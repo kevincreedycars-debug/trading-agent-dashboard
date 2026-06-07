@@ -2,7 +2,7 @@
   "dashboard_meta": {
     "system_timezone": "America/New_York",
     "execution_clock": "07:00 ET primary run",
-    "last_updated_et": "2026-06-07T19:37:58.031Z",
+    "last_updated_et": "2026-06-07T20:08:34.074Z",
     "architecture": "Layer 1 agents are sealed independent raw signal producers. No cross-agent communication.",
     "weekend_rule": "BTC remains open on weekends. USD, EUR, GOLD and NQ do not issue 24h calls on Saturday or Sunday.",
     "london_weekday": "Sunday"
@@ -1645,10 +1645,10 @@
     },
     {
       "agent": "EUR",
-      "status": "pending",
+      "status": "live",
       "market_status": "closed",
-      "last_run_et": null,
-      "summary": "Awaiting first EUR agent run.",
+      "last_run_et": "2026-06-07T19:55:38.604+00:00",
+      "summary": "EUR Layer 1 raw call generated from sealed independent workflow.",
       "calls": {
         "24h": {
           "direction": "NO 24H CALL",
@@ -1657,24 +1657,428 @@
           "status": "market_closed"
         },
         "3d": {
-          "direction": "PENDING",
-          "conviction": null,
-          "reason": "Awaiting data"
+          "direction": "BULLISH",
+          "conviction": 86,
+          "reason": "3d EUR deterministic score: bull case 86%, bear case 14%, neutral/inactive 41%, directional participation 59%, net edge +72.",
+          "conviction_model": {
+            "neutral_pct": 41,
+            "net_edge_pct": 72,
+            "winning_side": "BULLISH",
+            "participation": 59,
+            "weighted_edge": 0.72,
+            "neutral_weight": 41,
+            "raw_conviction": 86,
+            "agreement_boost": 0,
+            "base_conviction": 86,
+            "bear_case_weight": 8,
+            "bull_case_weight": 51,
+            "conflict_penalty": 0,
+            "final_conviction": 86,
+            "verdict_strength": "VERY_STRONG",
+            "participation_cap": 59,
+            "bearish_argument_pct": 14,
+            "bullish_argument_pct": 86,
+            "neutral_evidence_pct": 41,
+            "missing_input_penalty": 0,
+            "final_conviction_logic": "3d EUR deterministic score: bull case 86%, bear case 14%, neutral/inactive 41%, directional participation 59%, net edge +72.",
+            "active_participation_pct": 59,
+            "directional_participation_pct": 59,
+            "weighted_score": {
+              "bullish_weight": 51,
+              "bearish_weight": 8,
+              "neutral_weight": 41,
+              "active_weight": 59,
+              "weight_margin": 43
+            },
+            "alignment": 86
+          },
+          "weighted_score": {
+            "active_weight": 59,
+            "weight_margin": 43,
+            "bearish_weight": 8,
+            "bullish_weight": 51,
+            "neutral_weight": 41
+          },
+          "factor_breakdown": {
+            "F1": {
+              "reason": "Missing input",
+              "signal": "NEUTRAL",
+              "weight": 18,
+              "evidence": "ECB bias unknown"
+            },
+            "F2": {
+              "reason": "Rising German front-end yields support EUR",
+              "signal": "BULLISH",
+              "weight": 18,
+              "evidence": "Germany 2Y delta 11 bps"
+            },
+            "F3": {
+              "reason": "US-DE spread narrowing supports EUR",
+              "signal": "BULLISH",
+              "weight": 20,
+              "evidence": "US-DE 2Y spread delta -5 bps"
+            },
+            "F4": {
+              "reason": "No confirmed EZ economic surprise",
+              "signal": "NEUTRAL",
+              "weight": 10,
+              "evidence": "No recent Eurozone event"
+            },
+            "F5": {
+              "reason": "Weak or deteriorating Eurozone PMI trend pressures EUR",
+              "signal": "BEARISH",
+              "weight": 8,
+              "evidence": "EZ PMI 0 "
+            },
+            "F6": {
+              "reason": "EUR own price delta confirms bullish pressure",
+              "signal": "BULLISH",
+              "weight": 10,
+              "evidence": "EURUSD delta 0.78%"
+            },
+            "F7": {
+              "reason": "Gold move below confirmation threshold",
+              "signal": "NEUTRAL",
+              "weight": 4,
+              "evidence": "Gold delta 0%"
+            },
+            "F8": {
+              "reason": "Missing or inactive stress input",
+              "signal": "NEUTRAL",
+              "weight": 5,
+              "evidence": "EZ stress unavailable"
+            },
+            "F9": {
+              "reason": "Missing input",
+              "signal": "NEUTRAL",
+              "weight": 4,
+              "evidence": "Global growth unavailable"
+            },
+            "F10": {
+              "reason": "Risk-on regime supports EUR versus safe-haven USD",
+              "signal": "BULLISH",
+              "weight": 3,
+              "evidence": "VIX 15.4"
+            }
+          }
         },
         "current_week": {
-          "direction": "PENDING",
-          "conviction": null,
-          "reason": "Awaiting data"
+          "direction": "BULLISH",
+          "conviction": 79,
+          "reason": "current_week EUR deterministic score: bull case 79%, bear case 21%, neutral/inactive 42%, directional participation 58%, net edge +58.",
+          "conviction_model": {
+            "neutral_pct": 42,
+            "net_edge_pct": 58,
+            "winning_side": "BULLISH",
+            "participation": 58,
+            "weighted_edge": 0.58,
+            "neutral_weight": 42,
+            "raw_conviction": 79,
+            "agreement_boost": 0,
+            "base_conviction": 79,
+            "bear_case_weight": 12,
+            "bull_case_weight": 46,
+            "conflict_penalty": 0,
+            "final_conviction": 79,
+            "verdict_strength": "VERY_STRONG",
+            "participation_cap": 58,
+            "bearish_argument_pct": 21,
+            "bullish_argument_pct": 79,
+            "neutral_evidence_pct": 42,
+            "missing_input_penalty": 0,
+            "final_conviction_logic": "current_week EUR deterministic score: bull case 79%, bear case 21%, neutral/inactive 42%, directional participation 58%, net edge +58.",
+            "active_participation_pct": 58,
+            "directional_participation_pct": 58,
+            "weighted_score": {
+              "bullish_weight": 46,
+              "bearish_weight": 12,
+              "neutral_weight": 42,
+              "active_weight": 58,
+              "weight_margin": 34
+            },
+            "alignment": 79
+          },
+          "weighted_score": {
+            "active_weight": 58,
+            "weight_margin": 34,
+            "bearish_weight": 12,
+            "bullish_weight": 46,
+            "neutral_weight": 42
+          },
+          "factor_breakdown": {
+            "F1": {
+              "reason": "Missing input",
+              "signal": "NEUTRAL",
+              "weight": 18,
+              "evidence": "ECB bias unknown"
+            },
+            "F2": {
+              "reason": "Rising German front-end yields support EUR",
+              "signal": "BULLISH",
+              "weight": 14,
+              "evidence": "Germany 2Y delta 11 bps"
+            },
+            "F3": {
+              "reason": "US-DE spread narrowing supports EUR",
+              "signal": "BULLISH",
+              "weight": 22,
+              "evidence": "US-DE 2Y spread delta -5 bps"
+            },
+            "F4": {
+              "reason": "No confirmed EZ economic surprise",
+              "signal": "NEUTRAL",
+              "weight": 8,
+              "evidence": "No recent Eurozone event"
+            },
+            "F5": {
+              "reason": "Weak or deteriorating Eurozone PMI trend pressures EUR",
+              "signal": "BEARISH",
+              "weight": 12,
+              "evidence": "EZ PMI 0 "
+            },
+            "F6": {
+              "reason": "EUR own price delta confirms bullish pressure",
+              "signal": "BULLISH",
+              "weight": 8,
+              "evidence": "EURUSD delta 0.78%"
+            },
+            "F7": {
+              "reason": "Gold move below confirmation threshold",
+              "signal": "NEUTRAL",
+              "weight": 4,
+              "evidence": "Gold delta 0%"
+            },
+            "F8": {
+              "reason": "Missing or inactive stress input",
+              "signal": "NEUTRAL",
+              "weight": 8,
+              "evidence": "EZ stress unavailable"
+            },
+            "F9": {
+              "reason": "Missing input",
+              "signal": "NEUTRAL",
+              "weight": 4,
+              "evidence": "Global growth unavailable"
+            },
+            "F10": {
+              "reason": "Risk-on regime supports EUR versus safe-haven USD",
+              "signal": "BULLISH",
+              "weight": 2,
+              "evidence": "VIX 15.4"
+            }
+          }
         },
         "next_week": {
-          "direction": "PENDING",
-          "conviction": null,
-          "reason": "Awaiting data"
+          "direction": "BEARISH",
+          "conviction": 73,
+          "reason": "next_week EUR deterministic score: bull case 27%, bear case 73%, neutral/inactive 48%, directional participation 52%, net edge -46.",
+          "conviction_model": {
+            "neutral_pct": 48,
+            "net_edge_pct": -46,
+            "winning_side": "BEARISH",
+            "participation": 52,
+            "weighted_edge": 0.46,
+            "neutral_weight": 48,
+            "raw_conviction": 73,
+            "agreement_boost": 0,
+            "base_conviction": 73,
+            "bear_case_weight": 38,
+            "bull_case_weight": 14,
+            "conflict_penalty": 0,
+            "final_conviction": 73,
+            "verdict_strength": "VERY_STRONG",
+            "participation_cap": 52,
+            "bearish_argument_pct": 73,
+            "bullish_argument_pct": 27,
+            "neutral_evidence_pct": 48,
+            "missing_input_penalty": 0,
+            "final_conviction_logic": "next_week EUR deterministic score: bull case 27%, bear case 73%, neutral/inactive 48%, directional participation 52%, net edge -46.",
+            "active_participation_pct": 52,
+            "directional_participation_pct": 52,
+            "weighted_score": {
+              "bullish_weight": 14,
+              "bearish_weight": 38,
+              "neutral_weight": 48,
+              "active_weight": 52,
+              "weight_margin": 24
+            },
+            "alignment": 27
+          },
+          "weighted_score": {
+            "active_weight": 52,
+            "weight_margin": 24,
+            "bearish_weight": 38,
+            "bullish_weight": 14,
+            "neutral_weight": 48
+          },
+          "factor_breakdown": {
+            "F1": {
+              "reason": "Missing input",
+              "signal": "NEUTRAL",
+              "weight": 18,
+              "evidence": "ECB bias unknown"
+            },
+            "F2": {
+              "reason": "Rising German front-end yields support EUR",
+              "signal": "BULLISH",
+              "weight": 12,
+              "evidence": "Germany 2Y delta 7 bps"
+            },
+            "F3": {
+              "reason": "US-DE spread widening pressures EUR",
+              "signal": "BEARISH",
+              "weight": 24,
+              "evidence": "US-DE 2Y spread delta 11 bps"
+            },
+            "F4": {
+              "reason": "No confirmed EZ economic surprise",
+              "signal": "NEUTRAL",
+              "weight": 5,
+              "evidence": "No recent Eurozone event"
+            },
+            "F5": {
+              "reason": "Weak or deteriorating Eurozone PMI trend pressures EUR",
+              "signal": "BEARISH",
+              "weight": 14,
+              "evidence": "EZ PMI 0 "
+            },
+            "F6": {
+              "reason": "EUR own price move below threshold",
+              "signal": "NEUTRAL",
+              "weight": 6,
+              "evidence": "EURUSD delta -0.43%"
+            },
+            "F7": {
+              "reason": "Gold move below confirmation threshold",
+              "signal": "NEUTRAL",
+              "weight": 3,
+              "evidence": "Gold delta 0%"
+            },
+            "F8": {
+              "reason": "Missing or inactive stress input",
+              "signal": "NEUTRAL",
+              "weight": 10,
+              "evidence": "EZ stress unavailable"
+            },
+            "F9": {
+              "reason": "Missing input",
+              "signal": "NEUTRAL",
+              "weight": 6,
+              "evidence": "Global growth unavailable"
+            },
+            "F10": {
+              "reason": "Risk-on regime supports EUR versus safe-haven USD",
+              "signal": "BULLISH",
+              "weight": 2,
+              "evidence": "VIX 15.4"
+            }
+          }
         },
         "current_month": {
-          "direction": "PENDING",
-          "conviction": null,
-          "reason": "Awaiting data"
+          "direction": "BEARISH",
+          "conviction": 73,
+          "reason": "current_month EUR deterministic score: bull case 27%, bear case 73%, neutral/inactive 48%, directional participation 52%, net edge -46.",
+          "conviction_model": {
+            "neutral_pct": 48,
+            "net_edge_pct": -46,
+            "winning_side": "BEARISH",
+            "participation": 52,
+            "weighted_edge": 0.46,
+            "neutral_weight": 48,
+            "raw_conviction": 73,
+            "agreement_boost": 0,
+            "base_conviction": 73,
+            "bear_case_weight": 38,
+            "bull_case_weight": 14,
+            "conflict_penalty": 0,
+            "final_conviction": 73,
+            "verdict_strength": "VERY_STRONG",
+            "participation_cap": 52,
+            "bearish_argument_pct": 73,
+            "bullish_argument_pct": 27,
+            "neutral_evidence_pct": 48,
+            "missing_input_penalty": 0,
+            "final_conviction_logic": "current_month EUR deterministic score: bull case 27%, bear case 73%, neutral/inactive 48%, directional participation 52%, net edge -46.",
+            "active_participation_pct": 52,
+            "directional_participation_pct": 52,
+            "weighted_score": {
+              "bullish_weight": 14,
+              "bearish_weight": 38,
+              "neutral_weight": 48,
+              "active_weight": 52,
+              "weight_margin": 24
+            },
+            "alignment": 27
+          },
+          "weighted_score": {
+            "active_weight": 52,
+            "weight_margin": 24,
+            "bearish_weight": 38,
+            "bullish_weight": 14,
+            "neutral_weight": 48
+          },
+          "factor_breakdown": {
+            "F1": {
+              "reason": "Missing input",
+              "signal": "NEUTRAL",
+              "weight": 16,
+              "evidence": "ECB bias unknown"
+            },
+            "F2": {
+              "reason": "Rising German front-end yields support EUR",
+              "signal": "BULLISH",
+              "weight": 12,
+              "evidence": "Germany 2Y delta 7 bps"
+            },
+            "F3": {
+              "reason": "US-DE spread widening pressures EUR",
+              "signal": "BEARISH",
+              "weight": 22,
+              "evidence": "US-DE 2Y spread delta 11 bps"
+            },
+            "F4": {
+              "reason": "No confirmed EZ economic surprise",
+              "signal": "NEUTRAL",
+              "weight": 5,
+              "evidence": "No recent Eurozone event"
+            },
+            "F5": {
+              "reason": "Weak or deteriorating Eurozone PMI trend pressures EUR",
+              "signal": "BEARISH",
+              "weight": 16,
+              "evidence": "EZ PMI 0 "
+            },
+            "F6": {
+              "reason": "EUR own price move below threshold",
+              "signal": "NEUTRAL",
+              "weight": 8,
+              "evidence": "EURUSD delta -0.43%"
+            },
+            "F7": {
+              "reason": "Gold move below confirmation threshold",
+              "signal": "NEUTRAL",
+              "weight": 3,
+              "evidence": "Gold delta 0%"
+            },
+            "F8": {
+              "reason": "Missing or inactive stress input",
+              "signal": "NEUTRAL",
+              "weight": 10,
+              "evidence": "EZ stress unavailable"
+            },
+            "F9": {
+              "reason": "Missing input",
+              "signal": "NEUTRAL",
+              "weight": 6,
+              "evidence": "Global growth unavailable"
+            },
+            "F10": {
+              "reason": "Risk-on regime supports EUR versus safe-haven USD",
+              "signal": "BULLISH",
+              "weight": 2,
+              "evidence": "VIX 15.4"
+            }
+          }
         }
       },
       "priority_timeframe": "24h",
@@ -1684,31 +2088,1262 @@
         "reason": "Weekend rule active: this market is closed, so no 24h bias is issued.",
         "status": "market_closed"
       },
-      "factor_breakdown": {},
-      "key_factors": [],
+      "factor_breakdown": {
+        "F1": {
+          "reason": "Missing input",
+          "signal": "NEUTRAL",
+          "weight": 20,
+          "evidence": "ECB bias unknown"
+        },
+        "F2": {
+          "reason": "German 2Y move below threshold",
+          "signal": "NEUTRAL",
+          "weight": 18,
+          "evidence": "Germany 2Y delta 0 bps"
+        },
+        "F3": {
+          "reason": "Spread move below threshold",
+          "signal": "NEUTRAL",
+          "weight": 20,
+          "evidence": "US-DE 2Y spread delta 0 bps"
+        },
+        "F4": {
+          "reason": "No confirmed EZ economic surprise",
+          "signal": "NEUTRAL",
+          "weight": 14,
+          "evidence": "No recent Eurozone event"
+        },
+        "F5": {
+          "reason": "Weak or deteriorating Eurozone PMI trend pressures EUR",
+          "signal": "BEARISH",
+          "weight": 4,
+          "evidence": "EZ PMI 0 "
+        },
+        "F6": {
+          "reason": "EUR own price delta confirms bullish pressure",
+          "signal": "BULLISH",
+          "weight": 12,
+          "evidence": "EURUSD delta 0.26%"
+        },
+        "F7": {
+          "reason": "Gold move below confirmation threshold",
+          "signal": "NEUTRAL",
+          "weight": 4,
+          "evidence": "Gold delta 0%"
+        },
+        "F8": {
+          "reason": "Missing or inactive stress input",
+          "signal": "NEUTRAL",
+          "weight": 4,
+          "evidence": "EZ stress unavailable"
+        },
+        "F9": {
+          "reason": "Missing input",
+          "signal": "NEUTRAL",
+          "weight": 2,
+          "evidence": "Global growth unavailable"
+        },
+        "F10": {
+          "reason": "Risk-on regime supports EUR versus safe-haven USD",
+          "signal": "BULLISH",
+          "weight": 2,
+          "evidence": "VIX 15.4"
+        }
+      },
+      "key_factors": [
+        "F1 [20]: NEUTRAL — ECB bias unknown (Missing input)",
+        "F2 [18]: NEUTRAL — Germany 2Y delta 0 bps (German 2Y move below threshold)",
+        "F3 [20]: NEUTRAL — US-DE 2Y spread delta 0 bps (Spread move below threshold)",
+        "F4 [14]: NEUTRAL — No recent Eurozone event (No confirmed EZ economic surprise)",
+        "F5 [4]: BEARISH — EZ PMI 0  (Weak or deteriorating Eurozone PMI trend pressures EUR)",
+        "F6 [12]: BULLISH — EURUSD delta 0.26% (EUR own price delta confirms bullish pressure)",
+        "F7 [4]: NEUTRAL — Gold delta 0% (Gold move below confirmation threshold)",
+        "F8 [4]: NEUTRAL — EZ stress unavailable (Missing or inactive stress input)",
+        "F9 [2]: NEUTRAL — Global growth unavailable (Missing input)",
+        "F10 [2]: BULLISH — VIX 15.4 (Risk-on regime supports EUR versus safe-haven USD)"
+      ],
       "warnings": [],
-      "reasoning_summary": "",
-      "score_bullish": null,
-      "score_bearish": null,
-      "score_neutral": null,
-      "non_neutral_count": null,
-      "logic_document": null,
-      "logic_document_version": null,
-      "conviction_model": {},
-      "timeframe_models": {},
+      "reasoning_summary": "EUR weighted verdicts calculated deterministically by timeframe. 24h BULLISH 78%, 3d BULLISH 86%, current week BULLISH 79%, next week BEARISH 73%, current month BEARISH 73%.",
+      "score_bullish": 2,
+      "score_bearish": 1,
+      "score_neutral": 7,
+      "non_neutral_count": 2,
+      "logic_document": "agent_eur_direction.md",
+      "logic_document_version": "2.0_weighted_engine",
+      "conviction_model": {
+        "bullish_argument_pct": null,
+        "bearish_argument_pct": null,
+        "neutral_pct": null,
+        "neutral_evidence_pct": null,
+        "directional_participation_pct": null,
+        "active_participation_pct": null,
+        "net_edge_pct": null,
+        "final_conviction": null,
+        "verdict_strength": "MARKET_CLOSED",
+        "winning_side": "MARKET_CLOSED",
+        "final_conviction_logic": "24H priority timeframe is closed by weekend rule.",
+        "bull_case_weight": null,
+        "bear_case_weight": null,
+        "neutral_weight": null
+      },
+      "timeframe_models": {
+        "3d": {
+          "reason": "3d EUR deterministic score: bull case 86%, bear case 14%, neutral/inactive 41%, directional participation 59%, net edge +72.",
+          "direction": "BULLISH",
+          "conviction": 86,
+          "score_bearish": 1,
+          "score_bullish": 4,
+          "score_neutral": 5,
+          "weighted_score": {
+            "active_weight": 59,
+            "weight_margin": 43,
+            "bearish_weight": 8,
+            "bullish_weight": 51,
+            "neutral_weight": 41
+          },
+          "conviction_model": {
+            "neutral_pct": 41,
+            "net_edge_pct": 72,
+            "winning_side": "BULLISH",
+            "participation": 59,
+            "weighted_edge": 0.72,
+            "neutral_weight": 41,
+            "raw_conviction": 86,
+            "agreement_boost": 0,
+            "base_conviction": 86,
+            "bear_case_weight": 8,
+            "bull_case_weight": 51,
+            "conflict_penalty": 0,
+            "final_conviction": 86,
+            "verdict_strength": "VERY_STRONG",
+            "participation_cap": 59,
+            "bearish_argument_pct": 14,
+            "bullish_argument_pct": 86,
+            "neutral_evidence_pct": 41,
+            "missing_input_penalty": 0,
+            "final_conviction_logic": "3d EUR deterministic score: bull case 86%, bear case 14%, neutral/inactive 41%, directional participation 59%, net edge +72.",
+            "active_participation_pct": 59,
+            "directional_participation_pct": 59
+          },
+          "factor_breakdown": {
+            "F1": {
+              "reason": "Missing input",
+              "signal": "NEUTRAL",
+              "weight": 18,
+              "evidence": "ECB bias unknown"
+            },
+            "F2": {
+              "reason": "Rising German front-end yields support EUR",
+              "signal": "BULLISH",
+              "weight": 18,
+              "evidence": "Germany 2Y delta 11 bps"
+            },
+            "F3": {
+              "reason": "US-DE spread narrowing supports EUR",
+              "signal": "BULLISH",
+              "weight": 20,
+              "evidence": "US-DE 2Y spread delta -5 bps"
+            },
+            "F4": {
+              "reason": "No confirmed EZ economic surprise",
+              "signal": "NEUTRAL",
+              "weight": 10,
+              "evidence": "No recent Eurozone event"
+            },
+            "F5": {
+              "reason": "Weak or deteriorating Eurozone PMI trend pressures EUR",
+              "signal": "BEARISH",
+              "weight": 8,
+              "evidence": "EZ PMI 0 "
+            },
+            "F6": {
+              "reason": "EUR own price delta confirms bullish pressure",
+              "signal": "BULLISH",
+              "weight": 10,
+              "evidence": "EURUSD delta 0.78%"
+            },
+            "F7": {
+              "reason": "Gold move below confirmation threshold",
+              "signal": "NEUTRAL",
+              "weight": 4,
+              "evidence": "Gold delta 0%"
+            },
+            "F8": {
+              "reason": "Missing or inactive stress input",
+              "signal": "NEUTRAL",
+              "weight": 5,
+              "evidence": "EZ stress unavailable"
+            },
+            "F9": {
+              "reason": "Missing input",
+              "signal": "NEUTRAL",
+              "weight": 4,
+              "evidence": "Global growth unavailable"
+            },
+            "F10": {
+              "reason": "Risk-on regime supports EUR versus safe-haven USD",
+              "signal": "BULLISH",
+              "weight": 3,
+              "evidence": "VIX 15.4"
+            }
+          }
+        },
+        "24h": {
+          "reason": "24h EUR deterministic score: bull case 78%, bear case 22%, neutral/inactive 82%, directional participation 18%, net edge +56.",
+          "direction": "BULLISH",
+          "conviction": 78,
+          "score_bearish": 1,
+          "score_bullish": 2,
+          "score_neutral": 7,
+          "weighted_score": {
+            "active_weight": 18,
+            "weight_margin": 10,
+            "bearish_weight": 4,
+            "bullish_weight": 14,
+            "neutral_weight": 82
+          },
+          "conviction_model": {
+            "neutral_pct": 82,
+            "net_edge_pct": 56,
+            "winning_side": "BULLISH",
+            "participation": 18,
+            "weighted_edge": 0.56,
+            "neutral_weight": 82,
+            "raw_conviction": 78,
+            "agreement_boost": 0,
+            "base_conviction": 78,
+            "bear_case_weight": 4,
+            "bull_case_weight": 14,
+            "conflict_penalty": 0,
+            "final_conviction": 78,
+            "verdict_strength": "VERY_STRONG",
+            "participation_cap": 18,
+            "bearish_argument_pct": 22,
+            "bullish_argument_pct": 78,
+            "neutral_evidence_pct": 82,
+            "missing_input_penalty": 0,
+            "final_conviction_logic": "24h EUR deterministic score: bull case 78%, bear case 22%, neutral/inactive 82%, directional participation 18%, net edge +56.",
+            "active_participation_pct": 18,
+            "directional_participation_pct": 18
+          },
+          "factor_breakdown": {
+            "F1": {
+              "reason": "Missing input",
+              "signal": "NEUTRAL",
+              "weight": 20,
+              "evidence": "ECB bias unknown"
+            },
+            "F2": {
+              "reason": "German 2Y move below threshold",
+              "signal": "NEUTRAL",
+              "weight": 18,
+              "evidence": "Germany 2Y delta 0 bps"
+            },
+            "F3": {
+              "reason": "Spread move below threshold",
+              "signal": "NEUTRAL",
+              "weight": 20,
+              "evidence": "US-DE 2Y spread delta 0 bps"
+            },
+            "F4": {
+              "reason": "No confirmed EZ economic surprise",
+              "signal": "NEUTRAL",
+              "weight": 14,
+              "evidence": "No recent Eurozone event"
+            },
+            "F5": {
+              "reason": "Weak or deteriorating Eurozone PMI trend pressures EUR",
+              "signal": "BEARISH",
+              "weight": 4,
+              "evidence": "EZ PMI 0 "
+            },
+            "F6": {
+              "reason": "EUR own price delta confirms bullish pressure",
+              "signal": "BULLISH",
+              "weight": 12,
+              "evidence": "EURUSD delta 0.26%"
+            },
+            "F7": {
+              "reason": "Gold move below confirmation threshold",
+              "signal": "NEUTRAL",
+              "weight": 4,
+              "evidence": "Gold delta 0%"
+            },
+            "F8": {
+              "reason": "Missing or inactive stress input",
+              "signal": "NEUTRAL",
+              "weight": 4,
+              "evidence": "EZ stress unavailable"
+            },
+            "F9": {
+              "reason": "Missing input",
+              "signal": "NEUTRAL",
+              "weight": 2,
+              "evidence": "Global growth unavailable"
+            },
+            "F10": {
+              "reason": "Risk-on regime supports EUR versus safe-haven USD",
+              "signal": "BULLISH",
+              "weight": 2,
+              "evidence": "VIX 15.4"
+            }
+          }
+        },
+        "next_week": {
+          "reason": "next_week EUR deterministic score: bull case 27%, bear case 73%, neutral/inactive 48%, directional participation 52%, net edge -46.",
+          "direction": "BEARISH",
+          "conviction": 73,
+          "score_bearish": 2,
+          "score_bullish": 2,
+          "score_neutral": 6,
+          "weighted_score": {
+            "active_weight": 52,
+            "weight_margin": 24,
+            "bearish_weight": 38,
+            "bullish_weight": 14,
+            "neutral_weight": 48
+          },
+          "conviction_model": {
+            "neutral_pct": 48,
+            "net_edge_pct": -46,
+            "winning_side": "BEARISH",
+            "participation": 52,
+            "weighted_edge": 0.46,
+            "neutral_weight": 48,
+            "raw_conviction": 73,
+            "agreement_boost": 0,
+            "base_conviction": 73,
+            "bear_case_weight": 38,
+            "bull_case_weight": 14,
+            "conflict_penalty": 0,
+            "final_conviction": 73,
+            "verdict_strength": "VERY_STRONG",
+            "participation_cap": 52,
+            "bearish_argument_pct": 73,
+            "bullish_argument_pct": 27,
+            "neutral_evidence_pct": 48,
+            "missing_input_penalty": 0,
+            "final_conviction_logic": "next_week EUR deterministic score: bull case 27%, bear case 73%, neutral/inactive 48%, directional participation 52%, net edge -46.",
+            "active_participation_pct": 52,
+            "directional_participation_pct": 52
+          },
+          "factor_breakdown": {
+            "F1": {
+              "reason": "Missing input",
+              "signal": "NEUTRAL",
+              "weight": 18,
+              "evidence": "ECB bias unknown"
+            },
+            "F2": {
+              "reason": "Rising German front-end yields support EUR",
+              "signal": "BULLISH",
+              "weight": 12,
+              "evidence": "Germany 2Y delta 7 bps"
+            },
+            "F3": {
+              "reason": "US-DE spread widening pressures EUR",
+              "signal": "BEARISH",
+              "weight": 24,
+              "evidence": "US-DE 2Y spread delta 11 bps"
+            },
+            "F4": {
+              "reason": "No confirmed EZ economic surprise",
+              "signal": "NEUTRAL",
+              "weight": 5,
+              "evidence": "No recent Eurozone event"
+            },
+            "F5": {
+              "reason": "Weak or deteriorating Eurozone PMI trend pressures EUR",
+              "signal": "BEARISH",
+              "weight": 14,
+              "evidence": "EZ PMI 0 "
+            },
+            "F6": {
+              "reason": "EUR own price move below threshold",
+              "signal": "NEUTRAL",
+              "weight": 6,
+              "evidence": "EURUSD delta -0.43%"
+            },
+            "F7": {
+              "reason": "Gold move below confirmation threshold",
+              "signal": "NEUTRAL",
+              "weight": 3,
+              "evidence": "Gold delta 0%"
+            },
+            "F8": {
+              "reason": "Missing or inactive stress input",
+              "signal": "NEUTRAL",
+              "weight": 10,
+              "evidence": "EZ stress unavailable"
+            },
+            "F9": {
+              "reason": "Missing input",
+              "signal": "NEUTRAL",
+              "weight": 6,
+              "evidence": "Global growth unavailable"
+            },
+            "F10": {
+              "reason": "Risk-on regime supports EUR versus safe-haven USD",
+              "signal": "BULLISH",
+              "weight": 2,
+              "evidence": "VIX 15.4"
+            }
+          }
+        },
+        "current_week": {
+          "reason": "current_week EUR deterministic score: bull case 79%, bear case 21%, neutral/inactive 42%, directional participation 58%, net edge +58.",
+          "direction": "BULLISH",
+          "conviction": 79,
+          "score_bearish": 1,
+          "score_bullish": 4,
+          "score_neutral": 5,
+          "weighted_score": {
+            "active_weight": 58,
+            "weight_margin": 34,
+            "bearish_weight": 12,
+            "bullish_weight": 46,
+            "neutral_weight": 42
+          },
+          "conviction_model": {
+            "neutral_pct": 42,
+            "net_edge_pct": 58,
+            "winning_side": "BULLISH",
+            "participation": 58,
+            "weighted_edge": 0.58,
+            "neutral_weight": 42,
+            "raw_conviction": 79,
+            "agreement_boost": 0,
+            "base_conviction": 79,
+            "bear_case_weight": 12,
+            "bull_case_weight": 46,
+            "conflict_penalty": 0,
+            "final_conviction": 79,
+            "verdict_strength": "VERY_STRONG",
+            "participation_cap": 58,
+            "bearish_argument_pct": 21,
+            "bullish_argument_pct": 79,
+            "neutral_evidence_pct": 42,
+            "missing_input_penalty": 0,
+            "final_conviction_logic": "current_week EUR deterministic score: bull case 79%, bear case 21%, neutral/inactive 42%, directional participation 58%, net edge +58.",
+            "active_participation_pct": 58,
+            "directional_participation_pct": 58
+          },
+          "factor_breakdown": {
+            "F1": {
+              "reason": "Missing input",
+              "signal": "NEUTRAL",
+              "weight": 18,
+              "evidence": "ECB bias unknown"
+            },
+            "F2": {
+              "reason": "Rising German front-end yields support EUR",
+              "signal": "BULLISH",
+              "weight": 14,
+              "evidence": "Germany 2Y delta 11 bps"
+            },
+            "F3": {
+              "reason": "US-DE spread narrowing supports EUR",
+              "signal": "BULLISH",
+              "weight": 22,
+              "evidence": "US-DE 2Y spread delta -5 bps"
+            },
+            "F4": {
+              "reason": "No confirmed EZ economic surprise",
+              "signal": "NEUTRAL",
+              "weight": 8,
+              "evidence": "No recent Eurozone event"
+            },
+            "F5": {
+              "reason": "Weak or deteriorating Eurozone PMI trend pressures EUR",
+              "signal": "BEARISH",
+              "weight": 12,
+              "evidence": "EZ PMI 0 "
+            },
+            "F6": {
+              "reason": "EUR own price delta confirms bullish pressure",
+              "signal": "BULLISH",
+              "weight": 8,
+              "evidence": "EURUSD delta 0.78%"
+            },
+            "F7": {
+              "reason": "Gold move below confirmation threshold",
+              "signal": "NEUTRAL",
+              "weight": 4,
+              "evidence": "Gold delta 0%"
+            },
+            "F8": {
+              "reason": "Missing or inactive stress input",
+              "signal": "NEUTRAL",
+              "weight": 8,
+              "evidence": "EZ stress unavailable"
+            },
+            "F9": {
+              "reason": "Missing input",
+              "signal": "NEUTRAL",
+              "weight": 4,
+              "evidence": "Global growth unavailable"
+            },
+            "F10": {
+              "reason": "Risk-on regime supports EUR versus safe-haven USD",
+              "signal": "BULLISH",
+              "weight": 2,
+              "evidence": "VIX 15.4"
+            }
+          }
+        },
+        "current_month": {
+          "reason": "current_month EUR deterministic score: bull case 27%, bear case 73%, neutral/inactive 48%, directional participation 52%, net edge -46.",
+          "direction": "BEARISH",
+          "conviction": 73,
+          "score_bearish": 2,
+          "score_bullish": 2,
+          "score_neutral": 6,
+          "weighted_score": {
+            "active_weight": 52,
+            "weight_margin": 24,
+            "bearish_weight": 38,
+            "bullish_weight": 14,
+            "neutral_weight": 48
+          },
+          "conviction_model": {
+            "neutral_pct": 48,
+            "net_edge_pct": -46,
+            "winning_side": "BEARISH",
+            "participation": 52,
+            "weighted_edge": 0.46,
+            "neutral_weight": 48,
+            "raw_conviction": 73,
+            "agreement_boost": 0,
+            "base_conviction": 73,
+            "bear_case_weight": 38,
+            "bull_case_weight": 14,
+            "conflict_penalty": 0,
+            "final_conviction": 73,
+            "verdict_strength": "VERY_STRONG",
+            "participation_cap": 52,
+            "bearish_argument_pct": 73,
+            "bullish_argument_pct": 27,
+            "neutral_evidence_pct": 48,
+            "missing_input_penalty": 0,
+            "final_conviction_logic": "current_month EUR deterministic score: bull case 27%, bear case 73%, neutral/inactive 48%, directional participation 52%, net edge -46.",
+            "active_participation_pct": 52,
+            "directional_participation_pct": 52
+          },
+          "factor_breakdown": {
+            "F1": {
+              "reason": "Missing input",
+              "signal": "NEUTRAL",
+              "weight": 16,
+              "evidence": "ECB bias unknown"
+            },
+            "F2": {
+              "reason": "Rising German front-end yields support EUR",
+              "signal": "BULLISH",
+              "weight": 12,
+              "evidence": "Germany 2Y delta 7 bps"
+            },
+            "F3": {
+              "reason": "US-DE spread widening pressures EUR",
+              "signal": "BEARISH",
+              "weight": 22,
+              "evidence": "US-DE 2Y spread delta 11 bps"
+            },
+            "F4": {
+              "reason": "No confirmed EZ economic surprise",
+              "signal": "NEUTRAL",
+              "weight": 5,
+              "evidence": "No recent Eurozone event"
+            },
+            "F5": {
+              "reason": "Weak or deteriorating Eurozone PMI trend pressures EUR",
+              "signal": "BEARISH",
+              "weight": 16,
+              "evidence": "EZ PMI 0 "
+            },
+            "F6": {
+              "reason": "EUR own price move below threshold",
+              "signal": "NEUTRAL",
+              "weight": 8,
+              "evidence": "EURUSD delta -0.43%"
+            },
+            "F7": {
+              "reason": "Gold move below confirmation threshold",
+              "signal": "NEUTRAL",
+              "weight": 3,
+              "evidence": "Gold delta 0%"
+            },
+            "F8": {
+              "reason": "Missing or inactive stress input",
+              "signal": "NEUTRAL",
+              "weight": 10,
+              "evidence": "EZ stress unavailable"
+            },
+            "F9": {
+              "reason": "Missing input",
+              "signal": "NEUTRAL",
+              "weight": 6,
+              "evidence": "Global growth unavailable"
+            },
+            "F10": {
+              "reason": "Risk-on regime supports EUR versus safe-haven USD",
+              "signal": "BULLISH",
+              "weight": 2,
+              "evidence": "VIX 15.4"
+            }
+          }
+        }
+      },
       "display_metrics": {
         "bull_case": null,
         "bear_case": null,
-        "winning_side": null,
+        "winning_side": "MARKET_CLOSED",
         "conviction": null,
         "net_edge": null,
         "directional_participation": null,
         "neutral": null,
-        "verdict_strength": null,
+        "verdict_strength": "MARKET_CLOSED",
         "bull_case_weight": null,
         "bear_case_weight": null
       },
-      "full_output": {}
+      "full_output": {
+        "asset": "EUR",
+        "layer": "layer_1_raw",
+        "created_at": "2026-06-07T19:55:38.604+00:00",
+        "reason_24h": "24h EUR deterministic score: bull case 78%, bear case 22%, neutral/inactive 82%, directional participation 18%, net edge +56.",
+        "risk_flags": [],
+        "reason_3_day": "3d EUR deterministic score: bull case 86%, bear case 14%, neutral/inactive 41%, directional participation 59%, net edge +72.",
+        "direction_24h": "BULLISH",
+        "score_bearish": 1,
+        "score_bullish": 2,
+        "score_neutral": 7,
+        "conviction_24h": 78,
+        "logic_document": "agent_eur_direction.md",
+        "missing_inputs": [
+          "ecb_bias",
+          "latest_ez_event",
+          "ez_composite_pmi",
+          "ez_composite_pmi_direction",
+          "gold_d5_pct",
+          "gold_d20_pct",
+          "ez_stress_flag",
+          "global_growth_regime",
+          "china_growth_signal"
+        ],
+        "weighted_score": {
+          "active_weight": 18,
+          "weight_margin": 10,
+          "bearish_weight": 4,
+          "bullish_weight": 14,
+          "neutral_weight": 82
+        },
+        "direction_3_day": "BULLISH",
+        "conviction_3_day": 86,
+        "conviction_model": {
+          "neutral_pct": 82,
+          "net_edge_pct": 56,
+          "winning_side": "BULLISH",
+          "participation": 18,
+          "weighted_edge": 0.56,
+          "neutral_weight": 82,
+          "raw_conviction": 78,
+          "agreement_boost": 0,
+          "base_conviction": 78,
+          "bear_case_weight": 4,
+          "bull_case_weight": 14,
+          "conflict_penalty": 0,
+          "final_conviction": 78,
+          "verdict_strength": "VERY_STRONG",
+          "participation_cap": 18,
+          "bearish_argument_pct": 22,
+          "bullish_argument_pct": 78,
+          "neutral_evidence_pct": 82,
+          "missing_input_penalty": 0,
+          "final_conviction_logic": "24h EUR deterministic score: bull case 78%, bear case 22%, neutral/inactive 82%, directional participation 18%, net edge +56.",
+          "active_participation_pct": 18,
+          "directional_participation_pct": 18
+        },
+        "factor_breakdown": {
+          "F1": {
+            "reason": "Missing input",
+            "signal": "NEUTRAL",
+            "weight": 20,
+            "evidence": "ECB bias unknown"
+          },
+          "F2": {
+            "reason": "German 2Y move below threshold",
+            "signal": "NEUTRAL",
+            "weight": 18,
+            "evidence": "Germany 2Y delta 0 bps"
+          },
+          "F3": {
+            "reason": "Spread move below threshold",
+            "signal": "NEUTRAL",
+            "weight": 20,
+            "evidence": "US-DE 2Y spread delta 0 bps"
+          },
+          "F4": {
+            "reason": "No confirmed EZ economic surprise",
+            "signal": "NEUTRAL",
+            "weight": 14,
+            "evidence": "No recent Eurozone event"
+          },
+          "F5": {
+            "reason": "Weak or deteriorating Eurozone PMI trend pressures EUR",
+            "signal": "BEARISH",
+            "weight": 4,
+            "evidence": "EZ PMI 0 "
+          },
+          "F6": {
+            "reason": "EUR own price delta confirms bullish pressure",
+            "signal": "BULLISH",
+            "weight": 12,
+            "evidence": "EURUSD delta 0.26%"
+          },
+          "F7": {
+            "reason": "Gold move below confirmation threshold",
+            "signal": "NEUTRAL",
+            "weight": 4,
+            "evidence": "Gold delta 0%"
+          },
+          "F8": {
+            "reason": "Missing or inactive stress input",
+            "signal": "NEUTRAL",
+            "weight": 4,
+            "evidence": "EZ stress unavailable"
+          },
+          "F9": {
+            "reason": "Missing input",
+            "signal": "NEUTRAL",
+            "weight": 2,
+            "evidence": "Global growth unavailable"
+          },
+          "F10": {
+            "reason": "Risk-on regime supports EUR versus safe-haven USD",
+            "signal": "BULLISH",
+            "weight": 2,
+            "evidence": "VIX 15.4"
+          }
+        },
+        "reason_next_week": "next_week EUR deterministic score: bull case 27%, bear case 73%, neutral/inactive 48%, directional participation 52%, net edge -46.",
+        "timeframe_models": {
+          "3d": {
+            "reason": "3d EUR deterministic score: bull case 86%, bear case 14%, neutral/inactive 41%, directional participation 59%, net edge +72.",
+            "direction": "BULLISH",
+            "conviction": 86,
+            "score_bearish": 1,
+            "score_bullish": 4,
+            "score_neutral": 5,
+            "weighted_score": {
+              "active_weight": 59,
+              "weight_margin": 43,
+              "bearish_weight": 8,
+              "bullish_weight": 51,
+              "neutral_weight": 41
+            },
+            "conviction_model": {
+              "neutral_pct": 41,
+              "net_edge_pct": 72,
+              "winning_side": "BULLISH",
+              "participation": 59,
+              "weighted_edge": 0.72,
+              "neutral_weight": 41,
+              "raw_conviction": 86,
+              "agreement_boost": 0,
+              "base_conviction": 86,
+              "bear_case_weight": 8,
+              "bull_case_weight": 51,
+              "conflict_penalty": 0,
+              "final_conviction": 86,
+              "verdict_strength": "VERY_STRONG",
+              "participation_cap": 59,
+              "bearish_argument_pct": 14,
+              "bullish_argument_pct": 86,
+              "neutral_evidence_pct": 41,
+              "missing_input_penalty": 0,
+              "final_conviction_logic": "3d EUR deterministic score: bull case 86%, bear case 14%, neutral/inactive 41%, directional participation 59%, net edge +72.",
+              "active_participation_pct": 59,
+              "directional_participation_pct": 59
+            },
+            "factor_breakdown": {
+              "F1": {
+                "reason": "Missing input",
+                "signal": "NEUTRAL",
+                "weight": 18,
+                "evidence": "ECB bias unknown"
+              },
+              "F2": {
+                "reason": "Rising German front-end yields support EUR",
+                "signal": "BULLISH",
+                "weight": 18,
+                "evidence": "Germany 2Y delta 11 bps"
+              },
+              "F3": {
+                "reason": "US-DE spread narrowing supports EUR",
+                "signal": "BULLISH",
+                "weight": 20,
+                "evidence": "US-DE 2Y spread delta -5 bps"
+              },
+              "F4": {
+                "reason": "No confirmed EZ economic surprise",
+                "signal": "NEUTRAL",
+                "weight": 10,
+                "evidence": "No recent Eurozone event"
+              },
+              "F5": {
+                "reason": "Weak or deteriorating Eurozone PMI trend pressures EUR",
+                "signal": "BEARISH",
+                "weight": 8,
+                "evidence": "EZ PMI 0 "
+              },
+              "F6": {
+                "reason": "EUR own price delta confirms bullish pressure",
+                "signal": "BULLISH",
+                "weight": 10,
+                "evidence": "EURUSD delta 0.78%"
+              },
+              "F7": {
+                "reason": "Gold move below confirmation threshold",
+                "signal": "NEUTRAL",
+                "weight": 4,
+                "evidence": "Gold delta 0%"
+              },
+              "F8": {
+                "reason": "Missing or inactive stress input",
+                "signal": "NEUTRAL",
+                "weight": 5,
+                "evidence": "EZ stress unavailable"
+              },
+              "F9": {
+                "reason": "Missing input",
+                "signal": "NEUTRAL",
+                "weight": 4,
+                "evidence": "Global growth unavailable"
+              },
+              "F10": {
+                "reason": "Risk-on regime supports EUR versus safe-haven USD",
+                "signal": "BULLISH",
+                "weight": 3,
+                "evidence": "VIX 15.4"
+              }
+            }
+          },
+          "24h": {
+            "reason": "24h EUR deterministic score: bull case 78%, bear case 22%, neutral/inactive 82%, directional participation 18%, net edge +56.",
+            "direction": "BULLISH",
+            "conviction": 78,
+            "score_bearish": 1,
+            "score_bullish": 2,
+            "score_neutral": 7,
+            "weighted_score": {
+              "active_weight": 18,
+              "weight_margin": 10,
+              "bearish_weight": 4,
+              "bullish_weight": 14,
+              "neutral_weight": 82
+            },
+            "conviction_model": {
+              "neutral_pct": 82,
+              "net_edge_pct": 56,
+              "winning_side": "BULLISH",
+              "participation": 18,
+              "weighted_edge": 0.56,
+              "neutral_weight": 82,
+              "raw_conviction": 78,
+              "agreement_boost": 0,
+              "base_conviction": 78,
+              "bear_case_weight": 4,
+              "bull_case_weight": 14,
+              "conflict_penalty": 0,
+              "final_conviction": 78,
+              "verdict_strength": "VERY_STRONG",
+              "participation_cap": 18,
+              "bearish_argument_pct": 22,
+              "bullish_argument_pct": 78,
+              "neutral_evidence_pct": 82,
+              "missing_input_penalty": 0,
+              "final_conviction_logic": "24h EUR deterministic score: bull case 78%, bear case 22%, neutral/inactive 82%, directional participation 18%, net edge +56.",
+              "active_participation_pct": 18,
+              "directional_participation_pct": 18
+            },
+            "factor_breakdown": {
+              "F1": {
+                "reason": "Missing input",
+                "signal": "NEUTRAL",
+                "weight": 20,
+                "evidence": "ECB bias unknown"
+              },
+              "F2": {
+                "reason": "German 2Y move below threshold",
+                "signal": "NEUTRAL",
+                "weight": 18,
+                "evidence": "Germany 2Y delta 0 bps"
+              },
+              "F3": {
+                "reason": "Spread move below threshold",
+                "signal": "NEUTRAL",
+                "weight": 20,
+                "evidence": "US-DE 2Y spread delta 0 bps"
+              },
+              "F4": {
+                "reason": "No confirmed EZ economic surprise",
+                "signal": "NEUTRAL",
+                "weight": 14,
+                "evidence": "No recent Eurozone event"
+              },
+              "F5": {
+                "reason": "Weak or deteriorating Eurozone PMI trend pressures EUR",
+                "signal": "BEARISH",
+                "weight": 4,
+                "evidence": "EZ PMI 0 "
+              },
+              "F6": {
+                "reason": "EUR own price delta confirms bullish pressure",
+                "signal": "BULLISH",
+                "weight": 12,
+                "evidence": "EURUSD delta 0.26%"
+              },
+              "F7": {
+                "reason": "Gold move below confirmation threshold",
+                "signal": "NEUTRAL",
+                "weight": 4,
+                "evidence": "Gold delta 0%"
+              },
+              "F8": {
+                "reason": "Missing or inactive stress input",
+                "signal": "NEUTRAL",
+                "weight": 4,
+                "evidence": "EZ stress unavailable"
+              },
+              "F9": {
+                "reason": "Missing input",
+                "signal": "NEUTRAL",
+                "weight": 2,
+                "evidence": "Global growth unavailable"
+              },
+              "F10": {
+                "reason": "Risk-on regime supports EUR versus safe-haven USD",
+                "signal": "BULLISH",
+                "weight": 2,
+                "evidence": "VIX 15.4"
+              }
+            }
+          },
+          "next_week": {
+            "reason": "next_week EUR deterministic score: bull case 27%, bear case 73%, neutral/inactive 48%, directional participation 52%, net edge -46.",
+            "direction": "BEARISH",
+            "conviction": 73,
+            "score_bearish": 2,
+            "score_bullish": 2,
+            "score_neutral": 6,
+            "weighted_score": {
+              "active_weight": 52,
+              "weight_margin": 24,
+              "bearish_weight": 38,
+              "bullish_weight": 14,
+              "neutral_weight": 48
+            },
+            "conviction_model": {
+              "neutral_pct": 48,
+              "net_edge_pct": -46,
+              "winning_side": "BEARISH",
+              "participation": 52,
+              "weighted_edge": 0.46,
+              "neutral_weight": 48,
+              "raw_conviction": 73,
+              "agreement_boost": 0,
+              "base_conviction": 73,
+              "bear_case_weight": 38,
+              "bull_case_weight": 14,
+              "conflict_penalty": 0,
+              "final_conviction": 73,
+              "verdict_strength": "VERY_STRONG",
+              "participation_cap": 52,
+              "bearish_argument_pct": 73,
+              "bullish_argument_pct": 27,
+              "neutral_evidence_pct": 48,
+              "missing_input_penalty": 0,
+              "final_conviction_logic": "next_week EUR deterministic score: bull case 27%, bear case 73%, neutral/inactive 48%, directional participation 52%, net edge -46.",
+              "active_participation_pct": 52,
+              "directional_participation_pct": 52
+            },
+            "factor_breakdown": {
+              "F1": {
+                "reason": "Missing input",
+                "signal": "NEUTRAL",
+                "weight": 18,
+                "evidence": "ECB bias unknown"
+              },
+              "F2": {
+                "reason": "Rising German front-end yields support EUR",
+                "signal": "BULLISH",
+                "weight": 12,
+                "evidence": "Germany 2Y delta 7 bps"
+              },
+              "F3": {
+                "reason": "US-DE spread widening pressures EUR",
+                "signal": "BEARISH",
+                "weight": 24,
+                "evidence": "US-DE 2Y spread delta 11 bps"
+              },
+              "F4": {
+                "reason": "No confirmed EZ economic surprise",
+                "signal": "NEUTRAL",
+                "weight": 5,
+                "evidence": "No recent Eurozone event"
+              },
+              "F5": {
+                "reason": "Weak or deteriorating Eurozone PMI trend pressures EUR",
+                "signal": "BEARISH",
+                "weight": 14,
+                "evidence": "EZ PMI 0 "
+              },
+              "F6": {
+                "reason": "EUR own price move below threshold",
+                "signal": "NEUTRAL",
+                "weight": 6,
+                "evidence": "EURUSD delta -0.43%"
+              },
+              "F7": {
+                "reason": "Gold move below confirmation threshold",
+                "signal": "NEUTRAL",
+                "weight": 3,
+                "evidence": "Gold delta 0%"
+              },
+              "F8": {
+                "reason": "Missing or inactive stress input",
+                "signal": "NEUTRAL",
+                "weight": 10,
+                "evidence": "EZ stress unavailable"
+              },
+              "F9": {
+                "reason": "Missing input",
+                "signal": "NEUTRAL",
+                "weight": 6,
+                "evidence": "Global growth unavailable"
+              },
+              "F10": {
+                "reason": "Risk-on regime supports EUR versus safe-haven USD",
+                "signal": "BULLISH",
+                "weight": 2,
+                "evidence": "VIX 15.4"
+              }
+            }
+          },
+          "current_week": {
+            "reason": "current_week EUR deterministic score: bull case 79%, bear case 21%, neutral/inactive 42%, directional participation 58%, net edge +58.",
+            "direction": "BULLISH",
+            "conviction": 79,
+            "score_bearish": 1,
+            "score_bullish": 4,
+            "score_neutral": 5,
+            "weighted_score": {
+              "active_weight": 58,
+              "weight_margin": 34,
+              "bearish_weight": 12,
+              "bullish_weight": 46,
+              "neutral_weight": 42
+            },
+            "conviction_model": {
+              "neutral_pct": 42,
+              "net_edge_pct": 58,
+              "winning_side": "BULLISH",
+              "participation": 58,
+              "weighted_edge": 0.58,
+              "neutral_weight": 42,
+              "raw_conviction": 79,
+              "agreement_boost": 0,
+              "base_conviction": 79,
+              "bear_case_weight": 12,
+              "bull_case_weight": 46,
+              "conflict_penalty": 0,
+              "final_conviction": 79,
+              "verdict_strength": "VERY_STRONG",
+              "participation_cap": 58,
+              "bearish_argument_pct": 21,
+              "bullish_argument_pct": 79,
+              "neutral_evidence_pct": 42,
+              "missing_input_penalty": 0,
+              "final_conviction_logic": "current_week EUR deterministic score: bull case 79%, bear case 21%, neutral/inactive 42%, directional participation 58%, net edge +58.",
+              "active_participation_pct": 58,
+              "directional_participation_pct": 58
+            },
+            "factor_breakdown": {
+              "F1": {
+                "reason": "Missing input",
+                "signal": "NEUTRAL",
+                "weight": 18,
+                "evidence": "ECB bias unknown"
+              },
+              "F2": {
+                "reason": "Rising German front-end yields support EUR",
+                "signal": "BULLISH",
+                "weight": 14,
+                "evidence": "Germany 2Y delta 11 bps"
+              },
+              "F3": {
+                "reason": "US-DE spread narrowing supports EUR",
+                "signal": "BULLISH",
+                "weight": 22,
+                "evidence": "US-DE 2Y spread delta -5 bps"
+              },
+              "F4": {
+                "reason": "No confirmed EZ economic surprise",
+                "signal": "NEUTRAL",
+                "weight": 8,
+                "evidence": "No recent Eurozone event"
+              },
+              "F5": {
+                "reason": "Weak or deteriorating Eurozone PMI trend pressures EUR",
+                "signal": "BEARISH",
+                "weight": 12,
+                "evidence": "EZ PMI 0 "
+              },
+              "F6": {
+                "reason": "EUR own price delta confirms bullish pressure",
+                "signal": "BULLISH",
+                "weight": 8,
+                "evidence": "EURUSD delta 0.78%"
+              },
+              "F7": {
+                "reason": "Gold move below confirmation threshold",
+                "signal": "NEUTRAL",
+                "weight": 4,
+                "evidence": "Gold delta 0%"
+              },
+              "F8": {
+                "reason": "Missing or inactive stress input",
+                "signal": "NEUTRAL",
+                "weight": 8,
+                "evidence": "EZ stress unavailable"
+              },
+              "F9": {
+                "reason": "Missing input",
+                "signal": "NEUTRAL",
+                "weight": 4,
+                "evidence": "Global growth unavailable"
+              },
+              "F10": {
+                "reason": "Risk-on regime supports EUR versus safe-haven USD",
+                "signal": "BULLISH",
+                "weight": 2,
+                "evidence": "VIX 15.4"
+              }
+            }
+          },
+          "current_month": {
+            "reason": "current_month EUR deterministic score: bull case 27%, bear case 73%, neutral/inactive 48%, directional participation 52%, net edge -46.",
+            "direction": "BEARISH",
+            "conviction": 73,
+            "score_bearish": 2,
+            "score_bullish": 2,
+            "score_neutral": 6,
+            "weighted_score": {
+              "active_weight": 52,
+              "weight_margin": 24,
+              "bearish_weight": 38,
+              "bullish_weight": 14,
+              "neutral_weight": 48
+            },
+            "conviction_model": {
+              "neutral_pct": 48,
+              "net_edge_pct": -46,
+              "winning_side": "BEARISH",
+              "participation": 52,
+              "weighted_edge": 0.46,
+              "neutral_weight": 48,
+              "raw_conviction": 73,
+              "agreement_boost": 0,
+              "base_conviction": 73,
+              "bear_case_weight": 38,
+              "bull_case_weight": 14,
+              "conflict_penalty": 0,
+              "final_conviction": 73,
+              "verdict_strength": "VERY_STRONG",
+              "participation_cap": 52,
+              "bearish_argument_pct": 73,
+              "bullish_argument_pct": 27,
+              "neutral_evidence_pct": 48,
+              "missing_input_penalty": 0,
+              "final_conviction_logic": "current_month EUR deterministic score: bull case 27%, bear case 73%, neutral/inactive 48%, directional participation 52%, net edge -46.",
+              "active_participation_pct": 52,
+              "directional_participation_pct": 52
+            },
+            "factor_breakdown": {
+              "F1": {
+                "reason": "Missing input",
+                "signal": "NEUTRAL",
+                "weight": 16,
+                "evidence": "ECB bias unknown"
+              },
+              "F2": {
+                "reason": "Rising German front-end yields support EUR",
+                "signal": "BULLISH",
+                "weight": 12,
+                "evidence": "Germany 2Y delta 7 bps"
+              },
+              "F3": {
+                "reason": "US-DE spread widening pressures EUR",
+                "signal": "BEARISH",
+                "weight": 22,
+                "evidence": "US-DE 2Y spread delta 11 bps"
+              },
+              "F4": {
+                "reason": "No confirmed EZ economic surprise",
+                "signal": "NEUTRAL",
+                "weight": 5,
+                "evidence": "No recent Eurozone event"
+              },
+              "F5": {
+                "reason": "Weak or deteriorating Eurozone PMI trend pressures EUR",
+                "signal": "BEARISH",
+                "weight": 16,
+                "evidence": "EZ PMI 0 "
+              },
+              "F6": {
+                "reason": "EUR own price move below threshold",
+                "signal": "NEUTRAL",
+                "weight": 8,
+                "evidence": "EURUSD delta -0.43%"
+              },
+              "F7": {
+                "reason": "Gold move below confirmation threshold",
+                "signal": "NEUTRAL",
+                "weight": 3,
+                "evidence": "Gold delta 0%"
+              },
+              "F8": {
+                "reason": "Missing or inactive stress input",
+                "signal": "NEUTRAL",
+                "weight": 10,
+                "evidence": "EZ stress unavailable"
+              },
+              "F9": {
+                "reason": "Missing input",
+                "signal": "NEUTRAL",
+                "weight": 6,
+                "evidence": "Global growth unavailable"
+              },
+              "F10": {
+                "reason": "Risk-on regime supports EUR versus safe-haven USD",
+                "signal": "BULLISH",
+                "weight": 2,
+                "evidence": "VIX 15.4"
+              }
+            }
+          }
+        },
+        "non_neutral_count": 2,
+        "reasoning_summary": "EUR weighted verdicts calculated deterministically by timeframe. 24h BULLISH 78%, 3d BULLISH 86%, current week BULLISH 79%, next week BEARISH 73%, current month BEARISH 73%.",
+        "direction_next_week": "BEARISH",
+        "reason_current_week": "current_week EUR deterministic score: bull case 79%, bear case 21%, neutral/inactive 42%, directional participation 58%, net edge +58.",
+        "conviction_next_week": 73,
+        "reason_current_month": "current_month EUR deterministic score: bull case 27%, bear case 73%, neutral/inactive 48%, directional participation 52%, net edge -46.",
+        "direction_current_week": "BULLISH",
+        "logic_document_version": "2.0_weighted_engine",
+        "conviction_current_week": 79,
+        "direction_current_month": "BEARISH",
+        "conviction_current_month": 73
+      }
     },
     {
       "agent": "GOLD",
