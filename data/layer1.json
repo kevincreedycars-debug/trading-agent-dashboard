@@ -2,7 +2,7 @@
   "dashboard_meta": {
     "system_timezone": "America/New_York",
     "execution_clock": "07:00 ET primary run",
-    "last_updated_et": "2026-06-07T16:08:42.329Z",
+    "last_updated_et": "2026-06-07T16:36:25.904Z",
     "architecture": "Layer 1 agents are sealed independent raw signal producers. No cross-agent communication.",
     "weekend_rule": "BTC remains open on weekends. USD, EUR, GOLD and NQ do not issue 24h calls on Saturday or Sunday.",
     "london_weekday": "Sunday"
@@ -22,245 +22,734 @@
           "status": "market_closed"
         },
         "3d": {
-          "direction": "BULLISH_LEAN",
-          "conviction": 46,
-          "reason": "USD bullish since key primary drivers such as US 2Y yield delta, Fed bias, and recent positive US economic surprises support strength. However, bearish signals from VIX, US-DE spread narrowing, DXY 5-day decline, and Dollar Smile regime temper confidence. Moderate primary driver conflict and mixed signals from secondary factors yield a strong bullish directional call with solid evidence. No missing inputs limit conviction."
+          "direction": "BEARISH_LEAN",
+          "conviction": 52,
+          "reason": "3d deterministic score: bullish argument 48%, bearish argument 52%, neutral/inactive 27%, net edge -4 bearish."
         },
         "current_week": {
-          "direction": "BULLISH_LEAN",
-          "conviction": 45,
-          "reason": "USD bullish since key primary drivers such as US 2Y yield delta, Fed bias, and recent positive US economic surprises support strength. However, bearish signals from VIX, US-DE spread narrowing, DXY 5-day decline, and Dollar Smile regime temper confidence. Moderate primary driver conflict and mixed signals from secondary factors yield a strong bullish directional call with solid evidence. No missing inputs limit conviction."
+          "direction": "BEARISH_LEAN",
+          "conviction": 54,
+          "reason": "current_week deterministic score: bullish argument 46%, bearish argument 54%, neutral/inactive 30%, net edge -8 bearish."
         },
         "next_week": {
-          "direction": "BULLISH_LEAN",
-          "conviction": 43,
-          "reason": "USD bullish since key primary drivers such as US 2Y yield delta, Fed bias, and recent positive US economic surprises support strength. However, bearish signals from VIX, US-DE spread narrowing, DXY 5-day decline, and Dollar Smile regime temper confidence. Moderate primary driver conflict and mixed signals from secondary factors yield a strong bullish directional call with solid evidence. No missing inputs limit conviction."
+          "direction": "BULLISH",
+          "conviction": 70,
+          "reason": "next_week deterministic score: bullish argument 70%, bearish argument 30%, neutral/inactive 21%, net edge +40 bullish."
         },
         "current_month": {
-          "direction": "BULLISH_LEAN",
-          "conviction": 42,
-          "reason": "USD bullish since key primary drivers such as US 2Y yield delta, Fed bias, and recent positive US economic surprises support strength. However, bearish signals from VIX, US-DE spread narrowing, DXY 5-day decline, and Dollar Smile regime temper confidence. Moderate primary driver conflict and mixed signals from secondary factors yield a strong bullish directional call with solid evidence. No missing inputs limit conviction."
+          "direction": "BULLISH",
+          "conviction": 73,
+          "reason": "current_month deterministic score: bullish argument 73%, bearish argument 27%, neutral/inactive 23%, net edge +46 bullish."
         }
       },
       "factor_breakdown": {
-        "F8 Fed Bias Delta": {
-          "reason": "Hawkish Fed supports USD",
-          "signal": "BULLISH",
-          "weight": 18,
-          "evidence": "Fed bias hawkish"
-        },
-        "F5 DXY 5-Day Delta": {
-          "reason": "USD momentum confirms weakness",
-          "signal": "BEARISH",
-          "weight": 6,
-          "evidence": "DXY -0.41107825314780544% over 5d"
-        },
-        "F6 Gold 5-Day Delta": {
-          "reason": "Gold flat",
-          "signal": "NEUTRAL",
-          "weight": 5,
-          "evidence": "Gold 7.493516029790043e-7% over 5d"
-        },
-        "F9 Dollar Smile Regime": {
-          "reason": "Insufficient regime evidence",
-          "signal": "NEUTRAL",
-          "weight": 12,
-          "evidence": "No clear Dollar Smile edge"
-        },
-        "F2 US 2-Year Yield Delta": {
-          "reason": "Fed expectations support USD",
-          "signal": "BULLISH",
-          "weight": 14,
-          "evidence": "US 2Y +5.999999999999961 bps over 5d"
-        },
-        "F1 VIX Level and Risk Regime": {
+        "F1": {
           "reason": "Risk-on rotation away from USD",
           "signal": "BEARISH",
-          "weight": 10,
+          "weight": 14,
           "evidence": "VIX 15.4"
         },
-        "F4 US 10-Year Real Yield Delta": {
-          "reason": "Move below threshold",
-          "signal": "NEUTRAL",
-          "weight": 14,
-          "evidence": "Real yield 4.999999999999982 bps"
-        },
-        "F7 US Economic Surprise Direction": {
-          "reason": "Positive US surprise supports USD",
+        "F2": {
+          "reason": "US front-end yields support USD",
           "signal": "BULLISH",
-          "weight": 3,
-          "evidence": "{\"key\":\"NFP\",\"date\":\"2026-06-05\",\"event\":\"Non Farm Payrolls\",\"actual\":172,\"impact\":null,\"source\":\"surprises\",\"forecast\":85,\"previous\":null,\"surprise\":\"positive\",\"usd_signal\":\"BULLISH\",\"surprise_score\":1.09}"
+          "weight": 18,
+          "evidence": "US 2Y 5d bps 5.999999999999961"
         },
-        "F3 US/Germany 2-Year Rate Differential Delta": {
+        "F3": {
           "reason": "Relative rates weaken USD",
           "signal": "BEARISH",
-          "weight": 16,
-          "evidence": "US-DE spread -5.000000000000027 bps"
+          "weight": 12,
+          "evidence": "US-DE 2Y spread 5d bps -5.000000000000027"
         },
-        "F10 Equity Direction vs USD Correlation Regime": {
+        "F4": {
+          "reason": "Move below threshold",
+          "signal": "NEUTRAL",
+          "weight": 12,
+          "evidence": "Real yield 5d bps 4.999999999999982"
+        },
+        "F5": {
+          "reason": "Move below threshold",
+          "signal": "NEUTRAL",
+          "weight": 18,
+          "evidence": "DXY 1d % -0.1289571358242152"
+        },
+        "F6": {
+          "reason": "Gold flat",
+          "signal": "NEUTRAL",
+          "weight": 4,
+          "evidence": "Gold 7.493516029790043e-7%"
+        },
+        "F7": {
+          "reason": "Positive US surprise supports USD",
+          "signal": "BULLISH",
+          "weight": 12,
+          "evidence": "{\"key\":\"NFP\",\"date\":\"2026-06-05\",\"event\":\"Non Farm Payrolls\",\"actual\":172,\"impact\":null,\"source\":\"surprises\",\"forecast\":85,\"previous\":null,\"surprise\":\"positive\",\"usd_signal\":\"BULLISH\",\"surprise_score\":1.09}"
+        },
+        "F8": {
+          "reason": "Hawkish Fed supports USD",
+          "signal": "BULLISH",
+          "weight": 8,
+          "evidence": "Fed bias hawkish"
+        },
+        "F9": {
+          "reason": "Insufficient regime evidence",
+          "signal": "NEUTRAL",
+          "weight": 1,
+          "evidence": "No clear Dollar Smile edge"
+        },
+        "F10": {
           "reason": "Equity weakness supports USD",
           "signal": "BULLISH",
-          "weight": 2,
+          "weight": 1,
           "evidence": "NQ -4.8001% risk-on"
         }
       },
       "key_factors": [
-        "F8 Fed Bias Delta: BULLISH — Fed bias hawkish (Hawkish Fed supports USD)",
-        "F5 DXY 5-Day Delta: BEARISH — DXY -0.41107825314780544% over 5d (USD momentum confirms weakness)",
-        "F6 Gold 5-Day Delta: NEUTRAL — Gold 7.493516029790043e-7% over 5d (Gold flat)",
-        "F9 Dollar Smile Regime: NEUTRAL — No clear Dollar Smile edge (Insufficient regime evidence)",
-        "F2 US 2-Year Yield Delta: BULLISH — US 2Y +5.999999999999961 bps over 5d (Fed expectations support USD)",
-        "F1 VIX Level and Risk Regime: BEARISH — VIX 15.4 (Risk-on rotation away from USD)",
-        "F4 US 10-Year Real Yield Delta: NEUTRAL — Real yield 4.999999999999982 bps (Move below threshold)",
-        "F7 US Economic Surprise Direction: BULLISH — {\"key\":\"NFP\",\"date\":\"2026-06-05\",\"event\":\"Non Farm Payrolls\",\"actual\":172,\"impact\":null,\"source\":\"surprises\",\"forecast\":85,\"previous\":null,\"surprise\":\"positive\",\"usd_signal\":\"BULLISH\",\"surprise_score\":1.09} (Positive US surprise supports USD)",
-        "F3 US/Germany 2-Year Rate Differential Delta: BEARISH — US-DE spread -5.000000000000027 bps (Relative rates weaken USD)",
-        "F10 Equity Direction vs USD Correlation Regime: BULLISH — NQ -4.8001% risk-on (Equity weakness supports USD)"
+        "F1: BEARISH — VIX 15.4 (Risk-on rotation away from USD)",
+        "F2: BULLISH — US 2Y 5d bps 5.999999999999961 (US front-end yields support USD)",
+        "F3: BEARISH — US-DE 2Y spread 5d bps -5.000000000000027 (Relative rates weaken USD)",
+        "F4: NEUTRAL — Real yield 5d bps 4.999999999999982 (Move below threshold)",
+        "F5: NEUTRAL — DXY 1d % -0.1289571358242152 (Move below threshold)",
+        "F6: NEUTRAL — Gold 7.493516029790043e-7% (Gold flat)",
+        "F7: BULLISH — {\"key\":\"NFP\",\"date\":\"2026-06-05\",\"event\":\"Non Farm Payrolls\",\"actual\":172,\"impact\":null,\"source\":\"surprises\",\"forecast\":85,\"previous\":null,\"surprise\":\"positive\",\"usd_signal\":\"BULLISH\",\"surprise_score\":1.09} (Positive US surprise supports USD)",
+        "F8: BULLISH — Fed bias hawkish (Hawkish Fed supports USD)",
+        "F9: NEUTRAL — No clear Dollar Smile edge (Insufficient regime evidence)",
+        "F10: BULLISH — NQ -4.8001% risk-on (Equity weakness supports USD)"
       ],
       "warnings": [
         "Primary drivers partially conflicted",
         "US-DE 2Y spread delta bearish",
         "DXY 5-day delta bearish"
       ],
-      "reasoning_summary": "Deterministic USD score: bullish case 37%, bearish case 32%, neutral 31%, active participation 69%, final directional conviction 47%.",
+      "reasoning_summary": "USD weighted verdicts calculated deterministically by timeframe. 24h BULLISH 60%, 3d BEARISH_LEAN 52%, current week BEARISH_LEAN 54%, next week BULLISH 70%, current month BULLISH 73%.",
       "score_bullish": 4,
-      "score_bearish": 3,
-      "score_neutral": 3,
+      "score_bearish": 2,
+      "score_neutral": 4,
       "non_neutral_count": 8,
       "logic_document": "agent_usd_direction.md",
       "logic_document_version": "2.1_weighted_engine",
       "conviction_model": {
-        "neutral_pct": 31,
-        "net_edge_pct": 7,
-        "conflict_penalty": -5,
-        "final_conviction": 47,
-        "bearish_argument_pct": 32,
-        "bullish_argument_pct": 37,
-        "directional_share_pct": 54,
-        "final_conviction_logic": "Bullish case 37%, bearish case 32%, active participation 69%, directional share 54%, net edge 7%.",
-        "active_participation_pct": 69,
-        "weighted_edge": null,
-        "raw_conviction": null,
-        "participation_cap": null,
-        "alignment": null,
-        "base_conviction": null,
-        "participation": null,
-        "missing_input_penalty": 0,
+        "neutral_pct": 35,
+        "net_edge_pct": 20,
+        "participation": 65,
+        "weighted_edge": 0.2,
+        "raw_conviction": 60,
         "agreement_boost": 0,
+        "base_conviction": 60,
+        "conflict_penalty": 0,
+        "final_conviction": 60,
+        "verdict_strength": "MODERATE",
+        "participation_cap": 65,
+        "bearish_argument_pct": 40,
+        "bullish_argument_pct": 60,
+        "missing_input_penalty": 0,
+        "final_conviction_logic": "24h deterministic score: bullish argument 60%, bearish argument 40%, neutral/inactive 35%, net edge +20 bullish.",
+        "active_participation_pct": 65,
+        "alignment": 20,
         "weighted_score": {
-          "bullish_weight": 37,
-          "bearish_weight": 32,
-          "active_weight": 69,
-          "weight_margin": 5
+          "bullish_weight": 39,
+          "bearish_weight": 26,
+          "active_weight": 65,
+          "weight_margin": 13
         }
       },
       "full_output": {
         "asset": "USD",
         "layer": "layer_1_raw",
         "created_at": null,
+        "reason_24h": "24h deterministic score: bullish argument 60%, bearish argument 40%, neutral/inactive 35%, net edge +20 bullish.",
         "risk_flags": [
           "Primary drivers partially conflicted",
           "US-DE 2Y spread delta bearish",
           "DXY 5-day delta bearish"
         ],
-        "direction_24h": "BULLISH_LEAN",
-        "score_bearish": 3,
+        "reason_3_day": "3d deterministic score: bullish argument 48%, bearish argument 52%, neutral/inactive 27%, net edge -4 bearish.",
+        "direction_24h": "BULLISH",
+        "score_bearish": 2,
         "score_bullish": 4,
-        "score_neutral": 3,
+        "score_neutral": 4,
         "snapshot_date": "2026-06-07",
-        "conviction_24h": 47,
+        "conviction_24h": 60,
         "logic_document": "agent_usd_direction.md",
         "missing_inputs": [],
         "weighted_score": {
-          "active_weight": 69,
-          "weight_margin": 5,
-          "bearish_weight": 32,
-          "bullish_weight": 37,
-          "neutral_weight": 31
+          "active_weight": 65,
+          "weight_margin": 13,
+          "bearish_weight": 26,
+          "bullish_weight": 39,
+          "neutral_weight": 35
         },
-        "direction_3_day": "BULLISH_LEAN",
-        "conviction_3_day": 46,
+        "direction_3_day": "BEARISH_LEAN",
+        "conviction_3_day": 52,
         "conviction_model": {
-          "neutral_pct": 31,
-          "net_edge_pct": 7,
-          "conflict_penalty": -5,
-          "final_conviction": 47,
-          "bearish_argument_pct": 32,
-          "bullish_argument_pct": 37,
-          "directional_share_pct": 54,
-          "final_conviction_logic": "Bullish case 37%, bearish case 32%, active participation 69%, directional share 54%, net edge 7%.",
-          "active_participation_pct": 69
+          "neutral_pct": 35,
+          "net_edge_pct": 20,
+          "participation": 65,
+          "weighted_edge": 0.2,
+          "raw_conviction": 60,
+          "agreement_boost": 0,
+          "base_conviction": 60,
+          "conflict_penalty": 0,
+          "final_conviction": 60,
+          "verdict_strength": "MODERATE",
+          "participation_cap": 65,
+          "bearish_argument_pct": 40,
+          "bullish_argument_pct": 60,
+          "missing_input_penalty": 0,
+          "final_conviction_logic": "24h deterministic score: bullish argument 60%, bearish argument 40%, neutral/inactive 35%, net edge +20 bullish.",
+          "active_participation_pct": 65
         },
         "factor_breakdown": {
-          "F8 Fed Bias Delta": {
-            "reason": "Hawkish Fed supports USD",
-            "signal": "BULLISH",
-            "weight": 18,
-            "evidence": "Fed bias hawkish"
-          },
-          "F5 DXY 5-Day Delta": {
-            "reason": "USD momentum confirms weakness",
-            "signal": "BEARISH",
-            "weight": 6,
-            "evidence": "DXY -0.41107825314780544% over 5d"
-          },
-          "F6 Gold 5-Day Delta": {
-            "reason": "Gold flat",
-            "signal": "NEUTRAL",
-            "weight": 5,
-            "evidence": "Gold 7.493516029790043e-7% over 5d"
-          },
-          "F9 Dollar Smile Regime": {
-            "reason": "Insufficient regime evidence",
-            "signal": "NEUTRAL",
-            "weight": 12,
-            "evidence": "No clear Dollar Smile edge"
-          },
-          "F2 US 2-Year Yield Delta": {
-            "reason": "Fed expectations support USD",
-            "signal": "BULLISH",
-            "weight": 14,
-            "evidence": "US 2Y +5.999999999999961 bps over 5d"
-          },
-          "F1 VIX Level and Risk Regime": {
+          "F1": {
             "reason": "Risk-on rotation away from USD",
             "signal": "BEARISH",
-            "weight": 10,
+            "weight": 14,
             "evidence": "VIX 15.4"
           },
-          "F4 US 10-Year Real Yield Delta": {
-            "reason": "Move below threshold",
-            "signal": "NEUTRAL",
-            "weight": 14,
-            "evidence": "Real yield 4.999999999999982 bps"
-          },
-          "F7 US Economic Surprise Direction": {
-            "reason": "Positive US surprise supports USD",
+          "F2": {
+            "reason": "US front-end yields support USD",
             "signal": "BULLISH",
-            "weight": 3,
-            "evidence": "{\"key\":\"NFP\",\"date\":\"2026-06-05\",\"event\":\"Non Farm Payrolls\",\"actual\":172,\"impact\":null,\"source\":\"surprises\",\"forecast\":85,\"previous\":null,\"surprise\":\"positive\",\"usd_signal\":\"BULLISH\",\"surprise_score\":1.09}"
+            "weight": 18,
+            "evidence": "US 2Y 5d bps 5.999999999999961"
           },
-          "F3 US/Germany 2-Year Rate Differential Delta": {
+          "F3": {
             "reason": "Relative rates weaken USD",
             "signal": "BEARISH",
-            "weight": 16,
-            "evidence": "US-DE spread -5.000000000000027 bps"
+            "weight": 12,
+            "evidence": "US-DE 2Y spread 5d bps -5.000000000000027"
           },
-          "F10 Equity Direction vs USD Correlation Regime": {
+          "F4": {
+            "reason": "Move below threshold",
+            "signal": "NEUTRAL",
+            "weight": 12,
+            "evidence": "Real yield 5d bps 4.999999999999982"
+          },
+          "F5": {
+            "reason": "Move below threshold",
+            "signal": "NEUTRAL",
+            "weight": 18,
+            "evidence": "DXY 1d % -0.1289571358242152"
+          },
+          "F6": {
+            "reason": "Gold flat",
+            "signal": "NEUTRAL",
+            "weight": 4,
+            "evidence": "Gold 7.493516029790043e-7%"
+          },
+          "F7": {
+            "reason": "Positive US surprise supports USD",
+            "signal": "BULLISH",
+            "weight": 12,
+            "evidence": "{\"key\":\"NFP\",\"date\":\"2026-06-05\",\"event\":\"Non Farm Payrolls\",\"actual\":172,\"impact\":null,\"source\":\"surprises\",\"forecast\":85,\"previous\":null,\"surprise\":\"positive\",\"usd_signal\":\"BULLISH\",\"surprise_score\":1.09}"
+          },
+          "F8": {
+            "reason": "Hawkish Fed supports USD",
+            "signal": "BULLISH",
+            "weight": 8,
+            "evidence": "Fed bias hawkish"
+          },
+          "F9": {
+            "reason": "Insufficient regime evidence",
+            "signal": "NEUTRAL",
+            "weight": 1,
+            "evidence": "No clear Dollar Smile edge"
+          },
+          "F10": {
             "reason": "Equity weakness supports USD",
             "signal": "BULLISH",
-            "weight": 2,
+            "weight": 1,
             "evidence": "NQ -4.8001% risk-on"
           }
         },
+        "reason_next_week": "next_week deterministic score: bullish argument 70%, bearish argument 30%, neutral/inactive 21%, net edge +40 bullish.",
+        "timeframe_models": {
+          "3d": {
+            "reason": "3d deterministic score: bullish argument 48%, bearish argument 52%, neutral/inactive 27%, net edge -4 bearish.",
+            "direction": "BEARISH_LEAN",
+            "conviction": 52,
+            "score_bearish": 3,
+            "score_bullish": 4,
+            "score_neutral": 3,
+            "weighted_score": {
+              "active_weight": 73,
+              "weight_margin": 3,
+              "bearish_weight": 38,
+              "bullish_weight": 35,
+              "neutral_weight": 27
+            },
+            "conviction_model": {
+              "neutral_pct": 27,
+              "net_edge_pct": -4,
+              "participation": 73,
+              "weighted_edge": 0.04,
+              "raw_conviction": 52,
+              "agreement_boost": 0,
+              "base_conviction": 52,
+              "conflict_penalty": 0,
+              "final_conviction": 52,
+              "verdict_strength": "WEAK",
+              "participation_cap": 73,
+              "bearish_argument_pct": 52,
+              "bullish_argument_pct": 48,
+              "missing_input_penalty": 0,
+              "final_conviction_logic": "3d deterministic score: bullish argument 48%, bearish argument 52%, neutral/inactive 27%, net edge -4 bearish.",
+              "active_participation_pct": 73
+            },
+            "factor_breakdown": {
+              "F1": {
+                "reason": "Risk-on rotation away from USD",
+                "signal": "BEARISH",
+                "weight": 8,
+                "evidence": "VIX 15.4"
+              },
+              "F2": {
+                "reason": "US front-end yields support USD",
+                "signal": "BULLISH",
+                "weight": 16,
+                "evidence": "US 2Y 5d bps 5.999999999999961"
+              },
+              "F3": {
+                "reason": "Relative rates weaken USD",
+                "signal": "BEARISH",
+                "weight": 16,
+                "evidence": "US-DE 2Y spread 5d bps -5.000000000000027"
+              },
+              "F4": {
+                "reason": "Move below threshold",
+                "signal": "NEUTRAL",
+                "weight": 16,
+                "evidence": "Real yield 5d bps 4.999999999999982"
+              },
+              "F5": {
+                "reason": "DXY confirms USD weakness",
+                "signal": "BEARISH",
+                "weight": 14,
+                "evidence": "DXY 5d % -0.41107825314780544"
+              },
+              "F6": {
+                "reason": "Gold flat",
+                "signal": "NEUTRAL",
+                "weight": 8,
+                "evidence": "Gold 7.493516029790043e-7%"
+              },
+              "F7": {
+                "reason": "Positive US surprise supports USD",
+                "signal": "BULLISH",
+                "weight": 8,
+                "evidence": "{\"key\":\"NFP\",\"date\":\"2026-06-05\",\"event\":\"Non Farm Payrolls\",\"actual\":172,\"impact\":null,\"source\":\"surprises\",\"forecast\":85,\"previous\":null,\"surprise\":\"positive\",\"usd_signal\":\"BULLISH\",\"surprise_score\":1.09}"
+              },
+              "F8": {
+                "reason": "Hawkish Fed supports USD",
+                "signal": "BULLISH",
+                "weight": 10,
+                "evidence": "Fed bias hawkish"
+              },
+              "F9": {
+                "reason": "Insufficient regime evidence",
+                "signal": "NEUTRAL",
+                "weight": 3,
+                "evidence": "No clear Dollar Smile edge"
+              },
+              "F10": {
+                "reason": "Equity weakness supports USD",
+                "signal": "BULLISH",
+                "weight": 1,
+                "evidence": "NQ -4.8001% risk-on"
+              }
+            }
+          },
+          "24h": {
+            "reason": "24h deterministic score: bullish argument 60%, bearish argument 40%, neutral/inactive 35%, net edge +20 bullish.",
+            "direction": "BULLISH",
+            "conviction": 60,
+            "score_bearish": 2,
+            "score_bullish": 4,
+            "score_neutral": 4,
+            "weighted_score": {
+              "active_weight": 65,
+              "weight_margin": 13,
+              "bearish_weight": 26,
+              "bullish_weight": 39,
+              "neutral_weight": 35
+            },
+            "conviction_model": {
+              "neutral_pct": 35,
+              "net_edge_pct": 20,
+              "participation": 65,
+              "weighted_edge": 0.2,
+              "raw_conviction": 60,
+              "agreement_boost": 0,
+              "base_conviction": 60,
+              "conflict_penalty": 0,
+              "final_conviction": 60,
+              "verdict_strength": "MODERATE",
+              "participation_cap": 65,
+              "bearish_argument_pct": 40,
+              "bullish_argument_pct": 60,
+              "missing_input_penalty": 0,
+              "final_conviction_logic": "24h deterministic score: bullish argument 60%, bearish argument 40%, neutral/inactive 35%, net edge +20 bullish.",
+              "active_participation_pct": 65
+            },
+            "factor_breakdown": {
+              "F1": {
+                "reason": "Risk-on rotation away from USD",
+                "signal": "BEARISH",
+                "weight": 14,
+                "evidence": "VIX 15.4"
+              },
+              "F2": {
+                "reason": "US front-end yields support USD",
+                "signal": "BULLISH",
+                "weight": 18,
+                "evidence": "US 2Y 5d bps 5.999999999999961"
+              },
+              "F3": {
+                "reason": "Relative rates weaken USD",
+                "signal": "BEARISH",
+                "weight": 12,
+                "evidence": "US-DE 2Y spread 5d bps -5.000000000000027"
+              },
+              "F4": {
+                "reason": "Move below threshold",
+                "signal": "NEUTRAL",
+                "weight": 12,
+                "evidence": "Real yield 5d bps 4.999999999999982"
+              },
+              "F5": {
+                "reason": "Move below threshold",
+                "signal": "NEUTRAL",
+                "weight": 18,
+                "evidence": "DXY 1d % -0.1289571358242152"
+              },
+              "F6": {
+                "reason": "Gold flat",
+                "signal": "NEUTRAL",
+                "weight": 4,
+                "evidence": "Gold 7.493516029790043e-7%"
+              },
+              "F7": {
+                "reason": "Positive US surprise supports USD",
+                "signal": "BULLISH",
+                "weight": 12,
+                "evidence": "{\"key\":\"NFP\",\"date\":\"2026-06-05\",\"event\":\"Non Farm Payrolls\",\"actual\":172,\"impact\":null,\"source\":\"surprises\",\"forecast\":85,\"previous\":null,\"surprise\":\"positive\",\"usd_signal\":\"BULLISH\",\"surprise_score\":1.09}"
+              },
+              "F8": {
+                "reason": "Hawkish Fed supports USD",
+                "signal": "BULLISH",
+                "weight": 8,
+                "evidence": "Fed bias hawkish"
+              },
+              "F9": {
+                "reason": "Insufficient regime evidence",
+                "signal": "NEUTRAL",
+                "weight": 1,
+                "evidence": "No clear Dollar Smile edge"
+              },
+              "F10": {
+                "reason": "Equity weakness supports USD",
+                "signal": "BULLISH",
+                "weight": 1,
+                "evidence": "NQ -4.8001% risk-on"
+              }
+            }
+          },
+          "next_week": {
+            "reason": "next_week deterministic score: bullish argument 70%, bearish argument 30%, neutral/inactive 21%, net edge +40 bullish.",
+            "direction": "BULLISH",
+            "conviction": 70,
+            "score_bearish": 2,
+            "score_bullish": 5,
+            "score_neutral": 3,
+            "weighted_score": {
+              "active_weight": 79,
+              "weight_margin": 31,
+              "bearish_weight": 24,
+              "bullish_weight": 55,
+              "neutral_weight": 21
+            },
+            "conviction_model": {
+              "neutral_pct": 21,
+              "net_edge_pct": 40,
+              "participation": 79,
+              "weighted_edge": 0.4,
+              "raw_conviction": 70,
+              "agreement_boost": 0,
+              "base_conviction": 70,
+              "conflict_penalty": 0,
+              "final_conviction": 70,
+              "verdict_strength": "VERY_STRONG",
+              "participation_cap": 79,
+              "bearish_argument_pct": 30,
+              "bullish_argument_pct": 70,
+              "missing_input_penalty": 0,
+              "final_conviction_logic": "next_week deterministic score: bullish argument 70%, bearish argument 30%, neutral/inactive 21%, net edge +40 bullish.",
+              "active_participation_pct": 79
+            },
+            "factor_breakdown": {
+              "F1": {
+                "reason": "Risk-on rotation away from USD",
+                "signal": "BEARISH",
+                "weight": 4,
+                "evidence": "VIX 15.4"
+              },
+              "F2": {
+                "reason": "US front-end yields support USD",
+                "signal": "BULLISH",
+                "weight": 12,
+                "evidence": "US 2Y 20d bps 17.99999999999997"
+              },
+              "F3": {
+                "reason": "Relative rates weaken USD",
+                "signal": "BEARISH",
+                "weight": 20,
+                "evidence": "US-DE 2Y spread 5d bps -5.000000000000027"
+              },
+              "F4": {
+                "reason": "Rising real yields support USD",
+                "signal": "BULLISH",
+                "weight": 18,
+                "evidence": "Real yield 20d bps 16.999999999999993"
+              },
+              "F5": {
+                "reason": "Move below threshold",
+                "signal": "NEUTRAL",
+                "weight": 6,
+                "evidence": "DXY 20d % 0.17468463230274403"
+              },
+              "F6": {
+                "reason": "Gold flat",
+                "signal": "NEUTRAL",
+                "weight": 5,
+                "evidence": "Gold 7.493516029790043e-7%"
+              },
+              "F7": {
+                "reason": "Positive US surprise supports USD",
+                "signal": "BULLISH",
+                "weight": 6,
+                "evidence": "{\"key\":\"NFP\",\"date\":\"2026-06-05\",\"event\":\"Non Farm Payrolls\",\"actual\":172,\"impact\":null,\"source\":\"surprises\",\"forecast\":85,\"previous\":null,\"surprise\":\"positive\",\"usd_signal\":\"BULLISH\",\"surprise_score\":1.09}"
+              },
+              "F8": {
+                "reason": "Hawkish Fed supports USD",
+                "signal": "BULLISH",
+                "weight": 18,
+                "evidence": "Fed bias hawkish"
+              },
+              "F9": {
+                "reason": "Insufficient regime evidence",
+                "signal": "NEUTRAL",
+                "weight": 10,
+                "evidence": "No clear Dollar Smile edge"
+              },
+              "F10": {
+                "reason": "Equity weakness supports USD",
+                "signal": "BULLISH",
+                "weight": 1,
+                "evidence": "NQ -4.8001% risk-on"
+              }
+            }
+          },
+          "current_week": {
+            "reason": "current_week deterministic score: bullish argument 46%, bearish argument 54%, neutral/inactive 30%, net edge -8 bearish.",
+            "direction": "BEARISH_LEAN",
+            "conviction": 54,
+            "score_bearish": 3,
+            "score_bullish": 4,
+            "score_neutral": 3,
+            "weighted_score": {
+              "active_weight": 70,
+              "weight_margin": 6,
+              "bearish_weight": 38,
+              "bullish_weight": 32,
+              "neutral_weight": 30
+            },
+            "conviction_model": {
+              "neutral_pct": 30,
+              "net_edge_pct": -8,
+              "participation": 70,
+              "weighted_edge": 0.08,
+              "raw_conviction": 54,
+              "agreement_boost": 0,
+              "base_conviction": 54,
+              "conflict_penalty": 0,
+              "final_conviction": 54,
+              "verdict_strength": "WEAK",
+              "participation_cap": 70,
+              "bearish_argument_pct": 54,
+              "bullish_argument_pct": 46,
+              "missing_input_penalty": 0,
+              "final_conviction_logic": "current_week deterministic score: bullish argument 46%, bearish argument 54%, neutral/inactive 30%, net edge -8 bearish.",
+              "active_participation_pct": 70
+            },
+            "factor_breakdown": {
+              "F1": {
+                "reason": "Risk-on rotation away from USD",
+                "signal": "BEARISH",
+                "weight": 5,
+                "evidence": "VIX 15.4"
+              },
+              "F2": {
+                "reason": "US front-end yields support USD",
+                "signal": "BULLISH",
+                "weight": 14,
+                "evidence": "US 2Y 5d bps 5.999999999999961"
+              },
+              "F3": {
+                "reason": "Relative rates weaken USD",
+                "signal": "BEARISH",
+                "weight": 18,
+                "evidence": "US-DE 2Y spread 5d bps -5.000000000000027"
+              },
+              "F4": {
+                "reason": "Move below threshold",
+                "signal": "NEUTRAL",
+                "weight": 18,
+                "evidence": "Real yield 5d bps 4.999999999999982"
+              },
+              "F5": {
+                "reason": "DXY confirms USD weakness",
+                "signal": "BEARISH",
+                "weight": 15,
+                "evidence": "DXY 5d % -0.41107825314780544"
+              },
+              "F6": {
+                "reason": "Gold flat",
+                "signal": "NEUTRAL",
+                "weight": 7,
+                "evidence": "Gold 7.493516029790043e-7%"
+              },
+              "F7": {
+                "reason": "Positive US surprise supports USD",
+                "signal": "BULLISH",
+                "weight": 5,
+                "evidence": "{\"key\":\"NFP\",\"date\":\"2026-06-05\",\"event\":\"Non Farm Payrolls\",\"actual\":172,\"impact\":null,\"source\":\"surprises\",\"forecast\":85,\"previous\":null,\"surprise\":\"positive\",\"usd_signal\":\"BULLISH\",\"surprise_score\":1.09}"
+              },
+              "F8": {
+                "reason": "Hawkish Fed supports USD",
+                "signal": "BULLISH",
+                "weight": 12,
+                "evidence": "Fed bias hawkish"
+              },
+              "F9": {
+                "reason": "Insufficient regime evidence",
+                "signal": "NEUTRAL",
+                "weight": 5,
+                "evidence": "No clear Dollar Smile edge"
+              },
+              "F10": {
+                "reason": "Equity weakness supports USD",
+                "signal": "BULLISH",
+                "weight": 1,
+                "evidence": "NQ -4.8001% risk-on"
+              }
+            }
+          },
+          "current_month": {
+            "reason": "current_month deterministic score: bullish argument 73%, bearish argument 27%, neutral/inactive 23%, net edge +46 bullish.",
+            "direction": "BULLISH",
+            "conviction": 73,
+            "score_bearish": 2,
+            "score_bullish": 5,
+            "score_neutral": 3,
+            "weighted_score": {
+              "active_weight": 77,
+              "weight_margin": 35,
+              "bearish_weight": 21,
+              "bullish_weight": 56,
+              "neutral_weight": 23
+            },
+            "conviction_model": {
+              "neutral_pct": 23,
+              "net_edge_pct": 46,
+              "participation": 77,
+              "weighted_edge": 0.46,
+              "raw_conviction": 73,
+              "agreement_boost": 0,
+              "base_conviction": 73,
+              "conflict_penalty": 0,
+              "final_conviction": 73,
+              "verdict_strength": "VERY_STRONG",
+              "participation_cap": 77,
+              "bearish_argument_pct": 27,
+              "bullish_argument_pct": 73,
+              "missing_input_penalty": 0,
+              "final_conviction_logic": "current_month deterministic score: bullish argument 73%, bearish argument 27%, neutral/inactive 23%, net edge +46 bullish.",
+              "active_participation_pct": 77
+            },
+            "factor_breakdown": {
+              "F1": {
+                "reason": "Risk-on rotation away from USD",
+                "signal": "BEARISH",
+                "weight": 3,
+                "evidence": "VIX 15.4"
+              },
+              "F2": {
+                "reason": "US front-end yields support USD",
+                "signal": "BULLISH",
+                "weight": 12,
+                "evidence": "US 2Y 20d bps 17.99999999999997"
+              },
+              "F3": {
+                "reason": "Relative rates weaken USD",
+                "signal": "BEARISH",
+                "weight": 18,
+                "evidence": "US-DE 2Y spread 5d bps -5.000000000000027"
+              },
+              "F4": {
+                "reason": "Rising real yields support USD",
+                "signal": "BULLISH",
+                "weight": 20,
+                "evidence": "Real yield 20d bps 16.999999999999993"
+              },
+              "F5": {
+                "reason": "Move below threshold",
+                "signal": "NEUTRAL",
+                "weight": 8,
+                "evidence": "DXY 20d % 0.17468463230274403"
+              },
+              "F6": {
+                "reason": "Gold flat",
+                "signal": "NEUTRAL",
+                "weight": 5,
+                "evidence": "Gold 7.493516029790043e-7%"
+              },
+              "F7": {
+                "reason": "Positive US surprise supports USD",
+                "signal": "BULLISH",
+                "weight": 5,
+                "evidence": "{\"key\":\"NFP\",\"date\":\"2026-06-05\",\"event\":\"Non Farm Payrolls\",\"actual\":172,\"impact\":null,\"source\":\"surprises\",\"forecast\":85,\"previous\":null,\"surprise\":\"positive\",\"usd_signal\":\"BULLISH\",\"surprise_score\":1.09}"
+              },
+              "F8": {
+                "reason": "Hawkish Fed supports USD",
+                "signal": "BULLISH",
+                "weight": 18,
+                "evidence": "Fed bias hawkish"
+              },
+              "F9": {
+                "reason": "Insufficient regime evidence",
+                "signal": "NEUTRAL",
+                "weight": 10,
+                "evidence": "No clear Dollar Smile edge"
+              },
+              "F10": {
+                "reason": "Equity weakness supports USD",
+                "signal": "BULLISH",
+                "weight": 1,
+                "evidence": "NQ -4.8001% risk-on"
+              }
+            }
+          }
+        },
         "non_neutral_count": 8,
-        "reasoning_summary": "Deterministic USD score: bullish case 37%, bearish case 32%, neutral 31%, active participation 69%, final directional conviction 47%.",
-        "direction_next_week": "BULLISH_LEAN",
-        "conviction_next_week": 43,
-        "direction_current_week": "BULLISH_LEAN",
+        "reasoning_summary": "USD weighted verdicts calculated deterministically by timeframe. 24h BULLISH 60%, 3d BEARISH_LEAN 52%, current week BEARISH_LEAN 54%, next week BULLISH 70%, current month BULLISH 73%.",
+        "direction_next_week": "BULLISH",
+        "reason_current_week": "current_week deterministic score: bullish argument 46%, bearish argument 54%, neutral/inactive 30%, net edge -8 bearish.",
+        "conviction_next_week": 70,
+        "reason_current_month": "current_month deterministic score: bullish argument 73%, bearish argument 27%, neutral/inactive 23%, net edge +46 bullish.",
+        "direction_current_week": "BEARISH_LEAN",
         "logic_document_version": "2.1_weighted_engine",
-        "conviction_current_week": 45,
-        "direction_current_month": "BULLISH_LEAN",
-        "conviction_current_month": 42
+        "conviction_current_week": 54,
+        "direction_current_month": "BULLISH",
+        "conviction_current_month": 73
       }
     },
     {
