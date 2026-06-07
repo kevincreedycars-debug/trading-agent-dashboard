@@ -220,13 +220,29 @@ function renderFactorRows(agent) {
   }).join("");
 }
 
+function valueOrPending(value) {
+  return value === null || value === undefined || value === "" ? "pending" : value;
+}
+
+function formatModelPercent(value) {
+  if (value === null || value === undefined || value === "") return "pending";
+  const n = Number(value);
+  if (!Number.isFinite(n)) return escapeHtml(value);
+  return `${n <= 1 ? Math.round(n * 100) : Math.round(n)}%`;
+}
+
 function renderScoreBreakdown(agent) {
   const output = asObject(agent.full_output || agent.raw_agent_output, {});
-  const model = output.conviction_model || agent.conviction_model || {};
+  const model = agent.conviction_model || output.conviction_model || {};
+
   const bullish = agent.score_bullish ?? output.score_bullish ?? "--";
   const bearish = agent.score_bearish ?? output.score_bearish ?? "--";
   const neutral = agent.score_neutral ?? output.score_neutral ?? "--";
-  const nonNeutral = output.non_neutral_count ?? "--";
+  const nonNeutral = agent.non_neutral_count ?? output.non_neutral_count ?? "--";
+
+  const alignment = model.alignment ?? model.alignment_ratio ?? model.weighted_edge;
+  const baseConviction = model.base_conviction ?? model.raw_conviction;
+  const participation = model.participation ?? model.participation_modifier ?? model.participation_cap;
 
   return `
     <div class="score-grid">
@@ -236,11 +252,11 @@ function renderScoreBreakdown(agent) {
       <div class="score-box"><span>Active Factors</span><strong>${nonNeutral}</strong></div>
     </div>
     <div class="conviction-model">
-      <p><strong>Alignment:</strong> ${escapeHtml(model.alignment_ratio ?? "pending")}</p>
-      <p><strong>Base conviction:</strong> ${escapeHtml(model.base_conviction ?? "pending")}</p>
-      <p><strong>Participation:</strong> ${escapeHtml(model.participation_modifier ?? "pending")}</p>
-      <p><strong>Conflict penalty:</strong> ${escapeHtml(model.conflict_penalty ?? "pending")}</p>
-      <p><strong>Missing input penalty:</strong> ${escapeHtml(model.missing_input_penalty ?? "pending")}</p>
+      <p><strong>Alignment:</strong> ${formatModelPercent(alignment)}</p>
+      <p><strong>Base conviction:</strong> ${formatModelPercent(baseConviction)}</p>
+      <p><strong>Participation:</strong> ${formatModelPercent(participation)}</p>
+      <p><strong>Conflict penalty:</strong> ${escapeHtml(valueOrPending(model.conflict_penalty))}</p>
+      <p><strong>Missing input penalty:</strong> ${escapeHtml(valueOrPending(model.missing_input_penalty))}</p>
       <p><strong>Final logic:</strong> ${escapeHtml(model.final_conviction_logic ?? agent.reasoning_summary ?? "No conviction model supplied yet.")}</p>
     </div>
   `;
