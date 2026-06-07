@@ -50,14 +50,22 @@ Valid final directional outputs are:
 
 Only use `NO_CLEAR_BIAS` when there is effectively no usable directional data.
 
-The final output must always include a numeric conviction percentage.
+The agent must not calculate final conviction percentages.
 
-Conviction must be expressed as an integer from `50` to `100`.
+The agent’s job is to classify each factor as:
 
-* `50` means weakest possible directional lean.
-* `100` means maximum theoretical directional alignment.
+* `BULLISH`
+* `BEARISH`
+* `NEUTRAL`
 
-The conviction percentage is the primary machine-readable signal for future algorithmic weighting.
+The deterministic code node calculates:
+
+* weighted_score
+* conviction_model
+* final conviction percentages
+* timeframe conviction values
+
+The agent may explain factor evidence, but must not invent or estimate final conviction numbers.
 
 ---
 
@@ -421,8 +429,8 @@ For each run:
 7. Count neutral factors.
 8. Count missing inputs.
 9. Identify whether primary drivers agree or conflict.
-10. Produce directional verdicts for every timeframe.
-11. Produce numeric conviction percentages for every timeframe.
+10. 10. Produce provisional directional verdicts for every timeframe based only on factor direction.
+11. Do not produce numeric conviction percentages. The downstream deterministic code node calculates all conviction percentages.
 
 Neutral factors contribute 0 bullish weight and 0 bearish weight.
 
@@ -521,11 +529,11 @@ Only output `NO_CLEAR_BIAS` if there is no usable directional data at all.
 
 ---
 
-## 8. WEIGHTED CONVICTION PERCENTAGE RULE
+## 8. WEIGHTED CONVICTION CALCULATION REFERENCE
 
-Conviction must always be numeric.
+This section defines the formula used by the downstream deterministic code node.
 
-The output must use integer percentages between 50 and 100.
+The agent must not perform this calculation directly.
 
 Do not output conviction as only:
 
@@ -852,28 +860,48 @@ The JSON must follow this structure:
   "logic_document_version": "2.1_weighted_engine",
   "snapshot_date": "YYYY-MM-DD",
 
-  "direction_24h": "BULLISH_LEAN",
-  "conviction_24h": 52,
+    "direction_24h": "BULLISH_LEAN",
+  "conviction_24h": null,
+
   "direction_3_day": "BULLISH_LEAN",
-  "conviction_3_day": 58,
+  "conviction_3_day": null,
+
   "direction_current_week": "BULLISH",
-  "conviction_current_week": 67,
+  "conviction_current_week": null,
+
   "direction_next_week": "BEARISH_LEAN",
-  "conviction_next_week": 55,
+  "conviction_next_week": null,
+
   "direction_current_month": "BULLISH_LEAN",
-  "conviction_current_month": 61,
+  "conviction_current_month": null,
+
+IMPORTANT
+
+The agent must output directional verdicts only.
+
+All conviction fields must be returned as:
+
+null
+
+The deterministic conviction engine calculates:
+
+* conviction_24h
+* conviction_3_day
+* conviction_current_week
+* conviction_next_week
+* conviction_current_month
+
+after the agent has completed factor classification.
+
+The agent must never estimate, calculate, infer, or invent conviction percentages.
 
   "score_bullish": 0,
   "score_bearish": 0,
   "score_neutral": 0,
   "non_neutral_count": 0,
 
-  "weighted_score": {
-    "bullish_weight": 0,
-    "bearish_weight": 0,
-    "active_weight": 0,
-    "weight_margin": 0
-  },
+  "weighted_score": null,
+"conviction_model": null,
 
   "missing_inputs": [],
 
@@ -886,15 +914,7 @@ The JSON must follow this structure:
     }
   },
 
-  "conviction_model": {
-    "weighted_edge": 0,
-    "raw_conviction": 50,
-    "participation_cap": 55,
-    "missing_input_penalty": -10,
-    "conflict_penalty": -5,
-    "agreement_boost": 0,
-    "final_conviction_logic": "Tiebreaker decided direction; conviction capped by low active_weight and missing inputs"
-  },
+  "conviction_model": null,
 
   "reasoning_summary": "USD bullish lean because weighted rate/yield evidence is positive, but missing US-DE spread and Fed bias prevent stronger conviction.",
 
@@ -930,7 +950,9 @@ The dashboard should be able to read these fields directly:
 * `factor_breakdown`
 * `conviction_model`
 
-All conviction fields must be numbers, not strings.
+The agent should output conviction fields as null.
+
+The downstream deterministic code node will overwrite these fields with numeric values before Supabase insertion.
 
 Correct:
 
@@ -1022,7 +1044,7 @@ Reason this is incorrect:
 5. Missing inputs must be scored neutral, not guessed.
 6. Missing inputs reduce conviction but do not block a directional call.
 7. Final Layer 1 output must be directional unless no usable data exists.
-8. Conviction must always be a numeric percentage from 50 to 100.
+8. The agent must not calculate conviction percentages. Conviction is calculated only by the deterministic code node.
 9. Never output pair calls or trade recommendations.
 10. Never use other agent outputs.
 11. Do not wrap JSON in markdown fences.
