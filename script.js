@@ -174,14 +174,32 @@ function renderLayer1(data) {
 }
 
 function renderCallMatrix(agent) {
-  return Object.entries(agent.calls || {}).map(([tf, call]) => `
-    <div class="detail-call-card">
-      <span class="timeframe">${labels[tf] || tf}</span>
-      <strong class="direction ${directionClass(call.direction)}">${normaliseDirection(call.direction)}</strong>
-      <b>${formatConviction(call.conviction)}</b>
-      <p>${escapeHtml(call.reason || "No reason supplied.")}</p>
-    </div>
-  `).join("");
+  return Object.entries(agent.calls || {}).map(([tf, call]) => {
+    const model = call.conviction_model || {};
+    const bullCase = model.bullish_argument_pct;
+    const bearCase = model.bearish_argument_pct;
+    const netEdge = model.net_edge_pct;
+    const participation = model.directional_participation_pct;
+    const strength = model.verdict_strength;
+
+    return `
+      <div class="detail-call-card">
+        <span class="timeframe">${labels[tf] || tf}</span>
+        <strong class="direction ${directionClass(call.direction)}">${normaliseDirection(call.direction)}</strong>
+        <b>${formatConviction(call.conviction)}</b>
+
+        <div class="mini-model">
+          <small>Bull Case: ${formatModelPercent(bullCase)}</small>
+          <small>Bear Case: ${formatModelPercent(bearCase)}</small>
+          <small>Net Edge: ${netEdge ?? "--"}%</small>
+          <small>Participation: ${formatModelPercent(participation)}</small>
+          <small>Strength: ${strength || "--"}</small>
+        </div>
+
+        <p>${escapeHtml(call.reason || "No reason supplied.")}</p>
+      </div>
+    `;
+  }).join("");
 }
 
 function renderFactorRows(agent) {
