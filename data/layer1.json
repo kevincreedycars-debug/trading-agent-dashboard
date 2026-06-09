@@ -2,7 +2,7 @@
   "dashboard_meta": {
     "system_timezone": "America/New_York",
     "execution_clock": "07:00 ET primary run",
-    "last_updated_et": "2026-06-09T19:48:11.484Z",
+    "last_updated_et": "2026-06-09T19:59:53.297Z",
     "architecture": "Layer 1 agents are sealed independent raw signal producers. No cross-agent communication.",
     "weekend_rule": "BTC remains open on weekends. USD, EUR, GOLD and NQ do not issue 24h calls on Saturday or Sunday.",
     "london_weekday": "Tuesday"
@@ -2722,12 +2722,18 @@
         "F9 [2]: NEUTRAL — Global growth unavailable (Missing input)",
         "F10 [2]: NEUTRAL — VIX 21.51 (Neutral risk regime)"
       ],
-      "warnings": [],
+      "warnings": [
+        "missing_ecb_bias",
+        "missing_eurozone_economic_surprise",
+        "missing_eurozone_pmi_data",
+        "missing_eurozone_stress_risk",
+        "missing_global_growth_data"
+      ],
       "reasoning_summary": "EUR weighted verdicts calculated deterministically by timeframe. 24h BEARISH 80%, 3d BEARISH 68%, current week BEARISH 75%, next week BEARISH 79%, current month BEARISH 79%.",
       "score_bullish": 1,
       "score_bearish": 2,
       "score_neutral": 7,
-      "non_neutral_count": 6,
+      "non_neutral_count": 5,
       "logic_document": "agent_eur_direction.md",
       "logic_document_version": "2.0_weighted_engine",
       "conviction_model": {
@@ -3286,7 +3292,13 @@
         "layer": "layer_1_raw",
         "created_at": "2026-06-09T05:04:13.081489+00:00",
         "reason_24h": "24h EUR deterministic score: bull case 20%, bear case 80%, neutral/inactive 80%, directional participation 20%, net edge -60.",
-        "risk_flags": [],
+        "risk_flags": [
+          "missing_ecb_bias",
+          "missing_eurozone_economic_surprise",
+          "missing_eurozone_pmi_data",
+          "missing_eurozone_stress_risk",
+          "missing_global_growth_data"
+        ],
         "reason_3_day": "3d EUR deterministic score: bull case 32%, bear case 68%, neutral/inactive 44%, directional participation 56%, net edge -36.",
         "direction_24h": "BEARISH",
         "score_bearish": 2,
@@ -3906,8 +3918,132 @@
             }
           }
         },
-        "non_neutral_count": 6,
+        "non_neutral_count": 5,
         "reasoning_summary": "EUR weighted verdicts calculated deterministically by timeframe. 24h BEARISH 80%, 3d BEARISH 68%, current week BEARISH 75%, next week BEARISH 79%, current month BEARISH 79%.",
+        "snapshot_selection": {
+          "warnings": [
+            "gold_d5_pct missing; using gold_d1_pct fallback"
+          ],
+          "selected_by": "latest_eur_usable_snapshot",
+          "selected_from_rows": 25,
+          "selected_created_at": "2026-06-09T05:04:13.081489+00:00",
+          "selected_run_time_et": "2026-06-09T05:04:12.878+00:00",
+          "selected_snapshot_id": "4f2f78f4-da53-4dba-acc3-a5348557990c",
+          "selected_snapshot_date": "2026-06-09",
+          "top_5_rows_seen_by_workflow": [
+            {
+              "id": "8605c0fd-55e7-47d2-bc62-6de5ea6f402d",
+              "rank": 1,
+              "ecb_bias": null,
+              "fed_bias": "neutral",
+              "created_at": "2026-06-09T18:56:12.008037+00:00",
+              "eur_usable": false,
+              "de_2y_yield": 2.67,
+              "run_time_et": "2026-06-09T18:56:11.9+00:00",
+              "de_2y_d5_bps": 8.000000000000007,
+              "eurusd_price": null,
+              "eurusd_d1_pct": null,
+              "eurusd_d5_pct": null,
+              "snapshot_date": "2026-06-09",
+              "source_status": "partial",
+              "latest_ez_event": null,
+              "us_de_2y_spread": 1.5,
+              "ez_composite_pmi": null,
+              "collector_version": "v8_fed_bias_enabled",
+              "us_de_2y_spread_d5_bps": 10.999999999999988,
+              "ez_composite_pmi_direction": null
+            },
+            {
+              "id": "9a6175cb-e89c-4202-9008-2d6f05a9b886",
+              "rank": 2,
+              "ecb_bias": null,
+              "fed_bias": "hawkish",
+              "created_at": "2026-06-09T05:04:18.253861+00:00",
+              "eur_usable": false,
+              "de_2y_yield": 2.71,
+              "run_time_et": "2026-06-09T05:04:18.123+00:00",
+              "de_2y_d5_bps": 12.00000000000001,
+              "eurusd_price": null,
+              "eurusd_d1_pct": null,
+              "eurusd_d5_pct": null,
+              "snapshot_date": "2026-06-09",
+              "source_status": "partial",
+              "latest_ez_event": null,
+              "us_de_2y_spread": 1.46,
+              "ez_composite_pmi": null,
+              "collector_version": "v8_fed_bias_enabled",
+              "us_de_2y_spread_d5_bps": 6.999999999999984,
+              "ez_composite_pmi_direction": null
+            },
+            {
+              "id": "872dbddf-57e0-47cd-be62-f6bd6e653fb3",
+              "rank": 3,
+              "ecb_bias": null,
+              "fed_bias": "hawkish",
+              "created_at": "2026-06-09T05:04:16.353362+00:00",
+              "eur_usable": false,
+              "de_2y_yield": 2.71,
+              "run_time_et": "2026-06-09T05:04:16.251+00:00",
+              "de_2y_d5_bps": 12.00000000000001,
+              "eurusd_price": null,
+              "eurusd_d1_pct": null,
+              "eurusd_d5_pct": null,
+              "snapshot_date": "2026-06-09",
+              "source_status": "partial",
+              "latest_ez_event": null,
+              "us_de_2y_spread": 1.46,
+              "ez_composite_pmi": null,
+              "collector_version": "v9_nq_ready",
+              "us_de_2y_spread_d5_bps": 6.999999999999984,
+              "ez_composite_pmi_direction": null
+            },
+            {
+              "id": "b1adb40d-b312-4035-823f-2db290ee951e",
+              "rank": 4,
+              "ecb_bias": null,
+              "fed_bias": "hawkish",
+              "created_at": "2026-06-09T05:04:13.439826+00:00",
+              "eur_usable": false,
+              "de_2y_yield": 2.71,
+              "run_time_et": "2026-06-09T05:04:13.367+00:00",
+              "de_2y_d5_bps": 12.00000000000001,
+              "eurusd_price": null,
+              "eurusd_d1_pct": null,
+              "eurusd_d5_pct": null,
+              "snapshot_date": "2026-06-09",
+              "source_status": "partial",
+              "latest_ez_event": null,
+              "us_de_2y_spread": 1.46,
+              "ez_composite_pmi": null,
+              "collector_version": "btc_v1_weighted_inputs_etf_dominance_fear_greed",
+              "us_de_2y_spread_d5_bps": 6.999999999999984,
+              "ez_composite_pmi_direction": null
+            },
+            {
+              "id": "4f2f78f4-da53-4dba-acc3-a5348557990c",
+              "rank": 5,
+              "ecb_bias": "unknown",
+              "fed_bias": "neutral",
+              "created_at": "2026-06-09T05:04:13.081489+00:00",
+              "eur_usable": true,
+              "de_2y_yield": 2.71,
+              "run_time_et": "2026-06-09T05:04:12.878+00:00",
+              "de_2y_d5_bps": 12.00000000000001,
+              "eurusd_price": 1.1533,
+              "eurusd_d1_pct": -0.8255224008943204,
+              "eurusd_d5_pct": -1.2501070297114434,
+              "snapshot_date": "2026-06-09",
+              "source_status": "partial",
+              "latest_ez_event": null,
+              "us_de_2y_spread": 1.46,
+              "ez_composite_pmi": null,
+              "collector_version": "v10_eur_ready",
+              "us_de_2y_spread_d5_bps": 6.999999999999984,
+              "ez_composite_pmi_direction": null
+            }
+          ],
+          "missing_required_inputs_for_eur": []
+        },
         "direction_next_week": "BEARISH",
         "reason_current_week": "current_week EUR deterministic score: bull case 25%, bear case 75%, neutral/inactive 44%, directional participation 56%, net edge -50.",
         "conviction_next_week": 79,
@@ -3916,7 +4052,111 @@
         "logic_document_version": "2.0_weighted_engine",
         "conviction_current_week": 75,
         "direction_current_month": "BEARISH",
-        "conviction_current_month": 79
+        "conviction_current_month": 79,
+        "market_inputs_seen_by_workflow": {
+          "dxy_d1": 0.6045500433556843,
+          "dxy_d5": 1.013473443008527,
+          "vix_d1": 6.110000000000001,
+          "vix_d5": 6.190000000000001,
+          "dxy_d20": 1.755335916130279,
+          "ecb_bias": "unknown",
+          "fed_bias": "neutral",
+          "dxy_level": 120.0831,
+          "vix_level": 21.51,
+          "gold_price": 4333.938640096733,
+          "de_2y_yield": 2.71,
+          "gold_d1_pct": 0.692130000823445,
+          "gold_d5_pct": 0.692130000823445,
+          "us_2y_yield": 4.17,
+          "de_10y_yield": 2.9963157895,
+          "de_2y_d5_bps": 12.00000000000001,
+          "eurusd_price": 1.1533,
+          "gold_d20_pct": null,
+          "us_2y_d5_bps": 18.999999999999993,
+          "de_10y_d5_bps": 33.88157894999999,
+          "de_2y_d20_bps": 8.000000000000007,
+          "eurusd_d1_pct": -0.8255224008943204,
+          "eurusd_d5_pct": -1.2501070297114434,
+          "us_2y_d20_bps": 25,
+          "de_10y_d20_bps": 78.85885168,
+          "eurusd_d20_pct": -1.9636178170690157,
+          "ez_stress_flag": null,
+          "equities_regime": "neutral",
+          "latest_ez_event": null,
+          "latest_us_event": null,
+          "upcoming_events": [
+            {
+              "time": "2026-06-09 12:15:00",
+              "event": "ADP Employment Change Weekly",
+              "impact": "medium",
+              "estimate": null
+            },
+            {
+              "time": "2026-06-09 12:30:00",
+              "event": "Balance of Trade",
+              "impact": "medium",
+              "estimate": -56.4
+            },
+            {
+              "time": "2026-06-09 12:30:00",
+              "event": "Exports",
+              "impact": "medium",
+              "estimate": null
+            },
+            {
+              "time": "2026-06-09 12:30:00",
+              "event": "Imports",
+              "impact": "medium",
+              "estimate": null
+            },
+            {
+              "time": "2026-06-09 14:00:00",
+              "event": "Existing Home Sales",
+              "impact": "high",
+              "estimate": 4.06
+            },
+            {
+              "time": "2026-06-09 14:00:00",
+              "event": "Existing Home Sales MoM",
+              "impact": "medium",
+              "estimate": null
+            },
+            {
+              "time": "2026-06-09 16:00:00",
+              "event": "EIA Short-Term Energy Outlook",
+              "impact": "medium",
+              "estimate": null
+            },
+            {
+              "time": "2026-06-09 20:30:00",
+              "event": "API Crude Oil Stock Change",
+              "impact": "medium",
+              "estimate": null
+            },
+            {
+              "time": "2026-06-10 11:00:00",
+              "event": "MBA 30-Year Mortgage Rate",
+              "impact": "medium",
+              "estimate": null
+            },
+            {
+              "time": "2026-06-10 12:30:00",
+              "event": "Core Inflation Rate MoM",
+              "impact": "high",
+              "estimate": 0.3
+            }
+          ],
+          "us_de_2y_spread": 1.46,
+          "ez_composite_pmi": null,
+          "us_de_10y_spread": 1.5536842104999997,
+          "china_growth_signal": null,
+          "global_growth_regime": null,
+          "us_de_2y_spread_d5_bps": 6.999999999999984,
+          "us_de_10y_spread_d5_bps": -23.881578950000026,
+          "us_de_2y_spread_d20_bps": 16.999999999999993,
+          "us_de_10y_spread_d20_bps": -64.85885168000003,
+          "ez_composite_pmi_direction": null
+        }
       }
     },
     {
