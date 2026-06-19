@@ -18,22 +18,58 @@ In progress.
 
 - GitHub repository confirmed: `kevincreedycars-debug/trading-agent-dashboard`
 - GitHub connector has admin/push access
+- Project memory documentation scaffold created
 - `docs/CURRENT_STATE.md` created
-- Project memory file setup started
+- `docs/CURRENT_TASK.md` created
+- `docs/NEXT_STEPS.md` created
+- `docs/ARCHITECTURE.md` created
+- `docs/CHANGELOG.md` created
+- `docs/SESSION_LOG.md` created
+- `docs/DECISIONS.md` created
+- `issues/active_bugs.md` created
+- `issues/fixed_bugs.md` created
+- `logic/README.md` created
+- `workflows/README.md` created
+- `exports/README.md` created
+- `docs/N8N_INTEGRATION.md` created
+- `workflows/WORKFLOW_INVENTORY.md` created
+- Initial workflow documents added for Master Orchestrator, EUR Layer 1 Agent, and Eco Events Collector
+
+## n8n Workspace
+
+Base URL:
+
+```text
+https://silver17.app.n8n.cloud
+```
+
+Project UI:
+
+```text
+https://silver17.app.n8n.cloud/projects/ISQG9XU7TGTT6Fcu/workflows
+```
 
 ## Next Immediate Steps
 
-1. Finish repository documentation scaffold.
-2. Add n8n integration instructions.
-3. Capture outstanding workflow bugs.
-4. Decide direct n8n API first, MCP second.
-5. Request/record n8n workspace URL outside source control.
+1. Connect to n8n API from a secure runtime/tooling environment.
+2. List all workflows in the workspace.
+3. Match live workflow names against `workflows/WORKFLOW_INVENTORY.md`.
+4. Export all active workflow JSON into `exports/`.
+5. Fix EUR parser.
+6. Fix Eco Events duplicate insert.
+7. Add Master Orchestrator final execution summary.
 
 ## Current Blocker
 
-n8n API key has been supplied in chat, but the workspace base URL is still required before any direct n8n API calls can be made.
+Direct n8n API execution is not yet available inside this ChatGPT tool session.
 
-Do not commit the API key to GitHub.
+The n8n API key was supplied in chat and must not be committed to GitHub.
+
+Recommended after setup is proven:
+
+1. Revoke the exposed key.
+2. Generate a fresh key.
+3. Store it only in the secure execution environment used by Codex/automation.
 
 ## Target Outcome
 
@@ -47,6 +83,8 @@ and then read:
 - `docs/CURRENT_STATE.md`
 - `docs/NEXT_STEPS.md`
 - `docs/CHANGELOG.md`
+- `docs/N8N_INTEGRATION.md`
+- `workflows/WORKFLOW_INVENTORY.md`
 - `issues/active_bugs.md`
 
 before making any changes.
