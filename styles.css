@@ -277,9 +277,9 @@ h3 { font-size: 22px; }
   text-transform: uppercase;
 }
 
-.direction.bullish, .signal-pill.bullish { color: var(--green); }
-.direction.bearish, .signal-pill.bearish { color: var(--red); }
-.direction.neutral, .direction.pending, .signal-pill.neutral, .signal-pill.pending { color: var(--neutral); }
+.direction.bullish, .direction.buy, .signal-pill.bullish { color: var(--green); }
+.direction.bearish, .direction.sell, .signal-pill.bearish { color: var(--red); }
+.direction.neutral, .direction.pending, .direction.no-trade, .signal-pill.neutral, .signal-pill.pending { color: var(--neutral); }
 .direction.lean, .direction.lean-bullish, .direction.lean-bearish { color: var(--amber); }
 
 .reason {
@@ -543,15 +543,119 @@ h3 { font-size: 22px; }
 .adjusted-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
 .adjusted-card { border: 1px solid rgba(72,172,255,.14); border-radius: 16px; background: rgba(255,255,255,.024); padding: 14px; }
 
+.trade-layer-summary {
+  align-items: start;
+}
+
+.trade-layer-summary .summary {
+  max-width: 620px;
+  min-height: 0;
+}
+
+.trade-grid,
+.avoid-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.trade-opportunity-card {
+  border: 1px solid rgba(72,172,255,.18);
+  background: rgba(255,255,255,.026);
+  border-radius: 18px;
+  padding: 20px;
+  min-height: 290px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.trade-opportunity-card.buy {
+  border-color: rgba(45,255,179,.42);
+  background: linear-gradient(180deg, rgba(45,255,179,.09), rgba(255,255,255,.022));
+}
+
+.trade-opportunity-card.sell {
+  border-color: rgba(255,93,122,.42);
+  background: linear-gradient(180deg, rgba(255,93,122,.1), rgba(255,255,255,.022));
+}
+
+.trade-opportunity-card.no-trade {
+  border-color: rgba(157,169,181,.26);
+  background: rgba(255,255,255,.018);
+}
+
+.trade-card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  gap: 14px;
+}
+
+.trade-card-head h3 {
+  font-size: 30px;
+}
+
+.trade-direction {
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  padding: 8px 12px;
+  font-size: 13px;
+  letter-spacing: .08em;
+  white-space: nowrap;
+}
+
+.trade-direction.buy { color: var(--green); }
+.trade-direction.sell { color: var(--red); }
+.trade-direction.no-trade { color: var(--neutral); }
+
+.trade-confidence {
+  border: 1px solid rgba(72,172,255,.14);
+  border-radius: 16px;
+  padding: 16px;
+  background: rgba(0,0,0,.14);
+}
+
+.trade-confidence span,
+.trade-confidence small {
+  color: var(--muted);
+}
+
+.trade-confidence b {
+  display: block;
+  font-size: 56px;
+  line-height: 1;
+  margin: 8px 0;
+}
+
+.trade-reason {
+  color: var(--muted);
+  font-size: 15px;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.avoid-section {
+  margin-top: 24px;
+  border-top: 1px solid rgba(72,172,255,.16);
+  padding-top: 22px;
+}
+
+.avoid-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
 @media (max-width: 1180px) {
-  .agent-grid, .adjusted-grid, .detail-call-grid, .secondary-timeframes { grid-template-columns: repeat(2, 1fr); }
+  .agent-grid, .adjusted-grid, .detail-call-grid, .secondary-timeframes, .trade-grid, .avoid-grid { grid-template-columns: repeat(2, 1fr); }
   .rules-strip, .overview-stats { grid-template-columns: repeat(2, 1fr); }
   .hero, .agent-detail-hero, .today-call-panel, .detail-grid { grid-template-columns: 1fr; }
   .wide-panel { grid-column: span 1; }
 }
 
 @media (max-width: 640px) {
-  .agent-grid, .adjusted-grid, .rules-strip, .overview-stats, .detail-call-grid, .secondary-timeframes, .score-grid, .driver-columns, .raw-detail-grid { grid-template-columns: 1fr; }
+  .agent-grid, .adjusted-grid, .rules-strip, .overview-stats, .detail-call-grid, .secondary-timeframes, .score-grid, .driver-columns, .raw-detail-grid, .trade-grid, .avoid-grid { grid-template-columns: 1fr; }
   .section-header { align-items: start; flex-direction: column; gap: 8px; }
   .today-signal-card b { font-size: 52px; }
+  .trade-card-head { flex-direction: column; }
+  .trade-confidence b { font-size: 48px; }
 }

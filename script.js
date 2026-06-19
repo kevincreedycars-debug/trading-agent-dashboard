@@ -68,6 +68,9 @@ function normaliseDirection(direction = "") {
 function directionClass(direction = "") {
   const d = String(direction).toLowerCase();
   if (d.includes("pending")) return "pending";
+  if (d.includes("buy")) return "buy";
+  if (d.includes("sell")) return "sell";
+  if (d.includes("no trade")) return "no-trade";
   if (d.includes("bullish") || d.includes("long")) return d.includes("lean") ? "lean-bullish" : "bullish";
   if (d.includes("bearish") || d.includes("short")) return d.includes("lean") ? "lean-bearish" : "bearish";
   if (d.includes("neutral") || d.includes("no clear")) return "neutral";
@@ -760,7 +763,57 @@ function renderAgentDetail(agentName) {
   `;
 }
 
-function renderLayer2(data) {
+function confidenceLabel(value) {
+  if (value >= 80) return "High confidence";
+  if (value >= 65) return "Moderate confidence";
+  return "Low confidence";
+}
+
+function rankLabel(rank) {
+  if (rank === 1) return "#1 Best Trade Today";
+  if (rank === 2) return "#2 Second Best";
+  if (rank === 3) return "#3 Third Best";
+  return rank ? `#${rank} Trade Setup` : "";
+}
+
+function renderTradeOpportunityCard(opportunity, label = "") {
+  const direction = opportunity.direction || "NO TRADE";
+  const confidence = opportunity.confidence ?? null;
+
+  return `
+    <article class="trade-opportunity-card ${directionClass(direction)}">
+      <div class="trade-card-head">
+        <div>
+          ${label ? `<p class="eyebrow">${escapeHtml(label)}</p>` : ""}
+          <h3>${escapeHtml(opportunity.instrument)}</h3>
+        </div>
+        <strong class="trade-direction ${directionClass(direction)}">${escapeHtml(direction)}</strong>
+      </div>
+      <div class="trade-confidence">
+        <span>Confidence</span>
+        <b>${formatConviction(confidence)}</b>
+        <small>${confidence === null ? "Awaiting selection" : escapeHtml(confidenceLabel(Number(confidence)))}</small>
+      </div>
+      <p class="trade-reason">${escapeHtml(opportunity.reason || "No reason supplied.")}</p>
+    </article>
+  `;
+}
+
+function renderAvoidCard(item) {
+  return `
+    <article class="trade-opportunity-card no-trade">
+      <div class="trade-card-head">
+        <div>
+          <h3>${escapeHtml(item.instrument || "Instrument")}</h3>
+        </div>
+        <strong class="trade-direction no-trade">NO TRADE</strong>
+      </div>
+      <p class="trade-reason">${escapeHtml(item.reason || "No clear Layer 2 trade selection.")}</p>
+    </article>
+  `;
+}
+
+function renderLayer2(data = {}) {
   const layer2Updated = document.getElementById("layer2Updated");
   if (layer2Updated) {
     layer2Updated.textContent = `Last updated: ${formatDashboardTime(data.dashboard_meta?.last_updated_et)}`;
@@ -769,31 +822,36 @@ function renderLayer2(data) {
   const panel = document.getElementById("layer2Panel");
   if (!panel) return;
 
-  const agent = data.eco_events_agent || {};
-  const adjusted = agent.adjusted_calls || {};
-
-  const cards = Object.entries(adjusted).map(([asset, call]) => {
-    const direction = call.direction || "PENDING";
-
-    return `
-      <div class="adjusted-card">
-        <p class="eyebrow">${escapeHtml(asset)}</p>
-        <h3 class="direction ${directionClass(direction)}">${normaliseDirection(direction)}</h3>
-        <p class="summary">${formatConviction(call.conviction)} conviction</p>
-        <p class="reason">${escapeHtml(call.adjustment || "")}</p>
-      </div>
-    `;
-  }).join("");
+  const opportunities = Array.isArray(data.trade_opportunities) ? data.trade_opportunities : [];
+  const avoided = Array.isArray(data.avoid_today) ? data.avoid_today : [];
 
   panel.innerHTML = `
-    <div class="layer2-summary">
+    <div class="layer2-summary trade-layer-summary">
       <div>
-        <p class="eyebrow">Eco Events Agent</p>
-        <h3>${escapeHtml(agent.event_risk || "PENDING")} event risk</h3>
+        <p class="eyebrow">Today's Trade Opportunities</p>
+        <h3>Layer 2 Trade Selection</h3>
       </div>
-      <p class="summary">${escapeHtml(agent.summary || "Awaiting event layer.")}</p>
+      <p class="summary">Layer 2 displays trade selections produced by the Layer 2 agent. The browser only renders the supplied output.</p>
     </div>
-    <div class="adjusted-grid">${cards || `<div class="empty-state">Awaiting Layer 2 adjusted calls.</div>`}</div>
+    <div class="trade-grid">
+      ${opportunities.length
+        ? opportunities
+            .slice()
+            .sort((a, b) => Number(a.rank || 999) - Number(b.rank || 999))
+            .map(opportunity => renderTradeOpportunityCard(opportunity, rankLabel(Number(opportunity.rank)))).join("")
+        : `<div class="empty-state">Awaiting Layer 2 Trade Selection Agent.</div>`}
+    </div>
+    <section class="avoid-section">
+      <div class="panel-head">
+        <p class="eyebrow">Avoid Today</p>
+        <h3>No Trade Setups</h3>
+      </div>
+      <div class="avoid-grid">
+        ${avoided.length
+          ? avoided.map(renderAvoidCard).join("")
+          : `<div class="empty-state">No instruments are currently flagged for avoidance.</div>`}
+      </div>
+    </section>
   `;
 }
 
