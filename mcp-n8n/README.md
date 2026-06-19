@@ -9,11 +9,18 @@ Read-only.
 Available tools:
 
 - `n8n_list_workflows`
+- `n8n_find_workflow`
 - `n8n_get_workflow`
+- `n8n_get_workflow_summary`
+- `n8n_find_node`
+- `n8n_backup_workflow`
+- `n8n_get_code_node`
 - `n8n_list_executions`
 - `n8n_get_execution`
 
 Write/edit tools should only be added after all live workflows have been exported to GitHub.
+
+`n8n_backup_workflow` returns workflow JSON to the caller only. It does not write files automatically.
 
 ## Required Environment Variables
 
