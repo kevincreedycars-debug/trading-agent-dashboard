@@ -253,38 +253,294 @@ function renderLayer1(data) {
   });
 }
 
-function renderCallMatrix(agent) {
-  return Object.entries(agent.calls || {}).map(([tf, call]) => {
-    const model = call.conviction_model || {};
-    const bullCase = model.bullish_argument_pct;
-    const bearCase = model.bearish_argument_pct;
-    const netEdge = model.net_edge_pct;
-    const participation = model.directional_participation_pct;
-    const strength = model.verdict_strength;
+function cleanDecisionReason(reason = "") {
+  return String(reason || "")
+    .replace(/\b\d{1,2}h\s+/ig, "")
+    .replace(/\b(3d|current_week|next_week|current_month)\s+/ig, "")
+    .replace(/deterministic\s+(?:score|model|verdict):?\s*/ig, "")
+    .replace(/(?:bullish|bull)\s+(?:argument|case)\s+\d+(?:\.\d+)?(?:%| weight)?[,]?\s*/ig, "")
+    .replace(/(?:bearish|bear)\s+(?:argument|case)\s+\d+(?:\.\d+)?(?:%| weight)?[,]?\s*/ig, "")
+    .replace(/neutral(?:\/inactive| evidence)?\s+\d+(?:\.\d+)?(?:%| weight)?[,]?\s*/ig, "")
+    .replace(/directional participation\s+\d+(?:\.\d+)?%?[,]?\s*/ig, "")
+    .replace(/net edge\s+[+-]?\d+(?:\.\d+)?(?:%| bullish| bearish)?[,]?\.?/ig, "")
+    .replace(/winning side\s+(?:bullish|bearish|tied)[,]?\s*/ig, "")
+    .replace(/\s+/g, " ")
+    .replace(/\s+([,.])/g, "$1")
+    .trim();
+}
 
+function firstSentence(value = "") {
+  const text = String(value || "").trim();
+  if (!text) return "";
+
+  const match = text.match(/^(.+?[.!?])(?:\s|$)/);
+  return (match ? match[1] : text).trim();
+}
+
+function factorEntriesFrom(value) {
+  const factorObj = asObject(value, {});
+  return Object.entries(factorObj)
+    .map(([name, raw]) => {
+      const detail = typeof raw === "object" && raw !== null ? raw : { signal: String(raw) };
+      const signal = detail.signal || "NEUTRAL";
+      return {
+        name,
+        signal,
+        evidence: detail.evidence || "",
+        reason: detail.reason || "",
+        weight: Number.isFinite(Number(detail.weight)) ? Number(detail.weight) : null
+      };
+    })
+    .sort((a, b) => Number(b.weight || 0) - Number(a.weight || 0));
+}
+
+function getTodayFactors(agent) {
+  const today = getCall(agent, "24h");
+  return factorEntriesFrom(today.factor_breakdown || agent.factor_breakdown || {});
+}
+
+function splitTodayDrivers(agent) {
+  const factors = getTodayFactors(agent);
+
+  return {
+    bullish: factors.filter(f => signalClass(f.signal) === "bullish"),
+    bearish: factors.filter(f => signalClass(f.signal) === "bearish"),
+    neutral: factors.filter(f => !["bullish", "bearish"].includes(signalClass(f.signal)))
+  };
+}
+
+function renderDriverList(drivers, emptyText) {
+  if (!drivers.length) {
+    return `<div class="empty-state">${escapeHtml(emptyText)}</div>`;
+  }
+
+  return drivers.map(driver => `
+    <div class="driver-row">
+      <div>
+        <strong>${escapeHtml(driver.name)}</strong>
+        ${driver.evidence ? `<p>${escapeHtml(driver.evidence)}</p>` : ""}
+        ${driver.reason ? `<small>${escapeHtml(driver.reason)}</small>` : ""}
+      </div>
+      <span class="signal-pill ${signalClass(driver.signal)}">${escapeHtml(driver.signal)}</span>
+    </div>
+  `).join("");
+}
+
+function renderNeutralDrivers(drivers) {
+  if (!drivers.length) return "";
+
+  return `
+    <details class="neutral-drivers">
+      <summary>${drivers.length} neutral or inactive drivers</summary>
+      <div class="driver-list muted-list">
+        ${renderDriverList(drivers, "No neutral drivers.")}
+      </div>
+    </details>
+  `;
+}
+
+function decisionFallbackSentence(agent) {
+  const today = getCall(agent, "24h");
+  const drivers = splitTodayDrivers(agent);
+  const direction = normaliseDirection(today.direction).toLowerCase();
+  const leading = today.direction && !String(today.direction).toLowerCase().includes("no clear")
+    ? `${escapeHtml(agent.agent)} is ${escapeHtml(direction)} today`
+    : `${escapeHtml(agent.agent)} has no clear 24H bias today`;
+
+  const bullishNames = drivers.bullish.slice(0, 2).map(driver => driver.name).join(", ");
+  const bearishNames = drivers.bearish.slice(0, 2).map(driver => driver.name).join(", ");
+
+  if (bullishNames && bearishNames) {
+    return `${leading} because ${escapeHtml(bullishNames)} outweighs or offsets ${escapeHtml(bearishNames)}.`;
+  }
+  if (bullishNames) return `${leading} because ${escapeHtml(bullishNames)} is supporting the 24H call.`;
+  if (bearishNames) return `${leading} because ${escapeHtml(bearishNames)} is pressuring the 24H call.`;
+  return `${leading}; no active 24H driver explanation was supplied.`;
+}
+
+function todayExplanation(agent) {
+  const today = getCall(agent, "24h");
+  const cleaned = firstSentence(cleanDecisionReason(today.reason));
+
+  if (cleaned && cleaned.length > 32) return cleaned;
+  return decisionFallbackSentence(agent);
+}
+
+function participationValue(call) {
+  const model = call.conviction_model || {};
+  return Number(
+    model.directional_participation_pct ??
+    model.active_participation_pct ??
+    model.participation ??
+    NaN
+  );
+}
+
+function describeEventRisk(event) {
+  if (!event) return "No explicit event risk supplied by Layer 1.";
+  if (typeof event === "string") return firstSentence(event).slice(0, 220);
+
+  const eventName = event.event || event.name || event.event_name || "event";
+  const currency = event.currency ? `${event.currency} ` : "";
+  const surprise = event.surprise ? `surprise: ${event.surprise}` : "";
+  const signal = event.usd_signal || event.eur_signal || event.signal || "";
+  const parts = [`${currency}${eventName}`, surprise, signal].filter(Boolean);
+
+  return parts.length ? `Event context present: ${parts.join(" | ")}` : "Event context present.";
+}
+
+function renderTodayCall(agent) {
+  const today = getCall(agent, "24h");
+  const model = today.conviction_model || {};
+  const assetUpdated = getAgentUpdatedAt(agent);
+  const strength = model.verdict_strength || "Not supplied";
+
+  return `
+    <section class="today-call-panel">
+      <div class="today-copy">
+        <p class="eyebrow">Today's Trading Bias</p>
+        <h2>${escapeHtml(agent.agent)}</h2>
+        <div class="today-meta">
+          <span><strong>Timeframe:</strong> 24H only</span>
+          <span><strong>Strength:</strong> ${escapeHtml(strength)}</span>
+          <span><strong>Last updated:</strong> ${escapeHtml(formatDashboardTime(assetUpdated))}${formatRelativeAge(assetUpdated) ? ` | ${escapeHtml(formatRelativeAge(assetUpdated))}` : ""}</span>
+        </div>
+      </div>
+
+      <div class="today-signal-card">
+        <span>24H only</span>
+        <strong class="direction ${directionClass(today.direction)}">${normaliseDirection(today.direction)}</strong>
+        <b>${formatConviction(today.conviction)}</b>
+        <small>Current trading-session bias</small>
+      </div>
+    </section>
+  `;
+}
+
+function renderExecutiveSummary(agent) {
+  return `
+    <article class="detail-panel wide-panel executive-summary-panel">
+      <div class="panel-head">
+        <p class="eyebrow">Executive Summary</p>
+        <h3>Today, Is This Asset More Likely Bullish Or Bearish?</h3>
+      </div>
+      <p class="today-answer compact-answer">${escapeHtml(todayExplanation(agent))}</p>
+    </article>
+  `;
+}
+
+function renderTodayDrivers(agent) {
+  const drivers = splitTodayDrivers(agent);
+
+  return `
+    <article class="detail-panel wide-panel today-drivers-panel">
+      <div class="panel-head">
+        <p class="eyebrow">Why Today's Call Was Made</p>
+        <h3>Active 24H Drivers</h3>
+      </div>
+
+      <div class="driver-columns">
+        <section>
+          <h4>Bullish Drivers</h4>
+          <div class="driver-list">${renderDriverList(drivers.bullish, "No bullish drivers affected today's call.")}</div>
+        </section>
+        <section>
+          <h4>Bearish Drivers</h4>
+          <div class="driver-list">${renderDriverList(drivers.bearish, "No bearish drivers affected today's call.")}</div>
+        </section>
+      </div>
+
+      ${renderNeutralDrivers(drivers.neutral)}
+    </article>
+  `;
+}
+
+function renderInvalidationPanel(agent) {
+  const today = getCall(agent, "24h");
+  const output = asObject(agent.full_output || agent.raw_agent_output, {});
+  const marketInputs = asObject(agent.market_inputs || output.market_inputs_seen_by_workflow, {});
+  const warnings = [
+    ...asArray(agent.warnings),
+    ...asArray(today.warnings),
+    ...asArray(output.risk_flags),
+    ...asArray(output.missing_inputs).map(input => `Missing input: ${input}`)
+  ].filter(Boolean);
+
+  const participation = participationValue(today);
+  if (Number.isFinite(participation) && participation < 35) {
+    warnings.push(`Low 24H participation: only ${participation}% of weighted evidence is directional.`);
+  }
+
+  const latestEvent = marketInputs.latest_us_event || marketInputs.latest_ez_event || null;
+  const eventText = describeEventRisk(latestEvent);
+
+  return `
+    <article class="detail-panel wide-panel invalidation-panel">
+      <div class="panel-head">
+        <p class="eyebrow">Today's Risks</p>
+        <h3>What Could Invalidate Today's Call</h3>
+      </div>
+      <div class="warning-list">
+        ${warnings.length
+          ? warnings.map(w => `<div class="warning-card">${escapeHtml(w)}</div>`).join("")
+          : `<div class="empty-state">No missing inputs or risk flags reported.</div>`}
+        <div class="event-risk-note">${escapeHtml(eventText)}</div>
+      </div>
+    </article>
+  `;
+}
+
+function renderSecondaryTimeframes(agent) {
+  const timeframeKeys = ["3d", "current_week", "next_week", "current_month"];
+
+  return timeframeKeys.map(tf => {
+    const call = getCall(agent, tf);
     return `
-      <div class="detail-call-card">
+      <div class="secondary-timeframe-card">
         <span class="timeframe">${labels[tf] || tf}</span>
         <strong class="direction ${directionClass(call.direction)}">${normaliseDirection(call.direction)}</strong>
         <b>${formatConviction(call.conviction)}</b>
-
-        <div class="mini-model">
-          <small>Bull Case: ${formatModelPercent(bullCase)}</small>
-          <small>Bear Case: ${formatModelPercent(bearCase)}</small>
-          <small>Net Edge: ${netEdge ?? "--"}%</small>
-          <small>Participation: ${formatModelPercent(participation)}</small>
-          <small>Strength: ${strength || "--"}</small>
-        </div>
-
-        <p>${escapeHtml(call.reason || "No reason supplied.")}</p>
+        <p>${escapeHtml(firstSentence(cleanDecisionReason(call.reason)) || "No reason supplied.")}</p>
       </div>
     `;
   }).join("");
 }
 
+function renderRawModelDetails(agent) {
+  const today = getCall(agent, "24h");
+  const model = today.conviction_model || agent.conviction_model || {};
+  const output = asObject(agent.full_output || agent.raw_agent_output, {});
+  const bullish = agent.score_bullish ?? output.score_bullish ?? "--";
+  const bearish = agent.score_bearish ?? output.score_bearish ?? "--";
+  const neutral = agent.score_neutral ?? output.score_neutral ?? "--";
+
+  return `
+    <article class="detail-panel wide-panel raw-model-panel">
+      <div class="panel-head">
+        <p class="eyebrow">Raw Model Details</p>
+        <h3>Source Values</h3>
+      </div>
+      <details class="raw-model-details">
+        <summary>Show raw details</summary>
+        <div class="raw-detail-grid">
+          <p><strong>Bullish factors:</strong> ${escapeHtml(bullish)}</p>
+          <p><strong>Bearish factors:</strong> ${escapeHtml(bearish)}</p>
+          <p><strong>Neutral factors:</strong> ${escapeHtml(neutral)}</p>
+          <p><strong>Winning side:</strong> ${escapeHtml(model.winning_side || "--")}</p>
+          <p><strong>Directional participation:</strong> ${formatModelPercent(model.directional_participation_pct)}</p>
+          <p><strong>Net edge:</strong> ${model.net_edge_pct ?? "--"}%</p>
+        </div>
+      </details>
+    </article>
+  `;
+}
+
+function renderCallMatrix(agent) {
+  return renderSecondaryTimeframes(agent);
+}
+
 function renderFactorRows(agent) {
-  const factorObj = asObject(agent.factor_breakdown, {});
-  const entries = Object.entries(factorObj);
+  const entries = getTodayFactors(agent);
 
   if (!entries.length && Array.isArray(agent.key_factors)) {
     return agent.key_factors.map(f => `
@@ -295,27 +551,7 @@ function renderFactorRows(agent) {
     `).join("");
   }
 
-  if (!entries.length) {
-    return `<div class="empty-state">No factor breakdown available yet.</div>`;
-  }
-
-  return entries.map(([name, value]) => {
-    const detail = typeof value === "object" && value !== null ? value : { signal: String(value) };
-    const signal = detail.signal || "NEUTRAL";
-    const evidence = detail.evidence || "";
-    const reason = detail.reason || "";
-
-    return `
-      <div class="factor-row">
-        <div>
-          <strong>${escapeHtml(name)}</strong>
-          ${evidence ? `<p>${escapeHtml(evidence)}</p>` : ""}
-          ${reason ? `<small>${escapeHtml(reason)}</small>` : ""}
-        </div>
-        <span class="signal-pill ${signalClass(signal)}">${escapeHtml(signal)}</span>
-      </div>
-    `;
-  }).join("");
+  return renderDriverList(entries, "No factor breakdown available yet.");
 }
 
 function valueOrPending(value) {
@@ -362,14 +598,14 @@ function renderScoreBreakdown(agent) {
       <p><strong>Conviction:</strong> ${formatModelPercent(conviction)}</p>
       <p><strong>Net Edge:</strong> ${netEdge ?? "--"}%</p>
       <p><strong>Directional Participation:</strong> ${formatModelPercent(participation)}</p>
-      <p><strong>Neutral / Inactive:</strong> ${formatModelPercent(neutralPct)}</p>
+      <p><strong>Neutral factors:</strong> ${formatModelPercent(neutralPct)}</p>
       <p><strong>Verdict Strength:</strong> ${verdictStrength || "--"}</p>
       <p><strong>Final Logic:</strong> ${escapeHtml(model.final_conviction_logic ?? "No conviction model supplied yet.")}</p>
     </div>
   `;
 }
 
-function renderAgentDetail(agentName) {
+function renderAgentDetailLegacy(agentName) {
   const view = document.getElementById("agentView");
   const agent = getAgent(agentName);
 
@@ -406,7 +642,7 @@ function renderAgentDetail(agentName) {
       </div>
 
       <div class="signal-tower">
-        <span>24H Primary Call</span>
+        <span>24H Call</span>
         <strong class="direction ${directionClass(call24.direction)}">${normaliseDirection(call24.direction)}</strong>
         <b>${formatConviction(call24.conviction)}</b>
         <small>Last asset update: ${escapeHtml(formatDashboardTime(assetUpdated))}</small>
@@ -416,7 +652,7 @@ function renderAgentDetail(agentName) {
     <section class="detail-grid">
       <article class="detail-panel wide-panel">
         <div class="panel-head">
-          <p class="eyebrow">Timeframes</p>
+          <p class="eyebrow">Other Timeframes</p>
           <h3>Directional Calls</h3>
         </div>
         <div class="detail-call-grid">${renderCallMatrix(agent)}</div>
@@ -433,7 +669,7 @@ function renderAgentDetail(agentName) {
       <article class="detail-panel">
         <div class="panel-head">
           <p class="eyebrow">Conviction</p>
-          <h3>Score Breakdown</h3>
+          <h3>Raw Model Details</h3>
         </div>
         ${renderScoreBreakdown(agent)}
       </article>
@@ -465,6 +701,61 @@ function renderAgentDetail(agentName) {
           <p><strong>Isolation:</strong> Layer 1 raw call. No cross-agent contamination.</p>
         </div>
       </article>
+    </section>
+  `;
+}
+
+function renderAgentDetail(agentName) {
+  const view = document.getElementById("agentView");
+  const agent = getAgent(agentName);
+
+  if (!view) return;
+
+  if (!agent) {
+    view.innerHTML = `
+      <section class="detail-shell">
+        <div class="empty-state">No ${escapeHtml(agentName)} agent output available yet.</div>
+      </section>
+    `;
+    return;
+  }
+
+  const dashboardUpdated = getDashboardUpdatedAt();
+  const assetUpdated = getAgentUpdatedAt(agent);
+
+  view.innerHTML = `
+    ${renderTodayCall(agent)}
+
+    <section class="detail-grid">
+      ${renderExecutiveSummary(agent)}
+
+      ${renderTodayDrivers(agent)}
+
+      ${renderInvalidationPanel(agent)}
+
+      <article class="detail-panel wide-panel">
+        <div class="panel-head">
+          <p class="eyebrow">Other Timeframes</p>
+          <h3>Secondary Directional Context</h3>
+        </div>
+        <div class="secondary-timeframes">${renderCallMatrix(agent)}</div>
+      </article>
+
+      <article class="detail-panel">
+        <div class="panel-head">
+          <p class="eyebrow">Source of Truth</p>
+          <h3>Logic Document</h3>
+        </div>
+        <div class="logic-box">
+          <p><strong>Document:</strong> ${escapeHtml(agent.logic_document || "agent logic pending")}</p>
+          <p><strong>Version:</strong> ${escapeHtml(agent.logic_document_version || "unknown")}</p>
+          <p><strong>Isolation:</strong> Layer 1 raw call. No cross-agent contamination.</p>
+          <p><strong>Last n8n ingest:</strong> ${escapeHtml(formatDashboardTime(dashboardUpdated))}${formatRelativeAge(dashboardUpdated) ? ` | ${escapeHtml(formatRelativeAge(dashboardUpdated))}` : ""}</p>
+          <p><strong>Last asset update:</strong> ${escapeHtml(formatDashboardTime(assetUpdated))}${formatRelativeAge(assetUpdated) ? ` | ${escapeHtml(formatRelativeAge(assetUpdated))}` : ""}</p>
+        </div>
+      </article>
+
+      ${renderRawModelDetails(agent)}
     </section>
   `;
 }
