@@ -1592,6 +1592,9 @@ function renderScoreBreakdown(agent) {
 }
 
 function renderAgentDetailLegacy(agentName) {
+  renderAgentDetail(agentName);
+  return;
+
   const view = document.getElementById("agentView");
   const agent = getAgent(agentName);
 
