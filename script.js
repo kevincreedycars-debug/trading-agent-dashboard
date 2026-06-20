@@ -412,6 +412,94 @@ function getTimeframeModel(agent, timeframe = "24h") {
   return asObject(output.timeframe_models?.[timeframe], {});
 }
 
+const FALLBACK_ELIGIBLE_SNAPSHOT_INPUTS = new Set([
+  "gold_d5_pct",
+  "gold_d20_pct",
+  "nq_d5_pct",
+  "nq_d20_pct",
+  "btc_d5_pct",
+  "btc_d20_pct",
+  "us_10y_d20_bps",
+  "us_10y_real_yield_d20_bps"
+]);
+
+const ALWAYS_VISIBLE_SNAPSHOT_GAPS = new Set([
+  "latest_us_event",
+  "latest_ez_event",
+  "geopolitical_risk_flag",
+  "btc_dominance_d5",
+  "btc_dominance_d20",
+  "total_crypto_market_cap_d5_pct",
+  "total_crypto_market_cap_d20_pct",
+  "stablecoin_supply",
+  "stablecoin_supply_d5_pct",
+  "stablecoin_supply_d20_pct"
+]);
+
+function factorLabelFromWarning(value = "") {
+  const match = String(value || "").match(/Missing\/neutral input:\s*(.+)$/i);
+  return match ? match[1].trim() : "";
+}
+
+function factorLabelFromKey(key = "") {
+  return String(key || "")
+    .replace(/^[A-Z0-9]+\s+/, "")
+    .trim();
+}
+
+function factorHasMissingInputSignal(factor = {}) {
+  const reason = String(factor.reason || "").toLowerCase();
+  const evidence = String(factor.evidence || "").toLowerCase();
+  return reason.includes("missing input") || evidence.startsWith("missing ");
+}
+
+function liveMissingInputs(call, agent, timeframe = "24h") {
+  const output = getOutput(agent);
+  const timeframeModel = getTimeframeModel(agent, timeframe);
+  const factorBreakdown = asObject(
+    timeframeModel.factor_breakdown || call?.factor_breakdown,
+    {}
+  );
+
+  const labels = new Set();
+
+  for (const warning of [
+    ...asArray(call?.warnings),
+    ...asArray(timeframeModel.warnings)
+  ]) {
+    const label = factorLabelFromWarning(warning);
+    if (label) labels.add(label);
+  }
+
+  for (const [key, factor] of Object.entries(factorBreakdown)) {
+    if (factorHasMissingInputSignal(factor)) {
+      labels.add(factorLabelFromKey(key) || key);
+    }
+  }
+
+  for (const input of [
+    ...asArray(call?.missing_inputs),
+    ...asArray(call?.conviction_model?.missing_inputs),
+    ...asArray(timeframeModel.missing_inputs)
+  ]) {
+    if (input) labels.add(String(input));
+  }
+
+  for (const input of asArray(output.missing_inputs)) {
+    const name = String(input || "");
+    if (!name) continue;
+    if (ALWAYS_VISIBLE_SNAPSHOT_GAPS.has(name)) {
+      labels.add(name);
+      continue;
+    }
+    if (!FALLBACK_ELIGIBLE_SNAPSHOT_INPUTS.has(name)) {
+      labels.add(name);
+    }
+  }
+
+  return [...labels];
+}
+
 function combinedConfidenceFlags(call, agent, timeframe = "24h") {
   const output = getOutput(agent);
   const timeframeModel = getTimeframeModel(agent, timeframe);
@@ -431,15 +519,7 @@ function combinedConfidenceFlags(call, agent, timeframe = "24h") {
 }
 
 function missingInputsCount(call, agent, timeframe = "24h") {
-  const output = getOutput(agent);
-  const timeframeModel = getTimeframeModel(agent, timeframe);
-
-  return [
-    ...asArray(call?.missing_inputs),
-    ...asArray(call?.conviction_model?.missing_inputs),
-    ...asArray(timeframeModel.missing_inputs),
-    ...asArray(output.missing_inputs)
-  ].filter(Boolean).length;
+  return liveMissingInputs(call, agent, timeframe).length;
 }
 
 function getWeeklyCandleStatus(call, agent, timeframe = "24h") {
@@ -552,6 +632,30 @@ function confidenceValue(call, agent, timeframe = "24h") {
 
 function confidenceStrength(call, agent, timeframe = "24h") {
   return confidenceData(call, agent, timeframe).strength;
+}
+
+function deriveEvidenceSummary(call, agent, timeframe = "24h") {
+  const timeframeModel = getTimeframeModel(agent, timeframe);
+  const model = call?.conviction_model || timeframeModel.conviction_model || {};
+  const bullCase = numberOrNull(model.bullish_argument_pct);
+  const bearCase = numberOrNull(model.bearish_argument_pct);
+  const netEdge = numberOrNull(model.net_edge_pct);
+  const participation = numberOrNull(
+    model.directional_participation_pct ??
+    model.active_participation_pct ??
+    model.participation
+  );
+
+  if (
+    !Number.isFinite(bullCase) ||
+    !Number.isFinite(bearCase) ||
+    !Number.isFinite(netEdge) ||
+    !Number.isFinite(participation)
+  ) {
+    return "";
+  }
+
+  return `Derived from evidence split: Bull Case ${Math.round(bullCase)}%, Bear Case ${Math.round(bearCase)}%, Net Edge ${netEdge > 0 ? "+" : ""}${Math.round(netEdge)}%, Participation ${Math.round(participation)}%.`;
 }
 
 function displayMetricValue(value) {
@@ -928,17 +1032,9 @@ function renderSevenDayOutlook(data) {
 
 function cleanDecisionReason(reason = "") {
   return String(reason || "")
-    .replace(/\b\d{1,2}h\s+/ig, "")
-    .replace(/\b(3d|current_week|next_week|current_month)\s+/ig, "")
-    .replace(/deterministic\s+(?:score|model|verdict):?\s*/ig, "")
-    .replace(/(?:bullish|bull)\s+(?:argument|case)\s+\d+(?:\.\d+)?(?:%| weight)?[,]?\s*/ig, "")
-    .replace(/(?:bearish|bear)\s+(?:argument|case)\s+\d+(?:\.\d+)?(?:%| weight)?[,]?\s*/ig, "")
-    .replace(/neutral(?:\/inactive| evidence)?\s+\d+(?:\.\d+)?(?:%| weight)?[,]?\s*/ig, "")
-    .replace(/directional participation\s+\d+(?:\.\d+)?%?[,]?\s*/ig, "")
-    .replace(/net edge\s+[+-]?\d+(?:\.\d+)?(?:%| bullish| bearish)?[,]?\.?/ig, "")
-    .replace(/winning side\s+(?:bullish|bearish|tied)[,]?\s*/ig, "")
+    .replaceAll("_", " ")
+    .replace(/^(24h|3d|current week|next week|current month)\s+/i, "")
     .replace(/\s+/g, " ")
-    .replace(/\s+([,.])/g, "$1")
     .trim();
 }
 
@@ -1132,12 +1228,13 @@ function renderInvalidationPanel(agent) {
   const today = getCall(agent, "24h");
   const output = asObject(agent.full_output || agent.raw_agent_output, {});
   const marketInputs = asObject(agent.market_inputs || output.market_inputs_seen_by_workflow, {});
-  const warnings = [
+  const missingInputs = liveMissingInputs(today, agent, "24h");
+  const warnings = [...new Set([
     ...asArray(agent.warnings),
     ...asArray(today.warnings),
     ...asArray(output.risk_flags),
-    ...asArray(output.missing_inputs).map(input => `Missing input: ${input}`)
-  ].filter(Boolean);
+    ...missingInputs.map(input => `Missing input: ${input}`)
+  ].filter(Boolean))];
 
   const participation = participationValue(today);
   if (Number.isFinite(participation) && participation < 35) {
@@ -1169,12 +1266,22 @@ function renderSecondaryTimeframes(agent) {
   return timeframeKeys.map(tf => {
     const call = getCall(agent, tf);
     const confidence = confidenceValue(call, agent, tf);
+    const timeframeModel = getTimeframeModel(agent, tf);
+    const explicitReason = [
+      call.reason,
+      timeframeModel.reason,
+      call?.conviction_model?.final_conviction_logic,
+      timeframeModel?.conviction_model?.final_conviction_logic
+    ]
+      .map(value => cleanDecisionReason(value))
+      .find(Boolean);
+    const fallbackReason = explicitReason || deriveEvidenceSummary(call, agent, tf);
     return `
       <div class="secondary-timeframe-card">
         <span class="timeframe">${labels[tf] || tf}</span>
         <strong class="direction ${directionClass(call.direction)}">${normaliseDirection(call.direction)}</strong>
         <b>${formatConviction(confidence)}</b>
-        <p>${escapeHtml(firstSentence(cleanDecisionReason(call.reason)) || "No reason supplied.")}</p>
+        <p>${escapeHtml(firstSentence(fallbackReason) || "No reason supplied.")}</p>
       </div>
     `;
   }).join("");
