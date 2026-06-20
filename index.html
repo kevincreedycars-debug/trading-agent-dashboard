@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&family=Playfair+Display:wght@500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=20260620-premium-2" />
+  <link rel="stylesheet" href="styles.css?v=20260620-premium-3" />
 </head>
 <body>
   <header class="topbar">
@@ -69,7 +69,7 @@
       <button class="tab-button" data-tab="GOLD">Gold</button>
       <button class="tab-button" data-tab="NQ">NQ</button>
       <button class="tab-button" data-tab="BTC">BTC</button>
-      <button class="tab-button" data-tab="layer2">Trade Opportunities</button>
+      <button class="tab-button" data-tab="layer2">Pair Analysis</button>
       <button class="tab-button" data-tab="backtest">Backtest / Accuracy</button>
     </nav>
 
@@ -78,25 +78,6 @@
       <div><strong>No contamination:</strong> agents cannot read each other</div>
       <div><strong>Conviction:</strong> numeric percentage weighting</div>
       <div><strong>Primary run:</strong> 07:00 ET</div>
-    </section>
-
-    <section class="section-label">
-      <span class="section-label-text">Platform Control</span>
-      <span class="section-label-rule"></span>
-    </section>
-
-    <section class="workflow-control-panel" aria-labelledby="workflowControlTitle">
-      <div class="workflow-control-copy">
-        <p class="eyebrow">Master Orchestrator</p>
-        <h2 id="workflowControlTitle">Run Full Platform Refresh</h2>
-        <p id="workflowStatusSummary">Checking workflow status...</p>
-      </div>
-      <div class="workflow-control-actions">
-        <button id="runWorkflowButton" class="run-workflow-button" type="button">Run Full Refresh</button>
-        <span id="workflowStatusBadge" class="workflow-status-badge pending">Pending</span>
-      </div>
-      <div id="workflowErrorReport" class="workflow-error-report" hidden></div>
-      <div id="workflowStepReport" class="workflow-step-report"></div>
     </section>
 
     <section class="section-label">
@@ -113,8 +94,38 @@
         <p id="layer1Updated">Last updated: pending</p>
       </section>
 
+      <section class="workflow-compact-panel" aria-label="Platform refresh control">
+        <div>
+          <p class="eyebrow">Master Orchestrator</p>
+          <p id="workflowStatusSummary">Checking workflow status...</p>
+        </div>
+        <span id="workflowEta" class="workflow-eta">ETA pending</span>
+        <span id="workflowStatusBadge" class="workflow-status-badge pending">Pending</span>
+        <button id="runWorkflowButton" class="run-workflow-button" type="button">Run Refresh</button>
+      </section>
+
       <section id="overviewStats" class="overview-stats"></section>
       <section id="layer1Grid" class="agent-grid"></section>
+
+      <section class="section-header overview-layer2-title">
+        <div>
+          <p class="eyebrow">Layer 2</p>
+          <h2>Pair Analysis</h2>
+        </div>
+        <p id="overviewLayer2Updated">Last updated: pending</p>
+      </section>
+      <section id="overviewLayer2Panel" class="layer2-panel overview-layer2-panel"></section>
+
+      <section class="section-header workflow-report-title">
+        <div>
+          <p class="eyebrow">Workflow Report</p>
+          <h2>Full Platform Refresh Report</h2>
+        </div>
+      </section>
+      <section class="workflow-report-panel">
+        <div id="workflowErrorReport" class="workflow-error-report" hidden></div>
+        <div id="workflowStepReport" class="workflow-step-report"></div>
+      </section>
     </section>
 
     <section id="agentView" class="view"></section>
@@ -123,7 +134,7 @@
       <section class="section-header layer2-title">
         <div>
           <p class="eyebrow">Layer 2</p>
-          <h2>Today's Trade Opportunities</h2>
+          <h2>Pair Analysis</h2>
         </div>
         <p id="layer2Updated">Last updated: pending</p>
       </section>
@@ -148,6 +159,6 @@
     </section>
   </main>
 
-  <script src="script.js?v=20260620-premium-2"></script>
+  <script src="script.js?v=20260620-premium-3"></script>
 </body>
 </html>

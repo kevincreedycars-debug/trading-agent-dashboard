@@ -1088,17 +1088,17 @@ function renderLayer2(data = {}) {
   if (layer2Updated) {
     layer2Updated.textContent = `Last updated: ${formatDashboardTime(data.dashboard_meta?.last_updated_et)}`;
   }
-
-  const panel = document.getElementById("layer2Panel");
-  if (!panel) return;
+  const overviewLayer2Updated = document.getElementById("overviewLayer2Updated");
+  if (overviewLayer2Updated) {
+    overviewLayer2Updated.textContent = `Last updated: ${formatDashboardTime(data.dashboard_meta?.last_updated_et)}`;
+  }
 
   const opportunities = Array.isArray(data.trade_opportunities) ? data.trade_opportunities : [];
   const avoided = Array.isArray(data.avoid_today) ? data.avoid_today : [];
-
-  panel.innerHTML = `
+  const html = `
     <div class="layer2-summary trade-layer-summary">
       <div>
-        <p class="eyebrow">Today's Trade Opportunities</p>
+        <p class="eyebrow">Pair Analysis</p>
         <h3>Layer 2 Trade Selection</h3>
       </div>
       <p class="summary">Layer 2 displays trade selections produced by the Layer 2 agent. The browser only renders the supplied output.</p>
@@ -1123,6 +1123,11 @@ function renderLayer2(data = {}) {
       </div>
     </section>
   `;
+
+  ["layer2Panel", "overviewLayer2Panel"].forEach(id => {
+    const panel = document.getElementById(id);
+    if (panel) panel.innerHTML = html;
+  });
 }
 
 function resultClass(result = "") {
@@ -1469,11 +1474,29 @@ function renderWorkflowSteps(steps = []) {
   `;
 }
 
+function workflowEtaText(status, statusClass) {
+  if (status?.eta) return status.eta;
+  if (status?.eta_seconds !== undefined) return `${Math.max(0, Math.ceil(Number(status.eta_seconds) / 60))}m ETA`;
+  if (statusClass === "running" && status?.last_run_started_at) {
+    const startedAt = new Date(status.last_run_started_at).getTime();
+    const windowMs = Number(workflowControl?.poll_after_trigger_ms || 180000);
+    if (!Number.isNaN(startedAt)) {
+      const remainingMs = Math.max(0, startedAt + windowMs - Date.now());
+      return remainingMs > 0 ? `~${Math.ceil(remainingMs / 60000)}m ETA` : "Checking completion";
+    }
+  }
+  if (statusClass === "success") return status?.last_run_finished_at ? `Completed ${formatRelativeAge(status.last_run_finished_at)}` : "Completed";
+  if (statusClass === "failed") return "Needs review";
+  if (statusClass === "not-configured") return "Not configured";
+  return "Ready";
+}
+
 function renderWorkflowStatus(status = workflowStatus) {
   const summary = document.getElementById("workflowStatusSummary");
   const badge = document.getElementById("workflowStatusBadge");
   const button = document.getElementById("runWorkflowButton");
   const errorReport = document.getElementById("workflowErrorReport");
+  const eta = document.getElementById("workflowEta");
 
   const configured = Boolean(workflowControl?.enabled && workflowControl?.webhook_url);
   const currentStatus = status?.status || (configured ? "pending" : "not_configured");
@@ -1490,10 +1513,15 @@ function renderWorkflowStatus(status = workflowStatus) {
 
   if (button) {
     button.disabled = workflowTriggerInFlight || !configured;
-    button.textContent = workflowTriggerInFlight ? "Starting..." : "Run Full Refresh";
+    button.textContent = workflowTriggerInFlight ? "Starting..." : "Run Refresh";
     button.title = configured
       ? "Trigger the n8n Master Orchestrator"
       : "Add the n8n webhook URL to data/workflow-control.json";
+  }
+
+  if (eta) {
+    eta.textContent = workflowEtaText(status, statusClass);
+    eta.className = `workflow-eta ${statusClass}`;
   }
 
   if (summary) {

@@ -141,7 +141,7 @@ textarea {
 }
 
 .hero .eyebrow {
-  color: rgba(67, 200, 176, 0.8);
+  color: #66ead2;
 }
 
 h1,
@@ -152,7 +152,7 @@ h3 {
 }
 
 h1 {
-  color: #fff;
+  color: #fbfaf7;
   font-family: var(--serif);
   font-size: clamp(44px, 6vw, 76px);
   font-weight: 600;
@@ -179,7 +179,7 @@ h3 {
 .subcopy {
   max-width: 760px;
   margin: 18px 0 0;
-  color: rgba(255, 255, 255, 0.54);
+  color: rgba(255, 255, 255, 0.78);
   font-size: 16px;
   line-height: 1.7;
 }
@@ -202,14 +202,14 @@ h3 {
 
 .hero-stat span {
   display: block;
-  color: rgba(255, 255, 255, 0.36);
+  color: rgba(255, 255, 255, 0.68);
   font-size: 12px;
   margin-bottom: 6px;
 }
 
 .hero-stat strong {
   display: block;
-  color: #fff;
+  color: #fbfaf7;
   font-family: var(--serif);
   font-size: 28px;
   font-weight: 600;
@@ -227,7 +227,7 @@ h3 {
 
 .market-cities span {
   position: relative;
-  color: rgba(255, 255, 255, 0.36);
+  color: rgba(255, 255, 255, 0.68);
   font-size: 11px;
   padding-left: 12px;
 }
@@ -357,6 +357,54 @@ h3 {
   border-top: 3px solid var(--navy);
 }
 
+.workflow-compact-panel {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto auto;
+  gap: 12px;
+  align-items: center;
+  background: #fff;
+  border: 1px solid var(--cream-border);
+  border-radius: 8px;
+  box-shadow: 0 14px 32px rgba(33, 29, 21, 0.045);
+  padding: 12px 14px;
+  margin-bottom: 16px;
+}
+
+.workflow-compact-panel .eyebrow {
+  margin-bottom: 3px;
+}
+
+.workflow-compact-panel p:last-child {
+  margin: 0;
+  color: var(--ink-muted);
+  font-size: 13px;
+}
+
+.workflow-eta {
+  border: 1px solid var(--cream-border);
+  border-radius: 999px;
+  background: var(--cream);
+  color: var(--ink-muted);
+  font-family: var(--mono);
+  font-size: 11px;
+  padding: 6px 9px;
+  white-space: nowrap;
+}
+
+.workflow-eta.running { color: var(--blue); background: var(--navy-pale); }
+.workflow-eta.success { color: var(--green); background: var(--teal-bg); }
+.workflow-eta.failed { color: var(--red); background: #fff5f3; }
+.workflow-eta.not-configured,
+.workflow-eta.pending { color: var(--gold); background: var(--gold-bg); }
+
+.workflow-report-panel {
+  background: #fff;
+  border: 1px solid var(--cream-border);
+  border-radius: 8px;
+  box-shadow: 0 14px 32px rgba(33, 29, 21, 0.045);
+  padding: 16px;
+}
+
 .workflow-control-copy p:last-child,
 .section-header p:last-child,
 .summary,
@@ -384,6 +432,8 @@ h3 {
   color: var(--navy);
   background: var(--teal);
   border-color: rgba(67, 200, 176, 0.7);
+  padding: 8px 12px;
+  font-size: 11px;
 }
 
 .run-workflow-button:disabled {
@@ -576,6 +626,13 @@ h3 {
   align-items: start;
 }
 
+.call-row-head {
+  display: grid;
+  grid-template-columns: minmax(86px, 1fr) max-content;
+  align-items: center;
+  gap: 10px;
+}
+
 .badge {
   color: var(--blue);
   background: var(--navy-pale);
@@ -618,17 +675,24 @@ h3 {
   padding: 9px;
 }
 
+.compact-call .timeframe,
+.compact-call .direction {
+  font-size: 11px;
+}
+
 .timeframe {
   color: var(--ink-muted);
   font-size: 12px;
   text-transform: uppercase;
   letter-spacing: 0;
+  white-space: nowrap;
 }
 
 .direction {
   font-weight: 900;
   text-transform: uppercase;
   letter-spacing: 0;
+  white-space: nowrap;
 }
 
 .direction.bullish,
@@ -851,8 +915,14 @@ h3 {
 }
 
 .layer2-title,
-.backtest-title {
+.backtest-title,
+.overview-layer2-title,
+.workflow-report-title {
   margin-top: 44px;
+}
+
+.overview-layer2-panel .trade-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .layer2-summary {
@@ -1160,6 +1230,7 @@ h3 {
   .trade-grid,
   .avoid-grid,
   .workflow-control-panel,
+  .workflow-compact-panel,
   .workflow-step-grid,
   .backtest-empty-strip,
   .backtest-metric-grid,
