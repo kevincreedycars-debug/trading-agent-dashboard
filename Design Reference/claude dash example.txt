@@ -1,0 +1,865 @@
+<html lang="en"><head><style>:root{--litepicker-container-months-color-bg: #fff;--litepicker-container-months-box-shadow-color: #ddd;--litepicker-footer-color-bg: #fafafa;--litepicker-footer-box-shadow-color: #ddd;--litepicker-tooltip-color-bg: #fff;--litepicker-month-header-color: #333;--litepicker-button-prev-month-color: #9e9e9e;--litepicker-button-next-month-color: #9e9e9e;--litepicker-button-prev-month-color-hover: #2196f3;--litepicker-button-next-month-color-hover: #2196f3;--litepicker-month-width: calc(var(--litepicker-day-width) * 7);--litepicker-month-weekday-color: #9e9e9e;--litepicker-month-week-number-color: #9e9e9e;--litepicker-day-width: 38px;--litepicker-day-color: #333;--litepicker-day-color-hover: #2196f3;--litepicker-is-today-color: #f44336;--litepicker-is-in-range-color: #bbdefb;--litepicker-is-locked-color: #9e9e9e;--litepicker-is-start-color: #fff;--litepicker-is-start-color-bg: #2196f3;--litepicker-is-end-color: #fff;--litepicker-is-end-color-bg: #2196f3;--litepicker-button-cancel-color: #fff;--litepicker-button-cancel-color-bg: #9e9e9e;--litepicker-button-apply-color: #fff;--litepicker-button-apply-color-bg: #2196f3;--litepicker-button-reset-color: #909090;--litepicker-button-reset-color-hover: #2196f3;--litepicker-highlighted-day-color: #333;--litepicker-highlighted-day-color-bg: #ffeb3b}.show-week-numbers{--litepicker-month-width: calc(var(--litepicker-day-width) * 8)}.litepicker{font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;font-size:0.8em;display:none}.litepicker button{border:none;background:none}.litepicker .container__main{display:-webkit-box;display:-ms-flexbox;display:flex}.litepicker .container__months{display:-webkit-box;display:-ms-flexbox;display:flex;-ms-flex-wrap:wrap;flex-wrap:wrap;background-color:var(--litepicker-container-months-color-bg);border-radius:5px;-webkit-box-shadow:0 0 5px var(--litepicker-container-months-box-shadow-color);box-shadow:0 0 5px var(--litepicker-container-months-box-shadow-color);width:calc(var(--litepicker-month-width) + 10px);-webkit-box-sizing:content-box;box-sizing:content-box}.litepicker .container__months.columns-2{width:calc((var(--litepicker-month-width) * 2) + 20px)}.litepicker .container__months.columns-3{width:calc((var(--litepicker-month-width) * 3) + 30px)}.litepicker .container__months.columns-4{width:calc((var(--litepicker-month-width) * 4) + 40px)}.litepicker .container__months.split-view .month-item-header .button-previous-month,.litepicker .container__months.split-view .month-item-header .button-next-month{visibility:visible}.litepicker .container__months .month-item{padding:5px;width:var(--litepicker-month-width);-webkit-box-sizing:content-box;box-sizing:content-box}.litepicker .container__months .month-item-header{display:-webkit-box;display:-ms-flexbox;display:flex;-webkit-box-pack:justify;-ms-flex-pack:justify;justify-content:space-between;font-weight:500;padding:10px 5px;text-align:center;-webkit-box-align:center;-ms-flex-align:center;align-items:center;color:var(--litepicker-month-header-color)}.litepicker .container__months .month-item-header div{-webkit-box-flex:1;-ms-flex:1;flex:1}.litepicker .container__months .month-item-header div>.month-item-name{margin-right:5px}.litepicker .container__months .month-item-header div>.month-item-year{padding:0}.litepicker .container__months .month-item-header .reset-button{color:var(--litepicker-button-reset-color)}.litepicker .container__months .month-item-header .reset-button>svg{fill:var(--litepicker-button-reset-color)}.litepicker .container__months .month-item-header .reset-button *{pointer-events:none}.litepicker .container__months .month-item-header .reset-button:hover{color:var(--litepicker-button-reset-color-hover)}.litepicker .container__months .month-item-header .reset-button:hover>svg{fill:var(--litepicker-button-reset-color-hover)}.litepicker .container__months .month-item-header .button-previous-month,.litepicker .container__months .month-item-header .button-next-month{visibility:hidden;text-decoration:none;padding:3px 5px;border-radius:3px;-webkit-transition:color 0.3s, border 0.3s;transition:color 0.3s, border 0.3s;cursor:default}.litepicker .container__months .month-item-header .button-previous-month *,.litepicker .container__months .month-item-header .button-next-month *{pointer-events:none}.litepicker .container__months .month-item-header .button-previous-month{color:var(--litepicker-button-prev-month-color)}.litepicker .container__months .month-item-header .button-previous-month>svg,.litepicker .container__months .month-item-header .button-previous-month>img{fill:var(--litepicker-button-prev-month-color)}.litepicker .container__months .month-item-header .button-previous-month:hover{color:var(--litepicker-button-prev-month-color-hover)}.litepicker .container__months .month-item-header .button-previous-month:hover>svg{fill:var(--litepicker-button-prev-month-color-hover)}.litepicker .container__months .month-item-header .button-next-month{color:var(--litepicker-button-next-month-color)}.litepicker .container__months .month-item-header .button-next-month>svg,.litepicker .container__months .month-item-header .button-next-month>img{fill:var(--litepicker-button-next-month-color)}.litepicker .container__months .month-item-header .button-next-month:hover{color:var(--litepicker-button-next-month-color-hover)}.litepicker .container__months .month-item-header .button-next-month:hover>svg{fill:var(--litepicker-button-next-month-color-hover)}.litepicker .container__months .month-item-weekdays-row{display:-webkit-box;display:-ms-flexbox;display:flex;justify-self:center;-webkit-box-pack:start;-ms-flex-pack:start;justify-content:flex-start;color:var(--litepicker-month-weekday-color)}.litepicker .container__months .month-item-weekdays-row>div{padding:5px 0;font-size:85%;-webkit-box-flex:1;-ms-flex:1;flex:1;width:var(--litepicker-day-width);text-align:center}.litepicker .container__months .month-item:first-child .button-previous-month{visibility:visible}.litepicker .container__months .month-item:last-child .button-next-month{visibility:visible}.litepicker .container__months .month-item.no-previous-month .button-previous-month{visibility:hidden}.litepicker .container__months .month-item.no-next-month .button-next-month{visibility:hidden}.litepicker .container__days{display:-webkit-box;display:-ms-flexbox;display:flex;-ms-flex-wrap:wrap;flex-wrap:wrap;justify-self:center;-webkit-box-pack:start;-ms-flex-pack:start;justify-content:flex-start;text-align:center;-webkit-box-sizing:content-box;box-sizing:content-box}.litepicker .container__days>div,.litepicker .container__days>a{padding:5px 0;width:var(--litepicker-day-width)}.litepicker .container__days .day-item{color:var(--litepicker-day-color);text-align:center;text-decoration:none;border-radius:3px;-webkit-transition:color 0.3s, border 0.3s;transition:color 0.3s, border 0.3s;cursor:default}.litepicker .container__days .day-item:hover{color:var(--litepicker-day-color-hover);-webkit-box-shadow:inset 0 0 0 1px var(--litepicker-day-color-hover);box-shadow:inset 0 0 0 1px var(--litepicker-day-color-hover)}.litepicker .container__days .day-item.is-today{color:var(--litepicker-is-today-color)}.litepicker .container__days .day-item.is-locked{color:var(--litepicker-is-locked-color)}.litepicker .container__days .day-item.is-locked:hover{color:var(--litepicker-is-locked-color);-webkit-box-shadow:none;box-shadow:none;cursor:default}.litepicker .container__days .day-item.is-in-range{background-color:var(--litepicker-is-in-range-color);border-radius:0}.litepicker .container__days .day-item.is-start-date{color:var(--litepicker-is-start-color);background-color:var(--litepicker-is-start-color-bg);border-top-left-radius:5px;border-bottom-left-radius:5px;border-top-right-radius:0;border-bottom-right-radius:0}.litepicker .container__days .day-item.is-start-date.is-flipped{border-top-left-radius:0;border-bottom-left-radius:0;border-top-right-radius:5px;border-bottom-right-radius:5px}.litepicker .container__days .day-item.is-end-date{color:var(--litepicker-is-end-color);background-color:var(--litepicker-is-end-color-bg);border-top-left-radius:0;border-bottom-left-radius:0;border-top-right-radius:5px;border-bottom-right-radius:5px}.litepicker .container__days .day-item.is-end-date.is-flipped{border-top-left-radius:5px;border-bottom-left-radius:5px;border-top-right-radius:0;border-bottom-right-radius:0}.litepicker .container__days .day-item.is-start-date.is-end-date{border-top-left-radius:5px;border-bottom-left-radius:5px;border-top-right-radius:5px;border-bottom-right-radius:5px}.litepicker .container__days .day-item.is-highlighted{color:var(--litepicker-highlighted-day-color);background-color:var(--litepicker-highlighted-day-color-bg)}.litepicker .container__days .week-number{display:-webkit-box;display:-ms-flexbox;display:flex;-webkit-box-align:center;-ms-flex-align:center;align-items:center;-webkit-box-pack:center;-ms-flex-pack:center;justify-content:center;color:var(--litepicker-month-week-number-color);font-size:85%}.litepicker .container__footer{text-align:right;padding:10px 5px;margin:0 5px;background-color:var(--litepicker-footer-color-bg);-webkit-box-shadow:inset 0px 3px 3px 0px var(--litepicker-footer-box-shadow-color);box-shadow:inset 0px 3px 3px 0px var(--litepicker-footer-box-shadow-color);border-bottom-left-radius:5px;border-bottom-right-radius:5px}.litepicker .container__footer .preview-date-range{margin-right:10px;font-size:90%}.litepicker .container__footer .button-cancel{background-color:var(--litepicker-button-cancel-color-bg);color:var(--litepicker-button-cancel-color);border:0;padding:3px 7px 4px;border-radius:3px}.litepicker .container__footer .button-cancel *{pointer-events:none}.litepicker .container__footer .button-apply{background-color:var(--litepicker-button-apply-color-bg);color:var(--litepicker-button-apply-color);border:0;padding:3px 7px 4px;border-radius:3px;margin-left:10px;margin-right:10px}.litepicker .container__footer .button-apply:disabled{opacity:0.7}.litepicker .container__footer .button-apply *{pointer-events:none}.litepicker .container__tooltip{position:absolute;margin-top:-4px;padding:4px 8px;border-radius:4px;background-color:var(--litepicker-tooltip-color-bg);-webkit-box-shadow:0 1px 3px rgba(0,0,0,0.25);box-shadow:0 1px 3px rgba(0,0,0,0.25);white-space:nowrap;font-size:11px;pointer-events:none;visibility:hidden}.litepicker .container__tooltip:before{position:absolute;bottom:-5px;left:calc(50% - 5px);border-top:5px solid rgba(0,0,0,0.12);border-right:5px solid transparent;border-left:5px solid transparent;content:""}.litepicker .container__tooltip:after{position:absolute;bottom:-4px;left:calc(50% - 4px);border-top:4px solid var(--litepicker-tooltip-color-bg);border-right:4px solid transparent;border-left:4px solid transparent;content:""}
+</style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Daniel Silver — Executive Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400&amp;family=Inter:wght@300;400;500&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --cream:#F5F3EE;
+  --cream-mid:#EDE9E0;
+  --cream-border:#E0DAD0;
+  --cream-deep:#D4CCC0;
+  --ink:#1A1814;
+  --ink-mid:#3D3930;
+  --ink-muted:#6A6660;
+  --ink-faint:#A8A29A;
+  --gold:#B8841A;
+  --gold-light:#C4971E;
+  --gold-bg:#FBF5E6;
+  --gold-border:#E8D5A0;
+  --danger:#9B2626;
+  --danger-bg:#FDF3F3;
+  --danger-border:#E8C4C4;
+  --danger-mid:#C94040;
+  --navy:#0F1B35;
+  --navy-mid:#1A2E55;
+  --navy-pale:#EEF3FA;
+  --navy-border:#C4D8EE;
+  --teal:#4ECDB4;
+  --blue:#2A4E8A;
+  --blue-bg:#EEF3FA;
+  --blue-border:#C4D8EE;
+  --blue-ink:#1E3A5C;
+  --green:#2A6844;
+  --green-bg:#EEF8F3;
+  --green-border:#B8DDD0;
+  --slate:#4A5568;
+  --serif:'Playfair Display',Georgia,serif;
+  --sans:'Inter',system-ui,sans-serif;
+  --mono:'JetBrains Mono',monospace;
+}
+
+html{background:var(--cream);color:var(--ink);font-family:var(--sans)}
+body{min-height:100vh;background:var(--cream)}
+
+/* SETUP */
+#setup-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:2rem;background:var(--navy)}
+.setup-wrap{max-width:440px;width:100%}
+.setup-logo{font-family:var(--serif);font-size:2.2rem;color:#fff;margin-bottom:0.25rem;font-weight:400}
+.setup-sub{font-size:13px;color:rgba(255,255,255,0.4);margin-bottom:2rem;line-height:1.6;border-bottom:1px solid rgba(255,255,255,0.1);padding-bottom:1.5rem}
+.setup-label{font-size:11px;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;color:rgba(255,255,255,0.4);margin-bottom:0.4rem;display:block}
+.setup-input{width:100%;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.15);border-radius:6px;color:#fff;font-family:var(--mono);font-size:13px;padding:0.7rem 0.875rem;margin-bottom:1rem;outline:none;transition:border-color 0.2s}
+.setup-input:focus{border-color:var(--teal)}
+.setup-input::placeholder{color:rgba(255,255,255,0.2)}
+.setup-btn{width:100%;background:var(--teal);color:var(--navy);border:none;border-radius:6px;padding:0.8rem;font-family:var(--sans);font-size:13px;font-weight:600;cursor:pointer;letter-spacing:0.03em;transition:opacity 0.2s}
+.setup-btn:hover{opacity:0.88}
+.setup-note{margin-top:1rem;font-size:11px;color:rgba(255,255,255,0.25);line-height:1.65}
+.setup-error{color:#F87171;font-size:12px;margin-top:-0.5rem;margin-bottom:0.75rem;display:none}
+
+/* LOADING */
+#loading{position:fixed;inset:0;background:var(--navy);display:none;flex-direction:column;align-items:center;justify-content:center;gap:1rem;z-index:999}
+.loading-mark{font-family:var(--serif);font-size:1.6rem;color:#fff;font-weight:400;font-style:italic}
+.loading-sub{font-size:12px;color:rgba(255,255,255,0.35);letter-spacing:0.06em}
+.loading-rule{width:120px;height:1px;background:rgba(255,255,255,0.12);position:relative;overflow:hidden;margin-top:0.5rem}
+.loading-rule::after{content:'';position:absolute;top:0;left:-50%;width:50%;height:100%;background:var(--teal);animation:slide 1.4s ease-in-out infinite}
+@keyframes slide{0%{left:-50%}100%{left:150%}}
+
+/* DASHBOARD */
+#dashboard{display:none}
+
+/* TOPBAR */
+.topbar{background:var(--navy);border-bottom:1px solid rgba(255,255,255,0.07);padding:0 2rem;height:54px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.topbar-brand{font-family:var(--serif);font-size:1.05rem;color:#fff;font-weight:400;letter-spacing:0.01em}
+.topbar-brand span{font-style:italic;color:rgba(255,255,255,0.38)}
+.topbar-center{display:flex;align-items:center;gap:8px}
+.pill{border-radius:100px;padding:3px 11px;font-size:11px;font-family:var(--mono);font-weight:500;border:1px solid}
+.pill-gold{background:rgba(184,132,26,0.18);border-color:rgba(196,151,30,0.35);color:#E8B84A}
+.pill-muted{background:rgba(255,255,255,0.06);border-color:rgba(255,255,255,0.12);color:rgba(255,255,255,0.4)}
+.topbar-right{display:flex;align-items:center;gap:8px}
+.date-txt{font-size:11px;color:rgba(255,255,255,0.28);font-family:var(--mono);margin-right:4px}
+.btn-sm{background:transparent;border:1px solid rgba(255,255,255,0.16);border-radius:5px;color:rgba(255,255,255,0.55);font-size:12px;font-family:var(--sans);padding:5px 12px;cursor:pointer;display:flex;align-items:center;gap:5px;transition:all 0.15s}
+.btn-sm:hover{border-color:rgba(255,255,255,0.35);color:#fff}
+.btn-edit-toggle.active{background:rgba(78,205,180,0.12);border-color:rgba(78,205,180,0.5);color:var(--teal)}
+.btn-icon{width:30px;height:30px;display:flex;align-items:center;justify-content:center;background:transparent;border:1px solid rgba(255,255,255,0.16);border-radius:5px;cursor:pointer;color:rgba(255,255,255,0.45);font-size:15px;transition:all 0.15s}
+.btn-icon:hover{border-color:rgba(255,255,255,0.35);color:#fff}
+
+/* HERO */
+.hero-section{background:var(--navy);padding:2rem 2rem 2.5rem}
+.hero-inner{max-width:1360px;margin:0 auto;display:grid;grid-template-columns:290px 1fr;gap:3rem;align-items:center}
+.globe-col{display:flex;align-items:center;justify-content:center;position:relative}
+#globe-canvas{display:block}
+.hero-eyebrow{font-size:9px;font-weight:600;letter-spacing:0.18em;text-transform:uppercase;color:rgba(78,205,180,0.7);margin-bottom:0.75rem}
+.hero-title{font-family:var(--serif);font-size:2.5rem;color:#fff;font-weight:400;line-height:1.15;margin-bottom:0.875rem}
+.hero-title em{color:var(--teal);font-style:italic}
+.hero-tagline{font-size:12.5px;color:rgba(255,255,255,0.38);line-height:1.85;margin-bottom:1.75rem;max-width:480px}
+.hero-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:0;border-top:1px solid rgba(255,255,255,0.09)}
+.hero-stat{padding:1.25rem 1.5rem 0 0;margin-top:1.25rem}
+.hero-stat+.hero-stat{border-left:1px solid rgba(255,255,255,0.09);padding-left:1.5rem}
+.hs-val{font-family:var(--serif);font-size:2rem;color:#fff;font-weight:400;line-height:1}
+.hs-val.teal{color:var(--teal)}
+.hs-label{font-size:10px;color:rgba(255,255,255,0.3);letter-spacing:0.05em;margin-top:5px}
+.hero-cities{display:flex;flex-wrap:wrap;gap:10px;margin-top:1.75rem;padding-top:1.25rem;border-top:1px solid rgba(255,255,255,0.07)}
+.city-chip{display:flex;align-items:center;gap:5px;font-size:10px;color:rgba(255,255,255,0.28);letter-spacing:0.04em}
+.city-dot{width:5px;height:5px;border-radius:50%;background:var(--teal);opacity:0.55;flex-shrink:0}
+
+/* VPSP BANNER */
+.vpsp-outer{background:var(--cream);padding:1.5rem 2rem 0}
+.vpsp-wrap{max-width:1360px;margin:0 auto}
+.vpsp-card{background:#fff;border:1px solid var(--cream-border);border-left:3px solid var(--danger-mid);border-radius:0 8px 8px 0;padding:1.125rem 1.5rem}
+.vpsp-eyebrow{font-size:10px;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--danger-mid);margin-bottom:0.5rem}
+.vpsp-body{font-size:13px;line-height:1.75;color:#5C1A1A}
+.vpsp-body b{font-weight:500;color:var(--danger)}
+
+/* MAIN */
+.main{max-width:1360px;margin:0 auto;padding:1.5rem 2rem 4rem;display:grid;grid-template-columns:repeat(12,1fr);gap:1.125rem}
+
+/* SECTION LABELS */
+.section-label{grid-column:span 12;display:flex;align-items:center;gap:1rem;padding-top:0.5rem}
+.section-label-text{font-size:9px;font-weight:600;letter-spacing:0.16em;text-transform:uppercase;color:var(--ink-faint);white-space:nowrap}
+.section-label-rule{flex:1;height:1px;background:var(--cream-border)}
+
+/* CARDS */
+.card{background:#fff;border:1px solid var(--cream-border);border-radius:10px;padding:1.5rem;position:relative;overflow:hidden}
+.card-top{position:absolute;top:0;left:0;right:0;height:3px}
+.card-top.gold{background:linear-gradient(90deg,var(--gold-light),#D4A820)}
+.card-top.danger{background:linear-gradient(90deg,var(--danger-mid),#D84040)}
+.card-top.navy{background:linear-gradient(90deg,var(--navy),#2A4E8A)}
+.card-top.blue{background:linear-gradient(90deg,var(--blue),#3A6AAA)}
+.card-top.green{background:linear-gradient(90deg,var(--green),#3A8060)}
+.card-top.slate{background:linear-gradient(90deg,var(--slate),#6B7DA0)}
+.col-3{grid-column:span 3}
+.col-4{grid-column:span 4}
+.col-6{grid-column:span 6}
+.col-8{grid-column:span 8}
+.col-12{grid-column:span 12}
+@media(max-width:1000px){.col-3,.col-4{grid-column:span 6}.col-8{grid-column:span 12}}
+@media(max-width:680px){
+  .col-3,.col-4,.col-6,.col-8,.col-12{grid-column:span 12}
+  .main{padding:0 1rem 3rem}
+  .hero-section{padding:1.5rem 1rem}
+  .hero-inner{grid-template-columns:1fr;gap:1.5rem}
+  .vpsp-outer{padding:1.25rem 1rem 0}
+  .topbar{padding:0 1rem}
+  .hero-stats{grid-template-columns:repeat(2,1fr)}
+  .hero-stat+.hero-stat{border-left:none;padding-left:0}
+}
+
+.eyebrow{font-size:10px;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:0.625rem;margin-top:0.375rem}
+.eyebrow.gold{color:var(--gold)}
+.eyebrow.danger{color:var(--danger-mid)}
+.eyebrow.navy{color:var(--navy-mid)}
+.eyebrow.blue{color:var(--blue)}
+.eyebrow.green{color:var(--green)}
+.eyebrow.slate{color:var(--slate)}
+.card-title{font-family:var(--serif);font-size:1.2rem;font-weight:400;color:var(--ink);margin-bottom:1rem;line-height:1.3}
+.card-body{font-size:13px;line-height:1.8;color:var(--ink-muted)}
+.card-body p{margin-bottom:0.75rem}
+.card-body p:last-child{margin-bottom:0}
+.card-body b,.card-body strong{font-weight:500;color:var(--ink-mid)}
+
+/* EDIT */
+.edit-area{width:100%;background:var(--cream-mid);border:1px solid var(--cream-border);border-radius:6px;padding:10px;font-family:var(--sans);font-size:13px;line-height:1.7;color:var(--ink);resize:vertical;min-height:80px;outline:none;display:none;transition:border-color 0.15s}
+.edit-area:focus{border-color:var(--cream-deep)}
+.save-btn{margin-top:8px;background:var(--navy);color:#fff;border:none;border-radius:5px;font-size:11px;font-family:var(--sans);padding:5px 12px;cursor:pointer;display:none;letter-spacing:0.03em}
+.save-btn:hover{opacity:0.82}
+body.edit-mode .edit-area{display:block}
+body.edit-mode .save-btn{display:inline-block}
+body.edit-mode .display-content{display:none}
+
+/* PHASES */
+.phase-item{display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--cream-border)}
+.phase-item:last-child{border-bottom:none}
+.phase-num{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:11px;font-weight:500;flex-shrink:0;border:1px solid}
+.phase-active .phase-num{background:var(--gold-bg);border-color:var(--gold-border);color:var(--gold)}
+.phase-locked .phase-num{background:var(--cream-mid);border-color:var(--cream-border);color:var(--ink-faint)}
+.phase-text{flex:1}
+.phase-tag{font-size:10px;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:3px}
+.phase-active .phase-tag{color:var(--gold)}
+.phase-locked .phase-tag{color:var(--ink-faint)}
+.phase-desc{font-size:12.5px;color:var(--ink-muted);line-height:1.6}
+.phase-gate{font-family:var(--mono);font-size:11px;color:var(--gold);white-space:nowrap;align-self:center}
+.phase-locked .phase-gate{color:var(--ink-faint)}
+
+/* RULES */
+.rule-item{padding:9px 12px;border-radius:6px;background:var(--cream-mid);border:1px solid var(--cream-border);margin-bottom:6px}
+.rule-name{font-size:12px;font-weight:500;color:var(--ink-mid);margin-bottom:2px}
+.rule-desc{font-size:12px;color:var(--ink-muted);line-height:1.55}
+
+/* VPSP CASCADE */
+.stage-item{display:flex;gap:10px;padding:9px 0;border-bottom:1px solid var(--cream-border)}
+.stage-item:last-child{border-bottom:none}
+.stage-num{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:11px;font-weight:500;flex-shrink:0;border:1px solid}
+.s1 .stage-num{background:var(--danger-bg);border-color:var(--danger-border);color:var(--danger-mid)}
+.sn .stage-num{background:var(--cream-mid);border-color:var(--cream-border);color:var(--ink-faint)}
+.stage-body{flex:1}
+.int-badge{display:inline-block;background:var(--danger-bg);border:1px solid var(--danger-border);color:var(--danger-mid);font-size:10px;font-weight:500;padding:1px 7px;border-radius:4px;margin-bottom:4px;letter-spacing:0.06em}
+.stage-name{font-size:12px;font-weight:500;margin-bottom:2px}
+.s1 .stage-name{color:var(--danger-mid)}
+.sn .stage-name{color:var(--ink-mid)}
+.stage-desc{font-size:12px;color:var(--ink-muted);line-height:1.55}
+
+/* TIME BLOCKS */
+.time-item{display:flex;align-items:center;gap:10px;padding:8px 10px;background:var(--cream-mid);border:1px solid var(--cream-border);border-radius:6px;margin-bottom:6px}
+.time-range{font-family:var(--mono);font-size:11px;color:var(--ink-faint);min-width:88px}
+.time-label{font-size:12.5px;color:var(--ink-muted);flex:1}
+.time-badge{font-size:10px;font-weight:500;padding:2px 8px;border-radius:4px;letter-spacing:0.06em;border:1px solid;white-space:nowrap}
+.tb-trading{background:var(--gold-bg);border-color:var(--gold-border);color:var(--gold)}
+.tb-work{background:var(--blue-bg);border-color:var(--blue-border);color:var(--blue-ink)}
+.tb-seo{background:var(--cream-mid);border-color:var(--cream-deep);color:var(--ink-muted)}
+.tb-rest{background:var(--green-bg);border-color:var(--green-border);color:var(--green)}
+
+/* GRATITUDE */
+.grat-item{display:flex;gap:10px;padding:7px 0;border-bottom:1px solid var(--cream-border);font-size:13px;color:var(--ink-muted);line-height:1.6;align-items:flex-start}
+.grat-item:last-child{border-bottom:none}
+.grat-marker{width:4px;height:4px;border-radius:50%;background:var(--green);flex-shrink:0;margin-top:9px;opacity:0.6}
+
+/* ZOV */
+.zov-wrap{grid-column:span 12;background:#fff;border:1px solid var(--cream-border);border-top:3px solid var(--navy);border-radius:10px;padding:1.75rem}
+.zov-header{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:1.25rem}
+.zov-title{font-family:var(--serif);font-size:1.3rem;font-weight:400}
+.zov-rule{font-size:12px;color:var(--ink-muted)}
+.zov-rule b{font-weight:500;color:var(--ink-mid)}
+.task-row{display:flex;align-items:center;gap:10px;background:var(--cream-mid);border:1px solid var(--cream-border);border-radius:6px;padding:9px 14px;margin-bottom:6px;transition:border-color 0.15s}
+.task-row:focus-within{border-color:var(--cream-deep);background:#fff}
+.task-n{font-family:var(--mono);font-size:11px;color:var(--gold);font-weight:500;width:20px;flex-shrink:0}
+.task-inp{flex:1;background:transparent;border:none;font-family:var(--sans);font-size:13.5px;color:var(--ink);outline:none}
+.task-inp::placeholder{color:var(--ink-faint)}
+.task-time{width:64px;background:transparent;border:none;border-left:1px solid var(--cream-border);font-family:var(--mono);font-size:12px;color:var(--ink-muted);padding-left:12px;outline:none;text-align:center}
+.task-time::placeholder{color:var(--ink-faint)}
+.btn-commit{background:var(--navy);color:#fff;border:none;border-radius:6px;padding:9px 24px;font-family:var(--sans);font-size:13px;font-weight:500;cursor:pointer;margin-top:6px;letter-spacing:0.02em;transition:opacity 0.2s}
+.btn-commit:hover{opacity:0.82}
+
+.pull-quote{font-family:var(--serif);font-size:1.05rem;font-style:italic;color:var(--ink-mid);line-height:1.7;border-left:2px solid var(--gold-light);padding-left:1rem;margin-bottom:0.875rem}
+</style>
+<script src="chrome-extension://hjbfbllnfhppnhjdhhbmjabikmkfekgf/kins_stabilizer.js"></script><script src="chrome-extension://liecbddmkiiihnedobmlmillhodjkdmb/js/recordConsoleEvents.js"></script></head>
+<body>
+
+<!-- SETUP -->
+<div id="setup-screen" style="display: none;">
+  <div class="setup-wrap">
+    <div class="setup-logo">Executive Dashboard</div>
+    <p class="setup-sub">Connect your GitHub repository to load your framework. Credentials are stored in your browser only.</p>
+    <label class="setup-label">GitHub token</label>
+    <input class="setup-input" type="password" id="setup-token" placeholder="ghp_...">
+    <p class="setup-error" id="setup-error">Could not connect. Check your token and try again.</p>
+    <button class="setup-btn" onclick="connect()">Connect</button>
+    <p class="setup-note">Regenerate your token on GitHub after first connection for security. Token is never sent anywhere except the GitHub API.</p>
+  </div>
+</div>
+
+<!-- LOADING -->
+<div id="loading" style="display: none;">
+  <div class="loading-mark">Loading your framework</div>
+  <div class="loading-sub">Fetching from GitHub</div>
+  <div class="loading-rule"></div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="dashboard" style="display: block;">
+
+  <!-- TOPBAR -->
+  <header class="topbar">
+    <div class="topbar-brand">Daniel Silver <span>— Executive Dashboard</span></div>
+    <div class="topbar-center">
+      <span class="pill pill-gold" id="pill-days">3,648 days to exit</span>
+      <span class="pill pill-muted" id="pill-since">55 days in window</span>
+    </div>
+    <div class="topbar-right">
+      <span class="date-txt" id="date-txt">Saturday, 20 June 2026</span>
+      <button class="btn-sm btn-edit-toggle" id="edit-btn" onclick="toggleEdit()">✎ Edit</button>
+      <button class="btn-icon" onclick="refreshAll()" title="Refresh from GitHub">↻</button>
+      <button class="btn-icon" onclick="resetCreds()" title="Reset credentials" style="font-size:13px">⚙</button>
+    </div>
+  </header>
+
+  <!-- HERO -->
+  <section class="hero-section">
+    <div class="hero-inner">
+      <div class="globe-col">
+        <canvas id="globe-canvas" width="290" height="290"></canvas>
+      </div>
+      <div class="hero-content">
+        <div class="hero-eyebrow">The mission</div>
+        <h1 class="hero-title">Trade <em>the planet.</em><br>No stopping until 5 figures.</h1>
+        <p class="hero-tagline">Multiple good reads every day. Every week profits grow. Free life, nice cars, nice house, holiday homes, no financial stress, luxury holidays, optimal health. All possible. Keep going.</p>
+        <div class="hero-stats">
+          <div class="hero-stat">
+            <div class="hs-val teal" id="h-days">3,648</div>
+            <div class="hs-label">Days to exit · June 2036</div>
+          </div>
+          <div class="hero-stat">
+            <div class="hs-val" id="h-since">55</div>
+            <div class="hs-label">Days in trading window</div>
+          </div>
+          <div class="hero-stat">
+            <div class="hs-val" style="font-size:1.45rem;padding-top:0.2rem">£10k/mo</div>
+            <div class="hs-label">Exit condition · Sustained</div>
+          </div>
+        </div>
+        <div class="hero-cities">
+          <span class="city-chip"><span class="city-dot"></span>London</span>
+          <span class="city-chip"><span class="city-dot"></span>New York</span>
+          <span class="city-chip"><span class="city-dot"></span>Tokyo</span>
+          <span class="city-chip"><span class="city-dot"></span>Singapore</span>
+          <span class="city-chip"><span class="city-dot"></span>Dubai</span>
+          <span class="city-chip"><span class="city-dot"></span>Hong Kong</span>
+          <span class="city-chip"><span class="city-dot"></span>Sydney</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- VPSP BANNER -->
+  <div class="vpsp-outer">
+    <div class="vpsp-wrap">
+      <div class="vpsp-card">
+        <div class="vpsp-eyebrow">△ Critical — read every check-in · VPSP</div>
+        <div class="vpsp-body display-content" id="vpsp-display"><p>VPSP is the only source of real damage and pain left in life. It is the only thing that needs to be prevented in order to enjoy life properly. It ruins the day when it happens. It makes it hard to breathe for days after. It ruins sleep, ruins mood, makes everything in life harder. This is the only fight we have.</p></div>
+        <textarea class="edit-area" id="vpsp-edit" rows="4"></textarea>
+        <button class="save-btn" onclick="save('vpsp')">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN GRID -->
+  <main class="main">
+
+    <div class="section-label"><span class="section-label-text">Vision</span><span class="section-label-rule"></span></div>
+
+    <div class="card col-6">
+      <div class="card-top gold"></div>
+      <div class="eyebrow gold">01 · Vision and why</div>
+      <div class="card-title">What we are fighting for</div>
+      <div class="display-content card-body" id="vision-display"><p>Trading ends the shame, the money stress, the dependency, no owned home, the embarrassing car, no holidays, no pride. Trading levels the playing field — puts us back in a non-embarrassing position where we are no longer behind everyone. Standing out because we failed and fell behind is one of the biggest pain points.</p><p>The other side: any restaurant, real holidays, health sorted, nice car, own home.</p><p>Critically: if trading was working, we would actually be happy in the day job. We would be relaxed in life in general. Trading working is ALL that matters.</p><p>Complete focus. Complete dedication. Complete discipline. Nothing else until this is done. All in. All the time.</p><p><b>Motivational music must be playing constantly throughout the day to stay hungry and locked onto the goal.</b></p><p><b>Theanine is the key to calm focus throughout the day.</b></p><p><br>Anchor forward to this at the start of each day. The trading dream is becoming reality. Multiple good reads each day. Every week increasing profits by thousands of dollars. Enabling a completely free life: no financial stress, nice cars, nice house, holiday homes, no stressful bills, luxury holidays, luxury meals, spas, optimal health access.</p><p>All of this is possible with trading mastered. Keep going. Everything to play for. True freedom.</p></div>
+      <textarea class="edit-area" id="vision-edit"></textarea>
+      <button class="save-btn" onclick="save('vision')">Save</button>
+    </div>
+
+    <div class="card col-6">
+      <div class="card-top gold"></div>
+      <div class="eyebrow gold">02 · North star</div>
+      <div class="card-title">Three-phase sequential model</div>
+      <div class="display-content" id="northstar-display">
+        <div class="phase-item phase-active">
+          <div class="phase-num">1</div>
+          <div class="phase-text">
+            <div class="phase-tag">Active — Phase 1</div>
+            <div class="phase-desc">Master trading. L2L model and AI directional agent. Sustained £10k/month is the only gate that closes this phase.</div>
+          </div>
+          <div class="phase-gate">£10k/mo</div>
+        </div>
+        <div class="phase-item phase-locked">
+          <div class="phase-num">2</div>
+          <div class="phase-text">
+            <div class="phase-tag">Locked — Phase 2</div>
+            <div class="phase-desc">Deploy trading capital to fund a properly built ecommerce venture (SSB-style, distinct from Petalwood).</div>
+          </div>
+          <div class="phase-gate">After Ph.1</div>
+        </div>
+        <div class="phase-item phase-locked">
+          <div class="phase-num">3</div>
+          <div class="phase-text">
+            <div class="phase-tag">Locked — Phase 3</div>
+            <div class="phase-desc">Scale that ecommerce venture to a £10M exit by age 45. £10M+ generating £50k+/year in passive income.</div>
+          </div>
+          <div class="phase-gate">£10M exit</div>
+        </div>
+      </div>
+      <textarea class="edit-area" id="northstar-edit" rows="6"></textarea>
+      <button class="save-btn" onclick="save('northstar')">Save</button>
+    </div>
+
+    <div class="section-label"><span class="section-label-text">Trading &amp; Rules</span><span class="section-label-rule"></span></div>
+
+    <div class="card col-4">
+      <div class="card-top navy"></div>
+      <div class="eyebrow navy">03 · Trading window</div>
+      <div class="card-title">Commitment status</div>
+      <div class="display-content card-body" id="trading-display"><p><b>Started:</b> April 26, 2026</p><p><b>Status:</b> Active</p><p><b>Exit condition:</b> Sustained £10k/month from the chosen model. No time deadline. No trade count deadline. One model only.</p><p><br>Recall when pivot urge surfaces:</p><p>1. The day job was a rationalisation for abandonment, not the cause.<br>2. The real pattern: model, backtest, live, impatience, abandon, new model. Five years of this cycle.<br>3. Financial deadlines trigger the abandonment pattern.<br>4. Awareness of the pattern does not prevent it — external structure is required.<br>5. The next pivot will not look like a pivot. It will arrive disguised as "this side project funds trading faster." That disguise IS the violation.</p><p><br><b><em>"Trading keeps failing because we drop off, go somewhere else, come back, and can't quite get it back to what it was. The issue is we never stuck with it long term without distraction. The only side-project work now is trading, nothing else."</em></b></p></div>
+      <textarea class="edit-area" id="trading-edit" rows="7"></textarea>
+      <button class="save-btn" onclick="save('trading')">Save</button>
+    </div>
+
+    <div class="card col-8">
+      <div class="card-top navy"></div>
+      <div class="eyebrow navy">04 · Standing rules</div>
+      <div class="card-title">Non-negotiables</div>
+      <div class="display-content" id="rules-display">
+        <div class="rule-item"><div class="rule-name">O5 Sovereignty</div><div class="rule-desc">Work from O5 only, never reactive. We let no one make us feel rushed. 5 tasks lined up at all times. When things get busy, slow down and reset O5 before continuing. No exceptions regardless of who is applying pressure.</div></div>
+        <div class="rule-item"><div class="rule-name">Trading 90%+ of free time</div><div class="rule-desc">Until £10k/month, trading takes more than 90% of free time. Any opportunity disguised as "this funds trading faster" is the violation. The £10k/month threshold is the gate that releases this structure.</div></div>
+        <div class="rule-item"><div class="rule-name">Monthly mortgage allocation</div><div class="rule-desc">A defined portion of trading profits routes to the mortgage every month without exception. £700/month household target. Dan's minimum: £400/month. No skipped months.</div></div>
+        <div class="rule-item"><div class="rule-name">Shiny object suppression</div><div class="rule-desc">All new opportunities go to the Post-X Parking Lot. Reviewed only after the trading window closes. No exceptions for "this one is special."</div></div>
+        <div class="rule-item"><div class="rule-name">SEO maintenance cap</div><div class="rule-desc">1 hour per day maximum. Hard cap. Does not bleed over. Cashflow protects calm trading.</div></div>
+        <div class="rule-item"><div class="rule-name">Post-X Parking Lot</div><div class="rule-desc">The next pivot will not look like a pivot. It will arrive disguised as "this side project funds trading faster." That disguise is the violation.</div></div>
+        <div class="rule-item"><div class="rule-name">Caffeine restriction</div><div class="rule-desc">Caffeine is a known VPSP trigger. Emergency use only — genuinely bad sleep days where basic function is critically impaired. No regular use. Theanine is the approved daily focus aid.</div></div>
+        <div class="rule-item"><div class="rule-name">No zero days</div><div class="rule-desc">The agents must be pushed forward every single day without exception. Lock onto the trading anchor. Everything to play for.</div></div>
+        <div class="rule-item"><div class="rule-name">Motivational tracks</div><div class="rule-desc">Motivational tracks play regularly throughout the day. Not stressful — aggressive toward the goal. Standing operating condition, not optional.</div></div>
+        <div class="rule-item"><div class="rule-name">9pm Stop</div><div class="rule-desc">All work stops at 9pm without exception. Switch to EU for ~45 minutes — peaceful, present, no agenda. This is the daily gratitude and nervous system reset. Pure anchor time: something to look forward to during the day and return to when under pressure.</div></div>
+      </div>
+      <textarea class="edit-area" id="rules-edit" rows="10"></textarea>
+      <button class="save-btn" onclick="save('rules')">Save</button>
+    </div>
+
+    <div class="section-label"><span class="section-label-text">VPSP Protocol</span><span class="section-label-rule"></span></div>
+
+    <div class="card col-6">
+      <div class="card-top danger"></div>
+      <div class="eyebrow danger">05 · VPSP cascade</div>
+      <div class="card-title">7-stage intervention map</div>
+      <div class="display-content">
+        <div class="stage-item s1"><div class="stage-num">1</div><div class="stage-body"><div class="int-badge">Only intervention point</div><div class="stage-name">Impulsive food decision</div><div class="stage-desc">ANY small decision: chocolate bar, cake, sandwich. Also: too much or too strong green tea. ONE decision triggers the stomach. Once Stage 2 hits, willpower is physiologically blocked.</div></div></div>
+        <div class="stage-item sn"><div class="stage-num">2</div><div class="stage-body"><div class="stage-name">Stomach becomes unsettled</div><div class="stage-desc">Physiological state shifts. Willpower now compromised.</div></div></div>
+        <div class="stage-item sn"><div class="stage-num">3</div><div class="stage-body"><div class="stage-name">Energy and mood drop</div><div class="stage-desc">Cognitive function degrades. Flow state collapses.</div></div></div>
+        <div class="stage-item sn"><div class="stage-num">4</div><div class="stage-body"><div class="stage-name">Escape seeking intensifies</div><div class="stage-desc">The illusion of escape feels necessary. Rational override is extremely difficult from here.</div></div></div>
+        <div class="stage-item sn"><div class="stage-num">5</div><div class="stage-body"><div class="stage-name">VPSP episode</div><div class="stage-desc">Full cascade. Day is functionally lost.</div></div></div>
+        <div class="stage-item sn"><div class="stage-num">6</div><div class="stage-body"><div class="stage-name">Aftermath — disrupted sleep, comedown</div><div class="stage-desc">Physical and cognitive consequences compound.</div></div></div>
+        <div class="stage-item sn"><div class="stage-num">7</div><div class="stage-body"><div class="stage-name">Weakened state — loops to Stage 1</div><div class="stage-desc">Vulnerability increases. Next decision harder to win.</div></div></div>
+      </div>
+    </div>
+
+    <div class="card col-6">
+      <div class="card-top danger"></div>
+      <div class="eyebrow danger">05b · VPSP protocol</div>
+      <div class="card-title">Addiction mastery</div>
+      <div class="display-content card-body" id="vpsp2-display"><p>VPSP is the <b>only source of real damage and pain</b> left in life. It is the only thing that needs to be prevented in order to enjoy life properly.</p><p>It ruins the day when it happens. It makes it hard to breathe for days after. It ruins sleep, ruins mood, makes everything in life harder.</p><p><b>This is the only fight we have.</b></p><p><br>VPSP is that disruptive and dangerous to our life. Zero tolerance. We vocalise to everyone that we are off them. This is the only area of life we have an issue now — the last discipline hurdle to master. It ends here.</p><p>Life is still there when it ends. Same problems, same stress — just less time and a worse state to solve them in. Stay clean and Zov.</p><p><br>The escape VPSP appears to offer is an illusion. PNC from f.containment clears any illusion about the relief VPSP will offer. VPSP is not the physiological rebalance — the containment is. The rebalance happens inside f.containment. Engage f.containment first.</p><p><br>The only way we beat this is with Bx. It needs to overpower the VPSP state, then we anchor forward to being in P2R flow.</p><p>The escape illusion of VPSP is destroying our life. There is no escape. Sit in the silent stillness, accept it and return to Flow Rush, nothing better.</p><p>Leave the bank cards at home. Win just this day, one day at a time. The urge passes and life goes on.</p><p>Move fast but not panicked. Enjoy the rush of flow. Check things off fast.</p><p>If we need a rest from P2R: we can rest in the chair peacefully. We can have a restful evening in Entropia decompressing peacefully, mining or building our crafting database. What we never do is derail everything. We can use F.containment if things get tough but remember that can make us sluggish.</p><p>🔰 When we get clear of VPSP damage we enter Real Flow again where life is truly amazing. Trust in that anchor, just endure today and be in real flow tomorrow.</p><p><br>Engage f.containment first thing in the morning. Then cold, refreshing shower. Then start the day with a clear mind.</p><p>Prepare the next day's clothes the evening before, after the cold shower, so we are mentally primed and ready to wake up. This removes one decision from the morning and reinforces commitment to the routine.</p><p><br>Our single biggest loss of time and momentum is the VPSP. It wrecks sleep, forces us to wake too early and be tired all day. It destroys our ability to fall asleep the next night, making the following day harder and more vulnerable. Every episode costs at minimum two productive days. It is not worth it. It never is.</p><p><br>It is our inability to endure discomfort that makes us make the dumb decision to spiral. That one decision then weakens us for at least two days. Be stronger. Have more stamina. Prevent the one bad decision that robs us of days of productivity and peaceful routine.</p><p><br>- <b>Stage 1 — IMPULSIVE FOOD DECISION [ONLY INTERVENTION POINT]:</b> Includes ANY small decision: chocolate bar, cake, small sandwich, anything. Also: too much or too strong green tea. These feel harmless. They are not. ONE decision triggers the stomach. Once Stage 2 hits, willpower is physiologically blocked.<br>- <b>Stage 2 — STOMACH BECOMES UNSETTLED:</b> Physiological state shifts. Willpower now compromised.<br>- <b>Stage 3 — ENERGY AND MOOD DROP:</b> Cognitive function degrades. Flow state collapses.<br>- <b>Stage 4 — ESCAPE SEEKING INTENSIFIES:</b> The illusion of escape feels necessary. Rational override is extremely difficult from here.<br>- <b>Stage 5 — VPSP EPISODE:</b> Full cascade. Day is functionally lost.<br>- <b>Stage 6 — AFTERMATH: DISRUPTED SLEEP, COMEDOWN:</b> Physical and cognitive consequences compound.<br>- <b>Stage 7 — WEAKENED STATE:</b> Vulnerability increases. Next decision harder to win. Loops back to Stage 1.</p><p>NO IMPULSIVE EATING. NO IMPULSIVE GREEN TEA. NO SPIRAL. THIS IS THE WHOLE BATTLE.</p><p><br>When in active VPSP or the day after, this is not real flow. Do not force a happy positive state. Give a full day to rest and recover, then we start feeling great again. Flow returns naturally. Never reactive. Always on top of everything, building in balanced, harmonious flow.</p><p><br>Project forward to a specific pleasant moment: waking pleasantly, waking with time, feeling high energy not struggling to breathe, clear-headed not scatty, sitting reading a book with the whole day cleared. Enter silent stillness and lock into genuine anticipation of that moment. That moment cannot be accessed or enjoyed while in VPSP. Specificity and consistent practice make this work.</p><p><br>Before every boxing session, this reminder goes first with emphasis:</p><p>"Leave the bank cards at home. This is the only point of failure. Just simply don't do this bit and we win. Win today."</p><p>There is a post office near the boxing location. No cards means no post office means no VPSP means day won. This is the kill switch.</p><p>Additionally: lower stims and reduce green tea on boxing days. Over-stimulation leads to impulsivity, which leads to a VPSP decision, which then takes days to recover. Control the first link in the chain. The afternoon check-in must run BEFORE boxing, no exceptions.</p></div>
+      <textarea class="edit-area" id="vpsp2-edit" rows="10"></textarea>
+      <button class="save-btn" onclick="save('vpsp2')">Save</button>
+    </div>
+
+    <div class="section-label"><span class="section-label-text">Philosophy &amp; Identity</span><span class="section-label-rule"></span></div>
+
+    <div class="card col-6">
+      <div class="card-top blue"></div>
+      <div class="eyebrow blue">06 · Flow rush philosophy</div>
+      <div class="card-title">The only state worth being in</div>
+      <div class="display-content card-body" id="flow-display"><p>"We don't run from the harrow of not being able to escape current discomfort. We accept it, then anchor forward into Flow Rush being the best way to live life, where we don't need to escape, we just love building."</p><p>There is no better state than being locked into P2R flow. Nothing to escape to. Nothing to run from. Just building. Move fast but not panicked. Enjoy the rush of flow. Check things off fast.</p><p><br>It's all momentum. Force our way into the fast-paced momentum state. Don't wait to feel ready, start moving and the state follows the action.</p><p><br>The target state throughout the day is calm, focused, and well. Not stimulated — peaceful. Peaceful flow momentum is what induces flow rush. Stimulants only derail it. Protect this baseline at all costs throughout the day.</p><p><br>Life is best when we are building. Clear the decks first, then build in peace. Once building momentum begins, nothing is more engaging, fulfilling, or satisfying. That is the state we are protecting and returning to every day.</p><p><br>Play motivational tracks regularly throughout the day. Not stressful — aggressive toward the goal. The music keeps focus sharp and the fire burning without adding anxiety. Keep it on.</p><p><br>After a fulfilled day, 9pm is a peaceful, genuinely enjoyable end to the day. Anchor forward to this moment when stressed. This is how we plan to live for the next 10 years until the exit goal is hit.</p></div>
+      <textarea class="edit-area" id="flow-edit" rows="7"></textarea>
+      <button class="save-btn" onclick="save('flow')">Save</button>
+    </div>
+
+    <div class="card col-6">
+      <div class="card-top blue"></div>
+      <div class="eyebrow blue">07 · Systems architect + P2R</div>
+      <div class="card-title">Identity and filter</div>
+      <div class="display-content card-body" id="systems-display"><p>Dan's role is to identify a model, reverse-engineer it, rebuild it, test it, systematise it into an SOP, and hand it to the VA. Not to execute grind work. The only two functions permanently on his desk are sales and systemising. Everything else gets built into a process and delegated.</p><p>First principles before execution: before working on any new model, a first principles and unknowns spreadsheet must be opened or updated. No model gets built without this step.</p><p><br>Single filter for all task decisions: what is the single most important action that pushes the revenue needle in the most meaningful long-term way right now?</p><p>When overwhelmed: identify the next three P2R tasks only. Tackle in order. Reassess. Not ten things. Three.</p><p>Double all time estimates by default. Dan consistently underestimates task duration. No exceptions.</p><p><br>- 0 = Active now<br>- 1 = Today<br>- 2 = This week<br>- 3 = This month<br>- 4 = Next 1 to 3 months<br>- 5 = Sometime this year</p></div>
+      <textarea class="edit-area" id="systems-edit" rows="7"></textarea>
+      <button class="save-btn" onclick="save('systems')">Save</button>
+    </div>
+
+    <div class="section-label"><span class="section-label-text">ClickSlice &amp; Time</span><span class="section-label-rule"></span></div>
+
+    <div class="card col-6">
+      <div class="card-top slate"></div>
+      <div class="eyebrow slate">08 · ClickSlice containment</div>
+      <div class="card-title">Someone else's circus</div>
+      <div class="display-content card-body" id="clickslice-display"><p>Agencies aren't that serious. To clients it's just pay and forget — it's our job to make everything look like good value for money, primarily. We are okay with this — it gives us the optimal environment to learn, skill up, and further master the craft of digital marketing, which feeds directly into later projects. ClickSlice rents Dan's brain 9 to 5. It does not own it outside those hours.</p><p><b>What ClickSlice IS:</b> A cash printer. An elite SEO training ground. A safety net that enables smart risk-taking on personal ventures. Temporary.</p><p><b>What ClickSlice is NOT:</b> Dan's identity. His legacy. His path to wealth. Permanent.</p><p><br>Strip emotion. Identify the technical problem. Respond only to the work. Surgeon analogy: execute the procedure regardless of the patient's panic. Run the "so what" cascade to defuse catastrophic thinking.</p><p><br>Just relax. Never that serious — someone else's business. Appear bothered, master being conditionally psychopathic to protect our inner world's peace: no real empathy, just performing it. Never let it actually stress or hurt us. Pretend it matters where people can see, then switch it off. Never break calm for someone else's business. Always from the O5. Not our circus, not our monkeys. Only jobs: keep cover solid, day job safe, push P2R within constraints.</p><p><br>Nobody knows how they got here. Everyone is either pretending to be in control or has not lived enough to realise the fragile delusions they hold. Either way, no sovereignty is given to anyone.</p><p>He who speaks with the most confidence gets further. It is all a play. Play the part better than everyone else.</p><p>Even when it feels awkward, it never looks that way. That is the mind overthinking. It is never as visible as it feels.</p><p>We do not give our peace away to people who simply had it easier and know far less about existence than we do.</p></div>
+      <textarea class="edit-area" id="clickslice-edit" rows="8"></textarea>
+      <button class="save-btn" onclick="save('clickslice')">Save</button>
+    </div>
+
+    <div class="card col-6">
+      <div class="card-top slate"></div>
+      <div class="eyebrow slate">09 · Time blocks</div>
+      <div class="card-title">The day's architecture</div>
+      <div class="display-content">
+        <div class="time-item"><span class="time-range">Pre 9am</span><span class="time-label">1hr PI/SEO/backlink maintenance — hard cap, no bleed</span><span class="time-badge tb-seo">SEO</span></div>
+        <div class="time-item"><span class="time-range">Pre 9am</span><span class="time-label">1hr trading: chart review, methodology, backtest</span><span class="time-badge tb-trading">Trading</span></div>
+        <div class="time-item"><span class="time-range">9am — 5pm</span><span class="time-label">ClickSlice. Fully present. Extract maximum learning.</span><span class="time-badge tb-work">Day job</span></div>
+        <div class="time-item"><span class="time-range">5pm — 6pm</span><span class="time-label">Decompress</span><span class="time-badge tb-rest">Rest</span></div>
+        <div class="time-item"><span class="time-range">6pm — 6:30pm</span><span class="time-label">Plan, levels, playbook</span><span class="time-badge tb-trading">Prep</span></div>
+        <div class="time-item"><span class="time-range">6:30pm+</span><span class="time-label">Trade</span><span class="time-badge tb-trading">Trading</span></div>
+        <div class="time-item"><span class="time-range">9pm</span><span class="time-label">Peaceful end of day — earned, quiet, restorative</span><span class="time-badge tb-rest">Wind down</span></div>
+      </div>
+    </div>
+
+    <div class="section-label"><span class="section-label-text">Gratitude</span><span class="section-label-rule"></span></div>
+
+    <div class="card col-12">
+      <div class="card-top green"></div>
+      <div class="eyebrow green">10 · Gratitude anchors</div>
+      <div class="card-title">30 seconds. Eyes closed. Lock onto one thing that is awesome right now. Then Bx, and into flow.</div>
+      <div class="display-content" id="grat-display"><div class="grat-item"><div class="grat-marker"></div><span>30 to 60 seconds. Eyes closed. Body relaxed. Lock onto one thing that is awesome right now. Then Bx, and into flow.</span></div><div class="grat-item"><div class="grat-marker"></div><span>- Boots — genuinely sweet and kind, truly looks after us; together sharing a child-free, peaceful life lived with wisdom and genuine enjoyment, something many people never find or appreciate</span></div><div class="grat-item"><div class="grat-marker"></div><span>- Decade-plus of daily journaling</span></div><div class="grat-item"><div class="grat-marker"></div><span>- ClickSlice as income and elite training</span></div><div class="grat-item"><div class="grat-marker"></div><span>- The P2R system and organisational clarity</span></div><div class="grat-item"><div class="grat-marker"></div><span>- VA fully operational, producing approximately 30 articles per month</span></div><div class="grat-item"><div class="grat-marker"></div><span>- Backlink site at £1k/month</span></div><div class="grat-item"><div class="grat-marker"></div><span>- Being clean: no drugs, no comedowns, no sleepless days, no disrupted patterns</span></div><div class="grat-item"><div class="grat-marker"></div><span>- Financially stable now — stress is about saving more, not barely making ends meet. No longer constantly worried about money.</span></div><div class="grat-item"><div class="grat-marker"></div><span>- Deep gratitude for how pleasant life is now</span></div><div class="grat-item"><div class="grat-marker"></div><span>- Forward anchor: waking up well, accessing flow because not in VPSP</span></div><div class="grat-item"><div class="grat-marker"></div><span>While we have to keep the fire going to keep building the trading system, we also need to be doing it from a place of gratitude for how far we have come and how cool our life has become. The gratitude state is more peaceful, more enjoyable, and more effective for what we are trying to do.</span></div><div class="grat-item"><div class="grat-marker"></div><span>30 seconds. Close our eyes. Lock onto one thing we have right now that is awesome. Then Bx, and into flow.</span></div><div class="grat-item"><div class="grat-marker"></div><span>When stress surfaces, anchor forward. There is a peaceful end to the day at 9pm. After a fulfilled day, that evening is genuinely enjoyable — quiet, earned, restorative. This is how we plan to live for the next 10 years until the exit goal is reached. The stress is the path. The peace is the reward.</span></div></div>
+      <textarea class="edit-area" id="grat-edit" rows="8"></textarea>
+      <button class="save-btn" onclick="save('grat')">Save</button>
+    </div>
+
+    <div class="section-label"><span class="section-label-text">O5 — Zov prevention</span><span class="section-label-rule"></span></div>
+
+    <div class="zov-wrap">
+      <div class="zov-header">
+        <span class="zov-title">O5 — Zov prevention</span>
+        <span class="zov-rule">Define 5 tasks before work begins. <b>Doubled time estimates.</b> No exceptions.</span>
+      </div>
+      <div class="task-row"><span class="task-n">01</span><input class="task-inp" placeholder="Task description..."><input class="task-time" placeholder="09:00"></div>
+      <div class="task-row"><span class="task-n">02</span><input class="task-inp" placeholder="Task description..."><input class="task-time" placeholder="10:00"></div>
+      <div class="task-row"><span class="task-n">03</span><input class="task-inp" placeholder="Task description..."><input class="task-time" placeholder="11:00"></div>
+      <div class="task-row"><span class="task-n">04</span><input class="task-inp" placeholder="Task description..."><input class="task-time" placeholder="13:00"></div>
+      <div class="task-row"><span class="task-n">05</span><input class="task-inp" placeholder="Task description..."><input class="task-time" placeholder="14:30"></div>
+      <button class="btn-commit" onclick="commitO5()">Lock in O5 and begin</button>
+    </div>
+
+  </main>
+</div>
+
+<script>
+/* ── GLOBE ─────────────────────────────────────────────────────────────── */
+(function initGlobe(){
+  var canvas=document.getElementById('globe-canvas');
+  if(!canvas)return;
+  var ctx=canvas.getContext('2d');
+  var W=290,H=290,CX=145,CY=145,R=120;
+  var gRot=0,gT=0;
+
+  var CITIES=[
+    {lat:51.5,lng:-0.1},{lat:40.7,lng:-74},{lat:35.7,lng:139.7},
+    {lat:1.3,lng:103.8},{lat:-33.9,lng:151.2},{lat:25.2,lng:55.3},{lat:22.3,lng:114.2}
+  ];
+
+  var ROUTES=[[0,1],[0,2],[0,3],[1,2],[2,3],[3,4],[0,5],[5,3],[2,6],[6,3]];
+
+  var TRAVELERS=ROUTES.map(function(r,i){
+    return{route:i,progress:(i/ROUTES.length),speed:0.0014+Math.random()*0.0009};
+  });
+
+  function toXYZ(lat,lng,r){
+    var phi=(90-lat)*Math.PI/180;
+    var theta=(lng+gRot*180/Math.PI)*Math.PI/180;
+    return{x:r*Math.sin(phi)*Math.cos(theta),y:r*Math.cos(phi),z:r*Math.sin(phi)*Math.sin(theta)};
+  }
+
+  function norm(v){var m=Math.sqrt(v.x*v.x+v.y*v.y+v.z*v.z);return{x:v.x/m,y:v.y/m,z:v.z/m};}
+
+  function slerp(a,b,f){
+    var dot=Math.max(-1,Math.min(1,a.x*b.x+a.y*b.y+a.z*b.z));
+    var omega=Math.acos(dot);
+    if(Math.abs(omega)<0.001)return{x:a.x+(b.x-a.x)*f,y:a.y+(b.y-a.y)*f,z:a.z+(b.z-a.z)*f};
+    var s=Math.sin(omega);
+    return{x:(Math.sin((1-f)*omega)/s)*a.x+(Math.sin(f*omega)/s)*b.x,
+           y:(Math.sin((1-f)*omega)/s)*a.y+(Math.sin(f*omega)/s)*b.y,
+           z:(Math.sin((1-f)*omega)/s)*a.z+(Math.sin(f*omega)/s)*b.z};
+  }
+
+  function drawGlobe(){
+    ctx.clearRect(0,0,W,H);
+
+    /* Stars */
+    for(var i=0;i<55;i++){
+      var sx=(Math.sin(i*137.5)*0.5+0.5)*W;
+      var sy=(Math.cos(i*97.3)*0.5+0.5)*H;
+      if(Math.hypot(sx-CX,sy-CY)>R+10){
+        var br=0.08+0.35*(Math.sin(gT*0.4+i)*0.5+0.5);
+        ctx.beginPath();ctx.arc(sx,sy,0.7,0,Math.PI*2);
+        ctx.fillStyle='rgba(200,220,255,'+br+')';ctx.fill();
+      }
+    }
+
+    /* Atmosphere */
+    var atm=ctx.createRadialGradient(CX,CY,R-2,CX,CY,R+20);
+    atm.addColorStop(0,'rgba(78,205,180,0.14)');
+    atm.addColorStop(0.5,'rgba(139,168,212,0.07)');
+    atm.addColorStop(1,'rgba(139,168,212,0)');
+    ctx.beginPath();ctx.arc(CX,CY,R+20,0,Math.PI*2);
+    ctx.fillStyle=atm;ctx.fill();
+
+    /* Ocean */
+    var ocean=ctx.createRadialGradient(CX-22,CY-22,8,CX,CY,R);
+    ocean.addColorStop(0,'#1E3A6E');
+    ocean.addColorStop(0.55,'#112050');
+    ocean.addColorStop(1,'#07101E');
+    ctx.beginPath();ctx.arc(CX,CY,R,0,Math.PI*2);
+    ctx.fillStyle=ocean;ctx.fill();
+
+    /* Grid clip */
+    ctx.save();
+    ctx.beginPath();ctx.arc(CX,CY,R,0,Math.PI*2);ctx.clip();
+
+    /* Latitude ellipses */
+    for(var lat=-60;lat<=60;lat+=30){
+      var phi2=(90-lat)*Math.PI/180;
+      var xr2=R*Math.sin(phi2);
+      ctx.beginPath();
+      ctx.ellipse(CX,CY,xr2,xr2*0.15,0,0,Math.PI*2);
+      ctx.strokeStyle='rgba(139,168,212,0.07)';ctx.lineWidth=0.5;ctx.stroke();
+    }
+
+    /* Longitude lines */
+    for(var li=0;li<12;li++){
+      var lng2=gRot+(li*Math.PI/6);
+      ctx.beginPath();
+      var first=true;
+      for(var j=0;j<=36;j++){
+        var la2=(j/36)*Math.PI-Math.PI/2;
+        var lx=CX+R*Math.cos(la2)*Math.cos(lng2);
+        var ly=CY-R*Math.sin(la2);
+        var vis2=Math.cos(la2)*Math.cos(lng2);
+        ctx.globalAlpha=vis2>0?0.09:0.02;
+        if(first){ctx.moveTo(lx,ly);first=false;}else{ctx.lineTo(lx,ly);}
+      }
+      ctx.strokeStyle='#8BA8D4';ctx.lineWidth=0.5;ctx.stroke();
+      ctx.globalAlpha=1;
+    }
+    ctx.restore();
+
+    /* Arcs */
+    ROUTES.forEach(function(route){
+      var a=CITIES[route[0]],b=CITIES[route[1]];
+      var p3a=norm(toXYZ(a.lat,a.lng,1));
+      var p3b=norm(toXYZ(b.lat,b.lng,1));
+      var steps=44;
+      ctx.beginPath();
+      var inPath=false;
+      for(var s=0;s<=steps;s++){
+        var arc=slerp(p3a,p3b,s/steps);
+        var lx2=CX+arc.x*R*1.03;
+        var ly2=CY-arc.y*R*1.03;
+        var vis3=arc.z*R>-R*0.04;
+        if(vis3){if(!inPath){ctx.moveTo(lx2,ly2);inPath=true;}else ctx.lineTo(lx2,ly2);}
+        else inPath=false;
+      }
+      ctx.strokeStyle='rgba(78,205,180,0.18)';ctx.lineWidth=0.9;ctx.stroke();
+    });
+
+    /* Traveling dots */
+    TRAVELERS.forEach(function(tv){
+      var route=ROUTES[tv.route];
+      var a=CITIES[route[0]],b=CITIES[route[1]];
+      var p3a=norm(toXYZ(a.lat,a.lng,1));
+      var p3b=norm(toXYZ(b.lat,b.lng,1));
+      var arc=slerp(p3a,p3b,tv.progress);
+      var px=CX+arc.x*R*1.03;
+      var py=CY-arc.y*R*1.03;
+      if(arc.z*R>-R*0.04){
+        var t0=Math.max(0,tv.progress-0.07);
+        var a0=slerp(p3a,p3b,t0);
+        var tx2=CX+a0.x*R*1.03,ty2=CY-a0.y*R*1.03;
+        var tg=ctx.createLinearGradient(tx2,ty2,px,py);
+        tg.addColorStop(0,'rgba(78,205,180,0)');
+        tg.addColorStop(1,'rgba(78,205,180,0.65)');
+        ctx.beginPath();ctx.moveTo(tx2,ty2);ctx.lineTo(px,py);
+        ctx.strokeStyle=tg;ctx.lineWidth=1.5;ctx.stroke();
+        ctx.beginPath();ctx.arc(px,py,2.5,0,Math.PI*2);
+        ctx.fillStyle='#4ECDB4';ctx.fill();
+      }
+      tv.progress+=tv.speed;
+      if(tv.progress>1)tv.progress=0;
+    });
+
+    /* City markers */
+    CITIES.forEach(function(city,i){
+      var p3=toXYZ(city.lat,city.lng,R);
+      var px=CX+p3.x,py=CY-p3.y;
+      if(p3.z<-R*0.04)return;
+      var pulse=Math.sin(gT*2+i*1.4)*0.5+0.5;
+      ctx.beginPath();ctx.arc(px,py,4+pulse*3.5,0,Math.PI*2);
+      ctx.strokeStyle='rgba(78,205,180,'+(0.12+pulse*0.14)+')';ctx.lineWidth=1;ctx.stroke();
+      ctx.beginPath();ctx.arc(px,py,3.5,0,Math.PI*2);
+      ctx.strokeStyle='rgba(78,205,180,0.45)';ctx.lineWidth=1;ctx.stroke();
+      ctx.beginPath();ctx.arc(px,py,2,0,Math.PI*2);
+      ctx.fillStyle='#4ECDB4';ctx.fill();
+    });
+
+    /* Edge ring */
+    ctx.beginPath();ctx.arc(CX,CY,R,0,Math.PI*2);
+    ctx.strokeStyle='rgba(139,168,212,0.18)';ctx.lineWidth=1;ctx.stroke();
+
+    gRot+=0.006;
+    gT+=0.028;
+    requestAnimationFrame(drawGlobe);
+  }
+  drawGlobe();
+})();
+
+/* ── DASHBOARD LOGIC ────────────────────────────────────────────────────── */
+const GH_USER='kevincreedycars-debug',GH_REPO='EA-Dashboard';
+const CACHE_VERSION='3';
+const FILES=['vision_and_why','north_star','trading_window','standing_rules','vpsp_protocol','flow_philosophy','systems_identity','clickslice_containment','gratitude_anchors'];
+
+const DEFAULTS={
+  vpsp:"VPSP is the only source of real damage and pain left in life. It is the only thing that needs to be prevented in order to enjoy life properly. It ruins the day when it happens. It makes it hard to breathe for days after. It ruins sleep, ruins mood, makes everything in life harder. This is the only fight we have.",
+  vpsp2:"The only way we beat this is with Bx. It needs to overpower the VPSP state, then we anchor forward to being in P2R flow.\n\nThe escape illusion of VPSP is destroying our life. There is no escape. Sit in the silent stillness, accept it and return to Flow Rush, nothing better.\n\nLeave the bank cards at home. Win just this day, one day at a time. The urge passes and life goes on.\n\nMove fast but not panicked. Enjoy the rush of flow. Check things off fast.\n\nIf we need a rest from P2R: we can rest in the chair peacefully. We can have a restful evening in Entropia. What we never do is derail everything. We can use F.containment if things get tough but remember that can make us sluggish.\n\n🔰 When we get clear of VPSP damage we enter Real Flow again where life is truly amazing. Trust in that anchor, just endure today and be in real flow tomorrow.",
+  vision:"Trading ends the shame, the money stress, the dependency, no owned home, the embarrassing car, no holidays, no pride. Trading levels the playing field — puts us back in a non-embarrassing position where we are no longer behind everyone.\n\nThe other side: any restaurant, real holidays, health sorted, nice car, own home.\n\nCritically: if trading was working, we would actually be happy in the day job. We would be relaxed in life in general. Trading working is ALL that matters.\n\nComplete focus. Complete dedication. Complete discipline. Nothing else until this is done. All in. All the time.\n\nTheanine is the key to calm focus throughout the day. Motivational music must be playing constantly.\n\nMorning Trading Dream Anchor: the trading dream is becoming reality. Multiple good reads each day. Every week increasing profits by thousands of dollars. Free life, nice cars, nice house, holiday homes, no financial stress, luxury holidays, luxury meals, spas, optimal health. All possible. Keep going.",
+  trading:"Started: April 26, 2026. Status: Active. Exit condition: Sustained £10k/month from the chosen model. No time deadline. No trade count deadline. One model only.\n\nCore blindspots when pivot urge surfaces:\n1. The day job was a rationalisation for abandonment, not the cause.\n2. The real pattern: model, backtest, live, impatience, abandon, new model. Five years of this cycle.\n3. Financial deadlines trigger the abandonment pattern.\n4. Awareness of the pattern does not prevent it — external structure is required.\n5. The next pivot will not look like a pivot. It will arrive disguised as \"this side project funds trading faster.\" That disguise IS the violation.",
+  flow:"\"We don't run from the harrow of not being able to escape current discomfort. We accept it, then anchor forward into Flow Rush being the best way to live life, where we don't need to escape, we just love building.\"\n\nThere is no better state than being locked into P2R flow. Nothing to escape to. Nothing to run from. Just building. Move fast but not panicked. Enjoy the rush of flow. Check things off fast.\n\nMomentum Principle: It's all momentum. Force our way into the fast-paced momentum state. Don't wait to feel ready — start moving and the state follows the action.\n\nCalm Focused Baseline: the target state throughout the day is calm, focused, and well. Not stimulated — peaceful. Peaceful flow momentum is what induces flow rush. Stimulants only derail it.\n\nLife is best when building. Clear the decks first, then build in peace. Once momentum begins, nothing is more engaging, fulfilling, or satisfying.\n\nEvening Anchor: after a fulfilled day, 9pm is peaceful and genuinely enjoyable. Anchor forward to this when stressed. This is how we plan to live for the next 10 years.",
+  systems:"Dan's role is to identify a model, reverse-engineer it, rebuild it, test it, systematise it into an SOP, and hand it to the VA. Not to execute grind work. The only two functions permanently on his desk are sales and systemising.\n\nP2R filter: what is the single most important action that pushes the revenue needle in the most meaningful long-term way right now?\n\nWhen overwhelmed: identify the next three P2R tasks only. Tackle in order. Reassess. Not ten things. Three.\n\nDouble all time estimates by default. No exceptions.",
+  clickslice:"Agencies aren't that serious. To clients it's just pay and forget. We are okay with this — it gives us the optimal environment to learn, skill up, and further master digital marketing, which feeds directly into later projects. ClickSlice rents Dan's brain 9 to 5. It does not own it outside those hours.\n\nCalm Protocol: just relax. Never that serious — someone else's business. Appear bothered, master being conditionally psychopathic to protect our inner world's peace. Never break calm for someone else's business. Always from the O5. Not our circus, not our monkeys.\n\nSovereignty Anchor: nobody knows how they got here. Everyone is either pretending to be in control or has not lived enough to realise the fragile delusions they hold. No sovereignty is given to anyone. He who speaks with the most confidence gets further. It is all a play.",
+  grat:"Boots — genuinely sweet and kind, truly looks after us; together sharing a child-free, peaceful life lived with wisdom and genuine enjoyment, something many people never find or appreciate\nDecade-plus of daily journaling\nClickSlice as income and elite training\nVA fully operational, producing approximately 30 articles per month\nBacklink site at £1k/month\nBeing clean: no drugs, no comedowns, no sleepless days, no disrupted patterns\nFinancially stable now — stress is about saving more, not survival\nFully remote job — no commute, four large monitors, awesome headset\nForward anchor: waking up well, high energy, clear-headed, whole day accessible\nAnchor when stressed: peaceful 9pm end to a fulfilled day — this is the life for the next 10 years"
+};
+
+const DISPLAY_IDS={vpsp:'vpsp-display',vpsp2:'vpsp2-display',vision:'vision-display',trading:'trading-display',flow:'flow-display',systems:'systems-display',clickslice:'clickslice-display'};
+const EDIT_IDS={vpsp:'vpsp-edit',vpsp2:'vpsp2-edit',vision:'vision-edit',northstar:'northstar-edit',trading:'trading-edit',flow:'flow-edit',systems:'systems-edit',clickslice:'clickslice-edit',grat:'grat-edit'};
+
+function tok(){return localStorage.getItem('ea_token')}
+function setTok(t){localStorage.setItem('ea_token',t)}
+
+function clearOutdatedCache(){
+  if(localStorage.getItem('ea_cache_v')!==CACHE_VERSION){
+    Object.keys(DEFAULTS).forEach(k=>localStorage.removeItem('ea_content_'+k));
+    localStorage.setItem('ea_cache_v',CACHE_VERSION);
+  }
+}
+
+function days(target){return Math.max(0,Math.ceil((new Date(target)-new Date())/86400000))}
+function since(start){return Math.max(0,Math.floor((new Date()-new Date(start))/86400000))}
+
+function refreshCountdowns(){
+  const d=days('2036-06-15'),s=since('2026-04-26');
+  const fmt=n=>n.toLocaleString();
+  document.getElementById('pill-days').textContent=fmt(d)+' days to exit';
+  document.getElementById('pill-since').textContent=s+' days in window';
+  document.getElementById('h-days').textContent=fmt(d);
+  document.getElementById('h-since').textContent=s;
+  document.getElementById('date-txt').textContent=new Date().toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+}
+
+function md2html(t){
+  if(!t)return'';
+  return t.split('\n\n').map(para=>{
+    const lines=para.split('\n').map(l=>l.replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').replace(/\*(.+?)\*/g,'<em>$1</em>'));
+    if(lines.length===1&&lines[0].match(/^\d+\./))return'<p>'+lines[0]+'</p>';
+    return'<p>'+lines.join('<br>')+'</p>';
+  }).join('');
+}
+
+function renderGrat(val){
+  const el=document.getElementById('grat-display');
+  if(!el)return;
+  const items=val.split('\n').filter(l=>l.trim());
+  el.innerHTML=items.map(i=>`<div class="grat-item"><div class="grat-marker"></div><span>${i.trim()}</span></div>`).join('');
+}
+
+function renderSection(key,val){
+  const el=document.getElementById(DISPLAY_IDS[key]);
+  if(el)el.innerHTML=md2html(val);
+}
+
+function loadFromStorage(){
+  Object.keys(DEFAULTS).forEach(k=>{
+    const stored=localStorage.getItem('ea_content_'+k);
+    const val=stored!==null?stored:DEFAULTS[k];
+    const editEl=document.getElementById(EDIT_IDS[k]);
+    if(editEl)editEl.value=val;
+    if(k==='grat')renderGrat(val);
+    else renderSection(k,val);
+  });
+}
+
+async function fetchFile(name,token){
+  const r=await fetch(`https://api.github.com/repos/${GH_USER}/${GH_REPO}/contents/dashboard/${name}.md`,{headers:{'Authorization':'Bearer '+token,'Accept':'application/vnd.github.v3+json'}});
+  if(!r.ok)throw new Error(r.status);
+  const d=await r.json();
+  const bin=atob(d.content.replace(/\n/g,''));
+  const bytes=new Uint8Array(bin.length);
+  for(let i=0;i<bin.length;i++)bytes[i]=bin.charCodeAt(i);
+  return new TextDecoder('utf-8').decode(bytes);
+}
+
+function mdToKey(filename){
+  const map={'vision_and_why':'vision','trading_window':'trading','flow_philosophy':'flow','systems_identity':'systems','clickslice_containment':'clickslice','gratitude_anchors':'grat','vpsp_protocol':'vpsp2'};
+  return map[filename]||null;
+}
+
+async function fetchAll(token){
+  const results=await Promise.all(FILES.map(async f=>{
+    try{const c=await fetchFile(f,token);return{f,c}}catch(e){return{f,c:null}}
+  }));
+  results.forEach(({f,c})=>{
+    if(!c)return;
+    const key=mdToKey(f);
+    if(!key)return;
+    const clean=c.replace(/^#[^\n]*\n/gm,'').replace(/^##[^\n]*\n/gm,'').trim();
+    localStorage.setItem('ea_content_'+key,clean);
+    const editEl=document.getElementById(EDIT_IDS[key]);
+    if(editEl)editEl.value=clean;
+    if(key==='grat')renderGrat(clean);
+    else renderSection(key,clean);
+  });
+}
+
+function save(key){
+  const editEl=document.getElementById(EDIT_IDS[key]);
+  if(!editEl)return;
+  const val=editEl.value;
+  localStorage.setItem('ea_content_'+key,val);
+  if(key==='grat')renderGrat(val);
+  else renderSection(key,val);
+}
+
+let editMode=false;
+function toggleEdit(){
+  editMode=!editMode;
+  document.body.classList.toggle('edit-mode',editMode);
+  const btn=document.getElementById('edit-btn');
+  btn.classList.toggle('active',editMode);
+  btn.innerHTML=editMode?'&#x2715; Done editing':'&#9998; Edit';
+}
+
+async function refreshAll(){
+  const token=tok();
+  if(!token)return;
+  try{await fetchAll(token)}catch(e){console.warn(e)}
+  refreshCountdowns();
+}
+
+function resetCreds(){
+  if(!confirm('Reset credentials?'))return;
+  localStorage.removeItem('ea_token');
+  document.getElementById('dashboard').style.display='none';
+  document.getElementById('setup-screen').style.display='flex';
+}
+
+function commitO5(){
+  const inps=document.querySelectorAll('.task-inp');
+  const filled=[...inps].filter(i=>i.value.trim()).length;
+  if(filled<3){alert('Define at least 3 tasks before committing.');return;}
+  alert('O5 locked. Work from the list. Do not go reactive.');
+}
+
+async function connect(){
+  const token=document.getElementById('setup-token').value.trim();
+  const errEl=document.getElementById('setup-error');
+  errEl.style.display='none';
+  if(!token){errEl.style.display='block';errEl.textContent='Please enter your token.';return;}
+  document.getElementById('setup-screen').style.display='none';
+  document.getElementById('loading').style.display='flex';
+  try{
+    await fetchAll(token);
+    setTok(token);
+    localStorage.setItem('ea_cache_v',CACHE_VERSION);
+    document.getElementById('loading').style.display='none';
+    document.getElementById('dashboard').style.display='block';
+    loadFromStorage();
+    refreshCountdowns();
+  }catch(e){
+    document.getElementById('loading').style.display='none';
+    document.getElementById('setup-screen').style.display='flex';
+    errEl.style.display='block';
+    errEl.textContent='Could not connect. Check your token and try again.';
+  }
+}
+
+window.addEventListener('load',async()=>{
+  const token=tok();
+  if(token){
+    clearOutdatedCache();
+    document.getElementById('setup-screen').style.display='none';
+    document.getElementById('loading').style.display='flex';
+    loadFromStorage();
+    try{await fetchAll(token);}catch(e){}
+    document.getElementById('loading').style.display='none';
+    document.getElementById('dashboard').style.display='block';
+    refreshCountdowns();
+  }
+});
+</script>
+
+
+<div class="glasp-extension-toaster" style="display: block; width: 320px; margin: unset; padding: unset; border: unset; border-radius: unset; outline: unset; background-color: unset; box-shadow: unset; position: fixed; top: 40px; right: 24px; z-index: 9999;"></div><div id="kins-kins-popup" style="color-scheme: initial; forced-color-adjust: initial; math-depth: initial; position: initial; position-anchor: initial; text-size-adjust: initial; appearance: initial; font-feature-settings: initial; font-kerning: initial; font-language-override: initial; font-optical-sizing: initial; font-palette: initial; font-size-adjust: initial; font-stretch: initial; font-style: initial; font-synthesis: initial; font-variant: initial; font-variation-settings: initial; font-weight: initial; position-area: initial; text-orientation: initial; text-rendering: initial; text-spacing-trim: initial; -webkit-font-smoothing: initial; -webkit-locale: initial; -webkit-text-orientation: initial; -webkit-writing-mode: initial; writing-mode: initial; zoom: initial; accent-color: initial; place-content: initial; place-items: initial; place-self: initial; alignment-baseline: initial; anchor-name: initial; anchor-scope: initial; animation-composition: initial; animation: initial; animation-trigger: initial; app-region: initial; aspect-ratio: initial; backdrop-filter: initial; backface-visibility: initial; background-blend-mode: initial; baseline-shift: initial; baseline-source: initial; block-size: initial; border-block: initial; border-radius: initial; border-collapse: initial; border-end-end-radius: initial; border-end-start-radius: initial; border-inline: initial; border-shape: initial; border-start-end-radius: initial; border-start-start-radius: initial; inset: initial; box-decoration-break: initial; box-shadow: initial; break-after: initial; break-before: initial; break-inside: initial; buffered-rendering: initial; caption-side: initial; caret-animation: initial; caret-color: initial; caret-shape: initial; clear: initial; clip: initial; clip-path: initial; clip-rule: initial; color-interpolation: initial; color-interpolation-filters: initial; color-rendering: initial; columns: initial; column-fill: initial; gap: initial; rule-break: initial; rule: initial; rule-inset: initial; rule-visibility-items: initial; column-span: initial; contain: initial; contain-intrinsic-block-size: initial; contain-intrinsic-size: initial; contain-intrinsic-inline-size: initial; container: initial; content: initial; content-visibility: initial; corner-shape: initial; corner-block-end-shape: initial; corner-block-start-shape: initial; counter-increment: initial; counter-reset: initial; counter-set: initial; cursor: initial; cx: initial; cy: initial; d: initial; dominant-baseline: initial; dynamic-range-limit: initial; empty-cells: initial; field-sizing: initial; fill: initial; fill-opacity: initial; fill-rule: initial; filter: initial; flex: initial; flex-flow: initial; float: initial; flood-color: initial; flood-opacity: initial; grid: initial; grid-area: initial; hyphenate-character: initial; hyphenate-limit-chars: initial; hyphens: initial; image-orientation: initial; image-rendering: initial; initial-letter: initial; inline-size: initial; inset-block: initial; inset-inline: initial; interactivity: initial; interest-delay: initial; interpolate-size: initial; isolation: initial; letter-spacing: initial; lighting-color: initial; line-break: initial; list-style: initial; margin-block: initial; margin-inline: initial; marker: initial; mask: initial; mask-type: initial; math-shift: initial; math-style: initial; max-block-size: initial; max-height: initial; max-inline-size: initial; max-width: initial; min-block-size: initial; min-height: initial; min-inline-size: initial; min-width: initial; mix-blend-mode: initial; object-fit: initial; object-position: initial; object-view-box: initial; offset: initial; opacity: initial; order: initial; orphans: initial; outline: initial; outline-offset: initial; overflow-anchor: initial; overflow-block: initial; overflow-clip-margin: initial; overflow-inline: initial; overflow-wrap: initial; overflow: initial; overlay: initial; padding-block: initial; padding-inline: initial; page: initial; page-orientation: initial; paint-order: initial; perspective: initial; perspective-origin: initial; pointer-events: initial; position-try: initial; position-visibility: initial; print-color-adjust: initial; quotes: initial; r: initial; reading-flow: initial; reading-order: initial; resize: initial; rotate: initial; ruby-align: initial; ruby-position: initial; rule-overlap: initial; rx: initial; ry: initial; scale: initial; scroll-behavior: initial; scroll-initial-target: initial; scroll-margin-block: initial; scroll-margin: initial; scroll-margin-inline: initial; scroll-marker-group: initial; scroll-padding-block: initial; scroll-padding: initial; scroll-padding-inline: initial; scroll-snap-align: initial; scroll-snap-stop: initial; scroll-snap-type: initial; scroll-target-group: initial; scroll-timeline: initial; scrollbar-color: initial; scrollbar-gutter: initial; scrollbar-width: initial; shape-image-threshold: initial; shape-margin: initial; shape-outside: initial; shape-rendering: initial; size: initial; speak: initial; stop-color: initial; stop-opacity: initial; stroke: initial; stroke-dasharray: initial; stroke-dashoffset: initial; stroke-linecap: initial; stroke-linejoin: initial; stroke-miterlimit: initial; stroke-opacity: initial; stroke-width: initial; tab-size: initial; table-layout: initial; text-align-last: initial; text-anchor: initial; text-autospace: initial; text-box: initial; text-combine-upright: initial; text-decoration-skip-ink: initial; text-emphasis: initial; text-emphasis-position: initial; text-indent: initial; text-justify: initial; text-overflow: initial; text-shadow: initial; text-transform: initial; text-underline-offset: initial; text-underline-position: initial; text-wrap: wrap; timeline-scope: initial; timeline-trigger: initial; touch-action: initial; transform: initial; transform-box: initial; transform-origin: initial; transform-style: initial; transition: initial; translate: initial; trigger-scope: initial; user-select: initial; vector-effect: initial; vertical-align: initial; view-timeline: initial; view-transition-class: initial; view-transition-group: initial; view-transition-name: initial; view-transition-scope: initial; visibility: initial; border-spacing: initial; -webkit-box-align: initial; -webkit-box-decoration-break: initial; -webkit-box-direction: initial; -webkit-box-flex: initial; -webkit-box-ordinal-group: initial; -webkit-box-orient: initial; -webkit-box-pack: initial; -webkit-box-reflect: initial; -webkit-line-break: initial; -webkit-line-clamp: initial; -webkit-mask-box-image: initial; -webkit-rtl-ordering: initial; -webkit-ruby-position: initial; -webkit-tap-highlight-color: initial; -webkit-text-combine: initial; -webkit-text-decorations-in-effect: initial; -webkit-text-fill-color: initial; -webkit-text-security: initial; -webkit-text-stroke: initial; -webkit-user-drag: initial; widows: initial; will-change: initial; word-break: initial; word-spacing: initial; x: initial; y: initial; z-index: initial; display: block !important; box-sizing: border-box; margin: 0px; padding: 0px; width: auto; height: auto; background: none; border-width: medium; border-style: none; border-color: currentcolor; border-image: initial; font-size: medium; font-family: Rubik, sans-serif; color: initial; text-align: left; text-decoration: none; line-height: normal; white-space-collapse: collapse; direction: ltr; overscroll-behavior-block: none; overscroll-behavior-inline: none; overscroll-behavior: none;"><style>
+                    #kins_root {
+                        display: block !important;
+                    }
+                </style><div id="kins_root" style="color-scheme: initial; forced-color-adjust: initial; math-depth: initial; position: initial; position-anchor: initial; text-size-adjust: initial; appearance: initial; font-feature-settings: initial; font-kerning: initial; font-language-override: initial; font-optical-sizing: initial; font-palette: initial; font-size-adjust: initial; font-stretch: initial; font-style: initial; font-synthesis: initial; font-variant: initial; font-variation-settings: initial; font-weight: initial; position-area: initial; text-orientation: initial; text-rendering: initial; text-spacing-trim: initial; -webkit-font-smoothing: initial; -webkit-locale: initial; -webkit-text-orientation: initial; -webkit-writing-mode: initial; writing-mode: initial; zoom: initial; accent-color: initial; place-content: initial; place-items: initial; place-self: initial; alignment-baseline: initial; anchor-name: initial; anchor-scope: initial; animation-composition: initial; animation: initial; animation-trigger: initial; app-region: initial; aspect-ratio: initial; backdrop-filter: initial; backface-visibility: initial; background-blend-mode: initial; baseline-shift: initial; baseline-source: initial; block-size: initial; border-block: initial; border-radius: initial; border-collapse: initial; border-end-end-radius: initial; border-end-start-radius: initial; border-inline: initial; border-shape: initial; border-start-end-radius: initial; border-start-start-radius: initial; inset: initial; box-decoration-break: initial; box-shadow: initial; break-after: initial; break-before: initial; break-inside: initial; buffered-rendering: initial; caption-side: initial; caret-animation: initial; caret-color: initial; caret-shape: initial; clear: initial; clip: initial; clip-path: initial; clip-rule: initial; color-interpolation: initial; color-interpolation-filters: initial; color-rendering: initial; columns: initial; column-fill: initial; gap: initial; rule-break: initial; rule: initial; rule-inset: initial; rule-visibility-items: initial; column-span: initial; contain: initial; contain-intrinsic-block-size: initial; contain-intrinsic-size: initial; contain-intrinsic-inline-size: initial; container: initial; content: initial; content-visibility: initial; corner-shape: initial; corner-block-end-shape: initial; corner-block-start-shape: initial; counter-increment: initial; counter-reset: initial; counter-set: initial; cursor: initial; cx: initial; cy: initial; d: initial; dominant-baseline: initial; dynamic-range-limit: initial; empty-cells: initial; field-sizing: initial; fill: initial; fill-opacity: initial; fill-rule: initial; filter: initial; flex: initial; flex-flow: initial; float: initial; flood-color: initial; flood-opacity: initial; grid: initial; grid-area: initial; hyphenate-character: initial; hyphenate-limit-chars: initial; hyphens: initial; image-orientation: initial; image-rendering: initial; initial-letter: initial; inline-size: initial; inset-block: initial; inset-inline: initial; interactivity: initial; interest-delay: initial; interpolate-size: initial; isolation: initial; letter-spacing: initial; lighting-color: initial; line-break: initial; list-style: initial; margin-block: initial; margin-inline: initial; marker: initial; mask: initial; mask-type: initial; math-shift: initial; math-style: initial; max-block-size: initial; max-height: initial; max-inline-size: initial; max-width: initial; min-block-size: initial; min-height: initial; min-inline-size: initial; min-width: initial; mix-blend-mode: initial; object-fit: initial; object-position: initial; object-view-box: initial; offset: initial; opacity: initial; order: initial; orphans: initial; outline: initial; outline-offset: initial; overflow-anchor: initial; overflow-block: initial; overflow-clip-margin: initial; overflow-inline: initial; overflow-wrap: initial; overflow: initial; overlay: initial; padding-block: initial; padding-inline: initial; page: initial; page-orientation: initial; paint-order: initial; perspective: initial; perspective-origin: initial; pointer-events: initial; position-try: initial; position-visibility: initial; print-color-adjust: initial; quotes: initial; r: initial; reading-flow: initial; reading-order: initial; resize: initial; rotate: initial; ruby-align: initial; ruby-position: initial; rule-overlap: initial; rx: initial; ry: initial; scale: initial; scroll-behavior: initial; scroll-initial-target: initial; scroll-margin-block: initial; scroll-margin: initial; scroll-margin-inline: initial; scroll-marker-group: initial; scroll-padding-block: initial; scroll-padding: initial; scroll-padding-inline: initial; scroll-snap-align: initial; scroll-snap-stop: initial; scroll-snap-type: initial; scroll-target-group: initial; scroll-timeline: initial; scrollbar-color: initial; scrollbar-gutter: initial; scrollbar-width: initial; shape-image-threshold: initial; shape-margin: initial; shape-outside: initial; shape-rendering: initial; size: initial; speak: initial; stop-color: initial; stop-opacity: initial; stroke: initial; stroke-dasharray: initial; stroke-dashoffset: initial; stroke-linecap: initial; stroke-linejoin: initial; stroke-miterlimit: initial; stroke-opacity: initial; stroke-width: initial; tab-size: initial; table-layout: initial; text-align-last: initial; text-anchor: initial; text-autospace: initial; text-box: initial; text-combine-upright: initial; text-decoration-skip-ink: initial; text-emphasis: initial; text-emphasis-position: initial; text-indent: initial; text-justify: initial; text-overflow: initial; text-shadow: initial; text-transform: initial; text-underline-offset: initial; text-underline-position: initial; text-wrap: wrap; timeline-scope: initial; timeline-trigger: initial; touch-action: initial; transform: initial; transform-box: initial; transform-origin: initial; transform-style: initial; transition: initial; translate: initial; trigger-scope: initial; user-select: initial; vector-effect: initial; vertical-align: initial; view-timeline: initial; view-transition-class: initial; view-transition-group: initial; view-transition-name: initial; view-transition-scope: initial; visibility: initial; border-spacing: initial; -webkit-box-align: initial; -webkit-box-decoration-break: initial; -webkit-box-direction: initial; -webkit-box-flex: initial; -webkit-box-ordinal-group: initial; -webkit-box-orient: initial; -webkit-box-pack: initial; -webkit-box-reflect: initial; -webkit-line-break: initial; -webkit-line-clamp: initial; -webkit-mask-box-image: initial; -webkit-rtl-ordering: initial; -webkit-ruby-position: initial; -webkit-tap-highlight-color: initial; -webkit-text-combine: initial; -webkit-text-decorations-in-effect: initial; -webkit-text-fill-color: initial; -webkit-text-security: initial; -webkit-text-stroke: initial; -webkit-user-drag: initial; widows: initial; will-change: initial; word-break: initial; word-spacing: initial; x: initial; y: initial; z-index: initial; display: block; box-sizing: border-box; margin: 0px; padding: 0px; width: auto; height: auto; background: none; border-width: medium; border-style: none; border-color: currentcolor; border-image: initial; font-size: medium; font-family: Rubik, sans-serif; color: initial; text-align: left; text-decoration: none; line-height: normal; white-space-collapse: collapse; direction: ltr; overscroll-behavior-block: none; overscroll-behavior-inline: none; overscroll-behavior: none;"></div></div></body><div class="glasp-extension" style="display: block; width: unset; margin: unset; padding: unset; border: unset; border-radius: unset; outline: unset; background-color: unset; box-shadow: unset; position: fixed; bottom: 16px; right: 16px; z-index: 9999;"><div class="glasp-extension" style="font-family: inherit;"></div></div></html>

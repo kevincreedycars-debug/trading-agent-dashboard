@@ -22,17 +22,56 @@ Canonical project memory lives in `docs/`, except this startup file which stays 
    - `docs/ARCHITECTURE.md`
    - `docs/N8N_INTEGRATION.md`
    - `workflows/WORKFLOW_INVENTORY.md`
-3. Inspect the repository before making assumptions:
-   - `git status --short`
+3. Perform the Repository Health Check.
+4. Inspect the repository before making assumptions:
    - relevant source, workflow, data, and documentation files for the task
-4. Summarise the following before editing files:
-   - current project state
-   - current active task
-   - recently completed work
-   - planned next steps
-   - files likely to be edited
-5. Do not modify files until the summary is complete.
-6. Preserve user changes already present in the working tree.
+5. Present the startup summary before editing files.
+6. Do not modify files until the startup summary is complete and the user has confirmed the task for the session.
+7. Preserve user changes already present in the working tree.
+
+### Repository Health Check
+
+After reading the project memory files, but before making any code changes, perform a repository health check.
+
+Run:
+
+```bash
+git status --short --untracked-files=all
+git branch --show-current
+```
+
+Then include the results in your startup summary.
+
+The startup summary must always contain:
+
+### Repository Status
+
+- Current branch
+- Whether the working tree is clean
+- Any modified files
+- Any untracked files
+- Whether there are uncommitted changes that should be reviewed before editing
+
+### Project Summary
+
+- Current platform status
+- Current active task
+- Recently completed work
+- Highest-priority next task
+- Files or workflows likely to be modified during this session
+
+### Recommendations
+
+Based on the project documentation and current repository state:
+
+- Recommend the most logical next task.
+- Highlight any potential conflicts or unfinished work.
+- Warn if multiple changes may overlap.
+- Suggest whether documentation should be updated before continuing.
+
+Do not begin editing any files until this startup summary has been presented and the user has confirmed the task for the session.
+
+This repository health check must be performed at the start of every new Codex session.
 
 ## End-Of-Session Sequence
 
