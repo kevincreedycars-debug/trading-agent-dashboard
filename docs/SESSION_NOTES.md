@@ -8,6 +8,7 @@ Last updated: 2026-06-20
 - Extended the repository memory set with `docs/SESSION_NOTES.md` and `docs/PROJECT_HISTORY.md`.
 - Updated Codex operating instructions so future sessions read the full memory set before editing.
 - Updated project memory docs to record the new session management system.
+- Added continuous project memory maintenance rules to `CODEX_STARTUP.md`, including milestone documentation updates, logical commits, and startup recovery from repository memory.
 
 ## Unfinished Work
 

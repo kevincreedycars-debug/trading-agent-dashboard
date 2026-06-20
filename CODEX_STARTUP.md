@@ -22,12 +22,31 @@ Canonical project memory lives in `docs/`, except this startup file which stays 
    - `docs/ARCHITECTURE.md`
    - `docs/N8N_INTEGRATION.md`
    - `workflows/WORKFLOW_INVENTORY.md`
-3. Perform the Repository Health Check.
-4. Inspect the repository before making assumptions:
+3. Read the latest entry in `docs/CHANGELOG.md`.
+4. Read `docs/SESSION_NOTES.md` carefully enough to determine:
+   - where the previous session stopped
+   - what was completed
+   - what remains unfinished
+   - the exact next task
+5. Perform the Repository Health Check.
+6. Inspect the repository before making assumptions:
    - relevant source, workflow, data, and documentation files for the task
-5. Present the startup summary before editing files.
-6. Do not modify files until the startup summary is complete and the user has confirmed the task for the session.
-7. Preserve user changes already present in the working tree.
+7. Present the startup summary before editing files.
+8. Do not modify files until the startup summary is complete and the user has confirmed the task for the session.
+9. Preserve user changes already present in the working tree.
+
+### Startup Recovery
+
+At the beginning of every new session, recover the project state entirely from repository documentation instead of relying on previous chat history.
+
+After reading all project memory files, the latest changelog entry, and `docs/SESSION_NOTES.md`, determine:
+
+- where the previous session stopped
+- what was completed
+- what remains unfinished
+- the exact next task
+
+Summarise this before making any edits.
 
 ### Repository Health Check
 
@@ -96,6 +115,58 @@ Before ending a Codex session, update only the documents that actually changed:
 - relevant workflow, issue, or architecture docs if the work changed them
 
 Commit documentation updates with the related code changes whenever practical, then push the commits to GitHub when repository access is available.
+
+## Continuous Documentation Updates
+
+Project documentation is the permanent memory of this repository.
+
+Do not wait until the end of a session to update it.
+
+Whenever a meaningful piece of work is completed, immediately update the relevant documentation before continuing.
+
+A meaningful piece of work includes, for example:
+
+- completing a new dashboard component
+- completing a workflow
+- completing a database schema
+- completing a UI redesign section
+- completing a bug fix
+- completing a refactor
+- making an architectural decision
+- changing project priorities
+
+For each milestone:
+
+1. Update `docs/CHANGELOG.md`.
+2. Update `docs/CURRENT_STATE.md` if platform status changed.
+3. Update `docs/CURRENT_TASK.md` if the active task changed.
+4. Update `docs/NEXT_STEPS.md` if priorities changed.
+5. Update `docs/DECISIONS.md` if an architectural decision was made.
+6. Update `docs/SESSION_NOTES.md` with the current stopping point.
+7. Create a Git commit for that milestone.
+
+This should happen throughout long sessions rather than only once at the end.
+
+## Commit Frequency
+
+Avoid extremely large commits.
+
+Prefer multiple logical milestone commits.
+
+Examples:
+
+- Dashboard header redesign complete
+- Asset cards redesigned
+- Navigation updated
+- Backtesting tab scaffold complete
+
+Each milestone should have:
+
+- updated code
+- updated documentation
+- a Git commit
+
+This ensures that if a Codex session ends unexpectedly, very little project memory is lost.
 
 ## Milestone Update Rule
 

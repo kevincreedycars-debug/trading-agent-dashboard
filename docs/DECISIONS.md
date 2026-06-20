@@ -47,3 +47,11 @@ Decision: Keep project memory documents under `docs/`, with only `CODEX_STARTUP.
 Reason: Existing memory files already live in `docs/`, and preserving that structure avoids duplicate root-level files with the same purpose.
 
 Alternatives considered: moving all memory files to the repository root or creating root-level duplicates. Both were rejected because they would churn existing documentation and risk conflicting sources of truth.
+
+## 2026-06-20 - Continuous Project Memory Maintenance
+
+Decision: Meaningful completed work must update the relevant project memory documents immediately and be committed as a logical milestone before continuing.
+
+Reason: Long Codex sessions can end unexpectedly. Updating memory and committing at each milestone keeps GitHub recoverable as the project source of truth without relying on chat history.
+
+Alternatives considered: updating documentation only at session end or making very large combined commits. These were rejected because they increase the amount of project state that can be lost or become hard to review.
