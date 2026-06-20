@@ -49,3 +49,5 @@
 - Published the Master Orchestrator and referenced child workflows.
 - Configured `data/workflow-control.json` with the production webhook URL.
 - Added Master Orchestrator status publishing to `data/workflow-status.json`.
+- Added visual-only Backtest / Accuracy dashboard tab using placeholder mock data.
+- Added static `data/backtest.json` placeholder for agent accuracy and variable correlation UI scaffolding.

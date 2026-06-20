@@ -63,3 +63,23 @@ The n8n API key was exposed in chat again. It should be revoked after this proof
 - Added a final status builder and GitHub file writer to the Master Orchestrator.
 - Updated `data/workflow-control.json` with the production webhook URL.
 - Refreshed workflow JSON exports after live n8n changes.
+
+## 2026-06-20 - Backtest Accuracy Visual Shell
+
+### Session Goal
+
+Add the visual dashboard shell for Backtest / Accuracy without building the database, Supabase schema, or backtest engine.
+
+### Completed
+
+- Added a top-level Backtest / Accuracy dashboard tab.
+- Added Agent Direction Accuracy and Variable Correlation Analysis sub-tabs.
+- Added placeholder metric cards, asset/timeframe accuracy blocks, recent completed calls table, factor leaderboards, correlation table, empty states, and next-phase roadmap card.
+- Added `data/backtest.json` with mock placeholder values only.
+
+### Constraints Preserved
+
+- No Layer 1 logic changed.
+- No Layer 2 logic changed.
+- No Dashboard Writer workflow changed.
+- No Supabase schema or backtest calculation engine added.

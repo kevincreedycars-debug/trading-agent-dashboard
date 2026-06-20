@@ -1,5 +1,6 @@
 const layer1Url = "./data/layer1.json";
 const layer2Url = "./data/layer2.json";
+const backtestUrl = "./data/backtest.json";
 const workflowControlUrl = "./data/workflow-control.json";
 
 const labels = {
@@ -13,11 +14,13 @@ const labels = {
 const orderedAgents = ["USD", "EUR", "GOLD", "NQ", "BTC"];
 let layer1Data = null;
 let layer2Data = null;
+let backtestData = null;
 let workflowControl = null;
 let workflowStatus = null;
 let workflowPollTimer = null;
 let workflowTriggerInFlight = false;
 let activeTab = "overview";
+let activeBacktestTab = "accuracy";
 
 function updateClock() {
   const el = document.getElementById("currentTime");
@@ -874,6 +877,314 @@ function renderLayer2(data = {}) {
   `;
 }
 
+function resultClass(result = "") {
+  const r = String(result).toLowerCase();
+  if (r.includes("win")) return "success";
+  if (r.includes("loss")) return "failed";
+  if (r.includes("pending")) return "pending";
+  if (r.includes("no call")) return "neutral";
+  return "neutral";
+}
+
+function percentValue(value) {
+  return value === null || value === undefined || value === "" ? "--" : `${Number(value)}%`;
+}
+
+function renderBacktestEmptyStates() {
+  return `
+    <div class="backtest-empty-strip">
+      <span>Backtest data not connected yet</span>
+      <span>Waiting for historical snapshots</span>
+      <span>Database engine to be added in next phase</span>
+    </div>
+  `;
+}
+
+function renderBacktestMetric(label, value, detail = "") {
+  return `
+    <article class="backtest-metric-card">
+      <p class="eyebrow">${escapeHtml(label)}</p>
+      <h3>${escapeHtml(value)}</h3>
+      ${detail ? `<span>${escapeHtml(detail)}</span>` : ""}
+    </article>
+  `;
+}
+
+function renderAccuracyBars(items = [], labelKey) {
+  if (!items.length) return `<div class="empty-state">Backtest data not connected yet.</div>`;
+
+  return items.map(item => {
+    const label = item[labelKey] || item.asset || item.timeframe || "Item";
+    const value = Number(item.accuracy || 0);
+    return `
+      <div class="accuracy-bar-row">
+        <div>
+          <strong>${escapeHtml(label)}</strong>
+          <small>${escapeHtml(item.sample_size || 0)} mock samples</small>
+        </div>
+        <div class="accuracy-bar-track" aria-hidden="true">
+          <span style="width: ${Math.max(0, Math.min(value, 100))}%"></span>
+        </div>
+        <b>${percentValue(value)}</b>
+      </div>
+    `;
+  }).join("");
+}
+
+function renderRecentCallsTable(calls = []) {
+  if (!calls.length) return `<div class="empty-state">Waiting for historical snapshots.</div>`;
+
+  return `
+    <div class="table-scroll">
+      <table class="dashboard-table">
+        <thead>
+          <tr>
+            <th>Date/time call made</th>
+            <th>Asset</th>
+            <th>Timeframe</th>
+            <th>Agent call</th>
+            <th>Entry/reference price</th>
+            <th>Exit/settlement price</th>
+            <th>Actual direction</th>
+            <th>Result</th>
+            <th>Conviction</th>
+            <th>Strength</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${calls.map(call => `
+            <tr>
+              <td>${escapeHtml(call.called_at)}</td>
+              <td>${escapeHtml(call.asset)}</td>
+              <td>${escapeHtml(call.timeframe)}</td>
+              <td><span class="direction ${directionClass(call.agent_call)}">${escapeHtml(call.agent_call)}</span></td>
+              <td>${escapeHtml(call.entry_price)}</td>
+              <td>${escapeHtml(call.exit_price)}</td>
+              <td>${escapeHtml(call.actual_direction)}</td>
+              <td><span class="result-pill ${resultClass(call.result)}">${escapeHtml(call.result)}</span></td>
+              <td>${percentValue(call.conviction)}</td>
+              <td>${escapeHtml(call.strength)}</td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+function renderNextBuildPhase(phases = []) {
+  return `
+    <article class="detail-panel next-phase-card">
+      <div class="panel-head">
+        <p class="eyebrow">Next Build Phase</p>
+        <h3>Backtest Engine Roadmap</h3>
+      </div>
+      <ol class="phase-list">
+        ${phases.map(phase => `<li>${escapeHtml(phase)}</li>`).join("")}
+      </ol>
+    </article>
+  `;
+}
+
+function renderAccuracyBacktest(data = {}) {
+  const accuracy = data.accuracy || {};
+
+  return `
+    ${renderBacktestEmptyStates()}
+
+    <section class="backtest-metric-grid">
+      ${renderBacktestMetric("Overall Accuracy", percentValue(accuracy.overall_accuracy), "All assets and tracked timeframes")}
+      ${renderBacktestMetric("Bullish Call Accuracy", percentValue(accuracy.bullish_accuracy), "Mock directional outcomes")}
+      ${renderBacktestMetric("Bearish Call Accuracy", percentValue(accuracy.bearish_accuracy), "Mock directional outcomes")}
+      ${renderBacktestMetric("No-call Count", String(accuracy.no_call_count ?? "--"), "Filtered or avoided calls")}
+      ${renderBacktestMetric("Current Streak", accuracy.current_streak || "--", "Completed calls only")}
+      ${renderBacktestMetric("Best Asset", accuracy.best_asset || "--", "Highest mock hit rate")}
+      ${renderBacktestMetric("Weakest Asset", accuracy.weakest_asset || "--", "Lowest mock hit rate")}
+    </section>
+
+    <section class="backtest-grid two-column">
+      <article class="detail-panel">
+        <div class="panel-head">
+          <p class="eyebrow">Accuracy By Asset</p>
+          <h3>Asset Direction Calls</h3>
+        </div>
+        ${renderAccuracyBars(accuracy.asset_accuracy, "asset")}
+      </article>
+
+      <article class="detail-panel">
+        <div class="panel-head">
+          <p class="eyebrow">Accuracy By Timeframe</p>
+          <h3>Time Horizon Hit Rate</h3>
+        </div>
+        ${renderAccuracyBars(accuracy.timeframe_accuracy, "timeframe")}
+      </article>
+    </section>
+
+    <article class="detail-panel wide-panel">
+      <div class="panel-head">
+        <p class="eyebrow">Recent Completed Calls</p>
+        <h3>Mock Direction Accuracy Ledger</h3>
+      </div>
+      ${renderRecentCallsTable(accuracy.recent_completed_calls)}
+    </article>
+
+    ${renderNextBuildPhase(data.next_build_phase || [])}
+  `;
+}
+
+function renderMiniLeaderboard(items = [], valueKey, suffix = "%") {
+  if (!items.length) return `<div class="empty-state">Database engine to be added in next phase.</div>`;
+
+  return items.map((item, index) => {
+    const value = item[valueKey] ?? item.correlation ?? item.hit_rate ?? item.confidence ?? "--";
+    return `
+      <div class="leaderboard-row">
+        <span>${index + 1}</span>
+        <div>
+          <strong>${escapeHtml(item.factor)}</strong>
+          <small>${escapeHtml(item.asset || item.timeframe || "")}</small>
+        </div>
+        <b>${escapeHtml(value)}${value === "--" ? "" : suffix}</b>
+      </div>
+    `;
+  }).join("");
+}
+
+function renderCorrelationByTimeframe(items = []) {
+  if (!items.length) return `<div class="empty-state">Waiting for historical snapshots.</div>`;
+
+  return items.map(item => `
+    <div class="correlation-chip">
+      <span>${escapeHtml(item.timeframe)}</span>
+      <strong>${percentValue(item.correlation)}</strong>
+    </div>
+  `).join("");
+}
+
+function renderFactorHitRateTable(rows = []) {
+  if (!rows.length) return `<div class="empty-state">Backtest data not connected yet.</div>`;
+
+  return `
+    <div class="table-scroll">
+      <table class="dashboard-table">
+        <thead>
+          <tr>
+            <th>Asset</th>
+            <th>Variable / factor</th>
+            <th>Signal direction</th>
+            <th>Timeframe</th>
+            <th>Sample size</th>
+            <th>Bullish outcome %</th>
+            <th>Bearish outcome %</th>
+            <th>Neutral / mixed %</th>
+            <th>Confidence score</th>
+            <th>Notes</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows.map(row => `
+            <tr>
+              <td>${escapeHtml(row.asset)}</td>
+              <td>${escapeHtml(row.factor)}</td>
+              <td>${escapeHtml(row.signal_direction)}</td>
+              <td>${escapeHtml(row.timeframe)}</td>
+              <td>${escapeHtml(row.sample_size)}</td>
+              <td>${percentValue(row.bullish_outcome_pct)}</td>
+              <td>${percentValue(row.bearish_outcome_pct)}</td>
+              <td>${percentValue(row.neutral_mixed_pct)}</td>
+              <td>${percentValue(row.confidence_score)}</td>
+              <td>${escapeHtml(row.notes)}</td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+function renderCorrelationBacktest(data = {}) {
+  const correlation = data.correlation || {};
+
+  return `
+    ${renderBacktestEmptyStates()}
+
+    <article class="detail-panel wide-panel explanation-card">
+      <p class="eyebrow">Example Question</p>
+      <h3>${escapeHtml(correlation.example_question || "If CPI surprise is bullish USD, how often did USD/DXY rise over each timeframe?")}</h3>
+      <p>Placeholder only. Historical snapshots, settlement prices, and factor outcomes will be connected in a later phase.</p>
+    </article>
+
+    <section class="backtest-grid three-column">
+      <article class="detail-panel">
+        <div class="panel-head">
+          <p class="eyebrow">Variable Leaderboard</p>
+          <h3>Top Mock Factors</h3>
+        </div>
+        ${renderMiniLeaderboard(correlation.leaderboard, "correlation")}
+      </article>
+
+      <article class="detail-panel">
+        <div class="panel-head">
+          <p class="eyebrow">Best Bullish Predictors</p>
+          <h3>Positive Outcomes</h3>
+        </div>
+        ${renderMiniLeaderboard(correlation.best_bullish_predictors, "hit_rate")}
+      </article>
+
+      <article class="detail-panel">
+        <div class="panel-head">
+          <p class="eyebrow">Best Bearish Predictors</p>
+          <h3>Negative Outcomes</h3>
+        </div>
+        ${renderMiniLeaderboard(correlation.best_bearish_predictors, "hit_rate")}
+      </article>
+    </section>
+
+    <section class="backtest-grid two-column">
+      <article class="detail-panel">
+        <div class="panel-head">
+          <p class="eyebrow">Weak / Unreliable Variables</p>
+          <h3>Low Confidence Factors</h3>
+        </div>
+        ${renderMiniLeaderboard(correlation.weak_variables, "confidence")}
+      </article>
+
+      <article class="detail-panel">
+        <div class="panel-head">
+          <p class="eyebrow">Correlation By Timeframe</p>
+          <h3>Historical Window Fit</h3>
+        </div>
+        <div class="correlation-chip-grid">${renderCorrelationByTimeframe(correlation.timeframe_correlation)}</div>
+      </article>
+    </section>
+
+    <article class="detail-panel wide-panel">
+      <div class="panel-head">
+        <p class="eyebrow">Factor Hit-rate Table</p>
+        <h3>Mock Variable Outcome Matrix</h3>
+      </div>
+      ${renderFactorHitRateTable(correlation.factor_hit_rates)}
+    </article>
+
+    ${renderNextBuildPhase(data.next_build_phase || [])}
+  `;
+}
+
+function renderBacktest(data = {}) {
+  const updated = document.getElementById("backtestUpdated");
+  if (updated) {
+    const marker = data.meta?.placeholder ? "Placeholder mock data" : `Last updated: ${formatDashboardTime(data.meta?.last_updated)}`;
+    updated.textContent = marker;
+  }
+
+  const panel = document.getElementById("backtestPanel");
+  if (!panel) return;
+
+  panel.innerHTML = activeBacktestTab === "correlation"
+    ? renderCorrelationBacktest(data)
+    : renderAccuracyBacktest(data);
+}
+
 function workflowErrorText(error) {
   if (!error) return "";
   if (typeof error === "string") return error;
@@ -1109,33 +1420,49 @@ function setTab(tab) {
 
   const overviewView = document.getElementById("overviewView");
   const layer2View = document.getElementById("layer2View");
+  const backtestView = document.getElementById("backtestView");
   const agentView = document.getElementById("agentView");
 
   if (overviewView) overviewView.classList.toggle("active-view", tab === "overview");
   if (layer2View) layer2View.classList.toggle("active-view", tab === "layer2");
+  if (backtestView) backtestView.classList.toggle("active-view", tab === "backtest");
   if (agentView) agentView.classList.toggle("active-view", orderedAgents.includes(tab));
 
   if (orderedAgents.includes(tab)) renderAgentDetail(tab);
+  if (tab === "backtest") renderBacktest(backtestData || {});
 }
 
 function setupTabs() {
   document.querySelectorAll(".tab-button").forEach(btn => {
     btn.addEventListener("click", () => setTab(btn.dataset.tab));
   });
+
+  document.querySelectorAll(".subtab-button").forEach(btn => {
+    btn.addEventListener("click", () => {
+      activeBacktestTab = btn.dataset.backtestTab || "accuracy";
+      document.querySelectorAll(".subtab-button").forEach(item => {
+        item.classList.toggle("active", item === btn);
+      });
+      renderBacktest(backtestData || {});
+    });
+  });
 }
 
 async function loadDashboard() {
   try {
-    const [layer1Res, layer2Res] = await Promise.all([
+    const [layer1Res, layer2Res, backtestRes] = await Promise.all([
       fetch(layer1Url, { cache: "no-store" }),
-      fetch(layer2Url, { cache: "no-store" })
+      fetch(layer2Url, { cache: "no-store" }),
+      fetch(backtestUrl, { cache: "no-store" })
     ]);
 
     layer1Data = await layer1Res.json();
     layer2Data = await layer2Res.json();
+    backtestData = await backtestRes.json();
 
     renderLayer1(layer1Data);
     renderLayer2(layer2Data);
+    renderBacktest(backtestData);
 
     if (orderedAgents.includes(activeTab)) {
       renderAgentDetail(activeTab);
