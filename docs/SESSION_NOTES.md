@@ -4,15 +4,17 @@ Last updated: 2026-06-20
 
 ## Work Completed
 
-- Reviewed the existing dashboard use of conviction and confirmed the headline metric was being rendered directly from the deterministic `final_conviction` model output.
-- Added a front-end derived confidence score that combines evidence dominance, participation, and net edge, then applies penalties when missing inputs or risk flags are present in the live data.
-- Updated the Overview and asset detail views to label the headline metric as Confidence while keeping Bull Case, Bear Case, Net Edge, and Participation visible.
-- Added a compact definitions legend under the Overview Layer 1 calls.
-- Replaced the shared card top strip gradient with a single navy strip.
+- Verified that commit `683f4cb` exists locally but had not been pushed to `origin/main`, so the public dashboard remained on an older deploy.
+- Confirmed the active public dashboard host is GitHub Pages, and that the published HTML still lacked the new confidence/legend changes at verification time.
+- Added shared Layer 1 normalization in the dashboard so loaded agent data derives `confidence`, overview diagnostics, and `seven_day_outlook` consistently even if upstream JSON is older.
+- Added a 7-day direction outlook section to the Overview tab.
+- Updated the current `data/layer1.json` snapshot to include `confidence` and `seven_day_outlook`.
+- Kept the shared navy strip styling in place.
 - Validated the updated front-end syntax with `node --check script.js`.
 
 ## Unfinished Work
 
+- Push the updated commits to GitHub and verify the public GitHub Pages site updates.
 - Re-run the Master Orchestrator from the dashboard and verify the status/error report in the updated UI.
 - Fix EUR Layer 1 parser handling for OpenAI object|string output.
 - Fix Eco Events Collector duplicate insert handling.
@@ -33,4 +35,4 @@ Last updated: 2026-06-20
 
 ## Exact Next Task
 
-Run the Master Orchestrator from the dashboard and verify whether `data/workflow-status.json` receives a useful success or failure report in the updated dashboard UI.
+Push the updated commits to GitHub and verify the public GitHub Pages dashboard serves the new confidence and 7-day outlook UI.

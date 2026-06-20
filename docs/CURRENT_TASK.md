@@ -50,6 +50,9 @@ In progress.
 - Dashboard overview updated to display confidence as the headline call-quality metric instead of reusing raw conviction as-is
 - Overview definitions legend added under the Layer 1 calls
 - Shared dashboard card top strips changed from the orange/green/blue gradient to a single navy strip
+- Shared Layer 1 dashboard normalization now derives explicit `confidence` values and generates a 7-day direction outlook from the latest timeframe calls
+- `data/layer1.json` now carries `confidence` and `seven_day_outlook` in the current repository snapshot
+- Deployment verification confirmed the active public host is GitHub Pages, not Netlify, and that earlier local changes had not yet been pushed
 
 ## n8n Workspace
 
@@ -67,7 +70,7 @@ https://silver17.app.n8n.cloud/projects/ISQG9XU7TGTT6Fcu/workflows
 
 ## Next Immediate Steps
 
-1. Re-run the Master Orchestrator from the dashboard and verify the next published status/error report against the updated UI.
+1. Verify the pushed GitHub Pages site is serving the updated confidence and 7-day outlook UI after deployment catches up.
 2. Fix EUR parser.
 3. Fix Eco Events duplicate insert.
 4. Refine Master Orchestrator status parsing if needed after the next failed run payload is observed.

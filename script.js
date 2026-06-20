@@ -397,6 +397,7 @@ function asArray(value) {
 function getCall(agent, timeframe = "24h") {
   return agent?.calls?.[timeframe] || {
     direction: "PENDING",
+    confidence: null,
     conviction: null,
     reason: "Awaiting data"
   };
@@ -553,6 +554,188 @@ function confidenceStrength(call, agent, timeframe = "24h") {
   return confidenceData(call, agent, timeframe).strength;
 }
 
+function displayMetricValue(value) {
+  return value === null || value === undefined || value === "" ? "--" : `${Math.round(Number(value))}%`;
+}
+
+function isNoCallDirection(direction = "") {
+  const normalized = String(direction || "").toUpperCase();
+  return normalized === "NO CALL" || normalized === "NO 24H CALL" || normalized === "PENDING";
+}
+
+function hasUsableDirection(call) {
+  return !!call && !isNoCallDirection(call.direction);
+}
+
+function formatLondonDate(date) {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Europe/London",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit"
+  }).formatToParts(date);
+
+  const lookup = Object.fromEntries(parts.map(part => [part.type, part.value]));
+  return `${lookup.year}-${lookup.month}-${lookup.day}`;
+}
+
+function formatLondonDay(date) {
+  return date.toLocaleDateString("en-US", {
+    weekday: "short",
+    timeZone: "Europe/London"
+  });
+}
+
+function isWeekendDate(date) {
+  const weekday = date.toLocaleDateString("en-US", {
+    weekday: "long",
+    timeZone: "Europe/London"
+  });
+
+  return weekday === "Saturday" || weekday === "Sunday";
+}
+
+function marketOpenForDate(agentName, date) {
+  return agentName === "BTC" || !isWeekendDate(date);
+}
+
+function metricSourceTimeframe(agent) {
+  const ordered = ["24h", "3d", "current_week", "next_week", "current_month"];
+  return ordered.find(tf => {
+    const call = getCall(agent, tf);
+    return hasUsableDirection(call) && confidenceValue(call, agent, tf) !== null;
+  }) || "24h";
+}
+
+function buildDisplayMetrics(agent, timeframe) {
+  const call = getCall(agent, timeframe);
+  const model = call.conviction_model || {};
+  return {
+    bull_case: numberOrNull(model.bullish_argument_pct),
+    bear_case: numberOrNull(model.bearish_argument_pct),
+    winning_side: model.winning_side || null,
+    confidence: confidenceValue(call, agent, timeframe),
+    conviction: numberOrNull(call.conviction ?? model.final_conviction),
+    net_edge: numberOrNull(model.net_edge_pct),
+    participation: numberOrNull(
+      model.directional_participation_pct ??
+      model.active_participation_pct ??
+      model.participation
+    ),
+    directional_participation: numberOrNull(
+      model.directional_participation_pct ??
+      model.active_participation_pct ??
+      model.participation
+    ),
+    neutral: numberOrNull(model.neutral_evidence_pct ?? model.neutral_pct),
+    verdict_strength: confidenceStrength(call, agent, timeframe),
+    bull_case_weight: numberOrNull(model.bull_case_weight),
+    bear_case_weight: numberOrNull(model.bear_case_weight),
+    source_timeframe: timeframe
+  };
+}
+
+function normaliseAgentCalls(agent) {
+  const calls = Object.fromEntries(
+    Object.entries(agent.calls || {}).map(([timeframe, call]) => {
+      const metrics = buildDisplayMetrics(agent, timeframe);
+      return [timeframe, {
+        ...call,
+        confidence: metrics.confidence,
+        bull_case: metrics.bull_case,
+        bear_case: metrics.bear_case,
+        net_edge: metrics.net_edge,
+        participation: metrics.participation,
+        strength: metrics.verdict_strength
+      }];
+    })
+  );
+
+  return calls;
+}
+
+function outlookSourceTimeframes(dayOffset) {
+  if (dayOffset === 0) return ["24h"];
+  if (dayOffset === 1) return ["24h", "3d"];
+  if (dayOffset === 2 || dayOffset === 3) return ["3d"];
+  if (dayOffset === 4 || dayOffset === 5) return ["current_week"];
+  return ["next_week"];
+}
+
+function buildNoCallOutlookEntry(date, sourceTimeframe = "weekend_rule") {
+  return {
+    date: formatLondonDate(date),
+    day: formatLondonDay(date),
+    source_timeframe: sourceTimeframe,
+    direction: "NO CALL",
+    confidence: null
+  };
+}
+
+function buildSevenDayOutlook(agent) {
+  const baseDate = new Date();
+  baseDate.setHours(12, 0, 0, 0);
+
+  return Array.from({ length: 7 }, (_, dayOffset) => {
+    const date = new Date(baseDate);
+    date.setDate(baseDate.getDate() + dayOffset);
+
+    if (!marketOpenForDate(agent.agent, date)) {
+      return buildNoCallOutlookEntry(date);
+    }
+
+    const sourceTimeframe = outlookSourceTimeframes(dayOffset).find(timeframe => {
+      const call = getCall(agent, timeframe);
+      return hasUsableDirection(call);
+    });
+
+    if (!sourceTimeframe) {
+      return buildNoCallOutlookEntry(date, outlookSourceTimeframes(dayOffset)[0]);
+    }
+
+    const call = getCall(agent, sourceTimeframe);
+    return {
+      date: formatLondonDate(date),
+      day: formatLondonDay(date),
+      source_timeframe: sourceTimeframe,
+      direction: call.direction || "NO CALL",
+      confidence: confidenceValue(call, agent, sourceTimeframe)
+    };
+  });
+}
+
+function normaliseLayer1Data(data = {}) {
+  const agents = (data.agents || []).map(rawAgent => {
+    const provisionalAgent = {
+      ...rawAgent,
+      calls: rawAgent.calls || {}
+    };
+
+    const calls = normaliseAgentCalls(provisionalAgent);
+    const agent = {
+      ...provisionalAgent,
+      calls
+    };
+
+    const sourceTimeframe = metricSourceTimeframe(agent);
+    const displayMetrics = buildDisplayMetrics(agent, sourceTimeframe);
+
+    return {
+      ...agent,
+      display_metrics: {
+        ...(agent.display_metrics || {}),
+        ...displayMetrics
+      },
+      seven_day_outlook: buildSevenDayOutlook(agent)
+    };
+  });
+
+  return {
+    ...data,
+    agents
+  };
+}
+
 function getAgent(name) {
   return (layer1Data?.agents || []).find(agent => agent.agent === name);
 }
@@ -625,6 +808,7 @@ function renderOverviewStats() {
 function renderAgentCard(agent) {
   const call24 = getCall(agent, "24h");
   const call24Confidence = confidenceValue(call24, agent, "24h");
+  const metrics = agent.display_metrics || {};
   const assetUpdated = getAgentUpdatedAt(agent);
   const formattedAssetUpdated = formatDashboardTime(assetUpdated);
   const assetAge = formatRelativeAge(assetUpdated);
@@ -660,6 +844,33 @@ function renderAgentCard(agent) {
 
       <p class="summary">${escapeHtml(agent.summary || "")}</p>
 
+      <div class="agent-metrics">
+        <div class="agent-metric-chip">
+          <span>Confidence</span>
+          <strong>${displayMetricValue(metrics.confidence)}</strong>
+        </div>
+        <div class="agent-metric-chip">
+          <span>Bull Case</span>
+          <strong>${displayMetricValue(metrics.bull_case)}</strong>
+        </div>
+        <div class="agent-metric-chip">
+          <span>Bear Case</span>
+          <strong>${displayMetricValue(metrics.bear_case)}</strong>
+        </div>
+        <div class="agent-metric-chip">
+          <span>Net Edge</span>
+          <strong>${displayMetricValue(metrics.net_edge)}</strong>
+        </div>
+        <div class="agent-metric-chip">
+          <span>Participation</span>
+          <strong>${displayMetricValue(metrics.participation)}</strong>
+        </div>
+        <div class="agent-metric-chip">
+          <span>Strength</span>
+          <strong>${escapeHtml(metrics.verdict_strength || "--")}</strong>
+        </div>
+      </div>
+
       <p class="asset-update">
         <strong>Last asset update:</strong>
         ${escapeHtml(formattedAssetUpdated)}${assetAge ? ` · ${escapeHtml(assetAge)}` : ""}
@@ -678,6 +889,7 @@ function renderLayer1(data) {
   }
 
   renderOverviewStats();
+  renderSevenDayOutlook(data);
 
   const grid = document.getElementById("layer1Grid");
   if (!grid) return;
@@ -687,6 +899,31 @@ function renderLayer1(data) {
   grid.querySelectorAll("[data-agent]").forEach(el => {
     el.addEventListener("click", () => setTab(el.dataset.agent));
   });
+}
+
+function renderSevenDayOutlook(data) {
+  const container = document.getElementById("overviewOutlook");
+  if (!container) return;
+
+  container.innerHTML = (data?.agents || []).map(agent => `
+    <article class="detail-panel outlook-card">
+      <div class="panel-head compact-panel-head">
+        <div>
+          <p class="eyebrow">Layer 1 Outlook</p>
+          <h3>${escapeHtml(agent.agent)}</h3>
+        </div>
+      </div>
+      <div class="outlook-list">
+        ${(agent.seven_day_outlook || []).map(entry => `
+          <div class="outlook-row">
+            <span class="outlook-day">${escapeHtml(entry.day)}</span>
+            <span class="direction ${directionClass(entry.direction)}">${escapeHtml(normaliseDirection(entry.direction))}</span>
+            <span class="outlook-confidence">${displayMetricValue(entry.confidence)}</span>
+          </div>
+        `).join("")}
+      </div>
+    </article>
+  `).join("");
 }
 
 function cleanDecisionReason(reason = "") {
@@ -1897,7 +2134,7 @@ async function loadDashboard() {
       fetch(backtestUrl, { cache: "no-store" })
     ]);
 
-    layer1Data = await layer1Res.json();
+    layer1Data = normaliseLayer1Data(await layer1Res.json());
     layer2Data = await layer2Res.json();
     backtestData = await backtestRes.json();
 

@@ -8,6 +8,8 @@ The Layer 1 trading-agent platform is largely complete. The project is now movin
 
 The dashboard now distinguishes evidence split from headline call quality by deriving a separate confidence score from directional dominance, participation, and net edge, then applying penalties when the live data exposes missing-input or risk conditions.
 
+The Overview tab now also generates a lightweight 7-day direction outlook from the latest Layer 1 timeframe calls, with weekend no-call handling preserved for non-BTC markets.
+
 ## Current Architecture
 
 ```text
@@ -175,6 +177,16 @@ OpenAI invalid JSON
 ```
 
 Eventually this status should also appear on the dashboard.
+
+## Current Deployment State
+
+The repository currently documents and exposes GitHub Pages as the active static host:
+
+```text
+https://kevincreedycars-debug.github.io/trading-agent-dashboard/
+```
+
+Older architecture notes that refer to Netlify are currently stale and should be treated as historical context until explicitly reconciled.
 
 ## Current Strategic Shift
 
