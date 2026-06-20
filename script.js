@@ -436,6 +436,44 @@ const ALWAYS_VISIBLE_SNAPSHOT_GAPS = new Set([
   "stablecoin_supply_d20_pct"
 ]);
 
+const CONTEXTUAL_FACTOR_LABELS = new Set([
+  "US Economic Surprise Direction",
+  "EZ Economic Surprise Direction",
+  "Stablecoin / Crypto Liquidity",
+  "BTC Dominance / Crypto Structure"
+]);
+
+const FACTOR_ROLE_BY_ASSET = {
+  USD: {
+    F7: "contextual",
+    F9: "contextual",
+    F10: "contextual"
+  },
+  EUR: {
+    F7: "contextual",
+    F8: "contextual",
+    F9: "contextual",
+    F10: "contextual"
+  },
+  GOLD: {
+    F7: "contextual",
+    F8: "contextual",
+    F9: "contextual",
+    F10: "contextual"
+  },
+  NQ: {
+    F7: "contextual",
+    F9: "contextual",
+    F10: "contextual"
+  },
+  BTC: {
+    F6: "contextual",
+    F7: "contextual",
+    F9: "contextual",
+    F10: "contextual"
+  }
+};
+
 function factorLabelFromWarning(value = "") {
   const match = String(value || "").match(/Missing\/neutral input:\s*(.+)$/i);
   return match ? match[1].trim() : "";
@@ -453,51 +491,198 @@ function factorHasMissingInputSignal(factor = {}) {
   return reason.includes("missing input") || evidence.startsWith("missing ");
 }
 
-function liveMissingInputs(call, agent, timeframe = "24h") {
-  const output = getOutput(agent);
+function uniqueStrings(values = []) {
+  return [...new Set(values.filter(Boolean).map(value => String(value)))];
+}
+
+function factorRole(agentName = "", factorKey = "", factorLabel = "") {
+  if (CONTEXTUAL_FACTOR_LABELS.has(factorLabel)) return "contextual";
+  return FACTOR_ROLE_BY_ASSET[agentName]?.[factorKey] || "mandatory";
+}
+
+function factorEntriesForDiagnostics(call, agent, timeframe = "24h") {
   const timeframeModel = getTimeframeModel(agent, timeframe);
   const factorBreakdown = asObject(
     timeframeModel.factor_breakdown || call?.factor_breakdown,
     {}
   );
 
-  const labels = new Set();
+  return Object.entries(factorBreakdown).map(([key, factor]) => {
+    const label = factorLabelFromKey(key) || key;
+    return {
+      key: String(key || ""),
+      label,
+      factor: asObject(factor, {}),
+      role: factorRole(agent?.agent, String(key || "").split(" ")[0], label)
+    };
+  });
+}
 
-  for (const warning of [
-    ...asArray(call?.warnings),
-    ...asArray(timeframeModel.warnings)
-  ]) {
-    const label = factorLabelFromWarning(warning);
-    if (label) labels.add(label);
+function snapshotFieldLabel(field = "", options = {}) {
+  const noQualifyingEvent = options.noQualifyingEvent === true;
+  const labels = {
+    latest_us_event: noQualifyingEvent ? "No qualifying US event found" : "US event context unavailable",
+    latest_ez_event: noQualifyingEvent ? "No qualifying Eurozone event found" : "Eurozone event context unavailable",
+    geopolitical_risk_flag: "Geopolitical risk flag unavailable",
+    stablecoin_supply: "Stablecoin supply unavailable",
+    stablecoin_supply_d5_pct: "Stablecoin supply 5D delta unavailable",
+    stablecoin_supply_d20_pct: "Stablecoin supply 20D delta unavailable",
+    btc_dominance_d5: "BTC dominance 5D delta unavailable",
+    btc_dominance_d20: "BTC dominance 20D delta unavailable",
+    total_crypto_market_cap_d5_pct: "Total crypto market cap 5D delta unavailable",
+    total_crypto_market_cap_d20_pct: "Total crypto market cap 20D delta unavailable",
+    gold_d5_pct: "Gold 5D delta unavailable",
+    gold_d20_pct: "Gold 20D delta unavailable",
+    nq_d5_pct: "NQ 5D delta unavailable",
+    nq_d20_pct: "NQ 20D delta unavailable",
+    btc_d5_pct: "BTC 5D delta unavailable",
+    btc_d20_pct: "BTC 20D delta unavailable",
+    us_10y_d20_bps: "US 10Y 20D delta unavailable",
+    us_10y_real_yield_d20_bps: "US 10Y real yield 20D delta unavailable"
+  };
+
+  return labels[field] || `${String(field || "").replaceAll("_", " ")} unavailable`;
+}
+
+function factorDiagnosticLabel(entry = {}) {
+  const label = entry.label || entry.key || "Factor";
+  const evidence = String(entry.factor?.evidence || "");
+
+  if (label === "US Economic Surprise Direction" && evidence.toLowerCase().includes("no recent us event")) {
+    return "No qualifying US event found";
   }
 
-  for (const [key, factor] of Object.entries(factorBreakdown)) {
-    if (factorHasMissingInputSignal(factor)) {
-      labels.add(factorLabelFromKey(key) || key);
+  if (label === "EZ Economic Surprise Direction" && evidence.toLowerCase().includes("no recent ez event")) {
+    return "No qualifying Eurozone event found";
+  }
+
+  if (label === "Stablecoin / Crypto Liquidity") {
+    return "Stablecoin and crypto-liquidity context unavailable";
+  }
+
+  if (label === "BTC Dominance / Crypto Structure") {
+    return "BTC dominance structure context unavailable";
+  }
+
+  return `${label} unavailable`;
+}
+
+function eventWasSimplyAbsent(agent, timeframe = "24h", field = "") {
+  if (!["latest_us_event", "latest_ez_event"].includes(field)) return false;
+
+  return factorEntriesForDiagnostics(getCall(agent, timeframe), agent, timeframe).some(entry => {
+    if (field === "latest_us_event" && entry.label !== "US Economic Surprise Direction") return false;
+    if (field === "latest_ez_event" && entry.label !== "EZ Economic Surprise Direction") return false;
+
+    const evidence = String(entry.factor?.evidence || "").toLowerCase();
+    const reason = String(entry.factor?.reason || "").toLowerCase();
+    return evidence.includes("no recent") || reason.includes("no confirmed");
+  });
+}
+
+function fallbackMessageForField(field = "", timeframe = "24h") {
+  const messages = {
+    "24h": {
+      gold_d5_pct: "Gold 5D delta unavailable — using 1D delta",
+      nq_d5_pct: "NQ 5D delta unavailable — using 1D delta",
+      btc_d5_pct: "BTC 5D delta unavailable — using 1D delta"
+    },
+    "3d": {
+      gold_d20_pct: "Gold 20D delta unavailable — using 5D delta",
+      nq_d20_pct: "NQ 20D delta unavailable — using 5D delta",
+      btc_d20_pct: "BTC 20D delta unavailable — using 5D delta",
+      us_10y_d20_bps: "US 10Y 20D delta unavailable — using 5D delta",
+      us_10y_real_yield_d20_bps: "US 10Y real yield 20D unavailable — using 5D delta"
+    },
+    current_week: {
+      gold_d20_pct: "Gold 20D delta unavailable — using 5D delta",
+      nq_d20_pct: "NQ 20D delta unavailable — using 5D delta",
+      btc_d20_pct: "BTC 20D delta unavailable — using 5D delta",
+      us_10y_d20_bps: "US 10Y 20D delta unavailable — using 5D delta",
+      us_10y_real_yield_d20_bps: "US 10Y real yield 20D unavailable — using 5D delta"
+    },
+    next_week: {
+      gold_d20_pct: "Gold 20D delta unavailable — using 5D delta",
+      nq_d20_pct: "NQ 20D delta unavailable — using 5D delta",
+      btc_d20_pct: "BTC 20D delta unavailable — using 5D delta",
+      us_10y_d20_bps: "US 10Y 20D delta unavailable — using 5D delta",
+      us_10y_real_yield_d20_bps: "US 10Y real yield 20D unavailable — using 5D delta"
+    },
+    current_month: {
+      gold_d20_pct: "Gold 20D delta unavailable — using 5D delta",
+      nq_d20_pct: "NQ 20D delta unavailable — using 5D delta",
+      btc_d20_pct: "BTC 20D delta unavailable — using 5D delta",
+      us_10y_d20_bps: "US 10Y 20D delta unavailable — using 5D delta",
+      us_10y_real_yield_d20_bps: "US 10Y real yield 20D unavailable — using 5D delta"
+    }
+  };
+
+  return messages[timeframe]?.[field] || "";
+}
+
+function classifyDiagnostics(call, agent, timeframe = "24h") {
+  const output = getOutput(agent);
+  const factorEntries = factorEntriesForDiagnostics(call, agent, timeframe);
+  const timeframeModel = getTimeframeModel(agent, timeframe);
+  const model = call?.conviction_model || timeframeModel.conviction_model || {};
+  const criticalMissing = [];
+  const fallbacksUsed = [];
+  const collectorHealth = [];
+
+  for (const entry of factorEntries) {
+    if (!factorHasMissingInputSignal(entry.factor)) continue;
+
+    if (entry.role === "contextual") {
+      collectorHealth.push(factorDiagnosticLabel(entry));
+    } else {
+      criticalMissing.push(entry.label);
     }
   }
 
-  for (const input of [
-    ...asArray(call?.missing_inputs),
-    ...asArray(call?.conviction_model?.missing_inputs),
-    ...asArray(timeframeModel.missing_inputs)
-  ]) {
-    if (input) labels.add(String(input));
-  }
-
-  for (const input of asArray(output.missing_inputs)) {
-    const name = String(input || "");
+  for (const field of asArray(output.missing_inputs)) {
+    const name = String(field || "");
     if (!name) continue;
+
     if (ALWAYS_VISIBLE_SNAPSHOT_GAPS.has(name)) {
-      labels.add(name);
+      collectorHealth.push(snapshotFieldLabel(name, {
+        noQualifyingEvent: eventWasSimplyAbsent(agent, timeframe, name)
+      }));
       continue;
     }
-    if (!FALLBACK_ELIGIBLE_SNAPSHOT_INPUTS.has(name)) {
-      labels.add(name);
+
+    if (FALLBACK_ELIGIBLE_SNAPSHOT_INPUTS.has(name)) {
+      const fallback = fallbackMessageForField(name, timeframe);
+      if (fallback) {
+        fallbacksUsed.push(fallback);
+      }
+      continue;
     }
   }
 
-  return [...labels];
+  const confidenceCalculated = [
+    call?.confidence,
+    call?.conviction,
+    model.final_conviction,
+    model.bullish_argument_pct,
+    model.bearish_argument_pct,
+    model.net_edge_pct
+  ].some(value => numberOrNull(value) !== null);
+  const analysisCompleted = call?.direction && call.direction !== "PENDING";
+
+  return {
+    analysisStatus: {
+      mandatoryOk: criticalMissing.length === 0,
+      analysisCompleted,
+      confidenceCalculated,
+      criticalMissing: uniqueStrings(criticalMissing)
+    },
+    fallbacksUsed: uniqueStrings(fallbacksUsed),
+    collectorHealth: uniqueStrings(collectorHealth)
+  };
+}
+
+function liveMissingInputs(call, agent, timeframe = "24h") {
+  return classifyDiagnostics(call, agent, timeframe).analysisStatus.criticalMissing;
 }
 
 function combinedConfidenceFlags(call, agent, timeframe = "24h") {
@@ -1228,32 +1413,41 @@ function renderInvalidationPanel(agent) {
   const today = getCall(agent, "24h");
   const output = asObject(agent.full_output || agent.raw_agent_output, {});
   const marketInputs = asObject(agent.market_inputs || output.market_inputs_seen_by_workflow, {});
-  const missingInputs = liveMissingInputs(today, agent, "24h");
-  const warnings = [...new Set([
-    ...asArray(agent.warnings),
-    ...asArray(today.warnings),
-    ...asArray(output.risk_flags),
-    ...missingInputs.map(input => `Missing input: ${input}`)
-  ].filter(Boolean))];
+  const diagnostics = classifyDiagnostics(today, agent, "24h");
 
   const participation = participationValue(today);
-  if (Number.isFinite(participation) && participation < 35) {
-    warnings.push(`Low 24H participation: only ${participation}% of weighted evidence is directional.`);
-  }
-
   const latestEvent = marketInputs.latest_us_event || marketInputs.latest_ez_event || null;
   const eventText = describeEventRisk(latestEvent);
+  const statusLines = [
+    diagnostics.analysisStatus.analysisCompleted ? "Analysis completed" : "Analysis pending",
+    diagnostics.analysisStatus.confidenceCalculated ? "Confidence calculated" : "Confidence not available",
+    diagnostics.analysisStatus.mandatoryOk ? "All mandatory inputs available" : "Critical inputs missing",
+    diagnostics.analysisStatus.criticalMissing.length ? `Critical inputs missing: ${diagnostics.analysisStatus.criticalMissing.join(", ")}` : "No critical missing inputs"
+  ];
+
+  if (Number.isFinite(participation) && participation < 35) {
+    statusLines.push(`Low 24H participation: only ${participation}% of weighted evidence is directional.`);
+  }
+
+  const sectionHtml = (title, items, emptyText, variant = "") => `
+    <section class="diagnostic-section ${variant}">
+      <h4>${escapeHtml(title)}</h4>
+      ${items.length
+        ? `<div class="diagnostic-list">${items.map(item => `<div class="diagnostic-item">${escapeHtml(item)}</div>`).join("")}</div>`
+        : `<div class="empty-state">${escapeHtml(emptyText)}</div>`}
+    </section>
+  `;
 
   return `
     <article class="detail-panel wide-panel invalidation-panel">
       <div class="panel-head">
-        <p class="eyebrow">Today's Risks</p>
-        <h3>What Could Invalidate Today's Call</h3>
+        <p class="eyebrow">Analysis Diagnostics</p>
+        <h3>What Today's 24H Call Used</h3>
       </div>
-      <div class="warning-list">
-        ${warnings.length
-          ? warnings.map(w => `<div class="warning-card">${escapeHtml(w)}</div>`).join("")
-          : `<div class="empty-state">No missing inputs or risk flags reported.</div>`}
+      <div class="diagnostic-sections">
+        ${sectionHtml("Analysis Status", statusLines, "No analysis status available.", "diagnostic-status")}
+        ${sectionHtml("Fallbacks Used", diagnostics.fallbacksUsed, "No fallbacks used in today's 24H analysis.")}
+        ${sectionHtml("Collector Health", diagnostics.collectorHealth, "No collector health gaps surfaced for today's 24H view.")}
         <div class="event-risk-note">${escapeHtml(eventText)}</div>
       </div>
     </article>
