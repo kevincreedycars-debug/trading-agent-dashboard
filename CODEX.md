@@ -10,15 +10,20 @@ ChatGPT is used for architecture, planning, debugging, and review. Codex is used
 
 Read these files before making changes:
 
-1. `docs/CURRENT_TASK.md`
+1. `CODEX_STARTUP.md`
 2. `docs/CURRENT_STATE.md`
-3. `docs/NEXT_STEPS.md`
-4. `docs/ARCHITECTURE.md`
-5. `docs/N8N_INTEGRATION.md`
-6. `workflows/WORKFLOW_INVENTORY.md`
-7. `issues/active_bugs.md`
-8. `docs/DECISIONS.md`
-9. `docs/CHANGELOG.md`
+3. `docs/CURRENT_TASK.md`
+4. `docs/NEXT_STEPS.md`
+5. `docs/DECISIONS.md`
+6. `docs/CHANGELOG.md`
+7. `docs/SESSION_NOTES.md`
+8. `docs/PROJECT_HISTORY.md`
+9. `docs/ARCHITECTURE.md`
+10. `docs/N8N_INTEGRATION.md`
+11. `workflows/WORKFLOW_INVENTORY.md`
+12. `issues/active_bugs.md`
+
+After reading these files, inspect the repository and summarise the current project state, active task, recently completed work, planned next steps, and files likely to be edited before editing.
 
 ## Core Architecture Rule
 

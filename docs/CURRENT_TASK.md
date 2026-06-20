@@ -1,6 +1,6 @@
 # Current Task
 
-Last updated: 2026-06-19
+Last updated: 2026-06-20
 
 ## Task
 
@@ -33,6 +33,10 @@ In progress.
 - `exports/README.md` created
 - `docs/N8N_INTEGRATION.md` created
 - `workflows/WORKFLOW_INVENTORY.md` created
+- `CODEX_STARTUP.md` created to define mandatory startup and end-of-session memory behaviour
+- `CODEX.md` updated to read `CODEX_STARTUP.md` first
+- `docs/SESSION_NOTES.md` created for latest-session handoff notes
+- `docs/PROJECT_HISTORY.md` created for concise high-level milestones
 - Initial workflow documents added for Master Orchestrator, EUR Layer 1 Agent, and Eco Events Collector
 - Live n8n workflow JSON snapshots exported into `exports/`
 - Dashboard Master Orchestrator control panel added
@@ -86,10 +90,14 @@ A future session should be able to begin with:
 
 and then read:
 
+- `CODEX_STARTUP.md`
 - `docs/CURRENT_TASK.md`
 - `docs/CURRENT_STATE.md`
 - `docs/NEXT_STEPS.md`
 - `docs/CHANGELOG.md`
+- `docs/DECISIONS.md`
+- `docs/SESSION_NOTES.md`
+- `docs/PROJECT_HISTORY.md`
 - `docs/N8N_INTEGRATION.md`
 - `workflows/WORKFLOW_INVENTORY.md`
 - `issues/active_bugs.md`

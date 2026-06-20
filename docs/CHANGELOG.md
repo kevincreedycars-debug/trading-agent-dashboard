@@ -37,6 +37,9 @@
 - Added `data/workflow-control.json` for non-secret dashboard trigger configuration.
 - Added `data/workflow-status.json` for published run status and error reporting.
 - Added dashboard rendering for workflow status, step reports, and error reports.
+- Added `CODEX_STARTUP.md` as the permanent Codex working-memory startup guide.
+- Added `docs/SESSION_NOTES.md` for latest-session handoff notes.
+- Added `docs/PROJECT_HISTORY.md` for concise high-level project milestones.
 
 ### Pending
 
@@ -51,3 +54,5 @@
 - Added Master Orchestrator status publishing to `data/workflow-status.json`.
 - Added visual-only Backtest / Accuracy dashboard tab using placeholder mock data.
 - Added static `data/backtest.json` placeholder for agent accuracy and variable correlation UI scaffolding.
+- Updated `CODEX.md` and project memory docs to require Codex to read memory first, summarise state, and update only changed memory documents at session end.
+- Expanded the permanent memory process with startup summaries, milestone updates, session close notes, commit/push expectations, and canonical memory file locations.

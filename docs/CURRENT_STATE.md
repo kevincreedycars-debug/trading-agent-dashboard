@@ -1,6 +1,6 @@
 # Current State — AI Trading Platform
 
-Last updated: 2026-06-19
+Last updated: 2026-06-20
 
 ## Platform Status
 
@@ -200,3 +200,25 @@ ChatGPT should handle architecture, debugging, reasoning, planning, and document
 Codex should handle file edits, workflow JSON edits, code changes, commits, and implementation.
 
 Both should eventually be able to inspect GitHub and n8n without manual copy/paste from the user.
+
+## Permanent Working Memory
+
+Codex startup is now governed by `CODEX_STARTUP.md`.
+
+Every Codex session must read the startup file and the project memory documents before making edits, then summarise current state, active task, recently completed work, and planned next steps.
+
+The memory documents are authoritative between sessions and should be updated only when their contents actually change.
+
+The canonical project memory set is:
+
+- `CODEX_STARTUP.md`
+- `docs/CURRENT_STATE.md`
+- `docs/CURRENT_TASK.md`
+- `docs/NEXT_STEPS.md`
+- `docs/CHANGELOG.md`
+- `docs/DECISIONS.md`
+- `docs/SESSION_NOTES.md`
+- `docs/PROJECT_HISTORY.md`
+- `docs/ARCHITECTURE.md`
+- `docs/N8N_INTEGRATION.md`
+- `workflows/WORKFLOW_INVENTORY.md`

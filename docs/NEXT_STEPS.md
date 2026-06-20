@@ -1,6 +1,6 @@
 # Next Steps
 
-Last updated: 2026-06-19
+Last updated: 2026-06-20
 
 ## Priority 1 — Finish AI Development Environment
 
@@ -48,11 +48,14 @@ Codex:
 
 Create and maintain:
 
+- `CODEX_STARTUP.md`
 - `docs/CURRENT_STATE.md`
 - `docs/CURRENT_TASK.md`
 - `docs/NEXT_STEPS.md`
 - `docs/CHANGELOG.md`
 - `docs/SESSION_LOG.md`
+- `docs/SESSION_NOTES.md`
+- `docs/PROJECT_HISTORY.md`
 - `docs/ARCHITECTURE.md`
 - `docs/DECISIONS.md`
 - `issues/active_bugs.md`
