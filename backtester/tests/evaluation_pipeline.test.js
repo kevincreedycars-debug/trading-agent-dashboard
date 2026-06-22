@@ -120,10 +120,10 @@ test("Evaluation runner and research SQL layer work end-to-end for January 2024"
       const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
       const [predictions, evaluations, realised, factorObservations] = await Promise.all([
         fetchAllRows(supabaseUrl, serviceRoleKey, "research_timeframe_predictions", (url) => {
-          url.searchParams.set("select", "id,observation_id");
+          url.searchParams.set("select", "id,observation_id,timeframe,predicted_conviction,verdict_strength");
         }),
         fetchAllRows(supabaseUrl, serviceRoleKey, "research_prediction_evaluations", (url) => {
-          url.searchParams.set("select", "prediction_id,evaluation_mode,evaluated_market,timeframe,predicted_direction:agent_direction,result,move_magnitude_bucket,abs_pct_change,evaluation_version");
+          url.searchParams.set("select", "prediction_id,evaluation_mode,evaluated_market,timeframe,predicted_direction:agent_direction,result,move_magnitude_bucket,abs_pct_change,agent_conviction,evaluation_version");
           url.searchParams.set("evaluation_version", "eq.phase1_outcome_eval_v1");
         }),
         fetchAllRows(supabaseUrl, serviceRoleKey, "research_realised_outcomes", (url) => {
@@ -144,9 +144,9 @@ test("Evaluation runner and research SQL layer work end-to-end for January 2024"
         })).map((row) => row.id)
       );
 
-      const januaryPredictionIds = new Set(
-        predictions.filter((row) => januaryObservationIds.has(row.observation_id)).map((row) => row.id)
-      );
+      const januaryPredictionRows = predictions.filter((row) => januaryObservationIds.has(row.observation_id));
+      const januaryPredictionIds = new Set(januaryPredictionRows.map((row) => row.id));
+      const predictionById = new Map(januaryPredictionRows.map((row) => [row.id, row]));
 
       const januaryEvaluations = evaluations.filter((row) => januaryPredictionIds.has(row.prediction_id));
       const januaryRealised = realised.filter((row) => januaryPredictionIds.has(row.timeframe_prediction_id));
@@ -261,6 +261,225 @@ test("Evaluation runner and research SQL layer work end-to-end for January 2024"
           : null
       }));
 
+      const strengthBuckets = new Map();
+      for (const row of dxyRows) {
+        const prediction = predictionById.get(row.prediction_id);
+        const key = [row.timeframe, prediction?.verdict_strength || "UNKNOWN"].join("|");
+        const bucket = strengthBuckets.get(key) || {
+          timeframe: row.timeframe,
+          verdict_strength: prediction?.verdict_strength || "UNKNOWN",
+          evaluated_calls: 0,
+          wins: 0,
+          losses: 0,
+          flats: 0,
+          not_evaluable: 0,
+          confidences: [],
+          absMoves: []
+        };
+        if (["CORRECT", "WRONG", "FLAT"].includes(row.result)) {
+          bucket.evaluated_calls += 1;
+          if (row.result === "CORRECT") bucket.wins += 1;
+          if (row.result === "WRONG") bucket.losses += 1;
+          if (row.result === "FLAT") bucket.flats += 1;
+          const confidence = row.agent_conviction ?? prediction?.predicted_conviction;
+          if (confidence !== null && confidence !== undefined) bucket.confidences.push(Number(confidence));
+          if (row.abs_pct_change !== null && row.abs_pct_change !== undefined) bucket.absMoves.push(Number(row.abs_pct_change));
+        }
+        if (row.result === "NOT_EVALUABLE") bucket.not_evaluable += 1;
+        strengthBuckets.set(key, bucket);
+      }
+
+      const strengthSummary = Array.from(strengthBuckets.values()).map((bucket) => ({
+        key: [bucket.timeframe, bucket.verdict_strength].join("|"),
+        timeframe: bucket.timeframe,
+        verdict_strength: bucket.verdict_strength,
+        evaluated_calls: bucket.evaluated_calls,
+        wins: bucket.wins,
+        losses: bucket.losses,
+        flats: bucket.flats,
+        not_evaluable: bucket.not_evaluable,
+        win_rate_pct: bucket.evaluated_calls ? round((100 * bucket.wins) / bucket.evaluated_calls, 2) : null,
+        flat_no_move_pct: bucket.evaluated_calls ? round((100 * bucket.flats) / bucket.evaluated_calls, 2) : null,
+        avg_predicted_confidence: bucket.confidences.length
+          ? round(bucket.confidences.reduce((sum, value) => sum + value, 0) / bucket.confidences.length, 2)
+          : null,
+        avg_abs_move_pct: bucket.absMoves.length
+          ? round(bucket.absMoves.reduce((sum, value) => sum + value, 0) / bucket.absMoves.length, 4)
+          : null
+      }));
+
+      function confidenceBucketLabel(value) {
+        if (value === null || value === undefined || Number.isNaN(Number(value))) return "UNKNOWN";
+        const n = Number(value);
+        if (n < 50) return "<50";
+        if (n < 55) return "50-54";
+        if (n < 60) return "55-59";
+        if (n < 65) return "60-64";
+        if (n < 70) return "65-69";
+        if (n < 75) return "70-74";
+        if (n < 80) return "75-79";
+        if (n < 85) return "80-84";
+        if (n < 90) return "85-89";
+        if (n < 95) return "90-94";
+        return "95-100";
+      }
+
+      const confidenceBuckets = new Map();
+      for (const row of dxyRows) {
+        const prediction = predictionById.get(row.prediction_id);
+        const confidence = row.agent_conviction ?? prediction?.predicted_conviction;
+        const bucketLabel = confidenceBucketLabel(confidence);
+        const key = [row.timeframe, bucketLabel].join("|");
+        const bucket = confidenceBuckets.get(key) || {
+          timeframe: row.timeframe,
+          confidence_bucket: bucketLabel,
+          evaluated_calls: 0,
+          wins: 0,
+          losses: 0,
+          flats: 0,
+          not_evaluable: 0,
+          confidences: [],
+          absMoves: []
+        };
+        if (["CORRECT", "WRONG", "FLAT"].includes(row.result)) {
+          bucket.evaluated_calls += 1;
+          if (row.result === "CORRECT") bucket.wins += 1;
+          if (row.result === "WRONG") bucket.losses += 1;
+          if (row.result === "FLAT") bucket.flats += 1;
+          if (confidence !== null && confidence !== undefined) bucket.confidences.push(Number(confidence));
+          if (row.abs_pct_change !== null && row.abs_pct_change !== undefined) bucket.absMoves.push(Number(row.abs_pct_change));
+        }
+        if (row.result === "NOT_EVALUABLE") bucket.not_evaluable += 1;
+        confidenceBuckets.set(key, bucket);
+      }
+
+      const confidenceSummary = Array.from(confidenceBuckets.values()).map((bucket) => {
+        const rawAvgPredictedConfidence = bucket.confidences.length
+          ? bucket.confidences.reduce((sum, value) => sum + value, 0) / bucket.confidences.length
+          : null;
+        const avgPredictedConfidence = bucket.confidences.length
+          ? round(rawAvgPredictedConfidence, 2)
+          : null;
+        const rawActualWinRate = bucket.evaluated_calls ? (100 * bucket.wins) / bucket.evaluated_calls : null;
+        const actualWinRate = bucket.evaluated_calls ? round(rawActualWinRate, 2) : null;
+        return {
+          key: [bucket.timeframe, bucket.confidence_bucket].join("|"),
+          timeframe: bucket.timeframe,
+          confidence_bucket: bucket.confidence_bucket,
+          evaluated_calls: bucket.evaluated_calls,
+          wins: bucket.wins,
+          losses: bucket.losses,
+          flats: bucket.flats,
+          not_evaluable: bucket.not_evaluable,
+          win_rate_pct: actualWinRate,
+          flat_no_move_pct: bucket.evaluated_calls ? round((100 * bucket.flats) / bucket.evaluated_calls, 2) : null,
+          avg_predicted_confidence: avgPredictedConfidence,
+          avg_abs_move_pct: bucket.absMoves.length
+            ? round(bucket.absMoves.reduce((sum, value) => sum + value, 0) / bucket.absMoves.length, 4)
+            : null,
+          actual_win_rate_pct: actualWinRate,
+          calibration_gap_pct: rawAvgPredictedConfidence === null || rawActualWinRate === null
+            ? null
+            : round(rawActualWinRate - rawAvgPredictedConfidence, 2)
+        };
+      });
+
+      function strengthBucketRank(value) {
+        switch (value || "UNKNOWN") {
+          case "VERY_STRONG": return 1;
+          case "STRONG": return 2;
+          case "MODERATE": return 3;
+          case "WEAK": return 4;
+          case "NO_CALL": return 5;
+          case "MARKET_CLOSED": return 6;
+          default: return 7;
+        }
+      }
+
+      const tradeQualityThresholds = [
+        { label: "All Calls", rank: 1, predicate: () => true },
+        { label: "Confidence >= 60", rank: 2, predicate: (row, prediction, confidence) => confidence !== null && confidence !== undefined && Number(confidence) >= 60 },
+        { label: "Confidence >= 70", rank: 3, predicate: (row, prediction, confidence) => confidence !== null && confidence !== undefined && Number(confidence) >= 70 },
+        { label: "Confidence >= 75", rank: 4, predicate: (row, prediction, confidence) => confidence !== null && confidence !== undefined && Number(confidence) >= 75 },
+        { label: "Confidence >= 80", rank: 5, predicate: (row, prediction, confidence) => confidence !== null && confidence !== undefined && Number(confidence) >= 80 },
+        { label: "Confidence >= 85", rank: 6, predicate: (row, prediction, confidence) => confidence !== null && confidence !== undefined && Number(confidence) >= 85 },
+        { label: "Confidence >= 90", rank: 7, predicate: (row, prediction, confidence) => confidence !== null && confidence !== undefined && Number(confidence) >= 90 },
+        { label: "Strength >= MODERATE", rank: 8, predicate: (row, prediction) => strengthBucketRank(prediction?.verdict_strength) <= 3 },
+        { label: "Strength >= STRONG", rank: 9, predicate: (row, prediction) => strengthBucketRank(prediction?.verdict_strength) <= 2 },
+        { label: "Strength = VERY_STRONG", rank: 10, predicate: (row, prediction) => strengthBucketRank(prediction?.verdict_strength) === 1 },
+        { label: "Confidence >= 75 AND Strength >= STRONG", rank: 11, predicate: (row, prediction, confidence) => confidence !== null && confidence !== undefined && Number(confidence) >= 75 && strengthBucketRank(prediction?.verdict_strength) <= 2 },
+        { label: "Confidence >= 80 AND Strength >= STRONG", rank: 12, predicate: (row, prediction, confidence) => confidence !== null && confidence !== undefined && Number(confidence) >= 80 && strengthBucketRank(prediction?.verdict_strength) <= 2 },
+        { label: "Confidence >= 85 AND Strength = VERY_STRONG", rank: 13, predicate: (row, prediction, confidence) => confidence !== null && confidence !== undefined && Number(confidence) >= 85 && strengthBucketRank(prediction?.verdict_strength) === 1 }
+      ];
+
+      const totalPredictionsByTimeframe = new Map();
+      for (const row of dxyRows) {
+        totalPredictionsByTimeframe.set(
+          row.timeframe,
+          (totalPredictionsByTimeframe.get(row.timeframe) || 0) + 1
+        );
+      }
+
+      const tradeQualitySummary = [];
+      for (const timeframe of Array.from(totalPredictionsByTimeframe.keys())) {
+        const timeframeRows = dxyRows.filter((row) => row.timeframe === timeframe);
+        const totalAvailablePredictions = totalPredictionsByTimeframe.get(timeframe) || 0;
+
+        for (const threshold of tradeQualityThresholds) {
+          const matchingRows = timeframeRows.filter((row) => {
+            const prediction = predictionById.get(row.prediction_id);
+            const confidence = row.agent_conviction ?? prediction?.predicted_conviction;
+            return threshold.predicate(row, prediction, confidence);
+          });
+          const evaluatedRows = matchingRows.filter((row) => ["CORRECT", "WRONG", "FLAT"].includes(row.result));
+          const wins = evaluatedRows.filter((row) => row.result === "CORRECT").length;
+          const losses = evaluatedRows.filter((row) => row.result === "WRONG").length;
+          const flats = evaluatedRows.filter((row) => row.result === "FLAT").length;
+          const confidences = evaluatedRows
+            .map((row) => {
+              const prediction = predictionById.get(row.prediction_id);
+              return row.agent_conviction ?? prediction?.predicted_conviction;
+            })
+            .filter((value) => value !== null && value !== undefined)
+            .map((value) => Number(value));
+          const absMoves = evaluatedRows
+            .map((row) => row.abs_pct_change)
+            .filter((value) => value !== null && value !== undefined)
+            .map((value) => Number(value));
+          const rawAvgPredictedConfidence = confidences.length
+            ? confidences.reduce((sum, value) => sum + value, 0) / confidences.length
+            : null;
+          const rawActualWinRate = evaluatedRows.length
+            ? (100 * wins) / evaluatedRows.length
+            : null;
+
+          tradeQualitySummary.push({
+            key: [timeframe, threshold.label].join("|"),
+            timeframe,
+            threshold_label: threshold.label,
+            threshold_rank: threshold.rank,
+            total_available_predictions: totalAvailablePredictions,
+            tradeable_predictions: matchingRows.length,
+            coverage_pct: totalAvailablePredictions
+              ? round((100 * matchingRows.length) / totalAvailablePredictions, 2)
+              : null,
+            evaluated_calls: evaluatedRows.length,
+            wins,
+            losses,
+            flats,
+            win_rate_pct: evaluatedRows.length ? round((100 * wins) / evaluatedRows.length, 2) : null,
+            flat_no_move_pct: evaluatedRows.length ? round((100 * flats) / evaluatedRows.length, 2) : null,
+            avg_predicted_confidence: rawAvgPredictedConfidence === null ? null : round(rawAvgPredictedConfidence, 2),
+            avg_abs_move_pct: absMoves.length
+              ? round(absMoves.reduce((sum, value) => sum + value, 0) / absMoves.length, 4)
+              : null,
+            calibration_gap_pct: rawAvgPredictedConfidence === null || rawActualWinRate === null
+              ? null
+              : round(rawActualWinRate - rawAvgPredictedConfidence, 2)
+          });
+        }
+      }
+
       const benchmarkByPrediction = new Map(
         dxyRows.map((row) => [row.prediction_id, row.result])
       );
@@ -347,6 +566,9 @@ test("Evaluation runner and research SQL layer work end-to-end for January 2024"
         combined,
         dxy: dxySummary,
         dxy_24h: dxy24hSummary,
+        strength_summary: strengthSummary,
+        confidence_summary: confidenceSummary,
+        trade_quality_summary: tradeQualitySummary,
         magnitude: magnitudeSummary,
         factor_reliability: factorReliabilitySummary,
         factor_contribution: factorContributionSummary
@@ -387,6 +609,9 @@ test("Evaluation runner and research SQL layer work end-to-end for January 2024"
       const viewNames = [
         "research_overall_win_rate",
         "research_usd_24h_direction_accuracy",
+        "research_accuracy_by_verdict_strength",
+        "research_accuracy_by_confidence_bucket",
+        "research_trade_quality_thresholds",
         "research_win_rate_by_timeframe",
         "research_win_rate_by_conviction_bucket",
         "research_win_rate_by_weekday",
@@ -411,6 +636,15 @@ test("Evaluation runner and research SQL layer work end-to-end for January 2024"
       const summary24h = await fetchAllRows(supabaseUrl, serviceRoleKey, "research_usd_24h_direction_accuracy", (url) => {
         url.searchParams.set("select", "*");
       });
+      const verdictStrength = await fetchAllRows(supabaseUrl, serviceRoleKey, "research_accuracy_by_verdict_strength", (url) => {
+        url.searchParams.set("select", "*");
+      });
+      const confidenceCalibration = await fetchAllRows(supabaseUrl, serviceRoleKey, "research_accuracy_by_confidence_bucket", (url) => {
+        url.searchParams.set("select", "*");
+      });
+      const tradeQuality = await fetchAllRows(supabaseUrl, serviceRoleKey, "research_trade_quality_thresholds", (url) => {
+        url.searchParams.set("select", "*");
+      });
       const magnitude = await fetchAllRows(supabaseUrl, serviceRoleKey, "research_win_rate_by_magnitude_bucket", (url) => {
         url.searchParams.set("select", "*");
       });
@@ -425,6 +659,9 @@ test("Evaluation runner and research SQL layer work end-to-end for January 2024"
         counts,
         overall: overall[0] || null,
         summary24h: summary24h[0] || null,
+        verdictStrength,
+        confidenceCalibration,
+        tradeQuality,
         magnitude,
         factorReliability,
         factorContribution
@@ -438,6 +675,9 @@ test("Evaluation runner and research SQL layer work end-to-end for January 2024"
   const views = JSON.parse(runInlineNode(repoRoot, env, viewsScript));
   assert.ok(views.counts.research_overall_win_rate > 0);
   assert.ok(views.counts.research_usd_24h_direction_accuracy > 0);
+  assert.ok(views.counts.research_accuracy_by_verdict_strength > 0);
+  assert.ok(views.counts.research_accuracy_by_confidence_bucket > 0);
+  assert.ok(views.counts.research_trade_quality_thresholds > 0);
   assert.ok(views.counts.research_win_rate_by_timeframe > 0);
   assert.ok(views.counts.research_win_rate_by_conviction_bucket > 0);
   assert.ok(views.counts.research_win_rate_by_weekday > 0);
@@ -467,6 +707,61 @@ test("Evaluation runner and research SQL layer work end-to-end for January 2024"
   assert.equal(Number(views.summary24h.bullish_call_accuracy_pct), counts.dxy_24h.bullish_call_accuracy_pct);
   assert.equal(Number(views.summary24h.bearish_call_accuracy_pct), counts.dxy_24h.bearish_call_accuracy_pct);
   assert.equal(Number(views.summary24h.flat_no_move_accuracy_pct), counts.dxy_24h.flat_no_move_accuracy_pct);
+
+  const numericOrNull = (value) => value === null ? null : Number(value);
+
+  const strengthByKey = new Map(counts.strength_summary.map((row) => [row.key, row]));
+  for (const row of views.verdictStrength) {
+    const key = [row.timeframe, row.verdict_strength].join("|");
+    const expected = strengthByKey.get(key);
+    assert.ok(expected, `Expected verdict strength row ${key}`);
+    assert.equal(row.evaluated_calls, expected.evaluated_calls);
+    assert.equal(row.wins, expected.wins);
+    assert.equal(row.losses, expected.losses);
+    assert.equal(row.flats, expected.flats);
+    assert.equal(row.not_evaluable, expected.not_evaluable);
+    assert.equal(numericOrNull(row.win_rate_pct), expected.win_rate_pct);
+    assert.equal(numericOrNull(row.flat_no_move_pct), expected.flat_no_move_pct);
+    assert.equal(numericOrNull(row.avg_predicted_confidence), expected.avg_predicted_confidence);
+    assert.equal(numericOrNull(row.avg_abs_move_pct), expected.avg_abs_move_pct);
+  }
+
+  const confidenceByKey = new Map(counts.confidence_summary.map((row) => [row.key, row]));
+  for (const row of views.confidenceCalibration) {
+    const key = [row.timeframe, row.confidence_bucket].join("|");
+    const expected = confidenceByKey.get(key);
+    assert.ok(expected, `Expected confidence bucket row ${key}`);
+    assert.equal(row.evaluated_calls, expected.evaluated_calls);
+    assert.equal(row.wins, expected.wins);
+    assert.equal(row.losses, expected.losses);
+    assert.equal(row.flats, expected.flats);
+    assert.equal(row.not_evaluable, expected.not_evaluable);
+    assert.equal(numericOrNull(row.win_rate_pct), expected.win_rate_pct);
+    assert.equal(numericOrNull(row.flat_no_move_pct), expected.flat_no_move_pct);
+    assert.equal(numericOrNull(row.avg_predicted_confidence), expected.avg_predicted_confidence);
+    assert.equal(numericOrNull(row.avg_abs_move_pct), expected.avg_abs_move_pct);
+    assert.equal(numericOrNull(row.actual_win_rate_pct), expected.actual_win_rate_pct);
+    assert.equal(numericOrNull(row.calibration_gap_pct), expected.calibration_gap_pct);
+  }
+
+  const tradeQualityByKey = new Map(counts.trade_quality_summary.map((row) => [row.key, row]));
+  for (const row of views.tradeQuality) {
+    const key = [row.timeframe, row.threshold_label].join("|");
+    const expected = tradeQualityByKey.get(key);
+    assert.ok(expected, `Expected trade quality row ${key}`);
+    assert.equal(row.total_available_predictions, expected.total_available_predictions);
+    assert.equal(row.tradeable_predictions, expected.tradeable_predictions);
+    assert.equal(numericOrNull(row.coverage_pct), expected.coverage_pct);
+    assert.equal(row.evaluated_calls, expected.evaluated_calls);
+    assert.equal(row.wins, expected.wins);
+    assert.equal(row.losses, expected.losses);
+    assert.equal(row.flats, expected.flats);
+    assert.equal(numericOrNull(row.win_rate_pct), expected.win_rate_pct);
+    assert.equal(numericOrNull(row.flat_no_move_pct), expected.flat_no_move_pct);
+    assert.equal(numericOrNull(row.avg_predicted_confidence), expected.avg_predicted_confidence);
+    assert.equal(numericOrNull(row.avg_abs_move_pct), expected.avg_abs_move_pct);
+    assert.equal(numericOrNull(row.calibration_gap_pct), expected.calibration_gap_pct);
+  }
 
   const magnitudeByBucket = new Map(counts.magnitude.map((row) => [row.move_magnitude_bucket, row]));
   for (const row of views.magnitude) {

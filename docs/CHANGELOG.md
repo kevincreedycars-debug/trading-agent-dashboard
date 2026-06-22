@@ -1,5 +1,25 @@
 # Changelog
 
+## 2026-06-22
+
+### Added
+
+- Added `docs/CORE_RESEARCH_PHILOSOPHY.md` as the authoritative guiding document for research/backtesting principles.
+
+### Changed
+
+- Updated backtester and project-memory documentation to reference the new core research philosophy and reinforce that measurement comes before optimization.
+- Corrected stale hosting references where documentation still conflicted with the current GitHub Pages deployment model.
+
+## 2026-06-21
+
+### Changed
+
+- Updated the live `Eco Events Collector` workflow to remove the duplicate-insert failure against `economic_events`.
+- Replaced the previous direct Supabase write with idempotent routing: dedupe incoming events, look up existing rows for the run date, update matching rows, and create only unmatched rows.
+- Validated the live collector with two immediate reruns; executions `1081` and `1082` both succeeded with no `economic_events_event_date_currency_event_name_event_time_t_key` error.
+- Re-exported the updated live workflow into `exports/eco_events_collector.json`.
+
 ## 2026-06-19
 
 ### Added

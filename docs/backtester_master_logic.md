@@ -4,6 +4,8 @@
 
 The backtester is a reusable research engine for evaluating Layer 1 trading agents.
 
+`docs/CORE_RESEARCH_PHILOSOPHY.md` is the authoritative repository statement for the research platform's guiding principles.
+
 It must test what each agent would have said at a given point in time, based only on the inputs available at that time, and compare that verdict against realised market movement.
 
 The backtester must be reusable across assets and agents.
@@ -23,6 +25,8 @@ Production Layer 1 agents must remain sealed and deterministic.
 The backtester must never influence live signals directly.
 
 It is a downstream research and evaluation layer.
+
+The first job is measurement of the current production system, not optimization of a future one.
 
 ## Timeframes To Evaluate
 

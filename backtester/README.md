@@ -4,6 +4,8 @@ This directory contains the repo-side foundation for the observation-first backt
 
 The backtester is downstream-only.
 
+`docs/CORE_RESEARCH_PHILOSOPHY.md` is the authoritative repository statement for research/backtesting principles and production/research separation.
+
 Safety rules:
 
 - Do not read backtester outputs from live Layer 1 agents.
@@ -18,6 +20,8 @@ The long-term platform has three research goals:
 1. Evaluate agent directional accuracy across timeframes.
 2. Research factor reliability and factor combinations.
 3. Support future optimization without contaminating production Layer 1 logic.
+
+Measurement comes before optimization. The first responsibility of this backtester is to measure the current production Layer 1 agents exactly as they are.
 
 ## Observation-First Model
 

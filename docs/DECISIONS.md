@@ -63,3 +63,19 @@ Decision: Add `docs/ACTIVE_MILESTONE.md` as the live checkpoint for the current 
 Reason: `docs/CHANGELOG.md` records completed history, but new Codex sessions need one concise file that states what is being worked on right now and the exact next action.
 
 Alternatives considered: using only `docs/SESSION_NOTES.md` or adding milestone history to `docs/CHANGELOG.md`. These were rejected because session notes can be broader handoff text, and changelog should remain completed-work history rather than a live checkpoint.
+
+## 2026-06-20 - Smart Startup Uses Staged Context Loading
+
+Decision: `CODEX_STARTUP.md` remains the single startup entry point, but startup should always load only the core memory files first and load additional documentation only when it is relevant to the current task.
+
+Reason: Reading every memory document on every session adds unnecessary context load and makes startup less efficient. A staged startup keeps the repository as the source of truth while still allowing Codex to recover task-relevant state safely.
+
+Alternatives considered: always reading the full memory set on every session or relying on ad hoc file selection with no fixed core set. These were rejected because they either waste context or make startup recovery inconsistent.
+
+## 2026-06-22 - Research Measures Production Before Optimization
+
+Decision: The historical research platform exists first to measure the current production Layer 1 agents exactly as they are. `/logic` remains the production source of truth, research remains downstream-only, and no live Layer 1 changes should be made without historical justification and explicit human approval.
+
+Reason: Optimization before measurement creates an untrustworthy feedback loop. The platform needs a defensible baseline before any Layer 1 Version 2 work can be evaluated or approved.
+
+Alternatives considered: optimizing live Layer 1 logic early, replaying a research-only variant instead of production logic, or allowing research outputs to influence production automatically. These were rejected because they contaminate the benchmark and weaken production/research separation.

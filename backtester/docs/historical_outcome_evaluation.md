@@ -4,6 +4,8 @@
 
 This document locks the deterministic Phase 1 evaluation rules used after replay outputs exist.
 
+`docs/CORE_RESEARCH_PHILOSOPHY.md` is the authoritative repository statement for the production/research boundary and the rule that measurement comes before optimization.
+
 It does not:
 
 - modify live Layer 1 agents
@@ -11,6 +13,8 @@ It does not:
 - redesign the observation-first architecture
 
 The current production logic documents in `/logic` remain the active source of truth for replayed agent behavior.
+
+This evaluation layer exists to measure the current production agents against realized outcomes before any Layer 1 Version 2 changes are considered.
 
 ## Phase 1 Prediction Rows
 

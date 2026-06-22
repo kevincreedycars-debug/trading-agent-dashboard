@@ -194,6 +194,266 @@ from evaluated_24h
 comment on view research_usd_24h_direction_accuracy is
 'Single-row USD following-24hrs benchmark summary. Uses DXY-only benchmark accuracy, excludes MIXED and NOT_EVALUABLE from the evaluated denominator, and provides simple bullish, bearish, and flat/no-move accuracy splits for the dashboard.';
 
+create or replace view research_accuracy_by_verdict_strength as
+select
+  asset_code,
+  timeframe,
+  benchmark_market,
+  coalesce(verdict_strength, 'UNKNOWN') as verdict_strength,
+  case coalesce(verdict_strength, 'UNKNOWN')
+    when 'VERY_STRONG' then 1
+    when 'STRONG' then 2
+    when 'MODERATE' then 3
+    when 'WEAK' then 4
+    when 'NO_CALL' then 5
+    when 'MARKET_CLOSED' then 6
+    else 7
+  end as strength_rank,
+  count(*) filter (where combined_result in ('CORRECT', 'WRONG', 'FLAT')) as evaluated_calls,
+  count(*) filter (where combined_result = 'CORRECT') as wins,
+  count(*) filter (where combined_result = 'WRONG') as losses,
+  count(*) filter (where combined_result = 'FLAT') as flats,
+  count(*) filter (where combined_result = 'NOT_EVALUABLE') as not_evaluable,
+  round(
+    100.0 * count(*) filter (where combined_result = 'CORRECT')
+    / nullif(count(*) filter (where combined_result in ('CORRECT', 'WRONG', 'FLAT')), 0),
+    2
+  ) as win_rate_pct,
+  round(
+    100.0 * count(*) filter (where combined_result = 'FLAT')
+    / nullif(count(*) filter (where combined_result in ('CORRECT', 'WRONG', 'FLAT')), 0),
+    2
+  ) as flat_no_move_pct,
+  round(
+    avg(coalesce(agent_conviction, predicted_conviction)) filter (where combined_result in ('CORRECT', 'WRONG', 'FLAT'))::numeric,
+    2
+  ) as avg_predicted_confidence,
+  round(
+    avg(abs_pct_change) filter (where combined_result in ('CORRECT', 'WRONG', 'FLAT'))::numeric,
+    4
+  ) as avg_abs_move_pct
+from research_prediction_usd_benchmark_summary
+group by
+  asset_code,
+  timeframe,
+  benchmark_market,
+  coalesce(verdict_strength, 'UNKNOWN')
+;
+
+comment on view research_accuracy_by_verdict_strength is
+'DXY-only USD benchmark accuracy grouped by verdict strength. This tests whether the verdict-quality labels such as VERY_STRONG, STRONG, MODERATE, and WEAK actually predict directional accuracy.';
+
+create or replace view research_accuracy_by_confidence_bucket as
+with bucketed as (
+  select
+    asset_code,
+    timeframe,
+    benchmark_market,
+    combined_result,
+    abs_pct_change,
+    coalesce(agent_conviction, predicted_conviction) as predicted_confidence,
+    case
+      when coalesce(agent_conviction, predicted_conviction) is null then 'UNKNOWN'
+      when coalesce(agent_conviction, predicted_conviction) < 50 then '<50'
+      when coalesce(agent_conviction, predicted_conviction) < 55 then '50-54'
+      when coalesce(agent_conviction, predicted_conviction) < 60 then '55-59'
+      when coalesce(agent_conviction, predicted_conviction) < 65 then '60-64'
+      when coalesce(agent_conviction, predicted_conviction) < 70 then '65-69'
+      when coalesce(agent_conviction, predicted_conviction) < 75 then '70-74'
+      when coalesce(agent_conviction, predicted_conviction) < 80 then '75-79'
+      when coalesce(agent_conviction, predicted_conviction) < 85 then '80-84'
+      when coalesce(agent_conviction, predicted_conviction) < 90 then '85-89'
+      when coalesce(agent_conviction, predicted_conviction) < 95 then '90-94'
+      else '95-100'
+    end as confidence_bucket,
+    case
+      when coalesce(agent_conviction, predicted_conviction) is null then 12
+      when coalesce(agent_conviction, predicted_conviction) < 50 then 1
+      when coalesce(agent_conviction, predicted_conviction) < 55 then 2
+      when coalesce(agent_conviction, predicted_conviction) < 60 then 3
+      when coalesce(agent_conviction, predicted_conviction) < 65 then 4
+      when coalesce(agent_conviction, predicted_conviction) < 70 then 5
+      when coalesce(agent_conviction, predicted_conviction) < 75 then 6
+      when coalesce(agent_conviction, predicted_conviction) < 80 then 7
+      when coalesce(agent_conviction, predicted_conviction) < 85 then 8
+      when coalesce(agent_conviction, predicted_conviction) < 90 then 9
+      when coalesce(agent_conviction, predicted_conviction) < 95 then 10
+      else 11
+    end as confidence_bucket_rank
+  from research_prediction_usd_benchmark_summary
+)
+select
+  asset_code,
+  timeframe,
+  benchmark_market,
+  confidence_bucket,
+  confidence_bucket_rank,
+  count(*) filter (where combined_result in ('CORRECT', 'WRONG', 'FLAT')) as evaluated_calls,
+  count(*) filter (where combined_result = 'CORRECT') as wins,
+  count(*) filter (where combined_result = 'WRONG') as losses,
+  count(*) filter (where combined_result = 'FLAT') as flats,
+  count(*) filter (where combined_result = 'NOT_EVALUABLE') as not_evaluable,
+  round(
+    100.0 * count(*) filter (where combined_result = 'CORRECT')
+    / nullif(count(*) filter (where combined_result in ('CORRECT', 'WRONG', 'FLAT')), 0),
+    2
+  ) as win_rate_pct,
+  round(
+    100.0 * count(*) filter (where combined_result = 'FLAT')
+    / nullif(count(*) filter (where combined_result in ('CORRECT', 'WRONG', 'FLAT')), 0),
+    2
+  ) as flat_no_move_pct,
+  round(
+    avg(predicted_confidence) filter (where combined_result in ('CORRECT', 'WRONG', 'FLAT'))::numeric,
+    2
+  ) as avg_predicted_confidence,
+  round(
+    avg(abs_pct_change) filter (where combined_result in ('CORRECT', 'WRONG', 'FLAT'))::numeric,
+    4
+  ) as avg_abs_move_pct,
+  round(
+    100.0 * count(*) filter (where combined_result = 'CORRECT')
+    / nullif(count(*) filter (where combined_result in ('CORRECT', 'WRONG', 'FLAT')), 0),
+    2
+  ) as actual_win_rate_pct,
+  round(
+    (
+      100.0 * count(*) filter (where combined_result = 'CORRECT')
+      / nullif(count(*) filter (where combined_result in ('CORRECT', 'WRONG', 'FLAT')), 0)
+    ) - avg(predicted_confidence) filter (where combined_result in ('CORRECT', 'WRONG', 'FLAT')),
+    2
+  ) as calibration_gap_pct
+from bucketed
+group by
+  asset_code,
+  timeframe,
+  benchmark_market,
+  confidence_bucket,
+  confidence_bucket_rank
+;
+
+comment on view research_accuracy_by_confidence_bucket is
+'DXY-only USD benchmark accuracy grouped by predicted confidence bands. Includes a calibration gap so research can test whether the confidence score is overconfident or underconfident.';
+
+create or replace view research_trade_quality_thresholds as
+with base as (
+  select
+    asset_code,
+    timeframe,
+    benchmark_market,
+    combined_result,
+    abs_pct_change,
+    coalesce(agent_conviction, predicted_conviction) as predicted_confidence,
+    coalesce(verdict_strength, 'UNKNOWN') as verdict_strength,
+    case coalesce(verdict_strength, 'UNKNOWN')
+      when 'VERY_STRONG' then 1
+      when 'STRONG' then 2
+      when 'MODERATE' then 3
+      when 'WEAK' then 4
+      when 'NO_CALL' then 5
+      when 'MARKET_CLOSED' then 6
+      else 7
+    end as strength_rank
+  from research_prediction_usd_benchmark_summary
+),
+totals as (
+  select
+    asset_code,
+    timeframe,
+    benchmark_market,
+    count(*) as total_available_predictions
+  from base
+  group by
+    asset_code,
+    timeframe,
+    benchmark_market
+),
+threshold_rows as (
+  select *, 'All Calls' as threshold_label, 1 as threshold_rank from base
+  union all
+  select *, 'Confidence >= 60' as threshold_label, 2 as threshold_rank from base where predicted_confidence >= 60
+  union all
+  select *, 'Confidence >= 70' as threshold_label, 3 as threshold_rank from base where predicted_confidence >= 70
+  union all
+  select *, 'Confidence >= 75' as threshold_label, 4 as threshold_rank from base where predicted_confidence >= 75
+  union all
+  select *, 'Confidence >= 80' as threshold_label, 5 as threshold_rank from base where predicted_confidence >= 80
+  union all
+  select *, 'Confidence >= 85' as threshold_label, 6 as threshold_rank from base where predicted_confidence >= 85
+  union all
+  select *, 'Confidence >= 90' as threshold_label, 7 as threshold_rank from base where predicted_confidence >= 90
+  union all
+  select *, 'Strength >= MODERATE' as threshold_label, 8 as threshold_rank from base where strength_rank <= 3
+  union all
+  select *, 'Strength >= STRONG' as threshold_label, 9 as threshold_rank from base where strength_rank <= 2
+  union all
+  select *, 'Strength = VERY_STRONG' as threshold_label, 10 as threshold_rank from base where strength_rank = 1
+  union all
+  select *, 'Confidence >= 75 AND Strength >= STRONG' as threshold_label, 11 as threshold_rank from base where predicted_confidence >= 75 and strength_rank <= 2
+  union all
+  select *, 'Confidence >= 80 AND Strength >= STRONG' as threshold_label, 12 as threshold_rank from base where predicted_confidence >= 80 and strength_rank <= 2
+  union all
+  select *, 'Confidence >= 85 AND Strength = VERY_STRONG' as threshold_label, 13 as threshold_rank from base where predicted_confidence >= 85 and strength_rank = 1
+)
+select
+  t.asset_code,
+  t.timeframe,
+  t.benchmark_market,
+  t.threshold_label,
+  t.threshold_rank,
+  totals.total_available_predictions,
+  count(*) as tradeable_predictions,
+  round(
+    100.0 * count(*)
+    / nullif(totals.total_available_predictions, 0),
+    2
+  ) as coverage_pct,
+  count(*) filter (where combined_result in ('CORRECT', 'WRONG', 'FLAT')) as evaluated_calls,
+  count(*) filter (where combined_result = 'CORRECT') as wins,
+  count(*) filter (where combined_result = 'WRONG') as losses,
+  count(*) filter (where combined_result = 'FLAT') as flats,
+  round(
+    100.0 * count(*) filter (where combined_result = 'CORRECT')
+    / nullif(count(*) filter (where combined_result in ('CORRECT', 'WRONG', 'FLAT')), 0),
+    2
+  ) as win_rate_pct,
+  round(
+    100.0 * count(*) filter (where combined_result = 'FLAT')
+    / nullif(count(*) filter (where combined_result in ('CORRECT', 'WRONG', 'FLAT')), 0),
+    2
+  ) as flat_no_move_pct,
+  round(
+    avg(predicted_confidence) filter (where combined_result in ('CORRECT', 'WRONG', 'FLAT'))::numeric,
+    2
+  ) as avg_predicted_confidence,
+  round(
+    avg(abs_pct_change) filter (where combined_result in ('CORRECT', 'WRONG', 'FLAT'))::numeric,
+    4
+  ) as avg_abs_move_pct,
+  round(
+    (
+      100.0 * count(*) filter (where combined_result = 'CORRECT')
+      / nullif(count(*) filter (where combined_result in ('CORRECT', 'WRONG', 'FLAT')), 0)
+    ) - avg(predicted_confidence) filter (where combined_result in ('CORRECT', 'WRONG', 'FLAT')),
+    2
+  ) as calibration_gap_pct
+from threshold_rows t
+join totals
+  on totals.asset_code = t.asset_code
+ and totals.timeframe = t.timeframe
+ and totals.benchmark_market = t.benchmark_market
+group by
+  t.asset_code,
+  t.timeframe,
+  t.benchmark_market,
+  t.threshold_label,
+  t.threshold_rank,
+  totals.total_available_predictions
+;
+
+comment on view research_trade_quality_thresholds is
+'DXY-only USD benchmark trade-quality thresholds. Measures how win rate, coverage, confidence, and realised move change when research filters to higher-confidence or stronger verdict subsets without changing production behavior.';
+
 create or replace view research_overall_win_rate as
 select
   count(*) filter (where combined_result in ('CORRECT', 'WRONG', 'FLAT')) as evaluated_predictions,

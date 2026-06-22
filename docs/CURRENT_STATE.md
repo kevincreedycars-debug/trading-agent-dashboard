@@ -10,6 +10,8 @@ The dashboard now distinguishes evidence split from headline call quality by der
 
 The Overview tab now also generates a lightweight 7-day direction outlook from the latest Layer 1 timeframe calls, with weekend no-call handling preserved for non-BTC markets.
 
+The historical research platform is now implemented end-to-end for USD only. The committed research path currently covers January 2024 replay and evaluation, with DXY-only headline benchmark scoring and 24H accuracy treated as the primary short-horizon metric.
+
 ## Current Architecture
 
 ```text
@@ -23,7 +25,7 @@ agent_outputs
         ↓
 Dashboard Writer
         ↓
-Netlify Dashboard
+GitHub Pages Dashboard
 ```
 
 Layer 2 economic-event adjustment will be built later.
@@ -198,7 +200,7 @@ into:
 
 > building an AI-assisted autonomous development environment for the trading platform
 
-GitHub should become the source of truth. n8n remains the execution engine. Supabase remains the data layer. Netlify remains the presentation layer.
+GitHub is the source of truth. n8n remains the execution engine. Supabase remains the data layer. GitHub Pages is the active presentation host.
 
 ## Target Development Model
 
@@ -210,6 +212,8 @@ ChatGPT / Codex
         ├── Supabase data layer
         └── Netlify dashboard
 ```
+
+The active dashboard host in this model is GitHub Pages, not Netlify.
 
 ChatGPT should handle architecture, debugging, reasoning, planning, and documentation.
 
@@ -239,3 +243,21 @@ The canonical project memory set is:
 - `docs/ARCHITECTURE.md`
 - `docs/N8N_INTEGRATION.md`
 - `workflows/WORKFLOW_INVENTORY.md`
+
+## Historical Research Platform
+
+The historical research platform is downstream-only and must not modify production behavior.
+
+Authoritative principles live in:
+
+- `docs/CORE_RESEARCH_PHILOSOPHY.md`
+
+Current implemented state:
+
+- USD-only historical replay is implemented end-to-end.
+- Current committed replay coverage is January 2024.
+- Current committed sample is approximately 22 observations, 88 predictions, and 440 evaluation rows.
+- Headline USD benchmark accuracy is DXY-only.
+- Basket and translation markets remain diagnostic only.
+- 24H accuracy is the primary benchmark focus.
+- Pair-specific benchmark architecture exists, but only USD is implemented end-to-end in committed code.

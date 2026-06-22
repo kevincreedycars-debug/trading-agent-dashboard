@@ -2042,6 +2042,86 @@ function renderResearch24hSummary(summary = null) {
   `;
 }
 
+function renderResearchVerdictQuality(data = {}) {
+  const byVerdictStrength = data.accuracy?.by_verdict_strength || [];
+  const byConfidenceBucket = data.accuracy?.by_confidence_bucket || [];
+  const strength24h = byVerdictStrength.filter(row => row.timeframe === "following 24hrs");
+  const strengthRows = strength24h.length ? strength24h : byVerdictStrength;
+  const confidence24h = byConfidenceBucket.filter(row => row.timeframe === "following 24hrs");
+  const confidenceRows = confidence24h.length ? confidence24h : byConfidenceBucket;
+
+  return `
+    <section class="research-section">
+      <div class="research-section-head">
+        <div>
+          <p class="eyebrow">Verdict Quality</p>
+          <h3>Accuracy by Signal Strength</h3>
+        </div>
+        <p class="research-panel-copy">Overall accuracy answers: "Was the model directionally right?" Strength accuracy qualifies that headline by answering: "Were stronger verdicts actually more reliable?" Direction, confidence, and strength are one verdict-quality system, not separate side metrics.</p>
+      </div>
+      <section class="backtest-grid research-regime-grid">
+        ${renderResearchBreakdownTable("Accuracy by Signal Strength", "Verdict Quality", strengthRows, [
+          { label: "Strength", render: row => researchDataCell(row.verdict_strength, `${row.benchmark_market} • ${row.timeframe}`) },
+          { label: "Evaluated", render: row => researchDataCell(row.evaluated_calls, `${row.wins} wins / ${row.losses} losses`) },
+          { label: "Win Rate", render: row => researchDataCell(percentValue(row.win_rate_pct), `${row.flats} flat`) },
+          { label: "Avg Confidence", render: row => researchDataCell(percentValue(row.avg_predicted_confidence), metricAvailable(row.avg_abs_move_pct) ? `${row.avg_abs_move_pct}% abs move` : "Abs move n/a") }
+        ], {
+          description: "DXY-only benchmark rows. Low overall accuracy does not automatically mean the agent is unusable if high-confidence or VERY_STRONG calls are materially more accurate. Conversely, high overall accuracy is less useful if high-confidence calls are not better than weak calls."
+        })}
+      </section>
+    </section>
+
+    <section class="research-section">
+      <div class="research-section-head">
+        <div>
+          <p class="eyebrow">Verdict Quality</p>
+          <h3>Confidence Calibration</h3>
+        </div>
+        <p class="research-panel-copy">Confidence calibration qualifies headline accuracy by answering: "Did the confidence % match realised accuracy?" This 24H-priority view tests whether higher-confidence calls were actually more reliable, and whether the model was overconfident or underconfident by confidence band.</p>
+      </div>
+      <section class="backtest-grid research-regime-grid">
+        ${renderResearchBreakdownTable("Confidence Calibration", "Verdict Quality", confidenceRows, [
+          { label: "Confidence", render: row => researchDataCell(row.confidence_bucket, `${row.benchmark_market} • ${row.timeframe}`) },
+          { label: "Evaluated", render: row => researchDataCell(row.evaluated_calls, `${row.wins} wins / ${row.losses} losses`) },
+          { label: "Predicted", render: row => researchDataCell(percentValue(row.avg_predicted_confidence), `${row.flats} flat`) },
+          { label: "Actual", render: row => researchDataCell(percentValue(row.actual_win_rate_pct), metricAvailable(row.calibration_gap_pct) ? `${row.calibration_gap_pct > 0 ? "+" : ""}${row.calibration_gap_pct}% gap` : "Gap n/a") }
+        ], {
+          description: "Positive calibration gap means the bucket outperformed its average predicted confidence. Negative gap means the model was overconfident. Confidence is useful only if higher predicted confidence is matched by higher realised accuracy."
+        })}
+      </section>
+    </section>
+  `;
+}
+
+function renderResearchTradeQuality(data = {}) {
+  const tradeQuality = data.accuracy?.trade_quality || [];
+  const tradeQuality24h = tradeQuality.filter(row => row.timeframe === "following 24hrs");
+  const tradeQualityRows = tradeQuality24h.length ? tradeQuality24h : tradeQuality;
+
+  return `
+    <section class="research-section">
+      <div class="research-section-head">
+        <div>
+          <p class="eyebrow">Trade Quality</p>
+          <h3>Which subsets may have been worth taking</h3>
+        </div>
+        <p class="research-panel-copy">Overall accuracy treats every prediction equally. Trade Quality asks what would have happened if only higher-confidence or stronger verdicts were considered tradeable.</p>
+      </div>
+      <section class="backtest-grid research-regime-grid">
+        ${renderResearchBreakdownTable("Trade Quality", "Filtered Thresholds", tradeQualityRows, [
+          { label: "Threshold", render: row => researchDataCell(row.threshold_label, `${row.benchmark_market} • ${row.timeframe}`) },
+          { label: "Coverage", render: row => researchDataCell(percentValue(row.coverage_pct), `${row.tradeable_predictions} of ${row.total_available_predictions}`) },
+          { label: "Evaluated", render: row => researchDataCell(row.evaluated_calls, `${row.wins} wins / ${row.losses} losses`) },
+          { label: "Win Rate", render: row => researchDataCell(percentValue(row.win_rate_pct), `${row.flats} flat`) },
+          { label: "Avg Confidence", render: row => researchDataCell(percentValue(row.avg_predicted_confidence), metricAvailable(row.avg_abs_move_pct) ? `${row.avg_abs_move_pct}% abs move` : "Abs move n/a") }
+        ], {
+          description: "A lower overall win rate may still hide high-quality tradeable subsets. A high threshold with strong accuracy but tiny coverage means rare edge. A broad threshold with weaker accuracy may not be useful as a trade filter."
+        })}
+      </section>
+    </section>
+  `;
+}
+
 function renderResearchAccuracy(data = {}) {
   const overall = data.accuracy?.overall || null;
   const summary24h = data.accuracy?.summary_24h || null;
@@ -2059,6 +2139,8 @@ function renderResearchAccuracy(data = {}) {
   return `
     ${renderResearchStatusHeader(data)}
     ${renderResearch24hSummary(summary24h)}
+    ${renderResearchVerdictQuality(data)}
+    ${renderResearchTradeQuality(data)}
 
     <section class="research-section">
       <div class="research-section-head">
@@ -2551,6 +2633,9 @@ async function fetchResearchDashboardData() {
   const [
     overallRows,
     summary24hRows,
+    verdictStrengthRows,
+    confidenceBucketRows,
+    tradeQualityRows,
     timeframeRows,
     convictionRows,
     weekdayRows,
@@ -2563,6 +2648,9 @@ async function fetchResearchDashboardData() {
   ] = await Promise.all([
     fetchResearchView("research_overall_win_rate"),
     fetchResearchView("research_usd_24h_direction_accuracy"),
+    fetchResearchView("research_accuracy_by_verdict_strength", { order: "timeframe.asc,strength_rank.asc" }),
+    fetchResearchView("research_accuracy_by_confidence_bucket", { order: "timeframe.asc,confidence_bucket_rank.asc" }),
+    fetchResearchView("research_trade_quality_thresholds", { order: "timeframe.asc,threshold_rank.asc" }),
     fetchResearchView("research_win_rate_by_timeframe", { order: "timeframe.asc" }),
     fetchResearchView("research_win_rate_by_conviction_bucket"),
     fetchResearchView("research_win_rate_by_weekday"),
@@ -2592,6 +2680,9 @@ async function fetchResearchDashboardData() {
     accuracy: {
       overall: overallRows[0] || null,
       summary_24h: summary24hRows[0] || null,
+      by_verdict_strength: verdictStrengthRows,
+      by_confidence_bucket: confidenceBucketRows,
+      trade_quality: tradeQualityRows,
       by_timeframe: timeframeRows,
       by_conviction_bucket: convictionRows,
       by_weekday: weekdayRows,

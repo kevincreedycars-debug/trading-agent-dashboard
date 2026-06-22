@@ -15,7 +15,7 @@ Supabase agent_outputs
         ↓
 Dashboard Writer
         ↓
-Netlify Dashboard
+GitHub Pages Dashboard
 ```
 
 ## Platform Components
@@ -63,9 +63,9 @@ Key tables:
 - `agent_outputs`
 - `economic_events`
 
-### Netlify
+### GitHub Pages
 
-Netlify hosts the Layered Directional Command Dashboard.
+GitHub Pages hosts the Layered Directional Command Dashboard.
 
 The dashboard displays Layer 1 raw calls and, later, Layer 2 adjusted calls separately.
 
@@ -118,6 +118,8 @@ ChatGPT / Codex
         ├── Supabase
         └── Netlify
 ```
+
+The active dashboard host in this model is GitHub Pages, not Netlify.
 
 ChatGPT is used for:
 
