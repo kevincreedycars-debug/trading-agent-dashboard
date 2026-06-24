@@ -54,6 +54,15 @@ function computePctChange(openPrice, closePrice) {
   return ((close - open) / open) * 100;
 }
 
+function hasValidMarketPrice(value) {
+  const numeric = Number(value);
+  return Number.isFinite(numeric) && numeric > 0;
+}
+
+function normalizeMarketPrice(value) {
+  return hasValidMarketPrice(value) ? Number(value) : null;
+}
+
 function invertDirection(direction) {
   if (direction === "BULLISH") return "BEARISH";
   if (direction === "BEARISH") return "BULLISH";
@@ -83,7 +92,11 @@ function evaluateSingleMarket({
     callDate,
     callTimeEt
   });
-  const pctChange = computePctChange(openPrice, closePrice);
+  const normalizedOpenPrice = normalizeMarketPrice(openPrice);
+  const normalizedClosePrice = normalizeMarketPrice(closePrice);
+  const pricesAreValid = normalizedOpenPrice !== null && normalizedClosePrice !== null;
+  const priceDataMissingReason = pricesAreValid ? null : "market_price_missing";
+  const pctChange = pricesAreValid ? computePctChange(normalizedOpenPrice, normalizedClosePrice) : null;
   const absPctChange = pctChange === null ? null : Math.abs(pctChange);
   const marketOutcome = classifyMarketOutcome(pctChange, normalizedMarket);
   const comparableMarketDirection = marketRelationship === "inverse"
@@ -97,7 +110,7 @@ function evaluateSingleMarket({
   const scored = scoreEvaluationResult({
     agentDirection,
     marketOutcomeDirection: comparableMarketDirection,
-    notEvaluableReason: window.not_evaluable_reason
+    notEvaluableReason: window.not_evaluable_reason || priceDataMissingReason
   });
   const evaluationQuality = classifyEvaluationQuality(scored.result, moveMagnitudeBucket);
   const convictionMoveAlignment = classifyConvictionMoveAlignment({
@@ -118,8 +131,8 @@ function evaluateSingleMarket({
     open_time_et_local: window.open_time_et_local,
     close_time_et: window.close_time_et,
     close_time_et_local: window.close_time_et_local,
-    open_price: Number.isFinite(Number(openPrice)) ? Number(openPrice) : null,
-    close_price: Number.isFinite(Number(closePrice)) ? Number(closePrice) : null,
+    open_price: normalizedOpenPrice,
+    close_price: normalizedClosePrice,
     pct_change: pctChange,
     abs_pct_change: absPctChange,
     flat_threshold_used: flatThresholdUsed,
@@ -186,5 +199,6 @@ module.exports = {
   evaluatePhase1AssetAgainstConfiguredMarkets,
   evaluateSingleMarket,
   invertDirection,
+  normalizeMarketPrice,
   normalizeAssetCode
 };

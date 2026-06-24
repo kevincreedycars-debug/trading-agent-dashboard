@@ -4,9 +4,25 @@
 
 Collect relevant economic events and write them into Supabase for later event-risk and Layer 2 processing.
 
-## Current Known Bug
+## Current Status
 
-The workflow currently attempts to insert duplicate events into Supabase.
+The duplicate-insert failure has been fixed in the live workflow.
+
+The collector now behaves idempotently by:
+
+- deduping incoming calendar rows in `Code | Normalise Forex Factory Events`
+- fetching existing `economic_events` rows for the run date
+- routing matched rows to `Supabase | Update Economic Events`
+- routing unmatched rows to `Supabase | Create Economic Events`
+
+Matching identity:
+
+- `event_date`
+- `currency`
+- `event_name`
+- `event_time_text`
+
+## Previous Failure
 
 Observed error:
 
@@ -18,26 +34,24 @@ economic_events_event_date_currency_event_name_event_time_t_key
 
 ## Diagnosis
 
-Supabase has a uniqueness constraint on event identity fields. The collector should be idempotent, but currently it uses a plain insert/create pattern.
+The built-in `n8n-nodes-base.supabase` row node in this workspace does not expose a true composite-key upsert or `ON CONFLICT` setting.
 
-## Preferred Fix
+Because of that limitation, the supported live fix uses:
 
-Use one of:
+1. Deduplicate incoming events.
+2. Read existing rows for the target date.
+3. Update existing matches.
+4. Create only unmatched rows.
 
-- upsert
-- `ON CONFLICT DO NOTHING`
-- Supabase RPC/custom API call
+## Validation
 
-Avoid unnecessary Get → IF → Create logic unless the n8n Supabase node cannot support the preferred approach.
+Validation was performed against the live workflow on 2026-06-21.
 
-## Next Fix
+- First run succeeded: execution `1081`
+- Second immediate rerun succeeded: execution `1082`
+- No duplicate-key error appeared on either run
+- The rerun went through the update branch rather than create, confirming existing rows were updated instead of duplicated
 
-After n8n API connection:
+## Export Status
 
-1. Fetch Eco Events Collector workflow.
-2. Identify Supabase insert/create node.
-3. Confirm table and unique constraint columns.
-4. Replace insert behaviour with idempotent upsert/conflict-safe write.
-5. Run Eco Events Collector only.
-6. Confirm repeat execution does not fail on duplicate rows.
-7. Export updated workflow JSON to GitHub.
+The current live workflow has been re-exported to `exports/eco_events_collector.json`.

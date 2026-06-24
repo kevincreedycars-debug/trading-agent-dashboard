@@ -8,22 +8,19 @@ ChatGPT is used for architecture, planning, debugging, and review. Codex is used
 
 ## First Files To Read On Every Session
 
-Read these files before making changes:
+`CODEX_STARTUP.md` defines the startup sequence and is the single entry point for every new session.
+
+Always read:
 
 1. `CODEX_STARTUP.md`
 2. `docs/CURRENT_STATE.md`
 3. `docs/CURRENT_TASK.md`
-4. `docs/NEXT_STEPS.md`
-5. `docs/DECISIONS.md`
-6. `docs/CHANGELOG.md`
-7. `docs/SESSION_NOTES.md`
-8. `docs/PROJECT_HISTORY.md`
-9. `docs/ARCHITECTURE.md`
-10. `docs/N8N_INTEGRATION.md`
-11. `workflows/WORKFLOW_INVENTORY.md`
-12. `issues/active_bugs.md`
+4. `docs/ACTIVE_MILESTONE.md`
+5. `docs/SESSION_NOTES.md`
 
-After reading these files, inspect the repository and summarise the current project state, active task, recently completed work, planned next steps, and files likely to be edited before editing.
+Only load additional documents when they are relevant to the task, following `CODEX_STARTUP.md`.
+
+After reading the startup files, inspect the repository and provide the startup summary required by `CODEX_STARTUP.md` before editing.
 
 ## Core Architecture Rule
 
@@ -84,7 +81,7 @@ Expected first integration tasks:
 6. Never store Supabase service role keys or OpenAI keys in exports.
 7. After workflow edits, update:
    - `docs/CHANGELOG.md`
-   - `docs/SESSION_LOG.md`
+   - `docs/SESSION_NOTES.md`
    - `docs/CURRENT_TASK.md`
    - relevant `workflows/*.md`
 8. If a task changes architecture, update `docs/DECISIONS.md`.

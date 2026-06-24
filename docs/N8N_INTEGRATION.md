@@ -68,7 +68,7 @@ The AI development environment should eventually be able to:
 3. Never commit credentials.
 4. Prefer targeted node edits over whole-workflow rewrites.
 5. After editing, run the smallest relevant workflow first before running the full Master Orchestrator.
-6. Record all changes in `docs/CHANGELOG.md` and `docs/SESSION_LOG.md`.
+6. Record all changes in `docs/CHANGELOG.md` and `docs/SESSION_NOTES.md`.
 
 ## Current n8n Priorities
 

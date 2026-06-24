@@ -95,10 +95,10 @@ test("Evaluation runner and research SQL layer work end-to-end for January 2024"
   assert.equal(firstEvaluationSummary.predictions_processed, 88);
   assert.equal(firstEvaluationSummary.evaluation_rows_written, 440);
   assert.equal(firstEvaluationSummary.realised_outcome_rows_written, 88);
-  assert.equal(firstEvaluationSummary.result_counts.CORRECT, 91);
-  assert.equal(firstEvaluationSummary.result_counts.WRONG, 87);
+  assert.equal(firstEvaluationSummary.result_counts.CORRECT, 73);
+  assert.equal(firstEvaluationSummary.result_counts.WRONG, 78);
   assert.equal(firstEvaluationSummary.result_counts.FLAT, 74);
-  assert.equal(firstEvaluationSummary.result_counts.NOT_EVALUABLE, 188);
+  assert.equal(firstEvaluationSummary.result_counts.NOT_EVALUABLE, 215);
 
   const secondEvaluationOutput = runNodeScript(
     repoRoot,
@@ -583,8 +583,8 @@ test("Evaluation runner and research SQL layer work end-to-end for January 2024"
   assert.equal(counts.predictions, 88);
   assert.equal(counts.evaluation_rows, 440);
   assert.equal(counts.realised_outcomes, 88);
-  assert.equal(counts.combined.MIXED, 84);
-  assert.equal(counts.combined.NOT_EVALUABLE, 4);
+  assert.equal(counts.combined.MIXED, 75);
+  assert.equal(counts.combined.NOT_EVALUABLE, 13);
   assert.ok(counts.dxy.evaluated_predictions > 0);
   assert.ok(counts.dxy.wins + counts.dxy.losses + counts.dxy.flats === counts.dxy.evaluated_predictions);
   assert.equal(counts.dxy.mixed, 0);
