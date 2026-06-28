@@ -2043,10 +2043,30 @@ function renderResearch24hSummary(summary = null) {
 }
 
 const matrixStrengthBuckets = [
-  { key: "weak", label: "Weak" },
-  { key: "moderate", label: "Moderate" },
-  { key: "strong", label: "Strong" },
-  { key: "very_strong", label: "Very Strong" }
+  {
+    key: "weak",
+    label: "Weak",
+    rangeLabel: "50-64%",
+    definition: "Matrix Weak combines production Very Weak (50-55%) and Weak (56-64%) labels."
+  },
+  {
+    key: "moderate",
+    label: "Moderate",
+    rangeLabel: "65-74%",
+    definition: "Production Moderate label."
+  },
+  {
+    key: "strong",
+    label: "Strong",
+    rangeLabel: "75-84%",
+    definition: "Production Strong label."
+  },
+  {
+    key: "very_strong",
+    label: "Very Strong",
+    rangeLabel: "85-100%",
+    definition: "Production Very Strong label."
+  }
 ];
 
 const matrixDirectionBuckets = [
@@ -2172,6 +2192,16 @@ function matrixStrengthLabel(key = "") {
   return entry?.label || "Unknown";
 }
 
+function titleCaseWords(value = "") {
+  return String(value || "")
+    .trim()
+    .toLowerCase()
+    .split(/[\s_]+/)
+    .filter(Boolean)
+    .map(token => token.charAt(0).toUpperCase() + token.slice(1))
+    .join(" ");
+}
+
 function formatMatrixCorrectCount(value) {
   return metricAvailable(value) ? `${value} correct` : "&mdash; correct";
 }
@@ -2199,6 +2229,22 @@ function formatEvaluationResult(value = "") {
   if (normalized === "FLAT") return "Flat";
   if (normalized === "NOT_EVALUABLE") return "Not evaluable";
   return normalized.replaceAll("_", " ");
+}
+
+function formatConvictionPercent(value) {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) return "&mdash;";
+  const rounded = roundTo(numeric, 1);
+  const display = Math.abs(rounded - Math.round(rounded)) < 0.05 ? Math.round(rounded) : rounded;
+  return `${display}%`;
+}
+
+function formatProductionStrength(value = "") {
+  const normalized = String(value || "").trim().toUpperCase().replace(/[\s-]+/g, "_");
+  if (!normalized) return "Unknown";
+  if (normalized === "VERY_WEAK") return "Very Weak";
+  if (normalized === "VERY_STRONG") return "Very Strong";
+  return titleCaseWords(normalized);
 }
 
 function computeMatrixTotals(matrix = {}) {
@@ -2233,12 +2279,13 @@ function buildResearchEvidenceRows(rows = [], options = {}) {
         snapshotDate: row.snapshot_date || row.call_date || "",
         assetCode: row.asset_code || assetCode,
         timeframe: formatResearchTimeframeLabel(row.timeframe),
-        agentCall: normaliseDirection(row.agent_direction || row.predicted_direction || "Unknown"),
-        strength: row.verdict_strength || "Unknown",
+        direction: titleCaseWords(normaliseDirection(row.agent_direction || row.predicted_direction || "Unknown")),
+        convictionPct: formatConvictionPercent(row.agent_conviction ?? row.predicted_conviction),
+        strengthBucket: formatProductionStrength(row.verdict_strength),
         benchmark: row.benchmark_market || "Unknown",
         benchmarkMove: formatBenchmarkMove(row.pct_change),
         evaluationResult: formatEvaluationResult(row.combined_result),
-        matrixBucket: directionKey && strengthKey
+        matrixCell: directionKey && strengthKey
           ? `${matrixDirectionLabel(directionKey)} / ${matrixStrengthLabel(strengthKey)}`
           : "Unmapped"
       };
@@ -2283,14 +2330,15 @@ function renderResearchEvidenceAudit(rows = [], totals = {}, sourceView = "resea
         { label: "Date", render: row => researchDataCell(row.snapshotDate || "Unknown") },
         { label: "Asset", render: row => researchDataCell(row.assetCode) },
         { label: "Timeframe", render: row => researchDataCell(row.timeframe) },
-        { label: "Agent Call", render: row => researchDataCell(row.agentCall) },
-        { label: "Strength", render: row => researchDataCell(row.strength) },
+        { label: "Direction", render: row => researchDataCell(row.direction) },
+        { label: "Conviction %", render: row => researchDataCell(row.convictionPct) },
+        { label: "Strength Bucket", render: row => researchDataCell(row.strengthBucket) },
         { label: "Benchmark", render: row => researchDataCell(row.benchmark) },
         { label: "Benchmark Move", render: row => researchDataCell(row.benchmarkMove) },
         { label: "Evaluation Result", render: row => researchDataCell(row.evaluationResult) },
-        { label: "Matrix Bucket", render: row => researchDataCell(row.matrixBucket) }
+        { label: "Matrix Cell", render: row => researchDataCell(row.matrixCell) }
       ], {
-        description: "Latest evaluated USD following-24hrs rows only. The matrix bucket is derived from the same direction and strength mapping used by the table above.",
+        description: "Latest evaluated USD following-24hrs rows only. Conviction % is the original recorded confidence score. Matrix Cell uses the same direction and strength mapping as the table above.",
         panelClass: "research-evidence-panel",
         tableClass: "research-evidence-table"
       })}
@@ -2336,6 +2384,48 @@ function renderResearch24hEvidenceSummary(summary = null, data = {}) {
   `;
 }
 
+function renderResearchDefinitions() {
+  return `
+    <section class="research-section">
+      <div class="research-section-head">
+        <div>
+          <p class="eyebrow">Research Notes</p>
+          <h3>Definitions and strength mapping</h3>
+        </div>
+        <p class="research-panel-copy">Conviction and strength are related but not interchangeable. The research layer keeps each prediction's original conviction %, then groups it into a historical strength bucket for accuracy analysis.</p>
+      </div>
+      <article class="detail-panel wide-panel research-secondary-panel research-notes-panel">
+        <div class="research-definition-list">
+          <div class="research-definition-item">
+            <strong>Conviction %</strong>
+            <p>The model's original headline confidence score for that prediction.</p>
+          </div>
+          <div class="research-definition-item">
+            <strong>Strength Bucket</strong>
+            <p>The historical grouping derived from the production conviction thresholds. Historical accuracy is measured using these buckets.</p>
+          </div>
+        </div>
+        <div class="research-threshold-list">
+          ${matrixStrengthBuckets.map(bucket => `
+            <div class="research-threshold-item">
+              <strong>${escapeHtml(bucket.label)}</strong>
+              <span>${escapeHtml(bucket.rangeLabel)}</span>
+              <p>${escapeHtml(bucket.definition)}</p>
+            </div>
+          `).join("")}
+        </div>
+        <ul class="read-only-list">
+          <li>Each historical prediction retains its original conviction percentage.</li>
+          <li>The prediction is then grouped into the appropriate strength bucket for historical accuracy analysis.</li>
+          <li>The Weak matrix column intentionally combines production Very Weak and Weak rows to preserve the requested four-column layout.</li>
+          <li>NOT_EVALUABLE, MIXED, NO_CALL, and unsupported strength labels do not create fake matrix accuracy.</li>
+          <li>Infrastructure details remain available in the separate Infrastructure Status tab.</li>
+        </ul>
+      </article>
+    </section>
+  `;
+}
+
 function renderResearch24hAccuracyMatrix(rows = [], options = {}) {
   const assetLabel = options.assetLabel || "USD";
   const timeframeLabel = options.timeframeLabel || "24H";
@@ -2350,7 +2440,7 @@ function renderResearch24hAccuracyMatrix(rows = [], options = {}) {
           <p class="eyebrow">24H Accuracy Matrix</p>
           <h3>${escapeHtml(assetLabel)} ${escapeHtml(timeframeLabel)} direction by strength</h3>
         </div>
-        <p class="research-panel-copy">Each cell uses live research rows only. Call count is the number of evaluated predictions in that direction and strength bucket. Accuracy shows where the realised result actually confirmed the call.</p>
+        <p class="research-panel-copy">Each historical prediction retains its original conviction percentage, then the research layer groups it into the appropriate strength bucket for historical accuracy analysis. Each cell uses live research rows only.</p>
       </div>
       <article class="detail-panel wide-panel research-matrix-panel">
         <div class="research-matrix-meta">
@@ -2362,7 +2452,14 @@ function renderResearch24hAccuracyMatrix(rows = [], options = {}) {
             <thead>
               <tr>
                 <th>Direction</th>
-                ${matrixStrengthBuckets.map(strength => `<th>${escapeHtml(strength.label)}</th>`).join("")}
+                ${matrixStrengthBuckets.map(strength => `
+                  <th>
+                    <div class="research-matrix-heading">
+                      <strong>${escapeHtml(strength.label)}</strong>
+                      <span>${escapeHtml(strength.rangeLabel)}</span>
+                    </div>
+                  </th>
+                `).join("")}
               </tr>
             </thead>
             <tbody>
@@ -2494,32 +2591,20 @@ function renderResearchAccuracy(data = {}) {
   }
 
   return `
-    ${renderResearchStatusHeader(data)}
-    ${renderResearch24hContext(summary24h)}
-    ${renderResearch24hAccuracyMatrix(matrix24hRows, {
-      assetCode: "USD",
-      assetLabel: "USD",
-      timeframe: "following 24hrs",
-      timeframeLabel: "24H"
-    })}
-    ${renderResearch24hSummary(summary24h)}
-    ${renderResearch24hEvidenceSummary(summary24h, data)}
-    ${renderResearchEvidenceAudit(matrix24hRows, totals)}
-
-    <details class="research-diagnostics">
-      <summary>Research notes</summary>
-      <div class="research-diagnostics-body">
-        <article class="detail-panel research-secondary-panel">
-          <ul class="read-only-list">
-            <li>The matrix is limited to USD and the existing following-24hrs research rows.</li>
-            <li>Bullish and Bearish cells count CORRECT, WRONG, and FLAT rows as evaluated calls, with accuracy based on CORRECT results only.</li>
-            <li>Neutral / Flat cells count evaluated rows in neutral-call buckets, with accuracy based on realised FLAT outcomes.</li>
-            <li>NOT_EVALUABLE, MIXED, NO_CALL, and unsupported strength labels do not create fake matrix accuracy.</li>
-            <li>Infrastructure details remain available in the separate Infrastructure Status tab.</li>
-          </ul>
-        </article>
-      </div>
-    </details>
+    <div class="backtest-report">
+      ${renderResearchStatusHeader(data)}
+      ${renderResearch24hContext(summary24h)}
+      ${renderResearch24hAccuracyMatrix(matrix24hRows, {
+        assetCode: "USD",
+        assetLabel: "USD",
+        timeframe: "following 24hrs",
+        timeframeLabel: "24H"
+      })}
+      ${renderResearch24hSummary(summary24h)}
+      ${renderResearch24hEvidenceSummary(summary24h, data)}
+      ${renderResearchEvidenceAudit(matrix24hRows, totals)}
+      ${renderResearchDefinitions()}
+    </div>
   `;
 }
 

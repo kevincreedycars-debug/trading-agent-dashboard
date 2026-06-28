@@ -1461,8 +1461,13 @@ h3 {
 }
 
 .research-evidence-table {
-  min-width: 1260px;
+  min-width: 0;
   table-layout: auto;
+}
+
+.research-evidence-table th,
+.research-evidence-table td {
+  width: auto !important;
 }
 
 .research-matrix-empty {
@@ -1542,6 +1547,94 @@ h3 {
   display: grid;
   gap: 12px;
   margin-top: 12px;
+}
+
+.backtest-report {
+  display: grid;
+  gap: 18px;
+}
+
+.backtest-report .research-section-head {
+  display: grid;
+  align-items: start;
+  justify-content: start;
+  gap: 10px;
+}
+
+.backtest-report .research-panel-copy {
+  max-width: none;
+}
+
+.backtest-report .backtest-metric-grid {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.backtest-report .research-status-grid {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.backtest-report .backtest-metric-card {
+  min-height: 0;
+}
+
+.backtest-report .table-scroll,
+.backtest-report .research-table-scroll,
+.backtest-report .research-matrix-scroll {
+  overflow: visible;
+}
+
+.backtest-report .dashboard-table,
+.backtest-report .research-table,
+.backtest-report .research-matrix-table {
+  min-width: 0;
+  table-layout: auto;
+}
+
+.backtest-report .research-matrix-table th,
+.backtest-report .research-matrix-table td,
+.backtest-report .research-evidence-table th,
+.backtest-report .research-evidence-table td {
+  white-space: normal;
+}
+
+.research-matrix-heading {
+  display: grid;
+  gap: 3px;
+}
+
+.research-matrix-heading span {
+  color: var(--ink-muted);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: none;
+}
+
+.research-definition-list,
+.research-threshold-list {
+  display: grid;
+  gap: 12px;
+}
+
+.research-definition-item,
+.research-threshold-item {
+  padding: 14px 16px;
+  border: 1px solid var(--cream-border);
+  border-radius: 10px;
+  background: #fff;
+}
+
+.research-definition-item p,
+.research-threshold-item p,
+.research-threshold-item span {
+  margin: 6px 0 0;
+  color: var(--ink-muted);
+  line-height: 1.55;
+}
+
+.research-threshold-item span {
+  display: block;
+  font-weight: 700;
+  color: var(--navy);
 }
 
 .dashboard-table th,
