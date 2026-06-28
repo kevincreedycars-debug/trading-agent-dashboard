@@ -2065,7 +2065,10 @@ function normalizeResearchMatrixDirection(value = "") {
 }
 
 function normalizeResearchMatrixStrength(value = "") {
-  const normalized = String(value || "").trim().toUpperCase();
+  const normalized = String(value || "")
+    .trim()
+    .toUpperCase()
+    .replace(/[\s-]+/g, "_");
 
   if (normalized === "VERY_STRONG") return "very_strong";
   if (normalized === "STRONG") return "strong";
