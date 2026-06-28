@@ -1,6 +1,7 @@
 const layer1Url = "./data/layer1.json";
 const layer2Url = "./data/layer2.json";
 const workflowControlUrl = "./data/workflow-control.json";
+const checkerDataUrl = "./data/backtester-checker-usd-24h-2024-01.json";
 const researchSupabaseUrl = "https://eaolqbrlywczinfordvg.supabase.co/rest/v1";
 const researchSupabaseKey = "sb_publishable_k6YbEuuk3GyB9GVTQDtNVA_J1gCRYaY";
 
@@ -22,6 +23,7 @@ let workflowPollTimer = null;
 let workflowTriggerInFlight = false;
 let activeTab = "overview";
 let activeBacktestTab = "accuracy";
+let activeCheckerRowId = null;
 const navigationStateKey = "dashboard-navigation-state";
 
 function storageAvailable() {
@@ -2955,17 +2957,208 @@ function renderResearch24hEvidenceSummary(summary = null, data = {}) {
   `;
 }
 
+function checkerStatusBadge(status = "") {
+  const normalized = String(status || "").trim().toUpperCase();
+  const tone = normalized === "PASS"
+    ? "pass"
+    : normalized === "TOLERANCE_PASS"
+      ? "tolerance"
+      : normalized === "FAIL"
+        ? "fail"
+        : "missing";
+  const label = normalized === "TOLERANCE_PASS"
+    ? "Tolerance Pass"
+    : normalized === "MISSING_DATA"
+      ? "Missing Data"
+      : (normalized || "Unknown");
+  return `<span class="checker-status-badge ${tone}">${escapeHtml(label)}</span>`;
+}
+
+function formatCheckerValue(value) {
+  if (value === null || value === undefined || value === "") return displayDash();
+  if (typeof value === "number") {
+    return Number.isInteger(value) ? String(value) : String(roundTo(value, 3));
+  }
+  return escapeHtml(String(value));
+}
+
+function formatCheckerDifference(value) {
+  if (value === null || value === undefined || value === "") return displayDash();
+  if (typeof value === "number") {
+    const rounded = roundTo(value, 3);
+    return `${rounded > 0 ? "+" : ""}${rounded}`;
+  }
+  return escapeHtml(String(value));
+}
+
+function renderCheckerComparisonTable(comparisons = []) {
+  if (!comparisons.length) {
+    return `<div class="empty-state matrix-evidence-empty">No checker comparisons available.</div>`;
+  }
+
+  return `
+    <div class="table-scroll checker-table-scroll">
+      <table class="dashboard-table research-evidence-table checker-comparison-table">
+        <thead>
+          <tr>
+            <th>Field</th>
+            <th>Stored Output</th>
+            <th>Checker Re-run Output</th>
+            <th>Difference</th>
+            <th>PASS / FAIL</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${comparisons.map(item => `
+            <tr>
+              <td>${escapeHtml(item.label || item.key || "Field")}</td>
+              <td>${formatCheckerValue(item.stored)}</td>
+              <td>${formatCheckerValue(item.rerun)}</td>
+              <td>${formatCheckerDifference(item.difference)}</td>
+              <td>${checkerStatusBadge(item.status)}</td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+function renderCheckerFactorTable(factorComparisons = []) {
+  if (!factorComparisons.length) {
+    return "";
+  }
+
+  return `
+    <div class="table-scroll checker-table-scroll">
+      <table class="dashboard-table research-evidence-table checker-comparison-table">
+        <thead>
+          <tr>
+            <th>Factor</th>
+            <th>Stored Signal</th>
+            <th>Checker Signal</th>
+            <th>Signal Status</th>
+            <th>Stored Weight</th>
+            <th>Checker Weight</th>
+            <th>Weight Diff</th>
+            <th>PASS / FAIL</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${factorComparisons.map(item => `
+            <tr>
+              <td>${escapeHtml(item.factor_key || "Factor")}</td>
+              <td>${formatCheckerValue(item.signal?.stored)}</td>
+              <td>${formatCheckerValue(item.signal?.rerun)}</td>
+              <td>${checkerStatusBadge(item.signal?.status || "MISSING_DATA")}</td>
+              <td>${formatCheckerValue(item.weight?.stored)}</td>
+              <td>${formatCheckerValue(item.weight?.rerun)}</td>
+              <td>${formatCheckerDifference(item.weight?.difference)}</td>
+              <td>${checkerStatusBadge(item.status || "MISSING_DATA")}</td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+function renderCheckerRowDetail(checker = null) {
+  const rows = checker?.rows || [];
+  if (!rows.length) {
+    return `
+      <article class="detail-panel wide-panel research-secondary-panel">
+        <div class="empty-state matrix-evidence-empty">No checker rows available for USD 24H January 2024.</div>
+      </article>
+    `;
+  }
+
+  const selectedId = activeCheckerRowId && rows.some(row => row.prediction_id === activeCheckerRowId)
+    ? activeCheckerRowId
+    : (checker.selected_row_id || rows[0].prediction_id);
+  const selectedRow = rows.find(row => row.prediction_id === selectedId) || rows[0];
+  activeCheckerRowId = selectedRow.prediction_id;
+
+  const options = rows.map(row => `
+    <option value="${escapeHtml(row.prediction_id)}"${row.prediction_id === selectedRow.prediction_id ? " selected" : ""}>
+      ${escapeHtml(`${row.snapshot_date} • ${row.status}`)}
+    </option>
+  `).join("");
+
+  return `
+    <section class="research-section">
+      <div class="research-section-head">
+        <div>
+          <p class="eyebrow">Checker Detail</p>
+          <h3>Stored vs checker re-run output</h3>
+        </div>
+        <p class="research-panel-copy">This panel independently re-runs the USD replay from the historical snapshot, then compares it against the stored 24H backtester output and stored DXY evaluation row.</p>
+      </div>
+      <article class="detail-panel wide-panel research-secondary-panel checker-detail-panel">
+        <div class="checker-toolbar">
+          <label class="checker-select-label" for="checkerRowSelect">Selected row</label>
+          <select id="checkerRowSelect" class="checker-row-select" data-checker-row-select>
+            ${options}
+          </select>
+          ${checkerStatusBadge(selectedRow.status)}
+        </div>
+        <p class="research-audit-line">
+          <span><strong>Date:</strong> ${escapeHtml(selectedRow.snapshot_date || "Unknown")}</span>
+          <span><strong>Prediction ID:</strong> ${escapeHtml(selectedRow.prediction_id || "Unknown")}</span>
+          <span><strong>Timeframe:</strong> ${escapeHtml(selectedRow.timeframe || "following 24hrs")}</span>
+          <span><strong>Evaluation Close:</strong> ${escapeHtml(String(selectedRow.evaluation_inputs?.close_date || displayDash()))}</span>
+        </p>
+        ${renderCheckerComparisonTable(selectedRow.differences || [])}
+        ${renderCheckerFactorTable(selectedRow.factor_comparisons || [])}
+      </article>
+    </section>
+  `;
+}
+
 function renderResearchDataChecker(data = {}) {
-  const matrix24hRows = data.accuracy?.matrix_24h_rows || [];
-  const { matrix } = computeResearchMatrix(matrix24hRows, {
-    assetCode: "USD",
-    timeframe: "following 24hrs"
-  });
-  const totals = computeMatrixTotals(matrix);
+  const checker = data.checker || null;
+  const summary = checker?.summary || null;
+  const fieldsCompared = checker?.fields_compared || [];
+
+  if (!checker || !summary) {
+    return `
+      <div class="backtest-report">
+        <article class="detail-panel wide-panel research-secondary-panel">
+          <p class="eyebrow">Backtest Data Checker</p>
+          <h3>Checker data unavailable</h3>
+          <div class="empty-state matrix-evidence-empty">The generated checker artifact could not be loaded for this tab.</div>
+        </article>
+      </div>
+    `;
+  }
 
   return `
     <div class="backtest-report">
-      ${renderResearchEvidenceAudit(matrix24hRows, totals)}
+      <section class="research-section">
+        <div class="research-section-head">
+          <div>
+            <p class="eyebrow">Backtest Data Checker</p>
+            <h3>Independent replay reproducibility check</h3>
+          </div>
+          <p class="research-panel-copy">Phase 1 checker scope is USD only, 24H only, and January 2024 only. It loads stored replay rows, re-runs the same USD replay core from the historical snapshot, and compares stored vs checker output with exact and tolerance rules.</p>
+        </div>
+        <section class="backtest-metric-grid research-summary-grid checker-summary-grid">
+          ${renderBacktestKpiMetric("Rows Checked", String(summary.rows_checked ?? 0), "USD 24H January 2024")}
+          ${renderBacktestKpiMetric("Pass", String(summary.pass ?? 0), "Exact matches")}
+          ${renderBacktestKpiMetric("Tolerance Pass", String(summary.tolerance_pass ?? 0), `±${checker.meta?.tolerance_percentage_points ?? 0.5}pp numeric tolerance`)}
+          ${renderBacktestKpiMetric("Fail", String(summary.fail ?? 0), "Mismatch requires investigation")}
+          ${renderBacktestKpiMetric("Missing Data", String(summary.missing_data ?? 0), "Snapshot or evaluation missing")}
+        </section>
+        <article class="detail-panel wide-panel research-secondary-panel checker-meta-panel">
+          <p class="research-audit-line">
+            <span><strong>Generated:</strong> ${escapeHtml(formatDashboardTime(checker.meta?.generated_at))}</span>
+            <span><strong>Replay Core:</strong> ${escapeHtml(checker.meta?.replay_logic_source || "Unknown")}</span>
+            <span><strong>Evaluator:</strong> ${escapeHtml(checker.meta?.evaluation_logic_source || "Unknown")}</span>
+          </p>
+          <p class="research-panel-copy">Compared fields: ${escapeHtml(fieldsCompared.join(", "))}.</p>
+        </article>
+      </section>
+      ${renderCheckerRowDetail(checker)}
     </div>
   `;
 }
@@ -3694,6 +3887,22 @@ function setupBacktestEvidenceControls() {
       exportMatrixEvidenceCsv();
     }
   });
+
+  panel.addEventListener("change", event => {
+    const checkerSelect = event.target.closest("[data-checker-row-select]");
+    if (checkerSelect) {
+      activeCheckerRowId = checkerSelect.value || null;
+      renderBacktest(backtestData || {});
+    }
+  });
+}
+
+async function fetchLocalJson(url) {
+  const response = await fetch(url, { cache: "no-store" });
+  if (!response.ok) {
+    throw new Error(`${url} ${response.status}`);
+  }
+  return response.json();
 }
 
 async function fetchResearchView(viewName, options = {}) {
@@ -3736,6 +3945,10 @@ async function fetchResearchDashboardData() {
     console.warn("Could not load 24H benchmark matrix rows", err);
     return [];
   });
+  const checkerDataPromise = fetchLocalJson(checkerDataUrl).catch(err => {
+    console.warn("Could not load backtester checker data", err);
+    return null;
+  });
 
   const [
     overallRows,
@@ -3752,7 +3965,8 @@ async function fetchResearchDashboardData() {
     factorReliabilityRows,
     factorContributionRows,
     factorComboRows,
-    infrastructureRows
+    infrastructureRows,
+    checkerData
   ] = await Promise.all([
     fetchResearchView("research_overall_win_rate"),
     fetchResearchView("research_usd_24h_direction_accuracy"),
@@ -3777,7 +3991,8 @@ async function fetchResearchDashboardData() {
       order: "win_rate_pct.desc,combo_occurrences.desc,avg_combined_weight.desc",
       limit: 8
     }),
-    fetchResearchView("research_dashboard_infrastructure_status")
+    fetchResearchView("research_dashboard_infrastructure_status"),
+    checkerDataPromise
   ]);
 
   return {
@@ -3802,7 +4017,8 @@ async function fetchResearchDashboardData() {
       top_factor_contribution: factorContributionRows,
       best_factor_combinations: factorComboRows
     },
-    infrastructure: infrastructureRows[0] || {}
+    infrastructure: infrastructureRows[0] || {},
+    checker: checkerData
   };
 }
 
