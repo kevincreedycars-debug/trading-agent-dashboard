@@ -22,6 +22,68 @@ let workflowPollTimer = null;
 let workflowTriggerInFlight = false;
 let activeTab = "overview";
 let activeBacktestTab = "accuracy";
+const navigationStateKey = "dashboard-navigation-state";
+
+function storageAvailable() {
+  try {
+    return typeof window !== "undefined" && !!window.localStorage;
+  } catch (err) {
+    return false;
+  }
+}
+
+function getAvailableTopLevelTabs() {
+  return Array.from(document.querySelectorAll(".tab-button"))
+    .map(btn => btn.dataset.tab)
+    .filter(Boolean);
+}
+
+function getAvailableBacktestTabs() {
+  return Array.from(document.querySelectorAll(".subtab-button"))
+    .map(btn => btn.dataset.backtestTab)
+    .filter(Boolean);
+}
+
+function saveNavigationState() {
+  if (!storageAvailable()) return;
+  try {
+    window.localStorage.setItem(navigationStateKey, JSON.stringify({
+      activeTab,
+      activeBacktestTab
+    }));
+  } catch (err) {
+    console.warn("Could not save dashboard navigation state", err);
+  }
+}
+
+function restoreNavigationState() {
+  const availableTabs = getAvailableTopLevelTabs();
+  const availableBacktestTabs = getAvailableBacktestTabs();
+
+  if (!storageAvailable()) {
+    activeTab = availableTabs.includes("overview") ? "overview" : (availableTabs[0] || "overview");
+    activeBacktestTab = availableBacktestTabs.includes("accuracy") ? "accuracy" : (availableBacktestTabs[0] || "accuracy");
+    return;
+  }
+
+  try {
+    const parsed = JSON.parse(window.localStorage.getItem(navigationStateKey) || "{}");
+    const savedTopLevelTab = String(parsed.activeTab || "").trim();
+    const savedBacktestTab = String(parsed.activeBacktestTab || "").trim();
+
+    activeTab = availableTabs.includes(savedTopLevelTab)
+      ? savedTopLevelTab
+      : (availableTabs.includes("overview") ? "overview" : (availableTabs[0] || "overview"));
+
+    activeBacktestTab = availableBacktestTabs.includes(savedBacktestTab)
+      ? savedBacktestTab
+      : (availableBacktestTabs.includes("accuracy") ? "accuracy" : (availableBacktestTabs[0] || "accuracy"));
+  } catch (err) {
+    console.warn("Could not restore dashboard navigation state", err);
+    activeTab = availableTabs.includes("overview") ? "overview" : (availableTabs[0] || "overview");
+    activeBacktestTab = availableBacktestTabs.includes("accuracy") ? "accuracy" : (availableBacktestTabs[0] || "accuracy");
+  }
+}
 
 function updateClock() {
   const el = document.getElementById("currentTime");
@@ -3066,10 +3128,13 @@ function setupWorkflowControls() {
 }
 
 function setTab(tab) {
-  activeTab = tab;
+  const availableTabs = getAvailableTopLevelTabs();
+  const fallbackTab = availableTabs.includes("overview") ? "overview" : (availableTabs[0] || "overview");
+  activeTab = availableTabs.includes(tab) ? tab : fallbackTab;
+  saveNavigationState();
 
   document.querySelectorAll(".tab-button").forEach(btn => {
-    btn.classList.toggle("active", btn.dataset.tab === tab);
+    btn.classList.toggle("active", btn.dataset.tab === activeTab);
   });
 
   const overviewView = document.getElementById("overviewView");
@@ -3077,13 +3142,29 @@ function setTab(tab) {
   const backtestView = document.getElementById("backtestView");
   const agentView = document.getElementById("agentView");
 
-  if (overviewView) overviewView.classList.toggle("active-view", tab === "overview");
-  if (layer2View) layer2View.classList.toggle("active-view", tab === "layer2");
-  if (backtestView) backtestView.classList.toggle("active-view", tab === "backtest");
-  if (agentView) agentView.classList.toggle("active-view", orderedAgents.includes(tab));
+  if (overviewView) overviewView.classList.toggle("active-view", activeTab === "overview");
+  if (layer2View) layer2View.classList.toggle("active-view", activeTab === "layer2");
+  if (backtestView) backtestView.classList.toggle("active-view", activeTab === "backtest");
+  if (agentView) agentView.classList.toggle("active-view", orderedAgents.includes(activeTab));
 
-  if (orderedAgents.includes(tab)) renderAgentDetail(tab);
-  if (tab === "backtest") renderBacktest(backtestData || {});
+  if (orderedAgents.includes(activeTab)) renderAgentDetail(activeTab);
+  if (activeTab === "backtest") renderBacktest(backtestData || {});
+}
+
+function setBacktestTab(tab, options = {}) {
+  const availableTabs = getAvailableBacktestTabs();
+  const fallbackTab = availableTabs.includes("accuracy") ? "accuracy" : (availableTabs[0] || "accuracy");
+  activeBacktestTab = availableTabs.includes(tab) ? tab : fallbackTab;
+
+  document.querySelectorAll(".subtab-button").forEach(btn => {
+    btn.classList.toggle("active", btn.dataset.backtestTab === activeBacktestTab);
+  });
+
+  saveNavigationState();
+
+  if (!options.skipRender) {
+    renderBacktest(backtestData || {});
+  }
 }
 
 function setupTabs() {
@@ -3092,13 +3173,7 @@ function setupTabs() {
   });
 
   document.querySelectorAll(".subtab-button").forEach(btn => {
-    btn.addEventListener("click", () => {
-      activeBacktestTab = btn.dataset.backtestTab || "accuracy";
-      document.querySelectorAll(".subtab-button").forEach(item => {
-        item.classList.toggle("active", item === btn);
-      });
-      renderBacktest(backtestData || {});
-    });
+    btn.addEventListener("click", () => setBacktestTab(btn.dataset.backtestTab || "accuracy"));
   });
 }
 
@@ -3263,6 +3338,9 @@ async function loadDashboard() {
 }
 
 setupTabs();
+restoreNavigationState();
+setBacktestTab(activeBacktestTab, { skipRender: true });
+setTab(activeTab);
 setupWorkflowControls();
 initMarketGlobe();
 updateClock();
