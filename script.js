@@ -2057,8 +2057,46 @@ function confidenceBandStrengthKey(value) {
   return null;
 }
 
+function parseConfidenceCandidate(value) {
+  if (value === null || value === undefined) return null;
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (!trimmed) return null;
+    const normalized = trimmed.replace(/%/g, "").replace(/,/g, "");
+    const numeric = Number(normalized);
+    return Number.isFinite(numeric) ? numeric : null;
+  }
+  const numeric = Number(value);
+  return Number.isFinite(numeric) ? numeric : null;
+}
+
+function normalizeConfidencePercent(row = {}) {
+  const candidates = [
+    row.agent_conviction,
+    row.predicted_conviction,
+    row.confidence,
+    row.conviction
+  ];
+
+  for (const candidate of candidates) {
+    const numeric = parseConfidenceCandidate(candidate);
+    if (!Number.isFinite(numeric)) continue;
+
+    if (numeric >= 0.5 && numeric <= 1) {
+      return roundTo(numeric * 100, 1);
+    }
+
+    if (numeric >= 0 && numeric <= 100) {
+      return roundTo(numeric, 1);
+    }
+  }
+
+  return null;
+}
+
 function normalizeResearchMatrixStrength(row = {}) {
-  return confidenceBandStrengthKey(row.agent_conviction ?? row.predicted_conviction);
+  const confidencePct = normalizeConfidencePercent(row);
+  return confidenceBandStrengthKey(confidencePct);
 }
 
 function normaliseResearchRows(rows) {
@@ -2076,8 +2114,17 @@ function computeResearchMatrix(rows = [], options = {}) {
   const assetCode = options.assetCode || "USD";
   const timeframe = options.timeframe || "following 24hrs";
   const safeRows = normaliseResearchRows(rows);
+  const filteredRows = safeRows.filter(row =>
+    (!assetCode || row.asset_code === assetCode) &&
+    (!timeframe || row.timeframe === timeframe)
+  );
   const matrix = {};
   let usableRowCount = 0;
+  const exclusionCounts = {};
+
+  const trackExclusion = (reason) => {
+    exclusionCounts[reason] = (exclusionCounts[reason] || 0) + 1;
+  };
 
   matrixDirectionBuckets.forEach(direction => {
     matrix[direction.key] = {};
@@ -2090,18 +2137,27 @@ function computeResearchMatrix(rows = [], options = {}) {
     });
   });
 
-  safeRows
-    .filter(row =>
-      (!assetCode || row.asset_code === assetCode) &&
-      (!timeframe || row.timeframe === timeframe)
-    )
-    .forEach(row => {
+  filteredRows.forEach(row => {
       const directionKey = normalizeResearchMatrixDirection(row.predicted_direction || row.agent_direction);
       const strengthKey = normalizeResearchMatrixStrength(row);
       const result = String(row.combined_result || "").trim().toUpperCase();
 
-      if (!directionKey || !strengthKey) return;
-      if (!["CORRECT", "WRONG", "FLAT"].includes(result)) return;
+      if (!["CORRECT", "WRONG", "FLAT"].includes(result)) {
+        trackExclusion("unsupported_result");
+        return;
+      }
+      if (!directionKey) {
+        trackExclusion("unsupported_direction");
+        return;
+      }
+      if (!metricAvailable(normalizeConfidencePercent(row))) {
+        trackExclusion("missing_confidence");
+        return;
+      }
+      if (!strengthKey) {
+        trackExclusion("unsupported_confidence_band");
+        return;
+      }
 
       const bucket = matrix[directionKey][strengthKey];
       usableRowCount += 1;
@@ -2123,10 +2179,16 @@ function computeResearchMatrix(rows = [], options = {}) {
     });
   });
 
+  const mostCommonExclusionReason = Object.entries(exclusionCounts)
+    .sort((a, b) => b[1] - a[1])[0]?.[0] || "none";
+
   return {
     matrix,
-    sourceRowCount: safeRows.length,
-    usableRowCount
+    sourceRowCount: filteredRows.length,
+    usableRowCount,
+    excludedRowCount: Math.max(0, filteredRows.length - usableRowCount),
+    mostCommonExclusionReason,
+    exclusionCounts
   };
 }
 
@@ -2196,9 +2258,10 @@ function formatEvaluationResult(value = "") {
 }
 
 function formatConvictionPercent(value) {
-  const numeric = Number(value);
+  const numeric = parseConfidenceCandidate(value);
   if (!Number.isFinite(numeric)) return "&mdash;";
-  const rounded = roundTo(numeric, 1);
+  const normalized = numeric >= 0.5 && numeric <= 1 ? numeric * 100 : numeric;
+  const rounded = roundTo(normalized, 1);
   const display = Math.abs(rounded - Math.round(rounded)) < 0.05 ? Math.round(rounded) : rounded;
   return `${display}%`;
 }
@@ -2302,8 +2365,8 @@ function buildResearchEvidenceRows(rows = [], options = {}) {
         assetCode: row.asset_code || assetCode,
         timeframe: formatResearchTimeframeLabel(row.timeframe),
         direction: titleCaseWords(normaliseDirection(row.agent_direction || row.predicted_direction || "Unknown")),
-        convictionPct: formatConvictionPercent(row.agent_conviction ?? row.predicted_conviction),
-        strengthBucket: formatProductionStrength(row.agent_conviction ?? row.predicted_conviction),
+        convictionPct: formatConvictionPercent(normalizeConfidencePercent(row)),
+        strengthBucket: formatProductionStrength(normalizeConfidencePercent(row)),
         benchmark: row.benchmark_market || "Unknown",
         startPrice: formatBenchmarkPrice(row.open_price),
         endPrice: formatBenchmarkPrice(row.close_price),
@@ -2500,9 +2563,19 @@ function renderResearchDefinitions() {
 function renderResearch24hAccuracyMatrix(rows = [], options = {}) {
   const assetLabel = options.assetLabel || "USD";
   const timeframeLabel = options.timeframeLabel || "24H";
-  const { matrix, sourceRowCount, usableRowCount } = computeResearchMatrix(rows, options);
+  const {
+    matrix,
+    sourceRowCount,
+    usableRowCount,
+    excludedRowCount,
+    mostCommonExclusionReason
+  } = computeResearchMatrix(rows, options);
 
   const showWarning = !sourceRowCount || !usableRowCount;
+  const hasDiagnostic = sourceRowCount > 0;
+  const exclusionReasonText = mostCommonExclusionReason === "none"
+    ? "none"
+    : titleCaseWords(mostCommonExclusionReason);
 
   return `
     <section class="research-section">
@@ -2556,6 +2629,17 @@ function renderResearch24hAccuracyMatrix(rows = [], options = {}) {
           </table>
         </div>
         ${showWarning ? `<p class="research-matrix-warning">No evaluated 24H USD benchmark rows available from research view.</p>` : ""}
+        ${hasDiagnostic ? `
+          <p class="research-matrix-diagnostic">
+            Fetched research rows: ${sourceRowCount}
+            <span>&bull;</span>
+            Rows included in matrix: ${usableRowCount}
+            <span>&bull;</span>
+            Rows excluded: ${excludedRowCount}
+            <span>&bull;</span>
+            Most common exclusion reason: ${escapeHtml(exclusionReasonText)}
+          </p>
+        ` : ""}
         <p class="research-matrix-note">Empty buckets stay empty. No mock accuracy is shown when the live research layer has no evaluated calls for that bucket.</p>
       </article>
     </section>
@@ -3049,7 +3133,7 @@ async function fetchResearchView(viewName, options = {}) {
 
 async function fetchResearchDashboardData() {
   const matrix24hRowsPromise = fetchResearchView("research_prediction_usd_benchmark_summary", {
-    select: "asset_code,timeframe,predicted_direction,agent_direction,verdict_strength,combined_result",
+    select: "snapshot_date,asset_code,timeframe,predicted_direction,agent_direction,agent_conviction,predicted_conviction,verdict_strength,combined_result,benchmark_market,open_price,close_price,pct_change",
     order: "timeframe.asc,predicted_direction.asc,verdict_strength.asc",
     filters: {
       timeframe: "eq.following 24hrs"
