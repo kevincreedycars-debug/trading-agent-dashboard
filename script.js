@@ -1922,11 +1922,26 @@ function percentValue(value) {
   return value === null || value === undefined || value === "" ? "--" : `${Number(value)}%`;
 }
 
+function displayDash() {
+  return "—";
+}
+
 function renderBacktestMetric(label, value, detail = "") {
   return `
     <article class="backtest-metric-card">
       <p class="eyebrow">${escapeHtml(label)}</p>
       <h3>${escapeHtml(value)}</h3>
+      ${detail ? `<span>${escapeHtml(detail)}</span>` : ""}
+    </article>
+  `;
+}
+
+function renderBacktestKpiMetric(label, primary, secondary = "", detail = "") {
+  return `
+    <article class="backtest-metric-card backtest-kpi-card">
+      <p class="eyebrow">${escapeHtml(label)}</p>
+      <h3>${escapeHtml(primary)}</h3>
+      ${secondary ? `<strong class="backtest-kpi-secondary">${escapeHtml(secondary)}</strong>` : ""}
       ${detail ? `<span>${escapeHtml(detail)}</span>` : ""}
     </article>
   `;
@@ -2272,7 +2287,7 @@ function getResearchRowExclusionReason(row = {}) {
 }
 
 function formatMatrixAccuracy(value) {
-  if (!metricAvailable(value)) return "&mdash; accuracy";
+  if (!metricAvailable(value)) return `${displayDash()} accuracy`;
   const numeric = Number(value);
   const rounded = Math.abs(numeric - Math.round(numeric)) < 0.05
     ? Math.round(numeric)
@@ -2308,7 +2323,7 @@ function titleCaseWords(value = "") {
 }
 
 function formatMatrixCorrectCount(value) {
-  return metricAvailable(value) ? `${value} correct` : "&mdash; correct";
+  return metricAvailable(value) ? `${value} correct` : `${displayDash()} correct`;
 }
 
 function formatResearchTimeframeLabel(value = "") {
@@ -2320,7 +2335,7 @@ function formatResearchTimeframeLabel(value = "") {
 
 function formatBenchmarkMove(value) {
   const numeric = Number(value);
-  if (!Number.isFinite(numeric)) return "&mdash;";
+  if (!Number.isFinite(numeric)) return displayDash();
   const rounded = roundTo(numeric, 2);
   const sign = rounded > 0 ? "+" : "";
   return `${sign}${rounded}%`;
@@ -2338,7 +2353,7 @@ function formatEvaluationResult(value = "") {
 
 function formatConvictionPercent(value) {
   const numeric = parseConfidenceCandidate(value);
-  if (!Number.isFinite(numeric)) return "&mdash;";
+  if (!Number.isFinite(numeric)) return displayDash();
   const normalized = numeric >= 0.5 && numeric <= 1 ? numeric * 100 : numeric;
   const rounded = roundTo(normalized, 1);
   const display = Math.abs(rounded - Math.round(rounded)) < 0.05 ? Math.round(rounded) : rounded;
@@ -2352,14 +2367,14 @@ function formatProductionStrength(value = "") {
 
 function formatBenchmarkPrice(value) {
   const numeric = Number(value);
-  if (!Number.isFinite(numeric)) return "&mdash;";
+  if (!Number.isFinite(numeric)) return displayDash();
   return String(roundTo(numeric, 4));
 }
 
 function formatFallbackCell(value) {
-  if (value === null || value === undefined) return "&mdash;";
+  if (value === null || value === undefined) return displayDash();
   const text = String(value).trim();
-  return text ? escapeHtml(text) : "&mdash;";
+  return text ? escapeHtml(text) : displayDash();
 }
 
 function buildResearchEvidenceAudit(rows = [], options = {}) {
@@ -2413,7 +2428,7 @@ function buildResearchEvidenceAudit(rows = [], options = {}) {
         : "Unmapped",
       matrixCellKey: directionKey && strengthKey ? `${directionKey}__${strengthKey}` : "unmapped",
       predictionId: getResearchRowIdentifier(row),
-      predictionIdDisplay: getResearchRowIdentifier(row) ? escapeHtml(String(getResearchRowIdentifier(row))) : "&mdash;",
+      predictionIdDisplay: getResearchRowIdentifier(row) ? escapeHtml(String(getResearchRowIdentifier(row))) : displayDash(),
       exclusionReasonKey: exclusionReason,
       exclusionReason: exclusionReason ? titleCaseWords(exclusionReason) : "Included"
     };
@@ -2537,16 +2552,42 @@ function formatAccuracyWithCounts(correct, total) {
   const accuracyPct = safeTotal ? roundTo((safeCorrect / safeTotal) * 100, 1) : null;
   return {
     countLine: `${safeCorrect} / ${safeTotal} correct`,
-    accuracyLine: metricAvailable(accuracyPct) ? `${formatMatrixAccuracy(accuracyPct)}` : "&mdash; accuracy"
+    accuracyLine: metricAvailable(accuracyPct) ? `${formatMatrixAccuracy(accuracyPct)}` : `${displayDash()} accuracy`
   };
 }
 
 function formatRateLine(numerator, denominator, label) {
   const safeNumerator = Number(numerator || 0);
   const safeDenominator = Number(denominator || 0);
-  if (!safeDenominator) return `${label}: &mdash;`;
+  if (!safeDenominator) return `${label}: ${displayDash()}`;
   const pct = roundTo((safeNumerator / safeDenominator) * 100, 1);
   return `${label}: ${safeNumerator} / ${safeDenominator} = ${percentValue(pct)}`;
+}
+
+function formatCompactRateMetric(numerator, denominator, options = {}) {
+  const safeNumerator = Number(numerator || 0);
+  const safeDenominator = Number(denominator || 0);
+  const numeratorLabel = options.numeratorLabel || null;
+  const countSuffix = options.countSuffix || "";
+
+  if (!safeDenominator) {
+    return {
+      primary: displayDash(),
+      secondary: numeratorLabel ? `${safeNumerator} / ${safeDenominator} ${numeratorLabel}`.trim() : `${safeNumerator} / ${safeDenominator}`.trim(),
+      detail: options.emptyDetail || "No evaluated rows"
+    };
+  }
+
+  const pct = roundTo((safeNumerator / safeDenominator) * 100, 1);
+  const secondaryBase = numeratorLabel
+    ? `${safeNumerator} / ${safeDenominator} ${numeratorLabel}`.trim()
+    : `${safeNumerator} / ${safeDenominator}`;
+
+  return {
+    primary: percentValue(pct),
+    secondary: `${secondaryBase}${countSuffix}`.trim(),
+    detail: options.detail || ""
+  };
 }
 
 function formatMatrixRateBundle(correct, wrong, flat, total) {
@@ -2561,6 +2602,42 @@ function formatMatrixRateBundle(correct, wrong, flat, total) {
     exFlat: formatRateLine(safeCorrect, exFlatDenominator, "Decision Win Rate Ex-Flat"),
     flat: formatRateLine(safeFlat, safeTotal, "Flat Outcomes")
   };
+}
+
+function buildMatrixSummaryCards(directionTotals = {}, resultTotals = {}) {
+  const overallIncludingFlat = formatCompactRateMetric(resultTotals.correct, resultTotals.evaluated, {
+    numeratorLabel: "correct"
+  });
+  const overallExFlat = formatCompactRateMetric(resultTotals.correct, resultTotals.correct + resultTotals.wrong, {
+    detail: "(excludes flat)"
+  });
+  const overallFlat = formatCompactRateMetric(resultTotals.flat, resultTotals.evaluated);
+
+  const buildDirectionCard = (label, totals) => {
+    const includingFlat = formatCompactRateMetric(totals.correct, totals.total);
+    const exFlat = formatCompactRateMetric(totals.correct, totals.correct + totals.wrong, {
+      emptyDetail: "Ex-flat: —"
+    });
+    return renderBacktestKpiMetric(
+      label,
+      includingFlat.primary,
+      `${totals.correct} / ${totals.total}`,
+      `Ex-flat: ${exFlat.primary} · Flat: ${totals.flat} / ${totals.total}`
+    );
+  };
+
+  return `
+    ${renderBacktestKpiMetric("Total Evaluated", String(resultTotals.evaluated), "Included matrix rows")}
+    ${renderBacktestKpiMetric("Correct", String(resultTotals.correct), "Directional wins")}
+    ${renderBacktestKpiMetric("Wrong", String(resultTotals.wrong), "Directional misses")}
+    ${renderBacktestKpiMetric("Flat", String(resultTotals.flat), "Flat benchmark outcomes")}
+    ${renderBacktestKpiMetric("Accuracy (Incl. Flat)", overallIncludingFlat.primary, overallIncludingFlat.secondary)}
+    ${renderBacktestKpiMetric("Decision Win Rate", overallExFlat.primary, overallExFlat.secondary, overallExFlat.detail)}
+    ${renderBacktestKpiMetric("Flat Outcomes", overallFlat.primary, overallFlat.secondary)}
+    ${buildDirectionCard("Bullish", directionTotals.bullish)}
+    ${buildDirectionCard("Bearish", directionTotals.bearish)}
+    ${buildDirectionCard("Neutral", directionTotals.neutral)}
+  `;
 }
 
 function buildResearchEvidenceRows(rows = [], options = {}) {
@@ -2659,17 +2736,17 @@ function renderMatrixEvidenceSummaryGrid(audit = {}) {
       </div>
       <div class="matrix-evidence-summary-card">
         <span>Accuracy Including Flat</span>
-        <strong>${metricAvailable(audit.overallAccuracyPct) ? percentValue(audit.overallAccuracyPct) : "&mdash;"}</strong>
+        <strong>${metricAvailable(audit.overallAccuracyPct) ? percentValue(audit.overallAccuracyPct) : displayDash()}</strong>
         <small>${rateBundle.includingFlat}</small>
       </div>
       <div class="matrix-evidence-summary-card">
         <span>Decision Win Rate Ex-Flat</span>
-        <strong>${metricAvailable(audit.decisionWinRateExFlatPct) ? percentValue(audit.decisionWinRateExFlatPct) : "&mdash;"}</strong>
+        <strong>${metricAvailable(audit.decisionWinRateExFlatPct) ? percentValue(audit.decisionWinRateExFlatPct) : displayDash()}</strong>
         <small>${rateBundle.exFlat}</small>
       </div>
       <div class="matrix-evidence-summary-card">
         <span>Flat Outcomes</span>
-        <strong>${metricAvailable(audit.flatOutcomePct) ? percentValue(audit.flatOutcomePct) : "&mdash;"}</strong>
+        <strong>${metricAvailable(audit.flatOutcomePct) ? percentValue(audit.flatOutcomePct) : displayDash()}</strong>
         <small>${rateBundle.flat}</small>
       </div>
     </div>
@@ -2732,15 +2809,15 @@ function renderMatrixEvidenceRows(rows = [], kind = "included") {
               <td>${formatFallbackCell(row.assetCode)}</td>
               <td>${formatFallbackCell(row.timeframe)}</td>
               <td>${formatFallbackCell(row.directionLabel)}</td>
-              <td>${row.convictionPct || "&mdash;"}</td>
+              <td>${row.convictionPct || displayDash()}</td>
               <td>${formatFallbackCell(row.strengthBucket)}</td>
               <td>${formatFallbackCell(row.benchmark)}</td>
-              <td>${row.startPrice || "&mdash;"}</td>
-              <td>${row.endPrice || "&mdash;"}</td>
-              <td>${row.benchmarkMove || "&mdash;"}</td>
+              <td>${row.startPrice || displayDash()}</td>
+              <td>${row.endPrice || displayDash()}</td>
+              <td>${row.benchmarkMove || displayDash()}</td>
               <td>${formatFallbackCell(row.result)}</td>
               <td>${formatFallbackCell(row.matrixCell)}</td>
-              <td>${row.predictionIdDisplay || "&mdash;"}</td>
+              <td>${row.predictionIdDisplay || displayDash()}</td>
               ${kind === "excluded" ? `<td>${formatFallbackCell(row.exclusionReason)}</td>` : ""}
             </tr>
           `).join("")}
@@ -2895,11 +2972,6 @@ function renderResearchDataChecker(data = {}) {
 
 function renderMatrixSummary(rows = [], options = {}) {
   const { directionTotals, resultTotals } = computeMatrixSummary(rows, options);
-  const overall = formatMatrixRateBundle(resultTotals.correct, resultTotals.wrong, resultTotals.flat, resultTotals.evaluated);
-  const bullish = formatMatrixRateBundle(directionTotals.bullish.correct, directionTotals.bullish.wrong, directionTotals.bullish.flat, directionTotals.bullish.total);
-  const bearish = formatMatrixRateBundle(directionTotals.bearish.correct, directionTotals.bearish.wrong, directionTotals.bearish.flat, directionTotals.bearish.total);
-  const neutral = formatMatrixRateBundle(directionTotals.neutral.correct, directionTotals.neutral.wrong, directionTotals.neutral.flat, directionTotals.neutral.total);
-
   return `
     <section class="research-section">
       <div class="research-section-head">
@@ -2910,16 +2982,7 @@ function renderMatrixSummary(rows = [], options = {}) {
         <p class="research-panel-copy">Compact totals from the same evaluated USD 24H matrix rows above.</p>
       </div>
       <section class="backtest-metric-grid research-summary-grid matrix-summary-grid matrix-summary-grid-compact">
-        ${renderBacktestMetric("Total Evaluated", String(resultTotals.evaluated), "Included matrix rows")}
-        ${renderBacktestMetric("Correct", String(resultTotals.correct), "Directional wins")}
-        ${renderBacktestMetric("Wrong", String(resultTotals.wrong), "Directional misses")}
-        ${renderBacktestMetric("Flat", String(resultTotals.flat), "Flat benchmark outcomes")}
-        ${renderBacktestMetric("Accuracy Including Flat", overall.includingFlat, "Correct / included rows")}
-        ${renderBacktestMetric("Decision Win Rate Ex-Flat", overall.exFlat, "Correct / (correct + wrong)")}
-        ${renderBacktestMetric("Flat Outcomes", overall.flat, "Flat / included rows")}
-        ${renderBacktestMetric("Bullish", bullish.includingFlat, `${bullish.exFlat} | ${bullish.flat}`)}
-        ${renderBacktestMetric("Bearish", bearish.includingFlat, `${bearish.exFlat} | ${bearish.flat}`)}
-        ${renderBacktestMetric("Neutral", neutral.includingFlat, `${neutral.exFlat} | ${neutral.flat}`)}
+        ${buildMatrixSummaryCards(directionTotals, resultTotals)}
       </section>
     </section>
   `;
@@ -3296,9 +3359,9 @@ function exportMatrixEvidenceCsv() {
       row.convictionPctValue ?? "",
       row.strengthBucket || "",
       row.benchmark || "",
-      row.startPrice === "&mdash;" ? "" : row.startPrice,
-      row.endPrice === "&mdash;" ? "" : row.endPrice,
-      row.benchmarkMove === "&mdash;" ? "" : row.benchmarkMove,
+      row.startPrice === displayDash() ? "" : row.startPrice,
+      row.endPrice === displayDash() ? "" : row.endPrice,
+      row.benchmarkMove === displayDash() ? "" : row.benchmarkMove,
       row.result || "",
       row.matrixCell || "",
       row.predictionId || ""
