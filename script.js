@@ -2077,10 +2077,16 @@ function normalizeResearchMatrixStrength(value = "") {
   return null;
 }
 
+function normaliseResearchRows(rows) {
+  return Array.isArray(rows) ? rows.filter(row => row && typeof row === "object") : [];
+}
+
 function computeResearchMatrix(rows = [], options = {}) {
   const assetCode = options.assetCode || "USD";
   const timeframe = options.timeframe || "following 24hrs";
+  const safeRows = normaliseResearchRows(rows);
   const matrix = {};
+  let usableRowCount = 0;
 
   matrixDirectionBuckets.forEach(direction => {
     matrix[direction.key] = {};
@@ -2093,7 +2099,7 @@ function computeResearchMatrix(rows = [], options = {}) {
     });
   });
 
-  rows
+  safeRows
     .filter(row =>
       (!assetCode || row.asset_code === assetCode) &&
       (!timeframe || row.timeframe === timeframe)
@@ -2107,6 +2113,7 @@ function computeResearchMatrix(rows = [], options = {}) {
       if (!["CORRECT", "WRONG", "FLAT"].includes(result)) return;
 
       const bucket = matrix[directionKey][strengthKey];
+      usableRowCount += 1;
       bucket.callCount += 1;
 
       if (directionKey === "neutral") {
@@ -2125,7 +2132,11 @@ function computeResearchMatrix(rows = [], options = {}) {
     });
   });
 
-  return matrix;
+  return {
+    matrix,
+    sourceRowCount: safeRows.length,
+    usableRowCount
+  };
 }
 
 function formatMatrixAccuracy(value) {
@@ -2147,7 +2158,28 @@ function matrixCellTone(callCount, accuracyPct) {
 function renderResearch24hAccuracyMatrix(rows = [], options = {}) {
   const assetLabel = options.assetLabel || "USD";
   const timeframeLabel = options.timeframeLabel || "24H";
-  const matrix = computeResearchMatrix(rows, options);
+  const { matrix, sourceRowCount, usableRowCount } = computeResearchMatrix(rows, options);
+
+  if (!sourceRowCount || !usableRowCount) {
+    return `
+      <section class="research-section">
+        <div class="research-section-head">
+          <div>
+            <p class="eyebrow">24H Accuracy Matrix</p>
+            <h3>${escapeHtml(assetLabel)} ${escapeHtml(timeframeLabel)} direction by strength</h3>
+          </div>
+          <p class="research-panel-copy">Live research rows were unavailable or did not map cleanly into the current 24H direction/strength buckets.</p>
+        </div>
+        <article class="detail-panel wide-panel research-matrix-panel">
+          <div class="research-matrix-meta">
+            <span><strong>Asset:</strong> ${escapeHtml(assetLabel)}</span>
+            <span><strong>Timeframe:</strong> ${escapeHtml(timeframeLabel)}</span>
+          </div>
+          <div class="empty-state research-matrix-empty">No evaluated 24H rows available.</div>
+        </article>
+      </section>
+    `;
+  }
 
   return `
     <section class="research-section">
@@ -2345,10 +2377,20 @@ function renderBacktest(data = {}) {
 
   const panel = document.getElementById("backtestPanel");
   if (!panel) return;
-
-  panel.innerHTML = activeBacktestTab === "correlation"
-    ? renderResearchInfrastructure(data)
-    : renderResearchAccuracy(data);
+  try {
+    panel.innerHTML = activeBacktestTab === "correlation"
+      ? renderResearchInfrastructure(data)
+      : renderResearchAccuracy(data);
+  } catch (err) {
+    console.error("Backtest render failed", err);
+    panel.innerHTML = `
+      <article class="detail-panel wide-panel research-matrix-panel">
+        <p class="eyebrow">Backtest / Accuracy</p>
+        <h3>Research view unavailable</h3>
+        <div class="empty-state research-matrix-empty">The Backtest / Accuracy panel could not render cleanly. Reload the page or inspect the research layer response.</div>
+      </article>
+    `;
+  }
 }
 
 function workflowErrorText(error) {
