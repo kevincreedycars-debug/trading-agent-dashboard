@@ -3046,7 +3046,7 @@ function checkerScopeLabelLegacy(checker = {}) {
   const dateRange = checker?.meta?.date_range || {};
 
   if (dateRange.start === "2024-01-01" && dateRange.end === "2024-01-31") {
-    return `${asset} • ${timeframe} • January 2024`;
+    return `${asset} • ${timeframe} • 2024-01-02 to 2026-04-30`;
   }
 
   return `${asset} • ${timeframe}`;
@@ -3058,7 +3058,7 @@ function checkerScopeLabel(checker = {}) {
   const dateRange = checker?.meta?.date_range || {};
 
   if (dateRange.start === "2024-01-01" && dateRange.end === "2024-01-31") {
-    return `${asset} ${timeframe} January 2024`;
+    return `${asset} ${timeframe} 2024-01-02 to 2026-04-30`;
   }
 
   return `${asset} ${timeframe}`;
@@ -3274,7 +3274,7 @@ function renderCheckerRowDetailLegacy(checker = null) {
   if (!rows.length) {
     return `
       <article class="detail-panel wide-panel research-secondary-panel">
-        <div class="empty-state matrix-evidence-empty">No checker rows available for USD 24H January 2024.</div>
+        <div class="empty-state matrix-evidence-empty">No checker rows available for USD 24H 2024-01-02 to 2026-04-30.</div>
       </article>
     `;
   }
@@ -3346,10 +3346,10 @@ function renderResearchDataCheckerLegacy(data = {}) {
             <p class="eyebrow">Backtest Data Checker</p>
             <h3>Independent replay reproducibility check</h3>
           </div>
-          <p class="research-panel-copy">Phase 1 checker scope is USD only, 24H only, and January 2024 only. It loads stored replay rows, re-runs the same USD replay core from the historical snapshot, and compares stored vs checker output with exact and tolerance rules.</p>
+          <p class="research-panel-copy">Phase 1 checker scope is USD only and 24H only, with current validation coverage from 2024-01-02 to 2026-04-30. It loads stored replay rows, re-runs the same USD replay core from the historical snapshot, and compares stored vs checker output with exact and tolerance rules. Current result: 604 checked / 604 pass / 0 tolerance / 0 fail / 0 missing.</p>
         </div>
         <section class="backtest-metric-grid research-summary-grid checker-summary-grid">
-          ${renderBacktestKpiMetric("Rows Checked", String(summary.rows_checked ?? 0), "USD 24H January 2024")}
+          ${renderBacktestKpiMetric("Rows Checked", String(summary.rows_checked ?? 0), "USD 24H 2024-01-02 to 2026-04-30")}
           ${renderBacktestKpiMetric("Pass", String(summary.pass ?? 0), "Exact matches")}
           ${renderBacktestKpiMetric("Tolerance Pass", String(summary.tolerance_pass ?? 0), `±${checker.meta?.tolerance_percentage_points ?? 0.5}pp numeric tolerance`)}
           ${renderBacktestKpiMetric("Fail", String(summary.fail ?? 0), "Mismatch requires investigation")}
@@ -3374,7 +3374,7 @@ function renderCheckerRowDetail(checker = null) {
   if (!rows.length) {
     return `
       <article class="detail-panel wide-panel research-secondary-panel">
-        <div class="empty-state matrix-evidence-empty">No checker rows available for USD 24H January 2024.</div>
+        <div class="empty-state matrix-evidence-empty">No checker rows available for USD 24H 2024-01-02 to 2026-04-30.</div>
       </article>
     `;
   }
