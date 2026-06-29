@@ -1,7 +1,10 @@
 const layer1Url = "./data/layer1.json";
 const layer2Url = "./data/layer2.json";
 const workflowControlUrl = "./data/workflow-control.json";
-const checkerDataUrl = "./data/backtester-checker-usd-24h-2024-01.json?v=20260629-usd-flatband-010";
+const checkerDataUrls = {
+  USD: "./data/backtester-checker-usd-24h-2024-01.json?v=20260629-usd-flatband-010",
+  EUR: "./data/backtester-checker-eur-24h-2024-2026.json?v=20260629-eur-flatband-015"
+};
 const researchSupabaseUrl = "https://eaolqbrlywczinfordvg.supabase.co/rest/v1";
 const researchSupabaseKey = "sb_publishable_k6YbEuuk3GyB9GVTQDtNVA_J1gCRYaY";
 
@@ -2712,6 +2715,29 @@ function renderResearch24hContext(summary = null) {
   `;
 }
 
+function renderResearchAsset24hContext(options = {}) {
+  const assetCode = options.assetCode || "USD";
+  const benchmark = options.benchmark || (assetCode === "EUR" ? "EURUSD" : "DXY");
+  const ruleText = options.ruleText || (
+    assetCode === "EUR"
+      ? `EUR bullish is correct when ${benchmark} rises over the following 24hrs; EUR bearish is correct when ${benchmark} falls; flat is a neutral market outcome when ${benchmark} remains inside the EUR/USD flat threshold.`
+      : `USD bullish is correct when ${benchmark} rises over the following 24hrs; USD bearish is correct when ${benchmark} falls; flat is a neutral market outcome when ${benchmark} remains inside the flat threshold.`
+  );
+
+  return `
+    <article class="detail-panel wide-panel research-matrix-panel">
+      <div class="research-matrix-meta">
+        <span><strong>Asset:</strong> ${escapeHtml(assetCode)}</span>
+        <span><strong>Timeframe:</strong> 24H</span>
+        <span><strong>Benchmark:</strong> ${escapeHtml(benchmark)}</span>
+      </div>
+      <p class="research-panel-copy research-matrix-rule">
+        <strong>Evaluation rule:</strong> ${escapeHtml(ruleText)}
+      </p>
+    </article>
+  `;
+}
+
 function renderMatrixEvidenceCountItems(counts = {}, orderedLabels = []) {
   const entries = orderedLabels.length
     ? orderedLabels
@@ -2866,6 +2892,7 @@ function renderMatrixEvidenceRows(rows = [], kind = "included") {
 
 function renderMatrixEvidenceAccordion(rows = [], options = {}) {
   const audit = buildResearchEvidenceAudit(rows, options);
+  const exportKey = options.exportKey || `${String(options.assetCode || "usd").toLowerCase()}-24h`;
   const filterButtons = [
     { key: "all", label: "All" },
     { key: "correct", label: "Correct" },
@@ -2900,7 +2927,7 @@ function renderMatrixEvidenceAccordion(rows = [], options = {}) {
               </button>
             `).join("")}
           </div>
-          <button class="matrix-evidence-export-button" type="button" data-export-matrix-evidence="usd-24h">Export Matrix Evidence CSV</button>
+          <button class="matrix-evidence-export-button" type="button" data-export-matrix-evidence="${escapeHtml(exportKey)}">Export Matrix Evidence CSV</button>
         </div>
         <div class="matrix-evidence-table-wrap">
           ${renderMatrixEvidenceRows(audit.includedRows, "included")}
@@ -3406,10 +3433,11 @@ function renderResearchDataCheckerLegacy(data = {}) {
 
 function renderCheckerRowDetail(checker = null) {
   const rows = checker?.rows || [];
+  const asset = checker?.meta?.asset || "USD";
   if (!rows.length) {
     return `
       <article class="detail-panel wide-panel research-secondary-panel">
-        <div class="empty-state matrix-evidence-empty">No checker rows available for USD 24H 2024-01-02 to 2026-04-30.</div>
+        <div class="empty-state matrix-evidence-empty">No checker rows available for ${escapeHtml(asset)} 24H checker scope.</div>
       </article>
     `;
   }
@@ -3433,7 +3461,7 @@ function renderCheckerRowDetail(checker = null) {
           <p class="eyebrow">Checker Detail</p>
           <h3>Stored vs checker re-run output</h3>
         </div>
-        <p class="research-panel-copy">This panel independently re-runs the USD replay from the historical snapshot, then compares it against the stored 24H backtester output and stored DXY evaluation row.</p>
+        <p class="research-panel-copy">This panel independently re-runs the ${escapeHtml(asset)} replay from the historical snapshot, then compares it against the stored 24H backtester output and stored primary evaluation row.</p>
       </div>
       <article class="detail-panel wide-panel research-secondary-panel checker-detail-panel">
         <div class="checker-toolbar">
@@ -3460,11 +3488,11 @@ function renderCheckerRowDetail(checker = null) {
 }
 
 function renderResearchDataChecker(data = {}) {
-  const checker = data.checker || null;
-  const summary = checker?.summary || null;
-  const fieldsCompared = checker?.fields_compared || [];
+  const availableCheckers = Object.entries(data.checkers || {})
+    .map(([assetCode, checker]) => ({ assetCode, checker }))
+    .filter(({ checker }) => checker?.summary);
 
-  if (!checker || !summary) {
+  if (!availableCheckers.length) {
     return `
       <div class="backtest-report">
         <article class="detail-panel wide-panel research-secondary-panel">
@@ -3476,32 +3504,40 @@ function renderResearchDataChecker(data = {}) {
     `;
   }
 
-  const selectedRowId = activeCheckerRowId && checker.rows.some(row => row.prediction_id === activeCheckerRowId)
-    ? activeCheckerRowId
-    : (checker.selected_row_id || checker.rows?.[0]?.prediction_id);
-
   return `
     <div class="backtest-report">
-      ${renderCheckerWorkspaceHeader(checker, summary)}
-      <section class="research-section">
-        ${renderCheckerSummaryBlock(checker, summary, fieldsCompared)}
-      </section>
-      ${renderCheckerTriageTable(checker, selectedRowId)}
-      ${renderCheckerRowDetail(checker)}
+      ${availableCheckers.map(({ checker }) => {
+        const summary = checker.summary || null;
+        const fieldsCompared = checker.fields_compared || [];
+        const selectedRowId = activeCheckerRowId && checker.rows.some(row => row.prediction_id === activeCheckerRowId)
+          ? activeCheckerRowId
+          : (checker.selected_row_id || checker.rows?.[0]?.prediction_id);
+
+        return `
+          ${renderCheckerWorkspaceHeader(checker, summary)}
+          <section class="research-section">
+            ${renderCheckerSummaryBlock(checker, summary, fieldsCompared)}
+          </section>
+          ${renderCheckerTriageTable(checker, selectedRowId)}
+          ${renderCheckerRowDetail(checker)}
+        `;
+      }).join("")}
     </div>
   `;
 }
 
 function renderMatrixSummary(rows = [], options = {}) {
+  const assetLabel = options.assetLabel || "USD";
+  const timeframeLabel = options.timeframeLabel || "24H";
   const { directionTotals, resultTotals } = computeMatrixSummary(rows, options);
   return `
     <section class="research-section">
       <div class="research-section-head">
         <div>
           <p class="eyebrow">Matrix Summary</p>
-          <h3>24H totals derived from the matrix rows</h3>
+          <h3>${escapeHtml(assetLabel)} ${escapeHtml(timeframeLabel)} totals derived from the matrix rows</h3>
         </div>
-        <p class="research-panel-copy">Compact totals from the same evaluated USD 24H matrix rows above. Flat outcomes remain separate from directional wins and losses, so ex-flat win rate is the primary directional read.</p>
+        <p class="research-panel-copy">Compact totals from the same evaluated ${escapeHtml(assetLabel)} ${escapeHtml(timeframeLabel)} matrix rows above. Flat outcomes remain separate from directional wins and losses, so ex-flat win rate is the primary directional read.</p>
       </div>
       <section class="backtest-metric-grid research-summary-grid matrix-summary-grid matrix-summary-grid-compact">
         ${buildMatrixSummaryCards(directionTotals, resultTotals)}
@@ -3558,6 +3594,7 @@ function renderResearchDefinitions() {
 function renderResearch24hAccuracyMatrix(rows = [], options = {}) {
   const assetLabel = options.assetLabel || "USD";
   const timeframeLabel = options.timeframeLabel || "24H";
+  const sourceView = options.sourceView || "research_prediction_usd_benchmark_summary";
   const {
     matrix,
     sourceRowCount,
@@ -3624,7 +3661,7 @@ function renderResearch24hAccuracyMatrix(rows = [], options = {}) {
             </tbody>
           </table>
         </div>
-        ${showWarning ? `<p class="research-matrix-warning">No evaluated 24H USD benchmark rows available from research view.</p>` : ""}
+        ${showWarning ? `<p class="research-matrix-warning">No evaluated ${escapeHtml(timeframeLabel)} ${escapeHtml(assetLabel)} rows available from the configured research source.</p>` : ""}
         ${hasDiagnostic ? `
           <p class="research-matrix-diagnostic">
             Fetched research rows: ${sourceRowCount}
@@ -3641,10 +3678,30 @@ function renderResearch24hAccuracyMatrix(rows = [], options = {}) {
       ${renderMatrixEvidenceAccordion(rows, {
         assetCode: options.assetCode,
         timeframe: options.timeframe,
-        sourceView: options.sourceView || "research_prediction_usd_benchmark_summary"
+        sourceView,
+        exportKey: options.exportKey
       })}
     </section>
   `;
+}
+
+function normalizeEurMatrixRows(rows = []) {
+  return normaliseResearchRows(rows).map(row => ({
+    snapshot_date: row.call_date || row.snapshot_date || "",
+    asset_code: row.asset_code || "EUR",
+    timeframe: row.timeframe,
+    predicted_direction: row.agent_direction,
+    agent_direction: row.agent_direction,
+    predicted_conviction: row.agent_conviction,
+    agent_conviction: row.agent_conviction,
+    headline_confidence_pct: row.agent_conviction,
+    benchmark_market: row.evaluated_market || "EURUSD",
+    open_price: row.open_price,
+    close_price: row.close_price,
+    pct_change: row.pct_change,
+    combined_result: row.result,
+    prediction_id: row.prediction_id
+  }));
 }
 
 function renderResearchVerdictQuality(data = {}) {
@@ -3729,12 +3786,8 @@ function renderResearchTradeQuality(data = {}) {
 
 function renderResearchAccuracy(data = {}) {
   const summary24h = data.accuracy?.summary_24h || null;
-  const matrix24hRows = data.accuracy?.matrix_24h_rows || [];
-  const { matrix } = computeResearchMatrix(matrix24hRows, {
-    assetCode: "USD",
-    timeframe: "following 24hrs"
-  });
-  const totals = computeMatrixTotals(matrix);
+  const usdMatrix24hRows = data.accuracy?.matrix_24h_rows || [];
+  const eurMatrix24hRows = data.accuracy?.eur_matrix_24h_rows || [];
 
   if (data.meta?.error) {
     return `
@@ -3749,17 +3802,41 @@ function renderResearchAccuracy(data = {}) {
   return `
     <div class="backtest-report">
       ${renderResearchStatusHeader(data)}
-      ${renderResearch24hContext(summary24h)}
-      ${renderResearch24hAccuracyMatrix(matrix24hRows, {
+      ${renderResearchAsset24hContext({
+        assetCode: "USD",
+        benchmark: summary24h?.benchmark_market || "DXY"
+      })}
+      ${renderResearch24hAccuracyMatrix(usdMatrix24hRows, {
         assetCode: "USD",
         assetLabel: "USD",
         timeframe: "following 24hrs",
         timeframeLabel: "24H",
-        sourceView: "research_prediction_usd_benchmark_summary"
+        sourceView: "research_prediction_usd_benchmark_summary",
+        exportKey: "usd-24h"
       })}
-      ${renderMatrixSummary(matrix24hRows, {
+      ${renderMatrixSummary(usdMatrix24hRows, {
         assetCode: "USD",
-        timeframe: "following 24hrs"
+        timeframe: "following 24hrs",
+        assetLabel: "USD",
+        timeframeLabel: "24H"
+      })}
+      ${renderResearchAsset24hContext({
+        assetCode: "EUR",
+        benchmark: "EURUSD"
+      })}
+      ${renderResearch24hAccuracyMatrix(eurMatrix24hRows, {
+        assetCode: "EUR",
+        assetLabel: "EUR",
+        timeframe: "following 24hrs",
+        timeframeLabel: "24H",
+        sourceView: "research_prediction_evaluations",
+        exportKey: "eur-24h"
+      })}
+      ${renderMatrixSummary(eurMatrix24hRows, {
+        assetCode: "EUR",
+        timeframe: "following 24hrs",
+        assetLabel: "EUR",
+        timeframeLabel: "24H"
       })}
       ${renderResearchDefinitions()}
     </div>
@@ -3846,12 +3923,19 @@ function escapeCsvCell(value) {
   return /[",\n]/.test(escaped) ? `"${escaped}"` : escaped;
 }
 
-function exportMatrixEvidenceCsv() {
-  const matrix24hRows = backtestData?.accuracy?.matrix_24h_rows || [];
+function exportMatrixEvidenceCsv(exportKey = "usd-24h") {
+  const normalizedKey = String(exportKey || "usd-24h").toLowerCase();
+  const matrix24hRows = normalizedKey === "eur-24h"
+    ? (backtestData?.accuracy?.eur_matrix_24h_rows || [])
+    : (backtestData?.accuracy?.matrix_24h_rows || []);
+  const assetCode = normalizedKey === "eur-24h" ? "EUR" : "USD";
+  const sourceView = normalizedKey === "eur-24h"
+    ? "research_prediction_evaluations"
+    : "research_prediction_usd_benchmark_summary";
   const audit = buildResearchEvidenceAudit(matrix24hRows, {
-    assetCode: "USD",
+    assetCode,
     timeframe: "following 24hrs",
-    sourceView: "research_prediction_usd_benchmark_summary"
+    sourceView
   });
 
   if (!audit.includedRows.length) {
@@ -3897,7 +3981,7 @@ function exportMatrixEvidenceCsv() {
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
-  link.download = "usd-24h-matrix-evidence.csv";
+  link.download = `${normalizedKey}-matrix-evidence.csv`;
   document.body.appendChild(link);
   link.click();
   link.remove();
@@ -4223,7 +4307,7 @@ function setupBacktestEvidenceControls() {
 
     const exportButton = event.target.closest("[data-export-matrix-evidence]");
     if (exportButton) {
-      exportMatrixEvidenceCsv();
+      exportMatrixEvidenceCsv(exportButton.dataset.exportMatrixEvidence || "usd-24h");
     }
   });
 
@@ -4284,8 +4368,26 @@ async function fetchResearchDashboardData() {
     console.warn("Could not load 24H benchmark matrix rows", err);
     return [];
   });
-  const checkerDataPromise = fetchLocalJson(checkerDataUrl).catch(err => {
-    console.warn("Could not load backtester checker data", err);
+  const eurMatrix24hRowsPromise = fetchResearchView("research_prediction_evaluations", {
+    select: "call_date,asset_code,timeframe,agent_direction,agent_conviction,evaluated_market,open_price,close_price,pct_change,result,prediction_id",
+    order: "call_date.asc",
+    filters: {
+      asset_code: "eq.EUR",
+      evaluated_market: "eq.EURUSD",
+      timeframe: "eq.following 24hrs",
+      evaluation_mode: "eq.primary",
+      evaluation_version: "eq.phase1_outcome_eval_v1"
+    }
+  }).then(normalizeEurMatrixRows).catch(err => {
+    console.warn("Could not load 24H EUR matrix rows", err);
+    return [];
+  });
+  const usdCheckerDataPromise = fetchLocalJson(checkerDataUrls.USD).catch(err => {
+    console.warn("Could not load USD backtester checker data", err);
+    return null;
+  });
+  const eurCheckerDataPromise = fetchLocalJson(checkerDataUrls.EUR).catch(err => {
+    console.warn("Could not load EUR backtester checker data", err);
     return null;
   });
 
@@ -4293,6 +4395,7 @@ async function fetchResearchDashboardData() {
     overallRows,
     summary24hRows,
     matrix24hRows,
+    eurMatrix24hRows,
     verdictStrengthRows,
     confidenceBucketRows,
     tradeQualityRows,
@@ -4305,11 +4408,13 @@ async function fetchResearchDashboardData() {
     factorContributionRows,
     factorComboRows,
     infrastructureRows,
-    checkerData
+    usdCheckerData,
+    eurCheckerData
   ] = await Promise.all([
     fetchResearchView("research_overall_win_rate"),
     fetchResearchView("research_usd_24h_direction_accuracy"),
     matrix24hRowsPromise,
+    eurMatrix24hRowsPromise,
     fetchResearchView("research_accuracy_by_verdict_strength", { order: "timeframe.asc,strength_rank.asc" }),
     fetchResearchView("research_accuracy_by_confidence_bucket", { order: "timeframe.asc,confidence_bucket_rank.asc" }),
     fetchResearchView("research_trade_quality_thresholds", { order: "timeframe.asc,threshold_rank.asc" }),
@@ -4331,7 +4436,8 @@ async function fetchResearchDashboardData() {
       limit: 8
     }),
     fetchResearchView("research_dashboard_infrastructure_status"),
-    checkerDataPromise
+    usdCheckerDataPromise,
+    eurCheckerDataPromise
   ]);
 
   return {
@@ -4344,6 +4450,7 @@ async function fetchResearchDashboardData() {
       overall: overallRows[0] || null,
       summary_24h: summary24hRows[0] || null,
       matrix_24h_rows: matrix24hRows,
+      eur_matrix_24h_rows: eurMatrix24hRows,
       by_verdict_strength: verdictStrengthRows,
       by_confidence_bucket: confidenceBucketRows,
       trade_quality: tradeQualityRows,
@@ -4357,7 +4464,11 @@ async function fetchResearchDashboardData() {
       best_factor_combinations: factorComboRows
     },
     infrastructure: infrastructureRows[0] || {},
-    checker: checkerData
+    checker: usdCheckerData,
+    checkers: {
+      USD: usdCheckerData,
+      EUR: eurCheckerData
+    }
   };
 }
 

@@ -1,5 +1,22 @@
 # Changelog
 
+## 2026-06-29
+
+### Added
+
+- Added EUR replay core, historical snapshot builder, historical replay runner, parity fixture, parity script, EURUSD importer, EUR evaluation script, EUR checker builder, and EUR checker artifact.
+- Added dashboard support for the EUR 24H matrix and EUR checker alongside the existing USD research views.
+- Added linked-warehouse test locking so the Node smoke tests no longer race each other against shared Supabase-backed tables.
+
+### Changed
+
+- Reproduced the live EUR 24H deterministic workflow exactly in replay using the current `exports/eur_layer1_agent.json` node semantics rather than the generic markdown weight table where they differ.
+- Generated EUR historical replay coverage for `2024-01-02` through `2026-04-30` where warehouse data allows.
+- Unblocked EUR outcome evaluation by importing historical EURUSD series and evaluating EUR primarily against direct EUR/USD movement instead of any USD-style DXY benchmark.
+- Set the provisional EUR-only 24H flat band to `0.15` for EUR evaluation and checker generation without changing shared USD evaluation defaults.
+- Generated a passing EUR checker artifact with result `602 / 0 / 0 / 0`.
+- Updated the linked-warehouse tests to validate stable research invariants instead of brittle global row-count assumptions.
+
 ## 2026-06-22
 
 ### Added

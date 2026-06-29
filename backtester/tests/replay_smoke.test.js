@@ -2,6 +2,7 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 const childProcess = require("node:child_process");
 const path = require("node:path");
+const { withLinkedWarehouseLock } = require("./linked_warehouse_lock");
 
 function getSupabaseEnv() {
   const repoRoot = path.resolve(__dirname, "..", "..");
@@ -22,12 +23,13 @@ function getSupabaseEnv() {
   };
 }
 
-test("Replay smoke test can run January 2024 and produce research rows", { timeout: 120000 }, () => {
+test("Replay smoke test can run January 2024 and produce research rows", { timeout: 120000 }, async () => {
   const repoRoot = path.resolve(__dirname, "..", "..");
-  const env = {
-    ...process.env,
-    ...getSupabaseEnv()
-  };
+  await withLinkedWarehouseLock(repoRoot, async () => {
+    const env = {
+      ...process.env,
+      ...getSupabaseEnv()
+    };
 
   const buildOutput = childProcess.execFileSync(
     process.execPath,
@@ -96,12 +98,13 @@ test("Replay smoke test can run January 2024 and produce research rows", { timeo
     });
   `;
 
-  const counts = JSON.parse(
-    childProcess.execFileSync(process.execPath, ["-e", countScript], { cwd: repoRoot, env }).toString()
-  );
+    const counts = JSON.parse(
+      childProcess.execFileSync(process.execPath, ["-e", countScript], { cwd: repoRoot, env }).toString()
+    );
 
-  assert.equal(counts.observations, 22);
-  assert.equal(counts.verdicts, 22);
-  assert.equal(counts.predictions, 88);
-  assert.equal(counts.factors, 880);
+    assert.equal(counts.observations, 22);
+    assert.equal(counts.verdicts, 22);
+    assert.equal(counts.predictions, 88);
+    assert.equal(counts.factors, 880);
+  });
 });

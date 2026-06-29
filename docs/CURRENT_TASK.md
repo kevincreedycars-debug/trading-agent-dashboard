@@ -4,15 +4,15 @@ Last updated: 2026-06-29
 
 ## Task
 
-Align the USD 24H replay/backtester path to the live USD production workflow.
+Complete the EUR historical replay, checker, and dashboard release path using the parity-validated live EUR 24H logic as the reference.
 
 ## Objective
 
-Make replay reproduce live USD 24H behavior exactly, then use the checker to validate replay determinism after that alignment is complete.
+Measure how the current live EUR Layer 1 agent would have performed historically by reproducing its 24H behavior exactly, evaluating outcomes directly against EUR/USD, and exposing the resulting checker and matrix outputs in the dashboard.
 
 ## Current Status
 
-In progress.
+Completed and validated for release.
 
 ## Completed
 
@@ -61,6 +61,12 @@ In progress.
 - Backtest Checker workspace UI added under the Backtest / Accuracy dashboard area
 - Live-vs-replay audit completed for USD and confirmed that live USD remains the production source of truth
 - Audit confirmed the current checker result proves replay-vs-replay reproducibility, not live-vs-replay parity
+- EUR 24H live-vs-replay one-snapshot parity fixture added and now passes against the frozen live export target
+- EUR historical replay generated for `2024-01-02` through `2026-04-30` where warehouse data allows
+- EUR/USD historical outcome evaluation is now working end-to-end without using DXY benchmark logic
+- EUR/USD provisional 24H flat band set to `0.15` in the EUR-specific evaluation/checker path
+- EUR deterministic checker artifact generated with result `602 / 0 / 0 / 0`
+- Dashboard support added for the EUR 24H matrix and EUR checker alongside the existing USD views
 
 ## n8n Workspace
 
@@ -78,16 +84,15 @@ https://silver17.app.n8n.cloud/projects/ISQG9XU7TGTT6Fcu/workflows
 
 ## Next Immediate Steps
 
-1. Create a one-snapshot USD 24H parity fixture/harness that compares replay output against frozen live USD 24H output.
-2. Adjust replay/checker-side 24H behavior to match live USD without changing `exports/usd_layer1_agent.json`.
-3. Re-run the January 2024 checker after one-snapshot parity passes.
-4. Do not expand to full-year 2024 until one-snapshot 24H live-vs-replay parity passes.
+1. Monitor the live dashboard push and confirm the public Backtest / Accuracy panel renders both USD and EUR research views correctly.
+2. Decide whether the next EUR research milestone is richer macro reconstruction through historical EUR event/PMI backfill or broader replay-window expansion.
+3. Keep EUR replay semantics frozen until a deliberate optimization phase begins.
 
 ## Current Blocker
 
 No current repository-side blocker.
 
-The immediate risk is treating replay-vs-replay checker success as proof of live-vs-replay parity when the live USD workflow and replay core still differ for 24H.
+Known research limitation: EUR macro reconstruction is still lighter than the full live environment because historical EUR event and PMI inputs are incomplete, but this no longer blocks direct EUR/USD outcome evaluation or checker generation.
 
 The n8n API key was supplied in chat and must not be committed to GitHub.
 
@@ -122,4 +127,4 @@ before making any changes.
 
 The immediate working outcome for the current task is:
 
-> create a one-snapshot USD 24H live-vs-replay parity harness, align replay to live for 24H only, and keep full-year expansion blocked until parity passes
+> ship parity-validated EUR historical replay, EUR/USD outcome evaluation, EUR checker coverage, and dashboard support without changing live EUR semantics

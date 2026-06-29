@@ -1,0 +1,163 @@
+{
+  "meta": {
+    "name": "eur_live_replay_24h_parity_fixture",
+    "purpose": "One-snapshot live-vs-replay parity gate for EUR 24H before historical replay expansion.",
+    "live_factor_intent_source": "logic/agent_eur_direction.md",
+    "live_24h_parity_target": "exports/eur_layer1_agent.json#Calculate EUR Conviction",
+    "replay_source_under_test": "backtester/replay/eur/eur_replay_core.js",
+    "notes": [
+      "The expected output is frozen from the current live EUR deterministic workflow semantics.",
+      "Parity follows the exported live deterministic node even where it differs from the markdown logic document."
+    ]
+  },
+  "snapshot": {
+    "snapshot_date": "2026-06-29",
+    "ecb_bias": "neutral",
+    "de_2y_yield": 2.53,
+    "de_2y_d5_bps": -10.000000000000009,
+    "de_2y_d20_bps": -6.000000000000005,
+    "us_de_2y_spread": 1.56,
+    "us_de_2y_spread_d5_bps": -1.000000000000023,
+    "us_de_2y_spread_d20_bps": 14.999999999999991,
+    "eurusd_price": 1.147,
+    "eurusd_d1_pct": -1.0609850772017577,
+    "eurusd_d5_pct": -0.39079461571862345,
+    "eurusd_d20_pct": -1.290877796901885,
+    "gold_price": 4027.240496115724,
+    "gold_d1_pct": -5.598260978650541,
+    "gold_d5_pct": -5.598260978650541,
+    "gold_d20_pct": null,
+    "vix_level": 18.41,
+    "vix_d1": -0.4800000000000004,
+    "vix_d5": 1.629999999999999,
+    "latest_ez_event": null,
+    "ez_composite_pmi": 47.7,
+    "ez_composite_pmi_direction": "improving",
+    "ez_stress_flag": "neutral",
+    "global_growth_regime": "neutral",
+    "china_growth_signal": null
+  },
+  "expected_live_24h": {
+    "direction_24h": "BEARISH",
+    "conviction_24h": 89,
+    "strength_bucket": "VERY_STRONG",
+    "bull_case_pct": 11,
+    "bear_case_pct": 89,
+    "net_edge_pct": -78,
+    "participation_pct": 38,
+    "score_bullish": 1,
+    "score_bearish": 3,
+    "score_neutral": 6,
+    "weighted_score": {
+      "bullish_weight": 4,
+      "bearish_weight": 34,
+      "neutral_weight": 62,
+      "active_weight": 38,
+      "weight_margin": 30
+    },
+    "factor_breakdown": {
+      "F1": { "signal": "NEUTRAL", "weight": 20 },
+      "F2": { "signal": "BEARISH", "weight": 18 },
+      "F3": { "signal": "NEUTRAL", "weight": 20 },
+      "F4": { "signal": "NEUTRAL", "weight": 14 },
+      "F5": { "signal": "BULLISH", "weight": 4 },
+      "F6": { "signal": "BEARISH", "weight": 12 },
+      "F7": { "signal": "BEARISH", "weight": 4 },
+      "F8": { "signal": "NEUTRAL", "weight": 4 },
+      "F9": { "signal": "NEUTRAL", "weight": 2 },
+      "F10": { "signal": "NEUTRAL", "weight": 2 }
+    },
+    "conviction_model": {
+      "bullish_argument_pct": 11,
+      "bearish_argument_pct": 89,
+      "neutral_pct": 62,
+      "active_participation_pct": 38,
+      "net_edge_pct": -78,
+      "final_conviction": 89,
+      "verdict_strength": "VERY_STRONG"
+    },
+    "missing_inputs": [
+      "latest_ez_event"
+    ],
+    "warnings_affecting_confidence": []
+  },
+  "supplemental_cases": [
+    {
+      "name": "lean_conversion_case",
+      "snapshot": {
+        "ecb_bias": "neutral",
+        "de_2y_d5_bps": 6,
+        "us_de_2y_spread_d5_bps": 0,
+        "latest_ez_event": {
+          "signal": "negative"
+        },
+        "ez_composite_pmi": 50,
+        "ez_composite_pmi_direction": "flat",
+        "eurusd_d1_pct": 0.0,
+        "gold_d1_pct": 0.0,
+        "ez_stress_flag": "neutral",
+        "global_growth_regime": "neutral",
+        "vix_level": 18
+      },
+      "expected": {
+        "direction_24h": "BULLISH_LEAN",
+        "conviction_24h": 56,
+        "strength_bucket": "WEAK",
+        "bull_case_pct": 56,
+        "bear_case_pct": 44,
+        "net_edge_pct": 12,
+        "participation_pct": 32,
+        "weighted_score": {
+          "bullish_weight": 18,
+          "bearish_weight": 14,
+          "neutral_weight": 68,
+          "active_weight": 32,
+          "weight_margin": 4
+        },
+        "factor_breakdown": {
+          "F2": { "signal": "BULLISH", "weight": 18 },
+          "F4": { "signal": "BEARISH", "weight": 14 }
+        }
+      }
+    },
+    {
+      "name": "no_clear_bias_case",
+      "snapshot": {
+        "ecb_bias": "neutral",
+        "de_2y_d5_bps": 0,
+        "us_de_2y_spread_d5_bps": 0,
+        "latest_ez_event": null,
+        "ez_composite_pmi": 51,
+        "ez_composite_pmi_direction": "improving",
+        "eurusd_d1_pct": 0.0,
+        "gold_d1_pct": -0.4,
+        "ez_stress_flag": "neutral",
+        "global_growth_regime": "neutral",
+        "vix_level": 18
+      },
+      "expected": {
+        "direction_24h": "NO_CLEAR_BIAS",
+        "conviction_24h": 0,
+        "strength_bucket": "WEAK",
+        "bull_case_pct": 50,
+        "bear_case_pct": 50,
+        "net_edge_pct": 0,
+        "participation_pct": 8,
+        "weighted_score": {
+          "bullish_weight": 4,
+          "bearish_weight": 4,
+          "neutral_weight": 92,
+          "active_weight": 8,
+          "weight_margin": 0
+        },
+        "factor_breakdown": {
+          "F5": { "signal": "BULLISH", "weight": 4 },
+          "F7": { "signal": "BEARISH", "weight": 4 }
+        },
+        "missing_inputs": [
+          "latest_ez_event"
+        ]
+      }
+    }
+  ]
+}

@@ -80,6 +80,7 @@ function evaluateSingleMarket({
   openPrice,
   closePrice,
   evaluationVersion,
+  flatThresholdOverride = null,
   marketRelationship = "direct",
   evaluationMode = "primary"
 }) {
@@ -98,11 +99,11 @@ function evaluateSingleMarket({
   const priceDataMissingReason = pricesAreValid ? null : "market_price_missing";
   const pctChange = pricesAreValid ? computePctChange(normalizedOpenPrice, normalizedClosePrice) : null;
   const absPctChange = pctChange === null ? null : Math.abs(pctChange);
-  const marketOutcome = classifyMarketOutcome(pctChange, normalizedMarket);
+  const flatThresholdUsed = flatThresholdOverride ?? getFlatThreshold(normalizedMarket);
+  const marketOutcome = classifyMarketOutcome(pctChange, flatThresholdUsed);
   const comparableMarketDirection = marketRelationship === "inverse"
     ? invertDirection(marketOutcome.market_outcome_direction)
     : marketOutcome.market_outcome_direction;
-  const flatThresholdUsed = getFlatThreshold(normalizedMarket);
   const convictionBucket = classifyConvictionBucket(agentConviction);
   const moveMagnitudeBucket = classifyMoveMagnitude(absPctChange, flatThresholdUsed);
   const expectedThreshold = expectedMoveThreshold(flatThresholdUsed, convictionBucket);
