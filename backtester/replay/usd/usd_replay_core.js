@@ -26,6 +26,19 @@ const FACTOR_WEIGHTS = Object.freeze({
   "F10 Equity Regime": 2
 });
 
+const LIVE_24H_FACTOR_WEIGHTS = Object.freeze({
+  "F1 VIX": 10,
+  "F2 US 2Y Yield Delta": 14,
+  "F3 US-DE 2Y Spread Delta": 10,
+  "F4 US 10Y Real Yield Delta": 10,
+  "F5 DXY Delta": 14,
+  "F6 Gold Delta": 4,
+  "F7 US Economic Surprise": 24,
+  "F8 Fed Bias": 12,
+  "F9 Dollar Smile": 1,
+  "F10 Equity Regime": 1
+});
+
 const TIMEFRAME_CONFIG = Object.freeze({
   following_24hrs: {
     timeframe: "following 24hrs",
@@ -340,6 +353,181 @@ function factorSignal(snapshot, timeframeKey) {
   };
 }
 
+function buildLive24hFactorSignal(snapshot) {
+  const selectedDxy = selectSeriesValue(snapshot, ["dxy_d1", "dxy_d5"]);
+  const selectedGold = selectSeriesValue(snapshot, ["gold_d5_pct", "gold_d1_pct"]);
+  const selectedNq = selectSeriesValue(snapshot, ["nq_d1_pct", "nq_d5_pct"]);
+  const selectedUs2y = selectSeriesValue(snapshot, ["us_2y_d5_bps"]);
+  const selectedRealYield = selectSeriesValue(snapshot, ["us_10y_real_yield_d5_bps"]);
+
+  const factors = {};
+  const missingInputs = new Set();
+  const warnings = new Set(asArray(snapshot.warnings).filter(Boolean));
+
+  const vixLevel = toNumber(snapshot.vix_level);
+  const fedBias = snapshot.fed_bias ? String(snapshot.fed_bias).toLowerCase() : "";
+
+  let f1Signal = "NEUTRAL";
+  let f1Reason = "Domestic drivers dominate.";
+  if (vixLevel === null) {
+    missingInputs.add("vix_level");
+    f1Reason = "Missing input";
+  } else if (vixLevel > 25) {
+    f1Signal = "BULLISH";
+    f1Reason = "Safe-haven USD demand active.";
+  } else if (vixLevel < 16) {
+    f1Signal = "BEARISH";
+    f1Reason = "Risk-on rotation away from USD.";
+  }
+  factors["F1 VIX"] = {
+    signal: f1Signal,
+    weight: LIVE_24H_FACTOR_WEIGHTS["F1 VIX"],
+    evidence: vixLevel === null ? "Missing VIX" : `VIX ${vixLevel}`,
+    reason: f1Reason
+  };
+
+  const f2Signal = directionFromSignedValue(selectedUs2y.value, "BULLISH", "BEARISH", 5);
+  if (selectedUs2y.value === null) missingInputs.add(selectedUs2y.key);
+  factors["F2 US 2Y Yield Delta"] = {
+    signal: f2Signal || "NEUTRAL",
+    weight: LIVE_24H_FACTOR_WEIGHTS["F2 US 2Y Yield Delta"],
+    evidence: selectedUs2y.value === null ? "Missing US 2Y 5d bps" : `US 2Y 5d bps ${selectedUs2y.value}`,
+    reason: selectedUs2y.value === null ? "Missing input" : (f2Signal ? "US front-end yields support USD" : "Move below threshold")
+  };
+
+  const spreadD5 = toNumber(snapshot.us_de_2y_spread_d5_bps);
+  const f3Signal = directionFromSignedValue(spreadD5, "BULLISH", "BEARISH", 5);
+  if (spreadD5 === null) missingInputs.add("us_de_2y_spread_d5_bps");
+  factors["F3 US-DE 2Y Spread Delta"] = {
+    signal: f3Signal || "NEUTRAL",
+    weight: LIVE_24H_FACTOR_WEIGHTS["F3 US-DE 2Y Spread Delta"],
+    evidence: spreadD5 === null ? "Missing US-DE 2Y spread 5d bps" : `US-DE 2Y spread 5d bps ${spreadD5}`,
+    reason: spreadD5 === null ? "Missing input" : (f3Signal ? "Relative rates support USD" : "Move below threshold")
+  };
+
+  const f4Signal = directionFromSignedValue(selectedRealYield.value, "BULLISH", "BEARISH", 5);
+  if (selectedRealYield.value === null) missingInputs.add(selectedRealYield.key);
+  factors["F4 US 10Y Real Yield Delta"] = {
+    signal: f4Signal || "NEUTRAL",
+    weight: LIVE_24H_FACTOR_WEIGHTS["F4 US 10Y Real Yield Delta"],
+    evidence: selectedRealYield.value === null ? "Missing Real yield 5d bps" : `Real yield 5d bps ${selectedRealYield.value}`,
+    reason: selectedRealYield.value === null ? "Missing input" : (f4Signal ? "Rising real yields support USD" : "Move below threshold")
+  };
+
+  const f5Signal = directionFromSignedValue(selectedDxy.value, "BULLISH", "BEARISH", 0.15);
+  if (selectedDxy.value === null) missingInputs.add(selectedDxy.key);
+  factors["F5 DXY Delta"] = {
+    signal: f5Signal || "NEUTRAL",
+    weight: LIVE_24H_FACTOR_WEIGHTS["F5 DXY Delta"],
+    evidence: selectedDxy.value === null ? "Missing DXY delta" : `DXY 1d % ${selectedDxy.value}`,
+    reason: selectedDxy.value === null ? "Missing input" : (f5Signal ? "DXY confirms USD strength" : "Move below threshold")
+  };
+
+  let f6Signal = "NEUTRAL";
+  let f6Reason = "Gold flat";
+  if (selectedGold.value === null) {
+    missingInputs.add(selectedGold.key);
+    f6Reason = "Missing input";
+  } else if (selectedGold.value < -0.1) {
+    f6Signal = "BULLISH";
+    f6Reason = "Gold weakness supports USD";
+  } else if (selectedGold.value > 0.1) {
+    f6Signal = "BEARISH";
+    f6Reason = "Gold strength pressures USD";
+  }
+  factors["F6 Gold Delta"] = {
+    signal: f6Signal,
+    weight: LIVE_24H_FACTOR_WEIGHTS["F6 Gold Delta"],
+    evidence: selectedGold.value === null ? "Missing gold delta" : `Gold ${selectedGold.value}%`,
+    reason: f6Reason
+  };
+
+  const latestEvent = snapshot.latest_us_event || null;
+  const usdSignal = latestEvent?.usd_signal ? String(latestEvent.usd_signal).toUpperCase() : "";
+  let f7Signal = "NEUTRAL";
+  let f7Reason = "No clear USD surprise";
+  if (!latestEvent) {
+    missingInputs.add("latest_us_event");
+    f7Reason = "No confirmed surprise";
+  } else if (usdSignal === "BULLISH") {
+    f7Signal = "BULLISH";
+    f7Reason = "Positive US surprise supports USD";
+  } else if (usdSignal === "BEARISH") {
+    f7Signal = "BEARISH";
+    f7Reason = "Negative US surprise pressures USD";
+  }
+  factors["F7 US Economic Surprise"] = {
+    signal: f7Signal,
+    weight: LIVE_24H_FACTOR_WEIGHTS["F7 US Economic Surprise"],
+    evidence: latestEvent ? (latestEvent.event || JSON.stringify(latestEvent)) : "No recent US event",
+    reason: f7Reason
+  };
+
+  let f8Signal = "NEUTRAL";
+  let f8Reason = "No clear Fed impulse";
+  if (!fedBias || fedBias === "unknown") {
+    missingInputs.add("fed_bias");
+    f8Reason = "Missing input";
+  } else if (fedBias.includes("hawkish")) {
+    f8Signal = "BULLISH";
+    f8Reason = "Hawkish Fed supports USD";
+  } else if (fedBias.includes("dovish")) {
+    f8Signal = "BEARISH";
+    f8Reason = "Dovish Fed pressures USD";
+  }
+  factors["F8 Fed Bias"] = {
+    signal: f8Signal,
+    weight: LIVE_24H_FACTOR_WEIGHTS["F8 Fed Bias"],
+    evidence: !fedBias ? "Fed bias unknown" : `Fed bias ${fedBias}`,
+    reason: f8Reason
+  };
+
+  let f9Signal = "NEUTRAL";
+  let f9Reason = "Insufficient regime evidence";
+  if (vixLevel !== null && vixLevel > 25) {
+    f9Signal = "BULLISH";
+    f9Reason = "Dollar Smile right-side safe-haven bid";
+  } else if (vixLevel !== null && vixLevel < 16 && !fedBias.includes("hawkish")) {
+    f9Signal = "BEARISH";
+    f9Reason = "Risk-on Dollar Smile bottom weakens USD";
+  }
+  factors["F9 Dollar Smile"] = {
+    signal: f9Signal,
+    weight: LIVE_24H_FACTOR_WEIGHTS["F9 Dollar Smile"],
+    evidence: vixLevel === null ? "No clear Dollar Smile edge" : `VIX ${vixLevel}`,
+    reason: f9Reason
+  };
+
+  let f10Signal = "NEUTRAL";
+  let f10Reason = "No clear equity/USD signal";
+  if (selectedNq.value === null || vixLevel === null) {
+    if (selectedNq.value === null) missingInputs.add(selectedNq.key);
+    if (vixLevel === null) missingInputs.add("vix_level");
+    f10Reason = "Missing input";
+  } else if (vixLevel < 16 && selectedNq.value > 0) {
+    f10Signal = "BEARISH";
+    f10Reason = "Risk appetite reduces USD demand";
+  } else if (vixLevel < 16 && selectedNq.value < 0) {
+    f10Signal = "BULLISH";
+    f10Reason = "Equity weakness supports USD";
+  } else if (vixLevel > 25 && selectedNq.value < 0) {
+    f10Signal = "BULLISH";
+    f10Reason = "Risk-off supports USD";
+  }
+  factors["F10 Equity Regime"] = {
+    signal: f10Signal,
+    weight: LIVE_24H_FACTOR_WEIGHTS["F10 Equity Regime"],
+    evidence: selectedNq.value === null || vixLevel === null ? "Missing NQ/VIX" : `NQ ${selectedNq.value}%, VIX ${vixLevel}`,
+    reason: f10Reason
+  };
+
+  return {
+    factors,
+    warnings: Array.from(warnings),
+    missingInputs: Array.from(missingInputs)
+  };
+}
+
 function computeWeightedSummary(factors) {
   let bullishWeight = 0;
   let bearishWeight = 0;
@@ -615,7 +803,95 @@ function computeConviction(snapshot, timeframeKey, weighted, factors, directionI
   };
 }
 
+function strengthFromLive24hNetEdge(netEdge) {
+  const absEdge = Math.abs(Number(netEdge) || 0);
+  if (absEdge >= 40) return "VERY_STRONG";
+  if (absEdge >= 25) return "STRONG";
+  if (absEdge >= 15) return "MODERATE";
+  return "WEAK";
+}
+
+function buildLive24hPrediction(snapshot, logicDocumentVersion) {
+  const { factors, warnings, missingInputs } = buildLive24hFactorSignal(snapshot);
+  const weighted = computeWeightedSummary(factors);
+  const active = weighted.active_weight;
+  const bullishArgument = active > 0 ? Math.round((weighted.bullish_weight / active) * 100) : 0;
+  const bearishArgument = active > 0 ? Math.round((weighted.bearish_weight / active) * 100) : 0;
+  const neutralPct = Math.round(weighted.neutral_weight);
+  const netEdge = bullishArgument - bearishArgument;
+
+  const baseDirection =
+    weighted.bullish_weight > weighted.bearish_weight
+      ? "BULLISH"
+      : weighted.bearish_weight > weighted.bullish_weight
+        ? "BEARISH"
+        : "NO_CLEAR_BIAS";
+
+  const direction =
+    baseDirection === "NO_CLEAR_BIAS"
+      ? "NO_CLEAR_BIAS"
+      : Math.abs(netEdge) < 20
+        ? `${baseDirection}_LEAN`
+        : baseDirection;
+
+  const conviction =
+    baseDirection === "BULLISH"
+      ? bullishArgument
+      : baseDirection === "BEARISH"
+        ? bearishArgument
+        : 0;
+
+  const strength = strengthFromLive24hNetEdge(netEdge);
+  const reason = `24h deterministic score: bullish argument ${bullishArgument}%, bearish argument ${bearishArgument}%, neutral/inactive ${neutralPct}%, net edge ${netEdge > 0 ? "+" : ""}${netEdge} ${baseDirection.toLowerCase().replace("_", " ")}.`;
+
+  return {
+    timeframe: TIMEFRAME_CONFIG.following_24hrs.timeframe,
+    legacy_timeframe_key: TIMEFRAME_CONFIG.following_24hrs.legacy_timeframe_key,
+    predicted_direction: direction,
+    predicted_conviction: conviction,
+    bull_case_pct: bullishArgument,
+    bear_case_pct: bearishArgument,
+    net_edge_pct: netEdge,
+    participation_pct: active,
+    neutral_pct: neutralPct,
+    verdict_strength: strength,
+    reason_text: reason,
+    weighted_score: weighted,
+    conviction_model: {
+      bullish_argument_pct: bullishArgument,
+      bearish_argument_pct: bearishArgument,
+      neutral_pct: neutralPct,
+      active_participation_pct: active,
+      directional_participation_pct: active,
+      net_edge_pct: netEdge,
+      final_confidence: conviction,
+      final_conviction: conviction,
+      verdict_strength: strength,
+      confidence_strength: strength,
+      final_conviction_logic: reason,
+      weighted_edge: Math.abs(netEdge) / 100,
+      raw_conviction: conviction,
+      base_conviction: conviction,
+      participation: active,
+      participation_cap: active,
+      conflict_penalty: 0,
+      missing_input_penalty: 0,
+      agreement_boost: 0
+    },
+    factor_breakdown: factors,
+    warnings,
+    missing_inputs: missingInputs,
+    logic_document: LOGIC_DOCUMENT,
+    logic_document_version: logicDocumentVersion,
+    replay_version: REPLAY_VERSION
+  };
+}
+
 function buildPrediction(snapshot, timeframeKey, logicDocumentVersion) {
+  if (timeframeKey === "following_24hrs") {
+    return buildLive24hPrediction(snapshot, logicDocumentVersion);
+  }
+
   const { factors, warnings, missingInputs } = factorSignal(snapshot, timeframeKey);
   const weighted = computeWeightedSummary(factors);
   const directionInfo = determineDirection(snapshot, timeframeKey, weighted, factors);
@@ -708,9 +984,9 @@ function buildReplayOutput(snapshot, logicDocumentVersion) {
     conviction_current_week: timeframeMap.current_week.predicted_conviction,
     direction_current_month: timeframeMap.current_month.predicted_direction,
     conviction_current_month: timeframeMap.current_month.predicted_conviction,
-    score_bullish: timeframeMap.following_24hrs.weighted_score.bullish_weight,
-    score_bearish: timeframeMap.following_24hrs.weighted_score.bearish_weight,
-    score_neutral: timeframeMap.following_24hrs.weighted_score.neutral_weight,
+    score_bullish: timeframeMap.following_24hrs.weighted_score.bullish_count,
+    score_bearish: timeframeMap.following_24hrs.weighted_score.bearish_count,
+    score_neutral: timeframeMap.following_24hrs.weighted_score.neutral_count,
     non_neutral_count: timeframeMap.following_24hrs.weighted_score.bullish_count + timeframeMap.following_24hrs.weighted_score.bearish_count,
     weighted_score: timeframeMap.following_24hrs.weighted_score,
     conviction_model: timeframeMap.following_24hrs.conviction_model,

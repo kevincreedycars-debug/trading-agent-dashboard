@@ -95,8 +95,8 @@ test("Evaluation runner and research SQL layer work end-to-end for January 2024"
   assert.equal(firstEvaluationSummary.predictions_processed, 88);
   assert.equal(firstEvaluationSummary.evaluation_rows_written, 440);
   assert.equal(firstEvaluationSummary.realised_outcome_rows_written, 88);
-  assert.equal(firstEvaluationSummary.result_counts.CORRECT, 73);
-  assert.equal(firstEvaluationSummary.result_counts.WRONG, 78);
+  assert.equal(firstEvaluationSummary.result_counts.CORRECT, 72);
+  assert.equal(firstEvaluationSummary.result_counts.WRONG, 79);
   assert.equal(firstEvaluationSummary.result_counts.FLAT, 74);
   assert.equal(firstEvaluationSummary.result_counts.NOT_EVALUABLE, 215);
 
