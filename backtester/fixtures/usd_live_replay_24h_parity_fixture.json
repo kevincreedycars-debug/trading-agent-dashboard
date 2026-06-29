@@ -1,0 +1,100 @@
+{
+  "meta": {
+    "name": "usd_live_replay_24h_parity_fixture",
+    "purpose": "One-snapshot live-vs-replay parity gate for USD 24H before any January/full-year expansion.",
+    "live_source_of_truth": "exports/usd_layer1_agent.json",
+    "replay_source_under_test": "backtester/replay/usd/usd_replay_core.js",
+    "notes": [
+      "The expected output is frozen from the current live USD deterministic workflow logic.",
+      "This fixture intentionally uses a snapshot that exposes known live-vs-replay mismatches for 24H.",
+      "Reason text and timestamps are not parity-gated."
+    ]
+  },
+  "snapshot": {
+    "snapshot_date": "2024-01-09",
+    "vix_level": 13.0,
+    "vix_d1": -0.2,
+    "vix_d5": -0.1,
+    "us_2y_yield": 4.45,
+    "us_2y_d5_bps": 6,
+    "us_2y_d20_bps": 10,
+    "de_2y_yield": 2.4,
+    "de_2y_d5_bps": 6,
+    "us_de_2y_spread": 2.05,
+    "us_de_2y_spread_d5_bps": 6,
+    "us_de_2y_spread_d20_bps": 8,
+    "us_10y_yield": 4.02,
+    "us_10y_d5_bps": 7,
+    "us_10y_real_yield": 1.88,
+    "us_10y_real_yield_d5_bps": 7,
+    "us_10y_real_yield_d20_bps": 11,
+    "dxy_level": 101.7,
+    "dxy_d1": 0.2,
+    "dxy_d5": 0.1,
+    "dxy_d20": 0.4,
+    "gold_price": 2065,
+    "gold_d1_pct": -0.2,
+    "gold_d5_pct": 0.2,
+    "gold_d20_pct": 0.4,
+    "nq_price": 407,
+    "nq_d1_pct": 0.5,
+    "nq_d5_pct": 0.1,
+    "nq_d20_pct": 1.2,
+    "equities_regime": "neutral",
+    "latest_us_event": {
+      "event": "US CPI",
+      "usd_signal": "BULLISH",
+      "surprise": "positive",
+      "surprise_direction": "positive",
+      "age_hours": 120
+    },
+    "latest_us_event_age_hours": 120,
+    "surprise_score": 2,
+    "fed_bias": "hawkish",
+    "warnings": [],
+    "missing_inputs": [],
+    "global_growth_context": "neutral"
+  },
+  "expected_live_24h": {
+    "direction_24h": "BULLISH",
+    "conviction_24h": 85,
+    "strength_bucket": "VERY_STRONG",
+    "bull_case_pct": 85,
+    "bear_case_pct": 15,
+    "net_edge_pct": 70,
+    "participation_pct": 99,
+    "score_bullish": 6,
+    "score_bearish": 3,
+    "score_neutral": 1,
+    "weighted_score": {
+      "bullish_weight": 84,
+      "bearish_weight": 15,
+      "neutral_weight": 1,
+      "active_weight": 99,
+      "weight_margin": 69
+    },
+    "factor_breakdown": {
+      "F1 VIX": { "signal": "BEARISH", "weight": 10 },
+      "F2 US 2Y Yield Delta": { "signal": "BULLISH", "weight": 14 },
+      "F3 US-DE 2Y Spread Delta": { "signal": "BULLISH", "weight": 10 },
+      "F4 US 10Y Real Yield Delta": { "signal": "BULLISH", "weight": 10 },
+      "F5 DXY Delta": { "signal": "BULLISH", "weight": 14 },
+      "F6 Gold Delta": { "signal": "BEARISH", "weight": 4 },
+      "F7 US Economic Surprise": { "signal": "BULLISH", "weight": 24 },
+      "F8 Fed Bias": { "signal": "BULLISH", "weight": 12 },
+      "F9 Dollar Smile": { "signal": "NEUTRAL", "weight": 1 },
+      "F10 Equity Regime": { "signal": "BEARISH", "weight": 1 }
+    },
+    "conviction_model": {
+      "bullish_argument_pct": 85,
+      "bearish_argument_pct": 15,
+      "neutral_pct": 1,
+      "active_participation_pct": 99,
+      "net_edge_pct": 70,
+      "final_conviction": 85,
+      "verdict_strength": "VERY_STRONG"
+    },
+    "missing_inputs": [],
+    "warnings_affecting_confidence": []
+  }
+}
