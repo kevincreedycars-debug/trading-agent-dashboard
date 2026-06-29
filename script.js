@@ -3020,34 +3020,72 @@ function checkerRowTone(status = "") {
 }
 
 function renderCheckerWorkspaceHeader(checker = {}, summary = {}) {
-  const dateRange = checker?.meta?.date_range || {};
-  const rangeText = dateRange.start && dateRange.end
-    ? `${dateRange.start} to ${dateRange.end}`
-    : "January 2024";
-
   return `
     <section class="research-section">
       <article class="detail-panel wide-panel research-secondary-panel checker-workspace-panel">
         <div class="checker-workspace-copy">
           <p class="eyebrow">Backtest Checker</p>
           <h3>Backtest Checker Workspace</h3>
-          <p class="checker-status-line">Deterministic replay validation: stored replay vs fresh checker replay.</p>
-        </div>
-        <div class="checker-workspace-meta">
-          <span><strong>Scope:</strong> USD 24H ${escapeHtml(rangeText)}</span>
-          <span><strong>Rows:</strong> ${escapeHtml(String(summary.rows_checked ?? 0))}</span>
-          <span><strong>Tolerance:</strong> +/-${escapeHtml(String(checker.meta?.tolerance_percentage_points ?? 0.5))}pp</span>
+          <p class="checker-status-line">Deterministic replay validation</p>
         </div>
       </article>
     </section>
   `;
 }
 
+function checkerFilenameFromPath(value = "") {
+  const text = String(value || "").trim();
+  if (!text) return "Unknown";
+  const parts = text.split(/[\\/]/);
+  return parts[parts.length - 1] || text;
+}
+
+function checkerScopeLabel(checker = {}) {
+  const asset = checker?.meta?.asset || "USD";
+  const timeframe = checker?.meta?.timeframe === "following 24hrs" ? "24H" : (checker?.meta?.timeframe || "24H");
+  const dateRange = checker?.meta?.date_range || {};
+
+  if (dateRange.start === "2024-01-01" && dateRange.end === "2024-01-31") {
+    return `${asset} - ${timeframe} - Jan 2024`;
+  }
+
+  return `${asset} - ${timeframe}`;
+}
+
+function checkerComparedFieldsLabel(fieldsCompared = []) {
+  const fieldMap = {
+    direction: "direction",
+    headline_confidence_pct: "confidence",
+    strength_bucket: "strength",
+    bull_case_pct: "bull/bear",
+    bear_case_pct: null,
+    net_edge_pct: "net edge",
+    participation_pct: "participation",
+    active_directional_weight: "weights",
+    bull_weighted_total: null,
+    bear_weighted_total: null,
+    factor_scores: "factor scores",
+    evaluation_result: "evaluation"
+  };
+
+  const labels = [];
+  for (const field of fieldsCompared) {
+    const mapped = fieldMap[field] ?? field;
+    if (mapped && !labels.includes(mapped)) {
+      labels.push(mapped);
+    }
+  }
+
+  return labels.join("\n") || "None listed";
+}
+
 function renderCheckerSummaryCard(label, value, detail = "", options = {}) {
   const tone = options.tone ? ` ${options.tone}` : "";
   const wide = options.wide ? " wide" : "";
+  const preserveLines = options.preserveLines ? " preserve-lines" : "";
+  const tooltip = options.tooltip ? ` title="${escapeHtml(options.tooltip)}"` : "";
   return `
-    <article class="checker-summary-card${tone}${wide}">
+    <article class="checker-summary-card${tone}${wide}${preserveLines}"${tooltip}>
       <span>${escapeHtml(label)}</span>
       <strong>${escapeHtml(value)}</strong>
       ${detail ? `<small>${escapeHtml(detail)}</small>` : ""}
@@ -3059,15 +3097,23 @@ function renderCheckerSummaryBlock(checker = {}, summary = {}, fieldsCompared = 
   return `
     <article class="detail-panel wide-panel research-secondary-panel checker-summary-panel">
       <div class="checker-summary-card-grid">
-        ${renderCheckerSummaryCard("Rows Checked", String(summary.rows_checked ?? 0), "USD 24H January 2024")}
-        ${renderCheckerSummaryCard("Pass", String(summary.pass ?? 0), "Exact matches", { tone: "pass" })}
-        ${renderCheckerSummaryCard("Tolerance Pass", String(summary.tolerance_pass ?? 0), `+/-${checker.meta?.tolerance_percentage_points ?? 0.5}pp numeric tolerance`, { tone: "tolerance" })}
-        ${renderCheckerSummaryCard("Fail", String(summary.fail ?? 0), "Mismatch requires investigation", { tone: "fail" })}
-        ${renderCheckerSummaryCard("Missing Data", String(summary.missing_data ?? 0), "Snapshot or evaluation missing", { tone: "missing" })}
-        ${renderCheckerSummaryCard("Generated", formatDashboardTime(checker.meta?.generated_at), "Checker artifact build time")}
-        ${renderCheckerSummaryCard("Replay Core", checker.meta?.replay_logic_source || "Unknown", "Fresh checker replay path")}
-        ${renderCheckerSummaryCard("Evaluator", checker.meta?.evaluation_logic_source || "Unknown", "Outcome evaluation path")}
-        ${renderCheckerSummaryCard("Compared Fields", fieldsCompared.join(", ") || "None listed", "Stored replay vs checker replay comparison set", { wide: true })}
+        ${renderCheckerSummaryCard("Rows Checked", String(summary.rows_checked ?? 0))}
+        ${renderCheckerSummaryCard("Pass", String(summary.pass ?? 0), "", { tone: "pass" })}
+        ${renderCheckerSummaryCard("Tolerance", String(summary.tolerance_pass ?? 0), "", { tone: "tolerance" })}
+        ${renderCheckerSummaryCard("Fail", String(summary.fail ?? 0), "", { tone: "fail" })}
+        ${renderCheckerSummaryCard("Missing", String(summary.missing_data ?? 0), "", { tone: "missing" })}
+        ${renderCheckerSummaryCard("Scope", checkerScopeLabel(checker))}
+        ${renderCheckerSummaryCard("Generated", formatDashboardTime(checker.meta?.generated_at))}
+        ${renderCheckerSummaryCard("Replay Core", checkerFilenameFromPath(checker.meta?.replay_logic_source), "", {
+          tooltip: checker.meta?.replay_logic_source || ""
+        })}
+        ${renderCheckerSummaryCard("Evaluator", checkerFilenameFromPath(checker.meta?.evaluation_logic_source), "", {
+          tooltip: checker.meta?.evaluation_logic_source || ""
+        })}
+        ${renderCheckerSummaryCard("Compared Fields", checkerComparedFieldsLabel(fieldsCompared), "", {
+          wide: true,
+          preserveLines: true
+        })}
       </div>
     </article>
   `;
@@ -3376,13 +3422,6 @@ function renderResearchDataChecker(data = {}) {
     <div class="backtest-report">
       ${renderCheckerWorkspaceHeader(checker, summary)}
       <section class="research-section">
-        <div class="research-section-head">
-          <div>
-            <p class="eyebrow">Checker Summary</p>
-            <h3>Independent replay reproducibility check</h3>
-          </div>
-          <p class="research-panel-copy">Phase 1 checker scope is USD only, 24H only, and January 2024 only. It loads stored replay rows, re-runs the same USD replay core from the historical snapshot, and compares stored vs checker output with exact and tolerance rules.</p>
-        </div>
         ${renderCheckerSummaryBlock(checker, summary, fieldsCompared)}
       </section>
       ${renderCheckerTriageTable(checker, selectedRowId)}
