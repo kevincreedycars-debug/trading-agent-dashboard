@@ -79,3 +79,19 @@ Decision: The historical research platform exists first to measure the current p
 Reason: Optimization before measurement creates an untrustworthy feedback loop. The platform needs a defensible baseline before any Layer 1 Version 2 work can be evaluated or approved.
 
 Alternatives considered: optimizing live Layer 1 logic early, replaying a research-only variant instead of production logic, or allowing research outputs to influence production automatically. These were rejected because they contaminate the benchmark and weaken production/research separation.
+
+## 2026-06-29 - Live USD Workflow Is The Production Source Of Truth
+
+Decision: The live USD workflow remains the production source of truth. Replay and checker code must be adjusted to reproduce live USD 24H behavior, and the live workflow should not be changed during the first alignment pass.
+
+Reason: The current production benchmark is the live USD workflow behavior already used by the platform. Aligning replay to live preserves production truth while allowing historical research and determinism checks to measure the same logic safely downstream.
+
+Alternatives considered: making `usd_replay_core.js` the canonical source immediately and changing live USD to match it, or treating replay-vs-replay checker success as sufficient proof of parity. These were rejected because they would either alter production behavior prematurely or overstate what the current checker has actually validated.
+
+## 2026-06-29 - Checker Validates Determinism After Replay Alignment
+
+Decision: The current January 2024 USD checker result should be treated as proof of replay-vs-replay reproducibility only. Live-vs-replay parity must be proven separately with a one-snapshot USD 24H fixture before expanding checker coverage to the full 2024 dataset.
+
+Reason: The checker currently re-runs replay logic against stored replay outputs. That is useful for determinism, but it does not prove replay already matches the live USD production workflow. A one-snapshot live-vs-replay fixture is the smallest reliable gate before widening scope.
+
+Alternatives considered: expanding directly to full-year 2024 before live-vs-replay parity or changing live workflow and replay together in one step. These were rejected because they would blur the source of truth and make validation harder to trust.

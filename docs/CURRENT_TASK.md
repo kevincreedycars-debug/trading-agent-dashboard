@@ -4,11 +4,11 @@ Last updated: 2026-06-29
 
 ## Task
 
-Validate the USD historical replay and deterministic backtester checker.
+Align the USD 24H replay/backtester path to the live USD production workflow.
 
 ## Objective
 
-Confirm that the USD Data Checker is producing reliable deterministic results before expanding its coverage window.
+Make replay reproduce live USD 24H behavior exactly, then use the checker to validate replay determinism after that alignment is complete.
 
 ## Current Status
 
@@ -58,6 +58,9 @@ In progress.
 - Deterministic USD Backtester Checker added
 - Current checker scope verified for USD 24H January 2024
 - Latest checker result recorded as 22 checked / 22 pass / 0 fail / 0 missing
+- Backtest Checker workspace UI added under the Backtest / Accuracy dashboard area
+- Live-vs-replay audit completed for USD and confirmed that live USD remains the production source of truth
+- Audit confirmed the current checker result proves replay-vs-replay reproducibility, not live-vs-replay parity
 
 ## n8n Workspace
 
@@ -75,14 +78,16 @@ https://silver17.app.n8n.cloud/projects/ISQG9XU7TGTT6Fcu/workflows
 
 ## Next Immediate Steps
 
-1. Review the Data Checker UI for the current USD 24H January 2024 checker output.
-2. Expand the USD 24H checker scope to full-year 2024 after the UI review is complete.
+1. Create a one-snapshot USD 24H parity fixture/harness that compares replay output against frozen live USD 24H output.
+2. Adjust replay/checker-side 24H behavior to match live USD without changing `exports/usd_layer1_agent.json`.
+3. Re-run the January 2024 checker after one-snapshot parity passes.
+4. Do not expand to full-year 2024 until one-snapshot 24H live-vs-replay parity passes.
 
 ## Current Blocker
 
 No current repository-side blocker.
 
-The immediate risk is making checker-scope changes before the current Data Checker UI has been reviewed against the committed deterministic January 2024 result.
+The immediate risk is treating replay-vs-replay checker success as proof of live-vs-replay parity when the live USD workflow and replay core still differ for 24H.
 
 The n8n API key was supplied in chat and must not be committed to GitHub.
 
@@ -117,4 +122,4 @@ before making any changes.
 
 The immediate working outcome for the current task is:
 
-> review the USD Data Checker UI for January 2024, then extend the USD 24H checker to full-year 2024 without changing runtime production behavior
+> create a one-snapshot USD 24H live-vs-replay parity harness, align replay to live for 24H only, and keep full-year expansion blocked until parity passes
