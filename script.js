@@ -3704,6 +3704,36 @@ function normalizeEurMatrixRows(rows = []) {
   }));
 }
 
+function normalizeEurCheckerRowsForMatrix(checker = null) {
+  const rows = Array.isArray(checker?.rows) ? checker.rows : [];
+  return rows.map(row => {
+    const openPrice = Number(row?.evaluation_inputs?.open_price);
+    const closePrice = Number(row?.evaluation_inputs?.close_price);
+    const pctChange = Number.isFinite(openPrice) && Number.isFinite(closePrice) && openPrice !== 0
+      ? ((closePrice - openPrice) / openPrice) * 100
+      : null;
+    const stored = row?.stored || {};
+
+    return {
+      snapshot_date: row?.snapshot_date || "",
+      asset_code: checker?.meta?.asset || "EUR",
+      timeframe: row?.timeframe || checker?.meta?.timeframe || "following 24hrs",
+      predicted_direction: stored.direction || null,
+      agent_direction: stored.direction || null,
+      predicted_conviction: stored.headline_confidence_pct ?? null,
+      agent_conviction: stored.headline_confidence_pct ?? null,
+      headline_confidence_pct: stored.headline_confidence_pct ?? null,
+      verdict_strength: stored.strength_bucket || null,
+      benchmark_market: "EURUSD",
+      open_price: Number.isFinite(openPrice) ? openPrice : null,
+      close_price: Number.isFinite(closePrice) ? closePrice : null,
+      pct_change: Number.isFinite(pctChange) ? pctChange : null,
+      combined_result: stored.evaluation_result || null,
+      prediction_id: row?.prediction_id || null
+    };
+  });
+}
+
 function renderResearchVerdictQuality(data = {}) {
   const byVerdictStrength = data.accuracy?.by_verdict_strength || [];
   const byConfidenceBucket = data.accuracy?.by_confidence_bucket || [];
@@ -4440,6 +4470,10 @@ async function fetchResearchDashboardData() {
     eurCheckerDataPromise
   ]);
 
+  const resolvedEurMatrix24hRows = eurMatrix24hRows.length
+    ? eurMatrix24hRows
+    : normalizeEurCheckerRowsForMatrix(eurCheckerData);
+
   return {
     meta: {
       last_updated: new Date().toISOString(),
@@ -4450,7 +4484,7 @@ async function fetchResearchDashboardData() {
       overall: overallRows[0] || null,
       summary_24h: summary24hRows[0] || null,
       matrix_24h_rows: matrix24hRows,
-      eur_matrix_24h_rows: eurMatrix24hRows,
+      eur_matrix_24h_rows: resolvedEurMatrix24hRows,
       by_verdict_strength: verdictStrengthRows,
       by_confidence_bucket: confidenceBucketRows,
       trade_quality: tradeQualityRows,
