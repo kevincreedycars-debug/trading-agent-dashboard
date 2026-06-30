@@ -8,6 +8,7 @@ const {
   requireEnv
 } = require("../lib/historical_common");
 const { evaluateSingleMarket } = require("../lib/outcome_evaluation");
+const { computeHeadlineConfidenceFromRow } = require("../lib/headline_confidence");
 const { buildReplayOutput, parseLogicVersion } = require("../replay/usd/usd_replay_core");
 
 const DEFAULT_START = "2024-01-01";
@@ -185,6 +186,39 @@ function buildSeriesMap(rows, keyField, valueField) {
   return map;
 }
 
+function evaluationRank(row) {
+  const result = String(row?.result || "").toUpperCase();
+  const openPrice = toNumber(row?.open_price);
+  const closePrice = toNumber(row?.close_price);
+  const closeTime = row?.close_time_et ? new Date(row.close_time_et).getTime() : 0;
+  return [
+    result === "NOT_EVALUABLE" ? 0 : 1,
+    Number.isFinite(openPrice) && Number.isFinite(closePrice) ? 1 : 0,
+    Number.isFinite(closeTime) ? closeTime : 0
+  ];
+}
+
+function compareRank(left, right) {
+  for (let index = 0; index < Math.max(left.length, right.length); index += 1) {
+    const a = left[index] ?? 0;
+    const b = right[index] ?? 0;
+    if (a === b) continue;
+    return a - b;
+  }
+  return 0;
+}
+
+function buildEvaluationMap(rows = []) {
+  const map = new Map();
+  for (const row of rows) {
+    const existing = map.get(row.prediction_id);
+    if (!existing || compareRank(evaluationRank(existing), evaluationRank(row)) < 0) {
+      map.set(row.prediction_id, row);
+    }
+  }
+  return map;
+}
+
 function marketValueFromSnapshot(market, marketSnapshot) {
   if (market === "DXY") return toNumber(marketSnapshot?.dxy_level);
   return null;
@@ -231,6 +265,17 @@ function compareFactorBreakdown(storedBreakdown, rerunBreakdown) {
   });
 }
 
+function storedPredictionConviction(prediction) {
+  const convictionModel = safeObject(prediction?.conviction_model);
+  return (
+    toNumber(convictionModel.legacy_floor_conviction) ??
+    toNumber(convictionModel.raw_conviction) ??
+    toNumber(convictionModel.base_conviction) ??
+    toNumber(convictionModel.final_conviction) ??
+    toNumber(prediction?.predicted_conviction)
+  );
+}
+
 function buildRowComparison(prediction, snapshot, storedEvaluation, macroMap) {
   if (!snapshot || !storedEvaluation) {
     return {
@@ -270,10 +315,26 @@ function buildRowComparison(prediction, snapshot, storedEvaluation, macroMap) {
   const rerunWeighted = safeObject(rerun24h.weighted_score);
   const storedConvictionModel = safeObject(prediction.conviction_model);
   const rerunConvictionModel = safeObject(rerun24h.conviction_model);
+  const storedHeadlineConfidence = computeHeadlineConfidenceFromRow({
+    ...prediction,
+    predicted_direction: prediction.predicted_direction,
+    conviction_model: storedConvictionModel
+  }).value;
+  const rerunHeadlineConfidence = computeHeadlineConfidenceFromRow({
+    predicted_direction: rerun24h.direction,
+    bull_case_pct: rerunConvictionModel.bullish_argument_pct,
+    bear_case_pct: rerunConvictionModel.bearish_argument_pct,
+    participation_pct: rerunConvictionModel.directional_participation_pct,
+    net_edge_pct: rerunConvictionModel.net_edge_pct,
+    conviction_model: rerunConvictionModel
+  }).value;
+  const storedReplayConviction = storedPredictionConviction(prediction);
+  const rerunReplayConviction = storedPredictionConviction({ conviction_model: rerunConvictionModel, predicted_conviction: rerun24h.conviction });
 
   const comparisons = [
     compareExact("Direction", normalizeDirection(prediction.predicted_direction), normalizeDirection(rerun24h.direction)),
-    compareNumeric("Headline Confidence %", prediction.predicted_conviction, rerun24h.conviction),
+    compareNumeric("Predicted Conviction %", storedReplayConviction, rerunReplayConviction),
+    compareNumeric("Headline Confidence %", storedHeadlineConfidence, rerunHeadlineConfidence),
     compareExact("Strength Bucket", prediction.verdict_strength || null, rerunConvictionModel.confidence_strength || null),
     compareNumeric("Bull Case %", prediction.bull_case_pct, rerunConvictionModel.bullish_argument_pct),
     compareNumeric("Bear Case %", prediction.bear_case_pct, rerunConvictionModel.bearish_argument_pct),
@@ -297,7 +358,9 @@ function buildRowComparison(prediction, snapshot, storedEvaluation, macroMap) {
     timeframe: prediction.timeframe,
     stored: {
       direction: prediction.predicted_direction,
-      headline_confidence_pct: prediction.predicted_conviction,
+      predicted_conviction: storedReplayConviction,
+      displayed_headline_confidence_pct: storedHeadlineConfidence,
+      headline_confidence_pct: storedHeadlineConfidence,
       strength_bucket: prediction.verdict_strength,
       bull_case_pct: prediction.bull_case_pct,
       bear_case_pct: prediction.bear_case_pct,
@@ -312,7 +375,9 @@ function buildRowComparison(prediction, snapshot, storedEvaluation, macroMap) {
     },
     checker: {
       direction: rerun24h.direction,
-      headline_confidence_pct: rerun24h.conviction,
+      predicted_conviction: rerunReplayConviction,
+      displayed_headline_confidence_pct: rerunHeadlineConfidence,
+      headline_confidence_pct: rerunHeadlineConfidence,
       strength_bucket: rerunConvictionModel.confidence_strength || null,
       bull_case_pct: rerunConvictionModel.bullish_argument_pct ?? null,
       bear_case_pct: rerunConvictionModel.bearish_argument_pct ?? null,
@@ -379,7 +444,7 @@ async function run() {
     loadMacroSeries(supabaseUrl, serviceRoleKey, startDate, macroEndDate)
   ]);
 
-  const evaluationByPredictionId = new Map(evaluations.map(row => [row.prediction_id, row]));
+  const evaluationByPredictionId = buildEvaluationMap(evaluations);
   const snapshotByDate = new Map(snapshots.map(row => [row.snapshot_date, row]));
   const macroMap = buildSeriesMap(macroRows, "series_key", "value_numeric");
 
@@ -413,6 +478,7 @@ async function run() {
     selected_row_id: selectedRowId,
     fields_compared: [
       "direction",
+      "predicted_conviction",
       "headline_confidence_pct",
       "strength_bucket",
       "bull_case_pct",

@@ -1,5 +1,9 @@
 const fs = require("fs");
 const path = require("path");
+const {
+  computeHeadlineConfidenceData,
+  deriveConfidenceStrength
+} = require("../../lib/headline_confidence");
 
 const LOGIC_DOCUMENT = "agent_gold_direction.md";
 const LIVE_24H_FACTOR_WEIGHTS = Object.freeze({
@@ -264,6 +268,14 @@ function score24h(snapshot) {
     absEdge >= 25 && participation >= 50 ? "STRONG" :
     absEdge >= 15 ? "MODERATE" :
     "WEAK";
+  const headlineConfidence = computeHeadlineConfidenceData({
+    bullCase: bullishArgument,
+    bearCase: bearishArgument,
+    participation,
+    netEdge,
+    direction
+  }).value;
+  const confidenceStrength = deriveConfidenceStrength(headlineConfidence, netEdge, participation, direction);
 
   const reason = `24h deterministic Gold score: bull case ${bullishArgument}%, bear case ${bearishArgument}%, directional participation ${participation}%, neutral/inactive ${neutralPct}%, net edge ${netEdge > 0 ? "+" : ""}${netEdge}. Real yields and DXY remain the highest-priority Gold drivers.`;
 
@@ -295,8 +307,11 @@ function score24h(snapshot) {
       agreement_boost: 0,
       base_conviction: conviction,
       conflict_penalty: 0,
+      final_confidence: headlineConfidence,
+      headline_confidence_pct: headlineConfidence,
       final_conviction: conviction,
       verdict_strength: strength,
+      confidence_strength: confidenceStrength,
       participation_cap: participationCap,
       bearish_argument_pct: bearishArgument,
       bullish_argument_pct: bullishArgument,

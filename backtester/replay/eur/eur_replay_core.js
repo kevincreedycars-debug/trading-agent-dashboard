@@ -1,5 +1,9 @@
 const fs = require("fs");
 const path = require("path");
+const {
+  computeHeadlineConfidenceData,
+  deriveConfidenceStrength
+} = require("../../lib/headline_confidence");
 
 const LOGIC_DOCUMENT = "agent_eur_direction.md";
 const LIVE_24H_FACTOR_WEIGHTS = Object.freeze({
@@ -34,24 +38,6 @@ function pctLabel(value) {
   return numeric === null ? "missing" : `${Math.round(numeric * 100) / 100}`;
 }
 
-function clamp(value, min, max) {
-  return Math.min(max, Math.max(min, value));
-}
-
-function deriveConfidenceStrength(confidence, netEdge, participation, direction) {
-  if (direction === "NO_CALL" || direction === "NO 24H CALL") return "NO_CALL";
-  if (confidence === null || confidence === undefined) return "PENDING";
-
-  const edge = Math.abs(Number(netEdge) || 0);
-  const active = Number(participation) || 0;
-
-  if (confidence >= 80 && edge >= 25 && active >= 50) return "VERY_STRONG";
-  if (confidence >= 65 && edge >= 18 && active >= 35) return "STRONG";
-  if (confidence >= 50 && edge >= 10 && active >= 25) return "MODERATE";
-  if (confidence > 0) return "WEAK";
-  return "NO_CALL";
-}
-
 function deriveHeadlineConfidencePercent({
   bullCase,
   bearCase,
@@ -59,23 +45,13 @@ function deriveHeadlineConfidencePercent({
   netEdge,
   missingInputsCount = 0
 }) {
-  const values = [bullCase, bearCase, participation, netEdge].map(toNumber);
-  if (!values.every(Number.isFinite)) return null;
-
-  const [safeBullCase, safeBearCase, safeParticipation, safeNetEdge] = values;
-  let confidence =
-    ((Math.max(safeBullCase, safeBearCase) / 100) * 0.45) +
-    ((safeParticipation / 100) * 0.35) +
-    ((Math.abs(safeNetEdge) / 100) * 0.20);
-
-  if (safeParticipation < 40) confidence -= 0.10;
-  if (safeParticipation < 25) confidence -= 0.20;
-  if (Math.abs(safeNetEdge) < 20) confidence -= 0.10;
-
-  if (missingInputsCount >= 3) confidence -= 0.05;
-  if (missingInputsCount >= 6) confidence -= 0.10;
-
-  return Math.round(clamp(confidence, 0, 1) * 100);
+  return computeHeadlineConfidenceData({
+    bullCase,
+    bearCase,
+    participation,
+    netEdge,
+    missingInputsCount
+  }).value;
 }
 
 function parseLogicVersion() {

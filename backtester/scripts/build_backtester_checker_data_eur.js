@@ -8,6 +8,7 @@ const {
   requireEnv
 } = require("../lib/historical_common");
 const { evaluateSingleMarket } = require("../lib/outcome_evaluation");
+const { computeHeadlineConfidenceFromRow } = require("../lib/headline_confidence");
 const { buildReplayOutput, parseLogicVersion } = require("../replay/eur/eur_replay_core");
 
 const DEFAULT_START = "2024-01-02";
@@ -221,6 +222,15 @@ function compareFactorBreakdown(storedBreakdown, rerunBreakdown) {
   });
 }
 
+function storedPredictionConviction(prediction) {
+  const convictionModel = safeObject(prediction?.conviction_model);
+  return (
+    toNumber(convictionModel.final_conviction) ??
+    toNumber(convictionModel.raw_conviction) ??
+    toNumber(prediction?.predicted_conviction)
+  );
+}
+
 function buildRowComparison(prediction, snapshot, storedEvaluation, priceMap) {
   if (!snapshot || !storedEvaluation) {
     return {
@@ -261,10 +271,26 @@ function buildRowComparison(prediction, snapshot, storedEvaluation, priceMap) {
   const rerunWeighted = safeObject(rerun24h.weighted_score);
   const storedConvictionModel = safeObject(prediction.conviction_model);
   const rerunConvictionModel = safeObject(rerun24h.conviction_model);
+  const storedHeadlineConfidence = computeHeadlineConfidenceFromRow({
+    ...prediction,
+    predicted_direction: prediction.predicted_direction,
+    conviction_model: storedConvictionModel
+  }).value;
+  const rerunHeadlineConfidence = computeHeadlineConfidenceFromRow({
+    predicted_direction: rerun24h.direction,
+    bull_case_pct: rerunConvictionModel.bullish_argument_pct,
+    bear_case_pct: rerunConvictionModel.bearish_argument_pct,
+    participation_pct: rerunConvictionModel.directional_participation_pct,
+    net_edge_pct: rerunConvictionModel.net_edge_pct,
+    conviction_model: rerunConvictionModel
+  }).value;
+  const storedReplayConviction = storedPredictionConviction(prediction);
+  const rerunReplayConviction = storedPredictionConviction({ conviction_model: rerunConvictionModel, predicted_conviction: rerun24h.conviction });
 
   const comparisons = [
     compareExact("Direction", normalizeDirection(prediction.predicted_direction), normalizeDirection(rerun24h.direction)),
-    compareNumeric("Headline Confidence %", prediction.predicted_conviction, rerunConvictionModel.headline_confidence_pct ?? null),
+    compareNumeric("Predicted Conviction %", storedReplayConviction, rerunReplayConviction),
+    compareNumeric("Headline Confidence %", storedHeadlineConfidence, rerunHeadlineConfidence),
     compareExact("Strength Bucket", prediction.verdict_strength || null, rerunConvictionModel.confidence_strength || null),
     compareNumeric("Bull Case %", prediction.bull_case_pct, rerunConvictionModel.bullish_argument_pct),
     compareNumeric("Bear Case %", prediction.bear_case_pct, rerunConvictionModel.bearish_argument_pct),
@@ -288,7 +314,9 @@ function buildRowComparison(prediction, snapshot, storedEvaluation, priceMap) {
     timeframe: prediction.timeframe,
     stored: {
       direction: prediction.predicted_direction,
-      headline_confidence_pct: prediction.predicted_conviction,
+      predicted_conviction: storedReplayConviction,
+      displayed_headline_confidence_pct: storedHeadlineConfidence,
+      headline_confidence_pct: storedHeadlineConfidence,
       strength_bucket: prediction.verdict_strength,
       bull_case_pct: prediction.bull_case_pct,
       bear_case_pct: prediction.bear_case_pct,
@@ -303,7 +331,9 @@ function buildRowComparison(prediction, snapshot, storedEvaluation, priceMap) {
     },
     checker: {
       direction: rerun24h.direction,
-      headline_confidence_pct: rerunConvictionModel.headline_confidence_pct ?? null,
+      predicted_conviction: rerunReplayConviction,
+      displayed_headline_confidence_pct: rerunHeadlineConfidence,
+      headline_confidence_pct: rerunHeadlineConfidence,
       strength_bucket: rerunConvictionModel.confidence_strength || null,
       bull_case_pct: rerunConvictionModel.bullish_argument_pct ?? null,
       bear_case_pct: rerunConvictionModel.bearish_argument_pct ?? null,
@@ -404,6 +434,7 @@ async function run() {
     selected_row_id: selectedRowId,
     fields_compared: [
       "direction",
+      "predicted_conviction",
       "headline_confidence_pct",
       "strength_bucket",
       "bull_case_pct",

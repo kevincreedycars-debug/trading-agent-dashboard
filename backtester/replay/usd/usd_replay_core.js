@@ -8,6 +8,10 @@ const {
   parseArgs,
   requireEnv
 } = require("../../lib/historical_common");
+const {
+  computeHeadlineConfidenceData,
+  deriveConfidenceStrength
+} = require("../../lib/headline_confidence");
 
 const REPLAY_VERSION = "usd_historical_replay_v2";
 const SOURCE_WORKFLOW = "usd_historical_replay";
@@ -620,17 +624,7 @@ function convictionStrengthLabel(conviction) {
 }
 
 function deriveLiveConfidenceStrength(confidence, netEdge, participation, direction) {
-  if (direction === "NO_CALL" || direction === "NO 24H CALL") return "NO_CALL";
-  if (confidence === null || confidence === undefined) return "PENDING";
-
-  const edge = Math.abs(Number(netEdge) || 0);
-  const active = Number(participation) || 0;
-
-  if (confidence >= 80 && edge >= 25 && active >= 50) return "VERY_STRONG";
-  if (confidence >= 65 && edge >= 18 && active >= 35) return "STRONG";
-  if (confidence >= 50 && edge >= 10 && active >= 25) return "MODERATE";
-  if (confidence > 0) return "WEAK";
-  return "NO_CALL";
+  return deriveConfidenceStrength(confidence, netEdge, participation, direction);
 }
 
 function computeLiveHeadlineConfidence({
@@ -643,63 +637,16 @@ function computeLiveHeadlineConfidence({
   missingInputs = [],
   weeklyCandleStatus = ""
 }) {
-  const safeBullCase = toNumber(bullCase);
-  const safeBearCase = toNumber(bearCase);
-  const safeParticipation = toNumber(participation);
-  const safeNetEdge = toNumber(netEdge);
-
-  if ([safeBullCase, safeBearCase, safeParticipation, safeNetEdge].some((value) => value === null)) {
-    return {
-      value: null,
-      strength: deriveLiveConfidenceStrength(null, safeNetEdge, safeParticipation, direction)
-    };
-  }
-
-  let confidence =
-    ((Math.max(safeBullCase, safeBearCase) / 100) * 0.45) +
-    ((safeParticipation / 100) * 0.35) +
-    ((Math.abs(safeNetEdge) / 100) * 0.20);
-
-  if (safeParticipation < 40) confidence -= 0.10;
-  if (safeParticipation < 25) confidence -= 0.20;
-  if (Math.abs(safeNetEdge) < 20) confidence -= 0.10;
-
-  const missingCount = asArray(missingInputs).filter(Boolean).length;
-  if (missingCount >= 3) confidence -= 0.05;
-  if (missingCount >= 6) confidence -= 0.10;
-
-  const flagText = asArray(warnings).join(" ").toLowerCase();
-  const weeklyStatus = String(weeklyCandleStatus || "").toLowerCase();
-
-  if (
-    flagText.includes("event risk") ||
-    flagText.includes("high impact event") ||
-    flagText.includes("tier 1 event")
-  ) {
-    confidence -= 0.10;
-  }
-
-  if (weeklyStatus === "consolidating" || flagText.includes("weekly consolidation")) {
-    confidence -= 0.05;
-  }
-
-  if (
-    flagText.includes("conviction audit") ||
-    flagText.includes("audit flag") ||
-    flagText.includes("audit warning")
-  ) {
-    confidence -= 0.05;
-  }
-
-  if (flagText.includes("o layer")) confidence -= 0.05;
-  if (flagText.includes("adr warning") || flagText.includes("session warning")) confidence -= 0.05;
-
-  const finalConfidence = Math.round(clamp(confidence, 0, 1) * 100);
-
-  return {
-    value: finalConfidence,
-    strength: deriveLiveConfidenceStrength(finalConfidence, safeNetEdge, safeParticipation, direction)
-  };
+  return computeHeadlineConfidenceData({
+    bullCase,
+    bearCase,
+    participation,
+    netEdge,
+    direction,
+    warnings,
+    missingInputs,
+    weeklyCandleStatus
+  });
 }
 
 function computeConviction(snapshot, timeframeKey, weighted, factors, directionInfo, missingInputs) {
@@ -1010,7 +957,7 @@ function buildReplayOutput(snapshot, logicDocumentVersion) {
     timeframe_models: timeframeEntries.reduce((accumulator, [timeframeKey, prediction]) => {
       accumulator[timeframeKey] = {
         direction: prediction.predicted_direction,
-        conviction: prediction.predicted_conviction,
+        conviction: prediction.conviction_model?.legacy_floor_conviction ?? prediction.predicted_conviction,
         weighted_score: prediction.weighted_score,
         conviction_model: prediction.conviction_model,
         factor_breakdown: prediction.factor_breakdown

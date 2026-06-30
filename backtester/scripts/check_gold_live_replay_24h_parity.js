@@ -2,6 +2,7 @@
 
 const fs = require("fs");
 const path = require("path");
+const { computeHeadlineConfidenceFromRow } = require("../lib/headline_confidence");
 const { buildReplayOutput, parseLogicVersion } = require("../replay/gold/gold_replay_core");
 
 const fixturePath = path.resolve(__dirname, "../fixtures/gold_live_replay_24h_parity_fixture.json");
@@ -30,7 +31,14 @@ function replay24hSummary(output) {
   return {
     direction_24h: output.direction_24h,
     conviction_24h: output.conviction_24h,
-    headline_confidence_pct: convictionModel.final_conviction ?? output.conviction_24h ?? null,
+    headline_confidence_pct: computeHeadlineConfidenceFromRow({
+      predicted_direction: output.direction_24h,
+      bull_case_pct: convictionModel.bullish_argument_pct ?? convictionModel.bull_case ?? null,
+      bear_case_pct: convictionModel.bearish_argument_pct ?? convictionModel.bear_case ?? null,
+      participation_pct: convictionModel.directional_participation_pct ?? convictionModel.active_participation_pct ?? convictionModel.participation ?? null,
+      net_edge_pct: convictionModel.net_edge_pct ?? convictionModel.net_edge ?? null,
+      conviction_model: convictionModel
+    }).value,
     strength_bucket: convictionModel.verdict_strength ?? null,
     bull_case_pct: convictionModel.bullish_argument_pct ?? convictionModel.bull_case ?? null,
     bear_case_pct: convictionModel.bearish_argument_pct ?? convictionModel.bear_case ?? null,

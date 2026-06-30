@@ -8,6 +8,11 @@ const checkerDataUrls = {
 };
 const researchSupabaseUrl = "https://eaolqbrlywczinfordvg.supabase.co/rest/v1";
 const researchSupabaseKey = "sb_publishable_k6YbEuuk3GyB9GVTQDtNVA_J1gCRYaY";
+const headlineConfidenceLib = globalThis.HeadlineConfidence;
+
+if (!headlineConfidenceLib) {
+  throw new Error("HeadlineConfidence shared helper is required before loading script.js");
+}
 
 const labels = {
   "24h": "24H",
@@ -794,94 +799,23 @@ function getWeeklyCandleStatus(call, agent, timeframe = "24h") {
 }
 
 function deriveConfidenceStrength(confidence, netEdge, participation, direction) {
-  if (direction === "NO_CALL" || direction === "NO 24H CALL") return "NO_CALL";
-  if (confidence === null || confidence === undefined) return "PENDING";
-
-  const edge = Math.abs(Number(netEdge) || 0);
-  const active = Number(participation) || 0;
-
-  if (confidence >= 80 && edge >= 25 && active >= 50) return "VERY_STRONG";
-  if (confidence >= 65 && edge >= 18 && active >= 35) return "STRONG";
-  if (confidence >= 50 && edge >= 10 && active >= 25) return "MODERATE";
-  if (confidence > 0) return "WEAK";
-  return "NO_CALL";
+  return headlineConfidenceLib.deriveConfidenceStrength(confidence, netEdge, participation, direction);
 }
 
 function confidenceData(call, agent, timeframe = "24h") {
   const model = call?.conviction_model || {};
-  const direction = call?.direction || "PENDING";
-  const bullCase = numberOrNull(model.bullish_argument_pct);
-  const bearCase = numberOrNull(model.bearish_argument_pct);
-  const participation = numberOrNull(
-    model.directional_participation_pct ??
-    model.active_participation_pct ??
-    model.participation
-  );
-  const netEdge = numberOrNull(model.net_edge_pct);
-
-  const hasInputs = [bullCase, bearCase, participation, netEdge].every(Number.isFinite);
-  if (!hasInputs) {
-    const fallback = numberOrNull(model.final_confidence ?? call?.confidence);
-    return {
-      value: Number.isFinite(fallback) ? fallback : call?.conviction ?? null,
-      strength: deriveConfidenceStrength(fallback, netEdge, participation, direction),
-      evidenceDominance: null,
-      participation,
-      netEdge,
-      missingInputsCount: missingInputsCount(call, agent, timeframe)
-    };
-  }
-
-  let confidence =
-    ((Math.max(bullCase, bearCase) / 100) * 0.45) +
-    ((participation / 100) * 0.35) +
-    ((Math.abs(netEdge) / 100) * 0.20);
-
-  if (participation < 40) confidence -= 0.10;
-  if (participation < 25) confidence -= 0.20;
-  if (Math.abs(netEdge) < 20) confidence -= 0.10;
-
-  const missingCount = missingInputsCount(call, agent, timeframe);
-  if (missingCount >= 3) confidence -= 0.05;
-  if (missingCount >= 6) confidence -= 0.10;
-
-  const flags = combinedConfidenceFlags(call, agent, timeframe);
-  const weeklyStatus = String(getWeeklyCandleStatus(call, agent, timeframe)).toLowerCase();
-  const flagText = flags.join(" ").toLowerCase();
-
-  if (
-    flagText.includes("event risk") ||
-    flagText.includes("high impact event") ||
-    flagText.includes("tier 1 event")
-  ) {
-    confidence -= 0.10;
-  }
-
-  if (weeklyStatus === "consolidating" || flagText.includes("weekly consolidation")) {
-    confidence -= 0.05;
-  }
-
-  if (
-    flagText.includes("conviction audit") ||
-    flagText.includes("audit flag") ||
-    flagText.includes("audit warning")
-  ) {
-    confidence -= 0.05;
-  }
-
-  if (flagText.includes("o layer")) confidence -= 0.05;
-  if (flagText.includes("adr warning") || flagText.includes("session warning")) confidence -= 0.05;
-
-  const finalConfidence = Math.round(clamp(confidence, 0, 1) * 100);
-
-  return {
-    value: finalConfidence,
-    strength: model.confidence_strength || deriveConfidenceStrength(finalConfidence, netEdge, participation, direction),
-    evidenceDominance: Math.max(bullCase, bearCase),
-    participation,
-    netEdge,
-    missingInputsCount: missingCount
-  };
+  return headlineConfidenceLib.computeHeadlineConfidenceData({
+    bullCase: model.bullish_argument_pct,
+    bearCase: model.bearish_argument_pct,
+    participation: model.directional_participation_pct ?? model.active_participation_pct ?? model.participation,
+    netEdge: model.net_edge_pct,
+    direction: call?.direction || "PENDING",
+    warnings: combinedConfidenceFlags(call, agent, timeframe),
+    missingInputsCount: missingInputsCount(call, agent, timeframe),
+    weeklyCandleStatus: getWeeklyCandleStatus(call, agent, timeframe),
+    fallbackConfidence: model.final_confidence ?? call?.confidence ?? call?.conviction ?? null,
+    strengthOverride: model.confidence_strength || null
+  });
 }
 
 function confidenceValue(call, agent, timeframe = "24h") {
@@ -2154,32 +2088,16 @@ function parseConfidenceCandidate(value) {
 }
 
 function deriveHeadlineConfidencePercent(source = {}) {
-  const bullCase = parseConfidenceCandidate(source.bull_case_pct ?? source.bullCase);
-  const bearCase = parseConfidenceCandidate(source.bear_case_pct ?? source.bearCase);
-  const participation = parseConfidenceCandidate(source.participation_pct ?? source.participation);
-  const netEdge = parseConfidenceCandidate(source.net_edge_pct ?? source.netEdge);
-
-  if (![bullCase, bearCase, participation, netEdge].every(Number.isFinite)) {
-    return null;
-  }
-
-  let confidence =
-    ((Math.max(bullCase, bearCase) / 100) * 0.45) +
-    ((participation / 100) * 0.35) +
-    ((Math.abs(netEdge) / 100) * 0.20);
-
-  if (participation < 40) confidence -= 0.10;
-  if (participation < 25) confidence -= 0.20;
-  if (Math.abs(netEdge) < 20) confidence -= 0.10;
-
-  return roundTo(clamp(confidence, 0, 1) * 100, 1);
+  const confidence = headlineConfidenceLib.computeHeadlineConfidenceFromRow(source).value;
+  return Number.isFinite(confidence) ? roundTo(confidence, 1) : null;
 }
 
 function normalizeConfidencePercent(row = {}) {
   const derivedHeadline = deriveHeadlineConfidencePercent(row);
   const candidates = [
-    row.headline_confidence_pct,
+    row.displayed_headline_confidence_pct,
     derivedHeadline,
+    row.headline_confidence_pct,
     row.predicted_conviction,
     row.agent_conviction,
     row.confidence,
@@ -3735,7 +3653,8 @@ function normalizeEurMatrixRows(rows = []) {
     agent_direction: row.agent_direction,
     predicted_conviction: row.agent_conviction,
     agent_conviction: row.agent_conviction,
-    headline_confidence_pct: row.agent_conviction,
+    displayed_headline_confidence_pct: null,
+    headline_confidence_pct: null,
     benchmark_market: row.evaluated_market || "EURUSD",
     open_price: row.open_price,
     close_price: row.close_price,
@@ -3757,7 +3676,8 @@ function normalizeMarketEvaluationRows(rows = [], options = {}) {
     agent_direction: row.agent_direction,
     predicted_conviction: row.agent_conviction,
     agent_conviction: row.agent_conviction,
-    headline_confidence_pct: row.agent_conviction,
+    displayed_headline_confidence_pct: null,
+    headline_confidence_pct: null,
     benchmark_market: row.evaluated_market || benchmark,
     open_price: row.open_price,
     close_price: row.close_price,
@@ -3784,9 +3704,15 @@ function normalizeCheckerRowsForMatrix(checker = null, options = {}) {
       timeframe: row?.timeframe || checker?.meta?.timeframe || "following 24hrs",
       predicted_direction: stored.direction || null,
       agent_direction: stored.direction || null,
-      predicted_conviction: stored.headline_confidence_pct ?? null,
-      agent_conviction: stored.headline_confidence_pct ?? null,
-      headline_confidence_pct: stored.headline_confidence_pct ?? null,
+      predicted_conviction: stored.predicted_conviction ?? null,
+      agent_conviction: stored.predicted_conviction ?? null,
+      displayed_headline_confidence_pct: stored.displayed_headline_confidence_pct ?? stored.headline_confidence_pct ?? null,
+      headline_confidence_pct: stored.displayed_headline_confidence_pct ?? stored.headline_confidence_pct ?? null,
+      bull_case_pct: stored.bull_case_pct ?? null,
+      bear_case_pct: stored.bear_case_pct ?? null,
+      net_edge_pct: stored.net_edge_pct ?? null,
+      participation_pct: stored.participation_pct ?? null,
+      conviction_model: stored.conviction_model || null,
       verdict_strength: stored.strength_bucket || null,
       benchmark_market: benchmark,
       open_price: Number.isFinite(openPrice) ? openPrice : null,
@@ -4586,18 +4512,18 @@ async function fetchResearchDashboardData() {
     goldCheckerDataPromise
   ]);
 
-  const resolvedEurMatrix24hRows = eurMatrix24hRows.length
-    ? eurMatrix24hRows
-    : normalizeCheckerRowsForMatrix(eurCheckerData, {
+  const resolvedEurMatrix24hRows = eurCheckerData?.rows?.length
+    ? normalizeCheckerRowsForMatrix(eurCheckerData, {
       assetCode: "EUR",
       benchmark: "EURUSD"
-    });
-  const resolvedGoldMatrix24hRows = goldMatrix24hRows.length
-    ? goldMatrix24hRows
-    : normalizeCheckerRowsForMatrix(goldCheckerData, {
+    })
+    : eurMatrix24hRows;
+  const resolvedGoldMatrix24hRows = goldCheckerData?.rows?.length
+    ? normalizeCheckerRowsForMatrix(goldCheckerData, {
       assetCode: "GOLD",
       benchmark: "XAUUSD"
-    });
+    })
+    : goldMatrix24hRows;
 
   return {
     meta: {

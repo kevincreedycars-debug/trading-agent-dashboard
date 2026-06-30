@@ -293,7 +293,7 @@ async function run() {
       timeframe: TIMEFRAME_CONFIG["24h"].timeframe,
       legacy_timeframe_key: TIMEFRAME_CONFIG["24h"].legacy_timeframe_key,
       predicted_direction: prediction.direction,
-      predicted_conviction: prediction.conviction_model.headline_confidence_pct,
+      predicted_conviction: prediction.conviction,
       bull_case_pct: prediction.conviction_model.bullish_argument_pct,
       bear_case_pct: prediction.conviction_model.bearish_argument_pct,
       net_edge_pct: prediction.conviction_model.net_edge_pct,
