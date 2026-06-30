@@ -264,8 +264,8 @@ function buildRowComparison(prediction, snapshot, storedEvaluation, priceMap) {
 
   const comparisons = [
     compareExact("Direction", normalizeDirection(prediction.predicted_direction), normalizeDirection(rerun24h.direction)),
-    compareNumeric("Headline Confidence %", prediction.predicted_conviction, rerun24h.conviction),
-    compareExact("Strength Bucket", prediction.verdict_strength || null, rerunConvictionModel.verdict_strength || null),
+    compareNumeric("Headline Confidence %", prediction.predicted_conviction, rerunConvictionModel.headline_confidence_pct ?? null),
+    compareExact("Strength Bucket", prediction.verdict_strength || null, rerunConvictionModel.confidence_strength || null),
     compareNumeric("Bull Case %", prediction.bull_case_pct, rerunConvictionModel.bullish_argument_pct),
     compareNumeric("Bear Case %", prediction.bear_case_pct, rerunConvictionModel.bearish_argument_pct),
     compareNumeric("Net Edge %", prediction.net_edge_pct, rerunConvictionModel.net_edge_pct),
@@ -303,8 +303,8 @@ function buildRowComparison(prediction, snapshot, storedEvaluation, priceMap) {
     },
     checker: {
       direction: rerun24h.direction,
-      headline_confidence_pct: rerun24h.conviction,
-      strength_bucket: rerunConvictionModel.verdict_strength || null,
+      headline_confidence_pct: rerunConvictionModel.headline_confidence_pct ?? null,
+      strength_bucket: rerunConvictionModel.confidence_strength || null,
       bull_case_pct: rerunConvictionModel.bullish_argument_pct ?? null,
       bear_case_pct: rerunConvictionModel.bearish_argument_pct ?? null,
       net_edge_pct: rerunConvictionModel.net_edge_pct ?? null,
