@@ -3663,6 +3663,7 @@ function renderResearch24hAccuracyMatrix(rows = [], options = {}) {
           <span><strong>Asset:</strong> ${escapeHtml(assetLabel)}</span>
           <span><strong>Timeframe:</strong> ${escapeHtml(timeframeLabel)}</span>
         </div>
+        <p class="research-panel-copy research-matrix-note">Buckets use live headline confidence bands, not internal strength labels.</p>
         <div class="research-table-scroll research-matrix-scroll">
           <table class="dashboard-table research-matrix-table">
             <thead>
@@ -4484,23 +4485,23 @@ async function fetchResearchView(viewName, options = {}) {
 }
 
 async function fetchResearchDashboardData() {
-  const safeResearchView = (viewName, options = {}, fallback = []) =>
-    fetchResearchView(viewName, options).catch(err => {
-      console.warn(`Could not load research view ${viewName}`, err);
+  const resolveResearchTask = async (label, task, fallback) => {
+    try {
+      return await task;
+    } catch (err) {
+      console.warn(`Could not load research task ${label}`, err);
       return fallback;
-    });
+    }
+  };
 
-  const matrix24hRowsPromise = fetchResearchView("research_prediction_usd_benchmark_summary", {
+  const matrix24hRowsPromise = resolveResearchTask("research_prediction_usd_benchmark_summary", fetchResearchView("research_prediction_usd_benchmark_summary", {
     select: "snapshot_date,asset_code,timeframe,predicted_direction,agent_direction,agent_conviction,predicted_conviction,headline_confidence_pct,bull_case_pct,bear_case_pct,net_edge_pct,participation_pct,verdict_strength,combined_result,benchmark_market,open_price,close_price,pct_change",
     order: "timeframe.asc,predicted_direction.asc,verdict_strength.asc",
     filters: {
       timeframe: "eq.following 24hrs"
     }
-  }).catch(err => {
-    console.warn("Could not load 24H benchmark matrix rows", err);
-    return [];
-  });
-  const eurMatrix24hRowsPromise = fetchResearchView("research_prediction_evaluations", {
+  }), []);
+  const eurMatrix24hRowsPromise = resolveResearchTask("research_prediction_evaluations.EUR.24h", fetchResearchView("research_prediction_evaluations", {
     select: "call_date,asset_code,timeframe,agent_direction,agent_conviction,evaluated_market,open_price,close_price,pct_change,result,prediction_id",
     order: "call_date.asc",
     filters: {
@@ -4513,11 +4514,8 @@ async function fetchResearchDashboardData() {
   }).then(rows => normalizeMarketEvaluationRows(rows, {
     assetCode: "EUR",
     benchmark: "EURUSD"
-  })).catch(err => {
-    console.warn("Could not load 24H EUR matrix rows", err);
-    return [];
-  });
-  const goldMatrix24hRowsPromise = fetchResearchView("research_prediction_evaluations", {
+  })), []);
+  const goldMatrix24hRowsPromise = resolveResearchTask("research_prediction_evaluations.GOLD.24h", fetchResearchView("research_prediction_evaluations", {
     select: "call_date,asset_code,timeframe,agent_direction,agent_conviction,evaluated_market,open_price,close_price,pct_change,result,prediction_id",
     order: "call_date.asc",
     filters: {
@@ -4530,22 +4528,10 @@ async function fetchResearchDashboardData() {
   }).then(rows => normalizeMarketEvaluationRows(rows, {
     assetCode: "GOLD",
     benchmark: "XAUUSD"
-  })).catch(err => {
-    console.warn("Could not load 24H GOLD matrix rows", err);
-    return [];
-  });
-  const usdCheckerDataPromise = fetchLocalJson(checkerDataUrls.USD).catch(err => {
-    console.warn("Could not load USD backtester checker data", err);
-    return null;
-  });
-  const eurCheckerDataPromise = fetchLocalJson(checkerDataUrls.EUR).catch(err => {
-    console.warn("Could not load EUR backtester checker data", err);
-    return null;
-  });
-  const goldCheckerDataPromise = fetchLocalJson(checkerDataUrls.GOLD).catch(err => {
-    console.warn("Could not load GOLD backtester checker data", err);
-    return null;
-  });
+  })), []);
+  const usdCheckerDataPromise = resolveResearchTask("checker.USD", fetchLocalJson(checkerDataUrls.USD), null);
+  const eurCheckerDataPromise = resolveResearchTask("checker.EUR", fetchLocalJson(checkerDataUrls.EUR), null);
+  const goldCheckerDataPromise = resolveResearchTask("checker.GOLD", fetchLocalJson(checkerDataUrls.GOLD), null);
 
   const [
     overallRows,
@@ -4569,32 +4555,32 @@ async function fetchResearchDashboardData() {
     eurCheckerData,
     goldCheckerData
   ] = await Promise.all([
-    safeResearchView("research_overall_win_rate"),
-    safeResearchView("research_usd_24h_direction_accuracy"),
+    resolveResearchTask("research_overall_win_rate", fetchResearchView("research_overall_win_rate"), []),
+    resolveResearchTask("research_usd_24h_direction_accuracy", fetchResearchView("research_usd_24h_direction_accuracy"), []),
     matrix24hRowsPromise,
     eurMatrix24hRowsPromise,
     goldMatrix24hRowsPromise,
-    safeResearchView("research_accuracy_by_verdict_strength", { order: "timeframe.asc,strength_rank.asc" }),
-    safeResearchView("research_accuracy_by_confidence_bucket", { order: "timeframe.asc,confidence_bucket_rank.asc" }),
-    safeResearchView("research_trade_quality_thresholds", { order: "timeframe.asc,threshold_rank.asc" }),
-    safeResearchView("research_win_rate_by_timeframe", { order: "timeframe.asc" }),
-    safeResearchView("research_win_rate_by_conviction_bucket"),
-    safeResearchView("research_win_rate_by_weekday"),
-    safeResearchView("research_win_rate_by_magnitude_bucket"),
-    safeResearchView("research_win_rate_by_market_regime"),
-    safeResearchView("research_factor_reliability", {
+    resolveResearchTask("research_accuracy_by_verdict_strength", fetchResearchView("research_accuracy_by_verdict_strength", { order: "timeframe.asc,strength_rank.asc" }), []),
+    resolveResearchTask("research_accuracy_by_confidence_bucket", fetchResearchView("research_accuracy_by_confidence_bucket", { order: "timeframe.asc,confidence_bucket_rank.asc" }), []),
+    resolveResearchTask("research_trade_quality_thresholds", fetchResearchView("research_trade_quality_thresholds", { order: "timeframe.asc,threshold_rank.asc" }), []),
+    resolveResearchTask("research_win_rate_by_timeframe", fetchResearchView("research_win_rate_by_timeframe", { order: "timeframe.asc" }), []),
+    resolveResearchTask("research_win_rate_by_conviction_bucket", fetchResearchView("research_win_rate_by_conviction_bucket"), []),
+    resolveResearchTask("research_win_rate_by_weekday", fetchResearchView("research_win_rate_by_weekday"), []),
+    resolveResearchTask("research_win_rate_by_magnitude_bucket", fetchResearchView("research_win_rate_by_magnitude_bucket"), []),
+    resolveResearchTask("research_win_rate_by_market_regime", fetchResearchView("research_win_rate_by_market_regime"), []),
+    resolveResearchTask("research_factor_reliability", fetchResearchView("research_factor_reliability", {
       order: "win_rate_pct.desc,factor_occurrences.desc,avg_factor_weight.desc",
       limit: 8
-    }),
-    safeResearchView("research_factor_contribution", {
+    }), []),
+    resolveResearchTask("research_factor_contribution", fetchResearchView("research_factor_contribution", {
       order: "weighted_contribution_score.desc,contribution_score.desc,factor_occurrences.desc",
       limit: 8
-    }),
-    safeResearchView("research_best_factor_combinations", {
+    }), []),
+    resolveResearchTask("research_best_factor_combinations", fetchResearchView("research_best_factor_combinations", {
       order: "win_rate_pct.desc,combo_occurrences.desc,avg_combined_weight.desc",
       limit: 8
-    }),
-    safeResearchView("research_dashboard_infrastructure_status"),
+    }), []),
+    resolveResearchTask("research_dashboard_infrastructure_status", fetchResearchView("research_dashboard_infrastructure_status"), []),
     usdCheckerDataPromise,
     eurCheckerDataPromise,
     goldCheckerDataPromise

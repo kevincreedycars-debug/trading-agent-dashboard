@@ -40,12 +40,25 @@ async function run() {
   const page = await browser.newPage();
 
   try {
+    await page.route("**/research_best_factor_combinations**", async (route) => {
+      await route.fulfill({
+        status: 500,
+        contentType: "application/json; charset=utf-8",
+        body: JSON.stringify({ message: "forced ancillary failure for smoke test" })
+      });
+    });
+
     await page.goto("http://127.0.0.1:4173/", { waitUntil: "networkidle" });
     await page.getByRole("button", { name: "Backtest / Accuracy" }).click();
     await page.getByRole("button", { name: "Accuracy Tables" }).click();
 
     await page.waitForSelector("text=Gold 24H direction by strength", { timeout: 15000 });
     await page.waitForTimeout(2000);
+    const backtestText = await page.locator("#backtestPanel").innerText();
+
+    if (backtestText.includes("Research view unavailable") || backtestText.includes("Research data unavailable")) {
+      throw new Error(`Backtest panel fell back to full error state after ancillary 500.\n${backtestText}`);
+    }
 
     const goldMatrixIndex = 2;
     const summaryText = await page.locator(".matrix-summary-grid").nth(goldMatrixIndex).innerText();
@@ -64,6 +77,7 @@ async function run() {
     console.log(JSON.stringify({
       status: "PASS",
       target: "Gold Backtest / Accuracy matrix",
+      ancillary_failure_injected: "research_best_factor_combinations 500",
       matrix_summary_excerpt: summaryText
     }, null, 2));
   } finally {
