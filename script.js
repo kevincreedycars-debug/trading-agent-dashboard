@@ -3,7 +3,8 @@ const layer2Url = "./data/layer2.json";
 const workflowControlUrl = "./data/workflow-control.json";
 const checkerDataUrls = {
   USD: "./data/backtester-checker-usd-24h-2024-01.json?v=20260629-usd-flatband-010",
-  EUR: "./data/backtester-checker-eur-24h-2024-2026.json?v=20260629-eur-flatband-015"
+  EUR: "./data/backtester-checker-eur-24h-2024-2026.json?v=20260629-eur-flatband-015",
+  GOLD: "./data/backtester-checker-gold-24h-2024-2026.json?v=20260630-gold-xauusd-dashboard"
 };
 const researchSupabaseUrl = "https://eaolqbrlywczinfordvg.supabase.co/rest/v1";
 const researchSupabaseKey = "sb_publishable_k6YbEuuk3GyB9GVTQDtNVA_J1gCRYaY";
@@ -2587,6 +2588,37 @@ function computeMatrixSummary(rows = [], options = {}) {
   return { directionTotals, resultTotals };
 }
 
+function computeResearchOutcomeTotals(rows = [], options = {}) {
+  const assetCode = options.assetCode || "USD";
+  const timeframe = options.timeframe || "following 24hrs";
+  const resultTotals = {
+    total: 0,
+    correct: 0,
+    wrong: 0,
+    flat: 0,
+    no_call: 0,
+    not_evaluable: 0
+  };
+
+  normaliseResearchRows(rows)
+    .filter(row =>
+      (!assetCode || row.asset_code === assetCode) &&
+      (!timeframe || row.timeframe === timeframe)
+    )
+    .forEach(row => {
+      const result = String(row.combined_result || "").trim().toUpperCase();
+      if (!result) return;
+      resultTotals.total += 1;
+      if (result === "CORRECT") resultTotals.correct += 1;
+      if (result === "WRONG") resultTotals.wrong += 1;
+      if (result === "FLAT") resultTotals.flat += 1;
+      if (result === "NO_CALL") resultTotals.no_call += 1;
+      if (result === "NOT_EVALUABLE") resultTotals.not_evaluable += 1;
+    });
+
+  return resultTotals;
+}
+
 function formatAccuracyWithCounts(correct, total) {
   const safeCorrect = Number(correct || 0);
   const safeTotal = Number(total || 0);
@@ -2645,7 +2677,7 @@ function formatMatrixRateBundle(correct, wrong, flat, total) {
   };
 }
 
-function buildMatrixSummaryCards(directionTotals = {}, resultTotals = {}) {
+function buildMatrixSummaryCards(directionTotals = {}, resultTotals = {}, outcomeTotals = {}) {
   const overallIncludingFlat = formatCompactRateMetric(resultTotals.correct, resultTotals.evaluated, {
     numeratorLabel: "correct"
   });
@@ -2671,6 +2703,8 @@ function buildMatrixSummaryCards(directionTotals = {}, resultTotals = {}) {
     ${renderBacktestKpiMetric("Correct", String(resultTotals.correct), "Directional wins")}
     ${renderBacktestKpiMetric("Wrong", String(resultTotals.wrong), "Directional misses")}
     ${renderBacktestKpiMetric("Flat", String(resultTotals.flat), "Flat benchmark outcomes")}
+    ${renderBacktestKpiMetric("No Call", String(outcomeTotals.no_call ?? 0), "Not included in matrix")}
+    ${renderBacktestKpiMetric("Not Evaluable", String(outcomeTotals.not_evaluable ?? 0), "Missing evaluation-window coverage")}
     ${renderBacktestKpiMetric("Accuracy (Incl. Flat)", overallIncludingFlat.primary, overallIncludingFlat.secondary, "Secondary diagnostic only")}
     ${renderBacktestKpiMetric("Decision Win Rate", overallExFlat.primary, overallExFlat.secondary, "Primary directional metric")}
     ${renderBacktestKpiMetric("Flat Outcomes", overallFlat.primary, overallFlat.secondary, "Neutral market outcomes")}
@@ -2717,10 +2751,15 @@ function renderResearch24hContext(summary = null) {
 
 function renderResearchAsset24hContext(options = {}) {
   const assetCode = options.assetCode || "USD";
-  const benchmark = options.benchmark || (assetCode === "EUR" ? "EURUSD" : "DXY");
+  const benchmark = options.benchmark
+    || (assetCode === "EUR"
+      ? "EURUSD"
+      : (assetCode === "GOLD" ? "XAUUSD" : "DXY"));
   const ruleText = options.ruleText || (
     assetCode === "EUR"
       ? `EUR bullish is correct when ${benchmark} rises over the following 24hrs; EUR bearish is correct when ${benchmark} falls; flat is a neutral market outcome when ${benchmark} remains inside the EUR/USD flat threshold.`
+      : assetCode === "GOLD"
+        ? `Gold bullish is correct when ${benchmark} rises over the following 24hrs; Gold bearish is correct when ${benchmark} falls; flat is a neutral market outcome when ${benchmark} remains inside the Gold 24H flat threshold.`
       : `USD bullish is correct when ${benchmark} rises over the following 24hrs; USD bearish is correct when ${benchmark} falls; flat is a neutral market outcome when ${benchmark} remains inside the flat threshold.`
   );
 
@@ -3530,6 +3569,7 @@ function renderMatrixSummary(rows = [], options = {}) {
   const assetLabel = options.assetLabel || "USD";
   const timeframeLabel = options.timeframeLabel || "24H";
   const { directionTotals, resultTotals } = computeMatrixSummary(rows, options);
+  const outcomeTotals = computeResearchOutcomeTotals(rows, options);
   return `
     <section class="research-section">
       <div class="research-section-head">
@@ -3540,7 +3580,7 @@ function renderMatrixSummary(rows = [], options = {}) {
         <p class="research-panel-copy">Compact totals from the same evaluated ${escapeHtml(assetLabel)} ${escapeHtml(timeframeLabel)} matrix rows above. Flat outcomes remain separate from directional wins and losses, so ex-flat win rate is the primary directional read.</p>
       </div>
       <section class="backtest-metric-grid research-summary-grid matrix-summary-grid matrix-summary-grid-compact">
-        ${buildMatrixSummaryCards(directionTotals, resultTotals)}
+        ${buildMatrixSummaryCards(directionTotals, resultTotals, outcomeTotals)}
       </section>
     </section>
   `;
@@ -3704,8 +3744,31 @@ function normalizeEurMatrixRows(rows = []) {
   }));
 }
 
-function normalizeEurCheckerRowsForMatrix(checker = null) {
+function normalizeMarketEvaluationRows(rows = [], options = {}) {
+  const assetCode = options.assetCode || "EUR";
+  const benchmark = options.benchmark || "EURUSD";
+
+  return normaliseResearchRows(rows).map(row => ({
+    snapshot_date: row.call_date || row.snapshot_date || "",
+    asset_code: row.asset_code || assetCode,
+    timeframe: row.timeframe,
+    predicted_direction: row.agent_direction,
+    agent_direction: row.agent_direction,
+    predicted_conviction: row.agent_conviction,
+    agent_conviction: row.agent_conviction,
+    headline_confidence_pct: row.agent_conviction,
+    benchmark_market: row.evaluated_market || benchmark,
+    open_price: row.open_price,
+    close_price: row.close_price,
+    pct_change: row.pct_change,
+    combined_result: row.result,
+    prediction_id: row.prediction_id
+  }));
+}
+
+function normalizeCheckerRowsForMatrix(checker = null, options = {}) {
   const rows = Array.isArray(checker?.rows) ? checker.rows : [];
+  const benchmark = options.benchmark || "EURUSD";
   return rows.map(row => {
     const openPrice = Number(row?.evaluation_inputs?.open_price);
     const closePrice = Number(row?.evaluation_inputs?.close_price);
@@ -3716,7 +3779,7 @@ function normalizeEurCheckerRowsForMatrix(checker = null) {
 
     return {
       snapshot_date: row?.snapshot_date || "",
-      asset_code: checker?.meta?.asset || "EUR",
+      asset_code: checker?.meta?.asset || options.assetCode || "EUR",
       timeframe: row?.timeframe || checker?.meta?.timeframe || "following 24hrs",
       predicted_direction: stored.direction || null,
       agent_direction: stored.direction || null,
@@ -3724,7 +3787,7 @@ function normalizeEurCheckerRowsForMatrix(checker = null) {
       agent_conviction: stored.headline_confidence_pct ?? null,
       headline_confidence_pct: stored.headline_confidence_pct ?? null,
       verdict_strength: stored.strength_bucket || null,
-      benchmark_market: "EURUSD",
+      benchmark_market: benchmark,
       open_price: Number.isFinite(openPrice) ? openPrice : null,
       close_price: Number.isFinite(closePrice) ? closePrice : null,
       pct_change: Number.isFinite(pctChange) ? pctChange : null,
@@ -3818,6 +3881,7 @@ function renderResearchAccuracy(data = {}) {
   const summary24h = data.accuracy?.summary_24h || null;
   const usdMatrix24hRows = data.accuracy?.matrix_24h_rows || [];
   const eurMatrix24hRows = data.accuracy?.eur_matrix_24h_rows || [];
+  const goldMatrix24hRows = data.accuracy?.gold_matrix_24h_rows || [];
 
   if (data.meta?.error) {
     return `
@@ -3866,6 +3930,24 @@ function renderResearchAccuracy(data = {}) {
         assetCode: "EUR",
         timeframe: "following 24hrs",
         assetLabel: "EUR",
+        timeframeLabel: "24H"
+      })}
+      ${renderResearchAsset24hContext({
+        assetCode: "GOLD",
+        benchmark: "XAUUSD"
+      })}
+      ${renderResearch24hAccuracyMatrix(goldMatrix24hRows, {
+        assetCode: "GOLD",
+        assetLabel: "Gold",
+        timeframe: "following 24hrs",
+        timeframeLabel: "24H",
+        sourceView: "research_prediction_evaluations",
+        exportKey: "gold-24h"
+      })}
+      ${renderMatrixSummary(goldMatrix24hRows, {
+        assetCode: "GOLD",
+        timeframe: "following 24hrs",
+        assetLabel: "Gold",
         timeframeLabel: "24H"
       })}
       ${renderResearchDefinitions()}
@@ -3955,13 +4037,27 @@ function escapeCsvCell(value) {
 
 function exportMatrixEvidenceCsv(exportKey = "usd-24h") {
   const normalizedKey = String(exportKey || "usd-24h").toLowerCase();
-  const matrix24hRows = normalizedKey === "eur-24h"
-    ? (backtestData?.accuracy?.eur_matrix_24h_rows || [])
-    : (backtestData?.accuracy?.matrix_24h_rows || []);
-  const assetCode = normalizedKey === "eur-24h" ? "EUR" : "USD";
-  const sourceView = normalizedKey === "eur-24h"
-    ? "research_prediction_evaluations"
-    : "research_prediction_usd_benchmark_summary";
+  const exportConfig = {
+    "usd-24h": {
+      rows: backtestData?.accuracy?.matrix_24h_rows || [],
+      assetCode: "USD",
+      sourceView: "research_prediction_usd_benchmark_summary"
+    },
+    "eur-24h": {
+      rows: backtestData?.accuracy?.eur_matrix_24h_rows || [],
+      assetCode: "EUR",
+      sourceView: "research_prediction_evaluations"
+    },
+    "gold-24h": {
+      rows: backtestData?.accuracy?.gold_matrix_24h_rows || [],
+      assetCode: "GOLD",
+      sourceView: "research_prediction_evaluations"
+    }
+  };
+  const selectedExport = exportConfig[normalizedKey] || exportConfig["usd-24h"];
+  const matrix24hRows = selectedExport.rows;
+  const assetCode = selectedExport.assetCode;
+  const sourceView = selectedExport.sourceView;
   const audit = buildResearchEvidenceAudit(matrix24hRows, {
     assetCode,
     timeframe: "following 24hrs",
@@ -4388,6 +4484,12 @@ async function fetchResearchView(viewName, options = {}) {
 }
 
 async function fetchResearchDashboardData() {
+  const safeResearchView = (viewName, options = {}, fallback = []) =>
+    fetchResearchView(viewName, options).catch(err => {
+      console.warn(`Could not load research view ${viewName}`, err);
+      return fallback;
+    });
+
   const matrix24hRowsPromise = fetchResearchView("research_prediction_usd_benchmark_summary", {
     select: "snapshot_date,asset_code,timeframe,predicted_direction,agent_direction,agent_conviction,predicted_conviction,headline_confidence_pct,bull_case_pct,bear_case_pct,net_edge_pct,participation_pct,verdict_strength,combined_result,benchmark_market,open_price,close_price,pct_change",
     order: "timeframe.asc,predicted_direction.asc,verdict_strength.asc",
@@ -4408,8 +4510,28 @@ async function fetchResearchDashboardData() {
       evaluation_mode: "eq.primary",
       evaluation_version: "eq.phase1_outcome_eval_v1"
     }
-  }).then(normalizeEurMatrixRows).catch(err => {
+  }).then(rows => normalizeMarketEvaluationRows(rows, {
+    assetCode: "EUR",
+    benchmark: "EURUSD"
+  })).catch(err => {
     console.warn("Could not load 24H EUR matrix rows", err);
+    return [];
+  });
+  const goldMatrix24hRowsPromise = fetchResearchView("research_prediction_evaluations", {
+    select: "call_date,asset_code,timeframe,agent_direction,agent_conviction,evaluated_market,open_price,close_price,pct_change,result,prediction_id",
+    order: "call_date.asc",
+    filters: {
+      asset_code: "eq.GOLD",
+      evaluated_market: "eq.XAUUSD",
+      timeframe: "eq.following 24hrs",
+      evaluation_mode: "eq.primary",
+      evaluation_version: "eq.phase1_outcome_eval_v1"
+    }
+  }).then(rows => normalizeMarketEvaluationRows(rows, {
+    assetCode: "GOLD",
+    benchmark: "XAUUSD"
+  })).catch(err => {
+    console.warn("Could not load 24H GOLD matrix rows", err);
     return [];
   });
   const usdCheckerDataPromise = fetchLocalJson(checkerDataUrls.USD).catch(err => {
@@ -4420,12 +4542,17 @@ async function fetchResearchDashboardData() {
     console.warn("Could not load EUR backtester checker data", err);
     return null;
   });
+  const goldCheckerDataPromise = fetchLocalJson(checkerDataUrls.GOLD).catch(err => {
+    console.warn("Could not load GOLD backtester checker data", err);
+    return null;
+  });
 
   const [
     overallRows,
     summary24hRows,
     matrix24hRows,
     eurMatrix24hRows,
+    goldMatrix24hRows,
     verdictStrengthRows,
     confidenceBucketRows,
     tradeQualityRows,
@@ -4439,40 +4566,52 @@ async function fetchResearchDashboardData() {
     factorComboRows,
     infrastructureRows,
     usdCheckerData,
-    eurCheckerData
+    eurCheckerData,
+    goldCheckerData
   ] = await Promise.all([
-    fetchResearchView("research_overall_win_rate"),
-    fetchResearchView("research_usd_24h_direction_accuracy"),
+    safeResearchView("research_overall_win_rate"),
+    safeResearchView("research_usd_24h_direction_accuracy"),
     matrix24hRowsPromise,
     eurMatrix24hRowsPromise,
-    fetchResearchView("research_accuracy_by_verdict_strength", { order: "timeframe.asc,strength_rank.asc" }),
-    fetchResearchView("research_accuracy_by_confidence_bucket", { order: "timeframe.asc,confidence_bucket_rank.asc" }),
-    fetchResearchView("research_trade_quality_thresholds", { order: "timeframe.asc,threshold_rank.asc" }),
-    fetchResearchView("research_win_rate_by_timeframe", { order: "timeframe.asc" }),
-    fetchResearchView("research_win_rate_by_conviction_bucket"),
-    fetchResearchView("research_win_rate_by_weekday"),
-    fetchResearchView("research_win_rate_by_magnitude_bucket"),
-    fetchResearchView("research_win_rate_by_market_regime"),
-    fetchResearchView("research_factor_reliability", {
+    goldMatrix24hRowsPromise,
+    safeResearchView("research_accuracy_by_verdict_strength", { order: "timeframe.asc,strength_rank.asc" }),
+    safeResearchView("research_accuracy_by_confidence_bucket", { order: "timeframe.asc,confidence_bucket_rank.asc" }),
+    safeResearchView("research_trade_quality_thresholds", { order: "timeframe.asc,threshold_rank.asc" }),
+    safeResearchView("research_win_rate_by_timeframe", { order: "timeframe.asc" }),
+    safeResearchView("research_win_rate_by_conviction_bucket"),
+    safeResearchView("research_win_rate_by_weekday"),
+    safeResearchView("research_win_rate_by_magnitude_bucket"),
+    safeResearchView("research_win_rate_by_market_regime"),
+    safeResearchView("research_factor_reliability", {
       order: "win_rate_pct.desc,factor_occurrences.desc,avg_factor_weight.desc",
       limit: 8
     }),
-    fetchResearchView("research_factor_contribution", {
+    safeResearchView("research_factor_contribution", {
       order: "weighted_contribution_score.desc,contribution_score.desc,factor_occurrences.desc",
       limit: 8
     }),
-    fetchResearchView("research_best_factor_combinations", {
+    safeResearchView("research_best_factor_combinations", {
       order: "win_rate_pct.desc,combo_occurrences.desc,avg_combined_weight.desc",
       limit: 8
     }),
-    fetchResearchView("research_dashboard_infrastructure_status"),
+    safeResearchView("research_dashboard_infrastructure_status"),
     usdCheckerDataPromise,
-    eurCheckerDataPromise
+    eurCheckerDataPromise,
+    goldCheckerDataPromise
   ]);
 
   const resolvedEurMatrix24hRows = eurMatrix24hRows.length
     ? eurMatrix24hRows
-    : normalizeEurCheckerRowsForMatrix(eurCheckerData);
+    : normalizeCheckerRowsForMatrix(eurCheckerData, {
+      assetCode: "EUR",
+      benchmark: "EURUSD"
+    });
+  const resolvedGoldMatrix24hRows = goldMatrix24hRows.length
+    ? goldMatrix24hRows
+    : normalizeCheckerRowsForMatrix(goldCheckerData, {
+      assetCode: "GOLD",
+      benchmark: "XAUUSD"
+    });
 
   return {
     meta: {
@@ -4485,6 +4624,7 @@ async function fetchResearchDashboardData() {
       summary_24h: summary24hRows[0] || null,
       matrix_24h_rows: matrix24hRows,
       eur_matrix_24h_rows: resolvedEurMatrix24hRows,
+      gold_matrix_24h_rows: resolvedGoldMatrix24hRows,
       by_verdict_strength: verdictStrengthRows,
       by_confidence_bucket: confidenceBucketRows,
       trade_quality: tradeQualityRows,
@@ -4501,7 +4641,8 @@ async function fetchResearchDashboardData() {
     checker: usdCheckerData,
     checkers: {
       USD: usdCheckerData,
-      EUR: eurCheckerData
+      EUR: eurCheckerData,
+      GOLD: goldCheckerData
     }
   };
 }

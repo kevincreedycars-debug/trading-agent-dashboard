@@ -1,0 +1,133 @@
+{
+  "meta": {
+    "name": "gold_live_replay_24h_parity_fixture",
+    "purpose": "One-snapshot live-vs-replay parity gate for GOLD 24H before historical replay expansion.",
+    "live_factor_intent_source": "logic/agent_gold_direction.md",
+    "live_24h_parity_target": "exports/gold_layer1_agent.json#Calculate GOLD Conviction",
+    "replay_source_under_test": "backtester/replay/gold/gold_replay_core.js",
+    "notes": [
+      "The expected output is frozen from the current live GOLD deterministic workflow semantics in data/layer1.json.",
+      "Parity follows the exported live deterministic node even where it differs from the markdown logic document."
+    ]
+  },
+  "snapshot": {
+    "snapshot_date": "2026-06-30",
+    "gold_price": 3942.8217548295915,
+    "gold_d1_pct": -5.715216578110105,
+    "gold_d5_pct": 0,
+    "gold_d20_pct": -5.88382748647732,
+    "dxy_level": 97.188,
+    "dxy_d1": -0.1398527457149901,
+    "dxy_d5": 0.40765541655108173,
+    "dxy_d20": 1.558239058806132,
+    "us_2y_yield": 3.96,
+    "us_2y_d5_bps": -12.00000000000001,
+    "us_2y_d20_bps": -8.999999999999986,
+    "us_10y_yield": 4.28,
+    "us_10y_d5_bps": -4.0000000000000036,
+    "us_10y_d20_bps": 5.999999999999961,
+    "us_10y_real_yield": 1.98,
+    "us_10y_real_yield_d5_bps": -2.9999999999999805,
+    "us_10y_real_yield_d20_bps": 6.000000000000005,
+    "vix_level": 18.41,
+    "vix_d1": -0.4800000000000004,
+    "vix_d5": 1.629999999999999,
+    "latest_us_event": null,
+    "fed_bias": "neutral",
+    "equities_regime": "neutral",
+    "global_growth_regime": "neutral",
+    "geopolitical_risk_flag": null
+  },
+  "expected_live_24h": {
+    "direction_24h": "NO_CLEAR_BIAS",
+    "conviction_24h": 0,
+    "headline_confidence_pct": 0,
+    "strength_bucket": "WEAK",
+    "bull_case_pct": 50,
+    "bear_case_pct": 50,
+    "net_edge_pct": 0,
+    "participation_pct": 20,
+    "score_bullish": 1,
+    "score_bearish": 1,
+    "score_neutral": 8,
+    "weighted_score": {
+      "bullish_weight": 10,
+      "bearish_weight": 10,
+      "neutral_weight": 80,
+      "active_weight": 20,
+      "weight_margin": 0
+    },
+    "factor_breakdown": {
+      "F1": {
+        "signal": "NEUTRAL",
+        "weight": 26,
+        "evidence": "Real yield -2.9999999999999805bps",
+        "reason": "Real yield move below threshold"
+      },
+      "F2": {
+        "signal": "NEUTRAL",
+        "weight": 22,
+        "evidence": "DXY -0.1398527457149901%",
+        "reason": "DXY move below threshold"
+      },
+      "F3": {
+        "signal": "NEUTRAL",
+        "weight": 12,
+        "evidence": "Fed bias neutral",
+        "reason": "No clear Fed impulse"
+      },
+      "F4": {
+        "signal": "BULLISH",
+        "weight": 10,
+        "evidence": "US 2Y -12.00000000000001bps",
+        "reason": "Falling front-end yields support Gold"
+      },
+      "F5": {
+        "signal": "BEARISH",
+        "weight": 10,
+        "evidence": "Gold -5.715216578110105%",
+        "reason": "Gold own-price trend confirms downside pressure"
+      },
+      "F6": {
+        "signal": "NEUTRAL",
+        "weight": 8,
+        "evidence": "VIX 18.41",
+        "reason": "Neutral risk regime"
+      },
+      "F7": {
+        "signal": "NEUTRAL",
+        "weight": 8,
+        "evidence": "No recent US event",
+        "reason": "No confirmed US economic surprise"
+      },
+      "F8": {
+        "signal": "NEUTRAL",
+        "weight": 2,
+        "evidence": "Inflation signal unavailable",
+        "reason": "Collector does not currently provide a top-level inflation_signal column"
+      },
+      "F9": {
+        "signal": "NEUTRAL",
+        "weight": 1,
+        "evidence": "normal",
+        "reason": "No active safe-haven demand signal"
+      },
+      "F10": {
+        "signal": "NEUTRAL",
+        "weight": 1,
+        "evidence": "neutral",
+        "reason": "No clear growth or liquidity signal"
+      }
+    },
+    "conviction_model": {
+      "bullish_argument_pct": 50,
+      "bearish_argument_pct": 50,
+      "neutral_pct": 80,
+      "active_participation_pct": 20,
+      "net_edge_pct": 0,
+      "final_conviction": 0,
+      "verdict_strength": "WEAK"
+    },
+    "warnings": []
+  }
+}

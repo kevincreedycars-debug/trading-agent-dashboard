@@ -2,42 +2,29 @@
 
 ## Status
 
-Phase 3 decision: retain the current GLD proxy for now.
+Phase 4 decision: Gold release work uses true `XAU-USD` spot history from Coinbase.
 
-## Why true spot was not adopted yet
+## Accepted release source
 
-Preferred order was:
+- Live collectors already use Coinbase `XAU-USD` spot for current Gold pricing.
+- Coinbase `v2/prices/XAU-USD/spot?date=YYYY-MM-DD` returns historical daily spot-scale values.
+- This supports the required historical Gold release window without using an ETF proxy.
 
-1. FRED daily USD gold series
-2. another stable free USD gold source
-3. retain GLD if neither is practical
+Accepted historical lineage:
 
-What was verified on 2026-06-21:
+- vendor: `Coinbase`
+- source endpoint: `https://api.coinbase.com/v2/prices/XAU-USD/spot`
+- historical mode: per-date `?date=YYYY-MM-DD`
+- canonical release instrument key: `xauusd_spot`
 
-- FRED access is available in this workspace.
-- The attempted daily gold series identifier `GOLDAMGBD228NLBM` was invalid at runtime.
-- Broad FRED series search did not produce a practical daily USD gold spot/fix series for this loader.
-- LBMA public pages are reachable, but the page states historical tabulated precious-metals price data has moved behind the MyLBMA portal and licensing flow for Gold and Silver historical use.
+## Legacy proxy status
 
-Result:
-
-- There is no currently verified free, stable, directly importable daily USD spot/fix gold source in this workspace that is clearly better operationally than the existing GLD proxy.
-
-## Why GLD is retained
-
-- It is already loaded and working in the warehouse.
-- It covers the current available replay window without adding a brittle licensed dependency.
-- For the USD engine, gold is a secondary confirmation input rather than the primary directional driver.
-- The documented risk remains acceptable for the current infrastructure phase:
-  - GLD may slightly distort Factor 6 timing versus true spot gold.
-
-## Current warehouse reality
-
-- `historical_price_series.instrument_key = 'gold_spot_usd'` is currently backed by GLD ETF rows.
-- Existing metadata already marks the lineage with `proxy_label = gld_etf_proxy` and `vendor_symbol = GLD`.
+- Legacy `gold_spot_usd` rows are GLD ETF proxy history.
+- They are proxy-only and are not accepted for the Gold checker/dashboard release path.
+- Do not treat `gold_spot_usd` as true XAU/USD.
 
 ## Next action
 
-Proceed with Phase 4 using the retained GLD proxy.
+Use `xauusd_spot` for Gold historical snapshot builds, replay, evaluation, checker, and dashboard release work.
 
-If a validated free daily USD spot/fix source is found later, Phase 3 can be reopened and the series can be replaced with a documented migration.
+Keep GLD lineage documented as legacy proxy history only.

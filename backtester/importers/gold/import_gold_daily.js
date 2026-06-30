@@ -20,6 +20,7 @@ const DEFAULT_MANIFEST_NAME = "Gold daily history";
 const DEFAULT_SCHEMA_VERSION = "v1";
 const DEFAULT_NORMALIZATION_VERSION = "gold_daily_importer_v1";
 const DEFAULT_FRED_SERIES_ID = "GOLDAMGBD228NLBM";
+const COINBASE_XAUUSD_SPOT_URL = "https://api.coinbase.com/v2/prices/XAU-USD/spot";
 
 function buildFredUrl(seriesId, apiKey, startDate, endDate) {
   const url = new URL("https://api.stlouisfed.org/fred/series/observations");
@@ -39,6 +40,19 @@ async function fetchJson(url, options = {}) {
     throw new Error(`HTTP ${response.status} for ${url}\n${body}`);
   }
   return response.json();
+}
+
+function enumerateDates(startDate, endDate) {
+  const dates = [];
+  const cursor = new Date(`${startDate}T00:00:00Z`);
+  const end = new Date(`${endDate}T00:00:00Z`);
+
+  while (cursor <= end) {
+    dates.push(cursor.toISOString().slice(0, 10));
+    cursor.setUTCDate(cursor.getUTCDate() + 1);
+  }
+
+  return dates;
 }
 
 function parseFredGoldObservations(payload, seriesId) {
@@ -65,6 +79,53 @@ function parseFredGoldObservations(payload, seriesId) {
       };
     })
     .filter(Boolean);
+}
+
+async function fetchCoinbaseSpotRecord(observationDate) {
+  const url = new URL(COINBASE_XAUUSD_SPOT_URL);
+  url.searchParams.set("date", observationDate);
+
+  let payload;
+  try {
+    payload = await fetchJson(url.toString());
+  } catch (error) {
+    const message = String(error?.message || error);
+    if (message.includes("HTTP 404") || message.includes("rate not found")) {
+      return null;
+    }
+    throw error;
+  }
+
+  const close = toNullableNumber(payload?.data?.amount);
+  if (close === null || close <= 0) {
+    return null;
+  }
+
+  return {
+    date: observationDate,
+    close: String(close),
+    open: "",
+    high: "",
+    low: "",
+    volume: "",
+    instrument: "XAU/USD spot",
+    source_symbol: "XAU-USD",
+    source_note: "Coinbase spot price by date"
+  };
+}
+
+async function fetchCoinbaseSpotRecords(startDate, endDate) {
+  const dates = enumerateDates(startDate, endDate);
+  const records = [];
+
+  for (const observationDate of dates) {
+    const record = await fetchCoinbaseSpotRecord(observationDate);
+    if (record) {
+      records.push(record);
+    }
+  }
+
+  return records;
 }
 
 function buildRows(records, manifestId, options) {
@@ -132,20 +193,36 @@ async function run() {
   const sourcePreset = args.source || readOptionalEnv("GOLD_SOURCE_PRESET", "file");
   const fredSeriesId = args["fred-series-id"] || readOptionalEnv("GOLD_FRED_SERIES_ID", DEFAULT_FRED_SERIES_ID);
   const sourceUrl = args["source-url"] || readOptionalEnv("GOLD_SOURCE_URL");
-  const instrumentKey = args["instrument-key"] || readOptionalEnv("GOLD_INSTRUMENT_KEY", "gold_spot_usd");
-  const instrumentFamily = args["instrument-family"] || readOptionalEnv("GOLD_INSTRUMENT_FAMILY", "commodity");
+  const instrumentKey = args["instrument-key"] || readOptionalEnv(
+    "GOLD_INSTRUMENT_KEY",
+    sourcePreset === "coinbase_xauusd_spot_daily" ? "xauusd_spot" : "gold_spot_usd"
+  );
+  const instrumentFamily = args["instrument-family"] || readOptionalEnv(
+    "GOLD_INSTRUMENT_FAMILY",
+    sourcePreset === "coinbase_xauusd_spot_daily" ? "commodity_spot" : "commodity"
+  );
   const vendorName = args["vendor-name"] || readOptionalEnv(
     "GOLD_VENDOR_NAME",
-    sourcePreset === "fred_lbma_usd_am" ? "FRED" : "manual_source"
+    sourcePreset === "fred_lbma_usd_am"
+      ? "FRED"
+      : sourcePreset === "coinbase_xauusd_spot_daily"
+        ? "Coinbase"
+        : "manual_source"
   );
   const vendorSymbol = args["vendor-symbol"] || readOptionalEnv(
     "GOLD_VENDOR_SYMBOL",
-    sourcePreset === "fred_lbma_usd_am" ? fredSeriesId : "XAUUSD"
+    sourcePreset === "fred_lbma_usd_am"
+      ? fredSeriesId
+      : sourcePreset === "coinbase_xauusd_spot_daily"
+        ? "XAU-USD"
+        : "XAUUSD"
   );
   const proxyLabel = args["proxy-label"] || readOptionalEnv(
     "GOLD_PROXY_LABEL",
     sourcePreset === "fred_lbma_usd_am"
       ? "lbma_spot_fix_via_fred"
+      : sourcePreset === "coinbase_xauusd_spot_daily"
+        ? "spot"
       : instrumentKey === "gold_spot_usd"
         ? "spot"
         : "proxy"
@@ -155,8 +232,13 @@ async function run() {
 
   assertDateRange(startDate, endDate);
 
-  if (sourcePreset !== "fred_lbma_usd_am" && !filePath && !sourceUrl) {
-    throw new Error("Provide --file or --source-url, or use --source=fred_lbma_usd_am.");
+  if (
+    sourcePreset !== "fred_lbma_usd_am" &&
+    sourcePreset !== "coinbase_xauusd_spot_daily" &&
+    !filePath &&
+    !sourceUrl
+  ) {
+    throw new Error("Provide --file or --source-url, or use --source=fred_lbma_usd_am or --source=coinbase_xauusd_spot_daily.");
   }
 
   const supabaseUrl = requireEnv("SUPABASE_URL").replace(/\/$/, "");
@@ -166,7 +248,9 @@ async function run() {
         await fetchJson(buildFredUrl(fredSeriesId, requireEnv("FRED_API_KEY"), startDate, endDate)),
         fredSeriesId
       )
-    : parseDelimited(await readTextInput({ filePath, sourceUrl }), { delimiter });
+    : sourcePreset === "coinbase_xauusd_spot_daily"
+      ? await fetchCoinbaseSpotRecords(startDate, endDate)
+      : parseDelimited(await readTextInput({ filePath, sourceUrl }), { delimiter });
 
   const manifestPayload = {
     manifest_name: manifestName,
@@ -180,7 +264,10 @@ async function run() {
     import_mode: "historical_backfill",
     schema_version: DEFAULT_SCHEMA_VERSION,
     normalization_version: DEFAULT_NORMALIZATION_VERSION,
-    source_uri: sourceUrl || filePath || null,
+    source_uri:
+      sourcePreset === "coinbase_xauusd_spot_daily"
+        ? COINBASE_XAUUSD_SPOT_URL
+        : sourceUrl || filePath || null,
     metadata: {
       importer: "backtester/importers/gold/import_gold_daily.js",
       instrument_key: instrumentKey,
