@@ -4090,6 +4090,15 @@ function renderPairTradeSummaryCell(primary = "", secondary = "", options = {}) 
   `;
 }
 
+function renderPairSummaryMetricLine(label = "", value = "") {
+  return `
+    <div class="pair-summary-metric-line">
+      <span>${escapeHtml(label)}</span>
+      <strong>${escapeHtml(metricAvailable(value) ? String(value) : displayDash())}</strong>
+    </div>
+  `;
+}
+
 function renderWeekdayBreakdownAsset(assetSummary = null) {
   if (!assetSummary) return "";
   const assetLabel = assetSummary.assetCode || "Asset";
@@ -4378,13 +4387,17 @@ function buildPairTradeResearchForConfig(config = {}, checkers = {}) {
     bucketTotals.STRONG,
     bucketTotals.VERY_STRONG
   ]);
+  const matchedHistoricalDays = targetRows.length - (noTradeReasonCounts.missing_usd_snapshot || 0);
   const layer2Summary = {
     pairedRows: targetRows.length,
+    matchedHistoricalDays,
     tradableSignals: tradableRows.length,
     coveragePct: targetRows.length ? roundTo((tradableRows.length / targetRows.length) * 100, 1) : null,
+    tradeDaysPct: matchedHistoricalDays ? roundTo((tradableRows.length / matchedHistoricalDays) * 100, 1) : null,
     allSignalTotals: assetTotals,
     strongPlusSignals: strongPlusTotals.total,
     strongPlusCoveragePct: targetRows.length ? roundTo((strongPlusTotals.total / targetRows.length) * 100, 1) : null,
+    strongPlusTradeDaysPct: matchedHistoricalDays ? roundTo((strongPlusTotals.total / matchedHistoricalDays) * 100, 1) : null,
     strongPlusTotals
   };
 
@@ -4428,39 +4441,28 @@ function renderPairTradeSummaryCards(pairResearch = null) {
 function renderLayer2PairSummary(pairResearchRows = []) {
   if (!pairResearchRows.length) return "";
 
-  const summaryCards = pairResearchRows.map((pairResearch) => {
+  const summaryRows = pairResearchRows.map((pairResearch) => {
     const summary = pairResearch.layer2Summary || {};
     return `
-      <article class="detail-panel research-secondary-panel pair-summary-card" data-layer2-pair-summary-card="${escapeHtml(pairResearch.pairCode)}">
-        <div class="pair-summary-card-head">
-          <p class="eyebrow">${escapeHtml(pairResearch.pairLabel)}</p>
-          <h3>${escapeHtml(pairResearch.pairLabel)}</h3>
-          <p class="research-panel-copy">${escapeHtml(pairResearch.targetAssetCode)} paired with USD</p>
+      <div class="pair-summary-row" data-layer2-pair-summary-row="${escapeHtml(pairResearch.pairCode)}">
+        <div class="pair-summary-compare-cell pair-summary-pair-cell">
+          <strong>${escapeHtml(pairResearch.pairLabel)}</strong>
+          <span>${escapeHtml(pairResearch.targetAssetCode)} paired with USD</span>
         </div>
-        <section class="pair-summary-block">
-          <div class="pair-summary-block-head">
-            <strong>All Tradable Signals</strong>
-          </div>
-          <div class="pair-summary-stat-grid">
-            ${renderPairTradeSummaryCell(`${summary.tradableSignals ?? 0} signals`, "Tradable signals", { className: "pair-summary-cell-nowrap" })}
-            ${renderPairTradeSummaryCell(metricAvailable(summary.coveragePct) ? `${percentValue(summary.coveragePct)} coverage` : displayDash(), "Coverage %", { className: "pair-summary-cell-nowrap" })}
-            ${renderPairTradeSummaryCell(formatPairTradeExFlatInline(summary.allSignalTotals), "Ex-flat WR", { className: "pair-summary-cell-nowrap" })}
-            ${renderPairTradeSummaryCell(formatPairTradeCountsCompact(summary.allSignalTotals), "W / L / F / T", { className: "pair-summary-cell-nowrap" })}
-          </div>
-        </section>
-        <section class="pair-summary-block pair-summary-block-strongplus">
-          <div class="pair-summary-block-head">
-            <strong>Strong+</strong>
-          </div>
-          <div class="pair-summary-stat-grid">
-            ${renderPairTradeSummaryCell(`${summary.strongPlusSignals ?? 0} signals`, "Strong+ signals", { className: "pair-summary-cell-nowrap" })}
-            ${renderPairTradeSummaryCell(metricAvailable(summary.strongPlusCoveragePct) ? `${percentValue(summary.strongPlusCoveragePct)} coverage` : displayDash(), "Strong+ coverage %", { className: "pair-summary-cell-nowrap" })}
-            ${renderPairTradeSummaryCell(formatPairTradeExFlatInline(summary.strongPlusTotals), "Strong+ ex-flat WR", { className: "pair-summary-cell-nowrap" })}
-            ${renderPairTradeSummaryCell(formatPairTradeCountsCompact(summary.strongPlusTotals), "Strong+ W / L / F / T", { className: "pair-summary-cell-nowrap" })}
-            ${renderPairTradeSummaryCell(formatPairTradeFlatRateInline(summary.strongPlusTotals), "Strong+ flat rate", { className: "pair-summary-cell-nowrap" })}
-          </div>
-        </section>
-      </article>
+        <div class="pair-summary-compare-cell pair-summary-signal-cell">
+          ${renderPairSummaryMetricLine("Tradable signals", `${summary.tradableSignals ?? 0}`)}
+          ${renderPairSummaryMetricLine("Trade Days %", metricAvailable(summary.tradeDaysPct) ? percentValue(summary.tradeDaysPct) : displayDash())}
+          ${renderPairSummaryMetricLine("Ex-flat WR", formatPairTradeExFlatInline(summary.allSignalTotals))}
+          ${renderPairSummaryMetricLine("W / L / F / T", formatPairTradeCountsCompact(summary.allSignalTotals))}
+        </div>
+        <div class="pair-summary-compare-cell pair-summary-signal-cell pair-summary-strongplus-cell">
+          ${renderPairSummaryMetricLine("Strong+ signals", `${summary.strongPlusSignals ?? 0}`)}
+          ${renderPairSummaryMetricLine("Strong+ Trade Days %", metricAvailable(summary.strongPlusTradeDaysPct) ? percentValue(summary.strongPlusTradeDaysPct) : displayDash())}
+          ${renderPairSummaryMetricLine("Strong+ ex-flat WR", formatPairTradeExFlatInline(summary.strongPlusTotals))}
+          ${renderPairSummaryMetricLine("Strong+ W / L / F / T", formatPairTradeCountsCompact(summary.strongPlusTotals))}
+          ${renderPairSummaryMetricLine("Strong+ flat rate", formatPairTradeFlatRateInline(summary.strongPlusTotals))}
+        </div>
+      </div>
     `;
   }).join("");
 
@@ -4471,10 +4473,17 @@ function renderLayer2PairSummary(pairResearchRows = []) {
           <p class="eyebrow">Layer 2 Pair Summary</p>
           <h3>How accurate are our Layer 2 pair signals historically?</h3>
         </div>
-        <p class="research-panel-copy">This summary stays downstream of the validated pair-analysis view. Coverage uses tradable signals divided by total paired rows, and Strong+ uses the combined confidence bands where target/USD headline confidence resolves to 65 or higher.</p>
+        <p class="research-panel-copy">Trade Days % = the share of matched historical days where the pair logic produced an actual tradable signal. For BTC, matched historical days only include days where a same-date USD row exists.</p>
       </div>
-      <div class="pair-summary-grid" data-layer2-pair-summary="cards">
-        ${summaryCards}
+      <article class="detail-panel wide-panel research-secondary-panel pair-summary-compare-panel">
+        <div class="pair-summary-compare-grid" data-layer2-pair-summary="comparison-grid">
+          <div class="pair-summary-compare-head">Pair</div>
+          <div class="pair-summary-compare-head">All Signals</div>
+          <div class="pair-summary-compare-head pair-summary-strongplus-head">Strong+</div>
+          ${summaryRows}
+        </div>
+      </article>
+      <div class="pair-summary-grid-sentinel" data-layer2-pair-summary-cards="0" hidden>
       </div>
     </section>
   `;

@@ -243,15 +243,21 @@ function validatePair(config, checkers) {
     bucketTotals.STRONG,
     bucketTotals.VERY_STRONG
   ]);
+  const matchedHistoricalDays = targetRows.length - missingUsdCount;
   const coveragePct = targetRows.length ? roundPct(tradableCount / targetRows.length) : null;
+  const tradeDaysPct = matchedHistoricalDays ? roundPct(tradableCount / matchedHistoricalDays) : null;
   const strongPlusCoveragePct = targetRows.length ? roundPct(strongPlusRollup.total / targetRows.length) : null;
+  const strongPlusTradeDaysPct = matchedHistoricalDays ? roundPct(strongPlusRollup.total / matchedHistoricalDays) : null;
   const pairSummary = {
     paired_rows: targetRows.length,
+    matched_historical_days: matchedHistoricalDays,
     tradable_signals: tradableCount,
     coverage_pct: coveragePct,
+    trade_days_pct: tradeDaysPct,
     all_signal_totals: dayRollup,
     strong_plus_signals: strongPlusRollup.total,
     strong_plus_coverage_pct: strongPlusCoveragePct,
+    strong_plus_trade_days_pct: strongPlusTradeDaysPct,
     strong_plus_totals: strongPlusRollup,
     strong_plus_ex_flat_directional_win_rate_pct: (strongPlusRollup.wins + strongPlusRollup.losses)
       ? roundPct(strongPlusRollup.wins / (strongPlusRollup.wins + strongPlusRollup.losses))
@@ -286,8 +292,14 @@ function validatePair(config, checkers) {
   if (pairSummary.coverage_pct !== (pairSummary.paired_rows ? roundPct(pairSummary.tradable_signals / pairSummary.paired_rows) : null)) {
     errors.push("coverage % did not equal tradable signals divided by paired rows");
   }
+  if (pairSummary.trade_days_pct !== (pairSummary.matched_historical_days ? roundPct(pairSummary.tradable_signals / pairSummary.matched_historical_days) : null)) {
+    errors.push("trade days % did not equal tradable signals divided by matched historical days");
+  }
   if (pairSummary.strong_plus_coverage_pct !== (pairSummary.paired_rows ? roundPct(pairSummary.strong_plus_signals / pairSummary.paired_rows) : null)) {
     errors.push("Strong+ coverage % did not equal Strong+ tradable signals divided by paired rows");
+  }
+  if (pairSummary.strong_plus_trade_days_pct !== (pairSummary.matched_historical_days ? roundPct(pairSummary.strong_plus_signals / pairSummary.matched_historical_days) : null)) {
+    errors.push("Strong+ trade days % did not equal Strong+ tradable signals divided by matched historical days");
   }
   if (pairSummary.strong_plus_ex_flat_directional_win_rate_pct !== (
     (pairSummary.strong_plus_totals.wins + pairSummary.strong_plus_totals.losses)

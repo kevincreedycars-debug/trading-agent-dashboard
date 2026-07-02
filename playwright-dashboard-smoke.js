@@ -155,22 +155,31 @@ async function run() {
       throw new Error(`Expected 4 pair summary-card grids, found ${pairSummaryGridCount}.`);
     }
 
-    const topSummaryCardCount = await page.locator("[data-layer2-pair-summary-card]").count();
-    if (topSummaryCardCount !== 4) {
-      throw new Error(`Expected 4 Layer 2 summary cards, found ${topSummaryCardCount}.`);
+    if (!normalizedPairTradeText.includes("trade days % = the share of matched historical days where the pair logic produced an actual tradable signal")) {
+      throw new Error(`Layer 2 Pair Summary helper copy did not render.\n${pairTradeText}`);
     }
 
-    const topSummaryGridColumns = await page.locator("[data-layer2-pair-summary='cards']").evaluate((element) => {
+    const topSummaryRowCount = await page.locator("[data-layer2-pair-summary-row]").count();
+    if (topSummaryRowCount !== 4) {
+      throw new Error(`Expected 4 Layer 2 summary rows, found ${topSummaryRowCount}.`);
+    }
+
+    const topSummaryGridColumns = await page.locator("[data-layer2-pair-summary='comparison-grid']").evaluate((element) => {
       const columns = getComputedStyle(element).gridTemplateColumns.split(" ").filter(Boolean);
       return columns.length;
     });
-    if (topSummaryGridColumns < 2) {
-      throw new Error(`Layer 2 Pair Summary did not render as a multi-card grid.\nColumns: ${topSummaryGridColumns}`);
+    if (topSummaryGridColumns < 3) {
+      throw new Error(`Layer 2 Pair Summary did not render as a compact comparison grid.\nColumns: ${topSummaryGridColumns}`);
     }
 
     const legacySummaryTableCount = await page.locator("[data-layer2-pair-summary='true'], .layer2-pair-summary-table").count();
     if (legacySummaryTableCount !== 0) {
       throw new Error(`Legacy Layer 2 summary table still rendered.\nCount: ${legacySummaryTableCount}`);
+    }
+
+    const legacySummaryCardCount = await page.locator("[data-layer2-pair-summary-card]").count();
+    if (legacySummaryCardCount !== 0) {
+      throw new Error(`Legacy Layer 2 summary cards still rendered.\nCount: ${legacySummaryCardCount}`);
     }
 
     const firstPairGridColumns = await page.locator("[data-pair-trade-card-grid='EUR_USD']").evaluate((element) => {
@@ -211,7 +220,7 @@ async function run() {
       pair_trade_btc_headers: pairTradeBtcHeaders,
       pair_trade_grid_columns: firstPairGridColumns,
       pair_trade_overflow_x: pairBucketOverflow,
-      top_summary_card_count: topSummaryCardCount,
+      top_summary_row_count: topSummaryRowCount,
       top_summary_grid_columns: topSummaryGridColumns
     }, null, 2));
   } finally {

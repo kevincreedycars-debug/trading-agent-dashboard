@@ -2173,72 +2173,101 @@ h3 {
   font-size: 11px;
 }
 
-.pair-summary-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 14px;
+.pair-summary-compare-panel {
+  padding: 14px 16px 16px;
 }
 
-.pair-summary-card {
+.pair-summary-compare-grid {
   display: grid;
-  gap: 14px;
-  padding: 18px;
-}
-
-.pair-summary-card-head {
-  display: grid;
-  gap: 4px;
-}
-
-.pair-summary-card-head h3 {
-  margin: 0;
-}
-
-.pair-summary-block {
-  display: grid;
-  gap: 10px;
-  padding: 14px;
+  grid-template-columns: minmax(140px, 0.8fr) minmax(0, 1.15fr) minmax(0, 1.2fr);
+  gap: 0;
   border: 1px solid var(--cream-border);
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.78);
+  border-radius: 14px;
+  overflow: hidden;
+  background: #fffdfa;
 }
 
-.pair-summary-block-strongplus {
-  background: linear-gradient(180deg, rgba(184, 132, 26, 0.12) 0%, rgba(184, 132, 26, 0.05) 100%);
-  border-color: rgba(184, 132, 26, 0.28);
+.pair-summary-compare-head,
+.pair-summary-compare-cell {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--cream-border);
 }
 
-.pair-summary-block-head {
+.pair-summary-compare-head {
+  background: #fff8eb;
   color: var(--navy);
   font-size: 12px;
-  letter-spacing: 0.02em;
+  font-weight: 800;
   text-transform: uppercase;
+  letter-spacing: 0.03em;
 }
 
-.pair-summary-stat-grid {
+.pair-summary-strongplus-head {
+  background: linear-gradient(180deg, rgba(184, 132, 26, 0.16) 0%, rgba(184, 132, 26, 0.08) 100%);
+}
+
+.pair-summary-row {
+  display: contents;
+}
+
+.pair-summary-compare-grid > :nth-child(3n + 2),
+.pair-summary-compare-grid > :nth-child(3n + 3) {
+  border-left: 1px solid var(--cream-border);
+}
+
+.pair-summary-compare-grid > :nth-last-child(-n + 3) {
+  border-bottom: 0;
+}
+
+.pair-summary-pair-cell {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
-}
-
-.pair-summary-cell {
+  align-content: center;
   gap: 4px;
-  min-width: 0;
+  background: rgba(255, 255, 255, 0.92);
 }
 
-.pair-summary-cell strong {
-  font-size: 15px;
-  line-height: 1.25;
+.pair-summary-pair-cell strong {
+  color: var(--navy);
+  font-size: 16px;
+  line-height: 1.2;
 }
 
-.pair-summary-cell span {
+.pair-summary-pair-cell span {
+  color: var(--ink-muted);
   font-size: 11px;
   line-height: 1.35;
 }
 
-.pair-summary-cell-nowrap strong,
-.pair-summary-cell-nowrap span {
+.pair-summary-signal-cell {
+  display: grid;
+  gap: 8px;
+  align-content: start;
+  background: rgba(255, 255, 255, 0.92);
+}
+
+.pair-summary-strongplus-cell {
+  background: linear-gradient(180deg, rgba(184, 132, 26, 0.12) 0%, rgba(184, 132, 26, 0.05) 100%);
+}
+
+.pair-summary-metric-line {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.pair-summary-metric-line span {
+  color: var(--ink-muted);
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.pair-summary-metric-line strong {
+  color: var(--ink-mid);
+  font-size: 13px;
+  line-height: 1.25;
   white-space: nowrap;
+  text-align: right;
 }
 
 .weekday-breakdown-summary-strip {
@@ -2435,8 +2464,8 @@ h3 {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .pair-summary-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  .pair-summary-compare-grid {
+    grid-template-columns: minmax(132px, 0.8fr) minmax(0, 1fr) minmax(0, 1fr);
   }
 
   .agent-grid,
@@ -2588,9 +2617,45 @@ h3 {
     grid-template-columns: 1fr;
   }
 
-  .pair-summary-grid,
-  .pair-summary-stat-grid {
+  .pair-summary-compare-grid {
     grid-template-columns: 1fr;
+    border-radius: 12px;
+  }
+
+  .pair-summary-compare-head {
+    display: none;
+  }
+
+  .pair-summary-row {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .pair-summary-compare-cell {
+    border-bottom: 1px solid var(--cream-border);
+  }
+
+  .pair-summary-compare-grid > :nth-child(3n + 2),
+  .pair-summary-compare-grid > :nth-child(3n + 3) {
+    border-left: 0;
+  }
+
+  .pair-summary-pair-cell {
+    background: #fff8eb;
+  }
+
+  .pair-summary-signal-cell,
+  .pair-summary-strongplus-cell {
+    padding-top: 10px;
+  }
+
+  .pair-summary-metric-line {
+    flex-wrap: wrap;
+    gap: 4px 12px;
+  }
+
+  .pair-summary-metric-line strong {
+    text-align: left;
   }
 
   h1 {
