@@ -16,6 +16,12 @@ Last updated: 2026-07-02
 - Added a `Day Totals` table above each asset's confidence-bucket table, with ex-flat rate, `W / L / F / T`, and flat rate for each weekday plus the all-days total.
 - Extended the weekday validator to prove day totals equal the sum of bucket rows for each weekday and still reconcile back to the checker row counts.
 - Committed and pushed the flat-aware weekday breakdown follow-ups to `origin/main`.
+- Added a new `Pair Trade Research` Backtest / Accuracy sub-tab for EUR/USD, XAU/USD, NQ/USD, and BTC/USD.
+- Built pair-trade research entirely from same-date target + USD checker rows using stored displayed headline confidence only, with combined confidence defined as `min(target, USD)`.
+- Added pair-trade coverage summary, accuracy summary, combined-confidence bucket table, day totals, weekday breakdown, and conflict/no-trade summary.
+- Added `backtester/scripts/validate_layer2_pairing_analysis.js` and confirmed it passes alongside the existing five checker validators.
+- Expanded the local browser smoke test to verify the new Pair Trade Research tab renders without console errors.
+- Committed and pushed the Pair Trade Research implementation to `origin/main`.
 
 ## Unfinished Work
 
@@ -38,4 +44,4 @@ Last updated: 2026-07-02
 
 ## Exact Next Task
 
-Verify the public GitHub Pages dashboard renders the final Weekday Breakdown and Day Totals cleanly, then decide the next Backtest / Accuracy analytical expansion.
+Verify the public GitHub Pages dashboard renders the Pair Trade Research tab cleanly, then decide the next Backtest / Accuracy analytical expansion.

@@ -4,11 +4,11 @@ Last updated: 2026-07-02
 
 ## Task
 
-Add a new Backtest / Accuracy weekday breakdown view showing day-of-week performance by Layer 1 agent and displayed headline confidence bucket.
+Build the Layer 2 / Pair Trade Research Backtest / Accuracy sub-tab from the existing canonical checker artifacts.
 
 ## Objective
 
-Expose a compact historical breakdown that answers: for each Layer 1 agent, how did each displayed headline confidence bucket perform by day of week, while preserving the existing matrices/checkers and keeping all calculations downstream of the validated checker artifacts.
+Expose downstream-only pair-trade research for EUR/USD, XAU/USD, NQ/USD, and BTC/USD by pairing each target asset with same-date USD, using stored displayed headline confidence only, and showing coverage, accuracy, confidence-bucket, day-total, weekday, and conflict/no-trade views without altering Layer 1 logic.
 
 ## Current Status
 
@@ -75,6 +75,11 @@ Completed, validated, committed, and pushed.
 - Each weekday cell now shows ex-flat win rate plus `W / L / F / T` counts, with `Flat only` handling when a cell has no directional rows
 - Each asset now includes a `Day Totals` table above the bucket breakdown, aggregating Monday-Friday for USD/EUR/Gold/NQ and Monday-Sunday for BTC
 - Updated weekday validation confirms day totals reconcile to bucket rows and checker totals while preserving BTC weekends and non-BTC weekday-only coverage
+- New `Pair Trade Research` Backtest / Accuracy tab added for EUR/USD, XAU/USD, NQ/USD, and BTC/USD
+- Pair trade research uses same-date target + USD checker rows and combined confidence `min(target, USD)` without changing Layer 1 confidence logic
+- Added pair-trade coverage summary, accuracy summary, combined-confidence bucket table, day totals, weekday breakdown, and conflict/no-trade summary
+- Added `backtester/scripts/validate_layer2_pairing_analysis.js` and confirmed pair-trade research validation passes
+- Dashboard smoke updated and passing for the new Pair Trade Research tab
 
 ## n8n Workspace
 
@@ -92,8 +97,8 @@ https://silver17.app.n8n.cloud/projects/ISQG9XU7TGTT6Fcu/workflows
 
 ## Next Immediate Steps
 
-1. Confirm the public GitHub Pages dashboard renders the flat-aware Weekday Breakdown and Day Totals cleanly.
-2. Decide the next analytical breakdown or research view now that the full Layer 1 replay rollout and weekday breakdown are complete.
+1. Confirm the public GitHub Pages dashboard renders Pair Trade Research cleanly alongside the existing matrices, checker views, and weekday breakdowns.
+2. Decide the next analytical breakdown or research view now that Layer 1 replay rollout, weekday breakdowns, and pair-trade research are complete.
 3. Keep replay, checker, confidence, and flat-band semantics frozen until an explicit optimization phase is approved.
 
 ## Current Blocker
@@ -135,4 +140,4 @@ before making any changes.
 
 The immediate working outcome for the current task is:
 
-> ship the flat-aware weekday and day-total breakdowns from canonical checker artifacts without changing replay outputs, checker semantics, flat bands, or headline confidence logic
+> ship the Pair Trade Research tab from canonical checker artifacts without changing replay outputs, checker semantics, flat bands, or headline confidence logic

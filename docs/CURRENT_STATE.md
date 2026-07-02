@@ -8,7 +8,7 @@ The Layer 1 trading-agent platform remains operational, and the latest runtime e
 
 The full Layer 1 historical replay rollout is now validated across USD, EUR, Gold, NQ, and BTC. The active repository work has shifted from replay rollout itself into downstream research presentation and breakdown views built on top of the canonical checker artifacts.
 
-The current dashboard now includes the existing accuracy matrices, the checker workspaces, and a new weekday breakdown view that shows day-of-week performance by displayed headline confidence bucket without changing replay, checker, flat-band, or confidence semantics.
+The current dashboard now includes the existing accuracy matrices, the checker workspaces, the weekday breakdown views, and a new Pair Trade Research tab built entirely from canonical checker artifacts without changing replay, checker, flat-band, or confidence semantics.
 
 ## Current Architecture
 
@@ -200,6 +200,6 @@ Current implemented state:
 
 - Historical replay and deterministic checker coverage are validated for USD, EUR, Gold, NQ, and BTC.
 - Current checker totals are USD `604`, EUR `602`, Gold `608`, NQ `604`, and BTC `850`, all passing with zero fail / zero missing / zero tolerance pass.
-- The Backtest / Accuracy dashboard exposes the existing matrices and checker workspaces plus a weekday confidence breakdown derived directly from the checker artifacts.
+- The Backtest / Accuracy dashboard exposes the existing matrices and checker workspaces plus weekday confidence breakdowns and a Pair Trade Research tab derived directly from the checker artifacts.
 - 24H remains the primary short-horizon benchmark focus.
 - Historical research presentation remains downstream-only and must not modify live runtime behavior.

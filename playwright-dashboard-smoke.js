@@ -126,6 +126,26 @@ async function run() {
       throw new Error(`Weekday Breakdown summary totals did not render flat-aware metrics.\n${weekdayText}`);
     }
 
+    await page.getByRole("button", { name: "Pair Trade Research" }).click();
+    await page.waitForSelector("[data-pair-trade-asset='EUR_USD']", { timeout: 15000 });
+    const pairTradeText = await page.locator("#backtestPanel").innerText();
+    const normalizedPairTradeText = pairTradeText.toLowerCase();
+
+    if (!pairTradeText.includes("Layer 2 pair confirmation research from Layer 1 checker artifacts")) {
+      throw new Error(`Pair Trade Research tab header did not render.\n${pairTradeText}`);
+    }
+
+    if (!pairTradeText.includes("EUR/USD") || !normalizedPairTradeText.includes("conflict / no-trade summary")) {
+      throw new Error(`Pair Trade Research did not render expected pair sections.\n${pairTradeText}`);
+    }
+
+    const pairTradeBtcHeaders = await page.locator("[data-pair-trade-asset='BTC_USD'] thead th").allInnerTexts();
+    const normalizedPairTradeBtcHeaders = pairTradeBtcHeaders.map(text => text.trim().toLowerCase());
+
+    if (!normalizedPairTradeBtcHeaders.includes("saturday") || !normalizedPairTradeBtcHeaders.includes("sunday")) {
+      throw new Error(`BTC/USD pair trade breakdown did not include weekend columns.\n${pairTradeBtcHeaders.join(" | ")}`);
+    }
+
     if (consoleErrors.length) {
       throw new Error(`Console errors were emitted during dashboard smoke.\n${consoleErrors.join("\n")}`);
     }
@@ -135,7 +155,8 @@ async function run() {
       target: "Accuracy tables, checker, and weekday breakdown",
       matrix_summary_excerpt: summaryText,
       btc_weekday_headers: btcWeekdayHeaders,
-      usd_weekday_headers: usdWeekdayHeaders
+      usd_weekday_headers: usdWeekdayHeaders,
+      pair_trade_btc_headers: pairTradeBtcHeaders
     }, null, 2));
   } finally {
     await browser.close();

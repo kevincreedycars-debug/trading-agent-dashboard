@@ -2,11 +2,11 @@
 
 ## Current Feature
 
-Backtest / Accuracy weekday breakdown by displayed headline confidence bucket
+Backtest / Accuracy Pair Trade Research from canonical Layer 1 checker artifacts
 
 ## Current Milestone
 
-Release weekday-by-confidence performance tables for all validated Layer 1 checker artifacts
+Release pair-trade research summaries and breakdowns for target asset + USD setups
 
 ## Status
 
@@ -37,18 +37,24 @@ Complete
 - Weekday Breakdown cells now separate flat outcomes from directional wins/losses and show ex-flat directional win rate plus `W / L / F / T`.
 - Each asset now includes a `Day Totals` table above the bucket table, aggregating performance across all confidence buckets for each weekday.
 - The weekday validator now confirms day-level totals reconcile back to bucket rows and checker totals.
+- A new `Pair Trade Research` tab now renders EUR/USD, XAU/USD, NQ/USD, and BTC/USD same-date target + USD studies from the checker artifacts.
+- Pair trade research now includes coverage summary, accuracy summary, combined-confidence bucket table, day totals, weekday breakdown, and conflict/no-trade summary.
+- Combined pair confidence is computed as the lower of target and USD stored headline confidence, keeping pair confidence downstream-only and consistent with Layer 1 display semantics.
+- A dedicated pair-trade validator now passes, and browser smoke now passes with the Pair Trade Research tab included.
 
 ## Remaining Work
 
-- Confirm the public GitHub Pages dashboard renders the final flat-aware Weekday Breakdown and Day Totals cleanly.
+- Confirm the public GitHub Pages dashboard renders the Pair Trade Research tab cleanly.
 - Decide the next analytical breakdown or research milestone.
 
 ## Current Files Being Modified
 
+- `index.html`
 - `script.js`
 - `styles.css`
 - `playwright-dashboard-smoke.js`
 - `backtester/scripts/validate_weekday_breakdown.js`
+- `backtester/scripts/validate_layer2_pairing_analysis.js`
 - `docs/CURRENT_TASK.md`
 - `docs/ACTIVE_MILESTONE.md`
 - `docs/SESSION_NOTES.md`
@@ -60,8 +66,8 @@ No repository-side blocker.
 
 ## Next Immediate Action
 
-Verify the public GitHub Pages dashboard renders the final Weekday Breakdown and Day Totals cleanly, then choose the next research breakdown.
+Verify the public GitHub Pages dashboard renders the Pair Trade Research tab cleanly, then choose the next research breakdown.
 
 ## Last Updated
 
-2026-07-02 13:25 Europe/London
+2026-07-02 13:55 Europe/London

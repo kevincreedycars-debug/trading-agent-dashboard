@@ -47,6 +47,32 @@ const weekdayBreakdownColumnsByAsset = {
   NQ: ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY"],
   BTC: ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY"]
 };
+const pairTradeResearchConfigs = [
+  {
+    targetAssetCode: "EUR",
+    pairCode: "EUR_USD",
+    pairLabel: "EUR/USD",
+    weekdayKeys: weekdayBreakdownColumnsByAsset.EUR
+  },
+  {
+    targetAssetCode: "GOLD",
+    pairCode: "XAU_USD",
+    pairLabel: "XAU/USD",
+    weekdayKeys: weekdayBreakdownColumnsByAsset.GOLD
+  },
+  {
+    targetAssetCode: "NQ",
+    pairCode: "NQ_USD",
+    pairLabel: "NQ/USD",
+    weekdayKeys: weekdayBreakdownColumnsByAsset.NQ
+  },
+  {
+    targetAssetCode: "BTC",
+    pairCode: "BTC_USD",
+    pairLabel: "BTC/USD",
+    weekdayKeys: weekdayBreakdownColumnsByAsset.BTC
+  }
+];
 let layer1Data = null;
 let layer2Data = null;
 let backtestData = null;
@@ -4144,6 +4170,356 @@ function renderResearchWeekdayBreakdown(data = {}) {
   `;
 }
 
+function normalizeDirectionalSignalKey(value = "") {
+  const normalized = String(value || "").trim().toUpperCase();
+  if (normalized === "BULLISH" || normalized === "BEARISH") return normalized;
+  return null;
+}
+
+function pairTradeNoTradeReasonLabel(reason = "") {
+  const labelsByKey = {
+    missing_usd_snapshot: "Missing USD Snapshot",
+    unsupported_target_direction: "Target Non-Directional",
+    unsupported_usd_direction: "USD Non-Directional",
+    missing_combined_confidence: "Missing Combined Confidence",
+    unsupported_confidence_bucket: "Unsupported Confidence Bucket",
+    same_direction_conflict: "Same-Direction Conflict"
+  };
+  return labelsByKey[reason] || titleCaseWords(reason);
+}
+
+function checkerRowsByDate(checker = null) {
+  const rows = Array.isArray(checker?.rows) ? checker.rows : [];
+  const byDate = new Map();
+  rows.forEach((row) => {
+    const dateKey = String(row?.snapshot_date || "").trim();
+    if (dateKey && !byDate.has(dateKey)) {
+      byDate.set(dateKey, row);
+    }
+  });
+  return byDate;
+}
+
+function pairTradeOutcomeKey(row = {}) {
+  const result = String(row?.stored?.evaluation_result || row?.checker?.evaluation_result || "").trim().toUpperCase();
+  if (result === "CORRECT") return "WIN";
+  if (result === "WRONG") return "LOSS";
+  return "FLAT";
+}
+
+function buildPairTradeResearchForConfig(config = {}, checkers = {}) {
+  const targetChecker = checkers?.[config.targetAssetCode] || null;
+  const usdChecker = checkers?.USD || null;
+  const targetRows = Array.isArray(targetChecker?.rows) ? targetChecker.rows : [];
+  const usdRowsByDate = checkerRowsByDate(usdChecker);
+  const weekdayKeys = Array.isArray(config.weekdayKeys) ? config.weekdayKeys : weekdayBreakdownColumnsByAsset.USD;
+  const bucketMatrix = {};
+  const bucketTotals = {};
+  const weekdayTotals = {};
+  const noTradeReasonCounts = {};
+  const tradableRows = [];
+  const noTradeRows = [];
+
+  weekdayBreakdownBuckets.forEach(bucket => {
+    bucketMatrix[bucket.key] = {};
+    bucketTotals[bucket.key] = createWeekdayBreakdownCell();
+    weekdayKeys.forEach(weekdayKey => {
+      bucketMatrix[bucket.key][weekdayKey] = createWeekdayBreakdownCell();
+    });
+  });
+
+  weekdayKeys.forEach((weekdayKey) => {
+    weekdayTotals[weekdayKey] = createWeekdayBreakdownCell();
+  });
+
+  targetRows.forEach((targetRow) => {
+    const snapshotDate = String(targetRow?.snapshot_date || "").trim();
+    const weekdayKey = snapshotDateToWeekdayKey(snapshotDate);
+    const usdRow = usdRowsByDate.get(snapshotDate) || null;
+    const targetDirectionKey = normalizeDirectionalSignalKey(targetRow?.stored?.direction || targetRow?.checker?.direction || "");
+    const usdDirectionKey = normalizeDirectionalSignalKey(usdRow?.stored?.direction || usdRow?.checker?.direction || "");
+    const targetConfidence = checkerRowHeadlineConfidence(targetRow);
+    const usdConfidence = checkerRowHeadlineConfidence(usdRow);
+    const combinedConfidencePct = metricAvailable(targetConfidence) && metricAvailable(usdConfidence)
+      ? Math.min(Number(targetConfidence), Number(usdConfidence))
+      : null;
+    const combinedBucketKey = weekdayBreakdownBucketKey(combinedConfidencePct);
+
+    let noTradeReason = null;
+    if (!usdRow) {
+      noTradeReason = "missing_usd_snapshot";
+    } else if (!targetDirectionKey) {
+      noTradeReason = "unsupported_target_direction";
+    } else if (!usdDirectionKey) {
+      noTradeReason = "unsupported_usd_direction";
+    } else if (!metricAvailable(combinedConfidencePct)) {
+      noTradeReason = "missing_combined_confidence";
+    } else if (!combinedBucketKey || !bucketMatrix[combinedBucketKey]) {
+      noTradeReason = "unsupported_confidence_bucket";
+    } else if (targetDirectionKey === usdDirectionKey) {
+      noTradeReason = "same_direction_conflict";
+    }
+
+    if (noTradeReason) {
+      noTradeReasonCounts[noTradeReason] = (noTradeReasonCounts[noTradeReason] || 0) + 1;
+      noTradeRows.push({
+        snapshotDate,
+        weekdayKey,
+        reasonKey: noTradeReason,
+        reasonLabel: pairTradeNoTradeReasonLabel(noTradeReason)
+      });
+      return;
+    }
+
+    const pairBias = targetDirectionKey === "BULLISH" && usdDirectionKey === "BEARISH"
+      ? "PAIR_BULLISH"
+      : "PAIR_BEARISH";
+    const outcomeKey = pairTradeOutcomeKey(targetRow);
+    const cell = bucketMatrix[combinedBucketKey][weekdayKey] || null;
+    const bucketTotal = bucketTotals[combinedBucketKey] || null;
+    const weekdayTotal = weekdayTotals[weekdayKey] || null;
+
+    [cell, bucketTotal, weekdayTotal].forEach((target) => {
+      if (!target) return;
+      target.total += 1;
+      if (outcomeKey === "WIN") {
+        target.wins += 1;
+      } else if (outcomeKey === "LOSS") {
+        target.losses += 1;
+      } else {
+        target.flats += 1;
+      }
+    });
+
+    tradableRows.push({
+      snapshotDate,
+      weekdayKey,
+      pairBias,
+      combinedConfidencePct,
+      combinedBucketKey,
+      outcomeKey,
+      targetDirectionKey,
+      usdDirectionKey
+    });
+  });
+
+  const assetTotals = summarizeWeekdayBreakdownCell(
+    weekdayKeys.reduce((aggregate, weekdayKey) => {
+      const weekdayTotal = weekdayTotals[weekdayKey];
+      aggregate.total += weekdayTotal.total || 0;
+      aggregate.wins += weekdayTotal.wins || 0;
+      aggregate.losses += weekdayTotal.losses || 0;
+      aggregate.flats += weekdayTotal.flats || 0;
+      return aggregate;
+    }, createWeekdayBreakdownCell())
+  );
+
+  const bucketSummaryRows = weekdayBreakdownBuckets.map(bucket => {
+    const totals = summarizeWeekdayBreakdownCell(bucketTotals[bucket.key]);
+    return {
+      bucketKey: bucket.key,
+      bucketLabel: bucket.label,
+      combinedConfidenceBand: `${bucket.min}-${bucket.max}`,
+      ...totals
+    };
+  });
+
+  const conflictSummaryRows = Object.entries(noTradeReasonCounts)
+    .sort((a, b) => b[1] - a[1])
+    .map(([reasonKey, count]) => ({
+      reasonKey,
+      reasonLabel: pairTradeNoTradeReasonLabel(reasonKey),
+      count,
+      sharePct: targetRows.length ? roundTo((count / targetRows.length) * 100, 1) : null
+    }));
+
+  return {
+    ...config,
+    targetRowsCount: targetRows.length,
+    usdRowsCount: Array.isArray(usdChecker?.rows) ? usdChecker.rows.length : 0,
+    matchedUsdRowsCount: targetRows.length - (noTradeReasonCounts.missing_usd_snapshot || 0),
+    tradableRowsCount: tradableRows.length,
+    noTradeRowsCount: noTradeRows.length,
+    missingUsdRowsCount: noTradeReasonCounts.missing_usd_snapshot || 0,
+    conflictRowsCount: noTradeReasonCounts.same_direction_conflict || 0,
+    bucketMatrix,
+    bucketTotals,
+    weekdayTotals,
+    assetTotals,
+    bucketSummaryRows,
+    conflictSummaryRows,
+    tradableRows,
+    noTradeRows
+  };
+}
+
+function renderPairTradeCoverageSummary(pairResearch = null) {
+  if (!pairResearch) return "";
+  return `
+    <section class="backtest-metric-grid research-summary-grid pair-trade-kpi-grid">
+      ${renderBacktestKpiMetric("Target Rows", String(pairResearch.targetRowsCount ?? 0), "Rows available from target checker")}
+      ${renderBacktestKpiMetric("Matched USD Rows", String(pairResearch.matchedUsdRowsCount ?? 0), "Same-date USD rows")}
+      ${renderBacktestKpiMetric("Tradable Pairs", String(pairResearch.tradableRowsCount ?? 0), "Opposite directional target/USD signals")}
+      ${renderBacktestKpiMetric("No Trade", String(pairResearch.noTradeRowsCount ?? 0), "Missing USD or conflict/non-directional setup")}
+    </section>
+  `;
+}
+
+function renderPairTradeAccuracySummary(pairResearch = null) {
+  if (!pairResearch) return "";
+  return `
+    <section class="backtest-metric-grid research-summary-grid pair-trade-kpi-grid">
+      ${renderBacktestKpiMetric("Wins", String(pairResearch.assetTotals?.wins ?? 0), "Tradable pair rows marked CORRECT")}
+      ${renderBacktestKpiMetric("Losses", String(pairResearch.assetTotals?.losses ?? 0), "Tradable pair rows marked WRONG")}
+      ${renderBacktestKpiMetric("Flats", String(pairResearch.assetTotals?.flats ?? 0), "Tradable pair rows marked FLAT / neutral")}
+      ${renderBacktestKpiMetric("Ex-Flat Win Rate", metricAvailable(pairResearch.assetTotals?.exFlatWinRatePct) ? `${percentValue(pairResearch.assetTotals.exFlatWinRatePct)} ex-flat` : (pairResearch.assetTotals?.flats ? "Flat only" : displayDash()), `${pairResearch.assetTotals?.wins ?? 0}W / ${pairResearch.assetTotals?.losses ?? 0}L`)}
+    </section>
+  `;
+}
+
+function renderPairTradeDayTotals(pairResearch = null) {
+  if (!pairResearch) return "";
+  const weekdayHeaders = pairResearch.weekdayKeys.map(weekdayKey => `<th>${escapeHtml(weekdayBreakdownLabels[weekdayKey] || weekdayKey)}</th>`).join("");
+  const dayTotalCells = pairResearch.weekdayKeys.map(weekdayKey => `<td>${escapeHtml(formatWeekdayBreakdownCell(pairResearch.weekdayTotals?.[weekdayKey]))}</td>`).join("");
+  return `
+    <article class="detail-panel wide-panel research-secondary-panel weekday-breakdown-panel">
+      <div class="panel-head">
+        <p class="eyebrow">Day Totals</p>
+        <h3>${escapeHtml(pairResearch.pairLabel)} weekday totals across all confidence buckets</h3>
+      </div>
+      <div class="research-table-scroll weekday-breakdown-scroll">
+        <table class="dashboard-table weekday-breakdown-table weekday-breakdown-totals-table" data-pair-trade-day-totals="${escapeHtml(pairResearch.pairCode)}">
+          <thead>
+            <tr>
+              <th>Day Totals</th>
+              ${weekdayHeaders}
+              <th>Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th scope="row">All Confidence Buckets</th>
+              ${dayTotalCells}
+              <td class="weekday-breakdown-total-cell">${escapeHtml(formatWeekdayBreakdownCell(pairResearch.assetTotals))}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </article>
+  `;
+}
+
+function renderPairTradeWeekdayBreakdown(pairResearch = null) {
+  if (!pairResearch) return "";
+  const weekdayHeaders = pairResearch.weekdayKeys.map(weekdayKey => `<th>${escapeHtml(weekdayBreakdownLabels[weekdayKey] || weekdayKey)}</th>`).join("");
+  const bucketRows = weekdayBreakdownBuckets.map(bucket => {
+    const cells = pairResearch.weekdayKeys.map(weekdayKey => `<td>${escapeHtml(formatWeekdayBreakdownCell(pairResearch.bucketMatrix?.[bucket.key]?.[weekdayKey]))}</td>`).join("");
+    return `
+      <tr>
+        <th scope="row">${escapeHtml(bucket.label)}</th>
+        ${cells}
+        <td class="weekday-breakdown-total-cell">${escapeHtml(formatWeekdayBreakdownCell(pairResearch.bucketTotals?.[bucket.key]))}</td>
+      </tr>
+    `;
+  }).join("");
+
+  return `
+    <article class="detail-panel wide-panel research-secondary-panel weekday-breakdown-panel" data-pair-trade-asset="${escapeHtml(pairResearch.pairCode)}">
+      <div class="panel-head">
+        <p class="eyebrow">Weekday Breakdown</p>
+        <h3>${escapeHtml(pairResearch.pairLabel)} by combined confidence bucket and weekday</h3>
+      </div>
+      <p class="research-panel-copy">Combined confidence is the lower of target headline confidence and same-date USD headline confidence. Only opposite-direction target/USD setups are treated as tradable pair rows.</p>
+      <div class="research-table-scroll weekday-breakdown-scroll">
+        <table class="dashboard-table weekday-breakdown-table">
+          <thead>
+            <tr>
+              <th>Confidence Bucket</th>
+              ${weekdayHeaders}
+              <th>Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${bucketRows}
+          </tbody>
+        </table>
+      </div>
+    </article>
+  `;
+}
+
+function renderPairTradeResearchAsset(pairResearch = null) {
+  if (!pairResearch) return "";
+
+  return `
+    <section class="research-section pair-trade-section">
+      <div class="research-section-head">
+        <div>
+          <p class="eyebrow">Pair Trade Research</p>
+          <h3>${escapeHtml(pairResearch.pairLabel)} from ${escapeHtml(pairResearch.targetAssetCode)} + USD</h3>
+        </div>
+        <p class="research-panel-copy">Pair trade research remains downstream-only. It uses same-date target and USD checker rows, requires opposite directional calls to form a tradable pair setup, and uses the target asset's stored evaluation result as the realized pair outcome proxy.</p>
+      </div>
+      ${renderPairTradeCoverageSummary(pairResearch)}
+      ${renderPairTradeAccuracySummary(pairResearch)}
+      ${renderResearchBreakdownTable(`${pairResearch.pairLabel} confidence buckets`, "Confidence Bucket Table", pairResearch.bucketSummaryRows, [
+        { label: "Bucket", render: row => researchDataCell(row.bucketLabel, `${row.combinedConfidenceBand}% combined confidence`) },
+        { label: "Coverage", render: row => researchDataCell(row.total, `${row.wins}W / ${row.losses}L / ${row.flats}F`) },
+        { label: "Ex-Flat Win Rate", render: row => researchDataCell(metricAvailable(row.exFlatWinRatePct) ? `${percentValue(row.exFlatWinRatePct)} ex-flat` : (row.flats ? "Flat only" : displayDash()), `${row.wins + row.losses} directional`) },
+        { label: "Flat Rate", render: row => researchDataCell(metricAvailable(row.flatRatePct) ? percentValue(row.flatRatePct) : displayDash(), `${row.flats} of ${row.total}`) }
+      ], {
+        description: "Confidence buckets use min(target headline confidence, USD headline confidence) so pair trade confidence never exceeds the weaker side of the setup."
+      })}
+      ${renderPairTradeDayTotals(pairResearch)}
+      ${renderPairTradeWeekdayBreakdown(pairResearch)}
+      ${renderResearchBreakdownTable(`${pairResearch.pairLabel} conflict / no-trade summary`, "Conflict / No-Trade Summary", pairResearch.conflictSummaryRows, [
+        { label: "Reason", render: row => researchDataCell(row.reasonLabel, row.reasonKey) },
+        { label: "Count", render: row => researchDataCell(row.count, `${pairResearch.targetRowsCount ? roundTo((row.count / pairResearch.targetRowsCount) * 100, 1) : 0}% of target rows`) },
+        { label: "Share", render: row => researchDataCell(metricAvailable(row.sharePct) ? percentValue(row.sharePct) : displayDash(), "Target-row share") }
+      ], {
+        description: "No-trade rows include missing USD snapshots, same-direction target/USD conflicts, and non-directional or missing-confidence setups."
+      })}
+    </section>
+  `;
+}
+
+function renderResearchPairTrade(data = {}) {
+  const pairResearchRows = pairTradeResearchConfigs
+    .map(config => buildPairTradeResearchForConfig(config, data.checkers || {}))
+    .filter(item => item.targetRowsCount > 0);
+
+  if (!pairResearchRows.length) {
+    return `
+      <div class="backtest-report">
+        <article class="detail-panel wide-panel research-secondary-panel">
+          <p class="eyebrow">Pair Trade Research</p>
+          <h3>Pair trade research unavailable</h3>
+          <div class="empty-state matrix-evidence-empty">Required checker artifacts could not be loaded for pair trade research.</div>
+        </article>
+      </div>
+    `;
+  }
+
+  return `
+    <div class="backtest-report">
+      ${renderResearchStatusHeader(data)}
+      <section class="research-section">
+        <div class="research-section-head">
+          <div>
+            <p class="eyebrow">Pair Trade Research</p>
+            <h3>Layer 2 pair confirmation research from Layer 1 checker artifacts</h3>
+          </div>
+          <p class="research-panel-copy">This tab does not create live Layer 2 logic. It only studies same-date target + USD pair setups from the canonical checker artifacts, using stored displayed headline confidence and stored evaluation outcomes.</p>
+        </div>
+        <article class="detail-panel wide-panel research-secondary-panel weekday-breakdown-intro-panel">
+          <p class="research-panel-copy">Tradable pair rows require opposite target/USD directions. Combined confidence is the lower of the two stored headline confidence values. Same-direction target/USD rows are treated as conflicts, and BTC weekend rows with no same-date USD row remain visible in the conflict / no-trade summary.</p>
+        </article>
+      </section>
+      ${pairResearchRows.map(renderPairTradeResearchAsset).join("")}
+    </div>
+  `;
+}
+
 function renderResearchVerdictQuality(data = {}) {
   const byVerdictStrength = data.accuracy?.by_verdict_strength || [];
   const byConfidenceBucket = data.accuracy?.by_confidence_bucket || [];
@@ -4381,7 +4757,9 @@ function renderBacktest(data = {}) {
       ? renderResearchInfrastructure(data)
       : (activeBacktestTab === "checker"
         ? renderResearchDataChecker(data)
-        : (activeBacktestTab === "weekday-breakdown" ? renderResearchWeekdayBreakdown(data) : renderResearchAccuracy(data)));
+        : (activeBacktestTab === "weekday-breakdown"
+          ? renderResearchWeekdayBreakdown(data)
+          : (activeBacktestTab === "pair-trade-research" ? renderResearchPairTrade(data) : renderResearchAccuracy(data))));
     applyMatrixEvidenceFilter("all");
   } catch (err) {
     console.error("Backtest render failed", err);
