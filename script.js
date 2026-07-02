@@ -4012,10 +4012,10 @@ function formatWeekdayBreakdownCell(cell = {}) {
   if (!summary.total) return displayDash();
 
   if (!summary.directionalTotal && summary.flats > 0) {
-    return `Flat only\n0W / 0L / ${summary.flats}F / ${summary.total}T`;
+    return `Flat only\n0W / 0L / ${summary.flats}F / ${summary.total}T\n100% flat`;
   }
 
-  return `${percentValue(summary.exFlatWinRatePct)} ex-flat\n${summary.wins}W / ${summary.losses}L / ${summary.flats}F / ${summary.total}T`;
+  return `${percentValue(summary.exFlatWinRatePct)} ex-flat\n${summary.wins}W / ${summary.losses}L / ${summary.flats}F / ${summary.total}T\n${percentValue(summary.flatRatePct)} flat`;
 }
 
 function formatWeekdayBreakdownSummaryItem(item = null) {
@@ -4028,6 +4028,9 @@ function renderWeekdayBreakdownAsset(assetSummary = null) {
   const assetLabel = assetSummary.assetCode || "Asset";
   const weekdayHeaders = assetSummary.weekdayKeys.map(weekdayKey => `
     <th>${escapeHtml(weekdayBreakdownLabels[weekdayKey] || weekdayKey)}</th>
+  `).join("");
+  const dayTotalsCells = assetSummary.weekdayKeys.map(weekdayKey => `
+    <td>${escapeHtml(formatWeekdayBreakdownCell(assetSummary.weekdayTotals?.[weekdayKey]))}</td>
   `).join("");
   const bucketRows = weekdayBreakdownBuckets.map(bucket => {
     const cells = assetSummary.weekdayKeys.map(weekdayKey => `
@@ -4065,6 +4068,24 @@ function renderWeekdayBreakdownAsset(assetSummary = null) {
           <span><strong>Total Rows:</strong> ${escapeHtml(String(assetSummary.assetTotals?.total ?? 0))}</span>
           <span><strong>Flat Rate:</strong> ${escapeHtml(metricAvailable(assetSummary.assetTotals?.flatRatePct) ? percentValue(assetSummary.assetTotals.flatRatePct) : displayDash())}</span>
           <span><strong>Ex-Flat Win Rate:</strong> ${escapeHtml(metricAvailable(assetSummary.assetTotals?.exFlatWinRatePct) ? `${percentValue(assetSummary.assetTotals.exFlatWinRatePct)} ex-flat` : (assetSummary.assetTotals?.flats ? "Flat only" : displayDash()))}</span>
+        </div>
+        <div class="research-table-scroll weekday-breakdown-scroll">
+          <table class="dashboard-table weekday-breakdown-table weekday-breakdown-totals-table">
+            <thead>
+              <tr>
+                <th>Day Totals</th>
+                ${weekdayHeaders}
+                <th>Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <th scope="row">All Confidence Buckets</th>
+                ${dayTotalsCells}
+                <td class="weekday-breakdown-total-cell">${escapeHtml(formatWeekdayBreakdownCell(assetSummary.assetTotals))}</td>
+              </tr>
+            </tbody>
+          </table>
         </div>
         <div class="research-table-scroll weekday-breakdown-scroll">
           <table class="dashboard-table weekday-breakdown-table">

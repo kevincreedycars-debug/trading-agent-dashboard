@@ -90,6 +90,7 @@ async function run() {
     await page.getByRole("button", { name: "Weekday Breakdown" }).click();
     await page.waitForSelector("[data-weekday-breakdown-asset='BTC']", { timeout: 15000 });
     const weekdayText = await page.locator("#backtestPanel").innerText();
+    const normalizedWeekdayText = weekdayText.toLowerCase();
 
     if (!weekdayText.includes("Day-of-week performance by displayed headline confidence")) {
       throw new Error(`Weekday Breakdown tab header did not render.\n${weekdayText}`);
@@ -109,7 +110,7 @@ async function run() {
       throw new Error(`USD weekday table unexpectedly included weekend columns.\n${usdWeekdayHeaders.join(" | ")}`);
     }
 
-    if (!weekdayText.includes("ex-flat")) {
+    if (!normalizedWeekdayText.includes("ex-flat")) {
       throw new Error(`Weekday Breakdown did not render ex-flat rate copy.\n${weekdayText}`);
     }
 
@@ -117,7 +118,11 @@ async function run() {
       throw new Error(`Weekday Breakdown did not render W/L/F/T count lines.\n${weekdayText}`);
     }
 
-    if (!weekdayText.includes("Flat Rate") || !weekdayText.includes("Ex-Flat Win Rate")) {
+    if (!normalizedWeekdayText.includes("day totals") || !normalizedWeekdayText.includes("all confidence buckets")) {
+      throw new Error(`Weekday Breakdown did not render day-level totals above the bucket table.\n${weekdayText}`);
+    }
+
+    if (!normalizedWeekdayText.includes("flat rate") || !normalizedWeekdayText.includes("ex-flat win rate")) {
       throw new Error(`Weekday Breakdown summary totals did not render flat-aware metrics.\n${weekdayText}`);
     }
 

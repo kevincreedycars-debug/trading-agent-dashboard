@@ -189,6 +189,27 @@ function validateAsset(config) {
     });
   });
 
+  config.weekdays.forEach((weekday) => {
+    const summedBucketWeekday = BUCKETS.reduce((aggregate, bucket) => {
+      const cell = cellCounts[bucket.key][weekday];
+      aggregate.total += cell.total;
+      aggregate.wins += cell.wins;
+      aggregate.losses += cell.losses;
+      aggregate.flats += cell.flats;
+      return aggregate;
+    }, createTotals());
+    const dayTotals = weekdayCounts[weekday];
+
+    if (
+      summedBucketWeekday.total !== dayTotals.total
+      || summedBucketWeekday.wins !== dayTotals.wins
+      || summedBucketWeekday.losses !== dayTotals.losses
+      || summedBucketWeekday.flats !== dayTotals.flats
+    ) {
+      errors.push(`weekday ${weekday}: day totals did not match sum of bucket rows`);
+    }
+  });
+
   const weekdayRollup = sumTotals(weekdayCounts);
   const bucketRollup = sumTotals(bucketCounts);
 
@@ -228,6 +249,17 @@ function validateAsset(config) {
     bucket_total: bucketRollup.total,
     weekday_counts: weekdayCounts,
     bucket_counts: bucketCounts,
+    weekday_bucket_reconciliation: Object.fromEntries(config.weekdays.map((weekday) => {
+      const summedBucketWeekday = BUCKETS.reduce((aggregate, bucket) => {
+        const cell = cellCounts[bucket.key][weekday];
+        aggregate.total += cell.total;
+        aggregate.wins += cell.wins;
+        aggregate.losses += cell.losses;
+        aggregate.flats += cell.flats;
+        return aggregate;
+      }, createTotals());
+      return [weekday, summedBucketWeekday];
+    })),
     total_wins: weekdayRollup.wins,
     total_losses: weekdayRollup.losses,
     total_flats: weekdayRollup.flats,
