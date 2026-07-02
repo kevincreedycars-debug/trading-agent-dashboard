@@ -4,7 +4,8 @@ const workflowControlUrl = "./data/workflow-control.json";
 const checkerDataUrls = {
   USD: "./data/backtester-checker-usd-24h-2024-01.json?v=20260629-usd-flatband-010",
   EUR: "./data/backtester-checker-eur-24h-2024-2026.json?v=20260629-eur-flatband-015",
-  GOLD: "./data/backtester-checker-gold-24h-2024-2026.json?v=20260630-gold-xauusd-dashboard"
+  GOLD: "./data/backtester-checker-gold-24h-2024-2026.json?v=20260630-gold-xauusd-dashboard",
+  NQ: "./data/backtester-checker-nq-24h-2024-2026.json?v=20260702-nq-qqq-proxy-dashboard"
 };
 const researchSupabaseUrl = "https://eaolqbrlywczinfordvg.supabase.co/rest/v1";
 const researchSupabaseKey = "sb_publishable_k6YbEuuk3GyB9GVTQDtNVA_J1gCRYaY";
@@ -3809,6 +3810,7 @@ function renderResearchAccuracy(data = {}) {
   const usdMatrix24hRows = data.accuracy?.matrix_24h_rows || [];
   const eurMatrix24hRows = data.accuracy?.eur_matrix_24h_rows || [];
   const goldMatrix24hRows = data.accuracy?.gold_matrix_24h_rows || [];
+  const nqMatrix24hRows = data.accuracy?.nq_matrix_24h_rows || [];
 
   if (data.meta?.error) {
     return `
@@ -3875,6 +3877,24 @@ function renderResearchAccuracy(data = {}) {
         assetCode: "GOLD",
         timeframe: "following 24hrs",
         assetLabel: "Gold",
+        timeframeLabel: "24H"
+      })}
+      ${renderResearchAsset24hContext({
+        assetCode: "NQ",
+        benchmark: "QQQ_NQ_PROXY"
+      })}
+      ${renderResearch24hAccuracyMatrix(nqMatrix24hRows, {
+        assetCode: "NQ",
+        assetLabel: "NQ",
+        timeframe: "following 24hrs",
+        timeframeLabel: "24H",
+        sourceView: "research_prediction_evaluations",
+        exportKey: "nq-24h"
+      })}
+      ${renderMatrixSummary(nqMatrix24hRows, {
+        assetCode: "NQ",
+        timeframe: "following 24hrs",
+        assetLabel: "NQ",
         timeframeLabel: "24H"
       })}
       ${renderResearchDefinitions()}
@@ -3978,6 +3998,11 @@ function exportMatrixEvidenceCsv(exportKey = "usd-24h") {
     "gold-24h": {
       rows: backtestData?.accuracy?.gold_matrix_24h_rows || [],
       assetCode: "GOLD",
+      sourceView: "research_prediction_evaluations"
+    },
+    "nq-24h": {
+      rows: backtestData?.accuracy?.nq_matrix_24h_rows || [],
+      assetCode: "NQ",
       sourceView: "research_prediction_evaluations"
     }
   };
@@ -4455,9 +4480,24 @@ async function fetchResearchDashboardData() {
     assetCode: "GOLD",
     benchmark: "XAUUSD"
   })), []);
+  const nqMatrix24hRowsPromise = resolveResearchTask("research_prediction_evaluations.NQ.24h", fetchResearchView("research_prediction_evaluations", {
+    select: "call_date,asset_code,timeframe,agent_direction,agent_conviction,evaluated_market,open_price,close_price,pct_change,result,prediction_id",
+    order: "call_date.asc",
+    filters: {
+      asset_code: "eq.NQ",
+      evaluated_market: "eq.QQQ_NQ_PROXY",
+      timeframe: "eq.following 24hrs",
+      evaluation_mode: "eq.primary",
+      evaluation_version: "eq.phase1_outcome_eval_v1"
+    }
+  }).then(rows => normalizeMarketEvaluationRows(rows, {
+    assetCode: "NQ",
+    benchmark: "QQQ_NQ_PROXY"
+  })), []);
   const usdCheckerDataPromise = resolveResearchTask("checker.USD", fetchLocalJson(checkerDataUrls.USD), null);
   const eurCheckerDataPromise = resolveResearchTask("checker.EUR", fetchLocalJson(checkerDataUrls.EUR), null);
   const goldCheckerDataPromise = resolveResearchTask("checker.GOLD", fetchLocalJson(checkerDataUrls.GOLD), null);
+  const nqCheckerDataPromise = resolveResearchTask("checker.NQ", fetchLocalJson(checkerDataUrls.NQ), null);
 
   const [
     overallRows,
@@ -4465,6 +4505,7 @@ async function fetchResearchDashboardData() {
     matrix24hRows,
     eurMatrix24hRows,
     goldMatrix24hRows,
+    nqMatrix24hRows,
     verdictStrengthRows,
     confidenceBucketRows,
     tradeQualityRows,
@@ -4479,13 +4520,15 @@ async function fetchResearchDashboardData() {
     infrastructureRows,
     usdCheckerData,
     eurCheckerData,
-    goldCheckerData
+    goldCheckerData,
+    nqCheckerData
   ] = await Promise.all([
     resolveResearchTask("research_overall_win_rate", fetchResearchView("research_overall_win_rate"), []),
     resolveResearchTask("research_usd_24h_direction_accuracy", fetchResearchView("research_usd_24h_direction_accuracy"), []),
     matrix24hRowsPromise,
     eurMatrix24hRowsPromise,
     goldMatrix24hRowsPromise,
+    nqMatrix24hRowsPromise,
     resolveResearchTask("research_accuracy_by_verdict_strength", fetchResearchView("research_accuracy_by_verdict_strength", { order: "timeframe.asc,strength_rank.asc" }), []),
     resolveResearchTask("research_accuracy_by_confidence_bucket", fetchResearchView("research_accuracy_by_confidence_bucket", { order: "timeframe.asc,confidence_bucket_rank.asc" }), []),
     resolveResearchTask("research_trade_quality_thresholds", fetchResearchView("research_trade_quality_thresholds", { order: "timeframe.asc,threshold_rank.asc" }), []),
@@ -4509,7 +4552,8 @@ async function fetchResearchDashboardData() {
     resolveResearchTask("research_dashboard_infrastructure_status", fetchResearchView("research_dashboard_infrastructure_status"), []),
     usdCheckerDataPromise,
     eurCheckerDataPromise,
-    goldCheckerDataPromise
+    goldCheckerDataPromise,
+    nqCheckerDataPromise
   ]);
 
   const resolvedEurMatrix24hRows = eurCheckerData?.rows?.length
@@ -4524,6 +4568,12 @@ async function fetchResearchDashboardData() {
       benchmark: "XAUUSD"
     })
     : goldMatrix24hRows;
+  const resolvedNqMatrix24hRows = nqCheckerData?.rows?.length
+    ? normalizeCheckerRowsForMatrix(nqCheckerData, {
+      assetCode: "NQ",
+      benchmark: "QQQ_NQ_PROXY"
+    })
+    : nqMatrix24hRows;
 
   return {
     meta: {
@@ -4537,6 +4587,7 @@ async function fetchResearchDashboardData() {
       matrix_24h_rows: matrix24hRows,
       eur_matrix_24h_rows: resolvedEurMatrix24hRows,
       gold_matrix_24h_rows: resolvedGoldMatrix24hRows,
+      nq_matrix_24h_rows: resolvedNqMatrix24hRows,
       by_verdict_strength: verdictStrengthRows,
       by_confidence_bucket: confidenceBucketRows,
       trade_quality: tradeQualityRows,
@@ -4554,7 +4605,8 @@ async function fetchResearchDashboardData() {
     checkers: {
       USD: usdCheckerData,
       EUR: eurCheckerData,
-      GOLD: goldCheckerData
+      GOLD: goldCheckerData,
+      NQ: nqCheckerData
     }
   };
 }

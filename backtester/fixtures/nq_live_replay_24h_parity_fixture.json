@@ -1,0 +1,240 @@
+{
+  "meta": {
+    "name": "nq_live_replay_24h_parity_fixture",
+    "purpose": "One-snapshot live-vs-replay parity gate for NQ 24H before historical replay expansion.",
+    "live_factor_intent_source": "logic/agent_nq_direction.md",
+    "live_24h_parity_target": "exports/nq_layer1_agent.json#Calculate NQ Conviction",
+    "replay_source_under_test": "backtester/replay/nq/nq_replay_core.js",
+    "notes": [
+      "The expected output is frozen from the current live NQ deterministic workflow semantics.",
+      "The replay core preserves raw live conviction fields while also deriving canonical headline confidence for research/dashboard use."
+    ]
+  },
+  "snapshot": {
+    "snapshot_date": "2026-06-30",
+    "dxy_d1": -0.1398527457149901,
+    "dxy_d5": 0.40765541655108173,
+    "vix_d1": -0.4800000000000004,
+    "vix_d5": 1.629999999999999,
+    "dxy_d20": 1.558239058806132,
+    "fed_bias": "neutral",
+    "nq_price": 724.08,
+    "btc_price": 59454.735,
+    "dxy_level": 120.8866,
+    "nq_d1_pct": 2.4854,
+    "nq_d5_pct": 1.4615007356547418,
+    "vix_level": 18.41,
+    "btc_d1_pct": 0.24084548990476115,
+    "btc_d5_pct": -3.598106652214285,
+    "gold_price": 4021.005733954177,
+    "nq_d20_pct": 2.6976427538082004,
+    "btc_d20_pct": -5.365078260985825,
+    "gold_d1_pct": -0.13631245866856667,
+    "gold_d5_pct": -5.715216578110105,
+    "gold_d20_pct": -6.578365380749027,
+    "us_10y_yield": 4.38,
+    "us_10y_d5_bps": -8.000000000000007,
+    "us_10y_d20_bps": -7.000000000000028,
+    "us_10y_real_yield": 2.18,
+    "us_10y_real_yield_d5_bps": -2.9999999999999805,
+    "us_10y_real_yield_d20_bps": 12.00000000000001,
+    "equities_regime": "neutral",
+    "latest_us_event": null,
+    "upcoming_events": [
+      {
+        "priority": 50,
+        "timestamp": 0,
+        "impact_rank": 0
+      }
+    ]
+  },
+  "expected_live_24h": {
+    "direction_24h": "BULLISH",
+    "conviction_24h": 86,
+    "raw_strength_bucket": "VERY_STRONG",
+    "displayed_headline_confidence_pct": 28,
+    "headline_strength_bucket": "WEAK",
+    "bull_case_pct": 86,
+    "bear_case_pct": 14,
+    "net_edge_pct": 72,
+    "participation_pct": 14,
+    "score_bullish": 2,
+    "score_bearish": 1,
+    "score_neutral": 7,
+    "weighted_score": {
+      "bullish_weight": 12,
+      "bearish_weight": 2,
+      "neutral_weight": 86,
+      "active_weight": 14,
+      "weight_margin": 10
+    },
+    "factor_breakdown": {
+      "F1": { "signal": "NEUTRAL", "weight": 20 },
+      "F2": { "signal": "NEUTRAL", "weight": 14 },
+      "F3": { "signal": "NEUTRAL", "weight": 12 },
+      "F4": { "signal": "NEUTRAL", "weight": 6 },
+      "F5": { "signal": "NEUTRAL", "weight": 14 },
+      "F6": { "signal": "NEUTRAL", "weight": 12 },
+      "F7": { "signal": "NEUTRAL", "weight": 8 },
+      "F8": { "signal": "BULLISH", "weight": 10 },
+      "F9": { "signal": "BEARISH", "weight": 2 },
+      "F10": { "signal": "BULLISH", "weight": 2 }
+    },
+    "conviction_model": {
+      "bullish_argument_pct": 86,
+      "bearish_argument_pct": 14,
+      "neutral_pct": 86,
+      "active_participation_pct": 14,
+      "net_edge_pct": 72,
+      "final_conviction": 86,
+      "headline_confidence_pct": 28,
+      "verdict_strength": "VERY_STRONG",
+      "confidence_strength": "WEAK"
+    },
+    "missing_inputs": [],
+    "warnings_affecting_confidence": []
+  },
+  "supplemental_cases": [
+    {
+      "name": "lean_conversion_case",
+      "snapshot": {
+        "vix_level": 18,
+        "vix_d1": 0,
+        "vix_d5": 0,
+        "dxy_d1": 0.2,
+        "dxy_d5": 0.2,
+        "dxy_d20": 0.2,
+        "us_10y_d5_bps": -6,
+        "us_10y_d20_bps": -6,
+        "us_10y_real_yield_d5_bps": 0,
+        "us_10y_real_yield_d20_bps": 0,
+        "fed_bias": "neutral",
+        "latest_us_event": null,
+        "nq_d1_pct": 0.4,
+        "nq_d5_pct": 0.4,
+        "nq_d20_pct": 0.4,
+        "btc_d1_pct": 0.0,
+        "btc_d5_pct": 0.0,
+        "btc_d20_pct": 0.0,
+        "gold_d1_pct": 0.0,
+        "gold_d5_pct": 0.0,
+        "gold_d20_pct": 0.0
+      },
+      "expected": {
+        "direction_24h": "BEARISH_LEAN",
+        "conviction_24h": 55,
+        "bull_case_pct": 45,
+        "bear_case_pct": 55,
+        "net_edge_pct": -10,
+        "participation_pct": 22,
+        "weighted_score": {
+          "bullish_weight": 10,
+          "bearish_weight": 12,
+          "neutral_weight": 78,
+          "active_weight": 22,
+          "weight_margin": 2
+        },
+        "factor_breakdown": {
+          "F3": { "signal": "BEARISH", "weight": 12 },
+          "F4": { "signal": "NEUTRAL", "weight": 6 },
+          "F8": { "signal": "BULLISH", "weight": 10 }
+        }
+      }
+    },
+    {
+      "name": "no_clear_bias_case",
+      "snapshot": {
+        "vix_level": 18,
+        "vix_d1": 0,
+        "vix_d5": 0,
+        "dxy_d1": 0,
+        "dxy_d5": 0,
+        "dxy_d20": 0,
+        "us_10y_d5_bps": 6,
+        "us_10y_d20_bps": 6,
+        "us_10y_real_yield_d5_bps": 0,
+        "us_10y_real_yield_d20_bps": 0,
+        "fed_bias": "neutral",
+        "latest_us_event": null,
+        "nq_d1_pct": 0.4,
+        "nq_d5_pct": 0.4,
+        "nq_d20_pct": 0.4,
+        "btc_d1_pct": -0.6,
+        "btc_d5_pct": -0.6,
+        "btc_d20_pct": -0.6,
+        "gold_d1_pct": 0.4,
+        "gold_d5_pct": 0.4,
+        "gold_d20_pct": 0.4
+      },
+      "expected": {
+        "direction_24h": "BULLISH",
+        "conviction_24h": 83,
+        "bull_case_pct": 83,
+        "bear_case_pct": 17,
+        "net_edge_pct": 66,
+        "participation_pct": 12,
+        "weighted_score": {
+          "bullish_weight": 10,
+          "bearish_weight": 2,
+          "neutral_weight": 88,
+          "active_weight": 12,
+          "weight_margin": 8
+        },
+        "factor_breakdown": {
+          "F4": { "signal": "NEUTRAL", "weight": 6 },
+          "F8": { "signal": "BULLISH", "weight": 10 },
+          "F9": { "signal": "BEARISH", "weight": 2 },
+          "F10": { "signal": "NEUTRAL", "weight": 2 }
+        }
+      }
+    },
+    {
+      "name": "missing_input_neutral_case",
+      "snapshot": {
+        "vix_level": null,
+        "vix_d1": null,
+        "vix_d5": null,
+        "dxy_d1": null,
+        "dxy_d5": null,
+        "dxy_d20": null,
+        "us_10y_d5_bps": null,
+        "us_10y_d20_bps": null,
+        "us_10y_real_yield_d5_bps": null,
+        "us_10y_real_yield_d20_bps": null,
+        "fed_bias": "unknown",
+        "latest_us_event": null,
+        "nq_d1_pct": 0.4,
+        "nq_d5_pct": 0.4,
+        "nq_d20_pct": 0.4,
+        "btc_d1_pct": null,
+        "btc_d5_pct": null,
+        "btc_d20_pct": null,
+        "gold_d1_pct": null,
+        "gold_d5_pct": null,
+        "gold_d20_pct": null
+      },
+      "expected": {
+        "direction_24h": "BULLISH",
+        "conviction_24h": 100,
+        "bull_case_pct": 100,
+        "bear_case_pct": 0,
+        "net_edge_pct": 100,
+        "participation_pct": 10,
+        "weighted_score": {
+          "bullish_weight": 10,
+          "bearish_weight": 0,
+          "neutral_weight": 90,
+          "active_weight": 10,
+          "weight_margin": 10
+        },
+        "factor_breakdown": {
+          "F1": { "signal": "NEUTRAL", "weight": 20 },
+          "F3": { "signal": "NEUTRAL", "weight": 12 },
+          "F8": { "signal": "BULLISH", "weight": 10 },
+          "F9": { "signal": "NEUTRAL", "weight": 2 },
+          "F10": { "signal": "NEUTRAL", "weight": 2 }
+        }
+      }
+    }
+  ]
+}
