@@ -8,7 +8,9 @@ The Layer 1 trading-agent platform remains operational, and the latest runtime e
 
 The full Layer 1 historical replay rollout is now validated across USD, EUR, Gold, NQ, and BTC. The active repository work has shifted from replay rollout itself into downstream research presentation and breakdown views built on top of the canonical checker artifacts.
 
-The current dashboard now includes the existing accuracy matrices, the checker workspaces, the weekday breakdown views, and a new Pair Trade Research tab built entirely from canonical checker artifacts without changing replay, checker, flat-band, or confidence semantics.
+The current dashboard now includes the existing accuracy matrices, the checker workspaces, the weekday breakdown views, and a Pair Trade Research tab built entirely from canonical checker artifacts without changing replay, checker, flat-band, or confidence semantics.
+
+Current platform state is stable and validated. The Layer 1 historical replay rollout is complete, Weekday Breakdown and Day Totals are complete, and Pair Trade Research is complete including its later UI refinements.
 
 ## Current Architecture
 
@@ -145,6 +147,12 @@ The project has already established the AI-assisted development environment base
 The current repository priority is:
 
 > compact historical research breakdowns that reuse canonical checker artifact outputs
+
+The next immediate milestone is:
+
+> Build ADR Reach Research
+
+That next module is not another close-to-close accuracy table. Its purpose is to answer whether price moved at least `50%` of rolling `20-day ADR` in the direction of a Layer 1 or Layer 2 call at any point during that trading day, using historical OHLC data only. It should live as a separate Backtest / Accuracy sub-tab alongside the existing Layer 1 and Pair Trade Research views, keep existing replay/checker logic untouched, support future configurable thresholds of `25%`, `50%`, `75%`, and `100%`, and mark assets without sufficient OHLC history as unavailable rather than estimating from close-only data.
 
 GitHub is the source of truth. n8n remains the execution engine. Supabase remains the data layer. GitHub Pages is the active presentation host.
 

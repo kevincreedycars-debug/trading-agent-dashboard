@@ -2,15 +2,15 @@
 
 ## Current Feature
 
-Backtest / Accuracy Pair Trade Research from canonical Layer 1 checker artifacts
+Backtest / Accuracy ADR Reach Research
 
 ## Current Milestone
 
-Release pair-trade research summaries and breakdowns for target asset + USD setups
+Design and build ADR reach research alongside the existing Layer 1 and Pair Trade Research modules
 
 ## Status
 
-Complete
+Ready to start
 
 ## Completed Work
 
@@ -41,11 +41,14 @@ Complete
 - Pair trade research now includes coverage summary, accuracy summary, combined-confidence bucket table, day totals, weekday breakdown, and conflict/no-trade summary.
 - Combined pair confidence is computed as the lower of target and USD stored headline confidence, keeping pair confidence downstream-only and consistent with Layer 1 display semantics.
 - A dedicated pair-trade validator now passes, and browser smoke now passes with the Pair Trade Research tab included.
+- Pair Trade Research UI has been refined and validated, including top-summary comparison layout improvements, confidence-table spacing fixes, and clearer matched-day terminology in the summary layer.
 
 ## Remaining Work
 
-- Confirm the public GitHub Pages dashboard renders the Pair Trade Research tab cleanly.
-- Decide the next analytical breakdown or research milestone.
+- Build `ADR Reach Research` as a separate Backtest / Accuracy sub-tab.
+- Use rolling 20-day ADR with a default `50%` threshold and plan for configurable future thresholds of `25%`, `50%`, `75%`, and `100%`.
+- Source historical OHLC data and avoid any close-only intraday reach estimation.
+- Mark any asset without sufficient OHLC history as unavailable instead of inferring reach.
 
 ## Current Files Being Modified
 
@@ -66,8 +69,8 @@ No repository-side blocker.
 
 ## Next Immediate Action
 
-Verify the public GitHub Pages dashboard renders the Pair Trade Research tab cleanly, then choose the next research breakdown.
+Build ADR Reach Research without altering the existing Layer 1 replay/checker stack or the Pair Trade Research module.
 
 ## Last Updated
 
-2026-07-02 13:55 Europe/London
+2026-07-02 21:20 Europe/London

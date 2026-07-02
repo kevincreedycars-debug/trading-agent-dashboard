@@ -22,11 +22,14 @@ Last updated: 2026-07-02
 - Added `backtester/scripts/validate_layer2_pairing_analysis.js` and confirmed it passes alongside the existing five checker validators.
 - Expanded the local browser smoke test to verify the new Pair Trade Research tab renders without console errors.
 - Committed and pushed the Pair Trade Research implementation to `origin/main`.
+- Refined the Pair Trade Research UI without changing any pairing or Layer 1 calculations.
+- Reworked the top `Layer 2 Pair Summary` into a compact comparison layout, improved detailed-table spacing safety, and updated terminology so the summary now uses `Trade Days %` against matched historical days.
+- Re-ran lightweight validation and browser smoke after the UI refinements; current platform state is stable and validated.
 
 ## Unfinished Work
 
-- Verify the public GitHub Pages dashboard after push.
-- Decide the next Backtest / Accuracy analytical expansion.
+- Build `ADR Reach Research` as the next Backtest / Accuracy research sub-tab.
+- Source the required historical OHLC data inputs for ADR reach measurement where available.
 
 ## Blockers
 
@@ -44,4 +47,17 @@ Last updated: 2026-07-02
 
 ## Exact Next Task
 
-Verify the public GitHub Pages dashboard renders the Pair Trade Research tab cleanly, then decide the next Backtest / Accuracy analytical expansion.
+Build `ADR Reach Research`.
+
+Design intent for the handover:
+
+- This is not another close-to-close accuracy table.
+- Its purpose is to answer: `Did price move at least 50% of the rolling 20-day ADR in the direction of the Layer 1 or Layer 2 call at any point during that trading day?`
+- Add it as a separate `Backtest / Accuracy` sub-tab named `ADR Reach Research`.
+- Use rolling 20-day ADR.
+- Default threshold is `50%`.
+- Future thresholds should remain configurable for `25%`, `50%`, `75%`, and `100%`.
+- It requires historical OHLC data. Do not infer intraday reach from close-only data.
+- It sits alongside existing Layer 1 and Pair Trade Research. It does not replace existing checker logic.
+- Existing replay/checker logic remains untouched.
+- If an asset lacks historical OHLC data, record it as unavailable rather than estimating.

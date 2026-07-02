@@ -4,15 +4,19 @@ Last updated: 2026-07-02
 
 ## Task
 
-Build the Layer 2 / Pair Trade Research Backtest / Accuracy sub-tab from the existing canonical checker artifacts.
+Build `ADR Reach Research` as the next Backtest / Accuracy research sub-tab.
 
 ## Objective
 
-Expose downstream-only pair-trade research for EUR/USD, XAU/USD, NQ/USD, and BTC/USD by pairing each target asset with same-date USD, using stored displayed headline confidence only, and showing coverage, accuracy, confidence-bucket, day-total, weekday, and conflict/no-trade views without altering Layer 1 logic.
+Add a downstream-only ADR reach module that answers:
+
+> Did price move at least 50% of the rolling 20-day ADR in the direction of the Layer 1 or Layer 2 call at any point during that trading day?
+
+This work must sit alongside the existing Layer 1 and Pair Trade Research views, require historical OHLC data, keep existing replay/checker logic untouched, and record unavailable assets as unavailable rather than estimating intraday reach from close-only data.
 
 ## Current Status
 
-Completed, validated, committed, and pushed.
+Ready to begin in the next session. Current platform state is stable and validated.
 
 ## Completed
 
@@ -80,6 +84,7 @@ Completed, validated, committed, and pushed.
 - Added pair-trade coverage summary, accuracy summary, combined-confidence bucket table, day totals, weekday breakdown, and conflict/no-trade summary
 - Added `backtester/scripts/validate_layer2_pairing_analysis.js` and confirmed pair-trade research validation passes
 - Dashboard smoke updated and passing for the new Pair Trade Research tab
+- Pair Trade Research UI refined and validated, including top-summary layout improvements, confidence-table spacing improvements, and terminology updates for matched-day trade-share metrics
 
 ## n8n Workspace
 
@@ -97,9 +102,10 @@ https://silver17.app.n8n.cloud/projects/ISQG9XU7TGTT6Fcu/workflows
 
 ## Next Immediate Steps
 
-1. Confirm the public GitHub Pages dashboard renders Pair Trade Research cleanly alongside the existing matrices, checker views, and weekday breakdowns.
-2. Decide the next analytical breakdown or research view now that Layer 1 replay rollout, weekday breakdowns, and pair-trade research are complete.
-3. Keep replay, checker, confidence, and flat-band semantics frozen until an explicit optimization phase is approved.
+1. Build a separate `ADR Reach Research` Backtest / Accuracy sub-tab.
+2. Use rolling 20-day ADR with default threshold `50%`, while keeping future thresholds configurable to `25%`, `50%`, `75%`, and `100%`.
+3. Source historical OHLC data for each supported asset and record any asset without sufficient OHLC coverage as unavailable instead of estimating from close-only data.
+4. Keep replay, checker, pair-calculation, confidence, and flat-band semantics frozen while the ADR module is added downstream-only.
 
 ## Current Blocker
 
@@ -140,4 +146,4 @@ before making any changes.
 
 The immediate working outcome for the current task is:
 
-> ship the Pair Trade Research tab from canonical checker artifacts without changing replay outputs, checker semantics, flat bands, or headline confidence logic
+> ship ADR Reach Research as a separate research module without changing replay outputs, checker semantics, pair logic, flat bands, or headline confidence logic
