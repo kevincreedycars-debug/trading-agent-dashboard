@@ -1,6 +1,6 @@
 # Session Notes
 
-Last updated: 2026-07-02
+Last updated: 2026-07-03
 
 ## Work Completed
 
@@ -25,11 +25,18 @@ Last updated: 2026-07-02
 - Refined the Pair Trade Research UI without changing any pairing or Layer 1 calculations.
 - Reworked the top `Layer 2 Pair Summary` into a compact comparison layout, improved detailed-table spacing safety, and updated terminology so the summary now uses `Trade Days %` against matched historical days.
 - Re-ran lightweight validation and browser smoke after the UI refinements; current platform state is stable and validated.
+- Added a new `ADR Reach Research` Backtest / Accuracy sub-tab as a separate downstream module.
+- Added `backtester/scripts/validate_adr_reach_research.js` to audit available OHLC support, build `data/adr-reach-research.json`, and validate ADR20 windowing and reconciliation.
+- Confirmed the current repo evidence supports real OHLC-based ADR evaluation for `NQ` only, using the repo-local `QQQ` daily OHLC proxy file.
+- Confirmed the current repo evidence supports real Layer 2 ADR evaluation for `NQ/USD` only, by reusing the existing Pair Trade Research tradable-signal selection and the same `QQQ` OHLC source.
+- Explicitly marked `EUR`, `Gold`, `BTC`, `USD`, `EUR/USD`, `XAU/USD`, and `BTC/USD` unavailable in the ADR module because repo evidence does not currently include supportable High/Low history for them.
+- Updated the local dashboard smoke test so ADR Reach Research now verifies summary tables, confidence tables, day totals, weekday tables, and console-clean rendering.
+- Re-ran syntax checks, the new ADR validator, all existing Layer 1 checker validators, the existing Layer 2 pairing validator, and browser smoke successfully.
 
 ## Unfinished Work
 
-- Build `ADR Reach Research` as the next Backtest / Accuracy research sub-tab.
-- Source the required historical OHLC data inputs for ADR reach measurement where available.
+- Source supportable OHLC history for the blocked ADR assets and pairs.
+- Extend ADR evaluation beyond `NQ` / `NQ/USD` only after verified `Open` / `High` / `Low` / `Close` coverage exists.
 
 ## Blockers
 
@@ -47,17 +54,11 @@ Last updated: 2026-07-02
 
 ## Exact Next Task
 
-Build `ADR Reach Research`.
+Expand supportable OHLC coverage for the shipped `ADR Reach Research` module.
 
 Design intent for the handover:
 
-- This is not another close-to-close accuracy table.
-- Its purpose is to answer: `Did price move at least 50% of the rolling 20-day ADR in the direction of the Layer 1 or Layer 2 call at any point during that trading day?`
-- Add it as a separate `Backtest / Accuracy` sub-tab named `ADR Reach Research`.
-- Use rolling 20-day ADR.
-- Default threshold is `50%`.
-- Future thresholds should remain configurable for `25%`, `50%`, `75%`, and `100%`.
-- It requires historical OHLC data. Do not infer intraday reach from close-only data.
-- It sits alongside existing Layer 1 and Pair Trade Research. It does not replace existing checker logic.
-- Existing replay/checker logic remains untouched.
-- If an asset lacks historical OHLC data, record it as unavailable rather than estimating.
+- The first ADR release is now live.
+- Current supportable repo-local scope is `NQ` Layer 1 and `NQ/USD` Layer 2 only.
+- Reference price for the supported ADR path is evaluation-day `Open`, with previous-close fallback logic retained for future supportable OHLC feeds.
+- The next step is not to weaken the blocker rules; it is to source verified High/Low coverage for the currently unavailable assets and pairs.

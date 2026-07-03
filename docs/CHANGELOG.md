@@ -1,5 +1,19 @@
 # Changelog
 
+## 2026-07-03
+
+### Added
+
+- Added a new `ADR Reach Research` Backtest / Accuracy sub-tab driven by a checked-in downstream artifact in `data/adr-reach-research.json`.
+- Added `backtester/scripts/validate_adr_reach_research.js` to audit supportable OHLC coverage, build the ADR reach artifact, and validate ADR20 windowing, no-lookahead behavior, threshold calculation, weekday reconciliation, and checker invariants.
+
+### Changed
+
+- Kept the new ADR module fully downstream of replay, checker, confidence, and Pair Trade Research logic.
+- Implemented ADR reach using the existing repo-local `QQQ` OHLC proxy file for `NQ`, with evaluation-day `Open` as the reference price and previous-close fallback logic preserved for future supportable OHLC feeds.
+- Marked unsupported assets and pairs explicitly unavailable when repo evidence did not include supportable `High`/`Low` history, instead of estimating intraday reach from close-only data.
+- Expanded the local dashboard smoke script so the new ADR Reach Research tab verifies summary tables, confidence tables, day totals, weekday tables, and console-clean rendering.
+
 ## 2026-07-02
 
 ### Added

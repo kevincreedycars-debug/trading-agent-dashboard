@@ -1,14 +1,16 @@
 # Current Task
 
-Last updated: 2026-07-02
+Last updated: 2026-07-03
 
 ## Task
 
-Build `ADR Reach Research` as the next Backtest / Accuracy research sub-tab.
+Expand supportable OHLC coverage for blocked `ADR Reach Research` assets and pairs.
 
 ## Objective
 
-Add a downstream-only ADR reach module that answers:
+The downstream-only ADR reach module has now been added. The current objective is to broaden supportable OHLC coverage so the blocked assets can move from unavailable into real ADR measurement without changing any frozen research semantics.
+
+The module answers:
 
 > Did price move at least 50% of the rolling 20-day ADR in the direction of the Layer 1 or Layer 2 call at any point during that trading day?
 
@@ -16,7 +18,7 @@ This work must sit alongside the existing Layer 1 and Pair Trade Research views,
 
 ## Current Status
 
-Ready to begin in the next session. Current platform state is stable and validated.
+Initial ADR Reach Research release shipped. Current platform state is stable and validated.
 
 ## Completed
 
@@ -85,6 +87,12 @@ Ready to begin in the next session. Current platform state is stable and validat
 - Added `backtester/scripts/validate_layer2_pairing_analysis.js` and confirmed pair-trade research validation passes
 - Dashboard smoke updated and passing for the new Pair Trade Research tab
 - Pair Trade Research UI refined and validated, including top-summary layout improvements, confidence-table spacing improvements, and terminology updates for matched-day trade-share metrics
+- New `ADR Reach Research` Backtest / Accuracy sub-tab added downstream of the canonical checker artifacts
+- Added `backtester/scripts/validate_adr_reach_research.js` and generated `data/adr-reach-research.json`
+- Confirmed repo-local supportable OHLC coverage for `NQ` via `backtester/tmp/qqq_daily_yahoo.csv`
+- ADR reach now evaluates `NQ` Layer 1 and `NQ/USD` Layer 2 using evaluation-day `Open` as the reference price and rolling previous-20-session ADR20
+- `EUR`, `Gold`, `BTC`, `USD`, `EUR/USD`, `XAU/USD`, and `BTC/USD` are rendered unavailable in ADR Reach Research because repo evidence does not yet include supportable High/Low history for them
+- Updated dashboard smoke and validation passes for the new ADR Reach Research tab while leaving replay, checker, confidence, and Pair Trade Research logic unchanged
 
 ## n8n Workspace
 
@@ -102,10 +110,9 @@ https://silver17.app.n8n.cloud/projects/ISQG9XU7TGTT6Fcu/workflows
 
 ## Next Immediate Steps
 
-1. Build a separate `ADR Reach Research` Backtest / Accuracy sub-tab.
-2. Use rolling 20-day ADR with default threshold `50%`, while keeping future thresholds configurable to `25%`, `50%`, `75%`, and `100%`.
-3. Source historical OHLC data for each supported asset and record any asset without sufficient OHLC coverage as unavailable instead of estimating from close-only data.
-4. Keep replay, checker, pair-calculation, confidence, and flat-band semantics frozen while the ADR module is added downstream-only.
+1. Source supportable OHLC history for `EUR`, `Gold`, `BTC`, and `USD` so the current ADR blockers can be resolved without estimating intraday reach.
+2. Extend the ADR module from the current supported `NQ` / `NQ/USD` scope onto the newly supported assets only after verified `Open` / `High` / `Low` / `Close` coverage exists.
+3. Keep replay, checker, pair-calculation, confidence, and flat-band semantics frozen while ADR coverage expands downstream-only.
 
 ## Current Blocker
 
@@ -146,4 +153,4 @@ before making any changes.
 
 The immediate working outcome for the current task is:
 
-> ship ADR Reach Research as a separate research module without changing replay outputs, checker semantics, pair logic, flat bands, or headline confidence logic
+> expand the shipped ADR Reach Research module beyond its current `NQ` / `NQ/USD` support without changing replay outputs, checker semantics, pair logic, flat bands, or headline confidence logic

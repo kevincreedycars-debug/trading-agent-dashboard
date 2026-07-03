@@ -8,6 +8,7 @@ const checkerDataUrls = {
   NQ: "./data/backtester-checker-nq-24h-2024-2026.json?v=20260702-nq-qqq-proxy-dashboard",
   BTC: "./data/backtester-checker-btc-24h-2024-2026.json?v=20260702-btc-benchmark-dashboard"
 };
+const adrReachResearchUrl = "./data/adr-reach-research.json?v=20260703-adr-reach-research";
 const researchSupabaseUrl = "https://eaolqbrlywczinfordvg.supabase.co/rest/v1";
 const researchSupabaseKey = "sb_publishable_k6YbEuuk3GyB9GVTQDtNVA_J1gCRYaY";
 const headlineConfidenceLib = globalThis.HeadlineConfidence;
@@ -4067,6 +4068,272 @@ function formatPairTradeCountsCompact(cell = {}) {
   return `${summary.wins}W / ${summary.losses}L / ${summary.flats}F / ${summary.total}T`;
 }
 
+function summarizeAdrReachCell(cell = {}) {
+  const total = Number(cell.total || 0);
+  const wins = Number(cell.wins || 0);
+  const losses = Number(cell.losses || 0);
+  return {
+    total,
+    wins,
+    losses,
+    winRatePct: total ? roundTo((wins / total) * 100, 1) : null
+  };
+}
+
+function formatAdrReachWeekdayCell(cell = {}) {
+  const summary = summarizeAdrReachCell(cell);
+  if (!summary.total) return displayDash();
+  return `${percentValue(summary.winRatePct)}\n${summary.wins}W / ${summary.losses}L / ${summary.total}T`;
+}
+
+function renderAdrReachUnavailablePanel(title, blocker, dataAttribute = "", dataValue = "") {
+  const attributeMarkup = dataAttribute ? ` ${dataAttribute}="${escapeHtml(dataValue)}"` : "";
+  return `
+    <article class="detail-panel wide-panel research-secondary-panel"${attributeMarkup}>
+      <div class="panel-head">
+        <p class="eyebrow">ADR Reach Research</p>
+        <h3>${escapeHtml(title)}</h3>
+      </div>
+      <div class="empty-state matrix-evidence-empty">${escapeHtml(blocker || "Required OHLC history is unavailable for this ADR reach section.")}</div>
+    </article>
+  `;
+}
+
+function renderAdrReachDayTotals(item = {}, options = {}) {
+  const weekdayKeys = Array.isArray(item.weekdayKeys) ? item.weekdayKeys : [];
+  const weekdayHeaders = weekdayKeys.map(weekdayKey => `<th>${escapeHtml(weekdayBreakdownLabels[weekdayKey] || weekdayKey)}</th>`).join("");
+  const cells = weekdayKeys.map(weekdayKey => `<td>${escapeHtml(formatAdrReachWeekdayCell(item.weekdayTotals?.[weekdayKey]))}</td>`).join("");
+  const title = options.title || `${item.assetLabel || item.pairLabel || "ADR Reach"} weekday totals across all confidence buckets`;
+  const dataAttribute = options.dataAttribute ? ` ${options.dataAttribute}="${escapeHtml(options.dataValue || "")}"` : "";
+
+  return `
+    <article class="detail-panel wide-panel research-secondary-panel weekday-breakdown-panel"${dataAttribute}>
+      <div class="panel-head">
+        <p class="eyebrow">Day Totals</p>
+        <h3>${escapeHtml(title)}</h3>
+      </div>
+      <div class="research-table-scroll weekday-breakdown-scroll">
+        <table class="dashboard-table weekday-breakdown-table weekday-breakdown-totals-table">
+          <thead>
+            <tr>
+              <th>Day Totals</th>
+              ${weekdayHeaders}
+              <th>Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th scope="row">All Confidence Buckets</th>
+              ${cells}
+              <td class="weekday-breakdown-total-cell">${escapeHtml(formatAdrReachWeekdayCell(item.dayTotals))}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </article>
+  `;
+}
+
+function renderAdrReachWeekdayBreakdown(item = {}, options = {}) {
+  const weekdayKeys = Array.isArray(item.weekdayKeys) ? item.weekdayKeys : [];
+  const weekdayHeaders = weekdayKeys.map(weekdayKey => `<th>${escapeHtml(weekdayBreakdownLabels[weekdayKey] || weekdayKey)}</th>`).join("");
+  const bucketRows = weekdayBreakdownBuckets.map(bucket => {
+    const cells = weekdayKeys.map(weekdayKey => `<td>${escapeHtml(formatAdrReachWeekdayCell(item.bucketMatrix?.[bucket.key]?.[weekdayKey]))}</td>`).join("");
+    return `
+      <tr>
+        <th scope="row">${escapeHtml(bucket.label)}</th>
+        ${cells}
+        <td class="weekday-breakdown-total-cell">${escapeHtml(formatAdrReachWeekdayCell(item.bucketTotals?.[bucket.key]))}</td>
+      </tr>
+    `;
+  }).join("");
+  const title = options.title || `${item.assetLabel || item.pairLabel || "ADR Reach"} by confidence bucket and weekday`;
+  const dataAttribute = options.dataAttribute ? ` ${options.dataAttribute}="${escapeHtml(options.dataValue || "")}"` : "";
+
+  return `
+    <article class="detail-panel wide-panel research-secondary-panel weekday-breakdown-panel"${dataAttribute}>
+      <div class="panel-head">
+        <p class="eyebrow">Weekday Breakdown</p>
+        <h3>${escapeHtml(title)}</h3>
+      </div>
+      <p class="research-panel-copy">ADR reach win rate measures whether price reached the 50% ADR20 target at any point during the evaluation day. Cells show ADR reach % plus W / L / T counts.</p>
+      <div class="research-table-scroll weekday-breakdown-scroll">
+        <table class="dashboard-table weekday-breakdown-table">
+          <thead>
+            <tr>
+              <th>Confidence Bucket</th>
+              ${weekdayHeaders}
+              <th>Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${bucketRows}
+          </tbody>
+        </table>
+      </div>
+    </article>
+  `;
+}
+
+function renderAdrReachLayer1Asset(asset = {}) {
+  if (!asset.available) {
+    return renderAdrReachUnavailablePanel(`${asset.assetLabel} ADR reach unavailable`, asset.blocker, "data-adr-reach-asset", asset.assetCode);
+  }
+
+  return `
+    <section class="research-section">
+      <div class="research-section-head">
+        <div>
+          <p class="eyebrow">ADR Reach Research</p>
+          <h3>${escapeHtml(asset.assetLabel)} ADR reach from Layer 1 checker artifacts</h3>
+        </div>
+        <p class="research-panel-copy">Reference price uses the evaluation-day open when available, otherwise previous close. This section stays downstream of the stored checker artifact and evaluates only whether the 50% ADR20 target was reached intraday.</p>
+      </div>
+      ${renderResearchBreakdownTable(`${asset.assetLabel} confidence buckets`, "Confidence Breakdown", asset.bucketSummaryRows || [], [
+        { label: "Bucket", render: row => researchDataCell(row.bucketLabel, "Stored displayed headline confidence") },
+        { label: "Wins", render: row => researchDataCell(row.wins, `${row.losses} losses`) },
+        { label: "Losses", render: row => researchDataCell(row.losses, `${row.total} total`) },
+        { label: "Total", render: row => researchDataCell(row.total, row.total ? `${row.wins}W / ${row.losses}L` : "No evaluated rows") },
+        { label: "ADR Reach Win %", render: row => researchDataCell(metricAvailable(row.adrReachWinPct) ? percentValue(row.adrReachWinPct) : displayDash(), "50% ADR20 target") }
+      ], {
+        description: "Confidence buckets remain fixed to Weak 0-49, Moderate 50-64, Strong 65-79, and Very Strong 80-100. Confidence values come directly from the stored checker rows."
+      })}
+      ${renderAdrReachDayTotals(asset, {
+        title: `${asset.assetLabel} weekday totals across all confidence buckets`
+      })}
+      ${renderAdrReachWeekdayBreakdown(asset, {
+        title: `${asset.assetLabel} by confidence bucket and weekday`,
+        dataAttribute: "data-adr-reach-asset",
+        dataValue: asset.assetCode
+      })}
+    </section>
+  `;
+}
+
+function renderAdrReachLayer2Pair(pair = {}) {
+  if (!pair.available) {
+    return renderAdrReachUnavailablePanel(`${pair.pairLabel} ADR reach unavailable`, pair.blocker, "data-adr-reach-pair", pair.pairCode);
+  }
+
+  return `
+    <section class="research-section">
+      <div class="research-section-head">
+        <div>
+          <p class="eyebrow">ADR Reach Research</p>
+          <h3>${escapeHtml(pair.pairLabel)} from existing Pair Trade Research signal selection</h3>
+        </div>
+        <p class="research-panel-copy">This section reuses the existing Layer 2 pair-trade eligibility logic. Only actual tradable pair signals are included, and realized ADR reach is measured on the target asset without recalculating combined confidence.</p>
+      </div>
+      ${renderResearchBreakdownTable(`${pair.pairLabel} confidence buckets`, "Confidence Breakdown", pair.bucketSummaryRows || [], [
+        { label: "Bucket", render: row => researchDataCell(row.bucketLabel, "Combined confidence bucket") },
+        { label: "Wins", render: row => researchDataCell(row.wins, `${row.losses} losses`) },
+        { label: "Losses", render: row => researchDataCell(row.losses, `${row.total} total`) },
+        { label: "Total", render: row => researchDataCell(row.total, row.total ? `${row.wins}W / ${row.losses}L` : "No tradable rows") },
+        { label: "ADR Reach Win %", render: row => researchDataCell(metricAvailable(row.adrReachWinPct) ? percentValue(row.adrReachWinPct) : displayDash(), "50% ADR20 target") }
+      ], {
+        description: "Layer 2 confidence stays downstream-only and reuses the existing combined confidence from Pair Trade Research."
+      })}
+      ${renderAdrReachDayTotals(pair, {
+        title: `${pair.pairLabel} weekday totals across all confidence buckets`
+      })}
+      ${renderAdrReachWeekdayBreakdown(pair, {
+        title: `${pair.pairLabel} by combined confidence bucket and weekday`,
+        dataAttribute: "data-adr-reach-pair",
+        dataValue: pair.pairCode
+      })}
+    </section>
+  `;
+}
+
+function renderResearchAdrReach(data = {}) {
+  const adrReach = data.adr_reach || null;
+  const layer1SummaryRows = Array.isArray(adrReach?.layer1?.summary_rows) ? adrReach.layer1.summary_rows : [];
+  const layer1Assets = Array.isArray(adrReach?.layer1?.assets) ? adrReach.layer1.assets : [];
+  const layer2SummaryRows = Array.isArray(adrReach?.layer2?.summary_rows) ? adrReach.layer2.summary_rows : [];
+  const layer2Pairs = Array.isArray(adrReach?.layer2?.pairs) ? adrReach.layer2.pairs : [];
+  const sourceAuditRows = Array.isArray(adrReach?.source_audit) ? adrReach.source_audit : [];
+
+  if (!layer1SummaryRows.length && !layer2SummaryRows.length) {
+    return `
+      <div class="backtest-report">
+        <article class="detail-panel wide-panel research-secondary-panel">
+          <p class="eyebrow">ADR Reach Research</p>
+          <h3>ADR reach research unavailable</h3>
+          <div class="empty-state matrix-evidence-empty">The downstream ADR reach artifact could not be loaded.</div>
+        </article>
+      </div>
+    `;
+  }
+
+  return `
+    <div class="backtest-report">
+      ${renderResearchStatusHeader(data)}
+      <section class="research-section" data-adr-reach-layer1-summary="true">
+        <div class="research-section-head">
+          <div>
+            <p class="eyebrow">ADR Reach Research</p>
+            <h3>Intraday target-reach research from existing checker artifacts</h3>
+          </div>
+          <p class="research-panel-copy">This research does not measure closing accuracy. It measures whether the market offered enough movement to reach a 50% rolling ADR20 target in the predicted direction at any point during the evaluation day.</p>
+        </div>
+        <article class="detail-panel wide-panel research-secondary-panel weekday-breakdown-intro-panel">
+          <p class="research-panel-copy">A trade is counted as successful the moment the 50% ADR20 target is touched intraday, regardless of where price later closed. ADR20 uses the previous 20 completed sessions only, never the current day. Where repo evidence lacks supportable High/Low history, the asset or pair stays explicitly unavailable instead of estimated.</p>
+        </article>
+        ${renderResearchBreakdownTable("ADR source audit", "Warehouse Audit", sourceAuditRows, [
+          { label: "Asset", render: row => researchDataCell(row.assetLabel, row.available ? "Available" : "Unavailable") },
+          { label: "OHLC Source", render: row => researchDataCell(row.ohlcSourceLabel || displayDash(), row.ohlcSourcePath || "") },
+          { label: "Reference Price", render: row => researchDataCell(row.referencePricePolicy || displayDash(), row.available ? "Open first, previous close fallback" : "Blocked") },
+          { label: "Status", render: row => researchDataCell(row.available ? "Ready" : "Blocked", row.blocker || "Supportable OHLC confirmed") }
+        ], {
+          description: "Warehouse audit is based on repo evidence available to this static dashboard build. Only supportable OHLC inputs are used."
+        })}
+      </section>
+      <section class="research-section" data-adr-reach-layer2-summary="true">
+        <div class="research-section-head">
+          <div>
+            <p class="eyebrow">ADR Reach Research</p>
+            <h3>Layer 1 ADR Reach Summary</h3>
+          </div>
+          <p class="research-panel-copy">Layer 1 rows use stored displayed headline confidence and directional calls from the canonical checker artifacts. Lean signals remain directional for Layer 1 reach measurement.</p>
+        </div>
+        ${renderResearchBreakdownTable("Layer 1 ADR Reach Summary", "Summary", layer1SummaryRows, [
+          { label: "Asset", render: row => researchDataCell(row.assetLabel, row.available ? "Supportable OHLC confirmed" : "Unavailable") },
+          { label: "Evaluated Calls", render: row => researchDataCell(row.available ? row.evaluatedCalls : "Unavailable", row.available ? `${row.adrReachWins}W / ${row.adrReachLosses}L` : (row.blocker || displayDash())) },
+          { label: "ADR Reach Wins", render: row => researchDataCell(row.available ? row.adrReachWins : displayDash(), row.available ? `${row.adrReachLosses} losses` : "No estimate") },
+          { label: "ADR Reach Losses", render: row => researchDataCell(row.available ? row.adrReachLosses : displayDash(), row.available ? `${row.evaluatedCalls} total` : "No estimate") },
+          { label: "ADR Reach Win %", render: row => researchDataCell(row.available && metricAvailable(row.adrReachWinPct) ? percentValue(row.adrReachWinPct) : (row.available ? displayDash() : "Unavailable"), "50% ADR20") },
+          { label: "Strong+ Calls", render: row => researchDataCell(row.available ? row.strongPlusCalls : displayDash(), row.available ? "Strong + Very Strong" : "No estimate") },
+          { label: "Strong+ ADR Reach Win %", render: row => researchDataCell(row.available && metricAvailable(row.strongPlusAdrReachWinPct) ? percentValue(row.strongPlusAdrReachWinPct) : (row.available ? displayDash() : "Unavailable"), "65+ confidence") }
+        ], {
+          description: "Reference price uses the evaluation-day open where repo-local OHLC open exists, otherwise previous close."
+        })}
+      </section>
+      <section class="research-section">
+        <div class="research-section-head">
+          <div>
+            <p class="eyebrow">ADR Reach Research</p>
+            <h3>Layer 2 ADR Reach Summary</h3>
+          </div>
+          <p class="research-panel-copy">Layer 2 rows reuse the existing Pair Trade Research signal-selection rules. Only actual tradable pair signals are evaluated, while conflict, no-trade, and neutral setups stay excluded.</p>
+        </div>
+        ${renderResearchBreakdownTable("Layer 2 ADR Reach Summary", "Summary", layer2SummaryRows, [
+          { label: "Pair", render: row => researchDataCell(row.pairLabel, row.available ? "Tradable-signal ADR reach" : "Unavailable") },
+          { label: "Tradable Signals", render: row => researchDataCell(row.available ? row.tradableSignals : "Unavailable", row.available ? `${row.adrReachWins}W / ${row.adrReachLosses}L` : (row.blocker || displayDash())) },
+          { label: "ADR Reach Wins", render: row => researchDataCell(row.available ? row.adrReachWins : displayDash(), row.available ? `${row.adrReachLosses} losses` : "No estimate") },
+          { label: "ADR Reach Losses", render: row => researchDataCell(row.available ? row.adrReachLosses : displayDash(), row.available ? `${row.tradableSignals} total` : "No estimate") },
+          { label: "ADR Reach Win %", render: row => researchDataCell(row.available && metricAvailable(row.adrReachWinPct) ? percentValue(row.adrReachWinPct) : (row.available ? displayDash() : "Unavailable"), "50% ADR20") },
+          { label: "Strong+ Signals", render: row => researchDataCell(row.available ? row.strongPlusSignals : displayDash(), row.available ? "Strong + Very Strong" : "No estimate") },
+          { label: "Strong+ ADR Reach Win %", render: row => researchDataCell(row.available && metricAvailable(row.strongPlusAdrReachWinPct) ? percentValue(row.strongPlusAdrReachWinPct) : (row.available ? displayDash() : "Unavailable"), "65+ combined confidence") }
+        ], {
+          description: "Combined confidence is reused from the existing Pair Trade Research logic and is not recalculated here."
+        })}
+      </section>
+      ${layer1Assets.map(renderAdrReachLayer1Asset).join("")}
+      ${layer2Pairs.map(renderAdrReachLayer2Pair).join("")}
+    </div>
+  `;
+}
+
 function formatPairTradeExFlatInline(cell = {}) {
   const summary = summarizeWeekdayBreakdownCell(cell);
   if (!summary.total) return displayDash();
@@ -4873,7 +5140,9 @@ function renderBacktest(data = {}) {
         ? renderResearchDataChecker(data)
         : (activeBacktestTab === "weekday-breakdown"
           ? renderResearchWeekdayBreakdown(data)
-          : (activeBacktestTab === "pair-trade-research" ? renderResearchPairTrade(data) : renderResearchAccuracy(data))));
+          : (activeBacktestTab === "pair-trade-research"
+            ? renderResearchPairTrade(data)
+            : (activeBacktestTab === "adr-reach-research" ? renderResearchAdrReach(data) : renderResearchAccuracy(data)))));
     applyMatrixEvidenceFilter("all");
   } catch (err) {
     console.error("Backtest render failed", err);
@@ -5384,6 +5653,7 @@ async function fetchResearchDashboardData() {
     }
   };
 
+  const adrReachResearchPromise = resolveResearchTask("adr_reach_research", fetchLocalJson(adrReachResearchUrl), null);
   const matrix24hRowsPromise = resolveResearchTask("research_prediction_usd_benchmark_summary", fetchResearchView("research_prediction_usd_benchmark_summary", {
     select: "snapshot_date,asset_code,timeframe,predicted_direction,agent_direction,agent_conviction,predicted_conviction,headline_confidence_pct,bull_case_pct,bear_case_pct,net_edge_pct,participation_pct,verdict_strength,combined_result,benchmark_market,open_price,close_price,pct_change",
     order: "timeframe.asc,predicted_direction.asc,verdict_strength.asc",
@@ -5477,7 +5747,8 @@ async function fetchResearchDashboardData() {
     eurCheckerData,
     goldCheckerData,
     nqCheckerData,
-    btcCheckerData
+    btcCheckerData,
+    adrReachResearchData
   ] = await Promise.all([
     resolveResearchTask("research_overall_win_rate", fetchResearchView("research_overall_win_rate"), []),
     resolveResearchTask("research_usd_24h_direction_accuracy", fetchResearchView("research_usd_24h_direction_accuracy"), []),
@@ -5511,7 +5782,8 @@ async function fetchResearchDashboardData() {
     eurCheckerDataPromise,
     goldCheckerDataPromise,
     nqCheckerDataPromise,
-    btcCheckerDataPromise
+    btcCheckerDataPromise,
+    adrReachResearchPromise
   ]);
 
   const resolvedEurMatrix24hRows = eurCheckerData?.rows?.length
@@ -5566,6 +5838,7 @@ async function fetchResearchDashboardData() {
       best_factor_combinations: factorComboRows
     },
     infrastructure: infrastructureRows[0] || {},
+    adr_reach: adrReachResearchData,
     checker: usdCheckerData,
     checkers: {
       USD: usdCheckerData,

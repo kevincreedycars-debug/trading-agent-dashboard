@@ -1,6 +1,6 @@
 # Current State - AI Trading Platform
 
-Last updated: 2026-07-02
+Last updated: 2026-07-03
 
 ## Platform Status
 
@@ -8,9 +8,9 @@ The Layer 1 trading-agent platform remains operational, and the latest runtime e
 
 The full Layer 1 historical replay rollout is now validated across USD, EUR, Gold, NQ, and BTC. The active repository work has shifted from replay rollout itself into downstream research presentation and breakdown views built on top of the canonical checker artifacts.
 
-The current dashboard now includes the existing accuracy matrices, the checker workspaces, the weekday breakdown views, and a Pair Trade Research tab built entirely from canonical checker artifacts without changing replay, checker, flat-band, or confidence semantics.
+The current dashboard now includes the existing accuracy matrices, the checker workspaces, the weekday breakdown views, a Pair Trade Research tab, and a new ADR Reach Research tab built downstream of canonical checker artifacts without changing replay, checker, flat-band, pair-selection, or confidence semantics.
 
-Current platform state is stable and validated. The Layer 1 historical replay rollout is complete, Weekday Breakdown and Day Totals are complete, and Pair Trade Research is complete including its later UI refinements.
+Current platform state is stable and validated. The Layer 1 historical replay rollout is complete, Weekday Breakdown and Day Totals are complete, Pair Trade Research is complete including its later UI refinements, and ADR Reach Research is now present as a separate downstream module.
 
 ## Current Architecture
 
@@ -148,11 +148,28 @@ The current repository priority is:
 
 > compact historical research breakdowns that reuse canonical checker artifact outputs
 
-The next immediate milestone is:
+The next immediate milestone after shipping the first ADR module is:
 
-> Build ADR Reach Research
+> expand supportable OHLC coverage for blocked ADR assets and pairs without weakening the downstream-only rule
 
-That next module is not another close-to-close accuracy table. Its purpose is to answer whether price moved at least `50%` of rolling `20-day ADR` in the direction of a Layer 1 or Layer 2 call at any point during that trading day, using historical OHLC data only. It should live as a separate Backtest / Accuracy sub-tab alongside the existing Layer 1 and Pair Trade Research views, keep existing replay/checker logic untouched, support future configurable thresholds of `25%`, `50%`, `75%`, and `100%`, and mark assets without sufficient OHLC history as unavailable rather than estimating from close-only data.
+The newly added ADR Reach Research module is not another close-to-close accuracy table. It answers whether price moved at least `50%` of rolling `20-day ADR` in the direction of a Layer 1 or Layer 2 call at any point during that trading day, using historical OHLC data only.
+
+Current repository evidence supports real ADR measurement for:
+
+- `NQ` Layer 1 using the repo-local `QQQ` OHLC proxy file
+- `NQ/USD` Layer 2 using the existing Pair Trade Research tradable-signal logic plus the same `QQQ` OHLC source
+
+Current repository evidence does not yet support real ADR measurement for:
+
+- `EUR`
+- `Gold`
+- `BTC`
+- `USD`
+- `EUR/USD`
+- `XAU/USD`
+- `BTC/USD`
+
+Those assets and pairs are now rendered as unavailable in the ADR module rather than estimated from close-only data.
 
 GitHub is the source of truth. n8n remains the execution engine. Supabase remains the data layer. GitHub Pages is the active presentation host.
 
@@ -208,6 +225,6 @@ Current implemented state:
 
 - Historical replay and deterministic checker coverage are validated for USD, EUR, Gold, NQ, and BTC.
 - Current checker totals are USD `604`, EUR `602`, Gold `608`, NQ `604`, and BTC `850`, all passing with zero fail / zero missing / zero tolerance pass.
-- The Backtest / Accuracy dashboard exposes the existing matrices and checker workspaces plus weekday confidence breakdowns and a Pair Trade Research tab derived directly from the checker artifacts.
+- The Backtest / Accuracy dashboard exposes the existing matrices and checker workspaces plus weekday confidence breakdowns, Pair Trade Research, and the first ADR Reach Research release.
 - 24H remains the primary short-horizon benchmark focus.
 - Historical research presentation remains downstream-only and must not modify live runtime behavior.

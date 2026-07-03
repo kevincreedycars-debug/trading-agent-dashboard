@@ -207,17 +207,56 @@ async function run() {
       throw new Error(`BTC/USD pair trade breakdown did not include weekend columns.\n${pairTradeBtcHeaders.join(" | ")}`);
     }
 
+    await page.getByRole("button", { name: "ADR Reach Research" }).click();
+    await page.waitForSelector("[data-adr-reach-layer1-summary='true']", { timeout: 15000 });
+    const adrReachText = await page.locator("#backtestPanel").innerText();
+    const normalizedAdrReachText = adrReachText.toLowerCase();
+
+    if (!adrReachText.includes("Intraday target-reach research from existing checker artifacts")) {
+      throw new Error(`ADR Reach Research tab header did not render.\n${adrReachText}`);
+    }
+
+    if (!normalizedAdrReachText.includes("layer 1 adr reach summary") || !normalizedAdrReachText.includes("layer 2 adr reach summary")) {
+      throw new Error(`ADR Reach Research summary tables did not render.\n${adrReachText}`);
+    }
+
+    if (!normalizedAdrReachText.includes("50% rolling adr20 target in the predicted direction")) {
+      throw new Error(`ADR Reach Research did not render the expected research note copy.\n${adrReachText}`);
+    }
+
+    if (!normalizedAdrReachText.includes("nq adr reach from layer 1 checker artifacts") || !normalizedAdrReachText.includes("nq/usd from existing pair trade research signal selection")) {
+      throw new Error(`ADR Reach Research did not render the supported NQ detail sections.\n${adrReachText}`);
+    }
+
+    if (!normalizedAdrReachText.includes("confidence breakdown") || !normalizedAdrReachText.includes("day totals") || !normalizedAdrReachText.includes("weekday breakdown")) {
+      throw new Error(`ADR Reach Research did not render the required detail tables.\n${adrReachText}`);
+    }
+
+    const adrReachNqHeaders = await page.locator("[data-adr-reach-asset='NQ'] thead th").allInnerTexts();
+    const normalizedAdrReachNqHeaders = adrReachNqHeaders.map(text => text.trim().toLowerCase());
+    if (normalizedAdrReachNqHeaders.includes("saturday") || normalizedAdrReachNqHeaders.includes("sunday")) {
+      throw new Error(`NQ ADR weekday table unexpectedly included weekend columns.\n${adrReachNqHeaders.join(" | ")}`);
+    }
+
+    const adrReachPairHeaders = await page.locator("[data-adr-reach-pair='NQ_USD'] thead th").allInnerTexts();
+    const normalizedAdrReachPairHeaders = adrReachPairHeaders.map(text => text.trim().toLowerCase());
+    if (normalizedAdrReachPairHeaders.includes("saturday") || normalizedAdrReachPairHeaders.includes("sunday")) {
+      throw new Error(`NQ/USD ADR weekday table unexpectedly included weekend columns.\n${adrReachPairHeaders.join(" | ")}`);
+    }
+
     if (consoleErrors.length) {
       throw new Error(`Console errors were emitted during dashboard smoke.\n${consoleErrors.join("\n")}`);
     }
 
     console.log(JSON.stringify({
       status: "PASS",
-      target: "Accuracy tables, checker, and weekday breakdown",
+      target: "Accuracy tables, checker, weekday, pair trade, and ADR reach research",
       matrix_summary_excerpt: summaryText,
       btc_weekday_headers: btcWeekdayHeaders,
       usd_weekday_headers: usdWeekdayHeaders,
       pair_trade_btc_headers: pairTradeBtcHeaders,
+      adr_reach_nq_headers: adrReachNqHeaders,
+      adr_reach_pair_headers: adrReachPairHeaders,
       pair_trade_grid_columns: firstPairGridColumns,
       pair_trade_overflow_x: pairBucketOverflow,
       top_summary_row_count: topSummaryRowCount,

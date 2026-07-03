@@ -6,11 +6,11 @@ Backtest / Accuracy ADR Reach Research
 
 ## Current Milestone
 
-Design and build ADR reach research alongside the existing Layer 1 and Pair Trade Research modules
+Ship the first ADR reach research release and document the remaining OHLC blockers
 
 ## Status
 
-Ready to start
+Complete
 
 ## Completed Work
 
@@ -42,22 +42,27 @@ Ready to start
 - Combined pair confidence is computed as the lower of target and USD stored headline confidence, keeping pair confidence downstream-only and consistent with Layer 1 display semantics.
 - A dedicated pair-trade validator now passes, and browser smoke now passes with the Pair Trade Research tab included.
 - Pair Trade Research UI has been refined and validated, including top-summary comparison layout improvements, confidence-table spacing fixes, and clearer matched-day terminology in the summary layer.
+- A new `ADR Reach Research` sub-tab now renders as a separate downstream Backtest / Accuracy module.
+- The ADR module uses rolling previous-20-session ADR20 with a `50%` threshold and checks intraday target reach rather than close-to-close accuracy.
+- The current repo evidence supports real OHLC-based ADR evaluation for `NQ` Layer 1 via the repo-local `QQQ` OHLC proxy file.
+- The current repo evidence supports real OHLC-based ADR evaluation for `NQ/USD` Layer 2 by reusing existing Pair Trade Research tradable-signal selection and the same `QQQ` OHLC source.
+- `EUR`, `Gold`, `BTC`, `USD`, `EUR/USD`, `XAU/USD`, and `BTC/USD` are now explicitly marked unavailable in the ADR module because repo evidence does not yet include supportable High/Low history for them.
+- `backtester/scripts/validate_adr_reach_research.js` now builds and validates the ADR artifact, and browser smoke now passes with the ADR tab included.
 
 ## Remaining Work
 
-- Build `ADR Reach Research` as a separate Backtest / Accuracy sub-tab.
-- Use rolling 20-day ADR with a default `50%` threshold and plan for configurable future thresholds of `25%`, `50%`, `75%`, and `100%`.
-- Source historical OHLC data and avoid any close-only intraday reach estimation.
-- Mark any asset without sufficient OHLC history as unavailable instead of inferring reach.
+- Source supportable OHLC history for `EUR`, `Gold`, `BTC`, and `USD`.
+- Extend the ADR module onto the blocked assets and pairs only after verified High/Low coverage exists.
+- Decide whether the current accepted Gold and BTC historical lineages should be upgraded to true OHLC feeds or remain ADR-unavailable.
 
 ## Current Files Being Modified
 
 - `index.html`
 - `script.js`
-- `styles.css`
 - `playwright-dashboard-smoke.js`
-- `backtester/scripts/validate_weekday_breakdown.js`
-- `backtester/scripts/validate_layer2_pairing_analysis.js`
+- `backtester/scripts/validate_adr_reach_research.js`
+- `data/adr-reach-research.json`
+- `docs/CURRENT_STATE.md`
 - `docs/CURRENT_TASK.md`
 - `docs/ACTIVE_MILESTONE.md`
 - `docs/SESSION_NOTES.md`
@@ -65,12 +70,16 @@ Ready to start
 
 ## Blockers
 
-No repository-side blocker.
+No repository-side blocker for the shipped `NQ` / `NQ/USD` ADR release.
+
+Current blocker for broader ADR coverage:
+
+- repo evidence does not yet include supportable High/Low history for `EUR`, `Gold`, `BTC`, or `USD`
 
 ## Next Immediate Action
 
-Build ADR Reach Research without altering the existing Layer 1 replay/checker stack or the Pair Trade Research module.
+Source verified OHLC coverage for the blocked ADR assets without altering the existing Layer 1 replay/checker stack or the Pair Trade Research module.
 
 ## Last Updated
 
-2026-07-02 21:20 Europe/London
+2026-07-03 11:40 Europe/London
