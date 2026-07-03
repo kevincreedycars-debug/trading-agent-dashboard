@@ -228,7 +228,7 @@ async function run() {
       throw new Error(`ADR Reach Research did not render the supported NQ detail sections.\n${adrReachText}`);
     }
 
-    if (!normalizedAdrReachText.includes("confidence breakdown") || !normalizedAdrReachText.includes("day totals") || !normalizedAdrReachText.includes("weekday breakdown")) {
+    if (!normalizedAdrReachText.includes("confidence breakdown") || !normalizedAdrReachText.includes("weekday totals across all confidence buckets") || !normalizedAdrReachText.includes("by confidence bucket and weekday")) {
       throw new Error(`ADR Reach Research did not render the required detail tables.\n${adrReachText}`);
     }
 
@@ -246,13 +246,18 @@ async function run() {
     }
 
     for (const expectedUnavailableText of [
-      "gold adr reach unavailable",
-      "xau/usd adr reach unavailable",
-      "no repo-local dxy ohlc source"
+      "layer 1 unavailable reasons",
+      "layer 2 unavailable reasons",
+      "adr unavailable source blockers"
     ]) {
       if (!normalizedAdrReachText.includes(expectedUnavailableText)) {
         throw new Error(`ADR Reach Research did not preserve expected unavailable section: ${expectedUnavailableText}\n${adrReachText}`);
       }
+    }
+
+    const adrUnavailableAuditText = (await page.locator("[data-adr-unavailable-audit='true']").textContent() || "").toLowerCase();
+    if (!adrUnavailableAuditText.includes("no repo-local dxy ohlc export is available")) {
+      throw new Error(`ADR unavailable audit details did not preserve the USD/DXY blocker.\n${adrUnavailableAuditText}`);
     }
 
     if (normalizedAdrReachText.includes("no repo-local eurusd ohlc source") || normalizedAdrReachText.includes("repository evidence only includes eurusd close-only lineage")) {
@@ -274,6 +279,36 @@ async function run() {
       }
     }
 
+    const adrSummaryTableText = (await page.locator(".adr-summary-table").allInnerTexts()).join("\n").toLowerCase();
+    for (const forbiddenAdrTableString of [
+      "50% adr20 target",
+      "stored displayed headline confidence",
+      "combined confidence bucket",
+      " losses",
+      " total",
+      "65+ confidence"
+    ]) {
+      if (adrSummaryTableText.includes(forbiddenAdrTableString)) {
+        throw new Error(`ADR summary tables still included verbose repeated copy: ${forbiddenAdrTableString}\n${adrSummaryTableText}`);
+      }
+    }
+
+    const adrConfidenceTableText = (await page.locator(".adr-confidence-table").allInnerTexts()).join("\n").toLowerCase();
+    for (const forbiddenConfidenceTableString of [
+      "50% adr20 target",
+      "stored displayed headline confidence",
+      "combined confidence bucket"
+    ]) {
+      if (adrConfidenceTableText.includes(forbiddenConfidenceTableString)) {
+        throw new Error(`ADR confidence tables still included verbose repeated copy: ${forbiddenConfidenceTableString}\n${adrConfidenceTableText}`);
+      }
+    }
+
+    const adrHeadingMatches = adrReachText.match(/ADR Reach Research/g) || [];
+    if (adrHeadingMatches.length > 1) {
+      throw new Error(`ADR Reach Research heading was repeated too many times.\nCount: ${adrHeadingMatches.length}\n${adrReachText}`);
+    }
+
     const adrReachNqHeaders = await page.locator("[data-adr-reach-asset='NQ'] thead th").allInnerTexts();
     const normalizedAdrReachNqHeaders = adrReachNqHeaders.map(text => text.trim().toLowerCase());
     if (normalizedAdrReachNqHeaders.includes("saturday") || normalizedAdrReachNqHeaders.includes("sunday")) {
@@ -291,7 +326,7 @@ async function run() {
       throw new Error(`ADR summary table wrapper did not allow horizontal scrolling.\nOverflowX: ${adrSummaryOverflow}`);
     }
 
-    const adrSummaryPercentWhiteSpace = await page.locator(".adr-rate-cell strong").first().evaluate((element) => getComputedStyle(element).whiteSpace);
+    const adrSummaryPercentWhiteSpace = await page.locator(".adr-summary-table .adr-table-tight-cell strong").first().evaluate((element) => getComputedStyle(element).whiteSpace);
     if (adrSummaryPercentWhiteSpace !== "nowrap") {
       throw new Error(`ADR summary percentage values were still wrapping.\nwhite-space: ${adrSummaryPercentWhiteSpace}`);
     }
