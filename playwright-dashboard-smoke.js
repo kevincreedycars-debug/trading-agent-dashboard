@@ -49,6 +49,51 @@ async function run() {
 
     await page.goto("http://127.0.0.1:4173/", { waitUntil: "networkidle" });
 
+    const overviewBriefingText = await page.locator("[data-overview-briefing='true']").innerText();
+    const normalizedOverviewBriefingText = overviewBriefingText.toLowerCase();
+
+    if (!normalizedOverviewBriefingText.includes("24h market conditions")) {
+      throw new Error(`Overview briefing did not render the 24H Market Conditions section.\n${overviewBriefingText}`);
+    }
+
+    if (!normalizedOverviewBriefingText.includes("week ahead / what could change")) {
+      throw new Error(`Overview briefing did not render the Week Ahead / What Could Change section.\n${overviewBriefingText}`);
+    }
+
+    const fallbackBriefingContract = await page.evaluate(() => {
+      return globalThis.__dashboardTestHooks.buildOverviewBriefing({
+        layer1Calls: [
+          { agent: "USD", direction: "BULLISH", confidence: 68, warnings: [], missingInputs: [], participation: 42, marketInputs: {} },
+          { agent: "EUR", direction: "BEARISH", confidence: 61, warnings: [], missingInputs: [], participation: 39, marketInputs: {} },
+          { agent: "NQ", direction: "BEARISH", confidence: 44, warnings: [], missingInputs: [], participation: 29, marketInputs: {} }
+        ],
+        derivedLayer2: {
+          tradeOpportunities: [],
+          avoidToday: [{ instrument: "EUR/USD", reason: "No trade" }]
+        },
+        macroContext: {
+          upcomingEvents: [],
+          highImpactEvents: [],
+          latestUsEvent: null,
+          latestEzEvent: null,
+          fedBias: null,
+          ecbBias: null,
+          dxyFiveDayMove: null,
+          vixFiveDayMove: null,
+          realYieldFiveDayMove: null
+        }
+      });
+    });
+
+    if (
+      !fallbackBriefingContract
+      || typeof fallbackBriefingContract.marketConditions !== "string"
+      || typeof fallbackBriefingContract.weekAhead !== "string"
+      || !fallbackBriefingContract.weekAhead.toLowerCase().includes("high-impact")
+    ) {
+      throw new Error(`Overview briefing fallback contract failed when event data was missing.\n${JSON.stringify(fallbackBriefingContract, null, 2)}`);
+    }
+
     const browserPairContract = await page.evaluate(() => {
       const result = globalThis.Layer2PairLogic.deriveLayer2PairSignal({
         instrument: "TEST/USD",

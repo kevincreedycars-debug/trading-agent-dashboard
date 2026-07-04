@@ -1211,6 +1211,211 @@ function renderOverviewStats() {
   `;
 }
 
+function collectOverviewMacroContext(layer1Calls = []) {
+  const upcomingEvents = [];
+  const scalarContext = {
+    latestUsEvent: null,
+    latestEzEvent: null,
+    fedBias: null,
+    ecbBias: null,
+    dxyDayMove: null,
+    dxyFiveDayMove: null,
+    vixDayMove: null,
+    vixFiveDayMove: null,
+    realYieldFiveDayMove: null
+  };
+
+  layer1Calls.forEach((row) => {
+    const marketInputs = asObject(row.marketInputs, {});
+    const eventItems = asArray(marketInputs.upcoming_events).filter(item => item && typeof item === "object");
+    upcomingEvents.push(...eventItems);
+
+    if (scalarContext.latestUsEvent === null && marketInputs.latest_us_event) scalarContext.latestUsEvent = marketInputs.latest_us_event;
+    if (scalarContext.latestEzEvent === null && marketInputs.latest_ez_event) scalarContext.latestEzEvent = marketInputs.latest_ez_event;
+    if (scalarContext.fedBias === null && metricAvailable(marketInputs.fed_bias)) scalarContext.fedBias = marketInputs.fed_bias;
+    if (scalarContext.ecbBias === null && metricAvailable(marketInputs.ecb_bias)) scalarContext.ecbBias = marketInputs.ecb_bias;
+    if (scalarContext.dxyDayMove === null && metricAvailable(marketInputs.dxy_d1)) scalarContext.dxyDayMove = Number(marketInputs.dxy_d1);
+    if (scalarContext.dxyFiveDayMove === null && metricAvailable(marketInputs.dxy_d5)) scalarContext.dxyFiveDayMove = Number(marketInputs.dxy_d5);
+    if (scalarContext.vixDayMove === null && metricAvailable(marketInputs.vix_d1)) scalarContext.vixDayMove = Number(marketInputs.vix_d1);
+    if (scalarContext.vixFiveDayMove === null && metricAvailable(marketInputs.vix_d5)) scalarContext.vixFiveDayMove = Number(marketInputs.vix_d5);
+    if (scalarContext.realYieldFiveDayMove === null && metricAvailable(marketInputs.us_10y_real_yield_d5_bps)) scalarContext.realYieldFiveDayMove = Number(marketInputs.us_10y_real_yield_d5_bps);
+  });
+
+  const highImpactEvents = upcomingEvents.filter((event) => {
+    const priority = Number(event.priority ?? event.impact_rank ?? 0);
+    return Number.isFinite(priority) && priority >= 70;
+  });
+
+  return {
+    ...scalarContext,
+    upcomingEvents,
+    highImpactEvents
+  };
+}
+
+function collectOverviewBriefingState() {
+  const layer1Calls = (layer1Data?.agents || []).map((agent) => {
+    const call24 = getCall(agent, "24h");
+    return {
+      agent: agent.agent,
+      direction: call24.direction || "PENDING",
+      confidence: confidenceValue(call24, agent, "24h"),
+      strength: confidenceStrength(call24, agent, "24h"),
+      warnings: combinedConfidenceFlags(call24, agent, "24h"),
+      missingInputs: liveMissingInputs(call24, agent, "24h"),
+      participation: participationValue(call24),
+      marketInputs: asObject(agent.market_inputs || getOutput(agent).market_inputs_seen_by_workflow, {})
+    };
+  });
+
+  return {
+    layer1Calls,
+    derivedLayer2: deriveLiveLayer2Dashboard(),
+    macroContext: collectOverviewMacroContext(layer1Calls)
+  };
+}
+
+function buildOverviewBriefing(state = {}) {
+  const layer1Calls = Array.isArray(state.layer1Calls) ? state.layer1Calls : [];
+  const derivedLayer2 = state.derivedLayer2 || {};
+  const macroContext = state.macroContext || {};
+  const validCalls = layer1Calls.filter(row => metricAvailable(row.confidence) && String(row.direction || "").toUpperCase() !== "PENDING");
+  const usdRow = validCalls.find(row => row.agent === "USD") || null;
+
+  if (validCalls.length < 3 || !usdRow) {
+    return {
+      unavailable: true,
+      marketConditions: "Market briefing unavailable because current agent outputs are incomplete.",
+      weekAhead: "Refresh the dashboard after the next successful Master Orchestrator run to rebuild the current macro summary.",
+      macroRegime: { label: "High Uncertainty", tone: "high-uncertainty", detail: "Not enough complete Layer 1 inputs are available to produce a reliable briefing." },
+      outlookConfidence: { label: "Low", tone: "low", detail: "Overview confidence stays low until the current asset set is complete." }
+    };
+  }
+
+  const strongest = validCalls.slice().sort((a, b) => Number(b.confidence || 0) - Number(a.confidence || 0))[0];
+  const weakest = validCalls.slice().sort((a, b) => Number(a.confidence || 0) - Number(b.confidence || 0))[0];
+  const bullishCount = validCalls.filter(row => String(row.direction || "").toUpperCase().includes("BULLISH")).length;
+  const bearishCount = validCalls.filter(row => String(row.direction || "").toUpperCase().includes("BEARISH")).length;
+  const leanCount = validCalls.filter(row => String(row.direction || "").toUpperCase().includes("LEAN")).length;
+  const opportunities = Array.isArray(derivedLayer2.tradeOpportunities) ? derivedLayer2.tradeOpportunities : [];
+  const averageConfidence = validCalls.reduce((sum, row) => sum + Number(row.confidence || 0), 0) / validCalls.length;
+  const missingInputsCount = validCalls.reduce((sum, row) => sum + (Array.isArray(row.missingInputs) ? row.missingInputs.length : 0), 0);
+  const warningCount = validCalls.reduce((sum, row) => sum + (Array.isArray(row.warnings) ? row.warnings.length : 0), 0);
+  const lowParticipationCount = validCalls.filter(row => Number(row.participation || 0) > 0 && Number(row.participation || 0) < 35).length;
+
+  let breadthLabel = "mostly no-trade";
+  let breadthDetail = "with most pairs constrained by conflicting, non-directional, or incomplete legs.";
+  if (opportunities.length >= 3) {
+    breadthLabel = "broad";
+    breadthDetail = "with multiple tradable pair setups surviving the current confidence gate.";
+  } else if (opportunities.length >= 1) {
+    breadthLabel = "limited";
+    breadthDetail = opportunities.length === 1
+      ? "with one tradable pair and the broader set still constrained by weak or conflicting legs."
+      : "with a small tradable set but the broader board still constrained by weak or conflicting legs.";
+  }
+
+  const marketConditions = [
+    `24H conditions are ${bullishCount > bearishCount ? "slightly pro-risk" : bullishCount < bearishCount ? "defensive" : "mixed"}, with ${bullishCount} bullish and ${bearishCount} bearish calls${leanCount ? `, including ${leanCount} lean signal${leanCount === 1 ? "" : "s"}` : ""}. ${strongest.agent} is currently the strongest 24H call at ${Math.round(Number(strongest.confidence || 0))}% ${normaliseDirection(strongest.direction).toLowerCase()}, while ${weakest.agent} is the weakest at ${Math.round(Number(weakest.confidence || 0))}% ${normaliseDirection(weakest.direction).toLowerCase()}.`,
+    `USD, the common Layer 2 pair leg, is ${normaliseDirection(usdRow.direction).toLowerCase()} at ${Math.round(Number(usdRow.confidence || 0))}% headline confidence. Layer 2 opportunities are ${breadthLabel}, ${breadthDetail}`
+  ].join(" ");
+
+  const eventLead = macroContext.highImpactEvents?.length
+    ? "Upcoming high-impact calendar inputs are present in the current snapshot, so scheduled catalysts should be treated as the first watchpoint into the next refresh cycle."
+    : "Economic calendar detail is limited in the current snapshot, so the next set of high-impact releases and policy communication should be treated as the main catalyst risk.";
+  const yieldClause = Number.isFinite(macroContext.realYieldFiveDayMove)
+    ? macroContext.realYieldFiveDayMove > 0
+      ? "Firm real yields would keep pressure on gold and can reinforce USD support."
+      : "Easing real yields would favor gold and can weaken the current USD impulse."
+    : "Real-yield direction remains an important swing factor for gold and USD.";
+  const dxyClause = Number.isFinite(macroContext.dxyFiveDayMove)
+    ? macroContext.dxyFiveDayMove > 0
+      ? "A stronger DXY backdrop would matter most for EUR and gold."
+      : "A softer DXY backdrop would matter most for EUR, gold, and cross-asset risk tone."
+    : "DXY repricing remains one of the cleanest ways the board can rotate quickly.";
+  const riskClause = Number.isFinite(macroContext.vixFiveDayMove)
+    ? macroContext.vixFiveDayMove < 0
+      ? "If VIX and broader risk tone stay calm, NQ and BTC can hold their risk appetite bid."
+      : "If VIX and risk tone deteriorate, NQ and BTC can flip faster than the rates-sensitive assets."
+    : "Risk tone across VIX, NQ, and BTC should be watched closely for regime change.";
+
+  const weekAhead = [
+    eventLead,
+    `${dxyClause} ${yieldClause} ${riskClause} Fed and ECB communication, surprise data, and any break in gold/real-yield alignment can all change the next dashboard output materially.`
+  ].join(" ");
+
+  let macroRegime = { label: "Stable", tone: "stable", detail: "Cross-asset signals are mostly aligned and current inputs are broadly complete." };
+  if (missingInputsCount >= 6 || warningCount >= 8 || lowParticipationCount >= 2) {
+    macroRegime = { label: "High Uncertainty", tone: "high-uncertainty", detail: "Multiple missing inputs, warnings, or low-participation calls are reducing board clarity." };
+  } else if (missingInputsCount >= 3 || warningCount >= 4 || opportunities.length <= 1) {
+    macroRegime = { label: "Developing", tone: "developing", detail: "The board has direction, but cross-asset confirmation is still uneven." };
+  }
+
+  let outlookConfidence = { label: "High", tone: "high", detail: "Average 24H headline confidence is strong across the current board." };
+  if (averageConfidence < 55 || missingInputsCount >= 6) {
+    outlookConfidence = { label: "Low", tone: "low", detail: "Headline confidence is soft enough that the next catalyst can reshape the board quickly." };
+  } else if (averageConfidence < 72 || warningCount >= 4) {
+    outlookConfidence = { label: "Moderate", tone: "moderate", detail: "Signals are usable, but still depend on rates, DXY, and risk tone holding together." };
+  }
+
+  return {
+    unavailable: false,
+    marketConditions,
+    weekAhead,
+    macroRegime,
+    outlookConfidence
+  };
+}
+
+if (typeof globalThis !== "undefined") {
+  globalThis.__dashboardTestHooks = {
+    ...(globalThis.__dashboardTestHooks || {}),
+    buildOverviewBriefing
+  };
+}
+
+function renderOverviewBriefing() {
+  const container = document.getElementById("overviewBriefing");
+  if (!container) return;
+
+  const briefing = buildOverviewBriefing(collectOverviewBriefingState());
+  const macroRegimeClass = String(briefing.macroRegime?.tone || "").toLowerCase().replace(/\s+/g, "-");
+  const outlookConfidenceClass = String(briefing.outlookConfidence?.tone || "").toLowerCase().replace(/\s+/g, "-");
+
+  container.innerHTML = `
+    <div class="overview-briefing-shell" data-overview-briefing="true">
+      <div class="overview-briefing-copy">
+        <div class="panel-head compact-panel-head">
+          <div>
+            <p class="eyebrow">Overview Briefing</p>
+            <h3>Institutional Snapshot</h3>
+          </div>
+        </div>
+        <section class="overview-briefing-block" data-overview-briefing-section="market-conditions">
+          <h3>24H Market Conditions</h3>
+          <p>${escapeHtml(briefing.marketConditions)}</p>
+        </section>
+        <section class="overview-briefing-block" data-overview-briefing-section="week-ahead">
+          <h3>Week Ahead / What Could Change</h3>
+          <p>${escapeHtml(briefing.weekAhead)}</p>
+        </section>
+      </div>
+      <aside class="overview-briefing-chips" aria-label="Overview status chips">
+        <div class="overview-briefing-chip ${escapeHtml(macroRegimeClass)}" data-overview-briefing-chip="macro-regime">
+          <span>Current Macro Regime</span>
+          <strong>${escapeHtml(briefing.macroRegime?.label || "Unavailable")}</strong>
+          <small>${escapeHtml(briefing.macroRegime?.detail || "")}</small>
+        </div>
+        <div class="overview-briefing-chip ${escapeHtml(outlookConfidenceClass)}" data-overview-briefing-chip="outlook-confidence">
+          <span>Outlook Confidence</span>
+          <strong>${escapeHtml(briefing.outlookConfidence?.label || "Unavailable")}</strong>
+          <small>${escapeHtml(briefing.outlookConfidence?.detail || "")}</small>
+        </div>
+      </aside>
+    </div>
+  `;
+}
+
 function renderAgentCard(agent) {
   const call24 = getCall(agent, "24h");
   const call24Confidence = confidenceValue(call24, agent, "24h");
@@ -1295,6 +1500,7 @@ function renderLayer1(data) {
     layer1Updated.textContent = `Last n8n ingest: ${formatDashboardTime(data.dashboard_meta?.last_updated_et)}`;
   }
 
+  renderOverviewBriefing();
   renderOverviewStats();
   renderSevenDayOutlook(data);
 
@@ -1993,6 +2199,7 @@ function renderLayer2(data = {}) {
   }
 
   const derivedLayer2 = deriveLiveLayer2Dashboard();
+  renderOverviewBriefing();
   const opportunities = derivedLayer2.tradeOpportunities;
   const avoided = derivedLayer2.avoidToday;
   const html = `
