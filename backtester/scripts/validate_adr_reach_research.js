@@ -74,6 +74,15 @@ const ENTRY_RELIABILITY_GROUPS = [
     directionalCallTypes: ["LEAN_DIRECTIONAL"]
   }
 ];
+const SENSITIVITY_THRESHOLDS = [0.4, 0.5, 0.55, 0.6, 0.65, 0.7];
+const SENSITIVITY_THRESHOLD_LABELS = {
+  "0.4": "40%",
+  "0.5": "50%",
+  "0.55": "55%",
+  "0.6": "60%",
+  "0.65": "65%",
+  "0.7": "70%"
+};
 const ASSET_CONFIGS = [
   {
     assetCode: "EUR",
@@ -788,6 +797,13 @@ function reliabilityLabelFromRate(opportunityRatePct) {
   return opportunityRatePct >= 60 ? "Reliable" : "Not Reliable";
 }
 
+function sensitivityReliabilityLabel(opportunityRatePct) {
+  if (!Number.isFinite(opportunityRatePct)) return "Not yet available";
+  if (opportunityRatePct >= 70) return "High Reliability";
+  if (opportunityRatePct >= 60) return "Reliable";
+  return "Below Target";
+}
+
 function buildEntryReliabilityRows(rows = []) {
   const bucketRows = [
     ...CONFIDENCE_BUCKETS.map((bucket) => ({
@@ -838,9 +854,173 @@ function buildEntryReliabilityGroups(rows = []) {
   });
 }
 
-function buildOutput(layer1Assets, layer2Pairs) {
+function buildSensitivityRowDescriptors() {
+  return [
+    { rowKey: "COMBINED_ALL", rowLabel: "Combined Directional - All", directionalCallTypes: ["CLEAN_DIRECTIONAL", "LEAN_DIRECTIONAL"], bucketKeys: ["ALL"] },
+    { rowKey: "COMBINED_WEAK", rowLabel: "Combined - Weak", directionalCallTypes: ["CLEAN_DIRECTIONAL", "LEAN_DIRECTIONAL"], bucketKeys: ["WEAK"] },
+    { rowKey: "COMBINED_MODERATE", rowLabel: "Combined - Moderate", directionalCallTypes: ["CLEAN_DIRECTIONAL", "LEAN_DIRECTIONAL"], bucketKeys: ["MODERATE"] },
+    { rowKey: "COMBINED_STRONG", rowLabel: "Combined - Strong", directionalCallTypes: ["CLEAN_DIRECTIONAL", "LEAN_DIRECTIONAL"], bucketKeys: ["STRONG"] },
+    { rowKey: "COMBINED_VERY_STRONG", rowLabel: "Combined - Very Strong", directionalCallTypes: ["CLEAN_DIRECTIONAL", "LEAN_DIRECTIONAL"], bucketKeys: ["VERY_STRONG"] },
+    { rowKey: "COMBINED_STRONG_PLUS", rowLabel: "Combined - Strong+", directionalCallTypes: ["CLEAN_DIRECTIONAL", "LEAN_DIRECTIONAL"], bucketKeys: ["STRONG", "VERY_STRONG"] },
+    { rowKey: "CLEAN_ALL", rowLabel: "Clean Directional - All", directionalCallTypes: ["CLEAN_DIRECTIONAL"], bucketKeys: ["ALL"] },
+    { rowKey: "CLEAN_WEAK", rowLabel: "Clean - Weak", directionalCallTypes: ["CLEAN_DIRECTIONAL"], bucketKeys: ["WEAK"] },
+    { rowKey: "CLEAN_MODERATE", rowLabel: "Clean - Moderate", directionalCallTypes: ["CLEAN_DIRECTIONAL"], bucketKeys: ["MODERATE"] },
+    { rowKey: "CLEAN_STRONG", rowLabel: "Clean - Strong", directionalCallTypes: ["CLEAN_DIRECTIONAL"], bucketKeys: ["STRONG"] },
+    { rowKey: "CLEAN_VERY_STRONG", rowLabel: "Clean - Very Strong", directionalCallTypes: ["CLEAN_DIRECTIONAL"], bucketKeys: ["VERY_STRONG"] },
+    { rowKey: "CLEAN_STRONG_PLUS", rowLabel: "Clean - Strong+", directionalCallTypes: ["CLEAN_DIRECTIONAL"], bucketKeys: ["STRONG", "VERY_STRONG"] },
+    { rowKey: "LEAN_ALL", rowLabel: "Lean Directional - All", directionalCallTypes: ["LEAN_DIRECTIONAL"], bucketKeys: ["ALL"] },
+    { rowKey: "LEAN_WEAK", rowLabel: "Lean - Weak", directionalCallTypes: ["LEAN_DIRECTIONAL"], bucketKeys: ["WEAK"] },
+    { rowKey: "LEAN_MODERATE", rowLabel: "Lean - Moderate", directionalCallTypes: ["LEAN_DIRECTIONAL"], bucketKeys: ["MODERATE"] },
+    { rowKey: "LEAN_STRONG", rowLabel: "Lean - Strong", directionalCallTypes: ["LEAN_DIRECTIONAL"], bucketKeys: ["STRONG"] },
+    { rowKey: "LEAN_VERY_STRONG", rowLabel: "Lean - Very Strong", directionalCallTypes: ["LEAN_DIRECTIONAL"], bucketKeys: ["VERY_STRONG"] },
+    { rowKey: "LEAN_STRONG_PLUS", rowLabel: "Lean - Strong+", directionalCallTypes: ["LEAN_DIRECTIONAL"], bucketKeys: ["STRONG", "VERY_STRONG"] }
+  ];
+}
+
+function summarizeSensitivityRows(rows = []) {
+  const wins = rows.filter((row) => row.reached === true).length;
+  const total = rows.length;
+  const misses = total - wins;
+  const opportunityRatePct = total ? roundNumber((wins / total) * 100, 1) : null;
+  return {
+    totalEvaluated: total,
+    wins,
+    misses,
+    opportunityRatePct,
+    reliabilityLabel: sensitivityReliabilityLabel(opportunityRatePct)
+  };
+}
+
+function buildSensitivityRowsForThreshold(rows = [], threshold) {
+  const thresholdRows = rows.filter((row) => Number(row.threshold) === Number(threshold));
+  return buildSensitivityRowDescriptors().map((descriptor) => {
+    const filteredRows = thresholdRows.filter((row) =>
+      descriptor.directionalCallTypes.includes(row.directionalCallType)
+      && (
+        descriptor.bucketKeys.includes("ALL")
+        || descriptor.bucketKeys.includes(row.strengthBucket)
+      )
+    );
+    return {
+      rowKey: descriptor.rowKey,
+      rowLabel: descriptor.rowLabel,
+      thresholdMultiplier: threshold,
+      thresholdLabel: SENSITIVITY_THRESHOLD_LABELS[String(threshold)] || `${threshold}`,
+      ...summarizeSensitivityRows(filteredRows)
+    };
+  });
+}
+
+function buildSensitivityTable(rows = []) {
+  return {
+    thresholds: SENSITIVITY_THRESHOLDS.map((threshold) => ({
+      multiplier: threshold,
+      label: SENSITIVITY_THRESHOLD_LABELS[String(threshold)] || `${threshold}`
+    })),
+    rowsByThreshold: Object.fromEntries(SENSITIVITY_THRESHOLDS.map((threshold) => [String(threshold), buildSensitivityRowsForThreshold(rows, threshold)]))
+  };
+}
+
+function buildLayer1SensitivityRows(assetConfigs, checkers, options = {}) {
+  const contextsByAssetCode = options.contextsByAssetCode || {};
+  return assetConfigs
+    .filter((config) => !config.blocker)
+    .flatMap((config) => {
+      const contexts = contextsByAssetCode[config.assetCode] || loadAssetContexts(config);
+      if (!contexts) return [];
+      const checker = checkers[config.assetCode];
+      return (Array.isArray(checker?.rows) ? checker.rows : []).flatMap((row) => {
+        const rawDirectionLabel = String(row?.stored?.direction || row?.checker?.direction || "").trim().toUpperCase();
+        const directionKey = normalizeLayer1Direction(rawDirectionLabel);
+        const directionalCallType = classifyDirectionalCallType(rawDirectionLabel);
+        if (!directionKey || !directionalCallType) return [];
+        const confidencePct = normalizeHeadlineConfidence(row);
+        const bucketKey = bucketKeyFromConfidence(confidencePct);
+        if (!bucketKey) return [];
+        const evaluationDate = String(row?.evaluation_inputs?.close_date || "").trim();
+        if (!inRollingWindow(evaluationDate, options.rollingWindowStart || null)) return [];
+        const requiredInputs = buildRequiredDistanceInputs(config, contexts.daily, contexts.intraday, evaluationDate);
+        if (!requiredInputs.ok) return [];
+        return SENSITIVITY_THRESHOLDS.map((threshold) => {
+          const evaluation = evaluateL2lSequence(directionKey, {
+            ...requiredInputs,
+            requiredL2lDistance: requiredInputs.adr20 * threshold
+          });
+          if (evaluation.reached !== true && evaluation.reached !== false) return null;
+          return {
+            threshold,
+            directionalCallType,
+            strengthBucket: bucketKey,
+            reached: evaluation.reached
+          };
+        }).filter(Boolean);
+      });
+    });
+}
+
+function buildLayer2SensitivityRows(pairConfigs, assetConfigs, checkers, options = {}) {
+  const configByAssetCode = Object.fromEntries(assetConfigs.map((config) => [config.assetCode, config]));
+  const contextsByAssetCode = {
+    ...(options.contextsByAssetCode || {}),
+    ...Object.fromEntries(assetConfigs
+      .filter((config) => !config.blocker)
+      .map((config) => [config.assetCode, (options.contextsByAssetCode || {})[config.assetCode] || loadAssetContexts(config)]))
+  };
+  const usdRowsByDate = new Map((Array.isArray(checkers.USD?.rows) ? checkers.USD.rows : []).map((row) => [String(row?.snapshot_date || "").trim(), row]));
+
+  return pairConfigs.flatMap((pairConfig) => {
+    const targetConfig = configByAssetCode[pairConfig.targetAssetCode];
+    const contexts = contextsByAssetCode[pairConfig.targetAssetCode];
+    const targetChecker = checkers[pairConfig.targetAssetCode];
+    if (!targetConfig || !contexts || !targetChecker) return [];
+
+    return (Array.isArray(targetChecker.rows) ? targetChecker.rows : []).flatMap((targetRow) => {
+      const snapshotDate = String(targetRow?.snapshot_date || "").trim();
+      const usdRow = usdRowsByDate.get(snapshotDate) || null;
+      if (!usdRow) return [];
+
+      const targetRawDirection = String(targetRow?.stored?.direction || targetRow?.checker?.direction || "").trim().toUpperCase();
+      const usdRawDirection = String(usdRow?.stored?.direction || usdRow?.checker?.direction || "").trim().toUpperCase();
+      const targetDirection = normalizeLayer1Direction(targetRawDirection);
+      const usdDirection = normalizeLayer1Direction(usdRawDirection);
+      const directionalCallType = classifyDirectionalCallType(targetRawDirection);
+      if (!targetDirection || !usdDirection || !directionalCallType || targetDirection === usdDirection) return [];
+
+      const targetConfidence = normalizeHeadlineConfidence(targetRow);
+      const usdConfidence = normalizeHeadlineConfidence(usdRow);
+      const combinedConfidencePct = Number.isFinite(targetConfidence) && Number.isFinite(usdConfidence)
+        ? Math.min(targetConfidence, usdConfidence)
+        : null;
+      const bucketKey = bucketKeyFromConfidence(combinedConfidencePct);
+      if (!bucketKey) return [];
+
+      const evaluationDate = String(targetRow?.evaluation_inputs?.close_date || "").trim();
+      if (!inRollingWindow(evaluationDate, options.rollingWindowStart || null)) return [];
+      const requiredInputs = buildRequiredDistanceInputs(targetConfig, contexts.daily, contexts.intraday, evaluationDate);
+      if (!requiredInputs.ok) return [];
+
+      return SENSITIVITY_THRESHOLDS.map((threshold) => {
+        const evaluation = evaluateL2lSequence(targetDirection, {
+          ...requiredInputs,
+          requiredL2lDistance: requiredInputs.adr20 * threshold
+        });
+        if (evaluation.reached !== true && evaluation.reached !== false) return null;
+        return {
+          threshold,
+          directionalCallType,
+          strengthBucket: bucketKey,
+          reached: evaluation.reached
+        };
+      }).filter(Boolean);
+    });
+  });
+}
+
+function buildOutput(layer1Assets, layer2Pairs, options = {}) {
   const availableLayer1 = layer1Assets.filter((asset) => asset.available);
   const availableLayer2 = layer2Pairs.filter((pair) => pair.available);
+  const layer1Sensitivity = options.layer1Sensitivity || buildSensitivityTable([]);
+  const layer2Sensitivity = options.layer2Sensitivity || buildSensitivityTable([]);
 
   return {
     meta: {
@@ -885,6 +1065,7 @@ function buildOutput(layer1Assets, layer2Pairs) {
       strength_summary_rows: aggregateStrengthRows(availableLayer1, "keep_all"),
       comparison_rows: aggregateSignalsVsStrongPlus(availableLayer1, "layer1"),
       entry_reliability_groups: buildEntryReliabilityGroups(availableLayer1.flatMap((asset) => asset.evaluatedRows)),
+      threshold_sensitivity: layer1Sensitivity,
       assets: layer1Assets.map((asset) => ({
         assetCode: asset.assetCode,
         assetLabel: asset.assetLabel,
@@ -922,6 +1103,7 @@ function buildOutput(layer1Assets, layer2Pairs) {
       strength_summary_rows: aggregateStrengthRows(availableLayer2, "keep_all"),
       comparison_rows: aggregateSignalsVsStrongPlus(availableLayer2, "layer2"),
       entry_reliability_groups: buildEntryReliabilityGroups(availableLayer2.flatMap((pair) => pair.tradableRows)),
+      threshold_sensitivity: layer2Sensitivity,
       pairs: layer2Pairs.map((pair) => ({
         pairCode: pair.pairCode,
         pairLabel: pair.pairLabel,
@@ -951,7 +1133,12 @@ function main() {
   const layer1Assets = ASSET_CONFIGS.map((config) => buildLayer1AssetResearch(config, checkers[config.assetCode], { rollingWindowStart }));
   const layer1ByAssetCode = Object.fromEntries(layer1Assets.map((asset) => [asset.assetCode, asset]));
   const layer2Pairs = PAIR_CONFIGS.map((config) => buildLayer2PairResearch(config, layer1ByAssetCode, checkers, { rollingWindowStart }));
-  const output = buildOutput(layer1Assets, layer2Pairs);
+  const layer1SensitivityRows = buildLayer1SensitivityRows(ASSET_CONFIGS, checkers, { rollingWindowStart });
+  const layer2SensitivityRows = buildLayer2SensitivityRows(PAIR_CONFIGS, ASSET_CONFIGS, checkers, { rollingWindowStart });
+  const output = buildOutput(layer1Assets, layer2Pairs, {
+    layer1Sensitivity: buildSensitivityTable(layer1SensitivityRows),
+    layer2Sensitivity: buildSensitivityTable(layer2SensitivityRows)
+  });
   const errors = [];
 
   validateCheckerInvariants(checkers, errors);
@@ -999,10 +1186,14 @@ module.exports = {
   LOOKBACK_DAYS,
   OUTPUT_PATH,
   PAIR_CONFIGS,
+  SENSITIVITY_THRESHOLDS,
   buildLayer1AssetResearch,
+  buildLayer1SensitivityRows,
   buildLayer2PairResearch,
+  buildLayer2SensitivityRows,
   buildOutput,
   buildRollingWindowStartDate,
+  buildSensitivityTable,
   inRollingWindow,
   loadChecker,
   validateAvailableAsset,

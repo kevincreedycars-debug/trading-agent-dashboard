@@ -4472,6 +4472,49 @@ function renderAdrEntryReliabilitySection(title, groups = [], options = {}) {
   `;
 }
 
+function renderAdrSensitivityCell(cell = {}) {
+  return `
+    <div class="research-cell adr-compact-cell adr-threshold-cell">
+      <strong>${escapeHtml(metricAvailable(cell.opportunityRatePct) ? percentValue(cell.opportunityRatePct) : displayDash())}</strong>
+      <span>${escapeHtml(cell.reliabilityLabel || "Not yet available")}</span>
+    </div>
+  `;
+}
+
+function renderAdrThresholdSensitivityTable(title, sensitivity = {}, options = {}) {
+  const thresholds = Array.isArray(sensitivity.thresholds) ? sensitivity.thresholds : [];
+  const rowsByThreshold = sensitivity.rowsByThreshold || {};
+  if (!thresholds.length) return "";
+
+  const firstThresholdKey = String(thresholds[0]?.multiplier ?? "");
+  const rowSeed = Array.isArray(rowsByThreshold[firstThresholdKey]) ? rowsByThreshold[firstThresholdKey] : [];
+  const rows = rowSeed.map((seedRow) => ({
+    rowKey: seedRow.rowKey,
+    rowLabel: seedRow.rowLabel,
+    thresholds: Object.fromEntries(thresholds.map((threshold) => {
+      const thresholdKey = String(threshold.multiplier);
+      const thresholdRows = Array.isArray(rowsByThreshold[thresholdKey]) ? rowsByThreshold[thresholdKey] : [];
+      const matchingRow = thresholdRows.find((row) => row.rowKey === seedRow.rowKey) || null;
+      return [thresholdKey, matchingRow];
+    }))
+  }));
+
+  const columns = [
+    { label: "Row", className: "adr-col-entity", render: row => renderAdrCompactTextCell(row.rowLabel || displayDash(), "", { className: "adr-table-tight-cell" }) },
+    ...thresholds.map((threshold) => ({
+      label: threshold.label,
+      className: "adr-col-threshold",
+      render: row => renderAdrSensitivityCell(row.thresholds[String(threshold.multiplier)] || {})
+    }))
+  ];
+
+  return renderResearchBreakdownTable(title, "Threshold Sensitivity", rows, columns, {
+    tableClass: "adr-summary-table adr-threshold-sensitivity-table",
+    scrollClass: "adr-summary-scroll",
+    description: options.description || ""
+  });
+}
+
 function renderAdrUnavailableDetails(title, rows = [], options = {}) {
   if (!rows.length) return "";
   const dataAttribute = options.dataAttribute ? ` ${options.dataAttribute}="true"` : "";
@@ -4842,6 +4885,47 @@ function renderResearchAdrReach(data = {}) {
       </section>
       ${layer1Assets.map(renderAdrReachLayer1Asset).join("")}
       ${layer2Pairs.map(renderAdrReachLayer2Pair).join("")}
+    </div>
+  `;
+}
+
+function renderResearchAdrThresholdSensitivity(data = {}) {
+  const adrReach = data.adr_reach || null;
+  const layer1Sensitivity = adrReach?.layer1?.threshold_sensitivity || {};
+  const layer2Sensitivity = adrReach?.layer2?.threshold_sensitivity || {};
+
+  return `
+    <div class="backtest-report">
+      ${renderResearchStatusHeader(data)}
+      <section class="research-section">
+        <div class="research-section-head">
+          <div>
+            <h3>L2L Threshold Sensitivity</h3>
+          </div>
+          <p class="research-panel-copy">This sensitivity table tests the same L2L 1H Sequence Research engine using different required move thresholds. The production baseline is 50% ADR20. The goal is to see how far the directional edge persists as the required move increases.</p>
+        </div>
+      </section>
+      ${renderAdrThresholdSensitivityTable("Layer 1 Sensitivity", layer1Sensitivity, {
+        description: "Layer 1 sensitivity uses the same historical sequence engine and separates combined, clean, and lean directional call families across the configured ADR20 thresholds."
+      })}
+      ${renderAdrThresholdSensitivityTable("Layer 2 Sensitivity", layer2Sensitivity, {
+        description: "Layer 2 sensitivity remains downstream-only. It requires opposite directional target/USD sides and reports how opportunity rates change as the required move threshold increases."
+      })}
+      <article class="detail-panel overview-briefing-panel adr-threshold-conclusion-panel">
+        <div class="panel-head compact-panel-head">
+          <div>
+            <p class="eyebrow">Sensitivity Conclusion</p>
+            <h3>Production Threshold Read</h3>
+          </div>
+        </div>
+        <div class="legend-grid adr-threshold-conclusion-grid">
+          <div class="legend-item"><strong>50% ADR20</strong><span>50% ADR20 is the production baseline.</span></div>
+          <div class="legend-item"><strong>Through 55%</strong><span>Directional opportunity remains broadly reliable through 55% ADR20.</span></div>
+          <div class="legend-item"><strong>At 60%</strong><span>60% ADR20 becomes selective.</span></div>
+          <div class="legend-item"><strong>At 65% and 70%</strong><span>65% and 70% are above the current reliable edge.</span></div>
+          <div class="legend-item"><strong>Current Support</strong><span>This supports 50% ADR20 as the current production L2L threshold.</span></div>
+        </div>
+      </article>
     </div>
   `;
 }
@@ -5654,7 +5738,9 @@ function renderBacktest(data = {}) {
           ? renderResearchWeekdayBreakdown(data)
           : (activeBacktestTab === "pair-trade-research"
             ? renderResearchPairTrade(data)
-            : (activeBacktestTab === "adr-reach-research" ? renderResearchAdrReach(data) : renderResearchAccuracy(data)))));
+            : (activeBacktestTab === "adr-reach-research"
+              ? renderResearchAdrReach(data)
+              : (activeBacktestTab === "adr-threshold-sensitivity" ? renderResearchAdrThresholdSensitivity(data) : renderResearchAccuracy(data))))));
     applyMatrixEvidenceFilter("all");
   } catch (err) {
     console.error("Backtest render failed", err);

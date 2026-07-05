@@ -414,6 +414,29 @@ async function run() {
       throw new Error(`ADR summary last column padding is too small.\nPaddingRight: ${adrSummaryLastCellPadding}`);
     }
 
+    await page.getByRole("button", { name: "L2L Threshold Sensitivity" }).click();
+    await page.waitForSelector("text=Layer 1 Sensitivity", { timeout: 15000 });
+    const adrThresholdText = await page.locator("#backtestPanel").innerText();
+    const normalizedAdrThresholdText = adrThresholdText.toLowerCase();
+
+    if (!normalizedAdrThresholdText.includes("production baseline is 50% adr20")) {
+      throw new Error(`L2L Threshold Sensitivity did not render the expected explanatory copy.\n${adrThresholdText}`);
+    }
+
+    if (!normalizedAdrThresholdText.includes("layer 1 sensitivity") || !normalizedAdrThresholdText.includes("layer 2 sensitivity")) {
+      throw new Error(`L2L Threshold Sensitivity did not render both sensitivity tables.\n${adrThresholdText}`);
+    }
+
+    for (const thresholdLabel of ["40%", "50%", "55%", "60%", "65%", "70%"]) {
+      if (!adrThresholdText.includes(thresholdLabel)) {
+        throw new Error(`L2L Threshold Sensitivity did not render threshold column ${thresholdLabel}.\n${adrThresholdText}`);
+      }
+    }
+
+    if (!normalizedAdrThresholdText.includes("high reliability") || !normalizedAdrThresholdText.includes("below target")) {
+      throw new Error(`L2L Threshold Sensitivity did not render the expected reliability labels.\n${adrThresholdText}`);
+    }
+
     if (consoleErrors.length) {
       throw new Error(`Console errors were emitted during dashboard smoke.\n${consoleErrors.join("\n")}`);
     }

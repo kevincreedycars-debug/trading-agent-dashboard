@@ -4,6 +4,9 @@ const assert = require("node:assert/strict");
 const {
   buildLayer1AssetResearch,
   buildLayer2PairResearch,
+  buildLayer1SensitivityRows,
+  buildLayer2SensitivityRows,
+  buildSensitivityTable,
   buildOutput
 } = require("../scripts/validate_adr_reach_research");
 const {
@@ -412,4 +415,109 @@ test("entry reliability groups separate combined clean and lean directional rows
   assert.equal(layer2Clean.rows.find((row) => row.cohortKey === "ALL").total, 2);
   assert.equal(layer2Lean.rows.find((row) => row.cohortKey === "ALL").total, 2);
   assert.equal(layer2Lean.rows.find((row) => row.cohortKey === "ALL").reliabilityLabel, "Reliable");
+});
+
+test("threshold sensitivity table includes all configured thresholds and row groups", () => {
+  const checker = {
+    rows: [
+      createCheckerRow({
+        predictionId: "eur-clean-bull",
+        snapshotDate: "2024-02-06",
+        direction: "BULLISH",
+        confidence: 42,
+        closeDate: "2024-02-06"
+      }),
+      createCheckerRow({
+        predictionId: "eur-lean-bear",
+        snapshotDate: "2024-02-07",
+        direction: "BEARISH_LEAN",
+        confidence: 82,
+        closeDate: "2024-02-07"
+      })
+    ],
+    summary: { rows_checked: 2 }
+  };
+  const usdChecker = {
+    rows: [
+      createCheckerRow({
+        predictionId: "usd-clean-bear",
+        snapshotDate: "2024-02-06",
+        direction: "BEARISH",
+        confidence: 86,
+        closeDate: "2024-02-06"
+      }),
+      createCheckerRow({
+        predictionId: "usd-lean-bull",
+        snapshotDate: "2024-02-07",
+        direction: "BULLISH_LEAN",
+        confidence: 88,
+        closeDate: "2024-02-07"
+      })
+    ],
+    summary: { rows_checked: 2 }
+  };
+
+  const dailyContext = createDailyContext(createDailySeries());
+  const intradayContext = createIntradayContext({
+    "2024-02-06": [
+      { instrument: "TEST", timestamp: "2024-02-06T09:00:00Z", date: "2024-02-06", open: 105, high: 106, low: 100, close: 101, source: "test", complete: true },
+      { instrument: "TEST", timestamp: "2024-02-06T10:00:00Z", date: "2024-02-06", open: 101, high: 106, low: 101, close: 105, source: "test", complete: true }
+    ],
+    "2024-02-07": [
+      { instrument: "TEST", timestamp: "2024-02-07T09:00:00Z", date: "2024-02-07", open: 102, high: 110, low: 108, close: 109, source: "test", complete: true },
+      { instrument: "TEST", timestamp: "2024-02-07T10:00:00Z", date: "2024-02-07", open: 109, high: 109, low: 104, close: 105, source: "test", complete: true }
+    ]
+  });
+
+  const assetConfig = {
+    assetCode: "EUR",
+    assetLabel: "EUR",
+    weekdayKeys: ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY"],
+    instrument: "EUR_USD",
+    sourceVendor: "test",
+    candleSourceLabel: "test",
+    dailySourceLabel: "daily",
+    intradaySourceLabel: "intraday",
+    dailySourcePath: "daily.csv",
+    intradaySourcePath: "intraday.csv",
+    fixedReferenceL2lDistance: 5
+  };
+
+  const asset = buildLayer1AssetResearch(assetConfig, checker, {
+    contexts: { daily: dailyContext, intraday: intradayContext },
+    rollingWindowStart: "2024-01-01"
+  });
+  const pair = buildLayer2PairResearch({
+    targetAssetCode: "EUR",
+    pairCode: "EUR_USD",
+    pairLabel: "EUR/USD",
+    weekdayKeys: ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY"],
+    fixedReferenceL2lDistance: 5
+  }, { EUR: asset }, { USD: usdChecker, EUR: checker });
+
+  const layer1Sensitivity = buildSensitivityTable(buildLayer1SensitivityRows([assetConfig], { EUR: checker }, {
+    rollingWindowStart: "2024-01-01",
+    contextsByAssetCode: {
+      EUR: { daily: dailyContext, intraday: intradayContext }
+    }
+  }));
+  const layer2Sensitivity = buildSensitivityTable(buildLayer2SensitivityRows([
+    { targetAssetCode: "EUR", pairCode: "EUR_USD", pairLabel: "EUR/USD", weekdayKeys: ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY"], fixedReferenceL2lDistance: 5 }
+  ], [assetConfig], { USD: usdChecker, EUR: checker }, {
+    rollingWindowStart: "2024-01-01",
+    contextsByAssetCode: {
+      EUR: { daily: dailyContext, intraday: intradayContext }
+    }
+  }));
+  const output = buildOutput([asset], [pair], { layer1Sensitivity, layer2Sensitivity });
+
+  assert.equal(output.layer1.threshold_sensitivity.thresholds.length, 6);
+  assert.equal(output.layer2.threshold_sensitivity.thresholds.length, 6);
+  assert.equal(output.layer1.threshold_sensitivity.rowsByThreshold["0.5"].length, 18);
+  assert.equal(output.layer2.threshold_sensitivity.rowsByThreshold["0.5"].length, 18);
+  assert.equal(output.layer1.threshold_sensitivity.rowsByThreshold["0.5"][0].thresholdLabel, "50%");
+  assert.equal(
+    output.layer2.threshold_sensitivity.rowsByThreshold["0.4"].find((row) => row.rowKey === "COMBINED_ALL")?.reliabilityLabel,
+    "High Reliability"
+  );
 });
