@@ -4,21 +4,21 @@ Last updated: 2026-07-03
 
 ## Task
 
-Expand supportable OHLC coverage for blocked `ADR Reach Research` assets and pairs.
+Commit-ready cleanup for `L2L 1H Sequence Research`.
 
 ## Objective
 
-The downstream-only ADR reach module has now been added. The current objective is to broaden supportable OHLC coverage so the blocked assets can move from unavailable into real ADR measurement without changing any frozen research semantics.
+The downstream-only daily-range proxy has been replaced with sequence-aware `1H` L2L research. The current objective is to finish commit-ready cleanup: consistent wording, reproducible candle importers, and verification that no credentials or ignored caches are being committed.
 
 The module answers:
 
-> Did price move at least 50% of the rolling 20-day ADR in the direction of the Layer 1 or Layer 2 call at any point during that trading day?
+> Did price move at least the required `50% ADR20` distance in the direction of the Layer 1 or Layer 2 call after the relevant intraday swing, as confirmed by `1H` candles?
 
 This work must sit alongside the existing Layer 1 and Pair Trade Research views, require historical OHLC data, keep existing replay/checker logic untouched, and record unavailable assets as unavailable rather than estimating intraday reach from close-only data.
 
 ## Current Status
 
-ADR Reach Research supportable OHLC expansion is partially complete. Current platform state is stable and validated.
+L2L 1H Sequence Research is implemented and validated. Current platform state is stable and validated.
 
 ## Completed
 
@@ -87,16 +87,17 @@ ADR Reach Research supportable OHLC expansion is partially complete. Current pla
 - Added `backtester/scripts/validate_layer2_pairing_analysis.js` and confirmed pair-trade research validation passes
 - Dashboard smoke updated and passing for the new Pair Trade Research tab
 - Pair Trade Research UI refined and validated, including top-summary layout improvements, confidence-table spacing improvements, and terminology updates for matched-day trade-share metrics
-- New `ADR Reach Research` Backtest / Accuracy sub-tab added downstream of the canonical checker artifacts
-- Added `backtester/scripts/validate_adr_reach_research.js` and generated `data/adr-reach-research.json`
-- Confirmed repo-local supportable OHLC coverage for `NQ` via `backtester/tmp/qqq_daily_yahoo.csv`
-- ADR reach now evaluates `NQ` Layer 1 and `NQ/USD` Layer 2 using evaluation-day `Open` as the reference price and rolling previous-20-session ADR20
-- Added deterministic repo-local `EUR/USD` daily OHLC coverage in `backtester/tmp/eurusd_daily_alpha_vantage.csv` using Alpha Vantage `FX_DAILY`
-- Added deterministic repo-local `BTC/USD` daily OHLC coverage in `backtester/tmp/btcusd_daily_coinbase.csv` using Coinbase Exchange daily candles
-- ADR reach now evaluates `EUR`, `NQ`, and `BTC` Layer 1 assets using supportable daily OHLC with evaluation-day `Open` as the reference price and previous-close fallback preserved
-- ADR reach now evaluates `EUR/USD`, `NQ/USD`, and `BTC/USD` Layer 2 pairs by reusing existing Pair Trade Research tradable-signal selection against the same supportable OHLC sources
-- `Gold`, `USD`, and `XAU/USD` remain unavailable in ADR Reach Research because repo evidence still does not include supportable true `XAU/USD` or `DXY` High/Low history
-- Updated dashboard smoke and validation passes for the new ADR Reach Research tab while leaving replay, checker, confidence, and Pair Trade Research logic unchanged
+- `L2L 1H Sequence Research` now replaces the old daily OHLC range-availability research path.
+- Added `backtester/lib/adr_reach_research.js` for shared daily-ADR + `1H` sequence helpers.
+- Added `backtester/tests/adr_reach_research.test.js` with synthetic sequence-order tests and missing-candle coverage.
+- Added `backtester/importers/oanda/download_oanda_candles.js` and `backtester/importers/binance/download_binance_candles.js` for reproducible daily + `1H` downloads.
+- Staged repo-local OANDA daily + `1H` coverage for `EUR_USD`, `XAU_USD`, and `NAS100_USD`.
+- Staged repo-local Binance daily + `1H` coverage for `BTCUSDT`.
+- The research builder now uses daily candles only for `ADR20`, with required move `ADR20 * 0.5`, and evaluates wins/misses from forward-walked `1H` candles.
+- The rebuilt research path now supports `EUR`, `Gold`, `NQ`, and `BTC` Layer 1 assets.
+- The rebuilt research path now supports `EUR/USD`, `XAU/USD`, `NQ/USD`, and `BTC/USD` Layer 2 pairs by reusing existing Pair Trade Research tradable-signal selection.
+- `USD` remains unavailable because repo evidence still does not include supportable `DXY` daily + `1H` history.
+- Updated dashboard smoke and validation pass for the rebuilt `L2L 1H Sequence Research` tab while leaving replay, checker, confidence, and Pair Trade Research logic unchanged.
 
 ## n8n Workspace
 
@@ -114,9 +115,9 @@ https://silver17.app.n8n.cloud/projects/ISQG9XU7TGTT6Fcu/workflows
 
 ## Next Immediate Steps
 
-1. Source supportable true `XAU/USD` spot OHLC history so `Gold` Layer 1 and `XAU/USD` Layer 2 can move from unavailable to real ADR measurement.
-2. Source supportable `DXY` or other accepted USD benchmark OHLC history only if a real non-estimated source can be staged repo-locally.
-3. Keep replay, checker, pair-calculation, confidence, and flat-band semantics frozen while ADR coverage expands downstream-only.
+1. Confirm the commit-ready cleanup for renamed candle importers and the rebuilt `L2L 1H Sequence Research` wording.
+2. Source supportable `DXY` or other accepted USD benchmark daily + `1H` history only if a real non-estimated source can be staged repo-locally.
+3. Keep replay, checker, pair-calculation, confidence, and flat-band semantics frozen while the research module remains downstream-only.
 
 ## Current Blocker
 
@@ -157,4 +158,4 @@ before making any changes.
 
 The immediate working outcome for the current task is:
 
-> expand the shipped ADR Reach Research module beyond its current `NQ` / `NQ/USD` support without changing replay outputs, checker semantics, pair logic, flat bands, or headline confidence logic
+> finish commit-ready cleanup for the shipped `L2L 1H Sequence Research` module without changing replay outputs, checker semantics, pair logic, flat bands, or headline confidence logic

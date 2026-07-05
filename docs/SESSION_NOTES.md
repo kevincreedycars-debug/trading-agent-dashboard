@@ -25,24 +25,19 @@ Last updated: 2026-07-03
 - Refined the Pair Trade Research UI without changing any pairing or Layer 1 calculations.
 - Reworked the top `Layer 2 Pair Summary` into a compact comparison layout, improved detailed-table spacing safety, and updated terminology so the summary now uses `Trade Days %` against matched historical days.
 - Re-ran lightweight validation and browser smoke after the UI refinements; current platform state is stable and validated.
-- Added a new `ADR Reach Research` Backtest / Accuracy sub-tab as a separate downstream module.
-- Added `backtester/scripts/validate_adr_reach_research.js` to audit available OHLC support, build `data/adr-reach-research.json`, and validate ADR20 windowing and reconciliation.
-- Confirmed the current repo evidence supports real OHLC-based ADR evaluation for `NQ` only, using the repo-local `QQQ` daily OHLC proxy file.
-- Confirmed the current repo evidence supports real Layer 2 ADR evaluation for `NQ/USD` only, by reusing the existing Pair Trade Research tradable-signal selection and the same `QQQ` OHLC source.
-- Explicitly marked `EUR`, `Gold`, `BTC`, `USD`, `EUR/USD`, `XAU/USD`, and `BTC/USD` unavailable in the ADR module because repo evidence does not currently include supportable High/Low history for them.
-- Updated the local dashboard smoke test so ADR Reach Research now verifies summary tables, confidence tables, day totals, weekday tables, and console-clean rendering.
+- Rebuilt the old daily-range ADR path into `L2L 1H Sequence Research` as a separate downstream module.
+- Updated `backtester/scripts/validate_adr_reach_research.js` so daily candles provide `ADR20` and sequence-aware `1H` candles determine wins/misses.
+- Added repo-local OANDA daily + `1H` coverage for `EUR_USD`, `XAU_USD`, and `NAS100_USD`, plus Binance daily + `1H` coverage for `BTCUSDT`.
+- Added `backtester/importers/oanda/download_oanda_candles.js` and `backtester/importers/binance/download_binance_candles.js` to make those repo-local candle files reproducible.
+- Extended `backtester/scripts/validate_adr_reach_research.js` so `EUR`, `Gold`, `NQ`, and `BTC` Layer 1 plus `EUR/USD`, `XAU/USD`, `NQ/USD`, and `BTC/USD` Layer 2 now build real sequence-aware L2L results from supportable daily + `1H` sources.
+- Tightened the OANDA session-date normalization so non-BTC sources do not silently pick up weekend session labels while BTC preserves weekend handling.
+- Updated the local dashboard smoke test so `L2L 1H Sequence Research` now verifies summary tables, confidence tables, day totals, weekday tables, diagnostics tables, and console-clean rendering.
 - Re-ran syntax checks, the new ADR validator, all existing Layer 1 checker validators, the existing Layer 2 pairing validator, and browser smoke successfully.
-- Added deterministic repo-local `EUR/USD` OHLC coverage in `backtester/tmp/eurusd_daily_alpha_vantage.csv` using Alpha Vantage `FX_DAILY`.
-- Added deterministic repo-local `BTC/USD` OHLC coverage in `backtester/tmp/btcusd_daily_coinbase.csv` using Coinbase Exchange daily candles.
-- Added `backtester/importers/eurusd/download_eurusd_daily_ohlc_alpha_vantage.js` and `backtester/importers/btc/download_btcusd_daily_ohlc_coinbase.js` to make those repo-local OHLC files reproducible.
-- Extended `backtester/scripts/validate_adr_reach_research.js` so `EUR`, `NQ`, and `BTC` Layer 1 plus `EUR/USD`, `NQ/USD`, and `BTC/USD` Layer 2 now build real ADR reach results from supportable OHLC sources.
-- Tightened the ADR validator so non-BTC sources cannot introduce weekend OHLC rows and BTC must preserve weekend calendar handling.
-- Confirmed `Gold` and `XAU/USD` remain unavailable because the current repo/runtime evidence still does not include a supportable true `XAU/USD` OHLC source, and `USD` remains unavailable because no repo-local `DXY` OHLC source exists.
+- Confirmed `USD` remains unavailable because no repo-local `DXY` daily + `1H` source exists.
 
 ## Unfinished Work
 
-- Source supportable true `XAU/USD` spot OHLC history for the remaining Gold-layer ADR blocker.
-- Source supportable `DXY` or other accepted USD benchmark OHLC history only if a real non-estimated source can be staged repo-locally.
+- Source supportable `DXY` or other accepted USD benchmark daily + `1H` history only if a real non-estimated source can be staged repo-locally.
 
 ## Blockers
 
@@ -60,11 +55,11 @@ Last updated: 2026-07-03
 
 ## Exact Next Task
 
-Expand supportable OHLC coverage for the shipped `ADR Reach Research` module.
+Finish commit-ready cleanup for the shipped `L2L 1H Sequence Research` module.
 
 Design intent for the handover:
 
-- The first ADR release is now live and OHLC expansion is partially complete.
-- Current supportable repo-local scope is `EUR`, `NQ`, and `BTC` for Layer 1, plus `EUR/USD`, `NQ/USD`, and `BTC/USD` for Layer 2.
-- Reference price for the supported ADR path is evaluation-day `Open`, with previous-close fallback logic retained for future supportable OHLC feeds.
-- The next step is not to weaken the blocker rules; it is to source verified true `XAU/USD` and optional `DXY` High/Low coverage for the remaining unavailable assets and pairs.
+- The sequence-aware `1H` rewrite is now live locally and validated.
+- Current supportable repo-local scope is `EUR`, `Gold`, `NQ`, and `BTC` for Layer 1, plus `EUR/USD`, `XAU/USD`, `NQ/USD`, and `BTC/USD` for Layer 2.
+- Required move for the current research path is `50% ADR20`, with fixed legacy L2L values retained as diagnostics only.
+- The next step is not to weaken the blocker rules; it is to confirm cleanup, then source verified `DXY` daily + `1H` coverage if standalone `USD` research is still required.

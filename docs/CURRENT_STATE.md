@@ -8,9 +8,9 @@ The Layer 1 trading-agent platform remains operational, and the latest runtime e
 
 The full Layer 1 historical replay rollout is now validated across USD, EUR, Gold, NQ, and BTC. The active repository work has shifted from replay rollout itself into downstream research presentation and breakdown views built on top of the canonical checker artifacts.
 
-The current dashboard now includes the existing accuracy matrices, the checker workspaces, the weekday breakdown views, a Pair Trade Research tab, and a new ADR Reach Research tab built downstream of canonical checker artifacts without changing replay, checker, flat-band, pair-selection, or confidence semantics.
+The current dashboard now includes the existing accuracy matrices, the checker workspaces, the weekday breakdown views, a Pair Trade Research tab, and a `L2L 1H Sequence Research` tab built downstream of canonical checker artifacts without changing replay, checker, flat-band, pair-selection, or confidence semantics.
 
-Current platform state is stable and validated. The Layer 1 historical replay rollout is complete, Weekday Breakdown and Day Totals are complete, Pair Trade Research is complete including its later UI refinements, and ADR Reach Research is now present as a separate downstream module.
+Current platform state is stable and validated. The Layer 1 historical replay rollout is complete, Weekday Breakdown and Day Totals are complete, Pair Trade Research is complete including its later UI refinements, and `L2L 1H Sequence Research` is now present as a separate downstream module.
 
 ## Current Architecture
 
@@ -148,28 +148,28 @@ The current repository priority is:
 
 > compact historical research breakdowns that reuse canonical checker artifact outputs
 
-The next immediate milestone after shipping the first ADR module is:
+The next immediate milestone after shipping the first sequence-aware L2L module is:
 
-> expand supportable OHLC coverage for blocked ADR assets and pairs without weakening the downstream-only rule
+> keep the rebuilt sequence-aware research path reproducible and extend only supportable blocked assets without weakening the downstream-only rule
 
-The newly added ADR Reach Research module is not another close-to-close accuracy table. It answers whether price moved at least `50%` of rolling `20-day ADR` in the direction of a Layer 1 or Layer 2 call at any point during that trading day, using historical OHLC data only.
+The `L2L 1H Sequence Research` module is not another close-to-close accuracy table. It answers whether price moved at least the required `50% ADR20` distance in the direction of a Layer 1 or Layer 2 call after the relevant intraday swing, using sequence-aware `1H` candles and daily candles only for ADR20.
 
-Current repository evidence supports real ADR measurement for:
+Current repository evidence supports real sequence-aware L2L measurement for:
 
-- `EUR` Layer 1 using the repo-local `EUR/USD` OHLC file sourced from Alpha Vantage `FX_DAILY`
-- `NQ` Layer 1 using the repo-local `QQQ` OHLC proxy file
-- `BTC` Layer 1 using the repo-local `BTC/USD` OHLC file sourced from Coinbase Exchange candles
-- `EUR/USD` Layer 2 using the existing Pair Trade Research tradable-signal logic plus the same `EUR/USD` OHLC source
-- `NQ/USD` Layer 2 using the existing Pair Trade Research tradable-signal logic plus the same `QQQ` OHLC source
-- `BTC/USD` Layer 2 using the existing Pair Trade Research tradable-signal logic plus the same `BTC/USD` OHLC source
+- `EUR` Layer 1 using repo-local OANDA `EUR_USD` daily + `1H` candles
+- `Gold` Layer 1 using repo-local OANDA `XAU_USD` daily + `1H` candles
+- `NQ` Layer 1 using repo-local OANDA `NAS100_USD` daily + `1H` candles
+- `BTC` Layer 1 using repo-local Binance `BTCUSDT` daily + `1H` candles
+- `EUR/USD` Layer 2 using the existing Pair Trade Research tradable-signal logic plus the same `EUR_USD` candle source
+- `XAU/USD` Layer 2 using the existing Pair Trade Research tradable-signal logic plus the same `XAU_USD` candle source
+- `NQ/USD` Layer 2 using the existing Pair Trade Research tradable-signal logic plus the same `NAS100_USD` candle source
+- `BTC/USD` Layer 2 using the existing Pair Trade Research tradable-signal logic plus the same `BTCUSDT` candle source
 
-Current repository evidence does not yet support real ADR measurement for:
+Current repository evidence does not yet support real sequence-aware L2L measurement for:
 
-- `Gold`
 - `USD`
-- `XAU/USD`
 
-Those assets and pairs are now rendered as unavailable in the ADR module rather than estimated from close-only data.
+That unsupported path is now rendered as unavailable in the `L2L 1H Sequence Research` module rather than estimated from close-only data.
 
 GitHub is the source of truth. n8n remains the execution engine. Supabase remains the data layer. GitHub Pages is the active presentation host.
 
@@ -225,6 +225,6 @@ Current implemented state:
 
 - Historical replay and deterministic checker coverage are validated for USD, EUR, Gold, NQ, and BTC.
 - Current checker totals are USD `604`, EUR `602`, Gold `608`, NQ `604`, and BTC `850`, all passing with zero fail / zero missing / zero tolerance pass.
-- The Backtest / Accuracy dashboard exposes the existing matrices and checker workspaces plus weekday confidence breakdowns, Pair Trade Research, and the first ADR Reach Research release.
+- The Backtest / Accuracy dashboard exposes the existing matrices and checker workspaces plus weekday confidence breakdowns, Pair Trade Research, and the first `L2L 1H Sequence Research` release.
 - 24H remains the primary short-horizon benchmark focus.
 - Historical research presentation remains downstream-only and must not modify live runtime behavior.

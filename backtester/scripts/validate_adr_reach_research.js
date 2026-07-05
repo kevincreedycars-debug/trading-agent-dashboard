@@ -2,17 +2,28 @@
 
 const fs = require("fs");
 const path = require("path");
-const { parseArgs, parseDelimited } = require("../lib/historical_common");
+const { parseArgs } = require("../lib/historical_common");
+const {
+  CONFIDENCE_BUCKETS,
+  addOutcome,
+  bucketKeyFromConfidence,
+  buildCellMap,
+  buildRequiredDistanceInputs,
+  createOutcomeCell,
+  evaluateL2lSequence,
+  loadDailyOhlc,
+  loadIntradayOhlc,
+  normalizeExactDirectionalSignal,
+  normalizeHeadlineConfidence,
+  normalizeLayer1Direction,
+  reasonLabel,
+  roundNumber,
+  summarizeOutcomeCell,
+  sumOutcomeCells,
+  weekdayFromDate
+} = require("../lib/adr_reach_research");
 
-const ADR_WINDOW_SESSIONS = 20;
-const ADR_THRESHOLD_PCT = 50;
-const WEEKDAY_KEYS = ["SUNDAY", "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY"];
-const CONFIDENCE_BUCKETS = [
-  { key: "WEAK", label: "Weak", min: 0, max: 49 },
-  { key: "MODERATE", label: "Moderate", min: 50, max: 64 },
-  { key: "STRONG", label: "Strong", min: 65, max: 79 },
-  { key: "VERY_STRONG", label: "Very Strong", min: 80, max: 100 }
-];
+const LOOKBACK_DAYS = 730;
 const CHECKER_PATHS = {
   USD: path.resolve(__dirname, "../../data/backtester-checker-usd-24h-2024-01.json"),
   EUR: path.resolve(__dirname, "../../data/backtester-checker-eur-24h-2024-2026.json"),
@@ -27,303 +38,331 @@ const EXPECTED_CHECKER_ROWS = {
   NQ: 604,
   BTC: 850
 };
+const OUTPUT_PATH = path.resolve(__dirname, "../../data/adr-reach-research.json");
+const REPO_ROOT = path.resolve(__dirname, "../..");
+const FIXED_REFERENCE_L2L = {
+  EUR: 0.00426,
+  GOLD: 69.937,
+  NQ: 269.6,
+  BTC: 1468.4,
+  EUR_USD: 0.00426,
+  XAU_USD: 69.937,
+  NQ_USD: 269.6,
+  BTC_USD: 1468.4
+};
+const WEEKDAYS = {
+  WEEKDAY_ONLY: ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY"],
+  ALL_DAYS: ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY"]
+};
 const ASSET_CONFIGS = [
   {
     assetCode: "EUR",
     assetLabel: "EUR",
-    weekdayKeys: ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY"],
+    weekdayKeys: WEEKDAYS.WEEKDAY_ONLY,
     checkerPath: CHECKER_PATHS.EUR,
-    ohlcSourcePath: path.resolve(__dirname, "../tmp/eurusd_daily_alpha_vantage.csv"),
-    ohlcSourceLabel: "EUR/USD daily OHLC CSV from Alpha Vantage FX_DAILY",
-    status: "available",
-    blocker: null
+    dailySourcePath: path.resolve(__dirname, "../tmp/oanda_eur_usd_daily.csv"),
+    intradaySourcePath: path.resolve(__dirname, "../tmp/oanda_eur_usd_h1.csv"),
+    dailySourceLabel: "OANDA EUR_USD daily candles cache",
+    intradaySourceLabel: "OANDA EUR_USD 1H candles cache",
+    candleSourceLabel: "OANDA v20 candles",
+    instrument: "EUR_USD",
+    sourceVendor: "OANDA",
+    fixedReferenceL2lDistance: FIXED_REFERENCE_L2L.EUR
   },
   {
     assetCode: "GOLD",
     assetLabel: "Gold",
-    weekdayKeys: ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY"],
+    weekdayKeys: WEEKDAYS.WEEKDAY_ONLY,
     checkerPath: CHECKER_PATHS.GOLD,
-    ohlcSourcePath: null,
-    ohlcSourceLabel: "No repo-local XAU/USD OHLC source",
-    status: "unavailable",
-    blocker: "No supportable unauthenticated XAU/USD spot OHLC feed is staged repo-locally yet. Existing repo evidence is still either close-only spot lineage or GLD proxy data, neither of which is acceptable for ADR reach."
+    dailySourcePath: path.resolve(__dirname, "../tmp/oanda_xau_usd_daily.csv"),
+    intradaySourcePath: path.resolve(__dirname, "../tmp/oanda_xau_usd_h1.csv"),
+    dailySourceLabel: "OANDA XAU_USD daily candles cache",
+    intradaySourceLabel: "OANDA XAU_USD 1H candles cache",
+    candleSourceLabel: "OANDA v20 candles",
+    instrument: "XAU_USD",
+    sourceVendor: "OANDA",
+    fixedReferenceL2lDistance: FIXED_REFERENCE_L2L.GOLD
   },
   {
     assetCode: "NQ",
     assetLabel: "NQ",
-    weekdayKeys: ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY"],
+    weekdayKeys: WEEKDAYS.WEEKDAY_ONLY,
     checkerPath: CHECKER_PATHS.NQ,
-    ohlcSourcePath: path.resolve(__dirname, "../tmp/qqq_daily_yahoo.csv"),
-    ohlcSourceLabel: "QQQ OHLC daily proxy CSV",
-    status: "available",
-    blocker: null
+    dailySourcePath: path.resolve(__dirname, "../tmp/oanda_nas100_usd_daily.csv"),
+    intradaySourcePath: path.resolve(__dirname, "../tmp/oanda_nas100_usd_h1.csv"),
+    dailySourceLabel: "OANDA NAS100_USD daily candles cache",
+    intradaySourceLabel: "OANDA NAS100_USD 1H candles cache",
+    candleSourceLabel: "OANDA v20 candles",
+    instrument: "NAS100_USD",
+    sourceVendor: "OANDA",
+    fixedReferenceL2lDistance: FIXED_REFERENCE_L2L.NQ
   },
   {
     assetCode: "BTC",
     assetLabel: "BTC",
-    weekdayKeys: ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY"],
+    weekdayKeys: WEEKDAYS.ALL_DAYS,
     checkerPath: CHECKER_PATHS.BTC,
-    ohlcSourcePath: path.resolve(__dirname, "../tmp/btcusd_daily_coinbase.csv"),
-    ohlcSourceLabel: "BTC/USD daily OHLC CSV from Coinbase Exchange candles",
-    status: "available",
-    blocker: null
+    dailySourcePath: path.resolve(__dirname, "../tmp/binance_btcusdt_daily.csv"),
+    intradaySourcePath: path.resolve(__dirname, "../tmp/binance_btcusdt_1h.csv"),
+    dailySourceLabel: "Binance BTCUSDT daily klines cache",
+    intradaySourceLabel: "Binance BTCUSDT 1H klines cache",
+    candleSourceLabel: "Binance Spot klines",
+    instrument: "BTCUSDT",
+    sourceVendor: "Binance",
+    fixedReferenceL2lDistance: FIXED_REFERENCE_L2L.BTC
   },
   {
     assetCode: "USD",
     assetLabel: "USD",
-    weekdayKeys: ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY"],
+    weekdayKeys: WEEKDAYS.WEEKDAY_ONLY,
     checkerPath: CHECKER_PATHS.USD,
-    ohlcSourcePath: null,
-    ohlcSourceLabel: "No repo-local DXY OHLC source",
-    status: "unavailable",
-    blocker: "The repo includes only USD checker artifacts and close-to-close research views. No repo-local DXY OHLC export is available, and the raw warehouse table is not readable through the publishable research key."
+    dailySourcePath: null,
+    intradaySourcePath: null,
+    dailySourceLabel: "No DXY daily cache",
+    intradaySourceLabel: "No DXY 1H cache",
+    candleSourceLabel: "Unavailable",
+    instrument: "DXY",
+    sourceVendor: "Unavailable",
+    fixedReferenceL2lDistance: null,
+    blocker: "USD remains unavailable because no supportable repo-local DXY daily plus 1H source is staged."
   }
 ];
 const PAIR_CONFIGS = [
-  { targetAssetCode: "EUR", pairCode: "EUR_USD", pairLabel: "EUR/USD", weekdayKeys: ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY"] },
-  { targetAssetCode: "GOLD", pairCode: "XAU_USD", pairLabel: "XAU/USD", weekdayKeys: ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY"] },
-  { targetAssetCode: "NQ", pairCode: "NQ_USD", pairLabel: "NQ/USD", weekdayKeys: ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY"] },
-  { targetAssetCode: "BTC", pairCode: "BTC_USD", pairLabel: "BTC/USD", weekdayKeys: ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY"] }
+  { targetAssetCode: "EUR", pairCode: "EUR_USD", pairLabel: "EUR/USD", weekdayKeys: WEEKDAYS.WEEKDAY_ONLY, fixedReferenceL2lDistance: FIXED_REFERENCE_L2L.EUR_USD },
+  { targetAssetCode: "GOLD", pairCode: "XAU_USD", pairLabel: "XAU/USD", weekdayKeys: WEEKDAYS.WEEKDAY_ONLY, fixedReferenceL2lDistance: FIXED_REFERENCE_L2L.XAU_USD },
+  { targetAssetCode: "NQ", pairCode: "NQ_USD", pairLabel: "NQ/USD", weekdayKeys: WEEKDAYS.WEEKDAY_ONLY, fixedReferenceL2lDistance: FIXED_REFERENCE_L2L.NQ_USD },
+  { targetAssetCode: "BTC", pairCode: "BTC_USD", pairLabel: "BTC/USD", weekdayKeys: WEEKDAYS.ALL_DAYS, fixedReferenceL2lDistance: FIXED_REFERENCE_L2L.BTC_USD }
 ];
-const OUTPUT_PATH = path.resolve(__dirname, "../../data/adr-reach-research.json");
-
-function parseConfidenceCandidate(value) {
-  if (value === null || value === undefined || value === "") return null;
-  const numeric = Number(value);
-  return Number.isFinite(numeric) ? numeric : null;
-}
-
-function normalizeHeadlineConfidence(row) {
-  const candidates = [
-    row?.stored?.displayed_headline_confidence_pct,
-    row?.stored?.headline_confidence_pct,
-    row?.checker?.displayed_headline_confidence_pct,
-    row?.checker?.headline_confidence_pct
-  ];
-
-  for (const candidate of candidates) {
-    const numeric = parseConfidenceCandidate(candidate);
-    if (!Number.isFinite(numeric)) continue;
-    if (numeric >= 0.5 && numeric <= 1) return numeric * 100;
-    if (numeric >= 0 && numeric <= 100) return numeric;
-  }
-
-  return null;
-}
-
-function bucketKeyFromConfidence(confidence) {
-  const numeric = Number(confidence);
-  if (!Number.isFinite(numeric)) return null;
-  const clamped = Math.max(0, Math.min(100, numeric));
-  return CONFIDENCE_BUCKETS.find(bucket => clamped >= bucket.min && clamped <= bucket.max)?.key || null;
-}
-
-function bucketLabelFromKey(bucketKey) {
-  return CONFIDENCE_BUCKETS.find(bucket => bucket.key === bucketKey)?.label || bucketKey;
-}
-
-function weekdayFromDate(dateValue) {
-  const value = String(dateValue || "").trim();
-  if (!value) return null;
-  const parsed = new Date(`${value}T00:00:00Z`);
-  if (Number.isNaN(parsed.getTime())) return null;
-  return WEEKDAY_KEYS[parsed.getUTCDay()] || null;
-}
-
-function createOutcomeCell() {
-  return { total: 0, wins: 0, losses: 0 };
-}
-
-function addOutcome(cell, outcomeKey) {
-  cell.total += 1;
-  if (outcomeKey === "WIN") cell.wins += 1;
-  else cell.losses += 1;
-}
-
-function summarizeOutcomeCell(cell = {}) {
-  const total = Number(cell.total || 0);
-  const wins = Number(cell.wins || 0);
-  const losses = Number(cell.losses || 0);
-  return {
-    total,
-    wins,
-    losses,
-    winRatePct: total ? Number(((wins / total) * 100).toFixed(1)) : null
-  };
-}
-
-function sumOutcomeCells(cells = []) {
-  return summarizeOutcomeCell(cells.reduce((aggregate, cell) => {
-    aggregate.total += Number(cell?.total || 0);
-    aggregate.wins += Number(cell?.wins || 0);
-    aggregate.losses += Number(cell?.losses || 0);
-    return aggregate;
-  }, createOutcomeCell()));
-}
-
-function buildCellMap(keys = []) {
-  return Object.fromEntries(keys.map(key => [key, createOutcomeCell()]));
-}
-
-function normalizeLayer1Direction(value = "") {
-  const normalized = String(value || "").trim().toUpperCase();
-  if (normalized.startsWith("BULLISH")) return "BULLISH";
-  if (normalized.startsWith("BEARISH")) return "BEARISH";
-  return null;
-}
-
-function normalizeExactDirectionalSignal(value = "") {
-  const normalized = String(value || "").trim().toUpperCase();
-  if (normalized === "BULLISH" || normalized === "BEARISH") return normalized;
-  return null;
-}
 
 function loadChecker(filePath) {
   return JSON.parse(fs.readFileSync(filePath, "utf8"));
 }
 
-function loadCsvOhlc(filePath) {
-  const rows = parseDelimited(fs.readFileSync(filePath, "utf8"));
-  const records = rows
-    .map((row) => ({
-      date: String(row.date || "").trim(),
-      open: Number(row.open),
-      high: Number(row.high),
-      low: Number(row.low),
-      close: Number(row.close)
-    }))
-    .filter((row) =>
-      row.date
-      && Number.isFinite(row.high)
-      && Number.isFinite(row.low)
-      && Number.isFinite(row.close)
-    )
-    .sort((a, b) => a.date.localeCompare(b.date));
-
-  const byDate = new Map(records.map(record => [record.date, record]));
-  const indexByDate = new Map(records.map((record, index) => [record.date, index]));
-  const weekdayCounts = records.reduce((counts, record) => {
-    const weekdayKey = weekdayFromDate(record.date);
-    if (weekdayKey) counts[weekdayKey] = (counts[weekdayKey] || 0) + 1;
-    return counts;
-  }, {});
-  const weekendRowCount = Number(weekdayCounts.SATURDAY || 0) + Number(weekdayCounts.SUNDAY || 0);
-
-  return {
-    records,
-    byDate,
-    indexByDate,
-    coverageStart: records[0]?.date || null,
-    coverageEnd: records[records.length - 1]?.date || null,
-    weekdayCounts,
-    weekendRowCount
-  };
+function buildRollingWindowStartDate(currentDate = new Date()) {
+  const boundary = new Date(Date.UTC(
+    currentDate.getUTCFullYear(),
+    currentDate.getUTCMonth(),
+    currentDate.getUTCDate()
+  ));
+  boundary.setUTCDate(boundary.getUTCDate() - LOOKBACK_DAYS);
+  return boundary.toISOString().slice(0, 10);
 }
 
-function computeAdrInputs(context, evaluationDate) {
-  const index = context.indexByDate.get(evaluationDate);
-  if (!Number.isInteger(index)) {
-    return { ok: false, reason: "missing_evaluation_day_ohlc" };
-  }
-  if (index < ADR_WINDOW_SESSIONS) {
-    return { ok: false, reason: "insufficient_previous_sessions" };
+function inRollingWindow(dateValue, startDate) {
+  const value = String(dateValue || "").trim();
+  if (!value) return false;
+  if (!startDate) return true;
+  return value >= startDate;
+}
+
+function relativeRepoPath(filePath) {
+  if (!filePath) return null;
+  return path.relative(REPO_ROOT, filePath).replace(/\\/g, "/");
+}
+
+function loadAssetContexts(config) {
+  if (!config.dailySourcePath || !config.intradaySourcePath) {
+    return null;
   }
 
-  const evaluationRecord = context.records[index];
-  const previousSessions = context.records.slice(index - ADR_WINDOW_SESSIONS, index);
-  if (previousSessions.length !== ADR_WINDOW_SESSIONS) {
-    return { ok: false, reason: "insufficient_previous_sessions" };
-  }
-
-  const adr20 = previousSessions.reduce((sum, row) => sum + (row.high - row.low), 0) / ADR_WINDOW_SESSIONS;
-  const previousClose = context.records[index - 1]?.close;
-  const open = Number.isFinite(evaluationRecord.open) ? evaluationRecord.open : null;
-  const entryPrice = Number.isFinite(open) ? open : (Number.isFinite(previousClose) ? previousClose : null);
-  const entryKind = Number.isFinite(open) ? "open" : (Number.isFinite(previousClose) ? "previous_close" : null);
-
-  if (!Number.isFinite(entryPrice)) {
-    return { ok: false, reason: "missing_reference_price" };
+  if (!fs.existsSync(config.dailySourcePath) || !fs.existsSync(config.intradaySourcePath)) {
+    return null;
   }
 
   return {
-    ok: true,
-    entryPrice,
-    entryKind,
-    evaluationRecord,
-    previousSessions,
-    adr20,
-    targetDistance: adr20 * (ADR_THRESHOLD_PCT / 100)
+    daily: loadDailyOhlc(config.dailySourcePath, {
+      instrument: config.instrument,
+      source: config.candleSourceLabel
+    }),
+    intraday: loadIntradayOhlc(config.intradaySourcePath, {
+      instrument: config.instrument,
+      source: config.candleSourceLabel
+    })
   };
 }
 
-function evaluateAdrReach(directionKey, adrInputs) {
-  if (directionKey === "BULLISH") {
-    return {
-      reached: adrInputs.evaluationRecord.high >= (adrInputs.entryPrice + adrInputs.targetDistance),
-      reachedVia: "high"
-    };
-  }
+function buildUnavailableAsset(config, checker, contexts = null) {
+  const rowCount = Array.isArray(checker?.rows) ? checker.rows.length : 0;
+  const blocker = config.blocker
+    || (!fs.existsSync(config?.dailySourcePath || "") ? `Missing daily candle cache: ${relativeRepoPath(config.dailySourcePath)}` : `Missing 1H candle cache: ${relativeRepoPath(config.intradaySourcePath)}`);
 
-  return {
-    reached: adrInputs.evaluationRecord.low <= (adrInputs.entryPrice - adrInputs.targetDistance),
-    reachedVia: "low"
-  };
-}
-
-function buildUnavailableAsset(config, checker) {
   return {
     assetCode: config.assetCode,
     assetLabel: config.assetLabel,
     available: false,
     status: "UNAVAILABLE",
-    blocker: config.blocker,
-    ohlcSourceLabel: config.ohlcSourceLabel,
-    referencePricePolicy: "Unavailable because no supportable OHLC source exists in repo evidence.",
+    blocker,
+    weekdayKeys: config.weekdayKeys,
+    instrument: config.instrument || null,
+    sourceVendor: config.sourceVendor || null,
+    candleSourceLabel: config.candleSourceLabel,
+    dailySourceLabel: config.dailySourceLabel,
+    intradaySourceLabel: config.intradaySourceLabel,
+    dailySourcePath: relativeRepoPath(config.dailySourcePath),
+    intradaySourcePath: relativeRepoPath(config.intradaySourcePath),
+    fixedReferenceL2lDistance: config.fixedReferenceL2lDistance ?? null,
+    sourceCoverage: contexts ? buildSourceCoverage(contexts) : null,
     summaryRowsChecked: Number(checker?.summary?.rows_checked || 0),
-    totalCheckerRows: Array.isArray(checker?.rows) ? checker.rows.length : 0,
+    totalCheckerRows: rowCount,
+    diagnosticRows: [],
     evaluatedRows: [],
-    skippedCounts: {},
+    skippedCounts: { unsupported_instrument_rows: rowCount },
+    diagnostics: {
+      missing_intraday_session: 0,
+      incomplete_intraday_session: 0,
+      missing_daily_adr20: 0,
+      invalid_daily_adr20: 0,
+      invalid_required_l2l_distance: 0,
+      no_trade_or_non_directional_rows: 0,
+      unsupported_instrument_rows: rowCount
+    },
     summary: {
       evaluatedCalls: 0,
-      adrReachWins: 0,
-      adrReachLosses: 0,
-      adrReachWinPct: null,
+      l2lRangeAvailableWins: 0,
+      l2lRangeAvailableLosses: 0,
+      l2lRangeAvailablePct: null,
       strongPlusCalls: 0,
-      strongPlusAdrReachWinPct: null
+      strongPlusL2lRangeAvailablePct: null
     },
-    bucketSummaryRows: CONFIDENCE_BUCKETS.map(bucket => ({
-      bucketKey: bucket.key,
-      bucketLabel: bucket.label,
-      wins: 0,
-      losses: 0,
-      total: 0,
-      adrReachWinPct: null
-    })),
-    weekdayKeys: config.weekdayKeys,
+    bucketSummaryRows: emptyBucketSummaryRows(),
     weekdayTotals: buildCellMap(config.weekdayKeys),
-    bucketTotals: buildCellMap(CONFIDENCE_BUCKETS.map(bucket => bucket.key)),
-    bucketMatrix: Object.fromEntries(CONFIDENCE_BUCKETS.map(bucket => [bucket.key, buildCellMap(config.weekdayKeys)])),
+    bucketTotals: buildCellMap(CONFIDENCE_BUCKETS.map((bucket) => bucket.key)),
+    bucketMatrix: Object.fromEntries(CONFIDENCE_BUCKETS.map((bucket) => [bucket.key, buildCellMap(config.weekdayKeys)])),
     dayTotals: summarizeOutcomeCell(createOutcomeCell())
   };
 }
 
-function buildLayer1AssetResearch(config, checker) {
-  if (config.status !== "available") {
-    return buildUnavailableAsset(config, checker);
+function buildSourceCoverage(contexts) {
+  return {
+    daily: {
+      startDate: contexts.daily.coverageStart,
+      endDate: contexts.daily.coverageEnd,
+      rowCount: contexts.daily.records.length,
+      weekendRowCount: contexts.daily.weekendRowCount
+    },
+    intraday: {
+      startDate: contexts.intraday.coverageStart,
+      endDate: contexts.intraday.coverageEnd,
+      sessionCount: contexts.intraday.sessionCount,
+      candleCount: contexts.intraday.candleCount,
+      weekendRowCount: contexts.intraday.weekendRowCount
+    }
+  };
+}
+
+function emptyBucketSummaryRows() {
+  return CONFIDENCE_BUCKETS.map((bucket) => ({
+    bucketKey: bucket.key,
+    bucketLabel: bucket.label,
+    total: 0,
+    wins: 0,
+    losses: 0,
+    l2lRangeAvailablePct: null
+  }));
+}
+
+function classifySkipReason(reason) {
+  return reason || "unknown";
+}
+
+function buildDiagnosticBase(config, row, directionKey, bucketKey, confidencePct, evaluationDate) {
+  return {
+    predictionId: row?.prediction_id || null,
+    snapshotDate: String(row?.snapshot_date || "").trim(),
+    date: evaluationDate,
+    evaluationDate,
+    layer: "LAYER_1",
+    assetOrPair: config.assetCode,
+    callDirection: directionKey,
+    strengthBucket: bucketKey,
+    confidencePct: roundNumber(confidencePct, 4),
+    candleSource: config.candleSourceLabel,
+    instrumentSymbol: config.instrument || null,
+    fixedReferenceL2lDistance: config.fixedReferenceL2lDistance ?? null
+  };
+}
+
+function buildEvaluatedLayer1Row(config, contexts, baseRow, row, directionKey, bucketKey, confidencePct, requiredInputs, evaluation) {
+  return {
+    ...buildDiagnosticBase(config, row, directionKey, bucketKey, confidencePct, String(row?.evaluation_inputs?.close_date || "").trim()),
+    layer: "LAYER_1",
+    candleSource: config.candleSourceLabel,
+    instrumentSymbol: requiredInputs.instrumentSymbol,
+    numberOf1hCandlesLoaded: requiredInputs.numberOf1hCandlesLoaded,
+    adr20: roundNumber(requiredInputs.adr20),
+    requiredL2lDistance: roundNumber(requiredInputs.requiredL2lDistance),
+    fixedReferenceL2lDistance: roundNumber(requiredInputs.fixedReferenceL2lDistance),
+    triggerSwingPrice: evaluation.triggerSwingPrice,
+    triggerCandleTime: evaluation.triggerCandleTime,
+    triggerPrice: evaluation.triggerPrice,
+    reached: evaluation.reached,
+    margin: evaluation.margin,
+    notEvaluatedReason: null,
+    adr20WindowStartDate: requiredInputs.adr20WindowStartDate,
+    adr20WindowEndDate: requiredInputs.adr20WindowEndDate,
+    checkerOpenPrice: roundNumber(Number(row?.evaluation_inputs?.open_price)),
+    checkerClosePrice: roundNumber(Number(row?.evaluation_inputs?.close_price)),
+    outcomeKey: evaluation.reached ? "WIN" : "LOSS"
+  };
+}
+
+function buildNotEvaluatedLayer1Row(config, row, directionKey, bucketKey, confidencePct, evaluationDate, requiredInputs) {
+  return {
+    ...buildDiagnosticBase(config, row, directionKey, bucketKey, confidencePct, evaluationDate),
+    numberOf1hCandlesLoaded: Number(requiredInputs?.numberOf1hCandlesLoaded || 0),
+    adr20: Number.isFinite(requiredInputs?.adr20) ? roundNumber(requiredInputs.adr20) : null,
+    requiredL2lDistance: Number.isFinite(requiredInputs?.requiredL2lDistance) ? roundNumber(requiredInputs.requiredL2lDistance) : null,
+    triggerSwingPrice: null,
+    triggerCandleTime: null,
+    triggerPrice: null,
+    reached: null,
+    margin: null,
+    notEvaluatedReason: reasonLabel(requiredInputs?.reason),
+    notEvaluatedReasonKey: requiredInputs?.reason || null,
+    adr20WindowStartDate: requiredInputs?.adr20WindowStartDate || null,
+    adr20WindowEndDate: requiredInputs?.adr20WindowEndDate || null,
+    checkerOpenPrice: roundNumber(Number(row?.evaluation_inputs?.open_price)),
+    checkerClosePrice: roundNumber(Number(row?.evaluation_inputs?.close_price))
+  };
+}
+
+function buildBucketSummaryRows(bucketTotals) {
+  return CONFIDENCE_BUCKETS.map((bucket) => {
+    const totals = summarizeOutcomeCell(bucketTotals[bucket.key]);
+    return {
+      bucketKey: bucket.key,
+      bucketLabel: bucket.label,
+      ...totals,
+      l2lRangeAvailablePct: totals.winRatePct
+    };
+  });
+}
+
+function buildLayer1AssetResearch(config, checker, options = {}) {
+  const contexts = options.contexts || loadAssetContexts(config);
+  if (!contexts) {
+    return buildUnavailableAsset(config, checker, contexts);
   }
 
-  const context = loadCsvOhlc(config.ohlcSourcePath);
   const rows = Array.isArray(checker?.rows) ? checker.rows : [];
   const weekdayTotals = buildCellMap(config.weekdayKeys);
-  const bucketTotals = buildCellMap(CONFIDENCE_BUCKETS.map(bucket => bucket.key));
-  const bucketMatrix = Object.fromEntries(CONFIDENCE_BUCKETS.map(bucket => [bucket.key, buildCellMap(config.weekdayKeys)]));
+  const bucketTotals = buildCellMap(CONFIDENCE_BUCKETS.map((bucket) => bucket.key));
+  const bucketMatrix = Object.fromEntries(CONFIDENCE_BUCKETS.map((bucket) => [bucket.key, buildCellMap(config.weekdayKeys)]));
+  const diagnosticRows = [];
   const evaluatedRows = [];
   const skippedCounts = {};
+  const rollingWindowStart = options.rollingWindowStart || null;
 
   rows.forEach((row) => {
+    const evaluationDate = String(row?.evaluation_inputs?.close_date || "").trim();
+    if (!inRollingWindow(evaluationDate, rollingWindowStart)) {
+      skippedCounts.outside_lookback_window = (skippedCounts.outside_lookback_window || 0) + 1;
+      return;
+    }
+
     const directionKey = normalizeLayer1Direction(row?.stored?.direction || row?.checker?.direction || "");
     if (!directionKey) {
-      skippedCounts.unsupported_direction = (skippedCounts.unsupported_direction || 0) + 1;
+      skippedCounts.no_trade_or_non_directional_rows = (skippedCounts.no_trade_or_non_directional_rows || 0) + 1;
       return;
     }
 
@@ -331,69 +370,36 @@ function buildLayer1AssetResearch(config, checker) {
     const bucketKey = bucketKeyFromConfidence(confidencePct);
     if (!bucketKey) {
       skippedCounts.missing_confidence_bucket = (skippedCounts.missing_confidence_bucket || 0) + 1;
+      diagnosticRows.push(buildNotEvaluatedLayer1Row(config, row, directionKey, null, confidencePct, evaluationDate, { reason: "missing_confidence_bucket" }));
       return;
     }
 
-    const evaluationDate = String(row?.evaluation_inputs?.close_date || "").trim();
     const weekdayKey = weekdayFromDate(evaluationDate);
     if (!evaluationDate || !weekdayKey || !weekdayTotals[weekdayKey]) {
       skippedCounts.missing_evaluation_date = (skippedCounts.missing_evaluation_date || 0) + 1;
+      diagnosticRows.push(buildNotEvaluatedLayer1Row(config, row, directionKey, bucketKey, confidencePct, evaluationDate, { reason: "missing_evaluation_date" }));
       return;
     }
 
-    const adrInputs = computeAdrInputs(context, evaluationDate);
-    if (!adrInputs.ok) {
-      skippedCounts[adrInputs.reason] = (skippedCounts[adrInputs.reason] || 0) + 1;
+    const requiredInputs = buildRequiredDistanceInputs(config, contexts.daily, contexts.intraday, evaluationDate);
+    if (!requiredInputs.ok) {
+      const skipKey = classifySkipReason(requiredInputs.reason);
+      skippedCounts[skipKey] = (skippedCounts[skipKey] || 0) + 1;
+      diagnosticRows.push(buildNotEvaluatedLayer1Row(config, row, directionKey, bucketKey, confidencePct, evaluationDate, requiredInputs));
       return;
     }
 
-    const reach = evaluateAdrReach(directionKey, adrInputs);
-    const outcomeKey = reach.reached ? "WIN" : "LOSS";
-    addOutcome(weekdayTotals[weekdayKey], outcomeKey);
-    addOutcome(bucketTotals[bucketKey], outcomeKey);
-    addOutcome(bucketMatrix[bucketKey][weekdayKey], outcomeKey);
-
-    evaluatedRows.push({
-      predictionId: row?.prediction_id || null,
-      snapshotDate: row?.snapshot_date || "",
-      evaluationDate,
-      weekdayKey,
-      directionKey,
-      directionRaw: row?.stored?.direction || row?.checker?.direction || null,
-      confidencePct,
-      bucketKey,
-      entryPrice: adrInputs.entryPrice,
-      entryKind: adrInputs.entryKind,
-      adr20: Number(adrInputs.adr20.toFixed(8)),
-      targetDistance: Number(adrInputs.targetDistance.toFixed(8)),
-      dayOpen: Number.isFinite(adrInputs.evaluationRecord.open) ? adrInputs.evaluationRecord.open : null,
-      dayHigh: adrInputs.evaluationRecord.high,
-      dayLow: adrInputs.evaluationRecord.low,
-      dayClose: adrInputs.evaluationRecord.close,
-      prev20FirstDate: adrInputs.previousSessions[0]?.date || null,
-      prev20LastDate: adrInputs.previousSessions[ADR_WINDOW_SESSIONS - 1]?.date || null,
-      prev20Count: adrInputs.previousSessions.length,
-      thresholdPct: ADR_THRESHOLD_PCT,
-      outcomeKey,
-      reachedVia: reach.reachedVia,
-      checkerResult: row?.stored?.evaluation_result || row?.checker?.evaluation_result || null
-    });
+    const evaluation = evaluateL2lSequence(directionKey, requiredInputs);
+    const evaluatedRow = buildEvaluatedLayer1Row(config, contexts, null, row, directionKey, bucketKey, confidencePct, requiredInputs, evaluation);
+    diagnosticRows.push(evaluatedRow);
+    evaluatedRows.push(evaluatedRow);
+    addOutcome(weekdayTotals[weekdayKey], evaluatedRow.outcomeKey);
+    addOutcome(bucketTotals[bucketKey], evaluatedRow.outcomeKey);
+    addOutcome(bucketMatrix[bucketKey][weekdayKey], evaluatedRow.outcomeKey);
   });
 
   const dayTotals = sumOutcomeCells(Object.values(weekdayTotals));
-  const bucketSummaryRows = CONFIDENCE_BUCKETS.map(bucket => {
-    const totals = summarizeOutcomeCell(bucketTotals[bucket.key]);
-    return {
-      bucketKey: bucket.key,
-      bucketLabel: bucket.label,
-      ...totals,
-      adrReachWinPct: totals.winRatePct
-    };
-  });
-  const strongPlus = sumOutcomeCells([
-    bucketTotals.STRONG,
-    bucketTotals.VERY_STRONG
-  ]);
+  const strongPlus = sumOutcomeCells([bucketTotals.STRONG, bucketTotals.VERY_STRONG]);
 
   return {
     assetCode: config.assetCode,
@@ -401,29 +407,39 @@ function buildLayer1AssetResearch(config, checker) {
     available: true,
     status: "AVAILABLE",
     blocker: null,
-    ohlcSourceLabel: config.ohlcSourceLabel,
-    ohlcSourcePath: path.relative(path.resolve(__dirname, "../.."), config.ohlcSourcePath).replace(/\\/g, "/"),
-    referencePricePolicy: "Use evaluation-day open when OHLC open exists; otherwise use previous close.",
-    sourceCoverage: {
-      startDate: context.coverageStart,
-      endDate: context.coverageEnd,
-      rowCount: context.records.length,
-      weekendRowCount: context.weekendRowCount
-    },
+    weekdayKeys: config.weekdayKeys,
+    instrument: contexts.intraday.instrument || config.instrument || null,
+    sourceVendor: config.sourceVendor,
+    candleSourceLabel: config.candleSourceLabel,
+    dailySourceLabel: config.dailySourceLabel,
+    intradaySourceLabel: config.intradaySourceLabel,
+    dailySourcePath: relativeRepoPath(config.dailySourcePath),
+    intradaySourcePath: relativeRepoPath(config.intradaySourcePath),
+    fixedReferenceL2lDistance: config.fixedReferenceL2lDistance ?? null,
+    sourceCoverage: buildSourceCoverage(contexts),
     summaryRowsChecked: Number(checker?.summary?.rows_checked || 0),
     totalCheckerRows: rows.length,
+    diagnosticRows,
     evaluatedRows,
     skippedCounts,
+    diagnostics: {
+      missing_intraday_session: Number(skippedCounts.missing_intraday_session || 0),
+      incomplete_intraday_session: Number(skippedCounts.incomplete_intraday_session || 0),
+      missing_daily_adr20: Number(skippedCounts.missing_daily_adr20 || 0),
+      invalid_daily_adr20: Number(skippedCounts.invalid_daily_adr20 || 0),
+      invalid_required_l2l_distance: Number(skippedCounts.invalid_required_l2l_distance || 0),
+      no_trade_or_non_directional_rows: Number(skippedCounts.no_trade_or_non_directional_rows || 0),
+      unsupported_instrument_rows: 0
+    },
     summary: {
       evaluatedCalls: dayTotals.total,
-      adrReachWins: dayTotals.wins,
-      adrReachLosses: dayTotals.losses,
-      adrReachWinPct: dayTotals.winRatePct,
+      l2lRangeAvailableWins: dayTotals.wins,
+      l2lRangeAvailableLosses: dayTotals.losses,
+      l2lRangeAvailablePct: dayTotals.winRatePct,
       strongPlusCalls: strongPlus.total,
-      strongPlusAdrReachWinPct: strongPlus.winRatePct
+      strongPlusL2lRangeAvailablePct: strongPlus.winRatePct
     },
-    bucketSummaryRows,
-    weekdayKeys: config.weekdayKeys,
+    bucketSummaryRows: buildBucketSummaryRows(bucketTotals),
     weekdayTotals,
     bucketTotals,
     bucketMatrix,
@@ -431,51 +447,60 @@ function buildLayer1AssetResearch(config, checker) {
   };
 }
 
-function buildLayer2PairResearch(config, layer1ByAssetCode, checkers) {
+function buildUnavailablePair(config, targetAsset) {
+  return {
+    pairCode: config.pairCode,
+    pairLabel: config.pairLabel,
+    targetAssetCode: config.targetAssetCode,
+    available: false,
+    status: "UNAVAILABLE",
+    blocker: targetAsset?.blocker || "Target asset sequence support is unavailable.",
+    weekdayKeys: config.weekdayKeys,
+    fixedReferenceL2lDistance: config.fixedReferenceL2lDistance ?? null,
+    summary: {
+      tradableSignals: 0,
+      l2lRangeAvailableWins: 0,
+      l2lRangeAvailableLosses: 0,
+      l2lRangeAvailablePct: null,
+      strongPlusSignals: 0,
+      strongPlusL2lRangeAvailablePct: null
+    },
+    bucketSummaryRows: emptyBucketSummaryRows(),
+    weekdayTotals: buildCellMap(config.weekdayKeys),
+    bucketTotals: buildCellMap(CONFIDENCE_BUCKETS.map((bucket) => bucket.key)),
+    bucketMatrix: Object.fromEntries(CONFIDENCE_BUCKETS.map((bucket) => [bucket.key, buildCellMap(config.weekdayKeys)])),
+    dayTotals: summarizeOutcomeCell(createOutcomeCell()),
+    tradableRows: [],
+    diagnosticRows: [],
+    skippedCounts: {},
+    diagnostics: {
+      missing_intraday_session: Number(targetAsset?.diagnostics?.missing_intraday_session || 0),
+      incomplete_intraday_session: Number(targetAsset?.diagnostics?.incomplete_intraday_session || 0),
+      missing_daily_adr20: Number(targetAsset?.diagnostics?.missing_daily_adr20 || 0),
+      invalid_daily_adr20: Number(targetAsset?.diagnostics?.invalid_daily_adr20 || 0),
+      invalid_required_l2l_distance: Number(targetAsset?.diagnostics?.invalid_required_l2l_distance || 0),
+      no_trade_or_non_directional_rows: 0,
+      unsupported_instrument_rows: Number(targetAsset?.diagnostics?.unsupported_instrument_rows || 0)
+    }
+  };
+}
+
+function buildLayer2PairResearch(config, layer1ByAssetCode, checkers, options = {}) {
   const targetAsset = layer1ByAssetCode[config.targetAssetCode];
   if (!targetAsset?.available) {
-    return {
-      pairCode: config.pairCode,
-      pairLabel: config.pairLabel,
-      targetAssetCode: config.targetAssetCode,
-      available: false,
-      status: "UNAVAILABLE",
-      blocker: targetAsset?.blocker || "Target asset ADR reach support is unavailable.",
-      weekdayKeys: config.weekdayKeys,
-      summary: {
-        tradableSignals: 0,
-        adrReachWins: 0,
-        adrReachLosses: 0,
-        adrReachWinPct: null,
-        strongPlusSignals: 0,
-        strongPlusAdrReachWinPct: null
-      },
-      bucketSummaryRows: CONFIDENCE_BUCKETS.map(bucket => ({
-        bucketKey: bucket.key,
-        bucketLabel: bucket.label,
-        wins: 0,
-        losses: 0,
-        total: 0,
-        adrReachWinPct: null
-      })),
-      weekdayTotals: buildCellMap(config.weekdayKeys),
-      bucketTotals: buildCellMap(CONFIDENCE_BUCKETS.map(bucket => bucket.key)),
-      bucketMatrix: Object.fromEntries(CONFIDENCE_BUCKETS.map(bucket => [bucket.key, buildCellMap(config.weekdayKeys)])),
-      dayTotals: summarizeOutcomeCell(createOutcomeCell()),
-      tradableRows: [],
-      skippedCounts: {}
-    };
+    return buildUnavailablePair(config, targetAsset);
   }
 
   const usdChecker = checkers.USD;
   const targetChecker = checkers[config.targetAssetCode];
-  const usdRowsByDate = new Map((Array.isArray(usdChecker?.rows) ? usdChecker.rows : []).map(row => [String(row?.snapshot_date || "").trim(), row]));
-  const targetByPredictionId = new Map(targetAsset.evaluatedRows.map(row => [row.predictionId, row]));
-  const targetBySnapshotDate = new Map(targetAsset.evaluatedRows.map(row => [row.snapshotDate, row]));
+  const usdRowsByDate = new Map((Array.isArray(usdChecker?.rows) ? usdChecker.rows : []).map((row) => [String(row?.snapshot_date || "").trim(), row]));
+  const targetEvaluatedByPredictionId = new Map(targetAsset.evaluatedRows.map((row) => [row.predictionId, row]));
+  const targetDiagnosticByPredictionId = new Map(targetAsset.diagnosticRows.map((row) => [row.predictionId, row]));
   const weekdayTotals = buildCellMap(config.weekdayKeys);
-  const bucketTotals = buildCellMap(CONFIDENCE_BUCKETS.map(bucket => bucket.key));
-  const bucketMatrix = Object.fromEntries(CONFIDENCE_BUCKETS.map(bucket => [bucket.key, buildCellMap(config.weekdayKeys)]));
+  const bucketTotals = buildCellMap(CONFIDENCE_BUCKETS.map((bucket) => bucket.key));
+  const bucketMatrix = Object.fromEntries(CONFIDENCE_BUCKETS.map((bucket) => [bucket.key, buildCellMap(config.weekdayKeys)]));
   const skippedCounts = {};
+  const diagnosticRows = [];
   const tradableRows = [];
 
   (Array.isArray(targetChecker?.rows) ? targetChecker.rows : []).forEach((targetRow) => {
@@ -494,65 +519,83 @@ function buildLayer2PairResearch(config, layer1ByAssetCode, checkers) {
       skippedCounts.missing_usd_snapshot = (skippedCounts.missing_usd_snapshot || 0) + 1;
       return;
     }
-    if (!targetDirection) {
-      skippedCounts.unsupported_target_direction = (skippedCounts.unsupported_target_direction || 0) + 1;
+
+    if (!targetDirection || !usdDirection || targetDirection === usdDirection) {
+      skippedCounts.no_trade_or_non_directional_rows = (skippedCounts.no_trade_or_non_directional_rows || 0) + 1;
       return;
     }
-    if (!usdDirection) {
-      skippedCounts.unsupported_usd_direction = (skippedCounts.unsupported_usd_direction || 0) + 1;
-      return;
-    }
-    if (targetDirection === usdDirection) {
-      skippedCounts.same_direction_conflict = (skippedCounts.same_direction_conflict || 0) + 1;
-      return;
-    }
+
     if (!bucketKey) {
       skippedCounts.missing_combined_confidence = (skippedCounts.missing_combined_confidence || 0) + 1;
+      diagnosticRows.push({
+        predictionId: targetRow?.prediction_id || null,
+        snapshotDate,
+        date: String(targetRow?.evaluation_inputs?.close_date || "").trim(),
+        evaluationDate: String(targetRow?.evaluation_inputs?.close_date || "").trim(),
+        layer: "LAYER_2",
+        assetOrPair: config.pairCode,
+        callDirection: targetDirection,
+        strengthBucket: null,
+        confidencePct: null,
+        candleSource: targetAsset.candleSourceLabel,
+        instrumentSymbol: targetAsset.instrument,
+        numberOf1hCandlesLoaded: 0,
+        adr20: null,
+        requiredL2lDistance: null,
+        fixedReferenceL2lDistance: config.fixedReferenceL2lDistance ?? null,
+        triggerSwingPrice: null,
+        triggerCandleTime: null,
+        triggerPrice: null,
+        reached: null,
+        margin: null,
+        notEvaluatedReason: reasonLabel("missing_combined_confidence"),
+        notEvaluatedReasonKey: "missing_combined_confidence",
+        targetDirection,
+        usdDirection
+      });
       return;
     }
 
-    const evaluatedTargetRow = targetByPredictionId.get(targetRow?.prediction_id) || targetBySnapshotDate.get(snapshotDate) || null;
-    if (!evaluatedTargetRow) {
-      skippedCounts.missing_target_adr_support = (skippedCounts.missing_target_adr_support || 0) + 1;
+    const targetDiagnosticRow = targetDiagnosticByPredictionId.get(targetRow?.prediction_id) || null;
+    if (!targetDiagnosticRow) {
+      skippedCounts.missing_target_asset_row = (skippedCounts.missing_target_asset_row || 0) + 1;
       return;
     }
 
-    const weekdayKey = evaluatedTargetRow.weekdayKey;
+    const pairRow = {
+      ...targetDiagnosticRow,
+      layer: "LAYER_2",
+      assetOrPair: config.pairCode,
+      pairLabel: config.pairLabel,
+      targetDirection,
+      usdDirection,
+      strengthBucket: bucketKey,
+      confidencePct: roundNumber(combinedConfidencePct, 4),
+      fixedReferenceL2lDistance: config.fixedReferenceL2lDistance ?? null
+    };
+    diagnosticRows.push(pairRow);
+
+    if (pairRow.reached === null) {
+      skippedCounts[pairRow.notEvaluatedReasonKey || "missing_target_asset_row"] = (skippedCounts[pairRow.notEvaluatedReasonKey || "missing_target_asset_row"] || 0) + 1;
+      return;
+    }
+
+    const weekdayKey = weekdayFromDate(pairRow.evaluationDate);
     if (!weekdayTotals[weekdayKey]) {
       skippedCounts.unsupported_weekday = (skippedCounts.unsupported_weekday || 0) + 1;
       return;
     }
 
-    addOutcome(weekdayTotals[weekdayKey], evaluatedTargetRow.outcomeKey);
-    addOutcome(bucketTotals[bucketKey], evaluatedTargetRow.outcomeKey);
-    addOutcome(bucketMatrix[bucketKey][weekdayKey], evaluatedTargetRow.outcomeKey);
-    tradableRows.push({
-      predictionId: targetRow?.prediction_id || null,
-      snapshotDate,
-      evaluationDate: evaluatedTargetRow.evaluationDate,
-      weekdayKey,
-      targetDirection,
-      usdDirection,
-      combinedConfidencePct,
-      bucketKey,
-      outcomeKey: evaluatedTargetRow.outcomeKey
-    });
+    const outcomeKey = pairRow.reached ? "WIN" : "LOSS";
+    pairRow.outcomeKey = outcomeKey;
+    tradableRows.push(pairRow);
+    addOutcome(weekdayTotals[weekdayKey], outcomeKey);
+    addOutcome(bucketTotals[bucketKey], outcomeKey);
+    addOutcome(bucketMatrix[bucketKey][weekdayKey], outcomeKey);
   });
 
   const dayTotals = sumOutcomeCells(Object.values(weekdayTotals));
-  const bucketSummaryRows = CONFIDENCE_BUCKETS.map(bucket => {
-    const totals = summarizeOutcomeCell(bucketTotals[bucket.key]);
-    return {
-      bucketKey: bucket.key,
-      bucketLabel: bucket.label,
-      ...totals,
-      adrReachWinPct: totals.winRatePct
-    };
-  });
-  const strongPlus = sumOutcomeCells([
-    bucketTotals.STRONG,
-    bucketTotals.VERY_STRONG
-  ]);
+  const strongPlus = sumOutcomeCells([bucketTotals.STRONG, bucketTotals.VERY_STRONG]);
 
   return {
     pairCode: config.pairCode,
@@ -562,21 +605,34 @@ function buildLayer2PairResearch(config, layer1ByAssetCode, checkers) {
     status: "AVAILABLE",
     blocker: null,
     weekdayKeys: config.weekdayKeys,
+    fixedReferenceL2lDistance: config.fixedReferenceL2lDistance ?? null,
     summary: {
       tradableSignals: dayTotals.total,
-      adrReachWins: dayTotals.wins,
-      adrReachLosses: dayTotals.losses,
-      adrReachWinPct: dayTotals.winRatePct,
+      l2lRangeAvailableWins: dayTotals.wins,
+      l2lRangeAvailableLosses: dayTotals.losses,
+      l2lRangeAvailablePct: dayTotals.winRatePct,
       strongPlusSignals: strongPlus.total,
-      strongPlusAdrReachWinPct: strongPlus.winRatePct
+      strongPlusL2lRangeAvailablePct: strongPlus.winRatePct
     },
-    bucketSummaryRows,
+    bucketSummaryRows: buildBucketSummaryRows(bucketTotals),
     weekdayTotals,
     bucketTotals,
     bucketMatrix,
     dayTotals,
     tradableRows,
-    skippedCounts
+    diagnosticRows,
+    skippedCounts,
+    diagnostics: {
+      missing_intraday_session: Number(skippedCounts.missing_intraday_session || 0),
+      incomplete_intraday_session: Number(skippedCounts.incomplete_intraday_session || 0),
+      missing_daily_adr20: Number(skippedCounts.missing_daily_adr20 || 0),
+      invalid_daily_adr20: Number(skippedCounts.invalid_daily_adr20 || 0),
+      invalid_required_l2l_distance: Number(skippedCounts.invalid_required_l2l_distance || 0),
+      missing_usd_snapshot: Number(skippedCounts.missing_usd_snapshot || 0),
+      missing_combined_confidence: Number(skippedCounts.missing_combined_confidence || 0),
+      no_trade_or_non_directional_rows: Number(skippedCounts.no_trade_or_non_directional_rows || 0),
+      unsupported_instrument_rows: 0
+    }
   };
 }
 
@@ -595,36 +651,37 @@ function validateCheckerInvariants(checkers, errors) {
 
 function validateAvailableAsset(asset, errors) {
   if (asset.assetCode === "BTC") {
-    if (Number(asset?.sourceCoverage?.weekendRowCount || 0) <= 0) {
-      errors.push("BTC: source coverage did not include weekend OHLC rows");
+    if (Number(asset?.sourceCoverage?.daily?.weekendRowCount || 0) <= 0) {
+      errors.push("BTC: daily source coverage did not include weekend rows");
     }
-    const btcWeekendEvaluations = asset.evaluatedRows.filter((row) => row.weekdayKey === "SATURDAY" || row.weekdayKey === "SUNDAY").length;
-    if (btcWeekendEvaluations <= 0) {
-      errors.push("BTC: evaluated rows did not retain weekend calendar handling");
+    if (Number(asset?.sourceCoverage?.intraday?.weekendRowCount || 0) <= 0) {
+      errors.push("BTC: intraday source coverage did not include weekend sessions");
     }
-  } else if (Number(asset?.sourceCoverage?.weekendRowCount || 0) > 0) {
-    errors.push(`${asset.assetCode}: non-BTC OHLC source included weekend rows`);
+  } else {
+    if (Number(asset?.sourceCoverage?.daily?.weekendRowCount || 0) > 0) {
+      errors.push(`${asset.assetCode}: non-BTC daily source included weekend rows`);
+    }
+    if (Number(asset?.sourceCoverage?.intraday?.weekendRowCount || 0) > 0) {
+      errors.push(`${asset.assetCode}: non-BTC intraday source included weekend sessions`);
+    }
   }
 
   asset.evaluatedRows.forEach((row, index) => {
-    if (row.prev20Count !== ADR_WINDOW_SESSIONS) {
-      errors.push(`${asset.assetCode} row ${index + 1}: previous 20 sessions were not used`);
+    if (!(row.adr20 > 0)) {
+      errors.push(`${asset.assetCode} row ${index + 1}: ADR20 was not positive`);
     }
-    if (!row.prev20LastDate || row.prev20LastDate >= row.evaluationDate) {
-      errors.push(`${asset.assetCode} row ${index + 1}: ADR window included look-ahead data`);
+    if (!(row.requiredL2lDistance > 0)) {
+      errors.push(`${asset.assetCode} row ${index + 1}: required L2L distance was not positive`);
     }
-    if (Math.abs(row.targetDistance - (row.adr20 * 0.5)) > 0.000001) {
-      errors.push(`${asset.assetCode} row ${index + 1}: threshold did not equal 50% ADR20`);
+    if (row.reached !== true && row.reached !== false) {
+      errors.push(`${asset.assetCode} row ${index + 1}: reached must be boolean for evaluated rows`);
     }
-    if (row.directionKey === "BULLISH" && row.reachedVia !== "high") {
-      errors.push(`${asset.assetCode} row ${index + 1}: bullish reach was not evaluated against the session high`);
-    }
-    if (row.directionKey === "BEARISH" && row.reachedVia !== "low") {
-      errors.push(`${asset.assetCode} row ${index + 1}: bearish reach was not evaluated against the session low`);
+    if (row.reached === true && (!row.triggerCandleTime || !Number.isFinite(row.triggerPrice) || !Number.isFinite(row.triggerSwingPrice))) {
+      errors.push(`${asset.assetCode} row ${index + 1}: winning row was missing trigger diagnostics`);
     }
   });
 
-  const summaryTotal = asset.summary.adrReachWins + asset.summary.adrReachLosses;
+  const summaryTotal = asset.summary.l2lRangeAvailableWins + asset.summary.l2lRangeAvailableLosses;
   if (asset.summary.evaluatedCalls !== summaryTotal) {
     errors.push(`${asset.assetCode}: summary evaluated calls did not equal wins + losses`);
   }
@@ -634,22 +691,10 @@ function validateAvailableAsset(asset, errors) {
   if (bucketRollup.total !== asset.summary.evaluatedCalls || weekdayRollup.total !== asset.summary.evaluatedCalls) {
     errors.push(`${asset.assetCode}: confidence buckets or weekday totals did not reconcile to the asset summary`);
   }
-
-  asset.weekdayKeys.forEach((weekdayKey) => {
-    const weekdayRollupFromBuckets = sumOutcomeCells(CONFIDENCE_BUCKETS.map(bucket => asset.bucketMatrix?.[bucket.key]?.[weekdayKey]));
-    const dayCell = summarizeOutcomeCell(asset.weekdayTotals[weekdayKey]);
-    if (
-      weekdayRollupFromBuckets.total !== dayCell.total
-      || weekdayRollupFromBuckets.wins !== dayCell.wins
-      || weekdayRollupFromBuckets.losses !== dayCell.losses
-    ) {
-      errors.push(`${asset.assetCode}: weekday ${weekdayKey} did not reconcile to the confidence-bucket rows`);
-    }
-  });
 }
 
 function validateAvailablePair(pair, errors) {
-  const summaryTotal = pair.summary.adrReachWins + pair.summary.adrReachLosses;
+  const summaryTotal = pair.summary.l2lRangeAvailableWins + pair.summary.l2lRangeAvailableLosses;
   if (pair.summary.tradableSignals !== summaryTotal) {
     errors.push(`${pair.pairCode}: tradable signals did not equal wins + losses`);
   }
@@ -659,94 +704,146 @@ function validateAvailablePair(pair, errors) {
   if (bucketRollup.total !== pair.summary.tradableSignals || weekdayRollup.total !== pair.summary.tradableSignals) {
     errors.push(`${pair.pairCode}: confidence buckets or weekday totals did not reconcile to the pair summary`);
   }
+}
 
-  pair.weekdayKeys.forEach((weekdayKey) => {
-    const weekdayRollupFromBuckets = sumOutcomeCells(CONFIDENCE_BUCKETS.map(bucket => pair.bucketMatrix?.[bucket.key]?.[weekdayKey]));
-    const dayCell = summarizeOutcomeCell(pair.weekdayTotals[weekdayKey]);
-    if (
-      weekdayRollupFromBuckets.total !== dayCell.total
-      || weekdayRollupFromBuckets.wins !== dayCell.wins
-      || weekdayRollupFromBuckets.losses !== dayCell.losses
-    ) {
-      errors.push(`${pair.pairCode}: weekday ${weekdayKey} did not reconcile to the confidence-bucket rows`);
+function aggregateStrengthRows(items, totalKey) {
+  return CONFIDENCE_BUCKETS.map((bucket) => {
+    const totals = sumOutcomeCells(items.map((item) => item.bucketTotals?.[bucket.key]));
+    return {
+      bucketKey: bucket.key,
+      bucketLabel: bucket.label,
+      total: totals.total,
+      wins: totals.wins,
+      losses: totals.losses,
+      l2lRangeAvailablePct: totals.winRatePct
+    };
+  }).filter((row) => row.total > 0 || totalKey === "keep_all");
+}
+
+function aggregateSignalsVsStrongPlus(items, type) {
+  const totals = sumOutcomeCells(items.map((item) => ({
+    total: type === "layer1" ? item.summary.evaluatedCalls : item.summary.tradableSignals,
+    wins: item.summary.l2lRangeAvailableWins,
+    losses: item.summary.l2lRangeAvailableLosses
+  })));
+  const strongPlus = sumOutcomeCells(items.flatMap((item) => [item.bucketTotals?.STRONG, item.bucketTotals?.VERY_STRONG]));
+  return [
+    {
+      cohort: "All Signals",
+      total: totals.total,
+      wins: totals.wins,
+      losses: totals.losses,
+      l2lRangeAvailablePct: totals.winRatePct
+    },
+    {
+      cohort: "Strong+",
+      total: strongPlus.total,
+      wins: strongPlus.wins,
+      losses: strongPlus.losses,
+      l2lRangeAvailablePct: strongPlus.winRatePct
     }
-  });
+  ];
 }
 
 function buildOutput(layer1Assets, layer2Pairs) {
+  const availableLayer1 = layer1Assets.filter((asset) => asset.available);
+  const availableLayer2 = layer2Pairs.filter((pair) => pair.available);
+
   return {
     meta: {
       generated_at: new Date().toISOString(),
       source: "backtester/scripts/validate_adr_reach_research.js",
       evaluation_window: "following 24hrs",
-      adr_window_sessions: ADR_WINDOW_SESSIONS,
-      adr_threshold_pct: ADR_THRESHOLD_PCT,
-      reference_price_policy: "Use evaluation-day open when OHLC open exists; otherwise previous close. Unsupported assets stay unavailable rather than estimated."
+      lookback_days: null,
+      metric_name: "L2L 1H Sequence Research",
+      target_definition: "Walk 1H candles forward through the call day. Bullish rows win when a later candle high reaches the prior lowest low plus required L2L distance. Bearish rows win when a later candle low reaches the prior highest high minus required L2L distance.",
+      reference_price_policy: "Required L2L distance is dynamic 50% ADR20 from daily candles. Fixed legacy L2L values are preserved as diagnostics only."
     },
-    source_audit: layer1Assets.map(asset => ({
+    source_audit: layer1Assets.map((asset) => ({
       assetCode: asset.assetCode,
       assetLabel: asset.assetLabel,
       available: asset.available,
-      ohlcSourceLabel: asset.ohlcSourceLabel,
-      ohlcSourcePath: asset.ohlcSourcePath || null,
+      instrument: asset.instrument || null,
+      sourceVendor: asset.sourceVendor || null,
+      candleSourceLabel: asset.candleSourceLabel || null,
+      dailySourceLabel: asset.dailySourceLabel || null,
+      intradaySourceLabel: asset.intradaySourceLabel || null,
+      dailySourcePath: asset.dailySourcePath || null,
+      intradaySourcePath: asset.intradaySourcePath || null,
       sourceCoverage: asset.sourceCoverage || null,
-      referencePricePolicy: asset.referencePricePolicy,
+      fixedReferenceL2lDistance: asset.fixedReferenceL2lDistance ?? null,
+      diagnostics: asset.diagnostics || null,
       blocker: asset.blocker || null
     })),
     layer1: {
-      summary_rows: layer1Assets.map(asset => ({
+      summary_rows: layer1Assets.map((asset) => ({
         assetCode: asset.assetCode,
         assetLabel: asset.assetLabel,
         available: asset.available,
         blocker: asset.blocker || null,
         evaluatedCalls: asset.summary.evaluatedCalls,
-        adrReachWins: asset.summary.adrReachWins,
-        adrReachLosses: asset.summary.adrReachLosses,
-        adrReachWinPct: asset.summary.adrReachWinPct,
+        l2lRangeAvailableWins: asset.summary.l2lRangeAvailableWins,
+        l2lRangeAvailableLosses: asset.summary.l2lRangeAvailableLosses,
+        l2lRangeAvailablePct: asset.summary.l2lRangeAvailablePct,
         strongPlusCalls: asset.summary.strongPlusCalls,
-        strongPlusAdrReachWinPct: asset.summary.strongPlusAdrReachWinPct
+        strongPlusL2lRangeAvailablePct: asset.summary.strongPlusL2lRangeAvailablePct,
+        diagnostics: asset.diagnostics
       })),
-      assets: layer1Assets.map(asset => ({
+      strength_summary_rows: aggregateStrengthRows(availableLayer1, "keep_all"),
+      comparison_rows: aggregateSignalsVsStrongPlus(availableLayer1, "layer1"),
+      assets: layer1Assets.map((asset) => ({
         assetCode: asset.assetCode,
         assetLabel: asset.assetLabel,
         available: asset.available,
         blocker: asset.blocker || null,
+        instrument: asset.instrument || null,
+        fixedReferenceL2lDistance: asset.fixedReferenceL2lDistance ?? null,
         weekdayKeys: asset.weekdayKeys,
         summary: asset.summary,
         bucketSummaryRows: asset.bucketSummaryRows,
         dayTotals: asset.dayTotals,
         weekdayTotals: asset.weekdayTotals,
         bucketTotals: asset.bucketTotals,
-        bucketMatrix: asset.bucketMatrix
+        bucketMatrix: asset.bucketMatrix,
+        diagnostics: asset.diagnostics,
+        evaluatedRowsSample: asset.evaluatedRows.slice(0, 25),
+        diagnosticRowsSample: asset.diagnosticRows.slice(0, 50)
       }))
     },
     layer2: {
-      summary_rows: layer2Pairs.map(pair => ({
+      summary_rows: layer2Pairs.map((pair) => ({
         pairCode: pair.pairCode,
         pairLabel: pair.pairLabel,
         targetAssetCode: pair.targetAssetCode,
         available: pair.available,
         blocker: pair.blocker || null,
         tradableSignals: pair.summary.tradableSignals,
-        adrReachWins: pair.summary.adrReachWins,
-        adrReachLosses: pair.summary.adrReachLosses,
-        adrReachWinPct: pair.summary.adrReachWinPct,
+        l2lRangeAvailableWins: pair.summary.l2lRangeAvailableWins,
+        l2lRangeAvailableLosses: pair.summary.l2lRangeAvailableLosses,
+        l2lRangeAvailablePct: pair.summary.l2lRangeAvailablePct,
         strongPlusSignals: pair.summary.strongPlusSignals,
-        strongPlusAdrReachWinPct: pair.summary.strongPlusAdrReachWinPct
+        strongPlusL2lRangeAvailablePct: pair.summary.strongPlusL2lRangeAvailablePct,
+        diagnostics: pair.diagnostics
       })),
-      pairs: layer2Pairs.map(pair => ({
+      strength_summary_rows: aggregateStrengthRows(availableLayer2, "keep_all"),
+      comparison_rows: aggregateSignalsVsStrongPlus(availableLayer2, "layer2"),
+      pairs: layer2Pairs.map((pair) => ({
         pairCode: pair.pairCode,
         pairLabel: pair.pairLabel,
         targetAssetCode: pair.targetAssetCode,
         available: pair.available,
         blocker: pair.blocker || null,
+        fixedReferenceL2lDistance: pair.fixedReferenceL2lDistance ?? null,
         weekdayKeys: pair.weekdayKeys,
         summary: pair.summary,
         bucketSummaryRows: pair.bucketSummaryRows,
         dayTotals: pair.dayTotals,
         weekdayTotals: pair.weekdayTotals,
         bucketTotals: pair.bucketTotals,
-        bucketMatrix: pair.bucketMatrix
+        bucketMatrix: pair.bucketMatrix,
+        diagnostics: pair.diagnostics,
+        tradableRowsSample: pair.tradableRows.slice(0, 25),
+        diagnosticRowsSample: pair.diagnosticRows.slice(0, 50)
       }))
     }
   };
@@ -755,27 +852,28 @@ function buildOutput(layer1Assets, layer2Pairs) {
 function main() {
   const args = parseArgs(process.argv.slice(2));
   const checkers = Object.fromEntries(Object.entries(CHECKER_PATHS).map(([assetCode, filePath]) => [assetCode, loadChecker(filePath)]));
-  const layer1Assets = ASSET_CONFIGS.map(config => buildLayer1AssetResearch(config, checkers[config.assetCode]));
-  const layer1ByAssetCode = Object.fromEntries(layer1Assets.map(asset => [asset.assetCode, asset]));
-  const layer2Pairs = PAIR_CONFIGS.map(config => buildLayer2PairResearch(config, layer1ByAssetCode, checkers));
+  const rollingWindowStart = args.start_date || null;
+  const layer1Assets = ASSET_CONFIGS.map((config) => buildLayer1AssetResearch(config, checkers[config.assetCode], { rollingWindowStart }));
+  const layer1ByAssetCode = Object.fromEntries(layer1Assets.map((asset) => [asset.assetCode, asset]));
+  const layer2Pairs = PAIR_CONFIGS.map((config) => buildLayer2PairResearch(config, layer1ByAssetCode, checkers, { rollingWindowStart }));
   const output = buildOutput(layer1Assets, layer2Pairs);
   const errors = [];
 
   validateCheckerInvariants(checkers, errors);
-  layer1Assets.filter(asset => asset.available).forEach(asset => validateAvailableAsset(asset, errors));
-  layer2Pairs.filter(pair => pair.available).forEach(pair => validateAvailablePair(pair, errors));
+  layer1Assets.filter((asset) => asset.available).forEach((asset) => validateAvailableAsset(asset, errors));
+  layer2Pairs.filter((pair) => pair.available).forEach((pair) => validateAvailablePair(pair, errors));
 
   if (args.write === "true") {
     fs.writeFileSync(OUTPUT_PATH, `${JSON.stringify(output, null, 2)}\n`, "utf8");
   } else if (!fs.existsSync(OUTPUT_PATH)) {
-    errors.push("ADR reach artifact is missing. Run with --write to generate data/adr-reach-research.json.");
+    errors.push("L2L 1H sequence artifact is missing. Run with --write to generate data/adr-reach-research.json.");
   } else {
     const existing = fs.readFileSync(OUTPUT_PATH, "utf8");
     const parsed = JSON.parse(existing);
     const comparableCurrent = JSON.stringify({ ...output, meta: { ...output.meta, generated_at: null } });
     const comparableExisting = JSON.stringify({ ...parsed, meta: { ...parsed.meta, generated_at: null } });
     if (comparableCurrent !== comparableExisting) {
-      errors.push("ADR reach artifact is stale relative to the current builder output.");
+      errors.push("L2L 1H sequence artifact is stale relative to the current builder output.");
     }
   }
 
@@ -784,8 +882,8 @@ function main() {
     artifact_path: OUTPUT_PATH,
     layer1_summary: output.layer1.summary_rows,
     layer2_summary: output.layer2.summary_rows,
-    available_layer1_assets: layer1Assets.filter(asset => asset.available).map(asset => asset.assetCode),
-    available_layer2_pairs: layer2Pairs.filter(pair => pair.available).map(pair => pair.pairCode),
+    available_layer1_assets: layer1Assets.filter((asset) => asset.available).map((asset) => asset.assetCode),
+    available_layer2_pairs: layer2Pairs.filter((pair) => pair.available).map((pair) => pair.pairCode),
     errors
   }, null, 2));
 
@@ -794,4 +892,25 @@ function main() {
   }
 }
 
-main();
+if (require.main === module) {
+  main();
+}
+
+module.exports = {
+  ASSET_CONFIGS,
+  CHECKER_PATHS,
+  CONFIDENCE_BUCKETS,
+  EXPECTED_CHECKER_ROWS,
+  LOOKBACK_DAYS,
+  OUTPUT_PATH,
+  PAIR_CONFIGS,
+  buildLayer1AssetResearch,
+  buildLayer2PairResearch,
+  buildOutput,
+  buildRollingWindowStartDate,
+  inRollingWindow,
+  loadChecker,
+  validateAvailableAsset,
+  validateAvailablePair,
+  validateCheckerInvariants
+};

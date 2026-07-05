@@ -8,7 +8,7 @@ const checkerDataUrls = {
   NQ: "./data/backtester-checker-nq-24h-2024-2026.json?v=20260702-nq-qqq-proxy-dashboard",
   BTC: "./data/backtester-checker-btc-24h-2024-2026.json?v=20260702-btc-benchmark-dashboard"
 };
-const adrReachResearchUrl = "./data/adr-reach-research.json?v=20260703-adr-reach-research-ohcl-expansion-fix";
+const adrReachResearchUrl = "./data/adr-reach-research.json?v=20260705-l2l-1h-sequence";
 const researchSupabaseUrl = "https://eaolqbrlywczinfordvg.supabase.co/rest/v1";
 const researchSupabaseKey = "sb_publishable_k6YbEuuk3GyB9GVTQDtNVA_J1gCRYaY";
 const headlineConfidenceLib = globalThis.HeadlineConfidence;
@@ -2367,14 +2367,17 @@ function renderAdrCompactMetricCell(primary = "", secondary = "", options = {}) 
 
 function formatAdrAuditCoverage(row = {}) {
   const coverage = row.sourceCoverage || null;
-  if (!coverage?.startDate || !coverage?.endDate || !metricAvailable(coverage?.rowCount)) {
+  if (!coverage?.daily?.startDate || !coverage?.daily?.endDate || !metricAvailable(coverage?.daily?.rowCount)) {
     return "Coverage unavailable";
   }
 
-  const weekendNote = Number(coverage.weekendRowCount || 0) > 0
-    ? ` · ${coverage.weekendRowCount} weekend rows`
+  const dailyWeekendNote = Number(coverage.daily.weekendRowCount || 0) > 0
+    ? ` · ${coverage.daily.weekendRowCount} weekend daily rows`
     : "";
-  return `${coverage.startDate} to ${coverage.endDate} · ${coverage.rowCount} rows${weekendNote}`;
+  const intradayCoverage = coverage.intraday
+    ? `${coverage.intraday.startDate} to ${coverage.intraday.endDate} · ${coverage.intraday.sessionCount} sessions · ${coverage.intraday.candleCount} candles`
+    : "Intraday coverage unavailable";
+  return `Daily ${coverage.daily.startDate} to ${coverage.daily.endDate} · ${coverage.daily.rowCount} rows${dailyWeekendNote} | 1H ${intradayCoverage}`;
 }
 
 function researchPairCell(primary, secondary) {
@@ -4399,10 +4402,10 @@ function renderAdrReachUnavailablePanel(title, blocker, dataAttribute = "", data
   return `
     <article class="detail-panel wide-panel research-secondary-panel"${attributeMarkup}>
       <div class="panel-head">
-        <p class="eyebrow">ADR Reach Research</p>
+        <p class="eyebrow">L2L 1H Sequence Research</p>
         <h3>${escapeHtml(title)}</h3>
       </div>
-      <div class="empty-state matrix-evidence-empty">${escapeHtml(blocker || "Required OHLC history is unavailable for this ADR reach section.")}</div>
+      <div class="empty-state matrix-evidence-empty">${escapeHtml(blocker || "Required daily + 1H candle history is unavailable for this L2L sequence section.")}</div>
     </article>
   `;
 }
@@ -4454,7 +4457,7 @@ function renderAdrReachDayTotals(item = {}, options = {}) {
   const weekdayKeys = Array.isArray(item.weekdayKeys) ? item.weekdayKeys : [];
   const weekdayHeaders = weekdayKeys.map(weekdayKey => `<th>${escapeHtml(weekdayBreakdownLabels[weekdayKey] || weekdayKey)}</th>`).join("");
   const cells = weekdayKeys.map(weekdayKey => `<td>${escapeHtml(formatAdrReachWeekdayCell(item.weekdayTotals?.[weekdayKey]))}</td>`).join("");
-  const title = options.title || `${item.assetLabel || item.pairLabel || "ADR Reach"} weekday totals across all confidence buckets`;
+  const title = options.title || `${item.assetLabel || item.pairLabel || "L2L Range"} weekday totals across all confidence buckets`;
   const dataAttribute = options.dataAttribute ? ` ${options.dataAttribute}="${escapeHtml(options.dataValue || "")}"` : "";
 
   return `
@@ -4497,7 +4500,7 @@ function renderAdrReachWeekdayBreakdown(item = {}, options = {}) {
       </tr>
     `;
   }).join("");
-  const title = options.title || `${item.assetLabel || item.pairLabel || "ADR Reach"} by confidence bucket and weekday`;
+  const title = options.title || `${item.assetLabel || item.pairLabel || "L2L Range"} by confidence bucket and weekday`;
   const dataAttribute = options.dataAttribute ? ` ${options.dataAttribute}="${escapeHtml(options.dataValue || "")}"` : "";
 
   return `
@@ -4523,6 +4526,23 @@ function renderAdrReachWeekdayBreakdown(item = {}, options = {}) {
   `;
 }
 
+function renderAdrDiagnosticsTable(title, rows = [], options = {}) {
+  if (!rows.length) return "";
+  const displayRows = rows.slice(0, options.limit || 20);
+  return renderResearchBreakdownTable(title, "Diagnostics", displayRows, [
+    { label: "Date", className: "adr-col-date", render: row => renderAdrCompactTextCell(row.date || displayDash(), row.layer || "", { className: "adr-table-tight-cell" }) },
+    { label: "Signal", className: "adr-col-entity", render: row => renderAdrCompactTextCell(row.assetOrPair || displayDash(), row.callDirection || displayDash(), { className: "adr-table-tight-cell" }) },
+    { label: "Strength", className: "adr-col-strength", render: row => renderAdrCompactTextCell(row.strengthBucket || displayDash(), metricAvailable(row.confidencePct) ? `${Number(row.confidencePct).toFixed(1)} conf` : "", { className: "adr-table-tight-cell" }) },
+    { label: "Candles", className: "adr-col-metric", render: row => renderAdrCompactTextCell(metricAvailable(row.numberOf1hCandlesLoaded) ? row.numberOf1hCandlesLoaded : displayDash(), row.instrumentSymbol || displayDash(), { className: "adr-table-tight-cell" }) },
+    { label: "ADR20 / Req", className: "adr-col-metric", render: row => renderAdrCompactTextCell(metricAvailable(row.adr20) ? row.adr20 : displayDash(), metricAvailable(row.requiredL2lDistance) ? `Req ${row.requiredL2lDistance}` : (row.notEvaluatedReason || ""), { className: "adr-table-tight-cell" }) },
+    { label: "Trigger", className: "adr-col-trigger", render: row => renderAdrCompactTextCell(row.triggerCandleTime || displayDash(), metricAvailable(row.triggerPrice) ? `Price ${row.triggerPrice}` : (row.notEvaluatedReason || "No trigger"), { className: "adr-table-tight-cell" }) },
+    { label: "Reached", className: "adr-col-status", render: row => renderAdrCompactTextCell(row.reached === true ? "WIN" : (row.reached === false ? "MISS" : "N/E"), metricAvailable(row.margin) ? `Margin ${row.margin}` : "", { className: "adr-table-tight-cell" }) }
+  ], {
+    tableClass: "adr-summary-table adr-confidence-table",
+    scrollClass: "adr-summary-scroll"
+  });
+}
+
 function renderAdrReachLayer1Asset(asset = {}) {
   if (!asset.available) {
     return "";
@@ -4532,14 +4552,14 @@ function renderAdrReachLayer1Asset(asset = {}) {
     <section class="research-section">
       <div class="research-section-head">
         <div>
-          <h3>${escapeHtml(asset.assetLabel)} ADR reach from Layer 1 checker artifacts</h3>
+            <h3>${escapeHtml(asset.assetLabel)} 1H sequence research from Layer 1 checker artifacts</h3>
         </div>
-        <p class="research-panel-copy">Reference price uses the evaluation-day open when available, otherwise previous close. This section stays downstream of the stored checker artifact and evaluates only whether the 50% ADR20 target was reached intraday.</p>
+          <p class="research-panel-copy">This section stays downstream of the stored checker artifact and evaluates whether 1H candles confirm the required L2L move occurred after the relevant intraday swing.</p>
       </div>
       ${renderResearchBreakdownTable(`${asset.assetLabel} confidence buckets`, "Confidence Breakdown", asset.bucketSummaryRows || [], [
         { label: "Bucket", className: "adr-col-entity", render: row => renderAdrCompactTextCell(row.bucketLabel, "", { className: "adr-table-tight-cell" }) },
         { label: "Outcomes", className: "adr-col-metric", render: row => renderAdrCompactTextCell(`${row.wins}W / ${row.losses}L / ${row.total}T`, "", { className: "adr-table-tight-cell" }) },
-        { label: "ADR Reach %", className: "adr-col-rate", render: row => renderAdrCompactTextCell(metricAvailable(row.adrReachWinPct) ? percentValue(row.adrReachWinPct) : displayDash(), "", { className: "adr-table-tight-cell" }) }
+          { label: "Win Rate", className: "adr-col-rate", render: row => renderAdrCompactTextCell(metricAvailable(row.l2lRangeAvailablePct) ? percentValue(row.l2lRangeAvailablePct) : displayDash(), "", { className: "adr-table-tight-cell" }) }
       ], {
         tableClass: "adr-summary-table adr-confidence-table",
         scrollClass: "adr-summary-scroll"
@@ -4551,6 +4571,9 @@ function renderAdrReachLayer1Asset(asset = {}) {
         title: `${asset.assetLabel} by confidence bucket and weekday`,
         dataAttribute: "data-adr-reach-asset",
         dataValue: asset.assetCode
+      })}
+      ${renderAdrDiagnosticsTable(`${asset.assetLabel} diagnostics samples`, asset.diagnosticRowsSample || [], {
+        limit: 20
       })}
     </section>
   `;
@@ -4565,14 +4588,14 @@ function renderAdrReachLayer2Pair(pair = {}) {
     <section class="research-section">
       <div class="research-section-head">
         <div>
-          <h3>${escapeHtml(pair.pairLabel)} from existing Pair Trade Research signal selection</h3>
+            <h3>${escapeHtml(pair.pairLabel)} 1H sequence research from existing Pair Trade Research signal selection</h3>
         </div>
-        <p class="research-panel-copy">This section reuses the existing Layer 2 pair-trade eligibility logic. Only actual tradable pair signals are included, and realized ADR reach is measured on the target asset without recalculating combined confidence.</p>
+          <p class="research-panel-copy">This section reuses the existing Layer 2 pair-trade eligibility logic. Only actual tradable pair signals are included, and the metric asks whether 1H candles confirm the required L2L move occurred after the relevant intraday swing.</p>
       </div>
       ${renderResearchBreakdownTable(`${pair.pairLabel} confidence buckets`, "Confidence Breakdown", pair.bucketSummaryRows || [], [
         { label: "Bucket", className: "adr-col-entity", render: row => renderAdrCompactTextCell(row.bucketLabel, "", { className: "adr-table-tight-cell" }) },
         { label: "Outcomes", className: "adr-col-metric", render: row => renderAdrCompactTextCell(`${row.wins}W / ${row.losses}L / ${row.total}T`, "", { className: "adr-table-tight-cell" }) },
-        { label: "ADR Reach %", className: "adr-col-rate", render: row => renderAdrCompactTextCell(metricAvailable(row.adrReachWinPct) ? percentValue(row.adrReachWinPct) : displayDash(), "", { className: "adr-table-tight-cell" }) }
+          { label: "Win Rate", className: "adr-col-rate", render: row => renderAdrCompactTextCell(metricAvailable(row.l2lRangeAvailablePct) ? percentValue(row.l2lRangeAvailablePct) : displayDash(), "", { className: "adr-table-tight-cell" }) }
       ], {
         tableClass: "adr-summary-table adr-confidence-table",
         scrollClass: "adr-summary-scroll"
@@ -4585,6 +4608,9 @@ function renderAdrReachLayer2Pair(pair = {}) {
         dataAttribute: "data-adr-reach-pair",
         dataValue: pair.pairCode
       })}
+      ${renderAdrDiagnosticsTable(`${pair.pairLabel} diagnostics samples`, pair.diagnosticRowsSample || [], {
+        limit: 20
+      })}
     </section>
   `;
 }
@@ -4592,8 +4618,12 @@ function renderAdrReachLayer2Pair(pair = {}) {
 function renderResearchAdrReach(data = {}) {
   const adrReach = data.adr_reach || null;
   const layer1SummaryRows = Array.isArray(adrReach?.layer1?.summary_rows) ? adrReach.layer1.summary_rows : [];
+  const layer1StrengthRows = Array.isArray(adrReach?.layer1?.strength_summary_rows) ? adrReach.layer1.strength_summary_rows : [];
+  const layer1ComparisonRows = Array.isArray(adrReach?.layer1?.comparison_rows) ? adrReach.layer1.comparison_rows : [];
   const layer1Assets = Array.isArray(adrReach?.layer1?.assets) ? adrReach.layer1.assets : [];
   const layer2SummaryRows = Array.isArray(adrReach?.layer2?.summary_rows) ? adrReach.layer2.summary_rows : [];
+  const layer2StrengthRows = Array.isArray(adrReach?.layer2?.strength_summary_rows) ? adrReach.layer2.strength_summary_rows : [];
+  const layer2ComparisonRows = Array.isArray(adrReach?.layer2?.comparison_rows) ? adrReach.layer2.comparison_rows : [];
   const layer2Pairs = Array.isArray(adrReach?.layer2?.pairs) ? adrReach.layer2.pairs : [];
   const sourceAuditRows = Array.isArray(adrReach?.source_audit) ? adrReach.source_audit : [];
   const unavailableLayer1Rows = layer1SummaryRows.filter(row => !row.available);
@@ -4603,8 +4633,8 @@ function renderResearchAdrReach(data = {}) {
     return `
       <div class="backtest-report">
         <article class="detail-panel wide-panel research-secondary-panel">
-          <h3>ADR reach research unavailable</h3>
-          <div class="empty-state matrix-evidence-empty">The downstream ADR reach artifact could not be loaded.</div>
+            <h3>L2L 1H sequence research unavailable</h3>
+            <div class="empty-state matrix-evidence-empty">The downstream L2L 1H sequence artifact could not be loaded.</div>
         </article>
       </div>
     `;
@@ -4616,39 +4646,55 @@ function renderResearchAdrReach(data = {}) {
       <section class="research-section" data-adr-reach-layer1-summary="true">
         <div class="research-section-head">
           <div>
-            <h3>Intraday target-reach research from existing checker artifacts</h3>
+              <h3>L2L 1H Sequence Research</h3>
           </div>
-          <p class="research-panel-copy">This research does not measure closing accuracy. It measures whether the market offered enough movement to reach a 50% rolling ADR20 target in the predicted direction at any point during the evaluation day.</p>
+            <p class="research-panel-copy">This measures whether 1H intraday candles show price moved at least the required L2L distance in the direction of the call after the relevant intraday swing. It uses 50% of ADR20 as the required move. This is sequence-aware and does not rely on daily high-low alone.</p>
         </div>
         <article class="detail-panel wide-panel research-secondary-panel weekday-breakdown-intro-panel">
-          <p class="research-panel-copy">A trade is counted as successful the moment the 50% ADR20 target is touched intraday, regardless of where price later closed. ADR20 uses the previous 20 completed sessions only, never the current day. Where repo evidence lacks supportable High/Low history, the asset or pair stays explicitly unavailable instead of estimated.</p>
+            <p class="research-panel-copy">Bullish rows require a later 1H candle high to reach the prior lowest low plus required distance. Bearish rows require a later 1H candle low to reach the prior highest high minus required distance. Daily candles are used only for ADR20 and fixed reference values remain diagnostics only.</p>
         </article>
-        ${renderResearchBreakdownTable("ADR source audit", "Warehouse Audit", sourceAuditRows, [
+          ${renderResearchBreakdownTable("L2L source audit", "Warehouse Audit", sourceAuditRows, [
           { label: "Asset", className: "adr-col-entity", render: row => renderAdrCompactTextCell(row.assetLabel, "", { className: "adr-table-tight-cell" }) },
           { label: "Status", className: "adr-col-status", render: row => renderAdrCompactTextCell(row.available ? "Available" : "Unavailable", "", { className: "adr-table-tight-cell" }) },
-          { label: "Source", className: "adr-col-source", render: row => renderAdrCompactTextCell(row.available ? (row.ohlcSourceLabel || displayDash()) : displayDash(), row.available ? formatAdrAuditCoverage(row) : "", { className: "adr-table-tight-cell adr-source-cell" }) },
-          { label: "Reference", className: "adr-col-reference", render: row => renderAdrCompactTextCell(row.available ? "Open first" : displayDash(), row.available ? "Prev close fallback" : "", { className: "adr-table-tight-cell" }) }
+          { label: "Source", className: "adr-col-source", render: row => renderAdrCompactTextCell(row.available ? (row.candleSourceLabel || displayDash()) : displayDash(), row.available ? formatAdrAuditCoverage(row) : "", { className: "adr-table-tight-cell adr-source-cell" }) },
+            { label: "Instrument", className: "adr-col-reference", render: row => renderAdrCompactTextCell(row.available ? (row.instrument || displayDash()) : displayDash(), metricAvailable(row.fixedReferenceL2lDistance) ? `Fixed ref ${row.fixedReferenceL2lDistance}` : "", { className: "adr-table-tight-cell" }) }
         ], {
           tableClass: "adr-summary-table adr-audit-table",
           scrollClass: "adr-summary-scroll"
         })}
-        ${renderAdrUnavailableDetails("ADR unavailable source blockers", sourceAuditRows.filter(row => !row.available), {
+          ${renderAdrUnavailableDetails("L2L unavailable source blockers", sourceAuditRows.filter(row => !row.available), {
           dataAttribute: "data-adr-unavailable-audit"
         })}
       </section>
       <section class="research-section" data-adr-reach-layer2-summary="true">
         <div class="research-section-head">
           <div>
-            <h3>Layer 1 ADR Reach Summary</h3>
+              <h3>Layer 1 By Asset</h3>
           </div>
-          <p class="research-panel-copy">Layer 1 rows use stored displayed headline confidence and directional calls from the canonical checker artifacts. Lean signals remain directional for Layer 1 reach measurement.</p>
+          <p class="research-panel-copy">Layer 1 rows use stored displayed headline confidence and directional calls from the canonical checker artifacts.</p>
         </div>
-        ${renderResearchBreakdownTable("Layer 1 ADR Reach Summary", "Summary", layer1SummaryRows, [
+        ${renderResearchBreakdownTable("Layer 1 by asset", "Summary", layer1SummaryRows, [
           { label: "Asset", className: "adr-col-entity", render: row => renderAdrCompactTextCell(row.assetLabel, "", { className: "adr-table-tight-cell" }) },
           { label: "Status", className: "adr-col-status", render: row => renderAdrCompactTextCell(row.available ? "Available" : "Unavailable", "", { className: "adr-table-tight-cell" }) },
-          { label: "Evaluated", className: "adr-col-metric", render: row => renderAdrCompactTextCell(renderAdrCompactSummaryValue(row, "evaluatedCalls", "adrReachWins", "adrReachLosses"), "", { className: "adr-table-tight-cell" }) },
-          { label: "Win Rate", className: "adr-col-rate", render: row => renderAdrCompactTextCell(row.available && metricAvailable(row.adrReachWinPct) ? percentValue(row.adrReachWinPct) : displayDash(), "", { className: "adr-table-tight-cell" }) },
-          { label: "Strong+", className: "adr-col-strongplus", render: row => renderAdrCompactTextCell(renderAdrCompactStrongPlusValue(row, "strongPlusCalls", "strongPlusAdrReachWinPct"), "", { className: "adr-table-tight-cell" }) }
+          { label: "Evaluated", className: "adr-col-metric", render: row => renderAdrCompactTextCell(renderAdrCompactSummaryValue(row, "evaluatedCalls", "l2lRangeAvailableWins", "l2lRangeAvailableLosses"), "", { className: "adr-table-tight-cell" }) },
+          { label: "Win Rate", className: "adr-col-rate", render: row => renderAdrCompactTextCell(row.available && metricAvailable(row.l2lRangeAvailablePct) ? percentValue(row.l2lRangeAvailablePct) : displayDash(), "", { className: "adr-table-tight-cell" }) },
+          { label: "Strong+", className: "adr-col-strongplus", render: row => renderAdrCompactTextCell(renderAdrCompactStrongPlusValue(row, "strongPlusCalls", "strongPlusL2lRangeAvailablePct"), "", { className: "adr-table-tight-cell" }) }
+        ], {
+          tableClass: "adr-summary-table adr-layer1-summary-table",
+          scrollClass: "adr-summary-scroll"
+        })}
+        ${renderResearchBreakdownTable("Layer 1 by strength", "Summary", layer1StrengthRows, [
+          { label: "Strength", className: "adr-col-entity", render: row => renderAdrCompactTextCell(row.bucketLabel, "", { className: "adr-table-tight-cell" }) },
+          { label: "Evaluated", className: "adr-col-metric", render: row => renderAdrCompactTextCell(`${row.total} · ${row.wins}W / ${row.losses}L`, "", { className: "adr-table-tight-cell" }) },
+          { label: "Win Rate", className: "adr-col-rate", render: row => renderAdrCompactTextCell(metricAvailable(row.l2lRangeAvailablePct) ? percentValue(row.l2lRangeAvailablePct) : displayDash(), "", { className: "adr-table-tight-cell" }) }
+        ], {
+          tableClass: "adr-summary-table adr-layer1-summary-table",
+          scrollClass: "adr-summary-scroll"
+        })}
+        ${renderResearchBreakdownTable("Layer 1 all signals vs Strong+", "Summary", layer1ComparisonRows, [
+          { label: "Cohort", className: "adr-col-entity", render: row => renderAdrCompactTextCell(row.cohort, "", { className: "adr-table-tight-cell" }) },
+          { label: "Evaluated", className: "adr-col-metric", render: row => renderAdrCompactTextCell(`${row.total} · ${row.wins}W / ${row.losses}L`, "", { className: "adr-table-tight-cell" }) },
+          { label: "Win Rate", className: "adr-col-rate", render: row => renderAdrCompactTextCell(metricAvailable(row.l2lRangeAvailablePct) ? percentValue(row.l2lRangeAvailablePct) : displayDash(), "", { className: "adr-table-tight-cell" }) }
         ], {
           tableClass: "adr-summary-table adr-layer1-summary-table",
           scrollClass: "adr-summary-scroll"
@@ -4660,16 +4706,32 @@ function renderResearchAdrReach(data = {}) {
       <section class="research-section">
         <div class="research-section-head">
           <div>
-            <h3>Layer 2 ADR Reach Summary</h3>
+              <h3>Layer 2 By Pair</h3>
           </div>
           <p class="research-panel-copy">Layer 2 rows reuse the existing Pair Trade Research signal-selection rules. Only actual tradable pair signals are evaluated, while conflict, no-trade, and neutral setups stay excluded.</p>
         </div>
-        ${renderResearchBreakdownTable("Layer 2 ADR Reach Summary", "Summary", layer2SummaryRows, [
+          ${renderResearchBreakdownTable("Layer 2 by pair", "Summary", layer2SummaryRows, [
           { label: "Pair", className: "adr-col-entity", render: row => renderAdrCompactTextCell(row.pairLabel, "", { className: "adr-table-tight-cell" }) },
           { label: "Status", className: "adr-col-status", render: row => renderAdrCompactTextCell(row.available ? "Available" : "Unavailable", "", { className: "adr-table-tight-cell" }) },
-          { label: "Tradable", className: "adr-col-metric", render: row => renderAdrCompactTextCell(renderAdrCompactSummaryValue(row, "tradableSignals", "adrReachWins", "adrReachLosses"), "", { className: "adr-table-tight-cell" }) },
-          { label: "Win Rate", className: "adr-col-rate", render: row => renderAdrCompactTextCell(row.available && metricAvailable(row.adrReachWinPct) ? percentValue(row.adrReachWinPct) : displayDash(), "", { className: "adr-table-tight-cell" }) },
-          { label: "Strong+", className: "adr-col-strongplus", render: row => renderAdrCompactTextCell(renderAdrCompactStrongPlusValue(row, "strongPlusSignals", "strongPlusAdrReachWinPct"), "", { className: "adr-table-tight-cell" }) }
+          { label: "Tradable", className: "adr-col-metric", render: row => renderAdrCompactTextCell(renderAdrCompactSummaryValue(row, "tradableSignals", "l2lRangeAvailableWins", "l2lRangeAvailableLosses"), "", { className: "adr-table-tight-cell" }) },
+          { label: "Win Rate", className: "adr-col-rate", render: row => renderAdrCompactTextCell(row.available && metricAvailable(row.l2lRangeAvailablePct) ? percentValue(row.l2lRangeAvailablePct) : displayDash(), "", { className: "adr-table-tight-cell" }) },
+          { label: "Strong+", className: "adr-col-strongplus", render: row => renderAdrCompactTextCell(renderAdrCompactStrongPlusValue(row, "strongPlusSignals", "strongPlusL2lRangeAvailablePct"), "", { className: "adr-table-tight-cell" }) }
+        ], {
+          tableClass: "adr-summary-table adr-layer2-summary-table",
+          scrollClass: "adr-summary-scroll"
+        })}
+        ${renderResearchBreakdownTable("Layer 2 by strength", "Summary", layer2StrengthRows, [
+          { label: "Strength", className: "adr-col-entity", render: row => renderAdrCompactTextCell(row.bucketLabel, "", { className: "adr-table-tight-cell" }) },
+          { label: "Tradable", className: "adr-col-metric", render: row => renderAdrCompactTextCell(`${row.total} · ${row.wins}W / ${row.losses}L`, "", { className: "adr-table-tight-cell" }) },
+          { label: "Win Rate", className: "adr-col-rate", render: row => renderAdrCompactTextCell(metricAvailable(row.l2lRangeAvailablePct) ? percentValue(row.l2lRangeAvailablePct) : displayDash(), "", { className: "adr-table-tight-cell" }) }
+        ], {
+          tableClass: "adr-summary-table adr-layer2-summary-table",
+          scrollClass: "adr-summary-scroll"
+        })}
+        ${renderResearchBreakdownTable("Layer 2 all signals vs Strong+", "Summary", layer2ComparisonRows, [
+          { label: "Cohort", className: "adr-col-entity", render: row => renderAdrCompactTextCell(row.cohort, "", { className: "adr-table-tight-cell" }) },
+          { label: "Tradable", className: "adr-col-metric", render: row => renderAdrCompactTextCell(`${row.total} · ${row.wins}W / ${row.losses}L`, "", { className: "adr-table-tight-cell" }) },
+          { label: "Win Rate", className: "adr-col-rate", render: row => renderAdrCompactTextCell(metricAvailable(row.l2lRangeAvailablePct) ? percentValue(row.l2lRangeAvailablePct) : displayDash(), "", { className: "adr-table-tight-cell" }) }
         ], {
           tableClass: "adr-summary-table adr-layer2-summary-table",
           scrollClass: "adr-summary-scroll"

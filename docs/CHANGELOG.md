@@ -1,5 +1,21 @@
 # Changelog
 
+## 2026-07-05
+
+### Added
+
+- Added `backtester/lib/adr_reach_research.js` for shared daily-ADR + `1H` sequence research helpers.
+- Added `backtester/tests/adr_reach_research.test.js` with synthetic `1H` sequence cases covering bullish/bearish order dependence and missing-candle handling.
+- Added `backtester/importers/oanda/download_oanda_candles.js` for reproducible OANDA daily + `1H` candle downloads.
+- Added `backtester/importers/binance/download_binance_candles.js` for reproducible Binance daily + `1H` candle downloads.
+
+### Changed
+
+- Replaced the old daily OHLC range-availability path with `L2L 1H Sequence Research`.
+- Rebuilt `data/adr-reach-research.json` so required move is `50% ADR20` from daily candles while win/miss evaluation is sequence-aware using `1H` candles.
+- Added supportable downstream research coverage for `Gold` and `XAU/USD` using OANDA `XAU_USD`, and switched `NQ` research onto OANDA `NAS100_USD`.
+- Updated the dashboard wording, summaries, diagnostics tables, and smoke coverage to use the new `L2L 1H Sequence Research` terminology consistently.
+
 ## 2026-07-03
 
 ### Added

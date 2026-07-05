@@ -294,72 +294,63 @@ async function run() {
       throw new Error(`BTC/USD pair trade breakdown did not include weekend columns.\n${pairTradeBtcHeaders.join(" | ")}`);
     }
 
-    await page.getByRole("button", { name: "ADR Reach Research" }).click();
+    await page.getByRole("button", { name: "L2L 1H Sequence Research" }).click();
     await page.waitForSelector("[data-adr-reach-layer1-summary='true']", { timeout: 15000 });
     const adrReachText = await page.locator("#backtestPanel").innerText();
     const normalizedAdrReachText = adrReachText.toLowerCase();
 
-    if (!adrReachText.includes("Intraday target-reach research from existing checker artifacts")) {
-      throw new Error(`ADR Reach Research tab header did not render.\n${adrReachText}`);
+    if (!adrReachText.includes("L2L 1H Sequence Research")) {
+      throw new Error(`L2L 1H Sequence Research tab header did not render.\n${adrReachText}`);
     }
 
-    if (!normalizedAdrReachText.includes("layer 1 adr reach summary") || !normalizedAdrReachText.includes("layer 2 adr reach summary")) {
-      throw new Error(`ADR Reach Research summary tables did not render.\n${adrReachText}`);
+    if (!normalizedAdrReachText.includes("layer 1 by asset") || !normalizedAdrReachText.includes("layer 2 by pair")) {
+      throw new Error(`L2L 1H Sequence Research summary tables did not render.\n${adrReachText}`);
     }
 
-    if (!normalizedAdrReachText.includes("50% rolling adr20 target in the predicted direction")) {
-      throw new Error(`ADR Reach Research did not render the expected research note copy.\n${adrReachText}`);
+    if (!normalizedAdrReachText.includes("this measures whether 1h intraday candles show price moved at least the required l2l distance")) {
+      throw new Error(`L2L 1H Sequence Research did not render the expected research note copy.\n${adrReachText}`);
     }
 
-    if (!normalizedAdrReachText.includes("nq adr reach from layer 1 checker artifacts") || !normalizedAdrReachText.includes("nq/usd from existing pair trade research signal selection")) {
-      throw new Error(`ADR Reach Research did not render the supported NQ detail sections.\n${adrReachText}`);
+    if (!normalizedAdrReachText.includes("nq 1h sequence research from layer 1 checker artifacts") || !normalizedAdrReachText.includes("nq/usd 1h sequence research from existing pair trade research signal selection")) {
+      throw new Error(`L2L 1H Sequence Research did not render the supported NQ detail sections.\n${adrReachText}`);
     }
 
     if (!normalizedAdrReachText.includes("confidence breakdown") || !normalizedAdrReachText.includes("weekday totals across all confidence buckets") || !normalizedAdrReachText.includes("by confidence bucket and weekday")) {
-      throw new Error(`ADR Reach Research did not render the required detail tables.\n${adrReachText}`);
+      throw new Error(`L2L 1H Sequence Research did not render the required detail tables.\n${adrReachText}`);
     }
 
     for (const expectedAvailableText of [
-      "eur adr reach from layer 1 checker artifacts",
-      "nq adr reach from layer 1 checker artifacts",
-      "btc adr reach from layer 1 checker artifacts",
-      "eur/usd from existing pair trade research signal selection",
-      "nq/usd from existing pair trade research signal selection",
-      "btc/usd from existing pair trade research signal selection"
+      "eur 1h sequence research from layer 1 checker artifacts",
+      "nq 1h sequence research from layer 1 checker artifacts",
+      "btc 1h sequence research from layer 1 checker artifacts",
+      "eur/usd 1h sequence research from existing pair trade research signal selection",
+      "nq/usd 1h sequence research from existing pair trade research signal selection",
+      "btc/usd 1h sequence research from existing pair trade research signal selection"
     ]) {
       if (!normalizedAdrReachText.includes(expectedAvailableText)) {
-        throw new Error(`ADR Reach Research did not render expected available section: ${expectedAvailableText}\n${adrReachText}`);
+        throw new Error(`L2L 1H Sequence Research did not render expected available section: ${expectedAvailableText}\n${adrReachText}`);
       }
     }
 
     for (const expectedUnavailableText of [
       "layer 1 unavailable reasons",
-      "layer 2 unavailable reasons",
-      "adr unavailable source blockers"
+      "l2l unavailable source blockers"
     ]) {
       if (!normalizedAdrReachText.includes(expectedUnavailableText)) {
-        throw new Error(`ADR Reach Research did not preserve expected unavailable section: ${expectedUnavailableText}\n${adrReachText}`);
+        throw new Error(`L2L 1H Sequence Research did not preserve expected unavailable section: ${expectedUnavailableText}\n${adrReachText}`);
       }
     }
 
     const adrUnavailableAuditText = (await page.locator("[data-adr-unavailable-audit='true']").textContent() || "").toLowerCase();
-    if (!adrUnavailableAuditText.includes("no repo-local dxy ohlc export is available")) {
-      throw new Error(`ADR unavailable audit details did not preserve the USD/DXY blocker.\n${adrUnavailableAuditText}`);
-    }
-
-    if (normalizedAdrReachText.includes("no repo-local eurusd ohlc source") || normalizedAdrReachText.includes("repository evidence only includes eurusd close-only lineage")) {
-      throw new Error(`ADR Reach Research still rendered stale EUR unavailable copy.\n${adrReachText}`);
-    }
-
-    if (normalizedAdrReachText.includes("no repo-local btc ohlc source") || normalizedAdrReachText.includes("repository evidence only includes btc close-only coinbase spot lineage")) {
-      throw new Error(`ADR Reach Research still rendered stale BTC unavailable copy.\n${adrReachText}`);
+    if (!adrUnavailableAuditText.includes("no supportable repo-local dxy daily plus 1h source is staged")) {
+      throw new Error(`L2L unavailable audit details did not preserve the USD/DXY blocker.\n${adrUnavailableAuditText}`);
     }
 
     const adrAuditText = (await page.locator("[data-adr-reach-layer1-summary='true']").innerText()).toLowerCase();
     for (const expectedAuditText of [
-      "eur/usd daily ohlc csv from alpha vantage fx_daily",
-      "btc/usd daily ohlc csv from coinbase exchange candles",
-      "qqq ohlc daily proxy csv"
+      "oanda v20 candles",
+      "binance spot klines",
+      "fixed ref"
     ]) {
       if (!adrAuditText.includes(expectedAuditText)) {
         throw new Error(`Warehouse Audit did not render current OHLC source text: ${expectedAuditText}\n${adrAuditText}`);
@@ -391,21 +382,21 @@ async function run() {
       }
     }
 
-    const adrHeadingMatches = adrReachText.match(/ADR Reach Research/g) || [];
+    const adrHeadingMatches = adrReachText.match(/L2L 1H Sequence Research/g) || [];
     if (adrHeadingMatches.length > 1) {
-      throw new Error(`ADR Reach Research heading was repeated too many times.\nCount: ${adrHeadingMatches.length}\n${adrReachText}`);
+      throw new Error(`L2L 1H Sequence Research heading was repeated too many times.\nCount: ${adrHeadingMatches.length}\n${adrReachText}`);
     }
 
     const adrReachNqHeaders = await page.locator("[data-adr-reach-asset='NQ'] thead th").allInnerTexts();
     const normalizedAdrReachNqHeaders = adrReachNqHeaders.map(text => text.trim().toLowerCase());
     if (normalizedAdrReachNqHeaders.includes("saturday") || normalizedAdrReachNqHeaders.includes("sunday")) {
-      throw new Error(`NQ ADR weekday table unexpectedly included weekend columns.\n${adrReachNqHeaders.join(" | ")}`);
+      throw new Error(`NQ L2L range weekday table unexpectedly included weekend columns.\n${adrReachNqHeaders.join(" | ")}`);
     }
 
     const adrReachPairHeaders = await page.locator("[data-adr-reach-pair='NQ_USD'] thead th").allInnerTexts();
     const normalizedAdrReachPairHeaders = adrReachPairHeaders.map(text => text.trim().toLowerCase());
     if (normalizedAdrReachPairHeaders.includes("saturday") || normalizedAdrReachPairHeaders.includes("sunday")) {
-      throw new Error(`NQ/USD ADR weekday table unexpectedly included weekend columns.\n${adrReachPairHeaders.join(" | ")}`);
+      throw new Error(`NQ/USD L2L range weekday table unexpectedly included weekend columns.\n${adrReachPairHeaders.join(" | ")}`);
     }
 
     const adrSummaryOverflow = await page.locator(".adr-summary-scroll").first().evaluate((element) => getComputedStyle(element).overflowX);
