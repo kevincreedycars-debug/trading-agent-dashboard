@@ -79,6 +79,34 @@ const pairTradeResearchConfigs = [
     weekdayKeys: weekdayBreakdownColumnsByAsset.BTC
   }
 ];
+const directionalTrustGroupDefinitions = [
+  {
+    key: "COMBINED",
+    label: "Combined Directional",
+    shortLabel: "Combined",
+    directionalCallTypes: ["CLEAN_DIRECTIONAL", "LEAN_DIRECTIONAL"]
+  },
+  {
+    key: "CLEAN",
+    label: "Clean Directional Only",
+    shortLabel: "Clean",
+    directionalCallTypes: ["CLEAN_DIRECTIONAL"]
+  },
+  {
+    key: "LEAN",
+    label: "Lean Directional Only",
+    shortLabel: "Lean",
+    directionalCallTypes: ["LEAN_DIRECTIONAL"]
+  }
+];
+const directionalTrustStrengthDefinitions = [
+  { key: "ALL", label: "All" },
+  { key: "WEAK", label: "Weak" },
+  { key: "MODERATE", label: "Moderate" },
+  { key: "STRONG", label: "Strong" },
+  { key: "VERY_STRONG", label: "Very Strong" },
+  { key: "STRONG_PLUS", label: "Strong+" }
+];
 let layer1Data = null;
 let layer2Data = null;
 let backtestData = null;
@@ -4515,6 +4543,224 @@ function renderAdrThresholdSensitivityTable(title, sensitivity = {}, options = {
   });
 }
 
+function directionalTrustDescriptors() {
+  return directionalTrustGroupDefinitions.flatMap((group) => directionalTrustStrengthDefinitions.map((strength) => ({
+    rowKey: `${group.key}_${strength.key}`,
+    groupKey: group.key,
+    groupLabel: group.label,
+    groupShortLabel: group.shortLabel,
+    strengthKey: strength.key,
+    strengthLabel: strength.label,
+    directionalCallTypes: group.directionalCallTypes
+  })));
+}
+
+function directionalTrustStatus(winRatePct) {
+  if (!metricAvailable(winRatePct)) {
+    return {
+      label: "Unavailable",
+      icon: "–",
+      canUse: false
+    };
+  }
+  return Number(winRatePct) >= 60
+    ? { label: "Can Use", icon: "✅", canUse: true }
+    : { label: "Do Not Use", icon: "❌", canUse: false };
+}
+
+function renderTrustStatusCell(status = {}) {
+  const toneClass = status.canUse ? "trust-status-positive" : "trust-status-negative";
+  return `
+    <div class="research-cell adr-compact-cell trust-status-cell ${toneClass}">
+      <strong>${escapeHtml(status.icon || "–")}</strong>
+      <span>${escapeHtml(status.label || "Unavailable")}</span>
+    </div>
+  `;
+}
+
+function classifyDirectionalCallTypeForResearch(value = "") {
+  const normalized = String(value || "").trim().toUpperCase();
+  if (normalized === "BULLISH" || normalized === "BEARISH") return "CLEAN_DIRECTIONAL";
+  if (normalized === "BULLISH_LEAN" || normalized === "BEARISH_LEAN") return "LEAN_DIRECTIONAL";
+  return null;
+}
+
+function normalizeDirectionalBiasForResearch(value = "") {
+  const normalized = String(value || "").trim().toUpperCase();
+  if (normalized.startsWith("BULLISH")) return "BULLISH";
+  if (normalized.startsWith("BEARISH")) return "BEARISH";
+  return null;
+}
+
+function summarizeDirectionalTrustSignalRows(rows = []) {
+  const wins = rows.filter((row) => row.outcomeKey === "WIN").length;
+  const losses = rows.filter((row) => row.outcomeKey === "LOSS").length;
+  const flats = rows.filter((row) => row.outcomeKey === "FLAT").length;
+  const directionalTotal = wins + losses;
+  const total = directionalTotal + flats;
+  const directionalWinRatePct = directionalTotal ? roundTo((wins / directionalTotal) * 100, 1) : null;
+  return {
+    total,
+    wins,
+    losses,
+    flats,
+    directionalWinRatePct,
+    trustStatus: directionalTrustStatus(directionalWinRatePct)
+  };
+}
+
+function buildDirectionalTrustRows(signalRows = [], options = {}) {
+  return directionalTrustDescriptors().map((descriptor) => {
+    const matchingRows = signalRows.filter((row) =>
+      descriptor.directionalCallTypes.includes(row.directionalCallType)
+      && (
+        descriptor.strengthKey === "ALL"
+        || (descriptor.strengthKey === "STRONG_PLUS"
+          ? row.strengthBucket === "STRONG" || row.strengthBucket === "VERY_STRONG"
+          : row.strengthBucket === descriptor.strengthKey)
+      )
+    );
+    return {
+      rowKey: descriptor.rowKey,
+      signalGroup: `${options.layerLabel || "Layer"} ${descriptor.groupLabel}`,
+      signalGroupKey: descriptor.groupKey,
+      signalGroupLabel: descriptor.groupLabel,
+      strength: descriptor.strengthLabel,
+      strengthKey: descriptor.strengthKey,
+      ...summarizeDirectionalTrustSignalRows(matchingRows)
+    };
+  });
+}
+
+function buildLayer1DirectionalTrustRows(data = {}) {
+  const checkers = data.checkers || {};
+  return buildDirectionalTrustRows(
+    orderedAgents.flatMap((assetCode) => {
+      const checker = checkers[assetCode];
+      const rows = Array.isArray(checker?.rows) ? checker.rows : [];
+      return rows.flatMap((row) => {
+        const rawDirection = String(row?.stored?.direction || row?.checker?.direction || "").trim().toUpperCase();
+        const directionalCallType = classifyDirectionalCallTypeForResearch(rawDirection);
+        const direction = normalizeDirectionalBiasForResearch(rawDirection);
+        if (!directionalCallType || !direction) return [];
+        const confidencePct = checkerRowHeadlineConfidence(row);
+        const strengthBucket = weekdayBreakdownBucketKey(confidencePct);
+        if (!strengthBucket) return [];
+        return [{
+          directionalCallType,
+          strengthBucket,
+          outcomeKey: pairTradeOutcomeKey(row)
+        }];
+      });
+    }),
+    { layerLabel: "Layer 1" }
+  );
+}
+
+function buildLayer2DirectionalTrustRows(data = {}) {
+  const checkers = data.checkers || {};
+  const usdRowsByDate = checkerRowsByDate(checkers.USD || null);
+  const signalRows = pairTradeResearchConfigs.flatMap((config) => {
+    const targetRows = Array.isArray(checkers?.[config.targetAssetCode]?.rows) ? checkers[config.targetAssetCode].rows : [];
+    return targetRows.flatMap((targetRow) => {
+      const snapshotDate = String(targetRow?.snapshot_date || "").trim();
+      const usdRow = usdRowsByDate.get(snapshotDate) || null;
+      if (!usdRow) return [];
+      const targetRawDirection = String(targetRow?.stored?.direction || targetRow?.checker?.direction || "").trim().toUpperCase();
+      const usdRawDirection = String(usdRow?.stored?.direction || usdRow?.checker?.direction || "").trim().toUpperCase();
+      const targetDirection = normalizeDirectionalBiasForResearch(targetRawDirection);
+      const usdDirection = normalizeDirectionalBiasForResearch(usdRawDirection);
+      const directionalCallType = classifyDirectionalCallTypeForResearch(targetRawDirection);
+      if (!targetDirection || !usdDirection || !directionalCallType || targetDirection === usdDirection) return [];
+      const targetConfidence = checkerRowHeadlineConfidence(targetRow);
+      const usdConfidence = checkerRowHeadlineConfidence(usdRow);
+      const combinedConfidencePct = metricAvailable(targetConfidence) && metricAvailable(usdConfidence)
+        ? Math.min(Number(targetConfidence), Number(usdConfidence))
+        : null;
+      const strengthBucket = weekdayBreakdownBucketKey(combinedConfidencePct);
+      if (!strengthBucket) return [];
+      return [{
+        directionalCallType,
+        strengthBucket,
+        outcomeKey: pairTradeOutcomeKey(targetRow)
+      }];
+    });
+  });
+  return buildDirectionalTrustRows(signalRows, { layerLabel: "Layer 2" });
+}
+
+function buildAdrTrustSummaryRows(adrReach = null, thresholdKey = "0.55") {
+  const descriptors = directionalTrustDescriptors();
+  const layer1Rows = Array.isArray(adrReach?.layer1?.threshold_sensitivity?.rowsByThreshold?.[thresholdKey])
+    ? adrReach.layer1.threshold_sensitivity.rowsByThreshold[thresholdKey]
+    : [];
+  const layer2Rows = Array.isArray(adrReach?.layer2?.threshold_sensitivity?.rowsByThreshold?.[thresholdKey])
+    ? adrReach.layer2.threshold_sensitivity.rowsByThreshold[thresholdKey]
+    : [];
+  const toRows = (layerLabel, sourceRows) => descriptors.map((descriptor) => {
+    const source = sourceRows.find((row) => row.rowKey === descriptor.rowKey) || {};
+    return {
+      rowKey: `${layerLabel}_${descriptor.rowKey}`,
+      signalGroup: `${layerLabel} ${descriptor.groupLabel}`,
+      strength: descriptor.strengthLabel,
+      opportunityRatePct: source.opportunityRatePct ?? null,
+      trustStatus: directionalTrustStatus(source.opportunityRatePct)
+    };
+  });
+  return [
+    ...toRows("Layer 1", layer1Rows),
+    ...toRows("Layer 2", layer2Rows)
+  ];
+}
+
+function renderDirectionalTrustSummaryTable(title, rows = [], options = {}) {
+  return renderResearchBreakdownTable(title, options.subtitle || "Trust Summary", rows, [
+    { label: "Signal Group", className: "adr-col-entity", render: row => renderAdrCompactTextCell(row.signalGroup || displayDash(), "", { className: "adr-table-tight-cell" }) },
+    { label: "Strength", className: "adr-col-entity", render: row => renderAdrCompactTextCell(row.strength || displayDash(), "", { className: "adr-table-tight-cell" }) },
+    { label: options.rateLabel || "Directional Win Rate", className: "adr-col-rate", render: row => renderAdrCompactTextCell(metricAvailable(row.directionalWinRatePct ?? row.opportunityRatePct) ? percentValue(row.directionalWinRatePct ?? row.opportunityRatePct) : displayDash(), "", { className: "adr-table-tight-cell" }) },
+    ...(options.includeOutcomeColumns ? [
+      { label: "Wins", className: "adr-col-metric", render: row => renderAdrCompactTextCell(metricAvailable(row.wins) ? row.wins : displayDash(), "", { className: "adr-table-tight-cell" }) },
+      { label: "Losses", className: "adr-col-metric", render: row => renderAdrCompactTextCell(metricAvailable(row.losses) ? row.losses : displayDash(), "", { className: "adr-table-tight-cell" }) },
+      { label: "Flats", className: "adr-col-metric", render: row => renderAdrCompactTextCell(metricAvailable(row.flats) ? row.flats : displayDash(), "", { className: "adr-table-tight-cell" }) }
+    ] : []),
+    { label: "Trust Status", className: "adr-col-status", render: row => renderTrustStatusCell(row.trustStatus || directionalTrustStatus(null)) }
+  ], {
+    tableClass: `adr-summary-table ${options.tableClass || "directional-trust-table"}`,
+    scrollClass: "adr-summary-scroll",
+    description: options.description || ""
+  });
+}
+
+function renderResearchDirectionalTrustSummary(data = {}) {
+  const layer1Rows = buildLayer1DirectionalTrustRows(data);
+  const layer2Rows = buildLayer2DirectionalTrustRows(data);
+  return `
+    <div class="backtest-report">
+      ${renderResearchStatusHeader(data)}
+      <section class="research-section">
+        <div class="research-section-head">
+          <div>
+            <h3>Directional Trust Summary</h3>
+          </div>
+          <p class="research-panel-copy">This table isolates clean Bullish/Bearish calls from Lean calls using the existing historical directional evaluation data. It does not use L2L opportunity results. Trust status is based on ex-flat directional win rate only.</p>
+        </div>
+      </section>
+      ${renderDirectionalTrustSummaryTable("Layer 1 Directional Trust", layer1Rows, {
+        subtitle: "Historical Accuracy Trust",
+        rateLabel: "Directional Win Rate",
+        includeOutcomeColumns: true,
+        description: "Layer 1 uses stored checker directions, displayed headline confidence buckets, and stored evaluation outcomes from the current historical accuracy dataset."
+      })}
+      ${renderDirectionalTrustSummaryTable("Layer 2 Directional Trust", layer2Rows, {
+        subtitle: "Historical Accuracy Trust",
+        rateLabel: "Directional Win Rate",
+        includeOutcomeColumns: true,
+        description: "Layer 2 uses same-date target and USD checker rows, requires opposite directional sides, combines confidence as the lower leg, and uses the target leg's stored directional evaluation outcome."
+      })}
+    </div>
+  `;
+}
+
 function renderAdrUnavailableDetails(title, rows = [], options = {}) {
   if (!rows.length) return "";
   const dataAttribute = options.dataAttribute ? ` ${options.dataAttribute}="true"` : "";
@@ -4893,6 +5139,7 @@ function renderResearchAdrThresholdSensitivity(data = {}) {
   const adrReach = data.adr_reach || null;
   const layer1Sensitivity = adrReach?.layer1?.threshold_sensitivity || {};
   const layer2Sensitivity = adrReach?.layer2?.threshold_sensitivity || {};
+  const trustSummaryRows = buildAdrTrustSummaryRows(adrReach, "0.55");
 
   return `
     <div class="backtest-report">
@@ -4905,6 +5152,13 @@ function renderResearchAdrThresholdSensitivity(data = {}) {
           <p class="research-panel-copy">This sensitivity table tests the same L2L 1H Sequence Research engine using different required move thresholds. The production baseline is 50% ADR20. The goal is to see how far the directional edge persists as the required move increases.</p>
         </div>
       </section>
+      ${renderDirectionalTrustSummaryTable("55% ADR20 L2L Trust Summary", trustSummaryRows, {
+        subtitle: "Trust Summary",
+        rateLabel: "55% ADR20 Opportunity Rate",
+        includeOutcomeColumns: false,
+        tableClass: "directional-trust-table adr-trust-summary-table",
+        description: "At present, signal strength is not consistently reliable for this type of directional L2L confluence. The table should be read by actual historical opportunity rate, not by assuming higher strength always means better performance."
+      })}
       ${renderAdrThresholdSensitivityTable("Layer 1 Sensitivity", layer1Sensitivity, {
         description: "Layer 1 sensitivity uses the same historical sequence engine and separates combined, clean, and lean directional call families across the configured ADR20 thresholds."
       })}
@@ -5736,11 +5990,15 @@ function renderBacktest(data = {}) {
         ? renderResearchDataChecker(data)
         : (activeBacktestTab === "weekday-breakdown"
           ? renderResearchWeekdayBreakdown(data)
-          : (activeBacktestTab === "pair-trade-research"
-            ? renderResearchPairTrade(data)
-            : (activeBacktestTab === "adr-reach-research"
-              ? renderResearchAdrReach(data)
-              : (activeBacktestTab === "adr-threshold-sensitivity" ? renderResearchAdrThresholdSensitivity(data) : renderResearchAccuracy(data))))));
+        : (activeBacktestTab === "pair-trade-research"
+          ? renderResearchPairTrade(data)
+          : (activeBacktestTab === "adr-reach-research"
+            ? renderResearchAdrReach(data)
+            : (activeBacktestTab === "adr-threshold-sensitivity"
+              ? renderResearchAdrThresholdSensitivity(data)
+              : (activeBacktestTab === "directional-trust-summary"
+                ? renderResearchDirectionalTrustSummary(data)
+                : renderResearchAccuracy(data)))))));
     applyMatrixEvidenceFilter("all");
   } catch (err) {
     console.error("Backtest render failed", err);

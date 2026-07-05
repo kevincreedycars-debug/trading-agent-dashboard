@@ -437,6 +437,35 @@ async function run() {
       throw new Error(`L2L Threshold Sensitivity did not render the expected reliability labels.\n${adrThresholdText}`);
     }
 
+    if (!normalizedAdrThresholdText.includes("55% adr20 l2l trust summary") || !normalizedAdrThresholdText.includes("can use") || !normalizedAdrThresholdText.includes("do not use")) {
+      throw new Error(`L2L Threshold Sensitivity did not render the 55% trust summary.\n${adrThresholdText}`);
+    }
+
+    await page.getByRole("button", { name: "Directional Trust Summary" }).click();
+    await page.waitForSelector("text=Layer 1 Directional Trust", { timeout: 15000 });
+    const directionalTrustText = await page.locator("#backtestPanel").innerText();
+    const normalizedDirectionalTrustText = directionalTrustText.toLowerCase();
+
+    if (!normalizedDirectionalTrustText.includes("directional trust summary")) {
+      throw new Error(`Directional Trust Summary tab did not render the expected heading.\n${directionalTrustText}`);
+    }
+
+    if (!normalizedDirectionalTrustText.includes("layer 1 directional trust") || !normalizedDirectionalTrustText.includes("layer 2 directional trust")) {
+      throw new Error(`Directional Trust Summary did not render both layer tables.\n${directionalTrustText}`);
+    }
+
+    if (!normalizedDirectionalTrustText.includes("combined directional") || !normalizedDirectionalTrustText.includes("clean directional only") || !normalizedDirectionalTrustText.includes("lean directional only")) {
+      throw new Error(`Directional Trust Summary did not render all call groups.\n${directionalTrustText}`);
+    }
+
+    if (!normalizedDirectionalTrustText.includes("strong+") || !normalizedDirectionalTrustText.includes("very strong")) {
+      throw new Error(`Directional Trust Summary did not render all strength cohorts.\n${directionalTrustText}`);
+    }
+
+    if (!normalizedDirectionalTrustText.includes("can use") || !normalizedDirectionalTrustText.includes("do not use")) {
+      throw new Error(`Directional Trust Summary did not render trust-status labels.\n${directionalTrustText}`);
+    }
+
     if (consoleErrors.length) {
       throw new Error(`Console errors were emitted during dashboard smoke.\n${consoleErrors.join("\n")}`);
     }
