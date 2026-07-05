@@ -9,11 +9,11 @@ const {
   bucketKeyFromConfidence,
   buildCellMap,
   buildRequiredDistanceInputs,
+  classifyDirectionalCallType,
   createOutcomeCell,
   evaluateL2lSequence,
   loadDailyOhlc,
   loadIntradayOhlc,
-  normalizeExactDirectionalSignal,
   normalizeHeadlineConfidence,
   normalizeLayer1Direction,
   reasonLabel,
@@ -54,6 +54,26 @@ const WEEKDAYS = {
   WEEKDAY_ONLY: ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY"],
   ALL_DAYS: ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY"]
 };
+const ENTRY_RELIABILITY_GROUPS = [
+  {
+    key: "COMBINED_DIRECTIONAL",
+    label: "Combined Directional",
+    description: "Includes BULLISH, BEARISH, BULLISH_LEAN, and BEARISH_LEAN.",
+    directionalCallTypes: ["CLEAN_DIRECTIONAL", "LEAN_DIRECTIONAL"]
+  },
+  {
+    key: "CLEAN_DIRECTIONAL_ONLY",
+    label: "Clean Directional Only",
+    description: "Includes BULLISH and BEARISH only.",
+    directionalCallTypes: ["CLEAN_DIRECTIONAL"]
+  },
+  {
+    key: "LEAN_DIRECTIONAL_ONLY",
+    label: "Lean Directional Only",
+    description: "Includes BULLISH_LEAN and BEARISH_LEAN only.",
+    directionalCallTypes: ["LEAN_DIRECTIONAL"]
+  }
+];
 const ASSET_CONFIGS = [
   {
     assetCode: "EUR",
@@ -265,7 +285,7 @@ function classifySkipReason(reason) {
   return reason || "unknown";
 }
 
-function buildDiagnosticBase(config, row, directionKey, bucketKey, confidencePct, evaluationDate) {
+function buildDiagnosticBase(config, row, rawDirectionLabel, directionKey, directionalCallType, bucketKey, confidencePct, evaluationDate) {
   return {
     predictionId: row?.prediction_id || null,
     snapshotDate: String(row?.snapshot_date || "").trim(),
@@ -273,7 +293,9 @@ function buildDiagnosticBase(config, row, directionKey, bucketKey, confidencePct
     evaluationDate,
     layer: "LAYER_1",
     assetOrPair: config.assetCode,
+    rawCallDirection: rawDirectionLabel,
     callDirection: directionKey,
+    directionalCallType,
     strengthBucket: bucketKey,
     confidencePct: roundNumber(confidencePct, 4),
     candleSource: config.candleSourceLabel,
@@ -282,9 +304,9 @@ function buildDiagnosticBase(config, row, directionKey, bucketKey, confidencePct
   };
 }
 
-function buildEvaluatedLayer1Row(config, contexts, baseRow, row, directionKey, bucketKey, confidencePct, requiredInputs, evaluation) {
+function buildEvaluatedLayer1Row(config, contexts, baseRow, row, rawDirectionLabel, directionKey, directionalCallType, bucketKey, confidencePct, requiredInputs, evaluation) {
   return {
-    ...buildDiagnosticBase(config, row, directionKey, bucketKey, confidencePct, String(row?.evaluation_inputs?.close_date || "").trim()),
+    ...buildDiagnosticBase(config, row, rawDirectionLabel, directionKey, directionalCallType, bucketKey, confidencePct, String(row?.evaluation_inputs?.close_date || "").trim()),
     layer: "LAYER_1",
     candleSource: config.candleSourceLabel,
     instrumentSymbol: requiredInputs.instrumentSymbol,
@@ -306,9 +328,9 @@ function buildEvaluatedLayer1Row(config, contexts, baseRow, row, directionKey, b
   };
 }
 
-function buildNotEvaluatedLayer1Row(config, row, directionKey, bucketKey, confidencePct, evaluationDate, requiredInputs) {
+function buildNotEvaluatedLayer1Row(config, row, rawDirectionLabel, directionKey, directionalCallType, bucketKey, confidencePct, evaluationDate, requiredInputs) {
   return {
-    ...buildDiagnosticBase(config, row, directionKey, bucketKey, confidencePct, evaluationDate),
+    ...buildDiagnosticBase(config, row, rawDirectionLabel, directionKey, directionalCallType, bucketKey, confidencePct, evaluationDate),
     numberOf1hCandlesLoaded: Number(requiredInputs?.numberOf1hCandlesLoaded || 0),
     adr20: Number.isFinite(requiredInputs?.adr20) ? roundNumber(requiredInputs.adr20) : null,
     requiredL2lDistance: Number.isFinite(requiredInputs?.requiredL2lDistance) ? roundNumber(requiredInputs.requiredL2lDistance) : null,
@@ -360,7 +382,9 @@ function buildLayer1AssetResearch(config, checker, options = {}) {
       return;
     }
 
-    const directionKey = normalizeLayer1Direction(row?.stored?.direction || row?.checker?.direction || "");
+    const rawDirectionLabel = String(row?.stored?.direction || row?.checker?.direction || "").trim().toUpperCase();
+    const directionKey = normalizeLayer1Direction(rawDirectionLabel);
+    const directionalCallType = classifyDirectionalCallType(rawDirectionLabel);
     if (!directionKey) {
       skippedCounts.no_trade_or_non_directional_rows = (skippedCounts.no_trade_or_non_directional_rows || 0) + 1;
       return;
@@ -370,14 +394,14 @@ function buildLayer1AssetResearch(config, checker, options = {}) {
     const bucketKey = bucketKeyFromConfidence(confidencePct);
     if (!bucketKey) {
       skippedCounts.missing_confidence_bucket = (skippedCounts.missing_confidence_bucket || 0) + 1;
-      diagnosticRows.push(buildNotEvaluatedLayer1Row(config, row, directionKey, null, confidencePct, evaluationDate, { reason: "missing_confidence_bucket" }));
+      diagnosticRows.push(buildNotEvaluatedLayer1Row(config, row, rawDirectionLabel, directionKey, directionalCallType, null, confidencePct, evaluationDate, { reason: "missing_confidence_bucket" }));
       return;
     }
 
     const weekdayKey = weekdayFromDate(evaluationDate);
     if (!evaluationDate || !weekdayKey || !weekdayTotals[weekdayKey]) {
       skippedCounts.missing_evaluation_date = (skippedCounts.missing_evaluation_date || 0) + 1;
-      diagnosticRows.push(buildNotEvaluatedLayer1Row(config, row, directionKey, bucketKey, confidencePct, evaluationDate, { reason: "missing_evaluation_date" }));
+      diagnosticRows.push(buildNotEvaluatedLayer1Row(config, row, rawDirectionLabel, directionKey, directionalCallType, bucketKey, confidencePct, evaluationDate, { reason: "missing_evaluation_date" }));
       return;
     }
 
@@ -385,12 +409,12 @@ function buildLayer1AssetResearch(config, checker, options = {}) {
     if (!requiredInputs.ok) {
       const skipKey = classifySkipReason(requiredInputs.reason);
       skippedCounts[skipKey] = (skippedCounts[skipKey] || 0) + 1;
-      diagnosticRows.push(buildNotEvaluatedLayer1Row(config, row, directionKey, bucketKey, confidencePct, evaluationDate, requiredInputs));
+      diagnosticRows.push(buildNotEvaluatedLayer1Row(config, row, rawDirectionLabel, directionKey, directionalCallType, bucketKey, confidencePct, evaluationDate, requiredInputs));
       return;
     }
 
     const evaluation = evaluateL2lSequence(directionKey, requiredInputs);
-    const evaluatedRow = buildEvaluatedLayer1Row(config, contexts, null, row, directionKey, bucketKey, confidencePct, requiredInputs, evaluation);
+    const evaluatedRow = buildEvaluatedLayer1Row(config, contexts, null, row, rawDirectionLabel, directionKey, directionalCallType, bucketKey, confidencePct, requiredInputs, evaluation);
     diagnosticRows.push(evaluatedRow);
     evaluatedRows.push(evaluatedRow);
     addOutcome(weekdayTotals[weekdayKey], evaluatedRow.outcomeKey);
@@ -506,8 +530,12 @@ function buildLayer2PairResearch(config, layer1ByAssetCode, checkers, options = 
   (Array.isArray(targetChecker?.rows) ? targetChecker.rows : []).forEach((targetRow) => {
     const snapshotDate = String(targetRow?.snapshot_date || "").trim();
     const usdRow = usdRowsByDate.get(snapshotDate) || null;
-    const targetDirection = normalizeExactDirectionalSignal(targetRow?.stored?.direction || targetRow?.checker?.direction || "");
-    const usdDirection = normalizeExactDirectionalSignal(usdRow?.stored?.direction || usdRow?.checker?.direction || "");
+    const targetRawDirection = String(targetRow?.stored?.direction || targetRow?.checker?.direction || "").trim().toUpperCase();
+    const usdRawDirection = String(usdRow?.stored?.direction || usdRow?.checker?.direction || "").trim().toUpperCase();
+    const targetDirection = normalizeLayer1Direction(targetRawDirection);
+    const usdDirection = normalizeLayer1Direction(usdRawDirection);
+    const targetDirectionalCallType = classifyDirectionalCallType(targetRawDirection);
+    const usdDirectionalCallType = classifyDirectionalCallType(usdRawDirection);
     const targetConfidence = normalizeHeadlineConfidence(targetRow);
     const usdConfidence = normalizeHeadlineConfidence(usdRow);
     const combinedConfidencePct = Number.isFinite(targetConfidence) && Number.isFinite(usdConfidence)
@@ -534,7 +562,9 @@ function buildLayer2PairResearch(config, layer1ByAssetCode, checkers, options = 
         evaluationDate: String(targetRow?.evaluation_inputs?.close_date || "").trim(),
         layer: "LAYER_2",
         assetOrPair: config.pairCode,
+        rawCallDirection: targetRawDirection,
         callDirection: targetDirection,
+        directionalCallType: targetDirectionalCallType,
         strengthBucket: null,
         confidencePct: null,
         candleSource: targetAsset.candleSourceLabel,
@@ -551,7 +581,10 @@ function buildLayer2PairResearch(config, layer1ByAssetCode, checkers, options = 
         notEvaluatedReason: reasonLabel("missing_combined_confidence"),
         notEvaluatedReasonKey: "missing_combined_confidence",
         targetDirection,
-        usdDirection
+        usdDirection,
+        targetRawDirection,
+        usdRawDirection,
+        usdDirectionalCallType
       });
       return;
     }
@@ -567,8 +600,13 @@ function buildLayer2PairResearch(config, layer1ByAssetCode, checkers, options = 
       layer: "LAYER_2",
       assetOrPair: config.pairCode,
       pairLabel: config.pairLabel,
+      rawCallDirection: targetRawDirection,
       targetDirection,
       usdDirection,
+      directionalCallType: targetDirectionalCallType,
+      targetRawDirection,
+      usdRawDirection,
+      usdDirectionalCallType,
       strengthBucket: bucketKey,
       confidencePct: roundNumber(combinedConfidencePct, 4),
       fixedReferenceL2lDistance: config.fixedReferenceL2lDistance ?? null
@@ -745,6 +783,61 @@ function aggregateSignalsVsStrongPlus(items, type) {
   ];
 }
 
+function reliabilityLabelFromRate(opportunityRatePct) {
+  if (!Number.isFinite(opportunityRatePct)) return "Not yet available";
+  return opportunityRatePct >= 60 ? "Reliable" : "Not Reliable";
+}
+
+function buildEntryReliabilityRows(rows = []) {
+  const bucketRows = [
+    ...CONFIDENCE_BUCKETS.map((bucket) => ({
+      cohortKey: bucket.key,
+      cohortLabel: bucket.label,
+      filter: (row) => row.strengthBucket === bucket.key
+    })),
+    {
+      cohortKey: "STRONG_PLUS",
+      cohortLabel: "Strong+",
+      filter: (row) => row.strengthBucket === "STRONG" || row.strengthBucket === "VERY_STRONG"
+    },
+    {
+      cohortKey: "ALL",
+      cohortLabel: "All",
+      filter: () => true
+    }
+  ];
+
+  return bucketRows.map((bucket) => {
+    const matchingRows = rows.filter(bucket.filter);
+    const totals = summarizeOutcomeCell({
+      total: matchingRows.length,
+      wins: matchingRows.filter((row) => row.outcomeKey === "WIN").length,
+      losses: matchingRows.filter((row) => row.outcomeKey === "LOSS").length
+    });
+    return {
+      cohortKey: bucket.cohortKey,
+      cohortLabel: bucket.cohortLabel,
+      total: totals.total,
+      wins: totals.wins,
+      losses: totals.losses,
+      opportunityRatePct: totals.winRatePct,
+      reliabilityLabel: reliabilityLabelFromRate(totals.winRatePct)
+    };
+  });
+}
+
+function buildEntryReliabilityGroups(rows = []) {
+  return ENTRY_RELIABILITY_GROUPS.map((group) => {
+    const groupRows = rows.filter((row) => group.directionalCallTypes.includes(row.directionalCallType));
+    return {
+      groupKey: group.key,
+      groupLabel: group.label,
+      description: group.description,
+      rows: buildEntryReliabilityRows(groupRows)
+    };
+  });
+}
+
 function buildOutput(layer1Assets, layer2Pairs) {
   const availableLayer1 = layer1Assets.filter((asset) => asset.available);
   const availableLayer2 = layer2Pairs.filter((pair) => pair.available);
@@ -791,6 +884,7 @@ function buildOutput(layer1Assets, layer2Pairs) {
       })),
       strength_summary_rows: aggregateStrengthRows(availableLayer1, "keep_all"),
       comparison_rows: aggregateSignalsVsStrongPlus(availableLayer1, "layer1"),
+      entry_reliability_groups: buildEntryReliabilityGroups(availableLayer1.flatMap((asset) => asset.evaluatedRows)),
       assets: layer1Assets.map((asset) => ({
         assetCode: asset.assetCode,
         assetLabel: asset.assetLabel,
@@ -827,6 +921,7 @@ function buildOutput(layer1Assets, layer2Pairs) {
       })),
       strength_summary_rows: aggregateStrengthRows(availableLayer2, "keep_all"),
       comparison_rows: aggregateSignalsVsStrongPlus(availableLayer2, "layer2"),
+      entry_reliability_groups: buildEntryReliabilityGroups(availableLayer2.flatMap((pair) => pair.tradableRows)),
       pairs: layer2Pairs.map((pair) => ({
         pairCode: pair.pairCode,
         pairLabel: pair.pairLabel,

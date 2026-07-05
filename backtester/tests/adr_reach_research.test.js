@@ -3,7 +3,8 @@ const assert = require("node:assert/strict");
 
 const {
   buildLayer1AssetResearch,
-  buildLayer2PairResearch
+  buildLayer2PairResearch,
+  buildOutput
 } = require("../scripts/validate_adr_reach_research");
 const {
   buildRequiredDistanceInputs,
@@ -276,4 +277,139 @@ test("sequence research groups layer1 assets and layer2 strength buckets", () =>
   assert.equal(asset.bucketTotals.STRONG.total, 1);
   assert.equal(pair.summary.tradableSignals, 2);
   assert.equal(pair.summary.l2lRangeAvailableWins, 2);
+});
+
+test("entry reliability groups separate combined clean and lean directional rows", () => {
+  const checker = {
+    rows: [
+      createCheckerRow({
+        predictionId: "eur-clean-bull",
+        snapshotDate: "2024-02-06",
+        direction: "BULLISH",
+        confidence: 42,
+        closeDate: "2024-02-06"
+      }),
+      createCheckerRow({
+        predictionId: "eur-clean-bear",
+        snapshotDate: "2024-02-07",
+        direction: "BEARISH",
+        confidence: 72,
+        closeDate: "2024-02-07"
+      }),
+      createCheckerRow({
+        predictionId: "eur-lean-bull",
+        snapshotDate: "2024-02-08",
+        direction: "BULLISH_LEAN",
+        confidence: 63,
+        closeDate: "2024-02-08"
+      }),
+      createCheckerRow({
+        predictionId: "eur-lean-bear",
+        snapshotDate: "2024-02-09",
+        direction: "BEARISH_LEAN",
+        confidence: 82,
+        closeDate: "2024-02-09"
+      })
+    ],
+    summary: { rows_checked: 4 }
+  };
+  const usdChecker = {
+    rows: [
+      createCheckerRow({
+        predictionId: "usd-clean-bear",
+        snapshotDate: "2024-02-06",
+        direction: "BEARISH",
+        confidence: 86,
+        closeDate: "2024-02-06"
+      }),
+      createCheckerRow({
+        predictionId: "usd-clean-bull",
+        snapshotDate: "2024-02-07",
+        direction: "BULLISH",
+        confidence: 90,
+        closeDate: "2024-02-07"
+      }),
+      createCheckerRow({
+        predictionId: "usd-lean-bear",
+        snapshotDate: "2024-02-08",
+        direction: "BEARISH_LEAN",
+        confidence: 74,
+        closeDate: "2024-02-08"
+      }),
+      createCheckerRow({
+        predictionId: "usd-lean-bull",
+        snapshotDate: "2024-02-09",
+        direction: "BULLISH_LEAN",
+        confidence: 88,
+        closeDate: "2024-02-09"
+      })
+    ],
+    summary: { rows_checked: 4 }
+  };
+
+  const dailyContext = createDailyContext(createDailySeries());
+  const intradayContext = createIntradayContext({
+    "2024-02-06": [
+      { instrument: "TEST", timestamp: "2024-02-06T09:00:00Z", date: "2024-02-06", open: 105, high: 106, low: 100, close: 101, source: "test", complete: true },
+      { instrument: "TEST", timestamp: "2024-02-06T10:00:00Z", date: "2024-02-06", open: 101, high: 106, low: 101, close: 105, source: "test", complete: true }
+    ],
+    "2024-02-07": [
+      { instrument: "TEST", timestamp: "2024-02-07T09:00:00Z", date: "2024-02-07", open: 102, high: 110, low: 108, close: 109, source: "test", complete: true },
+      { instrument: "TEST", timestamp: "2024-02-07T10:00:00Z", date: "2024-02-07", open: 109, high: 109, low: 104, close: 105, source: "test", complete: true }
+    ],
+    "2024-02-08": [
+      { instrument: "TEST", timestamp: "2024-02-08T09:00:00Z", date: "2024-02-08", open: 105, high: 106, low: 100, close: 101, source: "test", complete: true },
+      { instrument: "TEST", timestamp: "2024-02-08T10:00:00Z", date: "2024-02-08", open: 101, high: 106, low: 101, close: 105, source: "test", complete: true }
+    ],
+    "2024-02-09": [
+      { instrument: "TEST", timestamp: "2024-02-09T09:00:00Z", date: "2024-02-09", open: 102, high: 110, low: 108, close: 109, source: "test", complete: true },
+      { instrument: "TEST", timestamp: "2024-02-09T10:00:00Z", date: "2024-02-09", open: 109, high: 109, low: 104, close: 105, source: "test", complete: true }
+    ]
+  });
+
+  const asset = buildLayer1AssetResearch({
+    assetCode: "EUR",
+    assetLabel: "EUR",
+    weekdayKeys: ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY"],
+    instrument: "EUR_USD",
+    sourceVendor: "test",
+    candleSourceLabel: "test",
+    dailySourceLabel: "daily",
+    intradaySourceLabel: "intraday",
+    dailySourcePath: "daily.csv",
+    intradaySourcePath: "intraday.csv",
+    fixedReferenceL2lDistance: 5
+  }, checker, {
+    contexts: {
+      daily: dailyContext,
+      intraday: intradayContext
+    },
+    rollingWindowStart: "2024-01-01"
+  });
+
+  const pair = buildLayer2PairResearch({
+    targetAssetCode: "EUR",
+    pairCode: "EUR_USD",
+    pairLabel: "EUR/USD",
+    weekdayKeys: ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY"],
+    fixedReferenceL2lDistance: 5
+  }, { EUR: asset }, { USD: usdChecker, EUR: checker });
+
+  assert.equal(pair.summary.tradableSignals, 4);
+
+  const output = buildOutput([asset], [pair]);
+  const layer1Combined = output.layer1.entry_reliability_groups.find((group) => group.groupKey === "COMBINED_DIRECTIONAL");
+  const layer1Clean = output.layer1.entry_reliability_groups.find((group) => group.groupKey === "CLEAN_DIRECTIONAL_ONLY");
+  const layer1Lean = output.layer1.entry_reliability_groups.find((group) => group.groupKey === "LEAN_DIRECTIONAL_ONLY");
+  const layer2Combined = output.layer2.entry_reliability_groups.find((group) => group.groupKey === "COMBINED_DIRECTIONAL");
+  const layer2Clean = output.layer2.entry_reliability_groups.find((group) => group.groupKey === "CLEAN_DIRECTIONAL_ONLY");
+  const layer2Lean = output.layer2.entry_reliability_groups.find((group) => group.groupKey === "LEAN_DIRECTIONAL_ONLY");
+
+  assert.equal(layer1Combined.rows.find((row) => row.cohortKey === "ALL").total, 4);
+  assert.equal(layer1Clean.rows.find((row) => row.cohortKey === "ALL").total, 2);
+  assert.equal(layer1Lean.rows.find((row) => row.cohortKey === "ALL").total, 2);
+  assert.equal(layer2Combined.rows.find((row) => row.cohortKey === "ALL").total, 4);
+  assert.equal(layer2Clean.rows.find((row) => row.cohortKey === "ALL").total, 2);
+  assert.equal(layer2Lean.rows.find((row) => row.cohortKey === "ALL").total, 2);
+  assert.equal(layer2Lean.rows.find((row) => row.cohortKey === "ALL").reliabilityLabel, "Reliable");
 });

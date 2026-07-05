@@ -4430,6 +4430,48 @@ function renderAdrCompactStrongPlusValue(row = {}, totalKey, winRateKey) {
   return `${row[totalKey]} · ${percentValue(row[winRateKey])}`;
 }
 
+function renderAdrReliabilityCell(row = {}) {
+  const label = row.reliabilityLabel || "Not yet available";
+  const className = label === "Reliable" ? "reliable" : (label === "Not Reliable" ? "not-reliable" : "unavailable");
+  return `
+    <div class="research-cell adr-compact-cell adr-reliability-cell ${className}">
+      <strong>${escapeHtml(label)}</strong>
+      <span>${metricAvailable(row.opportunityRatePct) ? `${percentValue(row.opportunityRatePct)} opportunity rate` : "No evaluated rows yet"}</span>
+    </div>
+  `;
+}
+
+function renderAdrEntryReliabilitySection(title, groups = [], options = {}) {
+  if (!groups.length) return "";
+  const evaluatedLabel = options.evaluatedLabel || "Evaluated";
+
+  return `
+    <section class="research-section adr-entry-reliability-section">
+      <div class="research-section-head">
+        <div>
+          <h3>${escapeHtml(title)}</h3>
+        </div>
+        <p class="research-panel-copy">${escapeHtml(options.description || "")}</p>
+      </div>
+      <div class="adr-entry-reliability-grid">
+        ${groups.map((group) => renderResearchBreakdownTable(group.groupLabel, "Entry Reliability", group.rows || [], [
+          { label: "Strength", className: "adr-col-entity", render: row => renderAdrCompactTextCell(row.cohortLabel || displayDash(), "", { className: "adr-table-tight-cell" }) },
+          { label: evaluatedLabel, className: "adr-col-metric", render: row => renderAdrCompactTextCell(metricAvailable(row.total) ? row.total : displayDash(), "", { className: "adr-table-tight-cell" }) },
+          { label: "Wins", className: "adr-col-metric", render: row => renderAdrCompactTextCell(metricAvailable(row.wins) ? row.wins : displayDash(), "", { className: "adr-table-tight-cell" }) },
+          { label: "Misses", className: "adr-col-metric", render: row => renderAdrCompactTextCell(metricAvailable(row.losses) ? row.losses : displayDash(), "", { className: "adr-table-tight-cell" }) },
+          { label: "Opportunity Rate", className: "adr-col-rate", render: row => renderAdrCompactTextCell(metricAvailable(row.opportunityRatePct) ? percentValue(row.opportunityRatePct) : displayDash(), "", { className: "adr-table-tight-cell" }) },
+          { label: "Reliability", className: "adr-col-status", render: row => renderAdrReliabilityCell(row) }
+        ], {
+          panelClass: "adr-entry-reliability-panel",
+          tableClass: "adr-summary-table adr-entry-reliability-table",
+          scrollClass: "adr-summary-scroll",
+          description: group.description
+        })).join("")}
+      </div>
+    </section>
+  `;
+}
+
 function renderAdrUnavailableDetails(title, rows = [], options = {}) {
   if (!rows.length) return "";
   const dataAttribute = options.dataAttribute ? ` ${options.dataAttribute}="true"` : "";
@@ -4659,10 +4701,12 @@ function renderResearchAdrReach(data = {}) {
   const layer1SummaryRows = Array.isArray(adrReach?.layer1?.summary_rows) ? adrReach.layer1.summary_rows : [];
   const layer1StrengthRows = Array.isArray(adrReach?.layer1?.strength_summary_rows) ? adrReach.layer1.strength_summary_rows : [];
   const layer1ComparisonRows = Array.isArray(adrReach?.layer1?.comparison_rows) ? adrReach.layer1.comparison_rows : [];
+  const layer1EntryReliabilityGroups = Array.isArray(adrReach?.layer1?.entry_reliability_groups) ? adrReach.layer1.entry_reliability_groups : [];
   const layer1Assets = Array.isArray(adrReach?.layer1?.assets) ? adrReach.layer1.assets : [];
   const layer2SummaryRows = Array.isArray(adrReach?.layer2?.summary_rows) ? adrReach.layer2.summary_rows : [];
   const layer2StrengthRows = Array.isArray(adrReach?.layer2?.strength_summary_rows) ? adrReach.layer2.strength_summary_rows : [];
   const layer2ComparisonRows = Array.isArray(adrReach?.layer2?.comparison_rows) ? adrReach.layer2.comparison_rows : [];
+  const layer2EntryReliabilityGroups = Array.isArray(adrReach?.layer2?.entry_reliability_groups) ? adrReach.layer2.entry_reliability_groups : [];
   const layer2Pairs = Array.isArray(adrReach?.layer2?.pairs) ? adrReach.layer2.pairs : [];
   const sourceAuditRows = Array.isArray(adrReach?.source_audit) ? adrReach.source_audit : [];
   const unavailableLayer1Rows = layer1SummaryRows.filter(row => !row.available);
@@ -4683,6 +4727,22 @@ function renderResearchAdrReach(data = {}) {
     <div class="backtest-report">
       ${renderResearchStatusHeader(data)}
       ${renderAdrHowToReadPanel()}
+      <section class="research-section">
+        <div class="research-section-head">
+          <div>
+            <h3>Entry Reliability</h3>
+          </div>
+          <p class="research-panel-copy">This section separates clean Bullish/Bearish calls from Lean calls so the minimum viable entry threshold can be identified. Rows marked Reliable have produced a 60%+ L2L opportunity rate historically.</p>
+        </div>
+      </section>
+      ${renderAdrEntryReliabilitySection("Layer 1 Entry Reliability", layer1EntryReliabilityGroups, {
+        evaluatedLabel: "Evaluated",
+        description: "Layer 1 reliability is grouped by the original call type while keeping the same L2L 1H sequence calculation and 50% ADR20 threshold."
+      })}
+      ${renderAdrEntryReliabilitySection("Layer 2 Entry Reliability", layer2EntryReliabilityGroups, {
+        evaluatedLabel: "Evaluated",
+        description: "Layer 2 reliability remains downstream-only. Opposite-side target/USD directional pairings are required, and Lean directional calls are now separated from clean Bullish/Bearish calls in this research view."
+      })}
       <section class="research-section" data-adr-reach-layer1-summary="true">
         <div class="research-section-head">
           <div>

@@ -2368,6 +2368,45 @@ h3 {
   min-width: 520px;
 }
 
+.adr-entry-reliability-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.adr-entry-reliability-panel {
+  height: 100%;
+}
+
+.adr-entry-reliability-table {
+  min-width: 760px;
+}
+
+.adr-entry-reliability-table .adr-col-entity {
+  width: 16%;
+}
+
+.adr-entry-reliability-table .adr-col-metric,
+.adr-entry-reliability-table .adr-col-rate {
+  width: 14%;
+}
+
+.adr-entry-reliability-table .adr-col-status {
+  width: 28%;
+}
+
+.adr-reliability-cell.reliable strong {
+  color: #1d5d4a;
+}
+
+.adr-reliability-cell.not-reliable strong {
+  color: #8f3d24;
+}
+
+.adr-reliability-cell.unavailable strong {
+  color: var(--ink-soft);
+}
+
 .adr-confidence-table .adr-col-entity {
   width: 22%;
 }
@@ -2778,7 +2817,8 @@ h3 {
   .rules-strip,
   .overview-briefing-shell,
   .overview-stats,
-  .outlook-grid {
+  .outlook-grid,
+  .adr-entry-reliability-grid {
     grid-template-columns: repeat(2, 1fr);
   }
 
@@ -2868,6 +2908,7 @@ h3 {
   .backtest-grid.three-column,
   .phase-list,
   .correlation-chip-grid,
+  .adr-entry-reliability-grid,
   .research-breakdown-grid,
   .research-factor-grid,
   .research-status-grid,

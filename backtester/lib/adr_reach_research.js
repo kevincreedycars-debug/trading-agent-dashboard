@@ -117,6 +117,13 @@ function normalizeLayer1Direction(value = "") {
   return null;
 }
 
+function classifyDirectionalCallType(value = "") {
+  const normalized = String(value || "").trim().toUpperCase();
+  if (normalized === "BULLISH" || normalized === "BEARISH") return "CLEAN_DIRECTIONAL";
+  if (normalized === "BULLISH_LEAN" || normalized === "BEARISH_LEAN") return "LEAN_DIRECTIONAL";
+  return null;
+}
+
 function normalizeExactDirectionalSignal(value = "") {
   const normalized = String(value || "").trim().toUpperCase();
   if (normalized === "BULLISH" || normalized === "BEARISH") return normalized;
@@ -419,6 +426,7 @@ module.exports = {
   bucketLabelFromKey,
   buildCellMap,
   buildRequiredDistanceInputs,
+  classifyDirectionalCallType,
   computeAdr20,
   createOutcomeCell,
   evaluateL2lSequence,
