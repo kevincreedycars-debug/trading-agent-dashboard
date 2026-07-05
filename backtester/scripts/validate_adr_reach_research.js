@@ -856,24 +856,24 @@ function buildEntryReliabilityGroups(rows = []) {
 
 function buildSensitivityRowDescriptors() {
   return [
-    { rowKey: "COMBINED_ALL", rowLabel: "Combined Directional - All", directionalCallTypes: ["CLEAN_DIRECTIONAL", "LEAN_DIRECTIONAL"], bucketKeys: ["ALL"] },
-    { rowKey: "COMBINED_WEAK", rowLabel: "Combined - Weak", directionalCallTypes: ["CLEAN_DIRECTIONAL", "LEAN_DIRECTIONAL"], bucketKeys: ["WEAK"] },
-    { rowKey: "COMBINED_MODERATE", rowLabel: "Combined - Moderate", directionalCallTypes: ["CLEAN_DIRECTIONAL", "LEAN_DIRECTIONAL"], bucketKeys: ["MODERATE"] },
-    { rowKey: "COMBINED_STRONG", rowLabel: "Combined - Strong", directionalCallTypes: ["CLEAN_DIRECTIONAL", "LEAN_DIRECTIONAL"], bucketKeys: ["STRONG"] },
-    { rowKey: "COMBINED_VERY_STRONG", rowLabel: "Combined - Very Strong", directionalCallTypes: ["CLEAN_DIRECTIONAL", "LEAN_DIRECTIONAL"], bucketKeys: ["VERY_STRONG"] },
-    { rowKey: "COMBINED_STRONG_PLUS", rowLabel: "Combined - Strong+", directionalCallTypes: ["CLEAN_DIRECTIONAL", "LEAN_DIRECTIONAL"], bucketKeys: ["STRONG", "VERY_STRONG"] },
-    { rowKey: "CLEAN_ALL", rowLabel: "Clean Directional - All", directionalCallTypes: ["CLEAN_DIRECTIONAL"], bucketKeys: ["ALL"] },
-    { rowKey: "CLEAN_WEAK", rowLabel: "Clean - Weak", directionalCallTypes: ["CLEAN_DIRECTIONAL"], bucketKeys: ["WEAK"] },
-    { rowKey: "CLEAN_MODERATE", rowLabel: "Clean - Moderate", directionalCallTypes: ["CLEAN_DIRECTIONAL"], bucketKeys: ["MODERATE"] },
-    { rowKey: "CLEAN_STRONG", rowLabel: "Clean - Strong", directionalCallTypes: ["CLEAN_DIRECTIONAL"], bucketKeys: ["STRONG"] },
-    { rowKey: "CLEAN_VERY_STRONG", rowLabel: "Clean - Very Strong", directionalCallTypes: ["CLEAN_DIRECTIONAL"], bucketKeys: ["VERY_STRONG"] },
-    { rowKey: "CLEAN_STRONG_PLUS", rowLabel: "Clean - Strong+", directionalCallTypes: ["CLEAN_DIRECTIONAL"], bucketKeys: ["STRONG", "VERY_STRONG"] },
-    { rowKey: "LEAN_ALL", rowLabel: "Lean Directional - All", directionalCallTypes: ["LEAN_DIRECTIONAL"], bucketKeys: ["ALL"] },
-    { rowKey: "LEAN_WEAK", rowLabel: "Lean - Weak", directionalCallTypes: ["LEAN_DIRECTIONAL"], bucketKeys: ["WEAK"] },
-    { rowKey: "LEAN_MODERATE", rowLabel: "Lean - Moderate", directionalCallTypes: ["LEAN_DIRECTIONAL"], bucketKeys: ["MODERATE"] },
-    { rowKey: "LEAN_STRONG", rowLabel: "Lean - Strong", directionalCallTypes: ["LEAN_DIRECTIONAL"], bucketKeys: ["STRONG"] },
-    { rowKey: "LEAN_VERY_STRONG", rowLabel: "Lean - Very Strong", directionalCallTypes: ["LEAN_DIRECTIONAL"], bucketKeys: ["VERY_STRONG"] },
-    { rowKey: "LEAN_STRONG_PLUS", rowLabel: "Lean - Strong+", directionalCallTypes: ["LEAN_DIRECTIONAL"], bucketKeys: ["STRONG", "VERY_STRONG"] }
+    { rowKey: "COMBINED_ALL", rowLabel: "Combined Directional - All", signalTypeKey: "COMBINED", signalTypeLabel: "Combined Directional", strengthKey: "ALL", strengthLabel: "All", directionalCallTypes: ["CLEAN_DIRECTIONAL", "LEAN_DIRECTIONAL"], bucketKeys: ["ALL"] },
+    { rowKey: "COMBINED_WEAK", rowLabel: "Combined - Weak", signalTypeKey: "COMBINED", signalTypeLabel: "Combined Directional", strengthKey: "WEAK", strengthLabel: "Weak", directionalCallTypes: ["CLEAN_DIRECTIONAL", "LEAN_DIRECTIONAL"], bucketKeys: ["WEAK"] },
+    { rowKey: "COMBINED_MODERATE", rowLabel: "Combined - Moderate", signalTypeKey: "COMBINED", signalTypeLabel: "Combined Directional", strengthKey: "MODERATE", strengthLabel: "Moderate", directionalCallTypes: ["CLEAN_DIRECTIONAL", "LEAN_DIRECTIONAL"], bucketKeys: ["MODERATE"] },
+    { rowKey: "COMBINED_STRONG", rowLabel: "Combined - Strong", signalTypeKey: "COMBINED", signalTypeLabel: "Combined Directional", strengthKey: "STRONG", strengthLabel: "Strong", directionalCallTypes: ["CLEAN_DIRECTIONAL", "LEAN_DIRECTIONAL"], bucketKeys: ["STRONG"] },
+    { rowKey: "COMBINED_VERY_STRONG", rowLabel: "Combined - Very Strong", signalTypeKey: "COMBINED", signalTypeLabel: "Combined Directional", strengthKey: "VERY_STRONG", strengthLabel: "Very Strong", directionalCallTypes: ["CLEAN_DIRECTIONAL", "LEAN_DIRECTIONAL"], bucketKeys: ["VERY_STRONG"] },
+    { rowKey: "COMBINED_STRONG_PLUS", rowLabel: "Combined - Strong+", signalTypeKey: "COMBINED", signalTypeLabel: "Combined Directional", strengthKey: "STRONG_PLUS", strengthLabel: "Strong+", directionalCallTypes: ["CLEAN_DIRECTIONAL", "LEAN_DIRECTIONAL"], bucketKeys: ["STRONG", "VERY_STRONG"] },
+    { rowKey: "CLEAN_ALL", rowLabel: "Clean Directional - All", signalTypeKey: "CLEAN", signalTypeLabel: "Clean Directional", strengthKey: "ALL", strengthLabel: "All", directionalCallTypes: ["CLEAN_DIRECTIONAL"], bucketKeys: ["ALL"] },
+    { rowKey: "CLEAN_WEAK", rowLabel: "Clean - Weak", signalTypeKey: "CLEAN", signalTypeLabel: "Clean Directional", strengthKey: "WEAK", strengthLabel: "Weak", directionalCallTypes: ["CLEAN_DIRECTIONAL"], bucketKeys: ["WEAK"] },
+    { rowKey: "CLEAN_MODERATE", rowLabel: "Clean - Moderate", signalTypeKey: "CLEAN", signalTypeLabel: "Clean Directional", strengthKey: "MODERATE", strengthLabel: "Moderate", directionalCallTypes: ["CLEAN_DIRECTIONAL"], bucketKeys: ["MODERATE"] },
+    { rowKey: "CLEAN_STRONG", rowLabel: "Clean - Strong", signalTypeKey: "CLEAN", signalTypeLabel: "Clean Directional", strengthKey: "STRONG", strengthLabel: "Strong", directionalCallTypes: ["CLEAN_DIRECTIONAL"], bucketKeys: ["STRONG"] },
+    { rowKey: "CLEAN_VERY_STRONG", rowLabel: "Clean - Very Strong", signalTypeKey: "CLEAN", signalTypeLabel: "Clean Directional", strengthKey: "VERY_STRONG", strengthLabel: "Very Strong", directionalCallTypes: ["CLEAN_DIRECTIONAL"], bucketKeys: ["VERY_STRONG"] },
+    { rowKey: "CLEAN_STRONG_PLUS", rowLabel: "Clean - Strong+", signalTypeKey: "CLEAN", signalTypeLabel: "Clean Directional", strengthKey: "STRONG_PLUS", strengthLabel: "Strong+", directionalCallTypes: ["CLEAN_DIRECTIONAL"], bucketKeys: ["STRONG", "VERY_STRONG"] },
+    { rowKey: "LEAN_ALL", rowLabel: "Lean Directional - All", signalTypeKey: "LEAN", signalTypeLabel: "Lean Directional", strengthKey: "ALL", strengthLabel: "All", directionalCallTypes: ["LEAN_DIRECTIONAL"], bucketKeys: ["ALL"] },
+    { rowKey: "LEAN_WEAK", rowLabel: "Lean - Weak", signalTypeKey: "LEAN", signalTypeLabel: "Lean Directional", strengthKey: "WEAK", strengthLabel: "Weak", directionalCallTypes: ["LEAN_DIRECTIONAL"], bucketKeys: ["WEAK"] },
+    { rowKey: "LEAN_MODERATE", rowLabel: "Lean - Moderate", signalTypeKey: "LEAN", signalTypeLabel: "Lean Directional", strengthKey: "MODERATE", strengthLabel: "Moderate", directionalCallTypes: ["LEAN_DIRECTIONAL"], bucketKeys: ["MODERATE"] },
+    { rowKey: "LEAN_STRONG", rowLabel: "Lean - Strong", signalTypeKey: "LEAN", signalTypeLabel: "Lean Directional", strengthKey: "STRONG", strengthLabel: "Strong", directionalCallTypes: ["LEAN_DIRECTIONAL"], bucketKeys: ["STRONG"] },
+    { rowKey: "LEAN_VERY_STRONG", rowLabel: "Lean - Very Strong", signalTypeKey: "LEAN", signalTypeLabel: "Lean Directional", strengthKey: "VERY_STRONG", strengthLabel: "Very Strong", directionalCallTypes: ["LEAN_DIRECTIONAL"], bucketKeys: ["VERY_STRONG"] },
+    { rowKey: "LEAN_STRONG_PLUS", rowLabel: "Lean - Strong+", signalTypeKey: "LEAN", signalTypeLabel: "Lean Directional", strengthKey: "STRONG_PLUS", strengthLabel: "Strong+", directionalCallTypes: ["LEAN_DIRECTIONAL"], bucketKeys: ["STRONG", "VERY_STRONG"] }
   ];
 }
 
@@ -904,6 +904,10 @@ function buildSensitivityRowsForThreshold(rows = [], threshold) {
     return {
       rowKey: descriptor.rowKey,
       rowLabel: descriptor.rowLabel,
+      signalTypeKey: descriptor.signalTypeKey,
+      signalTypeLabel: descriptor.signalTypeLabel,
+      strengthKey: descriptor.strengthKey,
+      strengthLabel: descriptor.strengthLabel,
       thresholdMultiplier: threshold,
       thresholdLabel: SENSITIVITY_THRESHOLD_LABELS[String(threshold)] || `${threshold}`,
       ...summarizeSensitivityRows(filteredRows)
@@ -919,6 +923,27 @@ function buildSensitivityTable(rows = []) {
     })),
     rowsByThreshold: Object.fromEntries(SENSITIVITY_THRESHOLDS.map((threshold) => [String(threshold), buildSensitivityRowsForThreshold(rows, threshold)]))
   };
+}
+
+function buildSensitivityTableByEntity(rows = [], entityKeyField, entityLabelField) {
+  const groupedRows = new Map();
+  rows.forEach((row) => {
+    const entityKey = row?.[entityKeyField];
+    if (!entityKey) return;
+    if (!groupedRows.has(entityKey)) {
+      groupedRows.set(entityKey, {
+        [entityKeyField]: entityKey,
+        [entityLabelField]: row?.[entityLabelField] || entityKey,
+        rows: []
+      });
+    }
+    groupedRows.get(entityKey).rows.push(row);
+  });
+  return Array.from(groupedRows.values()).map((entity) => ({
+    [entityKeyField]: entity[entityKeyField],
+    [entityLabelField]: entity[entityLabelField],
+    ...buildSensitivityTable(entity.rows)
+  }));
 }
 
 function buildLayer1SensitivityRows(assetConfigs, checkers, options = {}) {
@@ -949,6 +974,8 @@ function buildLayer1SensitivityRows(assetConfigs, checkers, options = {}) {
           if (evaluation.reached !== true && evaluation.reached !== false) return null;
           return {
             threshold,
+            assetCode: config.assetCode,
+            assetLabel: config.assetLabel,
             directionalCallType,
             strengthBucket: bucketKey,
             reached: evaluation.reached
@@ -1007,6 +1034,8 @@ function buildLayer2SensitivityRows(pairConfigs, assetConfigs, checkers, options
         if (evaluation.reached !== true && evaluation.reached !== false) return null;
         return {
           threshold,
+          pairCode: pairConfig.pairCode,
+          pairLabel: pairConfig.pairLabel,
           directionalCallType,
           strengthBucket: bucketKey,
           reached: evaluation.reached
@@ -1021,6 +1050,8 @@ function buildOutput(layer1Assets, layer2Pairs, options = {}) {
   const availableLayer2 = layer2Pairs.filter((pair) => pair.available);
   const layer1Sensitivity = options.layer1Sensitivity || buildSensitivityTable([]);
   const layer2Sensitivity = options.layer2Sensitivity || buildSensitivityTable([]);
+  const layer1SensitivityByAsset = options.layer1SensitivityByAsset || [];
+  const layer2SensitivityByPair = options.layer2SensitivityByPair || [];
 
   return {
     meta: {
@@ -1066,6 +1097,7 @@ function buildOutput(layer1Assets, layer2Pairs, options = {}) {
       comparison_rows: aggregateSignalsVsStrongPlus(availableLayer1, "layer1"),
       entry_reliability_groups: buildEntryReliabilityGroups(availableLayer1.flatMap((asset) => asset.evaluatedRows)),
       threshold_sensitivity: layer1Sensitivity,
+      threshold_sensitivity_by_asset: layer1SensitivityByAsset,
       assets: layer1Assets.map((asset) => ({
         assetCode: asset.assetCode,
         assetLabel: asset.assetLabel,
@@ -1104,6 +1136,7 @@ function buildOutput(layer1Assets, layer2Pairs, options = {}) {
       comparison_rows: aggregateSignalsVsStrongPlus(availableLayer2, "layer2"),
       entry_reliability_groups: buildEntryReliabilityGroups(availableLayer2.flatMap((pair) => pair.tradableRows)),
       threshold_sensitivity: layer2Sensitivity,
+      threshold_sensitivity_by_pair: layer2SensitivityByPair,
       pairs: layer2Pairs.map((pair) => ({
         pairCode: pair.pairCode,
         pairLabel: pair.pairLabel,
@@ -1137,7 +1170,9 @@ function main() {
   const layer2SensitivityRows = buildLayer2SensitivityRows(PAIR_CONFIGS, ASSET_CONFIGS, checkers, { rollingWindowStart });
   const output = buildOutput(layer1Assets, layer2Pairs, {
     layer1Sensitivity: buildSensitivityTable(layer1SensitivityRows),
-    layer2Sensitivity: buildSensitivityTable(layer2SensitivityRows)
+    layer2Sensitivity: buildSensitivityTable(layer2SensitivityRows),
+    layer1SensitivityByAsset: buildSensitivityTableByEntity(layer1SensitivityRows, "assetCode", "assetLabel"),
+    layer2SensitivityByPair: buildSensitivityTableByEntity(layer2SensitivityRows, "pairCode", "pairLabel")
   });
   const errors = [];
 
@@ -1193,6 +1228,7 @@ module.exports = {
   buildLayer2SensitivityRows,
   buildOutput,
   buildRollingWindowStartDate,
+  buildSensitivityTableByEntity,
   buildSensitivityTable,
   inRollingWindow,
   loadChecker,

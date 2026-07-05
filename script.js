@@ -1447,6 +1447,7 @@ function renderOverviewBriefing() {
 function renderAgentCard(agent) {
   const call24 = getCall(agent, "24h");
   const call24Confidence = confidenceValue(call24, agent, "24h");
+  const l2lTrustStatus = currentLayer1L2lTrustStatus(agent);
   const metrics = agent.display_metrics || {};
   const assetUpdated = getAgentUpdatedAt(agent);
   const formattedAssetUpdated = formatDashboardTime(assetUpdated);
@@ -1480,6 +1481,7 @@ function renderAgentCard(agent) {
         <span class="direction ${directionClass(call24.direction)}">${normaliseDirection(call24.direction)}</span>
         <strong>${formatConviction(call24Confidence)}</strong>
       </div>
+      ${buildL2lTrustBadge(l2lTrustStatus)}
 
       <p class="summary">${escapeHtml(agent.summary || "")}</p>
       ${renderEventCollectorAgentWarning(agent, "24h")}
@@ -2118,6 +2120,7 @@ function renderTradeOpportunityCard(opportunity, label = "") {
   const direction = opportunity.direction || "NO TRADE";
   const confidence = opportunity.confidence ?? null;
   const strengthLabel = opportunity.strengthBucket || (confidence === null ? "Awaiting selection" : confidenceLabel(Number(confidence)));
+  const trustStatus = currentLayer2L2lTrustStatus(opportunity);
 
   return `
     <article class="trade-opportunity-card ${directionClass(direction)}">
@@ -2133,12 +2136,14 @@ function renderTradeOpportunityCard(opportunity, label = "") {
         <b>${formatConviction(confidence)}</b>
         <small>${escapeHtml(strengthLabel)}</small>
       </div>
+      ${buildL2lTrustBadge(trustStatus)}
       <p class="trade-reason">${escapeHtml(opportunity.reason || "No reason supplied.")}</p>
     </article>
   `;
 }
 
 function renderAvoidCard(item) {
+  const trustStatus = { label: "Trust unavailable", icon: "–", canUse: null };
   return `
     <article class="trade-opportunity-card no-trade">
       <div class="trade-card-head">
@@ -2147,6 +2152,7 @@ function renderAvoidCard(item) {
         </div>
         <strong class="trade-direction no-trade">NO TRADE</strong>
       </div>
+      ${buildL2lTrustBadge(trustStatus)}
       <p class="trade-reason">${escapeHtml(item.reason || "No clear Layer 2 trade selection.")}</p>
     </article>
   `;
@@ -2185,6 +2191,7 @@ function deriveLiveLayer2Dashboard() {
 
     if (pairSignal.tradable) {
       opportunities.push({
+        pairCode: config.pairCode,
         instrument: config.pairLabel,
         direction: pairSignal.direction,
         confidence: pairSignal.combinedConfidence,
@@ -2195,6 +2202,7 @@ function deriveLiveLayer2Dashboard() {
     }
 
     avoided.push({
+      pairCode: config.pairCode,
       instrument: config.pairLabel,
       reason: pairSignal.reason
     });
@@ -4491,11 +4499,15 @@ function renderAdrEntryReliabilitySection(title, groups = [], options = {}) {
           { label: "Misses", className: "adr-col-metric", render: row => renderAdrCompactTextCell(metricAvailable(row.losses) ? row.losses : displayDash(), "", { className: "adr-table-tight-cell" }) },
           { label: "Opportunity Rate", className: "adr-col-rate", render: row => renderAdrCompactTextCell(metricAvailable(row.opportunityRatePct) ? percentValue(row.opportunityRatePct) : displayDash(), "", { className: "adr-table-tight-cell" }) },
           { label: "Reliability", className: "adr-col-status", render: row => renderAdrReliabilityCell(row) },
-          { label: "55% Trust", className: "adr-col-status", render: row => {
-            const match = adrTrustSummaryRow(trustLookup, trustLayerLabel, group.groupLabel, row.cohortLabel || "");
-            const status = match?.trustStatus || { label: "Trust status unavailable", icon: "–", canUse: false };
-            return renderTrustStatusCell(status);
-          } }
+          ...(trustLookup && options.trustEntityKey ? [{
+            label: "55% Trust",
+            className: "adr-col-status",
+            render: row => {
+              const match = adrTrustSummaryRow(trustLookup, trustLayerLabel, options.trustEntityKey, group.groupKey?.replace("_DIRECTIONAL_ONLY", "").replace("_DIRECTIONAL", "") || "", row.cohortKey || "");
+              const status = match?.trustStatus || { label: "Trust status unavailable", icon: "–", canUse: null };
+              return renderTrustStatusCell(status);
+            }
+          }] : [])
         ], {
           panelClass: "adr-entry-reliability-panel",
           tableClass: "adr-summary-table adr-entry-reliability-table",
@@ -4728,20 +4740,52 @@ function buildAdrTrustSummaryRows(adrReach = null, thresholdKey = "0.55") {
   ];
 }
 
+function buildAssetPairAdrTrustSummaryRows(entityTables = [], options = {}) {
+  const entityKeyField = options.entityKeyField || "assetCode";
+  const entityLabelField = options.entityLabelField || "assetLabel";
+  const thresholdKey = options.thresholdKey || "0.55";
+  return entityTables.flatMap((entity) => {
+    const entityRows = Array.isArray(entity?.rowsByThreshold?.[thresholdKey]) ? entity.rowsByThreshold[thresholdKey] : [];
+    return entityRows.map((row) => ({
+      layerLabel: options.layerLabel || "Layer",
+      entityKey: entity?.[entityKeyField] || null,
+      entityLabel: entity?.[entityLabelField] || null,
+      signalTypeKey: row.signalTypeKey || null,
+      signalTypeLabel: row.signalTypeLabel || null,
+      strengthKey: row.strengthKey || null,
+      strengthLabel: row.strengthLabel || null,
+      totalEvaluated: row.totalEvaluated ?? null,
+      wins: row.wins ?? null,
+      misses: row.misses ?? null,
+      opportunityRatePct: row.opportunityRatePct ?? null,
+      trustStatus: directionalTrustStatus(row.opportunityRatePct)
+    }));
+  });
+}
+
 function buildAdrTrustSummaryLookup(rows = []) {
   const lookup = new Map();
   rows.forEach((row) => {
-    const normalizedGroup = String(row.signalGroup || "").trim().toUpperCase();
-    const normalizedStrength = String(row.strength || "").trim().toUpperCase();
-    if (!normalizedGroup || !normalizedStrength) return;
-    lookup.set(`${normalizedGroup}__${normalizedStrength}`, row);
+    const keyParts = [
+      String(row.layerLabel || "").trim().toUpperCase(),
+      String(row.entityKey || "").trim().toUpperCase(),
+      String(row.signalTypeKey || "").trim().toUpperCase(),
+      String(row.strengthKey || "").trim().toUpperCase()
+    ];
+    if (keyParts.some((part) => !part)) return;
+    lookup.set(keyParts.join("__"), row);
   });
   return lookup;
 }
 
-function adrTrustSummaryRow(lookup, layerLabel, groupLabel, strengthLabel) {
+function adrTrustSummaryRow(lookup, layerLabel, entityKey, signalTypeKey, strengthKey) {
   if (!(lookup instanceof Map)) return null;
-  return lookup.get(`${String(`${layerLabel} ${groupLabel}`).trim().toUpperCase()}__${String(strengthLabel).trim().toUpperCase()}`) || null;
+  return lookup.get([
+    String(layerLabel || "").trim().toUpperCase(),
+    String(entityKey || "").trim().toUpperCase(),
+    String(signalTypeKey || "").trim().toUpperCase(),
+    String(strengthKey || "").trim().toUpperCase()
+  ].join("__")) || null;
 }
 
 function renderDirectionalTrustSummaryTable(title, rows = [], options = {}) {
@@ -4760,6 +4804,84 @@ function renderDirectionalTrustSummaryTable(title, rows = [], options = {}) {
     scrollClass: "adr-summary-scroll",
     description: options.description || ""
   });
+}
+
+function renderL2lAssetPairTrustTable(title, rows = [], options = {}) {
+  return renderResearchBreakdownTable(title, options.subtitle || "55% ADR20 Trust", rows, [
+    { label: options.entityColumnLabel || "Asset/Pair", className: "adr-col-entity", render: row => renderAdrCompactTextCell(row.entityLabel || displayDash(), row.layerLabel || "", { className: "adr-table-tight-cell" }) },
+    { label: "Signal Type", className: "adr-col-entity", render: row => renderAdrCompactTextCell(row.signalTypeLabel || displayDash(), "", { className: "adr-table-tight-cell" }) },
+    { label: "Strength", className: "adr-col-entity", render: row => renderAdrCompactTextCell(row.strengthLabel || displayDash(), "", { className: "adr-table-tight-cell" }) },
+    { label: "Evaluated", className: "adr-col-metric", render: row => renderAdrCompactTextCell(metricAvailable(row.totalEvaluated) ? row.totalEvaluated : displayDash(), "", { className: "adr-table-tight-cell" }) },
+    { label: "Wins", className: "adr-col-metric", render: row => renderAdrCompactTextCell(metricAvailable(row.wins) ? row.wins : displayDash(), "", { className: "adr-table-tight-cell" }) },
+    { label: "Misses", className: "adr-col-metric", render: row => renderAdrCompactTextCell(metricAvailable(row.misses) ? row.misses : displayDash(), "", { className: "adr-table-tight-cell" }) },
+    { label: "55% ADR20 Opportunity Rate", className: "adr-col-rate", render: row => renderAdrCompactTextCell(metricAvailable(row.opportunityRatePct) ? percentValue(row.opportunityRatePct) : displayDash(), "", { className: "adr-table-tight-cell" }) },
+    { label: "Trust Status", className: "adr-col-status", render: row => renderTrustStatusCell(row.trustStatus || directionalTrustStatus(null)) }
+  ], {
+    tableClass: `adr-summary-table ${options.tableClass || "directional-trust-table adr-trust-summary-table"}`,
+    scrollClass: "adr-summary-scroll",
+    description: options.description || ""
+  });
+}
+
+function normalizeLiveTrustStrengthKey(strengthLabel = "", confidencePct = null) {
+  const normalized = String(strengthLabel || "").trim().toUpperCase().replace(/\s+/g, "_");
+  if (["WEAK", "MODERATE", "STRONG", "VERY_STRONG", "STRONG_PLUS", "ALL"].includes(normalized)) return normalized;
+  const derivedBucket = weekdayBreakdownBucketKey(confidencePct);
+  return derivedBucket || null;
+}
+
+function liveSignalTypeKeyFromDirection(direction = "") {
+  const callType = classifyDirectionalCallTypeForResearch(direction);
+  if (callType === "CLEAN_DIRECTIONAL") return "CLEAN";
+  if (callType === "LEAN_DIRECTIONAL") return "LEAN";
+  return null;
+}
+
+function buildCurrentL2lTrustLookup(adrReach = null) {
+  return buildAdrTrustSummaryLookup([
+    ...buildAssetPairAdrTrustSummaryRows(Array.isArray(adrReach?.layer1?.threshold_sensitivity_by_asset) ? adrReach.layer1.threshold_sensitivity_by_asset : [], {
+      layerLabel: "Layer 1",
+      entityKeyField: "assetCode",
+      entityLabelField: "assetLabel",
+      thresholdKey: "0.55"
+    }),
+    ...buildAssetPairAdrTrustSummaryRows(Array.isArray(adrReach?.layer2?.threshold_sensitivity_by_pair) ? adrReach.layer2.threshold_sensitivity_by_pair : [], {
+      layerLabel: "Layer 2",
+      entityKeyField: "pairCode",
+      entityLabelField: "pairLabel",
+      thresholdKey: "0.55"
+    })
+  ]);
+}
+
+function buildL2lTrustBadge(status = null, options = {}) {
+  const resolvedStatus = status || { label: "Trust unavailable", icon: "–", canUse: null };
+  const tooltip = options.tooltip || "L2L Tradable means this asset/pair + call type + strength bucket has historically produced a 60%+ L2L opportunity rate at the 55% ADR20 threshold.";
+  return `
+    <div class="l2l-trust-badge ${resolvedStatus.canUse === true ? "l2l-trust-badge-positive" : resolvedStatus.canUse === false ? "l2l-trust-badge-negative" : "l2l-trust-badge-unavailable"}" title="${escapeHtml(tooltip)}">
+      <strong>${escapeHtml(resolvedStatus.canUse === true ? "✅ L2L Tradable" : resolvedStatus.canUse === false ? "❌ L2L Not Tradable" : "— Trust unavailable")}</strong>
+      <span>${escapeHtml(tooltip)}</span>
+    </div>
+  `;
+}
+
+function currentLayer1L2lTrustStatus(agent = null) {
+  const trustLookup = buildCurrentL2lTrustLookup(backtestData?.adr_reach || null);
+  const assetCode = String(agent?.agent || "").trim().toUpperCase();
+  const call24 = getCall(agent, "24h");
+  const signalTypeKey = liveSignalTypeKeyFromDirection(call24?.direction || "");
+  const strengthKey = normalizeLiveTrustStrengthKey("", confidenceValue(call24, agent, "24h"));
+  const row = adrTrustSummaryRow(trustLookup, "Layer 1", assetCode, signalTypeKey, strengthKey);
+  return row?.trustStatus || { label: "Trust unavailable", icon: "–", canUse: null };
+}
+
+function currentLayer2L2lTrustStatus(item = {}) {
+  const trustLookup = buildCurrentL2lTrustLookup(backtestData?.adr_reach || null);
+  const pairCode = String(item?.pairCode || "").trim().toUpperCase();
+  const signalTypeKey = item?.direction ? "CLEAN" : null;
+  const strengthKey = normalizeLiveTrustStrengthKey(item?.strengthBucket || "", item?.confidence ?? null);
+  const row = adrTrustSummaryRow(trustLookup, "Layer 2", pairCode, signalTypeKey, strengthKey);
+  return row?.trustStatus || { label: "Trust unavailable", icon: "–", canUse: null };
 }
 
 function renderResearchDirectionalTrustSummary(data = {}) {
@@ -5175,7 +5297,19 @@ function renderResearchAdrThresholdSensitivity(data = {}) {
   const adrReach = data.adr_reach || null;
   const layer1Sensitivity = adrReach?.layer1?.threshold_sensitivity || {};
   const layer2Sensitivity = adrReach?.layer2?.threshold_sensitivity || {};
-  const trustSummaryRows = buildAdrTrustSummaryRows(adrReach, "0.55");
+  const aggregateTrustSummaryRows = buildAdrTrustSummaryRows(adrReach, "0.55");
+  const layer1TrustByAssetRows = buildAssetPairAdrTrustSummaryRows(Array.isArray(adrReach?.layer1?.threshold_sensitivity_by_asset) ? adrReach.layer1.threshold_sensitivity_by_asset : [], {
+    layerLabel: "Layer 1",
+    entityKeyField: "assetCode",
+    entityLabelField: "assetLabel",
+    thresholdKey: "0.55"
+  });
+  const layer2TrustByPairRows = buildAssetPairAdrTrustSummaryRows(Array.isArray(adrReach?.layer2?.threshold_sensitivity_by_pair) ? adrReach.layer2.threshold_sensitivity_by_pair : [], {
+    layerLabel: "Layer 2",
+    entityKeyField: "pairCode",
+    entityLabelField: "pairLabel",
+    thresholdKey: "0.55"
+  });
 
   return `
     <div class="backtest-report">
@@ -5188,12 +5322,24 @@ function renderResearchAdrThresholdSensitivity(data = {}) {
           <p class="research-panel-copy">✅ Can Use means this signal group has a 60%+ historical L2L opportunity rate at the 55% ADR20 threshold. ❌ Do Not Use means it is currently below the 60% trust cut-off.</p>
         </div>
       </section>
-      ${renderDirectionalTrustSummaryTable("55% ADR20 L2L Trust Summary — Can We Use This Signal?", trustSummaryRows, {
-        subtitle: "Trust Summary",
+      ${renderL2lAssetPairTrustTable("Layer 1 55% ADR20 Trust By Asset", layer1TrustByAssetRows, {
+        subtitle: "Asset-Specific Trust",
+        entityColumnLabel: "Asset",
+        tableClass: "directional-trust-table adr-trust-summary-table",
+        description: "At present, signal strength is not consistently reliable for this type of directional L2L confluence. The table should be read by actual historical opportunity rate, not by assuming higher strength always means better performance."
+      })}
+      ${renderL2lAssetPairTrustTable("Layer 2 55% ADR20 Trust By Pair", layer2TrustByPairRows, {
+        subtitle: "Pair-Specific Trust",
+        entityColumnLabel: "Pair",
+        tableClass: "directional-trust-table adr-trust-summary-table",
+        description: "L2L Tradable means this asset/pair + call type + strength bucket has historically produced a 60%+ L2L opportunity rate at the 55% ADR20 threshold."
+      })}
+      ${renderDirectionalTrustSummaryTable("All Assets Aggregate / All Pairs Aggregate", aggregateTrustSummaryRows, {
+        subtitle: "Aggregate Trust",
         rateLabel: "55% ADR20 Opportunity Rate",
         includeOutcomeColumns: false,
         tableClass: "directional-trust-table adr-trust-summary-table",
-        description: "At present, signal strength is not consistently reliable for this type of directional L2L confluence. The table should be read by actual historical opportunity rate, not by assuming higher strength always means better performance."
+        description: "Aggregate rows are directional-family rollups across all supported assets and pairs. Use the asset-specific and pair-specific tables above for actual tradeability decisions."
       })}
       <section class="research-section">
         <div class="research-section-head">
@@ -6792,6 +6938,9 @@ async function loadDashboard() {
       infrastructure: {}
     };
   }
+
+  if (layer1Data) renderLayer1(layer1Data);
+  if (layer2Data) renderLayer2(layer2Data);
 
   renderBacktest(backtestData);
 

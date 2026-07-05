@@ -7,6 +7,7 @@ const {
   buildLayer1SensitivityRows,
   buildLayer2SensitivityRows,
   buildSensitivityTable,
+  buildSensitivityTableByEntity,
   buildOutput
 } = require("../scripts/validate_adr_reach_research");
 const {
@@ -495,27 +496,38 @@ test("threshold sensitivity table includes all configured thresholds and row gro
     fixedReferenceL2lDistance: 5
   }, { EUR: asset }, { USD: usdChecker, EUR: checker });
 
-  const layer1Sensitivity = buildSensitivityTable(buildLayer1SensitivityRows([assetConfig], { EUR: checker }, {
+  const layer1SensitivityRows = buildLayer1SensitivityRows([assetConfig], { EUR: checker }, {
     rollingWindowStart: "2024-01-01",
     contextsByAssetCode: {
       EUR: { daily: dailyContext, intraday: intradayContext }
     }
-  }));
-  const layer2Sensitivity = buildSensitivityTable(buildLayer2SensitivityRows([
+  });
+  const layer2SensitivityRows = buildLayer2SensitivityRows([
     { targetAssetCode: "EUR", pairCode: "EUR_USD", pairLabel: "EUR/USD", weekdayKeys: ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY"], fixedReferenceL2lDistance: 5 }
   ], [assetConfig], { USD: usdChecker, EUR: checker }, {
     rollingWindowStart: "2024-01-01",
     contextsByAssetCode: {
       EUR: { daily: dailyContext, intraday: intradayContext }
     }
-  }));
-  const output = buildOutput([asset], [pair], { layer1Sensitivity, layer2Sensitivity });
+  });
+  const layer1Sensitivity = buildSensitivityTable(layer1SensitivityRows);
+  const layer2Sensitivity = buildSensitivityTable(layer2SensitivityRows);
+  const output = buildOutput([asset], [pair], {
+    layer1Sensitivity,
+    layer2Sensitivity,
+    layer1SensitivityByAsset: buildSensitivityTableByEntity(layer1SensitivityRows, "assetCode", "assetLabel"),
+    layer2SensitivityByPair: buildSensitivityTableByEntity(layer2SensitivityRows, "pairCode", "pairLabel")
+  });
 
   assert.equal(output.layer1.threshold_sensitivity.thresholds.length, 6);
   assert.equal(output.layer2.threshold_sensitivity.thresholds.length, 6);
   assert.equal(output.layer1.threshold_sensitivity.rowsByThreshold["0.5"].length, 18);
   assert.equal(output.layer2.threshold_sensitivity.rowsByThreshold["0.5"].length, 18);
   assert.equal(output.layer1.threshold_sensitivity.rowsByThreshold["0.5"][0].thresholdLabel, "50%");
+  assert.equal(output.layer1.threshold_sensitivity_by_asset[0].assetCode, "EUR");
+  assert.equal(output.layer2.threshold_sensitivity_by_pair[0].pairCode, "EUR_USD");
+  assert.equal(output.layer1.threshold_sensitivity_by_asset[0].rowsByThreshold["0.55"][0].signalTypeLabel, "Combined Directional");
+  assert.equal(output.layer2.threshold_sensitivity_by_pair[0].rowsByThreshold["0.55"][0].strengthLabel, "All");
   assert.equal(
     output.layer2.threshold_sensitivity.rowsByThreshold["0.4"].find((row) => row.rowKey === "COMBINED_ALL")?.reliabilityLabel,
     "High Reliability"
