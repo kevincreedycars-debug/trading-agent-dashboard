@@ -4472,6 +4472,8 @@ function renderAdrReliabilityCell(row = {}) {
 function renderAdrEntryReliabilitySection(title, groups = [], options = {}) {
   if (!groups.length) return "";
   const evaluatedLabel = options.evaluatedLabel || "Evaluated";
+  const trustLookup = options.trustLookup instanceof Map ? options.trustLookup : null;
+  const trustLayerLabel = options.trustLayerLabel || "";
 
   return `
     <section class="research-section adr-entry-reliability-section">
@@ -4488,7 +4490,12 @@ function renderAdrEntryReliabilitySection(title, groups = [], options = {}) {
           { label: "Wins", className: "adr-col-metric", render: row => renderAdrCompactTextCell(metricAvailable(row.wins) ? row.wins : displayDash(), "", { className: "adr-table-tight-cell" }) },
           { label: "Misses", className: "adr-col-metric", render: row => renderAdrCompactTextCell(metricAvailable(row.losses) ? row.losses : displayDash(), "", { className: "adr-table-tight-cell" }) },
           { label: "Opportunity Rate", className: "adr-col-rate", render: row => renderAdrCompactTextCell(metricAvailable(row.opportunityRatePct) ? percentValue(row.opportunityRatePct) : displayDash(), "", { className: "adr-table-tight-cell" }) },
-          { label: "Reliability", className: "adr-col-status", render: row => renderAdrReliabilityCell(row) }
+          { label: "Reliability", className: "adr-col-status", render: row => renderAdrReliabilityCell(row) },
+          { label: "55% Trust", className: "adr-col-status", render: row => {
+            const match = adrTrustSummaryRow(trustLookup, trustLayerLabel, group.groupLabel, row.cohortLabel || "");
+            const status = match?.trustStatus || { label: "Trust status unavailable", icon: "–", canUse: false };
+            return renderTrustStatusCell(status);
+          } }
         ], {
           panelClass: "adr-entry-reliability-panel",
           tableClass: "adr-summary-table adr-entry-reliability-table",
@@ -4569,6 +4576,14 @@ function directionalTrustStatus(winRatePct) {
 }
 
 function renderTrustStatusCell(status = {}) {
+  if (!status || status.canUse === null || status.label === "Unavailable" || status.label === "Trust status unavailable") {
+    return `
+      <div class="research-cell adr-compact-cell trust-status-cell trust-status-unavailable">
+        <strong>${escapeHtml(status.icon || "–")}</strong>
+        <span>${escapeHtml(status.label || "Unavailable")}</span>
+      </div>
+    `;
+  }
   const toneClass = status.canUse ? "trust-status-positive" : "trust-status-negative";
   return `
     <div class="research-cell adr-compact-cell trust-status-cell ${toneClass}">
@@ -4711,6 +4726,22 @@ function buildAdrTrustSummaryRows(adrReach = null, thresholdKey = "0.55") {
     ...toRows("Layer 1", layer1Rows),
     ...toRows("Layer 2", layer2Rows)
   ];
+}
+
+function buildAdrTrustSummaryLookup(rows = []) {
+  const lookup = new Map();
+  rows.forEach((row) => {
+    const normalizedGroup = String(row.signalGroup || "").trim().toUpperCase();
+    const normalizedStrength = String(row.strength || "").trim().toUpperCase();
+    if (!normalizedGroup || !normalizedStrength) return;
+    lookup.set(`${normalizedGroup}__${normalizedStrength}`, row);
+  });
+  return lookup;
+}
+
+function adrTrustSummaryRow(lookup, layerLabel, groupLabel, strengthLabel) {
+  if (!(lookup instanceof Map)) return null;
+  return lookup.get(`${String(`${layerLabel} ${groupLabel}`).trim().toUpperCase()}__${String(strengthLabel).trim().toUpperCase()}`) || null;
 }
 
 function renderDirectionalTrustSummaryTable(title, rows = [], options = {}) {
@@ -4998,6 +5029,7 @@ function renderResearchAdrReach(data = {}) {
   const layer2EntryReliabilityGroups = Array.isArray(adrReach?.layer2?.entry_reliability_groups) ? adrReach.layer2.entry_reliability_groups : [];
   const layer2Pairs = Array.isArray(adrReach?.layer2?.pairs) ? adrReach.layer2.pairs : [];
   const sourceAuditRows = Array.isArray(adrReach?.source_audit) ? adrReach.source_audit : [];
+  const trustSummaryLookup = buildAdrTrustSummaryLookup(buildAdrTrustSummaryRows(adrReach, "0.55"));
   const unavailableLayer1Rows = layer1SummaryRows.filter(row => !row.available);
   const unavailableLayer2Rows = layer2SummaryRows.filter(row => !row.available);
 
@@ -5026,11 +5058,15 @@ function renderResearchAdrReach(data = {}) {
       </section>
       ${renderAdrEntryReliabilitySection("Layer 1 Entry Reliability", layer1EntryReliabilityGroups, {
         evaluatedLabel: "Evaluated",
-        description: "Layer 1 reliability is grouped by the original call type while keeping the same L2L 1H sequence calculation and 50% ADR20 threshold."
+        description: "Layer 1 reliability is grouped by the original call type while keeping the same L2L 1H sequence calculation and 50% ADR20 threshold.",
+        trustLookup: trustSummaryLookup,
+        trustLayerLabel: "Layer 1"
       })}
       ${renderAdrEntryReliabilitySection("Layer 2 Entry Reliability", layer2EntryReliabilityGroups, {
         evaluatedLabel: "Evaluated",
-        description: "Layer 2 reliability remains downstream-only. Opposite-side target/USD directional pairings are required, and Lean directional calls are now separated from clean Bullish/Bearish calls in this research view."
+        description: "Layer 2 reliability remains downstream-only. Opposite-side target/USD directional pairings are required, and Lean directional calls are now separated from clean Bullish/Bearish calls in this research view.",
+        trustLookup: trustSummaryLookup,
+        trustLayerLabel: "Layer 2"
       })}
       <section class="research-section" data-adr-reach-layer1-summary="true">
         <div class="research-section-head">
@@ -5147,18 +5183,26 @@ function renderResearchAdrThresholdSensitivity(data = {}) {
       <section class="research-section">
         <div class="research-section-head">
           <div>
-            <h3>L2L Threshold Sensitivity</h3>
+            <h3>55% ADR20 L2L Trust Summary — Can We Use This Signal?</h3>
           </div>
-          <p class="research-panel-copy">This sensitivity table tests the same L2L 1H Sequence Research engine using different required move thresholds. The production baseline is 50% ADR20. The goal is to see how far the directional edge persists as the required move increases.</p>
+          <p class="research-panel-copy">✅ Can Use means this signal group has a 60%+ historical L2L opportunity rate at the 55% ADR20 threshold. ❌ Do Not Use means it is currently below the 60% trust cut-off.</p>
         </div>
       </section>
-      ${renderDirectionalTrustSummaryTable("55% ADR20 L2L Trust Summary", trustSummaryRows, {
+      ${renderDirectionalTrustSummaryTable("55% ADR20 L2L Trust Summary — Can We Use This Signal?", trustSummaryRows, {
         subtitle: "Trust Summary",
         rateLabel: "55% ADR20 Opportunity Rate",
         includeOutcomeColumns: false,
         tableClass: "directional-trust-table adr-trust-summary-table",
         description: "At present, signal strength is not consistently reliable for this type of directional L2L confluence. The table should be read by actual historical opportunity rate, not by assuming higher strength always means better performance."
       })}
+      <section class="research-section">
+        <div class="research-section-head">
+          <div>
+            <h3>L2L Threshold Sensitivity</h3>
+          </div>
+          <p class="research-panel-copy">This sensitivity table tests the same L2L 1H Sequence Research engine using different required move thresholds. The production baseline is 50% ADR20. The goal is to see how far the directional edge persists as the required move increases.</p>
+        </div>
+      </section>
       ${renderAdrThresholdSensitivityTable("Layer 1 Sensitivity", layer1Sensitivity, {
         description: "Layer 1 sensitivity uses the same historical sequence engine and separates combined, clean, and lean directional call families across the configured ADR20 thresholds."
       })}
