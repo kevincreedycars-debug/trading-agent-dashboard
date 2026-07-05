@@ -1448,6 +1448,7 @@ function renderAgentCard(agent) {
   const call24 = getCall(agent, "24h");
   const call24Confidence = confidenceValue(call24, agent, "24h");
   const l2lTrustStatus = currentLayer1L2lTrustStatus(agent);
+  const directionalTrustStatus = currentLayer1DirectionalTrustStatus(agent);
   const metrics = agent.display_metrics || {};
   const assetUpdated = getAgentUpdatedAt(agent);
   const formattedAssetUpdated = formatDashboardTime(assetUpdated);
@@ -1481,7 +1482,10 @@ function renderAgentCard(agent) {
         <span class="direction ${directionClass(call24.direction)}">${normaliseDirection(call24.direction)}</span>
         <strong>${formatConviction(call24Confidence)}</strong>
       </div>
-      ${buildL2lTrustBadge(l2lTrustStatus)}
+      <div class="overview-validation-panel-stack" data-overview-validation-panels="true">
+        ${buildL2lTrustBadge(l2lTrustStatus)}
+        ${buildDirectionalTrustBadgePanel(directionalTrustStatus)}
+      </div>
 
       <p class="summary">${escapeHtml(agent.summary || "")}</p>
       ${renderEventCollectorAgentWarning(agent, "24h")}
@@ -2121,6 +2125,7 @@ function renderTradeOpportunityCard(opportunity, label = "") {
   const confidence = opportunity.confidence ?? null;
   const strengthLabel = opportunity.strengthBucket || (confidence === null ? "Awaiting selection" : confidenceLabel(Number(confidence)));
   const trustStatus = currentLayer2L2lTrustStatus(opportunity);
+  const directionalTrustStatus = currentLayer2DirectionalTrustStatus(opportunity);
 
   return `
     <article class="trade-opportunity-card ${directionClass(direction)}">
@@ -2136,7 +2141,10 @@ function renderTradeOpportunityCard(opportunity, label = "") {
         <b>${formatConviction(confidence)}</b>
         <small>${escapeHtml(strengthLabel)}</small>
       </div>
-      ${buildL2lTrustBadge(trustStatus)}
+      <div class="overview-validation-panel-stack" data-overview-validation-panels="true">
+        ${buildL2lTrustBadge(trustStatus)}
+        ${buildDirectionalTrustBadgePanel(directionalTrustStatus)}
+      </div>
       <p class="trade-reason">${escapeHtml(opportunity.reason || "No reason supplied.")}</p>
     </article>
   `;
@@ -2152,7 +2160,10 @@ function renderAvoidCard(item) {
         </div>
         <strong class="trade-direction no-trade">NO TRADE</strong>
       </div>
-      ${buildL2lTrustBadge(trustStatus)}
+      <div class="overview-validation-panel-stack" data-overview-validation-panels="true">
+        ${buildL2lTrustBadge(trustStatus)}
+        ${buildDirectionalTrustBadgePanel({ label: "Directional trust unavailable", icon: "-", canUse: null, exFlatWinRatePct: null })}
+      </div>
       <p class="trade-reason">${escapeHtml(item.reason || "No clear Layer 2 trade selection.")}</p>
     </article>
   `;
@@ -4858,9 +4869,125 @@ function buildL2lTrustBadge(status = null, options = {}) {
   const resolvedStatus = status || { label: "Trust unavailable", icon: "–", canUse: null };
   const tooltip = options.tooltip || "L2L Tradable means this asset/pair + call type + strength bucket has historically produced a 60%+ L2L opportunity rate at the 55% ADR20 threshold.";
   return `
-    <div class="l2l-trust-badge ${resolvedStatus.canUse === true ? "l2l-trust-badge-positive" : resolvedStatus.canUse === false ? "l2l-trust-badge-negative" : "l2l-trust-badge-unavailable"}" title="${escapeHtml(tooltip)}">
+    <div class="l2l-trust-badge ${resolvedStatus.canUse === true ? "l2l-trust-badge-positive" : resolvedStatus.canUse === false ? "l2l-trust-badge-negative" : "l2l-trust-badge-unavailable"}" title="${escapeHtml(tooltip)}" data-validation-panel="l2l">
       <strong>${escapeHtml(resolvedStatus.canUse === true ? "✅ L2L Tradable" : resolvedStatus.canUse === false ? "❌ L2L Not Tradable" : "— Trust unavailable")}</strong>
       <span>${escapeHtml(tooltip)}</span>
+    </div>
+  `;
+}
+
+function directionalTrustLookupKey(layerLabel = "", entityKey = "", directionKey = "", strengthKey = "") {
+  return [
+    String(layerLabel || "").trim().toUpperCase(),
+    String(entityKey || "").trim().toUpperCase(),
+    String(directionKey || "").trim().toUpperCase(),
+    String(strengthKey || "").trim().toUpperCase()
+  ].join("|");
+}
+
+function buildDirectionalTrustLookupRows(data = {}) {
+  const checkers = data.checkers || {};
+  const layer1Rows = orderedAgents.flatMap((assetCode) => {
+    const checker = checkers[assetCode];
+    const rows = Array.isArray(checker?.rows) ? checker.rows : [];
+    return rows.flatMap((row) => {
+      const rawDirection = String(row?.stored?.direction || row?.checker?.direction || "").trim().toUpperCase();
+      const directionKey = normalizeDirectionalBiasForResearch(rawDirection);
+      const confidencePct = checkerRowHeadlineConfidence(row);
+      const strengthKey = weekdayBreakdownBucketKey(confidencePct);
+      const outcomeKey = pairTradeOutcomeKey(row);
+      if (!directionKey || !strengthKey || !outcomeKey) return [];
+      return [{
+        layerLabel: "Layer 1",
+        entityKey: assetCode,
+        directionKey,
+        strengthKey,
+        outcomeKey
+      }];
+    });
+  });
+
+  const usdRowsByDate = checkerRowsByDate(checkers.USD || null);
+  const layer2Rows = pairTradeResearchConfigs.flatMap((config) => {
+    const targetRows = Array.isArray(checkers?.[config.targetAssetCode]?.rows) ? checkers[config.targetAssetCode].rows : [];
+    return targetRows.flatMap((targetRow) => {
+      const snapshotDate = String(targetRow?.snapshot_date || "").trim();
+      const usdRow = usdRowsByDate.get(snapshotDate) || null;
+      if (!usdRow) return [];
+      const targetRawDirection = String(targetRow?.stored?.direction || targetRow?.checker?.direction || "").trim().toUpperCase();
+      const usdRawDirection = String(usdRow?.stored?.direction || usdRow?.checker?.direction || "").trim().toUpperCase();
+      const targetDirection = normalizeDirectionalBiasForResearch(targetRawDirection);
+      const usdDirection = normalizeDirectionalBiasForResearch(usdRawDirection);
+      if (!targetDirection || !usdDirection || targetDirection === usdDirection) return [];
+      const targetConfidence = checkerRowHeadlineConfidence(targetRow);
+      const usdConfidence = checkerRowHeadlineConfidence(usdRow);
+      const combinedConfidencePct = metricAvailable(targetConfidence) && metricAvailable(usdConfidence)
+        ? Math.min(Number(targetConfidence), Number(usdConfidence))
+        : null;
+      const strengthKey = weekdayBreakdownBucketKey(combinedConfidencePct);
+      const outcomeKey = pairTradeOutcomeKey(targetRow);
+      if (!strengthKey || !outcomeKey) return [];
+      return [{
+        layerLabel: "Layer 2",
+        entityKey: config.pairCode,
+        directionKey: targetDirection === "BULLISH" ? "BUY" : "SELL",
+        strengthKey,
+        outcomeKey
+      }];
+    });
+  });
+
+  return [...layer1Rows, ...layer2Rows];
+}
+
+function directionalTrustOverviewStatus(exFlatWinRatePct) {
+  if (!metricAvailable(exFlatWinRatePct)) {
+    return {
+      label: "Directional trust unavailable",
+      icon: "-",
+      canUse: null,
+      exFlatWinRatePct: null
+    };
+  }
+
+  return Number(exFlatWinRatePct) > 55
+    ? { label: "Directional Viable", icon: "ok", canUse: true, exFlatWinRatePct: Number(exFlatWinRatePct) }
+    : { label: "Directional Not Viable", icon: "x", canUse: false, exFlatWinRatePct: Number(exFlatWinRatePct) };
+}
+
+function buildCurrentDirectionalTrustLookup(data = {}) {
+  const groupedRows = new Map();
+  buildDirectionalTrustLookupRows(data).forEach((row) => {
+    const key = directionalTrustLookupKey(row.layerLabel, row.entityKey, row.directionKey, row.strengthKey);
+    if (!groupedRows.has(key)) {
+      groupedRows.set(key, []);
+    }
+    groupedRows.get(key).push(row);
+  });
+
+  return new Map(Array.from(groupedRows.entries()).map(([key, rows]) => {
+    const summary = summarizeDirectionalTrustSignalRows(rows);
+    return [key, {
+      layerLabel: rows[0]?.layerLabel || "",
+      entityKey: rows[0]?.entityKey || "",
+      directionKey: rows[0]?.directionKey || "",
+      strengthKey: rows[0]?.strengthKey || "",
+      exFlatWinRatePct: summary.directionalWinRatePct,
+      trustStatus: directionalTrustOverviewStatus(summary.directionalWinRatePct)
+    }];
+  }));
+}
+
+function buildDirectionalTrustBadge(status = null, options = {}) {
+  const resolvedStatus = status || { label: "Directional trust unavailable", icon: "â€“", canUse: null, exFlatWinRatePct: null };
+  const tooltip = options.tooltip || "Directional Viable means this asset/pair + 24H direction + strength bucket has historically produced an ex-flat win rate above 55% in the 24H Direction by Strength data.";
+  const detail = metricAvailable(resolvedStatus.exFlatWinRatePct)
+    ? `${percentValue(resolvedStatus.exFlatWinRatePct)} ex-flat WR`
+    : tooltip;
+  return `
+    <div class="l2l-trust-badge ${resolvedStatus.canUse === true ? "l2l-trust-badge-positive" : resolvedStatus.canUse === false ? "l2l-trust-badge-negative" : "l2l-trust-badge-unavailable"}" title="${escapeHtml(tooltip)}" data-validation-panel="directional">
+      <strong>${escapeHtml(resolvedStatus.canUse === true ? "âœ… Directional Viable" : resolvedStatus.canUse === false ? "âŒ Directional Not Viable" : "â€” Directional trust unavailable")}</strong>
+      <span>${escapeHtml(detail)}</span>
     </div>
   `;
 }
@@ -4882,6 +5009,50 @@ function currentLayer2L2lTrustStatus(item = {}) {
   const strengthKey = normalizeLiveTrustStrengthKey(item?.strengthBucket || "", item?.confidence ?? null);
   const row = adrTrustSummaryRow(trustLookup, "Layer 2", pairCode, signalTypeKey, strengthKey);
   return row?.trustStatus || { label: "Trust unavailable", icon: "–", canUse: null };
+}
+
+function currentLayer1DirectionalTrustStatus(agent = null) {
+  const trustLookup = buildCurrentDirectionalTrustLookup(backtestData || {});
+  const assetCode = String(agent?.agent || "").trim().toUpperCase();
+  const call24 = getCall(agent, "24h");
+  const directionKey = normalizeDirectionalBiasForResearch(call24?.direction || "");
+  const strengthKey = weekdayBreakdownBucketKey(confidenceValue(call24, agent, "24h"));
+  if (!assetCode || !directionKey || !strengthKey) {
+    return { label: "Directional trust unavailable", icon: "â€“", canUse: null, exFlatWinRatePct: null };
+  }
+  const row = trustLookup.get(directionalTrustLookupKey("Layer 1", assetCode, directionKey, strengthKey)) || null;
+  return row?.trustStatus || { label: "Directional trust unavailable", icon: "â€“", canUse: null, exFlatWinRatePct: null };
+}
+
+function currentLayer2DirectionalTrustStatus(item = {}) {
+  const trustLookup = buildCurrentDirectionalTrustLookup(backtestData || {});
+  const pairCode = String(item?.pairCode || "").trim().toUpperCase();
+  const directionKey = String(item?.direction || "").trim().toUpperCase();
+  const strengthKey = normalizeLiveTrustStrengthKey(item?.strengthBucket || "", item?.confidence ?? null);
+  if (!pairCode || !directionKey || !strengthKey) {
+    return { label: "Directional trust unavailable", icon: "â€“", canUse: null, exFlatWinRatePct: null };
+  }
+  const row = trustLookup.get(directionalTrustLookupKey("Layer 2", pairCode, directionKey, strengthKey)) || null;
+  return row?.trustStatus || { label: "Directional trust unavailable", icon: "â€“", canUse: null, exFlatWinRatePct: null };
+}
+
+function buildDirectionalTrustBadgePanel(status = null, options = {}) {
+  const resolvedStatus = status || { label: "Directional trust unavailable", icon: "-", canUse: null, exFlatWinRatePct: null };
+  const tooltip = options.tooltip || "Directional Viable means this asset/pair + 24H direction + strength bucket has historically produced an ex-flat win rate above 55% in the 24H Direction by Strength data.";
+  const detail = metricAvailable(resolvedStatus.exFlatWinRatePct)
+    ? `${percentValue(resolvedStatus.exFlatWinRatePct)} ex-flat WR`
+    : tooltip;
+  const headline = resolvedStatus.canUse === true
+    ? "\u2705 Directional Viable"
+    : resolvedStatus.canUse === false
+      ? "\u274C Directional Not Viable"
+      : "\u2014 Directional trust unavailable";
+  return `
+    <div class="l2l-trust-badge ${resolvedStatus.canUse === true ? "l2l-trust-badge-positive" : resolvedStatus.canUse === false ? "l2l-trust-badge-negative" : "l2l-trust-badge-unavailable"}" title="${escapeHtml(tooltip)}" data-validation-panel="directional">
+      <strong>${headline}</strong>
+      <span>${escapeHtml(detail)}</span>
+    </div>
+  `;
 }
 
 function renderResearchDirectionalTrustSummary(data = {}) {
