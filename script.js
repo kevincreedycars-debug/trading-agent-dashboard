@@ -4543,6 +4543,45 @@ function renderAdrDiagnosticsTable(title, rows = [], options = {}) {
   });
 }
 
+function renderAdrHowToReadPanel() {
+  return `
+    <section class="detail-panel overview-briefing-panel adr-howto-panel" data-adr-howto-read="true">
+      <div class="overview-briefing-shell adr-howto-shell">
+        <div class="overview-briefing-copy">
+          <div class="panel-head compact-panel-head adr-howto-head">
+            <div>
+              <p class="eyebrow">Info Guide</p>
+              <h3>L2L 1H Sequence Research</h3>
+            </div>
+            <span class="adr-howto-icon" aria-hidden="true">i</span>
+          </div>
+          <section class="overview-briefing-block">
+            <h3>What this measures</h3>
+            <p>This is not close-to-close accuracy. It asks whether a tradable intraday opportunity existed in the direction of the call. The required move is 50% of rolling ADR20. One-hour candles are replayed in chronological order. For bullish calls, the test tracks the lowest low seen so far and counts a win if any later candle high reaches that low plus the required move. For bearish calls, it tracks the highest high seen so far and counts a win if any later candle low reaches that high minus the required move. The market does not need to close in the predicted direction.</p>
+          </section>
+          <section class="overview-briefing-block">
+            <h3>What the percentages mean</h3>
+            <p>These are Opportunity Rates. Given this directional signal, how often did the market provide a tradable L2L opportunity during that trading day?</p>
+          </section>
+        </div>
+        <aside class="overview-briefing-chips adr-howto-comparison" aria-label="L2L research comparison">
+          <div class="overview-briefing-chip adr-howto-compare-card">
+            <span>Difference From Historical Accuracy</span>
+            <div class="adr-howto-compare-block">
+              <strong>Historical Accuracy</strong>
+              <small>Measures whether the market ultimately moved in the predicted direction over the evaluation window.</small>
+            </div>
+            <div class="adr-howto-compare-block">
+              <strong>This Research View</strong>
+              <small>Measures whether the market provided a tradable intraday move in the predicted direction during the session.</small>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </section>
+  `;
+}
+
 function renderAdrReachLayer1Asset(asset = {}) {
   if (!asset.available) {
     return "";
@@ -4643,10 +4682,11 @@ function renderResearchAdrReach(data = {}) {
   return `
     <div class="backtest-report">
       ${renderResearchStatusHeader(data)}
+      ${renderAdrHowToReadPanel()}
       <section class="research-section" data-adr-reach-layer1-summary="true">
         <div class="research-section-head">
           <div>
-              <h3>L2L 1H Sequence Research</h3>
+              <h3>Method and Source Audit</h3>
           </div>
             <p class="research-panel-copy">This measures whether 1H intraday candles show price moved at least the required L2L distance in the direction of the call after the relevant intraday swing. It uses 50% of ADR20 as the required move. This is sequence-aware and does not rely on daily high-low alone.</p>
         </div>
