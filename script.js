@@ -9,7 +9,7 @@ const checkerDataUrls = {
   BTC: "./data/backtester-checker-btc-24h-2024-2026.json?v=20260702-btc-benchmark-dashboard"
 };
 const adrReachResearchUrl = "./data/adr-reach-research.json?v=20260705-l2l-1h-sequence";
-const factorEdgeLabUrl = "./data/factor-edge-lab.json?v=20260706-phase2f";
+const factorEdgeLabUrl = "./data/factor-edge-lab.json?v=20260706-review-summary";
 const researchSupabaseUrl = "https://eaolqbrlywczinfordvg.supabase.co/rest/v1";
 const researchSupabaseKey = "sb_publishable_k6YbEuuk3GyB9GVTQDtNVA_J1gCRYaY";
 const headlineConfidenceLib = globalThis.HeadlineConfidence;
