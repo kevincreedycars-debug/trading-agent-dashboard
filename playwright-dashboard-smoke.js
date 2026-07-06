@@ -597,6 +597,19 @@ async function run() {
       throw new Error(`Factor Edge Lab did not preserve the explicit NQ/USD mapping note.\n${factorEdgeText}`);
     }
 
+    for (const expectedCombinationText of [
+      "factor combinations",
+      "two-factor",
+      "three-factor",
+      "exploratory",
+      "base side combinations",
+      "quote/usd side combinations"
+    ]) {
+      if (!normalizedFactorEdgeText.includes(expectedCombinationText)) {
+        throw new Error(`Factor Edge Lab did not render expected combination analysis text: ${expectedCombinationText}\n${factorEdgeText}`);
+      }
+    }
+
     const blockingConsoleErrors = consoleErrors.filter((message) => !message.includes("Failed to load resource: the server responded with a status of 500 ()"));
 
     if (blockingConsoleErrors.length) {

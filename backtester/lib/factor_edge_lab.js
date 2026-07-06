@@ -216,6 +216,38 @@ function classifyDirectionalReliability(exFlatWrPct, directionalSample) {
   return "negative_evidence";
 }
 
+function classifyCombinationReliability({
+  exFlatWrPct,
+  directionalSample,
+  sampleCount,
+  minimumSampleCount,
+  exploratorySampleCount
+}) {
+  if (!directionalSample || sampleCount < exploratorySampleCount) return "unavailable_low_sample";
+
+  const baseLabel = classifyDirectionalReliability(exFlatWrPct, directionalSample);
+  if (sampleCount < minimumSampleCount) {
+    if (baseLabel === "negative_evidence") return "exploratory_negative_evidence";
+    if (baseLabel === "no_edge") return "exploratory_no_edge";
+    return "exploratory_positive_evidence";
+  }
+
+  return baseLabel;
+}
+
+function interpretCombinationReliability(reliabilityLabel) {
+  if (reliabilityLabel === "unavailable_low_sample") return "insufficient_sample_do_not_weight";
+  if (reliabilityLabel === "exploratory_negative_evidence") return "exploratory_negative_edge_only";
+  if (reliabilityLabel === "exploratory_no_edge") return "exploratory_no_clear_edge";
+  if (reliabilityLabel === "exploratory_positive_evidence") return "exploratory_positive_edge_needs_more_sample";
+  if (reliabilityLabel === "strong_positive_evidence") return "candidate_combination_edge";
+  if (reliabilityLabel === "moderate_positive_evidence") return "possible_combination_edge";
+  if (reliabilityLabel === "weak_positive_evidence") return "marginal_combination_edge";
+  if (reliabilityLabel === "negative_evidence") return "combination_underperforms";
+  if (reliabilityLabel === "no_edge") return "no_reliable_combination_edge";
+  return "insufficient_directional_sample";
+}
+
 function safeMedian(values) {
   if (!values.length) return null;
   const sorted = values.slice().sort((a, b) => a - b);
@@ -432,6 +464,7 @@ module.exports = {
   buildNeutralStats,
   buildStateStats,
   buildWeightMismatch,
+  classifyCombinationReliability,
   classifyDirectionalReliability,
   classifyOutcomeDirection,
   classifySampleSize,
@@ -439,6 +472,7 @@ module.exports = {
   derivePairCallDirection,
   factorDefinitionIndex,
   invertDirection,
+  interpretCombinationReliability,
   normalizeDirection,
   roundNumber,
   signalFromFactorComparison,

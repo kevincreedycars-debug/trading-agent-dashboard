@@ -5,10 +5,13 @@ const {
   buildFactorProfile,
   buildStateStats,
   buildAlignmentStats,
+  classifyCombinationReliability,
+  interpretCombinationReliability,
   LAYER2_CONFIGS,
   derivePairCallDirection,
   invertDirection
 } = require("../lib/factor_edge_lab");
+const { buildCombinationAnalysis } = require("../scripts/build_factor_edge_lab");
 
 test("buildStateStats excludes flats from ex-flat win rate", () => {
   const stats = buildStateStats([
@@ -125,4 +128,109 @@ test("layer 2 pair-side mappings are explicit for all supported pairs", () => {
     /inverse/i,
     "NQ/USD USD-side mapping must remain explicit rather than inferred"
   );
+});
+
+test("combination reliability applies exploratory and unavailable sample gating", () => {
+  assert.equal(classifyCombinationReliability({
+    exFlatWrPct: 70,
+    directionalSample: 7,
+    sampleCount: 7,
+    minimumSampleCount: 12,
+    exploratorySampleCount: 6
+  }), "exploratory_positive_evidence");
+  assert.equal(classifyCombinationReliability({
+    exFlatWrPct: 70,
+    directionalSample: 4,
+    sampleCount: 4,
+    minimumSampleCount: 12,
+    exploratorySampleCount: 6
+  }), "unavailable_low_sample");
+  assert.equal(interpretCombinationReliability("exploratory_positive_evidence"), "exploratory_positive_edge_needs_more_sample");
+});
+
+test("buildCombinationAnalysis keeps layer 2 style scope separated and exposes alignment metrics", () => {
+  const rows = [
+    {
+      snapshotDate: "2026-01-01",
+      finalCallDirection: "BULLISH",
+      outcomeDirection: "BULLISH",
+      realisedMovePct: 1.1,
+      factorItems: [
+        { factorId: "F1", factorName: "Factor 1", sourceSide: "target_asset", sourceAsset: "EUR", originalWeight: 20, expectedDirection: "BULLISH" },
+        { factorId: "F2", factorName: "Factor 2", sourceSide: "target_asset", sourceAsset: "EUR", originalWeight: 18, expectedDirection: "BULLISH" },
+        { factorId: "F3", factorName: "Factor 3", sourceSide: "target_asset", sourceAsset: "EUR", originalWeight: 12, expectedDirection: "BULLISH" }
+      ]
+    },
+    {
+      snapshotDate: "2026-01-02",
+      finalCallDirection: "BULLISH",
+      outcomeDirection: "BULLISH",
+      realisedMovePct: 0.9,
+      factorItems: [
+        { factorId: "F1", factorName: "Factor 1", sourceSide: "target_asset", sourceAsset: "EUR", originalWeight: 20, expectedDirection: "BULLISH" },
+        { factorId: "F2", factorName: "Factor 2", sourceSide: "target_asset", sourceAsset: "EUR", originalWeight: 18, expectedDirection: "BULLISH" },
+        { factorId: "F3", factorName: "Factor 3", sourceSide: "target_asset", sourceAsset: "EUR", originalWeight: 12, expectedDirection: "BULLISH" }
+      ]
+    },
+    {
+      snapshotDate: "2026-01-03",
+      finalCallDirection: "BEARISH",
+      outcomeDirection: "FLAT",
+      realisedMovePct: 0.01,
+      factorItems: [
+        { factorId: "F1", factorName: "Factor 1", sourceSide: "target_asset", sourceAsset: "EUR", originalWeight: 20, expectedDirection: "BULLISH" },
+        { factorId: "F2", factorName: "Factor 2", sourceSide: "target_asset", sourceAsset: "EUR", originalWeight: 18, expectedDirection: "BULLISH" }
+      ]
+    },
+    {
+      snapshotDate: "2026-01-04",
+      finalCallDirection: null,
+      outcomeDirection: "BEARISH",
+      realisedMovePct: -0.6,
+      factorItems: [
+        { factorId: "F1", factorName: "Factor 1", sourceSide: "target_asset", sourceAsset: "EUR", originalWeight: 20, expectedDirection: "BULLISH" },
+        { factorId: "F2", factorName: "Factor 2", sourceSide: "target_asset", sourceAsset: "EUR", originalWeight: 18, expectedDirection: "BULLISH" }
+      ]
+    },
+    {
+      snapshotDate: "2026-01-05",
+      finalCallDirection: "BULLISH",
+      outcomeDirection: "BULLISH",
+      realisedMovePct: 0.8,
+      factorItems: [
+        { factorId: "F1", factorName: "Factor 1", sourceSide: "target_asset", sourceAsset: "EUR", originalWeight: 20, expectedDirection: "BULLISH" },
+        { factorId: "F2", factorName: "Factor 2", sourceSide: "target_asset", sourceAsset: "EUR", originalWeight: 18, expectedDirection: "BULLISH" }
+      ]
+    },
+    {
+      snapshotDate: "2026-01-06",
+      finalCallDirection: "BULLISH",
+      outcomeDirection: "BULLISH",
+      realisedMovePct: 0.7,
+      factorItems: [
+        { factorId: "F1", factorName: "Factor 1", sourceSide: "target_asset", sourceAsset: "EUR", originalWeight: 20, expectedDirection: "BULLISH" },
+        { factorId: "F2", factorName: "Factor 2", sourceSide: "target_asset", sourceAsset: "EUR", originalWeight: 18, expectedDirection: "BULLISH" }
+      ]
+    }
+  ];
+
+  const analysis = buildCombinationAnalysis("layer2_pair_side", rows);
+  const twoFactor = analysis.two_factor.combinations.find((entry) => entry.factor_ids.join("|") === "F1|F2");
+  const threeFactor = analysis.three_factor.combinations.find((entry) => entry.factor_ids.join("|") === "F1|F2|F3");
+
+  assert.ok(twoFactor, "expected F1/F2 two-factor combination");
+  assert.equal(twoFactor.sample_count, 6);
+  assert.equal(twoFactor.ex_flat_wr_pct, 80);
+  assert.equal(twoFactor.flat_count, 1);
+  assert.equal(twoFactor.reliability_label, "exploratory_positive_evidence");
+  assert.equal(twoFactor.interpretation, "exploratory_positive_edge_needs_more_sample");
+  assert.equal(twoFactor.agrees_with_final_call.sample_count, 4);
+  assert.equal(twoFactor.contradicts_final_call.sample_count, 1);
+  assert.equal(twoFactor.skipped_no_final_call_count, 1);
+  assert.equal(twoFactor.adr_l2l_factor_join.available, false);
+
+  assert.ok(threeFactor, "expected F1/F2/F3 three-factor combination");
+  assert.equal(threeFactor.sample_count, 2);
+  assert.equal(threeFactor.reliability_label, "unavailable_low_sample");
+  assert.equal(analysis.two_factor.exploratory_combination_count >= 1, true);
 });

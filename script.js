@@ -9,7 +9,7 @@ const checkerDataUrls = {
   BTC: "./data/backtester-checker-btc-24h-2024-2026.json?v=20260702-btc-benchmark-dashboard"
 };
 const adrReachResearchUrl = "./data/adr-reach-research.json?v=20260705-l2l-1h-sequence";
-const factorEdgeLabUrl = "./data/factor-edge-lab.json?v=20260706-phase2a";
+const factorEdgeLabUrl = "./data/factor-edge-lab.json?v=20260706-phase2f";
 const researchSupabaseUrl = "https://eaolqbrlywczinfordvg.supabase.co/rest/v1";
 const researchSupabaseKey = "sb_publishable_k6YbEuuk3GyB9GVTQDtNVA_J1gCRYaY";
 const headlineConfidenceLib = globalThis.HeadlineConfidence;
@@ -2468,6 +2468,123 @@ function renderFactorEdgeFactorTable(entity = {}) {
   `;
 }
 
+function renderFactorEdgeCombinationTable(bucket = {}, title = "Combinations") {
+  const rows = asArray(bucket.combinations);
+  if (!rows.length) {
+    return `
+      <article class="detail-panel factor-edge-combination-card">
+        <p class="eyebrow">${escapeHtml(title)}</p>
+        <div class="empty-state">No combination rows were generated for this scope.</div>
+      </article>
+    `;
+  }
+
+  return `
+    <article class="detail-panel factor-edge-combination-card">
+      <div class="research-section-head">
+        <div>
+          <p class="eyebrow">${escapeHtml(title)}</p>
+          <h4>${escapeHtml(`${bucket.combination_size || rows[0]?.factor_ids?.length || "?"}-Factor Combinations`)}</h4>
+        </div>
+        <p class="research-panel-copy">
+          Min sample ${escapeHtml(String(bucket.minimum_sample_count || displayDash()))} ·
+          Exploratory from ${escapeHtml(String(bucket.exploratory_sample_count || displayDash()))} ·
+          Usable ${escapeHtml(String(bucket.usable_combination_count || 0))}
+        </p>
+      </div>
+      <div class="table-scroll factor-edge-table-scroll">
+        <table class="dashboard-table research-evidence-table factor-edge-table">
+          <thead>
+            <tr>
+              <th>Combination</th>
+              <th>Direction</th>
+              <th>Sample</th>
+              <th>Ex-Flat WR</th>
+              <th>Flats</th>
+              <th>Final-Call Alignment</th>
+              <th>Reliability</th>
+              <th>ADR/L2L</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rows.slice(0, 12).map((row) => `
+              <tr>
+                <td>${renderAdrCompactTextCell(
+                  escapeHtml(asArray(row.factor_names).join(" + ") || displayDash()),
+                  escapeHtml(asArray(row.factor_ids).join(" · ") || displayDash()),
+                  { className: "adr-table-tight-cell" }
+                )}</td>
+                <td>${renderAdrCompactTextCell(
+                  escapeHtml(row.direction_tested || displayDash()),
+                  row.bullish_direction_tested ? "Bullish setup" : row.bearish_direction_tested ? "Bearish setup" : "No directional setup",
+                  { className: "adr-table-tight-cell" }
+                )}</td>
+                <td>${renderAdrCompactTextCell(
+                  renderSimpleMetricValue(row.sample_count),
+                  row.sample_size_label || "No sample label",
+                  { className: "adr-table-tight-cell" }
+                )}</td>
+                <td>${renderAdrCompactTextCell(
+                  metricAvailable(row.ex_flat_wr_pct) ? percentValue(row.ex_flat_wr_pct) : displayDash(),
+                  `${renderSimpleMetricValue(row.bullish_sample_count)} bull moves · ${renderSimpleMetricValue(row.bearish_sample_count)} bear moves`,
+                  { className: "adr-table-tight-cell" }
+                )}</td>
+                <td>${renderAdrCompactTextCell(
+                  metricAvailable(row.flat_rate_pct) ? percentValue(row.flat_rate_pct) : displayDash(),
+                  `${renderSimpleMetricValue(row.flat_count)} flats`,
+                  { className: "adr-table-tight-cell" }
+                )}</td>
+                <td>${renderAdrCompactTextCell(
+                  `${renderSimpleMetricValue(row.agrees_with_final_call?.sample_count)} agree · ${renderSimpleMetricValue(row.contradicts_final_call?.sample_count)} contra`,
+                  [
+                    metricAvailable(row.agrees_with_final_call?.ex_flat_wr_pct) ? `Agree WR ${percentValue(row.agrees_with_final_call.ex_flat_wr_pct)}` : "Agree WR unavailable",
+                    metricAvailable(row.contradicts_final_call?.ex_flat_wr_pct) ? `Contra WR ${percentValue(row.contradicts_final_call.ex_flat_wr_pct)}` : "Contra WR unavailable",
+                    row.skipped_no_final_call_count ? `${row.skipped_no_final_call_count} no final call` : "All rows had a final call"
+                  ].join(" · "),
+                  { className: "adr-table-tight-cell" }
+                )}</td>
+                <td>${renderAdrCompactTextCell(
+                  row.reliability_label || "Not yet available",
+                  row.interpretation || "No interpretation",
+                  { className: "adr-table-tight-cell" }
+                )}</td>
+                <td>${renderFactorEdgeStatusPill(
+                  row.adr_l2l_factor_join?.available,
+                  row.adr_l2l_factor_join?.blocker || ""
+                )}</td>
+              </tr>
+            `).join("")}
+          </tbody>
+        </table>
+      </div>
+    </article>
+  `;
+}
+
+function renderFactorEdgeCombinationSection(entity = {}, options = {}) {
+  const combinations = entity.factor_combinations || {};
+  if (!Object.keys(combinations).length) {
+    return `<div class="empty-state">No factor combination analysis was present in the checked-in artifact.</div>`;
+  }
+
+  const title = options.title || "Factor Combinations";
+  return `
+    <section class="factor-edge-combination-shell">
+      <div class="research-section-head">
+        <div>
+          <p class="eyebrow">Factor Combinations</p>
+          <h4>${escapeHtml(title)}</h4>
+        </div>
+        <p class="research-panel-copy">${escapeHtml(options.copy || "Research-only combination evidence. Low-sample results stay exploratory or unavailable and do not imply production weighting changes.")}</p>
+      </div>
+      <div class="factor-edge-combination-grid">
+        ${renderFactorEdgeCombinationTable(combinations.two_factor || {}, "Two-Factor")}
+        ${renderFactorEdgeCombinationTable(combinations.three_factor || {}, "Three-Factor")}
+      </div>
+    </section>
+  `;
+}
+
 function renderFactorEdgePairSideSummary(side = {}) {
   const summary = side.summary || {};
   const carryingFactor = summary.carrying_edge_factor || null;
@@ -2492,10 +2609,15 @@ function renderFactorEdgePairSideSection(entity = {}, sideKey = "base_side") {
   }
 
   const sideRows = asArray(entity.factors).filter((row) => row.source_side === side.sideKey);
+  const sideCombinations = entity.factor_combinations?.[sideKey] || {};
   return `
     <section class="factor-edge-pair-side-section">
       ${renderFactorEdgePairSideSummary(side)}
       ${renderFactorEdgeFactorTable({ ...entity, factors: sideRows })}
+      ${renderFactorEdgeCombinationSection({ factor_combinations: sideCombinations }, {
+        title: `${side.label || "Pair Side"} Combinations`,
+        copy: `${side.sourceAsset || "Unknown"} side combinations stay ${String(side.mapping || "unavailable").toLowerCase()}-mapped and separate from the opposite pair side in this phase.`
+      })}
     </section>
   `;
 }
@@ -2518,7 +2640,13 @@ function renderFactorEdgeEntitySection(entityName, entity = {}, options = {}) {
           ${renderFactorEdgePairSideSection(entity, "base_side")}
           ${renderFactorEdgePairSideSection(entity, "quote_usd_side")}
         </section>
-      ` : renderFactorEdgeFactorTable(entity)}
+      ` : `
+        ${renderFactorEdgeFactorTable(entity)}
+        ${renderFactorEdgeCombinationSection(entity, {
+          title: `${entityName} Factor Combinations`,
+          copy: "Combination analysis stays research-only. Tiny samples remain exploratory or unavailable rather than being treated as strong edge."
+        })}
+      `}
     </article>
   `;
 }
