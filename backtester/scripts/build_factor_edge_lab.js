@@ -45,6 +45,8 @@ const COMBINATION_CONFIG = Object.freeze({
     exploratory_sample_count: 8
   })
 });
+const RELIABLE_FACTOR_SAMPLE_MIN = 30;
+const RELIABLE_COMBINATION_SAMPLE_MIN = 12;
 
 function readJson(filePath) {
   return JSON.parse(fs.readFileSync(filePath, "utf8"));
@@ -71,6 +73,149 @@ function createAdrL2lUnavailableBlock() {
   return {
     available: false,
     blocker: ADR_L2L_BLOCKER
+  };
+}
+
+function topItems(items = [], scoreSelector, limit = 3, minimumScore = null) {
+  return items
+    .map((item) => ({ item, score: scoreSelector(item) }))
+    .filter((entry) => Number.isFinite(entry.score) && (minimumScore === null || entry.score >= minimumScore))
+    .sort((left, right) => (
+      right.score - left.score
+      || String(left.item.factor_id || left.item.factor_ids?.join("|") || "").localeCompare(String(right.item.factor_id || right.item.factor_ids?.join("|") || ""))
+    ))
+    .slice(0, limit)
+    .map((entry) => entry.item);
+}
+
+function buildLowSampleWarning({
+  singleFactors = [],
+  combinationGroups = []
+}) {
+  const insufficientFactors = singleFactors.filter((factor) => (factor.weight_mismatch?.directional_sample || 0) < RELIABLE_FACTOR_SAMPLE_MIN).length;
+  const exploratoryCombinations = combinationGroups.reduce((sum, group) => sum + (group?.exploratory_combination_count || 0), 0);
+  const unavailableCombinations = combinationGroups.reduce((sum, group) => sum + (group?.unavailable_low_sample_count || 0), 0);
+
+  return {
+    insufficient_single_factor_count: insufficientFactors,
+    exploratory_combination_count: exploratoryCombinations,
+    unavailable_combination_count: unavailableCombinations,
+    label: insufficientFactors || exploratoryCombinations || unavailableCombinations
+      ? "low_sample_review_caution"
+      : "sample_coverage_acceptable"
+  };
+}
+
+function classifyFactorReviewLabel(factor) {
+  const sample = factor.weight_mismatch?.directional_sample || 0;
+  const reliability = factor.weight_mismatch?.combined_factor_reliability_pct;
+  const originalWeight = factor.original_weight;
+  const interpretation = factor.weight_mismatch?.suggested_interpretation || factor.suggested_interpretation;
+
+  if (sample < RELIABLE_FACTOR_SAMPLE_MIN || !Number.isFinite(reliability)) return "insufficient_evidence";
+  if (interpretation === "low_weight_but_strong_realised_evidence" || interpretation === "asymmetric_directional_factor") return "contradiction_edge_possible_hidden_predictor";
+  if (interpretation === "high_weight_but_negative_realised_evidence" || reliability < 48) return "candidate_reduce_weight";
+  if (reliability >= 65 && Number.isFinite(originalWeight) && originalWeight <= 10) return "candidate_increase_weight";
+  if (reliability >= 58 && Number.isFinite(originalWeight) && originalWeight <= 14) return "candidate_increase_weight";
+  if (reliability >= 52) return "confirmation_only_factor";
+  return "insufficient_evidence";
+}
+
+function classifyCombinationReviewLabel(combination) {
+  const sample = combination.sample_count || 0;
+  const reliabilityLabel = combination.reliability_label;
+  const reliability = combination.ex_flat_wr_pct;
+
+  if (reliabilityLabel === "unavailable_low_sample" || sample < RELIABLE_COMBINATION_SAMPLE_MIN) return "insufficient_evidence";
+  if (String(reliabilityLabel).startsWith("exploratory")) return "insufficient_evidence";
+  if (reliabilityLabel === "negative_evidence") return "candidate_reduce_weight";
+  if (reliabilityLabel === "strong_positive_evidence" || (reliabilityLabel === "moderate_positive_evidence" && reliability >= 58)) return "candidate_increase_weight";
+  if (reliabilityLabel === "weak_positive_evidence" || reliabilityLabel === "no_edge") return "confirmation_only_factor";
+  return "insufficient_evidence";
+}
+
+function labelFactorForReview(factor) {
+  return {
+    ...factor,
+    review_label: classifyFactorReviewLabel(factor)
+  };
+}
+
+function labelCombinationForReview(combination) {
+  return {
+    ...combination,
+    review_label: classifyCombinationReviewLabel(combination)
+  };
+}
+
+function pairEdgeCarrierLabel(pairSideAnalysis = {}) {
+  const baseScore = pairSideAnalysis.base_side?.summary?.average_combined_factor_reliability_pct;
+  const usdScore = pairSideAnalysis.quote_usd_side?.summary?.average_combined_factor_reliability_pct;
+  if (!Number.isFinite(baseScore) || !Number.isFinite(usdScore)) return "mixed_or_insufficient_side_evidence";
+  if (baseScore >= usdScore + 4) return "mostly_base_side";
+  if (usdScore >= baseScore + 4) return "mostly_usd_side";
+  return "mixed";
+}
+
+function buildTopEvidenceSummary({
+  factors = [],
+  combinationAnalysis = null,
+  pairSideAnalysis = null,
+  baseSideCombinations = null,
+  usdSideCombinations = null
+}) {
+  const strongestReliableSingleFactors = topItems(
+    factors.filter((factor) => factor.review_label === "candidate_increase_weight" || factor.review_label === "confirmation_only_factor"),
+    (factor) => factor.weight_mismatch?.combined_factor_reliability_pct,
+    3,
+    52
+  );
+  const weakestFailingFactors = topItems(
+    factors.filter((factor) => factor.review_label === "candidate_reduce_weight" || factor.review_label === "contradiction_edge_possible_hidden_predictor"),
+    (factor) => {
+      const reliability = factor.weight_mismatch?.combined_factor_reliability_pct;
+      if (factor.review_label === "contradiction_edge_possible_hidden_predictor") {
+        return Number.isFinite(reliability) ? 100 - reliability + 25 : 25;
+      }
+      return Number.isFinite(reliability) ? 100 - reliability : 0;
+    },
+    3
+  );
+
+  const reviewWarnings = buildLowSampleWarning({
+    singleFactors: factors,
+    combinationGroups: [
+      combinationAnalysis?.two_factor,
+      combinationAnalysis?.three_factor,
+      baseSideCombinations?.two_factor,
+      baseSideCombinations?.three_factor,
+      usdSideCombinations?.two_factor,
+      usdSideCombinations?.three_factor
+    ].filter(Boolean)
+  });
+
+  const combinationCandidates = [
+    ...(combinationAnalysis?.two_factor?.combinations || []),
+    ...(combinationAnalysis?.three_factor?.combinations || []),
+    ...(baseSideCombinations?.two_factor?.combinations || []),
+    ...(baseSideCombinations?.three_factor?.combinations || []),
+    ...(usdSideCombinations?.two_factor?.combinations || []),
+    ...(usdSideCombinations?.three_factor?.combinations || [])
+  ];
+
+  const strongestReliableCombinations = topItems(
+    combinationCandidates.filter((combination) => combination.review_label === "candidate_increase_weight" || combination.review_label === "confirmation_only_factor"),
+    (combination) => combination.ex_flat_wr_pct,
+    3,
+    52
+  );
+
+  return {
+    strongest_reliable_single_factors: strongestReliableSingleFactors,
+    weakest_failing_factors: weakestFailingFactors,
+    strongest_reliable_combinations: strongestReliableCombinations,
+    low_sample_warning: reviewWarnings,
+    layer2_edge_balance: pairSideAnalysis ? pairEdgeCarrierLabel(pairSideAnalysis) : null
   };
 }
 
@@ -204,12 +349,12 @@ function buildCombinationAnalysis(scopeLabel, directionalRows = []) {
   };
 
   for (const bucket of comboBuckets.values()) {
-    grouped[bucket.analysisKey].push(summarizeCombinationBucket({
+    grouped[bucket.analysisKey].push(labelCombinationForReview(summarizeCombinationBucket({
       factorItems: bucket.factorItems,
       directionTested: bucket.directionTested,
       observations: bucket.observations,
       config: bucket.config
-    }));
+    })));
   }
 
   return Object.fromEntries(Object.entries(COMBINATION_CONFIG).map(([analysisKey, config]) => {
@@ -278,7 +423,7 @@ function buildFactorEntry({
     suggestedInterpretation: weightMismatch.suggested_interpretation
   });
 
-  return {
+  return labelFactorForReview({
     factor_id: factorId,
     factor_name: factorName,
     source_side: sourceSide,
@@ -291,7 +436,7 @@ function buildFactorEntry({
     alignment_with_final_call: alignment,
     weight_mismatch: weightMismatch,
     suggested_interpretation: weightMismatch.suggested_interpretation
-  };
+  });
 }
 
 function buildEntitySummary(factors, totalObservations) {
@@ -426,6 +571,8 @@ function buildLayer1Entity(config, checker) {
     .sort((a, b) => String(a.factorId).localeCompare(String(b.factorId)))
     .map((entry) => buildFactorEntry(entry));
 
+  const factorCombinations = buildCombinationAnalysis("layer1_asset", combinationRows);
+
   return {
     summary: buildEntitySummary(factors, checker.rows?.length || 0),
     date_range: {
@@ -434,7 +581,11 @@ function buildLayer1Entity(config, checker) {
     },
     outcome_market: config.marketKey,
     adr_l2l_factor_join: createAdrL2lUnavailableBlock(),
-    factor_combinations: buildCombinationAnalysis("layer1_asset", combinationRows),
+    top_evidence_summary: buildTopEvidenceSummary({
+      factors,
+      combinationAnalysis: factorCombinations
+    }),
+    factor_combinations: factorCombinations,
     factors
   };
 }
@@ -594,6 +745,43 @@ function buildLayer2Entity(config, allCheckers) {
   const baseSideFactors = factors.filter((factor) => factor.source_side === "target_asset");
   const usdSideFactors = factors.filter((factor) => factor.source_side === "usd_side");
   const pairSideMapping = config.pairSideMapping || null;
+  const pairSideAnalysis = {
+    base_side: {
+      ...(pairSideMapping?.base_side || {
+        sideKey: "target_asset",
+        label: "Base Side",
+        sourceAsset: config.targetAssetCode,
+        mapping: "direct",
+        description: "Target-side factors are tested direct against pair movement."
+      }),
+      summary: summarizeFactorSide(baseSideFactors)
+    },
+    quote_usd_side: {
+      ...(pairSideMapping?.quote_usd_side || {
+        sideKey: "usd_side",
+        label: "Quote/USD Side",
+        sourceAsset: "USD",
+        mapping: "inverse",
+        description: "USD-side factors are tested inverse against pair movement."
+      }),
+      summary: summarizeFactorSide(usdSideFactors)
+    }
+  };
+
+  const factorCombinations = {
+    base_side: {
+      ...(pairSideMapping?.base_side || {}),
+      ...buildCombinationAnalysis("layer2_pair_side", baseSideCombinationRows)
+    },
+    quote_usd_side: {
+      ...(pairSideMapping?.quote_usd_side || {}),
+      ...buildCombinationAnalysis("layer2_pair_side", usdSideCombinationRows)
+    },
+    cross_side: {
+      available: false,
+      blocker: "Phase 2F keeps Layer 2 factor combinations side-separated. Cross-side factor combinations are not inferred without an explicit mapping contract."
+    }
+  };
 
   return {
     summary: buildEntitySummary(factors, matchedDates.length),
@@ -604,43 +792,15 @@ function buildLayer2Entity(config, allCheckers) {
     outcome_market: config.marketKey,
     matched_date_observations: matchedDates.length,
     methodology_note: methodologyNote,
-    pair_side_analysis: {
-      base_side: {
-        ...(pairSideMapping?.base_side || {
-          sideKey: "target_asset",
-          label: "Base Side",
-          sourceAsset: config.targetAssetCode,
-          mapping: "direct",
-          description: "Target-side factors are tested direct against pair movement."
-        }),
-        summary: summarizeFactorSide(baseSideFactors)
-      },
-      quote_usd_side: {
-        ...(pairSideMapping?.quote_usd_side || {
-          sideKey: "usd_side",
-          label: "Quote/USD Side",
-          sourceAsset: "USD",
-          mapping: "inverse",
-          description: "USD-side factors are tested inverse against pair movement."
-        }),
-        summary: summarizeFactorSide(usdSideFactors)
-      }
-    },
+    pair_side_analysis: pairSideAnalysis,
     adr_l2l_factor_join: createAdrL2lUnavailableBlock(),
-    factor_combinations: {
-      base_side: {
-        ...(pairSideMapping?.base_side || {}),
-        ...buildCombinationAnalysis("layer2_pair_side", baseSideCombinationRows)
-      },
-      quote_usd_side: {
-        ...(pairSideMapping?.quote_usd_side || {}),
-        ...buildCombinationAnalysis("layer2_pair_side", usdSideCombinationRows)
-      },
-      cross_side: {
-        available: false,
-        blocker: "Phase 2F keeps Layer 2 factor combinations side-separated. Cross-side factor combinations are not inferred without an explicit mapping contract."
-      }
-    },
+    top_evidence_summary: buildTopEvidenceSummary({
+      factors,
+      pairSideAnalysis,
+      baseSideCombinations: factorCombinations.base_side,
+      usdSideCombinations: factorCombinations.quote_usd_side
+    }),
+    factor_combinations: factorCombinations,
     factors
   };
 }
@@ -734,5 +894,8 @@ if (require.main === module) {
 
 module.exports = {
   buildCombinationAnalysis,
+  buildTopEvidenceSummary,
+  classifyCombinationReviewLabel,
+  classifyFactorReviewLabel,
   buildPayload
 };

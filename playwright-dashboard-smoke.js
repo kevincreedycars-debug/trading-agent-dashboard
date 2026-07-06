@@ -602,6 +602,11 @@ async function run() {
       "two-factor",
       "three-factor",
       "exploratory",
+      "top evidence",
+      "review summary",
+      "candidate increase weight",
+      "candidate reduce weight",
+      "insufficient evidence",
       "base side combinations",
       "quote/usd side combinations"
     ]) {

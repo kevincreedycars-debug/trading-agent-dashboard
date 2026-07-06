@@ -2330,6 +2330,13 @@ function renderSimpleMetricValue(value, formatter = null) {
   return formatter ? formatter(value) : String(value);
 }
 
+function formatReviewLabel(value) {
+  if (!value) return "Not yet available";
+  return String(value)
+    .replaceAll("_", " ")
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
 function renderFactorEdgeStatusPill(available, blocker = "") {
   if (available === false) {
     return `
@@ -2389,6 +2396,61 @@ function renderFactorEdgeEntityHighlights(entity = {}) {
   `;
 }
 
+function renderFactorEdgeTopEvidence(entity = {}, options = {}) {
+  const summary = entity.top_evidence_summary || {};
+  const strongestSingles = asArray(summary.strongest_reliable_single_factors);
+  const weakestFactors = asArray(summary.weakest_failing_factors);
+  const strongestCombinations = asArray(summary.strongest_reliable_combinations);
+  const lowSampleWarning = summary.low_sample_warning || {};
+  const edgeBalance = summary.layer2_edge_balance;
+
+  const renderEvidenceList = (items, type) => {
+    if (!items.length) {
+      return `<li>${escapeHtml(type === "combination" ? "No reliable combination evidence surfaced yet." : "No reliable factor evidence surfaced yet.")}</li>`;
+    }
+
+    return items.map((item) => {
+      const title = type === "combination" ? asArray(item.factor_names).join(" + ") : item.factor_name;
+      const subtitle = type === "combination" ? asArray(item.factor_ids).join(" · ") : item.factor_id;
+      const score = type === "combination"
+        ? (metricAvailable(item.ex_flat_wr_pct) ? percentValue(item.ex_flat_wr_pct) : displayDash())
+        : (metricAvailable(item.weight_mismatch?.combined_factor_reliability_pct) ? percentValue(item.weight_mismatch.combined_factor_reliability_pct) : displayDash());
+      return `<li><strong>${escapeHtml(title || "Not yet available")}</strong> <span>${escapeHtml(subtitle || displayDash())} · ${escapeHtml(score)} · ${escapeHtml(formatReviewLabel(item.review_label))}</span></li>`;
+    }).join("");
+  };
+
+  return `
+    <section class="detail-panel factor-edge-top-evidence-card">
+      <div class="research-section-head">
+        <div>
+          <p class="eyebrow">Top Evidence</p>
+          <h4>${escapeHtml(options.title || "Review Readiness")}</h4>
+        </div>
+        <p class="research-panel-copy">Research-only review summary. These labels flag evidence for human inspection and do not change any production weighting or live logic.</p>
+      </div>
+      <section class="backtest-grid three-column factor-edge-summary-grid">
+        ${renderBacktestKpiMetric("Low-Sample Warning", formatReviewLabel(lowSampleWarning.label), `${renderSimpleMetricValue(lowSampleWarning.insufficient_single_factor_count)} factors · ${renderSimpleMetricValue(lowSampleWarning.exploratory_combination_count)} exploratory combos`, "Counts of factors or combinations that still need more sample before review confidence increases")}
+        ${renderBacktestKpiMetric("Unavailable Combos", renderSimpleMetricValue(lowSampleWarning.unavailable_combination_count), "Held back by minimum sample gating", "Tiny-sample combinations remain unavailable instead of being surfaced as strong edge")}
+        ${renderBacktestKpiMetric("Layer 2 Edge Balance", edgeBalance ? formatReviewLabel(edgeBalance) : displayDash(), "", "Which Layer 2 side appears to carry more realized edge in this research-only view")}
+      </section>
+      <div class="factor-edge-combination-grid">
+        <article class="detail-panel factor-edge-combination-card">
+          <p class="eyebrow">Strongest Reliable Single Factors</p>
+          <ul class="adr-unavailable-list factor-edge-limitations-list">${renderEvidenceList(strongestSingles, "factor")}</ul>
+        </article>
+        <article class="detail-panel factor-edge-combination-card">
+          <p class="eyebrow">Weakest / Failing Factors</p>
+          <ul class="adr-unavailable-list factor-edge-limitations-list">${renderEvidenceList(weakestFactors, "factor")}</ul>
+        </article>
+        <article class="detail-panel factor-edge-combination-card">
+          <p class="eyebrow">Strongest Reliable Combinations</p>
+          <ul class="adr-unavailable-list factor-edge-limitations-list">${renderEvidenceList(strongestCombinations, "combination")}</ul>
+        </article>
+      </div>
+    </section>
+  `;
+}
+
 function renderFactorEdgeFactorTable(entity = {}) {
   const rows = asArray(entity.factors);
   if (!rows.length) {
@@ -2403,6 +2465,7 @@ function renderFactorEdgeFactorTable(entity = {}) {
             <th>Factor</th>
             <th>Source</th>
             <th>Weight</th>
+            <th>Review Label</th>
             <th>Signal Counts</th>
             <th>Bullish Reliability</th>
             <th>Bearish Reliability</th>
@@ -2418,6 +2481,11 @@ function renderFactorEdgeFactorTable(entity = {}) {
               <td>${renderAdrCompactTextCell(row.factor_name || displayDash(), row.factor_id || "", { className: "adr-table-tight-cell" })}</td>
               <td>${renderAdrCompactTextCell(row.source_asset || displayDash(), row.source_side || "", { className: "adr-table-tight-cell" })}</td>
               <td>${renderAdrCompactTextCell(renderSimpleMetricValue(row.original_weight), row.suggested_interpretation || "", { className: "adr-table-tight-cell" })}</td>
+              <td>${renderAdrCompactTextCell(
+                formatReviewLabel(row.review_label),
+                row.weight_mismatch?.suggested_interpretation || row.suggested_interpretation || "No interpretation",
+                { className: "adr-table-tight-cell" }
+              )}</td>
               <td>${renderAdrCompactTextCell(
                 `${row.factor_profile?.bullish_sample_count ?? 0}B / ${row.factor_profile?.bearish_sample_count ?? 0}Br`,
                 `${row.factor_profile?.neutral_no_signal_count ?? 0} neutral · ${row.factor_profile?.directional_sample_count ?? 0} directional`,
@@ -2526,7 +2594,7 @@ function renderFactorEdgeCombinationTable(bucket = {}, title = "Combinations") {
                 )}</td>
                 <td>${renderAdrCompactTextCell(
                   metricAvailable(row.ex_flat_wr_pct) ? percentValue(row.ex_flat_wr_pct) : displayDash(),
-                  `${renderSimpleMetricValue(row.bullish_sample_count)} bull moves · ${renderSimpleMetricValue(row.bearish_sample_count)} bear moves`,
+                  `${renderSimpleMetricValue(row.bullish_sample_count)} bull moves · ${renderSimpleMetricValue(row.bearish_sample_count)} bear moves · ${formatReviewLabel(row.review_label)}`,
                   { className: "adr-table-tight-cell" }
                 )}</td>
                 <td>${renderAdrCompactTextCell(
@@ -2545,7 +2613,7 @@ function renderFactorEdgeCombinationTable(bucket = {}, title = "Combinations") {
                 )}</td>
                 <td>${renderAdrCompactTextCell(
                   row.reliability_label || "Not yet available",
-                  row.interpretation || "No interpretation",
+                  `${formatReviewLabel(row.review_label)} · ${row.interpretation || "No interpretation"}`,
                   { className: "adr-table-tight-cell" }
                 )}</td>
                 <td>${renderFactorEdgeStatusPill(
@@ -2635,6 +2703,7 @@ function renderFactorEdgeEntitySection(entityName, entity = {}, options = {}) {
       </div>
       ${renderFactorEdgeSummaryCards(entityName, entity, options)}
       ${renderFactorEdgeEntityHighlights(entity)}
+      ${renderFactorEdgeTopEvidence(entity, { title: `${entityName} Review Summary` })}
       ${isLayer2 ? `
         <section class="factor-edge-pair-sides-shell">
           ${renderFactorEdgePairSideSection(entity, "base_side")}

@@ -11,7 +11,12 @@ const {
   derivePairCallDirection,
   invertDirection
 } = require("../lib/factor_edge_lab");
-const { buildCombinationAnalysis } = require("../scripts/build_factor_edge_lab");
+const {
+  buildCombinationAnalysis,
+  buildTopEvidenceSummary,
+  classifyCombinationReviewLabel,
+  classifyFactorReviewLabel
+} = require("../scripts/build_factor_edge_lab");
 
 test("buildStateStats excludes flats from ex-flat win rate", () => {
   const stats = buildStateStats([
@@ -233,4 +238,102 @@ test("buildCombinationAnalysis keeps layer 2 style scope separated and exposes a
   assert.equal(threeFactor.sample_count, 2);
   assert.equal(threeFactor.reliability_label, "unavailable_low_sample");
   assert.equal(analysis.two_factor.exploratory_combination_count >= 1, true);
+});
+
+test("review labels promote strong low-weight factors and demote failing high-weight factors", () => {
+  assert.equal(classifyFactorReviewLabel({
+    original_weight: 6,
+    suggested_interpretation: "factor_supports_current_weighting",
+    weight_mismatch: {
+      directional_sample: 48,
+      combined_factor_reliability_pct: 66.4,
+      suggested_interpretation: "low_weight_but_strong_realised_evidence"
+    }
+  }), "contradiction_edge_possible_hidden_predictor");
+
+  assert.equal(classifyFactorReviewLabel({
+    original_weight: 18,
+    suggested_interpretation: "factor_underperforms_historically",
+    weight_mismatch: {
+      directional_sample: 61,
+      combined_factor_reliability_pct: 44.2,
+      suggested_interpretation: "high_weight_but_negative_realised_evidence"
+    }
+  }), "candidate_reduce_weight");
+
+  assert.equal(classifyCombinationReviewLabel({
+    sample_count: 22,
+    reliability_label: "strong_positive_evidence",
+    ex_flat_wr_pct: 72.1
+  }), "candidate_increase_weight");
+});
+
+test("top evidence summary ranks reliable factors, combinations, and layer 2 edge balance", () => {
+  const factors = [
+    {
+      factor_id: "F1",
+      factor_name: "Factor One",
+      review_label: "candidate_increase_weight",
+      weight_mismatch: { combined_factor_reliability_pct: 68.2, directional_sample: 52 }
+    },
+    {
+      factor_id: "F2",
+      factor_name: "Factor Two",
+      review_label: "candidate_reduce_weight",
+      weight_mismatch: { combined_factor_reliability_pct: 43.5, directional_sample: 49 }
+    },
+    {
+      factor_id: "F3",
+      factor_name: "Factor Three",
+      review_label: "insufficient_evidence",
+      weight_mismatch: { combined_factor_reliability_pct: 59.3, directional_sample: 8 }
+    }
+  ];
+  const baseSideCombinations = {
+    two_factor: {
+      exploratory_combination_count: 1,
+      unavailable_low_sample_count: 2,
+      combinations: [
+        {
+          factor_ids: ["F1", "F4"],
+          factor_names: ["Factor One", "Factor Four"],
+          ex_flat_wr_pct: 69.5,
+          review_label: "candidate_increase_weight"
+        }
+      ]
+    },
+    three_factor: {
+      exploratory_combination_count: 0,
+      unavailable_low_sample_count: 1,
+      combinations: []
+    }
+  };
+  const usdSideCombinations = {
+    two_factor: {
+      exploratory_combination_count: 0,
+      unavailable_low_sample_count: 0,
+      combinations: []
+    },
+    three_factor: {
+      exploratory_combination_count: 0,
+      unavailable_low_sample_count: 0,
+      combinations: []
+    }
+  };
+
+  const summary = buildTopEvidenceSummary({
+    factors,
+    pairSideAnalysis: {
+      base_side: { summary: { average_combined_factor_reliability_pct: 63 } },
+      quote_usd_side: { summary: { average_combined_factor_reliability_pct: 54 } }
+    },
+    baseSideCombinations,
+    usdSideCombinations
+  });
+
+  assert.equal(summary.strongest_reliable_single_factors[0].factor_id, "F1");
+  assert.equal(summary.weakest_failing_factors[0].factor_id, "F2");
+  assert.equal(summary.strongest_reliable_combinations[0].factor_ids.join("|"), "F1|F4");
+  assert.equal(summary.low_sample_warning.label, "low_sample_review_caution");
+  assert.equal(summary.layer2_edge_balance, "mostly_base_side");
 });
