@@ -5,6 +5,7 @@ const {
   buildFactorProfile,
   buildStateStats,
   buildAlignmentStats,
+  LAYER2_CONFIGS,
   derivePairCallDirection,
   invertDirection
 } = require("../lib/factor_edge_lab");
@@ -105,4 +106,23 @@ test("pair direction mapping inverts USD-side expectations", () => {
   assert.equal(derivePairCallDirection("BULLISH", "BULLISH"), null);
   assert.equal(invertDirection("BULLISH"), "BEARISH");
   assert.equal(invertDirection("BEARISH"), "BULLISH");
+});
+
+test("layer 2 pair-side mappings are explicit for all supported pairs", () => {
+  const pairConfigs = Object.fromEntries(LAYER2_CONFIGS.map((config) => [config.pairLabel, config]));
+
+  for (const pairLabel of ["EUR/USD", "XAU/USD", "NQ/USD", "BTC/USD"]) {
+    const config = pairConfigs[pairLabel];
+    assert.ok(config, `missing config for ${pairLabel}`);
+    assert.equal(config.pairSideMapping?.base_side?.mapping, "direct", `${pairLabel} base side should be explicit direct`);
+    assert.equal(config.pairSideMapping?.quote_usd_side?.mapping, "inverse", `${pairLabel} USD side should be explicit inverse`);
+    assert.ok(config.pairSideMapping?.base_side?.description, `${pairLabel} base side description missing`);
+    assert.ok(config.pairSideMapping?.quote_usd_side?.description, `${pairLabel} USD side description missing`);
+  }
+
+  assert.match(
+    pairConfigs["NQ/USD"].pairSideMapping.quote_usd_side.description,
+    /inverse/i,
+    "NQ/USD USD-side mapping must remain explicit rather than inferred"
+  );
 });

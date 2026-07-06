@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-06T18:54:33.341Z",
+  "generated_at": "2026-07-06T19:15:10.932Z",
   "version": "phase2-factor-edge-lab-v1",
   "timeframe": "24H",
   "primary_metric": "ex_flat_wr",
@@ -14,6 +14,10 @@
       "target_asset_factors": "target bullish -> pair bullish, target bearish -> pair bearish",
       "usd_side_factors": "USD bullish -> pair bearish, USD bearish -> pair bullish",
       "pair_call_alignment": "final pair call exists only when target and USD 24H calls are both directional and opposite"
+    },
+    "pair_side_groups": {
+      "base_side": "Base-side factors are shown separately and are tested direct against pair movement.",
+      "quote_usd_side": "Quote/USD-side factors are shown separately and are tested inverse against pair movement unless an explicit checked-in rule says otherwise."
     },
     "outcome_markets": {
       "USD": "DXY",
@@ -5619,6 +5623,44 @@
       "outcome_market": "EURUSD",
       "matched_date_observations": 602,
       "methodology_note": "Pair directional outcomes reuse the checked-in target-side 24H evaluation market and invert USD-side factor expectations locally for research only.",
+      "pair_side_analysis": {
+        "base_side": {
+          "sideKey": "target_asset",
+          "label": "Base Side",
+          "sourceAsset": "EUR",
+          "mapping": "direct",
+          "description": "EUR factors are tested direct against EUR/USD movement.",
+          "summary": {
+            "factor_count": 10,
+            "directional_sample_count": 814,
+            "average_combined_factor_reliability_pct": 50.5,
+            "edge_label": "mixed_or_marginal_edge",
+            "carrying_edge_factor": {
+              "factor_id": "F9",
+              "factor_name": "Global Growth Regime",
+              "score": 53.9
+            }
+          }
+        },
+        "quote_usd_side": {
+          "sideKey": "usd_side",
+          "label": "Quote/USD Side",
+          "sourceAsset": "USD",
+          "mapping": "inverse",
+          "description": "USD factors are tested inverse against EUR/USD movement.",
+          "summary": {
+            "factor_count": 10,
+            "directional_sample_count": 1417,
+            "average_combined_factor_reliability_pct": 51.5,
+            "edge_label": "mixed_or_marginal_edge",
+            "carrying_edge_factor": {
+              "factor_id": "F7 US Economic Surprise",
+              "factor_name": "US Economic Surprise",
+              "score": 62.5
+            }
+          }
+        }
+      },
       "adr_l2l_factor_join": {
         "available": false,
         "blocker": "Checked-in data/adr-reach-research.json does not expose full per-prediction factor-joinable rows; only summaries and samples are exported, so factor-level ADR/L2L joins are unavailable from repo-local artifacts alone."
@@ -7803,6 +7845,44 @@
       "outcome_market": "XAUUSD",
       "matched_date_observations": 604,
       "methodology_note": "Pair directional outcomes reuse the checked-in target-side 24H evaluation market and invert USD-side factor expectations locally for research only.",
+      "pair_side_analysis": {
+        "base_side": {
+          "sideKey": "target_asset",
+          "label": "Base Side",
+          "sourceAsset": "Gold",
+          "mapping": "direct",
+          "description": "Gold factors are tested direct against XAU/USD movement.",
+          "summary": {
+            "factor_count": 10,
+            "directional_sample_count": 1176,
+            "average_combined_factor_reliability_pct": 57.4,
+            "edge_label": "mixed_or_marginal_edge",
+            "carrying_edge_factor": {
+              "factor_id": "F2",
+              "factor_name": "DXY Delta",
+              "score": 71.9
+            }
+          }
+        },
+        "quote_usd_side": {
+          "sideKey": "usd_side",
+          "label": "Quote/USD Side",
+          "sourceAsset": "USD",
+          "mapping": "inverse",
+          "description": "USD factors are tested inverse against XAU/USD movement.",
+          "summary": {
+            "factor_count": 10,
+            "directional_sample_count": 1935,
+            "average_combined_factor_reliability_pct": 61.7,
+            "edge_label": "side_carrying_positive_edge",
+            "carrying_edge_factor": {
+              "factor_id": "F5 DXY Delta",
+              "factor_name": "DXY Delta",
+              "score": 71.9
+            }
+          }
+        }
+      },
       "adr_l2l_factor_join": {
         "available": false,
         "blocker": "Checked-in data/adr-reach-research.json does not expose full per-prediction factor-joinable rows; only summaries and samples are exported, so factor-level ADR/L2L joins are unavailable from repo-local artifacts alone."
@@ -9983,6 +10063,44 @@
       "outcome_market": "QQQ_NQ_PROXY",
       "matched_date_observations": 604,
       "methodology_note": "Pair directional outcomes reuse the repo's existing NQ Phase 1 proxy semantics (QQQ_NQ_PROXY) because the checked-in directional checker does not expose a separate NQ/USD close-to-close evaluator.",
+      "pair_side_analysis": {
+        "base_side": {
+          "sideKey": "target_asset",
+          "label": "Base Side",
+          "sourceAsset": "NQ",
+          "mapping": "direct",
+          "description": "NQ factors are tested direct against NQ/USD movement using the existing checked-in QQQ proxy semantics.",
+          "summary": {
+            "factor_count": 10,
+            "directional_sample_count": 865,
+            "average_combined_factor_reliability_pct": 50,
+            "edge_label": "mixed_or_marginal_edge",
+            "carrying_edge_factor": {
+              "factor_id": "F10",
+              "factor_name": "Gold Defensive Flow Confirmation",
+              "score": 57.5
+            }
+          }
+        },
+        "quote_usd_side": {
+          "sideKey": "usd_side",
+          "label": "Quote/USD Side",
+          "sourceAsset": "USD",
+          "mapping": "inverse",
+          "description": "USD factors are tested inverse against NQ/USD movement under the same checked-in QQQ proxy semantics.",
+          "summary": {
+            "factor_count": 10,
+            "directional_sample_count": 1708,
+            "average_combined_factor_reliability_pct": 53.4,
+            "edge_label": "mixed_or_marginal_edge",
+            "carrying_edge_factor": {
+              "factor_id": "F7 US Economic Surprise",
+              "factor_name": "US Economic Surprise",
+              "score": 57.1
+            }
+          }
+        }
+      },
       "adr_l2l_factor_join": {
         "available": false,
         "blocker": "Checked-in data/adr-reach-research.json does not expose full per-prediction factor-joinable rows; only summaries and samples are exported, so factor-level ADR/L2L joins are unavailable from repo-local artifacts alone."
@@ -12167,6 +12285,44 @@
       "outcome_market": "BTCUSD",
       "matched_date_observations": 604,
       "methodology_note": "Pair directional outcomes reuse the checked-in target-side 24H evaluation market and invert USD-side factor expectations locally for research only.",
+      "pair_side_analysis": {
+        "base_side": {
+          "sideKey": "target_asset",
+          "label": "Base Side",
+          "sourceAsset": "BTC",
+          "mapping": "direct",
+          "description": "BTC factors are tested direct against BTC/USD movement.",
+          "summary": {
+            "factor_count": 10,
+            "directional_sample_count": 1140,
+            "average_combined_factor_reliability_pct": 57.4,
+            "edge_label": "mixed_or_marginal_edge",
+            "carrying_edge_factor": {
+              "factor_id": "F7 US Economic Surprise Direction",
+              "factor_name": "US Economic Surprise Direction",
+              "score": 71.4
+            }
+          }
+        },
+        "quote_usd_side": {
+          "sideKey": "usd_side",
+          "label": "Quote/USD Side",
+          "sourceAsset": "USD",
+          "mapping": "inverse",
+          "description": "USD factors are tested inverse against BTC/USD movement.",
+          "summary": {
+            "factor_count": 10,
+            "directional_sample_count": 1821,
+            "average_combined_factor_reliability_pct": 52.1,
+            "edge_label": "mixed_or_marginal_edge",
+            "carrying_edge_factor": {
+              "factor_id": "F5 DXY Delta",
+              "factor_name": "DXY Delta",
+              "score": 63.1
+            }
+          }
+        }
+      },
       "adr_l2l_factor_join": {
         "available": false,
         "blocker": "Checked-in data/adr-reach-research.json does not expose full per-prediction factor-joinable rows; only summaries and samples are exported, so factor-level ADR/L2L joins are unavailable from repo-local artifacts alone."

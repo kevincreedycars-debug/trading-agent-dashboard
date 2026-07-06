@@ -2468,7 +2468,40 @@ function renderFactorEdgeFactorTable(entity = {}) {
   `;
 }
 
+function renderFactorEdgePairSideSummary(side = {}) {
+  const summary = side.summary || {};
+  const carryingFactor = summary.carrying_edge_factor || null;
+  return `
+    <article class="detail-panel factor-edge-side-summary-card">
+      <p class="eyebrow">${escapeHtml(side.label || "Pair Side")}</p>
+      <h3>${escapeHtml(side.sourceAsset || "Unknown")} · ${escapeHtml(String(side.mapping || "unavailable").toUpperCase())}</h3>
+      <p class="research-panel-copy">${escapeHtml(side.description || "No explicit pair-side mapping note was provided.")}</p>
+      <section class="backtest-grid three-column factor-edge-side-grid">
+        ${renderBacktestKpiMetric("Factors", renderSimpleMetricValue(summary.factor_count), renderSimpleMetricValue(summary.directional_sample_count), "Directional sample count is aggregated from the side's factor rows only")}
+        ${renderBacktestKpiMetric("Avg Reliability", metricAvailable(summary.average_combined_factor_reliability_pct) ? percentValue(summary.average_combined_factor_reliability_pct) : displayDash(), summary.edge_label || "Not yet available", "Average combined factor reliability across this side's factors")}
+        ${renderBacktestKpiMetric("Carrying Factor", carryingFactor?.factor_name || "Not yet available", carryingFactor?.factor_id || "", "Highest combined reliability factor on this side")}
+      </section>
+    </article>
+  `;
+}
+
+function renderFactorEdgePairSideSection(entity = {}, sideKey = "base_side") {
+  const side = entity.pair_side_analysis?.[sideKey] || null;
+  if (!side) {
+    return `<div class="empty-state">No explicit pair-side analysis was present for this side.</div>`;
+  }
+
+  const sideRows = asArray(entity.factors).filter((row) => row.source_side === side.sideKey);
+  return `
+    <section class="factor-edge-pair-side-section">
+      ${renderFactorEdgePairSideSummary(side)}
+      ${renderFactorEdgeFactorTable({ ...entity, factors: sideRows })}
+    </section>
+  `;
+}
+
 function renderFactorEdgeEntitySection(entityName, entity = {}, options = {}) {
+  const isLayer2 = options.eyebrow === "Layer 2";
   return `
     <article class="research-section detail-panel factor-edge-entity-panel">
       <div class="research-section-head">
@@ -2480,7 +2513,12 @@ function renderFactorEdgeEntitySection(entityName, entity = {}, options = {}) {
       </div>
       ${renderFactorEdgeSummaryCards(entityName, entity, options)}
       ${renderFactorEdgeEntityHighlights(entity)}
-      ${renderFactorEdgeFactorTable(entity)}
+      ${isLayer2 ? `
+        <section class="factor-edge-pair-sides-shell">
+          ${renderFactorEdgePairSideSection(entity, "base_side")}
+          ${renderFactorEdgePairSideSection(entity, "quote_usd_side")}
+        </section>
+      ` : renderFactorEdgeFactorTable(entity)}
     </article>
   `;
 }

@@ -579,6 +579,24 @@ async function run() {
       throw new Error(`Factor Edge Lab rendered too few unavailable ADR/L2L pills.\nCount: ${factorEdgeUnavailablePillCount}`);
     }
 
+    for (const expectedPairSideText of [
+      "base side",
+      "quote/usd side",
+      "eur · direct",
+      "usd · inverse",
+      "gold · direct",
+      "btc · direct",
+      "nq · direct"
+    ]) {
+      if (!normalizedFactorEdgeText.includes(expectedPairSideText)) {
+        throw new Error(`Factor Edge Lab did not render expected pair-side mapping text: ${expectedPairSideText}\n${factorEdgeText}`);
+      }
+    }
+
+    if (!normalizedFactorEdgeText.includes("using the existing checked-in qqq proxy semantics")) {
+      throw new Error(`Factor Edge Lab did not preserve the explicit NQ/USD mapping note.\n${factorEdgeText}`);
+    }
+
     const blockingConsoleErrors = consoleErrors.filter((message) => !message.includes("Failed to load resource: the server responded with a status of 500 ()"));
 
     if (blockingConsoleErrors.length) {

@@ -138,6 +138,36 @@ function buildEntitySummary(factors, totalObservations) {
   };
 }
 
+function summarizeFactorSide(factors = []) {
+  const relevantFactors = factors.filter((factor) => factor && factor.weight_mismatch);
+  const reliabilityValues = relevantFactors
+    .map((factor) => factor.weight_mismatch?.combined_factor_reliability_pct)
+    .filter((value) => Number.isFinite(value));
+  const directionalSamples = relevantFactors.reduce((sum, factor) => sum + (factor.weight_mismatch?.directional_sample || 0), 0);
+  const carryingEdgeFactor = strongestFactorBy(relevantFactors, (factor) => {
+    const reliability = factor.weight_mismatch?.combined_factor_reliability_pct;
+    return Number.isFinite(reliability) ? reliability : Number.NEGATIVE_INFINITY;
+  });
+  const averageReliability = reliabilityValues.length
+    ? roundNumber(reliabilityValues.reduce((sum, value) => sum + value, 0) / reliabilityValues.length, 1)
+    : null;
+  const edgeLabel = averageReliability === null
+    ? "insufficient_directional_sample"
+    : averageReliability >= 58
+      ? "side_carrying_positive_edge"
+      : averageReliability < 48
+        ? "side_underperforming"
+        : "mixed_or_marginal_edge";
+
+  return {
+    factor_count: relevantFactors.length,
+    directional_sample_count: directionalSamples,
+    average_combined_factor_reliability_pct: averageReliability,
+    edge_label: edgeLabel,
+    carrying_edge_factor: carryingEdgeFactor
+  };
+}
+
 function buildLayer1Entity(config, checker) {
   const factorDefinitions = factorDefinitionIndex(config.assetCode);
   const factorObservationMap = new Map();
@@ -320,6 +350,9 @@ function buildLayer2Entity(config, allCheckers) {
   const methodologyNote = config.pairCode === "NQ_USD"
     ? "Pair directional outcomes reuse the repo's existing NQ Phase 1 proxy semantics (QQQ_NQ_PROXY) because the checked-in directional checker does not expose a separate NQ/USD close-to-close evaluator."
     : "Pair directional outcomes reuse the checked-in target-side 24H evaluation market and invert USD-side factor expectations locally for research only.";
+  const baseSideFactors = factors.filter((factor) => factor.source_side === "target_asset");
+  const usdSideFactors = factors.filter((factor) => factor.source_side === "usd_side");
+  const pairSideMapping = config.pairSideMapping || null;
 
   return {
     summary: buildEntitySummary(factors, matchedDates.length),
@@ -330,6 +363,28 @@ function buildLayer2Entity(config, allCheckers) {
     outcome_market: config.marketKey,
     matched_date_observations: matchedDates.length,
     methodology_note: methodologyNote,
+    pair_side_analysis: {
+      base_side: {
+        ...(pairSideMapping?.base_side || {
+          sideKey: "target_asset",
+          label: "Base Side",
+          sourceAsset: config.targetAssetCode,
+          mapping: "direct",
+          description: "Target-side factors are tested direct against pair movement."
+        }),
+        summary: summarizeFactorSide(baseSideFactors)
+      },
+      quote_usd_side: {
+        ...(pairSideMapping?.quote_usd_side || {
+          sideKey: "usd_side",
+          label: "Quote/USD Side",
+          sourceAsset: "USD",
+          mapping: "inverse",
+          description: "USD-side factors are tested inverse against pair movement."
+        }),
+        summary: summarizeFactorSide(usdSideFactors)
+      }
+    },
     adr_l2l_factor_join: createAdrL2lUnavailableBlock(),
     factors
   };
@@ -359,6 +414,10 @@ function buildPayload() {
         target_asset_factors: "target bullish -> pair bullish, target bearish -> pair bearish",
         usd_side_factors: "USD bullish -> pair bearish, USD bearish -> pair bullish",
         pair_call_alignment: "final pair call exists only when target and USD 24H calls are both directional and opposite"
+      },
+      pair_side_groups: {
+        base_side: "Base-side factors are shown separately and are tested direct against pair movement.",
+        quote_usd_side: "Quote/USD-side factors are shown separately and are tested inverse against pair movement unless an explicit checked-in rule says otherwise."
       },
       outcome_markets: {
         USD: "DXY",

@@ -18,10 +18,94 @@ const LAYER1_CONFIGS = Object.freeze([
 ]);
 
 const LAYER2_CONFIGS = Object.freeze([
-  { targetAssetCode: "EUR", pairCode: "EUR_USD", pairLabel: "EUR/USD", marketKey: "EURUSD" },
-  { targetAssetCode: "GOLD", pairCode: "XAU_USD", pairLabel: "XAU/USD", marketKey: "XAUUSD" },
-  { targetAssetCode: "NQ", pairCode: "NQ_USD", pairLabel: "NQ/USD", marketKey: "QQQ_NQ_PROXY" },
-  { targetAssetCode: "BTC", pairCode: "BTC_USD", pairLabel: "BTC/USD", marketKey: "BTCUSD" }
+  {
+    targetAssetCode: "EUR",
+    pairCode: "EUR_USD",
+    pairLabel: "EUR/USD",
+    marketKey: "EURUSD",
+    pairSideMapping: Object.freeze({
+      base_side: Object.freeze({
+        sideKey: "target_asset",
+        label: "Base Side",
+        sourceAsset: "EUR",
+        mapping: "direct",
+        description: "EUR factors are tested direct against EUR/USD movement."
+      }),
+      quote_usd_side: Object.freeze({
+        sideKey: "usd_side",
+        label: "Quote/USD Side",
+        sourceAsset: "USD",
+        mapping: "inverse",
+        description: "USD factors are tested inverse against EUR/USD movement."
+      })
+    })
+  },
+  {
+    targetAssetCode: "GOLD",
+    pairCode: "XAU_USD",
+    pairLabel: "XAU/USD",
+    marketKey: "XAUUSD",
+    pairSideMapping: Object.freeze({
+      base_side: Object.freeze({
+        sideKey: "target_asset",
+        label: "Base Side",
+        sourceAsset: "Gold",
+        mapping: "direct",
+        description: "Gold factors are tested direct against XAU/USD movement."
+      }),
+      quote_usd_side: Object.freeze({
+        sideKey: "usd_side",
+        label: "Quote/USD Side",
+        sourceAsset: "USD",
+        mapping: "inverse",
+        description: "USD factors are tested inverse against XAU/USD movement."
+      })
+    })
+  },
+  {
+    targetAssetCode: "NQ",
+    pairCode: "NQ_USD",
+    pairLabel: "NQ/USD",
+    marketKey: "QQQ_NQ_PROXY",
+    pairSideMapping: Object.freeze({
+      base_side: Object.freeze({
+        sideKey: "target_asset",
+        label: "Base Side",
+        sourceAsset: "NQ",
+        mapping: "direct",
+        description: "NQ factors are tested direct against NQ/USD movement using the existing checked-in QQQ proxy semantics."
+      }),
+      quote_usd_side: Object.freeze({
+        sideKey: "usd_side",
+        label: "Quote/USD Side",
+        sourceAsset: "USD",
+        mapping: "inverse",
+        description: "USD factors are tested inverse against NQ/USD movement under the same checked-in QQQ proxy semantics."
+      })
+    })
+  },
+  {
+    targetAssetCode: "BTC",
+    pairCode: "BTC_USD",
+    pairLabel: "BTC/USD",
+    marketKey: "BTCUSD",
+    pairSideMapping: Object.freeze({
+      base_side: Object.freeze({
+        sideKey: "target_asset",
+        label: "Base Side",
+        sourceAsset: "BTC",
+        mapping: "direct",
+        description: "BTC factors are tested direct against BTC/USD movement."
+      }),
+      quote_usd_side: Object.freeze({
+        sideKey: "usd_side",
+        label: "Quote/USD Side",
+        sourceAsset: "USD",
+        mapping: "inverse",
+        description: "USD factors are tested inverse against BTC/USD movement."
+      })
+    })
+  }
 ]);
 
 const FACTOR_DEFINITIONS = Object.freeze({
