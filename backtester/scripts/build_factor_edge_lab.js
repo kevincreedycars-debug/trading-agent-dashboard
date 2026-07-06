@@ -8,6 +8,7 @@ const {
   LAYER1_CONFIGS,
   LAYER2_CONFIGS,
   buildAlignmentStats,
+  buildFactorProfile,
   buildNeutralStats,
   buildStateStats,
   buildWeightMismatch,
@@ -92,6 +93,12 @@ function buildFactorEntry({
     combinedReliabilityPct,
     directionalSample
   });
+  const factorProfile = buildFactorProfile({
+    bullishState,
+    bearishState,
+    neutralState,
+    suggestedInterpretation: weightMismatch.suggested_interpretation
+  });
 
   return {
     factor_id: factorId,
@@ -99,6 +106,7 @@ function buildFactorEntry({
     source_side: sourceSide,
     source_asset: sourceAsset,
     original_weight: originalWeight,
+    factor_profile: factorProfile,
     bullish_state: bullishState,
     bearish_state: bearishState,
     neutral_state: neutralState,

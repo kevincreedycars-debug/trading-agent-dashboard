@@ -2403,9 +2403,11 @@ function renderFactorEdgeFactorTable(entity = {}) {
             <th>Factor</th>
             <th>Source</th>
             <th>Weight</th>
-            <th>Bullish State</th>
-            <th>Bearish State</th>
-            <th>Alignment With Final Call</th>
+            <th>Signal Counts</th>
+            <th>Bullish Reliability</th>
+            <th>Bearish Reliability</th>
+            <th>Flats</th>
+            <th>Final-Call Alignment</th>
             <th>Weight Mismatch</th>
             <th>ADR/L2L</th>
           </tr>
@@ -2417,23 +2419,41 @@ function renderFactorEdgeFactorTable(entity = {}) {
               <td>${renderAdrCompactTextCell(row.source_asset || displayDash(), row.source_side || "", { className: "adr-table-tight-cell" })}</td>
               <td>${renderAdrCompactTextCell(renderSimpleMetricValue(row.original_weight), row.suggested_interpretation || "", { className: "adr-table-tight-cell" })}</td>
               <td>${renderAdrCompactTextCell(
+                `${row.factor_profile?.bullish_sample_count ?? 0}B / ${row.factor_profile?.bearish_sample_count ?? 0}Br`,
+                `${row.factor_profile?.neutral_no_signal_count ?? 0} neutral · ${row.factor_profile?.directional_sample_count ?? 0} directional`,
+                { className: "adr-table-tight-cell" }
+              )}</td>
+              <td>${renderAdrCompactTextCell(
                 metricAvailable(row.bullish_state?.ex_flat_wr_pct) ? percentValue(row.bullish_state.ex_flat_wr_pct) : displayDash(),
-                metricAvailable(row.bullish_state?.directional_sample) ? `${row.bullish_state.directional_sample} dir · ${row.bullish_state.wins}W / ${row.bullish_state.losses}L` : "No directional sample",
+                metricAvailable(row.bullish_state?.sample_count) ? `${row.bullish_state.sample_count} sample · ${row.bullish_state.reliability_label || "No label"}` : "No directional sample",
                 { className: "adr-table-tight-cell" }
               )}</td>
               <td>${renderAdrCompactTextCell(
                 metricAvailable(row.bearish_state?.ex_flat_wr_pct) ? percentValue(row.bearish_state.ex_flat_wr_pct) : displayDash(),
-                metricAvailable(row.bearish_state?.directional_sample) ? `${row.bearish_state.directional_sample} dir · ${row.bearish_state.wins}W / ${row.bearish_state.losses}L` : "No directional sample",
+                metricAvailable(row.bearish_state?.sample_count) ? `${row.bearish_state.sample_count} sample · ${row.bearish_state.reliability_label || "No label"}` : "No directional sample",
                 { className: "adr-table-tight-cell" }
               )}</td>
               <td>${renderAdrCompactTextCell(
-                metricAvailable(row.alignment_with_final_call?.aligned_ex_flat_wr_pct) ? percentValue(row.alignment_with_final_call.aligned_ex_flat_wr_pct) : displayDash(),
-                `${row.alignment_with_final_call?.times_factor_agreed_with_final_call ?? 0} agree · ${row.alignment_with_final_call?.times_factor_contradicted_final_call ?? 0} contradict`,
+                metricAvailable(row.factor_profile?.flat_rate_pct) ? percentValue(row.factor_profile.flat_rate_pct) : displayDash(),
+                `${row.factor_profile?.flat_count ?? 0} flats across all factor states`,
+                { className: "adr-table-tight-cell" }
+              )}</td>
+              <td>${renderAdrCompactTextCell(
+                metricAvailable(row.alignment_with_final_call?.agrees_with_final_call?.ex_flat_wr_pct)
+                  ? `Agree ${percentValue(row.alignment_with_final_call.agrees_with_final_call.ex_flat_wr_pct)}`
+                  : "Agree —",
+                [
+                  `${row.alignment_with_final_call?.agrees_with_final_call?.sample_count ?? 0} agree`,
+                  `${row.alignment_with_final_call?.contradicts_final_call?.sample_count ?? 0} contradict`,
+                  `C ex-flat ${metricAvailable(row.alignment_with_final_call?.contradicts_final_call?.ex_flat_wr_pct) ? percentValue(row.alignment_with_final_call.contradicts_final_call.ex_flat_wr_pct) : displayDash()}`,
+                  `A flat ${metricAvailable(row.alignment_with_final_call?.agrees_with_final_call?.flat_rate_pct) ? percentValue(row.alignment_with_final_call.agrees_with_final_call.flat_rate_pct) : displayDash()}`,
+                  `C flat ${metricAvailable(row.alignment_with_final_call?.contradicts_final_call?.flat_rate_pct) ? percentValue(row.alignment_with_final_call.contradicts_final_call.flat_rate_pct) : displayDash()}`
+                ].join(" · "),
                 { className: "adr-table-tight-cell" }
               )}</td>
               <td>${renderAdrCompactTextCell(
                 metricAvailable(row.weight_mismatch?.combined_factor_reliability_pct) ? percentValue(row.weight_mismatch.combined_factor_reliability_pct) : displayDash(),
-                row.weight_mismatch?.suggested_interpretation || "No interpretation",
+                `${row.weight_mismatch?.suggested_interpretation || "No interpretation"} · ${metricAvailable(row.weight_mismatch?.directional_sample) ? `${row.weight_mismatch.directional_sample} dir` : "No dir sample"}`,
                 { className: "adr-table-tight-cell" }
               )}</td>
               <td>${renderFactorEdgeStatusPill(

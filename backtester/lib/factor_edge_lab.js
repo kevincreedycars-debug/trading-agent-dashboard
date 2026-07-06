@@ -168,6 +168,7 @@ function buildStateStats(observations, expectedDirection) {
 
   return {
     total_observations: observations.length,
+    sample_count: observations.length,
     price_moved_bullish_count: priceMovedBullishCount,
     price_moved_bearish_count: priceMovedBearishCount,
     flat_count: flatCount,
@@ -177,6 +178,7 @@ function buildStateStats(observations, expectedDirection) {
     wins,
     losses,
     sample_size_label: classifySampleSize(observations.length),
+    reliability_label: classifyDirectionalReliability(exFlatWrPct, directionalSample),
     directional_reliability_label: classifyDirectionalReliability(exFlatWrPct, directionalSample),
     average_realised_24h_move_pct: moveStats.averageRealisedMovePct,
     median_realised_24h_move_pct: moveStats.medianRealisedMovePct
@@ -190,6 +192,22 @@ function buildAlignmentStats(observations) {
   const contradictedState = buildStateStats(contradicted, "BULLISH");
 
   return {
+    agrees_with_final_call: {
+      sample_count: aligned.length,
+      ex_flat_wr_pct: alignedState.ex_flat_wr_pct,
+      flat_count: alignedState.flat_count,
+      flat_rate_pct: alignedState.flat_rate_pct,
+      wins: alignedState.wins,
+      losses: alignedState.losses
+    },
+    contradicts_final_call: {
+      sample_count: contradicted.length,
+      ex_flat_wr_pct: contradictedState.ex_flat_wr_pct,
+      flat_count: contradictedState.flat_count,
+      flat_rate_pct: contradictedState.flat_rate_pct,
+      wins: contradictedState.wins,
+      losses: contradictedState.losses
+    },
     times_factor_agreed_with_final_call: aligned.length,
     aligned_wins: aligned.filter((item) => item.alignmentOutcome === "WIN").length,
     aligned_losses: aligned.filter((item) => item.alignmentOutcome === "LOSS").length,
@@ -207,8 +225,38 @@ function buildAlignmentStats(observations) {
 function buildNeutralStats(observations) {
   return {
     total_observations: observations.length,
+    neutral_no_signal_count: observations.length,
     sample_size_label: classifySampleSize(observations.length),
     note: "Includes neutral or non-directional factor states. These rows are excluded from directional reliability scoring."
+  };
+}
+
+function buildFactorProfile({ bullishState, bearishState, neutralState, suggestedInterpretation }) {
+  const totalObservations = (bullishState?.sample_count || 0) + (bearishState?.sample_count || 0) + (neutralState?.total_observations || 0);
+  const flatCount = (bullishState?.flat_count || 0) + (bearishState?.flat_count || 0);
+  const flatRatePct = totalObservations ? roundNumber((flatCount / totalObservations) * 100, 1) : null;
+  const directionalSample = (bullishState?.directional_sample || 0) + (bearishState?.directional_sample || 0);
+  const rankedStates = [
+    { label: "bullish", value: bullishState?.ex_flat_wr_pct, reliabilityLabel: bullishState?.reliability_label },
+    { label: "bearish", value: bearishState?.ex_flat_wr_pct, reliabilityLabel: bearishState?.reliability_label }
+  ]
+    .filter((item) => Number.isFinite(item.value))
+    .sort((a, b) => b.value - a.value);
+  const strongestStateLabel = rankedStates[0]?.label || null;
+  const strongestReliabilityLabel = rankedStates[0]?.reliabilityLabel || "insufficient_directional_sample";
+
+  return {
+    bullish_sample_count: bullishState?.sample_count || 0,
+    bearish_sample_count: bearishState?.sample_count || 0,
+    neutral_no_signal_count: neutralState?.neutral_no_signal_count || 0,
+    bullish_ex_flat_wr_pct: bullishState?.ex_flat_wr_pct ?? null,
+    bearish_ex_flat_wr_pct: bearishState?.ex_flat_wr_pct ?? null,
+    flat_count: flatCount,
+    flat_rate_pct: flatRatePct,
+    directional_sample_count: directionalSample,
+    reliability_label: strongestReliabilityLabel,
+    strongest_state_label: strongestStateLabel,
+    suggested_interpretation: suggestedInterpretation || "insufficient_directional_sample"
   };
 }
 
@@ -296,6 +344,7 @@ module.exports = {
   LAYER1_CONFIGS,
   LAYER2_CONFIGS,
   buildAlignmentStats,
+  buildFactorProfile,
   buildNeutralStats,
   buildStateStats,
   buildWeightMismatch,
