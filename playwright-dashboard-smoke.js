@@ -90,16 +90,40 @@ async function run() {
     const btcL2lText = (await btcL2lPanel.innerText()).toLowerCase();
     const btcDirectionalText = (await btcDirectionalPanel.innerText()).toLowerCase();
 
-    if (!btcL2lText.includes("l2l tradable") && !btcL2lText.includes("l2l not tradable") && !btcL2lText.includes("trust unavailable")) {
+    if (!btcL2lText.includes("l2l tradable") && !btcL2lText.includes("l2l not tradable")) {
       throw new Error(`BTC Overview card L2L panel did not render an expected status.\n${btcL2lText}`);
     }
 
-    if (
-      !btcDirectionalText.includes("directional viable")
-      && !btcDirectionalText.includes("directional not viable")
-      && !btcDirectionalText.includes("directional trust unavailable")
-    ) {
+    if (!btcDirectionalText.includes("directional viable") && !btcDirectionalText.includes("directional not viable")) {
       throw new Error(`BTC Overview card directional panel did not render an expected status.\n${btcDirectionalText}`);
+    }
+
+    const syntheticNoCallCard = await page.evaluate(() => {
+      const html = globalThis.__dashboardTestHooks.renderAgentCard({
+        agent: "TEST_NO_CALL",
+        status: "live",
+        summary: "Synthetic no-call validation card.",
+        display_metrics: {},
+        calls: {}
+      });
+
+      const host = document.createElement("div");
+      host.innerHTML = html;
+      const card = host.querySelector(".agent-card");
+      const directional = card?.querySelector("[data-validation-panel='directional']")?.innerText || "";
+      const l2l = card?.querySelector("[data-validation-panel='l2l']")?.innerText || "";
+      return { l2l, directional };
+    });
+
+    const syntheticDirectionalText = String(syntheticNoCallCard.directional || "").toLowerCase();
+    const syntheticL2lText = String(syntheticNoCallCard.l2l || "").toLowerCase();
+
+    if (!syntheticDirectionalText.includes("directional not viable") || !syntheticDirectionalText.includes("no 24h call")) {
+      throw new Error(`Synthetic no-call Overview card did not render the required directional no-call state.\n${syntheticNoCallCard.directional}`);
+    }
+
+    if (!syntheticL2lText.includes("l2l not tradable") || !syntheticL2lText.includes("no valid call")) {
+      throw new Error(`Synthetic no-call Overview card did not render the required L2L no-call state.\n${syntheticNoCallCard.l2l}`);
     }
 
     const fallbackBriefingContract = await page.evaluate(() => {
