@@ -547,6 +547,38 @@ async function run() {
       throw new Error(`Directional Trust Summary did not render trust-status labels.\n${directionalTrustText}`);
     }
 
+    await page.getByRole("button", { name: "Factor Edge Lab" }).click();
+    await page.waitForSelector("text=Research-Only Factor Evidence Review", { timeout: 15000 });
+    const factorEdgeText = await page.locator("#factorEdgeLabPanel").innerText();
+    const normalizedFactorEdgeText = factorEdgeText.toLowerCase();
+
+    if (!normalizedFactorEdgeText.includes("factor evidence for later weighting review")) {
+      throw new Error(`Factor Edge Lab did not render the expected status heading.\n${factorEdgeText}`);
+    }
+
+    if (!normalizedFactorEdgeText.includes("this dashboard reads only from the checked-in")) {
+      throw new Error(`Factor Edge Lab did not render the read-only artifact contract.\n${factorEdgeText}`);
+    }
+
+    for (const expectedEntity of ["usd", "eur", "gold", "nq", "btc", "eur/usd", "xau/usd", "nq/usd", "btc/usd"]) {
+      if (!normalizedFactorEdgeText.includes(expectedEntity)) {
+        throw new Error(`Factor Edge Lab did not render expected entity ${expectedEntity}.\n${factorEdgeText}`);
+      }
+    }
+
+    if (!normalizedFactorEdgeText.includes("unavailable")) {
+      throw new Error(`Factor Edge Lab did not preserve explicit unavailable ADR/L2L states.\n${factorEdgeText}`);
+    }
+
+    if (!normalizedFactorEdgeText.includes("factor-level adr/l2l opportunity reliability is marked unavailable")) {
+      throw new Error(`Factor Edge Lab did not render the explicit ADR/L2L methodology guardrail.\n${factorEdgeText}`);
+    }
+
+    const factorEdgeUnavailablePillCount = await page.locator(".factor-edge-pill.unavailable").count();
+    if (factorEdgeUnavailablePillCount < 20) {
+      throw new Error(`Factor Edge Lab rendered too few unavailable ADR/L2L pills.\nCount: ${factorEdgeUnavailablePillCount}`);
+    }
+
     const blockingConsoleErrors = consoleErrors.filter((message) => !message.includes("Failed to load resource: the server responded with a status of 500 ()"));
 
     if (blockingConsoleErrors.length) {
@@ -562,6 +594,7 @@ async function run() {
       pair_trade_btc_headers: pairTradeBtcHeaders,
       adr_reach_nq_headers: adrReachNqHeaders,
       adr_reach_pair_headers: adrReachPairHeaders,
+      factor_edge_unavailable_pill_count: factorEdgeUnavailablePillCount,
       pair_trade_grid_columns: firstPairGridColumns,
       pair_trade_overflow_x: pairBucketOverflow,
       top_summary_row_count: topSummaryRowCount,

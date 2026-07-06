@@ -9,6 +9,7 @@ const checkerDataUrls = {
   BTC: "./data/backtester-checker-btc-24h-2024-2026.json?v=20260702-btc-benchmark-dashboard"
 };
 const adrReachResearchUrl = "./data/adr-reach-research.json?v=20260705-l2l-1h-sequence";
+const factorEdgeLabUrl = "./data/factor-edge-lab.json?v=20260706-phase2a";
 const researchSupabaseUrl = "https://eaolqbrlywczinfordvg.supabase.co/rest/v1";
 const researchSupabaseKey = "sb_publishable_k6YbEuuk3GyB9GVTQDtNVA_J1gCRYaY";
 const headlineConfidenceLib = globalThis.HeadlineConfidence;
@@ -110,6 +111,7 @@ const directionalTrustStrengthDefinitions = [
 let layer1Data = null;
 let layer2Data = null;
 let backtestData = null;
+let factorEdgeLabData = null;
 let workflowControl = null;
 let workflowStatus = null;
 let workflowPollTimer = null;
@@ -2320,6 +2322,230 @@ function renderBacktestKpiMetric(label, primary, secondary = "", detail = "") {
       ${secondary ? `<strong class="backtest-kpi-secondary">${escapeHtml(secondary)}</strong>` : ""}
       ${detail ? `<span>${escapeHtml(detail)}</span>` : ""}
     </article>
+  `;
+}
+
+function renderSimpleMetricValue(value, formatter = null) {
+  if (!metricAvailable(value) && value !== 0) return displayDash();
+  return formatter ? formatter(value) : String(value);
+}
+
+function renderFactorEdgeStatusPill(available, blocker = "") {
+  if (available === false) {
+    return `
+      <div class="factor-edge-pill unavailable">
+        <strong>Unavailable</strong>
+        <span>${escapeHtml(blocker || "No repo-local joinable ADR/L2L export exists for factor-level attribution.")}</span>
+      </div>
+    `;
+  }
+
+  return `
+    <div class="factor-edge-pill available">
+      <strong>Available</strong>
+      <span>Repo-local evidence exists for this research field.</span>
+    </div>
+  `;
+}
+
+function renderFactorEdgeSummaryCards(entityName, entity = {}, options = {}) {
+  const summary = entity.summary || {};
+  const dateRange = entity.date_range || {};
+  const matchedLabel = options.matchedLabel || "Observations";
+  const factorCountLabel = options.factorCountLabel || "Factor Entries";
+
+  return `
+    <section class="backtest-grid three-column factor-edge-summary-grid">
+      ${renderBacktestKpiMetric(matchedLabel, renderSimpleMetricValue(summary.total_observations), `${formatDateValue(dateRange.start)} to ${formatDateValue(dateRange.end)}`, "Checked-in historical rows used for this research-only factor study")}
+      ${renderBacktestKpiMetric(factorCountLabel, renderSimpleMetricValue(summary.factor_count), entity.outcome_market || "Not yet available", "Directional outcomes reuse the existing checked-in evaluation market only")}
+      ${renderBacktestKpiMetric("ADR/L2L Factor Join", entity.adr_l2l_factor_join?.available === false ? "Unavailable" : "Available", entity.adr_l2l_factor_join?.blocker || "", "Factor-level ADR/L2L opportunity metrics must stay unavailable unless a full joinable export exists locally")}
+    </section>
+  `;
+}
+
+function renderFactorEdgeEntityHighlights(entity = {}) {
+  const summary = entity.summary || {};
+  const cards = [
+    { label: "Strongest Bullish Factor", value: summary.strongest_bullish_factor },
+    { label: "Strongest Bearish Factor", value: summary.strongest_bearish_factor },
+    { label: "Highest Sample Reliable Factor", value: summary.highest_sample_reliable_factor },
+    { label: "Biggest Weight Mismatch", value: summary.biggest_weight_mismatch },
+    { label: "Weakest Factor", value: summary.weakest_factor }
+  ];
+
+  return `
+    <section class="research-factor-grid factor-edge-highlight-grid">
+      ${cards.map(card => `
+        <article class="detail-panel factor-edge-highlight-card">
+          <p class="eyebrow">${escapeHtml(card.label)}</p>
+          <h3>${escapeHtml(card.value?.factor_name || "Not yet available")}</h3>
+          <p class="factor-edge-highlight-copy">
+            <strong>${escapeHtml(card.value?.factor_id || displayDash())}</strong>
+            <span>${escapeHtml(metricAvailable(card.value?.score) ? String(card.value.score) : "No scored output")}</span>
+          </p>
+        </article>
+      `).join("")}
+    </section>
+  `;
+}
+
+function renderFactorEdgeFactorTable(entity = {}) {
+  const rows = asArray(entity.factors);
+  if (!rows.length) {
+    return `<div class="empty-state">No factor rows were present in the checked-in Factor Edge Lab artifact.</div>`;
+  }
+
+  return `
+    <div class="table-scroll factor-edge-table-scroll">
+      <table class="dashboard-table research-evidence-table factor-edge-table">
+        <thead>
+          <tr>
+            <th>Factor</th>
+            <th>Source</th>
+            <th>Weight</th>
+            <th>Bullish State</th>
+            <th>Bearish State</th>
+            <th>Alignment With Final Call</th>
+            <th>Weight Mismatch</th>
+            <th>ADR/L2L</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows.map(row => `
+            <tr>
+              <td>${renderAdrCompactTextCell(row.factor_name || displayDash(), row.factor_id || "", { className: "adr-table-tight-cell" })}</td>
+              <td>${renderAdrCompactTextCell(row.source_asset || displayDash(), row.source_side || "", { className: "adr-table-tight-cell" })}</td>
+              <td>${renderAdrCompactTextCell(renderSimpleMetricValue(row.original_weight), row.suggested_interpretation || "", { className: "adr-table-tight-cell" })}</td>
+              <td>${renderAdrCompactTextCell(
+                metricAvailable(row.bullish_state?.ex_flat_wr_pct) ? percentValue(row.bullish_state.ex_flat_wr_pct) : displayDash(),
+                metricAvailable(row.bullish_state?.directional_sample) ? `${row.bullish_state.directional_sample} dir · ${row.bullish_state.wins}W / ${row.bullish_state.losses}L` : "No directional sample",
+                { className: "adr-table-tight-cell" }
+              )}</td>
+              <td>${renderAdrCompactTextCell(
+                metricAvailable(row.bearish_state?.ex_flat_wr_pct) ? percentValue(row.bearish_state.ex_flat_wr_pct) : displayDash(),
+                metricAvailable(row.bearish_state?.directional_sample) ? `${row.bearish_state.directional_sample} dir · ${row.bearish_state.wins}W / ${row.bearish_state.losses}L` : "No directional sample",
+                { className: "adr-table-tight-cell" }
+              )}</td>
+              <td>${renderAdrCompactTextCell(
+                metricAvailable(row.alignment_with_final_call?.aligned_ex_flat_wr_pct) ? percentValue(row.alignment_with_final_call.aligned_ex_flat_wr_pct) : displayDash(),
+                `${row.alignment_with_final_call?.times_factor_agreed_with_final_call ?? 0} agree · ${row.alignment_with_final_call?.times_factor_contradicted_final_call ?? 0} contradict`,
+                { className: "adr-table-tight-cell" }
+              )}</td>
+              <td>${renderAdrCompactTextCell(
+                metricAvailable(row.weight_mismatch?.combined_factor_reliability_pct) ? percentValue(row.weight_mismatch.combined_factor_reliability_pct) : displayDash(),
+                row.weight_mismatch?.suggested_interpretation || "No interpretation",
+                { className: "adr-table-tight-cell" }
+              )}</td>
+              <td>${renderFactorEdgeStatusPill(
+                row.bullish_state?.adr_l2l_opportunity?.available,
+                row.bullish_state?.adr_l2l_opportunity?.blocker || row.bearish_state?.adr_l2l_opportunity?.blocker || entity.adr_l2l_factor_join?.blocker || ""
+              )}</td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+function renderFactorEdgeEntitySection(entityName, entity = {}, options = {}) {
+  return `
+    <article class="research-section detail-panel factor-edge-entity-panel">
+      <div class="research-section-head">
+        <div>
+          <p class="eyebrow">${escapeHtml(options.eyebrow || "Factor Edge Lab")}</p>
+          <h3>${escapeHtml(entityName)}</h3>
+        </div>
+        <p class="research-panel-copy">${escapeHtml(options.copy || "Research-only factor evidence from checked-in historical artifacts. This view does not modify production weighting, live calls, replay methodology, or ADR/L2L logic.")}</p>
+      </div>
+      ${renderFactorEdgeSummaryCards(entityName, entity, options)}
+      ${renderFactorEdgeEntityHighlights(entity)}
+      ${renderFactorEdgeFactorTable(entity)}
+    </article>
+  `;
+}
+
+function renderFactorEdgeLab(payload = {}) {
+  const updated = document.getElementById("factorEdgeLabUpdated");
+  if (updated) {
+    updated.textContent = payload?.meta?.error
+      ? `Factor Edge Lab unavailable: ${payload.meta.error}`
+      : `Last synced: ${formatDashboardTime(payload.generated_at)}`;
+  }
+
+  const panel = document.getElementById("factorEdgeLabPanel");
+  if (!panel) return;
+
+  if (payload?.meta?.error) {
+    panel.innerHTML = `
+      <article class="detail-panel wide-panel research-status-card">
+        <p class="eyebrow">Factor Edge Lab</p>
+        <h3>Artifact unavailable</h3>
+        <div class="empty-state">${escapeHtml(payload.meta.error)}</div>
+      </article>
+    `;
+    return;
+  }
+
+  const layer1Entries = Object.entries(payload.layer1 || {});
+  const layer2Entries = Object.entries(payload.layer2 || {});
+  const limitationItems = asArray(payload.methodology?.known_limitations);
+
+  panel.innerHTML = `
+    <section class="research-status-hero">
+      <article class="detail-panel wide-panel research-status-card factor-edge-status-card">
+        <div class="research-section-head">
+          <div>
+            <p class="eyebrow">Research Only</p>
+            <h3>Factor evidence for later weighting review</h3>
+          </div>
+          <p class="research-panel-copy">This dashboard reads only from the checked-in <code>data/factor-edge-lab.json</code> artifact. It exposes historical factor evidence so weighting decisions can be reviewed later without altering live Layer 1, live Layer 2, replay, Directional Trust, L2L/ADR, or Overview badge logic.</p>
+        </div>
+        <section class="backtest-grid three-column factor-edge-summary-grid">
+          ${renderBacktestKpiMetric("Version", payload.version || "Not yet available", payload.timeframe || "", "Artifact contract for the current research-only builder")}
+          ${renderBacktestKpiMetric("Layer 1 Coverage", String(layer1Entries.length), Object.keys(payload.layer1 || {}).join(", "), "Entities present in the checked-in Layer 1 factor artifact")}
+          ${renderBacktestKpiMetric("Layer 2 Coverage", String(layer2Entries.length), Object.keys(payload.layer2 || {}).join(", "), "Pairs present in the checked-in Layer 2 factor artifact")}
+        </section>
+        <section class="detail-panel factor-edge-methodology-panel">
+          <p class="eyebrow">Methodology Guardrails</p>
+          <div class="factor-edge-methodology-grid">
+            <div class="factor-edge-methodology-card">
+              <strong>Primary Metric</strong>
+              <span>${escapeHtml(payload.primary_metric || displayDash())}</span>
+            </div>
+            <div class="factor-edge-methodology-card">
+              <strong>Directional Outcome</strong>
+              <span>${escapeHtml(payload.methodology?.directional_outcome || "Not yet available")}</span>
+            </div>
+            <div class="factor-edge-methodology-card">
+              <strong>ADR/L2L Handling</strong>
+              <span>${escapeHtml(payload.methodology?.adr_l2l || "Not yet available")}</span>
+            </div>
+          </div>
+          <ul class="adr-unavailable-list factor-edge-limitations-list">
+            ${limitationItems.map(item => `<li>${escapeHtml(item)}</li>`).join("")}
+          </ul>
+        </section>
+      </article>
+    </section>
+
+    <section class="research-section factor-edge-section-stack">
+      ${layer1Entries.map(([entityName, entity]) => renderFactorEdgeEntitySection(entityName, entity, {
+        eyebrow: "Layer 1",
+        matchedLabel: "Observations",
+        factorCountLabel: "Factors",
+        copy: "Independent Layer 1 factor evidence only. This is a read-only review surface for historical realized edge versus original factor weighting."
+      })).join("")}
+    </section>
+
+    <section class="research-section factor-edge-section-stack">
+      ${layer2Entries.map(([entityName, entity]) => renderFactorEdgeEntitySection(entityName, entity, {
+        eyebrow: "Layer 2",
+        matchedLabel: "Matched Dates",
+        factorCountLabel: "Factor Entries",
+        copy: entity.methodology_note || "Layer 2 factor evidence is derived downstream from checked-in target-side and USD-side research artifacts only."
+      })).join("")}
+    </section>
   `;
 }
 
@@ -6848,15 +7074,18 @@ function setTab(tab) {
   const overviewView = document.getElementById("overviewView");
   const layer2View = document.getElementById("layer2View");
   const backtestView = document.getElementById("backtestView");
+  const factorEdgeLabView = document.getElementById("factorEdgeLabView");
   const agentView = document.getElementById("agentView");
 
   if (overviewView) overviewView.classList.toggle("active-view", activeTab === "overview");
   if (layer2View) layer2View.classList.toggle("active-view", activeTab === "layer2");
   if (backtestView) backtestView.classList.toggle("active-view", activeTab === "backtest");
+  if (factorEdgeLabView) factorEdgeLabView.classList.toggle("active-view", activeTab === "factor-edge-lab");
   if (agentView) agentView.classList.toggle("active-view", orderedAgents.includes(activeTab));
 
   if (orderedAgents.includes(activeTab)) renderAgentDetail(activeTab);
   if (activeTab === "backtest") renderBacktest(backtestData || {});
+  if (activeTab === "factor-edge-lab") renderFactorEdgeLab(factorEdgeLabData || {});
 }
 
 function setBacktestTab(tab, options = {}) {
@@ -7163,10 +7392,11 @@ async function fetchResearchDashboardData() {
 }
 
 async function loadDashboard() {
-  const [layer1Result, layer2Result, researchResult] = await Promise.allSettled([
+  const [layer1Result, layer2Result, researchResult, factorEdgeLabResult] = await Promise.allSettled([
     fetch(layer1Url, { cache: "no-store" }),
     fetch(layer2Url, { cache: "no-store" }),
-    fetchResearchDashboardData()
+    fetchResearchDashboardData(),
+    fetchLocalJson(factorEdgeLabUrl)
   ]);
 
   try {
@@ -7205,10 +7435,26 @@ async function loadDashboard() {
     };
   }
 
+  if (factorEdgeLabResult.status === "fulfilled") {
+    factorEdgeLabData = factorEdgeLabResult.value;
+  } else {
+    console.error(factorEdgeLabResult.reason);
+    factorEdgeLabData = {
+      generated_at: new Date().toISOString(),
+      meta: {
+        error: factorEdgeLabResult.reason?.message || String(factorEdgeLabResult.reason)
+      },
+      methodology: {},
+      layer1: {},
+      layer2: {}
+    };
+  }
+
   if (layer1Data) renderLayer1(layer1Data);
   if (layer2Data) renderLayer2(layer2Data);
 
   renderBacktest(backtestData);
+  renderFactorEdgeLab(factorEdgeLabData);
 
   if (orderedAgents.includes(activeTab) && layer1Data) {
     renderAgentDetail(activeTab);

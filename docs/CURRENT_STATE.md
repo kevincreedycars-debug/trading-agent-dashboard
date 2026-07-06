@@ -1,16 +1,16 @@
 # Current State - AI Trading Platform
 
-Last updated: 2026-07-03
+Last updated: 2026-07-06
 
 ## Platform Status
 
-The Layer 1 trading-agent platform remains operational, and the latest runtime evidence in `data/workflow-status.json` shows a successful manual refresh on 2026-07-03 with every listed step marked successful, including `Layer 2 Trade Selection Agent`.
+The Layer 1 trading-agent platform remains operational, and the latest runtime evidence in `data/workflow-status.json` shows a successful manual refresh on 2026-07-06 with every listed step marked successful, including `Layer 2 Trade Selection Agent`.
 
 The full Layer 1 historical replay rollout is now validated across USD, EUR, Gold, NQ, and BTC. The active repository work has shifted from replay rollout itself into downstream research presentation and breakdown views built on top of the canonical checker artifacts.
 
-The current dashboard now includes the existing accuracy matrices, the checker workspaces, the weekday breakdown views, a Pair Trade Research tab, and a `L2L 1H Sequence Research` tab built downstream of canonical checker artifacts without changing replay, checker, flat-band, pair-selection, or confidence semantics.
+The current dashboard now includes the existing accuracy matrices, the checker workspaces, the weekday breakdown views, a Pair Trade Research tab, a `L2L 1H Sequence Research` tab, and a top-level `Factor Edge Lab` research tab built downstream of canonical checker artifacts without changing replay, checker, flat-band, pair-selection, or confidence semantics.
 
-Current platform state is stable and validated. The Layer 1 historical replay rollout is complete, Weekday Breakdown and Day Totals are complete, Pair Trade Research is complete including its later UI refinements, and `L2L 1H Sequence Research` is now present as a separate downstream module.
+Current platform state is stable and validated. The Layer 1 historical replay rollout is complete, Weekday Breakdown and Day Totals are complete, Pair Trade Research is complete including its later UI refinements, `L2L 1H Sequence Research` is present as a separate downstream module, and `Factor Edge Lab` is now present as a separate research-only dashboard view.
 
 ## Current Architecture
 
@@ -97,7 +97,7 @@ Dashboard Writer
 
 Every workflow has been converted to use `Execute Sub-workflow Trigger`, allowing the master workflow to call workflows sequentially.
 
-Runtime evidence in `data/workflow-status.json` shows a successful run on 2026-07-03, with every listed step marked successful and no reported error.
+Runtime evidence in `data/workflow-status.json` shows a successful run on 2026-07-06, with every listed step marked successful and no reported error.
 
 ## Known Current Issues
 
@@ -150,7 +150,7 @@ The current repository priority is:
 
 The next immediate milestone after shipping the first sequence-aware L2L module is:
 
-> keep the rebuilt sequence-aware research path reproducible and extend only supportable blocked assets without weakening the downstream-only rule
+> expose factor-level historical evidence in a research-only dashboard before considering any production weighting changes
 
 The `L2L 1H Sequence Research` module is not another close-to-close accuracy table. It answers whether price moved at least the required `50% ADR20` distance in the direction of a Layer 1 or Layer 2 call after the relevant intraday swing, using sequence-aware `1H` candles and daily candles only for ADR20.
 

@@ -1,161 +1,74 @@
 # Current Task
 
-Last updated: 2026-07-03
+Last updated: 2026-07-06
 
 ## Task
 
-Commit-ready cleanup for `L2L 1H Sequence Research`.
+Factor Edge Lab - Phase 2B dashboard UI.
 
 ## Objective
 
-The downstream-only daily-range proxy has been replaced with sequence-aware `1H` L2L research. The current objective is to finish commit-ready cleanup: consistent wording, reproducible candle importers, and verification that no credentials or ignored caches are being committed.
+Expose the checked-in `data/factor-edge-lab.json` artifact in a dedicated research-only dashboard tab so factor-level historical evidence can be reviewed before any production weighting changes are considered.
 
-The module answers:
+This phase must:
 
-> Did price move at least the required `50% ADR20` distance in the direction of the Layer 1 or Layer 2 call after the relevant intraday swing, as confirmed by `1H` candles?
-
-This work must sit alongside the existing Layer 1 and Pair Trade Research views, require historical OHLC data, keep existing replay/checker logic untouched, and record unavailable assets as unavailable rather than estimating intraday reach from close-only data.
+- read only from `data/factor-edge-lab.json`
+- stay downstream-only and research-only
+- avoid changes to live Layer 1 logic
+- avoid changes to live Layer 2 logic
+- avoid changes to replay methodology
+- avoid changes to Directional Trust calculations
+- avoid changes to L2L/ADR methodology
+- avoid changes to Overview badge logic
 
 ## Current Status
 
-L2L 1H Sequence Research is implemented and validated. Current platform state is stable and validated.
+Phase 2A is complete and committed. The Factor Edge Lab artifact builder, tests, and checked-in artifact were validated and committed in `f9e7062`.
+
+Phase 2B is now implemented locally: the dashboard has a new top-level `Factor Edge Lab` tab that reads only from `data/factor-edge-lab.json`, renders Layer 1 and Layer 2 factor evidence, and preserves explicit ADR/L2L unavailability instead of fabricating those metrics.
 
 ## Completed
 
-- GitHub repository confirmed: `kevincreedycars-debug/trading-agent-dashboard`
-- GitHub connector has admin/push access
-- Project memory documentation scaffold created
-- `docs/CURRENT_STATE.md` created
-- `docs/CURRENT_TASK.md` created
-- `docs/ACTIVE_MILESTONE.md` created
-- `docs/NEXT_STEPS.md` created
-- `docs/ARCHITECTURE.md` created
-- `docs/CHANGELOG.md` created
-- `docs/SESSION_LOG.md` created
-- `docs/DECISIONS.md` created
-- `issues/active_bugs.md` created
-- `issues/fixed_bugs.md` created
-- `logic/README.md` created
-- `workflows/README.md` created
-- `exports/README.md` created
-- `docs/N8N_INTEGRATION.md` created
-- `workflows/WORKFLOW_INVENTORY.md` created
-- `CODEX_STARTUP.md` created to define mandatory startup and end-of-session memory behaviour
-- `CODEX.md` updated to read `CODEX_STARTUP.md` first
-- `docs/SESSION_NOTES.md` created for latest-session handoff notes
-- `docs/PROJECT_HISTORY.md` created for concise high-level milestones
-- Initial workflow documents added for Master Orchestrator, EUR Layer 1 Agent, and Eco Events Collector
-- Live n8n workflow JSON snapshots exported into `exports/`
-- Dashboard Master Orchestrator control panel added
-- Dashboard workflow status and error report rendering added
-- `data/workflow-control.json` added for non-secret webhook configuration
-- `data/workflow-status.json` added for run status published by n8n
-- Live Master Orchestrator configured with a production Webhook Trigger
-- Referenced child workflows published so the Master Orchestrator webhook can run
-- Master Orchestrator configured to publish run status to `data/workflow-status.json`
-- Dashboard overview updated to display confidence as the headline call-quality metric instead of reusing raw conviction as-is
-- Overview definitions legend added under the Layer 1 calls
-- Shared dashboard card top strips changed from the orange/green/blue gradient to a single navy strip
-- Shared Layer 1 dashboard normalization now derives explicit `confidence` values and generates a 7-day direction outlook from the latest timeframe calls
-- `data/layer1.json` now carries `confidence` and `seven_day_outlook` in the current repository snapshot
-- Deployment verification confirmed the active public host is GitHub Pages, not Netlify, and that earlier local changes had not yet been pushed
-- Eco Events duplicate insert handling fixed in the live workflow on 2026-06-21
-- Master Orchestrator latest published status is successful as of 2026-06-28
-- Deterministic USD Backtester Checker added
-- Current checker scope verified for USD 24H January 2024
-- Latest checker result recorded as 22 checked / 22 pass / 0 fail / 0 missing
-- Backtest Checker workspace UI added under the Backtest / Accuracy dashboard area
-- Live-vs-replay audit completed for USD and confirmed that live USD remains the production source of truth
-- Audit confirmed the current checker result proves replay-vs-replay reproducibility, not live-vs-replay parity
-- EUR 24H live-vs-replay one-snapshot parity fixture added and now passes against the frozen live export target
-- EUR historical replay generated for `2024-01-02` through `2026-04-30` where warehouse data allows
-- EUR/USD historical outcome evaluation is now working end-to-end without using DXY benchmark logic
-- EUR/USD provisional 24H flat band set to `0.15` in the EUR-specific evaluation/checker path
-- EUR deterministic checker artifact generated with result `602 / 0 / 0 / 0`
-- Dashboard support added for the EUR 24H matrix and EUR checker alongside the existing USD views
-- Full Layer 1 historical replay rollout completed and validated for USD, EUR, Gold, NQ, and BTC
-- New `Weekday Breakdown` Backtest / Accuracy tab added using stored checker-artifact headline confidence and evaluation results
-- New weekday reconciliation validator added and passing for USD `604`, EUR `602`, Gold `608`, NQ `604`, and BTC `850`
-- Dashboard smoke updated and passing for matrices, checker views, and the new weekday breakdown tab
-- Weekday Breakdown updated so flat outcomes are shown separately and ex-flat directional win rate excludes flats
-- Each weekday cell now shows ex-flat win rate plus `W / L / F / T` counts, with `Flat only` handling when a cell has no directional rows
-- Each asset now includes a `Day Totals` table above the bucket breakdown, aggregating Monday-Friday for USD/EUR/Gold/NQ and Monday-Sunday for BTC
-- Updated weekday validation confirms day totals reconcile to bucket rows and checker totals while preserving BTC weekends and non-BTC weekday-only coverage
-- New `Pair Trade Research` Backtest / Accuracy tab added for EUR/USD, XAU/USD, NQ/USD, and BTC/USD
-- Pair trade research uses same-date target + USD checker rows and combined confidence `min(target, USD)` without changing Layer 1 confidence logic
-- Added pair-trade coverage summary, accuracy summary, combined-confidence bucket table, day totals, weekday breakdown, and conflict/no-trade summary
-- Added `backtester/scripts/validate_layer2_pairing_analysis.js` and confirmed pair-trade research validation passes
-- Dashboard smoke updated and passing for the new Pair Trade Research tab
-- Pair Trade Research UI refined and validated, including top-summary layout improvements, confidence-table spacing improvements, and terminology updates for matched-day trade-share metrics
-- `L2L 1H Sequence Research` now replaces the old daily OHLC range-availability research path.
-- Added `backtester/lib/adr_reach_research.js` for shared daily-ADR + `1H` sequence helpers.
-- Added `backtester/tests/adr_reach_research.test.js` with synthetic sequence-order tests and missing-candle coverage.
-- Added `backtester/importers/oanda/download_oanda_candles.js` and `backtester/importers/binance/download_binance_candles.js` for reproducible daily + `1H` downloads.
-- Staged repo-local OANDA daily + `1H` coverage for `EUR_USD`, `XAU_USD`, and `NAS100_USD`.
-- Staged repo-local Binance daily + `1H` coverage for `BTCUSDT`.
-- The research builder now uses daily candles only for `ADR20`, with required move `ADR20 * 0.5`, and evaluates wins/misses from forward-walked `1H` candles.
-- The rebuilt research path now supports `EUR`, `Gold`, `NQ`, and `BTC` Layer 1 assets.
-- The rebuilt research path now supports `EUR/USD`, `XAU/USD`, `NQ/USD`, and `BTC/USD` Layer 2 pairs by reusing existing Pair Trade Research tradable-signal selection.
-- `USD` remains unavailable because repo evidence still does not include supportable `DXY` daily + `1H` history.
-- Updated dashboard smoke and validation pass for the rebuilt `L2L 1H Sequence Research` tab while leaving replay, checker, confidence, and Pair Trade Research logic unchanged.
-
-## n8n Workspace
-
-Base URL:
-
-```text
-https://silver17.app.n8n.cloud
-```
-
-Project UI:
-
-```text
-https://silver17.app.n8n.cloud/projects/ISQG9XU7TGTT6Fcu/workflows
-```
+- Verified the current working tree and preserved `.claude/launch.json` as unrelated local state that must remain untracked.
+- Inspected only the requested Phase 2A files before validation.
+- Re-ran:
+  - `node --check backtester/lib/factor_edge_lab.js`
+  - `node --check backtester/scripts/build_factor_edge_lab.js`
+  - `node --test backtester/tests/factor_edge_lab.test.js`
+  - `node backtester/scripts/build_factor_edge_lab.js`
+- Confirmed the generated artifact contains Layer 1 entities `USD`, `EUR`, `Gold`, `NQ`, and `BTC`.
+- Confirmed the generated artifact contains Layer 2 entities `EUR/USD`, `XAU/USD`, `NQ/USD`, and `BTC/USD`.
+- Confirmed factor-level ADR/L2L metrics are explicitly marked unavailable with blocker text and are not fabricated.
+- Reviewed the generated JSON for obvious schema issues and found none.
+- Committed only:
+  - `backtester/lib/factor_edge_lab.js`
+  - `backtester/scripts/build_factor_edge_lab.js`
+  - `backtester/tests/factor_edge_lab.test.js`
+  - `data/factor-edge-lab.json`
+- Added a new top-level `Factor Edge Lab` dashboard tab.
+- Wired the dashboard to load only `data/factor-edge-lab.json` for this view.
+- Added research-only rendering for Layer 1 and Layer 2 factor evidence plus methodology guardrails.
+- Extended `playwright-dashboard-smoke.js` to cover the new `Factor Edge Lab` tab and the explicit ADR/L2L unavailable contract.
+- Re-ran syntax checks and the dashboard smoke successfully.
 
 ## Next Immediate Steps
 
-1. Confirm the commit-ready cleanup for renamed candle importers and the rebuilt `L2L 1H Sequence Research` wording.
-2. Source supportable `DXY` or other accepted USD benchmark daily + `1H` history only if a real non-estimated source can be staged repo-locally.
-3. Keep replay, checker, pair-calculation, confidence, and flat-band semantics frozen while the research module remains downstream-only.
+1. Review the local `Factor Edge Lab` UI and decide whether to refine layout, copy, or evidence density before committing Phase 2B.
+2. Keep the factor review surface research-only until the weighting review is complete.
+3. If later approved, derive any production weighting changes from reviewed evidence rather than from the dashboard layer itself.
 
 ## Current Blocker
 
-No current repository-side blocker.
+No repository-side blocker.
 
-Known research limitations in individual historical inputs remain, but they do not block the validated full Layer 1 replay rollout or the new weekday breakdown view because that view is computed entirely from canonical checker artifacts.
-
-The n8n API key was supplied in chat and must not be committed to GitHub.
-
-Recommended after setup is proven:
-
-1. Revoke the exposed key.
-2. Generate a fresh key.
-3. Store it only in the secure execution environment used by Codex/automation.
+Factor-level ADR/L2L opportunity metrics remain intentionally unavailable because `data/adr-reach-research.json` does not expose a full per-prediction factor-joinable export. That is a guardrail, not a bug.
 
 ## Target Outcome
 
-A future session should be able to begin with:
+The near-term outcome is:
 
-> Continue.
+> a stable research-only Factor Edge Lab dashboard that exposes factor evidence without changing production logic
 
-and then read:
+The later decision point is:
 
-- `CODEX_STARTUP.md`
-- `docs/CURRENT_TASK.md`
-- `docs/CURRENT_STATE.md`
-- `docs/ACTIVE_MILESTONE.md`
-- `docs/NEXT_STEPS.md`
-- `docs/CHANGELOG.md`
-- `docs/DECISIONS.md`
-- `docs/SESSION_NOTES.md`
-- `docs/PROJECT_HISTORY.md`
-- `docs/N8N_INTEGRATION.md`
-- `workflows/WORKFLOW_INVENTORY.md`
-- `issues/active_bugs.md`
-
-before making any changes.
-
-The immediate working outcome for the current task is:
-
-> finish commit-ready cleanup for the shipped `L2L 1H Sequence Research` module without changing replay outputs, checker semantics, pair logic, flat bands, or headline confidence logic
+> use the reviewed evidence to decide whether any weighting changes are justified, and only then consider separate production work
