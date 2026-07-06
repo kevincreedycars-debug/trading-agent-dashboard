@@ -75,6 +75,33 @@ async function run() {
       throw new Error(`Overview Layer 1 card is missing the directional validation panel.\n${overviewAgentPanels.join("\n")}`);
     }
 
+    const btcOverviewCard = page.locator("#layer1Grid .agent-card", { has: page.locator("h3:text('BTC')") }).first();
+    const btcL2lPanel = btcOverviewCard.locator("[data-validation-panel='l2l']");
+    const btcDirectionalPanel = btcOverviewCard.locator("[data-validation-panel='directional']");
+
+    if (!await btcL2lPanel.isVisible()) {
+      throw new Error("BTC Overview card did not visibly render the L2L validation panel.");
+    }
+
+    if (!await btcDirectionalPanel.isVisible()) {
+      throw new Error("BTC Overview card did not visibly render the directional validation panel.");
+    }
+
+    const btcL2lText = (await btcL2lPanel.innerText()).toLowerCase();
+    const btcDirectionalText = (await btcDirectionalPanel.innerText()).toLowerCase();
+
+    if (!btcL2lText.includes("l2l tradable") && !btcL2lText.includes("l2l not tradable") && !btcL2lText.includes("trust unavailable")) {
+      throw new Error(`BTC Overview card L2L panel did not render an expected status.\n${btcL2lText}`);
+    }
+
+    if (
+      !btcDirectionalText.includes("directional viable")
+      && !btcDirectionalText.includes("directional not viable")
+      && !btcDirectionalText.includes("directional trust unavailable")
+    ) {
+      throw new Error(`BTC Overview card directional panel did not render an expected status.\n${btcDirectionalText}`);
+    }
+
     const fallbackBriefingContract = await page.evaluate(() => {
       return globalThis.__dashboardTestHooks.buildOverviewBriefing({
         layer1Calls: [
