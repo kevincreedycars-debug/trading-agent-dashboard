@@ -1,51 +1,52 @@
 # Session Notes
 
-Last updated: 2026-07-06
+Last updated: 2026-07-07
 
 ## Work Completed
 
-- Startup recovery confirmed the platform is still operational and that `data/workflow-status.json` shows a successful run on 2026-07-06.
-- Startup recovery also found documentation drift: the memory files still pointed at completed `L2L 1H Sequence Research` cleanup while the live local task had already shifted to Factor Edge Lab.
-- Verified the working tree and left all existing local changes untouched as instructed.
-- Preserved `.claude/launch.json` as the only unrelated local item and kept it untracked.
-- Inspected only the requested Phase 2A files before validation:
-  - `backtester/lib/factor_edge_lab.js`
-  - `backtester/scripts/build_factor_edge_lab.js`
-  - `backtester/tests/factor_edge_lab.test.js`
-  - `data/factor-edge-lab.json`
-- Re-ran the requested Phase 2A validation commands successfully.
-- Confirmed the Factor Edge Lab artifact contains Layer 1 entities `USD`, `EUR`, `Gold`, `NQ`, and `BTC`.
-- Confirmed the Factor Edge Lab artifact contains Layer 2 entities `EUR/USD`, `XAU/USD`, `NQ/USD`, and `BTC/USD`.
-- Confirmed factor-level ADR/L2L metrics are explicitly unavailable and guarded by blocker text instead of being fabricated.
-- Reviewed the generated JSON for obvious schema issues and found none.
-- Committed only the four requested Phase 2A files in commit `f9e7062` with message `Add Factor Edge Lab research artifact builder`.
-- Began Phase 2B and added a new top-level `Factor Edge Lab` dashboard tab.
-- Kept the new dashboard fully research-only and artifact-driven by reading only `data/factor-edge-lab.json`.
-- Added methodology guardrails and per-entity factor evidence rendering for Layer 1 and Layer 2.
-- Left live Layer 1 logic, live Layer 2 logic, replay methodology, Directional Trust, L2L/ADR methodology, and Overview badge logic untouched.
-- Extended `playwright-dashboard-smoke.js` to verify the new Factor Edge Lab tab renders and preserves the explicit ADR/L2L unavailable contract.
+- Confirmed `.claude/launch.json` remains the only unrelated untracked local file and kept it untouched.
+- Started the new research-only `Phase 2 Shadow Backtest / Evidence-Reweighted Logic` task without modifying production logic.
+- Inspected the checked-in Factor Edge artifact, checker artifacts, and dashboard rendering patterns before implementation.
+- Added `backtester/lib/phase2_shadow_backtest.js` for:
+  - conservative factor reweighting
+  - shadow no-call gating
+  - original-vs-shadow summary reconciliation
+- Added `backtester/scripts/build_phase2_shadow_backtest.js` to generate `data/phase-2-shadow-backtest.json`.
+- Added `backtester/tests/phase2_shadow_backtest.test.js` for the first shadow rules.
+- Built and checked in the first shadow artifact for `USD`, `EUR`, `Gold`, `NQ`, and `BTC` at `24H`.
+- Added a new top-level `Shadow Logic Backtest` dashboard tab wired only to `data/phase-2-shadow-backtest.json`.
+- Added research-only rendering for:
+  - overall asset comparison
+  - pass / warn / fail comparison state
+  - shadow factor weight changes
+  - small-sample warnings
+  - changed-row preview
+- Extended `playwright-dashboard-smoke.js` to verify the new tab and confirm there is no page-level horizontal overflow.
 - Re-ran:
+  - `node --check backtester/lib/phase2_shadow_backtest.js`
+  - `node --check backtester/scripts/build_phase2_shadow_backtest.js`
+  - `node --test backtester/tests/phase2_shadow_backtest.test.js`
+  - `node backtester/scripts/build_phase2_shadow_backtest.js`
   - `node --check script.js`
   - `node --check playwright-dashboard-smoke.js`
   - `node playwright-dashboard-smoke.js`
-- Confirmed the dashboard smoke passes with the new tab included.
 
 ## Unfinished Work
 
-- Decide whether the current Phase 2B UI is final enough to commit as its own milestone.
-- Optionally refine layout density or copy in the Factor Edge Lab tab if review feedback calls for it.
+- Review whether the first conservative shadow formula is satisfactory or needs research-only threshold tuning.
+- Decide whether to expand the shadow surface later to broader horizon coverage or deeper row-level evidence.
 
 ## Blockers
 
 - No repository-side blocker.
-- Intentional limitation remains in place: factor-level ADR/L2L joins are unavailable because the checked-in ADR artifact does not expose full per-prediction factor-joinable rows.
+- Current intentional limitation remains: the first shadow comparison is limited to Layer 1 `24H` because that is the checked-in like-for-like checker scope available locally.
 
 ## Assumptions
 
-- Factor Edge Lab remains research-only until the evidence review is complete.
-- Any future weighting changes must be handled in a separate production task, not through the dashboard layer.
+- The Phase 2 shadow model remains research-only and must not feed into production logic.
+- Any later production weighting proposal must be handled in a separate task.
 - `.claude/launch.json` must remain untracked and never be committed.
 
 ## Exact Next Task
 
-Review the local Factor Edge Lab dashboard UI and, if accepted, commit the Phase 2B dashboard milestone separately from the already-committed Phase 2A builder work.
+Review the new `Shadow Logic Backtest` outputs and commit the first research-only shadow milestone if the conservative formula is acceptable.

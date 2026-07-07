@@ -1,74 +1,76 @@
 # Current Task
 
-Last updated: 2026-07-06
+Last updated: 2026-07-07
 
 ## Task
 
-Factor Edge Lab - Phase 2B dashboard UI.
+Phase 2 Shadow Backtest / Evidence-Reweighted Logic.
 
 ## Objective
 
-Expose the checked-in `data/factor-edge-lab.json` artifact in a dedicated research-only dashboard tab so factor-level historical evidence can be reviewed before any production weighting changes are considered.
+Build a separate research-only dashboard surface that compares current production logic against a shadow reweighted logic model derived from the checked-in Factor Edge Lab evidence.
 
 This phase must:
 
-- read only from `data/factor-edge-lab.json`
+- read only from separate checked-in research artifacts
 - stay downstream-only and research-only
 - avoid changes to live Layer 1 logic
 - avoid changes to live Layer 2 logic
-- avoid changes to replay methodology
-- avoid changes to Directional Trust calculations
-- avoid changes to L2L/ADR methodology
-- avoid changes to Overview badge logic
+- avoid changes to replay source-of-truth files
+- avoid changes to checker behavior and outputs
+- avoid changes to existing Backtest / Accuracy behavior
+- avoid changes to existing Factor Edge Lab evidence calculations
 
 ## Current Status
 
-Phase 2A is complete and committed. The Factor Edge Lab artifact builder, tests, and checked-in artifact were validated and committed in `f9e7062`.
+The new shadow research path is now implemented locally:
 
-Phase 2B is now implemented locally: the dashboard has a new top-level `Factor Edge Lab` tab that reads only from `data/factor-edge-lab.json`, renders Layer 1 and Layer 2 factor evidence, and preserves explicit ADR/L2L unavailability instead of fabricating those metrics.
+- `backtester/lib/phase2_shadow_backtest.js` contains the conservative shadow reweighting and shadow decision gate helpers
+- `backtester/scripts/build_phase2_shadow_backtest.js` builds the checked-in `data/phase-2-shadow-backtest.json` artifact
+- `backtester/tests/phase2_shadow_backtest.test.js` covers the initial reweighting rules and summary logic
+- the dashboard has a new top-level `Shadow Logic Backtest` tab that reads only from `data/phase-2-shadow-backtest.json`
 
 ## Completed
 
-- Verified the current working tree and preserved `.claude/launch.json` as unrelated local state that must remain untracked.
-- Inspected only the requested Phase 2A files before validation.
-- Re-ran:
-  - `node --check backtester/lib/factor_edge_lab.js`
-  - `node --check backtester/scripts/build_factor_edge_lab.js`
-  - `node --test backtester/tests/factor_edge_lab.test.js`
-  - `node backtester/scripts/build_factor_edge_lab.js`
-- Confirmed the generated artifact contains Layer 1 entities `USD`, `EUR`, `Gold`, `NQ`, and `BTC`.
-- Confirmed the generated artifact contains Layer 2 entities `EUR/USD`, `XAU/USD`, `NQ/USD`, and `BTC/USD`.
-- Confirmed factor-level ADR/L2L metrics are explicitly marked unavailable with blocker text and are not fabricated.
-- Reviewed the generated JSON for obvious schema issues and found none.
-- Committed only:
-  - `backtester/lib/factor_edge_lab.js`
-  - `backtester/scripts/build_factor_edge_lab.js`
-  - `backtester/tests/factor_edge_lab.test.js`
-  - `data/factor-edge-lab.json`
-- Added a new top-level `Factor Edge Lab` dashboard tab.
-- Wired the dashboard to load only `data/factor-edge-lab.json` for this view.
-- Added research-only rendering for Layer 1 and Layer 2 factor evidence plus methodology guardrails.
-- Extended `playwright-dashboard-smoke.js` to cover the new `Factor Edge Lab` tab and the explicit ADR/L2L unavailable contract.
-- Re-ran syntax checks and the dashboard smoke successfully.
+- Preserved `.claude/launch.json` as unrelated untracked local state.
+- Reused the checked-in checker artifacts and checked-in Factor Edge Lab artifact instead of touching replay or live logic.
+- Added a conservative shadow weight formula based on:
+  - factor agreement ex-flat performance versus asset baseline
+  - contradiction performance
+  - combined factor reliability
+  - flat behavior
+  - same-asset combination support
+  - pair-side support as a small auxiliary signal only
+- Kept the shadow decision engine conservative by allowing shadow no-calls when directional weight or dominance is weak.
+- Built the checked-in `data/phase-2-shadow-backtest.json` artifact for USD, EUR, Gold, NQ, and BTC at 24H.
+- Added a readable research-only dashboard tab with:
+  - Original Logic vs Shadow Logic comparison
+  - pass / warn / fail comparison state
+  - factor weight change tables
+  - sample warnings
+  - contained table scrolling
+- Extended `playwright-dashboard-smoke.js` to verify the new shadow tab and confirm no page-level horizontal overflow.
 
 ## Next Immediate Steps
 
-1. Review the local `Factor Edge Lab` UI and decide whether to refine layout, copy, or evidence density before committing Phase 2B.
-2. Keep the factor review surface research-only until the weighting review is complete.
-3. If later approved, derive any production weighting changes from reviewed evidence rather than from the dashboard layer itself.
+1. Review the new shadow backtest outputs and decide whether the first conservative formula needs threshold tuning.
+2. Keep all findings explicitly research-only until any later production proposal is separately approved.
+3. If the shadow model remains useful, expand later to deeper evidence views or broader horizon coverage without touching production logic.
 
 ## Current Blocker
 
 No repository-side blocker.
 
-Factor-level ADR/L2L opportunity metrics remain intentionally unavailable because `data/adr-reach-research.json` does not expose a full per-prediction factor-joinable export. That is a guardrail, not a bug.
+Current intentional limitation:
+
+- the first shadow artifact compares Layer 1 24H only because that is the checked-in checker scope available for like-for-like comparison
 
 ## Target Outcome
 
 The near-term outcome is:
 
-> a stable research-only Factor Edge Lab dashboard that exposes factor evidence without changing production logic
+> a separate research-only Phase 2 shadow backtest surface that compares existing production outcomes against conservative evidence-reweighted shadow logic without changing production behavior
 
 The later decision point is:
 
-> use the reviewed evidence to decide whether any weighting changes are justified, and only then consider separate production work
+> decide whether the reviewed shadow evidence justifies any future production proposal, and only then consider separate live-logic work

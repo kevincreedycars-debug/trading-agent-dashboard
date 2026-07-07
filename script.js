@@ -10,6 +10,7 @@ const checkerDataUrls = {
 };
 const adrReachResearchUrl = "./data/adr-reach-research.json?v=20260705-l2l-1h-sequence";
 const factorEdgeLabUrl = "./data/factor-edge-lab.json?v=20260706-review-summary";
+const phase2ShadowBacktestUrl = "./data/phase-2-shadow-backtest.json?v=20260707-phase2-shadow-v1";
 const researchSupabaseUrl = "https://eaolqbrlywczinfordvg.supabase.co/rest/v1";
 const researchSupabaseKey = "sb_publishable_k6YbEuuk3GyB9GVTQDtNVA_J1gCRYaY";
 const headlineConfidenceLib = globalThis.HeadlineConfidence;
@@ -112,6 +113,7 @@ let layer1Data = null;
 let layer2Data = null;
 let backtestData = null;
 let factorEdgeLabData = null;
+let phase2ShadowBacktestData = null;
 let workflowControl = null;
 let workflowStatus = null;
 let workflowPollTimer = null;
@@ -2801,6 +2803,237 @@ function renderFactorEdgeLab(payload = {}) {
         copy: entity.methodology_note || "Layer 2 factor evidence is derived downstream from checked-in target-side and USD-side research artifacts only."
       })).join("")}
     </section>
+  `;
+}
+
+function signedMetricValue(value, suffix = "") {
+  if (!metricAvailable(value) && value !== 0) return displayDash();
+  const numeric = Number(value);
+  const sign = numeric > 0 ? "+" : "";
+  return `${sign}${numeric}${suffix}`;
+}
+
+function renderShadowBacktestStatusBadge(status = "WARN") {
+  const normalized = String(status || "WARN").toUpperCase();
+  const tone = normalized === "PASS" ? "pass" : (normalized === "FAIL" ? "fail" : "warn");
+  return `<span class="shadow-backtest-status-badge ${tone}">${escapeHtml(normalized)}</span>`;
+}
+
+function renderShadowBacktestSummaryCards(payload = {}) {
+  const overall = payload.overall || {};
+  return `
+    <section class="backtest-grid three-column shadow-backtest-summary-grid">
+      ${renderBacktestKpiMetric("Assets Compared", renderSimpleMetricValue(overall.assets_compared), "Current phase compares Layer 1 24H assets only", "This artifact stays downstream of the checked-in checker and Factor Edge evidence")}
+      ${renderBacktestKpiMetric("Improved Assets", renderSimpleMetricValue(overall.improved_assets), `${renderSimpleMetricValue(overall.degraded_assets)} degraded`, "PASS means shadow ex-flat win rate improved by at least 3 points with enough directional sample")}
+      ${renderBacktestKpiMetric("Average Ex-Flat Delta", metricAvailable(overall.average_ex_flat_change_pct_points) ? signedMetricValue(overall.average_ex_flat_change_pct_points, " pp") : displayDash(), `${renderSimpleMetricValue(overall.mixed_or_warn_assets)} mixed or warn`, "Positive means the shadow logic improved directional ex-flat win rate on average")}
+    </section>
+  `;
+}
+
+function renderShadowBacktestMethodology(payload = {}) {
+  const methodology = payload.methodology || {};
+  const renderList = (items = []) => items.length
+    ? `<ul class="adr-unavailable-list factor-edge-limitations-list shadow-backtest-list">${items.map(item => `<li>${escapeHtml(item)}</li>`).join("")}</ul>`
+    : `<div class="empty-state">No methodology notes were supplied in the checked-in artifact.</div>`;
+
+  return `
+    <section class="detail-panel shadow-backtest-status-card research-status-card">
+      <div class="research-section-head">
+        <div>
+          <p class="eyebrow">Phase 2 Shadow Logic</p>
+          <h3>Original Logic vs Evidence-Reweighted Shadow Logic</h3>
+        </div>
+        <p class="research-panel-copy">This dashboard reads only from the checked-in <code>data/phase-2-shadow-backtest.json</code> artifact. It compares current production outcomes against a research-only shadow model without changing live Layer 1, live Layer 2, replay, checker, Directional Trust, ADR/L2L, or Factor Edge evidence calculations.</p>
+      </div>
+      ${renderShadowBacktestSummaryCards(payload)}
+      <div class="shadow-backtest-methodology-grid">
+        <article class="detail-panel shadow-backtest-methodology-card">
+          <p class="eyebrow">Shadow Engine</p>
+          <p class="research-panel-copy">${escapeHtml(methodology.shadow_engine || "Not yet available.")}</p>
+        </article>
+        <article class="detail-panel shadow-backtest-methodology-card">
+          <p class="eyebrow">Scope</p>
+          <p class="research-panel-copy">${escapeHtml(methodology.scope || "Not yet available.")}</p>
+        </article>
+      </div>
+      <section class="shadow-backtest-methodology-grid">
+        <article class="detail-panel shadow-backtest-methodology-card">
+          <p class="eyebrow">Weight Formula</p>
+          ${renderList(methodology.weight_formula || [])}
+        </article>
+        <article class="detail-panel shadow-backtest-methodology-card">
+          <p class="eyebrow">Decision Gate</p>
+          ${renderList(methodology.shadow_decision_gate || [])}
+        </article>
+        <article class="detail-panel shadow-backtest-methodology-card">
+          <p class="eyebrow">Known Limitations</p>
+          ${renderList(methodology.known_limitations || [])}
+        </article>
+      </section>
+    </section>
+  `;
+}
+
+function renderShadowBacktestOverviewTable(payload = {}) {
+  const assets = Object.values(payload.assets || {});
+  return renderResearchBreakdownTable("Asset comparison", "Original vs Shadow", assets, [
+    {
+      label: "Asset / TF",
+      render: row => renderAdrCompactTextCell(row.asset_label || displayDash(), row.timeframe || displayDash(), { className: "adr-table-tight-cell" })
+    },
+    {
+      label: "Original Logic",
+      render: row => renderAdrCompactTextCell(
+        metricAvailable(row.original_logic?.ex_flat_wr_pct) ? percentValue(row.original_logic.ex_flat_wr_pct) : displayDash(),
+        `${row.original_logic?.wins ?? 0}W / ${row.original_logic?.losses ?? 0}L / ${row.original_logic?.flats ?? 0}F · ${row.original_logic?.directional_call_count ?? 0} calls`,
+        { className: "adr-table-tight-cell" }
+      )
+    },
+    {
+      label: "Shadow Logic",
+      render: row => renderAdrCompactTextCell(
+        metricAvailable(row.shadow_logic?.ex_flat_wr_pct) ? percentValue(row.shadow_logic.ex_flat_wr_pct) : displayDash(),
+        `${row.shadow_logic?.wins ?? 0}W / ${row.shadow_logic?.losses ?? 0}L / ${row.shadow_logic?.flats ?? 0}F · ${row.shadow_logic?.directional_call_count ?? 0} calls`,
+        { className: "adr-table-tight-cell" }
+      )
+    },
+    {
+      label: "Delta",
+      render: row => renderAdrCompactTextCell(
+        metricAvailable(row.comparison?.ex_flat_change_pct_points) ? signedMetricValue(row.comparison.ex_flat_change_pct_points, " pp") : displayDash(),
+        `Flat ${metricAvailable(row.comparison?.flat_rate_change_pct_points) ? signedMetricValue(row.comparison.flat_rate_change_pct_points, " pp") : displayDash()} · Wins ${signedMetricValue(row.comparison?.directional_wins_delta || 0)} · Losses ${signedMetricValue(row.comparison?.directional_losses_delta || 0)}`,
+        { className: "adr-table-tight-cell" }
+      )
+    },
+    {
+      label: "Comparison",
+      render: row => `
+        <div class="shadow-backtest-status-cell">
+          ${renderShadowBacktestStatusBadge(row.comparison?.status || "WARN")}
+          <span>${escapeHtml(formatReviewLabel(row.comparison?.headline || "mixed_or_small_sample"))}</span>
+        </div>
+      `
+    },
+    {
+      label: "Sample Warning",
+      render: row => renderAdrCompactTextCell(
+        formatReviewLabel(row.sample_warning?.label || "not_available"),
+        row.sample_warning?.detail || "Not yet available",
+        { className: "adr-table-tight-cell" }
+      )
+    }
+  ], {
+    panelClass: "shadow-backtest-overview-panel",
+    tableClass: "research-evidence-table shadow-backtest-table shadow-backtest-overview-table",
+    scrollClass: "shadow-backtest-table-scroll",
+    description: "Pass / warn / fail remains research-only. Small samples and shadow no-call behaviour are intentionally kept visible instead of being hidden."
+  });
+}
+
+function renderShadowBacktestComparisonTable(asset = {}) {
+  return renderResearchBreakdownTable(`${asset.asset_label} 24H comparison`, "Original vs Shadow", [
+    {
+      logic: "Original Logic",
+      metrics: asset.original_logic || {}
+    },
+    {
+      logic: "Shadow Logic",
+      metrics: asset.shadow_logic || {}
+    }
+  ], [
+    { label: "Logic", render: row => renderAdrCompactTextCell(row.logic, asset.outcome_market || displayDash(), { className: "adr-table-tight-cell" }) },
+    { label: "Sample Count", render: row => renderAdrCompactTextCell(renderSimpleMetricValue(row.metrics?.sample_count), `${row.metrics?.directional_call_count ?? 0} directional calls`, { className: "adr-table-tight-cell" }) },
+    { label: "Ex-Flat WR", render: row => renderAdrCompactTextCell(metricAvailable(row.metrics?.ex_flat_wr_pct) ? percentValue(row.metrics.ex_flat_wr_pct) : displayDash(), `${row.metrics?.wins ?? 0}W / ${row.metrics?.losses ?? 0}L`, { className: "adr-table-tight-cell" }) },
+    { label: "Flat Rate", render: row => renderAdrCompactTextCell(metricAvailable(row.metrics?.flat_rate_pct) ? percentValue(row.metrics.flat_rate_pct) : displayDash(), `${row.metrics?.flats ?? 0} flats`, { className: "adr-table-tight-cell" }) },
+    { label: "No Call", render: row => renderAdrCompactTextCell(renderSimpleMetricValue(row.metrics?.no_call_count), `${row.metrics?.not_evaluable_count ?? 0} not evaluable`, { className: "adr-table-tight-cell" }) }
+  ], {
+    panelClass: "shadow-backtest-detail-panel",
+    tableClass: "research-evidence-table shadow-backtest-table shadow-backtest-detail-table",
+    scrollClass: "shadow-backtest-table-scroll"
+  });
+}
+
+function renderShadowBacktestWeightTable(asset = {}) {
+  const rows = asArray(asset.weight_changes);
+  return renderResearchBreakdownTable(`${asset.asset_label} weight changes`, "Shadow Factor Weight Changes", rows, [
+    { label: "Factor", render: row => renderAdrCompactTextCell(row.factor_name || displayDash(), row.factor_id || displayDash(), { className: "adr-table-tight-cell" }) },
+    { label: "Original Weight", render: row => renderAdrCompactTextCell(renderSimpleMetricValue(row.original_weight), row.suggested_interpretation || displayDash(), { className: "adr-table-tight-cell" }) },
+    { label: "Shadow Weight", render: row => renderAdrCompactTextCell(renderSimpleMetricValue(row.shadow_weight), metricAvailable(row.row_multiplier) ? `${row.row_multiplier}x row multiplier` : displayDash(), { className: "adr-table-tight-cell" }) },
+    { label: "Change %", render: row => renderAdrCompactTextCell(metricAvailable(row.change_pct) ? signedMetricValue(row.change_pct, "%") : displayDash(), `Score ${renderSimpleMetricValue(row.score)}`, { className: "adr-table-tight-cell" }) },
+    { label: "Reason", render: row => renderAdrCompactTextCell(formatReviewLabel(row.reason_label), formatReviewLabel(row.review_label), { className: "adr-table-tight-cell" }) },
+    { label: "Evidence Snapshot", render: row => renderAdrCompactTextCell(metricAvailable(row.combined_reliability_pct) ? `${row.combined_reliability_pct}% rel` : displayDash(), `${row.directional_sample ?? 0} sample | Agree ${metricAvailable(row.agree_ex_flat_wr_pct) ? `${row.agree_ex_flat_wr_pct}%` : displayDash()} | Contra ${metricAvailable(row.contradiction_ex_flat_wr_pct) ? `${row.contradiction_ex_flat_wr_pct}%` : displayDash()} | Flat ${metricAvailable(row.flat_rate_pct) ? `${row.flat_rate_pct}%` : displayDash()}`, { className: "adr-table-tight-cell" }) },
+    { label: "Rationale", render: row => renderAdrCompactTextCell(row.pair_side_adjustment || displayDash(), row.rationale || displayDash(), { className: "adr-table-tight-cell" }) }
+  ], {
+    panelClass: "shadow-backtest-detail-panel",
+    tableClass: "research-evidence-table shadow-backtest-table shadow-backtest-weight-table",
+    scrollClass: "shadow-backtest-table-scroll"
+  });
+}
+
+function renderShadowBacktestChangedRows(asset = {}) {
+  const rows = asArray(asset.changed_row_preview);
+  if (!rows.length) return "";
+  return renderResearchBreakdownTable(`${asset.asset_label} changed-row preview`, "Direction Changes", rows, [
+    { label: "Date", render: row => renderAdrCompactTextCell(row.snapshot_date || displayDash(), row.prediction_id || displayDash(), { className: "adr-table-tight-cell" }) },
+    { label: "Original", render: row => renderAdrCompactTextCell(row.original_direction || displayDash(), row.original_result || displayDash(), { className: "adr-table-tight-cell" }) },
+    { label: "Shadow", render: row => renderAdrCompactTextCell(row.shadow_direction || displayDash(), row.shadow_result || displayDash(), { className: "adr-table-tight-cell" }) },
+    { label: "Outcome", render: row => renderAdrCompactTextCell(row.outcome_direction || displayDash(), "Research-only preview of rows where the shadow model changed the call or outcome bucket", { className: "adr-table-tight-cell" }) }
+  ], {
+    panelClass: "shadow-backtest-detail-panel",
+    tableClass: "research-evidence-table shadow-backtest-table shadow-backtest-detail-table",
+    scrollClass: "shadow-backtest-table-scroll"
+  });
+}
+
+function renderShadowBacktestAssetSection(asset = {}) {
+  return `
+    <article class="research-section detail-panel shadow-backtest-asset-panel">
+      <div class="research-section-head">
+        <div>
+          <p class="eyebrow">Asset / Timeframe</p>
+          <h3>${escapeHtml(asset.asset_label || "Unknown")} ${escapeHtml(asset.timeframe || displayDash())}</h3>
+        </div>
+        <p class="research-panel-copy">Research-only comparison against the existing checked-in ${escapeHtml(asset.outcome_market || "outcome market")} outcome surface. Small samples and extra no-call behaviour remain visible instead of being smoothed away.</p>
+      </div>
+      <section class="backtest-grid three-column shadow-backtest-summary-grid">
+        ${renderBacktestKpiMetric("Sample Count", renderSimpleMetricValue(asset.original_logic?.sample_count), `${asset.original_logic?.directional_call_count ?? 0} original directional calls`, "Rows compared against the same checked-in 24H checker history")}
+        ${renderBacktestKpiMetric("Ex-Flat Delta", metricAvailable(asset.comparison?.ex_flat_change_pct_points) ? signedMetricValue(asset.comparison.ex_flat_change_pct_points, " pp") : displayDash(), `Wins ${signedMetricValue(asset.comparison?.directional_wins_delta || 0)} · Losses ${signedMetricValue(asset.comparison?.directional_losses_delta || 0)}`, "Positive means the shadow model improved directional ex-flat win rate")}
+        ${renderBacktestKpiMetric("Sample Warning", formatReviewLabel(asset.sample_warning?.label || "not_available"), asset.sample_warning?.detail || "", "Warnings remain explicit so the shadow model does not overstate reliability")}
+      </section>
+      <article class="detail-panel shadow-backtest-warning">
+        <div class="shadow-backtest-warning-copy">
+          ${renderShadowBacktestStatusBadge(asset.comparison?.status || "WARN")}
+          <strong>${escapeHtml(formatReviewLabel(asset.comparison?.headline || "mixed_or_small_sample"))}</strong>
+          <span>${escapeHtml(asset.sample_warning?.detail || "No sample warning supplied.")}</span>
+        </div>
+      </article>
+      ${renderShadowBacktestComparisonTable(asset)}
+      ${renderShadowBacktestWeightTable(asset)}
+      ${renderShadowBacktestChangedRows(asset)}
+    </article>
+  `;
+}
+
+function renderShadowLogicBacktest(payload = {}) {
+  const updated = document.getElementById("shadowLogicBacktestUpdated");
+  if (updated) {
+    updated.textContent = payload?.meta?.error
+      ? `Shadow backtest unavailable: ${payload.meta.error}`
+      : `Last synced: ${formatDashboardTime(payload.generated_at)}`;
+  }
+
+  const panel = document.getElementById("shadowLogicBacktestPanel");
+  if (!panel) return;
+
+  const assets = Object.values(payload.assets || {});
+  panel.innerHTML = `
+    <div class="backtest-report shadow-backtest-report">
+      ${renderShadowBacktestMethodology(payload)}
+      ${renderShadowBacktestOverviewTable(payload)}
+      <section class="research-section shadow-backtest-section-stack">
+        ${assets.map(renderShadowBacktestAssetSection).join("")}
+      </section>
+    </div>
   `;
 }
 
@@ -7330,17 +7563,20 @@ function setTab(tab) {
   const layer2View = document.getElementById("layer2View");
   const backtestView = document.getElementById("backtestView");
   const factorEdgeLabView = document.getElementById("factorEdgeLabView");
+  const shadowLogicBacktestView = document.getElementById("shadowLogicBacktestView");
   const agentView = document.getElementById("agentView");
 
   if (overviewView) overviewView.classList.toggle("active-view", activeTab === "overview");
   if (layer2View) layer2View.classList.toggle("active-view", activeTab === "layer2");
   if (backtestView) backtestView.classList.toggle("active-view", activeTab === "backtest");
   if (factorEdgeLabView) factorEdgeLabView.classList.toggle("active-view", activeTab === "factor-edge-lab");
+  if (shadowLogicBacktestView) shadowLogicBacktestView.classList.toggle("active-view", activeTab === "shadow-logic-backtest");
   if (agentView) agentView.classList.toggle("active-view", orderedAgents.includes(activeTab));
 
   if (orderedAgents.includes(activeTab)) renderAgentDetail(activeTab);
   if (activeTab === "backtest") renderBacktest(backtestData || {});
   if (activeTab === "factor-edge-lab") renderFactorEdgeLab(factorEdgeLabData || {});
+  if (activeTab === "shadow-logic-backtest") renderShadowLogicBacktest(phase2ShadowBacktestData || {});
 }
 
 function setBacktestTab(tab, options = {}) {
@@ -7647,11 +7883,12 @@ async function fetchResearchDashboardData() {
 }
 
 async function loadDashboard() {
-  const [layer1Result, layer2Result, researchResult, factorEdgeLabResult] = await Promise.allSettled([
+  const [layer1Result, layer2Result, researchResult, factorEdgeLabResult, phase2ShadowBacktestResult] = await Promise.allSettled([
     fetch(layer1Url, { cache: "no-store" }),
     fetch(layer2Url, { cache: "no-store" }),
     fetchResearchDashboardData(),
-    fetchLocalJson(factorEdgeLabUrl)
+    fetchLocalJson(factorEdgeLabUrl),
+    fetchLocalJson(phase2ShadowBacktestUrl)
   ]);
 
   try {
@@ -7705,11 +7942,26 @@ async function loadDashboard() {
     };
   }
 
+  if (phase2ShadowBacktestResult.status === "fulfilled") {
+    phase2ShadowBacktestData = phase2ShadowBacktestResult.value;
+  } else {
+    console.error(phase2ShadowBacktestResult.reason);
+    phase2ShadowBacktestData = {
+      generated_at: new Date().toISOString(),
+      meta: {
+        error: phase2ShadowBacktestResult.reason?.message || String(phase2ShadowBacktestResult.reason)
+      },
+      overall: {},
+      assets: {}
+    };
+  }
+
   if (layer1Data) renderLayer1(layer1Data);
   if (layer2Data) renderLayer2(layer2Data);
 
   renderBacktest(backtestData);
   renderFactorEdgeLab(factorEdgeLabData);
+  renderShadowLogicBacktest(phase2ShadowBacktestData);
 
   if (orderedAgents.includes(activeTab) && layer1Data) {
     renderAgentDetail(activeTab);

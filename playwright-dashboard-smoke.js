@@ -646,6 +646,63 @@ async function run() {
       throw new Error(`Factor Edge Lab did not render any local table scroll shells.\n${JSON.stringify(factorEdgeLayout, null, 2)}`);
     }
 
+    await page.getByRole("button", { name: "Shadow Logic Backtest" }).click();
+    await page.waitForSelector("text=Research-Only Shadow Logic Comparison", { timeout: 15000 });
+    const shadowBacktestText = await page.locator("#shadowLogicBacktestPanel").innerText();
+    const normalizedShadowBacktestText = shadowBacktestText.toLowerCase();
+
+    for (const expectedShadowText of [
+      "original logic vs evidence-reweighted shadow logic",
+      "data/phase-2-shadow-backtest.json",
+      "original logic",
+      "shadow logic",
+      "shadow factor weight changes",
+      "increase candidate",
+      "reduce candidate",
+      "confirmation only",
+      "insufficient evidence",
+      "asset comparison"
+    ]) {
+      if (!normalizedShadowBacktestText.includes(expectedShadowText)) {
+        throw new Error(`Shadow Logic Backtest did not render expected text: ${expectedShadowText}\n${shadowBacktestText}`);
+      }
+    }
+
+    for (const expectedAsset of ["usd", "eur", "gold", "nq", "btc"]) {
+      if (!normalizedShadowBacktestText.includes(expectedAsset)) {
+        throw new Error(`Shadow Logic Backtest did not render expected asset ${expectedAsset}.\n${shadowBacktestText}`);
+      }
+    }
+
+    const shadowLayout = await page.evaluate(() => {
+      const doc = document.documentElement;
+      const panel = document.getElementById("shadowLogicBacktestPanel");
+      const tableScrolls = Array.from(document.querySelectorAll(".shadow-backtest-table-scroll")).map((node) => ({
+        clientWidth: node.clientWidth,
+        scrollWidth: node.scrollWidth,
+        overflows: node.scrollWidth > node.clientWidth + 1
+      }));
+
+      return {
+        pageHasHorizontalOverflow: doc.scrollWidth > doc.clientWidth + 1,
+        panelHasHorizontalOverflow: panel ? panel.scrollWidth > panel.clientWidth + 1 : false,
+        overflowingTableScrollCount: tableScrolls.filter((entry) => entry.overflows).length,
+        tableScrollCount: tableScrolls.length
+      };
+    });
+
+    if (shadowLayout.pageHasHorizontalOverflow) {
+      throw new Error(`Shadow Logic Backtest caused page-level horizontal overflow.\n${JSON.stringify(shadowLayout, null, 2)}`);
+    }
+
+    if (shadowLayout.panelHasHorizontalOverflow) {
+      throw new Error(`Shadow Logic Backtest panel overflowed horizontally instead of containing overflow inside local table scrollers.\n${JSON.stringify(shadowLayout, null, 2)}`);
+    }
+
+    if (shadowLayout.tableScrollCount === 0) {
+      throw new Error(`Shadow Logic Backtest did not render any local table scroll shells.\n${JSON.stringify(shadowLayout, null, 2)}`);
+    }
+
     const blockingConsoleErrors = consoleErrors.filter((message) => !message.includes("Failed to load resource: the server responded with a status of 500 ()"));
 
     if (blockingConsoleErrors.length) {
@@ -663,6 +720,7 @@ async function run() {
       adr_reach_pair_headers: adrReachPairHeaders,
       factor_edge_unavailable_pill_count: factorEdgeUnavailablePillCount,
       factor_edge_layout: factorEdgeLayout,
+      shadow_backtest_layout: shadowLayout,
       pair_trade_grid_columns: firstPairGridColumns,
       pair_trade_overflow_x: pairBucketOverflow,
       top_summary_row_count: topSummaryRowCount,

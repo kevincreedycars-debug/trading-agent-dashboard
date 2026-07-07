@@ -8,9 +8,9 @@ The Layer 1 trading-agent platform remains operational, and the latest runtime e
 
 The full Layer 1 historical replay rollout is now validated across USD, EUR, Gold, NQ, and BTC. The active repository work has shifted from replay rollout itself into downstream research presentation and breakdown views built on top of the canonical checker artifacts.
 
-The current dashboard now includes the existing accuracy matrices, the checker workspaces, the weekday breakdown views, a Pair Trade Research tab, a `L2L 1H Sequence Research` tab, and a top-level `Factor Edge Lab` research tab built downstream of canonical checker artifacts without changing replay, checker, flat-band, pair-selection, or confidence semantics.
+The current dashboard now includes the existing accuracy matrices, the checker workspaces, the weekday breakdown views, a Pair Trade Research tab, a `L2L 1H Sequence Research` tab, a top-level `Factor Edge Lab` research tab, and a separate top-level `Shadow Logic Backtest` research tab built downstream of canonical checker artifacts without changing replay, checker, flat-band, pair-selection, or confidence semantics.
 
-Current platform state is stable and validated. The Layer 1 historical replay rollout is complete, Weekday Breakdown and Day Totals are complete, Pair Trade Research is complete including its later UI refinements, `L2L 1H Sequence Research` is present as a separate downstream module, and `Factor Edge Lab` is now present as a separate research-only dashboard view.
+Current platform state is stable and validated. The Layer 1 historical replay rollout is complete, Weekday Breakdown and Day Totals are complete, Pair Trade Research is complete including its later UI refinements, `L2L 1H Sequence Research` is present as a separate downstream module, `Factor Edge Lab` is present as a separate research-only dashboard view, and the first `Shadow Logic Backtest` view is now present as a separate research-only comparison surface.
 
 ## Current Architecture
 
