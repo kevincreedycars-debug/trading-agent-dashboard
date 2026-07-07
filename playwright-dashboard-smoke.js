@@ -34,7 +34,9 @@ function createServer() {
 
 async function run() {
   const server = createServer();
-  await new Promise((resolve) => server.listen(4173, "127.0.0.1", resolve));
+  await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
+  const address = server.address();
+  const baseUrl = `http://127.0.0.1:${address.port}/`;
 
   const browser = await chromium.launch({ headless: true });
   const page = await browser.newPage();
@@ -47,7 +49,7 @@ async function run() {
       }
     });
 
-    await page.goto("http://127.0.0.1:4173/", { waitUntil: "networkidle" });
+    await page.goto(baseUrl, { waitUntil: "networkidle" });
 
     const overviewBriefingText = await page.locator("[data-overview-briefing='true']").innerText();
     const normalizedOverviewBriefingText = overviewBriefingText.toLowerCase();
@@ -615,6 +617,35 @@ async function run() {
       }
     }
 
+    const factorEdgeLayout = await page.evaluate(() => {
+      const doc = document.documentElement;
+      const panel = document.getElementById("factorEdgeLabPanel");
+      const tableScrolls = Array.from(document.querySelectorAll(".factor-edge-table-scroll")).map((node) => ({
+        clientWidth: node.clientWidth,
+        scrollWidth: node.scrollWidth,
+        overflows: node.scrollWidth > node.clientWidth + 1
+      }));
+
+      return {
+        pageHasHorizontalOverflow: doc.scrollWidth > doc.clientWidth + 1,
+        panelHasHorizontalOverflow: panel ? panel.scrollWidth > panel.clientWidth + 1 : false,
+        overflowingTableScrollCount: tableScrolls.filter((entry) => entry.overflows).length,
+        tableScrollCount: tableScrolls.length
+      };
+    });
+
+    if (factorEdgeLayout.pageHasHorizontalOverflow) {
+      throw new Error(`Factor Edge Lab caused page-level horizontal overflow.\n${JSON.stringify(factorEdgeLayout, null, 2)}`);
+    }
+
+    if (factorEdgeLayout.panelHasHorizontalOverflow) {
+      throw new Error(`Factor Edge Lab panel overflowed horizontally instead of containing overflow inside its local table scrollers.\n${JSON.stringify(factorEdgeLayout, null, 2)}`);
+    }
+
+    if (factorEdgeLayout.tableScrollCount === 0) {
+      throw new Error(`Factor Edge Lab did not render any local table scroll shells.\n${JSON.stringify(factorEdgeLayout, null, 2)}`);
+    }
+
     const blockingConsoleErrors = consoleErrors.filter((message) => !message.includes("Failed to load resource: the server responded with a status of 500 ()"));
 
     if (blockingConsoleErrors.length) {
@@ -631,6 +662,7 @@ async function run() {
       adr_reach_nq_headers: adrReachNqHeaders,
       adr_reach_pair_headers: adrReachPairHeaders,
       factor_edge_unavailable_pill_count: factorEdgeUnavailablePillCount,
+      factor_edge_layout: factorEdgeLayout,
       pair_trade_grid_columns: firstPairGridColumns,
       pair_trade_overflow_x: pairBucketOverflow,
       top_summary_row_count: topSummaryRowCount,

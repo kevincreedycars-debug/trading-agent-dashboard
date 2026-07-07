@@ -2459,54 +2459,54 @@ function renderFactorEdgeFactorTable(entity = {}) {
 
   return `
     <div class="table-scroll factor-edge-table-scroll">
-      <table class="dashboard-table research-evidence-table factor-edge-table">
+      <table class="dashboard-table research-evidence-table factor-edge-table factor-edge-factor-table">
         <thead>
           <tr>
-            <th>Factor</th>
-            <th>Source</th>
-            <th>Weight</th>
-            <th>Review Label</th>
-            <th>Signal Counts</th>
-            <th>Bullish Reliability</th>
-            <th>Bearish Reliability</th>
-            <th>Flats</th>
-            <th>Final-Call Alignment</th>
-            <th>Weight Mismatch</th>
-            <th>ADR/L2L</th>
+            <th class="factor-edge-col-factor">Factor</th>
+            <th class="factor-edge-col-source">Source</th>
+            <th class="factor-edge-col-weight">Weight</th>
+            <th class="factor-edge-col-review">Review Label</th>
+            <th class="factor-edge-col-counts">Signal Counts</th>
+            <th class="factor-edge-col-reliability">Bullish Reliability</th>
+            <th class="factor-edge-col-reliability">Bearish Reliability</th>
+            <th class="factor-edge-col-flats">Flats</th>
+            <th class="factor-edge-col-alignment">Final-Call Alignment</th>
+            <th class="factor-edge-col-mismatch">Weight Mismatch</th>
+            <th class="factor-edge-col-status">ADR/L2L</th>
           </tr>
         </thead>
         <tbody>
           ${rows.map(row => `
             <tr>
-              <td>${renderAdrCompactTextCell(row.factor_name || displayDash(), row.factor_id || "", { className: "adr-table-tight-cell" })}</td>
-              <td>${renderAdrCompactTextCell(row.source_asset || displayDash(), row.source_side || "", { className: "adr-table-tight-cell" })}</td>
-              <td>${renderAdrCompactTextCell(renderSimpleMetricValue(row.original_weight), row.suggested_interpretation || "", { className: "adr-table-tight-cell" })}</td>
-              <td>${renderAdrCompactTextCell(
+              <td class="factor-edge-col-factor">${renderAdrCompactTextCell(row.factor_name || displayDash(), row.factor_id || "", { className: "adr-table-tight-cell" })}</td>
+              <td class="factor-edge-col-source">${renderAdrCompactTextCell(row.source_asset || displayDash(), row.source_side || "", { className: "adr-table-tight-cell" })}</td>
+              <td class="factor-edge-col-weight">${renderAdrCompactTextCell(renderSimpleMetricValue(row.original_weight), row.suggested_interpretation || "", { className: "adr-table-tight-cell" })}</td>
+              <td class="factor-edge-col-review">${renderAdrCompactTextCell(
                 formatReviewLabel(row.review_label),
                 row.weight_mismatch?.suggested_interpretation || row.suggested_interpretation || "No interpretation",
                 { className: "adr-table-tight-cell" }
               )}</td>
-              <td>${renderAdrCompactTextCell(
+              <td class="factor-edge-col-counts">${renderAdrCompactTextCell(
                 `${row.factor_profile?.bullish_sample_count ?? 0}B / ${row.factor_profile?.bearish_sample_count ?? 0}Br`,
                 `${row.factor_profile?.neutral_no_signal_count ?? 0} neutral · ${row.factor_profile?.directional_sample_count ?? 0} directional`,
                 { className: "adr-table-tight-cell" }
               )}</td>
-              <td>${renderAdrCompactTextCell(
+              <td class="factor-edge-col-reliability">${renderAdrCompactTextCell(
                 metricAvailable(row.bullish_state?.ex_flat_wr_pct) ? percentValue(row.bullish_state.ex_flat_wr_pct) : displayDash(),
                 metricAvailable(row.bullish_state?.sample_count) ? `${row.bullish_state.sample_count} sample · ${row.bullish_state.reliability_label || "No label"}` : "No directional sample",
                 { className: "adr-table-tight-cell" }
               )}</td>
-              <td>${renderAdrCompactTextCell(
+              <td class="factor-edge-col-reliability">${renderAdrCompactTextCell(
                 metricAvailable(row.bearish_state?.ex_flat_wr_pct) ? percentValue(row.bearish_state.ex_flat_wr_pct) : displayDash(),
                 metricAvailable(row.bearish_state?.sample_count) ? `${row.bearish_state.sample_count} sample · ${row.bearish_state.reliability_label || "No label"}` : "No directional sample",
                 { className: "adr-table-tight-cell" }
               )}</td>
-              <td>${renderAdrCompactTextCell(
+              <td class="factor-edge-col-flats">${renderAdrCompactTextCell(
                 metricAvailable(row.factor_profile?.flat_rate_pct) ? percentValue(row.factor_profile.flat_rate_pct) : displayDash(),
                 `${row.factor_profile?.flat_count ?? 0} flats across all factor states`,
                 { className: "adr-table-tight-cell" }
               )}</td>
-              <td>${renderAdrCompactTextCell(
+              <td class="factor-edge-col-alignment">${renderAdrCompactTextCell(
                 metricAvailable(row.alignment_with_final_call?.agrees_with_final_call?.ex_flat_wr_pct)
                   ? `Agree ${percentValue(row.alignment_with_final_call.agrees_with_final_call.ex_flat_wr_pct)}`
                   : "Agree —",
@@ -2519,12 +2519,12 @@ function renderFactorEdgeFactorTable(entity = {}) {
                 ].join(" · "),
                 { className: "adr-table-tight-cell" }
               )}</td>
-              <td>${renderAdrCompactTextCell(
+              <td class="factor-edge-col-mismatch">${renderAdrCompactTextCell(
                 metricAvailable(row.weight_mismatch?.combined_factor_reliability_pct) ? percentValue(row.weight_mismatch.combined_factor_reliability_pct) : displayDash(),
                 `${row.weight_mismatch?.suggested_interpretation || "No interpretation"} · ${metricAvailable(row.weight_mismatch?.directional_sample) ? `${row.weight_mismatch.directional_sample} dir` : "No dir sample"}`,
                 { className: "adr-table-tight-cell" }
               )}</td>
-              <td>${renderFactorEdgeStatusPill(
+              <td class="factor-edge-col-status">${renderFactorEdgeStatusPill(
                 row.bullish_state?.adr_l2l_opportunity?.available,
                 row.bullish_state?.adr_l2l_opportunity?.blocker || row.bearish_state?.adr_l2l_opportunity?.blocker || entity.adr_l2l_factor_join?.blocker || ""
               )}</td>
@@ -2561,48 +2561,48 @@ function renderFactorEdgeCombinationTable(bucket = {}, title = "Combinations") {
         </p>
       </div>
       <div class="table-scroll factor-edge-table-scroll">
-        <table class="dashboard-table research-evidence-table factor-edge-table">
+        <table class="dashboard-table research-evidence-table factor-edge-table factor-edge-combination-table">
           <thead>
             <tr>
-              <th>Combination</th>
-              <th>Direction</th>
-              <th>Sample</th>
-              <th>Ex-Flat WR</th>
-              <th>Flats</th>
-              <th>Final-Call Alignment</th>
-              <th>Reliability</th>
-              <th>ADR/L2L</th>
+              <th class="factor-edge-col-combination">Combination</th>
+              <th class="factor-edge-col-direction">Direction</th>
+              <th class="factor-edge-col-sample">Sample</th>
+              <th class="factor-edge-col-rate">Ex-Flat WR</th>
+              <th class="factor-edge-col-flats">Flats</th>
+              <th class="factor-edge-col-alignment">Final-Call Alignment</th>
+              <th class="factor-edge-col-reliability">Reliability</th>
+              <th class="factor-edge-col-status">ADR/L2L</th>
             </tr>
           </thead>
           <tbody>
             ${rows.slice(0, 12).map((row) => `
               <tr>
-                <td>${renderAdrCompactTextCell(
+                <td class="factor-edge-col-combination">${renderAdrCompactTextCell(
                   escapeHtml(asArray(row.factor_names).join(" + ") || displayDash()),
                   escapeHtml(asArray(row.factor_ids).join(" · ") || displayDash()),
                   { className: "adr-table-tight-cell" }
                 )}</td>
-                <td>${renderAdrCompactTextCell(
+                <td class="factor-edge-col-direction">${renderAdrCompactTextCell(
                   escapeHtml(row.direction_tested || displayDash()),
                   row.bullish_direction_tested ? "Bullish setup" : row.bearish_direction_tested ? "Bearish setup" : "No directional setup",
                   { className: "adr-table-tight-cell" }
                 )}</td>
-                <td>${renderAdrCompactTextCell(
+                <td class="factor-edge-col-sample">${renderAdrCompactTextCell(
                   renderSimpleMetricValue(row.sample_count),
                   row.sample_size_label || "No sample label",
                   { className: "adr-table-tight-cell" }
                 )}</td>
-                <td>${renderAdrCompactTextCell(
+                <td class="factor-edge-col-rate">${renderAdrCompactTextCell(
                   metricAvailable(row.ex_flat_wr_pct) ? percentValue(row.ex_flat_wr_pct) : displayDash(),
                   `${renderSimpleMetricValue(row.bullish_sample_count)} bull moves · ${renderSimpleMetricValue(row.bearish_sample_count)} bear moves · ${formatReviewLabel(row.review_label)}`,
                   { className: "adr-table-tight-cell" }
                 )}</td>
-                <td>${renderAdrCompactTextCell(
+                <td class="factor-edge-col-flats">${renderAdrCompactTextCell(
                   metricAvailable(row.flat_rate_pct) ? percentValue(row.flat_rate_pct) : displayDash(),
                   `${renderSimpleMetricValue(row.flat_count)} flats`,
                   { className: "adr-table-tight-cell" }
                 )}</td>
-                <td>${renderAdrCompactTextCell(
+                <td class="factor-edge-col-alignment">${renderAdrCompactTextCell(
                   `${renderSimpleMetricValue(row.agrees_with_final_call?.sample_count)} agree · ${renderSimpleMetricValue(row.contradicts_final_call?.sample_count)} contra`,
                   [
                     metricAvailable(row.agrees_with_final_call?.ex_flat_wr_pct) ? `Agree WR ${percentValue(row.agrees_with_final_call.ex_flat_wr_pct)}` : "Agree WR unavailable",
@@ -2611,12 +2611,12 @@ function renderFactorEdgeCombinationTable(bucket = {}, title = "Combinations") {
                   ].join(" · "),
                   { className: "adr-table-tight-cell" }
                 )}</td>
-                <td>${renderAdrCompactTextCell(
+                <td class="factor-edge-col-reliability">${renderAdrCompactTextCell(
                   row.reliability_label || "Not yet available",
                   `${formatReviewLabel(row.review_label)} · ${row.interpretation || "No interpretation"}`,
                   { className: "adr-table-tight-cell" }
                 )}</td>
-                <td>${renderFactorEdgeStatusPill(
+                <td class="factor-edge-col-status">${renderFactorEdgeStatusPill(
                   row.adr_l2l_factor_join?.available,
                   row.adr_l2l_factor_join?.blocker || ""
                 )}</td>
