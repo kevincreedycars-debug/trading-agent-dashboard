@@ -2,24 +2,164 @@
   "dashboard_meta": {
     "system_timezone": "America/New_York",
     "execution_clock": "07:00 ET primary run",
-    "last_updated_et": "2026-07-18T14:39:43.984Z",
+    "last_updated_et": "2026-07-18T14:48:50.709Z",
     "architecture": "Layer 1 agents are sealed independent raw signal producers. No cross-agent communication.",
-    "weekend_rule": "BTC remains open on weekends. USD, EUR, GOLD and NQ do not issue 24h calls on Saturday or Sunday.",
-    "london_weekday": "Saturday"
+    "weekend_rule": "Weekday-active-time V1 pauses only for weekend closure. Exchange holidays and intraday maintenance breaks are not yet modelled.",
+    "display_timezone": "Europe/London",
+    "validity_contract_version": "live_v3_explicit_forecast_expiry",
+    "timing_contract_note": "Forecast expiry is explicit and separate from the provisional refresh threshold. Refresh timing remains an operational expectation only.",
+    "horizon_contract_note": "Weekday-active-time V1 excludes weekend-closed hours only. Exchange holidays and intraday maintenance breaks are not yet modelled.",
+    "refresh_schedule": "07:00",
+    "refresh_timezone": "America/New_York",
+    "refresh_schedule_status": "PROVISIONAL",
+    "validity_schedule_source": "dashboard_meta.execution_clock",
+    "validity_schedule_note": "No authoritative orchestrator cron exists in the repository"
   },
   "agents": [
     {
       "agent": "USD",
       "status": "live",
-      "market_status": "closed",
+      "market_status": null,
       "last_run_et": "2026-07-18T14:38:04.219+00:00",
-      "summary": "USD Layer 1 raw call generated from sealed independent workflow.",
+      "generated_at": "2026-07-18T14:38:04.219+00:00",
+      "sealed_at": "2026-07-18T14:47:31.658506+00:00",
+      "valid_from": "2026-07-18T14:47:31.658506+00:00",
+      "refresh_due_at": "2026-07-19T11:00:00.000Z",
+      "forecast_window_end": "2026-07-21T04:00:00.000Z",
+      "expires_at": "2026-07-21T04:00:00.000Z",
+      "status_at_build": "ACTIVE",
+      "effective_status": "ACTIVE",
+      "status_resolved_at": "2026-07-18T14:48:50.695Z",
+      "horizon_code": "24H",
+      "horizon_duration": "PT24H",
+      "horizon_basis": "WEEKDAY_ACTIVE_TIME_V1",
+      "timezone": "America/New_York",
+      "market_calendar": "WEEKDAY_ACTIVE_TIME_V1",
+      "source_run_id": null,
+      "summary": "USD weighted verdicts calculated deterministically by timeframe. 24h BEARISH 86%, 3d BEARISH 67%, current week BEARISH 72%, next week BULLISH 67%, current month BULLISH 71%.",
       "calls": {
         "24h": {
-          "direction": "NO 24H CALL",
-          "conviction": null,
-          "reason": "Weekend rule active: this market is closed, so no 24h bias is issued.",
-          "status": "market_closed"
+          "direction": "BEARISH",
+          "conviction": 86,
+          "reason": "24h deterministic score: bullish argument 14%, bearish argument 86%, neutral/inactive 72%, net edge -72 bearish.",
+          "conviction_model": {
+            "neutral_pct": 72,
+            "net_edge_pct": -72,
+            "participation": 28,
+            "weighted_edge": 0.72,
+            "raw_conviction": 86,
+            "agreement_boost": 0,
+            "base_conviction": 86,
+            "conflict_penalty": 0,
+            "final_conviction": 86,
+            "verdict_strength": "VERY_STRONG",
+            "participation_cap": 28,
+            "bearish_argument_pct": 86,
+            "bullish_argument_pct": 14,
+            "missing_input_penalty": 0,
+            "final_conviction_logic": "24h deterministic score: bullish argument 14%, bearish argument 86%, neutral/inactive 72%, net edge -72 bearish.",
+            "active_participation_pct": 28,
+            "neutral_evidence_pct": 72,
+            "directional_participation_pct": 28,
+            "winning_side": "BEARISH",
+            "bull_case_weight": 4,
+            "bear_case_weight": 24,
+            "neutral_weight": 72,
+            "weighted_score": {
+              "bullish_weight": 4,
+              "bearish_weight": 24,
+              "neutral_weight": 72,
+              "active_weight": 28,
+              "weight_margin": 20
+            },
+            "alignment": 14
+          },
+          "weighted_score": {
+            "active_weight": 28,
+            "weight_margin": 20,
+            "bearish_weight": 24,
+            "bullish_weight": 4,
+            "neutral_weight": 72
+          },
+          "factor_breakdown": {
+            "F1": {
+              "reason": "Domestic drivers dominate",
+              "signal": "NEUTRAL",
+              "weight": 10,
+              "evidence": "VIX 16.73"
+            },
+            "F2": {
+              "reason": "Move below threshold",
+              "signal": "NEUTRAL",
+              "weight": 14,
+              "evidence": "US 2Y 5d bps 0"
+            },
+            "F3": {
+              "reason": "Relative rates weaken USD",
+              "signal": "BEARISH",
+              "weight": 10,
+              "evidence": "US-DE 2Y spread 5d bps -12.00000000000001"
+            },
+            "F4": {
+              "reason": "Move below threshold",
+              "signal": "NEUTRAL",
+              "weight": 10,
+              "evidence": "Real yield 5d bps 4.0000000000000036"
+            },
+            "F5": {
+              "reason": "DXY confirms USD weakness",
+              "signal": "BEARISH",
+              "weight": 14,
+              "evidence": "DXY 1d % -0.2057091749273341"
+            },
+            "F6": {
+              "reason": "Gold weakness supports USD",
+              "signal": "BULLISH",
+              "weight": 4,
+              "evidence": "Gold -0.9524922718320341%"
+            },
+            "F7": {
+              "reason": "No confirmed surprise",
+              "signal": "NEUTRAL",
+              "weight": 24,
+              "evidence": "No recent US event"
+            },
+            "F8": {
+              "reason": "No clear Fed impulse",
+              "signal": "NEUTRAL",
+              "weight": 12,
+              "evidence": "Fed bias neutral"
+            },
+            "F9": {
+              "reason": "Insufficient regime evidence",
+              "signal": "NEUTRAL",
+              "weight": 1,
+              "evidence": "No clear Dollar Smile edge"
+            },
+            "F10": {
+              "reason": "No clear equity/USD signal",
+              "signal": "NEUTRAL",
+              "weight": 1,
+              "evidence": "NQ -1.503%, VIX 16.73"
+            }
+          },
+          "generated_at": "2026-07-18T14:38:04.219+00:00",
+          "sealed_at": "2026-07-18T14:47:31.658506+00:00",
+          "valid_from": "2026-07-18T14:47:31.658506+00:00",
+          "refresh_due_at": "2026-07-19T11:00:00.000Z",
+          "forecast_window_end": "2026-07-21T04:00:00.000Z",
+          "expires_at": "2026-07-21T04:00:00.000Z",
+          "status_at_build": "ACTIVE",
+          "effective_status": "ACTIVE",
+          "status_resolved_at": "2026-07-18T14:48:50.695Z",
+          "horizon_code": "24H",
+          "horizon_duration": "PT24H",
+          "horizon_basis": "WEEKDAY_ACTIVE_TIME_V1",
+          "timezone": "America/New_York",
+          "market_calendar": "WEEKDAY_ACTIVE_TIME_V1",
+          "source_run_id": null,
+          "validity_note": "Operational freshness uses a provisional refresh expectation only. Forecast expiry is explicit and separate from the provisional refresh threshold.",
+          "horizon_note": "Weekday-active-time V1 excludes weekend-closed hours only. Exchange holidays and intraday maintenance breaks are not yet modelled."
         },
         "3d": {
           "direction": "BEARISH",
@@ -448,10 +588,127 @@
       },
       "priority_timeframe": "24h",
       "priority_call": {
-        "direction": "NO 24H CALL",
-        "conviction": null,
-        "reason": "Weekend rule active: this market is closed, so no 24h bias is issued.",
-        "status": "market_closed"
+        "direction": "BEARISH",
+        "conviction": 86,
+        "reason": "24h deterministic score: bullish argument 14%, bearish argument 86%, neutral/inactive 72%, net edge -72 bearish.",
+        "conviction_model": {
+          "neutral_pct": 72,
+          "net_edge_pct": -72,
+          "participation": 28,
+          "weighted_edge": 0.72,
+          "raw_conviction": 86,
+          "agreement_boost": 0,
+          "base_conviction": 86,
+          "conflict_penalty": 0,
+          "final_conviction": 86,
+          "verdict_strength": "VERY_STRONG",
+          "participation_cap": 28,
+          "bearish_argument_pct": 86,
+          "bullish_argument_pct": 14,
+          "missing_input_penalty": 0,
+          "final_conviction_logic": "24h deterministic score: bullish argument 14%, bearish argument 86%, neutral/inactive 72%, net edge -72 bearish.",
+          "active_participation_pct": 28,
+          "neutral_evidence_pct": 72,
+          "directional_participation_pct": 28,
+          "winning_side": "BEARISH",
+          "bull_case_weight": 4,
+          "bear_case_weight": 24,
+          "neutral_weight": 72,
+          "weighted_score": {
+            "bullish_weight": 4,
+            "bearish_weight": 24,
+            "neutral_weight": 72,
+            "active_weight": 28,
+            "weight_margin": 20
+          },
+          "alignment": 14
+        },
+        "weighted_score": {
+          "active_weight": 28,
+          "weight_margin": 20,
+          "bearish_weight": 24,
+          "bullish_weight": 4,
+          "neutral_weight": 72
+        },
+        "factor_breakdown": {
+          "F1": {
+            "reason": "Domestic drivers dominate",
+            "signal": "NEUTRAL",
+            "weight": 10,
+            "evidence": "VIX 16.73"
+          },
+          "F2": {
+            "reason": "Move below threshold",
+            "signal": "NEUTRAL",
+            "weight": 14,
+            "evidence": "US 2Y 5d bps 0"
+          },
+          "F3": {
+            "reason": "Relative rates weaken USD",
+            "signal": "BEARISH",
+            "weight": 10,
+            "evidence": "US-DE 2Y spread 5d bps -12.00000000000001"
+          },
+          "F4": {
+            "reason": "Move below threshold",
+            "signal": "NEUTRAL",
+            "weight": 10,
+            "evidence": "Real yield 5d bps 4.0000000000000036"
+          },
+          "F5": {
+            "reason": "DXY confirms USD weakness",
+            "signal": "BEARISH",
+            "weight": 14,
+            "evidence": "DXY 1d % -0.2057091749273341"
+          },
+          "F6": {
+            "reason": "Gold weakness supports USD",
+            "signal": "BULLISH",
+            "weight": 4,
+            "evidence": "Gold -0.9524922718320341%"
+          },
+          "F7": {
+            "reason": "No confirmed surprise",
+            "signal": "NEUTRAL",
+            "weight": 24,
+            "evidence": "No recent US event"
+          },
+          "F8": {
+            "reason": "No clear Fed impulse",
+            "signal": "NEUTRAL",
+            "weight": 12,
+            "evidence": "Fed bias neutral"
+          },
+          "F9": {
+            "reason": "Insufficient regime evidence",
+            "signal": "NEUTRAL",
+            "weight": 1,
+            "evidence": "No clear Dollar Smile edge"
+          },
+          "F10": {
+            "reason": "No clear equity/USD signal",
+            "signal": "NEUTRAL",
+            "weight": 1,
+            "evidence": "NQ -1.503%, VIX 16.73"
+          }
+        },
+        "generated_at": "2026-07-18T14:38:04.219+00:00",
+        "sealed_at": "2026-07-18T14:47:31.658506+00:00",
+        "valid_from": "2026-07-18T14:47:31.658506+00:00",
+        "refresh_due_at": "2026-07-19T11:00:00.000Z",
+        "forecast_window_end": "2026-07-21T04:00:00.000Z",
+        "expires_at": "2026-07-21T04:00:00.000Z",
+        "status_at_build": "ACTIVE",
+        "effective_status": "ACTIVE",
+        "status_resolved_at": "2026-07-18T14:48:50.695Z",
+        "horizon_code": "24H",
+        "horizon_duration": "PT24H",
+        "horizon_basis": "WEEKDAY_ACTIVE_TIME_V1",
+        "timezone": "America/New_York",
+        "market_calendar": "WEEKDAY_ACTIVE_TIME_V1",
+        "source_run_id": null,
+        "validity_note": "Operational freshness uses a provisional refresh expectation only. Forecast expiry is explicit and separate from the provisional refresh threshold.",
+        "horizon_note": "Weekday-active-time V1 excludes weekend-closed hours only. Exchange holidays and intraday maintenance breaks are not yet modelled."
       },
       "factor_breakdown": {
         "F1": {
@@ -516,16 +773,16 @@
         }
       },
       "key_factors": [
-        "F1 [10]: NEUTRAL — VIX 16.73 (Domestic drivers dominate)",
-        "F2 [14]: NEUTRAL — US 2Y 5d bps 0 (Move below threshold)",
-        "F3 [10]: BEARISH — US-DE 2Y spread 5d bps -12.00000000000001 (Relative rates weaken USD)",
-        "F4 [10]: NEUTRAL — Real yield 5d bps 4.0000000000000036 (Move below threshold)",
-        "F5 [14]: BEARISH — DXY 1d % -0.2057091749273341 (DXY confirms USD weakness)",
-        "F6 [4]: BULLISH — Gold -0.9524922718320341% (Gold weakness supports USD)",
-        "F7 [24]: NEUTRAL — No recent US event (No confirmed surprise)",
-        "F8 [12]: NEUTRAL — Fed bias neutral (No clear Fed impulse)",
-        "F9 [1]: NEUTRAL — No clear Dollar Smile edge (Insufficient regime evidence)",
-        "F10 [1]: NEUTRAL — NQ -1.503%, VIX 16.73 (No clear equity/USD signal)"
+        "F1 [10]: NEUTRAL - VIX 16.73 (Domestic drivers dominate)",
+        "F2 [14]: NEUTRAL - US 2Y 5d bps 0 (Move below threshold)",
+        "F3 [10]: BEARISH - US-DE 2Y spread 5d bps -12.00000000000001 (Relative rates weaken USD)",
+        "F4 [10]: NEUTRAL - Real yield 5d bps 4.0000000000000036 (Move below threshold)",
+        "F5 [14]: BEARISH - DXY 1d % -0.2057091749273341 (DXY confirms USD weakness)",
+        "F6 [4]: BULLISH - Gold -0.9524922718320341% (Gold weakness supports USD)",
+        "F7 [24]: NEUTRAL - No recent US event (No confirmed surprise)",
+        "F8 [12]: NEUTRAL - Fed bias neutral (No clear Fed impulse)",
+        "F9 [1]: NEUTRAL - No clear Dollar Smile edge (Insufficient regime evidence)",
+        "F10 [1]: NEUTRAL - NQ -1.503%, VIX 16.73 (No clear equity/USD signal)"
       ],
       "warnings": [
         "Missing latest US event"
@@ -538,20 +795,36 @@
       "logic_document": "agent_usd_direction.md",
       "logic_document_version": "2.1_weighted_engine",
       "conviction_model": {
-        "bullish_argument_pct": null,
-        "bearish_argument_pct": null,
-        "neutral_pct": null,
-        "neutral_evidence_pct": null,
-        "directional_participation_pct": null,
-        "active_participation_pct": null,
-        "net_edge_pct": null,
-        "final_conviction": null,
-        "verdict_strength": "MARKET_CLOSED",
-        "winning_side": "MARKET_CLOSED",
-        "final_conviction_logic": "24H priority timeframe is closed by weekend rule.",
-        "bull_case_weight": null,
-        "bear_case_weight": null,
-        "neutral_weight": null
+        "neutral_pct": 72,
+        "net_edge_pct": -72,
+        "participation": 28,
+        "weighted_edge": 0.72,
+        "raw_conviction": 86,
+        "agreement_boost": 0,
+        "base_conviction": 86,
+        "conflict_penalty": 0,
+        "final_conviction": 86,
+        "verdict_strength": "VERY_STRONG",
+        "participation_cap": 28,
+        "bearish_argument_pct": 86,
+        "bullish_argument_pct": 14,
+        "missing_input_penalty": 0,
+        "final_conviction_logic": "24h deterministic score: bullish argument 14%, bearish argument 86%, neutral/inactive 72%, net edge -72 bearish.",
+        "active_participation_pct": 28,
+        "neutral_evidence_pct": 72,
+        "directional_participation_pct": 28,
+        "winning_side": "BEARISH",
+        "bull_case_weight": 4,
+        "bear_case_weight": 24,
+        "neutral_weight": 72,
+        "weighted_score": {
+          "bullish_weight": 4,
+          "bearish_weight": 24,
+          "neutral_weight": 72,
+          "active_weight": 28,
+          "weight_margin": 20
+        },
+        "alignment": 14
       },
       "timeframe_models": {
         "3d": {
@@ -1031,16 +1304,16 @@
         }
       },
       "display_metrics": {
-        "bull_case": null,
-        "bear_case": null,
-        "winning_side": "MARKET_CLOSED",
-        "conviction": null,
-        "net_edge": null,
-        "directional_participation": null,
-        "neutral": null,
-        "verdict_strength": "MARKET_CLOSED",
-        "bull_case_weight": null,
-        "bear_case_weight": null
+        "bull_case": 14,
+        "bear_case": 86,
+        "winning_side": "BEARISH",
+        "conviction": 86,
+        "net_edge": -72,
+        "directional_participation": 28,
+        "neutral": 72,
+        "verdict_strength": "VERY_STRONG",
+        "bull_case_weight": 4,
+        "bear_case_weight": 24
       },
       "full_output": {
         "asset": "USD",
@@ -1048,9 +1321,9 @@
         "created_at": "2026-07-18T14:38:04.337869+00:00",
         "reason_24h": "24h deterministic score: bullish argument 14%, bearish argument 86%, neutral/inactive 72%, net edge -72 bearish.",
         "risk_flags": [
-          "Missing latest_us_event",
+          "Missing latest US economic event input",
           "Primary drivers partially conflicted",
-          "Low active participation from primary drivers"
+          "Low active participation"
         ],
         "reason_3_day": "3d deterministic score: bullish argument 33%, bearish argument 67%, neutral/inactive 76%, net edge -34 bearish.",
         "direction_24h": "BEARISH",
@@ -1635,22 +1908,22 @@
         "snapshot_selection": {
           "warnings": [],
           "selected_by": "latest_usd_usable_snapshot",
-          "selected_from_rows": 343,
+          "selected_from_rows": 348,
           "selected_created_at": "2026-07-18T14:38:04.337869+00:00",
           "selected_run_time_et": "2026-07-18T14:38:04.219+00:00",
           "selected_snapshot_id": "15bdadf8-e5ef-46ef-87dd-2f75963a9e2c",
           "selected_snapshot_date": "2026-07-18",
           "top_5_rows_seen_by_workflow": [
             {
-              "id": "779a1e41-28be-4c53-9f09-bd0f1f513eee",
+              "id": "6ada218a-0f44-40be-ae6c-22026a54f953",
               "rank": 1,
               "fed_bias": "neutral",
               "dxy_level": 120.5046,
               "vix_level": 16.73,
-              "created_at": "2026-07-18T14:38:11.838503+00:00",
+              "created_at": "2026-07-18T14:47:03.034865+00:00",
               "usd_usable": false,
               "de_2y_yield": null,
-              "run_time_et": "2026-07-18T14:38:11.759+00:00",
+              "run_time_et": "2026-07-18T14:47:02.865+00:00",
               "snapshot_date": "2026-07-18",
               "source_status": "partial",
               "us_de_2y_spread": null,
@@ -1658,15 +1931,15 @@
               "us_de_2y_spread_d5_bps": null
             },
             {
-              "id": "15bdadf8-e5ef-46ef-87dd-2f75963a9e2c",
+              "id": "b54e14ea-2d99-4a00-8aff-f25a65ac26e8",
               "rank": 2,
               "fed_bias": "neutral",
               "dxy_level": 120.5046,
               "vix_level": 16.73,
-              "created_at": "2026-07-18T14:38:04.337869+00:00",
-              "usd_usable": true,
+              "created_at": "2026-07-18T14:46:56.592199+00:00",
+              "usd_usable": false,
               "de_2y_yield": 2.77,
-              "run_time_et": "2026-07-18T14:38:04.219+00:00",
+              "run_time_et": "2026-07-18T14:46:56.455+00:00",
               "snapshot_date": "2026-07-18",
               "source_status": "partial",
               "us_de_2y_spread": 1.3900000000000001,
@@ -1674,15 +1947,15 @@
               "us_de_2y_spread_d5_bps": -12.00000000000001
             },
             {
-              "id": "9cde1072-5128-4625-99f0-8e9ac7838834",
+              "id": "172fa760-677a-4255-af12-1ce026cdb98d",
               "rank": 3,
               "fed_bias": "neutral",
               "dxy_level": 120.5046,
               "vix_level": 16.73,
-              "created_at": "2026-07-18T14:37:26.405223+00:00",
-              "usd_usable": true,
+              "created_at": "2026-07-18T14:46:17.899242+00:00",
+              "usd_usable": false,
               "de_2y_yield": 2.77,
-              "run_time_et": "2026-07-18T14:37:26.327+00:00",
+              "run_time_et": "2026-07-18T14:46:17.769+00:00",
               "snapshot_date": "2026-07-18",
               "source_status": "partial",
               "us_de_2y_spread": 1.3900000000000001,
@@ -1690,15 +1963,15 @@
               "us_de_2y_spread_d5_bps": -12.00000000000001
             },
             {
-              "id": "28733938-efd2-4283-a15a-e5d1922769b7",
+              "id": "cc6ec17c-2239-410f-bcb0-c9aa73162213",
               "rank": 4,
               "fed_bias": null,
               "dxy_level": 120.5046,
               "vix_level": 16.73,
-              "created_at": "2026-07-18T14:37:18.597749+00:00",
+              "created_at": "2026-07-18T14:46:09.13927+00:00",
               "usd_usable": false,
               "de_2y_yield": 2.77,
-              "run_time_et": "2026-07-18T14:37:18.419+00:00",
+              "run_time_et": "2026-07-18T14:46:09.053+00:00",
               "snapshot_date": "2026-07-18",
               "source_status": "partial",
               "us_de_2y_spread": 1.3900000000000001,
@@ -1706,15 +1979,15 @@
               "us_de_2y_spread_d5_bps": -12.00000000000001
             },
             {
-              "id": "099f19cb-7553-4542-a334-2e07da9b0513",
+              "id": "0f54f885-2553-480b-89d1-85fb12710c98",
               "rank": 5,
               "fed_bias": "neutral",
               "dxy_level": 120.5046,
               "vix_level": 16.73,
-              "created_at": "2026-07-18T14:37:13.055784+00:00",
-              "usd_usable": true,
+              "created_at": "2026-07-18T14:46:03.30891+00:00",
+              "usd_usable": false,
               "de_2y_yield": 2.77,
-              "run_time_et": "2026-07-18T14:37:12.963+00:00",
+              "run_time_et": "2026-07-18T14:46:03.149+00:00",
               "snapshot_date": "2026-07-18",
               "source_status": "partial",
               "us_de_2y_spread": 1.3900000000000001,
@@ -1733,9 +2006,9 @@
         "conviction_current_week": 72,
         "direction_current_month": "BULLISH",
         "model_reported_warnings": [
-          "Missing latest_us_event",
+          "Missing latest US economic event input",
           "Primary drivers partially conflicted",
-          "Low active participation from primary drivers"
+          "Low active participation"
         ],
         "conviction_current_month": 71,
         "input_validation_warnings": [
@@ -1788,20 +2061,159 @@
           "us_10y_real_yield_d5_bps": 4.0000000000000036,
           "us_10y_real_yield_d20_bps": 20.999999999999996
         }
-      }
+      },
+      "validity_note": "Operational freshness uses a provisional refresh expectation only. Forecast expiry is explicit and separate from the provisional refresh threshold.",
+      "horizon_note": "Weekday-active-time V1 excludes weekend-closed hours only. Exchange holidays and intraday maintenance breaks are not yet modelled.",
+      "refresh_schedule": "07:00",
+      "refresh_timezone": "America/New_York",
+      "refresh_schedule_status": "PROVISIONAL",
+      "validity_schedule_source": "dashboard_meta.execution_clock",
+      "validity_schedule_note": "No authoritative orchestrator cron exists in the repository"
     },
     {
       "agent": "EUR",
       "status": "live",
-      "market_status": "closed",
-      "last_run_et": "2026-07-18T14:37:18.419+00:00",
-      "summary": "EUR Layer 1 raw call generated from sealed independent workflow.",
+      "market_status": null,
+      "last_run_et": "2026-07-18T14:46:09.053+00:00",
+      "generated_at": "2026-07-18T14:46:09.053+00:00",
+      "sealed_at": "2026-07-18T14:47:43.613063+00:00",
+      "valid_from": "2026-07-18T14:47:43.613063+00:00",
+      "refresh_due_at": "2026-07-19T11:00:00.000Z",
+      "forecast_window_end": "2026-07-21T04:00:00.000Z",
+      "expires_at": "2026-07-21T04:00:00.000Z",
+      "status_at_build": "ACTIVE",
+      "effective_status": "ACTIVE",
+      "status_resolved_at": "2026-07-18T14:48:50.695Z",
+      "horizon_code": "24H",
+      "horizon_duration": "PT24H",
+      "horizon_basis": "WEEKDAY_ACTIVE_TIME_V1",
+      "timezone": "America/New_York",
+      "market_calendar": "WEEKDAY_ACTIVE_TIME_V1",
+      "source_run_id": null,
+      "summary": "EUR weighted verdicts calculated deterministically by timeframe. 24h BULLISH 91%, 3d BULLISH 92%, current week BULLISH 92%, next week BULLISH 74%, current month BULLISH 72%.",
       "calls": {
         "24h": {
-          "direction": "NO 24H CALL",
-          "conviction": null,
-          "reason": "Weekend rule active: this market is closed, so no 24h bias is issued.",
-          "status": "market_closed"
+          "direction": "BULLISH",
+          "conviction": 91,
+          "reason": "24h EUR deterministic score: bull case 91%, bear case 9%, neutral/inactive 54%, directional participation 46%, net edge +82.",
+          "conviction_model": {
+            "neutral_pct": 54,
+            "net_edge_pct": 82,
+            "winning_side": "BULLISH",
+            "participation": 46,
+            "weighted_edge": 0.82,
+            "neutral_weight": 54,
+            "raw_conviction": 91,
+            "agreement_boost": 0,
+            "base_conviction": 91,
+            "bear_case_weight": 4,
+            "bull_case_weight": 42,
+            "conflict_penalty": 0,
+            "final_conviction": 91,
+            "verdict_strength": "VERY_STRONG",
+            "participation_cap": 46,
+            "bearish_argument_pct": 9,
+            "bullish_argument_pct": 91,
+            "neutral_evidence_pct": 54,
+            "missing_input_penalty": 0,
+            "final_conviction_logic": "24h EUR deterministic score: bull case 91%, bear case 9%, neutral/inactive 54%, directional participation 46%, net edge +82.",
+            "active_participation_pct": 46,
+            "directional_participation_pct": 46,
+            "weighted_score": {
+              "bullish_weight": 42,
+              "bearish_weight": 4,
+              "neutral_weight": 54,
+              "active_weight": 46,
+              "weight_margin": 38
+            },
+            "alignment": 91
+          },
+          "weighted_score": {
+            "active_weight": 46,
+            "weight_margin": 38,
+            "bearish_weight": 4,
+            "bullish_weight": 42,
+            "neutral_weight": 54
+          },
+          "factor_breakdown": {
+            "F1": {
+              "reason": "No clear ECB impulse",
+              "signal": "NEUTRAL",
+              "weight": 20,
+              "evidence": "ECB bias neutral"
+            },
+            "F2": {
+              "reason": "Rising German front-end yields support EUR",
+              "signal": "BULLISH",
+              "weight": 18,
+              "evidence": "Germany 2Y delta 12 bps"
+            },
+            "F3": {
+              "reason": "US-DE spread narrowing supports EUR",
+              "signal": "BULLISH",
+              "weight": 20,
+              "evidence": "US-DE 2Y spread delta -12 bps"
+            },
+            "F4": {
+              "reason": "No confirmed EZ economic surprise",
+              "signal": "NEUTRAL",
+              "weight": 14,
+              "evidence": "No recent Eurozone event"
+            },
+            "F5": {
+              "reason": "Improving Eurozone PMI trend supports EUR",
+              "signal": "BULLISH",
+              "weight": 4,
+              "evidence": "EZ PMI 47.7 improving"
+            },
+            "F6": {
+              "reason": "EUR own price move below threshold",
+              "signal": "NEUTRAL",
+              "weight": 12,
+              "evidence": "EURUSD delta -0.01%"
+            },
+            "F7": {
+              "reason": "Gold weakness confirms USD strength pressure against EUR",
+              "signal": "BEARISH",
+              "weight": 4,
+              "evidence": "Gold delta -5.83%"
+            },
+            "F8": {
+              "reason": "No active Eurozone stress signal",
+              "signal": "NEUTRAL",
+              "weight": 4,
+              "evidence": "EZ stress neutral"
+            },
+            "F9": {
+              "reason": "Global growth signal mixed",
+              "signal": "NEUTRAL",
+              "weight": 2,
+              "evidence": "Growth regime neutral"
+            },
+            "F10": {
+              "reason": "Neutral risk regime",
+              "signal": "NEUTRAL",
+              "weight": 2,
+              "evidence": "VIX 16.73"
+            }
+          },
+          "generated_at": "2026-07-18T14:46:09.053+00:00",
+          "sealed_at": "2026-07-18T14:47:43.613063+00:00",
+          "valid_from": "2026-07-18T14:47:43.613063+00:00",
+          "refresh_due_at": "2026-07-19T11:00:00.000Z",
+          "forecast_window_end": "2026-07-21T04:00:00.000Z",
+          "expires_at": "2026-07-21T04:00:00.000Z",
+          "status_at_build": "ACTIVE",
+          "effective_status": "ACTIVE",
+          "status_resolved_at": "2026-07-18T14:48:50.695Z",
+          "horizon_code": "24H",
+          "horizon_duration": "PT24H",
+          "horizon_basis": "WEEKDAY_ACTIVE_TIME_V1",
+          "timezone": "America/New_York",
+          "market_calendar": "WEEKDAY_ACTIVE_TIME_V1",
+          "source_run_id": null,
+          "validity_note": "Operational freshness uses a provisional refresh expectation only. Forecast expiry is explicit and separate from the provisional refresh threshold.",
+          "horizon_note": "Weekday-active-time V1 excludes weekend-closed hours only. Exchange holidays and intraday maintenance breaks are not yet modelled."
         },
         "3d": {
           "direction": "BULLISH",
@@ -2230,10 +2642,127 @@
       },
       "priority_timeframe": "24h",
       "priority_call": {
-        "direction": "NO 24H CALL",
-        "conviction": null,
-        "reason": "Weekend rule active: this market is closed, so no 24h bias is issued.",
-        "status": "market_closed"
+        "direction": "BULLISH",
+        "conviction": 91,
+        "reason": "24h EUR deterministic score: bull case 91%, bear case 9%, neutral/inactive 54%, directional participation 46%, net edge +82.",
+        "conviction_model": {
+          "neutral_pct": 54,
+          "net_edge_pct": 82,
+          "winning_side": "BULLISH",
+          "participation": 46,
+          "weighted_edge": 0.82,
+          "neutral_weight": 54,
+          "raw_conviction": 91,
+          "agreement_boost": 0,
+          "base_conviction": 91,
+          "bear_case_weight": 4,
+          "bull_case_weight": 42,
+          "conflict_penalty": 0,
+          "final_conviction": 91,
+          "verdict_strength": "VERY_STRONG",
+          "participation_cap": 46,
+          "bearish_argument_pct": 9,
+          "bullish_argument_pct": 91,
+          "neutral_evidence_pct": 54,
+          "missing_input_penalty": 0,
+          "final_conviction_logic": "24h EUR deterministic score: bull case 91%, bear case 9%, neutral/inactive 54%, directional participation 46%, net edge +82.",
+          "active_participation_pct": 46,
+          "directional_participation_pct": 46,
+          "weighted_score": {
+            "bullish_weight": 42,
+            "bearish_weight": 4,
+            "neutral_weight": 54,
+            "active_weight": 46,
+            "weight_margin": 38
+          },
+          "alignment": 91
+        },
+        "weighted_score": {
+          "active_weight": 46,
+          "weight_margin": 38,
+          "bearish_weight": 4,
+          "bullish_weight": 42,
+          "neutral_weight": 54
+        },
+        "factor_breakdown": {
+          "F1": {
+            "reason": "No clear ECB impulse",
+            "signal": "NEUTRAL",
+            "weight": 20,
+            "evidence": "ECB bias neutral"
+          },
+          "F2": {
+            "reason": "Rising German front-end yields support EUR",
+            "signal": "BULLISH",
+            "weight": 18,
+            "evidence": "Germany 2Y delta 12 bps"
+          },
+          "F3": {
+            "reason": "US-DE spread narrowing supports EUR",
+            "signal": "BULLISH",
+            "weight": 20,
+            "evidence": "US-DE 2Y spread delta -12 bps"
+          },
+          "F4": {
+            "reason": "No confirmed EZ economic surprise",
+            "signal": "NEUTRAL",
+            "weight": 14,
+            "evidence": "No recent Eurozone event"
+          },
+          "F5": {
+            "reason": "Improving Eurozone PMI trend supports EUR",
+            "signal": "BULLISH",
+            "weight": 4,
+            "evidence": "EZ PMI 47.7 improving"
+          },
+          "F6": {
+            "reason": "EUR own price move below threshold",
+            "signal": "NEUTRAL",
+            "weight": 12,
+            "evidence": "EURUSD delta -0.01%"
+          },
+          "F7": {
+            "reason": "Gold weakness confirms USD strength pressure against EUR",
+            "signal": "BEARISH",
+            "weight": 4,
+            "evidence": "Gold delta -5.83%"
+          },
+          "F8": {
+            "reason": "No active Eurozone stress signal",
+            "signal": "NEUTRAL",
+            "weight": 4,
+            "evidence": "EZ stress neutral"
+          },
+          "F9": {
+            "reason": "Global growth signal mixed",
+            "signal": "NEUTRAL",
+            "weight": 2,
+            "evidence": "Growth regime neutral"
+          },
+          "F10": {
+            "reason": "Neutral risk regime",
+            "signal": "NEUTRAL",
+            "weight": 2,
+            "evidence": "VIX 16.73"
+          }
+        },
+        "generated_at": "2026-07-18T14:46:09.053+00:00",
+        "sealed_at": "2026-07-18T14:47:43.613063+00:00",
+        "valid_from": "2026-07-18T14:47:43.613063+00:00",
+        "refresh_due_at": "2026-07-19T11:00:00.000Z",
+        "forecast_window_end": "2026-07-21T04:00:00.000Z",
+        "expires_at": "2026-07-21T04:00:00.000Z",
+        "status_at_build": "ACTIVE",
+        "effective_status": "ACTIVE",
+        "status_resolved_at": "2026-07-18T14:48:50.695Z",
+        "horizon_code": "24H",
+        "horizon_duration": "PT24H",
+        "horizon_basis": "WEEKDAY_ACTIVE_TIME_V1",
+        "timezone": "America/New_York",
+        "market_calendar": "WEEKDAY_ACTIVE_TIME_V1",
+        "source_run_id": null,
+        "validity_note": "Operational freshness uses a provisional refresh expectation only. Forecast expiry is explicit and separate from the provisional refresh threshold.",
+        "horizon_note": "Weekday-active-time V1 excludes weekend-closed hours only. Exchange holidays and intraday maintenance breaks are not yet modelled."
       },
       "factor_breakdown": {
         "F1": {
@@ -2298,40 +2827,56 @@
         }
       },
       "key_factors": [
-        "F1 [20]: NEUTRAL — ECB bias neutral (No clear ECB impulse)",
-        "F2 [18]: BULLISH — Germany 2Y delta 12 bps (Rising German front-end yields support EUR)",
-        "F3 [20]: BULLISH — US-DE 2Y spread delta -12 bps (US-DE spread narrowing supports EUR)",
-        "F4 [14]: NEUTRAL — No recent Eurozone event (No confirmed EZ economic surprise)",
-        "F5 [4]: BULLISH — EZ PMI 47.7 improving (Improving Eurozone PMI trend supports EUR)",
-        "F6 [12]: NEUTRAL — EURUSD delta -0.01% (EUR own price move below threshold)",
-        "F7 [4]: BEARISH — Gold delta -5.83% (Gold weakness confirms USD strength pressure against EUR)",
-        "F8 [4]: NEUTRAL — EZ stress neutral (No active Eurozone stress signal)",
-        "F9 [2]: NEUTRAL — Growth regime neutral (Global growth signal mixed)",
-        "F10 [2]: NEUTRAL — VIX 16.73 (Neutral risk regime)"
+        "F1 [20]: NEUTRAL - ECB bias neutral (No clear ECB impulse)",
+        "F2 [18]: BULLISH - Germany 2Y delta 12 bps (Rising German front-end yields support EUR)",
+        "F3 [20]: BULLISH - US-DE 2Y spread delta -12 bps (US-DE spread narrowing supports EUR)",
+        "F4 [14]: NEUTRAL - No recent Eurozone event (No confirmed EZ economic surprise)",
+        "F5 [4]: BULLISH - EZ PMI 47.7 improving (Improving Eurozone PMI trend supports EUR)",
+        "F6 [12]: NEUTRAL - EURUSD delta -0.01% (EUR own price move below threshold)",
+        "F7 [4]: BEARISH - Gold delta -5.83% (Gold weakness confirms USD strength pressure against EUR)",
+        "F8 [4]: NEUTRAL - EZ stress neutral (No active Eurozone stress signal)",
+        "F9 [2]: NEUTRAL - Growth regime neutral (Global growth signal mixed)",
+        "F10 [2]: NEUTRAL - VIX 16.73 (Neutral risk regime)"
       ],
       "warnings": [],
       "reasoning_summary": "EUR weighted verdicts calculated deterministically by timeframe. 24h BULLISH 91%, 3d BULLISH 92%, current week BULLISH 92%, next week BULLISH 74%, current month BULLISH 72%.",
       "score_bullish": 3,
       "score_bearish": 1,
       "score_neutral": 6,
-      "non_neutral_count": 6,
+      "non_neutral_count": 5,
       "logic_document": "agent_eur_direction.md",
       "logic_document_version": "2.0_weighted_engine",
       "conviction_model": {
-        "bullish_argument_pct": null,
-        "bearish_argument_pct": null,
-        "neutral_pct": null,
-        "neutral_evidence_pct": null,
-        "directional_participation_pct": null,
-        "active_participation_pct": null,
-        "net_edge_pct": null,
-        "final_conviction": null,
-        "verdict_strength": "MARKET_CLOSED",
-        "winning_side": "MARKET_CLOSED",
-        "final_conviction_logic": "24H priority timeframe is closed by weekend rule.",
-        "bull_case_weight": null,
-        "bear_case_weight": null,
-        "neutral_weight": null
+        "neutral_pct": 54,
+        "net_edge_pct": 82,
+        "winning_side": "BULLISH",
+        "participation": 46,
+        "weighted_edge": 0.82,
+        "neutral_weight": 54,
+        "raw_conviction": 91,
+        "agreement_boost": 0,
+        "base_conviction": 91,
+        "bear_case_weight": 4,
+        "bull_case_weight": 42,
+        "conflict_penalty": 0,
+        "final_conviction": 91,
+        "verdict_strength": "VERY_STRONG",
+        "participation_cap": 46,
+        "bearish_argument_pct": 9,
+        "bullish_argument_pct": 91,
+        "neutral_evidence_pct": 54,
+        "missing_input_penalty": 0,
+        "final_conviction_logic": "24h EUR deterministic score: bull case 91%, bear case 9%, neutral/inactive 54%, directional participation 46%, net edge +82.",
+        "active_participation_pct": 46,
+        "directional_participation_pct": 46,
+        "weighted_score": {
+          "bullish_weight": 42,
+          "bearish_weight": 4,
+          "neutral_weight": 54,
+          "active_weight": 46,
+          "weight_margin": 38
+        },
+        "alignment": 91
       },
       "timeframe_models": {
         "3d": {
@@ -2841,21 +3386,21 @@
         }
       },
       "display_metrics": {
-        "bull_case": null,
-        "bear_case": null,
-        "winning_side": "MARKET_CLOSED",
-        "conviction": null,
-        "net_edge": null,
-        "directional_participation": null,
-        "neutral": null,
-        "verdict_strength": "MARKET_CLOSED",
-        "bull_case_weight": null,
-        "bear_case_weight": null
+        "bull_case": 91,
+        "bear_case": 9,
+        "winning_side": "BULLISH",
+        "conviction": 91,
+        "net_edge": 82,
+        "directional_participation": 46,
+        "neutral": 54,
+        "verdict_strength": "VERY_STRONG",
+        "bull_case_weight": 42,
+        "bear_case_weight": 4
       },
       "full_output": {
         "asset": "EUR",
         "layer": "layer_1_raw",
-        "created_at": "2026-07-18T14:37:18.597749+00:00",
+        "created_at": "2026-07-18T14:46:09.13927+00:00",
         "reason_24h": "24h EUR deterministic score: bull case 91%, bear case 9%, neutral/inactive 54%, directional participation 46%, net edge +82.",
         "risk_flags": [],
         "reason_3_day": "3d EUR deterministic score: bull case 92%, bear case 8%, neutral/inactive 50%, directional participation 50%, net edge +84.",
@@ -2867,7 +3412,8 @@
         "logic_document": "agent_eur_direction.md",
         "missing_inputs": [
           "latest_ez_event",
-          "gold_d5_pct"
+          "gold_d5_pct",
+          "gold_d20_pct"
         ],
         "weighted_score": {
           "active_weight": 46,
@@ -3472,28 +4018,28 @@
             }
           }
         },
-        "non_neutral_count": 6,
+        "non_neutral_count": 5,
         "reasoning_summary": "EUR weighted verdicts calculated deterministically by timeframe. 24h BULLISH 91%, 3d BULLISH 92%, current week BULLISH 92%, next week BULLISH 74%, current month BULLISH 72%.",
         "snapshot_selection": {
           "warnings": [
             "gold_d5_pct missing; using gold_d1_pct fallback"
           ],
           "selected_by": "latest_v11_eur_usable_snapshot",
-          "selected_from_rows": 343,
-          "selected_created_at": "2026-07-18T14:37:18.597749+00:00",
-          "selected_run_time_et": "2026-07-18T14:37:18.419+00:00",
-          "selected_snapshot_id": "28733938-efd2-4283-a15a-e5d1922769b7",
+          "selected_from_rows": 348,
+          "selected_created_at": "2026-07-18T14:46:09.13927+00:00",
+          "selected_run_time_et": "2026-07-18T14:46:09.053+00:00",
+          "selected_snapshot_id": "cc6ec17c-2239-410f-bcb0-c9aa73162213",
           "selected_snapshot_date": "2026-07-18",
           "top_5_rows_seen_by_workflow": [
             {
-              "id": "779a1e41-28be-4c53-9f09-bd0f1f513eee",
+              "id": "6ada218a-0f44-40be-ae6c-22026a54f953",
               "rank": 1,
               "ecb_bias": null,
               "fed_bias": "neutral",
-              "created_at": "2026-07-18T14:38:11.838503+00:00",
+              "created_at": "2026-07-18T14:47:03.034865+00:00",
               "eur_usable": false,
               "de_2y_yield": null,
-              "run_time_et": "2026-07-18T14:38:11.759+00:00",
+              "run_time_et": "2026-07-18T14:47:02.865+00:00",
               "de_2y_d5_bps": null,
               "eurusd_price": null,
               "de_2y_d20_bps": null,
@@ -3511,14 +4057,14 @@
               "ez_composite_pmi_direction": null
             },
             {
-              "id": "15bdadf8-e5ef-46ef-87dd-2f75963a9e2c",
+              "id": "b54e14ea-2d99-4a00-8aff-f25a65ac26e8",
               "rank": 2,
               "ecb_bias": null,
               "fed_bias": "neutral",
-              "created_at": "2026-07-18T14:38:04.337869+00:00",
+              "created_at": "2026-07-18T14:46:56.592199+00:00",
               "eur_usable": false,
               "de_2y_yield": 2.77,
-              "run_time_et": "2026-07-18T14:38:04.219+00:00",
+              "run_time_et": "2026-07-18T14:46:56.455+00:00",
               "de_2y_d5_bps": 12.00000000000001,
               "eurusd_price": null,
               "de_2y_d20_bps": null,
@@ -3536,14 +4082,14 @@
               "ez_composite_pmi_direction": null
             },
             {
-              "id": "9cde1072-5128-4625-99f0-8e9ac7838834",
+              "id": "172fa760-677a-4255-af12-1ce026cdb98d",
               "rank": 3,
               "ecb_bias": null,
               "fed_bias": "neutral",
-              "created_at": "2026-07-18T14:37:26.405223+00:00",
+              "created_at": "2026-07-18T14:46:17.899242+00:00",
               "eur_usable": false,
               "de_2y_yield": 2.77,
-              "run_time_et": "2026-07-18T14:37:26.327+00:00",
+              "run_time_et": "2026-07-18T14:46:17.769+00:00",
               "de_2y_d5_bps": 12.00000000000001,
               "eurusd_price": null,
               "de_2y_d20_bps": null,
@@ -3561,14 +4107,14 @@
               "ez_composite_pmi_direction": null
             },
             {
-              "id": "28733938-efd2-4283-a15a-e5d1922769b7",
+              "id": "cc6ec17c-2239-410f-bcb0-c9aa73162213",
               "rank": 4,
               "ecb_bias": "neutral",
               "fed_bias": null,
-              "created_at": "2026-07-18T14:37:18.597749+00:00",
+              "created_at": "2026-07-18T14:46:09.13927+00:00",
               "eur_usable": true,
               "de_2y_yield": 2.77,
-              "run_time_et": "2026-07-18T14:37:18.419+00:00",
+              "run_time_et": "2026-07-18T14:46:09.053+00:00",
               "de_2y_d5_bps": 12.00000000000001,
               "eurusd_price": 1.1438,
               "de_2y_d20_bps": 14.000000000000012,
@@ -3586,14 +4132,14 @@
               "ez_composite_pmi_direction": "improving"
             },
             {
-              "id": "099f19cb-7553-4542-a334-2e07da9b0513",
+              "id": "0f54f885-2553-480b-89d1-85fb12710c98",
               "rank": 5,
               "ecb_bias": null,
               "fed_bias": "neutral",
-              "created_at": "2026-07-18T14:37:13.055784+00:00",
+              "created_at": "2026-07-18T14:46:03.30891+00:00",
               "eur_usable": false,
               "de_2y_yield": 2.77,
-              "run_time_et": "2026-07-18T14:37:12.963+00:00",
+              "run_time_et": "2026-07-18T14:46:03.149+00:00",
               "de_2y_d5_bps": 12.00000000000001,
               "eurusd_price": null,
               "de_2y_d20_bps": null,
@@ -3632,10 +4178,10 @@
           "fed_bias": null,
           "dxy_level": 120.5046,
           "vix_level": 16.73,
-          "gold_price": 4017.258142010934,
+          "gold_price": 4017.2581420115,
           "de_2y_yield": 2.77,
-          "gold_d1_pct": -5.8322553447501,
-          "gold_d5_pct": -5.8322553447501,
+          "gold_d1_pct": -5.83225534473684,
+          "gold_d5_pct": -5.83225534473684,
           "us_2y_yield": 4.16,
           "de_10y_yield": 2.97,
           "de_2y_d5_bps": 12.00000000000001,
@@ -3680,10 +4226,10 @@
           "fed_bias": null,
           "dxy_level": 120.5046,
           "vix_level": 16.73,
-          "gold_price": 4017.258142010934,
+          "gold_price": 4017.2581420115,
           "de_2y_yield": 2.77,
-          "gold_d1_pct": -5.8322553447501,
-          "gold_d5_pct": -5.8322553447501,
+          "gold_d1_pct": -5.83225534473684,
+          "gold_d5_pct": -5.83225534473684,
           "us_2y_yield": 4.16,
           "de_10y_yield": 2.97,
           "de_2y_d5_bps": 12.00000000000001,
@@ -3718,20 +4264,163 @@
           "us_de_10y_spread_d20_bps": -60.043478259999986,
           "ez_composite_pmi_direction": "improving"
         }
-      }
+      },
+      "validity_note": "Operational freshness uses a provisional refresh expectation only. Forecast expiry is explicit and separate from the provisional refresh threshold.",
+      "horizon_note": "Weekday-active-time V1 excludes weekend-closed hours only. Exchange holidays and intraday maintenance breaks are not yet modelled.",
+      "refresh_schedule": "07:00",
+      "refresh_timezone": "America/New_York",
+      "refresh_schedule_status": "PROVISIONAL",
+      "validity_schedule_source": "dashboard_meta.execution_clock",
+      "validity_schedule_note": "No authoritative orchestrator cron exists in the repository"
     },
     {
       "agent": "GOLD",
       "status": "live",
-      "market_status": "closed",
-      "last_run_et": "2026-07-18T14:38:11.759+00:00",
-      "summary": "GOLD Layer 1 raw call generated from sealed independent workflow.",
+      "market_status": null,
+      "last_run_et": "2026-07-18T14:47:02.865+00:00",
+      "generated_at": "2026-07-18T14:47:02.865+00:00",
+      "sealed_at": "2026-07-18T14:47:55.364006+00:00",
+      "valid_from": "2026-07-18T14:47:55.364006+00:00",
+      "refresh_due_at": "2026-07-19T11:00:00.000Z",
+      "forecast_window_end": "2026-07-21T04:00:00.000Z",
+      "expires_at": "2026-07-21T04:00:00.000Z",
+      "status_at_build": "ACTIVE",
+      "effective_status": "ACTIVE",
+      "status_resolved_at": "2026-07-18T14:48:50.695Z",
+      "horizon_code": "24H",
+      "horizon_duration": "PT24H",
+      "horizon_basis": "WEEKDAY_ACTIVE_TIME_V1",
+      "timezone": "America/New_York",
+      "market_calendar": "WEEKDAY_ACTIVE_TIME_V1",
+      "source_run_id": null,
+      "summary": "GOLD weighted verdicts calculated deterministically by timeframe. 24h BULLISH_LEAN 22%, 3d NO_CLEAR_BIAS 0%, current week NO_CLEAR_BIAS 0%, next week BEARISH_LEAN 46%, current month BEARISH_LEAN 44%.",
       "calls": {
         "24h": {
-          "direction": "NO 24H CALL",
-          "conviction": null,
-          "reason": "Weekend rule active: this market is closed, so no 24h bias is issued.",
-          "status": "market_closed"
+          "direction": "BULLISH_LEAN",
+          "conviction": 22,
+          "reason": "24h deterministic Gold score: bull case 69%, bear case 31%, directional participation 32%, neutral/inactive 68%, net edge +38. Real yields and DXY remain the highest-priority Gold drivers.",
+          "conviction_model": {
+            "net_edge": 38,
+            "bear_case": 31,
+            "bull_case": 69,
+            "neutral_pct": 68,
+            "net_edge_pct": 38,
+            "winning_side": "BULLISH",
+            "participation": 32,
+            "weighted_edge": 0.38,
+            "raw_conviction": 22,
+            "agreement_boost": 0,
+            "base_conviction": 22,
+            "conflict_penalty": 0,
+            "final_conviction": 22,
+            "verdict_strength": "MODERATE",
+            "participation_cap": 32,
+            "bearish_argument_pct": 31,
+            "bullish_argument_pct": 69,
+            "missing_input_penalty": 0,
+            "final_conviction_logic": "24h deterministic Gold score: bull case 69%, bear case 31%, directional participation 32%, neutral/inactive 68%, net edge +38. Real yields and DXY remain the highest-priority Gold drivers.",
+            "active_participation_pct": 32,
+            "directional_participation": 32,
+            "neutral_evidence_pct": 68,
+            "directional_participation_pct": 32,
+            "bull_case_weight": 22,
+            "bear_case_weight": 10,
+            "neutral_weight": 68,
+            "weighted_score": {
+              "bullish_weight": 22,
+              "bearish_weight": 10,
+              "neutral_weight": 68,
+              "active_weight": 32,
+              "weight_margin": 12
+            },
+            "alignment": 69
+          },
+          "weighted_score": {
+            "active_weight": 32,
+            "weight_margin": 12,
+            "bearish_weight": 10,
+            "bullish_weight": 22,
+            "neutral_weight": 68
+          },
+          "factor_breakdown": {
+            "F1": {
+              "reason": "Real yield move below threshold",
+              "signal": "NEUTRAL",
+              "weight": 26,
+              "evidence": "Real yield 4.0000000000000036bps"
+            },
+            "F2": {
+              "reason": "Dollar weakness supports Gold",
+              "signal": "BULLISH",
+              "weight": 22,
+              "evidence": "DXY -0.2057091749273341%"
+            },
+            "F3": {
+              "reason": "No clear Fed impulse",
+              "signal": "NEUTRAL",
+              "weight": 12,
+              "evidence": "Fed bias neutral"
+            },
+            "F4": {
+              "reason": "US 2Y move below threshold",
+              "signal": "NEUTRAL",
+              "weight": 10,
+              "evidence": "US 2Y 0bps"
+            },
+            "F5": {
+              "reason": "Gold own-price trend confirms downside pressure",
+              "signal": "BEARISH",
+              "weight": 10,
+              "evidence": "Gold -5.83225534473684%"
+            },
+            "F6": {
+              "reason": "Neutral risk regime",
+              "signal": "NEUTRAL",
+              "weight": 8,
+              "evidence": "VIX 16.73"
+            },
+            "F7": {
+              "reason": "No confirmed US economic surprise",
+              "signal": "NEUTRAL",
+              "weight": 8,
+              "evidence": "No recent US event"
+            },
+            "F8": {
+              "reason": "Collector does not currently provide a top-level inflation_signal column",
+              "signal": "NEUTRAL",
+              "weight": 2,
+              "evidence": "Inflation signal unavailable"
+            },
+            "F9": {
+              "reason": "No active safe-haven demand signal",
+              "signal": "NEUTRAL",
+              "weight": 1,
+              "evidence": "normal"
+            },
+            "F10": {
+              "reason": "No clear growth or liquidity signal",
+              "signal": "NEUTRAL",
+              "weight": 1,
+              "evidence": "neutral"
+            }
+          },
+          "generated_at": "2026-07-18T14:47:02.865+00:00",
+          "sealed_at": "2026-07-18T14:47:55.364006+00:00",
+          "valid_from": "2026-07-18T14:47:55.364006+00:00",
+          "refresh_due_at": "2026-07-19T11:00:00.000Z",
+          "forecast_window_end": "2026-07-21T04:00:00.000Z",
+          "expires_at": "2026-07-21T04:00:00.000Z",
+          "status_at_build": "ACTIVE",
+          "effective_status": "ACTIVE",
+          "status_resolved_at": "2026-07-18T14:48:50.695Z",
+          "horizon_code": "24H",
+          "horizon_duration": "PT24H",
+          "horizon_basis": "WEEKDAY_ACTIVE_TIME_V1",
+          "timezone": "America/New_York",
+          "market_calendar": "WEEKDAY_ACTIVE_TIME_V1",
+          "source_run_id": null,
+          "validity_note": "Operational freshness uses a provisional refresh expectation only. Forecast expiry is explicit and separate from the provisional refresh threshold.",
+          "horizon_note": "Weekday-active-time V1 excludes weekend-closed hours only. Exchange holidays and intraday maintenance breaks are not yet modelled."
         },
         "3d": {
           "direction": "NO_CLEAR_BIAS",
@@ -4176,10 +4865,131 @@
       },
       "priority_timeframe": "24h",
       "priority_call": {
-        "direction": "NO 24H CALL",
-        "conviction": null,
-        "reason": "Weekend rule active: this market is closed, so no 24h bias is issued.",
-        "status": "market_closed"
+        "direction": "BULLISH_LEAN",
+        "conviction": 22,
+        "reason": "24h deterministic Gold score: bull case 69%, bear case 31%, directional participation 32%, neutral/inactive 68%, net edge +38. Real yields and DXY remain the highest-priority Gold drivers.",
+        "conviction_model": {
+          "net_edge": 38,
+          "bear_case": 31,
+          "bull_case": 69,
+          "neutral_pct": 68,
+          "net_edge_pct": 38,
+          "winning_side": "BULLISH",
+          "participation": 32,
+          "weighted_edge": 0.38,
+          "raw_conviction": 22,
+          "agreement_boost": 0,
+          "base_conviction": 22,
+          "conflict_penalty": 0,
+          "final_conviction": 22,
+          "verdict_strength": "MODERATE",
+          "participation_cap": 32,
+          "bearish_argument_pct": 31,
+          "bullish_argument_pct": 69,
+          "missing_input_penalty": 0,
+          "final_conviction_logic": "24h deterministic Gold score: bull case 69%, bear case 31%, directional participation 32%, neutral/inactive 68%, net edge +38. Real yields and DXY remain the highest-priority Gold drivers.",
+          "active_participation_pct": 32,
+          "directional_participation": 32,
+          "neutral_evidence_pct": 68,
+          "directional_participation_pct": 32,
+          "bull_case_weight": 22,
+          "bear_case_weight": 10,
+          "neutral_weight": 68,
+          "weighted_score": {
+            "bullish_weight": 22,
+            "bearish_weight": 10,
+            "neutral_weight": 68,
+            "active_weight": 32,
+            "weight_margin": 12
+          },
+          "alignment": 69
+        },
+        "weighted_score": {
+          "active_weight": 32,
+          "weight_margin": 12,
+          "bearish_weight": 10,
+          "bullish_weight": 22,
+          "neutral_weight": 68
+        },
+        "factor_breakdown": {
+          "F1": {
+            "reason": "Real yield move below threshold",
+            "signal": "NEUTRAL",
+            "weight": 26,
+            "evidence": "Real yield 4.0000000000000036bps"
+          },
+          "F2": {
+            "reason": "Dollar weakness supports Gold",
+            "signal": "BULLISH",
+            "weight": 22,
+            "evidence": "DXY -0.2057091749273341%"
+          },
+          "F3": {
+            "reason": "No clear Fed impulse",
+            "signal": "NEUTRAL",
+            "weight": 12,
+            "evidence": "Fed bias neutral"
+          },
+          "F4": {
+            "reason": "US 2Y move below threshold",
+            "signal": "NEUTRAL",
+            "weight": 10,
+            "evidence": "US 2Y 0bps"
+          },
+          "F5": {
+            "reason": "Gold own-price trend confirms downside pressure",
+            "signal": "BEARISH",
+            "weight": 10,
+            "evidence": "Gold -5.83225534473684%"
+          },
+          "F6": {
+            "reason": "Neutral risk regime",
+            "signal": "NEUTRAL",
+            "weight": 8,
+            "evidence": "VIX 16.73"
+          },
+          "F7": {
+            "reason": "No confirmed US economic surprise",
+            "signal": "NEUTRAL",
+            "weight": 8,
+            "evidence": "No recent US event"
+          },
+          "F8": {
+            "reason": "Collector does not currently provide a top-level inflation_signal column",
+            "signal": "NEUTRAL",
+            "weight": 2,
+            "evidence": "Inflation signal unavailable"
+          },
+          "F9": {
+            "reason": "No active safe-haven demand signal",
+            "signal": "NEUTRAL",
+            "weight": 1,
+            "evidence": "normal"
+          },
+          "F10": {
+            "reason": "No clear growth or liquidity signal",
+            "signal": "NEUTRAL",
+            "weight": 1,
+            "evidence": "neutral"
+          }
+        },
+        "generated_at": "2026-07-18T14:47:02.865+00:00",
+        "sealed_at": "2026-07-18T14:47:55.364006+00:00",
+        "valid_from": "2026-07-18T14:47:55.364006+00:00",
+        "refresh_due_at": "2026-07-19T11:00:00.000Z",
+        "forecast_window_end": "2026-07-21T04:00:00.000Z",
+        "expires_at": "2026-07-21T04:00:00.000Z",
+        "status_at_build": "ACTIVE",
+        "effective_status": "ACTIVE",
+        "status_resolved_at": "2026-07-18T14:48:50.695Z",
+        "horizon_code": "24H",
+        "horizon_duration": "PT24H",
+        "horizon_basis": "WEEKDAY_ACTIVE_TIME_V1",
+        "timezone": "America/New_York",
+        "market_calendar": "WEEKDAY_ACTIVE_TIME_V1",
+        "source_run_id": null,
+        "validity_note": "Operational freshness uses a provisional refresh expectation only. Forecast expiry is explicit and separate from the provisional refresh threshold.",
+        "horizon_note": "Weekday-active-time V1 excludes weekend-closed hours only. Exchange holidays and intraday maintenance breaks are not yet modelled."
       },
       "factor_breakdown": {
         "F1": {
@@ -4210,7 +5020,7 @@
           "reason": "Gold own-price trend confirms downside pressure",
           "signal": "BEARISH",
           "weight": 10,
-          "evidence": "Gold -5.8322553447501%"
+          "evidence": "Gold -5.83225534473684%"
         },
         "F6": {
           "reason": "Neutral risk regime",
@@ -4244,16 +5054,16 @@
         }
       },
       "key_factors": [
-        "F1 [26]: NEUTRAL — Real yield 4.0000000000000036bps (Real yield move below threshold)",
-        "F2 [22]: BULLISH — DXY -0.2057091749273341% (Dollar weakness supports Gold)",
-        "F3 [12]: NEUTRAL — Fed bias neutral (No clear Fed impulse)",
-        "F4 [10]: NEUTRAL — US 2Y 0bps (US 2Y move below threshold)",
-        "F5 [10]: BEARISH — Gold -5.8322553447501% (Gold own-price trend confirms downside pressure)",
-        "F6 [8]: NEUTRAL — VIX 16.73 (Neutral risk regime)",
-        "F7 [8]: NEUTRAL — No recent US event (No confirmed US economic surprise)",
-        "F8 [2]: NEUTRAL — Inflation signal unavailable (Collector does not currently provide a top-level inflation_signal column)",
-        "F9 [1]: NEUTRAL — normal (No active safe-haven demand signal)",
-        "F10 [1]: NEUTRAL — neutral (No clear growth or liquidity signal)"
+        "F1 [26]: NEUTRAL - Real yield 4.0000000000000036bps (Real yield move below threshold)",
+        "F2 [22]: BULLISH - DXY -0.2057091749273341% (Dollar weakness supports Gold)",
+        "F3 [12]: NEUTRAL - Fed bias neutral (No clear Fed impulse)",
+        "F4 [10]: NEUTRAL - US 2Y 0bps (US 2Y move below threshold)",
+        "F5 [10]: BEARISH - Gold -5.83225534473684% (Gold own-price trend confirms downside pressure)",
+        "F6 [8]: NEUTRAL - VIX 16.73 (Neutral risk regime)",
+        "F7 [8]: NEUTRAL - No recent US event (No confirmed US economic surprise)",
+        "F8 [2]: NEUTRAL - Inflation signal unavailable (Collector does not currently provide a top-level inflation_signal column)",
+        "F9 [1]: NEUTRAL - normal (No active safe-haven demand signal)",
+        "F10 [1]: NEUTRAL - neutral (No clear growth or liquidity signal)"
       ],
       "warnings": [],
       "reasoning_summary": "GOLD weighted verdicts calculated deterministically by timeframe. 24h BULLISH_LEAN 22%, 3d NO_CLEAR_BIAS 0%, current week NO_CLEAR_BIAS 0%, next week BEARISH_LEAN 46%, current month BEARISH_LEAN 44%.",
@@ -4264,20 +5074,40 @@
       "logic_document": "agent_gold_direction.md",
       "logic_document_version": "2.0_weighted_engine",
       "conviction_model": {
-        "bullish_argument_pct": null,
-        "bearish_argument_pct": null,
-        "neutral_pct": null,
-        "neutral_evidence_pct": null,
-        "directional_participation_pct": null,
-        "active_participation_pct": null,
-        "net_edge_pct": null,
-        "final_conviction": null,
-        "verdict_strength": "MARKET_CLOSED",
-        "winning_side": "MARKET_CLOSED",
-        "final_conviction_logic": "24H priority timeframe is closed by weekend rule.",
-        "bull_case_weight": null,
-        "bear_case_weight": null,
-        "neutral_weight": null
+        "net_edge": 38,
+        "bear_case": 31,
+        "bull_case": 69,
+        "neutral_pct": 68,
+        "net_edge_pct": 38,
+        "winning_side": "BULLISH",
+        "participation": 32,
+        "weighted_edge": 0.38,
+        "raw_conviction": 22,
+        "agreement_boost": 0,
+        "base_conviction": 22,
+        "conflict_penalty": 0,
+        "final_conviction": 22,
+        "verdict_strength": "MODERATE",
+        "participation_cap": 32,
+        "bearish_argument_pct": 31,
+        "bullish_argument_pct": 69,
+        "missing_input_penalty": 0,
+        "final_conviction_logic": "24h deterministic Gold score: bull case 69%, bear case 31%, directional participation 32%, neutral/inactive 68%, net edge +38. Real yields and DXY remain the highest-priority Gold drivers.",
+        "active_participation_pct": 32,
+        "directional_participation": 32,
+        "neutral_evidence_pct": 68,
+        "directional_participation_pct": 32,
+        "bull_case_weight": 22,
+        "bear_case_weight": 10,
+        "neutral_weight": 68,
+        "weighted_score": {
+          "bullish_weight": 22,
+          "bearish_weight": 10,
+          "neutral_weight": 68,
+          "active_weight": 32,
+          "weight_margin": 12
+        },
+        "alignment": 69
       },
       "timeframe_models": {
         "3d": {
@@ -4446,7 +5276,7 @@
               "reason": "Gold own-price trend confirms downside pressure",
               "signal": "BEARISH",
               "weight": 10,
-              "evidence": "Gold -5.8322553447501%"
+              "evidence": "Gold -5.83225534473684%"
             },
             "F6": {
               "reason": "Neutral risk regime",
@@ -4782,16 +5612,16 @@
         }
       },
       "display_metrics": {
-        "bull_case": null,
-        "bear_case": null,
-        "winning_side": "MARKET_CLOSED",
-        "conviction": null,
-        "net_edge": null,
-        "directional_participation": null,
-        "neutral": null,
-        "verdict_strength": "MARKET_CLOSED",
-        "bull_case_weight": null,
-        "bear_case_weight": null
+        "bull_case": 69,
+        "bear_case": 31,
+        "winning_side": "BULLISH",
+        "conviction": 22,
+        "net_edge": 38,
+        "directional_participation": 32,
+        "neutral": 68,
+        "verdict_strength": "MODERATE",
+        "bull_case_weight": 22,
+        "bear_case_weight": 10
       },
       "full_output": {
         "asset": "GOLD",
@@ -4873,7 +5703,7 @@
             "reason": "Gold own-price trend confirms downside pressure",
             "signal": "BEARISH",
             "weight": 10,
-            "evidence": "Gold -5.8322553447501%"
+            "evidence": "Gold -5.83225534473684%"
           },
           "F6": {
             "reason": "Neutral risk regime",
@@ -5074,7 +5904,7 @@
                 "reason": "Gold own-price trend confirms downside pressure",
                 "signal": "BEARISH",
                 "weight": 10,
-                "evidence": "Gold -5.8322553447501%"
+                "evidence": "Gold -5.83225534473684%"
               },
               "F6": {
                 "reason": "Neutral risk regime",
@@ -5419,20 +6249,159 @@
         "conviction_current_week": 0,
         "direction_current_month": "BEARISH_LEAN",
         "conviction_current_month": 44
-      }
+      },
+      "validity_note": "Operational freshness uses a provisional refresh expectation only. Forecast expiry is explicit and separate from the provisional refresh threshold.",
+      "horizon_note": "Weekday-active-time V1 excludes weekend-closed hours only. Exchange holidays and intraday maintenance breaks are not yet modelled.",
+      "refresh_schedule": "07:00",
+      "refresh_timezone": "America/New_York",
+      "refresh_schedule_status": "PROVISIONAL",
+      "validity_schedule_source": "dashboard_meta.execution_clock",
+      "validity_schedule_note": "No authoritative orchestrator cron exists in the repository"
     },
     {
       "agent": "NQ",
       "status": "live",
-      "market_status": "closed",
-      "last_run_et": "2026-07-18T14:38:11.759+00:00",
-      "summary": "NQ Layer 1 raw call generated from sealed independent workflow.",
+      "market_status": null,
+      "last_run_et": "2026-07-18T14:47:02.865+00:00",
+      "generated_at": "2026-07-18T14:47:02.865+00:00",
+      "sealed_at": "2026-07-18T14:48:17.336537+00:00",
+      "valid_from": "2026-07-18T14:48:17.336537+00:00",
+      "refresh_due_at": "2026-07-19T11:00:00.000Z",
+      "forecast_window_end": "2026-07-21T04:00:00.000Z",
+      "expires_at": "2026-07-21T04:00:00.000Z",
+      "status_at_build": "ACTIVE",
+      "effective_status": "ACTIVE",
+      "status_resolved_at": "2026-07-18T14:48:50.695Z",
+      "horizon_code": "24H",
+      "horizon_duration": "PT24H",
+      "horizon_basis": "WEEKDAY_ACTIVE_TIME_V1",
+      "timezone": "America/New_York",
+      "market_calendar": "WEEKDAY_ACTIVE_TIME_V1",
+      "source_run_id": null,
+      "summary": "NQ weighted verdicts calculated deterministically by timeframe. 24h BULLISH 100%, 3d NO_CLEAR_BIAS 0%, current week NO_CLEAR_BIAS 0%, next week BEARISH 100%, current month BEARISH 100%.",
       "calls": {
         "24h": {
-          "direction": "NO 24H CALL",
-          "conviction": null,
-          "reason": "Weekend rule active: this market is closed, so no 24h bias is issued.",
-          "status": "market_closed"
+          "direction": "BULLISH",
+          "conviction": 100,
+          "reason": "24h NQ deterministic score: bull case 100%, bear case 0%, neutral/inactive 84%, directional participation 16%, net edge +100.",
+          "conviction_model": {
+            "neutral_pct": 84,
+            "net_edge_pct": 100,
+            "winning_side": "BULLISH",
+            "participation": 16,
+            "weighted_edge": 1,
+            "neutral_weight": 84,
+            "raw_conviction": 100,
+            "agreement_boost": 0,
+            "base_conviction": 100,
+            "bear_case_weight": 0,
+            "bull_case_weight": 16,
+            "conflict_penalty": 0,
+            "final_conviction": 100,
+            "verdict_strength": "VERY_STRONG",
+            "participation_cap": 16,
+            "bearish_argument_pct": 0,
+            "bullish_argument_pct": 100,
+            "neutral_evidence_pct": 84,
+            "missing_input_penalty": 0,
+            "final_conviction_logic": "24h NQ deterministic score: bull case 100%, bear case 0%, neutral/inactive 84%, directional participation 16%, net edge +100.",
+            "active_participation_pct": 16,
+            "directional_participation_pct": 16,
+            "weighted_score": {
+              "bullish_weight": 16,
+              "bearish_weight": 0,
+              "neutral_weight": 84,
+              "active_weight": 16,
+              "weight_margin": 16
+            },
+            "alignment": 100
+          },
+          "weighted_score": {
+            "active_weight": 16,
+            "weight_margin": 16,
+            "bearish_weight": 0,
+            "bullish_weight": 16,
+            "neutral_weight": 84
+          },
+          "factor_breakdown": {
+            "F1": {
+              "reason": "Neutral VIX regime",
+              "signal": "NEUTRAL",
+              "weight": 20,
+              "evidence": "VIX 16.73"
+            },
+            "F2": {
+              "reason": "Volatility change below threshold",
+              "signal": "NEUTRAL",
+              "weight": 14,
+              "evidence": "VIX delta 1.06"
+            },
+            "F3": {
+              "reason": "Falling USD eases financial conditions and supports NQ",
+              "signal": "BULLISH",
+              "weight": 12,
+              "evidence": "DXY delta -0.21%"
+            },
+            "F4": {
+              "reason": "Nominal yield move below threshold",
+              "signal": "NEUTRAL",
+              "weight": 6,
+              "evidence": "US 10Y nominal delta 0 bps"
+            },
+            "F5": {
+              "reason": "Real yield move below threshold",
+              "signal": "NEUTRAL",
+              "weight": 14,
+              "evidence": "US 10Y real yield delta 0 bps"
+            },
+            "F6": {
+              "reason": "No clear Fed liquidity impulse",
+              "signal": "NEUTRAL",
+              "weight": 12,
+              "evidence": "Fed bias neutral"
+            },
+            "F7": {
+              "reason": "No confirmed US economic surprise",
+              "signal": "NEUTRAL",
+              "weight": 8,
+              "evidence": "No recent US event"
+            },
+            "F8": {
+              "reason": "NQ price move below confirmation threshold",
+              "signal": "NEUTRAL",
+              "weight": 10,
+              "evidence": "NQ delta 0%"
+            },
+            "F9": {
+              "reason": "BTC strength confirms high-beta risk appetite",
+              "signal": "BULLISH",
+              "weight": 2,
+              "evidence": "BTC delta 3.96%"
+            },
+            "F10": {
+              "reason": "Gold weakness outside risk-off supports risk appetite",
+              "signal": "BULLISH",
+              "weight": 2,
+              "evidence": "Gold delta -5.83%, VIX 16.73"
+            }
+          },
+          "generated_at": "2026-07-18T14:47:02.865+00:00",
+          "sealed_at": "2026-07-18T14:48:17.336537+00:00",
+          "valid_from": "2026-07-18T14:48:17.336537+00:00",
+          "refresh_due_at": "2026-07-19T11:00:00.000Z",
+          "forecast_window_end": "2026-07-21T04:00:00.000Z",
+          "expires_at": "2026-07-21T04:00:00.000Z",
+          "status_at_build": "ACTIVE",
+          "effective_status": "ACTIVE",
+          "status_resolved_at": "2026-07-18T14:48:50.695Z",
+          "horizon_code": "24H",
+          "horizon_duration": "PT24H",
+          "horizon_basis": "WEEKDAY_ACTIVE_TIME_V1",
+          "timezone": "America/New_York",
+          "market_calendar": "WEEKDAY_ACTIVE_TIME_V1",
+          "source_run_id": null,
+          "validity_note": "Operational freshness uses a provisional refresh expectation only. Forecast expiry is explicit and separate from the provisional refresh threshold.",
+          "horizon_note": "Weekday-active-time V1 excludes weekend-closed hours only. Exchange holidays and intraday maintenance breaks are not yet modelled."
         },
         "3d": {
           "direction": "NO_CLEAR_BIAS",
@@ -5861,10 +6830,127 @@
       },
       "priority_timeframe": "24h",
       "priority_call": {
-        "direction": "NO 24H CALL",
-        "conviction": null,
-        "reason": "Weekend rule active: this market is closed, so no 24h bias is issued.",
-        "status": "market_closed"
+        "direction": "BULLISH",
+        "conviction": 100,
+        "reason": "24h NQ deterministic score: bull case 100%, bear case 0%, neutral/inactive 84%, directional participation 16%, net edge +100.",
+        "conviction_model": {
+          "neutral_pct": 84,
+          "net_edge_pct": 100,
+          "winning_side": "BULLISH",
+          "participation": 16,
+          "weighted_edge": 1,
+          "neutral_weight": 84,
+          "raw_conviction": 100,
+          "agreement_boost": 0,
+          "base_conviction": 100,
+          "bear_case_weight": 0,
+          "bull_case_weight": 16,
+          "conflict_penalty": 0,
+          "final_conviction": 100,
+          "verdict_strength": "VERY_STRONG",
+          "participation_cap": 16,
+          "bearish_argument_pct": 0,
+          "bullish_argument_pct": 100,
+          "neutral_evidence_pct": 84,
+          "missing_input_penalty": 0,
+          "final_conviction_logic": "24h NQ deterministic score: bull case 100%, bear case 0%, neutral/inactive 84%, directional participation 16%, net edge +100.",
+          "active_participation_pct": 16,
+          "directional_participation_pct": 16,
+          "weighted_score": {
+            "bullish_weight": 16,
+            "bearish_weight": 0,
+            "neutral_weight": 84,
+            "active_weight": 16,
+            "weight_margin": 16
+          },
+          "alignment": 100
+        },
+        "weighted_score": {
+          "active_weight": 16,
+          "weight_margin": 16,
+          "bearish_weight": 0,
+          "bullish_weight": 16,
+          "neutral_weight": 84
+        },
+        "factor_breakdown": {
+          "F1": {
+            "reason": "Neutral VIX regime",
+            "signal": "NEUTRAL",
+            "weight": 20,
+            "evidence": "VIX 16.73"
+          },
+          "F2": {
+            "reason": "Volatility change below threshold",
+            "signal": "NEUTRAL",
+            "weight": 14,
+            "evidence": "VIX delta 1.06"
+          },
+          "F3": {
+            "reason": "Falling USD eases financial conditions and supports NQ",
+            "signal": "BULLISH",
+            "weight": 12,
+            "evidence": "DXY delta -0.21%"
+          },
+          "F4": {
+            "reason": "Nominal yield move below threshold",
+            "signal": "NEUTRAL",
+            "weight": 6,
+            "evidence": "US 10Y nominal delta 0 bps"
+          },
+          "F5": {
+            "reason": "Real yield move below threshold",
+            "signal": "NEUTRAL",
+            "weight": 14,
+            "evidence": "US 10Y real yield delta 0 bps"
+          },
+          "F6": {
+            "reason": "No clear Fed liquidity impulse",
+            "signal": "NEUTRAL",
+            "weight": 12,
+            "evidence": "Fed bias neutral"
+          },
+          "F7": {
+            "reason": "No confirmed US economic surprise",
+            "signal": "NEUTRAL",
+            "weight": 8,
+            "evidence": "No recent US event"
+          },
+          "F8": {
+            "reason": "NQ price move below confirmation threshold",
+            "signal": "NEUTRAL",
+            "weight": 10,
+            "evidence": "NQ delta 0%"
+          },
+          "F9": {
+            "reason": "BTC strength confirms high-beta risk appetite",
+            "signal": "BULLISH",
+            "weight": 2,
+            "evidence": "BTC delta 3.96%"
+          },
+          "F10": {
+            "reason": "Gold weakness outside risk-off supports risk appetite",
+            "signal": "BULLISH",
+            "weight": 2,
+            "evidence": "Gold delta -5.83%, VIX 16.73"
+          }
+        },
+        "generated_at": "2026-07-18T14:47:02.865+00:00",
+        "sealed_at": "2026-07-18T14:48:17.336537+00:00",
+        "valid_from": "2026-07-18T14:48:17.336537+00:00",
+        "refresh_due_at": "2026-07-19T11:00:00.000Z",
+        "forecast_window_end": "2026-07-21T04:00:00.000Z",
+        "expires_at": "2026-07-21T04:00:00.000Z",
+        "status_at_build": "ACTIVE",
+        "effective_status": "ACTIVE",
+        "status_resolved_at": "2026-07-18T14:48:50.695Z",
+        "horizon_code": "24H",
+        "horizon_duration": "PT24H",
+        "horizon_basis": "WEEKDAY_ACTIVE_TIME_V1",
+        "timezone": "America/New_York",
+        "market_calendar": "WEEKDAY_ACTIVE_TIME_V1",
+        "source_run_id": null,
+        "validity_note": "Operational freshness uses a provisional refresh expectation only. Forecast expiry is explicit and separate from the provisional refresh threshold.",
+        "horizon_note": "Weekday-active-time V1 excludes weekend-closed hours only. Exchange holidays and intraday maintenance breaks are not yet modelled."
       },
       "factor_breakdown": {
         "F1": {
@@ -5919,7 +7005,7 @@
           "reason": "BTC strength confirms high-beta risk appetite",
           "signal": "BULLISH",
           "weight": 2,
-          "evidence": "BTC delta 3.94%"
+          "evidence": "BTC delta 3.96%"
         },
         "F10": {
           "reason": "Gold weakness outside risk-off supports risk appetite",
@@ -5929,40 +7015,56 @@
         }
       },
       "key_factors": [
-        "F1 [20]: NEUTRAL — VIX 16.73 (Neutral VIX regime)",
-        "F2 [14]: NEUTRAL — VIX delta 1.06 (Volatility change below threshold)",
-        "F3 [12]: BULLISH — DXY delta -0.21% (Falling USD eases financial conditions and supports NQ)",
-        "F4 [6]: NEUTRAL — US 10Y nominal delta 0 bps (Nominal yield move below threshold)",
-        "F5 [14]: NEUTRAL — US 10Y real yield delta 0 bps (Real yield move below threshold)",
-        "F6 [12]: NEUTRAL — Fed bias neutral (No clear Fed liquidity impulse)",
-        "F7 [8]: NEUTRAL — No recent US event (No confirmed US economic surprise)",
-        "F8 [10]: NEUTRAL — NQ delta 0% (NQ price move below confirmation threshold)",
-        "F9 [2]: BULLISH — BTC delta 3.94% (BTC strength confirms high-beta risk appetite)",
-        "F10 [2]: BULLISH — Gold delta -5.83%, VIX 16.73 (Gold weakness outside risk-off supports risk appetite)"
+        "F1 [20]: NEUTRAL - VIX 16.73 (Neutral VIX regime)",
+        "F2 [14]: NEUTRAL - VIX delta 1.06 (Volatility change below threshold)",
+        "F3 [12]: BULLISH - DXY delta -0.21% (Falling USD eases financial conditions and supports NQ)",
+        "F4 [6]: NEUTRAL - US 10Y nominal delta 0 bps (Nominal yield move below threshold)",
+        "F5 [14]: NEUTRAL - US 10Y real yield delta 0 bps (Real yield move below threshold)",
+        "F6 [12]: NEUTRAL - Fed bias neutral (No clear Fed liquidity impulse)",
+        "F7 [8]: NEUTRAL - No recent US event (No confirmed US economic surprise)",
+        "F8 [10]: NEUTRAL - NQ delta 0% (NQ price move below confirmation threshold)",
+        "F9 [2]: BULLISH - BTC delta 3.96% (BTC strength confirms high-beta risk appetite)",
+        "F10 [2]: BULLISH - Gold delta -5.83%, VIX 16.73 (Gold weakness outside risk-off supports risk appetite)"
       ],
       "warnings": [],
       "reasoning_summary": "NQ weighted verdicts calculated deterministically by timeframe. 24h BULLISH 100%, 3d NO_CLEAR_BIAS 0%, current week NO_CLEAR_BIAS 0%, next week BEARISH 100%, current month BEARISH 100%.",
       "score_bullish": 3,
       "score_bearish": 0,
       "score_neutral": 7,
-      "non_neutral_count": 3,
+      "non_neutral_count": 7,
       "logic_document": "agent_nq_direction.md",
       "logic_document_version": "2.0_weighted_engine",
       "conviction_model": {
-        "bullish_argument_pct": null,
-        "bearish_argument_pct": null,
-        "neutral_pct": null,
-        "neutral_evidence_pct": null,
-        "directional_participation_pct": null,
-        "active_participation_pct": null,
-        "net_edge_pct": null,
-        "final_conviction": null,
-        "verdict_strength": "MARKET_CLOSED",
-        "winning_side": "MARKET_CLOSED",
-        "final_conviction_logic": "24H priority timeframe is closed by weekend rule.",
-        "bull_case_weight": null,
-        "bear_case_weight": null,
-        "neutral_weight": null
+        "neutral_pct": 84,
+        "net_edge_pct": 100,
+        "winning_side": "BULLISH",
+        "participation": 16,
+        "weighted_edge": 1,
+        "neutral_weight": 84,
+        "raw_conviction": 100,
+        "agreement_boost": 0,
+        "base_conviction": 100,
+        "bear_case_weight": 0,
+        "bull_case_weight": 16,
+        "conflict_penalty": 0,
+        "final_conviction": 100,
+        "verdict_strength": "VERY_STRONG",
+        "participation_cap": 16,
+        "bearish_argument_pct": 0,
+        "bullish_argument_pct": 100,
+        "neutral_evidence_pct": 84,
+        "missing_input_penalty": 0,
+        "final_conviction_logic": "24h NQ deterministic score: bull case 100%, bear case 0%, neutral/inactive 84%, directional participation 16%, net edge +100.",
+        "active_participation_pct": 16,
+        "directional_participation_pct": 16,
+        "weighted_score": {
+          "bullish_weight": 16,
+          "bearish_weight": 0,
+          "neutral_weight": 84,
+          "active_weight": 16,
+          "weight_margin": 16
+        },
+        "alignment": 100
       },
       "timeframe_models": {
         "3d": {
@@ -6157,7 +7259,7 @@
               "reason": "BTC strength confirms high-beta risk appetite",
               "signal": "BULLISH",
               "weight": 2,
-              "evidence": "BTC delta 3.94%"
+              "evidence": "BTC delta 3.96%"
             },
             "F10": {
               "reason": "Gold weakness outside risk-off supports risk appetite",
@@ -6472,16 +7574,16 @@
         }
       },
       "display_metrics": {
-        "bull_case": null,
-        "bear_case": null,
-        "winning_side": "MARKET_CLOSED",
-        "conviction": null,
-        "net_edge": null,
-        "directional_participation": null,
-        "neutral": null,
-        "verdict_strength": "MARKET_CLOSED",
-        "bull_case_weight": null,
-        "bear_case_weight": null
+        "bull_case": 100,
+        "bear_case": 0,
+        "winning_side": "BULLISH",
+        "conviction": 100,
+        "net_edge": 100,
+        "directional_participation": 16,
+        "neutral": 84,
+        "verdict_strength": "VERY_STRONG",
+        "bull_case_weight": 16,
+        "bear_case_weight": 0
       },
       "full_output": {
         "asset": "NQ",
@@ -6498,14 +7600,12 @@
         "conviction_24h": 100,
         "logic_document": "agent_nq_direction.md",
         "missing_inputs": [
+          "latest_us_event",
           "nq_d1_pct",
           "nq_d5_pct",
           "nq_d20_pct",
-          "latest_us_event",
           "btc_d5_pct",
-          "btc_d20_pct",
-          "gold_d5_pct",
-          "gold_d20_pct"
+          "gold_d5_pct"
         ],
         "weighted_score": {
           "active_weight": 16,
@@ -6593,7 +7693,7 @@
             "reason": "BTC strength confirms high-beta risk appetite",
             "signal": "BULLISH",
             "weight": 2,
-            "evidence": "BTC delta 3.94%"
+            "evidence": "BTC delta 3.96%"
           },
           "F10": {
             "reason": "Gold weakness outside risk-off supports risk appetite",
@@ -6796,7 +7896,7 @@
                 "reason": "BTC strength confirms high-beta risk appetite",
                 "signal": "BULLISH",
                 "weight": 2,
-                "evidence": "BTC delta 3.94%"
+                "evidence": "BTC delta 3.96%"
               },
               "F10": {
                 "reason": "Gold weakness outside risk-off supports risk appetite",
@@ -7110,7 +8210,7 @@
             }
           }
         },
-        "non_neutral_count": 3,
+        "non_neutral_count": 7,
         "reasoning_summary": "NQ weighted verdicts calculated deterministically by timeframe. 24h BULLISH 100%, 3d NO_CLEAR_BIAS 0%, current week NO_CLEAR_BIAS 0%, next week BEARISH 100%, current month BEARISH 100%.",
         "direction_next_week": "BEARISH",
         "reason_current_week": "current_week NQ deterministic score: bull case 0%, bear case 0%, neutral/inactive 100%, directional participation 0%, net edge 0.",
@@ -7121,14 +8221,36 @@
         "conviction_current_week": 0,
         "direction_current_month": "BEARISH",
         "conviction_current_month": 100
-      }
+      },
+      "validity_note": "Operational freshness uses a provisional refresh expectation only. Forecast expiry is explicit and separate from the provisional refresh threshold.",
+      "horizon_note": "Weekday-active-time V1 excludes weekend-closed hours only. Exchange holidays and intraday maintenance breaks are not yet modelled.",
+      "refresh_schedule": "07:00",
+      "refresh_timezone": "America/New_York",
+      "refresh_schedule_status": "PROVISIONAL",
+      "validity_schedule_source": "dashboard_meta.execution_clock",
+      "validity_schedule_note": "No authoritative orchestrator cron exists in the repository"
     },
     {
       "agent": "BTC",
       "status": "live",
-      "market_status": "open",
-      "last_run_et": "2026-07-18T14:38:11.759+00:00",
-      "summary": "BTC Layer 1 raw call generated from sealed independent workflow.",
+      "market_status": null,
+      "last_run_et": "2026-07-18T14:47:02.865+00:00",
+      "generated_at": "2026-07-18T14:47:02.865+00:00",
+      "sealed_at": "2026-07-18T14:48:45.653823+00:00",
+      "valid_from": "2026-07-18T14:48:45.653823+00:00",
+      "refresh_due_at": "2026-07-19T11:00:00.000Z",
+      "forecast_window_end": "2026-07-19T14:48:45.653Z",
+      "expires_at": "2026-07-19T14:48:45.653Z",
+      "status_at_build": "ACTIVE",
+      "effective_status": "ACTIVE",
+      "status_resolved_at": "2026-07-18T14:48:50.695Z",
+      "horizon_code": "24H",
+      "horizon_duration": "PT24H",
+      "horizon_basis": "WALL_CLOCK",
+      "timezone": "America/New_York",
+      "market_calendar": "CRYPTO_24_7",
+      "source_run_id": null,
+      "summary": "BTC weighted verdicts calculated deterministically by timeframe. 24h BULLISH_LEAN 100%, 3d BULLISH_LEAN 100%, current week BULLISH_LEAN 100%, next week BEARISH_LEAN 74%, current month BEARISH_LEAN 73%.",
       "calls": {
         "24h": {
           "direction": "BULLISH_LEAN",
@@ -7184,7 +8306,7 @@
               "reason": "BTC own trend is above noise threshold and supports upside pressure",
               "signal": "BULLISH",
               "weight": 16,
-              "evidence": "BTC 1d % 3.9429855372193976"
+              "evidence": "BTC 1d % 3.963853385127327"
             },
             "F3 US 10Y Real Yield Delta": {
               "reason": "Real yield move below threshold",
@@ -7234,7 +8356,24 @@
               "weight": 3,
               "evidence": "Fear/Greed 25"
             }
-          }
+          },
+          "generated_at": "2026-07-18T14:47:02.865+00:00",
+          "sealed_at": "2026-07-18T14:48:45.653823+00:00",
+          "valid_from": "2026-07-18T14:48:45.653823+00:00",
+          "refresh_due_at": "2026-07-19T11:00:00.000Z",
+          "forecast_window_end": "2026-07-19T14:48:45.653Z",
+          "expires_at": "2026-07-19T14:48:45.653Z",
+          "status_at_build": "ACTIVE",
+          "effective_status": "ACTIVE",
+          "status_resolved_at": "2026-07-18T14:48:50.695Z",
+          "horizon_code": "24H",
+          "horizon_duration": "PT24H",
+          "horizon_basis": "WALL_CLOCK",
+          "timezone": "America/New_York",
+          "market_calendar": "CRYPTO_24_7",
+          "source_run_id": null,
+          "validity_note": "Operational freshness uses a provisional refresh expectation only. Forecast expiry is explicit and separate from the provisional refresh threshold.",
+          "horizon_note": ""
         },
         "3d": {
           "direction": "BULLISH_LEAN",
@@ -7716,7 +8855,7 @@
             "reason": "BTC own trend is above noise threshold and supports upside pressure",
             "signal": "BULLISH",
             "weight": 16,
-            "evidence": "BTC 1d % 3.9429855372193976"
+            "evidence": "BTC 1d % 3.963853385127327"
           },
           "F3 US 10Y Real Yield Delta": {
             "reason": "Real yield move below threshold",
@@ -7766,7 +8905,24 @@
             "weight": 3,
             "evidence": "Fear/Greed 25"
           }
-        }
+        },
+        "generated_at": "2026-07-18T14:47:02.865+00:00",
+        "sealed_at": "2026-07-18T14:48:45.653823+00:00",
+        "valid_from": "2026-07-18T14:48:45.653823+00:00",
+        "refresh_due_at": "2026-07-19T11:00:00.000Z",
+        "forecast_window_end": "2026-07-19T14:48:45.653Z",
+        "expires_at": "2026-07-19T14:48:45.653Z",
+        "status_at_build": "ACTIVE",
+        "effective_status": "ACTIVE",
+        "status_resolved_at": "2026-07-18T14:48:50.695Z",
+        "horizon_code": "24H",
+        "horizon_duration": "PT24H",
+        "horizon_basis": "WALL_CLOCK",
+        "timezone": "America/New_York",
+        "market_calendar": "CRYPTO_24_7",
+        "source_run_id": null,
+        "validity_note": "Operational freshness uses a provisional refresh expectation only. Forecast expiry is explicit and separate from the provisional refresh threshold.",
+        "horizon_note": ""
       },
       "factor_breakdown": {
         "F2 DXY / USD Pressure": {
@@ -7779,7 +8935,7 @@
           "reason": "BTC own trend is above noise threshold and supports upside pressure",
           "signal": "BULLISH",
           "weight": 16,
-          "evidence": "BTC 1d % 3.9429855372193976"
+          "evidence": "BTC 1d % 3.963853385127327"
         },
         "F3 US 10Y Real Yield Delta": {
           "reason": "Real yield move below threshold",
@@ -7831,22 +8987,20 @@
         }
       },
       "key_factors": [
-        "F2 DXY / USD Pressure [14]: BULLISH — DXY 1d % -0.2057091749273341 (DXY weakness supports BTC/USD)",
-        "F1 BTC Own Price Delta [16]: BULLISH — BTC 1d % 3.9429855372193976 (BTC own trend is above noise threshold and supports upside pressure)",
-        "F3 US 10Y Real Yield Delta [10]: NEUTRAL — Real yield 5d bps 4.0000000000000036 (Real yield move below threshold)",
-        "F5 VIX Level and Risk Regime [16]: NEUTRAL — VIX 16.73 (Risk regime neutral)",
-        "F4 Fed Bias / Policy Liquidity [10]: NEUTRAL — Fed bias neutral (No clear Fed liquidity impulse)",
-        "F8 BTC ETF / Institutional Flow [8]: BULLISH — ETF flow 655300000 (Confirmed BTC ETF net inflow supports BTC demand)",
-        "F9 Stablecoin / Crypto Liquidity [3]: NEUTRAL — Missing stablecoin and crypto market cap deltas (Missing input)",
-        "F7 US Economic Surprise Direction [6]: NEUTRAL — No recent US event (No confirmed surprise)",
-        "F6 NQ / High-Beta Risk Confirmation [14]: NEUTRAL — Missing NQ 1d % (Missing input)",
-        "F10 BTC Dominance / Crypto Structure [3]: NEUTRAL — Fear/Greed 25 (Sentiment alone is not enough to drive BTC factor)"
+        "F2 DXY / USD Pressure [14]: BULLISH - DXY 1d % -0.2057091749273341 (DXY weakness supports BTC/USD)",
+        "F1 BTC Own Price Delta [16]: BULLISH - BTC 1d % 3.963853385127327 (BTC own trend is above noise threshold and supports upside pressure)",
+        "F3 US 10Y Real Yield Delta [10]: NEUTRAL - Real yield 5d bps 4.0000000000000036 (Real yield move below threshold)",
+        "F5 VIX Level and Risk Regime [16]: NEUTRAL - VIX 16.73 (Risk regime neutral)",
+        "F4 Fed Bias / Policy Liquidity [10]: NEUTRAL - Fed bias neutral (No clear Fed liquidity impulse)",
+        "F8 BTC ETF / Institutional Flow [8]: BULLISH - ETF flow 655300000 (Confirmed BTC ETF net inflow supports BTC demand)",
+        "F9 Stablecoin / Crypto Liquidity [3]: NEUTRAL - Missing stablecoin and crypto market cap deltas (Missing input)",
+        "F7 US Economic Surprise Direction [6]: NEUTRAL - No recent US event (No confirmed surprise)",
+        "F6 NQ / High-Beta Risk Confirmation [14]: NEUTRAL - Missing NQ 1d % (Missing input)",
+        "F10 BTC Dominance / Crypto Structure [3]: NEUTRAL - Fear/Greed 25 (Sentiment alone is not enough to drive BTC factor)"
       ],
       "warnings": [
-        "MISSING_NQ_DATA",
-        "MISSING_LATEST_US_EVENT",
-        "BTC_NQ_DECOUPLING",
         "WEEKEND_LIQUIDITY_RISK",
+        "BTC_NQ_DECOUPLING",
         "Missing/neutral input: F6 NQ / High-Beta Risk Confirmation",
         "Missing/neutral input: F9 Stablecoin / Crypto Liquidity",
         "Missing/neutral input: F1 BTC Own Price Delta"
@@ -7855,7 +9009,7 @@
       "score_bullish": 3,
       "score_bearish": 0,
       "score_neutral": 7,
-      "non_neutral_count": 5,
+      "non_neutral_count": 6,
       "logic_document": "agent_btc_direction.md",
       "logic_document_version": "2.0_weighted_engine",
       "conviction_model": {
@@ -8018,7 +9172,7 @@
           ],
           "bear_case": [],
           "bull_case": [
-            "F1 BTC Own Price Delta (16): BTC 1d % 3.9429855372193976",
+            "F1 BTC Own Price Delta (16): BTC 1d % 3.963853385127327",
             "F2 DXY / USD Pressure (14): DXY 1d % -0.2057091749273341",
             "F8 BTC ETF / Institutional Flow (8): ETF flow 655300000"
           ],
@@ -8075,7 +9229,7 @@
               "reason": "BTC own trend is above noise threshold and supports upside pressure",
               "signal": "BULLISH",
               "weight": 16,
-              "evidence": "BTC 1d % 3.9429855372193976"
+              "evidence": "BTC 1d % 3.963853385127327"
             },
             "F3 US 10Y Real Yield Delta": {
               "reason": "Real yield move below threshold",
@@ -8499,13 +9653,11 @@
       "full_output": {
         "asset": "BTC",
         "layer": "layer_1_raw",
-        "created_at": "2026-07-18T14:39:35.704Z",
+        "created_at": "2026-07-18T14:48:45.501Z",
         "reason_24h": "24h BTC deterministic score: bull case 38 weight, bear case 0 weight, neutral evidence 62 weight. Winning side BULLISH, conviction 100%, net edge +100, directional participation 38%.",
         "risk_flags": [
-          "MISSING_NQ_DATA",
-          "MISSING_LATEST_US_EVENT",
-          "BTC_NQ_DECOUPLING",
           "WEEKEND_LIQUIDITY_RISK",
+          "BTC_NQ_DECOUPLING",
           "Missing/neutral input: F6 NQ / High-Beta Risk Confirmation",
           "Missing/neutral input: F9 Stablecoin / Crypto Liquidity",
           "Missing/neutral input: F1 BTC Own Price Delta"
@@ -8577,7 +9729,7 @@
             "reason": "BTC own trend is above noise threshold and supports upside pressure",
             "signal": "BULLISH",
             "weight": 16,
-            "evidence": "BTC 1d % 3.9429855372193976"
+            "evidence": "BTC 1d % 3.963853385127327"
           },
           "F3 US 10Y Real Yield Delta": {
             "reason": "Real yield move below threshold",
@@ -8757,7 +9909,7 @@
             ],
             "bear_case": [],
             "bull_case": [
-              "F1 BTC Own Price Delta (16): BTC 1d % 3.9429855372193976",
+              "F1 BTC Own Price Delta (16): BTC 1d % 3.963853385127327",
               "F2 DXY / USD Pressure (14): DXY 1d % -0.2057091749273341",
               "F8 BTC ETF / Institutional Flow (8): ETF flow 655300000"
             ],
@@ -8814,7 +9966,7 @@
                 "reason": "BTC own trend is above noise threshold and supports upside pressure",
                 "signal": "BULLISH",
                 "weight": 16,
-                "evidence": "BTC 1d % 3.9429855372193976"
+                "evidence": "BTC 1d % 3.963853385127327"
               },
               "F3 US 10Y Real Yield Delta": {
                 "reason": "Real yield move below threshold",
@@ -9223,7 +10375,7 @@
             }
           }
         },
-        "non_neutral_count": 5,
+        "non_neutral_count": 6,
         "reasoning_summary": "BTC weighted verdicts calculated deterministically by timeframe. 24h BULLISH_LEAN 100%, 3d BULLISH_LEAN 100%, current week BULLISH_LEAN 100%, next week BEARISH_LEAN 74%, current month BEARISH_LEAN 73%.",
         "direction_next_week": "BEARISH_LEAN",
         "reason_current_week": "current_week BTC deterministic score: bull case 9 weight, bear case 0 weight, neutral evidence 91 weight. Winning side BULLISH, conviction 100%, net edge +100, directional participation 9%.",
@@ -9234,7 +10386,14 @@
         "conviction_current_week": 100,
         "direction_current_month": "BEARISH_LEAN",
         "conviction_current_month": 73
-      }
+      },
+      "validity_note": "Operational freshness uses a provisional refresh expectation only. Forecast expiry is explicit and separate from the provisional refresh threshold.",
+      "horizon_note": "",
+      "refresh_schedule": "07:00",
+      "refresh_timezone": "America/New_York",
+      "refresh_schedule_status": "PROVISIONAL",
+      "validity_schedule_source": "dashboard_meta.execution_clock",
+      "validity_schedule_note": "No authoritative orchestrator cron exists in the repository"
     }
   ]
 }
