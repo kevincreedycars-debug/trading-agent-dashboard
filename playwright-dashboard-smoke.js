@@ -416,12 +416,19 @@ async function run() {
       const doc = document.documentElement;
       const topbar = document.querySelector(".topbar");
       const clock = document.getElementById("topbarClock");
+      const cardGaps = Array.from(document.querySelectorAll("#layer1Grid .agent-card")).map((card) => {
+        const validationStack = card.querySelector(".overview-validation-panel-stack");
+        const metrics = card.querySelector(".agent-metrics");
+        if (!validationStack || !metrics) return null;
+        return Number((metrics.getBoundingClientRect().top - validationStack.getBoundingClientRect().bottom).toFixed(2));
+      });
       return {
         clockText: clock?.textContent?.trim() || "",
         pageHasHorizontalOverflow: doc.scrollWidth > doc.clientWidth + 1,
         topbarHasHorizontalOverflow: topbar ? topbar.scrollWidth > topbar.clientWidth + 1 : false,
         gridHasHorizontalOverflow: document.getElementById("layer1Grid")?.scrollWidth > document.getElementById("layer1Grid")?.clientWidth + 1,
-        overviewCardOverflowCount: Array.from(document.querySelectorAll("#layer1Grid .agent-card")).filter((card) => card.scrollWidth > card.clientWidth + 1).length
+        overviewCardOverflowCount: Array.from(document.querySelectorAll("#layer1Grid .agent-card")).filter((card) => card.scrollWidth > card.clientWidth + 1).length,
+        cardGaps
       };
     });
 
@@ -431,6 +438,10 @@ async function run() {
 
     if (narrowClockLayout.pageHasHorizontalOverflow || narrowClockLayout.topbarHasHorizontalOverflow || narrowClockLayout.gridHasHorizontalOverflow || narrowClockLayout.overviewCardOverflowCount > 0) {
       throw new Error(`Dual clock or Layer 1 cards caused overflow at the narrow viewport.\n${JSON.stringify(narrowClockLayout, null, 2)}`);
+    }
+
+    if (narrowClockLayout.cardGaps.some((gap) => gap === null || gap < 10)) {
+      throw new Error(`Layer 1 cards did not preserve the validation-to-metrics gap at the narrow viewport.\n${JSON.stringify(narrowClockLayout, null, 2)}`);
     }
 
     await page.setViewportSize({ width: 1280, height: 2200 });
