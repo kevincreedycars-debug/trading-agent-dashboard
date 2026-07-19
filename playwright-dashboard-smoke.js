@@ -51,6 +51,38 @@ async function run() {
 
     await page.goto(baseUrl, { waitUntil: "networkidle" });
 
+    const topbarClockContract = await page.evaluate(() => {
+      const clock = document.getElementById("topbarClock");
+      const date = document.getElementById("currentDate");
+      const text = clock?.textContent?.trim() || "";
+      const title = clock?.getAttribute("title") || "";
+      const ariaLabel = clock?.getAttribute("aria-label") || "";
+      const clockPattern = /^UK \d{2}:\d{2} \| ET \d{2}:\d{2}$/;
+      return {
+        text,
+        title,
+        ariaLabel,
+        currentDate: date?.textContent?.trim() || "",
+        matchesPattern: clockPattern.test(text)
+      };
+    });
+
+    if (!topbarClockContract.matchesPattern) {
+      throw new Error(`Topbar dual clock did not render the expected UK/ET format.\n${JSON.stringify(topbarClockContract, null, 2)}`);
+    }
+
+    if (!topbarClockContract.title.includes("GMT and BST") || !topbarClockContract.title.includes("EST and EDT")) {
+      throw new Error(`Topbar dual clock did not preserve the DST tooltip guidance.\n${JSON.stringify(topbarClockContract, null, 2)}`);
+    }
+
+    if (!topbarClockContract.ariaLabel.includes("UK time") || !topbarClockContract.ariaLabel.includes("Eastern Time")) {
+      throw new Error(`Topbar dual clock did not expose the expected accessible live label.\n${JSON.stringify(topbarClockContract, null, 2)}`);
+    }
+
+    if (!topbarClockContract.currentDate) {
+      throw new Error(`Topbar date label did not render alongside the dual clock.\n${JSON.stringify(topbarClockContract, null, 2)}`);
+    }
+
     const overviewBriefingText = await page.locator("[data-overview-briefing='true']").innerText();
     const normalizedOverviewBriefingText = overviewBriefingText.toLowerCase();
 
@@ -133,6 +165,14 @@ async function run() {
       expiryLabel: card.querySelector("[data-overview-expiry-card='true'] .validity-label")?.textContent?.trim() || "",
       expiryValue: card.querySelector(".overview-expiry-value")?.textContent?.trim() || "",
       expiryStatus: card.querySelector(".overview-expiry-badge")?.textContent?.trim() || "",
+      directionalPanelGap: (() => {
+        const directional = card.querySelector("[data-validation-panel='directional']");
+        const metrics = card.querySelector(".agent-metrics");
+        if (!directional || !metrics) return null;
+        const directionalRect = directional.getBoundingClientRect();
+        const metricsRect = metrics.getBoundingClientRect();
+        return Number((metricsRect.top - directionalRect.bottom).toFixed(2));
+      })(),
       text: card.innerText || "",
       hasHorizontalOverflow: card.scrollWidth > card.clientWidth + 1
     })));
@@ -175,20 +215,26 @@ async function run() {
       if (rendered.hasHorizontalOverflow) {
         throw new Error(`Overview Layer 1 card ${expected.asset} overflowed horizontally after the expiry block was added.\n${JSON.stringify(rendered, null, 2)}`);
       }
+
+      if (rendered.directionalPanelGap === null || rendered.directionalPanelGap < 10) {
+        throw new Error(`Overview Layer 1 card ${expected.asset} did not preserve visible spacing beneath the Directional Viability panel.\n${JSON.stringify(rendered, null, 2)}`);
+      }
     }
 
     const overviewLayout = await page.evaluate(() => {
       const doc = document.documentElement;
       const grid = document.getElementById("layer1Grid");
+      const topbar = document.querySelector(".topbar");
       const cards = Array.from(document.querySelectorAll("#layer1Grid .agent-card"));
       return {
         pageHasHorizontalOverflow: doc.scrollWidth > doc.clientWidth + 1,
+        topbarHasHorizontalOverflow: topbar ? topbar.scrollWidth > topbar.clientWidth + 1 : false,
         gridHasHorizontalOverflow: grid ? grid.scrollWidth > grid.clientWidth + 1 : false,
         overflowingCards: cards.filter((card) => card.scrollWidth > card.clientWidth + 1).length
       };
     });
 
-    if (overviewLayout.pageHasHorizontalOverflow || overviewLayout.gridHasHorizontalOverflow || overviewLayout.overflowingCards > 0) {
+    if (overviewLayout.pageHasHorizontalOverflow || overviewLayout.topbarHasHorizontalOverflow || overviewLayout.gridHasHorizontalOverflow || overviewLayout.overflowingCards > 0) {
       throw new Error(`Overview Layer 1 expiry presentation introduced horizontal overflow.\n${JSON.stringify(overviewLayout, null, 2)}`);
     }
 
@@ -360,6 +406,35 @@ async function run() {
     if (!usdDetailReasoningText.toLowerCase().includes("why today's call was made")) {
       throw new Error(`USD detail view did not retain the detailed reasoning section.\n${usdDetailReasoningText}`);
     }
+
+    await page.getByRole("button", { name: "Overview" }).click();
+    await page.waitForSelector("#layer1Grid .agent-card", { timeout: 15000 });
+    await page.setViewportSize({ width: 390, height: 1280 });
+    await page.waitForTimeout(250);
+
+    const narrowClockLayout = await page.evaluate(() => {
+      const doc = document.documentElement;
+      const topbar = document.querySelector(".topbar");
+      const clock = document.getElementById("topbarClock");
+      return {
+        clockText: clock?.textContent?.trim() || "",
+        pageHasHorizontalOverflow: doc.scrollWidth > doc.clientWidth + 1,
+        topbarHasHorizontalOverflow: topbar ? topbar.scrollWidth > topbar.clientWidth + 1 : false,
+        gridHasHorizontalOverflow: document.getElementById("layer1Grid")?.scrollWidth > document.getElementById("layer1Grid")?.clientWidth + 1,
+        overviewCardOverflowCount: Array.from(document.querySelectorAll("#layer1Grid .agent-card")).filter((card) => card.scrollWidth > card.clientWidth + 1).length
+      };
+    });
+
+    if (!/^UK \d{2}:\d{2} \| ET \d{2}:\d{2}$/.test(narrowClockLayout.clockText)) {
+      throw new Error(`Topbar dual clock did not survive the narrow viewport layout.\n${JSON.stringify(narrowClockLayout, null, 2)}`);
+    }
+
+    if (narrowClockLayout.pageHasHorizontalOverflow || narrowClockLayout.topbarHasHorizontalOverflow || narrowClockLayout.gridHasHorizontalOverflow || narrowClockLayout.overviewCardOverflowCount > 0) {
+      throw new Error(`Dual clock or Layer 1 cards caused overflow at the narrow viewport.\n${JSON.stringify(narrowClockLayout, null, 2)}`);
+    }
+
+    await page.setViewportSize({ width: 1280, height: 2200 });
+    await page.waitForTimeout(250);
 
     await page.getByRole("button", { name: "Pair Analysis" }).click();
     await page.waitForSelector("text=Layer 2 Trade Selection", { timeout: 15000 });

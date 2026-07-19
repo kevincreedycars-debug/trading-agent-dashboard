@@ -189,17 +189,44 @@ function updateClock() {
   const topbarClock = document.getElementById("topbarClock");
   const currentDate = document.getElementById("currentDate");
   const now = new Date();
-  const etTime = new Intl.DateTimeFormat("en-GB", {
-    timeZone: "America/New_York",
-    weekday: "short",
+  const ukClockFormatter = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Europe/London",
     hour: "2-digit",
     minute: "2-digit",
-    second: "2-digit",
+    hour12: false
+  });
+  const etClockFormatter = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "America/New_York",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false
+  });
+  const ukZoneFormatter = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Europe/London",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
     timeZoneName: "short"
-  }).format(now);
+  });
+  const etZoneFormatter = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "America/New_York",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+    timeZoneName: "short"
+  });
+  const ukTime = ukClockFormatter.format(now);
+  const etTime = etClockFormatter.format(now);
+  const ukZone = zoneAbbreviation(ukZoneFormatter, now);
+  const etZone = zoneAbbreviation(etZoneFormatter, now);
+  const dualClock = `UK ${ukTime} | ET ${etTime}`;
 
-  if (el) el.textContent = etTime;
-  if (topbarClock) topbarClock.textContent = etTime;
+  if (el) el.textContent = dualClock;
+  if (topbarClock) {
+    topbarClock.textContent = dualClock;
+    topbarClock.setAttribute("aria-label", `UK time ${ukTime} ${ukZone}. Eastern Time ${etTime} ${etZone}.`);
+    topbarClock.setAttribute("title", `UK time automatically switches between GMT and BST. ET automatically switches between EST and EDT. Currently ${ukZone} and ${etZone}.`);
+  }
   if (currentDate) {
     currentDate.textContent = new Intl.DateTimeFormat("en-GB", {
       timeZone: "Europe/London",
@@ -209,6 +236,11 @@ function updateClock() {
       year: "numeric"
     }).format(now);
   }
+}
+
+function zoneAbbreviation(formatter, date) {
+  const parts = formatter.formatToParts(date);
+  return parts.find((part) => part.type === "timeZoneName")?.value || "";
 }
 
 function initMarketGlobe() {
