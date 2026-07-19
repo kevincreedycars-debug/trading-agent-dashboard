@@ -100,13 +100,131 @@ async function run() {
       throw new Error(`BTC Overview card directional panel did not render an expected status.\n${btcDirectionalText}`);
     }
 
+    const overviewExpiryContract = await page.evaluate(async () => {
+      const response = await fetch("./data/layer1.json", { cache: "no-store" });
+      const payload = await response.json();
+      const agents = Array.isArray(payload?.agents)
+        ? payload.agents.filter((agent) => String(agent?.status || "").toLowerCase() === "live")
+        : [];
+      const formatExpiry = (value, timeZone = "America/New_York") => {
+        if (!value) return null;
+        return `${new Intl.DateTimeFormat("en-GB", {
+          timeZone,
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: false
+        }).format(new Date(value))} ET`;
+      };
+
+      return agents.map((agent) => ({
+        asset: agent.agent,
+        forecastWindowEnd: agent.forecast_window_end || null,
+        expiresAt: agent.expires_at || null,
+        expectedExpiry: formatExpiry(agent.forecast_window_end || agent.expires_at, agent.timezone || "America/New_York"),
+        expectedStatus: String(agent.effective_status || agent.status_at_build || "UNAVAILABLE").toUpperCase()
+      }));
+    });
+
+    const overviewExpiryCards = await page.locator("#layer1Grid .agent-card").evaluateAll((cards) => cards.map((card) => ({
+      asset: card.querySelector("h3")?.textContent?.trim() || "",
+      expiryLabel: card.querySelector("[data-overview-expiry-card='true'] .validity-label")?.textContent?.trim() || "",
+      expiryValue: card.querySelector(".overview-expiry-value")?.textContent?.trim() || "",
+      expiryStatus: card.querySelector(".overview-expiry-badge")?.textContent?.trim() || "",
+      text: card.innerText || "",
+      hasHorizontalOverflow: card.scrollWidth > card.clientWidth + 1
+    })));
+
+    if (overviewExpiryCards.length !== overviewExpiryContract.length) {
+      throw new Error(`Overview Layer 1 card count did not match the available artifact rows.\nRendered: ${overviewExpiryCards.length}\nArtifact: ${overviewExpiryContract.length}`);
+    }
+
+    for (const expected of overviewExpiryContract) {
+      if (!expected.forecastWindowEnd) {
+        throw new Error(`Artifact row ${expected.asset} did not expose forecast_window_end for the Overview expiry contract.`);
+      }
+
+      if (expected.forecastWindowEnd !== expected.expiresAt) {
+        throw new Error(`Artifact row ${expected.asset} did not preserve expires_at as the alias of forecast_window_end.\n${JSON.stringify(expected, null, 2)}`);
+      }
+
+      const rendered = overviewExpiryCards.find((card) => card.asset === expected.asset);
+      if (!rendered) {
+        throw new Error(`Overview Layer 1 card for ${expected.asset} did not render.`);
+      }
+
+      if (rendered.expiryLabel !== "24H call valid until") {
+        throw new Error(`Overview Layer 1 card ${expected.asset} did not render the required expiry label.\n${JSON.stringify(rendered, null, 2)}`);
+      }
+
+      if (rendered.expiryValue !== expected.expectedExpiry) {
+        throw new Error(`Overview Layer 1 card ${expected.asset} did not render the artifact-backed expiry value.\nExpected: ${expected.expectedExpiry}\nRendered: ${rendered.expiryValue}`);
+      }
+
+      if (rendered.expiryStatus !== expected.expectedStatus) {
+        throw new Error(`Overview Layer 1 card ${expected.asset} did not render the expected validity status.\nExpected: ${expected.expectedStatus}\nRendered: ${rendered.expiryStatus}`);
+      }
+
+      const normalizedRenderedText = rendered.text.toLowerCase();
+      if (normalizedRenderedText.includes("weighted verdicts calculated deterministically")) {
+        throw new Error(`Overview Layer 1 card ${expected.asset} still rendered the weighted-verdict summary prose.\n${rendered.text}`);
+      }
+
+      if (rendered.hasHorizontalOverflow) {
+        throw new Error(`Overview Layer 1 card ${expected.asset} overflowed horizontally after the expiry block was added.\n${JSON.stringify(rendered, null, 2)}`);
+      }
+    }
+
+    const overviewLayout = await page.evaluate(() => {
+      const doc = document.documentElement;
+      const grid = document.getElementById("layer1Grid");
+      const cards = Array.from(document.querySelectorAll("#layer1Grid .agent-card"));
+      return {
+        pageHasHorizontalOverflow: doc.scrollWidth > doc.clientWidth + 1,
+        gridHasHorizontalOverflow: grid ? grid.scrollWidth > grid.clientWidth + 1 : false,
+        overflowingCards: cards.filter((card) => card.scrollWidth > card.clientWidth + 1).length
+      };
+    });
+
+    if (overviewLayout.pageHasHorizontalOverflow || overviewLayout.gridHasHorizontalOverflow || overviewLayout.overflowingCards > 0) {
+      throw new Error(`Overview Layer 1 expiry presentation introduced horizontal overflow.\n${JSON.stringify(overviewLayout, null, 2)}`);
+    }
+
     const syntheticNoCallCard = await page.evaluate(() => {
       const html = globalThis.__dashboardTestHooks.renderAgentCard({
         agent: "TEST_NO_CALL",
         status: "live",
         summary: "Synthetic no-call validation card.",
+        sealed_at: "2026-07-11T05:56:00.000Z",
+        valid_from: "2026-07-11T05:56:00.000Z",
+        refresh_due_at: "2026-07-11T11:00:00.000Z",
+        expires_at: null,
+        status_at_build: "NO_CALL",
+        effective_status: "NO_CALL",
+        status_resolved_at: "2026-07-11T05:56:00.000Z",
         display_metrics: {},
-        calls: {}
+        calls: {
+          "24h": {
+            direction: "NO 24H CALL",
+            conviction: null,
+            status_at_build: "NO_CALL",
+            effective_status: "NO_CALL",
+            valid_from: "2026-07-11T05:56:00.000Z",
+            refresh_due_at: "2026-07-11T11:00:00.000Z",
+            expires_at: null
+          }
+        },
+        priority_call: {
+          direction: "NO 24H CALL",
+          conviction: null,
+          status_at_build: "NO_CALL",
+          effective_status: "NO_CALL",
+          valid_from: "2026-07-11T05:56:00.000Z",
+          refresh_due_at: "2026-07-11T11:00:00.000Z",
+          expires_at: null
+        }
       });
 
       const host = document.createElement("div");
@@ -114,11 +232,15 @@ async function run() {
       const card = host.querySelector(".agent-card");
       const directional = card?.querySelector("[data-validation-panel='directional']")?.innerText || "";
       const l2l = card?.querySelector("[data-validation-panel='l2l']")?.innerText || "";
-      return { l2l, directional };
+      const expiryLabel = card?.querySelector("[data-overview-expiry-card='true'] .validity-label")?.textContent || "";
+      const expiryValue = card?.querySelector(".overview-expiry-value")?.textContent || "";
+      const expiryStatus = card?.querySelector(".overview-expiry-badge")?.textContent || "";
+      return { l2l, directional, expiryLabel, expiryValue, expiryStatus, text: card?.innerText || "" };
     });
 
     const syntheticDirectionalText = String(syntheticNoCallCard.directional || "").toLowerCase();
     const syntheticL2lText = String(syntheticNoCallCard.l2l || "").toLowerCase();
+    const syntheticCardText = String(syntheticNoCallCard.text || "").toLowerCase();
 
     if (!syntheticDirectionalText.includes("directional not viable") || !syntheticDirectionalText.includes("no 24h call")) {
       throw new Error(`Synthetic no-call Overview card did not render the required directional no-call state.\n${syntheticNoCallCard.directional}`);
@@ -126,6 +248,14 @@ async function run() {
 
     if (!syntheticL2lText.includes("l2l not tradable") || !syntheticL2lText.includes("no valid call")) {
       throw new Error(`Synthetic no-call Overview card did not render the required L2L no-call state.\n${syntheticNoCallCard.l2l}`);
+    }
+
+    if (String(syntheticNoCallCard.expiryLabel || "").trim() !== "24H call valid until" || String(syntheticNoCallCard.expiryValue || "").trim() !== "No active 24H expiry" || String(syntheticNoCallCard.expiryStatus || "").trim() !== "NO CALL") {
+      throw new Error(`Synthetic no-call Overview card did not render the expected no-call expiry presentation.\n${JSON.stringify(syntheticNoCallCard, null, 2)}`);
+    }
+
+    if (syntheticCardText.includes("synthetic no-call validation card")) {
+      throw new Error(`Synthetic no-call Overview card still rendered the summary paragraph.\n${syntheticNoCallCard.text}`);
     }
 
     const fallbackBriefingContract = await page.evaluate(() => {
@@ -202,6 +332,37 @@ async function run() {
     if (!normalizedLayer2Text.includes("no trade") || !normalizedLayer2Text.includes("target 24h signal is non-directional")) {
       throw new Error(`Layer 2 live cards did not render expected tradable/no-trade state.\n${layer2Text}`);
     }
+
+    const usdDetailReasoning = await page.evaluate(async () => {
+      const response = await fetch("./data/layer1.json", { cache: "no-store" });
+      const payload = await response.json();
+      const agent = payload?.agents?.find((entry) => entry.agent === "USD") || null;
+      return {
+        callReason: agent?.calls?.["24h"]?.reason || ""
+      };
+    });
+
+    await page.getByRole("button", { name: "Overview" }).click();
+    await page.waitForSelector("#layer1Grid .agent-card", { timeout: 15000 });
+    await page.locator("#layer1Grid .agent-card", { has: page.locator("h3:text('USD')") }).locator("[data-agent='USD']").click();
+    await page.waitForFunction(() => {
+      const activeView = document.querySelector(".active-view");
+      const heading = document.querySelector("#agentView h2");
+      return activeView?.id === "agentView" && heading && heading.textContent.includes("USD");
+    }, { timeout: 15000 });
+
+    const usdDetailReasoningText = await page.locator("#agentView").innerText();
+    const expectedUsdDetailReason = String(usdDetailReasoning?.callReason || "").replace(/^24h\s+/i, "");
+    if (!expectedUsdDetailReason || !usdDetailReasoningText.includes(expectedUsdDetailReason)) {
+      throw new Error(`USD detail view did not preserve the detailed 24H reasoning text.\nExpected call reason: ${expectedUsdDetailReason}\nRendered: ${usdDetailReasoningText}`);
+    }
+
+    if (!usdDetailReasoningText.toLowerCase().includes("why today's call was made")) {
+      throw new Error(`USD detail view did not retain the detailed reasoning section.\n${usdDetailReasoningText}`);
+    }
+
+    await page.getByRole("button", { name: "Pair Analysis" }).click();
+    await page.waitForSelector("text=Layer 2 Trade Selection", { timeout: 15000 });
 
     const overviewLayer2Panels = await page.locator("#overviewLayer2Panel .trade-opportunity-card").first().locator("[data-overview-validation-panels='true'] [data-validation-panel]").allInnerTexts();
     const normalizedOverviewLayer2Panels = overviewLayer2Panels.map(text => text.toLowerCase());

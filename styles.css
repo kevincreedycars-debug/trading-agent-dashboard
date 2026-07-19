@@ -831,6 +831,68 @@ h3 {
   margin-top: 8px;
 }
 
+.overview-expiry-card {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 12px;
+  padding: 11px 12px;
+  border: 1px solid var(--cream-border);
+  border-radius: 8px;
+  background: #fffdf9;
+}
+
+.overview-expiry-card.status-active {
+  border-color: rgba(36, 107, 72, 0.2);
+  background: #f5fbf8;
+}
+
+.overview-expiry-card.status-stale {
+  border-color: rgba(165, 48, 48, 0.2);
+  background: #fff5f3;
+}
+
+.overview-expiry-card.status-no_call,
+.overview-expiry-card.status-market_closed,
+.overview-expiry-card.status-unavailable,
+.overview-expiry-card.status-superseded {
+  border-color: rgba(184, 132, 26, 0.2);
+  background: #fffaf0;
+}
+
+.overview-expiry-head {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.overview-expiry-copy {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.overview-expiry-value {
+  color: var(--ink-mid);
+  font-size: 15px;
+  line-height: 1.35;
+}
+
+.overview-expiry-badge {
+  align-self: start;
+  max-width: 100%;
+  white-space: normal;
+}
+
+.overview-expiry-meta {
+  display: grid;
+  gap: 3px;
+  color: var(--ink-muted);
+  font-size: 11px;
+  line-height: 1.45;
+}
+
 .agent-metrics {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -874,6 +936,16 @@ h3 {
 .backtest-grid {
   display: grid;
   gap: 10px;
+}
+
+.call-list .call-row-head {
+  grid-template-columns: minmax(64px, auto) minmax(0, 1fr);
+}
+
+.call-list .direction {
+  justify-self: end;
+  text-align: right;
+  white-space: normal;
 }
 
 .research-status-hero,
@@ -3675,6 +3747,11 @@ h3 {
 
   .overview-briefing-chips {
     grid-template-columns: 1fr;
+  }
+
+  .overview-expiry-head {
+    flex-direction: column;
+    align-items: stretch;
   }
 
   .pair-summary-compare-grid > :nth-child(3n + 2),

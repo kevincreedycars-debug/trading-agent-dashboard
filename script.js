@@ -449,6 +449,26 @@ function formatDashboardTime(value) {
   }).format(date);
 }
 
+function formatContractTime(value, timeZone = "America/New_York", options = {}) {
+  if (!value || value === "pending") return "Pending";
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return String(value);
+
+  const formatted = new Intl.DateTimeFormat("en-GB", {
+    timeZone,
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false
+  }).format(date);
+
+  if (options.includeZoneLabel === false) return formatted;
+  return `${formatted} ${options.zoneLabel || "ET"}`;
+}
+
 function formatRelativeAge(value) {
   if (!value || value === "pending") return "Pending";
 
@@ -1186,6 +1206,63 @@ function getAgentUpdatedAt(agent) {
   return agent?.last_run_et || agent?.created_at || null;
 }
 
+function getLayer1Validity(agent) {
+  if (!agent) return null;
+  return {
+    generated_at: agent.generated_at || agent.priority_call?.generated_at || agent.calls?.["24h"]?.generated_at || null,
+    sealed_at: agent.sealed_at || agent.priority_call?.sealed_at || agent.calls?.["24h"]?.sealed_at || null,
+    valid_from: agent.valid_from || agent.priority_call?.valid_from || agent.calls?.["24h"]?.valid_from || null,
+    refresh_due_at: agent.refresh_due_at || agent.priority_call?.refresh_due_at || agent.calls?.["24h"]?.refresh_due_at || null,
+    forecast_window_end: agent.forecast_window_end ?? agent.priority_call?.forecast_window_end ?? agent.calls?.["24h"]?.forecast_window_end ?? null,
+    expires_at: agent.expires_at ?? agent.priority_call?.expires_at ?? agent.calls?.["24h"]?.expires_at ?? null,
+    status_at_build: agent.status_at_build || agent.priority_call?.status_at_build || agent.calls?.["24h"]?.status_at_build || null,
+    effective_status: agent.effective_status || agent.priority_call?.effective_status || agent.calls?.["24h"]?.effective_status || null,
+    status_resolved_at: agent.status_resolved_at || agent.priority_call?.status_resolved_at || agent.calls?.["24h"]?.status_resolved_at || null,
+    timezone: agent.timezone || agent.priority_call?.timezone || agent.calls?.["24h"]?.timezone || "America/New_York"
+  };
+}
+
+function resolveLayer1DisplayStatus(agent) {
+  return getLayer1Validity(agent)?.effective_status || getLayer1Validity(agent)?.status_at_build || "UNAVAILABLE";
+}
+
+function validityStatusLabel(status = "") {
+  return String(status || "UNAVAILABLE").replaceAll("_", " ");
+}
+
+function validityStatusClass(status = "") {
+  return `status-${String(status || "unavailable").toLowerCase()}`;
+}
+
+function renderOverviewExpirySection(validity = null, displayStatus = "UNAVAILABLE") {
+  const forecastExpiresAt = validity?.forecast_window_end || validity?.expires_at || null;
+  const expiryValue = forecastExpiresAt
+    ? formatContractTime(forecastExpiresAt, validity?.timezone || "America/New_York", { zoneLabel: "ET" })
+    : "No active 24H expiry";
+  const refreshDueAt = validity?.refresh_due_at
+    ? formatContractTime(validity.refresh_due_at, validity?.timezone || "America/New_York", { zoneLabel: "ET" })
+    : "Pending";
+  const expiryNote = forecastExpiresAt
+    ? "Expiry = when this forecast stops being valid."
+    : "No active 24H directional forecast is currently published.";
+
+  return `
+    <section class="overview-expiry-card ${escapeHtml(validityStatusClass(displayStatus))}" data-overview-expiry-card="true" data-validity-status="${escapeHtml(displayStatus)}">
+      <div class="overview-expiry-head">
+        <div class="overview-expiry-copy">
+          <span class="validity-label">24H call valid until</span>
+          <strong class="overview-expiry-value">${escapeHtml(expiryValue)}</strong>
+        </div>
+        <span class="badge ${escapeHtml(validityStatusClass(displayStatus))} overview-expiry-badge">${escapeHtml(validityStatusLabel(displayStatus))}</span>
+      </div>
+      <div class="overview-expiry-meta">
+        <span>${escapeHtml(expiryNote)}</span>
+        <span>Refresh due: ${escapeHtml(refreshDueAt)}</span>
+      </div>
+    </section>
+  `;
+}
+
 function bestLiveAgent() {
   const live = (layer1Data?.agents || []).filter(agent => {
     const call24 = getCall(agent, "24h");
@@ -1403,7 +1480,9 @@ if (typeof globalThis !== "undefined") {
   globalThis.__dashboardTestHooks = {
     ...(globalThis.__dashboardTestHooks || {}),
     buildOverviewBriefing,
-    renderAgentCard
+    getLayer1Validity,
+    renderAgentCard,
+    resolveLayer1DisplayStatus
   };
 }
 
@@ -1458,6 +1537,8 @@ function renderAgentCard(agent) {
   const assetUpdated = getAgentUpdatedAt(agent);
   const formattedAssetUpdated = formatDashboardTime(assetUpdated);
   const assetAge = formatRelativeAge(assetUpdated);
+  const validity = getLayer1Validity(agent);
+  const displayStatus = resolveLayer1DisplayStatus(agent);
 
   const calls = Object.entries(agent.calls || {}).map(([tf, call]) => {
     const direction = call.direction || "PENDING";
@@ -1480,19 +1561,19 @@ function renderAgentCard(agent) {
           <p class="eyebrow">Layer 1</p>
           <h3>${escapeHtml(agent.agent)}</h3>
         </div>
-        <span class="badge">${escapeHtml(agent.status || "pending")}</span>
+        <span class="badge ${escapeHtml(validityStatusClass(displayStatus))}">${escapeHtml(validityStatusLabel(displayStatus))}</span>
       </div>
 
       <div class="main-signal">
         <span class="direction ${directionClass(call24.direction)}">${normaliseDirection(call24.direction)}</span>
         <strong>${formatConviction(call24Confidence)}</strong>
       </div>
+      ${renderOverviewExpirySection(validity, displayStatus)}
       <div class="overview-validation-panel-stack" data-overview-validation-panels="true">
         ${buildOverviewL2lTrustBadge(l2lTrustStatus)}
         ${buildOverviewDirectionalTrustBadge(directionalTrustStatus)}
       </div>
 
-      <p class="summary">${escapeHtml(agent.summary || "")}</p>
       ${renderEventCollectorAgentWarning(agent, "24h")}
 
       <div class="agent-metrics">
