@@ -8,9 +8,9 @@ The Layer 1 trading-agent platform remains operational, and the latest runtime e
 
 The full Layer 1 historical replay rollout is now validated across USD, EUR, Gold, NQ, and BTC. The active repository work has shifted from replay rollout itself into downstream research presentation and breakdown views built on top of the canonical checker artifacts.
 
-The current deployed production baseline includes the UK/ET live header clock, explicit Layer 1 `24H` expiry display on Overview cards, the Layer 1 Directional Viability spacing fix, and removal of the redundant Overview weighted-verdict prose. The deployed production commit is `a15100d62f9a8a4c6ad6d8390f97f7de25ca1cdd`.
+The current deployed production baseline includes the UK/ET live header clock, explicit Layer 1 `24H` expiry display on Overview cards, the Layer 1 Directional Viability spacing fix, removal of the redundant Overview weighted-verdict prose, and UK-time hover/focus tooltips on every available Layer 1 `24H` expiry section while preserving the visible ET expiry. The tooltip converts the exact same expiry timestamp into UK time using browser-native `Intl.DateTimeFormat` with automatic GMT/BST handling.
 
-Current platform state is stable and validated. The production dashboard exposes the live Layer 1 and Layer 2 surfaces plus the read-only historical research tabs, and the current active implementation task is a small production enhancement on top of the already deployed Layer 1 Overview expiry presentation.
+Current platform state is stable and validated. The production dashboard exposes the live Layer 1 and Layer 2 surfaces plus the read-only historical research tabs, and the active implementation task now shifts to the Architecture Mirror planning/build phase.
 
 ## Current Architecture
 
@@ -150,11 +150,11 @@ The current repository priority is:
 
 The current immediate implementation task is:
 
-> add UK-time hover/focus tooltips to the existing Layer 1 `24H` expiry sections while preserving the visible ET expiry display
+> design and build the Architecture Mirror as a read-only documentation surface inside the dashboard
 
 The next planned phase after this production polish task is:
 
-> architecture mirror of the dashboard and research platform
+> implement an Architecture tab that maps production and research flows without changing runtime or research logic
 
 The `L2L 1H Sequence Research` module is not another close-to-close accuracy table. It answers whether price moved at least the required `50% ADR20` distance in the direction of a Layer 1 or Layer 2 call after the relevant intraday swing, using sequence-aware `1H` candles and daily candles only for ADR20.
 

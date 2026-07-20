@@ -4,42 +4,48 @@ Last updated: 2026-07-20
 
 ## Task
 
-Layer 1 Overview expiry UK tooltip.
+Architecture Mirror.
 
 ## Objective
 
-Add UK-time hover/focus tooltips to the existing Layer 1 `24H` expiry sections on the Overview cards while preserving the visible ET expiry display that is already deployed and validated.
+Design and build a read-only Architecture Mirror inside the dashboard that visually explains the production platform and downstream research platform end to end without changing production or research logic.
 
 This task must:
 
-- continue using `forecast_window_end` as the primary expiry source, with `expires_at` as fallback only
-- convert the same expiry timestamp into UK time using `Europe/London`
-- use browser-native `Intl.DateTimeFormat`
-- preserve the visible ET expiry value
-- keep the tooltip compact, accessible, and free of overflow
-- avoid changing Layer 2 logic or presentation unless a shared Layer 1 component naturally inherits the same behavior without a logic change
+- cover Layer 1, Layer 2, historical replay/backtesters, Factor Edge Lab, Phase 2 Shadow Backtest, Phase 3 validation modules, ADR/L2L research, n8n execution, data sources, artifacts, GitHub publication, and dashboard rendering
+- clearly separate production versus research-only boundaries
+- show failure and status-reporting paths
+- use a top-level `Architecture` tab
+- use a checked-in `data/architecture-map.json` manifest as the source of truth
+- render the diagrams with a custom HTML/CSS/SVG renderer
+- expose one overview map plus expandable module maps
+- remain read-only and documentation-only
+- avoid changing production logic, research logic, workflow execution, or artifact-generation semantics
 
 ## Current Status
 
-The current production baseline is already deployed and validated at commit `a15100d62f9a8a4c6ad6d8390f97f7de25ca1cdd` with:
+The current production baseline is already deployed and validated with:
 
 - explicit Layer 1 `24H` expiry visible on Overview cards
 - UK/ET live header clock
 - Layer 1 Directional Viability spacing fix
 - redundant Overview weighted-verdict prose removed
+- UK-time hover/focus tooltips deployed on every Layer 1 `24H` expiry section while keeping the visible ET expiry unchanged
 
 ## Completed
 
-- The visible ET expiry block on each Layer 1 Overview card is already deployed.
-- The UK/ET live header clock is already deployed and validated.
-- The Layer 1 Directional Viability spacing fix is already deployed and validated.
-- The redundant Overview weighted-verdict summary prose has already been removed.
+- The visible ET expiry block on each Layer 1 Overview card is deployed.
+- The UK/ET live header clock is deployed and validated.
+- The Layer 1 Directional Viability spacing fix is deployed and validated.
+- The redundant Overview weighted-verdict summary prose is removed.
+- The UK-time hover/focus tooltip is deployed on every available Layer 1 `24H` expiry section.
+- The tooltip converts the same expiry timestamp to UK time with automatic GMT/BST handling.
 
 ## Next Immediate Steps
 
-1. Add a compact UK-time hover/focus tooltip to each available Layer 1 Overview expiry section.
-2. Extend smoke coverage to verify the tooltip contract, focus behavior, ET display preservation, and no-overflow behavior.
-3. After the tooltip work, plan the architecture-mirror implementation without building it yet.
+1. Define the `data/architecture-map.json` manifest shape.
+2. Build the top-level Architecture tab shell and overview map renderer.
+3. Add expandable module maps for production and research flows without altering existing dashboard logic.
 
 ## Current Blocker
 
@@ -49,8 +55,8 @@ No repository-side blocker.
 
 The near-term outcome is:
 
-> preserve the deployed ET expiry display while exposing the exact same `24H` expiry in UK time on hover and keyboard focus
+> a read-only Architecture Mirror that explains the production and research platform clearly inside the dashboard
 
 The next planned phase is:
 
-> architecture mirror of the dashboard and research platform
+> iterate on the Architecture Mirror after the first in-dashboard release if additional map depth is needed

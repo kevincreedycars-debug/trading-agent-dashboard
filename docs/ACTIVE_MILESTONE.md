@@ -2,35 +2,35 @@
 
 ## Current Feature
 
-Layer 1 Overview Expiry Tooltip
+Architecture Mirror
 
 ## Current Milestone
 
-Add UK-time hover/focus tooltips to the existing Layer 1 `24H` expiry sections without changing the visible ET display
+Plan and begin the read-only Architecture Mirror using a checked-in manifest and custom renderer
 
 ## Status
 
-In Progress
+Planning
 
 ## Completed Work
 
-- The visible ET `24H` expiry block is already deployed on each Layer 1 Overview card.
-- The UK/ET live header clock is already deployed and validated.
-- The Layer 1 Directional Viability spacing fix is already deployed and validated.
-- The redundant Overview weighted-verdict prose is already removed from the cards.
+- UK-time hover/focus tooltips are deployed on every available Layer 1 `24H` expiry section.
+- The visible Layer 1 expiry remains in ET.
+- The tooltip converts the same expiry timestamp to UK time with automatic GMT/BST handling.
+- The UK/ET live header clock, Directional Viability spacing fix, and Overview prose removal remain intact in production.
 
 ## Remaining Work
 
-- Add a compact UK-time tooltip derived from the same Layer 1 expiry timestamp.
-- Verify hover and keyboard-focus accessibility for all available Layer 1 expiry sections.
-- Keep Layer 2 unchanged while preparing a separate architecture-mirror plan for later work.
+- Define the Architecture Mirror manifest shape in `data/architecture-map.json`.
+- Add a top-level `Architecture` tab with an overview system map.
+- Add expandable module maps for production and research flows.
 
 ## Current Files Being Modified
 
+- `index.html`
 - `script.js`
 - `styles.css`
-- `playwright-dashboard-smoke.js`
-- `CODEX_STARTUP.md`
+- `data/architecture-map.json`
 - `docs/CURRENT_STATE.md`
 - `docs/CURRENT_TASK.md`
 - `docs/ACTIVE_MILESTONE.md`
@@ -42,8 +42,8 @@ No repository-side blocker.
 
 ## Next Immediate Action
 
-Add UK-time hover/focus tooltips to the existing Layer 1 `24H` expiry sections and validate the tooltip contract.
+Define the Architecture Mirror manifest and build the initial read-only Architecture tab shell.
 
 ## Last Updated
 
-2026-07-20 00:00:00 Europe/London
+2026-07-20 10:10:00 Europe/London

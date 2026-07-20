@@ -8,12 +8,16 @@ Last updated: 2026-07-20
 - Confirmed the visible Layer 1 `24H` ET expiry blocks, UK/ET header clock, Directional Viability spacing fix, and Overview prose removal are already deployed and validated.
 - Identified `CODEX_STARTUP.md` as the instruction source causing routine `.claude/launch.json` prompts and prepared the minimum startup-rule correction.
 - Identified that the current active-state project memory pointers were still aimed at the earlier shadow-backtest task and needed correction before the next startup.
+- Deployed UK-time hover/focus tooltips on every available Layer 1 `24H` expiry section while preserving the visible ET expiry.
+- Verified that the tooltip converts the same expiry timestamp into UK time with browser-native `Intl.DateTimeFormat` using automatic GMT/BST handling.
+- Verified live GitHub Pages asset cache busting and live tooltip behavior after deployment.
+- Approved the Architecture Mirror direction: top-level `Architecture` tab, checked-in `data/architecture-map.json` manifest, custom HTML/CSS/SVG renderer, overview map plus expandable module maps, and a read-only documentation surface with no effect on production or research logic.
 
 ## Unfinished Work
 
-- Add UK-time hover/focus tooltips to the Layer 1 `24H` expiry sections while keeping the visible ET display unchanged.
-- Update smoke coverage to verify the tooltip contract, accessibility behavior, and no-overflow guardrails.
-- Produce a planning-only architecture-mirror proposal after the tooltip work.
+- Design and build the Architecture Mirror.
+- Define the checked-in architecture manifest.
+- Build the first overview map and expandable module maps.
 
 ## Blockers
 
@@ -21,10 +25,10 @@ Last updated: 2026-07-20
 
 ## Assumptions
 
-- The visible Layer 1 expiry continues to use `forecast_window_end` with `expires_at` as fallback only.
-- UK conversion must use `Europe/London` via browser-native `Intl.DateTimeFormat`.
-- The next planned phase after this tooltip task is the architecture mirror of the dashboard and research platform.
+- The Architecture Mirror remains read-only and must not alter production or research logic.
+- The first Architecture release should be driven from a checked-in manifest rather than hand-maintained independent diagrams.
+- Production versus research-only boundaries and failure/status paths must be explicit in the mirror.
 
 ## Exact Next Task
 
-Add UK-time hover/focus tooltips to the existing Layer 1 `24H` expiry sections, then plan the architecture mirror without implementing it yet.
+Design and build the Architecture Mirror using a checked-in manifest and custom renderer.
