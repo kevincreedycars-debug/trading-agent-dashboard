@@ -24,7 +24,7 @@ This task must:
 
 ## Current Status
 
-The current production baseline is already deployed and validated with:
+Credential continuity is complete and documented. The current production baseline is already deployed and validated with:
 
 - explicit Layer 1 `24H` expiry visible on Overview cards
 - UK/ET live header clock
@@ -34,6 +34,12 @@ The current production baseline is already deployed and validated with:
 
 ## Completed
 
+- Completed the CLIXML-based local credential continuity system under `%USERPROFILE%\.trading-agent-dashboard\`.
+- Verified eight continuity variables present in the encrypted local store.
+- Confirmed `OANDA_ACCOUNT_ID` is conditional, currently absent, and not a blocker for ordinary OANDA candle downloads.
+- Validated read-only connectivity for `n8n`, Supabase, FRED, OANDA, and Alpha Vantage.
+- Confirmed RapidAPI credential loading while leaving external endpoint verification marked inconclusive because the harmless validation endpoint timed out.
+- Validated isolated CLIXML backup and restore behavior.
 - The visible ET expiry block on each Layer 1 Overview card is deployed.
 - The UK/ET live header clock is deployed and validated.
 - The Layer 1 Directional Viability spacing fix is deployed and validated.

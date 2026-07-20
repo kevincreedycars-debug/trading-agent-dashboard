@@ -19,7 +19,7 @@ function assertDate(value, label) {
 async function fetchJson(url) {
   const response = await fetch(url);
   if (!response.ok) {
-    throw new Error(`HTTP ${response.status} for ${url}`);
+    throw new Error(`HTTP ${response.status} for ${sanitizeUrlForLogging(url)}`);
   }
   return response.json();
 }
@@ -32,6 +32,18 @@ function buildUrl(apiKey) {
   url.searchParams.set("outputsize", "full");
   url.searchParams.set("apikey", apiKey);
   return url.toString();
+}
+
+function sanitizeUrlForLogging(rawUrl) {
+  try {
+    const url = new URL(rawUrl);
+    if (url.searchParams.has("apikey")) {
+      url.searchParams.set("apikey", "[REDACTED]");
+    }
+    return url.toString();
+  } catch {
+    return String(rawUrl || "");
+  }
 }
 
 function quoteCsv(value) {
@@ -108,8 +120,15 @@ async function main() {
   }, null, 2));
 }
 
-main().catch((error) => {
-  console.error("EUR/USD OHLC download failed.");
-  console.error(error.stack || error.message || String(error));
-  process.exit(1);
-});
+if (require.main === module) {
+  main().catch((error) => {
+    console.error("EUR/USD OHLC download failed.");
+    console.error(error.stack || error.message || String(error));
+    process.exit(1);
+  });
+}
+
+module.exports = {
+  buildUrl,
+  sanitizeUrlForLogging
+};

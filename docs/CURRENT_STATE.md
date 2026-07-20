@@ -4,13 +4,33 @@ Last updated: 2026-07-20
 
 ## Platform Status
 
-The Layer 1 trading-agent platform remains operational, and the latest runtime evidence in `data/workflow-status.json` shows a successful manual refresh on 2026-07-06 with every listed step marked successful, including `Layer 2 Trade Selection Agent`.
+The Layer 1 trading-agent platform remains operational, and the latest runtime evidence in `data/workflow-status.json` shows a successful manual refresh on 2026-07-20 with every listed step marked successful, including `Layer 2 Trade Selection Agent`.
 
 The full Layer 1 historical replay rollout is now validated across USD, EUR, Gold, NQ, and BTC. The active repository work has shifted from replay rollout itself into downstream research presentation and breakdown views built on top of the canonical checker artifacts.
 
 The current deployed production baseline includes the UK/ET live header clock, explicit Layer 1 `24H` expiry display on Overview cards, the Layer 1 Directional Viability spacing fix, removal of the redundant Overview weighted-verdict prose, and UK-time hover/focus tooltips on every available Layer 1 `24H` expiry section while preserving the visible ET expiry. The tooltip converts the exact same expiry timestamp into UK time using browser-native `Intl.DateTimeFormat` with automatic GMT/BST handling.
 
-Current platform state is stable and validated. The production dashboard exposes the live Layer 1 and Layer 2 surfaces plus the read-only historical research tabs, and the active implementation task now shifts to the Architecture Mirror planning/build phase.
+Current platform state is stable and validated. The production dashboard exposes the live Layer 1 and Layer 2 surfaces plus the read-only historical research tabs. The credential-continuity milestone is now complete, and the next active implementation task is the Architecture Mirror planning/build phase.
+
+## Credential Continuity Status
+
+Credential continuity is now functionally complete using the existing CLIXML-based encrypted local store under:
+
+```text
+%USERPROFILE%\.trading-agent-dashboard\
+```
+
+Current validated local state:
+
+- eight continuity variables are present in the local encrypted store
+- `OANDA_ACCOUNT_ID` remains optional / conditional and is currently absent
+- repository bootstrap is `powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts\bootstrap-local-secrets.ps1`
+- repository validation is `powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts\check-required-secrets.ps1 -Scope all`
+- isolated backup and restore validation passed
+- read-only connectivity validation passed for `n8n`, Supabase, FRED, OANDA, and Alpha Vantage
+- RapidAPI credential loading is confirmed, but external endpoint verification remains inconclusive because the harmless validation endpoint timed out
+
+This continuity work did not change production logic, trading logic, or live workflows.
 
 ## Current Architecture
 
@@ -97,7 +117,7 @@ Dashboard Writer
 
 Every workflow has been converted to use `Execute Sub-workflow Trigger`, allowing the master workflow to call workflows sequentially.
 
-Runtime evidence in `data/workflow-status.json` shows a successful run on 2026-07-06, with every listed step marked successful and no reported error.
+Runtime evidence in `data/workflow-status.json` shows a successful run on 2026-07-20, with every listed step marked successful and no reported error.
 
 ## Known Current Issues
 

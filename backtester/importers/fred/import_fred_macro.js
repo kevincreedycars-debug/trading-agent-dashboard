@@ -86,11 +86,23 @@ function buildFredUrl(seriesId, apiKey, startDate, endDate) {
   return url.toString();
 }
 
+function sanitizeUrlForLogging(rawUrl) {
+  try {
+    const url = new URL(rawUrl);
+    if (url.searchParams.has("api_key")) {
+      url.searchParams.set("api_key", "[REDACTED]");
+    }
+    return url.toString();
+  } catch {
+    return String(rawUrl || "");
+  }
+}
+
 async function fetchJson(url, options = {}) {
   const response = await fetch(url, options);
   if (!response.ok) {
     const body = await response.text();
-    throw new Error(`HTTP ${response.status} for ${url}\n${body}`);
+    throw new Error(`HTTP ${response.status} for ${sanitizeUrlForLogging(url)}\n${body}`);
   }
   return response.json();
 }
@@ -99,7 +111,7 @@ async function fetchText(url, options = {}) {
   const response = await fetch(url, options);
   if (!response.ok) {
     const body = await response.text();
-    throw new Error(`HTTP ${response.status} for ${url}\n${body}`);
+    throw new Error(`HTTP ${response.status} for ${sanitizeUrlForLogging(url)}\n${body}`);
   }
   return response.text();
 }
@@ -322,8 +334,15 @@ async function run() {
   console.log(`Total submitted rows: ${totalRowsSubmitted}`);
 }
 
-run().catch((error) => {
-  console.error("FRED historical macro import failed.");
-  console.error(error.stack || error.message || String(error));
-  process.exit(1);
-});
+if (require.main === module) {
+  run().catch((error) => {
+    console.error("FRED historical macro import failed.");
+    console.error(error.stack || error.message || String(error));
+    process.exit(1);
+  });
+}
+
+module.exports = {
+  buildFredUrl,
+  sanitizeUrlForLogging
+};

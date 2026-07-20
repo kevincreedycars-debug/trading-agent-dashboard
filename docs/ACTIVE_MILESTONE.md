@@ -6,14 +6,21 @@ Architecture Mirror
 
 ## Current Milestone
 
-Plan and begin the read-only Architecture Mirror using a checked-in manifest and custom renderer
+Begin the read-only Architecture Mirror using a checked-in manifest and custom renderer
 
 ## Status
 
-Planning
+Ready to start
 
 ## Completed Work
 
+- CLIXML-based credential continuity is complete under `%USERPROFILE%\.trading-agent-dashboard\`.
+- Repository bootstrap and validation wrappers are in place for future Codex sessions.
+- Eight continuity variables are present in the encrypted local store.
+- `OANDA_ACCOUNT_ID` is confirmed conditional and currently absent without blocking ordinary OANDA candle downloads.
+- Read-only connectivity validation passed for `n8n`, Supabase, FRED, OANDA, and Alpha Vantage.
+- RapidAPI credential loading is confirmed, while external endpoint verification remains inconclusive due to timeout.
+- Isolated backup/restore validation passed for the CLIXML store.
 - UK-time hover/focus tooltips are deployed on every available Layer 1 `24H` expiry section.
 - The visible Layer 1 expiry remains in ET.
 - The tooltip converts the same expiry timestamp to UK time with automatic GMT/BST handling.
@@ -27,10 +34,6 @@ Planning
 
 ## Current Files Being Modified
 
-- `index.html`
-- `script.js`
-- `styles.css`
-- `data/architecture-map.json`
 - `docs/CURRENT_STATE.md`
 - `docs/CURRENT_TASK.md`
 - `docs/ACTIVE_MILESTONE.md`
@@ -46,4 +49,4 @@ Define the Architecture Mirror manifest and build the initial read-only Architec
 
 ## Last Updated
 
-2026-07-20 10:10:00 Europe/London
+2026-07-20 16:45:00 Europe/London
