@@ -501,6 +501,34 @@ function formatContractTime(value, timeZone = "America/New_York", options = {}) 
   return `${formatted} ${options.zoneLabel || "ET"}`;
 }
 
+function formatContractTimeWithTimezoneAbbreviation(value, timeZone = "Europe/London", fallbackZoneLabel = "UK") {
+  if (!value || value === "pending") return "Pending";
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return String(value);
+
+  const formatter = new Intl.DateTimeFormat("en-GB", {
+    timeZone,
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+    timeZoneName: "short"
+  });
+  const parts = formatter.formatToParts(date);
+  const zoneLabel = parts.find((part) => part.type === "timeZoneName")?.value || fallbackZoneLabel;
+  const formatted = parts
+    .filter((part) => part.type !== "timeZoneName")
+    .map((part) => part.value)
+    .join("")
+    .trim()
+    .replace(/\s+,/g, ",");
+
+  return `${formatted} ${zoneLabel}`.trim();
+}
+
 function formatRelativeAge(value) {
   if (!value || value === "pending") return "Pending";
 
@@ -1266,24 +1294,43 @@ function validityStatusClass(status = "") {
   return `status-${String(status || "unavailable").toLowerCase()}`;
 }
 
-function renderOverviewExpirySection(validity = null, displayStatus = "UNAVAILABLE") {
+function renderOverviewExpirySection(validity = null, displayStatus = "UNAVAILABLE", assetName = "") {
   const forecastExpiresAt = validity?.forecast_window_end || validity?.expires_at || null;
   const expiryValue = forecastExpiresAt
     ? formatContractTime(forecastExpiresAt, validity?.timezone || "America/New_York", { zoneLabel: "ET" })
     : "No active 24H expiry";
+  const ukExpiryValue = forecastExpiresAt
+    ? formatContractTimeWithTimezoneAbbreviation(forecastExpiresAt, "Europe/London", "UK")
+    : null;
   const refreshDueAt = validity?.refresh_due_at
     ? formatContractTime(validity.refresh_due_at, validity?.timezone || "America/New_York", { zoneLabel: "ET" })
     : "Pending";
   const expiryNote = forecastExpiresAt
     ? "Expiry = when this forecast stops being valid."
     : "No active 24H directional forecast is currently published.";
+  const tooltipId = assetName
+    ? `overview-expiry-tooltip-${String(assetName).toLowerCase().replace(/[^a-z0-9]+/g, "-")}`
+    : "overview-expiry-tooltip";
+  const triggerLabel = forecastExpiresAt
+    ? `24H call valid until ${expiryValue}. UK time ${ukExpiryValue}.`
+    : `24H call valid until ${expiryValue}.`;
 
   return `
     <section class="overview-expiry-card ${escapeHtml(validityStatusClass(displayStatus))}" data-overview-expiry-card="true" data-validity-status="${escapeHtml(displayStatus)}">
       <div class="overview-expiry-head">
         <div class="overview-expiry-copy">
           <span class="validity-label">24H call valid until</span>
-          <strong class="overview-expiry-value">${escapeHtml(expiryValue)}</strong>
+          <span
+            class="overview-expiry-trigger${forecastExpiresAt ? " has-tooltip" : ""}"
+            ${forecastExpiresAt ? `tabindex="0" aria-describedby="${escapeHtml(tooltipId)}" aria-label="${escapeHtml(triggerLabel)}"` : ""}
+          >
+            <strong class="overview-expiry-value">${escapeHtml(expiryValue)}</strong>
+            ${forecastExpiresAt ? `
+              <span id="${escapeHtml(tooltipId)}" class="overview-expiry-tooltip" role="tooltip">
+                UK time: ${escapeHtml(ukExpiryValue)}
+              </span>
+            ` : ""}
+          </span>
         </div>
         <span class="badge ${escapeHtml(validityStatusClass(displayStatus))} overview-expiry-badge">${escapeHtml(validityStatusLabel(displayStatus))}</span>
       </div>
@@ -1600,7 +1647,7 @@ function renderAgentCard(agent) {
         <span class="direction ${directionClass(call24.direction)}">${normaliseDirection(call24.direction)}</span>
         <strong>${formatConviction(call24Confidence)}</strong>
       </div>
-      ${renderOverviewExpirySection(validity, displayStatus)}
+      ${renderOverviewExpirySection(validity, displayStatus, agent.agent)}
       <div class="overview-validation-panel-stack" data-overview-validation-panels="true">
         ${buildOverviewL2lTrustBadge(l2lTrustStatus)}
         ${buildOverviewDirectionalTrustBadge(directionalTrustStatus)}

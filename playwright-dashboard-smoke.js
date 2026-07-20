@@ -150,12 +150,35 @@ async function run() {
           hour12: false
         }).format(new Date(value))} ET`;
       };
+      const formatUkExpiry = (value) => {
+        if (!value) return null;
+        const formatter = new Intl.DateTimeFormat("en-GB", {
+          timeZone: "Europe/London",
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: false,
+          timeZoneName: "short"
+        });
+        const parts = formatter.formatToParts(new Date(value));
+        const zoneLabel = parts.find((part) => part.type === "timeZoneName")?.value || "UK";
+        const formatted = parts
+          .filter((part) => part.type !== "timeZoneName")
+          .map((part) => part.value)
+          .join("")
+          .trim()
+          .replace(/\s+,/g, ",");
+        return `UK time: ${formatted} ${zoneLabel}`.trim();
+      };
 
       return agents.map((agent) => ({
         asset: agent.agent,
         forecastWindowEnd: agent.forecast_window_end || null,
         expiresAt: agent.expires_at || null,
         expectedExpiry: formatExpiry(agent.forecast_window_end || agent.expires_at, agent.timezone || "America/New_York"),
+        expectedUkTooltip: formatUkExpiry(agent.forecast_window_end || agent.expires_at),
         expectedStatus: String(agent.effective_status || agent.status_at_build || "UNAVAILABLE").toUpperCase()
       }));
     });
@@ -165,6 +188,13 @@ async function run() {
       expiryLabel: card.querySelector("[data-overview-expiry-card='true'] .validity-label")?.textContent?.trim() || "",
       expiryValue: card.querySelector(".overview-expiry-value")?.textContent?.trim() || "",
       expiryStatus: card.querySelector(".overview-expiry-badge")?.textContent?.trim() || "",
+      expiryTooltip: card.querySelector(".overview-expiry-tooltip")?.textContent?.trim() || "",
+      expiryTooltipRole: card.querySelector(".overview-expiry-tooltip")?.getAttribute("role") || "",
+      expiryTooltipVisibleOnHover: false,
+      expiryTooltipVisibleOnFocus: false,
+      expiryTriggerTag: card.querySelector(".overview-expiry-trigger")?.tagName || "",
+      expiryTriggerDescribedBy: card.querySelector(".overview-expiry-trigger")?.getAttribute("aria-describedby") || "",
+      expiryTriggerLabel: card.querySelector(".overview-expiry-trigger")?.getAttribute("aria-label") || "",
       directionalPanelGap: (() => {
         const directional = card.querySelector("[data-validation-panel='directional']");
         const metrics = card.querySelector(".agent-metrics");
@@ -203,6 +233,14 @@ async function run() {
         throw new Error(`Overview Layer 1 card ${expected.asset} did not render the artifact-backed expiry value.\nExpected: ${expected.expectedExpiry}\nRendered: ${rendered.expiryValue}`);
       }
 
+      if (rendered.expiryTooltip !== expected.expectedUkTooltip) {
+        throw new Error(`Overview Layer 1 card ${expected.asset} did not render the expected UK tooltip.\nExpected: ${expected.expectedUkTooltip}\nRendered: ${rendered.expiryTooltip}`);
+      }
+
+      if (rendered.expiryTooltipRole !== "tooltip" || !rendered.expiryTriggerDescribedBy || !rendered.expiryTriggerLabel.includes(expected.expectedExpiry) || !rendered.expiryTriggerLabel.includes(expected.expectedUkTooltip.replace("UK time: ", ""))) {
+        throw new Error(`Overview Layer 1 card ${expected.asset} did not expose the expiry tooltip accessibly.\n${JSON.stringify(rendered, null, 2)}`);
+      }
+
       if (rendered.expiryStatus !== expected.expectedStatus) {
         throw new Error(`Overview Layer 1 card ${expected.asset} did not render the expected validity status.\nExpected: ${expected.expectedStatus}\nRendered: ${rendered.expiryStatus}`);
       }
@@ -219,6 +257,39 @@ async function run() {
       if (rendered.directionalPanelGap === null || rendered.directionalPanelGap < 10) {
         throw new Error(`Overview Layer 1 card ${expected.asset} did not preserve visible spacing beneath the Directional Viability panel.\n${JSON.stringify(rendered, null, 2)}`);
       }
+    }
+
+    for (const expected of overviewExpiryContract) {
+      const card = page.locator(`#layer1Grid .agent-card[data-agent="${expected.asset}"]`).first();
+      const trigger = card.locator(".overview-expiry-trigger");
+      const tooltip = card.locator(".overview-expiry-tooltip");
+
+      await trigger.hover();
+      await page.waitForFunction((element) => {
+        if (!element) return false;
+        const style = getComputedStyle(element);
+        return style.visibility === "visible" && Number(style.opacity) > 0.5;
+      }, await tooltip.elementHandle());
+      if (!(await tooltip.isVisible())) {
+        throw new Error(`Overview Layer 1 card ${expected.asset} did not reveal the expiry tooltip on hover.`);
+      }
+
+      await trigger.focus();
+      await page.waitForFunction((element) => {
+        if (!element) return false;
+        const style = getComputedStyle(element);
+        return style.visibility === "visible" && Number(style.opacity) > 0.5;
+      }, await tooltip.elementHandle());
+      if (!(await tooltip.isVisible())) {
+        throw new Error(`Overview Layer 1 card ${expected.asset} did not reveal the expiry tooltip on keyboard focus.`);
+      }
+
+      await page.locator("#runWorkflowButton").focus();
+      await page.waitForFunction((element) => {
+        if (!element) return true;
+        const style = getComputedStyle(element);
+        return style.visibility === "hidden" || Number(style.opacity) < 0.1;
+      }, await tooltip.elementHandle());
     }
 
     const overviewLayout = await page.evaluate(() => {
@@ -281,7 +352,8 @@ async function run() {
       const expiryLabel = card?.querySelector("[data-overview-expiry-card='true'] .validity-label")?.textContent || "";
       const expiryValue = card?.querySelector(".overview-expiry-value")?.textContent || "";
       const expiryStatus = card?.querySelector(".overview-expiry-badge")?.textContent || "";
-      return { l2l, directional, expiryLabel, expiryValue, expiryStatus, text: card?.innerText || "" };
+      const expiryTooltip = card?.querySelector(".overview-expiry-tooltip")?.textContent || "";
+      return { l2l, directional, expiryLabel, expiryValue, expiryStatus, expiryTooltip, text: card?.innerText || "" };
     });
 
     const syntheticDirectionalText = String(syntheticNoCallCard.directional || "").toLowerCase();
@@ -298,6 +370,10 @@ async function run() {
 
     if (String(syntheticNoCallCard.expiryLabel || "").trim() !== "24H call valid until" || String(syntheticNoCallCard.expiryValue || "").trim() !== "No active 24H expiry" || String(syntheticNoCallCard.expiryStatus || "").trim() !== "NO CALL") {
       throw new Error(`Synthetic no-call Overview card did not render the expected no-call expiry presentation.\n${JSON.stringify(syntheticNoCallCard, null, 2)}`);
+    }
+
+    if (String(syntheticNoCallCard.expiryTooltip || "").trim() !== "") {
+      throw new Error(`Synthetic no-call Overview card should not render a UK expiry tooltip when no active expiry exists.\n${JSON.stringify(syntheticNoCallCard, null, 2)}`);
     }
 
     if (syntheticCardText.includes("synthetic no-call validation card")) {

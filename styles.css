@@ -882,10 +882,59 @@ h3 {
   gap: 4px;
 }
 
+.overview-expiry-trigger {
+  position: relative;
+  min-width: 0;
+  display: inline-grid;
+  justify-items: start;
+}
+
+.overview-expiry-trigger.has-tooltip {
+  cursor: help;
+}
+
+.overview-expiry-trigger:focus-visible {
+  outline: 2px solid rgba(42, 78, 138, 0.35);
+  outline-offset: 4px;
+  border-radius: 4px;
+}
+
 .overview-expiry-value {
   color: var(--ink-mid);
   font-size: 15px;
   line-height: 1.35;
+}
+
+.overview-expiry-tooltip {
+  position: absolute;
+  left: 0;
+  bottom: calc(100% + 8px);
+  z-index: 5;
+  width: max-content;
+  max-width: min(260px, calc(100vw - 72px));
+  padding: 7px 9px;
+  border-radius: 7px;
+  background: rgba(15, 27, 53, 0.96);
+  color: #fff;
+  font-size: 11px;
+  line-height: 1.35;
+  box-shadow: 0 12px 28px rgba(15, 27, 53, 0.18);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateY(-2px);
+  transition: opacity 120ms ease, transform 120ms ease, visibility 120ms ease;
+  white-space: normal;
+}
+
+.overview-expiry-card:hover .overview-expiry-tooltip,
+.overview-expiry-card:focus-within .overview-expiry-tooltip,
+.overview-expiry-trigger.has-tooltip:hover .overview-expiry-tooltip,
+.overview-expiry-trigger.has-tooltip:focus .overview-expiry-tooltip,
+.overview-expiry-trigger.has-tooltip:focus-visible .overview-expiry-tooltip {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
 }
 
 .overview-expiry-badge {
