@@ -1,6 +1,6 @@
 # Current State - AI Trading Platform
 
-Last updated: 2026-07-06
+Last updated: 2026-07-20
 
 ## Platform Status
 
@@ -8,9 +8,9 @@ The Layer 1 trading-agent platform remains operational, and the latest runtime e
 
 The full Layer 1 historical replay rollout is now validated across USD, EUR, Gold, NQ, and BTC. The active repository work has shifted from replay rollout itself into downstream research presentation and breakdown views built on top of the canonical checker artifacts.
 
-The current dashboard now includes the existing accuracy matrices, the checker workspaces, the weekday breakdown views, a Pair Trade Research tab, a `L2L 1H Sequence Research` tab, a top-level `Factor Edge Lab` research tab, and a separate top-level `Shadow Logic Backtest` research tab built downstream of canonical checker artifacts without changing replay, checker, flat-band, pair-selection, or confidence semantics.
+The current deployed production baseline includes the UK/ET live header clock, explicit Layer 1 `24H` expiry display on Overview cards, the Layer 1 Directional Viability spacing fix, and removal of the redundant Overview weighted-verdict prose. The deployed production commit is `a15100d62f9a8a4c6ad6d8390f97f7de25ca1cdd`.
 
-Current platform state is stable and validated. The Layer 1 historical replay rollout is complete, Weekday Breakdown and Day Totals are complete, Pair Trade Research is complete including its later UI refinements, `L2L 1H Sequence Research` is present as a separate downstream module, `Factor Edge Lab` is present as a separate research-only dashboard view, and the first `Shadow Logic Backtest` view is now present as a separate research-only comparison surface.
+Current platform state is stable and validated. The production dashboard exposes the live Layer 1 and Layer 2 surfaces plus the read-only historical research tabs, and the current active implementation task is a small production enhancement on top of the already deployed Layer 1 Overview expiry presentation.
 
 ## Current Architecture
 
@@ -146,11 +146,15 @@ The project has already established the AI-assisted development environment base
 
 The current repository priority is:
 
-> compact historical research breakdowns that reuse canonical checker artifact outputs
+> keep the production dashboard baseline clean and explicit while preparing for a later architecture mirror of production and research flows
 
-The next immediate milestone after shipping the first sequence-aware L2L module is:
+The current immediate implementation task is:
 
-> expose factor-level historical evidence in a research-only dashboard before considering any production weighting changes
+> add UK-time hover/focus tooltips to the existing Layer 1 `24H` expiry sections while preserving the visible ET expiry display
+
+The next planned phase after this production polish task is:
+
+> architecture mirror of the dashboard and research platform
 
 The `L2L 1H Sequence Research` module is not another close-to-close accuracy table. It answers whether price moved at least the required `50% ADR20` distance in the direction of a Layer 1 or Layer 2 call after the relevant intraday swing, using sequence-aware `1H` candles and daily candles only for ADR20.
 

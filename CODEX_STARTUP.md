@@ -90,6 +90,12 @@ git status --short --untracked-files=all
 git branch --show-current
 ```
 
+Routine local-only exception:
+
+- ignore `.claude/launch.json` during normal startup, status summaries, validation reports, task handovers, and session close notes
+- do not ask how to handle `.claude/launch.json` when it is merely present as unrelated local state
+- mention `.claude/launch.json` only if there is a real risk it may be modified, staged, committed, deleted, or otherwise interfere with the active task
+
 Then include the results in your startup summary.
 
 The startup summary must always contain:
@@ -106,6 +112,8 @@ If the working tree is not clean, ask whether the existing changes should be:
 - stashed
 - discarded
 - left untouched
+
+Apply the `.claude/launch.json` exception above before deciding whether the working tree is meaningfully dirty.
 
 Do not assume the correct action. Do not make additional edits until the user has answered.
 

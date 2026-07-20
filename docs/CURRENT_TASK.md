@@ -1,76 +1,56 @@
 # Current Task
 
-Last updated: 2026-07-07
+Last updated: 2026-07-20
 
 ## Task
 
-Phase 2 Shadow Backtest / Evidence-Reweighted Logic.
+Layer 1 Overview expiry UK tooltip.
 
 ## Objective
 
-Build a separate research-only dashboard surface that compares current production logic against a shadow reweighted logic model derived from the checked-in Factor Edge Lab evidence.
+Add UK-time hover/focus tooltips to the existing Layer 1 `24H` expiry sections on the Overview cards while preserving the visible ET expiry display that is already deployed and validated.
 
-This phase must:
+This task must:
 
-- read only from separate checked-in research artifacts
-- stay downstream-only and research-only
-- avoid changes to live Layer 1 logic
-- avoid changes to live Layer 2 logic
-- avoid changes to replay source-of-truth files
-- avoid changes to checker behavior and outputs
-- avoid changes to existing Backtest / Accuracy behavior
-- avoid changes to existing Factor Edge Lab evidence calculations
+- continue using `forecast_window_end` as the primary expiry source, with `expires_at` as fallback only
+- convert the same expiry timestamp into UK time using `Europe/London`
+- use browser-native `Intl.DateTimeFormat`
+- preserve the visible ET expiry value
+- keep the tooltip compact, accessible, and free of overflow
+- avoid changing Layer 2 logic or presentation unless a shared Layer 1 component naturally inherits the same behavior without a logic change
 
 ## Current Status
 
-The new shadow research path is now implemented locally:
+The current production baseline is already deployed and validated at commit `a15100d62f9a8a4c6ad6d8390f97f7de25ca1cdd` with:
 
-- `backtester/lib/phase2_shadow_backtest.js` contains the conservative shadow reweighting and shadow decision gate helpers
-- `backtester/scripts/build_phase2_shadow_backtest.js` builds the checked-in `data/phase-2-shadow-backtest.json` artifact
-- `backtester/tests/phase2_shadow_backtest.test.js` covers the initial reweighting rules and summary logic
-- the dashboard has a new top-level `Shadow Logic Backtest` tab that reads only from `data/phase-2-shadow-backtest.json`
+- explicit Layer 1 `24H` expiry visible on Overview cards
+- UK/ET live header clock
+- Layer 1 Directional Viability spacing fix
+- redundant Overview weighted-verdict prose removed
 
 ## Completed
 
-- Preserved `.claude/launch.json` as unrelated untracked local state.
-- Reused the checked-in checker artifacts and checked-in Factor Edge Lab artifact instead of touching replay or live logic.
-- Added a conservative shadow weight formula based on:
-  - factor agreement ex-flat performance versus asset baseline
-  - contradiction performance
-  - combined factor reliability
-  - flat behavior
-  - same-asset combination support
-  - pair-side support as a small auxiliary signal only
-- Kept the shadow decision engine conservative by allowing shadow no-calls when directional weight or dominance is weak.
-- Built the checked-in `data/phase-2-shadow-backtest.json` artifact for USD, EUR, Gold, NQ, and BTC at 24H.
-- Added a readable research-only dashboard tab with:
-  - Original Logic vs Shadow Logic comparison
-  - pass / warn / fail comparison state
-  - factor weight change tables
-  - sample warnings
-  - contained table scrolling
-- Extended `playwright-dashboard-smoke.js` to verify the new shadow tab and confirm no page-level horizontal overflow.
+- The visible ET expiry block on each Layer 1 Overview card is already deployed.
+- The UK/ET live header clock is already deployed and validated.
+- The Layer 1 Directional Viability spacing fix is already deployed and validated.
+- The redundant Overview weighted-verdict summary prose has already been removed.
 
 ## Next Immediate Steps
 
-1. Review the new shadow backtest outputs and decide whether the first conservative formula needs threshold tuning.
-2. Keep all findings explicitly research-only until any later production proposal is separately approved.
-3. If the shadow model remains useful, expand later to deeper evidence views or broader horizon coverage without touching production logic.
+1. Add a compact UK-time hover/focus tooltip to each available Layer 1 Overview expiry section.
+2. Extend smoke coverage to verify the tooltip contract, focus behavior, ET display preservation, and no-overflow behavior.
+3. After the tooltip work, plan the architecture-mirror implementation without building it yet.
 
 ## Current Blocker
 
 No repository-side blocker.
 
-Current intentional limitation:
-
-- the first shadow artifact compares Layer 1 24H only because that is the checked-in checker scope available for like-for-like comparison
-
 ## Target Outcome
 
 The near-term outcome is:
 
-> a separate research-only Phase 2 shadow backtest surface that compares existing production outcomes against conservative evidence-reweighted shadow logic without changing production behavior
+> preserve the deployed ET expiry display while exposing the exact same `24H` expiry in UK time on hover and keyboard focus
 
-The later decision point is:
+The next planned phase is:
 
-> decide whether the reviewed shadow evidence justifies any future production proposal, and only then consider separate live-logic work
+> architecture mirror of the dashboard and research platform
