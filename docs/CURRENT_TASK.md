@@ -24,7 +24,7 @@ The completed Architecture Mirror now:
 
 ## Current Status
 
-Architecture Mirror is deployed and validated at implementation commit `67379533005d9c163b849016dc773ab498551004`.
+Architecture Mirror is deployed and validated at implementation commit `2c4f0cc177b6cca9ac26d72a7cfac939de84e4d2`, with cache-busted deployment commit `c824f2ab007902efe1b7fa59f32aa1ddd91c5f31`.
 
 Current deployed scope:
 
@@ -32,6 +32,11 @@ Current deployed scope:
 - 59 edges
 - 5 boundaries
 - 13 views
+- 8 grouped Overview stages
+- deterministic lane-based focused views
+- orthogonal edge routing
+- below-canvas detail panel
+- geometry checks across all 13 views
 
 Credential continuity remains complete and documented. The current production baseline is already deployed and validated with:
 

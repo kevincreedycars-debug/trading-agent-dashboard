@@ -27,6 +27,11 @@ Last updated: 2026-07-21
 - Verified the live GitHub Pages deployment serves the Architecture tab, `data/architecture-map.json`, and the updated `script.js` and `styles.css` assets.
 - Verified live Architecture behavior: no manifest fetch on initial Overview load, one manifest fetch on first Architecture open, stable cached reuse on view changes and tab reopen, working click and keyboard selection, verified-only filtering, and no desktop or mobile page-level horizontal overflow.
 - Observed an unrelated live research warning from `research_best_factor_combinations` returning HTTP 500 from Supabase; Architecture behavior remained unaffected and no new Architecture-specific console errors were present.
+- Completed the Architecture layout correction at implementation commit `2c4f0cc177b6cca9ac26d72a7cfac939de84e4d2` and deployed it with cache-busted asset commit `c824f2ab007902efe1b7fa59f32aa1ddd91c5f31`.
+- Replaced the old compressed side-by-side Architecture layout with grouped view controls, a full-width map, a below-canvas selected-node panel, and a compact collapsible legend.
+- Changed Overview into 8 grouped system stages while keeping manifest facts and verification statuses unchanged.
+- Changed focused Architecture views to deterministic lane layouts with orthogonal SVG routing and geometry checks across all 13 views.
+- Verified the live GitHub Pages deployment at `1440×900`, `1920×1080`, `1024×768`, and `390×844`, with all 13 Architecture views rendering without node overlap, page-level horizontal overflow, or Architecture-specific console errors.
 
 ## Unfinished Work
 

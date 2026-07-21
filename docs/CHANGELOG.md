@@ -12,6 +12,7 @@
 - Added Architecture smoke coverage for lazy loading, failure isolation, selection, filtering, and responsive overflow.
 - Deployed the Architecture Mirror to GitHub Pages and validated the live manifest, script, and stylesheet assets.
 - Preserved the six explicitly uncertain architecture relationships as unverified rather than inferring unsupported production or research dependencies.
+- Reworked the Architecture renderer so Overview now uses 8 grouped stages, focused views use deterministic lane layouts, connectors use orthogonal routing, the detail panel sits below the canvas, and geometry checks cover all 13 views.
 
 ## 2026-07-20
 

@@ -12,12 +12,20 @@ The current deployed production baseline includes the UK/ET live header clock, e
 
 Current platform state is stable and validated. The production dashboard exposes the live Layer 1 and Layer 2 surfaces plus the read-only historical research tabs. The credential-continuity milestone is complete, and the Architecture Mirror is now implemented and deployed as a read-only top-level dashboard tab.
 
-The deployed Architecture Mirror baseline is commit `67379533005d9c163b849016dc773ab498551004`. It ships a validated checked-in manifest and custom HTML/CSS/SVG renderer with:
+The deployed Architecture Mirror baseline is implementation commit `2c4f0cc177b6cca9ac26d72a7cfac939de84e4d2`, published at deployed commit `c824f2ab007902efe1b7fa59f32aa1ddd91c5f31`. It ships a validated checked-in manifest and custom HTML/CSS/SVG renderer with:
 
 - 36 nodes
 - 59 edges
 - 5 boundaries
 - 13 views
+
+The current deployed presentation uses:
+
+- an 8-stage grouped Overview map rendered from the browser-side renderer rather than from altered manifest facts
+- deterministic lane-based focused views
+- orthogonal edge routing with boundary-aware node exits
+- a below-canvas selected-node detail panel
+- geometry checks across all 13 views to keep node overlap and edge-through-node regressions out of the dashboard
 
 The Architecture Mirror remains documentation-only. It does not change production logic, research calculations, workflow execution, credentials, or existing artifact semantics.
 
