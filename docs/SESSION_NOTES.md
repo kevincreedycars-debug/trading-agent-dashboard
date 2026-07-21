@@ -27,11 +27,11 @@ Last updated: 2026-07-21
 - Verified the live GitHub Pages deployment serves the Architecture tab, `data/architecture-map.json`, and the updated `script.js` and `styles.css` assets.
 - Verified live Architecture behavior: no manifest fetch on initial Overview load, one manifest fetch on first Architecture open, stable cached reuse on view changes and tab reopen, working click and keyboard selection, verified-only filtering, and no desktop or mobile page-level horizontal overflow.
 - Observed an unrelated live research warning from `research_best_factor_combinations` returning HTTP 500 from Supabase; Architecture behavior remained unaffected and no new Architecture-specific console errors were present.
-- Completed the Architecture layout correction at implementation commit `2c4f0cc177b6cca9ac26d72a7cfac939de84e4d2` and deployed it with cache-busted asset commit `c824f2ab007902efe1b7fa59f32aa1ddd91c5f31`.
-- Replaced the old compressed side-by-side Architecture layout with grouped view controls, a full-width map, a below-canvas selected-node panel, and a compact collapsible legend.
-- Changed Overview into 8 grouped system stages while keeping manifest facts and verification statuses unchanged.
-- Changed focused Architecture views to deterministic lane layouts with orthogonal SVG routing and geometry checks across all 13 views.
-- Verified the live GitHub Pages deployment at `1440×900`, `1920×1080`, `1024×768`, and `390×844`, with all 13 Architecture views rendering without node overlap, page-level horizontal overflow, or Architecture-specific console errors.
+- Replaced the old horizontal Architecture graph with the vertical waterfall renderer at implementation commit `7586016d89c1e06c9f20beed3201034248d1e048` and deployed it with cache-busted asset commit `9407893cc668b47fc9ddddf0cfa4b9e8a6f722bc`.
+- Changed the Architecture presentation to a strict top-to-bottom waterfall with full-width canvas use, below-canvas detail layout, and a compact collapsible legend.
+- Changed Overview into the exact 8-stage top-to-bottom order: External Data, Collection and Storage, Master Orchestration, Layer 1 Agents, Layer 2 Selection, Artifact Publication, Dashboard, Research System.
+- Changed every focused Architecture view to a deterministic top-to-bottom waterfall with contained responsive grids for parallel nodes, centered vertical connectors, no absolute node placement, no SVG bus routing, and no horizontal scrolling.
+- Verified the live GitHub Pages deployment at `1440x900`, `1920x1080`, `1024x768`, and `390x844`, with all 13 Architecture views rendering inside bounds with no card overlap, no stage overlap, no horizontal Architecture scrollbar, and no new Architecture-specific console errors.
 
 ## Unfinished Work
 

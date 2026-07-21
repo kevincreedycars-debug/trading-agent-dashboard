@@ -12,7 +12,7 @@ The current deployed production baseline includes the UK/ET live header clock, e
 
 Current platform state is stable and validated. The production dashboard exposes the live Layer 1 and Layer 2 surfaces plus the read-only historical research tabs. The credential-continuity milestone is complete, and the Architecture Mirror is now implemented and deployed as a read-only top-level dashboard tab.
 
-The deployed Architecture Mirror baseline is implementation commit `2c4f0cc177b6cca9ac26d72a7cfac939de84e4d2`, published at deployed commit `c824f2ab007902efe1b7fa59f32aa1ddd91c5f31`. It ships a validated checked-in manifest and custom HTML/CSS/SVG renderer with:
+The deployed Architecture Mirror baseline is implementation commit `7586016d89c1e06c9f20beed3201034248d1e048`, published at deployed commit `9407893cc668b47fc9ddddf0cfa4b9e8a6f722bc`. It ships a validated checked-in manifest and custom HTML/CSS renderer with:
 
 - 36 nodes
 - 59 edges
@@ -22,10 +22,14 @@ The deployed Architecture Mirror baseline is implementation commit `2c4f0cc177b6
 The current deployed presentation uses:
 
 - an 8-stage grouped Overview map rendered from the browser-side renderer rather than from altered manifest facts
-- deterministic lane-based focused views
-- orthogonal edge routing with boundary-aware node exits
+- deterministic vertical waterfall views for every Architecture tab
+- contained responsive grids for parallel nodes within a stage
+- centered vertical connectors between stages
 - a below-canvas selected-node detail panel
-- geometry checks across all 13 views to keep node overlap and edge-through-node regressions out of the dashboard
+- no absolute node placement in the active renderer
+- no SVG bus routing in the active renderer
+- no horizontal scrolling in the Architecture canvas
+- four-viewport geometry and live review coverage across all 13 views
 
 The Architecture Mirror remains documentation-only. It does not change production logic, research calculations, workflow execution, credentials, or existing artifact semantics.
 

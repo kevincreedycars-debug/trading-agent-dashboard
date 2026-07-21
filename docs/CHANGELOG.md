@@ -12,7 +12,9 @@
 - Added Architecture smoke coverage for lazy loading, failure isolation, selection, filtering, and responsive overflow.
 - Deployed the Architecture Mirror to GitHub Pages and validated the live manifest, script, and stylesheet assets.
 - Preserved the six explicitly uncertain architecture relationships as unverified rather than inferring unsupported production or research dependencies.
-- Reworked the Architecture renderer so Overview now uses 8 grouped stages, focused views use deterministic lane layouts, connectors use orthogonal routing, the detail panel sits below the canvas, and geometry checks cover all 13 views.
+- Reworked the Architecture renderer so Overview now uses the exact 8-stage top-to-bottom order, focused views use deterministic vertical waterfalls, parallel nodes stay in contained responsive grids, the detail panel sits below the canvas, and geometry checks cover all 13 views.
+- Removed the active horizontal graph path by using no absolute placement, no SVG bus routing, and no horizontal scrolling in the deployed Architecture renderer.
+- Verified the live GitHub Pages waterfall deployment across all 13 views at `1440x900`, `1920x1080`, `1024x768`, and `390x844`.
 
 ## 2026-07-20
 
