@@ -1,6 +1,6 @@
 # Current State - AI Trading Platform
 
-Last updated: 2026-07-20
+Last updated: 2026-07-21
 
 ## Platform Status
 
@@ -10,7 +10,25 @@ The full Layer 1 historical replay rollout is now validated across USD, EUR, Gol
 
 The current deployed production baseline includes the UK/ET live header clock, explicit Layer 1 `24H` expiry display on Overview cards, the Layer 1 Directional Viability spacing fix, removal of the redundant Overview weighted-verdict prose, and UK-time hover/focus tooltips on every available Layer 1 `24H` expiry section while preserving the visible ET expiry. The tooltip converts the exact same expiry timestamp into UK time using browser-native `Intl.DateTimeFormat` with automatic GMT/BST handling.
 
-Current platform state is stable and validated. The production dashboard exposes the live Layer 1 and Layer 2 surfaces plus the read-only historical research tabs. The credential-continuity milestone is now complete, and the next active implementation task is the Architecture Mirror planning/build phase.
+Current platform state is stable and validated. The production dashboard exposes the live Layer 1 and Layer 2 surfaces plus the read-only historical research tabs. The credential-continuity milestone is complete, and the Architecture Mirror is now implemented and deployed as a read-only top-level dashboard tab.
+
+The deployed Architecture Mirror baseline is commit `67379533005d9c163b849016dc773ab498551004`. It ships a validated checked-in manifest and custom HTML/CSS/SVG renderer with:
+
+- 36 nodes
+- 59 edges
+- 5 boundaries
+- 13 views
+
+The Architecture Mirror remains documentation-only. It does not change production logic, research calculations, workflow execution, credentials, or existing artifact semantics.
+
+The following architecture areas remain intentionally explicit but unverified in the deployed mirror:
+
+- whether Dashboard Writer publishes artifacts beyond `data/layer1.json`
+- the exact publication responsibility split for `data/layer2.json`
+- which non-BTC collectors directly consume economic events
+- exact GitHub commit sequencing during an orchestrator run
+- complete column-level Supabase lineage
+- node-level failure fan-out inside every exported workflow
 
 ## Credential Continuity Status
 
@@ -166,15 +184,15 @@ The project has already established the AI-assisted development environment base
 
 The current repository priority is:
 
-> keep the production dashboard baseline clean and explicit while preparing for a later architecture mirror of production and research flows
+> keep the production dashboard baseline clean and explicit while validating and reviewing the newly deployed Architecture Mirror
 
 The current immediate implementation task is:
 
-> design and build the Architecture Mirror as a read-only documentation surface inside the dashboard
+> review the deployed Architecture Mirror and decide the next milestone
 
 The next planned phase after this production polish task is:
 
-> implement an Architecture tab that maps production and research flows without changing runtime or research logic
+> no new implementation phase is active yet; the next milestone awaits review unless a separately documented task is approved
 
 The `L2L 1H Sequence Research` module is not another close-to-close accuracy table. It answers whether price moved at least the required `50% ADR20` distance in the direction of a Layer 1 or Layer 2 call after the relevant intraday swing, using sequence-aware `1H` candles and daily candles only for ADR20.
 

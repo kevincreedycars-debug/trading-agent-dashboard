@@ -1,5 +1,18 @@
 # Changelog
 
+## 2026-07-21
+
+### Added
+
+- Added the read-only `Architecture` dashboard tab driven by checked-in `data/architecture-map.json`.
+- Added `data/architecture-map.schema.json`, `scripts/validate_architecture_map.js`, and `tests/validate_architecture_map.test.js` for schema validation, deterministic validation, and rule-level rejection coverage.
+
+### Changed
+
+- Added Architecture smoke coverage for lazy loading, failure isolation, selection, filtering, and responsive overflow.
+- Deployed the Architecture Mirror to GitHub Pages and validated the live manifest, script, and stylesheet assets.
+- Preserved the six explicitly uncertain architecture relationships as unverified rather than inferring unsupported production or research dependencies.
+
 ## 2026-07-20
 
 ### Added

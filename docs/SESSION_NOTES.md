@@ -1,6 +1,6 @@
 # Session Notes
 
-Last updated: 2026-07-20
+Last updated: 2026-07-21
 
 ## Work Completed
 
@@ -21,12 +21,17 @@ Last updated: 2026-07-20
 - Verified that the tooltip converts the same expiry timestamp into UK time with browser-native `Intl.DateTimeFormat` using automatic GMT/BST handling.
 - Verified live GitHub Pages asset cache busting and live tooltip behavior after deployment.
 - Approved the Architecture Mirror direction: top-level `Architecture` tab, checked-in `data/architecture-map.json` manifest, custom HTML/CSS/SVG renderer, overview map plus expandable module maps, and a read-only documentation surface with no effect on production or research logic.
+- Implemented and deployed the Architecture Mirror as a top-level read-only dashboard tab at commit `67379533005d9c163b849016dc773ab498551004`.
+- Shipped the checked-in Architecture manifest and schema with 36 nodes, 59 edges, 5 boundaries, and 13 views.
+- Added deterministic manifest validation plus direct validator rejection tests for duplicate IDs, invalid references, and unsupported verification statuses.
+- Verified the live GitHub Pages deployment serves the Architecture tab, `data/architecture-map.json`, and the updated `script.js` and `styles.css` assets.
+- Verified live Architecture behavior: no manifest fetch on initial Overview load, one manifest fetch on first Architecture open, stable cached reuse on view changes and tab reopen, working click and keyboard selection, verified-only filtering, and no desktop or mobile page-level horizontal overflow.
+- Observed an unrelated live research warning from `research_best_factor_combinations` returning HTTP 500 from Supabase; Architecture behavior remained unaffected and no new Architecture-specific console errors were present.
 
 ## Unfinished Work
 
-- Design and build the Architecture Mirror.
-- Define the checked-in architecture manifest.
-- Build the first overview map and expandable module maps.
+- Await review of the deployed Architecture Mirror.
+- Leave the six explicitly unverified architecture relationships unchanged until stronger repository evidence exists.
 
 ## Blockers
 
@@ -42,4 +47,4 @@ Last updated: 2026-07-20
 
 ## Exact Next Task
 
-Design and build the Architecture Mirror using a checked-in manifest and custom renderer.
+Review the deployed Architecture Mirror and approve or reject any follow-up milestone.

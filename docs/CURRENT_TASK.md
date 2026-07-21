@@ -1,16 +1,16 @@
 # Current Task
 
-Last updated: 2026-07-20
+Last updated: 2026-07-21
 
 ## Task
 
-Architecture Mirror.
+Architecture Mirror review and closeout.
 
 ## Objective
 
-Design and build a read-only Architecture Mirror inside the dashboard that visually explains the production platform and downstream research platform end to end without changing production or research logic.
+Confirm the deployed read-only Architecture Mirror is complete, documented, and ready for follow-up review without changing production or research logic.
 
-This task must:
+The completed Architecture Mirror now:
 
 - cover Layer 1, Layer 2, historical replay/backtesters, Factor Edge Lab, Phase 2 Shadow Backtest, Phase 3 validation modules, ADR/L2L research, n8n execution, data sources, artifacts, GitHub publication, and dashboard rendering
 - clearly separate production versus research-only boundaries
@@ -24,7 +24,16 @@ This task must:
 
 ## Current Status
 
-Credential continuity is complete and documented. The current production baseline is already deployed and validated with:
+Architecture Mirror is deployed and validated at implementation commit `67379533005d9c163b849016dc773ab498551004`.
+
+Current deployed scope:
+
+- 36 nodes
+- 59 edges
+- 5 boundaries
+- 13 views
+
+Credential continuity remains complete and documented. The current production baseline is already deployed and validated with:
 
 - explicit Layer 1 `24H` expiry visible on Overview cards
 - UK/ET live header clock
@@ -47,11 +56,20 @@ Credential continuity is complete and documented. The current production baselin
 - The UK-time hover/focus tooltip is deployed on every available Layer 1 `24H` expiry section.
 - The tooltip converts the same expiry timestamp to UK time with automatic GMT/BST handling.
 
+## Remaining Explicit Unverified Areas
+
+- whether Dashboard Writer publishes artifacts beyond `data/layer1.json`
+- the exact publication responsibility split for `data/layer2.json`
+- which non-BTC collectors directly consume economic events
+- exact GitHub commit sequencing during an orchestrator run
+- complete column-level Supabase lineage
+- node-level failure fan-out inside every exported workflow
+
 ## Next Immediate Steps
 
-1. Define the `data/architecture-map.json` manifest shape.
-2. Build the top-level Architecture tab shell and overview map renderer.
-3. Add expandable module maps for production and research flows without altering existing dashboard logic.
+1. Review the deployed Architecture Mirror with the current repository baseline.
+2. Decide whether any follow-up Architecture depth is required.
+3. Leave the next milestone unset until review approves a documented successor task.
 
 ## Current Blocker
 
@@ -59,10 +77,10 @@ No repository-side blocker.
 
 ## Target Outcome
 
-The near-term outcome is:
+The achieved outcome is:
 
 > a read-only Architecture Mirror that explains the production and research platform clearly inside the dashboard
 
 The next planned phase is:
 
-> iterate on the Architecture Mirror after the first in-dashboard release if additional map depth is needed
+> awaiting review; no new implementation phase is active yet

@@ -6,11 +6,11 @@ Architecture Mirror
 
 ## Current Milestone
 
-Begin the read-only Architecture Mirror using a checked-in manifest and custom renderer
+Read-only Architecture Mirror implemented and deployed
 
 ## Status
 
-Ready to start
+Awaiting review
 
 ## Completed Work
 
@@ -25,12 +25,17 @@ Ready to start
 - The visible Layer 1 expiry remains in ET.
 - The tooltip converts the same expiry timestamp to UK time with automatic GMT/BST handling.
 - The UK/ET live header clock, Directional Viability spacing fix, and Overview prose removal remain intact in production.
+- Deployed the Architecture Mirror at commit `67379533005d9c163b849016dc773ab498551004`.
+- Added the top-level `Architecture` tab with lazy manifest loading and isolated failure handling.
+- Added the checked-in manifest and schema with 36 nodes, 59 edges, 5 boundaries, and 13 views.
+- Added deterministic manifest validation and direct validator rejection tests.
+- Verified the live GitHub Pages deployment serves the Architecture tab, manifest, updated script, and updated styles.
 
 ## Remaining Work
 
-- Define the Architecture Mirror manifest shape in `data/architecture-map.json`.
-- Add a top-level `Architecture` tab with an overview system map.
-- Add expandable module maps for production and research flows.
+- Await review of the deployed Architecture Mirror.
+- Preserve the six explicitly unverified architecture areas until stronger repository evidence exists.
+- Do not start a new milestone until a documented follow-up task is approved.
 
 ## Current Files Being Modified
 
@@ -45,8 +50,8 @@ No repository-side blocker.
 
 ## Next Immediate Action
 
-Define the Architecture Mirror manifest and build the initial read-only Architecture tab shell.
+Review the deployed Architecture Mirror and decide the next milestone.
 
 ## Last Updated
 
-2026-07-20 16:45:00 Europe/London
+2026-07-21 15:55:00 Europe/London
