@@ -3621,149 +3621,154 @@ h3 {
 
 .architecture-canvas-shell {
   max-width: 100%;
-  overflow-x: auto;
-  overflow-y: hidden;
-  padding-bottom: 4px;
-}
-
-.architecture-canvas-shell.is-scrollable {
-  margin-inline: -4px;
-  padding-inline: 4px;
+  overflow-x: hidden;
+  overflow-y: visible;
 }
 
 .architecture-canvas {
-  position: relative;
-  width: var(--architecture-canvas-width);
-  min-width: var(--architecture-canvas-width);
-  height: var(--architecture-canvas-height);
-  max-width: none;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
   border: 1px solid rgba(11, 31, 58, 0.08);
   border-radius: 20px;
   background:
-    radial-gradient(circle at top right, rgba(67, 200, 176, 0.08), transparent 24%),
+    radial-gradient(circle at top right, rgba(67, 200, 176, 0.08), transparent 28%),
     linear-gradient(180deg, #fffdfa 0%, #ffffff 100%);
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: visible;
+  box-sizing: border-box;
+  padding: 22px 18px;
 }
 
-.architecture-canvas-shell:not(.is-scrollable) .architecture-canvas {
+.architecture-stage-stack {
+  display: grid;
+  gap: 12px;
   width: 100%;
+  max-width: 100%;
   min-width: 0;
 }
 
-.architecture-canvas-svg,
-.architecture-node-layer {
-  position: absolute;
-  inset: 0;
+.architecture-stage {
   width: 100%;
-  height: 100%;
+  max-width: 100%;
+  min-width: 0;
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid rgba(11, 31, 58, 0.1);
+  border-top: 5px solid rgba(42, 78, 138, 0.18);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.92);
+  box-sizing: border-box;
 }
 
-.architecture-node-layer {
-  pointer-events: none;
-  overflow: hidden;
+.architecture-stage-boundary-supabase-runtime,
+.architecture-stage-boundary-external-inputs {
+  border-top-color: rgba(67, 200, 176, 0.48);
 }
 
-.architecture-arrow-head {
-  fill: currentColor;
+.architecture-stage-boundary-n8n-runtime,
+.architecture-stage-boundary-runtime {
+  border-top-color: rgba(42, 78, 138, 0.36);
 }
 
-.architecture-boundary-box {
-  fill: rgba(15, 27, 53, 0.03);
-  stroke: rgba(15, 27, 53, 0.12);
-  stroke-width: 1.5;
-  stroke-dasharray: 10 10;
+.architecture-stage-boundary-github-publication,
+.architecture-stage-boundary-publication {
+  border-top-color: rgba(209, 165, 58, 0.48);
 }
 
-.architecture-boundary-label {
-  fill: var(--navy);
-  font-family: var(--mono);
-  font-size: 13px;
-  font-weight: 700;
+.architecture-stage-boundary-browser-surface,
+.architecture-stage-boundary-browser {
+  border-top-color: rgba(104, 76, 173, 0.42);
 }
 
-.architecture-boundary-browser-surface .architecture-boundary-box,
-.architecture-boundary-overview-browser .architecture-boundary-box {
-  fill: rgba(42, 78, 138, 0.04);
+.architecture-stage-boundary-research-stack,
+.architecture-stage-boundary-research-system,
+.architecture-stage-boundary-research {
+  border-top-color: rgba(35, 126, 108, 0.56);
 }
 
-.architecture-boundary-github-publication .architecture-boundary-box,
-.architecture-boundary-overview-publication .architecture-boundary-box {
-  fill: rgba(209, 165, 58, 0.06);
+.architecture-stage-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  gap: 10px 16px;
 }
 
-.architecture-boundary-research-stack .architecture-boundary-box,
-.architecture-boundary-overview-research .architecture-boundary-box {
-  fill: rgba(67, 200, 176, 0.05);
-}
-
-.architecture-stage-box {
-  fill: rgba(255, 255, 255, 0.78);
-  stroke: rgba(15, 27, 53, 0.08);
-  stroke-width: 1.25;
-}
-
-.architecture-stage-label {
-  fill: var(--navy);
-  font-size: 12px;
-  font-weight: 800;
+.architecture-stage-heading {
+  margin: 0;
+  color: var(--navy);
+  font-size: 15px;
+  font-weight: 900;
   text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
-.architecture-edge {
-  fill: none;
-  stroke: rgba(15, 27, 53, 0.24);
-  stroke-width: 3;
-  opacity: 0.32;
-  color: rgba(15, 27, 53, 0.42);
+.architecture-stage-subtitle {
+  margin: 6px 0 0;
+  color: var(--ink-muted);
+  line-height: 1.5;
 }
 
-.architecture-edge.is-highlighted {
-  stroke-width: 4.5;
-  opacity: 1;
+.architecture-stage-badges {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: end;
+  gap: 8px;
 }
 
-.architecture-edge.is-muted {
-  opacity: 0.2;
+.architecture-stage-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
 }
 
-.architecture-edge-status-verified {
-  stroke: rgba(36, 107, 72, 0.8);
-  color: rgba(36, 107, 72, 0.8);
+.architecture-stage-grid[data-architecture-stage-count="1"] {
+  grid-template-columns: minmax(0, 1fr);
 }
 
-.architecture-edge-status-partially_verified {
-  stroke: rgba(184, 132, 26, 0.8);
-  stroke-dasharray: 10 7;
-  color: rgba(184, 132, 26, 0.8);
+.architecture-stage-connector {
+  display: grid;
+  justify-items: center;
+  gap: 0;
+  width: 100%;
+  padding: 2px 0;
 }
 
-.architecture-edge-status-unverified {
-  stroke: rgba(165, 48, 48, 0.78);
-  stroke-dasharray: 4 8;
-  color: rgba(165, 48, 48, 0.78);
+.architecture-stage-connector-line {
+  width: 2px;
+  height: 22px;
+  border-radius: 999px;
+  background: rgba(15, 27, 53, 0.22);
 }
 
-.architecture-edge-label {
-  fill: var(--ink-mid);
-  font-size: 11px;
-  font-weight: 700;
+.architecture-stage-connector-arrow {
+  width: 0;
+  height: 0;
+  border-left: 7px solid transparent;
+  border-right: 7px solid transparent;
+  border-top: 10px solid rgba(15, 27, 53, 0.28);
 }
 
 .architecture-node {
-  position: absolute;
-  width: 172px;
-  min-width: 150px;
-  max-width: 190px;
+  position: relative;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
   display: grid;
-  gap: 6px;
-  padding: 12px 12px 11px;
+  gap: 8px;
+  padding: 14px;
   border: 1px solid rgba(11, 31, 58, 0.12);
   border-radius: 14px;
   background: rgba(255, 255, 255, 0.96);
   box-shadow: 0 10px 24px rgba(11, 31, 58, 0.08);
   text-align: left;
   color: var(--ink);
-  pointer-events: auto;
+  box-sizing: border-box;
+  min-height: 116px;
 }
 
 .architecture-node.is-selected {
@@ -3787,11 +3792,15 @@ h3 {
   overflow: hidden;
 }
 
-.architecture-node-subtitle {
+.architecture-node-purpose {
   color: var(--ink-muted);
-  font-size: 11px;
-  line-height: 1.35;
-  min-height: 28px;
+  font-size: 12px;
+  line-height: 1.45;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  min-width: 0;
 }
 
 .architecture-node-meta {
@@ -3911,8 +3920,10 @@ h3 {
 }
 
 .architecture-detail-section {
-  border-top: 1px solid rgba(11, 31, 58, 0.08);
-  padding-top: 10px;
+  border: 1px solid rgba(11, 31, 58, 0.08);
+  border-radius: 12px;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.72);
 }
 
 .architecture-detail-section summary {
@@ -4005,7 +4016,7 @@ h3 {
   display: block;
   width: 100%;
   height: 10px;
-  border: 1px dashed rgba(15, 27, 53, 0.16);
+  border: 1px solid rgba(15, 27, 53, 0.16);
   border-radius: 999px;
   background: rgba(67, 200, 176, 0.06);
 }
@@ -4092,6 +4103,10 @@ h3 {
 
   .research-table-scroll {
     overflow-x: auto;
+  }
+
+  .architecture-stage-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
@@ -4245,19 +4260,17 @@ h3 {
 
   .architecture-view-group-row,
   .architecture-detail-grid,
-  .architecture-legend-compact-grid {
+  .architecture-legend-compact-grid,
+  .architecture-stage-grid {
     grid-template-columns: 1fr;
   }
 
-  .architecture-canvas {
-    width: var(--architecture-canvas-width);
-    min-width: var(--architecture-canvas-width);
-    height: min(560px, var(--architecture-canvas-height));
+  .architecture-stage-head {
+    flex-direction: column;
   }
 
-  .architecture-node {
-    width: 164px;
-    min-width: 150px;
+  .architecture-stage-badges {
+    justify-content: start;
   }
 
   .section-header {
