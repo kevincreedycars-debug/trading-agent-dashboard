@@ -32,6 +32,42 @@ function createServer() {
   });
 }
 
+function rectanglesOverlap(a, b) {
+  return !(a.x + a.width <= b.x || b.x + b.width <= a.x || a.y + a.height <= b.y || b.y + b.height <= a.y);
+}
+
+function segmentIntersectsInterior(segment, rect, inset = 18) {
+  const inner = {
+    x: rect.x + inset,
+    y: rect.y + inset,
+    width: Math.max(0, rect.width - inset * 2),
+    height: Math.max(0, rect.height - inset * 2)
+  };
+
+  if (inner.width <= 0 || inner.height <= 0) return false;
+
+  const minX = Math.min(segment.x1, segment.x2);
+  const maxX = Math.max(segment.x1, segment.x2);
+  const minY = Math.min(segment.y1, segment.y2);
+  const maxY = Math.max(segment.y1, segment.y2);
+
+  if (segment.y1 === segment.y2) {
+    return segment.y1 >= inner.y
+      && segment.y1 <= inner.y + inner.height
+      && maxX >= inner.x
+      && minX <= inner.x + inner.width;
+  }
+
+  if (segment.x1 === segment.x2) {
+    return segment.x1 >= inner.x
+      && segment.x1 <= inner.x + inner.width
+      && maxY >= inner.y
+      && minY <= inner.y + inner.height;
+  }
+
+  return false;
+}
+
 async function run() {
   const server = createServer();
   await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
@@ -1038,10 +1074,23 @@ async function run() {
     }
 
     const architectureDefaultSelection = await page.evaluate(() => {
-      const activeView = document.querySelector("[data-architecture-view].active")?.getAttribute("data-architecture-view") || "";
+      const activeView = document.querySelector("[data-architecture-view][aria-pressed='true']")?.getAttribute("data-architecture-view") || "";
       const detailHeading = document.querySelector("[data-architecture-detail='true'] h3")?.textContent?.trim() || "";
       const selectedNode = document.querySelector(".architecture-node.is-selected")?.getAttribute("data-architecture-node") || "";
-      return { activeView, detailHeading, selectedNode };
+      const overviewNodeCount = document.querySelectorAll("[data-architecture-node]").length;
+      const shell = document.querySelector("[data-architecture-shell='true']");
+      const canvas = document.querySelector("[data-architecture-canvas='true']");
+      const detail = document.querySelector("[data-architecture-detail='true']");
+      return {
+        activeView,
+        detailHeading,
+        selectedNode,
+        overviewNodeCount,
+        shellWidth: shell?.getBoundingClientRect().width || 0,
+        canvasWidth: canvas?.getBoundingClientRect().width || 0,
+        canvasBottom: canvas?.getBoundingClientRect().bottom || 0,
+        detailTop: detail?.getBoundingClientRect().top || 0
+      };
     });
 
     if (architectureDefaultSelection.activeView !== "overview-map") {
@@ -1052,17 +1101,16 @@ async function run() {
       throw new Error(`Architecture tab did not select a default node.\n${JSON.stringify(architectureDefaultSelection, null, 2)}`);
     }
 
-    await page.locator("[data-architecture-node='master_orchestrator']").click();
-    const architectureClickSelection = await page.locator("[data-architecture-detail='true'] h3").textContent() || "";
-    if (!architectureClickSelection.includes("Master Orchestrator")) {
-      throw new Error(`Architecture click selection did not update the detail panel.\n${architectureClickSelection}`);
+    if (architectureDefaultSelection.overviewNodeCount !== 8) {
+      throw new Error(`Overview Map should render grouped summary nodes instead of all manifest nodes.\n${JSON.stringify(architectureDefaultSelection, null, 2)}`);
     }
 
-    await page.locator("[data-architecture-node='checker_artifacts']").focus();
-    await page.keyboard.press("Enter");
-    const architectureKeyboardSelection = await page.locator("[data-architecture-detail='true'] h3").textContent() || "";
-    if (!architectureKeyboardSelection.includes("Checker Artifacts")) {
-      throw new Error(`Architecture keyboard selection did not update the detail panel.\n${architectureKeyboardSelection}`);
+    if (architectureDefaultSelection.canvasWidth < architectureDefaultSelection.shellWidth * 0.9) {
+      throw new Error(`Architecture canvas is not using the intended content width.\n${JSON.stringify(architectureDefaultSelection, null, 2)}`);
+    }
+
+    if (architectureDefaultSelection.detailTop < architectureDefaultSelection.canvasBottom - 1) {
+      throw new Error(`Architecture detail panel did not render below the canvas on desktop.\n${JSON.stringify(architectureDefaultSelection, null, 2)}`);
     }
 
     await page.locator("[data-architecture-view='layer2']").click();
@@ -1070,6 +1118,19 @@ async function run() {
     const architectureLayer2Text = await page.locator("#architecturePanel").innerText();
     if (!architectureLayer2Text.toLowerCase().includes("unverified")) {
       throw new Error(`Architecture Layer 2 view did not preserve explicit unverified relationships.\n${architectureLayer2Text}`);
+    }
+
+    await page.locator("[data-architecture-node='layer2_trade_selection_agent']").click();
+    const architectureClickSelection = await page.locator("[data-architecture-detail='true'] h3").textContent() || "";
+    if (!architectureClickSelection.includes("Layer 2 Trade Selection Agent")) {
+      throw new Error(`Architecture click selection did not update the detail panel.\n${architectureClickSelection}`);
+    }
+
+    await page.locator("[data-architecture-node='layer2_json']").focus();
+    await page.keyboard.press("Enter");
+    const architectureKeyboardSelection = await page.locator("[data-architecture-detail='true'] h3").textContent() || "";
+    if (!architectureKeyboardSelection.includes("data/layer2.json")) {
+      throw new Error(`Architecture keyboard selection did not update the detail panel.\n${architectureKeyboardSelection}`);
     }
 
     await page.locator("[data-architecture-filter='verified-only']").click();
@@ -1082,15 +1143,77 @@ async function run() {
       const doc = document.documentElement;
       const panel = document.getElementById("architecturePanel");
       const canvas = document.querySelector("[data-architecture-canvas='true']");
+      const detail = document.querySelector("[data-architecture-detail='true']");
+      const controls = document.querySelector("[data-architecture-view-controls='true']");
       return {
         pageHasHorizontalOverflow: doc.scrollWidth > doc.clientWidth + 1,
         panelHasHorizontalOverflow: panel ? panel.scrollWidth > panel.clientWidth + 1 : false,
-        canvasHasHorizontalOverflow: canvas ? canvas.scrollWidth > canvas.clientWidth + 1 : false
+        canvasHasHorizontalOverflow: canvas ? canvas.scrollWidth > canvas.clientWidth + 1 : false,
+        canvasWidth: canvas?.getBoundingClientRect().width || 0,
+        panelWidth: panel?.getBoundingClientRect().width || 0,
+        detailTop: detail?.getBoundingClientRect().top || 0,
+        canvasBottom: canvas?.getBoundingClientRect().bottom || 0,
+        controlsBottom: controls?.getBoundingClientRect().bottom || 0,
+        activeViewButton: document.querySelector("[data-architecture-view][aria-pressed='true']")?.textContent?.trim() || ""
       };
     });
 
-    if (architectureDesktopLayout.pageHasHorizontalOverflow || architectureDesktopLayout.panelHasHorizontalOverflow || architectureDesktopLayout.canvasHasHorizontalOverflow) {
+    if (architectureDesktopLayout.pageHasHorizontalOverflow || architectureDesktopLayout.panelHasHorizontalOverflow) {
       throw new Error(`Architecture tab overflowed horizontally on desktop.\n${JSON.stringify(architectureDesktopLayout, null, 2)}`);
+    }
+
+    if (!architectureDesktopLayout.activeViewButton) {
+      throw new Error(`Architecture active view control was not identifiable.\n${JSON.stringify(architectureDesktopLayout, null, 2)}`);
+    }
+
+    if (architectureDesktopLayout.detailTop < architectureDesktopLayout.canvasBottom - 1 || architectureDesktopLayout.controlsBottom > architectureDesktopLayout.canvasBottom) {
+      throw new Error(`Architecture desktop layout did not keep the canvas and below-canvas detail stack aligned.\n${JSON.stringify(architectureDesktopLayout, null, 2)}`);
+    }
+
+    const architectureAllViewGeometry = await page.evaluate(async () => {
+      const results = [];
+      const viewButtons = Array.from(document.querySelectorAll("[data-architecture-view]")).map((button) => button.getAttribute("data-architecture-view"));
+      for (const viewId of viewButtons) {
+        const button = document.querySelector(`[data-architecture-view="${viewId}"]`);
+        button?.click();
+        await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+        const geometry = globalThis.__dashboardTestHooks.getArchitectureGeometryForTest();
+        const labelOverflow = Array.from(document.querySelectorAll("[data-architecture-node]")).some((node) => node.scrollHeight > node.clientHeight + 1 || node.scrollWidth > node.clientWidth + 1);
+        results.push({
+          viewId,
+          geometry,
+          labelOverflow
+        });
+      }
+      return results;
+    });
+
+    for (const viewAudit of architectureAllViewGeometry) {
+      if (!viewAudit.geometry) {
+        throw new Error(`Architecture geometry hook returned no data for ${viewAudit.viewId}.`);
+      }
+
+      const nodes = viewAudit.geometry.nodes || [];
+      for (let index = 0; index < nodes.length; index += 1) {
+        for (let compareIndex = index + 1; compareIndex < nodes.length; compareIndex += 1) {
+          if (rectanglesOverlap(nodes[index], nodes[compareIndex])) {
+            throw new Error(`Architecture nodes overlapped in ${viewAudit.viewId}: ${nodes[index].id} vs ${nodes[compareIndex].id}`);
+          }
+        }
+      }
+
+      for (const edge of viewAudit.geometry.edges || []) {
+        for (const node of nodes) {
+          if (node.id === edge.source || node.id === edge.target) continue;
+          if ((edge.segments || []).some((segment) => segmentIntersectsInterior(segment, node))) {
+            throw new Error(`Architecture edge ${edge.id} crossed the center area of unrelated node ${node.id} in ${viewAudit.viewId}.`);
+          }
+        }
+      }
+
+      if (viewAudit.labelOverflow) {
+        throw new Error(`Architecture node labels overflowed their node bounds in ${viewAudit.viewId}.`);
+      }
     }
 
     const missingManifestState = await page.evaluate(async () => {
@@ -1128,15 +1251,15 @@ async function run() {
     const architectureMobileLayout = await page.evaluate(() => {
       const doc = document.documentElement;
       const panel = document.getElementById("architecturePanel");
-      const canvas = document.querySelector("[data-architecture-canvas='true']");
+      const shell = document.querySelector("[data-architecture-shell='true']");
       return {
         pageHasHorizontalOverflow: doc.scrollWidth > doc.clientWidth + 1,
         panelHasHorizontalOverflow: panel ? panel.scrollWidth > panel.clientWidth + 1 : false,
-        canvasHasHorizontalOverflow: canvas ? canvas.scrollWidth > canvas.clientWidth + 1 : false
+        shellHasHorizontalOverflow: shell ? shell.scrollWidth > shell.clientWidth + 1 : false
       };
     });
 
-    if (architectureMobileLayout.pageHasHorizontalOverflow || architectureMobileLayout.panelHasHorizontalOverflow || architectureMobileLayout.canvasHasHorizontalOverflow) {
+    if (architectureMobileLayout.pageHasHorizontalOverflow || architectureMobileLayout.panelHasHorizontalOverflow) {
       throw new Error(`Architecture tab overflowed horizontally on mobile.\n${JSON.stringify(architectureMobileLayout, null, 2)}`);
     }
 

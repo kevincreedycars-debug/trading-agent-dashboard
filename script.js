@@ -131,7 +131,215 @@ let architectureState = {
   activeViewId: null,
   selectedNodeId: null,
   verifiedOnly: false,
-  loadingPromise: null
+  loadingPromise: null,
+  renderModel: null
+};
+const architectureViewGroups = [
+  {
+    label: "System",
+    viewIds: ["overview-map", "production-flow", "research-flow", "failure-and-status-paths"]
+  },
+  {
+    label: "Production",
+    viewIds: ["layer1", "layer2", "n8n-execution", "artifact-publication"]
+  },
+  {
+    label: "Research",
+    viewIds: ["historical-replay-and-checker", "factor-edge-lab", "phase-2-shadow-backtest", "phase-3-validation", "adr-l2l-research"]
+  }
+];
+const architectureOverviewGroups = [
+  {
+    id: "overview_external_data",
+    label: "External Data",
+    subtitle: "Economic events and market feeds",
+    memberNodeIds: ["economic_events", "eco_events_collector"],
+    environmentLabel: "External Inputs",
+    summary: "Upstream market and calendar context enters the platform through economic-event collection and asset-specific market feeds.",
+    details: "This grouped stage summarizes the platform's external information intake without claiming extra provider-level architecture that is not explicitly represented in the repository."
+  },
+  {
+    id: "overview_collection_storage",
+    label: "Collection and Storage",
+    subtitle: "Collectors plus runtime tables",
+    memberNodeIds: ["usd_collector", "eur_collector", "gold_collector", "nq_collector", "btc_collector", "market_snapshots", "agent_outputs"],
+    environmentLabel: "Runtime",
+    summary: "Collectors gather current asset context and write canonical runtime stores for downstream agent and pair-selection use.",
+    details: "This stage groups the five production collectors plus the verified runtime storage tables that support Layer 1 and Layer 2."
+  },
+  {
+    id: "overview_orchestration",
+    label: "Master Orchestration",
+    subtitle: "Sequential workflow control",
+    memberNodeIds: ["workflow_control_json", "master_orchestrator", "workflow_status_builder", "workflow_status_json"],
+    environmentLabel: "n8n Runtime",
+    summary: "The browser triggers the Master Orchestrator through the published control contract, and status publication closes the loop.",
+    details: "The orchestrator remains the verified sequential execution spine for production refreshes and published workflow status."
+  },
+  {
+    id: "overview_layer1",
+    label: "Layer 1 Agents",
+    subtitle: "5 sealed directional agents",
+    memberNodeIds: ["usd_layer1_agent", "eur_layer1_agent", "gold_layer1_agent", "nq_layer1_agent", "btc_layer1_agent"],
+    environmentLabel: "Production Logic",
+    summary: "Five sealed Layer 1 agents produce independent raw directional outputs for USD, EUR, Gold, NQ, and BTC.",
+    details: "The Overview keeps Layer 1 grouped to preserve readability while still surfacing the asset-isolated architecture contract."
+  },
+  {
+    id: "overview_layer2",
+    label: "Layer 2 Selection",
+    subtitle: "Downstream pair selection",
+    memberNodeIds: ["layer2_trade_selection_agent", "layer2_json"],
+    environmentLabel: "Production Logic",
+    summary: "Layer 2 remains downstream of Layer 1 outputs and publishes the pair-selection artifact consumed by the dashboard.",
+    details: "Explicit uncertain event-adjustment and publication-split relationships remain unverified rather than inferred into the Overview."
+  },
+  {
+    id: "overview_publication",
+    label: "Artifact Publication",
+    subtitle: "Published JSON contracts",
+    memberNodeIds: ["dashboard_writer", "layer1_json", "layer2_json", "workflow_status_json", "github_pages"],
+    environmentLabel: "Publication",
+    summary: "Dashboard artifacts are written, checked in, and served as static contracts for the dashboard surface.",
+    details: "This stage groups the verified publication artifacts and host surface without inventing extra publication responsibilities."
+  },
+  {
+    id: "overview_dashboard",
+    label: "Dashboard",
+    subtitle: "Renderer and operator browser",
+    memberNodeIds: ["dashboard_renderer", "dashboard_browser"],
+    environmentLabel: "Browser Surface",
+    summary: "The browser-side renderer consumes the published contracts and research artifacts without changing production outputs.",
+    details: "Architecture remains lazy-loaded and isolated so the main dashboard continues to render even if the Architecture manifest fails."
+  },
+  {
+    id: "overview_research",
+    label: "Research System",
+    subtitle: "Replay, checker, and labs",
+    memberNodeIds: ["repo_docs_and_logic", "historical_snapshot_builders", "replay_runners", "outcome_evaluators", "checker_artifacts", "factor_edge_lab_artifact", "phase2_shadow_backtest_artifact", "phase3_validation_modules", "repo_local_candle_sources", "adr_l2l_research_artifact", "research_supabase_views"],
+    environmentLabel: "Research Stack",
+    summary: "Historical replay, checker artifacts, downstream labs, and read-only research tabs remain separate from live production logic.",
+    details: "The Overview represents the full research platform as a grouped stage so the system map stays readable at standard desktop widths."
+  }
+];
+const architectureLaneViewConfigs = {
+  "production-flow": {
+    minHeight: 620,
+    lanes: [
+      { id: "external-data", label: "External Data", boundaryId: "supabase_runtime", nodeIds: ["economic_events"] },
+      { id: "collectors", label: "Collectors", boundaryId: "n8n_runtime", nodeIds: ["eco_events_collector", "usd_collector", "eur_collector", "gold_collector", "nq_collector", "btc_collector"] },
+      { id: "runtime-stores", label: "Runtime Stores", boundaryId: "supabase_runtime", nodeIds: ["market_snapshots", "agent_outputs"] },
+      { id: "orchestrator", label: "Master Orchestration", boundaryId: "n8n_runtime", nodeIds: ["workflow_control_json", "master_orchestrator", "workflow_status_builder", "workflow_status_json"] },
+      { id: "layer1", label: "Layer 1", boundaryId: "n8n_runtime", nodeIds: ["usd_layer1_agent", "eur_layer1_agent", "gold_layer1_agent", "nq_layer1_agent", "btc_layer1_agent"] },
+      { id: "layer2", label: "Layer 2", boundaryId: "n8n_runtime", nodeIds: ["layer2_trade_selection_agent"] },
+      { id: "publication", label: "Publication", boundaryId: "github_publication", nodeIds: ["dashboard_writer", "layer1_json", "layer2_json"] },
+      { id: "browser", label: "Browser", boundaryId: "browser_surface", nodeIds: ["github_pages", "dashboard_renderer", "dashboard_browser"] }
+    ]
+  },
+  "layer1": {
+    minHeight: 600,
+    lanes: [
+      { id: "collectors", label: "Collectors", boundaryId: "n8n_runtime", nodeIds: ["usd_collector", "eur_collector", "gold_collector", "nq_collector", "btc_collector"] },
+      { id: "market-snapshots", label: "Market Snapshots", boundaryId: "supabase_runtime", nodeIds: ["market_snapshots"] },
+      { id: "layer1-agents", label: "Layer 1 Agents", boundaryId: "n8n_runtime", nodeIds: ["usd_layer1_agent", "eur_layer1_agent", "gold_layer1_agent", "nq_layer1_agent", "btc_layer1_agent"] },
+      { id: "agent-outputs", label: "Agent Outputs", boundaryId: "supabase_runtime", nodeIds: ["agent_outputs"] },
+      { id: "publication", label: "Publication", boundaryId: "github_publication", nodeIds: ["dashboard_writer", "layer1_json"] }
+    ]
+  },
+  "layer2": {
+    minHeight: 520,
+    lanes: [
+      { id: "runtime-inputs", label: "Runtime Inputs", boundaryId: "supabase_runtime", nodeIds: ["economic_events", "agent_outputs"] },
+      { id: "layer2-engine", label: "Layer 2 Selection", boundaryId: "n8n_runtime", nodeIds: ["layer2_trade_selection_agent"] },
+      { id: "publication", label: "Published Artifact", boundaryId: "github_publication", nodeIds: ["layer2_json"] },
+      { id: "browser", label: "Browser Surface", boundaryId: "browser_surface", nodeIds: ["dashboard_renderer", "dashboard_browser"] }
+    ]
+  },
+  "n8n-execution": {
+    minHeight: 650,
+    lanes: [
+      { id: "trigger", label: "Trigger Contract", boundaryId: "browser_surface", nodeIds: ["workflow_control_json", "dashboard_renderer"] },
+      { id: "orchestrator", label: "Master Orchestrator", boundaryId: "n8n_runtime", nodeIds: ["master_orchestrator"] },
+      { id: "collection", label: "Collection Workflows", boundaryId: "n8n_runtime", nodeIds: ["eco_events_collector", "usd_collector", "eur_collector", "gold_collector", "nq_collector", "btc_collector"] },
+      { id: "layer1", label: "Layer 1 Workflows", boundaryId: "n8n_runtime", nodeIds: ["usd_layer1_agent", "eur_layer1_agent", "gold_layer1_agent", "nq_layer1_agent", "btc_layer1_agent"] },
+      { id: "downstream", label: "Downstream Workflows", boundaryId: "n8n_runtime", nodeIds: ["layer2_trade_selection_agent", "dashboard_writer", "workflow_status_builder"] },
+      { id: "publication", label: "Published Outputs", boundaryId: "github_publication", nodeIds: ["workflow_status_json"] }
+    ]
+  },
+  "artifact-publication": {
+    minHeight: 520,
+    lanes: [
+      { id: "workflow-writers", label: "Workflow Writers", boundaryId: "n8n_runtime", nodeIds: ["workflow_status_builder", "layer2_trade_selection_agent", "dashboard_writer"] },
+      { id: "artifacts", label: "Published Artifacts", boundaryId: "github_publication", nodeIds: ["workflow_status_json", "layer2_json", "layer1_json"] },
+      { id: "hosting", label: "Static Hosting", boundaryId: "github_publication", nodeIds: ["github_pages"] },
+      { id: "browser", label: "Browser Surface", boundaryId: "browser_surface", nodeIds: ["dashboard_renderer", "dashboard_browser"] }
+    ]
+  },
+  "historical-replay-and-checker": {
+    minHeight: 520,
+    lanes: [
+      { id: "baseline", label: "Baseline Logic", boundaryId: "research_stack", nodeIds: ["repo_docs_and_logic"] },
+      { id: "snapshots", label: "Snapshot Builders", boundaryId: "research_stack", nodeIds: ["historical_snapshot_builders"] },
+      { id: "replay", label: "Replay Engines", boundaryId: "research_stack", nodeIds: ["replay_runners"] },
+      { id: "evaluation", label: "Outcome Evaluation", boundaryId: "research_stack", nodeIds: ["outcome_evaluators"] },
+      { id: "checker", label: "Checker and Views", boundaryId: "research_stack", nodeIds: ["checker_artifacts", "research_supabase_views"] },
+      { id: "browser", label: "Dashboard Readout", boundaryId: "browser_surface", nodeIds: ["dashboard_renderer"] }
+    ]
+  },
+  "factor-edge-lab": {
+    minHeight: 460,
+    lanes: [
+      { id: "checker", label: "Checker Artifacts", boundaryId: "research_stack", nodeIds: ["checker_artifacts"] },
+      { id: "lab", label: "Factor Edge Lab", boundaryId: "research_stack", nodeIds: ["factor_edge_lab_artifact"] },
+      { id: "browser", label: "Dashboard Readout", boundaryId: "browser_surface", nodeIds: ["dashboard_renderer", "dashboard_browser"] }
+    ]
+  },
+  "phase-2-shadow-backtest": {
+    minHeight: 500,
+    lanes: [
+      { id: "research-inputs", label: "Research Inputs", boundaryId: "research_stack", nodeIds: ["checker_artifacts", "factor_edge_lab_artifact"] },
+      { id: "phase2", label: "Phase 2 Shadow", boundaryId: "research_stack", nodeIds: ["phase2_shadow_backtest_artifact"] },
+      { id: "browser", label: "Dashboard Readout", boundaryId: "browser_surface", nodeIds: ["dashboard_renderer", "dashboard_browser"] }
+    ]
+  },
+  "phase-3-validation": {
+    minHeight: 500,
+    lanes: [
+      { id: "frozen-baseline", label: "Frozen Baseline", boundaryId: "research_stack", nodeIds: ["repo_docs_and_logic", "checker_artifacts"] },
+      { id: "phase3", label: "Phase 3 Validation", boundaryId: "research_stack", nodeIds: ["phase3_validation_modules"] },
+      { id: "views", label: "Research Views", boundaryId: "research_stack", nodeIds: ["research_supabase_views"] },
+      { id: "browser", label: "Dashboard Readout", boundaryId: "browser_surface", nodeIds: ["dashboard_renderer"] }
+    ]
+  },
+  "adr-l2l-research": {
+    minHeight: 500,
+    lanes: [
+      { id: "inputs", label: "Research Inputs", boundaryId: "research_stack", nodeIds: ["checker_artifacts", "repo_local_candle_sources"] },
+      { id: "adr", label: "ADR / L2L Module", boundaryId: "research_stack", nodeIds: ["adr_l2l_research_artifact"] },
+      { id: "browser", label: "Dashboard Readout", boundaryId: "browser_surface", nodeIds: ["dashboard_renderer", "dashboard_browser"] }
+    ]
+  },
+  "research-flow": {
+    minHeight: 620,
+    lanes: [
+      { id: "inputs", label: "Historical Inputs", boundaryId: "research_stack", nodeIds: ["repo_docs_and_logic", "repo_local_candle_sources"] },
+      { id: "snapshots", label: "Snapshot Builders", boundaryId: "research_stack", nodeIds: ["historical_snapshot_builders"] },
+      { id: "replay", label: "Replay Engines", boundaryId: "research_stack", nodeIds: ["replay_runners"] },
+      { id: "evaluation", label: "Outcome Evaluation", boundaryId: "research_stack", nodeIds: ["outcome_evaluators"] },
+      { id: "checker", label: "Checker Artifacts", boundaryId: "research_stack", nodeIds: ["checker_artifacts"] },
+      { id: "labs", label: "Downstream Labs", boundaryId: "research_stack", nodeIds: ["factor_edge_lab_artifact", "phase2_shadow_backtest_artifact", "phase3_validation_modules", "adr_l2l_research_artifact", "research_supabase_views"] },
+      { id: "browser", label: "Research Tabs", boundaryId: "browser_surface", nodeIds: ["dashboard_renderer"] }
+    ]
+  },
+  "failure-and-status-paths": {
+    minHeight: 520,
+    lanes: [
+      { id: "browser", label: "Browser Trigger", boundaryId: "browser_surface", nodeIds: ["dashboard_browser", "dashboard_renderer"] },
+      { id: "orchestrator", label: "Orchestrator", boundaryId: "n8n_runtime", nodeIds: ["master_orchestrator"] },
+      { id: "child-workflows", label: "Child Workflows", boundaryId: "n8n_runtime", nodeIds: ["eco_events_collector", "layer2_trade_selection_agent", "dashboard_writer"] },
+      { id: "status", label: "Status Publication", boundaryId: "n8n_runtime", nodeIds: ["workflow_status_builder", "workflow_status_json"] }
+    ]
+  }
 };
 const navigationStateKey = "dashboard-navigation-state";
 
@@ -1597,6 +1805,28 @@ if (typeof globalThis !== "undefined") {
         error: architectureState.error,
         activeViewId: architectureState.activeViewId,
         selectedNodeId: architectureState.selectedNodeId
+      };
+    },
+    getArchitectureGeometryForTest() {
+      const renderModel = architectureState.renderModel;
+      if (!renderModel) return null;
+      return {
+        viewId: architectureState.activeViewId,
+        width: renderModel.width,
+        height: renderModel.height,
+        nodes: renderModel.nodes.map((node) => ({
+          id: node.id,
+          x: node.x,
+          y: node.y,
+          width: node.width,
+          height: node.height
+        })),
+        edges: renderModel.edges.map((edge) => ({
+          id: edge.id,
+          source: edge.source,
+          target: edge.target,
+          segments: edge.route?.segments || []
+        }))
       };
     }
   };
@@ -7760,7 +7990,8 @@ function resetArchitectureState() {
     activeViewId: null,
     selectedNodeId: null,
     verifiedOnly: false,
-    loadingPromise: null
+    loadingPromise: null,
+    renderModel: null
   };
 }
 
@@ -7885,17 +8116,17 @@ function getArchitectureCurrentView() {
 }
 
 function getArchitectureCurrentNode(view = getArchitectureCurrentView()) {
-  if (!view) return null;
-  if (architectureState.selectedNodeId && view.node_ids.includes(architectureState.selectedNodeId)) {
-    return architectureState.manifest.nodeById.get(architectureState.selectedNodeId) || null;
+  const renderModel = architectureState.renderModel || (architectureState.manifest && view ? buildArchitectureViewModel(architectureState.manifest, view) : null);
+  if (!renderModel) return null;
+  if (architectureState.selectedNodeId && renderModel.nodeById.has(architectureState.selectedNodeId)) {
+    return renderModel.nodeById.get(architectureState.selectedNodeId) || null;
   }
-  const fallbackId = view.node_ids.find((nodeId) => architectureState.manifest.nodeById.has(nodeId));
-  return fallbackId ? architectureState.manifest.nodeById.get(fallbackId) : null;
+  return renderModel.nodes[0] || null;
 }
 
 function setArchitectureSelection(nodeId) {
-  const view = getArchitectureCurrentView();
-  if (!view || !view.node_ids.includes(nodeId)) return;
+  const renderModel = architectureState.renderModel || (architectureState.manifest ? buildArchitectureViewModel(architectureState.manifest, getArchitectureCurrentView()) : null);
+  if (!renderModel?.nodeById.has(nodeId)) return;
   architectureState.selectedNodeId = nodeId;
   renderArchitecture();
 }
@@ -7904,8 +8135,9 @@ function setArchitectureView(viewId) {
   if (!architectureState.manifest?.viewById?.has(viewId)) return;
   architectureState.activeViewId = viewId;
   const view = getArchitectureCurrentView();
-  if (!view?.node_ids.includes(architectureState.selectedNodeId)) {
-    architectureState.selectedNodeId = view?.node_ids?.[0] || null;
+  architectureState.renderModel = view ? buildArchitectureViewModel(architectureState.manifest, view) : null;
+  if (!architectureState.renderModel?.nodeById.has(architectureState.selectedNodeId)) {
+    architectureState.selectedNodeId = architectureState.renderModel?.nodes?.[0]?.id || null;
   }
   renderArchitecture();
 }
@@ -7931,6 +8163,7 @@ async function loadArchitectureManifest(options = {}) {
     architectureState.manifest = null;
     architectureState.error = "";
     architectureState.loadingPromise = null;
+    architectureState.renderModel = null;
   }
 
   architectureState.status = "loading";
@@ -7951,9 +8184,10 @@ async function loadArchitectureManifest(options = {}) {
       architectureState.manifest = normalizeArchitectureManifest(manifest);
       architectureState.status = "ready";
       architectureState.activeViewId = architectureState.manifest.views?.[0]?.id || null;
-      architectureState.selectedNodeId = architectureState.manifest.views?.[0]?.node_ids?.[0] || null;
+      architectureState.selectedNodeId = null;
       architectureState.error = "";
       architectureState.loadingPromise = null;
+      architectureState.renderModel = null;
       renderArchitecture();
       return architectureState.manifest;
     })
@@ -7962,6 +8196,7 @@ async function loadArchitectureManifest(options = {}) {
       architectureState.manifest = null;
       architectureState.error = err?.message || String(err);
       architectureState.loadingPromise = null;
+      architectureState.renderModel = null;
       renderArchitecture();
       throw err;
     });
@@ -7973,6 +8208,473 @@ async function loadArchitectureManifest(options = {}) {
 function architectureNodeSummary(node) {
   const verificationLabel = humanizeArchitectureStatus(node?.verification?.status || "unverified");
   return `${node?.label || "Unknown node"}. ${node?.kind || "Node"}. ${verificationLabel}. ${node?.summary || ""}`.trim();
+}
+
+function aggregateArchitectureStatus(statuses = []) {
+  if (!statuses.length) return "unverified";
+  if (statuses.every((status) => status === "verified")) return "verified";
+  if (statuses.includes("partially_verified") || (statuses.includes("verified") && statuses.includes("unverified"))) {
+    return "partially_verified";
+  }
+  return statuses[0] || "unverified";
+}
+
+function architectureViewLabel(manifest, viewId) {
+  return manifest.viewById.get(viewId)?.label || viewId;
+}
+
+function architectureBoundaryLabel(manifest, boundaryId) {
+  return manifest.boundaryById.get(boundaryId)?.label || "Cross-System";
+}
+
+function normalizeArchitectureRenderNode(node, options = {}) {
+  return {
+    id: node.id,
+    label: node.label,
+    shortLabel: node.short_label || node.label,
+    subtitle: options.subtitle || "",
+    kind: options.kind || node.kind,
+    summary: options.summary || node.summary || "",
+    details: options.details || node.details || "",
+    verification: options.verification || node.verification || { status: "unverified", evidence: "", notes: [] },
+    files: options.files || node.files || [],
+    environmentLabel: options.environmentLabel || "Cross-System",
+    memberNodeIds: options.memberNodeIds || [node.id],
+    memberLabels: options.memberLabels || [],
+    producerItems: [],
+    consumerItems: []
+  };
+}
+
+function buildArchitectureOverviewRenderModel(manifest) {
+  const stageWidth = 154;
+  const stageGap = 20;
+  const stageStartX = 42;
+  const nodeHeight = 118;
+  const width = stageStartX * 2 + (architectureOverviewGroups.length * stageWidth) + ((architectureOverviewGroups.length - 1) * stageGap);
+  const height = 580;
+  const nodes = architectureOverviewGroups.map((group, index) => {
+    const members = group.memberNodeIds.map((nodeId) => manifest.nodeById.get(nodeId)).filter(Boolean);
+    const statuses = members.map((node) => node.verification?.status || "unverified");
+    return {
+      id: group.id,
+      label: group.label,
+      shortLabel: group.label,
+      subtitle: group.subtitle,
+      kind: "System Group",
+      summary: group.summary,
+      details: group.details,
+      verification: {
+        status: aggregateArchitectureStatus(statuses),
+        evidence: `${members.length} repository-backed architecture nodes are represented in this grouped stage.`,
+        notes: []
+      },
+      files: [],
+      environmentLabel: group.environmentLabel,
+      memberNodeIds: members.map((node) => node.id),
+      memberLabels: members.map((node) => node.short_label || node.label),
+      x: stageStartX + index * (stageWidth + stageGap),
+      y: 244,
+      width: stageWidth,
+      height: nodeHeight,
+      producerItems: [],
+      consumerItems: []
+    };
+  });
+  const nodeById = new Map(nodes.map((node) => [node.id, node]));
+  const edges = nodes.slice(0, -1).map((node, index) => ({
+    id: `overview_edge_${index + 1}`,
+    source: node.id,
+    target: nodes[index + 1].id,
+    label: index === nodes.length - 2 ? "Feeds research stack" : "Feeds next stage",
+    verification: { status: "verified" }
+  }));
+
+  return {
+    type: "overview",
+    width,
+    height,
+    viewportHeight: 580,
+    scrollable: false,
+    selectedNodeId: nodeById.has(architectureState.selectedNodeId) ? architectureState.selectedNodeId : nodes[0]?.id || null,
+    nodes,
+    nodeById,
+    edges,
+    boundaries: [
+      { id: "overview-runtime", label: "Runtime", x: 20, y: 126, width: 856, height: 256, colorClass: "runtime" },
+      { id: "overview-publication", label: "Publication", x: 886, y: 126, width: 170, height: 256, colorClass: "publication" },
+      { id: "overview-browser", label: "Browser", x: 1066, y: 126, width: 170, height: 256, colorClass: "browser" },
+      { id: "overview-research", label: "Research", x: 1246, y: 126, width: 170, height: 256, colorClass: "research" }
+    ],
+    lanes: architectureOverviewGroups.map((group, index) => ({
+      id: group.id,
+      label: group.label,
+      x: stageStartX + index * (stageWidth + stageGap),
+      width: stageWidth
+    }))
+  };
+}
+
+function buildArchitectureLaneRenderModel(manifest, view, config) {
+  const laneWidth = 188;
+  const laneGap = 30;
+  const nodeWidth = 172;
+  const nodeHeight = 86;
+  const topPadding = 148;
+  const sidePadding = 46;
+  const rowGap = 24;
+  const filteredLanes = (config.lanes || [])
+    .map((lane) => ({
+      ...lane,
+      nodeIds: (lane.nodeIds || []).filter((nodeId) => (view.node_ids || []).includes(nodeId))
+    }))
+    .filter((lane) => lane.nodeIds.length);
+  const maxRows = Math.max(1, ...filteredLanes.map((lane) => lane.nodeIds.length));
+  const height = Math.max(config.minHeight || 480, topPadding + (maxRows * nodeHeight) + ((maxRows - 1) * rowGap) + 54);
+  const width = sidePadding * 2 + (filteredLanes.length * laneWidth) + (Math.max(0, filteredLanes.length - 1) * laneGap);
+  const nodes = [];
+  const nodeById = new Map();
+  const lanes = filteredLanes.map((lane, laneIndex) => {
+    const laneX = sidePadding + laneIndex * (laneWidth + laneGap);
+    lane.nodeIds.forEach((nodeId, rowIndex) => {
+      const node = manifest.nodeById.get(nodeId);
+      if (!node) return;
+      const renderNode = normalizeArchitectureRenderNode(node, {
+        environmentLabel: architectureBoundaryLabel(manifest, lane.boundaryId)
+      });
+      renderNode.laneId = lane.id;
+      renderNode.laneIndex = laneIndex;
+      renderNode.x = laneX + Math.round((laneWidth - nodeWidth) / 2);
+      renderNode.y = topPadding + rowIndex * (nodeHeight + rowGap);
+      renderNode.width = nodeWidth;
+      renderNode.height = nodeHeight;
+      nodes.push(renderNode);
+      nodeById.set(renderNode.id, renderNode);
+    });
+    return {
+      ...lane,
+      x: laneX,
+      width: laneWidth
+    };
+  });
+
+  const edges = (view.edge_ids || [])
+    .map((edgeId) => manifest.edgeById.get(edgeId))
+    .filter(Boolean)
+    .filter((edge) => nodeById.has(edge.source) && nodeById.has(edge.target))
+    .filter((edge) => !architectureState.verifiedOnly || edge?.verification?.status === "verified");
+
+  edges.forEach((edge) => {
+    const source = nodeById.get(edge.source);
+    const target = nodeById.get(edge.target);
+    if (!source || !target) return;
+    source.consumerItems.push({ edge, node: target });
+    target.producerItems.push({ edge, node: source });
+  });
+
+  const groupedBoundaries = [];
+  lanes.forEach((lane) => {
+    const existing = groupedBoundaries[groupedBoundaries.length - 1];
+    if (existing && existing.boundaryId === lane.boundaryId) {
+      existing.endX = lane.x + lane.width;
+    } else {
+      groupedBoundaries.push({
+        boundaryId: lane.boundaryId,
+        endX: lane.x + lane.width,
+        startX: lane.x
+      });
+    }
+  });
+
+  return {
+    type: "lane",
+    width,
+    height,
+    viewportHeight: Math.min(Math.max(config.minHeight || 480, height), 640),
+    scrollable: width > 1320,
+    selectedNodeId: nodeById.has(architectureState.selectedNodeId) ? architectureState.selectedNodeId : nodes[0]?.id || null,
+    nodes,
+    nodeById,
+    edges,
+    lanes,
+    boundaries: groupedBoundaries.map((group) => ({
+      id: group.boundaryId,
+      label: architectureBoundaryLabel(manifest, group.boundaryId),
+      x: group.startX - 10,
+      y: 64,
+      width: (group.endX - group.startX) + 20,
+      height: height - 92,
+      colorClass: String(group.boundaryId || "runtime").replace(/_/g, "-")
+    }))
+  };
+}
+
+function buildArchitectureViewModel(manifest, view) {
+  if (!manifest || !view) return null;
+  if (view.id === "overview-map") return buildArchitectureOverviewRenderModel(manifest);
+  const config = architectureLaneViewConfigs[view.id] || {
+    minHeight: 520,
+    lanes: [{ id: "default", label: view.label, boundaryId: view.boundary_ids?.[0] || "n8n_runtime", nodeIds: view.node_ids || [] }]
+  };
+  return buildArchitectureLaneRenderModel(manifest, view, config);
+}
+
+function buildArchitectureRoute(sourceNode, targetNode) {
+  const sourceCenterY = sourceNode.y + sourceNode.height / 2;
+  const targetCenterY = targetNode.y + targetNode.height / 2;
+  const forward = targetNode.x >= sourceNode.x;
+  const sourceAnchorX = forward ? sourceNode.x + sourceNode.width : sourceNode.x;
+  const targetAnchorX = forward ? targetNode.x : targetNode.x + targetNode.width;
+  const sourceOuterX = forward ? sourceNode.x + sourceNode.width + 14 : sourceNode.x - 14;
+  const targetOuterX = forward ? targetNode.x - 14 : targetNode.x + targetNode.width + 14;
+  const busY = Math.max(92, Math.min(sourceNode.y, targetNode.y) - 24);
+
+  return {
+    d: `M ${sourceAnchorX} ${sourceCenterY} L ${sourceOuterX} ${sourceCenterY} L ${sourceOuterX} ${busY} L ${targetOuterX} ${busY} L ${targetOuterX} ${targetCenterY} L ${targetAnchorX} ${targetCenterY}`,
+    segments: [
+      { x1: sourceAnchorX, y1: sourceCenterY, x2: sourceOuterX, y2: sourceCenterY },
+      { x1: sourceOuterX, y1: sourceCenterY, x2: sourceOuterX, y2: busY },
+      { x1: sourceOuterX, y1: busY, x2: targetOuterX, y2: busY },
+      { x1: targetOuterX, y1: busY, x2: targetOuterX, y2: targetCenterY },
+      { x1: targetOuterX, y1: targetCenterY, x2: targetAnchorX, y2: targetCenterY }
+    ],
+    labelX: (sourceOuterX + targetOuterX) / 2,
+    labelY: busY - 6
+  };
+}
+
+function renderArchitectureControlsV2(manifest) {
+  return `
+    <section class="detail-panel architecture-controls-panel">
+      <div class="panel-head compact-panel-head">
+        <div>
+          <p class="eyebrow">Architecture Views</p>
+          <h3>Read-Only Mirror Controls</h3>
+        </div>
+      </div>
+      <div class="architecture-view-groups" data-architecture-view-controls="true">
+        ${architectureViewGroups.map((group) => `
+          <section class="architecture-view-group">
+            <h4>${escapeHtml(group.label)}</h4>
+            <div class="architecture-view-group-row">
+              ${group.viewIds.map((viewId) => `
+                <button
+                  type="button"
+                  class="architecture-view-button ${viewId === architectureState.activeViewId ? "active" : ""}"
+                  data-architecture-view="${escapeHtml(viewId)}"
+                  aria-pressed="${viewId === architectureState.activeViewId ? "true" : "false"}"
+                >${escapeHtml(architectureViewLabel(manifest, viewId))}</button>
+              `).join("")}
+            </div>
+          </section>
+        `).join("")}
+      </div>
+      <div class="architecture-filter-row">
+        <button
+          type="button"
+          class="architecture-filter-button ${architectureState.verifiedOnly ? "active" : ""}"
+          data-architecture-filter="verified-only"
+          aria-pressed="${architectureState.verifiedOnly ? "true" : "false"}"
+        >${architectureState.verifiedOnly ? "Showing verified links only" : "Show verified links only"}</button>
+        <span class="architecture-filter-copy">Node labels always show verification state. The filter only hides non-verified relationships.</span>
+      </div>
+    </section>
+  `;
+}
+
+function renderArchitectureLegendV2() {
+  return `
+    <details class="detail-panel architecture-legend-panel" data-architecture-legend="true">
+      <summary class="architecture-legend-summary">
+        <span>How to read this map</span>
+        <span class="architecture-legend-summary-copy">Compact legend for statuses, links, and boundaries</span>
+      </summary>
+      <div class="architecture-legend-compact-grid">
+        <div class="architecture-legend-swatch architecture-status-verified"><strong>Verified</strong><span>Direct repository evidence</span></div>
+        <div class="architecture-legend-swatch architecture-status-partially_verified"><strong>Partially Verified</strong><span>Scope verified, boundary incomplete</span></div>
+        <div class="architecture-legend-swatch architecture-status-unverified"><strong>Unverified</strong><span>Explicitly uncertain relationship</span></div>
+        <div class="architecture-legend-line architecture-legend-line-verified"><strong>Solid route</strong><span>Verified relationship</span></div>
+        <div class="architecture-legend-line architecture-legend-line-unverified"><strong>Dashed route</strong><span>Unverified or partial relationship</span></div>
+        <div class="architecture-legend-boundary"><strong>Boundary region</strong><span>Environment group behind the active lanes</span></div>
+      </div>
+    </details>
+  `;
+}
+
+function renderArchitectureDetailListV2(items, emptyText) {
+  if (!items.length) return `<p class="architecture-detail-empty">${escapeHtml(emptyText)}</p>`;
+  return `
+    <ul class="architecture-detail-list">
+      ${items.map((item) => `
+        <li>
+          <strong>${escapeHtml(item.node?.label || item.label || "Unknown")}</strong>
+          <span>${escapeHtml(item.edge ? `${item.edge.label} · ${humanizeArchitectureStatus(item.edge.verification?.status || "unverified")}` : (item.description || ""))}</span>
+        </li>
+      `).join("")}
+    </ul>
+  `;
+}
+
+function renderArchitectureDetailSectionV2(title, body, open = false) {
+  return `
+    <details class="architecture-detail-section" ${open ? "open" : ""}>
+      <summary>${escapeHtml(title)}</summary>
+      <div class="architecture-detail-section-body">${body}</div>
+    </details>
+  `;
+}
+
+function renderArchitectureDetailV2(renderModel) {
+  const selectedNode = getArchitectureCurrentNode();
+  if (!selectedNode) {
+    return `
+      <section class="detail-panel architecture-detail-panel" data-architecture-detail="true">
+        <div class="empty-state architecture-empty-state">No selectable node was available for this architecture view.</div>
+      </section>
+    `;
+  }
+
+  const includedSystems = (selectedNode.memberLabels || []).map((label) => ({ label, description: "" }));
+  return `
+    <section class="detail-panel architecture-detail-panel" data-architecture-detail="true">
+      <div class="panel-head compact-panel-head architecture-detail-head">
+        <div>
+          <p class="eyebrow">Selected Node</p>
+          <h3>${escapeHtml(selectedNode.label)}</h3>
+        </div>
+        <div class="architecture-detail-badges">
+          <span class="architecture-chip">${escapeHtml(selectedNode.kind || "")}</span>
+          <span class="architecture-chip">${escapeHtml(selectedNode.environmentLabel || "Cross-System")}</span>
+          <span class="architecture-chip architecture-chip-status architecture-status-${escapeHtml(selectedNode.verification?.status || "unverified")}">${escapeHtml(humanizeArchitectureStatus(selectedNode.verification?.status || "unverified"))}</span>
+        </div>
+      </div>
+      <div class="architecture-detail-grid">
+        <div class="architecture-detail-card">
+          <h4>Purpose and Process</h4>
+          <p class="architecture-detail-summary">${escapeHtml(selectedNode.summary || "No summary recorded.")}</p>
+          <p>${escapeHtml(selectedNode.details || "No additional detail recorded.")}</p>
+        </div>
+        <div class="architecture-detail-card">
+          <h4>Inputs and Upstream Producers</h4>
+          ${renderArchitectureDetailListV2(selectedNode.producerItems || [], "No upstream producers in this view.")}
+        </div>
+        <div class="architecture-detail-card">
+          <h4>Outputs and Downstream Consumers</h4>
+          ${renderArchitectureDetailListV2(selectedNode.consumerItems || [], "No downstream consumers in this view.")}
+        </div>
+      </div>
+      <div class="architecture-detail-sections">
+        ${renderArchitectureDetailSectionV2("Implementation Files", Array.isArray(selectedNode.files) && selectedNode.files.length
+          ? `<ul class="architecture-detail-list">${selectedNode.files.map((file) => `<li>${escapeHtml(file)}</li>`).join("")}</ul>`
+          : `<p class="architecture-detail-empty">No direct file list is shown for this grouped or derived node.</p>`)}
+        ${renderArchitectureDetailSectionV2("Included Systems", renderArchitectureDetailListV2(includedSystems, "No grouped systems recorded for this node."), renderModel.type === "overview")}
+        ${renderArchitectureDetailSectionV2("Verification Evidence", `
+          <p>${escapeHtml(selectedNode.verification?.evidence || "No evidence recorded.")}</p>
+          ${Array.isArray(selectedNode.verification?.notes) && selectedNode.verification.notes.length
+            ? `<ul class="architecture-detail-list">${selectedNode.verification.notes.map((note) => `<li>${escapeHtml(note)}</li>`).join("")}</ul>`
+            : `<p class="architecture-detail-empty">No additional verification notes were recorded.</p>`}
+        `)}
+      </div>
+    </section>
+  `;
+}
+
+function renderArchitectureCanvasV2(view, renderModel) {
+  const highlightedEdgeIds = new Set(renderModel.edges
+    .filter((edge) => edge.source === renderModel.selectedNodeId || edge.target === renderModel.selectedNodeId)
+    .map((edge) => edge.id));
+  const boundaryMarkup = (renderModel.boundaries || []).map((boundary) => `
+    <g class="architecture-boundary-group architecture-boundary-${escapeHtml(boundary.colorClass || "runtime")}">
+      <rect class="architecture-boundary-box" x="${boundary.x}" y="${boundary.y}" width="${boundary.width}" height="${boundary.height}" rx="22"></rect>
+      <text class="architecture-boundary-label" x="${boundary.x + 16}" y="${boundary.y + 24}">${escapeHtml(boundary.label)}</text>
+    </g>
+  `).join("");
+  const stageMarkup = (renderModel.lanes || []).map((lane) => `
+    <g class="architecture-stage-group">
+      <rect class="architecture-stage-box" x="${lane.x}" y="98" width="${lane.width}" height="${renderModel.height - 126}" rx="18"></rect>
+      <text class="architecture-stage-label" x="${lane.x + 12}" y="124">${escapeHtml(lane.label)}</text>
+    </g>
+  `).join("");
+  const edgeMarkup = renderModel.edges.map((edge) => {
+    const source = renderModel.nodeById.get(edge.source);
+    const target = renderModel.nodeById.get(edge.target);
+    if (!source || !target) return "";
+    const route = buildArchitectureRoute(source, target);
+    edge.route = route;
+    const classes = [
+      "architecture-edge",
+      `architecture-edge-status-${edge?.verification?.status || "unverified"}`,
+      highlightedEdgeIds.has(edge.id) ? "is-highlighted" : "is-muted"
+    ].filter(Boolean).join(" ");
+    const showLabel = highlightedEdgeIds.has(edge.id) && edge.label && edge.label.length <= 22;
+    return `
+      <g class="architecture-edge-group" data-architecture-edge="${escapeHtml(edge.id)}">
+        <path class="${classes}" d="${route.d}" marker-end="url(#architectureArrow)"></path>
+        ${showLabel ? `<text class="architecture-edge-label" x="${route.labelX + 8}" y="${route.labelY - 8}">${escapeHtml(edge.label)}</text>` : ""}
+      </g>
+    `;
+  }).join("");
+  const nodeMarkup = renderModel.nodes.map((node) => {
+    const relationshipLabel = node.id === renderModel.selectedNodeId
+      ? "Selected"
+      : (node.producerItems || []).some((entry) => entry.node?.id === renderModel.selectedNodeId)
+        ? "Feeds selected"
+        : (node.consumerItems || []).some((entry) => entry.node?.id === renderModel.selectedNodeId)
+          ? "Used by selected"
+          : "";
+    const classes = [
+      "architecture-node",
+      `architecture-node-status-${node?.verification?.status || "unverified"}`,
+      node.id === renderModel.selectedNodeId ? "is-selected" : "",
+      relationshipLabel ? "is-connected" : ""
+    ].filter(Boolean).join(" ");
+    return `
+      <button
+        type="button"
+        class="${classes}"
+        data-architecture-node="${escapeHtml(node.id)}"
+        data-architecture-node-kind="${escapeHtml(node.kind || "")}"
+        data-architecture-node-rect="${escapeHtml(`${node.x},${node.y},${node.width},${node.height}`)}"
+        style="left:${node.x}px; top:${node.y}px; width:${node.width}px; min-height:${node.height}px;"
+        aria-label="${escapeHtml(architectureNodeSummary(node))}"
+        title="${escapeHtml(architectureNodeSummary(node))}"
+      >
+        <span class="architecture-node-title">${escapeHtml(node.shortLabel || node.label)}</span>
+        ${node.subtitle ? `<span class="architecture-node-subtitle">${escapeHtml(node.subtitle)}</span>` : ""}
+        <span class="architecture-node-meta"><span>${escapeHtml(node.kind)}</span></span>
+        <span class="architecture-node-badge-row">
+          <span class="architecture-node-badge architecture-node-badge-status architecture-status-${escapeHtml(node.verification?.status || "unverified")}">${escapeHtml(humanizeArchitectureStatus(node.verification?.status || "unverified"))}</span>
+          ${relationshipLabel ? `<span class="architecture-node-badge architecture-node-badge-relationship">${escapeHtml(relationshipLabel)}</span>` : ""}
+        </span>
+      </button>
+    `;
+  }).join("");
+  return `
+    <section class="detail-panel architecture-canvas-panel">
+      <div class="panel-head compact-panel-head architecture-canvas-head">
+        <div>
+          <p class="eyebrow">Architecture Canvas</p>
+          <h3>${escapeHtml(view.label)}</h3>
+        </div>
+        <span class="architecture-canvas-summary">${escapeHtml(view.description || "")}</span>
+      </div>
+      <div class="architecture-canvas-shell ${renderModel.scrollable ? "is-scrollable" : ""}" data-architecture-shell="true">
+        <div class="architecture-canvas" data-architecture-canvas="true" data-architecture-view-id="${escapeHtml(view.id)}" style="--architecture-canvas-width:${renderModel.width}px; --architecture-canvas-height:${renderModel.viewportHeight}px;">
+          <svg class="architecture-canvas-svg" viewBox="0 0 ${renderModel.width} ${renderModel.height}" role="img" aria-label="${escapeHtml(`${view.label}. ${view.description}`)}">
+            <defs>
+              <marker id="architectureArrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+                <path d="M 0 0 L 10 5 L 0 10 z" class="architecture-arrow-head"></path>
+              </marker>
+            </defs>
+            ${boundaryMarkup}
+            ${stageMarkup}
+            ${edgeMarkup}
+          </svg>
+          <div class="architecture-node-layer">${nodeMarkup}</div>
+        </div>
+      </div>
+    </section>
+  `;
 }
 
 function renderArchitectureUnavailable(message) {
@@ -8282,44 +8984,17 @@ function renderArchitecture() {
     return;
   }
 
-  if (!view.node_ids.includes(architectureState.selectedNodeId)) {
-    architectureState.selectedNodeId = view.node_ids[0] || null;
+  architectureState.renderModel = buildArchitectureViewModel(manifest, view);
+  if (!architectureState.renderModel?.nodeById.has(architectureState.selectedNodeId)) {
+    architectureState.selectedNodeId = architectureState.renderModel?.nodes?.[0]?.id || null;
   }
-
-  const canvas = renderArchitectureCanvas(manifest, view);
+  architectureState.renderModel.selectedNodeId = architectureState.selectedNodeId;
 
   panel.innerHTML = `
-    <section class="detail-panel architecture-controls-panel">
-      <div class="panel-head compact-panel-head">
-        <div>
-          <p class="eyebrow">Architecture Views</p>
-          <h3>Read-Only Mirror Controls</h3>
-        </div>
-      </div>
-      <div class="architecture-controls-row" data-architecture-view-controls="true">
-        ${(manifest.views || []).map((entry) => `
-          <button
-            type="button"
-            class="architecture-view-button ${entry.id === architectureState.activeViewId ? "active" : ""}"
-            data-architecture-view="${escapeHtml(entry.id)}"
-          >${escapeHtml(entry.label)}</button>
-        `).join("")}
-      </div>
-      <div class="architecture-filter-row">
-        <button
-          type="button"
-          class="architecture-filter-button ${architectureState.verifiedOnly ? "active" : ""}"
-          data-architecture-filter="verified-only"
-          aria-pressed="${architectureState.verifiedOnly ? "true" : "false"}"
-        >${architectureState.verifiedOnly ? "Showing verified links only" : "Show verified links only"}</button>
-        <span class="architecture-filter-copy">Node labels always show verification state. The filter only hides non-verified relationships.</span>
-      </div>
-    </section>
-    <div class="architecture-layout">
-      ${canvas.markup}
-      ${renderArchitectureDetail(manifest, view, canvas.visibleEdges)}
-    </div>
-    ${renderArchitectureLegend(manifest)}
+    ${renderArchitectureControlsV2(manifest)}
+    ${renderArchitectureCanvasV2(view, architectureState.renderModel)}
+    ${renderArchitectureDetailV2(architectureState.renderModel)}
+    ${renderArchitectureLegendV2()}
   `;
 }
 
