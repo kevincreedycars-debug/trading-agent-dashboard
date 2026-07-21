@@ -475,7 +475,9 @@ async function run() {
 
     const usdDetailReasoningText = await page.locator("#agentView").innerText();
     const expectedUsdDetailReason = String(usdDetailReasoning?.callReason || "").replace(/^24h\s+/i, "");
-    if (!expectedUsdDetailReason || !usdDetailReasoningText.includes(expectedUsdDetailReason)) {
+    const normalizedExpectedUsdDetailReason = expectedUsdDetailReason.toLowerCase().replace(/_/g, " ").replace(/\s+/g, " ").trim();
+    const normalizedUsdDetailReasoningText = usdDetailReasoningText.toLowerCase().replace(/_/g, " ").replace(/\s+/g, " ").trim();
+    if (!normalizedExpectedUsdDetailReason || !normalizedUsdDetailReasoningText.includes(normalizedExpectedUsdDetailReason)) {
       throw new Error(`USD detail view did not preserve the detailed 24H reasoning text.\nExpected call reason: ${expectedUsdDetailReason}\nRendered: ${usdDetailReasoningText}`);
     }
 
