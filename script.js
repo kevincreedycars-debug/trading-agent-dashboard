@@ -11,6 +11,7 @@ const checkerDataUrls = {
 const adrReachResearchUrl = "./data/adr-reach-research.json?v=20260705-l2l-1h-sequence";
 const factorEdgeLabUrl = "./data/factor-edge-lab.json?v=20260706-review-summary";
 const phase2ShadowBacktestUrl = "./data/phase-2-shadow-backtest.json?v=20260707-phase2-shadow-v1";
+const architectureManifestUrlDefault = "./data/architecture-map.json?v=20260721-architecture-mirror-v1";
 const researchSupabaseUrl = "https://eaolqbrlywczinfordvg.supabase.co/rest/v1";
 const researchSupabaseKey = "sb_publishable_k6YbEuuk3GyB9GVTQDtNVA_J1gCRYaY";
 const headlineConfidenceLib = globalThis.HeadlineConfidence;
@@ -109,6 +110,7 @@ const directionalTrustStrengthDefinitions = [
   { key: "VERY_STRONG", label: "Very Strong" },
   { key: "STRONG_PLUS", label: "Strong+" }
 ];
+const architectureAllowedVerificationStatuses = new Set(["verified", "partially_verified", "unverified"]);
 let layer1Data = null;
 let layer2Data = null;
 let backtestData = null;
@@ -121,6 +123,16 @@ let workflowTriggerInFlight = false;
 let activeTab = "overview";
 let activeBacktestTab = "accuracy";
 let activeCheckerRowId = null;
+let architectureManifestUrl = architectureManifestUrlDefault;
+let architectureState = {
+  status: "idle",
+  manifest: null,
+  error: "",
+  activeViewId: null,
+  selectedNodeId: null,
+  verifiedOnly: false,
+  loadingPromise: null
+};
 const navigationStateKey = "dashboard-navigation-state";
 
 function storageAvailable() {
@@ -1561,7 +1573,32 @@ if (typeof globalThis !== "undefined") {
     buildOverviewBriefing,
     getLayer1Validity,
     renderAgentCard,
-    resolveLayer1DisplayStatus
+    resolveLayer1DisplayStatus,
+    validateArchitectureManifest,
+    setArchitectureManifestUrlForTest(url) {
+      architectureManifestUrl = url || architectureManifestUrlDefault;
+      resetArchitectureState();
+    },
+    resetArchitectureManifestUrlForTest() {
+      architectureManifestUrl = architectureManifestUrlDefault;
+      resetArchitectureState();
+    },
+    async reloadArchitectureManifestForTest() {
+      try {
+        await loadArchitectureManifest({ force: true });
+      } catch (err) {
+        return {
+          status: architectureState.status,
+          error: architectureState.error
+        };
+      }
+      return {
+        status: architectureState.status,
+        error: architectureState.error,
+        activeViewId: architectureState.activeViewId,
+        selectedNodeId: architectureState.selectedNodeId
+      };
+    }
   };
 }
 
@@ -7709,6 +7746,616 @@ function setupWorkflowControls() {
   }
 }
 
+function humanizeArchitectureStatus(status = "") {
+  return String(status || "")
+    .replaceAll("_", " ")
+    .replace(/\b\w/g, (match) => match.toUpperCase());
+}
+
+function resetArchitectureState() {
+  architectureState = {
+    status: "idle",
+    manifest: null,
+    error: "",
+    activeViewId: null,
+    selectedNodeId: null,
+    verifiedOnly: false,
+    loadingPromise: null
+  };
+}
+
+function validateArchitectureManifest(manifest) {
+  const errors = [];
+  const requiredTopLevel = ["metadata", "nodes", "edges", "views", "legends", "boundaries"];
+
+  requiredTopLevel.forEach((key) => {
+    if (!(key in (manifest || {}))) errors.push(`Missing top-level field: ${key}`);
+  });
+
+  if (!Array.isArray(manifest?.nodes)) errors.push("nodes must be an array");
+  if (!Array.isArray(manifest?.edges)) errors.push("edges must be an array");
+  if (!Array.isArray(manifest?.views)) errors.push("views must be an array");
+  if (!Array.isArray(manifest?.legends)) errors.push("legends must be an array");
+  if (!Array.isArray(manifest?.boundaries)) errors.push("boundaries must be an array");
+  if (errors.length) return errors;
+
+  const nodeIds = new Set();
+  const edgeIds = new Set();
+  const boundaryIds = new Set();
+  const edgeById = new Map();
+
+  manifest.nodes.forEach((node) => {
+    if (!node?.id) errors.push("Every node requires an id");
+    if (!node?.label) errors.push(`Node ${node?.id || "<missing>"} requires a label`);
+    if (!node?.kind) errors.push(`Node ${node?.id || "<missing>"} requires a kind`);
+    if (!node?.summary) errors.push(`Node ${node?.id || "<missing>"} requires a summary`);
+    if (!node?.verification?.status) errors.push(`Node ${node?.id || "<missing>"} requires verification.status`);
+    if (node?.verification?.status && !architectureAllowedVerificationStatuses.has(node.verification.status)) {
+      errors.push(`Node ${node.id} has invalid verification status: ${node.verification.status}`);
+    }
+    if (nodeIds.has(node?.id)) errors.push(`Duplicate node id: ${node.id}`);
+    nodeIds.add(node?.id);
+  });
+
+  manifest.edges.forEach((edge) => {
+    if (!edge?.id) errors.push("Every edge requires an id");
+    if (!edge?.source) errors.push(`Edge ${edge?.id || "<missing>"} requires a source`);
+    if (!edge?.target) errors.push(`Edge ${edge?.id || "<missing>"} requires a target`);
+    if (!edge?.label) errors.push(`Edge ${edge?.id || "<missing>"} requires a label`);
+    if (!edge?.verification?.status) errors.push(`Edge ${edge?.id || "<missing>"} requires verification.status`);
+    if (edge?.verification?.status && !architectureAllowedVerificationStatuses.has(edge.verification.status)) {
+      errors.push(`Edge ${edge.id} has invalid verification status: ${edge.verification.status}`);
+    }
+    if (edgeIds.has(edge?.id)) errors.push(`Duplicate edge id: ${edge.id}`);
+    if (edge?.source && !nodeIds.has(edge.source)) errors.push(`Edge ${edge.id} references missing source node: ${edge.source}`);
+    if (edge?.target && !nodeIds.has(edge.target)) errors.push(`Edge ${edge.id} references missing target node: ${edge.target}`);
+    edgeIds.add(edge?.id);
+    edgeById.set(edge?.id, edge);
+  });
+
+  manifest.boundaries.forEach((boundary) => {
+    if (!boundary?.id) errors.push("Every boundary requires an id");
+    if (!boundary?.label) errors.push(`Boundary ${boundary?.id || "<missing>"} requires a label`);
+    if (!boundary?.description) errors.push(`Boundary ${boundary?.id || "<missing>"} requires a description`);
+    if (boundaryIds.has(boundary?.id)) errors.push(`Duplicate boundary id: ${boundary.id}`);
+    boundaryIds.add(boundary?.id);
+  });
+
+  manifest.views.forEach((view) => {
+    if (!view?.id) {
+      errors.push("Every view requires an id");
+      return;
+    }
+    if (!Array.isArray(view.node_ids)) errors.push(`View ${view.id} requires node_ids`);
+    if (!Array.isArray(view.edge_ids)) errors.push(`View ${view.id} requires edge_ids`);
+    if (!Array.isArray(view.boundary_ids)) errors.push(`View ${view.id} requires boundary_ids`);
+    if (!view?.layout || typeof view.layout !== "object") {
+      errors.push(`View ${view.id} requires a layout object`);
+      return;
+    }
+
+    const viewNodeSet = new Set(view.node_ids || []);
+    const viewBoundarySet = new Set(view.boundary_ids || []);
+
+    (view.node_ids || []).forEach((nodeId) => {
+      if (!nodeIds.has(nodeId)) errors.push(`View ${view.id} references missing node ${nodeId}`);
+      if (!view.layout?.nodes?.[nodeId]) errors.push(`View ${view.id} is missing layout coordinates for node ${nodeId}`);
+    });
+
+    (view.edge_ids || []).forEach((edgeId) => {
+      const edge = edgeById.get(edgeId);
+      if (!edge) {
+        errors.push(`View ${view.id} references missing edge ${edgeId}`);
+        return;
+      }
+      if (!viewNodeSet.has(edge.source) || !viewNodeSet.has(edge.target)) {
+        errors.push(`View ${view.id} includes edge ${edgeId} without both endpoint nodes`);
+      }
+    });
+
+    (view.boundary_ids || []).forEach((boundaryId) => {
+      if (!boundaryIds.has(boundaryId)) errors.push(`View ${view.id} references missing boundary ${boundaryId}`);
+      if (!view.layout?.boundaries?.[boundaryId]) errors.push(`View ${view.id} is missing layout coordinates for boundary ${boundaryId}`);
+    });
+
+    Object.keys(view.layout?.nodes || {}).forEach((nodeId) => {
+      if (!viewNodeSet.has(nodeId)) errors.push(`View ${view.id} layout.nodes contains undeclared node ${nodeId}`);
+    });
+
+    Object.keys(view.layout?.boundaries || {}).forEach((boundaryId) => {
+      if (!viewBoundarySet.has(boundaryId)) errors.push(`View ${view.id} layout.boundaries contains undeclared boundary ${boundaryId}`);
+    });
+  });
+
+  return errors;
+}
+
+function normalizeArchitectureManifest(manifest) {
+  return {
+    ...manifest,
+    nodeById: new Map((manifest.nodes || []).map((node) => [node.id, node])),
+    edgeById: new Map((manifest.edges || []).map((edge) => [edge.id, edge])),
+    boundaryById: new Map((manifest.boundaries || []).map((boundary) => [boundary.id, boundary])),
+    viewById: new Map((manifest.views || []).map((view) => [view.id, view]))
+  };
+}
+
+function getArchitectureCurrentView() {
+  return architectureState.manifest?.viewById?.get(architectureState.activeViewId) || null;
+}
+
+function getArchitectureCurrentNode(view = getArchitectureCurrentView()) {
+  if (!view) return null;
+  if (architectureState.selectedNodeId && view.node_ids.includes(architectureState.selectedNodeId)) {
+    return architectureState.manifest.nodeById.get(architectureState.selectedNodeId) || null;
+  }
+  const fallbackId = view.node_ids.find((nodeId) => architectureState.manifest.nodeById.has(nodeId));
+  return fallbackId ? architectureState.manifest.nodeById.get(fallbackId) : null;
+}
+
+function setArchitectureSelection(nodeId) {
+  const view = getArchitectureCurrentView();
+  if (!view || !view.node_ids.includes(nodeId)) return;
+  architectureState.selectedNodeId = nodeId;
+  renderArchitecture();
+}
+
+function setArchitectureView(viewId) {
+  if (!architectureState.manifest?.viewById?.has(viewId)) return;
+  architectureState.activeViewId = viewId;
+  const view = getArchitectureCurrentView();
+  if (!view?.node_ids.includes(architectureState.selectedNodeId)) {
+    architectureState.selectedNodeId = view?.node_ids?.[0] || null;
+  }
+  renderArchitecture();
+}
+
+function setArchitectureVerifiedOnly(nextValue) {
+  architectureState.verifiedOnly = nextValue;
+  renderArchitecture();
+}
+
+async function loadArchitectureManifest(options = {}) {
+  if (!options.force && architectureState.status === "ready" && architectureState.manifest) {
+    return architectureState.manifest;
+  }
+
+  if (!options.force && architectureState.status === "unavailable") {
+    return Promise.reject(new Error(architectureState.error || "Architecture manifest unavailable"));
+  }
+
+  if (architectureState.loadingPromise && !options.force) return architectureState.loadingPromise;
+
+  if (options.force) {
+    architectureState.status = "idle";
+    architectureState.manifest = null;
+    architectureState.error = "";
+    architectureState.loadingPromise = null;
+  }
+
+  architectureState.status = "loading";
+  architectureState.error = "";
+  renderArchitecture();
+
+  const request = fetchLocalJson(architectureManifestUrl)
+    .then((manifest) => {
+      if (manifest?.unavailable === true) {
+        throw new Error(manifest?.message || "Architecture manifest was marked unavailable.");
+      }
+
+      const validationErrors = validateArchitectureManifest(manifest);
+      if (validationErrors.length) {
+        throw new Error(`Manifest validation failed: ${validationErrors[0]}`);
+      }
+
+      architectureState.manifest = normalizeArchitectureManifest(manifest);
+      architectureState.status = "ready";
+      architectureState.activeViewId = architectureState.manifest.views?.[0]?.id || null;
+      architectureState.selectedNodeId = architectureState.manifest.views?.[0]?.node_ids?.[0] || null;
+      architectureState.error = "";
+      architectureState.loadingPromise = null;
+      renderArchitecture();
+      return architectureState.manifest;
+    })
+    .catch((err) => {
+      architectureState.status = "unavailable";
+      architectureState.manifest = null;
+      architectureState.error = err?.message || String(err);
+      architectureState.loadingPromise = null;
+      renderArchitecture();
+      throw err;
+    });
+
+  architectureState.loadingPromise = request;
+  return request;
+}
+
+function architectureNodeSummary(node) {
+  const verificationLabel = humanizeArchitectureStatus(node?.verification?.status || "unverified");
+  return `${node?.label || "Unknown node"}. ${node?.kind || "Node"}. ${verificationLabel}. ${node?.summary || ""}`.trim();
+}
+
+function renderArchitectureUnavailable(message) {
+  return `
+    <section class="detail-panel architecture-unavailable-panel" data-architecture-state="unavailable">
+      <div class="panel-head compact-panel-head">
+        <div>
+          <p class="eyebrow">Architecture</p>
+          <h3>Architecture view unavailable</h3>
+        </div>
+      </div>
+      <div class="empty-state architecture-empty-state">
+        The Architecture tab could not load a valid manifest. Other dashboard tabs remain unaffected.
+      </div>
+      <div class="architecture-error-copy">${escapeHtml(message || "No manifest error detail was available.")}</div>
+    </section>
+  `;
+}
+
+function renderArchitectureLegend(manifest) {
+  return `
+    <section class="detail-panel architecture-legend-panel" data-architecture-legend="true">
+      <div class="panel-head compact-panel-head">
+        <div>
+          <p class="eyebrow">Legend</p>
+          <h3>Status and Boundaries</h3>
+        </div>
+      </div>
+      <div class="architecture-legend-stack">
+        ${(manifest.legends || []).map((legend) => `
+          <section class="architecture-legend-group">
+            <h4>${escapeHtml(legend.title || "")}</h4>
+            <div class="architecture-legend-items">
+              ${(legend.items || []).map((item) => `
+                <div class="architecture-legend-item">
+                  <strong>${escapeHtml(item.label || "")}</strong>
+                  <span>${escapeHtml(item.description || "")}</span>
+                </div>
+              `).join("")}
+            </div>
+          </section>
+        `).join("")}
+      </div>
+    </section>
+  `;
+}
+
+function renderArchitectureNodeFiles(node) {
+  if (!Array.isArray(node?.files) || !node.files.length) return "";
+  return `
+    <div class="architecture-detail-block">
+      <h4>Evidence Files</h4>
+      <ul class="architecture-detail-list">
+        ${node.files.map((file) => `<li>${escapeHtml(file)}</li>`).join("")}
+      </ul>
+    </div>
+  `;
+}
+
+function renderArchitectureEdgeList(title, edges, direction = "consumer") {
+  if (!edges.length) {
+    return `
+      <div class="architecture-detail-block">
+        <h4>${escapeHtml(title)}</h4>
+        <p class="architecture-detail-empty">None in this view.</p>
+      </div>
+    `;
+  }
+
+  return `
+    <div class="architecture-detail-block">
+      <h4>${escapeHtml(title)}</h4>
+      <ul class="architecture-detail-list">
+        ${edges.map(({ edge, node }) => `
+          <li>
+            <strong>${escapeHtml(node?.label || "Unknown")}</strong>
+            <span>${escapeHtml(direction === "producer" ? "Feeds" : "Uses")} via ${escapeHtml(edge.label || "")} · ${escapeHtml(humanizeArchitectureStatus(edge?.verification?.status || ""))}</span>
+          </li>
+        `).join("")}
+      </ul>
+    </div>
+  `;
+}
+
+function renderArchitectureDetail(manifest, view, visibleEdges) {
+  const selectedNode = getArchitectureCurrentNode(view);
+  if (!selectedNode) {
+    return `
+      <section class="detail-panel architecture-detail-panel">
+        <div class="empty-state architecture-empty-state">No selectable node was available for this architecture view.</div>
+      </section>
+    `;
+  }
+
+  const incoming = visibleEdges
+    .filter((edge) => edge.target === selectedNode.id)
+    .map((edge) => ({ edge, node: manifest.nodeById.get(edge.source) }))
+    .filter((entry) => entry.node);
+  const outgoing = visibleEdges
+    .filter((edge) => edge.source === selectedNode.id)
+    .map((edge) => ({ edge, node: manifest.nodeById.get(edge.target) }))
+    .filter((entry) => entry.node);
+
+  return `
+    <section class="detail-panel architecture-detail-panel" data-architecture-detail="true">
+      <div class="panel-head compact-panel-head">
+        <div>
+          <p class="eyebrow">Selected Node</p>
+          <h3>${escapeHtml(selectedNode.label)}</h3>
+        </div>
+        <div class="architecture-detail-badges">
+          <span class="architecture-chip">${escapeHtml(selectedNode.kind || "")}</span>
+          <span class="architecture-chip architecture-chip-status architecture-status-${escapeHtml(selectedNode.verification?.status || "unverified")}">${escapeHtml(humanizeArchitectureStatus(selectedNode.verification?.status || "unverified"))}</span>
+        </div>
+      </div>
+      <p class="architecture-detail-summary">${escapeHtml(selectedNode.summary || "")}</p>
+      <div class="architecture-detail-block">
+        <h4>Details</h4>
+        <p>${escapeHtml(selectedNode.details || "No additional detail recorded.")}</p>
+      </div>
+      <div class="architecture-detail-block">
+        <h4>Verification</h4>
+        <p>${escapeHtml(selectedNode.verification?.evidence || "No evidence recorded.")}</p>
+        ${(selectedNode.verification?.notes || []).length ? `
+          <ul class="architecture-detail-list">
+            ${(selectedNode.verification.notes || []).map((note) => `<li>${escapeHtml(note)}</li>`).join("")}
+          </ul>
+        ` : ""}
+      </div>
+      ${renderArchitectureNodeFiles(selectedNode)}
+      ${renderArchitectureEdgeList("Upstream Producers", incoming, "producer")}
+      ${renderArchitectureEdgeList("Downstream Consumers", outgoing, "consumer")}
+    </section>
+  `;
+}
+
+function renderArchitectureCanvas(manifest, view) {
+  const selectedNode = getArchitectureCurrentNode(view);
+  const visibleEdges = (view.edge_ids || [])
+    .map((edgeId) => manifest.edgeById.get(edgeId))
+    .filter(Boolean)
+    .filter((edge) => !architectureState.verifiedOnly || edge?.verification?.status === "verified");
+  const selectedNodeId = selectedNode?.id || null;
+  const connectedOutgoing = new Set(visibleEdges.filter((edge) => edge.source === selectedNodeId).map((edge) => edge.target));
+  const connectedIncoming = new Set(visibleEdges.filter((edge) => edge.target === selectedNodeId).map((edge) => edge.source));
+  const highlightedEdgeIds = new Set(visibleEdges
+    .filter((edge) => edge.source === selectedNodeId || edge.target === selectedNodeId)
+    .map((edge) => edge.id));
+
+  const edgeMarkup = visibleEdges.map((edge) => {
+    const source = view.layout.nodes?.[edge.source];
+    const target = view.layout.nodes?.[edge.target];
+    if (!source || !target) return "";
+    const classes = [
+      "architecture-edge",
+      `architecture-edge-status-${edge?.verification?.status || "unverified"}`,
+      highlightedEdgeIds.has(edge.id) ? "is-highlighted" : ""
+    ].filter(Boolean).join(" ");
+    return `
+      <line
+        class="${classes}"
+        x1="${source.x}"
+        y1="${source.y}"
+        x2="${target.x}"
+        y2="${target.y}"
+        marker-end="url(#architectureArrow)"
+      ></line>
+    `;
+  }).join("");
+
+  const boundaryMarkup = (view.boundary_ids || []).map((boundaryId) => {
+    const boundary = manifest.boundaryById.get(boundaryId);
+    const layout = view.layout.boundaries?.[boundaryId];
+    if (!boundary || !layout) return "";
+    return `
+      <g class="architecture-boundary-group">
+        <rect class="architecture-boundary-box" x="${layout.x}" y="${layout.y}" width="${layout.width}" height="${layout.height}" rx="18"></rect>
+        <text class="architecture-boundary-label" x="${layout.x + 18}" y="${layout.y + 28}">${escapeHtml(boundary.label)}</text>
+      </g>
+    `;
+  }).join("");
+
+  const nodeMarkup = (view.node_ids || []).map((nodeId) => {
+    const node = manifest.nodeById.get(nodeId);
+    const layout = view.layout.nodes?.[nodeId];
+    if (!node || !layout) return "";
+    const relationshipLabel = nodeId === selectedNodeId
+      ? "Selected"
+      : connectedOutgoing.has(nodeId)
+        ? "Consumes"
+        : connectedIncoming.has(nodeId)
+          ? "Produces"
+          : "";
+    const classes = [
+      "architecture-node",
+      `architecture-node-status-${node?.verification?.status || "unverified"}`,
+      nodeId === selectedNodeId ? "is-selected" : "",
+      connectedOutgoing.has(nodeId) ? "is-consumer" : "",
+      connectedIncoming.has(nodeId) ? "is-producer" : ""
+    ].filter(Boolean).join(" ");
+
+    return `
+      <button
+        type="button"
+        class="${classes}"
+        data-architecture-node="${escapeHtml(nodeId)}"
+        style="left:${(layout.x / view.layout.width) * 100}%; top:${(layout.y / view.layout.height) * 100}%;"
+        aria-label="${escapeHtml(architectureNodeSummary(node))}"
+        title="${escapeHtml(architectureNodeSummary(node))}"
+      >
+        <span class="architecture-node-title">${escapeHtml(node.short_label || node.label)}</span>
+        <span class="architecture-node-meta">
+          <span>${escapeHtml(node.kind)}</span>
+          <span>${escapeHtml(humanizeArchitectureStatus(node.verification?.status || "unverified"))}</span>
+        </span>
+        ${relationshipLabel ? `<span class="architecture-node-relationship">${escapeHtml(relationshipLabel)}</span>` : ""}
+      </button>
+    `;
+  }).join("");
+
+  return {
+    visibleEdges,
+    markup: `
+      <section class="detail-panel architecture-canvas-panel">
+        <div class="panel-head compact-panel-head">
+          <div>
+            <p class="eyebrow">Architecture Canvas</p>
+            <h3>${escapeHtml(view.label)}</h3>
+          </div>
+          <span class="architecture-canvas-summary">${escapeHtml(view.description || "")}</span>
+        </div>
+        <div class="architecture-canvas-shell">
+          <div
+            class="architecture-canvas"
+            data-architecture-canvas="true"
+            style="--architecture-aspect:${escapeHtml(String(view.layout.width))} / ${escapeHtml(String(view.layout.height))};"
+          >
+            <svg
+              class="architecture-canvas-svg"
+              viewBox="0 0 ${view.layout.width} ${view.layout.height}"
+              role="img"
+              aria-label="${escapeHtml(`${view.label}. ${view.description}`)}"
+            >
+              <defs>
+                <marker id="architectureArrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+                  <path d="M 0 0 L 10 5 L 0 10 z" class="architecture-arrow-head"></path>
+                </marker>
+              </defs>
+              ${boundaryMarkup}
+              ${edgeMarkup}
+            </svg>
+            <div class="architecture-node-layer">
+              ${nodeMarkup}
+            </div>
+          </div>
+        </div>
+      </section>
+    `
+  };
+}
+
+function renderArchitecture() {
+  const panel = document.getElementById("architecturePanel");
+  const updated = document.getElementById("architectureUpdated");
+  if (!panel) return;
+
+  if (updated) {
+    if (architectureState.status === "ready") {
+      const verifiedAt = architectureState.manifest?.metadata?.last_verified_at || "unknown";
+      updated.textContent = `Manifest verified: ${verifiedAt}`;
+    } else if (architectureState.status === "loading") {
+      updated.textContent = "Loading architecture manifest...";
+    } else if (architectureState.status === "unavailable") {
+      updated.textContent = "Architecture manifest unavailable";
+    } else {
+      updated.textContent = "Architecture manifest pending";
+    }
+  }
+
+  if (architectureState.status === "loading") {
+    panel.innerHTML = `
+      <section class="detail-panel architecture-loading-panel" data-architecture-state="loading">
+        <div class="empty-state architecture-empty-state">Loading the checked-in Architecture Mirror manifest...</div>
+      </section>
+    `;
+    return;
+  }
+
+  if (architectureState.status === "idle") {
+    panel.innerHTML = `
+      <section class="detail-panel architecture-loading-panel" data-architecture-state="loading">
+        <div class="empty-state architecture-empty-state">Architecture manifest is ready to load when this tab is opened.</div>
+      </section>
+    `;
+    return;
+  }
+
+  if (architectureState.status !== "ready" || !architectureState.manifest) {
+    panel.innerHTML = renderArchitectureUnavailable(architectureState.error);
+    return;
+  }
+
+  const manifest = architectureState.manifest;
+  const view = getArchitectureCurrentView();
+  if (!view) {
+    panel.innerHTML = renderArchitectureUnavailable("No architecture view definitions were available.");
+    return;
+  }
+
+  if (!view.node_ids.includes(architectureState.selectedNodeId)) {
+    architectureState.selectedNodeId = view.node_ids[0] || null;
+  }
+
+  const canvas = renderArchitectureCanvas(manifest, view);
+
+  panel.innerHTML = `
+    <section class="detail-panel architecture-controls-panel">
+      <div class="panel-head compact-panel-head">
+        <div>
+          <p class="eyebrow">Architecture Views</p>
+          <h3>Read-Only Mirror Controls</h3>
+        </div>
+      </div>
+      <div class="architecture-controls-row" data-architecture-view-controls="true">
+        ${(manifest.views || []).map((entry) => `
+          <button
+            type="button"
+            class="architecture-view-button ${entry.id === architectureState.activeViewId ? "active" : ""}"
+            data-architecture-view="${escapeHtml(entry.id)}"
+          >${escapeHtml(entry.label)}</button>
+        `).join("")}
+      </div>
+      <div class="architecture-filter-row">
+        <button
+          type="button"
+          class="architecture-filter-button ${architectureState.verifiedOnly ? "active" : ""}"
+          data-architecture-filter="verified-only"
+          aria-pressed="${architectureState.verifiedOnly ? "true" : "false"}"
+        >${architectureState.verifiedOnly ? "Showing verified links only" : "Show verified links only"}</button>
+        <span class="architecture-filter-copy">Node labels always show verification state. The filter only hides non-verified relationships.</span>
+      </div>
+    </section>
+    <div class="architecture-layout">
+      ${canvas.markup}
+      ${renderArchitectureDetail(manifest, view, canvas.visibleEdges)}
+    </div>
+    ${renderArchitectureLegend(manifest)}
+  `;
+}
+
+function setupArchitectureControls() {
+  const panel = document.getElementById("architecturePanel");
+  if (!panel) return;
+
+  panel.addEventListener("click", (event) => {
+    const viewButton = event.target.closest("[data-architecture-view]");
+    if (viewButton) {
+      setArchitectureView(viewButton.dataset.architectureView || "");
+      return;
+    }
+
+    const nodeButton = event.target.closest("[data-architecture-node]");
+    if (nodeButton) {
+      setArchitectureSelection(nodeButton.dataset.architectureNode || "");
+      return;
+    }
+
+    const filterButton = event.target.closest("[data-architecture-filter='verified-only']");
+    if (filterButton) {
+      setArchitectureVerifiedOnly(!architectureState.verifiedOnly);
+    }
+  });
+
+  panel.addEventListener("keydown", (event) => {
+    const nodeButton = event.target.closest("[data-architecture-node]");
+    if (!nodeButton) return;
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      setArchitectureSelection(nodeButton.dataset.architectureNode || "");
+    }
+  });
+}
+
 function setTab(tab) {
   const availableTabs = getAvailableTopLevelTabs();
   const fallbackTab = availableTabs.includes("overview") ? "overview" : (availableTabs[0] || "overview");
@@ -7724,6 +8371,7 @@ function setTab(tab) {
   const backtestView = document.getElementById("backtestView");
   const factorEdgeLabView = document.getElementById("factorEdgeLabView");
   const shadowLogicBacktestView = document.getElementById("shadowLogicBacktestView");
+  const architectureView = document.getElementById("architectureView");
   const agentView = document.getElementById("agentView");
 
   if (overviewView) overviewView.classList.toggle("active-view", activeTab === "overview");
@@ -7731,12 +8379,17 @@ function setTab(tab) {
   if (backtestView) backtestView.classList.toggle("active-view", activeTab === "backtest");
   if (factorEdgeLabView) factorEdgeLabView.classList.toggle("active-view", activeTab === "factor-edge-lab");
   if (shadowLogicBacktestView) shadowLogicBacktestView.classList.toggle("active-view", activeTab === "shadow-logic-backtest");
+  if (architectureView) architectureView.classList.toggle("active-view", activeTab === "architecture");
   if (agentView) agentView.classList.toggle("active-view", orderedAgents.includes(activeTab));
 
   if (orderedAgents.includes(activeTab)) renderAgentDetail(activeTab);
   if (activeTab === "backtest") renderBacktest(backtestData || {});
   if (activeTab === "factor-edge-lab") renderFactorEdgeLab(factorEdgeLabData || {});
   if (activeTab === "shadow-logic-backtest") renderShadowLogicBacktest(phase2ShadowBacktestData || {});
+  if (activeTab === "architecture") {
+    renderArchitecture();
+    loadArchitectureManifest().catch(() => {});
+  }
 }
 
 function setBacktestTab(tab, options = {}) {
@@ -8130,6 +8783,7 @@ async function loadDashboard() {
 
 setupTabs();
 setupBacktestEvidenceControls();
+setupArchitectureControls();
 restoreNavigationState();
 setBacktestTab(activeBacktestTab, { skipRender: true });
 setTab(activeTab);

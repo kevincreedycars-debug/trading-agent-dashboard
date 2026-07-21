@@ -1,0 +1,2188 @@
+{
+  "metadata": {
+    "title": "Trading Agent Dashboard Architecture Mirror",
+    "version": "2026-07-21-architecture-mirror-v1",
+    "generated_from": [
+      "HANDOFF_BRIEF.md",
+      "README.md",
+      "docs/CURRENT_STATE.md",
+      "exports/master_orchestrator.json",
+      "exports/dashboard_writer.json",
+      "exports/layer2_trade_selection_agent.json",
+      "script.js",
+      "index.html",
+      "playwright-dashboard-smoke.js",
+      "data/workflow-status.json"
+    ],
+    "last_verified_at": "2026-07-21",
+    "notes": [
+      "This manifest documents architecture only. It must not change production logic, research logic, workflow execution, or artifact semantics.",
+      "Explicitly uncertain relationships remain marked unverified instead of being inferred into verified flow."
+    ]
+  },
+  "boundaries": [
+    {
+      "id": "browser_surface",
+      "label": "Browser Surface",
+      "description": "Static GitHub Pages UI rendered by index.html, styles.css, script.js, and shared browser-side helpers."
+    },
+    {
+      "id": "github_publication",
+      "label": "GitHub Publication",
+      "description": "Checked-in JSON artifacts and static files served from the repository through GitHub Pages."
+    },
+    {
+      "id": "n8n_runtime",
+      "label": "n8n Runtime",
+      "description": "Live orchestration and workflow execution inside the n8n workspace."
+    },
+    {
+      "id": "supabase_runtime",
+      "label": "Supabase Runtime",
+      "description": "Canonical runtime storage for market snapshots, agent outputs, and economic events."
+    },
+    {
+      "id": "research_stack",
+      "label": "Research Stack",
+      "description": "Downstream-only replay, evaluation, checker, and derived research artifact generation."
+    }
+  ],
+  "legends": [
+    {
+      "id": "verification-statuses",
+      "title": "Verification Statuses",
+      "items": [
+        {
+          "label": "Verified",
+          "description": "Directly supported by current repository files, exports, or runtime artifacts."
+        },
+        {
+          "label": "Partially Verified",
+          "description": "High-level component or path is supported, but exact implementation boundaries remain incomplete."
+        },
+        {
+          "label": "Unverified",
+          "description": "Called out intentionally as uncertain and left explicit rather than assumed."
+        }
+      ]
+    },
+    {
+      "id": "edge-meanings",
+      "title": "Relationship Meanings",
+      "items": [
+        {
+          "label": "Reads / Consumes",
+          "description": "Downstream component reads data or artifacts produced elsewhere."
+        },
+        {
+          "label": "Writes / Publishes",
+          "description": "Component emits a checked-in artifact or runtime table update."
+        },
+        {
+          "label": "Triggers",
+          "description": "Execution control path, not a data transformation."
+        }
+      ]
+    },
+    {
+      "id": "boundary-meanings",
+      "title": "Boundary Regions",
+      "items": [
+        {
+          "label": "Browser",
+          "description": "Read-only UI and browser-derived presentation logic."
+        },
+        {
+          "label": "Runtime",
+          "description": "Live orchestration, collectors, agents, and runtime data stores."
+        },
+        {
+          "label": "Research",
+          "description": "Historical analysis stack that must stay downstream-only."
+        }
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "id": "github_pages",
+      "label": "GitHub Pages",
+      "short_label": "Pages",
+      "kind": "Host",
+      "summary": "Serves the static dashboard and checked-in JSON artifacts from the repository root.",
+      "details": "Current hosting is GitHub Pages, not Netlify. The dashboard loads index.html, styles.css, script.js, and checked-in data files from the repository.",
+      "files": [
+        "docs/CURRENT_STATE.md",
+        "README.md",
+        "index.html"
+      ],
+      "verification": {
+        "status": "verified",
+        "evidence": "docs/CURRENT_STATE.md and README.md identify GitHub Pages as the active host.",
+        "notes": []
+      }
+    },
+    {
+      "id": "dashboard_renderer",
+      "label": "Dashboard Renderer",
+      "short_label": "Renderer",
+      "kind": "Browser Code",
+      "summary": "Renders live production cards and read-only research tabs from published artifacts and Supabase research views.",
+      "details": "script.js loads layer1.json, layer2.json, workflow-control.json, workflow-status.json, local research artifacts, and selected research Supabase views. Browser-side Layer 2 confidence is re-derived from Layer 1 headline confidence.",
+      "files": [
+        "index.html",
+        "script.js",
+        "styles.css",
+        "backtester/lib/headline_confidence.js",
+        "backtester/lib/layer2_pair_logic.js"
+      ],
+      "verification": {
+        "status": "verified",
+        "evidence": "index.html and script.js define the static UI and data-loading behavior.",
+        "notes": []
+      }
+    },
+    {
+      "id": "dashboard_browser",
+      "label": "Operator Browser",
+      "short_label": "Browser",
+      "kind": "Consumer",
+      "summary": "Receives the rendered dashboard surface and can trigger the orchestrator through the published webhook control contract.",
+      "details": "The browser never receives the n8n API key. It works through workflow-control.json and the published status/data artifacts.",
+      "files": [
+        "index.html",
+        "script.js",
+        "data/workflow-control.json"
+      ],
+      "verification": {
+        "status": "verified",
+        "evidence": "script.js triggers the webhook from workflow-control.json and polls workflow-status.json.",
+        "notes": []
+      }
+    },
+    {
+      "id": "workflow_control_json",
+      "label": "data/workflow-control.json",
+      "short_label": "workflow-control.json",
+      "kind": "Published Artifact",
+      "summary": "Contains the non-secret webhook configuration used by the browser to trigger the Master Orchestrator.",
+      "details": "The dashboard uses this checked-in file so the browser can trigger runs without exposing the n8n API key.",
+      "files": [
+        "data/workflow-control.json",
+        "script.js",
+        "HANDOFF_BRIEF.md"
+      ],
+      "verification": {
+        "status": "verified",
+        "evidence": "HANDOFF_BRIEF.md and script.js both describe workflow-control.json as the trigger contract.",
+        "notes": []
+      }
+    },
+    {
+      "id": "workflow_status_json",
+      "label": "data/workflow-status.json",
+      "short_label": "workflow-status.json",
+      "kind": "Published Artifact",
+      "summary": "Published run-status artifact consumed by the dashboard for workflow health, steps, and failure reporting.",
+      "details": "The latest checked-in runtime artifact shows a successful run on 2026-07-20 with Layer 2 Trade Selection Agent included.",
+      "files": [
+        "data/workflow-status.json",
+        "script.js",
+        "exports/master_orchestrator.json"
+      ],
+      "verification": {
+        "status": "verified",
+        "evidence": "data/workflow-status.json and exports/master_orchestrator.json show the status payload contract.",
+        "notes": []
+      }
+    },
+    {
+      "id": "layer1_json",
+      "label": "data/layer1.json",
+      "short_label": "layer1.json",
+      "kind": "Published Artifact",
+      "summary": "Published Layer 1 dashboard artifact containing sealed raw-call presentation data.",
+      "details": "Current production cards, expiry presentation, and tooltip contract render from this checked-in artifact.",
+      "files": [
+        "data/layer1.json",
+        "exports/dashboard_writer.json",
+        "script.js"
+      ],
+      "verification": {
+        "status": "verified",
+        "evidence": "dashboard_writer.json writes data/layer1.json and script.js renders it directly.",
+        "notes": []
+      }
+    },
+    {
+      "id": "layer2_json",
+      "label": "data/layer2.json",
+      "short_label": "layer2.json",
+      "kind": "Published Artifact",
+      "summary": "Published raw Layer 2 pair-selection artifact used as upstream display input.",
+      "details": "The browser still re-derives live pair confidence and strength from Layer 1 headline confidence instead of trusting every upstream Layer 2 payload field.",
+      "files": [
+        "data/layer2.json",
+        "exports/layer2_trade_selection_agent.json",
+        "script.js"
+      ],
+      "verification": {
+        "status": "verified",
+        "evidence": "layer2_trade_selection_agent.json writes data/layer2.json and script.js reads it.",
+        "notes": [
+          "The exact publication responsibility split beyond the verified Layer 2 writer remains explicitly unverified."
+        ]
+      }
+    },
+    {
+      "id": "master_orchestrator",
+      "label": "Master Orchestrator",
+      "short_label": "Master Orchestrator",
+      "kind": "Workflow",
+      "summary": "Sequential n8n control workflow that triggers collectors, Layer 1 agents, Layer 2, Dashboard Writer, and status publication.",
+      "details": "The current export includes Layer 2 Trade Selection Agent before Dashboard Writer and then builds workflow-status.json.",
+      "files": [
+        "exports/master_orchestrator.json",
+        "workflows/master_orchestrator.md",
+        "docs/CURRENT_STATE.md"
+      ],
+      "verification": {
+        "status": "verified",
+        "evidence": "exports/master_orchestrator.json and current docs agree on the sequential execution chain.",
+        "notes": []
+      }
+    },
+    {
+      "id": "workflow_status_builder",
+      "label": "Workflow Status Builder",
+      "short_label": "Status Builder",
+      "kind": "Workflow Step",
+      "summary": "Inline JS inside the Master Orchestrator that assembles the final success or failure payload.",
+      "details": "The export contains an inline JS node that enumerates all orchestration step names, builds status objects, and writes the final workflow-status.json payload.",
+      "files": [
+        "exports/master_orchestrator.json",
+        "data/workflow-status.json"
+      ],
+      "verification": {
+        "status": "verified",
+        "evidence": "exports/master_orchestrator.json contains the Build workflow-status JSON node.",
+        "notes": [
+          "Node-level failure fan-out inside each child workflow remains unverified beyond the published step summary."
+        ]
+      }
+    },
+    {
+      "id": "eco_events_collector",
+      "label": "Eco Events Collector",
+      "short_label": "Eco Events",
+      "kind": "Workflow",
+      "summary": "Collects economic calendar inputs and writes deduped rows into Supabase economic_events.",
+      "details": "The current live issue around duplicate inserts is documented as fixed. It remains part of the orchestrator sequence and future event-risk context.",
+      "files": [
+        "exports/eco_events_collector.json",
+        "workflows/eco_events_collector.md",
+        "docs/CURRENT_STATE.md"
+      ],
+      "verification": {
+        "status": "verified",
+        "evidence": "Current docs and exports identify the collector and economic_events destination.",
+        "notes": []
+      }
+    },
+    {
+      "id": "economic_events",
+      "label": "Supabase economic_events",
+      "short_label": "economic_events",
+      "kind": "Runtime Table",
+      "summary": "Runtime event-context table fed by Eco Events Collector.",
+      "details": "Future or partial downstream consumers of economic_events are not fully verified across every collector and downstream workflow.",
+      "files": [
+        "docs/CURRENT_STATE.md",
+        "HANDOFF_BRIEF.md",
+        "exports/eco_events_collector.json"
+      ],
+      "verification": {
+        "status": "verified",
+        "evidence": "Docs and export references identify economic_events as the collector target.",
+        "notes": [
+          "Which non-BTC collectors directly consume economic_events remains explicitly unverified."
+        ]
+      }
+    },
+    {
+      "id": "usd_collector",
+      "label": "USD Collector",
+      "short_label": "USD Collector",
+      "kind": "Workflow",
+      "summary": "Collects current USD market context for downstream snapshot use.",
+      "details": "Collector-level factor mix differs by asset, but its architectural role is to build usable market context for the matching Layer 1 agent.",
+      "files": [
+        "exports/usd_collector.json",
+        "exports/master_orchestrator.json"
+      ],
+      "verification": {
+        "status": "verified",
+        "evidence": "Exports show USD Collector as an orchestrated workflow.",
+        "notes": []
+      }
+    },
+    {
+      "id": "eur_collector",
+      "label": "EUR Collector",
+      "short_label": "EUR Collector",
+      "kind": "Workflow",
+      "summary": "Collects current EUR market context for downstream snapshot use.",
+      "details": "Collector architecture matches the same collector-to-snapshot role documented in the handoff.",
+      "files": [
+        "exports/eur_collector.json",
+        "exports/master_orchestrator.json"
+      ],
+      "verification": {
+        "status": "verified",
+        "evidence": "Exports show EUR Collector as an orchestrated workflow.",
+        "notes": []
+      }
+    },
+    {
+      "id": "gold_collector",
+      "label": "Gold Collector",
+      "short_label": "Gold Collector",
+      "kind": "Workflow",
+      "summary": "Collects current Gold/XAU market context for downstream snapshot use.",
+      "details": "Gold remains a runtime collector in production and a separately measured asset in research.",
+      "files": [
+        "exports/gold_collector.json",
+        "exports/master_orchestrator.json"
+      ],
+      "verification": {
+        "status": "verified",
+        "evidence": "Exports show Gold Collector as an orchestrated workflow.",
+        "notes": []
+      }
+    },
+    {
+      "id": "nq_collector",
+      "label": "NQ Collector",
+      "short_label": "NQ Collector",
+      "kind": "Workflow",
+      "summary": "Collects current NQ market context for downstream snapshot use.",
+      "details": "NQ runtime collection is distinct from the research-side NQ replay and checker stack.",
+      "files": [
+        "exports/nq_collector.json",
+        "exports/master_orchestrator.json"
+      ],
+      "verification": {
+        "status": "verified",
+        "evidence": "Exports show NQ Collector as an orchestrated workflow.",
+        "notes": []
+      }
+    },
+    {
+      "id": "btc_collector",
+      "label": "BTC Collector",
+      "short_label": "BTC Collector",
+      "kind": "Workflow",
+      "summary": "Collects current BTC market context for downstream snapshot use.",
+      "details": "BTC remains the only covered asset with weekend research handling in the dashboard.",
+      "files": [
+        "exports/btc_collector.json",
+        "exports/master_orchestrator.json"
+      ],
+      "verification": {
+        "status": "verified",
+        "evidence": "Exports show BTC Collector as an orchestrated workflow.",
+        "notes": []
+      }
+    },
+    {
+      "id": "market_snapshots",
+      "label": "Supabase market_snapshots",
+      "short_label": "market_snapshots",
+      "kind": "Runtime Table",
+      "summary": "Canonical runtime snapshot store populated by collectors and consumed by Layer 1 agents.",
+      "details": "High-level table role is well documented, but complete column-level lineage remains outside the current verified Architecture Mirror scope.",
+      "files": [
+        "docs/CURRENT_STATE.md",
+        "docs/ARCHITECTURE.md",
+        "HANDOFF_BRIEF.md"
+      ],
+      "verification": {
+        "status": "partially_verified",
+        "evidence": "Docs consistently identify market_snapshots as the runtime collector output store.",
+        "notes": [
+          "Complete column-level Supabase runtime and research lineage remains explicitly unverified."
+        ]
+      }
+    },
+    {
+      "id": "usd_layer1_agent",
+      "label": "USD Layer 1 Agent",
+      "short_label": "USD L1",
+      "kind": "Workflow",
+      "summary": "Sealed raw directional agent for USD.",
+      "details": "Layer 1 isolation is a non-negotiable architectural rule. The agent writes raw output to agent_outputs only.",
+      "files": [
+        "exports/usd_layer1_agent.json",
+        "docs/CURRENT_STATE.md"
+      ],
+      "verification": {
+        "status": "verified",
+        "evidence": "Exports and docs identify the USD Layer 1 workflow and sealed-agent rule.",
+        "notes": []
+      }
+    },
+    {
+      "id": "eur_layer1_agent",
+      "label": "EUR Layer 1 Agent",
+      "short_label": "EUR L1",
+      "kind": "Workflow",
+      "summary": "Sealed raw directional agent for EUR.",
+      "details": "Docs still flag a potential JSON parsing brittleness unless confirmed fixed in the live workflow.",
+      "files": [
+        "exports/eur_layer1_agent.json",
+        "workflows/eur_layer1_agent.md",
+        "docs/CURRENT_STATE.md"
+      ],
+      "verification": {
+        "status": "partially_verified",
+        "evidence": "The workflow is verified, but a parser-risk note remains active in repository docs.",
+        "notes": [
+          "Known issue status for object-vs-string JSON parsing remains partially verified."
+        ]
+      }
+    },
+    {
+      "id": "gold_layer1_agent",
+      "label": "Gold Layer 1 Agent",
+      "short_label": "Gold L1",
+      "kind": "Workflow",
+      "summary": "Sealed raw directional agent for Gold/XAU.",
+      "details": "Writes raw output to agent_outputs and remains isolated from other Layer 1 outputs.",
+      "files": [
+        "exports/gold_layer1_agent.json",
+        "docs/CURRENT_STATE.md"
+      ],
+      "verification": {
+        "status": "verified",
+        "evidence": "Exports and docs identify the workflow and isolation rule.",
+        "notes": []
+      }
+    },
+    {
+      "id": "nq_layer1_agent",
+      "label": "NQ Layer 1 Agent",
+      "short_label": "NQ L1",
+      "kind": "Workflow",
+      "summary": "Sealed raw directional agent for NQ.",
+      "details": "Writes raw output to agent_outputs and remains isolated from other Layer 1 outputs.",
+      "files": [
+        "exports/nq_layer1_agent.json",
+        "docs/CURRENT_STATE.md"
+      ],
+      "verification": {
+        "status": "verified",
+        "evidence": "Exports and docs identify the workflow and isolation rule.",
+        "notes": []
+      }
+    },
+    {
+      "id": "btc_layer1_agent",
+      "label": "BTC Layer 1 Agent",
+      "short_label": "BTC L1",
+      "kind": "Workflow",
+      "summary": "Sealed raw directional agent for BTC.",
+      "details": "Writes raw output to agent_outputs and remains isolated from other Layer 1 outputs.",
+      "files": [
+        "exports/btc_layer1_agent.json",
+        "docs/CURRENT_STATE.md"
+      ],
+      "verification": {
+        "status": "verified",
+        "evidence": "Exports and docs identify the workflow and isolation rule.",
+        "notes": []
+      }
+    },
+    {
+      "id": "agent_outputs",
+      "label": "Supabase agent_outputs",
+      "short_label": "agent_outputs",
+      "kind": "Runtime Table",
+      "summary": "Canonical runtime store for Layer 1 outputs and a key upstream source for publication and Layer 2 pair selection.",
+      "details": "Dashboard Writer and the current Layer 2 Trade Selection Agent both read from agent_outputs in the verified export set.",
+      "files": [
+        "exports/dashboard_writer.json",
+        "exports/layer2_trade_selection_agent.json",
+        "docs/CURRENT_STATE.md"
+      ],
+      "verification": {
+        "status": "verified",
+        "evidence": "Exports explicitly query agent_outputs.",
+        "notes": []
+      }
+    },
+    {
+      "id": "layer2_trade_selection_agent",
+      "label": "Layer 2 Trade Selection Agent",
+      "short_label": "Layer 2 Agent",
+      "kind": "Workflow",
+      "summary": "Downstream pair-selection workflow built from Layer 1 outputs.",
+      "details": "The verified export reads agent_outputs, builds a pair-trade JSON, and writes data/layer2.json. Browser semantics remain stricter than some upstream payload fields.",
+      "files": [
+        "exports/layer2_trade_selection_agent.json",
+        "script.js",
+        "backtester/lib/layer2_pair_logic.js"
+      ],
+      "verification": {
+        "status": "verified",
+        "evidence": "Current export and browser logic both show Layer 2 as downstream of Layer 1 outputs.",
+        "notes": [
+          "README-level event-adjusted descriptions are broader than the current verified export read path."
+        ]
+      }
+    },
+    {
+      "id": "dashboard_writer",
+      "label": "Dashboard Writer",
+      "short_label": "Dashboard Writer",
+      "kind": "Workflow",
+      "summary": "Builds the published Layer 1 dashboard artifact from runtime outputs.",
+      "details": "The current verified export writes data/layer1.json. Whether it publishes additional dashboard artifacts beyond that verified file remains intentionally unverified.",
+      "files": [
+        "exports/dashboard_writer.json",
+        "README.md",
+        "HANDOFF_BRIEF.md"
+      ],
+      "verification": {
+        "status": "verified",
+        "evidence": "dashboard_writer.json writes data/layer1.json through the GitHub node.",
+        "notes": [
+          "Whether Dashboard Writer publishes artifacts beyond data/layer1.json remains explicitly unverified."
+        ]
+      }
+    },
+    {
+      "id": "repo_docs_and_logic",
+      "label": "Repo Docs and Logic",
+      "short_label": "Docs and Logic",
+      "kind": "Repository Source",
+      "summary": "Checked-in logic documents, workflow exports, and browser code used to recover architecture and drive downstream replay.",
+      "details": "This node represents the repository-side source of truth for project memory, workflow exports, browser code, and research scripts.",
+      "files": [
+        "CODEX_STARTUP.md",
+        "HANDOFF_BRIEF.md",
+        "docs/CURRENT_STATE.md",
+        "exports/master_orchestrator.json",
+        "script.js"
+      ],
+      "verification": {
+        "status": "verified",
+        "evidence": "Repository memory and checked-in exports are the documented recovery baseline.",
+        "notes": []
+      }
+    },
+    {
+      "id": "historical_snapshot_builders",
+      "label": "Historical Snapshot Builders",
+      "short_label": "Snapshot Builders",
+      "kind": "Research Module",
+      "summary": "Build repo-local historical market snapshots for downstream replay.",
+      "details": "These builders sit in backtester/ and are part of the downstream historical research stack, not live production runtime.",
+      "files": [
+        "backtester/builders/eur/build_eur_historical_snapshots.js",
+        "backtester/builders/nq/build_nq_historical_snapshots.js",
+        "HANDOFF_BRIEF.md"
+      ],
+      "verification": {
+        "status": "verified",
+        "evidence": "Handoff and checked-in builder scripts establish the historical snapshot-builder role.",
+        "notes": []
+      }
+    },
+    {
+      "id": "replay_runners",
+      "label": "Historical Replay Runners",
+      "short_label": "Replay Runners",
+      "kind": "Research Module",
+      "summary": "Reconstruct production-style calls over historical windows using the replay stack.",
+      "details": "Replay is downstream-only and measures production-style logic rather than replacing it.",
+      "files": [
+        "backtester/replay/eur/run_eur_historical_replay.js",
+        "backtester/replay/nq/run_nq_historical_replay.js",
+        "docs/CORE_RESEARCH_PHILOSOPHY.md"
+      ],
+      "verification": {
+        "status": "verified",
+        "evidence": "Checked-in replay runners and research philosophy docs define replay as downstream-only.",
+        "notes": []
+      }
+    },
+    {
+      "id": "outcome_evaluators",
+      "label": "Outcome Evaluators",
+      "short_label": "Evaluators",
+      "kind": "Research Module",
+      "summary": "Judge replayed predictions against realized outcomes before checker generation.",
+      "details": "Evaluation sits between replay and checker generation in the deterministic research chain.",
+      "files": [
+        "backtester/tests/outcome_evaluation.test.js",
+        "backtester/tests/evaluation_pipeline.test.js",
+        "HANDOFF_BRIEF.md"
+      ],
+      "verification": {
+        "status": "partially_verified",
+        "evidence": "Research docs and tests show the evaluation stage, though not every asset-specific evaluator file is summarized in one place.",
+        "notes": []
+      }
+    },
+    {
+      "id": "checker_artifacts",
+      "label": "Checker Artifacts",
+      "short_label": "Checkers",
+      "kind": "Research Artifact",
+      "summary": "Canonical deterministic checker artifacts for USD, EUR, Gold, NQ, and BTC.",
+      "details": "These checked-in artifacts are the main downstream source for accuracy tables, weekday breakdowns, pair trade research, Factor Edge Lab, Phase 2 Shadow Backtest, and parts of ADR/L2L research.",
+      "files": [
+        "data/backtester-checker-usd-24h-2024-01.json",
+        "data/backtester-checker-eur-24h-2024-2026.json",
+        "data/backtester-checker-gold-24h-2024-2026.json",
+        "data/backtester-checker-nq-24h-2024-2026.json",
+        "data/backtester-checker-btc-24h-2024-2026.json"
+      ],
+      "verification": {
+        "status": "verified",
+        "evidence": "Current checked-in checker artifacts and dashboard code use these as canonical research inputs.",
+        "notes": []
+      }
+    },
+    {
+      "id": "repo_local_candle_sources",
+      "label": "Repo-Local Candle Sources",
+      "short_label": "Candle Sources",
+      "kind": "Research Input",
+      "summary": "Repo-local OANDA and Binance candle coverage used by L2L 1H Sequence Research.",
+      "details": "Current repository evidence supports sequence-aware L2L measurement for EUR, Gold, NQ, BTC, and selected Layer 2 pairs. Unsupported paths remain explicitly unavailable.",
+      "files": [
+        "backtester/importers/oanda/download_oanda_candles.js",
+        "backtester/importers/binance/download_binance_candles.js",
+        "docs/CURRENT_STATE.md"
+      ],
+      "verification": {
+        "status": "verified",
+        "evidence": "Current docs and importer scripts support the repo-local candle-source role.",
+        "notes": [
+          "USD/DXY and unsupported OHLC gaps remain explicitly unavailable rather than inferred."
+        ]
+      }
+    },
+    {
+      "id": "adr_l2l_research_artifact",
+      "label": "ADR / L2L Research Artifact",
+      "short_label": "ADR/L2L",
+      "kind": "Research Artifact",
+      "summary": "Checked-in L2L 1H Sequence Research artifact used by the dashboard.",
+      "details": "This module answers whether price moved at least the required ADR-based distance using sequence-aware 1H candles and daily ADR20, while keeping unsupported assets explicitly unavailable.",
+      "files": [
+        "data/adr-reach-research.json",
+        "backtester/tests/adr_reach_research.test.js",
+        "playwright-dashboard-smoke.js"
+      ],
+      "verification": {
+        "status": "verified",
+        "evidence": "Current artifact, tests, and dashboard rendering all reference the ADR/L2L research payload.",
+        "notes": []
+      }
+    },
+    {
+      "id": "factor_edge_lab_artifact",
+      "label": "Factor Edge Lab Artifact",
+      "short_label": "Factor Edge Lab",
+      "kind": "Research Artifact",
+      "summary": "Checked-in factor-review artifact for Layer 1 and Layer 2 factor evidence.",
+      "details": "This tab is read-only and keeps factor-level ADR/L2L opportunity reliability explicitly unavailable where no joinable export exists.",
+      "files": [
+        "data/factor-edge-lab.json",
+        "backtester/tests/factor_edge_lab.test.js",
+        "playwright-dashboard-smoke.js"
+      ],
+      "verification": {
+        "status": "verified",
+        "evidence": "Current artifact, tests, and dashboard rendering all reference Factor Edge Lab.",
+        "notes": []
+      }
+    },
+    {
+      "id": "phase2_shadow_backtest_artifact",
+      "label": "Phase 2 Shadow Backtest Artifact",
+      "short_label": "Shadow Backtest",
+      "kind": "Research Artifact",
+      "summary": "Checked-in conservative shadow-logic comparison artifact derived downstream from stored evidence.",
+      "details": "This artifact compares original logic against evidence-reweighted shadow logic without changing production logic or canonical checker outputs.",
+      "files": [
+        "data/phase-2-shadow-backtest.json",
+        "backtester/tests/phase2_shadow_backtest.test.js",
+        "playwright-dashboard-smoke.js"
+      ],
+      "verification": {
+        "status": "verified",
+        "evidence": "Current artifact, tests, and dashboard rendering all reference Phase 2 Shadow Backtest.",
+        "notes": []
+      }
+    },
+    {
+      "id": "phase3_validation_modules",
+      "label": "Phase 3 Validation Modules",
+      "short_label": "Phase 3",
+      "kind": "Research Module",
+      "summary": "Phase 3 validation scripts and reports for selectivity, walk-forward, parity, and stability work.",
+      "details": "Phase 3 evidence exists in scripts and docs, but not every module currently publishes a dedicated dashboard artifact.",
+      "files": [
+        "backtester/scripts/build_phase3_walk_forward_validation.js",
+        "backtester/scripts/build_phase3_selectivity_utility.js",
+        "backtester/scripts/build_phase3_factor_stability.js",
+        "docs/PHASE3_HISTORICAL_EXPANSION_REPORT.md",
+        "docs/PHASE3_HISTORICAL_WEAKNESSES.md"
+      ],
+      "verification": {
+        "status": "partially_verified",
+        "evidence": "Checked-in scripts and reports verify the Phase 3 validation area, but publication paths are not unified into one checked-in artifact.",
+        "notes": []
+      }
+    },
+    {
+      "id": "research_supabase_views",
+      "label": "Research Supabase Views",
+      "short_label": "Research Views",
+      "kind": "Read-Only Data Source",
+      "summary": "Read-only Supabase research views queried directly by the dashboard for selected backtest panels.",
+      "details": "script.js queries multiple read-only research views for matrices and infrastructure status. Complete column-level lineage across every derived view remains outside this verified scope.",
+      "files": [
+        "script.js",
+        "HANDOFF_BRIEF.md"
+      ],
+      "verification": {
+        "status": "partially_verified",
+        "evidence": "script.js contains the live fetchResearchView queries and read-only usage contract.",
+        "notes": [
+          "Complete column-level Supabase research lineage remains explicitly unverified."
+        ]
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e_github_pages_serves_renderer",
+      "source": "github_pages",
+      "target": "dashboard_renderer",
+      "label": "Serves static dashboard files",
+      "details": "GitHub Pages serves index.html, script.js, styles.css, and shared browser-side libraries.",
+      "verification": {
+        "status": "verified",
+        "evidence": "README.md and index.html define the static-site surface.",
+        "notes": []
+      }
+    },
+    {
+      "id": "e_renderer_to_browser",
+      "source": "dashboard_renderer",
+      "target": "dashboard_browser",
+      "label": "Renders dashboard UI",
+      "details": "The browser receives the rendered production and research tabs from the static dashboard code.",
+      "verification": {
+        "status": "verified",
+        "evidence": "index.html and script.js implement the browser UI.",
+        "notes": []
+      }
+    },
+    {
+      "id": "e_workflow_control_to_renderer",
+      "source": "workflow_control_json",
+      "target": "dashboard_renderer",
+      "label": "Trigger configuration",
+      "details": "workflow-control.json provides the non-secret webhook contract used by script.js.",
+      "verification": {
+        "status": "verified",
+        "evidence": "script.js loadWorkflowControl reads workflow-control.json.",
+        "notes": []
+      }
+    },
+    {
+      "id": "e_workflow_status_to_renderer",
+      "source": "workflow_status_json",
+      "target": "dashboard_renderer",
+      "label": "Run status and failure report",
+      "details": "workflow-status.json drives workflow summary, step reports, and error reporting.",
+      "verification": {
+        "status": "verified",
+        "evidence": "script.js loadWorkflowStatus reads workflow-status.json.",
+        "notes": []
+      }
+    },
+    {
+      "id": "e_layer1_to_renderer",
+      "source": "layer1_json",
+      "target": "dashboard_renderer",
+      "label": "Layer 1 dashboard payload",
+      "details": "Published Layer 1 live cards, expiry state, and overview panels render from layer1.json.",
+      "verification": {
+        "status": "verified",
+        "evidence": "script.js fetches and renders layer1.json.",
+        "notes": []
+      }
+    },
+    {
+      "id": "e_layer2_to_renderer",
+      "source": "layer2_json",
+      "target": "dashboard_renderer",
+      "label": "Raw Layer 2 dashboard payload",
+      "details": "script.js reads layer2.json as upstream input, then applies stricter browser-side pair logic for display semantics.",
+      "verification": {
+        "status": "verified",
+        "evidence": "script.js fetches layer2.json and applies shared Layer2PairLogic.",
+        "notes": []
+      }
+    },
+    {
+      "id": "e_research_views_to_renderer",
+      "source": "research_supabase_views",
+      "target": "dashboard_renderer",
+      "label": "Read-only research queries",
+      "details": "Selected backtest panels query research Supabase views directly from the browser.",
+      "verification": {
+        "status": "verified",
+        "evidence": "script.js fetchResearchView queries the research Supabase endpoint.",
+        "notes": []
+      }
+    },
+    {
+      "id": "e_checker_to_renderer",
+      "source": "checker_artifacts",
+      "target": "dashboard_renderer",
+      "label": "Checked-in checker artifacts",
+      "details": "Checker JSON files drive multiple research panels and deterministic validations.",
+      "verification": {
+        "status": "verified",
+        "evidence": "script.js and Playwright smoke both consume the checked-in checker artifacts.",
+        "notes": []
+      }
+    },
+    {
+      "id": "e_adr_to_renderer",
+      "source": "adr_l2l_research_artifact",
+      "target": "dashboard_renderer",
+      "label": "ADR/L2L research artifact",
+      "details": "The L2L 1H Sequence Research tab reads the checked-in ADR artifact.",
+      "verification": {
+        "status": "verified",
+        "evidence": "script.js and smoke tests both consume data/adr-reach-research.json.",
+        "notes": []
+      }
+    },
+    {
+      "id": "e_factor_edge_to_renderer",
+      "source": "factor_edge_lab_artifact",
+      "target": "dashboard_renderer",
+      "label": "Factor Edge Lab artifact",
+      "details": "The Factor Edge Lab tab reads the checked-in factor artifact.",
+      "verification": {
+        "status": "verified",
+        "evidence": "script.js and smoke tests both consume data/factor-edge-lab.json.",
+        "notes": []
+      }
+    },
+    {
+      "id": "e_shadow_to_renderer",
+      "source": "phase2_shadow_backtest_artifact",
+      "target": "dashboard_renderer",
+      "label": "Shadow backtest artifact",
+      "details": "The Shadow Logic Backtest tab reads the checked-in Phase 2 artifact.",
+      "verification": {
+        "status": "verified",
+        "evidence": "script.js and smoke tests both consume data/phase-2-shadow-backtest.json.",
+        "notes": []
+      }
+    },
+    {
+      "id": "e_browser_triggers_orchestrator",
+      "source": "dashboard_renderer",
+      "target": "master_orchestrator",
+      "label": "Webhook trigger",
+      "details": "The dashboard trigger path uses workflow-control.json rather than a direct browser n8n API key.",
+      "verification": {
+        "status": "verified",
+        "evidence": "script.js triggerWorkflowRun posts to the configured webhook URL.",
+        "notes": []
+      }
+    },
+    {
+      "id": "e_master_runs_eco",
+      "source": "master_orchestrator",
+      "target": "eco_events_collector",
+      "label": "Execute sub-workflow",
+      "details": "Eco Events Collector is the first child workflow in the current orchestrator sequence.",
+      "verification": {
+        "status": "verified",
+        "evidence": "exports/master_orchestrator.json includes the step and sequence.",
+        "notes": []
+      }
+    },
+    {
+      "id": "e_master_runs_usd_collector",
+      "source": "master_orchestrator",
+      "target": "usd_collector",
+      "label": "Execute sub-workflow",
+      "details": "USD Collector runs after Eco Events Collector in the current sequence.",
+      "verification": {
+        "status": "verified",
+        "evidence": "exports/master_orchestrator.json includes the step and sequence.",
+        "notes": []
+      }
+    },
+    {
+      "id": "e_master_runs_eur_collector",
+      "source": "master_orchestrator",
+      "target": "eur_collector",
+      "label": "Execute sub-workflow",
+      "details": "EUR Collector runs in the current sequence before Layer 1 agent execution.",
+      "verification": {
+        "status": "verified",
+        "evidence": "exports/master_orchestrator.json includes the step and sequence.",
+        "notes": []
+      }
+    },
+    {
+      "id": "e_master_runs_gold_collector",
+      "source": "master_orchestrator",
+      "target": "gold_collector",
+      "label": "Execute sub-workflow",
+      "details": "Gold Collector runs in the current sequence before Layer 1 agent execution.",
+      "verification": {
+        "status": "verified",
+        "evidence": "exports/master_orchestrator.json includes the step and sequence.",
+        "notes": []
+      }
+    },
+    {
+      "id": "e_master_runs_nq_collector",
+      "source": "master_orchestrator",
+      "target": "nq_collector",
+      "label": "Execute sub-workflow",
+      "details": "NQ Collector runs in the current sequence before Layer 1 agent execution.",
+      "verification": {
+        "status": "verified",
+        "evidence": "exports/master_orchestrator.json includes the step and sequence.",
+        "notes": []
+      }
+    },
+    {
+      "id": "e_master_runs_btc_collector",
+      "source": "master_orchestrator",
+      "target": "btc_collector",
+      "label": "Execute sub-workflow",
+      "details": "BTC Collector runs in the current sequence before Layer 1 agent execution.",
+      "verification": {
+        "status": "verified",
+        "evidence": "exports/master_orchestrator.json includes the step and sequence.",
+        "notes": []
+      }
+    },
+    {
+      "id": "e_master_runs_usd_agent",
+      "source": "master_orchestrator",
+      "target": "usd_layer1_agent",
+      "label": "Execute sub-workflow",
+      "details": "USD Layer 1 Agent runs after collectors in the current sequence.",
+      "verification": {
+        "status": "verified",
+        "evidence": "exports/master_orchestrator.json includes the step and sequence.",
+        "notes": []
+      }
+    },
+    {
+      "id": "e_master_runs_eur_agent",
+      "source": "master_orchestrator",
+      "target": "eur_layer1_agent",
+      "label": "Execute sub-workflow",
+      "details": "EUR Layer 1 Agent runs after collectors in the current sequence.",
+      "verification": {
+        "status": "verified",
+        "evidence": "exports/master_orchestrator.json includes the step and sequence.",
+        "notes": []
+      }
+    },
+    {
+      "id": "e_master_runs_gold_agent",
+      "source": "master_orchestrator",
+      "target": "gold_layer1_agent",
+      "label": "Execute sub-workflow",
+      "details": "Gold Layer 1 Agent runs after collectors in the current sequence.",
+      "verification": {
+        "status": "verified",
+        "evidence": "exports/master_orchestrator.json includes the step and sequence.",
+        "notes": []
+      }
+    },
+    {
+      "id": "e_master_runs_nq_agent",
+      "source": "master_orchestrator",
+      "target": "nq_layer1_agent",
+      "label": "Execute sub-workflow",
+      "details": "NQ Layer 1 Agent runs after collectors in the current sequence.",
+      "verification": {
+        "status": "verified",
+        "evidence": "exports/master_orchestrator.json includes the step and sequence.",
+        "notes": []
+      }
+    },
+    {
+      "id": "e_master_runs_btc_agent",
+      "source": "master_orchestrator",
+      "target": "btc_layer1_agent",
+      "label": "Execute sub-workflow",
+      "details": "BTC Layer 1 Agent runs after collectors in the current sequence.",
+      "verification": {
+        "status": "verified",
+        "evidence": "exports/master_orchestrator.json includes the step and sequence.",
+        "notes": []
+      }
+    },
+    {
+      "id": "e_master_runs_layer2",
+      "source": "master_orchestrator",
+      "target": "layer2_trade_selection_agent",
+      "label": "Execute sub-workflow",
+      "details": "Layer 2 Trade Selection Agent is included in the current orchestrator sequence before Dashboard Writer.",
+      "verification": {
+        "status": "verified",
+        "evidence": "exports/master_orchestrator.json includes Layer 2 Trade Selection Agent.",
+        "notes": []
+      }
+    },
+    {
+      "id": "e_master_runs_dashboard_writer",
+      "source": "master_orchestrator",
+      "target": "dashboard_writer",
+      "label": "Execute sub-workflow",
+      "details": "Dashboard Writer runs after Layer 2 Trade Selection Agent in the current sequence.",
+      "verification": {
+        "status": "verified",
+        "evidence": "exports/master_orchestrator.json includes Dashboard Writer after Layer 2.",
+        "notes": []
+      }
+    },
+    {
+      "id": "e_master_to_status_builder",
+      "source": "master_orchestrator",
+      "target": "workflow_status_builder",
+      "label": "Build final step summary",
+      "details": "After child workflows run, the orchestrator builds the final published status payload.",
+      "verification": {
+        "status": "verified",
+        "evidence": "exports/master_orchestrator.json contains the status-building JS node.",
+        "notes": []
+      }
+    },
+    {
+      "id": "e_status_builder_to_workflow_status",
+      "source": "workflow_status_builder",
+      "target": "workflow_status_json",
+      "label": "Publish status artifact",
+      "details": "The status builder writes data/workflow-status.json back into GitHub.",
+      "verification": {
+        "status": "verified",
+        "evidence": "exports/master_orchestrator.json writes data/workflow-status.json with a GitHub node.",
+        "notes": []
+      }
+    },
+    {
+      "id": "e_eco_to_events",
+      "source": "eco_events_collector",
+      "target": "economic_events",
+      "label": "Writes deduped event rows",
+      "details": "Eco Events Collector writes deduped rows into Supabase economic_events.",
+      "verification": {
+        "status": "verified",
+        "evidence": "exports/eco_events_collector.json and docs identify economic_events as the target.",
+        "notes": []
+      }
+    },
+    {
+      "id": "e_usd_collector_to_snapshots",
+      "source": "usd_collector",
+      "target": "market_snapshots",
+      "label": "Writes USD market context",
+      "details": "USD Collector contributes runtime snapshot context for downstream Layer 1 use.",
+      "verification": {
+        "status": "verified",
+        "evidence": "Handoff docs assign collectors to market_snapshots as the runtime snapshot layer.",
+        "notes": []
+      }
+    },
+    {
+      "id": "e_eur_collector_to_snapshots",
+      "source": "eur_collector",
+      "target": "market_snapshots",
+      "label": "Writes EUR market context",
+      "details": "EUR Collector contributes runtime snapshot context for downstream Layer 1 use.",
+      "verification": {
+        "status": "verified",
+        "evidence": "Handoff docs assign collectors to market_snapshots as the runtime snapshot layer.",
+        "notes": []
+      }
+    },
+    {
+      "id": "e_gold_collector_to_snapshots",
+      "source": "gold_collector",
+      "target": "market_snapshots",
+      "label": "Writes Gold market context",
+      "details": "Gold Collector contributes runtime snapshot context for downstream Layer 1 use.",
+      "verification": {
+        "status": "verified",
+        "evidence": "Handoff docs assign collectors to market_snapshots as the runtime snapshot layer.",
+        "notes": []
+      }
+    },
+    {
+      "id": "e_nq_collector_to_snapshots",
+      "source": "nq_collector",
+      "target": "market_snapshots",
+      "label": "Writes NQ market context",
+      "details": "NQ Collector contributes runtime snapshot context for downstream Layer 1 use.",
+      "verification": {
+        "status": "verified",
+        "evidence": "Handoff docs assign collectors to market_snapshots as the runtime snapshot layer.",
+        "notes": []
+      }
+    },
+    {
+      "id": "e_btc_collector_to_snapshots",
+      "source": "btc_collector",
+      "target": "market_snapshots",
+      "label": "Writes BTC market context",
+      "details": "BTC Collector contributes runtime snapshot context for downstream Layer 1 use.",
+      "verification": {
+        "status": "verified",
+        "evidence": "Handoff docs assign collectors to market_snapshots as the runtime snapshot layer.",
+        "notes": []
+      }
+    },
+    {
+      "id": "e_snapshots_to_usd_agent",
+      "source": "market_snapshots",
+      "target": "usd_layer1_agent",
+      "label": "Latest usable USD snapshot",
+      "details": "Layer 1 agents consume only their own usable snapshot context.",
+      "verification": {
+        "status": "verified",
+        "evidence": "Current docs define Layer 1 agents as consuming only their own snapshot context.",
+        "notes": []
+      }
+    },
+    {
+      "id": "e_snapshots_to_eur_agent",
+      "source": "market_snapshots",
+      "target": "eur_layer1_agent",
+      "label": "Latest usable EUR snapshot",
+      "details": "Layer 1 agents consume only their own usable snapshot context.",
+      "verification": {
+        "status": "verified",
+        "evidence": "Current docs define Layer 1 agents as consuming only their own snapshot context.",
+        "notes": []
+      }
+    },
+    {
+      "id": "e_snapshots_to_gold_agent",
+      "source": "market_snapshots",
+      "target": "gold_layer1_agent",
+      "label": "Latest usable Gold snapshot",
+      "details": "Layer 1 agents consume only their own usable snapshot context.",
+      "verification": {
+        "status": "verified",
+        "evidence": "Current docs define Layer 1 agents as consuming only their own snapshot context.",
+        "notes": []
+      }
+    },
+    {
+      "id": "e_snapshots_to_nq_agent",
+      "source": "market_snapshots",
+      "target": "nq_layer1_agent",
+      "label": "Latest usable NQ snapshot",
+      "details": "Layer 1 agents consume only their own usable snapshot context.",
+      "verification": {
+        "status": "verified",
+        "evidence": "Current docs define Layer 1 agents as consuming only their own snapshot context.",
+        "notes": []
+      }
+    },
+    {
+      "id": "e_snapshots_to_btc_agent",
+      "source": "market_snapshots",
+      "target": "btc_layer1_agent",
+      "label": "Latest usable BTC snapshot",
+      "details": "Layer 1 agents consume only their own usable snapshot context.",
+      "verification": {
+        "status": "verified",
+        "evidence": "Current docs define Layer 1 agents as consuming only their own snapshot context.",
+        "notes": []
+      }
+    },
+    {
+      "id": "e_usd_agent_to_outputs",
+      "source": "usd_layer1_agent",
+      "target": "agent_outputs",
+      "label": "Writes raw Layer 1 output",
+      "details": "USD Layer 1 Agent writes raw directional output into agent_outputs.",
+      "verification": {
+        "status": "verified",
+        "evidence": "Handoff and runtime architecture docs identify agent_outputs as the Layer 1 output store.",
+        "notes": []
+      }
+    },
+    {
+      "id": "e_eur_agent_to_outputs",
+      "source": "eur_layer1_agent",
+      "target": "agent_outputs",
+      "label": "Writes raw Layer 1 output",
+      "details": "EUR Layer 1 Agent writes raw directional output into agent_outputs.",
+      "verification": {
+        "status": "verified",
+        "evidence": "Handoff and runtime architecture docs identify agent_outputs as the Layer 1 output store.",
+        "notes": []
+      }
+    },
+    {
+      "id": "e_gold_agent_to_outputs",
+      "source": "gold_layer1_agent",
+      "target": "agent_outputs",
+      "label": "Writes raw Layer 1 output",
+      "details": "Gold Layer 1 Agent writes raw directional output into agent_outputs.",
+      "verification": {
+        "status": "verified",
+        "evidence": "Handoff and runtime architecture docs identify agent_outputs as the Layer 1 output store.",
+        "notes": []
+      }
+    },
+    {
+      "id": "e_nq_agent_to_outputs",
+      "source": "nq_layer1_agent",
+      "target": "agent_outputs",
+      "label": "Writes raw Layer 1 output",
+      "details": "NQ Layer 1 Agent writes raw directional output into agent_outputs.",
+      "verification": {
+        "status": "verified",
+        "evidence": "Handoff and runtime architecture docs identify agent_outputs as the Layer 1 output store.",
+        "notes": []
+      }
+    },
+    {
+      "id": "e_btc_agent_to_outputs",
+      "source": "btc_layer1_agent",
+      "target": "agent_outputs",
+      "label": "Writes raw Layer 1 output",
+      "details": "BTC Layer 1 Agent writes raw directional output into agent_outputs.",
+      "verification": {
+        "status": "verified",
+        "evidence": "Handoff and runtime architecture docs identify agent_outputs as the Layer 1 output store.",
+        "notes": []
+      }
+    },
+    {
+      "id": "e_outputs_to_layer2",
+      "source": "agent_outputs",
+      "target": "layer2_trade_selection_agent",
+      "label": "Reads Layer 1 outputs",
+      "details": "The current Layer 2 export reads agent_outputs as its verified upstream source.",
+      "verification": {
+        "status": "verified",
+        "evidence": "exports/layer2_trade_selection_agent.json queries agent_outputs.",
+        "notes": []
+      }
+    },
+    {
+      "id": "e_events_to_layer2_unverified",
+      "source": "economic_events",
+      "target": "layer2_trade_selection_agent",
+      "label": "Event adjustment input",
+      "details": "Repository prose describes Layer 2 as event-adjusted, but the current verified export evidence confirms agent_outputs reads more clearly than a direct economic_events read path.",
+      "verification": {
+        "status": "unverified",
+        "evidence": "README.md describes Layer 2 as event-adjusted, while the current export evidence centers on agent_outputs.",
+        "notes": [
+          "Retained explicitly as unverified instead of promoted into a verified runtime dependency."
+        ]
+      }
+    },
+    {
+      "id": "e_layer2_to_layer2_json",
+      "source": "layer2_trade_selection_agent",
+      "target": "layer2_json",
+      "label": "Publishes Layer 2 artifact",
+      "details": "The current verified Layer 2 export writes data/layer2.json back into GitHub.",
+      "verification": {
+        "status": "verified",
+        "evidence": "exports/layer2_trade_selection_agent.json writes data/layer2.json with a GitHub node.",
+        "notes": [
+          "Exact commit sequencing relative to other orchestrator publications remains unverified."
+        ]
+      }
+    },
+    {
+      "id": "e_outputs_to_dashboard_writer",
+      "source": "agent_outputs",
+      "target": "dashboard_writer",
+      "label": "Reads Layer 1 outputs",
+      "details": "Dashboard Writer reads agent_outputs and builds the published Layer 1 dashboard artifact.",
+      "verification": {
+        "status": "verified",
+        "evidence": "exports/dashboard_writer.json queries agent_outputs.",
+        "notes": []
+      }
+    },
+    {
+      "id": "e_dashboard_writer_to_layer1_json",
+      "source": "dashboard_writer",
+      "target": "layer1_json",
+      "label": "Publishes Layer 1 artifact",
+      "details": "The verified Dashboard Writer export writes data/layer1.json back into GitHub.",
+      "verification": {
+        "status": "verified",
+        "evidence": "exports/dashboard_writer.json writes data/layer1.json with a GitHub node.",
+        "notes": [
+          "Exact commit sequencing relative to other orchestrator publications remains unverified."
+        ]
+      }
+    },
+    {
+      "id": "e_repo_logic_to_snapshot_builders",
+      "source": "repo_docs_and_logic",
+      "target": "historical_snapshot_builders",
+      "label": "Defines replay baseline",
+      "details": "Replay and snapshot generation stay downstream of the checked-in logic and documentation baseline.",
+      "verification": {
+        "status": "verified",
+        "evidence": "Research docs and scripts treat the repository as the replay baseline.",
+        "notes": []
+      }
+    },
+    {
+      "id": "e_snapshot_builders_to_replay",
+      "source": "historical_snapshot_builders",
+      "target": "replay_runners",
+      "label": "Feeds historical replay inputs",
+      "details": "Historical snapshots are built before replay reconstructs production-style calls.",
+      "verification": {
+        "status": "verified",
+        "evidence": "Handoff sequence and builder/replay scripts define this research order.",
+        "notes": []
+      }
+    },
+    {
+      "id": "e_replay_to_evaluators",
+      "source": "replay_runners",
+      "target": "outcome_evaluators",
+      "label": "Feeds evaluated predictions",
+      "details": "Replay output is judged against realized outcomes before checker generation.",
+      "verification": {
+        "status": "verified",
+        "evidence": "Research docs and tests describe replay before evaluation.",
+        "notes": []
+      }
+    },
+    {
+      "id": "e_evaluators_to_checker",
+      "source": "outcome_evaluators",
+      "target": "checker_artifacts",
+      "label": "Builds canonical checker artifacts",
+      "details": "Checker artifacts are downstream reproducibility evidence built after evaluation.",
+      "verification": {
+        "status": "verified",
+        "evidence": "Current checked-in checker artifacts and docs describe the evaluation-to-checker path.",
+        "notes": []
+      }
+    },
+    {
+      "id": "e_checker_to_research_views",
+      "source": "checker_artifacts",
+      "target": "research_supabase_views",
+      "label": "Feeds derived research summaries",
+      "details": "The dashboard’s research views are downstream analytical surfaces built on canonical research outputs.",
+      "verification": {
+        "status": "partially_verified",
+        "evidence": "Handoff and script.js align on downstream research summaries, though full view lineage is not fully enumerated in one artifact.",
+        "notes": [
+          "Complete column-level Supabase research lineage remains explicitly unverified."
+        ]
+      }
+    },
+    {
+      "id": "e_checker_to_factor_edge",
+      "source": "checker_artifacts",
+      "target": "factor_edge_lab_artifact",
+      "label": "Builds factor review artifact",
+      "details": "Factor Edge Lab is built downstream from checked-in checker evidence.",
+      "verification": {
+        "status": "verified",
+        "evidence": "Current changelog, tests, and dashboard artifact usage all align on checker-driven Factor Edge Lab generation.",
+        "notes": []
+      }
+    },
+    {
+      "id": "e_checker_to_shadow",
+      "source": "checker_artifacts",
+      "target": "phase2_shadow_backtest_artifact",
+      "label": "Builds shadow comparison artifact",
+      "details": "Phase 2 Shadow Backtest reuses stored checker evidence rather than changing production logic.",
+      "verification": {
+        "status": "verified",
+        "evidence": "Current changelog and tests describe Phase 2 as checker-driven and downstream-only.",
+        "notes": []
+      }
+    },
+    {
+      "id": "e_factor_edge_to_shadow",
+      "source": "factor_edge_lab_artifact",
+      "target": "phase2_shadow_backtest_artifact",
+      "label": "Supplies weighting evidence",
+      "details": "Phase 2 Shadow Backtest reuses checked-in Factor Edge evidence for conservative shadow reweighting.",
+      "verification": {
+        "status": "verified",
+        "evidence": "Current changelog and backtester docs describe Phase 2 as using checked-in Factor Edge evidence.",
+        "notes": []
+      }
+    },
+    {
+      "id": "e_checker_to_phase3",
+      "source": "checker_artifacts",
+      "target": "phase3_validation_modules",
+      "label": "Feeds Phase 3 validation",
+      "details": "Phase 3 validation work consumes frozen research outputs rather than mutating production logic.",
+      "verification": {
+        "status": "partially_verified",
+        "evidence": "Phase 3 scripts and reports exist, but not every publication path is unified into a single artifact.",
+        "notes": []
+      }
+    },
+    {
+      "id": "e_checker_to_adr",
+      "source": "checker_artifacts",
+      "target": "adr_l2l_research_artifact",
+      "label": "Supplies checker-side call context",
+      "details": "ADR/L2L research uses canonical checker outputs as one of its downstream reference inputs.",
+      "verification": {
+        "status": "verified",
+        "evidence": "Current docs describe checker-backed sequence research for Layer 1 and Layer 2.",
+        "notes": []
+      }
+    },
+    {
+      "id": "e_candles_to_adr",
+      "source": "repo_local_candle_sources",
+      "target": "adr_l2l_research_artifact",
+      "label": "Supplies sequence-aware OHLC",
+      "details": "L2L 1H Sequence Research requires repo-local candle coverage and keeps unsupported assets unavailable.",
+      "verification": {
+        "status": "verified",
+        "evidence": "Current importer scripts, docs, and artifact behavior all enforce this requirement.",
+        "notes": []
+      }
+    }
+  ],
+  "views": [
+    {
+      "id": "overview-map",
+      "label": "Overview Map",
+      "description": "High-level production and research map, including the top-level browser, runtime, publication, and research surfaces.",
+      "node_ids": [
+        "dashboard_browser",
+        "dashboard_renderer",
+        "github_pages",
+        "master_orchestrator",
+        "workflow_status_builder",
+        "market_snapshots",
+        "agent_outputs",
+        "layer2_trade_selection_agent",
+        "dashboard_writer",
+        "layer1_json",
+        "layer2_json",
+        "workflow_status_json",
+        "checker_artifacts",
+        "factor_edge_lab_artifact",
+        "phase2_shadow_backtest_artifact",
+        "adr_l2l_research_artifact",
+        "research_supabase_views"
+      ],
+      "edge_ids": [
+        "e_github_pages_serves_renderer",
+        "e_renderer_to_browser",
+        "e_layer1_to_renderer",
+        "e_layer2_to_renderer",
+        "e_workflow_status_to_renderer",
+        "e_research_views_to_renderer",
+        "e_checker_to_renderer",
+        "e_adr_to_renderer",
+        "e_factor_edge_to_renderer",
+        "e_shadow_to_renderer",
+        "e_browser_triggers_orchestrator",
+        "e_outputs_to_layer2",
+        "e_layer2_to_layer2_json",
+        "e_outputs_to_dashboard_writer",
+        "e_dashboard_writer_to_layer1_json",
+        "e_status_builder_to_workflow_status",
+        "e_checker_to_research_views",
+        "e_checker_to_factor_edge",
+        "e_checker_to_shadow",
+        "e_checker_to_adr"
+      ],
+      "boundary_ids": [
+        "browser_surface",
+        "github_publication",
+        "n8n_runtime",
+        "supabase_runtime",
+        "research_stack"
+      ],
+      "layout": {
+        "width": 1200,
+        "height": 720,
+        "nodes": {
+          "dashboard_browser": { "x": 1040, "y": 110 },
+          "dashboard_renderer": { "x": 840, "y": 110 },
+          "github_pages": { "x": 620, "y": 110 },
+          "master_orchestrator": { "x": 250, "y": 250 },
+          "workflow_status_builder": { "x": 440, "y": 400 },
+          "market_snapshots": { "x": 250, "y": 470 },
+          "agent_outputs": { "x": 470, "y": 470 },
+          "layer2_trade_selection_agent": { "x": 470, "y": 250 },
+          "dashboard_writer": { "x": 620, "y": 250 },
+          "layer1_json": { "x": 790, "y": 250 },
+          "layer2_json": { "x": 790, "y": 400 },
+          "workflow_status_json": { "x": 620, "y": 400 },
+          "checker_artifacts": { "x": 250, "y": 620 },
+          "factor_edge_lab_artifact": { "x": 470, "y": 620 },
+          "phase2_shadow_backtest_artifact": { "x": 690, "y": 620 },
+          "adr_l2l_research_artifact": { "x": 910, "y": 620 },
+          "research_supabase_views": { "x": 1040, "y": 620 }
+        },
+        "boundaries": {
+          "browser_surface": { "x": 720, "y": 30, "width": 430, "height": 180 },
+          "github_publication": { "x": 540, "y": 30, "width": 230, "height": 470 },
+          "n8n_runtime": { "x": 90, "y": 170, "width": 620, "height": 160 },
+          "supabase_runtime": { "x": 120, "y": 360, "width": 430, "height": 180 },
+          "research_stack": { "x": 120, "y": 560, "width": 1030, "height": 120 }
+        }
+      }
+    },
+    {
+      "id": "production-flow",
+      "label": "Production Flow",
+      "description": "Current production path from browser trigger through orchestration, runtime storage, publication, and dashboard rendering.",
+      "node_ids": [
+        "dashboard_browser",
+        "dashboard_renderer",
+        "workflow_control_json",
+        "github_pages",
+        "master_orchestrator",
+        "eco_events_collector",
+        "market_snapshots",
+        "agent_outputs",
+        "layer2_trade_selection_agent",
+        "dashboard_writer",
+        "workflow_status_builder",
+        "workflow_status_json",
+        "layer1_json",
+        "layer2_json"
+      ],
+      "edge_ids": [
+        "e_github_pages_serves_renderer",
+        "e_renderer_to_browser",
+        "e_workflow_control_to_renderer",
+        "e_workflow_status_to_renderer",
+        "e_layer1_to_renderer",
+        "e_layer2_to_renderer",
+        "e_browser_triggers_orchestrator",
+        "e_master_runs_eco",
+        "e_outputs_to_layer2",
+        "e_layer2_to_layer2_json",
+        "e_outputs_to_dashboard_writer",
+        "e_dashboard_writer_to_layer1_json",
+        "e_master_to_status_builder",
+        "e_status_builder_to_workflow_status"
+      ],
+      "boundary_ids": [
+        "browser_surface",
+        "github_publication",
+        "n8n_runtime",
+        "supabase_runtime"
+      ],
+      "layout": {
+        "width": 1200,
+        "height": 700,
+        "nodes": {
+          "dashboard_browser": { "x": 1020, "y": 90 },
+          "dashboard_renderer": { "x": 820, "y": 90 },
+          "workflow_control_json": { "x": 620, "y": 90 },
+          "github_pages": { "x": 620, "y": 220 },
+          "master_orchestrator": { "x": 330, "y": 220 },
+          "eco_events_collector": { "x": 150, "y": 390 },
+          "market_snapshots": { "x": 330, "y": 520 },
+          "agent_outputs": { "x": 510, "y": 520 },
+          "layer2_trade_selection_agent": { "x": 510, "y": 390 },
+          "dashboard_writer": { "x": 700, "y": 390 },
+          "workflow_status_builder": { "x": 330, "y": 390 },
+          "workflow_status_json": { "x": 620, "y": 390 },
+          "layer1_json": { "x": 820, "y": 390 },
+          "layer2_json": { "x": 1000, "y": 390 }
+        },
+        "boundaries": {
+          "browser_surface": { "x": 720, "y": 25, "width": 400, "height": 135 },
+          "github_publication": { "x": 555, "y": 25, "width": 255, "height": 470 },
+          "n8n_runtime": { "x": 70, "y": 145, "width": 700, "height": 325 },
+          "supabase_runtime": { "x": 180, "y": 470, "width": 430, "height": 170 }
+        }
+      }
+    },
+    {
+      "id": "layer1",
+      "label": "Layer 1",
+      "description": "Collector-to-snapshot-to-sealed-agent flow for the five production Layer 1 assets.",
+      "node_ids": [
+        "market_snapshots",
+        "agent_outputs",
+        "usd_collector",
+        "eur_collector",
+        "gold_collector",
+        "nq_collector",
+        "btc_collector",
+        "usd_layer1_agent",
+        "eur_layer1_agent",
+        "gold_layer1_agent",
+        "nq_layer1_agent",
+        "btc_layer1_agent",
+        "dashboard_writer",
+        "layer1_json"
+      ],
+      "edge_ids": [
+        "e_usd_collector_to_snapshots",
+        "e_eur_collector_to_snapshots",
+        "e_gold_collector_to_snapshots",
+        "e_nq_collector_to_snapshots",
+        "e_btc_collector_to_snapshots",
+        "e_snapshots_to_usd_agent",
+        "e_snapshots_to_eur_agent",
+        "e_snapshots_to_gold_agent",
+        "e_snapshots_to_nq_agent",
+        "e_snapshots_to_btc_agent",
+        "e_usd_agent_to_outputs",
+        "e_eur_agent_to_outputs",
+        "e_gold_agent_to_outputs",
+        "e_nq_agent_to_outputs",
+        "e_btc_agent_to_outputs",
+        "e_outputs_to_dashboard_writer",
+        "e_dashboard_writer_to_layer1_json"
+      ],
+      "boundary_ids": [
+        "n8n_runtime",
+        "supabase_runtime",
+        "github_publication"
+      ],
+      "layout": {
+        "width": 1200,
+        "height": 760,
+        "nodes": {
+          "usd_collector": { "x": 120, "y": 120 },
+          "eur_collector": { "x": 280, "y": 120 },
+          "gold_collector": { "x": 440, "y": 120 },
+          "nq_collector": { "x": 600, "y": 120 },
+          "btc_collector": { "x": 760, "y": 120 },
+          "market_snapshots": { "x": 440, "y": 260 },
+          "usd_layer1_agent": { "x": 120, "y": 430 },
+          "eur_layer1_agent": { "x": 280, "y": 430 },
+          "gold_layer1_agent": { "x": 440, "y": 430 },
+          "nq_layer1_agent": { "x": 600, "y": 430 },
+          "btc_layer1_agent": { "x": 760, "y": 430 },
+          "agent_outputs": { "x": 440, "y": 590 },
+          "dashboard_writer": { "x": 920, "y": 590 },
+          "layer1_json": { "x": 1080, "y": 590 }
+        },
+        "boundaries": {
+          "n8n_runtime": { "x": 45, "y": 50, "width": 980, "height": 470 },
+          "supabase_runtime": { "x": 250, "y": 205, "width": 370, "height": 460 },
+          "github_publication": { "x": 860, "y": 520, "width": 270, "height": 130 }
+        }
+      }
+    },
+    {
+      "id": "layer2",
+      "label": "Layer 2",
+      "description": "Current downstream Layer 2 pair-selection path and the explicitly uncertain event-adjustment dependency.",
+      "node_ids": [
+        "economic_events",
+        "agent_outputs",
+        "layer2_trade_selection_agent",
+        "layer2_json",
+        "dashboard_renderer",
+        "dashboard_browser"
+      ],
+      "edge_ids": [
+        "e_outputs_to_layer2",
+        "e_events_to_layer2_unverified",
+        "e_layer2_to_layer2_json",
+        "e_layer2_to_renderer",
+        "e_renderer_to_browser"
+      ],
+      "boundary_ids": [
+        "supabase_runtime",
+        "n8n_runtime",
+        "github_publication",
+        "browser_surface"
+      ],
+      "layout": {
+        "width": 1200,
+        "height": 620,
+        "nodes": {
+          "economic_events": { "x": 180, "y": 150 },
+          "agent_outputs": { "x": 180, "y": 360 },
+          "layer2_trade_selection_agent": { "x": 470, "y": 260 },
+          "layer2_json": { "x": 760, "y": 260 },
+          "dashboard_renderer": { "x": 980, "y": 260 },
+          "dashboard_browser": { "x": 1090, "y": 100 }
+        },
+        "boundaries": {
+          "supabase_runtime": { "x": 80, "y": 90, "width": 210, "height": 350 },
+          "n8n_runtime": { "x": 350, "y": 180, "width": 230, "height": 160 },
+          "github_publication": { "x": 660, "y": 180, "width": 220, "height": 160 },
+          "browser_surface": { "x": 900, "y": 40, "width": 230, "height": 320 }
+        }
+      }
+    },
+    {
+      "id": "n8n-execution",
+      "label": "n8n Execution",
+      "description": "Dashboard-triggered webhook control path and the verified child-workflow execution chain.",
+      "node_ids": [
+        "dashboard_renderer",
+        "workflow_control_json",
+        "master_orchestrator",
+        "eco_events_collector",
+        "usd_collector",
+        "eur_collector",
+        "gold_collector",
+        "nq_collector",
+        "btc_collector",
+        "usd_layer1_agent",
+        "eur_layer1_agent",
+        "gold_layer1_agent",
+        "nq_layer1_agent",
+        "btc_layer1_agent",
+        "layer2_trade_selection_agent",
+        "dashboard_writer",
+        "workflow_status_builder",
+        "workflow_status_json"
+      ],
+      "edge_ids": [
+        "e_workflow_control_to_renderer",
+        "e_browser_triggers_orchestrator",
+        "e_master_runs_eco",
+        "e_master_runs_usd_collector",
+        "e_master_runs_eur_collector",
+        "e_master_runs_gold_collector",
+        "e_master_runs_nq_collector",
+        "e_master_runs_btc_collector",
+        "e_master_runs_usd_agent",
+        "e_master_runs_eur_agent",
+        "e_master_runs_gold_agent",
+        "e_master_runs_nq_agent",
+        "e_master_runs_btc_agent",
+        "e_master_runs_layer2",
+        "e_master_runs_dashboard_writer",
+        "e_master_to_status_builder",
+        "e_status_builder_to_workflow_status"
+      ],
+      "boundary_ids": [
+        "browser_surface",
+        "n8n_runtime",
+        "github_publication"
+      ],
+      "layout": {
+        "width": 1400,
+        "height": 760,
+        "nodes": {
+          "workflow_control_json": { "x": 140, "y": 90 },
+          "dashboard_renderer": { "x": 340, "y": 90 },
+          "master_orchestrator": { "x": 220, "y": 240 },
+          "eco_events_collector": { "x": 120, "y": 420 },
+          "usd_collector": { "x": 260, "y": 420 },
+          "eur_collector": { "x": 400, "y": 420 },
+          "gold_collector": { "x": 540, "y": 420 },
+          "nq_collector": { "x": 680, "y": 420 },
+          "btc_collector": { "x": 820, "y": 420 },
+          "usd_layer1_agent": { "x": 260, "y": 600 },
+          "eur_layer1_agent": { "x": 400, "y": 600 },
+          "gold_layer1_agent": { "x": 540, "y": 600 },
+          "nq_layer1_agent": { "x": 680, "y": 600 },
+          "btc_layer1_agent": { "x": 820, "y": 600 },
+          "layer2_trade_selection_agent": { "x": 980, "y": 510 },
+          "dashboard_writer": { "x": 1180, "y": 510 },
+          "workflow_status_builder": { "x": 980, "y": 240 },
+          "workflow_status_json": { "x": 1180, "y": 240 }
+        },
+        "boundaries": {
+          "browser_surface": { "x": 60, "y": 35, "width": 360, "height": 115 },
+          "n8n_runtime": { "x": 60, "y": 175, "width": 1260, "height": 515 },
+          "github_publication": { "x": 1090, "y": 170, "width": 220, "height": 170 }
+        }
+      }
+    },
+    {
+      "id": "artifact-publication",
+      "label": "Artifact Publication",
+      "description": "Verified checked-in publication targets and the deliberately unverified areas around exact commit sequencing and extra writers.",
+      "node_ids": [
+        "master_orchestrator",
+        "workflow_status_builder",
+        "workflow_status_json",
+        "layer2_trade_selection_agent",
+        "layer2_json",
+        "dashboard_writer",
+        "layer1_json",
+        "github_pages",
+        "dashboard_renderer",
+        "dashboard_browser"
+      ],
+      "edge_ids": [
+        "e_status_builder_to_workflow_status",
+        "e_layer2_to_layer2_json",
+        "e_dashboard_writer_to_layer1_json",
+        "e_github_pages_serves_renderer",
+        "e_workflow_status_to_renderer",
+        "e_layer1_to_renderer",
+        "e_layer2_to_renderer",
+        "e_renderer_to_browser"
+      ],
+      "boundary_ids": [
+        "n8n_runtime",
+        "github_publication",
+        "browser_surface"
+      ],
+      "layout": {
+        "width": 1200,
+        "height": 640,
+        "nodes": {
+          "master_orchestrator": { "x": 180, "y": 180 },
+          "workflow_status_builder": { "x": 360, "y": 120 },
+          "workflow_status_json": { "x": 560, "y": 120 },
+          "layer2_trade_selection_agent": { "x": 360, "y": 300 },
+          "layer2_json": { "x": 560, "y": 300 },
+          "dashboard_writer": { "x": 360, "y": 480 },
+          "layer1_json": { "x": 560, "y": 480 },
+          "github_pages": { "x": 780, "y": 300 },
+          "dashboard_renderer": { "x": 980, "y": 300 },
+          "dashboard_browser": { "x": 1080, "y": 120 }
+        },
+        "boundaries": {
+          "n8n_runtime": { "x": 80, "y": 70, "width": 350, "height": 470 },
+          "github_publication": { "x": 470, "y": 60, "width": 390, "height": 500 },
+          "browser_surface": { "x": 900, "y": 70, "width": 220, "height": 310 }
+        }
+      }
+    },
+    {
+      "id": "historical-replay-and-checker",
+      "label": "Historical Replay and Checker",
+      "description": "Downstream historical snapshot, replay, evaluation, and checker chain.",
+      "node_ids": [
+        "repo_docs_and_logic",
+        "historical_snapshot_builders",
+        "replay_runners",
+        "outcome_evaluators",
+        "checker_artifacts",
+        "research_supabase_views",
+        "dashboard_renderer"
+      ],
+      "edge_ids": [
+        "e_repo_logic_to_snapshot_builders",
+        "e_snapshot_builders_to_replay",
+        "e_replay_to_evaluators",
+        "e_evaluators_to_checker",
+        "e_checker_to_research_views",
+        "e_checker_to_renderer",
+        "e_research_views_to_renderer"
+      ],
+      "boundary_ids": [
+        "research_stack",
+        "browser_surface"
+      ],
+      "layout": {
+        "width": 1200,
+        "height": 540,
+        "nodes": {
+          "repo_docs_and_logic": { "x": 120, "y": 270 },
+          "historical_snapshot_builders": { "x": 320, "y": 270 },
+          "replay_runners": { "x": 520, "y": 270 },
+          "outcome_evaluators": { "x": 720, "y": 270 },
+          "checker_artifacts": { "x": 920, "y": 180 },
+          "research_supabase_views": { "x": 920, "y": 360 },
+          "dashboard_renderer": { "x": 1080, "y": 270 }
+        },
+        "boundaries": {
+          "research_stack": { "x": 40, "y": 110, "width": 980, "height": 320 },
+          "browser_surface": { "x": 1020, "y": 180, "width": 140, "height": 180 }
+        }
+      }
+    },
+    {
+      "id": "factor-edge-lab",
+      "label": "Factor Edge Lab",
+      "description": "Checker-driven factor review artifact and its read-only dashboard publication path.",
+      "node_ids": [
+        "checker_artifacts",
+        "factor_edge_lab_artifact",
+        "dashboard_renderer",
+        "dashboard_browser"
+      ],
+      "edge_ids": [
+        "e_checker_to_factor_edge",
+        "e_factor_edge_to_renderer",
+        "e_renderer_to_browser"
+      ],
+      "boundary_ids": [
+        "research_stack",
+        "browser_surface"
+      ],
+      "layout": {
+        "width": 1080,
+        "height": 460,
+        "nodes": {
+          "checker_artifacts": { "x": 180, "y": 230 },
+          "factor_edge_lab_artifact": { "x": 450, "y": 230 },
+          "dashboard_renderer": { "x": 740, "y": 230 },
+          "dashboard_browser": { "x": 930, "y": 110 }
+        },
+        "boundaries": {
+          "research_stack": { "x": 70, "y": 140, "width": 470, "height": 180 },
+          "browser_surface": { "x": 640, "y": 55, "width": 330, "height": 270 }
+        }
+      }
+    },
+    {
+      "id": "phase-2-shadow-backtest",
+      "label": "Phase 2 Shadow Backtest",
+      "description": "Checker- and Factor Edge-driven shadow comparison artifact that stays downstream-only.",
+      "node_ids": [
+        "checker_artifacts",
+        "factor_edge_lab_artifact",
+        "phase2_shadow_backtest_artifact",
+        "dashboard_renderer",
+        "dashboard_browser"
+      ],
+      "edge_ids": [
+        "e_checker_to_shadow",
+        "e_factor_edge_to_shadow",
+        "e_shadow_to_renderer",
+        "e_renderer_to_browser"
+      ],
+      "boundary_ids": [
+        "research_stack",
+        "browser_surface"
+      ],
+      "layout": {
+        "width": 1120,
+        "height": 500,
+        "nodes": {
+          "checker_artifacts": { "x": 160, "y": 250 },
+          "factor_edge_lab_artifact": { "x": 390, "y": 120 },
+          "phase2_shadow_backtest_artifact": { "x": 460, "y": 320 },
+          "dashboard_renderer": { "x": 760, "y": 250 },
+          "dashboard_browser": { "x": 960, "y": 120 }
+        },
+        "boundaries": {
+          "research_stack": { "x": 60, "y": 65, "width": 520, "height": 340 },
+          "browser_surface": { "x": 650, "y": 70, "width": 360, "height": 270 }
+        }
+      }
+    },
+    {
+      "id": "phase-3-validation",
+      "label": "Phase 3 Validation",
+      "description": "Phase 3 validation work consuming frozen research outputs while keeping production logic unchanged.",
+      "node_ids": [
+        "repo_docs_and_logic",
+        "checker_artifacts",
+        "phase3_validation_modules",
+        "research_supabase_views",
+        "dashboard_renderer"
+      ],
+      "edge_ids": [
+        "e_checker_to_phase3",
+        "e_checker_to_research_views",
+        "e_research_views_to_renderer"
+      ],
+      "boundary_ids": [
+        "research_stack",
+        "browser_surface"
+      ],
+      "layout": {
+        "width": 1120,
+        "height": 500,
+        "nodes": {
+          "repo_docs_and_logic": { "x": 120, "y": 250 },
+          "checker_artifacts": { "x": 350, "y": 250 },
+          "phase3_validation_modules": { "x": 590, "y": 160 },
+          "research_supabase_views": { "x": 590, "y": 340 },
+          "dashboard_renderer": { "x": 870, "y": 250 }
+        },
+        "boundaries": {
+          "research_stack": { "x": 50, "y": 95, "width": 660, "height": 310 },
+          "browser_surface": { "x": 780, "y": 165, "width": 180, "height": 170 }
+        }
+      }
+    },
+    {
+      "id": "adr-l2l-research",
+      "label": "ADR / L2L Research",
+      "description": "Sequence-aware ADR/L2L research path using checker context plus repo-local candle sources.",
+      "node_ids": [
+        "checker_artifacts",
+        "repo_local_candle_sources",
+        "adr_l2l_research_artifact",
+        "dashboard_renderer",
+        "dashboard_browser"
+      ],
+      "edge_ids": [
+        "e_checker_to_adr",
+        "e_candles_to_adr",
+        "e_adr_to_renderer",
+        "e_renderer_to_browser"
+      ],
+      "boundary_ids": [
+        "research_stack",
+        "browser_surface"
+      ],
+      "layout": {
+        "width": 1120,
+        "height": 500,
+        "nodes": {
+          "checker_artifacts": { "x": 180, "y": 150 },
+          "repo_local_candle_sources": { "x": 180, "y": 340 },
+          "adr_l2l_research_artifact": { "x": 500, "y": 245 },
+          "dashboard_renderer": { "x": 800, "y": 245 },
+          "dashboard_browser": { "x": 990, "y": 120 }
+        },
+        "boundaries": {
+          "research_stack": { "x": 65, "y": 80, "width": 560, "height": 330 },
+          "browser_surface": { "x": 700, "y": 75, "width": 340, "height": 270 }
+        }
+      }
+    },
+    {
+      "id": "research-flow",
+      "label": "Research Flow",
+      "description": "Cross-module downstream research path from repo baseline through checker-driven artifacts and read-only dashboard publication.",
+      "node_ids": [
+        "repo_docs_and_logic",
+        "historical_snapshot_builders",
+        "replay_runners",
+        "outcome_evaluators",
+        "checker_artifacts",
+        "factor_edge_lab_artifact",
+        "phase2_shadow_backtest_artifact",
+        "phase3_validation_modules",
+        "repo_local_candle_sources",
+        "adr_l2l_research_artifact",
+        "research_supabase_views",
+        "dashboard_renderer"
+      ],
+      "edge_ids": [
+        "e_repo_logic_to_snapshot_builders",
+        "e_snapshot_builders_to_replay",
+        "e_replay_to_evaluators",
+        "e_evaluators_to_checker",
+        "e_checker_to_research_views",
+        "e_checker_to_factor_edge",
+        "e_checker_to_shadow",
+        "e_factor_edge_to_shadow",
+        "e_checker_to_phase3",
+        "e_checker_to_adr",
+        "e_candles_to_adr",
+        "e_research_views_to_renderer",
+        "e_checker_to_renderer",
+        "e_factor_edge_to_renderer",
+        "e_shadow_to_renderer",
+        "e_adr_to_renderer"
+      ],
+      "boundary_ids": [
+        "research_stack",
+        "browser_surface"
+      ],
+      "layout": {
+        "width": 1400,
+        "height": 760,
+        "nodes": {
+          "repo_docs_and_logic": { "x": 120, "y": 170 },
+          "historical_snapshot_builders": { "x": 320, "y": 170 },
+          "replay_runners": { "x": 520, "y": 170 },
+          "outcome_evaluators": { "x": 720, "y": 170 },
+          "checker_artifacts": { "x": 930, "y": 170 },
+          "factor_edge_lab_artifact": { "x": 1120, "y": 110 },
+          "phase2_shadow_backtest_artifact": { "x": 1120, "y": 250 },
+          "phase3_validation_modules": { "x": 1120, "y": 390 },
+          "repo_local_candle_sources": { "x": 930, "y": 530 },
+          "adr_l2l_research_artifact": { "x": 1120, "y": 530 },
+          "research_supabase_views": { "x": 930, "y": 390 },
+          "dashboard_renderer": { "x": 1290, "y": 320 }
+        },
+        "boundaries": {
+          "research_stack": { "x": 45, "y": 55, "width": 1210, "height": 610 },
+          "browser_surface": { "x": 1230, "y": 230, "width": 120, "height": 180 }
+        }
+      }
+    },
+    {
+      "id": "failure-and-status-paths",
+      "label": "Failure and Status Paths",
+      "description": "Published workflow health path and the current boundary between verified step reporting and unverified internal fan-out.",
+      "node_ids": [
+        "dashboard_renderer",
+        "dashboard_browser",
+        "master_orchestrator",
+        "eco_events_collector",
+        "layer2_trade_selection_agent",
+        "dashboard_writer",
+        "workflow_status_builder",
+        "workflow_status_json"
+      ],
+      "edge_ids": [
+        "e_browser_triggers_orchestrator",
+        "e_master_runs_eco",
+        "e_master_runs_layer2",
+        "e_master_runs_dashboard_writer",
+        "e_master_to_status_builder",
+        "e_status_builder_to_workflow_status",
+        "e_workflow_status_to_renderer",
+        "e_renderer_to_browser"
+      ],
+      "boundary_ids": [
+        "browser_surface",
+        "n8n_runtime",
+        "github_publication"
+      ],
+      "layout": {
+        "width": 1120,
+        "height": 540,
+        "nodes": {
+          "dashboard_browser": { "x": 980, "y": 100 },
+          "dashboard_renderer": { "x": 810, "y": 100 },
+          "master_orchestrator": { "x": 240, "y": 240 },
+          "eco_events_collector": { "x": 120, "y": 410 },
+          "layer2_trade_selection_agent": { "x": 360, "y": 410 },
+          "dashboard_writer": { "x": 600, "y": 410 },
+          "workflow_status_builder": { "x": 520, "y": 240 },
+          "workflow_status_json": { "x": 710, "y": 240 }
+        },
+        "boundaries": {
+          "browser_surface": { "x": 730, "y": 45, "width": 320, "height": 150 },
+          "n8n_runtime": { "x": 50, "y": 175, "width": 610, "height": 300 },
+          "github_publication": { "x": 650, "y": 180, "width": 160, "height": 140 }
+        }
+      }
+    }
+  ]
+}

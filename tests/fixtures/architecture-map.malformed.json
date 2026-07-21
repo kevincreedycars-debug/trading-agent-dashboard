@@ -1,0 +1,74 @@
+{
+  "metadata": {
+    "title": "Malformed Architecture Mirror Fixture",
+    "version": "test-fixture",
+    "generated_from": [
+      "playwright-dashboard-smoke.js"
+    ],
+    "last_verified_at": "2026-07-21"
+  },
+  "boundaries": [
+    {
+      "id": "browser_surface",
+      "label": "Browser Surface",
+      "description": "Fixture boundary"
+    }
+  ],
+  "legends": [],
+  "nodes": [
+    {
+      "id": "duplicate-node",
+      "label": "Duplicate Node A",
+      "kind": "Fixture",
+      "summary": "First duplicate fixture node.",
+      "verification": {
+        "status": "verified",
+        "evidence": "Fixture"
+      }
+    },
+    {
+      "id": "duplicate-node",
+      "label": "Duplicate Node B",
+      "kind": "Fixture",
+      "summary": "Second duplicate fixture node.",
+      "verification": {
+        "status": "unsupported",
+        "evidence": "Fixture"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge-1",
+      "source": "missing-source",
+      "target": "duplicate-node",
+      "label": "Broken edge",
+      "verification": {
+        "status": "verified",
+        "evidence": "Fixture"
+      }
+    }
+  ],
+  "views": [
+    {
+      "id": "broken-view",
+      "label": "Broken View",
+      "description": "This fixture should fail validation.",
+      "node_ids": [
+        "duplicate-node"
+      ],
+      "edge_ids": [
+        "edge-1"
+      ],
+      "boundary_ids": [
+        "missing-boundary"
+      ],
+      "layout": {
+        "width": 1000,
+        "height": 600,
+        "nodes": {},
+        "boundaries": {}
+      }
+    }
+  ]
+}

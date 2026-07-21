@@ -1026,7 +1026,129 @@ async function run() {
       throw new Error(`Shadow Logic Backtest did not render any local table scroll shells.\n${JSON.stringify(shadowLayout, null, 2)}`);
     }
 
-    const blockingConsoleErrors = consoleErrors.filter((message) => !message.includes("Failed to load resource: the server responded with a status of 500 ()"));
+    await page.setViewportSize({ width: 1440, height: 1100 });
+    await page.getByRole("button", { name: "Architecture" }).click();
+    await page.waitForSelector("[data-architecture-canvas='true']", { timeout: 15000 });
+
+    const architectureOverviewText = await page.locator("#architecturePanel").innerText();
+    if (!architectureOverviewText.includes("Overview Map")) {
+      throw new Error(`Architecture tab did not render the Overview Map controls.\n${architectureOverviewText}`);
+    }
+
+    const architectureDefaultSelection = await page.evaluate(() => {
+      const activeView = document.querySelector("[data-architecture-view].active")?.getAttribute("data-architecture-view") || "";
+      const detailHeading = document.querySelector("[data-architecture-detail='true'] h3")?.textContent?.trim() || "";
+      const selectedNode = document.querySelector(".architecture-node.is-selected")?.getAttribute("data-architecture-node") || "";
+      return { activeView, detailHeading, selectedNode };
+    });
+
+    if (architectureDefaultSelection.activeView !== "overview-map") {
+      throw new Error(`Architecture tab did not default to Overview Map.\n${JSON.stringify(architectureDefaultSelection, null, 2)}`);
+    }
+
+    if (!architectureDefaultSelection.selectedNode || !architectureDefaultSelection.detailHeading) {
+      throw new Error(`Architecture tab did not select a default node.\n${JSON.stringify(architectureDefaultSelection, null, 2)}`);
+    }
+
+    await page.locator("[data-architecture-node='master_orchestrator']").click();
+    const architectureClickSelection = await page.locator("[data-architecture-detail='true'] h3").textContent() || "";
+    if (!architectureClickSelection.includes("Master Orchestrator")) {
+      throw new Error(`Architecture click selection did not update the detail panel.\n${architectureClickSelection}`);
+    }
+
+    await page.locator("[data-architecture-node='checker_artifacts']").focus();
+    await page.keyboard.press("Enter");
+    const architectureKeyboardSelection = await page.locator("[data-architecture-detail='true'] h3").textContent() || "";
+    if (!architectureKeyboardSelection.includes("Checker Artifacts")) {
+      throw new Error(`Architecture keyboard selection did not update the detail panel.\n${architectureKeyboardSelection}`);
+    }
+
+    await page.locator("[data-architecture-view='layer2']").click();
+    await page.waitForSelector("[data-architecture-canvas='true']", { timeout: 15000 });
+    const architectureLayer2Text = await page.locator("#architecturePanel").innerText();
+    if (!architectureLayer2Text.toLowerCase().includes("unverified")) {
+      throw new Error(`Architecture Layer 2 view did not preserve explicit unverified relationships.\n${architectureLayer2Text}`);
+    }
+
+    await page.locator("[data-architecture-filter='verified-only']").click();
+    const verifiedOnlyState = await page.locator("[data-architecture-filter='verified-only']").getAttribute("aria-pressed");
+    if (verifiedOnlyState !== "true") {
+      throw new Error(`Architecture verified-only filter did not toggle on.\nState: ${verifiedOnlyState}`);
+    }
+
+    const architectureDesktopLayout = await page.evaluate(() => {
+      const doc = document.documentElement;
+      const panel = document.getElementById("architecturePanel");
+      const canvas = document.querySelector("[data-architecture-canvas='true']");
+      return {
+        pageHasHorizontalOverflow: doc.scrollWidth > doc.clientWidth + 1,
+        panelHasHorizontalOverflow: panel ? panel.scrollWidth > panel.clientWidth + 1 : false,
+        canvasHasHorizontalOverflow: canvas ? canvas.scrollWidth > canvas.clientWidth + 1 : false
+      };
+    });
+
+    if (architectureDesktopLayout.pageHasHorizontalOverflow || architectureDesktopLayout.panelHasHorizontalOverflow || architectureDesktopLayout.canvasHasHorizontalOverflow) {
+      throw new Error(`Architecture tab overflowed horizontally on desktop.\n${JSON.stringify(architectureDesktopLayout, null, 2)}`);
+    }
+
+    const missingManifestState = await page.evaluate(async () => {
+      globalThis.__dashboardTestHooks.setArchitectureManifestUrlForTest("./tests/fixtures/architecture-map.unavailable.json");
+      return globalThis.__dashboardTestHooks.reloadArchitectureManifestForTest();
+    });
+    await page.waitForSelector("[data-architecture-state='unavailable']", { timeout: 15000 });
+    const missingManifestText = await page.locator("#architecturePanel").innerText();
+    if (missingManifestState.status !== "unavailable" || !missingManifestText.toLowerCase().includes("could not load a valid manifest")) {
+      throw new Error(`Architecture unavailable state did not fail closed for a missing manifest.\n${JSON.stringify({ missingManifestState, missingManifestText }, null, 2)}`);
+    }
+
+    const malformedManifestState = await page.evaluate(async () => {
+      globalThis.__dashboardTestHooks.setArchitectureManifestUrlForTest("./tests/fixtures/architecture-map.malformed.json");
+      return globalThis.__dashboardTestHooks.reloadArchitectureManifestForTest();
+    });
+    await page.waitForSelector("[data-architecture-state='unavailable']", { timeout: 15000 });
+    const malformedManifestText = await page.locator("#architecturePanel").innerText();
+    if (malformedManifestState.status !== "unavailable" || !malformedManifestText.toLowerCase().includes("manifest validation failed")) {
+      throw new Error(`Architecture malformed-manifest state did not fail closed.\n${JSON.stringify({ malformedManifestState, malformedManifestText }, null, 2)}`);
+    }
+
+    const restoredManifestState = await page.evaluate(async () => {
+      globalThis.__dashboardTestHooks.resetArchitectureManifestUrlForTest();
+      return globalThis.__dashboardTestHooks.reloadArchitectureManifestForTest();
+    });
+    await page.waitForSelector("[data-architecture-canvas='true']", { timeout: 15000 });
+    if (restoredManifestState.status !== "ready") {
+      throw new Error(`Architecture manifest did not recover after resetting the test hook.\n${JSON.stringify(restoredManifestState, null, 2)}`);
+    }
+
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.getByRole("button", { name: "Architecture" }).click();
+    await page.waitForSelector("[data-architecture-canvas='true']", { timeout: 15000 });
+    const architectureMobileLayout = await page.evaluate(() => {
+      const doc = document.documentElement;
+      const panel = document.getElementById("architecturePanel");
+      const canvas = document.querySelector("[data-architecture-canvas='true']");
+      return {
+        pageHasHorizontalOverflow: doc.scrollWidth > doc.clientWidth + 1,
+        panelHasHorizontalOverflow: panel ? panel.scrollWidth > panel.clientWidth + 1 : false,
+        canvasHasHorizontalOverflow: canvas ? canvas.scrollWidth > canvas.clientWidth + 1 : false
+      };
+    });
+
+    if (architectureMobileLayout.pageHasHorizontalOverflow || architectureMobileLayout.panelHasHorizontalOverflow || architectureMobileLayout.canvasHasHorizontalOverflow) {
+      throw new Error(`Architecture tab overflowed horizontally on mobile.\n${JSON.stringify(architectureMobileLayout, null, 2)}`);
+    }
+
+    await page.getByRole("button", { name: "Overview", exact: true }).click();
+    await page.waitForSelector("[data-overview-briefing='true']", { timeout: 15000 });
+    const overviewStillWorksText = await page.locator("#overviewBriefing").innerText();
+    if (!overviewStillWorksText.toLowerCase().includes("24h market conditions")) {
+      throw new Error(`Overview did not recover cleanly after Architecture tab testing.\n${overviewStillWorksText}`);
+    }
+
+    const blockingConsoleErrors = consoleErrors.filter((message) => {
+      if (message.includes("Failed to load resource: the server responded with a status of 500 ()")) return false;
+      return true;
+    });
 
     if (blockingConsoleErrors.length) {
       throw new Error(`Console errors were emitted during dashboard smoke.\n${blockingConsoleErrors.join("\n")}`);
@@ -1034,7 +1156,7 @@ async function run() {
 
     console.log(JSON.stringify({
       status: "PASS",
-      target: "Accuracy tables, checker, weekday, pair trade, and ADR reach research",
+      target: "Overview, research tabs, and Architecture Mirror",
       matrix_summary_excerpt: summaryText,
       btc_weekday_headers: btcWeekdayHeaders,
       usd_weekday_headers: usdWeekdayHeaders,
@@ -1044,6 +1166,9 @@ async function run() {
       factor_edge_unavailable_pill_count: factorEdgeUnavailablePillCount,
       factor_edge_layout: factorEdgeLayout,
       shadow_backtest_layout: shadowLayout,
+      architecture_default_selection: architectureDefaultSelection,
+      architecture_desktop_layout: architectureDesktopLayout,
+      architecture_mobile_layout: architectureMobileLayout,
       pair_trade_grid_columns: firstPairGridColumns,
       pair_trade_overflow_x: pairBucketOverflow,
       top_summary_row_count: topSummaryRowCount,
