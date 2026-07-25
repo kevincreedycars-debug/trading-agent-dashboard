@@ -1375,11 +1375,15 @@ async function run() {
     }
 
     const previewPage = await browser.newPage();
+    const previewRequests = [];
     const previewConsoleErrors = [];
     previewPage.on("console", (message) => {
       if (message.type() === "error") {
         previewConsoleErrors.push(message.text());
       }
+    });
+    previewPage.on("request", (request) => {
+      previewRequests.push(request.url());
     });
 
     await previewPage.goto(previewUrl, { waitUntil: "networkidle" });
@@ -1389,6 +1393,22 @@ async function run() {
     const previewContract = await previewPage.evaluate(() => {
       const text = document.body.innerText || "";
       const previewArea = document.getElementById("operationsPreviewArea");
+      const layer1Grid = document.getElementById("layer1Grid");
+      const economicPanel = document.querySelector("[data-operations-preview-panel='economic-event-status']");
+      const inputHealthPanel = document.querySelector("[data-operations-preview-panel='input-health']");
+      const developmentPanel = document.querySelector("[data-operations-preview-panel='development-status']");
+      const rectPayload = (node) => {
+        if (!node) return null;
+        const rect = node.getBoundingClientRect();
+        return {
+          top: rect.top,
+          bottom: rect.bottom,
+          left: rect.left,
+          right: rect.right,
+          width: rect.width,
+          height: rect.height
+        };
+      };
       return {
         previewVisible: !previewArea?.hidden,
         economicHeading: document.querySelector("[data-operations-preview-panel='economic-event-status'] h3")?.textContent?.trim() || "",
@@ -1396,7 +1416,12 @@ async function run() {
         developmentHeading: document.querySelector("[data-operations-preview-panel='development-status'] h3")?.textContent?.trim() || "",
         text,
         bodyScrollWidth: document.documentElement.scrollWidth,
-        bodyClientWidth: document.documentElement.clientWidth
+        bodyClientWidth: document.documentElement.clientWidth,
+        layer1Count: document.querySelectorAll("#layer1Grid .agent-card").length,
+        layer1Rect: rectPayload(layer1Grid),
+        economicRect: rectPayload(economicPanel),
+        inputHealthRect: rectPayload(inputHealthPanel),
+        developmentRect: rectPayload(developmentPanel)
       };
     });
 
@@ -1436,6 +1461,29 @@ async function run() {
       throw new Error(`Preview mode introduced desktop horizontal overflow.\n${JSON.stringify(previewContract, null, 2)}`);
     }
 
+    if (previewContract.layer1Count < 5) {
+      throw new Error(`Preview mode did not preserve the complete Layer 1 card group before the preview modules.\n${JSON.stringify(previewContract, null, 2)}`);
+    }
+
+    if (!previewContract.layer1Rect || !previewContract.economicRect || !previewContract.inputHealthRect || !previewContract.developmentRect) {
+      throw new Error(`Preview mode did not render all expected ordered panels.\n${JSON.stringify(previewContract, null, 2)}`);
+    }
+
+    if (!(previewContract.layer1Rect.bottom <= previewContract.economicRect.top
+      && previewContract.economicRect.bottom <= previewContract.inputHealthRect.top
+      && previewContract.inputHealthRect.bottom <= previewContract.developmentRect.top)) {
+      throw new Error(`Preview mode did not preserve the required Layer 1 -> Economic Event -> Input Health -> Development Status order on desktop.\n${JSON.stringify(previewContract, null, 2)}`);
+    }
+
+    const forbiddenPreviewRequests = previewRequests.filter((url) => (
+      url.includes("workflow-control.json")
+      || url.includes("workflow-status.json")
+      || url.includes("supabase.co")
+    ));
+    if (forbiddenPreviewRequests.length) {
+      throw new Error(`Preview mode still attempted workflow or Supabase loading.\n${forbiddenPreviewRequests.join("\n")}`);
+    }
+
     await previewPage.screenshot({ path: path.join(screenshotDir, "overview-preview-desktop.png"), fullPage: true });
 
     await previewPage.setViewportSize({ width: 390, height: 844 });
@@ -1444,6 +1492,18 @@ async function run() {
 
     const mobilePreviewLayout = await previewPage.evaluate(() => {
       const doc = document.documentElement;
+      const layer1Grid = document.getElementById("layer1Grid");
+      const economicPanel = document.querySelector("[data-operations-preview-panel='economic-event-status']");
+      const inputHealthPanel = document.querySelector("[data-operations-preview-panel='input-health']");
+      const developmentPanel = document.querySelector("[data-operations-preview-panel='development-status']");
+      const rectPayload = (node) => {
+        if (!node) return null;
+        const rect = node.getBoundingClientRect();
+        return {
+          top: rect.top,
+          bottom: rect.bottom
+        };
+      };
       const panels = Array.from(document.querySelectorAll("[data-operations-preview-panel]")).map((node) => {
         const rect = node.getBoundingClientRect();
         return {
@@ -1456,12 +1516,26 @@ async function run() {
       return {
         pageHasHorizontalOverflow: doc.scrollWidth > doc.clientWidth + 1,
         panelOverflowCount: panels.filter((panel) => panel.scrollWidth > panel.clientWidth + 1).length,
-        panelOutOfBoundsCount: panels.filter((panel) => panel.right > doc.clientWidth + 1).length
+        panelOutOfBoundsCount: panels.filter((panel) => panel.right > doc.clientWidth + 1).length,
+        layer1Rect: rectPayload(layer1Grid),
+        economicRect: rectPayload(economicPanel),
+        inputHealthRect: rectPayload(inputHealthPanel),
+        developmentRect: rectPayload(developmentPanel)
       };
     });
 
     if (mobilePreviewLayout.pageHasHorizontalOverflow || mobilePreviewLayout.panelOverflowCount > 0 || mobilePreviewLayout.panelOutOfBoundsCount > 0) {
       throw new Error(`Preview mode introduced mobile layout overflow.\n${JSON.stringify(mobilePreviewLayout, null, 2)}`);
+    }
+
+    if (!mobilePreviewLayout.layer1Rect || !mobilePreviewLayout.economicRect || !mobilePreviewLayout.inputHealthRect || !mobilePreviewLayout.developmentRect) {
+      throw new Error(`Preview mode did not render all expected ordered panels on mobile.\n${JSON.stringify(mobilePreviewLayout, null, 2)}`);
+    }
+
+    if (!(mobilePreviewLayout.layer1Rect.bottom <= mobilePreviewLayout.economicRect.top
+      && mobilePreviewLayout.economicRect.bottom <= mobilePreviewLayout.inputHealthRect.top
+      && mobilePreviewLayout.inputHealthRect.bottom <= mobilePreviewLayout.developmentRect.top)) {
+      throw new Error(`Preview mode did not preserve the required Layer 1 -> Economic Event -> Input Health -> Development Status order on mobile.\n${JSON.stringify(mobilePreviewLayout, null, 2)}`);
     }
 
     await previewPage.screenshot({ path: path.join(screenshotDir, "overview-preview-mobile.png"), fullPage: true });
