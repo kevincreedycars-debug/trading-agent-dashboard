@@ -563,6 +563,182 @@ h3 {
   margin: 30px 0 16px;
 }
 
+.overview-operations-preview[hidden],
+.development-status-panel[hidden] {
+  display: none !important;
+}
+
+.overview-operations-preview {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.economic-event-panel,
+.operational-warnings-panel,
+.development-status-panel {
+  background:
+    radial-gradient(circle at top right, rgba(184, 132, 26, 0.11), transparent 32%),
+    linear-gradient(180deg, #fcfbf7 0%, #ffffff 100%);
+}
+
+.operational-warnings-panel {
+  background:
+    radial-gradient(circle at top left, rgba(32, 82, 149, 0.08), transparent 30%),
+    linear-gradient(180deg, #fcfbf7 0%, #ffffff 100%);
+}
+
+.development-status-panel {
+  margin-bottom: 18px;
+  background:
+    radial-gradient(circle at top left, rgba(67, 200, 176, 0.08), transparent 30%),
+    linear-gradient(180deg, #fdfcf8 0%, #ffffff 100%);
+}
+
+.economic-event-preview-shell,
+.input-health-preview-shell,
+.development-status-preview-shell {
+  display: grid;
+  gap: 14px;
+}
+
+.economic-event-preview-shell {
+  border-top: 3px solid var(--blue);
+}
+
+.input-health-preview-shell {
+  border-top: 3px solid var(--red);
+}
+
+.development-status-preview-shell {
+  border-top: 3px solid rgba(67, 200, 176, 0.7);
+}
+
+.operations-preview-head,
+.operations-preview-issue-head,
+.operations-preview-agent-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  gap: 14px;
+}
+
+.operations-preview-indicator {
+  display: inline-flex;
+  width: fit-content;
+  margin-top: 8px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(11, 31, 58, 0.1);
+  background: rgba(255, 255, 255, 0.74);
+  color: var(--ink-muted);
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.operations-preview-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  padding: 7px 10px;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.operations-preview-badge.source-unavailable {
+  color: var(--blue);
+  background: var(--navy-pale);
+}
+
+.operations-preview-badge.critical {
+  color: var(--red);
+  background: #fff5f3;
+}
+
+.operations-preview-copy,
+.operations-preview-subcopy,
+.operations-preview-issue-card p,
+.operations-preview-agent-card p,
+.development-status-preview-shell p {
+  margin: 0;
+  color: var(--ink-muted);
+  line-height: 1.6;
+}
+
+.operations-preview-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+}
+
+.operations-preview-summary-grid > div,
+.operations-preview-issue-card,
+.operations-preview-agent-card {
+  border: 1px solid rgba(24, 35, 52, 0.08);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.84);
+  padding: 12px 14px;
+}
+
+.operations-preview-summary-grid strong,
+.operations-preview-agent-card strong,
+.operations-preview-issue-card strong {
+  display: block;
+  font-size: 11px;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin-bottom: 4px;
+}
+
+.operations-preview-summary-grid span,
+.operations-preview-agent-card span,
+.operations-preview-issue-card span {
+  font-weight: 800;
+}
+
+.operations-preview-issue-card small,
+.operations-preview-agent-card small {
+  display: block;
+  margin-top: 6px;
+  color: var(--ink-muted);
+  line-height: 1.45;
+}
+
+.operations-preview-agent-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.operations-preview-agent-head {
+  margin-bottom: 8px;
+}
+
+.operations-preview-state-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.operations-preview-state-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 8px;
+  border-radius: 999px;
+  background: #f6f9ff;
+  color: var(--navy);
+  border: 1px solid rgba(42, 78, 138, 0.12);
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
 .overview-stats {
   display: grid;
   grid-template-columns: 2fr 1fr 1.4fr;
@@ -4086,6 +4262,7 @@ h3 {
 
   .rules-strip,
   .overview-briefing-shell,
+  .overview-operations-preview,
   .overview-stats,
   .outlook-grid,
   .adr-entry-reliability-grid,
@@ -4219,6 +4396,7 @@ h3 {
   }
 
   .agent-grid,
+  .overview-operations-preview,
   .overview-briefing-shell,
   .outlook-grid,
   .adjusted-grid,

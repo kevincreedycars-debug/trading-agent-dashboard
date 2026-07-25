@@ -16,6 +16,73 @@ const researchSupabaseUrl = "https://eaolqbrlywczinfordvg.supabase.co/rest/v1";
 const researchSupabaseKey = "sb_publishable_k6YbEuuk3GyB9GVTQDtNVA_J1gCRYaY";
 const headlineConfidenceLib = globalThis.HeadlineConfidence;
 const layer2PairLogicLib = globalThis.Layer2PairLogic;
+const operationsPreviewMode = new URLSearchParams(globalThis.location?.search || "").get("operations-preview") === "1";
+const operationsPreviewData = {
+  economicEventStatus: {
+    tone: "source-unavailable",
+    status: "SOURCE UNAVAILABLE",
+    label: "UI PREVIEW — NOT LIVE CONNECTED",
+    message: "Economic-event timing is unavailable. Layer 1 calls may have reduced event awareness."
+  },
+  inputHealth: {
+    tone: "critical",
+    status: "CRITICAL",
+    label: "UI PREVIEW — DEMONSTRATION DATA",
+    overallStatus: "CRITICAL",
+    affectedAgents: 5,
+    criticalIssues: 1,
+    missingInputs: 3,
+    staleInputs: 2,
+    groupedIssue: "Economic-event source unavailable",
+    agentExamples: [
+      {
+        agent: "USD",
+        state: "Missing inputs",
+        evidence: "Calendar timing unavailable and one macro input missing."
+      },
+      {
+        agent: "EUR",
+        state: "Stale inputs",
+        evidence: "Latest event-awareness snapshot is outside the healthy recency window."
+      },
+      {
+        agent: "GOLD",
+        state: "Fallback used",
+        evidence: "A temporary substitute source was used while the primary event feed was unavailable."
+      },
+      {
+        agent: "NQ",
+        state: "Unavailable evidence",
+        evidence: "Source-level warning grouped with broader event-awareness degradation."
+      },
+      {
+        agent: "BTC",
+        state: "Mixed warning",
+        evidence: "Preview example of missing plus stale input evidence shown in one compact card."
+      }
+    ]
+  },
+  developmentStatus: {
+    label: "DEVELOPMENT UPDATE",
+    title: "Development Status",
+    body: "Input Health and economic-event integrity observability are implemented locally, including honest source-failure warnings and same-run health evidence. The next priority is proving fully isolated staged validation before completing the remaining connected workflow tests and preparing the changes for deployment."
+  },
+  staticResearch: {
+    meta: {
+      last_updated: new Date().toISOString(),
+      source: "operations_preview_static",
+      read_only: true
+    },
+    accuracy: {},
+    infrastructure: {}
+  },
+  workflowStatus: {
+    status: "not_configured",
+    message: "Operations preview is using static demonstration data only.",
+    steps: [],
+    error: null
+  }
+};
 
 if (!headlineConfidenceLib) {
   throw new Error("HeadlineConfidence shared helper is required before loading script.js");
@@ -1848,6 +1915,136 @@ function renderOverviewBriefing() {
       </aside>
     </div>
   `;
+}
+
+function renderOperationsPreview() {
+  const area = document.getElementById("operationsPreviewArea");
+  const economicPanel = document.getElementById("economicEventPreviewPanel");
+  const inputHealthPanel = document.getElementById("inputHealthPreviewPanel");
+  const developmentPanel = document.getElementById("developmentStatusPreviewPanel");
+
+  if (!area || !economicPanel || !inputHealthPanel || !developmentPanel) return;
+
+  if (!operationsPreviewMode) {
+    area.hidden = true;
+    economicPanel.hidden = true;
+    inputHealthPanel.hidden = true;
+    developmentPanel.hidden = true;
+    economicPanel.innerHTML = "";
+    inputHealthPanel.innerHTML = "";
+    developmentPanel.innerHTML = "";
+    return;
+  }
+
+  const economic = operationsPreviewData.economicEventStatus;
+  const inputHealth = operationsPreviewData.inputHealth;
+  const developmentStatus = operationsPreviewData.developmentStatus;
+
+  area.hidden = false;
+  economicPanel.hidden = false;
+  inputHealthPanel.hidden = false;
+  developmentPanel.hidden = false;
+
+  economicPanel.innerHTML = `
+    <div class="economic-event-preview-shell" data-operations-preview-panel="economic-event-status">
+      <div class="operations-preview-head">
+        <div>
+          <p class="eyebrow">Operational Warning Preview</p>
+          <h3>Economic Event Status</h3>
+          <span class="operations-preview-indicator">${escapeHtml(economic.label)}</span>
+        </div>
+        <span class="operations-preview-badge ${escapeHtml(economic.tone)}">${escapeHtml(economic.status)}</span>
+      </div>
+      <p class="operations-preview-copy">${escapeHtml(economic.message)}</p>
+      <p class="operations-preview-subcopy">This preview uses a disconnected-source example, not a quiet calendar day. A real no-event state would be presented separately from source failure.</p>
+      <div class="operations-preview-summary-grid">
+        <div><strong>Preview state</strong><span>Source failure</span></div>
+        <div><strong>Operational impact</strong><span>Reduced event awareness</span></div>
+        <div><strong>Expected user cue</strong><span>Visible warning remains on Overview</span></div>
+      </div>
+    </div>
+  `;
+
+  inputHealthPanel.innerHTML = `
+    <div class="input-health-preview-shell" data-operations-preview-panel="input-health">
+      <div class="operations-preview-head">
+        <div>
+          <p class="eyebrow">Operational Warning Preview</p>
+          <h3>Input Health</h3>
+          <span class="operations-preview-indicator">${escapeHtml(inputHealth.label)}</span>
+        </div>
+        <span class="operations-preview-badge ${escapeHtml(inputHealth.tone)}">${escapeHtml(inputHealth.status)}</span>
+      </div>
+      <p class="operations-preview-copy">Input-health preview shows how genuinely missing, stale, fallback, or unavailable evidence will stay visible even when the rest of the dashboard still renders.</p>
+      <div class="operations-preview-summary-grid">
+        <div><strong>Overall status</strong><span>${escapeHtml(inputHealth.overallStatus)}</span></div>
+        <div><strong>Affected agents</strong><span>${escapeHtml(String(inputHealth.affectedAgents))}</span></div>
+        <div><strong>Critical issues</strong><span>${escapeHtml(String(inputHealth.criticalIssues))}</span></div>
+        <div><strong>Missing inputs</strong><span>${escapeHtml(String(inputHealth.missingInputs))}</span></div>
+        <div><strong>Stale inputs</strong><span>${escapeHtml(String(inputHealth.staleInputs))}</span></div>
+        <div><strong>Grouped issue</strong><span>${escapeHtml(inputHealth.groupedIssue)}</span></div>
+      </div>
+      <div class="operations-preview-agent-list" aria-label="Input health agent examples">
+        ${inputHealth.agentExamples.map((example) => `
+          <article class="operations-preview-agent-card">
+            <div class="operations-preview-agent-head">
+              <strong>${escapeHtml(example.agent)}</strong>
+              <span>${escapeHtml(example.state)}</span>
+            </div>
+            <p>${escapeHtml(example.evidence)}</p>
+            <div class="operations-preview-state-list">
+              <span class="operations-preview-state-pill">Preview evidence</span>
+            </div>
+          </article>
+        `).join("")}
+      </div>
+    </div>
+  `;
+
+  developmentPanel.innerHTML = `
+    <div class="development-status-preview-shell" data-operations-preview-panel="development-status">
+      <div class="operations-preview-head">
+        <div>
+          <p class="eyebrow">${escapeHtml(developmentStatus.label)}</p>
+          <h3>${escapeHtml(developmentStatus.title)}</h3>
+        </div>
+      </div>
+      <p>${escapeHtml(developmentStatus.body)}</p>
+    </div>
+  `;
+}
+
+function applyOperationsPreviewWorkflowState() {
+  if (!operationsPreviewMode) return;
+
+  workflowControl = {
+    enabled: false,
+    webhook_url: "",
+    status_url: "./data/workflow-status.json",
+    poll_interval_ms: 10000,
+    poll_after_trigger_ms: 180000
+  };
+  workflowStatus = { ...operationsPreviewData.workflowStatus };
+  renderWorkflowStatus(workflowStatus);
+
+  const summary = document.getElementById("workflowStatusSummary");
+  const badge = document.getElementById("workflowStatusBadge");
+  const eta = document.getElementById("workflowEta");
+  const button = document.getElementById("runWorkflowButton");
+
+  if (summary) {
+    summary.textContent = "Operations preview mode is using static demonstration data only. Connected workflow controls are disabled here.";
+  }
+  if (badge) {
+    badge.textContent = "Preview";
+  }
+  if (eta) {
+    eta.textContent = "Static preview";
+  }
+  if (button) {
+    button.disabled = true;
+    button.title = "Operations preview mode does not trigger connected workflows.";
+  }
 }
 
 function renderAgentCard(agent) {
@@ -9233,7 +9430,7 @@ async function loadDashboard() {
   const [layer1Result, layer2Result, researchResult, factorEdgeLabResult, phase2ShadowBacktestResult] = await Promise.allSettled([
     fetch(layer1Url, { cache: "no-store" }),
     fetch(layer2Url, { cache: "no-store" }),
-    fetchResearchDashboardData(),
+    operationsPreviewMode ? Promise.resolve(operationsPreviewData.staticResearch) : fetchResearchDashboardData(),
     fetchLocalJson(factorEdgeLabUrl),
     fetchLocalJson(phase2ShadowBacktestUrl)
   ]);
@@ -9305,6 +9502,7 @@ async function loadDashboard() {
 
   if (layer1Data) renderLayer1(layer1Data);
   if (layer2Data) renderLayer2(layer2Data);
+  renderOperationsPreview();
 
   renderBacktest(backtestData);
   renderFactorEdgeLab(factorEdgeLabData);
@@ -9326,7 +9524,12 @@ initMarketGlobe();
 updateClock();
 setInterval(updateClock, 1000);
 
-loadWorkflowControl().then(loadWorkflowStatus);
+renderOperationsPreview();
+if (operationsPreviewMode) {
+  applyOperationsPreviewWorkflowState();
+} else {
+  loadWorkflowControl().then(loadWorkflowStatus);
+  setInterval(loadWorkflowStatus, 60000);
+}
 loadDashboard();
 setInterval(loadDashboard, 60000);
-setInterval(loadWorkflowStatus, 60000);

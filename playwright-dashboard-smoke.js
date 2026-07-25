@@ -4,6 +4,7 @@ const path = require("path");
 const { chromium } = require("playwright");
 
 const rootDir = __dirname;
+const screenshotDir = path.join(rootDir, "tmp", "playwright-dashboard-smoke");
 
 function contentType(filePath) {
   const ext = path.extname(filePath).toLowerCase();
@@ -30,6 +31,10 @@ function createServer() {
     res.writeHead(200, { "Content-Type": contentType(filePath) });
     res.end(fs.readFileSync(filePath));
   });
+}
+
+function ensureScreenshotDir() {
+  fs.mkdirSync(screenshotDir, { recursive: true });
 }
 
 function rectanglesOverlap(a, b) {
@@ -73,11 +78,13 @@ async function run() {
   await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
   const address = server.address();
   const baseUrl = `http://127.0.0.1:${address.port}/`;
+  const previewUrl = `${baseUrl}?operations-preview=1`;
 
   const browser = await chromium.launch({ headless: true });
   const page = await browser.newPage();
 
   try {
+    ensureScreenshotDir();
     const consoleErrors = [];
     page.on("console", (message) => {
       if (message.type() === "error") {
@@ -85,7 +92,31 @@ async function run() {
       }
     });
 
+    await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto(baseUrl, { waitUntil: "networkidle" });
+
+    const normalPreviewLeakCheck = await page.evaluate(() => ({
+      hasOperationsPreviewArea: !document.getElementById("operationsPreviewArea")?.hidden,
+      normalText: document.body.innerText
+    }));
+
+    if (normalPreviewLeakCheck.hasOperationsPreviewArea) {
+      throw new Error("Normal homepage exposed the operations preview area without the query parameter.");
+    }
+
+    const normalizedNormalText = normalPreviewLeakCheck.normalText.toLowerCase();
+    for (const unexpectedText of [
+      "ui preview — not live connected",
+      "ui preview — demonstration data",
+      "development update",
+      "source unavailable"
+    ]) {
+      if (normalizedNormalText.includes(unexpectedText)) {
+        throw new Error(`Normal homepage leaked preview-only content: ${unexpectedText}`);
+      }
+    }
+
+    await page.screenshot({ path: path.join(screenshotDir, "overview-normal-desktop.png"), fullPage: true });
 
     const topbarClockContract = await page.evaluate(() => {
       const clock = document.getElementById("topbarClock");
@@ -1343,9 +1374,113 @@ async function run() {
       throw new Error(`Console errors were emitted during dashboard smoke.\n${blockingConsoleErrors.join("\n")}`);
     }
 
+    const previewPage = await browser.newPage();
+    const previewConsoleErrors = [];
+    previewPage.on("console", (message) => {
+      if (message.type() === "error") {
+        previewConsoleErrors.push(message.text());
+      }
+    });
+
+    await previewPage.goto(previewUrl, { waitUntil: "networkidle" });
+    await previewPage.setViewportSize({ width: 1440, height: 900 });
+    await previewPage.waitForSelector("[data-operations-preview-panel='economic-event-status']", { timeout: 15000 });
+
+    const previewContract = await previewPage.evaluate(() => {
+      const text = document.body.innerText || "";
+      const previewArea = document.getElementById("operationsPreviewArea");
+      return {
+        previewVisible: !previewArea?.hidden,
+        economicHeading: document.querySelector("[data-operations-preview-panel='economic-event-status'] h3")?.textContent?.trim() || "",
+        inputHealthHeading: document.querySelector("[data-operations-preview-panel='input-health'] h3")?.textContent?.trim() || "",
+        developmentHeading: document.querySelector("[data-operations-preview-panel='development-status'] h3")?.textContent?.trim() || "",
+        text,
+        bodyScrollWidth: document.documentElement.scrollWidth,
+        bodyClientWidth: document.documentElement.clientWidth
+      };
+    });
+
+    if (!previewContract.previewVisible) {
+      throw new Error("Preview query mode did not reveal the operations preview area.");
+    }
+
+    const normalizedPreviewText = previewContract.text.toLowerCase();
+    for (const expectedText of [
+      "economic event status",
+      "input health",
+      "development status",
+      "source unavailable",
+      "critical",
+      "ui preview — not live connected",
+      "ui preview — demonstration data",
+      "development update"
+    ]) {
+      if (!normalizedPreviewText.includes(expectedText)) {
+        throw new Error(`Preview mode did not render expected preview text: ${expectedText}`);
+      }
+    }
+
+    for (const forbiddenText of [
+      "ciwsnhyoi35zma44",
+      "4zd3qegwhesssghw",
+      "execution",
+      "credential",
+      "row id"
+    ]) {
+      if (normalizedPreviewText.includes(forbiddenText)) {
+        throw new Error(`Preview mode exposed internal diagnostics or identifiers: ${forbiddenText}`);
+      }
+    }
+
+    if (previewContract.bodyScrollWidth > previewContract.bodyClientWidth + 1) {
+      throw new Error(`Preview mode introduced desktop horizontal overflow.\n${JSON.stringify(previewContract, null, 2)}`);
+    }
+
+    await previewPage.screenshot({ path: path.join(screenshotDir, "overview-preview-desktop.png"), fullPage: true });
+
+    await previewPage.setViewportSize({ width: 390, height: 844 });
+    await previewPage.goto(previewUrl, { waitUntil: "networkidle" });
+    await previewPage.waitForSelector("[data-operations-preview-panel='input-health']", { timeout: 15000 });
+
+    const mobilePreviewLayout = await previewPage.evaluate(() => {
+      const doc = document.documentElement;
+      const panels = Array.from(document.querySelectorAll("[data-operations-preview-panel]")).map((node) => {
+        const rect = node.getBoundingClientRect();
+        return {
+          width: rect.width,
+          right: rect.right,
+          clientWidth: node.clientWidth,
+          scrollWidth: node.scrollWidth
+        };
+      });
+      return {
+        pageHasHorizontalOverflow: doc.scrollWidth > doc.clientWidth + 1,
+        panelOverflowCount: panels.filter((panel) => panel.scrollWidth > panel.clientWidth + 1).length,
+        panelOutOfBoundsCount: panels.filter((panel) => panel.right > doc.clientWidth + 1).length
+      };
+    });
+
+    if (mobilePreviewLayout.pageHasHorizontalOverflow || mobilePreviewLayout.panelOverflowCount > 0 || mobilePreviewLayout.panelOutOfBoundsCount > 0) {
+      throw new Error(`Preview mode introduced mobile layout overflow.\n${JSON.stringify(mobilePreviewLayout, null, 2)}`);
+    }
+
+    await previewPage.screenshot({ path: path.join(screenshotDir, "overview-preview-mobile.png"), fullPage: true });
+
+    if (previewConsoleErrors.length) {
+      throw new Error(`Preview mode emitted console errors.\n${previewConsoleErrors.join("\n")}`);
+    }
+
+    await previewPage.close();
+
     console.log(JSON.stringify({
       status: "PASS",
       target: "Overview, research tabs, and Architecture Mirror",
+      preview_url: previewUrl,
+      screenshot_paths: {
+        normal_desktop: path.join(screenshotDir, "overview-normal-desktop.png"),
+        preview_desktop: path.join(screenshotDir, "overview-preview-desktop.png"),
+        preview_mobile: path.join(screenshotDir, "overview-preview-mobile.png")
+      },
       matrix_summary_excerpt: summaryText,
       btc_weekday_headers: btcWeekdayHeaders,
       usd_weekday_headers: usdWeekdayHeaders,
