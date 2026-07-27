@@ -33,10 +33,6 @@ function createServer() {
   });
 }
 
-function ensureScreenshotDir() {
-  fs.mkdirSync(screenshotDir, { recursive: true });
-}
-
 function rectanglesOverlap(a, b) {
   return !(a.x + a.width <= b.x || b.x + b.width <= a.x || a.y + a.height <= b.y || b.y + b.height <= a.y);
 }
@@ -74,17 +70,16 @@ function segmentIntersectsInterior(segment, rect, inset = 18) {
 }
 
 async function run() {
+  fs.mkdirSync(screenshotDir, { recursive: true });
   const server = createServer();
   await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
   const address = server.address();
   const baseUrl = `http://127.0.0.1:${address.port}/`;
-  const previewUrl = `${baseUrl}?operations-preview=1`;
 
   const browser = await chromium.launch({ headless: true });
   const page = await browser.newPage();
 
   try {
-    ensureScreenshotDir();
     const consoleErrors = [];
     page.on("console", (message) => {
       if (message.type() === "error") {
@@ -92,31 +87,7 @@ async function run() {
       }
     });
 
-    await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto(baseUrl, { waitUntil: "networkidle" });
-
-    const normalPreviewLeakCheck = await page.evaluate(() => ({
-      hasOperationsPreviewArea: !document.getElementById("operationsPreviewArea")?.hidden,
-      normalText: document.body.innerText
-    }));
-
-    if (normalPreviewLeakCheck.hasOperationsPreviewArea) {
-      throw new Error("Normal homepage exposed the operations preview area without the query parameter.");
-    }
-
-    const normalizedNormalText = normalPreviewLeakCheck.normalText.toLowerCase();
-    for (const unexpectedText of [
-      "ui preview — not live connected",
-      "ui preview — demonstration data",
-      "development update",
-      "source unavailable"
-    ]) {
-      if (normalizedNormalText.includes(unexpectedText)) {
-        throw new Error(`Normal homepage leaked preview-only content: ${unexpectedText}`);
-      }
-    }
-
-    await page.screenshot({ path: path.join(screenshotDir, "overview-normal-desktop.png"), fullPage: true });
 
     const topbarClockContract = await page.evaluate(() => {
       const clock = document.getElementById("topbarClock");
@@ -160,6 +131,138 @@ async function run() {
     if (!normalizedOverviewBriefingText.includes("week ahead / what could change")) {
       throw new Error(`Overview briefing did not render the Week Ahead / What Could Change section.\n${overviewBriefingText}`);
     }
+
+    const overviewStatusPanel = await page.evaluate(() => {
+      const panel = document.querySelector("[data-overview-status='true']");
+      return {
+        rendered: Boolean(panel),
+        heading: panel?.querySelector("h3")?.textContent?.trim() || "",
+        badge: panel?.querySelector(".overview-status-badge")?.textContent?.trim() || "",
+        text: panel?.innerText || "",
+        hasHorizontalOverflow: panel ? panel.scrollWidth > panel.clientWidth + 1 : false
+      };
+    });
+
+    if (!overviewStatusPanel.rendered) {
+      throw new Error("Overview system-status panel did not render on the Overview.");
+    }
+
+    const normalizedOverviewStatusText = overviewStatusPanel.text.toLowerCase();
+    for (const expectedText of [
+      "system status",
+      "input health",
+      "latest refresh",
+      "layer 1 calls",
+      "economic-event source"
+    ]) {
+      if (!normalizedOverviewStatusText.includes(expectedText)) {
+        throw new Error(`Overview system-status panel did not render expected copy: ${expectedText}\n${overviewStatusPanel.text}`);
+      }
+    }
+
+    if (overviewStatusPanel.heading !== "SYSTEM STATUS") {
+      throw new Error(`Overview system-status panel did not render the expected heading.\n${JSON.stringify(overviewStatusPanel, null, 2)}`);
+    }
+
+    if (!["HEALTHY", "NEEDS REVIEW", "CRITICAL", "REFRESH FAILED"].some((label) => overviewStatusPanel.badge.includes(label))) {
+      throw new Error(`Overview system-status panel did not render a valid badge.\n${JSON.stringify(overviewStatusPanel, null, 2)}`);
+    }
+
+    if (overviewStatusPanel.hasHorizontalOverflow) {
+      throw new Error(`Overview system-status panel overflowed horizontally.\n${JSON.stringify(overviewStatusPanel, null, 2)}`);
+    }
+
+    const economicEventContract = await page.evaluate(async () => {
+      const response = await fetch("./data/economic-event-refresh.json", { cache: "no-store" });
+      const payload = await response.json();
+      return {
+        panelState: payload?.summary?.panel_state || "SOURCE_UNAVAILABLE",
+        warnings: Array.isArray(payload?.summary?.data_quality_warnings) ? payload.summary.data_quality_warnings : [],
+        eventCount: Array.isArray(payload?.events) ? payload.events.filter((event) => event?.state !== "CLEARED").length : 0
+      };
+    });
+
+    const renderedEconomicEventPanel = await page.evaluate(() => {
+      const panel = document.querySelector("[data-economic-event-panel='true']");
+      return {
+        rendered: Boolean(panel),
+        state: panel?.getAttribute("data-economic-event-panel-state") || "",
+        heading: panel?.querySelector("h3")?.textContent?.trim() || "",
+        badge: panel?.querySelector(".economic-event-status-badge")?.textContent?.trim() || "",
+        text: panel?.innerText || "",
+        cardCount: panel?.querySelectorAll("[data-economic-event-card='true']").length || 0,
+        hasHorizontalOverflow: panel ? panel.scrollWidth > panel.clientWidth + 1 : false
+      };
+    });
+
+    if (!renderedEconomicEventPanel.rendered) {
+      throw new Error("Economic event refresh panel did not render in the Overview.");
+    }
+
+    if (renderedEconomicEventPanel.heading !== "ECONOMIC EVENT STATUS") {
+      throw new Error(`Economic event module did not render the required heading.\n${JSON.stringify(renderedEconomicEventPanel, null, 2)}`);
+    }
+
+    const expectedEconomicPanelState = economicEventContract.warnings.includes("no_source_rows_available")
+      ? "SOURCE_UNAVAILABLE"
+      : economicEventContract.panelState;
+    if (renderedEconomicEventPanel.state !== expectedEconomicPanelState) {
+      throw new Error(`Economic event refresh panel state did not match the published artifact.\nExpected: ${economicEventContract.panelState}\nRendered: ${renderedEconomicEventPanel.state}`);
+    }
+
+    const expectedEventBadge = expectedEconomicPanelState.replaceAll("_", " ");
+    if (!renderedEconomicEventPanel.badge.includes(expectedEventBadge)) {
+      throw new Error(`Economic event refresh panel badge did not match the artifact state.\nExpected badge to include: ${expectedEventBadge}\nRendered: ${renderedEconomicEventPanel.badge}`);
+    }
+
+    if (renderedEconomicEventPanel.cardCount !== economicEventContract.eventCount) {
+      throw new Error(`Economic event refresh panel card count did not match the published artifact.\nExpected: ${economicEventContract.eventCount}\nRendered: ${renderedEconomicEventPanel.cardCount}`);
+    }
+
+    if (renderedEconomicEventPanel.hasHorizontalOverflow) {
+      throw new Error(`Economic event refresh panel overflowed horizontally.\n${JSON.stringify(renderedEconomicEventPanel, null, 2)}`);
+    }
+
+    if (
+      economicEventContract.warnings.includes("no_source_rows_available")
+      && !renderedEconomicEventPanel.text.toLowerCase().includes("economic-event timing is currently unavailable")
+    ) {
+      throw new Error(`Economic event refresh panel did not surface the no-source-rows data-quality warning.\n${renderedEconomicEventPanel.text}`);
+    }
+
+    const renderedOperationalPanel = await page.evaluate(() => {
+      const panel = document.querySelector("[data-input-health-panel='true']");
+      return {
+        rendered: Boolean(panel),
+        heading: panel?.querySelector("h3")?.textContent?.trim() || "",
+        state: panel?.getAttribute("data-input-health-panel-state") || "",
+        badge: panel?.querySelector(".economic-event-status-badge")?.textContent?.trim() || "",
+        text: panel?.innerText || "",
+        hasHorizontalOverflow: panel ? panel.scrollWidth > panel.clientWidth + 1 : false
+      };
+    });
+
+    if (!renderedOperationalPanel.rendered) {
+      throw new Error("Operational warnings panel did not render in the Overview.");
+    }
+
+    if (renderedOperationalPanel.heading !== "INPUT HEALTH") {
+      throw new Error(`Input health module did not render the required heading.\n${JSON.stringify(renderedOperationalPanel, null, 2)}`);
+    }
+
+    if (renderedOperationalPanel.state !== "CRITICAL" || !renderedOperationalPanel.badge.includes("CRITICAL")) {
+      throw new Error(`Input health module did not render the current critical state.\n${JSON.stringify(renderedOperationalPanel, null, 2)}`);
+    }
+
+    if (!renderedOperationalPanel.text.toLowerCase().includes("calls produced with degraded event inputs")) {
+      throw new Error(`Input health module did not render expected degraded-event copy.\n${renderedOperationalPanel.text}`);
+    }
+
+    if (renderedOperationalPanel.hasHorizontalOverflow) {
+      throw new Error(`Operational warnings panel overflowed horizontally.\n${JSON.stringify(renderedOperationalPanel, null, 2)}`);
+    }
+
+    await page.screenshot({ path: path.join(screenshotDir, "overview-desktop.png"), fullPage: false });
 
     const overviewAgentPanels = await page.locator("#layer1Grid .agent-card").first().locator("[data-overview-validation-panels='true'] [data-validation-panel]").allInnerTexts();
     const normalizedOverviewAgentPanels = overviewAgentPanels.map(text => text.toLowerCase());
@@ -554,6 +657,22 @@ async function run() {
 
     await page.getByRole("button", { name: "Overview" }).click();
     await page.waitForSelector("#layer1Grid .agent-card", { timeout: 15000 });
+    await page.setViewportSize({ width: 900, height: 1280 });
+    await page.waitForTimeout(250);
+
+    const tabletEconomicEventLayout = await page.evaluate(() => {
+      const doc = document.documentElement;
+      const panel = document.querySelector("[data-economic-event-panel='true']");
+      return {
+        pageHasHorizontalOverflow: doc.scrollWidth > doc.clientWidth + 1,
+        panelHasHorizontalOverflow: panel ? panel.scrollWidth > panel.clientWidth + 1 : false
+      };
+    });
+
+    if (tabletEconomicEventLayout.pageHasHorizontalOverflow || tabletEconomicEventLayout.panelHasHorizontalOverflow) {
+      throw new Error(`Economic event panel overflowed at tablet width.\n${JSON.stringify(tabletEconomicEventLayout, null, 2)}`);
+    }
+
     await page.setViewportSize({ width: 390, height: 1280 });
     await page.waitForTimeout(250);
 
@@ -561,6 +680,7 @@ async function run() {
       const doc = document.documentElement;
       const topbar = document.querySelector(".topbar");
       const clock = document.getElementById("topbarClock");
+      const economicPanel = document.querySelector("[data-economic-event-panel='true']");
       const cardGaps = Array.from(document.querySelectorAll("#layer1Grid .agent-card")).map((card) => {
         const validationStack = card.querySelector(".overview-validation-panel-stack");
         const metrics = card.querySelector(".agent-metrics");
@@ -571,6 +691,7 @@ async function run() {
         clockText: clock?.textContent?.trim() || "",
         pageHasHorizontalOverflow: doc.scrollWidth > doc.clientWidth + 1,
         topbarHasHorizontalOverflow: topbar ? topbar.scrollWidth > topbar.clientWidth + 1 : false,
+        economicPanelHasHorizontalOverflow: economicPanel ? economicPanel.scrollWidth > economicPanel.clientWidth + 1 : false,
         gridHasHorizontalOverflow: document.getElementById("layer1Grid")?.scrollWidth > document.getElementById("layer1Grid")?.clientWidth + 1,
         overviewCardOverflowCount: Array.from(document.querySelectorAll("#layer1Grid .agent-card")).filter((card) => card.scrollWidth > card.clientWidth + 1).length,
         cardGaps
@@ -581,13 +702,176 @@ async function run() {
       throw new Error(`Topbar dual clock did not survive the narrow viewport layout.\n${JSON.stringify(narrowClockLayout, null, 2)}`);
     }
 
-    if (narrowClockLayout.pageHasHorizontalOverflow || narrowClockLayout.topbarHasHorizontalOverflow || narrowClockLayout.gridHasHorizontalOverflow || narrowClockLayout.overviewCardOverflowCount > 0) {
+    if (narrowClockLayout.pageHasHorizontalOverflow || narrowClockLayout.topbarHasHorizontalOverflow || narrowClockLayout.economicPanelHasHorizontalOverflow || narrowClockLayout.gridHasHorizontalOverflow || narrowClockLayout.overviewCardOverflowCount > 0) {
       throw new Error(`Dual clock or Layer 1 cards caused overflow at the narrow viewport.\n${JSON.stringify(narrowClockLayout, null, 2)}`);
     }
 
     if (narrowClockLayout.cardGaps.some((gap) => gap === null || gap < 10)) {
       throw new Error(`Layer 1 cards did not preserve the validation-to-metrics gap at the narrow viewport.\n${JSON.stringify(narrowClockLayout, null, 2)}`);
     }
+
+    await page.screenshot({ path: path.join(screenshotDir, "overview-mobile.png"), fullPage: false });
+
+    const missingArtifactState = await page.evaluate(async () => {
+      globalThis.__dashboardTestHooks.setOperationalArtifactUrlsForTest({
+        economicEventRefreshUrl: "./tests/fixtures/missing-economic-event-refresh.json",
+        economicEventsSourceUrl: "./tests/fixtures/missing-economic-event-refresh.json",
+        inputHealthUrl: "./tests/fixtures/missing-input-health.json",
+        workflowStatusUrl: "./data/workflow-status.json"
+      });
+      return globalThis.__dashboardTestHooks.reloadDashboardForTest();
+    });
+    await page.waitForFunction(() => {
+      const economic = document.querySelector("[data-economic-event-panel='true']");
+      const input = document.querySelector("[data-input-health-panel='true']");
+      return economic?.getAttribute("data-economic-event-panel-state") === "DATA_UNAVAILABLE"
+        && input?.getAttribute("data-input-health-panel-state") === "DATA_UNAVAILABLE";
+    }, { timeout: 15000 });
+
+    const missingArtifactPanels = await page.evaluate(() => {
+      const economic = document.querySelector("[data-economic-event-panel='true']");
+      const input = document.querySelector("[data-input-health-panel='true']");
+      const doc = document.documentElement;
+      return {
+        economicHeading: economic?.querySelector("h3")?.textContent?.trim() || "",
+        economicBadge: economic?.querySelector(".economic-event-status-badge")?.textContent?.trim() || "",
+        economicText: economic?.innerText || "",
+        inputHeading: input?.querySelector("h3")?.textContent?.trim() || "",
+        inputBadge: input?.querySelector(".economic-event-status-badge")?.textContent?.trim() || "",
+        inputText: input?.innerText || "",
+        pageHasHorizontalOverflow: doc.scrollWidth > doc.clientWidth + 1
+      };
+    });
+
+    if (missingArtifactState.economicEventPanelState !== "DATA_UNAVAILABLE" || missingArtifactState.inputHealthPanelState !== "DATA_UNAVAILABLE") {
+      throw new Error(`Missing-artifact fallback state did not render correctly.\n${JSON.stringify({ missingArtifactState, missingArtifactPanels }, null, 2)}`);
+    }
+
+    if (!missingArtifactPanels.economicHeading.includes("ECONOMIC EVENT STATUS") || !missingArtifactPanels.economicBadge.includes("DATA UNAVAILABLE") || !missingArtifactPanels.economicText.toLowerCase().includes("could not be loaded")) {
+      throw new Error(`Economic event missing-artifact fallback did not render the required visible shell.\n${JSON.stringify(missingArtifactPanels, null, 2)}`);
+    }
+
+    if (!missingArtifactPanels.inputHeading.includes("INPUT HEALTH") || !missingArtifactPanels.inputBadge.includes("DATA UNAVAILABLE") || !missingArtifactPanels.inputText.toLowerCase().includes("could not be loaded")) {
+      throw new Error(`Input health missing-artifact fallback did not render the required visible shell.\n${JSON.stringify(missingArtifactPanels, null, 2)}`);
+    }
+
+    if (missingArtifactPanels.pageHasHorizontalOverflow) {
+      throw new Error(`Missing-artifact fallback caused horizontal overflow.\n${JSON.stringify(missingArtifactPanels, null, 2)}`);
+    }
+
+    await page.screenshot({ path: path.join(screenshotDir, "overview-missing-artifact.png"), fullPage: false });
+
+    const healthyFixtureState = await page.evaluate(async () => {
+      globalThis.__dashboardTestHooks.setOperationalArtifactUrlsForTest({
+        economicEventRefreshUrl: "./tests/fixtures/economic-event-refresh.healthy.json",
+        economicEventsSourceUrl: "./tests/fixtures/economic-events-source.healthy.json",
+        inputHealthUrl: "./tests/fixtures/input-health.healthy.json",
+        workflowStatusUrl: "./data/workflow-status.json"
+      });
+      return globalThis.__dashboardTestHooks.reloadDashboardForTest();
+    });
+    await page.waitForFunction(() => {
+      const economic = document.querySelector("[data-economic-event-panel='true']");
+      const input = document.querySelector("[data-input-health-panel='true']");
+      return economic?.getAttribute("data-economic-event-panel-state") === "NO_MAJOR_EVENTS"
+        && input?.getAttribute("data-input-health-panel-state") === "HEALTHY";
+    }, { timeout: 15000 });
+
+    const healthyFixturePanels = await page.evaluate(() => {
+      const economic = document.querySelector("[data-economic-event-panel='true']");
+      const input = document.querySelector("[data-input-health-panel='true']");
+      return {
+        economicHeading: economic?.querySelector("h3")?.textContent?.trim() || "",
+        economicBadge: economic?.querySelector(".economic-event-status-badge")?.textContent?.trim() || "",
+        inputHeading: input?.querySelector("h3")?.textContent?.trim() || "",
+        inputBadge: input?.querySelector(".economic-event-status-badge")?.textContent?.trim() || "",
+        overviewBadge: document.querySelector("[data-overview-status='true'] .overview-status-badge")?.textContent?.trim() || "",
+        overviewText: document.querySelector("[data-overview-status='true']")?.innerText || ""
+      };
+    });
+
+    if (healthyFixtureState.economicEventPanelState !== "NO_MAJOR_EVENTS" || healthyFixtureState.inputHealthPanelState !== "HEALTHY") {
+      throw new Error(`Healthy fixture state did not render correctly.\n${JSON.stringify({ healthyFixtureState, healthyFixturePanels }, null, 2)}`);
+    }
+
+    if (!healthyFixturePanels.economicHeading.includes("ECONOMIC EVENT STATUS") || !healthyFixturePanels.inputHeading.includes("INPUT HEALTH") || !healthyFixturePanels.economicBadge.includes("NO MAJOR EVENTS") || !healthyFixturePanels.inputBadge.includes("HEALTHY")) {
+      throw new Error(`Healthy fixture did not preserve both visible module shells.\n${JSON.stringify(healthyFixturePanels, null, 2)}`);
+    }
+
+    if (healthyFixtureState.workflowStatusTone !== "success" || !healthyFixturePanels.overviewBadge.includes("HEALTHY") || !healthyFixturePanels.overviewText.toLowerCase().includes("all critical inputs are available")) {
+      throw new Error(`Healthy fixture did not render the expected overview system-status state.\n${JSON.stringify({ healthyFixtureState, healthyFixturePanels }, null, 2)}`);
+    }
+
+    await page.screenshot({ path: path.join(screenshotDir, "overview-healthy.png"), fullPage: false });
+
+    const malformedArtifactState = await page.evaluate(async () => {
+      globalThis.__dashboardTestHooks.setOperationalArtifactUrlsForTest({
+        economicEventRefreshUrl: "./tests/fixtures/economic-event-refresh.malformed.json",
+        economicEventsSourceUrl: "./tests/fixtures/economic-event-refresh.malformed.json",
+        inputHealthUrl: "./tests/fixtures/input-health.malformed.json",
+        workflowStatusUrl: "./data/workflow-status.json"
+      });
+      return globalThis.__dashboardTestHooks.reloadDashboardForTest();
+    });
+    await page.waitForFunction(() => {
+      const economic = document.querySelector("[data-economic-event-panel='true']");
+      const input = document.querySelector("[data-input-health-panel='true']");
+      return economic?.getAttribute("data-economic-event-panel-state") === "DATA_UNAVAILABLE"
+        && input?.getAttribute("data-input-health-panel-state") === "DATA_UNAVAILABLE";
+    }, { timeout: 15000 });
+
+    if (malformedArtifactState.economicEventPanelState !== "DATA_UNAVAILABLE" || malformedArtifactState.inputHealthPanelState !== "DATA_UNAVAILABLE") {
+      throw new Error(`Malformed-artifact fallback state did not render correctly.\n${JSON.stringify(malformedArtifactState, null, 2)}`);
+    }
+
+    const failedRetainedState = await page.evaluate(async () => {
+      globalThis.__dashboardTestHooks.setOperationalArtifactUrlsForTest({
+        economicEventRefreshUrl: "./tests/fixtures/economic-event-refresh.healthy.json",
+        economicEventsSourceUrl: "./tests/fixtures/economic-events-source.healthy.json",
+        inputHealthUrl: "./tests/fixtures/input-health.healthy.json",
+        workflowStatusUrl: "./tests/fixtures/workflow-status.failed-retained.json"
+      });
+      return globalThis.__dashboardTestHooks.reloadDashboardForTest();
+    });
+    await page.waitForFunction(() => {
+      const overview = document.querySelector("[data-overview-status='true']");
+      return overview?.getAttribute("data-overview-status-tone") === "critical";
+    }, { timeout: 15000 });
+
+    const failedRetainedPanels = await page.evaluate(() => {
+      const overview = document.querySelector("[data-overview-status='true']");
+      return {
+        badge: overview?.querySelector(".overview-status-badge")?.textContent?.trim() || "",
+        text: overview?.innerText || "",
+        layer1Cards: document.querySelectorAll("#layer1Grid .agent-card").length,
+        layer2Cards: document.querySelectorAll("#overviewLayer2Panel .trade-opportunity-card, #overviewLayer2Panel .warning-card").length
+      };
+    });
+
+    if (failedRetainedState.workflowStatusTone !== "critical" || !failedRetainedPanels.badge.includes("REFRESH FAILED")) {
+      throw new Error(`Failed-latest-run state did not render the expected critical overview state.\n${JSON.stringify({ failedRetainedState, failedRetainedPanels }, null, 2)}`);
+    }
+
+    if (!failedRetainedPanels.text.toLowerCase().includes("latest refresh failed") || !failedRetainedPanels.text.toLowerCase().includes("still showing the most recently published calls")) {
+      throw new Error(`Failed-latest-run state did not explain retained calls truthfully.\n${JSON.stringify(failedRetainedPanels, null, 2)}`);
+    }
+
+    if (failedRetainedPanels.layer1Cards === 0 || failedRetainedPanels.layer2Cards === 0) {
+      throw new Error(`Failed-latest-run state hid valid retained cards.\n${JSON.stringify(failedRetainedPanels, null, 2)}`);
+    }
+
+    await page.screenshot({ path: path.join(screenshotDir, "overview-failed-retained.png"), fullPage: false });
+
+    await page.evaluate(async () => {
+      globalThis.__dashboardTestHooks.resetOperationalArtifactUrlsForTest();
+      return globalThis.__dashboardTestHooks.reloadDashboardForTest();
+    });
+    await page.waitForFunction(() => {
+      const economic = document.querySelector("[data-economic-event-panel='true']");
+      const input = document.querySelector("[data-input-health-panel='true']");
+      return economic?.getAttribute("data-economic-event-panel-state") === "SOURCE_UNAVAILABLE"
+        && input?.getAttribute("data-input-health-panel-state") === "CRITICAL";
+    }, { timeout: 15000 });
 
     await page.setViewportSize({ width: 1280, height: 2200 });
     await page.waitForTimeout(250);
@@ -1367,6 +1651,10 @@ async function run() {
 
     const blockingConsoleErrors = consoleErrors.filter((message) => {
       if (message.includes("Failed to load resource: the server responded with a status of 500 ()")) return false;
+      if (message.includes("missing-economic-event-refresh.json 404")) return false;
+      if (message.includes("missing-input-health.json 404")) return false;
+      if (message.includes("Expected property name or '}' in JSON")) return false;
+      if (message.includes("Failed to load resource: the server responded with a status of 404 (Not Found)")) return false;
       return true;
     });
 
@@ -1374,187 +1662,9 @@ async function run() {
       throw new Error(`Console errors were emitted during dashboard smoke.\n${blockingConsoleErrors.join("\n")}`);
     }
 
-    const previewPage = await browser.newPage();
-    const previewRequests = [];
-    const previewConsoleErrors = [];
-    previewPage.on("console", (message) => {
-      if (message.type() === "error") {
-        previewConsoleErrors.push(message.text());
-      }
-    });
-    previewPage.on("request", (request) => {
-      previewRequests.push(request.url());
-    });
-
-    await previewPage.goto(previewUrl, { waitUntil: "networkidle" });
-    await previewPage.setViewportSize({ width: 1440, height: 900 });
-    await previewPage.waitForSelector("[data-operations-preview-panel='economic-event-status']", { timeout: 15000 });
-
-    const previewContract = await previewPage.evaluate(() => {
-      const text = document.body.innerText || "";
-      const previewArea = document.getElementById("operationsPreviewArea");
-      const layer1Grid = document.getElementById("layer1Grid");
-      const economicPanel = document.querySelector("[data-operations-preview-panel='economic-event-status']");
-      const inputHealthPanel = document.querySelector("[data-operations-preview-panel='input-health']");
-      const developmentPanel = document.querySelector("[data-operations-preview-panel='development-status']");
-      const rectPayload = (node) => {
-        if (!node) return null;
-        const rect = node.getBoundingClientRect();
-        return {
-          top: rect.top,
-          bottom: rect.bottom,
-          left: rect.left,
-          right: rect.right,
-          width: rect.width,
-          height: rect.height
-        };
-      };
-      return {
-        previewVisible: !previewArea?.hidden,
-        economicHeading: document.querySelector("[data-operations-preview-panel='economic-event-status'] h3")?.textContent?.trim() || "",
-        inputHealthHeading: document.querySelector("[data-operations-preview-panel='input-health'] h3")?.textContent?.trim() || "",
-        developmentHeading: document.querySelector("[data-operations-preview-panel='development-status'] h3")?.textContent?.trim() || "",
-        text,
-        bodyScrollWidth: document.documentElement.scrollWidth,
-        bodyClientWidth: document.documentElement.clientWidth,
-        layer1Count: document.querySelectorAll("#layer1Grid .agent-card").length,
-        layer1Rect: rectPayload(layer1Grid),
-        economicRect: rectPayload(economicPanel),
-        inputHealthRect: rectPayload(inputHealthPanel),
-        developmentRect: rectPayload(developmentPanel)
-      };
-    });
-
-    if (!previewContract.previewVisible) {
-      throw new Error("Preview query mode did not reveal the operations preview area.");
-    }
-
-    const normalizedPreviewText = previewContract.text.toLowerCase();
-    for (const expectedText of [
-      "economic event status",
-      "input health",
-      "development status",
-      "source unavailable",
-      "critical",
-      "ui preview — not live connected",
-      "ui preview — demonstration data",
-      "development update"
-    ]) {
-      if (!normalizedPreviewText.includes(expectedText)) {
-        throw new Error(`Preview mode did not render expected preview text: ${expectedText}`);
-      }
-    }
-
-    for (const forbiddenText of [
-      "ciwsnhyoi35zma44",
-      "4zd3qegwhesssghw",
-      "execution",
-      "credential",
-      "row id"
-    ]) {
-      if (normalizedPreviewText.includes(forbiddenText)) {
-        throw new Error(`Preview mode exposed internal diagnostics or identifiers: ${forbiddenText}`);
-      }
-    }
-
-    if (previewContract.bodyScrollWidth > previewContract.bodyClientWidth + 1) {
-      throw new Error(`Preview mode introduced desktop horizontal overflow.\n${JSON.stringify(previewContract, null, 2)}`);
-    }
-
-    if (previewContract.layer1Count < 5) {
-      throw new Error(`Preview mode did not preserve the complete Layer 1 card group before the preview modules.\n${JSON.stringify(previewContract, null, 2)}`);
-    }
-
-    if (!previewContract.layer1Rect || !previewContract.economicRect || !previewContract.inputHealthRect || !previewContract.developmentRect) {
-      throw new Error(`Preview mode did not render all expected ordered panels.\n${JSON.stringify(previewContract, null, 2)}`);
-    }
-
-    if (!(previewContract.layer1Rect.bottom <= previewContract.economicRect.top
-      && previewContract.economicRect.bottom <= previewContract.inputHealthRect.top
-      && previewContract.inputHealthRect.bottom <= previewContract.developmentRect.top)) {
-      throw new Error(`Preview mode did not preserve the required Layer 1 -> Economic Event -> Input Health -> Development Status order on desktop.\n${JSON.stringify(previewContract, null, 2)}`);
-    }
-
-    const forbiddenPreviewRequests = previewRequests.filter((url) => (
-      url.includes("workflow-control.json")
-      || url.includes("workflow-status.json")
-      || url.includes("supabase.co")
-    ));
-    if (forbiddenPreviewRequests.length) {
-      throw new Error(`Preview mode still attempted workflow or Supabase loading.\n${forbiddenPreviewRequests.join("\n")}`);
-    }
-
-    await previewPage.screenshot({ path: path.join(screenshotDir, "overview-preview-desktop.png"), fullPage: true });
-
-    await previewPage.setViewportSize({ width: 390, height: 844 });
-    await previewPage.goto(previewUrl, { waitUntil: "networkidle" });
-    await previewPage.waitForSelector("[data-operations-preview-panel='input-health']", { timeout: 15000 });
-
-    const mobilePreviewLayout = await previewPage.evaluate(() => {
-      const doc = document.documentElement;
-      const layer1Grid = document.getElementById("layer1Grid");
-      const economicPanel = document.querySelector("[data-operations-preview-panel='economic-event-status']");
-      const inputHealthPanel = document.querySelector("[data-operations-preview-panel='input-health']");
-      const developmentPanel = document.querySelector("[data-operations-preview-panel='development-status']");
-      const rectPayload = (node) => {
-        if (!node) return null;
-        const rect = node.getBoundingClientRect();
-        return {
-          top: rect.top,
-          bottom: rect.bottom
-        };
-      };
-      const panels = Array.from(document.querySelectorAll("[data-operations-preview-panel]")).map((node) => {
-        const rect = node.getBoundingClientRect();
-        return {
-          width: rect.width,
-          right: rect.right,
-          clientWidth: node.clientWidth,
-          scrollWidth: node.scrollWidth
-        };
-      });
-      return {
-        pageHasHorizontalOverflow: doc.scrollWidth > doc.clientWidth + 1,
-        panelOverflowCount: panels.filter((panel) => panel.scrollWidth > panel.clientWidth + 1).length,
-        panelOutOfBoundsCount: panels.filter((panel) => panel.right > doc.clientWidth + 1).length,
-        layer1Rect: rectPayload(layer1Grid),
-        economicRect: rectPayload(economicPanel),
-        inputHealthRect: rectPayload(inputHealthPanel),
-        developmentRect: rectPayload(developmentPanel)
-      };
-    });
-
-    if (mobilePreviewLayout.pageHasHorizontalOverflow || mobilePreviewLayout.panelOverflowCount > 0 || mobilePreviewLayout.panelOutOfBoundsCount > 0) {
-      throw new Error(`Preview mode introduced mobile layout overflow.\n${JSON.stringify(mobilePreviewLayout, null, 2)}`);
-    }
-
-    if (!mobilePreviewLayout.layer1Rect || !mobilePreviewLayout.economicRect || !mobilePreviewLayout.inputHealthRect || !mobilePreviewLayout.developmentRect) {
-      throw new Error(`Preview mode did not render all expected ordered panels on mobile.\n${JSON.stringify(mobilePreviewLayout, null, 2)}`);
-    }
-
-    if (!(mobilePreviewLayout.layer1Rect.bottom <= mobilePreviewLayout.economicRect.top
-      && mobilePreviewLayout.economicRect.bottom <= mobilePreviewLayout.inputHealthRect.top
-      && mobilePreviewLayout.inputHealthRect.bottom <= mobilePreviewLayout.developmentRect.top)) {
-      throw new Error(`Preview mode did not preserve the required Layer 1 -> Economic Event -> Input Health -> Development Status order on mobile.\n${JSON.stringify(mobilePreviewLayout, null, 2)}`);
-    }
-
-    await previewPage.screenshot({ path: path.join(screenshotDir, "overview-preview-mobile.png"), fullPage: true });
-
-    if (previewConsoleErrors.length) {
-      throw new Error(`Preview mode emitted console errors.\n${previewConsoleErrors.join("\n")}`);
-    }
-
-    await previewPage.close();
-
     console.log(JSON.stringify({
       status: "PASS",
       target: "Overview, research tabs, and Architecture Mirror",
-      preview_url: previewUrl,
-      screenshot_paths: {
-        normal_desktop: path.join(screenshotDir, "overview-normal-desktop.png"),
-        preview_desktop: path.join(screenshotDir, "overview-preview-desktop.png"),
-        preview_mobile: path.join(screenshotDir, "overview-preview-mobile.png")
-      },
       matrix_summary_excerpt: summaryText,
       btc_weekday_headers: btcWeekdayHeaders,
       usd_weekday_headers: usdWeekdayHeaders,

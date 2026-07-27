@@ -385,6 +385,310 @@ h3 {
   margin-bottom: 16px;
 }
 
+.overview-warnings-area {
+  display: grid;
+  gap: 18px;
+  margin-bottom: 18px;
+}
+
+.economic-event-panel {
+  background:
+    radial-gradient(circle at top right, rgba(184, 132, 26, 0.12), transparent 32%),
+    linear-gradient(180deg, #fcfbf7 0%, #ffffff 100%);
+}
+
+.operational-warnings-panel {
+  background:
+    radial-gradient(circle at top left, rgba(32, 82, 149, 0.08), transparent 30%),
+    linear-gradient(180deg, #fcfbf7 0%, #ffffff 100%);
+}
+
+.operational-warnings-shell {
+  display: grid;
+  gap: 14px;
+}
+
+.operational-warnings-shell.warning,
+.operational-warnings-shell.critical,
+.operational-warnings-shell.data-warning {
+  border-top: 3px solid var(--red);
+}
+
+.operational-warnings-shell.success {
+  border-top: 3px solid var(--green);
+}
+
+.economic-event-panel-shell {
+  display: grid;
+  gap: 14px;
+}
+
+.economic-event-panel-shell.critical {
+  border-top: 3px solid var(--red);
+}
+
+.economic-event-panel-shell.warning {
+  border-top: 3px solid var(--gold);
+}
+
+.economic-event-panel-shell.data-warning {
+  border-top: 3px solid var(--blue);
+}
+
+.economic-event-panel-shell.cleared,
+.economic-event-panel-shell.neutral,
+.economic-event-panel-shell.upcoming {
+  border-top: 3px solid var(--navy);
+}
+
+.economic-event-panel-head,
+.economic-event-card-head,
+.operational-warnings-head,
+.operational-agent-head,
+.operational-issue-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  gap: 14px;
+}
+
+.operational-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+}
+
+.warning-module-summary-grid {
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.operational-summary-grid > div,
+.operational-source-note,
+.operational-agent-card,
+.operational-issue-card {
+  border: 1px solid rgba(24, 35, 52, 0.08);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.84);
+  padding: 12px 14px;
+}
+
+.operational-summary-grid strong,
+.operational-source-note strong {
+  display: block;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--ink-soft);
+  margin-bottom: 4px;
+}
+
+.operational-summary-grid span,
+.operational-source-note span {
+  font-weight: 800;
+}
+
+.operational-source-note {
+  display: grid;
+  gap: 4px;
+}
+
+.operational-source-note small,
+.operational-issue-card small {
+  color: var(--ink-soft);
+}
+
+.warning-module-indicator {
+  display: inline-flex;
+  width: fit-content;
+  margin-top: 8px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(11, 31, 58, 0.1);
+  background: rgba(255, 255, 255, 0.74);
+  color: var(--ink-muted);
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.operational-agent-list,
+.operational-issue-list {
+  display: grid;
+  gap: 12px;
+}
+
+.operational-agent-list {
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.operational-agent-card p,
+.operational-issue-card p {
+  margin: 8px 0 0;
+}
+
+.economic-event-status-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  padding: 7px 10px;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.economic-event-status-badge.critical {
+  color: var(--red);
+  background: #fff5f3;
+}
+
+.economic-event-status-badge.warning {
+  color: var(--gold);
+  background: var(--gold-bg);
+}
+
+.economic-event-status-badge.data-warning {
+  color: var(--blue);
+  background: var(--navy-pale);
+}
+
+.economic-event-status-badge.upcoming,
+.economic-event-status-badge.neutral {
+  color: var(--navy);
+  background: #f5f8fd;
+}
+
+.economic-event-status-badge.cleared {
+  color: var(--green);
+  background: var(--teal-bg);
+}
+
+.economic-event-copy,
+.economic-event-subcopy {
+  margin: 0;
+  color: var(--ink-muted);
+  line-height: 1.6;
+}
+
+.economic-event-card-list {
+  display: grid;
+  gap: 14px;
+}
+
+.economic-event-card {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid var(--cream-border);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.92);
+}
+
+.economic-event-card.critical {
+  border-color: rgba(165, 48, 48, 0.28);
+  background: #fff7f5;
+}
+
+.economic-event-card.warning {
+  border-color: rgba(184, 132, 26, 0.3);
+  background: #fffaf1;
+}
+
+.economic-event-card.data-warning {
+  border-color: rgba(42, 78, 138, 0.24);
+  background: #f6f9ff;
+}
+
+.economic-event-card.cleared {
+  border-color: rgba(36, 107, 72, 0.22);
+  background: #f6fbf8;
+}
+
+.economic-event-meta,
+.economic-event-agent-grid,
+.economic-event-evidence-list,
+.economic-event-summary-warnings,
+.economic-event-warning-list {
+  display: grid;
+  gap: 10px;
+}
+
+.economic-event-meta {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.economic-event-meta span,
+.economic-event-agent-line,
+.economic-event-evidence-chip,
+.economic-event-summary-warnings span,
+.economic-event-warning-list span {
+  border: 1px solid var(--cream-border);
+  border-radius: 8px;
+  background: var(--panel2);
+  padding: 11px 12px;
+}
+
+.economic-event-agent-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.economic-event-agent-line {
+  display: grid;
+  gap: 4px;
+}
+
+.economic-event-agent-line strong,
+.economic-event-evidence-chip strong {
+  color: var(--ink-mid);
+  font-size: 12px;
+}
+
+.economic-event-agent-line span,
+.economic-event-evidence-chip span,
+.economic-event-evidence-chip small {
+  color: var(--ink-muted);
+  line-height: 1.45;
+}
+
+.economic-event-agent-line.critical {
+  border-color: rgba(165, 48, 48, 0.22);
+  background: #fff5f3;
+}
+
+.economic-event-agent-line.cleared {
+  border-color: rgba(36, 107, 72, 0.2);
+  background: #f5fbf8;
+}
+
+.economic-event-agent-line.data-warning {
+  border-color: rgba(42, 78, 138, 0.2);
+  background: #f5f8fd;
+}
+
+.economic-event-evidence-list {
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+}
+
+.economic-event-evidence-chip {
+  display: grid;
+  gap: 4px;
+}
+
+.economic-event-summary-warnings,
+.economic-event-warning-list {
+  grid-template-columns: 1fr;
+}
+
+.economic-event-summary-warnings span,
+.economic-event-warning-list span {
+  border-left: 3px solid var(--blue);
+  background: #f6f9ff;
+  color: var(--ink-mid);
+}
+
 .workflow-compact-panel .eyebrow {
   margin-bottom: 3px;
 }
@@ -474,6 +778,7 @@ h3 {
 }
 
 .workflow-status-badge.success { color: var(--green); }
+.workflow-status-badge.warning { color: var(--gold-deep); }
 .workflow-status-badge.failed { color: var(--red); }
 .workflow-status-badge.running { color: var(--blue); }
 .workflow-status-badge.pending,
@@ -563,184 +868,6 @@ h3 {
   margin: 30px 0 16px;
 }
 
-.overview-operations-preview[hidden],
-.development-status-panel[hidden] {
-  display: none !important;
-}
-
-.overview-operations-preview {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 16px;
-  margin-top: 20px;
-  margin-bottom: 16px;
-}
-
-.economic-event-panel,
-.operational-warnings-panel,
-.development-status-panel {
-  background:
-    radial-gradient(circle at top right, rgba(184, 132, 26, 0.11), transparent 32%),
-    linear-gradient(180deg, #fcfbf7 0%, #ffffff 100%);
-}
-
-.operational-warnings-panel {
-  background:
-    radial-gradient(circle at top left, rgba(32, 82, 149, 0.08), transparent 30%),
-    linear-gradient(180deg, #fcfbf7 0%, #ffffff 100%);
-}
-
-.development-status-panel {
-  margin-top: 0;
-  margin-bottom: 18px;
-  background:
-    radial-gradient(circle at top left, rgba(67, 200, 176, 0.08), transparent 30%),
-    linear-gradient(180deg, #fdfcf8 0%, #ffffff 100%);
-}
-
-.economic-event-preview-shell,
-.input-health-preview-shell,
-.development-status-preview-shell {
-  display: grid;
-  gap: 14px;
-}
-
-.economic-event-preview-shell {
-  border-top: 3px solid var(--blue);
-}
-
-.input-health-preview-shell {
-  border-top: 3px solid var(--red);
-}
-
-.development-status-preview-shell {
-  border-top: 3px solid rgba(67, 200, 176, 0.7);
-}
-
-.operations-preview-head,
-.operations-preview-issue-head,
-.operations-preview-agent-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: start;
-  gap: 14px;
-}
-
-.operations-preview-indicator {
-  display: inline-flex;
-  width: fit-content;
-  margin-top: 8px;
-  padding: 6px 10px;
-  border-radius: 999px;
-  border: 1px solid rgba(11, 31, 58, 0.1);
-  background: rgba(255, 255, 255, 0.74);
-  color: var(--ink-muted);
-  font-size: 10px;
-  font-weight: 800;
-  text-transform: uppercase;
-}
-
-.operations-preview-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid currentColor;
-  border-radius: 999px;
-  padding: 7px 10px;
-  font-size: 11px;
-  font-weight: 800;
-  text-transform: uppercase;
-  white-space: nowrap;
-}
-
-.operations-preview-badge.source-unavailable {
-  color: var(--blue);
-  background: var(--navy-pale);
-}
-
-.operations-preview-badge.critical {
-  color: var(--red);
-  background: #fff5f3;
-}
-
-.operations-preview-copy,
-.operations-preview-subcopy,
-.operations-preview-issue-card p,
-.operations-preview-agent-card p,
-.development-status-preview-shell p {
-  margin: 0;
-  color: var(--ink-muted);
-  line-height: 1.6;
-}
-
-.operations-preview-summary-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  gap: 12px;
-}
-
-.operations-preview-summary-grid > div,
-.operations-preview-issue-card,
-.operations-preview-agent-card {
-  border: 1px solid rgba(24, 35, 52, 0.08);
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.84);
-  padding: 12px 14px;
-}
-
-.operations-preview-summary-grid strong,
-.operations-preview-agent-card strong,
-.operations-preview-issue-card strong {
-  display: block;
-  font-size: 11px;
-  text-transform: uppercase;
-  color: var(--ink-faint);
-  margin-bottom: 4px;
-}
-
-.operations-preview-summary-grid span,
-.operations-preview-agent-card span,
-.operations-preview-issue-card span {
-  font-weight: 800;
-}
-
-.operations-preview-issue-card small,
-.operations-preview-agent-card small {
-  display: block;
-  margin-top: 6px;
-  color: var(--ink-muted);
-  line-height: 1.45;
-}
-
-.operations-preview-agent-list {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 12px;
-}
-
-.operations-preview-agent-head {
-  margin-bottom: 8px;
-}
-
-.operations-preview-state-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.operations-preview-state-pill {
-  display: inline-flex;
-  align-items: center;
-  padding: 5px 8px;
-  border-radius: 999px;
-  background: #f6f9ff;
-  color: var(--navy);
-  border: 1px solid rgba(42, 78, 138, 0.12);
-  font-size: 10px;
-  font-weight: 800;
-  text-transform: uppercase;
-}
-
 .overview-stats {
   display: grid;
   grid-template-columns: 2fr 1fr 1.4fr;
@@ -753,6 +880,119 @@ h3 {
   background:
     radial-gradient(circle at top right, rgba(198, 155, 70, 0.08), transparent 34%),
     linear-gradient(180deg, #fbfcff 0%, #ffffff 100%);
+}
+
+.overview-status-panel {
+  margin-bottom: 18px;
+  background:
+    radial-gradient(circle at top left, rgba(42, 78, 138, 0.08), transparent 30%),
+    linear-gradient(180deg, #fbfcfd 0%, #ffffff 100%);
+}
+
+.overview-status-shell {
+  display: grid;
+  gap: 14px;
+  border-top: 3px solid var(--green);
+}
+
+.overview-status-shell.warning {
+  border-top-color: var(--gold);
+}
+
+.overview-status-shell.critical,
+.overview-status-shell.failed {
+  border-top-color: var(--red);
+}
+
+.overview-status-head,
+.overview-status-issue-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  gap: 14px;
+}
+
+.overview-status-copy {
+  display: grid;
+  gap: 10px;
+}
+
+.overview-status-copy strong {
+  color: var(--navy);
+  font-size: 18px;
+}
+
+.overview-status-copy p {
+  margin: 0;
+  color: var(--ink-muted);
+  line-height: 1.65;
+  font-size: 14px;
+}
+
+.overview-status-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(42, 78, 138, 0.16);
+  border-radius: 999px;
+  padding: 7px 10px;
+  background: rgba(245, 248, 253, 0.94);
+  color: var(--navy);
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.overview-status-badge.warning {
+  color: #8b5d08;
+  background: #fbf4df;
+  border-color: rgba(184, 132, 26, 0.24);
+}
+
+.overview-status-badge.critical,
+.overview-status-badge.failed {
+  color: var(--red);
+  background: #fff0f0;
+  border-color: rgba(165, 48, 48, 0.2);
+}
+
+.overview-status-metrics,
+.overview-status-issues {
+  display: grid;
+  gap: 12px;
+}
+
+.overview-status-metrics {
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+}
+
+.overview-status-metrics > div,
+.overview-status-issue {
+  border: 1px solid rgba(24, 35, 52, 0.08);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.84);
+  padding: 12px 14px;
+}
+
+.overview-status-metrics strong,
+.overview-status-issue strong {
+  display: block;
+  color: var(--ink-mid);
+  font-size: 11px;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.overview-status-metrics span,
+.overview-status-issue span {
+  font-weight: 800;
+}
+
+.overview-status-issue p {
+  margin: 8px 0 0;
+  color: var(--ink-muted);
+  line-height: 1.55;
 }
 
 .overview-briefing-shell {
@@ -957,6 +1197,7 @@ h3 {
 
 .agent-card {
   min-height: 350px;
+  min-width: 0;
 }
 
 .outlook-grid {
@@ -996,6 +1237,20 @@ h3 {
   gap: 10px;
 }
 
+.agent-card > *,
+.call-row,
+.call-row > *,
+.call-row-head > *,
+.main-signal,
+.overview-expiry-card,
+.overview-expiry-copy,
+.overview-expiry-meta,
+.agent-metrics,
+.agent-metric-chip,
+.asset-update {
+  min-width: 0;
+}
+
 .badge {
   color: var(--blue);
   background: var(--navy-pale);
@@ -1016,6 +1271,7 @@ h3 {
   font-size: 44px;
   line-height: 1;
   margin-top: 8px;
+  overflow-wrap: anywhere;
 }
 
 .overview-expiry-card {
@@ -1047,10 +1303,9 @@ h3 {
 }
 
 .overview-expiry-head {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: start;
-  justify-content: space-between;
-  flex-wrap: wrap;
   gap: 10px;
 }
 
@@ -1065,6 +1320,8 @@ h3 {
   min-width: 0;
   display: inline-grid;
   justify-items: start;
+  width: 100%;
+  max-width: 100%;
 }
 
 .overview-expiry-trigger.has-tooltip {
@@ -1078,9 +1335,13 @@ h3 {
 }
 
 .overview-expiry-value {
+  display: block;
+  max-width: 100%;
   color: var(--ink-mid);
   font-size: 15px;
   line-height: 1.35;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 
 .overview-expiry-tooltip {
@@ -1160,12 +1421,14 @@ h3 {
   margin-top: 4px;
   color: var(--ink-mid);
   font-size: 15px;
+  overflow-wrap: anywhere;
 }
 
 .asset-update {
   color: var(--ink-muted);
   font-size: 12px;
   line-height: 1.45;
+  overflow-wrap: anywhere;
 }
 
 .call-list,
@@ -1186,6 +1449,7 @@ h3 {
   justify-self: end;
   text-align: right;
   white-space: normal;
+  overflow-wrap: anywhere;
 }
 
 .research-status-hero,
@@ -1634,6 +1898,7 @@ h3 {
   display: flex;
   flex-direction: column;
   gap: 4px;
+  min-width: 0;
 }
 
 .overview-validation-panel-stack {
@@ -1644,12 +1909,14 @@ h3 {
 .l2l-trust-badge strong {
   font-size: 13px;
   line-height: 1.35;
+  overflow-wrap: anywhere;
 }
 
 .l2l-trust-badge span {
   color: var(--ink-muted);
   font-size: 11px;
   line-height: 1.4;
+  overflow-wrap: anywhere;
 }
 
 .l2l-trust-badge-positive {
@@ -4263,6 +4530,8 @@ h3 {
   }
 
   .rules-strip,
+  .economic-event-meta,
+  .economic-event-agent-grid,
   .overview-briefing-shell,
   .overview-stats,
   .outlook-grid,
@@ -4397,7 +4666,9 @@ h3 {
   }
 
   .agent-grid,
-  .overview-operations-preview,
+  .economic-event-meta,
+  .economic-event-agent-grid,
+  .operational-summary-grid,
   .overview-briefing-shell,
   .outlook-grid,
   .adjusted-grid,
@@ -4445,6 +4716,14 @@ h3 {
   }
 
   .architecture-stage-head {
+    flex-direction: column;
+  }
+
+  .economic-event-panel-head,
+  .economic-event-card-head,
+  .operational-warnings-head,
+  .operational-agent-head,
+  .operational-issue-head {
     flex-direction: column;
   }
 
@@ -4554,5 +4833,9 @@ h3 {
 
   .trade-card-head {
     flex-direction: column;
+  }
+
+  .economic-event-status-badge {
+    white-space: normal;
   }
 }

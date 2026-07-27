@@ -1,6 +1,13 @@
 const layer1Url = "./data/layer1.json";
 const layer2Url = "./data/layer2.json";
 const workflowControlUrl = "./data/workflow-control.json";
+const workflowStatusUrlDefault = "./data/workflow-status.json";
+const economicEventRefreshUrlDefault = "./data/economic-event-refresh.json?v=20260723-operational-warning-modules-v2";
+const economicEventsSourceUrlDefault = "./data/economic-events-source.json?v=20260727-input-health-overview-release";
+const inputHealthUrlDefault = "./data/input-health.json?v=20260723-operational-warning-modules-v2";
+let economicEventRefreshUrl = economicEventRefreshUrlDefault;
+let economicEventsSourceUrl = economicEventsSourceUrlDefault;
+let inputHealthUrl = inputHealthUrlDefault;
 const checkerDataUrls = {
   USD: "./data/backtester-checker-usd-24h-2024-01.json?v=20260629-usd-flatband-010",
   EUR: "./data/backtester-checker-eur-24h-2024-2026.json?v=20260629-eur-flatband-015",
@@ -16,73 +23,7 @@ const researchSupabaseUrl = "https://eaolqbrlywczinfordvg.supabase.co/rest/v1";
 const researchSupabaseKey = "sb_publishable_k6YbEuuk3GyB9GVTQDtNVA_J1gCRYaY";
 const headlineConfidenceLib = globalThis.HeadlineConfidence;
 const layer2PairLogicLib = globalThis.Layer2PairLogic;
-const operationsPreviewMode = new URLSearchParams(globalThis.location?.search || "").get("operations-preview") === "1";
-const operationsPreviewData = {
-  economicEventStatus: {
-    tone: "source-unavailable",
-    status: "SOURCE UNAVAILABLE",
-    label: "UI PREVIEW — NOT LIVE CONNECTED",
-    message: "Economic-event timing is unavailable. Layer 1 calls may have reduced event awareness."
-  },
-  inputHealth: {
-    tone: "critical",
-    status: "CRITICAL",
-    label: "UI PREVIEW — DEMONSTRATION DATA",
-    overallStatus: "CRITICAL",
-    affectedAgents: 5,
-    criticalIssues: 1,
-    missingInputs: 3,
-    staleInputs: 2,
-    groupedIssue: "Economic-event source unavailable",
-    agentExamples: [
-      {
-        agent: "USD",
-        state: "Missing inputs",
-        evidence: "Calendar timing unavailable and one macro input missing."
-      },
-      {
-        agent: "EUR",
-        state: "Stale inputs",
-        evidence: "Latest event-awareness snapshot is outside the healthy recency window."
-      },
-      {
-        agent: "GOLD",
-        state: "Fallback used",
-        evidence: "A temporary substitute source was used while the primary event feed was unavailable."
-      },
-      {
-        agent: "NQ",
-        state: "Unavailable evidence",
-        evidence: "Source-level warning grouped with broader event-awareness degradation."
-      },
-      {
-        agent: "BTC",
-        state: "Mixed warning",
-        evidence: "Preview example of missing plus stale input evidence shown in one compact card."
-      }
-    ]
-  },
-  developmentStatus: {
-    label: "DEVELOPMENT UPDATE",
-    title: "Development Status",
-    body: "Input Health and economic-event integrity observability are implemented locally, including honest source-failure warnings and same-run health evidence. The next priority is proving fully isolated staged validation before completing the remaining connected workflow tests and preparing the changes for deployment."
-  },
-  staticResearch: {
-    meta: {
-      last_updated: new Date().toISOString(),
-      source: "operations_preview_static",
-      read_only: true
-    },
-    accuracy: {},
-    infrastructure: {}
-  },
-  workflowStatus: {
-    status: "not_configured",
-    message: "Operations preview is using static demonstration data only.",
-    steps: [],
-    error: null
-  }
-};
+const economicEventRefreshLib = globalThis.EconomicEventRefresh;
 
 if (!headlineConfidenceLib) {
   throw new Error("HeadlineConfidence shared helper is required before loading script.js");
@@ -90,6 +31,10 @@ if (!headlineConfidenceLib) {
 
 if (!layer2PairLogicLib) {
   throw new Error("Layer2PairLogic shared helper is required before loading script.js");
+}
+
+if (!economicEventRefreshLib) {
+  throw new Error("EconomicEventRefresh shared helper is required before loading script.js");
 }
 
 const labels = {
@@ -183,8 +128,12 @@ let layer2Data = null;
 let backtestData = null;
 let factorEdgeLabData = null;
 let phase2ShadowBacktestData = null;
+let economicEventRefreshData = null;
+let economicEventsSourceData = null;
+let inputHealthData = null;
 let workflowControl = null;
 let workflowStatus = null;
+let workflowStatusUrlOverride = "";
 let workflowPollTimer = null;
 let workflowTriggerInFlight = false;
 let activeTab = "overview";
@@ -825,6 +774,7 @@ function formatRelativeAge(value) {
 
 function workflowStatusClass(status = "") {
   const value = String(status || "pending").toLowerCase();
+  if (["success_degraded", "degraded", "warning"].includes(value)) return "warning";
   if (["success", "complete", "completed"].includes(value)) return "success";
   if (["failed", "failure", "error"].includes(value)) return "failed";
   if (["running", "started", "starting", "queued", "triggered"].includes(value)) return "running";
@@ -835,6 +785,26 @@ function workflowStatusClass(status = "") {
 function workflowStatusLabel(status = "") {
   const value = String(status || "pending").replaceAll("_", " ");
   return value ? value.toUpperCase() : "PENDING";
+}
+
+function inputHealthTone(status = "") {
+  const value = String(status || "UNKNOWN").toUpperCase();
+  if (value === "DATA_UNAVAILABLE") return "data-warning";
+  if (value === "MISMATCHED") return "warning";
+  if (value === "CRITICAL") return "critical";
+  if (value === "DEGRADED") return "warning";
+  if (value === "HEALTHY") return "success";
+  return "data-warning";
+}
+
+function inputHealthStatusLabel(status = "") {
+  const value = String(status || "UNKNOWN").toUpperCase();
+  if (value === "HEALTHY") return "HEALTHY";
+  if (value === "DEGRADED") return "DEGRADED";
+  if (value === "CRITICAL") return "CRITICAL";
+  if (value === "MISMATCHED") return "MISMATCHED";
+  if (value === "DATA_UNAVAILABLE") return "DATA UNAVAILABLE";
+  return "UNKNOWN";
 }
 
 function isEconomicEventsCollectorFailure(status = workflowStatus) {
@@ -1871,6 +1841,27 @@ if (typeof globalThis !== "undefined") {
         nodeIds: renderModel.nodes.map((node) => node.id),
         edgeIds: renderModel.edges.map((edge) => edge.id)
       };
+    },
+    setOperationalArtifactUrlsForTest(urls = {}) {
+      economicEventRefreshUrl = urls.economicEventRefreshUrl || economicEventRefreshUrlDefault;
+      economicEventsSourceUrl = urls.economicEventsSourceUrl || economicEventsSourceUrlDefault;
+      inputHealthUrl = urls.inputHealthUrl || inputHealthUrlDefault;
+      workflowStatusUrlOverride = urls.workflowStatusUrl || workflowStatusUrlOverride;
+    },
+    resetOperationalArtifactUrlsForTest() {
+      economicEventRefreshUrl = economicEventRefreshUrlDefault;
+      economicEventsSourceUrl = economicEventsSourceUrlDefault;
+      inputHealthUrl = inputHealthUrlDefault;
+      workflowStatusUrlOverride = "";
+    },
+    async reloadDashboardForTest() {
+      await loadDashboard();
+      await loadWorkflowStatus();
+      return {
+        economicEventPanelState: document.querySelector("[data-economic-event-panel='true']")?.getAttribute("data-economic-event-panel-state") || "",
+        inputHealthPanelState: document.querySelector("[data-input-health-panel='true']")?.getAttribute("data-input-health-panel-state") || "",
+        workflowStatusTone: document.querySelector("[data-overview-status='true']")?.getAttribute("data-overview-status-tone") || ""
+      };
     }
   };
 }
@@ -1917,134 +1908,741 @@ function renderOverviewBriefing() {
   `;
 }
 
-function renderOperationsPreview() {
-  const area = document.getElementById("operationsPreviewArea");
-  const economicPanel = document.getElementById("economicEventPreviewPanel");
-  const inputHealthPanel = document.getElementById("inputHealthPreviewPanel");
-  const developmentPanel = document.getElementById("developmentStatusPreviewPanel");
+function createEconomicEventRefreshFallback(errorMessage = "") {
+  const warningCodes = errorMessage ? ["artifact_unavailable"] : [];
+  return {
+    schema_version: 1,
+    generated_at: new Date().toISOString(),
+    source_run_id: null,
+    consistency_status: "UNKNOWN",
+    consistency_warnings: errorMessage ? ["artifact_unavailable"] : [],
+    event_source: {
+      name: "dashboard_fallback",
+      source_status: errorMessage ? "DATA_UNAVAILABLE" : "SOURCE_UNAVAILABLE",
+      source_timezone: economicEventRefreshLib.DEFAULT_SOURCE?.source_timezone_label || "Unknown",
+      policy_version: null,
+      rows_seen: null
+    },
+    summary: {
+      panel_state: errorMessage ? "DATA_UNAVAILABLE" : "SOURCE_UNAVAILABLE",
+      total_events_in_scope: 0,
+      unresolved_event_count: 0,
+      highest_priority_event_id: null,
+      imminent_threshold_minutes: economicEventRefreshLib.DEFAULT_IMMINENT_THRESHOLD_MINUTES || 60,
+      selection_rule: "Include today's in-scope major events, unresolved earlier-today or previous-day events, and future events that fall within at least one affected agent's active forecast window.",
+      data_quality_warnings: warningCodes
+    },
+    agents: {},
+    events: [],
+    error: errorMessage || "",
+    fallback_kind: errorMessage ? "artifact_unavailable" : "bootstrap"
+  };
+}
 
-  if (!area || !economicPanel || !inputHealthPanel || !developmentPanel) return;
+function createInputHealthFallback(errorMessage = "") {
+  return {
+    schema_version: 1,
+    generated_at: new Date().toISOString(),
+    overall_status: errorMessage ? "DATA_UNAVAILABLE" : "UNKNOWN",
+    affected_agent_count: 0,
+    critical_issue_count: 0,
+    missing_input_count: 0,
+    stale_input_count: 0,
+    placeholder_input_count: 0,
+    source_failure_count: 0,
+    last_full_health_at: null,
+    sources: {},
+    agents: {},
+    fallback_kind: errorMessage ? "artifact_unavailable" : "bootstrap",
+    issues: errorMessage ? [{
+      agent: "SYSTEM",
+      input_id: "input_health_artifact",
+      label: "Input health artifact",
+      category: "artifact",
+      importance: "high",
+      status: "UNKNOWN",
+      reason: errorMessage,
+      default_applied: false,
+      fallback_applied: false,
+      confidence_effect: "No extra confidence adjustment beyond the canonical model",
+      recovery_action: "Republish the input-health artifact"
+    }] : []
+  };
+}
 
-  if (!operationsPreviewMode) {
-    area.hidden = true;
-    economicPanel.hidden = true;
-    inputHealthPanel.hidden = true;
-    developmentPanel.hidden = true;
-    economicPanel.innerHTML = "";
-    inputHealthPanel.innerHTML = "";
-    developmentPanel.innerHTML = "";
-    return;
+function createEconomicEventsSourceFallback(errorMessage = "") {
+  return {
+    schema_version: 1,
+    generated_at: new Date().toISOString(),
+    source: {
+      source_name: "dashboard_fallback",
+      source_status: errorMessage ? "DATA_UNAVAILABLE" : "SOURCE_UNAVAILABLE",
+      warning: errorMessage || "The economic-event source artifact is unavailable."
+    },
+    events: [],
+    error: errorMessage || "",
+    fallback_kind: errorMessage ? "artifact_unavailable" : "bootstrap"
+  };
+}
+
+function firstNonEmptyTimestamp(...values) {
+  return values.find((value) => value) || null;
+}
+
+function latestIsoTimestamp(values = []) {
+  const validTimes = values
+    .map((value) => {
+      const ms = value ? new Date(value).getTime() : Number.NaN;
+      return Number.isNaN(ms) ? null : { value, ms };
+    })
+    .filter(Boolean)
+    .sort((a, b) => b.ms - a.ms);
+  return validTimes[0]?.value || null;
+}
+
+function countLiveLayer1Agents(data = layer1Data) {
+  return Array.isArray(data?.agents)
+    ? data.agents.filter((agent) => String(agent?.status || "").toLowerCase() === "live").length
+    : 0;
+}
+
+function countRenderableLayer2Pairs(data = layer2Data) {
+  return Array.isArray(data?.pairs) ? data.pairs.length : 0;
+}
+
+function getLayer1PublishedAt(data = layer1Data) {
+  const candidates = [data?.dashboard_meta?.last_updated_et];
+  if (Array.isArray(data?.agents)) {
+    for (const agent of data.agents) {
+      candidates.push(firstNonEmptyTimestamp(agent?.sealed_at, agent?.generated_at, agent?.last_run_et));
+    }
+  }
+  return latestIsoTimestamp(candidates);
+}
+
+function getLayer2PublishedAt(data = layer2Data) {
+  const candidates = [data?.dashboard_meta?.last_updated_et];
+  if (Array.isArray(data?.pairs)) {
+    for (const pair of data.pairs) {
+      candidates.push(firstNonEmptyTimestamp(pair?.sealed_at, pair?.generated_at, pair?.valid_from));
+    }
+  }
+  return latestIsoTimestamp(candidates);
+}
+
+function workflowFailed(status = workflowStatus) {
+  return workflowStatusClass(status?.status || "pending") === "failed";
+}
+
+function callsRemainVisible() {
+  return countLiveLayer1Agents() > 0 || countRenderableLayer2Pairs() > 0;
+}
+
+function getWorkflowFailureSummary(status = workflowStatus) {
+  return {
+    failedStep: status?.failed_step || status?.error?.step || "Refresh workflow",
+    reason: workflowErrorText(status?.error) || status?.message || "No error reason supplied."
+  };
+}
+
+function getEconomicSourceStatus() {
+  const sourceStatus = economicEventsSourceData?.source?.source_status
+    || economicEventRefreshData?.event_source?.source_status
+    || inputHealthData?.sources?.economic_events?.data_status
+    || "";
+  return String(sourceStatus || "UNKNOWN").toUpperCase();
+}
+
+function getEconomicSourceWarning() {
+  return economicEventsSourceData?.source?.warning
+    || economicEventRefreshData?.event_source?.warning
+    || inputHealthData?.sources?.economic_events?.warning
+    || "";
+}
+
+function isArtifactBehindCurrentCalls(artifactGeneratedAt, referencePublishedAt) {
+  if (!artifactGeneratedAt || !referencePublishedAt) return false;
+  const artifactMs = new Date(artifactGeneratedAt).getTime();
+  const referenceMs = new Date(referencePublishedAt).getTime();
+  if (Number.isNaN(artifactMs) || Number.isNaN(referenceMs)) return false;
+  return referenceMs - artifactMs > 300000;
+}
+
+function publicIssueStatusLabel(status = "") {
+  const normalized = String(status || "UNKNOWN").toUpperCase();
+  if (normalized === "SOURCE_UNAVAILABLE") return "SOURCE UNAVAILABLE";
+  if (normalized === "STALE") return "STALE";
+  if (normalized === "MISSING" || normalized === "PLACEHOLDER") return "MISSING";
+  if (normalized === "PARTIAL") return "DEGRADED";
+  return normalized.replaceAll("_", " ");
+}
+
+function formatPublicIssueSummary(issue) {
+  if (!issue) return "No specific issue recorded.";
+  const label = issue.label || "Input";
+  const status = String(issue.status || "UNKNOWN").toUpperCase();
+  const timestamp = firstNonEmptyTimestamp(issue.collected_timestamp, issue.observation_timestamp);
+  const updateText = timestamp ? ` Last updated ${formatDashboardTime(timestamp)}.` : "";
+
+  if (status === "SOURCE_UNAVAILABLE") return `${label} source unavailable.${updateText}`;
+  if (status === "STALE") return `${label} is stale.${updateText}`;
+  if (status === "MISSING" || status === "PLACEHOLDER") return `${label} is missing.${updateText}`;
+  if (status === "PARTIAL") return `${label} is degraded because upstream source evidence is incomplete.${updateText}`;
+  return `${label}: ${publicIssueStatusLabel(status)}.${updateText}`;
+}
+
+function summarizeInputHealthAgentIssues(agentCode, health) {
+  const issues = Array.isArray(health?.issues) ? health.issues : [];
+  if (!issues.length) return "No active issues recorded.";
+  const orderedIssues = issues.slice().sort((left, right) => {
+    const priority = (value) => {
+      const status = String(value?.status || "").toUpperCase();
+      if (status === "SOURCE_UNAVAILABLE") return 0;
+      if (status === "STALE") return 1;
+      if (status === "MISSING" || status === "PLACEHOLDER") return 2;
+      if (status === "PARTIAL") return 3;
+      return 4;
+    };
+    return priority(left) - priority(right);
+  });
+  return formatPublicIssueSummary(orderedIssues[0]);
+}
+
+function buildOverviewStatusModel() {
+  const inputStatus = String(inputHealthData?.overall_status || "UNKNOWN").toUpperCase();
+  const economicSourceStatus = getEconomicSourceStatus();
+  const layer1PublishedAt = getLayer1PublishedAt();
+  const layer2PublishedAt = getLayer2PublishedAt();
+  const healthArtifactBehind = isArtifactBehindCurrentCalls(inputHealthData?.generated_at, layer1PublishedAt);
+  const economicArtifactBehind = isArtifactBehindCurrentCalls(
+    economicEventRefreshData?.generated_at || economicEventsSourceData?.generated_at,
+    layer1PublishedAt
+  );
+  const retainedCalls = callsRemainVisible();
+  const latestRunFinished = workflowStatus?.last_run_finished_at || null;
+  const latestSuccessfulRun = workflowStatus?.status === "success"
+    ? workflowStatus?.last_run_finished_at
+    : workflowStatus?.last_successful_run_finished_at || null;
+  const affectedAgents = Object.entries(inputHealthData?.agents || {})
+    .filter(([, health]) => String(health?.overall_status || "").toUpperCase() !== "HEALTHY")
+    .map(([agent]) => agent);
+  const issueCards = [];
+
+  let tone = "success";
+  let badge = "HEALTHY";
+  let title = "System working normally";
+  let summary = "All critical inputs are available and the latest refresh completed successfully.";
+
+  if (workflowFailed()) {
+    tone = "critical";
+    badge = "REFRESH FAILED";
+    title = "Latest refresh failed";
+    summary = retainedCalls
+      ? "The latest refresh failed. The dashboard is still showing the most recently published calls."
+      : "The latest refresh failed and no current published calls are available to show.";
+    const failure = getWorkflowFailureSummary();
+    issueCards.push({
+      label: failure.failedStep,
+      status: "REFRESH FAILED",
+      detail: failure.reason
+    });
+  } else if (economicSourceStatus === "SOURCE_UNAVAILABLE" || inputStatus === "CRITICAL") {
+    tone = "critical";
+    badge = "CRITICAL";
+    title = "Needs review";
+    summary = retainedCalls
+      ? "Critical trading inputs are unavailable or stale. Current published calls remain visible, but they should be treated with caution."
+      : "Critical trading inputs are unavailable and current published calls are not available.";
+  } else if (inputStatus === "DEGRADED" || inputStatus === "DATA_UNAVAILABLE" || healthArtifactBehind || economicArtifactBehind) {
+    tone = "warning";
+    badge = "NEEDS REVIEW";
+    title = "Needs review";
+    summary = retainedCalls
+      ? "One or more inputs are degraded or not fully verified for the current calls. Current published calls remain visible."
+      : "Input evidence is degraded and there are no current published calls to verify.";
   }
 
-  const economic = operationsPreviewData.economicEventStatus;
-  const inputHealth = operationsPreviewData.inputHealth;
-  const developmentStatus = operationsPreviewData.developmentStatus;
+  if (economicSourceStatus === "SOURCE_UNAVAILABLE") {
+    issueCards.push({
+      label: "Economic events",
+      status: "SOURCE UNAVAILABLE",
+      detail: getEconomicSourceWarning() || "Economic-event source coverage is currently unavailable."
+    });
+  }
 
-  area.hidden = false;
-  economicPanel.hidden = false;
-  inputHealthPanel.hidden = false;
-  developmentPanel.hidden = false;
+  if (healthArtifactBehind) {
+    issueCards.push({
+      label: "Input health snapshot",
+      status: "STALE",
+      detail: "The published input-health snapshot predates the current Layer 1 calls."
+    });
+  }
 
-  economicPanel.innerHTML = `
-    <div class="economic-event-preview-shell" data-operations-preview-panel="economic-event-status">
-      <div class="operations-preview-head">
+  if (economicArtifactBehind) {
+    issueCards.push({
+      label: "Economic-event snapshot",
+      status: "STALE",
+      detail: "The published economic-event warning snapshot predates the current Layer 1 calls."
+    });
+  }
+
+  for (const agent of affectedAgents.slice(0, 5)) {
+    issueCards.push({
+      label: agent === "GOLD" ? "Gold" : agent,
+      status: inputHealthData?.agents?.[agent]?.overall_status || "UNKNOWN",
+      detail: summarizeInputHealthAgentIssues(agent, inputHealthData?.agents?.[agent])
+    });
+  }
+
+  return {
+    tone,
+    badge,
+    title,
+    summary,
+    retainedCalls,
+    latestRunFinished,
+    latestSuccessfulRun,
+    latestPublishedLayer1: layer1PublishedAt,
+    latestPublishedLayer2: layer2PublishedAt,
+    economicSourceStatus,
+    issueCards: issueCards.slice(0, 6)
+  };
+}
+
+function renderOverviewStatusPanel() {
+  const container = document.getElementById("overviewStatusPanel");
+  if (!container) return;
+
+  const model = buildOverviewStatusModel();
+  const latestSuccessfulLabel = model.latestSuccessfulRun
+    ? formatDashboardTime(model.latestSuccessfulRun)
+    : "Not published";
+  const latestFinishedLabel = model.latestRunFinished
+    ? formatDashboardTime(model.latestRunFinished)
+    : "Not published";
+  const callsMessage = model.retainedCalls
+    ? "Published Layer 1 and Layer 2 calls remain visible."
+    : "Published calls are currently unavailable.";
+
+  container.innerHTML = `
+    <div class="overview-status-shell ${escapeHtml(model.tone)}" data-overview-status="true" data-overview-status-tone="${escapeHtml(model.tone)}">
+      <div class="overview-status-head">
         <div>
-          <p class="eyebrow">Operational Warning Preview</p>
-          <h3>Economic Event Status</h3>
-          <span class="operations-preview-indicator">${escapeHtml(economic.label)}</span>
+          <p class="eyebrow">Overview</p>
+          <h3>SYSTEM STATUS</h3>
         </div>
-        <span class="operations-preview-badge ${escapeHtml(economic.tone)}">${escapeHtml(economic.status)}</span>
+        <span class="overview-status-badge ${escapeHtml(model.tone)}">${escapeHtml(model.badge)}</span>
       </div>
-      <p class="operations-preview-copy">${escapeHtml(economic.message)}</p>
-      <p class="operations-preview-subcopy">This preview uses a disconnected-source example, not a quiet calendar day. A real no-event state would be presented separately from source failure.</p>
-      <div class="operations-preview-summary-grid">
-        <div><strong>Preview state</strong><span>Source failure</span></div>
-        <div><strong>Operational impact</strong><span>Reduced event awareness</span></div>
-        <div><strong>Expected user cue</strong><span>Visible warning remains on Overview</span></div>
+      <div class="overview-status-copy">
+        <strong>${escapeHtml(model.title)}</strong>
+        <p>${escapeHtml(model.summary)}</p>
+        <p>${escapeHtml(callsMessage)}</p>
       </div>
-    </div>
-  `;
-
-  inputHealthPanel.innerHTML = `
-    <div class="input-health-preview-shell" data-operations-preview-panel="input-health">
-      <div class="operations-preview-head">
-        <div>
-          <p class="eyebrow">Operational Warning Preview</p>
-          <h3>Input Health</h3>
-          <span class="operations-preview-indicator">${escapeHtml(inputHealth.label)}</span>
+      <div class="overview-status-metrics">
+        <div><strong>Latest refresh</strong><span>${escapeHtml(latestFinishedLabel)}</span></div>
+        <div><strong>Last successful refresh</strong><span>${escapeHtml(latestSuccessfulLabel)}</span></div>
+        <div><strong>Input health</strong><span>${escapeHtml(inputHealthStatusLabel(inputHealthData?.overall_status || "UNKNOWN"))}</span></div>
+        <div><strong>Layer 1 calls</strong><span>${escapeHtml(model.latestPublishedLayer1 ? formatDashboardTime(model.latestPublishedLayer1) : "Unavailable")}</span></div>
+        <div><strong>Layer 2 calls</strong><span>${escapeHtml(model.latestPublishedLayer2 ? formatDashboardTime(model.latestPublishedLayer2) : "Unavailable")}</span></div>
+        <div><strong>Economic-event source</strong><span>${escapeHtml(publicIssueStatusLabel(model.economicSourceStatus))}</span></div>
+        <div><strong>Affected agents</strong><span>${escapeHtml(String(Object.keys(inputHealthData?.agents || {}).filter((agent) => String(inputHealthData?.agents?.[agent]?.overall_status || "").toUpperCase() !== "HEALTHY").length))}</span></div>
+      </div>
+      ${model.issueCards.length ? `
+        <div class="overview-status-issues">
+          ${model.issueCards.map((issue) => `
+            <article class="overview-status-issue">
+              <div class="overview-status-issue-head">
+                <strong>${escapeHtml(issue.label)}</strong>
+                <span>${escapeHtml(publicIssueStatusLabel(issue.status))}</span>
+              </div>
+              <p>${escapeHtml(issue.detail)}</p>
+            </article>
+          `).join("")}
         </div>
-        <span class="operations-preview-badge ${escapeHtml(inputHealth.tone)}">${escapeHtml(inputHealth.status)}</span>
-      </div>
-      <p class="operations-preview-copy">Input-health preview shows how genuinely missing, stale, fallback, or unavailable evidence will stay visible even when the rest of the dashboard still renders.</p>
-      <div class="operations-preview-summary-grid">
-        <div><strong>Overall status</strong><span>${escapeHtml(inputHealth.overallStatus)}</span></div>
-        <div><strong>Affected agents</strong><span>${escapeHtml(String(inputHealth.affectedAgents))}</span></div>
-        <div><strong>Critical issues</strong><span>${escapeHtml(String(inputHealth.criticalIssues))}</span></div>
-        <div><strong>Missing inputs</strong><span>${escapeHtml(String(inputHealth.missingInputs))}</span></div>
-        <div><strong>Stale inputs</strong><span>${escapeHtml(String(inputHealth.staleInputs))}</span></div>
-        <div><strong>Grouped issue</strong><span>${escapeHtml(inputHealth.groupedIssue)}</span></div>
-      </div>
-      <div class="operations-preview-agent-list" aria-label="Input health agent examples">
-        ${inputHealth.agentExamples.map((example) => `
-          <article class="operations-preview-agent-card">
-            <div class="operations-preview-agent-head">
-              <strong>${escapeHtml(example.agent)}</strong>
-              <span>${escapeHtml(example.state)}</span>
-            </div>
-            <p>${escapeHtml(example.evidence)}</p>
-            <div class="operations-preview-state-list">
-              <span class="operations-preview-state-pill">Preview evidence</span>
-            </div>
-          </article>
-        `).join("")}
-      </div>
-    </div>
-  `;
-
-  developmentPanel.innerHTML = `
-    <div class="development-status-preview-shell" data-operations-preview-panel="development-status">
-      <div class="operations-preview-head">
-        <div>
-          <p class="eyebrow">${escapeHtml(developmentStatus.label)}</p>
-          <h3>${escapeHtml(developmentStatus.title)}</h3>
-        </div>
-      </div>
-      <p>${escapeHtml(developmentStatus.body)}</p>
+      ` : ""}
     </div>
   `;
 }
 
-function applyOperationsPreviewWorkflowState() {
-  if (!operationsPreviewMode) return;
-
-  workflowControl = {
-    enabled: false,
-    webhook_url: "",
-    status_url: "./data/workflow-status.json",
-    poll_interval_ms: 10000,
-    poll_after_trigger_ms: 180000
+function economicEventStateLabel(state = "") {
+  const labelsByState = {
+    DATA_UNAVAILABLE: "DATA UNAVAILABLE",
+    UNKNOWN: "UNKNOWN",
+    SOURCE_UNAVAILABLE: "ECONOMIC EVENT DATA UNAVAILABLE",
+    STALE_SOURCE: "ECONOMIC EVENT DATA STALE",
+    INVALID_SOURCE: "ECONOMIC EVENT DATA INVALID",
+    NO_MAJOR_EVENTS: "NO MAJOR EVENTS",
+    UPCOMING: "UPCOMING",
+    EVENT_IMMINENT: "EVENT IMMINENT",
+    REFRESH_REQUIRED: "REFRESH REQUIRED",
+    PARTIALLY_REFRESHED: "PARTIALLY REFRESHED",
+    CLEARED: "CLEARED",
+    REFRESH_EVIDENCE_UNAVAILABLE: "REFRESH EVIDENCE UNAVAILABLE",
+    INVALID_EVENT_TIME: "INVALID EVENT TIME"
   };
-  workflowStatus = { ...operationsPreviewData.workflowStatus };
-  renderWorkflowStatus(workflowStatus);
+  return labelsByState[state] || "UNKNOWN";
+}
 
-  const summary = document.getElementById("workflowStatusSummary");
-  const badge = document.getElementById("workflowStatusBadge");
-  const eta = document.getElementById("workflowEta");
-  const button = document.getElementById("runWorkflowButton");
+function economicEventStateTone(state = "") {
+  if (state === "DATA_UNAVAILABLE") return "data-warning";
+  if (state === "SOURCE_UNAVAILABLE") return "data-warning";
+  if (state === "STALE_SOURCE") return "warning";
+  if (state === "INVALID_SOURCE") return "data-warning";
+  if (state === "REFRESH_EVIDENCE_UNAVAILABLE" || state === "INVALID_EVENT_TIME") return "data-warning";
+  if (state === "REFRESH_REQUIRED") return "critical";
+  if (state === "PARTIALLY_REFRESHED" || state === "EVENT_IMMINENT") return "warning";
+  if (state === "UPCOMING") return "upcoming";
+  if (state === "CLEARED") return "cleared";
+  return "neutral";
+}
 
-  if (summary) {
-    summary.textContent = "Operations preview mode is using static demonstration data only. Connected workflow controls are disabled here.";
+function warningModuleIndicatorLabel(artifact, type) {
+  const sourceRunId = artifact?.source_run_id;
+  if (!sourceRunId) return "RUN-LINK EVIDENCE UNAVAILABLE";
+  if (String(artifact?.consistency_status || "").toUpperCase() !== "MATCHED") return "HEALTH EVIDENCE MISMATCHED";
+  if (type === "economic" && String(artifact?.event_source?.name || "").toLowerCase().includes("unverified")) {
+    return "SOURCE COVERAGE DEGRADED";
   }
-  if (badge) {
-    badge.textContent = "Preview";
+  return "";
+}
+
+function formatWarningValue(value, fallback = "Unavailable") {
+  if (value === null || value === undefined || value === "") return fallback;
+  return String(value);
+}
+
+function uniqueAgentList(values = []) {
+  return Array.from(new Set(values.filter(Boolean).map((value) => String(value).toUpperCase())));
+}
+
+function renderWarningModuleIndicator(label) {
+  if (!label) return "";
+  return `<span class="warning-module-indicator">${escapeHtml(label)}</span>`;
+}
+
+function economicEventAgentLabel(agentCode = "") {
+  const normalized = String(agentCode || "").toUpperCase();
+  if (normalized === "GOLD") return "Gold";
+  return normalized;
+}
+
+function joinEconomicEventAgentLabels(agents = []) {
+  return agents.map((agent) => economicEventAgentLabel(agent.agent || agent)).join(", ");
+}
+
+function economicEventWarningLabel(code = "") {
+  const labelsByCode = {
+    no_source_rows_available: "No economic event source rows are present in the current published snapshot.",
+    artifact_unavailable: "The dashboard could not load the published economic-event refresh artifact.",
+    ambiguous_source_timezone: "At least one event row has an ambiguous source timezone and was excluded.",
+    missing_source_date: "At least one event row is missing its source date.",
+    invalid_source_date: "At least one event row contains an invalid source date.",
+    ambiguous_time_text: "At least one event row has a non-deterministic release time.",
+    missing_time_text: "At least one event row is missing its release time."
+  };
+  return labelsByCode[code] || code.replaceAll("_", " ");
+}
+
+function formatEconomicEventEvidenceTimestamp(value) {
+  if (!value) return "Unavailable";
+  return formatDashboardTime(value);
+}
+
+function describeEconomicEventState(event) {
+  const displayTimeUk = event?.display_times?.uk || "an unknown UK time";
+  const requiredAgents = (event?.affected_agents || []).filter((agent) => agent.refresh_required);
+  const requiredAgentLabels = joinEconomicEventAgentLabels(requiredAgents);
+  const refreshedAgents = requiredAgents.filter((agent) => agent.refresh_state === "CLEARED");
+  const pendingAgents = requiredAgents.filter((agent) => agent.refresh_state === "REFRESH_REQUIRED");
+  const evidenceUnavailableAgents = requiredAgents.filter((agent) => agent.refresh_state === "REFRESH_EVIDENCE_UNAVAILABLE");
+
+  switch (event?.state) {
+    case "UPCOMING":
+      return `Current affected calls predate this release. Refresh ${requiredAgentLabels} after the event.`;
+    case "EVENT_IMMINENT":
+      return `This release is within the next ${economicEventRefreshData?.summary?.imminent_threshold_minutes || 60} minutes. Refresh ${requiredAgentLabels} after the event boundary.`;
+    case "REFRESH_REQUIRED":
+      return `The event passed at ${displayTimeUk}. None of the required affected agents has published a qualifying post-event output yet.`;
+    case "PARTIALLY_REFRESHED":
+      return `The event passed at ${displayTimeUk}. Some affected agents have refreshed, but the warning remains active until all required agents clear the boundary.`;
+    case "CLEARED":
+      return `All refresh-required affected agents have published a successful output at or after the event boundary.`;
+    case "REFRESH_EVIDENCE_UNAVAILABLE":
+      return `The event time is valid, but at least one required agent lacks enough successful-output evidence for a trustworthy comparison.`;
+    case "INVALID_EVENT_TIME":
+      return `This event row could not be assigned a trustworthy canonical UTC timestamp and is excluded from ordinary refresh comparisons.`;
+    default:
+      if (evidenceUnavailableAgents.length) {
+        return `Refresh evidence is unavailable for ${joinEconomicEventAgentLabels(evidenceUnavailableAgents)}.`;
+      }
+      if (pendingAgents.length) {
+        return `${joinEconomicEventAgentLabels(pendingAgents)} still requires a post-event refresh.`;
+      }
+      if (refreshedAgents.length) {
+        return `${joinEconomicEventAgentLabels(refreshedAgents)} has already refreshed after the event.`;
+      }
+      return "No additional event refresh detail is available.";
   }
-  if (eta) {
-    eta.textContent = "Static preview";
-  }
-  if (button) {
-    button.disabled = true;
-    button.title = "Operations preview mode does not trigger connected workflows.";
-  }
+}
+
+function renderEconomicEventAgentLine(title, agents, className = "") {
+  if (!agents.length) return "";
+  return `
+    <div class="economic-event-agent-line ${className}">
+      <strong>${escapeHtml(title)}</strong>
+      <span>${escapeHtml(joinEconomicEventAgentLabels(agents))}</span>
+    </div>
+  `;
+}
+
+function renderEconomicEventEvidenceList(agents) {
+  if (!agents.length) return "";
+  return `
+    <div class="economic-event-evidence-list">
+      ${agents.map((agent) => `
+        <div class="economic-event-evidence-chip">
+          <strong>${escapeHtml(economicEventAgentLabel(agent.agent))}</strong>
+          <span>${escapeHtml(formatEconomicEventEvidenceTimestamp(agent.latest_successful_output_timestamp))}</span>
+          <small>${escapeHtml(agent.latest_successful_output_timestamp_source === "generated_at" ? "generated_at fallback" : "sealed_at")}</small>
+        </div>
+      `).join("")}
+    </div>
+  `;
+}
+
+function renderEconomicEventCard(event) {
+  const tone = economicEventStateTone(event.state);
+  const requiredAgents = (event.affected_agents || []).filter((agent) => agent.refresh_required);
+  const refreshedAgents = requiredAgents.filter((agent) => agent.refresh_state === "CLEARED");
+  const pendingAgents = requiredAgents.filter((agent) => agent.refresh_state === "REFRESH_REQUIRED");
+  const evidenceUnavailableAgents = requiredAgents.filter((agent) => agent.refresh_state === "REFRESH_EVIDENCE_UNAVAILABLE");
+  const impactLabel = event.impact || `Impact ${event.impact_rank || "--"}`;
+  const marketLabel = [event.currency, event.region].filter(Boolean).join(" / ") || "Unspecified market";
+  const componentSummary = (event.component_event_names || []).length > 1
+    ? `Grouped release: ${event.component_event_names.join(", ")}.`
+    : "";
+
+  return `
+    <article class="economic-event-card ${escapeHtml(tone)}" data-economic-event-card="true" data-economic-event-state="${escapeHtml(event.state)}">
+      <div class="economic-event-card-head">
+        <div>
+          <p class="eyebrow">Economic Event Refresh Watch</p>
+          <h3>${escapeHtml(event.event_name || "Economic event")}</h3>
+        </div>
+        <span class="economic-event-status-badge ${escapeHtml(tone)}">${escapeHtml(economicEventStateLabel(event.state))}</span>
+      </div>
+      <div class="economic-event-meta">
+        <span><strong>UK:</strong> ${escapeHtml(event.display_times?.uk || "Unavailable")}</span>
+        <span><strong>ET:</strong> ${escapeHtml(event.display_times?.et || "Unavailable")}</span>
+        <span><strong>Market:</strong> ${escapeHtml(marketLabel)}</span>
+        <span><strong>Impact:</strong> ${escapeHtml(impactLabel)}</span>
+      </div>
+      <p class="economic-event-copy">${escapeHtml(describeEconomicEventState(event))}</p>
+      ${componentSummary ? `<p class="economic-event-subcopy">${escapeHtml(componentSummary)}</p>` : ""}
+      <div class="economic-event-agent-grid">
+        ${renderEconomicEventAgentLine("Refresh required", requiredAgents)}
+        ${renderEconomicEventAgentLine("Still waiting", pendingAgents, "critical")}
+        ${renderEconomicEventAgentLine("Already refreshed", refreshedAgents, "cleared")}
+        ${renderEconomicEventAgentLine("Evidence unavailable", evidenceUnavailableAgents, "data-warning")}
+      </div>
+      ${refreshedAgents.length ? renderEconomicEventEvidenceList(refreshedAgents) : ""}
+      ${(event.data_quality_warnings || []).length ? `
+        <div class="economic-event-warning-list">
+          ${(event.data_quality_warnings || []).map((warning) => `<span>${escapeHtml(economicEventWarningLabel(warning))}</span>`).join("")}
+        </div>
+      ` : ""}
+    </article>
+  `;
+}
+
+function renderEconomicEventRefreshPanel() {
+  const container = document.getElementById("economicEventRefreshPanel");
+  if (!container) return;
+
+  const artifact = economicEventRefreshData || createEconomicEventRefreshFallback();
+  const summary = artifact.summary || {};
+  const events = Array.isArray(artifact.events) ? artifact.events : [];
+  const warnings = Array.isArray(summary.data_quality_warnings) ? summary.data_quality_warnings : [];
+  const fallbackUnavailable = artifact.fallback_kind === "artifact_unavailable";
+  const sourceStatus = economicEventsSourceData?.source?.source_status
+    || artifact?.event_source?.source_status
+    || inputHealthData?.sources?.economic_events?.data_status
+    || "";
+  const sourceUnavailable = !fallbackUnavailable && (
+    warnings.includes("no_source_rows_available")
+    || String(sourceStatus).toUpperCase() === "SOURCE_UNAVAILABLE"
+  );
+  const effectivePanelState = fallbackUnavailable
+    ? "DATA_UNAVAILABLE"
+    : sourceUnavailable
+    ? "SOURCE_UNAVAILABLE"
+    : (summary.panel_state || "UNKNOWN");
+  const primaryTone = economicEventStateTone(effectivePanelState);
+  const visibleEvents = events.filter((event) => event.state !== "CLEARED");
+  const nextClearedEvent = events.find((event) => event.state === "CLEARED");
+  const affectedAgents = uniqueAgentList([
+    ...Object.keys(artifact.agents || {}),
+    ...((inputHealthData?.source_groups || []).find((group) => group.source_id === "economic_events")?.affected_agents || [])
+  ]);
+  const latestSourceTimestamp = economicEventsSourceData?.generated_at
+    || artifact?.event_source?.source_collected_at
+    || artifact?.generated_at
+    || null;
+  const currentOrNextEvent = visibleEvents[0] || nextClearedEvent || null;
+  const bootstrapLabel = warningModuleIndicatorLabel(artifact, "economic");
+  const summaryCopy = fallbackUnavailable
+    ? "The economic-event warning artifact could not be loaded."
+    : effectivePanelState === "SOURCE_UNAVAILABLE"
+    ? "Economic-event timing is currently unavailable. Layer 1 calls may have reduced event awareness."
+    : visibleEvents.length
+    ? `${visibleEvents.length} in-scope major event${visibleEvents.length === 1 ? "" : "s"} currently visible in the refresh watch window.`
+    : effectivePanelState === "NO_MAJOR_EVENTS"
+    ? "No major refresh-triggering events are currently in scope for today's published Layer 1 calls."
+    : "Economic-event status is available, but there are no active warning rows to display.";
+  const warningCopy = warnings.length
+    ? `<div class="economic-event-summary-warnings">${warnings.map((warning) => `<span>${escapeHtml(economicEventWarningLabel(warning))}</span>`).join("")}</div>`
+    : "";
+  const clearedCopy = !visibleEvents.length && nextClearedEvent
+    ? `<p class="economic-event-subcopy">Most recent cleared event: ${escapeHtml(nextClearedEvent.event_name)}.</p>`
+    : "";
+
+  container.innerHTML = `
+    <div class="economic-event-panel-shell ${escapeHtml(primaryTone)}" data-economic-event-panel="true" data-economic-event-panel-state="${escapeHtml(effectivePanelState)}">
+      <div class="economic-event-panel-head">
+        <div>
+          <p class="eyebrow">Operational Warnings</p>
+          <h3>ECONOMIC EVENT STATUS</h3>
+          ${renderWarningModuleIndicator(bootstrapLabel)}
+        </div>
+        <span class="economic-event-status-badge ${escapeHtml(primaryTone)}">${escapeHtml(effectivePanelState === "SOURCE_UNAVAILABLE" ? "SOURCE UNAVAILABLE" : economicEventStateLabel(effectivePanelState))}</span>
+      </div>
+      <p class="economic-event-copy">${escapeHtml(summaryCopy)}</p>
+      <p class="economic-event-subcopy">The panel remains visible in healthy, degraded, stale, mismatched, bootstrap, and unavailable states so event-awareness status stays explicit on Overview.</p>
+      <div class="operational-summary-grid warning-module-summary-grid">
+        <div><strong>Affected agents</strong><span>${escapeHtml(affectedAgents.join(", ") || "None recorded")}</span></div>
+        <div><strong>Source status</strong><span>${escapeHtml(formatWarningValue(sourceStatus || effectivePanelState).replaceAll("_", " "))}</span></div>
+        <div><strong>Rows seen</strong><span>${escapeHtml(formatWarningValue(artifact?.event_source?.rows_seen, "Unavailable"))}</span></div>
+        <div><strong>Latest source timestamp</strong><span>${escapeHtml(latestSourceTimestamp ? formatDashboardTime(latestSourceTimestamp) : "Unavailable")}</span></div>
+        <div><strong>Current / next event</strong><span>${escapeHtml(currentOrNextEvent?.event_name || "None in scope")}</span></div>
+        <div><strong>Refresh requirement</strong><span>${escapeHtml(visibleEvents.length ? "Refresh review required" : fallbackUnavailable ? "Artifact recovery required" : effectivePanelState === "SOURCE_UNAVAILABLE" ? "Source recovery required" : "No immediate refresh requirement")}</span></div>
+      </div>
+      ${warningCopy}
+      ${artifact.error ? `<div class="economic-event-warning-list"><span>${escapeHtml(artifact.error)}</span></div>` : ""}
+      ${visibleEvents.length ? `<div class="economic-event-card-list">${visibleEvents.map(renderEconomicEventCard).join("")}</div>` : ""}
+      ${!visibleEvents.length ? clearedCopy : ""}
+    </div>
+  `;
+}
+
+function renderOperationalWarningsPanel() {
+  const container = document.getElementById("operationalWarningsPanel");
+  if (!container) return;
+
+  const artifact = inputHealthData || createInputHealthFallback("Input-health artifact unavailable");
+  const issues = Array.isArray(artifact.issues) ? artifact.issues : [];
+  const sourceGroups = Array.isArray(artifact.source_groups) ? artifact.source_groups : [];
+  const affectedAgentKeys = Object.entries(artifact.agents || {})
+    .filter(([, health]) => health && health.overall_status && health.overall_status !== "HEALTHY")
+    .map(([agent]) => agent);
+  const topIssues = issues.slice(0, 8);
+  const tone = inputHealthTone(artifact.overall_status);
+  const latestHealthy = artifact.last_full_health_at ? formatDashboardTime(artifact.last_full_health_at) : "Not yet recorded";
+  const economicSource = artifact.sources?.economic_events || null;
+  const fallbackUnavailable = artifact.fallback_kind === "artifact_unavailable";
+  const bootstrapLabel = warningModuleIndicatorLabel(artifact, "input_health");
+  const statusLabel = inputHealthStatusLabel(artifact.overall_status);
+
+  container.innerHTML = `
+    <div class="operational-warnings-shell ${escapeHtml(tone)}" data-operational-warnings-state="${escapeHtml(artifact.overall_status || "UNKNOWN")}" data-input-health-panel="true" data-input-health-panel-state="${escapeHtml(artifact.overall_status || "UNKNOWN")}">
+      <div class="operational-warnings-head">
+        <div>
+          <p class="eyebrow">Operational Warnings</p>
+          <h3>INPUT HEALTH</h3>
+          ${renderWarningModuleIndicator(bootstrapLabel)}
+        </div>
+        <span class="economic-event-status-badge ${escapeHtml(tone)}">${escapeHtml(statusLabel)}</span>
+      </div>
+      <p class="economic-event-copy">
+        ${fallbackUnavailable
+          ? "The input-health artifact could not be loaded."
+          : artifact.overall_status === "HEALTHY"
+          ? "All monitored Layer 1 inputs are currently healthy within the published contract."
+          : "Calls produced with degraded event inputs or stale upstream sources remain visible here. This surface separates workflow execution, input completeness, and call validity."}
+      </p>
+      <div class="operational-summary-grid">
+        <div><strong>Overall health</strong><span>${escapeHtml(statusLabel)}</span></div>
+        <div><strong>Affected agents</strong><span>${escapeHtml(String(artifact.affected_agent_count || 0))}</span></div>
+        <div><strong>Critical issues</strong><span>${escapeHtml(String(artifact.critical_issue_count || 0))}</span></div>
+        <div><strong>Missing inputs</strong><span>${escapeHtml(String(artifact.missing_input_count || 0))}</span></div>
+        <div><strong>Stale inputs</strong><span>${escapeHtml(String(artifact.stale_input_count || 0))}</span></div>
+        <div><strong>Source failures</strong><span>${escapeHtml(String(artifact.source_failure_count || 0))}</span></div>
+        <div><strong>Last full health</strong><span>${escapeHtml(latestHealthy)}</span></div>
+      </div>
+      ${economicSource ? `
+        <div class="operational-source-note">
+          <strong>Economic events</strong>
+          <span>${escapeHtml(String(economicSource.data_status || "UNKNOWN").replaceAll("_", " "))}</span>
+          ${economicSource.warning ? `<small>${escapeHtml(economicSource.warning)}</small>` : ""}
+        </div>
+      ` : ""}
+      ${sourceGroups.length ? `
+        <div class="operational-issue-list">
+          ${sourceGroups.map((group) => `
+            <article class="operational-issue-card">
+              <div class="operational-issue-head">
+                <strong>${escapeHtml(group.label || group.source_id)}</strong>
+                <span>${escapeHtml(String(group.status || "UNKNOWN").replaceAll("_", " "))}</span>
+              </div>
+              <p>${escapeHtml(group.warning || "Shared source degradation is affecting one or more Layer 1 agents.")}</p>
+              <small>Affected agents: ${escapeHtml((group.affected_agents || []).join(", ") || "None recorded")}</small>
+            </article>
+          `).join("")}
+        </div>
+      ` : ""}
+      ${affectedAgentKeys.length ? `
+        <div class="operational-agent-list">
+          ${affectedAgentKeys.map((agent) => {
+            const health = artifact.agents[agent];
+            const healthIssues = Array.isArray(health?.issues) ? health.issues : [];
+            return `
+              <article class="operational-agent-card ${escapeHtml(inputHealthTone(health.overall_status))}">
+                <div class="operational-agent-head">
+                  <strong>${escapeHtml(agent)}</strong>
+                  <span>${escapeHtml(inputHealthStatusLabel(health.overall_status))}</span>
+                </div>
+                <p>${escapeHtml(summarizeInputHealthAgentIssues(agent, health))}</p>
+                <small>${escapeHtml(`Issues recorded: ${healthIssues.length}`)}</small>
+              </article>
+            `;
+          }).join("")}
+        </div>
+      ` : `
+        <div class="operational-agent-list">
+          <article class="operational-agent-card success">
+            <div class="operational-agent-head">
+              <strong>System</strong>
+              <span>${escapeHtml(statusLabel)}</span>
+            </div>
+            <p>No per-agent degradations are currently published.</p>
+          </article>
+        </div>
+      `}
+      ${topIssues.length ? `
+        <div class="operational-issue-list">
+          ${topIssues.map((issue) => `
+            <article class="operational-issue-card">
+              <div class="operational-issue-head">
+                <strong>${escapeHtml(issue.agent)} - ${escapeHtml(issue.label)}</strong>
+                <span>${escapeHtml(String(issue.status || "").replaceAll("_", " "))}</span>
+              </div>
+              <p>${escapeHtml(issue.reason || "No reason supplied.")}</p>
+              <small>${escapeHtml(issue.confidence_effect || "No confidence note supplied.")}</small>
+            </article>
+          `).join("")}
+        </div>
+      ` : ""}
+    </div>
+  `;
 }
 
 function renderAgentCard(agent) {
@@ -2139,6 +2737,9 @@ function renderLayer1(data) {
     layer1Updated.textContent = `Last n8n ingest: ${formatDashboardTime(data.dashboard_meta?.last_updated_et)}`;
   }
 
+  renderOperationalWarningsPanel();
+  renderEconomicEventRefreshPanel();
+  renderOverviewStatusPanel();
   renderOverviewBriefing();
   renderOverviewStats();
   renderSevenDayOutlook(data);
@@ -7920,12 +8521,15 @@ function renderWorkflowSteps(steps = []) {
   container.innerHTML = `
     <div class="workflow-step-grid">
       ${steps.map(step => {
-        const status = workflowStatusClass(step.status);
+        const executionStatus = step.execution_status || step.status;
+        const dataStatus = step.data_status || null;
+        const status = workflowStatusClass(dataStatus && String(dataStatus).toUpperCase() !== "HEALTHY" ? "warning" : executionStatus);
         const error = workflowErrorText(step.error || step.reason || step.message);
         return `
           <div class="workflow-step ${status}">
             <span>${escapeHtml(step.name || step.workflow || "Workflow step")}</span>
-            <strong>${escapeHtml(workflowStatusLabel(step.status))}</strong>
+            <strong>${escapeHtml(workflowStatusLabel(executionStatus))}</strong>
+            ${dataStatus ? `<small>Data: ${escapeHtml(workflowStatusLabel(dataStatus))}</small>` : ""}
             ${error && status === "failed" ? `<small>${escapeHtml(error)}</small>` : ""}
           </div>
         `;
@@ -7959,8 +8563,18 @@ function renderWorkflowStatus(status = workflowStatus) {
   const eta = document.getElementById("workflowEta");
 
   const configured = Boolean(workflowControl?.enabled && workflowControl?.webhook_url);
+  const dataStatus = status?.overall_data_status || status?.data_status || (
+    inputHealthData?.overall_status === "CRITICAL" || inputHealthData?.overall_status === "DEGRADED"
+      ? "DEGRADED"
+      : inputHealthData?.overall_status === "UNKNOWN"
+        ? "UNKNOWN"
+        : "HEALTHY"
+  );
   const currentStatus = status?.status || (configured ? "pending" : "not_configured");
-  const statusClass = workflowStatusClass(currentStatus);
+  const effectiveStatus = currentStatus === "success" && dataStatus && String(dataStatus).toUpperCase() !== "HEALTHY"
+    ? "success_degraded"
+    : currentStatus;
+  const statusClass = workflowStatusClass(effectiveStatus);
   const started = status?.last_run_started_at ? formatDashboardTime(status.last_run_started_at) : null;
   const finished = status?.last_run_finished_at ? formatDashboardTime(status.last_run_finished_at) : null;
   const age = status?.last_run_finished_at ? formatRelativeAge(status.last_run_finished_at) : "";
@@ -7968,7 +8582,7 @@ function renderWorkflowStatus(status = workflowStatus) {
 
   if (badge) {
     badge.className = `workflow-status-badge ${statusClass}`;
-    badge.textContent = workflowStatusLabel(currentStatus);
+    badge.textContent = workflowStatusLabel(effectiveStatus);
   }
 
   if (button) {
@@ -7991,6 +8605,8 @@ function renderWorkflowStatus(status = workflowStatus) {
       summary.textContent = `Workflow run is in progress${started ? `, started ${started}` : ""}.`;
     } else if (statusClass === "success") {
       summary.textContent = `Last run completed${finished ? ` ${finished}` : ""}${age ? ` (${age})` : ""}.`;
+    } else if (statusClass === "warning") {
+      summary.textContent = `Last run completed${finished ? ` ${finished}` : ""}${age ? ` (${age})` : ""}, but monitored input data remains degraded.`;
     } else if (statusClass === "failed") {
       summary.textContent = `Last run failed${finished ? ` ${finished}` : ""}.`;
     } else {
@@ -8016,6 +8632,7 @@ function renderWorkflowStatus(status = workflowStatus) {
   }
 
   renderWorkflowSteps(status?.steps || []);
+  renderOverviewStatusPanel();
 }
 
 async function loadWorkflowControl() {
@@ -8038,7 +8655,7 @@ async function loadWorkflowControl() {
 }
 
 async function loadWorkflowStatus() {
-  const statusUrl = workflowControl?.status_url || "./data/workflow-status.json";
+  const statusUrl = workflowStatusUrlOverride || workflowControl?.status_url || workflowStatusUrlDefault;
 
   try {
     const response = await fetch(statusUrl, { cache: "no-store" });
@@ -9427,12 +10044,15 @@ async function fetchResearchDashboardData() {
 }
 
 async function loadDashboard() {
-  const [layer1Result, layer2Result, researchResult, factorEdgeLabResult, phase2ShadowBacktestResult] = await Promise.allSettled([
+  const [layer1Result, layer2Result, researchResult, factorEdgeLabResult, phase2ShadowBacktestResult, economicEventRefreshResult, economicEventsSourceResult, inputHealthResult] = await Promise.allSettled([
     fetch(layer1Url, { cache: "no-store" }),
     fetch(layer2Url, { cache: "no-store" }),
-    operationsPreviewMode ? Promise.resolve(operationsPreviewData.staticResearch) : fetchResearchDashboardData(),
+    fetchResearchDashboardData(),
     fetchLocalJson(factorEdgeLabUrl),
-    fetchLocalJson(phase2ShadowBacktestUrl)
+    fetchLocalJson(phase2ShadowBacktestUrl),
+    fetchLocalJson(economicEventRefreshUrl),
+    fetchLocalJson(economicEventsSourceUrl),
+    fetchLocalJson(inputHealthUrl)
   ]);
 
   try {
@@ -9500,13 +10120,47 @@ async function loadDashboard() {
     };
   }
 
-  if (layer1Data) renderLayer1(layer1Data);
+  if (economicEventRefreshResult.status === "fulfilled") {
+    economicEventRefreshData = economicEventRefreshResult.value;
+  } else {
+    console.error(economicEventRefreshResult.reason);
+    economicEventRefreshData = createEconomicEventRefreshFallback(
+      economicEventRefreshResult.reason?.message || String(economicEventRefreshResult.reason || "Economic event refresh artifact unavailable")
+    );
+  }
+
+  if (economicEventsSourceResult.status === "fulfilled") {
+    economicEventsSourceData = economicEventsSourceResult.value;
+  } else {
+    console.error(economicEventsSourceResult.reason);
+    economicEventsSourceData = createEconomicEventsSourceFallback(
+      economicEventsSourceResult.reason?.message || String(economicEventsSourceResult.reason || "Economic event source artifact unavailable")
+    );
+  }
+
+  if (inputHealthResult.status === "fulfilled") {
+    inputHealthData = inputHealthResult.value;
+  } else {
+    console.error(inputHealthResult.reason);
+    inputHealthData = createInputHealthFallback(
+      inputHealthResult.reason?.message || String(inputHealthResult.reason || "Input health artifact unavailable")
+    );
+  }
+
+  if (layer1Data) {
+    renderLayer1(layer1Data);
+  } else {
+    renderOverviewStatusPanel();
+    renderOperationalWarningsPanel();
+    renderEconomicEventRefreshPanel();
+  }
   if (layer2Data) renderLayer2(layer2Data);
-  renderOperationsPreview();
 
   renderBacktest(backtestData);
   renderFactorEdgeLab(factorEdgeLabData);
   renderShadowLogicBacktest(phase2ShadowBacktestData);
+  renderWorkflowStatus(workflowStatus);
+  renderOverviewStatusPanel();
 
   if (orderedAgents.includes(activeTab) && layer1Data) {
     renderAgentDetail(activeTab);
@@ -9524,12 +10178,7 @@ initMarketGlobe();
 updateClock();
 setInterval(updateClock, 1000);
 
-renderOperationsPreview();
-if (operationsPreviewMode) {
-  applyOperationsPreviewWorkflowState();
-} else {
-  loadWorkflowControl().then(loadWorkflowStatus);
-  setInterval(loadWorkflowStatus, 60000);
-}
+loadWorkflowControl().then(loadWorkflowStatus);
 loadDashboard();
 setInterval(loadDashboard, 60000);
+setInterval(loadWorkflowStatus, 60000);

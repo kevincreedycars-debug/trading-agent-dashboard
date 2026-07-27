@@ -1,10 +1,11 @@
 {
-  "status": "success",
-  "last_run_started_at": "2026-07-27T05:04:39.462Z",
-  "last_run_finished_at": "2026-07-27T05:04:39.463Z",
+  "status": "failed",
+  "last_run_started_at": "2026-07-27T06:34:10.000Z",
+  "last_run_finished_at": "2026-07-27T06:34:55.000Z",
+  "last_successful_run_finished_at": "2026-07-27T05:04:39.463Z",
   "triggered_by": "dashboard_or_manual",
-  "message": "Manual Refresh Complete",
-  "failed_step": null,
+  "message": "Latest refresh failed before publication completed.",
+  "failed_step": "Layer 2 Trade Selection Agent",
   "steps": [
     {
       "name": "Call '1. Economic Events Collector'",
@@ -52,12 +53,15 @@
     },
     {
       "name": "Layer 2 Trade Selection Agent",
-      "status": "success"
+      "status": "failed"
     },
     {
       "name": "Dashboard Writer",
-      "status": "success"
+      "status": "pending"
     }
   ],
-  "error": null
+  "error": {
+    "step": "Layer 2 Trade Selection Agent",
+    "reason": "Transient fixture selection failed."
+  }
 }
