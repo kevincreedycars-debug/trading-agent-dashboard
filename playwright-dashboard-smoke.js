@@ -209,6 +209,50 @@ async function run() {
       }
     }
 
+    const overviewOrder = await page.evaluate(() => {
+      function top(selector) {
+        const element = document.querySelector(selector);
+        if (!element) return null;
+        return element.getBoundingClientRect().top;
+      }
+
+      return {
+        layer1Top: top("#layer1Grid"),
+        layer2Top: top("#overviewLayer2Panel"),
+        systemStatusTop: top("#overviewStatusPanel"),
+        inputHealthTop: top("#operationalWarningsPanel"),
+        economicEventTop: top("#economicEventRefreshPanel"),
+        pairPerformanceTop: top("#overviewPerformancePanel")
+      };
+    });
+
+    if (
+      overviewOrder.layer1Top === null
+      || overviewOrder.layer2Top === null
+      || overviewOrder.systemStatusTop === null
+      || overviewOrder.inputHealthTop === null
+      || overviewOrder.economicEventTop === null
+      || overviewOrder.pairPerformanceTop === null
+    ) {
+      throw new Error(`Overview priority-order anchors were missing.\n${JSON.stringify(overviewOrder, null, 2)}`);
+    }
+
+    if (!(overviewOrder.layer1Top < overviewOrder.layer2Top)) {
+      throw new Error(`Overview order regression: Layer 1 did not render before Layer 2.\n${JSON.stringify(overviewOrder, null, 2)}`);
+    }
+
+    if (!(overviewOrder.layer2Top < overviewOrder.systemStatusTop)) {
+      throw new Error(`Overview order regression: Layer 2 did not render before System Status.\n${JSON.stringify(overviewOrder, null, 2)}`);
+    }
+
+    if (!(overviewOrder.systemStatusTop < overviewOrder.economicEventTop)) {
+      throw new Error(`Overview order regression: System Status did not render before Economic Event Status.\n${JSON.stringify(overviewOrder, null, 2)}`);
+    }
+
+    if (!(overviewOrder.economicEventTop < overviewOrder.pairPerformanceTop)) {
+      throw new Error(`Overview order regression: Economic Event Status did not render before Pair Performance.\n${JSON.stringify(overviewOrder, null, 2)}`);
+    }
+
     const economicEventContract = await page.evaluate(async () => {
       const response = await fetch("./data/economic-event-refresh.json", { cache: "no-store" });
       const payload = await response.json();
