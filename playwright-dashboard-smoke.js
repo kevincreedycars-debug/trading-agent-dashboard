@@ -172,6 +172,43 @@ async function run() {
       throw new Error(`Overview system-status panel overflowed horizontally.\n${JSON.stringify(overviewStatusPanel, null, 2)}`);
     }
 
+    const overviewPerformancePanel = await page.evaluate(() => {
+      const panel = document.getElementById("overviewPerformancePanel");
+      const rows = Array.from(panel?.querySelectorAll("tbody tr") || []).map((row) => row.innerText || "");
+      return {
+        rendered: Boolean(panel),
+        heading: panel?.querySelector("h3")?.textContent?.trim() || "",
+        meta: panel?.querySelector(".overview-performance-meta")?.textContent?.trim() || "",
+        copy: panel?.querySelector(".overview-performance-copy")?.textContent?.trim() || "",
+        text: panel?.innerText || "",
+        rowCount: rows.length,
+        rows,
+        hasHorizontalOverflow: panel ? panel.scrollWidth > panel.clientWidth + 1 : false
+      };
+    });
+
+    if (!overviewPerformancePanel.rendered || overviewPerformancePanel.heading !== "PAIR PERFORMANCE") {
+      throw new Error(`Overview pair performance panel did not render.\n${JSON.stringify(overviewPerformancePanel, null, 2)}`);
+    }
+
+    if (!overviewPerformancePanel.meta.includes("Historical results snapshot") || !overviewPerformancePanel.meta.includes("Last updated 20 July 2026")) {
+      throw new Error(`Overview pair performance panel did not render the required update metadata.\n${JSON.stringify(overviewPerformancePanel, null, 2)}`);
+    }
+
+    if (!overviewPerformancePanel.copy.includes("Completed tracked trades only.") || !overviewPerformancePanel.copy.includes("not updated by the live refresh workflow")) {
+      throw new Error(`Overview pair performance panel did not render the required non-live qualifier.\n${JSON.stringify(overviewPerformancePanel, null, 2)}`);
+    }
+
+    if (overviewPerformancePanel.rowCount !== 4) {
+      throw new Error(`Overview pair performance panel did not render four rows.\n${JSON.stringify(overviewPerformancePanel, null, 2)}`);
+    }
+
+    for (const expectedText of ["BTCUSD", "EURUSD", "US100.cash", "XAUUSD", "$302.17", "-$309.26"]) {
+      if (!overviewPerformancePanel.text.includes(expectedText)) {
+        throw new Error(`Overview pair performance panel did not render expected snapshot value '${expectedText}'.\n${overviewPerformancePanel.text}`);
+      }
+    }
+
     const economicEventContract = await page.evaluate(async () => {
       const response = await fetch("./data/economic-event-refresh.json", { cache: "no-store" });
       const payload = await response.json();
@@ -467,11 +504,13 @@ async function run() {
       const grid = document.getElementById("layer1Grid");
       const topbar = document.querySelector(".topbar");
       const cards = Array.from(document.querySelectorAll("#layer1Grid .agent-card"));
+      const performanceWrap = document.querySelector(".overview-performance-table-wrap");
       return {
         pageHasHorizontalOverflow: doc.scrollWidth > doc.clientWidth + 1,
         topbarHasHorizontalOverflow: topbar ? topbar.scrollWidth > topbar.clientWidth + 1 : false,
         gridHasHorizontalOverflow: grid ? grid.scrollWidth > grid.clientWidth + 1 : false,
-        overflowingCards: cards.filter((card) => card.scrollWidth > card.clientWidth + 1).length
+        overflowingCards: cards.filter((card) => card.scrollWidth > card.clientWidth + 1).length,
+        performanceWrapHasOverflow: performanceWrap ? performanceWrap.scrollWidth > performanceWrap.clientWidth + 1 : false
       };
     });
 

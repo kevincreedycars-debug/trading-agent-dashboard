@@ -94,6 +94,17 @@ const pairTradeResearchConfigs = [
     weekdayKeys: weekdayBreakdownColumnsByAsset.BTC
   }
 ];
+// User-supplied historical snapshot. Updated July 20, 2026. Not live-refresh data.
+const overviewPairPerformanceSnapshot = {
+  updated_label: "20 July 2026",
+  qualifier: "Completed tracked trades only. This table is not updated by the live refresh workflow.",
+  rows: [
+    { pair: "BTCUSD", trades: 24, wins: 10, losses: 14, win_rate: "41.7%", net_pl: "$302.17", net_pl_direction: "positive" },
+    { pair: "EURUSD", trades: 21, wins: 4, losses: 17, win_rate: "19.0%", net_pl: "-$309.26", net_pl_direction: "negative" },
+    { pair: "US100.cash", trades: 22, wins: 6, losses: 16, win_rate: "27.3%", net_pl: "-$106.52", net_pl_direction: "negative" },
+    { pair: "XAUUSD", trades: 7, wins: 2, losses: 5, win_rate: "42.9%", net_pl: "$87.37", net_pl_direction: "positive" }
+  ]
+};
 const directionalTrustGroupDefinitions = [
   {
     key: "COMBINED",
@@ -2743,6 +2754,7 @@ function renderLayer1(data) {
   renderOverviewBriefing();
   renderOverviewStats();
   renderSevenDayOutlook(data);
+  renderOverviewPerformancePanel();
 
   const grid = document.getElementById("layer1Grid");
   if (!grid) return;
@@ -2777,6 +2789,51 @@ function renderSevenDayOutlook(data) {
       </div>
     </article>
   `).join("");
+}
+
+function renderOverviewPerformancePanel() {
+  const container = document.getElementById("overviewPerformancePanel");
+  if (!container) return;
+
+  const rows = overviewPairPerformanceSnapshot.rows.map((row) => `
+    <tr>
+      <th scope="row">${escapeHtml(row.pair)}</th>
+      <td class="table-number">${escapeHtml(String(row.trades))}</td>
+      <td class="table-number">${escapeHtml(String(row.wins))}</td>
+      <td class="table-number">${escapeHtml(String(row.losses))}</td>
+      <td class="table-number">${escapeHtml(row.win_rate)}</td>
+      <td class="table-number overview-performance-pl ${escapeHtml(row.net_pl_direction)}">
+        <span class="overview-performance-pl-label">${row.net_pl_direction === "positive" ? "Profit" : "Loss"}</span>
+        <span>${escapeHtml(row.net_pl)}</span>
+      </td>
+    </tr>
+  `).join("");
+
+  container.innerHTML = `
+    <div class="panel-head compact-panel-head">
+      <div>
+        <p class="eyebrow">Historical Snapshot</p>
+        <h3>PAIR PERFORMANCE</h3>
+        <p class="overview-performance-meta">Historical results snapshot · Last updated ${escapeHtml(overviewPairPerformanceSnapshot.updated_label)}</p>
+      </div>
+    </div>
+    <p class="overview-performance-copy">${escapeHtml(overviewPairPerformanceSnapshot.qualifier)}</p>
+    <div class="overview-performance-table-wrap">
+      <table class="overview-performance-table">
+        <thead>
+          <tr>
+            <th scope="col">Pair</th>
+            <th scope="col" class="table-number">Trades</th>
+            <th scope="col" class="table-number">Wins</th>
+            <th scope="col" class="table-number">Losses</th>
+            <th scope="col" class="table-number">Win rate</th>
+            <th scope="col" class="table-number">Net P/L</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+  `;
 }
 
 function cleanDecisionReason(reason = "") {
@@ -3488,6 +3545,8 @@ function renderLayer2(data = {}) {
     const panel = document.getElementById(id);
     if (panel) panel.innerHTML = html;
   });
+
+  renderOverviewPerformancePanel();
 }
 
 function resultClass(result = "") {
@@ -10075,6 +10134,7 @@ async function loadDashboard() {
     if (grid) {
       grid.innerHTML = `<p class="warning">Could not load dashboard JSON.</p>`;
     }
+    renderOverviewPerformancePanel();
   }
 
   if (researchResult.status === "fulfilled") {
