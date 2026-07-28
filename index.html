@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&family=Playfair+Display:wght@500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=20260727-input-health-overview-release" />
+  <link rel="stylesheet" href="styles.css?v=20260728-confidence-delivery-release" />
 </head>
 <body>
   <header class="topbar">
@@ -128,12 +128,12 @@
           <div class="legend-item"><strong>Bearish</strong><span>The model expects the asset is more likely to move lower over the selected timeframe.</span></div>
           <div class="legend-item"><strong>Bullish Lean</strong><span>The evidence currently favours a bullish move, but the advantage over the bearish case is not strong enough for a full Bullish call. Treat this as a developing upside bias, not a high-conviction signal.</span></div>
           <div class="legend-item"><strong>Bearish Lean</strong><span>The evidence currently favours a bearish move, but the advantage over the bullish case is not strong enough for a full Bearish call. Treat this as a developing downside bias, not a high-conviction signal.</span></div>
-          <div class="legend-item"><strong>Confidence</strong><span>The headline quality score for the call. It combines evidence dominance, participation, net edge, missing data, event risk, and timing filters. It is not a guaranteed probability.</span></div>
+          <div class="legend-item"><strong>Confidence</strong><span>A 0-100 composite score showing how strongly the available evidence supports the selected direction. It combines directional evidence, weighted participation, and the size of the directional edge, then applies penalties for missing data, weak separation, event risk, and other reliability conditions. It is a conviction score, not a guaranteed probability of success.</span></div>
           <div class="legend-item"><strong>Bull Case</strong><span>The percentage of active directional evidence supporting an upward or bullish call.</span></div>
           <div class="legend-item"><strong>Bear Case</strong><span>The percentage of active directional evidence supporting a downward or bearish call.</span></div>
           <div class="legend-item"><strong>Net Edge</strong><span>The gap between bull evidence and bear evidence. A wider gap means the active evidence is less conflicted.</span></div>
-          <div class="legend-item"><strong>Participation</strong><span>How much of the model had usable directional evidence. Low participation means the call is based on fewer active inputs.</span></div>
-          <div class="legend-item"><strong>Strength</strong><span>A descriptive label derived from confidence, net edge, and participation.</span></div>
+          <div class="legend-item"><strong>Participation</strong><span>The weighted share of expected model evidence that supplied valid, usable directional input for the call. Higher participation means more of the intended weighted inputs contributed directional evidence. Low participation reduces confidence because the call rests on a thinner active evidence base.</span></div>
+          <div class="legend-item"><strong>Strength</strong><span>A plain-language classification derived from the final confidence score after all penalties and reliability checks, with minimum net-edge and participation gates for the stronger Layer 1 labels. It summarises model conviction as Weak, Moderate, Strong, or Very Strong, not the size of the expected market move.</span></div>
           <div class="legend-item"><strong>No Call</strong><span>The model did not have enough clean evidence, participation, or market conditions to issue a directional call.</span></div>
         </div>
       </section>
@@ -174,6 +174,7 @@
       </section>
 
       <section id="overviewPerformancePanel" class="detail-panel overview-performance-panel" aria-label="Historical pair performance snapshot"></section>
+      <section id="overviewConfidenceBandPanel" class="detail-panel overview-confidence-band-panel" aria-label="Historical confidence-band accuracy"></section>
     </section>
 
     <section id="agentView" class="view"></section>
@@ -252,6 +253,6 @@
   <script src="backtester/lib/headline_confidence.js?v=20260630-headline-confidence-contract"></script>
   <script src="backtester/lib/layer2_pair_logic.js?v=20260704-layer2-min-confidence-contract"></script>
   <script src="lib/economic_event_refresh.js?v=20260727-input-health-overview-release"></script>
-  <script src="script.js?v=20260727-input-health-overview-release"></script>
+  <script src="script.js?v=20260728-confidence-delivery-release"></script>
 </body>
 </html>

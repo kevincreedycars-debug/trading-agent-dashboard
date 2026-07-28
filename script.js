@@ -18,6 +18,8 @@ const checkerDataUrls = {
 const adrReachResearchUrl = "./data/adr-reach-research.json?v=20260705-l2l-1h-sequence";
 const factorEdgeLabUrl = "./data/factor-edge-lab.json?v=20260706-review-summary";
 const phase2ShadowBacktestUrl = "./data/phase-2-shadow-backtest.json?v=20260707-phase2-shadow-v1";
+const confidenceCalibrationUrl = "./data/confidence-calibration.json?v=20260728-confidence-calibration-v1";
+const confidenceBandDeliveryUrl = "./data/confidence-band-delivery.json?v=20260728-confidence-band-delivery-v1";
 const architectureManifestUrlDefault = "./data/architecture-map.json?v=20260721-architecture-mirror-v1";
 const researchSupabaseUrl = "https://eaolqbrlywczinfordvg.supabase.co/rest/v1";
 const researchSupabaseKey = "sb_publishable_k6YbEuuk3GyB9GVTQDtNVA_J1gCRYaY";
@@ -139,6 +141,7 @@ let layer2Data = null;
 let backtestData = null;
 let factorEdgeLabData = null;
 let phase2ShadowBacktestData = null;
+let confidenceBandDeliveryData = null;
 let economicEventRefreshData = null;
 let economicEventsSourceData = null;
 let inputHealthData = null;
@@ -2755,6 +2758,7 @@ function renderLayer1(data) {
   renderOverviewStats();
   renderSevenDayOutlook(data);
   renderOverviewPerformancePanel();
+  renderOverviewConfidenceBandPanel();
 
   const grid = document.getElementById("layer1Grid");
   if (!grid) return;
@@ -2832,6 +2836,640 @@ function renderOverviewPerformancePanel() {
         </thead>
         <tbody>${rows}</tbody>
       </table>
+    </div>
+  `;
+}
+
+function normalizeConfidenceBandRows(payload = {}) {
+  return {
+    marketRows: Array.isArray(payload.rows) ? payload.rows : [],
+    pooledRows: Array.isArray(payload.pooled_reference_rows) ? payload.pooled_reference_rows : [],
+    thresholds: payload.sample_size_thresholds || {}
+  };
+}
+
+function findConfidenceBandRow(rows = [], marketKey, confidence) {
+  const numeric = numberOrNull(confidence);
+  if (!marketKey || numeric === null) return null;
+  const clamped = Math.max(0, Math.min(100, numeric));
+  return rows.find((row) =>
+    String(row.market_key || "").trim().toUpperCase() === String(marketKey || "").trim().toUpperCase()
+    && clamped >= Number(row.confidence_band_min ?? 0)
+    && clamped <= Number(row.confidence_band_max ?? 0)
+  ) || null;
+}
+
+function formatSampleStatusLabel(status = "") {
+  return String(status || "").trim() || "Not yet available";
+}
+
+function overviewAccuracySampleText(row = {}) {
+  return `Based on ${row.directional_sample ?? 0} correct-or-wrong directional outcomes and ${row.flat ?? 0} flat outcomes.`;
+}
+
+function renderOverviewConfidenceBandMetrics(row = {}, options = {}) {
+  const isInsufficient = Boolean(row.insufficient_historical_sample);
+  return `
+    <div class="overview-confidence-band-kpis">
+      <div class="overview-confidence-band-kpi">
+        <span>Historical directional accuracy</span>
+        <strong>${isInsufficient ? "Insufficient historical sample" : (metricAvailable(row.ex_flat_win_rate) ? percentValue(row.ex_flat_win_rate) : displayDash())}</strong>
+      </div>
+      <div class="overview-confidence-band-kpi">
+        <span>All-outcome accuracy</span>
+        <strong>${isInsufficient ? "Secondary only" : (metricAvailable(row.all_outcome_accuracy) ? percentValue(row.all_outcome_accuracy) : displayDash())}</strong>
+      </div>
+      <div class="overview-confidence-band-kpi">
+        <span>Sample</span>
+        <strong>${row.correct ?? 0} correct · ${row.wrong ?? 0} wrong · ${row.flat ?? 0} flat</strong>
+      </div>
+      <div class="overview-confidence-band-kpi">
+        <span>Sample-size status</span>
+        <strong>${escapeHtml(formatSampleStatusLabel(row.sample_size_status))}</strong>
+      </div>
+    </div>
+    <p class="overview-confidence-band-copy">${isInsufficient
+      ? `<strong>Insufficient historical sample.</strong> Market-specific directional accuracy is not emphasised for this confidence band.`
+      : `<strong>${escapeHtml(options.marketLabel || "Market")}</strong> Historical calls for this market in the same confidence band were directionally correct ${escapeHtml(metricAvailable(row.ex_flat_win_rate) ? `${row.ex_flat_win_rate}%` : displayDash())} of the time, excluding flat outcomes.`}
+    </p>
+    <p class="overview-confidence-band-copy">${isInsufficient
+      ? "Use the labelled pooled reference below only as secondary context."
+      : `Including flat outcomes, the call was correct ${escapeHtml(metricAvailable(row.all_outcome_accuracy) ? `${row.all_outcome_accuracy}%` : displayDash())} of the time.`}</p>
+    <p class="overview-confidence-band-copy">${escapeHtml(overviewAccuracySampleText(row))}</p>
+  `;
+}
+
+function renderOverviewConfidenceBandReference(referenceRow = {}, label = "") {
+  if (!referenceRow) return "";
+  return `
+    <p class="overview-confidence-band-reference">
+      <strong>${escapeHtml(label)}</strong>
+      ${metricAvailable(referenceRow.ex_flat_win_rate) ? `${referenceRow.ex_flat_win_rate}% ex-flat` : "Not yet available"} ·
+      ${referenceRow.correct ?? 0} correct · ${referenceRow.wrong ?? 0} wrong · ${referenceRow.flat ?? 0} flat ·
+      ${escapeHtml(formatSampleStatusLabel(referenceRow.sample_size_status))}
+    </p>
+  `;
+}
+
+function renderOverviewConfidenceBandLayer1Card(agent, contract) {
+  const call24 = getCall(agent, "24h");
+  const direction = call24.direction || "PENDING";
+  const confidence = confidenceValue(call24, agent, "24h");
+  const strength = confidenceStrength(call24, agent, "24h");
+  const marketRow = findConfidenceBandRow(contract.marketRows, agent.agent, confidence);
+  const pooledRow = findConfidenceBandRow(contract.pooledRows, "LAYER1_POOLED", confidence);
+  const normalizedDirection = String(direction || "").trim().toUpperCase();
+  const directional = normalizedDirection.startsWith("BULLISH") || normalizedDirection.startsWith("BEARISH");
+  const bandLabel = marketRow?.confidence_band || "Not yet available";
+
+  return `
+    <article class="overview-confidence-band-card${marketRow?.insufficient_historical_sample ? " is-low-sample" : ""}" data-overview-confidence-card="true" data-overview-confidence-market="${escapeHtml(agent.agent)}">
+      <div class="overview-confidence-band-head">
+        <div class="overview-confidence-band-headline">
+          <div>
+            <p class="eyebrow">Layer 1</p>
+            <h3>${escapeHtml(agent.agent)}</h3>
+          </div>
+          <span class="badge">${escapeHtml(directional ? "Directional Call" : "No Active Directional Call")}</span>
+        </div>
+        <p class="overview-confidence-band-meta">
+          Current call: ${escapeHtml(normaliseDirection(direction))}
+          · Model conviction: ${escapeHtml(metricAvailable(confidence) ? String(confidence) : "--")}
+          · ${escapeHtml(formatReviewLabel(String(strength || "not_available").toLowerCase()))}
+        </p>
+        <p class="overview-confidence-band-meta">Confidence band: ${escapeHtml(bandLabel)}</p>
+      </div>
+      ${directional && marketRow
+        ? renderOverviewConfidenceBandMetrics(marketRow, { marketLabel: agent.agent })
+        : `<p class="overview-confidence-band-copy"><strong>No active directional call.</strong> Historical directional accuracy is not shown because the current 24H state is non-directional.</p>`}
+      ${directional && marketRow?.insufficient_historical_sample ? renderOverviewConfidenceBandReference(pooledRow, "Pooled Layer 1 reference") : ""}
+      <p class="overview-confidence-band-contract"><strong>Horizon:</strong> ${escapeHtml(marketRow?.horizon || "following 24hrs")} · <strong>Contract:</strong> ${escapeHtml(marketRow?.checker_contract || "locked following-24-hours checker contract")}</p>
+    </article>
+  `;
+}
+
+function renderOverviewConfidenceBandLayer2Card(pair, contract) {
+  const marketRow = findConfidenceBandRow(contract.marketRows, pair.pair_code, pair.combined_confidence);
+  const pooledRow = findConfidenceBandRow(contract.pooledRows, "LAYER2_POOLED", pair.combined_confidence);
+  const isDirectional = String(pair.decision || "").trim().toUpperCase() !== "NO_TRADE" && metricAvailable(pair.combined_confidence);
+  const currentDirection = isDirectional ? String(pair.direction || "").trim().toUpperCase() : "NO TRADE";
+  const bandLabel = marketRow?.confidence_band || "Not yet available";
+
+  return `
+    <article class="overview-confidence-band-card${marketRow?.insufficient_historical_sample ? " is-low-sample" : ""}" data-overview-confidence-card="true" data-overview-confidence-market="${escapeHtml(pair.pair_code || pair.pair || "")}">
+      <div class="overview-confidence-band-head">
+        <div class="overview-confidence-band-headline">
+          <div>
+            <p class="eyebrow">Layer 2</p>
+            <h3>${escapeHtml(pair.pair || pair.pair_code || "Pair")}</h3>
+          </div>
+          <span class="badge">${escapeHtml(isDirectional ? "Directional Pair" : "No Active Directional Call")}</span>
+        </div>
+        <p class="overview-confidence-band-meta">
+          Current call: ${escapeHtml(currentDirection)}
+          · Model conviction: ${escapeHtml(metricAvailable(pair.combined_confidence) ? String(pair.combined_confidence) : "--")}
+          · ${escapeHtml(pair.strength || "Not yet available")}
+        </p>
+        <p class="overview-confidence-band-meta">Confidence band: ${escapeHtml(bandLabel)}</p>
+      </div>
+      ${isDirectional && marketRow
+        ? renderOverviewConfidenceBandMetrics(marketRow, { marketLabel: pair.pair || pair.pair_code || "Pair" })
+        : `<p class="overview-confidence-band-copy"><strong>No active directional call.</strong> Historical directional accuracy is not shown because the current Layer 2 state is NO TRADE.</p>`}
+      ${isDirectional && marketRow?.insufficient_historical_sample ? renderOverviewConfidenceBandReference(pooledRow, "Pooled Layer 2 reference") : ""}
+      <p class="overview-confidence-band-contract"><strong>Horizon:</strong> ${escapeHtml(marketRow?.horizon || "following 24hrs")} · <strong>Contract:</strong> ${escapeHtml(marketRow?.checker_contract || "locked following-24-hours checker contract")}</p>
+    </article>
+  `;
+}
+
+function renderOverviewConfidenceBandPanel() {
+  const container = document.getElementById("overviewConfidenceBandPanel");
+  if (!container) return;
+
+  if (!layer1Data || !layer2Data || !confidenceBandDeliveryData) {
+    container.innerHTML = `
+      <div class="panel-head compact-panel-head">
+        <div>
+          <p class="eyebrow">Historical Confidence-Band Accuracy</p>
+          <h3>Current call delivery by market and confidence band</h3>
+        </div>
+      </div>
+      <div class="empty-state overview-confidence-band-empty">Historical confidence-band delivery is not yet available from the local research artifact.</div>
+    `;
+    return;
+  }
+
+  const contract = normalizeConfidenceBandRows(confidenceBandDeliveryData);
+  const layer1Cards = (layer1Data.agents || []).map((agent) => renderOverviewConfidenceBandLayer1Card(agent, contract));
+  const layer2Cards = (layer2Data.pairs || []).map((pair) => renderOverviewConfidenceBandLayer2Card(pair, contract));
+
+  container.innerHTML = `
+    <div class="panel-head compact-panel-head">
+      <div>
+        <p class="eyebrow">Historical Confidence-Band Accuracy</p>
+        <h3>Current call delivery under the locked following-24-hours contract</h3>
+      </div>
+    </div>
+    <p class="overview-confidence-band-note">Confidence is the model's internal conviction score, not a guaranteed probability. Historical accuracy shows how calls in the same confidence band actually performed under the locked following-24-hours backtest contract.</p>
+    <p class="overview-confidence-band-note">Historical performance does not guarantee the current call will succeed.</p>
+    <div class="overview-confidence-band-grid">
+      ${layer1Cards.join("")}
+      ${layer2Cards.join("")}
+    </div>
+    <div class="overview-confidence-band-summary-stack">
+      <p class="overview-confidence-band-note">These tables show how many historical calls fell into each model-confidence band and how often those calls delivered the predicted direction under the locked following-24-hours checker contract.</p>
+      <p class="overview-confidence-band-note">Confidence is model conviction, not a guaranteed probability. Ex-flat accuracy excludes flat outcomes; all-outcome accuracy includes them.</p>
+      ${renderOverviewConfidenceBandSummaryTable("Layer 1", contract)}
+      ${renderOverviewConfidenceBandSummaryTable("Layer 2", contract)}
+    </div>
+  `;
+}
+
+function pooledConfidenceBandRows(contract, layer) {
+  const pooledKey = layer === "Layer 1" ? "LAYER1_POOLED" : "LAYER2_POOLED";
+  const rows = contract.rows
+    .filter((row) =>
+      String(row.scope_type || "") === "pooled_layer_band"
+      && String(row.layer || "") === layer
+      && String(row.market_key || "") === pooledKey
+      && String(row.direction || "") === "BOTH"
+    )
+    .slice()
+    .sort((left, right) => Number(left.confidence_band_min || 0) - Number(right.confidence_band_min || 0));
+  return rows;
+}
+
+function currentDirectionalBandsForLayer(layer) {
+  const bands = new Set();
+  if (layer === "Layer 1") {
+    for (const agent of (layer1Data?.agents || [])) {
+      const call24 = getCall(agent, "24h");
+      const direction = deriveOverviewLayer1DeliveryDirection(call24.direction || "");
+      if (!direction) continue;
+      const confidence = confidenceValue(call24, agent, "24h");
+      const clamped = numberOrNull(confidence);
+      if (clamped === null) continue;
+      const row = findConfidenceBandReferenceRow(normalizeConfidenceBandRows(confidenceBandDeliveryData).rows, {
+        scopeType: "pooled_layer_band",
+        layer: "Layer 1",
+        marketKey: "LAYER1_POOLED",
+        direction: "BOTH",
+        confidence: clamped
+      });
+      if (row?.confidence_band) bands.add(row.confidence_band);
+    }
+  } else {
+    for (const pair of (layer2Data?.pairs || [])) {
+      const direction = deriveOverviewLayer2DeliveryDirection(pair);
+      const confidence = numberOrNull(pair?.combined_confidence);
+      if (!direction || confidence === null) continue;
+      const row = findConfidenceBandReferenceRow(normalizeConfidenceBandRows(confidenceBandDeliveryData).rows, {
+        scopeType: "pooled_layer_band",
+        layer: "Layer 2",
+        marketKey: "LAYER2_POOLED",
+        direction: "BOTH",
+        confidence
+      });
+      if (row?.confidence_band) bands.add(row.confidence_band);
+    }
+  }
+  return bands;
+}
+
+function pooledConfidenceBandMetric(value, formatter = percentValue) {
+  return metricAvailable(value) ? formatter(value) : "n/a";
+}
+
+function renderOverviewConfidenceBandSummaryTable(layer, contract) {
+  const rows = pooledConfidenceBandRows(contract, layer);
+  const highlightedBands = currentDirectionalBandsForLayer(layer);
+  const tableId = layer === "Layer 1" ? "overviewLayer1ConfidenceBandTable" : "overviewLayer2ConfidenceBandTable";
+
+  return `
+    <div class="overview-confidence-band-table-panel" data-overview-confidence-summary="${escapeHtml(layer)}">
+      <div class="overview-confidence-band-table-head">
+        <div>
+          <p class="eyebrow">Pooled Reference</p>
+          <h3>${escapeHtml(layer)} confidence-band performance</h3>
+        </div>
+        <p class="overview-confidence-band-table-meta">Pooled ${escapeHtml(layer)} reference only. These rows are not market-specific.</p>
+      </div>
+      <div class="overview-confidence-band-table-scroll">
+        <table class="overview-confidence-band-table" id="${escapeHtml(tableId)}">
+          <thead>
+            <tr>
+              <th>Confidence band</th>
+              <th>Total calls</th>
+              <th>Correct</th>
+              <th>Wrong</th>
+              <th>Flat</th>
+              <th>Directional sample</th>
+              <th>Ex-flat accuracy</th>
+              <th>All-outcome accuracy</th>
+              <th>Flat rate</th>
+              <th>Evidence label</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rows.map((row) => {
+              const isCurrentBand = highlightedBands.has(row.confidence_band);
+              return `
+                <tr class="${isCurrentBand ? "is-current-band" : ""}" data-overview-confidence-band-row="true" data-overview-confidence-band="${escapeHtml(row.confidence_band)}" data-overview-confidence-layer="${escapeHtml(layer)}">
+                  <th>${escapeHtml(row.confidence_band)}</th>
+                  <td>${escapeHtml(String(row.total_sample ?? 0))}</td>
+                  <td>${escapeHtml(String(row.correct ?? 0))}</td>
+                  <td>${escapeHtml(String(row.wrong ?? 0))}</td>
+                  <td>${escapeHtml(String(row.flat ?? 0))}</td>
+                  <td>${escapeHtml(String(row.directional_sample ?? 0))}</td>
+                  <td>${escapeHtml(pooledConfidenceBandMetric(row.ex_flat_win_rate))}</td>
+                  <td>${escapeHtml(pooledConfidenceBandMetric(row.all_outcome_accuracy))}</td>
+                  <td>${escapeHtml(pooledConfidenceBandMetric(row.flat_rate))}</td>
+                  <td>${escapeHtml(formatSampleStatusLabel(row.sample_size_status))}</td>
+                </tr>
+              `;
+            }).join("")}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+function renderOverviewConfidenceBandPanel() {
+  const container = document.getElementById("overviewConfidenceBandPanel");
+  if (!container) return;
+
+  if (!layer1Data || !layer2Data || !confidenceBandDeliveryData) {
+    container.innerHTML = `
+      <div class="panel-head compact-panel-head">
+        <div>
+          <p class="eyebrow">Historical Confidence-Band Accuracy</p>
+          <h3>Current call delivery by market and confidence band</h3>
+        </div>
+      </div>
+      <div class="empty-state overview-confidence-band-empty">Historical confidence-band delivery is not yet available from the local research artifact.</div>
+    `;
+    return;
+  }
+
+  const contract = normalizeConfidenceBandRows(confidenceBandDeliveryData);
+  const layer1Cards = (layer1Data.agents || []).map((agent) => renderOverviewConfidenceBandLayer1Card(agent, contract));
+  const layer2Cards = (layer2Data.pairs || []).map((pair) => renderOverviewConfidenceBandLayer2Card(pair, contract));
+
+  container.innerHTML = `
+    <div class="panel-head compact-panel-head">
+      <div>
+        <p class="eyebrow">Historical Confidence-Band Accuracy</p>
+        <h3>Current call delivery under the locked following-24-hours contract</h3>
+      </div>
+    </div>
+    <p class="overview-confidence-band-note">Confidence is the model's internal conviction score, not a guaranteed probability. Historical accuracy shows how calls in the same confidence band actually performed under the locked following-24-hours backtest contract.</p>
+    <p class="overview-confidence-band-note">Historical performance does not guarantee the current call will succeed.</p>
+    <div class="overview-confidence-band-grid">
+      ${layer1Cards.join("")}
+      ${layer2Cards.join("")}
+    </div>
+    <div class="overview-confidence-band-summary-stack">
+      <p class="overview-confidence-band-note">These tables show how many historical calls fell into each model-confidence band and how often those calls delivered the predicted direction under the locked following-24-hours checker contract.</p>
+      <p class="overview-confidence-band-note">Confidence is model conviction, not a guaranteed probability. Ex-flat accuracy excludes flat outcomes; all-outcome accuracy includes them.</p>
+      ${renderOverviewConfidenceBandSummaryTable("Layer 1", contract)}
+      ${renderOverviewConfidenceBandSummaryTable("Layer 2", contract)}
+    </div>
+  `;
+}
+
+function normalizeConfidenceBandRows(payload = {}) {
+  return {
+    rows: Array.isArray(payload.rows) ? payload.rows : [],
+    thresholds: payload.sample_size_thresholds || {}
+  };
+}
+
+function findConfidenceBandReferenceRow(rows = [], options = {}) {
+  const {
+    scopeType = "",
+    layer = "",
+    marketKey = "",
+    direction = null,
+    confidence = null
+  } = options;
+  const numeric = numberOrNull(confidence);
+  if (numeric === null) return null;
+  const clamped = Math.max(0, Math.min(100, numeric));
+  return rows.find((row) =>
+    (!scopeType || String(row.scope_type || "").trim() === String(scopeType || "").trim())
+    && (!layer || String(row.layer || "").trim().toUpperCase() === String(layer || "").trim().toUpperCase())
+    && (!marketKey || String(row.market_key || "").trim().toUpperCase() === String(marketKey || "").trim().toUpperCase())
+    && (direction === null || String(row.direction || "").trim().toUpperCase() === String(direction || "").trim().toUpperCase())
+    && clamped >= Number(row.confidence_band_min ?? 0)
+    && clamped <= Number(row.confidence_band_max ?? 0)
+  ) || null;
+}
+
+function deriveOverviewLayer1DeliveryDirection(direction = "") {
+  const normalized = String(direction || "").trim().toUpperCase();
+  if (normalized.startsWith("BULLISH")) return "BULLISH";
+  if (normalized.startsWith("BEARISH")) return "BEARISH";
+  return null;
+}
+
+function deriveOverviewLayer2DeliveryDirection(pair = {}) {
+  const decision = String(pair?.decision || "").trim().toUpperCase();
+  if (decision === "BUY" || decision === "SELL") return decision;
+  if (decision === "TRADE") {
+    const direction = String(pair?.direction || "").trim().toUpperCase();
+    if (direction === "BUY" || direction === "SELL") return direction;
+  }
+  return null;
+}
+
+function findFirstUsableConfidenceReference(candidates = []) {
+  return candidates.find((row) => row && !row.insufficient_historical_sample) || null;
+}
+
+function resolveOverviewConfidenceBandReferences(contract, options = {}) {
+  const {
+    layer,
+    marketKey,
+    direction,
+    confidence
+  } = options;
+  const pooledKey = layer === "Layer 1" ? "LAYER1_POOLED" : "LAYER2_POOLED";
+  const exactRow = direction ? findConfidenceBandReferenceRow(contract.rows, {
+    scopeType: "exact_market_direction",
+    layer,
+    marketKey,
+    direction,
+    confidence
+  }) : null;
+  const marketBandRow = findConfidenceBandReferenceRow(contract.rows, {
+    scopeType: "market_band_both_directions",
+    layer,
+    marketKey,
+    direction: "BOTH",
+    confidence
+  });
+  const layerDirectionRow = direction ? findConfidenceBandReferenceRow(contract.rows, {
+    scopeType: "pooled_layer_direction",
+    layer,
+    marketKey: pooledKey,
+    direction,
+    confidence
+  }) : null;
+  const layerBandRow = findConfidenceBandReferenceRow(contract.rows, {
+    scopeType: "pooled_layer_band",
+    layer,
+    marketKey: pooledKey,
+    direction: "BOTH",
+    confidence
+  });
+  const primaryRow = findFirstUsableConfidenceReference([exactRow, marketBandRow, layerDirectionRow, layerBandRow]);
+
+  return {
+    exactRow,
+    marketBandRow,
+    layerDirectionRow,
+    layerBandRow,
+    primaryRow,
+    fallbackRows: [exactRow, marketBandRow, layerDirectionRow, layerBandRow].filter((row) => row && row !== primaryRow)
+  };
+}
+
+function renderOverviewConfidenceBandReference(referenceRow = {}, label = "") {
+  if (!referenceRow) return "";
+  return `
+    <p class="overview-confidence-band-reference">
+      <strong>${escapeHtml(label)}</strong>
+      ${metricAvailable(referenceRow.ex_flat_win_rate) ? `${referenceRow.ex_flat_win_rate}% ex-flat` : "Not yet available"} |
+      ${referenceRow.correct ?? 0} correct | ${referenceRow.wrong ?? 0} wrong | ${referenceRow.flat ?? 0} flat |
+      ${escapeHtml(formatSampleStatusLabel(referenceRow.sample_size_status))}
+    </p>
+  `;
+}
+
+function renderOverviewConfidenceBandMetrics(row = {}, options = {}) {
+  const {
+    marketLabel = "Market",
+    deliveryDirection = "",
+    referenceLabel = "",
+    exactRow = null
+  } = options;
+  const primaryInsufficient = Boolean(!row || row.insufficient_historical_sample);
+  const exactInsufficient = Boolean(exactRow && exactRow.insufficient_historical_sample);
+  const normalizedDirection = String(deliveryDirection || "").trim().toLowerCase();
+  let headlineCopy = "Insufficient historical evidence.";
+
+  if (row) {
+    if (referenceLabel === "Exact market and direction") {
+      headlineCopy = `Historical ${normalizedDirection} ${marketLabel} calls in the same confidence band were directionally correct ${escapeHtml(metricAvailable(row.ex_flat_win_rate) ? `${row.ex_flat_win_rate}%` : displayDash())} of the time, excluding flat outcomes.`;
+    } else if (referenceLabel === "Market band, both directions") {
+      headlineCopy = `Insufficient ${normalizedDirection} ${marketLabel} evidence in this confidence band. Across ${marketLabel} calls in either direction, historical directional accuracy was ${escapeHtml(metricAvailable(row.ex_flat_win_rate) ? `${row.ex_flat_win_rate}%` : displayDash())}.`;
+    } else if (referenceLabel === "Pooled Layer 1 directional reference" || referenceLabel === "Pooled Layer 2 directional reference") {
+      headlineCopy = `Insufficient ${normalizedDirection} ${marketLabel} evidence in this confidence band. Across ${escapeHtml(referenceLabel.replace(" reference", "").toLowerCase())}, historical directional accuracy was ${escapeHtml(metricAvailable(row.ex_flat_win_rate) ? `${row.ex_flat_win_rate}%` : displayDash())}.`;
+    } else {
+      headlineCopy = `Insufficient ${normalizedDirection} ${marketLabel} evidence in this confidence band. Across pooled ${escapeHtml(String(row.layer || "").toLowerCase())} calls in this confidence band, historical directional accuracy was ${escapeHtml(metricAvailable(row.ex_flat_win_rate) ? `${row.ex_flat_win_rate}%` : displayDash())}.`;
+    }
+  }
+
+  return `
+    <div class="overview-confidence-band-kpis">
+      <div class="overview-confidence-band-kpi">
+        <span>Historical directional accuracy</span>
+        <strong>${primaryInsufficient ? "Insufficient historical evidence" : (metricAvailable(row.ex_flat_win_rate) ? percentValue(row.ex_flat_win_rate) : displayDash())}</strong>
+      </div>
+      <div class="overview-confidence-band-kpi">
+        <span>All-outcome accuracy</span>
+        <strong>${primaryInsufficient ? "Secondary only" : (metricAvailable(row.all_outcome_accuracy) ? percentValue(row.all_outcome_accuracy) : displayDash())}</strong>
+      </div>
+      <div class="overview-confidence-band-kpi">
+        <span>Sample</span>
+        <strong>${row.correct ?? 0} correct | ${row.wrong ?? 0} wrong | ${row.flat ?? 0} flat</strong>
+      </div>
+      <div class="overview-confidence-band-kpi">
+        <span>Evidence status</span>
+        <strong>${escapeHtml(formatSampleStatusLabel(row.sample_size_status))}</strong>
+      </div>
+    </div>
+    <p class="overview-confidence-band-copy"><strong>${escapeHtml(referenceLabel || "Insufficient historical evidence")}</strong> ${headlineCopy}</p>
+    ${exactInsufficient && referenceLabel !== "Exact market and direction"
+      ? `<p class="overview-confidence-band-copy">The exact market-and-direction sample for this call remains below the primary-emphasis threshold.</p>`
+      : ""}
+    <p class="overview-confidence-band-copy">Including flat outcomes, the call was correct ${escapeHtml(metricAvailable(row.all_outcome_accuracy) ? `${row.all_outcome_accuracy}%` : displayDash())} of the time.</p>
+    <p class="overview-confidence-band-copy">${escapeHtml(overviewAccuracySampleText(row))}</p>
+  `;
+}
+
+function renderOverviewConfidenceBandLayer1Card(agent, contract) {
+  const call24 = getCall(agent, "24h");
+  const direction = call24.direction || "PENDING";
+  const confidence = confidenceValue(call24, agent, "24h");
+  const strength = confidenceStrength(call24, agent, "24h");
+  const deliveryDirection = deriveOverviewLayer1DeliveryDirection(direction);
+  const directional = Boolean(deliveryDirection);
+  const references = resolveOverviewConfidenceBandReferences(contract, {
+    layer: "Layer 1",
+    marketKey: agent.agent,
+    direction: deliveryDirection,
+    confidence
+  });
+  const primaryRow = references.primaryRow || references.exactRow || references.marketBandRow || references.layerDirectionRow || references.layerBandRow;
+  const bandLabel = primaryRow?.confidence_band || "Not yet available";
+  const emphasizedAsLimited = Boolean(references.exactRow?.insufficient_historical_sample || primaryRow?.insufficient_historical_sample);
+
+  return `
+    <article class="overview-confidence-band-card${emphasizedAsLimited ? " is-low-sample" : ""}" data-overview-confidence-card="true" data-overview-confidence-market="${escapeHtml(agent.agent)}">
+      <div class="overview-confidence-band-head">
+        <div class="overview-confidence-band-headline">
+          <div>
+            <p class="eyebrow">Layer 1</p>
+            <h3>${escapeHtml(agent.agent)}</h3>
+          </div>
+          <span class="badge">${escapeHtml(directional ? "Directional Call" : "No Active Directional Call")}</span>
+        </div>
+        <p class="overview-confidence-band-meta">
+          Current call: ${escapeHtml(normaliseDirection(direction))}
+          | Model conviction: ${escapeHtml(metricAvailable(confidence) ? String(confidence) : "--")}
+          | ${escapeHtml(formatReviewLabel(String(strength || "not_available").toLowerCase()))}
+        </p>
+        <p class="overview-confidence-band-meta">Confidence band: ${escapeHtml(bandLabel)}</p>
+      </div>
+      ${directional && primaryRow
+        ? renderOverviewConfidenceBandMetrics(primaryRow, {
+          marketLabel: agent.agent,
+          deliveryDirection,
+          referenceLabel: primaryRow.reference_label,
+          exactRow: references.exactRow
+        })
+        : `<p class="overview-confidence-band-copy"><strong>No active directional call.</strong> Historical directional accuracy is not shown because the current 24H state is non-directional.</p>`}
+      ${directional ? references.fallbackRows.map((row) => renderOverviewConfidenceBandReference(row, row.reference_label)).join("") : ""}
+      <p class="overview-confidence-band-contract"><strong>Horizon:</strong> ${escapeHtml(primaryRow?.horizon || "following 24hrs")} | <strong>Contract:</strong> ${escapeHtml(primaryRow?.checker_contract || "locked following-24-hours checker contract")}</p>
+    </article>
+  `;
+}
+
+function renderOverviewConfidenceBandLayer2Card(pair, contract) {
+  const deliveryDirection = deriveOverviewLayer2DeliveryDirection(pair);
+  const isDirectional = Boolean(deliveryDirection) && metricAvailable(pair.combined_confidence);
+  const references = resolveOverviewConfidenceBandReferences(contract, {
+    layer: "Layer 2",
+    marketKey: pair.pair_code,
+    direction: deliveryDirection,
+    confidence: pair.combined_confidence
+  });
+  const primaryRow = references.primaryRow || references.exactRow || references.marketBandRow || references.layerDirectionRow || references.layerBandRow;
+  const currentDirection = isDirectional ? deliveryDirection : "NO TRADE";
+  const bandLabel = primaryRow?.confidence_band || "Not yet available";
+  const emphasizedAsLimited = Boolean(references.exactRow?.insufficient_historical_sample || primaryRow?.insufficient_historical_sample);
+
+  return `
+    <article class="overview-confidence-band-card${emphasizedAsLimited ? " is-low-sample" : ""}" data-overview-confidence-card="true" data-overview-confidence-market="${escapeHtml(pair.pair_code || pair.pair || "")}">
+      <div class="overview-confidence-band-head">
+        <div class="overview-confidence-band-headline">
+          <div>
+            <p class="eyebrow">Layer 2</p>
+            <h3>${escapeHtml(pair.pair || pair.pair_code || "Pair")}</h3>
+          </div>
+          <span class="badge">${escapeHtml(isDirectional ? "Directional Pair" : "No Active Directional Call")}</span>
+        </div>
+        <p class="overview-confidence-band-meta">
+          Current call: ${escapeHtml(currentDirection)}
+          | Model conviction: ${escapeHtml(metricAvailable(pair.combined_confidence) ? String(pair.combined_confidence) : "--")}
+          | ${escapeHtml(pair.strength || "Not yet available")}
+        </p>
+        <p class="overview-confidence-band-meta">Confidence band: ${escapeHtml(bandLabel)}</p>
+      </div>
+      ${isDirectional && primaryRow
+        ? renderOverviewConfidenceBandMetrics(primaryRow, {
+          marketLabel: pair.pair || pair.pair_code || "Pair",
+          deliveryDirection,
+          referenceLabel: primaryRow.reference_label,
+          exactRow: references.exactRow
+        })
+        : `<p class="overview-confidence-band-copy"><strong>No active directional call.</strong> Historical directional accuracy is not shown because the current Layer 2 state is NO TRADE.</p>`}
+      ${isDirectional ? references.fallbackRows.map((row) => renderOverviewConfidenceBandReference(row, row.reference_label)).join("") : ""}
+      <p class="overview-confidence-band-contract"><strong>Horizon:</strong> ${escapeHtml(primaryRow?.horizon || "following 24hrs")} | <strong>Contract:</strong> ${escapeHtml(primaryRow?.checker_contract || "locked following-24-hours checker contract")}</p>
+    </article>
+  `;
+}
+
+function renderOverviewConfidenceBandPanel() {
+  const container = document.getElementById("overviewConfidenceBandPanel");
+  if (!container) return;
+
+  if (!layer1Data || !layer2Data || !confidenceBandDeliveryData) {
+    container.innerHTML = `
+      <div class="panel-head compact-panel-head">
+        <div>
+          <p class="eyebrow">Historical Confidence-Band Accuracy</p>
+          <h3>Current call delivery by market and confidence band</h3>
+        </div>
+      </div>
+      <div class="empty-state overview-confidence-band-empty">Historical confidence-band delivery is not yet available from the local research artifact.</div>
+    `;
+    return;
+  }
+
+  const contract = normalizeConfidenceBandRows(confidenceBandDeliveryData);
+  const layer1Cards = (layer1Data.agents || []).map((agent) => renderOverviewConfidenceBandLayer1Card(agent, contract));
+  const layer2Cards = (layer2Data.pairs || []).map((pair) => renderOverviewConfidenceBandLayer2Card(pair, contract));
+
+  container.innerHTML = `
+    <div class="panel-head compact-panel-head">
+      <div>
+        <p class="eyebrow">Historical Confidence-Band Accuracy</p>
+        <h3>Current call delivery under the locked following-24-hours contract</h3>
+      </div>
+    </div>
+    <p class="overview-confidence-band-note">Confidence is the model's internal conviction score, not a guaranteed probability. Historical accuracy shows how calls in the same confidence band actually performed under the locked following-24-hours backtest contract.</p>
+    <p class="overview-confidence-band-note">Historical performance does not guarantee the current call will succeed.</p>
+    <div class="overview-confidence-band-grid">
+      ${layer1Cards.join("")}
+      ${layer2Cards.join("")}
+    </div>
+    <div class="overview-confidence-band-summary-stack">
+      <p class="overview-confidence-band-note">These tables show how many historical calls fell into each model-confidence band and how often those calls delivered the predicted direction under the locked following-24-hours checker contract.</p>
+      <p class="overview-confidence-band-note">Confidence is model conviction, not a guaranteed probability. Ex-flat accuracy excludes flat outcomes; all-outcome accuracy includes them.</p>
+      ${renderOverviewConfidenceBandSummaryTable("Layer 1", contract)}
+      ${renderOverviewConfidenceBandSummaryTable("Layer 2", contract)}
     </div>
   `;
 }
@@ -3547,6 +4185,7 @@ function renderLayer2(data = {}) {
   });
 
   renderOverviewPerformancePanel();
+  renderOverviewConfidenceBandPanel();
 }
 
 function resultClass(result = "") {
@@ -8372,6 +9011,7 @@ function renderResearchAccuracy(data = {}) {
         assetLabel: "BTC",
         timeframeLabel: "24H"
       })}
+      ${renderConfidenceCalibrationSummary(data.confidence_calibration || {})}
       ${renderResearchDefinitions()}
     </div>
   `;
@@ -9261,6 +9901,114 @@ function renderArchitectureControlsV2(manifest) {
   `;
 }
 
+function renderConfidenceCalibrationDirectionAccuracy(row = {}, directionKey = "bullish") {
+  const value = directionKey === "bullish" ? row.bullish_accuracy_pct : row.bearish_accuracy_pct;
+  return metricAvailable(value) ? percentValue(value) : displayDash();
+}
+
+function renderConfidenceCalibrationBucketTable(entity = {}) {
+  return renderResearchBreakdownTable(`${entity.entity_label || "Entity"} confidence buckets`, "Confidence Calibration", entity.bucket_rows || [], [
+    { label: "Bucket", render: row => researchDataCell(row.bucket_label, `${row.bucket_min_confidence_pct}-${row.bucket_max_confidence_pct}%`) },
+    { label: "Rows", render: row => researchDataCell(row.total_rows, `${row.directional_calls} directional · ${row.no_calls} no-call`) },
+    { label: "Results", render: row => researchDataCell(`${row.correct} / ${row.wrong} / ${row.flat}`, "correct / wrong / flat") },
+    { label: "Ex-Flat", render: row => researchDataCell(metricAvailable(row.ex_flat_win_rate_pct) ? percentValue(row.ex_flat_win_rate_pct) : displayDash(), metricAvailable(row.calibration_gap_pct) ? `${signedMetricValue(row.calibration_gap_pct, " pp")} gap` : "Gap n/a") },
+    { label: "Incl. Flat", render: row => researchDataCell(metricAvailable(row.all_outcome_accuracy_pct) ? percentValue(row.all_outcome_accuracy_pct) : displayDash(), metricAvailable(row.flat_rate_pct) ? `${percentValue(row.flat_rate_pct)} flat` : "Flat n/a") },
+    { label: "Bull / Bear", render: row => researchDataCell(renderConfidenceCalibrationDirectionAccuracy(row, "bullish"), `${renderConfidenceCalibrationDirectionAccuracy(row, "bearish")} bear`) },
+    { label: "Return", render: row => researchDataCell(metricAvailable(row.average_normalized_return_pct) ? `${row.average_normalized_return_pct}% avg` : displayDash(), metricAvailable(row.median_normalized_return_pct) ? `${row.median_normalized_return_pct}% median` : "Median n/a") },
+    { label: "Mean Conf.", render: row => researchDataCell(metricAvailable(row.mean_confidence_pct) ? percentValue(row.mean_confidence_pct) : displayDash(), row.sample_size_warning?.label ? formatReviewLabel(row.sample_size_warning.label) : "Sample n/a") },
+    { label: "Chron. Folds", render: row => researchDataCell(formatReviewLabel(row.chronological_fold_consistency?.label || "not_available"), metricAvailable(row.chronological_fold_consistency?.spread_pct_points) ? `${row.chronological_fold_consistency.spread_pct_points} pp spread` : "Spread n/a") }
+  ], {
+    description: entity.note || "Confidence buckets stay diagnostic only and remain tied to the checked-in following-24hrs checker contract."
+  });
+}
+
+function renderConfidenceCalibrationStrengthTable(entity = {}) {
+  return renderResearchBreakdownTable(`${entity.entity_label || "Entity"} strength bands`, "Strength Calibration", entity.strength_band_rows || [], [
+    { label: "Strength", render: row => researchDataCell(row.strength_label, `${row.directional_calls} directional`) },
+    { label: "Rows", render: row => researchDataCell(row.total_rows, `${row.no_calls} no-call`) },
+    { label: "Results", render: row => researchDataCell(`${row.correct} / ${row.wrong} / ${row.flat}`, "correct / wrong / flat") },
+    { label: "Ex-Flat", render: row => researchDataCell(metricAvailable(row.ex_flat_win_rate_pct) ? percentValue(row.ex_flat_win_rate_pct) : displayDash(), metricAvailable(row.all_outcome_accuracy_pct) ? `${percentValue(row.all_outcome_accuracy_pct)} incl. flat` : "Incl. flat n/a") }
+  ], {
+    description: "Strength rows use the exact current production strength contract for the relevant layer rather than a new calibration-specific threshold set."
+  });
+}
+
+function renderConfidenceCalibrationEntitySection(entity = {}) {
+  const monotonic = entity.monotonic_accuracy || {};
+  const reliability = entity.reliability_summary || {};
+  return `
+    <section class="research-section">
+      <div class="research-section-head">
+        <div>
+          <p class="eyebrow">${escapeHtml(entity.entity_type || "Calibration")}</p>
+          <h3>${escapeHtml(entity.entity_label || "Confidence calibration")}</h3>
+        </div>
+        <p class="research-panel-copy">${escapeHtml(entity.note || "Read-only calibration diagnostic built from the current checked-in research outputs.")}</p>
+      </div>
+      <section class="backtest-grid three-column research-summary-grid">
+        ${renderBacktestKpiMetric("Rows", renderSimpleMetricValue(entity.rows_with_bucket), `${renderSimpleMetricValue(entity.rows_without_bucket)} without confidence bucket`, "Rows in the current checked-in artifact for this entity")}
+        ${renderBacktestKpiMetric("Monotonicity", formatReviewLabel(monotonic.label || "not_available"), monotonic.monotonic === null ? "Insufficient data" : (monotonic.monotonic ? "No decreasing bucket step" : `${monotonic.breaks?.length || 0} break(s)`), "Whether ex-flat accuracy rose monotonically as confidence increased")}
+        ${renderBacktestKpiMetric("Reliability", formatReviewLabel(reliability.ordinal_conviction_label || "not_available"), formatReviewLabel(reliability.probability_label || "not_available"), "Ordinal-vs-probability diagnostic only; not a production recalibration")}
+      </section>
+      ${renderConfidenceCalibrationBucketTable(entity)}
+      ${renderConfidenceCalibrationStrengthTable(entity)}
+    </section>
+  `;
+}
+
+function renderConfidenceCalibrationSummary(payload = {}) {
+  const layer1Pooled = payload.layer1?.pooled || {};
+  const layer2Pooled = payload.layer2?.pooled || {};
+  const existingAudit = payload.existing_analysis_audit || {};
+  const layer1Assets = Object.values(payload.layer1?.assets || {});
+  const layer2Pairs = Object.values(payload.layer2?.pairs || {});
+
+  if (payload.meta?.error) {
+    return `
+      <section class="research-section">
+        <div class="research-section-head">
+          <div>
+            <p class="eyebrow">Confidence Calibration</p>
+            <h3>Local calibration artifact unavailable</h3>
+          </div>
+          <p class="research-panel-copy">${escapeHtml(payload.meta.error || "Confidence calibration artifact unavailable.")}</p>
+        </div>
+      </section>
+    `;
+  }
+
+  return `
+    <section class="research-section">
+      <div class="research-section-head">
+        <div>
+          <p class="eyebrow">Confidence Calibration</p>
+          <h3>Research-only confidence-band calibration on the current checker contract</h3>
+        </div>
+        <p class="research-panel-copy">${escapeHtml(payload.outcome_contract_note || "Diagnostic only. No production confidence mapping or threshold change is implied.")}</p>
+      </div>
+      <section class="backtest-grid three-column research-summary-grid">
+        ${renderBacktestKpiMetric("Version", payload.version || "Not yet available", payload.timeframe || "", "Local artifact contract for calibration diagnostics")}
+        ${renderBacktestKpiMetric("Layer 1 Pooled", metricAvailable(layer1Pooled.reliability_summary?.average_absolute_calibration_gap_pct_points) ? `${layer1Pooled.reliability_summary.average_absolute_calibration_gap_pct_points} pp avg gap` : displayDash(), formatReviewLabel(layer1Pooled.monotonic_accuracy?.label || "not_available"), "Pooled Layer 1 calibration across all five checker artifacts")}
+        ${renderBacktestKpiMetric("Layer 2 Pooled", metricAvailable(layer2Pooled.reliability_summary?.average_absolute_calibration_gap_pct_points) ? `${layer2Pooled.reliability_summary.average_absolute_calibration_gap_pct_points} pp avg gap` : displayDash(), formatReviewLabel(layer2Pooled.monotonic_accuracy?.label || "not_available"), "Pooled Layer 2 calibration across reconstructed historically emitted pair calls")}
+      </section>
+      ${renderResearchBreakdownTable("What already existed before this artifact", "Calibration Audit", (existingAudit.existing_dashboard_views || []).map((item, index) => ({ id: index + 1, text: item })), [
+        { label: "Existing", render: row => researchDataCell(row.id, row.text) }
+      ], {
+        description: "The dashboard already had confidence-oriented research views, but they were not sufficient to establish calibration."
+      })}
+      ${renderResearchBreakdownTable("What was missing before this artifact", "Calibration Audit", (existingAudit.missing_before_this_artifact || []).map((item, index) => ({ id: index + 1, text: item })), [
+        { label: "Missing", render: row => researchDataCell(row.id, row.text) }
+      ], {
+        description: "These gaps are what this local artifact closes without changing production scoring."
+      })}
+      ${renderConfidenceCalibrationEntitySection(layer1Pooled)}
+      ${layer1Assets.map(renderConfidenceCalibrationEntitySection).join("")}
+      ${renderConfidenceCalibrationEntitySection(layer2Pooled)}
+      ${layer2Pairs.map(renderConfidenceCalibrationEntitySection).join("")}
+    </section>
+  `;
+}
+
 function renderArchitectureLegendV2() {
   return `
     <details class="detail-panel architecture-legend-panel" data-architecture-legend="true">
@@ -9906,6 +10654,7 @@ async function fetchResearchDashboardData() {
   };
 
   const adrReachResearchPromise = resolveResearchTask("adr_reach_research", fetchLocalJson(adrReachResearchUrl), null);
+  const confidenceCalibrationPromise = resolveResearchTask("confidence_calibration", fetchLocalJson(confidenceCalibrationUrl), null);
   const matrix24hRowsPromise = resolveResearchTask("research_prediction_usd_benchmark_summary", fetchResearchView("research_prediction_usd_benchmark_summary", {
     select: "snapshot_date,asset_code,timeframe,predicted_direction,agent_direction,agent_conviction,predicted_conviction,headline_confidence_pct,bull_case_pct,bear_case_pct,net_edge_pct,participation_pct,verdict_strength,combined_result,benchmark_market,open_price,close_price,pct_change",
     order: "timeframe.asc,predicted_direction.asc,verdict_strength.asc",
@@ -10000,7 +10749,8 @@ async function fetchResearchDashboardData() {
     goldCheckerData,
     nqCheckerData,
     btcCheckerData,
-    adrReachResearchData
+    adrReachResearchData,
+    confidenceCalibrationData
   ] = await Promise.all([
     resolveResearchTask("research_overall_win_rate", fetchResearchView("research_overall_win_rate"), []),
     resolveResearchTask("research_usd_24h_direction_accuracy", fetchResearchView("research_usd_24h_direction_accuracy"), []),
@@ -10035,7 +10785,8 @@ async function fetchResearchDashboardData() {
     goldCheckerDataPromise,
     nqCheckerDataPromise,
     btcCheckerDataPromise,
-    adrReachResearchPromise
+    adrReachResearchPromise,
+    confidenceCalibrationPromise
   ]);
 
   const resolvedEurMatrix24hRows = eurCheckerData?.rows?.length
@@ -10091,6 +10842,7 @@ async function fetchResearchDashboardData() {
     },
     infrastructure: infrastructureRows[0] || {},
     adr_reach: adrReachResearchData,
+    confidence_calibration: confidenceCalibrationData,
     checker: usdCheckerData,
     checkers: {
       USD: usdCheckerData,
@@ -10103,12 +10855,13 @@ async function fetchResearchDashboardData() {
 }
 
 async function loadDashboard() {
-  const [layer1Result, layer2Result, researchResult, factorEdgeLabResult, phase2ShadowBacktestResult, economicEventRefreshResult, economicEventsSourceResult, inputHealthResult] = await Promise.allSettled([
+  const [layer1Result, layer2Result, researchResult, factorEdgeLabResult, phase2ShadowBacktestResult, confidenceBandDeliveryResult, economicEventRefreshResult, economicEventsSourceResult, inputHealthResult] = await Promise.allSettled([
     fetch(layer1Url, { cache: "no-store" }),
     fetch(layer2Url, { cache: "no-store" }),
     fetchResearchDashboardData(),
     fetchLocalJson(factorEdgeLabUrl),
     fetchLocalJson(phase2ShadowBacktestUrl),
+    fetchLocalJson(confidenceBandDeliveryUrl),
     fetchLocalJson(economicEventRefreshUrl),
     fetchLocalJson(economicEventsSourceUrl),
     fetchLocalJson(inputHealthUrl)
@@ -10180,6 +10933,19 @@ async function loadDashboard() {
     };
   }
 
+  if (confidenceBandDeliveryResult.status === "fulfilled") {
+    confidenceBandDeliveryData = confidenceBandDeliveryResult.value;
+  } else {
+    console.error(confidenceBandDeliveryResult.reason);
+    confidenceBandDeliveryData = {
+      meta: {
+        error: confidenceBandDeliveryResult.reason?.message || String(confidenceBandDeliveryResult.reason)
+      },
+      rows: [],
+      pooled_reference_rows: []
+    };
+  }
+
   if (economicEventRefreshResult.status === "fulfilled") {
     economicEventRefreshData = economicEventRefreshResult.value;
   } else {
@@ -10221,6 +10987,7 @@ async function loadDashboard() {
   renderShadowLogicBacktest(phase2ShadowBacktestData);
   renderWorkflowStatus(workflowStatus);
   renderOverviewStatusPanel();
+  renderOverviewConfidenceBandPanel();
 
   if (orderedAgents.includes(activeTab) && layer1Data) {
     renderAgentDetail(activeTab);
