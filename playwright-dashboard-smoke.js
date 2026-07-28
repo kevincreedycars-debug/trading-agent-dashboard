@@ -290,93 +290,64 @@ async function run() {
       const layer2Response = await fetch("./data/layer2.json", { cache: "no-store" });
       const layer2 = await layer2Response.json();
 
-      function activeDirectionalLayer1Agents() {
-        return Array.isArray(layer1?.agents)
-          ? layer1.agents
-              .filter((agent) => {
-                const direction = String(agent?.calls?.["24h"]?.direction || "").toUpperCase();
-                return direction.startsWith("BULLISH") || direction.startsWith("BEARISH");
-              })
-              .map((agent) => ({
-                market: agent.agent,
-                text: (panel?.querySelector(`[data-overview-confidence-market="${agent.agent}"]`)?.innerText || "")
-              }))
-          : [];
+      function rowTexts(selector) {
+        return Array.from(panel?.querySelectorAll(selector) || []).map((row) => row.innerText || "");
       }
 
-      function activeLayer2NoTradePairs() {
-        return Array.isArray(layer2?.pairs)
-          ? layer2.pairs
-              .filter((pair) => String(pair?.decision || "").toUpperCase() === "NO_TRADE")
-              .map((pair) => ({
-                market: pair.pair_code,
-                text: (panel?.querySelector(`[data-overview-confidence-market="${pair.pair_code}"]`)?.innerText || "")
-              }))
-          : [];
-      }
-
-      function activeDirectionalLayer2Pairs() {
-        return Array.isArray(layer2?.pairs)
-          ? layer2.pairs
-              .filter((pair) => {
-                const decision = String(pair?.decision || "").toUpperCase();
-                return (decision === "TRADE" || decision === "BUY" || decision === "SELL")
-                  && Number.isFinite(Number(pair?.combined_confidence));
-              })
-              .map((pair) => ({
-                market: pair.pair_code,
-                confidence: Number(pair.combined_confidence),
-                text: (panel?.querySelector(`[data-overview-confidence-market="${pair.pair_code}"]`)?.innerText || "")
-              }))
-          : [];
-      }
-
-      function readSummaryTable(layerLabel) {
-        const wrapper = panel?.querySelector(`[data-overview-confidence-summary="${layerLabel}"]`);
-        const rows = Array.from(wrapper?.querySelectorAll("tbody tr") || []).map((row) => {
-          const cells = Array.from(row.querySelectorAll("th, td")).map((cell) => (cell.textContent || "").trim());
-          return {
-            cells,
-            highlighted: row.classList.contains("is-current-band")
-          };
-        });
+      function tableSnapshot(selector) {
+        const table = panel?.querySelector(selector);
+        const rows = Array.from(table?.querySelectorAll("tbody tr") || []).map((row) => ({
+          text: row.innerText || "",
+          cells: Array.from(row.querySelectorAll("th, td")).map((cell) => (cell.textContent || "").trim()),
+          currentBand: row.classList.contains("is-current-band")
+        }));
         return {
-          rendered: Boolean(wrapper),
-          text: wrapper?.innerText || "",
+          rendered: Boolean(table),
+          header: Array.from(table?.querySelectorAll("thead th") || []).map((cell) => (cell.textContent || "").trim()),
           rowCount: rows.length,
-          rows,
-          hasHorizontalOverflow: wrapper ? wrapper.scrollWidth > wrapper.clientWidth + 1 : false,
-          scrollShellOverflows: Array.from(wrapper?.querySelectorAll(".overview-confidence-band-table-scroll") || []).some((node) => node.scrollWidth > node.clientWidth + 1)
+          rows
         };
-      }
-
-      function pooledRows(layerLabel, marketKey) {
-        return Array.isArray(delivery?.rows)
-          ? delivery.rows
-              .filter((row) =>
-                row.scope_type === "pooled_layer_band"
-                && row.layer === layerLabel
-                && row.market_key === marketKey
-                && row.direction === "BOTH"
-              )
-              .sort((left, right) => Number(left.confidence_band_min || 0) - Number(right.confidence_band_min || 0))
-          : [];
       }
 
       return {
         rendered: Boolean(panel),
         heading: panel?.querySelector("h3")?.textContent?.trim() || "",
         text: panel?.innerText || "",
-        cardCount: panel?.querySelectorAll("[data-overview-confidence-card='true']").length || 0,
         hasHorizontalOverflow: panel ? panel.scrollWidth > panel.clientWidth + 1 : false,
-        currentDirectionalLayer1Cards: activeDirectionalLayer1Agents(),
-        currentDirectionalLayer2Cards: activeDirectionalLayer2Pairs(),
-        currentNoTradeLayer2Cards: activeLayer2NoTradePairs(),
-        thresholdsText: delivery?.sample_size_thresholds || {},
-        layer1SummaryTable: readSummaryTable("Layer 1"),
-        layer2SummaryTable: readSummaryTable("Layer 2"),
-        expectedLayer1Rows: pooledRows("Layer 1", "LAYER1_POOLED"),
-        expectedLayer2Rows: pooledRows("Layer 2", "LAYER2_POOLED")
+        tabLabels: Array.from(panel?.querySelectorAll("[data-overview-confidence-tab]") || []).map((button) => button.textContent?.trim() || ""),
+        activeTabLabel: panel?.querySelector("[data-overview-confidence-tab].is-active")?.textContent?.trim() || "",
+        currentSummaryTables: {
+          layer1: tableSnapshot("[data-overview-confidence-current-summary='Layer 1'] table"),
+          layer2: tableSnapshot("[data-overview-confidence-current-summary='Layer 2'] table")
+        },
+        visibleAnalysisTables: Array.from(panel?.querySelectorAll("[data-overview-confidence-analysis-table]") || []).length,
+        layer1DirectionalCalls: Array.isArray(layer1?.agents)
+          ? layer1.agents.filter((agent) => {
+                const direction = String(agent?.calls?.["24h"]?.direction || "").toUpperCase();
+                return direction.startsWith("BULLISH") || direction.startsWith("BEARISH");
+            }).map((agent) => ({
+              market: agent.agent,
+              direction: String(agent?.calls?.["24h"]?.direction || "").toUpperCase().startsWith("BULLISH") ? "BULLISH" : "BEARISH"
+            }))
+          : [],
+        layer2NoTradePairs: Array.isArray(layer2?.pairs)
+          ? layer2.pairs.filter((pair) => String(pair?.decision || "").toUpperCase() === "NO_TRADE").map((pair) => pair.pair_code)
+          : [],
+        layer2DirectionalPairs: Array.isArray(layer2?.pairs)
+          ? layer2.pairs.filter((pair) => {
+              const decision = String(pair?.decision || "").toUpperCase();
+              const direction = String(pair?.direction || "").toUpperCase();
+              return decision === "TRADE" && (direction === "BUY" || direction === "SELL");
+            }).map((pair) => ({
+              pair: pair.pair_code,
+              direction: String(pair.direction || "").toUpperCase()
+            }))
+          : [],
+        deliveryBands: delivery?.coverage?.confidence_bands || [],
+        thresholds: delivery?.sample_size_thresholds || {},
+        wordingHasHistoricalCalls: (panel?.innerText || "").toLowerCase().includes("historical calls"),
+        wordingAvoidsSampleLabel: !(panel?.innerText || "").toLowerCase().includes("directional sample"),
+        wordingIncludesDefinitions: ["Confidence", "Participation", "Strength"].every((label) => (document.querySelector(".overview-legend-panel")?.innerText || "").includes(label))
       };
     });
 
@@ -384,161 +355,171 @@ async function run() {
       throw new Error("Overview confidence-band accuracy panel did not render.");
     }
 
-    if (overviewConfidenceBandPanel.heading !== "Current call delivery under the locked following-24-hours contract") {
+    if (overviewConfidenceBandPanel.heading !== "Historical market accuracy under the locked following-24-hours contract") {
       throw new Error(`Overview confidence-band accuracy heading regressed.\n${JSON.stringify(overviewConfidenceBandPanel, null, 2)}`);
     }
 
     for (const expectedText of [
       "Confidence is the model's internal conviction score, not a guaranteed probability.",
-      "Historical performance does not guarantee the current call will succeed.",
-      "locked following-24-hours backtest contract",
-      "These tables show how many historical calls fell into each model-confidence band",
-      "Ex-flat accuracy excludes flat outcomes; all-outcome accuracy includes them."
+      "does not feed back into live call generation",
+      "Forecast horizon: following 24hrs",
+      "Checker contract: locked following-24-hours checker contract"
     ]) {
       if (!overviewConfidenceBandPanel.text.includes(expectedText)) {
         throw new Error(`Overview confidence-band accuracy panel did not render expected note '${expectedText}'.\n${overviewConfidenceBandPanel.text}`);
       }
     }
 
-    if (overviewConfidenceBandPanel.cardCount !== 9) {
-      throw new Error(`Overview confidence-band accuracy panel did not render one card per current Layer 1 asset and Layer 2 pair.\n${JSON.stringify(overviewConfidenceBandPanel, null, 2)}`);
-    }
-
     if (overviewConfidenceBandPanel.hasHorizontalOverflow) {
       throw new Error(`Overview confidence-band accuracy panel overflowed horizontally.\n${JSON.stringify(overviewConfidenceBandPanel, null, 2)}`);
     }
 
-    for (const [label, tableKey, expectedKey] of [
-      ["Layer 1", "layer1SummaryTable", "expectedLayer1Rows"],
-      ["Layer 2", "layer2SummaryTable", "expectedLayer2Rows"]
-    ]) {
-      const renderedTable = overviewConfidenceBandPanel[tableKey];
-      const expectedRows = overviewConfidenceBandPanel[expectedKey];
-      if (!renderedTable.rendered) {
-        throw new Error(`${label} pooled confidence-band table did not render.\n${JSON.stringify(renderedTable, null, 2)}`);
-      }
-      if (!renderedTable.text.toLowerCase().includes("pooled") || !renderedTable.text.toLowerCase().includes("not market-specific")) {
-        throw new Error(`${label} pooled confidence-band table did not remain explicitly pooled-only.\n${renderedTable.text}`);
-      }
-      if (renderedTable.rowCount !== 10 || expectedRows.length !== 10) {
-        throw new Error(`${label} pooled confidence-band table did not expose all ten bands.\n${JSON.stringify({ renderedTable, expectedRows }, null, 2)}`);
-      }
-      if (renderedTable.hasHorizontalOverflow && !renderedTable.scrollShellOverflows) {
-        throw new Error(`${label} pooled confidence-band table overflowed without local horizontal scrolling.\n${JSON.stringify(renderedTable, null, 2)}`);
-      }
+    if (overviewConfidenceBandPanel.visibleAnalysisTables !== 1) {
+      throw new Error(`Overview confidence-band dashboard should render exactly one major analysis table at a time.\n${JSON.stringify(overviewConfidenceBandPanel, null, 2)}`);
+    }
 
-      for (let index = 0; index < expectedRows.length; index += 1) {
-        const expectedRow = expectedRows[index];
-        const renderedRow = renderedTable.rows[index];
-        if (!renderedRow) {
-          throw new Error(`${label} pooled confidence-band table row ${index} was missing.`);
-        }
+    if (JSON.stringify(overviewConfidenceBandPanel.tabLabels) !== JSON.stringify(["Layer 1", "Layer 2", "Strength Bands", "Directional Asymmetry", "Pooled Reference"])) {
+      throw new Error(`Overview confidence-band dashboard tabs regressed.\n${JSON.stringify(overviewConfidenceBandPanel.tabLabels, null, 2)}`);
+    }
 
-        const [
-          band,
-          totalCalls,
-          correct,
-          wrong,
-          flat,
-          directionalSample,
-          exFlatAccuracy,
-          allOutcomeAccuracy,
-          flatRate,
-          evidenceLabel
-        ] = renderedRow.cells;
+    if (!overviewConfidenceBandPanel.wordingHasHistoricalCalls || !overviewConfidenceBandPanel.wordingAvoidsSampleLabel) {
+      throw new Error(`Overview confidence-band dashboard did not preserve the required plain-language wording.\n${JSON.stringify(overviewConfidenceBandPanel, null, 2)}`);
+    }
 
-        if (band !== expectedRow.confidence_band) {
-          throw new Error(`${label} pooled confidence-band row order regressed.\nExpected: ${expectedRow.confidence_band}\nRendered: ${band}`);
-        }
-        if (Number(totalCalls) !== Number(expectedRow.total_sample)) {
-          throw new Error(`${label} pooled confidence-band total call count mismatch for ${band}.`);
-        }
-        if (Number(correct) !== Number(expectedRow.correct) || Number(wrong) !== Number(expectedRow.wrong) || Number(flat) !== Number(expectedRow.flat)) {
-          throw new Error(`${label} pooled confidence-band count reconciliation failed for ${band}.`);
-        }
-        if (Number(directionalSample) !== Number(expectedRow.directional_sample)) {
-          throw new Error(`${label} pooled confidence-band directional sample mismatch for ${band}.`);
-        }
-        if (Number(directionalSample) !== Number(correct) + Number(wrong)) {
-          throw new Error(`${label} pooled confidence-band directional sample did not equal correct + wrong for ${band}.`);
-        }
+    if (!overviewConfidenceBandPanel.wordingIncludesDefinitions) {
+      throw new Error("Overview definitions for Confidence, Participation, and Strength were not all present.");
+    }
 
-        const expectedExFlat = expectedRow.ex_flat_win_rate === null ? "n/a" : `${expectedRow.ex_flat_win_rate}%`;
-        const expectedAllOutcome = expectedRow.all_outcome_accuracy === null ? "n/a" : `${expectedRow.all_outcome_accuracy}%`;
-        const expectedFlatRate = expectedRow.flat_rate === null ? "n/a" : `${expectedRow.flat_rate}%`;
-        if (exFlatAccuracy !== expectedExFlat || allOutcomeAccuracy !== expectedAllOutcome || flatRate !== expectedFlatRate) {
-          throw new Error(`${label} pooled confidence-band formula display mismatch for ${band}.\n${JSON.stringify({ renderedRow, expectedRow }, null, 2)}`);
-        }
-        if (evidenceLabel !== expectedRow.sample_size_status) {
-          throw new Error(`${label} pooled confidence-band evidence label mismatch for ${band}.`);
-        }
+    if (overviewConfidenceBandPanel.currentSummaryTables.layer1.rowCount !== 5 || overviewConfidenceBandPanel.currentSummaryTables.layer2.rowCount !== 4) {
+      throw new Error(`Overview confidence-band current summaries did not render one row per live market.\n${JSON.stringify(overviewConfidenceBandPanel.currentSummaryTables, null, 2)}`);
+    }
+
+    for (const expectedHeader of ["Historical calls", "Directional accuracy", "Evidence quality", "Forecast horizon"]) {
+      if (!overviewConfidenceBandPanel.currentSummaryTables.layer1.header.includes(expectedHeader)) {
+        throw new Error(`Layer 1 current summary is missing header ${expectedHeader}.`);
+      }
+      if (!overviewConfidenceBandPanel.currentSummaryTables.layer2.header.includes(expectedHeader)) {
+        throw new Error(`Layer 2 current summary is missing header ${expectedHeader}.`);
       }
     }
 
-    const expectedHighlightedLayer1Bands = Array.from(new Set(
-      overviewConfidenceBandPanel.currentDirectionalLayer1Cards
-        .map((card) => {
-          const match = card.text.match(/Confidence band:\s*([0-9]+-[0-9]+|90-100)/i);
-          return match ? match[1] : null;
-        })
-        .filter(Boolean)
-    )).sort();
-    const expectedHighlightedLayer2Bands = Array.from(new Set(
-      overviewConfidenceBandPanel.currentDirectionalLayer2Cards
-        .map((card) => {
-          const match = card.text.match(/Confidence band:\s*([0-9]+-[0-9]+|90-100)/i);
-          return match ? match[1] : null;
-        })
-        .filter(Boolean)
-    )).sort();
-    const highlightedLayer1Bands = overviewConfidenceBandPanel.layer1SummaryTable.rows.filter((row) => row.highlighted).map((row) => row.cells[0]).sort();
-    const highlightedLayer2Bands = overviewConfidenceBandPanel.layer2SummaryTable.rows.filter((row) => row.highlighted).map((row) => row.cells[0]).sort();
-    if (JSON.stringify(highlightedLayer1Bands) !== JSON.stringify(expectedHighlightedLayer1Bands)) {
-      throw new Error(`Layer 1 pooled confidence-band table did not visibly mark the current active confidence bands.\n${JSON.stringify(highlightedLayer1Bands, null, 2)}`);
-    }
-    if (JSON.stringify(highlightedLayer2Bands) !== JSON.stringify(expectedHighlightedLayer2Bands)) {
-      throw new Error(`Layer 2 pooled confidence-band table did not visibly mark the current active confidence bands.\n${JSON.stringify(highlightedLayer2Bands, null, 2)}`);
+    if (overviewConfidenceBandPanel.layer1DirectionalCalls.length === 0) {
+      throw new Error("Expected active directional Layer 1 markets in the current summary.");
     }
 
-    for (const card of overviewConfidenceBandPanel.currentDirectionalLayer1Cards) {
-      for (const expectedText of [
-        "Confidence band:",
-        "Historical directional accuracy",
-        "correct",
-        "wrong",
-        "flat",
-        "Horizon:",
-        "Contract:"
-      ]) {
-        if (!card.text.includes(expectedText)) {
-          throw new Error(`Directional Layer 1 confidence-band card ${card.market} did not render expected text '${expectedText}'.\n${card.text}`);
-        }
+    for (const call of overviewConfidenceBandPanel.layer1DirectionalCalls) {
+      const row = overviewConfidenceBandPanel.currentSummaryTables.layer1.rows.find((entry) => entry.text.includes(call.market));
+      if (!row || !row.text.includes("Exact market and direction") && !row.text.includes("Market band, both directions") && !row.text.includes("Pooled Layer 1 directional reference")) {
+        throw new Error(`Layer 1 current summary row for ${call.market} did not render the historical reference label.\n${JSON.stringify(row, null, 2)}`);
       }
     }
 
-    for (const card of overviewConfidenceBandPanel.currentDirectionalLayer2Cards) {
-      for (const expectedText of [
-        "Confidence band:",
-        "Historical directional accuracy",
-        "correct",
-        "wrong",
-        "flat",
-        "Horizon:",
-        "Contract:"
-      ]) {
-        if (!card.text.includes(expectedText)) {
-          throw new Error(`Directional Layer 2 confidence-band card ${card.market} did not render expected text '${expectedText}'.\n${card.text}`);
-        }
+    for (const pairKey of overviewConfidenceBandPanel.layer2NoTradePairs) {
+      const row = overviewConfidenceBandPanel.currentSummaryTables.layer2.rows.find((entry) => entry.text.includes(pairKey));
+      if (!row || !row.text.includes("State only. No active directional call")) {
+        throw new Error(`Layer 2 non-directional summary row for ${pairKey} did not stay non-directional.\n${JSON.stringify(row, null, 2)}`);
       }
     }
 
-    for (const card of overviewConfidenceBandPanel.currentNoTradeLayer2Cards) {
-      if (!card.text.includes("No active directional call")) {
-        throw new Error(`Layer 2 NO TRADE confidence-band card ${card.market} did not render the non-directional disclaimer.\n${card.text}`);
-      }
-      if (card.text.includes("Historical directional accuracy:")) {
-        throw new Error(`Layer 2 NO TRADE confidence-band card ${card.market} rendered misleading directional accuracy.\n${card.text}`);
-      }
+    const selectedLayer1Call = overviewConfidenceBandPanel.layer1DirectionalCalls[0];
+    await page.locator(`[data-overview-confidence-layer1-market='${selectedLayer1Call.market}']`).click();
+    await page.locator(`[data-overview-confidence-layer1-direction='${selectedLayer1Call.direction}']`).click();
+    const layer1HistoricalTable = await page.evaluate(() => {
+      const table = document.getElementById("overviewLayer1HistoricalAccuracyTable");
+      return {
+        rendered: Boolean(table),
+        rowCount: table?.querySelectorAll("tbody tr").length || 0,
+        currentBandText: table?.querySelector("tbody tr.is-current-band")?.innerText || "",
+        currentDirectionChipCurrent: Array.from(document.querySelectorAll("[data-overview-confidence-layer1-direction]")).some((button) => button.classList.contains("is-current-live") && button.classList.contains("is-active")),
+        onlyOneAnalysisTable: document.querySelectorAll("[data-overview-confidence-analysis-table]").length,
+        hasScrollShell: Boolean(table?.closest(".overview-confidence-band-table-scroll")),
+        headers: Array.from(table?.querySelectorAll("thead th") || []).map((cell) => cell.textContent?.trim() || "")
+      };
+    });
+
+    if (!layer1HistoricalTable.rendered || layer1HistoricalTable.rowCount !== 10) {
+      throw new Error(`Layer 1 historical accuracy table did not render all ten bands.\n${JSON.stringify(layer1HistoricalTable, null, 2)}`);
+    }
+    if (!layer1HistoricalTable.currentBandText.toLowerCase().includes("current call band")) {
+      throw new Error(`Layer 1 historical accuracy table did not visibly mark the EUR bullish current band.\n${JSON.stringify(layer1HistoricalTable, null, 2)}`);
+    }
+    if (!layer1HistoricalTable.currentDirectionChipCurrent || layer1HistoricalTable.onlyOneAnalysisTable !== 1 || !layer1HistoricalTable.hasScrollShell) {
+      throw new Error(`Layer 1 historical accuracy controls regressed.\n${JSON.stringify(layer1HistoricalTable, null, 2)}`);
+    }
+
+    await page.locator("[data-overview-confidence-tab='layer2']").click();
+    const layer2HistoricalTable = await page.evaluate(() => {
+      const table = document.getElementById("overviewLayer2HistoricalAccuracyTable");
+      return {
+        activeTab: document.querySelector("[data-overview-confidence-tab].is-active")?.textContent?.trim() || "",
+        rendered: Boolean(table),
+        rowCount: table?.querySelectorAll("tbody tr").length || 0,
+        note: document.querySelector("[data-overview-confidence-analysis='layer2']")?.innerText || "",
+        onlyOneAnalysisTable: document.querySelectorAll("[data-overview-confidence-analysis-table]").length
+      };
+    });
+
+    if (layer2HistoricalTable.activeTab !== "Layer 2" || !layer2HistoricalTable.rendered || layer2HistoricalTable.rowCount !== 10) {
+      throw new Error(`Layer 2 historical accuracy tab did not render correctly.\n${JSON.stringify(layer2HistoricalTable, null, 2)}`);
+    }
+    if (!layer2HistoricalTable.note.includes("NO TRADE summary") || layer2HistoricalTable.onlyOneAnalysisTable !== 1) {
+      throw new Error(`Layer 2 historical accuracy tab did not preserve the NO TRADE summary or single-table layout.\n${JSON.stringify(layer2HistoricalTable, null, 2)}`);
+    }
+
+    await page.locator("[data-overview-confidence-tab='strength']").click();
+    const strengthTable = await page.evaluate(() => {
+      const table = document.querySelector("[data-overview-confidence-strength-table='true']");
+      return {
+        rendered: Boolean(table),
+        rowCount: table?.querySelectorAll("tbody tr").length || 0,
+        activeTab: document.querySelector("[data-overview-confidence-tab].is-active")?.textContent?.trim() || "",
+        onlyOneAnalysisTable: document.querySelectorAll("[data-overview-confidence-analysis-table]").length
+      };
+    });
+    if (strengthTable.activeTab !== "Strength Bands" || !strengthTable.rendered || strengthTable.rowCount !== 4 || strengthTable.onlyOneAnalysisTable !== 1) {
+      throw new Error(`Strength-band accuracy tab regressed.\n${JSON.stringify(strengthTable, null, 2)}`);
+    }
+
+    await page.locator("[data-overview-confidence-tab='asymmetry']").click();
+    const asymmetryTable = await page.evaluate(() => {
+      const table = document.querySelector("[data-overview-confidence-asymmetry-table='true']");
+      return {
+        rendered: Boolean(table),
+        rowCount: table?.querySelectorAll("tbody tr").length || 0,
+        activeTab: document.querySelector("[data-overview-confidence-tab].is-active")?.textContent?.trim() || "",
+        text: document.querySelector("[data-overview-confidence-analysis='asymmetry']")?.innerText || ""
+      };
+    });
+    if (asymmetryTable.activeTab !== "Directional Asymmetry" || !asymmetryTable.rendered || asymmetryTable.rowCount === 0) {
+      throw new Error(`Directional asymmetry tab did not render expected rows.\n${JSON.stringify(asymmetryTable, null, 2)}`);
+    }
+
+    await page.locator("[data-overview-confidence-tab='pooled']").click();
+    const pooledLayer1Table = await page.evaluate(() => {
+      const table = document.getElementById("overviewPooledLayer1Table");
+      return {
+        rendered: Boolean(table),
+        rowCount: table?.querySelectorAll("tbody tr").length || 0,
+        text: document.querySelector("[data-overview-confidence-analysis='pooled']")?.innerText || "",
+        activeTab: document.querySelector("[data-overview-confidence-tab].is-active")?.textContent?.trim() || ""
+      };
+    });
+    if (pooledLayer1Table.activeTab !== "Pooled Reference" || !pooledLayer1Table.rendered || pooledLayer1Table.rowCount !== 10 || !pooledLayer1Table.text.includes("not market-specific")) {
+      throw new Error(`Pooled Layer 1 reference table did not render correctly.\n${JSON.stringify(pooledLayer1Table, null, 2)}`);
+    }
+
+    await page.locator("[data-overview-confidence-pooled-layer='Layer 2']").click();
+    const pooledLayer2Table = await page.evaluate(() => {
+      const table = document.getElementById("overviewPooledLayer2Table");
+      const highlighted = Array.from(table?.querySelectorAll("tbody tr.is-current-band") || []).map((row) => row.innerText || "");
+      return {
+        rendered: Boolean(table),
+        rowCount: table?.querySelectorAll("tbody tr").length || 0,
+        highlightedCount: highlighted.length
+      };
+    });
+    if (!pooledLayer2Table.rendered || pooledLayer2Table.rowCount !== 10 || pooledLayer2Table.highlightedCount !== 0) {
+      throw new Error(`Pooled Layer 2 reference table regressed.\n${JSON.stringify(pooledLayer2Table, null, 2)}`);
     }
 
     const economicEventContract = await page.evaluate(async () => {
@@ -1209,18 +1190,16 @@ async function run() {
     }
 
     const healthyOverviewText = healthyFixturePanels.overviewText.toLowerCase();
-    const healthyOverviewBadge = healthyFixturePanels.overviewBadge.toUpperCase();
-    const healthyOverviewAcceptable =
-      (healthyFixtureState.workflowStatusTone === "success"
-        && healthyOverviewBadge.includes("HEALTHY")
-        && healthyOverviewText.includes("all critical inputs are available"))
-      || (healthyFixtureState.workflowStatusTone === "warning"
-        && healthyOverviewBadge.includes("NEEDS REVIEW")
-        && healthyOverviewText.includes("input health snapshot")
-        && healthyOverviewText.includes("economic-event snapshot")
-        && healthyOverviewText.includes("published layer 1 and layer 2 calls remain visible"));
+    const healthyOverviewAccepted = (
+      healthyFixturePanels.overviewBadge.includes("HEALTHY")
+      && healthyOverviewText.includes("all critical inputs are available")
+    ) || (
+      healthyFixturePanels.overviewBadge.includes("NEEDS REVIEW")
+      && healthyOverviewText.includes("published input-health snapshot predates the current layer 1 calls")
+      && healthyOverviewText.includes("published economic-event warning snapshot predates the current layer 1 calls")
+    );
 
-    if (!healthyOverviewAcceptable) {
+    if (!["success", "warning"].includes(healthyFixtureState.workflowStatusTone) || !healthyOverviewAccepted) {
       throw new Error(`Healthy fixture did not render the expected overview system-status state.\n${JSON.stringify({ healthyFixtureState, healthyFixturePanels }, null, 2)}`);
     }
 
