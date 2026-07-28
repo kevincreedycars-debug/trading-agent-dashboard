@@ -3565,7 +3565,9 @@ function deriveOverviewLayer1DeliveryDirection(direction = "") {
 
 function deriveOverviewLayer2DeliveryDirection(pair = {}) {
   const decision = String(pair?.decision || "").trim().toUpperCase();
+  const direction = String(pair?.direction || "").trim().toUpperCase();
   if (decision === "BUY" || decision === "SELL") return decision;
+  if (decision === "TRADE" && (direction === "BUY" || direction === "SELL")) return direction;
   return null;
 }
 
