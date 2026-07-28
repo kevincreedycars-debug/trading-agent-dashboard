@@ -337,7 +337,7 @@ async function run() {
           ? layer2.pairs.filter((pair) => {
               const decision = String(pair?.decision || "").toUpperCase();
               const direction = String(pair?.direction || "").toUpperCase();
-              return decision === "TRADE" && (direction === "BUY" || direction === "SELL");
+              return (decision === "TRADE" || decision === "BUY" || decision === "SELL") && (direction === "BUY" || direction === "SELL");
             }).map((pair) => ({
               pair: pair.pair_code,
               direction: String(pair.direction || "").toUpperCase()
@@ -418,6 +418,13 @@ async function run() {
       const row = overviewConfidenceBandPanel.currentSummaryTables.layer2.rows.find((entry) => entry.text.includes(pairKey));
       if (!row || !row.text.includes("State only. No active directional call")) {
         throw new Error(`Layer 2 non-directional summary row for ${pairKey} did not stay non-directional.\n${JSON.stringify(row, null, 2)}`);
+      }
+    }
+
+    for (const pairCall of overviewConfidenceBandPanel.layer2DirectionalPairs) {
+      const row = overviewConfidenceBandPanel.currentSummaryTables.layer2.rows.find((entry) => entry.text.includes(pairCall.pair));
+      if (!row || !row.text.includes(pairCall.direction) || row.text.includes("State only. No active directional call")) {
+        throw new Error(`Layer 2 directional summary row for ${pairCall.pair} did not render the live directional state.\n${JSON.stringify(row, null, 2)}`);
       }
     }
 
