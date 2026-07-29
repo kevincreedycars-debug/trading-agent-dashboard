@@ -3693,6 +3693,47 @@ function overviewConfidenceMetricCell(value) {
   return metricAvailable(value) ? percentValue(value) : "n/a";
 }
 
+function overviewConfidenceComparisonLabel(referenceLabel = "") {
+  const normalized = String(referenceLabel || "").trim();
+  const replacements = {
+    "Exact market and direction": "Exact match: same market, direction and confidence band",
+    "Market band, both directions": "Fallback: same market and confidence band, both directions",
+    "Pooled Layer 1 directional reference": "Fallback: pooled Layer 1, same direction and confidence band",
+    "Pooled Layer 1 reference": "Fallback: pooled Layer 1 confidence band",
+    "Pooled Layer 2 directional reference": "Fallback: pooled Layer 2, same direction and confidence band",
+    "Pooled Layer 2 reference": "Fallback: pooled Layer 2 confidence band"
+  };
+  return replacements[normalized] || normalized || "Not yet available";
+}
+
+function overviewConfidenceComparisonBadge(referenceRow = null) {
+  if (!referenceRow) return "";
+  return String(referenceRow.scope_type || "") === "exact_market_direction" ? "EXACT MATCH" : "FALLBACK";
+}
+
+function overviewConfidenceLiveBadge(summary = {}) {
+  if (summary.layer === "Layer 2") {
+    return summary.deliveryDirection ? "LIVE TRADE" : "LIVE STATE";
+  }
+  return summary.deliveryDirection ? "LIVE CALL" : "LIVE STATE";
+}
+
+function overviewConfidenceLiveStateText(summary = {}) {
+  if (!summary.deliveryDirection) {
+    if (summary.layer === "Layer 2") {
+      return "Current live state: NO TRADE. No directional historical accuracy is shown because there is no active BUY or SELL call.";
+    }
+    return "Current live state: NO CLEAR BIAS. No directional historical accuracy is shown because there is no active directional call.";
+  }
+
+  const headline = `${summary.market} — ${summary.stateLabel || "Not yet available"}`;
+  const confidenceLine = metricAvailable(summary.confidence)
+    ? `Confidence ${summary.confidence}${summary.strength ? ` · ${summary.strength}` : ""}`
+    : (summary.strength ? `Strength ${summary.strength}` : "");
+  const bandLine = summary.currentBand ? `Band ${summary.currentBand}` : "";
+  return [headline, confidenceLine, bandLine].filter(Boolean).join("\n");
+}
+
 function overviewConfidenceDirectionLabel(direction = "", layer = "Layer 1") {
   const normalized = String(direction || "").trim().toUpperCase();
   if (normalized === "BULLISH" || normalized === "BEARISH" || normalized === "BUY" || normalized === "SELL") {
@@ -3724,15 +3765,31 @@ function overviewConfidenceButton(options = {}) {
 function renderOverviewConfidenceCurrentSummaryRow(summary = {}) {
   const row = summary.references?.primaryRow || summary.references?.exactRow || summary.references?.marketBandRow || summary.references?.layerDirectionRow || summary.references?.layerBandRow || null;
   const directional = Boolean(summary.deliveryDirection);
-  const label = row?.reference_label || "Insufficient historical evidence";
+  const label = overviewConfidenceComparisonLabel(row?.reference_label || "");
+  const comparisonBadge = overviewConfidenceComparisonBadge(row);
   const lowEvidence = Boolean(row?.insufficient_historical_sample);
+  const liveBadge = overviewConfidenceLiveBadge(summary);
+  const liveStateText = overviewConfidenceLiveStateText(summary);
+  const liveStateHtml = directional
+    ? `
+        <div class="overview-confidence-band-live-call">
+          <strong>${escapeHtml(`${summary.market} — ${summary.stateLabel || "Not yet available"}`)}</strong>
+          <span>${metricAvailable(summary.confidence)
+            ? escapeHtml(`Confidence ${summary.confidence}${summary.strength ? ` · ${summary.strength}` : ""}`)
+            : escapeHtml(summary.strength ? `Strength ${summary.strength}` : "Confidence not available")}</span>
+          <span>${escapeHtml(summary.currentBand ? `Band ${summary.currentBand}` : "Band not available")}</span>
+        </div>
+      `
+    : `<div class="overview-confidence-band-state-only">${escapeHtml(liveStateText)}</div>`;
   return `
     <tr data-overview-confidence-current-row="true" data-overview-confidence-market="${escapeHtml(summary.market)}" class="${lowEvidence ? "is-low-evidence" : ""}">
-      <th scope="row">${escapeHtml(summary.market)}</th>
-      <td>${escapeHtml(summary.stateLabel || "Not yet available")}</td>
-      <td>${metricAvailable(summary.confidence) ? escapeHtml(String(summary.confidence)) : displayDash()}</td>
-      <td>${escapeHtml(summary.strength || "Not yet available")}</td>
-      <td>${escapeHtml(summary.currentBand || "Not yet available")}</td>
+      <th scope="row">
+        <div class="overview-confidence-band-market-cell">
+          <strong>${escapeHtml(summary.market)}</strong>
+          <span class="overview-confidence-band-badge">${escapeHtml(liveBadge)}</span>
+        </div>
+      </th>
+      <td>${liveStateHtml}</td>
       ${directional && row ? `
         <td>${escapeHtml(String(row.total_calls ?? 0))}</td>
         <td>${escapeHtml(String(row.correct ?? 0))}</td>
@@ -3742,33 +3799,42 @@ function renderOverviewConfidenceCurrentSummaryRow(summary = {}) {
         <td class="${lowEvidence ? "is-muted-metric" : ""}">${escapeHtml(overviewConfidenceMetricCell(row.all_outcome_accuracy))}</td>
         <td>${escapeHtml(overviewConfidenceMetricCell(row.flat_rate))}</td>
         <td>${escapeHtml(row.evidence_quality || "Not yet available")}</td>
-        <td>${escapeHtml(summary.horizon || "following 24hrs")}</td>
         <td>${escapeHtml(label)}</td>
+        <td><span class="overview-confidence-band-badge ${comparisonBadge === "FALLBACK" ? "is-fallback" : "is-exact"}">${escapeHtml(comparisonBadge)}</span></td>
       ` : `
-        <td colspan="10" class="overview-confidence-band-nondirectional">State only. No active directional call, so no directional historical-accuracy figure is shown.</td>
+        <td colspan="9" class="overview-confidence-band-nondirectional">${escapeHtml(liveStateText)}</td>
       `}
     </tr>
   `;
 }
 
 function renderOverviewConfidenceCurrentSummaryTable(layer, summaries = []) {
+  const heading = layer === "Layer 1"
+    ? "Current Live Layer 1 Calls — Historical Accuracy"
+    : "Current Live Layer 2 Calls — Historical Accuracy";
+  const intro = layer === "Layer 1"
+    ? "These rows show the currently live Layer 1 directional calls and how often comparable historical calls were correct over the following 24 hours."
+    : "These rows show the currently live Layer 2 trade decisions and how often comparable historical BUY or SELL calls were correct over the following 24 hours.";
+  const fallbackNote = layer === "Layer 1"
+    ? "The comparison uses the same market, direction and confidence band where sufficient history exists. Broader comparisons are used only when the exact historical record is too limited, and every fallback is clearly labelled."
+    : "The comparison uses the same pair, trade direction and confidence band where sufficient history exists. Broader comparisons are used only when the exact historical record is too limited, and every fallback is clearly labelled.";
   return `
     <article class="overview-confidence-band-table-panel overview-confidence-band-summary-table-panel" data-overview-confidence-current-summary="${escapeHtml(layer)}">
       <div class="overview-confidence-band-table-head">
         <div>
           <p class="eyebrow">${escapeHtml(layer)}</p>
-          <h3>${escapeHtml(layer)} current call accuracy summary</h3>
+          <h3>${escapeHtml(heading)}</h3>
         </div>
+        <p class="overview-confidence-band-table-meta">How to read this section: the live call is shown first, followed by the historical delivery rate for comparable past calls. Directional accuracy excludes flat outcomes; all-outcome accuracy includes them.</p>
       </div>
+      <p class="overview-confidence-band-note">${escapeHtml(intro)}</p>
+      <p class="overview-confidence-band-note">${escapeHtml(fallbackNote)}</p>
       <div class="overview-confidence-band-table-scroll">
         <table class="overview-confidence-band-table overview-confidence-band-current-table">
           <thead>
             <tr>
               <th>Market</th>
-              <th>Current direction</th>
-              <th>Model confidence</th>
-              <th>Strength</th>
-              <th>Confidence band</th>
+              <th>Current live call</th>
               <th>Historical calls</th>
               <th>Correct</th>
               <th>Wrong</th>
@@ -3777,8 +3843,8 @@ function renderOverviewConfidenceCurrentSummaryTable(layer, summaries = []) {
               <th>All-outcome accuracy</th>
               <th>Flat rate</th>
               <th>Evidence quality</th>
-              <th>Forecast horizon</th>
-              <th>Reference</th>
+              <th>Historical comparison used</th>
+              <th>Comparison</th>
             </tr>
           </thead>
           <tbody>
@@ -4275,15 +4341,18 @@ function renderOverviewConfidenceBandPanel() {
   container.innerHTML = `
     <div class="panel-head compact-panel-head">
       <div>
-        <p class="eyebrow">Historical Confidence-Band Accuracy</p>
-        <h3>Historical market accuracy under the locked following-24-hours contract</h3>
+        <p class="eyebrow">Current Live Calls and Historical Accuracy</p>
+        <h3>Current Live Calls and Historical Accuracy</h3>
       </div>
     </div>
+    <p class="overview-confidence-band-note">Today’s live directional calls compared with the full historical accuracy record under the locked following-24-hours contract.</p>
     <p class="overview-confidence-band-note">Confidence is the model's internal conviction score, not a guaranteed probability. Historical performance is shown for information only and does not feed back into live call generation.</p>
     <p class="overview-confidence-band-note">Forecast horizon: ${escapeHtml(contract.timeframe)}. Checker contract: ${escapeHtml(contract.checkerContract)}.</p>
-    <div class="overview-confidence-band-summary-stack">
-      ${renderOverviewConfidenceCurrentSummaryTable("Layer 1", layer1Summaries)}
-      ${renderOverviewConfidenceCurrentSummaryTable("Layer 2", layer2Summaries)}
+    <div class="overview-confidence-band-summary-shell">
+      <div class="overview-confidence-band-summary-stack">
+        ${renderOverviewConfidenceCurrentSummaryTable("Layer 1", layer1Summaries)}
+        ${renderOverviewConfidenceCurrentSummaryTable("Layer 2", layer2Summaries)}
+      </div>
     </div>
     <div class="overview-confidence-band-analysis-shell" data-overview-confidence-dashboard="true">
       <div class="overview-confidence-band-tab-row" role="tablist" aria-label="Historical accuracy sections">

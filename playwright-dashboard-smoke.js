@@ -69,6 +69,10 @@ function segmentIntersectsInterior(segment, rect, inset = 18) {
   return false;
 }
 
+function nearlyEqual(a, b, epsilon = 0.75) {
+  return Math.abs(Number(a || 0) - Number(b || 0)) <= epsilon;
+}
+
 async function run() {
   fs.mkdirSync(screenshotDir, { recursive: true });
   const server = createServer();
@@ -80,6 +84,191 @@ async function run() {
   const page = await browser.newPage();
 
   try {
+    const assertOverviewStrengthLayout = async (viewportLabel) => {
+      const audit = await page.evaluate(() => {
+        const minimumReadableFontPx = 12;
+        const cards = Array.from(document.querySelectorAll("#layer1Grid .agent-card")).map((card) => {
+          const heading = card.querySelector("h3")?.textContent?.trim() || "";
+          const strengthChip = Array.from(card.querySelectorAll(".agent-metric-chip")).find((chip) => {
+            const label = chip.querySelector("span")?.textContent?.trim() || "";
+            return label.toUpperCase() === "STRENGTH";
+          }) || null;
+          const value = strengthChip?.querySelector("strong") || null;
+          if (!strengthChip || !value) {
+            return {
+              asset: heading,
+              missing: true
+            };
+          }
+
+          const chipRect = strengthChip.getBoundingClientRect();
+          const valueRect = value.getBoundingClientRect();
+          const computed = getComputedStyle(value);
+          const lineHeight = Number.parseFloat(computed.lineHeight);
+          const fontSize = Number.parseFloat(computed.fontSize);
+          const rectHeight = valueRect.height;
+          const inferredSingleLine = Number.isFinite(lineHeight)
+            ? rectHeight <= lineHeight * 1.35
+            : nearlyEqual(rectHeight, fontSize, Math.max(1.5, fontSize * 0.45));
+
+          return {
+            asset: heading,
+            text: value.textContent?.trim() || "",
+            missing: false,
+            fontSize,
+            lineHeight,
+            rectHeight,
+            inferredSingleLine,
+            whiteSpace: computed.whiteSpace,
+            wordBreak: computed.wordBreak,
+            overflowWrap: computed.overflowWrap,
+            scrollWidth: value.scrollWidth,
+            clientWidth: value.clientWidth,
+            withinChipBounds: valueRect.left >= chipRect.left - 0.5
+              && valueRect.right <= chipRect.right + 0.5
+              && valueRect.top >= chipRect.top - 0.5
+              && valueRect.bottom <= chipRect.bottom + 0.5,
+            notClipped: value.scrollWidth <= value.clientWidth + 1 && value.scrollHeight <= value.clientHeight + 1,
+            minimumReadableFontPx
+          };
+        });
+
+        const uniqueTexts = Array.from(new Set(cards.filter((card) => !card.missing).map((card) => card.text)));
+        return {
+          cards,
+          gridHasHorizontalOverflow: document.getElementById("layer1Grid")?.scrollWidth > document.getElementById("layer1Grid")?.clientWidth + 1
+        };
+      });
+
+      if (audit.gridHasHorizontalOverflow) {
+        throw new Error(`Layer 1 grid overflowed while checking Strength layout at ${viewportLabel}.\n${JSON.stringify(audit, null, 2)}`);
+      }
+
+      for (const card of audit.cards) {
+        if (card.missing) {
+          throw new Error(`Missing Strength metric chip in Layer 1 card at ${viewportLabel}.\n${JSON.stringify(card, null, 2)}`);
+        }
+        if (card.whiteSpace !== "nowrap" || card.wordBreak !== "normal" || card.overflowWrap !== "normal") {
+          throw new Error(`Strength value CSS contract regressed at ${viewportLabel}.\n${JSON.stringify(card, null, 2)}`);
+        }
+        if (!card.inferredSingleLine) {
+          throw new Error(`Strength value wrapped to multiple lines in ${card.asset} at ${viewportLabel}.\n${JSON.stringify(card, null, 2)}`);
+        }
+        if (!card.withinChipBounds || !card.notClipped) {
+          throw new Error(`Strength value overflowed or clipped in ${card.asset} at ${viewportLabel}.\n${JSON.stringify(card, null, 2)}`);
+        }
+        if (!(card.fontSize >= card.minimumReadableFontPx)) {
+          throw new Error(`Strength value font size fell below the readable minimum in ${card.asset} at ${viewportLabel}.\n${JSON.stringify(card, null, 2)}`);
+        }
+      }
+    };
+
+    const assertSyntheticStrengthVariants = async (viewportLabel) => {
+      const audit = await page.evaluate(() => {
+        const strengths = ["WEAK", "MODERATE", "STRONG", "VERY STRONG"];
+        const host = document.createElement("div");
+        host.style.position = "fixed";
+        host.style.left = "-10000px";
+        host.style.top = "0";
+        host.style.width = "100%";
+        host.setAttribute("data-test-strength-host", "true");
+        document.body.appendChild(host);
+
+        host.innerHTML = strengths.map((strength, index) => globalThis.__dashboardTestHooks.renderAgentCard({
+          agent: `TEST_${index + 1}`,
+          status: "live",
+          summary: "",
+          sealed_at: "2026-07-29T05:56:00.000Z",
+          valid_from: "2026-07-29T05:56:00.000Z",
+          refresh_due_at: "2026-07-29T11:00:00.000Z",
+          expires_at: "2026-07-29T21:00:00.000Z",
+          status_at_build: "LIVE",
+          effective_status: "LIVE",
+          status_resolved_at: "2026-07-29T05:56:00.000Z",
+          display_metrics: {
+            confidence: 64,
+            bull_case: 70,
+            bear_case: 30,
+            net_edge: 40,
+            participation: 55,
+            verdict_strength: strength
+          },
+          calls: {
+            "24h": {
+              direction: "BULLISH",
+              conviction: 64,
+              status_at_build: "LIVE",
+              effective_status: "LIVE",
+              valid_from: "2026-07-29T05:56:00.000Z",
+              refresh_due_at: "2026-07-29T11:00:00.000Z",
+              expires_at: "2026-07-29T21:00:00.000Z",
+              conviction_model: {
+                bullish_argument_pct: 70,
+                bearish_argument_pct: 30,
+                directional_participation_pct: 55,
+                net_edge_pct: 40,
+                confidence_strength: strength
+              }
+            }
+          },
+          priority_call: {
+            direction: "BULLISH",
+            conviction: 64,
+            status_at_build: "LIVE",
+            effective_status: "LIVE",
+            valid_from: "2026-07-29T05:56:00.000Z",
+            refresh_due_at: "2026-07-29T11:00:00.000Z",
+            expires_at: "2026-07-29T21:00:00.000Z"
+          }
+        })).join("");
+
+        const cards = Array.from(host.querySelectorAll(".agent-card")).map((card) => {
+          const strengthChip = Array.from(card.querySelectorAll(".agent-metric-chip")).find((chip) => {
+            const label = chip.querySelector("span")?.textContent?.trim() || "";
+            return label.toUpperCase() === "STRENGTH";
+          }) || null;
+          const value = strengthChip?.querySelector("strong") || null;
+          const chipRect = strengthChip?.getBoundingClientRect() || null;
+          const valueRect = value?.getBoundingClientRect() || null;
+          const computed = value ? getComputedStyle(value) : null;
+          const lineHeight = computed ? Number.parseFloat(computed.lineHeight) : NaN;
+          const fontSize = computed ? Number.parseFloat(computed.fontSize) : NaN;
+          const rectHeight = valueRect ? valueRect.height : NaN;
+          return {
+            text: value?.textContent?.trim() || "",
+            whiteSpace: computed?.whiteSpace || "",
+            wordBreak: computed?.wordBreak || "",
+            overflowWrap: computed?.overflowWrap || "",
+            fontSize,
+            inferredSingleLine: Number.isFinite(lineHeight) ? rectHeight <= lineHeight * 1.35 : false,
+            withinChipBounds: Boolean(chipRect && valueRect)
+              && valueRect.left >= chipRect.left - 0.5
+              && valueRect.right <= chipRect.right + 0.5
+              && valueRect.top >= chipRect.top - 0.5
+              && valueRect.bottom <= chipRect.bottom + 0.5,
+            notClipped: Boolean(value) && value.scrollWidth <= value.clientWidth + 1 && value.scrollHeight <= value.clientHeight + 1
+          };
+        });
+
+        host.remove();
+        return cards;
+      });
+
+      const expectedStrengths = ["WEAK", "MODERATE", "STRONG", "VERY STRONG"];
+      for (const strength of expectedStrengths) {
+        const row = audit.find((entry) => entry.text === strength);
+        if (!row) {
+          throw new Error(`Synthetic Strength card for '${strength}' did not render at ${viewportLabel}.\n${JSON.stringify(audit, null, 2)}`);
+        }
+        if (row.whiteSpace !== "nowrap" || row.wordBreak !== "normal" || row.overflowWrap !== "normal") {
+          throw new Error(`Synthetic Strength CSS contract regressed for '${strength}' at ${viewportLabel}.\n${JSON.stringify(row, null, 2)}`);
+        }
+        if (!row.inferredSingleLine || !row.withinChipBounds || !row.notClipped) {
+          throw new Error(`Synthetic Strength value '${strength}' did not fit on one line at ${viewportLabel}.\n${JSON.stringify(row, null, 2)}`);
+        }
+      }
+    };
+
     const consoleErrors = [];
     page.on("console", (message) => {
       if (message.type() === "error") {
@@ -313,6 +502,7 @@ async function run() {
         rendered: Boolean(panel),
         heading: panel?.querySelector("h3")?.textContent?.trim() || "",
         text: panel?.innerText || "",
+        eyebrow: panel?.querySelector(".eyebrow")?.textContent?.trim() || "",
         hasHorizontalOverflow: panel ? panel.scrollWidth > panel.clientWidth + 1 : false,
         tabLabels: Array.from(panel?.querySelectorAll("[data-overview-confidence-tab]") || []).map((button) => button.textContent?.trim() || ""),
         activeTabLabel: panel?.querySelector("[data-overview-confidence-tab].is-active")?.textContent?.trim() || "",
@@ -355,11 +545,12 @@ async function run() {
       throw new Error("Overview confidence-band accuracy panel did not render.");
     }
 
-    if (overviewConfidenceBandPanel.heading !== "Historical market accuracy under the locked following-24-hours contract") {
+    if (overviewConfidenceBandPanel.heading !== "Current Live Calls and Historical Accuracy" || overviewConfidenceBandPanel.eyebrow !== "Current Live Calls and Historical Accuracy") {
       throw new Error(`Overview confidence-band accuracy heading regressed.\n${JSON.stringify(overviewConfidenceBandPanel, null, 2)}`);
     }
 
     for (const expectedText of [
+      "Today’s live directional calls compared with the full historical accuracy record under the locked following-24-hours contract.",
       "Confidence is the model's internal conviction score, not a guaranteed probability.",
       "does not feed back into live call generation",
       "Forecast horizon: following 24hrs",
@@ -395,11 +586,32 @@ async function run() {
     }
 
     for (const expectedHeader of ["Historical calls", "Directional accuracy", "Evidence quality", "Forecast horizon"]) {
+      if (!overviewConfidenceBandPanel.currentSummaryTables.layer1.header.includes(expectedHeader) && expectedHeader !== "Forecast horizon") {
+        throw new Error(`Layer 1 current summary is missing header ${expectedHeader}.`);
+      }
+      if (!overviewConfidenceBandPanel.currentSummaryTables.layer2.header.includes(expectedHeader) && expectedHeader !== "Forecast horizon") {
+        throw new Error(`Layer 2 current summary is missing header ${expectedHeader}.`);
+      }
+    }
+
+    for (const expectedHeader of ["Current live call", "Historical comparison used", "Comparison"]) {
       if (!overviewConfidenceBandPanel.currentSummaryTables.layer1.header.includes(expectedHeader)) {
         throw new Error(`Layer 1 current summary is missing header ${expectedHeader}.`);
       }
       if (!overviewConfidenceBandPanel.currentSummaryTables.layer2.header.includes(expectedHeader)) {
         throw new Error(`Layer 2 current summary is missing header ${expectedHeader}.`);
+      }
+    }
+
+    for (const expectedText of [
+      "Current Live Layer 1 Calls — Historical Accuracy",
+      "Current Live Layer 2 Calls — Historical Accuracy",
+      "These rows show the currently live Layer 1 directional calls and how often comparable historical calls were correct over the following 24 hours.",
+      "These rows show the currently live Layer 2 trade decisions and how often comparable historical BUY or SELL calls were correct over the following 24 hours.",
+      "How to read this section: the live call is shown first, followed by the historical delivery rate for comparable past calls. Directional accuracy excludes flat outcomes; all-outcome accuracy includes them."
+    ]) {
+      if (!overviewConfidenceBandPanel.text.includes(expectedText)) {
+        throw new Error(`Overview confidence-band panel did not render expected live-call wording '${expectedText}'.\n${overviewConfidenceBandPanel.text}`);
       }
     }
 
@@ -409,21 +621,30 @@ async function run() {
 
     for (const call of overviewConfidenceBandPanel.layer1DirectionalCalls) {
       const row = overviewConfidenceBandPanel.currentSummaryTables.layer1.rows.find((entry) => entry.text.includes(call.market));
-      if (!row || !row.text.includes("Exact market and direction") && !row.text.includes("Market band, both directions") && !row.text.includes("Pooled Layer 1 directional reference")) {
+      if (!row || !row.text.includes("LIVE CALL")) {
+        throw new Error(`Layer 1 current summary row for ${call.market} did not render LIVE CALL.\n${JSON.stringify(row, null, 2)}`);
+      }
+      if (!row.text.includes("EXACT MATCH") && !row.text.includes("FALLBACK")) {
+        throw new Error(`Layer 1 current summary row for ${call.market} did not render comparison badge.\n${JSON.stringify(row, null, 2)}`);
+      }
+      if (!row.text.includes("Exact match: same market, direction and confidence band")
+        && !row.text.includes("Fallback: same market and confidence band, both directions")
+        && !row.text.includes("Fallback: pooled Layer 1, same direction and confidence band")
+        && !row.text.includes("Fallback: pooled Layer 1 confidence band")) {
         throw new Error(`Layer 1 current summary row for ${call.market} did not render the historical reference label.\n${JSON.stringify(row, null, 2)}`);
       }
     }
 
     for (const pairKey of overviewConfidenceBandPanel.layer2NoTradePairs) {
       const row = overviewConfidenceBandPanel.currentSummaryTables.layer2.rows.find((entry) => entry.text.includes(pairKey));
-      if (!row || !row.text.includes("State only. No active directional call")) {
+      if (!row || !row.text.includes("LIVE STATE") || !row.text.includes("Current live state: NO TRADE. No directional historical accuracy is shown because there is no active BUY or SELL call.")) {
         throw new Error(`Layer 2 non-directional summary row for ${pairKey} did not stay non-directional.\n${JSON.stringify(row, null, 2)}`);
       }
     }
 
     for (const pairCall of overviewConfidenceBandPanel.layer2DirectionalPairs) {
       const row = overviewConfidenceBandPanel.currentSummaryTables.layer2.rows.find((entry) => entry.text.includes(pairCall.pair));
-      if (!row || !row.text.includes(pairCall.direction) || row.text.includes("State only. No active directional call")) {
+      if (!row || !row.text.includes(pairCall.direction) || !row.text.includes("LIVE TRADE") || row.text.includes("Current live state: NO TRADE")) {
         throw new Error(`Layer 2 directional summary row for ${pairCall.pair} did not render the live directional state.\n${JSON.stringify(row, null, 2)}`);
       }
     }
@@ -877,6 +1098,9 @@ async function run() {
       throw new Error(`Overview Layer 1 expiry presentation introduced horizontal overflow.\n${JSON.stringify(overviewLayout, null, 2)}`);
     }
 
+    await assertOverviewStrengthLayout("1440x900");
+    await assertSyntheticStrengthVariants("1440x900");
+
     const syntheticNoCallCard = await page.evaluate(() => {
       const html = globalThis.__dashboardTestHooks.renderAgentCard({
         agent: "TEST_NO_CALL",
@@ -1058,6 +1282,9 @@ async function run() {
     await page.setViewportSize({ width: 900, height: 1280 });
     await page.waitForTimeout(250);
 
+    await assertOverviewStrengthLayout("900x1280");
+    await assertSyntheticStrengthVariants("900x1280");
+
     const tabletEconomicEventLayout = await page.evaluate(() => {
       const doc = document.documentElement;
       const panel = document.querySelector("[data-economic-event-panel='true']");
@@ -1073,6 +1300,9 @@ async function run() {
 
     await page.setViewportSize({ width: 390, height: 1280 });
     await page.waitForTimeout(250);
+
+    await assertOverviewStrengthLayout("390x1280");
+    await assertSyntheticStrengthVariants("390x1280");
 
     const narrowClockLayout = await page.evaluate(() => {
       const doc = document.documentElement;
@@ -1109,6 +1339,11 @@ async function run() {
     }
 
     await page.screenshot({ path: path.join(screenshotDir, "overview-mobile.png"), fullPage: false });
+
+    await page.setViewportSize({ width: 1920, height: 1080 });
+    await page.waitForTimeout(250);
+    await assertOverviewStrengthLayout("1920x1080");
+    await assertSyntheticStrengthVariants("1920x1080");
 
     const missingArtifactState = await page.evaluate(async () => {
       globalThis.__dashboardTestHooks.setOperationalArtifactUrlsForTest({

@@ -749,6 +749,14 @@ h3 {
   margin-top: 18px;
 }
 
+.overview-confidence-band-summary-shell {
+  margin-top: 18px;
+  padding: 16px;
+  border: 1px solid rgba(20, 54, 96, 0.14);
+  border-radius: 12px;
+  background: linear-gradient(180deg, rgba(244, 248, 252, 0.92), rgba(255, 255, 255, 0.94));
+}
+
 .overview-confidence-band-analysis-shell {
   margin-top: 18px;
   display: grid;
@@ -937,6 +945,49 @@ h3 {
 
 .overview-confidence-band-summary-table-panel {
   background: rgba(255, 255, 255, 0.86);
+}
+
+.overview-confidence-band-market-cell,
+.overview-confidence-band-live-call,
+.overview-confidence-band-state-only {
+  display: grid;
+  gap: 4px;
+}
+
+.overview-confidence-band-live-call strong,
+.overview-confidence-band-market-cell strong {
+  color: var(--navy);
+}
+
+.overview-confidence-band-live-call span,
+.overview-confidence-band-state-only {
+  color: var(--ink-muted);
+  white-space: normal;
+  line-height: 1.45;
+}
+
+.overview-confidence-band-badge {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: rgba(20, 54, 96, 0.1);
+  color: var(--navy);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.overview-confidence-band-badge.is-fallback {
+  background: rgba(184, 132, 26, 0.14);
+  color: #7b5d11;
+}
+
+.overview-confidence-band-badge.is-exact {
+  background: rgba(34, 116, 72, 0.12);
+  color: #1f6a42;
 }
 
 .overview-performance-meta,
@@ -1715,8 +1766,11 @@ h3 {
   display: block;
   margin-top: 4px;
   color: var(--ink-mid);
-  font-size: 15px;
-  overflow-wrap: anywhere;
+  font-size: clamp(12px, 0.92vw, 15px);
+  line-height: 1.15;
+  white-space: nowrap;
+  word-break: normal;
+  overflow-wrap: normal;
 }
 
 .asset-update {
