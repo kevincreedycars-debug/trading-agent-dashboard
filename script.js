@@ -2,6 +2,7 @@ const layer1Url = "./data/layer1.json";
 const layer2Url = "./data/layer2.json";
 const workflowControlUrl = "./data/workflow-control.json";
 const workflowStatusUrlDefault = "./data/workflow-status.json";
+const workflowRuntimeProfileUrlDefault = "./data/refresh-runtime-profile.json";
 const economicEventRefreshUrlDefault = "./data/economic-event-refresh.json?v=20260723-operational-warning-modules-v2";
 const economicEventsSourceUrlDefault = "./data/economic-events-source.json?v=20260727-input-health-overview-release";
 const inputHealthUrlDefault = "./data/input-health.json?v=20260723-operational-warning-modules-v2";
@@ -150,6 +151,11 @@ let workflowStatus = null;
 let workflowStatusUrlOverride = "";
 let workflowPollTimer = null;
 let workflowTriggerInFlight = false;
+let workflowStatusLoadError = null;
+let workflowRuntimeProfile = null;
+let workflowRefreshState = null;
+let workflowRefreshRenderTimer = null;
+let workflowRefreshTabId = "";
 let activeTab = "overview";
 let activeBacktestTab = "accuracy";
 let activeCheckerRowId = null;
@@ -360,6 +366,8 @@ const architectureWaterfallViewConfigs = {
   }
 };
 const navigationStateKey = "dashboard-navigation-state";
+const workflowRefreshStateKey = "dashboard-workflow-refresh-state";
+const workflowRefreshTabIdKey = "dashboard-workflow-refresh-tab-id";
 
 function storageAvailable() {
   try {
@@ -367,6 +375,45 @@ function storageAvailable() {
   } catch (err) {
     return false;
   }
+}
+
+function parseTimestamp(value) {
+  if (!value) return NaN;
+  const parsed = new Date(value).getTime();
+  return Number.isFinite(parsed) ? parsed : NaN;
+}
+
+function createWorkflowRefreshTabId() {
+  if (workflowRefreshTabId) return workflowRefreshTabId;
+
+  if (storageAvailable()) {
+    try {
+      const existing = String(window.sessionStorage?.getItem(workflowRefreshTabIdKey) || "").trim();
+      if (existing) {
+        workflowRefreshTabId = existing;
+        return workflowRefreshTabId;
+      }
+    } catch (err) {
+      console.warn("Could not read workflow refresh tab id", err);
+    }
+  }
+
+  workflowRefreshTabId = `tab-${Date.now().toString(36)}-${Math.random().toString(16).slice(2, 10)}`;
+
+  if (storageAvailable()) {
+    try {
+      window.sessionStorage?.setItem(workflowRefreshTabIdKey, workflowRefreshTabId);
+    } catch (err) {
+      console.warn("Could not persist workflow refresh tab id", err);
+    }
+  }
+
+  return workflowRefreshTabId;
+}
+
+function createRefreshRequestId() {
+  if (globalThis.crypto?.randomUUID) return globalThis.crypto.randomUUID();
+  return `refresh-${Date.now().toString(36)}-${Math.random().toString(16).slice(2, 10)}`;
 }
 
 function getAvailableTopLevelTabs() {
@@ -799,6 +846,110 @@ function workflowStatusClass(status = "") {
 function workflowStatusLabel(status = "") {
   const value = String(status || "pending").replaceAll("_", " ");
   return value ? value.toUpperCase() : "PENDING";
+}
+
+function workflowRefreshPhaseBadgeLabel(phase = "") {
+  const value = String(phase || "").toLowerCase();
+  if (value === "accepted") return "Accepted";
+  if (value === "sending") return "Sending";
+  if (value === "publishing") return "Publishing";
+  if (value === "delayed") return "Delayed";
+  if (value === "status_unavailable") return "Status unavailable";
+  if (value === "association_unverified") return "Association unverified";
+  if (value === "failed_dispatch") return "Dispatch failed";
+  return workflowStatusLabel(value || "pending");
+}
+
+function workflowRefreshPhaseClass(phase = "") {
+  const value = String(phase || "").toLowerCase();
+  if (value === "association_unverified") return "warning";
+  if (value === "status_unavailable" || value === "delayed") return "warning";
+  if (value === "failed_dispatch" || value === "failed") return "failed";
+  if (value === "accepted" || value === "sending" || value === "publishing") return "running";
+  return "pending";
+}
+
+function buildWorkflowRefreshPresentation(state) {
+  if (!state) return null;
+
+  const reconciled = reconcileWorkflowRefreshState() || state;
+  const elapsedSeconds = workflowRefreshElapsedSeconds(reconciled.requested_at);
+  const medianSeconds = getRuntimeProfilePercentileSeconds("median");
+  const delayedThreshold = getRuntimeProfilePercentileSeconds("p75");
+  const strongDelayThreshold = getRuntimeProfilePercentileSeconds("p90");
+  const remainingSeconds = Number.isFinite(medianSeconds) ? Math.max(0, medianSeconds - elapsedSeconds) : null;
+  const badgeClass = workflowRefreshPhaseClass(reconciled.phase);
+  const badgeLabel = workflowRefreshPhaseBadgeLabel(reconciled.phase);
+  const baseline = reconciled.baseline || {};
+  const observed = reconciled.observed_markers || currentWorkflowMarkers();
+  const markerDelta = buildWorkflowMarkerDelta(baseline, observed, reconciled.requested_at);
+  const noteParts = [];
+  let summary = "Refresh request state unavailable.";
+  let etaText = "Estimate unavailable";
+  let meta = `Request ${reconciled.refresh_request_id || "unknown"}`;
+
+  if (reconciled.phase === "sending") {
+    summary = "Sending refresh request to the Master Orchestrator.";
+    meta = `Request ${reconciled.refresh_request_id} created ${formatDashboardTime(reconciled.requested_at)}.`;
+    noteParts.push("A successful browser dispatch is not completion.");
+  } else if (reconciled.phase === "accepted") {
+    summary = "Refresh request dispatched. Waiting for execution confirmation from public status signals.";
+    meta = `Request ${reconciled.refresh_request_id} sent ${formatDashboardTime(reconciled.requested_at)}. Opaque no-cors delivery is not verified acceptance.`;
+    noteParts.push("The dashboard cannot read the webhook response body in this mode.");
+    noteParts.push("Estimated time remaining is based on recent production runtimes, not a completion guarantee.");
+  } else if (reconciled.phase === "publishing") {
+    summary = "New post-request artifacts are appearing. Waiting for public publication to settle.";
+    meta = `Request ${reconciled.refresh_request_id} is observing post-request signals, but exact execution association is still unavailable.`;
+    noteParts.push("Fresh publication does not yet prove that this exact click completed.");
+  } else if (reconciled.phase === "delayed") {
+    summary = "This refresh is taking longer than usual based on recent successful production runtimes.";
+    meta = `Request ${reconciled.refresh_request_id} has exceeded the usual threshold without a correlated completion signal.`;
+    noteParts.push("The countdown reaching zero does not mean success.");
+  } else if (reconciled.phase === "status_unavailable") {
+    summary = "Workflow status is temporarily unavailable while this refresh request is active.";
+    meta = `Request ${reconciled.refresh_request_id} is still being tracked locally.`;
+    noteParts.push("Public status polling failed, so the dashboard cannot confirm progress right now.");
+  } else if (reconciled.phase === "association_unverified") {
+    summary = "A newer refresh publication was detected after your request, but exact association remains unverified in browser-only mode.";
+    meta = `Request ${reconciled.refresh_request_id} observed fresh workflow and artifact signals after ${formatDashboardTime(reconciled.requested_at)}.`;
+    noteParts.push("A fresh unrelated or manual run could produce the same public signals.");
+    noteParts.push("Browser-only mode will not label this request Complete.");
+  } else if (reconciled.phase === "failed_dispatch") {
+    summary = "The dashboard could not send the refresh request.";
+    meta = `Request ${reconciled.refresh_request_id} failed before the dashboard could begin tracking execution.`;
+    noteParts.push(reconciled.error_message || "No additional error detail was supplied.");
+  }
+
+  if (Number.isFinite(remainingSeconds)) {
+    etaText = remainingSeconds > 0
+      ? `Estimated time remaining ${formatDurationClock(remainingSeconds)}`
+      : "Estimated time remaining 00:00";
+  }
+
+  if (Number.isFinite(delayedThreshold) && elapsedSeconds > delayedThreshold && reconciled.phase !== "association_unverified") {
+    noteParts.push(`Taking longer than usual after ${formatDurationClock(delayedThreshold)}.`);
+  }
+  if (Number.isFinite(strongDelayThreshold) && elapsedSeconds > strongDelayThreshold && reconciled.phase !== "association_unverified") {
+    noteParts.push(`Still running beyond the stronger delay band of ${formatDurationClock(strongDelayThreshold)}.`);
+  }
+  if (markerDelta.layer2Fresh && !markerDelta.layer1Fresh) {
+    noteParts.push("A newer Layer 2 artifact is visible before Layer 1 publication has caught up.");
+  }
+  if (markerDelta.layer1Fresh && !markerDelta.workflowFinishedFresh) {
+    noteParts.push("A newer Layer 1 artifact is visible before final workflow status publication has caught up.");
+  }
+
+  return {
+    badgeClass,
+    badgeLabel,
+    etaText,
+    elapsedText: `Elapsed ${formatDurationClock(elapsedSeconds)}`,
+    summary,
+    meta,
+    note: noteParts.join(" "),
+    requestId: reconciled.refresh_request_id || "",
+    phase: reconciled.phase
+  };
 }
 
 function inputHealthTone(status = "") {
@@ -1818,9 +1969,24 @@ if (typeof globalThis !== "undefined") {
   globalThis.__dashboardTestHooks = {
     ...(globalThis.__dashboardTestHooks || {}),
     buildOverviewBriefing,
+    buildWorkflowMarkerDelta,
+    buildWorkflowRefreshPresentation,
+    buildWorkflowRuntimeProfileFallback,
+    createRefreshRequestId,
+    currentWorkflowMarkers,
+    formatDurationClock,
     getLayer1Validity,
+    isTerminalWorkflowRefreshPhase,
+    loadDashboardForTest: loadDashboard,
+    loadWorkflowRuntimeProfileForTest: loadWorkflowRuntimeProfile,
+    loadWorkflowStatusForTest: loadWorkflowStatus,
+    readStoredWorkflowRefreshState,
     renderAgentCard,
     resolveLayer1DisplayStatus,
+    restoreWorkflowRefreshStateForTest: restoreWorkflowRefreshState,
+    writeStoredWorkflowRefreshState,
+    workflowRefreshElapsedSeconds,
+    workflowRefreshPhaseBadgeLabel,
     validateArchitectureManifest,
     setArchitectureManifestUrlForTest(url) {
       architectureManifestUrl = url || architectureManifestUrlDefault;
@@ -2397,6 +2563,184 @@ function describeEconomicEventState(event) {
       }
       return "No additional event refresh detail is available.";
   }
+}
+
+function buildWorkflowRuntimeProfileFallback() {
+  return {
+    version: "2026-08-01-prod13",
+    workflow_id: "X75RKU34ikiM5RMU",
+    sample_count: 13,
+    percentiles_seconds: {
+      median: 296.103,
+      p75: 317.972,
+      p80: 318.2,
+      p90: 325.913,
+      p95: 333.783,
+      max: 342.754
+    }
+  };
+}
+
+function readStoredWorkflowRefreshState() {
+  if (!storageAvailable()) return null;
+
+  try {
+    const parsed = JSON.parse(window.localStorage.getItem(workflowRefreshStateKey) || "null");
+    return parsed && typeof parsed === "object" ? parsed : null;
+  } catch (err) {
+    console.warn("Could not read workflow refresh state", err);
+    return null;
+  }
+}
+
+function isTerminalWorkflowRefreshPhase(phase = "") {
+  return ["association_unverified", "failed_dispatch", "failed", "complete"].includes(String(phase || "").toLowerCase());
+}
+
+function writeStoredWorkflowRefreshState(state) {
+  workflowRefreshState = state || null;
+  if (!storageAvailable()) return;
+
+  try {
+    if (state) {
+      window.localStorage.setItem(workflowRefreshStateKey, JSON.stringify(state));
+    } else {
+      window.localStorage.removeItem(workflowRefreshStateKey);
+    }
+  } catch (err) {
+    console.warn("Could not save workflow refresh state", err);
+  }
+}
+
+function currentWorkflowMarkers() {
+  return {
+    workflow_finished_at: workflowStatus?.last_run_finished_at || null,
+    workflow_started_at: workflowStatus?.last_run_started_at || null,
+    workflow_status: workflowStatus?.status || null,
+    layer1_generated_at: layer1Data?.generated_at || null,
+    layer2_generated_at: layer2Data?.generated_at || null
+  };
+}
+
+function isTimestampAfter(reference, candidate) {
+  const referenceMs = parseTimestamp(reference);
+  const candidateMs = parseTimestamp(candidate);
+  return Number.isFinite(referenceMs) && Number.isFinite(candidateMs) && candidateMs > referenceMs;
+}
+
+function markerChanged(baselineValue, currentValue) {
+  return Boolean(currentValue) && currentValue !== (baselineValue || null);
+}
+
+function buildWorkflowMarkerDelta(baseline = {}, current = {}, requestedAt = "") {
+  return {
+    workflowFinishedFresh: markerChanged(baseline.workflow_finished_at, current.workflow_finished_at)
+      && isTimestampAfter(requestedAt, current.workflow_finished_at),
+    workflowStartedFresh: markerChanged(baseline.workflow_started_at, current.workflow_started_at)
+      && isTimestampAfter(requestedAt, current.workflow_started_at),
+    layer1Fresh: markerChanged(baseline.layer1_generated_at, current.layer1_generated_at)
+      && isTimestampAfter(requestedAt, current.layer1_generated_at),
+    layer2Fresh: markerChanged(baseline.layer2_generated_at, current.layer2_generated_at)
+      && isTimestampAfter(requestedAt, current.layer2_generated_at)
+  };
+}
+
+function activeWorkflowRefreshBlocksNewRequest(state = workflowRefreshState) {
+  return Boolean(state && !isTerminalWorkflowRefreshPhase(state.phase));
+}
+
+function clearWorkflowRefreshPollingTimer() {
+  if (workflowRefreshRenderTimer) {
+    clearInterval(workflowRefreshRenderTimer);
+    workflowRefreshRenderTimer = null;
+  }
+}
+
+function ensureWorkflowRefreshRenderTimer() {
+  if (workflowRefreshRenderTimer) return;
+  workflowRefreshRenderTimer = setInterval(() => renderWorkflowStatus(workflowStatus), 1000);
+}
+
+function getRuntimeProfilePercentileSeconds(key, fallback = null) {
+  const value = Number(workflowRuntimeProfile?.percentiles_seconds?.[key]);
+  return Number.isFinite(value) ? value : fallback;
+}
+
+function workflowRefreshElapsedSeconds(requestedAt) {
+  const requestedMs = parseTimestamp(requestedAt);
+  if (!Number.isFinite(requestedMs)) return 0;
+  return Math.max(0, (Date.now() - requestedMs) / 1000);
+}
+
+function formatDurationClock(totalSeconds) {
+  const seconds = Math.max(0, Math.floor(Number(totalSeconds) || 0));
+  const minutes = Math.floor(seconds / 60);
+  const remainder = seconds % 60;
+  return `${String(minutes).padStart(2, "0")}:${String(remainder).padStart(2, "0")}`;
+}
+
+function captureWorkflowRefreshBaseline() {
+  return currentWorkflowMarkers();
+}
+
+function reconcileWorkflowRefreshState() {
+  const state = workflowRefreshState;
+  if (!state) {
+    clearWorkflowRefreshPollingTimer();
+    return null;
+  }
+
+  const baseline = state.baseline || {};
+  const current = currentWorkflowMarkers();
+  const delta = buildWorkflowMarkerDelta(baseline, current, state.requested_at);
+  const elapsedSeconds = workflowRefreshElapsedSeconds(state.requested_at);
+  const delayedThreshold = getRuntimeProfilePercentileSeconds("p75", 317.972);
+  const anyFresh = delta.workflowFinishedFresh || delta.workflowStartedFresh || delta.layer1Fresh || delta.layer2Fresh;
+  const allFresh = delta.workflowFinishedFresh && delta.layer1Fresh && delta.layer2Fresh;
+  let nextPhase = state.phase || "sending";
+
+  if (state.phase === "failed_dispatch") {
+    nextPhase = "failed_dispatch";
+  } else if (anyFresh) {
+    nextPhase = allFresh ? "association_unverified" : "publishing";
+  } else if (workflowStatusLoadError) {
+    nextPhase = "status_unavailable";
+  } else if (elapsedSeconds > delayedThreshold) {
+    nextPhase = "delayed";
+  } else if (state.phase === "sending") {
+    nextPhase = "accepted";
+  } else if (!state.phase || state.phase === "pending") {
+    nextPhase = "accepted";
+  }
+
+  const updated = {
+    ...state,
+    phase: nextPhase,
+    last_updated_at: new Date().toISOString(),
+    observed_markers: current
+  };
+
+  if (nextPhase !== state.phase) {
+    writeStoredWorkflowRefreshState(updated);
+  } else {
+    workflowRefreshState = updated;
+  }
+
+  if (isTerminalWorkflowRefreshPhase(updated.phase)) {
+    clearWorkflowRefreshPollingTimer();
+  } else {
+    ensureWorkflowRefreshRenderTimer();
+  }
+
+  return updated;
+}
+
+function restoreWorkflowRefreshState() {
+  workflowRefreshState = readStoredWorkflowRefreshState();
+  if (activeWorkflowRefreshBlocksNewRequest()) {
+    ensureWorkflowRefreshRenderTimer();
+  }
+  return workflowRefreshState;
 }
 
 function renderEconomicEventAgentLine(title, agents, className = "") {
@@ -10156,8 +10500,12 @@ function renderWorkflowStatus(status = workflowStatus) {
   const button = document.getElementById("runWorkflowButton");
   const errorReport = document.getElementById("workflowErrorReport");
   const eta = document.getElementById("workflowEta");
+  const elapsed = document.getElementById("workflowElapsed");
+  const meta = document.getElementById("workflowProgressMeta");
+  const note = document.getElementById("workflowProgressNote");
 
   const configured = Boolean(workflowControl?.enabled && workflowControl?.webhook_url);
+  const activeRefreshPresentation = buildWorkflowRefreshPresentation(workflowRefreshState);
   const dataStatus = status?.overall_data_status || status?.data_status || (
     inputHealthData?.overall_status === "CRITICAL" || inputHealthData?.overall_status === "DEGRADED"
       ? "DEGRADED"
@@ -10174,27 +10522,47 @@ function renderWorkflowStatus(status = workflowStatus) {
   const finished = status?.last_run_finished_at ? formatDashboardTime(status.last_run_finished_at) : null;
   const age = status?.last_run_finished_at ? formatRelativeAge(status.last_run_finished_at) : "";
   const message = status?.message || "";
+  const blockedByStoredRefresh = activeWorkflowRefreshBlocksNewRequest();
 
   if (badge) {
-    badge.className = `workflow-status-badge ${statusClass}`;
-    badge.textContent = workflowStatusLabel(effectiveStatus);
+    badge.className = `workflow-status-badge ${activeRefreshPresentation?.badgeClass || statusClass}`;
+    badge.textContent = activeRefreshPresentation?.badgeLabel || workflowStatusLabel(effectiveStatus);
   }
 
   if (button) {
-    button.disabled = workflowTriggerInFlight || !configured;
+    button.disabled = workflowTriggerInFlight || blockedByStoredRefresh || !configured;
     button.textContent = workflowTriggerInFlight ? "Starting..." : "Run Refresh";
     button.title = configured
-      ? "Trigger the n8n Master Orchestrator"
+      ? (blockedByStoredRefresh
+        ? "A refresh request is already being tracked in this browser profile."
+        : "Trigger the n8n Master Orchestrator")
       : "Add the n8n webhook URL to data/workflow-control.json";
   }
 
   if (eta) {
-    eta.textContent = workflowEtaText(status, statusClass);
-    eta.className = `workflow-eta ${statusClass}`;
+    eta.textContent = activeRefreshPresentation?.etaText || workflowEtaText(status, statusClass);
+    eta.className = `workflow-eta ${activeRefreshPresentation?.badgeClass || statusClass}`;
+  }
+
+  if (elapsed) {
+    elapsed.textContent = activeRefreshPresentation?.elapsedText || "Elapsed pending";
+    elapsed.className = `workflow-elapsed ${activeRefreshPresentation?.badgeClass || statusClass}`;
+  }
+
+  if (meta) {
+    meta.textContent = activeRefreshPresentation?.meta || `Latest published workflow status: ${workflowStatusLabel(effectiveStatus)}.`;
+  }
+
+  if (note) {
+    note.hidden = !activeRefreshPresentation?.note;
+    note.textContent = activeRefreshPresentation?.note || "";
+    note.className = `workflow-progress-note ${activeRefreshPresentation?.badgeClass || statusClass}`;
   }
 
   if (summary) {
-    if (!configured) {
+    if (activeRefreshPresentation) {
+      summary.textContent = activeRefreshPresentation.summary;
+    } else if (!configured) {
       summary.textContent = "Dashboard trigger is waiting for the Master Orchestrator webhook URL.";
     } else if (statusClass === "running") {
       summary.textContent = `Workflow run is in progress${started ? `, started ${started}` : ""}.`;
@@ -10211,7 +10579,7 @@ function renderWorkflowStatus(status = workflowStatus) {
 
   const errorText = workflowErrorText(status?.error);
   if (errorReport) {
-    if (statusClass === "failed" || errorText) {
+    if (!activeRefreshPresentation && (statusClass === "failed" || errorText)) {
       const impactSummary = economicEventsCollectorImpactSummary(status);
       errorReport.hidden = false;
       errorReport.innerHTML = `
@@ -10249,6 +10617,21 @@ async function loadWorkflowControl() {
   renderWorkflowStatus();
 }
 
+async function loadWorkflowRuntimeProfile() {
+  const runtimeProfileUrl = workflowControl?.runtime_profile_url || workflowRuntimeProfileUrlDefault;
+
+  try {
+    const response = await fetch(runtimeProfileUrl, { cache: "no-store" });
+    if (!response.ok) throw new Error(`refresh-runtime-profile ${response.status}`);
+    workflowRuntimeProfile = await response.json();
+  } catch (err) {
+    console.warn("Could not load workflow runtime profile", err);
+    workflowRuntimeProfile = null;
+  }
+
+  renderWorkflowStatus(workflowStatus);
+}
+
 async function loadWorkflowStatus() {
   const statusUrl = workflowStatusUrlOverride || workflowControl?.status_url || workflowStatusUrlDefault;
 
@@ -10256,8 +10639,10 @@ async function loadWorkflowStatus() {
     const response = await fetch(statusUrl, { cache: "no-store" });
     if (!response.ok) throw new Error(`workflow-status ${response.status}`);
     workflowStatus = await response.json();
+    workflowStatusLoadError = null;
   } catch (err) {
     console.warn("Could not load workflow status", err);
+    workflowStatusLoadError = err;
     workflowStatus = {
       status: workflowControl?.enabled ? "pending" : "not_configured",
       message: "Workflow status has not been published yet.",
@@ -10289,7 +10674,7 @@ function startWorkflowStatusPolling(durationMs) {
 }
 
 async function triggerWorkflowRun() {
-  if (workflowTriggerInFlight) return;
+  if (workflowTriggerInFlight || activeWorkflowRefreshBlocksNewRequest()) return;
 
   if (!workflowControl?.enabled || !workflowControl?.webhook_url) {
     renderWorkflowStatus({
@@ -10302,20 +10687,28 @@ async function triggerWorkflowRun() {
   }
 
   workflowTriggerInFlight = true;
-  renderWorkflowStatus({
-    status: "starting",
-    last_run_started_at: new Date().toISOString(),
-    message: "Dashboard requested a Master Orchestrator run.",
-    steps: [],
-    error: null
-  });
+  const requestedAt = new Date().toISOString();
+  const refreshRequestId = createRefreshRequestId();
+  const refreshState = {
+    refresh_request_id: refreshRequestId,
+    requested_at: requestedAt,
+    source: "dashboard",
+    phase: "sending",
+    owner_tab_id: createWorkflowRefreshTabId(),
+    runtime_profile_version: workflowRuntimeProfile?.version || null,
+    baseline: captureWorkflowRefreshBaseline(),
+    last_updated_at: requestedAt
+  };
+  writeStoredWorkflowRefreshState(refreshState);
+  ensureWorkflowRefreshRenderTimer();
+  renderWorkflowStatus(workflowStatus);
 
   try {
     const method = workflowControl.method || "POST";
     const requestMode = workflowControl.request_mode || "cors";
     const payload = {
       source: "dashboard",
-      requested_at: new Date().toISOString()
+      requested_at: requestedAt
     };
 
     await fetch(workflowControl.webhook_url, {
@@ -10325,28 +10718,26 @@ async function triggerWorkflowRun() {
       body: method.toUpperCase() === "GET" ? undefined : JSON.stringify(payload)
     });
 
-    workflowStatus = {
-      status: "running",
-      last_run_started_at: payload.requested_at,
-      message: "Master Orchestrator trigger sent. Waiting for n8n to publish status.",
-      steps: [],
-      error: null
-    };
+    writeStoredWorkflowRefreshState({
+      ...refreshState,
+      phase: "accepted",
+      last_updated_at: new Date().toISOString()
+    });
     renderWorkflowStatus(workflowStatus);
-    startWorkflowStatusPolling(Number(workflowControl.poll_after_trigger_ms || 180000));
+    const pollWindowMs = Math.max(
+      Number(workflowControl.poll_after_trigger_ms || 180000),
+      Math.ceil((getRuntimeProfilePercentileSeconds("max", 342.754) * 1000) + 120000)
+    );
+    startWorkflowStatusPolling(pollWindowMs);
+    loadWorkflowStatus();
+    loadDashboard();
   } catch (err) {
-    workflowStatus = {
-      status: "failed",
-      last_run_started_at: new Date().toISOString(),
-      last_run_finished_at: new Date().toISOString(),
-      failed_step: "Dashboard trigger",
-      message: "The dashboard could not call the n8n webhook.",
-      steps: [],
-      error: {
-        step: "Dashboard trigger",
-        reason: err.message || String(err)
-      }
-    };
+    writeStoredWorkflowRefreshState({
+      ...refreshState,
+      phase: "failed_dispatch",
+      error_message: err.message || String(err),
+      last_updated_at: new Date().toISOString()
+    });
     renderWorkflowStatus(workflowStatus);
   } finally {
     workflowTriggerInFlight = false;
@@ -10359,6 +10750,28 @@ function setupWorkflowControls() {
   if (button) {
     button.addEventListener("click", triggerWorkflowRun);
   }
+}
+
+function setupWorkflowRefreshStorageSync() {
+  if (typeof window === "undefined") return;
+
+  window.addEventListener("storage", (event) => {
+    if (event.key !== workflowRefreshStateKey) return;
+    workflowRefreshState = readStoredWorkflowRefreshState();
+    if (activeWorkflowRefreshBlocksNewRequest()) {
+      ensureWorkflowRefreshRenderTimer();
+      const pollWindowMs = Math.max(
+        Number(workflowControl?.poll_after_trigger_ms || 180000),
+        Math.ceil((getRuntimeProfilePercentileSeconds("max", 342.754) * 1000) + 120000)
+      );
+      startWorkflowStatusPolling(pollWindowMs);
+      loadWorkflowStatus();
+      loadDashboard();
+    } else {
+      clearWorkflowRefreshPollingTimer();
+    }
+    renderWorkflowStatus(workflowStatus);
+  });
 }
 
 function humanizeArchitectureStatus(status = "") {
@@ -11894,14 +12307,28 @@ setupTabs();
 setupBacktestEvidenceControls();
 setupArchitectureControls();
 restoreNavigationState();
+createWorkflowRefreshTabId();
+restoreWorkflowRefreshState();
 setBacktestTab(activeBacktestTab, { skipRender: true });
 setTab(activeTab);
 setupWorkflowControls();
+renderWorkflowStatus();
+setupWorkflowRefreshStorageSync();
 initMarketGlobe();
 updateClock();
 setInterval(updateClock, 1000);
 
-loadWorkflowControl().then(loadWorkflowStatus);
+loadWorkflowControl().then(async () => {
+  await loadWorkflowRuntimeProfile();
+  await loadWorkflowStatus();
+  if (activeWorkflowRefreshBlocksNewRequest()) {
+    const pollWindowMs = Math.max(
+      Number(workflowControl?.poll_after_trigger_ms || 180000),
+      Math.ceil((getRuntimeProfilePercentileSeconds("max", 342.754) * 1000) + 120000)
+    );
+    startWorkflowStatusPolling(pollWindowMs);
+  }
+});
 loadDashboard();
 setInterval(loadDashboard, 60000);
 setInterval(loadWorkflowStatus, 60000);
