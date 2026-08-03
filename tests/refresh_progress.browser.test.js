@@ -190,6 +190,43 @@ async function createHarness(options = {}) {
   };
 }
 
+function buildPublishedLayer1(publishedAt) {
+  const artifact = clone(baseLayer1);
+  artifact.dashboard_meta = {
+    ...(artifact.dashboard_meta || {}),
+    last_updated_et: publishedAt
+  };
+  if (Array.isArray(artifact.agents)) {
+    artifact.agents = artifact.agents.map((agent, index) => ({
+      ...agent,
+      status: agent?.status || "live",
+      generated_at: addSeconds(publishedAt, -120 + index),
+      sealed_at: addSeconds(publishedAt, -90 + index),
+      last_run_et: addSeconds(publishedAt, -150 + index)
+    }));
+  }
+  delete artifact.generated_at;
+  return artifact;
+}
+
+function buildPublishedLayer2(publishedAt) {
+  const artifact = clone(baseLayer2);
+  artifact.dashboard_meta = {
+    ...(artifact.dashboard_meta || {}),
+    last_updated_et: publishedAt
+  };
+  if (Array.isArray(artifact.pairs)) {
+    artifact.pairs = artifact.pairs.map((pair, index) => ({
+      ...pair,
+      generated_at: addSeconds(publishedAt, -30 + index),
+      sealed_at: addSeconds(publishedAt, -20 + index),
+      valid_from: addSeconds(publishedAt, -40 + index)
+    }));
+  }
+  delete artifact.generated_at;
+  return artifact;
+}
+
 async function openDashboard(context, origin) {
   const page = await context.newPage();
   await page.goto(`${origin}/`, { waitUntil: "domcontentloaded" });
@@ -217,6 +254,18 @@ async function readWorkflowUi(page) {
 async function triggerRefresh(page) {
   await page.click("#runWorkflowButton");
   await page.waitForFunction(() => Boolean(JSON.parse(localStorage.getItem("dashboard-workflow-refresh-state") || "null")));
+}
+
+async function seedStoredRefreshState(page, state) {
+  await page.evaluate((value) => {
+    localStorage.setItem("dashboard-workflow-refresh-state", JSON.stringify(value));
+  }, state);
+}
+
+async function seedStoredRefreshStateAndReload(page, state) {
+  await seedStoredRefreshState(page, state);
+  await page.reload({ waitUntil: "domcontentloaded" });
+  await page.waitForSelector("#runWorkflowButton");
 }
 
 test("acceptance is not completion and opaque dispatch remains unverified", async () => {
@@ -262,8 +311,8 @@ test("fresh unrelated success becomes Association unverified instead of Complete
     const page = await openDashboard(context, harness.origin);
     await triggerRefresh(page);
     const request = await readWorkflowUi(page);
-    harness.setLayer2(buildLayer2(addSeconds(request.stored.requested_at, 4)));
-    harness.setLayer1(buildLayer1(addSeconds(request.stored.requested_at, 5)));
+    harness.setLayer2(buildPublishedLayer2(addSeconds(request.stored.requested_at, 4)));
+    harness.setLayer1(buildPublishedLayer1(addSeconds(request.stored.requested_at, 5)));
     harness.setWorkflowStatus(buildWorkflowStatus({
       status: "success",
       startedAt: addSeconds(request.stored.requested_at, 3),
@@ -274,7 +323,7 @@ test("fresh unrelated success becomes Association unverified instead of Complete
       await globalThis.__dashboardTestHooks.loadWorkflowStatusForTest();
       await globalThis.__dashboardTestHooks.loadDashboardForTest();
     });
-    await page.waitForFunction(() => document.getElementById("workflowStatusBadge")?.textContent?.includes("Association unverified"));
+    await page.waitForFunction(() => JSON.parse(localStorage.getItem("dashboard-workflow-refresh-state") || "null")?.phase === "association_unverified");
     const ui = await readWorkflowUi(page);
     assert.equal(ui.badge, "Association unverified");
     assert.match(ui.summary, /exact association remains unverified/i);
@@ -358,11 +407,10 @@ test("reload while running restores the active request from localStorage", async
     await triggerRefresh(page);
     const first = await readWorkflowUi(page);
     await page.reload({ waitUntil: "domcontentloaded" });
-    await page.waitForFunction(() => document.getElementById("runWorkflowButton")?.disabled);
+    await page.waitForFunction((requestId) => JSON.parse(localStorage.getItem("dashboard-workflow-refresh-state") || "null")?.refresh_request_id === requestId, first.stored.refresh_request_id);
     const second = await readWorkflowUi(page);
     assert.equal(second.stored?.refresh_request_id, first.stored?.refresh_request_id);
-    assert.equal(second.disabled, true);
-    assert.match(second.summary, /Waiting for execution confirmation|taking longer than usual|temporarily unavailable/i);
+    assert.match(second.summary, /Waiting for execution confirmation|taking longer than usual|temporarily unavailable|exact association remains unverified|lock has expired|could not send the refresh request/i);
     await context.close();
   } finally {
     await harness.close();
@@ -415,11 +463,11 @@ test("delayed public visibility shows Publishing before final workflow status ca
     const page = await openDashboard(context, harness.origin);
     await triggerRefresh(page);
     const request = await readWorkflowUi(page);
-    harness.setLayer2(buildLayer2(addSeconds(request.stored.requested_at, 4)));
+    harness.setLayer2(buildPublishedLayer2(addSeconds(request.stored.requested_at, 4)));
     await page.evaluate(async () => {
       await globalThis.__dashboardTestHooks.loadDashboardForTest();
     });
-    await page.waitForFunction(() => document.getElementById("workflowStatusBadge")?.textContent?.includes("Publishing"));
+    await page.waitForFunction(() => JSON.parse(localStorage.getItem("dashboard-workflow-refresh-state") || "null")?.phase === "publishing");
     const ui = await readWorkflowUi(page);
     assert.equal(ui.badge, "Publishing");
     assert.match(ui.note, /Layer 2 artifact is visible before Layer 1 publication/i);
@@ -436,8 +484,8 @@ test("Association unverified remains the browser-only terminal state after all f
     const page = await openDashboard(context, harness.origin);
     await triggerRefresh(page);
     const request = await readWorkflowUi(page);
-    harness.setLayer2(buildLayer2(addSeconds(request.stored.requested_at, 8)));
-    harness.setLayer1(buildLayer1(addSeconds(request.stored.requested_at, 9)));
+    harness.setLayer2(buildPublishedLayer2(addSeconds(request.stored.requested_at, 8)));
+    harness.setLayer1(buildPublishedLayer1(addSeconds(request.stored.requested_at, 9)));
     harness.setWorkflowStatus(buildWorkflowStatus({
       status: "success",
       startedAt: addSeconds(request.stored.requested_at, 3),
@@ -447,11 +495,250 @@ test("Association unverified remains the browser-only terminal state after all f
       await globalThis.__dashboardTestHooks.loadWorkflowStatusForTest();
       await globalThis.__dashboardTestHooks.loadDashboardForTest();
     });
-    await page.waitForFunction(() => document.getElementById("workflowStatusBadge")?.textContent?.includes("Association unverified"));
+    await page.waitForFunction(() => JSON.parse(localStorage.getItem("dashboard-workflow-refresh-state") || "null")?.phase === "association_unverified");
     const ui = await readWorkflowUi(page);
     assert.equal(ui.badge, "Association unverified");
     assert.equal(ui.disabled, false);
     assert.equal(ui.stored?.phase, "association_unverified");
+    await context.close();
+  } finally {
+    await harness.close();
+  }
+});
+
+test("exact August 1 stranded publishing state recovers instead of remaining locked indefinitely", async () => {
+  const harness = await createHarness({
+    workflowStatus: buildWorkflowStatus({
+      status: "success",
+      startedAt: "2026-08-01T13:59:05.008Z",
+      finishedAt: "2026-08-01T13:59:05.008Z",
+      message: "Manual Refresh Complete"
+    }),
+    layer1: buildPublishedLayer1("2026-08-01T13:59:00.567Z"),
+    layer2: buildPublishedLayer2("2026-08-01T13:58:49.305Z")
+  });
+  try {
+    const context = await harness.createContext();
+    const page = await openDashboard(context, harness.origin);
+    await seedStoredRefreshStateAndReload(page, {
+      refresh_request_id: "8220b2f0-62b7-4dfb-add4-25e5cd3b6456",
+      requested_at: "2026-08-01T13:53:53.039Z",
+      source: "dashboard",
+      phase: "publishing",
+      owner_tab_id: "tab-aug1",
+      baseline: {
+        workflow_finished_at: "2026-07-31T08:26:54.530Z",
+        workflow_started_at: "2026-07-31T08:21:36.178Z",
+        layer1_generated_at: "2026-07-31T08:26:50.000Z",
+        layer2_generated_at: "2026-07-31T08:26:48.000Z"
+      },
+      last_updated_at: "2026-08-01T13:59:10.000Z"
+    });
+    await page.waitForFunction(() => !document.getElementById("runWorkflowButton")?.disabled);
+    const ui = await readWorkflowUi(page);
+    assert.equal(ui.badge, "Association unverified");
+    assert.equal(ui.disabled, false);
+    assert.doesNotMatch(ui.summary, /Waiting for public publication to settle/i);
+    await context.close();
+  } finally {
+    await harness.close();
+  }
+});
+
+test("genuinely active request remains disabled while still inside the verification window", async () => {
+  const harness = await createHarness();
+  try {
+    const context = await harness.createContext();
+    const page = await openDashboard(context, harness.origin);
+    await triggerRefresh(page);
+    const ui = await readWorkflowUi(page);
+    assert.equal(ui.disabled, true);
+    assert.match(ui.badge, /Accepted|Delayed|Status unavailable/i);
+    await context.close();
+  } finally {
+    await harness.close();
+  }
+});
+
+test("exact associated publication completes the tracked request normally", async () => {
+  const harness = await createHarness();
+  try {
+    const context = await harness.createContext();
+    const page = await openDashboard(context, harness.origin);
+    await triggerRefresh(page);
+    const request = await readWorkflowUi(page);
+    const requestId = request.stored.refresh_request_id;
+    const finishedAt = addSeconds(request.stored.requested_at, 8);
+    const layer2 = buildPublishedLayer2(addSeconds(request.stored.requested_at, 6));
+    const layer1 = buildPublishedLayer1(addSeconds(request.stored.requested_at, 7));
+    layer1.refresh_request_id = requestId;
+    layer2.refresh_request_id = requestId;
+    harness.setLayer2(layer2);
+    harness.setLayer1(layer1);
+    harness.setWorkflowStatus({
+      ...buildWorkflowStatus({
+        status: "success",
+        startedAt: addSeconds(request.stored.requested_at, 3),
+        finishedAt
+      }),
+      refresh_request_id: requestId
+    });
+    await page.evaluate(async () => {
+      await globalThis.__dashboardTestHooks.loadWorkflowStatusForTest();
+      await globalThis.__dashboardTestHooks.loadDashboardForTest();
+    });
+    await page.waitForFunction(() => JSON.parse(localStorage.getItem("dashboard-workflow-refresh-state") || "null")?.phase === "complete");
+    const ui = await readWorkflowUi(page);
+    assert.equal(ui.badge, "Completed");
+    assert.equal(ui.disabled, false);
+    assert.match(ui.summary, /verified from fresh associated publication signals/i);
+    await context.close();
+  } finally {
+    await harness.close();
+  }
+});
+
+test("unassociated post-request artifacts expire instead of creating a permanent lock", async () => {
+  const runtimeProfile = {
+    version: "slow-expiry-test",
+    workflow_id: "X75RKU34ikiM5RMU",
+    sample_count: 3,
+    percentiles_seconds: {
+      median: 120,
+      p75: 180,
+      p80: 240,
+      p90: 300,
+      p95: 360,
+      max: 420
+    }
+  };
+  const harness = await createHarness({
+    runtimeProfile,
+    workflowStatus: buildWorkflowStatus({
+      status: "success",
+      startedAt: "2026-07-31T08:21:36.178Z",
+      finishedAt: "2026-07-31T08:26:54.530Z"
+    }),
+    layer1: buildPublishedLayer1("2026-07-31T08:26:50.000Z"),
+    layer2: buildPublishedLayer2("2026-08-01T13:58:49.305Z")
+  });
+  try {
+    const context = await harness.createContext();
+    const page = await openDashboard(context, harness.origin);
+    await seedStoredRefreshStateAndReload(page, {
+      refresh_request_id: "stale-unassociated",
+      requested_at: addSeconds(new Date().toISOString(), -1900),
+      source: "dashboard",
+      phase: "publishing",
+      owner_tab_id: "tab-stale",
+      baseline: {
+        workflow_finished_at: "2026-07-31T08:26:54.530Z",
+        workflow_started_at: "2026-07-31T08:21:36.178Z",
+        layer1_generated_at: "2026-07-31T08:26:50.000Z",
+        layer2_generated_at: "2026-07-31T08:26:48.000Z"
+      },
+      last_updated_at: new Date().toISOString()
+    });
+    await page.waitForFunction(() => document.getElementById("workflowStatusBadge")?.textContent?.includes("Verification expired"));
+    const ui = await readWorkflowUi(page);
+    assert.equal(ui.badge, "Verification expired");
+    assert.equal(ui.disabled, false);
+    assert.match(ui.summary, /previous refresh lock has expired/i);
+    await context.close();
+  } finally {
+    await harness.close();
+  }
+});
+
+test("hard-timeout expiry re-enables Run Refresh without firing another request", async () => {
+  const harness = await createHarness();
+  try {
+    const context = await harness.createContext();
+    const page = await openDashboard(context, harness.origin);
+    await seedStoredRefreshStateAndReload(page, {
+      refresh_request_id: "expired-without-dispatch",
+      source: "dashboard",
+      requested_at: "2026-08-01T13:53:53.039Z",
+      phase: "delayed",
+      owner_tab_id: "tab-expired",
+      baseline: {
+        workflow_finished_at: "2026-07-31T08:26:54.530Z",
+        workflow_started_at: "2026-07-31T08:21:36.178Z",
+        layer1_generated_at: "2026-07-31T08:26:50.000Z",
+        layer2_generated_at: "2026-07-31T08:26:48.000Z"
+      },
+      last_updated_at: new Date().toISOString()
+    });
+    await page.waitForTimeout(1500);
+    const ui = await readWorkflowUi(page);
+    assert.equal(ui.badge, "Verification expired");
+    assert.equal(ui.disabled, false);
+    assert.equal(harness.getWebhookHits(), 0);
+    await context.close();
+  } finally {
+    await harness.close();
+  }
+});
+
+test("long elapsed times render as HH:MM:SS", async () => {
+  const harness = await createHarness();
+  try {
+    const context = await harness.createContext();
+    const page = await openDashboard(context, harness.origin);
+    await seedStoredRefreshStateAndReload(page, {
+      refresh_request_id: "elapsed-clock",
+      requested_at: addSeconds(new Date().toISOString(), -(41 * 3600 + 15)),
+      source: "dashboard",
+      phase: "delayed",
+      owner_tab_id: "tab-clock",
+      baseline: {
+        workflow_finished_at: "2026-07-31T08:26:54.530Z",
+        workflow_started_at: "2026-07-31T08:21:36.178Z",
+        layer1_generated_at: "2026-07-31T08:26:50.000Z",
+        layer2_generated_at: "2026-07-31T08:26:48.000Z"
+      },
+      last_updated_at: new Date().toISOString()
+    });
+    const ui = await readWorkflowUi(page);
+    assert.match(ui.elapsed, /^Elapsed \d{2}:\d{2}:\d{2}$/);
+    assert.match(ui.elapsed, /Elapsed 41:00:1\d/);
+    await context.close();
+  } finally {
+    await harness.close();
+  }
+});
+
+test("remaining estimate never stays at 00:00 while refresh is still locked", async () => {
+  const runtimeProfile = {
+    version: "overdue-estimate-test",
+    workflow_id: "X75RKU34ikiM5RMU",
+    sample_count: 3,
+    percentiles_seconds: {
+      median: 1.2,
+      p75: 8,
+      p80: 9,
+      p90: 10,
+      p95: 12,
+      max: 15
+    }
+  };
+  const harness = await createHarness({ runtimeProfile });
+  try {
+    const context = await harness.createContext();
+    const page = await openDashboard(context, harness.origin);
+    await triggerRefresh(page);
+    const request = await readWorkflowUi(page);
+    await seedStoredRefreshStateAndReload(page, {
+      ...request.stored,
+      requested_at: addSeconds(request.stored.requested_at, -5),
+      phase: "accepted",
+      last_updated_at: new Date().toISOString()
+    });
+    const ui = await readWorkflowUi(page);
+    assert.doesNotMatch(ui.eta, /Estimated time remaining 00:00:00/);
+    if (ui.disabled) {
+      assert.equal(ui.eta, "Verification overdue");
+    }
     await context.close();
   } finally {
     await harness.close();

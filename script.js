@@ -851,9 +851,11 @@ function workflowStatusLabel(status = "") {
 function workflowRefreshPhaseBadgeLabel(phase = "") {
   const value = String(phase || "").toLowerCase();
   if (value === "accepted") return "Accepted";
+  if (value === "complete") return "Completed";
   if (value === "sending") return "Sending";
   if (value === "publishing") return "Publishing";
   if (value === "delayed") return "Delayed";
+  if (value === "verification_expired") return "Verification expired";
   if (value === "status_unavailable") return "Status unavailable";
   if (value === "association_unverified") return "Association unverified";
   if (value === "failed_dispatch") return "Dispatch failed";
@@ -862,8 +864,9 @@ function workflowRefreshPhaseBadgeLabel(phase = "") {
 
 function workflowRefreshPhaseClass(phase = "") {
   const value = String(phase || "").toLowerCase();
+  if (value === "complete") return "success";
   if (value === "association_unverified") return "warning";
-  if (value === "status_unavailable" || value === "delayed") return "warning";
+  if (value === "verification_expired" || value === "status_unavailable" || value === "delayed") return "warning";
   if (value === "failed_dispatch" || value === "failed") return "failed";
   if (value === "accepted" || value === "sending" || value === "publishing") return "running";
   return "pending";
@@ -877,6 +880,7 @@ function buildWorkflowRefreshPresentation(state) {
   const medianSeconds = getRuntimeProfilePercentileSeconds("median");
   const delayedThreshold = getRuntimeProfilePercentileSeconds("p75");
   const strongDelayThreshold = getRuntimeProfilePercentileSeconds("p90");
+  const hardExpirySeconds = getWorkflowRefreshHardExpirySeconds();
   const remainingSeconds = Number.isFinite(medianSeconds) ? Math.max(0, medianSeconds - elapsedSeconds) : null;
   const badgeClass = workflowRefreshPhaseClass(reconciled.phase);
   const badgeLabel = workflowRefreshPhaseBadgeLabel(reconciled.phase);
@@ -897,6 +901,9 @@ function buildWorkflowRefreshPresentation(state) {
     meta = `Request ${reconciled.refresh_request_id} sent ${formatDashboardTime(reconciled.requested_at)}. Opaque no-cors delivery is not verified acceptance.`;
     noteParts.push("The dashboard cannot read the webhook response body in this mode.");
     noteParts.push("Estimated time remaining is based on recent production runtimes, not a completion guarantee.");
+  } else if (reconciled.phase === "complete") {
+    summary = "Refresh completion was verified from fresh associated publication signals.";
+    meta = `Request ${reconciled.refresh_request_id} matched a fresh completion and publication signal after ${formatDashboardTime(reconciled.requested_at)}.`;
   } else if (reconciled.phase === "publishing") {
     summary = "New post-request artifacts are appearing. Waiting for public publication to settle.";
     meta = `Request ${reconciled.refresh_request_id} is observing post-request signals, but exact execution association is still unavailable.`;
@@ -905,6 +912,11 @@ function buildWorkflowRefreshPresentation(state) {
     summary = "This refresh is taking longer than usual based on recent successful production runtimes.";
     meta = `Request ${reconciled.refresh_request_id} has exceeded the usual threshold without a correlated completion signal.`;
     noteParts.push("The countdown reaching zero does not mean success.");
+  } else if (reconciled.phase === "verification_expired") {
+    summary = "Completion could not be verified. The previous refresh lock has expired.";
+    meta = `Request ${reconciled.refresh_request_id} exceeded the verification window of ${formatDurationClock(hardExpirySeconds)} without a fresh associated completion signal.`;
+    noteParts.push("Run Refresh is available again.");
+    noteParts.push("Expiring the previous lock does not submit another request.");
   } else if (reconciled.phase === "status_unavailable") {
     summary = "Workflow status is temporarily unavailable while this refresh request is active.";
     meta = `Request ${reconciled.refresh_request_id} is still being tracked locally.`;
@@ -921,9 +933,17 @@ function buildWorkflowRefreshPresentation(state) {
   }
 
   if (Number.isFinite(remainingSeconds)) {
-    etaText = remainingSeconds > 0
-      ? `Estimated time remaining ${formatDurationClock(remainingSeconds)}`
-      : "Estimated time remaining 00:00";
+    if (reconciled.phase === "verification_expired") {
+      etaText = "Verification expired";
+    } else if (reconciled.phase === "complete") {
+      etaText = "Completed";
+    } else if (remainingSeconds >= 1) {
+      etaText = `Estimated time remaining ${formatDurationClock(remainingSeconds)}`;
+    } else if (activeWorkflowRefreshBlocksNewRequest(reconciled)) {
+      etaText = "Verification overdue";
+    } else {
+      etaText = "Unable to estimate";
+    }
   }
 
   if (Number.isFinite(delayedThreshold) && elapsedSeconds > delayedThreshold && reconciled.phase !== "association_unverified") {
@@ -2594,7 +2614,7 @@ function readStoredWorkflowRefreshState() {
 }
 
 function isTerminalWorkflowRefreshPhase(phase = "") {
-  return ["association_unverified", "failed_dispatch", "failed", "complete"].includes(String(phase || "").toLowerCase());
+  return ["association_unverified", "verification_expired", "failed_dispatch", "failed", "complete"].includes(String(phase || "").toLowerCase());
 }
 
 function writeStoredWorkflowRefreshState(state) {
@@ -2617,8 +2637,14 @@ function currentWorkflowMarkers() {
     workflow_finished_at: workflowStatus?.last_run_finished_at || null,
     workflow_started_at: workflowStatus?.last_run_started_at || null,
     workflow_status: workflowStatus?.status || null,
-    layer1_generated_at: layer1Data?.generated_at || null,
-    layer2_generated_at: layer2Data?.generated_at || null
+    workflow_refresh_request_id: workflowStatus?.refresh_request_id || workflowStatus?.request_id || null,
+    workflow_source_run_id: workflowStatus?.source_run_id || null,
+    layer1_generated_at: getLayer1PublishedAt(layer1Data),
+    layer1_refresh_request_id: layer1Data?.refresh_request_id || layer1Data?.request_id || null,
+    layer1_source_run_id: layer1Data?.source_run_id || null,
+    layer2_generated_at: getLayer2PublishedAt(layer2Data),
+    layer2_refresh_request_id: layer2Data?.refresh_request_id || layer2Data?.request_id || null,
+    layer2_source_run_id: layer2Data?.source_run_id || null
   };
 }
 
@@ -2674,13 +2700,37 @@ function workflowRefreshElapsedSeconds(requestedAt) {
 
 function formatDurationClock(totalSeconds) {
   const seconds = Math.max(0, Math.floor(Number(totalSeconds) || 0));
-  const minutes = Math.floor(seconds / 60);
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
   const remainder = seconds % 60;
-  return `${String(minutes).padStart(2, "0")}:${String(remainder).padStart(2, "0")}`;
+  return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(remainder).padStart(2, "0")}`;
+}
+
+function getWorkflowRefreshHardExpirySeconds() {
+  const observedMax = getRuntimeProfilePercentileSeconds("max", 342.754);
+  const observedP95 = getRuntimeProfilePercentileSeconds("p95", observedMax);
+  const observedMedian = getRuntimeProfilePercentileSeconds("median", observedMax);
+  return Math.max(
+    1800,
+    Math.ceil(observedMax * 3),
+    Math.ceil(observedP95 + 900),
+    Math.ceil(observedMedian + 1200)
+  );
 }
 
 function captureWorkflowRefreshBaseline() {
   return currentWorkflowMarkers();
+}
+
+function hasExactRefreshAssociation(state, current = currentWorkflowMarkers()) {
+  const requestId = String(state?.refresh_request_id || "").trim();
+  if (!requestId) return false;
+  const candidates = [
+    current.workflow_refresh_request_id,
+    current.layer1_refresh_request_id,
+    current.layer2_refresh_request_id
+  ].map((value) => String(value || "").trim()).filter(Boolean);
+  return candidates.includes(requestId);
 }
 
 function reconcileWorkflowRefreshState() {
@@ -2695,14 +2745,20 @@ function reconcileWorkflowRefreshState() {
   const delta = buildWorkflowMarkerDelta(baseline, current, state.requested_at);
   const elapsedSeconds = workflowRefreshElapsedSeconds(state.requested_at);
   const delayedThreshold = getRuntimeProfilePercentileSeconds("p75", 317.972);
+  const hardExpirySeconds = getWorkflowRefreshHardExpirySeconds();
   const anyFresh = delta.workflowFinishedFresh || delta.workflowStartedFresh || delta.layer1Fresh || delta.layer2Fresh;
   const allFresh = delta.workflowFinishedFresh && delta.layer1Fresh && delta.layer2Fresh;
+  const exactAssociation = hasExactRefreshAssociation(state, current);
   let nextPhase = state.phase || "sending";
 
   if (state.phase === "failed_dispatch") {
     nextPhase = "failed_dispatch";
+  } else if (exactAssociation && allFresh) {
+    nextPhase = "complete";
   } else if (anyFresh) {
     nextPhase = allFresh ? "association_unverified" : "publishing";
+  } else if (elapsedSeconds > hardExpirySeconds) {
+    nextPhase = "verification_expired";
   } else if (workflowStatusLoadError) {
     nextPhase = "status_unavailable";
   } else if (elapsedSeconds > delayedThreshold) {
