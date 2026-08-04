@@ -1,10 +1,10 @@
 {
-  "status": "success",
-  "last_run_started_at": "2026-08-03T08:27:31.050Z",
-  "last_run_finished_at": "2026-08-03T08:27:31.050Z",
+  "status": "failed",
+  "last_run_started_at": "2026-08-04T06:30:51.459Z",
+  "last_run_finished_at": "2026-08-04T06:30:51.459Z",
   "triggered_by": "dashboard_or_manual",
-  "message": "Manual Refresh Complete",
-  "failed_step": null,
+  "message": "Master Orchestrator finished with errors.",
+  "failed_step": "Dashboard Writer",
   "steps": [
     {
       "name": "Call '1. Economic Events Collector'",
@@ -56,8 +56,12 @@
     },
     {
       "name": "Dashboard Writer",
-      "status": "success"
+      "status": "failed",
+      "error": "The service was not able to process your request: canceling statement due to statement timeout"
     }
   ],
-  "error": null
+  "error": {
+    "step": "Dashboard Writer",
+    "reason": "The service was not able to process your request: canceling statement due to statement timeout"
+  }
 }
