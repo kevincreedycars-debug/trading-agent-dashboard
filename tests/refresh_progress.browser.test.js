@@ -49,14 +49,30 @@ function buildLayer2(generatedAt) {
   return artifact;
 }
 
-function buildWorkflowStatus({ status = "success", startedAt, finishedAt, message = "Published", steps = [] }) {
+function buildWorkflowStatus({
+  status = "success",
+  startedAt,
+  finishedAt,
+  message = "Published",
+  steps = [],
+  refreshRequestId = null,
+  failedStep = null,
+  errorReason = null
+}) {
+  const resolvedFailedStep = failedStep || steps.find((step) => String(step?.status || "").toLowerCase() === "failed")?.name || null;
+  const resolvedErrorReason = errorReason || steps.find((step) => String(step?.status || "").toLowerCase() === "failed")?.error || null;
   return {
     status,
     message,
     last_run_started_at: startedAt,
     last_run_finished_at: finishedAt,
+    refresh_request_id: refreshRequestId,
+    failed_step: resolvedFailedStep,
     steps,
-    error: null
+    error: resolvedFailedStep ? {
+      step: resolvedFailedStep,
+      reason: resolvedErrorReason || "Step did not produce output."
+    } : null
   };
 }
 
@@ -534,7 +550,7 @@ test("exact August 1 stranded publishing state recovers instead of remaining loc
       },
       last_updated_at: "2026-08-01T13:59:10.000Z"
     });
-    await page.waitForFunction(() => !document.getElementById("runWorkflowButton")?.disabled);
+    await page.waitForFunction(() => JSON.parse(localStorage.getItem("dashboard-workflow-refresh-state") || "null")?.phase === "association_unverified");
     const ui = await readWorkflowUi(page);
     assert.equal(ui.badge, "Association unverified");
     assert.equal(ui.disabled, false);
@@ -598,6 +614,42 @@ test("exact associated publication completes the tracked request normally", asyn
   }
 });
 
+test("exact associated artifacts with mismatched run IDs do not count as a completed refresh", async () => {
+  const harness = await createHarness();
+  try {
+    const context = await harness.createContext();
+    const page = await openDashboard(context, harness.origin);
+    await triggerRefresh(page);
+    const request = await readWorkflowUi(page);
+    const requestId = request.stored.refresh_request_id;
+    const layer2 = buildPublishedLayer2(addSeconds(request.stored.requested_at, 6));
+    const layer1 = buildPublishedLayer1(addSeconds(request.stored.requested_at, 7));
+    layer1.refresh_request_id = requestId;
+    layer2.refresh_request_id = requestId;
+    layer1.source_run_id = "run-layer1";
+    layer2.source_run_id = "run-layer2";
+    harness.setLayer2(layer2);
+    harness.setLayer1(layer1);
+    harness.setWorkflowStatus(buildWorkflowStatus({
+      status: "success",
+      startedAt: addSeconds(request.stored.requested_at, 3),
+      finishedAt: addSeconds(request.stored.requested_at, 8),
+      refreshRequestId: requestId
+    }));
+    await page.evaluate(async () => {
+      await globalThis.__dashboardTestHooks.loadWorkflowStatusForTest();
+      await globalThis.__dashboardTestHooks.loadDashboardForTest();
+    });
+    await page.waitForFunction(() => JSON.parse(localStorage.getItem("dashboard-workflow-refresh-state") || "null")?.phase === "association_unverified");
+    const ui = await readWorkflowUi(page);
+    assert.equal(ui.badge, "Association unverified");
+    assert.equal(ui.disabled, false);
+    assert.doesNotMatch(ui.badge, /Completed/i);
+  } finally {
+    await harness.close();
+  }
+});
+
 test("unassociated post-request artifacts expire instead of creating a permanent lock", async () => {
   const runtimeProfile = {
     version: "slow-expiry-test",
@@ -627,7 +679,7 @@ test("unassociated post-request artifacts expire instead of creating a permanent
     const page = await openDashboard(context, harness.origin);
     await seedStoredRefreshStateAndReload(page, {
       refresh_request_id: "stale-unassociated",
-      requested_at: addSeconds(new Date().toISOString(), -1900),
+      requested_at: "2026-08-01T13:53:53.039Z",
       source: "dashboard",
       phase: "publishing",
       owner_tab_id: "tab-stale",
@@ -637,13 +689,81 @@ test("unassociated post-request artifacts expire instead of creating a permanent
         layer1_generated_at: "2026-07-31T08:26:50.000Z",
         layer2_generated_at: "2026-07-31T08:26:48.000Z"
       },
-      last_updated_at: new Date().toISOString()
+      last_updated_at: "2026-08-01T14:25:00.000Z"
     });
-    await page.waitForFunction(() => document.getElementById("workflowStatusBadge")?.textContent?.includes("Verification expired"));
+    await page.waitForFunction(() => document.getElementById("workflowStatusBadge")?.textContent?.includes("Incomplete"));
     const ui = await readWorkflowUi(page);
-    assert.equal(ui.badge, "Verification expired");
+    assert.equal(ui.badge, "Incomplete");
     assert.equal(ui.disabled, false);
-    assert.match(ui.summary, /previous refresh lock has expired/i);
+    assert.match(ui.summary, /partial publication/i);
+    assert.match(ui.note, /Fresh: Layer 2/i);
+    assert.match(ui.note, /Missing: workflow status, Layer 1/i);
+    await context.close();
+  } finally {
+    await harness.close();
+  }
+});
+
+test("fresh post-request dashboard writer failure releases the lock even without exact request association", async () => {
+  const harness = await createHarness();
+  try {
+    const context = await harness.createContext();
+    const page = await openDashboard(context, harness.origin);
+    await triggerRefresh(page);
+    const request = await readWorkflowUi(page);
+    harness.setLayer2(buildPublishedLayer2(addSeconds(request.stored.requested_at, 4)));
+    harness.setWorkflowStatus(buildWorkflowStatus({
+      status: "failed",
+      startedAt: addSeconds(request.stored.requested_at, 3),
+      finishedAt: addSeconds(request.stored.requested_at, 8),
+      message: "Master Orchestrator finished with errors.",
+      steps: [
+        { name: "Layer 2 Trade Selection Agent", status: "success" },
+        { name: "Dashboard Writer", status: "failed", error: "canceling statement due to statement timeout" }
+      ]
+    }));
+    await page.evaluate(async () => {
+      await globalThis.__dashboardTestHooks.loadWorkflowStatusForTest();
+      await globalThis.__dashboardTestHooks.loadDashboardForTest();
+    });
+    await page.waitForFunction(() => JSON.parse(localStorage.getItem("dashboard-workflow-refresh-state") || "null")?.phase === "failed");
+    const ui = await readWorkflowUi(page);
+    assert.equal(ui.badge, "Failed");
+    assert.equal(ui.disabled, false);
+    assert.match(ui.note, /Exact request association remains unavailable/i);
+    assert.match(ui.note, /statement timeout/i);
+    await context.close();
+  } finally {
+    await harness.close();
+  }
+});
+
+test("exact associated dashboard writer failure releases the lock immediately", async () => {
+  const harness = await createHarness();
+  try {
+    const context = await harness.createContext();
+    const page = await openDashboard(context, harness.origin);
+    await triggerRefresh(page);
+    const request = await readWorkflowUi(page);
+    const requestId = request.stored.refresh_request_id;
+    harness.setWorkflowStatus(buildWorkflowStatus({
+      status: "failed",
+      startedAt: addSeconds(request.stored.requested_at, 2),
+      finishedAt: addSeconds(request.stored.requested_at, 7),
+      refreshRequestId: requestId,
+      message: "Master Orchestrator finished with errors.",
+      steps: [
+        { name: "Dashboard Writer", status: "failed", error: "canceling statement due to statement timeout" }
+      ]
+    }));
+    await page.evaluate(async () => {
+      await globalThis.__dashboardTestHooks.loadWorkflowStatusForTest();
+    });
+    await page.waitForFunction(() => JSON.parse(localStorage.getItem("dashboard-workflow-refresh-state") || "null")?.phase === "failed");
+    const ui = await readWorkflowUi(page);
+    assert.equal(ui.badge, "Failed");
+    assert.equal(ui.disabled, false);
+    assert.doesNotMatch(ui.note, /Exact request association remains unavailable/i);
     await context.close();
   } finally {
     await harness.close();

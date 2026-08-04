@@ -854,11 +854,13 @@ function workflowRefreshPhaseBadgeLabel(phase = "") {
   if (value === "complete") return "Completed";
   if (value === "sending") return "Sending";
   if (value === "publishing") return "Publishing";
+  if (value === "incomplete") return "Incomplete";
   if (value === "delayed") return "Delayed";
   if (value === "verification_expired") return "Verification expired";
   if (value === "status_unavailable") return "Status unavailable";
   if (value === "association_unverified") return "Association unverified";
   if (value === "failed_dispatch") return "Dispatch failed";
+  if (value === "failed") return "Failed";
   return workflowStatusLabel(value || "pending");
 }
 
@@ -866,7 +868,7 @@ function workflowRefreshPhaseClass(phase = "") {
   const value = String(phase || "").toLowerCase();
   if (value === "complete") return "success";
   if (value === "association_unverified") return "warning";
-  if (value === "verification_expired" || value === "status_unavailable" || value === "delayed") return "warning";
+  if (value === "incomplete" || value === "verification_expired" || value === "status_unavailable" || value === "delayed") return "warning";
   if (value === "failed_dispatch" || value === "failed") return "failed";
   if (value === "accepted" || value === "sending" || value === "publishing") return "running";
   return "pending";
@@ -887,6 +889,9 @@ function buildWorkflowRefreshPresentation(state) {
   const baseline = reconciled.baseline || {};
   const observed = reconciled.observed_markers || currentWorkflowMarkers();
   const markerDelta = buildWorkflowMarkerDelta(baseline, observed, reconciled.requested_at);
+  const freshArtifacts = Array.isArray(reconciled.fresh_artifacts) ? reconciled.fresh_artifacts : [];
+  const missingArtifacts = Array.isArray(reconciled.missing_artifacts) ? reconciled.missing_artifacts : [];
+  const failure = reconciled.workflow_failure || null;
   const noteParts = [];
   let summary = "Refresh request state unavailable.";
   let etaText = "Estimate unavailable";
@@ -908,10 +913,36 @@ function buildWorkflowRefreshPresentation(state) {
     summary = "New post-request artifacts are appearing. Waiting for public publication to settle.";
     meta = `Request ${reconciled.refresh_request_id} is observing post-request signals, but exact execution association is still unavailable.`;
     noteParts.push("Fresh publication does not yet prove that this exact click completed.");
+  } else if (reconciled.phase === "incomplete") {
+    summary = "The verification window expired after only a partial publication.";
+    meta = `Request ${reconciled.refresh_request_id} exceeded the verification window of ${formatDurationClock(hardExpirySeconds)} with only part of the required artifact set published.`;
+    if (freshArtifacts.length) {
+      noteParts.push(`Fresh: ${freshArtifacts.join(", ")}.`);
+    }
+    if (missingArtifacts.length) {
+      noteParts.push(`Missing: ${missingArtifacts.join(", ")}.`);
+    }
+    noteParts.push("Run Refresh is available again.");
   } else if (reconciled.phase === "delayed") {
     summary = "This refresh is taking longer than usual based on recent successful production runtimes.";
     meta = `Request ${reconciled.refresh_request_id} has exceeded the usual threshold without a correlated completion signal.`;
     noteParts.push("The countdown reaching zero does not mean success.");
+  } else if (reconciled.phase === "failed") {
+    summary = "A fresh post-request workflow failure was observed. This refresh lock is now closed.";
+    meta = `Request ${reconciled.refresh_request_id} observed a post-request workflow failure${failure?.failed_step ? ` at ${failure.failed_step}` : ""}.`;
+    if (failure?.reason) {
+      noteParts.push(failure.reason);
+    }
+    if (!failure?.exact_association) {
+      noteParts.push("Exact request association remains unavailable in browser-only mode.");
+    }
+    if (freshArtifacts.length) {
+      noteParts.push(`Fresh before failure: ${freshArtifacts.join(", ")}.`);
+    }
+    if (missingArtifacts.length) {
+      noteParts.push(`Missing: ${missingArtifacts.join(", ")}.`);
+    }
+    noteParts.push("Run Refresh is available again.");
   } else if (reconciled.phase === "verification_expired") {
     summary = "Completion could not be verified. The previous refresh lock has expired.";
     meta = `Request ${reconciled.refresh_request_id} exceeded the verification window of ${formatDurationClock(hardExpirySeconds)} without a fresh associated completion signal.`;
@@ -935,6 +966,10 @@ function buildWorkflowRefreshPresentation(state) {
   if (Number.isFinite(remainingSeconds)) {
     if (reconciled.phase === "verification_expired") {
       etaText = "Verification expired";
+    } else if (reconciled.phase === "incomplete") {
+      etaText = "Incomplete";
+    } else if (reconciled.phase === "failed") {
+      etaText = "Failed";
     } else if (reconciled.phase === "complete") {
       etaText = "Completed";
     } else if (remainingSeconds >= 1) {
@@ -2614,7 +2649,7 @@ function readStoredWorkflowRefreshState() {
 }
 
 function isTerminalWorkflowRefreshPhase(phase = "") {
-  return ["association_unverified", "verification_expired", "failed_dispatch", "failed", "complete"].includes(String(phase || "").toLowerCase());
+  return ["association_unverified", "incomplete", "verification_expired", "failed_dispatch", "failed", "complete"].includes(String(phase || "").toLowerCase());
 }
 
 function writeStoredWorkflowRefreshState(state) {
@@ -2637,6 +2672,8 @@ function currentWorkflowMarkers() {
     workflow_finished_at: workflowStatus?.last_run_finished_at || null,
     workflow_started_at: workflowStatus?.last_run_started_at || null,
     workflow_status: workflowStatus?.status || null,
+    workflow_failed_step: workflowStatus?.failed_step || workflowStatus?.error?.step || null,
+    workflow_error_reason: workflowStatus?.error?.reason || null,
     workflow_refresh_request_id: workflowStatus?.refresh_request_id || workflowStatus?.request_id || null,
     workflow_source_run_id: workflowStatus?.source_run_id || null,
     layer1_generated_at: getLayer1PublishedAt(layer1Data),
@@ -2668,6 +2705,59 @@ function buildWorkflowMarkerDelta(baseline = {}, current = {}, requestedAt = "")
       && isTimestampAfter(requestedAt, current.layer1_generated_at),
     layer2Fresh: markerChanged(baseline.layer2_generated_at, current.layer2_generated_at)
       && isTimestampAfter(requestedAt, current.layer2_generated_at)
+  };
+}
+
+function isFailedWorkflowStatus(status = "") {
+  return ["failed", "failure", "error"].includes(String(status || "").toLowerCase());
+}
+
+function listWorkflowFreshArtifacts(delta = {}) {
+  const fresh = [];
+  const missing = [];
+  [
+    ["workflowFinishedFresh", "workflow status"],
+    ["layer1Fresh", "Layer 1"],
+    ["layer2Fresh", "Layer 2"]
+  ].forEach(([key, label]) => {
+    if (delta[key]) {
+      fresh.push(label);
+    } else {
+      missing.push(label);
+    }
+  });
+  return { fresh, missing };
+}
+
+function workflowRunIdsConsistent(current = {}) {
+  const runIds = [
+    current.workflow_source_run_id,
+    current.layer1_source_run_id,
+    current.layer2_source_run_id
+  ].map((value) => String(value || "").trim()).filter(Boolean);
+  return runIds.length <= 1 || runIds.every((value) => value === runIds[0]);
+}
+
+function buildWorkflowFailureSignal(state, current, delta, baseline) {
+  const requestId = String(state?.refresh_request_id || "").trim();
+  const workflowFailedFresh = markerChanged(baseline.workflow_finished_at, current.workflow_finished_at)
+    && isTimestampAfter(state?.requested_at, current.workflow_finished_at)
+    && isFailedWorkflowStatus(current.workflow_status);
+
+  if (!workflowFailedFresh) {
+    return {
+      observed: false,
+      exactAssociation: false,
+      relevantPartialPublication: false
+    };
+  }
+
+  return {
+    observed: true,
+    exactAssociation: Boolean(requestId) && hasExactRefreshAssociation(state, current),
+    relevantPartialPublication: Boolean(delta.layer1Fresh || delta.layer2Fresh || delta.workflowStartedFresh),
+    failedStep: current.workflow_failed_step || null,
+    reason: current.workflow_error_reason || null
   };
 }
 
@@ -2749,16 +2839,25 @@ function reconcileWorkflowRefreshState() {
   const anyFresh = delta.workflowFinishedFresh || delta.workflowStartedFresh || delta.layer1Fresh || delta.layer2Fresh;
   const allFresh = delta.workflowFinishedFresh && delta.layer1Fresh && delta.layer2Fresh;
   const exactAssociation = hasExactRefreshAssociation(state, current);
+  const freshArtifacts = listWorkflowFreshArtifacts(delta);
+  const consistentRunIds = workflowRunIdsConsistent(current);
+  const failureSignal = buildWorkflowFailureSignal(state, current, delta, baseline);
   let nextPhase = state.phase || "sending";
 
   if (state.phase === "failed_dispatch") {
     nextPhase = "failed_dispatch";
-  } else if (exactAssociation && allFresh) {
+  } else if (failureSignal.observed && (failureSignal.exactAssociation || failureSignal.relevantPartialPublication)) {
+    nextPhase = "failed";
+  } else if (exactAssociation && allFresh && consistentRunIds) {
     nextPhase = "complete";
+  } else if (elapsedSeconds > hardExpirySeconds) {
+    if (allFresh) {
+      nextPhase = "association_unverified";
+    } else {
+      nextPhase = freshArtifacts.fresh.length ? "incomplete" : "verification_expired";
+    }
   } else if (anyFresh) {
     nextPhase = allFresh ? "association_unverified" : "publishing";
-  } else if (elapsedSeconds > hardExpirySeconds) {
-    nextPhase = "verification_expired";
   } else if (workflowStatusLoadError) {
     nextPhase = "status_unavailable";
   } else if (elapsedSeconds > delayedThreshold) {
@@ -2773,7 +2872,15 @@ function reconcileWorkflowRefreshState() {
     ...state,
     phase: nextPhase,
     last_updated_at: new Date().toISOString(),
-    observed_markers: current
+    observed_markers: current,
+    fresh_artifacts: freshArtifacts.fresh,
+    missing_artifacts: freshArtifacts.missing,
+    workflow_failure: failureSignal.observed ? {
+      failed_step: failureSignal.failedStep || null,
+      reason: failureSignal.reason || null,
+      exact_association: failureSignal.exactAssociation,
+      relevant_partial_publication: failureSignal.relevantPartialPublication
+    } : null
   };
 
   if (nextPhase !== state.phase) {
