@@ -17,6 +17,7 @@ const checkerDataUrls = {
   BTC: "./data/backtester-checker-btc-24h-2024-2026.json?v=20260702-btc-benchmark-dashboard"
 };
 const adrReachResearchUrl = "./data/adr-reach-research.json?v=20260705-l2l-1h-sequence";
+const halfL2lReachResearchUrl = "./data/half-l2l-reach-research.json?v=20260809-half-l2l-reach-v2";
 const factorEdgeLabUrl = "./data/factor-edge-lab.json?v=20260706-review-summary";
 const phase2ShadowBacktestUrl = "./data/phase-2-shadow-backtest.json?v=20260707-phase2-shadow-v1";
 const confidenceCalibrationUrl = "./data/confidence-calibration.json?v=20260728-confidence-calibration-v1";
@@ -156,6 +157,21 @@ let workflowRuntimeProfile = null;
 let workflowRefreshState = null;
 let workflowRefreshRenderTimer = null;
 let workflowRefreshTabId = "";
+const halfL2lReviewStorageKey = "halfL2lDirectionalAccuracyReviewState";
+const halfL2lReviewImportInputId = "halfL2lReviewImportInput";
+let halfL2lExplorerState = {
+  search: "",
+  layer: "ALL",
+  entity: "ALL",
+  direction: "ALL",
+  halfOutcome: "ALL",
+  fullOutcome: "ALL",
+  confidenceBand: "ALL",
+  fold: "ALL",
+  status: "ALL",
+  startDate: "",
+  endDate: ""
+};
 let activeTab = "overview";
 let activeBacktestTab = "accuracy";
 let activeCheckerRowId = null;
@@ -2143,6 +2159,143 @@ function renderOverviewBriefing() {
   `;
 }
 
+function formatCompactSignalValue(value, fallback = "--") {
+  return metricAvailable(value) ? String(value) : fallback;
+}
+
+function compactTitleLabel(value = "", fallback = "--") {
+  const text = String(value || "").trim();
+  if (!text) return fallback;
+  return text
+    .replaceAll("_", " ")
+    .toLowerCase()
+    .replace(/\b\w/g, (match) => match.toUpperCase());
+}
+
+function compactOverviewStateLabel(value = "") {
+  const text = String(value || "").trim();
+  if (!text) return "No setup";
+  if (/^rank\s+/i.test(text)) return text.toUpperCase();
+  if (/awaiting refresh/i.test(text)) return "Awaiting refresh";
+  if (/no setup/i.test(text)) return "No setup";
+  return "Filtered";
+}
+
+function buildOverviewLayer2SummaryRows() {
+  const derivedLayer2 = deriveLiveLayer2Dashboard();
+  const opportunityMap = new Map(
+    (derivedLayer2.tradeOpportunities || []).map((item) => [String(item.pairCode || "").toUpperCase(), item])
+  );
+  const avoidMap = new Map(
+    (derivedLayer2.avoidToday || []).map((item) => [String(item.pairCode || "").toUpperCase(), item])
+  );
+
+  return pairTradeResearchConfigs.map((config) => {
+    const key = String(config.pairCode || "").toUpperCase();
+    const opportunity = opportunityMap.get(key);
+    if (opportunity) {
+      return {
+        pair: config.pairLabel,
+        signal: String(opportunity.direction || "NO TRADE").replaceAll("_", " "),
+        confidence: metricAvailable(opportunity.confidence) ? `${Math.round(Number(opportunity.confidence))}%` : "--",
+        strength: compactTitleLabel(opportunity.strengthBucket, "--"),
+        state: `Rank ${opportunity.rank || "--"}`
+      };
+    }
+    const avoided = avoidMap.get(key);
+    return {
+      pair: config.pairLabel,
+      signal: "NO TRADE",
+      confidence: "--",
+      strength: "--",
+      state: avoided?.reason ? compactOverviewStateLabel(String(avoided.reason)) : "No setup"
+    };
+  });
+}
+
+function renderOverviewSignalBoard() {
+  const container = document.getElementById("overviewSignalBoard");
+  if (!container) return;
+
+  const layer2Cards = buildOverviewLayer2SummaryRows().map((row) => ({
+    tier: "Layer 2",
+    status: row.state,
+    asset: row.pair,
+    signal: row.signal,
+    signalClass: directionClass(row.signal),
+    isActiveTrade: row.signal === "BUY" || row.signal === "SELL",
+    metrics: [
+      { label: "Conf.", value: row.confidence },
+      { label: "Strength", value: row.strength }
+    ],
+    footer: row.signal === "NO TRADE" ? "No trade filter active" : "Trade setup candidate"
+  }));
+
+  const fallbackLayer2Cards = [
+    "Setup scan",
+    "Relative strength",
+    "Pair ranking",
+    "Trade filter"
+  ].map((asset) => ({
+    tier: "Layer 2",
+    status: "Awaiting refresh",
+    asset,
+    signal: "Pending",
+    signalClass: directionClass("PENDING"),
+    metrics: [
+      { label: "Conf.", value: "--" },
+      { label: "Strength", value: "--" }
+    ],
+    footer: "Awaiting setup"
+  }));
+
+  const renderMiniCard = (card) => `
+    <article class="signal-mini-card${card.isActiveTrade ? " is-active-trade" : ""}">
+      <div class="signal-mini-card-topline">
+        <p class="signal-mini-label">${escapeHtml(card.tier)}</p>
+        <span class="signal-mini-status">${escapeHtml(card.status)}</span>
+      </div>
+      <div class="signal-mini-asset">${escapeHtml(card.asset)}</div>
+      <div class="signal-mini-signal direction ${escapeHtml(card.signalClass)}">${escapeHtml(card.signal)}</div>
+      <div class="signal-mini-metrics">
+        ${card.metrics
+          .map(
+            (metric) => `
+              <div class="signal-mini-metric-pill">
+                <span>${escapeHtml(metric.label)}</span>
+                <strong>${escapeHtml(metric.value)}</strong>
+              </div>
+            `
+          )
+          .join("")}
+      </div>
+      <div class="signal-mini-footer">${escapeHtml(card.footer || "")}</div>
+    </article>
+  `;
+
+  const finalLayer2Cards = (layer2Cards.length ? layer2Cards : fallbackLayer2Cards).map(renderMiniCard).join("");
+  const activeTradeCount = layer2Cards.filter((card) => card.isActiveTrade).length;
+
+  container.innerHTML = `
+    <div class="panel-head compact-panel-head overview-signal-board-head">
+      <div>
+        <p class="eyebrow">Quick Overview</p>
+        <h3>Signal Board</h3>
+      </div>
+      <p class="summary">Fast scan first. Compact cards surface the live Layer 2 trade ideas before the deeper panels below.</p>
+    </div>
+    <div class="overview-signal-board-grid">
+      <section class="overview-signal-strip">
+        <div class="overview-signal-strip-head">
+          <p class="overview-signal-strip-label">Layer 2 active trades</p>
+          <p class="overview-signal-strip-meta">${activeTradeCount || layer2Cards.length || fallbackLayer2Cards.length} live setup slots</p>
+        </div>
+        <div class="overview-signal-mini-grid">${finalLayer2Cards}</div>
+      </section>
+    </div>
+  `;
+}
+
 function createEconomicEventRefreshFallback(errorMessage = "") {
   const warningCodes = errorMessage ? ["artifact_unavailable"] : [];
   return {
@@ -3261,6 +3414,7 @@ function renderLayer1(data) {
   renderOperationalWarningsPanel();
   renderEconomicEventRefreshPanel();
   renderOverviewStatusPanel();
+  renderOverviewSignalBoard();
   renderOverviewBriefing();
   renderOverviewStats();
   renderSevenDayOutlook(data);
@@ -9575,6 +9729,827 @@ function renderResearchAdrReach(data = {}) {
   `;
 }
 
+function formatHalfL2lRate(summary = {}) {
+  if (!summary || !metricAvailable(summary.hitRatePct)) {
+    return renderAdrCompactTextCell(displayDash(), "", { className: "adr-table-tight-cell" });
+  }
+
+  const ciText = metricAvailable(summary.wilson95LowPct) && metricAvailable(summary.wilson95HighPct)
+    ? `95% CI ${summary.wilson95LowPct}-${summary.wilson95HighPct}%`
+    : "";
+  return renderAdrCompactTextCell(
+    percentValue(summary.hitRatePct),
+    `${summary.hits ?? 0}/${summary.eligibleCalls ?? 0}${ciText ? ` | ${ciText}` : ""}`,
+    { className: "adr-table-tight-cell" }
+  );
+}
+
+function formatHalfL2lCoverage(row = {}) {
+  const full = row.fullStandard || {};
+  const half = row.halfOfStandard || {};
+  return renderAdrCompactTextCell(
+    metricAvailable(full.eligibleCalls) ? full.eligibleCalls : displayDash(),
+    `Unresolved ${full.unresolvedRows ?? 0} | Excl ${full.exclusions ?? 0} | Half hits ${half.hits ?? 0}`,
+    { className: "adr-table-tight-cell" }
+  );
+}
+
+function formatHalfL2lDelta(row = {}) {
+  return renderAdrCompactTextCell(
+    metricAvailable(row.halfMinusFullPctPoints) ? signedMetricValue(row.halfMinusFullPctPoints, "pp") : displayDash(),
+    `Full med ${metricAvailable(row.fullStandard?.medianTimeToTargetHours) ? `${row.fullStandard.medianTimeToTargetHours}h` : displayDash()} | Half med ${metricAvailable(row.halfOfStandard?.medianTimeToTargetHours) ? `${row.halfOfStandard.medianTimeToTargetHours}h` : displayDash()}`,
+    { className: "adr-table-tight-cell" }
+  );
+}
+
+function renderHalfL2lComparisonTable(title, subtitle, rows = [], options = {}) {
+  if (!rows.length) return "";
+  return renderResearchBreakdownTable(title, subtitle, rows, [
+    {
+      label: options.entityLabel || "Entity",
+      className: "adr-col-entity",
+      render: row => renderAdrCompactTextCell(options.entityRenderer ? options.entityRenderer(row) : (row.assetLabel || row.pairLabel || row.label || displayDash()), options.entitySecondaryRenderer ? options.entitySecondaryRenderer(row) : "", { className: "adr-table-tight-cell" })
+    },
+    { label: "100% Standard", className: "adr-col-rate", render: row => formatHalfL2lRate(row.fullStandard) },
+    { label: "50% Of Standard", className: "adr-col-rate", render: row => formatHalfL2lRate(row.halfOfStandard) },
+    { label: "Delta / Median", className: "adr-col-metric", render: row => formatHalfL2lDelta(row) },
+    { label: "Coverage", className: "adr-col-metric", render: row => formatHalfL2lCoverage(row) }
+  ], {
+    tableClass: "adr-summary-table adr-layer1-summary-table",
+    scrollClass: "adr-summary-scroll"
+  });
+}
+
+function renderResearchHalfL2lReach(data = {}) {
+  const halfL2l = data.half_l2l_reach || null;
+  const comparisons = halfL2l?.comparisons || {};
+  const sourceAuditRows = Array.isArray(halfL2l?.source_audit) ? halfL2l.source_audit : [];
+  const layer1AssetRows = Array.isArray(comparisons.layer1_assets) ? comparisons.layer1_assets : [];
+  const layer2PairRows = Array.isArray(comparisons.layer2_pairs) ? comparisons.layer2_pairs : [];
+  const layer1DirectionRows = Array.isArray(comparisons.layer1_directions) ? comparisons.layer1_directions : [];
+  const layer2DirectionRows = Array.isArray(comparisons.layer2_directions) ? comparisons.layer2_directions : [];
+  const layer1StrengthRows = Array.isArray(comparisons.layer1_strength_bands) ? comparisons.layer1_strength_bands : [];
+  const layer2StrengthRows = Array.isArray(comparisons.layer2_strength_bands) ? comparisons.layer2_strength_bands : [];
+  const layer1ExactRows = (Array.isArray(comparisons.layer1_exact_confidence_buckets) ? comparisons.layer1_exact_confidence_buckets : []).filter(row => Number(row?.fullStandard?.eligibleCalls || 0) >= 20);
+  const layer2ExactRows = (Array.isArray(comparisons.layer2_exact_confidence_buckets) ? comparisons.layer2_exact_confidence_buckets : []).filter(row => Number(row?.fullStandard?.eligibleCalls || 0) >= 20);
+  const layer1FoldRows = Array.isArray(comparisons.layer1_chronological_folds) ? comparisons.layer1_chronological_folds : [];
+  const layer2FoldRows = Array.isArray(comparisons.layer2_chronological_folds) ? comparisons.layer2_chronological_folds : [];
+  const latestLayer1Rows = Array.isArray(comparisons.layer1_latest_period) ? comparisons.layer1_latest_period : [];
+  const latestLayer2Rows = Array.isArray(comparisons.layer2_latest_period) ? comparisons.layer2_latest_period : [];
+  const monotonicityRows = Array.isArray(halfL2l?.monotonicity) ? halfL2l.monotonicity : [];
+
+  if (!halfL2l || (!layer1AssetRows.length && !layer2PairRows.length)) {
+    return `
+      <div class="backtest-report">
+        <article class="detail-panel wide-panel research-secondary-panel">
+          <h3>50% L2L Reach unavailable</h3>
+          <div class="empty-state matrix-evidence-empty">The downstream 50% L2L Reach artifact could not be loaded.</div>
+        </article>
+      </div>
+    `;
+  }
+
+  return `
+    <div class="backtest-report">
+      ${renderResearchStatusHeader(data)}
+      <section class="detail-panel overview-briefing-panel adr-howto-panel" data-half-l2l-summary="true">
+        <div class="overview-briefing-shell adr-howto-shell">
+          <div class="overview-briefing-copy">
+            <div class="panel-head compact-panel-head adr-howto-head">
+              <div>
+                <p class="eyebrow">Research Only</p>
+                <h3>50% L2L Reach</h3>
+              </div>
+              <span class="adr-howto-icon" aria-hidden="true">50%</span>
+            </div>
+            <section class="overview-briefing-block">
+              <h3>Definition</h3>
+              <p>This tab does not change live trading logic. The existing standard L2L research uses <code>ADR20 × 0.5</code>. This new view tests <code>50% of that existing standard</code>, which equals <code>ADR20 × 0.25</code>, while keeping the same directional calls, same evaluation-day session, same source candles, and same exclusions.</p>
+            </section>
+            <section class="overview-briefing-block">
+              <h3>Guardrails</h3>
+              <p>Reach rate is not trade profitability. The current contract has no entry, spread, stop, slippage, or target-before-stop sequence rule, so these results are research-only evidence for a later confidence redesign.</p>
+            </section>
+          </div>
+          <aside class="overview-briefing-chips adr-howto-comparison" aria-label="50% L2L research comparison">
+            <div class="overview-briefing-chip adr-howto-compare-card">
+              <span>Current Baseline</span>
+              <div class="adr-howto-compare-block">
+                <strong>100% Of Current Standard</strong>
+                <small>${escapeHtml(halfL2l?.meta?.current_standard_definition || "ADR20 × 0.5")}</small>
+              </div>
+              <div class="adr-howto-compare-block">
+                <strong>50% Of Current Standard</strong>
+                <small>${escapeHtml(halfL2l?.meta?.half_target_definition || "ADR20 × 0.25")}</small>
+              </div>
+            </div>
+          </aside>
+        </div>
+      </section>
+      <section class="research-section">
+        <div class="research-section-head">
+          <div>
+            <h3>Overall Comparison</h3>
+          </div>
+          <p class="research-panel-copy">Both layers are shown side by side with numerator, denominator, Wilson 95% interval, unresolved rows, exclusions, and median time to target.</p>
+        </div>
+        ${renderHalfL2lComparisonTable("Layer totals", "Research summary", [
+          comparisons.overall?.layer1 || {},
+          comparisons.overall?.layer2 || {}
+        ], {
+          entityLabel: "Layer",
+          entityRenderer: row => row.label || row.layer || displayDash()
+        })}
+      </section>
+      <section class="research-section">
+        <div class="research-section-head">
+          <div>
+            <h3>Source Contract</h3>
+          </div>
+          <p class="research-panel-copy">The same repo-local OANDA and Binance caches used by the existing L2L 1H Sequence Research are reused here. Unsupported USD/DXY remains unavailable.</p>
+        </div>
+        ${renderResearchBreakdownTable("Source audit", "Coverage", sourceAuditRows, [
+          { label: "Asset", className: "adr-col-entity", render: row => renderAdrCompactTextCell(row.assetLabel || displayDash(), row.instrument || "", { className: "adr-table-tight-cell" }) },
+          { label: "Status", className: "adr-col-status", render: row => renderAdrCompactTextCell(row.available ? "Available" : "Unavailable", "", { className: "adr-table-tight-cell" }) },
+          { label: "Coverage", className: "adr-col-source", render: row => renderAdrCompactTextCell(row.sourceCoverage?.intraday?.startDate || displayDash(), row.sourceCoverage?.intraday?.endDate ? `1H to ${row.sourceCoverage.intraday.endDate}` : (row.blocker || ""), { className: "adr-table-tight-cell" }) },
+          { label: "Hashes", className: "adr-col-reference", render: row => renderAdrCompactTextCell(row.dailySourceHash?.sha256 ? row.dailySourceHash.sha256.slice(0, 12) : displayDash(), row.intradaySourceHash?.sha256 ? row.intradaySourceHash.sha256.slice(0, 12) : "", { className: "adr-table-tight-cell" }) }
+        ], {
+          tableClass: "adr-summary-table adr-audit-table",
+          scrollClass: "adr-summary-scroll"
+        })}
+        ${renderAdrUnavailableDetails("Unavailable source blockers", sourceAuditRows.filter(row => !row.available).map(row => ({
+          assetOrPair: row.assetLabel,
+          callDirection: row.instrument || "",
+          notEvaluatedReason: row.blocker || "Unavailable source",
+          date: row.sourceCoverage?.intraday?.startDate || "",
+          layer: "Source Audit"
+        })), {
+          dataAttribute: "data-half-l2l-unavailable"
+        })}
+      </section>
+      <section class="research-section">
+        <div class="research-section-head">
+          <div>
+            <h3>By Asset And Pair</h3>
+          </div>
+          <p class="research-panel-copy">This is the first place to compare the current baseline against the half-target relaxation without conflating it with profitability.</p>
+        </div>
+        ${renderHalfL2lComparisonTable("Layer 1 by asset", "Asset results", layer1AssetRows, {
+          entityLabel: "Asset",
+          entityRenderer: row => row.assetLabel || displayDash()
+        })}
+        ${renderHalfL2lComparisonTable("Layer 2 by pair", "Pair results", layer2PairRows, {
+          entityLabel: "Pair",
+          entityRenderer: row => row.pairLabel || displayDash()
+        })}
+      </section>
+      <section class="research-section">
+        <div class="research-section-head">
+          <div>
+            <h3>Direction And Confidence</h3>
+          </div>
+          <p class="research-panel-copy">These tables split results by direction, current strength band, and finer exact confidence buckets where sample size is at least 20 eligible rows.</p>
+        </div>
+        ${renderHalfL2lComparisonTable("Layer 1 by direction", "Direction split", layer1DirectionRows, {
+          entityLabel: "Direction",
+          entityRenderer: row => row.assetLabel || displayDash(),
+          entitySecondaryRenderer: row => row.callDirection || ""
+        })}
+        ${renderHalfL2lComparisonTable("Layer 2 by direction", "Direction split", layer2DirectionRows, {
+          entityLabel: "Direction",
+          entityRenderer: row => row.pairLabel || displayDash(),
+          entitySecondaryRenderer: row => row.callDirection || ""
+        })}
+        ${renderHalfL2lComparisonTable("Layer 1 by strength", "Current confidence bands", layer1StrengthRows, {
+          entityLabel: "Strength",
+          entityRenderer: row => row.assetLabel || displayDash(),
+          entitySecondaryRenderer: row => row.strengthBucket || ""
+        })}
+        ${renderHalfL2lComparisonTable("Layer 2 by strength", "Current confidence bands", layer2StrengthRows, {
+          entityLabel: "Strength",
+          entityRenderer: row => row.pairLabel || displayDash(),
+          entitySecondaryRenderer: row => row.strengthBucket || ""
+        })}
+        ${renderHalfL2lComparisonTable("Layer 1 exact confidence buckets", "Sample size >= 20", layer1ExactRows, {
+          entityLabel: "Confidence",
+          entityRenderer: row => row.assetLabel || displayDash(),
+          entitySecondaryRenderer: row => row.exactConfidenceBucketLabel || ""
+        })}
+        ${renderHalfL2lComparisonTable("Layer 2 exact confidence buckets", "Sample size >= 20", layer2ExactRows, {
+          entityLabel: "Confidence",
+          entityRenderer: row => row.pairLabel || displayDash(),
+          entitySecondaryRenderer: row => row.exactConfidenceBucketLabel || ""
+        })}
+      </section>
+      <section class="research-section">
+        <div class="research-section-head">
+          <div>
+            <h3>Chronological Stability</h3>
+          </div>
+          <p class="research-panel-copy">Rows are split into chronological folds by entity, and the latest untouched fold is shown separately so a strong point estimate cannot hide a weak most-recent period.</p>
+        </div>
+        ${renderHalfL2lComparisonTable("Layer 1 chronological folds", "Fold stability", layer1FoldRows, {
+          entityLabel: "Fold",
+          entityRenderer: row => row.assetLabel || displayDash(),
+          entitySecondaryRenderer: row => `${row.foldKey || ""} | ${row.foldStartDate || ""} to ${row.foldEndDate || ""}`
+        })}
+        ${renderHalfL2lComparisonTable("Layer 2 chronological folds", "Fold stability", layer2FoldRows, {
+          entityLabel: "Fold",
+          entityRenderer: row => row.pairLabel || displayDash(),
+          entitySecondaryRenderer: row => `${row.foldKey || ""} | ${row.foldStartDate || ""} to ${row.foldEndDate || ""}`
+        })}
+        ${renderHalfL2lComparisonTable("Latest untouched chronological period", "Most recent fold only", [...latestLayer1Rows, ...latestLayer2Rows], {
+          entityLabel: "Latest",
+          entityRenderer: row => row.assetLabel || row.pairLabel || displayDash(),
+          entitySecondaryRenderer: row => `${row.foldKey || ""} | ${row.foldStartDate || ""} to ${row.foldEndDate || ""}`
+        })}
+      </section>
+      <section class="research-section">
+        <div class="research-section-head">
+          <div>
+            <h3>Confidence Monotonicity</h3>
+          </div>
+          <p class="research-panel-copy">Higher displayed confidence is tested against the half-target reach rate only. A higher point estimate is not enough by itself; sample size and interval stability remain visible.</p>
+        </div>
+        ${renderResearchBreakdownTable("Half-target monotonicity", "Half target only", monotonicityRows, [
+          { label: "Layer", className: "adr-col-entity", render: row => renderAdrCompactTextCell(row.layerLabel || displayDash(), row.monotonicNonDecreasing ? "Non-decreasing" : "Violations found", { className: "adr-table-tight-cell" }) },
+          { label: "Checked buckets", className: "adr-col-metric", render: row => renderAdrCompactTextCell(row.checkedBuckets?.length ?? 0, `${row.minimumSampleForCheck ?? 0}+ sample`, { className: "adr-table-tight-cell" }) },
+          { label: "Result", className: "adr-col-status", render: row => renderAdrCompactTextCell(row.monotonicNonDecreasing ? "Pass" : "Fail", row.violations?.length ? `${row.violations.length} reversal(s)` : "", { className: "adr-table-tight-cell" }) },
+          { label: "Buckets", className: "adr-col-source", render: row => renderAdrCompactTextCell((row.checkedBuckets || []).map(bucket => `${bucket.bucketKey}:${metricAvailable(bucket.hitRatePct) ? `${bucket.hitRatePct}%` : "-"}`).join(" | ") || displayDash(), "", { className: "adr-table-tight-cell" }) }
+        ], {
+          tableClass: "adr-summary-table adr-audit-table",
+          scrollClass: "adr-summary-scroll"
+        })}
+      </section>
+    </div>
+  `;
+}
+
+function getDirectionalAccuracyArtifact(data = {}) {
+  return data.half_l2l_reach || null;
+}
+
+function getDirectionalAccuracyRows(data = {}) {
+  const artifact = getDirectionalAccuracyArtifact(data);
+  if (Array.isArray(artifact?.row_level?.all)) return artifact.row_level.all;
+  return [
+    ...(Array.isArray(artifact?.row_level?.layer1) ? artifact.row_level.layer1 : []),
+    ...(Array.isArray(artifact?.row_level?.layer2) ? artifact.row_level.layer2 : [])
+  ];
+}
+
+function getDirectionalAccuracyReviewSignature(artifact = null) {
+  return JSON.stringify({
+    version: artifact?.meta?.version || null,
+    hashes: (artifact?.source_audit || []).map(row => `${row.assetCode}:${row.dailySourceHash?.sha256 || ""}:${row.intradaySourceHash?.sha256 || ""}`),
+    sampleRecordIds: (artifact?.manual_review?.sample_rows || []).map(row => row?.recordId).filter(Boolean)
+  });
+}
+
+function compareDirectionalAccuracySampleRow(left, right) {
+  const leftDate = String(left?.evaluationDate || "");
+  const rightDate = String(right?.evaluationDate || "");
+  if (leftDate !== rightDate) return leftDate.localeCompare(rightDate);
+  return String(left?.recordId || "").localeCompare(String(right?.recordId || ""));
+}
+
+function getDirectionalAccuracyManualSampleRows(artifact = null) {
+  return Array.isArray(artifact?.manual_review?.sample_rows)
+    ? artifact.manual_review.sample_rows.slice().sort(compareDirectionalAccuracySampleRow)
+    : [];
+}
+
+function getDirectionalAccuracyManualGroups(artifact = null) {
+  const sampleRows = getDirectionalAccuracyManualSampleRows(artifact);
+  const configuredGroups = Array.isArray(artifact?.manual_review?.groups) ? artifact.manual_review.groups : [];
+  if (configuredGroups.length) {
+    return configuredGroups.map((group) => ({
+      ...group,
+      sampleRows: sampleRows
+        .filter((row) => row.layer === group.layer && row.entityCode === group.entityCode)
+        .sort(compareDirectionalAccuracySampleRow)
+    }));
+  }
+
+  const orderedKeys = [];
+  sampleRows.forEach((row) => {
+    const key = `${row.layer}:${row.entityCode}`;
+    if (!orderedKeys.includes(key)) orderedKeys.push(key);
+  });
+  return orderedKeys.map((key) => {
+    const [layer, entityCode] = key.split(":");
+    const rows = sampleRows.filter((row) => row.layer === layer && row.entityCode === entityCode).sort(compareDirectionalAccuracySampleRow);
+    return {
+      layer,
+      layerLabel: layer === "LAYER_1" ? "Layer 1" : "Layer 2",
+      entityCode,
+      entityLabel: rows[0]?.entityLabel || entityCode,
+      sampleRows: rows
+    };
+  });
+}
+
+function getDirectionalAccuracyRetainedReviewRows(artifact = null, store = null) {
+  const effectiveStore = store || loadDirectionalAccuracyReviewStore(artifact);
+  return getDirectionalAccuracyManualSampleRows(artifact).map((row) => ({
+    row,
+    review: effectiveStore.reviews?.[row.recordId] || {}
+  }));
+}
+
+function loadDirectionalAccuracyReviewStore(artifact = null) {
+  const signature = getDirectionalAccuracyReviewSignature(artifact);
+  const fallback = { artifactSignature: signature, staleArtifactSignature: null, reviews: {} };
+  if (!storageAvailable()) return fallback;
+  try {
+    const parsed = JSON.parse(window.localStorage.getItem(halfL2lReviewStorageKey) || "null");
+    if (!parsed || typeof parsed !== "object") return fallback;
+    return {
+      artifactSignature: signature,
+      staleArtifactSignature: parsed.staleArtifactSignature || (parsed.artifactSignature && parsed.artifactSignature !== signature ? parsed.artifactSignature : null),
+      reviews: parsed.reviews && typeof parsed.reviews === "object" ? parsed.reviews : {}
+    };
+  } catch (err) {
+    return fallback;
+  }
+}
+
+function saveDirectionalAccuracyReviewStore(store) {
+  if (!storageAvailable()) return;
+  window.localStorage.setItem(halfL2lReviewStorageKey, JSON.stringify(store));
+}
+
+function exportDirectionalAccuracyReviewJson(artifact = null) {
+  const store = loadDirectionalAccuracyReviewStore(artifact);
+  const retainedRows = getDirectionalAccuracyRetainedReviewRows(artifact, store);
+  const manualGroups = getDirectionalAccuracyManualGroups(artifact);
+  const payload = {
+    review_contract_version: "half-l2l-manual-review-export-v1",
+    sample_contract_version: "half-l2l-manual-review-export-v2",
+    research_contract_version: artifact?.meta?.version || null,
+    artifact_signature: getDirectionalAccuracyReviewSignature(artifact),
+    source_hashes: (artifact?.source_audit || []).map(row => ({
+      assetCode: row.assetCode,
+      dailySourceHash: row.dailySourceHash?.sha256 || null,
+      intradaySourceHash: row.intradaySourceHash?.sha256 || null
+    })),
+    sample_size: retainedRows.length,
+    sample_layer_counts: retainedRows.reduce((acc, entry) => {
+      acc[entry.row.layer] = (acc[entry.row.layer] || 0) + 1;
+      return acc;
+    }, {}),
+    sample_record_ids: retainedRows.map((entry) => entry.row.recordId),
+    sample_groups: manualGroups.map((group) => ({
+      layer: group.layer,
+      entityCode: group.entityCode,
+      entityLabel: group.entityLabel,
+      sampleSize: group.sampleRows.length,
+      recordIds: group.sampleRows.map((row) => row.recordId)
+    })),
+    reviews: retainedRows.map(({ row, review }) => ({
+      recordId: row.recordId,
+      layer: row.layer,
+      entityCode: row.entityCode,
+      entityLabel: row.entityLabel || row.entityCode,
+      evaluationDate: row.evaluationDate || null,
+      callDirection: row.callDirection || null,
+      backtesterHalfOutcome: review.backtesterHalfOutcome || row.outcomes?.HALF_OF_STANDARD?.outcome || null,
+      backtesterFullOutcome: review.backtesterFullOutcome || row.outcomes?.FULL_STANDARD?.outcome || null,
+      manualVerdict: review.manualVerdict || "NOT_CHECKED",
+      notes: review.notes || "",
+      reviewTimestamp: review.reviewTimestamp || null
+    }))
+  };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "half-l2l-manual-review.json";
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+}
+
+function exportDirectionalAccuracyReviewCsv(artifact = null) {
+  const store = loadDirectionalAccuracyReviewStore(artifact);
+  const retainedRows = getDirectionalAccuracyRetainedReviewRows(artifact, store);
+  const headers = ["record_id", "layer", "entity_code", "entity_label", "evaluation_date", "call_direction", "manual_verdict", "notes", "review_timestamp", "backtester_half_outcome", "backtester_full_outcome"];
+  const lines = [
+    headers.join(","),
+    ...retainedRows.map(({ row, review }) => [
+      row.recordId,
+      row.layer || "",
+      row.entityCode || "",
+      row.entityLabel || "",
+      row.evaluationDate || "",
+      row.callDirection || "",
+      review.manualVerdict || "NOT_CHECKED",
+      review.notes || "",
+      review.reviewTimestamp || "",
+      review.backtesterHalfOutcome || row.outcomes?.HALF_OF_STANDARD?.outcome || "",
+      review.backtesterFullOutcome || row.outcomes?.FULL_STANDARD?.outcome || ""
+    ].map(escapeCsvCell).join(","))
+  ];
+  const blob = new Blob([lines.join("\n")], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "half-l2l-manual-review.csv";
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+}
+
+function applyDirectionalAccuracyFilters(rows = []) {
+  const search = String(halfL2lExplorerState.search || "").trim().toLowerCase();
+  return rows.filter((row) => {
+    const statusKey = row.status === "ELIGIBLE" ? "RESOLVED" : row.status;
+    if (halfL2lExplorerState.layer !== "ALL" && row.layer !== halfL2lExplorerState.layer) return false;
+    if (halfL2lExplorerState.entity !== "ALL" && row.entityCode !== halfL2lExplorerState.entity) return false;
+    if (halfL2lExplorerState.direction !== "ALL" && row.callDirection !== halfL2lExplorerState.direction) return false;
+    if (halfL2lExplorerState.halfOutcome !== "ALL" && String(row.outcomes?.HALF_OF_STANDARD?.outcome || "N/A") !== halfL2lExplorerState.halfOutcome) return false;
+    if (halfL2lExplorerState.fullOutcome !== "ALL" && String(row.outcomes?.FULL_STANDARD?.outcome || "N/A") !== halfL2lExplorerState.fullOutcome) return false;
+    if (halfL2lExplorerState.confidenceBand !== "ALL" && row.strengthBucket !== halfL2lExplorerState.confidenceBand) return false;
+    if (halfL2lExplorerState.fold !== "ALL" && row.chronologicalFoldKey !== halfL2lExplorerState.fold) return false;
+    if (halfL2lExplorerState.status !== "ALL" && statusKey !== halfL2lExplorerState.status) return false;
+    if (halfL2lExplorerState.startDate && String(row.evaluationDate || "") < halfL2lExplorerState.startDate) return false;
+    if (halfL2lExplorerState.endDate && String(row.evaluationDate || "") > halfL2lExplorerState.endDate) return false;
+    if (!search) return true;
+    const haystack = [
+      row.recordId,
+      row.evaluationDate,
+      row.layer,
+      row.entityCode,
+      row.entityLabel,
+      row.callDirection,
+      row.strengthBucket,
+      row.status,
+      row.statusReason,
+      row.candleSourceLabel
+    ].filter(Boolean).join(" ").toLowerCase();
+    return haystack.includes(search);
+  });
+}
+
+function renderDirectionalAccuracyOverviewCard(title, summary = {}, dateRange = {}) {
+  const rangeText = dateRange?.earliest && dateRange?.latest ? `${dateRange.earliest} to ${dateRange.latest}` : "Range unavailable";
+  return renderBacktestMetric(
+    title,
+    metricAvailable(summary.hitRatePct) ? `${summary.hits}/${summary.eligibleCalls} (${summary.hitRatePct}%)` : displayDash(),
+    metricAvailable(summary.wilson95LowPct) && metricAvailable(summary.wilson95HighPct) ? `95% CI ${summary.wilson95LowPct}-${summary.wilson95HighPct}%` : "95% CI unavailable",
+    `Unresolved ${summary.unresolvedRows ?? 0} | Excluded ${summary.exclusions ?? 0} | Coverage ${summary.dataCoveragePct ?? displayDash()}% | ${rangeText}`
+  );
+}
+
+function renderDirectionalAccuracyHistoryTable(rows = []) {
+  const filteredRows = applyDirectionalAccuracyFilters(rows);
+  const entities = uniqueStrings(rows.map(row => row.entityCode)).sort();
+  const folds = uniqueStrings(rows.map(row => row.chronologicalFoldKey)).sort();
+  const directions = uniqueStrings(rows.map(row => row.callDirection)).sort();
+  const bands = uniqueStrings(rows.map(row => row.strengthBucket)).sort();
+
+  return `
+    <section class="research-section" data-half-l2l-history="true">
+      <div class="research-section-head">
+        <div>
+          <h3>Historical Record Explorer</h3>
+        </div>
+        <p class="research-panel-copy">Complete canonical history. Resolved, unresolved, and excluded rows stay visible rather than being silently converted into misses.</p>
+      </div>
+      <article class="detail-panel wide-panel research-secondary-panel">
+        <div class="architecture-filter-row">
+          <input type="search" data-half-l2l-filter="search" placeholder="Search record, date, asset, direction" value="${escapeHtml(halfL2lExplorerState.search || "")}">
+          <select data-half-l2l-filter="layer"><option value="ALL">All layers</option><option value="LAYER_1"${halfL2lExplorerState.layer === "LAYER_1" ? " selected" : ""}>Layer 1</option><option value="LAYER_2"${halfL2lExplorerState.layer === "LAYER_2" ? " selected" : ""}>Layer 2</option></select>
+          <select data-half-l2l-filter="entity"><option value="ALL">All assets/pairs</option>${entities.map(value => `<option value="${escapeHtml(value)}"${halfL2lExplorerState.entity === value ? " selected" : ""}>${escapeHtml(value)}</option>`).join("")}</select>
+          <select data-half-l2l-filter="direction"><option value="ALL">All directions</option>${directions.map(value => `<option value="${escapeHtml(value)}"${halfL2lExplorerState.direction === value ? " selected" : ""}>${escapeHtml(value)}</option>`).join("")}</select>
+          <select data-half-l2l-filter="halfOutcome"><option value="ALL">All half outcomes</option>${["HIT", "MISS", "N/A"].map(value => `<option value="${escapeHtml(value)}"${halfL2lExplorerState.halfOutcome === value ? " selected" : ""}>${escapeHtml(value)}</option>`).join("")}</select>
+          <select data-half-l2l-filter="fullOutcome"><option value="ALL">All full outcomes</option>${["HIT", "MISS", "N/A"].map(value => `<option value="${escapeHtml(value)}"${halfL2lExplorerState.fullOutcome === value ? " selected" : ""}>${escapeHtml(value)}</option>`).join("")}</select>
+          <select data-half-l2l-filter="confidenceBand"><option value="ALL">All confidence bands</option>${bands.map(value => `<option value="${escapeHtml(value)}"${halfL2lExplorerState.confidenceBand === value ? " selected" : ""}>${escapeHtml(value)}</option>`).join("")}</select>
+          <select data-half-l2l-filter="fold"><option value="ALL">All folds</option>${folds.map(value => `<option value="${escapeHtml(value)}"${halfL2lExplorerState.fold === value ? " selected" : ""}>${escapeHtml(value)}</option>`).join("")}</select>
+          <select data-half-l2l-filter="status"><option value="ALL">All statuses</option><option value="RESOLVED"${halfL2lExplorerState.status === "RESOLVED" ? " selected" : ""}>Resolved</option><option value="UNRESOLVED_MISSING_DATA"${halfL2lExplorerState.status === "UNRESOLVED_MISSING_DATA" ? " selected" : ""}>Unresolved</option><option value="EXCLUDED"${halfL2lExplorerState.status === "EXCLUDED" ? " selected" : ""}>Excluded</option></select>
+          <input type="date" data-half-l2l-filter="startDate" value="${escapeHtml(halfL2lExplorerState.startDate || "")}">
+          <input type="date" data-half-l2l-filter="endDate" value="${escapeHtml(halfL2lExplorerState.endDate || "")}">
+        </div>
+        <p class="research-panel-copy">Showing ${filteredRows.length} of ${rows.length} rows.</p>
+        <div class="research-table-scroll">
+          <table class="dashboard-table research-evidence-table">
+            <thead>
+              <tr>
+                <th>Record</th>
+                <th>Call</th>
+                <th>Distances</th>
+                <th>Window</th>
+                <th>Half L2L</th>
+                <th>Full L2L</th>
+                <th>Evidence</th>
+                <th>Source / Reason</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${filteredRows.map(row => `
+                <tr>
+                  <td>${researchDataCell(row.recordId || displayDash(), `${row.layer} | ${row.evaluationDate || displayDash()} | ${row.entityLabel || row.entityCode || displayDash()}`)}</td>
+                  <td>${researchDataCell(row.callDirection || displayDash(), `${metricAvailable(row.confidencePct) ? `${row.confidencePct}%` : displayDash()} | ${row.strengthBucket || displayDash()} | ${row.chronologicalFoldKey || "No fold"}`)}</td>
+                  <td>${researchDataCell(metricAvailable(row.halfL2lDistance) ? row.halfL2lDistance : displayDash(), `Full ${metricAvailable(row.currentStandardL2lDistance) ? row.currentStandardL2lDistance : displayDash()} | ADR20 ${metricAvailable(row.adr20) ? row.adr20 : displayDash()}`)}</td>
+                  <td>${researchDataCell(row.evaluationStartTime || displayDash(), row.evaluationEndTime || "Window unavailable")}</td>
+                  <td>${researchDataCell(
+                    row.outcomes?.HALF_OF_STANDARD?.outcome || "N/A",
+                    row.outcomes?.HALF_OF_STANDARD?.outcome === "HIT"
+                      ? (row.outcomes?.HALF_OF_STANDARD?.confirmingTime || row.outcomes?.HALF_OF_STANDARD?.triggerCandleTime || "Completion time unavailable")
+                      : "No qualifying confirming point"
+                  )}</td>
+                  <td>${researchDataCell(
+                    row.outcomes?.FULL_STANDARD?.outcome || "N/A",
+                    row.outcomes?.FULL_STANDARD?.outcome === "HIT"
+                      ? (row.outcomes?.FULL_STANDARD?.confirmingTime || row.outcomes?.FULL_STANDARD?.triggerCandleTime || "Completion time unavailable")
+                      : "No qualifying confirming point"
+                  )}</td>
+                  <td>${researchDataCell(
+                    `${row.outcomes?.HALF_OF_STANDARD?.initiatingPrice ?? row.outcomes?.FULL_STANDARD?.initiatingPrice ?? displayDash()} @ ${row.outcomes?.HALF_OF_STANDARD?.initiatingTime || row.outcomes?.FULL_STANDARD?.initiatingTime || displayDash()}`,
+                    ((row.outcomes?.HALF_OF_STANDARD?.outcome === "HIT" || row.outcomes?.FULL_STANDARD?.outcome === "HIT")
+                      ? `Confirm ${row.outcomes?.HALF_OF_STANDARD?.confirmingPrice ?? row.outcomes?.FULL_STANDARD?.confirmingPrice ?? displayDash()} @ ${row.outcomes?.HALF_OF_STANDARD?.confirmingTime || row.outcomes?.FULL_STANDARD?.confirmingTime || displayDash()}`
+                      : "No qualifying confirming point")
+                    + ` | Max fav ${row.outcomes?.FULL_STANDARD?.maxFavourableDistance ?? row.outcomes?.HALF_OF_STANDARD?.maxFavourableDistance ?? displayDash()}`
+                  )}</td>
+                  <td>${researchDataCell([row.sourceVendor, row.candleSourceLabel].filter(Boolean).join(" | ") || displayDash(), row.status === "ELIGIBLE" ? (row.instrumentSymbol || "") : (row.statusReason || row.status || displayDash()))}</td>
+                </tr>
+              `).join("")}
+            </tbody>
+          </table>
+        </div>
+      </article>
+    </section>
+  `;
+}
+
+function renderDirectionalAccuracyManualVerification(data = {}) {
+  const artifact = getDirectionalAccuracyArtifact(data);
+  const sampleRows = getDirectionalAccuracyManualSampleRows(artifact);
+  const manualGroups = getDirectionalAccuracyManualGroups(artifact);
+  const reviewStore = loadDirectionalAccuracyReviewStore(artifact);
+  const reviews = reviewStore.reviews || {};
+  const reviewed = sampleRows.filter(row => (reviews[row.recordId]?.manualVerdict || "NOT_CHECKED") !== "NOT_CHECKED");
+  const matches = reviewed.filter(row => reviews[row.recordId]?.manualVerdict === "MATCHES").length;
+  const mismatches = reviewed.filter(row => reviews[row.recordId]?.manualVerdict === "DOES_NOT_MATCH").length;
+  const agreementPct = reviewed.length ? `${((matches / reviewed.length) * 100).toFixed(1)}%` : displayDash();
+
+  return `
+    <section class="research-section" data-half-l2l-manual="true">
+      <div class="research-section-head">
+        <div>
+          <h3>Manual Backtester Verification</h3>
+        </div>
+        <p class="research-panel-copy">Manual verification is stored in this browser unless exported.</p>
+      </div>
+      <article class="detail-panel wide-panel research-secondary-panel">
+        <div class="diagnostic-item">
+          1. Open the named market and date on an independent chart. 2. Match the chart timezone and session to the displayed UTC evaluation window. 3. Check the initiating extreme and later confirming extreme in chronological order. 4. Confirm the calculated distance against the displayed ADR20 requirement. 5. Select MATCHES only if the independent chart agrees with the backtester. 6. Select DOES NOT MATCH if the price, timestamp, sequence, session or outcome differs. 7. Record the reason in Notes. 8. Leave uncertain cases NOT CHECKED. Chart-platform candle construction or session differences should be recorded, not automatically treated as a backtester defect.
+        </div>
+        <div class="workflow-step-grid">
+          <div class="workflow-step"><span>Reviewed</span><strong id="halfL2lReviewedCount">${reviewed.length}</strong></div>
+          <div class="workflow-step"><span>Remaining</span><strong id="halfL2lRemainingCount">${sampleRows.length - reviewed.length}</strong></div>
+          <div class="workflow-step success"><span>Matches</span><strong id="halfL2lMatchesCount">${matches}</strong></div>
+          <div class="workflow-step failed"><span>Mismatches</span><strong id="halfL2lMismatchesCount">${mismatches}</strong></div>
+          <div class="workflow-step"><span>Agreement</span><strong id="halfL2lAgreementPct">${agreementPct}</strong></div>
+        </div>
+        ${reviewStore.staleArtifactSignature ? `<div class="diagnostic-item">Saved reviews were created against a different artifact signature. Re-check before relying on them.</div>` : ""}
+        <div class="architecture-filter-row">
+          <button type="button" data-half-l2l-export-json="true">Export Review JSON</button>
+          <button type="button" data-half-l2l-export-csv="true">Export Review CSV</button>
+          <button type="button" data-half-l2l-import-json="true">Import Review JSON</button>
+          <button type="button" data-half-l2l-reset-review="true">Reset Review</button>
+          <input id="${halfL2lReviewImportInputId}" type="file" accept=".json,application/json" hidden>
+        </div>
+        <div class="diagnostic-item">Current sample: ${sampleRows.length} retained records. Exports include only the current 32-row verification sample even if older local review entries still exist for retired sample rows.</div>
+        <div class="diagnostic-item" data-half-l2l-selection-rule="true">Selection rule: MISS/HIT is impossible because any full-target hit necessarily implies the half target was hit first. Non-EUR groups retain the oldest eligible HIT/HIT, HIT/MISS, and MISS/MISS examples from the prior eight-row sample, plus the oldest remaining row. EUR retains the four authoritative previously reviewed stable IDs.</div>
+        ${manualGroups.map((group) => {
+          const groupReviewed = group.sampleRows.filter((row) => (reviews[row.recordId]?.manualVerdict || "NOT_CHECKED") !== "NOT_CHECKED").length;
+          return `
+            <section class="research-section" data-half-l2l-manual-group="${escapeHtml(group.entityCode)}">
+              <div class="research-section-head">
+                <div>
+                  <h4 data-half-l2l-manual-group-heading="${escapeHtml(group.entityCode)}">${escapeHtml(group.entityLabel || group.entityCode)} - ${groupReviewed} of ${group.sampleRows.length} reviewed</h4>
+                </div>
+                <p class="research-panel-copy">${escapeHtml(group.layerLabel || (group.layer === "LAYER_1" ? "Layer 1" : "Layer 2"))} manual verification group in deterministic call-date order.</p>
+              </div>
+              <div class="research-table-scroll">
+                <table class="dashboard-table research-evidence-table">
+                  <thead>
+                    <tr>
+                      <th>Record</th>
+                      <th>Backtester</th>
+                      <th>Evidence</th>
+                      <th>Manual review</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${group.sampleRows.map((row) => {
+                      const review = reviews[row.recordId] || {};
+                      const verdict = review.manualVerdict || "NOT_CHECKED";
+                      return `
+                        <tr data-half-l2l-sample-row="${escapeHtml(row.recordId)}">
+                          <td>${researchDataCell(row.recordId || displayDash(), `${row.layer} | ${row.entityLabel || row.entityCode} | ${row.evaluationDate || displayDash()} | ${row.callDirection || displayDash()} | ${metricAvailable(row.confidencePct) ? `${row.confidencePct}%` : displayDash()} | ${row.strengthBucket || displayDash()}`)}</td>
+                          <td>${researchDataCell(`Half ${row.outcomes?.HALF_OF_STANDARD?.outcome || "N/A"} | Full ${row.outcomes?.FULL_STANDARD?.outcome || "N/A"}`, `ADR20 ${row.adr20 ?? displayDash()} | Half ${row.halfL2lDistance ?? displayDash()} | Full ${row.currentStandardL2lDistance ?? displayDash()} | ${row.evaluationStartTime || displayDash()} to ${row.evaluationEndTime || displayDash()} UTC`)}</td>
+                          <td>${researchDataCell(
+                            `Init ${row.outcomes?.HALF_OF_STANDARD?.initiatingPrice ?? row.outcomes?.FULL_STANDARD?.initiatingPrice ?? displayDash()} @ ${row.outcomes?.HALF_OF_STANDARD?.initiatingTime || row.outcomes?.FULL_STANDARD?.initiatingTime || displayDash()}`,
+                            ((row.outcomes?.HALF_OF_STANDARD?.outcome === "HIT" || row.outcomes?.FULL_STANDARD?.outcome === "HIT")
+                              ? `Confirm ${row.outcomes?.HALF_OF_STANDARD?.confirmingPrice ?? row.outcomes?.FULL_STANDARD?.confirmingPrice ?? displayDash()} @ ${row.outcomes?.HALF_OF_STANDARD?.confirmingTime || row.outcomes?.FULL_STANDARD?.confirmingTime || displayDash()}`
+                              : "No qualifying confirming point")
+                            + ` | Max fav ${row.outcomes?.FULL_STANDARD?.maxFavourableDistance ?? row.outcomes?.HALF_OF_STANDARD?.maxFavourableDistance ?? displayDash()} | ${row.candleSourceLabel || displayDash()}`
+                          )}</td>
+                          <td>
+                            <div class="research-cell">
+                              <label><input type="radio" name="half-l2l-review-${escapeHtml(row.recordId)}" value="MATCHES" data-half-l2l-verdict="${escapeHtml(row.recordId)}"${verdict === "MATCHES" ? " checked" : ""}> MATCHES</label>
+                              <label><input type="radio" name="half-l2l-review-${escapeHtml(row.recordId)}" value="DOES_NOT_MATCH" data-half-l2l-verdict="${escapeHtml(row.recordId)}"${verdict === "DOES_NOT_MATCH" ? " checked" : ""}> DOES NOT MATCH</label>
+                              <label><input type="radio" name="half-l2l-review-${escapeHtml(row.recordId)}" value="NOT_CHECKED" data-half-l2l-verdict="${escapeHtml(row.recordId)}"${verdict === "NOT_CHECKED" ? " checked" : ""}> NOT CHECKED</label>
+                              <textarea data-half-l2l-notes="${escapeHtml(row.recordId)}" rows="3" placeholder="Optional notes">${escapeHtml(review.notes || "")}</textarea>
+                              <small>Last checked: ${escapeHtml(review.reviewTimestamp || "Not yet checked")}</small>
+                            </div>
+                          </td>
+                        </tr>
+                      `;
+                    }).join("")}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          `;
+        }).join("")}
+      </article>
+    </section>
+  `;
+}
+
+function renderResearchL2lDirectionalAccuracy(data = {}) {
+  const artifact = getDirectionalAccuracyArtifact(data);
+  const comparisons = artifact?.comparisons || {};
+  const sourceAuditRows = Array.isArray(artifact?.source_audit) ? artifact.source_audit : [];
+  const allRows = getDirectionalAccuracyRows(data);
+  const layer1AssetRows = Array.isArray(comparisons.layer1_assets) ? comparisons.layer1_assets : [];
+  const layer2PairRows = Array.isArray(comparisons.layer2_pairs) ? comparisons.layer2_pairs : [];
+  const layer1DirectionRows = Array.isArray(comparisons.layer1_directions) ? comparisons.layer1_directions : [];
+  const layer2DirectionRows = Array.isArray(comparisons.layer2_directions) ? comparisons.layer2_directions : [];
+  const layer1StrengthRows = Array.isArray(comparisons.layer1_strength_bands) ? comparisons.layer1_strength_bands : [];
+  const layer2StrengthRows = Array.isArray(comparisons.layer2_strength_bands) ? comparisons.layer2_strength_bands : [];
+  const layer1ExactRows = (Array.isArray(comparisons.layer1_exact_confidence_buckets) ? comparisons.layer1_exact_confidence_buckets : []).filter(row => Number(row?.fullStandard?.eligibleCalls || 0) >= 20);
+  const layer2ExactRows = (Array.isArray(comparisons.layer2_exact_confidence_buckets) ? comparisons.layer2_exact_confidence_buckets : []).filter(row => Number(row?.fullStandard?.eligibleCalls || 0) >= 20);
+  const layer1YearRows = Array.isArray(comparisons.layer1_years) ? comparisons.layer1_years : [];
+  const layer2YearRows = Array.isArray(comparisons.layer2_years) ? comparisons.layer2_years : [];
+  const layer1MonthRows = Array.isArray(comparisons.layer1_months) ? comparisons.layer1_months : [];
+  const layer2MonthRows = Array.isArray(comparisons.layer2_months) ? comparisons.layer2_months : [];
+  const layer1FoldRows = Array.isArray(comparisons.layer1_chronological_folds) ? comparisons.layer1_chronological_folds : [];
+  const layer2FoldRows = Array.isArray(comparisons.layer2_chronological_folds) ? comparisons.layer2_chronological_folds : [];
+  const latestLayer1Rows = Array.isArray(comparisons.layer1_latest_period) ? comparisons.layer1_latest_period : [];
+  const latestLayer2Rows = Array.isArray(comparisons.layer2_latest_period) ? comparisons.layer2_latest_period : [];
+  const monotonicityRows = Array.isArray(artifact?.monotonicity) ? artifact.monotonicity : [];
+
+  if (!artifact || (!layer1AssetRows.length && !layer2PairRows.length)) {
+    return `
+      <div class="backtest-report">
+        <article class="detail-panel wide-panel research-secondary-panel">
+          <h3>L2L Directional Accuracy unavailable</h3>
+          <div class="empty-state matrix-evidence-empty">The downstream L2L Directional Accuracy artifact could not be loaded.</div>
+        </article>
+      </div>
+    `;
+  }
+
+  return `
+    <div class="backtest-report">
+      ${renderResearchStatusHeader(data)}
+      <section class="detail-panel overview-briefing-panel adr-howto-panel" data-half-l2l-summary="true">
+        <div class="overview-briefing-shell adr-howto-shell">
+          <div class="overview-briefing-copy">
+            <div class="panel-head compact-panel-head adr-howto-head">
+              <div>
+                <p class="eyebrow">Research Only</p>
+                <h3>L2L Directional Accuracy</h3>
+              </div>
+              <span class="adr-howto-icon" aria-hidden="true">L2L</span>
+            </div>
+            <section class="overview-briefing-block">
+              <h3>Definition</h3>
+              <p>Did the trading day provide a chronological opportunity to cover the required distance in the direction of the morning call? This view tests exactly <code>0.25 x ADR20</code> and <code>0.50 x ADR20</code>.</p>
+            </section>
+            <section class="overview-briefing-block">
+              <h3>Warnings</h3>
+              <p>Research only - not a live trading signal. Accuracy here means that the required chronological directional opportunity occurred during the evaluated session. It does not mean a trade entered at an arbitrary price would have made a profit.</p>
+            </section>
+            <section class="overview-briefing-block">
+              <h3>Timing contract</h3>
+              <p>The established contract is date-based and UTC-keyed. Each row maps to the source 1H session attached to <code>evaluation_inputs.close_date</code>. Exact session start and end timestamps are shown in the explorer and manual sample below. Because exact morning publication times are unavailable, some source sessions may include pre-call candles.</p>
+            </section>
+          </div>
+          <aside class="overview-briefing-chips adr-howto-comparison" aria-label="L2L directional accuracy contract">
+            <div class="overview-briefing-chip adr-howto-compare-card">
+              <span>Current contract</span>
+              <div class="adr-howto-compare-block">
+                <strong>Half L2L</strong>
+                <small>${escapeHtml(artifact?.meta?.half_target_definition || "ADR20 x 0.25")}</small>
+              </div>
+              <div class="adr-howto-compare-block">
+                <strong>Full / current L2L</strong>
+                <small>${escapeHtml(artifact?.meta?.current_standard_definition || "ADR20 x 0.50")}</small>
+              </div>
+              <div class="adr-howto-compare-block">
+                <strong>Exact evaluated dates</strong>
+                <small>Layer 1 ${escapeHtml(artifact?.meta?.evaluated_date_ranges?.layer1?.earliest || displayDash())} to ${escapeHtml(artifact?.meta?.evaluated_date_ranges?.layer1?.latest || displayDash())} | Layer 2 ${escapeHtml(artifact?.meta?.evaluated_date_ranges?.layer2?.earliest || displayDash())} to ${escapeHtml(artifact?.meta?.evaluated_date_ranges?.layer2?.latest || displayDash())}</small>
+              </div>
+            </div>
+          </aside>
+        </div>
+      </section>
+      <section class="backtest-metric-grid research-progress-grid">
+        ${renderDirectionalAccuracyOverviewCard("Layer 1 Half L2L", comparisons.overall?.layer1?.halfOfStandard, artifact?.meta?.evaluated_date_ranges?.layer1)}
+        ${renderDirectionalAccuracyOverviewCard("Layer 1 Full L2L", comparisons.overall?.layer1?.fullStandard, artifact?.meta?.evaluated_date_ranges?.layer1)}
+        ${renderDirectionalAccuracyOverviewCard("Layer 2 Half L2L", comparisons.overall?.layer2?.halfOfStandard, artifact?.meta?.evaluated_date_ranges?.layer2)}
+        ${renderDirectionalAccuracyOverviewCard("Layer 2 Full L2L", comparisons.overall?.layer2?.fullStandard, artifact?.meta?.evaluated_date_ranges?.layer2)}
+      </section>
+      <section class="research-section">
+        <div class="research-section-head">
+          <div>
+            <h3>Overall Comparison</h3>
+          </div>
+          <p class="research-panel-copy">Half and full directional-opportunity rates with hits, eligible calls, Wilson 95% confidence intervals, unresolved counts, excluded counts, exact date ranges, and coverage percentages.</p>
+        </div>
+        ${renderHalfL2lComparisonTable("Layer totals", "Research summary", [comparisons.overall?.layer1 || {}, comparisons.overall?.layer2 || {}], {
+          entityLabel: "Layer",
+          entityRenderer: row => row.label || row.layer || displayDash()
+        })}
+      </section>
+      <section class="research-section">
+        <div class="research-section-head">
+          <div>
+            <h3>Source Contract</h3>
+          </div>
+          <p class="research-panel-copy">The same repo-local OANDA and Binance caches used by the existing L2L 1H Sequence Research are reused here. Unsupported USD/DXY remains unavailable.</p>
+        </div>
+        ${renderResearchBreakdownTable("Source audit", "Coverage", sourceAuditRows, [
+          { label: "Asset", className: "adr-col-entity", render: row => renderAdrCompactTextCell(row.assetLabel || displayDash(), row.instrument || "", { className: "adr-table-tight-cell" }) },
+          { label: "Status", className: "adr-col-status", render: row => renderAdrCompactTextCell(row.available ? "Available" : "Unavailable", "", { className: "adr-table-tight-cell" }) },
+          { label: "Coverage", className: "adr-col-source", render: row => renderAdrCompactTextCell(row.sourceCoverage?.intraday?.startDate || displayDash(), row.sourceCoverage?.intraday?.endDate ? `1H to ${row.sourceCoverage.intraday.endDate}` : (row.blocker || ""), { className: "adr-table-tight-cell" }) },
+          { label: "Hashes", className: "adr-col-reference", render: row => renderAdrCompactTextCell(row.dailySourceHash?.sha256 ? row.dailySourceHash.sha256.slice(0, 12) : displayDash(), row.intradaySourceHash?.sha256 ? row.intradaySourceHash.sha256.slice(0, 12) : "", { className: "adr-table-tight-cell" }) }
+        ], {
+          tableClass: "adr-summary-table adr-audit-table",
+          scrollClass: "adr-summary-scroll"
+        })}
+      </section>
+      <section class="research-section">
+        <div class="research-section-head">
+          <div>
+            <h3>By Asset, Pair, Direction, And Confidence</h3>
+          </div>
+          <p class="research-panel-copy">Half versus full L2L by asset/pair, bullish or bearish direction, confidence band, exact confidence bucket, year, and month.</p>
+        </div>
+        ${renderHalfL2lComparisonTable("Layer 1 by asset", "Asset results", layer1AssetRows, { entityLabel: "Asset", entityRenderer: row => row.assetLabel || displayDash() })}
+        ${renderHalfL2lComparisonTable("Layer 2 by pair", "Pair results", layer2PairRows, { entityLabel: "Pair", entityRenderer: row => row.pairLabel || displayDash() })}
+        ${renderHalfL2lComparisonTable("Layer 1 by direction", "Direction split", layer1DirectionRows, { entityLabel: "Direction", entityRenderer: row => row.assetLabel || displayDash(), entitySecondaryRenderer: row => row.callDirection || "" })}
+        ${renderHalfL2lComparisonTable("Layer 2 by direction", "Direction split", layer2DirectionRows, { entityLabel: "Direction", entityRenderer: row => row.pairLabel || displayDash(), entitySecondaryRenderer: row => row.callDirection || "" })}
+        ${renderHalfL2lComparisonTable("Layer 1 by strength", "Confidence bands", layer1StrengthRows, { entityLabel: "Band", entityRenderer: row => row.assetLabel || displayDash(), entitySecondaryRenderer: row => row.strengthBucket || "" })}
+        ${renderHalfL2lComparisonTable("Layer 2 by strength", "Confidence bands", layer2StrengthRows, { entityLabel: "Band", entityRenderer: row => row.pairLabel || displayDash(), entitySecondaryRenderer: row => row.strengthBucket || "" })}
+        ${renderHalfL2lComparisonTable("Layer 1 exact confidence buckets", "Sample size >= 20", layer1ExactRows, { entityLabel: "Bucket", entityRenderer: row => row.assetLabel || displayDash(), entitySecondaryRenderer: row => row.exactConfidenceBucketLabel || "" })}
+        ${renderHalfL2lComparisonTable("Layer 2 exact confidence buckets", "Sample size >= 20", layer2ExactRows, { entityLabel: "Bucket", entityRenderer: row => row.pairLabel || displayDash(), entitySecondaryRenderer: row => row.exactConfidenceBucketLabel || "" })}
+        ${renderHalfL2lComparisonTable("Layer 1 by year", "Calendar year", layer1YearRows, { entityLabel: "Year", entityRenderer: row => row.assetLabel || displayDash(), entitySecondaryRenderer: row => row.evaluationYear || "" })}
+        ${renderHalfL2lComparisonTable("Layer 2 by year", "Calendar year", layer2YearRows, { entityLabel: "Year", entityRenderer: row => row.pairLabel || displayDash(), entitySecondaryRenderer: row => row.evaluationYear || "" })}
+        ${renderHalfL2lComparisonTable("Layer 1 by month", "Calendar month", layer1MonthRows, { entityLabel: "Month", entityRenderer: row => row.assetLabel || displayDash(), entitySecondaryRenderer: row => row.evaluationMonth || "" })}
+        ${renderHalfL2lComparisonTable("Layer 2 by month", "Calendar month", layer2MonthRows, { entityLabel: "Month", entityRenderer: row => row.pairLabel || displayDash(), entitySecondaryRenderer: row => row.evaluationMonth || "" })}
+      </section>
+      <section class="research-section">
+        <div class="research-section-head">
+          <div>
+            <h3>Chronological Stability</h3>
+          </div>
+          <p class="research-panel-copy">Rows are split into chronological folds by entity, and the latest untouched fold is shown separately so a strong point estimate cannot hide a weak most-recent period.</p>
+        </div>
+        ${renderHalfL2lComparisonTable("Layer 1 chronological folds", "Fold stability", layer1FoldRows, { entityLabel: "Fold", entityRenderer: row => row.assetLabel || displayDash(), entitySecondaryRenderer: row => `${row.foldKey || ""} | ${row.foldStartDate || ""} to ${row.foldEndDate || ""}` })}
+        ${renderHalfL2lComparisonTable("Layer 2 chronological folds", "Fold stability", layer2FoldRows, { entityLabel: "Fold", entityRenderer: row => row.pairLabel || displayDash(), entitySecondaryRenderer: row => `${row.foldKey || ""} | ${row.foldStartDate || ""} to ${row.foldEndDate || ""}` })}
+        ${renderHalfL2lComparisonTable("Latest untouched chronological period", "Most recent fold only", [...latestLayer1Rows, ...latestLayer2Rows], { entityLabel: "Latest", entityRenderer: row => row.assetLabel || row.pairLabel || displayDash(), entitySecondaryRenderer: row => `${row.foldKey || ""} | ${row.foldStartDate || ""} to ${row.foldEndDate || ""}` })}
+      </section>
+      <section class="research-section">
+        <div class="research-section-head">
+          <div>
+            <h3>Confidence Monotonicity</h3>
+          </div>
+          <p class="research-panel-copy">Higher displayed confidence is tested against the half-target reach rate only.</p>
+        </div>
+        ${renderResearchBreakdownTable("Half-target monotonicity", "Half target only", monotonicityRows, [
+          { label: "Layer", className: "adr-col-entity", render: row => renderAdrCompactTextCell(row.layerLabel || displayDash(), row.monotonicNonDecreasing ? "Non-decreasing" : "Violations found", { className: "adr-table-tight-cell" }) },
+          { label: "Checked buckets", className: "adr-col-metric", render: row => renderAdrCompactTextCell(row.checkedBuckets?.length ?? 0, `${row.minimumSampleForCheck ?? 0}+ sample`, { className: "adr-table-tight-cell" }) },
+          { label: "Result", className: "adr-col-status", render: row => renderAdrCompactTextCell(row.monotonicNonDecreasing ? "Pass" : "Fail", row.violations?.length ? `${row.violations.length} reversal(s)` : "", { className: "adr-table-tight-cell" }) },
+          { label: "Buckets", className: "adr-col-source", render: row => renderAdrCompactTextCell((row.checkedBuckets || []).map(bucket => `${bucket.bucketKey}:${metricAvailable(bucket.hitRatePct) ? `${bucket.hitRatePct}%` : "-"}`).join(" | ") || displayDash(), "", { className: "adr-table-tight-cell" }) }
+        ], {
+          tableClass: "adr-summary-table adr-audit-table",
+          scrollClass: "adr-summary-scroll"
+        })}
+      </section>
+      ${renderDirectionalAccuracyHistoryTable(allRows)}
+      ${renderDirectionalAccuracyManualVerification(data)}
+    </div>
+  `;
+}
+
 function renderResearchAdrThresholdSensitivity(data = {}) {
   const adrReach = data.adr_reach || null;
   const layer1Sensitivity = adrReach?.layer1?.threshold_sensitivity || {};
@@ -10467,11 +11442,13 @@ function renderBacktest(data = {}) {
           ? renderResearchPairTrade(data)
           : (activeBacktestTab === "adr-reach-research"
             ? renderResearchAdrReach(data)
+            : (activeBacktestTab === "half-l2l-reach"
+              ? renderResearchL2lDirectionalAccuracy(data)
             : (activeBacktestTab === "adr-threshold-sensitivity"
               ? renderResearchAdrThresholdSensitivity(data)
               : (activeBacktestTab === "directional-trust-summary"
                 ? renderResearchDirectionalTrustSummary(data)
-                : renderResearchAccuracy(data)))))));
+                : renderResearchAccuracy(data))))))));
     applyMatrixEvidenceFilter("all");
   } catch (err) {
     console.error("Backtest render failed", err);
@@ -12066,6 +13043,41 @@ function setupBacktestEvidenceControls() {
     const exportButton = event.target.closest("[data-export-matrix-evidence]");
     if (exportButton) {
       exportMatrixEvidenceCsv(exportButton.dataset.exportMatrixEvidence || "usd-24h");
+      return;
+    }
+
+    const exportReviewJsonButton = event.target.closest("[data-half-l2l-export-json]");
+    if (exportReviewJsonButton) {
+      exportDirectionalAccuracyReviewJson(getDirectionalAccuracyArtifact(backtestData || {}));
+      return;
+    }
+
+    const exportReviewCsvButton = event.target.closest("[data-half-l2l-export-csv]");
+    if (exportReviewCsvButton) {
+      exportDirectionalAccuracyReviewCsv(getDirectionalAccuracyArtifact(backtestData || {}));
+      return;
+    }
+
+    const importReviewButton = event.target.closest("[data-half-l2l-import-json]");
+    if (importReviewButton) {
+      const input = document.getElementById(halfL2lReviewImportInputId);
+      if (input) {
+        input.value = "";
+        input.click();
+      }
+      return;
+    }
+
+    const resetReviewButton = event.target.closest("[data-half-l2l-reset-review]");
+    if (resetReviewButton) {
+      if (window.confirm("Reset all local manual review state for L2L Directional Accuracy?")) {
+        saveDirectionalAccuracyReviewStore({
+          artifactSignature: getDirectionalAccuracyReviewSignature(getDirectionalAccuracyArtifact(backtestData || {})),
+          staleArtifactSignature: null,
+          reviews: {}
+        });
+        renderBacktest(backtestData || {});
+      }
     }
   });
 
@@ -12074,6 +13086,87 @@ function setupBacktestEvidenceControls() {
     if (checkerSelect) {
       activeCheckerRowId = checkerSelect.value || null;
       renderBacktest(backtestData || {});
+      return;
+    }
+
+    const filterInput = event.target.closest("[data-half-l2l-filter]");
+    if (filterInput) {
+      halfL2lExplorerState[filterInput.dataset.halfL2lFilter] = filterInput.value || "";
+      renderBacktest(backtestData || {});
+      return;
+    }
+
+    const verdictInput = event.target.closest("[data-half-l2l-verdict]");
+    if (verdictInput) {
+      const artifact = getDirectionalAccuracyArtifact(backtestData || {});
+      const row = getDirectionalAccuracyRows(backtestData || {}).find(item => item.recordId === verdictInput.dataset.halfL2lVerdict);
+      const store = loadDirectionalAccuracyReviewStore(artifact);
+      const existing = store.reviews[verdictInput.dataset.halfL2lVerdict] || {};
+      store.reviews[verdictInput.dataset.halfL2lVerdict] = {
+        ...existing,
+        manualVerdict: verdictInput.value || "NOT_CHECKED",
+        notes: existing.notes || "",
+        reviewTimestamp: new Date().toISOString(),
+        backtesterHalfOutcome: row?.outcomes?.HALF_OF_STANDARD?.outcome || null,
+        backtesterFullOutcome: row?.outcomes?.FULL_STANDARD?.outcome || null
+      };
+      saveDirectionalAccuracyReviewStore(store);
+      renderBacktest(backtestData || {});
+      return;
+    }
+
+    if (event.target.id === halfL2lReviewImportInputId && event.target.files?.[0]) {
+      const file = event.target.files[0];
+      file.text().then((text) => {
+        const parsed = JSON.parse(text);
+        const reviews = {};
+        (parsed?.reviews || []).forEach((review) => {
+          if (!review?.recordId) return;
+          reviews[review.recordId] = {
+            manualVerdict: review.manualVerdict || "NOT_CHECKED",
+            notes: review.notes || "",
+            reviewTimestamp: review.reviewTimestamp || null,
+            backtesterHalfOutcome: review.backtesterHalfOutcome || null,
+            backtesterFullOutcome: review.backtesterFullOutcome || null
+          };
+        });
+        saveDirectionalAccuracyReviewStore({
+          artifactSignature: getDirectionalAccuracyReviewSignature(getDirectionalAccuracyArtifact(backtestData || {})),
+          staleArtifactSignature: parsed?.artifact_signature && parsed.artifact_signature !== getDirectionalAccuracyReviewSignature(getDirectionalAccuracyArtifact(backtestData || {}))
+            ? parsed.artifact_signature
+            : null,
+          reviews
+        });
+        renderBacktest(backtestData || {});
+      }).catch((err) => {
+        console.warn("Could not import half-L2L review JSON", err);
+      });
+    }
+  });
+
+  panel.addEventListener("input", event => {
+    const filterInput = event.target.closest("[data-half-l2l-filter='search']");
+    if (filterInput) {
+      halfL2lExplorerState.search = filterInput.value || "";
+      renderBacktest(backtestData || {});
+      return;
+    }
+
+    const notesInput = event.target.closest("[data-half-l2l-notes]");
+    if (notesInput) {
+      const artifact = getDirectionalAccuracyArtifact(backtestData || {});
+      const row = getDirectionalAccuracyRows(backtestData || {}).find(item => item.recordId === notesInput.dataset.halfL2lNotes);
+      const store = loadDirectionalAccuracyReviewStore(artifact);
+      const existing = store.reviews[notesInput.dataset.halfL2lNotes] || {};
+      store.reviews[notesInput.dataset.halfL2lNotes] = {
+        ...existing,
+        manualVerdict: existing.manualVerdict || "NOT_CHECKED",
+        notes: notesInput.value || "",
+        reviewTimestamp: existing.reviewTimestamp || null,
+        backtesterHalfOutcome: existing.backtesterHalfOutcome || row?.outcomes?.HALF_OF_STANDARD?.outcome || null,
+        backtesterFullOutcome: existing.backtesterFullOutcome || row?.outcomes?.FULL_STANDARD?.outcome || null
+      };
+      saveDirectionalAccuracyReviewStore(store);
     }
   });
 }
@@ -12126,6 +13219,7 @@ async function fetchResearchDashboardData() {
   };
 
   const adrReachResearchPromise = resolveResearchTask("adr_reach_research", fetchLocalJson(adrReachResearchUrl), null);
+  const halfL2lReachResearchPromise = resolveResearchTask("half_l2l_reach_research", fetchLocalJson(halfL2lReachResearchUrl), null);
   const confidenceCalibrationPromise = resolveResearchTask("confidence_calibration", fetchLocalJson(confidenceCalibrationUrl), null);
   const matrix24hRowsPromise = resolveResearchTask("research_prediction_usd_benchmark_summary", fetchResearchView("research_prediction_usd_benchmark_summary", {
     select: "snapshot_date,asset_code,timeframe,predicted_direction,agent_direction,agent_conviction,predicted_conviction,headline_confidence_pct,bull_case_pct,bear_case_pct,net_edge_pct,participation_pct,verdict_strength,combined_result,benchmark_market,open_price,close_price,pct_change",
@@ -12222,6 +13316,7 @@ async function fetchResearchDashboardData() {
     nqCheckerData,
     btcCheckerData,
     adrReachResearchData,
+    halfL2lReachResearchData,
     confidenceCalibrationData
   ] = await Promise.all([
     resolveResearchTask("research_overall_win_rate", fetchResearchView("research_overall_win_rate"), []),
@@ -12258,6 +13353,7 @@ async function fetchResearchDashboardData() {
     nqCheckerDataPromise,
     btcCheckerDataPromise,
     adrReachResearchPromise,
+    halfL2lReachResearchPromise,
     confidenceCalibrationPromise
   ]);
 
@@ -12314,6 +13410,7 @@ async function fetchResearchDashboardData() {
     },
     infrastructure: infrastructureRows[0] || {},
     adr_reach: adrReachResearchData,
+    half_l2l_reach: halfL2lReachResearchData,
     confidence_calibration: confidenceCalibrationData,
     checker: usdCheckerData,
     checkers: {

@@ -4,9 +4,10 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Asset Directional Movement Dashboard</title>
+  <!-- Visual work in this project should consult $trading-dashboard-aesthetic-rules first. -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&family=Playfair+Display:wght@500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css?v=20260729-live-call-clarity-strength-fix" />
 </head>
 <body>
@@ -17,6 +18,8 @@
       <span class="topbar-pill">Layer 2 Trade Selection</span>
     </div>
     <div class="topbar-meta">
+      <a class="topbar-link" href="dashboard-northstar.html">North Star Brief</a>
+      <a class="topbar-link" href="standing-dashboard.html">Standing Dashboard</a>
       <span id="currentDate">Loading date...</span>
       <span
         id="topbarClock"
@@ -30,37 +33,75 @@
 
   <main class="shell">
     <section class="hero">
-      <div class="globe-column" aria-hidden="true">
-        <canvas id="marketGlobeCanvas" width="290" height="290"></canvas>
-      </div>
-      <div class="hero-content">
-        <p class="eyebrow">Independent Agentic Trading Intelligence</p>
-        <h1>Asset Directional Movement Dashboard</h1>
-        <p class="subcopy">
-          A premium macro command centre for sealed Layer 1 directional calls, Layer 2 trade selection, workflow health, and read-only historical research accuracy.
-        </p>
-        <div class="hero-stats" aria-label="Live dashboard summary">
-          <div class="hero-stat">
-            <span>Live Agents</span>
-            <strong id="heroLiveAgents">-- / 5</strong>
+      <div class="hero-primary">
+        <div class="globe-column" aria-hidden="true">
+          <canvas id="marketGlobeCanvas" width="290" height="290"></canvas>
+        </div>
+        <div class="hero-content">
+          <div class="hero-kicker-row" aria-label="Dashboard posture">
+            <span class="hero-kicker">Live Surface</span>
+            <span class="hero-kicker">Read-Only Research Context</span>
+            <span class="hero-kicker">Trading Desk Aesthetic</span>
           </div>
-          <div class="hero-stat">
-            <span>Strongest 24H Signal</span>
-            <strong id="heroStrongestSignal">Pending</strong>
+          <p class="eyebrow">Independent Agentic Trading Intelligence</p>
+          <h1>Trading-desk clarity for sealed directional calls.</h1>
+          <p class="subcopy">
+            A darker command surface for Layer 1 directional calls, Layer 2 pair selection, workflow health, and research context without blurring the boundary between live output and frozen study artifacts.
+          </p>
+          <div class="hero-stats" aria-label="Live dashboard summary">
+            <div class="hero-stat">
+              <span>Live Agents</span>
+              <strong id="heroLiveAgents">-- / 5</strong>
+            </div>
+            <div class="hero-stat">
+              <span>Strongest 24H Signal</span>
+              <strong id="heroStrongestSignal">Pending</strong>
+            </div>
+            <div class="hero-stat">
+              <span>Last n8n Ingest</span>
+              <strong id="heroLastRun">Pending</strong>
+            </div>
           </div>
-          <div class="hero-stat">
-            <span>Last n8n Ingest</span>
-            <strong id="heroLastRun">Pending</strong>
+          <div class="market-cities" aria-label="Global market centres">
+            <span>London</span>
+            <span>New York</span>
+            <span>Tokyo</span>
+            <span>Singapore</span>
+            <span>Dubai</span>
           </div>
         </div>
-        <div class="market-cities" aria-label="Global market centres">
-          <span>London</span>
-          <span>New York</span>
-          <span>Tokyo</span>
-          <span>Singapore</span>
-          <span>Dubai</span>
-        </div>
       </div>
+      <aside class="hero-terminal" aria-label="Current dashboard focus">
+        <div class="hero-terminal-head">
+          <div>
+            <p class="eyebrow">Current focus</p>
+            <h2>What we are working on</h2>
+          </div>
+          <span class="terminal-status">Active</span>
+        </div>
+        <div class="hero-terminal-list">
+          <div class="hero-terminal-row">
+            <span>Now</span>
+            <strong>Clarify signal trust and workflow health</strong>
+          </div>
+          <div class="hero-terminal-row">
+            <span>Why</span>
+            <strong>Make every call legible before any new research phase</strong>
+          </div>
+          <div class="hero-terminal-row">
+            <span>North star</span>
+            <strong>A trustworthy, trading-grade read surface for sealed model output</strong>
+          </div>
+          <div class="hero-terminal-row">
+            <span>Guardrail</span>
+            <strong>No visual polish should imply live edge where research is frozen</strong>
+          </div>
+        </div>
+        <div class="hero-terminal-actions">
+          <a class="hero-terminal-link" href="dashboard-northstar.html">Open full brief</a>
+          <a class="hero-terminal-link" href="standing-dashboard.html">Open standing dashboard</a>
+        </div>
+      </aside>
     </section>
 
     <section class="section-label">
@@ -116,6 +157,7 @@
         <div id="workflowProgressNote" class="workflow-progress-note" hidden></div>
       </section>
 
+      <section id="overviewSignalBoard" class="detail-panel overview-signal-board" aria-label="Compact signal board"></section>
       <section id="overviewBriefing" class="detail-panel overview-briefing-panel"></section>
       <section id="overviewStats" class="overview-stats"></section>
       <section id="layer1Grid" class="agent-grid"></section>
@@ -207,6 +249,7 @@
         <button class="subtab-button" type="button" data-backtest-tab="weekday-breakdown">Weekday Breakdown</button>
         <button class="subtab-button" type="button" data-backtest-tab="pair-trade-research">Pair Trade Research</button>
         <button class="subtab-button" type="button" data-backtest-tab="adr-reach-research">L2L 1H Sequence Research</button>
+        <button class="subtab-button" type="button" data-backtest-tab="half-l2l-reach">L2L Directional Accuracy</button>
         <button class="subtab-button" type="button" data-backtest-tab="adr-threshold-sensitivity">L2L Threshold Sensitivity</button>
         <button class="subtab-button" type="button" data-backtest-tab="directional-trust-summary">Directional Trust Summary</button>
         <button class="subtab-button" type="button" data-backtest-tab="checker">Backtest Checker</button>
