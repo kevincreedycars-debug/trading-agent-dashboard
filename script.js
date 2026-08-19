@@ -2618,6 +2618,106 @@ function buildPublicationCatchupModel(latestRunFinished, layer1PublishedAt, laye
   };
 }
 
+function buildFreshnessVerdictModel(layer1PublishedAt, layer2PublishedAt, publicationSync, publicationCatchup) {
+  const layer1Ms = parseTimestamp(layer1PublishedAt);
+  const layer2Ms = parseTimestamp(layer2PublishedAt);
+
+  if (!Number.isFinite(layer1Ms) && !Number.isFinite(layer2Ms)) {
+    return {
+      tone: "warning",
+      label: "No live publish window",
+      detail: "Neither Layer 1 nor Layer 2 currently exposes a publish timestamp."
+    };
+  }
+
+  if (!Number.isFinite(layer1Ms) || !Number.isFinite(layer2Ms)) {
+    return {
+      tone: "warning",
+      label: "Partial publish window",
+      detail: publicationSync.detail
+    };
+  }
+
+  if (publicationSync.tone === "success" && publicationCatchup.tone === "success") {
+    return {
+      tone: "success",
+      label: "Both layers live",
+      detail: "Layer 1 and Layer 2 are aligned to the same publish window and caught up to the latest workflow finish."
+    };
+  }
+
+  if (publicationSync.tone === "warning") {
+    return {
+      tone: "warning",
+      label: "Mixed publish window",
+      detail: publicationSync.detail
+    };
+  }
+
+  return {
+    tone: publicationCatchup.tone,
+    label: "Older publish window",
+    detail: publicationCatchup.detail
+  };
+}
+
+function buildLayerFreshnessModel(layerLabel, publishedAt, siblingLabel, siblingPublishedAt, latestRunFinished) {
+  const publishedMs = parseTimestamp(publishedAt);
+  const siblingMs = parseTimestamp(siblingPublishedAt);
+  const finishedMs = parseTimestamp(latestRunFinished);
+  const toleranceSeconds = 180;
+
+  if (!Number.isFinite(publishedMs)) {
+    return {
+      tone: "warning",
+      label: "Unavailable",
+      value: "Unavailable",
+      detail: `No published ${layerLabel} timestamp is currently available.`
+    };
+  }
+
+  let tone = "success";
+  let label = "Aligned";
+  const detailParts = [`Published ${formatDashboardTime(publishedAt)}.`, `${formatAgeOrUnavailable(publishedAt)}.`];
+
+  if (Number.isFinite(siblingMs)) {
+    const diffSeconds = Math.abs(publishedMs - siblingMs) / 1000;
+    if (diffSeconds <= toleranceSeconds) {
+      detailParts.push(`Within ${durationPhraseFromSeconds(diffSeconds)} of ${siblingLabel}.`);
+    } else if (publishedMs > siblingMs) {
+      tone = "neutral";
+      label = `Newer than ${siblingLabel}`;
+      detailParts.push(`${layerLabel} is newer by ${durationPhraseFromSeconds(diffSeconds)}.`);
+    } else {
+      tone = "warning";
+      label = `Older than ${siblingLabel}`;
+      detailParts.push(`${layerLabel} is older by ${durationPhraseFromSeconds(diffSeconds)}.`);
+    }
+  } else {
+    tone = "neutral";
+    label = `${siblingLabel} unavailable`;
+    detailParts.push(`${siblingLabel} does not currently expose a publish timestamp.`);
+  }
+
+  if (Number.isFinite(finishedMs)) {
+    const workflowLagSeconds = (finishedMs - publishedMs) / 1000;
+    if (workflowLagSeconds > toleranceSeconds) {
+      tone = "warning";
+      label = "Behind workflow";
+      detailParts.push(`Still predates the latest workflow finish by ${durationPhraseFromSeconds(workflowLagSeconds)}.`);
+    } else {
+      detailParts.push("Caught up to the latest workflow finish.");
+    }
+  }
+
+  return {
+    tone,
+    label,
+    value: formatDashboardTime(publishedAt),
+    detail: detailParts.join(" ")
+  };
+}
+
 function buildOverviewStatusModel() {
   const inputStatus = String(inputHealthData?.overall_status || "UNKNOWN").toUpperCase();
   const economicSourceStatus = getEconomicSourceStatus();
@@ -2625,6 +2725,7 @@ function buildOverviewStatusModel() {
   const layer2PublishedAt = getLayer2PublishedAt();
   const publicationSync = buildPublicationSyncModel(layer1PublishedAt, layer2PublishedAt);
   const publicationCatchup = buildPublicationCatchupModel(workflowStatus?.last_run_finished_at || null, layer1PublishedAt, layer2PublishedAt);
+  const freshnessVerdict = buildFreshnessVerdictModel(layer1PublishedAt, layer2PublishedAt, publicationSync, publicationCatchup);
   const healthArtifactBehind = isArtifactBehindCurrentCalls(inputHealthData?.generated_at, layer1PublishedAt);
   const economicArtifactBehind = isArtifactBehindCurrentCalls(
     economicEventRefreshData?.generated_at || economicEventsSourceData?.generated_at,
@@ -2734,6 +2835,9 @@ function buildOverviewStatusModel() {
     latestPublishedLayer2: layer2PublishedAt,
     layer1Age: formatAgeOrUnavailable(layer1PublishedAt),
     layer2Age: formatAgeOrUnavailable(layer2PublishedAt),
+    freshnessVerdict,
+    layer1Freshness: buildLayerFreshnessModel("Layer 1", layer1PublishedAt, "Layer 2", layer2PublishedAt, latestRunFinished),
+    layer2Freshness: buildLayerFreshnessModel("Layer 2", layer2PublishedAt, "Layer 1", layer1PublishedAt, latestRunFinished),
     publicationSync,
     publicationCatchup,
     economicSourceStatus,
@@ -2786,6 +2890,21 @@ function renderOverviewStatusPanel() {
         <div><strong>Layer 2 age</strong><span>${escapeHtml(model.layer2Age)}</span></div>
       </div>
       <div class="overview-status-liveops">
+        <article class="overview-status-liveops-card ${escapeHtml(model.freshnessVerdict.tone)}">
+          <strong>Freshness verdict</strong>
+          <span>${escapeHtml(model.freshnessVerdict.label)}</span>
+          <p>${escapeHtml(model.freshnessVerdict.detail)}</p>
+        </article>
+        <article class="overview-status-liveops-card ${escapeHtml(model.layer1Freshness.tone)}">
+          <strong>Layer 1 publish</strong>
+          <span>${escapeHtml(model.layer1Freshness.value)}</span>
+          <p>${escapeHtml(model.layer1Freshness.label)}. ${escapeHtml(model.layer1Freshness.detail)}</p>
+        </article>
+        <article class="overview-status-liveops-card ${escapeHtml(model.layer2Freshness.tone)}">
+          <strong>Layer 2 publish</strong>
+          <span>${escapeHtml(model.layer2Freshness.value)}</span>
+          <p>${escapeHtml(model.layer2Freshness.label)}. ${escapeHtml(model.layer2Freshness.detail)}</p>
+        </article>
         <article class="overview-status-liveops-card ${escapeHtml(model.publicationSync.tone)}">
           <strong>Layer 1 / Layer 2 sync</strong>
           <span>${escapeHtml(model.publicationSync.label)}</span>
@@ -2795,11 +2914,6 @@ function renderOverviewStatusPanel() {
           <strong>Workflow to publish</strong>
           <span>${escapeHtml(model.publicationCatchup.label)}</span>
           <p>${escapeHtml(model.publicationCatchup.detail)}</p>
-        </article>
-        <article class="overview-status-liveops-card neutral">
-          <strong>Project status surface</strong>
-          <span>Standing dashboard</span>
-          <p>Use the standing dashboard for what is being worked on now, why it matters, what is next, and what has already shipped.</p>
         </article>
       </div>
       ${model.issueCards.length ? `

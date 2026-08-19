@@ -267,6 +267,10 @@ async function readWorkflowUi(page) {
   }));
 }
 
+async function readOverviewStatusText(page) {
+  return page.evaluate(() => document.getElementById("overviewStatusPanel")?.textContent?.replace(/\s+/g, " ").trim() || "");
+}
+
 async function triggerRefresh(page) {
   await page.click("#runWorkflowButton");
   await page.waitForFunction(() => Boolean(JSON.parse(localStorage.getItem("dashboard-workflow-refresh-state") || "null")));
@@ -516,6 +520,58 @@ test("fresh Layer 1 publication remains terminal after all fresh markers appear"
     assert.equal(ui.badge, "Published");
     assert.equal(ui.disabled, false);
     assert.equal(ui.stored?.phase, "published");
+    await context.close();
+  } finally {
+    await harness.close();
+  }
+});
+
+test("overview system status makes aligned layer freshness explicit", async () => {
+  const harness = await createHarness({
+    workflowStatus: buildWorkflowStatus({
+      status: "success",
+      startedAt: "2026-08-19T08:12:00.000Z",
+      finishedAt: "2026-08-19T08:15:00.000Z",
+      message: "Last production run finished."
+    }),
+    layer1: buildPublishedLayer1("2026-08-19T08:15:28.000Z"),
+    layer2: buildPublishedLayer2("2026-08-19T08:15:18.000Z")
+  });
+  try {
+    const context = await harness.createContext();
+    const page = await openDashboard(context, harness.origin);
+    await page.waitForFunction(() => /Freshness verdict/i.test(document.getElementById("overviewStatusPanel")?.textContent || ""));
+    const text = await readOverviewStatusText(page);
+    assert.match(text, /Freshness verdict Both layers live/i);
+    assert.match(text, /Layer 1 publish/i);
+    assert.match(text, /Layer 2 publish/i);
+    assert.match(text, /Workflow to publish Publication caught up/i);
+    await context.close();
+  } finally {
+    await harness.close();
+  }
+});
+
+test("overview system status makes mixed publish windows explicit", async () => {
+  const harness = await createHarness({
+    workflowStatus: buildWorkflowStatus({
+      status: "success",
+      startedAt: "2026-08-19T08:12:00.000Z",
+      finishedAt: "2026-08-19T08:13:00.000Z",
+      message: "Last production run finished."
+    }),
+    layer1: buildPublishedLayer1("2026-08-19T08:10:00.000Z"),
+    layer2: buildPublishedLayer2("2026-08-19T08:15:30.000Z")
+  });
+  try {
+    const context = await harness.createContext();
+    const page = await openDashboard(context, harness.origin);
+    await page.waitForFunction(() => /Freshness verdict/i.test(document.getElementById("overviewStatusPanel")?.textContent || ""));
+    const text = await readOverviewStatusText(page);
+    assert.match(text, /Freshness verdict Mixed publish window/i);
+    assert.match(text, /Layer 2 is newer than Layer 1/i);
+    assert.match(text, /Layer 1 publish .*Older than Layer 2/i);
+    assert.match(text, /Layer 2 publish .*Newer than Layer 1/i);
     await context.close();
   } finally {
     await harness.close();

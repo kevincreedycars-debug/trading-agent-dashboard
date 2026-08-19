@@ -38,3 +38,6 @@
 
 2026-08-19 18:04 BST
 - Refreshed the standing dashboard so it now names the active live-ops work, recent shipped items, and near-term next steps instead of the earlier placeholder content.
+
+2026-08-19 20:48 BST
+- Made Layer 1 and Layer 2 freshness harder to misread in the Overview system-status panel by adding a blunt freshness verdict, separate per-layer publish cards, and clearer workflow catch-up context.
