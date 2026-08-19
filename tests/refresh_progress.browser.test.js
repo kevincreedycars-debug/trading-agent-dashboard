@@ -342,8 +342,8 @@ test("fresh Layer 1 publication closes browser-local tracking even without exact
     await page.waitForFunction(() => JSON.parse(localStorage.getItem("dashboard-workflow-refresh-state") || "null")?.phase === "published");
     const ui = await readWorkflowUi(page);
     assert.equal(ui.badge, "Published");
-    assert.match(ui.summary, /Layer 1 dashboard publication was observed/i);
-    assert.match(ui.note, /exact execution association remains unavailable/i);
+    assert.match(ui.summary, /Dashboard updated after this refresh request/i);
+    assert.equal(ui.note, "");
     await context.close();
   } finally {
     await harness.close();

@@ -929,10 +929,8 @@ function buildWorkflowRefreshPresentation(state) {
     summary = "Refresh completion was verified from fresh associated publication signals.";
     meta = `Request ${reconciled.refresh_request_id} matched a fresh completion and publication signal after ${formatDashboardTime(reconciled.requested_at)}.`;
   } else if (reconciled.phase === "published") {
-    summary = "A fresh Layer 1 dashboard publication was observed after this refresh request.";
-    meta = `Request ${reconciled.refresh_request_id} saw the dashboard ingest update after ${formatDashboardTime(reconciled.requested_at)}.`;
-    noteParts.push("Exact execution association remains unavailable in browser-only mode.");
-    noteParts.push("Run Refresh is available again.");
+    summary = "Dashboard updated after this refresh request.";
+    meta = `Layer 1 ingest updated after ${formatDashboardTime(reconciled.requested_at)}.`;
   } else if (reconciled.phase === "publishing") {
     summary = "New post-request artifacts are appearing. Waiting for public publication to settle.";
     meta = `Request ${reconciled.refresh_request_id} is observing post-request signals, but exact execution association is still unavailable.`;
