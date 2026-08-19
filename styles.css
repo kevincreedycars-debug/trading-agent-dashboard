@@ -6470,6 +6470,35 @@ body {
   color: #c7d4e3;
 }
 
+.overview-status-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.overview-status-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  padding: 8px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(94, 161, 255, 0.24);
+  background: rgba(20, 28, 40, 0.96);
+  color: #dceaff;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-decoration: none;
+}
+
+.overview-status-link:hover {
+  border-color: rgba(94, 161, 255, 0.42);
+  background: rgba(29, 53, 85, 0.98);
+  color: #ffffff;
+}
+
 .overview-briefing-block h3,
 .overview-status-copy strong,
 .workflow-step strong,
@@ -6487,6 +6516,7 @@ body {
 .overview-briefing-chip,
 .overview-status-metrics > div,
 .overview-status-issue,
+.overview-status-liveops-card,
 .progress-pill {
   border-radius: 16px;
 }
@@ -6500,6 +6530,50 @@ body {
 
 .overview-status-shell {
   border-top-color: transparent;
+}
+
+.overview-status-liveops {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.overview-status-liveops-card {
+  min-width: 0;
+  padding: 14px 15px;
+}
+
+.overview-status-liveops-card strong {
+  display: block;
+  color: #bcd0e6;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 6px;
+}
+
+.overview-status-liveops-card span {
+  display: block;
+  color: #f7fbff;
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.overview-status-liveops-card p {
+  margin: 0;
+  color: #c7d4e3;
+  line-height: 1.65;
+}
+
+.overview-status-liveops-card.success {
+  border-color: rgba(52, 210, 154, 0.22);
+}
+
+.overview-status-liveops-card.warning {
+  border-color: rgba(212, 169, 87, 0.26);
 }
 
 .overview-status-badge {
@@ -6588,6 +6662,7 @@ body {
 /* Elevated inner telemetry surfaces: stronger separation from dark parent panels. */
 .overview-status-metrics > div,
 .overview-status-issue,
+.overview-status-liveops-card,
 .operational-summary-grid > div,
 .operational-source-note,
 .operational-agent-card,
@@ -6609,6 +6684,7 @@ body {
 
 .overview-status-metrics strong,
 .overview-status-issue strong,
+.overview-status-liveops-card strong,
 .operational-summary-grid strong,
 .operational-source-note strong,
 .operational-agent-card strong,
@@ -6628,6 +6704,7 @@ body {
 
 .overview-status-metrics span,
 .overview-status-issue span,
+.overview-status-liveops-card span,
 .operational-summary-grid span,
 .operational-source-note span,
 .operational-agent-card span,
@@ -6642,6 +6719,7 @@ body {
 
 .overview-status-metrics > div,
 .overview-status-issue,
+.overview-status-liveops-card,
 .operational-summary-grid > div,
 .operational-source-note,
 .operational-agent-card,
@@ -6656,6 +6734,7 @@ body {
 }
 
 .overview-status-metrics > div,
+.overview-status-liveops-card,
 .operational-summary-grid > div,
 .operational-source-note {
   padding: 14px 15px;
@@ -7164,6 +7243,10 @@ body {
   min-width: 0;
 }
 
+.overview-status-liveops-card > * {
+  min-width: 0;
+}
+
 .signal-mini-card:hover {
   border-color: rgba(137, 178, 226, 0.34);
   box-shadow:
@@ -7301,6 +7384,10 @@ body {
 }
 
 @media (max-width: 720px) {
+  .overview-status-liveops {
+    grid-template-columns: 1fr;
+  }
+
   .overview-signal-mini-grid {
     grid-template-columns: 1fr 1fr;
   }

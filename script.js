@@ -2506,11 +2506,125 @@ function summarizeInputHealthAgentIssues(agentCode, health) {
   return formatPublicIssueSummary(orderedIssues[0]);
 }
 
+function formatAgeOrUnavailable(value) {
+  const age = formatRelativeAge(value);
+  return age || "Unavailable";
+}
+
+function durationPhraseFromSeconds(totalSeconds) {
+  const seconds = Math.max(0, Math.round(Number(totalSeconds) || 0));
+  if (seconds < 60) return `${seconds}s`;
+  const minutes = Math.floor(seconds / 60);
+  const remainderSeconds = seconds % 60;
+  if (minutes < 60) return remainderSeconds ? `${minutes}m ${remainderSeconds}s` : `${minutes}m`;
+  const hours = Math.floor(minutes / 60);
+  const remainderMinutes = minutes % 60;
+  return remainderMinutes ? `${hours}h ${remainderMinutes}m` : `${hours}h`;
+}
+
+function buildPublicationSyncModel(layer1PublishedAt, layer2PublishedAt) {
+  const layer1Ms = parseTimestamp(layer1PublishedAt);
+  const layer2Ms = parseTimestamp(layer2PublishedAt);
+  if (!Number.isFinite(layer1Ms) && !Number.isFinite(layer2Ms)) {
+    return {
+      tone: "warning",
+      label: "Unavailable",
+      detail: "No published Layer 1 or Layer 2 timestamps are currently available."
+    };
+  }
+  if (Number.isFinite(layer1Ms) && !Number.isFinite(layer2Ms)) {
+    return {
+      tone: "warning",
+      label: "Layer 2 unavailable",
+      detail: "Layer 1 is published, but no Layer 2 publish timestamp is available yet."
+    };
+  }
+  if (!Number.isFinite(layer1Ms) && Number.isFinite(layer2Ms)) {
+    return {
+      tone: "warning",
+      label: "Layer 1 unavailable",
+      detail: "Layer 2 is published, but no Layer 1 publish timestamp is available yet."
+    };
+  }
+
+  const diffSeconds = Math.abs(layer1Ms - layer2Ms) / 1000;
+  if (diffSeconds <= 180) {
+    return {
+      tone: "success",
+      label: "In sync",
+      detail: `Layer 1 and Layer 2 published within ${durationPhraseFromSeconds(diffSeconds)} of each other.`
+    };
+  }
+
+  if (layer1Ms > layer2Ms) {
+    return {
+      tone: "warning",
+      label: "Layer 2 lagging",
+      detail: `Layer 1 is newer than Layer 2 by ${durationPhraseFromSeconds(diffSeconds)}.`
+    };
+  }
+
+  return {
+    tone: "warning",
+    label: "Layer 2 ahead",
+    detail: `Layer 2 is newer than Layer 1 by ${durationPhraseFromSeconds(diffSeconds)}.`
+  };
+}
+
+function buildPublicationCatchupModel(latestRunFinished, layer1PublishedAt, layer2PublishedAt) {
+  const finishedMs = parseTimestamp(latestRunFinished);
+  if (!Number.isFinite(finishedMs)) {
+    return {
+      tone: "warning",
+      label: "Workflow finish unavailable",
+      detail: "The dashboard cannot compare publication timing because the latest workflow finish timestamp is missing."
+    };
+  }
+
+  const layer1Ms = parseTimestamp(layer1PublishedAt);
+  const layer2Ms = parseTimestamp(layer2PublishedAt);
+  const staleThresholdSeconds = 180;
+  const layer1CaughtUp = Number.isFinite(layer1Ms) && layer1Ms >= (finishedMs - (staleThresholdSeconds * 1000));
+  const layer2CaughtUp = Number.isFinite(layer2Ms) && layer2Ms >= (finishedMs - (staleThresholdSeconds * 1000));
+
+  if (layer1CaughtUp && layer2CaughtUp) {
+    return {
+      tone: "success",
+      label: "Publication caught up",
+      detail: "Both published call layers are at or beyond the latest recorded workflow finish."
+    };
+  }
+
+  if (layer1CaughtUp && !layer2CaughtUp) {
+    return {
+      tone: "warning",
+      label: "Layer 2 still behind",
+      detail: "Layer 1 caught up to the latest workflow finish, but Layer 2 still appears older."
+    };
+  }
+
+  if (!layer1CaughtUp && layer2CaughtUp) {
+    return {
+      tone: "warning",
+      label: "Layer 1 still behind",
+      detail: "Layer 2 caught up to the latest workflow finish, but Layer 1 still appears older."
+    };
+  }
+
+  return {
+    tone: "warning",
+    label: "Publication behind workflow",
+    detail: "The latest published call timestamps still predate the latest workflow finish."
+  };
+}
+
 function buildOverviewStatusModel() {
   const inputStatus = String(inputHealthData?.overall_status || "UNKNOWN").toUpperCase();
   const economicSourceStatus = getEconomicSourceStatus();
   const layer1PublishedAt = getLayer1PublishedAt();
   const layer2PublishedAt = getLayer2PublishedAt();
+  const publicationSync = buildPublicationSyncModel(layer1PublishedAt, layer2PublishedAt);
+  const publicationCatchup = buildPublicationCatchupModel(workflowStatus?.last_run_finished_at || null, layer1PublishedAt, layer2PublishedAt);
   const healthArtifactBehind = isArtifactBehindCurrentCalls(inputHealthData?.generated_at, layer1PublishedAt);
   const economicArtifactBehind = isArtifactBehindCurrentCalls(
     economicEventRefreshData?.generated_at || economicEventsSourceData?.generated_at,
@@ -2584,6 +2698,22 @@ function buildOverviewStatusModel() {
     });
   }
 
+  if (publicationSync.tone === "warning") {
+    issueCards.push({
+      label: "Layer 1 / Layer 2 publication",
+      status: publicationSync.label.toUpperCase(),
+      detail: publicationSync.detail
+    });
+  }
+
+  if (publicationCatchup.tone === "warning") {
+    issueCards.push({
+      label: "Workflow publication catch-up",
+      status: publicationCatchup.label.toUpperCase(),
+      detail: publicationCatchup.detail
+    });
+  }
+
   for (const agent of affectedAgents.slice(0, 5)) {
     issueCards.push({
       label: agent === "GOLD" ? "Gold" : agent,
@@ -2602,6 +2732,10 @@ function buildOverviewStatusModel() {
     latestSuccessfulRun,
     latestPublishedLayer1: layer1PublishedAt,
     latestPublishedLayer2: layer2PublishedAt,
+    layer1Age: formatAgeOrUnavailable(layer1PublishedAt),
+    layer2Age: formatAgeOrUnavailable(layer2PublishedAt),
+    publicationSync,
+    publicationCatchup,
     economicSourceStatus,
     issueCards: issueCards.slice(0, 6)
   };
@@ -2636,6 +2770,10 @@ function renderOverviewStatusPanel() {
         <p>${escapeHtml(model.summary)}</p>
         <p>${escapeHtml(callsMessage)}</p>
       </div>
+      <div class="overview-status-actions">
+        <a class="overview-status-link" href="standing-dashboard.html">Open standing dashboard</a>
+        <a class="overview-status-link" href="project-progress-log.md">Open progress log</a>
+      </div>
       <div class="overview-status-metrics">
         <div><strong>Latest refresh</strong><span>${escapeHtml(latestFinishedLabel)}</span></div>
         <div><strong>Last successful refresh</strong><span>${escapeHtml(latestSuccessfulLabel)}</span></div>
@@ -2644,6 +2782,25 @@ function renderOverviewStatusPanel() {
         <div><strong>Layer 2 calls</strong><span>${escapeHtml(model.latestPublishedLayer2 ? formatDashboardTime(model.latestPublishedLayer2) : "Unavailable")}</span></div>
         <div><strong>Economic-event source</strong><span>${escapeHtml(publicIssueStatusLabel(model.economicSourceStatus))}</span></div>
         <div><strong>Affected agents</strong><span>${escapeHtml(String(Object.keys(inputHealthData?.agents || {}).filter((agent) => String(inputHealthData?.agents?.[agent]?.overall_status || "").toUpperCase() !== "HEALTHY").length))}</span></div>
+        <div><strong>Layer 1 age</strong><span>${escapeHtml(model.layer1Age)}</span></div>
+        <div><strong>Layer 2 age</strong><span>${escapeHtml(model.layer2Age)}</span></div>
+      </div>
+      <div class="overview-status-liveops">
+        <article class="overview-status-liveops-card ${escapeHtml(model.publicationSync.tone)}">
+          <strong>Layer 1 / Layer 2 sync</strong>
+          <span>${escapeHtml(model.publicationSync.label)}</span>
+          <p>${escapeHtml(model.publicationSync.detail)}</p>
+        </article>
+        <article class="overview-status-liveops-card ${escapeHtml(model.publicationCatchup.tone)}">
+          <strong>Workflow to publish</strong>
+          <span>${escapeHtml(model.publicationCatchup.label)}</span>
+          <p>${escapeHtml(model.publicationCatchup.detail)}</p>
+        </article>
+        <article class="overview-status-liveops-card neutral">
+          <strong>Project status surface</strong>
+          <span>Standing dashboard</span>
+          <p>Use the standing dashboard for what is being worked on now, why it matters, what is next, and what has already shipped.</p>
+        </article>
       </div>
       ${model.issueCards.length ? `
         <div class="overview-status-issues">

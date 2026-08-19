@@ -23,3 +23,18 @@
 
 2026-08-16 10:46 BST
 - Started the standing dashboard progress page so tabbing back into the project gives an immediate, truthful status read.
+
+2026-08-19 17:02 BST
+- Stopped the dashboard refresh timer once a fresh Layer 1 publish lands after the request, so the workflow panel no longer lingers in a false running state.
+
+2026-08-19 17:18 BST
+- Simplified the published-refresh copy so operators see that the dashboard updated without browser-only caveat noise.
+
+2026-08-19 17:31 BST
+- Removed the duplicate Published presentation in the workflow panel and changed the shared card top strips from a blue/green gradient to a single solid accent.
+
+2026-08-19 17:56 BST
+- Added live-ops publication truth to the Overview system-status panel, including Layer 1 / Layer 2 sync, workflow-to-publish catch-up, and direct links to the standing dashboard and append-only progress log.
+
+2026-08-19 18:04 BST
+- Refreshed the standing dashboard so it now names the active live-ops work, recent shipped items, and near-term next steps instead of the earlier placeholder content.

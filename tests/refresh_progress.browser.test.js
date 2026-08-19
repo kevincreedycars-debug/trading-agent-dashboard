@@ -295,7 +295,7 @@ test("acceptance is not completion and opaque dispatch remains unverified", asyn
     assert.match(ui.badge, /Accepted|Delayed/);
     assert.match(ui.summary, /Waiting for execution confirmation|taking longer than usual/i);
     assert.match(ui.meta, /not verified acceptance|exceeded the usual threshold/i);
-    assert.match(ui.note, /completion guarantee/i);
+    assert.match(ui.note, /completion guarantee|does not mean success/i);
     assert.doesNotMatch(ui.badge, /Complete/i);
     await context.close();
   } finally {
