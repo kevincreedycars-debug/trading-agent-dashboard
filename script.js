@@ -995,7 +995,7 @@ function buildWorkflowRefreshPresentation(state) {
     } else if (reconciled.phase === "complete") {
       etaText = "Completed";
     } else if (reconciled.phase === "published") {
-      etaText = "Published";
+      etaText = "Refresh available";
     } else if (remainingSeconds >= 1) {
       etaText = `Estimated time remaining ${formatDurationClock(remainingSeconds)}`;
     } else if (activeWorkflowRefreshBlocksNewRequest(reconciled)) {
