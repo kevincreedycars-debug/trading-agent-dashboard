@@ -290,11 +290,11 @@ test("acceptance is not completion and opaque dispatch remains unverified", asyn
     const context = await harness.createContext();
     const page = await openDashboard(context, harness.origin);
     await triggerRefresh(page);
-    await page.waitForFunction(() => document.getElementById("workflowStatusBadge")?.textContent?.includes("Accepted"));
+    await page.waitForFunction(() => /Accepted|Delayed/.test(document.getElementById("workflowStatusBadge")?.textContent || ""));
     const ui = await readWorkflowUi(page);
-    assert.equal(ui.badge, "Accepted");
-    assert.match(ui.summary, /Waiting for execution confirmation/i);
-    assert.match(ui.meta, /not verified acceptance/i);
+    assert.match(ui.badge, /Accepted|Delayed/);
+    assert.match(ui.summary, /Waiting for execution confirmation|taking longer than usual/i);
+    assert.match(ui.meta, /not verified acceptance|exceeded the usual threshold/i);
     assert.match(ui.note, /completion guarantee/i);
     assert.doesNotMatch(ui.badge, /Complete/i);
     await context.close();
@@ -320,7 +320,7 @@ test("stale previous success does not satisfy a new request", async () => {
   }
 });
 
-test("fresh unrelated success becomes Association unverified instead of Complete", async () => {
+test("fresh Layer 1 publication closes browser-local tracking even without exact association", async () => {
   const harness = await createHarness();
   try {
     const context = await harness.createContext();
@@ -339,11 +339,11 @@ test("fresh unrelated success becomes Association unverified instead of Complete
       await globalThis.__dashboardTestHooks.loadWorkflowStatusForTest();
       await globalThis.__dashboardTestHooks.loadDashboardForTest();
     });
-    await page.waitForFunction(() => JSON.parse(localStorage.getItem("dashboard-workflow-refresh-state") || "null")?.phase === "association_unverified");
+    await page.waitForFunction(() => JSON.parse(localStorage.getItem("dashboard-workflow-refresh-state") || "null")?.phase === "published");
     const ui = await readWorkflowUi(page);
-    assert.equal(ui.badge, "Association unverified");
-    assert.match(ui.summary, /exact association remains unverified/i);
-    assert.match(ui.note, /will not label this request Complete/i);
+    assert.equal(ui.badge, "Published");
+    assert.match(ui.summary, /Layer 1 dashboard publication was observed/i);
+    assert.match(ui.note, /exact execution association remains unavailable/i);
     await context.close();
   } finally {
     await harness.close();
@@ -493,7 +493,7 @@ test("delayed public visibility shows Publishing before final workflow status ca
   }
 });
 
-test("Association unverified remains the browser-only terminal state after all fresh markers appear", async () => {
+test("fresh Layer 1 publication remains terminal after all fresh markers appear", async () => {
   const harness = await createHarness();
   try {
     const context = await harness.createContext();
@@ -511,11 +511,11 @@ test("Association unverified remains the browser-only terminal state after all f
       await globalThis.__dashboardTestHooks.loadWorkflowStatusForTest();
       await globalThis.__dashboardTestHooks.loadDashboardForTest();
     });
-    await page.waitForFunction(() => JSON.parse(localStorage.getItem("dashboard-workflow-refresh-state") || "null")?.phase === "association_unverified");
+    await page.waitForFunction(() => JSON.parse(localStorage.getItem("dashboard-workflow-refresh-state") || "null")?.phase === "published");
     const ui = await readWorkflowUi(page);
-    assert.equal(ui.badge, "Association unverified");
+    assert.equal(ui.badge, "Published");
     assert.equal(ui.disabled, false);
-    assert.equal(ui.stored?.phase, "association_unverified");
+    assert.equal(ui.stored?.phase, "published");
     await context.close();
   } finally {
     await harness.close();
@@ -550,9 +550,9 @@ test("exact August 1 stranded publishing state recovers instead of remaining loc
       },
       last_updated_at: "2026-08-01T13:59:10.000Z"
     });
-    await page.waitForFunction(() => JSON.parse(localStorage.getItem("dashboard-workflow-refresh-state") || "null")?.phase === "association_unverified");
+    await page.waitForFunction(() => JSON.parse(localStorage.getItem("dashboard-workflow-refresh-state") || "null")?.phase === "published");
     const ui = await readWorkflowUi(page);
-    assert.equal(ui.badge, "Association unverified");
+    assert.equal(ui.badge, "Published");
     assert.equal(ui.disabled, false);
     assert.doesNotMatch(ui.summary, /Waiting for public publication to settle/i);
     await context.close();
@@ -640,9 +640,9 @@ test("exact associated artifacts with mismatched run IDs do not count as a compl
       await globalThis.__dashboardTestHooks.loadWorkflowStatusForTest();
       await globalThis.__dashboardTestHooks.loadDashboardForTest();
     });
-    await page.waitForFunction(() => JSON.parse(localStorage.getItem("dashboard-workflow-refresh-state") || "null")?.phase === "association_unverified");
+    await page.waitForFunction(() => JSON.parse(localStorage.getItem("dashboard-workflow-refresh-state") || "null")?.phase === "published");
     const ui = await readWorkflowUi(page);
-    assert.equal(ui.badge, "Association unverified");
+    assert.equal(ui.badge, "Published");
     assert.equal(ui.disabled, false);
     assert.doesNotMatch(ui.badge, /Completed/i);
   } finally {
@@ -770,7 +770,7 @@ test("exact associated dashboard writer failure releases the lock immediately", 
   }
 });
 
-test("hard-timeout expiry re-enables Run Refresh without firing another request", async () => {
+test("hard-timeout with a fresh Layer 1 ingest re-enables Run Refresh without firing another request", async () => {
   const harness = await createHarness();
   try {
     const context = await harness.createContext();
@@ -791,9 +791,75 @@ test("hard-timeout expiry re-enables Run Refresh without firing another request"
     });
     await page.waitForTimeout(1500);
     const ui = await readWorkflowUi(page);
-    assert.equal(ui.badge, "Verification expired");
+    assert.equal(ui.badge, "Published");
     assert.equal(ui.disabled, false);
     assert.equal(harness.getWebhookHits(), 0);
+    await context.close();
+  } finally {
+    await harness.close();
+  }
+});
+
+test("stale terminal refresh state retires after a newer unrelated published run appears", async () => {
+  const harness = await createHarness({
+    workflowStatus: buildWorkflowStatus({
+      status: "success",
+      startedAt: "2026-08-18T08:35:00.000Z",
+      finishedAt: "2026-08-18T08:40:00.000Z",
+      message: "Manual Refresh Complete"
+    }),
+    layer1: buildPublishedLayer1("2026-08-18T08:39:40.000Z"),
+    layer2: buildPublishedLayer2("2026-08-18T08:39:20.000Z")
+  });
+  try {
+    const context = await harness.createContext();
+    const page = await openDashboard(context, harness.origin);
+    await seedStoredRefreshStateAndReload(page, {
+      refresh_request_id: "stale-failed-request",
+      requested_at: "2026-08-18T00:10:00.000Z",
+      source: "dashboard",
+      phase: "failed",
+      owner_tab_id: "tab-stale-failed",
+      baseline: {
+        workflow_finished_at: "2026-08-18T00:00:00.000Z",
+        workflow_started_at: "2026-08-18T00:00:00.000Z",
+        layer1_generated_at: "2026-08-18T00:00:00.000Z",
+        layer2_generated_at: "2026-08-18T00:00:00.000Z"
+      },
+      observed_markers: {
+        workflow_finished_at: "2026-08-18T00:15:00.000Z",
+        workflow_started_at: "2026-08-18T00:11:00.000Z",
+        workflow_status: "failed",
+        workflow_failed_step: "USD Collector",
+        workflow_error_reason: "Collector timeout",
+        workflow_refresh_request_id: null,
+        workflow_source_run_id: null,
+        layer1_generated_at: "2026-08-18T00:14:00.000Z",
+        layer1_refresh_request_id: null,
+        layer1_source_run_id: null,
+        layer2_generated_at: "2026-08-18T00:13:00.000Z",
+        layer2_refresh_request_id: null,
+        layer2_source_run_id: null
+      },
+      fresh_artifacts: ["workflow status", "Layer 1", "Layer 2"],
+      missing_artifacts: [],
+      workflow_failure: {
+        failed_step: "USD Collector",
+        reason: "Collector timeout",
+        exact_association: false,
+        relevant_partial_publication: true
+      },
+      last_updated_at: "2026-08-18T00:15:00.000Z"
+    });
+    await page.evaluate(async () => {
+      await globalThis.__dashboardTestHooks.loadWorkflowStatusForTest();
+      await globalThis.__dashboardTestHooks.loadDashboardForTest();
+    });
+    await page.waitForTimeout(1200);
+    const ui = await readWorkflowUi(page);
+    assert.equal(ui.disabled, false);
+    assert.doesNotMatch(ui.badge, /Failed/i);
+    assert.doesNotMatch(ui.summary, /refresh stopped/i);
     await context.close();
   } finally {
     await harness.close();

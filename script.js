@@ -868,6 +868,7 @@ function workflowRefreshPhaseBadgeLabel(phase = "") {
   const value = String(phase || "").toLowerCase();
   if (value === "accepted") return "Accepted";
   if (value === "complete") return "Completed";
+  if (value === "published") return "Published";
   if (value === "sending") return "Sending";
   if (value === "publishing") return "Publishing";
   if (value === "incomplete") return "Incomplete";
@@ -883,6 +884,7 @@ function workflowRefreshPhaseBadgeLabel(phase = "") {
 function workflowRefreshPhaseClass(phase = "") {
   const value = String(phase || "").toLowerCase();
   if (value === "complete") return "success";
+  if (value === "published") return "success";
   if (value === "association_unverified") return "warning";
   if (value === "incomplete" || value === "verification_expired" || value === "status_unavailable" || value === "delayed") return "warning";
   if (value === "failed_dispatch" || value === "failed") return "failed";
@@ -893,7 +895,8 @@ function workflowRefreshPhaseClass(phase = "") {
 function buildWorkflowRefreshPresentation(state) {
   if (!state) return null;
 
-  const reconciled = reconcileWorkflowRefreshState() || state;
+  const reconciled = reconcileWorkflowRefreshState();
+  if (!reconciled) return null;
   const elapsedSeconds = workflowRefreshElapsedSeconds(reconciled.requested_at);
   const medianSeconds = getRuntimeProfilePercentileSeconds("median");
   const delayedThreshold = getRuntimeProfilePercentileSeconds("p75");
@@ -925,6 +928,11 @@ function buildWorkflowRefreshPresentation(state) {
   } else if (reconciled.phase === "complete") {
     summary = "Refresh completion was verified from fresh associated publication signals.";
     meta = `Request ${reconciled.refresh_request_id} matched a fresh completion and publication signal after ${formatDashboardTime(reconciled.requested_at)}.`;
+  } else if (reconciled.phase === "published") {
+    summary = "A fresh Layer 1 dashboard publication was observed after this refresh request.";
+    meta = `Request ${reconciled.refresh_request_id} saw the dashboard ingest update after ${formatDashboardTime(reconciled.requested_at)}.`;
+    noteParts.push("Exact execution association remains unavailable in browser-only mode.");
+    noteParts.push("Run Refresh is available again.");
   } else if (reconciled.phase === "publishing") {
     summary = "New post-request artifacts are appearing. Waiting for public publication to settle.";
     meta = `Request ${reconciled.refresh_request_id} is observing post-request signals, but exact execution association is still unavailable.`;
@@ -988,6 +996,8 @@ function buildWorkflowRefreshPresentation(state) {
       etaText = "Failed";
     } else if (reconciled.phase === "complete") {
       etaText = "Completed";
+    } else if (reconciled.phase === "published") {
+      etaText = "Published";
     } else if (remainingSeconds >= 1) {
       etaText = `Estimated time remaining ${formatDurationClock(remainingSeconds)}`;
     } else if (activeWorkflowRefreshBlocksNewRequest(reconciled)) {
@@ -997,10 +1007,12 @@ function buildWorkflowRefreshPresentation(state) {
     }
   }
 
-  if (Number.isFinite(delayedThreshold) && elapsedSeconds > delayedThreshold && reconciled.phase !== "association_unverified") {
+  const shouldShowDelayNotes = ["sending", "accepted", "publishing", "delayed", "status_unavailable"].includes(String(reconciled.phase || "").toLowerCase());
+
+  if (shouldShowDelayNotes && Number.isFinite(delayedThreshold) && elapsedSeconds > delayedThreshold && reconciled.phase !== "association_unverified") {
     noteParts.push(`Taking longer than usual after ${formatDurationClock(delayedThreshold)}.`);
   }
-  if (Number.isFinite(strongDelayThreshold) && elapsedSeconds > strongDelayThreshold && reconciled.phase !== "association_unverified") {
+  if (shouldShowDelayNotes && Number.isFinite(strongDelayThreshold) && elapsedSeconds > strongDelayThreshold && reconciled.phase !== "association_unverified") {
     noteParts.push(`Still running beyond the stronger delay band of ${formatDurationClock(strongDelayThreshold)}.`);
   }
   if (markerDelta.layer2Fresh && !markerDelta.layer1Fresh) {
@@ -2802,7 +2814,7 @@ function readStoredWorkflowRefreshState() {
 }
 
 function isTerminalWorkflowRefreshPhase(phase = "") {
-  return ["association_unverified", "incomplete", "verification_expired", "failed_dispatch", "failed", "complete"].includes(String(phase || "").toLowerCase());
+  return ["association_unverified", "incomplete", "verification_expired", "failed_dispatch", "failed", "complete", "published"].includes(String(phase || "").toLowerCase());
 }
 
 function writeStoredWorkflowRefreshState(state) {
@@ -2976,6 +2988,21 @@ function hasExactRefreshAssociation(state, current = currentWorkflowMarkers()) {
   return candidates.includes(requestId);
 }
 
+function workflowRefreshTerminalMarkersAdvanced(state, current = currentWorkflowMarkers()) {
+  const observed = state?.observed_markers || {};
+  const fallbackReference = state?.last_updated_at || state?.requested_at || null;
+  return [
+    [observed.workflow_finished_at || fallbackReference, current.workflow_finished_at],
+    [observed.workflow_started_at || fallbackReference, current.workflow_started_at]
+  ].some(([reference, candidate]) => isTimestampAfter(reference, candidate));
+}
+
+function shouldRetireStoredWorkflowRefreshState(state, current = currentWorkflowMarkers()) {
+  if (!state || !isTerminalWorkflowRefreshPhase(state.phase)) return false;
+  if (hasExactRefreshAssociation(state, current)) return false;
+  return workflowRefreshTerminalMarkersAdvanced(state, current);
+}
+
 function reconcileWorkflowRefreshState() {
   const state = workflowRefreshState;
   if (!state) {
@@ -2985,6 +3012,11 @@ function reconcileWorkflowRefreshState() {
 
   const baseline = state.baseline || {};
   const current = currentWorkflowMarkers();
+  if (shouldRetireStoredWorkflowRefreshState(state, current)) {
+    writeStoredWorkflowRefreshState(null);
+    clearWorkflowRefreshPollingTimer();
+    return null;
+  }
   const delta = buildWorkflowMarkerDelta(baseline, current, state.requested_at);
   const elapsedSeconds = workflowRefreshElapsedSeconds(state.requested_at);
   const delayedThreshold = getRuntimeProfilePercentileSeconds("p75", 317.972);
@@ -3003,6 +3035,8 @@ function reconcileWorkflowRefreshState() {
     nextPhase = "failed";
   } else if (exactAssociation && allFresh && consistentRunIds) {
     nextPhase = "complete";
+  } else if (delta.layer1Fresh) {
+    nextPhase = "published";
   } else if (elapsedSeconds > hardExpirySeconds) {
     if (allFresh) {
       nextPhase = "association_unverified";
