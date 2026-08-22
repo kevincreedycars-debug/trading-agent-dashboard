@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=20260729-live-call-clarity-strength-fix" />
+  <link rel="stylesheet" href="styles.css?v=20260822-sidebar-organiser-v1" />
 </head>
 <body>
   <header class="topbar">
@@ -31,7 +31,35 @@
     </div>
   </header>
 
-  <main class="shell">
+  <div class="dashboard-frame">
+    <aside class="side-rail" aria-label="Primary navigation">
+      <div class="side-rail-head">
+        <span class="side-rail-mark">ADM</span>
+        <span class="side-rail-label">Control Room</span>
+      </div>
+      <nav id="agentTabs" class="tab-bar side-rail-tabs" aria-label="Dashboard tabs">
+        <span class="side-rail-group">Operate</span>
+        <button class="tab-button active" data-tab="overview">Overview</button>
+        <button class="tab-button" data-tab="USD">USD</button>
+        <button class="tab-button" data-tab="EUR">EUR</button>
+        <button class="tab-button" data-tab="GOLD">Gold</button>
+        <button class="tab-button" data-tab="NQ">NQ</button>
+        <button class="tab-button" data-tab="BTC">BTC</button>
+        <button class="tab-button" data-tab="layer2">Pair Analysis</button>
+        <span class="side-rail-group">Evidence</span>
+        <button class="tab-button" data-tab="backtest">Backtest / Accuracy</button>
+        <button class="tab-button" data-tab="factor-edge-lab">Factor Edge Lab</button>
+        <button class="tab-button" data-tab="shadow-logic-backtest">Shadow Logic Backtest</button>
+        <span class="side-rail-group">System</span>
+        <button class="tab-button" data-tab="architecture">Architecture</button>
+      </nav>
+      <div class="side-rail-foot">
+        <span class="side-rail-status-dot" aria-hidden="true"></span>
+        <span>Published dashboard</span>
+      </div>
+    </aside>
+
+    <main class="shell">
     <section class="hero">
       <div class="hero-primary">
         <div class="globe-column" aria-hidden="true">
@@ -103,25 +131,6 @@
         </div>
       </aside>
     </section>
-
-    <section class="section-label">
-      <span class="section-label-text">Navigation</span>
-      <span class="section-label-rule"></span>
-    </section>
-
-    <nav id="agentTabs" class="tab-bar" aria-label="Dashboard tabs">
-      <button class="tab-button active" data-tab="overview">Overview</button>
-      <button class="tab-button" data-tab="USD">USD</button>
-      <button class="tab-button" data-tab="EUR">EUR</button>
-      <button class="tab-button" data-tab="GOLD">Gold</button>
-      <button class="tab-button" data-tab="NQ">NQ</button>
-      <button class="tab-button" data-tab="BTC">BTC</button>
-      <button class="tab-button" data-tab="layer2">Pair Analysis</button>
-      <button class="tab-button" data-tab="backtest">Backtest / Accuracy</button>
-      <button class="tab-button" data-tab="factor-edge-lab">Factor Edge Lab</button>
-      <button class="tab-button" data-tab="shadow-logic-backtest">Shadow Logic Backtest</button>
-      <button class="tab-button" data-tab="architecture">Architecture</button>
-    </nav>
 
     <section class="rules-strip">
       <div><strong>Layer 1:</strong> Independent raw calls only</div>
@@ -294,7 +303,8 @@
 
       <section id="architecturePanel" class="backtest-panel architecture-panel"></section>
     </section>
-  </main>
+    </main>
+  </div>
 
   <script src="backtester/lib/headline_confidence.js?v=20260630-headline-confidence-contract"></script>
   <script src="backtester/lib/layer2_pair_logic.js?v=20260704-layer2-min-confidence-contract"></script>
