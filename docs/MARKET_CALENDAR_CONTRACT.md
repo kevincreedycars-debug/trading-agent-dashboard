@@ -1,0 +1,32 @@
+# Market Calendar Contract
+
+`lib/market_calendar.js` is the shared market-session policy used by the
+dashboard. It is deliberately fail-closed: an unknown asset or invalid timestamp
+is treated as closed rather than permitting a call.
+
+## Current policy
+
+| Asset class | Codes | Session policy |
+| --- | --- | --- |
+| Weekday markets | USD, EUR, GBP, GOLD/XAU, SILVER/XAG, WTI, NQ | Closed on Saturday and Sunday in `Europe/London` |
+| Continuous markets | BTC | Open every day |
+
+An explicit closure list can override either policy for exchange holidays,
+maintenance windows, or exceptional closures. This intentionally separates the
+baseline weekend safety guard from an authoritative exchange calendar.
+
+## Production scheduler requirements
+
+The n8n dashboard writer must use the same contract before it publishes a call.
+Do not treat this dashboard-only change as a production scheduling fix until all
+of the following are complete:
+
+1. Port the contract into the writer workflow and deploy/activate that workflow.
+2. Supply and test an authoritative holiday and maintenance closure source.
+3. Add a workflow test proving that closed sessions publish `NO TRADE` and cannot
+   emit a new actionable call.
+4. Publish input-health from the same refresh cycle so a healthy workflow status
+   cannot conceal stale market inputs.
+
+BTC must remain exempt from weekday closure rules; it can still be blocked when
+its required USD reference input is unavailable or stale.

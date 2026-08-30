@@ -28,6 +28,7 @@ const researchSupabaseKey = "sb_publishable_k6YbEuuk3GyB9GVTQDtNVA_J1gCRYaY";
 const headlineConfidenceLib = globalThis.HeadlineConfidence;
 const layer2PairLogicLib = globalThis.Layer2PairLogic;
 const economicEventRefreshLib = globalThis.EconomicEventRefresh;
+const marketCalendarLib = globalThis.MarketCalendar;
 
 if (!headlineConfidenceLib) {
   throw new Error("HeadlineConfidence shared helper is required before loading script.js");
@@ -39,6 +40,10 @@ if (!layer2PairLogicLib) {
 
 if (!economicEventRefreshLib) {
   throw new Error("EconomicEventRefresh shared helper is required before loading script.js");
+}
+
+if (!marketCalendarLib) {
+  throw new Error("MarketCalendar shared helper is required before loading script.js");
 }
 
 const labels = {
@@ -1714,17 +1719,8 @@ function formatLondonDay(date) {
   });
 }
 
-function isWeekendDate(date) {
-  const weekday = date.toLocaleDateString("en-US", {
-    weekday: "long",
-    timeZone: "Europe/London"
-  });
-
-  return weekday === "Saturday" || weekday === "Sunday";
-}
-
 function marketOpenForDate(agentName, date) {
-  return agentName === "BTC" || !isWeekendDate(date);
+  return marketCalendarLib.isMarketOpen(agentName, date);
 }
 
 function metricSourceTimeframe(agent) {
