@@ -36,15 +36,17 @@ Recommended long-term action:
 ### Workflow Export Credentials
 
 Workflow exports must not contain provider secrets. The current collector exports
-expect the following n8n environment variables or their equivalent managed
-credential values:
+use the following environment-variable references for self-hosted n8n:
 
 - `RAPIDAPI_KEY` for economic-calendar requests.
 - `FINNHUB_API_KEY` for Finnhub collector requests.
 
 Before importing the updated exports, configure those values in the n8n runtime
 and rotate any provider key that was previously stored in a repository export.
-The repository test `tests/workflow_export_credentials.test.js` prevents those
+For n8n Cloud, do not rely on custom `$env` expressions: create reusable Header
+Auth credentials instead, then replace the RapidAPI header and Finnhub query
+token expressions with those credentials in the imported HTTP Request nodes.
+The repository test `tests/workflow_export_credentials.test.js` prevents provider
 literals from being reintroduced.
 
 ### Economic Event Failure Gate
