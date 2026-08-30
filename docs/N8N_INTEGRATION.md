@@ -33,6 +33,20 @@ Recommended long-term action:
 3. Generate a fresh API key.
 4. Store it only in the secure runtime/tooling environment.
 
+### Workflow Export Credentials
+
+Workflow exports must not contain provider secrets. The current collector exports
+expect the following n8n environment variables or their equivalent managed
+credential values:
+
+- `RAPIDAPI_KEY` for economic-calendar requests.
+- `FINNHUB_API_KEY` for Finnhub collector requests.
+
+Before importing the updated exports, configure those values in the n8n runtime
+and rotate any provider key that was previously stored in a repository export.
+The repository test `tests/workflow_export_credentials.test.js` prevents those
+literals from being reintroduced.
+
 ## Integration Strategy
 
 Use n8n API first.
@@ -73,7 +87,10 @@ The AI development environment should eventually be able to:
 ## Current n8n Priorities
 
 1. Export all active workflows into `exports/`.
-2. Create human-readable workflow documents in `workflows/`.
-3. Fix EUR Layer 1 parser.
-4. Fix Eco Events duplicate insert handling.
-5. Add Master Orchestrator execution summary.
+2. Configure managed provider credentials before importing updated collectors.
+3. Publish `data/input-health.json` from the same cycle as Layer 1 and Layer 2
+   artifacts, including an explicit failed/degraded economic-event source state.
+4. Block new actionable calls whenever required input health is not healthy.
+5. Create human-readable workflow documents in `workflows/`.
+6. Fix EUR Layer 1 parser.
+7. Add a Master Orchestrator execution summary that includes input health.
