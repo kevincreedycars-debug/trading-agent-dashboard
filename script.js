@@ -68,7 +68,10 @@ const weekdayBreakdownLabels = {
 const weekdayBreakdownColumnsByAsset = {
   USD: ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY"],
   EUR: ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY"],
+  GBP: ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY"],
   GOLD: ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY"],
+  SILVER: ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY"],
+  WTI: ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY"],
   NQ: ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY"],
   BTC: ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY"]
 };
@@ -77,25 +80,53 @@ const pairTradeResearchConfigs = [
     targetAssetCode: "EUR",
     pairCode: "EUR_USD",
     pairLabel: "EUR/USD",
-    weekdayKeys: weekdayBreakdownColumnsByAsset.EUR
+    weekdayKeys: weekdayBreakdownColumnsByAsset.EUR,
+    liveEligibility: "READY"
+  },
+  {
+    targetAssetCode: "GBP",
+    pairCode: "GBP_USD",
+    pairLabel: "GBP/USD",
+    weekdayKeys: weekdayBreakdownColumnsByAsset.GBP,
+    liveEligibility: "ONBOARDING",
+    onboardingReason: "Layer 1 and historical replay onboarding in progress."
   },
   {
     targetAssetCode: "GOLD",
     pairCode: "XAU_USD",
     pairLabel: "XAU/USD",
-    weekdayKeys: weekdayBreakdownColumnsByAsset.GOLD
+    weekdayKeys: weekdayBreakdownColumnsByAsset.GOLD,
+    liveEligibility: "READY"
+  },
+  {
+    targetAssetCode: "SILVER",
+    pairCode: "XAG_USD",
+    pairLabel: "XAG/USD",
+    weekdayKeys: weekdayBreakdownColumnsByAsset.SILVER,
+    liveEligibility: "ONBOARDING",
+    onboardingReason: "Layer 1 and historical replay onboarding in progress."
+  },
+  {
+    targetAssetCode: "WTI",
+    pairCode: "WTI_USD",
+    pairLabel: "WTI/USD",
+    weekdayKeys: weekdayBreakdownColumnsByAsset.WTI,
+    liveEligibility: "ONBOARDING",
+    onboardingReason: "Layer 1 and historical replay onboarding in progress."
   },
   {
     targetAssetCode: "NQ",
     pairCode: "NQ_USD",
     pairLabel: "NQ/USD",
-    weekdayKeys: weekdayBreakdownColumnsByAsset.NQ
+    weekdayKeys: weekdayBreakdownColumnsByAsset.NQ,
+    liveEligibility: "READY"
   },
   {
     targetAssetCode: "BTC",
     pairCode: "BTC_USD",
     pairLabel: "BTC/USD",
-    weekdayKeys: weekdayBreakdownColumnsByAsset.BTC
+    weekdayKeys: weekdayBreakdownColumnsByAsset.BTC,
+    liveEligibility: "READY"
   }
 ];
 // User-supplied historical snapshot. Updated July 20, 2026. Not live-refresh data.
@@ -2201,6 +2232,17 @@ function buildOverviewLayer2SummaryRows() {
   );
 
   return pairTradeResearchConfigs.map((config) => {
+    if (config.liveEligibility !== "READY") {
+      return {
+        pair: config.pairLabel,
+        signal: "RESEARCH",
+        confidence: "--",
+        strength: "--",
+        state: "Onboarding",
+        onboarding: true,
+        marketClosed: false
+      };
+    }
     const key = String(config.pairCode || "").toUpperCase();
     const opportunity = opportunityMap.get(key);
     if (opportunity) {
@@ -2209,7 +2251,9 @@ function buildOverviewLayer2SummaryRows() {
         signal: String(opportunity.direction || "NO TRADE").replaceAll("_", " "),
         confidence: metricAvailable(opportunity.confidence) ? `${Math.round(Number(opportunity.confidence))}%` : "--",
         strength: compactTitleLabel(opportunity.strengthBucket, "--"),
-        state: `Rank ${opportunity.rank || "--"}`
+        state: `Rank ${opportunity.rank || "--"}`,
+        onboarding: false,
+        marketClosed: false
       };
     }
     const avoided = avoidMap.get(key);
@@ -2218,7 +2262,9 @@ function buildOverviewLayer2SummaryRows() {
       signal: "NO TRADE",
       confidence: "--",
       strength: "--",
-      state: avoided?.reason ? compactOverviewStateLabel(String(avoided.reason)) : "No setup"
+      state: avoided?.marketStatus === "CLOSED" ? "Market closed" : avoided?.reason ? compactOverviewStateLabel(String(avoided.reason)) : "No setup",
+      onboarding: false,
+      marketClosed: avoided?.marketStatus === "CLOSED"
     };
   });
 }
@@ -2234,11 +2280,17 @@ function renderOverviewSignalBoard() {
     signal: row.signal,
     signalClass: directionClass(row.signal),
     isActiveTrade: row.signal === "BUY" || row.signal === "SELL",
+    isOnboarding: row.onboarding === true,
+    isMarketClosed: row.marketClosed === true,
     metrics: [
       { label: "Conf.", value: row.confidence },
       { label: "Strength", value: row.strength }
     ],
-    footer: row.signal === "NO TRADE" ? "No trade filter active" : "Trade setup candidate"
+    footer: row.onboarding
+      ? "Layer 1 and replay required"
+      : row.marketClosed
+        ? "Market closed - no trade permitted"
+        : row.signal === "NO TRADE" ? "No trade filter active" : "Trade setup candidate"
   }));
 
   const fallbackLayer2Cards = [
@@ -2260,7 +2312,7 @@ function renderOverviewSignalBoard() {
   }));
 
   const renderMiniCard = (card) => `
-    <article class="signal-mini-card${card.isActiveTrade ? " is-active-trade" : ""}">
+    <article class="signal-mini-card${card.isActiveTrade ? " is-active-trade" : ""}${card.isOnboarding ? " is-onboarding" : ""}${card.isMarketClosed ? " is-market-closed" : ""}">
       <div class="signal-mini-card-topline">
         <p class="signal-mini-label">${escapeHtml(card.tier)}</p>
         <span class="signal-mini-status">${escapeHtml(card.status)}</span>
@@ -2285,6 +2337,8 @@ function renderOverviewSignalBoard() {
 
   const finalLayer2Cards = (layer2Cards.length ? layer2Cards : fallbackLayer2Cards).map(renderMiniCard).join("");
   const activeTradeCount = layer2Cards.filter((card) => card.isActiveTrade).length;
+  const livePairCount = pairTradeResearchConfigs.filter((config) => config.liveEligibility === "READY").length;
+  const onboardingPairCount = pairTradeResearchConfigs.length - livePairCount;
 
   container.innerHTML = `
     <div class="panel-head compact-panel-head overview-signal-board-head">
@@ -2292,13 +2346,13 @@ function renderOverviewSignalBoard() {
         <p class="eyebrow">Quick Overview</p>
         <h3>Signal Board</h3>
       </div>
-      <p class="summary">Fast scan first. Compact cards surface the live Layer 2 trade ideas before the deeper panels below.</p>
+      <p class="summary">Fast scan of live trade eligibility, closed-market blocks, and assets still in research onboarding.</p>
     </div>
     <div class="overview-signal-board-grid">
       <section class="overview-signal-strip">
         <div class="overview-signal-strip-head">
-          <p class="overview-signal-strip-label">Layer 2 active trades</p>
-          <p class="overview-signal-strip-meta">${activeTradeCount || layer2Cards.length || fallbackLayer2Cards.length} live setup slots</p>
+          <p class="overview-signal-strip-label">Layer 2 signal board</p>
+          <p class="overview-signal-strip-meta">${activeTradeCount} active / ${livePairCount} live pairs${onboardingPairCount ? ` / ${onboardingPairCount} onboarding` : ""}</p>
         </div>
         <div class="overview-signal-mini-grid">${finalLayer2Cards}</div>
       </section>
@@ -5946,6 +6000,27 @@ function deriveLiveLayer2Dashboard() {
   const avoided = [];
 
   pairTradeResearchConfigs.forEach((config) => {
+    if (config.liveEligibility !== "READY") {
+      avoided.push({
+        pairCode: config.pairCode,
+        instrument: config.pairLabel,
+        reason: config.onboardingReason || "Layer 1 and historical replay onboarding required.",
+        marketStatus: "ONBOARDING"
+      });
+      return;
+    }
+
+    const marketDate = new Date();
+    if (!marketOpenForDate(config.targetAssetCode, marketDate) || !marketOpenForDate("USD", marketDate)) {
+      avoided.push({
+        pairCode: config.pairCode,
+        instrument: config.pairLabel,
+        reason: "Market closed: no live trade is permitted outside the active market session.",
+        marketStatus: "CLOSED"
+      });
+      return;
+    }
+
     const targetAgent = layer1Data.agents.find((agent) => agent?.agent === config.targetAssetCode) || null;
     const targetCall = getCall(targetAgent, "24h");
     const usdCall = getCall(usdAgent, "24h");
