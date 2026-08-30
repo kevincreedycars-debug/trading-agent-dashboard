@@ -92,11 +92,35 @@ const pairTradeResearchConfigs = [
     onboardingReason: "Layer 1 and historical replay onboarding in progress."
   },
   {
+    targetAssetCode: "EUR",
+    pairCode: "EUR_GBP",
+    pairLabel: "EUR/GBP",
+    weekdayKeys: weekdayBreakdownColumnsByAsset.EUR,
+    liveEligibility: "ONBOARDING",
+    onboardingReason: "Cross-quote Layer 1 and historical replay onboarding in progress."
+  },
+  {
     targetAssetCode: "GOLD",
     pairCode: "XAU_USD",
     pairLabel: "XAU/USD",
     weekdayKeys: weekdayBreakdownColumnsByAsset.GOLD,
     liveEligibility: "READY"
+  },
+  {
+    targetAssetCode: "GOLD",
+    pairCode: "XAU_EUR",
+    pairLabel: "XAU/EUR",
+    weekdayKeys: weekdayBreakdownColumnsByAsset.GOLD,
+    liveEligibility: "ONBOARDING",
+    onboardingReason: "Cross-quote Layer 1 and historical replay onboarding in progress."
+  },
+  {
+    targetAssetCode: "GOLD",
+    pairCode: "XAU_GBP",
+    pairLabel: "XAU/GBP",
+    weekdayKeys: weekdayBreakdownColumnsByAsset.GOLD,
+    liveEligibility: "ONBOARDING",
+    onboardingReason: "Cross-quote Layer 1 and historical replay onboarding in progress."
   },
   {
     targetAssetCode: "SILVER",
@@ -107,12 +131,44 @@ const pairTradeResearchConfigs = [
     onboardingReason: "Layer 1 and historical replay onboarding in progress."
   },
   {
+    targetAssetCode: "SILVER",
+    pairCode: "XAG_EUR",
+    pairLabel: "XAG/EUR",
+    weekdayKeys: weekdayBreakdownColumnsByAsset.SILVER,
+    liveEligibility: "ONBOARDING",
+    onboardingReason: "Cross-quote Layer 1 and historical replay onboarding in progress."
+  },
+  {
+    targetAssetCode: "SILVER",
+    pairCode: "XAG_GBP",
+    pairLabel: "XAG/GBP",
+    weekdayKeys: weekdayBreakdownColumnsByAsset.SILVER,
+    liveEligibility: "ONBOARDING",
+    onboardingReason: "Cross-quote Layer 1 and historical replay onboarding in progress."
+  },
+  {
     targetAssetCode: "WTI",
     pairCode: "WTI_USD",
     pairLabel: "WTI/USD",
     weekdayKeys: weekdayBreakdownColumnsByAsset.WTI,
     liveEligibility: "ONBOARDING",
     onboardingReason: "Layer 1 and historical replay onboarding in progress."
+  },
+  {
+    targetAssetCode: "WTI",
+    pairCode: "WTI_EUR",
+    pairLabel: "WTI/EUR",
+    weekdayKeys: weekdayBreakdownColumnsByAsset.WTI,
+    liveEligibility: "ONBOARDING",
+    onboardingReason: "Cross-quote Layer 1 and historical replay onboarding in progress."
+  },
+  {
+    targetAssetCode: "WTI",
+    pairCode: "WTI_GBP",
+    pairLabel: "WTI/GBP",
+    weekdayKeys: weekdayBreakdownColumnsByAsset.WTI,
+    liveEligibility: "ONBOARDING",
+    onboardingReason: "Cross-quote Layer 1 and historical replay onboarding in progress."
   },
   {
     targetAssetCode: "NQ",
@@ -122,11 +178,43 @@ const pairTradeResearchConfigs = [
     liveEligibility: "READY"
   },
   {
+    targetAssetCode: "NQ",
+    pairCode: "NQ_EUR",
+    pairLabel: "NQ/EUR",
+    weekdayKeys: weekdayBreakdownColumnsByAsset.NQ,
+    liveEligibility: "ONBOARDING",
+    onboardingReason: "Cross-quote Layer 1 and historical replay onboarding in progress."
+  },
+  {
+    targetAssetCode: "NQ",
+    pairCode: "NQ_GBP",
+    pairLabel: "NQ/GBP",
+    weekdayKeys: weekdayBreakdownColumnsByAsset.NQ,
+    liveEligibility: "ONBOARDING",
+    onboardingReason: "Cross-quote Layer 1 and historical replay onboarding in progress."
+  },
+  {
     targetAssetCode: "BTC",
     pairCode: "BTC_USD",
     pairLabel: "BTC/USD",
     weekdayKeys: weekdayBreakdownColumnsByAsset.BTC,
     liveEligibility: "READY"
+  },
+  {
+    targetAssetCode: "BTC",
+    pairCode: "BTC_EUR",
+    pairLabel: "BTC/EUR",
+    weekdayKeys: weekdayBreakdownColumnsByAsset.BTC,
+    liveEligibility: "ONBOARDING",
+    onboardingReason: "Cross-quote Layer 1 and historical replay onboarding in progress."
+  },
+  {
+    targetAssetCode: "BTC",
+    pairCode: "BTC_GBP",
+    pairLabel: "BTC/GBP",
+    weekdayKeys: weekdayBreakdownColumnsByAsset.BTC,
+    liveEligibility: "ONBOARDING",
+    onboardingReason: "Cross-quote Layer 1 and historical replay onboarding in progress."
   }
 ];
 // User-supplied historical snapshot. Updated July 20, 2026. Not live-refresh data.
