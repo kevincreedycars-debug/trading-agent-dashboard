@@ -2240,7 +2240,8 @@ function buildOverviewLayer2SummaryRows() {
         strength: "--",
         state: "Onboarding",
         onboarding: true,
-        marketClosed: false
+        marketClosed: false,
+        referenceUnavailable: false
       };
     }
     const key = String(config.pairCode || "").toUpperCase();
@@ -2253,7 +2254,8 @@ function buildOverviewLayer2SummaryRows() {
         strength: compactTitleLabel(opportunity.strengthBucket, "--"),
         state: `Rank ${opportunity.rank || "--"}`,
         onboarding: false,
-        marketClosed: false
+        marketClosed: false,
+        referenceUnavailable: false
       };
     }
     const avoided = avoidMap.get(key);
@@ -2262,9 +2264,14 @@ function buildOverviewLayer2SummaryRows() {
       signal: "NO TRADE",
       confidence: "--",
       strength: "--",
-      state: avoided?.marketStatus === "CLOSED" ? "Market closed" : avoided?.reason ? compactOverviewStateLabel(String(avoided.reason)) : "No setup",
+      state: avoided?.marketStatus === "CLOSED"
+        ? "Market closed"
+        : avoided?.marketStatus === "REFERENCE_UNAVAILABLE"
+          ? "USD reference unavailable"
+          : avoided?.reason ? compactOverviewStateLabel(String(avoided.reason)) : "No setup",
       onboarding: false,
-      marketClosed: avoided?.marketStatus === "CLOSED"
+      marketClosed: avoided?.marketStatus === "CLOSED",
+      referenceUnavailable: avoided?.marketStatus === "REFERENCE_UNAVAILABLE"
     };
   });
 }
@@ -2282,6 +2289,7 @@ function renderOverviewSignalBoard() {
     isActiveTrade: row.signal === "BUY" || row.signal === "SELL",
     isOnboarding: row.onboarding === true,
     isMarketClosed: row.marketClosed === true,
+    isReferenceUnavailable: row.referenceUnavailable === true,
     metrics: [
       { label: "Conf.", value: row.confidence },
       { label: "Strength", value: row.strength }
@@ -2290,6 +2298,8 @@ function renderOverviewSignalBoard() {
       ? "Layer 1 and replay required"
       : row.marketClosed
         ? "Market closed - no trade permitted"
+        : row.referenceUnavailable
+          ? "Crypto market open - USD reference call unavailable"
         : row.signal === "NO TRADE" ? "No trade filter active" : "Trade setup candidate"
   }));
 
@@ -2312,7 +2322,7 @@ function renderOverviewSignalBoard() {
   }));
 
   const renderMiniCard = (card) => `
-    <article class="signal-mini-card${card.isActiveTrade ? " is-active-trade" : ""}${card.isOnboarding ? " is-onboarding" : ""}${card.isMarketClosed ? " is-market-closed" : ""}">
+    <article class="signal-mini-card${card.isActiveTrade ? " is-active-trade" : ""}${card.isOnboarding ? " is-onboarding" : ""}${card.isMarketClosed ? " is-market-closed" : ""}${card.isReferenceUnavailable ? " is-reference-unavailable" : ""}">
       <div class="signal-mini-card-topline">
         <p class="signal-mini-label">${escapeHtml(card.tier)}</p>
         <span class="signal-mini-status">${escapeHtml(card.status)}</span>
@@ -6011,7 +6021,7 @@ function deriveLiveLayer2Dashboard() {
     }
 
     const marketDate = new Date();
-    if (!marketOpenForDate(config.targetAssetCode, marketDate) || !marketOpenForDate("USD", marketDate)) {
+    if (!marketOpenForDate(config.targetAssetCode, marketDate)) {
       avoided.push({
         pairCode: config.pairCode,
         instrument: config.pairLabel,
@@ -6024,6 +6034,15 @@ function deriveLiveLayer2Dashboard() {
     const targetAgent = layer1Data.agents.find((agent) => agent?.agent === config.targetAssetCode) || null;
     const targetCall = getCall(targetAgent, "24h");
     const usdCall = getCall(usdAgent, "24h");
+    if (!hasUsableDirection(usdCall)) {
+      avoided.push({
+        pairCode: config.pairCode,
+        instrument: config.pairLabel,
+        reason: "USD reference call is unavailable while its market is closed.",
+        marketStatus: "REFERENCE_UNAVAILABLE"
+      });
+      return;
+    }
     const targetDirection = layer2PairLogicLib.normalizeDirectionalSignalKey(targetCall?.direction);
     const usdDirection = layer2PairLogicLib.normalizeDirectionalSignalKey(usdCall?.direction);
     const targetConfidence = confidenceValue(targetCall, targetAgent, "24h");
