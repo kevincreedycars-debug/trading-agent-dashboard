@@ -47,7 +47,7 @@
       ],
       "id": "43b4dc12-6b34-4700-9db7-f77d8137bb33",
       "name": "Call '1. Economic Events Collector'",
-      "onError": "continueRegularOutput"
+      "onError": "continueErrorOutput"
     },
     {
       "parameters": {
@@ -458,6 +458,70 @@
         }
       },
       "webhookId": "ee146613-0300-40de-8f42-cb67ab301ae5"
+    },
+    {
+      "id": "guard-economic-event-collector",
+      "name": "Guard Economic Event Collector",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        384,
+        -112
+      ],
+      "parameters": {
+        "jsCode": "return $input.all().map((item) => ({ json: { ...item.json, economic_event_gate: 'PASS', economic_event_error: null } }));"
+      }
+    },
+    {
+      "id": "build-input-health-economic-event-failure",
+      "name": "Build Input Health on Economic Event Failure",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        384,
+        688
+      ],
+      "parameters": {
+        "jsCode": "const raw = $input.first()?.json || {};\nfunction serialise(value) { try { return typeof value === 'string' ? value : JSON.stringify(value); } catch (error) { return String(value); } }\nconst error = serialise(raw.error || raw.message || raw.reason || raw.cause || 'Economic event collector failed.');\nconst generatedAt = new Date().toISOString();\nconst affectedAgents = ['USD', 'EUR', 'GOLD', 'NQ', 'BTC'];\nconst issue = { input_id: 'economic_events', label: 'Economic events', category: 'economic_events', importance: 'critical', status: 'SOURCE_UNAVAILABLE', reason: error, recovery_action: 'Restore the economic-event collector, then run a controlled refresh.' };\nconst health = { schema_version: 1, generated_at: generatedAt, source_run_id: null, consistency_status: 'FAILED', consistency_warnings: ['economic_event_collector_failed'], overall_status: 'CRITICAL', affected_agent_count: affectedAgents.length, critical_issue_count: affectedAgents.length, missing_input_count: 0, stale_input_count: 0, placeholder_input_count: 0, source_failure_count: 1, last_full_health_at: null, sources: { economic_events: { source_id: 'economic_events', label: 'Economic events', execution_status: 'failed', data_status: 'SOURCE_UNAVAILABLE', source_collected_at: generatedAt, warning: error } }, source_groups: [{ source_id: 'economic_events', label: 'Economic events', status: 'SOURCE_UNAVAILABLE', warning: error, execution_status: 'failed', source_collected_at: generatedAt, affected_agents: affectedAgents, affected_inputs: [], recovery_state: 'unrecovered' }], agents: Object.fromEntries(affectedAgents.map((agent) => [agent, { overall_status: 'CRITICAL', issues: [{ ...issue, agent }] }])), issues: affectedAgents.map((agent) => ({ ...issue, agent })) };\nreturn [{ json: { file_content: JSON.stringify(health, null, 2), health } }];"
+      }
+    },
+    {
+      "id": "publish-input-health-economic-event-failure",
+      "name": "Publish Input Health on Economic Event Failure",
+      "type": "n8n-nodes-base.github",
+      "typeVersion": 1.1,
+      "position": [
+        592,
+        688
+      ],
+      "parameters": {
+        "authentication": "oAuth2",
+        "resource": "file",
+        "operation": "edit",
+        "owner": {
+          "__rl": true,
+          "value": "kevincreedycars-debug",
+          "mode": "list",
+          "cachedResultName": "kevincreedycars-debug",
+          "cachedResultUrl": "https://github.com/kevincreedycars-debug"
+        },
+        "repository": {
+          "__rl": true,
+          "value": "trading-agent-dashboard",
+          "mode": "list",
+          "cachedResultName": "trading-agent-dashboard",
+          "cachedResultUrl": "https://github.com/kevincreedycars-debug/trading-agent-dashboard"
+        },
+        "filePath": "data/input-health.json",
+        "fileContent": "={{ $json.file_content }}",
+        "commitMessage": "Publish failed economic-event input health"
+      },
+      "credentials": {
+        "githubOAuth2Api": {
+          "id": "wr4dhSbWkjNonhfi",
+          "name": "GitHub account 3"
+        }
+      }
     }
   ],
   "connections": {
@@ -476,7 +540,14 @@
       "main": [
         [
           {
-            "node": "USD Collector",
+            "node": "Guard Economic Event Collector",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build Input Health on Economic Event Failure",
             "type": "main",
             "index": 0
           }
@@ -631,6 +702,39 @@
         [
           {
             "node": "Publish Workflow Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Guard Economic Event Collector": {
+      "main": [
+        [
+          {
+            "node": "USD Collector",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Input Health on Economic Event Failure": {
+      "main": [
+        [
+          {
+            "node": "Publish Input Health on Economic Event Failure",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Publish Input Health on Economic Event Failure": {
+      "main": [
+        [
+          {
+            "node": "Build Workflow Status JSON",
             "type": "main",
             "index": 0
           }
