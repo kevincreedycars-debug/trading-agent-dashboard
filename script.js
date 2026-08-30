@@ -29,6 +29,7 @@ const headlineConfidenceLib = globalThis.HeadlineConfidence;
 const layer2PairLogicLib = globalThis.Layer2PairLogic;
 const economicEventRefreshLib = globalThis.EconomicEventRefresh;
 const marketCalendarLib = globalThis.MarketCalendar;
+const pairReadinessLib = globalThis.PairReadiness;
 
 if (!headlineConfidenceLib) {
   throw new Error("HeadlineConfidence shared helper is required before loading script.js");
@@ -44,6 +45,10 @@ if (!economicEventRefreshLib) {
 
 if (!marketCalendarLib) {
   throw new Error("MarketCalendar shared helper is required before loading script.js");
+}
+
+if (!pairReadinessLib) {
+  throw new Error("PairReadiness shared helper is required before loading script.js");
 }
 
 const labels = {
@@ -222,6 +227,12 @@ const pairTradeResearchConfigs = [
     onboardingReason: "Cross-quote Layer 1 and historical replay onboarding in progress."
   }
 ];
+
+pairTradeResearchConfigs.forEach((config) => {
+  const readiness = pairReadinessLib.getPairReadiness(config.pairLabel);
+  config.liveEligibility = readiness.liveEligibility;
+  config.onboardingReason = readiness.onboardingReason;
+});
 // User-supplied historical snapshot. Updated July 20, 2026. Not live-refresh data.
 const overviewPairPerformanceSnapshot = {
   updated_label: "20 July 2026",
