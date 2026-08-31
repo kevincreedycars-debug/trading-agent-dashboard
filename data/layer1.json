@@ -4,7 +4,7 @@
   "dashboard_meta": {
     "system_timezone": "America/New_York",
     "execution_clock": "07:00 ET primary run",
-    "last_updated_et": "2026-08-31T13:30:50.782Z",
+    "last_updated_et": "2026-08-31T13:33:16.906Z",
     "architecture": "Layer 1 agents are sealed independent raw signal producers. No cross-agent communication.",
     "weekend_rule": "Weekday-active-time V1 pauses only for weekend closure. Exchange holidays and intraday maintenance breaks are not yet modelled.",
     "display_timezone": "Europe/London",
@@ -36,14 +36,14 @@
       "market_status": null,
       "last_run_et": "2026-08-31T13:28:51.315+00:00",
       "generated_at": "2026-08-31T13:28:51.315+00:00",
-      "sealed_at": "2026-08-31T13:29:15.680469+00:00",
-      "valid_from": "2026-08-31T13:29:15.680469+00:00",
+      "sealed_at": "2026-08-31T13:31:50.167143+00:00",
+      "valid_from": "2026-08-31T13:31:50.167143+00:00",
       "refresh_due_at": "2026-09-01T11:00:00.000Z",
-      "forecast_window_end": "2026-09-01T13:29:15.680Z",
-      "expires_at": "2026-09-01T13:29:15.680Z",
+      "forecast_window_end": "2026-09-01T13:31:50.167Z",
+      "expires_at": "2026-09-01T13:31:50.167Z",
       "status_at_build": "ACTIVE",
       "effective_status": "ACTIVE",
-      "status_resolved_at": "2026-08-31T13:30:50.772Z",
+      "status_resolved_at": "2026-08-31T13:33:16.896Z",
       "horizon_code": "24H",
       "horizon_duration": "PT24H",
       "horizon_basis": "WEEKDAY_ACTIVE_TIME_V1",
@@ -159,14 +159,14 @@
             }
           },
           "generated_at": "2026-08-31T13:28:51.315+00:00",
-          "sealed_at": "2026-08-31T13:29:15.680469+00:00",
-          "valid_from": "2026-08-31T13:29:15.680469+00:00",
+          "sealed_at": "2026-08-31T13:31:50.167143+00:00",
+          "valid_from": "2026-08-31T13:31:50.167143+00:00",
           "refresh_due_at": "2026-09-01T11:00:00.000Z",
-          "forecast_window_end": "2026-09-01T13:29:15.680Z",
-          "expires_at": "2026-09-01T13:29:15.680Z",
+          "forecast_window_end": "2026-09-01T13:31:50.167Z",
+          "expires_at": "2026-09-01T13:31:50.167Z",
           "status_at_build": "ACTIVE",
           "effective_status": "ACTIVE",
-          "status_resolved_at": "2026-08-31T13:30:50.772Z",
+          "status_resolved_at": "2026-08-31T13:33:16.896Z",
           "horizon_code": "24H",
           "horizon_duration": "PT24H",
           "horizon_basis": "WEEKDAY_ACTIVE_TIME_V1",
@@ -708,14 +708,14 @@
           }
         },
         "generated_at": "2026-08-31T13:28:51.315+00:00",
-        "sealed_at": "2026-08-31T13:29:15.680469+00:00",
-        "valid_from": "2026-08-31T13:29:15.680469+00:00",
+        "sealed_at": "2026-08-31T13:31:50.167143+00:00",
+        "valid_from": "2026-08-31T13:31:50.167143+00:00",
         "refresh_due_at": "2026-09-01T11:00:00.000Z",
-        "forecast_window_end": "2026-09-01T13:29:15.680Z",
-        "expires_at": "2026-09-01T13:29:15.680Z",
+        "forecast_window_end": "2026-09-01T13:31:50.167Z",
+        "expires_at": "2026-09-01T13:31:50.167Z",
         "status_at_build": "ACTIVE",
         "effective_status": "ACTIVE",
-        "status_resolved_at": "2026-08-31T13:30:50.772Z",
+        "status_resolved_at": "2026-08-31T13:33:16.896Z",
         "horizon_code": "24H",
         "horizon_duration": "PT24H",
         "horizon_basis": "WEEKDAY_ACTIVE_TIME_V1",
@@ -806,7 +806,7 @@
       "score_bullish": 2,
       "score_bearish": 4,
       "score_neutral": 4,
-      "non_neutral_count": 8,
+      "non_neutral_count": 5,
       "logic_document": "agent_usd_direction.md",
       "logic_document_version": "2.1_weighted_engine",
       "conviction_model": {
@@ -1336,9 +1336,9 @@
         "created_at": "2026-08-31T13:28:51.444454+00:00",
         "reason_24h": "24h deterministic score: bullish argument 13%, bearish argument 88%, neutral/inactive 60%, net edge -75 bearish.",
         "risk_flags": [
-          "Missing latest_us_event",
-          "Primary drivers partially conflicted",
-          "Low conviction due to Fed bias neutral and missing economic data"
+          "Missing latest US economic event input",
+          "Fed bias neutral limits directional conviction",
+          "Primary drivers partially conflicted"
         ],
         "reason_3_day": "3d deterministic score: bullish argument 16%, bearish argument 84%, neutral/inactive 50%, net edge -68 bearish.",
         "direction_24h": "BEARISH",
@@ -1918,20 +1918,84 @@
             }
           }
         },
-        "non_neutral_count": 8,
+        "non_neutral_count": 5,
         "reasoning_summary": "USD weighted verdicts calculated deterministically by timeframe. 24h BEARISH 88%, 3d BEARISH 84%, current week BEARISH 86%, next week BEARISH 100%, current month BEARISH 100%.",
         "snapshot_selection": {
           "warnings": [],
           "selected_by": "latest_usd_usable_snapshot",
-          "selected_from_rows": 711,
+          "selected_from_rows": 715,
           "selected_created_at": "2026-08-31T13:28:51.444454+00:00",
           "selected_run_time_et": "2026-08-31T13:28:51.315+00:00",
           "selected_snapshot_id": "0d54b40d-98d2-4a23-9103-48c8d4462238",
           "selected_snapshot_date": "2026-08-31",
           "top_5_rows_seen_by_workflow": [
             {
-              "id": "ca3d9a03-957b-4a83-b115-a521dbe60d65",
+              "id": "16638444-747d-410c-af7a-1380afe6b044",
               "rank": 1,
+              "fed_bias": "neutral",
+              "dxy_level": 118.0628,
+              "vix_level": 14.51,
+              "created_at": "2026-08-31T13:31:28.869053+00:00",
+              "usd_usable": false,
+              "de_2y_yield": null,
+              "run_time_et": "2026-08-31T13:31:28.734+00:00",
+              "snapshot_date": "2026-08-31",
+              "source_status": "partial",
+              "us_de_2y_spread": null,
+              "collector_version": "btc_v2_economic_events_weighted_inputs",
+              "us_de_2y_spread_d5_bps": null
+            },
+            {
+              "id": "a9a1de3b-29fa-49c6-950b-a7fea28c7979",
+              "rank": 2,
+              "fed_bias": "neutral",
+              "dxy_level": 118.0628,
+              "vix_level": 14.51,
+              "created_at": "2026-08-31T13:30:43.476456+00:00",
+              "usd_usable": false,
+              "de_2y_yield": 2.92,
+              "run_time_et": "2026-08-31T13:30:43.135+00:00",
+              "snapshot_date": "2026-08-31",
+              "source_status": "partial",
+              "us_de_2y_spread": 1.2800000000000002,
+              "collector_version": "nq_v2_economic_events_weighted_inputs",
+              "us_de_2y_spread_d5_bps": -7.000000000000028
+            },
+            {
+              "id": "f2f8f9fe-9936-44e4-a754-f0aac6319fc9",
+              "rank": 3,
+              "fed_bias": "neutral",
+              "dxy_level": 118.0628,
+              "vix_level": 14.51,
+              "created_at": "2026-08-31T13:29:16.889404+00:00",
+              "usd_usable": false,
+              "de_2y_yield": 2.92,
+              "run_time_et": "2026-08-31T13:29:16.807+00:00",
+              "snapshot_date": "2026-08-31",
+              "source_status": "partial",
+              "us_de_2y_spread": 1.2800000000000002,
+              "collector_version": "gold_v2_economic_events_weighted_inputs",
+              "us_de_2y_spread_d5_bps": -7.000000000000028
+            },
+            {
+              "id": "01fb16e0-7aed-49df-9f5b-faa2b6ebf6e2",
+              "rank": 4,
+              "fed_bias": null,
+              "dxy_level": 118.0628,
+              "vix_level": 14.51,
+              "created_at": "2026-08-31T13:29:06.228744+00:00",
+              "usd_usable": false,
+              "de_2y_yield": 2.92,
+              "run_time_et": "2026-08-31T13:29:06.148+00:00",
+              "snapshot_date": "2026-08-31",
+              "source_status": "partial",
+              "us_de_2y_spread": 1.2800000000000002,
+              "collector_version": "v11_eur_forex_factory_events",
+              "us_de_2y_spread_d5_bps": -7.000000000000028
+            },
+            {
+              "id": "ca3d9a03-957b-4a83-b115-a521dbe60d65",
+              "rank": 5,
               "fed_bias": "neutral",
               "dxy_level": 118.0628,
               "vix_level": 14.51,
@@ -1944,70 +2008,6 @@
               "us_de_2y_spread": null,
               "collector_version": "btc_v2_economic_events_weighted_inputs",
               "us_de_2y_spread_d5_bps": null
-            },
-            {
-              "id": "4e6d03e8-bd56-465b-a4aa-cd7d082215b4",
-              "rank": 2,
-              "fed_bias": "neutral",
-              "dxy_level": 118.0628,
-              "vix_level": 14.51,
-              "created_at": "2026-08-31T13:28:58.271136+00:00",
-              "usd_usable": false,
-              "de_2y_yield": 2.92,
-              "run_time_et": "2026-08-31T13:28:58.143+00:00",
-              "snapshot_date": "2026-08-31",
-              "source_status": "partial",
-              "us_de_2y_spread": 1.2800000000000002,
-              "collector_version": "v8_fed_bias_enabled",
-              "us_de_2y_spread_d5_bps": -7.000000000000028
-            },
-            {
-              "id": "0d54b40d-98d2-4a23-9103-48c8d4462238",
-              "rank": 3,
-              "fed_bias": "neutral",
-              "dxy_level": 118.0628,
-              "vix_level": 14.51,
-              "created_at": "2026-08-31T13:28:51.444454+00:00",
-              "usd_usable": true,
-              "de_2y_yield": 2.92,
-              "run_time_et": "2026-08-31T13:28:51.315+00:00",
-              "snapshot_date": "2026-08-31",
-              "source_status": "partial",
-              "us_de_2y_spread": 1.2800000000000002,
-              "collector_version": "nq_v2_economic_events_weighted_inputs",
-              "us_de_2y_spread_d5_bps": -7.000000000000028
-            },
-            {
-              "id": "ea00d8b0-0262-4e1d-9759-698f6b25d8d3",
-              "rank": 4,
-              "fed_bias": "neutral",
-              "dxy_level": 118.0628,
-              "vix_level": 14.51,
-              "created_at": "2026-08-31T13:27:39.638279+00:00",
-              "usd_usable": true,
-              "de_2y_yield": 2.92,
-              "run_time_et": "2026-08-31T13:27:39.482+00:00",
-              "snapshot_date": "2026-08-31",
-              "source_status": "partial",
-              "us_de_2y_spread": 1.2800000000000002,
-              "collector_version": "gold_v2_economic_events_weighted_inputs",
-              "us_de_2y_spread_d5_bps": -7.000000000000028
-            },
-            {
-              "id": "7329b4af-cd5d-4fef-8a10-764f60a3d5c1",
-              "rank": 5,
-              "fed_bias": null,
-              "dxy_level": 118.0628,
-              "vix_level": 14.51,
-              "created_at": "2026-08-31T13:27:30.224823+00:00",
-              "usd_usable": false,
-              "de_2y_yield": 2.92,
-              "run_time_et": "2026-08-31T13:27:30.076+00:00",
-              "snapshot_date": "2026-08-31",
-              "source_status": "partial",
-              "us_de_2y_spread": 1.2800000000000002,
-              "collector_version": "v11_eur_forex_factory_events",
-              "us_de_2y_spread_d5_bps": -7.000000000000028
             }
           ],
           "missing_required_inputs_for_usd": []
@@ -2021,9 +2021,9 @@
         "conviction_current_week": 86,
         "direction_current_month": "BEARISH",
         "model_reported_warnings": [
-          "Missing latest_us_event",
-          "Primary drivers partially conflicted",
-          "Low conviction due to Fed bias neutral and missing economic data"
+          "Missing latest US economic event input",
+          "Fed bias neutral limits directional conviction",
+          "Primary drivers partially conflicted"
         ],
         "conviction_current_month": 100,
         "input_validation_warnings": [
@@ -2091,14 +2091,14 @@
       "market_status": null,
       "last_run_et": "2026-08-31T13:29:06.148+00:00",
       "generated_at": "2026-08-31T13:29:06.148+00:00",
-      "sealed_at": "2026-08-31T13:29:37.930003+00:00",
-      "valid_from": "2026-08-31T13:29:37.930003+00:00",
+      "sealed_at": "2026-08-31T13:32:10.827434+00:00",
+      "valid_from": "2026-08-31T13:32:10.827434+00:00",
       "refresh_due_at": "2026-09-01T11:00:00.000Z",
-      "forecast_window_end": "2026-09-01T13:29:37.930Z",
-      "expires_at": "2026-09-01T13:29:37.930Z",
+      "forecast_window_end": "2026-09-01T13:32:10.827Z",
+      "expires_at": "2026-09-01T13:32:10.827Z",
       "status_at_build": "ACTIVE",
       "effective_status": "ACTIVE",
-      "status_resolved_at": "2026-08-31T13:30:50.772Z",
+      "status_resolved_at": "2026-08-31T13:33:16.896Z",
       "horizon_code": "24H",
       "horizon_duration": "PT24H",
       "horizon_basis": "WEEKDAY_ACTIVE_TIME_V1",
@@ -2214,14 +2214,14 @@
             }
           },
           "generated_at": "2026-08-31T13:29:06.148+00:00",
-          "sealed_at": "2026-08-31T13:29:37.930003+00:00",
-          "valid_from": "2026-08-31T13:29:37.930003+00:00",
+          "sealed_at": "2026-08-31T13:32:10.827434+00:00",
+          "valid_from": "2026-08-31T13:32:10.827434+00:00",
           "refresh_due_at": "2026-09-01T11:00:00.000Z",
-          "forecast_window_end": "2026-09-01T13:29:37.930Z",
-          "expires_at": "2026-09-01T13:29:37.930Z",
+          "forecast_window_end": "2026-09-01T13:32:10.827Z",
+          "expires_at": "2026-09-01T13:32:10.827Z",
           "status_at_build": "ACTIVE",
           "effective_status": "ACTIVE",
-          "status_resolved_at": "2026-08-31T13:30:50.772Z",
+          "status_resolved_at": "2026-08-31T13:33:16.896Z",
           "horizon_code": "24H",
           "horizon_duration": "PT24H",
           "horizon_basis": "WEEKDAY_ACTIVE_TIME_V1",
@@ -2763,14 +2763,14 @@
           }
         },
         "generated_at": "2026-08-31T13:29:06.148+00:00",
-        "sealed_at": "2026-08-31T13:29:37.930003+00:00",
-        "valid_from": "2026-08-31T13:29:37.930003+00:00",
+        "sealed_at": "2026-08-31T13:32:10.827434+00:00",
+        "valid_from": "2026-08-31T13:32:10.827434+00:00",
         "refresh_due_at": "2026-09-01T11:00:00.000Z",
-        "forecast_window_end": "2026-09-01T13:29:37.930Z",
-        "expires_at": "2026-09-01T13:29:37.930Z",
+        "forecast_window_end": "2026-09-01T13:32:10.827Z",
+        "expires_at": "2026-09-01T13:32:10.827Z",
         "status_at_build": "ACTIVE",
         "effective_status": "ACTIVE",
-        "status_resolved_at": "2026-08-31T13:30:50.772Z",
+        "status_resolved_at": "2026-08-31T13:33:16.896Z",
         "horizon_code": "24H",
         "horizon_duration": "PT24H",
         "horizon_basis": "WEEKDAY_ACTIVE_TIME_V1",
@@ -2859,7 +2859,7 @@
       "score_bullish": 5,
       "score_bearish": 0,
       "score_neutral": 5,
-      "non_neutral_count": 5,
+      "non_neutral_count": 6,
       "logic_document": "agent_eur_direction.md",
       "logic_document_version": "2.0_weighted_engine",
       "conviction_model": {
@@ -3427,8 +3427,7 @@
         "conviction_24h": 100,
         "logic_document": "agent_eur_direction.md",
         "missing_inputs": [
-          "latest_ez_event",
-          "gold_d20_pct"
+          "latest_ez_event"
         ],
         "weighted_score": {
           "active_weight": 48,
@@ -4033,22 +4032,97 @@
             }
           }
         },
-        "non_neutral_count": 5,
+        "non_neutral_count": 6,
         "reasoning_summary": "EUR weighted verdicts calculated deterministically by timeframe. 24h BULLISH 100%, 3d BULLISH 100%, current week BULLISH 100%, next week BULLISH 100%, current month BULLISH 100%.",
         "snapshot_selection": {
           "warnings": [
             "gold_d5_pct missing; using gold_d1_pct fallback"
           ],
           "selected_by": "latest_v11_eur_usable_snapshot",
-          "selected_from_rows": 713,
+          "selected_from_rows": 716,
           "selected_created_at": "2026-08-31T13:29:06.228744+00:00",
           "selected_run_time_et": "2026-08-31T13:29:06.148+00:00",
           "selected_snapshot_id": "01fb16e0-7aed-49df-9f5b-faa2b6ebf6e2",
           "selected_snapshot_date": "2026-08-31",
           "top_5_rows_seen_by_workflow": [
             {
-              "id": "f2f8f9fe-9936-44e4-a754-f0aac6319fc9",
+              "id": "794fabe7-7981-4316-b61e-da02e427bffd",
               "rank": 1,
+              "ecb_bias": null,
+              "fed_bias": "neutral",
+              "created_at": "2026-08-31T13:31:31.335025+00:00",
+              "eur_usable": false,
+              "de_2y_yield": 2.92,
+              "run_time_et": "2026-08-31T13:31:31.26+00:00",
+              "de_2y_d5_bps": 8.000000000000007,
+              "eurusd_price": null,
+              "de_2y_d20_bps": null,
+              "eurusd_d1_pct": null,
+              "eurusd_d5_pct": null,
+              "snapshot_date": "2026-08-31",
+              "source_status": "partial",
+              "eurusd_d20_pct": null,
+              "latest_ez_event": null,
+              "us_de_2y_spread": 1.2800000000000002,
+              "ez_composite_pmi": null,
+              "collector_version": "v8_fed_bias_enabled",
+              "us_de_2y_spread_d5_bps": -7.000000000000028,
+              "us_de_2y_spread_d20_bps": null,
+              "ez_composite_pmi_direction": null
+            },
+            {
+              "id": "16638444-747d-410c-af7a-1380afe6b044",
+              "rank": 2,
+              "ecb_bias": null,
+              "fed_bias": "neutral",
+              "created_at": "2026-08-31T13:31:28.869053+00:00",
+              "eur_usable": false,
+              "de_2y_yield": null,
+              "run_time_et": "2026-08-31T13:31:28.734+00:00",
+              "de_2y_d5_bps": null,
+              "eurusd_price": null,
+              "de_2y_d20_bps": null,
+              "eurusd_d1_pct": null,
+              "eurusd_d5_pct": null,
+              "snapshot_date": "2026-08-31",
+              "source_status": "partial",
+              "eurusd_d20_pct": null,
+              "latest_ez_event": null,
+              "us_de_2y_spread": null,
+              "ez_composite_pmi": null,
+              "collector_version": "btc_v2_economic_events_weighted_inputs",
+              "us_de_2y_spread_d5_bps": null,
+              "us_de_2y_spread_d20_bps": null,
+              "ez_composite_pmi_direction": null
+            },
+            {
+              "id": "a9a1de3b-29fa-49c6-950b-a7fea28c7979",
+              "rank": 3,
+              "ecb_bias": null,
+              "fed_bias": "neutral",
+              "created_at": "2026-08-31T13:30:43.476456+00:00",
+              "eur_usable": false,
+              "de_2y_yield": 2.92,
+              "run_time_et": "2026-08-31T13:30:43.135+00:00",
+              "de_2y_d5_bps": 8.000000000000007,
+              "eurusd_price": null,
+              "de_2y_d20_bps": null,
+              "eurusd_d1_pct": null,
+              "eurusd_d5_pct": null,
+              "snapshot_date": "2026-08-31",
+              "source_status": "partial",
+              "eurusd_d20_pct": null,
+              "latest_ez_event": null,
+              "us_de_2y_spread": 1.2800000000000002,
+              "ez_composite_pmi": null,
+              "collector_version": "nq_v2_economic_events_weighted_inputs",
+              "us_de_2y_spread_d5_bps": -7.000000000000028,
+              "us_de_2y_spread_d20_bps": null,
+              "ez_composite_pmi_direction": null
+            },
+            {
+              "id": "f2f8f9fe-9936-44e4-a754-f0aac6319fc9",
+              "rank": 4,
               "ecb_bias": null,
               "fed_bias": "neutral",
               "created_at": "2026-08-31T13:29:16.889404+00:00",
@@ -4073,7 +4147,7 @@
             },
             {
               "id": "01fb16e0-7aed-49df-9f5b-faa2b6ebf6e2",
-              "rank": 2,
+              "rank": 5,
               "ecb_bias": "neutral",
               "fed_bias": null,
               "created_at": "2026-08-31T13:29:06.228744+00:00",
@@ -4095,81 +4169,6 @@
               "us_de_2y_spread_d5_bps": -7.000000000000028,
               "us_de_2y_spread_d20_bps": -19.00000000000004,
               "ez_composite_pmi_direction": "improving"
-            },
-            {
-              "id": "ca3d9a03-957b-4a83-b115-a521dbe60d65",
-              "rank": 3,
-              "ecb_bias": null,
-              "fed_bias": "neutral",
-              "created_at": "2026-08-31T13:28:58.645313+00:00",
-              "eur_usable": false,
-              "de_2y_yield": null,
-              "run_time_et": "2026-08-31T13:28:58.573+00:00",
-              "de_2y_d5_bps": null,
-              "eurusd_price": null,
-              "de_2y_d20_bps": null,
-              "eurusd_d1_pct": null,
-              "eurusd_d5_pct": null,
-              "snapshot_date": "2026-08-31",
-              "source_status": "partial",
-              "eurusd_d20_pct": null,
-              "latest_ez_event": null,
-              "us_de_2y_spread": null,
-              "ez_composite_pmi": null,
-              "collector_version": "btc_v2_economic_events_weighted_inputs",
-              "us_de_2y_spread_d5_bps": null,
-              "us_de_2y_spread_d20_bps": null,
-              "ez_composite_pmi_direction": null
-            },
-            {
-              "id": "4e6d03e8-bd56-465b-a4aa-cd7d082215b4",
-              "rank": 4,
-              "ecb_bias": null,
-              "fed_bias": "neutral",
-              "created_at": "2026-08-31T13:28:58.271136+00:00",
-              "eur_usable": false,
-              "de_2y_yield": 2.92,
-              "run_time_et": "2026-08-31T13:28:58.143+00:00",
-              "de_2y_d5_bps": 8.000000000000007,
-              "eurusd_price": null,
-              "de_2y_d20_bps": null,
-              "eurusd_d1_pct": null,
-              "eurusd_d5_pct": null,
-              "snapshot_date": "2026-08-31",
-              "source_status": "partial",
-              "eurusd_d20_pct": null,
-              "latest_ez_event": null,
-              "us_de_2y_spread": 1.2800000000000002,
-              "ez_composite_pmi": null,
-              "collector_version": "v8_fed_bias_enabled",
-              "us_de_2y_spread_d5_bps": -7.000000000000028,
-              "us_de_2y_spread_d20_bps": null,
-              "ez_composite_pmi_direction": null
-            },
-            {
-              "id": "0d54b40d-98d2-4a23-9103-48c8d4462238",
-              "rank": 5,
-              "ecb_bias": null,
-              "fed_bias": "neutral",
-              "created_at": "2026-08-31T13:28:51.444454+00:00",
-              "eur_usable": false,
-              "de_2y_yield": 2.92,
-              "run_time_et": "2026-08-31T13:28:51.315+00:00",
-              "de_2y_d5_bps": 8.000000000000007,
-              "eurusd_price": null,
-              "de_2y_d20_bps": null,
-              "eurusd_d1_pct": null,
-              "eurusd_d5_pct": null,
-              "snapshot_date": "2026-08-31",
-              "source_status": "partial",
-              "eurusd_d20_pct": null,
-              "latest_ez_event": null,
-              "us_de_2y_spread": 1.2800000000000002,
-              "ez_composite_pmi": null,
-              "collector_version": "nq_v2_economic_events_weighted_inputs",
-              "us_de_2y_spread_d5_bps": -7.000000000000028,
-              "us_de_2y_spread_d20_bps": null,
-              "ez_composite_pmi_direction": null
             }
           ],
           "missing_required_inputs_for_eur": []
@@ -4292,16 +4291,16 @@
       "agent": "GOLD",
       "status": "live",
       "market_status": null,
-      "last_run_et": "2026-08-31T13:29:16.807+00:00",
-      "generated_at": "2026-08-31T13:29:16.807+00:00",
-      "sealed_at": "2026-08-31T13:29:47.3613+00:00",
-      "valid_from": "2026-08-31T13:29:47.3613+00:00",
+      "last_run_et": "2026-08-31T13:31:59.158+00:00",
+      "generated_at": "2026-08-31T13:31:59.158+00:00",
+      "sealed_at": "2026-08-31T13:32:20.263406+00:00",
+      "valid_from": "2026-08-31T13:32:20.263406+00:00",
       "refresh_due_at": "2026-09-01T11:00:00.000Z",
-      "forecast_window_end": "2026-09-01T13:29:47.361Z",
-      "expires_at": "2026-09-01T13:29:47.361Z",
+      "forecast_window_end": "2026-09-01T13:32:20.263Z",
+      "expires_at": "2026-09-01T13:32:20.263Z",
       "status_at_build": "ACTIVE",
       "effective_status": "ACTIVE",
-      "status_resolved_at": "2026-08-31T13:30:50.772Z",
+      "status_resolved_at": "2026-08-31T13:33:16.896Z",
       "horizon_code": "24H",
       "horizon_duration": "PT24H",
       "horizon_basis": "WEEKDAY_ACTIVE_TIME_V1",
@@ -4309,54 +4308,54 @@
       "market_calendar": "WEEKDAY_ACTIVE_TIME_V1",
       "source_run_id": null,
       "refresh_request_id": null,
-      "summary": "GOLD weighted verdicts calculated deterministically by timeframe. 24h BULLISH_LEAN 32%, 3d BULLISH_LEAN 28%, current week BULLISH_LEAN 26%, next week BULLISH 42%, current month BULLISH 40%.",
+      "summary": "GOLD weighted verdicts calculated deterministically by timeframe. 24h BULLISH_LEAN 32%, 3d BULLISH_LEAN 20%, current week BULLISH_LEAN 18%, next week BULLISH_LEAN 36%, current month BULLISH_LEAN 34%.",
       "calls": {
         "24h": {
           "direction": "BULLISH_LEAN",
           "conviction": 32,
-          "reason": "24h deterministic Gold score: bull case 78%, bear case 22%, directional participation 41%, neutral/inactive 59%, net edge +56. Real yields and DXY remain the highest-priority Gold drivers.",
+          "reason": "24h deterministic Gold score: bull case 80%, bear case 20%, directional participation 40%, neutral/inactive 60%, net edge +60. Real yields and DXY remain the highest-priority Gold drivers.",
           "conviction_model": {
-            "net_edge": 56,
-            "bear_case": 22,
-            "bull_case": 78,
-            "neutral_pct": 59,
-            "net_edge_pct": 56,
+            "net_edge": 60,
+            "bear_case": 20,
+            "bull_case": 80,
+            "neutral_pct": 60,
+            "net_edge_pct": 60,
             "winning_side": "BULLISH",
-            "participation": 41,
-            "weighted_edge": 0.56,
+            "participation": 40,
+            "weighted_edge": 0.6,
             "raw_conviction": 32,
             "agreement_boost": 0,
             "base_conviction": 32,
             "conflict_penalty": 0,
             "final_conviction": 32,
             "verdict_strength": "MODERATE",
-            "participation_cap": 41,
-            "bearish_argument_pct": 22,
-            "bullish_argument_pct": 78,
+            "participation_cap": 40,
+            "bearish_argument_pct": 20,
+            "bullish_argument_pct": 80,
             "missing_input_penalty": 0,
-            "final_conviction_logic": "24h deterministic Gold score: bull case 78%, bear case 22%, directional participation 41%, neutral/inactive 59%, net edge +56. Real yields and DXY remain the highest-priority Gold drivers.",
-            "active_participation_pct": 41,
-            "directional_participation": 41,
-            "neutral_evidence_pct": 59,
-            "directional_participation_pct": 41,
+            "final_conviction_logic": "24h deterministic Gold score: bull case 80%, bear case 20%, directional participation 40%, neutral/inactive 60%, net edge +60. Real yields and DXY remain the highest-priority Gold drivers.",
+            "active_participation_pct": 40,
+            "directional_participation": 40,
+            "neutral_evidence_pct": 60,
+            "directional_participation_pct": 40,
             "bull_case_weight": 32,
-            "bear_case_weight": 9,
-            "neutral_weight": 59,
+            "bear_case_weight": 8,
+            "neutral_weight": 60,
             "weighted_score": {
               "bullish_weight": 32,
-              "bearish_weight": 9,
-              "neutral_weight": 59,
-              "active_weight": 41,
-              "weight_margin": 23
+              "bearish_weight": 8,
+              "neutral_weight": 60,
+              "active_weight": 40,
+              "weight_margin": 24
             },
-            "alignment": 78
+            "alignment": 80
           },
           "weighted_score": {
-            "active_weight": 41,
-            "weight_margin": 23,
-            "bearish_weight": 9,
+            "active_weight": 40,
+            "weight_margin": 24,
+            "bearish_weight": 8,
             "bullish_weight": 32,
-            "neutral_weight": 59
+            "neutral_weight": 60
           },
           "factor_breakdown": {
             "F1": {
@@ -4372,10 +4371,10 @@
               "evidence": "DXY -0.1623612741301049%"
             },
             "F3": {
-              "reason": "No clear Fed impulse",
+              "reason": "Missing input",
               "signal": "NEUTRAL",
               "weight": 12,
-              "evidence": "Fed bias neutral"
+              "evidence": "Fed bias unknown"
             },
             "F4": {
               "reason": "US 2Y move below threshold",
@@ -4387,7 +4386,7 @@
               "reason": "Gold own-price trend confirms upside pressure",
               "signal": "BULLISH",
               "weight": 10,
-              "evidence": "Gold 4.148468705430726%"
+              "evidence": "Gold 4.183648525522788%"
             },
             "F6": {
               "reason": "Risk-on conditions reduce defensive Gold demand",
@@ -4414,21 +4413,21 @@
               "evidence": "normal"
             },
             "F10": {
-              "reason": "Supportive growth reduces defensive Gold demand and can lift yields",
-              "signal": "BEARISH",
+              "reason": "No clear growth or liquidity signal",
+              "signal": "NEUTRAL",
               "weight": 1,
-              "evidence": "liquidity_expansion"
+              "evidence": "neutral"
             }
           },
-          "generated_at": "2026-08-31T13:29:16.807+00:00",
-          "sealed_at": "2026-08-31T13:29:47.3613+00:00",
-          "valid_from": "2026-08-31T13:29:47.3613+00:00",
+          "generated_at": "2026-08-31T13:31:59.158+00:00",
+          "sealed_at": "2026-08-31T13:32:20.263406+00:00",
+          "valid_from": "2026-08-31T13:32:20.263406+00:00",
           "refresh_due_at": "2026-09-01T11:00:00.000Z",
-          "forecast_window_end": "2026-09-01T13:29:47.361Z",
-          "expires_at": "2026-09-01T13:29:47.361Z",
+          "forecast_window_end": "2026-09-01T13:32:20.263Z",
+          "expires_at": "2026-09-01T13:32:20.263Z",
           "status_at_build": "ACTIVE",
           "effective_status": "ACTIVE",
-          "status_resolved_at": "2026-08-31T13:30:50.772Z",
+          "status_resolved_at": "2026-08-31T13:33:16.896Z",
           "horizon_code": "24H",
           "horizon_duration": "PT24H",
           "horizon_basis": "WEEKDAY_ACTIVE_TIME_V1",
@@ -4440,50 +4439,50 @@
         },
         "3d": {
           "direction": "BULLISH_LEAN",
-          "conviction": 28,
-          "reason": "3d deterministic Gold score: bull case 72%, bear case 28%, directional participation 39%, neutral/inactive 61%, net edge +44. Real yields and DXY remain the highest-priority Gold drivers.",
+          "conviction": 20,
+          "reason": "3d deterministic Gold score: bull case 67%, bear case 33%, directional participation 30%, neutral/inactive 70%, net edge +34. Real yields and DXY remain the highest-priority Gold drivers.",
           "conviction_model": {
-            "net_edge": 44,
-            "bear_case": 28,
-            "bull_case": 72,
-            "neutral_pct": 61,
-            "net_edge_pct": 44,
+            "net_edge": 34,
+            "bear_case": 33,
+            "bull_case": 67,
+            "neutral_pct": 70,
+            "net_edge_pct": 34,
             "winning_side": "BULLISH",
-            "participation": 39,
-            "weighted_edge": 0.44,
-            "raw_conviction": 28,
+            "participation": 30,
+            "weighted_edge": 0.34,
+            "raw_conviction": 20,
             "agreement_boost": 0,
-            "base_conviction": 28,
+            "base_conviction": 20,
             "conflict_penalty": 0,
-            "final_conviction": 28,
+            "final_conviction": 20,
             "verdict_strength": "MODERATE",
-            "participation_cap": 39,
-            "bearish_argument_pct": 28,
-            "bullish_argument_pct": 72,
+            "participation_cap": 30,
+            "bearish_argument_pct": 33,
+            "bullish_argument_pct": 67,
             "missing_input_penalty": 0,
-            "final_conviction_logic": "3d deterministic Gold score: bull case 72%, bear case 28%, directional participation 39%, neutral/inactive 61%, net edge +44. Real yields and DXY remain the highest-priority Gold drivers.",
-            "active_participation_pct": 39,
-            "directional_participation": 39,
-            "neutral_evidence_pct": 61,
-            "directional_participation_pct": 39,
-            "bull_case_weight": 28,
-            "bear_case_weight": 11,
-            "neutral_weight": 61,
+            "final_conviction_logic": "3d deterministic Gold score: bull case 67%, bear case 33%, directional participation 30%, neutral/inactive 70%, net edge +34. Real yields and DXY remain the highest-priority Gold drivers.",
+            "active_participation_pct": 30,
+            "directional_participation": 30,
+            "neutral_evidence_pct": 70,
+            "directional_participation_pct": 30,
+            "bull_case_weight": 20,
+            "bear_case_weight": 10,
+            "neutral_weight": 70,
             "weighted_score": {
-              "bullish_weight": 28,
-              "bearish_weight": 11,
-              "neutral_weight": 61,
-              "active_weight": 39,
-              "weight_margin": 17
+              "bullish_weight": 20,
+              "bearish_weight": 10,
+              "neutral_weight": 70,
+              "active_weight": 30,
+              "weight_margin": 10
             },
-            "alignment": 72
+            "alignment": 67
           },
           "weighted_score": {
-            "active_weight": 39,
-            "weight_margin": 17,
-            "bearish_weight": 11,
-            "bullish_weight": 28,
-            "neutral_weight": 61
+            "active_weight": 30,
+            "weight_margin": 10,
+            "bearish_weight": 10,
+            "bullish_weight": 20,
+            "neutral_weight": 70
           },
           "factor_breakdown": {
             "F1": {
@@ -4499,10 +4498,10 @@
               "evidence": "DXY -0.7064593937232794%"
             },
             "F3": {
-              "reason": "No clear Fed impulse",
+              "reason": "Missing input",
               "signal": "NEUTRAL",
               "weight": 14,
-              "evidence": "Fed bias neutral"
+              "evidence": "Fed bias unknown"
             },
             "F4": {
               "reason": "US 2Y move below threshold",
@@ -4511,10 +4510,10 @@
               "evidence": "US 2Y 0.9999999999999787bps"
             },
             "F5": {
-              "reason": "Gold own-price trend confirms upside pressure",
-              "signal": "BULLISH",
+              "reason": "Gold price move below threshold",
+              "signal": "NEUTRAL",
               "weight": 8,
-              "evidence": "Gold 4.148468705430726%"
+              "evidence": "Gold 0%"
             },
             "F6": {
               "reason": "Risk-on conditions reduce defensive Gold demand",
@@ -4541,59 +4540,59 @@
               "evidence": "normal"
             },
             "F10": {
-              "reason": "Supportive growth reduces defensive Gold demand and can lift yields",
-              "signal": "BEARISH",
+              "reason": "No clear growth or liquidity signal",
+              "signal": "NEUTRAL",
               "weight": 1,
-              "evidence": "liquidity_expansion"
+              "evidence": "neutral"
             }
           }
         },
         "current_week": {
           "direction": "BULLISH_LEAN",
-          "conviction": 26,
-          "reason": "current_week deterministic Gold score: bull case 68%, bear case 32%, directional participation 38%, neutral/inactive 62%, net edge +36. Real yields and DXY remain the highest-priority Gold drivers.",
+          "conviction": 18,
+          "reason": "current_week deterministic Gold score: bull case 64%, bear case 36%, directional participation 28%, neutral/inactive 72%, net edge +28. Real yields and DXY remain the highest-priority Gold drivers.",
           "conviction_model": {
-            "net_edge": 36,
-            "bear_case": 32,
-            "bull_case": 68,
-            "neutral_pct": 62,
-            "net_edge_pct": 36,
+            "net_edge": 28,
+            "bear_case": 36,
+            "bull_case": 64,
+            "neutral_pct": 72,
+            "net_edge_pct": 28,
             "winning_side": "BULLISH",
-            "participation": 38,
-            "weighted_edge": 0.36,
-            "raw_conviction": 26,
+            "participation": 28,
+            "weighted_edge": 0.28,
+            "raw_conviction": 18,
             "agreement_boost": 0,
-            "base_conviction": 26,
+            "base_conviction": 18,
             "conflict_penalty": 0,
-            "final_conviction": 26,
+            "final_conviction": 18,
             "verdict_strength": "MODERATE",
-            "participation_cap": 38,
-            "bearish_argument_pct": 32,
-            "bullish_argument_pct": 68,
+            "participation_cap": 28,
+            "bearish_argument_pct": 36,
+            "bullish_argument_pct": 64,
             "missing_input_penalty": 0,
-            "final_conviction_logic": "current_week deterministic Gold score: bull case 68%, bear case 32%, directional participation 38%, neutral/inactive 62%, net edge +36. Real yields and DXY remain the highest-priority Gold drivers.",
-            "active_participation_pct": 38,
-            "directional_participation": 38,
-            "neutral_evidence_pct": 62,
-            "directional_participation_pct": 38,
-            "bull_case_weight": 26,
-            "bear_case_weight": 12,
-            "neutral_weight": 62,
+            "final_conviction_logic": "current_week deterministic Gold score: bull case 64%, bear case 36%, directional participation 28%, neutral/inactive 72%, net edge +28. Real yields and DXY remain the highest-priority Gold drivers.",
+            "active_participation_pct": 28,
+            "directional_participation": 28,
+            "neutral_evidence_pct": 72,
+            "directional_participation_pct": 28,
+            "bull_case_weight": 18,
+            "bear_case_weight": 10,
+            "neutral_weight": 72,
             "weighted_score": {
-              "bullish_weight": 26,
-              "bearish_weight": 12,
-              "neutral_weight": 62,
-              "active_weight": 38,
-              "weight_margin": 14
+              "bullish_weight": 18,
+              "bearish_weight": 10,
+              "neutral_weight": 72,
+              "active_weight": 28,
+              "weight_margin": 8
             },
-            "alignment": 68
+            "alignment": 64
           },
           "weighted_score": {
-            "active_weight": 38,
-            "weight_margin": 14,
-            "bearish_weight": 12,
-            "bullish_weight": 26,
-            "neutral_weight": 62
+            "active_weight": 28,
+            "weight_margin": 8,
+            "bearish_weight": 10,
+            "bullish_weight": 18,
+            "neutral_weight": 72
           },
           "factor_breakdown": {
             "F1": {
@@ -4609,10 +4608,10 @@
               "evidence": "DXY -0.7064593937232794%"
             },
             "F3": {
-              "reason": "No clear Fed impulse",
+              "reason": "Missing input",
               "signal": "NEUTRAL",
               "weight": 16,
-              "evidence": "Fed bias neutral"
+              "evidence": "Fed bias unknown"
             },
             "F4": {
               "reason": "US 2Y move below threshold",
@@ -4621,10 +4620,10 @@
               "evidence": "US 2Y 0.9999999999999787bps"
             },
             "F5": {
-              "reason": "Gold own-price trend confirms upside pressure",
-              "signal": "BULLISH",
+              "reason": "Gold price move below threshold",
+              "signal": "NEUTRAL",
               "weight": 8,
-              "evidence": "Gold 4.148468705430726%"
+              "evidence": "Gold 0%"
             },
             "F6": {
               "reason": "Risk-on conditions reduce defensive Gold demand",
@@ -4651,59 +4650,59 @@
               "evidence": "normal"
             },
             "F10": {
-              "reason": "Supportive growth reduces defensive Gold demand and can lift yields",
-              "signal": "BEARISH",
+              "reason": "No clear growth or liquidity signal",
+              "signal": "NEUTRAL",
               "weight": 2,
-              "evidence": "liquidity_expansion"
+              "evidence": "neutral"
             }
           }
         },
         "next_week": {
-          "direction": "BULLISH",
-          "conviction": 42,
-          "reason": "next_week deterministic Gold score: bull case 78%, bear case 22%, directional participation 54%, neutral/inactive 46%, net edge +56. Real yields and DXY remain the highest-priority Gold drivers.",
+          "direction": "BULLISH_LEAN",
+          "conviction": 36,
+          "reason": "next_week deterministic Gold score: bull case 82%, bear case 18%, directional participation 44%, neutral/inactive 56%, net edge +64. Real yields and DXY remain the highest-priority Gold drivers.",
           "conviction_model": {
-            "net_edge": 56,
-            "bear_case": 22,
-            "bull_case": 78,
-            "neutral_pct": 46,
-            "net_edge_pct": 56,
+            "net_edge": 64,
+            "bear_case": 18,
+            "bull_case": 82,
+            "neutral_pct": 56,
+            "net_edge_pct": 64,
             "winning_side": "BULLISH",
-            "participation": 54,
-            "weighted_edge": 0.56,
-            "raw_conviction": 42,
+            "participation": 44,
+            "weighted_edge": 0.64,
+            "raw_conviction": 36,
             "agreement_boost": 0,
-            "base_conviction": 42,
+            "base_conviction": 36,
             "conflict_penalty": 0,
-            "final_conviction": 42,
-            "verdict_strength": "STRONG",
-            "participation_cap": 54,
-            "bearish_argument_pct": 22,
-            "bullish_argument_pct": 78,
+            "final_conviction": 36,
+            "verdict_strength": "MODERATE",
+            "participation_cap": 44,
+            "bearish_argument_pct": 18,
+            "bullish_argument_pct": 82,
             "missing_input_penalty": 0,
-            "final_conviction_logic": "next_week deterministic Gold score: bull case 78%, bear case 22%, directional participation 54%, neutral/inactive 46%, net edge +56. Real yields and DXY remain the highest-priority Gold drivers.",
-            "active_participation_pct": 54,
-            "directional_participation": 54,
-            "neutral_evidence_pct": 46,
-            "directional_participation_pct": 54,
-            "bull_case_weight": 42,
-            "bear_case_weight": 12,
-            "neutral_weight": 46,
+            "final_conviction_logic": "next_week deterministic Gold score: bull case 82%, bear case 18%, directional participation 44%, neutral/inactive 56%, net edge +64. Real yields and DXY remain the highest-priority Gold drivers.",
+            "active_participation_pct": 44,
+            "directional_participation": 44,
+            "neutral_evidence_pct": 56,
+            "directional_participation_pct": 44,
+            "bull_case_weight": 36,
+            "bear_case_weight": 8,
+            "neutral_weight": 56,
             "weighted_score": {
-              "bullish_weight": 42,
-              "bearish_weight": 12,
-              "neutral_weight": 46,
-              "active_weight": 54,
-              "weight_margin": 30
+              "bullish_weight": 36,
+              "bearish_weight": 8,
+              "neutral_weight": 56,
+              "active_weight": 44,
+              "weight_margin": 28
             },
-            "alignment": 78
+            "alignment": 82
           },
           "weighted_score": {
-            "active_weight": 54,
-            "weight_margin": 30,
-            "bearish_weight": 12,
-            "bullish_weight": 42,
-            "neutral_weight": 46
+            "active_weight": 44,
+            "weight_margin": 28,
+            "bearish_weight": 8,
+            "bullish_weight": 36,
+            "neutral_weight": 56
           },
           "factor_breakdown": {
             "F1": {
@@ -4719,10 +4718,10 @@
               "evidence": "DXY -2.193429734778665%"
             },
             "F3": {
-              "reason": "No clear Fed impulse",
+              "reason": "Missing input",
               "signal": "NEUTRAL",
               "weight": 18,
-              "evidence": "Fed bias neutral"
+              "evidence": "Fed bias unknown"
             },
             "F4": {
               "reason": "US 2Y move below threshold",
@@ -4731,10 +4730,10 @@
               "evidence": "US 2Y -3.000000000000025bps"
             },
             "F5": {
-              "reason": "Gold own-price trend confirms upside pressure",
-              "signal": "BULLISH",
+              "reason": "Gold price move below threshold",
+              "signal": "NEUTRAL",
               "weight": 6,
-              "evidence": "Gold 4.148468705430726%"
+              "evidence": "Gold 0%"
             },
             "F6": {
               "reason": "Risk-on conditions reduce defensive Gold demand",
@@ -4761,59 +4760,59 @@
               "evidence": "normal"
             },
             "F10": {
-              "reason": "Supportive growth reduces defensive Gold demand and can lift yields",
-              "signal": "BEARISH",
+              "reason": "No clear growth or liquidity signal",
+              "signal": "NEUTRAL",
               "weight": 4,
-              "evidence": "liquidity_expansion"
+              "evidence": "neutral"
             }
           }
         },
         "current_month": {
-          "direction": "BULLISH",
-          "conviction": 40,
-          "reason": "current_month deterministic Gold score: bull case 77%, bear case 23%, directional participation 52%, neutral/inactive 48%, net edge +54. Real yields and DXY remain the highest-priority Gold drivers.",
+          "direction": "BULLISH_LEAN",
+          "conviction": 34,
+          "reason": "current_month deterministic Gold score: bull case 85%, bear case 15%, directional participation 40%, neutral/inactive 60%, net edge +70. Real yields and DXY remain the highest-priority Gold drivers.",
           "conviction_model": {
-            "net_edge": 54,
-            "bear_case": 23,
-            "bull_case": 77,
-            "neutral_pct": 48,
-            "net_edge_pct": 54,
+            "net_edge": 70,
+            "bear_case": 15,
+            "bull_case": 85,
+            "neutral_pct": 60,
+            "net_edge_pct": 70,
             "winning_side": "BULLISH",
-            "participation": 52,
-            "weighted_edge": 0.54,
-            "raw_conviction": 40,
+            "participation": 40,
+            "weighted_edge": 0.7,
+            "raw_conviction": 34,
             "agreement_boost": 0,
-            "base_conviction": 40,
+            "base_conviction": 34,
             "conflict_penalty": 0,
-            "final_conviction": 40,
-            "verdict_strength": "STRONG",
-            "participation_cap": 52,
-            "bearish_argument_pct": 23,
-            "bullish_argument_pct": 77,
+            "final_conviction": 34,
+            "verdict_strength": "MODERATE",
+            "participation_cap": 40,
+            "bearish_argument_pct": 15,
+            "bullish_argument_pct": 85,
             "missing_input_penalty": 0,
-            "final_conviction_logic": "current_month deterministic Gold score: bull case 77%, bear case 23%, directional participation 52%, neutral/inactive 48%, net edge +54. Real yields and DXY remain the highest-priority Gold drivers.",
-            "active_participation_pct": 52,
-            "directional_participation": 52,
-            "neutral_evidence_pct": 48,
-            "directional_participation_pct": 52,
-            "bull_case_weight": 40,
-            "bear_case_weight": 12,
-            "neutral_weight": 48,
+            "final_conviction_logic": "current_month deterministic Gold score: bull case 85%, bear case 15%, directional participation 40%, neutral/inactive 60%, net edge +70. Real yields and DXY remain the highest-priority Gold drivers.",
+            "active_participation_pct": 40,
+            "directional_participation": 40,
+            "neutral_evidence_pct": 60,
+            "directional_participation_pct": 40,
+            "bull_case_weight": 34,
+            "bear_case_weight": 6,
+            "neutral_weight": 60,
             "weighted_score": {
-              "bullish_weight": 40,
-              "bearish_weight": 12,
-              "neutral_weight": 48,
-              "active_weight": 52,
+              "bullish_weight": 34,
+              "bearish_weight": 6,
+              "neutral_weight": 60,
+              "active_weight": 40,
               "weight_margin": 28
             },
-            "alignment": 77
+            "alignment": 85
           },
           "weighted_score": {
-            "active_weight": 52,
+            "active_weight": 40,
             "weight_margin": 28,
-            "bearish_weight": 12,
-            "bullish_weight": 40,
-            "neutral_weight": 48
+            "bearish_weight": 6,
+            "bullish_weight": 34,
+            "neutral_weight": 60
           },
           "factor_breakdown": {
             "F1": {
@@ -4829,10 +4828,10 @@
               "evidence": "DXY -2.193429734778665%"
             },
             "F3": {
-              "reason": "No clear Fed impulse",
+              "reason": "Missing input",
               "signal": "NEUTRAL",
               "weight": 18,
-              "evidence": "Fed bias neutral"
+              "evidence": "Fed bias unknown"
             },
             "F4": {
               "reason": "US 2Y move below threshold",
@@ -4841,10 +4840,10 @@
               "evidence": "US 2Y -3.000000000000025bps"
             },
             "F5": {
-              "reason": "Gold own-price trend confirms upside pressure",
-              "signal": "BULLISH",
+              "reason": "Gold price move below threshold",
+              "signal": "NEUTRAL",
               "weight": 6,
-              "evidence": "Gold 4.148468705430726%"
+              "evidence": "Gold 0%"
             },
             "F6": {
               "reason": "Risk-on conditions reduce defensive Gold demand",
@@ -4871,10 +4870,10 @@
               "evidence": "normal"
             },
             "F10": {
-              "reason": "Supportive growth reduces defensive Gold demand and can lift yields",
-              "signal": "BEARISH",
+              "reason": "No clear growth or liquidity signal",
+              "signal": "NEUTRAL",
               "weight": 6,
-              "evidence": "liquidity_expansion"
+              "evidence": "neutral"
             }
           }
         }
@@ -4883,49 +4882,49 @@
       "priority_call": {
         "direction": "BULLISH_LEAN",
         "conviction": 32,
-        "reason": "24h deterministic Gold score: bull case 78%, bear case 22%, directional participation 41%, neutral/inactive 59%, net edge +56. Real yields and DXY remain the highest-priority Gold drivers.",
+        "reason": "24h deterministic Gold score: bull case 80%, bear case 20%, directional participation 40%, neutral/inactive 60%, net edge +60. Real yields and DXY remain the highest-priority Gold drivers.",
         "conviction_model": {
-          "net_edge": 56,
-          "bear_case": 22,
-          "bull_case": 78,
-          "neutral_pct": 59,
-          "net_edge_pct": 56,
+          "net_edge": 60,
+          "bear_case": 20,
+          "bull_case": 80,
+          "neutral_pct": 60,
+          "net_edge_pct": 60,
           "winning_side": "BULLISH",
-          "participation": 41,
-          "weighted_edge": 0.56,
+          "participation": 40,
+          "weighted_edge": 0.6,
           "raw_conviction": 32,
           "agreement_boost": 0,
           "base_conviction": 32,
           "conflict_penalty": 0,
           "final_conviction": 32,
           "verdict_strength": "MODERATE",
-          "participation_cap": 41,
-          "bearish_argument_pct": 22,
-          "bullish_argument_pct": 78,
+          "participation_cap": 40,
+          "bearish_argument_pct": 20,
+          "bullish_argument_pct": 80,
           "missing_input_penalty": 0,
-          "final_conviction_logic": "24h deterministic Gold score: bull case 78%, bear case 22%, directional participation 41%, neutral/inactive 59%, net edge +56. Real yields and DXY remain the highest-priority Gold drivers.",
-          "active_participation_pct": 41,
-          "directional_participation": 41,
-          "neutral_evidence_pct": 59,
-          "directional_participation_pct": 41,
+          "final_conviction_logic": "24h deterministic Gold score: bull case 80%, bear case 20%, directional participation 40%, neutral/inactive 60%, net edge +60. Real yields and DXY remain the highest-priority Gold drivers.",
+          "active_participation_pct": 40,
+          "directional_participation": 40,
+          "neutral_evidence_pct": 60,
+          "directional_participation_pct": 40,
           "bull_case_weight": 32,
-          "bear_case_weight": 9,
-          "neutral_weight": 59,
+          "bear_case_weight": 8,
+          "neutral_weight": 60,
           "weighted_score": {
             "bullish_weight": 32,
-            "bearish_weight": 9,
-            "neutral_weight": 59,
-            "active_weight": 41,
-            "weight_margin": 23
+            "bearish_weight": 8,
+            "neutral_weight": 60,
+            "active_weight": 40,
+            "weight_margin": 24
           },
-          "alignment": 78
+          "alignment": 80
         },
         "weighted_score": {
-          "active_weight": 41,
-          "weight_margin": 23,
-          "bearish_weight": 9,
+          "active_weight": 40,
+          "weight_margin": 24,
+          "bearish_weight": 8,
           "bullish_weight": 32,
-          "neutral_weight": 59
+          "neutral_weight": 60
         },
         "factor_breakdown": {
           "F1": {
@@ -4941,10 +4940,10 @@
             "evidence": "DXY -0.1623612741301049%"
           },
           "F3": {
-            "reason": "No clear Fed impulse",
+            "reason": "Missing input",
             "signal": "NEUTRAL",
             "weight": 12,
-            "evidence": "Fed bias neutral"
+            "evidence": "Fed bias unknown"
           },
           "F4": {
             "reason": "US 2Y move below threshold",
@@ -4956,7 +4955,7 @@
             "reason": "Gold own-price trend confirms upside pressure",
             "signal": "BULLISH",
             "weight": 10,
-            "evidence": "Gold 4.148468705430726%"
+            "evidence": "Gold 4.183648525522788%"
           },
           "F6": {
             "reason": "Risk-on conditions reduce defensive Gold demand",
@@ -4983,21 +4982,21 @@
             "evidence": "normal"
           },
           "F10": {
-            "reason": "Supportive growth reduces defensive Gold demand and can lift yields",
-            "signal": "BEARISH",
+            "reason": "No clear growth or liquidity signal",
+            "signal": "NEUTRAL",
             "weight": 1,
-            "evidence": "liquidity_expansion"
+            "evidence": "neutral"
           }
         },
-        "generated_at": "2026-08-31T13:29:16.807+00:00",
-        "sealed_at": "2026-08-31T13:29:47.3613+00:00",
-        "valid_from": "2026-08-31T13:29:47.3613+00:00",
+        "generated_at": "2026-08-31T13:31:59.158+00:00",
+        "sealed_at": "2026-08-31T13:32:20.263406+00:00",
+        "valid_from": "2026-08-31T13:32:20.263406+00:00",
         "refresh_due_at": "2026-09-01T11:00:00.000Z",
-        "forecast_window_end": "2026-09-01T13:29:47.361Z",
-        "expires_at": "2026-09-01T13:29:47.361Z",
+        "forecast_window_end": "2026-09-01T13:32:20.263Z",
+        "expires_at": "2026-09-01T13:32:20.263Z",
         "status_at_build": "ACTIVE",
         "effective_status": "ACTIVE",
-        "status_resolved_at": "2026-08-31T13:30:50.772Z",
+        "status_resolved_at": "2026-08-31T13:33:16.896Z",
         "horizon_code": "24H",
         "horizon_duration": "PT24H",
         "horizon_basis": "WEEKDAY_ACTIVE_TIME_V1",
@@ -5021,10 +5020,10 @@
           "evidence": "DXY -0.1623612741301049%"
         },
         "F3": {
-          "reason": "No clear Fed impulse",
+          "reason": "Missing input",
           "signal": "NEUTRAL",
           "weight": 12,
-          "evidence": "Fed bias neutral"
+          "evidence": "Fed bias unknown"
         },
         "F4": {
           "reason": "US 2Y move below threshold",
@@ -5036,7 +5035,7 @@
           "reason": "Gold own-price trend confirms upside pressure",
           "signal": "BULLISH",
           "weight": 10,
-          "evidence": "Gold 4.148468705430726%"
+          "evidence": "Gold 4.183648525522788%"
         },
         "F6": {
           "reason": "Risk-on conditions reduce defensive Gold demand",
@@ -5063,105 +5062,105 @@
           "evidence": "normal"
         },
         "F10": {
-          "reason": "Supportive growth reduces defensive Gold demand and can lift yields",
-          "signal": "BEARISH",
+          "reason": "No clear growth or liquidity signal",
+          "signal": "NEUTRAL",
           "weight": 1,
-          "evidence": "liquidity_expansion"
+          "evidence": "neutral"
         }
       },
       "key_factors": [
         "F1 [26]: NEUTRAL - Real yield -1.000000000000023bps (Real yield move below threshold)",
         "F2 [22]: BULLISH - DXY -0.1623612741301049% (Dollar weakness supports Gold)",
-        "F3 [12]: NEUTRAL - Fed bias neutral (No clear Fed impulse)",
+        "F3 [12]: NEUTRAL - Fed bias unknown (Missing input)",
         "F4 [10]: NEUTRAL - US 2Y 0.9999999999999787bps (US 2Y move below threshold)",
-        "F5 [10]: BULLISH - Gold 4.148468705430726% (Gold own-price trend confirms upside pressure)",
+        "F5 [10]: BULLISH - Gold 4.183648525522788% (Gold own-price trend confirms upside pressure)",
         "F6 [8]: BEARISH - VIX 14.51 (Risk-on conditions reduce defensive Gold demand)",
         "F7 [8]: NEUTRAL - No recent US event (No confirmed US economic surprise)",
         "F8 [2]: NEUTRAL - Inflation signal unavailable (Collector does not currently provide a top-level inflation_signal column)",
         "F9 [1]: NEUTRAL - normal (No active safe-haven demand signal)",
-        "F10 [1]: BEARISH - liquidity_expansion (Supportive growth reduces defensive Gold demand and can lift yields)"
+        "F10 [1]: NEUTRAL - neutral (No clear growth or liquidity signal)"
       ],
       "warnings": [],
-      "reasoning_summary": "GOLD weighted verdicts calculated deterministically by timeframe. 24h BULLISH_LEAN 32%, 3d BULLISH_LEAN 28%, current week BULLISH_LEAN 26%, next week BULLISH 42%, current month BULLISH 40%.",
+      "reasoning_summary": "GOLD weighted verdicts calculated deterministically by timeframe. 24h BULLISH_LEAN 32%, 3d BULLISH_LEAN 20%, current week BULLISH_LEAN 18%, next week BULLISH_LEAN 36%, current month BULLISH_LEAN 34%.",
       "score_bullish": 2,
-      "score_bearish": 2,
-      "score_neutral": 6,
+      "score_bearish": 1,
+      "score_neutral": 7,
       "non_neutral_count": null,
       "logic_document": "agent_gold_direction.md",
       "logic_document_version": "2.0_weighted_engine",
       "conviction_model": {
-        "net_edge": 56,
-        "bear_case": 22,
-        "bull_case": 78,
-        "neutral_pct": 59,
-        "net_edge_pct": 56,
+        "net_edge": 60,
+        "bear_case": 20,
+        "bull_case": 80,
+        "neutral_pct": 60,
+        "net_edge_pct": 60,
         "winning_side": "BULLISH",
-        "participation": 41,
-        "weighted_edge": 0.56,
+        "participation": 40,
+        "weighted_edge": 0.6,
         "raw_conviction": 32,
         "agreement_boost": 0,
         "base_conviction": 32,
         "conflict_penalty": 0,
         "final_conviction": 32,
         "verdict_strength": "MODERATE",
-        "participation_cap": 41,
-        "bearish_argument_pct": 22,
-        "bullish_argument_pct": 78,
+        "participation_cap": 40,
+        "bearish_argument_pct": 20,
+        "bullish_argument_pct": 80,
         "missing_input_penalty": 0,
-        "final_conviction_logic": "24h deterministic Gold score: bull case 78%, bear case 22%, directional participation 41%, neutral/inactive 59%, net edge +56. Real yields and DXY remain the highest-priority Gold drivers.",
-        "active_participation_pct": 41,
-        "directional_participation": 41,
-        "neutral_evidence_pct": 59,
-        "directional_participation_pct": 41,
+        "final_conviction_logic": "24h deterministic Gold score: bull case 80%, bear case 20%, directional participation 40%, neutral/inactive 60%, net edge +60. Real yields and DXY remain the highest-priority Gold drivers.",
+        "active_participation_pct": 40,
+        "directional_participation": 40,
+        "neutral_evidence_pct": 60,
+        "directional_participation_pct": 40,
         "bull_case_weight": 32,
-        "bear_case_weight": 9,
-        "neutral_weight": 59,
+        "bear_case_weight": 8,
+        "neutral_weight": 60,
         "weighted_score": {
           "bullish_weight": 32,
-          "bearish_weight": 9,
-          "neutral_weight": 59,
-          "active_weight": 41,
-          "weight_margin": 23
+          "bearish_weight": 8,
+          "neutral_weight": 60,
+          "active_weight": 40,
+          "weight_margin": 24
         },
-        "alignment": 78
+        "alignment": 80
       },
       "timeframe_models": {
         "3d": {
-          "reason": "3d deterministic Gold score: bull case 72%, bear case 28%, directional participation 39%, neutral/inactive 61%, net edge +44. Real yields and DXY remain the highest-priority Gold drivers.",
+          "reason": "3d deterministic Gold score: bull case 67%, bear case 33%, directional participation 30%, neutral/inactive 70%, net edge +34. Real yields and DXY remain the highest-priority Gold drivers.",
           "direction": "BULLISH_LEAN",
-          "conviction": 28,
-          "score_bearish": 2,
-          "score_bullish": 2,
-          "score_neutral": 6,
+          "conviction": 20,
+          "score_bearish": 1,
+          "score_bullish": 1,
+          "score_neutral": 8,
           "weighted_score": {
-            "active_weight": 39,
-            "weight_margin": 17,
-            "bearish_weight": 11,
-            "bullish_weight": 28,
-            "neutral_weight": 61
+            "active_weight": 30,
+            "weight_margin": 10,
+            "bearish_weight": 10,
+            "bullish_weight": 20,
+            "neutral_weight": 70
           },
           "conviction_model": {
-            "net_edge": 44,
-            "bear_case": 28,
-            "bull_case": 72,
-            "neutral_pct": 61,
-            "net_edge_pct": 44,
+            "net_edge": 34,
+            "bear_case": 33,
+            "bull_case": 67,
+            "neutral_pct": 70,
+            "net_edge_pct": 34,
             "winning_side": "BULLISH",
-            "participation": 39,
-            "weighted_edge": 0.44,
-            "raw_conviction": 28,
+            "participation": 30,
+            "weighted_edge": 0.34,
+            "raw_conviction": 20,
             "agreement_boost": 0,
-            "base_conviction": 28,
+            "base_conviction": 20,
             "conflict_penalty": 0,
-            "final_conviction": 28,
+            "final_conviction": 20,
             "verdict_strength": "MODERATE",
-            "participation_cap": 39,
-            "bearish_argument_pct": 28,
-            "bullish_argument_pct": 72,
+            "participation_cap": 30,
+            "bearish_argument_pct": 33,
+            "bullish_argument_pct": 67,
             "missing_input_penalty": 0,
-            "final_conviction_logic": "3d deterministic Gold score: bull case 72%, bear case 28%, directional participation 39%, neutral/inactive 61%, net edge +44. Real yields and DXY remain the highest-priority Gold drivers.",
-            "active_participation_pct": 39,
-            "directional_participation": 39
+            "final_conviction_logic": "3d deterministic Gold score: bull case 67%, bear case 33%, directional participation 30%, neutral/inactive 70%, net edge +34. Real yields and DXY remain the highest-priority Gold drivers.",
+            "active_participation_pct": 30,
+            "directional_participation": 30
           },
           "factor_breakdown": {
             "F1": {
@@ -5177,10 +5176,10 @@
               "evidence": "DXY -0.7064593937232794%"
             },
             "F3": {
-              "reason": "No clear Fed impulse",
+              "reason": "Missing input",
               "signal": "NEUTRAL",
               "weight": 14,
-              "evidence": "Fed bias neutral"
+              "evidence": "Fed bias unknown"
             },
             "F4": {
               "reason": "US 2Y move below threshold",
@@ -5189,10 +5188,10 @@
               "evidence": "US 2Y 0.9999999999999787bps"
             },
             "F5": {
-              "reason": "Gold own-price trend confirms upside pressure",
-              "signal": "BULLISH",
+              "reason": "Gold price move below threshold",
+              "signal": "NEUTRAL",
               "weight": 8,
-              "evidence": "Gold 4.148468705430726%"
+              "evidence": "Gold 0%"
             },
             "F6": {
               "reason": "Risk-on conditions reduce defensive Gold demand",
@@ -5219,49 +5218,49 @@
               "evidence": "normal"
             },
             "F10": {
-              "reason": "Supportive growth reduces defensive Gold demand and can lift yields",
-              "signal": "BEARISH",
+              "reason": "No clear growth or liquidity signal",
+              "signal": "NEUTRAL",
               "weight": 1,
-              "evidence": "liquidity_expansion"
+              "evidence": "neutral"
             }
           }
         },
         "24h": {
-          "reason": "24h deterministic Gold score: bull case 78%, bear case 22%, directional participation 41%, neutral/inactive 59%, net edge +56. Real yields and DXY remain the highest-priority Gold drivers.",
+          "reason": "24h deterministic Gold score: bull case 80%, bear case 20%, directional participation 40%, neutral/inactive 60%, net edge +60. Real yields and DXY remain the highest-priority Gold drivers.",
           "direction": "BULLISH_LEAN",
           "conviction": 32,
-          "score_bearish": 2,
+          "score_bearish": 1,
           "score_bullish": 2,
-          "score_neutral": 6,
+          "score_neutral": 7,
           "weighted_score": {
-            "active_weight": 41,
-            "weight_margin": 23,
-            "bearish_weight": 9,
+            "active_weight": 40,
+            "weight_margin": 24,
+            "bearish_weight": 8,
             "bullish_weight": 32,
-            "neutral_weight": 59
+            "neutral_weight": 60
           },
           "conviction_model": {
-            "net_edge": 56,
-            "bear_case": 22,
-            "bull_case": 78,
-            "neutral_pct": 59,
-            "net_edge_pct": 56,
+            "net_edge": 60,
+            "bear_case": 20,
+            "bull_case": 80,
+            "neutral_pct": 60,
+            "net_edge_pct": 60,
             "winning_side": "BULLISH",
-            "participation": 41,
-            "weighted_edge": 0.56,
+            "participation": 40,
+            "weighted_edge": 0.6,
             "raw_conviction": 32,
             "agreement_boost": 0,
             "base_conviction": 32,
             "conflict_penalty": 0,
             "final_conviction": 32,
             "verdict_strength": "MODERATE",
-            "participation_cap": 41,
-            "bearish_argument_pct": 22,
-            "bullish_argument_pct": 78,
+            "participation_cap": 40,
+            "bearish_argument_pct": 20,
+            "bullish_argument_pct": 80,
             "missing_input_penalty": 0,
-            "final_conviction_logic": "24h deterministic Gold score: bull case 78%, bear case 22%, directional participation 41%, neutral/inactive 59%, net edge +56. Real yields and DXY remain the highest-priority Gold drivers.",
-            "active_participation_pct": 41,
-            "directional_participation": 41
+            "final_conviction_logic": "24h deterministic Gold score: bull case 80%, bear case 20%, directional participation 40%, neutral/inactive 60%, net edge +60. Real yields and DXY remain the highest-priority Gold drivers.",
+            "active_participation_pct": 40,
+            "directional_participation": 40
           },
           "factor_breakdown": {
             "F1": {
@@ -5277,10 +5276,10 @@
               "evidence": "DXY -0.1623612741301049%"
             },
             "F3": {
-              "reason": "No clear Fed impulse",
+              "reason": "Missing input",
               "signal": "NEUTRAL",
               "weight": 12,
-              "evidence": "Fed bias neutral"
+              "evidence": "Fed bias unknown"
             },
             "F4": {
               "reason": "US 2Y move below threshold",
@@ -5292,7 +5291,7 @@
               "reason": "Gold own-price trend confirms upside pressure",
               "signal": "BULLISH",
               "weight": 10,
-              "evidence": "Gold 4.148468705430726%"
+              "evidence": "Gold 4.183648525522788%"
             },
             "F6": {
               "reason": "Risk-on conditions reduce defensive Gold demand",
@@ -5319,49 +5318,49 @@
               "evidence": "normal"
             },
             "F10": {
-              "reason": "Supportive growth reduces defensive Gold demand and can lift yields",
-              "signal": "BEARISH",
+              "reason": "No clear growth or liquidity signal",
+              "signal": "NEUTRAL",
               "weight": 1,
-              "evidence": "liquidity_expansion"
+              "evidence": "neutral"
             }
           }
         },
         "next_week": {
-          "reason": "next_week deterministic Gold score: bull case 78%, bear case 22%, directional participation 54%, neutral/inactive 46%, net edge +56. Real yields and DXY remain the highest-priority Gold drivers.",
-          "direction": "BULLISH",
-          "conviction": 42,
-          "score_bearish": 2,
-          "score_bullish": 3,
-          "score_neutral": 5,
+          "reason": "next_week deterministic Gold score: bull case 82%, bear case 18%, directional participation 44%, neutral/inactive 56%, net edge +64. Real yields and DXY remain the highest-priority Gold drivers.",
+          "direction": "BULLISH_LEAN",
+          "conviction": 36,
+          "score_bearish": 1,
+          "score_bullish": 2,
+          "score_neutral": 7,
           "weighted_score": {
-            "active_weight": 54,
-            "weight_margin": 30,
-            "bearish_weight": 12,
-            "bullish_weight": 42,
-            "neutral_weight": 46
+            "active_weight": 44,
+            "weight_margin": 28,
+            "bearish_weight": 8,
+            "bullish_weight": 36,
+            "neutral_weight": 56
           },
           "conviction_model": {
-            "net_edge": 56,
-            "bear_case": 22,
-            "bull_case": 78,
-            "neutral_pct": 46,
-            "net_edge_pct": 56,
+            "net_edge": 64,
+            "bear_case": 18,
+            "bull_case": 82,
+            "neutral_pct": 56,
+            "net_edge_pct": 64,
             "winning_side": "BULLISH",
-            "participation": 54,
-            "weighted_edge": 0.56,
-            "raw_conviction": 42,
+            "participation": 44,
+            "weighted_edge": 0.64,
+            "raw_conviction": 36,
             "agreement_boost": 0,
-            "base_conviction": 42,
+            "base_conviction": 36,
             "conflict_penalty": 0,
-            "final_conviction": 42,
-            "verdict_strength": "STRONG",
-            "participation_cap": 54,
-            "bearish_argument_pct": 22,
-            "bullish_argument_pct": 78,
+            "final_conviction": 36,
+            "verdict_strength": "MODERATE",
+            "participation_cap": 44,
+            "bearish_argument_pct": 18,
+            "bullish_argument_pct": 82,
             "missing_input_penalty": 0,
-            "final_conviction_logic": "next_week deterministic Gold score: bull case 78%, bear case 22%, directional participation 54%, neutral/inactive 46%, net edge +56. Real yields and DXY remain the highest-priority Gold drivers.",
-            "active_participation_pct": 54,
-            "directional_participation": 54
+            "final_conviction_logic": "next_week deterministic Gold score: bull case 82%, bear case 18%, directional participation 44%, neutral/inactive 56%, net edge +64. Real yields and DXY remain the highest-priority Gold drivers.",
+            "active_participation_pct": 44,
+            "directional_participation": 44
           },
           "factor_breakdown": {
             "F1": {
@@ -5377,10 +5376,10 @@
               "evidence": "DXY -2.193429734778665%"
             },
             "F3": {
-              "reason": "No clear Fed impulse",
+              "reason": "Missing input",
               "signal": "NEUTRAL",
               "weight": 18,
-              "evidence": "Fed bias neutral"
+              "evidence": "Fed bias unknown"
             },
             "F4": {
               "reason": "US 2Y move below threshold",
@@ -5389,10 +5388,10 @@
               "evidence": "US 2Y -3.000000000000025bps"
             },
             "F5": {
-              "reason": "Gold own-price trend confirms upside pressure",
-              "signal": "BULLISH",
+              "reason": "Gold price move below threshold",
+              "signal": "NEUTRAL",
               "weight": 6,
-              "evidence": "Gold 4.148468705430726%"
+              "evidence": "Gold 0%"
             },
             "F6": {
               "reason": "Risk-on conditions reduce defensive Gold demand",
@@ -5419,49 +5418,49 @@
               "evidence": "normal"
             },
             "F10": {
-              "reason": "Supportive growth reduces defensive Gold demand and can lift yields",
-              "signal": "BEARISH",
+              "reason": "No clear growth or liquidity signal",
+              "signal": "NEUTRAL",
               "weight": 4,
-              "evidence": "liquidity_expansion"
+              "evidence": "neutral"
             }
           }
         },
         "current_week": {
-          "reason": "current_week deterministic Gold score: bull case 68%, bear case 32%, directional participation 38%, neutral/inactive 62%, net edge +36. Real yields and DXY remain the highest-priority Gold drivers.",
+          "reason": "current_week deterministic Gold score: bull case 64%, bear case 36%, directional participation 28%, neutral/inactive 72%, net edge +28. Real yields and DXY remain the highest-priority Gold drivers.",
           "direction": "BULLISH_LEAN",
-          "conviction": 26,
-          "score_bearish": 2,
-          "score_bullish": 2,
-          "score_neutral": 6,
+          "conviction": 18,
+          "score_bearish": 1,
+          "score_bullish": 1,
+          "score_neutral": 8,
           "weighted_score": {
-            "active_weight": 38,
-            "weight_margin": 14,
-            "bearish_weight": 12,
-            "bullish_weight": 26,
-            "neutral_weight": 62
+            "active_weight": 28,
+            "weight_margin": 8,
+            "bearish_weight": 10,
+            "bullish_weight": 18,
+            "neutral_weight": 72
           },
           "conviction_model": {
-            "net_edge": 36,
-            "bear_case": 32,
-            "bull_case": 68,
-            "neutral_pct": 62,
-            "net_edge_pct": 36,
+            "net_edge": 28,
+            "bear_case": 36,
+            "bull_case": 64,
+            "neutral_pct": 72,
+            "net_edge_pct": 28,
             "winning_side": "BULLISH",
-            "participation": 38,
-            "weighted_edge": 0.36,
-            "raw_conviction": 26,
+            "participation": 28,
+            "weighted_edge": 0.28,
+            "raw_conviction": 18,
             "agreement_boost": 0,
-            "base_conviction": 26,
+            "base_conviction": 18,
             "conflict_penalty": 0,
-            "final_conviction": 26,
+            "final_conviction": 18,
             "verdict_strength": "MODERATE",
-            "participation_cap": 38,
-            "bearish_argument_pct": 32,
-            "bullish_argument_pct": 68,
+            "participation_cap": 28,
+            "bearish_argument_pct": 36,
+            "bullish_argument_pct": 64,
             "missing_input_penalty": 0,
-            "final_conviction_logic": "current_week deterministic Gold score: bull case 68%, bear case 32%, directional participation 38%, neutral/inactive 62%, net edge +36. Real yields and DXY remain the highest-priority Gold drivers.",
-            "active_participation_pct": 38,
-            "directional_participation": 38
+            "final_conviction_logic": "current_week deterministic Gold score: bull case 64%, bear case 36%, directional participation 28%, neutral/inactive 72%, net edge +28. Real yields and DXY remain the highest-priority Gold drivers.",
+            "active_participation_pct": 28,
+            "directional_participation": 28
           },
           "factor_breakdown": {
             "F1": {
@@ -5477,10 +5476,10 @@
               "evidence": "DXY -0.7064593937232794%"
             },
             "F3": {
-              "reason": "No clear Fed impulse",
+              "reason": "Missing input",
               "signal": "NEUTRAL",
               "weight": 16,
-              "evidence": "Fed bias neutral"
+              "evidence": "Fed bias unknown"
             },
             "F4": {
               "reason": "US 2Y move below threshold",
@@ -5489,10 +5488,10 @@
               "evidence": "US 2Y 0.9999999999999787bps"
             },
             "F5": {
-              "reason": "Gold own-price trend confirms upside pressure",
-              "signal": "BULLISH",
+              "reason": "Gold price move below threshold",
+              "signal": "NEUTRAL",
               "weight": 8,
-              "evidence": "Gold 4.148468705430726%"
+              "evidence": "Gold 0%"
             },
             "F6": {
               "reason": "Risk-on conditions reduce defensive Gold demand",
@@ -5519,49 +5518,49 @@
               "evidence": "normal"
             },
             "F10": {
-              "reason": "Supportive growth reduces defensive Gold demand and can lift yields",
-              "signal": "BEARISH",
+              "reason": "No clear growth or liquidity signal",
+              "signal": "NEUTRAL",
               "weight": 2,
-              "evidence": "liquidity_expansion"
+              "evidence": "neutral"
             }
           }
         },
         "current_month": {
-          "reason": "current_month deterministic Gold score: bull case 77%, bear case 23%, directional participation 52%, neutral/inactive 48%, net edge +54. Real yields and DXY remain the highest-priority Gold drivers.",
-          "direction": "BULLISH",
-          "conviction": 40,
-          "score_bearish": 2,
-          "score_bullish": 3,
-          "score_neutral": 5,
+          "reason": "current_month deterministic Gold score: bull case 85%, bear case 15%, directional participation 40%, neutral/inactive 60%, net edge +70. Real yields and DXY remain the highest-priority Gold drivers.",
+          "direction": "BULLISH_LEAN",
+          "conviction": 34,
+          "score_bearish": 1,
+          "score_bullish": 2,
+          "score_neutral": 7,
           "weighted_score": {
-            "active_weight": 52,
+            "active_weight": 40,
             "weight_margin": 28,
-            "bearish_weight": 12,
-            "bullish_weight": 40,
-            "neutral_weight": 48
+            "bearish_weight": 6,
+            "bullish_weight": 34,
+            "neutral_weight": 60
           },
           "conviction_model": {
-            "net_edge": 54,
-            "bear_case": 23,
-            "bull_case": 77,
-            "neutral_pct": 48,
-            "net_edge_pct": 54,
+            "net_edge": 70,
+            "bear_case": 15,
+            "bull_case": 85,
+            "neutral_pct": 60,
+            "net_edge_pct": 70,
             "winning_side": "BULLISH",
-            "participation": 52,
-            "weighted_edge": 0.54,
-            "raw_conviction": 40,
+            "participation": 40,
+            "weighted_edge": 0.7,
+            "raw_conviction": 34,
             "agreement_boost": 0,
-            "base_conviction": 40,
+            "base_conviction": 34,
             "conflict_penalty": 0,
-            "final_conviction": 40,
-            "verdict_strength": "STRONG",
-            "participation_cap": 52,
-            "bearish_argument_pct": 23,
-            "bullish_argument_pct": 77,
+            "final_conviction": 34,
+            "verdict_strength": "MODERATE",
+            "participation_cap": 40,
+            "bearish_argument_pct": 15,
+            "bullish_argument_pct": 85,
             "missing_input_penalty": 0,
-            "final_conviction_logic": "current_month deterministic Gold score: bull case 77%, bear case 23%, directional participation 52%, neutral/inactive 48%, net edge +54. Real yields and DXY remain the highest-priority Gold drivers.",
-            "active_participation_pct": 52,
-            "directional_participation": 52
+            "final_conviction_logic": "current_month deterministic Gold score: bull case 85%, bear case 15%, directional participation 40%, neutral/inactive 60%, net edge +70. Real yields and DXY remain the highest-priority Gold drivers.",
+            "active_participation_pct": 40,
+            "directional_participation": 40
           },
           "factor_breakdown": {
             "F1": {
@@ -5577,10 +5576,10 @@
               "evidence": "DXY -2.193429734778665%"
             },
             "F3": {
-              "reason": "No clear Fed impulse",
+              "reason": "Missing input",
               "signal": "NEUTRAL",
               "weight": 18,
-              "evidence": "Fed bias neutral"
+              "evidence": "Fed bias unknown"
             },
             "F4": {
               "reason": "US 2Y move below threshold",
@@ -5589,10 +5588,10 @@
               "evidence": "US 2Y -3.000000000000025bps"
             },
             "F5": {
-              "reason": "Gold own-price trend confirms upside pressure",
-              "signal": "BULLISH",
+              "reason": "Gold price move below threshold",
+              "signal": "NEUTRAL",
               "weight": 6,
-              "evidence": "Gold 4.148468705430726%"
+              "evidence": "Gold 0%"
             },
             "F6": {
               "reason": "Risk-on conditions reduce defensive Gold demand",
@@ -5619,73 +5618,77 @@
               "evidence": "normal"
             },
             "F10": {
-              "reason": "Supportive growth reduces defensive Gold demand and can lift yields",
-              "signal": "BEARISH",
+              "reason": "No clear growth or liquidity signal",
+              "signal": "NEUTRAL",
               "weight": 6,
-              "evidence": "liquidity_expansion"
+              "evidence": "neutral"
             }
           }
         }
       },
       "display_metrics": {
-        "bull_case": 78,
-        "bear_case": 22,
+        "bull_case": 80,
+        "bear_case": 20,
         "winning_side": "BULLISH",
         "conviction": 32,
-        "net_edge": 56,
-        "directional_participation": 41,
-        "neutral": 59,
+        "net_edge": 60,
+        "directional_participation": 40,
+        "neutral": 60,
         "verdict_strength": "MODERATE",
         "bull_case_weight": 32,
-        "bear_case_weight": 9
+        "bear_case_weight": 8
       },
       "full_output": {
         "asset": "GOLD",
         "layer": "layer_1_raw",
         "agent_name": "GOLD",
-        "reason_24h": "24h deterministic Gold score: bull case 78%, bear case 22%, directional participation 41%, neutral/inactive 59%, net edge +56. Real yields and DXY remain the highest-priority Gold drivers.",
+        "reason_24h": "24h deterministic Gold score: bull case 80%, bear case 20%, directional participation 40%, neutral/inactive 60%, net edge +60. Real yields and DXY remain the highest-priority Gold drivers.",
         "risk_flags": [],
-        "reason_3_day": "3d deterministic Gold score: bull case 72%, bear case 28%, directional participation 39%, neutral/inactive 61%, net edge +44. Real yields and DXY remain the highest-priority Gold drivers.",
+        "reason_3_day": "3d deterministic Gold score: bull case 67%, bear case 33%, directional participation 30%, neutral/inactive 70%, net edge +34. Real yields and DXY remain the highest-priority Gold drivers.",
         "direction_24h": "BULLISH_LEAN",
-        "score_bearish": 2,
+        "score_bearish": 1,
         "score_bullish": 2,
-        "score_neutral": 6,
+        "score_neutral": 7,
         "conviction_24h": 32,
         "logic_document": "agent_gold_direction.md",
         "missing_inputs": [
-          "latest_us_event"
+          "gold_d5_pct",
+          "gold_d20_pct",
+          "latest_us_event",
+          "fed_bias",
+          "geopolitical_risk_flag"
         ],
         "weighted_score": {
-          "active_weight": 41,
-          "weight_margin": 23,
-          "bearish_weight": 9,
+          "active_weight": 40,
+          "weight_margin": 24,
+          "bearish_weight": 8,
           "bullish_weight": 32,
-          "neutral_weight": 59
+          "neutral_weight": 60
         },
         "direction_3_day": "BULLISH_LEAN",
-        "conviction_3_day": 28,
+        "conviction_3_day": 20,
         "conviction_model": {
-          "net_edge": 56,
-          "bear_case": 22,
-          "bull_case": 78,
-          "neutral_pct": 59,
-          "net_edge_pct": 56,
+          "net_edge": 60,
+          "bear_case": 20,
+          "bull_case": 80,
+          "neutral_pct": 60,
+          "net_edge_pct": 60,
           "winning_side": "BULLISH",
-          "participation": 41,
-          "weighted_edge": 0.56,
+          "participation": 40,
+          "weighted_edge": 0.6,
           "raw_conviction": 32,
           "agreement_boost": 0,
           "base_conviction": 32,
           "conflict_penalty": 0,
           "final_conviction": 32,
           "verdict_strength": "MODERATE",
-          "participation_cap": 41,
-          "bearish_argument_pct": 22,
-          "bullish_argument_pct": 78,
+          "participation_cap": 40,
+          "bearish_argument_pct": 20,
+          "bullish_argument_pct": 80,
           "missing_input_penalty": 0,
-          "final_conviction_logic": "24h deterministic Gold score: bull case 78%, bear case 22%, directional participation 41%, neutral/inactive 59%, net edge +56. Real yields and DXY remain the highest-priority Gold drivers.",
-          "active_participation_pct": 41,
-          "directional_participation": 41
+          "final_conviction_logic": "24h deterministic Gold score: bull case 80%, bear case 20%, directional participation 40%, neutral/inactive 60%, net edge +60. Real yields and DXY remain the highest-priority Gold drivers.",
+          "active_participation_pct": 40,
+          "directional_participation": 40
         },
         "factor_breakdown": {
           "F1": {
@@ -5701,10 +5704,10 @@
             "evidence": "DXY -0.1623612741301049%"
           },
           "F3": {
-            "reason": "No clear Fed impulse",
+            "reason": "Missing input",
             "signal": "NEUTRAL",
             "weight": 12,
-            "evidence": "Fed bias neutral"
+            "evidence": "Fed bias unknown"
           },
           "F4": {
             "reason": "US 2Y move below threshold",
@@ -5716,7 +5719,7 @@
             "reason": "Gold own-price trend confirms upside pressure",
             "signal": "BULLISH",
             "weight": 10,
-            "evidence": "Gold 4.148468705430726%"
+            "evidence": "Gold 4.183648525522788%"
           },
           "F6": {
             "reason": "Risk-on conditions reduce defensive Gold demand",
@@ -5743,50 +5746,50 @@
             "evidence": "normal"
           },
           "F10": {
-            "reason": "Supportive growth reduces defensive Gold demand and can lift yields",
-            "signal": "BEARISH",
+            "reason": "No clear growth or liquidity signal",
+            "signal": "NEUTRAL",
             "weight": 1,
-            "evidence": "liquidity_expansion"
+            "evidence": "neutral"
           }
         },
-        "reason_next_week": "next_week deterministic Gold score: bull case 78%, bear case 22%, directional participation 54%, neutral/inactive 46%, net edge +56. Real yields and DXY remain the highest-priority Gold drivers.",
+        "reason_next_week": "next_week deterministic Gold score: bull case 82%, bear case 18%, directional participation 44%, neutral/inactive 56%, net edge +64. Real yields and DXY remain the highest-priority Gold drivers.",
         "timeframe_models": {
           "3d": {
-            "reason": "3d deterministic Gold score: bull case 72%, bear case 28%, directional participation 39%, neutral/inactive 61%, net edge +44. Real yields and DXY remain the highest-priority Gold drivers.",
+            "reason": "3d deterministic Gold score: bull case 67%, bear case 33%, directional participation 30%, neutral/inactive 70%, net edge +34. Real yields and DXY remain the highest-priority Gold drivers.",
             "direction": "BULLISH_LEAN",
-            "conviction": 28,
-            "score_bearish": 2,
-            "score_bullish": 2,
-            "score_neutral": 6,
+            "conviction": 20,
+            "score_bearish": 1,
+            "score_bullish": 1,
+            "score_neutral": 8,
             "weighted_score": {
-              "active_weight": 39,
-              "weight_margin": 17,
-              "bearish_weight": 11,
-              "bullish_weight": 28,
-              "neutral_weight": 61
+              "active_weight": 30,
+              "weight_margin": 10,
+              "bearish_weight": 10,
+              "bullish_weight": 20,
+              "neutral_weight": 70
             },
             "conviction_model": {
-              "net_edge": 44,
-              "bear_case": 28,
-              "bull_case": 72,
-              "neutral_pct": 61,
-              "net_edge_pct": 44,
+              "net_edge": 34,
+              "bear_case": 33,
+              "bull_case": 67,
+              "neutral_pct": 70,
+              "net_edge_pct": 34,
               "winning_side": "BULLISH",
-              "participation": 39,
-              "weighted_edge": 0.44,
-              "raw_conviction": 28,
+              "participation": 30,
+              "weighted_edge": 0.34,
+              "raw_conviction": 20,
               "agreement_boost": 0,
-              "base_conviction": 28,
+              "base_conviction": 20,
               "conflict_penalty": 0,
-              "final_conviction": 28,
+              "final_conviction": 20,
               "verdict_strength": "MODERATE",
-              "participation_cap": 39,
-              "bearish_argument_pct": 28,
-              "bullish_argument_pct": 72,
+              "participation_cap": 30,
+              "bearish_argument_pct": 33,
+              "bullish_argument_pct": 67,
               "missing_input_penalty": 0,
-              "final_conviction_logic": "3d deterministic Gold score: bull case 72%, bear case 28%, directional participation 39%, neutral/inactive 61%, net edge +44. Real yields and DXY remain the highest-priority Gold drivers.",
-              "active_participation_pct": 39,
-              "directional_participation": 39
+              "final_conviction_logic": "3d deterministic Gold score: bull case 67%, bear case 33%, directional participation 30%, neutral/inactive 70%, net edge +34. Real yields and DXY remain the highest-priority Gold drivers.",
+              "active_participation_pct": 30,
+              "directional_participation": 30
             },
             "factor_breakdown": {
               "F1": {
@@ -5802,10 +5805,10 @@
                 "evidence": "DXY -0.7064593937232794%"
               },
               "F3": {
-                "reason": "No clear Fed impulse",
+                "reason": "Missing input",
                 "signal": "NEUTRAL",
                 "weight": 14,
-                "evidence": "Fed bias neutral"
+                "evidence": "Fed bias unknown"
               },
               "F4": {
                 "reason": "US 2Y move below threshold",
@@ -5814,10 +5817,10 @@
                 "evidence": "US 2Y 0.9999999999999787bps"
               },
               "F5": {
-                "reason": "Gold own-price trend confirms upside pressure",
-                "signal": "BULLISH",
+                "reason": "Gold price move below threshold",
+                "signal": "NEUTRAL",
                 "weight": 8,
-                "evidence": "Gold 4.148468705430726%"
+                "evidence": "Gold 0%"
               },
               "F6": {
                 "reason": "Risk-on conditions reduce defensive Gold demand",
@@ -5844,49 +5847,49 @@
                 "evidence": "normal"
               },
               "F10": {
-                "reason": "Supportive growth reduces defensive Gold demand and can lift yields",
-                "signal": "BEARISH",
+                "reason": "No clear growth or liquidity signal",
+                "signal": "NEUTRAL",
                 "weight": 1,
-                "evidence": "liquidity_expansion"
+                "evidence": "neutral"
               }
             }
           },
           "24h": {
-            "reason": "24h deterministic Gold score: bull case 78%, bear case 22%, directional participation 41%, neutral/inactive 59%, net edge +56. Real yields and DXY remain the highest-priority Gold drivers.",
+            "reason": "24h deterministic Gold score: bull case 80%, bear case 20%, directional participation 40%, neutral/inactive 60%, net edge +60. Real yields and DXY remain the highest-priority Gold drivers.",
             "direction": "BULLISH_LEAN",
             "conviction": 32,
-            "score_bearish": 2,
+            "score_bearish": 1,
             "score_bullish": 2,
-            "score_neutral": 6,
+            "score_neutral": 7,
             "weighted_score": {
-              "active_weight": 41,
-              "weight_margin": 23,
-              "bearish_weight": 9,
+              "active_weight": 40,
+              "weight_margin": 24,
+              "bearish_weight": 8,
               "bullish_weight": 32,
-              "neutral_weight": 59
+              "neutral_weight": 60
             },
             "conviction_model": {
-              "net_edge": 56,
-              "bear_case": 22,
-              "bull_case": 78,
-              "neutral_pct": 59,
-              "net_edge_pct": 56,
+              "net_edge": 60,
+              "bear_case": 20,
+              "bull_case": 80,
+              "neutral_pct": 60,
+              "net_edge_pct": 60,
               "winning_side": "BULLISH",
-              "participation": 41,
-              "weighted_edge": 0.56,
+              "participation": 40,
+              "weighted_edge": 0.6,
               "raw_conviction": 32,
               "agreement_boost": 0,
               "base_conviction": 32,
               "conflict_penalty": 0,
               "final_conviction": 32,
               "verdict_strength": "MODERATE",
-              "participation_cap": 41,
-              "bearish_argument_pct": 22,
-              "bullish_argument_pct": 78,
+              "participation_cap": 40,
+              "bearish_argument_pct": 20,
+              "bullish_argument_pct": 80,
               "missing_input_penalty": 0,
-              "final_conviction_logic": "24h deterministic Gold score: bull case 78%, bear case 22%, directional participation 41%, neutral/inactive 59%, net edge +56. Real yields and DXY remain the highest-priority Gold drivers.",
-              "active_participation_pct": 41,
-              "directional_participation": 41
+              "final_conviction_logic": "24h deterministic Gold score: bull case 80%, bear case 20%, directional participation 40%, neutral/inactive 60%, net edge +60. Real yields and DXY remain the highest-priority Gold drivers.",
+              "active_participation_pct": 40,
+              "directional_participation": 40
             },
             "factor_breakdown": {
               "F1": {
@@ -5902,10 +5905,10 @@
                 "evidence": "DXY -0.1623612741301049%"
               },
               "F3": {
-                "reason": "No clear Fed impulse",
+                "reason": "Missing input",
                 "signal": "NEUTRAL",
                 "weight": 12,
-                "evidence": "Fed bias neutral"
+                "evidence": "Fed bias unknown"
               },
               "F4": {
                 "reason": "US 2Y move below threshold",
@@ -5917,7 +5920,7 @@
                 "reason": "Gold own-price trend confirms upside pressure",
                 "signal": "BULLISH",
                 "weight": 10,
-                "evidence": "Gold 4.148468705430726%"
+                "evidence": "Gold 4.183648525522788%"
               },
               "F6": {
                 "reason": "Risk-on conditions reduce defensive Gold demand",
@@ -5944,49 +5947,49 @@
                 "evidence": "normal"
               },
               "F10": {
-                "reason": "Supportive growth reduces defensive Gold demand and can lift yields",
-                "signal": "BEARISH",
+                "reason": "No clear growth or liquidity signal",
+                "signal": "NEUTRAL",
                 "weight": 1,
-                "evidence": "liquidity_expansion"
+                "evidence": "neutral"
               }
             }
           },
           "next_week": {
-            "reason": "next_week deterministic Gold score: bull case 78%, bear case 22%, directional participation 54%, neutral/inactive 46%, net edge +56. Real yields and DXY remain the highest-priority Gold drivers.",
-            "direction": "BULLISH",
-            "conviction": 42,
-            "score_bearish": 2,
-            "score_bullish": 3,
-            "score_neutral": 5,
+            "reason": "next_week deterministic Gold score: bull case 82%, bear case 18%, directional participation 44%, neutral/inactive 56%, net edge +64. Real yields and DXY remain the highest-priority Gold drivers.",
+            "direction": "BULLISH_LEAN",
+            "conviction": 36,
+            "score_bearish": 1,
+            "score_bullish": 2,
+            "score_neutral": 7,
             "weighted_score": {
-              "active_weight": 54,
-              "weight_margin": 30,
-              "bearish_weight": 12,
-              "bullish_weight": 42,
-              "neutral_weight": 46
+              "active_weight": 44,
+              "weight_margin": 28,
+              "bearish_weight": 8,
+              "bullish_weight": 36,
+              "neutral_weight": 56
             },
             "conviction_model": {
-              "net_edge": 56,
-              "bear_case": 22,
-              "bull_case": 78,
-              "neutral_pct": 46,
-              "net_edge_pct": 56,
+              "net_edge": 64,
+              "bear_case": 18,
+              "bull_case": 82,
+              "neutral_pct": 56,
+              "net_edge_pct": 64,
               "winning_side": "BULLISH",
-              "participation": 54,
-              "weighted_edge": 0.56,
-              "raw_conviction": 42,
+              "participation": 44,
+              "weighted_edge": 0.64,
+              "raw_conviction": 36,
               "agreement_boost": 0,
-              "base_conviction": 42,
+              "base_conviction": 36,
               "conflict_penalty": 0,
-              "final_conviction": 42,
-              "verdict_strength": "STRONG",
-              "participation_cap": 54,
-              "bearish_argument_pct": 22,
-              "bullish_argument_pct": 78,
+              "final_conviction": 36,
+              "verdict_strength": "MODERATE",
+              "participation_cap": 44,
+              "bearish_argument_pct": 18,
+              "bullish_argument_pct": 82,
               "missing_input_penalty": 0,
-              "final_conviction_logic": "next_week deterministic Gold score: bull case 78%, bear case 22%, directional participation 54%, neutral/inactive 46%, net edge +56. Real yields and DXY remain the highest-priority Gold drivers.",
-              "active_participation_pct": 54,
-              "directional_participation": 54
+              "final_conviction_logic": "next_week deterministic Gold score: bull case 82%, bear case 18%, directional participation 44%, neutral/inactive 56%, net edge +64. Real yields and DXY remain the highest-priority Gold drivers.",
+              "active_participation_pct": 44,
+              "directional_participation": 44
             },
             "factor_breakdown": {
               "F1": {
@@ -6002,10 +6005,10 @@
                 "evidence": "DXY -2.193429734778665%"
               },
               "F3": {
-                "reason": "No clear Fed impulse",
+                "reason": "Missing input",
                 "signal": "NEUTRAL",
                 "weight": 18,
-                "evidence": "Fed bias neutral"
+                "evidence": "Fed bias unknown"
               },
               "F4": {
                 "reason": "US 2Y move below threshold",
@@ -6014,10 +6017,10 @@
                 "evidence": "US 2Y -3.000000000000025bps"
               },
               "F5": {
-                "reason": "Gold own-price trend confirms upside pressure",
-                "signal": "BULLISH",
+                "reason": "Gold price move below threshold",
+                "signal": "NEUTRAL",
                 "weight": 6,
-                "evidence": "Gold 4.148468705430726%"
+                "evidence": "Gold 0%"
               },
               "F6": {
                 "reason": "Risk-on conditions reduce defensive Gold demand",
@@ -6044,49 +6047,49 @@
                 "evidence": "normal"
               },
               "F10": {
-                "reason": "Supportive growth reduces defensive Gold demand and can lift yields",
-                "signal": "BEARISH",
+                "reason": "No clear growth or liquidity signal",
+                "signal": "NEUTRAL",
                 "weight": 4,
-                "evidence": "liquidity_expansion"
+                "evidence": "neutral"
               }
             }
           },
           "current_week": {
-            "reason": "current_week deterministic Gold score: bull case 68%, bear case 32%, directional participation 38%, neutral/inactive 62%, net edge +36. Real yields and DXY remain the highest-priority Gold drivers.",
+            "reason": "current_week deterministic Gold score: bull case 64%, bear case 36%, directional participation 28%, neutral/inactive 72%, net edge +28. Real yields and DXY remain the highest-priority Gold drivers.",
             "direction": "BULLISH_LEAN",
-            "conviction": 26,
-            "score_bearish": 2,
-            "score_bullish": 2,
-            "score_neutral": 6,
+            "conviction": 18,
+            "score_bearish": 1,
+            "score_bullish": 1,
+            "score_neutral": 8,
             "weighted_score": {
-              "active_weight": 38,
-              "weight_margin": 14,
-              "bearish_weight": 12,
-              "bullish_weight": 26,
-              "neutral_weight": 62
+              "active_weight": 28,
+              "weight_margin": 8,
+              "bearish_weight": 10,
+              "bullish_weight": 18,
+              "neutral_weight": 72
             },
             "conviction_model": {
-              "net_edge": 36,
-              "bear_case": 32,
-              "bull_case": 68,
-              "neutral_pct": 62,
-              "net_edge_pct": 36,
+              "net_edge": 28,
+              "bear_case": 36,
+              "bull_case": 64,
+              "neutral_pct": 72,
+              "net_edge_pct": 28,
               "winning_side": "BULLISH",
-              "participation": 38,
-              "weighted_edge": 0.36,
-              "raw_conviction": 26,
+              "participation": 28,
+              "weighted_edge": 0.28,
+              "raw_conviction": 18,
               "agreement_boost": 0,
-              "base_conviction": 26,
+              "base_conviction": 18,
               "conflict_penalty": 0,
-              "final_conviction": 26,
+              "final_conviction": 18,
               "verdict_strength": "MODERATE",
-              "participation_cap": 38,
-              "bearish_argument_pct": 32,
-              "bullish_argument_pct": 68,
+              "participation_cap": 28,
+              "bearish_argument_pct": 36,
+              "bullish_argument_pct": 64,
               "missing_input_penalty": 0,
-              "final_conviction_logic": "current_week deterministic Gold score: bull case 68%, bear case 32%, directional participation 38%, neutral/inactive 62%, net edge +36. Real yields and DXY remain the highest-priority Gold drivers.",
-              "active_participation_pct": 38,
-              "directional_participation": 38
+              "final_conviction_logic": "current_week deterministic Gold score: bull case 64%, bear case 36%, directional participation 28%, neutral/inactive 72%, net edge +28. Real yields and DXY remain the highest-priority Gold drivers.",
+              "active_participation_pct": 28,
+              "directional_participation": 28
             },
             "factor_breakdown": {
               "F1": {
@@ -6102,10 +6105,10 @@
                 "evidence": "DXY -0.7064593937232794%"
               },
               "F3": {
-                "reason": "No clear Fed impulse",
+                "reason": "Missing input",
                 "signal": "NEUTRAL",
                 "weight": 16,
-                "evidence": "Fed bias neutral"
+                "evidence": "Fed bias unknown"
               },
               "F4": {
                 "reason": "US 2Y move below threshold",
@@ -6114,10 +6117,10 @@
                 "evidence": "US 2Y 0.9999999999999787bps"
               },
               "F5": {
-                "reason": "Gold own-price trend confirms upside pressure",
-                "signal": "BULLISH",
+                "reason": "Gold price move below threshold",
+                "signal": "NEUTRAL",
                 "weight": 8,
-                "evidence": "Gold 4.148468705430726%"
+                "evidence": "Gold 0%"
               },
               "F6": {
                 "reason": "Risk-on conditions reduce defensive Gold demand",
@@ -6144,49 +6147,49 @@
                 "evidence": "normal"
               },
               "F10": {
-                "reason": "Supportive growth reduces defensive Gold demand and can lift yields",
-                "signal": "BEARISH",
+                "reason": "No clear growth or liquidity signal",
+                "signal": "NEUTRAL",
                 "weight": 2,
-                "evidence": "liquidity_expansion"
+                "evidence": "neutral"
               }
             }
           },
           "current_month": {
-            "reason": "current_month deterministic Gold score: bull case 77%, bear case 23%, directional participation 52%, neutral/inactive 48%, net edge +54. Real yields and DXY remain the highest-priority Gold drivers.",
-            "direction": "BULLISH",
-            "conviction": 40,
-            "score_bearish": 2,
-            "score_bullish": 3,
-            "score_neutral": 5,
+            "reason": "current_month deterministic Gold score: bull case 85%, bear case 15%, directional participation 40%, neutral/inactive 60%, net edge +70. Real yields and DXY remain the highest-priority Gold drivers.",
+            "direction": "BULLISH_LEAN",
+            "conviction": 34,
+            "score_bearish": 1,
+            "score_bullish": 2,
+            "score_neutral": 7,
             "weighted_score": {
-              "active_weight": 52,
+              "active_weight": 40,
               "weight_margin": 28,
-              "bearish_weight": 12,
-              "bullish_weight": 40,
-              "neutral_weight": 48
+              "bearish_weight": 6,
+              "bullish_weight": 34,
+              "neutral_weight": 60
             },
             "conviction_model": {
-              "net_edge": 54,
-              "bear_case": 23,
-              "bull_case": 77,
-              "neutral_pct": 48,
-              "net_edge_pct": 54,
+              "net_edge": 70,
+              "bear_case": 15,
+              "bull_case": 85,
+              "neutral_pct": 60,
+              "net_edge_pct": 70,
               "winning_side": "BULLISH",
-              "participation": 52,
-              "weighted_edge": 0.54,
-              "raw_conviction": 40,
+              "participation": 40,
+              "weighted_edge": 0.7,
+              "raw_conviction": 34,
               "agreement_boost": 0,
-              "base_conviction": 40,
+              "base_conviction": 34,
               "conflict_penalty": 0,
-              "final_conviction": 40,
-              "verdict_strength": "STRONG",
-              "participation_cap": 52,
-              "bearish_argument_pct": 23,
-              "bullish_argument_pct": 77,
+              "final_conviction": 34,
+              "verdict_strength": "MODERATE",
+              "participation_cap": 40,
+              "bearish_argument_pct": 15,
+              "bullish_argument_pct": 85,
               "missing_input_penalty": 0,
-              "final_conviction_logic": "current_month deterministic Gold score: bull case 77%, bear case 23%, directional participation 52%, neutral/inactive 48%, net edge +54. Real yields and DXY remain the highest-priority Gold drivers.",
-              "active_participation_pct": 52,
-              "directional_participation": 52
+              "final_conviction_logic": "current_month deterministic Gold score: bull case 85%, bear case 15%, directional participation 40%, neutral/inactive 60%, net edge +70. Real yields and DXY remain the highest-priority Gold drivers.",
+              "active_participation_pct": 40,
+              "directional_participation": 40
             },
             "factor_breakdown": {
               "F1": {
@@ -6202,10 +6205,10 @@
                 "evidence": "DXY -2.193429734778665%"
               },
               "F3": {
-                "reason": "No clear Fed impulse",
+                "reason": "Missing input",
                 "signal": "NEUTRAL",
                 "weight": 18,
-                "evidence": "Fed bias neutral"
+                "evidence": "Fed bias unknown"
               },
               "F4": {
                 "reason": "US 2Y move below threshold",
@@ -6214,10 +6217,10 @@
                 "evidence": "US 2Y -3.000000000000025bps"
               },
               "F5": {
-                "reason": "Gold own-price trend confirms upside pressure",
-                "signal": "BULLISH",
+                "reason": "Gold price move below threshold",
+                "signal": "NEUTRAL",
                 "weight": 6,
-                "evidence": "Gold 4.148468705430726%"
+                "evidence": "Gold 0%"
               },
               "F6": {
                 "reason": "Risk-on conditions reduce defensive Gold demand",
@@ -6244,24 +6247,24 @@
                 "evidence": "normal"
               },
               "F10": {
-                "reason": "Supportive growth reduces defensive Gold demand and can lift yields",
-                "signal": "BEARISH",
+                "reason": "No clear growth or liquidity signal",
+                "signal": "NEUTRAL",
                 "weight": 6,
-                "evidence": "liquidity_expansion"
+                "evidence": "neutral"
               }
             }
           }
         },
-        "reasoning_summary": "GOLD weighted verdicts calculated deterministically by timeframe. 24h BULLISH_LEAN 32%, 3d BULLISH_LEAN 28%, current week BULLISH_LEAN 26%, next week BULLISH 42%, current month BULLISH 40%.",
-        "direction_next_week": "BULLISH",
-        "reason_current_week": "current_week deterministic Gold score: bull case 68%, bear case 32%, directional participation 38%, neutral/inactive 62%, net edge +36. Real yields and DXY remain the highest-priority Gold drivers.",
-        "conviction_next_week": 42,
-        "reason_current_month": "current_month deterministic Gold score: bull case 77%, bear case 23%, directional participation 52%, neutral/inactive 48%, net edge +54. Real yields and DXY remain the highest-priority Gold drivers.",
+        "reasoning_summary": "GOLD weighted verdicts calculated deterministically by timeframe. 24h BULLISH_LEAN 32%, 3d BULLISH_LEAN 20%, current week BULLISH_LEAN 18%, next week BULLISH_LEAN 36%, current month BULLISH_LEAN 34%.",
+        "direction_next_week": "BULLISH_LEAN",
+        "reason_current_week": "current_week deterministic Gold score: bull case 64%, bear case 36%, directional participation 28%, neutral/inactive 72%, net edge +28. Real yields and DXY remain the highest-priority Gold drivers.",
+        "conviction_next_week": 36,
+        "reason_current_month": "current_month deterministic Gold score: bull case 85%, bear case 15%, directional participation 40%, neutral/inactive 60%, net edge +70. Real yields and DXY remain the highest-priority Gold drivers.",
         "direction_current_week": "BULLISH_LEAN",
         "logic_document_version": "2.0_weighted_engine",
-        "conviction_current_week": 26,
-        "direction_current_month": "BULLISH",
-        "conviction_current_month": 40
+        "conviction_current_week": 18,
+        "direction_current_month": "BULLISH_LEAN",
+        "conviction_current_month": 34
       },
       "validity_note": "Operational freshness uses a provisional refresh expectation only. Forecast expiry is explicit and separate from the provisional refresh threshold.",
       "horizon_note": "Weekday-active-time V1 excludes weekend-closed hours only. Exchange holidays and intraday maintenance breaks are not yet modelled.",
@@ -6275,16 +6278,16 @@
       "agent": "NQ",
       "status": "live",
       "market_status": null,
-      "last_run_et": "2026-08-31T13:29:16.807+00:00",
-      "generated_at": "2026-08-31T13:29:16.807+00:00",
-      "sealed_at": "2026-08-31T13:30:06.97901+00:00",
-      "valid_from": "2026-08-31T13:30:06.97901+00:00",
+      "last_run_et": "2026-08-31T13:31:59.158+00:00",
+      "generated_at": "2026-08-31T13:31:59.158+00:00",
+      "sealed_at": "2026-08-31T13:32:36.143452+00:00",
+      "valid_from": "2026-08-31T13:32:36.143452+00:00",
       "refresh_due_at": "2026-09-01T11:00:00.000Z",
-      "forecast_window_end": "2026-09-01T13:30:06.979Z",
-      "expires_at": "2026-09-01T13:30:06.979Z",
+      "forecast_window_end": "2026-09-01T13:32:36.143Z",
+      "expires_at": "2026-09-01T13:32:36.143Z",
       "status_at_build": "ACTIVE",
       "effective_status": "ACTIVE",
-      "status_resolved_at": "2026-08-31T13:30:50.772Z",
+      "status_resolved_at": "2026-08-31T13:33:16.896Z",
       "horizon_code": "24H",
       "horizon_duration": "PT24H",
       "horizon_basis": "WEEKDAY_ACTIVE_TIME_V1",
@@ -6369,10 +6372,10 @@
               "evidence": "US 10Y real yield delta 0 bps"
             },
             "F6": {
-              "reason": "No clear Fed liquidity impulse",
+              "reason": "Missing input",
               "signal": "NEUTRAL",
               "weight": 12,
-              "evidence": "Fed bias neutral"
+              "evidence": "Fed bias unknown"
             },
             "F7": {
               "reason": "No confirmed US economic surprise",
@@ -6390,24 +6393,24 @@
               "reason": "BTC strength confirms high-beta risk appetite",
               "signal": "BULLISH",
               "weight": 2,
-              "evidence": "BTC delta 26.51%"
+              "evidence": "BTC delta 26.65%"
             },
             "F10": {
               "reason": "Gold does not provide a clean defensive-flow signal",
               "signal": "NEUTRAL",
               "weight": 2,
-              "evidence": "Gold delta 4.15%"
+              "evidence": "Gold delta 4.18%"
             }
           },
-          "generated_at": "2026-08-31T13:29:16.807+00:00",
-          "sealed_at": "2026-08-31T13:30:06.97901+00:00",
-          "valid_from": "2026-08-31T13:30:06.97901+00:00",
+          "generated_at": "2026-08-31T13:31:59.158+00:00",
+          "sealed_at": "2026-08-31T13:32:36.143452+00:00",
+          "valid_from": "2026-08-31T13:32:36.143452+00:00",
           "refresh_due_at": "2026-09-01T11:00:00.000Z",
-          "forecast_window_end": "2026-09-01T13:30:06.979Z",
-          "expires_at": "2026-09-01T13:30:06.979Z",
+          "forecast_window_end": "2026-09-01T13:32:36.143Z",
+          "expires_at": "2026-09-01T13:32:36.143Z",
           "status_at_build": "ACTIVE",
           "effective_status": "ACTIVE",
-          "status_resolved_at": "2026-08-31T13:30:50.772Z",
+          "status_resolved_at": "2026-08-31T13:33:16.896Z",
           "horizon_code": "24H",
           "horizon_duration": "PT24H",
           "horizon_basis": "WEEKDAY_ACTIVE_TIME_V1",
@@ -6420,45 +6423,45 @@
         "3d": {
           "direction": "BULLISH",
           "conviction": 100,
-          "reason": "3d NQ deterministic score: bull case 100%, bear case 0%, neutral/inactive 67%, directional participation 33%, net edge +100.",
+          "reason": "3d NQ deterministic score: bull case 100%, bear case 0%, neutral/inactive 70%, directional participation 30%, net edge +100.",
           "conviction_model": {
-            "neutral_pct": 67,
+            "neutral_pct": 70,
             "net_edge_pct": 100,
             "winning_side": "BULLISH",
-            "participation": 33,
+            "participation": 30,
             "weighted_edge": 1,
-            "neutral_weight": 67,
+            "neutral_weight": 70,
             "raw_conviction": 100,
             "agreement_boost": 0,
             "base_conviction": 100,
             "bear_case_weight": 0,
-            "bull_case_weight": 33,
+            "bull_case_weight": 30,
             "conflict_penalty": 0,
             "final_conviction": 100,
             "verdict_strength": "VERY_STRONG",
-            "participation_cap": 33,
+            "participation_cap": 30,
             "bearish_argument_pct": 0,
             "bullish_argument_pct": 100,
-            "neutral_evidence_pct": 67,
+            "neutral_evidence_pct": 70,
             "missing_input_penalty": 0,
-            "final_conviction_logic": "3d NQ deterministic score: bull case 100%, bear case 0%, neutral/inactive 67%, directional participation 33%, net edge +100.",
-            "active_participation_pct": 33,
-            "directional_participation_pct": 33,
+            "final_conviction_logic": "3d NQ deterministic score: bull case 100%, bear case 0%, neutral/inactive 70%, directional participation 30%, net edge +100.",
+            "active_participation_pct": 30,
+            "directional_participation_pct": 30,
             "weighted_score": {
-              "bullish_weight": 33,
+              "bullish_weight": 30,
               "bearish_weight": 0,
-              "neutral_weight": 67,
-              "active_weight": 33,
-              "weight_margin": 33
+              "neutral_weight": 70,
+              "active_weight": 30,
+              "weight_margin": 30
             },
             "alignment": 100
           },
           "weighted_score": {
-            "active_weight": 33,
-            "weight_margin": 33,
+            "active_weight": 30,
+            "weight_margin": 30,
             "bearish_weight": 0,
-            "bullish_weight": 33,
-            "neutral_weight": 67
+            "bullish_weight": 30,
+            "neutral_weight": 70
           },
           "factor_breakdown": {
             "F1": {
@@ -6492,10 +6495,10 @@
               "evidence": "US 10Y real yield delta -1 bps"
             },
             "F6": {
-              "reason": "No clear Fed liquidity impulse",
+              "reason": "Missing input",
               "signal": "NEUTRAL",
               "weight": 14,
-              "evidence": "Fed bias neutral"
+              "evidence": "Fed bias unknown"
             },
             "F7": {
               "reason": "No confirmed US economic surprise",
@@ -6510,61 +6513,61 @@
               "evidence": "NQ delta 0%"
             },
             "F9": {
-              "reason": "BTC strength confirms high-beta risk appetite",
-              "signal": "BULLISH",
+              "reason": "BTC move below confirmation threshold",
+              "signal": "NEUTRAL",
               "weight": 3,
-              "evidence": "BTC delta 26.51%"
+              "evidence": "BTC delta 0%"
             },
             "F10": {
               "reason": "Gold does not provide a clean defensive-flow signal",
               "signal": "NEUTRAL",
               "weight": 2,
-              "evidence": "Gold delta 4.15%"
+              "evidence": "Gold delta 0%"
             }
           }
         },
         "current_week": {
           "direction": "BULLISH",
           "conviction": 100,
-          "reason": "current_week NQ deterministic score: bull case 100%, bear case 0%, neutral/inactive 68%, directional participation 32%, net edge +100.",
+          "reason": "current_week NQ deterministic score: bull case 100%, bear case 0%, neutral/inactive 72%, directional participation 28%, net edge +100.",
           "conviction_model": {
-            "neutral_pct": 68,
+            "neutral_pct": 72,
             "net_edge_pct": 100,
             "winning_side": "BULLISH",
-            "participation": 32,
+            "participation": 28,
             "weighted_edge": 1,
-            "neutral_weight": 68,
+            "neutral_weight": 72,
             "raw_conviction": 100,
             "agreement_boost": 0,
             "base_conviction": 100,
             "bear_case_weight": 0,
-            "bull_case_weight": 32,
+            "bull_case_weight": 28,
             "conflict_penalty": 0,
             "final_conviction": 100,
             "verdict_strength": "VERY_STRONG",
-            "participation_cap": 32,
+            "participation_cap": 28,
             "bearish_argument_pct": 0,
             "bullish_argument_pct": 100,
-            "neutral_evidence_pct": 68,
+            "neutral_evidence_pct": 72,
             "missing_input_penalty": 0,
-            "final_conviction_logic": "current_week NQ deterministic score: bull case 100%, bear case 0%, neutral/inactive 68%, directional participation 32%, net edge +100.",
-            "active_participation_pct": 32,
-            "directional_participation_pct": 32,
+            "final_conviction_logic": "current_week NQ deterministic score: bull case 100%, bear case 0%, neutral/inactive 72%, directional participation 28%, net edge +100.",
+            "active_participation_pct": 28,
+            "directional_participation_pct": 28,
             "weighted_score": {
-              "bullish_weight": 32,
+              "bullish_weight": 28,
               "bearish_weight": 0,
-              "neutral_weight": 68,
-              "active_weight": 32,
-              "weight_margin": 32
+              "neutral_weight": 72,
+              "active_weight": 28,
+              "weight_margin": 28
             },
             "alignment": 100
           },
           "weighted_score": {
-            "active_weight": 32,
-            "weight_margin": 32,
+            "active_weight": 28,
+            "weight_margin": 28,
             "bearish_weight": 0,
-            "bullish_weight": 32,
-            "neutral_weight": 68
+            "bullish_weight": 28,
+            "neutral_weight": 72
           },
           "factor_breakdown": {
             "F1": {
@@ -6598,10 +6601,10 @@
               "evidence": "US 10Y real yield delta -1 bps"
             },
             "F6": {
-              "reason": "No clear Fed liquidity impulse",
+              "reason": "Missing input",
               "signal": "NEUTRAL",
               "weight": 16,
-              "evidence": "Fed bias neutral"
+              "evidence": "Fed bias unknown"
             },
             "F7": {
               "reason": "No confirmed US economic surprise",
@@ -6616,61 +6619,61 @@
               "evidence": "NQ delta 0%"
             },
             "F9": {
-              "reason": "BTC strength confirms high-beta risk appetite",
-              "signal": "BULLISH",
+              "reason": "BTC move below confirmation threshold",
+              "signal": "NEUTRAL",
               "weight": 4,
-              "evidence": "BTC delta 26.51%"
+              "evidence": "BTC delta 0%"
             },
             "F10": {
               "reason": "Gold does not provide a clean defensive-flow signal",
               "signal": "NEUTRAL",
               "weight": 2,
-              "evidence": "Gold delta 4.15%"
+              "evidence": "Gold delta 0%"
             }
           }
         },
         "next_week": {
           "direction": "BULLISH",
           "conviction": 100,
-          "reason": "next_week NQ deterministic score: bull case 100%, bear case 0%, neutral/inactive 49%, directional participation 51%, net edge +100.",
+          "reason": "next_week NQ deterministic score: bull case 100%, bear case 0%, neutral/inactive 54%, directional participation 46%, net edge +100.",
           "conviction_model": {
-            "neutral_pct": 49,
+            "neutral_pct": 54,
             "net_edge_pct": 100,
             "winning_side": "BULLISH",
-            "participation": 51,
+            "participation": 46,
             "weighted_edge": 1,
-            "neutral_weight": 49,
+            "neutral_weight": 54,
             "raw_conviction": 100,
             "agreement_boost": 0,
             "base_conviction": 100,
             "bear_case_weight": 0,
-            "bull_case_weight": 51,
+            "bull_case_weight": 46,
             "conflict_penalty": 0,
             "final_conviction": 100,
             "verdict_strength": "VERY_STRONG",
-            "participation_cap": 51,
+            "participation_cap": 46,
             "bearish_argument_pct": 0,
             "bullish_argument_pct": 100,
-            "neutral_evidence_pct": 49,
+            "neutral_evidence_pct": 54,
             "missing_input_penalty": 0,
-            "final_conviction_logic": "next_week NQ deterministic score: bull case 100%, bear case 0%, neutral/inactive 49%, directional participation 51%, net edge +100.",
-            "active_participation_pct": 51,
-            "directional_participation_pct": 51,
+            "final_conviction_logic": "next_week NQ deterministic score: bull case 100%, bear case 0%, neutral/inactive 54%, directional participation 46%, net edge +100.",
+            "active_participation_pct": 46,
+            "directional_participation_pct": 46,
             "weighted_score": {
-              "bullish_weight": 51,
+              "bullish_weight": 46,
               "bearish_weight": 0,
-              "neutral_weight": 49,
-              "active_weight": 51,
-              "weight_margin": 51
+              "neutral_weight": 54,
+              "active_weight": 46,
+              "weight_margin": 46
             },
             "alignment": 100
           },
           "weighted_score": {
-            "active_weight": 51,
-            "weight_margin": 51,
+            "active_weight": 46,
+            "weight_margin": 46,
             "bearish_weight": 0,
-            "bullish_weight": 51,
-            "neutral_weight": 49
+            "bullish_weight": 46,
+            "neutral_weight": 54
           },
           "factor_breakdown": {
             "F1": {
@@ -6695,7 +6698,7 @@
               "reason": "Nominal yield move below threshold",
               "signal": "NEUTRAL",
               "weight": 8,
-              "evidence": "US 10Y nominal delta 0 bps"
+              "evidence": "US 10Y nominal delta -1 bps"
             },
             "F5": {
               "reason": "Falling real yields support long-duration growth equities",
@@ -6704,10 +6707,10 @@
               "evidence": "US 10Y real yield delta -7 bps"
             },
             "F6": {
-              "reason": "No clear Fed liquidity impulse",
+              "reason": "Missing input",
               "signal": "NEUTRAL",
               "weight": 20,
-              "evidence": "Fed bias neutral"
+              "evidence": "Fed bias unknown"
             },
             "F7": {
               "reason": "No confirmed US economic surprise",
@@ -6722,61 +6725,61 @@
               "evidence": "NQ delta 0%"
             },
             "F9": {
-              "reason": "BTC strength confirms high-beta risk appetite",
-              "signal": "BULLISH",
+              "reason": "BTC move below confirmation threshold",
+              "signal": "NEUTRAL",
               "weight": 5,
-              "evidence": "BTC delta 26.51%"
+              "evidence": "BTC delta 0%"
             },
             "F10": {
               "reason": "Gold does not provide a clean defensive-flow signal",
               "signal": "NEUTRAL",
               "weight": 3,
-              "evidence": "Gold delta 4.15%"
+              "evidence": "Gold delta 0%"
             }
           }
         },
         "current_month": {
           "direction": "BULLISH",
           "conviction": 100,
-          "reason": "current_month NQ deterministic score: bull case 100%, bear case 0%, neutral/inactive 49%, directional participation 51%, net edge +100.",
+          "reason": "current_month NQ deterministic score: bull case 100%, bear case 0%, neutral/inactive 54%, directional participation 46%, net edge +100.",
           "conviction_model": {
-            "neutral_pct": 49,
+            "neutral_pct": 54,
             "net_edge_pct": 100,
             "winning_side": "BULLISH",
-            "participation": 51,
+            "participation": 46,
             "weighted_edge": 1,
-            "neutral_weight": 49,
+            "neutral_weight": 54,
             "raw_conviction": 100,
             "agreement_boost": 0,
             "base_conviction": 100,
             "bear_case_weight": 0,
-            "bull_case_weight": 51,
+            "bull_case_weight": 46,
             "conflict_penalty": 0,
             "final_conviction": 100,
             "verdict_strength": "VERY_STRONG",
-            "participation_cap": 51,
+            "participation_cap": 46,
             "bearish_argument_pct": 0,
             "bullish_argument_pct": 100,
-            "neutral_evidence_pct": 49,
+            "neutral_evidence_pct": 54,
             "missing_input_penalty": 0,
-            "final_conviction_logic": "current_month NQ deterministic score: bull case 100%, bear case 0%, neutral/inactive 49%, directional participation 51%, net edge +100.",
-            "active_participation_pct": 51,
-            "directional_participation_pct": 51,
+            "final_conviction_logic": "current_month NQ deterministic score: bull case 100%, bear case 0%, neutral/inactive 54%, directional participation 46%, net edge +100.",
+            "active_participation_pct": 46,
+            "directional_participation_pct": 46,
             "weighted_score": {
-              "bullish_weight": 51,
+              "bullish_weight": 46,
               "bearish_weight": 0,
-              "neutral_weight": 49,
-              "active_weight": 51,
-              "weight_margin": 51
+              "neutral_weight": 54,
+              "active_weight": 46,
+              "weight_margin": 46
             },
             "alignment": 100
           },
           "weighted_score": {
-            "active_weight": 51,
-            "weight_margin": 51,
+            "active_weight": 46,
+            "weight_margin": 46,
             "bearish_weight": 0,
-            "bullish_weight": 51,
-            "neutral_weight": 49
+            "bullish_weight": 46,
+            "neutral_weight": 54
           },
           "factor_breakdown": {
             "F1": {
@@ -6801,7 +6804,7 @@
               "reason": "Nominal yield move below threshold",
               "signal": "NEUTRAL",
               "weight": 8,
-              "evidence": "US 10Y nominal delta 0 bps"
+              "evidence": "US 10Y nominal delta -1 bps"
             },
             "F5": {
               "reason": "Falling real yields support long-duration growth equities",
@@ -6810,10 +6813,10 @@
               "evidence": "US 10Y real yield delta -7 bps"
             },
             "F6": {
-              "reason": "No clear Fed liquidity impulse",
+              "reason": "Missing input",
               "signal": "NEUTRAL",
               "weight": 20,
-              "evidence": "Fed bias neutral"
+              "evidence": "Fed bias unknown"
             },
             "F7": {
               "reason": "No confirmed US economic surprise",
@@ -6828,16 +6831,16 @@
               "evidence": "NQ delta 0%"
             },
             "F9": {
-              "reason": "BTC strength confirms high-beta risk appetite",
-              "signal": "BULLISH",
+              "reason": "BTC move below confirmation threshold",
+              "signal": "NEUTRAL",
               "weight": 5,
-              "evidence": "BTC delta 26.51%"
+              "evidence": "BTC delta 0%"
             },
             "F10": {
               "reason": "Gold does not provide a clean defensive-flow signal",
               "signal": "NEUTRAL",
               "weight": 4,
-              "evidence": "Gold delta 4.15%"
+              "evidence": "Gold delta 0%"
             }
           }
         }
@@ -6918,10 +6921,10 @@
             "evidence": "US 10Y real yield delta 0 bps"
           },
           "F6": {
-            "reason": "No clear Fed liquidity impulse",
+            "reason": "Missing input",
             "signal": "NEUTRAL",
             "weight": 12,
-            "evidence": "Fed bias neutral"
+            "evidence": "Fed bias unknown"
           },
           "F7": {
             "reason": "No confirmed US economic surprise",
@@ -6939,24 +6942,24 @@
             "reason": "BTC strength confirms high-beta risk appetite",
             "signal": "BULLISH",
             "weight": 2,
-            "evidence": "BTC delta 26.51%"
+            "evidence": "BTC delta 26.65%"
           },
           "F10": {
             "reason": "Gold does not provide a clean defensive-flow signal",
             "signal": "NEUTRAL",
             "weight": 2,
-            "evidence": "Gold delta 4.15%"
+            "evidence": "Gold delta 4.18%"
           }
         },
-        "generated_at": "2026-08-31T13:29:16.807+00:00",
-        "sealed_at": "2026-08-31T13:30:06.97901+00:00",
-        "valid_from": "2026-08-31T13:30:06.97901+00:00",
+        "generated_at": "2026-08-31T13:31:59.158+00:00",
+        "sealed_at": "2026-08-31T13:32:36.143452+00:00",
+        "valid_from": "2026-08-31T13:32:36.143452+00:00",
         "refresh_due_at": "2026-09-01T11:00:00.000Z",
-        "forecast_window_end": "2026-09-01T13:30:06.979Z",
-        "expires_at": "2026-09-01T13:30:06.979Z",
+        "forecast_window_end": "2026-09-01T13:32:36.143Z",
+        "expires_at": "2026-09-01T13:32:36.143Z",
         "status_at_build": "ACTIVE",
         "effective_status": "ACTIVE",
-        "status_resolved_at": "2026-08-31T13:30:50.772Z",
+        "status_resolved_at": "2026-08-31T13:33:16.896Z",
         "horizon_code": "24H",
         "horizon_duration": "PT24H",
         "horizon_basis": "WEEKDAY_ACTIVE_TIME_V1",
@@ -6998,10 +7001,10 @@
           "evidence": "US 10Y real yield delta 0 bps"
         },
         "F6": {
-          "reason": "No clear Fed liquidity impulse",
+          "reason": "Missing input",
           "signal": "NEUTRAL",
           "weight": 12,
-          "evidence": "Fed bias neutral"
+          "evidence": "Fed bias unknown"
         },
         "F7": {
           "reason": "No confirmed US economic surprise",
@@ -7019,13 +7022,13 @@
           "reason": "BTC strength confirms high-beta risk appetite",
           "signal": "BULLISH",
           "weight": 2,
-          "evidence": "BTC delta 26.51%"
+          "evidence": "BTC delta 26.65%"
         },
         "F10": {
           "reason": "Gold does not provide a clean defensive-flow signal",
           "signal": "NEUTRAL",
           "weight": 2,
-          "evidence": "Gold delta 4.15%"
+          "evidence": "Gold delta 4.18%"
         }
       },
       "key_factors": [
@@ -7034,20 +7037,18 @@
         "F3 [12]: BULLISH - DXY delta -0.16% (Falling USD eases financial conditions and supports NQ)",
         "F4 [6]: NEUTRAL - US 10Y nominal delta 0 bps (Nominal yield move below threshold)",
         "F5 [14]: NEUTRAL - US 10Y real yield delta 0 bps (Real yield move below threshold)",
-        "F6 [12]: NEUTRAL - Fed bias neutral (No clear Fed liquidity impulse)",
+        "F6 [12]: NEUTRAL - Fed bias unknown (Missing input)",
         "F7 [8]: NEUTRAL - No recent US event (No confirmed US economic surprise)",
         "F8 [10]: NEUTRAL - NQ delta 0% (NQ price move below confirmation threshold)",
-        "F9 [2]: BULLISH - BTC delta 26.51% (BTC strength confirms high-beta risk appetite)",
-        "F10 [2]: NEUTRAL - Gold delta 4.15% (Gold does not provide a clean defensive-flow signal)"
+        "F9 [2]: BULLISH - BTC delta 26.65% (BTC strength confirms high-beta risk appetite)",
+        "F10 [2]: NEUTRAL - Gold delta 4.18% (Gold does not provide a clean defensive-flow signal)"
       ],
-      "warnings": [
-        "NQ_GOLD_DEFENSIVE_FLOW_CONFLICT"
-      ],
+      "warnings": [],
       "reasoning_summary": "NQ weighted verdicts calculated deterministically by timeframe. 24h BULLISH 100%, 3d BULLISH 100%, current week BULLISH 100%, next week BULLISH 100%, current month BULLISH 100%.",
       "score_bullish": 3,
       "score_bearish": 0,
       "score_neutral": 7,
-      "non_neutral_count": 2,
+      "non_neutral_count": 0,
       "logic_document": "agent_nq_direction.md",
       "logic_document_version": "2.0_weighted_engine",
       "conviction_model": {
@@ -7084,42 +7085,42 @@
       },
       "timeframe_models": {
         "3d": {
-          "reason": "3d NQ deterministic score: bull case 100%, bear case 0%, neutral/inactive 67%, directional participation 33%, net edge +100.",
+          "reason": "3d NQ deterministic score: bull case 100%, bear case 0%, neutral/inactive 70%, directional participation 30%, net edge +100.",
           "direction": "BULLISH",
           "conviction": 100,
           "score_bearish": 0,
-          "score_bullish": 3,
-          "score_neutral": 7,
+          "score_bullish": 2,
+          "score_neutral": 8,
           "weighted_score": {
-            "active_weight": 33,
-            "weight_margin": 33,
+            "active_weight": 30,
+            "weight_margin": 30,
             "bearish_weight": 0,
-            "bullish_weight": 33,
-            "neutral_weight": 67
+            "bullish_weight": 30,
+            "neutral_weight": 70
           },
           "conviction_model": {
-            "neutral_pct": 67,
+            "neutral_pct": 70,
             "net_edge_pct": 100,
             "winning_side": "BULLISH",
-            "participation": 33,
+            "participation": 30,
             "weighted_edge": 1,
-            "neutral_weight": 67,
+            "neutral_weight": 70,
             "raw_conviction": 100,
             "agreement_boost": 0,
             "base_conviction": 100,
             "bear_case_weight": 0,
-            "bull_case_weight": 33,
+            "bull_case_weight": 30,
             "conflict_penalty": 0,
             "final_conviction": 100,
             "verdict_strength": "VERY_STRONG",
-            "participation_cap": 33,
+            "participation_cap": 30,
             "bearish_argument_pct": 0,
             "bullish_argument_pct": 100,
-            "neutral_evidence_pct": 67,
+            "neutral_evidence_pct": 70,
             "missing_input_penalty": 0,
-            "final_conviction_logic": "3d NQ deterministic score: bull case 100%, bear case 0%, neutral/inactive 67%, directional participation 33%, net edge +100.",
-            "active_participation_pct": 33,
-            "directional_participation_pct": 33
+            "final_conviction_logic": "3d NQ deterministic score: bull case 100%, bear case 0%, neutral/inactive 70%, directional participation 30%, net edge +100.",
+            "active_participation_pct": 30,
+            "directional_participation_pct": 30
           },
           "factor_breakdown": {
             "F1": {
@@ -7153,10 +7154,10 @@
               "evidence": "US 10Y real yield delta -1 bps"
             },
             "F6": {
-              "reason": "No clear Fed liquidity impulse",
+              "reason": "Missing input",
               "signal": "NEUTRAL",
               "weight": 14,
-              "evidence": "Fed bias neutral"
+              "evidence": "Fed bias unknown"
             },
             "F7": {
               "reason": "No confirmed US economic surprise",
@@ -7171,16 +7172,16 @@
               "evidence": "NQ delta 0%"
             },
             "F9": {
-              "reason": "BTC strength confirms high-beta risk appetite",
-              "signal": "BULLISH",
+              "reason": "BTC move below confirmation threshold",
+              "signal": "NEUTRAL",
               "weight": 3,
-              "evidence": "BTC delta 26.51%"
+              "evidence": "BTC delta 0%"
             },
             "F10": {
               "reason": "Gold does not provide a clean defensive-flow signal",
               "signal": "NEUTRAL",
               "weight": 2,
-              "evidence": "Gold delta 4.15%"
+              "evidence": "Gold delta 0%"
             }
           }
         },
@@ -7254,10 +7255,10 @@
               "evidence": "US 10Y real yield delta 0 bps"
             },
             "F6": {
-              "reason": "No clear Fed liquidity impulse",
+              "reason": "Missing input",
               "signal": "NEUTRAL",
               "weight": 12,
-              "evidence": "Fed bias neutral"
+              "evidence": "Fed bias unknown"
             },
             "F7": {
               "reason": "No confirmed US economic surprise",
@@ -7275,53 +7276,53 @@
               "reason": "BTC strength confirms high-beta risk appetite",
               "signal": "BULLISH",
               "weight": 2,
-              "evidence": "BTC delta 26.51%"
+              "evidence": "BTC delta 26.65%"
             },
             "F10": {
               "reason": "Gold does not provide a clean defensive-flow signal",
               "signal": "NEUTRAL",
               "weight": 2,
-              "evidence": "Gold delta 4.15%"
+              "evidence": "Gold delta 4.18%"
             }
           }
         },
         "next_week": {
-          "reason": "next_week NQ deterministic score: bull case 100%, bear case 0%, neutral/inactive 49%, directional participation 51%, net edge +100.",
+          "reason": "next_week NQ deterministic score: bull case 100%, bear case 0%, neutral/inactive 54%, directional participation 46%, net edge +100.",
           "direction": "BULLISH",
           "conviction": 100,
           "score_bearish": 0,
-          "score_bullish": 4,
-          "score_neutral": 6,
+          "score_bullish": 3,
+          "score_neutral": 7,
           "weighted_score": {
-            "active_weight": 51,
-            "weight_margin": 51,
+            "active_weight": 46,
+            "weight_margin": 46,
             "bearish_weight": 0,
-            "bullish_weight": 51,
-            "neutral_weight": 49
+            "bullish_weight": 46,
+            "neutral_weight": 54
           },
           "conviction_model": {
-            "neutral_pct": 49,
+            "neutral_pct": 54,
             "net_edge_pct": 100,
             "winning_side": "BULLISH",
-            "participation": 51,
+            "participation": 46,
             "weighted_edge": 1,
-            "neutral_weight": 49,
+            "neutral_weight": 54,
             "raw_conviction": 100,
             "agreement_boost": 0,
             "base_conviction": 100,
             "bear_case_weight": 0,
-            "bull_case_weight": 51,
+            "bull_case_weight": 46,
             "conflict_penalty": 0,
             "final_conviction": 100,
             "verdict_strength": "VERY_STRONG",
-            "participation_cap": 51,
+            "participation_cap": 46,
             "bearish_argument_pct": 0,
             "bullish_argument_pct": 100,
-            "neutral_evidence_pct": 49,
+            "neutral_evidence_pct": 54,
             "missing_input_penalty": 0,
-            "final_conviction_logic": "next_week NQ deterministic score: bull case 100%, bear case 0%, neutral/inactive 49%, directional participation 51%, net edge +100.",
-            "active_participation_pct": 51,
-            "directional_participation_pct": 51
+            "final_conviction_logic": "next_week NQ deterministic score: bull case 100%, bear case 0%, neutral/inactive 54%, directional participation 46%, net edge +100.",
+            "active_participation_pct": 46,
+            "directional_participation_pct": 46
           },
           "factor_breakdown": {
             "F1": {
@@ -7346,7 +7347,7 @@
               "reason": "Nominal yield move below threshold",
               "signal": "NEUTRAL",
               "weight": 8,
-              "evidence": "US 10Y nominal delta 0 bps"
+              "evidence": "US 10Y nominal delta -1 bps"
             },
             "F5": {
               "reason": "Falling real yields support long-duration growth equities",
@@ -7355,10 +7356,10 @@
               "evidence": "US 10Y real yield delta -7 bps"
             },
             "F6": {
-              "reason": "No clear Fed liquidity impulse",
+              "reason": "Missing input",
               "signal": "NEUTRAL",
               "weight": 20,
-              "evidence": "Fed bias neutral"
+              "evidence": "Fed bias unknown"
             },
             "F7": {
               "reason": "No confirmed US economic surprise",
@@ -7373,56 +7374,56 @@
               "evidence": "NQ delta 0%"
             },
             "F9": {
-              "reason": "BTC strength confirms high-beta risk appetite",
-              "signal": "BULLISH",
+              "reason": "BTC move below confirmation threshold",
+              "signal": "NEUTRAL",
               "weight": 5,
-              "evidence": "BTC delta 26.51%"
+              "evidence": "BTC delta 0%"
             },
             "F10": {
               "reason": "Gold does not provide a clean defensive-flow signal",
               "signal": "NEUTRAL",
               "weight": 3,
-              "evidence": "Gold delta 4.15%"
+              "evidence": "Gold delta 0%"
             }
           }
         },
         "current_week": {
-          "reason": "current_week NQ deterministic score: bull case 100%, bear case 0%, neutral/inactive 68%, directional participation 32%, net edge +100.",
+          "reason": "current_week NQ deterministic score: bull case 100%, bear case 0%, neutral/inactive 72%, directional participation 28%, net edge +100.",
           "direction": "BULLISH",
           "conviction": 100,
           "score_bearish": 0,
-          "score_bullish": 3,
-          "score_neutral": 7,
+          "score_bullish": 2,
+          "score_neutral": 8,
           "weighted_score": {
-            "active_weight": 32,
-            "weight_margin": 32,
+            "active_weight": 28,
+            "weight_margin": 28,
             "bearish_weight": 0,
-            "bullish_weight": 32,
-            "neutral_weight": 68
+            "bullish_weight": 28,
+            "neutral_weight": 72
           },
           "conviction_model": {
-            "neutral_pct": 68,
+            "neutral_pct": 72,
             "net_edge_pct": 100,
             "winning_side": "BULLISH",
-            "participation": 32,
+            "participation": 28,
             "weighted_edge": 1,
-            "neutral_weight": 68,
+            "neutral_weight": 72,
             "raw_conviction": 100,
             "agreement_boost": 0,
             "base_conviction": 100,
             "bear_case_weight": 0,
-            "bull_case_weight": 32,
+            "bull_case_weight": 28,
             "conflict_penalty": 0,
             "final_conviction": 100,
             "verdict_strength": "VERY_STRONG",
-            "participation_cap": 32,
+            "participation_cap": 28,
             "bearish_argument_pct": 0,
             "bullish_argument_pct": 100,
-            "neutral_evidence_pct": 68,
+            "neutral_evidence_pct": 72,
             "missing_input_penalty": 0,
-            "final_conviction_logic": "current_week NQ deterministic score: bull case 100%, bear case 0%, neutral/inactive 68%, directional participation 32%, net edge +100.",
-            "active_participation_pct": 32,
-            "directional_participation_pct": 32
+            "final_conviction_logic": "current_week NQ deterministic score: bull case 100%, bear case 0%, neutral/inactive 72%, directional participation 28%, net edge +100.",
+            "active_participation_pct": 28,
+            "directional_participation_pct": 28
           },
           "factor_breakdown": {
             "F1": {
@@ -7456,10 +7457,10 @@
               "evidence": "US 10Y real yield delta -1 bps"
             },
             "F6": {
-              "reason": "No clear Fed liquidity impulse",
+              "reason": "Missing input",
               "signal": "NEUTRAL",
               "weight": 16,
-              "evidence": "Fed bias neutral"
+              "evidence": "Fed bias unknown"
             },
             "F7": {
               "reason": "No confirmed US economic surprise",
@@ -7474,56 +7475,56 @@
               "evidence": "NQ delta 0%"
             },
             "F9": {
-              "reason": "BTC strength confirms high-beta risk appetite",
-              "signal": "BULLISH",
+              "reason": "BTC move below confirmation threshold",
+              "signal": "NEUTRAL",
               "weight": 4,
-              "evidence": "BTC delta 26.51%"
+              "evidence": "BTC delta 0%"
             },
             "F10": {
               "reason": "Gold does not provide a clean defensive-flow signal",
               "signal": "NEUTRAL",
               "weight": 2,
-              "evidence": "Gold delta 4.15%"
+              "evidence": "Gold delta 0%"
             }
           }
         },
         "current_month": {
-          "reason": "current_month NQ deterministic score: bull case 100%, bear case 0%, neutral/inactive 49%, directional participation 51%, net edge +100.",
+          "reason": "current_month NQ deterministic score: bull case 100%, bear case 0%, neutral/inactive 54%, directional participation 46%, net edge +100.",
           "direction": "BULLISH",
           "conviction": 100,
           "score_bearish": 0,
-          "score_bullish": 4,
-          "score_neutral": 6,
+          "score_bullish": 3,
+          "score_neutral": 7,
           "weighted_score": {
-            "active_weight": 51,
-            "weight_margin": 51,
+            "active_weight": 46,
+            "weight_margin": 46,
             "bearish_weight": 0,
-            "bullish_weight": 51,
-            "neutral_weight": 49
+            "bullish_weight": 46,
+            "neutral_weight": 54
           },
           "conviction_model": {
-            "neutral_pct": 49,
+            "neutral_pct": 54,
             "net_edge_pct": 100,
             "winning_side": "BULLISH",
-            "participation": 51,
+            "participation": 46,
             "weighted_edge": 1,
-            "neutral_weight": 49,
+            "neutral_weight": 54,
             "raw_conviction": 100,
             "agreement_boost": 0,
             "base_conviction": 100,
             "bear_case_weight": 0,
-            "bull_case_weight": 51,
+            "bull_case_weight": 46,
             "conflict_penalty": 0,
             "final_conviction": 100,
             "verdict_strength": "VERY_STRONG",
-            "participation_cap": 51,
+            "participation_cap": 46,
             "bearish_argument_pct": 0,
             "bullish_argument_pct": 100,
-            "neutral_evidence_pct": 49,
+            "neutral_evidence_pct": 54,
             "missing_input_penalty": 0,
-            "final_conviction_logic": "current_month NQ deterministic score: bull case 100%, bear case 0%, neutral/inactive 49%, directional participation 51%, net edge +100.",
-            "active_participation_pct": 51,
-            "directional_participation_pct": 51
+            "final_conviction_logic": "current_month NQ deterministic score: bull case 100%, bear case 0%, neutral/inactive 54%, directional participation 46%, net edge +100.",
+            "active_participation_pct": 46,
+            "directional_participation_pct": 46
           },
           "factor_breakdown": {
             "F1": {
@@ -7548,7 +7549,7 @@
               "reason": "Nominal yield move below threshold",
               "signal": "NEUTRAL",
               "weight": 8,
-              "evidence": "US 10Y nominal delta 0 bps"
+              "evidence": "US 10Y nominal delta -1 bps"
             },
             "F5": {
               "reason": "Falling real yields support long-duration growth equities",
@@ -7557,10 +7558,10 @@
               "evidence": "US 10Y real yield delta -7 bps"
             },
             "F6": {
-              "reason": "No clear Fed liquidity impulse",
+              "reason": "Missing input",
               "signal": "NEUTRAL",
               "weight": 20,
-              "evidence": "Fed bias neutral"
+              "evidence": "Fed bias unknown"
             },
             "F7": {
               "reason": "No confirmed US economic surprise",
@@ -7575,16 +7576,16 @@
               "evidence": "NQ delta 0%"
             },
             "F9": {
-              "reason": "BTC strength confirms high-beta risk appetite",
-              "signal": "BULLISH",
+              "reason": "BTC move below confirmation threshold",
+              "signal": "NEUTRAL",
               "weight": 5,
-              "evidence": "BTC delta 26.51%"
+              "evidence": "BTC delta 0%"
             },
             "F10": {
               "reason": "Gold does not provide a clean defensive-flow signal",
               "signal": "NEUTRAL",
               "weight": 4,
-              "evidence": "Gold delta 4.15%"
+              "evidence": "Gold delta 0%"
             }
           }
         }
@@ -7606,10 +7607,8 @@
         "layer": "layer_1_raw",
         "created_at": null,
         "reason_24h": "24h NQ deterministic score: bull case 100%, bear case 0%, neutral/inactive 66%, directional participation 34%, net edge +100.",
-        "risk_flags": [
-          "NQ_GOLD_DEFENSIVE_FLOW_CONFLICT"
-        ],
-        "reason_3_day": "3d NQ deterministic score: bull case 100%, bear case 0%, neutral/inactive 67%, directional participation 33%, net edge +100.",
+        "risk_flags": [],
+        "reason_3_day": "3d NQ deterministic score: bull case 100%, bear case 0%, neutral/inactive 70%, directional participation 30%, net edge +100.",
         "direction_24h": "BULLISH",
         "score_bearish": 0,
         "score_bullish": 3,
@@ -7618,12 +7617,14 @@
         "conviction_24h": 100,
         "logic_document": "agent_nq_direction.md",
         "missing_inputs": [
+          "fed_bias",
+          "latest_us_event",
           "nq_price",
           "nq_d1_pct",
           "nq_d5_pct",
           "nq_d20_pct",
-          "fed_bias",
-          "latest_us_event"
+          "btc_d5_pct",
+          "gold_d5_pct"
         ],
         "weighted_score": {
           "active_weight": 34,
@@ -7690,10 +7691,10 @@
             "evidence": "US 10Y real yield delta 0 bps"
           },
           "F6": {
-            "reason": "No clear Fed liquidity impulse",
+            "reason": "Missing input",
             "signal": "NEUTRAL",
             "weight": 12,
-            "evidence": "Fed bias neutral"
+            "evidence": "Fed bias unknown"
           },
           "F7": {
             "reason": "No confirmed US economic surprise",
@@ -7711,54 +7712,54 @@
             "reason": "BTC strength confirms high-beta risk appetite",
             "signal": "BULLISH",
             "weight": 2,
-            "evidence": "BTC delta 26.51%"
+            "evidence": "BTC delta 26.65%"
           },
           "F10": {
             "reason": "Gold does not provide a clean defensive-flow signal",
             "signal": "NEUTRAL",
             "weight": 2,
-            "evidence": "Gold delta 4.15%"
+            "evidence": "Gold delta 4.18%"
           }
         },
-        "reason_next_week": "next_week NQ deterministic score: bull case 100%, bear case 0%, neutral/inactive 49%, directional participation 51%, net edge +100.",
+        "reason_next_week": "next_week NQ deterministic score: bull case 100%, bear case 0%, neutral/inactive 54%, directional participation 46%, net edge +100.",
         "timeframe_models": {
           "3d": {
-            "reason": "3d NQ deterministic score: bull case 100%, bear case 0%, neutral/inactive 67%, directional participation 33%, net edge +100.",
+            "reason": "3d NQ deterministic score: bull case 100%, bear case 0%, neutral/inactive 70%, directional participation 30%, net edge +100.",
             "direction": "BULLISH",
             "conviction": 100,
             "score_bearish": 0,
-            "score_bullish": 3,
-            "score_neutral": 7,
+            "score_bullish": 2,
+            "score_neutral": 8,
             "weighted_score": {
-              "active_weight": 33,
-              "weight_margin": 33,
+              "active_weight": 30,
+              "weight_margin": 30,
               "bearish_weight": 0,
-              "bullish_weight": 33,
-              "neutral_weight": 67
+              "bullish_weight": 30,
+              "neutral_weight": 70
             },
             "conviction_model": {
-              "neutral_pct": 67,
+              "neutral_pct": 70,
               "net_edge_pct": 100,
               "winning_side": "BULLISH",
-              "participation": 33,
+              "participation": 30,
               "weighted_edge": 1,
-              "neutral_weight": 67,
+              "neutral_weight": 70,
               "raw_conviction": 100,
               "agreement_boost": 0,
               "base_conviction": 100,
               "bear_case_weight": 0,
-              "bull_case_weight": 33,
+              "bull_case_weight": 30,
               "conflict_penalty": 0,
               "final_conviction": 100,
               "verdict_strength": "VERY_STRONG",
-              "participation_cap": 33,
+              "participation_cap": 30,
               "bearish_argument_pct": 0,
               "bullish_argument_pct": 100,
-              "neutral_evidence_pct": 67,
+              "neutral_evidence_pct": 70,
               "missing_input_penalty": 0,
-              "final_conviction_logic": "3d NQ deterministic score: bull case 100%, bear case 0%, neutral/inactive 67%, directional participation 33%, net edge +100.",
-              "active_participation_pct": 33,
-              "directional_participation_pct": 33
+              "final_conviction_logic": "3d NQ deterministic score: bull case 100%, bear case 0%, neutral/inactive 70%, directional participation 30%, net edge +100.",
+              "active_participation_pct": 30,
+              "directional_participation_pct": 30
             },
             "factor_breakdown": {
               "F1": {
@@ -7792,10 +7793,10 @@
                 "evidence": "US 10Y real yield delta -1 bps"
               },
               "F6": {
-                "reason": "No clear Fed liquidity impulse",
+                "reason": "Missing input",
                 "signal": "NEUTRAL",
                 "weight": 14,
-                "evidence": "Fed bias neutral"
+                "evidence": "Fed bias unknown"
               },
               "F7": {
                 "reason": "No confirmed US economic surprise",
@@ -7810,16 +7811,16 @@
                 "evidence": "NQ delta 0%"
               },
               "F9": {
-                "reason": "BTC strength confirms high-beta risk appetite",
-                "signal": "BULLISH",
+                "reason": "BTC move below confirmation threshold",
+                "signal": "NEUTRAL",
                 "weight": 3,
-                "evidence": "BTC delta 26.51%"
+                "evidence": "BTC delta 0%"
               },
               "F10": {
                 "reason": "Gold does not provide a clean defensive-flow signal",
                 "signal": "NEUTRAL",
                 "weight": 2,
-                "evidence": "Gold delta 4.15%"
+                "evidence": "Gold delta 0%"
               }
             }
           },
@@ -7893,10 +7894,10 @@
                 "evidence": "US 10Y real yield delta 0 bps"
               },
               "F6": {
-                "reason": "No clear Fed liquidity impulse",
+                "reason": "Missing input",
                 "signal": "NEUTRAL",
                 "weight": 12,
-                "evidence": "Fed bias neutral"
+                "evidence": "Fed bias unknown"
               },
               "F7": {
                 "reason": "No confirmed US economic surprise",
@@ -7914,53 +7915,53 @@
                 "reason": "BTC strength confirms high-beta risk appetite",
                 "signal": "BULLISH",
                 "weight": 2,
-                "evidence": "BTC delta 26.51%"
+                "evidence": "BTC delta 26.65%"
               },
               "F10": {
                 "reason": "Gold does not provide a clean defensive-flow signal",
                 "signal": "NEUTRAL",
                 "weight": 2,
-                "evidence": "Gold delta 4.15%"
+                "evidence": "Gold delta 4.18%"
               }
             }
           },
           "next_week": {
-            "reason": "next_week NQ deterministic score: bull case 100%, bear case 0%, neutral/inactive 49%, directional participation 51%, net edge +100.",
+            "reason": "next_week NQ deterministic score: bull case 100%, bear case 0%, neutral/inactive 54%, directional participation 46%, net edge +100.",
             "direction": "BULLISH",
             "conviction": 100,
             "score_bearish": 0,
-            "score_bullish": 4,
-            "score_neutral": 6,
+            "score_bullish": 3,
+            "score_neutral": 7,
             "weighted_score": {
-              "active_weight": 51,
-              "weight_margin": 51,
+              "active_weight": 46,
+              "weight_margin": 46,
               "bearish_weight": 0,
-              "bullish_weight": 51,
-              "neutral_weight": 49
+              "bullish_weight": 46,
+              "neutral_weight": 54
             },
             "conviction_model": {
-              "neutral_pct": 49,
+              "neutral_pct": 54,
               "net_edge_pct": 100,
               "winning_side": "BULLISH",
-              "participation": 51,
+              "participation": 46,
               "weighted_edge": 1,
-              "neutral_weight": 49,
+              "neutral_weight": 54,
               "raw_conviction": 100,
               "agreement_boost": 0,
               "base_conviction": 100,
               "bear_case_weight": 0,
-              "bull_case_weight": 51,
+              "bull_case_weight": 46,
               "conflict_penalty": 0,
               "final_conviction": 100,
               "verdict_strength": "VERY_STRONG",
-              "participation_cap": 51,
+              "participation_cap": 46,
               "bearish_argument_pct": 0,
               "bullish_argument_pct": 100,
-              "neutral_evidence_pct": 49,
+              "neutral_evidence_pct": 54,
               "missing_input_penalty": 0,
-              "final_conviction_logic": "next_week NQ deterministic score: bull case 100%, bear case 0%, neutral/inactive 49%, directional participation 51%, net edge +100.",
-              "active_participation_pct": 51,
-              "directional_participation_pct": 51
+              "final_conviction_logic": "next_week NQ deterministic score: bull case 100%, bear case 0%, neutral/inactive 54%, directional participation 46%, net edge +100.",
+              "active_participation_pct": 46,
+              "directional_participation_pct": 46
             },
             "factor_breakdown": {
               "F1": {
@@ -7985,7 +7986,7 @@
                 "reason": "Nominal yield move below threshold",
                 "signal": "NEUTRAL",
                 "weight": 8,
-                "evidence": "US 10Y nominal delta 0 bps"
+                "evidence": "US 10Y nominal delta -1 bps"
               },
               "F5": {
                 "reason": "Falling real yields support long-duration growth equities",
@@ -7994,10 +7995,10 @@
                 "evidence": "US 10Y real yield delta -7 bps"
               },
               "F6": {
-                "reason": "No clear Fed liquidity impulse",
+                "reason": "Missing input",
                 "signal": "NEUTRAL",
                 "weight": 20,
-                "evidence": "Fed bias neutral"
+                "evidence": "Fed bias unknown"
               },
               "F7": {
                 "reason": "No confirmed US economic surprise",
@@ -8012,56 +8013,56 @@
                 "evidence": "NQ delta 0%"
               },
               "F9": {
-                "reason": "BTC strength confirms high-beta risk appetite",
-                "signal": "BULLISH",
+                "reason": "BTC move below confirmation threshold",
+                "signal": "NEUTRAL",
                 "weight": 5,
-                "evidence": "BTC delta 26.51%"
+                "evidence": "BTC delta 0%"
               },
               "F10": {
                 "reason": "Gold does not provide a clean defensive-flow signal",
                 "signal": "NEUTRAL",
                 "weight": 3,
-                "evidence": "Gold delta 4.15%"
+                "evidence": "Gold delta 0%"
               }
             }
           },
           "current_week": {
-            "reason": "current_week NQ deterministic score: bull case 100%, bear case 0%, neutral/inactive 68%, directional participation 32%, net edge +100.",
+            "reason": "current_week NQ deterministic score: bull case 100%, bear case 0%, neutral/inactive 72%, directional participation 28%, net edge +100.",
             "direction": "BULLISH",
             "conviction": 100,
             "score_bearish": 0,
-            "score_bullish": 3,
-            "score_neutral": 7,
+            "score_bullish": 2,
+            "score_neutral": 8,
             "weighted_score": {
-              "active_weight": 32,
-              "weight_margin": 32,
+              "active_weight": 28,
+              "weight_margin": 28,
               "bearish_weight": 0,
-              "bullish_weight": 32,
-              "neutral_weight": 68
+              "bullish_weight": 28,
+              "neutral_weight": 72
             },
             "conviction_model": {
-              "neutral_pct": 68,
+              "neutral_pct": 72,
               "net_edge_pct": 100,
               "winning_side": "BULLISH",
-              "participation": 32,
+              "participation": 28,
               "weighted_edge": 1,
-              "neutral_weight": 68,
+              "neutral_weight": 72,
               "raw_conviction": 100,
               "agreement_boost": 0,
               "base_conviction": 100,
               "bear_case_weight": 0,
-              "bull_case_weight": 32,
+              "bull_case_weight": 28,
               "conflict_penalty": 0,
               "final_conviction": 100,
               "verdict_strength": "VERY_STRONG",
-              "participation_cap": 32,
+              "participation_cap": 28,
               "bearish_argument_pct": 0,
               "bullish_argument_pct": 100,
-              "neutral_evidence_pct": 68,
+              "neutral_evidence_pct": 72,
               "missing_input_penalty": 0,
-              "final_conviction_logic": "current_week NQ deterministic score: bull case 100%, bear case 0%, neutral/inactive 68%, directional participation 32%, net edge +100.",
-              "active_participation_pct": 32,
-              "directional_participation_pct": 32
+              "final_conviction_logic": "current_week NQ deterministic score: bull case 100%, bear case 0%, neutral/inactive 72%, directional participation 28%, net edge +100.",
+              "active_participation_pct": 28,
+              "directional_participation_pct": 28
             },
             "factor_breakdown": {
               "F1": {
@@ -8095,10 +8096,10 @@
                 "evidence": "US 10Y real yield delta -1 bps"
               },
               "F6": {
-                "reason": "No clear Fed liquidity impulse",
+                "reason": "Missing input",
                 "signal": "NEUTRAL",
                 "weight": 16,
-                "evidence": "Fed bias neutral"
+                "evidence": "Fed bias unknown"
               },
               "F7": {
                 "reason": "No confirmed US economic surprise",
@@ -8113,56 +8114,56 @@
                 "evidence": "NQ delta 0%"
               },
               "F9": {
-                "reason": "BTC strength confirms high-beta risk appetite",
-                "signal": "BULLISH",
+                "reason": "BTC move below confirmation threshold",
+                "signal": "NEUTRAL",
                 "weight": 4,
-                "evidence": "BTC delta 26.51%"
+                "evidence": "BTC delta 0%"
               },
               "F10": {
                 "reason": "Gold does not provide a clean defensive-flow signal",
                 "signal": "NEUTRAL",
                 "weight": 2,
-                "evidence": "Gold delta 4.15%"
+                "evidence": "Gold delta 0%"
               }
             }
           },
           "current_month": {
-            "reason": "current_month NQ deterministic score: bull case 100%, bear case 0%, neutral/inactive 49%, directional participation 51%, net edge +100.",
+            "reason": "current_month NQ deterministic score: bull case 100%, bear case 0%, neutral/inactive 54%, directional participation 46%, net edge +100.",
             "direction": "BULLISH",
             "conviction": 100,
             "score_bearish": 0,
-            "score_bullish": 4,
-            "score_neutral": 6,
+            "score_bullish": 3,
+            "score_neutral": 7,
             "weighted_score": {
-              "active_weight": 51,
-              "weight_margin": 51,
+              "active_weight": 46,
+              "weight_margin": 46,
               "bearish_weight": 0,
-              "bullish_weight": 51,
-              "neutral_weight": 49
+              "bullish_weight": 46,
+              "neutral_weight": 54
             },
             "conviction_model": {
-              "neutral_pct": 49,
+              "neutral_pct": 54,
               "net_edge_pct": 100,
               "winning_side": "BULLISH",
-              "participation": 51,
+              "participation": 46,
               "weighted_edge": 1,
-              "neutral_weight": 49,
+              "neutral_weight": 54,
               "raw_conviction": 100,
               "agreement_boost": 0,
               "base_conviction": 100,
               "bear_case_weight": 0,
-              "bull_case_weight": 51,
+              "bull_case_weight": 46,
               "conflict_penalty": 0,
               "final_conviction": 100,
               "verdict_strength": "VERY_STRONG",
-              "participation_cap": 51,
+              "participation_cap": 46,
               "bearish_argument_pct": 0,
               "bullish_argument_pct": 100,
-              "neutral_evidence_pct": 49,
+              "neutral_evidence_pct": 54,
               "missing_input_penalty": 0,
-              "final_conviction_logic": "current_month NQ deterministic score: bull case 100%, bear case 0%, neutral/inactive 49%, directional participation 51%, net edge +100.",
-              "active_participation_pct": 51,
-              "directional_participation_pct": 51
+              "final_conviction_logic": "current_month NQ deterministic score: bull case 100%, bear case 0%, neutral/inactive 54%, directional participation 46%, net edge +100.",
+              "active_participation_pct": 46,
+              "directional_participation_pct": 46
             },
             "factor_breakdown": {
               "F1": {
@@ -8187,7 +8188,7 @@
                 "reason": "Nominal yield move below threshold",
                 "signal": "NEUTRAL",
                 "weight": 8,
-                "evidence": "US 10Y nominal delta 0 bps"
+                "evidence": "US 10Y nominal delta -1 bps"
               },
               "F5": {
                 "reason": "Falling real yields support long-duration growth equities",
@@ -8196,10 +8197,10 @@
                 "evidence": "US 10Y real yield delta -7 bps"
               },
               "F6": {
-                "reason": "No clear Fed liquidity impulse",
+                "reason": "Missing input",
                 "signal": "NEUTRAL",
                 "weight": 20,
-                "evidence": "Fed bias neutral"
+                "evidence": "Fed bias unknown"
               },
               "F7": {
                 "reason": "No confirmed US economic surprise",
@@ -8214,26 +8215,26 @@
                 "evidence": "NQ delta 0%"
               },
               "F9": {
-                "reason": "BTC strength confirms high-beta risk appetite",
-                "signal": "BULLISH",
+                "reason": "BTC move below confirmation threshold",
+                "signal": "NEUTRAL",
                 "weight": 5,
-                "evidence": "BTC delta 26.51%"
+                "evidence": "BTC delta 0%"
               },
               "F10": {
                 "reason": "Gold does not provide a clean defensive-flow signal",
                 "signal": "NEUTRAL",
                 "weight": 4,
-                "evidence": "Gold delta 4.15%"
+                "evidence": "Gold delta 0%"
               }
             }
           }
         },
-        "non_neutral_count": 2,
+        "non_neutral_count": 0,
         "reasoning_summary": "NQ weighted verdicts calculated deterministically by timeframe. 24h BULLISH 100%, 3d BULLISH 100%, current week BULLISH 100%, next week BULLISH 100%, current month BULLISH 100%.",
         "direction_next_week": "BULLISH",
-        "reason_current_week": "current_week NQ deterministic score: bull case 100%, bear case 0%, neutral/inactive 68%, directional participation 32%, net edge +100.",
+        "reason_current_week": "current_week NQ deterministic score: bull case 100%, bear case 0%, neutral/inactive 72%, directional participation 28%, net edge +100.",
         "conviction_next_week": 100,
-        "reason_current_month": "current_month NQ deterministic score: bull case 100%, bear case 0%, neutral/inactive 49%, directional participation 51%, net edge +100.",
+        "reason_current_month": "current_month NQ deterministic score: bull case 100%, bear case 0%, neutral/inactive 54%, directional participation 46%, net edge +100.",
         "direction_current_week": "BULLISH",
         "logic_document_version": "2.0_weighted_engine",
         "conviction_current_week": 100,
@@ -8252,16 +8253,16 @@
       "agent": "BTC",
       "status": "live",
       "market_status": null,
-      "last_run_et": "2026-08-31T13:29:16.807+00:00",
-      "generated_at": "2026-08-31T13:29:16.807+00:00",
-      "sealed_at": "2026-08-31T13:30:25.153169+00:00",
-      "valid_from": "2026-08-31T13:30:25.153169+00:00",
+      "last_run_et": "2026-08-31T13:32:35.012+00:00",
+      "generated_at": "2026-08-31T13:32:35.012+00:00",
+      "sealed_at": "2026-08-31T13:32:56.113189+00:00",
+      "valid_from": "2026-08-31T13:32:56.113189+00:00",
       "refresh_due_at": "2026-09-01T11:00:00.000Z",
-      "forecast_window_end": "2026-09-01T13:30:25.153Z",
-      "expires_at": "2026-09-01T13:30:25.153Z",
+      "forecast_window_end": "2026-09-01T13:32:56.113Z",
+      "expires_at": "2026-09-01T13:32:56.113Z",
       "status_at_build": "ACTIVE",
       "effective_status": "ACTIVE",
-      "status_resolved_at": "2026-08-31T13:30:50.772Z",
+      "status_resolved_at": "2026-08-31T13:33:16.896Z",
       "horizon_code": "24H",
       "horizon_duration": "PT24H",
       "horizon_basis": "WALL_CLOCK",
@@ -8325,7 +8326,7 @@
               "reason": "BTC own trend is above noise threshold and supports upside pressure",
               "signal": "BULLISH",
               "weight": 16,
-              "evidence": "BTC 1d % 26.508482326173215"
+              "evidence": "BTC 1d % 26.689361329542972"
             },
             "F3 US 10Y Real Yield Delta": {
               "reason": "Real yield move below threshold",
@@ -8376,15 +8377,15 @@
               "evidence": "Missing BTC dominance and fear/greed"
             }
           },
-          "generated_at": "2026-08-31T13:29:16.807+00:00",
-          "sealed_at": "2026-08-31T13:30:25.153169+00:00",
-          "valid_from": "2026-08-31T13:30:25.153169+00:00",
+          "generated_at": "2026-08-31T13:32:35.012+00:00",
+          "sealed_at": "2026-08-31T13:32:56.113189+00:00",
+          "valid_from": "2026-08-31T13:32:56.113189+00:00",
           "refresh_due_at": "2026-09-01T11:00:00.000Z",
-          "forecast_window_end": "2026-09-01T13:30:25.153Z",
-          "expires_at": "2026-09-01T13:30:25.153Z",
+          "forecast_window_end": "2026-09-01T13:32:56.113Z",
+          "expires_at": "2026-09-01T13:32:56.113Z",
           "status_at_build": "ACTIVE",
           "effective_status": "ACTIVE",
-          "status_resolved_at": "2026-08-31T13:30:50.772Z",
+          "status_resolved_at": "2026-08-31T13:33:16.896Z",
           "horizon_code": "24H",
           "horizon_duration": "PT24H",
           "horizon_basis": "WALL_CLOCK",
@@ -8448,7 +8449,7 @@
               "reason": "BTC own trend is above noise threshold and supports upside pressure",
               "signal": "BULLISH",
               "weight": 12,
-              "evidence": "BTC 5d % 26.508482326173215"
+              "evidence": "BTC 5d % 26.689361329542972"
             },
             "F3 US 10Y Real Yield Delta": {
               "reason": "Real yield move below threshold",
@@ -8554,7 +8555,7 @@
               "reason": "BTC own trend is above noise threshold and supports upside pressure",
               "signal": "BULLISH",
               "weight": 10,
-              "evidence": "BTC 5d % 26.508482326173215"
+              "evidence": "BTC 5d % 26.689361329542972"
             },
             "F3 US 10Y Real Yield Delta": {
               "reason": "Real yield move below threshold",
@@ -8660,7 +8661,7 @@
               "reason": "BTC own trend is above noise threshold and supports upside pressure",
               "signal": "BULLISH",
               "weight": 6,
-              "evidence": "BTC 20d % 26.508482326173215"
+              "evidence": "BTC 20d % 26.689361329542972"
             },
             "F3 US 10Y Real Yield Delta": {
               "reason": "Falling real yields reduce BTC opportunity-cost pressure",
@@ -8766,7 +8767,7 @@
               "reason": "BTC own trend is above noise threshold and supports upside pressure",
               "signal": "BULLISH",
               "weight": 7,
-              "evidence": "BTC 20d % 26.508482326173215"
+              "evidence": "BTC 20d % 26.689361329542972"
             },
             "F3 US 10Y Real Yield Delta": {
               "reason": "Falling real yields reduce BTC opportunity-cost pressure",
@@ -8874,7 +8875,7 @@
             "reason": "BTC own trend is above noise threshold and supports upside pressure",
             "signal": "BULLISH",
             "weight": 16,
-            "evidence": "BTC 1d % 26.508482326173215"
+            "evidence": "BTC 1d % 26.689361329542972"
           },
           "F3 US 10Y Real Yield Delta": {
             "reason": "Real yield move below threshold",
@@ -8925,15 +8926,15 @@
             "evidence": "Missing BTC dominance and fear/greed"
           }
         },
-        "generated_at": "2026-08-31T13:29:16.807+00:00",
-        "sealed_at": "2026-08-31T13:30:25.153169+00:00",
-        "valid_from": "2026-08-31T13:30:25.153169+00:00",
+        "generated_at": "2026-08-31T13:32:35.012+00:00",
+        "sealed_at": "2026-08-31T13:32:56.113189+00:00",
+        "valid_from": "2026-08-31T13:32:56.113189+00:00",
         "refresh_due_at": "2026-09-01T11:00:00.000Z",
-        "forecast_window_end": "2026-09-01T13:30:25.153Z",
-        "expires_at": "2026-09-01T13:30:25.153Z",
+        "forecast_window_end": "2026-09-01T13:32:56.113Z",
+        "expires_at": "2026-09-01T13:32:56.113Z",
         "status_at_build": "ACTIVE",
         "effective_status": "ACTIVE",
-        "status_resolved_at": "2026-08-31T13:30:50.772Z",
+        "status_resolved_at": "2026-08-31T13:33:16.896Z",
         "horizon_code": "24H",
         "horizon_duration": "PT24H",
         "horizon_basis": "WALL_CLOCK",
@@ -8954,7 +8955,7 @@
           "reason": "BTC own trend is above noise threshold and supports upside pressure",
           "signal": "BULLISH",
           "weight": 16,
-          "evidence": "BTC 1d % 26.508482326173215"
+          "evidence": "BTC 1d % 26.689361329542972"
         },
         "F3 US 10Y Real Yield Delta": {
           "reason": "Real yield move below threshold",
@@ -9007,7 +9008,7 @@
       },
       "key_factors": [
         "F2 DXY / USD Pressure [14]: BULLISH - DXY 1d % -0.1623612741301049 (DXY weakness supports BTC/USD)",
-        "F1 BTC Own Price Delta [16]: BULLISH - BTC 1d % 26.508482326173215 (BTC own trend is above noise threshold and supports upside pressure)",
+        "F1 BTC Own Price Delta [16]: BULLISH - BTC 1d % 26.689361329542972 (BTC own trend is above noise threshold and supports upside pressure)",
         "F3 US 10Y Real Yield Delta [10]: NEUTRAL - Real yield 5d bps -1.000000000000023 (Real yield move below threshold)",
         "F5 VIX Level and Risk Regime [16]: BULLISH - VIX 14.51 (Low VIX supports risk appetite and BTC)",
         "F4 Fed Bias / Policy Liquidity [10]: NEUTRAL - Fed bias neutral (No clear Fed liquidity impulse)",
@@ -9074,7 +9075,7 @@
           ],
           "bear_case": [],
           "bull_case": [
-            "F1 BTC Own Price Delta (12): BTC 5d % 26.508482326173215",
+            "F1 BTC Own Price Delta (12): BTC 5d % 26.689361329542972",
             "F2 DXY / USD Pressure (15): DXY 5d % -0.7064593937232794",
             "F5 VIX Level and Risk Regime (14): VIX 14.51"
           ],
@@ -9131,7 +9132,7 @@
               "reason": "BTC own trend is above noise threshold and supports upside pressure",
               "signal": "BULLISH",
               "weight": 12,
-              "evidence": "BTC 5d % 26.508482326173215"
+              "evidence": "BTC 5d % 26.689361329542972"
             },
             "F3 US 10Y Real Yield Delta": {
               "reason": "Real yield move below threshold",
@@ -9193,7 +9194,7 @@
           ],
           "bear_case": [],
           "bull_case": [
-            "F1 BTC Own Price Delta (16): BTC 1d % 26.508482326173215",
+            "F1 BTC Own Price Delta (16): BTC 1d % 26.689361329542972",
             "F2 DXY / USD Pressure (14): DXY 1d % -0.1623612741301049",
             "F5 VIX Level and Risk Regime (16): VIX 14.51"
           ],
@@ -9250,7 +9251,7 @@
               "reason": "BTC own trend is above noise threshold and supports upside pressure",
               "signal": "BULLISH",
               "weight": 16,
-              "evidence": "BTC 1d % 26.508482326173215"
+              "evidence": "BTC 1d % 26.689361329542972"
             },
             "F3 US 10Y Real Yield Delta": {
               "reason": "Real yield move below threshold",
@@ -9312,7 +9313,7 @@
           ],
           "bear_case": [],
           "bull_case": [
-            "F1 BTC Own Price Delta (6): BTC 20d % 26.508482326173215",
+            "F1 BTC Own Price Delta (6): BTC 20d % 26.689361329542972",
             "F2 DXY / USD Pressure (14): DXY 20d % -2.193429734778665",
             "F3 US 10Y Real Yield Delta (18): Real yield 20d bps -7.000000000000028",
             "F5 VIX Level and Risk Regime (10): VIX 14.51"
@@ -9369,7 +9370,7 @@
               "reason": "BTC own trend is above noise threshold and supports upside pressure",
               "signal": "BULLISH",
               "weight": 6,
-              "evidence": "BTC 20d % 26.508482326173215"
+              "evidence": "BTC 20d % 26.689361329542972"
             },
             "F3 US 10Y Real Yield Delta": {
               "reason": "Falling real yields reduce BTC opportunity-cost pressure",
@@ -9431,7 +9432,7 @@
           ],
           "bear_case": [],
           "bull_case": [
-            "F1 BTC Own Price Delta (10): BTC 5d % 26.508482326173215",
+            "F1 BTC Own Price Delta (10): BTC 5d % 26.689361329542972",
             "F2 DXY / USD Pressure (15): DXY 5d % -0.7064593937232794",
             "F5 VIX Level and Risk Regime (13): VIX 14.51"
           ],
@@ -9488,7 +9489,7 @@
               "reason": "BTC own trend is above noise threshold and supports upside pressure",
               "signal": "BULLISH",
               "weight": 10,
-              "evidence": "BTC 5d % 26.508482326173215"
+              "evidence": "BTC 5d % 26.689361329542972"
             },
             "F3 US 10Y Real Yield Delta": {
               "reason": "Real yield move below threshold",
@@ -9550,7 +9551,7 @@
           ],
           "bear_case": [],
           "bull_case": [
-            "F1 BTC Own Price Delta (7): BTC 20d % 26.508482326173215",
+            "F1 BTC Own Price Delta (7): BTC 20d % 26.689361329542972",
             "F2 DXY / USD Pressure (14): DXY 20d % -2.193429734778665",
             "F3 US 10Y Real Yield Delta (18): Real yield 20d bps -7.000000000000028",
             "F5 VIX Level and Risk Regime (9): VIX 14.51"
@@ -9607,7 +9608,7 @@
               "reason": "BTC own trend is above noise threshold and supports upside pressure",
               "signal": "BULLISH",
               "weight": 7,
-              "evidence": "BTC 20d % 26.508482326173215"
+              "evidence": "BTC 20d % 26.689361329542972"
             },
             "F3 US 10Y Real Yield Delta": {
               "reason": "Falling real yields reduce BTC opportunity-cost pressure",
@@ -9675,7 +9676,7 @@
       "full_output": {
         "asset": "BTC",
         "layer": "layer_1_raw",
-        "created_at": "2026-08-31T13:30:25.064Z",
+        "created_at": "2026-08-31T13:32:55.980Z",
         "reason_24h": "24h BTC deterministic score: bull case 46 weight, bear case 0 weight, neutral evidence 54 weight. Winning side BULLISH, conviction 100%, net edge +100, directional participation 46%.",
         "risk_flags": [
           "WEEKEND_LIQUIDITY_RISK",
@@ -9753,7 +9754,7 @@
             "reason": "BTC own trend is above noise threshold and supports upside pressure",
             "signal": "BULLISH",
             "weight": 16,
-            "evidence": "BTC 1d % 26.508482326173215"
+            "evidence": "BTC 1d % 26.689361329542972"
           },
           "F3 US 10Y Real Yield Delta": {
             "reason": "Real yield move below threshold",
@@ -9816,7 +9817,7 @@
             ],
             "bear_case": [],
             "bull_case": [
-              "F1 BTC Own Price Delta (12): BTC 5d % 26.508482326173215",
+              "F1 BTC Own Price Delta (12): BTC 5d % 26.689361329542972",
               "F2 DXY / USD Pressure (15): DXY 5d % -0.7064593937232794",
               "F5 VIX Level and Risk Regime (14): VIX 14.51"
             ],
@@ -9873,7 +9874,7 @@
                 "reason": "BTC own trend is above noise threshold and supports upside pressure",
                 "signal": "BULLISH",
                 "weight": 12,
-                "evidence": "BTC 5d % 26.508482326173215"
+                "evidence": "BTC 5d % 26.689361329542972"
               },
               "F3 US 10Y Real Yield Delta": {
                 "reason": "Real yield move below threshold",
@@ -9935,7 +9936,7 @@
             ],
             "bear_case": [],
             "bull_case": [
-              "F1 BTC Own Price Delta (16): BTC 1d % 26.508482326173215",
+              "F1 BTC Own Price Delta (16): BTC 1d % 26.689361329542972",
               "F2 DXY / USD Pressure (14): DXY 1d % -0.1623612741301049",
               "F5 VIX Level and Risk Regime (16): VIX 14.51"
             ],
@@ -9992,7 +9993,7 @@
                 "reason": "BTC own trend is above noise threshold and supports upside pressure",
                 "signal": "BULLISH",
                 "weight": 16,
-                "evidence": "BTC 1d % 26.508482326173215"
+                "evidence": "BTC 1d % 26.689361329542972"
               },
               "F3 US 10Y Real Yield Delta": {
                 "reason": "Real yield move below threshold",
@@ -10054,7 +10055,7 @@
             ],
             "bear_case": [],
             "bull_case": [
-              "F1 BTC Own Price Delta (6): BTC 20d % 26.508482326173215",
+              "F1 BTC Own Price Delta (6): BTC 20d % 26.689361329542972",
               "F2 DXY / USD Pressure (14): DXY 20d % -2.193429734778665",
               "F3 US 10Y Real Yield Delta (18): Real yield 20d bps -7.000000000000028",
               "F5 VIX Level and Risk Regime (10): VIX 14.51"
@@ -10111,7 +10112,7 @@
                 "reason": "BTC own trend is above noise threshold and supports upside pressure",
                 "signal": "BULLISH",
                 "weight": 6,
-                "evidence": "BTC 20d % 26.508482326173215"
+                "evidence": "BTC 20d % 26.689361329542972"
               },
               "F3 US 10Y Real Yield Delta": {
                 "reason": "Falling real yields reduce BTC opportunity-cost pressure",
@@ -10173,7 +10174,7 @@
             ],
             "bear_case": [],
             "bull_case": [
-              "F1 BTC Own Price Delta (10): BTC 5d % 26.508482326173215",
+              "F1 BTC Own Price Delta (10): BTC 5d % 26.689361329542972",
               "F2 DXY / USD Pressure (15): DXY 5d % -0.7064593937232794",
               "F5 VIX Level and Risk Regime (13): VIX 14.51"
             ],
@@ -10230,7 +10231,7 @@
                 "reason": "BTC own trend is above noise threshold and supports upside pressure",
                 "signal": "BULLISH",
                 "weight": 10,
-                "evidence": "BTC 5d % 26.508482326173215"
+                "evidence": "BTC 5d % 26.689361329542972"
               },
               "F3 US 10Y Real Yield Delta": {
                 "reason": "Real yield move below threshold",
@@ -10292,7 +10293,7 @@
             ],
             "bear_case": [],
             "bull_case": [
-              "F1 BTC Own Price Delta (7): BTC 20d % 26.508482326173215",
+              "F1 BTC Own Price Delta (7): BTC 20d % 26.689361329542972",
               "F2 DXY / USD Pressure (14): DXY 20d % -2.193429734778665",
               "F3 US 10Y Real Yield Delta (18): Real yield 20d bps -7.000000000000028",
               "F5 VIX Level and Risk Regime (9): VIX 14.51"
@@ -10349,7 +10350,7 @@
                 "reason": "BTC own trend is above noise threshold and supports upside pressure",
                 "signal": "BULLISH",
                 "weight": 7,
-                "evidence": "BTC 20d % 26.508482326173215"
+                "evidence": "BTC 20d % 26.689361329542972"
               },
               "F3 US 10Y Real Yield Delta": {
                 "reason": "Falling real yields reduce BTC opportunity-cost pressure",
