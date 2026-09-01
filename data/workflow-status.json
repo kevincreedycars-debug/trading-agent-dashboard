@@ -1,10 +1,10 @@
 {
   "status": "failed",
-  "last_run_started_at": "2026-09-01T15:02:06.521Z",
-  "last_run_finished_at": "2026-09-01T15:02:06.522Z",
+  "last_run_started_at": "2026-09-01T17:35:05.319Z",
+  "last_run_finished_at": "2026-09-01T17:35:05.320Z",
   "triggered_by": "dashboard_or_manual",
   "message": "Master Orchestrator finished with errors.",
-  "failed_step": "BTC Collector",
+  "failed_step": "USD Collector",
   "steps": [
     {
       "name": "Call '1. Economic Events Collector'",
@@ -12,7 +12,8 @@
     },
     {
       "name": "USD Collector",
-      "status": "success"
+      "status": "failed",
+      "error": "Bad gateway - the service failed to handle your request"
     },
     {
       "name": "EUR Collector",
@@ -28,8 +29,7 @@
     },
     {
       "name": "BTC Collector",
-      "status": "failed",
-      "error": "The service was not able to process your request"
+      "status": "success"
     },
     {
       "name": "USD Layer 1 Agent",
@@ -53,7 +53,8 @@
     },
     {
       "name": "Layer 2 Trade Selection Agent",
-      "status": "success"
+      "status": "failed",
+      "error": "Your request is invalid or could not be processed by the service"
     },
     {
       "name": "Dashboard Writer",
@@ -61,7 +62,7 @@
     }
   ],
   "error": {
-    "step": "BTC Collector",
-    "reason": "The service was not able to process your request"
+    "step": "USD Collector",
+    "reason": "Bad gateway - the service failed to handle your request"
   }
 }
