@@ -1,10 +1,10 @@
 {
   "status": "failed",
-  "last_run_started_at": "2026-09-01T13:56:13.218Z",
-  "last_run_finished_at": "2026-09-01T13:56:13.218Z",
+  "last_run_started_at": "2026-09-01T15:02:06.521Z",
+  "last_run_finished_at": "2026-09-01T15:02:06.522Z",
   "triggered_by": "dashboard_or_manual",
   "message": "Master Orchestrator finished with errors.",
-  "failed_step": "Layer 2 Trade Selection Agent",
+  "failed_step": "BTC Collector",
   "steps": [
     {
       "name": "Call '1. Economic Events Collector'",
@@ -28,7 +28,8 @@
     },
     {
       "name": "BTC Collector",
-      "status": "success"
+      "status": "failed",
+      "error": "The service was not able to process your request"
     },
     {
       "name": "USD Layer 1 Agent",
@@ -52,8 +53,7 @@
     },
     {
       "name": "Layer 2 Trade Selection Agent",
-      "status": "failed",
-      "error": "Your request is invalid or could not be processed by the service"
+      "status": "success"
     },
     {
       "name": "Dashboard Writer",
@@ -61,7 +61,7 @@
     }
   ],
   "error": {
-    "step": "Layer 2 Trade Selection Agent",
-    "reason": "Your request is invalid or could not be processed by the service"
+    "step": "BTC Collector",
+    "reason": "The service was not able to process your request"
   }
 }
