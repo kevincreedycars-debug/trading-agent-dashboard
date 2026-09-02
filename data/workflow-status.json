@@ -1,10 +1,10 @@
 {
   "status": "failed",
-  "last_run_started_at": "2026-09-01T20:18:59.200Z",
-  "last_run_finished_at": "2026-09-01T20:18:59.200Z",
+  "last_run_started_at": "2026-09-02T08:09:09.844Z",
+  "last_run_finished_at": "2026-09-02T08:09:09.844Z",
   "triggered_by": "dashboard_or_manual",
   "message": "Master Orchestrator finished with errors.",
-  "failed_step": "Layer 2 Trade Selection Agent",
+  "failed_step": "USD Collector",
   "steps": [
     {
       "name": "Call '1. Economic Events Collector'",
@@ -12,7 +12,8 @@
     },
     {
       "name": "USD Collector",
-      "status": "success"
+      "status": "failed",
+      "error": "Bad request - please check your parameters"
     },
     {
       "name": "EUR Collector",
@@ -20,7 +21,8 @@
     },
     {
       "name": "Gold Collector",
-      "status": "success"
+      "status": "failed",
+      "error": "Bad request - please check your parameters"
     },
     {
       "name": "NQ Collector",
@@ -52,8 +54,7 @@
     },
     {
       "name": "Layer 2 Trade Selection Agent",
-      "status": "failed",
-      "error": "Your request is invalid or could not be processed by the service"
+      "status": "success"
     },
     {
       "name": "Dashboard Writer",
@@ -61,7 +62,7 @@
     }
   ],
   "error": {
-    "step": "Layer 2 Trade Selection Agent",
-    "reason": "Your request is invalid or could not be processed by the service"
+    "step": "USD Collector",
+    "reason": "Bad request - please check your parameters"
   }
 }
