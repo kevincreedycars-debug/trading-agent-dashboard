@@ -3374,6 +3374,13 @@ function workflowRefreshElapsedSeconds(requestedAt) {
   return Math.max(0, (Date.now() - requestedMs) / 1000);
 }
 
+function workflowRefreshStateAgeSeconds(state) {
+  const reference = state?.last_updated_at || state?.requested_at || null;
+  const referenceMs = parseTimestamp(reference);
+  if (!Number.isFinite(referenceMs)) return 0;
+  return Math.max(0, (Date.now() - referenceMs) / 1000);
+}
+
 function formatDurationClock(totalSeconds) {
   const seconds = Math.max(0, Math.floor(Number(totalSeconds) || 0));
   const hours = Math.floor(seconds / 3600);
@@ -3421,6 +3428,7 @@ function workflowRefreshTerminalMarkersAdvanced(state, current = currentWorkflow
 function shouldRetireStoredWorkflowRefreshState(state, current = currentWorkflowMarkers()) {
   if (!state || !isTerminalWorkflowRefreshPhase(state.phase)) return false;
   if (hasExactRefreshAssociation(state, current)) return false;
+  if (workflowRefreshStateAgeSeconds(state) > getWorkflowRefreshHardExpirySeconds()) return true;
   return workflowRefreshTerminalMarkersAdvanced(state, current);
 }
 

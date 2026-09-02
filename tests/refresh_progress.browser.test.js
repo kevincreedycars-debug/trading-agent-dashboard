@@ -922,6 +922,69 @@ test("stale terminal refresh state retires after a newer unrelated published run
   }
 });
 
+test("aged terminal refresh state retires even when no newer public run appears", async () => {
+  const harness = await createHarness({
+    workflowStatus: buildWorkflowStatus({
+      status: "success",
+      startedAt: "2026-08-08T11:12:00.626Z",
+      finishedAt: "2026-08-08T11:12:00.627Z",
+      message: "Manual Refresh Complete"
+    }),
+    layer1: buildPublishedLayer1("2026-08-08T11:11:40.000Z"),
+    layer2: buildPublishedLayer2("2026-08-08T11:11:20.000Z")
+  });
+  try {
+    const context = await harness.createContext();
+    const page = await openDashboard(context, harness.origin);
+    await seedStoredRefreshStateAndReload(page, {
+      refresh_request_id: "aged-failed-request",
+      requested_at: "2026-09-01T20:13:33.000Z",
+      source: "dashboard",
+      phase: "failed",
+      owner_tab_id: "tab-aged-failed",
+      baseline: {
+        workflow_finished_at: "2026-08-08T11:12:00.627Z",
+        workflow_started_at: "2026-08-08T11:12:00.626Z",
+        layer1_generated_at: "2026-08-08T11:11:40.000Z",
+        layer2_generated_at: "2026-08-08T11:11:20.000Z"
+      },
+      observed_markers: {
+        workflow_finished_at: "2026-09-01T20:18:56.000Z",
+        workflow_started_at: "2026-09-01T20:13:50.000Z",
+        workflow_status: "failed",
+        workflow_failed_step: "USD Collector",
+        workflow_error_reason: "Bad request",
+        workflow_refresh_request_id: null,
+        workflow_source_run_id: null,
+        layer1_generated_at: "2026-09-01T20:18:40.000Z",
+        layer1_refresh_request_id: null,
+        layer1_source_run_id: null,
+        layer2_generated_at: "2026-09-01T20:18:20.000Z",
+        layer2_refresh_request_id: null,
+        layer2_source_run_id: null
+      },
+      fresh_artifacts: ["workflow status", "Layer 1", "Layer 2"],
+      missing_artifacts: [],
+      workflow_failure: {
+        failed_step: "USD Collector",
+        reason: "Bad request",
+        exact_association: false,
+        relevant_partial_publication: true
+      },
+      last_updated_at: "2026-09-01T20:18:56.000Z"
+    });
+    await page.waitForTimeout(1200);
+    const ui = await readWorkflowUi(page);
+    assert.equal(ui.disabled, false);
+    assert.match(ui.badge, /SUCCESS|Success/i);
+    assert.doesNotMatch(ui.summary, /post-request workflow stop|refresh lock is now closed/i);
+    assert.equal(ui.stored, null);
+    await context.close();
+  } finally {
+    await harness.close();
+  }
+});
+
 test("long elapsed times render as HH:MM:SS", async () => {
   const harness = await createHarness();
   try {
