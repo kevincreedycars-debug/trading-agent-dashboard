@@ -22,6 +22,7 @@ const factorEdgeLabUrl = "./data/factor-edge-lab.json?v=20260706-review-summary"
 const phase2ShadowBacktestUrl = "./data/phase-2-shadow-backtest.json?v=20260707-phase2-shadow-v1";
 const confidenceCalibrationUrl = "./data/confidence-calibration.json?v=20260728-confidence-calibration-v1";
 const confidenceBandDeliveryUrl = "./data/confidence-band-delivery.json?v=20260728-confidence-band-delivery-v1";
+const researchProofMapUrl = "./data/research-proof-map.json?v=20260902-proof-map-v1";
 const architectureManifestUrlDefault = "./data/architecture-map.json?v=20260721-architecture-mirror-v1";
 const researchSupabaseUrl = "https://eaolqbrlywczinfordvg.supabase.co/rest/v1";
 const researchSupabaseKey = "sb_publishable_k6YbEuuk3GyB9GVTQDtNVA_J1gCRYaY";
@@ -263,6 +264,7 @@ let backtestData = null;
 let factorEdgeLabData = null;
 let phase2ShadowBacktestData = null;
 let confidenceBandDeliveryData = null;
+let researchProofMapData = null;
 let economicEventRefreshData = null;
 let economicEventsSourceData = null;
 let inputHealthData = null;
@@ -294,6 +296,7 @@ let halfL2lExplorerState = {
 let activeTab = "overview";
 let activeBacktestTab = "accuracy";
 let activeCheckerRowId = null;
+let activeResearchProofStageId = null;
 let architectureManifestUrl = architectureManifestUrlDefault;
 let architectureState = {
   status: "idle",
@@ -11913,6 +11916,115 @@ function renderResearchInfrastructure(data = {}) {
   `;
 }
 
+function researchProofStatusLabel(status = "") {
+  const labels = {
+    complete: "Complete",
+    active: "In progress",
+    blocked: "Blocked",
+    planned: "Queued"
+  };
+  return labels[String(status || "").toLowerCase()] || "Unverified";
+}
+
+function researchProofMapProgress(stages = []) {
+  const complete = stages.filter(stage => stage.status === "complete").length;
+  const active = stages.filter(stage => stage.status === "active").length;
+  return { complete, active, total: stages.length };
+}
+
+function renderResearchProofMap(data = {}) {
+  const updated = document.getElementById("researchProofMapUpdated");
+  const panel = document.getElementById("researchProofMapPanel");
+  const stages = Array.isArray(data.stages) ? data.stages : [];
+
+  if (updated) {
+    updated.textContent = data.meta?.generated_at
+      ? `Evidence map updated: ${formatDashboardTime(data.meta.generated_at)}`
+      : "Research proof map is unavailable.";
+  }
+  if (!panel) return;
+  if (!stages.length) {
+    panel.innerHTML = `<div class="empty-state">No research proof milestones are currently published.</div>`;
+    return;
+  }
+
+  const selected = stages.find(stage => stage.id === activeResearchProofStageId) || stages.find(stage => stage.status === "active") || stages[0];
+  const progress = researchProofMapProgress(stages);
+  const releaseRequirements = Array.isArray(data.release_gate?.requirements) ? data.release_gate.requirements : [];
+
+  panel.innerHTML = `
+    <section class="research-proof-hero detail-panel">
+      <div class="research-proof-hero-copy">
+        <p class="eyebrow">Release Standard</p>
+        <h3>${escapeHtml(data.release_gate?.title || "Evidence required before release")}</h3>
+        <p>Current research is exploratory. A stage being complete does not make a live call eligible on its own.</p>
+      </div>
+      <div class="research-proof-progress" aria-label="Research milestone progress">
+        <strong>${progress.complete} / ${progress.total}</strong>
+        <span>proof stages complete</span>
+        <span>${progress.active} stage${progress.active === 1 ? "" : "s"} under active investigation</span>
+      </div>
+    </section>
+    <section class="research-proof-orbit" aria-label="24 hour signal proof path">
+      <div class="research-proof-track" aria-hidden="true"></div>
+      ${stages.map((stage, index) => `
+        <button
+          type="button"
+          class="research-proof-stage is-${escapeHtml(stage.status || "unverified")}${selected.id === stage.id ? " is-selected" : ""}"
+          data-research-proof-stage="${escapeHtml(stage.id)}"
+          aria-pressed="${selected.id === stage.id ? "true" : "false"}">
+          <span class="research-proof-stage-index">${String(index + 1).padStart(2, "0")}</span>
+          <strong>${escapeHtml(stage.short_label || stage.label || `Stage ${index + 1}`)}</strong>
+          <span class="research-proof-stage-status">${escapeHtml(researchProofStatusLabel(stage.status))}</span>
+        </button>
+      `).join("")}
+      <div class="research-proof-gate" aria-label="Live release gate">
+        <span>LIVE</span>
+        <strong>Release gate</strong>
+        <small>All proof stages required</small>
+      </div>
+    </section>
+    <section class="research-proof-detail detail-panel" aria-live="polite">
+      <div class="research-proof-detail-head">
+        <div>
+          <p class="eyebrow">Stage ${String(stages.indexOf(selected) + 1).padStart(2, "0")}</p>
+          <h3>${escapeHtml(selected.label || "Research stage")}</h3>
+        </div>
+        <span class="research-proof-status is-${escapeHtml(selected.status || "unverified")}">${escapeHtml(researchProofStatusLabel(selected.status))}</span>
+      </div>
+      <div class="research-proof-detail-grid">
+        <div><span>Current evidence</span><p>${escapeHtml(selected.evidence || "No evidence note is published yet.")}</p></div>
+        <div><span>Next improvement</span><p>${escapeHtml(selected.next_action || "No next action is published yet.")}</p></div>
+      </div>
+      ${selected.target_tab ? `<button type="button" class="inspect-button" data-research-proof-open="${escapeHtml(selected.id)}">Open supporting evidence</button>` : ""}
+    </section>
+    <section class="research-proof-requirements detail-panel">
+      <p class="eyebrow">Non-negotiable release checks</p>
+      <div class="research-proof-requirement-list">
+        ${releaseRequirements.map((requirement, index) => `<div><span>${String(index + 1).padStart(2, "0")}</span><p>${escapeHtml(requirement)}</p></div>`).join("")}
+      </div>
+    </section>
+  `;
+
+  if (panel.dataset.researchProofBound === "true") return;
+  panel.dataset.researchProofBound = "true";
+  panel.addEventListener("click", event => {
+    const stageButton = event.target.closest("[data-research-proof-stage]");
+    if (stageButton) {
+      activeResearchProofStageId = stageButton.dataset.researchProofStage || null;
+      renderResearchProofMap(researchProofMapData || {});
+      return;
+    }
+
+    const evidenceButton = event.target.closest("[data-research-proof-open]");
+    if (!evidenceButton) return;
+    const stage = stages.find(item => item.id === evidenceButton.dataset.researchProofOpen);
+    if (!stage?.target_tab) return;
+    if (stage.target_backtest_tab) activeBacktestTab = stage.target_backtest_tab;
+    setTab(stage.target_tab);
+  });
+}
+
 function renderBacktest(data = {}) {
   const updated = document.getElementById("backtestUpdated");
   if (updated) {
@@ -13466,6 +13578,7 @@ function setTab(tab) {
   const overviewView = document.getElementById("overviewView");
   const layer2View = document.getElementById("layer2View");
   const backtestView = document.getElementById("backtestView");
+  const researchProofMapView = document.getElementById("researchProofMapView");
   const factorEdgeLabView = document.getElementById("factorEdgeLabView");
   const shadowLogicBacktestView = document.getElementById("shadowLogicBacktestView");
   const architectureView = document.getElementById("architectureView");
@@ -13474,6 +13587,7 @@ function setTab(tab) {
   if (overviewView) overviewView.classList.toggle("active-view", activeTab === "overview");
   if (layer2View) layer2View.classList.toggle("active-view", activeTab === "layer2");
   if (backtestView) backtestView.classList.toggle("active-view", activeTab === "backtest");
+  if (researchProofMapView) researchProofMapView.classList.toggle("active-view", activeTab === "research-proof-map");
   if (factorEdgeLabView) factorEdgeLabView.classList.toggle("active-view", activeTab === "factor-edge-lab");
   if (shadowLogicBacktestView) shadowLogicBacktestView.classList.toggle("active-view", activeTab === "shadow-logic-backtest");
   if (architectureView) architectureView.classList.toggle("active-view", activeTab === "architecture");
@@ -13481,6 +13595,7 @@ function setTab(tab) {
 
   if (orderedAgents.includes(activeTab)) renderAgentDetail(activeTab);
   if (activeTab === "backtest") renderBacktest(backtestData || {});
+  if (activeTab === "research-proof-map") renderResearchProofMap(researchProofMapData || {});
   if (activeTab === "factor-edge-lab") renderFactorEdgeLab(factorEdgeLabData || {});
   if (activeTab === "shadow-logic-backtest") renderShadowLogicBacktest(phase2ShadowBacktestData || {});
   if (activeTab === "architecture") {
@@ -13917,13 +14032,14 @@ async function fetchResearchDashboardData() {
 }
 
 async function loadDashboard() {
-  const [layer1Result, layer2Result, researchResult, factorEdgeLabResult, phase2ShadowBacktestResult, confidenceBandDeliveryResult, economicEventRefreshResult, economicEventsSourceResult, inputHealthResult] = await Promise.allSettled([
+  const [layer1Result, layer2Result, researchResult, factorEdgeLabResult, phase2ShadowBacktestResult, confidenceBandDeliveryResult, researchProofMapResult, economicEventRefreshResult, economicEventsSourceResult, inputHealthResult] = await Promise.allSettled([
     fetch(layer1Url, { cache: "no-store" }),
     fetch(layer2Url, { cache: "no-store" }),
     fetchResearchDashboardData(),
     fetchLocalJson(factorEdgeLabUrl),
     fetchLocalJson(phase2ShadowBacktestUrl),
     fetchLocalJson(confidenceBandDeliveryUrl),
+    fetchLocalJson(researchProofMapUrl),
     fetchLocalJson(economicEventRefreshUrl),
     fetchLocalJson(economicEventsSourceUrl),
     fetchLocalJson(inputHealthUrl)
@@ -14008,6 +14124,16 @@ async function loadDashboard() {
     };
   }
 
+  if (researchProofMapResult.status === "fulfilled") {
+    researchProofMapData = researchProofMapResult.value;
+  } else {
+    console.error(researchProofMapResult.reason);
+    researchProofMapData = {
+      meta: { error: researchProofMapResult.reason?.message || String(researchProofMapResult.reason) },
+      stages: []
+    };
+  }
+
   if (economicEventRefreshResult.status === "fulfilled") {
     economicEventRefreshData = economicEventRefreshResult.value;
   } else {
@@ -14045,6 +14171,7 @@ async function loadDashboard() {
   if (layer2Data) renderLayer2(layer2Data);
 
   renderBacktest(backtestData);
+  renderResearchProofMap(researchProofMapData);
   renderFactorEdgeLab(factorEdgeLabData);
   renderShadowLogicBacktest(phase2ShadowBacktestData);
   renderWorkflowStatus(workflowStatus);

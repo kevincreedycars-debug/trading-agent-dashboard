@@ -1,0 +1,74 @@
+{
+  "meta": {
+    "generated_at": "2026-09-02T13:00:00.000Z",
+    "version": "research-proof-map-v1",
+    "scope": "Read-only research control surface. This map does not alter live Layer 1 or Layer 2 decisions."
+  },
+  "release_gate": {
+    "title": "Do not release a directional call until all gates pass",
+    "requirements": [
+      "Unseen-period directional accuracy is above 50% after flats are handled by the locked contract.",
+      "Each confidence band is calibrated against realised outcomes with sufficient sample size.",
+      "The result is stable across time splits and does not depend on one asset, regime, or factor."
+    ]
+  },
+  "stages": [
+    {
+      "id": "contract",
+      "label": "Lock the 24H contract",
+      "short_label": "Contract",
+      "status": "complete",
+      "evidence": "Outcome and flat-band rules are defined in the checker contract.",
+      "next_action": "Keep the definition frozen while testing so results remain comparable.",
+      "target_tab": "backtest",
+      "target_backtest_tab": "accuracy"
+    },
+    {
+      "id": "replay",
+      "label": "Rebuild historical calls",
+      "short_label": "Replay",
+      "status": "complete",
+      "evidence": "Historical checker artifacts exist for the five current Layer 1 assets.",
+      "next_action": "Extend only with timestamp-safe inputs; never use information published after the call time.",
+      "target_tab": "backtest",
+      "target_backtest_tab": "checker"
+    },
+    {
+      "id": "factors",
+      "label": "Find stable variables",
+      "short_label": "Factors",
+      "status": "active",
+      "evidence": "Factor Edge Lab identifies candidate evidence, but factor-level ADR/L2L joins remain incomplete.",
+      "next_action": "Test each factor and factor combination across independent time periods, then remove unstable candidates.",
+      "target_tab": "factor-edge-lab"
+    },
+    {
+      "id": "selectivity",
+      "label": "Prove selective accuracy",
+      "short_label": "Selectivity",
+      "status": "active",
+      "evidence": "The Phase 2 shadow comparison improves two assets, with three assets still mixed or awaiting stronger evidence.",
+      "next_action": "Measure only the calls the gate would actually allow, separately by asset and confidence band.",
+      "target_tab": "shadow-logic-backtest"
+    },
+    {
+      "id": "calibration",
+      "label": "Calibrate confidence",
+      "short_label": "Confidence",
+      "status": "blocked",
+      "evidence": "Confidence-band delivery exists, but calibration must be demonstrated on a separate unseen period.",
+      "next_action": "Compare stated confidence bands with realised win rates and reject bands that are not honest or well sampled.",
+      "target_tab": "backtest",
+      "target_backtest_tab": "directional-trust-summary"
+    },
+    {
+      "id": "validation",
+      "label": "Pass unseen validation",
+      "short_label": "Validation",
+      "status": "planned",
+      "evidence": "Walk-forward, stability, and selectivity modules exist, but their evidence is not yet unified into one release decision.",
+      "next_action": "Run time-ordered holdout tests and require every release gate to pass before a live-trading recommendation.",
+      "target_tab": "architecture"
+    }
+  ]
+}
