@@ -23,6 +23,7 @@ const phase2ShadowBacktestUrl = "./data/phase-2-shadow-backtest.json?v=20260707-
 const confidenceCalibrationUrl = "./data/confidence-calibration.json?v=20260728-confidence-calibration-v1";
 const confidenceBandDeliveryUrl = "./data/confidence-band-delivery.json?v=20260728-confidence-band-delivery-v1";
 const researchProofMapUrl = "./data/research-proof-map.json?v=20260902-proof-map-v1";
+const backtestEngineUrl = "./data/backtest-engine.json?v=20260903-engine-v1";
 const architectureManifestUrlDefault = "./data/architecture-map.json?v=20260721-architecture-mirror-v1";
 const researchSupabaseUrl = "https://eaolqbrlywczinfordvg.supabase.co/rest/v1";
 const researchSupabaseKey = "sb_publishable_k6YbEuuk3GyB9GVTQDtNVA_J1gCRYaY";
@@ -265,6 +266,7 @@ let factorEdgeLabData = null;
 let phase2ShadowBacktestData = null;
 let confidenceBandDeliveryData = null;
 let researchProofMapData = null;
+let backtestEngineData = null;
 let economicEventRefreshData = null;
 let economicEventsSourceData = null;
 let inputHealthData = null;
@@ -12055,6 +12057,93 @@ function renderResearchProofMap(data = {}) {
   });
 }
 
+function backtestEngineStatusLabel(status) {
+  return researchProofStatusLabel(status);
+}
+
+function renderBacktestEngine(data = {}) {
+  const updated = document.getElementById("backtestEngineUpdated");
+  const panel = document.getElementById("backtestEnginePanel");
+  const lanes = Array.isArray(data.lanes) ? data.lanes : [];
+  const todo = Array.isArray(data.todo) ? data.todo : [];
+  const metrics = Array.isArray(data.performance) ? data.performance : [];
+  const gates = Array.isArray(data.qualification_gate?.checks) ? data.qualification_gate.checks : [];
+
+  if (updated) {
+    updated.textContent = data.meta?.generated_at
+      ? `Engine tracker updated: ${formatDashboardTime(data.meta.generated_at)}`
+      : "Engine tracker is unavailable.";
+  }
+  if (!panel) return;
+  if (!lanes.length) {
+    panel.innerHTML = `<div class="empty-state">No backtest-engine development state is currently published.</div>`;
+    return;
+  }
+
+  const completed = lanes.filter(lane => lane.status === "complete").length;
+  const active = lanes.filter(lane => lane.status === "active").length;
+  const overall = data.qualification_gate?.status || "not qualified";
+
+  panel.innerHTML = `
+    <section class="engine-hero detail-panel">
+      <div class="engine-hero-copy">
+        <p class="eyebrow">Development reality</p>
+        <h3>${escapeHtml(data.title || "Build a reliable XAU/USD call qualifier")}</h3>
+        <p>${escapeHtml(data.summary || "This board tracks engineering evidence. It does not make a live call eligible.")}</p>
+      </div>
+      <div class="engine-verdict is-${escapeHtml(overall.replace(/\s+/g, "-"))}">
+        <span>Current call gate</span>
+        <strong>${escapeHtml(overall)}</strong>
+        <small>${completed} of ${lanes.length} workstreams complete; ${active} active</small>
+      </div>
+    </section>
+    <section class="engine-todo detail-panel" aria-label="Backtest engine control list">
+      <div class="engine-section-head">
+        <div><p class="eyebrow">Control list</p><h3>Where we are, what is next, and what we need</h3></div>
+        <span>Start with XAU/USD</span>
+      </div>
+      <ol>
+        ${todo.map((item, index) => `<li class="is-${escapeHtml(item.status || "planned")}"><span>${String(index + 1).padStart(2, "0")}</span><div><small>${escapeHtml(backtestEngineStatusLabel(item.status))}</small><strong>${escapeHtml(item.title || "Development task")}</strong><p>${escapeHtml(item.detail || "No detail published.")}</p></div></li>`).join("")}
+      </ol>
+    </section>
+    <section class="engine-metrics" aria-label="XAU/USD research performance summary">
+      ${metrics.map(metric => `<article><span>${escapeHtml(metric.label || "Research metric")}</span><strong>${escapeHtml(metric.value || "--")}</strong><small>${escapeHtml(metric.detail || "No detail published.")}</small></article>`).join("")}
+    </section>
+    <section class="engine-board" aria-label="Visual backtest engine assessment board">
+      <div class="engine-board-header"><div><p class="eyebrow">Assessment board</p><h3>Build evidence in order, not all at once</h3></div><p>Every lane must be evidence-backed before the call-qualifying gate can pass.</p></div>
+      <div class="engine-lanes">
+        ${lanes.map((lane, index) => `<article class="engine-lane is-${escapeHtml(lane.status || "planned")}">
+          <div class="engine-lane-top"><span>${String(index + 1).padStart(2, "0")}</span><small>${escapeHtml(backtestEngineStatusLabel(lane.status))}</small></div>
+          <h4>${escapeHtml(lane.title || "Workstream")}</h4>
+          <p>${escapeHtml(lane.goal || "No goal published.")}</p>
+          <div class="engine-lane-progress"><span style="width:${Math.max(0, Math.min(100, Number(lane.progress) || 0))}%"></span></div>
+          <strong>${escapeHtml(String(lane.progress ?? 0))}% evidence complete</strong>
+          <ul>${(Array.isArray(lane.items) ? lane.items : []).map(item => `<li class="is-${escapeHtml(item.status || "planned")}"><i></i><span>${escapeHtml(item.label || "Assessment item")}</span><small>${escapeHtml(backtestEngineStatusLabel(item.status))}</small></li>`).join("")}</ul>
+          <p class="engine-lane-next"><b>Next:</b> ${escapeHtml(lane.next_action || "No next action published.")}</p>
+        </article>`).join("")}
+      </div>
+    </section>
+    <section class="engine-gate detail-panel" aria-label="Call qualifying gate">
+      <div class="engine-section-head"><div><p class="eyebrow">Call qualifying gate</p><h3>${escapeHtml(data.qualification_gate?.title || "No call is qualified yet")}</h3></div><span class="engine-gate-status">${escapeHtml(overall)}</span></div>
+      <div class="engine-gate-flow">
+        ${gates.map((gate, index) => `<div class="engine-gate-check is-${escapeHtml(gate.status || "planned")}"><span>${String(index + 1).padStart(2, "0")}</span><strong>${escapeHtml(gate.label || "Gate check")}</strong><small>${escapeHtml(backtestEngineStatusLabel(gate.status))}</small></div>`).join("")}
+        <div class="engine-gate-end"><span>OUTPUT</span><strong>Strength grade + call qualifier</strong><small>Locked until every check is complete</small></div>
+      </div>
+      <p class="engine-gate-note">${escapeHtml(data.qualification_gate?.note || "")}</p>
+      <div class="engine-actions"><button type="button" class="inspect-button" data-engine-open="factor-edge-lab">Open factor evidence</button><button type="button" class="inspect-button" data-engine-open="backtest">Open L2L reach research</button></div>
+    </section>
+  `;
+
+  if (panel.dataset.engineBound === "true") return;
+  panel.dataset.engineBound = "true";
+  panel.addEventListener("click", event => {
+    const target = event.target.closest("[data-engine-open]")?.dataset.engineOpen;
+    if (!target) return;
+    if (target === "backtest") activeBacktestTab = "half-l2l-reach";
+    setTab(target);
+  });
+}
+
 function renderBacktest(data = {}) {
   const updated = document.getElementById("backtestUpdated");
   if (updated) {
@@ -13608,6 +13697,7 @@ function setTab(tab) {
   const overviewView = document.getElementById("overviewView");
   const layer2View = document.getElementById("layer2View");
   const backtestView = document.getElementById("backtestView");
+  const backtestEngineView = document.getElementById("backtestEngineView");
   const researchProofMapView = document.getElementById("researchProofMapView");
   const factorEdgeLabView = document.getElementById("factorEdgeLabView");
   const shadowLogicBacktestView = document.getElementById("shadowLogicBacktestView");
@@ -13617,6 +13707,7 @@ function setTab(tab) {
   if (overviewView) overviewView.classList.toggle("active-view", activeTab === "overview");
   if (layer2View) layer2View.classList.toggle("active-view", activeTab === "layer2");
   if (backtestView) backtestView.classList.toggle("active-view", activeTab === "backtest");
+  if (backtestEngineView) backtestEngineView.classList.toggle("active-view", activeTab === "backtest-engine");
   if (researchProofMapView) researchProofMapView.classList.toggle("active-view", activeTab === "research-proof-map");
   if (factorEdgeLabView) factorEdgeLabView.classList.toggle("active-view", activeTab === "factor-edge-lab");
   if (shadowLogicBacktestView) shadowLogicBacktestView.classList.toggle("active-view", activeTab === "shadow-logic-backtest");
@@ -13625,6 +13716,7 @@ function setTab(tab) {
 
   if (orderedAgents.includes(activeTab)) renderAgentDetail(activeTab);
   if (activeTab === "backtest") renderBacktest(backtestData || {});
+  if (activeTab === "backtest-engine") renderBacktestEngine(backtestEngineData || {});
   if (activeTab === "research-proof-map") renderResearchProofMap(researchProofMapData || {});
   if (activeTab === "factor-edge-lab") renderFactorEdgeLab(factorEdgeLabData || {});
   if (activeTab === "shadow-logic-backtest") renderShadowLogicBacktest(phase2ShadowBacktestData || {});
@@ -14062,7 +14154,7 @@ async function fetchResearchDashboardData() {
 }
 
 async function loadDashboard() {
-  const [layer1Result, layer2Result, researchResult, factorEdgeLabResult, phase2ShadowBacktestResult, confidenceBandDeliveryResult, researchProofMapResult, economicEventRefreshResult, economicEventsSourceResult, inputHealthResult] = await Promise.allSettled([
+  const [layer1Result, layer2Result, researchResult, factorEdgeLabResult, phase2ShadowBacktestResult, confidenceBandDeliveryResult, researchProofMapResult, backtestEngineResult, economicEventRefreshResult, economicEventsSourceResult, inputHealthResult] = await Promise.allSettled([
     fetch(layer1Url, { cache: "no-store" }),
     fetch(layer2Url, { cache: "no-store" }),
     fetchResearchDashboardData(),
@@ -14070,6 +14162,7 @@ async function loadDashboard() {
     fetchLocalJson(phase2ShadowBacktestUrl),
     fetchLocalJson(confidenceBandDeliveryUrl),
     fetchLocalJson(researchProofMapUrl),
+    fetchLocalJson(backtestEngineUrl),
     fetchLocalJson(economicEventRefreshUrl),
     fetchLocalJson(economicEventsSourceUrl),
     fetchLocalJson(inputHealthUrl)
@@ -14164,6 +14257,13 @@ async function loadDashboard() {
     };
   }
 
+  if (backtestEngineResult.status === "fulfilled") {
+    backtestEngineData = backtestEngineResult.value;
+  } else {
+    console.error(backtestEngineResult.reason);
+    backtestEngineData = { meta: { error: backtestEngineResult.reason?.message || String(backtestEngineResult.reason) }, lanes: [] };
+  }
+
   if (economicEventRefreshResult.status === "fulfilled") {
     economicEventRefreshData = economicEventRefreshResult.value;
   } else {
@@ -14202,6 +14302,7 @@ async function loadDashboard() {
 
   renderBacktest(backtestData);
   renderResearchProofMap(researchProofMapData);
+  renderBacktestEngine(backtestEngineData);
   renderFactorEdgeLab(factorEdgeLabData);
   renderShadowLogicBacktest(phase2ShadowBacktestData);
   renderWorkflowStatus(workflowStatus);

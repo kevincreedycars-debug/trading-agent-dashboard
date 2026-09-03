@@ -19,20 +19,23 @@ function serve() {
   return new Promise(resolve => server.listen(4173, () => resolve(server)));
 }
 
-test("Backtesting Development presents the XAU/USD research control board", async () => {
+test("Backtest Engine presents the XAU/USD visual development board", async () => {
   const server = await serve();
   const browser = await chromium.launch({ headless: true });
   try {
     const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
     await page.goto(`http://127.0.0.1:${server.address().port}/index.html`, { waitUntil: "networkidle" });
-    await page.getByRole("button", { name: "Backtesting Development" }).click();
-    const panel = page.locator("#researchProofMapPanel");
+    await page.getByRole("button", { name: "Backtest Engine" }).click();
+    const panel = page.locator("#backtestEnginePanel");
     await panel.waitFor();
     await assert.doesNotReject(async () => {
       const text = await panel.innerText();
-      assert.match(text, /XAU\/USD remains unqualified/);
-      assert.match(text, /0\.5 L2L REACH/);
-      assert.match(text, /Provide an MT5 data export or read-only feed/);
+      assert.match(text, /Build a reliable XAU\/USD strength grade and call qualifier/);
+      assert.match(text, /Individual elements/);
+      assert.match(text, /Combinations and correlation/);
+      assert.match(text, /Full algorithm/);
+      assert.match(text, /NOT QUALIFIED/);
+      assert.match(text, /Connect an MT5 export or read-only feed/);
     });
     const desktopOverflow = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth + 1);
     assert.equal(desktopOverflow, false);

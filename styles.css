@@ -36,11 +36,13 @@ html {
   background: var(--cream);
   color: var(--ink);
   font-family: var(--sans);
+  overflow-x: hidden;
 }
 
 body {
   margin: 0;
   min-height: 100vh;
+  overflow-x: hidden;
   background:
     linear-gradient(180deg, var(--navy) 0, var(--navy) 396px, var(--cream) 396px, var(--cream) 100%);
   color: var(--ink);
@@ -7912,6 +7914,9 @@ body {
     gap: 6px;
     margin: 0;
     padding: 9px 16px;
+    box-sizing: border-box;
+    max-width: 100%;
+    contain: paint;
     overflow-x: auto;
     overflow-y: hidden;
   }
@@ -8207,3 +8212,29 @@ body {
   .research-proof-summary { grid-template-columns: 1fr; }
   .research-proof-todo { padding: 16px; }
 }
+
+/* Dedicated engine board: deliberately separates work-in-progress evidence from a qualified call. */
+.engine-hero,
+.engine-todo,
+.engine-gate { margin: 16px 0; padding: 20px; }
+.engine-hero { display: grid; grid-template-columns: minmax(0, 1fr) minmax(220px, .36fr); gap: 20px; border-color: rgba(94, 161, 255, .25); background: radial-gradient(circle at 80% 0%, rgba(49, 122, 191, .16), transparent 38%), linear-gradient(135deg, #101c2b, #080c12 72%); }
+.engine-hero-copy, .engine-section-head > div, .engine-lane, .engine-todo li > div { min-width: 0; }
+.engine-hero h3, .engine-section-head h3, .engine-board-header h3 { color: #f5f9ff; font-family: var(--sans); font-size: clamp(22px, 3vw, 30px); line-height: 1.1; }
+.engine-hero-copy > p:not(.eyebrow), .engine-board-header > p { color: #b7c9dc; line-height: 1.55; margin: 10px 0 0; overflow-wrap: anywhere; }
+.engine-verdict { display: grid; align-content: center; gap: 7px; padding: 16px; min-width: 0; border: 1px solid rgba(255, 91, 110, .35); border-radius: 12px; background: rgba(255, 91, 110, .07); }
+.engine-verdict span, .engine-verdict small, .engine-lane-top small, .engine-lane li small, .engine-gate-check small { color: #b7c9dc; font-family: var(--mono); font-size: 10px; font-weight: 700; letter-spacing: .05em; line-height: 1.4; text-transform: uppercase; overflow-wrap: anywhere; }
+.engine-verdict strong { color: #ffbdc6; font-family: var(--mono); font-size: clamp(20px, 2.3vw, 28px); line-height: 1; text-transform: uppercase; overflow-wrap: anywhere; }
+.engine-section-head, .engine-board-header { display: flex; justify-content: space-between; gap: 18px; align-items: start; }
+.engine-section-head > span { flex: 0 1 220px; color: #9fc7ef; font-family: var(--mono); font-size: 11px; line-height: 1.4; text-align: right; overflow-wrap: anywhere; }
+.engine-todo ol { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin: 16px 0 0; padding: 0; list-style: none; }
+.engine-todo li { display: grid; grid-template-columns: 34px minmax(0, 1fr); gap: 12px; min-width: 0; padding: 14px; border: 1px solid rgba(152, 178, 205, .16); border-radius: 12px; background: rgba(8, 12, 18, .7); }
+.engine-todo li > span, .engine-lane-top > span, .engine-gate-check > span { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 50%; color: #cfe5fb; background: rgba(94, 161, 255, .15); font-family: var(--mono); font-size: 11px; font-weight: 700; }
+.engine-todo li strong { display: block; margin-top: 4px; color: #f4f8fe; line-height: 1.35; overflow-wrap: anywhere; }
+.engine-todo li p { margin: 6px 0 0; color: #b7c9dc; font-size: 12px; line-height: 1.5; overflow-wrap: anywhere; }
+.engine-todo li.is-needs_you { border-color: rgba(244, 184, 96, .38); }.engine-todo li.is-needs_you > span { color: #ffd99e; background: rgba(244, 184, 96, .16); }.engine-todo li.is-blocked { border-color: rgba(255, 91, 110, .35); }.engine-todo li.is-blocked > span { color: #ffbdc6; background: rgba(255, 91, 110, .15); }
+.engine-metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin: 16px 0; }
+.engine-metrics article { display: grid; gap: 7px; min-width: 0; padding: 16px; border: 1px solid rgba(152, 178, 205, .16); border-radius: 12px; background: linear-gradient(180deg, #101924, #0a1018); }.engine-metrics span { color: #a9bfd5; font-family: var(--mono); font-size: 10px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; overflow-wrap: anywhere; }.engine-metrics strong { color: #f7fbff; font-size: clamp(20px, 2.4vw, 30px); line-height: 1.1; overflow-wrap: anywhere; }.engine-metrics small { color: #b7c9dc; font-size: 12px; line-height: 1.5; overflow-wrap: anywhere; }
+.engine-board { margin: 24px 0; }.engine-board-header { margin-bottom: 14px; }.engine-board-header > p { max-width: 360px; margin-top: 0; text-align: right; }.engine-lanes { display: grid; grid-template-columns: repeat(4, minmax(235px, 1fr)); gap: 12px; overflow-x: auto; padding-bottom: 6px; }.engine-lane { display: grid; align-content: start; gap: 11px; min-width: 235px; padding: 16px; border: 1px solid rgba(152, 178, 205, .18); border-top: 3px solid #536b85; border-radius: 12px; background: linear-gradient(180deg, #101a26, #080d14); }.engine-lane.is-active { border-top-color: #5ea1ff; }.engine-lane.is-blocked { border-top-color: #ff5b6e; }.engine-lane h4 { margin: 0; color: #f4f8fe; font-family: var(--sans); font-size: 18px; line-height: 1.2; overflow-wrap: anywhere; }.engine-lane > p { margin: 0; color: #b7c9dc; font-size: 12px; line-height: 1.5; overflow-wrap: anywhere; }.engine-lane-top { display: flex; justify-content: space-between; gap: 8px; align-items: center; }.engine-lane-top small { text-align: right; }.engine-lane-progress { height: 6px; overflow: hidden; border-radius: 999px; background: #223244; }.engine-lane-progress span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #4b8ee5, #64d5c7); }.engine-lane > strong { color: #9fc7ef; font-family: var(--mono); font-size: 10px; letter-spacing: .04em; text-transform: uppercase; }.engine-lane ul { display: grid; gap: 7px; margin: 2px 0; padding: 0; list-style: none; }.engine-lane li { display: grid; grid-template-columns: 8px minmax(0, 1fr); gap: 8px; align-items: start; color: #c9d8e8; font-size: 12px; line-height: 1.4; }.engine-lane li i { width: 7px; height: 7px; margin-top: 5px; border-radius: 50%; background: #61748a; }.engine-lane li.is-complete i { background: #64d5a2; }.engine-lane li.is-active i { background: #5ea1ff; }.engine-lane li.is-blocked i { background: #ff5b6e; }.engine-lane li.is-needs_you i { background: #f4b860; }.engine-lane li small { grid-column: 2; color: #8298af; }.engine-lane-next { border-top: 1px solid rgba(152, 178, 205, .13); padding-top: 10px; }.engine-lane-next b { color: #9fc7ef; }
+.engine-gate-flow { display: grid; grid-template-columns: repeat(6, minmax(140px, 1fr)) minmax(190px, 1.2fr); gap: 8px; margin-top: 18px; overflow-x: auto; padding-bottom: 6px; }.engine-gate-check, .engine-gate-end { position: relative; display: grid; align-content: start; gap: 8px; min-width: 140px; padding: 13px; border: 1px solid rgba(152, 178, 205, .18); border-radius: 10px; background: #0c131d; }.engine-gate-check:not(:last-of-type)::after { content: ""; position: absolute; top: 50%; right: -8px; width: 8px; border-top: 1px solid #58718b; }.engine-gate-check strong, .engine-gate-end strong { color: #eef6ff; font-size: 13px; line-height: 1.35; overflow-wrap: anywhere; }.engine-gate-check.is-blocked { border-color: rgba(255, 91, 110, .42); }.engine-gate-check.is-needs_you { border-color: rgba(244, 184, 96, .42); }.engine-gate-end { min-width: 190px; border-color: rgba(255, 91, 110, .42); background: linear-gradient(135deg, rgba(255, 91, 110, .14), #111721); }.engine-gate-end span, .engine-gate-end small { color: #ffbdc6; font-family: var(--mono); font-size: 10px; font-weight: 700; letter-spacing: .05em; line-height: 1.4; text-transform: uppercase; }.engine-gate-note { color: #b7c9dc; font-size: 12px; line-height: 1.55; overflow-wrap: anywhere; }.engine-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }.engine-actions .inspect-button { min-width: 0; }
+@media (max-width: 980px) { .engine-hero, .engine-todo ol, .engine-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }.engine-hero-copy { grid-column: 1 / -1; }.engine-board-header { display: block; }.engine-board-header > p { max-width: none; margin-top: 8px; text-align: left; } }
+@media (max-width: 560px) { .engine-hero, .engine-todo ol, .engine-metrics { grid-template-columns: 1fr; }.engine-hero, .engine-todo, .engine-gate { padding: 16px; }.engine-section-head { display: block; }.engine-section-head > span { display: block; margin-top: 8px; text-align: left; }.engine-gate-flow { grid-template-columns: repeat(6, minmax(138px, 1fr)) minmax(180px, 1.2fr); } }

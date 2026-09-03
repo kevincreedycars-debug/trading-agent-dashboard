@@ -1,0 +1,36 @@
+{
+  "meta": { "generated_at": "2026-09-03T12:00:00.000Z", "version": "xauusd-engine-development-v1", "scope": "Engineering tracker. Research metrics are context only and do not qualify live calls." },
+  "title": "Build a reliable XAU/USD strength grade and call qualifier",
+  "summary": "The reach study is a useful starting signal, but the engine is not yet executable. This tracker keeps the data contract, factor evidence, correlation controls, and full-algorithm validation visible in one place.",
+  "todo": [
+    { "status": "active", "title": "Freeze the XAU/USD call and level contract", "detail": "Record every published call with exact timestamp, direction, standard L2L, and 0.5 L2L known at that moment." },
+    { "status": "needs_you", "title": "Connect an MT5 export or read-only feed", "detail": "Needed: broker symbol, server timezone, bid/ask OHLC, spread, timeframe, session boundaries, and the real standard plus 0.5 L2L levels." },
+    { "status": "planned", "title": "Run per-factor and correlation assessment", "detail": "Measure standalone value, overlap, stability, and conflict before proposing any weight change." },
+    { "status": "blocked", "title": "Validate the executable full algorithm", "detail": "Blocked until entry timing, target, adverse boundary, and intraday sequencing are defined on real price paths." }
+  ],
+  "performance": [
+    { "label": "Full L2L reach", "value": "73.2%", "detail": "328 / 448 eligible directional calls; reach-only research" },
+    { "label": "0.5 L2L reach", "value": "99.1%", "detail": "444 / 448 eligible calls; 1h median time" },
+    { "label": "Data coverage", "value": "73.7%", "detail": "12 unresolved rows remain visible in the research" },
+    { "label": "Strength grade", "value": "UNAVAILABLE", "detail": "Cannot calibrate until MT5-aligned executable evidence exists" }
+  ],
+  "lanes": [
+    { "title": "Input and level contract", "status": "active", "progress": 35, "goal": "Make every historical call reproducible from the exact market state that existed when it was issued.", "items": [{ "label": "Frozen directional call history", "status": "complete" }, { "label": "Standard and 0.5 L2L publication record", "status": "active" }, { "label": "MT5 bid/ask and spread alignment", "status": "needs_you" }], "next_action": "Lock the MT5 export schema and attach levels to each call." },
+    { "title": "Individual elements", "status": "active", "progress": 15, "goal": "Assess every XAU/USD input independently for directional contribution, coverage, and stability.", "items": [{ "label": "Factor inventory: 10 current inputs", "status": "complete" }, { "label": "Standalone factor scorecards", "status": "active" }, { "label": "Out-of-sample stability by regime", "status": "planned" }], "next_action": "Produce factor-level outcomes before touching algorithm weights." },
+    { "title": "Combinations and correlation", "status": "planned", "progress": 0, "goal": "Find duplicated influence and test whether agreement is genuine confirmation or correlated noise.", "items": [{ "label": "Correlation and overlap matrix", "status": "planned" }, { "label": "Agreement and conflict cohorts", "status": "planned" }, { "label": "Re-weighting recommendation", "status": "planned" }], "next_action": "Join the factor evidence to the MT5-aligned call dataset." },
+    { "title": "Full algorithm", "status": "blocked", "progress": 0, "goal": "Test the composite as an executable strategy, not merely as a direction or reach observation.", "items": [{ "label": "Exact entry and publication timing", "status": "blocked" }, { "label": "Target, adverse boundary, and sequencing", "status": "blocked" }, { "label": "Walk-forward holdout validation", "status": "planned" }], "next_action": "Define the risk contract from actual intraday paths." }
+  ],
+  "qualification_gate": {
+    "title": "No live XAU/USD call qualifier until the evidence chain is complete",
+    "status": "not qualified",
+    "note": "The current 73.2% full-L2L and 99.1% half-L2L figures show directional reach only. They are not expectancy, risk-adjusted performance, or a production strength grade.",
+    "checks": [
+      { "label": "MT5-aligned source data", "status": "needs_you" },
+      { "label": "Published L2L and 0.5 L2L contract", "status": "active" },
+      { "label": "Individual factor evidence", "status": "active" },
+      { "label": "Correlation and combination audit", "status": "planned" },
+      { "label": "Executable full-algorithm test", "status": "blocked" },
+      { "label": "Sealed holdout and calibration", "status": "planned" }
+    ]
+  }
+}
