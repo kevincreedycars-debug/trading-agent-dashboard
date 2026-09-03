@@ -31,6 +31,8 @@ test("Backtest Engine presents the XAU/USD visual development board", async () =
     await assert.doesNotReject(async () => {
       const text = await panel.innerText();
       assert.match(text, /Build a reliable XAU\/USD strength grade and call qualifier/);
+      assert.match(text, /Why the XAU\/USD call gate is still locked/);
+      assert.match(text, /Follow the connections to see the dependency chain/);
       assert.match(text, /Individual elements/);
       assert.match(text, /Combinations and correlation/);
       assert.match(text, /Full algorithm/);

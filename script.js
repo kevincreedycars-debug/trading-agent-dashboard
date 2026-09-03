@@ -12097,6 +12097,35 @@ function renderBacktestEngine(data = {}) {
         <small>${completed} of ${lanes.length} workstreams complete; ${active} active</small>
       </div>
     </section>
+    <section class="engine-map detail-panel" aria-label="XAU/USD backtest engine flow diagram">
+      <div class="engine-section-head"><div><p class="eyebrow">Visual engine map</p><h3>Why the XAU/USD call gate is still locked</h3></div><span>Follow the connections to see the dependency chain</span></div>
+      <div class="engine-flow-map">
+        <svg class="engine-flow-lines" viewBox="0 0 1000 500" preserveAspectRatio="none" aria-hidden="true">
+          <path d="M 235 125 C 340 125, 360 215, 460 235"></path>
+          <path d="M 235 375 C 340 375, 360 285, 460 265"></path>
+          <path d="M 540 235 C 650 215, 660 125, 765 125"></path>
+          <path d="M 540 265 C 650 285, 660 375, 765 375"></path>
+          <path class="engine-flow-output-line" d="M 500 300 L 500 440"></path>
+        </svg>
+        ${lanes.map((lane, index) => `<article class="engine-map-node engine-map-node-${index} is-${escapeHtml(lane.status || "planned")}">
+          <div class="engine-map-node-head"><span>${String(index + 1).padStart(2, "0")}</span><small>${escapeHtml(backtestEngineStatusLabel(lane.status))}</small></div>
+          <h4>${escapeHtml(lane.title || "Workstream")}</h4>
+          <strong>${escapeHtml(String(lane.progress ?? 0))}% complete</strong>
+          <p>${escapeHtml(lane.next_action || "No next action published.")}</p>
+        </article>`).join("")}
+        <article class="engine-map-core">
+          <span>CORE</span>
+          <strong>XAU/USD<br>Backtest Engine</strong>
+          <small>Turns evidence into a calibrated strength grade</small>
+        </article>
+        <article class="engine-map-output is-${escapeHtml(overall.replace(/\s+/g, "-"))}">
+          <span>OUTPUT</span>
+          <strong>Strength grade<br>+ call qualifier</strong>
+          <small>${escapeHtml(overall)}: every connected workstream must pass</small>
+        </article>
+      </div>
+      <div class="engine-map-key"><span class="is-complete"><i></i>Proven baseline</span><span class="is-active"><i></i>Being built</span><span class="is-needs_you"><i></i>Needs MT5 / levels</span><span class="is-blocked"><i></i>Cannot start yet</span></div>
+    </section>
     <section class="engine-todo detail-panel" aria-label="Backtest engine control list">
       <div class="engine-section-head">
         <div><p class="eyebrow">Control list</p><h3>Where we are, what is next, and what we need</h3></div>
