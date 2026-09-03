@@ -11921,7 +11921,8 @@ function researchProofStatusLabel(status = "") {
     complete: "Complete",
     active: "In progress",
     blocked: "Blocked",
-    planned: "Queued"
+    planned: "Queued",
+    needs_you: "Needed from you"
   };
   return labels[String(status || "").toLowerCase()] || "Unverified";
 }
@@ -11951,6 +11952,8 @@ function renderResearchProofMap(data = {}) {
   const selected = stages.find(stage => stage.id === activeResearchProofStageId) || stages.find(stage => stage.status === "active") || stages[0];
   const progress = researchProofMapProgress(stages);
   const releaseRequirements = Array.isArray(data.release_gate?.requirements) ? data.release_gate.requirements : [];
+  const performance = Array.isArray(data.performance) ? data.performance : [];
+  const todo = Array.isArray(data.todo) ? data.todo : [];
 
   panel.innerHTML = `
     <section class="research-proof-hero detail-panel">
@@ -11964,6 +11967,33 @@ function renderResearchProofMap(data = {}) {
         <span>proof stages complete</span>
         <span>${progress.active} stage${progress.active === 1 ? "" : "s"} under active investigation</span>
       </div>
+    </section>
+    <section class="research-proof-summary" aria-label="XAU/USD research performance">
+      ${performance.map(item => `
+        <article>
+          <span>${escapeHtml(item.label || "Research metric")}</span>
+          <strong>${escapeHtml(item.value || "--")}</strong>
+          <small>${escapeHtml(item.detail || "No detail published.")}</small>
+        </article>
+      `).join("")}
+    </section>
+    <section class="research-proof-todo detail-panel">
+      <div>
+        <p class="eyebrow">Control list</p>
+        <h3>What is next, and what is needed from you</h3>
+      </div>
+      <ol>
+        ${todo.map((item, index) => `
+          <li class="is-${escapeHtml(item.status || "planned")}">
+            <span>${String(index + 1).padStart(2, "0")}</span>
+            <div>
+              <small>${escapeHtml(researchProofStatusLabel(item.status))}</small>
+              <strong>${escapeHtml(item.title || "Research task")}</strong>
+              <p>${escapeHtml(item.detail || "No detail published.")}</p>
+            </div>
+          </li>
+        `).join("")}
+      </ol>
     </section>
     <section class="research-proof-orbit" aria-label="24 hour signal proof path">
       <div class="research-proof-track" aria-hidden="true"></div>

@@ -1,74 +1,33 @@
 {
-  "meta": {
-    "generated_at": "2026-09-02T13:00:00.000Z",
-    "version": "research-proof-map-v1",
-    "scope": "Read-only research control surface. This map does not alter live Layer 1 or Layer 2 decisions."
-  },
+  "meta": { "generated_at": "2026-09-03T12:00:00.000Z", "version": "backtesting-development-v1", "scope": "Read-only XAU/USD research control surface. It does not qualify live calls or alter live weights." },
   "release_gate": {
-    "title": "Do not release a directional call until all gates pass",
+    "title": "XAU/USD remains unqualified until every gate passes",
     "requirements": [
-      "Unseen-period directional accuracy is above 50% after flats are handled by the locked contract.",
-      "Each confidence band is calibrated against realised outcomes with sufficient sample size.",
-      "The result is stable across time splits and does not depend on one asset, regime, or factor."
+      "Use exact MT5-aligned call timestamps, broker symbols, bid/ask prices, spread, session boundaries, and the published standard and 0.5 L2L levels.",
+      "Assess every individual algorithm element, then combinations and correlation clusters, before proposing any weight change.",
+      "Prove the full algorithm with an explicit entry, target, adverse-boundary, and sequencing contract on unseen time-ordered data.",
+      "Treat reach rate as research context only. It is not trade expectancy or evidence that a live call should be released."
     ]
   },
+  "performance": [
+    { "label": "Full L2L reach", "value": "73.2%", "detail": "328 / 448 eligible XAU/USD directional calls" },
+    { "label": "0.5 L2L reach", "value": "99.1%", "detail": "444 / 448 eligible calls; 1h median time" },
+    { "label": "Data coverage", "value": "73.7%", "detail": "12 unresolved rows; exclusions remain visible" },
+    { "label": "Call gate", "value": "NOT QUALIFIED", "detail": "MT5 alignment and executable risk contract required" }
+  ],
+  "todo": [
+    { "status": "active", "title": "Establish the XAU/USD level contract", "detail": "Capture the standard L2L and 0.5 L2L levels known at each published call, with the exact timestamp." },
+    { "status": "needs_you", "title": "Provide an MT5 data export or read-only feed", "detail": "Needed: broker symbol, timezone, bid/ask OHLC, spread, timeframe, session boundary, call timestamp, and published L2L levels." },
+    { "status": "planned", "title": "Assess every XAU/USD algorithm element", "detail": "Measure standalone directional value, coverage, stability, and correlation before any re-weighting." },
+    { "status": "planned", "title": "Assess element combinations", "detail": "Test agreement, conflict, and highly correlated clusters on a sealed holdout." },
+    { "status": "blocked", "title": "Validate the full executable algorithm", "detail": "Blocked until the entry, target, adverse boundary, and intraday path are defined from real market data." }
+  ],
   "stages": [
-    {
-      "id": "contract",
-      "label": "Lock the 24H contract",
-      "short_label": "Contract",
-      "status": "complete",
-      "evidence": "Outcome and flat-band rules are defined in the checker contract.",
-      "next_action": "Keep the definition frozen while testing so results remain comparable.",
-      "target_tab": "backtest",
-      "target_backtest_tab": "accuracy"
-    },
-    {
-      "id": "replay",
-      "label": "Rebuild historical calls",
-      "short_label": "Replay",
-      "status": "complete",
-      "evidence": "Historical checker artifacts exist for the five current Layer 1 assets.",
-      "next_action": "Extend only with timestamp-safe inputs; never use information published after the call time.",
-      "target_tab": "backtest",
-      "target_backtest_tab": "checker"
-    },
-    {
-      "id": "factors",
-      "label": "Find stable variables",
-      "short_label": "Factors",
-      "status": "active",
-      "evidence": "Factor Edge Lab identifies candidate evidence, but factor-level ADR/L2L joins remain incomplete.",
-      "next_action": "Test each factor and factor combination across independent time periods, then remove unstable candidates.",
-      "target_tab": "factor-edge-lab"
-    },
-    {
-      "id": "selectivity",
-      "label": "Prove selective accuracy",
-      "short_label": "Selectivity",
-      "status": "active",
-      "evidence": "The Phase 2 shadow comparison improves two assets, with three assets still mixed or awaiting stronger evidence.",
-      "next_action": "Measure only the calls the gate would actually allow, separately by asset and confidence band.",
-      "target_tab": "shadow-logic-backtest"
-    },
-    {
-      "id": "calibration",
-      "label": "Calibrate confidence",
-      "short_label": "Confidence",
-      "status": "blocked",
-      "evidence": "Confidence-band delivery exists, but calibration must be demonstrated on a separate unseen period.",
-      "next_action": "Compare stated confidence bands with realised win rates and reject bands that are not honest or well sampled.",
-      "target_tab": "backtest",
-      "target_backtest_tab": "directional-trust-summary"
-    },
-    {
-      "id": "validation",
-      "label": "Pass unseen validation",
-      "short_label": "Validation",
-      "status": "planned",
-      "evidence": "Walk-forward, stability, and selectivity modules exist, but their evidence is not yet unified into one release decision.",
-      "next_action": "Run time-ordered holdout tests and require every release gate to pass before a live-trading recommendation.",
-      "target_tab": "architecture"
-    }
+    { "id": "reach", "label": "Directional reach baseline", "short_label": "Reach", "status": "complete", "evidence": "Historical 1H research compares the existing L2L distance with its 0.5 equivalent using frozen directional calls.", "next_action": "Keep these reach results separate from trade expectancy until a risk contract exists.", "target_tab": "backtest", "target_backtest_tab": "half-l2l-reach" },
+    { "id": "audit", "label": "Signal and failure audit", "short_label": "Audit", "status": "complete", "evidence": "Signal construction, directional discrimination, and failure diagnostics have been produced as research artifacts.", "next_action": "Use the audit to define the element inventory for the XAU/USD assessment.", "target_tab": "factor-edge-lab" },
+    { "id": "elements", "label": "Individual elements", "short_label": "Elements", "status": "active", "evidence": "XAU/USD is the first focused market for per-element reliability and correlation assessment.", "next_action": "Measure each input independently before combining or re-weighting factors.", "target_tab": "factor-edge-lab" },
+    { "id": "combinations", "label": "Combinations and correlation", "short_label": "Combinations", "status": "planned", "evidence": "No correlated cluster should be mistaken for independent confirmation.", "next_action": "Test interactions and remove duplicate influence before evaluating the composite.", "target_tab": "factor-edge-lab" },
+    { "id": "executable", "label": "Executable trade validation", "short_label": "Execution", "status": "blocked", "evidence": "The current contract does not establish an intraday publication time or adverse boundary/stop sequencing.", "next_action": "Use MT5-aligned price paths and L2L levels to lock the executable contract.", "target_tab": "backtest", "target_backtest_tab": "half-l2l-reach" },
+    { "id": "gate", "label": "Call qualifying gate", "short_label": "Gate", "status": "planned", "evidence": "A reliable strength grade needs calibrated evidence, robust weighting, and executable validation.", "next_action": "Require all gates to pass before any production call qualification is considered.", "target_tab": "shadow-logic-backtest" }
   ]
 }
