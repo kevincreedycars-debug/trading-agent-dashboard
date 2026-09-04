@@ -12083,6 +12083,8 @@ function renderBacktestEngine(data = {}) {
   const completed = lanes.filter(lane => lane.status === "complete").length;
   const active = lanes.filter(lane => lane.status === "active").length;
   const overall = data.qualification_gate?.status || "not qualified";
+  const currentFocus = todo.find(item => item.status === "active") || todo[0] || {};
+  const nextDependency = todo.find(item => item.status === "needs_you") || todo.find(item => item.status === "planned") || {};
 
   panel.innerHTML = `
     <section class="engine-hero detail-panel">
@@ -12098,7 +12100,7 @@ function renderBacktestEngine(data = {}) {
       </div>
     </section>
     <section class="engine-map detail-panel" aria-label="XAU/USD backtest engine flow diagram">
-      <div class="engine-section-head"><div><p class="eyebrow">Visual engine map</p><h3>Why the XAU/USD call gate is still locked</h3></div><div class="engine-map-actions"><span>Follow the connections to see the dependency chain</span><button type="button" class="inspect-button" data-engine-print>Print black-on-white map</button></div></div>
+      <div class="engine-section-head"><div><p class="eyebrow">Visual engine map</p><h3>Why the XAU/USD call gate is still locked</h3></div><div class="engine-map-actions"><span>Follow the connections to see the dependency chain</span><button type="button" class="inspect-button" data-engine-print>Print wireframe flowchart</button></div></div>
       <div class="engine-flow-map">
         <svg class="engine-flow-lines" viewBox="0 0 1000 500" preserveAspectRatio="none" aria-hidden="true">
           <path d="M 235 125 C 340 125, 360 215, 460 235"></path>
@@ -12128,6 +12130,27 @@ function renderBacktestEngine(data = {}) {
       </div>
       <div class="engine-map-key"><span class="is-complete"><i></i>Proven baseline</span><span class="is-active"><i></i>Being built</span><span class="is-needs_you"><i></i>Needs MT5 / levels</span><span class="is-blocked"><i></i>Cannot start yet</span></div>
       <div class="engine-map-print-notes"><div><span>Observed reach context</span><p>${metrics.map(metric => `${escapeHtml(metric.label || "Metric")}: <b>${escapeHtml(metric.value || "--")}</b>`).join(" | ")}</p></div><div><span>Why the output is locked</span><p>${escapeHtml(data.qualification_gate?.note || "No release note published.")}</p></div></div>
+    </section>
+    <section class="engine-print-sheet" aria-label="Printable XAU/USD backtest-engine flowchart">
+      <header class="engine-print-title"><div><span>XAU/USD BACKTEST ENGINE</span><h2>Development Flowchart</h2></div><p>Working reference: ${escapeHtml(data.meta?.generated_at ? formatDashboardTime(data.meta.generated_at) : "Current state")}</p></header>
+      <section class="engine-print-brief">
+        <article><span>What we are working on and why</span><h3>${escapeHtml(currentFocus.title || "Current focus not set")}</h3><p>${escapeHtml(currentFocus.detail || "No current work note published.")}</p></article>
+        <article><span>What we need next</span><h3>${escapeHtml(nextDependency.title || "Next dependency not set")}</h3><p>${escapeHtml(nextDependency.detail || "No dependency note published.")}</p></article>
+        <article><span>Expected outcome</span><h3>Calibrated strength grade + call qualifier</h3><p>Only issued after every evidence and execution gate passes. Current state: <b>${escapeHtml(overall)}</b>.</p></article>
+      </section>
+      <section class="engine-print-flow" aria-label="Backtest-engine sequential flow">
+        ${lanes.map((lane, index) => `<article class="engine-print-step is-${escapeHtml(lane.status || "planned")}">
+          <div class="engine-print-step-head"><span>STEP ${index + 1}</span><b>${escapeHtml(backtestEngineStatusLabel(lane.status))}</b></div>
+          <h3>${escapeHtml(lane.title || "Workstream")}</h3>
+          <div><span>WHY</span><p>${escapeHtml(lane.goal || "No purpose published.")}</p></div>
+          <div><span>NEXT</span><p>${escapeHtml(lane.next_action || "No next action published.")}</p></div>
+          <ul>${(Array.isArray(lane.items) ? lane.items : []).map(item => `<li><i></i>${escapeHtml(item.label || "Assessment item")}</li>`).join("")}</ul>
+        </article>`).join("")}
+      </section>
+      <section class="engine-print-gate">
+        <div><span>FINAL GATE</span><h3>${escapeHtml(data.qualification_gate?.title || "Call qualification")}</h3><p>${escapeHtml(data.qualification_gate?.note || "No gate note published.")}</p></div>
+        <ol>${gates.map((gate, index) => `<li><span>${index + 1}</span>${escapeHtml(gate.label || "Gate check")} <b>${escapeHtml(backtestEngineStatusLabel(gate.status))}</b></li>`).join("")}</ol>
+      </section>
     </section>
     <section class="engine-todo detail-panel" aria-label="Backtest engine control list">
       <div class="engine-section-head">
