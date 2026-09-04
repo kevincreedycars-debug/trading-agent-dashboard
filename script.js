@@ -12061,6 +12061,55 @@ function backtestEngineStatusLabel(status) {
   return researchProofStatusLabel(status);
 }
 
+function createBacktestEnginePrintDocument(data = {}) {
+  const lanes = Array.isArray(data.lanes) ? data.lanes : [];
+  const todo = Array.isArray(data.todo) ? data.todo : [];
+  const gates = Array.isArray(data.qualification_gate?.checks) ? data.qualification_gate.checks : [];
+  const overall = data.qualification_gate?.status || "not qualified";
+  const currentFocus = todo.find(item => item.status === "active") || todo[0] || {};
+  const nextDependency = todo.find(item => item.status === "needs_you") || todo.find(item => item.status === "planned") || {};
+  const referenceDate = data.meta?.generated_at ? formatDashboardTime(data.meta.generated_at) : "Current state";
+
+  return `<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>XAU/USD Backtest Engine Flowchart</title>
+<style>
+  @page { size: A4 landscape; margin: 8mm; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: #fff; color: #000; font-family: Arial, Helvetica, sans-serif; }
+  body { font-size: 8pt; }
+  .sheet { max-width: 281mm; margin: 0 auto; }
+  .title { display: flex; justify-content: space-between; gap: 12mm; align-items: end; padding-bottom: 3mm; border-bottom: 2px solid #000; }
+  .kicker, .label { font-family: "Courier New", monospace; font-size: 7pt; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+  h1 { margin: 1mm 0 0; font-size: 22pt; line-height: 1; } .reference { margin: 0; font-size: 7.5pt; text-align: right; }
+  .brief { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4mm; margin: 4mm 0; }.brief article { min-width: 0; padding: 3mm; border: 1px solid #000; }.brief h2 { margin: 1.5mm 0 1mm; font-size: 10pt; line-height: 1.15; }.brief p { margin: 0; line-height: 1.3; overflow-wrap: anywhere; }
+  .flow { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 5mm; margin: 4mm 0; break-inside: avoid; }.step { position: relative; min-width: 0; padding: 3mm; border: 1.5px solid #000; }.step:not(:last-child)::after { content: "→"; position: absolute; top: 48%; right: -5.2mm; z-index: 1; width: 5mm; color: #000; background: #fff; font-size: 16pt; font-weight: 700; line-height: 1; text-align: center; }.step-head { display: flex; justify-content: space-between; gap: 3mm; padding-bottom: 1.5mm; border-bottom: 1px solid #000; }.step-head b { font-size: 6.5pt; text-align: right; text-transform: uppercase; }.step h2 { margin: 1.8mm 0; font-size: 11pt; line-height: 1.1; }.step .label { display: block; font-size: 6.5pt; }.step p { margin: .7mm 0 1.5mm; font-size: 7.2pt; line-height: 1.26; overflow-wrap: anywhere; }.step ul { display: grid; gap: .8mm; margin: 1.5mm 0 0; padding: 1.5mm 0 0; border-top: 1px solid #000; list-style: none; }.step li { display: grid; grid-template-columns: 4px minmax(0, 1fr); gap: 4px; font-size: 6.8pt; line-height: 1.18; overflow-wrap: anywhere; }.step li::before { content: ""; width: 4px; height: 4px; margin-top: 2px; border: 1px solid #000; border-radius: 50%; }
+  .gate { display: grid; grid-template-columns: minmax(185px, .78fr) minmax(0, 1.22fr); gap: 5mm; padding: 3.5mm; border: 2px solid #000; break-inside: avoid; }.gate h2 { margin: 1mm 0; font-size: 12pt; line-height: 1.1; }.gate p { margin: 0; line-height: 1.28; }.gate ol { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.7mm 4mm; margin: 0; padding: 0; list-style: none; }.gate li { display: grid; grid-template-columns: 15px minmax(0, 1fr); gap: 4px; font-size: 7.4pt; line-height: 1.2; overflow-wrap: anywhere; }.gate li > span { grid-row: span 2; display: grid; place-items: center; width: 14px; height: 14px; border: 1px solid #000; border-radius: 50%; font-family: "Courier New", monospace; font-size: 6.5pt; font-weight: 700; }.gate li b { grid-column: 2; font-family: "Courier New", monospace; font-size: 6.3pt; text-transform: uppercase; }
+  .outcome { margin-top: 3mm; padding: 2mm 3mm; border: 1px solid #000; font-size: 7.5pt; }.outcome b { font-family: "Courier New", monospace; }
+</style></head><body><main class="sheet">
+  <header class="title"><div><div class="kicker">XAU/USD Backtest Engine</div><h1>Development Flowchart</h1></div><p class="reference">Working reference: ${escapeHtml(referenceDate)}<br>One-page wireframe</p></header>
+  <section class="brief">
+    <article><div class="label">What we are working on and why</div><h2>${escapeHtml(currentFocus.title || "Current focus not set")}</h2><p>${escapeHtml(currentFocus.detail || "No current work note published.")}</p></article>
+    <article><div class="label">What we need next</div><h2>${escapeHtml(nextDependency.title || "Next dependency not set")}</h2><p>${escapeHtml(nextDependency.detail || "No dependency note published.")}</p></article>
+    <article><div class="label">Expected outcome</div><h2>Calibrated strength grade + call qualifier</h2><p>Only issued after every evidence and execution gate passes. Current state: <b>${escapeHtml(overall)}</b>.</p></article>
+  </section>
+  <section class="flow">
+    ${lanes.map((lane, index) => `<article class="step"><div class="step-head"><span class="label">Step ${index + 1}</span><b>${escapeHtml(backtestEngineStatusLabel(lane.status))}</b></div><h2>${escapeHtml(lane.title || "Workstream")}</h2><div><span class="label">Why</span><p>${escapeHtml(lane.goal || "No purpose published.")}</p></div><div><span class="label">Next</span><p>${escapeHtml(lane.next_action || "No next action published.")}</p></div><ul>${(Array.isArray(lane.items) ? lane.items : []).map(item => `<li>${escapeHtml(item.label || "Assessment item")}</li>`).join("")}</ul></article>`).join("")}
+  </section>
+  <section class="gate"><div><span class="label">Final gate</span><h2>${escapeHtml(data.qualification_gate?.title || "Call qualification")}</h2><p>${escapeHtml(data.qualification_gate?.note || "No gate note published.")}</p></div><ol>${gates.map((gate, index) => `<li><span>${index + 1}</span>${escapeHtml(gate.label || "Gate check")}<b>${escapeHtml(backtestEngineStatusLabel(gate.status))}</b></li>`).join("")}</ol></section>
+  <p class="outcome"><b>OUTPUT:</b> Strength grade + call qualifier remains <b>${escapeHtml(overall)}</b> until the final gate is complete.</p>
+</main></body></html>`;
+}
+
+function openBacktestEnginePrintFlowchart(data) {
+  const printWindow = window.open("", "xauusd-backtest-engine-flowchart", "popup=yes,width=1280,height=820");
+  if (!printWindow) return;
+  printWindow.document.open();
+  printWindow.document.write(createBacktestEnginePrintDocument(data));
+  printWindow.document.close();
+  printWindow.focus();
+  window.setTimeout(() => printWindow.print(), 250);
+}
+
 function renderBacktestEngine(data = {}) {
   const updated = document.getElementById("backtestEngineUpdated");
   const panel = document.getElementById("backtestEnginePanel");
@@ -12100,7 +12149,7 @@ function renderBacktestEngine(data = {}) {
       </div>
     </section>
     <section class="engine-map detail-panel" aria-label="XAU/USD backtest engine flow diagram">
-      <div class="engine-section-head"><div><p class="eyebrow">Visual engine map</p><h3>Why the XAU/USD call gate is still locked</h3></div><div class="engine-map-actions"><span>Follow the connections to see the dependency chain</span><button type="button" class="inspect-button" data-engine-print>Print wireframe flowchart</button></div></div>
+      <div class="engine-section-head"><div><p class="eyebrow">Visual engine map</p><h3>Why the XAU/USD call gate is still locked</h3></div><div class="engine-map-actions"><span>Follow the connections to see the dependency chain</span><button type="button" class="inspect-button" data-engine-print>Open printer-friendly flowchart</button></div></div>
       <div class="engine-flow-map">
         <svg class="engine-flow-lines" viewBox="0 0 1000 500" preserveAspectRatio="none" aria-hidden="true">
           <path d="M 235 125 C 340 125, 360 215, 460 235"></path>
@@ -12193,7 +12242,7 @@ function renderBacktestEngine(data = {}) {
   panel.dataset.engineBound = "true";
   panel.addEventListener("click", event => {
     if (event.target.closest("[data-engine-print]")) {
-      window.print();
+      openBacktestEnginePrintFlowchart(data);
       return;
     }
     const target = event.target.closest("[data-engine-open]")?.dataset.engineOpen;
