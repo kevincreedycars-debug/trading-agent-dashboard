@@ -12149,7 +12149,7 @@ function renderBacktestEngine(data = {}) {
       </div>
     </section>
     <section class="engine-map detail-panel" aria-label="XAU/USD backtest engine flow diagram">
-      <div class="engine-section-head"><div><p class="eyebrow">Visual engine map</p><h3>Why the XAU/USD call gate is still locked</h3></div><div class="engine-map-actions"><span>Follow the connections to see the dependency chain</span><button type="button" class="inspect-button" data-engine-print>Open printer-friendly flowchart</button></div></div>
+      <div class="engine-section-head"><div><p class="eyebrow">Visual engine map</p><h3>Why the XAU/USD call gate is still locked</h3></div><div class="engine-map-actions"><span>Follow the connections to see the dependency chain</span><button type="button" class="inspect-button" data-engine-print>Print flowchart</button></div></div>
       <div class="engine-flow-map">
         <svg class="engine-flow-lines" viewBox="0 0 1000 500" preserveAspectRatio="none" aria-hidden="true">
           <path d="M 235 125 C 340 125, 360 215, 460 235"></path>

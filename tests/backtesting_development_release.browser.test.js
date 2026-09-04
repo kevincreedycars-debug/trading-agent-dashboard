@@ -47,7 +47,7 @@ test("Backtest Engine presents the XAU/USD visual development board", async () =
     const mobileOverflow = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth + 1);
     assert.equal(mobileOverflow, false);
     const popupPromise = page.waitForEvent("popup");
-    await page.getByRole("button", { name: "Open printer-friendly flowchart" }).click();
+    await page.getByRole("button", { name: "Print flowchart" }).click();
     const popup = await popupPromise;
     await popup.waitForLoadState("domcontentloaded");
     const printText = await popup.locator("body").innerText();
