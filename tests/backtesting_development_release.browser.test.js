@@ -33,7 +33,7 @@ test("Backtest Engine presents the XAU/USD visual development board", async () =
       assert.match(text, /Build a reliable XAU\/USD strength grade and call qualifier/);
       assert.match(text, /Why the XAU\/USD call gate is still locked/);
       assert.match(text, /Follow the connections to see the dependency chain/);
-      assert.match(text, /OPEN PRINTER-FRIENDLY FLOWCHART/);
+      assert.match(text, /PRINT FLOWCHART/);
       assert.match(text, /MT5-aligned source data/);
       assert.match(text, /Individual elements/);
       assert.match(text, /Combinations and correlation/);
