@@ -33,6 +33,8 @@ test("Backtest Engine presents the XAU/USD visual development board", async () =
       assert.match(text, /Build a reliable XAU\/USD strength grade and call qualifier/);
       assert.match(text, /Why the XAU\/USD call gate is still locked/);
       assert.match(text, /Follow the connections to see the dependency chain/);
+      assert.match(text, /PRINT BLACK-ON-WHITE MAP/);
+      assert.match(text, /MT5-aligned source data/);
       assert.match(text, /Individual elements/);
       assert.match(text, /Combinations and correlation/);
       assert.match(text, /Full algorithm/);
@@ -44,6 +46,11 @@ test("Backtest Engine presents the XAU/USD visual development board", async () =
     await page.setViewportSize({ width: 390, height: 844 });
     const mobileOverflow = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth + 1);
     assert.equal(mobileOverflow, false);
+    await page.emulateMedia({ media: "print" });
+    assert.equal(await page.locator(".engine-map").isVisible(), true);
+    assert.equal(await page.locator(".engine-todo").isVisible(), false);
+    const printBackground = await page.locator(".engine-map").evaluate(element => getComputedStyle(element).backgroundColor);
+    assert.equal(printBackground, "rgb(255, 255, 255)");
   } finally {
     await browser.close();
     await new Promise(resolve => server.close(resolve));

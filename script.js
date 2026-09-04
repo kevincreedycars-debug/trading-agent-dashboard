@@ -12098,7 +12098,7 @@ function renderBacktestEngine(data = {}) {
       </div>
     </section>
     <section class="engine-map detail-panel" aria-label="XAU/USD backtest engine flow diagram">
-      <div class="engine-section-head"><div><p class="eyebrow">Visual engine map</p><h3>Why the XAU/USD call gate is still locked</h3></div><span>Follow the connections to see the dependency chain</span></div>
+      <div class="engine-section-head"><div><p class="eyebrow">Visual engine map</p><h3>Why the XAU/USD call gate is still locked</h3></div><div class="engine-map-actions"><span>Follow the connections to see the dependency chain</span><button type="button" class="inspect-button" data-engine-print>Print black-on-white map</button></div></div>
       <div class="engine-flow-map">
         <svg class="engine-flow-lines" viewBox="0 0 1000 500" preserveAspectRatio="none" aria-hidden="true">
           <path d="M 235 125 C 340 125, 360 215, 460 235"></path>
@@ -12111,6 +12111,7 @@ function renderBacktestEngine(data = {}) {
           <div class="engine-map-node-head"><span>${String(index + 1).padStart(2, "0")}</span><small>${escapeHtml(backtestEngineStatusLabel(lane.status))}</small></div>
           <h4>${escapeHtml(lane.title || "Workstream")}</h4>
           <strong>${escapeHtml(String(lane.progress ?? 0))}% complete</strong>
+          <ul>${(Array.isArray(lane.items) ? lane.items : []).map(item => `<li class="is-${escapeHtml(item.status || "planned")}"><i></i><span>${escapeHtml(item.label || "Assessment item")}</span></li>`).join("")}</ul>
           <p>${escapeHtml(lane.next_action || "No next action published.")}</p>
         </article>`).join("")}
         <article class="engine-map-core">
@@ -12122,9 +12123,11 @@ function renderBacktestEngine(data = {}) {
           <span>OUTPUT</span>
           <strong>Strength grade<br>+ call qualifier</strong>
           <small>${escapeHtml(overall)}: every connected workstream must pass</small>
+          <div class="engine-map-output-checks">${gates.map(gate => `<span class="is-${escapeHtml(gate.status || "planned")}"><i></i>${escapeHtml(gate.label || "Gate check")}</span>`).join("")}</div>
         </article>
       </div>
       <div class="engine-map-key"><span class="is-complete"><i></i>Proven baseline</span><span class="is-active"><i></i>Being built</span><span class="is-needs_you"><i></i>Needs MT5 / levels</span><span class="is-blocked"><i></i>Cannot start yet</span></div>
+      <div class="engine-map-print-notes"><div><span>Observed reach context</span><p>${metrics.map(metric => `${escapeHtml(metric.label || "Metric")}: <b>${escapeHtml(metric.value || "--")}</b>`).join(" | ")}</p></div><div><span>Why the output is locked</span><p>${escapeHtml(data.qualification_gate?.note || "No release note published.")}</p></div></div>
     </section>
     <section class="engine-todo detail-panel" aria-label="Backtest engine control list">
       <div class="engine-section-head">
@@ -12166,6 +12169,10 @@ function renderBacktestEngine(data = {}) {
   if (panel.dataset.engineBound === "true") return;
   panel.dataset.engineBound = "true";
   panel.addEventListener("click", event => {
+    if (event.target.closest("[data-engine-print]")) {
+      window.print();
+      return;
+    }
     const target = event.target.closest("[data-engine-open]")?.dataset.engineOpen;
     if (!target) return;
     if (target === "backtest") activeBacktestTab = "half-l2l-reach";
