@@ -1,13 +1,21 @@
-# Session notes
+﻿# Session notes
 
-2026-09-07: repository consolidation and main-folder cutover complete.
+2026-09-07: initial Gold timestamped contract audit complete.
 
-Use `D:\trading-agent-dashboard-codex` on local `main`. It is now the sole registered worktree. The old research worktree and all redundant worktrees were retired after verified backups. Its old directory is empty but still held open by a Windows process; no project files remain there. All branch histories remain preserved. Recovery archives and logs are under ignored `.local/consolidation-20260907/`; required raw evidence remains under ignored `backtester/tmp/` and `tmp/`.
+Canonical folder: `D:\trading-agent-dashboard-codex`. Review began from clean local `main` at `6c43cbb`, eight commits ahead of recorded `origin/main`. Work is on local `review/gold-timestamped-contract`; no production push or deployment occurred. Consolidation/recovery details remain in `CONSOLIDATION_20260907.md`.
 
-Seven coherent integration commits start at production `125d871` and finish at `b14b63a`; the final handoff commit records cutover. Research, Gold evidence, GBP drafts, the isolated macro prototype, workflow fixes and dashboard integration are consolidated. Trial and calendar-hardening work remains parked. Historical startup/task notes are archived; current navigation is `docs/README.md`.
+Read `GOLD_TIMESTAMPED_EVALUATION_CONTRACT.md` for the versioned measurement contract, alternative stored-call/as-of paths, source-to-report trace, denominator rules and prioritized findings:
 
-Validation from the original folder: `npm ci --ignore-scripts` succeeded; **280 local tests passed**. Eighteen page/viewport combinations passed layout/JavaScript checks. Recovery archives, 101 raw evidence files, six GBP draft/progress files and 34 research data artifacts were verified. The full scan of 424 tracked files found no credential findings. Details and log locations are in `CONSOLIDATION_20260907.md`.
+- G1: direct evaluator accepts missing/non-boolean completion metadata; OANDA normalization already emits only completed candles.
+- G2: rounding storage just below a minute upward can advance entry and horizon an additional minute relative to the raw next boundary. This follows existing normalization order but needs explicit protocol semantics; pilot incidence is unmeasured.
+- G3: as-of builder drops the supplied protocol envelope before reporting.
 
-No production push, live n8n mutation, warehouse write or credential change occurred. Existing collector exports now contain named environment references instead of old key literals and require runtime binding review before import. Historical Git commits and private archives may still contain the original literals.
+No evaluator behavior or frozen research artifact changed. Six new offline review tests include independent outcomes/DST/weekend/reconciliation checks and explicitly labelled characterizations of the three gaps. Characterization success is not a repair claim.
 
-Next: follow `BACKTESTING_REVIEW_PLAN.md` and write the Gold timestamped directional-evaluation contract. The Gold history-query repair is still unapplied; input timing, complete paths and MT5 execution evidence remain qualification gaps. GBP expansion, macro provisioning and optimization remain parked.
+Validation: `node --test backtester/tests/gold_contract_review.test.js` passed 6/6; `npm test` passed 286/286 with no failures, skips or cancellations. Full local log: ignored `tmp/gold-contract-review-tests-20260907.log`. Linked-warehouse mutation suites remain excluded. No acquisition or live workflow execution was run.
+
+Next immediate action: address G1 with explicit completion validation and a versioned compatibility decision for direct datasets/fixtures. Keep the same active Gold review milestone; then resolve entry precision semantics and protocol propagation. Isolated n8n validation of the unapplied Gold history patch remains a separate operational gate.
+
+Storage/publication proxies, unverified feature vintages, repeated snapshots, no complete strict pilot paths, the June 9 input defect and consumed holdouts remain limitations. GBP onboarding, macro provisioning and model optimization remain parked.
+
+Concurrent unrelated edits appeared during this review in `docs/PARALLEL_AGENT_HANDOFF.md`, `docs/README.md`, and new `docs/DEEPSEEK_BUILD_BRIEF.md`. They were left untouched and are excluded from the review commit.

@@ -7,22 +7,22 @@ Backtesting engine review.
 Define and audit the Gold timestamped directional-evaluation contract.
 
 ## Status
-Planning
+Initial contract audit complete; demonstrated repairs pending.
 
 ## Completed Work
-Repository preservation, consolidation and original-folder cutover completed. All 280 local tests pass in the main folder; engine inventory and review sequence are documented. See the consolidation record for recovery and validation evidence.
+Versioned contract and source-to-report trace documented in `GOLD_TIMESTAMPED_EVALUATION_CONTRACT.md`. Six offline review tests cover hand-calculated outcomes, DST/weekend boundaries, denominator reconciliation and three reproduced gaps. Engine behavior and frozen research artifacts are unchanged.
 
 ## Remaining Work
-Write the explicit contract, trace the evaluator and adapters against it, and prioritize demonstrated correctness gaps. Establish a separate repair-validation path for the Gold collection defect.
+Repair explicit candle-completion validation, resolve/version raw versus normalized storage entry semantics, and preserve as-of protocol metadata. Replace gap characterization assertions with repaired expectations. Review shared snapshot selection/provenance. Keep isolated history-query validation separate.
 
 ## Current Files Being Modified
-No engine implementation changes are active. Review starts in `docs/BACKTESTING_REVIEW_PLAN.md` and the referenced Gold modules.
+Contract/review documentation and `backtester/tests/gold_contract_review.test.js`; no engine implementation changes.
 
 ## Blockers
 Gold input history defect remains unrepaired in production. Authentic availability/publication timestamps, complete paths and MT5 execution evidence are not yet established. These block qualification, not code review.
 
 ## Next Immediate Action
-Write the Gold timestamped directional-evaluation contract from the existing implementation and documented evidence limitations.
+Implement explicit candle-completion validation with a versioned compatibility decision for direct datasets and synthetic fixtures (contract gap G1).
 
 ## Last Updated
 2026-09-07.

@@ -2,7 +2,7 @@
 
 Updated 2026-09-07.
 
-Reassess the backtesting engines from the consolidated baseline. The first bounded task is to specify the Gold timestamped directional-evaluation contract and audit its implementation against that contract.
+Reassess the backtesting engines from the consolidated baseline. The Gold timestamped directional-evaluation contract and initial implementation audit are recorded in [GOLD_TIMESTAMPED_EVALUATION_CONTRACT.md](GOLD_TIMESTAMPED_EVALUATION_CONTRACT.md). Continue the same Gold review milestone by addressing its demonstrated contract gaps, beginning with explicit candle-completion validation.
 
 Read [BACKTESTING_REVIEW_PLAN.md](BACKTESTING_REVIEW_PLAN.md). Start with decision/publication time, feature availability, entry time, horizon, price source and gap handling. Record demonstrated defects before proposing code changes.
 

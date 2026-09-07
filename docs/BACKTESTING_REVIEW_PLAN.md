@@ -2,6 +2,8 @@
 
 Baseline date: 2026-09-07. Objective: establish what each engine actually measures, correct demonstrated measurement defects, and qualify evidence before optimization.
 
+First review checkpoint: [Gold timestamped contract and implementation audit](GOLD_TIMESTAMPED_EVALUATION_CONTRACT.md). The versioned review records the two input paths, measurement rules, denominator accounting, independent examples, and three reproduced gaps. Evaluator behavior and frozen pilot artifacts remain unchanged; explicit candle-completion validation is the first proposed repair.
+
 ## Engine inventory
 
 | Path / family | Inputs and question | Current disposition / main limitation |

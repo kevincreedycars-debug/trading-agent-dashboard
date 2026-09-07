@@ -1,3 +1,7 @@
+# 2026-09-07 - Gold timestamped contract review
+
+Documented the versioned measurement contract, alternative input paths, lineage and denominator rules. Added six offline review tests, including reproductions of permissive completion flags, minute-boundary storage rounding and lost as-of protocol metadata. No engine behavior or frozen research artifact changed. All 286 local tests pass. See `GOLD_TIMESTAMPED_EVALUATION_CONTRACT.md`; production and parked GBP/macro work remain outside this review.
+
 # 2026-09-07 ? Repository consolidation
 
 Preserved all existing worktrees and local evidence; reconciled research and production dashboard files; retained GBP drafts and isolated macro source; removed collector export credential literals; made local tests repeatable; archived superseded handoffs and established a focused backtesting review plan. Validation: 275 local tests plus five credential-reference regressions pass; 18 browser viewport/page combinations pass. Local baseline only; no production publication. See `CONSOLIDATION_20260907.md`.
