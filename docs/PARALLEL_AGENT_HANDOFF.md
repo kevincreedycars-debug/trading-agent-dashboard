@@ -1,49 +1,51 @@
 # Parallel development handoff
 
-## Consolidation addendum — 2026-09-07
+Updated 2026-09-07 after consolidation. This document supersedes the earlier instruction to park all additional Layer 1 development while reviewing backtesting.
 
-The user authorized preservation and consolidation of all workstreams into the main project folder. Use `D:\trading-agent-dashboard-codex` and the current task documents after cutover. The old research checkout and blanket no-commit instruction below describe the pre-consolidation shared session. GBP draft contents/progress remain preserved; GBP implementation and macro development are parked during the backtesting review. New simultaneous editing requires a fresh ownership checkpoint.
+## Authorized workstreams
 
+- **Codex:** backtesting correctness, timestamped data contracts, historical replay, evaluation and research diagnostics. The current review is the Gold timestamped directional-evaluation contract.
+- **DeepSeek through Cline:** build additional independent Layer 1 asset agents and collectors using the established workflow/logic/contract-test structure. Detailed assignment instructions are in [DEEPSEEK_BUILD_BRIEF.md](DEEPSEEK_BUILD_BRIEF.md).
+- **Assigned assets: GBP, Silver and WTI**, each in a separate VS Code window, worktree and branch. These are Layer 1 asset agents, while Codex owns the backtesting engine.
 
-Established 2026-09-05 from the user's instruction: DeepSeek through Cline builds the other Layer 1 agents while Codex continues improving the backtesting engine.
+Codex uses `D:\trading-agent-dashboard-codex`. DeepSeek uses the asset worktrees listed below. The old research checkout has been retired. At this update the main-folder checkout is on `review/gold-timestamped-contract`; inspect status rather than assuming it is still on `main`.
+
+## EUR pair-coverage workstream
+
+The user additionally authorized a fourth DeepSeek worker for EUR-related pair coverage. See [DEEPSEEK_EUR_PAIRS_BRIEF.md](DEEPSEEK_EUR_PAIRS_BRIEF.md). It owns `pair-coverage/eur/**`, `tests/pair-coverage/eur/**` and `docs/DEEPSEEK_EUR_PAIRS_PROGRESS.md`; existing agents, shared pair logic and backtester integration remain with their existing owners.
 
 ## Ownership
 
-- **Cline / DeepSeek:** additional independent Layer 1 agent logic, asset-specific collector and agent workflow drafts, documentation, and isolated contract tests.
-- **Codex:** the backtesting engine, historical replay, dataset construction, research evaluation, and backtesting UI.
-- Each agent must read this file at session start. This is coordination through files; neither agent automatically receives the other's conversation.
+| Work | Writer | Boundary |
+| --- | --- | --- |
+| `backtester/**`, research `data/**`, backtesting UI/tests | Codex | DeepSeek reads contracts and proposes adapter changes in its handoff. |
+| One assigned asset's logic, collector/agent drafts, workflow docs, tests and progress | Assigned DeepSeek builder | Each builder owns a different asset and exact file list. |
+| `index.html`, `script.js`, `styles.css`, package/lockfiles, shared test helpers, existing production exports, orchestration and published data | Codex integration owner | Builders record integration requests instead of editing these files concurrently. |
+| Current task/milestone/session documents and this coordination file | Codex coordinator | Builders maintain their asset-specific progress files. |
 
-## DeepSeek: first task
+Existing GBP ownership remains in `docs/DEEPSEEK_LAYER1_PROGRESS.md`. New asset builders use `docs/DEEPSEEK_<ASSET>_PROGRESS.md` and `tests/layer1-onboarding/<asset>/` so they do not race on GBP's files or a shared progress document. Read any asset-specific instructions before editing.
 
-1. Read `README.md`, `logic/README.md`, relevant `logic/agent_*_direction.md`, `workflows/eur_layer1_agent.md`, and existing collector/agent exports. Read relevant handoff notes and inspect `git status` and diffs. Historical notes and the workflow inventory can be stale; verify claims against code. Local exports do not prove current live deployment.
-2. Audit the additional-asset backlog. Local exports already exist for USD, EUR, Gold, NQ, and BTC. GBP has `logic/agent_gbp_direction.md` and `backtester/replay/gbp/`, but no root GBP collector/agent exports were found. Start by assessing and extending this existing GBP draft; do not rebuild those five existing agents.
-3. Treat Silver and WTI as candidates mentioned in earlier project notes, not a confirmed ordered backlog. Identify evidence for any further asset scope and record uncertainties before implementing additional assets.
-4. Record your intended file list in `docs/DEEPSEEK_LAYER1_PROGRESS.md` before editing. Build a reviewable GBP collector/Layer 1 draft compatible with the existing input/output contracts. Document actual data requirements and any unavailable provider inputs. Do not invent data, calibrated weights, workflow IDs, or credentials.
-5. Add isolated tests for meaningful contract behavior: missing/stale input handling, independent asset output, and schema compatibility. Use local fixtures; report what was and was not validated. New weights remain hypotheses until backtested.
-6. Finish with changed files, test commands/results, unresolved questions, and an integration checklist in your progress file. Do not claim historical validation or production readiness from contract tests.
+## Separate-worktree discipline
 
-## File boundaries
+| Builder | Folder | Branch |
+| --- | --- | --- |
+| GBP | `D:\trading-agent-dashboard-codex.worktrees\agent-gbp` | `agents/gbp-layer1-20260907` |
+| Silver | `D:\trading-agent-dashboard-codex.worktrees\agent-silver` | `agents/silver-layer1-20260907` |
+| WTI | `D:\trading-agent-dashboard-codex.worktrees\agent-wti` | `agents/wti-layer1-20260907` |
+| EUR pairs | `D:\trading-agent-dashboard-codex.worktrees\agent-eur-pairs` | `agents/eur-pair-coverage-20260907` |
 
-DeepSeek may create or extend asset-specific files for the additional agents:
+The user explicitly requested these three isolated VS Code instances on 2026-09-07. They are bounded asset-building worktrees, not a return to one indefinitely dirty research checkout. Open `docs/AGENT_ASSIGNMENT.md` in each worker folder; its local task files identify the assigned asset.
 
-- `logic/agent_gbp_direction.md` and logic documents for confirmed additional assets.
-- New asset-specific drafts in `exports/` and documentation in `workflows/`.
-- New isolated tests/fixtures under `tests/layer1-onboarding/`.
-- `docs/DEEPSEEK_LAYER1_PROGRESS.md` for its status and integration requests.
+Workers may make scoped local implementation commits on their own branch. Do not switch or reset the main-folder checkout, merge/push production, commit outside the assigned asset, or edit another worker's directory. Each worker starts with a setup-only documentation commit; do not merge that setup commit back into the canonical project. Deliver subsequent implementation commit IDs plus the contract mapping to Codex. Codex reviews and integrates asset-only changes, then retires the completed worktree after preserving any remaining local evidence.
 
-Codex owns `backtester/**`, research outputs in `data/`, and backtesting-related tests and UI changes. DeepSeek may read these to understand compatibility, including the GBP replay implementation, but should record requested changes rather than edit them.
+Git worktrees share commit history but have separate files and indexes. Changes do not automatically appear in the other windows. Each worker maintains its local asset progress document; the coordinator reads it from the listed worktree when reviewing a handoff. No worker can assume it has the other agents' chat history.
 
-Shared integration files have one editor at a time. DeepSeek should propose required changes in its handoff instead of modifying `index.html`, `script.js`, `styles.css`, `package.json`, lockfiles, `data/layer1.json`, `data/layer2.json`, existing production exports, `exports/master_orchestrator.json`, or `exports/dashboard_writer.json`. Codex coordinates their integration. This does not block DeepSeek from completing isolated agent drafts.
+These are local draft builds. Workflow activation, live database/schema changes, credential changes and production publication are separate integration steps. Layer 1 agents consume their own raw inputs and logic; they do not consume another agent's verdict or backtesting outputs.
 
-## Working rules
+## Delivery and integration
 
-- Preserve all pre-existing modified and untracked files. This checkout contains substantial uncommitted work.
-- Do not switch branches, reset, clean, stash, or broadly stage/commit the shared checkout. Limit any explicitly requested commit to owned changes.
-- Re-read owned files before editing; if another agent changed them, coordinate rather than overwrite.
-- Keep Layer 1 outputs independent: use the asset's own logic and permitted raw market inputs, never another agent's verdict or Layer 2 adjustments. Follow the established publishing contract; do not overwrite other assets' results.
-- Build and test locally. Deploying/activating workflows, changing credentials, or triggering production orchestration is outside this development handoff.
-- Record integration needs with exact input/output examples so Codex can connect new agents to the backtesting engine without guessing.
+Each builder delivers the asset-specific files, exact local test command/results, input availability and missing-data matrix, unresolved provider/schema questions, and a mapping from snapshot fields to factor inputs and output fields. Keep an explicit provisional/untested label on weights and scoring assumptions.
 
-## Codex workstream
+Codex reviews this contract for replay/backtester compatibility while continuing the Gold review. Draft completion does not imply validated directional edge, complete execution evidence, or permission to deploy. Macro provisioning and model optimization remain parked.
 
-Continue improving backtesting correctness and evidence quality. The existing development tracker names XAU/USD factor assessment and timestamped L2L contracts, with executable validation dependent on real market timing, spread, and adverse-path evidence. Treat this as a repository baseline to verify, not proof of current completion or a new replacement research mandate. Keep new agent development independent of engine changes until their contracts can be reviewed and integrated.
+No DeepSeek process is started by writing this handoff. The operator must start the assignments in the DeepSeek/Cline sessions; workers coordinate through the files, not an assumed shared conversation.

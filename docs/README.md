@@ -15,9 +15,12 @@
 
 - `CODEX_GOLD_BACKTEST_PROGRESS.md`: dated Gold evidence and known collection defect.
 - `DEEPSEEK_LAYER1_PROGRESS.md`: original GBP draft progress, preserved without rewriting its findings.
-- `PARALLEL_AGENT_HANDOFF.md`: workstream ownership; the consolidation addendum supersedes old folder instructions.
+- `PARALLEL_AGENT_HANDOFF.md`: current parallel-work ownership and shared-checkout rules.
+- `DEEPSEEK_BUILD_BRIEF.md`: additional asset-agent template, delivery contract and three assigned asset worktrees.
 - `../backtester/docs/gold_timestamped_backtesting.md` and `gold_stored_call_pilot_20260906.md`: contracts and reproduction commands.
 - `../macro-engine/README.md` and `macro-engine/`: parked macro prototype contracts.
+
+- `DEEPSEEK_EUR_PAIRS_BRIEF.md`: fourth worker covering the seven configured EUR-related pairs.
 
 ## Historical material
 
