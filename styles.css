@@ -814,6 +814,7 @@ h3 {
   display: grid;
   gap: 14px;
   margin-top: 18px;
+  min-width: 0;
 }
 
 .overview-confidence-band-summary-shell {
@@ -822,12 +823,14 @@ h3 {
   border: 1px solid rgba(20, 54, 96, 0.14);
   border-radius: 12px;
   background: linear-gradient(180deg, rgba(244, 248, 252, 0.92), rgba(255, 255, 255, 0.94));
+  min-width: 0;
 }
 
 .overview-confidence-band-analysis-shell {
   margin-top: 18px;
   display: grid;
   gap: 14px;
+  min-width: 0;
 }
 
 .overview-confidence-band-tab-row,
@@ -882,6 +885,7 @@ h3 {
 .overview-confidence-band-analysis-section {
   display: grid;
   gap: 14px;
+  min-width: 0;
 }
 
 .overview-confidence-band-selector-group {
@@ -918,6 +922,7 @@ h3 {
   border-radius: 10px;
   background: rgba(255, 255, 255, 0.82);
   padding: 16px;
+  min-width: 0;
 }
 
 .overview-confidence-band-table-head {
@@ -933,7 +938,10 @@ h3 {
 }
 
 .overview-confidence-band-table-scroll {
+  max-width: 100%;
+  min-width: 0;
   overflow-x: auto;
+  overflow-y: hidden;
 }
 
 .overview-confidence-band-table {
@@ -1289,6 +1297,31 @@ h3 {
 
 .view { display: none; }
 .active-view { display: block; }
+
+/* The structure map is a local, read-only guide loaded inside the dashboard shell. */
+.structure-map-frame-panel {
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid rgba(123, 157, 194, 0.22);
+  border-radius: 18px;
+  background: #070c13;
+  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.22);
+}
+
+.structure-map-frame {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  height: min(1100px, 78vh);
+  border: 0;
+  background: #070c13;
+}
+
+@media (max-width: 720px) {
+  .structure-map-frame {
+    height: 82vh;
+  }
+}
 
 .section-header {
   display: flex;
@@ -5108,6 +5141,131 @@ h3 {
   min-height: 0;
 }
 
+/* Keep the architecture mirror visually aligned with the live terminal surfaces. */
+#architectureView {
+  --architecture-surface: #0d1420;
+  --architecture-surface-raised: #131d2c;
+  --architecture-surface-node: #101a28;
+  --architecture-border: rgba(148, 172, 205, 0.2);
+  --architecture-text: #e7eef8;
+  --architecture-muted: #a5b4c8;
+  --architecture-accent: #62b6ff;
+}
+
+#architectureView .architecture-controls-panel,
+#architectureView .architecture-canvas-panel,
+#architectureView .architecture-detail-panel,
+#architectureView .architecture-legend-panel,
+#architectureView .architecture-loading-panel,
+#architectureView .architecture-unavailable-panel {
+  background: linear-gradient(145deg, rgba(17, 28, 43, 0.98), rgba(9, 15, 24, 0.98));
+  border-color: var(--architecture-border);
+  box-shadow: inset 0 1px 0 rgba(177, 207, 240, 0.05), 0 18px 44px rgba(0, 0, 0, 0.2);
+}
+
+#architectureView .architecture-view-button,
+#architectureView .architecture-filter-button,
+#architectureView .architecture-chip {
+  background: rgba(12, 21, 33, 0.92);
+  border-color: var(--architecture-border);
+  color: var(--architecture-muted);
+}
+
+#architectureView .architecture-view-button.active,
+#architectureView .architecture-view-button:hover,
+#architectureView .architecture-filter-button.active,
+#architectureView .architecture-filter-button:hover {
+  color: #edf7ff;
+  border-color: rgba(98, 182, 255, 0.58);
+  background: linear-gradient(135deg, rgba(36, 103, 165, 0.42), rgba(16, 44, 76, 0.72));
+}
+
+#architectureView .architecture-view-group h4,
+#architectureView .architecture-stage-heading,
+#architectureView .architecture-node-title,
+#architectureView .architecture-detail-card h4,
+#architectureView .architecture-detail-section summary,
+#architectureView .architecture-legend-summary {
+  color: var(--architecture-text);
+}
+
+#architectureView .architecture-filter-copy,
+#architectureView .architecture-canvas-summary,
+#architectureView .architecture-error-copy,
+#architectureView .architecture-detail-summary,
+#architectureView .architecture-detail-block p,
+#architectureView .architecture-detail-empty,
+#architectureView .architecture-legend-item span,
+#architectureView .architecture-stage-subtitle,
+#architectureView .architecture-node-purpose,
+#architectureView .architecture-node-meta,
+#architectureView .architecture-detail-list li,
+#architectureView .architecture-detail-list li span,
+#architectureView .architecture-legend-summary-copy {
+  color: var(--architecture-muted);
+}
+
+#architectureView .architecture-canvas {
+  border-color: rgba(98, 182, 255, 0.18);
+  background:
+    radial-gradient(circle at 88% 4%, rgba(47, 155, 230, 0.14), transparent 26%),
+    linear-gradient(rgba(111, 153, 200, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(111, 153, 200, 0.045) 1px, transparent 1px),
+    linear-gradient(145deg, #101a29, #080e17);
+  background-size: auto, 26px 26px, 26px 26px, auto;
+}
+
+#architectureView .architecture-stage {
+  border-color: var(--architecture-border);
+  background: rgba(15, 25, 39, 0.88);
+  border-top-color: rgba(98, 182, 255, 0.52);
+}
+
+#architectureView .architecture-stage-boundary-supabase-runtime,
+#architectureView .architecture-stage-boundary-external-inputs { border-top-color: #48c4b0; }
+#architectureView .architecture-stage-boundary-n8n-runtime,
+#architectureView .architecture-stage-boundary-runtime { border-top-color: #62b6ff; }
+#architectureView .architecture-stage-boundary-github-publication,
+#architectureView .architecture-stage-boundary-publication { border-top-color: #d8a844; }
+#architectureView .architecture-stage-boundary-browser-surface,
+#architectureView .architecture-stage-boundary-browser { border-top-color: #78a5df; }
+#architectureView .architecture-stage-boundary-research-stack,
+#architectureView .architecture-stage-boundary-research-system,
+#architectureView .architecture-stage-boundary-research { border-top-color: #4ec99a; }
+
+#architectureView .architecture-stage-connector-line { background: rgba(98, 182, 255, 0.38); }
+#architectureView .architecture-stage-connector-arrow { border-top-color: rgba(98, 182, 255, 0.72); }
+
+#architectureView .architecture-node,
+#architectureView .architecture-detail-card,
+#architectureView .architecture-detail-section,
+#architectureView .architecture-legend-swatch,
+#architectureView .architecture-legend-line,
+#architectureView .architecture-legend-boundary {
+  border-color: var(--architecture-border);
+  background: linear-gradient(145deg, rgba(22, 35, 53, 0.96), rgba(12, 20, 31, 0.96));
+  color: var(--architecture-text);
+  box-shadow: inset 0 1px 0 rgba(177, 207, 240, 0.04), 0 10px 24px rgba(0, 0, 0, 0.18);
+}
+
+#architectureView .architecture-node.is-selected {
+  border-color: var(--architecture-accent);
+  box-shadow: 0 0 0 1px rgba(98, 182, 255, 0.2), 0 18px 34px rgba(0, 0, 0, 0.3);
+}
+
+#architectureView .architecture-node.is-connected:not(.is-selected) { border-color: rgba(98, 182, 255, 0.46); }
+#architectureView .architecture-node-badge-status { border-color: rgba(148, 172, 205, 0.2); }
+#architectureView .architecture-node-badge-relationship { background: rgba(45, 116, 182, 0.24); color: #b9deff; }
+#architectureView .architecture-node-status-verified { background: rgba(43, 151, 109, 0.2); color: #9ce9c7; }
+#architectureView .architecture-node-status-partially_verified { background: rgba(191, 137, 32, 0.22); color: #ffd47d; }
+#architectureView .architecture-node-status-unverified { background: rgba(174, 68, 68, 0.22); color: #ffb3b3; }
+#architectureView .architecture-chip-status.architecture-status-verified { color: #9ce9c7; background: rgba(43, 151, 109, 0.18); }
+#architectureView .architecture-chip-status.architecture-status-partially_verified { color: #ffd47d; background: rgba(191, 137, 32, 0.18); }
+#architectureView .architecture-chip-status.architecture-status-unverified { color: #ffb3b3; background: rgba(174, 68, 68, 0.18); }
+#architectureView .architecture-detail-list li strong { color: #d5e7fa; }
+#architectureView .architecture-legend-line::before { border-top-color: rgba(157, 205, 255, 0.7); }
+#architectureView .architecture-legend-boundary::before { border-color: rgba(98, 182, 255, 0.32); background: rgba(98, 182, 255, 0.1); }
+
 @media (max-width: 1180px) {
   .hero,
   .agent-detail-hero,
@@ -6729,6 +6887,298 @@ body {
   color: #ffffff;
 }
 
+/* Backtesting Development is deliberately separate from live call presentation. */
+.backtesting-development-tab {
+  border-color: rgba(22, 199, 183, 0.2);
+}
+
+.development-command-panel,
+.development-todo-panel,
+.development-assessment-panel,
+.development-stage-panel,
+.development-empty-state {
+  min-width: 0;
+  padding: 20px;
+}
+
+.development-command-panel {
+  background:
+    radial-gradient(circle at top right, rgba(22, 199, 183, 0.12), transparent 32%),
+    linear-gradient(180deg, rgba(12, 22, 31, 0.98), rgba(8, 12, 18, 0.98));
+}
+
+.development-command-head,
+.development-section-head {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.development-command-head > div,
+.development-section-head > div,
+.development-command-notes,
+.development-todo-item > div,
+.development-stage > div {
+  min-width: 0;
+}
+
+.development-command-head h3,
+.development-section-head h3 {
+  color: #f7fbff;
+  font-family: var(--sans);
+  font-size: clamp(22px, 3vw, 30px);
+}
+
+.development-command-head p,
+.development-command-notes p,
+.development-todo-item p,
+.development-assessment-card p,
+.development-stage p,
+.development-assessment-note {
+  color: #c7d4e3;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+.development-command-head > div > p:last-child {
+  max-width: 700px;
+  margin: 8px 0 0;
+}
+
+.development-gate-stack {
+  display: grid;
+  gap: 8px;
+  justify-items: end;
+}
+
+.development-status-badge,
+.development-status-label {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  max-width: 100%;
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  line-height: 1.35;
+  text-transform: uppercase;
+  overflow-wrap: anywhere;
+}
+
+.development-status-badge {
+  padding: 7px 10px;
+  border: 1px solid rgba(94, 161, 255, 0.24);
+  border-radius: 999px;
+  background: rgba(94, 161, 255, 0.1);
+  color: #dceaff;
+}
+
+.development-status-badge.grade-hypothesis,
+.development-status-label {
+  color: #ffd28b;
+}
+
+.development-status-badge.gate-blocked {
+  border-color: rgba(255, 91, 110, 0.24);
+  background: rgba(255, 91, 110, 0.1);
+  color: #ffb6c0;
+}
+
+.development-command-notes {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.development-command-notes p {
+  margin: 0;
+  padding: 12px 14px;
+  border: 1px solid rgba(152, 178, 205, 0.14);
+  border-radius: 12px;
+  background: rgba(7, 11, 17, 0.7);
+}
+
+.development-command-notes strong {
+  color: #f2f7fe;
+}
+
+.development-performance-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin-top: 16px;
+}
+
+.development-todo-panel,
+.development-assessment-panel,
+.development-stage-panel {
+  margin-top: 16px;
+}
+
+.development-section-note {
+  color: #9fb4ca;
+  font-size: 12px;
+  line-height: 1.45;
+  text-align: right;
+}
+
+.development-todo-list,
+.development-stage-list {
+  display: grid;
+  gap: 10px;
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.development-todo-item,
+.development-stage {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+  min-width: 0;
+  padding: 14px;
+  border: 1px solid rgba(152, 178, 205, 0.14);
+  border-radius: 14px;
+  background: rgba(7, 11, 17, 0.72);
+}
+
+.development-todo-index,
+.development-stage-number,
+.development-assessment-card > span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: rgba(94, 161, 255, 0.16);
+  color: #dceaff;
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.development-todo-item strong,
+.development-stage h4,
+.development-assessment-card h4 {
+  display: block;
+  margin-top: 4px;
+  color: #f3f8ff;
+  font-size: 15px;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.development-todo-item p,
+.development-stage p,
+.development-assessment-card p,
+.development-assessment-note {
+  margin: 6px 0 0;
+}
+
+.development-todo-item.status-in_progress,
+.development-assessment-card.is-active {
+  border-color: rgba(94, 161, 255, 0.38);
+  background: linear-gradient(90deg, rgba(94, 161, 255, 0.11), rgba(7, 11, 17, 0.72));
+}
+
+.development-todo-item.status-needs_you {
+  border-color: rgba(244, 184, 96, 0.3);
+}
+
+.development-todo-item.status-needs_you .development-todo-index,
+.development-todo-item.status-next .development-todo-index {
+  background: rgba(244, 184, 96, 0.16);
+  color: #ffdca1;
+}
+
+.development-todo-item.status-blocked,
+.development-stage.status-blocked,
+.development-assessment-card.is-blocked {
+  border-color: rgba(255, 91, 110, 0.28);
+  background: linear-gradient(90deg, rgba(255, 91, 110, 0.08), rgba(7, 11, 17, 0.72));
+}
+
+.development-todo-item.status-blocked .development-todo-index,
+.development-stage.status-blocked .development-stage-number,
+.development-assessment-card.is-blocked > span {
+  background: rgba(255, 91, 110, 0.15);
+  color: #ffb6c0;
+}
+
+.development-stage.status-complete .development-stage-number {
+  background: rgba(24, 212, 139, 0.16);
+  color: #a5f3cb;
+}
+
+.development-assessment-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.development-assessment-card {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid rgba(152, 178, 205, 0.14);
+  border-radius: 14px;
+  background: rgba(7, 11, 17, 0.72);
+}
+
+.development-assessment-card small {
+  color: #9fb4ca;
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  line-height: 1.4;
+  text-transform: uppercase;
+  overflow-wrap: anywhere;
+}
+
+.development-assessment-note {
+  padding-top: 14px;
+  border-top: 1px solid rgba(152, 178, 205, 0.12);
+}
+
+.development-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+@media (max-width: 980px) {
+  .development-performance-grid,
+  .development-assessment-grid,
+  .development-command-notes {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 620px) {
+  .development-command-head,
+  .development-section-head {
+    display: grid;
+  }
+
+  .development-gate-stack {
+    justify-items: start;
+  }
+
+  .development-section-note {
+    text-align: left;
+  }
+}
+
 .overview-briefing-block h3,
 .overview-status-copy strong,
 .workflow-step strong,
@@ -7291,6 +7741,51 @@ body {
   align-items: start;
 }
 
+.card-title-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-width: 0;
+}
+
+.card-title-row h3 {
+  min-width: 0;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.data-quality-marker {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  max-width: 100%;
+  padding: 4px 7px 4px 5px;
+  border: 1px solid rgba(184, 132, 26, 0.42);
+  border-radius: 999px;
+  background: rgba(184, 132, 26, 0.12);
+  color: var(--gold-deep);
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+.data-quality-marker-icon {
+  display: inline-grid;
+  place-items: center;
+  width: 15px;
+  height: 15px;
+  flex: 0 0 15px;
+  border-radius: 50%;
+  background: var(--gold-deep);
+  color: #fff;
+  font-size: 10px;
+  line-height: 1;
+}
+
 .agent-card .call-list .direction {
   color: #eef5ff;
 }
@@ -7679,6 +8174,23 @@ body {
 }
 
 @media (max-width: 980px) {
+  .topbar {
+    position: static;
+    flex-wrap: wrap;
+    padding: 14px 18px;
+  }
+
+  .topbar-brand,
+  .topbar-center,
+  .topbar-meta {
+    width: 100%;
+    justify-content: start;
+  }
+
+  .topbar-dual-clock {
+    white-space: normal;
+  }
+
   .overview-signal-board-head {
     align-items: start;
     flex-direction: column;

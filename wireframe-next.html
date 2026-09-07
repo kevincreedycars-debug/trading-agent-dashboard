@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard Structure Map</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root { --bg:#070c13; --panel:#0d1621; --panel2:#101d2a; --line:#2a4057; --text:#f2f7fc; --muted:#b5c4d3; --blue:#79c9fb; --gold:#e4af4d; --green:#48c69a; --red:#ef7b8e; --amber:#f0bc5b; }
+    * { box-sizing:border-box; }
+    body { margin:0; min-height:100vh; color:var(--text); background:radial-gradient(circle at 82% 0%,rgba(47,91,130,.2),transparent 34%),var(--bg); font-family:"IBM Plex Sans",sans-serif; }
+    button { color:var(--text); font:inherit; cursor:pointer; }
+    a { color:inherit; }
+    .shell { width:min(1500px,calc(100% - 32px)); margin:0 auto; padding:24px 0 44px; }
+    .topbar,.workspace,.detail { border:1px solid var(--line); border-radius:18px; background:linear-gradient(180deg,rgba(15,27,40,.97),rgba(8,14,22,.98)); box-shadow:0 20px 52px rgba(0,0,0,.28); }
+    .topbar { display:flex; justify-content:space-between; align-items:center; gap:24px; padding:20px 22px; }
+    .eyebrow { margin:0 0 6px; color:var(--blue); font:600 10px/1.3 "IBM Plex Mono",monospace; letter-spacing:.15em; text-transform:uppercase; }
+    h1,h2,h3,p { min-width:0; overflow-wrap:anywhere; }
+    h1 { margin:0; font:700 clamp(1.8rem,3.5vw,2.9rem)/1 "Space Grotesk",sans-serif; letter-spacing:-.045em; }
+    .lede { max-width:780px; margin:8px 0 0; color:var(--muted); line-height:1.55; }
+    .dashboard-link { flex:0 0 auto; border:1px solid rgba(121,201,251,.5); border-radius:9px; padding:11px 14px; background:#154465; color:#f7fbff; font:600 .8rem/1.2 "IBM Plex Mono",monospace; text-decoration:none; }
+    .dashboard-link:hover,.dashboard-link:focus-visible { background:#1c608b; outline:2px solid var(--blue); outline-offset:3px; }
+    .workspace { display:grid; grid-template-columns:minmax(0,1fr) minmax(280px,.31fr); gap:18px; margin-top:18px; padding:18px; }
+    .map { min-width:0; }
+    .map-title { display:flex; justify-content:space-between; align-items:flex-start; gap:16px; margin:0 2px 14px; }
+    h2 { margin:0; font:600 1.3rem/1.2 "Space Grotesk",sans-serif; }
+    .map-title p:last-child { margin:6px 0 0; color:var(--muted); line-height:1.5; }
+    .legend { display:flex; flex-wrap:wrap; justify-content:flex-end; gap:8px; }
+    .legend span { border:1px solid var(--line); border-radius:99px; padding:6px 8px; color:var(--muted); font:500 10px/1 "IBM Plex Mono",monospace; }
+    .legend .live { border-color:rgba(72,198,154,.5); color:#aaf0d2; }
+    .legend .research { border-color:rgba(240,188,91,.45); color:#ffda92; }
+    .diagram { display:grid; grid-template-columns:190px minmax(0,1fr); gap:14px; min-width:0; padding:14px; border:1px solid rgba(90,127,162,.32); border-radius:14px; background-color:#09121c; background-image:linear-gradient(rgba(117,166,207,.055) 1px,transparent 1px),linear-gradient(90deg,rgba(117,166,207,.055) 1px,transparent 1px); background-size:28px 28px; }
+    .rail { display:flex; flex-direction:column; min-width:0; gap:5px; padding:12px 8px; border:1px solid rgba(117,154,192,.2); border-radius:11px; background:rgba(10,18,28,.92); }
+    .rail-mark { display:flex; align-items:center; gap:8px; padding:5px 7px 13px; border-bottom:1px solid rgba(117,154,192,.18); color:#e8eef5; font:600 11px/1.2 "IBM Plex Mono",monospace; letter-spacing:.07em; }
+    .rail-mark b { display:grid; place-items:center; width:27px; height:27px; border:1px solid rgba(228,175,77,.55); border-radius:7px; background:rgba(185,137,39,.12); color:#f2c86f; font-size:9px; }
+    .group { margin:10px 7px 3px; color:#7890a8; font:600 9px/1 "IBM Plex Mono",monospace; letter-spacing:.14em; text-transform:uppercase; }
+    .node { width:100%; min-width:0; border:1px solid transparent; border-radius:8px; padding:8px 10px; background:transparent; color:#c7d6e5; text-align:left; font-size:12px; font-weight:600; line-height:1.25; overflow-wrap:anywhere; }
+    .node:hover,.node:focus-visible { border-color:rgba(121,201,251,.42); background:rgba(62,110,148,.17); outline:none; }
+    .node.active { border-color:rgba(228,175,77,.38); background:linear-gradient(90deg,rgba(190,139,41,.23),rgba(190,139,41,.05)); color:#f6d48f; }
+    .canvas { display:grid; min-width:0; gap:12px; align-content:start; }
+    .flow-row { display:grid; grid-template-columns:repeat(12,minmax(0,1fr)); gap:12px; min-width:0; }
+    .card { min-width:0; min-height:98px; padding:14px; border:1px solid var(--line); border-radius:12px; background:linear-gradient(180deg,rgba(18,31,45,.98),rgba(9,17,27,.98)); color:var(--text); text-align:left; transition:transform .15s ease,border-color .15s ease,box-shadow .15s ease; }
+    .card:hover,.card:focus-visible { border-color:rgba(121,201,251,.66); box-shadow:0 0 0 3px rgba(83,155,203,.11); transform:translateY(-1px); outline:none; }
+    .card.selected { border-color:var(--gold); box-shadow:0 0 0 3px rgba(228,175,77,.13); }
+    .card strong { display:block; color:var(--text); font-size:.96rem; line-height:1.2; overflow-wrap:anywhere; }
+    .card small { display:block; margin-top:7px; color:var(--muted); font-size:.76rem; line-height:1.45; overflow-wrap:anywhere; }
+    .card .tag { display:inline-block; margin-bottom:8px; color:var(--blue); font:600 9px/1 "IBM Plex Mono",monospace; letter-spacing:.12em; text-transform:uppercase; }
+    .card.live .tag { color:#9ce8c8; }
+    .card.research .tag { color:#ffd78e; }
+    .hero { grid-column:span 8; min-height:128px; background:radial-gradient(circle at top left,rgba(87,169,226,.14),transparent 53%),linear-gradient(180deg,rgba(19,37,54,.98),rgba(10,20,31,.98)); }
+    .focus { grid-column:span 4; min-height:128px; }
+    .wide { grid-column:span 12; }
+    .six { grid-column:span 6; }
+    .four { grid-column:span 4; }
+    .three { grid-column:span 3; }
+    .connector { height:14px; border-left:1px dashed rgba(121,201,251,.45); margin:0 50%; }
+    .detail { min-width:0; padding:18px; align-self:start; position:sticky; top:18px; }
+    .detail-status { display:inline-block; margin:0 0 14px; border:1px solid rgba(72,198,154,.42); border-radius:99px; padding:6px 8px; background:rgba(36,102,77,.22); color:#b4f1d6; font:500 10px/1 "IBM Plex Mono",monospace; }
+    .detail h2 { font-size:1.18rem; }
+    .detail p { color:var(--muted); line-height:1.6; }
+    .detail dl { margin:18px 0 0; }
+    .detail dt { margin-top:14px; color:var(--blue); font:600 10px/1.3 "IBM Plex Mono",monospace; letter-spacing:.12em; text-transform:uppercase; }
+    .detail dd { margin:5px 0 0; color:#dce7f1; font-size:.88rem; line-height:1.55; overflow-wrap:anywhere; }
+    @media (max-width:1060px) { .workspace { grid-template-columns:1fr; } .detail { position:static; } }
+    @media (max-width:760px) { .shell { width:min(100% - 20px,1500px); padding-top:12px; } .topbar,.map-title { align-items:flex-start; flex-direction:column; } .legend { justify-content:flex-start; } .diagram { grid-template-columns:1fr; } .rail { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); } .rail-mark,.group { grid-column:span 2; } .hero,.focus,.six,.four,.three { grid-column:span 12; } }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">Derived from the current dashboard</p>
+        <h1>Dashboard Structure Map</h1>
+        <p class="lede">A clickable diagram of the existing Asset Directional Movement Dashboard. It is based on its actual navigation and current page sections, not a guessed paper wireframe.</p>
+      </div>
+      <a class="dashboard-link" href="index.html">Open live dashboard</a>
+    </header>
+    <section class="workspace">
+      <div class="map">
+        <div class="map-title">
+          <div><p class="eyebrow">Overview route</p><h2>How the dashboard is organised</h2><p>Select any block to see its role in the live product.</p></div>
+          <div class="legend"><span class="live">Live operations</span><span>Navigation / overview</span><span class="research">Research context</span></div>
+        </div>
+        <div class="diagram">
+          <nav class="rail" id="rail" aria-label="Dashboard map navigation">
+            <div class="rail-mark"><b>ADM</b> CONTROL ROOM</div>
+            <span class="group">Operate</span>
+            <button class="node active" data-key="overview">Overview</button><button class="node" data-key="agents">USD / EUR / Gold / NQ / BTC</button><button class="node" data-key="pair">Pair Analysis</button>
+            <span class="group">Evidence</span>
+            <button class="node" data-key="development">Backtesting Development</button><button class="node" data-key="backtest">Backtest / Accuracy</button><button class="node" data-key="factor">Factor Edge Lab</button><button class="node" data-key="shadow">Shadow Logic Backtest</button>
+            <span class="group">System</span><button class="node" data-key="architecture">Architecture</button>
+          </nav>
+          <div class="canvas" id="canvas">
+            <div class="flow-row"><button class="card hero selected" data-key="overview"><span class="tag">Overview</span><strong>Global Asset Direction</strong><small>Top-level trading read: market posture, live agent summary, and the entry point into the operating dashboard.</small></button><button class="card focus" data-key="focus"><span class="tag">Focus panel</span><strong>Current work and guardrails</strong><small>States current product intent without overstating research validity.</small></button></div>
+            <div class="connector" aria-hidden="true"></div>
+            <div class="flow-row"><button class="card wide live" data-key="refresh"><span class="tag">Live operations</span><strong>Master Orchestrator and Refresh Control</strong><small>Refresh status, elapsed time, ETA, diagnostics, and the explicit Run Refresh action.</small></button></div>
+            <div class="connector" aria-hidden="true"></div>
+            <div class="flow-row"><button class="card four live" data-key="signal"><span class="tag">Live operations</span><strong>Compact Signal Board</strong><small>Fast scan of active directional calls and headline confidence.</small></button><button class="card four" data-key="briefing"><span class="tag">Overview</span><strong>Briefing and Summary Stats</strong><small>Market conditions, week-ahead context, and condensed status.</small></button><button class="card four live" data-key="agents"><span class="tag">Live operations</span><strong>Layer 1 Agent Cards</strong><small>Independent raw calls for USD, EUR, Gold, NQ, and BTC.</small></button></div>
+            <div class="flow-row"><button class="card three" data-key="outlook"><span class="tag">Overview</span><strong>7-Day Outlook</strong><small>Lightweight projection from the latest Layer 1 calls.</small></button><button class="card three" data-key="pair"><span class="tag">Layer 2</span><strong>Pair Analysis</strong><small>Cross-asset pairing and trade framing.</small></button><button class="card three" data-key="health"><span class="tag">System health</span><strong>Input and Event Health</strong><small>Operational warnings and economic event refresh status.</small></button><button class="card three" data-key="report"><span class="tag">Workflow</span><strong>Refresh Report</strong><small>Step-level process report and errors.</small></button></div>
+            <div class="connector" aria-hidden="true"></div>
+            <div class="flow-row"><button class="card six research" data-key="backtest"><span class="tag">Research context</span><strong>Backtest and Accuracy</strong><small>Accuracy tables, sequence research, thresholds, trust summary, and checker views.</small></button><button class="card three research" data-key="factor"><span class="tag">Research context</span><strong>Factor Edge Lab</strong><small>Research-only factor evidence review.</small></button><button class="card three research" data-key="shadow"><span class="tag">Research context</span><strong>Shadow Logic Backtest</strong><small>Research-only comparison of alternative logic.</small></button></div>
+            <div class="flow-row"><button class="card six research" data-key="development"><span class="tag">Research context</span><strong>Backtesting Development</strong><small>Development surface for current research work.</small></button><button class="card six" data-key="architecture"><span class="tag">System</span><strong>Production and Research Flow Map</strong><small>Architecture view separating production pathways from research pathways.</small></button></div>
+          </div>
+        </div>
+      </div>
+      <aside class="detail" aria-live="polite"><span class="detail-status" id="detailStatus">Overview</span><p class="eyebrow">Selected area</p><h2 id="detailTitle">Global Asset Direction</h2><p id="detailCopy">The live entry point for the dashboard. It brings operational state and directional context together before the user drills into a panel.</p><dl><dt>Dashboard source</dt><dd id="detailSource">`index.html` - Overview route</dd><dt>Purpose</dt><dd id="detailPurpose">Give a trading-desk scan of the current system state.</dd></dl></aside>
+    </section>
+  </main>
+  <script>
+    const areas = {
+      overview:{status:"Overview",title:"Global Asset Direction",copy:"The live entry point for the dashboard. It brings operational state and directional context together before the user drills into a panel.",source:"index.html - Overview route",purpose:"Give a trading-desk scan of the current system state."},
+      focus:{status:"Overview",title:"Current work and guardrails",copy:"The hero-side terminal names the current product focus and makes the boundary between live operations and read-only research explicit.",source:"index.html - hero terminal",purpose:"Keep the dashboard honest about what is live, frozen, or still under development."},
+      refresh:{status:"Live operations",title:"Master Orchestrator and Refresh Control",copy:"This compact panel reports workflow health and gives the operator a conscious refresh action.",source:"index.html - workflow-compact-panel",purpose:"Expose workflow status, diagnostics, elapsed time, ETA, and refresh control."},
+      signal:{status:"Live operations",title:"Compact Signal Board",copy:"A fast visual read across current directional calls, designed for scanning rather than deep research.",source:"index.html - overviewSignalBoard",purpose:"Surface headline signals and confidence without hiding their operational state."},
+      briefing:{status:"Overview",title:"Briefing and Summary Stats",copy:"Contextual market briefing and high-level statistics sit alongside the operational signal surfaces.",source:"index.html - overviewBriefing / overviewStats",purpose:"Add narrative context to the live dashboard scan."},
+      agents:{status:"Live operations",title:"Layer 1 Agent Cards",copy:"The dashboard renders the independent raw calls for the five core asset agents as the primary evidence surface.",source:"index.html - layer1Grid",purpose:"Keep each agent's output legible and independent."},
+      outlook:{status:"Overview",title:"7-Day Outlook",copy:"A lightweight projection generated from the most recent Layer 1 timeframe calls.",source:"index.html - overviewOutlook",purpose:"Provide a forward-looking summary without presenting it as a guarantee."},
+      pair:{status:"Layer 2",title:"Pair Analysis",copy:"This route and overview panel move from independent raw calls into paired asset analysis.",source:"index.html - layer2View / overviewLayer2Panel",purpose:"Support cross-asset framing after Layer 1 evidence is available."},
+      health:{status:"System health",title:"Input and Event Health",copy:"Operational warnings and event freshness are displayed alongside overview content.",source:"index.html - overviewWarningsArea",purpose:"Make data or event risks visible before a signal is trusted."},
+      report:{status:"Workflow",title:"Full Platform Refresh Report",copy:"A deeper execution report with step-level detail and error context.",source:"index.html - workflow-report-panel",purpose:"Make refresh failures and process state inspectable."},
+      development:{status:"Research context",title:"Backtesting Development",copy:"A dedicated route for research-development work that is not represented as live trading output.",source:"index.html - backtestingDevelopmentView",purpose:"Separate in-progress research work from the operating read surface."},
+      backtest:{status:"Research context",title:"Backtest and Accuracy",copy:"The evidence route includes accuracy, weekday, pair-trade, L2L, thresholds, directional trust, and checker sections.",source:"index.html - backtestView",purpose:"Inspect historical research performance and validation tools."},
+      factor:{status:"Research context",title:"Factor Edge Lab",copy:"A research-only evidence review for factor-level analysis.",source:"index.html - factorEdgeLabView",purpose:"Explore factor evidence without implying it is a live model call."},
+      shadow:{status:"Research context",title:"Shadow Logic Backtest",copy:"A research-only comparison surface for alternative logic.",source:"index.html - shadowLogicBacktestView",purpose:"Compare logic safely within an explicitly research-only boundary."},
+      architecture:{status:"System",title:"Production and Research Flow Map",copy:"The architecture route documents the relationship between production and research paths.",source:"index.html - architectureView",purpose:"Clarify system boundaries and the way information moves through the product."}
+    };
+    const title=document.getElementById("detailTitle"),copy=document.getElementById("detailCopy"),status=document.getElementById("detailStatus"),source=document.getElementById("detailSource"),purpose=document.getElementById("detailPurpose");
+    const selectArea=(key)=>{const area=areas[key]; if(!area)return; title.textContent=area.title;copy.textContent=area.copy;status.textContent=area.status;source.textContent=area.source;purpose.textContent=area.purpose;document.querySelectorAll("[data-key]").forEach((item)=>item.classList.toggle("selected",item.classList.contains("card")&&item.dataset.key===key));document.querySelectorAll(".node").forEach((item)=>item.classList.toggle("active",item.dataset.key===key));};
+    document.querySelectorAll("[data-key]").forEach((item)=>item.addEventListener("click",()=>selectArea(item.dataset.key)));
+  </script>
+</body>
+</html>

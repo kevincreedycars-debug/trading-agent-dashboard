@@ -18,6 +18,7 @@ const checkerDataUrls = {
 };
 const adrReachResearchUrl = "./data/adr-reach-research.json?v=20260705-l2l-1h-sequence";
 const halfL2lReachResearchUrl = "./data/half-l2l-reach-research.json?v=20260809-half-l2l-reach-v2";
+const backtestingDevelopmentUrl = "./data/backtesting-development.json?v=20260903-backtesting-development-v1";
 const factorEdgeLabUrl = "./data/factor-edge-lab.json?v=20260706-review-summary";
 const phase2ShadowBacktestUrl = "./data/phase-2-shadow-backtest.json?v=20260707-phase2-shadow-v1";
 const confidenceCalibrationUrl = "./data/confidence-calibration.json?v=20260728-confidence-calibration-v1";
@@ -262,6 +263,7 @@ const architectureAllowedVerificationStatuses = new Set(["verified", "partially_
 let layer1Data = null;
 let layer2Data = null;
 let backtestData = null;
+let backtestingDevelopmentData = null;
 let factorEdgeLabData = null;
 let phase2ShadowBacktestData = null;
 let confidenceBandDeliveryData = null;
@@ -2293,6 +2295,38 @@ function renderOverviewBriefing() {
   `;
 }
 
+function missingDataLabels(agent) {
+  const fullOutput = asObject(agent?.full_output);
+  const snapshot = asObject(fullOutput.market_snapshot);
+  const candidates = [
+    ...asArray(agent?.warnings),
+    ...asArray(fullOutput.missing_inputs),
+    ...asArray(fullOutput.data_quality?.missing),
+    ...asArray(snapshot.data_quality?.missing)
+  ];
+
+  return Array.from(new Set(candidates
+    .map(value => String(value || "").trim())
+    .filter(value => /missing|unavailable|not available|partial|failed|error/i.test(value))));
+}
+
+function layer2LegAgents(instrument = "") {
+  const base = String(instrument).split("/")[0].toUpperCase();
+  const asset = { XAU: "GOLD", GOLD: "GOLD", BTC: "BTC", NQ: "NQ", EUR: "EUR" }[base] || base;
+  return asset && asset !== "USD" ? [asset, "USD"] : ["USD"];
+}
+
+function renderMissingDataMarker(labels, contextLabel) {
+  if (!labels.length) return "";
+  const detail = labels.join("; ");
+  return `
+    <span class="data-quality-marker" title="${escapeHtml(detail)}" aria-label="${escapeHtml(`${contextLabel}: ${detail}`)}">
+      <span class="data-quality-marker-icon" aria-hidden="true">!</span>
+      <span>Data gap${labels.length > 1 ? ` (${labels.length})` : ""}</span>
+    </span>
+  `;
+}
+
 function formatCompactSignalValue(value, fallback = "--") {
   return metricAvailable(value) ? String(value) : fallback;
 }
@@ -3798,6 +3832,7 @@ function renderAgentCard(agent) {
   const assetAge = formatRelativeAge(assetUpdated);
   const validity = getLayer1Validity(agent);
   const displayStatus = resolveLayer1DisplayStatus(agent);
+  const dataGaps = missingDataLabels(agent);
 
   const calls = Object.entries(agent.calls || {}).map(([tf, call]) => {
     const direction = call.direction || "PENDING";
@@ -3818,7 +3853,7 @@ function renderAgentCard(agent) {
       <div class="agent-top">
         <div>
           <p class="eyebrow">Layer 1</p>
-          <h3>${escapeHtml(agent.agent)}</h3>
+          <div class="card-title-row"><h3>${escapeHtml(agent.agent)}</h3>${renderMissingDataMarker(dataGaps, `${agent.agent} has missing analysis input`)}</div>
         </div>
         <span class="badge ${escapeHtml(validityStatusClass(displayStatus))}">${escapeHtml(validityStatusLabel(displayStatus))}</span>
       </div>
@@ -6052,13 +6087,15 @@ function renderTradeOpportunityCard(opportunity, label = "") {
   const strengthLabel = opportunity.strengthBucket || (confidence === null ? "Awaiting selection" : confidenceLabel(Number(confidence)));
   const trustStatus = currentOverviewLayer2L2lTrustStatus(opportunity);
   const directionalTrustStatus = currentOverviewLayer2DirectionalTrustStatus(opportunity);
+  const legGaps = layer2LegAgents(opportunity.instrument)
+    .flatMap(agentName => missingDataLabels(getAgent(agentName)).map(label => `${agentName}: ${label}`));
 
   return `
     <article class="trade-opportunity-card ${directionClass(direction)}">
       <div class="trade-card-head">
         <div>
           ${label ? `<p class="eyebrow">${escapeHtml(label)}</p>` : ""}
-          <h3>${escapeHtml(opportunity.instrument)}</h3>
+          <div class="card-title-row"><h3>${escapeHtml(opportunity.instrument)}</h3>${renderMissingDataMarker(legGaps, `${opportunity.instrument} has missing Layer 1 input`)}</div>
         </div>
         <strong class="trade-direction ${directionClass(direction)}">${escapeHtml(direction)}</strong>
       </div>
@@ -6077,12 +6114,14 @@ function renderTradeOpportunityCard(opportunity, label = "") {
 }
 
 function renderAvoidCard(item) {
+  const legGaps = layer2LegAgents(item.instrument)
+    .flatMap(agentName => missingDataLabels(getAgent(agentName)).map(label => `${agentName}: ${label}`));
   const trustStatus = { label: "Trust unavailable", icon: "–", canUse: null };
   return `
     <article class="trade-opportunity-card no-trade">
       <div class="trade-card-head">
         <div>
-          <h3>${escapeHtml(item.instrument || "Instrument")}</h3>
+          <div class="card-title-row"><h3>${escapeHtml(item.instrument || "Instrument")}</h3>${renderMissingDataMarker(legGaps, `${item.instrument || "Instrument"} has missing Layer 1 input`)}</div>
         </div>
         <strong class="trade-direction no-trade">NO TRADE</strong>
       </div>
@@ -13807,8 +13846,10 @@ function setTab(tab) {
   const backtestView = document.getElementById("backtestView");
   const backtestEngineView = document.getElementById("backtestEngineView");
   const researchProofMapView = document.getElementById("researchProofMapView");
+  const backtestingDevelopmentView = document.getElementById("backtestingDevelopmentView");
   const factorEdgeLabView = document.getElementById("factorEdgeLabView");
   const shadowLogicBacktestView = document.getElementById("shadowLogicBacktestView");
+  const structureMapView = document.getElementById("structureMapView");
   const architectureView = document.getElementById("architectureView");
   const agentView = document.getElementById("agentView");
 
@@ -13817,8 +13858,10 @@ function setTab(tab) {
   if (backtestView) backtestView.classList.toggle("active-view", activeTab === "backtest");
   if (backtestEngineView) backtestEngineView.classList.toggle("active-view", activeTab === "backtest-engine");
   if (researchProofMapView) researchProofMapView.classList.toggle("active-view", activeTab === "research-proof-map");
+  if (backtestingDevelopmentView) backtestingDevelopmentView.classList.toggle("active-view", activeTab === "backtesting-development");
   if (factorEdgeLabView) factorEdgeLabView.classList.toggle("active-view", activeTab === "factor-edge-lab");
   if (shadowLogicBacktestView) shadowLogicBacktestView.classList.toggle("active-view", activeTab === "shadow-logic-backtest");
+  if (structureMapView) structureMapView.classList.toggle("active-view", activeTab === "structure-map");
   if (architectureView) architectureView.classList.toggle("active-view", activeTab === "architecture");
   if (agentView) agentView.classList.toggle("active-view", orderedAgents.includes(activeTab));
 
@@ -13826,6 +13869,7 @@ function setTab(tab) {
   if (activeTab === "backtest") renderBacktest(backtestData || {});
   if (activeTab === "backtest-engine") renderBacktestEngine(backtestEngineData || {});
   if (activeTab === "research-proof-map") renderResearchProofMap(researchProofMapData || {});
+  if (activeTab === "backtesting-development") renderBacktestingDevelopmentTracker(backtestingDevelopmentData || {});
   if (activeTab === "factor-edge-lab") renderFactorEdgeLab(factorEdgeLabData || {});
   if (activeTab === "shadow-logic-backtest") renderShadowLogicBacktest(phase2ShadowBacktestData || {});
   if (activeTab === "architecture") {
@@ -14006,6 +14050,139 @@ function setupBacktestEvidenceControls() {
       };
       saveDirectionalAccuracyReviewStore(store);
     }
+  });
+}
+
+function formatDevelopmentStatus(status = "") {
+  return String(status || "not_started").replace(/_/g, " ").replace(/\b\w/g, character => character.toUpperCase());
+}
+
+function getBacktestingDevelopmentL2lMetrics() {
+  const comparisons = backtestData?.half_l2l_reach?.comparisons || {};
+  const pairRows = Array.isArray(comparisons.layer2_pairs) ? comparisons.layer2_pairs : [];
+  const xauPair = pairRows.find(row => String(row.entityCode || row.pairCode || row.assetCode || "").toUpperCase() === "XAU_USD") || null;
+  const summary = xauPair || comparisons.overall?.layer2 || null;
+  const full = summary?.fullStandard || {};
+  const half = summary?.halfOfStandard || {};
+
+  return {
+    sourceLabel: xauPair ? "XAU/USD directional research" : "Layer 2 directional research",
+    fullHitRate: metricAvailable(full.hitRatePct) ? percentValue(full.hitRatePct) : displayDash(),
+    halfHitRate: metricAvailable(half.hitRatePct) ? percentValue(half.hitRatePct) : displayDash(),
+    eligibleCalls: metricAvailable(full.eligibleCalls) ? String(full.eligibleCalls) : displayDash(),
+    coverage: metricAvailable(full.dataCoveragePct) ? percentValue(full.dataCoveragePct) : displayDash()
+  };
+}
+
+function renderBacktestingDevelopmentTracker(data = {}) {
+  const meta = data.meta || {};
+  const todo = Array.isArray(data.todo) ? data.todo : [];
+  const stages = Array.isArray(data.stages) ? data.stages : [];
+  const metrics = getBacktestingDevelopmentL2lMetrics();
+  const updated = document.getElementById("backtestingDevelopmentUpdated");
+  if (updated) updated.textContent = meta.error ? `Tracker unavailable: ${meta.error}` : (meta.updated_label || "Research-only tracker");
+
+  const panel = document.getElementById("backtestingDevelopmentPanel");
+  if (!panel) return;
+
+  if (meta.error) {
+    panel.innerHTML = `<article class="detail-panel development-empty-state"><p class="eyebrow">Backtesting Development</p><h3>Tracker data unavailable</h3><p>The tracker could not load. Existing research remains available under Backtest / Accuracy.</p></article>`;
+    return;
+  }
+
+  panel.innerHTML = `
+    <section class="detail-panel development-command-panel">
+      <div class="development-command-head">
+        <div>
+          <p class="eyebrow">Current study</p>
+          <h3>${escapeHtml(meta.focus_market || "XAU/USD")}</h3>
+          <p>${escapeHtml(meta.focus_reason || "Research focus pending.")}</p>
+        </div>
+        <div class="development-gate-stack" aria-label="Research readiness">
+          <span class="development-status-badge grade-${escapeHtml(String(data.research_grade?.label || "hypothesis").toLowerCase().replace(/[^a-z]+/g, "-"))}">Research grade: ${escapeHtml(data.research_grade?.label || "Not assessed")}</span>
+          <span class="development-status-badge gate-blocked">Call gate: ${escapeHtml(data.call_gate?.label || "Not qualified")}</span>
+        </div>
+      </div>
+      <div class="development-command-notes">
+        <p><strong>Grade:</strong> ${escapeHtml(data.research_grade?.detail || "Not yet assessed.")}</p>
+        <p><strong>Gate:</strong> ${escapeHtml(data.call_gate?.detail || "Not yet assessed.")}</p>
+      </div>
+    </section>
+
+    <section class="backtest-grid development-performance-grid" aria-label="Directional reach performance">
+      ${renderBacktestKpiMetric("Full L2L hit rate", metrics.fullHitRate, metrics.sourceLabel, "Reach-only result. It is not trade expectancy or a call qualification.")}
+      ${renderBacktestKpiMetric("0.5 L2L hit rate", metrics.halfHitRate, `${metrics.eligibleCalls} eligible calls`, "The 0.5 L2L level is the active target-definition comparison.")}
+      ${renderBacktestKpiMetric("Data coverage", metrics.coverage, "Current research artifact", "Coverage remains visible because unavailable rows must not be treated as misses or wins.")}
+      ${renderBacktestKpiMetric("Next decision", "MT5 alignment", "Timestamp, broker path, levels, spread", "This is the evidence required before executable validation can begin.")}
+    </section>
+
+    <section class="detail-panel development-todo-panel">
+      <div class="development-section-head">
+        <div>
+          <p class="eyebrow">Control list</p>
+          <h3>What is next, and what is needed from you</h3>
+        </div>
+        <span class="development-section-note">The active item is the work frontier.</span>
+      </div>
+      <ol class="development-todo-list">
+        ${todo.map((item, index) => `
+          <li class="development-todo-item status-${escapeHtml(item.status || "not_started")}">
+            <span class="development-todo-index">${index + 1}</span>
+            <div>
+              <span class="development-status-label">${escapeHtml(formatDevelopmentStatus(item.status))}</span>
+              <strong>${escapeHtml(item.title || "Untitled task")}</strong>
+              <p>${escapeHtml(item.detail || "No detail supplied.")}</p>
+            </div>
+          </li>
+        `).join("")}
+      </ol>
+    </section>
+
+    <section class="detail-panel development-assessment-panel">
+      <div class="development-section-head">
+        <div>
+          <p class="eyebrow">Assessment coverage</p>
+          <h3>Prove each layer before changing weights</h3>
+        </div>
+      </div>
+      <div class="development-assessment-grid">
+        <article class="development-assessment-card is-active"><span>1</span><h4>Individual elements</h4><p>Measure value, coverage, stability, and directional contribution for every XAU/USD input.</p><small>In progress</small></article>
+        <article class="development-assessment-card"><span>2</span><h4>Element combinations</h4><p>Test agreement, conflict, interaction, and correlation clusters before proposing re-weights.</p><small>Next</small></article>
+        <article class="development-assessment-card is-blocked"><span>3</span><h4>Full algorithm</h4><p>Validate the composite with a sealed holdout and an executable entry-and-risk contract.</p><small>Blocked by MT5-aligned data</small></article>
+      </div>
+      <p class="development-assessment-note">High correlation is a re-weighting risk, not evidence of extra conviction. Any proposed weight change stays research-only until it passes holdout and walk-forward checks.</p>
+    </section>
+
+    <section class="detail-panel development-stage-panel">
+      <div class="development-section-head"><div><p class="eyebrow">Development path</p><h3>Evidence to call qualification</h3></div></div>
+      <div class="development-stage-list">
+        ${stages.map((stage, index) => `
+          <article class="development-stage status-${escapeHtml(stage.status || "not_started")}">
+            <span class="development-stage-number">${index + 1}</span>
+            <div><span class="development-status-label">${escapeHtml(formatDevelopmentStatus(stage.status))}</span><h4>${escapeHtml(stage.title || "Untitled stage")}</h4><p>${escapeHtml(stage.detail || "No detail supplied.")}</p></div>
+          </article>
+        `).join("")}
+      </div>
+      <div class="development-actions">
+        <button class="inspect-button" type="button" data-backtesting-open-tab="half-l2l-reach">Open L2L directional accuracy</button>
+        <button class="inspect-button" type="button" data-backtesting-open-top-level="factor-edge-lab">Open factor edge lab</button>
+      </div>
+    </section>
+  `;
+}
+
+function setupBacktestingDevelopmentControls() {
+  const panel = document.getElementById("backtestingDevelopmentPanel");
+  if (!panel) return;
+  panel.addEventListener("click", event => {
+    const researchTab = event.target.closest("[data-backtesting-open-tab]");
+    if (researchTab) {
+      setTab("backtest");
+      setBacktestTab(researchTab.dataset.backtestingOpenTab || "half-l2l-reach");
+      return;
+    }
+    const topLevelTab = event.target.closest("[data-backtesting-open-top-level]");
+    if (topLevelTab) setTab(topLevelTab.dataset.backtestingOpenTopLevel || "factor-edge-lab");
   });
 }
 
@@ -14262,7 +14439,7 @@ async function fetchResearchDashboardData() {
 }
 
 async function loadDashboard() {
-  const [layer1Result, layer2Result, researchResult, factorEdgeLabResult, phase2ShadowBacktestResult, confidenceBandDeliveryResult, researchProofMapResult, backtestEngineResult, economicEventRefreshResult, economicEventsSourceResult, inputHealthResult] = await Promise.allSettled([
+  const [layer1Result, layer2Result, researchResult, factorEdgeLabResult, phase2ShadowBacktestResult, confidenceBandDeliveryResult, researchProofMapResult, backtestEngineResult, economicEventRefreshResult, economicEventsSourceResult, inputHealthResult, backtestingDevelopmentResult] = await Promise.allSettled([
     fetch(layer1Url, { cache: "no-store" }),
     fetch(layer2Url, { cache: "no-store" }),
     fetchResearchDashboardData(),
@@ -14273,7 +14450,8 @@ async function loadDashboard() {
     fetchLocalJson(backtestEngineUrl),
     fetchLocalJson(economicEventRefreshUrl),
     fetchLocalJson(economicEventsSourceUrl),
-    fetchLocalJson(inputHealthUrl)
+    fetchLocalJson(inputHealthUrl),
+    fetchLocalJson(backtestingDevelopmentUrl)
   ]);
 
   try {
@@ -14310,6 +14488,17 @@ async function loadDashboard() {
       },
       accuracy: {},
       infrastructure: {}
+    };
+  }
+
+  if (backtestingDevelopmentResult.status === "fulfilled") {
+    backtestingDevelopmentData = backtestingDevelopmentResult.value;
+  } else {
+    console.error(backtestingDevelopmentResult.reason);
+    backtestingDevelopmentData = {
+      meta: {
+        error: backtestingDevelopmentResult.reason?.message || String(backtestingDevelopmentResult.reason)
+      }
     };
   }
 
@@ -14411,6 +14600,7 @@ async function loadDashboard() {
   renderBacktest(backtestData);
   renderResearchProofMap(researchProofMapData);
   renderBacktestEngine(backtestEngineData);
+  renderBacktestingDevelopmentTracker(backtestingDevelopmentData);
   renderFactorEdgeLab(factorEdgeLabData);
   renderShadowLogicBacktest(phase2ShadowBacktestData);
   renderWorkflowStatus(workflowStatus);
@@ -14424,6 +14614,7 @@ async function loadDashboard() {
 
 setupTabs();
 setupBacktestEvidenceControls();
+setupBacktestingDevelopmentControls();
 setupArchitectureControls();
 restoreNavigationState();
 createWorkflowRefreshTabId();

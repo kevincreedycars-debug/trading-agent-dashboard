@@ -6,8 +6,8 @@ const http = require("node:http");
 const { chromium } = require("playwright");
 
 const repoRoot = path.resolve(__dirname, "..");
-const baseLayer1 = readJson("data/layer1.json");
-const baseLayer2 = readJson("data/layer2.json");
+const baseLayer1 = readJson("tests/fixtures/refresh/layer1.json");
+const baseLayer2 = readJson("tests/fixtures/refresh/layer2.json");
 
 function readJson(relativePath) {
   return JSON.parse(fs.readFileSync(path.join(repoRoot, relativePath), "utf8").replace(/^\uFEFF/, ""));

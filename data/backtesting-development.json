@@ -1,0 +1,102 @@
+{
+  "meta": {
+    "version": "backtesting-development-v1",
+    "scope": "Research-only development tracker. It does not qualify live calls or modify live weights.",
+    "focus_market": "XAU/USD",
+    "focus_reason": "Gold is the first complete target market for the call-quality investigation because its Layer 1 and Layer 2 research rows are already available locally.",
+    "updated_label": "6 September 2026 ? stored Gold pilot and confirmed input defect"
+  },
+  "local_engine_evidence": {
+    "review_page": "gold-backtesting.html",
+    "audit": "data/gold-evidence-audit.json",
+    "input_contract": "backtester/docs/gold_timestamped_backtesting.md",
+    "source_rows": 608,
+    "recomputed_result_mismatches": 0,
+    "missing_price_rows": 45,
+    "usable_price_outcome_rows": 563,
+    "legacy_timing_qualified": false,
+    "strict_engine_validation": "87 focused tests pass. Real storage-time pilot: 97 exact endpoints, zero continuous paths. Stale collector history reference confirmed; raw publication timing remains unverified.",
+    "stored_call_pilot": "data/gold-stored-call-pilot-20260906.json",
+    "snapshot_lineage_audit": "data/gold-snapshot-lineage-audit-20260906.json",
+    "stored_calls": 154,
+    "endpoint_evaluable_calls": 97,
+    "strict_contiguous_calls": 0
+  },
+  "research_grade": {
+    "label": "Hypothesis",
+    "detail": "Stored-call diagnostics exist, but a stale Gold daily reference is confirmed and executable entry/risk evidence remains incomplete."
+  },
+  "call_gate": {
+    "label": "Not qualified",
+    "detail": "Do not use this research to qualify a live XAU/USD call until the required market-data and risk gates pass."
+  },
+  "todo": [
+    {
+      "status": "next",
+      "title": "Validate Gold history query repair",
+      "detail": "The unordered 25-row read anchors Gold daily changes to June 9. A paginated recent-history patch is prepared locally; isolated n8n validation is next."
+    },
+    {
+      "status": "in_progress",
+      "title": "Establish XAU/USD L2L level contract",
+      "detail": "Record the standard L2L and 0.5 L2L levels available at each call, together with the exact call timestamp."
+    },
+    {
+      "status": "needs_you",
+      "title": "Provide MT5 evidence feed or export",
+      "detail": "Needed fields: broker symbol, timezone, bid/ask OHLC, spread, timeframe, session boundary, call timestamp, and published L2L levels."
+    },
+    {
+      "status": "next",
+      "title": "Assess every XAU/USD algorithm element",
+      "detail": "Measure standalone directional value, coverage, stability, and correlation before proposing any weight change."
+    },
+    {
+      "status": "next",
+      "title": "Assess XAU/USD element combinations",
+      "detail": "Test agreement, conflict, and high-correlation clusters using a sealed holdout before changing the composite."
+    },
+    {
+      "status": "blocked",
+      "title": "Assess the full executable algorithm",
+      "detail": "Blocked until the entry, target, stop/adverse-boundary, and intraday sequencing contract is defined from real market data."
+    }
+  ],
+  "stages": [
+    {
+      "status": "complete",
+      "title": "Local Gold evidence audit",
+      "detail": "Audited 608 saved calls: result labels agree under legacy assumptions; 45 lack prices. Source timestamps remain unverified."
+    },
+    {
+      "status": "complete",
+      "title": "Timestamped evaluation tooling",
+      "detail": "Built and tested. A 154-call storage-time pilot has 97 exact endpoints and no continuous paths; publication and raw-input timing remain unverified."
+    },
+    {
+      "status": "complete",
+      "title": "Directional reach baseline",
+      "detail": "Historical 1H reach research compares the existing L2L distance with its 0.5 equivalent using the same frozen directional calls."
+    },
+    {
+      "status": "complete",
+      "title": "Signal and failure audit",
+      "detail": "Construction, directional discrimination, and failure-diagnostic artifacts are available for review."
+    },
+    {
+      "status": "in_progress",
+      "title": "XAU/USD factor assessment",
+      "detail": "All ten factors and 45 pairs assessed descriptively on stored calls. Repair the confirmed daily-input defect and collect fresh evidence before calibration."
+    },
+    {
+      "status": "blocked",
+      "title": "Executable trade validation",
+      "detail": "Requires real MT5-aligned timing, levels, spread, and adverse-path evidence."
+    },
+    {
+      "status": "not_started",
+      "title": "Call qualifying gate",
+      "detail": "Only starts after data integrity, calibration, risk sequencing, and out-of-sample gates pass."
+    }
+  ]
+}

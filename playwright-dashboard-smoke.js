@@ -1816,6 +1816,200 @@ async function run() {
       throw new Error(`ADR summary last column padding is too small.\nPaddingRight: ${adrSummaryLastCellPadding}`);
     }
 
+    await page.getByRole("button", { name: "L2L Directional Accuracy" }).click();
+    await page.waitForSelector("[data-half-l2l-summary='true']", { timeout: 15000 });
+    const halfL2lText = await page.locator("#backtestPanel").innerText();
+    const normalizedHalfL2lText = halfL2lText.toLowerCase();
+
+    if (!halfL2lText.includes("L2L Directional Accuracy")) {
+      throw new Error(`L2L Directional Accuracy tab header did not render.\n${halfL2lText}`);
+    }
+
+    for (const expectedText of [
+      "research only",
+      "0.25 x adr20",
+      "reach rate is not trade profitability",
+      "overall comparison",
+      "by asset, pair, direction, and confidence",
+      "chronological stability",
+      "confidence monotonicity",
+      "latest untouched chronological period",
+      "historical record explorer",
+      "manual backtester verification"
+    ]) {
+      if (!normalizedHalfL2lText.includes(expectedText)) {
+        throw new Error(`L2L Directional Accuracy tab did not render expected content: ${expectedText}\n${halfL2lText}`);
+      }
+    }
+
+    if (!normalizedHalfL2lText.includes("100% of current standard") || !normalizedHalfL2lText.includes("50% of current standard")) {
+      throw new Error(`L2L Directional Accuracy tab did not render the full-versus-half comparison labels.\n${halfL2lText}`);
+    }
+
+    const manualReviewAuditInitial = await page.evaluate(() => {
+      const groupNodes = Array.from(document.querySelectorAll("[data-half-l2l-manual-group]"));
+      return {
+        sampleRowCount: document.querySelectorAll("[data-half-l2l-sample-row]").length,
+        groupHeadings: groupNodes.map((node) => ({
+          entityCode: node.getAttribute("data-half-l2l-manual-group") || "",
+          heading: node.querySelector("[data-half-l2l-manual-group-heading]")?.textContent?.trim() || "",
+          rowIds: Array.from(node.querySelectorAll("[data-half-l2l-sample-row]")).map((row) => row.getAttribute("data-half-l2l-sample-row") || "")
+        })),
+        reviewedCount: document.getElementById("halfL2lReviewedCount")?.textContent?.trim() || "",
+        remainingCount: document.getElementById("halfL2lRemainingCount")?.textContent?.trim() || "",
+        matchesCount: document.getElementById("halfL2lMatchesCount")?.textContent?.trim() || "",
+        mismatchesCount: document.getElementById("halfL2lMismatchesCount")?.textContent?.trim() || ""
+      };
+    });
+
+    if (manualReviewAuditInitial.sampleRowCount !== 32) {
+      throw new Error(`Manual review surface did not render exactly 32 retained rows.\n${JSON.stringify(manualReviewAuditInitial, null, 2)}`);
+    }
+
+    const expectedManualGroupOrder = [
+      "EUR",
+      "GOLD",
+      "NQ",
+      "BTC",
+      "EUR_USD",
+      "XAU_USD",
+      "NQ_USD",
+      "BTC_USD"
+    ];
+    if (JSON.stringify(manualReviewAuditInitial.groupHeadings.map((group) => group.entityCode)) !== JSON.stringify(expectedManualGroupOrder)) {
+      throw new Error(`Manual review groups were not rendered in the required Layer 1 then Layer 2 order.\n${JSON.stringify(manualReviewAuditInitial, null, 2)}`);
+    }
+
+    for (const group of manualReviewAuditInitial.groupHeadings) {
+      if (group.rowIds.length !== 4) {
+        throw new Error(`Manual review group ${group.entityCode} did not render exactly 4 rows.\n${JSON.stringify(group, null, 2)}`);
+      }
+      if (!group.heading.toLowerCase().includes("0 of 4 reviewed")) {
+        throw new Error(`Manual review heading did not render the initial counter for ${group.entityCode}.\n${JSON.stringify(group, null, 2)}`);
+      }
+    }
+
+    const eurGroupRowIds = manualReviewAuditInitial.groupHeadings.find((group) => group.entityCode === "EUR")?.rowIds || [];
+    if (eurGroupRowIds.length !== 4) {
+      throw new Error(`EUR manual review group was not reduced to four retained rows.\n${JSON.stringify(manualReviewAuditInitial, null, 2)}`);
+    }
+
+    const firstEurRecordId = eurGroupRowIds[0];
+    await page.locator(`[data-half-l2l-verdict="${firstEurRecordId}"][value="MATCHES"]`).check();
+    await page.locator(`[data-half-l2l-notes="${firstEurRecordId}"]`).fill("persistent note");
+
+    const firstEurVerdictState = await page.evaluate((recordId) => {
+      const values = ["MATCHES", "DOES_NOT_MATCH", "NOT_CHECKED"].map((value) => ({
+        value,
+        checked: Boolean(document.querySelector(`[data-half-l2l-verdict="${recordId}"][value="${value}"]`)?.checked)
+      }));
+      return {
+        values,
+        notes: document.querySelector(`[data-half-l2l-notes="${recordId}"]`)?.value || ""
+      };
+    }, firstEurRecordId);
+    if (firstEurVerdictState.values.filter((entry) => entry.checked).length !== 1 || !firstEurVerdictState.values.find((entry) => entry.value === "MATCHES")?.checked) {
+      throw new Error(`Manual review verdict radios were not mutually exclusive after setting MATCHES.\n${JSON.stringify(firstEurVerdictState, null, 2)}`);
+    }
+
+    await page.reload({ waitUntil: "networkidle" });
+    await page.getByRole("button", { name: "Backtest / Accuracy" }).click();
+    await page.getByRole("button", { name: "L2L Directional Accuracy" }).click();
+    await page.waitForSelector("[data-half-l2l-summary='true']", { timeout: 15000 });
+
+    const persistedReviewState = await page.evaluate((recordId) => ({
+      matchesChecked: Boolean(document.querySelector(`[data-half-l2l-verdict="${recordId}"][value="MATCHES"]`)?.checked),
+      notes: document.querySelector(`[data-half-l2l-notes="${recordId}"]`)?.value || "",
+      reviewedCount: document.getElementById("halfL2lReviewedCount")?.textContent?.trim() || "",
+      remainingCount: document.getElementById("halfL2lRemainingCount")?.textContent?.trim() || "",
+      eurHeading: document.querySelector('[data-half-l2l-manual-group-heading="EUR"]')?.textContent?.trim() || ""
+    }), firstEurRecordId);
+    if (!persistedReviewState.matchesChecked || persistedReviewState.notes !== "persistent note") {
+      throw new Error(`Manual review state did not persist across reload.\n${JSON.stringify(persistedReviewState, null, 2)}`);
+    }
+
+    const legacyImportPayloadPath = path.join(rootDir, "tmp", "half-l2l-manual-review.json");
+    const eurImportRows = await page.evaluate((rowIds) => rowIds.map((recordId, index) => ({
+      recordId,
+      backtesterHalfOutcome: document.querySelector(`[data-half-l2l-sample-row="${recordId}"] td:nth-child(2)`)?.textContent?.includes("Half HIT") ? "HIT" : "MISS",
+      backtesterFullOutcome: document.querySelector(`[data-half-l2l-sample-row="${recordId}"] td:nth-child(2)`)?.textContent?.includes("Full HIT") ? "HIT" : "MISS",
+      manualVerdict: "MATCHES",
+      notes: `EUR review ${index + 1}`,
+      reviewTimestamp: `2026-08-09T18:0${index}:00.000Z`
+    })), eurGroupRowIds);
+    fs.writeFileSync(legacyImportPayloadPath, JSON.stringify({
+      review_contract_version: "half-l2l-manual-review-export-v1",
+      artifact_signature: "legacy-import-signature",
+      reviews: eurImportRows
+    }, null, 2));
+
+    await page.locator("#halfL2lReviewImportInput").setInputFiles(legacyImportPayloadPath);
+    await page.waitForTimeout(100);
+
+    const importedReviewAudit = await page.evaluate((rowIds) => {
+      const verdicts = rowIds.map((recordId) => ({
+        recordId,
+        matchesChecked: Boolean(document.querySelector(`[data-half-l2l-verdict="${recordId}"][value="MATCHES"]`)?.checked),
+        notes: document.querySelector(`[data-half-l2l-notes="${recordId}"]`)?.value || "",
+        reviewTimestamp: document.querySelector(`[data-half-l2l-sample-row="${recordId}"] small`)?.textContent?.trim() || ""
+      }));
+      return {
+        verdicts,
+        reviewedCount: document.getElementById("halfL2lReviewedCount")?.textContent?.trim() || "",
+        matchesCount: document.getElementById("halfL2lMatchesCount")?.textContent?.trim() || "",
+        eurHeading: document.querySelector('[data-half-l2l-manual-group-heading="EUR"]')?.textContent?.trim() || "",
+        staleWarningVisible: Boolean(Array.from(document.querySelectorAll("[data-half-l2l-manual='true'] .diagnostic-item")).find((node) => node.textContent?.includes("different artifact signature")))
+      };
+    }, eurGroupRowIds);
+    if (!importedReviewAudit.verdicts.every((row) => row.matchesChecked)) {
+      throw new Error(`Legacy import did not restore all four EUR reviews as MATCHES.\n${JSON.stringify(importedReviewAudit, null, 2)}`);
+    }
+    if (importedReviewAudit.eurHeading.toLowerCase().indexOf("4 of 4 reviewed") === -1) {
+      throw new Error(`EUR group heading did not update to 4 of 4 reviewed after import.\n${JSON.stringify(importedReviewAudit, null, 2)}`);
+    }
+    if (!importedReviewAudit.staleWarningVisible) {
+      throw new Error(`Legacy import with a mismatched artifact signature did not surface the stale warning.\n${JSON.stringify(importedReviewAudit, null, 2)}`);
+    }
+
+    const selectedGoldRecordId = "layer_1-gold-c8accaf11388";
+    const selectedGoldState = await page.evaluate((recordId) => {
+      const row = document.querySelector(`[data-half-l2l-sample-row="${recordId}"]`);
+      if (!row) return { selected: false };
+      return {
+        selected: true,
+        notChecked: Boolean(document.querySelector(`[data-half-l2l-verdict="${recordId}"][value="NOT_CHECKED"]`)?.checked)
+      };
+    }, selectedGoldRecordId);
+    if (selectedGoldState.selected && !selectedGoldState.notChecked) {
+      throw new Error(`Retained Gold record ${selectedGoldRecordId} was not preserved as NOT_CHECKED.\n${JSON.stringify(selectedGoldState, null, 2)}`);
+    }
+
+    const jsonDownloadPromise = page.waitForEvent("download");
+    await page.locator("[data-half-l2l-export-json='true']").click();
+    const jsonDownload = await jsonDownloadPromise;
+    const jsonDownloadPath = path.join(rootDir, "tmp", "half-l2l-manual-review-export.json");
+    await jsonDownload.saveAs(jsonDownloadPath);
+    const exportedJson = JSON.parse(fs.readFileSync(jsonDownloadPath, "utf8"));
+    if ((exportedJson.sample_size || 0) !== 32 || (exportedJson.sample_layer_counts?.LAYER_1 || 0) !== 16 || (exportedJson.sample_layer_counts?.LAYER_2 || 0) !== 16) {
+      throw new Error(`Review JSON export did not describe the retained 32-row sample correctly.\n${JSON.stringify(exportedJson, null, 2)}`);
+    }
+    if (new Set(exportedJson.sample_record_ids || []).size !== 32 || (exportedJson.reviews || []).length !== 32) {
+      throw new Error(`Review JSON export did not include exactly 32 unique retained review rows.\n${JSON.stringify(exportedJson, null, 2)}`);
+    }
+
+    const csvDownloadPromise = page.waitForEvent("download");
+    await page.locator("[data-half-l2l-export-csv='true']").click();
+    const csvDownload = await csvDownloadPromise;
+    const csvDownloadPath = path.join(rootDir, "tmp", "half-l2l-manual-review-export.csv");
+    await csvDownload.saveAs(csvDownloadPath);
+    const exportedCsv = fs.readFileSync(csvDownloadPath, "utf8").trim().split(/\r?\n/);
+    if (exportedCsv.length !== 33) {
+      throw new Error(`Review CSV export did not include one header plus 32 retained review rows.\n${exportedCsv.length}`);
+    }
+    if (!exportedCsv[0].includes("entity_code") || !exportedCsv[0].includes("evaluation_date")) {
+      throw new Error(`Review CSV export did not expose the retained-sample metadata columns.\n${exportedCsv[0]}`);
+    }
+
     await page.getByRole("button", { name: "L2L Threshold Sensitivity" }).click();
     await page.waitForSelector("text=Layer 1 Sensitivity", { timeout: 15000 });
     const adrThresholdText = await page.locator("#backtestPanel").innerText();

@@ -16,7 +16,7 @@ function serve() {
       response.end(error ? "Not found" : content);
     });
   });
-  return new Promise(resolve => server.listen(4173, () => resolve(server)));
+  return new Promise(resolve => server.listen(0, '127.0.0.1', () => resolve(server)));
 }
 
 test("Backtest Engine presents the XAU/USD visual development board", async () => {
