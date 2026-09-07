@@ -19,3 +19,22 @@ Next immediate action: address G1 with explicit completion validation and a vers
 Storage/publication proxies, unverified feature vintages, repeated snapshots, no complete strict pilot paths, the June 9 input defect and consumed holdouts remain limitations. GBP onboarding, macro provisioning and model optimization remain parked.
 
 Concurrent unrelated edits appeared during this review in `docs/PARALLEL_AGENT_HANDOFF.md`, `docs/README.md`, and new `docs/DEEPSEEK_BUILD_BRIEF.md`. They were left untouched and are excluded from the review commit.
+
+## Evening checkpoint - parallel builder setup (2026-09-07)
+
+User requested "save here for tonight". This coordination session is paused. The Gold contract review checkpoint above is preserved; the earlier blanket statement that GBP onboarding is parked is superseded by the user's parallel-build authorization.
+
+Four separate DeepSeek/Cline workspaces are prepared, with dependencies installed and `docs/AGENT_ASSIGNMENT.md` opened in each VS Code window:
+
+- GBP: `D:\trading-agent-dashboard-codex.worktrees\agent-gbp`, branch `agents/gbp-layer1-20260907`.
+- Silver: `D:\trading-agent-dashboard-codex.worktrees\agent-silver`, branch `agents/silver-layer1-20260907`.
+- WTI: `D:\trading-agent-dashboard-codex.worktrees\agent-wti`, branch `agents/wti-layer1-20260907`.
+- EUR pairs: `D:\trading-agent-dashboard-codex.worktrees\agent-eur-pairs`, branch `agents/eur-pair-coverage-20260907`.
+
+GBP completes its existing draft; Silver and WTI build asset-specific drafts from the established structure. EUR pair coverage includes EUR/USD, EUR/GBP, XAU/EUR, XAG/EUR, WTI/EUR, NQ/EUR and BTC/EUR. Read `PARALLEL_AGENT_HANDOFF.md`, `DEEPSEEK_BUILD_BRIEF.md` and `DEEPSEEK_EUR_PAIRS_BRIEF.md` for exact boundaries and deliverables.
+
+Workspace setup does not launch DeepSeek. This session has not started or stopped another window's agent. On resuming, inspect every worker's Git status and asset progress file before assuming work has or has not begun. Select DeepSeek in Cline and ask it to follow `docs/AGENT_ASSIGNMENT.md` in any window not yet started.
+
+Codex continues the Gold correctness review in the main folder, currently on `review/gold-timestamped-contract`. Do not merge worktree setup/task documents back into the canonical project. Integrate reviewed asset-only implementation commits, preserve local evidence, then retire completed worker folders.
+
+Only coordination documents are saved by this checkpoint. No engine edits, live deployment, production push or external workflow execution occurred in the setup session. Macro provisioning and model optimization remain parked.
