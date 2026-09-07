@@ -1,0 +1,138 @@
+{
+  "meta": {
+    "generated_at": "2026-08-15T18:42:25.793Z",
+    "version": "l2l-directional-research-verdict-v1",
+    "research_only": true,
+    "immutable_summary": true,
+    "preserved_frozen_artifacts": true,
+    "final_test_consumed": true,
+    "current_core_scope": "trading-day directional outcome research closed",
+    "executable_entry_draft_status": "outside_current_core_scope_preserved_without_modification"
+  },
+  "sourceArtifacts": [
+    {
+      "path": "data/half-l2l-reach-research.json",
+      "sha256": "0d2955248066be6dff0741ae89fbe3e7de4ead6294c6bec16aa09a1aa452e9b8"
+    },
+    {
+      "path": "data/half-l2l-executable-entry-v1-draft.json",
+      "sha256": "6a45ac02a6df172af8a5560a39dfc286ad87ccb921145cd9f27a265c7906a72a"
+    },
+    {
+      "path": "data/l2l-trading-day-directional-v1.json",
+      "sha256": "75a81e8429a1515de42b326fd29cb60ee81c24cc6e0d111a3cb954a9e6d41c59"
+    },
+    {
+      "path": "data/l2l-directional-failure-diagnostics-v1.json",
+      "sha256": "8b080181740e46c08e54face6a3eb5eff63172aa313373b68994af6771a93f93"
+    },
+    {
+      "path": "data/l2l-directional-discrimination-v1.json",
+      "sha256": "ec58ffc85481e7fa42ef0098d0eed646a36e5210074ebddba8fce846e6d3e543"
+    },
+    {
+      "path": "data/l2l-excursion-definition-reconciliation-v1.json",
+      "sha256": "4e00dc3a7304edaaa8bea24b8621b6525ec9aeda65dc46792995943ff74868a4"
+    }
+  ],
+  "frozenPopulation": {
+    "eligibleRows": 4085,
+    "layer1Rows": 2493,
+    "layer2Rows": 1592,
+    "duplicatePredictionIdsAcrossLayersNotIndependentEvidence": true,
+    "preservedArtifactHash": "0d2955248066be6dff0741ae89fbe3e7de4ead6294c6bec16aa09a1aa452e9b8",
+    "preservedExecutableEntryDraftHash": "6a45ac02a6df172af8a5560a39dfc286ad87ccb921145cd9f27a265c7906a72a"
+  },
+  "findings": {
+    "originalExcursionMetric": {
+      "label": "path_dependent_intraday_excursion_only",
+      "conclusion": "ORIGINAL_METRIC_PATH_DEPENDENT",
+      "layer1HalfAdr20ReachPct": 96.99,
+      "layer1FullAdr20ReachPct": 70.52,
+      "layer2HalfAdr20ReachPct": 97.3,
+      "layer2FullAdr20ReachPct": 72.3,
+      "pathDependenceEvidence": {
+        "originalOnlyHalfHits": 1325,
+        "originalOnlyFullHits": 1378,
+        "originalOnlyHalfHitsWithLaterInitiatingSwing": 1207,
+        "originalOnlyFullHitsWithLaterInitiatingSwing": 1309
+      }
+    },
+    "sessionOpenDiscrimination": {
+      "conclusion": "BEARISH_ASYMMETRY_ONLY",
+      "halfAdr20CalledMinusOppositeReachPct": {
+        "layer1": -2.61,
+        "layer2": -1.76
+      },
+      "fullAdr20CalledMinusOppositeReachPct": {
+        "layer1": -3.17,
+        "layer2": -1.76
+      }
+    },
+    "sessionCloseDirectionalAccuracy": {
+      "layer1AccuracyPct": 47.65,
+      "layer2AccuracyPct": 47.99,
+      "layer1AlwaysBullishBaselinePct": 53.19,
+      "layer2AlwaysBullishBaselinePct": 53.45
+    },
+    "bearishCallUnderperformance": {
+      "layer1BullishAccuracyPct": 50.69,
+      "layer1BearishAccuracyPct": 42.96,
+      "layer2BullishAccuracyPct": 51.12,
+      "layer2BearishAccuracyPct": 42.33
+    },
+    "confidenceMonotonicityAbsent": {
+      "layer1AccuracyMonotonicNonDecreasing": false,
+      "layer2AccuracyMonotonicNonDecreasing": false
+    },
+    "stableSubgroupCandidatesAbsent": {
+      "classification": "BEARISH_CALL_FAILURE_DOMINATES",
+      "weakestEntities": [
+        {
+          "code": "EUR_USD",
+          "sampleSize": 385,
+          "accuracyPct": 44.68,
+          "excessAccuracyVsBaselinePct": -6.49,
+          "multipleTestingWarning": "Exploratory subgroup result only. Many overlapping slices were examined; treat apparent winners or losers as unstable unless they persist prospectively."
+        },
+        {
+          "code": "BTC_USD",
+          "sampleSize": 387,
+          "accuracyPct": 45.99,
+          "excessAccuracyVsBaselinePct": -4.91,
+          "multipleTestingWarning": "Exploratory subgroup result only. Many overlapping slices were examined; treat apparent winners or losers as unstable unless they persist prospectively."
+        },
+        {
+          "code": "EUR",
+          "sampleSize": 570,
+          "accuracyPct": 46.14,
+          "excessAccuracyVsBaselinePct": -4.04,
+          "multipleTestingWarning": "Exploratory subgroup result only. Many overlapping slices were examined; treat apparent winners or losers as unstable unless they persist prospectively."
+        },
+        {
+          "code": "GOLD",
+          "sampleSize": 570,
+          "accuracyPct": 46.32,
+          "excessAccuracyVsBaselinePct": -10.52,
+          "multipleTestingWarning": "Exploratory subgroup result only. Many overlapping slices were examined; treat apparent winners or losers as unstable unless they persist prospectively."
+        }
+      ]
+    },
+    "layer2ImprovementAbsent": {
+      "matchedPredictionCount": 1592,
+      "netImprovementPct": 0,
+      "improvedCount": 0,
+      "worsenedCount": 0
+    }
+  },
+  "finalConclusion": {
+    "validatedPredictorOfDesignatedSessionDirection": false,
+    "plainEnglish": "The current Layer 1 and Layer 2 calls are not validated predictors of the designated trading session's closing direction.",
+    "prohibitedFutureClaims": [
+      "Do not describe the original 97% or 70-72% excursion rates as directional accuracy.",
+      "Do not describe the original excursion rates as win rate.",
+      "Do not describe the original excursion rates as evidence that the call can be relied upon for the trading day.",
+      "Do not describe the original excursion metric as an executable forecasting result."
+    ]
+  }
+}

@@ -41,7 +41,11 @@ An Observation is one permanent record of everything known at the moment an agen
 - later AI reviews
 - later optimization results
 
-## Current Scope
+## Current scope (2026-09-07)
+
+The repository now includes replay, directional evaluation, reach research, timestamped Gold evaluation and diagnostics. Use [the engine inventory and review plan](../docs/BACKTESTING_REVIEW_PLAN.md) as the current navigation. The foundation description below is historical.
+
+## Original foundation scope
 
 Phase 1 adds safe scaffolding only:
 

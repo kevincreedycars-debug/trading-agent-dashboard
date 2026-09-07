@@ -1,0 +1,2555 @@
+{
+  "meta": {
+    "generated_at": "2026-08-15T17:51:01.722Z",
+    "version": "l2l-directional-failure-diagnostics-v1",
+    "research_only": true,
+    "source_artifact": "data/l2l-trading-day-directional-v1.json",
+    "mechanically_validated_result_preserved": true,
+    "final_test_consumed": true,
+    "future_evaluation_constraint": "FINAL_TEST is consumed. Future call-logic redesign must use walk-forward evaluation or a genuinely new chronological holdout.",
+    "multiple_testing_global_warning": "Exploratory subgroup result only. Many overlapping slices were examined; treat apparent winners or losers as unstable unless they persist prospectively."
+  },
+  "preserved_result": {
+    "layer1AccuracyPct": 47.65,
+    "layer2AccuracyPct": 47.99,
+    "validationLayer1AccuracyPct": 43.84,
+    "validationLayer2AccuracyPct": 43.88,
+    "finalTestLayer1AccuracyPct": 48.52,
+    "finalTestLayer2AccuracyPct": 52.44,
+    "mechanicalMismatches": 0,
+    "reliableDailyCloseSignal": false
+  },
+  "population": {
+    "eligibleRows": 4085,
+    "layer1Rows": 2493,
+    "layer2Rows": 1592,
+    "uniquePredictionIdsAcrossLayers": 2493,
+    "duplicatedCrossLayerPredictionIdsNotIndependentEvidence": 1592
+  },
+  "layers": {
+    "layer1": {
+      "overall": {
+        "layer": "LAYER_1",
+        "sampleSize": 2493,
+        "evaluableCount": 2493,
+        "correctCount": 1188,
+        "incorrectCount": 1305,
+        "flatCount": 0,
+        "accuracyPct": 47.65,
+        "wilson95LowPct": 45.7,
+        "wilson95HighPct": 49.62,
+        "inverseDirectionAccuracyPct": 52.35,
+        "excessAccuracyVsBaselinePct": -5.54,
+        "callDistribution": {
+          "bullishCount": 1513,
+          "bearishCount": 980,
+          "bullishPct": 60.69,
+          "bearishPct": 39.31
+        },
+        "actualDistribution": {
+          "actualBullishCount": 1326,
+          "actualBearishCount": 1167,
+          "actualFlatCount": 0,
+          "actualBullishPct": 53.19,
+          "actualBearishPct": 46.81,
+          "actualFlatPct": 0,
+          "majorityDirection": "BULLISH",
+          "majorityBaselinePct": 53.19
+        },
+        "signedReturnAdr": {
+          "mean": -0.020284,
+          "median": -0.031999
+        },
+        "openToCloseReturnAdr": {
+          "mean": 0.043564,
+          "median": 0.038314
+        },
+        "multipleTestingWarning": "Exploratory subgroup result only. Many overlapping slices were examined; treat apparent winners or losers as unstable unless they persist prospectively."
+      },
+      "direction": {
+        "layer": "LAYER_1",
+        "directionSummaries": [
+          {
+            "layer": "LAYER_1",
+            "callDirection": "BULLISH",
+            "sampleSize": 1513,
+            "evaluableCount": 1513,
+            "correctCount": 767,
+            "incorrectCount": 746,
+            "flatCount": 0,
+            "accuracyPct": 50.69,
+            "wilson95LowPct": 48.18,
+            "wilson95HighPct": 53.21,
+            "inverseDirectionAccuracyPct": 49.31,
+            "excessAccuracyVsBaselinePct": 0,
+            "callDistribution": {
+              "bullishCount": 1513,
+              "bearishCount": 0,
+              "bullishPct": 100,
+              "bearishPct": 0
+            },
+            "actualDistribution": {
+              "actualBullishCount": 767,
+              "actualBearishCount": 746,
+              "actualFlatCount": 0,
+              "actualBullishPct": 50.69,
+              "actualBearishPct": 49.31,
+              "actualFlatPct": 0,
+              "majorityDirection": "BULLISH",
+              "majorityBaselinePct": 50.69
+            },
+            "signedReturnAdr": {
+              "mean": 0.01918,
+              "median": 0.010794
+            },
+            "openToCloseReturnAdr": {
+              "mean": 0.01918,
+              "median": 0.010794
+            },
+            "multipleTestingWarning": "Exploratory subgroup result only. Many overlapping slices were examined; treat apparent winners or losers as unstable unless they persist prospectively."
+          },
+          {
+            "layer": "LAYER_1",
+            "callDirection": "BEARISH",
+            "sampleSize": 980,
+            "evaluableCount": 980,
+            "correctCount": 421,
+            "incorrectCount": 559,
+            "flatCount": 0,
+            "accuracyPct": 42.96,
+            "wilson95LowPct": 39.89,
+            "wilson95HighPct": 46.08,
+            "inverseDirectionAccuracyPct": 57.04,
+            "excessAccuracyVsBaselinePct": -14.08,
+            "callDistribution": {
+              "bullishCount": 0,
+              "bearishCount": 980,
+              "bullishPct": 0,
+              "bearishPct": 100
+            },
+            "actualDistribution": {
+              "actualBullishCount": 559,
+              "actualBearishCount": 421,
+              "actualFlatCount": 0,
+              "actualBullishPct": 57.04,
+              "actualBearishPct": 42.96,
+              "actualFlatPct": 0,
+              "majorityDirection": "BULLISH",
+              "majorityBaselinePct": 57.04
+            },
+            "signedReturnAdr": {
+              "mean": -0.08121,
+              "median": -0.101534
+            },
+            "openToCloseReturnAdr": {
+              "mean": 0.08121,
+              "median": 0.101534
+            },
+            "multipleTestingWarning": "Exploratory subgroup result only. Many overlapping slices were examined; treat apparent winners or losers as unstable unless they persist prospectively."
+          }
+        ],
+        "multipleTestingWarning": "Exploratory subgroup result only. Many overlapping slices were examined; treat apparent winners or losers as unstable unless they persist prospectively."
+      },
+      "entities": [
+        {
+          "layer": "LAYER_1",
+          "entityCode": "BTC",
+          "label": "BTC",
+          "sampleSize": 793,
+          "evaluableCount": 793,
+          "correctCount": 370,
+          "incorrectCount": 423,
+          "flatCount": 0,
+          "accuracyPct": 46.66,
+          "wilson95LowPct": 43.21,
+          "wilson95HighPct": 50.14,
+          "inverseDirectionAccuracyPct": 53.34,
+          "excessAccuracyVsBaselinePct": -3.53,
+          "callDistribution": {
+            "bullishCount": 518,
+            "bearishCount": 275,
+            "bullishPct": 65.32,
+            "bearishPct": 34.68
+          },
+          "actualDistribution": {
+            "actualBullishCount": 395,
+            "actualBearishCount": 398,
+            "actualFlatCount": 0,
+            "actualBullishPct": 49.81,
+            "actualBearishPct": 50.19,
+            "actualFlatPct": 0,
+            "majorityDirection": "BEARISH",
+            "majorityBaselinePct": 50.19
+          },
+          "signedReturnAdr": {
+            "mean": 0.004985,
+            "median": -0.031279
+          },
+          "openToCloseReturnAdr": {
+            "mean": 0.015385,
+            "median": -0.000994
+          },
+          "multipleTestingWarning": "Exploratory subgroup result only. Many overlapping slices were examined; treat apparent winners or losers as unstable unless they persist prospectively."
+        },
+        {
+          "layer": "LAYER_1",
+          "entityCode": "EUR",
+          "label": "EUR",
+          "sampleSize": 570,
+          "evaluableCount": 570,
+          "correctCount": 263,
+          "incorrectCount": 307,
+          "flatCount": 0,
+          "accuracyPct": 46.14,
+          "wilson95LowPct": 42.09,
+          "wilson95HighPct": 50.25,
+          "inverseDirectionAccuracyPct": 53.86,
+          "excessAccuracyVsBaselinePct": -4.04,
+          "callDistribution": {
+            "bullishCount": 351,
+            "bearishCount": 219,
+            "bullishPct": 61.58,
+            "bearishPct": 38.42
+          },
+          "actualDistribution": {
+            "actualBullishCount": 286,
+            "actualBearishCount": 284,
+            "actualFlatCount": 0,
+            "actualBullishPct": 50.18,
+            "actualBearishPct": 49.82,
+            "actualFlatPct": 0,
+            "majorityDirection": "BULLISH",
+            "majorityBaselinePct": 50.18
+          },
+          "signedReturnAdr": {
+            "mean": -0.04617,
+            "median": -0.057317
+          },
+          "openToCloseReturnAdr": {
+            "mean": 0.026682,
+            "median": 0.005852
+          },
+          "multipleTestingWarning": "Exploratory subgroup result only. Many overlapping slices were examined; treat apparent winners or losers as unstable unless they persist prospectively."
+        },
+        {
+          "layer": "LAYER_1",
+          "entityCode": "GOLD",
+          "label": "Gold",
+          "sampleSize": 570,
+          "evaluableCount": 570,
+          "correctCount": 264,
+          "incorrectCount": 306,
+          "flatCount": 0,
+          "accuracyPct": 46.32,
+          "wilson95LowPct": 42.26,
+          "wilson95HighPct": 50.42,
+          "inverseDirectionAccuracyPct": 53.68,
+          "excessAccuracyVsBaselinePct": -10.52,
+          "callDistribution": {
+            "bullishCount": 270,
+            "bearishCount": 300,
+            "bullishPct": 47.37,
+            "bearishPct": 52.63
+          },
+          "actualDistribution": {
+            "actualBullishCount": 324,
+            "actualBearishCount": 246,
+            "actualFlatCount": 0,
+            "actualBullishPct": 56.84,
+            "actualBearishPct": 43.16,
+            "actualFlatPct": 0,
+            "majorityDirection": "BULLISH",
+            "majorityBaselinePct": 56.84
+          },
+          "signedReturnAdr": {
+            "mean": -0.036005,
+            "median": -0.061412
+          },
+          "openToCloseReturnAdr": {
+            "mean": 0.090343,
+            "median": 0.111525
+          },
+          "multipleTestingWarning": "Exploratory subgroup result only. Many overlapping slices were examined; treat apparent winners or losers as unstable unless they persist prospectively."
+        },
+        {
+          "layer": "LAYER_1",
+          "entityCode": "NQ",
+          "label": "NQ",
+          "sampleSize": 560,
+          "evaluableCount": 560,
+          "correctCount": 291,
+          "incorrectCount": 269,
+          "flatCount": 0,
+          "accuracyPct": 51.96,
+          "wilson95LowPct": 47.83,
+          "wilson95HighPct": 56.07,
+          "inverseDirectionAccuracyPct": 48.04,
+          "excessAccuracyVsBaselinePct": -5.36,
+          "callDistribution": {
+            "bullishCount": 374,
+            "bearishCount": 186,
+            "bullishPct": 66.79,
+            "bearishPct": 33.21
+          },
+          "actualDistribution": {
+            "actualBullishCount": 321,
+            "actualBearishCount": 239,
+            "actualFlatCount": 0,
+            "actualBullishPct": 57.32,
+            "actualBearishPct": 42.68,
+            "actualFlatPct": 0,
+            "majorityDirection": "BULLISH",
+            "majorityBaselinePct": 57.32
+          },
+          "signedReturnAdr": {
+            "mean": -0.013715,
+            "median": 0.023905
+          },
+          "openToCloseReturnAdr": {
+            "mean": 0.053037,
+            "median": 0.088988
+          },
+          "multipleTestingWarning": "Exploratory subgroup result only. Many overlapping slices were examined; treat apparent winners or losers as unstable unless they persist prospectively."
+        }
+      ],
+      "strength": {
+        "layer": "LAYER_1",
+        "strengthSummaries": [
+          {
+            "layer": "LAYER_1",
+            "strengthBucket": "WEAK",
+            "sampleSize": 1331,
+            "evaluableCount": 1331,
+            "correctCount": 637,
+            "incorrectCount": 694,
+            "flatCount": 0,
+            "accuracyPct": 47.86,
+            "wilson95LowPct": 45.19,
+            "wilson95HighPct": 50.54,
+            "inverseDirectionAccuracyPct": 52.14,
+            "excessAccuracyVsBaselinePct": -5.48,
+            "callDistribution": {
+              "bullishCount": 800,
+              "bearishCount": 531,
+              "bullishPct": 60.11,
+              "bearishPct": 39.89
+            },
+            "actualDistribution": {
+              "actualBullishCount": 710,
+              "actualBearishCount": 621,
+              "actualFlatCount": 0,
+              "actualBullishPct": 53.34,
+              "actualBearishPct": 46.66,
+              "actualFlatPct": 0,
+              "majorityDirection": "BULLISH",
+              "majorityBaselinePct": 53.34
+            },
+            "signedReturnAdr": {
+              "mean": -0.025095,
+              "median": -0.027781
+            },
+            "openToCloseReturnAdr": {
+              "mean": 0.036013,
+              "median": 0.042003
+            },
+            "multipleTestingWarning": "Exploratory subgroup result only. Many overlapping slices were examined; treat apparent winners or losers as unstable unless they persist prospectively."
+          },
+          {
+            "layer": "LAYER_1",
+            "strengthBucket": "MODERATE",
+            "sampleSize": 390,
+            "evaluableCount": 390,
+            "correctCount": 176,
+            "incorrectCount": 214,
+            "flatCount": 0,
+            "accuracyPct": 45.13,
+            "wilson95LowPct": 40.26,
+            "wilson95HighPct": 50.09,
+            "inverseDirectionAccuracyPct": 54.87,
+            "excessAccuracyVsBaselinePct": -5.38,
+            "callDistribution": {
+              "bullishCount": 237,
+              "bearishCount": 153,
+              "bullishPct": 60.77,
+              "bearishPct": 39.23
+            },
+            "actualDistribution": {
+              "actualBullishCount": 197,
+              "actualBearishCount": 193,
+              "actualFlatCount": 0,
+              "actualBullishPct": 50.51,
+              "actualBearishPct": 49.49,
+              "actualFlatPct": 0,
+              "majorityDirection": "BULLISH",
+              "majorityBaselinePct": 50.51
+            },
+            "signedReturnAdr": {
+              "mean": -0.019026,
+              "median": -0.051772
+            },
+            "openToCloseReturnAdr": {
+              "mean": 0.048222,
+              "median": 0.010445
+            },
+            "multipleTestingWarning": "Exploratory subgroup result only. Many overlapping slices were examined; treat apparent winners or losers as unstable unless they persist prospectively."
+          },
+          {
+            "layer": "LAYER_1",
+            "strengthBucket": "STRONG",
+            "sampleSize": 477,
+            "evaluableCount": 477,
+            "correctCount": 234,
+            "incorrectCount": 243,
+            "flatCount": 0,
+            "accuracyPct": 49.06,
+            "wilson95LowPct": 44.6,
+            "wilson95HighPct": 53.53,
+            "inverseDirectionAccuracyPct": 50.94,
+            "excessAccuracyVsBaselinePct": -4.82,
+            "callDistribution": {
+              "bullishCount": 304,
+              "bearishCount": 173,
+              "bullishPct": 63.73,
+              "bearishPct": 36.27
+            },
+            "actualDistribution": {
+              "actualBullishCount": 257,
+              "actualBearishCount": 220,
+              "actualFlatCount": 0,
+              "actualBullishPct": 53.88,
+              "actualBearishPct": 46.12,
+              "actualFlatPct": 0,
+              "majorityDirection": "BULLISH",
+              "majorityBaselinePct": 53.88
+            },
+            "signedReturnAdr": {
+              "mean": 0.002062,
+              "median": -0.023897
+            },
+            "openToCloseReturnAdr": {
+              "mean": 0.045119,
+              "median": 0.056682
+            },
+            "multipleTestingWarning": "Exploratory subgroup result only. Many overlapping slices were examined; treat apparent winners or losers as unstable unless they persist prospectively."
+          },
+          {
+            "layer": "LAYER_1",
+            "strengthBucket": "VERY_STRONG",
+            "sampleSize": 295,
+            "evaluableCount": 295,
+            "correctCount": 141,
+            "incorrectCount": 154,
+            "flatCount": 0,
+            "accuracyPct": 47.8,
+            "wilson95LowPct": 42.16,
+            "wilson95HighPct": 53.49,
+            "inverseDirectionAccuracyPct": 52.2,
+            "excessAccuracyVsBaselinePct": -7.12,
+            "callDistribution": {
+              "bullishCount": 172,
+              "bearishCount": 123,
+              "bullishPct": 58.31,
+              "bearishPct": 41.69
+            },
+            "actualDistribution": {
+              "actualBullishCount": 162,
+              "actualBearishCount": 133,
+              "actualFlatCount": 0,
+              "actualBullishPct": 54.92,
+              "actualBearishPct": 45.08,
+              "actualFlatPct": 0,
+              "majorityDirection": "BULLISH",
+              "majorityBaselinePct": 54.92
+            },
+            "signedReturnAdr": {
+              "mean": -0.03637,
+              "median": -0.031999
+            },
+            "openToCloseReturnAdr": {
+              "mean": 0.068961,
+              "median": 0.047716
+            },
+            "multipleTestingWarning": "Exploratory subgroup result only. Many overlapping slices were examined; treat apparent winners or losers as unstable unless they persist prospectively."
+          }
+        ],
+        "multipleTestingWarning": "Exploratory subgroup result only. Many overlapping slices were examined; treat apparent winners or losers as unstable unless they persist prospectively."
+      },
+      "confidence": {
+        "layer": "LAYER_1",
+        "bucketSummaries": [
+          {
+            "layer": "LAYER_1",
+            "confidenceBucketKey": "0_9",
+            "confidenceBucketLabel": "0-9",
+            "sampleSize": 68,
+            "evaluableCount": 68,
+            "correctCount": 33,
+            "incorrectCount": 35,
+            "flatCount": 0,
+            "accuracyPct": 48.53,
+            "wilson95LowPct": 37.05,
+            "wilson95HighPct": 60.17,
+            "inverseDirectionAccuracyPct": 51.47,
+            "excessAccuracyVsBaselinePct": -4.41,
+            "callDistribution": {
+              "bullishCount": 37,
+              "bearishCount": 31,
+              "bullishPct": 54.41,
+              "bearishPct": 45.59
+            },
+            "actualDistribution": {
+              "actualBullishCount": 36,
+              "actualBearishCount": 32,
+              "actualFlatCount": 0,
+              "actualBullishPct": 52.94,
+              "actualBearishPct": 47.06,
+              "actualFlatPct": 0,
+              "majorityDirection": "BULLISH",
+              "majorityBaselinePct": 52.94
+            },
+            "signedReturnAdr": {
+              "mean": -0.027736,
+              "median": -0.01782
+            },
+            "openToCloseReturnAdr": {
+              "mean": 0.059382,
+              "median": 0.023176
+            },
+            "multipleTestingWarning": "Exploratory subgroup result only. Many overlapping slices were examined; treat apparent winners or losers as unstable unless they persist prospectively."
+          },
+          {
+            "layer": "LAYER_1",
+            "confidenceBucketKey": "10_19",
+            "confidenceBucketLabel": "10-19",
+            "sampleSize": 47,
+            "evaluableCount": 47,
+            "correctCount": 17,
+            "incorrectCount": 30,
+            "flatCount": 0,
+            "accuracyPct": 36.17,
+            "wilson95LowPct": 23.97,
+            "wilson95HighPct": 50.46,
+            "inverseDirectionAccuracyPct": 63.83,
+            "excessAccuracyVsBaselinePct": -14.89,
+            "callDistribution": {
+              "bullishCount": 35,
+              "bearishCount": 12,
+              "bullishPct": 74.47,
+              "bearishPct": 25.53
+            },
+            "actualDistribution": {
+              "actualBullishCount": 23,
+              "actualBearishCount": 24,
+              "actualFlatCount": 0,
+              "actualBullishPct": 48.94,
+              "actualBearishPct": 51.06,
+              "actualFlatPct": 0,
+              "majorityDirection": "BEARISH",
+              "majorityBaselinePct": 51.06
+            },
+            "signedReturnAdr": {
+              "mean": -0.149367,
+              "median": -0.132076
+            },
+            "openToCloseReturnAdr": {
+              "mean": -0.032004,
+              "median": -0.019797
+            },
+            "multipleTestingWarning": "Exploratory subgroup result only. Many overlapping slices were examined; treat apparent winners or losers as unstable unless they persist prospectively."
+          },
+          {
+            "layer": "LAYER_1",
+            "confidenceBucketKey": "20_29",
+            "confidenceBucketLabel": "20-29",
+            "sampleSize": 112,
+            "evaluableCount": 112,
+            "correctCount": 56,
+            "incorrectCount": 56,
+            "flatCount": 0,
+            "accuracyPct": 50,
+            "wilson95LowPct": 40.89,
+            "wilson95HighPct": 59.11,
+            "inverseDirectionAccuracyPct": 50,
+            "excessAccuracyVsBaselinePct": -1.79,
+            "callDistribution": {
+              "bullishCount": 44,
+              "bearishCount": 68,
+              "bullishPct": 39.29,
+              "bearishPct": 60.71
+            },
+            "actualDistribution": {
+              "actualBullishCount": 54,
+              "actualBearishCount": 58,
+              "actualFlatCount": 0,
+              "actualBullishPct": 48.21,
+              "actualBearishPct": 51.79,
+              "actualFlatPct": 0,
+              "majorityDirection": "BEARISH",
+              "majorityBaselinePct": 51.79
+            },
+            "signedReturnAdr": {
+              "mean": -0.085174,
+              "median": 0.001963
+            },
+            "openToCloseReturnAdr": {
+              "mean": -0.016972,
+              "median": -0.052157
+            },
+            "multipleTestingWarning": "Exploratory subgroup result only. Many overlapping slices were examined; treat apparent winners or losers as unstable unless they persist prospectively."
+          },
+          {
+            "layer": "LAYER_1",
+            "confidenceBucketKey": "30_39",
+            "confidenceBucketLabel": "30-39",
+            "sampleSize": 552,
+            "evaluableCount": 552,
+            "correctCount": 259,
+            "incorrectCount": 293,
+            "flatCount": 0,
+            "accuracyPct": 46.92,
+            "wilson95LowPct": 42.79,
+            "wilson95HighPct": 51.09,
+            "inverseDirectionAccuracyPct": 53.08,
+            "excessAccuracyVsBaselinePct": -4.71,
+            "callDistribution": {
+              "bullishCount": 328,
+              "bearishCount": 224,
+              "bullishPct": 59.42,
+              "bearishPct": 40.58
+            },
+            "actualDistribution": {
+              "actualBullishCount": 285,
+              "actualBearishCount": 267,
+              "actualFlatCount": 0,
+              "actualBullishPct": 51.63,
+              "actualBearishPct": 48.37,
+              "actualFlatPct": 0,
+              "majorityDirection": "BULLISH",
+              "majorityBaselinePct": 51.63
+            },
+            "signedReturnAdr": {
+              "mean": -0.003517,
+              "median": -0.050974
+            },
+            "openToCloseReturnAdr": {
+              "mean": 0.030379,
+              "median": 0.036334
+            },
+            "multipleTestingWarning": "Exploratory subgroup result only. Many overlapping slices were examined; treat apparent winners or losers as unstable unless they persist prospectively."
+          },
+          {
+            "layer": "LAYER_1",
+            "confidenceBucketKey": "40_49",
+            "confidenceBucketLabel": "40-49",
+            "sampleSize": 552,
+            "evaluableCount": 552,
+            "correctCount": 272,
+            "incorrectCount": 280,
+            "flatCount": 0,
+            "accuracyPct": 49.28,
+            "wilson95LowPct": 45.12,
+            "wilson95HighPct": 53.44,
+            "inverseDirectionAccuracyPct": 50.72,
+            "excessAccuracyVsBaselinePct": -7.24,
+            "callDistribution": {
+              "bullishCount": 356,
+              "bearishCount": 196,
+              "bullishPct": 64.49,
+              "bearishPct": 35.51
+            },
+            "actualDistribution": {
+              "actualBullishCount": 312,
+              "actualBearishCount": 240,
+              "actualFlatCount": 0,
+              "actualBullishPct": 56.52,
+              "actualBearishPct": 43.48,
+              "actualFlatPct": 0,
+              "majorityDirection": "BULLISH",
+              "majorityBaselinePct": 56.52
+            },
+            "signedReturnAdr": {
+              "mean": -0.023577,
+              "median": -0.00638
+            },
+            "openToCloseReturnAdr": {
+              "mean": 0.05531,
+              "median": 0.071306
+            },
+            "multipleTestingWarning": "Exploratory subgroup result only. Many overlapping slices were examined; treat apparent winners or losers as unstable unless they persist prospectively."
+          },
+          {
+            "layer": "LAYER_1",
+            "confidenceBucketKey": "50_59",
+            "confidenceBucketLabel": "50-59",
+            "sampleSize": 234,
+            "evaluableCount": 234,
+            "correctCount": 108,
+            "incorrectCount": 126,
+            "flatCount": 0,
+            "accuracyPct": 46.15,
+            "wilson95LowPct": 39.88,
+            "wilson95HighPct": 52.55,
+            "inverseDirectionAccuracyPct": 53.85,
+            "excessAccuracyVsBaselinePct": -3.85,
+            "callDistribution": {
+              "bullishCount": 141,
+              "bearishCount": 93,
+              "bullishPct": 60.26,
+              "bearishPct": 39.74
+            },
+            "actualDistribution": {
+              "actualBullishCount": 117,
+              "actualBearishCount": 117,
+              "actualFlatCount": 0,
+              "actualBullishPct": 50,
+              "actualBearishPct": 50,
+              "actualFlatPct": 0,
+              "majorityDirection": "BULLISH",
+              "majorityBaselinePct": 50
+            },
+            "signedReturnAdr": {
+              "mean": -0.005833,
+              "median": -0.038927
+            },
+            "openToCloseReturnAdr": {
+              "mean": 0.040817,
+              "median": -0.01057
+            },
+            "multipleTestingWarning": "Exploratory subgroup result only. Many overlapping slices were examined; treat apparent winners or losers as unstable unless they persist prospectively."
+          },
+          {
+            "layer": "LAYER_1",
+            "confidenceBucketKey": "60_69",
+            "confidenceBucketLabel": "60-69",
+            "sampleSize": 481,
+            "evaluableCount": 481,
+            "correctCount": 233,
+            "incorrectCount": 248,
+            "flatCount": 0,
+            "accuracyPct": 48.44,
+            "wilson95LowPct": 44,
+            "wilson95HighPct": 52.9,
+            "inverseDirectionAccuracyPct": 51.56,
+            "excessAccuracyVsBaselinePct": -6.03,
+            "callDistribution": {
+              "bullishCount": 312,
+              "bearishCount": 169,
+              "bullishPct": 64.86,
+              "bearishPct": 35.14
+            },
+            "actualDistribution": {
+              "actualBullishCount": 262,
+              "actualBearishCount": 219,
+              "actualFlatCount": 0,
+              "actualBullishPct": 54.47,
+              "actualBearishPct": 45.53,
+              "actualFlatPct": 0,
+              "majorityDirection": "BULLISH",
+              "majorityBaselinePct": 54.47
+            },
+            "signedReturnAdr": {
+              "mean": 0.0082,
+              "median": -0.029084
+            },
+            "openToCloseReturnAdr": {
+              "mean": 0.054079,
+              "median": 0.056682
+            },
+            "multipleTestingWarning": "Exploratory subgroup result only. Many overlapping slices were examined; treat apparent winners or losers as unstable unless they persist prospectively."
+          },
+          {
+            "layer": "LAYER_1",
+            "confidenceBucketKey": "70_79",
+            "confidenceBucketLabel": "70-79",
+            "sampleSize": 152,
+            "evaluableCount": 152,
+            "correctCount": 69,
+            "incorrectCount": 83,
+            "flatCount": 0,
+            "accuracyPct": 45.39,
+            "wilson95LowPct": 37.69,
+            "wilson95HighPct": 53.33,
+            "inverseDirectionAccuracyPct": 54.61,
+            "excessAccuracyVsBaselinePct": -5.27,
+            "callDistribution": {
+              "bullishCount": 88,
+              "bearishCount": 64,
+              "bullishPct": 57.89,
+              "bearishPct": 42.11
+            },
+            "actualDistribution": {
+              "actualBullishCount": 75,
+              "actualBearishCount": 77,
+              "actualFlatCount": 0,
+              "actualBullishPct": 49.34,
+              "actualBearishPct": 50.66,
+              "actualFlatPct": 0,
+              "majorityDirection": "BEARISH",
+              "majorityBaselinePct": 50.66
+            },
+            "signedReturnAdr": {
+              "mean": -0.059315,
+              "median": -0.089267
+            },
+            "openToCloseReturnAdr": {
+              "mean": 0.031348,
+              "median": -0.016225
+            },
+            "multipleTestingWarning": "Exploratory subgroup result only. Many overlapping slices were examined; treat apparent winners or losers as unstable unless they persist prospectively."
+          },
+          {
+            "layer": "LAYER_1",
+            "confidenceBucketKey": "80_89",
+            "confidenceBucketLabel": "80-89",
+            "sampleSize": 282,
+            "evaluableCount": 282,
+            "correctCount": 135,
+            "incorrectCount": 147,
+            "flatCount": 0,
+            "accuracyPct": 47.87,
+            "wilson95LowPct": 42.11,
+            "wilson95HighPct": 53.69,
+            "inverseDirectionAccuracyPct": 52.13,
+            "excessAccuracyVsBaselinePct": -6.74,
+            "callDistribution": {
+              "bullishCount": 165,
+              "bearishCount": 117,
+              "bullishPct": 58.51,
+              "bearishPct": 41.49
+            },
+            "actualDistribution": {
+              "actualBullishCount": 154,
+              "actualBearishCount": 128,
+              "actualFlatCount": 0,
+              "actualBullishPct": 54.61,
+              "actualBearishPct": 45.39,
+              "actualFlatPct": 0,
+              "majorityDirection": "BULLISH",
+              "majorityBaselinePct": 54.61
+            },
+            "signedReturnAdr": {
+              "mean": -0.031732,
+              "median": -0.035341
+            },
+            "openToCloseReturnAdr": {
+              "mean": 0.081096,
+              "median": 0.044564
+            },
+            "multipleTestingWarning": "Exploratory subgroup result only. Many overlapping slices were examined; treat apparent winners or losers as unstable unless they persist prospectively."
+          },
+          {
+            "layer": "LAYER_1",
+            "confidenceBucketKey": "90_100",
+            "confidenceBucketLabel": "90-100",
+            "sampleSize": 13,
+            "evaluableCount": 13,
+            "correctCount": 6,
+            "incorrectCount": 7,
+            "flatCount": 0,
+            "accuracyPct": 46.15,
+            "wilson95LowPct": 23.21,
+            "wilson95HighPct": 70.86,
+            "inverseDirectionAccuracyPct": 53.85,
+            "excessAccuracyVsBaselinePct": -15.39,
+            "callDistribution": {
+              "bullishCount": 7,
+              "bearishCount": 6,
+              "bullishPct": 53.85,
+              "bearishPct": 46.15
+            },
+            "actualDistribution": {
+              "actualBullishCount": 8,
+              "actualBearishCount": 5,
+              "actualFlatCount": 0,
+              "actualBullishPct": 61.54,
+              "actualBearishPct": 38.46,
+              "actualFlatPct": 0,
+              "majorityDirection": "BULLISH",
+              "majorityBaselinePct": 61.54
+            },
+            "signedReturnAdr": {
+              "mean": -0.136978,
+              "median": -0.005789
+            },
+            "openToCloseReturnAdr": {
+              "mean": -0.194278,
+              "median": 0.077575
+            },
+            "multipleTestingWarning": "Exploratory subgroup result only. Many overlapping slices were examined; treat apparent winners or losers as unstable unless they persist prospectively."
+          }
+        ],
+        "monotonicity": {
+          "adequateBucketCount": 9,
+          "accuracyMonotonicNonDecreasing": false,
+          "signedReturnMonotonicNonDecreasing": false
+        },
+        "multipleTestingWarning": "Exploratory subgroup result only. Many overlapping slices were examined; treat apparent winners or losers as unstable unless they persist prospectively."
+      },
+      "weekdays": [
+        {
+          "layer": "LAYER_1",
+          "weekdayKey": "MONDAY",
+          "sampleSize": 443,
+          "evaluableCount": 443,
+          "correctCount": 230,
+          "incorrectCount": 213,
+          "flatCount": 0,
+          "accuracyPct": 51.92,
+          "wilson95LowPct": 47.27,
+          "wilson95HighPct": 56.53,
+          "inverseDirectionAccuracyPct": 48.08,
+          "excessAccuracyVsBaselinePct": -7.67,
+          "callDistribution": {
+            "bullishCount": 279,
+            "bearishCount": 164,
+            "bullishPct": 62.98,
+            "bearishPct": 37.02
+          },
+          "actualDistribution": {
+            "actualBullishCount": 264,
+            "actualBearishCount": 179,
+            "actualFlatCount": 0,
+            "actualBullishPct": 59.59,
+            "actualBearishPct": 40.41,
+            "actualFlatPct": 0,
+            "majorityDirection": "BULLISH",
+            "majorityBaselinePct": 59.59
+          },
+          "signedReturnAdr": {
+            "mean": 0.016368,
+            "median": 0.03552
+          },
+          "openToCloseReturnAdr": {
+            "mean": 0.130915,
+            "median": 0.130817
+          },
+          "multipleTestingWarning": "Exploratory subgroup result only. Many overlapping slices were examined; treat apparent winners or losers as unstable unless they persist prospectively."
+        },
+        {
+          "layer": "LAYER_1",
+          "weekdayKey": "TUESDAY",
+          "sampleSize": 457,
+          "evaluableCount": 457,
+          "correctCount": 211,
+          "incorrectCount": 246,
+          "flatCount": 0,
+          "accuracyPct": 46.17,
+          "wilson95LowPct": 41.65,
+          "wilson95HighPct": 50.75,
+          "inverseDirectionAccuracyPct": 53.83,
+          "excessAccuracyVsBaselinePct": -5.03,
+          "callDistribution": {
+            "bullishCount": 284,
+            "bearishCount": 173,
+            "bullishPct": 62.14,
+            "bearishPct": 37.86
+          },
+          "actualDistribution": {
+            "actualBullishCount": 234,
+            "actualBearishCount": 223,
+            "actualFlatCount": 0,
+            "actualBullishPct": 51.2,
+            "actualBearishPct": 48.8,
+            "actualFlatPct": 0,
+            "majorityDirection": "BULLISH",
+            "majorityBaselinePct": 51.2
+          },
+          "signedReturnAdr": {
+            "mean": -0.054693,
+            "median": -0.058782
+          },
+          "openToCloseReturnAdr": {
+            "mean": 0.017972,
+            "median": 0.016449
+          },
+          "multipleTestingWarning": "Exploratory subgroup result only. Many overlapping slices were examined; treat apparent winners or losers as unstable unless they persist prospectively."
+        },
+        {
+          "layer": "LAYER_1",
+          "weekdayKey": "WEDNESDAY",
+          "sampleSize": 464,
+          "evaluableCount": 464,
+          "correctCount": 199,
+          "incorrectCount": 265,
+          "flatCount": 0,
+          "accuracyPct": 42.89,
+          "wilson95LowPct": 38.46,
+          "wilson95HighPct": 47.43,
+          "inverseDirectionAccuracyPct": 57.11,
+          "excessAccuracyVsBaselinePct": -10.99,
+          "callDistribution": {
+            "bullishCount": 275,
+            "bearishCount": 189,
+            "bullishPct": 59.27,
+            "bearishPct": 40.73
+          },
+          "actualDistribution": {
+            "actualBullishCount": 250,
+            "actualBearishCount": 214,
+            "actualFlatCount": 0,
+            "actualBullishPct": 53.88,
+            "actualBearishPct": 46.12,
+            "actualFlatPct": 0,
+            "majorityDirection": "BULLISH",
+            "majorityBaselinePct": 53.88
+          },
+          "signedReturnAdr": {
+            "mean": -0.04031,
+            "median": -0.096067
+          },
+          "openToCloseReturnAdr": {
+            "mean": 0.085335,
+            "median": 0.056599
+          },
+          "multipleTestingWarning": "Exploratory subgroup result only. Many overlapping slices were examined; treat apparent winners or losers as unstable unless they persist prospectively."
+        },
+        {
+          "layer": "LAYER_1",
+          "weekdayKey": "THURSDAY",
+          "sampleSize": 450,
+          "evaluableCount": 450,
+          "correctCount": 208,
+          "incorrectCount": 242,
+          "flatCount": 0,
+          "accuracyPct": 46.22,
+          "wilson95LowPct": 41.67,
+          "wilson95HighPct": 50.84,
+          "inverseDirectionAccuracyPct": 53.78,
+          "excessAccuracyVsBaselinePct": -6,
+          "callDistribution": {
+            "bullishCount": 283,
+            "bearishCount": 167,
+            "bullishPct": 62.89,
+            "bearishPct": 37.11
+          },
+          "actualDistribution": {
+            "actualBullishCount": 215,
+            "actualBearishCount": 235,
+            "actualFlatCount": 0,
+            "actualBullishPct": 47.78,
+            "actualBearishPct": 52.22,
+            "actualFlatPct": 0,
+            "majorityDirection": "BEARISH",
+            "majorityBaselinePct": 52.22
+          },
+          "signedReturnAdr": {
+            "mean": -0.017645,
+            "median": -0.055578
+          },
+          "openToCloseReturnAdr": {
+            "mean": -0.012935,
+            "median": -0.041681
+          },
+          "multipleTestingWarning": "Exploratory subgroup result only. Many overlapping slices were examined; treat apparent winners or losers as unstable unless they persist prospectively."
+        },
+        {
+          "layer": "LAYER_1",
+          "weekdayKey": "FRIDAY",
+          "sampleSize": 458,
+          "evaluableCount": 458,
+          "correctCount": 225,
+          "incorrectCount": 233,
+          "flatCount": 0,
+          "accuracyPct": 49.13,
+          "wilson95LowPct": 44.57,
+          "wilson95HighPct": 53.69,
+          "inverseDirectionAccuracyPct": 50.87,
+          "excessAccuracyVsBaselinePct": -5.67,
+          "callDistribution": {
+            "bullishCount": 242,
+            "bearishCount": 216,
+            "bullishPct": 52.84,
+            "bearishPct": 47.16
+          },
+          "actualDistribution": {
+            "actualBullishCount": 251,
+            "actualBearishCount": 207,
+            "actualFlatCount": 0,
+            "actualBullishPct": 54.8,
+            "actualBearishPct": 45.2,
+            "actualFlatPct": 0,
+            "majorityDirection": "BULLISH",
+            "majorityBaselinePct": 54.8
+          },
+          "signedReturnAdr": {
+            "mean": -0.040406,
+            "median": -0.023885
+          },
+          "openToCloseReturnAdr": {
+            "mean": 0.01822,
+            "median": 0.058432
+          },
+          "multipleTestingWarning": "Exploratory subgroup result only. Many overlapping slices were examined; treat apparent winners or losers as unstable unless they persist prospectively."
+        },
+        {
+          "layer": "LAYER_1",
+          "weekdayKey": "SATURDAY",
+          "sampleSize": 116,
+          "evaluableCount": 116,
+          "correctCount": 62,
+          "incorrectCount": 54,
+          "flatCount": 0,
+          "accuracyPct": 53.45,
+          "wilson95LowPct": 44.41,
+          "wilson95HighPct": 62.27,
+          "inverseDirectionAccuracyPct": 46.55,
+          "excessAccuracyVsBaselinePct": 3.45,
+          "callDistribution": {
+            "bullishCount": 76,
+            "bearishCount": 40,
+            "bullishPct": 65.52,
+            "bearishPct": 34.48
+          },
+          "actualDistribution": {
+            "actualBullishCount": 58,
+            "actualBearishCount": 58,
+            "actualFlatCount": 0,
+            "actualBullishPct": 50,
+            "actualBearishPct": 50,
+            "actualFlatPct": 0,
+            "majorityDirection": "BULLISH",
+            "majorityBaselinePct": 50
+          },
+          "signedReturnAdr": {
+            "mean": 0.062393,
+            "median": 0.012321
+          },
+          "openToCloseReturnAdr": {
+            "mean": -0.019555,
+            "median": 0.004432
+          },
+          "multipleTestingWarning": "Exploratory subgroup result only. Many overlapping slices were examined; treat apparent winners or losers as unstable unless they persist prospectively."
+        },
+        {
+          "layer": "LAYER_1",
+          "weekdayKey": "SUNDAY",
+          "sampleSize": 105,
+          "evaluableCount": 105,
+          "correctCount": 53,
+          "incorrectCount": 52,
+          "flatCount": 0,
+          "accuracyPct": 50.48,
+          "wilson95LowPct": 41.07,
+          "wilson95HighPct": 59.85,
+          "inverseDirectionAccuracyPct": 49.52,
+          "excessAccuracyVsBaselinePct": -0.95,
+          "callDistribution": {
+            "bullishCount": 74,
+            "bearishCount": 31,
+            "bullishPct": 70.48,
+            "bearishPct": 29.52
+          },
+          "actualDistribution": {
+            "actualBullishCount": 54,
+            "actualBearishCount": 51,
+            "actualFlatCount": 0,
+            "actualBullishPct": 51.43,
+            "actualBearishPct": 48.57,
+            "actualFlatPct": 0,
+            "majorityDirection": "BULLISH",
+            "majorityBaselinePct": 51.43
+          },
+          "signedReturnAdr": {
+            "mean": 0.048464,
+            "median": 0.003946
+          },
+          "openToCloseReturnAdr": {
+            "mean": 0.024234,
+            "median": 0.008536
+          },
+          "multipleTestingWarning": "Exploratory subgroup result only. Many overlapping slices were examined; treat apparent winners or losers as unstable unless they persist prospectively."
+        }
+      ],
+      "folds": [
+        {
+          "layer": "LAYER_1",
+          "chronologicalFold": "TRAIN",
+          "sampleSize": 1089,
+          "evaluableCount": 1089,
+          "correctCount": 544,
+          "incorrectCount": 545,
+          "flatCount": 0,
+          "accuracyPct": 49.95,
+          "wilson95LowPct": 46.99,
+          "wilson95HighPct": 52.92,
+          "inverseDirectionAccuracyPct": 50.05,
+          "excessAccuracyVsBaselinePct": -4.23,
+          "callDistribution": {
+            "bullishCount": 689,
+            "bearishCount": 400,
+            "bullishPct": 63.27,
+            "bearishPct": 36.73
+          },
+          "actualDistribution": {
+            "actualBullishCount": 590,
+            "actualBearishCount": 499,
+            "actualFlatCount": 0,
+            "actualBullishPct": 54.18,
+            "actualBearishPct": 45.82,
+            "actualFlatPct": 0,
+            "majorityDirection": "BULLISH",
+            "majorityBaselinePct": 54.18
+          },
+          "signedReturnAdr": {
+            "mean": 0.007519,
+            "median": -0.000506
+          },
+          "openToCloseReturnAdr": {
+            "mean": 0.048458,
+            "median": 0.055344
+          },
+          "multipleTestingWarning": "Exploratory subgroup result only. Many overlapping slices were examined; treat apparent winners or losers as unstable unless they persist prospectively."
+        },
+        {
+          "layer": "LAYER_1",
+          "chronologicalFold": "VALIDATION",
+          "sampleSize": 796,
+          "evaluableCount": 796,
+          "correctCount": 349,
+          "incorrectCount": 447,
+          "flatCount": 0,
+          "accuracyPct": 43.84,
+          "wilson95LowPct": 40.43,
+          "wilson95HighPct": 47.31,
+          "inverseDirectionAccuracyPct": 56.16,
+          "excessAccuracyVsBaselinePct": -10.68,
+          "callDistribution": {
+            "bullishCount": 469,
+            "bearishCount": 327,
+            "bullishPct": 58.92,
+            "bearishPct": 41.08
+          },
+          "actualDistribution": {
+            "actualBullishCount": 434,
+            "actualBearishCount": 362,
+            "actualFlatCount": 0,
+            "actualBullishPct": 54.52,
+            "actualBearishPct": 45.48,
+            "actualFlatPct": 0,
+            "majorityDirection": "BULLISH",
+            "majorityBaselinePct": 54.52
+          },
+          "signedReturnAdr": {
+            "mean": -0.061851,
+            "median": -0.072216
+          },
+          "openToCloseReturnAdr": {
+            "mean": 0.069047,
+            "median": 0.048793
+          },
+          "multipleTestingWarning": "Exploratory subgroup result only. Many overlapping slices were examined; treat apparent winners or losers as unstable unless they persist prospectively."
+        },
+        {
+          "layer": "LAYER_1",
+          "chronologicalFold": "FINAL_TEST",
+          "sampleSize": 608,
+          "evaluableCount": 608,
+          "correctCount": 295,
+          "incorrectCount": 313,
+          "flatCount": 0,
+          "accuracyPct": 48.52,
+          "wilson95LowPct": 44.57,
+          "wilson95HighPct": 52.49,
+          "inverseDirectionAccuracyPct": 51.48,
+          "excessAccuracyVsBaselinePct": -1.81,
+          "callDistribution": {
+            "bullishCount": 355,
+            "bearishCount": 253,
+            "bullishPct": 58.39,
+            "bearishPct": 41.61
+          },
+          "actualDistribution": {
+            "actualBullishCount": 302,
+            "actualBearishCount": 306,
+            "actualFlatCount": 0,
+            "actualBullishPct": 49.67,
+            "actualBearishPct": 50.33,
+            "actualFlatPct": 0,
+            "majorityDirection": "BEARISH",
+            "majorityBaselinePct": 50.33
+          },
+          "signedReturnAdr": {
+            "mean": -0.01566,
+            "median": -0.022507
+          },
+          "openToCloseReturnAdr": {
+            "mean": 0.001435,
+            "median": -0.00934
+          },
+          "multipleTestingWarning": "Exploratory subgroup result only. Many overlapping slices were examined; treat apparent winners or losers as unstable unless they persist prospectively."
+        }
+      ]
+    },
+    "layer2": {
+      "overall": {
+        "layer": "LAYER_2",
+        "sampleSize": 1592,
+        "evaluableCount": 1592,
+        "correctCount": 764,
+        "incorrectCount": 828,
+        "flatCount": 0,
+        "accuracyPct": 47.99,
+        "wilson95LowPct": 45.54,
+        "wilson95HighPct": 50.45,
+        "inverseDirectionAccuracyPct": 52.01,
+        "excessAccuracyVsBaselinePct": -5.46,
+        "callDistribution": {
+          "bullishCount": 1025,
+          "bearishCount": 567,
+          "bullishPct": 64.38,
+          "bearishPct": 35.62
+        },
+        "actualDistribution": {
+          "actualBullishCount": 851,
+          "actualBearishCount": 741,
+          "actualFlatCount": 0,
+          "actualBullishPct": 53.45,
+          "actualBearishPct": 46.55,
+          "actualFlatPct": 0,
+          "majorityDirection": "BULLISH",
+          "majorityBaselinePct": 53.45
+        },
+        "signedReturnAdr": {
+          "mean": -0.012922,
+          "median": -0.027457
+        },
+        "openToCloseReturnAdr": {
+          "mean": 0.040364,
+          "median": 0.047482
+        },
+        "multipleTestingWarning": "Exploratory subgroup result only. Many overlapping slices were examined; treat apparent winners or losers as unstable unless they persist prospectively."
+      },
+      "direction": {
+        "layer": "LAYER_2",
+        "directionSummaries": [
+          {
+            "layer": "LAYER_2",
+            "callDirection": "BULLISH",
+            "sampleSize": 1025,
+            "evaluableCount": 1025,
+            "correctCount": 524,
+            "incorrectCount": 501,
+            "flatCount": 0,
+            "accuracyPct": 51.12,
+            "wilson95LowPct": 48.06,
+            "wilson95HighPct": 54.17,
+            "inverseDirectionAccuracyPct": 48.88,
+            "excessAccuracyVsBaselinePct": 0,
+            "callDistribution": {
+              "bullishCount": 1025,
+              "bearishCount": 0,
+              "bullishPct": 100,
+              "bearishPct": 0
+            },
+            "actualDistribution": {
+              "actualBullishCount": 524,
+              "actualBearishCount": 501,
+              "actualFlatCount": 0,
+              "actualBullishPct": 51.12,
+              "actualBearishPct": 48.88,
+              "actualFlatPct": 0,
+              "majorityDirection": "BULLISH",
+              "majorityBaselinePct": 51.12
+            },
+            "signedReturnAdr": {
+              "mean": 0.021311,
+              "median": 0.017593
+            },
+            "openToCloseReturnAdr": {
+              "mean": 0.021311,
+              "median": 0.017593
+            },
+            "multipleTestingWarning": "Exploratory subgroup result only. Many overlapping slices were examined; treat apparent winners or losers as unstable unless they persist prospectively."
+          },
+          {
+            "layer": "LAYER_2",
+            "callDirection": "BEARISH",
+            "sampleSize": 567,
+            "evaluableCount": 567,
+            "correctCount": 240,
+            "incorrectCount": 327,
+            "flatCount": 0,
+            "accuracyPct": 42.33,
+            "wilson95LowPct": 38.33,
+            "wilson95HighPct": 46.43,
+            "inverseDirectionAccuracyPct": 57.67,
+            "excessAccuracyVsBaselinePct": -15.34,
+            "callDistribution": {
+              "bullishCount": 0,
+              "bearishCount": 567,
+              "bullishPct": 0,
+              "bearishPct": 100
+            },
+            "actualDistribution": {
+              "actualBullishCount": 327,
+              "actualBearishCount": 240,
+              "actualFlatCount": 0,
+              "actualBullishPct": 57.67,
+              "actualBearishPct": 42.33,
+              "actualFlatPct": 0,
+              "majorityDirection": "BULLISH",
+              "majorityBaselinePct": 57.67
+            },
+            "signedReturnAdr": {
+              "mean": -0.074807,
+              "median": -0.112285
+            },
+            "openToCloseReturnAdr": {
+              "mean": 0.074807,
+              "median": 0.112285
+            },
+            "multipleTestingWarning": "Exploratory subgroup result only. Many overlapping slices were examined; treat apparent winners or losers as unstable unless they persist prospectively."
+          }
+        ],
+        "multipleTestingWarning": "Exploratory subgroup result only. Many overlapping slices were examined; treat apparent winners or losers as unstable unless they persist prospectively."
+      },
+      "entities": [
+        {
+          "layer": "LAYER_2",
+          "entityCode": "BTC_USD",
+          "label": "BTC/USD",
+          "sampleSize": 387,
+          "evaluableCount": 387,
+          "correctCount": 178,
+          "incorrectCount": 209,
+          "flatCount": 0,
+          "accuracyPct": 45.99,
+          "wilson95LowPct": 41.09,
+          "wilson95HighPct": 50.98,
+          "inverseDirectionAccuracyPct": 54.01,
+          "excessAccuracyVsBaselinePct": -4.91,
+          "callDistribution": {
+            "bullishCount": 263,
+            "bearishCount": 124,
+            "bullishPct": 67.96,
+            "bearishPct": 32.04
+          },
+          "actualDistribution": {
+            "actualBullishCount": 190,
+            "actualBearishCount": 197,
+            "actualFlatCount": 0,
+            "actualBullishPct": 49.1,
+            "actualBearishPct": 50.9,
+            "actualFlatPct": 0,
+            "majorityDirection": "BEARISH",
+            "majorityBaselinePct": 50.9
+          },
+          "signedReturnAdr": {
+            "mean": 0.000895,
+            "median": -0.036665
+          },
+          "openToCloseReturnAdr": {
+            "mean": -0.012616,
+            "median": -0.01001
+          },
+          "multipleTestingWarning": "Exploratory subgroup result only. Many overlapping slices were examined; treat apparent winners or losers as unstable unless they persist prospectively."
+        },
+        {
+          "layer": "LAYER_2",
+          "entityCode": "EUR_USD",
+          "label": "EUR/USD",
+          "sampleSize": 385,
+          "evaluableCount": 385,
+          "correctCount": 172,
+          "incorrectCount": 213,
+          "flatCount": 0,
+          "accuracyPct": 44.68,
+          "wilson95LowPct": 39.79,
+          "wilson95HighPct": 49.67,
+          "inverseDirectionAccuracyPct": 55.32,
+          "excessAccuracyVsBaselinePct": -6.49,
+          "callDistribution": {
+            "bullishCount": 254,
+            "bearishCount": 131,
+            "bullishPct": 65.97,
+            "bearishPct": 34.03
+          },
+          "actualDistribution": {
+            "actualBullishCount": 197,
+            "actualBearishCount": 188,
+            "actualFlatCount": 0,
+            "actualBullishPct": 51.17,
+            "actualBearishPct": 48.83,
+            "actualFlatPct": 0,
+            "majorityDirection": "BULLISH",
+            "majorityBaselinePct": 51.17
+          },
+          "signedReturnAdr": {
+            "mean": -0.046355,
+            "median": -0.069371
+          },
+          "openToCloseReturnAdr": {
+            "mean": 0.034033,
+            "median": 0.02536
+          },
+          "multipleTestingWarning": "Exploratory subgroup result only. Many overlapping slices were examined; treat apparent winners or losers as unstable unless they persist prospectively."
+        },
+        {
+          "layer": "LAYER_2",
+          "entityCode": "NQ_USD",
+          "label": "NQ/USD",
+          "sampleSize": 372,
+          "evaluableCount": 372,
+          "correctCount": 204,
+          "incorrectCount": 168,
+          "flatCount": 0,
+          "accuracyPct": 54.84,
+          "wilson95LowPct": 49.76,
+          "wilson95HighPct": 59.82,
+          "inverseDirectionAccuracyPct": 45.16,
+          "excessAccuracyVsBaselinePct": -1.61,
+          "callDistribution": {
+            "bullishCount": 262,
+            "bearishCount": 110,
+            "bullishPct": 70.43,
+            "bearishPct": 29.57
+          },
+          "actualDistribution": {
+            "actualBullishCount": 210,
+            "actualBearishCount": 162,
+            "actualFlatCount": 0,
+            "actualBullishPct": 56.45,
+            "actualBearishPct": 43.55,
+            "actualFlatPct": 0,
+            "majorityDirection": "BULLISH",
+            "majorityBaselinePct": 56.45
+          },
+          "signedReturnAdr": {
+            "mean": 0.027019,
+            "median": 0.057854
+          },
+          "openToCloseReturnAdr": {
+            "mean": 0.045792,
+            "median": 0.075971
+          },
+          "multipleTestingWarning": "Exploratory subgroup result only. Many overlapping slices were examined; treat apparent winners or losers as unstable unless they persist prospectively."
+        },
+        {
+          "layer": "LAYER_2",
+          "entityCode": "XAU_USD",
+          "label": "XAU/USD",
+          "sampleSize": 448,
+          "evaluableCount": 448,
+          "correctCount": 210,
+          "incorrectCount": 238,
+          "flatCount": 0,
+          "accuracyPct": 46.88,
+          "wilson95LowPct": 42.3,
+          "wilson95HighPct": 51.5,
+          "inverseDirectionAccuracyPct": 53.13,
+          "excessAccuracyVsBaselinePct": -9.82,
+          "callDistribution": {
+            "bullishCount": 246,
+            "bearishCount": 202,
+            "bullishPct": 54.91,
+            "bearishPct": 45.09
+          },
+          "actualDistribution": {
+            "actualBullishCount": 254,
+            "actualBearishCount": 194,
+            "actualFlatCount": 0,
+            "actualBullishPct": 56.7,
+            "actualBearishPct": 43.3,
+            "actualFlatPct": 0,
+            "majorityDirection": "BULLISH",
+            "majorityBaselinePct": 56.7
+          },
+          "signedReturnAdr": {
+            "mean": -0.029292,
+            "median": -0.054448
+          },
+          "openToCloseReturnAdr": {
+            "mean": 0.087063,
+            "median": 0.108792
+          },
+          "multipleTestingWarning": "Exploratory subgroup result only. Many overlapping slices were examined; treat apparent winners or losers as unstable unless they persist prospectively."
+        }
+      ],
+      "strength": {
+        "layer": "LAYER_2",
+        "strengthSummaries": [
+          {
+            "layer": "LAYER_2",
+            "strengthBucket": "WEAK",
+            "sampleSize": 965,
+            "evaluableCount": 965,
+            "correctCount": 461,
+            "incorrectCount": 504,
+            "flatCount": 0,
+            "accuracyPct": 47.77,
+            "wilson95LowPct": 44.64,
+            "wilson95HighPct": 50.93,
+            "inverseDirectionAccuracyPct": 52.23,
+            "excessAccuracyVsBaselinePct": -5.49,
+            "callDistribution": {
+              "bullishCount": 626,
+              "bearishCount": 339,
+              "bullishPct": 64.87,
+              "bearishPct": 35.13
+            },
+            "actualDistribution": {
+              "actualBullishCount": 514,
+              "actualBearishCount": 451,
+              "actualFlatCount": 0,
+              "actualBullishPct": 53.26,
+              "actualBearishPct": 46.74,
+              "actualFlatPct": 0,
+              "majorityDirection": "BULLISH",
+              "majorityBaselinePct": 53.26
+            },
+            "signedReturnAdr": {
+              "mean": -0.018047,
+              "median": -0.027464
+            },
+            "openToCloseReturnAdr": {
+              "mean": 0.032613,
+              "median": 0.045434
+            },
+            "multipleTestingWarning": "Exploratory subgroup result only. Many overlapping slices were examined; treat apparent winners or losers as unstable unless they persist prospectively."
+          },
+          {
+            "layer": "LAYER_2",
+            "strengthBucket": "MODERATE",
+            "sampleSize": 274,
+            "evaluableCount": 274,
+            "correctCount": 125,
+            "incorrectCount": 149,
+            "flatCount": 0,
+            "accuracyPct": 45.62,
+            "wilson95LowPct": 39.82,
+            "wilson95HighPct": 51.54,
+            "inverseDirectionAccuracyPct": 54.38,
+            "excessAccuracyVsBaselinePct": -6.93,
+            "callDistribution": {
+              "bullishCount": 155,
+              "bearishCount": 119,
+              "bullishPct": 56.57,
+              "bearishPct": 43.43
+            },
+            "actualDistribution": {
+              "actualBullishCount": 144,
+              "actualBearishCount": 130,
+              "actualFlatCount": 0,
+              "actualBullishPct": 52.55,
+              "actualBearishPct": 47.45,
+              "actualFlatPct": 0,
+              "majorityDirection": "BULLISH",
+              "majorityBaselinePct": 52.55
+            },
+            "signedReturnAdr": {
+              "mean": -0.01312,
+              "median": -0.055816
+            },
+            "openToCloseReturnAdr": {
+              "mean": 0.06573,
+              "median": 0.033211
+            },
+            "multipleTestingWarning": "Exploratory subgroup result only. Many overlapping slices were examined; treat apparent winners or losers as unstable unless they persist prospectively."
+          },
+          {
+            "layer": "LAYER_2",
+            "strengthBucket": "STRONG",
+            "sampleSize": 266,
+            "evaluableCount": 266,
+            "correctCount": 134,
+            "incorrectCount": 132,
+            "flatCount": 0,
+            "accuracyPct": 50.38,
+            "wilson95LowPct": 44.4,
+            "wilson95HighPct": 56.34,
+            "inverseDirectionAccuracyPct": 49.62,
+            "excessAccuracyVsBaselinePct": -5.26,
+            "callDistribution": {
+              "bullishCount": 176,
+              "bearishCount": 90,
+              "bullishPct": 66.17,
+              "bearishPct": 33.83
+            },
+            "actualDistribution": {
+              "actualBullishCount": 148,
+              "actualBearishCount": 118,
+              "actualFlatCount": 0,
+              "actualBullishPct": 55.64,
+              "actualBearishPct": 44.36,
+              "actualFlatPct": 0,
+              "majorityDirection": "BULLISH",
+              "majorityBaselinePct": 55.64
+            },
+            "signedReturnAdr": {
+              "mean": -0.008408,
+              "median": 0.018952
+            },
+            "openToCloseReturnAdr": {
+              "mean": 0.041669,
+              "median": 0.057172
+            },
+            "multipleTestingWarning": "Exploratory subgroup result only. Many overlapping slices were examined; treat apparent winners or losers as unstable unless they persist prospectively."
+          },
+          {
+            "layer": "LAYER_2",
+            "strengthBucket": "VERY_STRONG",
+            "sampleSize": 87,
+            "evaluableCount": 87,
+            "correctCount": 44,
+            "incorrectCount": 43,
+            "flatCount": 0,
+            "accuracyPct": 50.57,
+            "wilson95LowPct": 40.27,
+            "wilson95HighPct": 60.83,
+            "inverseDirectionAccuracyPct": 49.43,
+            "excessAccuracyVsBaselinePct": -1.15,
+            "callDistribution": {
+              "bullishCount": 68,
+              "bearishCount": 19,
+              "bullishPct": 78.16,
+              "bearishPct": 21.84
+            },
+            "actualDistribution": {
+              "actualBullishCount": 45,
+              "actualBearishCount": 42,
+              "actualFlatCount": 0,
+              "actualBullishPct": 51.72,
+              "actualBearishPct": 48.28,
+              "actualFlatPct": 0,
+              "majorityDirection": "BULLISH",
+              "majorityBaselinePct": 51.72
+            },
+            "signedReturnAdr": {
+              "mean": 0.030745,
+              "median": 0.035486
+            },
+            "openToCloseReturnAdr": {
+              "mean": 0.042455,
+              "median": 0.040028
+            },
+            "multipleTestingWarning": "Exploratory subgroup result only. Many overlapping slices were examined; treat apparent winners or losers as unstable unless they persist prospectively."
+          }
+        ],
+        "multipleTestingWarning": "Exploratory subgroup result only. Many overlapping slices were examined; treat apparent winners or losers as unstable unless they persist prospectively."
+      },
+      "confidence": {
+        "layer": "LAYER_2",
+        "bucketSummaries": [
+          {
+            "layer": "LAYER_2",
+            "confidenceBucketKey": "0_9",
+            "confidenceBucketLabel": "0-9",
+            "sampleSize": 47,
+            "evaluableCount": 47,
+            "correctCount": 22,
+            "incorrectCount": 25,
+            "flatCount": 0,
+            "accuracyPct": 46.81,
+            "wilson95LowPct": 33.33,
+            "wilson95HighPct": 60.77,
+            "inverseDirectionAccuracyPct": 53.19,
+            "excessAccuracyVsBaselinePct": -6.38,
+            "callDistribution": {
+              "bullishCount": 32,
+              "bearishCount": 15,
+              "bullishPct": 68.09,
+              "bearishPct": 31.91
+            },
+            "actualDistribution": {
+              "actualBullishCount": 25,
+              "actualBearishCount": 22,
+              "actualFlatCount": 0,
+              "actualBullishPct": 53.19,
+              "actualBearishPct": 46.81,
+              "actualFlatPct": 0,
+              "majorityDirection": "BULLISH",
+              "majorityBaselinePct": 53.19
+            },
+            "signedReturnAdr": {
+              "mean": -0.011123,
+              "median": -0.025704
+            },
+            "openToCloseReturnAdr": {
+              "mean": 0.021264,
+              "median": 0.03552
+            },
+            "multipleTestingWarning": "Exploratory subgroup result only. Many overlapping slices were examined; treat apparent winners or losers as unstable unless they persist prospectively."
+          },
+          {
+            "layer": "LAYER_2",
+            "confidenceBucketKey": "10_19",
+            "confidenceBucketLabel": "10-19",
+            "sampleSize": 98,
+            "evaluableCount": 98,
+            "correctCount": 43,
+            "incorrectCount": 55,
+            "flatCount": 0,
+            "accuracyPct": 43.88,
+            "wilson95LowPct": 34.47,
+            "wilson95HighPct": 53.75,
+            "inverseDirectionAccuracyPct": 56.12,
+            "excessAccuracyVsBaselinePct": -6.12,
+            "callDistribution": {
+              "bullishCount": 72,
+              "bearishCount": 26,
+              "bullishPct": 73.47,
+              "bearishPct": 26.53
+            },
+            "actualDistribution": {
+              "actualBullishCount": 49,
+              "actualBearishCount": 49,
+              "actualFlatCount": 0,
+              "actualBullishPct": 50,
+              "actualBearishPct": 50,
+              "actualFlatPct": 0,
+              "majorityDirection": "BULLISH",
+              "majorityBaselinePct": 50
+            },
+            "signedReturnAdr": {
+              "mean": 0.045811,
+              "median": -0.039847
+            },
+            "openToCloseReturnAdr": {
+              "mean": 0.038192,
+              "median": 0.001457
+            },
+            "multipleTestingWarning": "Exploratory subgroup result only. Many overlapping slices were examined; treat apparent winners or losers as unstable unless they persist prospectively."
+          },
+          {
+            "layer": "LAYER_2",
+            "confidenceBucketKey": "20_29",
+            "confidenceBucketLabel": "20-29",
+            "sampleSize": 83,
+            "evaluableCount": 83,
+            "correctCount": 36,
+            "incorrectCount": 47,
+            "flatCount": 0,
+            "accuracyPct": 43.37,
+            "wilson95LowPct": 33.24,
+            "wilson95HighPct": 54.09,
+            "inverseDirectionAccuracyPct": 56.63,
+            "excessAccuracyVsBaselinePct": -7.23,
+            "callDistribution": {
+              "bullishCount": 23,
+              "bearishCount": 60,
+              "bullishPct": 27.71,
+              "bearishPct": 72.29
+            },
+            "actualDistribution": {
+              "actualBullishCount": 42,
+              "actualBearishCount": 41,
+              "actualFlatCount": 0,
+              "actualBullishPct": 50.6,
+              "actualBearishPct": 49.4,
+              "actualFlatPct": 0,
+              "majorityDirection": "BULLISH",
+              "majorityBaselinePct": 50.6
+            },
+            "signedReturnAdr": {
+              "mean": -0.078907,
+              "median": -0.177574
+            },
+            "openToCloseReturnAdr": {
+              "mean": 0.069695,
+              "median": 0.025151
+            },
+            "multipleTestingWarning": "Exploratory subgroup result only. Many overlapping slices were examined; treat apparent winners or losers as unstable unless they persist prospectively."
+          },
+          {
+            "layer": "LAYER_2",
+            "confidenceBucketKey": "30_39",
+            "confidenceBucketLabel": "30-39",
+            "sampleSize": 380,
+            "evaluableCount": 380,
+            "correctCount": 186,
+            "incorrectCount": 194,
+            "flatCount": 0,
+            "accuracyPct": 48.95,
+            "wilson95LowPct": 43.96,
+            "wilson95HighPct": 53.96,
+            "inverseDirectionAccuracyPct": 51.05,
+            "excessAccuracyVsBaselinePct": -2.37,
+            "callDistribution": {
+              "bullishCount": 253,
+              "bearishCount": 127,
+              "bullishPct": 66.58,
+              "bearishPct": 33.42
+            },
+            "actualDistribution": {
+              "actualBullishCount": 195,
+              "actualBearishCount": 185,
+              "actualFlatCount": 0,
+              "actualBullishPct": 51.32,
+              "actualBearishPct": 48.68,
+              "actualFlatPct": 0,
+              "majorityDirection": "BULLISH",
+              "majorityBaselinePct": 51.32
+            },
+            "signedReturnAdr": {
+              "mean": 0.008923,
+              "median": -0.021721
+            },
+            "openToCloseReturnAdr": {
+              "mean": 0.009921,
+              "median": 0.026136
+            },
+            "multipleTestingWarning": "Exploratory subgroup result only. Many overlapping slices were examined; treat apparent winners or losers as unstable unless they persist prospectively."
+          },
+          {
+            "layer": "LAYER_2",
+            "confidenceBucketKey": "40_49",
+            "confidenceBucketLabel": "40-49",
+            "sampleSize": 357,
+            "evaluableCount": 357,
+            "correctCount": 174,
+            "incorrectCount": 183,
+            "flatCount": 0,
+            "accuracyPct": 48.74,
+            "wilson95LowPct": 43.6,
+            "wilson95HighPct": 53.91,
+            "inverseDirectionAccuracyPct": 51.26,
+            "excessAccuracyVsBaselinePct": -8.12,
+            "callDistribution": {
+              "bullishCount": 246,
+              "bearishCount": 111,
+              "bullishPct": 68.91,
+              "bearishPct": 31.09
+            },
+            "actualDistribution": {
+              "actualBullishCount": 203,
+              "actualBearishCount": 154,
+              "actualFlatCount": 0,
+              "actualBullishPct": 56.86,
+              "actualBearishPct": 43.14,
+              "actualFlatPct": 0,
+              "majorityDirection": "BULLISH",
+              "majorityBaselinePct": 56.86
+            },
+            "signedReturnAdr": {
+              "mean": -0.051046,
+              "median": -0.010086
+            },
+            "openToCloseReturnAdr": {
+              "mean": 0.048109,
+              "median": 0.080637
+            },
+            "multipleTestingWarning": "Exploratory subgroup result only. Many overlapping slices were examined; treat apparent winners or losers as unstable unless they persist prospectively."
+          },
+          {
+            "layer": "LAYER_2",
+            "confidenceBucketKey": "50_59",
+            "confidenceBucketLabel": "50-59",
+            "sampleSize": 185,
+            "evaluableCount": 185,
+            "correctCount": 83,
+            "incorrectCount": 102,
+            "flatCount": 0,
+            "accuracyPct": 44.86,
+            "wilson95LowPct": 37.87,
+            "wilson95HighPct": 52.06,
+            "inverseDirectionAccuracyPct": 55.14,
+            "excessAccuracyVsBaselinePct": -9.73,
+            "callDistribution": {
+              "bullishCount": 91,
+              "bearishCount": 94,
+              "bullishPct": 49.19,
+              "bearishPct": 50.81
+            },
+            "actualDistribution": {
+              "actualBullishCount": 101,
+              "actualBearishCount": 84,
+              "actualFlatCount": 0,
+              "actualBullishPct": 54.59,
+              "actualBearishPct": 45.41,
+              "actualFlatPct": 0,
+              "majorityDirection": "BULLISH",
+              "majorityBaselinePct": 54.59
+            },
+            "signedReturnAdr": {
+              "mean": -0.038804,
+              "median": -0.089046
+            },
+            "openToCloseReturnAdr": {
+              "mean": 0.062218,
+              "median": 0.062797
+            },
+            "multipleTestingWarning": "Exploratory subgroup result only. Many overlapping slices were examined; treat apparent winners or losers as unstable unless they persist prospectively."
+          },
+          {
+            "layer": "LAYER_2",
+            "confidenceBucketKey": "60_69",
+            "confidenceBucketLabel": "60-69",
+            "sampleSize": 240,
+            "evaluableCount": 240,
+            "correctCount": 118,
+            "incorrectCount": 122,
+            "flatCount": 0,
+            "accuracyPct": 49.17,
+            "wilson95LowPct": 42.9,
+            "wilson95HighPct": 55.45,
+            "inverseDirectionAccuracyPct": 50.83,
+            "excessAccuracyVsBaselinePct": -3.33,
+            "callDistribution": {
+              "bullishCount": 166,
+              "bearishCount": 74,
+              "bullishPct": 69.17,
+              "bearishPct": 30.83
+            },
+            "actualDistribution": {
+              "actualBullishCount": 126,
+              "actualBearishCount": 114,
+              "actualFlatCount": 0,
+              "actualBullishPct": 52.5,
+              "actualBearishPct": 47.5,
+              "actualFlatPct": 0,
+              "majorityDirection": "BULLISH",
+              "majorityBaselinePct": 52.5
+            },
+            "signedReturnAdr": {
+              "mean": 0.012094,
+              "median": -0.028769
+            },
+            "openToCloseReturnAdr": {
+              "mean": 0.041488,
+              "median": 0.037466
+            },
+            "multipleTestingWarning": "Exploratory subgroup result only. Many overlapping slices were examined; treat apparent winners or losers as unstable unless they persist prospectively."
+          },
+          {
+            "layer": "LAYER_2",
+            "confidenceBucketKey": "70_79",
+            "confidenceBucketLabel": "70-79",
+            "sampleSize": 115,
+            "evaluableCount": 115,
+            "correctCount": 58,
+            "incorrectCount": 57,
+            "flatCount": 0,
+            "accuracyPct": 50.43,
+            "wilson95LowPct": 41.43,
+            "wilson95HighPct": 59.41,
+            "inverseDirectionAccuracyPct": 49.57,
+            "excessAccuracyVsBaselinePct": -6.09,
+            "callDistribution": {
+              "bullishCount": 74,
+              "bearishCount": 41,
+              "bullishPct": 64.35,
+              "bearishPct": 35.65
+            },
+            "actualDistribution": {
+              "actualBullishCount": 65,
+              "actualBearishCount": 50,
+              "actualFlatCount": 0,
+              "actualBullishPct": 56.52,
+              "actualBearishPct": 43.48,
+              "actualFlatPct": 0,
+              "majorityDirection": "BULLISH",
+              "majorityBaselinePct": 56.52
+            },
+            "signedReturnAdr": {
+              "mean": -0.013525,
+              "median": 0.017593
+            },
+            "openToCloseReturnAdr": {
+              "mean": 0.066317,
+              "median": 0.047716
+            },
+            "multipleTestingWarning": "Exploratory subgroup result only. Many overlapping slices were examined; treat apparent winners or losers as unstable unless they persist prospectively."
+          },
+          {
+            "layer": "LAYER_2",
+            "confidenceBucketKey": "80_89",
+            "confidenceBucketLabel": "80-89",
+            "sampleSize": 87,
+            "evaluableCount": 87,
+            "correctCount": 44,
+            "incorrectCount": 43,
+            "flatCount": 0,
+            "accuracyPct": 50.57,
+            "wilson95LowPct": 40.27,
+            "wilson95HighPct": 60.83,
+            "inverseDirectionAccuracyPct": 49.43,
+            "excessAccuracyVsBaselinePct": -1.15,
+            "callDistribution": {
+              "bullishCount": 68,
+              "bearishCount": 19,
+              "bullishPct": 78.16,
+              "bearishPct": 21.84
+            },
+            "actualDistribution": {
+              "actualBullishCount": 45,
+              "actualBearishCount": 42,
+              "actualFlatCount": 0,
+              "actualBullishPct": 51.72,
+              "actualBearishPct": 48.28,
+              "actualFlatPct": 0,
+              "majorityDirection": "BULLISH",
+              "majorityBaselinePct": 51.72
+            },
+            "signedReturnAdr": {
+              "mean": 0.030745,
+              "median": 0.035486
+            },
+            "openToCloseReturnAdr": {
+              "mean": 0.042455,
+              "median": 0.040028
+            },
+            "multipleTestingWarning": "Exploratory subgroup result only. Many overlapping slices were examined; treat apparent winners or losers as unstable unless they persist prospectively."
+          }
+        ],
+        "monotonicity": {
+          "adequateBucketCount": 9,
+          "accuracyMonotonicNonDecreasing": false,
+          "signedReturnMonotonicNonDecreasing": false
+        },
+        "multipleTestingWarning": "Exploratory subgroup result only. Many overlapping slices were examined; treat apparent winners or losers as unstable unless they persist prospectively."
+      },
+      "weekdays": [
+        {
+          "layer": "LAYER_2",
+          "weekdayKey": "MONDAY",
+          "sampleSize": 251,
+          "evaluableCount": 251,
+          "correctCount": 135,
+          "incorrectCount": 116,
+          "flatCount": 0,
+          "accuracyPct": 53.78,
+          "wilson95LowPct": 47.61,
+          "wilson95HighPct": 59.85,
+          "inverseDirectionAccuracyPct": 46.22,
+          "excessAccuracyVsBaselinePct": -7.57,
+          "callDistribution": {
+            "bullishCount": 168,
+            "bearishCount": 83,
+            "bullishPct": 66.93,
+            "bearishPct": 33.07
+          },
+          "actualDistribution": {
+            "actualBullishCount": 154,
+            "actualBearishCount": 97,
+            "actualFlatCount": 0,
+            "actualBullishPct": 61.35,
+            "actualBearishPct": 38.65,
+            "actualFlatPct": 0,
+            "majorityDirection": "BULLISH",
+            "majorityBaselinePct": 61.35
+          },
+          "signedReturnAdr": {
+            "mean": 0.037413,
+            "median": 0.057922
+          },
+          "openToCloseReturnAdr": {
+            "mean": 0.130707,
+            "median": 0.142174
+          },
+          "multipleTestingWarning": "Exploratory subgroup result only. Many overlapping slices were examined; treat apparent winners or losers as unstable unless they persist prospectively."
+        },
+        {
+          "layer": "LAYER_2",
+          "weekdayKey": "TUESDAY",
+          "sampleSize": 311,
+          "evaluableCount": 311,
+          "correctCount": 145,
+          "incorrectCount": 166,
+          "flatCount": 0,
+          "accuracyPct": 46.62,
+          "wilson95LowPct": 41.15,
+          "wilson95HighPct": 52.18,
+          "inverseDirectionAccuracyPct": 53.38,
+          "excessAccuracyVsBaselinePct": -7.4,
+          "callDistribution": {
+            "bullishCount": 212,
+            "bearishCount": 99,
+            "bullishPct": 68.17,
+            "bearishPct": 31.83
+          },
+          "actualDistribution": {
+            "actualBullishCount": 168,
+            "actualBearishCount": 143,
+            "actualFlatCount": 0,
+            "actualBullishPct": 54.02,
+            "actualBearishPct": 45.98,
+            "actualFlatPct": 0,
+            "majorityDirection": "BULLISH",
+            "majorityBaselinePct": 54.02
+          },
+          "signedReturnAdr": {
+            "mean": -0.040631,
+            "median": -0.047369
+          },
+          "openToCloseReturnAdr": {
+            "mean": 0.042956,
+            "median": 0.061065
+          },
+          "multipleTestingWarning": "Exploratory subgroup result only. Many overlapping slices were examined; treat apparent winners or losers as unstable unless they persist prospectively."
+        },
+        {
+          "layer": "LAYER_2",
+          "weekdayKey": "WEDNESDAY",
+          "sampleSize": 327,
+          "evaluableCount": 327,
+          "correctCount": 142,
+          "incorrectCount": 185,
+          "flatCount": 0,
+          "accuracyPct": 43.43,
+          "wilson95LowPct": 38.16,
+          "wilson95HighPct": 48.84,
+          "inverseDirectionAccuracyPct": 56.57,
+          "excessAccuracyVsBaselinePct": -6.72,
+          "callDistribution": {
+            "bullishCount": 204,
+            "bearishCount": 123,
+            "bullishPct": 62.39,
+            "bearishPct": 37.61
+          },
+          "actualDistribution": {
+            "actualBullishCount": 163,
+            "actualBearishCount": 164,
+            "actualFlatCount": 0,
+            "actualBullishPct": 49.85,
+            "actualBearishPct": 50.15,
+            "actualFlatPct": 0,
+            "majorityDirection": "BEARISH",
+            "majorityBaselinePct": 50.15
+          },
+          "signedReturnAdr": {
+            "mean": -0.034321,
+            "median": -0.090596
+          },
+          "openToCloseReturnAdr": {
+            "mean": 0.067318,
+            "median": -0.003224
+          },
+          "multipleTestingWarning": "Exploratory subgroup result only. Many overlapping slices were examined; treat apparent winners or losers as unstable unless they persist prospectively."
+        },
+        {
+          "layer": "LAYER_2",
+          "weekdayKey": "THURSDAY",
+          "sampleSize": 325,
+          "evaluableCount": 325,
+          "correctCount": 151,
+          "incorrectCount": 174,
+          "flatCount": 0,
+          "accuracyPct": 46.46,
+          "wilson95LowPct": 41.11,
+          "wilson95HighPct": 51.89,
+          "inverseDirectionAccuracyPct": 53.54,
+          "excessAccuracyVsBaselinePct": -6.77,
+          "callDistribution": {
+            "bullishCount": 214,
+            "bearishCount": 111,
+            "bullishPct": 65.85,
+            "bearishPct": 34.15
+          },
+          "actualDistribution": {
+            "actualBullishCount": 152,
+            "actualBearishCount": 173,
+            "actualFlatCount": 0,
+            "actualBullishPct": 46.77,
+            "actualBearishPct": 53.23,
+            "actualFlatPct": 0,
+            "majorityDirection": "BEARISH",
+            "majorityBaselinePct": 53.23
+          },
+          "signedReturnAdr": {
+            "mean": 0.008977,
+            "median": -0.049277
+          },
+          "openToCloseReturnAdr": {
+            "mean": -0.038174,
+            "median": -0.049331
+          },
+          "multipleTestingWarning": "Exploratory subgroup result only. Many overlapping slices were examined; treat apparent winners or losers as unstable unless they persist prospectively."
+        },
+        {
+          "layer": "LAYER_2",
+          "weekdayKey": "FRIDAY",
+          "sampleSize": 302,
+          "evaluableCount": 302,
+          "correctCount": 146,
+          "incorrectCount": 156,
+          "flatCount": 0,
+          "accuracyPct": 48.34,
+          "wilson95LowPct": 42.76,
+          "wilson95HighPct": 53.97,
+          "inverseDirectionAccuracyPct": 51.66,
+          "excessAccuracyVsBaselinePct": -9.61,
+          "callDistribution": {
+            "bullishCount": 173,
+            "bearishCount": 129,
+            "bullishPct": 57.28,
+            "bearishPct": 42.72
+          },
+          "actualDistribution": {
+            "actualBullishCount": 175,
+            "actualBearishCount": 127,
+            "actualFlatCount": 0,
+            "actualBullishPct": 57.95,
+            "actualBearishPct": 42.05,
+            "actualFlatPct": 0,
+            "majorityDirection": "BULLISH",
+            "majorityBaselinePct": 57.95
+          },
+          "signedReturnAdr": {
+            "mean": -0.051253,
+            "median": -0.037589
+          },
+          "openToCloseReturnAdr": {
+            "mean": 0.034969,
+            "median": 0.106515
+          },
+          "multipleTestingWarning": "Exploratory subgroup result only. Many overlapping slices were examined; treat apparent winners or losers as unstable unless they persist prospectively."
+        },
+        {
+          "layer": "LAYER_2",
+          "weekdayKey": "SATURDAY",
+          "sampleSize": 76,
+          "evaluableCount": 76,
+          "correctCount": 45,
+          "incorrectCount": 31,
+          "flatCount": 0,
+          "accuracyPct": 59.21,
+          "wilson95LowPct": 47.98,
+          "wilson95HighPct": 69.56,
+          "inverseDirectionAccuracyPct": 40.79,
+          "excessAccuracyVsBaselinePct": 7.89,
+          "callDistribution": {
+            "bullishCount": 54,
+            "bearishCount": 22,
+            "bullishPct": 71.05,
+            "bearishPct": 28.95
+          },
+          "actualDistribution": {
+            "actualBullishCount": 39,
+            "actualBearishCount": 37,
+            "actualFlatCount": 0,
+            "actualBullishPct": 51.32,
+            "actualBearishPct": 48.68,
+            "actualFlatPct": 0,
+            "majorityDirection": "BULLISH",
+            "majorityBaselinePct": 51.32
+          },
+          "signedReturnAdr": {
+            "mean": 0.084969,
+            "median": 0.023523
+          },
+          "openToCloseReturnAdr": {
+            "mean": -0.027297,
+            "median": 0.014174
+          },
+          "multipleTestingWarning": "Exploratory subgroup result only. Many overlapping slices were examined; treat apparent winners or losers as unstable unless they persist prospectively."
+        }
+      ],
+      "folds": [
+        {
+          "layer": "LAYER_2",
+          "chronologicalFold": "TRAIN",
+          "sampleSize": 688,
+          "evaluableCount": 688,
+          "correctCount": 334,
+          "incorrectCount": 354,
+          "flatCount": 0,
+          "accuracyPct": 48.55,
+          "wilson95LowPct": 44.83,
+          "wilson95HighPct": 52.28,
+          "inverseDirectionAccuracyPct": 51.45,
+          "excessAccuracyVsBaselinePct": -5.23,
+          "callDistribution": {
+            "bullishCount": 456,
+            "bearishCount": 232,
+            "bullishPct": 66.28,
+            "bearishPct": 33.72
+          },
+          "actualDistribution": {
+            "actualBullishCount": 370,
+            "actualBearishCount": 318,
+            "actualFlatCount": 0,
+            "actualBullishPct": 53.78,
+            "actualBearishPct": 46.22,
+            "actualFlatPct": 0,
+            "majorityDirection": "BULLISH",
+            "majorityBaselinePct": 53.78
+          },
+          "signedReturnAdr": {
+            "mean": -0.001653,
+            "median": -0.027043
+          },
+          "openToCloseReturnAdr": {
+            "mean": 0.044507,
+            "median": 0.053825
+          },
+          "multipleTestingWarning": "Exploratory subgroup result only. Many overlapping slices were examined; treat apparent winners or losers as unstable unless they persist prospectively."
+        },
+        {
+          "layer": "LAYER_2",
+          "chronologicalFold": "VALIDATION",
+          "sampleSize": 515,
+          "evaluableCount": 515,
+          "correctCount": 226,
+          "incorrectCount": 289,
+          "flatCount": 0,
+          "accuracyPct": 43.88,
+          "wilson95LowPct": 39.66,
+          "wilson95HighPct": 48.2,
+          "inverseDirectionAccuracyPct": 56.12,
+          "excessAccuracyVsBaselinePct": -12.24,
+          "callDistribution": {
+            "bullishCount": 342,
+            "bearishCount": 173,
+            "bullishPct": 66.41,
+            "bearishPct": 33.59
+          },
+          "actualDistribution": {
+            "actualBullishCount": 289,
+            "actualBearishCount": 226,
+            "actualFlatCount": 0,
+            "actualBullishPct": 56.12,
+            "actualBearishPct": 43.88,
+            "actualFlatPct": 0,
+            "majorityDirection": "BULLISH",
+            "majorityBaselinePct": 56.12
+          },
+          "signedReturnAdr": {
+            "mean": -0.074928,
+            "median": -0.058119
+          },
+          "openToCloseReturnAdr": {
+            "mean": 0.07727,
+            "median": 0.084244
+          },
+          "multipleTestingWarning": "Exploratory subgroup result only. Many overlapping slices were examined; treat apparent winners or losers as unstable unless they persist prospectively."
+        },
+        {
+          "layer": "LAYER_2",
+          "chronologicalFold": "FINAL_TEST",
+          "sampleSize": 389,
+          "evaluableCount": 389,
+          "correctCount": 204,
+          "incorrectCount": 185,
+          "flatCount": 0,
+          "accuracyPct": 52.44,
+          "wilson95LowPct": 47.48,
+          "wilson95HighPct": 57.36,
+          "inverseDirectionAccuracyPct": 47.56,
+          "excessAccuracyVsBaselinePct": 1.8,
+          "callDistribution": {
+            "bullishCount": 227,
+            "bearishCount": 162,
+            "bullishPct": 58.35,
+            "bearishPct": 41.65
+          },
+          "actualDistribution": {
+            "actualBullishCount": 192,
+            "actualBearishCount": 197,
+            "actualFlatCount": 0,
+            "actualBullishPct": 49.36,
+            "actualBearishPct": 50.64,
+            "actualFlatPct": 0,
+            "majorityDirection": "BEARISH",
+            "majorityBaselinePct": 50.64
+          },
+          "signedReturnAdr": {
+            "mean": 0.049237,
+            "median": 0.040794
+          },
+          "openToCloseReturnAdr": {
+            "mean": -0.015823,
+            "median": -0.011038
+          },
+          "multipleTestingWarning": "Exploratory subgroup result only. Many overlapping slices were examined; treat apparent winners or losers as unstable unless they persist prospectively."
+        }
+      ]
+    }
+  },
+  "layer2VersusLayer1": {
+    "matchedPredictionCount": 1592,
+    "improvedCount": 0,
+    "worsenedCount": 0,
+    "bothCorrectCount": 764,
+    "bothIncorrectCount": 828,
+    "netImprovementPct": 0,
+    "byPair": [
+      {
+        "pairCode": "BTC_USD",
+        "sampleSize": 387,
+        "improvedCount": 0,
+        "worsenedCount": 0,
+        "sameOutcomeCount": 387,
+        "netImprovementPct": 0,
+        "multipleTestingWarning": "Exploratory subgroup result only. Many overlapping slices were examined; treat apparent winners or losers as unstable unless they persist prospectively."
+      },
+      {
+        "pairCode": "EUR_USD",
+        "sampleSize": 385,
+        "improvedCount": 0,
+        "worsenedCount": 0,
+        "sameOutcomeCount": 385,
+        "netImprovementPct": 0,
+        "multipleTestingWarning": "Exploratory subgroup result only. Many overlapping slices were examined; treat apparent winners or losers as unstable unless they persist prospectively."
+      },
+      {
+        "pairCode": "NQ_USD",
+        "sampleSize": 372,
+        "improvedCount": 0,
+        "worsenedCount": 0,
+        "sameOutcomeCount": 372,
+        "netImprovementPct": 0,
+        "multipleTestingWarning": "Exploratory subgroup result only. Many overlapping slices were examined; treat apparent winners or losers as unstable unless they persist prospectively."
+      },
+      {
+        "pairCode": "XAU_USD",
+        "sampleSize": 448,
+        "improvedCount": 0,
+        "worsenedCount": 0,
+        "sameOutcomeCount": 448,
+        "netImprovementPct": 0,
+        "multipleTestingWarning": "Exploratory subgroup result only. Many overlapping slices were examined; treat apparent winners or losers as unstable unless they persist prospectively."
+      }
+    ],
+    "multipleTestingWarning": "Exploratory subgroup result only. Many overlapping slices were examined; treat apparent winners or losers as unstable unless they persist prospectively."
+  },
+  "classification": "BEARISH_CALL_FAILURE_DOMINATES",
+  "findings": {
+    "broadSignalAssessment": {
+      "layer1ExcessVsBaselinePct": -5.54,
+      "layer2ExcessVsBaselinePct": -5.46,
+      "layer2NetImprovementVsMatchedLayer1Pct": 0
+    },
+    "bullishVsBearish": {
+      "layer1BullishAccuracyPct": 50.69,
+      "layer1BearishAccuracyPct": 42.96,
+      "layer2BullishAccuracyPct": 51.12,
+      "layer2BearishAccuracyPct": 42.33
+    },
+    "confidenceMonotonicity": {
+      "layer1AccuracyMonotonicNonDecreasing": false,
+      "layer2AccuracyMonotonicNonDecreasing": false,
+      "layer1SignedReturnMonotonicNonDecreasing": false,
+      "layer2SignedReturnMonotonicNonDecreasing": false
+    },
+    "weakestEntities": [
+      {
+        "code": "EUR_USD",
+        "sampleSize": 385,
+        "accuracyPct": 44.68,
+        "excessAccuracyVsBaselinePct": -6.49,
+        "multipleTestingWarning": "Exploratory subgroup result only. Many overlapping slices were examined; treat apparent winners or losers as unstable unless they persist prospectively."
+      },
+      {
+        "code": "BTC_USD",
+        "sampleSize": 387,
+        "accuracyPct": 45.99,
+        "excessAccuracyVsBaselinePct": -4.91,
+        "multipleTestingWarning": "Exploratory subgroup result only. Many overlapping slices were examined; treat apparent winners or losers as unstable unless they persist prospectively."
+      },
+      {
+        "code": "EUR",
+        "sampleSize": 570,
+        "accuracyPct": 46.14,
+        "excessAccuracyVsBaselinePct": -4.04,
+        "multipleTestingWarning": "Exploratory subgroup result only. Many overlapping slices were examined; treat apparent winners or losers as unstable unless they persist prospectively."
+      },
+      {
+        "code": "GOLD",
+        "sampleSize": 570,
+        "accuracyPct": 46.32,
+        "excessAccuracyVsBaselinePct": -10.52,
+        "multipleTestingWarning": "Exploratory subgroup result only. Many overlapping slices were examined; treat apparent winners or losers as unstable unless they persist prospectively."
+      }
+    ]
+  }
+}

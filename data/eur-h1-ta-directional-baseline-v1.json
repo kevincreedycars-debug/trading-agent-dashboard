@@ -1,0 +1,2275 @@
+{
+  "meta": {
+    "generatedAt": "2026-08-23T15:00:26.200Z",
+    "version": "eur-h1-ta-directional-baseline-v1",
+    "researchOnly": true,
+    "dashboardModelUpdated": false,
+    "modelStatus": "FIXED_BASELINE_NOT_PRODUCTION_READY",
+    "modelDescription": "Fixed L2-regularised logistic regression on completed EUR/USD H1 technical features. No post-final-test tuning is permitted."
+  },
+  "contract": {
+    "inputDatasetVersion": "l2l-session-close-dataset-v1",
+    "inputPilotVersion": "l2l-session-close-eur-h1-ta-v1",
+    "folds": [
+      {
+        "key": "TRAIN",
+        "start": "2024-01-01",
+        "end": "2024-12-31"
+      },
+      {
+        "key": "VALIDATION",
+        "start": "2025-01-01",
+        "end": "2025-09-30"
+      },
+      {
+        "key": "FINAL_TEST",
+        "start": "2025-10-01",
+        "end": "2026-04-30"
+      }
+    ]
+  },
+  "featureNames": [
+    "eurusd_h1_return_1h_pct",
+    "eurusd_h1_return_4h_pct",
+    "eurusd_h1_return_12h_pct",
+    "eurusd_h1_return_24h_pct",
+    "eurusd_h1_range_24h_pct",
+    "eurusd_h1_close_vs_24h_mean_pct"
+  ],
+  "training": {
+    "recordCount": 205,
+    "model": {
+      "weights": [
+        0.11017498425173985,
+        -0.0797363290550684,
+        -0.24622838413218692,
+        0.13460699716791624,
+        -0.203140560164851,
+        -0.03176834823044995,
+        0.1239445546453009
+      ],
+      "standardizer": {
+        "means": [
+          -0.0024052975609756095,
+          0.005795375609756096,
+          -0.009377146341463414,
+          -0.025118395121951215,
+          0.5821556097560976,
+          -0.013105848780487801
+        ],
+        "scales": [
+          0.06288091135180379,
+          0.14238654540017293,
+          0.31078343018609,
+          0.3716879442611083,
+          0.2753709287968023,
+          0.23483969027282348
+        ]
+      },
+      "names": [
+        "eurusd_h1_return_1h_pct",
+        "eurusd_h1_return_4h_pct",
+        "eurusd_h1_return_12h_pct",
+        "eurusd_h1_return_24h_pct",
+        "eurusd_h1_range_24h_pct",
+        "eurusd_h1_close_vs_24h_mean_pct"
+      ],
+      "trainingOptions": {
+        "iterations": 1600,
+        "learningRate": 0.08,
+        "l2": 0.03
+      }
+    }
+  },
+  "validation": {
+    "count": 153,
+    "correctCount": 86,
+    "accuracyPct": 56.21,
+    "alwaysBullishBaselinePct": 53.59,
+    "deltaVsAlwaysBullishPct": 2.61,
+    "predictions": [
+      {
+        "recordId": "EUR-H1-TA|2025-01-02",
+        "sessionDate": "2025-01-02",
+        "actual": "BEARISH",
+        "prediction": "BEARISH",
+        "bullishProbability": 0.474503,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-01-06",
+        "sessionDate": "2025-01-06",
+        "actual": "BULLISH",
+        "prediction": "BEARISH",
+        "bullishProbability": 0.470109,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-01-08",
+        "sessionDate": "2025-01-08",
+        "actual": "BEARISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.568827,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-01-09",
+        "sessionDate": "2025-01-09",
+        "actual": "BEARISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.507709,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-01-10",
+        "sessionDate": "2025-01-10",
+        "actual": "BEARISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.515384,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-01-13",
+        "sessionDate": "2025-01-13",
+        "actual": "BULLISH",
+        "prediction": "BEARISH",
+        "bullishProbability": 0.490903,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-01-15",
+        "sessionDate": "2025-01-15",
+        "actual": "BEARISH",
+        "prediction": "BEARISH",
+        "bullishProbability": 0.441854,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-01-16",
+        "sessionDate": "2025-01-16",
+        "actual": "BULLISH",
+        "prediction": "BEARISH",
+        "bullishProbability": 0.446963,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-01-17",
+        "sessionDate": "2025-01-17",
+        "actual": "BEARISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.553747,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-01-20",
+        "sessionDate": "2025-01-20",
+        "actual": "BULLISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.563261,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-01-22",
+        "sessionDate": "2025-01-22",
+        "actual": "BEARISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.617506,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-01-23",
+        "sessionDate": "2025-01-23",
+        "actual": "BULLISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.568811,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-01-24",
+        "sessionDate": "2025-01-24",
+        "actual": "BULLISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.57873,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-01-27",
+        "sessionDate": "2025-01-27",
+        "actual": "BULLISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.505721,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-01-29",
+        "sessionDate": "2025-01-29",
+        "actual": "BEARISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.584803,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-01-30",
+        "sessionDate": "2025-01-30",
+        "actual": "BEARISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.567885,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-01-31",
+        "sessionDate": "2025-01-31",
+        "actual": "BEARISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.608134,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-02-03",
+        "sessionDate": "2025-02-03",
+        "actual": "BULLISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.763262,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-02-05",
+        "sessionDate": "2025-02-05",
+        "actual": "BULLISH",
+        "prediction": "BEARISH",
+        "bullishProbability": 0.466301,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-02-06",
+        "sessionDate": "2025-02-06",
+        "actual": "BEARISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.569479,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-02-07",
+        "sessionDate": "2025-02-07",
+        "actual": "BEARISH",
+        "prediction": "BEARISH",
+        "bullishProbability": 0.48401,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-02-10",
+        "sessionDate": "2025-02-10",
+        "actual": "BULLISH",
+        "prediction": "BEARISH",
+        "bullishProbability": 0.45161,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-02-12",
+        "sessionDate": "2025-02-12",
+        "actual": "BULLISH",
+        "prediction": "BEARISH",
+        "bullishProbability": 0.461542,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-02-13",
+        "sessionDate": "2025-02-13",
+        "actual": "BULLISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.521586,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-02-14",
+        "sessionDate": "2025-02-14",
+        "actual": "BULLISH",
+        "prediction": "BEARISH",
+        "bullishProbability": 0.329612,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-02-17",
+        "sessionDate": "2025-02-17",
+        "actual": "BEARISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.58348,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-02-19",
+        "sessionDate": "2025-02-19",
+        "actual": "BEARISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.580401,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-02-20",
+        "sessionDate": "2025-02-20",
+        "actual": "BULLISH",
+        "prediction": "BEARISH",
+        "bullishProbability": 0.443309,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-02-21",
+        "sessionDate": "2025-02-21",
+        "actual": "BEARISH",
+        "prediction": "BEARISH",
+        "bullishProbability": 0.444619,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-02-24",
+        "sessionDate": "2025-02-24",
+        "actual": "BEARISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.561712,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-02-26",
+        "sessionDate": "2025-02-26",
+        "actual": "BEARISH",
+        "prediction": "BEARISH",
+        "bullishProbability": 0.456458,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-02-27",
+        "sessionDate": "2025-02-27",
+        "actual": "BEARISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.657977,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-02-28",
+        "sessionDate": "2025-02-28",
+        "actual": "BEARISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.518736,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-03-03",
+        "sessionDate": "2025-03-03",
+        "actual": "BULLISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.603234,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-03-05",
+        "sessionDate": "2025-03-05",
+        "actual": "BULLISH",
+        "prediction": "BEARISH",
+        "bullishProbability": 0.242402,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-03-06",
+        "sessionDate": "2025-03-06",
+        "actual": "BEARISH",
+        "prediction": "BEARISH",
+        "bullishProbability": 0.375982,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-03-07",
+        "sessionDate": "2025-03-07",
+        "actual": "BULLISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.656652,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-03-10",
+        "sessionDate": "2025-03-10",
+        "actual": "BULLISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.504673,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-03-12",
+        "sessionDate": "2025-03-12",
+        "actual": "BEARISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.534875,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-03-13",
+        "sessionDate": "2025-03-13",
+        "actual": "BEARISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.653199,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-03-14",
+        "sessionDate": "2025-03-14",
+        "actual": "BULLISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.586132,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-03-17",
+        "sessionDate": "2025-03-17",
+        "actual": "BULLISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.562259,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-03-19",
+        "sessionDate": "2025-03-19",
+        "actual": "BEARISH",
+        "prediction": "BEARISH",
+        "bullishProbability": 0.448797,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-03-20",
+        "sessionDate": "2025-03-20",
+        "actual": "BEARISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.506842,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-03-21",
+        "sessionDate": "2025-03-21",
+        "actual": "BEARISH",
+        "prediction": "BEARISH",
+        "bullishProbability": 0.486225,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-03-24",
+        "sessionDate": "2025-03-24",
+        "actual": "BEARISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.550183,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-03-26",
+        "sessionDate": "2025-03-26",
+        "actual": "BEARISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.577491,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-03-27",
+        "sessionDate": "2025-03-27",
+        "actual": "BULLISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.63489,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-03-28",
+        "sessionDate": "2025-03-28",
+        "actual": "BULLISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.530597,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-03-31",
+        "sessionDate": "2025-03-31",
+        "actual": "BEARISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.527082,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-04-02",
+        "sessionDate": "2025-04-02",
+        "actual": "BULLISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.558251,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-04-03",
+        "sessionDate": "2025-04-03",
+        "actual": "BULLISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.627239,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-04-04",
+        "sessionDate": "2025-04-04",
+        "actual": "BEARISH",
+        "prediction": "BEARISH",
+        "bullishProbability": 0.466089,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-04-07",
+        "sessionDate": "2025-04-07",
+        "actual": "BULLISH",
+        "prediction": "BEARISH",
+        "bullishProbability": 0.469849,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-04-09",
+        "sessionDate": "2025-04-09",
+        "actual": "BEARISH",
+        "prediction": "BEARISH",
+        "bullishProbability": 0.35076,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-04-10",
+        "sessionDate": "2025-04-10",
+        "actual": "BULLISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.790009,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-04-11",
+        "sessionDate": "2025-04-11",
+        "actual": "BULLISH",
+        "prediction": "BEARISH",
+        "bullishProbability": 0.449991,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-04-14",
+        "sessionDate": "2025-04-14",
+        "actual": "BULLISH",
+        "prediction": "BEARISH",
+        "bullishProbability": 0.12147,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-04-16",
+        "sessionDate": "2025-04-16",
+        "actual": "BULLISH",
+        "prediction": "BEARISH",
+        "bullishProbability": 0.479705,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-04-17",
+        "sessionDate": "2025-04-17",
+        "actual": "BEARISH",
+        "prediction": "BEARISH",
+        "bullishProbability": 0.409182,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-04-18",
+        "sessionDate": "2025-04-18",
+        "actual": "BULLISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.50581,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-04-21",
+        "sessionDate": "2025-04-21",
+        "actual": "BULLISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.539923,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-04-23",
+        "sessionDate": "2025-04-23",
+        "actual": "BEARISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.642105,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-04-24",
+        "sessionDate": "2025-04-24",
+        "actual": "BULLISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.582804,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-04-25",
+        "sessionDate": "2025-04-25",
+        "actual": "BEARISH",
+        "prediction": "BEARISH",
+        "bullishProbability": 0.383105,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-04-28",
+        "sessionDate": "2025-04-28",
+        "actual": "BULLISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.581896,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-04-30",
+        "sessionDate": "2025-04-30",
+        "actual": "BEARISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.600005,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-05-01",
+        "sessionDate": "2025-05-01",
+        "actual": "BEARISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.61764,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-05-02",
+        "sessionDate": "2025-05-02",
+        "actual": "BULLISH",
+        "prediction": "BEARISH",
+        "bullishProbability": 0.489178,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-05-05",
+        "sessionDate": "2025-05-05",
+        "actual": "BULLISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.541943,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-05-07",
+        "sessionDate": "2025-05-07",
+        "actual": "BEARISH",
+        "prediction": "BEARISH",
+        "bullishProbability": 0.420327,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-05-08",
+        "sessionDate": "2025-05-08",
+        "actual": "BEARISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.713841,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-05-09",
+        "sessionDate": "2025-05-09",
+        "actual": "BULLISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.549701,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-05-12",
+        "sessionDate": "2025-05-12",
+        "actual": "BEARISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.557212,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-05-14",
+        "sessionDate": "2025-05-14",
+        "actual": "BEARISH",
+        "prediction": "BEARISH",
+        "bullishProbability": 0.475764,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-05-15",
+        "sessionDate": "2025-05-15",
+        "actual": "BULLISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.633647,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-05-16",
+        "sessionDate": "2025-05-16",
+        "actual": "BEARISH",
+        "prediction": "BEARISH",
+        "bullishProbability": 0.484583,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-05-19",
+        "sessionDate": "2025-05-19",
+        "actual": "BULLISH",
+        "prediction": "BEARISH",
+        "bullishProbability": 0.3697,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-05-21",
+        "sessionDate": "2025-05-21",
+        "actual": "BULLISH",
+        "prediction": "BEARISH",
+        "bullishProbability": 0.392713,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-05-22",
+        "sessionDate": "2025-05-22",
+        "actual": "BEARISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.599418,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-05-23",
+        "sessionDate": "2025-05-23",
+        "actual": "BULLISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.50072,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-05-26",
+        "sessionDate": "2025-05-26",
+        "actual": "BULLISH",
+        "prediction": "BEARISH",
+        "bullishProbability": 0.454094,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-05-28",
+        "sessionDate": "2025-05-28",
+        "actual": "BEARISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.538516,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-05-29",
+        "sessionDate": "2025-05-29",
+        "actual": "BULLISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.507966,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-05-30",
+        "sessionDate": "2025-05-30",
+        "actual": "BEARISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.608172,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-06-02",
+        "sessionDate": "2025-06-02",
+        "actual": "BULLISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.60275,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-06-04",
+        "sessionDate": "2025-06-04",
+        "actual": "BULLISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.552132,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-06-05",
+        "sessionDate": "2025-06-05",
+        "actual": "BULLISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.586287,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-06-06",
+        "sessionDate": "2025-06-06",
+        "actual": "BEARISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.545816,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-06-09",
+        "sessionDate": "2025-06-09",
+        "actual": "BULLISH",
+        "prediction": "BEARISH",
+        "bullishProbability": 0.499839,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-06-11",
+        "sessionDate": "2025-06-11",
+        "actual": "BULLISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.53752,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-06-12",
+        "sessionDate": "2025-06-12",
+        "actual": "BULLISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.590993,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-06-13",
+        "sessionDate": "2025-06-13",
+        "actual": "BEARISH",
+        "prediction": "BEARISH",
+        "bullishProbability": 0.484684,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-06-16",
+        "sessionDate": "2025-06-16",
+        "actual": "BULLISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.592184,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-06-18",
+        "sessionDate": "2025-06-18",
+        "actual": "BEARISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.634275,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-06-19",
+        "sessionDate": "2025-06-19",
+        "actual": "BULLISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.647336,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-06-20",
+        "sessionDate": "2025-06-20",
+        "actual": "BULLISH",
+        "prediction": "BEARISH",
+        "bullishProbability": 0.390262,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-06-23",
+        "sessionDate": "2025-06-23",
+        "actual": "BULLISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.538845,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-06-26",
+        "sessionDate": "2025-06-26",
+        "actual": "BULLISH",
+        "prediction": "BEARISH",
+        "bullishProbability": 0.440145,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-06-27",
+        "sessionDate": "2025-06-27",
+        "actual": "BULLISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.558382,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-06-30",
+        "sessionDate": "2025-06-30",
+        "actual": "BULLISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.510724,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-07-02",
+        "sessionDate": "2025-07-02",
+        "actual": "BEARISH",
+        "prediction": "BEARISH",
+        "bullishProbability": 0.438286,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-07-03",
+        "sessionDate": "2025-07-03",
+        "actual": "BEARISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.505128,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-07-04",
+        "sessionDate": "2025-07-04",
+        "actual": "BULLISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.534925,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-07-07",
+        "sessionDate": "2025-07-07",
+        "actual": "BEARISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.503909,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-07-09",
+        "sessionDate": "2025-07-09",
+        "actual": "BULLISH",
+        "prediction": "BEARISH",
+        "bullishProbability": 0.42099,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-07-10",
+        "sessionDate": "2025-07-10",
+        "actual": "BEARISH",
+        "prediction": "BEARISH",
+        "bullishProbability": 0.495273,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-07-11",
+        "sessionDate": "2025-07-11",
+        "actual": "BEARISH",
+        "prediction": "BEARISH",
+        "bullishProbability": 0.451983,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-07-14",
+        "sessionDate": "2025-07-14",
+        "actual": "BEARISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.549488,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-07-16",
+        "sessionDate": "2025-07-16",
+        "actual": "BULLISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.522389,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-07-17",
+        "sessionDate": "2025-07-17",
+        "actual": "BEARISH",
+        "prediction": "BEARISH",
+        "bullishProbability": 0.458257,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-07-18",
+        "sessionDate": "2025-07-18",
+        "actual": "BULLISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.52709,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-07-21",
+        "sessionDate": "2025-07-21",
+        "actual": "BULLISH",
+        "prediction": "BEARISH",
+        "bullishProbability": 0.482437,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-07-23",
+        "sessionDate": "2025-07-23",
+        "actual": "BULLISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.541285,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-07-24",
+        "sessionDate": "2025-07-24",
+        "actual": "BEARISH",
+        "prediction": "BEARISH",
+        "bullishProbability": 0.466186,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-07-25",
+        "sessionDate": "2025-07-25",
+        "actual": "BULLISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.580964,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-07-28",
+        "sessionDate": "2025-07-28",
+        "actual": "BEARISH",
+        "prediction": "BEARISH",
+        "bullishProbability": 0.499679,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-07-30",
+        "sessionDate": "2025-07-30",
+        "actual": "BEARISH",
+        "prediction": "BEARISH",
+        "bullishProbability": 0.492567,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-07-31",
+        "sessionDate": "2025-07-31",
+        "actual": "BULLISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.588424,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-08-01",
+        "sessionDate": "2025-08-01",
+        "actual": "BULLISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.593869,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-08-04",
+        "sessionDate": "2025-08-04",
+        "actual": "BEARISH",
+        "prediction": "BEARISH",
+        "bullishProbability": 0.371123,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-08-06",
+        "sessionDate": "2025-08-06",
+        "actual": "BULLISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.590363,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-08-07",
+        "sessionDate": "2025-08-07",
+        "actual": "BULLISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.531969,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-08-08",
+        "sessionDate": "2025-08-08",
+        "actual": "BEARISH",
+        "prediction": "BEARISH",
+        "bullishProbability": 0.351742,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-08-11",
+        "sessionDate": "2025-08-11",
+        "actual": "BEARISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.605769,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-08-13",
+        "sessionDate": "2025-08-13",
+        "actual": "BULLISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.51311,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-08-14",
+        "sessionDate": "2025-08-14",
+        "actual": "BEARISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.551115,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-08-15",
+        "sessionDate": "2025-08-15",
+        "actual": "BULLISH",
+        "prediction": "BEARISH",
+        "bullishProbability": 0.479743,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-08-18",
+        "sessionDate": "2025-08-18",
+        "actual": "BEARISH",
+        "prediction": "BEARISH",
+        "bullishProbability": 0.495245,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-08-20",
+        "sessionDate": "2025-08-20",
+        "actual": "BULLISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.547711,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-08-21",
+        "sessionDate": "2025-08-21",
+        "actual": "BEARISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.52785,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-08-22",
+        "sessionDate": "2025-08-22",
+        "actual": "BULLISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.510318,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-08-25",
+        "sessionDate": "2025-08-25",
+        "actual": "BEARISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.575842,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-08-27",
+        "sessionDate": "2025-08-27",
+        "actual": "BEARISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.578367,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-08-28",
+        "sessionDate": "2025-08-28",
+        "actual": "BULLISH",
+        "prediction": "BEARISH",
+        "bullishProbability": 0.487457,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-08-29",
+        "sessionDate": "2025-08-29",
+        "actual": "BULLISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.514503,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-09-01",
+        "sessionDate": "2025-09-01",
+        "actual": "BULLISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.63497,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-09-03",
+        "sessionDate": "2025-09-03",
+        "actual": "BULLISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.58449,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-09-04",
+        "sessionDate": "2025-09-04",
+        "actual": "BEARISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.611139,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-09-05",
+        "sessionDate": "2025-09-05",
+        "actual": "BULLISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.512736,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-09-08",
+        "sessionDate": "2025-09-08",
+        "actual": "BULLISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.574599,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-09-10",
+        "sessionDate": "2025-09-10",
+        "actual": "BEARISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.557215,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-09-11",
+        "sessionDate": "2025-09-11",
+        "actual": "BULLISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.594555,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-09-12",
+        "sessionDate": "2025-09-12",
+        "actual": "BULLISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.533534,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-09-15",
+        "sessionDate": "2025-09-15",
+        "actual": "BULLISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.530461,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-09-17",
+        "sessionDate": "2025-09-17",
+        "actual": "BEARISH",
+        "prediction": "BEARISH",
+        "bullishProbability": 0.499668,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-09-18",
+        "sessionDate": "2025-09-18",
+        "actual": "BEARISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.615138,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-09-19",
+        "sessionDate": "2025-09-19",
+        "actual": "BEARISH",
+        "prediction": "BEARISH",
+        "bullishProbability": 0.488965,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-09-22",
+        "sessionDate": "2025-09-22",
+        "actual": "BULLISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.565771,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-09-24",
+        "sessionDate": "2025-09-24",
+        "actual": "BEARISH",
+        "prediction": "BEARISH",
+        "bullishProbability": 0.476361,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-09-25",
+        "sessionDate": "2025-09-25",
+        "actual": "BEARISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.537345,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-09-26",
+        "sessionDate": "2025-09-26",
+        "actual": "BULLISH",
+        "prediction": "BEARISH",
+        "bullishProbability": 0.495453,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-09-29",
+        "sessionDate": "2025-09-29",
+        "actual": "BULLISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.520812,
+        "correct": true
+      }
+    ]
+  },
+  "finalTest": {
+    "count": 118,
+    "correctCount": 50,
+    "accuracyPct": 42.37,
+    "alwaysBullishBaselinePct": 44.92,
+    "deltaVsAlwaysBullishPct": -2.54,
+    "predictions": [
+      {
+        "recordId": "EUR-H1-TA|2025-10-01",
+        "sessionDate": "2025-10-01",
+        "actual": "BEARISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.503207,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-10-02",
+        "sessionDate": "2025-10-02",
+        "actual": "BEARISH",
+        "prediction": "BEARISH",
+        "bullishProbability": 0.496548,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-10-03",
+        "sessionDate": "2025-10-03",
+        "actual": "BULLISH",
+        "prediction": "BEARISH",
+        "bullishProbability": 0.420563,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-10-06",
+        "sessionDate": "2025-10-06",
+        "actual": "BEARISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.502084,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-10-08",
+        "sessionDate": "2025-10-08",
+        "actual": "BEARISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.638459,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-10-09",
+        "sessionDate": "2025-10-09",
+        "actual": "BEARISH",
+        "prediction": "BEARISH",
+        "bullishProbability": 0.449571,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-10-10",
+        "sessionDate": "2025-10-10",
+        "actual": "BULLISH",
+        "prediction": "BEARISH",
+        "bullishProbability": 0.454823,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-10-13",
+        "sessionDate": "2025-10-13",
+        "actual": "BEARISH",
+        "prediction": "BEARISH",
+        "bullishProbability": 0.459139,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-10-15",
+        "sessionDate": "2025-10-15",
+        "actual": "BULLISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.570892,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-10-16",
+        "sessionDate": "2025-10-16",
+        "actual": "BULLISH",
+        "prediction": "BEARISH",
+        "bullishProbability": 0.461457,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-10-17",
+        "sessionDate": "2025-10-17",
+        "actual": "BEARISH",
+        "prediction": "BEARISH",
+        "bullishProbability": 0.455723,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-10-20",
+        "sessionDate": "2025-10-20",
+        "actual": "BEARISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.607323,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-10-22",
+        "sessionDate": "2025-10-22",
+        "actual": "BULLISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.592204,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-10-23",
+        "sessionDate": "2025-10-23",
+        "actual": "BULLISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.563927,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-10-24",
+        "sessionDate": "2025-10-24",
+        "actual": "BULLISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.539455,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-10-27",
+        "sessionDate": "2025-10-27",
+        "actual": "BULLISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.56409,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-10-29",
+        "sessionDate": "2025-10-29",
+        "actual": "BEARISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.572515,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-10-30",
+        "sessionDate": "2025-10-30",
+        "actual": "BEARISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.718089,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-10-31",
+        "sessionDate": "2025-10-31",
+        "actual": "BEARISH",
+        "prediction": "BEARISH",
+        "bullishProbability": 0.483832,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-11-03",
+        "sessionDate": "2025-11-03",
+        "actual": "BEARISH",
+        "prediction": "BEARISH",
+        "bullishProbability": 0.458456,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-11-05",
+        "sessionDate": "2025-11-05",
+        "actual": "BULLISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.554341,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-11-06",
+        "sessionDate": "2025-11-06",
+        "actual": "BULLISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.506685,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-11-07",
+        "sessionDate": "2025-11-07",
+        "actual": "BULLISH",
+        "prediction": "BEARISH",
+        "bullishProbability": 0.472,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-11-10",
+        "sessionDate": "2025-11-10",
+        "actual": "BEARISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.595592,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-11-12",
+        "sessionDate": "2025-11-12",
+        "actual": "BULLISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.588017,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-11-13",
+        "sessionDate": "2025-11-13",
+        "actual": "BULLISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.547912,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-11-14",
+        "sessionDate": "2025-11-14",
+        "actual": "BEARISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.569774,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-11-17",
+        "sessionDate": "2025-11-17",
+        "actual": "BEARISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.507873,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-11-19",
+        "sessionDate": "2025-11-19",
+        "actual": "BEARISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.531877,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-11-20",
+        "sessionDate": "2025-11-20",
+        "actual": "BEARISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.534834,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-11-21",
+        "sessionDate": "2025-11-21",
+        "actual": "BEARISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.598044,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-11-24",
+        "sessionDate": "2025-11-24",
+        "actual": "BULLISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.51528,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-11-26",
+        "sessionDate": "2025-11-26",
+        "actual": "BULLISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.544561,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-11-27",
+        "sessionDate": "2025-11-27",
+        "actual": "BULLISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.519031,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-11-28",
+        "sessionDate": "2025-11-28",
+        "actual": "BULLISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.554511,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-12-01",
+        "sessionDate": "2025-12-01",
+        "actual": "BULLISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.59141,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-12-03",
+        "sessionDate": "2025-12-03",
+        "actual": "BULLISH",
+        "prediction": "BEARISH",
+        "bullishProbability": 0.42893,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-12-04",
+        "sessionDate": "2025-12-04",
+        "actual": "BEARISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.517631,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-12-05",
+        "sessionDate": "2025-12-05",
+        "actual": "BEARISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.583761,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-12-08",
+        "sessionDate": "2025-12-08",
+        "actual": "BEARISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.521741,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-12-10",
+        "sessionDate": "2025-12-10",
+        "actual": "BULLISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.564538,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-12-11",
+        "sessionDate": "2025-12-11",
+        "actual": "BULLISH",
+        "prediction": "BEARISH",
+        "bullishProbability": 0.344311,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-12-12",
+        "sessionDate": "2025-12-12",
+        "actual": "BULLISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.593588,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-12-15",
+        "sessionDate": "2025-12-15",
+        "actual": "BULLISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.571982,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-12-17",
+        "sessionDate": "2025-12-17",
+        "actual": "BEARISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.616648,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-12-18",
+        "sessionDate": "2025-12-18",
+        "actual": "BEARISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.606338,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-12-19",
+        "sessionDate": "2025-12-19",
+        "actual": "BEARISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.56104,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-12-22",
+        "sessionDate": "2025-12-22",
+        "actual": "BULLISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.576499,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-12-24",
+        "sessionDate": "2025-12-24",
+        "actual": "BEARISH",
+        "prediction": "BEARISH",
+        "bullishProbability": 0.461963,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-12-26",
+        "sessionDate": "2025-12-26",
+        "actual": "BEARISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.527267,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2025-12-31",
+        "sessionDate": "2025-12-31",
+        "actual": "BEARISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.603269,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2026-01-02",
+        "sessionDate": "2026-01-02",
+        "actual": "BEARISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.533988,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2026-01-07",
+        "sessionDate": "2026-01-07",
+        "actual": "BEARISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.517806,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2026-01-08",
+        "sessionDate": "2026-01-08",
+        "actual": "BEARISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.576375,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2026-01-09",
+        "sessionDate": "2026-01-09",
+        "actual": "BEARISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.5367,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2026-01-12",
+        "sessionDate": "2026-01-12",
+        "actual": "BULLISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.522458,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2026-01-14",
+        "sessionDate": "2026-01-14",
+        "actual": "BULLISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.528868,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2026-01-15",
+        "sessionDate": "2026-01-15",
+        "actual": "BEARISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.555644,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2026-01-16",
+        "sessionDate": "2026-01-16",
+        "actual": "BEARISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.555339,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2026-01-19",
+        "sessionDate": "2026-01-19",
+        "actual": "BULLISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.518733,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2026-01-21",
+        "sessionDate": "2026-01-21",
+        "actual": "BEARISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.508793,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2026-01-22",
+        "sessionDate": "2026-01-22",
+        "actual": "BULLISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.585263,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2026-01-23",
+        "sessionDate": "2026-01-23",
+        "actual": "BULLISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.506171,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2026-01-26",
+        "sessionDate": "2026-01-26",
+        "actual": "BULLISH",
+        "prediction": "BEARISH",
+        "bullishProbability": 0.458498,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2026-01-28",
+        "sessionDate": "2026-01-28",
+        "actual": "BEARISH",
+        "prediction": "BEARISH",
+        "bullishProbability": 0.297955,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2026-01-29",
+        "sessionDate": "2026-01-29",
+        "actual": "BULLISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.500423,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2026-01-30",
+        "sessionDate": "2026-01-30",
+        "actual": "BEARISH",
+        "prediction": "BEARISH",
+        "bullishProbability": 0.386346,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2026-02-02",
+        "sessionDate": "2026-02-02",
+        "actual": "BEARISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.615359,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2026-02-04",
+        "sessionDate": "2026-02-04",
+        "actual": "BEARISH",
+        "prediction": "BEARISH",
+        "bullishProbability": 0.491833,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2026-02-05",
+        "sessionDate": "2026-02-05",
+        "actual": "BEARISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.526922,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2026-02-06",
+        "sessionDate": "2026-02-06",
+        "actual": "BULLISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.632102,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2026-02-09",
+        "sessionDate": "2026-02-09",
+        "actual": "BULLISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.547202,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2026-02-11",
+        "sessionDate": "2026-02-11",
+        "actual": "BEARISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.561686,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2026-02-12",
+        "sessionDate": "2026-02-12",
+        "actual": "BEARISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.547715,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2026-02-13",
+        "sessionDate": "2026-02-13",
+        "actual": "BEARISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.526167,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2026-02-16",
+        "sessionDate": "2026-02-16",
+        "actual": "BEARISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.592363,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2026-02-18",
+        "sessionDate": "2026-02-18",
+        "actual": "BEARISH",
+        "prediction": "BEARISH",
+        "bullishProbability": 0.47681,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2026-02-19",
+        "sessionDate": "2026-02-19",
+        "actual": "BEARISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.612844,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2026-02-20",
+        "sessionDate": "2026-02-20",
+        "actual": "BULLISH",
+        "prediction": "BEARISH",
+        "bullishProbability": 0.462308,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2026-02-23",
+        "sessionDate": "2026-02-23",
+        "actual": "BEARISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.552412,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2026-02-25",
+        "sessionDate": "2026-02-25",
+        "actual": "BULLISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.595219,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2026-02-26",
+        "sessionDate": "2026-02-26",
+        "actual": "BEARISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.522102,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2026-02-27",
+        "sessionDate": "2026-02-27",
+        "actual": "BULLISH",
+        "prediction": "BEARISH",
+        "bullishProbability": 0.482849,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2026-03-02",
+        "sessionDate": "2026-03-02",
+        "actual": "BEARISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.541185,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2026-03-04",
+        "sessionDate": "2026-03-04",
+        "actual": "BULLISH",
+        "prediction": "BEARISH",
+        "bullishProbability": 0.490128,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2026-03-05",
+        "sessionDate": "2026-03-05",
+        "actual": "BEARISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.549047,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2026-03-06",
+        "sessionDate": "2026-03-06",
+        "actual": "BULLISH",
+        "prediction": "BEARISH",
+        "bullishProbability": 0.402946,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2026-03-09",
+        "sessionDate": "2026-03-09",
+        "actual": "BULLISH",
+        "prediction": "BEARISH",
+        "bullishProbability": 0.470711,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2026-03-11",
+        "sessionDate": "2026-03-11",
+        "actual": "BEARISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.610449,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2026-03-12",
+        "sessionDate": "2026-03-12",
+        "actual": "BEARISH",
+        "prediction": "BEARISH",
+        "bullishProbability": 0.467385,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2026-03-13",
+        "sessionDate": "2026-03-13",
+        "actual": "BEARISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.55188,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2026-03-16",
+        "sessionDate": "2026-03-16",
+        "actual": "BULLISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.64284,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2026-03-18",
+        "sessionDate": "2026-03-18",
+        "actual": "BEARISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.528658,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2026-03-19",
+        "sessionDate": "2026-03-19",
+        "actual": "BULLISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.662102,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2026-03-20",
+        "sessionDate": "2026-03-20",
+        "actual": "BEARISH",
+        "prediction": "BEARISH",
+        "bullishProbability": 0.335976,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2026-03-23",
+        "sessionDate": "2026-03-23",
+        "actual": "BULLISH",
+        "prediction": "BEARISH",
+        "bullishProbability": 0.484167,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2026-03-25",
+        "sessionDate": "2026-03-25",
+        "actual": "BEARISH",
+        "prediction": "BEARISH",
+        "bullishProbability": 0.497132,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2026-03-26",
+        "sessionDate": "2026-03-26",
+        "actual": "BEARISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.51872,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2026-03-27",
+        "sessionDate": "2026-03-27",
+        "actual": "BEARISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.622102,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2026-03-30",
+        "sessionDate": "2026-03-30",
+        "actual": "BEARISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.574872,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2026-04-01",
+        "sessionDate": "2026-04-01",
+        "actual": "BULLISH",
+        "prediction": "BEARISH",
+        "bullishProbability": 0.36642,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2026-04-02",
+        "sessionDate": "2026-04-02",
+        "actual": "BEARISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.595146,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2026-04-03",
+        "sessionDate": "2026-04-03",
+        "actual": "BEARISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.609967,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2026-04-06",
+        "sessionDate": "2026-04-06",
+        "actual": "BULLISH",
+        "prediction": "BEARISH",
+        "bullishProbability": 0.492355,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2026-04-08",
+        "sessionDate": "2026-04-08",
+        "actual": "BULLISH",
+        "prediction": "BEARISH",
+        "bullishProbability": 0.414685,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2026-04-09",
+        "sessionDate": "2026-04-09",
+        "actual": "BULLISH",
+        "prediction": "BEARISH",
+        "bullishProbability": 0.41276,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2026-04-10",
+        "sessionDate": "2026-04-10",
+        "actual": "BULLISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.565468,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2026-04-13",
+        "sessionDate": "2026-04-13",
+        "actual": "BULLISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.546468,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2026-04-15",
+        "sessionDate": "2026-04-15",
+        "actual": "BULLISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.51631,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2026-04-16",
+        "sessionDate": "2026-04-16",
+        "actual": "BEARISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.545661,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2026-04-17",
+        "sessionDate": "2026-04-17",
+        "actual": "BEARISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.530768,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2026-04-20",
+        "sessionDate": "2026-04-20",
+        "actual": "BULLISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.628253,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2026-04-22",
+        "sessionDate": "2026-04-22",
+        "actual": "BEARISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.647524,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2026-04-23",
+        "sessionDate": "2026-04-23",
+        "actual": "BEARISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.511534,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2026-04-24",
+        "sessionDate": "2026-04-24",
+        "actual": "BULLISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.59432,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2026-04-27",
+        "sessionDate": "2026-04-27",
+        "actual": "BULLISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.543733,
+        "correct": true
+      },
+      {
+        "recordId": "EUR-H1-TA|2026-04-29",
+        "sessionDate": "2026-04-29",
+        "actual": "BEARISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.579218,
+        "correct": false
+      },
+      {
+        "recordId": "EUR-H1-TA|2026-04-30",
+        "sessionDate": "2026-04-30",
+        "actual": "BULLISH",
+        "prediction": "BULLISH",
+        "bullishProbability": 0.57189,
+        "correct": true
+      }
+    ]
+  },
+  "conclusion": {
+    "passesValidationBaseline": true,
+    "passesFinalTestBaseline": false,
+    "readyForDashboard": false
+  }
+}

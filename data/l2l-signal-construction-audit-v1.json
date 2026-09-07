@@ -1,0 +1,461 @@
+{
+  "meta": {
+    "generated_at": "2026-08-15T18:43:11.269Z",
+    "version": "l2l-signal-construction-audit-v1",
+    "research_only": true,
+    "preserved_frozen_artifacts": true,
+    "final_test_consumed": true,
+    "no_call_logic_changes": true
+  },
+  "codePathTrace": {
+    "sharedSources": [
+      {
+        "path": "backtester/lib/headline_confidence.js",
+        "sha256": "b1468f977ac686977a4e0d1b0ac67d53155e6eabe091a2b62462e5904b3b0cc0"
+      },
+      {
+        "path": "backtester/lib/layer2_pair_logic.js",
+        "sha256": "88762eaa8fefa30fe0e77f8000f4a65bd0b0d0e6c7c7373a6e747cc35106c542"
+      },
+      {
+        "path": "backtester/lib/adr_reach_research.js",
+        "sha256": "ce240529940ecf107d85f9aafa5d8599c607176b331e559779f128544e6368dc"
+      },
+      {
+        "path": "backtester/lib/l2l_trading_day_directional.js",
+        "sha256": "2cd477478c861143d23103c93e4e44f55842bebb40fc7d878f02773b4cdff2c7"
+      }
+    ],
+    "assetPipelines": [
+      {
+        "assetCode": "EUR",
+        "replaySource": {
+          "path": "backtester/replay/eur/eur_replay_core.js",
+          "sha256": "66e8f7e55a556fd7081cdb511c6d1ab19f22fd8976947ca3bf0f7d0935e7cf07"
+        },
+        "checkerBuilderSource": {
+          "path": "backtester/scripts/build_backtester_checker_data_eur.js",
+          "sha256": "7fdf70604202ab21af1f859a40b88ff7c472462d77d1da7c0bdfb44eb1646aad"
+        },
+        "checkerArtifact": {
+          "path": "data/backtester-checker-eur-24h-2024-2026.json",
+          "sha256": "e2c711e52edeb2dc89a36d1864eca4a99b5e4c04b42b789ba05181b2d2177c1f"
+        }
+      },
+      {
+        "assetCode": "GOLD",
+        "replaySource": {
+          "path": "backtester/replay/gold/gold_replay_core.js",
+          "sha256": "c5806d5d6516ad72019a5bce528c351d847ddb25d7073b3c3b3d9ac0d0231ab2"
+        },
+        "checkerBuilderSource": {
+          "path": "backtester/scripts/build_backtester_checker_data_gold.js",
+          "sha256": "0642ea15b9fa05b724171e52a3eda968c2ba715f7f65112b7f4f51588b1ee466"
+        },
+        "checkerArtifact": {
+          "path": "data/backtester-checker-gold-24h-2024-2026.json",
+          "sha256": "9b4fbd4fd958c4f86f8d70d853990e16d335a0043c0304059699a25d5f693586"
+        }
+      },
+      {
+        "assetCode": "NQ",
+        "replaySource": {
+          "path": "backtester/replay/nq/nq_replay_core.js",
+          "sha256": "eb0e160d78226c6aae75b254a1560e4fcf5d88d7274164754484dc99cd492038"
+        },
+        "checkerBuilderSource": {
+          "path": "backtester/scripts/build_backtester_checker_data_nq.js",
+          "sha256": "a9a904af09432f07d692314996c9f4ee221fd32d7bbe8fbf3c6d774ac9f31d0f"
+        },
+        "checkerArtifact": {
+          "path": "data/backtester-checker-nq-24h-2024-2026.json",
+          "sha256": "224c41270e629d23e354460e396462703a79a411420cb4079be802316d611c9b"
+        }
+      },
+      {
+        "assetCode": "BTC",
+        "replaySource": {
+          "path": "backtester/replay/btc/btc_replay_core.js",
+          "sha256": "4623afa202e857f01684582bdcd6192030eca0a3f208eda667dc76015aa86bbb"
+        },
+        "checkerBuilderSource": {
+          "path": "backtester/scripts/build_backtester_checker_data_btc.js",
+          "sha256": "d97faa62c1ba174a2dc366afced36a967f8a2b33bb45e002f6d0f8dc03fc2984"
+        },
+        "checkerArtifact": {
+          "path": "data/backtester-checker-btc-24h-2024-2026.json",
+          "sha256": "b5c4b334b85350ad3430f4fd921ee54a012bbc96ab6d4c8d87cdca0a8e5a3392"
+        }
+      },
+      {
+        "assetCode": "USD",
+        "replaySource": {
+          "path": "backtester/replay/usd/usd_replay_core.js",
+          "sha256": "fee82bb06e429cd89158e3ff8c40f86079462dddee2b06b457f0a7ad7dafb9a2"
+        },
+        "checkerBuilderSource": {
+          "path": "backtester/scripts/check_usd_live_replay_24h_parity.js",
+          "sha256": "b097c8ab47a64959e8489375c54735fc22b6b0e695b85d2efcb8c9f6d416bb30"
+        },
+        "checkerArtifact": {
+          "path": "data/backtester-checker-usd-24h-2024-01.json",
+          "sha256": "770058e8f978e5495ede1108b8112144d95fa0eb5e4b785b55cb973b0f6f0e0e"
+        }
+      }
+    ],
+    "layer1Explanation": "Historical market snapshots are replayed into a following-24hrs signal, persisted into checker artifacts, then normalized into half-L2L research rows.",
+    "layer2Explanation": "Layer 2 pair calls are composed from the target asset Layer 1 direction and the USD Layer 1 direction, with confidence equal to the lower of the two Layer 1 headline confidences."
+  },
+  "validatedDirectionalOutcome": {
+    "layer1DirectionalAccuracyPct": 47.65,
+    "layer2DirectionalAccuracyPct": 47.99,
+    "layer1BaselinePct": 53.19,
+    "layer2BaselinePct": 53.45,
+    "layer1BullishAccuracyPct": 50.69,
+    "layer1BearishAccuracyPct": 42.96,
+    "layer2BullishAccuracyPct": 51.12,
+    "layer2BearishAccuracyPct": 42.33,
+    "layer1ConfidenceMonotonicity": false,
+    "layer2ConfidenceMonotonicity": false,
+    "layer2NetImprovementPct": 0,
+    "sessionOpenDiscriminationConclusion": "BEARISH_ASYMMETRY_ONLY",
+    "pathDependenceConclusion": "ORIGINAL_METRIC_PATH_DEPENDENT"
+  },
+  "reproduction": {
+    "layer1Checkers": {
+      "byAsset": {
+        "EUR": {
+          "assetCode": "EUR",
+          "rowsChecked": 602,
+          "checkerSummary": {
+            "rows_checked": 602,
+            "pass": 602,
+            "tolerance_pass": 0,
+            "fail": 0,
+            "missing_data": 0,
+            "exact_matches": 602
+          },
+          "directionMismatchCount": 0,
+          "confidenceMismatchCount": 0,
+          "oppositeDirectionMatchCount": 0,
+          "nonDirectionalStoredRowCount": 27,
+          "missingCoreInputsCount": 0,
+          "fallbackConfidenceCount": 0
+        },
+        "GOLD": {
+          "assetCode": "GOLD",
+          "rowsChecked": 608,
+          "checkerSummary": {
+            "rows_checked": 608,
+            "pass": 608,
+            "tolerance_pass": 0,
+            "fail": 0,
+            "missing_data": 0,
+            "exact_matches": 608
+          },
+          "directionMismatchCount": 0,
+          "confidenceMismatchCount": 0,
+          "oppositeDirectionMatchCount": 0,
+          "nonDirectionalStoredRowCount": 30,
+          "missingCoreInputsCount": 0,
+          "fallbackConfidenceCount": 0
+        },
+        "NQ": {
+          "assetCode": "NQ",
+          "rowsChecked": 604,
+          "checkerSummary": {
+            "rows_checked": 604,
+            "pass": 604,
+            "tolerance_pass": 0,
+            "fail": 0,
+            "missing_data": 0,
+            "exact_matches": 604
+          },
+          "directionMismatchCount": 0,
+          "confidenceMismatchCount": 0,
+          "oppositeDirectionMatchCount": 0,
+          "nonDirectionalStoredRowCount": 38,
+          "missingCoreInputsCount": 0,
+          "fallbackConfidenceCount": 0
+        },
+        "BTC": {
+          "assetCode": "BTC",
+          "rowsChecked": 850,
+          "checkerSummary": {
+            "rows_checked": 850,
+            "pass": 850,
+            "tolerance_pass": 0,
+            "fail": 0,
+            "missing_data": 0,
+            "exact_matches": 850
+          },
+          "directionMismatchCount": 0,
+          "confidenceMismatchCount": 0,
+          "oppositeDirectionMatchCount": 0,
+          "nonDirectionalStoredRowCount": 56,
+          "missingCoreInputsCount": 0,
+          "fallbackConfidenceCount": 0
+        },
+        "USD": {
+          "assetCode": "USD",
+          "rowsChecked": 604,
+          "checkerSummary": {
+            "rows_checked": 604,
+            "pass": 604,
+            "tolerance_pass": 0,
+            "fail": 0,
+            "missing_data": 0,
+            "exact_matches": 603
+          },
+          "directionMismatchCount": 0,
+          "confidenceMismatchCount": 0,
+          "oppositeDirectionMatchCount": 0,
+          "nonDirectionalStoredRowCount": 23,
+          "missingCoreInputsCount": 0,
+          "fallbackConfidenceCount": 0
+        }
+      }
+    },
+    "layer1DirectionalArtifact": {
+      "rowsChecked": 2493,
+      "missingJoinCount": 0,
+      "directionMismatchCount": 0,
+      "confidenceMismatchCount": 0,
+      "snapshotDateMismatchCount": 0,
+      "byAsset": [
+        {
+          "assetCode": "BTC",
+          "rowsChecked": 793,
+          "directionMismatchCount": 0,
+          "confidenceMismatchCount": 0,
+          "snapshotDateMismatchCount": 0
+        },
+        {
+          "assetCode": "EUR",
+          "rowsChecked": 570,
+          "directionMismatchCount": 0,
+          "confidenceMismatchCount": 0,
+          "snapshotDateMismatchCount": 0
+        },
+        {
+          "assetCode": "GOLD",
+          "rowsChecked": 570,
+          "directionMismatchCount": 0,
+          "confidenceMismatchCount": 0,
+          "snapshotDateMismatchCount": 0
+        },
+        {
+          "assetCode": "NQ",
+          "rowsChecked": 560,
+          "directionMismatchCount": 0,
+          "confidenceMismatchCount": 0,
+          "snapshotDateMismatchCount": 0
+        }
+      ]
+    },
+    "layer2DirectionalArtifact": {
+      "rowsChecked": 1592,
+      "missingJoinCount": 0,
+      "targetMissingCount": 0,
+      "usdMissingCount": 0,
+      "directionMismatchCount": 0,
+      "confidenceMismatchCount": 0,
+      "duplicateTargetJoinCount": 0,
+      "reusedUsdSnapshotJoinCount": 1505,
+      "byPair": [
+        {
+          "pairCode": "BTC_USD",
+          "rowsChecked": 387,
+          "directionMismatchCount": 0,
+          "confidenceMismatchCount": 0
+        },
+        {
+          "pairCode": "EUR_USD",
+          "rowsChecked": 385,
+          "directionMismatchCount": 0,
+          "confidenceMismatchCount": 0
+        },
+        {
+          "pairCode": "NQ_USD",
+          "rowsChecked": 372,
+          "directionMismatchCount": 0,
+          "confidenceMismatchCount": 0
+        },
+        {
+          "pairCode": "XAU_USD",
+          "rowsChecked": 448,
+          "directionMismatchCount": 0,
+          "confidenceMismatchCount": 0
+        }
+      ]
+    }
+  },
+  "exploratoryFalseBearishFactorDiagnostics": [
+    {
+      "assetCode": "BTC",
+      "bearishCallCount": 275,
+      "incorrectBearishCount": 150,
+      "correctBearishCount": 125,
+      "topExploratoryFactors": [
+        {
+          "factorKey": "F6 NQ / High-Beta Risk Confirmation",
+          "wrongBearishPct": 53.33,
+          "correctBearishPct": 50.4,
+          "wrongMinusCorrectPct": 2.93
+        },
+        {
+          "factorKey": "F2 DXY / USD Pressure",
+          "wrongBearishPct": 37.33,
+          "correctBearishPct": 36,
+          "wrongMinusCorrectPct": 1.33
+        },
+        {
+          "factorKey": "F7 US Economic Surprise Direction",
+          "wrongBearishPct": 0.67,
+          "correctBearishPct": 0,
+          "wrongMinusCorrectPct": 0.67
+        },
+        {
+          "factorKey": "F4 Fed Bias / Policy Liquidity",
+          "wrongBearishPct": 0,
+          "correctBearishPct": 0,
+          "wrongMinusCorrectPct": 0
+        },
+        {
+          "factorKey": "F8 BTC ETF / Institutional Flow",
+          "wrongBearishPct": 0,
+          "correctBearishPct": 0,
+          "wrongMinusCorrectPct": 0
+        }
+      ],
+      "warning": "Exploratory only. Preserved factor labels associated with false bearish calls are not a basis for changing weights or thresholds."
+    },
+    {
+      "assetCode": "EUR",
+      "bearishCallCount": 219,
+      "incorrectBearishCount": 121,
+      "correctBearishCount": 98,
+      "topExploratoryFactors": [
+        {
+          "factorKey": "F10",
+          "wrongBearishPct": 10.74,
+          "correctBearishPct": 8.16,
+          "wrongMinusCorrectPct": 2.58
+        },
+        {
+          "factorKey": "F3",
+          "wrongBearishPct": 59.5,
+          "correctBearishPct": 59.18,
+          "wrongMinusCorrectPct": 0.32
+        },
+        {
+          "factorKey": "F7",
+          "wrongBearishPct": 47.11,
+          "correctBearishPct": 46.94,
+          "wrongMinusCorrectPct": 0.17
+        },
+        {
+          "factorKey": "F1",
+          "wrongBearishPct": 0,
+          "correctBearishPct": 0,
+          "wrongMinusCorrectPct": 0
+        },
+        {
+          "factorKey": "F4",
+          "wrongBearishPct": 0,
+          "correctBearishPct": 0,
+          "wrongMinusCorrectPct": 0
+        }
+      ],
+      "warning": "Exploratory only. Preserved factor labels associated with false bearish calls are not a basis for changing weights or thresholds."
+    },
+    {
+      "assetCode": "GOLD",
+      "bearishCallCount": 300,
+      "incorrectBearishCount": 180,
+      "correctBearishCount": 120,
+      "topExploratoryFactors": [
+        {
+          "factorKey": "F2",
+          "wrongBearishPct": 47.78,
+          "correctBearishPct": 38.33,
+          "wrongMinusCorrectPct": 9.44
+        },
+        {
+          "factorKey": "F7",
+          "wrongBearishPct": 3.33,
+          "correctBearishPct": 0.83,
+          "wrongMinusCorrectPct": 2.5
+        },
+        {
+          "factorKey": "F5",
+          "wrongBearishPct": 31.11,
+          "correctBearishPct": 30,
+          "wrongMinusCorrectPct": 1.11
+        },
+        {
+          "factorKey": "F10",
+          "wrongBearishPct": 0,
+          "correctBearishPct": 0,
+          "wrongMinusCorrectPct": 0
+        },
+        {
+          "factorKey": "F3",
+          "wrongBearishPct": 0,
+          "correctBearishPct": 0,
+          "wrongMinusCorrectPct": 0
+        }
+      ],
+      "warning": "Exploratory only. Preserved factor labels associated with false bearish calls are not a basis for changing weights or thresholds."
+    },
+    {
+      "assetCode": "NQ",
+      "bearishCallCount": 186,
+      "incorrectBearishCount": 108,
+      "correctBearishCount": 78,
+      "topExploratoryFactors": [
+        {
+          "factorKey": "F8",
+          "wrongBearishPct": 75,
+          "correctBearishPct": 58.97,
+          "wrongMinusCorrectPct": 16.03
+        },
+        {
+          "factorKey": "F2",
+          "wrongBearishPct": 28.7,
+          "correctBearishPct": 24.36,
+          "wrongMinusCorrectPct": 4.34
+        },
+        {
+          "factorKey": "F4",
+          "wrongBearishPct": 0,
+          "correctBearishPct": 0,
+          "wrongMinusCorrectPct": 0
+        },
+        {
+          "factorKey": "F5",
+          "wrongBearishPct": 0,
+          "correctBearishPct": 0,
+          "wrongMinusCorrectPct": 0
+        },
+        {
+          "factorKey": "F6",
+          "wrongBearishPct": 0,
+          "correctBearishPct": 0,
+          "wrongMinusCorrectPct": 0
+        }
+      ],
+      "warning": "Exploratory only. Preserved factor labels associated with false bearish calls are not a basis for changing weights or thresholds."
+    }
+  ],
+  "bestExplainedBy": "horizon_mismatch",
+  "interpretation": {
+    "implementationDefectEvidence": "No preserved implementation or mapping defect was found. Stored Layer 1 and Layer 2 directions/confidences reproduced exactly from preserved checker inputs.",
+    "nonDirectionalCheckerRowsObservation": "Checker artifacts include some preserved non-directional 24-hour rows outside the eligible half-L2L directional population. Those rows explain the non-directional checker counts and do not create mismatches inside the 4,085 eligible rows.",
+    "usdReuseObservation": "USD snapshot joins are reused across multiple Layer 2 pairs on the same date by design. Reuse is expected and is not a duplicate-join defect.",
+    "bearishAsymmetryObservation": "Bearish calls underperform bullish calls in both layers, but bullish calls still trail the unconditional always-bullish baseline.",
+    "horizonMismatchObservation": "The traced signal path explicitly produces a following-24hrs call, while the validated research question is the direction in which the designated trading session closes.",
+    "confidenceObservation": "Headline confidence is mechanically reproducible from preserved conviction inputs, but it is not monotonic with realized directional accuracy.",
+    "exploratoryConstraint": "False-bearish factor associations are exploratory only and do not justify changing weights or thresholds."
+  }
+}

@@ -282,11 +282,15 @@ function computeAdr20(dailyContext, evaluationDate) {
 
 function buildRequiredDistanceInputs(config, dailyContext, intradayContext, evaluationDate) {
   const sessionCandles = intradayContext.byDate.get(evaluationDate) || [];
+  const sessionStartTime = sessionCandles[0]?.timestamp || null;
+  const sessionEndTime = sessionCandles[sessionCandles.length - 1]?.timestamp || null;
   if (!sessionCandles.length) {
     return {
       ok: false,
       reason: "missing_intraday_session",
       numberOf1hCandlesLoaded: 0,
+      evaluationStartTime: null,
+      evaluationEndTime: null,
       fixedReferenceL2lDistance: config.fixedReferenceL2lDistance ?? null
     };
   }
@@ -296,6 +300,8 @@ function buildRequiredDistanceInputs(config, dailyContext, intradayContext, eval
       ok: false,
       reason: "incomplete_intraday_session",
       numberOf1hCandlesLoaded: sessionCandles.length,
+      evaluationStartTime: sessionStartTime,
+      evaluationEndTime: sessionEndTime,
       fixedReferenceL2lDistance: config.fixedReferenceL2lDistance ?? null
     };
   }
@@ -306,6 +312,8 @@ function buildRequiredDistanceInputs(config, dailyContext, intradayContext, eval
       ok: false,
       reason: adrResult.reason,
       numberOf1hCandlesLoaded: sessionCandles.length,
+      evaluationStartTime: sessionStartTime,
+      evaluationEndTime: sessionEndTime,
       fixedReferenceL2lDistance: config.fixedReferenceL2lDistance ?? null
     };
   }
@@ -317,6 +325,8 @@ function buildRequiredDistanceInputs(config, dailyContext, intradayContext, eval
       reason: "invalid_required_l2l_distance",
       numberOf1hCandlesLoaded: sessionCandles.length,
       adr20: adrResult.adr20,
+      evaluationStartTime: sessionStartTime,
+      evaluationEndTime: sessionEndTime,
       fixedReferenceL2lDistance: config.fixedReferenceL2lDistance ?? null
     };
   }
@@ -325,6 +335,8 @@ function buildRequiredDistanceInputs(config, dailyContext, intradayContext, eval
     ok: true,
     sessionCandles,
     numberOf1hCandlesLoaded: sessionCandles.length,
+    evaluationStartTime: sessionStartTime,
+    evaluationEndTime: sessionEndTime,
     adr20: adrResult.adr20,
     adr20WindowStartDate: adrResult.windowStartDate,
     adr20WindowEndDate: adrResult.windowEndDate,

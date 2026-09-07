@@ -1,0 +1,222 @@
+{
+  "meta": {
+    "version": "half-l2l-executable-entry-v1-draft",
+    "generated_at": "2026-08-15T16:30:22.338Z",
+    "source": "backtester/scripts/validate_half_l2l_executable_entry_draft.js",
+    "research_only": true,
+    "status": "DRAFT_BLOCKED_FROM_PROFITABILITY_EXECUTION",
+    "time_zone": "America/New_York",
+    "profitability_execution_blocked_until_costs_approved": true,
+    "prohibits_parameter_selection_using_final_test": true
+  },
+  "lineage": {
+    "source_artifact_path": "data/half-l2l-reach-research.json",
+    "source_artifact_version": "half-l2l-reach-v2",
+    "source_artifact_sha256": "0d2955248066be6dff0741ae89fbe3e7de4ead6294c6bec16aa09a1aa452e9b8",
+    "publication_time_recovery_decision": "PROXY_REQUIRED",
+    "publication_time_recovery_evidence": "tmp/half-l2l-publication-time-recovery-followup-20260815.json",
+    "preserved_candle_source_hashes": [
+      {
+        "assetCode": "EUR",
+        "dailySourcePath": "backtester/tmp/oanda_eur_usd_daily.csv",
+        "intradaySourcePath": "backtester/tmp/oanda_eur_usd_h1.csv",
+        "dailySourceHash": "dce4dd5deb9ca692ac67a1d7b1ea249032bcbff72a30634d39283fc36d54bd3e",
+        "intradaySourceHash": "edaf6016466e75ef892b34eda86287cbd299ac0afa21ea4b9baf907042633f8f"
+      },
+      {
+        "assetCode": "GOLD",
+        "dailySourcePath": "backtester/tmp/oanda_xau_usd_daily.csv",
+        "intradaySourcePath": "backtester/tmp/oanda_xau_usd_h1.csv",
+        "dailySourceHash": "50942a226e99a43742f08c700aa14baae45f37c4785108bfa44fe4f7a128b84c",
+        "intradaySourceHash": "78f797c77247ab735a263e8bfccbc722d3458c8eb484ac9b4d36204ca20280df"
+      },
+      {
+        "assetCode": "NQ",
+        "dailySourcePath": "backtester/tmp/oanda_nas100_usd_daily.csv",
+        "intradaySourcePath": "backtester/tmp/oanda_nas100_usd_h1.csv",
+        "dailySourceHash": "bf6783989cd8ee76be4b73c023525a2293f832488a6ff2787e8f56ca8a8510f4",
+        "intradaySourceHash": "d2f2ad90c89bd93d245348685aa2ceaaeb16d67272876406fb2584f661951f97"
+      },
+      {
+        "assetCode": "BTC",
+        "dailySourcePath": "backtester/tmp/binance_btcusdt_daily.csv",
+        "intradaySourcePath": "backtester/tmp/binance_btcusdt_1h.csv",
+        "dailySourceHash": "e45d42821c7fb28c88e97248308f837f5c944dee9199a4bd833cc4b4fde4e184",
+        "intradaySourceHash": "166a2f4733ddddc7a15b1226e0c2b6c3926c5394cab2c307f66658dd5861f731"
+      },
+      {
+        "assetCode": "USD",
+        "dailySourcePath": null,
+        "intradaySourcePath": null,
+        "dailySourceHash": null,
+        "intradaySourceHash": null
+      }
+    ]
+  },
+  "source_population": {
+    "eligible_row_count": 4085,
+    "eligible_layer1_row_count": 2493,
+    "eligible_layer2_row_count": 1592,
+    "unique_prediction_id_count_across_layers": 2493,
+    "duplicated_prediction_ids_not_independent_evidence": 1592,
+    "populations_must_remain_separate": true,
+    "use_existing_prior_20_bar_adr20_without_future_information": true,
+    "layer1_asset_counts": {
+      "EUR": 570,
+      "GOLD": 570,
+      "NQ": 560,
+      "BTC": 793
+    },
+    "layer2_pair_counts": {
+      "EUR_USD": 385,
+      "XAU_USD": 448,
+      "NQ_USD": 372,
+      "BTC_USD": 387
+    }
+  },
+  "entry_scenarios": {
+    "executable_proxy_selection_rule": "Enter at the open of the first available 1H candle whose opening timestamp is at or after the proxy timestamp. Exclude all earlier candles.",
+    "no_later_trading_day_roll_rule": true,
+    "exclusion_reason_if_no_entry_candle_exists": "no_entry_candle_at_or_after_proxy_before_same_day_session_end",
+    "scenarios": [
+      {
+        "key": "PRIMARY_10_ET",
+        "label": "PRIMARY",
+        "executable": true,
+        "local_time": "10:00:00",
+        "use_source_defined_session_open": false,
+        "report_separately": false,
+        "time_zone": "America/New_York",
+        "source_defined_session_open_lineage": null
+      },
+      {
+        "key": "DELAY_12_ET",
+        "label": "DELAY_SENSITIVITY",
+        "executable": true,
+        "local_time": "12:00:00",
+        "use_source_defined_session_open": false,
+        "report_separately": false,
+        "time_zone": "America/New_York",
+        "source_defined_session_open_lineage": null
+      },
+      {
+        "key": "NON_EXECUTABLE_OPTIMISM_BOUND",
+        "label": "NON_EXECUTABLE_OPTIMISM_BOUND",
+        "executable": false,
+        "local_time": "09:30:00",
+        "use_source_defined_session_open": true,
+        "report_separately": true,
+        "time_zone": "America/New_York",
+        "source_defined_session_open_lineage": "following-24hrs source window open at 09:30 America/New_York, handled by date using IANA timezone"
+      }
+    ]
+  },
+  "strategy_variants": {
+    "frozen_before_outcome_calculation": true,
+    "variants": [
+      {
+        "key": "PRIMARY",
+        "target_multiplier_adr20": 0.25,
+        "stop_multiplier_adr20": 0.25,
+        "time_exit": "final_available_candle_close_within_source_defined_evaluation_window"
+      },
+      {
+        "key": "FULL_DISTANCE",
+        "target_multiplier_adr20": 0.5,
+        "stop_multiplier_adr20": 0.5,
+        "time_exit": "final_available_candle_close_within_source_defined_evaluation_window"
+      },
+      {
+        "key": "ASYMMETRIC_SENSITIVITY",
+        "target_multiplier_adr20": 0.5,
+        "stop_multiplier_adr20": 0.25,
+        "time_exit": "final_available_candle_close_within_source_defined_evaluation_window"
+      }
+    ]
+  },
+  "ohlc_sequencing": {
+    "entry_price_rule": "selected_candle_open",
+    "ignore_pre_entry_movement": true,
+    "start_target_stop_evaluation_after_entry_only": true,
+    "same_bar_target_and_stop_resolution": "STOP_FIRST_PESSIMISTIC",
+    "apply_same_convention_to_entry_candle": true,
+    "record_same_bar_ambiguity_explicitly": true
+  },
+  "evaluation_design": {
+    "folds": [
+      {
+        "key": "TRAIN",
+        "start": "2024-01-03",
+        "end": "2024-12-31",
+        "sealed_from_parameter_selection": false
+      },
+      {
+        "key": "VALIDATION",
+        "start": "2025-01-01",
+        "end": "2025-09-30",
+        "sealed_from_parameter_selection": false
+      },
+      {
+        "key": "FINAL_TEST",
+        "start": "2025-10-01",
+        "end": "2026-04-30",
+        "sealed_from_parameter_selection": true
+      }
+    ],
+    "final_test_must_remain_sealed_for_parameter_decisions": true,
+    "required_reporting_dimensions": [
+      "layer",
+      "asset_or_pair",
+      "direction",
+      "confidence_band",
+      "weekday",
+      "chronological_fold"
+    ],
+    "required_metrics": [
+      "trade_count",
+      "target_count",
+      "stop_count",
+      "time_exit_count",
+      "win_rate",
+      "expectancy",
+      "average_return_r",
+      "profit_factor",
+      "maximum_drawdown",
+      "mfe",
+      "mae",
+      "exclusion_count",
+      "same_bar_ambiguity_count"
+    ]
+  },
+  "costs": {
+    "approved_for_profitability_execution": false,
+    "fields_must_be_configured_separately_by_asset": {
+      "EUR": {
+        "spread": null,
+        "commission": null,
+        "slippage": null
+      },
+      "GOLD": {
+        "spread": null,
+        "commission": null,
+        "slippage": null
+      },
+      "NQ": {
+        "spread": null,
+        "commission": null,
+        "slippage": null
+      },
+      "BTC": {
+        "spread": null,
+        "commission": null,
+        "slippage": null
+      }
+    },
+    "gross_result_baselines_required": true
+  },
+  "implementation_scope": {
+    "this_draft_only": true,
+    "no_changes_to_existing_half_l2l_excursion_contract": true,
+    "no_trade_ledger_or_profitability_backtest_in_this_phase": true
+  }
+}
