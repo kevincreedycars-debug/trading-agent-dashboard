@@ -1,0 +1,290 @@
+# Current State - AI Trading Platform
+
+## Research qualification update — 2026-09-06
+
+Read-only inspection confirmed a Gold collection defect: an unordered 25-row history read leaves June 9's Gold price as the daily reference in 143 of 147 audited linked snapshots. The normal Master Orchestrator calls the affected `Data Collector - GOLD` workflow. A local patch is prepared; production has not been changed. The stored-call pilot is descriptive and does not qualify a trading edge or executable outcomes. See `docs/CODEX_GOLD_BACKTEST_PROGRESS.md` and `backtester/docs/gold_stored_call_pilot_20260906.md`.
+
+The July platform/deployment history below is preserved as its dated baseline; broad production health was not revalidated in this research session.
+
+Last updated: 2026-07-21
+
+## Platform Status
+
+The Layer 1 trading-agent platform remains operational, and the latest runtime evidence in `data/workflow-status.json` shows a successful manual refresh on 2026-07-20 with every listed step marked successful, including `Layer 2 Trade Selection Agent`.
+
+The full Layer 1 historical replay rollout is now validated across USD, EUR, Gold, NQ, and BTC. The active repository work has shifted from replay rollout itself into downstream research presentation and breakdown views built on top of the canonical checker artifacts.
+
+The current deployed production baseline includes the UK/ET live header clock, explicit Layer 1 `24H` expiry display on Overview cards, the Layer 1 Directional Viability spacing fix, removal of the redundant Overview weighted-verdict prose, and UK-time hover/focus tooltips on every available Layer 1 `24H` expiry section while preserving the visible ET expiry. The tooltip converts the exact same expiry timestamp into UK time using browser-native `Intl.DateTimeFormat` with automatic GMT/BST handling.
+
+Current platform state is stable and validated. The production dashboard exposes the live Layer 1 and Layer 2 surfaces plus the read-only historical research tabs. The credential-continuity milestone is complete, and the Architecture Mirror is now implemented and deployed as a read-only top-level dashboard tab.
+
+The deployed Architecture Mirror baseline is implementation commit `7586016d89c1e06c9f20beed3201034248d1e048`, published at deployed commit `9407893cc668b47fc9ddddf0cfa4b9e8a6f722bc`. It ships a validated checked-in manifest and custom HTML/CSS renderer with:
+
+- 36 nodes
+- 59 edges
+- 5 boundaries
+- 13 views
+
+The current deployed presentation uses:
+
+- an 8-stage grouped Overview map rendered from the browser-side renderer rather than from altered manifest facts
+- deterministic vertical waterfall views for every Architecture tab
+- contained responsive grids for parallel nodes within a stage
+- centered vertical connectors between stages
+- a below-canvas selected-node detail panel
+- no absolute node placement in the active renderer
+- no SVG bus routing in the active renderer
+- no horizontal scrolling in the Architecture canvas
+- four-viewport geometry and live review coverage across all 13 views
+
+The Architecture Mirror remains documentation-only. It does not change production logic, research calculations, workflow execution, credentials, or existing artifact semantics.
+
+The following architecture areas remain intentionally explicit but unverified in the deployed mirror:
+
+- whether Dashboard Writer publishes artifacts beyond `data/layer1.json`
+- the exact publication responsibility split for `data/layer2.json`
+- which non-BTC collectors directly consume economic events
+- exact GitHub commit sequencing during an orchestrator run
+- complete column-level Supabase lineage
+- node-level failure fan-out inside every exported workflow
+
+## Credential Continuity Status
+
+Credential continuity is now functionally complete using the existing CLIXML-based encrypted local store under:
+
+```text
+%USERPROFILE%\.trading-agent-dashboard\
+```
+
+Current validated local state:
+
+- eight continuity variables are present in the local encrypted store
+- `OANDA_ACCOUNT_ID` remains optional / conditional and is currently absent
+- repository bootstrap is `powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts\bootstrap-local-secrets.ps1`
+- repository validation is `powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts\check-required-secrets.ps1 -Scope all`
+- isolated backup and restore validation passed
+- read-only connectivity validation passed for `n8n`, Supabase, FRED, OANDA, and Alpha Vantage
+- RapidAPI credential loading is confirmed, but external endpoint verification remains inconclusive because the harmless validation endpoint timed out
+
+This continuity work did not change production logic, trading logic, or live workflows.
+
+## Current Architecture
+
+```text
+Market Collectors
+        ->
+Market Snapshot (Supabase)
+        ->
+Independent Layer 1 Agents
+        ->
+agent_outputs
+        ->
+Dashboard Writer
+        ->
+GitHub Pages Dashboard
+```
+
+Layer 2 economic-event adjustment will be built later.
+
+## Layer 1 Assets
+
+- USD
+- EUR
+- Gold / XAU
+- NQ
+- BTC
+
+## Layer 1 Isolation Rule
+
+Each Layer 1 agent must remain sealed and independent.
+
+No Layer 1 agent may:
+
+- read another agent output
+- read dashboard output
+- read Layer 2 output
+- synthesise pair relationships using other agents
+- contaminate its own raw call with another asset's call
+
+Each Layer 1 agent receives only:
+
+- its own logic document
+- the latest usable market snapshot
+
+Each Layer 1 agent answers:
+
+> Based on confirmed value-driving factors available at execution time, what is the likely direction of this asset?
+
+## Master Orchestrator
+
+A Master Orchestrator workflow has been created in n8n.
+
+Purpose: one manual button press runs the whole platform sequentially.
+
+Current intended execution order:
+
+```text
+Manual Trigger
+        ->
+Eco Events Collector
+        ->
+USD Collector
+        ->
+EUR Collector
+        ->
+Gold Collector
+        ->
+NQ Collector
+        ->
+BTC Collector
+        ->
+USD Layer 1 Agent
+        ->
+EUR Layer 1 Agent
+        ->
+Gold Layer 1 Agent
+        ->
+NQ Layer 1 Agent
+        ->
+BTC Layer 1 Agent
+        ->
+Dashboard Writer
+```
+
+Every workflow has been converted to use `Execute Sub-workflow Trigger`, allowing the master workflow to call workflows sequentially.
+
+Runtime evidence in `data/workflow-status.json` shows a successful run on 2026-07-20, with every listed step marked successful and no reported error.
+
+## Known Current Issues
+
+### 1. Eco Events duplicate insert
+
+This issue was fixed on 2026-06-21.
+
+The live `Eco Events Collector` was updated to dedupe incoming events, update existing rows, and create only unmatched rows. The previous duplicate-key failure is no longer an active known issue.
+
+### 2. EUR Agent JSON parsing
+
+The EUR Layer 1 Agent can fail when the OpenAI node output is returned as an object instead of a string.
+
+Original parser assumed:
+
+```js
+JSON.parse(text)
+```
+
+After enabling OpenAI `Output Format: JSON Object`, the parser must support both:
+
+- string output
+- object output
+
+This remains a known issue unless confirmed fixed in the live workflow.
+
+### 3. Master workflow final status summary
+
+The latest runtime artifact in `data/workflow-status.json` now provides a useful success payload, including a top-level message, per-step statuses, and no reported error for the latest run.
+
+Any further refinement should be driven by observed runtime gaps rather than by the older missing-summary assumption.
+
+## Current Deployment State
+
+The repository currently documents and exposes GitHub Pages as the active static host:
+
+```text
+https://kevincreedycars-debug.github.io/trading-agent-dashboard/
+```
+
+Older architecture notes that refer to Netlify are historical context and should not be treated as the current host model.
+
+## Current Strategic Shift
+
+The project has already established the AI-assisted development environment baseline and completed the Layer 1 historical replay rollout. The current repository priority is downstream analytical visibility and validation on top of those frozen checker artifacts.
+
+The current repository priority is:
+
+> keep the production dashboard baseline clean and explicit while validating and reviewing the newly deployed Architecture Mirror
+
+The current immediate implementation task is:
+
+> review the deployed Architecture Mirror and decide the next milestone
+
+The next planned phase after this production polish task is:
+
+> no new implementation phase is active yet; the next milestone awaits review unless a separately documented task is approved
+
+The `L2L 1H Sequence Research` module is not another close-to-close accuracy table. It answers whether price moved at least the required `50% ADR20` distance in the direction of a Layer 1 or Layer 2 call after the relevant intraday swing, using sequence-aware `1H` candles and daily candles only for ADR20.
+
+Current repository evidence supports real sequence-aware L2L measurement for:
+
+- `EUR` Layer 1 using repo-local OANDA `EUR_USD` daily + `1H` candles
+- `Gold` Layer 1 using repo-local OANDA `XAU_USD` daily + `1H` candles
+- `NQ` Layer 1 using repo-local OANDA `NAS100_USD` daily + `1H` candles
+- `BTC` Layer 1 using repo-local Binance `BTCUSDT` daily + `1H` candles
+- `EUR/USD` Layer 2 using the existing Pair Trade Research tradable-signal logic plus the same `EUR_USD` candle source
+- `XAU/USD` Layer 2 using the existing Pair Trade Research tradable-signal logic plus the same `XAU_USD` candle source
+- `NQ/USD` Layer 2 using the existing Pair Trade Research tradable-signal logic plus the same `NAS100_USD` candle source
+- `BTC/USD` Layer 2 using the existing Pair Trade Research tradable-signal logic plus the same `BTCUSDT` candle source
+
+Current repository evidence does not yet support real sequence-aware L2L measurement for:
+
+- `USD`
+
+That unsupported path is now rendered as unavailable in the `L2L 1H Sequence Research` module rather than estimated from close-only data.
+
+GitHub is the source of truth. n8n remains the execution engine. Supabase remains the data layer. GitHub Pages is the active presentation host.
+
+## Target Development Model
+
+```text
+ChatGPT / Codex
+        |
+        |-- GitHub repository
+        |-- n8n workflows
+        |-- Supabase data layer
+        `-- GitHub Pages dashboard
+```
+
+ChatGPT should handle architecture, debugging, reasoning, planning, and documentation.
+
+Codex should handle file edits, workflow JSON edits, code changes, commits, and implementation.
+
+Both should eventually be able to inspect GitHub and n8n without manual copy/paste from the user.
+
+## Permanent Working Memory
+
+Codex startup is now governed by `CODEX_STARTUP.md`.
+
+Every Codex session must use `CODEX_STARTUP.md` as the single startup entry point, always read the core memory files first, selectively load additional documents only when relevant, then inspect repository and runtime state before editing.
+
+The memory documents are authoritative between sessions and should be updated only when their contents actually change.
+
+The canonical project memory set is:
+
+- `CODEX_STARTUP.md`
+- `docs/CURRENT_STATE.md`
+- `docs/CURRENT_TASK.md`
+- `docs/ACTIVE_MILESTONE.md`
+- `docs/NEXT_STEPS.md`
+- `docs/CHANGELOG.md`
+- `docs/DECISIONS.md`
+- `docs/SESSION_NOTES.md`
+- `docs/PROJECT_HISTORY.md`
+- `docs/ARCHITECTURE.md`
+- `docs/N8N_INTEGRATION.md`
+- `workflows/WORKFLOW_INVENTORY.md`
+
+## Historical Research Platform
+
+The historical research platform is downstream-only and must not modify production behavior.
+
+Authoritative principles live in:
+
+- `docs/CORE_RESEARCH_PHILOSOPHY.md`
+
+Current implemented state:
+
+- Historical replay and deterministic checker coverage are validated for USD, EUR, Gold, NQ, and BTC.
+- Current checker totals are USD `604`, EUR `602`, Gold `608`, NQ `604`, and BTC `850`, all passing with zero fail / zero missing / zero tolerance pass.
+- The Backtest / Accuracy dashboard exposes the existing matrices and checker workspaces plus weekday confidence breakdowns, Pair Trade Research, and the first `L2L 1H Sequence Research` release.
+- 24H remains the primary short-horizon benchmark focus.
+- Historical research presentation remains downstream-only and must not modify live runtime behavior.

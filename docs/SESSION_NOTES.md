@@ -1,55 +1,11 @@
-# Session Notes
+# Session notes
 
-Last updated: 2026-07-21
+2026-09-07: user authorized full repository consolidation and return to the main folder before a focused backtesting review.
 
-## Work Completed
+Source and all existing worktrees were preserved in verified local archives with SHA-256 manifests and a verified Git bundle. A separate integration branch starts at fetched production `125d871`, combines local research/drafts and current production views, and parks trial/calendar work. See `CONSOLIDATION_20260907.md` for exact dispositions.
 
-- Completed the CLIXML-based local credential continuity system using the pre-existing encrypted local store under `%USERPROFILE%\.trading-agent-dashboard\`.
-- Added repository-safe bootstrap and validation wrappers so future Codex sessions can sync local templates and validate required credential names without exposing values.
-- Repaired the local CLIXML loader/runner path so child commands load credentials into the process environment and restore the previous environment afterward.
-- Classified the credential inventory, validated eight continuity variables present, and confirmed `OANDA_ACCOUNT_ID` remains conditional and currently absent.
-- Safely migrated the missing supported credentials from the local ignored `Keys/` folder into the CLIXML store without printing values and corrected the stored FRED key from the explicit local FRED key source.
-- Validated read-only connectivity for `n8n`, Supabase, FRED, OANDA, and Alpha Vantage.
-- Confirmed RapidAPI credential loading and storage, while leaving external endpoint verification inconclusive because the harmless endpoint timed out.
-- Verified isolated CLIXML backup and restore behavior.
-- Added repository secret-scanner tests plus importer URL-redaction tests and kept the scanner output free of matched values.
-- Confirmed the current production baseline is the deployed dashboard at commit `a15100d62f9a8a4c6ad6d8390f97f7de25ca1cdd`.
-- Confirmed the visible Layer 1 `24H` ET expiry blocks, UK/ET header clock, Directional Viability spacing fix, and Overview prose removal are already deployed and validated.
-- Identified `CODEX_STARTUP.md` as the instruction source causing routine `.claude/launch.json` prompts and prepared the minimum startup-rule correction.
-- Identified that the current active-state project memory pointers were still aimed at the earlier shadow-backtest task and needed correction before the next startup.
-- Deployed UK-time hover/focus tooltips on every available Layer 1 `24H` expiry section while preserving the visible ET expiry.
-- Verified that the tooltip converts the same expiry timestamp into UK time with browser-native `Intl.DateTimeFormat` using automatic GMT/BST handling.
-- Verified live GitHub Pages asset cache busting and live tooltip behavior after deployment.
-- Approved the Architecture Mirror direction: top-level `Architecture` tab, checked-in `data/architecture-map.json` manifest, custom HTML/CSS/SVG renderer, overview map plus expandable module maps, and a read-only documentation surface with no effect on production or research logic.
-- Implemented and deployed the Architecture Mirror as a top-level read-only dashboard tab at commit `67379533005d9c163b849016dc773ab498551004`.
-- Shipped the checked-in Architecture manifest and schema with 36 nodes, 59 edges, 5 boundaries, and 13 views.
-- Added deterministic manifest validation plus direct validator rejection tests for duplicate IDs, invalid references, and unsupported verification statuses.
-- Verified the live GitHub Pages deployment serves the Architecture tab, `data/architecture-map.json`, and the updated `script.js` and `styles.css` assets.
-- Verified live Architecture behavior: no manifest fetch on initial Overview load, one manifest fetch on first Architecture open, stable cached reuse on view changes and tab reopen, working click and keyboard selection, verified-only filtering, and no desktop or mobile page-level horizontal overflow.
-- Observed an unrelated live research warning from `research_best_factor_combinations` returning HTTP 500 from Supabase; Architecture behavior remained unaffected and no new Architecture-specific console errors were present.
-- Replaced the old horizontal Architecture graph with the vertical waterfall renderer at implementation commit `7586016d89c1e06c9f20beed3201034248d1e048` and deployed it with cache-busted asset commit `9407893cc668b47fc9ddddf0cfa4b9e8a6f722bc`.
-- Changed the Architecture presentation to a strict top-to-bottom waterfall with full-width canvas use, below-canvas detail layout, and a compact collapsible legend.
-- Changed Overview into the exact 8-stage top-to-bottom order: External Data, Collection and Storage, Master Orchestration, Layer 1 Agents, Layer 2 Selection, Artifact Publication, Dashboard, Research System.
-- Changed every focused Architecture view to a deterministic top-to-bottom waterfall with contained responsive grids for parallel nodes, centered vertical connectors, no absolute node placement, no SVG bus routing, and no horizontal scrolling.
-- Verified the live GitHub Pages deployment at `1440x900`, `1920x1080`, `1024x768`, and `390x844`, with all 13 Architecture views rendering inside bounds with no card overlap, no stage overlap, no horizontal Architecture scrollbar, and no new Architecture-specific console errors.
+Validation: 275 combined local tests passed, plus five provider credential-reference regressions. Eighteen viewport/page combinations passed without overflow or JavaScript errors. The complete staged scan found only documented placeholders/self-referential allowlist text after credential sanitization; its narrowly corrected follow-up is clean. Live workflows, warehouse writes and production publication were not performed.
 
-## Unfinished Work
+The integration baseline is ready for the original-folder cutover and final installation/evidence verification. Recovery scripts/logs are under ignored `backtester/tmp/consolidation-20260907/` until copied to `.local/consolidation-20260907/` in the main folder.
 
-- Await review of the deployed Architecture Mirror.
-- Leave the six explicitly unverified architecture relationships unchanged until stronger repository evidence exists.
-
-## Blockers
-
-- No repository-side blocker.
-
-## Assumptions
-
-- The CLIXML local credential store remains the supported continuity foundation and should not be replaced with SecretStore.
-- Future sessions should bootstrap with `powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts\bootstrap-local-secrets.ps1` and validate with `powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts\check-required-secrets.ps1 -Scope all`.
-- The Architecture Mirror remains read-only and must not alter production or research logic.
-- The first Architecture release should be driven from a checked-in manifest rather than hand-maintained independent diagrams.
-- Production versus research-only boundaries and failure/status paths must be explicit in the mirror.
-
-## Exact Next Task
-
-Review the deployed Architecture Mirror and approve or reject any follow-up milestone.
+Next workstream after cutover: follow `BACKTESTING_REVIEW_PLAN.md`, starting with the Gold timestamped directional contract. GBP expansion and macro work remain parked; Gold history-query repair is still unapplied.

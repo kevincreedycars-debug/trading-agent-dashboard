@@ -1,4 +1,24 @@
+# 2026-09-07 ? Repository consolidation
+
+Preserved all existing worktrees and local evidence; reconciled research and production dashboard files; retained GBP drafts and isolated macro source; removed collector export credential literals; made local tests repeatable; archived superseded handoffs and established a focused backtesting review plan. Validation: 275 local tests plus five credential-reference regressions pass; 18 browser viewport/page combinations pass. Local baseline only; no production publication. See `CONSOLIDATION_20260907.md`.
+
 # Changelog
+
+## 2026-09-06 - Gold stored-call evidence and collector history defect
+
+- Acquired 154 recorded Gold calls and 76,143 completed OANDA M1 candles through read-only APIs, retaining raw evidence and hashes locally.
+- Confirmed the active Gold collector reads 25 unordered history rows: the June 9 price anchors 143 of 147 linked snapshots. Prepared an unapplied query patch; a replacement GET returned 543 rows across 49 recent dates.
+- Reproduced all 154 recorded directions and ten-factor signal sets from their linked inputs. A counterfactual one-day input repair changes 97 F5 signals and 19 directions; no outcome-improvement claim or historical rewrite.
+- Built a stored-call pilot: 97 exact-endpoint outcomes, 45 correct/37 wrong/13 flat/2 no-call; zero strict continuous paths. Earlier/later directional accuracy is 68.0%/34.4%, with explicit storage-time, cohort and input-quality limitations.
+- Added opt-in delayed entry and endpoint diagnostics, indexed batch candle lookup, factor correlation and cohort baselines. Fixed as-of selection advancing explicit cutoffs and clearing upstream rejections.
+- Updated the offline Gold evidence page, reproduction guide and research handoff. Focused validation: 87 passing tests, including desktop/narrow browser checks. No production writes, deployment, activation or weight changes.
+
+## 2026-09-01 - Layer 2 refresh timeout hardening
+
+- Replaced the unfiltered 1,000-row `agent_outputs` read in Layer 2 with five bounded, newest-first Layer 1 agent reads.
+- Added the `agent_outputs` lookup index migration and a guarded production apply script that backs up the live n8n workflow before updating it.
+- Extended the Eco Events duplicate guard to the collector's full rolling seven-day window, so existing future events update rather than violate the composite unique key.
+- Reduced Dashboard Writer reads from 250 to 20 newest-first rows per agent, preserving the published data contract while preventing unnecessary full-output memory pressure.
 
 ## 2026-07-21
 
