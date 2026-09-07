@@ -1,0 +1,282 @@
+{
+  "name": "DRAFT - Data Collector - GBP",
+  "description": "Reviewable DRAFT (2026-09-05) of the GBP Layer 1 market collector. Not deployed, not activated. Modeled on the EUR collector contract; FRED api_key values are placeholders. Unavailable fundamentals (UK 2Y, BoE bias, UK events, UK PMI, UK stress) are written null + data_quality.missing.",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "url": "https://api.stlouisfed.org/fred/series/observations?series_id=DGS2&sort_order=desc&limit=25&file_type=json&api_key=FRED_API_KEY_PLACEHOLDER_DO_NOT_COMMIT_REAL_KEY",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        160,
+        0
+      ],
+      "name": "HTTP Request | US 2Y Treasury Yield - FRED API"
+    },
+    {
+      "parameters": {
+        "url": "https://api.stlouisfed.org/fred/series/observations?series_id=VIXCLS&sort_order=desc&limit=25&file_type=json&api_key=FRED_API_KEY_PLACEHOLDER_DO_NOT_COMMIT_REAL_KEY",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        320,
+        0
+      ],
+      "name": "HTTP Request | VIX - FRED Api",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "url": "https://api.stlouisfed.org/fred/series/observations?series_id=DTWEXBGS&sort_order=desc&limit=25&file_type=json&api_key=FRED_API_KEY_PLACEHOLDER_DO_NOT_COMMIT_REAL_KEY",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        480,
+        0
+      ],
+      "name": "HTTP Request | DXY - FRED Dollar Index - FRED API"
+    },
+    {
+      "parameters": {
+        "url": "https://api.stlouisfed.org/fred/series/observations?series_id=IRLTLT01GBM156N&sort_order=desc&limit=25&file_type=json&api_key=FRED_API_KEY_PLACEHOLDER_DO_NOT_COMMIT_REAL_KEY",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        640,
+        0
+      ],
+      "name": "HTTP Request | UK 10Y Benchmark Yield - FRED api"
+    },
+    {
+      "parameters": {
+        "url": "https://api.coinbase.com/v2/prices/GBP-USD/spot",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        800,
+        0
+      ],
+      "name": "HTTP Request | GBP/USD - Coinbase",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "market_snapshots",
+        "limit": 25
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        960,
+        0
+      ],
+      "name": "Supabase | Get Previous Market Snapshots",
+      "credentials": {
+        "supabaseApi": {
+          "id": "trM35g1QCTOgQp4K",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// GBP collector draft v0.1 (2026-09-05). Builds a market_snapshots row for the\r\n// GBP Layer 1 agent using repo-verified providers only. Unavailable fundamentals\r\n// (UK 2Y, BoE bias, UK events, UK PMI, UK stress) are written null and listed in\r\n// data_quality.missing - never proxied or guessed.\r\n\r\nfunction num(v) {\r\n  if (v === null || v === undefined || v === \".\" || v === \"\") return null;\r\n  const cleaned = String(v).replace(\"%\", \"\").replace(\",\", \".\").trim();\r\n  const n = Number(cleaned);\r\n  return Number.isFinite(n) ? n : null;\r\n}\r\n\r\nfunction getNode(name) {\r\n  try {\r\n    return $(name).first().json;\r\n  } catch (error) {\r\n    return null;\r\n  }\r\n}\r\n\r\nfunction getNodeAll(name) {\r\n  try {\r\n    return $(name).all().map((item) => item.json);\r\n  } catch (error) {\r\n    return [];\r\n  }\r\n}\r\n\r\nfunction fredLatest(data) {\r\n  const obs = (data && data.observations) || [];\r\n  const valid = obs.filter((o) => num(o.value) !== null);\r\n  const latest = num(valid[0] && valid[0].value);\r\n  return {\r\n    latest,\r\n    d1: valid[1] && latest !== null ? latest - num(valid[1].value) : null,\r\n    d5: valid[5] && latest !== null ? latest - num(valid[5].value) : null,\r\n    d20: valid[20] && latest !== null ? latest - num(valid[20].value) : null,\r\n    date: (valid[0] && valid[0].date) || null\r\n  };\r\n}\r\n\r\nfunction fredPct(data) {\r\n  const obs = (data && data.observations) || [];\r\n  const valid = obs.filter((o) => num(o.value) !== null);\r\n  const latest = num(valid[0] && valid[0].value);\r\n  function pct(i) {\r\n    const old = num(valid[i] && valid[i].value);\r\n    if (latest === null || old === null || old === 0) return null;\r\n    return ((latest - old) / old) * 100;\r\n  }\r\n  return {\r\n    latest,\r\n    d1: pct(1),\r\n    d5: pct(5),\r\n    d20: pct(20),\r\n    date: (valid[0] && valid[0].date) || null\r\n  };\r\n}\r\n\r\nfunction coinbasePrice(data) {\r\n  return num(data && data.data && data.data.amount);\r\n}\r\n\r\nfunction bps(v) {\r\n  return v === null || v === undefined ? null : v * 100;\r\n}\r\n\r\nfunction pctChange(current, old) {\r\n  current = num(current);\r\n  old = num(old);\r\n  if (current === null || old === null || old === 0) return null;\r\n  return ((current - old) / old) * 100;\r\n}\r\n\r\nconst now = new Date();\r\nconst today = now.toISOString().slice(0, 10);\r\n\r\nconst previousRows = getNodeAll(\"Supabase | Get Previous Market Snapshots\")\r\n  .filter((r) => r.snapshot_date && r.run_time_et && r.snapshot_date < today)\r\n  .sort((a, b) => new Date(b.run_time_et) - new Date(a.run_time_et));\r\n\r\nconst uniquePreviousRows = [];\r\nconst seenDates = new Set();\r\nfor (const row of previousRows) {\r\n  if (!seenDates.has(row.snapshot_date)) {\r\n    seenDates.add(row.snapshot_date);\r\n    uniquePreviousRows.push(row);\r\n  }\r\n}\r\n\r\nfunction historyPct(current, field, index) {\r\n  const oldRow = uniquePreviousRows[index];\r\n  return oldRow ? pctChange(current, oldRow[field]) : null;\r\n}\r\n\r\nconst us2y = fredLatest(getNode(\"HTTP Request | US 2Y Treasury Yield - FRED API\"));\r\nconst vix = fredLatest(getNode(\"HTTP Request | VIX - FRED Api\"));\r\nconst dxy = fredPct(getNode(\"HTTP Request | DXY - FRED Dollar Index - FRED API\"));\r\nconst uk10y = fredLatest(getNode(\"HTTP Request | UK 10Y Benchmark Yield - FRED api\"));\r\nconst gbpusdPrice = coinbasePrice(getNode(\"HTTP Request | GBP/USD - Coinbase\"));\r\n\r\n// Global growth regime uses the shared snapshot NQ 20-day trend when enough NQ\r\n// history exists in previous rows (same derivation as the EUR collector).\r\n\r\nconst missing = [];\r\nfunction checkMissing(label, value) {\r\n  if (value === null || value === undefined) missing.push(label);\r\n}\r\ncheckMissing(\"vix_level\", vix.latest);\r\ncheckMissing(\"dxy_level\", dxy.latest);\r\ncheckMissing(\"us_2y_yield\", us2y.latest);\r\ncheckMissing(\"gbpusd_price\", gbpusdPrice);\r\n// Unavailable by design (no repo-verified provider on 2026-09-05):\r\nmissing.push(\"uk_2y_yield (no verified UK 2Y daily provider)\");\r\nmissing.push(\"uk_2y_d5_bps (depends on UK 2Y)\");\r\nmissing.push(\"us_uk_2y_spread_d5_bps (depends on UK 2Y)\");\r\nmissing.push(\"boe_bias (UK economic events coverage not available)\");\r\nmissing.push(\"latest_uk_event (UK economic events coverage not available)\");\r\nmissing.push(\"uk_composite_pmi / uk_composite_pmi_direction (no verified UK PMI source)\");\r\nmissing.push(\"uk_stress_flag (no repo-verified UK stress proxy)\");\r\nmissing.push(\"global_growth_regime (requires 20 shared NQ snapshot rows)\");\r\nmissing.push(\"gbpusd_d1_pct (requires previous GBP snapshot row)\");\r\n\r\nconst row = {\r\n  snapshot_date: today,\r\n  run_time_et: now.toISOString(),\r\n  source_status: \"partial\",\r\n  collector_version: \"gbp_collector_draft_v0_1\",\r\n\r\n  vix_level: vix.latest,\r\n  vix_d1: vix.d1,\r\n  vix_d5: vix.d5,\r\n\r\n  dxy_level: dxy.latest,\r\n  dxy_d1: dxy.d1,\r\n  dxy_d5: dxy.d5,\r\n  dxy_d20: dxy.d20,\r\n\r\n  us_2y_yield: us2y.latest,\r\n  us_2y_d5_bps: bps(us2y.d5),\r\n  us_2y_d20_bps: bps(us2y.d20),\r\n\r\n  uk_10y_yield: uk10y.latest,\r\n  uk_10y_d5_bps: bps(uk10y.d5),\r\n  uk_10y_d20_bps: bps(uk10y.d20),\r\n\r\n  uk_2y_yield: null,\r\n  uk_2y_d5_bps: null,\r\n  uk_2y_d20_bps: null,\r\n\r\n  us_uk_2y_spread: null,\r\n  us_uk_2y_spread_d5_bps: null,\r\n  us_uk_2y_spread_d20_bps: null,\r\n\r\n  gbpusd_price: gbpusdPrice,\r\n  gbpusd_d1_pct: historyPct(gbpusdPrice, \"gbpusd_price\", 0),\r\n  gbpusd_d5_pct: historyPct(gbpusdPrice, \"gbpusd_price\", 4),\r\n  gbpusd_d20_pct: historyPct(gbpusdPrice, \"gbpusd_price\", 19),\r\n\r\n  boe_bias: null,\r\n  latest_uk_event: null,\r\n  uk_composite_pmi: null,\r\n  uk_composite_pmi_direction: null,\r\n  uk_stress_flag: null,\r\n\r\n  equities_regime: equitiesRegime,\r\n  global_growth_regime: globalGrowthRegime,\r\n\r\n  data_quality: {\r\n    collector_status: \"partial_by_design\",\r\n    missing,\r\n    history_rows_used: uniquePreviousRows.length,\r\n    notes: [\r\n      \"GBP collector draft v0.1; review-only, not deployed.\",\r\n      \"FRED api_key values in this draft are placeholders; configure the real key outside the repository.\",\r\n      \"dxy uses the repo's DTWEXBGS broad-dollar proxy; naming vs dxy_d1_pct is an open reconciliation item.\",\r\n      \"UK 2Y / BoE bias / UK events / UK PMI / UK stress are unavailable until providers are approved.\"\r\n    ]\r\n  },\r\n\r\n  raw_payload: {\r\n    previous_snapshot_dates_used: uniquePreviousRows.map((r) => r.snapshot_date),\r\n    us2y,\r\n    vix,\r\n    dxy,\r\n    uk10y\r\n  }\r\n};\r\n\r\nreturn [{ json: row }];\r\n\r\nconst nqRows = uniquePreviousRows.filter((r) => r.nq_price !== null && r.nq_price !== undefined);\r\nlet globalGrowthRegime = null;\r\nif (nqRows.length >= 20) {\r\n  const nq20dPct = pctChange(nqRows[0].nq_price, nqRows[19].nq_price);\r\n  globalGrowthRegime = nq20dPct !== null ? (nq20dPct > 5 ? \"expanding\" : nq20dPct < -5 ? \"contracting\" : \"neutral\") : null;\r\n}\r\n\r\nconst equitiesRegime =\r\n  vix.latest !== null\r\n    ? vix.latest < 16\r\n      ? \"risk_on\"\r\n      : vix.latest > 25\r\n        ? \"risk_off\"\r\n        : \"neutral\"\r\n    : null;\r\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        320
+      ],
+      "name": "Code | Build GBP Snapshot Row"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Fail closed: never insert a snapshot row that cannot support a GBP snapshot\r\n// read (requires GBP/USD spot price plus identity timestamps).\r\nconst row = $input.first().json;\r\n\r\nif (\r\n  !row ||\r\n  !row.snapshot_date ||\r\n  !row.run_time_et ||\r\n  row.gbpusd_price === null ||\r\n  row.gbpusd_price === undefined\r\n) {\r\n  return [];\r\n}\r\n\r\nreturn [{ json: row }];\r\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        560,
+        320
+      ],
+      "name": "Code | Evaluate GBP Snapshot Usability"
+    },
+    {
+      "parameters": {
+        "tableId": "market_snapshots",
+        "dataToSend": "autoMapInputData"
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        800,
+        320
+      ],
+      "name": "Create a row",
+      "credentials": {
+        "supabaseApi": {
+          "id": "trM35g1QCTOgQp4K",
+          "name": "Supabase account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request | US 2Y Treasury Yield - FRED API",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "HTTP Request | VIX - FRED Api",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "HTTP Request | DXY - FRED Dollar Index - FRED API",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "HTTP Request | UK 10Y Benchmark Yield - FRED api",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "HTTP Request | GBP/USD - Coinbase",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Supabase | Get Previous Market Snapshots",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request | US 2Y Treasury Yield - FRED API": {
+      "main": [
+        [
+          {
+            "node": "Code | Build GBP Snapshot Row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request | VIX - FRED Api": {
+      "main": [
+        [
+          {
+            "node": "Code | Build GBP Snapshot Row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request | DXY - FRED Dollar Index - FRED API": {
+      "main": [
+        [
+          {
+            "node": "Code | Build GBP Snapshot Row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request | UK 10Y Benchmark Yield - FRED api": {
+      "main": [
+        [
+          {
+            "node": "Code | Build GBP Snapshot Row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request | GBP/USD - Coinbase": {
+      "main": [
+        [
+          {
+            "node": "Code | Build GBP Snapshot Row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase | Get Previous Market Snapshots": {
+      "main": [
+        [
+          {
+            "node": "Code | Build GBP Snapshot Row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Build GBP Snapshot Row": {
+      "main": [
+        [
+          {
+            "node": "Code | Evaluate GBP Snapshot Usability",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Evaluate GBP Snapshot Usability": {
+      "main": [
+        [
+          {
+            "node": "Create a row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

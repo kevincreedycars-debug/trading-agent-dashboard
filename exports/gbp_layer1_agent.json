@@ -1,0 +1,280 @@
+{
+  "name": "DRAFT - GBP Layer 1 Agent",
+  "description": "Reviewable DRAFT (2026-09-05) of the independent GBP Layer 1 agent. Not deployed, not activated. Reads only logic/agent_gbp_direction.md and shared market_snapshots; writes agent_outputs (layer 1, agent GBP). 24H-only until a multi-timeframe review is approved.",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "market_snapshots",
+        "returnAll": true,
+        "filterType": "none"
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        160,
+        0
+      ],
+      "name": "Supabase Get Many",
+      "credentials": {
+        "supabaseApi": {
+          "id": "trM35g1QCTOgQp4K",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// GBP Layer 1 agent draft v0.1 (2026-09-05): select the latest usable GBP market\r\n// snapshot and expose the GBP input contract. Fails closed when no GBP snapshot\r\n// with a GBP/USD price exists, and when the only available snapshot is stale.\r\n\r\nconst rows = $input.all().map((item) => item.json);\r\n\r\nfunction hasValue(v) {\r\n  return v !== null && v !== undefined && v !== \"\";\r\n}\r\n\r\n// Latest GBP trading weekday on or before the previous UTC day. Used so that a\r\n// Monday run can accept a Friday snapshot (weekend closure) but a Tuesday run\r\n// cannot accept a Friday snapshot.\r\nfunction latestGbpWeekdayOnOrBeforePreviousDay(date) {\r\n  const d = new Date(date.getTime());\r\n  d.setUTCDate(d.getUTCDate() - 1);\r\n  let guard = 0;\r\n  while ((d.getUTCDay() === 0 || d.getUTCDay() === 6) && guard < 5) {\r\n    d.setUTCDate(d.getUTCDate() - 1);\r\n    guard += 1;\r\n  }\r\n  return d.toISOString().slice(0, 10);\r\n}\r\n\r\nfunction isUsableGbpSnapshot(row) {\r\n  return Boolean(row.snapshot_date && row.run_time_et && hasValue(row.gbpusd_price));\r\n}\r\n\r\nfunction isStaleGbpSnapshot(row, now) {\r\n  const runTime = new Date(row.run_time_et || row.created_at || 0).getTime();\r\n  const ageHours = (now.getTime() - runTime) / 3600000;\r\n  const latestExpected = latestGbpWeekdayOnOrBeforePreviousDay(now);\r\n  return ageHours > 26 && String(row.snapshot_date) < latestExpected;\r\n}\r\n\r\nconst now = new Date();\r\n\r\nconst sortedRows = rows\r\n  .filter((r) => r.snapshot_date && r.run_time_et)\r\n  .sort((a, b) => {\r\n    const bTime = new Date(b.run_time_et || b.created_at || 0).getTime();\r\n    const aTime = new Date(a.run_time_et || a.created_at || 0).getTime();\r\n    return bTime - aTime;\r\n  });\r\n\r\nconst usableRows = sortedRows.filter(isUsableGbpSnapshot);\r\n\r\nconst snapshot =\r\n  usableRows.find((r) => r.collector_version === \"gbp_collector_draft_v0_1\" && !isStaleGbpSnapshot(r, now)) ||\r\n  usableRows.find((r) => !isStaleGbpSnapshot(r, now)) ||\r\n  null;\r\n\r\nif (!snapshot) {\r\n  const freshest = sortedRows[0];\r\n  const detail = freshest\r\n    ? `latest row snapshot_date=${freshest.snapshot_date} run_time_et=${freshest.run_time_et} has gbpusd_price=${hasValue(freshest.gbpusd_price)}`\r\n    : \"no GBP snapshot rows found\";\r\n  throw new Error(`No usable GBP market snapshot found (${detail})`);\r\n}\r\n\r\nconst quality = (() => {\r\n  if (!snapshot.data_quality) return {};\r\n  if (typeof snapshot.data_quality === \"object\") return snapshot.data_quality;\r\n  try {\r\n    return JSON.parse(snapshot.data_quality);\r\n  } catch (error) {\r\n    return {};\r\n  }\r\n})();\r\n\r\n\r\nfunction numOrNull(v) {\r\n  if (!hasValue(v)) return null;\r\n  const n = Number(v);\r\n  return Number.isFinite(n) ? n : null;\r\n}\r\n\r\nfunction parseMaybeJson(v) {\r\n  if (!hasValue(v)) return null;\r\n  if (typeof v === \"object\") return v;\r\n  try {\r\n    return JSON.parse(v);\r\n  } catch (error) {\r\n    return v;\r\n  }\r\n}\r\n\r\nconst missingInputs = [];\r\nconst warnings = [];\r\n\r\nfunction requireInput(key, label = key) {\r\n  const value = snapshot[key];\r\n  if (!hasValue(value)) {\r\n    missingInputs.push(label);\r\n    return null;\r\n  }\r\n  return value;\r\n\r\nconst gbpInputPack = {\r\n  snapshot_id: snapshot.id || null,\r\n  run_time_et: snapshot.run_time_et,\r\n  snapshot_date: snapshot.snapshot_date,\r\n  collector_version: snapshot.collector_version || null,\r\n\r\n  snapshot_selection: {\r\n    selected_from_rows: sortedRows.length,\r\n    selected_by: selectedBy,\r\n    missing_required_inputs_for_gbp: missingInputs,\r\n    data_quality: quality,\r\n    warnings,\r\n    top_5_rows_seen_by_workflow: debugTopRows\r\n  },\r\n\r\n  available_inputs: {\r\n    gbpusd_price: requireInput(\"gbpusd_price\"),\r\n    gbpusd_d1_pct: numOrNull(snapshot.gbpusd_d1_pct),\r\n    gbpusd_d5_pct: numOrNull(snapshot.gbpusd_d5_pct),\r\n    gbpusd_d20_pct: numOrNull(snapshot.gbpusd_d20_pct),\r\n\r\n    vix_level: requireInput(\"vix_level\"),\r\n    vix_d1: numOrNull(snapshot.vix_d1),\r\n    vix_d5: numOrNull(snapshot.vix_d5),\r\n\r\n    dxy_level: numOrNull(snapshot.dxy_level),\r\n    dxy_d1: numOrNull(snapshot.dxy_d1),\r\n    dxy_d5: numOrNull(snapshot.dxy_d5),\r\n    dxy_d20: numOrNull(snapshot.dxy_d20),\r\n\r\n    us_2y_yield: numOrNull(snapshot.us_2y_yield),\r\n    us_2y_d5_bps: numOrNull(snapshot.us_2y_d5_bps),\r\n    us_2y_d20_bps: numOrNull(snapshot.us_2y_d20_bps),\r\n\r\n    uk_10y_yield: numOrNull(snapshot.uk_10y_yield),\r\n    uk_10y_d5_bps: numOrNull(snapshot.uk_10y_d5_bps),\r\n\r\n    uk_2y_yield: numOrNull(snapshot.uk_2y_yield),\r\n    uk_2y_d5_bps: numOrNull(snapshot.uk_2y_d5_bps),\r\n    uk_2y_d20_bps: numOrNull(snapshot.uk_2y_d20_bps),\r\n\r\n    us_uk_2y_spread: numOrNull(snapshot.us_uk_2y_spread),\r\n    us_uk_2y_spread_d5_bps: numOrNull(snapshot.us_uk_2y_spread_d5_bps),\r\n    us_uk_2y_spread_d20_bps: numOrNull(snapshot.us_uk_2y_spread_d20_bps),\r\n\r\n    boe_bias: snapshot.boe_bias ?? null,\r\n    latest_uk_event: parseMaybeJson(snapshot.latest_uk_event),\r\n    uk_composite_pmi: numOrNull(snapshot.uk_composite_pmi),\r\n    uk_composite_pmi_direction: snapshot.uk_composite_pmi_direction ?? null,\r\n    uk_stress_flag: snapshot.uk_stress_flag ?? null,\r\n\r\n    equities_regime: snapshot.equities_regime ?? null,\r\n    global_growth_regime: snapshot.global_growth_regime ?? null\r\n  },\r\n\r\n  missing_inputs_must_be_scored_neutral: [\r\n    \"boe_bias if unavailable\",\r\n    \"uk_2y_d5_bps or uk_2y_d20_bps if unavailable\",\r\n    \"us_uk_2y_spread_d5_bps or us_uk_2y_spread_d20_bps if unavailable\",\r\n    \"latest_uk_event if unavailable\",\r\n    \"uk_composite_pmi or uk_composite_pmi_direction if unavailable\",\r\n    \"gbpusd_d1_pct, gbpusd_d5_pct or gbpusd_d20_pct if unavailable\",\r\n    \"dxy_d1, dxy_d5 or dxy_d20 if unavailable\",\r\n    \"uk_stress_flag if unavailable\",\r\n    \"global_growth_regime if unavailable\",\r\n    \"vix_level, vix_d1 or vix_d5 if unavailable\"\r\n  ],\r\n\r\n  gbp_factor_map: {\r\n    F1: \"BoE policy bias\",\r\n    F2: \"UK 2Y yield delta\",\r\n    F3: \"US-UK 2Y spread delta\",\r\n    F4: \"UK economic surprise\",\r\n    F5: \"UK PMI trend\",\r\n    F6: \"GBP own-price delta\",\r\n    F7: \"DXY confirmation\",\r\n    F8: \"Risk appetite / VIX regime\",\r\n    F9: \"Global growth regime\",\r\n    F10: \"UK stress\"\r\n  }\r\n};\r\n\r\nreturn [{ json: gbpInputPack }];\r\n\r\n}\r\n\r\nconst selectedBy = snapshot.collector_version === \"gbp_collector_draft_v0_1\"\r\n  ? \"latest_gbp_draft_usable_snapshot\"\r\n  : \"latest_gbp_usable_snapshot\";\r\n\r\nconst debugTopRows = sortedRows.slice(0, 5).map((r, index) => ({\r\n  rank: index + 1,\r\n  id: r.id || null,\r\n  created_at: r.created_at || null,\r\n  run_time_et: r.run_time_et,\r\n  snapshot_date: r.snapshot_date,\r\n  collector_version: r.collector_version || null,\r\n  source_status: r.source_status || null,\r\n  gbpusd_price: r.gbpusd_price || null,\r\n  gbp_usable: isUsableGbpSnapshot(r),\r\n  stale: isStaleGbpSnapshot(r, now)\r\n}));\r\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        160,
+        320
+      ],
+      "name": "Code | Build GBP Input Pack"
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "resource": "file",
+        "operation": "get",
+        "owner": {
+          "__rl": true,
+          "value": "kevincreedycars-debug",
+          "mode": "list",
+          "cachedResultName": "kevincreedycars-debug",
+          "cachedResultUrl": "https://github.com/kevincreedycars-debug"
+        },
+        "repository": {
+          "__rl": true,
+          "value": "trading-agent-dashboard",
+          "mode": "list",
+          "cachedResultName": "trading-agent-dashboard",
+          "cachedResultUrl": "https://github.com/kevincreedycars-debug/trading-agent-dashboard"
+        },
+        "filePath": "logic/agent_gbp_direction.md",
+        "asBinaryProperty": false,
+        "additionalParameters": {}
+      },
+      "type": "n8n-nodes-base.github",
+      "typeVersion": 1.1,
+      "position": [
+        360,
+        320
+      ],
+      "name": "Get GBP Logic Document",
+      "credentials": {
+        "githubOAuth2Api": {
+          "id": "wr4dhSbWkjNonhfi",
+          "name": "GitHub account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// GBP Layer 1 agent draft v0.1: combine the GBP logic document with the selected\r\n// GBP input pack for the model prompt.\r\nconst logicItem = $(\"Get GBP Logic Document\").first().json;\r\nconst inputPack = $(\"Build GBP Input Pack\").first().json;\r\n\r\nlet logicDocument = logicItem.content || \"\";\r\n\r\nif (logicItem.encoding === \"base64\") {\r\n  logicDocument = Buffer.from(logicDocument, \"base64\").toString(\"utf8\");\r\n}\r\n\r\nreturn [\r\n  {\r\n    json: {\r\n      logic_document: logicDocument,\r\n      market_snapshot: inputPack\r\n    }\r\n  }\r\n];\r\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        560,
+        320
+      ],
+      "name": "Code | Combine GBP logic & market snapshot"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4.1-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4.1-MINI"
+        },
+        "responses": {
+          "values": [
+            {
+              "role": "system",
+              "content": "You are the GBP Layer 1 Direction Agent.\nYou must follow the supplied GBP logic document exactly.\nYou analyse GBP only.\nYou must not produce GBP/USD pair calls, trade recommendations, cross-asset calls, consensus calls, or Layer 2 event-adjusted calls.\nYou must not use technical analysis, chart patterns, support/resistance, RSI, MACD, moving averages, or indicator logic.\nUse only the supplied market snapshot and supplied logic document.\nIf required inputs are missing or null, score the affected factor as NEUTRAL and clearly state the missing input.\nReturn valid JSON only.\nDo not wrap the JSON in markdown fences. Do not include ```json. Return raw JSON only."
+            },
+            {
+              "content": "={\n  \"logic_document\": \"{{ $json.logic_document }}\",\n  \"market_snapshot\": {{ JSON.stringify($json.market_snapshot) }},\n  \"output_requirement\": {\n    \"asset\": \"GBP\",\n    \"layer\": \"Layer 1 Raw\",\n    \"format\": \"valid_json_only\"\n  }\n}"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {
+          "textFormat": {
+            "textOptions": {
+              "type": "json_object"
+            }
+          }
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.3,
+      "position": [
+        760,
+        320
+      ],
+      "name": "Message a model",
+      "credentials": {
+        "openAiApi": {
+          "id": "VY1FMMlFQNwU3Ctt",
+          "name": "OpenAI account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// GBP Layer 1 agent draft v0.1: tolerant OpenAI output parser (object|string) that\r\n// maps the model JSON into the agent_outputs row contract for the GBP 24H call.\r\nconst openAiItem = $input.first().json;\r\n\r\nlet raw =\r\n  openAiItem.output?.[0]?.content?.[0]?.text ??\r\n  openAiItem.output?.[0]?.content?.[0] ??\r\n  openAiItem.text ??\r\n  openAiItem.message ??\r\n  openAiItem;\r\n\r\nif (!raw) {\r\n  throw new Error(\"No OpenAI output found\");\r\n}\r\n\r\nlet report;\r\n\r\nif (typeof raw === \"object\") {\r\n  report = raw;\r\n} else {\r\n  try {\r\n    report = JSON.parse(String(raw));\r\n  } catch (error) {\r\n    throw new Error(`OpenAI returned invalid JSON: ${error.message}. Raw text: ${String(raw).slice(0, 1000)}`);\r\n  }\r\n}\r\n\r\nconst inputPack = $(\"Build GBP Input Pack\").first().json || {};\r\nconst marketInputs = inputPack.available_inputs || {};\r\n\r\nfunction pct(value) {\r\n  if (value === null || value === undefined || value === \"\") return null;\r\n  const match = String(value).match(/(\\d+(\\.\\d+)?)/);\r\n  return match ? Number(match[1]) : null;\r\n}\r\n\r\nfunction reasonFor24h() {\r\n  return report.reason_24h || report.reasoning_summary || \"\";\r\n}\r\n\r\nreturn [\r\n  {\r\n    json: {\r\n      snapshot_id: inputPack.snapshot_id || null,\r\n      agent_name: \"GBP\",\r\n      layer: 1,\r\n\r\n      run_time_et: inputPack.run_time_et || new Date().toISOString(),\r\n      snapshot_date: inputPack.snapshot_date || new Date().toISOString().slice(0, 10),\r\n\r\n      market_inputs: marketInputs,\r\n      snapshot_selection: inputPack.snapshot_selection || null,\r\n\r\n      call_24h_direction: report.direction_24h || report.call_24h_direction || null,\r\n      call_24h_conviction: pct(report.conviction_24h ?? report.call_24h_conviction),\r\n      call_24h_reason: reasonFor24h(),\r\n\r\n      direction_24h: report.direction_24h || null,\r\n      conviction_24h: pct(report.conviction_24h),\r\n\r\n      factor_breakdown: report.factor_breakdown || {},\r\n      weighted_score: report.weighted_score || null,\r\n      conviction_model: report.conviction_model || null,\r\n\r\n      missing_inputs: report.missing_inputs || [],\r\n      reasoning_summary: report.reasoning_summary || \"\",\r\n\r\n      risk_flags: report.risk_flags || [],\r\n      warnings: report.warnings || [],\r\n\r\n      full_output: {\r\n        ...report,\r\n        market_inputs_seen_by_workflow: marketInputs,\r\n        snapshot_selection: inputPack.snapshot_selection || null\r\n      },\r\n\r\n      raw_agent_output: report,\r\n\r\n      logic_document: \"agent_gbp_direction.md\",\r\n      logic_document_version: report.logic_document_version || \"0.1_research_baseline\",\r\n\r\n      score_bullish: report.score_bullish ?? null,\r\n      score_bearish: report.score_bearish ?? null,\r\n      score_neutral: report.score_neutral ?? null\r\n    }\r\n  }\r\n];\r\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        760,
+        480
+      ],
+      "name": "Code | Parse GBP Agent Output"
+    },
+    {
+      "parameters": {
+        "jsCode": "// GBP Layer 1 agent draft v0.1: deterministic 24H verdict gate. Recomputes the 24H\r\n// direction/conviction from the factor signals in the model output using the\r\n// logic-document weight table (agent_gbp_direction.md), overriding any model\r\n// confidence so the published verdict is deterministic.\r\nconst item = $input.first().json;\r\nconst breakdown = item.factor_breakdown || {};\r\n\r\n// Must stay identical to the logic-document factor table and to\r\n// backtester/replay/gbp/gbp_replay_core.js LIVE_24H_FACTOR_WEIGHTS.\r\nconst WEIGHTS = {\r\n  F1: 20,\r\n  F2: 16,\r\n  F3: 20,\r\n  F4: 12,\r\n  F5: 8,\r\n  F6: 10,\r\n  F7: 6,\r\n  F8: 4,\r\n  F9: 2,\r\n  F10: 2\r\n};\r\n\r\nfunction normaliseSignal(factor) {\r\n  const signal = String((factor && factor.signal) || \"\").toUpperCase();\r\n  if (signal === \"BULLISH\" || signal === \"BEARISH\") return signal;\r\n  return \"NEUTRAL\";\r\n}\r\n\r\nlet bullishWeight = 0;\r\nlet bearishWeight = 0;\r\nlet neutralWeight = 0;\r\nconst factorSignals = {};\r\n\r\nfor (const key of Object.keys(WEIGHTS)) {\r\n  const signal = normaliseSignal(breakdown[key]);\r\n  const weight = WEIGHTS[key];\r\n  factorSignals[key] = signal;\r\n  if (signal === \"BULLISH\") bullishWeight += weight;\r\n  else if (signal === \"BEARISH\") bearishWeight += weight;\r\n  else neutralWeight += weight;\r\n}\r\n\r\nconst active = bullishWeight + bearishWeight;\r\nconst missingFactorCount = Object.keys(WEIGHTS).filter((key) => !breakdown[key] || !breakdown[key].signal).length;\r\n\r\nlet direction = \"NO_CLEAR_BIAS\";\r\nlet conviction = 0;\r\nlet weightedScore = null;\r\nlet convictionModel = null;\r\n\r\nif (active > 0) {\r\n  const bullishArgument = Math.round((bullishWeight / active) * 100);\r\n  const bearishArgument = Math.round((bearishWeight / active) * 100);\r\n  const netEdge = bullishArgument - bearishArgument;\r\n  const winningSide = bullishArgument > bearishArgument ? \"BULLISH\" : bearishArgument > bullishArgument ? \"BEARISH\" : \"NO_CLEAR_BIAS\";\r\n\r\n  direction = winningSide === \"NO_CLEAR_BIAS\" ? \"NO_CLEAR_BIAS\" : Math.abs(netEdge) < 20 ? `${winningSide}_LEAN` : winningSide;\r\n  conviction = winningSide === \"BULLISH\" ? bullishArgument : winningSide === \"BEARISH\" ? bearishArgument : 0;\r\n\r\n  weightedScore = {\r\n    bullish_weight: bullishWeight,\r\n    bearish_weight: bearishWeight,\r\n    neutral_weight: neutralWeight,\r\n    active_weight: active,\r\n    weight_margin: Math.abs(bullishWeight - bearishWeight)\r\n  };\r\n\r\n  convictionModel = {\r\n    bullish_argument_pct: bullishArgument,\r\n    bearish_argument_pct: bearishArgument,\r\n    neutral_evidence_pct: neutralWeight,\r\n    directional_participation_pct: active,\r\n    net_edge_pct: netEdge,\r\n    winning_side: winningSide,\r\n    final_conviction: conviction\r\n  };\r\n}\r\n\r\nreturn [\r\n  {\r\n    json: {\r\n      ...item,\r\n      direction_24h: direction,\r\n      conviction_24h: conviction,\r\n      call_24h_direction: direction,\r\n      call_24h_conviction: conviction,\r\n      call_24h_reason: item.call_24h_reason || \"Deterministic 24H gate: no active directional weight.\",\r\n      weighted_score: weightedScore,\r\n      conviction_model: convictionModel,\r\n      deterministic_24h_gate: {\r\n        active_weight: active,\r\n        missing_factor_count: missingFactorCount,\r\n        factor_signals: factorSignals\r\n      }\r\n    }\r\n  }\r\n];\r\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        760,
+        640
+      ],
+      "name": "Code | Deterministic GBP 24H Verdict Gate"
+    },
+    {
+      "parameters": {
+        "tableId": "agent_outputs",
+        "dataToSend": "autoMapInputData"
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        760,
+        800
+      ],
+      "name": "Create a row",
+      "credentials": {
+        "supabaseApi": {
+          "id": "trM35g1QCTOgQp4K",
+          "name": "Supabase account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Supabase Get Many",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase Get Many": {
+      "main": [
+        [
+          {
+            "node": "Code | Build GBP Input Pack",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Build GBP Input Pack": {
+      "main": [
+        [
+          {
+            "node": "Get GBP Logic Document",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get GBP Logic Document": {
+      "main": [
+        [
+          {
+            "node": "Code | Combine GBP logic & market snapshot",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Combine GBP logic & market snapshot": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Code | Parse GBP Agent Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Parse GBP Agent Output": {
+      "main": [
+        [
+          {
+            "node": "Code | Deterministic GBP 24H Verdict Gate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Deterministic GBP 24H Verdict Gate": {
+      "main": [
+        [
+          {
+            "node": "Create a row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
