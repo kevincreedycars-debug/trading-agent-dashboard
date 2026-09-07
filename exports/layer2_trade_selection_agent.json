@@ -21,8 +21,8 @@
       "typeVersion": 1.2
     },
     {
-      "id": "layer2-get-agent-outputs",
-      "name": "Get Layer 1 Agent Outputs",
+      "id": "layer2-get-usd-rows",
+      "name": "Get latest USD rows",
       "credentials": {
         "supabaseApi": {
           "id": "trM35g1QCTOgQp4K",
@@ -37,10 +37,103 @@
       "parameters": {
         "tableId": "agent_outputs",
         "operation": "getAll",
-        "limit": 1000,
+        "limit": 20,
+        "orderBy": "created_at.desc",
+        "matchType": "allFilters",
         "filters": {
-          "conditions": []
+          "conditions": [
+            {
+              "keyName": "agent_name",
+              "condition": "eq",
+              "keyValue": "USD"
+            },
+            {
+              "keyName": "layer",
+              "condition": "eq",
+              "keyValue": "1"
+            }
+          ]
         }
+      },
+      "typeVersion": 1
+    },
+    {
+      "id": "layer2-get-eur-rows",
+      "name": "Get latest EUR rows",
+      "credentials": {
+        "supabaseApi": {
+          "id": "trM35g1QCTOgQp4K",
+          "name": "Supabase account"
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "position": [260, 80],
+      "parameters": {
+        "tableId": "agent_outputs", "operation": "getAll", "limit": 20, "orderBy": "created_at.desc", "matchType": "allFilters",
+        "filters": { "conditions": [
+          { "keyName": "agent_name", "condition": "eq", "keyValue": "EUR" },
+          { "keyName": "layer", "condition": "eq", "keyValue": "1" }
+        ] }
+      },
+      "typeVersion": 1
+    },
+    {
+      "id": "layer2-get-gold-rows",
+      "name": "Get latest GOLD rows",
+      "credentials": {
+        "supabaseApi": {
+          "id": "trM35g1QCTOgQp4K",
+          "name": "Supabase account"
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "position": [260, 160],
+      "parameters": {
+        "tableId": "agent_outputs", "operation": "getAll", "limit": 20, "orderBy": "created_at.desc", "matchType": "allFilters",
+        "filters": { "conditions": [
+          { "keyName": "agent_name", "condition": "eq", "keyValue": "GOLD" },
+          { "keyName": "layer", "condition": "eq", "keyValue": "1" }
+        ] }
+      },
+      "typeVersion": 1
+    },
+    {
+      "id": "layer2-get-nq-rows",
+      "name": "Get latest NQ rows",
+      "credentials": {
+        "supabaseApi": {
+          "id": "trM35g1QCTOgQp4K",
+          "name": "Supabase account"
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "position": [260, 240],
+      "parameters": {
+        "tableId": "agent_outputs", "operation": "getAll", "limit": 20, "orderBy": "created_at.desc", "matchType": "allFilters",
+        "filters": { "conditions": [
+          { "keyName": "agent_name", "condition": "eq", "keyValue": "NQ" },
+          { "keyName": "layer", "condition": "eq", "keyValue": "1" }
+        ] }
+      },
+      "typeVersion": 1
+    },
+    {
+      "id": "layer2-get-btc-rows",
+      "name": "Get latest BTC rows",
+      "credentials": {
+        "supabaseApi": {
+          "id": "trM35g1QCTOgQp4K",
+          "name": "Supabase account"
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "position": [260, 320],
+      "parameters": {
+        "tableId": "agent_outputs", "operation": "getAll", "limit": 20, "orderBy": "created_at.desc", "matchType": "allFilters",
+        "filters": { "conditions": [
+          { "keyName": "agent_name", "condition": "eq", "keyValue": "BTC" },
+          { "keyName": "layer", "condition": "eq", "keyValue": "1" }
+        ] }
       },
       "typeVersion": 1
     },
@@ -94,6 +187,9 @@
         "commitMessage": "Update layer2 dashboard data from trade selection agent"
       },
       "typeVersion": 1.1,
+      "retryOnFail": true,
+      "maxTries": 4,
+      "waitBetweenTries": 5000,
       "webhookId": "eaf73ad3-058e-46e0-81c6-cce7d95aaf32"
     }
   ],
@@ -101,15 +197,27 @@
     "When Executed by Another Workflow": {
       "main": [
         [
-          {
-            "node": "Get Layer 1 Agent Outputs",
-            "type": "main",
-            "index": 0
-          }
+          { "node": "Get latest USD rows", "type": "main", "index": 0 },
+          { "node": "Get latest EUR rows", "type": "main", "index": 0 },
+          { "node": "Get latest GOLD rows", "type": "main", "index": 0 },
+          { "node": "Get latest NQ rows", "type": "main", "index": 0 },
+          { "node": "Get latest BTC rows", "type": "main", "index": 0 }
         ]
       ]
     },
-    "Get Layer 1 Agent Outputs": {
+    "Get latest USD rows": {
+      "main": [[{ "node": "Build Layer 2 Trade Selection JSON", "type": "main", "index": 0 }]]
+    },
+    "Get latest EUR rows": {
+      "main": [[{ "node": "Build Layer 2 Trade Selection JSON", "type": "main", "index": 0 }]]
+    },
+    "Get latest GOLD rows": {
+      "main": [[{ "node": "Build Layer 2 Trade Selection JSON", "type": "main", "index": 0 }]]
+    },
+    "Get latest NQ rows": {
+      "main": [[{ "node": "Build Layer 2 Trade Selection JSON", "type": "main", "index": 0 }]]
+    },
+    "Get latest BTC rows": {
       "main": [
         [
           {
@@ -183,8 +291,8 @@
         "typeVersion": 1.2
       },
       {
-        "id": "layer2-get-agent-outputs",
-        "name": "Get Layer 1 Agent Outputs",
+        "id": "layer2-get-usd-rows",
+        "name": "Get latest USD rows",
         "credentials": {
           "supabaseApi": {
             "id": "trM35g1QCTOgQp4K",
@@ -199,12 +307,65 @@
         "parameters": {
           "tableId": "agent_outputs",
           "operation": "getAll",
-          "limit": 1000,
+          "limit": 20,
+          "orderBy": "created_at.desc",
+          "matchType": "allFilters",
           "filters": {
-            "conditions": []
+            "conditions": [
+              { "keyName": "agent_name", "condition": "eq", "keyValue": "USD" },
+              { "keyName": "layer", "condition": "eq", "keyValue": "1" }
+            ]
           }
         },
         "typeVersion": 1
+      },
+      {
+        "id": "layer2-get-eur-rows", "name": "Get latest EUR rows",
+        "credentials": { "supabaseApi": { "id": "trM35g1QCTOgQp4K", "name": "Supabase account" } },
+        "type": "n8n-nodes-base.supabase", "position": [260, 80],
+        "parameters": {
+          "tableId": "agent_outputs", "operation": "getAll", "limit": 20, "orderBy": "created_at.desc", "matchType": "allFilters",
+          "filters": { "conditions": [
+            { "keyName": "agent_name", "condition": "eq", "keyValue": "EUR" },
+            { "keyName": "layer", "condition": "eq", "keyValue": "1" }
+          ] }
+        }, "typeVersion": 1
+      },
+      {
+        "id": "layer2-get-gold-rows", "name": "Get latest GOLD rows",
+        "credentials": { "supabaseApi": { "id": "trM35g1QCTOgQp4K", "name": "Supabase account" } },
+        "type": "n8n-nodes-base.supabase", "position": [260, 160],
+        "parameters": {
+          "tableId": "agent_outputs", "operation": "getAll", "limit": 20, "orderBy": "created_at.desc", "matchType": "allFilters",
+          "filters": { "conditions": [
+            { "keyName": "agent_name", "condition": "eq", "keyValue": "GOLD" },
+            { "keyName": "layer", "condition": "eq", "keyValue": "1" }
+          ] }
+        }, "typeVersion": 1
+      },
+      {
+        "id": "layer2-get-nq-rows", "name": "Get latest NQ rows",
+        "credentials": { "supabaseApi": { "id": "trM35g1QCTOgQp4K", "name": "Supabase account" } },
+        "type": "n8n-nodes-base.supabase", "position": [260, 240],
+        "parameters": {
+          "tableId": "agent_outputs", "operation": "getAll", "limit": 20, "orderBy": "created_at.desc", "matchType": "allFilters",
+          "filters": { "conditions": [
+            { "keyName": "agent_name", "condition": "eq", "keyValue": "NQ" },
+            { "keyName": "layer", "condition": "eq", "keyValue": "1" }
+          ] }
+        }, "typeVersion": 1
+      },
+      {
+        "id": "layer2-get-btc-rows", "name": "Get latest BTC rows",
+        "credentials": { "supabaseApi": { "id": "trM35g1QCTOgQp4K", "name": "Supabase account" } },
+        "type": "n8n-nodes-base.supabase", "position": [260, 320],
+        "parameters": {
+          "tableId": "agent_outputs", "operation": "getAll", "limit": 20, "orderBy": "created_at.desc", "matchType": "allFilters",
+          "filters": { "conditions": [
+            { "keyName": "agent_name", "condition": "eq", "keyValue": "BTC" },
+            { "keyName": "layer", "condition": "eq", "keyValue": "1" }
+          ] }
+        }, "typeVersion": 1
       },
       {
         "id": "layer2-build-json",
@@ -256,6 +417,9 @@
           "commitMessage": "Update layer2 dashboard data from trade selection agent"
         },
         "typeVersion": 1.1,
+        "retryOnFail": true,
+        "maxTries": 4,
+        "waitBetweenTries": 5000,
         "webhookId": "eaf73ad3-058e-46e0-81c6-cce7d95aaf32"
       }
     ],
@@ -263,25 +427,39 @@
       "When Executed by Another Workflow": {
         "main": [
           [
-            {
-              "node": "Get Layer 1 Agent Outputs",
-              "type": "main",
-              "index": 0
+          {
+            "node": "Get latest USD rows",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get latest EUR rows",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get latest GOLD rows",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get latest NQ rows",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get latest BTC rows",
+            "type": "main",
+            "index": 0
             }
           ]
         ]
       },
-      "Get Layer 1 Agent Outputs": {
-        "main": [
-          [
-            {
-              "node": "Build Layer 2 Trade Selection JSON",
-              "type": "main",
-              "index": 0
-            }
-          ]
-        ]
-      },
+      "Get latest USD rows": { "main": [[{ "node": "Build Layer 2 Trade Selection JSON", "type": "main", "index": 0 }]] },
+      "Get latest EUR rows": { "main": [[{ "node": "Build Layer 2 Trade Selection JSON", "type": "main", "index": 0 }]] },
+      "Get latest GOLD rows": { "main": [[{ "node": "Build Layer 2 Trade Selection JSON", "type": "main", "index": 0 }]] },
+      "Get latest NQ rows": { "main": [[{ "node": "Build Layer 2 Trade Selection JSON", "type": "main", "index": 0 }]] },
+      "Get latest BTC rows": { "main": [[{ "node": "Build Layer 2 Trade Selection JSON", "type": "main", "index": 0 }]] },
       "Build Layer 2 Trade Selection JSON": {
         "main": [
           [

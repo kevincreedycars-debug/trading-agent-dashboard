@@ -75,6 +75,11 @@ function Get-Patterns {
       Regex = '(?i)\b(?:N8N_API_KEY|SUPABASE_SERVICE_ROLE_KEY|FRED_API_KEY|RAPIDAPI_KEY|ALPHA_VANTAGE_API_KEY|OANDA_API_TOKEN|OPENAI_API_KEY|ANTHROPIC_API_KEY|API_KEY|SECRET|TOKEN|PASSWORD)\b\s*[:=]\s*[''"]?[A-Za-z0-9_./+\-=]{12,}'
     },
     @{
+      Id = "rapidapi-header-literal"
+      Description = "RapidAPI key embedded in a request header"
+      Regex = '(?i)["'']x-rapidapi-key["'']\s*:\s*["''][A-Za-z0-9_./+\-=]{12,}["'']'
+    },
+    @{
       Id = "service-role-assignment"
       Description = "Supabase service-role assignment"
       Regex = '(?i)\bservice[_-]?role\b.{0,40}[:=].{0,200}'

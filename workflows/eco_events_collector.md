@@ -8,6 +8,27 @@ Collect relevant economic events and write them into Supabase for later event-ri
 
 The duplicate-insert failure has been fixed in the live workflow.
 
+### Data availability incident: 2026-08-21
+
+The active production collector (`UaSliyR8qlSVIfmk`) had been reporting successful
+executions while the Forex Factory RapidAPI request returned an empty payload. The
+normalisation node consequently emitted zero event rows. This left the dashboard
+with no trustworthy published economic-event data despite a green workflow status.
+
+The live workflow now has a 30-second HTTP timeout and explicitly fails when the
+provider returns no usable event rows. A successful execution is therefore no
+longer treated as evidence that economic events were imported.
+
+The former `currency=ALL` request was replaced with separate `currency=USD` and
+`currency=EUR` requests. Their responses are appended before normalisation, so
+the dashboard's USD, EUR, Gold, NQ, and BTC context retains the required US and
+Euro-area event coverage without relying on the ambiguous all-currency response.
+
+At the time of the repair, both configured RapidAPI calendar sources were
+unavailable: the primary provider returned an empty payload after roughly 115
+seconds, and the alternate provider returned HTTP 403. Restoring live imports
+still requires a working, entitled calendar source.
+
 The collector now behaves idempotently by:
 
 - deduping incoming calendar rows in `Code | Normalise Forex Factory Events`

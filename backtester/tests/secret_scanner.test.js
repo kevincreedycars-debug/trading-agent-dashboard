@@ -80,6 +80,7 @@ test("scanner detects placeholder secret patterns and ignores allowlisted publis
   writeFile(repoPath, "github.txt", "ghp_FAKEPLACEHOLDERTOKENVALUE1234567890\n");
   writeFile(repoPath, "app.js", 'const N8N_API_KEY = "PLACEHOLDERSECRET123456";\n');
   writeFile(repoPath, "auth.txt", "Authorization: Bearer PLACEHOLDERBEARERTOKEN1234567890\n");
+  writeFile(repoPath, "rapidapi.json", '{"x-rapidapi-key":"RAPIDAPIHEADERPLACEHOLDER123456"}\n');
   writeFile(repoPath, ".env", "FRED_API_KEY=PLACEHOLDERENVVALUE123456\n");
   writeFile(repoPath, "script.js", 'const researchSupabaseKey = "sb_publishable_PLACEHOLDER123456";\n');
   writeFile(repoPath, "config.txt", "REQUEST_TIMEOUT_MS=30000\n");
@@ -92,6 +93,7 @@ test("scanner detects placeholder secret patterns and ignores allowlisted publis
   assert.match(stdout, /github-pat/);
   assert.match(stdout, /assignment-known-secret/);
   assert.match(stdout, /bearer-literal/);
+  assert.match(stdout, /rapidapi-header-literal/);
   assert.match(stdout, /env-file-secret/);
   assert.doesNotMatch(stdout, /researchSupabaseKey/);
   assert.doesNotMatch(stdout, /sb_publishable_PLACEHOLDER123456/);
