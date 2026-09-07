@@ -2,7 +2,7 @@
 
 Updated 2026-09-07. This is the current repository summary; dated workstream reports provide supporting evidence.
 
-- Canonical working folder: `D:\trading-agent-dashboard-codex`, branch `main`, after the consolidation cutover.
+- Canonical working folder: `D:\trading-agent-dashboard-codex`, branch `main`; consolidation cutover is complete and this is the sole registered worktree.
 - Consolidation starts from production `origin/main` at `125d871` (fetched 2026-09-07), preserving its current dashboard and published data. Local commits add the recovered work. This is a local baseline, not a new production deployment.
 - Production architecture: independent Layer 1 agents -> Supabase -> Layer 2 trade selection/dashboard publication -> GitHub Pages. Local exported workflows do not establish live runtime health.
 - Existing USD, EUR, Gold, NQ and BTC replay/checker paths remain preserved. Replay agreement is implementation parity, not evidence of predictive or trading performance.

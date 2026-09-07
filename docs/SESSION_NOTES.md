@@ -1,11 +1,13 @@
 # Session notes
 
-2026-09-07: user authorized full repository consolidation and return to the main folder before a focused backtesting review.
+2026-09-07: repository consolidation and main-folder cutover complete.
 
-Source and all existing worktrees were preserved in verified local archives with SHA-256 manifests and a verified Git bundle. A separate integration branch starts at fetched production `125d871`, combines local research/drafts and current production views, and parks trial/calendar work. See `CONSOLIDATION_20260907.md` for exact dispositions.
+Use `D:\trading-agent-dashboard-codex` on local `main`. It is now the sole registered worktree. The old research worktree and all redundant worktrees were retired after verified backups. Its old directory is empty but still held open by a Windows process; no project files remain there. All branch histories remain preserved. Recovery archives and logs are under ignored `.local/consolidation-20260907/`; required raw evidence remains under ignored `backtester/tmp/` and `tmp/`.
 
-Validation: 275 combined local tests passed, plus five provider credential-reference regressions. Eighteen viewport/page combinations passed without overflow or JavaScript errors. The complete staged scan found only documented placeholders/self-referential allowlist text after credential sanitization; its narrowly corrected follow-up is clean. Live workflows, warehouse writes and production publication were not performed.
+Seven coherent integration commits start at production `125d871` and finish at `b14b63a`; the final handoff commit records cutover. Research, Gold evidence, GBP drafts, the isolated macro prototype, workflow fixes and dashboard integration are consolidated. Trial and calendar-hardening work remains parked. Historical startup/task notes are archived; current navigation is `docs/README.md`.
 
-The integration baseline is ready for the original-folder cutover and final installation/evidence verification. Recovery scripts/logs are under ignored `backtester/tmp/consolidation-20260907/` until copied to `.local/consolidation-20260907/` in the main folder.
+Validation from the original folder: `npm ci --ignore-scripts` succeeded; **280 local tests passed**. Eighteen page/viewport combinations passed layout/JavaScript checks. Recovery archives, 101 raw evidence files, six GBP draft/progress files and 34 research data artifacts were verified. The full scan of 424 tracked files found no credential findings. Details and log locations are in `CONSOLIDATION_20260907.md`.
 
-Next workstream after cutover: follow `BACKTESTING_REVIEW_PLAN.md`, starting with the Gold timestamped directional contract. GBP expansion and macro work remain parked; Gold history-query repair is still unapplied.
+No production push, live n8n mutation, warehouse write or credential change occurred. Existing collector exports now contain named environment references instead of old key literals and require runtime binding review before import. Historical Git commits and private archives may still contain the original literals.
+
+Next: follow `BACKTESTING_REVIEW_PLAN.md` and write the Gold timestamped directional-evaluation contract. The Gold history-query repair is still unapplied; input timing, complete paths and MT5 execution evidence remain qualification gaps. GBP expansion, macro provisioning and optimization remain parked.

@@ -10,7 +10,7 @@ Define and audit the Gold timestamped directional-evaluation contract.
 Planning
 
 ## Completed Work
-Repository preservation and consolidation; engine inventory and review sequence documented. See the consolidation record for final cutover and validation evidence.
+Repository preservation, consolidation and original-folder cutover completed. All 280 local tests pass in the main folder; engine inventory and review sequence are documented. See the consolidation record for recovery and validation evidence.
 
 ## Remaining Work
 Write the explicit contract, trace the evaluator and adapters against it, and prioritize demonstrated correctness gaps. Establish a separate repair-validation path for the Gold collection defect.

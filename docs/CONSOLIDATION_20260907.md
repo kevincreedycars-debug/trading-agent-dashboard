@@ -61,7 +61,15 @@ Raw research files required by current scripts remain at their original relative
 
 ## Cutover checkpoint
 
-Prepared and validated in the integration checkout. Final main-folder commit, verification and retired-checkout details will be recorded here when cutover completes.
+Completed 2026-09-07. `D:\trading-agent-dashboard-codex` is the sole registered worktree, on local `main`. Seven coherent integration commits (`30ffe5b` through `b14b63a`) preserve the recovered work; a final handoff commit records the cutover. All redundant worktrees were retired after preservation and validation. The old research directory is empty and unregistered; Windows currently holds that empty directory open through a running process, so its final directory removal must wait for the handle to close. No project files remain there. Branch histories remain available.
+
+`npm ci --ignore-scripts` succeeded from the original folder (zero reported package vulnerabilities), and **all 280 local tests passed there**. The full tracked-file audit covered **424 files with zero credential findings**, using the repository scanner patterns and narrow allowlist. Active-code whitespace checks passed; archived Markdown keeps its original hard-break whitespace.
+
+The copied recovery ZIPs, original Git bundle and manifest match their source hashes. **101 raw research evidence files** and **six GBP draft/progress files** were verified. **34 research data artifacts** match the original research checkout; the four changed live-data files come from the selected production baseline. Before final retirement, original research source hashes were rechecked; the changing browser debug log was retained separately.
+
+Editor settings now preview `/index.html`. Open the main folder and `docs/BACKTESTING_REVIEW_PLAN.md` in VS Code. No live n8n workflow, warehouse, credential or production publication was changed. Local `main` is intentionally ahead of `origin/main`; do not push it as an incidental cleanup step because that may publish GitHub Pages.
+
+Final logs: `.local/consolidation-20260907/main-tests.log`, `main-verification.json`, `full-secret-audit.json`, `visual-audit.json`, `retired-checkouts.json`, and `retired-final.json`. `consolidated.bundle` provides the post-cutover Git recovery snapshot.
 
 ## Next direction
 
