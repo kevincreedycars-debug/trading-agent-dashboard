@@ -44,17 +44,21 @@ function normalizeAssetCode(assetCode) {
 }
 
 function computePctChange(openPrice, closePrice) {
-  const open = Number(openPrice);
-  const close = Number(closePrice);
+  const open = normalizeMarketPrice(openPrice);
+  const close = normalizeMarketPrice(closePrice);
 
-  if (!Number.isFinite(open) || !Number.isFinite(close) || open === 0) {
+  if (open === null || close === null) {
     return null;
   }
 
-  return ((close - open) / open) * 100;
+  const pctChange = ((close - open) / open) * 100;
+  return Number.isFinite(pctChange) ? pctChange : null;
 }
 
 function hasValidMarketPrice(value) {
+  // JSON booleans and arrays must never become prices through Number coercion.
+  if (typeof value !== "number" && typeof value !== "string") return false;
+  if (typeof value === "string" && value.trim() === "") return false;
   const numeric = Number(value);
   return Number.isFinite(numeric) && numeric > 0;
 }
@@ -98,6 +102,8 @@ function evaluateSingleMarket({
   const pricesAreValid = normalizedOpenPrice !== null && normalizedClosePrice !== null;
   const priceDataMissingReason = pricesAreValid ? null : "market_price_missing";
   const pctChange = pricesAreValid ? computePctChange(normalizedOpenPrice, normalizedClosePrice) : null;
+  const notEvaluableReason = window.not_evaluable_reason || priceDataMissingReason ||
+    (pctChange === null ? "market_return_invalid" : null);
   const absPctChange = pctChange === null ? null : Math.abs(pctChange);
   const flatThresholdUsed = flatThresholdOverride ?? getFlatThreshold(normalizedMarket);
   const marketOutcome = classifyMarketOutcome(pctChange, flatThresholdUsed);
@@ -111,7 +117,7 @@ function evaluateSingleMarket({
   const scored = scoreEvaluationResult({
     agentDirection,
     marketOutcomeDirection: comparableMarketDirection,
-    notEvaluableReason: window.not_evaluable_reason || priceDataMissingReason
+    notEvaluableReason
   });
   const evaluationQuality = classifyEvaluationQuality(scored.result, moveMagnitudeBucket);
   const convictionMoveAlignment = classifyConvictionMoveAlignment({
@@ -153,7 +159,7 @@ function evaluateSingleMarket({
     evaluation_version: evaluationVersion,
     evaluation_mode: evaluationMode,
     market_relationship: marketRelationship,
-    evaluable: window.evaluable
+    evaluable: window.evaluable && scored.result !== "NOT_EVALUABLE"
   };
 }
 

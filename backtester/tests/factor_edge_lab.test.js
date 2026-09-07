@@ -8,6 +8,7 @@ const {
   classifyCombinationReliability,
   interpretCombinationReliability,
   LAYER2_CONFIGS,
+  LAYER2_ONBOARDING_CONFIGS,
   derivePairCallDirection,
   invertDirection
 } = require("../lib/factor_edge_lab");
@@ -38,6 +39,15 @@ test("buildStateStats excludes flats from ex-flat win rate", () => {
   assert.equal(stats.sample_count, 4);
   assert.equal(stats.reliability_label, "strong_positive_evidence");
   assert.equal(stats.directional_reliability_label, "strong_positive_evidence");
+});
+
+test("new pair targets remain research-only until their Layer 1 and replay evidence exists", () => {
+  assert.deepEqual(
+    LAYER2_ONBOARDING_CONFIGS.map((config) => config.pairLabel),
+    ["GBP/USD", "XAG/USD", "WTI/USD"]
+  );
+  assert.ok(LAYER2_ONBOARDING_CONFIGS.every((config) => config.marketCalendar === "WEEKDAY_ACTIVE_TIME_V1"));
+  assert.ok(LAYER2_ONBOARDING_CONFIGS.every((config) => !LAYER2_CONFIGS.some((live) => live.pairCode === config.pairCode)));
 });
 
 test("buildAlignmentStats separates aligned and contradicting rows", () => {

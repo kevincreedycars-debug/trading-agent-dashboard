@@ -1,0 +1,28 @@
+{
+  "status": "LOCAL_REVIEW_ONLY_NOT_APPLIED",
+  "workflow_id": "0z71FpOfKdL72hgW",
+  "workflow_name": "Data Collector - GOLD",
+  "node_name": "Supabase | Get Previous Market Snapshots",
+  "observed_live_updated_at": "2026-06-18T19:44:31.835Z",
+  "problem": "Unordered limit 25 returns June 6-9 rows. Sorting after retrieval cannot recover recent history. The June 9 Gold price anchors 143 of 147 audited snapshots.",
+  "expected_parameters": {
+    "operation": "getAll",
+    "tableId": "market_snapshots",
+    "limit": 25
+  },
+  "replacement_parameters": {
+    "operation": "getAll",
+    "tableId": "market_snapshots",
+    "returnAll": true,
+    "filterType": "string",
+    "filterString": "={{ 'and=(snapshot_date.lt.' + $now.toUTC().toISODate() + ',snapshot_date.gte.' + $now.toUTC().minus({ days: 60 }).toISODate() + ')&order=snapshot_date.desc,run_time_et.desc,id.desc&select=id,snapshot_date,run_time_et,gold_price,btc_price,nq_price,btc_dominance,total_crypto_market_cap,stablecoin_supply' }}"
+  },
+  "review_notes": [
+    "Preserve node id, name, position, credentials and all workflow connections.",
+    "Read all paginated rows within an explicit 60-calendar-day window; retain existing per-date normalization. Do not simply raise the unordered row limit.",
+    "60 calendar days is an operational retrieval bound, not a guarantee of 20 trading-day observations. Existing shorter-history fallback remains a separate limitation.",
+    "Verify installed n8n Supabase string-filter and pagination behavior in an isolated import/execution before applying to production.",
+    "Re-fetch live workflow and review drift immediately before applying. Active TEST collector variants were also observed and need separate ownership review.",
+    "No credentials, warehouse changes, workflow activation, or API writes are included in this draft."
+  ]
+}

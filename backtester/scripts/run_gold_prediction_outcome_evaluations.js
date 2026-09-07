@@ -112,7 +112,7 @@ function summarizePrimaryEvaluations(evaluations) {
     entry_price: first?.open_price ?? null,
     exit_price: first?.close_price ?? null,
     realised_return_pct: pctValues.length ? pctValues[0] : null,
-    realised_direction: first?.comparable_market_direction || null,
+    realised_direction: first?.comparable_market_direction || first?.evaluation_payload?.comparable_market_direction || null,
     outcome_label: combinedLabel,
     settlement_source: "phase1_primary_evaluation_summary",
     settlement_payload: {
@@ -297,3 +297,5 @@ if (require.main === module) {
     process.exit(1);
   });
 }
+
+module.exports = { summarizePrimaryEvaluations };

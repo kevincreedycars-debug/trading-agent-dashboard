@@ -1,0 +1,166 @@
+{
+  "version": "gold-history-query-audit-v1",
+  "research_only": true,
+  "checked_at": "2026-09-06T12:54:35.395Z",
+  "production_collector": {
+    "id": "0z71FpOfKdL72hgW",
+    "name": "Data Collector - GOLD",
+    "active": true,
+    "updated_at": "2026-06-18T19:44:31.835Z",
+    "history_nodes": [
+      {
+        "name": "Supabase | Get Previous Market Snapshots",
+        "type": "n8n-nodes-base.supabase",
+        "parameters": {
+          "operation": "getAll",
+          "tableId": "market_snapshots",
+          "limit": 25
+        }
+      }
+    ],
+    "normalization_sha256": "12f55425141c65a335b215f8e5012cb6ca924bd5ef63e29b476b4726cef38252",
+    "history_code_excerpt": "const previousRows = getNodeAll(\"Supabase | Get Previous Market Snapshots\")\n  .filter(r => r.snapshot_date && r.run_time_et)\n  .filter(r => r.snapshot_date < today)\n  .sort((a, b) => new Date(b.run_time_et) - new Date(a.run_time_et));\n\nconst uniquePreviousRows = [];\nconst seenDates = new Set();\n\nfor (const row of previousRows) {\n  if (!seenDates.has(row.snapshot_date)) {\n    uniquePreviousRows.push(row);\n    seenDates.add(row.snapshot_date);\n  }\n}\n\nfunction historyPct(current, field, index) {\n  const oldRow = uniquePreviousRows[index];\n  return oldRow ? pctChange(current, oldRow[field]) : null;\n}\n\n"
+  },
+  "other_gold_collector_variants": [
+    {
+      "id": "7tk8NwIRZNcIy2xh",
+      "name": "TEST - Data Collector - GOLD - 20260722 - modified probe",
+      "active": false
+    },
+    {
+      "id": "NLGyMosysypCldMO",
+      "name": "TEST - Data Collector - GOLD - 20260722",
+      "active": true
+    }
+  ],
+  "old_query": {
+    "rows": 25,
+    "newest_returned": {
+      "id": "8605c0fd-55e7-47d2-bc62-6de5ea6f402d",
+      "snapshot_date": "2026-06-09",
+      "run_time_et": "2026-06-09T18:56:11.9+00:00",
+      "gold_price": 4266.066004573223
+    },
+    "oldest_date": "2026-06-06"
+  },
+  "replacement_query": {
+    "checked_at": "2026-09-06T12:57:50.339Z",
+    "query": {
+      "and": "(snapshot_date.lt.2026-09-06,snapshot_date.gte.2026-07-08)",
+      "order": "snapshot_date.desc,run_time_et.desc,id.desc",
+      "select": "id,snapshot_date,run_time_et,gold_price,btc_price,nq_price,btc_dominance,total_crypto_market_cap,stablecoin_supply"
+    },
+    "rows": 543,
+    "distinct_dates": 49,
+    "newest_snapshot_date": "2026-09-05",
+    "newest_gold_price": 4430.051698703324
+  },
+  "workflow_updated": false,
+  "isolated_n8n_execution_validated": false,
+  "trigger_lineage": {
+    "checked_at": "2026-09-06T13:17:02.293Z",
+    "workflows": [
+      {
+        "id": "0z71FpOfKdL72hgW",
+        "name": "Data Collector - GOLD",
+        "active": true,
+        "trigger_nodes": [
+          {
+            "name": "When Executed by Another Workflow",
+            "type": "n8n-nodes-base.executeWorkflowTrigger",
+            "disabled": false
+          }
+        ],
+        "gold_calls": []
+      },
+      {
+        "id": "7tk8NwIRZNcIy2xh",
+        "name": "TEST - Data Collector - GOLD - 20260722 - modified probe",
+        "active": false,
+        "trigger_nodes": [
+          {
+            "name": "When Executed by Another Workflow",
+            "type": "n8n-nodes-base.executeWorkflowTrigger",
+            "disabled": false
+          }
+        ],
+        "gold_calls": []
+      },
+      {
+        "id": "CIvsnhyOi35zmA44",
+        "name": "TEST - Master Orchestrator - ISOLATED - 20260723",
+        "active": true,
+        "trigger_nodes": [
+          {
+            "name": "Manual Start - Run All Agents",
+            "type": "n8n-nodes-base.manualTrigger",
+            "disabled": false
+          },
+          {
+            "name": "Dashboard Trigger - Run All Agents",
+            "type": "n8n-nodes-base.webhook",
+            "disabled": false
+          }
+        ],
+        "gold_calls": [
+          {
+            "name": "Gold Collector",
+            "type": "n8n-nodes-base.executeWorkflow",
+            "workflow_id": "NLGyMosysypCldMO",
+            "disabled": false
+          },
+          {
+            "name": "Gold Layer 1 Agent",
+            "type": "n8n-nodes-base.executeWorkflow",
+            "workflow_id": "rtAcgTz71gFzQSZx",
+            "disabled": false
+          }
+        ]
+      },
+      {
+        "id": "NLGyMosysypCldMO",
+        "name": "TEST - Data Collector - GOLD - 20260722",
+        "active": true,
+        "trigger_nodes": [
+          {
+            "name": "When Executed by Another Workflow",
+            "type": "n8n-nodes-base.executeWorkflowTrigger",
+            "disabled": false
+          }
+        ],
+        "gold_calls": []
+      },
+      {
+        "id": "X75RKU34ikiM5RMU",
+        "name": "Master Orchestrator",
+        "active": true,
+        "trigger_nodes": [
+          {
+            "name": "Manual Start - Run All Agents",
+            "type": "n8n-nodes-base.manualTrigger",
+            "disabled": false
+          },
+          {
+            "name": "Dashboard Trigger - Run All Agents",
+            "type": "n8n-nodes-base.webhook",
+            "disabled": false
+          }
+        ],
+        "gold_calls": [
+          {
+            "name": "Gold Collector",
+            "type": "n8n-nodes-base.executeWorkflow",
+            "workflow_id": "0z71FpOfKdL72hgW",
+            "disabled": false
+          },
+          {
+            "name": "Gold Layer 1 Agent",
+            "type": "n8n-nodes-base.executeWorkflow",
+            "workflow_id": "wwBVT0EQcKu5517I",
+            "disabled": false
+          }
+        ]
+      }
+    ]
+  }
+}

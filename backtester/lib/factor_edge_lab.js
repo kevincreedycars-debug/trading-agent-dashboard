@@ -108,6 +108,12 @@ const LAYER2_CONFIGS = Object.freeze([
   }
 ]);
 
+const LAYER2_ONBOARDING_CONFIGS = Object.freeze([
+  { targetAssetCode: "GBP", pairCode: "GBP_USD", pairLabel: "GBP/USD", marketKey: "GBPUSD", marketCalendar: "WEEKDAY_ACTIVE_TIME_V1" },
+  { targetAssetCode: "SILVER", pairCode: "XAG_USD", pairLabel: "XAG/USD", marketKey: "XAGUSD", marketCalendar: "WEEKDAY_ACTIVE_TIME_V1" },
+  { targetAssetCode: "WTI", pairCode: "WTI_USD", pairLabel: "WTI/USD", marketKey: "DCOILWTICO", marketCalendar: "WEEKDAY_ACTIVE_TIME_V1" }
+]);
+
 const FACTOR_DEFINITIONS = Object.freeze({
   USD: Object.freeze([
     { factorId: "F1 VIX", factorName: "VIX", originalWeight: 10 },
@@ -459,6 +465,7 @@ module.exports = {
   FACTOR_DEFINITIONS,
   LAYER1_CONFIGS,
   LAYER2_CONFIGS,
+  LAYER2_ONBOARDING_CONFIGS,
   buildAlignmentStats,
   buildFactorProfile,
   buildNeutralStats,

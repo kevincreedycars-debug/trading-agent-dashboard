@@ -1,7 +1,7 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
 
-const { evaluateSingleMarket } = require("../lib/outcome_evaluation");
+const { evaluateSingleMarket, computePctChange } = require("../lib/outcome_evaluation");
 
 function buildEvaluation(overrides = {}) {
   return evaluateSingleMarket({
@@ -27,6 +27,7 @@ test("missing market prices become NOT_EVALUABLE instead of a scored result", ()
 
   assert.equal(evaluation.result, "NOT_EVALUABLE");
   assert.equal(evaluation.result_reason, "market_price_missing");
+  assert.equal(evaluation.evaluable, false);
   assert.equal(evaluation.open_price, null);
   assert.equal(evaluation.close_price, 101);
   assert.equal(evaluation.pct_change, null);
@@ -109,4 +110,50 @@ test("valid bearish prices still evaluate normally", () => {
   assert.equal(evaluation.market_outcome_direction, "BEARISH");
   assert.equal(evaluation.comparable_market_direction, "BEARISH");
   assert.equal(evaluation.evaluation_quality, "WRONG");
+});
+
+test("Gold rejects missing, non-positive, and coercible non-price values on either side", () => {
+  const invalidPrices = [null, undefined, "", "  ", true, false, [], [2000], {}, 0, -1, NaN, Infinity, "Infinity"];
+  for (const invalid of invalidPrices) {
+    for (const side of ["openPrice", "closePrice"]) {
+      const evaluation = buildEvaluation({
+        assetCode: "GOLD", evaluatedMarket: "XAUUSD",
+        openPrice: 2000, closePrice: 2020, [side]: invalid
+      });
+      assert.equal(evaluation.result, "NOT_EVALUABLE", `${side}: ${String(invalid)}`);
+      assert.equal(evaluation.evaluable, false);
+      assert.equal(evaluation.pct_change, null);
+      assert.equal(evaluation.market_outcome_direction, null);
+      assert.equal(computePctChange(side === "openPrice" ? invalid : 2000,
+        side === "closePrice" ? invalid : 2020), null);
+    }
+  }
+});
+
+test("Gold preserves numeric string prices and bullish, bearish, flat and no-call outcomes", () => {
+  for (const [closePrice, agentDirection, expected] of [
+    ["2020", "BULLISH", "CORRECT"], ["1980", "BEARISH", "CORRECT"],
+    ["1980", "BULLISH", "WRONG"], ["2000", "BULLISH", "FLAT"],
+    ["2020", "NO_CLEAR_BIAS", "NO_CALL"]
+  ]) {
+    const evaluation = buildEvaluation({
+      assetCode: "GOLD", evaluatedMarket: "XAUUSD",
+      openPrice: "2000", closePrice, agentDirection
+    });
+    assert.equal(evaluation.result, expected);
+    assert.equal(evaluation.evaluable, true);
+    assert.equal(evaluation.open_price, 2000);
+  }
+});
+
+test("Gold rejects a non-finite return even when both supplied prices are finite", () => {
+  const evaluation = buildEvaluation({
+    assetCode: "GOLD", evaluatedMarket: "XAUUSD",
+    openPrice: Number.MIN_VALUE, closePrice: Number.MAX_VALUE
+  });
+  assert.equal(evaluation.result, "NOT_EVALUABLE");
+  assert.equal(evaluation.result_reason, "market_return_invalid");
+  assert.equal(evaluation.evaluable, false);
+  assert.equal(evaluation.pct_change, null);
+  assert.equal(computePctChange(Number.MIN_VALUE, Number.MAX_VALUE), null);
 });

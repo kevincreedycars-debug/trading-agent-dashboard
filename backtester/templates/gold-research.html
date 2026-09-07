@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Gold Backtesting · Evidence Review</title>
+<style>
+:root{color-scheme:dark;--bg:#080e16;--panel:#101b29;--line:#304358;--text:#e8eef5;--muted:#b2c1d0;--amber:#f2c167;--blue:#8acfff}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:15px/1.55 "IBM Plex Sans",system-ui,sans-serif}main{max-width:1380px;margin:auto;padding:28px 24px 60px}h1,h2,h3,p{margin:0 0 12px;overflow-wrap:anywhere}h1{font-size:clamp(28px,4vw,42px);line-height:1.15}h2{font-size:21px}h3{font-size:16px}a{color:var(--blue)}header{display:flex;gap:24px;justify-content:space-between;align-items:flex-start;margin-bottom:24px}header>*,.metrics>*,.columns>*{min-width:0}.eyebrow{font:12px/1.5 "IBM Plex Mono",monospace;letter-spacing:.12em;color:var(--amber);text-transform:uppercase}.muted,small{color:var(--muted)}.notice{border:1px solid #81642f;background:#211e17;padding:18px;margin:20px 0;color:#ffe0a2}.metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.metric,.panel{border:1px solid var(--line);background:var(--panel);padding:18px;min-width:0;overflow-wrap:anywhere}.metric strong{display:block;font:32px/1.4 "IBM Plex Mono",monospace}.metric span{color:var(--muted)}.columns{display:grid;grid-template-columns:1.2fr 1fr;gap:16px;margin-top:18px}.panel{margin-top:18px}.columns .panel{margin-top:0}.controls{display:flex;gap:16px;flex-wrap:wrap;align-items:end;margin:18px 0}label{display:grid;gap:6px;min-width:0}input,select{max-width:100%;min-width:0;background:#080e16;color:var(--text);border:1px solid #5c758f;padding:9px;font:inherit}input:focus,select:focus,a:focus,summary:focus{outline:2px solid var(--blue);outline-offset:3px}.table-wrap{overflow-x:auto;max-width:100%}table{width:100%;min-width:610px;border-collapse:collapse;text-align:left;font-size:14px}th,td{padding:11px 12px;border-bottom:1px solid var(--line);overflow-wrap:anywhere}th{color:var(--muted);font-weight:500}td:first-child{font-family:monospace}summary{cursor:pointer;color:var(--blue);padding:8px 0}.steps{padding-left:20px;margin-bottom:0}.steps li{margin-bottom:10px}.hash{font:12px/1.6 monospace;overflow-wrap:anywhere}.tag{color:var(--amber)}.empty{padding:12px;color:var(--muted)}footer{margin-top:22px;color:var(--muted)}@media(max-width:720px){main{padding:18px 12px 40px}header{flex-direction:column;gap:8px}.metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.columns{grid-template-columns:1fr}.panel{padding:14px}th,td{padding:9px 7px}table{font-size:13px}}@media(max-width:380px){.metrics{grid-template-columns:1fr}}
+</style>
+<style>
+.section-label{margin:32px 0 12px;padding-top:22px;border-top:1px solid var(--line)}.critical{border-color:#9b5744;background:#281a18;color:#ffd2be}.pilot-links{display:flex;gap:18px;flex-wrap:wrap}.pilot-links>*{min-width:0;overflow-wrap:anywhere}.pilot-table{min-width:780px}#stored-pilot [hidden]{display:none}
+</style>
+</head>
+<body><main>
+<header><div><p class="eyebrow">XAU/USD · Research only</p><h1>Gold backtesting evidence</h1><p class="muted">Historical factor diagnostics and the checks needed before evaluating tradable outcomes.</p></div><a href="index.html">Dashboard ↗</a></header>
+<section id="stored-pilot" hidden aria-label="Stored Gold call pilot">
+<p class="eyebrow">Stored calls / June–September 2026</p>
+<div class="notice critical"><strong>Daily input defect confirmed.</strong> <span id="pilot-defect"></span> The live collector reads 25 unordered history rows. Sorting afterward cannot recover recent prices. <a href="backtester/drafts/gold_collector_history_query_patch.json">Review the unapplied query patch</a>.</div>
+<div class="metrics" aria-label="Stored call coverage">
+<div class="metric"><span>Stored Gold calls</span><strong id="pilot-calls">—</strong></div>
+<div class="metric"><span>Exact endpoint coverage</span><strong id="pilot-endpoints">—</strong></div>
+<div class="metric"><span>Continuous path coverage</span><strong id="pilot-strict">—</strong></div>
+<div class="metric"><span>OANDA minute candles</span><strong id="pilot-candles">—</strong></div>
+</div>
+<div class="columns"><section class="panel"><h2>Recorded performance is unstable</h2><p id="pilot-outcomes"></p><p id="pilot-stability"></p><p class="muted">Accuracy excludes flats and no-calls. The input defect, dependent calls and small samples prevent an edge or weight-change conclusion.</p></section>
+<section class="panel"><h2>What was actually tested</h2><p>Entry at the next minute after database storage, then 24 elapsed hours to an exact OANDA midpoint candle close. Storage time is a proxy for availability; dashboard publication was not verified.</p><p class="muted">All evaluable endpoint windows have interior gaps. No stops, targets, fills or executable profits are validated. The 0.3% flat band is an explicit research assumption.</p><p id="pilot-replay"></p></section></div>
+<section class="panel"><h2>Call cohorts and simple baselines</h2><p class="muted">Selections use source timestamps before filtering outcomes. The later period begins after the 1 August split plus a one-day embargo. This is a descriptive calendar split, not an untouched holdout.</p>
+<div class="table-wrap" tabindex="0" role="region" aria-label="Scrollable stored call cohorts"><table class="pilot-table"><thead><tr><th scope="col">Cohort</th><th scope="col">Calls</th><th scope="col">Evaluable</th><th scope="col">Correct / wrong</th><th scope="col">Accuracy</th><th scope="col">Always bullish</th><th scope="col">Always bearish</th></tr></thead><tbody id="pilot-cohorts"></tbody></table></div>
+</section>
+<section class="panel"><h2>Recorded factor stability</h2><p class="muted">Every factor uses the same endpoint coverage policy. “n” counts directional outcomes with an active factor. Neutral or constant factors do not establish predictive value.</p>
+<div class="table-wrap" tabindex="0" role="region" aria-label="Scrollable stored factor comparison"><table><thead><tr><th scope="col">Factor</th><th scope="col">Earlier n</th><th scope="col">Earlier accuracy</th><th scope="col">Later n</th><th scope="col">Later accuracy</th></tr></thead><tbody id="pilot-factors"></tbody></table></div>
+<details><summary>Stored factor pairs and correlation</summary><p class="muted">Signals encode bullish +1, neutral 0, bearish −1. Missing signals are omitted; constant series have undefined correlation. All 45 comparisons are descriptive.</p><div class="table-wrap" tabindex="0" role="region" aria-label="Scrollable stored factor correlations"><table><thead><tr><th scope="col">Pair</th><th scope="col">Earlier correlation</th><th scope="col">Later correlation</th><th scope="col">Later jointly active</th><th scope="col">Later agreement</th></tr></thead><tbody id="pilot-pairs"></tbody></table></div></details>
+<details><summary>Coverage failures and evidence provenance</summary><p id="pilot-failures"></p><p id="pilot-source" class="hash"></p><p id="pilot-protocol" class="hash"></p><p class="muted">Raw provider responses and stored-call exports are retained locally with hashes. Legacy snapshots are preserved. No live weights or workflows were changed.</p></details>
+</section>
+<div class="panel"><h2>Next research gate</h2><p>Validate the collector history repair in isolation, establish a fresh input-quality baseline, and record actual publication times and contemporaneous L2L levels. Then collect new observations under a fixed protocol.</p><p>The separate counterfactual repair audit measures changes in factor signals and final directions. Improved performance was not tested.</p><div class="pilot-links"><a href="backtester/docs/gold_stored_call_pilot_20260906.md">Findings and reproduction</a><a href="data/gold-stored-call-pilot-20260906.json">Pilot report</a><a href="data/gold-snapshot-lineage-audit-20260906.json">Snapshot lineage audit</a><a href="data/gold-history-repair-impact-20260906.json">Counterfactual repair impact</a></div></div>
+<h2 class="section-label">Legacy daily snapshot audit</h2>
+</section>
+<div class="notice"><strong>Legacy timing not qualified.</strong> The saved daily prices have no verified source timestamps. Matching historical results does not establish what was tradable at the call time.</div>
+<section class="metrics" aria-label="Evidence coverage">
+<div class="metric"><span>Saved calls</span><strong id="total">—</strong></div>
+<div class="metric"><span>Results recomputed</span><strong id="recomputed">—</strong></div>
+<div class="metric"><span>Usable price outcomes</span><strong id="usable">—</strong></div>
+<div class="metric"><span>Missing prices</span><strong id="missing">—</strong></div>
+</section>
+<div class="columns"><section class="panel"><h2>What this evidence establishes</h2><p id="agreement"></p><p class="muted">The legacy “following 24hrs” measure uses a call-date price and the next weekday close. It is not an exact 24-hour entry-to-exit test, and does not model exchange holidays.</p><details><summary>Result counts and data issues</summary><div id="issues"></div></details></section>
+<section class="panel"><h2>Path to stronger evidence</h2><ol class="steps"><li><strong>Timestamped direction engine built.</strong> Requires exact candle boundaries, complete coverage, and feature availability before the call.</li><li><strong>Chronological factor tools built.</strong> Separate training and validation, excluding outcomes that cross the split.</li><li><strong class="tag">Real timestamped data still needed.</strong> Entry, target, stop, spread, and price sequence remain necessary for executable trade validation.</li></ol><a href="backtester/docs/gold_timestamped_backtesting.md">Data contract and local commands ↗</a></section></div>
+<section class="panel"><h2>Individual Gold factors</h2><p class="muted">Descriptive accuracy excludes flat outcomes. Counts are historical observations, not proof of an independent or profitable edge. No weights are changed.</p>
+<p class="muted">On a narrow screen, scroll the table horizontally to read every column.</p><div class="controls"><label>Period<select id="year"><option value="all">All available years</option></select></label><label>Find a factor<input id="filter" type="search" placeholder="F1, F2, …" autocomplete="off"></label></div>
+<div class="table-wrap" tabindex="0" role="region" aria-label="Scrollable research table"><table><thead><tr><th scope="col">Factor</th><th scope="col">Active</th><th scope="col">Directional</th><th scope="col">Correct</th><th scope="col">Flat</th><th scope="col">Accuracy</th></tr></thead><tbody id="factors"></tbody></table></div><p id="factor-empty" class="empty" hidden>No factors match this filter.</p>
+<details><summary>Factor pairs: agreement and outcome coverage</summary><p class="muted">All-period results. Agreement can indicate duplicated information; it is not a correlation coefficient or a validation result.</p><div class="table-wrap" tabindex="0" role="region" aria-label="Scrollable research table"><table><thead><tr><th scope="col">Pair</th><th scope="col">Both active</th><th scope="col">Agreement</th><th scope="col">Directional agreement samples</th><th scope="col">Accuracy when agreeing</th></tr></thead><tbody id="pairs"></tbody></table></div></details>
+</section>
+<footer><details><summary>Evidence lineage</summary><p id="source-date"></p><p>Source SHA-256</p><p class="hash" id="hash"></p><p>This page is a frozen local audit. Rebuild it after changing source evidence. No live trading actions are available here.</p></details></footer>
+</main>
+<script id="audit-data" type="application/json">__GOLD_AUDIT_JSON__</script>
+<script id="pilot-data" type="application/json">__GOLD_PILOT_JSON__</script>
+<script id="lineage-data" type="application/json">__GOLD_LINEAGE_JSON__</script>
+<script>
+'use strict';
+const audit=JSON.parse(document.getElementById('audit-data').textContent);
+const set=(id,value)=>document.getElementById(id).textContent=value;
+const pct=value=>typeof value==='number'&&Number.isFinite(value)?value.toFixed(1)+'%':'Unavailable';
+set('total',audit.coverage.source_rows);set('recomputed',audit.coverage.recomputed_rows);set('usable',audit.coverage.factor_outcome_rows);set('missing',audit.issue_counts.market_price_missing||0);
+const mismatches=audit.issue_counts.stored_result_mismatch||0;
+set('agreement',mismatches?`${mismatches} recomputed result labels differ from the saved labels.`:`All ${audit.coverage.recomputed_rows} recomputed result labels match the saved labels, including rows marked not evaluable.`);
+set('source-date','Source artifact generated: '+(audit.source_generated_at||'Unknown'));set('hash',audit.source_sha256||'Unavailable');
+for(const [label,counts]of [['Results',audit.result_counts],['Issues',audit.issue_counts]]){const p=document.createElement('p');p.textContent=label+': '+(Object.entries(counts).map(([k,v])=>k.replaceAll('_',' ')+' '+v).join(' · ')||'None');document.getElementById('issues').append(p);}
+const years=[...new Set(audit.factors.flatMap(row=>Object.keys(row.by_year)))].sort();for(const year of years){const option=document.createElement('option');option.value=year;option.textContent=year;document.getElementById('year').append(option);}
+function appendRow(target,values){const tr=document.createElement('tr');for(const value of values){const td=document.createElement('td');td.textContent=value;tr.append(td);}target.append(tr);}
+function render(){const year=document.getElementById('year').value,query=document.getElementById('filter').value.trim().toUpperCase();const body=document.getElementById('factors');body.replaceChildren();for(const factor of audit.factors.filter(row=>row.factor.includes(query))){const stat=year==='all'?factor:factor.by_year[year];appendRow(body,[factor.factor,stat?.observations||0,stat?.directional_observations||0,stat?.correct||0,stat?.flat||0,pct(stat?.ex_flat_accuracy_pct)]);}document.getElementById('factor-empty').hidden=body.children.length>0;}
+document.getElementById('year').addEventListener('change',render);document.getElementById('filter').addEventListener('input',render);render();
+for(const pair of audit.factor_pairs)appendRow(document.getElementById('pairs'),[pair.factors.join(' + '),pair.jointly_active_rows,pct(pair.agreement_pct),pair.agreement_outcomes.directional_observations,pct(pair.agreement_outcomes.ex_flat_accuracy_pct)]);
+const pilot=JSON.parse(document.getElementById('pilot-data').textContent),lineage=JSON.parse(document.getElementById('lineage-data').textContent);
+if(pilot&&lineage){
+document.getElementById('stored-pilot').hidden=false;
+const anchor=lineage.implied_d1_reference_groups[0],d=pilot.diagnostics;
+set('pilot-defect',`${anchor.snapshots} of ${lineage.linked_snapshot_inputs} linked snapshots use the same implied daily reference price (${anchor.implied_reference_price.toLocaleString('en-GB',{maximumFractionDigits:3})}) from ${anchor.first_snapshot_date} through ${anchor.last_snapshot_date}.`);
+set('pilot-calls',pilot.endpoint_summary.calls);set('pilot-endpoints',pilot.endpoint_summary.evaluable);set('pilot-strict',pilot.strict_summary.evaluable);set('pilot-candles',pilot.candles.toLocaleString('en-GB'));
+set('pilot-outcomes',`${pilot.endpoint_summary.correct} correct, ${pilot.endpoint_summary.wrong} wrong, ${pilot.endpoint_summary.flat} flat and ${pilot.endpoint_summary.no_call} no-call outcomes; ${pilot.endpoint_summary.not_evaluable} calls lack exact endpoints.`);
+set('pilot-stability',`Directional accuracy falls from ${pct(d.training.directional_accuracy_ex_flat_pct)} in the earlier period to ${pct(d.validation.directional_accuracy_ex_flat_pct)} in the later period.`);
+set('pilot-replay',`${lineage.replayed_outputs} calls replayed from linked snapshots; ${lineage.replay_mismatches} signal or direction mismatches. This confirms reproduction, not input quality.`);
+for(const [name,row]of [['All stored calls',d.overall],['Earlier period',d.training],['Later period',d.validation],['Earliest per snapshot',d.earliest_per_snapshot],['Nonoverlapping schedule',d.nonoverlapping_schedule]])appendRow(document.getElementById('pilot-cohorts'),[name,row.calls,row.evaluable,`${row.correct} / ${row.wrong}`,pct(row.directional_accuracy_ex_flat_pct),pct(row.baseline_same_scored_calls.always_bullish_accuracy_pct),pct(row.baseline_same_scored_calls.always_bearish_accuracy_pct)]);
+for(const row of pilot.chronological.factors)appendRow(document.getElementById('pilot-factors'),[row.factor,row.training.directional_samples,pct(row.training.ex_flat_accuracy_pct),row.validation.directional_samples,pct(row.validation.ex_flat_accuracy_pct)]);
+const correlation=value=>typeof value==='number'?value.toFixed(2):'Undefined';
+for(const row of pilot.chronological.pairs)appendRow(document.getElementById('pilot-pairs'),[row.factors.join(' + '),correlation(row.training.signal_correlation),correlation(row.validation.signal_correlation),row.validation.jointly_active_calls,pct(row.validation.agreement_pct)]);
+set('pilot-failures','Strict coverage: '+Object.entries(pilot.strict.reason_counts).map(([key,value])=>key.replaceAll('_',' ')+': '+value).join(' · '));
+set('pilot-source','Candle dataset SHA-256: '+pilot.source_dataset_sha256);set('pilot-protocol','Analysis protocol SHA-256: '+pilot.analysis_protocol_sha256);
+}
+</script></body></html>
