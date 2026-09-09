@@ -16,7 +16,14 @@ function parseTimestamp(value) {
 }
 
 function evaluateGoldTimestampedCall(call, candles, config) {
-  const base = { prediction_id: call?.prediction_id ?? null, version: 'gold-timestamped-direction-v1',
+  const base = { prediction_id: call?.prediction_id ?? null, version: 'gold-timestamped-direction-v2',
+    source_lineage: { source_snapshot_id: call?.source_snapshot_id ?? null,
+      original_storage_timestamp: call?.original_storage_timestamp ?? null,
+      feature_selection_cutoff: call?.feature_selection_cutoff ?? null,
+      features: Array.isArray(call?.features) ? call.features.map(feature => ({
+        name: feature?.name ?? null, source: feature?.source ?? null,
+        source_record_id: feature?.source_record_id ?? null,
+        observed_at: feature?.observed_at ?? null, available_at: feature?.available_at ?? null })) : [] },
     research_only: true, executable_trade_validated: false, evaluable: false,
     result: 'NOT_EVALUABLE', pct_change: null, market_outcome_direction: null,
     methodology: 'Exact candle-open at call to candle-close at explicit horizon; price direction only, not fills or P&L.' };
@@ -69,6 +76,7 @@ function evaluateGoldTimestampedCall(call, candles, config) {
     // Outside-window candles cannot influence entry, settlement or path coverage.
     if (closeTime <= entry || openTime >= end) continue;
     if (candle.complete === false) return reject('candle_incomplete');
+    if (candle.complete !== true) return reject('candle_completion_unknown');
     if (candle.price_basis !== config.price_basis) return reject('candle_price_basis_mismatch');
     if (typeof candle.source !== 'string' || !candle.source.trim()) return reject('candle_source_missing');
     const prices = ['open', 'high', 'low', 'close'].map(key => normalizeMarketPrice(candle[key]));
@@ -142,16 +150,20 @@ function buildGoldTimestampedReport(dataset) {
   const rows = dataset.calls.map(call => {
     const row = evaluateGoldTimestampedCall(call, windowForCall(call), dataset.config);
     if (call?.prediction_id && idCounts.get(call.prediction_id) > 1) return {
+      version: row.version, source_lineage: row.source_lineage,
       prediction_id: call.prediction_id, evaluable: false, result: 'NOT_EVALUABLE',
-      result_reason: 'duplicate_prediction_id', pct_change: null, research_only: true, executable_trade_validated: false
+      result_reason: 'duplicate_prediction_id', pct_change: null, market_outcome_direction: null,
+      research_only: true, executable_trade_validated: false
     };
     return row;
   });
   const count = key => rows.reduce((counts, row) => { counts[row[key]] = (counts[row[key]] || 0) + 1; return counts; }, {});
-  return { version: 'gold-timestamped-direction-v1', research_only: true,
+  return { version: 'gold-timestamped-direction-v2', research_only: true,
+    candle_completion_policy: 'explicit_boolean_true',
     data_kind: dataset.data_kind || 'unspecified',
     evaluation_contract: dataset.config ?? null,
     protocol: dataset.protocol ?? null,
+    entry_semantics: dataset.entry_semantics ?? null,
     executable_trade_validated: false,
     provenance_note: 'Validates supplied timestamp consistency, not independent authenticity of the feed or feature availability claims.',
     calls: rows.length, evaluable_calls: rows.filter(row => row.evaluable).length,

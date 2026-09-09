@@ -10,7 +10,7 @@ function fixture() {
       features: [{ name: 'F1', value: 'BULLISH', available_at: time(hour) },
         { name: 'F2', value: 'BULLISH', available_at: time(hour) }] })),
     candles: [10, 11, 12, 13, 14].map(hour => ({ market: 'XAUUSD', open_time: time(hour), close_time: time(hour + 1),
-      open: 2000, high: 2020, low: 2000, close: 2020, price_basis: 'mid', source: 'synthetic-test-only' })) };
+      open: 2000, high: 2020, low: 2000, close: 2020, price_basis: 'mid', source: 'synthetic-test-only', complete: true })) };
 }
 const options = { split_at: '2024-01-08T12:00:00Z', embargo_ms: 3600000 };
 

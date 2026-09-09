@@ -39,3 +39,32 @@ test('rounding cannot conceal a snapshot stored microseconds after the output',(
   const b=bundle();b.snapshots[0].created_at='2024-01-08T14:00:00.000002Z';
   assert.equal(prepareGoldStoredCalls(b,protocol).audit.issue_counts.snapshot_not_proven_stored_before_output,1);
 });
+
+
+test('normalized storage entry is explicit at millisecond, nanosecond and offset boundaries', () => {
+  const { buildGoldTimestampedReport } = require('../lib/gold_timestamped_evaluation');
+  for (const [raw, normalized, entry, delay] of [
+    ['2024-01-08T13:59:59.999Z', '2024-01-08T13:59:59.999Z', '2024-01-08T14:00:00.000Z', 1],
+    ['2024-01-08T13:59:59.999000001Z', '2024-01-08T14:00:00.000Z', '2024-01-08T14:01:00.000Z', 60000],
+    ['2024-01-08T09:00:00-05:00', '2024-01-08T14:00:00.000Z', '2024-01-08T14:01:00.000Z', 60000],
+    ['2024-01-08T14:00:00.000001Z', '2024-01-08T14:00:00.001Z', '2024-01-08T14:01:00.000Z', 59999]
+  ]) {
+    const b = bundle(); b.outputs[0].created_at = raw;
+    const p = { ...protocol, entry_policy: 'next_minute_after_normalized_storage', horizon_ms: 60000 };
+    const { dataset, audit } = prepareGoldStoredCalls(b, p);
+    assert.equal(dataset.calls[0].call_time, normalized);
+    assert.equal(dataset.calls[0].entry_time, entry);
+    assert.equal(dataset.calls[0].horizon_end, new Date(Date.parse(entry) + 60000).toISOString());
+    assert.equal(audit.entry_semantics.legacy_policy_alias, false);
+    assert.deepEqual(prepareGoldStoredCalls(b, { ...p, entry_policy: 'next_minute_after_storage' }).dataset.calls, dataset.calls);
+    dataset.candles = [{ market: 'XAUUSD', open_time: entry, close_time: dataset.calls[0].horizon_end,
+      open: 100, high: 101, low: 99, close: 99, complete: true, price_basis: 'mid', source: 'synthetic-only' }];
+    const report = buildGoldTimestampedReport(dataset);
+    assert.equal(report.rows[0].result, 'CORRECT');
+    assert.equal(report.rows[0].entry_delay_ms, delay);
+    assert.deepEqual(report.entry_semantics, audit.entry_semantics);
+    dataset.config.max_entry_delay_ms = delay - 1;
+    assert.equal(buildGoldTimestampedReport(dataset).rows[0].evaluable, false);
+  }
+  assert.throws(() => prepareGoldStoredCalls(bundle(), { ...protocol, entry_policy: 'next_minute_after_raw_storage' }), /protocol/);
+});

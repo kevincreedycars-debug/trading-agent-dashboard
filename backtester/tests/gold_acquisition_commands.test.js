@@ -54,9 +54,13 @@ test('acquisition keeps raw bid/ask/mid evidence and refuses to overwrite its so
 test('pilot command emits both coverage policies and preserves existing reports',()=>{
  const directory=fs.mkdtempSync(path.join(root,'backtester/tmp/gold-pilot-test-'));
  const source=path.join(directory,'source.json'),planPath=path.join(directory,'plan.json'),output=path.join(directory,'pilot.json');
- fs.writeFileSync(source,JSON.stringify(require('../fixtures/gold_timestamped.synthetic.json')));
+ const data=structuredClone(require('../fixtures/gold_timestamped.synthetic.json'));
+ data.calls.forEach(call=>call.source_snapshot_id='shared');
+ fs.writeFileSync(source,JSON.stringify(data));
  fs.writeFileSync(planPath,JSON.stringify({id:'test',recorded_at:'2024-01-01T00:00:00Z',coverage_policies:['contiguous','exact_endpoints'],split_at:'2024-01-08T15:00:00Z',embargo_ms:0}));
  const report=pilot([source,planPath,output]);assert.equal(report.strict_summary.evaluable,2);assert.equal(report.endpoint_summary.evaluable,2);
+ assert.deepEqual(report.earliest_per_snapshot_summary,report.diagnostics.earliest_per_snapshot);
+ assert.deepEqual(report.earliest_per_snapshot_summary.selected_prediction_ids,['synthetic-1']);
  assert.equal(report.untouched_holdout_claimed,false);assert.equal(report.chronological.pairs.length,45);
  assert.throws(()=>pilot([source,planPath,output]),/new report path/);
 });

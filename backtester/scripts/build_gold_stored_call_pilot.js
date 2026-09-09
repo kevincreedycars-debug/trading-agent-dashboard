@@ -17,24 +17,16 @@ function run(args=process.argv.slice(2)) {
   const endpointDataset={...dataset,config:{...dataset.config,coverage_policy:'exact_endpoints'}};
   const endpoints=buildGoldTimestampedReport(endpointDataset);
   const chronological=buildGoldChronologicalFactors(endpointDataset,plan);
-  const sourceCalls=dataset.calls;
-  const groups=new Map();
-  sourceCalls.forEach((call,index)=>{
-    const key=call.source_snapshot_id;
-    if(!key) return;
-    const previous=groups.get(key);
-    if(previous===undefined || call.call_time<sourceCalls[previous].call_time) groups.set(key,index);
-  });
-  const earliestSnapshotRows=[...groups.values()].map(index=>endpoints.rows[index]);
-  const report={version:'gold-stored-call-pilot-v1',generated_at:new Date().toISOString(),research_only:true,
+  const diagnostics=buildGoldPilotDiagnostics(dataset,endpoints,plan);
+  const report={version:'gold-stored-call-pilot-v2',generated_at:new Date().toISOString(),research_only:true,
     data_kind:dataset.data_kind,source_dataset_sha256:crypto.createHash('sha256').update(raw).digest('hex'),
     analysis_protocol_sha256:crypto.createHash('sha256').update(planRaw).digest('hex'),analysis_protocol:plan,
     protocol:dataset.protocol,candles:dataset.candles.length,
     strict_summary:summarize(strict.rows),endpoint_summary:summarize(endpoints.rows),
-    earliest_per_snapshot_summary:summarize(earliestSnapshotRows),
+    earliest_per_snapshot_summary:diagnostics.earliest_per_snapshot,
     interpretation:'Recorded Gold 24H directions compared with OANDA next-minute-after-storage to 24 elapsed-hour endpoints. Storage is not authenticated dashboard publication. Endpoint results do not validate the trade path.',
     executable_trade_validated:false,untouched_holdout_claimed:false,weight_changes_proposed:false,
-    diagnostics:buildGoldPilotDiagnostics(dataset,endpoints,plan),strict,endpoints,chronological};
+    diagnostics,strict,endpoints,chronological};
   fs.writeFileSync(output,JSON.stringify(report,null,2)+'\n',{flag:'wx'});
   console.log(JSON.stringify({output,strict:report.strict_summary,endpoints:report.endpoint_summary,
     strict_reasons:strict.reason_counts,endpoint_reasons:endpoints.reason_counts,chronological:chronological.coverage},null,2));

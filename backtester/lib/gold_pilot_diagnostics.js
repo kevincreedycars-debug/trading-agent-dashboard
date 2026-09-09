@@ -16,7 +16,7 @@ function summarizePilotRows(rows) {
 function buildGoldPilotDiagnostics(dataset,evaluation,plan) {
   if(dataset.calls.length!==evaluation.rows.length || dataset.calls.some((call,i)=>call.prediction_id!==evaluation.rows[i].prediction_id)) throw new Error('Evaluation rows must align with source calls.');
   const split=parseTimestamp(plan.split_at),validationStart=split+plan.embargo_ms;
-  const entries=dataset.calls.map((call,i)=>({call,row:evaluation.rows[i],start:parseTimestamp(call.call_time),end:parseTimestamp(call.horizon_end)}));
+  const entries=dataset.calls.map((call,i)=>({call,index:i,row:evaluation.rows[i],start:parseTimestamp(call.call_time),end:parseTimestamp(call.horizon_end)}));
   const summarize=items=>summarizePilotRows(items.map(item=>item.row));
   const groups=(keyOf)=>{
     const map=new Map();
@@ -33,11 +33,24 @@ function buildGoldPilotDiagnostics(dataset,evaluation,plan) {
     else {selected.push(item);occupiedUntil=item.end;}
   }
   const firstBySnapshot=new Map();
-  for(const item of ordered) if(item.call.source_snapshot_id && !firstBySnapshot.has(item.call.source_snapshot_id)) firstBySnapshot.set(item.call.source_snapshot_id,item);
+  // Horizon validity and outcome must not replace an earlier recorded decision.
+  const snapshotOrdered=entries.filter(item=>item.start!==null)
+    .sort((a,b)=>a.start-b.start || (String(a.call.prediction_id)<String(b.call.prediction_id) ? -1 :
+      String(a.call.prediction_id)>String(b.call.prediction_id) ? 1 : a.index-b.index));
+  for(const item of snapshotOrdered) if(item.call.source_snapshot_id && !firstBySnapshot.has(item.call.source_snapshot_id)) firstBySnapshot.set(item.call.source_snapshot_id,item);
+  const snapshotSelected=[...firstBySnapshot.values()];
+  const selectedIndices=new Set(snapshotSelected.map(item=>item.index));
   return {overall:summarize(entries),
     training:summarize(entries.filter(item=>item.end!==null && item.end<=split)),
     validation:summarize(entries.filter(item=>item.start!==null && item.start>=validationStart)),
-    earliest_per_snapshot:summarize([...firstBySnapshot.values()]),
+    earliest_per_snapshot:{...summarize(snapshotSelected),
+      selection_version:'gold-earliest-snapshot-v2',
+      selected_prediction_ids:snapshotSelected.map(item=>item.call.prediction_id),
+      selected_source_indices:snapshotSelected.map(item=>item.index),
+      excluded:entries.filter(item=>!selectedIndices.has(item.index)).map(item=>({source_index:item.index,
+        prediction_id:item.call.prediction_id,reason:!item.call.source_snapshot_id ? 'snapshot_id_missing' :
+          item.start===null ? 'decision_timestamp_invalid' : 'later_or_tied_snapshot_call'})),
+      selection:'Earliest parsed decision per snapshot; ties use prediction ID code-unit order then source index. Invalid decisions excluded; invalid horizons and rejected outcomes retained.'},
     nonoverlapping_schedule:{...summarize(selected),selected_prediction_ids:selected.map(item=>item.call.prediction_id),
       overlapping_calls_excluded:excluded.length,excluded_prediction_ids:excluded,
       selection:'Greedy earliest source decision, retaining unavailable outcomes; skip decisions before retained horizon. This does not prove independent market trials.'},

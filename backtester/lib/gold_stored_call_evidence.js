@@ -23,12 +23,18 @@ const SIGNALS = ['BULLISH', 'BEARISH', 'NEUTRAL'];
 
 function prepareGoldStoredCalls(bundle, protocol) {
   if (!Array.isArray(bundle?.outputs) || !Array.isArray(bundle?.snapshots)) throw new Error('outputs and snapshots arrays required.');
-  if (protocol?.entry_policy !== 'next_minute_after_storage' ||
+  if (!['next_minute_after_storage', 'next_minute_after_normalized_storage'].includes(protocol?.entry_policy) ||
     !Number.isSafeInteger(protocol.horizon_ms) || protocol.horizon_ms <= 0 || protocol.horizon_ms % 60000 ||
     typeof protocol.id !== 'string' || !protocol.id.trim() || parseTimestamp(protocol.frozen_at) === null ||
     typeof protocol.flat_threshold_pct !== 'number' || !Number.isFinite(protocol.flat_threshold_pct) || protocol.flat_threshold_pct < 0) {
-    throw new Error('Explicit protocol id, frozen_at, next_minute_after_storage, whole-minute horizon_ms and flat_threshold_pct required.');
+    throw new Error('Explicit protocol id, frozen_at, next_minute_after_normalized_storage (or legacy next_minute_after_storage), whole-minute horizon_ms and flat_threshold_pct required.');
   }
+  // Preserve legacy protocol bytes and timing; disclose the resolved semantics separately.
+  const entrySemantics = { version: 'gold-storage-entry-v2',
+    policy: 'next_minute_after_normalized_storage',
+    availability_rounding: 'ceil_to_millisecond',
+    exact_boundary: 'advance_one_minute',
+    legacy_policy_alias: protocol.entry_policy === 'next_minute_after_storage' };
   const snapshots = new Map();
   for (const row of bundle.snapshots) {
     if (!row?.id) throw new Error('Snapshot id required.');
@@ -71,7 +77,7 @@ function prepareGoldStoredCalls(bundle, protocol) {
   const count = values => Object.fromEntries([...new Set(values)].sort().map(value => [value,values.filter(v=>v===value).length]));
   const timestamps = calls.map(row=>row.call_time).filter(Boolean).sort();
   const snapshotCounts = count(calls.map(row=>row.source_snapshot_id).filter(Boolean));
-  const audit = { version:'gold-stored-call-evidence-v1', research_only:true,
+  const audit = { version:'gold-stored-call-evidence-v2', research_only:true, entry_semantics:entrySemantics,
     retrieved_at:bundle.retrieved_at ?? null, protocol,
     outputs:calls.length, first_stored_call:timestamps[0] ?? null, last_stored_call:timestamps.at(-1) ?? null,
     calls_with_input_rejections:calls.filter(row=>row.input_rejections.length).length,
@@ -90,7 +96,8 @@ function prepareGoldStoredCalls(bundle, protocol) {
       'Repeated calls and shared snapshots are dependent observations; counts are not independent trials.',
       'Next-minute entry and the explicit horizon are research assumptions; no production rule or weight is changed.'
     ] };
-  return {audit,dataset:{version:'gold-stored-call-dataset-v1',data_kind:'observed_stored_gold_calls_storage_time_proxy',
+  return {audit,dataset:{version:'gold-stored-call-dataset-v2',data_kind:'observed_stored_gold_calls_storage_time_proxy',
+    entry_semantics:entrySemantics,
     protocol, config:{candle_interval_ms:60000,price_basis:'mid',flat_threshold_pct:protocol.flat_threshold_pct,
       entry_policy:'next_interval_open_after_call',max_entry_delay_ms:60000}, calls,candles:[]}};
 }

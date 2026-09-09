@@ -46,14 +46,17 @@ function buildGoldAsOfDataset(input) {
         continue;
       }
       features.push({ name, value: latest.value, observed_at: latest.observed_at,
-        available_at: latest.available_at, source: latest.source });
+        available_at: latest.available_at, source: latest.source,
+        ...(latest.source_record_id === undefined ? {} : { source_record_id: latest.source_record_id }) });
     }
     const cutoff = features.length ? Math.max(...features.map(row => parseTimestamp(row.available_at))) : selectionCutoff;
     return { ...call, market: 'XAUUSD', features, inputs_available_at: new Date(cutoff).toISOString(),
       feature_selection_cutoff: new Date(selectionCutoff).toISOString(),
       input_rejections: rejections, missing_features: missing };
   });
-  return { version: 'gold-asof-dataset-v1', data_kind: input.data_kind || 'unspecified',
+  return { version: 'gold-asof-dataset-v2', data_kind: input.data_kind || 'unspecified',
+    protocol: input.protocol ?? null,
+    entry_semantics: input.entry_semantics ?? null,
     config: input.config, calls, candles: input.candles,
     input_methodology: 'Latest observed feature available by the explicit input cutoff (default: decision); latest available revision of that observation. Age measured from observed_at to decision. Upstream rejections preserved.',
     feature_contract: input.feature_contract,

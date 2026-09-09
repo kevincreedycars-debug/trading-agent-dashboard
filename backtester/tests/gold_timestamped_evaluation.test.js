@@ -11,9 +11,9 @@ function fixture() {
       features: [{ name: 'F1', value: 'BULLISH', available_at: '2024-01-08T13:58:00Z' }] }],
     candles: [
       { market: 'XAUUSD', open_time: '2024-01-08T14:00:00Z', close_time: '2024-01-08T15:00:00Z',
-        open: 2000, high: 2020, low: 1990, close: 2010, price_basis: 'bid', source: 'synthetic-test-only' },
+        open: 2000, high: 2020, low: 1990, close: 2010, price_basis: 'bid', source: 'synthetic-test-only', complete: true },
       { market: 'XAUUSD', open_time: '2024-01-08T15:00:00Z', close_time: '2024-01-08T16:00:00Z',
-        open: 2010, high: 2030, low: 2000, close: 2020, price_basis: 'bid', source: 'synthetic-test-only' }
+        open: 2010, high: 2030, low: 2000, close: 2020, price_basis: 'bid', source: 'synthetic-test-only', complete: true }
     ]
   };
 }
@@ -151,5 +151,23 @@ test('indexed batch evaluation matches direct checks including malformed and ove
   for(const data of cases) {
     data.candles.reverse();
     assert.deepEqual(buildGoldTimestampedReport(data).rows[0],evaluate(data));
+  }
+});
+
+
+test('completion is enforced in both coverage modes and ignored only outside the window', () => {
+  for (const coverage_policy of ['contiguous', 'exact_endpoints']) {
+    for (const [complete, reason] of [[false, 'candle_incomplete'], [undefined, 'candle_completion_unknown'],
+      [null, 'candle_completion_unknown'], ['true', 'candle_completion_unknown'], [1, 'candle_completion_unknown']]) {
+      const data = fixture(); data.config.coverage_policy = coverage_policy;
+      data.candles[1].complete = complete;
+      assert.equal(evaluate(data).result_reason, reason);
+      assert.deepEqual(buildGoldTimestampedReport(data).rows[0], evaluate(data));
+      data.candles[1].complete = true;
+      const before = evaluate(data);
+      data.candles.push({ ...data.candles[1], complete, open_time: '2024-01-08T16:00:00Z', close_time: '2024-01-08T17:00:00Z' });
+      assert.deepEqual(evaluate(data), before);
+      assert.equal(buildGoldTimestampedReport(data).version, 'gold-timestamped-direction-v2');
+    }
   }
 });

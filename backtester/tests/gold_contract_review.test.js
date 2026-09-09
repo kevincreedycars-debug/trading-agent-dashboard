@@ -52,35 +52,36 @@ test('review: weekend gaps remain rejected in strict mode and exposed in endpoin
   assert.equal(row.observed_path_complete, false);
 });
 
-// These characterize reviewed gaps, not desired repaired behavior. Replace their
-// expectations with fail-closed/versioned-contract assertions when repairing.
-test('review gap G1: completion metadata other than literal false is accepted', () => {
-  for (const flag of [undefined, null, 'false', 0]) {
+test('G1 repaired: only explicit boolean completion can score', () => {
+  for (const flag of [undefined, null, 'false', 'true', 0, 1, {}, []]) {
     const data = dataset(); data.candles[0].complete = flag;
-    assert.equal(buildGoldTimestampedReport(data).rows[0].evaluable, true);
+    assert.equal(buildGoldTimestampedReport(data).rows[0].result_reason, 'candle_completion_unknown');
   }
 });
 
-test('review gap G2: rounding across a minute delays entry beyond the raw next minute', () => {
+test('G2 resolved: legacy storage policy declares normalized next-minute semantics', () => {
   const protocol = { id: 'synthetic-review', frozen_at: '2024-01-01T00:00:00Z',
     entry_policy: 'next_minute_after_storage', horizon_ms: 86400000, flat_threshold_pct: 0.3 };
   const result = prepareGoldStoredCalls({ outputs: [{ id: 'review', agent_name: 'GOLD', layer: 1,
     snapshot_id: 'snapshot', created_at: '2024-01-08T13:59:59.999999Z', call_24h_direction: 'BULLISH',
     factor_breakdown: Object.fromEntries(Array.from({ length: 10 }, (_, i) => [`F${i + 1}`, { signal: 'BULLISH' }])) }],
     snapshots: [{ id: 'snapshot', created_at: '2024-01-08T13:00:00Z' }] }, protocol);
+  assert.equal(result.dataset.entry_semantics.policy, 'next_minute_after_normalized_storage');
+  assert.equal(result.dataset.entry_semantics.legacy_policy_alias, true);
+  assert.deepEqual(result.dataset.protocol, protocol);
   const call = result.dataset.calls[0];
   assert.equal(call.call_time, '2024-01-08T14:00:00.000Z');
   assert.equal(call.entry_time, '2024-01-08T14:01:00.000Z');
   assert.notEqual(call.entry_time, '2024-01-08T14:00:00.000Z');
 });
 
-test('review gap G3: as-of selection drops the supplied protocol envelope', () => {
+test('G3 repaired: as-of selection preserves protocol through evaluation', () => {
   const input = dataset(); input.protocol = { id: 'synthetic-review-protocol' };
   input.feature_contract = [{ name: 'F1', required: true, max_age_ms: 0 }];
   input.feature_records = [{ name: 'F1', value: 'BULLISH', observed_at: '2024-03-10T06:00:00Z',
     available_at: '2024-03-10T06:00:00Z', source: 'synthetic-review-only' }];
   const output = buildGoldAsOfDataset(input);
-  assert.equal(output.protocol, undefined);
-  assert.equal(buildGoldTimestampedReport(output).protocol, null);
+  assert.deepEqual(output.protocol, input.protocol);
+  assert.deepEqual(buildGoldTimestampedReport(output).protocol, input.protocol);
   assert.equal(input.protocol.id, 'synthetic-review-protocol');
 });

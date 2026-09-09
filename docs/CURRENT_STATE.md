@@ -1,12 +1,12 @@
 # Current state
 
-Updated 2026-09-07. This is the current repository summary; dated workstream reports provide supporting evidence.
+Updated 2026-09-09. This is the current repository summary; dated workstream reports provide supporting evidence.
 
-- Canonical working folder: `D:\trading-agent-dashboard-codex`, branch `main`; consolidation cutover is complete and this is the sole registered worktree.
+- Canonical working folder: `D:\trading-agent-dashboard-codex`, current branch `review/gold-timestamped-contract`; consolidation cutover is complete. Separate authorized asset-builder worktrees are listed in `PARALLEL_AGENT_HANDOFF.md`.
 - Consolidation starts from production `origin/main` at `125d871` (fetched 2026-09-07), preserving its current dashboard and published data. Local commits add the recovered work. This is a local baseline, not a new production deployment.
 - Production architecture: independent Layer 1 agents -> Supabase -> Layer 2 trade selection/dashboard publication -> GitHub Pages. Local exported workflows do not establish live runtime health.
 - Existing USD, EUR, Gold, NQ and BTC replay/checker paths remain preserved. Replay agreement is implementation parity, not evidence of predictive or trading performance.
-- Gold contract review is documented in `GOLD_TIMESTAMPED_EVALUATION_CONTRACT.md`: direct candle completion is permissive, normalized storage rounding can advance entry an extra minute, and as-of selection drops the protocol envelope. Six offline review tests reproduce measurement rules and gaps; engine behavior is unchanged.
+- Gold contract review is documented in `GOLD_TIMESTAMPED_EVALUATION_CONTRACT.md`: v2 rejects unknown candle completion, explicitly declares normalized storage-entry semantics and preserves protocol/source lineage. Pilot v2 shares deterministic earliest-snapshot selection between summaries and discloses selected IDs and exclusions. Frozen research artifacts remain unchanged.
 - Timestamped Gold evaluation, input lineage audits, chronological diagnostics and local reports are consolidated. The confirmed unordered 25-row Gold history query remains a production input defect. The prepared repair is unapplied and requires isolated n8n validation.
 - GBP collector/agent drafts and replay code are retained. They remain research onboarding drafts; contract tests do not authorize production activation.
 - The macro prototype is retained in `macro-engine/`, with no production imports or database provisioning. The trial and calendar-hardening experiments remain parked in their preserved branches.

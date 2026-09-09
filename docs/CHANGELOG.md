@@ -1,3 +1,7 @@
+# 2026-09-09 - Gold v2 measurement and reporting repairs
+
+Require explicit completed candles in both coverage modes; preserve conservative normalized storage entry through an explicit policy and legacy alias; retain as-of protocol and selected source lineage through rejection reporting. Pilot v2 shares deterministic earliest-snapshot selection with IDs and denominator exclusions, including invalid-horizon earliest calls. Frozen artifacts and production workflows are unchanged. Final `npm test`: 290/290 passed, no failures/skips/cancellations; final unit suite: 260/260. See `GOLD_TIMESTAMPED_EVALUATION_CONTRACT.md`.
+
 # 2026-09-07 - Parallel builder handoff saved
 
 Prepared isolated GBP, Silver, WTI and EUR pair-coverage DeepSeek workspaces with explicit assignments, ownership and integration boundaries. Installed local dependencies and opened their VS Code windows. Saved the evening resume checkpoint in `SESSION_NOTES.md`. Setup only; DeepSeek processes were not launched by this session and no live deployment occurred.

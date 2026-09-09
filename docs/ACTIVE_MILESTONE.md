@@ -4,25 +4,25 @@
 Backtesting engine review.
 
 ## Current Milestone
-Define and audit the Gold timestamped directional-evaluation contract.
+Prepare isolated validation of the Gold history-input repair.
 
 ## Status
-Initial contract audit complete; demonstrated repairs pending.
+Gold timestamped contract implementation review complete locally; history patch remains unapplied.
 
 ## Completed Work
-Versioned contract and source-to-report trace documented in `GOLD_TIMESTAMPED_EVALUATION_CONTRACT.md`. Six offline review tests cover hand-calculated outcomes, DST/weekend boundaries, denominator reconciliation and three reproduced gaps. Engine behavior and frozen research artifacts are unchanged.
+Gold v2 now requires explicit candle completion, declares normalized storage entry without retiming old protocols, preserves protocol/source lineage and reconciles shared earliest-snapshot selection. Independent boundary and reporting regressions pass. Frozen research artifacts and live workflows are unchanged.
 
 ## Remaining Work
-Repair explicit candle-completion validation, resolve/version raw versus normalized storage entry semantics, and preserve as-of protocol metadata. Replace gap characterization assertions with repaired expectations. Review shared snapshot selection/provenance. Keep isolated history-query validation separate.
+Inspect the existing history patch and prepare a reproducible isolated validation package for ordering, pagination, strict prior-date cutoff, duplicate-date handling and agent-compatible output shape. Establish the isolated trigger/destination before any live execution. Production deployment and fresh source-quality collection remain separate gates.
 
 ## Current Files Being Modified
-Contract/review documentation and `backtester/tests/gold_contract_review.test.js`; no engine implementation changes.
+No history implementation files yet; Gold contract review changes are ready for a local commit.
 
 ## Blockers
-Gold input history defect remains unrepaired in production. Authentic availability/publication timestamps, complete paths and MT5 execution evidence are not yet established. These block qualification, not code review.
+Authentic publication/release timestamps, complete paths and MT5 execution evidence remain unestablished. These block qualification, not offline engineering.
 
 ## Next Immediate Action
-Implement explicit candle-completion validation with a versioned compatibility decision for direct datasets and synthetic fixtures (contract gap G1).
+Inspect the history patch and its consumer contract to prepare an offline isolation/validation package.
 
 ## Last Updated
-2026-09-07.
+2026-09-09.

@@ -38,7 +38,9 @@ Each call:
 - Non-empty `features`: unique `name`, non-null scalar `value`, and `available_at` for each. Every availability time must be at or before both the input cutoff and the call. Use actual availability, not the economic observation date.
 - For factor analysis, use `F1` through `F10` with `BULLISH`, `BEARISH`, or `NEUTRAL` values. Other raw features may be recorded but are not interpreted as factor votes. Missing factors remain missing.
 
-Each candle:
+Each candle (v2 evaluator contract):
+
+- Literal boolean `complete: true` is required for every candle overlapping the evaluation window. Missing/non-boolean completion rejects as `candle_completion_unknown`; false rejects as `candle_incomplete`. Supply source-supported metadata for real data; do not automatically mark old rows complete.
 
 - `market: "XAUUSD"`, explicit `open_time` and `close_time`, numeric positive `open`, `high`, `low`, `close`.
 - Consistent OHLC bounds, `price_basis`, and a non-empty `source` identifying the actual feed/export.
@@ -52,7 +54,7 @@ The validator checks supplied metadata consistency. It cannot independently veri
 
 The default remains entry exactly at `call_time` with contiguous candles. Two opt-in settings support the stored-call research path:
 
-- A call may supply `entry_time` with `config.entry_policy: "next_interval_open_after_call"` and a positive integer `max_entry_delay_ms`. Entry must equal the next global interval boundary after the normalized call time, remain within the delay bound, and precede the horizon. Feature availability is still checked against the original decision cutoff, never against the later entry. The stored-call adapter preserves original microseconds and rounds availability upward before choosing the next minute.
+- A call may supply `entry_time` with `config.entry_policy: "next_interval_open_after_call"` and a positive integer `max_entry_delay_ms`. Entry must equal the next global interval boundary after the normalized call time, remain within the delay bound, and precede the horizon. Feature availability is still checked against the original decision cutoff, never against the later entry. The stored-call adapter preserves original precision and rounds availability upward before choosing the next minute. New protocols name this `next_minute_after_normalized_storage`; the old `next_minute_after_storage` name remains an explicitly disclosed alias with unchanged timing. The `entry_semantics` envelope records the resolved policy.
 - `config.coverage_policy: "exact_endpoints"` permits interior gaps for a price-direction comparison only. Entry and horizon candles remain exact; duplicate/overlapping candles, malformed OHLC, incomplete candles, mixed feeds and missing endpoints are rejected. Reports expose gap count, missing duration and `observed_path_complete`; they always retain `executable_trade_validated: false`. Gaps are not filled or declared scheduled closures.
 
 Batch evaluation indexes candle timestamps once and selects each call's window. Tests compare indexed results with direct evaluation, including malformed archives, outside-window bad prices and overlaps. A malformed market/timestamp archive falls back to the direct path to preserve rejection behavior.
@@ -109,3 +111,5 @@ Chronological pair diagnostics also report Pearson correlation of factor votes e
 ## Still needed for executable testing
 
 Actual Gold call/feature timestamps and price provenance are needed to run the strict path on real evidence. Trade-level validation additionally requires a frozen entry rule, contemporaneous L2L/0.5 L2L levels, stop/adverse boundary, bid/ask and spread data, and enough price resolution to determine target/stop ordering. Neither these tools nor the synthetic example establish that stage as complete.
+
+Reports now use `gold-timestamped-direction-v2` and retain protocol, entry semantics and per-row source lineage, including rejected calls. Pilot v2 uses one earliest-snapshot selection for both summaries, disclosing selected call IDs/source indices and exclusions. Frozen v1 artifacts remain preserved. See `docs/GOLD_TIMESTAMPED_EVALUATION_CONTRACT.md` for the full compatibility decisions.

@@ -77,3 +77,25 @@ test('upstream rejections survive feature selection', () => {
   assert.equal(buildGoldTimestampedReport(result).evaluable_calls,0);
   assert.equal(result.calls[0].input_rejections[0].reason,'snapshot_lineage_unverified');
 });
+
+
+test('selected source record identity survives revisions, rejection and duplicate reporting', () => {
+  const input = fixture();
+  input.protocol = { id: 'lineage-test', nested: { horizon: 'explicit' } };
+  input.entry_semantics = { version: 'synthetic-semantics' };
+  input.feature_records[0].source_record_id = 'original';
+  input.feature_records.push({ ...input.feature_records[0], source_record_id: 'revision', available_at: '2024-01-08T13:45:00Z' });
+  const data = buildGoldAsOfDataset(input);
+  assert.equal(data.calls[0].features[0].source_record_id, 'revision');
+  data.calls.push({ ...data.calls[0] });
+  const report = buildGoldTimestampedReport(data);
+  assert.deepEqual(report.protocol, input.protocol);
+  assert.deepEqual(report.entry_semantics, input.entry_semantics);
+  for (const row of report.rows) {
+    assert.equal(row.result_reason, 'duplicate_prediction_id');
+    assert.equal(row.source_lineage.features[0].source_record_id, 'revision');
+    assert.equal(row.market_outcome_direction, null);
+  }
+  delete input.protocol;
+  assert.equal(buildGoldTimestampedReport(buildGoldAsOfDataset(input)).protocol, null);
+});
