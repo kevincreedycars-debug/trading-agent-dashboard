@@ -9,6 +9,8 @@ Read this file first, then:
 
 Use `docs/README.md` to find additional sources only when relevant. Historical handoffs are provenance, not competing active plans.
 
+For n8n, Supabase or provider access, read `docs/CREDENTIAL_CONTINUITY.md` and use the documented scoped encrypted-credential runner before concluding credentials are unavailable. Process environment variables are intentionally empty outside that runner. Never print credential values.
+
 Inspect the current branch, `git status --short --untracked-files=all`, relevant files and test commands. Summarize the current task, meaningful existing changes and next action before editing. Existing user authorization persists; proceed with work already authorized. Ask only when an unresolved choice or action outside that scope requires input.
 
 Preserve unrelated changes. Keep credentials out of Git and logs. Ignore `.claude/launch.json` as unrelated local state unless the task actually affects it. Local evidence belongs under ignored `backtester/tmp/` or `tmp/`; recovery archives belong under `.local/`.
