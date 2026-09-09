@@ -1,3 +1,9 @@
+# 2026-09-09 - Gold isolated workflow and capture comparison tooling
+
+Built an inactive manual/read/capture workflow generator from the reviewed Gold source and patch, with credential omission, explicit UTC cutoff and byte/object hashes. Added a capture/reference checker that rejects graph or execution drift, pinning, missing/duplicate rows, field changes, out-of-bound dates and incorrect ordering across page boundaries. New-directory/report guards preserve evidence. A local candidate is saved under ignored `tmp/gold-history-isolation-20260909/`; no import, execution or production change occurred.
+
+Validation: `npm test` passed 297/297; after one additional timestamp/boundary regression, final `npm run test:unit` passed 268/268 and focused isolation tests passed 6/6. No failures, skips or cancellations. Installed n8n validation remains unavailable because this session has no runtime connection; see `GOLD_HISTORY_PATCH_VALIDATION.md` and `SESSION_NOTES.md`.
+
 # 2026-09-09 - Offline Gold history repair validation package
 
 Added an offline harness executing the exact exported normalizer with 600 synthetic rows, independent lookback expectations, UTC/date and duplicate/fallback checks. The new-path-only CLI records source/code hashes. Mutation regressions catch query caps and consumer drift. Documented installed-n8n isolation and acceptance criteria; no workflow edits, imports or production execution occurred. Focused tests pass 2/2; the six harness checks pass; final `npm run test:unit` passes 262/262. Full Gold v2 suite immediately before this addition passed 290/290.

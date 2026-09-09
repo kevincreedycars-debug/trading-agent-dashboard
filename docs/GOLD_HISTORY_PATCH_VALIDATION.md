@@ -39,3 +39,38 @@ The runtime evidence must demonstrate:
 6. UTC-midnight behavior, runtime execution ID, inactive/manual-only graph evidence and no side-effect nodes.
 
 Record installed node/runtime versions, execution IDs, source/candidate hashes, row counts, selected IDs and discrepancies. A passing local harness cannot close these checks. Production deployment remains a separate milestone after reviewing the isolated result and current live drift. Fresh source-quality collection follows deployment; old inspected outcomes remain consumed evidence.
+
+## Isolation workflow generator and capture checker
+
+The local generator now builds the three-node manual/read/capture graph directly from a supplied Gold export and the reviewed patch. It refuses source-parameter or patch drift, copies the Supabase node type/version, and omits all credentials and production connections. The source export must be freshly acquired before a runtime validation; the checked-in export only establishes a local candidate.
+
+```powershell
+node backtester/scripts/build_gold_history_isolation.js exports/gold_collector.json backtester/drafts/gold_collector_history_query_patch.json 2026-09-09 tmp/gold-history-isolation-NEW
+```
+
+The new directory contains `workflow.json` and `manifest.json`, with both input-byte and object hashes. Existing directories are refused. The read uses a fixed-date expression resolving to the exact reviewed query for the specified UTC date. This isolates pagination and ordering from wall-clock changes; it deliberately does not close the production `$now`/midnight gate. The generated workflow reads `market_snapshots` only and never creates fixtures. Use a captured independent reference from that source; provisioning any synthetic table is outside this generator.
+
+After an authenticated manual execution, retain the exported inactive runtime workflow, an independent reference row array (exact projected fields), the capture node's n8n items array (`[{"json": {...}}]`), and an execution metadata file:
+
+```json
+{
+  "id": "ACTUAL_EXECUTION_ID",
+  "workflow_id": "ACTUAL_ISOLATED_WORKFLOW_ID",
+  "runtime_version": "OBSERVED_INSTALLED_VERSION",
+  "mode": "manual",
+  "status": "success",
+  "observed_page_size": 1000
+}
+```
+
+The page size above is an example; obtain the real value from installed-node/request evidence. This metadata is a supplied assertion until authenticated against the runtime. Do not substitute synthetic test IDs or infer pagination merely from output length.
+
+```powershell
+node backtester/scripts/verify_gold_history_capture.js SOURCE.json PATCH.json MANIFEST.json RUNTIME_WORKFLOW.json REFERENCE_ROWS.json CAPTURED_ITEMS.json EXECUTION.json tmp/gold-history-comparison-NEW.json
+```
+
+The checker regenerates the candidate from the hashed source/patch and compares the runtime graph exactly. Only a Supabase credential reference on the read node and workflow-level server metadata are permitted; activation, node/settings/connection drift, pinning and static data are rejected. It reconciles every captured row against the independently sorted reference, rejecting missing/duplicate IDs, differing field values, field-shape drift, invalid timestamps, out-of-window dates and page-boundary ordering errors. IDs are compared in code-unit order; timestamp ordering retains nanosecond precision. The report exposes selected per-date IDs, exact-page-multiple/overflow coverage and all source hashes.
+
+A passing comparison sets `supplied_capture_matches_reference: true`, while `installed_runtime_authenticated` remains false. Authentication, independent reference completeness, actual page requests and midnight/normalizer checks remain explicit operational gates. The checker does not automatically authorize deployment.
+
+Local regression coverage includes empty, 1,000-, 1,001- and 2,000-row synthetic captures, equal-time IDs across page boundaries, data/graph mutations and command overwrite/hash guards. These validate the tools, not a real Supabase execution.

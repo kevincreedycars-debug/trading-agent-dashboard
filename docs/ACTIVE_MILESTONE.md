@@ -4,25 +4,25 @@
 Backtesting engine review.
 
 ## Current Milestone
-Prepare isolated validation of the Gold history-input repair.
+Validate the Gold history-input repair in an isolated runtime.
 
 ## Status
-Offline history validation package complete; installed n8n validation remains outstanding and the history patch is unapplied.
+Local isolation tooling complete; installed n8n execution unavailable in this session.
 
 ## Completed Work
-Gold v2 now requires explicit candle completion, declares normalized storage entry without retiming old protocols, preserves protocol/source lineage and reconciles shared earliest-snapshot selection. Independent boundary and reporting regressions pass. Frozen research artifacts and live workflows are unchanged.
+Gold v2 measurement/reporting repairs and the offline normalization harness are preserved. Added a credential-free manual/read/capture workflow generator with source/patch drift guards, plus a capture checker for exact row content/order, timestamp bounds, graph isolation and execution identity. A local candidate is saved under ignored `tmp/gold-history-isolation-20260909/`.
 
 ## Remaining Work
-Execute and capture the installed-node acceptance checks in the prepared package; local consumer checks cannot establish pagination behavior. Establish the isolated trigger/destination before any live execution. Production deployment and fresh source-quality collection remain separate gates.
+Acquire a fresh source export, bind the isolated read credential in the available runtime, execute the inactive manual-only candidate, and compare captured rows with an independent reference. Verify actual pagination requests, runtime version and production-clock/midnight behavior. Production application and fresh-data collection remain separate gates.
 
 ## Current Files Being Modified
-`backtester/lib/gold_history_patch_validation.js`, its offline command/tests, and `docs/GOLD_HISTORY_PATCH_VALIDATION.md`. Gold v2 repairs are committed as `730fc4c`.
+Isolation library, generation/comparison commands, tests and `GOLD_HISTORY_PATCH_VALIDATION.md`; no production workflow files.
 
 ## Blockers
-Authentic publication/release timestamps, complete paths and MT5 execution evidence remain unestablished. These block qualification, not offline engineering.
+This session exposes no n8n/Docker executable, n8n API environment variables, n8n connector or connected browser. Local tests cannot substitute for installed-runtime execution. Authentic source timing and complete market paths remain separate qualification limitations.
 
 ## Next Immediate Action
-Establish an inactive manual-only n8n validation target and fixture/read-only source according to `GOLD_HISTORY_PATCH_VALIDATION.md` before executing the installed node.
+Acquire the fresh Gold workflow export and establish the inactive manual-only runtime target when authenticated n8n access is available.
 
 ## Last Updated
 2026-09-09.
