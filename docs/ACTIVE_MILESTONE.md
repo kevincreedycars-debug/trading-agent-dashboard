@@ -1,28 +1,28 @@
 # Active milestone
 
 ## Current Feature
-Backtesting engine review.
+Live dashboard refresh reliability.
 
 ## Current Milestone
-Validate the Gold history-input repair in an isolated runtime.
+Resolve provider failures and verify one complete refresh.
 
 ## Status
-Local isolation tooling complete; installed n8n execution unavailable in this session.
+CoinGecko repair deployed; FRED access remains unresolved.
 
 ## Completed Work
-Gold v2 measurement/reporting repairs and the offline normalization harness are preserved. Added a credential-free manual/read/capture workflow generator with source/patch drift guards, plus a capture checker for exact row content/order, timestamp bounds, graph isolation and execution identity. A local candidate is saved under ignored `tmp/gold-history-isolation-20260909/`.
+Confirmed HTTP 429 in BTC execution 3482, added bounded retries and explicit partial-data continuation only to CoinGecko, preserved a live backup, verified the active version and successful retry 3490. Full local suite passes 302/302. Full refresh 3491 exposed separate FRED 403 Access Denied failures; the public status correctly reports failed.
 
 ## Remaining Work
-Acquire a fresh source export, bind the isolated read credential in the available runtime, execute the inactive manual-only candidate, and compare captured rows with an independent reference. Verify actual pagination requests, runtime version and production-clock/midnight behavior. Production application and fresh-data collection remain separate gates.
+Establish why FRED is denying the n8n runtime, restore authorized provider access, then validate the smallest collector before another complete refresh. Preserve failure visibility. Resume Gold isolation after this incident.
 
 ## Current Files Being Modified
-Isolation library, generation/comparison commands, tests and `GOLD_HISTORY_PATCH_VALIDATION.md`; no production workflow files.
+BTC export, guarded repair command/tests and incident/handoff documentation. No FRED workflow or credential changes.
 
 ## Blockers
-This session exposes no n8n/Docker executable, n8n API environment variables, n8n connector or connected browser. Local tests cannot substitute for installed-runtime execution. Authentic source timing and complete market paths remain separate qualification limitations.
+FRED returned HTML Access Denied across multiple collectors. Requests use HTTPS and the configured key matches the encrypted store. This is an upstream access failure; no configuration mismatch has been demonstrated.
 
 ## Next Immediate Action
-Acquire the fresh Gold workflow export and establish the inactive manual-only runtime target when authenticated n8n access is available.
+Review FRED access recovery using the captured n8n 403 evidence before attempting another full refresh.
 
 ## Last Updated
 2026-09-09.

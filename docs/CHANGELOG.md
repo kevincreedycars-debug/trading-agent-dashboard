@@ -1,3 +1,7 @@
+# 2026-09-09 - Live BTC CoinGecko repair; FRED failure identified
+
+Applied a targeted, backed-up live repair to BTC CoinGecko input after confirmed 429 execution 3482. Three tries with five-second waits precede explicit partial-data continuation. Active version verified; retry 3490 succeeded, fetched CoinGecko and stored a snapshot. A single full refresh 3491 exposed separate FRED 403 Access Denied failures; end-to-end recovery is not claimed. No FRED credentials/nodes changed. Final local suite 302/302. Corrected startup credential discovery to use the existing encrypted CLIXML runner. See `BTC_RATE_LIMIT_INCIDENT_20260909.md`.
+
 # 2026-09-09 - Gold isolated workflow and capture comparison tooling
 
 Built an inactive manual/read/capture workflow generator from the reviewed Gold source and patch, with credential omission, explicit UTC cutoff and byte/object hashes. Added a capture/reference checker that rejects graph or execution drift, pinning, missing/duplicate rows, field changes, out-of-bound dates and incorrect ordering across page boundaries. New-directory/report guards preserve evidence. A local candidate is saved under ignored `tmp/gold-history-isolation-20260909/`; no import, execution or production change occurred.
