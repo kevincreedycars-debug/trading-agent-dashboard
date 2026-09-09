@@ -1,3 +1,7 @@
+# 2026-09-09 - Offline Gold history repair validation package
+
+Added an offline harness executing the exact exported normalizer with 600 synthetic rows, independent lookback expectations, UTC/date and duplicate/fallback checks. The new-path-only CLI records source/code hashes. Mutation regressions catch query caps and consumer drift. Documented installed-n8n isolation and acceptance criteria; no workflow edits, imports or production execution occurred. Focused tests pass 2/2; the six harness checks pass; final `npm run test:unit` passes 262/262. Full Gold v2 suite immediately before this addition passed 290/290.
+
 # 2026-09-09 - Gold v2 measurement and reporting repairs
 
 Require explicit completed candles in both coverage modes; preserve conservative normalized storage entry through an explicit policy and legacy alias; retain as-of protocol and selected source lineage through rejection reporting. Pilot v2 shares deterministic earliest-snapshot selection with IDs and denominator exclusions, including invalid-horizon earliest calls. Frozen artifacts and production workflows are unchanged. Final `npm test`: 290/290 passed, no failures/skips/cancellations; final unit suite: 260/260. See `GOLD_TIMESTAMPED_EVALUATION_CONTRACT.md`.
