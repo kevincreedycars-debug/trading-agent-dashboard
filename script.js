@@ -12505,6 +12505,50 @@ function workflowEtaText(status, statusClass) {
   return "Ready";
 }
 
+function setWorkflowControlHelp(control, text) {
+  if (!control) return;
+  const tooltipId = `${control.id}Help`;
+  let tooltip = document.getElementById(tooltipId);
+  if (!tooltip) {
+    tooltip = document.createElement("div");
+    tooltip.id = tooltipId;
+    tooltip.className = "workflow-control-tooltip";
+    tooltip.setAttribute("role", "tooltip");
+    tooltip.hidden = true;
+    document.body.appendChild(tooltip);
+    control.setAttribute("aria-describedby", tooltipId);
+    if (control.tagName !== "BUTTON") control.tabIndex = 0;
+    let hideTimer;
+    const hide = () => { clearTimeout(hideTimer); tooltip.hidden = true; };
+    const show = () => {
+      clearTimeout(hideTimer);
+      tooltip.hidden = false;
+      const bounds = control.getBoundingClientRect();
+      if (bounds.bottom < 0 || bounds.top > window.innerHeight) return hide();
+      const width = tooltip.offsetWidth;
+      const height = tooltip.offsetHeight;
+      tooltip.style.left = `${Math.max(12, Math.min(bounds.right - width, window.innerWidth - width - 12))}px`;
+      const below = bounds.bottom + 8;
+      tooltip.style.top = `${Math.max(12, below + height <= window.innerHeight - 12 ? below : bounds.top - height - 8)}px`;
+    };
+    const leave = () => {
+      if (document.activeElement !== control) hideTimer = setTimeout(hide, 120);
+    };
+    control.addEventListener("pointerenter", show);
+    control.addEventListener("pointerleave", leave);
+    control.addEventListener("focus", show);
+    control.addEventListener("blur", hide);
+    tooltip.addEventListener("pointerenter", () => clearTimeout(hideTimer));
+    tooltip.addEventListener("pointerleave", leave);
+    document.addEventListener("keydown", event => { if (event.key === "Escape") hide(); });
+    const reposition = () => { if (!tooltip.hidden) show(); };
+    window.addEventListener("scroll", reposition, true);
+    window.addEventListener("resize", reposition);
+  }
+  control.removeAttribute("title");
+  tooltip.textContent = text;
+}
+
 function renderWorkflowStatus(status = workflowStatus) {
   const summary = document.getElementById("workflowStatusSummary");
   const badge = document.getElementById("workflowStatusBadge");
@@ -12534,6 +12578,9 @@ function renderWorkflowStatus(status = workflowStatus) {
   const age = status?.last_run_finished_at ? formatRelativeAge(status.last_run_finished_at) : "";
   const message = status?.message || "";
   const blockedByStoredRefresh = activeWorkflowRefreshBlocksNewRequest();
+  const healthReportNote = !status?.overall_data_status && !status?.data_status && inputHealthData?.generated_at
+    ? ` Input-health report: ${formatDashboardTime(inputHealthData.generated_at)}. This report may be older than the latest workflow run.`
+    : "";
 
   if (badge) {
     badge.className = `workflow-status-badge ${activeRefreshPresentation?.badgeClass || statusClass}`;
@@ -12559,6 +12606,29 @@ function renderWorkflowStatus(status = workflowStatus) {
     elapsed.textContent = activeRefreshPresentation?.elapsedText || "Elapsed pending";
     elapsed.className = `workflow-elapsed ${activeRefreshPresentation?.badgeClass || statusClass}`;
   }
+
+  setWorkflowControlHelp(elapsed, activeRefreshPresentation
+    ? "Time since this browser requested the refresh, including waiting for published results. This is not the exact n8n execution duration."
+    : "No refresh duration is being tracked in this browser. The timer starts when you select Run Refresh; pending does not mean a workflow is currently running.");
+  setWorkflowControlHelp(eta, activeRefreshPresentation
+    ? "Estimated timing or tracking stage for this browser's refresh request. Timing is an estimate, not a guaranteed finish time."
+    : eta?.textContent === "Ready"
+      ? "The refresh control is ready. This describes refresh availability, not the health or trading readiness of the market data."
+      : "Timing or completion state of the latest published workflow. Any ETA is an estimate, not a guaranteed finish time.");
+  setWorkflowControlHelp(badge, activeRefreshPresentation
+    ? `Refresh tracking status: ${activeRefreshPresentation.badgeLabel}. ${activeRefreshPresentation.summary}`
+    : effectiveStatus === "success_degraded"
+      ? `The workflow completed successfully, but input-health monitoring reports missing, stale, unavailable or unverified data.${healthReportNote} Review Input Health for details.`
+      : statusClass === "success"
+        ? "The latest published workflow completed successfully and reports healthy monitored inputs. This is an operational status, not a measure of signal accuracy."
+        : statusClass === "failed"
+          ? "The latest published workflow reported a failure. Review the error report for the affected step and reason."
+          : `Latest published workflow status: ${workflowStatusLabel(effectiveStatus)}. This describes workflow operation, not signal accuracy.`);
+  setWorkflowControlHelp(button, !configured
+    ? "Refresh is unavailable because the dashboard connection is not configured."
+    : workflowTriggerInFlight || blockedByStoredRefresh
+      ? "A refresh request is already being sent or tracked in this browser. Wait for tracking to finish before requesting another."
+      : "Run the Master Orchestrator to collect market data, run the independent Layer 1 agents, update Layer 2 and publish the dashboard. This starts a new workflow run; it does not just reload the page.");
 
   if (meta) {
     meta.textContent = activeRefreshPresentation?.meta || `Latest published workflow status: ${workflowStatusLabel(effectiveStatus)}.`;

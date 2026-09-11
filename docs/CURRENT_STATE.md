@@ -17,6 +17,8 @@ Updated 2026-09-11. This is the current repository summary; dated workstream rep
 
 ## Evidence limitations
 
+The September 11 UI follow-up confirmed public `input-health.json` is still dated September 1 and marked CRITICAL, even though the latest workflow status is successful. This older artifact drives the Success degraded badge; it is not proof of a new failure in Master 3563. Four local refresh-control tooltips now explain status/timing/action semantics and show the health-report date. UI publication and health-artifact regeneration were not performed in that follow-up.
+
 Gold's September stored-call pilot is descriptive: storage timestamps are proxies, source vintages are unverified, repeated snapshots create dependence, and no evaluated call had a complete strict 24-hour path. The June 9 reference defect affects 143 of 147 linked snapshots. See [Gold progress](CODEX_GOLD_BACKTEST_PROGRESS.md).
 
 The older L2L final-test period (2025-10-01 to 2026-04-30) is consumed. Intraday reach rates are not directional accuracy or executable win rates. A fresh timestamp-defensible dataset is required before new model qualification.

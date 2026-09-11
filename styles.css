@@ -729,6 +729,32 @@ h3 {
   line-height: 1.45;
 }
 
+.workflow-control-tooltip {
+  position: fixed;
+  z-index: 1000;
+  box-sizing: border-box;
+  width: max-content;
+  max-width: min(320px, calc(100vw - 24px));
+  padding: 12px 14px;
+  border: 1px solid rgba(154, 180, 211, 0.35);
+  border-radius: 8px;
+  background: #101923;
+  color: #edf3fb;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  font-size: 12px;
+  line-height: 1.55;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.workflow-control-tooltip[hidden] { display: none; }
+
+.workflow-compact-panel [aria-describedby]:not(button) { cursor: help; }
+.workflow-compact-panel [aria-describedby]:focus-visible {
+  outline: 2px solid #8bbcff;
+  outline-offset: 3px;
+}
+
 .workflow-elapsed,
 .workflow-eta {
   border: 1px solid var(--cream-border);

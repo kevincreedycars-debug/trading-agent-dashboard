@@ -1,3 +1,7 @@
+# 2026-09-11 - Layer 1 refresh-control tooltips
+
+Added hover and keyboard-focus explanations to Elapsed, Ready/ETA, workflow status and Run Refresh. Help follows current states, supports disabled-button hover and Escape dismissal, and stays within desktop/mobile viewports. Success degraded distinguishes execution success from input health and shows the health-report date. Read-only production inspection confirmed the screenshot combines September 11 workflow success with a September 1 critical input-health report; tooltips do not regenerate that report or change status logic. Browser interaction/layout check passes at 1440px and 390px. UI changes are local to the task branch, not published to production.
+
 # 2026-09-11 - Live collector request multiplication repaired
 
 Traced FRED 429 to 16 economic-event items causing duplicate static requests in USD, then rate-limit failures in the remaining collectors. Set the initial DGS2 request to execute once in all five active collectors, preserving all other nodes, credentials, connections and error behavior. Guarded backups and saved/active verification completed. Fresh Master 3563 and all child steps succeeded; each collector stored one snapshot and USD demonstrated 16 trigger items becoming one item per HTTP request. Pages and raw production status report Manual Refresh Complete at 07:56:07 UTC. Existing partial history/calendar data stays disclosed. Local suite 305/305. See `COLLECTOR_FANOUT_INCIDENT_20260911.md`.

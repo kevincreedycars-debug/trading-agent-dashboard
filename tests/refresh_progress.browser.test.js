@@ -288,6 +288,52 @@ async function seedStoredRefreshStateAndReload(page, state) {
   await page.waitForSelector("#runWorkflowButton");
 }
 
+test("workflow control help explains degraded health and supports hover, focus and narrow screens", async () => {
+  const harness = await createHarness();
+  try {
+    const context = await harness.createContext();
+    const page = await openDashboard(context, harness.origin);
+    await page.waitForFunction(() => document.getElementById("workflowStatusBadgeHelp")?.textContent.includes("Input-health report:"));
+    const controls = ["workflowElapsed", "workflowEta", "workflowStatusBadge", "runWorkflowButton"];
+    for (const width of [1440, 390]) {
+      await page.setViewportSize({ width, height: 1000 });
+      for (const id of controls) {
+        const control = page.locator(`#${id}`);
+        const help = page.locator(`#${id}Help`);
+        await page.mouse.move(0, 0);
+        await control.hover();
+        await help.waitFor({ state: "visible", timeout: 3000 });
+        const box = await help.boundingBox();
+        assert.ok(box.x >= 0 && box.x + box.width <= width, `${id} tooltip fits ${width}px viewport`);
+        assert.ok(box.y >= 0 && box.y + box.height <= 1000);
+        assert.equal(await control.getAttribute("aria-describedby"), `${id}Help`);
+        await page.keyboard.press("Escape");
+        assert.equal(await help.isVisible(), false);
+        await control.focus();
+        assert.equal(await help.isVisible(), true);
+        await control.evaluate(el => el.blur());
+      }
+      assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), true);
+    }
+    assert.match(await page.locator("#workflowStatusBadgeHelp").textContent(), /report may be older/);
+    assert.match(await page.locator("#workflowElapsedHelp").textContent(), /does not mean a workflow is currently running/);
+    assert.match(await page.locator("#workflowEtaHelp").textContent(), /not the health or trading readiness/);
+    assert.equal(harness.getWebhookHits(), 0, "hover and focus never trigger a refresh");
+    await page.evaluate(() => {
+      workflowControl.enabled = false;
+      renderWorkflowStatus({ status: "failed" });
+    });
+    await page.mouse.move(0, 0);
+    await page.locator("#runWorkflowButton").hover();
+    await page.locator("#runWorkflowButtonHelp").waitFor({ state: "visible", timeout: 3000 });
+    assert.match(await page.locator("#runWorkflowButtonHelp").textContent(), /unavailable/);
+    assert.match(await page.locator("#workflowStatusBadgeHelp").textContent(), /reported a failure/);
+    await context.close();
+  } finally {
+    await harness.close();
+  }
+});
+
 test("acceptance is not completion and opaque dispatch remains unverified", async () => {
   const harness = await createHarness();
   try {

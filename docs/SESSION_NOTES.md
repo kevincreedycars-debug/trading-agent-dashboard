@@ -1,6 +1,10 @@
 # Session notes
 
+2026-09-11 follow-up: added state-aware hover/focus tooltips to the four Layer 1 refresh controls in script.js/styles.css, with cache-version changes in index.html. Success degraded now explains input health and includes the health-report date. Read-only public inspection found input-health.json still dated September 1, marked CRITICAL for an older economic-event failure, while workflow-status.json reports the verified September 11 success. The tooltip change does not refresh the health artifact or alter health/refresh behavior. Desktop/mobile screenshots are ignored under tmp/workflow-help-*.png. Browser interaction checks pass; production UI publication is not performed by this change. The Gold objective below remains the next milestone.
+
 2026-09-11: recurring live refresh failure traced to collector item multiplication.
+
+Tooltip follow-up validation: final `npm test` passed 306/306, with no failures/skips/cancellations; desktop and narrow screenshots reviewed. Log: ignored `tmp/workflow-help-tests-20260911.log`.
 
 Branch `fix/btc-collector-rate-limit`. User authorized fixing the live failure. USD 3549 received 16 economic-event rows and requested each FRED series 16 times, exhausting the rate limit; EUR/Gold/NQ/BTC then failed immediately with 429. This is distinct from September 9's FRED 403 and earlier CoinGecko 429. The CoinGecko repair remains intact.
 
