@@ -1,28 +1,22 @@
 # Active milestone
 
 ## Current Feature
-Live dashboard refresh reliability.
+Gold timestamped history input validation.
 
 ## Current Milestone
-Resolve provider failures and verify one complete refresh.
+Validate the prepared Gold history query repair in an isolated n8n workflow.
 
 ## Status
-CoinGecko repair deployed; FRED access remains unresolved.
+Resuming after the resolved September 11 live refresh incident. Production Gold history repair remains unapplied.
 
 ## Completed Work
-Confirmed HTTP 429 in BTC execution 3482, added bounded retries and explicit partial-data continuation only to CoinGecko, preserved a live backup, verified the active version and successful retry 3490. Full local suite passes 302/302. Full refresh 3491 exposed separate FRED 403 Access Denied failures; the public status correctly reports failed.
+Offline history-query and exact-normalizer validation, manual-only isolation generator and hashed capture/reference checker are ready. Authenticated runtime access is available through the scoped encrypted credential runner. The refresh detour is closed: execute-once collector entry repair deployed, fresh Master 3563 and all child steps succeeded, public success verified at 07:56:07 UTC, local suite 305/305.
 
 ## Remaining Work
-Establish why FRED is denying the n8n runtime, restore authorized provider access, then validate the smallest collector before another complete refresh. Preserve failure visibility. Resume Gold isolation after this incident.
-
-## Current Files Being Modified
-BTC export, guarded repair command/tests and incident/handoff documentation. No FRED workflow or credential changes.
-
-## Blockers
-FRED returned HTML Access Denied across multiple collectors. Requests use HTTPS and the configured key matches the encrypted store. This is an upstream access failure; no configuration mismatch has been demonstrated.
+Perform the isolated runtime validation in GOLD_HISTORY_PATCH_VALIDATION.md before any production history-query repair. Preserve independent Layer 1 inputs and downstream-only backtesting.
 
 ## Next Immediate Action
-Review FRED access recovery using the captured n8n 403 evidence before attempting another full refresh.
+Review the prepared Gold isolation artifact against current live source using the documented validation contract.
 
 ## Last Updated
-2026-09-09.
+2026-09-11.

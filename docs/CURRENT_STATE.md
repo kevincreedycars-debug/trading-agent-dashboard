@@ -1,6 +1,6 @@
 # Current state
 
-Updated 2026-09-09. This is the current repository summary; dated workstream reports provide supporting evidence.
+Updated 2026-09-11. This is the current repository summary; dated workstream reports provide supporting evidence.
 
 - Canonical working folder: `D:\trading-agent-dashboard-codex`, current branch `fix/btc-collector-rate-limit`; consolidation cutover is complete. Separate authorized asset-builder worktrees are listed in `PARALLEL_AGENT_HANDOFF.md`.
 - Consolidation starts from production `origin/main` at `125d871` (fetched 2026-09-07), preserving its current dashboard and published data. Local commits add the recovered work. This is a local baseline, not a new production deployment.
@@ -13,7 +13,7 @@ Updated 2026-09-09. This is the current repository summary; dated workstream rep
 - Raw research evidence stays local under ignored `backtester/tmp/` and `tmp/`; recovery archives stay under ignored `.local/consolidation-20260907/`. Git stores source, synthetic fixtures and selected reports.
 - Collector export credential literals have been replaced with named environment references. These sanitized exports require credential binding review before import; live n8n credentials and workflows were not changed. Historical commits and private recovery archives may still contain old literals.
 
-- Live incident 2026-09-09: CoinGecko-only BTC retry/partial-data handling is deployed and verified by successful execution 3490. Subsequent full refresh 3491 is still failed due to separate FRED 403 Access Denied errors across collectors. See `BTC_RATE_LIMIT_INCIDENT_20260909.md`.
+- Live refresh recovered September 11: FRED 429 was caused by incoming economic-event items multiplying static provider requests; all five collector entry requests now execute once. Fresh Master 3563 and all 13 child steps succeeded; each collector stored one snapshot. Public Pages status reports success at 07:56:07 UTC. Existing history/calendar input gaps remain explicitly partial. The earlier CoinGecko repair remains intact. See `COLLECTOR_FANOUT_INCIDENT_20260911.md` and `BTC_RATE_LIMIT_INCIDENT_20260909.md`.
 
 ## Evidence limitations
 

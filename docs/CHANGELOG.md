@@ -1,3 +1,7 @@
+# 2026-09-11 - Live collector request multiplication repaired
+
+Traced FRED 429 to 16 economic-event items causing duplicate static requests in USD, then rate-limit failures in the remaining collectors. Set the initial DGS2 request to execute once in all five active collectors, preserving all other nodes, credentials, connections and error behavior. Guarded backups and saved/active verification completed. Fresh Master 3563 and all child steps succeeded; each collector stored one snapshot and USD demonstrated 16 trigger items becoming one item per HTTP request. Pages and raw production status report Manual Refresh Complete at 07:56:07 UTC. Existing partial history/calendar data stays disclosed. Local suite 305/305. See `COLLECTOR_FANOUT_INCIDENT_20260911.md`.
+
 # 2026-09-09 - Live BTC CoinGecko repair; FRED failure identified
 
 Applied a targeted, backed-up live repair to BTC CoinGecko input after confirmed 429 execution 3482. Three tries with five-second waits precede explicit partial-data continuation. Active version verified; retry 3490 succeeded, fetched CoinGecko and stored a snapshot. A single full refresh 3491 exposed separate FRED 403 Access Denied failures; end-to-end recovery is not claimed. No FRED credentials/nodes changed. Final local suite 302/302. Corrected startup credential discovery to use the existing encrypted CLIXML runner. See `BTC_RATE_LIMIT_INCIDENT_20260909.md`.
