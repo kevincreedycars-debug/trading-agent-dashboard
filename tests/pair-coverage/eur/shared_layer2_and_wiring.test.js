@@ -111,12 +111,11 @@ test("the six EUR crosses carry an explicit quote asset", () => {
   );
 });
 
-test("only crosses whose both legs are live are marked READY", () => {
-  for (const code of ["EUR_USD", "XAU_USD", "NQ_USD", "BTC_USD", "XAU_EUR", "NQ_EUR", "BTC_EUR"]) {
+test("every EUR cross is READY once both of its Layer 1 legs are live", () => {
+  for (const code of [
+    "EUR_USD", "XAU_USD", "NQ_USD", "BTC_USD",
+    "EUR_GBP", "XAU_EUR", "XAG_EUR", "WTI_EUR", "NQ_EUR", "BTC_EUR"
+  ]) {
     assert.equal(configField(code, "liveEligibility"), "READY", `${code} should be READY`);
-  }
-  // GBP is still a peer draft; SILVER and WTI Layer 1 agents are not built yet.
-  for (const code of ["EUR_GBP", "XAG_EUR", "WTI_EUR"]) {
-    assert.equal(configField(code, "liveEligibility"), "ONBOARDING", `${code} should stay ONBOARDING`);
   }
 });

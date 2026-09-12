@@ -2,9 +2,9 @@
 
 Prepared 2026-09-12 by the EUR pair-coverage workstream.
 
-**STATUS: APPLIED 2026-09-12** (user-authorised). Gates 1 and 3 are resolved for
-the shared/dashboard code; the n8n producer upgrade remains a pending live-system
-step. See `DEEPSEEK_EUR_PAIRS_PROGRESS.md` for the current status table.
+**STATUS: APPLIED AND DEPLOYED 2026-09-12.** Fast-forwarded to `origin/main` as
+commit `2f70b6e`. All six EUR crosses are `READY`; the n8n producer upgrade remains
+a pending live-system step.
 
 ## What was applied
 
@@ -14,17 +14,17 @@ step. See `DEEPSEEK_EUR_PAIRS_PROGRESS.md` for the current status table.
 - `script.js`: explicit `quoteAssetCode` on every EUR cross and on the READY USD
   pairs; `deriveLiveLayer2Dashboard()` resolves the quote per pair; quote-aware
   reference-unavailable and reason strings.
-- `pairTradeResearchConfigs`: `XAU/EUR`, `NQ/EUR`, `BTC/EUR` flipped to `READY`
-  (both legs already live). `EUR/GBP`, `XAG/EUR`, `WTI/EUR` stay `ONBOARDING`.
+- `pairTradeResearchConfigs`: **all six EUR crosses flipped to `READY`** — the live
+  pipeline now publishes WTI, GBP and SILVER Layer 1 agents, so every leg exists.
 - Verified by `tests/pair-coverage/eur/shared_layer2_and_wiring.test.js` plus the
   pre-existing `backtester/tests/layer2_pair_logic.test.js`.
 
 ## Still pending
 
 - n8n producer activation: import `pair-coverage/eur/exports/eur_pair_layer2_agent.json`,
-  bind Supabase/GitHub credentials, add `Get latest GBP/SILVER/WTI rows` when those
-  Layer 1 agents exist.
-- Per-pair price evidence; then flip the remaining three labels.
+  bind Supabase/GitHub credentials. Not required for the board (it re-derives from
+  `data/layer1.json`).
+- Per-pair tradable instrument/feed identity and historical replay evidence.
 - `data/layer2.json` is unchanged (dashboard re-derives live pairs from
   `data/layer1.json`, so the board is already correct without it).
 

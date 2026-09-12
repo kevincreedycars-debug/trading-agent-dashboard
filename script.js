@@ -101,8 +101,7 @@ const pairTradeResearchConfigs = [
     pairLabel: "EUR/GBP",
     weekdayKeys: weekdayBreakdownColumnsByAsset.EUR,
     quoteAssetCode: "GBP",
-    liveEligibility: "ONBOARDING",
-    onboardingReason: "Cross-quote Layer 1 and historical replay onboarding in progress."
+    liveEligibility: "READY"
   },
   {
     targetAssetCode: "GOLD",
@@ -142,8 +141,7 @@ const pairTradeResearchConfigs = [
     pairLabel: "XAG/EUR",
     weekdayKeys: weekdayBreakdownColumnsByAsset.SILVER,
     quoteAssetCode: "EUR",
-    liveEligibility: "ONBOARDING",
-    onboardingReason: "Cross-quote Layer 1 and historical replay onboarding in progress."
+    liveEligibility: "READY"
   },
   {
     targetAssetCode: "SILVER",
@@ -167,8 +165,7 @@ const pairTradeResearchConfigs = [
     pairLabel: "WTI/EUR",
     weekdayKeys: weekdayBreakdownColumnsByAsset.WTI,
     quoteAssetCode: "EUR",
-    liveEligibility: "ONBOARDING",
-    onboardingReason: "Cross-quote Layer 1 and historical replay onboarding in progress."
+    liveEligibility: "READY"
   },
   {
     targetAssetCode: "WTI",
