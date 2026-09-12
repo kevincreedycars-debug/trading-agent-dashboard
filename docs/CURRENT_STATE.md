@@ -2,6 +2,8 @@
 
 Updated 2026-09-12. This is the current repository summary; dated workstream reports provide supporting evidence.
 
+Latest: the offline Gold macro/event research bundle is implemented and executed. Fresh FRED vintages, 15,977 hourly prices and 841 event snapshots produce 681 fixed research observations (390 training, 143 validation, 148 exclusions). Among 800 single/pair candidates, the training-selected candidate scored 75.86% training and 53.57% validation. Original event/consensus vintages remain an evidence wall: only ten scheduled decisions have eligible current-archive event proxies. Live-call greater-than-60% reliability is not established. See `GOLD_RESEARCH_RESULTS_20260912.md`.
+
 - Canonical working folder: `D:\trading-agent-dashboard-codex`, current branch `research/gold-dataset-contract`; consolidation cutover is complete. Separate authorized asset-builder worktrees are listed in `PARALLEL_AGENT_HANDOFF.md`.
 - September 12 source acquisition: 164 Gold outputs, 83 storage dates, 154 linked snapshots and nine repeated-snapshot groups. The 28-variable inventory finds nine exact top-level fields in this projected export, with no records meeting publication/vintage metadata requirements. Nineteen missing mappings are export/schema gaps, not proof of provider unavailability. Raw evidence is ignored under `backtester/tmp/gold-source-refresh-20260912/`. See `GOLD_RESEARCH_DELIVERY_CONTRACT.md`.
 - Full-field follow-up acquired all 78 fields for the same 154 snapshots. Nineteen of 28 inventory variables are present as exact top-level values; nine require missing/nested/alias review. Publication/vintage qualification remains absent. Full-field source hash: `990d656d768b4f2461d39576a4d83a6c98318eb10ef51f2d0c02a624c74568d0`.

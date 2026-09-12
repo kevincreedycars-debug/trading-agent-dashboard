@@ -4,6 +4,8 @@ Baseline date: 2026-09-07. Objective: establish what each engine actually measur
 
 ## Research framework: the common 24-hour question
 
+September 12 execution results and the remaining event-vintage wall are in [Gold research results](GOLD_RESEARCH_RESULTS_20260912.md). The implemented offline bundle covers source acquisition, conservative macro as-of selection, individual/pair experiments and event-version exclusion. The training-selected candidate failed to exceed 60% in validation; no production qualification follows.
+
 The user-confirmed delivery order and greater-than-60% qualification target are now in [Gold research delivery contract](GOLD_RESEARCH_DELIVERY_CONTRACT.md). Individual raw variables precede event-conditioned combinations; Layer 1 and Layer 2 receive separate final qualification. The active milestone is source coverage, while operational Gold history repair retains its separate validation gate.
 
 The backtester is being built to answer one bounded question per asset: **given the variables and event information demonstrably available when a Layer 1 decision was made, which pre-declared conditions are associated with the realised following-24-hour price direction?** This includes market variables, agent factors, event actual-versus-forecast surprises, time since release, regimes and data quality states. It does not infer causation from correlation.

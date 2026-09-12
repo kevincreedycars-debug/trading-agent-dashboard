@@ -43,6 +43,8 @@ An Observation is one permanent record of everything known at the moment an agen
 
 ## Current scope (2026-09-12)
 
+The offline Gold macro/event bundle is runnable with `node backtester/scripts/run_gold_research_bundle.js FRED_DIRECTORY HOURLY_DIRECTORY EVENT_DIRECTORY NEW_OUTPUT_DIRECTORY`. Acquisition is separate and read-only. See [actual results and source limitations](../docs/GOLD_RESEARCH_RESULTS_20260912.md). An operational research engine does not imply a qualified live formula.
+
 The repository now includes replay, directional evaluation, reach research, timestamped Gold evaluation and diagnostics. The generic variable/event research harness adds a common record, registry and chronological cohort-reporting contract for 24-hour research. Read [the variable and event framework](docs/variable_event_research_framework.md) with [the engine inventory and review plan](../docs/BACKTESTING_REVIEW_PLAN.md). The foundation description below is historical.
 
 ## Original foundation scope

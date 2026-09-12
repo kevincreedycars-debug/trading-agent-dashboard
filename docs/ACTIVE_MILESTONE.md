@@ -4,19 +4,19 @@
 Gold 24-hour source dataset.
 
 ## Current Milestone
-Establish auditable source coverage for the Gold variable inventory.
+Establish contemporaneous event-vintage coverage for Gold combination research.
 
 ## Status
-Fresh September 12 stored-call acquisition is complete. Publication/vintage evidence remains unverified; the full dataset is not yet qualified. Production Gold history repair remains unapplied.
+Offline macro/event research pipeline is implemented and executed. Greater-than-60% qualification failed for the training-selected candidate. Current event archive revisions cannot establish historical original releases/consensus; see GOLD_RESEARCH_RESULTS_20260912.md.
 
 ## Completed Work
-Offline history-query and exact-normalizer validation, manual-only isolation generator and hashed capture/reference checker are ready. Authenticated runtime access is available through the scoped encrypted credential runner. The generic downstream-only variable/event framework and first Gold factor-state adapter/registry are complete; they require this history gate before producing qualifying evidence. The refresh detour is closed: execute-once collector entry repair deployed, fresh Master 3563 and all child steps succeeded, public success verified at 07:56:07 UTC, local suite 311/311.
+Acquired 82,703 M1 candles, 15,977 H1 candles, five FRED vintage series and 841 calendar records. Built 681 fixed daily research observations, 800 training-defined single/pair candidates, event-as-of attachment, rejection accounting and an offline bundle command. The selected candidate declined from 75.86% training to 53.57% validation. No live formulas were modified.
 
 ## Remaining Work
-Map raw variables and event fields to source records with defensible availability and vintages. Preserve original research-document coverage as unverified until traced. Complete the separate isolated runtime validation before any production history-query repair.
+Original release/consensus vintages, untouched final validation, historical session calendar, remaining original research-variable coverage and timestamped Layer 2 evaluation remain outstanding. Current endpoint reports do not qualify live trading.
 
 ## Next Immediate Action
-Map the 28-variable source inventory to provider/schema fields and audit authentic publication/vintage availability.
+Secure an archive preserving original event releases and pre-release consensus versions, then rerun the existing as-of audit.
 
 ## Last Updated
 2026-09-12.
