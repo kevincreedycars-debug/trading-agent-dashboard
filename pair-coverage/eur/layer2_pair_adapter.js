@@ -1,4 +1,5 @@
 const { EUR_PAIR_INVENTORY } = require("./pair_inventory");
+const { pairSessionStatus, MARKET_CLOSED_REASON } = require("./pair_session");
 
 // Isolated, pure Layer 2 producer draft for EUR-related pairs.
 //
@@ -148,6 +149,72 @@ function buildLayer2PairDashboard(input = {}) {
   };
 }
 
+// Mirrors `confidenceBucketFromValue` in backtester/lib/layer2_pair_logic.js so
+// the dashboard's `strengthBucket` field renders identically.
+function confidenceBucket(confidence) {
+  const numeric = toNumber(confidence);
+  if (numeric === null) return null;
+  if (numeric >= 80) return { key: "VERY_STRONG", label: "Very Strong" };
+  if (numeric >= 65) return { key: "STRONG", label: "Strong" };
+  if (numeric >= 50) return { key: "MODERATE", label: "Moderate" };
+  if (numeric >= 0) return { key: "WEAK", label: "Weak" };
+  return null;
+}
+
+// Dashboard-consumer view: the shape `deriveLiveLayer2Dashboard()` returns in
+// script.js for live-eligible pairs, so the six EUR crosses can be rendered
+// without the shared dashboard code being edited by this workstream.
+// Applies the pair's base-asset session rule and adds `pairCode` + bucket.
+function buildDashboardLayer2View(input = {}) {
+  const pairs = Array.isArray(input.pairs) && input.pairs.length ? input.pairs : EUR_LAYER2_PAIRS;
+  const calls = input.calls || {};
+  const asOf = input.asOf ? new Date(input.asOf) : new Date();
+  const tradeOpportunities = [];
+  const avoidToday = [];
+
+  for (const pair of pairs) {
+    const session = pairSessionStatus(pair, asOf);
+    if (session.marketStatus === "CLOSED") {
+      avoidToday.push({
+        pairCode: pair.pairCode,
+        instrument: pair.instrument,
+        reason: MARKET_CLOSED_REASON,
+        marketStatus: "CLOSED"
+      });
+      continue;
+    }
+
+    const result = buildLayer2PairOpportunity(pair, calls);
+    if (result.opportunity) {
+      const bucket = confidenceBucket(result.opportunity.confidence);
+      tradeOpportunities.push({
+        pairCode: pair.pairCode,
+        ...result.opportunity,
+        strengthBucket: bucket ? bucket.label : null,
+        strengthBucketKey: bucket ? bucket.key : null
+      });
+    } else {
+      avoidToday.push({
+        pairCode: pair.pairCode,
+        instrument: pair.instrument,
+        reason: result.avoid.reason
+      });
+    }
+  }
+
+  // Mirrors the dashboard sort: confidence desc, then instrument asc.
+  tradeOpportunities.sort((a, b) => {
+    const delta = Number(b.confidence ?? 0) - Number(a.confidence ?? 0);
+    if (delta !== 0) return delta;
+    return String(a.instrument || "").localeCompare(String(b.instrument || ""));
+  });
+  tradeOpportunities.forEach((opportunity, index) => {
+    opportunity.rank = index + 1;
+  });
+
+  return { tradeOpportunities, avoidToday };
+}
+
 module.exports = {
   LOW_CONVICTION_THRESHOLD,
   DASHBOARD_SOURCE,
@@ -155,6 +222,8 @@ module.exports = {
   EUR_CROSS_PAIRS,
   normalizeDirection,
   clampConviction,
+  confidenceBucket,
   buildLayer2PairOpportunity,
-  buildLayer2PairDashboard
+  buildLayer2PairDashboard,
+  buildDashboardLayer2View
 };

@@ -17,14 +17,17 @@ expected market-closed behaviour, not a Layer 1 defect.
 
 ## Intended files
 
-The implementation will add:
+The implementation adds:
 
 - `pair-coverage/eur/pair_inventory.js`
 - `pair-coverage/eur/pair_contract.js`
 - `pair-coverage/eur/layer2_pair_adapter.js`
-- `tests/pair-coverage/eur/fixtures.js`
-- `tests/pair-coverage/eur/pair_contract.test.js`
-- `tests/pair-coverage/eur/layer2_pair_adapter.test.js`
+- `pair-coverage/eur/layer1_call_adapter.js`
+- `pair-coverage/eur/pair_session.js`
+- `pair-coverage/eur/eur_pair_logic.md`
+- `pair-coverage/eur/exports/eur_pair_layer2_agent.json` (inactive draft)
+- `pair-coverage/eur/workflows/eur_pair_layer2_agent.md`
+- `tests/pair-coverage/eur/*.test.js` (+ `fixtures.js`)
 
 ## Coverage matrix and findings
 
@@ -143,12 +146,62 @@ confidence, avoid reasons, ranking, `dashboard_meta`/`trade_opportunities`/
 `USD`. USD-quoted pairs reproduce the live strings byte-for-byte. It is pure, does
 no I/O and is the drop-in Codex can lift into the shared producer.
 
+## Draft package status (completion criteria)
+
+Implemented and locally tested:
+
+- Pair identity/orientation inventory and the fail-closed readiness contract.
+- Quote-agnostic Layer 2 producer with live-shape parity for USD quotes.
+- Session rule (`pair_session.js`) mirroring `isWeekendDate`/`marketOpenForDate`.
+- Layer 1 adapters for both live shapes (`agent_outputs` rows and `layer1.json`).
+- Dashboard-consumer view with `pairCode` and strength buckets.
+- Inactive, secret-free n8n draft (`exports/eur_pair_layer2_agent.json`).
+
+Missing provider/schema evidence:
+
+- Direct-feed identity, units and availability per cross are still unrecorded.
+- `market_snapshots` has no repo migration; the live column set is unconfirmed.
+
+n8n runtime validation still required:
+
+- Draft import, credential binding (Supabase + GitHub nodes), and execution.
+- The `SILVER`/`WTI` Layer 1 agents must exist before those legs can feed in.
+
+Historical/backtesting validation still required:
+
+- No replay or outcome evaluation has been run for any EUR cross.
+
+Activation/integration not performed:
+
+- No onboarding label changed, no workflow activated, no `data/layer2.json` write.
+
+## Source and availability matrix
+
+| Pair | Base feed source | Quote feed source | Availability recorded |
+| --- | --- | --- | --- |
+| EUR/GBP | EUR (live) | GBP (peer draft) | not established |
+| XAU/EUR | GOLD (live) | EUR (live) | not established |
+| XAG/EUR | SILVER (not built) | EUR (live) | not established |
+| WTI/EUR | WTI (not built) | EUR (live) | not established |
+| NQ/EUR | NQ (live) | EUR (live) | not established |
+| BTC/EUR | BTC (live) | EUR (live) | not established |
+
+## Integration field mapping
+
+| Source field | Normalized | Used by | Output field |
+| --- | --- | --- | --- |
+| `agent_outputs.call_24h_direction` / `full_output.today_call.direction` | `BULLISH`/`BEARISH`/`NO_CLEAR_BIAS` | pair legs | `trade_opportunities[].direction` |
+| `agent_outputs.call_24h_conviction` / `conviction_24h`  | integer 0-100, null preserved | pair legs | `trade_opportunities[].confidence` |
+| `layer1.json` `calls["24h"].direction/conviction` | same as above | dashboard view | `tradeOpportunities[].confidence` |
+| pair base asset | `OPEN`/`CLOSED` session | suppression | `avoidToday[].marketStatus` |
+| lower leg conviction | rounded average with quote leg | ranking | `rank`, `strengthBucket` |
+
 ## Test result
 
 Command: `node --test tests/pair-coverage/eur/*.test.js` (quote the glob in PowerShell).
 
-Result: 16/16 passed on 2026-09-12 (8 contract tests + 8 Layer 2 producer tests,
-including six-cross scope coverage).
+Result: 36/36 passed on 2026-09-12 (contract, producer, session, adapter, dashboard
+view and workflow-draft suites across the six non-EUR/USD crosses).
 JavaScript syntax checks and editor diagnostics also report no errors. The quoted
 glob is required in PowerShell; an unquoted `*.test.js` is passed through literally
 and can report a spurious non-zero exit while truncating pipes.
