@@ -236,3 +236,60 @@ JavaScript syntax checks and editor diagnostics also report no errors. The quote
 glob is required in PowerShell; an unquoted `*.test.js` is passed through literally
 and can report a spurious non-zero exit while truncating pipes.
 
+
+
+## End of session — 2026-09-12
+
+**Status: EUR pair Layer 2 shipped to production.** All six non-EUR/USD crosses are
+live-eligible on the dashboard.
+
+Branch and commits:
+
+- Worker branch `agents/eur-pair-coverage-20260907` (this worktree) — head `feabdff`.
+  History: `930d983` contract → `5102543` quote-agnostic producer → `18e1b45`
+  six-cross scope → `4c919d1` draft package → `e930e1f` integration proposal →
+  `c645167` Layer 2 integration → `feabdff` all six READY + deployment record.
+- Production `origin/main` — head `d429a87`. History: `c7dae3f` → `2f70b6e`
+  (integration) → `d429a87` (cache-buster bump).
+
+What is live:
+
+- `backtester/lib/layer2_pair_logic.js` and `script.js` are quote-agnostic; the
+  dashboard resolves each pair's quote via `quoteAssetCode`.
+- 10 pairs `READY`: EUR/USD, XAU/USD, NQ/USD, BTC/USD, EUR/GBP, XAU/EUR, XAG/EUR,
+  WTI/EUR, NQ/EUR, BTC/EUR.
+- GitHub Pages serves the new build (verified: deployed `index.html` is 17,523
+  bytes, matching `origin/main`).
+
+Verification performed:
+
+- `node --test 'tests/pair-coverage/eur/*.test.js'` → 42/42 pass.
+- Clean worktree based on live `origin/main` → `node --check script.js` OK and
+  45/45 pass before either push.
+- Live `data/layer1.json` (2026-09-12T19:33Z) carries eight live agents including
+  WTI, GBP and SILVER, which is why every cross could be enabled.
+
+Open items for the next session:
+
+1. Optional n8n producer activation: import
+   `pair-coverage/eur/exports/eur_pair_layer2_agent.json` and bind Supabase/GitHub
+   credentials. The board does not depend on it (it re-derives from `data/layer1.json`).
+2. Per-pair tradable instrument/feed identity and historical replay evidence; the
+   source/availability matrix still says "not established".
+3. Coordinator-owned documents (`CURRENT_STATE.md`, `CURRENT_TASK.md`,
+   `ACTIVE_MILESTONE.md`, `SESSION_NOTES.md`, `PARALLEL_AGENT_HANDOFF.md`) were not
+   edited by this worker; they need the coordinator's status update and the worktree
+   retirement decision.
+4. Known unrelated failure: `backtester/tests/secret_scanner.test.js`, caused by
+   PowerShell `Format-Table -AutoSize` truncation in a non-interactive host. Proven
+   pre-existing at `e930e1f`.
+5. Local `main` is still the diverged consolidation baseline (142 commits behind
+   live). Do not push it; production is `origin/main`.
+
+Resume:
+
+```powershell
+git log --oneline -6
+node --test 'tests/pair-coverage/eur/*.test.js'
+node tmp/simulate_board.js   # local board preview (tmp/ is ignored local tooling)
+```
