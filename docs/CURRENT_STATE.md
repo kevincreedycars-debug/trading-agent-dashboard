@@ -2,6 +2,8 @@
 
 Updated 2026-09-12. This is the current repository summary; dated workstream reports provide supporting evidence.
 
+Latest follow-up: used the stored evidence and newer calendar API archive for an explicit retrospective event run: 7,678 candidates, 6,878 event-conditioned, 21 families, 395 decisions with usable event records before outcome filtering and 285 afterward. No event candidate meets the 50-directional-training-observation floor; selected macro validation stays 53.57%. The corrected conservative audit separates 385 late/unknown versions from 92 missing-measurement decisions (previously combined as 477). See `GOLD_EVENT_ASSOCIATIONS_20260912.md`. Further exploration is authorized without waiting for original-release evidence; live qualification still requires it.
+
 Latest: the offline Gold macro/event research bundle is implemented and executed. Fresh FRED vintages, 15,977 hourly prices and 841 event snapshots produce 681 fixed research observations (390 training, 143 validation, 148 exclusions). Among 800 single/pair candidates, the training-selected candidate scored 75.86% training and 53.57% validation. Original event/consensus vintages remain an evidence wall: only ten scheduled decisions have eligible current-archive event proxies. Live-call greater-than-60% reliability is not established. See `GOLD_RESEARCH_RESULTS_20260912.md`.
 
 - Canonical working folder: `D:\trading-agent-dashboard-codex`, current branch `research/gold-dataset-contract`; consolidation cutover is complete. Separate authorized asset-builder worktrees are listed in `PARALLEL_AGENT_HANDOFF.md`.

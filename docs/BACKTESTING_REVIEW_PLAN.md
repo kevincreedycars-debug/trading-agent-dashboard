@@ -4,6 +4,8 @@ Baseline date: 2026-09-07. Objective: establish what each engine actually measur
 
 ## Research framework: the common 24-hour question
 
+The latest stored-data/new-calendar-API run is in [Gold event associations](GOLD_EVENT_ASSOCIATIONS_20260912.md): 7,678 single/pair candidates across 21 event families, with explicit retrospective versus as-of evidence modes and family-level sample/exclusion reports. Historical associations can be studied now; historical availability remains a separate requirement for live-call qualification.
+
 September 12 execution results and the remaining event-vintage wall are in [Gold research results](GOLD_RESEARCH_RESULTS_20260912.md). The implemented offline bundle covers source acquisition, conservative macro as-of selection, individual/pair experiments and event-version exclusion. The training-selected candidate failed to exceed 60% in validation; no production qualification follows.
 
 The user-confirmed delivery order and greater-than-60% qualification target are now in [Gold research delivery contract](GOLD_RESEARCH_DELIVERY_CONTRACT.md). Individual raw variables precede event-conditioned combinations; Layer 1 and Layer 2 receive separate final qualification. The active milestone is source coverage, while operational Gold history repair retains its separate validation gate.

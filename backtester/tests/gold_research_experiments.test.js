@@ -18,6 +18,23 @@ function fixture() {
   return { data, snapshots };
 }
 const options = { split_at: '2024-01-09T00:00:00Z', embargo_ms: 0, minimum_training_samples: 2 };
+
+test('retrospective associations are explicit, cannot qualify live calls and selection ignores validation outcomes', () => {
+  const { data, snapshots } = fixture();
+  for (const call of data.calls) call.retrospective_event_features = [{ name: 'event_cpi_surprise', value: 'above_consensus',
+    available_at: '2025-01-01T00:00:00Z' }];
+  assert.throws(() => buildExperiments(data, snapshots, options), /explicit evidence mode/);
+  data.event_vintage_audit = { mode: 'retrospective' };
+  const first = buildExperiments(data, snapshots, options);
+  assert.ok(first.experiments.some(row => row.event_conditioned));
+  assert.ok(first.rows.every(row => row.source_issues.includes('retrospective_event_values_not_verified_at_decision')));
+  assert.equal(first.qualified_for_live_calls, false);
+  const coverage = first.event_family_coverage[0];
+  assert.equal(coverage.source_decisions, coverage.training + coverage.validation + Object.values(coverage.exclusions).reduce((a, b) => a + b, 0));
+  for (const candle of data.candles) if (candle.open_time >= options.split_at) candle.close = 102;
+  const second = buildExperiments(data, snapshots, options);
+  assert.deepEqual(first.selected_by_class_training_only, second.selected_by_class_training_only);
+});
 test('changing validation prices cannot change trained conditions, directions or candidate selection', () => {
   const { data, snapshots } = fixture();
   const first = buildExperiments(data, snapshots, options);

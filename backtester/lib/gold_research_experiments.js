@@ -103,6 +103,11 @@ function buildExperiments(dataset, snapshots, options) {
     if (extracted.issues.includes('snapshot_storage_not_before_decision')) { exclude(extracted.issues[0]); continue; }
     // The timestamped evaluator has already validated every supplied feature cutoff.
     for (const feature of call.features || []) extracted.values[feature.name] = feature.value;
+    if (call.retrospective_event_features?.length) {
+      if (dataset.event_vintage_audit?.mode !== 'retrospective') throw new Error('Retrospective event values require explicit evidence mode');
+      for (const feature of call.retrospective_event_features) extracted.values[feature.name] = feature.value;
+      extracted.issues.push('retrospective_event_values_not_verified_at_decision');
+    }
     rows.push({ prediction_id: call.prediction_id, source_snapshot_id: snapshot.id, decision_time: call.call_time,
       partition, values: extracted.values, source_issues: extracted.issues,
       sign: result.market_outcome_direction === 'BULLISH' ? 1 : result.market_outcome_direction === 'BEARISH' ? -1 : 0,
@@ -149,12 +154,35 @@ function buildExperiments(dataset, snapshots, options) {
   });
   const ranked = experiments.filter(row => row.training_eligible).sort((a, b) =>
     b.training.ex_flat_accuracy_pct - a.training.ex_flat_accuracy_pct || b.training.directional_observations - a.training.directional_observations || a.id.localeCompare(b.id));
+  const selectedByClass = {};
+  for (const [name, predicate] of Object.entries({ single_variable: row => row.conditions.length === 1,
+    cross_variable: row => row.conditions.length === 2, event_conditioned: row => row.event_conditioned })) {
+    selectedByClass[name] = ranked.find(predicate)?.id ?? null;
+  }
   const scoreCalls = set => {
     const called = set.filter(row => row.call_sign !== 0);
     return { scheduled_evaluable: set.length, no_calls: set.length - called.length,
       ...stats(called.map(row => ({ ...row, sign: row.sign * row.call_sign })), 1),
       always_bullish: stats(called, 1), always_bearish: stats(called, -1) };
   };
+  const admittedById = new Map(rows.map(row => [row.prediction_id, row]));
+  const excludedByIndex = new Map(exclusions.map(row => [row.source_index, row.reason]));
+  const eventCoverage = new Map();
+  for (const { call, index } of source) {
+    for (const feature of [...(call.features || []), ...(call.retrospective_event_features || [])]) {
+      if (!feature.name.startsWith('event_') || !feature.name.endsWith('_surprise')) continue;
+      if (!eventCoverage.has(feature.name)) eventCoverage.set(feature.name, { feature: feature.name,
+        event_name: feature.event_name ?? feature.name, source_decisions: 0, training: 0, validation: 0, exclusions: {} });
+      const group = eventCoverage.get(feature.name);
+      group.source_decisions++;
+      const admitted = admittedById.get(call.prediction_id);
+      if (admitted) group[admitted.partition]++;
+      else {
+        const reason = excludedByIndex.get(index) ?? 'unclassified';
+        group.exclusions[reason] = (group.exclusions[reason] || 0) + 1;
+      }
+    }
+  }
   return { version: 'gold-experiments-v1', research_only: true, data_kind: dataset.data_kind, options,
     source_schedule: 'Earliest UTC-day decision then nonoverlapping 24h windows; selected before outcome filtering. Descriptive schedule, not verified daily production schedule.',
     qualified_for_live_calls: false, greater_than_60pct_established: false,
@@ -166,8 +194,10 @@ function buildExperiments(dataset, snapshots, options) {
     unconditional_market_baseline: { training: { bullish: stats(training, 1), bearish: stats(training, -1) },
       validation: { bullish: stats(validation, 1), bearish: stats(validation, -1) } },
     event_vintage_audit: dataset.event_vintage_audit ?? null,
+    event_family_coverage: [...eventCoverage.values()],
     candidate_count: experiments.length, eligible_training_candidates: ranked.length,
     selected_by_training_only: ranked[0]?.id ?? null,
+    selected_by_class_training_only: selectedByClass,
     conditions_learned_from: 'training only; median thresholds, categorical states and majority directions',
     experiments, rows, exclusions };
 }

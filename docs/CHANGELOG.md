@@ -1,3 +1,7 @@
+# 2026-09-12 - Expanded stored-data event associations
+
+Added explicit retrospective event mode, preserving vendor timestamps outside causal inputs; class-specific training-only selection; event-family denominator/exclusion tables; and corrected missing-value versus late-vintage audit categories. Executed 7,678 candidates from stored macro/prices and the newer API's 841 records. No event candidate meets the existing training floor; selected macro validation remains 53.57%. See GOLD_EVENT_ASSOCIATIONS_20260912.md. No production changes.
+
 # 2026-09-12 - Executed Gold macro/event research bundle
 
 Added read-only FRED-vintage, OANDA H1 and current calendar-archive acquisitions; conservative macro as-of dataset builder; event-vintage attachment; training-defined single/pair experiments; and one offline bundle command with reports/source hashes. Fresh evidence covers 681 scheduled observations, five macro series, 15,977 hourly prices and 841 events. Training-selected candidate: 75.86% training, 53.57% validation; reliable greater-than-60% calls remain unestablished. Event contemporaneous coverage is only ten scheduled decisions. Report and evidence limits: `GOLD_RESEARCH_RESULTS_20260912.md`. Full local suite 324/324. No live changes.
