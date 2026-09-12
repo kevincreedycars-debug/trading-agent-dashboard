@@ -1,10 +1,10 @@
 {
-  "status": "success",
-  "last_run_started_at": "2026-09-12T18:13:34.071Z",
-  "last_run_finished_at": "2026-09-12T18:13:34.071Z",
+  "status": "failed",
+  "last_run_started_at": "2026-09-12T18:51:24.950Z",
+  "last_run_finished_at": "2026-09-12T18:51:24.950Z",
   "triggered_by": "dashboard_or_manual",
-  "message": "Manual Refresh Complete",
-  "failed_step": null,
+  "message": "Master Orchestrator finished with errors.",
+  "failed_step": "Dashboard Writer",
   "steps": [
     {
       "name": "Call '1. Economic Events Collector'",
@@ -28,6 +28,10 @@
     },
     {
       "name": "BTC Collector",
+      "status": "success"
+    },
+    {
+      "name": "Silver Collector",
       "status": "success"
     },
     {
@@ -55,13 +59,21 @@
       "status": "success"
     },
     {
+      "name": "Silver Layer 1 Agent",
+      "status": "success"
+    },
+    {
       "name": "Layer 2 Trade Selection Agent",
       "status": "success"
     },
     {
       "name": "Dashboard Writer",
-      "status": "success"
+      "status": "failed",
+      "error": "SILVER [line 740]"
     }
   ],
-  "error": null
+  "error": {
+    "step": "Dashboard Writer",
+    "reason": "SILVER [line 740]"
+  }
 }
