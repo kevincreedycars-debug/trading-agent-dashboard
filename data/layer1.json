@@ -4,7 +4,7 @@
   "dashboard_meta": {
     "system_timezone": "America/New_York",
     "execution_clock": "07:00 ET primary run",
-    "last_updated_et": "2026-09-12T07:54:50.265Z",
+    "last_updated_et": "2026-09-12T18:05:54.142Z",
     "architecture": "Layer 1 agents are sealed independent raw signal producers. No cross-agent communication.",
     "weekend_rule": "Weekday-active-time V1 pauses only for weekend closure. Exchange holidays and intraday maintenance breaks are not yet modelled.",
     "display_timezone": "Europe/London",
@@ -14,7 +14,8 @@
       "EUR",
       "GOLD",
       "NQ",
-      "BTC"
+      "BTC",
+      "WTI"
     ],
     "source_run_id_consistency": "UNKNOWN",
     "refresh_request_id_consistency": "UNKNOWN",
@@ -34,16 +35,16 @@
       "agent": "USD",
       "status": "live",
       "market_status": null,
-      "last_run_et": "2026-09-12T07:53:34.256+00:00",
-      "generated_at": "2026-09-12T07:53:34.256+00:00",
-      "sealed_at": "2026-09-12T07:53:52.870476+00:00",
-      "valid_from": "2026-09-12T07:53:52.870476+00:00",
-      "refresh_due_at": "2026-09-12T11:00:00.000Z",
+      "last_run_et": "2026-09-12T18:04:34.504+00:00",
+      "generated_at": "2026-09-12T18:04:34.504+00:00",
+      "sealed_at": "2026-09-12T18:04:54.566505+00:00",
+      "valid_from": "2026-09-12T18:04:54.566505+00:00",
+      "refresh_due_at": "2026-09-13T11:00:00.000Z",
       "forecast_window_end": "2026-09-15T04:00:00.000Z",
       "expires_at": "2026-09-15T04:00:00.000Z",
       "status_at_build": "ACTIVE",
       "effective_status": "ACTIVE",
-      "status_resolved_at": "2026-09-12T07:54:50.254Z",
+      "status_resolved_at": "2026-09-12T18:05:54.128Z",
       "horizon_code": "24H",
       "horizon_duration": "PT24H",
       "horizon_basis": "WEEKDAY_ACTIVE_TIME_V1",
@@ -158,15 +159,15 @@
               "evidence": "NQ 0.8734%, VIX 17.84"
             }
           },
-          "generated_at": "2026-09-12T07:53:34.256+00:00",
-          "sealed_at": "2026-09-12T07:53:52.870476+00:00",
-          "valid_from": "2026-09-12T07:53:52.870476+00:00",
-          "refresh_due_at": "2026-09-12T11:00:00.000Z",
+          "generated_at": "2026-09-12T18:04:34.504+00:00",
+          "sealed_at": "2026-09-12T18:04:54.566505+00:00",
+          "valid_from": "2026-09-12T18:04:54.566505+00:00",
+          "refresh_due_at": "2026-09-13T11:00:00.000Z",
           "forecast_window_end": "2026-09-15T04:00:00.000Z",
           "expires_at": "2026-09-15T04:00:00.000Z",
           "status_at_build": "ACTIVE",
           "effective_status": "ACTIVE",
-          "status_resolved_at": "2026-09-12T07:54:50.254Z",
+          "status_resolved_at": "2026-09-12T18:05:54.128Z",
           "horizon_code": "24H",
           "horizon_duration": "PT24H",
           "horizon_basis": "WEEKDAY_ACTIVE_TIME_V1",
@@ -707,15 +708,15 @@
             "evidence": "NQ 0.8734%, VIX 17.84"
           }
         },
-        "generated_at": "2026-09-12T07:53:34.256+00:00",
-        "sealed_at": "2026-09-12T07:53:52.870476+00:00",
-        "valid_from": "2026-09-12T07:53:52.870476+00:00",
-        "refresh_due_at": "2026-09-12T11:00:00.000Z",
+        "generated_at": "2026-09-12T18:04:34.504+00:00",
+        "sealed_at": "2026-09-12T18:04:54.566505+00:00",
+        "valid_from": "2026-09-12T18:04:54.566505+00:00",
+        "refresh_due_at": "2026-09-13T11:00:00.000Z",
         "forecast_window_end": "2026-09-15T04:00:00.000Z",
         "expires_at": "2026-09-15T04:00:00.000Z",
         "status_at_build": "ACTIVE",
         "effective_status": "ACTIVE",
-        "status_resolved_at": "2026-09-12T07:54:50.254Z",
+        "status_resolved_at": "2026-09-12T18:05:54.128Z",
         "horizon_code": "24H",
         "horizon_duration": "PT24H",
         "horizon_basis": "WEEKDAY_ACTIVE_TIME_V1",
@@ -806,7 +807,7 @@
       "score_bullish": 3,
       "score_bearish": 1,
       "score_neutral": 6,
-      "non_neutral_count": 7,
+      "non_neutral_count": 6,
       "logic_document": "agent_usd_direction.md",
       "logic_document_version": "2.1_weighted_engine",
       "conviction_model": {
@@ -1333,12 +1334,12 @@
       "full_output": {
         "asset": "USD",
         "layer": "layer_1_raw",
-        "created_at": "2026-09-12T07:53:34.361326+00:00",
+        "created_at": "2026-09-12T18:04:34.621883+00:00",
         "reason_24h": "24h deterministic score: bullish argument 74%, bearish argument 26%, neutral/inactive 62%, net edge +48 bullish.",
         "risk_flags": [
-          "Missing latest US event input",
-          "Fed bias neutral - no directional change",
-          "Primary drivers partially conflicted between bullish rates and bearish spread/DXY"
+          "Missing latest_us_event input reduces confidence",
+          "Primary drivers partially conflicted between bullish and bearish signals",
+          "Moderate active participation with four neutral secondary factors"
         ],
         "reason_3_day": "3d deterministic score: bullish argument 57%, bearish argument 43%, neutral/inactive 30%, net edge +14 bullish.",
         "direction_24h": "BULLISH",
@@ -1918,27 +1919,27 @@
             }
           }
         },
-        "non_neutral_count": 7,
+        "non_neutral_count": 6,
         "reasoning_summary": "USD weighted verdicts calculated deterministically by timeframe. 24h BULLISH 74%, 3d BULLISH_LEAN 57%, current week BULLISH_LEAN 54%, next week BULLISH_LEAN 57%, current month BULLISH_LEAN 59%.",
         "snapshot_selection": {
           "warnings": [],
           "selected_by": "latest_usd_usable_snapshot",
-          "selected_from_rows": 832,
-          "selected_created_at": "2026-09-12T07:53:34.361326+00:00",
-          "selected_run_time_et": "2026-09-12T07:53:34.256+00:00",
-          "selected_snapshot_id": "03ab3502-52a5-4cdf-b118-43c803315b85",
+          "selected_from_rows": 837,
+          "selected_created_at": "2026-09-12T18:04:34.621883+00:00",
+          "selected_run_time_et": "2026-09-12T18:04:34.504+00:00",
+          "selected_snapshot_id": "02bc3eff-c171-4f2c-8629-9c2e08c27bf9",
           "selected_snapshot_date": "2026-09-12",
           "top_5_rows_seen_by_workflow": [
             {
-              "id": "5a1ca3af-0b00-4495-a98e-90b1aa1c2586",
+              "id": "a860fb48-91f6-4f27-9568-12ba8e098eb6",
               "rank": 1,
               "fed_bias": "neutral",
               "dxy_level": 118.0732,
               "vix_level": 17.84,
-              "created_at": "2026-09-12T07:53:41.035053+00:00",
+              "created_at": "2026-09-12T18:04:41.75137+00:00",
               "usd_usable": false,
               "de_2y_yield": null,
-              "run_time_et": "2026-09-12T07:53:40.968+00:00",
+              "run_time_et": "2026-09-12T18:04:41.655+00:00",
               "snapshot_date": "2026-09-12",
               "source_status": "partial",
               "us_de_2y_spread": null,
@@ -1946,15 +1947,15 @@
               "us_de_2y_spread_d5_bps": null
             },
             {
-              "id": "03ab3502-52a5-4cdf-b118-43c803315b85",
+              "id": "02bc3eff-c171-4f2c-8629-9c2e08c27bf9",
               "rank": 2,
               "fed_bias": "neutral",
               "dxy_level": 118.0732,
               "vix_level": 17.84,
-              "created_at": "2026-09-12T07:53:34.361326+00:00",
+              "created_at": "2026-09-12T18:04:34.621883+00:00",
               "usd_usable": true,
               "de_2y_yield": 3.18,
-              "run_time_et": "2026-09-12T07:53:34.256+00:00",
+              "run_time_et": "2026-09-12T18:04:34.504+00:00",
               "snapshot_date": "2026-09-12",
               "source_status": "partial",
               "us_de_2y_spread": 1.3799999999999994,
@@ -1962,15 +1963,15 @@
               "us_de_2y_spread_d5_bps": -5.000000000000027
             },
             {
-              "id": "b9bbc075-704f-4d4f-b8c8-4bac2edf8996",
+              "id": "342409f2-9cee-448d-a786-9537b5f74847",
               "rank": 3,
               "fed_bias": "neutral",
               "dxy_level": 118.0732,
               "vix_level": 17.84,
-              "created_at": "2026-09-12T07:52:27.777966+00:00",
+              "created_at": "2026-09-12T18:03:22.041808+00:00",
               "usd_usable": true,
               "de_2y_yield": 3.18,
-              "run_time_et": "2026-09-12T07:52:27.701+00:00",
+              "run_time_et": "2026-09-12T18:03:21.963+00:00",
               "snapshot_date": "2026-09-12",
               "source_status": "partial",
               "us_de_2y_spread": 1.3799999999999994,
@@ -1978,15 +1979,15 @@
               "us_de_2y_spread_d5_bps": -5.000000000000027
             },
             {
-              "id": "88f9de98-01cf-4f27-b73c-0304e32efed1",
+              "id": "9067eef1-62f7-41be-9292-51abb6e127fa",
               "rank": 4,
               "fed_bias": null,
               "dxy_level": 118.0732,
               "vix_level": 17.84,
-              "created_at": "2026-09-12T07:52:19.628354+00:00",
+              "created_at": "2026-09-12T18:03:14.090853+00:00",
               "usd_usable": false,
               "de_2y_yield": 3.18,
-              "run_time_et": "2026-09-12T07:52:19.506+00:00",
+              "run_time_et": "2026-09-12T18:03:14.013+00:00",
               "snapshot_date": "2026-09-12",
               "source_status": "partial",
               "us_de_2y_spread": 1.3799999999999994,
@@ -1994,15 +1995,15 @@
               "us_de_2y_spread_d5_bps": -5.000000000000027
             },
             {
-              "id": "a2f0fb7b-7ef1-4211-8849-10ce60e20031",
+              "id": "9effaebe-2ec6-4df2-aa40-692d0055ce24",
               "rank": 5,
               "fed_bias": "neutral",
               "dxy_level": 118.0732,
               "vix_level": 17.84,
-              "created_at": "2026-09-12T07:52:13.327871+00:00",
+              "created_at": "2026-09-12T18:03:06.99256+00:00",
               "usd_usable": true,
               "de_2y_yield": 3.18,
-              "run_time_et": "2026-09-12T07:52:13.194+00:00",
+              "run_time_et": "2026-09-12T18:03:06.931+00:00",
               "snapshot_date": "2026-09-12",
               "source_status": "partial",
               "us_de_2y_spread": 1.3799999999999994,
@@ -2021,9 +2022,9 @@
         "conviction_current_week": 54,
         "direction_current_month": "BULLISH_LEAN",
         "model_reported_warnings": [
-          "Missing latest US event input",
-          "Fed bias neutral - no directional change",
-          "Primary drivers partially conflicted between bullish rates and bearish spread/DXY"
+          "Missing latest_us_event input reduces confidence",
+          "Primary drivers partially conflicted between bullish and bearish signals",
+          "Moderate active participation with four neutral secondary factors"
         ],
         "conviction_current_month": 59,
         "input_validation_warnings": [
@@ -2037,16 +2038,16 @@
           "dxy_d20": -0.8329070952060553,
           "fed_bias": "neutral",
           "nq_price": 714.88,
-          "btc_price": 77256.655,
+          "btc_price": 77172.755,
           "dxy_level": 118.0732,
           "nq_d1_pct": 0.8734,
           "nq_d5_pct": -0.5674863691999612,
           "vix_level": 17.84,
-          "btc_d1_pct": 0.09716038129004505,
-          "btc_d5_pct": -3.1714296475073107,
+          "btc_d1_pct": -0.01154419252291194,
+          "btc_d5_pct": -3.2765845633210176,
           "gold_price": 4349.206487276397,
           "nq_d20_pct": -2.0537904010303216,
-          "btc_d20_pct": 20.452301918051315,
+          "btc_d20_pct": 20.321491852162186,
           "de_2y_yield": 3.18,
           "gold_d1_pct": 0.1561364449032359,
           "gold_d5_pct": -0.9520574641145934,
@@ -2089,16 +2090,16 @@
       "agent": "EUR",
       "status": "live",
       "market_status": null,
-      "last_run_et": "2026-09-12T07:52:19.506+00:00",
-      "generated_at": "2026-09-12T07:52:19.506+00:00",
-      "sealed_at": "2026-09-12T07:54:01.488497+00:00",
-      "valid_from": "2026-09-12T07:54:01.488497+00:00",
-      "refresh_due_at": "2026-09-12T11:00:00.000Z",
+      "last_run_et": "2026-09-12T18:03:14.013+00:00",
+      "generated_at": "2026-09-12T18:03:14.013+00:00",
+      "sealed_at": "2026-09-12T18:05:04.678113+00:00",
+      "valid_from": "2026-09-12T18:05:04.678113+00:00",
+      "refresh_due_at": "2026-09-13T11:00:00.000Z",
       "forecast_window_end": "2026-09-15T04:00:00.000Z",
       "expires_at": "2026-09-15T04:00:00.000Z",
       "status_at_build": "ACTIVE",
       "effective_status": "ACTIVE",
-      "status_resolved_at": "2026-09-12T07:54:50.254Z",
+      "status_resolved_at": "2026-09-12T18:05:54.128Z",
       "horizon_code": "24H",
       "horizon_duration": "PT24H",
       "horizon_basis": "WEEKDAY_ACTIVE_TIME_V1",
@@ -2213,15 +2214,15 @@
               "evidence": "VIX 17.84"
             }
           },
-          "generated_at": "2026-09-12T07:52:19.506+00:00",
-          "sealed_at": "2026-09-12T07:54:01.488497+00:00",
-          "valid_from": "2026-09-12T07:54:01.488497+00:00",
-          "refresh_due_at": "2026-09-12T11:00:00.000Z",
+          "generated_at": "2026-09-12T18:03:14.013+00:00",
+          "sealed_at": "2026-09-12T18:05:04.678113+00:00",
+          "valid_from": "2026-09-12T18:05:04.678113+00:00",
+          "refresh_due_at": "2026-09-13T11:00:00.000Z",
           "forecast_window_end": "2026-09-15T04:00:00.000Z",
           "expires_at": "2026-09-15T04:00:00.000Z",
           "status_at_build": "ACTIVE",
           "effective_status": "ACTIVE",
-          "status_resolved_at": "2026-09-12T07:54:50.254Z",
+          "status_resolved_at": "2026-09-12T18:05:54.128Z",
           "horizon_code": "24H",
           "horizon_duration": "PT24H",
           "horizon_basis": "WEEKDAY_ACTIVE_TIME_V1",
@@ -2762,15 +2763,15 @@
             "evidence": "VIX 17.84"
           }
         },
-        "generated_at": "2026-09-12T07:52:19.506+00:00",
-        "sealed_at": "2026-09-12T07:54:01.488497+00:00",
-        "valid_from": "2026-09-12T07:54:01.488497+00:00",
-        "refresh_due_at": "2026-09-12T11:00:00.000Z",
+        "generated_at": "2026-09-12T18:03:14.013+00:00",
+        "sealed_at": "2026-09-12T18:05:04.678113+00:00",
+        "valid_from": "2026-09-12T18:05:04.678113+00:00",
+        "refresh_due_at": "2026-09-13T11:00:00.000Z",
         "forecast_window_end": "2026-09-15T04:00:00.000Z",
         "expires_at": "2026-09-15T04:00:00.000Z",
         "status_at_build": "ACTIVE",
         "effective_status": "ACTIVE",
-        "status_resolved_at": "2026-09-12T07:54:50.254Z",
+        "status_resolved_at": "2026-09-12T18:05:54.128Z",
         "horizon_code": "24H",
         "horizon_duration": "PT24H",
         "horizon_basis": "WEEKDAY_ACTIVE_TIME_V1",
@@ -2859,7 +2860,7 @@
       "score_bullish": 4,
       "score_bearish": 0,
       "score_neutral": 6,
-      "non_neutral_count": 4,
+      "non_neutral_count": 5,
       "logic_document": "agent_eur_direction.md",
       "logic_document_version": "2.0_weighted_engine",
       "conviction_model": {
@@ -3416,7 +3417,7 @@
       "full_output": {
         "asset": "EUR",
         "layer": "layer_1_raw",
-        "created_at": "2026-09-12T07:52:19.628354+00:00",
+        "created_at": "2026-09-12T18:03:14.090853+00:00",
         "reason_24h": "24h EUR deterministic score: bull case 100%, bear case 0%, neutral/inactive 54%, directional participation 46%, net edge +100.",
         "risk_flags": [],
         "reason_3_day": "3d EUR deterministic score: bull case 100%, bear case 0%, neutral/inactive 50%, directional participation 50%, net edge +100.",
@@ -3428,9 +3429,7 @@
         "logic_document": "agent_eur_direction.md",
         "missing_inputs": [
           "latest_ez_event",
-          "gold_d5_pct",
-          "gold_d20_pct",
-          "us_de_2y_spread_d20_bps"
+          "gold_d5_pct"
         ],
         "weighted_score": {
           "active_weight": 46,
@@ -4035,28 +4034,28 @@
             }
           }
         },
-        "non_neutral_count": 4,
+        "non_neutral_count": 5,
         "reasoning_summary": "EUR weighted verdicts calculated deterministically by timeframe. 24h BULLISH 100%, 3d BULLISH 100%, current week BULLISH 100%, next week BULLISH 100%, current month BULLISH 100%.",
         "snapshot_selection": {
           "warnings": [
             "gold_d5_pct missing; using gold_d1_pct fallback"
           ],
           "selected_by": "latest_v11_eur_usable_snapshot",
-          "selected_from_rows": 832,
-          "selected_created_at": "2026-09-12T07:52:19.628354+00:00",
-          "selected_run_time_et": "2026-09-12T07:52:19.506+00:00",
-          "selected_snapshot_id": "88f9de98-01cf-4f27-b73c-0304e32efed1",
+          "selected_from_rows": 837,
+          "selected_created_at": "2026-09-12T18:03:14.090853+00:00",
+          "selected_run_time_et": "2026-09-12T18:03:14.013+00:00",
+          "selected_snapshot_id": "9067eef1-62f7-41be-9292-51abb6e127fa",
           "selected_snapshot_date": "2026-09-12",
           "top_5_rows_seen_by_workflow": [
             {
-              "id": "5a1ca3af-0b00-4495-a98e-90b1aa1c2586",
+              "id": "a860fb48-91f6-4f27-9568-12ba8e098eb6",
               "rank": 1,
               "ecb_bias": null,
               "fed_bias": "neutral",
-              "created_at": "2026-09-12T07:53:41.035053+00:00",
+              "created_at": "2026-09-12T18:04:41.75137+00:00",
               "eur_usable": false,
               "de_2y_yield": null,
-              "run_time_et": "2026-09-12T07:53:40.968+00:00",
+              "run_time_et": "2026-09-12T18:04:41.655+00:00",
               "de_2y_d5_bps": null,
               "eurusd_price": null,
               "de_2y_d20_bps": null,
@@ -4074,14 +4073,14 @@
               "ez_composite_pmi_direction": null
             },
             {
-              "id": "03ab3502-52a5-4cdf-b118-43c803315b85",
+              "id": "02bc3eff-c171-4f2c-8629-9c2e08c27bf9",
               "rank": 2,
               "ecb_bias": null,
               "fed_bias": "neutral",
-              "created_at": "2026-09-12T07:53:34.361326+00:00",
+              "created_at": "2026-09-12T18:04:34.621883+00:00",
               "eur_usable": false,
               "de_2y_yield": 3.18,
-              "run_time_et": "2026-09-12T07:53:34.256+00:00",
+              "run_time_et": "2026-09-12T18:04:34.504+00:00",
               "de_2y_d5_bps": 22.00000000000002,
               "eurusd_price": null,
               "de_2y_d20_bps": null,
@@ -4099,14 +4098,14 @@
               "ez_composite_pmi_direction": null
             },
             {
-              "id": "b9bbc075-704f-4d4f-b8c8-4bac2edf8996",
+              "id": "342409f2-9cee-448d-a786-9537b5f74847",
               "rank": 3,
               "ecb_bias": null,
               "fed_bias": "neutral",
-              "created_at": "2026-09-12T07:52:27.777966+00:00",
+              "created_at": "2026-09-12T18:03:22.041808+00:00",
               "eur_usable": false,
               "de_2y_yield": 3.18,
-              "run_time_et": "2026-09-12T07:52:27.701+00:00",
+              "run_time_et": "2026-09-12T18:03:21.963+00:00",
               "de_2y_d5_bps": 22.00000000000002,
               "eurusd_price": null,
               "de_2y_d20_bps": null,
@@ -4124,14 +4123,14 @@
               "ez_composite_pmi_direction": null
             },
             {
-              "id": "88f9de98-01cf-4f27-b73c-0304e32efed1",
+              "id": "9067eef1-62f7-41be-9292-51abb6e127fa",
               "rank": 4,
               "ecb_bias": "neutral",
               "fed_bias": null,
-              "created_at": "2026-09-12T07:52:19.628354+00:00",
+              "created_at": "2026-09-12T18:03:14.090853+00:00",
               "eur_usable": true,
               "de_2y_yield": 3.18,
-              "run_time_et": "2026-09-12T07:52:19.506+00:00",
+              "run_time_et": "2026-09-12T18:03:14.013+00:00",
               "de_2y_d5_bps": 22.00000000000002,
               "eurusd_price": 1.1618,
               "de_2y_d20_bps": 40.000000000000036,
@@ -4149,14 +4148,14 @@
               "ez_composite_pmi_direction": "improving"
             },
             {
-              "id": "a2f0fb7b-7ef1-4211-8849-10ce60e20031",
+              "id": "9effaebe-2ec6-4df2-aa40-692d0055ce24",
               "rank": 5,
               "ecb_bias": null,
               "fed_bias": "neutral",
-              "created_at": "2026-09-12T07:52:13.327871+00:00",
+              "created_at": "2026-09-12T18:03:06.99256+00:00",
               "eur_usable": false,
               "de_2y_yield": 3.18,
-              "run_time_et": "2026-09-12T07:52:13.194+00:00",
+              "run_time_et": "2026-09-12T18:03:06.931+00:00",
               "de_2y_d5_bps": 22.00000000000002,
               "eurusd_price": null,
               "de_2y_d20_bps": null,
@@ -4195,10 +4194,10 @@
           "fed_bias": null,
           "dxy_level": 118.0732,
           "vix_level": 17.84,
-          "gold_price": 4349.206487276397,
+          "gold_price": 4349.206501179661,
           "de_2y_yield": 3.18,
-          "gold_d1_pct": 1.9488794269485563,
-          "gold_d5_pct": 1.9488794269485563,
+          "gold_d1_pct": 1.9488797528521993,
+          "gold_d5_pct": 1.9488797528521993,
           "us_2y_yield": 4.56,
           "de_10y_yield": 2.97,
           "de_2y_d5_bps": 22.00000000000002,
@@ -4243,10 +4242,10 @@
           "fed_bias": null,
           "dxy_level": 118.0732,
           "vix_level": 17.84,
-          "gold_price": 4349.206487276397,
+          "gold_price": 4349.206501179661,
           "de_2y_yield": 3.18,
-          "gold_d1_pct": 1.9488794269485563,
-          "gold_d5_pct": 1.9488794269485563,
+          "gold_d1_pct": 1.9488797528521993,
+          "gold_d5_pct": 1.9488797528521993,
           "us_2y_yield": 4.56,
           "de_10y_yield": 2.97,
           "de_2y_d5_bps": 22.00000000000002,
@@ -4294,16 +4293,16 @@
       "agent": "GOLD",
       "status": "live",
       "market_status": null,
-      "last_run_et": "2026-09-12T07:53:40.968+00:00",
-      "generated_at": "2026-09-12T07:53:40.968+00:00",
-      "sealed_at": "2026-09-12T07:54:10.373225+00:00",
-      "valid_from": "2026-09-12T07:54:10.373225+00:00",
-      "refresh_due_at": "2026-09-12T11:00:00.000Z",
+      "last_run_et": "2026-09-12T18:04:41.655+00:00",
+      "generated_at": "2026-09-12T18:04:41.655+00:00",
+      "sealed_at": "2026-09-12T18:05:12.733342+00:00",
+      "valid_from": "2026-09-12T18:05:12.733342+00:00",
+      "refresh_due_at": "2026-09-13T11:00:00.000Z",
       "forecast_window_end": "2026-09-15T04:00:00.000Z",
       "expires_at": "2026-09-15T04:00:00.000Z",
       "status_at_build": "ACTIVE",
       "effective_status": "ACTIVE",
-      "status_resolved_at": "2026-09-12T07:54:50.254Z",
+      "status_resolved_at": "2026-09-12T18:05:54.128Z",
       "horizon_code": "24H",
       "horizon_duration": "PT24H",
       "horizon_basis": "WEEKDAY_ACTIVE_TIME_V1",
@@ -4389,7 +4388,7 @@
               "reason": "Gold own-price trend confirms upside pressure",
               "signal": "BULLISH",
               "weight": 10,
-              "evidence": "Gold 1.9488797528521993%"
+              "evidence": "Gold 1.9488794269485563%"
             },
             "F6": {
               "reason": "Neutral risk regime",
@@ -4422,15 +4421,15 @@
               "evidence": "neutral"
             }
           },
-          "generated_at": "2026-09-12T07:53:40.968+00:00",
-          "sealed_at": "2026-09-12T07:54:10.373225+00:00",
-          "valid_from": "2026-09-12T07:54:10.373225+00:00",
-          "refresh_due_at": "2026-09-12T11:00:00.000Z",
+          "generated_at": "2026-09-12T18:04:41.655+00:00",
+          "sealed_at": "2026-09-12T18:05:12.733342+00:00",
+          "valid_from": "2026-09-12T18:05:12.733342+00:00",
+          "refresh_due_at": "2026-09-13T11:00:00.000Z",
           "forecast_window_end": "2026-09-15T04:00:00.000Z",
           "expires_at": "2026-09-15T04:00:00.000Z",
           "status_at_build": "ACTIVE",
           "effective_status": "ACTIVE",
-          "status_resolved_at": "2026-09-12T07:54:50.254Z",
+          "status_resolved_at": "2026-09-12T18:05:54.128Z",
           "horizon_code": "24H",
           "horizon_duration": "PT24H",
           "horizon_basis": "WEEKDAY_ACTIVE_TIME_V1",
@@ -4958,7 +4957,7 @@
             "reason": "Gold own-price trend confirms upside pressure",
             "signal": "BULLISH",
             "weight": 10,
-            "evidence": "Gold 1.9488797528521993%"
+            "evidence": "Gold 1.9488794269485563%"
           },
           "F6": {
             "reason": "Neutral risk regime",
@@ -4991,15 +4990,15 @@
             "evidence": "neutral"
           }
         },
-        "generated_at": "2026-09-12T07:53:40.968+00:00",
-        "sealed_at": "2026-09-12T07:54:10.373225+00:00",
-        "valid_from": "2026-09-12T07:54:10.373225+00:00",
-        "refresh_due_at": "2026-09-12T11:00:00.000Z",
+        "generated_at": "2026-09-12T18:04:41.655+00:00",
+        "sealed_at": "2026-09-12T18:05:12.733342+00:00",
+        "valid_from": "2026-09-12T18:05:12.733342+00:00",
+        "refresh_due_at": "2026-09-13T11:00:00.000Z",
         "forecast_window_end": "2026-09-15T04:00:00.000Z",
         "expires_at": "2026-09-15T04:00:00.000Z",
         "status_at_build": "ACTIVE",
         "effective_status": "ACTIVE",
-        "status_resolved_at": "2026-09-12T07:54:50.254Z",
+        "status_resolved_at": "2026-09-12T18:05:54.128Z",
         "horizon_code": "24H",
         "horizon_duration": "PT24H",
         "horizon_basis": "WEEKDAY_ACTIVE_TIME_V1",
@@ -5038,7 +5037,7 @@
           "reason": "Gold own-price trend confirms upside pressure",
           "signal": "BULLISH",
           "weight": 10,
-          "evidence": "Gold 1.9488797528521993%"
+          "evidence": "Gold 1.9488794269485563%"
         },
         "F6": {
           "reason": "Neutral risk regime",
@@ -5076,7 +5075,7 @@
         "F2 [22]: NEUTRAL - DXY -0.04554420242619842% (DXY move below threshold)",
         "F3 [12]: NEUTRAL - Fed bias neutral (No clear Fed impulse)",
         "F4 [10]: BEARISH - US 2Y 16.999999999999993bps (Rising front-end yields pressure Gold)",
-        "F5 [10]: BULLISH - Gold 1.9488797528521993% (Gold own-price trend confirms upside pressure)",
+        "F5 [10]: BULLISH - Gold 1.9488794269485563% (Gold own-price trend confirms upside pressure)",
         "F6 [8]: NEUTRAL - VIX 17.84 (Neutral risk regime)",
         "F7 [8]: NEUTRAL - No recent US event (No confirmed US economic surprise)",
         "F8 [2]: NEUTRAL - Inflation signal unavailable (Collector does not currently provide a top-level inflation_signal column)",
@@ -5294,7 +5293,7 @@
               "reason": "Gold own-price trend confirms upside pressure",
               "signal": "BULLISH",
               "weight": 10,
-              "evidence": "Gold 1.9488797528521993%"
+              "evidence": "Gold 1.9488794269485563%"
             },
             "F6": {
               "reason": "Neutral risk regime",
@@ -5720,7 +5719,7 @@
             "reason": "Gold own-price trend confirms upside pressure",
             "signal": "BULLISH",
             "weight": 10,
-            "evidence": "Gold 1.9488797528521993%"
+            "evidence": "Gold 1.9488794269485563%"
           },
           "F6": {
             "reason": "Neutral risk regime",
@@ -5921,7 +5920,7 @@
                 "reason": "Gold own-price trend confirms upside pressure",
                 "signal": "BULLISH",
                 "weight": 10,
-                "evidence": "Gold 1.9488797528521993%"
+                "evidence": "Gold 1.9488794269485563%"
               },
               "F6": {
                 "reason": "Neutral risk regime",
@@ -6279,16 +6278,16 @@
       "agent": "NQ",
       "status": "live",
       "market_status": null,
-      "last_run_et": "2026-09-12T07:53:40.968+00:00",
-      "generated_at": "2026-09-12T07:53:40.968+00:00",
-      "sealed_at": "2026-09-12T07:54:24.872865+00:00",
-      "valid_from": "2026-09-12T07:54:24.872865+00:00",
-      "refresh_due_at": "2026-09-12T11:00:00.000Z",
+      "last_run_et": "2026-09-12T18:04:41.655+00:00",
+      "generated_at": "2026-09-12T18:04:41.655+00:00",
+      "sealed_at": "2026-09-12T18:05:25.101878+00:00",
+      "valid_from": "2026-09-12T18:05:25.101878+00:00",
+      "refresh_due_at": "2026-09-13T11:00:00.000Z",
       "forecast_window_end": "2026-09-15T04:00:00.000Z",
       "expires_at": "2026-09-15T04:00:00.000Z",
       "status_at_build": "ACTIVE",
       "effective_status": "ACTIVE",
-      "status_resolved_at": "2026-09-12T07:54:50.254Z",
+      "status_resolved_at": "2026-09-12T18:05:54.128Z",
       "horizon_code": "24H",
       "horizon_duration": "PT24H",
       "horizon_basis": "WEEKDAY_ACTIVE_TIME_V1",
@@ -6394,7 +6393,7 @@
               "reason": "BTC strength confirms high-beta risk appetite",
               "signal": "BULLISH",
               "weight": 2,
-              "evidence": "BTC delta 25.28%"
+              "evidence": "BTC delta 25.13%"
             },
             "F10": {
               "reason": "Gold does not provide a clean defensive-flow signal",
@@ -6403,15 +6402,15 @@
               "evidence": "Gold delta 1.95%"
             }
           },
-          "generated_at": "2026-09-12T07:53:40.968+00:00",
-          "sealed_at": "2026-09-12T07:54:24.872865+00:00",
-          "valid_from": "2026-09-12T07:54:24.872865+00:00",
-          "refresh_due_at": "2026-09-12T11:00:00.000Z",
+          "generated_at": "2026-09-12T18:04:41.655+00:00",
+          "sealed_at": "2026-09-12T18:05:25.101878+00:00",
+          "valid_from": "2026-09-12T18:05:25.101878+00:00",
+          "refresh_due_at": "2026-09-13T11:00:00.000Z",
           "forecast_window_end": "2026-09-15T04:00:00.000Z",
           "expires_at": "2026-09-15T04:00:00.000Z",
           "status_at_build": "ACTIVE",
           "effective_status": "ACTIVE",
-          "status_resolved_at": "2026-09-12T07:54:50.254Z",
+          "status_resolved_at": "2026-09-12T18:05:54.128Z",
           "horizon_code": "24H",
           "horizon_duration": "PT24H",
           "horizon_basis": "WEEKDAY_ACTIVE_TIME_V1",
@@ -6943,7 +6942,7 @@
             "reason": "BTC strength confirms high-beta risk appetite",
             "signal": "BULLISH",
             "weight": 2,
-            "evidence": "BTC delta 25.28%"
+            "evidence": "BTC delta 25.13%"
           },
           "F10": {
             "reason": "Gold does not provide a clean defensive-flow signal",
@@ -6952,15 +6951,15 @@
             "evidence": "Gold delta 1.95%"
           }
         },
-        "generated_at": "2026-09-12T07:53:40.968+00:00",
-        "sealed_at": "2026-09-12T07:54:24.872865+00:00",
-        "valid_from": "2026-09-12T07:54:24.872865+00:00",
-        "refresh_due_at": "2026-09-12T11:00:00.000Z",
+        "generated_at": "2026-09-12T18:04:41.655+00:00",
+        "sealed_at": "2026-09-12T18:05:25.101878+00:00",
+        "valid_from": "2026-09-12T18:05:25.101878+00:00",
+        "refresh_due_at": "2026-09-13T11:00:00.000Z",
         "forecast_window_end": "2026-09-15T04:00:00.000Z",
         "expires_at": "2026-09-15T04:00:00.000Z",
         "status_at_build": "ACTIVE",
         "effective_status": "ACTIVE",
-        "status_resolved_at": "2026-09-12T07:54:50.254Z",
+        "status_resolved_at": "2026-09-12T18:05:54.128Z",
         "horizon_code": "24H",
         "horizon_duration": "PT24H",
         "horizon_basis": "WEEKDAY_ACTIVE_TIME_V1",
@@ -7023,7 +7022,7 @@
           "reason": "BTC strength confirms high-beta risk appetite",
           "signal": "BULLISH",
           "weight": 2,
-          "evidence": "BTC delta 25.28%"
+          "evidence": "BTC delta 25.13%"
         },
         "F10": {
           "reason": "Gold does not provide a clean defensive-flow signal",
@@ -7041,17 +7040,15 @@
         "F6 [12]: NEUTRAL - Fed bias neutral (No clear Fed liquidity impulse)",
         "F7 [8]: NEUTRAL - No recent US event (No confirmed US economic surprise)",
         "F8 [10]: BULLISH - NQ delta 0.87% (NQ own price action confirms bullish pressure)",
-        "F9 [2]: BULLISH - BTC delta 25.28% (BTC strength confirms high-beta risk appetite)",
+        "F9 [2]: BULLISH - BTC delta 25.13% (BTC strength confirms high-beta risk appetite)",
         "F10 [2]: NEUTRAL - Gold delta 1.95% (Gold does not provide a clean defensive-flow signal)"
       ],
-      "warnings": [
-        "VIX_REAL_YIELD_PRESSURE"
-      ],
+      "warnings": [],
       "reasoning_summary": "NQ weighted verdicts calculated deterministically by timeframe. 24h BULLISH 100%, 3d BEARISH 76%, current week BEARISH 76%, next week BEARISH 70%, current month BEARISH 70%.",
       "score_bullish": 2,
       "score_bearish": 0,
       "score_neutral": 8,
-      "non_neutral_count": 4,
+      "non_neutral_count": 6,
       "logic_document": "agent_nq_direction.md",
       "logic_document_version": "2.0_weighted_engine",
       "conviction_model": {
@@ -7279,7 +7276,7 @@
               "reason": "BTC strength confirms high-beta risk appetite",
               "signal": "BULLISH",
               "weight": 2,
-              "evidence": "BTC delta 25.28%"
+              "evidence": "BTC delta 25.13%"
             },
             "F10": {
               "reason": "Gold does not provide a clean defensive-flow signal",
@@ -7610,9 +7607,7 @@
         "layer": "layer_1_raw",
         "created_at": null,
         "reason_24h": "24h NQ deterministic score: bull case 100%, bear case 0%, neutral/inactive 88%, directional participation 12%, net edge +100.",
-        "risk_flags": [
-          "VIX_REAL_YIELD_PRESSURE"
-        ],
+        "risk_flags": [],
         "reason_3_day": "3d NQ deterministic score: bull case 24%, bear case 76%, neutral/inactive 51%, directional participation 49%, net edge -52.",
         "direction_24h": "BULLISH",
         "score_bearish": 0,
@@ -7626,7 +7621,9 @@
           "nq_d5_pct",
           "nq_d20_pct",
           "btc_d5_pct",
-          "gold_d5_pct"
+          "btc_d20_pct",
+          "gold_d5_pct",
+          "gold_d20_pct"
         ],
         "weighted_score": {
           "active_weight": 12,
@@ -7714,7 +7711,7 @@
             "reason": "BTC strength confirms high-beta risk appetite",
             "signal": "BULLISH",
             "weight": 2,
-            "evidence": "BTC delta 25.28%"
+            "evidence": "BTC delta 25.13%"
           },
           "F10": {
             "reason": "Gold does not provide a clean defensive-flow signal",
@@ -7917,7 +7914,7 @@
                 "reason": "BTC strength confirms high-beta risk appetite",
                 "signal": "BULLISH",
                 "weight": 2,
-                "evidence": "BTC delta 25.28%"
+                "evidence": "BTC delta 25.13%"
               },
               "F10": {
                 "reason": "Gold does not provide a clean defensive-flow signal",
@@ -8231,7 +8228,7 @@
             }
           }
         },
-        "non_neutral_count": 4,
+        "non_neutral_count": 6,
         "reasoning_summary": "NQ weighted verdicts calculated deterministically by timeframe. 24h BULLISH 100%, 3d BEARISH 76%, current week BEARISH 76%, next week BEARISH 70%, current month BEARISH 70%.",
         "direction_next_week": "BEARISH",
         "reason_current_week": "current_week NQ deterministic score: bull case 24%, bear case 76%, neutral/inactive 50%, directional participation 50%, net edge -52.",
@@ -8255,16 +8252,16 @@
       "agent": "BTC",
       "status": "live",
       "market_status": null,
-      "last_run_et": "2026-09-12T07:53:40.968+00:00",
-      "generated_at": "2026-09-12T07:53:40.968+00:00",
-      "sealed_at": "2026-09-12T07:54:36.311006+00:00",
-      "valid_from": "2026-09-12T07:54:36.311006+00:00",
-      "refresh_due_at": "2026-09-12T11:00:00.000Z",
-      "forecast_window_end": "2026-09-13T07:54:36.311Z",
-      "expires_at": "2026-09-13T07:54:36.311Z",
+      "last_run_et": "2026-09-12T18:04:41.655+00:00",
+      "generated_at": "2026-09-12T18:04:41.655+00:00",
+      "sealed_at": "2026-09-12T18:05:38.05199+00:00",
+      "valid_from": "2026-09-12T18:05:38.05199+00:00",
+      "refresh_due_at": "2026-09-13T11:00:00.000Z",
+      "forecast_window_end": "2026-09-13T18:05:38.051Z",
+      "expires_at": "2026-09-13T18:05:38.051Z",
       "status_at_build": "ACTIVE",
       "effective_status": "ACTIVE",
-      "status_resolved_at": "2026-09-12T07:54:50.254Z",
+      "status_resolved_at": "2026-09-12T18:05:54.128Z",
       "horizon_code": "24H",
       "horizon_duration": "PT24H",
       "horizon_basis": "WALL_CLOCK",
@@ -8328,7 +8325,7 @@
               "reason": "BTC own trend is above noise threshold and supports upside pressure",
               "signal": "BULLISH",
               "weight": 16,
-              "evidence": "BTC 1d % 25.278957483178644"
+              "evidence": "BTC 1d % 25.130482826385435"
             },
             "F3 US 10Y Real Yield Delta": {
               "reason": "Rising real yields tighten financial conditions and pressure BTC",
@@ -8379,15 +8376,15 @@
               "evidence": "Fear/Greed 63"
             }
           },
-          "generated_at": "2026-09-12T07:53:40.968+00:00",
-          "sealed_at": "2026-09-12T07:54:36.311006+00:00",
-          "valid_from": "2026-09-12T07:54:36.311006+00:00",
-          "refresh_due_at": "2026-09-12T11:00:00.000Z",
-          "forecast_window_end": "2026-09-13T07:54:36.311Z",
-          "expires_at": "2026-09-13T07:54:36.311Z",
+          "generated_at": "2026-09-12T18:04:41.655+00:00",
+          "sealed_at": "2026-09-12T18:05:38.05199+00:00",
+          "valid_from": "2026-09-12T18:05:38.05199+00:00",
+          "refresh_due_at": "2026-09-13T11:00:00.000Z",
+          "forecast_window_end": "2026-09-13T18:05:38.051Z",
+          "expires_at": "2026-09-13T18:05:38.051Z",
           "status_at_build": "ACTIVE",
           "effective_status": "ACTIVE",
-          "status_resolved_at": "2026-09-12T07:54:50.254Z",
+          "status_resolved_at": "2026-09-12T18:05:54.128Z",
           "horizon_code": "24H",
           "horizon_duration": "PT24H",
           "horizon_basis": "WALL_CLOCK",
@@ -8877,7 +8874,7 @@
             "reason": "BTC own trend is above noise threshold and supports upside pressure",
             "signal": "BULLISH",
             "weight": 16,
-            "evidence": "BTC 1d % 25.278957483178644"
+            "evidence": "BTC 1d % 25.130482826385435"
           },
           "F3 US 10Y Real Yield Delta": {
             "reason": "Rising real yields tighten financial conditions and pressure BTC",
@@ -8928,15 +8925,15 @@
             "evidence": "Fear/Greed 63"
           }
         },
-        "generated_at": "2026-09-12T07:53:40.968+00:00",
-        "sealed_at": "2026-09-12T07:54:36.311006+00:00",
-        "valid_from": "2026-09-12T07:54:36.311006+00:00",
-        "refresh_due_at": "2026-09-12T11:00:00.000Z",
-        "forecast_window_end": "2026-09-13T07:54:36.311Z",
-        "expires_at": "2026-09-13T07:54:36.311Z",
+        "generated_at": "2026-09-12T18:04:41.655+00:00",
+        "sealed_at": "2026-09-12T18:05:38.05199+00:00",
+        "valid_from": "2026-09-12T18:05:38.05199+00:00",
+        "refresh_due_at": "2026-09-13T11:00:00.000Z",
+        "forecast_window_end": "2026-09-13T18:05:38.051Z",
+        "expires_at": "2026-09-13T18:05:38.051Z",
         "status_at_build": "ACTIVE",
         "effective_status": "ACTIVE",
-        "status_resolved_at": "2026-09-12T07:54:50.254Z",
+        "status_resolved_at": "2026-09-12T18:05:54.128Z",
         "horizon_code": "24H",
         "horizon_duration": "PT24H",
         "horizon_basis": "WALL_CLOCK",
@@ -8957,7 +8954,7 @@
           "reason": "BTC own trend is above noise threshold and supports upside pressure",
           "signal": "BULLISH",
           "weight": 16,
-          "evidence": "BTC 1d % 25.278957483178644"
+          "evidence": "BTC 1d % 25.130482826385435"
         },
         "F3 US 10Y Real Yield Delta": {
           "reason": "Rising real yields tighten financial conditions and pressure BTC",
@@ -9010,7 +9007,7 @@
       },
       "key_factors": [
         "F2 DXY / USD Pressure [14]: NEUTRAL - DXY 1d % -0.04554420242619842 (DXY move below threshold)",
-        "F1 BTC Own Price Delta [16]: BULLISH - BTC 1d % 25.278957483178644 (BTC own trend is above noise threshold and supports upside pressure)",
+        "F1 BTC Own Price Delta [16]: BULLISH - BTC 1d % 25.130482826385435 (BTC own trend is above noise threshold and supports upside pressure)",
         "F3 US 10Y Real Yield Delta [10]: BEARISH - Real yield 5d bps 9.999999999999964 (Rising real yields tighten financial conditions and pressure BTC)",
         "F5 VIX Level and Risk Regime [16]: BEARISH - VIX 17.84, VIX d5 3.5199999999999996 (VIX rising materially increases BTC risk pressure)",
         "F4 Fed Bias / Policy Liquidity [10]: NEUTRAL - Fed bias neutral (No clear Fed liquidity impulse)",
@@ -9030,7 +9027,7 @@
       "score_bullish": 3,
       "score_bearish": 2,
       "score_neutral": 5,
-      "non_neutral_count": 7,
+      "non_neutral_count": 6,
       "logic_document": "agent_btc_direction.md",
       "logic_document_version": "2.0_weighted_engine",
       "conviction_model": {
@@ -9196,7 +9193,7 @@
             "F5 VIX Level and Risk Regime (16): VIX 17.84, VIX d5 3.5199999999999996"
           ],
           "bull_case": [
-            "F1 BTC Own Price Delta (16): BTC 1d % 25.278957483178644",
+            "F1 BTC Own Price Delta (16): BTC 1d % 25.130482826385435",
             "F6 NQ / High-Beta Risk Confirmation (14): NQ 1d % 0.8734",
             "F8 BTC ETF / Institutional Flow (8): ETF flow 655300000"
           ],
@@ -9251,7 +9248,7 @@
               "reason": "BTC own trend is above noise threshold and supports upside pressure",
               "signal": "BULLISH",
               "weight": 16,
-              "evidence": "BTC 1d % 25.278957483178644"
+              "evidence": "BTC 1d % 25.130482826385435"
             },
             "F3 US 10Y Real Yield Delta": {
               "reason": "Rising real yields tighten financial conditions and pressure BTC",
@@ -9676,7 +9673,7 @@
       "full_output": {
         "asset": "BTC",
         "layer": "layer_1_raw",
-        "created_at": "2026-09-12T07:54:36.052Z",
+        "created_at": "2026-09-12T18:05:37.770Z",
         "reason_24h": "24h BTC deterministic score: bull case 38 weight, bear case 26 weight, neutral evidence 36 weight. Winning side BULLISH, conviction 59%, net edge +18, directional participation 64%.",
         "risk_flags": [
           "WEEKEND_LIQUIDITY_RISK",
@@ -9749,7 +9746,7 @@
             "reason": "BTC own trend is above noise threshold and supports upside pressure",
             "signal": "BULLISH",
             "weight": 16,
-            "evidence": "BTC 1d % 25.278957483178644"
+            "evidence": "BTC 1d % 25.130482826385435"
           },
           "F3 US 10Y Real Yield Delta": {
             "reason": "Rising real yields tighten financial conditions and pressure BTC",
@@ -9932,7 +9929,7 @@
               "F5 VIX Level and Risk Regime (16): VIX 17.84, VIX d5 3.5199999999999996"
             ],
             "bull_case": [
-              "F1 BTC Own Price Delta (16): BTC 1d % 25.278957483178644",
+              "F1 BTC Own Price Delta (16): BTC 1d % 25.130482826385435",
               "F6 NQ / High-Beta Risk Confirmation (14): NQ 1d % 0.8734",
               "F8 BTC ETF / Institutional Flow (8): ETF flow 655300000"
             ],
@@ -9987,7 +9984,7 @@
                 "reason": "BTC own trend is above noise threshold and supports upside pressure",
                 "signal": "BULLISH",
                 "weight": 16,
-                "evidence": "BTC 1d % 25.278957483178644"
+                "evidence": "BTC 1d % 25.130482826385435"
               },
               "F3 US 10Y Real Yield Delta": {
                 "reason": "Rising real yields tighten financial conditions and pressure BTC",
@@ -10397,7 +10394,7 @@
             }
           }
         },
-        "non_neutral_count": 7,
+        "non_neutral_count": 6,
         "reasoning_summary": "BTC weighted verdicts calculated deterministically by timeframe. 24h BULLISH_LEAN 59%, 3d BEARISH_LEAN 55%, current week BEARISH_LEAN 55%, next week BEARISH_LEAN 53%, current month BEARISH_LEAN 51%.",
         "direction_next_week": "BEARISH_LEAN",
         "reason_current_week": "current_week BTC deterministic score: bull case 24 weight, bear case 29 weight, neutral evidence 47 weight. Winning side BEARISH, conviction 55%, net edge -10, directional participation 53%.",
@@ -10411,6 +10408,1200 @@
       },
       "validity_note": "Operational freshness uses a provisional refresh expectation only. Forecast expiry is explicit and separate from the provisional refresh threshold.",
       "horizon_note": "",
+      "refresh_schedule": "07:00",
+      "refresh_timezone": "America/New_York",
+      "refresh_schedule_status": "PROVISIONAL",
+      "validity_schedule_source": "dashboard_meta.execution_clock",
+      "validity_schedule_note": "No authoritative orchestrator cron exists in the repository"
+    },
+    {
+      "agent": "WTI",
+      "status": "live",
+      "market_status": null,
+      "last_run_et": "2026-09-12T18:00:38.621+00:00",
+      "generated_at": "2026-09-12T18:00:38.621+00:00",
+      "sealed_at": "2026-09-12T18:00:58.171789+00:00",
+      "valid_from": "2026-09-12T18:00:58.171789+00:00",
+      "refresh_due_at": "2026-09-13T11:00:00.000Z",
+      "forecast_window_end": "2026-09-15T04:00:00.000Z",
+      "expires_at": "2026-09-15T04:00:00.000Z",
+      "status_at_build": "ACTIVE",
+      "effective_status": "ACTIVE",
+      "status_resolved_at": "2026-09-12T18:05:54.128Z",
+      "horizon_code": "24H",
+      "horizon_duration": "PT24H",
+      "horizon_basis": "WEEKDAY_ACTIVE_TIME_V1",
+      "timezone": "America/New_York",
+      "market_calendar": "WEEKDAY_ACTIVE_TIME_V1",
+      "source_run_id": null,
+      "refresh_request_id": null,
+      "summary": "24H deterministic WTI score: bull case 83%, bear case 17%, directional participation 84%, neutral/unavailable 16%, net edge +66. Missing inputs (wti_regime, eia_crude_inventory_surprise, opec_supply_bias) are scored neutral and never inferred.",
+      "calls": {
+        "24h": {
+          "direction": "BULLISH",
+          "conviction": 66,
+          "reason": "24H deterministic WTI score: bull case 83%, bear case 17%, directional participation 84%, neutral/unavailable 16%, net edge +66. Missing inputs (wti_regime, eia_crude_inventory_surprise, opec_supply_bias) are scored neutral and never inferred.",
+          "conviction_model": {
+            "net_edge": 66,
+            "bear_case": 17,
+            "bull_case": 83,
+            "neutral_pct": 16,
+            "net_edge_pct": 66,
+            "winning_side": "BULLISH",
+            "participation": 84,
+            "weighted_edge": 0.66,
+            "neutral_weight": 16,
+            "raw_conviction": 66,
+            "agreement_boost": 0,
+            "base_conviction": 66,
+            "bear_case_weight": 14,
+            "bull_case_weight": 70,
+            "conflict_penalty": 0,
+            "final_conviction": 66,
+            "verdict_strength": "VERY_STRONG",
+            "participation_cap": 80,
+            "bearish_argument_pct": 17,
+            "bullish_argument_pct": 83,
+            "neutral_evidence_pct": 16,
+            "missing_input_penalty": 0,
+            "final_conviction_logic": "24H deterministic WTI score: bull case 83%, bear case 17%, directional participation 84%, neutral/unavailable 16%, net edge +66. Missing inputs (wti_regime, eia_crude_inventory_surprise, opec_supply_bias) are scored neutral and never inferred.",
+            "active_participation_pct": 84,
+            "directional_participation": 84,
+            "directional_participation_pct": 84,
+            "weighted_score": {
+              "bullish_weight": 70,
+              "bearish_weight": 14,
+              "neutral_weight": 16,
+              "active_weight": 84,
+              "weight_margin": 56
+            },
+            "alignment": 83
+          },
+          "weighted_score": {
+            "active_weight": 84,
+            "weight_margin": 56,
+            "bearish_weight": 14,
+            "bullish_weight": 70,
+            "neutral_weight": 16
+          },
+          "factor_breakdown": {
+            "F1": {
+              "reason": "Price increasing at least 1.0% daily confirms positive direct WTI price impulse",
+              "signal": "BULLISH",
+              "weight": 20,
+              "evidence": "WTI own-price impulse is +3.24% daily and +6.32% over five days"
+            },
+            "F2": {
+              "reason": "Movement at least 2.0% over five days supports the matching direction",
+              "signal": "BULLISH",
+              "weight": 14,
+              "evidence": "Five-day WTI trend is +6.32%"
+            },
+            "F3": {
+              "reason": "A weaker broad dollar supports bullish WTI; here dollar weakening signals bearish for dollar hence bullish for WTI. But factor F3 expects a stronger dollar to support WTI, so a weaker dollar results in bearish F3 for WTI price",
+              "signal": "BEARISH",
+              "weight": 14,
+              "evidence": "US dollar (DXY) daily percentage change is -0.0455%, five-day change is -0.568%"
+            },
+            "F4": {
+              "reason": "Risk appetite as indicated by VIX below 16 supports bullish WTI; slightly above 16 but below 25 still leans bullish",
+              "signal": "BULLISH",
+              "weight": 10,
+              "evidence": "VIX level is 17.84, below 16 supports bullish WTI; here VIX is slightly above but close enough and the logic says above 16 supports bullish WTI with above 25 strongest bearish; 17.84 is between 16 and 25, so moderately bullish"
+            },
+            "F5": {
+              "reason": "A move of at least +0.5% confirms matching risk direction, supporting WTI bullish",
+              "signal": "BULLISH",
+              "weight": 10,
+              "evidence": "S&P 500 daily change is +0.86%, positive movement"
+            },
+            "F6": {
+              "reason": "Rising short-term yield by at least 5 bps is bullish for WTI",
+              "signal": "BULLISH",
+              "weight": 8,
+              "evidence": "US 2Y yield increased by approximately 17 bps over five days, with current level at 4.56%"
+            },
+            "F7": {
+              "reason": "WTI rising while dollar falling confirms bullish direction",
+              "signal": "BULLISH",
+              "weight": 8,
+              "evidence": "WTI daily price change +3.24%, DXY daily -0.0455%, thus price move and dollar move confirm bearish dollar with rising WTI; the directional logic says while dollar falls WTI falls is bullish; here WTI rises while dollar falls, so bullish signal"
+            },
+            "F8": {
+              "reason": "Unavailable input results in neutral score",
+              "signal": "NEUTRAL",
+              "weight": 6,
+              "evidence": "WTI term structure input is unavailable"
+            },
+            "F9": {
+              "reason": "Unavailable input results in neutral score",
+              "signal": "NEUTRAL",
+              "weight": 5,
+              "evidence": "EIA crude inventory surprise is unavailable"
+            },
+            "F10": {
+              "reason": "Unavailable input results in neutral score",
+              "signal": "NEUTRAL",
+              "weight": 5,
+              "evidence": "OPEC supply bias is unavailable"
+            }
+          },
+          "generated_at": "2026-09-12T18:00:38.621+00:00",
+          "sealed_at": "2026-09-12T18:00:58.171789+00:00",
+          "valid_from": "2026-09-12T18:00:58.171789+00:00",
+          "refresh_due_at": "2026-09-13T11:00:00.000Z",
+          "forecast_window_end": "2026-09-15T04:00:00.000Z",
+          "expires_at": "2026-09-15T04:00:00.000Z",
+          "status_at_build": "ACTIVE",
+          "effective_status": "ACTIVE",
+          "status_resolved_at": "2026-09-12T18:05:54.128Z",
+          "horizon_code": "24H",
+          "horizon_duration": "PT24H",
+          "horizon_basis": "WEEKDAY_ACTIVE_TIME_V1",
+          "timezone": "America/New_York",
+          "market_calendar": "WEEKDAY_ACTIVE_TIME_V1",
+          "source_run_id": null,
+          "validity_note": "Operational freshness uses a provisional refresh expectation only. Forecast expiry is explicit and separate from the provisional refresh threshold.",
+          "horizon_note": "Weekday-active-time V1 excludes weekend-closed hours only. Exchange holidays and intraday maintenance breaks are not yet modelled."
+        },
+        "3d": {
+          "direction": "PENDING",
+          "conviction": null,
+          "reason": "24H deterministic WTI score: bull case 83%, bear case 17%, directional participation 84%, neutral/unavailable 16%, net edge +66. Missing inputs (wti_regime, eia_crude_inventory_surprise, opec_supply_bias) are scored neutral and never inferred.",
+          "conviction_model": {
+            "net_edge": 66,
+            "bear_case": 17,
+            "bull_case": 83,
+            "neutral_pct": 16,
+            "net_edge_pct": 66,
+            "winning_side": "BULLISH",
+            "participation": 84,
+            "weighted_edge": 0.66,
+            "neutral_weight": 16,
+            "raw_conviction": 66,
+            "agreement_boost": 0,
+            "base_conviction": 66,
+            "bear_case_weight": 14,
+            "bull_case_weight": 70,
+            "conflict_penalty": 0,
+            "final_conviction": 66,
+            "verdict_strength": "VERY_STRONG",
+            "participation_cap": 80,
+            "bearish_argument_pct": 17,
+            "bullish_argument_pct": 83,
+            "neutral_evidence_pct": 16,
+            "missing_input_penalty": 0,
+            "final_conviction_logic": "24H deterministic WTI score: bull case 83%, bear case 17%, directional participation 84%, neutral/unavailable 16%, net edge +66. Missing inputs (wti_regime, eia_crude_inventory_surprise, opec_supply_bias) are scored neutral and never inferred.",
+            "active_participation_pct": 84,
+            "directional_participation": 84,
+            "directional_participation_pct": 84,
+            "weighted_score": {
+              "bullish_weight": 70,
+              "bearish_weight": 14,
+              "neutral_weight": 16,
+              "active_weight": 84,
+              "weight_margin": 56
+            },
+            "alignment": 83
+          },
+          "weighted_score": {
+            "active_weight": 84,
+            "weight_margin": 56,
+            "bearish_weight": 14,
+            "bullish_weight": 70,
+            "neutral_weight": 16
+          },
+          "factor_breakdown": {
+            "F1": {
+              "reason": "Price increasing at least 1.0% daily confirms positive direct WTI price impulse",
+              "signal": "BULLISH",
+              "weight": 20,
+              "evidence": "WTI own-price impulse is +3.24% daily and +6.32% over five days"
+            },
+            "F2": {
+              "reason": "Movement at least 2.0% over five days supports the matching direction",
+              "signal": "BULLISH",
+              "weight": 14,
+              "evidence": "Five-day WTI trend is +6.32%"
+            },
+            "F3": {
+              "reason": "A weaker broad dollar supports bullish WTI; here dollar weakening signals bearish for dollar hence bullish for WTI. But factor F3 expects a stronger dollar to support WTI, so a weaker dollar results in bearish F3 for WTI price",
+              "signal": "BEARISH",
+              "weight": 14,
+              "evidence": "US dollar (DXY) daily percentage change is -0.0455%, five-day change is -0.568%"
+            },
+            "F4": {
+              "reason": "Risk appetite as indicated by VIX below 16 supports bullish WTI; slightly above 16 but below 25 still leans bullish",
+              "signal": "BULLISH",
+              "weight": 10,
+              "evidence": "VIX level is 17.84, below 16 supports bullish WTI; here VIX is slightly above but close enough and the logic says above 16 supports bullish WTI with above 25 strongest bearish; 17.84 is between 16 and 25, so moderately bullish"
+            },
+            "F5": {
+              "reason": "A move of at least +0.5% confirms matching risk direction, supporting WTI bullish",
+              "signal": "BULLISH",
+              "weight": 10,
+              "evidence": "S&P 500 daily change is +0.86%, positive movement"
+            },
+            "F6": {
+              "reason": "Rising short-term yield by at least 5 bps is bullish for WTI",
+              "signal": "BULLISH",
+              "weight": 8,
+              "evidence": "US 2Y yield increased by approximately 17 bps over five days, with current level at 4.56%"
+            },
+            "F7": {
+              "reason": "WTI rising while dollar falling confirms bullish direction",
+              "signal": "BULLISH",
+              "weight": 8,
+              "evidence": "WTI daily price change +3.24%, DXY daily -0.0455%, thus price move and dollar move confirm bearish dollar with rising WTI; the directional logic says while dollar falls WTI falls is bullish; here WTI rises while dollar falls, so bullish signal"
+            },
+            "F8": {
+              "reason": "Unavailable input results in neutral score",
+              "signal": "NEUTRAL",
+              "weight": 6,
+              "evidence": "WTI term structure input is unavailable"
+            },
+            "F9": {
+              "reason": "Unavailable input results in neutral score",
+              "signal": "NEUTRAL",
+              "weight": 5,
+              "evidence": "EIA crude inventory surprise is unavailable"
+            },
+            "F10": {
+              "reason": "Unavailable input results in neutral score",
+              "signal": "NEUTRAL",
+              "weight": 5,
+              "evidence": "OPEC supply bias is unavailable"
+            }
+          }
+        },
+        "current_week": {
+          "direction": "PENDING",
+          "conviction": null,
+          "reason": "24H deterministic WTI score: bull case 83%, bear case 17%, directional participation 84%, neutral/unavailable 16%, net edge +66. Missing inputs (wti_regime, eia_crude_inventory_surprise, opec_supply_bias) are scored neutral and never inferred.",
+          "conviction_model": {
+            "net_edge": 66,
+            "bear_case": 17,
+            "bull_case": 83,
+            "neutral_pct": 16,
+            "net_edge_pct": 66,
+            "winning_side": "BULLISH",
+            "participation": 84,
+            "weighted_edge": 0.66,
+            "neutral_weight": 16,
+            "raw_conviction": 66,
+            "agreement_boost": 0,
+            "base_conviction": 66,
+            "bear_case_weight": 14,
+            "bull_case_weight": 70,
+            "conflict_penalty": 0,
+            "final_conviction": 66,
+            "verdict_strength": "VERY_STRONG",
+            "participation_cap": 80,
+            "bearish_argument_pct": 17,
+            "bullish_argument_pct": 83,
+            "neutral_evidence_pct": 16,
+            "missing_input_penalty": 0,
+            "final_conviction_logic": "24H deterministic WTI score: bull case 83%, bear case 17%, directional participation 84%, neutral/unavailable 16%, net edge +66. Missing inputs (wti_regime, eia_crude_inventory_surprise, opec_supply_bias) are scored neutral and never inferred.",
+            "active_participation_pct": 84,
+            "directional_participation": 84,
+            "directional_participation_pct": 84,
+            "weighted_score": {
+              "bullish_weight": 70,
+              "bearish_weight": 14,
+              "neutral_weight": 16,
+              "active_weight": 84,
+              "weight_margin": 56
+            },
+            "alignment": 83
+          },
+          "weighted_score": {
+            "active_weight": 84,
+            "weight_margin": 56,
+            "bearish_weight": 14,
+            "bullish_weight": 70,
+            "neutral_weight": 16
+          },
+          "factor_breakdown": {
+            "F1": {
+              "reason": "Price increasing at least 1.0% daily confirms positive direct WTI price impulse",
+              "signal": "BULLISH",
+              "weight": 20,
+              "evidence": "WTI own-price impulse is +3.24% daily and +6.32% over five days"
+            },
+            "F2": {
+              "reason": "Movement at least 2.0% over five days supports the matching direction",
+              "signal": "BULLISH",
+              "weight": 14,
+              "evidence": "Five-day WTI trend is +6.32%"
+            },
+            "F3": {
+              "reason": "A weaker broad dollar supports bullish WTI; here dollar weakening signals bearish for dollar hence bullish for WTI. But factor F3 expects a stronger dollar to support WTI, so a weaker dollar results in bearish F3 for WTI price",
+              "signal": "BEARISH",
+              "weight": 14,
+              "evidence": "US dollar (DXY) daily percentage change is -0.0455%, five-day change is -0.568%"
+            },
+            "F4": {
+              "reason": "Risk appetite as indicated by VIX below 16 supports bullish WTI; slightly above 16 but below 25 still leans bullish",
+              "signal": "BULLISH",
+              "weight": 10,
+              "evidence": "VIX level is 17.84, below 16 supports bullish WTI; here VIX is slightly above but close enough and the logic says above 16 supports bullish WTI with above 25 strongest bearish; 17.84 is between 16 and 25, so moderately bullish"
+            },
+            "F5": {
+              "reason": "A move of at least +0.5% confirms matching risk direction, supporting WTI bullish",
+              "signal": "BULLISH",
+              "weight": 10,
+              "evidence": "S&P 500 daily change is +0.86%, positive movement"
+            },
+            "F6": {
+              "reason": "Rising short-term yield by at least 5 bps is bullish for WTI",
+              "signal": "BULLISH",
+              "weight": 8,
+              "evidence": "US 2Y yield increased by approximately 17 bps over five days, with current level at 4.56%"
+            },
+            "F7": {
+              "reason": "WTI rising while dollar falling confirms bullish direction",
+              "signal": "BULLISH",
+              "weight": 8,
+              "evidence": "WTI daily price change +3.24%, DXY daily -0.0455%, thus price move and dollar move confirm bearish dollar with rising WTI; the directional logic says while dollar falls WTI falls is bullish; here WTI rises while dollar falls, so bullish signal"
+            },
+            "F8": {
+              "reason": "Unavailable input results in neutral score",
+              "signal": "NEUTRAL",
+              "weight": 6,
+              "evidence": "WTI term structure input is unavailable"
+            },
+            "F9": {
+              "reason": "Unavailable input results in neutral score",
+              "signal": "NEUTRAL",
+              "weight": 5,
+              "evidence": "EIA crude inventory surprise is unavailable"
+            },
+            "F10": {
+              "reason": "Unavailable input results in neutral score",
+              "signal": "NEUTRAL",
+              "weight": 5,
+              "evidence": "OPEC supply bias is unavailable"
+            }
+          }
+        },
+        "next_week": {
+          "direction": "PENDING",
+          "conviction": null,
+          "reason": "24H deterministic WTI score: bull case 83%, bear case 17%, directional participation 84%, neutral/unavailable 16%, net edge +66. Missing inputs (wti_regime, eia_crude_inventory_surprise, opec_supply_bias) are scored neutral and never inferred.",
+          "conviction_model": {
+            "net_edge": 66,
+            "bear_case": 17,
+            "bull_case": 83,
+            "neutral_pct": 16,
+            "net_edge_pct": 66,
+            "winning_side": "BULLISH",
+            "participation": 84,
+            "weighted_edge": 0.66,
+            "neutral_weight": 16,
+            "raw_conviction": 66,
+            "agreement_boost": 0,
+            "base_conviction": 66,
+            "bear_case_weight": 14,
+            "bull_case_weight": 70,
+            "conflict_penalty": 0,
+            "final_conviction": 66,
+            "verdict_strength": "VERY_STRONG",
+            "participation_cap": 80,
+            "bearish_argument_pct": 17,
+            "bullish_argument_pct": 83,
+            "neutral_evidence_pct": 16,
+            "missing_input_penalty": 0,
+            "final_conviction_logic": "24H deterministic WTI score: bull case 83%, bear case 17%, directional participation 84%, neutral/unavailable 16%, net edge +66. Missing inputs (wti_regime, eia_crude_inventory_surprise, opec_supply_bias) are scored neutral and never inferred.",
+            "active_participation_pct": 84,
+            "directional_participation": 84,
+            "directional_participation_pct": 84,
+            "weighted_score": {
+              "bullish_weight": 70,
+              "bearish_weight": 14,
+              "neutral_weight": 16,
+              "active_weight": 84,
+              "weight_margin": 56
+            },
+            "alignment": 83
+          },
+          "weighted_score": {
+            "active_weight": 84,
+            "weight_margin": 56,
+            "bearish_weight": 14,
+            "bullish_weight": 70,
+            "neutral_weight": 16
+          },
+          "factor_breakdown": {
+            "F1": {
+              "reason": "Price increasing at least 1.0% daily confirms positive direct WTI price impulse",
+              "signal": "BULLISH",
+              "weight": 20,
+              "evidence": "WTI own-price impulse is +3.24% daily and +6.32% over five days"
+            },
+            "F2": {
+              "reason": "Movement at least 2.0% over five days supports the matching direction",
+              "signal": "BULLISH",
+              "weight": 14,
+              "evidence": "Five-day WTI trend is +6.32%"
+            },
+            "F3": {
+              "reason": "A weaker broad dollar supports bullish WTI; here dollar weakening signals bearish for dollar hence bullish for WTI. But factor F3 expects a stronger dollar to support WTI, so a weaker dollar results in bearish F3 for WTI price",
+              "signal": "BEARISH",
+              "weight": 14,
+              "evidence": "US dollar (DXY) daily percentage change is -0.0455%, five-day change is -0.568%"
+            },
+            "F4": {
+              "reason": "Risk appetite as indicated by VIX below 16 supports bullish WTI; slightly above 16 but below 25 still leans bullish",
+              "signal": "BULLISH",
+              "weight": 10,
+              "evidence": "VIX level is 17.84, below 16 supports bullish WTI; here VIX is slightly above but close enough and the logic says above 16 supports bullish WTI with above 25 strongest bearish; 17.84 is between 16 and 25, so moderately bullish"
+            },
+            "F5": {
+              "reason": "A move of at least +0.5% confirms matching risk direction, supporting WTI bullish",
+              "signal": "BULLISH",
+              "weight": 10,
+              "evidence": "S&P 500 daily change is +0.86%, positive movement"
+            },
+            "F6": {
+              "reason": "Rising short-term yield by at least 5 bps is bullish for WTI",
+              "signal": "BULLISH",
+              "weight": 8,
+              "evidence": "US 2Y yield increased by approximately 17 bps over five days, with current level at 4.56%"
+            },
+            "F7": {
+              "reason": "WTI rising while dollar falling confirms bullish direction",
+              "signal": "BULLISH",
+              "weight": 8,
+              "evidence": "WTI daily price change +3.24%, DXY daily -0.0455%, thus price move and dollar move confirm bearish dollar with rising WTI; the directional logic says while dollar falls WTI falls is bullish; here WTI rises while dollar falls, so bullish signal"
+            },
+            "F8": {
+              "reason": "Unavailable input results in neutral score",
+              "signal": "NEUTRAL",
+              "weight": 6,
+              "evidence": "WTI term structure input is unavailable"
+            },
+            "F9": {
+              "reason": "Unavailable input results in neutral score",
+              "signal": "NEUTRAL",
+              "weight": 5,
+              "evidence": "EIA crude inventory surprise is unavailable"
+            },
+            "F10": {
+              "reason": "Unavailable input results in neutral score",
+              "signal": "NEUTRAL",
+              "weight": 5,
+              "evidence": "OPEC supply bias is unavailable"
+            }
+          }
+        },
+        "current_month": {
+          "direction": "PENDING",
+          "conviction": null,
+          "reason": "24H deterministic WTI score: bull case 83%, bear case 17%, directional participation 84%, neutral/unavailable 16%, net edge +66. Missing inputs (wti_regime, eia_crude_inventory_surprise, opec_supply_bias) are scored neutral and never inferred.",
+          "conviction_model": {
+            "net_edge": 66,
+            "bear_case": 17,
+            "bull_case": 83,
+            "neutral_pct": 16,
+            "net_edge_pct": 66,
+            "winning_side": "BULLISH",
+            "participation": 84,
+            "weighted_edge": 0.66,
+            "neutral_weight": 16,
+            "raw_conviction": 66,
+            "agreement_boost": 0,
+            "base_conviction": 66,
+            "bear_case_weight": 14,
+            "bull_case_weight": 70,
+            "conflict_penalty": 0,
+            "final_conviction": 66,
+            "verdict_strength": "VERY_STRONG",
+            "participation_cap": 80,
+            "bearish_argument_pct": 17,
+            "bullish_argument_pct": 83,
+            "neutral_evidence_pct": 16,
+            "missing_input_penalty": 0,
+            "final_conviction_logic": "24H deterministic WTI score: bull case 83%, bear case 17%, directional participation 84%, neutral/unavailable 16%, net edge +66. Missing inputs (wti_regime, eia_crude_inventory_surprise, opec_supply_bias) are scored neutral and never inferred.",
+            "active_participation_pct": 84,
+            "directional_participation": 84,
+            "directional_participation_pct": 84,
+            "weighted_score": {
+              "bullish_weight": 70,
+              "bearish_weight": 14,
+              "neutral_weight": 16,
+              "active_weight": 84,
+              "weight_margin": 56
+            },
+            "alignment": 83
+          },
+          "weighted_score": {
+            "active_weight": 84,
+            "weight_margin": 56,
+            "bearish_weight": 14,
+            "bullish_weight": 70,
+            "neutral_weight": 16
+          },
+          "factor_breakdown": {
+            "F1": {
+              "reason": "Price increasing at least 1.0% daily confirms positive direct WTI price impulse",
+              "signal": "BULLISH",
+              "weight": 20,
+              "evidence": "WTI own-price impulse is +3.24% daily and +6.32% over five days"
+            },
+            "F2": {
+              "reason": "Movement at least 2.0% over five days supports the matching direction",
+              "signal": "BULLISH",
+              "weight": 14,
+              "evidence": "Five-day WTI trend is +6.32%"
+            },
+            "F3": {
+              "reason": "A weaker broad dollar supports bullish WTI; here dollar weakening signals bearish for dollar hence bullish for WTI. But factor F3 expects a stronger dollar to support WTI, so a weaker dollar results in bearish F3 for WTI price",
+              "signal": "BEARISH",
+              "weight": 14,
+              "evidence": "US dollar (DXY) daily percentage change is -0.0455%, five-day change is -0.568%"
+            },
+            "F4": {
+              "reason": "Risk appetite as indicated by VIX below 16 supports bullish WTI; slightly above 16 but below 25 still leans bullish",
+              "signal": "BULLISH",
+              "weight": 10,
+              "evidence": "VIX level is 17.84, below 16 supports bullish WTI; here VIX is slightly above but close enough and the logic says above 16 supports bullish WTI with above 25 strongest bearish; 17.84 is between 16 and 25, so moderately bullish"
+            },
+            "F5": {
+              "reason": "A move of at least +0.5% confirms matching risk direction, supporting WTI bullish",
+              "signal": "BULLISH",
+              "weight": 10,
+              "evidence": "S&P 500 daily change is +0.86%, positive movement"
+            },
+            "F6": {
+              "reason": "Rising short-term yield by at least 5 bps is bullish for WTI",
+              "signal": "BULLISH",
+              "weight": 8,
+              "evidence": "US 2Y yield increased by approximately 17 bps over five days, with current level at 4.56%"
+            },
+            "F7": {
+              "reason": "WTI rising while dollar falling confirms bullish direction",
+              "signal": "BULLISH",
+              "weight": 8,
+              "evidence": "WTI daily price change +3.24%, DXY daily -0.0455%, thus price move and dollar move confirm bearish dollar with rising WTI; the directional logic says while dollar falls WTI falls is bullish; here WTI rises while dollar falls, so bullish signal"
+            },
+            "F8": {
+              "reason": "Unavailable input results in neutral score",
+              "signal": "NEUTRAL",
+              "weight": 6,
+              "evidence": "WTI term structure input is unavailable"
+            },
+            "F9": {
+              "reason": "Unavailable input results in neutral score",
+              "signal": "NEUTRAL",
+              "weight": 5,
+              "evidence": "EIA crude inventory surprise is unavailable"
+            },
+            "F10": {
+              "reason": "Unavailable input results in neutral score",
+              "signal": "NEUTRAL",
+              "weight": 5,
+              "evidence": "OPEC supply bias is unavailable"
+            }
+          }
+        }
+      },
+      "priority_timeframe": "24h",
+      "priority_call": {
+        "direction": "BULLISH",
+        "conviction": 66,
+        "reason": "24H deterministic WTI score: bull case 83%, bear case 17%, directional participation 84%, neutral/unavailable 16%, net edge +66. Missing inputs (wti_regime, eia_crude_inventory_surprise, opec_supply_bias) are scored neutral and never inferred.",
+        "conviction_model": {
+          "net_edge": 66,
+          "bear_case": 17,
+          "bull_case": 83,
+          "neutral_pct": 16,
+          "net_edge_pct": 66,
+          "winning_side": "BULLISH",
+          "participation": 84,
+          "weighted_edge": 0.66,
+          "neutral_weight": 16,
+          "raw_conviction": 66,
+          "agreement_boost": 0,
+          "base_conviction": 66,
+          "bear_case_weight": 14,
+          "bull_case_weight": 70,
+          "conflict_penalty": 0,
+          "final_conviction": 66,
+          "verdict_strength": "VERY_STRONG",
+          "participation_cap": 80,
+          "bearish_argument_pct": 17,
+          "bullish_argument_pct": 83,
+          "neutral_evidence_pct": 16,
+          "missing_input_penalty": 0,
+          "final_conviction_logic": "24H deterministic WTI score: bull case 83%, bear case 17%, directional participation 84%, neutral/unavailable 16%, net edge +66. Missing inputs (wti_regime, eia_crude_inventory_surprise, opec_supply_bias) are scored neutral and never inferred.",
+          "active_participation_pct": 84,
+          "directional_participation": 84,
+          "directional_participation_pct": 84,
+          "weighted_score": {
+            "bullish_weight": 70,
+            "bearish_weight": 14,
+            "neutral_weight": 16,
+            "active_weight": 84,
+            "weight_margin": 56
+          },
+          "alignment": 83
+        },
+        "weighted_score": {
+          "active_weight": 84,
+          "weight_margin": 56,
+          "bearish_weight": 14,
+          "bullish_weight": 70,
+          "neutral_weight": 16
+        },
+        "factor_breakdown": {
+          "F1": {
+            "reason": "Price increasing at least 1.0% daily confirms positive direct WTI price impulse",
+            "signal": "BULLISH",
+            "weight": 20,
+            "evidence": "WTI own-price impulse is +3.24% daily and +6.32% over five days"
+          },
+          "F2": {
+            "reason": "Movement at least 2.0% over five days supports the matching direction",
+            "signal": "BULLISH",
+            "weight": 14,
+            "evidence": "Five-day WTI trend is +6.32%"
+          },
+          "F3": {
+            "reason": "A weaker broad dollar supports bullish WTI; here dollar weakening signals bearish for dollar hence bullish for WTI. But factor F3 expects a stronger dollar to support WTI, so a weaker dollar results in bearish F3 for WTI price",
+            "signal": "BEARISH",
+            "weight": 14,
+            "evidence": "US dollar (DXY) daily percentage change is -0.0455%, five-day change is -0.568%"
+          },
+          "F4": {
+            "reason": "Risk appetite as indicated by VIX below 16 supports bullish WTI; slightly above 16 but below 25 still leans bullish",
+            "signal": "BULLISH",
+            "weight": 10,
+            "evidence": "VIX level is 17.84, below 16 supports bullish WTI; here VIX is slightly above but close enough and the logic says above 16 supports bullish WTI with above 25 strongest bearish; 17.84 is between 16 and 25, so moderately bullish"
+          },
+          "F5": {
+            "reason": "A move of at least +0.5% confirms matching risk direction, supporting WTI bullish",
+            "signal": "BULLISH",
+            "weight": 10,
+            "evidence": "S&P 500 daily change is +0.86%, positive movement"
+          },
+          "F6": {
+            "reason": "Rising short-term yield by at least 5 bps is bullish for WTI",
+            "signal": "BULLISH",
+            "weight": 8,
+            "evidence": "US 2Y yield increased by approximately 17 bps over five days, with current level at 4.56%"
+          },
+          "F7": {
+            "reason": "WTI rising while dollar falling confirms bullish direction",
+            "signal": "BULLISH",
+            "weight": 8,
+            "evidence": "WTI daily price change +3.24%, DXY daily -0.0455%, thus price move and dollar move confirm bearish dollar with rising WTI; the directional logic says while dollar falls WTI falls is bullish; here WTI rises while dollar falls, so bullish signal"
+          },
+          "F8": {
+            "reason": "Unavailable input results in neutral score",
+            "signal": "NEUTRAL",
+            "weight": 6,
+            "evidence": "WTI term structure input is unavailable"
+          },
+          "F9": {
+            "reason": "Unavailable input results in neutral score",
+            "signal": "NEUTRAL",
+            "weight": 5,
+            "evidence": "EIA crude inventory surprise is unavailable"
+          },
+          "F10": {
+            "reason": "Unavailable input results in neutral score",
+            "signal": "NEUTRAL",
+            "weight": 5,
+            "evidence": "OPEC supply bias is unavailable"
+          }
+        },
+        "generated_at": "2026-09-12T18:00:38.621+00:00",
+        "sealed_at": "2026-09-12T18:00:58.171789+00:00",
+        "valid_from": "2026-09-12T18:00:58.171789+00:00",
+        "refresh_due_at": "2026-09-13T11:00:00.000Z",
+        "forecast_window_end": "2026-09-15T04:00:00.000Z",
+        "expires_at": "2026-09-15T04:00:00.000Z",
+        "status_at_build": "ACTIVE",
+        "effective_status": "ACTIVE",
+        "status_resolved_at": "2026-09-12T18:05:54.128Z",
+        "horizon_code": "24H",
+        "horizon_duration": "PT24H",
+        "horizon_basis": "WEEKDAY_ACTIVE_TIME_V1",
+        "timezone": "America/New_York",
+        "market_calendar": "WEEKDAY_ACTIVE_TIME_V1",
+        "source_run_id": null,
+        "validity_note": "Operational freshness uses a provisional refresh expectation only. Forecast expiry is explicit and separate from the provisional refresh threshold.",
+        "horizon_note": "Weekday-active-time V1 excludes weekend-closed hours only. Exchange holidays and intraday maintenance breaks are not yet modelled."
+      },
+      "factor_breakdown": {
+        "F1": {
+          "reason": "Price increasing at least 1.0% daily confirms positive direct WTI price impulse",
+          "signal": "BULLISH",
+          "weight": 20,
+          "evidence": "WTI own-price impulse is +3.24% daily and +6.32% over five days"
+        },
+        "F2": {
+          "reason": "Movement at least 2.0% over five days supports the matching direction",
+          "signal": "BULLISH",
+          "weight": 14,
+          "evidence": "Five-day WTI trend is +6.32%"
+        },
+        "F3": {
+          "reason": "A weaker broad dollar supports bullish WTI; here dollar weakening signals bearish for dollar hence bullish for WTI. But factor F3 expects a stronger dollar to support WTI, so a weaker dollar results in bearish F3 for WTI price",
+          "signal": "BEARISH",
+          "weight": 14,
+          "evidence": "US dollar (DXY) daily percentage change is -0.0455%, five-day change is -0.568%"
+        },
+        "F4": {
+          "reason": "Risk appetite as indicated by VIX below 16 supports bullish WTI; slightly above 16 but below 25 still leans bullish",
+          "signal": "BULLISH",
+          "weight": 10,
+          "evidence": "VIX level is 17.84, below 16 supports bullish WTI; here VIX is slightly above but close enough and the logic says above 16 supports bullish WTI with above 25 strongest bearish; 17.84 is between 16 and 25, so moderately bullish"
+        },
+        "F5": {
+          "reason": "A move of at least +0.5% confirms matching risk direction, supporting WTI bullish",
+          "signal": "BULLISH",
+          "weight": 10,
+          "evidence": "S&P 500 daily change is +0.86%, positive movement"
+        },
+        "F6": {
+          "reason": "Rising short-term yield by at least 5 bps is bullish for WTI",
+          "signal": "BULLISH",
+          "weight": 8,
+          "evidence": "US 2Y yield increased by approximately 17 bps over five days, with current level at 4.56%"
+        },
+        "F7": {
+          "reason": "WTI rising while dollar falling confirms bullish direction",
+          "signal": "BULLISH",
+          "weight": 8,
+          "evidence": "WTI daily price change +3.24%, DXY daily -0.0455%, thus price move and dollar move confirm bearish dollar with rising WTI; the directional logic says while dollar falls WTI falls is bullish; here WTI rises while dollar falls, so bullish signal"
+        },
+        "F8": {
+          "reason": "Unavailable input results in neutral score",
+          "signal": "NEUTRAL",
+          "weight": 6,
+          "evidence": "WTI term structure input is unavailable"
+        },
+        "F9": {
+          "reason": "Unavailable input results in neutral score",
+          "signal": "NEUTRAL",
+          "weight": 5,
+          "evidence": "EIA crude inventory surprise is unavailable"
+        },
+        "F10": {
+          "reason": "Unavailable input results in neutral score",
+          "signal": "NEUTRAL",
+          "weight": 5,
+          "evidence": "OPEC supply bias is unavailable"
+        }
+      },
+      "key_factors": [
+        "F1 [20]: BULLISH - WTI own-price impulse is +3.24% daily and +6.32% over five days (Price increasing at least 1.0% daily confirms positive direct WTI price impulse)",
+        "F2 [14]: BULLISH - Five-day WTI trend is +6.32% (Movement at least 2.0% over five days supports the matching direction)",
+        "F3 [14]: BEARISH - US dollar (DXY) daily percentage change is -0.0455%, five-day change is -0.568% (A weaker broad dollar supports bullish WTI; here dollar weakening signals bearish for dollar hence bullish for WTI. But factor F3 expects a stronger dollar to support WTI, so a weaker dollar results in bearish F3 for WTI price)",
+        "F4 [10]: BULLISH - VIX level is 17.84, below 16 supports bullish WTI; here VIX is slightly above but close enough and the logic says above 16 supports bullish WTI with above 25 strongest bearish; 17.84 is between 16 and 25, so moderately bullish (Risk appetite as indicated by VIX below 16 supports bullish WTI; slightly above 16 but below 25 still leans bullish)",
+        "F5 [10]: BULLISH - S&P 500 daily change is +0.86%, positive movement (A move of at least +0.5% confirms matching risk direction, supporting WTI bullish)",
+        "F6 [8]: BULLISH - US 2Y yield increased by approximately 17 bps over five days, with current level at 4.56% (Rising short-term yield by at least 5 bps is bullish for WTI)",
+        "F7 [8]: BULLISH - WTI daily price change +3.24%, DXY daily -0.0455%, thus price move and dollar move confirm bearish dollar with rising WTI; the directional logic says while dollar falls WTI falls is bullish; here WTI rises while dollar falls, so bullish signal (WTI rising while dollar falling confirms bullish direction)",
+        "F8 [6]: NEUTRAL - WTI term structure input is unavailable (Unavailable input results in neutral score)",
+        "F9 [5]: NEUTRAL - EIA crude inventory surprise is unavailable (Unavailable input results in neutral score)",
+        "F10 [5]: NEUTRAL - OPEC supply bias is unavailable (Unavailable input results in neutral score)"
+      ],
+      "warnings": [
+        "PROVISIONAL_WEIGHTS",
+        "WTI_24H_ONLY",
+        "wti_regime",
+        "eia_crude_inventory_surprise",
+        "opec_supply_bias"
+      ],
+      "reasoning_summary": "24H deterministic WTI score: bull case 83%, bear case 17%, directional participation 84%, neutral/unavailable 16%, net edge +66. Missing inputs (wti_regime, eia_crude_inventory_surprise, opec_supply_bias) are scored neutral and never inferred.",
+      "score_bullish": 6,
+      "score_bearish": 1,
+      "score_neutral": 3,
+      "non_neutral_count": 7,
+      "logic_document": "agent_wti_direction.md",
+      "logic_document_version": "0.2_research_conviction_engine",
+      "conviction_model": {
+        "net_edge": 66,
+        "bear_case": 17,
+        "bull_case": 83,
+        "neutral_pct": 16,
+        "net_edge_pct": 66,
+        "winning_side": "BULLISH",
+        "participation": 84,
+        "weighted_edge": 0.66,
+        "neutral_weight": 16,
+        "raw_conviction": 66,
+        "agreement_boost": 0,
+        "base_conviction": 66,
+        "bear_case_weight": 14,
+        "bull_case_weight": 70,
+        "conflict_penalty": 0,
+        "final_conviction": 66,
+        "verdict_strength": "VERY_STRONG",
+        "participation_cap": 80,
+        "bearish_argument_pct": 17,
+        "bullish_argument_pct": 83,
+        "neutral_evidence_pct": 16,
+        "missing_input_penalty": 0,
+        "final_conviction_logic": "24H deterministic WTI score: bull case 83%, bear case 17%, directional participation 84%, neutral/unavailable 16%, net edge +66. Missing inputs (wti_regime, eia_crude_inventory_surprise, opec_supply_bias) are scored neutral and never inferred.",
+        "active_participation_pct": 84,
+        "directional_participation": 84,
+        "directional_participation_pct": 84,
+        "weighted_score": {
+          "bullish_weight": 70,
+          "bearish_weight": 14,
+          "neutral_weight": 16,
+          "active_weight": 84,
+          "weight_margin": 56
+        },
+        "alignment": 83
+      },
+      "timeframe_models": {
+        "24h": {
+          "reason": "24H deterministic WTI score: bull case 83%, bear case 17%, directional participation 84%, neutral/unavailable 16%, net edge +66. Missing inputs (wti_regime, eia_crude_inventory_surprise, opec_supply_bias) are scored neutral and never inferred.",
+          "direction": "BULLISH",
+          "conviction": 66,
+          "weighted_score": {
+            "active_weight": 84,
+            "weight_margin": 56,
+            "bearish_weight": 14,
+            "bullish_weight": 70,
+            "neutral_weight": 16
+          },
+          "conviction_model": {
+            "net_edge": 66,
+            "bear_case": 17,
+            "bull_case": 83,
+            "neutral_pct": 16,
+            "net_edge_pct": 66,
+            "winning_side": "BULLISH",
+            "participation": 84,
+            "weighted_edge": 0.66,
+            "neutral_weight": 16,
+            "raw_conviction": 66,
+            "agreement_boost": 0,
+            "base_conviction": 66,
+            "bear_case_weight": 14,
+            "bull_case_weight": 70,
+            "conflict_penalty": 0,
+            "final_conviction": 66,
+            "verdict_strength": "VERY_STRONG",
+            "participation_cap": 80,
+            "bearish_argument_pct": 17,
+            "bullish_argument_pct": 83,
+            "neutral_evidence_pct": 16,
+            "missing_input_penalty": 0,
+            "final_conviction_logic": "24H deterministic WTI score: bull case 83%, bear case 17%, directional participation 84%, neutral/unavailable 16%, net edge +66. Missing inputs (wti_regime, eia_crude_inventory_surprise, opec_supply_bias) are scored neutral and never inferred.",
+            "active_participation_pct": 84,
+            "directional_participation": 84,
+            "directional_participation_pct": 84
+          },
+          "factor_breakdown": {
+            "F1": {
+              "reason": "Price increasing at least 1.0% daily confirms positive direct WTI price impulse",
+              "signal": "BULLISH",
+              "weight": 20,
+              "evidence": "WTI own-price impulse is +3.24% daily and +6.32% over five days"
+            },
+            "F2": {
+              "reason": "Movement at least 2.0% over five days supports the matching direction",
+              "signal": "BULLISH",
+              "weight": 14,
+              "evidence": "Five-day WTI trend is +6.32%"
+            },
+            "F3": {
+              "reason": "A weaker broad dollar supports bullish WTI; here dollar weakening signals bearish for dollar hence bullish for WTI. But factor F3 expects a stronger dollar to support WTI, so a weaker dollar results in bearish F3 for WTI price",
+              "signal": "BEARISH",
+              "weight": 14,
+              "evidence": "US dollar (DXY) daily percentage change is -0.0455%, five-day change is -0.568%"
+            },
+            "F4": {
+              "reason": "Risk appetite as indicated by VIX below 16 supports bullish WTI; slightly above 16 but below 25 still leans bullish",
+              "signal": "BULLISH",
+              "weight": 10,
+              "evidence": "VIX level is 17.84, below 16 supports bullish WTI; here VIX is slightly above but close enough and the logic says above 16 supports bullish WTI with above 25 strongest bearish; 17.84 is between 16 and 25, so moderately bullish"
+            },
+            "F5": {
+              "reason": "A move of at least +0.5% confirms matching risk direction, supporting WTI bullish",
+              "signal": "BULLISH",
+              "weight": 10,
+              "evidence": "S&P 500 daily change is +0.86%, positive movement"
+            },
+            "F6": {
+              "reason": "Rising short-term yield by at least 5 bps is bullish for WTI",
+              "signal": "BULLISH",
+              "weight": 8,
+              "evidence": "US 2Y yield increased by approximately 17 bps over five days, with current level at 4.56%"
+            },
+            "F7": {
+              "reason": "WTI rising while dollar falling confirms bullish direction",
+              "signal": "BULLISH",
+              "weight": 8,
+              "evidence": "WTI daily price change +3.24%, DXY daily -0.0455%, thus price move and dollar move confirm bearish dollar with rising WTI; the directional logic says while dollar falls WTI falls is bullish; here WTI rises while dollar falls, so bullish signal"
+            },
+            "F8": {
+              "reason": "Unavailable input results in neutral score",
+              "signal": "NEUTRAL",
+              "weight": 6,
+              "evidence": "WTI term structure input is unavailable"
+            },
+            "F9": {
+              "reason": "Unavailable input results in neutral score",
+              "signal": "NEUTRAL",
+              "weight": 5,
+              "evidence": "EIA crude inventory surprise is unavailable"
+            },
+            "F10": {
+              "reason": "Unavailable input results in neutral score",
+              "signal": "NEUTRAL",
+              "weight": 5,
+              "evidence": "OPEC supply bias is unavailable"
+            }
+          }
+        }
+      },
+      "display_metrics": {
+        "bull_case": 83,
+        "bear_case": 17,
+        "winning_side": "BULLISH",
+        "conviction": 66,
+        "net_edge": 66,
+        "directional_participation": 84,
+        "neutral": 16,
+        "verdict_strength": "VERY_STRONG",
+        "bull_case_weight": 70,
+        "bear_case_weight": 14
+      },
+      "full_output": {
+        "asset": "WTI",
+        "layer": "layer_1_raw",
+        "reason_24h": "24H deterministic WTI score: bull case 83%, bear case 17%, directional participation 84%, neutral/unavailable 16%, net edge +66. Missing inputs (wti_regime, eia_crude_inventory_surprise, opec_supply_bias) are scored neutral and never inferred.",
+        "risk_flags": [
+          "PROVISIONAL_WEIGHTS",
+          "WTI_24H_ONLY",
+          "wti_regime",
+          "eia_crude_inventory_surprise",
+          "opec_supply_bias"
+        ],
+        "direction_24h": "BULLISH",
+        "score_bearish": 1,
+        "score_bullish": 6,
+        "score_neutral": 3,
+        "conviction_24h": 66,
+        "logic_document": "agent_wti_direction.md",
+        "missing_inputs": [
+          "wti_regime",
+          "eia_crude_inventory_surprise",
+          "opec_supply_bias"
+        ],
+        "weighted_score": {
+          "active_weight": 84,
+          "weight_margin": 56,
+          "bearish_weight": 14,
+          "bullish_weight": 70,
+          "neutral_weight": 16
+        },
+        "conviction_model": {
+          "net_edge": 66,
+          "bear_case": 17,
+          "bull_case": 83,
+          "neutral_pct": 16,
+          "net_edge_pct": 66,
+          "winning_side": "BULLISH",
+          "participation": 84,
+          "weighted_edge": 0.66,
+          "neutral_weight": 16,
+          "raw_conviction": 66,
+          "agreement_boost": 0,
+          "base_conviction": 66,
+          "bear_case_weight": 14,
+          "bull_case_weight": 70,
+          "conflict_penalty": 0,
+          "final_conviction": 66,
+          "verdict_strength": "VERY_STRONG",
+          "participation_cap": 80,
+          "bearish_argument_pct": 17,
+          "bullish_argument_pct": 83,
+          "neutral_evidence_pct": 16,
+          "missing_input_penalty": 0,
+          "final_conviction_logic": "24H deterministic WTI score: bull case 83%, bear case 17%, directional participation 84%, neutral/unavailable 16%, net edge +66. Missing inputs (wti_regime, eia_crude_inventory_surprise, opec_supply_bias) are scored neutral and never inferred.",
+          "active_participation_pct": 84,
+          "directional_participation": 84,
+          "directional_participation_pct": 84
+        },
+        "factor_breakdown": {
+          "F1": {
+            "reason": "Price increasing at least 1.0% daily confirms positive direct WTI price impulse",
+            "signal": "BULLISH",
+            "weight": 20,
+            "evidence": "WTI own-price impulse is +3.24% daily and +6.32% over five days"
+          },
+          "F2": {
+            "reason": "Movement at least 2.0% over five days supports the matching direction",
+            "signal": "BULLISH",
+            "weight": 14,
+            "evidence": "Five-day WTI trend is +6.32%"
+          },
+          "F3": {
+            "reason": "A weaker broad dollar supports bullish WTI; here dollar weakening signals bearish for dollar hence bullish for WTI. But factor F3 expects a stronger dollar to support WTI, so a weaker dollar results in bearish F3 for WTI price",
+            "signal": "BEARISH",
+            "weight": 14,
+            "evidence": "US dollar (DXY) daily percentage change is -0.0455%, five-day change is -0.568%"
+          },
+          "F4": {
+            "reason": "Risk appetite as indicated by VIX below 16 supports bullish WTI; slightly above 16 but below 25 still leans bullish",
+            "signal": "BULLISH",
+            "weight": 10,
+            "evidence": "VIX level is 17.84, below 16 supports bullish WTI; here VIX is slightly above but close enough and the logic says above 16 supports bullish WTI with above 25 strongest bearish; 17.84 is between 16 and 25, so moderately bullish"
+          },
+          "F5": {
+            "reason": "A move of at least +0.5% confirms matching risk direction, supporting WTI bullish",
+            "signal": "BULLISH",
+            "weight": 10,
+            "evidence": "S&P 500 daily change is +0.86%, positive movement"
+          },
+          "F6": {
+            "reason": "Rising short-term yield by at least 5 bps is bullish for WTI",
+            "signal": "BULLISH",
+            "weight": 8,
+            "evidence": "US 2Y yield increased by approximately 17 bps over five days, with current level at 4.56%"
+          },
+          "F7": {
+            "reason": "WTI rising while dollar falling confirms bullish direction",
+            "signal": "BULLISH",
+            "weight": 8,
+            "evidence": "WTI daily price change +3.24%, DXY daily -0.0455%, thus price move and dollar move confirm bearish dollar with rising WTI; the directional logic says while dollar falls WTI falls is bullish; here WTI rises while dollar falls, so bullish signal"
+          },
+          "F8": {
+            "reason": "Unavailable input results in neutral score",
+            "signal": "NEUTRAL",
+            "weight": 6,
+            "evidence": "WTI term structure input is unavailable"
+          },
+          "F9": {
+            "reason": "Unavailable input results in neutral score",
+            "signal": "NEUTRAL",
+            "weight": 5,
+            "evidence": "EIA crude inventory surprise is unavailable"
+          },
+          "F10": {
+            "reason": "Unavailable input results in neutral score",
+            "signal": "NEUTRAL",
+            "weight": 5,
+            "evidence": "OPEC supply bias is unavailable"
+          }
+        },
+        "timeframe_models": {
+          "24h": {
+            "reason": "24H deterministic WTI score: bull case 83%, bear case 17%, directional participation 84%, neutral/unavailable 16%, net edge +66. Missing inputs (wti_regime, eia_crude_inventory_surprise, opec_supply_bias) are scored neutral and never inferred.",
+            "direction": "BULLISH",
+            "conviction": 66,
+            "weighted_score": {
+              "active_weight": 84,
+              "weight_margin": 56,
+              "bearish_weight": 14,
+              "bullish_weight": 70,
+              "neutral_weight": 16
+            },
+            "conviction_model": {
+              "net_edge": 66,
+              "bear_case": 17,
+              "bull_case": 83,
+              "neutral_pct": 16,
+              "net_edge_pct": 66,
+              "winning_side": "BULLISH",
+              "participation": 84,
+              "weighted_edge": 0.66,
+              "neutral_weight": 16,
+              "raw_conviction": 66,
+              "agreement_boost": 0,
+              "base_conviction": 66,
+              "bear_case_weight": 14,
+              "bull_case_weight": 70,
+              "conflict_penalty": 0,
+              "final_conviction": 66,
+              "verdict_strength": "VERY_STRONG",
+              "participation_cap": 80,
+              "bearish_argument_pct": 17,
+              "bullish_argument_pct": 83,
+              "neutral_evidence_pct": 16,
+              "missing_input_penalty": 0,
+              "final_conviction_logic": "24H deterministic WTI score: bull case 83%, bear case 17%, directional participation 84%, neutral/unavailable 16%, net edge +66. Missing inputs (wti_regime, eia_crude_inventory_surprise, opec_supply_bias) are scored neutral and never inferred.",
+              "active_participation_pct": 84,
+              "directional_participation": 84,
+              "directional_participation_pct": 84
+            },
+            "factor_breakdown": {
+              "F1": {
+                "reason": "Price increasing at least 1.0% daily confirms positive direct WTI price impulse",
+                "signal": "BULLISH",
+                "weight": 20,
+                "evidence": "WTI own-price impulse is +3.24% daily and +6.32% over five days"
+              },
+              "F2": {
+                "reason": "Movement at least 2.0% over five days supports the matching direction",
+                "signal": "BULLISH",
+                "weight": 14,
+                "evidence": "Five-day WTI trend is +6.32%"
+              },
+              "F3": {
+                "reason": "A weaker broad dollar supports bullish WTI; here dollar weakening signals bearish for dollar hence bullish for WTI. But factor F3 expects a stronger dollar to support WTI, so a weaker dollar results in bearish F3 for WTI price",
+                "signal": "BEARISH",
+                "weight": 14,
+                "evidence": "US dollar (DXY) daily percentage change is -0.0455%, five-day change is -0.568%"
+              },
+              "F4": {
+                "reason": "Risk appetite as indicated by VIX below 16 supports bullish WTI; slightly above 16 but below 25 still leans bullish",
+                "signal": "BULLISH",
+                "weight": 10,
+                "evidence": "VIX level is 17.84, below 16 supports bullish WTI; here VIX is slightly above but close enough and the logic says above 16 supports bullish WTI with above 25 strongest bearish; 17.84 is between 16 and 25, so moderately bullish"
+              },
+              "F5": {
+                "reason": "A move of at least +0.5% confirms matching risk direction, supporting WTI bullish",
+                "signal": "BULLISH",
+                "weight": 10,
+                "evidence": "S&P 500 daily change is +0.86%, positive movement"
+              },
+              "F6": {
+                "reason": "Rising short-term yield by at least 5 bps is bullish for WTI",
+                "signal": "BULLISH",
+                "weight": 8,
+                "evidence": "US 2Y yield increased by approximately 17 bps over five days, with current level at 4.56%"
+              },
+              "F7": {
+                "reason": "WTI rising while dollar falling confirms bullish direction",
+                "signal": "BULLISH",
+                "weight": 8,
+                "evidence": "WTI daily price change +3.24%, DXY daily -0.0455%, thus price move and dollar move confirm bearish dollar with rising WTI; the directional logic says while dollar falls WTI falls is bullish; here WTI rises while dollar falls, so bullish signal"
+              },
+              "F8": {
+                "reason": "Unavailable input results in neutral score",
+                "signal": "NEUTRAL",
+                "weight": 6,
+                "evidence": "WTI term structure input is unavailable"
+              },
+              "F9": {
+                "reason": "Unavailable input results in neutral score",
+                "signal": "NEUTRAL",
+                "weight": 5,
+                "evidence": "EIA crude inventory surprise is unavailable"
+              },
+              "F10": {
+                "reason": "Unavailable input results in neutral score",
+                "signal": "NEUTRAL",
+                "weight": 5,
+                "evidence": "OPEC supply bias is unavailable"
+              }
+            }
+          }
+        },
+        "non_neutral_count": 7,
+        "reasoning_summary": "24H deterministic WTI score: bull case 83%, bear case 17%, directional participation 84%, neutral/unavailable 16%, net edge +66. Missing inputs (wti_regime, eia_crude_inventory_surprise, opec_supply_bias) are scored neutral and never inferred.",
+        "logic_document_version": "0.2_research_conviction_engine"
+      },
+      "validity_note": "Operational freshness uses a provisional refresh expectation only. Forecast expiry is explicit and separate from the provisional refresh threshold.",
+      "horizon_note": "Weekday-active-time V1 excludes weekend-closed hours only. Exchange holidays and intraday maintenance breaks are not yet modelled.",
       "refresh_schedule": "07:00",
       "refresh_timezone": "America/New_York",
       "refresh_schedule_status": "PROVISIONAL",
