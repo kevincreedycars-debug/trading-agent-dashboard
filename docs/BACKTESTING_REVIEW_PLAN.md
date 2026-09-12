@@ -2,6 +2,14 @@
 
 Baseline date: 2026-09-07. Objective: establish what each engine actually measures, correct demonstrated measurement defects, and qualify evidence before optimization.
 
+## Research framework: the common 24-hour question
+
+The backtester is being built to answer one bounded question per asset: **given the variables and event information demonstrably available when a Layer 1 decision was made, which pre-declared conditions are associated with the realised following-24-hour price direction?** This includes market variables, agent factors, event actual-versus-forecast surprises, time since release, regimes and data quality states. It does not infer causation from correlation.
+
+The common harness is `backtester/lib/variable_event_research.js`; its contract is documented in `backtester/docs/variable_event_research_framework.md`. A committed feature/hypothesis registry, time-valid observation records, a versioned outcome contract, chronological train/validation split plus embargo, denominator reconciliation, uncertainty and same-partition baselines are required. It records associations only: no automated weights, live changes, causal claims, or executable P&L claims.
+
+Gold history isolation remains the immediate prerequisite because the generic framework cannot make a valid result from unordered or future-leaking inputs. Once that gate is complete, the first implementation will register and evaluate Gold factors/events through the shared 24-hour contract; other assets follow only after their own input timing is defensible.
+
 First review checkpoint: [Gold timestamped contract and implementation audit](GOLD_TIMESTAMPED_EVALUATION_CONTRACT.md). The versioned review records the two input paths, measurement rules, denominator accounting, independent examples, and three reproduced gaps. The v2 evaluator now requires explicit candle completion, declares normalized storage-entry semantics and preserves as-of protocol metadata. Frozen pilot artifacts remain unchanged. Shared snapshot selection and report provenance are also repaired. The next milestone prepares isolated validation of the history-input repair.
 
 ## Engine inventory

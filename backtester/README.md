@@ -41,9 +41,9 @@ An Observation is one permanent record of everything known at the moment an agen
 - later AI reviews
 - later optimization results
 
-## Current scope (2026-09-07)
+## Current scope (2026-09-12)
 
-The repository now includes replay, directional evaluation, reach research, timestamped Gold evaluation and diagnostics. Use [the engine inventory and review plan](../docs/BACKTESTING_REVIEW_PLAN.md) as the current navigation. The foundation description below is historical.
+The repository now includes replay, directional evaluation, reach research, timestamped Gold evaluation and diagnostics. The generic variable/event research harness adds a common record, registry and chronological cohort-reporting contract for 24-hour research. Read [the variable and event framework](docs/variable_event_research_framework.md) with [the engine inventory and review plan](../docs/BACKTESTING_REVIEW_PLAN.md). The foundation description below is historical.
 
 ## Original foundation scope
 

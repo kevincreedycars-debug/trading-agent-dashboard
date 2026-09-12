@@ -1,3 +1,7 @@
+# 2026-09-12 - Variable and event 24-hour research framework
+
+Added a generic downstream-only research harness with pre-declared feature/hypothesis registries, per-feature availability cutoffs, versioned outcomes, chronological training/validation partitions plus embargo, explicit exclusions, Wilson intervals and same-partition baselines. Results are explicitly association-only: no causal, executable-P&L, automatic weight or production claim is permitted. Added the first Gold timestamped adapter, F1-F10 exploratory factor-state registry and hashed-source CLI; upstream timestamped-evaluator rejections remain visible in its output. The registry uses factor states only and remains pending authentic source timing. No live workflow, database or Layer 1 change occurred. Focused tests passed 20/20; final local suite passed 311/311.
+
 # 2026-09-11 - Layer 1 refresh-control tooltips
 
 Added hover and keyboard-focus explanations to Elapsed, Ready/ETA, workflow status and Run Refresh. Help follows current states, supports disabled-button hover and Escape dismissal, and stays within desktop/mobile viewports. Success degraded distinguishes execution success from input health and shows the health-report date. Read-only production inspection confirmed the screenshot combines September 11 workflow success with a September 1 critical input-health report; tooltips do not regenerate that report or change status logic. Browser interaction/layout check passes at 1440px and 390px. UI changes are local to the task branch, not published to production.
