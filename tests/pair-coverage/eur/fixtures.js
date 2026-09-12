@@ -28,4 +28,26 @@ function completeInput(pairCode = "EUR_USD", baseDirection = "BULLISH", quoteDir
   };
 }
 
-module.exports = { completeInput, completeSignal, directEurUsdPrice };
+// Layer 2 producer fixtures mirror the live agent_outputs call shape
+// (direction + conviction only) that `layer2_trade_selection_agent` consumes.
+const layer2Call = (direction, conviction) => ({ direction, conviction });
+
+const layer2Calls = (overrides = {}) => ({
+  USD: layer2Call("BEARISH", 72),
+  EUR: layer2Call("BULLISH", 72),
+  GBP: layer2Call("BEARISH", 68),
+  GOLD: layer2Call("BULLISH", 80),
+  SILVER: layer2Call("BULLISH", 66),
+  WTI: layer2Call("BEARISH", 64),
+  NQ: layer2Call("BULLISH", 70),
+  BTC: layer2Call("BULLISH", 75),
+  ...overrides
+});
+
+module.exports = {
+  completeInput,
+  completeSignal,
+  directEurUsdPrice,
+  layer2Call,
+  layer2Calls
+};

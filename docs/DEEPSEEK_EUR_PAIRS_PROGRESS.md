@@ -10,8 +10,10 @@ The implementation will add:
 
 - `pair-coverage/eur/pair_inventory.js`
 - `pair-coverage/eur/pair_contract.js`
+- `pair-coverage/eur/layer2_pair_adapter.js`
 - `tests/pair-coverage/eur/fixtures.js`
 - `tests/pair-coverage/eur/pair_contract.test.js`
+- `tests/pair-coverage/eur/layer2_pair_adapter.test.js`
 
 ## Coverage matrix and findings
 
@@ -58,9 +60,87 @@ accepted as a tradable cross path.
 4. Run the pair contract tests as a unit check only; do not treat them as a
 	backtest, live workflow validation or activation approval.
 
+## Layer 1 / Layer 2 parity: confirmation and process
+
+**Confirmation: this workstream does not build Layer 1 or Layer 2.** The draft is
+a contract/readiness spec plus a pure producer mirror under `pair-coverage/eur/`.
+It creates no collector, no agent, no Supabase read/write, no GitHub publish and no
+dashboard wiring. Parity with the live USD pairs requires the integration steps
+below, which are owned by Codex/coordinator and the peer asset workstreams.
+
+### What the live USD-pair system actually is
+
+- Layer 1: five n8n collectors (USD, EUR, GOLD, NQ, BTC) writing
+  `market_snapshots`; five n8n Layer 1 agents writing `agent_outputs`;
+  `dashboard_writer` reads `agent_outputs` and writes `data/layer1.json`.
+- Layer 2: `exports/layer2_trade_selection_agent.json` is a single code node that
+  reads only `agent_name` in `{USD, EUR, GOLD, NQ, BTC}`, hardcodes the pair list
+  to `EUR/USD`, `XAU/USD`, `BTC/USD`, `NQ/USD`, assigns `const usd = calls.USD`,
+  uses `LOW_CONVICTION_THRESHOLD = 60`, sets
+  `confidence = round((base + quote) / 2)` and writes `data/layer2.json` to GitHub.
+- Therefore "live" today means **four USD-quoted pairs only**. GBP/USD, XAG/USD and
+  WTI/USD are onboarding in the same way the EUR crosses are.
+
+### Layer 1 leg readiness per EUR pair
+
+| Pair | Base leg | Quote leg | L1 status |
+| --- | --- | --- | --- |
+| EUR/USD | EUR (live) | USD (live) | legs exist |
+| XAU/EUR | GOLD (live) | EUR (live) | legs exist |
+| NQ/EUR | NQ (live) | EUR (live) | legs exist |
+| BTC/EUR | BTC (live) | EUR (live) | legs exist |
+| EUR/GBP | EUR (live) | GBP (draft, peer worktree) | blocked on GBP |
+| XAG/EUR | SILVER (not built) | EUR (live) | blocked on Silver |
+| WTI/EUR | WTI (not built) | EUR (live) | blocked on WTI |
+
+### The missing system: quote-agnostic Layer 2
+
+Three USD-hardwired locations must be generalized before any EUR cross can run:
+
+1. `backtester/lib/layer2_pair_logic.js` — `usdDirection` / `usdConfidence` inputs
+   and the "USD is..." wording (Codex-owned; propose, do not edit here).
+2. The Layer 2 n8n code node — `const usd = calls.USD` and the literal `USD` in
+   the generated reasons.
+3. `script.js` `deriveLiveLayer2Dashboard()` — the `agent === "USD"` lookup and the
+   `while USD is independently ...` reason at the pair loop.
+
+`pairTradeResearchConfigs` already lists the EUR pairs as `ONBOARDING`; the
+configuration entry is not the mechanism.
+
+### Process, in order
+
+1. **Restore Layer 1 health first.** The committed `data/layer2.json` currently
+   reports "Missing 24H conviction from one or both Layer 1 assets." for all four
+   live pairs, so even USD pairs are not producing a call. Known causes are recorded
+   in `workflows/eur_layer1_agent.md` (object-vs-string parser) and
+   `workflows/master_orchestrator.md` (Eco Events duplicate insert).
+2. **Land the missing Layer 1 legs** for GBP (peer GBP worktree) and Silver/WTI
+   (peer asset worktrees). No EUR-cross L1 work is required for EUR/USD, XAU/EUR,
+   NQ/EUR or BTC/EUR — those legs already run.
+3. **Generalize the shared Layer 2** at the three locations above, keeping USD as
+   the backward-compatible default so existing USD pairs are byte-identical.
+4. **Add quote-row Supabase nodes** (`Get latest GBP/SILVER/WTI rows`) as those
+   Layer 1 agents go live, and expand the code node's `assets`/`pairs` lists.
+5. **Supply per-pair evidence** (direct feed identity or documented synchronized
+   legs) before any onboarding label changes.
+6. **Activate** through n8n/operator + Codex merge. This is a separate integration
+   step; it is not performed from this worktree.
+
+### Delivered today: quote-agnostic Layer 2 producer draft
+
+`pair-coverage/eur/layer2_pair_adapter.js` mirrors the live workflow semantics
+exactly (sentinel handling, conviction clamp, threshold 60, rounded-average
+confidence, avoid reasons, ranking, `dashboard_meta`/`trade_opportunities`/
+`avoid_today` shape) with the quote asset taken per pair instead of the literal
+`USD`. USD-quoted pairs reproduce the live strings byte-for-byte. It is pure, does
+no I/O and is the drop-in Codex can lift into the shared producer.
+
 ## Test result
 
-Command: `node --test tests/pair-coverage/eur/*.test.js`
+Command: `node --test tests/pair-coverage/eur/*.test.js` (quote the glob in PowerShell).
 
-Result: 8/8 passed on 2026-09-09. JavaScript syntax checks and editor diagnostics
-also report no errors for the four implementation/test files.
+Result: 15/15 passed on 2026-09-12 (8 contract tests + 7 Layer 2 producer tests).
+JavaScript syntax checks and editor diagnostics also report no errors. The quoted
+glob is required in PowerShell; an unquoted `*.test.js` is passed through literally
+and can report a spurious non-zero exit while truncating pipes.
+
