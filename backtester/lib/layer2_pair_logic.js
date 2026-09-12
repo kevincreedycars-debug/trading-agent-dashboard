@@ -29,12 +29,20 @@
     return null;
   }
 
+  function normalizeQuoteLabel(value) {
+    const label = String(value || "USD").trim().toUpperCase();
+    return label || "USD";
+  }
+
   function deriveLayer2PairSignal(input = {}) {
     const instrument = input.instrument || input.pairLabel || "Pair";
     const targetDirection = normalizeDirectionalSignalKey(input.targetDirection);
-    const usdDirection = normalizeDirectionalSignalKey(input.usdDirection);
+    // Quote leg is generic. `usdDirection`/`usdConfidence` remain supported aliases
+    // so existing USD-pair callers are unaffected.
+    const quoteDirection = normalizeDirectionalSignalKey(input.quoteDirection ?? input.usdDirection);
     const targetConfidence = numberOrNull(input.targetConfidence);
-    const usdConfidence = numberOrNull(input.usdConfidence);
+    const quoteConfidence = numberOrNull(input.quoteConfidence ?? input.usdConfidence);
+    const quoteLabel = normalizeQuoteLabel(input.quoteLabel);
 
     let reasonKey = null;
     let reason = "";
@@ -42,13 +50,13 @@
     if (!targetDirection) {
       reasonKey = "unsupported_target_direction";
       reason = "Target 24H signal is non-directional, so there is no Layer 2 pair trade.";
-    } else if (!usdDirection) {
+    } else if (!quoteDirection) {
       reasonKey = "unsupported_usd_direction";
-      reason = "USD 24H signal is non-directional, so there is no Layer 2 pair trade.";
-    } else if (targetConfidence === null || usdConfidence === null) {
+      reason = `${quoteLabel} 24H signal is non-directional, so there is no Layer 2 pair trade.`;
+    } else if (targetConfidence === null || quoteConfidence === null) {
       reasonKey = "missing_combined_confidence";
       reason = "Missing Layer 1 headline confidence prevents a Layer 2 pair trade.";
-    } else if (targetDirection === usdDirection) {
+    } else if (targetDirection === quoteDirection) {
       reasonKey = "same_direction_conflict";
       reason = "Both assets point in the same 24H direction, so there is no clear relative edge.";
     }
@@ -66,9 +74,9 @@
       };
     }
 
-    const combinedConfidence = Math.min(targetConfidence, usdConfidence);
+    const combinedConfidence = Math.min(targetConfidence, quoteConfidence);
     const bucket = confidenceBucketFromValue(combinedConfidence);
-    const direction = targetDirection === "BULLISH" && usdDirection === "BEARISH" ? "BUY" : "SELL";
+    const direction = targetDirection === "BULLISH" && quoteDirection === "BEARISH" ? "BUY" : "SELL";
 
     return {
       instrument,
@@ -78,7 +86,7 @@
       strengthBucket: bucket ? bucket.label : null,
       strengthBucketKey: bucket ? bucket.key : null,
       reasonKey: "tradable_pair",
-      reason: `${instrument} is tradable because the target and USD 24H signals are opposite. Combined confidence is the lower Layer 1 confidence.`
+      reason: `${instrument} is tradable because the target and ${quoteLabel} 24H signals are opposite. Combined confidence is the lower Layer 1 confidence.`
     };
   }
 
