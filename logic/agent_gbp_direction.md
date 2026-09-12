@@ -121,3 +121,14 @@ Added by the DeepSeek/Cline GBP workstream. The factor table, weights, Version a
 - Those fields are only ever copied from provider data. When the calendar node fails (for example an expired RapidAPI key or missing entitlement), the node is marked `onError: continueRegularOutput` and every UK event field is written as null and listed in `data_quality.missing`; the snapshot is not blocked and the affected factors score NEUTRAL.
 - F2/F3 therefore remain the only permanently neutral weights (36 of 100) until a UK 2Y provider is approved by the operator. F10 (weight 2) also remains neutral.
 - Coverage status: 62 of 100 weight is collectable today (F1, F4, F5, F6, F7, F8, F9); 36 of 100 requires a UK 2Y provider decision; 2 of 100 requires a UK stress proxy decision.
+
+---
+
+## Live Status (2026-09-12)
+
+- The **GBP Layer 1 agent is live** in n8n (`GBP Layer 1 Agent`, id `bMv96EPR0xCXi3bi`, active). The Master Orchestrator runs it between `WTI Layer 1 Agent` and `Layer 2 Trade Selection Agent`.
+- Onboarding follows the **WTI precedent**: because the shared `market_snapshots` table has no GBP columns, the sealed agent reads its providers at run time and writes only its own `agent_outputs` row. The collector draft in `exports/gbp_collector.json` stays unimported until that schema gains GBP columns.
+- Providers read at run time: Coinbase GBP/USD spot; FRED `DGS2`, `DGS10`, `IRLTLT01GBM156N`, `VIXCLS`, `DTWEXBGS`; and the UK economic calendar (RapidAPI `economic-calendar-api`).
+- **`countryCode=UK` is required**: the provider returns zero events for `GB` (verified live 2026-09-12). It reports `currencyCode` as `GBP`.
+- `Layer 2 Trade Selection Agent` now publishes `GBP/USD` (alongside `EUR/USD`, `XAU/USD`, `BTC/USD`, `NQ/USD`, `WTI/USD`, `XAG/USD`) and `Dashboard Writer - Layer 1` includes `GBP` in its asset list.
+- The deterministic gate remains the only conviction source. Weights above are unchanged and remain provisional hypotheses pending historical replay.
