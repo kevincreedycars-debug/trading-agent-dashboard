@@ -284,6 +284,24 @@ Production `main`'s `orderedAgents` does not list `WTI` or `GBP`, although both 
 producers and both appear in the published `layer1.json`. The live-agent count therefore still
 under-reports. That is the WTI and GBP windows' dashboard scope; SILVER was added here only for SILVER.
 
+### Follow-up dashboard pass (same day)
+
+A real browser check of the published site showed the SILVER tab rendering correctly, but also two
+things worth fixing:
+
+- the "Live Agents" metric read `8 / 6`, because the numerator comes from the published data while the
+  denominator came from `orderedAgents`. `WTI` and `GBP` are live producers already present in
+  `layer1.json`, so they were added to `orderedAgents` with their own nav buttons. The metric is now
+  `8 / 8` and every live asset has a reachable detail view.
+- the SILVER factor evidence rendered raw float noise (`Real yield 9.999999999999964bps`). The
+  conviction engine now formats evidence values through a small `fmt()` helper, so the dashboard shows
+  `Real yield 10bps`. The SILVER agent was redeployed with the fix.
+
+Still produced by other windows: `WTI_USD` and `GBP_USD` remain `liveEligibility: "ONBOARDING"` in the
+Pair Analysis configs even though both pairs are live in Layer 2, unlike `XAG_USD` which was promoted to
+`READY` here. Their owners should align those two flags.
+
+
 
 
 

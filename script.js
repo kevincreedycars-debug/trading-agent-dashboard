@@ -51,7 +51,7 @@ const labels = {
   "current_month": "Month"
 };
 
-const orderedAgents = ["USD", "EUR", "GOLD", "SILVER", "NQ", "BTC"];
+const orderedAgents = ["USD", "EUR", "GOLD", "SILVER", "NQ", "BTC", "WTI", "GBP"];
 const weekdayBreakdownBuckets = [
   { key: "WEAK", label: "Weak", min: 0, max: 49 },
   { key: "MODERATE", label: "Moderate", min: 50, max: 64 },
