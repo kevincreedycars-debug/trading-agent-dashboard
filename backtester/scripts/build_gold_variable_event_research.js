@@ -26,7 +26,7 @@ function run(args = process.argv.slice(2)) {
   );
   report.source_sha256 = hashFile(input);
   report.registry_sha256 = hashFile(registryPath);
-  fs.writeFileSync(output, `${JSON.stringify(report, null, 2)}\n`);
+  fs.writeFileSync(output, `${JSON.stringify(report, null, 2)}\n`, { flag: 'wx' });
   console.log(JSON.stringify({ output, coverage: report.coverage, upstream_evaluation: report.upstream_evaluation }, null, 2));
   return report;
 }

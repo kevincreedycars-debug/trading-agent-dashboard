@@ -20,6 +20,7 @@ test("Gold registry uses the shared framework and keeps synthetic results labell
   assert.equal(report.adapter, "gold-timestamped-variable-event-v1");
   assert.equal(report.data_kind, "synthetic_contract_example_not_market_evidence");
   assert.equal(report.hypotheses.length, 20);
-  assert.equal(report.hypotheses.find(row => row.id === "F1-bullish").results.training.cohort.directional_hit_rate_pct, 100);
+  assert.equal(report.hypotheses.find(row => row.id === "F1-bullish").results.training.cohort.directional_hit_rate_pct, null);
+  assert.equal(report.coverage.excluded_observations, 2, 'one-hour fixture cannot pass as 24-hour evidence');
   assert.equal(report.upstream_evaluation.evaluable_calls, 2);
 });

@@ -22,8 +22,10 @@ function buildGoldVariableEventDataset(dataset) {
     observations.push({
       observation_id: call.prediction_id,
       decision_time: result.call_time,
+      entry_time: result.entry_time,
       outcome_end_time: result.horizon_end,
       outcome_direction: result.market_outcome_direction,
+      return_pct: result.pct_change,
       features
     });
   });
@@ -49,6 +51,9 @@ function buildGoldVariableEventResearchReport(dataset, registry, options) {
     ...report,
     adapter: "gold-timestamped-variable-event-v1",
     upstream_evaluation: adapted.upstream_evaluation,
+    evaluation_contract: adapted.outcome_contract,
+    protocol: dataset.protocol ?? null,
+    entry_semantics: dataset.entry_semantics ?? null,
     limitations: [
       ...report.limitations,
       "Gold input/query lineage limitations from the timestamped evaluator remain inherited by this report."

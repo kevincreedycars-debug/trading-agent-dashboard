@@ -19,7 +19,7 @@ function observation(id, hour, outcome, features) {
   return {
     observation_id: id,
     decision_time: `2024-01-01T${String(hour).padStart(2, "0")}:00:00Z`,
-    outcome_end_time: `2024-01-01T${String(hour + 1).padStart(2, "0")}:00:00Z`,
+    outcome_end_time: `2024-01-02T${String(hour).padStart(2, "0")}:00:00Z`,
     outcome_direction: outcome,
     features
   };
@@ -32,7 +32,11 @@ test("predeclared numeric and event cohorts report training and validation assoc
     observation("three", 12, "BULLISH", { yield_delta: { value: 8, available_at: "2024-01-01T11:00:00Z" }, cpi_surprise: { value: "HOT", available_at: "2024-01-01T11:00:00Z" } }),
     observation("four", 13, "FLAT", { yield_delta: { value: 6, available_at: "2024-01-01T12:00:00Z" }, cpi_surprise: { value: "HOT", available_at: "2024-01-01T12:00:00Z" } })
   ] };
-  const report = buildVariableEventResearchReport(dataset, registry, { split_at: "2024-01-01T11:00:00Z", embargo_ms: 0 });
+  for (const row of dataset.observations.slice(2)) {
+    row.decision_time = row.decision_time.replace('01-01', '01-03');
+    row.outcome_end_time = row.outcome_end_time.replace('01-02', '01-04');
+  }
+  const report = buildVariableEventResearchReport(dataset, registry, { split_at: "2024-01-02T11:00:00Z", embargo_ms: 0 });
   const yieldHypothesis = report.hypotheses[0];
   assert.deepEqual(report.coverage, { source_observations: 4, accepted_observations: 4, training_observations: 2, validation_observations: 2, excluded_observations: 0 });
   assert.equal(yieldHypothesis.results.training.cohort.directional_hit_rate_pct, 100);
@@ -49,7 +53,7 @@ test("late, missing, invalid, duplicate and embargoed records are explicitly exc
     observation("duplicate", 12, "BULLISH", { yield_delta: { value: 9, available_at: "2024-01-01T11:00:00Z" } }),
     observation("embargoed", 11, "BULLISH", { yield_delta: { value: 9, available_at: "2024-01-01T10:00:00Z" } })
   ] };
-  const report = buildVariableEventResearchReport(dataset, registry, { split_at: "2024-01-01T10:00:00Z", embargo_ms: 7200000 });
+  const report = buildVariableEventResearchReport(dataset, registry, { split_at: "2024-01-02T10:00:00Z", embargo_ms: 7200000 });
   assert.equal(report.coverage.excluded_observations, 3);
   assert.equal(report.hypotheses[0].results.training.feature_exclusions.late_feature, 1);
   assert.equal(report.hypotheses[0].results.training.feature_exclusions.missing_feature, 1);

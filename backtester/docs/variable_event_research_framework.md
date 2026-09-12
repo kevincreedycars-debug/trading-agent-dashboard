@@ -2,6 +2,8 @@
 
 ## Purpose
 
+Version 2 enforces exactly 24 elapsed hours from explicit entry (default decision), validates timezone-aware real-calendar timestamps and rejects null/coercible numeric values. The previous version did not enforce this duration; its one-hour synthetic example must not be called 24-hour evidence. Report files now refuse overwrite. Gold reports retain evaluator configuration and protocol. Numeric raw-variable Pearson correlation and mean/median return are descriptive only; Wilson intervals are unadjusted for serial dependence and multiple hypotheses.
+
 This is the common harness for the question: **given information demonstrably available at a decision time, which pre-declared variable or event conditions are associated with the following 24-hour market outcome?**
 
 It is downstream-only research. It does not change Layer 1 logic, weights, thresholds, collectors, or production workflows.
