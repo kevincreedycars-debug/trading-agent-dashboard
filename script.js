@@ -51,7 +51,7 @@ const labels = {
   "current_month": "Month"
 };
 
-const orderedAgents = ["USD", "EUR", "GOLD", "NQ", "BTC"];
+const orderedAgents = ["USD", "EUR", "GOLD", "SILVER", "NQ", "BTC"];
 const weekdayBreakdownBuckets = [
   { key: "WEAK", label: "Weak", min: 0, max: 49 },
   { key: "MODERATE", label: "Moderate", min: 50, max: 64 },
@@ -131,8 +131,7 @@ const pairTradeResearchConfigs = [
     pairCode: "XAG_USD",
     pairLabel: "XAG/USD",
     weekdayKeys: weekdayBreakdownColumnsByAsset.SILVER,
-    liveEligibility: "ONBOARDING",
-    onboardingReason: "Layer 1 and historical replay onboarding in progress."
+    liveEligibility: "READY"
   },
   {
     targetAssetCode: "SILVER",

@@ -1,0 +1,263 @@
+{
+  "name": "SILVER Layer 1 Agent",
+  "description": "Independent SILVER/XAGUSD Layer 1 agent. Reads only market_snapshots and the SILVER logic document.",
+  "active": false,
+  "nodes": [
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4.1-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4.1-MINI"
+        },
+        "responses": {
+          "values": [
+            {
+              "role": "system",
+              "content": "You are the SILVER Layer 1 Direction Agent.\n\nYou must follow the supplied SILVER logic document exactly.\n\nYou analyse Silver (XAG) only.\n\nYour task is to determine the likely direction of Silver using only the supplied market snapshot and the supplied SILVER logic document.\n\nYou must not:\n\n* Produce USD calls\n* Produce EUR calls\n* Produce BTC calls\n* Produce NQ calls\n* Produce pair calls\n* Produce trade recommendations\n* Produce entry or exit signals\n* Produce cross-asset directional calls\n* Produce consensus calls\n* Produce Layer 2 event-adjusted calls\n* Read or infer the output of any other agent\n\nLayer 1 isolation is mandatory.\n\nYou may only use:\n\n* Silver price data\n* DXY data\n* US Treasury yield data\n* US real yield data\n* Fed bias\n* Economic event data\n* Risk regime data\n* Inputs explicitly provided in the market snapshot\n\nIf a required input is unavailable or missing:\n\n* Score the affected factor as NEUTRAL\n* Add the missing field to missing_inputs\n* Do not estimate or infer missing values\n\nThe supplied logic document is the sole source of truth.\n\nReturn valid JSON only.\n\nDo not return explanations outside the JSON structure.\n\nDo not wrap JSON in markdown.\n\nDo not use code fences.\n\nDo not return ```json.\n\nReturn raw JSON only.\n"
+            },
+            {
+              "content": "={\n  \"logic_document\": \"{{ $json.logic_document }}\",\n  \"market_snapshot\": {{ JSON.stringify($json.market_snapshot) }},\n  \"output_requirement\": {\n    \"asset\": \"GOLD\",\n    \"layer\": \"layer_1_raw\",\n    \"logic_version\": \"2.0_weighted_engine\",\n    \"format\": \"valid_json_only\",\n    \"conviction_fields\": \"must_be_null\",\n    \"factor_classification_only\": true\n  }\n}"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.3,
+      "position": [
+        896,
+        0
+      ],
+      "id": "fb76045b-8e97-4bb7-93cc-6a643c76e6a0",
+      "name": "Message a model",
+      "retryOnFail": true,
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "openAiApi": {
+          "id": "VY1FMMlFQNwU3Ctt",
+          "name": "OpenAI account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "market_snapshots",
+        "returnAll": true,
+        "filterType": "none"
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        176,
+        0
+      ],
+      "id": "b70e4758-7df8-4794-8f25-6fa622451946",
+      "name": "Supabase Get Many",
+      "credentials": {
+        "supabaseApi": {
+          "id": "trM35g1QCTOgQp4K",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "tableId": "agent_outputs",
+        "dataToSend": "autoMapInputData"
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1056,
+        256
+      ],
+      "id": "f571d714-11c8-4aa5-80a1-a5ace73f57a5",
+      "name": "Create a row",
+      "credentials": {
+        "supabaseApi": {
+          "id": "trM35g1QCTOgQp4K",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const logicItem = $('Get SILVER Logic Document').first().json;\nconst marketItem = $('Build SILVER Input Pack').first().json;\n\nlet logicDocument = logicItem.content || '';\n\nif (logicItem.encoding === 'base64') {\n  logicDocument = Buffer.from(logicDocument, 'base64').toString('utf8');\n}\n\nreturn [\n  {\n    json: {\n      logic_document: logicDocument,\n      market_snapshot: marketItem\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        720,
+        0
+      ],
+      "id": "05a1eede-a4a0-4969-8cab-0bc21c111864",
+      "name": "Combine md & market snapshot"
+    },
+    {
+      "parameters": {
+        "jsCode": "const rows = $input.all().map(item => item.json);\r\n\r\nconst snapshot = rows\r\n  .filter(r => r.snapshot_date && r.run_time_et)\r\n  .sort((a, b) => new Date(b.run_time_et) - new Date(a.run_time_et))[0];\r\n\r\nif (!snapshot) {\r\n  throw new Error(\"No valid market snapshot found\");\r\n}\r\n\r\n// The silver fields live in `raw_payload.silver` while `market_snapshots` has no\r\n// silver columns. Typed columns win when they exist, so this upgrades by itself\r\n// once the silver migration is applied.\r\nconst embedded = (snapshot.raw_payload && snapshot.raw_payload.silver) || {};\r\nconst pick = (key) => (embedded[key] !== undefined && embedded[key] !== null ? embedded[key] : snapshot[key]);\r\n\r\nconst silverInputPack = {\r\n  agent_name: \"SILVER\",\r\n  layer: 1,\r\n  isolation_rule: \"This Layer 1 agent may only use this market snapshot. It must not read other agent outputs.\",\r\n  execution_question: \"Based on confirmed value-driving factors available at execution time, what is the likely direction of Silver (XAG/USD)?\",\r\n\r\n  snapshot_id: snapshot.id,\r\n  snapshot_date: snapshot.snapshot_date,\r\n  run_time_et: snapshot.run_time_et,\r\n\r\n  available_inputs: {\r\n    silver_price: pick(\"silver_price\"),\r\n    silver_d1_pct: pick(\"silver_d1_pct\"),\r\n    silver_d5_pct: pick(\"silver_d5_pct\"),\r\n    silver_d20_pct: pick(\"silver_d20_pct\"),\r\n\r\n    gold_price: snapshot.gold_price,\r\n    gold_d1_pct: snapshot.gold_d1_pct,\r\n    gold_d5_pct: snapshot.gold_d5_pct,\r\n    gold_d20_pct: snapshot.gold_d20_pct,\r\n\r\n    gold_silver_ratio: pick(\"gold_silver_ratio\"),\r\n    gold_silver_ratio_d5_pct: pick(\"gold_silver_ratio_d5_pct\"),\r\n    gold_silver_ratio_d20_pct: pick(\"gold_silver_ratio_d20_pct\"),\r\n\r\n    dxy_level: snapshot.dxy_level,\r\n    dxy_d1: snapshot.dxy_d1,\r\n    dxy_d5: snapshot.dxy_d5,\r\n    dxy_d20: snapshot.dxy_d20,\r\n\r\n    us_2y_yield: snapshot.us_2y_yield,\r\n    us_2y_d5_bps: snapshot.us_2y_d5_bps,\r\n    us_2y_d20_bps: snapshot.us_2y_d20_bps,\r\n\r\n    us_10y_yield: snapshot.us_10y_yield,\r\n    us_10y_d5_bps: snapshot.us_10y_d5_bps,\r\n    us_10y_d20_bps: snapshot.us_10y_d20_bps,\r\n\r\n    us_10y_real_yield: snapshot.us_10y_real_yield,\r\n    us_10y_real_yield_d5_bps: snapshot.us_10y_real_yield_d5_bps,\r\n    us_10y_real_yield_d20_bps: snapshot.us_10y_real_yield_d20_bps,\r\n\r\n    vix_level: snapshot.vix_level,\r\n    vix_d1: snapshot.vix_d1,\r\n    vix_d5: snapshot.vix_d5,\r\n\r\n    copper_price: pick(\"copper_price\"),\r\n    copper_3m_pct: pick(\"copper_3m_pct\"),\r\n    industrial_production_index: pick(\"industrial_production_index\"),\r\n    industrial_production_3m_pct: pick(\"industrial_production_3m_pct\"),\r\n    industrial_demand_regime: pick(\"industrial_demand_regime\"),\r\n\r\n    silver_supply_event: pick(\"silver_supply_event\"),\r\n\r\n    latest_us_event: snapshot.latest_us_event,\r\n    fed_bias: snapshot.fed_bias,\r\n    equities_regime: snapshot.equities_regime,\r\n    global_growth_regime: snapshot.global_growth_regime,\r\n    geopolitical_risk_flag: snapshot.geopolitical_risk_flag\r\n  },\r\n\r\n  missing_inputs_must_be_scored_neutral: [\r\n    \"silver_d5_pct if unavailable\",\r\n    \"silver_d20_pct if unavailable\",\r\n    \"gold_silver_ratio if unavailable\",\r\n    \"dxy_d5 if unavailable\",\r\n    \"us_10y_real_yield_d5_bps if unavailable\",\r\n    \"vix_level if unavailable\",\r\n    \"copper_price if unavailable\",\r\n    \"industrial_production_index if unavailable\",\r\n    \"silver_supply_event if unavailable\",\r\n    \"latest_us_event if unavailable\",\r\n    \"fed_bias if unavailable\",\r\n    \"global_growth_regime if unavailable\"\r\n  ]\r\n};\r\n\r\nreturn [{ json: silverInputPack }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        368,
+        0
+      ],
+      "id": "bc13d867-f311-4068-b78b-1ab42d76193b",
+      "name": "Build SILVER Input Pack"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Reviewed SILVER logic document, inlined so the agent has no repo dependency.\nconst LOGIC_DOCUMENT = \"# SILVER Layer 1 Direction Agent\\r\\n\\r\\nVersion: 1.0_weighted_engine  \\r\\nStatus: Inactive draft. Do not activate until provider, schema, replay and checker validation pass.\\r\\n\\r\\n## Scope\\r\\n\\r\\nThis agent analyses SILVER as the XAG/USD instrument only. It must not produce pair calls, trade\\r\\nrecommendations, Layer 2 decisions, or consume another agent's output.\\r\\n\\r\\n## 24H Factor Contract\\r\\n\\r\\n| Factor | Weight | Input | SILVER interpretation |\\r\\n| --- | ---: | --- | --- |\\r\\n| F1 US real-yield pressure | 24 | `us_10y_real_yield_d5_bps` | Falling real yields reduce the opportunity cost of holding Silver and score BULLISH; rising real yields score BEARISH. Threshold +/-5bps. |\\r\\n| F2 Broad-dollar direction | 18 | `dxy_d1` | A weaker dollar is mechanically supportive for a USD-priced metal; threshold +/-0.15% on the 24H horizon. |\\r\\n| F3 Fed bias | 10 | `fed_bias` | Dovish BULLISH, hawkish BEARISH, unknown NEUTRAL. |\\r\\n| F4 Silver own-price momentum | 12 | `silver_d1_pct` | Move >= 0.5% on the 24H horizon confirms matching direction; otherwise NEUTRAL. |\\r\\n| F5 Gold/silver ratio direction | 12 | `gold_silver_ratio_d5_pct` | A rising ratio means Silver is underperforming Gold and scores BEARISH; a falling ratio scores BULLISH. Threshold +/-1.0% on 24H. |\\r\\n| F6 Volatility regime | 8 | `vix_level` | Signed the opposite way to Gold. VIX above 28 scores BEARISH because risk-off liquidation pressure falls disproportionately on Silver's industrial and liquidity-sensitive component; VIX below 16 scores BULLISH. |\\r\\n| F7 US economic surprise | 6 | `latest_us_event` | A negative US surprise scores BULLISH; a positive US surprise scores BEARISH. |\\r\\n| F8 Industrial demand regime | 5 | `industrial_demand_regime` | Expanding industrial demand BULLISH, contracting BEARISH. |\\r\\n| F9 Growth/liquidity regime | 4 | `global_growth_regime` | Weak or contracting growth scores BEARISH because it reduces cyclical demand; improving or supportive growth scores BULLISH. |\\r\\n| F10 Supply/event context | 1 | `silver_supply_event` | No verified physical supply or event feed is wired, so this factor is always NEUTRAL and must never be guessed. |\\r\\n\\r\\nThe 24H weights above total 100. Longer horizons shift weight from the fast macro and\\r\\nprice-confirmation factors into the structural F8 and F9 demand blocks:\\r\\n\\r\\n| Factor | 24h | 3d | current_week | next_week | current_month |\\r\\n| --- | ---: | ---: | ---: | ---: | ---: |\\r\\n| F1 | 24 | 22 | 20 | 18 | 16 |\\r\\n| F2 | 18 | 18 | 17 | 16 | 15 |\\r\\n| F3 | 10 | 10 | 10 | 11 | 11 |\\r\\n| F4 | 12 | 12 | 12 | 11 | 10 |\\r\\n| F5 | 12 | 12 | 12 | 12 | 12 |\\r\\n| F6 | 8 | 8 | 8 | 7 | 6 |\\r\\n| F7 | 6 | 6 | 6 | 5 | 4 |\\r\\n| F8 | 5 | 6 | 7 | 9 | 11 |\\r\\n| F9 | 4 | 5 | 7 | 10 | 14 |\\r\\n| F10 | 1 | 1 | 1 | 1 | 1 |\\r\\n| **Total** | **100** | **100** | **100** | **100** | **100** |\\r\\n\\r\\nWeights are hypotheses pending backtesting, not calibrated production parameters.\\r\\n\\r\\n## Why SILVER does not reuse Gold's factors\\r\\n\\r\\nSilver is a USD-priced industrial/precious hybrid rather than a pure monetary safe haven:\\r\\n\\r\\n- F6 is signed inversely to Gold's equivalent risk factor. In a Gold model, high VIX is a\\r\\n  safe-haven bid; for Silver, risk-off liquidation pressure usually dominates.\\r\\n- F9 is signed inversely to Gold's growth factor. Gold gains from defensive demand in a\\r\\n  weakening-growth regime; Silver loses cyclical fabrication demand.\\r\\n- F8 carries real weight (rising to 11 at the one-month horizon) because the industrial leg\\r\\n  is a genuine Silver driver and is near-zero in the Gold weighting.\\r\\n- F5 (gold/silver ratio) has no Gold equivalent; it is Silver's relative-value anchor.\\r\\n\\r\\n## Snapshot Contract\\r\\n\\r\\nA usable snapshot row is the newest shared `market_snapshots` row carrying `snapshot_date` and\\r\\n`run_time_et`. `market_snapshots` is a single shared table: every collector writes the same\\r\\nsuperset, and every Layer 1 agent reads the newest row. Any macro or event field may be null and\\r\\nthen scores NEUTRAL. Missing inputs must be listed explicitly; they must never be fabricated or\\r\\nsilently proxied.\\r\\n\\r\\nA stale snapshot produces no usable call. Weekend presentation suppression is applied by the\\r\\ndashboard writer, not by this agent; the agent always publishes its raw classification so it\\r\\nremains auditable.\\r\\n\\r\\n## Provider and availability status\\r\\n\\r\\n- XAG/USD spot: Coinbase `XAG-USD` spot, the same provider pattern already used for Gold's\\r\\n  `XAU-USD`. The returned shape matches Gold's (`data.amount`).\\r\\n- Gold spot for the ratio: Coinbase `XAU-USD`.\\r\\n- US real yields, US 10Y, US 2Y, broad dollar and VIX: existing approved FRED series\\r\\n  (`DFII10`, `DGS10`, `DGS2`, `DTWEXBGS`, `VIXCLS`) via `$env.FRED_API_KEY`.\\r\\n- Industrial demand: FRED `PCOPPUSDM` (global copper price) and `INDPRO` (US industrial\\r\\n  production), both monthly, compared on a three-period lookback. Both series must agree\\r\\n  before the regime is called expanding or contracting.\\r\\n- Economic events and Fed bias: the existing Finnhub calendar path already used by Gold.\\r\\n- Silver supply/event context: no verified provider exists. `silver_supply_event` stays null.\\r\\n\\r\\n## Output Contract\\r\\n\\r\\nThe workflow emits `agent_name: SILVER`, `layer: 1`, `logic_document: agent_silver_direction.md`,\\r\\nper-timeframe `direction_*`/`conviction_*`/`reason_*` for 24h, 3d, current week, next week and\\r\\ncurrent month, `factor_breakdown`, `weighted_score`, `conviction_model`, `score_*`,\\r\\n`reasoning_summary`, plus `full_output` and `raw_agent_output`. The deterministic gate recomputes\\r\\ndirection and conviction from factor signals; model confidence is never trusted as a score.\\r\\n`NO_CLEAR_BIAS` and `*_LEAN` are valid outputs when evidence is balanced or thin.\\r\\n\";\nreturn [{ json: { content: LOGIC_DOCUMENT, encoding: \"utf8\", source: \"logic/agent_silver_direction.md\" } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        544,
+        0
+      ],
+      "id": "e26a94af-63c1-486b-a2fa-a0347ec9365e",
+      "name": "Get SILVER Logic Document",
+      "webhookId": "7466e72c-3fb1-4bfa-9bed-259ad7321f74"
+    },
+    {
+      "parameters": {
+        "jsCode": "const openAiItem = $input.first().json;\n\nlet text =\n  openAiItem.output?.[0]?.content?.[0]?.text ||\n  openAiItem.text ||\n  openAiItem.message ||\n  '';\n\nif (!text) {\n  throw new Error('No OpenAI text output found');\n}\n\ntext = String(text)\n  .replace(/^```json\\s*/i, '')\n  .replace(/^```\\s*/i, '')\n  .replace(/```$/i, '')\n  .trim();\n\nconst report = JSON.parse(text);\n\nconst marketSnapshot =\n  $('Combine md & market snapshot').first().json.market_snapshot || {};\n\nfunction reasonFor(tf) {\n  return (\n    report[`${tf}_reason`] ||\n    report.reasoning_summary ||\n    ''\n  );\n}\n\nreturn [\n  {\n    json: {\n      snapshot_id: marketSnapshot.snapshot_id || null,\n      agent_name: 'SILVER',\n      layer: 1,\n\n      run_time_et:\n        marketSnapshot.run_time_et ||\n        new Date().toISOString(),\n\n      snapshot_date:\n        marketSnapshot.snapshot_date ||\n        new Date().toISOString().slice(0, 10),\n\n      market_inputs:\n        marketSnapshot.available_inputs || {},\n\n      call_24h_direction: report.direction_24h || null,\n      call_24h_conviction: null,\n      call_24h_reason: reasonFor('24h'),\n\n      call_3d_direction: report.direction_3_day || null,\n      call_3d_conviction: null,\n      call_3d_reason: reasonFor('3d'),\n\n      call_current_week_direction:\n        report.direction_current_week || null,\n      call_current_week_conviction: null,\n      call_current_week_reason:\n        reasonFor('current_week'),\n\n      call_next_week_direction:\n        report.direction_next_week || null,\n      call_next_week_conviction: null,\n      call_next_week_reason:\n        reasonFor('next_week'),\n\n      call_current_month_direction:\n        report.direction_current_month || null,\n      call_current_month_conviction: null,\n      call_current_month_reason:\n        reasonFor('current_month'),\n\n      direction_24h: report.direction_24h || null,\n      conviction_24h: null,\n\n      direction_3_day: report.direction_3_day || null,\n      conviction_3_day: null,\n\n      direction_current_week:\n        report.direction_current_week || null,\n      conviction_current_week: null,\n\n      direction_next_week:\n        report.direction_next_week || null,\n      conviction_next_week: null,\n\n      direction_current_month:\n        report.direction_current_month || null,\n      conviction_current_month: null,\n\n      factor_breakdown:\n        report.factor_breakdown || {},\n\n      warnings:\n        report.risk_flags ||\n        report.warnings ||\n        [],\n\n      full_output: report,\n      raw_agent_output: report,\n\n      logic_document: 'agent_silver_direction.md',\n      logic_document_version:\n        report.logic_document_version ||\n        '1.0_weighted_engine',\n\n      reasoning_summary:\n        report.reasoning_summary || '',\n\n      score_bullish:\n        report.score_bullish ?? null,\n\n      score_bearish:\n        report.score_bearish ?? null,\n\n      score_neutral:\n        report.score_neutral ?? null,\n\n      weighted_score:\n        report.weighted_score || null,\n\n      conviction_model:\n        report.conviction_model || null\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1200,
+        0
+      ],
+      "id": "9b4f9ede-6294-401b-96bb-9cd94b3c42af",
+      "name": "Parse SILVER Agent Output"
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.first().json;\r\nconst inputs = item.market_inputs || {};\r\n\r\nfunction n(v) {\r\n  const x = Number(v);\r\n  return Number.isFinite(x) ? x : null;\r\n}\r\n\r\nfunction makeFactor(signal, evidence, reason) {\r\n  return { signal, evidence, reason };\r\n}\r\n\r\nfunction safeJson(value) {\r\n  try {\r\n    return JSON.stringify(value);\r\n  } catch (error) {\r\n    return String(value || \"\");\r\n  }\r\n}\r\n\r\n// SILVER weight hypotheses. Silver is a USD-priced industrial/precious hybrid,\r\n// so the weighting deliberately differs from Gold: the industrial-demand and\r\n// growth blocks (F8, F9) carry materially more weight than they do for Gold,\r\n// and the risk block (F6) is signed the opposite way (see F6 below).\r\nconst TIMEFRAME_WEIGHTS = {\r\n  \"24h\": { F1: 24, F2: 18, F3: 10, F4: 12, F5: 12, F6: 8, F7: 6, F8: 5, F9: 4, F10: 1 },\r\n  \"3d\": { F1: 22, F2: 18, F3: 10, F4: 12, F5: 12, F6: 8, F7: 6, F8: 6, F9: 5, F10: 1 },\r\n  \"current_week\": { F1: 20, F2: 17, F3: 10, F4: 12, F5: 12, F6: 8, F7: 6, F8: 7, F9: 7, F10: 1 },\r\n  \"next_week\": { F1: 18, F2: 16, F3: 11, F4: 11, F5: 12, F6: 7, F7: 5, F8: 9, F9: 10, F10: 1 },\r\n  \"current_month\": { F1: 16, F2: 15, F3: 11, F4: 10, F5: 12, F6: 6, F7: 4, F8: 11, F9: 14, F10: 1 }\r\n};\r\n\r\nfunction factorSignals(tf) {\r\n  const use20d = tf === \"next_week\" || tf === \"current_month\";\r\n\r\n  const realYieldDelta =\r\n    use20d && n(inputs.us_10y_real_yield_d20_bps) !== null\r\n      ? n(inputs.us_10y_real_yield_d20_bps)\r\n      : n(inputs.us_10y_real_yield_d5_bps);\r\n\r\n  const dxyDelta =\r\n    use20d && n(inputs.dxy_d20) !== null\r\n      ? n(inputs.dxy_d20)\r\n      : tf === \"24h\" && n(inputs.dxy_d1) !== null\r\n        ? n(inputs.dxy_d1)\r\n        : n(inputs.dxy_d5);\r\n\r\n  const silverDelta =\r\n    use20d && n(inputs.silver_d20_pct) !== null\r\n      ? n(inputs.silver_d20_pct)\r\n      : tf === \"24h\" && n(inputs.silver_d1_pct) !== null\r\n        ? n(inputs.silver_d1_pct)\r\n        : n(inputs.silver_d5_pct);\r\n\r\n  const ratioDelta =\r\n    use20d && n(inputs.gold_silver_ratio_d20_pct) !== null\r\n      ? n(inputs.gold_silver_ratio_d20_pct)\r\n      : n(inputs.gold_silver_ratio_d5_pct);\r\n\r\n  const vix = n(inputs.vix_level);\r\n  const fed = String(inputs.fed_bias || \"\").toLowerCase();\r\n  const growth = String(inputs.global_growth_regime || inputs.growth_regime || \"\").toLowerCase();\r\n  const industrial = String(inputs.industrial_demand_regime || \"\").toLowerCase();\r\n  const copper3m = n(inputs.copper_3m_pct);\r\n\r\n  const signals = {};\r\n\r\n  signals.F1 = (() => {\r\n    if (realYieldDelta === null) return makeFactor(\"NEUTRAL\", \"Missing real yield delta\", \"Missing input\");\r\n    if (realYieldDelta <= -5) return makeFactor(\"BULLISH\", `Real yield ${realYieldDelta}bps`, \"Falling real yields reduce the opportunity cost of holding Silver\");\r\n    if (realYieldDelta >= 5) return makeFactor(\"BEARISH\", `Real yield ${realYieldDelta}bps`, \"Rising real yields raise the opportunity cost of holding Silver\");\r\n    return makeFactor(\"NEUTRAL\", `Real yield ${realYieldDelta}bps`, \"Real yield move below threshold\");\r\n  })();\r\n\r\n  signals.F2 = (() => {\r\n    if (dxyDelta === null) return makeFactor(\"NEUTRAL\", \"Missing DXY delta\", \"Missing input\");\r\n    const threshold = tf === \"24h\" ? 0.15 : 0.3;\r\n    if (dxyDelta <= -threshold) return makeFactor(\"BULLISH\", `DXY ${dxyDelta}%`, \"Dollar weakness is mechanically supportive for a USD-priced metal\");\r\n    if (dxyDelta >= threshold) return makeFactor(\"BEARISH\", `DXY ${dxyDelta}%`, \"Dollar strength is mechanically restrictive for a USD-priced metal\");\r\n    return makeFactor(\"NEUTRAL\", `DXY ${dxyDelta}%`, \"DXY move below threshold\");\r\n  })();\r\n\r\n  signals.F3 = (() => {\r\n    if (!fed || fed === \"unknown\") return makeFactor(\"NEUTRAL\", \"Fed bias unknown\", \"Missing input\");\r\n    if (fed.includes(\"dovish\")) return makeFactor(\"BULLISH\", `Fed bias ${fed}`, \"Dovish Fed supports metals through lower real-yield expectations\");\r\n    if (fed.includes(\"hawkish\")) return makeFactor(\"BEARISH\", `Fed bias ${fed}`, \"Hawkish Fed pressures metals through higher real-yield expectations\");\r\n    return makeFactor(\"NEUTRAL\", `Fed bias ${fed}`, \"No clear Fed impulse\");\r\n  })();\r\n\r\n  signals.F4 = (() => {\r\n    if (silverDelta === null) return makeFactor(\"NEUTRAL\", \"Missing Silver delta\", \"Missing input\");\r\n    const threshold = tf === \"24h\" ? 0.5 : 0.8;\r\n    if (silverDelta >= threshold) return makeFactor(\"BULLISH\", `Silver ${silverDelta}%`, \"Silver own-price trend confirms upside pressure\");\r\n    if (silverDelta <= -threshold) return makeFactor(\"BEARISH\", `Silver ${silverDelta}%`, \"Silver own-price trend confirms downside pressure\");\r\n    return makeFactor(\"NEUTRAL\", `Silver ${silverDelta}%`, \"Silver price move below threshold\");\r\n  })();\r\n\r\n  signals.F5 = (() => {\r\n    if (ratioDelta === null) return makeFactor(\"NEUTRAL\", \"Missing gold/silver ratio delta\", \"Missing input\");\r\n    const threshold = tf === \"24h\" ? 1.0 : 2.0;\r\n    if (ratioDelta >= threshold) return makeFactor(\"BEARISH\", `Gold/silver ratio ${ratioDelta}%`, \"A rising ratio means Silver is underperforming Gold\");\r\n    if (ratioDelta <= -threshold) return makeFactor(\"BULLISH\", `Gold/silver ratio ${ratioDelta}%`, \"A falling ratio means Silver is outperforming Gold\");\r\n    return makeFactor(\"NEUTRAL\", `Gold/silver ratio ${ratioDelta}%`, \"Relative move below threshold\");\r\n  })();\n\n  signals.F6 = (() => {\r\n    if (vix === null) return makeFactor(\"NEUTRAL\", \"Missing VIX\", \"Missing input\");\r\n    // Deliberately signed opposite to Gold. Silver carries a large industrial\r\n    // and liquidity-sensitive component, so risk-off liquidation is treated as\r\n    // pressure rather than as a safe-haven bid.\r\n    if (vix > 28) return makeFactor(\"BEARISH\", `VIX ${vix}`, \"Risk-off liquidation pressure typically hits Silver harder than Gold\");\r\n    if (vix < 16) return makeFactor(\"BULLISH\", `VIX ${vix}`, \"Risk-on conditions support Silver's industrial and liquidity-sensitive demand\");\r\n    return makeFactor(\"NEUTRAL\", `VIX ${vix}`, \"Neutral risk regime\");\r\n  })();\r\n\r\n  signals.F7 = (() => {\r\n    const ev = inputs.latest_us_event;\r\n    const text = safeJson(ev).toLowerCase();\r\n    if (!ev || text === \"{}\") return makeFactor(\"NEUTRAL\", \"No recent US event\", \"No confirmed US economic surprise\");\r\n    if (text.includes(\"negative\") || text.includes(\"miss\") || text.includes(\"bearish\")) {\r\n      return makeFactor(\"BULLISH\", safeJson(ev), \"Negative US surprise supports metals through lower yield and Fed repricing risk\");\r\n    }\r\n    if (text.includes(\"positive\") || text.includes(\"beat\") || text.includes(\"bullish\")) {\r\n      return makeFactor(\"BEARISH\", safeJson(ev), \"Positive US surprise pressures metals through higher yield and Fed repricing risk\");\r\n    }\r\n    return makeFactor(\"NEUTRAL\", safeJson(ev), \"No clear Silver signal from latest US event\");\r\n  })();\r\n\r\n  signals.F8 = (() => {\r\n    if (industrial.includes(\"expanding\")) {\r\n      return makeFactor(\"BULLISH\", `Industrial demand ${industrial}`, \"Expanding industrial demand supports Silver's fabrication demand\");\r\n    }\r\n    if (industrial.includes(\"contracting\")) {\r\n      return makeFactor(\"BEARISH\", `Industrial demand ${industrial}`, \"Contracting industrial demand pressures Silver's fabrication demand\");\r\n    }\r\n    if (copper3m !== null && Math.abs(copper3m) > 2) {\r\n      return makeFactor(\"NEUTRAL\", `Copper 3m ${copper3m}%`, \"Metal complex and production series disagree, so industrial demand stays neutral\");\r\n    }\r\n    return makeFactor(\"NEUTRAL\", industrial || \"neutral\", \"No clear industrial demand signal\");\r\n  })();\r\n\r\n  signals.F9 = (() => {\r\n    if (growth.includes(\"weakening\") || growth.includes(\"contraction\")) {\r\n      return makeFactor(\"BEARISH\", growth, \"Weakening growth reduces cyclical Silver demand\");\r\n    }\r\n    if (growth.includes(\"supportive\") || growth.includes(\"expansion\") || growth.includes(\"improving\")) {\r\n      return makeFactor(\"BULLISH\", growth, \"Improving growth supports cyclical Silver demand\");\r\n    }\r\n    return makeFactor(\"NEUTRAL\", growth || \"neutral\", \"No clear growth or liquidity signal\");\r\n  })();\r\n\r\n  signals.F10 = (() => {\r\n    const supply = inputs.silver_supply_event;\r\n    if (supply === null || supply === undefined || supply === \"\" || safeJson(supply) === \"{}\") {\r\n      return makeFactor(\"NEUTRAL\", \"No verified supply/event feed\", \"No verified physical Silver supply or event source is wired\");\r\n    }\r\n    const text = safeJson(supply).toLowerCase();\r\n    if (text.includes(\"constrain\") || text.includes(\"deficit\") || text.includes(\"disrupt\")) {\r\n      return makeFactor(\"BULLISH\", text, \"Constrained supply supports Silver\");\r\n    }\r\n    if (text.includes(\"surplus\") || text.includes(\"oversupply\")) {\r\n      return makeFactor(\"BEARISH\", text, \"Supply surplus pressures Silver\");\r\n    }\r\n    return makeFactor(\"NEUTRAL\", text, \"Supply/event context is not directional\");\r\n  })();\r\n\r\n  return signals;\r\n}\n\nfunction scoreTimeframe(tf) {\r\n  const weights = TIMEFRAME_WEIGHTS[tf];\r\n  const signals = factorSignals(tf);\r\n\r\n  let bullish = 0;\r\n  let bearish = 0;\r\n  let neutral = 0;\r\n  let bullishCount = 0;\r\n  let bearishCount = 0;\r\n  let neutralCount = 0;\r\n\r\n  const factorBreakdown = {};\r\n\r\n  for (const [id, sig] of Object.entries(signals)) {\r\n    const weight = weights[id] || 0;\r\n    factorBreakdown[id] = { ...sig, weight };\r\n\r\n    if (sig.signal === \"BULLISH\") {\r\n      bullish += weight;\r\n      bullishCount++;\r\n    } else if (sig.signal === \"BEARISH\") {\r\n      bearish += weight;\r\n      bearishCount++;\r\n    } else {\r\n      neutral += weight;\r\n      neutralCount++;\r\n    }\r\n  }\r\n\r\n  const active = bullish + bearish;\r\n  const participation = active;\r\n\r\n  const bullishArgument = active > 0 ? Math.round((bullish / active) * 100) : 0;\r\n  const bearishArgument = active > 0 ? Math.round((bearish / active) * 100) : 0;\r\n  const neutralPct = Math.round(neutral);\r\n  const netEdge = bullishArgument - bearishArgument;\r\n\r\n  const baseDirection =\r\n    bullish > bearish ? \"BULLISH\" : bearish > bullish ? \"BEARISH\" : \"NO_CLEAR_BIAS\";\r\n\r\n  const absEdge = Math.abs(netEdge);\r\n  const weightMargin = Math.abs(bullish - bearish);\r\n\r\n  const direction =\r\n    baseDirection === \"NO_CLEAR_BIAS\"\r\n      ? \"NO_CLEAR_BIAS\"\r\n      : active < 50 || weightMargin < 15 || absEdge < 20\r\n        ? `${baseDirection}_LEAN`\r\n        : baseDirection;\r\n\r\n  const winningArgument =\r\n    baseDirection === \"BULLISH\" ? bullishArgument : baseDirection === \"BEARISH\" ? bearishArgument : 0;\r\n\r\n  const participationCap = Math.min(participation, 80);\r\n\r\n  const conviction =\r\n    baseDirection === \"NO_CLEAR_BIAS\"\r\n      ? 0\r\n      : Math.round(winningArgument * (participationCap / 100));\r\n\r\n  const strength =\r\n    absEdge >= 40 && participation >= 70 ? \"VERY_STRONG\" :\r\n    absEdge >= 25 && participation >= 50 ? \"STRONG\" :\r\n    absEdge >= 15 ? \"MODERATE\" :\r\n    \"WEAK\";\r\n\r\n  const reason =\r\n    `${tf} deterministic Silver score: bull case ${bullishArgument}%, bear case ${bearishArgument}%, ` +\r\n    `directional participation ${participation}%, neutral/inactive ${neutralPct}%, net edge ${netEdge > 0 ? \"+\" : \"\"}${netEdge}. ` +\r\n    `Real yields and the dollar remain the highest-priority Silver drivers, with industrial demand weighted above the Gold weighting.`;\r\n\r\n  return {\r\n    direction,\r\n    conviction,\r\n    reason,\r\n    factor_breakdown: factorBreakdown,\r\n    score_bullish: bullishCount,\r\n    score_bearish: bearishCount,\r\n    score_neutral: neutralCount,\r\n    weighted_score: {\r\n      bullish_weight: bullish,\r\n      bearish_weight: bearish,\r\n      neutral_weight: neutral,\r\n      active_weight: active,\r\n      weight_margin: weightMargin\r\n    },\r\n    conviction_model: {\r\n      bull_case: bullishArgument,\r\n      bear_case: bearishArgument,\r\n      winning_side: baseDirection,\r\n      directional_participation: participation,\r\n      net_edge: netEdge,\r\n      final_conviction: conviction,\r\n      verdict_strength: strength,\r\n      final_conviction_logic: reason,\r\n      bullish_argument_pct: bullishArgument,\r\n      bearish_argument_pct: bearishArgument,\r\n      neutral_pct: neutralPct,\r\n      active_participation_pct: participation,\r\n      net_edge_pct: netEdge,\r\n      weighted_edge: Math.abs(netEdge) / 100,\r\n      raw_conviction: conviction,\r\n      base_conviction: conviction,\r\n      participation,\r\n      participation_cap: participationCap,\r\n      conflict_penalty: 0,\r\n      missing_input_penalty: 0,\r\n      agreement_boost: 0\r\n    }\r\n  };\r\n}\r\n\r\nconst r24h = scoreTimeframe(\"24h\");\r\nconst r3d = scoreTimeframe(\"3d\");\r\nconst rWeek = scoreTimeframe(\"current_week\");\r\nconst rNextWeek = scoreTimeframe(\"next_week\");\r\nconst rMonth = scoreTimeframe(\"current_month\");\n\nconst output = {\r\n  ...(item.full_output || {}),\r\n\r\n  asset: \"SILVER\",\r\n  agent_name: \"SILVER\",\r\n  logic_document: \"agent_silver_direction.md\",\r\n  logic_document_version: \"1.0_weighted_engine\",\r\n\r\n  direction_24h: r24h.direction,\r\n  conviction_24h: r24h.conviction,\r\n  reason_24h: r24h.reason,\r\n\r\n  direction_3_day: r3d.direction,\r\n  conviction_3_day: r3d.conviction,\r\n  reason_3_day: r3d.reason,\r\n\r\n  direction_current_week: rWeek.direction,\r\n  conviction_current_week: rWeek.conviction,\r\n  reason_current_week: rWeek.reason,\r\n\r\n  direction_next_week: rNextWeek.direction,\r\n  conviction_next_week: rNextWeek.conviction,\r\n  reason_next_week: rNextWeek.reason,\r\n\r\n  direction_current_month: rMonth.direction,\r\n  conviction_current_month: rMonth.conviction,\r\n  reason_current_month: rMonth.reason,\r\n\r\n  weighted_score: r24h.weighted_score,\r\n  conviction_model: r24h.conviction_model,\r\n  factor_breakdown: r24h.factor_breakdown,\r\n\r\n  timeframe_models: {\r\n    \"24h\": r24h,\r\n    \"3d\": r3d,\r\n    \"current_week\": rWeek,\r\n    \"next_week\": rNextWeek,\r\n    \"current_month\": rMonth\r\n  },\r\n\r\n  score_bullish: r24h.score_bullish,\r\n  score_bearish: r24h.score_bearish,\r\n  score_neutral: r24h.score_neutral,\r\n\r\n  reasoning_summary:\r\n    `SILVER weighted verdicts calculated deterministically by timeframe. ` +\r\n    `24h ${r24h.direction} ${r24h.conviction}%, ` +\r\n    `3d ${r3d.direction} ${r3d.conviction}%, ` +\r\n    `current week ${rWeek.direction} ${rWeek.conviction}%, ` +\r\n    `next week ${rNextWeek.direction} ${rNextWeek.conviction}%, ` +\r\n    `current month ${rMonth.direction} ${rMonth.conviction}%.`\r\n};\r\n\r\nconst { market_inputs, ...safeItem } = item;\r\n\r\ndelete safeItem.non_neutral_count;\r\ndelete safeItem.missing_inputs;\r\ndelete safeItem.timeframe_models;\r\n\r\nreturn [{\r\n  json: {\r\n    ...safeItem,\r\n\r\n    agent_name: \"SILVER\",\r\n    logic_document: \"agent_silver_direction.md\",\r\n    logic_document_version: \"1.0_weighted_engine\",\r\n\r\n    call_24h_direction: output.direction_24h,\r\n    call_24h_conviction: output.conviction_24h,\r\n    call_24h_reason: output.reason_24h,\r\n\r\n    call_3d_direction: output.direction_3_day,\r\n    call_3d_conviction: output.conviction_3_day,\r\n    call_3d_reason: output.reason_3_day,\r\n\r\n    call_current_week_direction: output.direction_current_week,\r\n    call_current_week_conviction: output.conviction_current_week,\r\n    call_current_week_reason: output.reason_current_week,\r\n\r\n    call_next_week_direction: output.direction_next_week,\r\n    call_next_week_conviction: output.conviction_next_week,\r\n    call_next_week_reason: output.reason_next_week,\r\n\r\n    call_current_month_direction: output.direction_current_month,\r\n    call_current_month_conviction: output.conviction_current_month,\r\n    call_current_month_reason: output.reason_current_month,\r\n\r\n    direction_24h: output.direction_24h,\r\n    conviction_24h: output.conviction_24h,\r\n\r\n    direction_3_day: output.direction_3_day,\r\n    conviction_3_day: output.conviction_3_day,\r\n\r\n    direction_current_week: output.direction_current_week,\r\n    conviction_current_week: output.conviction_current_week,\r\n\r\n    direction_next_week: output.direction_next_week,\r\n    conviction_next_week: output.conviction_next_week,\r\n\r\n    direction_current_month: output.direction_current_month,\r\n    conviction_current_month: output.conviction_current_month,\r\n\r\n    factor_breakdown: output.factor_breakdown,\r\n    weighted_score: output.weighted_score,\r\n    conviction_model: output.conviction_model,\r\n\r\n    full_output: output,\r\n    raw_agent_output: output,\r\n\r\n    reasoning_summary: output.reasoning_summary,\r\n    score_bullish: output.score_bullish,\r\n    score_bearish: output.score_bearish,\r\n    score_neutral: output.score_neutral\r\n  }\r\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        832,
+        256
+      ],
+      "id": "ebd77d2b-3445-4bd7-8a75-a1d3c8e5cf61",
+      "name": "Calculate SILVER Conviction"
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "f684a159-1a69-448a-ad14-5d3031d74672",
+      "name": "When Executed by Another Workflow"
+    }
+  ],
+  "connections": {
+    "Supabase Get Many": {
+      "main": [
+        [
+          {
+            "node": "Build SILVER Input Pack",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Parse SILVER Agent Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Combine md & market snapshot": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build SILVER Input Pack": {
+      "main": [
+        [
+          {
+            "node": "Get SILVER Logic Document",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get SILVER Logic Document": {
+      "main": [
+        [
+          {
+            "node": "Combine md & market snapshot",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse SILVER Agent Output": {
+      "main": [
+        [
+          {
+            "node": "Calculate SILVER Conviction",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculate SILVER Conviction": {
+      "main": [
+        [
+          {
+            "node": "Create a row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Supabase Get Many",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "isArchived": false
+}
