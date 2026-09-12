@@ -12,8 +12,8 @@ The agent analyses GBP as an independent Layer 1 asset. It must not produce GBP/
 | Factor | Weight | Input | GBP interpretation |
 | --- | ---: | --- | --- |
 | F1 BoE policy bias | 20 | `boe_bias` | Hawkish bullish, dovish bearish. |
-| F2 UK 2Y yield delta | 16 | `uk_2y_d5_bps` | Rising at least 5 bps bullish; falling at least 5 bps bearish. |
-| F3 US-UK 2Y spread delta | 20 | `us_uk_2y_spread_d5_bps` | Narrowing at least 5 bps bullish; widening at least 5 bps bearish. |
+| F2 UK gilt yield impulse | 16 | `uk_5y_d5_bps` | Rising at least 5 bps bullish; falling at least 5 bps bearish. |
+| F3 US-UK relative rate impulse | 20 | `us_uk_10y_spread_d5_bps` | Narrowing at least 5 bps bullish; widening at least 5 bps bearish. |
 | F4 UK economic surprise | 12 | `latest_uk_event` | Positive surprise bullish; negative surprise bearish. |
 | F5 UK PMI trend | 8 | `uk_composite_pmi`, `uk_composite_pmi_direction` | Above 50 and improving bullish; below 50 or deteriorating bearish. |
 | F6 GBP own-price delta | 10 | `gbpusd_d1_pct` | Move of at least 0.2% confirms the matching direction. |
@@ -132,3 +132,30 @@ Added by the DeepSeek/Cline GBP workstream. The factor table, weights, Version a
 - **`countryCode=UK` is required**: the provider returns zero events for `GB` (verified live 2026-09-12). It reports `currencyCode` as `GBP`.
 - `Layer 2 Trade Selection Agent` now publishes `GBP/USD` (alongside `EUR/USD`, `XAU/USD`, `BTC/USD`, `NQ/USD`, `WTI/USD`, `XAG/USD`) and `Dashboard Writer - Layer 1` includes `GBP` in its asset list.
 - The deterministic gate remains the only conviction source. Weights above are unchanged and remain provisional hypotheses pending historical replay.
+
+### Provider substitution for the unavailable FRED UK 2Y series (2026-09-12)
+
+FRED has no UK 2-year series, so F2 and F3 previously scored NEUTRAL (36 of 100 weight permanently inactive). The operator authorised sourcing the UK leg from a provider the platform already uses. Every historically-used provider was audited:
+
+| Provider | Already used for | UK 2Y available? |
+| --- | --- | --- |
+| FRED | rates, VIX, broad dollar | **No UK 2Y series exists** (verified via the FRED series-search API) |
+| Bundesbank REST | Germany 2Y | Germany only |
+| Twelve Data | price backfill (inactive "Price fetch old") | **No** - bond yields are not on the platform's `basic` plan (`GB2Y`/`US2Y`/`GB10Y` rejected; only US corporate bonds listed) |
+| RapidAPI `economic-calendar-api` | economic calendar | Calendar only |
+| Finnhub | calendar | Calendar only (and not entitlement-covered) |
+| Alpha Vantage / Coinbase / CoinGecko / Farside / alternative.me | prices, crypto, flows | Not rate providers |
+
+**Adopted workaround - Bank of England IADB** (`bankofengland.co.uk/boeapps/iadb`): the UK's national central bank and the direct analogue of the Bundesbank REST pattern already used live for Germany 2Y. Free, no credential, daily, and returns `application/csv`:
+
+- `IUDSNPY` -> `uk_5y_yield`, `uk_5y_d5_bps` (F2)
+- `IUDMNPY` -> `uk_10y_yield`, `uk_10y_d5_bps` (context, daily; replaces the lagging monthly FRED UK 10Y)
+- `IUDBEDR` -> `uk_bank_rate` (context; BoE policy rate)
+
+F3 is now a **maturity-matched** US-UK spread: FRED `DGS10` minus BoE `IUDMNPY`, both daily -> `us_uk_10y_spread_d5_bps`. FRED `IR3TIB01GBM156N` (UK 3-month interbank) is also read as `uk_3m_interbank` context - real UK data FRED already held but the platform was not using.
+
+Weights are unchanged (F2 = 16, F3 = 20, total still 100). This is an **input-availability substitution, not a performance change**, and no accuracy improvement is claimed. Result: **98 of 100 weight is now collectable**; only F10 (`uk_stress_flag`, weight 2) remains unavailable.
+
+### Runtime defect found and fixed (2026-09-12)
+
+The first deployment funnelled all provider responses directly into the input-pack Code node. n8n executes such a node **once per incoming connection**, and `$('<node>')` references only resolved for the triggering branch, so the pack silently produced null inputs (only GBP/USD ever populated). Fixed by funnelling every provider through a single **Merge** node (`mode: append`) so the pack executes exactly once with every response already resolved, plus `executeOnce: true` on the pack and `onError: continueRegularOutput` on every provider node. Verified live: missing inputs fell from 11 to 2, and the UK calendar window was widened from future-only to the trailing 30 days plus 7 forward so events carry `actual` values.
