@@ -35,6 +35,13 @@ const EUR_LAYER2_PAIRS = Object.freeze(
   }))
 );
 
+// Active workstream scope: the six EUR crosses that are not EUR/USD.
+// EUR/USD stays in EUR_LAYER2_PAIRS only as the byte-parity reference for the
+// live USD-quoted behaviour.
+const EUR_CROSS_PAIRS = Object.freeze(
+  EUR_LAYER2_PAIRS.filter((pair) => pair.pairCode !== "EUR_USD")
+);
+
 function toNumber(value) {
   if (value === null || value === undefined || value === "") return null;
   const numeric = Number(value);
@@ -145,6 +152,7 @@ module.exports = {
   LOW_CONVICTION_THRESHOLD,
   DASHBOARD_SOURCE,
   EUR_LAYER2_PAIRS,
+  EUR_CROSS_PAIRS,
   normalizeDirection,
   clampConviction,
   buildLayer2PairOpportunity,

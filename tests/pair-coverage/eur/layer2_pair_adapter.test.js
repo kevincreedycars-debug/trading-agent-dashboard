@@ -3,6 +3,7 @@ const assert = require("node:assert/strict");
 const {
   LOW_CONVICTION_THRESHOLD,
   EUR_LAYER2_PAIRS,
+  EUR_CROSS_PAIRS,
   normalizeDirection,
   clampConviction,
   buildLayer2PairDashboard
@@ -140,6 +141,58 @@ test("clamps conviction to integer 0-100 and preserves null", () => {
   assert.equal(clampConviction("68"), 68);
   assert.equal(clampConviction(null), null);
   assert.equal(clampConviction(""), null);
+});
+
+test("covers the six non-EUR/USD EUR crosses as the active scope", () => {
+  assert.deepEqual(
+    EUR_CROSS_PAIRS.map((pair) => [pair.pairLabel ?? pair.instrument, pair.base, pair.quote]),
+    [
+      ["EUR/GBP", "EUR", "GBP"],
+      ["XAU/EUR", "GOLD", "EUR"],
+      ["XAG/EUR", "SILVER", "EUR"],
+      ["WTI/EUR", "WTI", "EUR"],
+      ["NQ/EUR", "NQ", "EUR"],
+      ["BTC/EUR", "BTC", "EUR"]
+    ]
+  );
+  assert.equal(
+    EUR_CROSS_PAIRS.some((pair) => pair.pairCode === "EUR_USD"),
+    false
+  );
+
+  // EUR is BULLISH (default), so a EUR-quoted cross needs a BEARISH base and the
+  // EUR-based cross needs a BEARISH quote for all six to produce a decision.
+  const dashboard = buildLayer2PairDashboard({
+    pairs: EUR_CROSS_PAIRS,
+    calls: layer2Calls({
+      GBP: layer2Call("BEARISH", 68),
+      GOLD: layer2Call("BEARISH", 80),
+      SILVER: layer2Call("BEARISH", 66),
+      WTI: layer2Call("BEARISH", 64),
+      NQ: layer2Call("BEARISH", 70),
+      BTC: layer2Call("BEARISH", 75)
+    }),
+    generatedAt: "2026-09-12T10:00:00Z"
+  });
+
+  // GOLD 80+EUR 72 -> 76 SELL | BTC 75+72 -> 74 SELL | NQ 70+72 -> 71 SELL
+  // EUR 72+GBP 68 -> 70 BUY | SILVER 66+72 -> 69 SELL | WTI 64+72 -> 68 SELL
+  assert.deepEqual(
+    dashboard.trade_opportunities.map((item) => [item.instrument, item.direction, item.confidence]),
+    [
+      ["XAU/EUR", "SELL", 76],
+      ["BTC/EUR", "SELL", 74],
+      ["NQ/EUR", "SELL", 71],
+      ["EUR/GBP", "BUY", 70],
+      ["XAG/EUR", "SELL", 69],
+      ["WTI/EUR", "SELL", 68]
+    ]
+  );
+  assert.deepEqual(dashboard.avoid_today, []);
+  assert.equal(
+    dashboard.trade_opportunities[0].reason,
+    "EUR is independently bullish while GOLD is independently bearish during today's session."
+  );
 });
 
 test("covers all seven EUR inventory pairs and blocks legs that are absent", () => {

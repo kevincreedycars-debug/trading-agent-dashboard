@@ -4,6 +4,17 @@ Assigned 2026-09-07. Implementation is isolated under `pair-coverage/eur/` and
 `tests/pair-coverage/eur/`. It does not publish dashboard state or modify shared
 Layer 2/backtesting code.
 
+## Scope (2026-09-12)
+
+Remaining focus is the **six EUR pairs that are not EUR/USD**: EUR/GBP, XAU/EUR,
+XAG/EUR, WTI/EUR, NQ/EUR and BTC/EUR. EUR/USD is already live and is retained only
+as the byte-parity reference so the generalized Layer 2 cannot regress it.
+
+The four live USD pairs produced no calls on the committed refresh because
+**2026-09-12 is a Saturday**: `marketOpenForDate()` in `script.js` suppresses every
+non-BTC asset at weekends (`script.js:1733`, weekday lists `script.js:71`). That is
+expected market-closed behaviour, not a Layer 1 defect.
+
 ## Intended files
 
 The implementation will add:
@@ -109,16 +120,13 @@ configuration entry is not the mechanism.
 
 ### Process, in order
 
-1. **Restore Layer 1 health first.** The committed `data/layer2.json` currently
-   reports "Missing 24H conviction from one or both Layer 1 assets." for all four
-   live pairs, so even USD pairs are not producing a call. Known causes are recorded
-   in `workflows/eur_layer1_agent.md` (object-vs-string parser) and
-   `workflows/master_orchestrator.md` (Eco Events duplicate insert).
+1. **No Layer 1 work is needed for EUR/USD, XAU/EUR, NQ/EUR or BTC/EUR** — both
+   legs already run live. XAU/EUR, NQ/EUR and BTC/EUR are usable as soon as the
+   Layer 2 generalization lands and their price evidence is recorded.
 2. **Land the missing Layer 1 legs** for GBP (peer GBP worktree) and Silver/WTI
-   (peer asset worktrees). No EUR-cross L1 work is required for EUR/USD, XAU/EUR,
-   NQ/EUR or BTC/EUR — those legs already run.
+   (peer asset worktrees); those block EUR/GBP, XAG/EUR and WTI/EUR only.
 3. **Generalize the shared Layer 2** at the three locations above, keeping USD as
-   the backward-compatible default so existing USD pairs are byte-identical.
+   the backward-compatible default so EUR/USD stays byte-identical.
 4. **Add quote-row Supabase nodes** (`Get latest GBP/SILVER/WTI rows`) as those
    Layer 1 agents go live, and expand the code node's `assets`/`pairs` lists.
 5. **Supply per-pair evidence** (direct feed identity or documented synchronized
@@ -139,7 +147,8 @@ no I/O and is the drop-in Codex can lift into the shared producer.
 
 Command: `node --test tests/pair-coverage/eur/*.test.js` (quote the glob in PowerShell).
 
-Result: 15/15 passed on 2026-09-12 (8 contract tests + 7 Layer 2 producer tests).
+Result: 16/16 passed on 2026-09-12 (8 contract tests + 8 Layer 2 producer tests,
+including six-cross scope coverage).
 JavaScript syntax checks and editor diagnostics also report no errors. The quoted
 glob is required in PowerShell; an unquoted `*.test.js` is passed through literally
 and can report a spurious non-zero exit while truncating pipes.
