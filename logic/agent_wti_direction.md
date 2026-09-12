@@ -28,6 +28,9 @@ Weights are provisional hypotheses and sum to 100. Missing inputs are neutral an
 
 Required identity fields are `asset: "WTI"`, `snapshot_date`, `run_time_et`, and `wti_price`. Price is the FRED `DCOILWTICO` daily Cushing spot series, in USD per barrel. Context series use FRED `DTWEXBGS` as a broad-dollar proxy, `VIXCLS` for VIX, `SP500` for equity context, and `DGS2` for the US 2Y yield. Delta fields are percent changes or basis-point changes versus valid prior observations.
 
+The live workflow reads those series inside the sealed agent immediately before scoring, because the shared `market_snapshots` table has no WTI columns. The resulting input values are recorded in the agent's own `full_output` so the call remains reproducible. An offline collector draft exists in `workflows/wti_collector.md` and stays unimported until the market_snapshots schema carries WTI columns; if that column set is added, the collector becomes the snapshot source and the agent should read the snapshot instead.
+
+
 The 24H output contains `asset`, `agent_name: "WTI"`, `layer: 1`, `logic_document`, `logic_document_version`, `direction_24h`, `conviction_24h`, `call_24h_direction`, `call_24h_conviction`, `call_24h_reason`, `factor_breakdown`, `weighted_score`, `conviction_model`, `timeframe_models`, `score_bullish`, `score_bearish`, `score_neutral`, `non_neutral_count`, `missing_inputs`, `warnings`, `risk_flags`, `reasoning_summary`, `full_output` and `raw_agent_output`. No usable snapshot means no output row.
 
 This field set matches the shared Layer 1 contract used by the other live asset agents so the Layer 2 trade selection agent and the Dashboard Writer can consume a WTI row without WTI-specific code.
@@ -55,4 +58,4 @@ The model returns factor signals only and must never calculate conviction; the d
 
 ## Isolation and Validation
 
-The agent reads only this logic document and the latest usable WTI `market_snapshots` row. It must not read Layer 1 outputs, Layer 2 outputs, dashboards, pair engines, or backtester verdicts. The workflow exports are inactive drafts. Contract tests validate synthetic shape and deterministic behavior only; they do not validate live providers, n8n execution, historical replay, predictive edge, or activation readiness.
+The agent reads only this logic document and its own WTI inputs. It must not read Layer 1 outputs, Layer 2 outputs, dashboards, pair engines, or backtester verdicts. The live workflow is active and writes only `agent_outputs` rows for WTI; the collector draft in `workflows/wti_collector.md` is inactive and not imported. Contract tests validate synthetic shape, insert safety and deterministic behaviour only; they do not validate historical replay, predictive edge, provider release timing or trading readiness. Weights remain provisional hypotheses.
