@@ -301,6 +301,67 @@ Still produced by other windows: `WTI_USD` and `GBP_USD` remain `liveEligibility
 Pair Analysis configs even though both pairs are live in Layer 2, unlike `XAG_USD` which was promoted to
 `READY` here. Their owners should align those two flags.
 
+## Final verification (2026-09-12, live site)
+
+Real Chromium checks against the published GitHub Pages dashboard:
+
+```
+Live Agents metric: 8 / 8
+
+USD     OK     BULLISH 37%
+EUR     OK     BULLISH 81%
+GOLD    OK     BEARISH LEAN 62%
+SILVER  OK     BEARISH LEAN 51%
+NQ      OK     BULLISH 36%
+BTC     OK     BEARISH LEAN 47%
+WTI     OK     BULLISH 75%
+GBP     OK     BEARISH LEAN 32%
+
+layer2 panel: all seven pairs present, including XAG/USD
+XAG/USD card: NO TRADE - L2L Not Tradable / Directional Not Viable - Market closed
+```
+
+The SILVER detail view renders the full call: `BEARISH LEAN 51%`, strength `MODERATE`, the executive
+summary, the active drivers (`F8 Industrial demand expanding` bullish, `F1 Real yield 10bps` bearish),
+the collapsed neutral set, and diagnostics including `Critical inputs missing: F5` and
+`Low 24H participation: only 29% of weighted evidence`.
+
+`2026-09-12` is a **Saturday**, so `Market closed` on the non-BTC pairs and the single `BTC/USD` SELL
+opportunity are both correct: BTC is the only 24/7 asset, and the weekday-active calendar suppresses the
+rest until Monday. SILVER still publishes a raw verdict so the call remains auditable, and its
+`expires_at` correctly spans the weekend (`2026-09-15T04:00:00Z`).
+
+### Layer 2 fan-in fix confirmed working
+
+Before the fix, every Layer 2 pair resolved to `Missing 24H conviction from one or both Layer 1 assets`
+and `trade_opportunities` was always empty. After moving the eight agent reads onto one append-merge
+chain, the published `data/layer2.json` reads:
+
+```json
+"trade_opportunities": [
+  { "instrument": "BTC/USD", "direction": "SELL", "confidence": 63, "rank": 1, ... }
+],
+"avoid_today": [
+  { "instrument": "XAU/USD", "reason": "Mixed or low conviction 24H signals." },
+  { "instrument": "XAG/USD", "reason": "Mixed or low conviction 24H signals." },
+  { "instrument": "GBP/USD", "reason": "Mixed or low conviction 24H signals." }
+]
+```
+
+Avoid reasons are now accurate rather than a missing-data artefact, and XAG/USD is correctly held back
+because SILVER's own 24H conviction is 24, below the 60 threshold.
+
+### Pre-existing items left alone
+
+- `data/half-l2l-reach-research.json` is referenced by `script.js` but is not published. It is a 34.5 MB
+  research artefact, so it was deliberately not added to the repository. 21 of 22 referenced dashboard
+  data files are present; this is the only 404.
+- The four Supabase `research_*` views return 500 for the anonymous key on some loads. Unrelated to
+  SILVER and not introduced here.
+- The `market_snapshots` silver columns still require the migration, because no credential in the store
+  can run DDL.
+
+
 
 
 
