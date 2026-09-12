@@ -2,6 +2,38 @@
 
 Prepared 2026-09-12 by the EUR pair-coverage workstream.
 
+**STATUS: APPLIED 2026-09-12** (user-authorised). Gates 1 and 3 are resolved for
+the shared/dashboard code; the n8n producer upgrade remains a pending live-system
+step. See `DEEPSEEK_EUR_PAIRS_PROGRESS.md` for the current status table.
+
+## What was applied
+
+- `backtester/lib/layer2_pair_logic.js`: `quoteDirection` / `quoteConfidence` /
+  `quoteLabel` supported; `usdDirection` / `usdConfidence` kept as aliases;
+  `reasonKey` values unchanged.
+- `script.js`: explicit `quoteAssetCode` on every EUR cross and on the READY USD
+  pairs; `deriveLiveLayer2Dashboard()` resolves the quote per pair; quote-aware
+  reference-unavailable and reason strings.
+- `pairTradeResearchConfigs`: `XAU/EUR`, `NQ/EUR`, `BTC/EUR` flipped to `READY`
+  (both legs already live). `EUR/GBP`, `XAG/EUR`, `WTI/EUR` stay `ONBOARDING`.
+- Verified by `tests/pair-coverage/eur/shared_layer2_and_wiring.test.js` plus the
+  pre-existing `backtester/tests/layer2_pair_logic.test.js`.
+
+## Still pending
+
+- n8n producer activation: import `pair-coverage/eur/exports/eur_pair_layer2_agent.json`,
+  bind Supabase/GitHub credentials, add `Get latest GBP/SILVER/WTI rows` when those
+  Layer 1 agents exist.
+- Per-pair price evidence; then flip the remaining three labels.
+- `data/layer2.json` is unchanged (dashboard re-derives live pairs from
+  `data/layer1.json`, so the board is already correct without it).
+
+---
+
+# Original proposal (kept for review history)
+
+Prepared 2026-09-12 by the EUR pair-coverage workstream.
+
 **Answer to "can the Signal Board show the EUR pair calls now?" — no, not yet.**
 Everything in `pair-coverage/eur/**` is an isolated, tested draft. Nothing is
 published, and three gates currently hide the six crosses. This file lists the

@@ -109,33 +109,37 @@ below, which are owned by Codex/coordinator and the peer asset workstreams.
 
 ### The missing system: quote-agnostic Layer 2
 
-Three USD-hardwired locations must be generalized before any EUR cross can run:
+Three USD-hardwired locations had to be generalized. The two shared-code points are
+now integrated (2026-09-12); the n8n producer is still pending activation.
 
-1. `backtester/lib/layer2_pair_logic.js` — `usdDirection` / `usdConfidence` inputs
-   and the "USD is..." wording (Codex-owned; propose, do not edit here).
-2. The Layer 2 n8n code node — `const usd = calls.USD` and the literal `USD` in
-   the generated reasons.
-3. `script.js` `deriveLiveLayer2Dashboard()` — the `agent === "USD"` lookup and the
-   `while USD is independently ...` reason at the pair loop.
+1. `backtester/lib/layer2_pair_logic.js` — **DONE.** `quoteDirection` /
+   `quoteConfidence` / `quoteLabel` are supported; `usdDirection` / `usdConfidence`
+   remain working aliases and `reasonKey` values are unchanged, so existing USD
+   callers and tests are unaffected.
+2. The Layer 2 n8n code node — **PENDING.** `const usd = calls.USD` and the literal
+   `USD` reasons are replaced by `pair-coverage/eur/exports/eur_pair_layer2_agent.json`,
+   which still needs import and credential binding.
+3. `script.js` `deriveLiveLayer2Dashboard()` — **DONE.** The single global USD agent
+   lookup is gone; each config resolves its own `quoteAssetCode`.
 
-`pairTradeResearchConfigs` already lists the EUR pairs as `ONBOARDING`; the
-configuration entry is not the mechanism.
+`pairTradeResearchConfigs` now carries an explicit `quoteAssetCode` per pair, and
+`XAU/EUR`, `NQ/EUR` and `BTC/EUR` are `READY` because both of their Layer 1 legs
+already run. `EUR/GBP`, `XAG/EUR` and `WTI/EUR` intentionally stay `ONBOARDING`
+until the GBP/SILVER/WTI Layer 1 agents exist — flipping them would render empty
+"missing conviction" rows rather than real coverage.
 
 ### Process, in order
 
-1. **No Layer 1 work is needed for EUR/USD, XAU/EUR, NQ/EUR or BTC/EUR** — both
-   legs already run live. XAU/EUR, NQ/EUR and BTC/EUR are usable as soon as the
-   Layer 2 generalization lands and their price evidence is recorded.
-2. **Land the missing Layer 1 legs** for GBP (peer GBP worktree) and Silver/WTI
-   (peer asset worktrees); those block EUR/GBP, XAG/EUR and WTI/EUR only.
-3. **Generalize the shared Layer 2** at the three locations above, keeping USD as
-   the backward-compatible default so EUR/USD stays byte-identical.
-4. **Add quote-row Supabase nodes** (`Get latest GBP/SILVER/WTI rows`) as those
-   Layer 1 agents go live, and expand the code node's `assets`/`pairs` lists.
-5. **Supply per-pair evidence** (direct feed identity or documented synchronized
-   legs) before any onboarding label changes.
-6. **Activate** through n8n/operator + Codex merge. This is a separate integration
-   step; it is not performed from this worktree.
+1. **No Layer 1 work was needed for EUR/USD, XAU/EUR, NQ/EUR or BTC/EUR** — both
+   legs already run live.
+2. **Missing Layer 1 legs still block three pairs:** GBP (peer GBP worktree) blocks
+   EUR/GBP; SILVER and WTI (peer asset worktrees) block XAG/EUR and WTI/EUR.
+3. **Shared Layer 2 generalization — done.** USD behaviour is unchanged and is
+   re-verified by test.
+4. **Pending:** add quote-row Supabase nodes (`Get latest GBP/SILVER/WTI rows`) as
+   those Layer 1 agents go live, and activate the generalized n8n producer.
+5. **Pending:** record per-pair price evidence before flipping the remaining labels.
+6. **n8n activation** is a live-system step and has not been performed.
 
 ### Delivered today: quote-agnostic Layer 2 producer draft
 
@@ -171,9 +175,16 @@ Historical/backtesting validation still required:
 
 - No replay or outcome evaluation has been run for any EUR cross.
 
-Activation/integration not performed:
+Activation performed / not performed:
 
-- No onboarding label changed, no workflow activated, no `data/layer2.json` write.
+- **Performed:** shared Layer 2 generalized; `quoteAssetCode` added to the pair
+  configs; `XAU/EUR`, `NQ/EUR` and `BTC/EUR` flipped to `READY`. The board now
+  derives these from `data/layer1.json` through the shared module.
+- **Not performed:** n8n workflow activation, credential binding, and any
+  `data/layer2.json` write. The published file still lists USD-quoted pairs only;
+  the dashboard re-derives live pairs from `data/layer1.json`, so the board updates
+  without it.
+- **Remaining ONBOARDING by design:** EUR/GBP, XAG/EUR, WTI/EUR.
 
 ## Source and availability matrix
 
@@ -200,8 +211,12 @@ Activation/integration not performed:
 
 Command: `node --test tests/pair-coverage/eur/*.test.js` (quote the glob in PowerShell).
 
-Result: 36/36 passed on 2026-09-12 (contract, producer, session, adapter, dashboard
-view and workflow-draft suites across the six non-EUR/USD crosses).
+Result: 42/42 passed on 2026-09-12 (contract, producer, session, adapter, dashboard
+view, workflow-draft and shared-integration/wiring suites across the six
+non-EUR/USD crosses). The full local suite (`npm test`) passes apart from a
+pre-existing, unrelated `backtester/tests/secret_scanner.test.js` failure caused by
+PowerShell `Format-Table -AutoSize` truncating under a non-interactive host width —
+confirmed failing on a clean checkout at `e930e1f` before any integration edit.
 JavaScript syntax checks and editor diagnostics also report no errors. The quoted
 glob is required in PowerShell; an unquoted `*.test.js` is passed through literally
 and can report a spurious non-zero exit while truncating pipes.

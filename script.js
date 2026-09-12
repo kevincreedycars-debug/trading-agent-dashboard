@@ -84,6 +84,7 @@ const pairTradeResearchConfigs = [
     pairCode: "EUR_USD",
     pairLabel: "EUR/USD",
     weekdayKeys: weekdayBreakdownColumnsByAsset.EUR,
+    quoteAssetCode: "USD",
     liveEligibility: "READY"
   },
   {
@@ -99,6 +100,7 @@ const pairTradeResearchConfigs = [
     pairCode: "EUR_GBP",
     pairLabel: "EUR/GBP",
     weekdayKeys: weekdayBreakdownColumnsByAsset.EUR,
+    quoteAssetCode: "GBP",
     liveEligibility: "ONBOARDING",
     onboardingReason: "Cross-quote Layer 1 and historical replay onboarding in progress."
   },
@@ -107,6 +109,7 @@ const pairTradeResearchConfigs = [
     pairCode: "XAU_USD",
     pairLabel: "XAU/USD",
     weekdayKeys: weekdayBreakdownColumnsByAsset.GOLD,
+    quoteAssetCode: "USD",
     liveEligibility: "READY"
   },
   {
@@ -114,8 +117,8 @@ const pairTradeResearchConfigs = [
     pairCode: "XAU_EUR",
     pairLabel: "XAU/EUR",
     weekdayKeys: weekdayBreakdownColumnsByAsset.GOLD,
-    liveEligibility: "ONBOARDING",
-    onboardingReason: "Cross-quote Layer 1 and historical replay onboarding in progress."
+    quoteAssetCode: "EUR",
+    liveEligibility: "READY"
   },
   {
     targetAssetCode: "GOLD",
@@ -138,6 +141,7 @@ const pairTradeResearchConfigs = [
     pairCode: "XAG_EUR",
     pairLabel: "XAG/EUR",
     weekdayKeys: weekdayBreakdownColumnsByAsset.SILVER,
+    quoteAssetCode: "EUR",
     liveEligibility: "ONBOARDING",
     onboardingReason: "Cross-quote Layer 1 and historical replay onboarding in progress."
   },
@@ -162,6 +166,7 @@ const pairTradeResearchConfigs = [
     pairCode: "WTI_EUR",
     pairLabel: "WTI/EUR",
     weekdayKeys: weekdayBreakdownColumnsByAsset.WTI,
+    quoteAssetCode: "EUR",
     liveEligibility: "ONBOARDING",
     onboardingReason: "Cross-quote Layer 1 and historical replay onboarding in progress."
   },
@@ -178,6 +183,7 @@ const pairTradeResearchConfigs = [
     pairCode: "NQ_USD",
     pairLabel: "NQ/USD",
     weekdayKeys: weekdayBreakdownColumnsByAsset.NQ,
+    quoteAssetCode: "USD",
     liveEligibility: "READY"
   },
   {
@@ -185,8 +191,8 @@ const pairTradeResearchConfigs = [
     pairCode: "NQ_EUR",
     pairLabel: "NQ/EUR",
     weekdayKeys: weekdayBreakdownColumnsByAsset.NQ,
-    liveEligibility: "ONBOARDING",
-    onboardingReason: "Cross-quote Layer 1 and historical replay onboarding in progress."
+    quoteAssetCode: "EUR",
+    liveEligibility: "READY"
   },
   {
     targetAssetCode: "NQ",
@@ -201,6 +207,7 @@ const pairTradeResearchConfigs = [
     pairCode: "BTC_USD",
     pairLabel: "BTC/USD",
     weekdayKeys: weekdayBreakdownColumnsByAsset.BTC,
+    quoteAssetCode: "USD",
     liveEligibility: "READY"
   },
   {
@@ -208,8 +215,8 @@ const pairTradeResearchConfigs = [
     pairCode: "BTC_EUR",
     pairLabel: "BTC/EUR",
     weekdayKeys: weekdayBreakdownColumnsByAsset.BTC,
-    liveEligibility: "ONBOARDING",
-    onboardingReason: "Cross-quote Layer 1 and historical replay onboarding in progress."
+    quoteAssetCode: "EUR",
+    liveEligibility: "READY"
   },
   {
     targetAssetCode: "BTC",
@@ -2394,7 +2401,7 @@ function buildOverviewLayer2SummaryRows() {
       state: avoided?.marketStatus === "CLOSED"
         ? "Market closed"
         : avoided?.marketStatus === "REFERENCE_UNAVAILABLE"
-          ? "USD reference unavailable"
+          ? `${config.quoteAssetCode || "USD"} reference unavailable`
           : avoided?.reason ? compactOverviewStateLabel(String(avoided.reason)) : "No setup",
       onboarding: false,
       marketClosed: avoided?.marketStatus === "CLOSED",
@@ -2426,7 +2433,7 @@ function renderOverviewSignalBoard() {
       : row.marketClosed
         ? "Market closed - no trade permitted"
         : row.referenceUnavailable
-          ? "Crypto market open - USD reference call unavailable"
+          ? "Crypto market open - quote reference call unavailable"
         : row.signal === "NO TRADE" ? "No trade filter active" : "Trade setup candidate"
   }));
 
@@ -6145,7 +6152,6 @@ function deriveLiveLayer2Dashboard() {
     };
   }
 
-  const usdAgent = layer1Data.agents.find((agent) => agent?.agent === "USD") || null;
   const opportunities = [];
   const avoided = [];
 
@@ -6171,28 +6177,31 @@ function deriveLiveLayer2Dashboard() {
       return;
     }
 
+    const quoteAssetCode = config.quoteAssetCode || "USD";
     const targetAgent = layer1Data.agents.find((agent) => agent?.agent === config.targetAssetCode) || null;
+    const quoteAgent = layer1Data.agents.find((agent) => agent?.agent === quoteAssetCode) || null;
     const targetCall = getCall(targetAgent, "24h");
-    const usdCall = getCall(usdAgent, "24h");
-    if (!hasUsableDirection(usdCall)) {
+    const quoteCall = getCall(quoteAgent, "24h");
+    if (!hasUsableDirection(quoteCall)) {
       avoided.push({
         pairCode: config.pairCode,
         instrument: config.pairLabel,
-        reason: "USD reference call is unavailable while its market is closed.",
+        reason: `${quoteAssetCode} reference call is unavailable while its market is closed.`,
         marketStatus: "REFERENCE_UNAVAILABLE"
       });
       return;
     }
     const targetDirection = layer2PairLogicLib.normalizeDirectionalSignalKey(targetCall?.direction);
-    const usdDirection = layer2PairLogicLib.normalizeDirectionalSignalKey(usdCall?.direction);
+    const quoteDirection = layer2PairLogicLib.normalizeDirectionalSignalKey(quoteCall?.direction);
     const targetConfidence = confidenceValue(targetCall, targetAgent, "24h");
-    const usdConfidence = confidenceValue(usdCall, usdAgent, "24h");
+    const quoteConfidence = confidenceValue(quoteCall, quoteAgent, "24h");
     const pairSignal = layer2PairLogicLib.deriveLayer2PairSignal({
       instrument: config.pairLabel,
       targetDirection,
-      usdDirection,
+      quoteDirection,
+      quoteLabel: quoteAssetCode,
       targetConfidence,
-      usdConfidence
+      quoteConfidence
     });
 
     if (pairSignal.tradable) {
@@ -6202,7 +6211,7 @@ function deriveLiveLayer2Dashboard() {
         direction: pairSignal.direction,
         confidence: pairSignal.combinedConfidence,
         strengthBucket: pairSignal.strengthBucket,
-        reason: `${config.targetAssetCode} is independently ${targetDirection.toLowerCase()} while USD is independently ${usdDirection.toLowerCase()} during today's session.`
+        reason: `${config.targetAssetCode} is independently ${targetDirection.toLowerCase()} while ${quoteAssetCode} is independently ${quoteDirection.toLowerCase()} during today's session.`
       });
       return;
     }
@@ -6250,7 +6259,7 @@ function renderLayer2(data = {}) {
         <p class="eyebrow">Pair Analysis</p>
         <h3>Layer 2 Trade Selection</h3>
       </div>
-      <p class="summary">Layer 2 derives live pair trades from 24H Layer 1 headline confidence and direction state. Tradable pairs require opposite directional target/USD signals, and combined confidence is always the lower Layer 1 confidence.</p>
+      <p class="summary">Layer 2 derives live pair trades from 24H Layer 1 headline confidence and direction state. Tradable pairs require opposite directional target/quote signals, and combined confidence is always the lower Layer 1 confidence.</p>
     </div>
     <div class="trade-grid">
       ${opportunities.length
