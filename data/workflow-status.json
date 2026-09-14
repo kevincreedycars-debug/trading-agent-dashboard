@@ -1,10 +1,10 @@
 {
-  "status": "success",
-  "last_run_started_at": "2026-09-12T19:48:32.286Z",
-  "last_run_finished_at": "2026-09-12T19:48:32.287Z",
+  "status": "failed",
+  "last_run_started_at": "2026-09-14T08:26:07.134Z",
+  "last_run_finished_at": "2026-09-14T08:26:07.135Z",
   "triggered_by": "dashboard_or_manual",
-  "message": "Manual Refresh Complete",
-  "failed_step": null,
+  "message": "Master Orchestrator finished with errors.",
+  "failed_step": "Silver Layer 1 Agent",
   "steps": [
     {
       "name": "Call '1. Economic Events Collector'",
@@ -60,7 +60,8 @@
     },
     {
       "name": "Silver Layer 1 Agent",
-      "status": "success"
+      "status": "failed",
+      "error": "Expected ',' or '}' after property value in JSON at position 2075 (line 68 column 18) [line 19]"
     },
     {
       "name": "Layer 2 Trade Selection Agent",
@@ -71,5 +72,8 @@
       "status": "success"
     }
   ],
-  "error": null
+  "error": {
+    "step": "Silver Layer 1 Agent",
+    "reason": "Expected ',' or '}' after property value in JSON at position 2075 (line 68 column 18) [line 19]"
+  }
 }
