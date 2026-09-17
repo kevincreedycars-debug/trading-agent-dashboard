@@ -123,8 +123,8 @@ const pairTradeResearchConfigs = [
     pairCode: "XAU_GBP",
     pairLabel: "XAU/GBP",
     weekdayKeys: weekdayBreakdownColumnsByAsset.GOLD,
-    liveEligibility: "ONBOARDING",
-    onboardingReason: "Cross-quote Layer 1 and historical replay onboarding in progress."
+    quoteAssetCode: "GBP",
+    liveEligibility: "READY"
   },
   {
     targetAssetCode: "SILVER",
@@ -146,8 +146,8 @@ const pairTradeResearchConfigs = [
     pairCode: "XAG_GBP",
     pairLabel: "XAG/GBP",
     weekdayKeys: weekdayBreakdownColumnsByAsset.SILVER,
-    liveEligibility: "ONBOARDING",
-    onboardingReason: "Cross-quote Layer 1 and historical replay onboarding in progress."
+    quoteAssetCode: "GBP",
+    liveEligibility: "READY"
   },
   {
     targetAssetCode: "WTI",
@@ -170,8 +170,8 @@ const pairTradeResearchConfigs = [
     pairCode: "WTI_GBP",
     pairLabel: "WTI/GBP",
     weekdayKeys: weekdayBreakdownColumnsByAsset.WTI,
-    liveEligibility: "ONBOARDING",
-    onboardingReason: "Cross-quote Layer 1 and historical replay onboarding in progress."
+    quoteAssetCode: "GBP",
+    liveEligibility: "READY"
   },
   {
     targetAssetCode: "NQ",
@@ -194,8 +194,8 @@ const pairTradeResearchConfigs = [
     pairCode: "NQ_GBP",
     pairLabel: "NQ/GBP",
     weekdayKeys: weekdayBreakdownColumnsByAsset.NQ,
-    liveEligibility: "ONBOARDING",
-    onboardingReason: "Cross-quote Layer 1 and historical replay onboarding in progress."
+    quoteAssetCode: "GBP",
+    liveEligibility: "READY"
   },
   {
     targetAssetCode: "BTC",
@@ -218,8 +218,8 @@ const pairTradeResearchConfigs = [
     pairCode: "BTC_GBP",
     pairLabel: "BTC/GBP",
     weekdayKeys: weekdayBreakdownColumnsByAsset.BTC,
-    liveEligibility: "ONBOARDING",
-    onboardingReason: "Cross-quote Layer 1 and historical replay onboarding in progress."
+    quoteAssetCode: "GBP",
+    liveEligibility: "READY"
   }
 ];
 // User-supplied historical snapshot. Updated July 20, 2026. Not live-refresh data.
