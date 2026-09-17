@@ -91,8 +91,8 @@ const pairTradeResearchConfigs = [
     pairCode: "GBP_USD",
     pairLabel: "GBP/USD",
     weekdayKeys: weekdayBreakdownColumnsByAsset.GBP,
-    liveEligibility: "ONBOARDING",
-    onboardingReason: "Layer 1 and historical replay onboarding in progress."
+    quoteAssetCode: "USD",
+    liveEligibility: "READY"
   },
   {
     targetAssetCode: "EUR",
