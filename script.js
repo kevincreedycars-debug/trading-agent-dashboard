@@ -154,8 +154,8 @@ const pairTradeResearchConfigs = [
     pairCode: "WTI_USD",
     pairLabel: "WTI/USD",
     weekdayKeys: weekdayBreakdownColumnsByAsset.WTI,
-    quoteAssetCode: "USD",
-    liveEligibility: "READY"
+    liveEligibility: "ONBOARDING",
+    onboardingReason: "Layer 1 and historical replay onboarding in progress."
   },
   {
     targetAssetCode: "WTI",
