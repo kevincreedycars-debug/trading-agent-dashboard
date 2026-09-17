@@ -4,19 +4,19 @@
 Gold 24-hour source dataset.
 
 ## Current Milestone
-Expand stored-data and economic-event coverage for Gold combination research.
+Establish aligned pre-2024 source coverage for Gold combination research.
 
 ## Status
-Both as-of-proxy and retrospective event research pipelines are implemented and executed. Retrospective analysis tests 7,678 single/pair candidates across 21 event families. Greater-than-60% qualification remains unestablished; see GOLD_EVENT_ASSOCIATIONS_20260912.md.
+Both evidence modes have been rerun on 3,829 HIGH/MEDIUM events. Retrospective analysis tests 44,367 candidates across 62 families. One event-age condition meets the training floor but adds no validation benefit over its cohort baseline. Greater-than-60% qualification remains unestablished; see GOLD_COVERAGE_EXPANSION_20260917.md.
 
 ## Completed Work
-Acquired 82,703 M1 candles, 15,977 H1 candles, five FRED vintage series and 841 calendar records. Built 681 fixed daily research observations, 800 training-defined single/pair candidates, event-as-of attachment, rejection accounting and an offline bundle command. The selected candidate declined from 75.86% training to 53.57% validation. No live formulas were modified.
+Acquired 82,703 M1 candles, 15,977 H1 candles, five FRED vintage series and now 3,829 calendar records. Retained 681 fixed daily decisions. Overall selected candidate remains 75.86% training and 53.57% validation; the sole eligible event condition scores 59.26% validation. Reviewed stored mapping finds some values for 25/28 variables, including only one unique mapped event release. Full local suite: 331/331. No live formulas were modified.
 
 ## Remaining Work
 Original release/consensus vintages, untouched final validation, historical session calendar, remaining original research-variable coverage and timestamped Layer 2 evaluation remain outstanding. Current endpoint reports do not qualify live trading.
 
 ## Next Immediate Action
-Expand event-family sample coverage using the authorized stored data/API and map remaining research variables, preserving explicit timing and exact-24-hour exclusions.
+Check aligned pre-2024 economic-event, OANDA price and FRED vintage coverage before extending the fixed research schedule, preserving timing and exact-24-hour exclusions.
 
 ## Last Updated
-2026-09-12.
+2026-09-17.

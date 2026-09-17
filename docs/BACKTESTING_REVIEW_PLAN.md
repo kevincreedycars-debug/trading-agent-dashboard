@@ -4,6 +4,8 @@ Baseline date: 2026-09-07. Objective: establish what each engine actually measur
 
 ## Research framework: the common 24-hour question
 
+September 17 coverage expansion is in [Gold coverage expansion](GOLD_COVERAGE_EXPANSION_20260917.md): 3,829 HIGH/MEDIUM events, 62 retrospective families, 44,367 candidates and reviewed storage mappings for 25/28 variables. One event-age condition now meets the training floor, but its 59.26% validation matches its cohort's constant-direction baseline. The selected macro result remains 53.57%. Next: aligned pre-2024 source coverage. September 12 results below are the earlier baseline.
+
 The latest stored-data/new-calendar-API run is in [Gold event associations](GOLD_EVENT_ASSOCIATIONS_20260912.md): 7,678 single/pair candidates across 21 event families, with explicit retrospective versus as-of evidence modes and family-level sample/exclusion reports. Historical associations can be studied now; historical availability remains a separate requirement for live-call qualification.
 
 September 12 execution results and the remaining event-vintage wall are in [Gold research results](GOLD_RESEARCH_RESULTS_20260912.md). The implemented offline bundle covers source acquisition, conservative macro as-of selection, individual/pair experiments and event-version exclusion. The training-selected candidate failed to exceed 60% in validation; no production qualification follows.

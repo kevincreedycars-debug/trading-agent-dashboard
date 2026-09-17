@@ -1,3 +1,7 @@
+# 2026-09-17 - Gold event coverage and source mapping
+
+Expanded calendar acquisition to explicit dates and impact filters; captured 3,829 HIGH/MEDIUM records and reran both modes. Retrospective coverage reaches 62 families and 44,367 candidates. One jobless-claims age condition meets the floor but matches its cohort baseline at 59.26% validation; overall macro remains 53.57%. Added reviewed snapshot mapping, fixture exclusion and provenance accounting: some coverage for 25/28 variables, not publication qualification. Full local suite 331/331. See GOLD_COVERAGE_EXPANSION_20260917.md. No production changes.
+
 # 2026-09-12 - Expanded stored-data event associations
 
 Added explicit retrospective event mode, preserving vendor timestamps outside causal inputs; class-specific training-only selection; event-family denominator/exclusion tables; and corrected missing-value versus late-vintage audit categories. Executed 7,678 candidates from stored macro/prices and the newer API's 841 records. No event candidate meets the existing training floor; selected macro validation remains 53.57%. See GOLD_EVENT_ASSOCIATIONS_20260912.md. No production changes.

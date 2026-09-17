@@ -1,6 +1,8 @@
 # Current state
 
-Updated 2026-09-12. This is the current repository summary; dated workstream reports provide supporting evidence.
+Updated 2026-09-17. This is the current repository summary; dated workstream reports provide supporting evidence.
+
+September 17 expansion: acquired 3,829 HIGH/MEDIUM events and executed both modes. Retrospective analysis now covers 62 families, 426 evaluable event-bearing decisions and 44,367 candidates. One jobless-claims age condition meets the training floor but scores 59.26% validation, matching its cohort's always-bullish baseline. Overall selected macro validation remains 53.57%. Mapping finds some values for 25/28 variables; five mapped event fields cover one unique release, and ten fixture events are rejected. See `GOLD_COVERAGE_EXPANSION_20260917.md`. Next: check aligned pre-2024 source coverage. Full local suite: 331/331. September 12 figures below are the previous baseline.
 
 Latest follow-up: used the stored evidence and newer calendar API archive for an explicit retrospective event run: 7,678 candidates, 6,878 event-conditioned, 21 families, 395 decisions with usable event records before outcome filtering and 285 afterward. No event candidate meets the 50-directional-training-observation floor; selected macro validation stays 53.57%. The corrected conservative audit separates 385 late/unknown versions from 92 missing-measurement decisions (previously combined as 477). See `GOLD_EVENT_ASSOCIATIONS_20260912.md`. Further exploration is authorized without waiting for original-release evidence; live qualification still requires it.
 
