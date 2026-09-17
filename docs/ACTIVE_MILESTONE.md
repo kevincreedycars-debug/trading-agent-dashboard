@@ -7,6 +7,8 @@ Gold 24-hour source dataset.
 Establish aligned pre-2024 source coverage for Gold combination research.
 
 ## Status
+
+September 17 operational interruption closed: USD gateway retry repair is deployed and fresh Master 3992/all children/public Pages succeeded. See USD_GATEWAY_INCIDENT_20260917.md. Gold remains the active research milestone.
 Both evidence modes have been rerun on 3,829 HIGH/MEDIUM events. Retrospective analysis tests 44,367 candidates across 62 families. One event-age condition meets the training floor but adds no validation benefit over its cohort baseline. Greater-than-60% qualification remains unestablished; see GOLD_COVERAGE_EXPANSION_20260917.md.
 
 ## Completed Work

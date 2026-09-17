@@ -1,3 +1,7 @@
+# 2026-09-17 - USD FRED gateway recovery
+
+Confirmed HTTP 502 at USD's first FRED GET. Added guarded three-attempt/five-second retries without error suppression or changing single-run behavior. Backed up and verified live saved/active workflow; fresh Master 3992 and every child succeeded. Public Pages reports Manual Refresh Complete at 21:16:17 UTC. Full local suite 333/333. See USD_GATEWAY_INCIDENT_20260917.md.
+
 # 2026-09-17 - Gold event coverage and source mapping
 
 Expanded calendar acquisition to explicit dates and impact filters; captured 3,829 HIGH/MEDIUM records and reran both modes. Retrospective coverage reaches 62 families and 44,367 candidates. One jobless-claims age condition meets the floor but matches its cohort baseline at 59.26% validation; overall macro remains 53.57%. Added reviewed snapshot mapping, fixture exclusion and provenance accounting: some coverage for 25/28 variables, not publication qualification. Full local suite 331/331. See GOLD_COVERAGE_EXPANSION_20260917.md. No production changes.

@@ -53,4 +53,4 @@ function planBtcRateLimitRepair(workflow, execution) {
       limitation: 'Persistent CoinGecko failure leaves dominance/market-cap inputs absent and the snapshot partial; it does not invent replacement values.' } };
 }
 
-module.exports = { WORKFLOW_ID, hash, planBtcRateLimitRepair };
+module.exports = { WORKFLOW_ID, hash, normalizedHttpNode, planBtcRateLimitRepair };
