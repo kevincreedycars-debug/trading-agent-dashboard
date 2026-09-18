@@ -1,5 +1,7 @@
 # Current task
 
+September 18: pre-2024 overlap check complete on `research/gold-pre2024-coverage`. Acquired 1,197 events, 5,895 hourly candles and five FRED series. Of 260 decisions, 205 have exact endpoints and 163 also have retrospective events; zero have eligible as-of events or contiguous paths. No new accuracy search or production change. Full local suite: 333/333 passed. See `GOLD_PRE2024_COVERAGE_20260918.md`. Next: predeclare the extended exploratory schedule/split, acquire the December 2022 event buffer and build a versioned 2023?2026 bundle, preserving prior results and consumed-validation labels. This supersedes earlier coverage-check next actions.
+
 Updated 2026-09-17.
 
 Active objective: build a source-auditable Gold 24-hour variable dataset, then assess individual variables, event-conditioned combinations and independent Layer 1/Layer 2 qualification against the user's greater-than-60% target. Follow `GOLD_RESEARCH_DELIVERY_CONTRACT.md`. Source acquisition and framework work are authorized; no further design input is required. The target is not a promised empirical result.

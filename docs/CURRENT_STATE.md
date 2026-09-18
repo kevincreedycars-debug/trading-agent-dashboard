@@ -1,5 +1,7 @@
 # Current state
 
+September 18: pre-2024 overlap check complete on `research/gold-pre2024-coverage`. Acquired 1,197 events, 5,895 hourly candles and five FRED series. Of 260 decisions, 205 have exact endpoints and 163 also have retrospective events; zero have eligible as-of events or contiguous paths. No new accuracy search or production change. Full local suite: 333/333 passed. See `GOLD_PRE2024_COVERAGE_20260918.md`. Next: predeclare the extended exploratory schedule/split, acquire the December 2022 event buffer and build a versioned 2023?2026 bundle, preserving prior results and consumed-validation labels. This supersedes earlier coverage-check next actions.
+
 Updated 2026-09-17. This is the current repository summary; dated workstream reports provide supporting evidence.
 
 Live refresh follow-up: USD 3976 failed on its first FRED GET with HTTP 502; prior single-run repair remained intact. Added three-attempt/five-second retries to that node only, with persistent failure still fatal. Fresh Master 3992 and every child succeeded; public Pages reports success at 21:16:17 UTC (22:16 London). Full local suite 333/333. See `USD_GATEWAY_INCIDENT_20260917.md`. Current repair branch: `fix/usd-fred-gateway`; the Gold research baseline is preserved in its ancestry.

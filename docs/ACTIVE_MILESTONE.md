@@ -4,21 +4,19 @@
 Gold 24-hour source dataset.
 
 ## Current Milestone
-Establish aligned pre-2024 source coverage for Gold combination research.
+Versioned extension of exploratory Gold research to 2023.
 
 ## Status
-
-September 17 operational interruption closed: USD gateway retry repair is deployed and fresh Master 3992/all children/public Pages succeeded. See USD_GATEWAY_INCIDENT_20260917.md. Gold remains the active research milestone.
-Both evidence modes have been rerun on 3,829 HIGH/MEDIUM events. Retrospective analysis tests 44,367 candidates across 62 families. One event-age condition meets the training floor but adds no validation benefit over its cohort baseline. Greater-than-60% qualification remains unestablished; see GOLD_COVERAGE_EXPANSION_20260917.md.
+Pre-2024 coverage check complete. Prior selected macro validation remains 53.57%; no new accuracy search was run.
 
 ## Completed Work
-Acquired 82,703 M1 candles, 15,977 H1 candles, five FRED vintage series and now 3,829 calendar records. Retained 681 fixed daily decisions. Overall selected candidate remains 75.86% training and 53.57% validation; the sole eligible event condition scores 59.26% validation. Reviewed stored mapping finds some values for 25/28 variables, including only one unique mapped event release. Full local suite: 331/331. No live formulas were modified.
+September 18: pre-2024 overlap check complete on `research/gold-pre2024-coverage`. Acquired 1,197 events, 5,895 hourly candles and five FRED series. Of 260 decisions, 205 have exact endpoints and 163 also have retrospective events; zero have eligible as-of events or contiguous paths. No new accuracy search or production change. Full local suite: 333/333 passed. See `GOLD_PRE2024_COVERAGE_20260918.md`.
 
 ## Remaining Work
-Original release/consensus vintages, untouched final validation, historical session calendar, remaining original research-variable coverage and timestamped Layer 2 evaluation remain outstanding. Current endpoint reports do not qualify live trading.
+Extended schedule/split declaration, event boundary buffer and versioned bundle; original event vintages, session classification, remaining variable coverage, untouched final qualification and Layer 2 evaluation. Gold history repair still requires isolated runtime validation.
 
 ## Next Immediate Action
-Check aligned pre-2024 economic-event, OANDA price and FRED vintage coverage before extending the fixed research schedule, preserving timing and exact-24-hour exclusions.
+Predeclare the extended exploratory schedule and chronological split, acquire the December 2022 event buffer, and build a versioned 2023?2026 bundle preserving prior artifacts and consumed-validation labels.
 
 ## Last Updated
-2026-09-17.
+2026-09-18.
