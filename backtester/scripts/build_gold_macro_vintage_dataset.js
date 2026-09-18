@@ -3,7 +3,8 @@ const crypto = require('node:crypto');
 const { buildMacroDataset, SERIES } = require('../lib/gold_macro_vintage_dataset');
 const hash = raw => crypto.createHash('sha256').update(raw).digest('hex');
 function run(args = process.argv.slice(2)) {
-  if (args.length !== 3) throw new Error('Usage: FRED_DIRECTORY HOURLY_DIRECTORY NEW_DIRECTORY');
+  if (![3, 4].includes(args.length)) throw new Error('Usage: FRED_DIRECTORY HOURLY_DIRECTORY NEW_DIRECTORY [PLAN.json]');
+  const plan = args[3] ? JSON.parse(fs.readFileSync(args[3])) : { start_date: '2024-02-01', end_date: '2026-09-10' };
   const manifest = JSON.parse(fs.readFileSync(`${args[0]}/manifest.json`));
   if (!manifest.complete) throw new Error('Incomplete FRED acquisition');
   const payloads = {};
@@ -16,7 +17,8 @@ function run(args = process.argv.slice(2)) {
   const priceManifest = JSON.parse(fs.readFileSync(`${args[1]}/manifest.json`));
   const prices = fs.readFileSync(`${args[1]}/candles.json`);
   if (!priceManifest.complete || hash(prices) !== priceManifest.output_sha256) throw new Error('Price acquisition incomplete or changed');
-  const result = buildMacroDataset(payloads, JSON.parse(prices), { start_date: '2024-02-01', end_date: '2026-09-10' });
+  const result = buildMacroDataset(payloads, JSON.parse(prices), plan);
+  if (args[3]) result.dataset.research_plan = { ...plan, sha256: hash(fs.readFileSync(args[3])) };
   result.dataset.acquisition_lineage = { fred_requests: manifest.requests, price_sha256: hash(prices) };
   fs.mkdirSync(args[2]);
   fs.writeFileSync(`${args[2]}/dataset.json`, JSON.stringify(result.dataset), { flag: 'wx' });

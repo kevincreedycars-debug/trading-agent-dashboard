@@ -6,13 +6,13 @@ const { run: experiment } = require('./build_gold_research_experiments');
 
 // Offline orchestration only: each source acquisition is a separate explicit read-only command.
 function run(args = process.argv.slice(2)) {
-  if (args.length < 4 || args.length > 5) throw new Error('Usage: FRED_DIRECTORY HOURLY_DIRECTORY EVENT_DIRECTORY NEW_OUTPUT_DIRECTORY [as_of_proxy|retrospective]');
+  if (args.length < 4 || args.length > 6) throw new Error('Usage: FRED_DIRECTORY HOURLY_DIRECTORY EVENT_DIRECTORY NEW_OUTPUT_DIRECTORY [as_of_proxy|retrospective] [PLAN.json]');
   const mode = args[4] ?? 'as_of_proxy';
   if (!['as_of_proxy', 'retrospective'].includes(mode)) throw new Error('Unknown event evidence mode');
   const output = path.resolve(args[3]);
-  buildMacro([args[0], args[1], output]);
+  const plan = path.resolve(args[5] ?? path.resolve(__dirname, '../registries/gold_macro_exploration_plan.v1.json'));
+  buildMacro([args[0], args[1], output, ...(args[5] ? [plan] : [])]);
   attachEvents([`${output}/dataset.json`, args[2], `${output}/event-dataset.json`, mode]);
-  const plan = path.resolve(__dirname, '../registries/gold_macro_exploration_plan.v1.json');
   const report = experiment([`${output}/event-dataset.json`, `${output}/snapshots.json`, plan, `${output}/experiments.json`]);
   const selected = report.experiments.find(row => row.id === report.selected_by_training_only);
   const audit = report.event_vintage_audit;

@@ -1,3 +1,7 @@
+# 2026-09-18 - Extended Gold research delivered
+
+Predeclared and executed 2023-2026 research in both evidence modes. Added verified archive merger, configurable plan wiring, training-selected diagnostic scorecards and paired month-block sensitivity. Usable training grew 390 to 613; 53,751 retrospective candidates yielded 23 eligible event conditions. Claims-below-consensus lead scores 12/16 directional validation outcomes, with five flats, unverified vintages and broad uncertainty; macro-only winner stays 53.57%. Full local suite 336/336. No production changes. See GOLD_EXTENDED_RESEARCH_20260918.md.
+
 # 2026-09-18 - Gold pre-2024 coverage
 
 September 18: pre-2024 overlap check complete on `research/gold-pre2024-coverage`. Acquired 1,197 events, 5,895 hourly candles and five FRED series. Of 260 decisions, 205 have exact endpoints and 163 also have retrospective events; zero have eligible as-of events or contiguous paths. No new accuracy search or production change. Full local suite: 333/333 passed. See `GOLD_PRE2024_COVERAGE_20260918.md`. Next: predeclare the extended exploratory schedule/split, acquire the December 2022 event buffer and build a versioned 2023?2026 bundle, preserving prior results and consumed-validation labels. This supersedes earlier coverage-check next actions.

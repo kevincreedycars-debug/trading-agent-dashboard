@@ -1,10 +1,10 @@
 # Backtesting review plan
 
-September 18: pre-2024 overlap check complete on `research/gold-pre2024-coverage`. Acquired 1,197 events, 5,895 hourly candles and five FRED series. Of 260 decisions, 205 have exact endpoints and 163 also have retrospective events; zero have eligible as-of events or contiguous paths. No new accuracy search or production change. Full local suite: 333/333 passed. See `GOLD_PRE2024_COVERAGE_20260918.md`. Next: predeclare the extended exploratory schedule/split, acquire the December 2022 event buffer and build a versioned 2023?2026 bundle, preserving prior results and consumed-validation labels. This supersedes earlier coverage-check next actions.
-
 Baseline date: 2026-09-07. Objective: establish what each engine actually measures, correct demonstrated measurement defects, and qualify evidence before optimization.
 
 ## Research framework: the common 24-hour question
+
+Current September 18 result: [Extended research delivery](GOLD_EXTENDED_RESEARCH_20260918.md). Both 2023-2026 runs completed: 964 decisions, 53,751 retrospective candidates, 23 eligible event candidates. Training-selected claims hypothesis scores 12/16 directional validation outcomes, but only 21 total matches and unverified original event vintages; macro-only winner remains 15/28. Next is claims provenance and a frozen prospective contract. The dated entries below are prior stages, not competing next actions.
 
 September 17 coverage expansion is in [Gold coverage expansion](GOLD_COVERAGE_EXPANSION_20260917.md): 3,829 HIGH/MEDIUM events, 62 retrospective families, 44,367 candidates and reviewed storage mappings for 25/28 variables. One event-age condition now meets the training floor, but its 59.26% validation matches its cohort's constant-direction baseline. The selected macro result remains 53.57%. Next: aligned pre-2024 source coverage. September 12 results below are the earlier baseline.
 

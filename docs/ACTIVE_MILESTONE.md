@@ -1,22 +1,22 @@
 # Active milestone
 
 ## Current Feature
-Gold 24-hour source dataset.
+Gold 24-hour source dataset and event research.
 
 ## Current Milestone
-Versioned extension of exploratory Gold research to 2023.
+Qualify the evidence behind the training-selected Initial Jobless Claims hypothesis.
 
 ## Status
-Pre-2024 coverage check complete. Prior selected macro validation remains 53.57%; no new accuracy search was run.
+Extended 2023-2026 research completed. A retrospective lead exists; reliable greater-than-60% live performance remains unestablished.
 
 ## Completed Work
-September 18: pre-2024 overlap check complete on `research/gold-pre2024-coverage`. Acquired 1,197 events, 5,895 hourly candles and five FRED series. Of 260 decisions, 205 have exact endpoints and 163 also have retrospective events; zero have eligible as-of events or contiguous paths. No new accuracy search or production change. Full local suite: 333/333 passed. See `GOLD_PRE2024_COVERAGE_20260918.md`.
+Both evidence modes executed on 964 scheduled decisions. Retrospective: 53,751 candidates, 69 event families and 23 eligible event candidates. Claims below consensus, bullish: 43/58 training and 12/16 validation, with five validation flats and 21 unique validation releases. Macro winner: 15/28 validation. Delivered all 20 macro feature scorecards, yearly breakdowns and month-block diagnostics. Full local suite 336/336 passed. See GOLD_EXTENDED_RESEARCH_20260918.md.
 
 ## Remaining Work
-Extended schedule/split declaration, event boundary buffer and versioned bundle; original event vintages, session classification, remaining variable coverage, untouched final qualification and Layer 2 evaluation. Gold history repair still requires isolated runtime validation.
+Original event/consensus versions, frozen prospective evaluation, session classification, remaining variable coverage, untouched final qualification and separate Layer 2 evaluation. Gold history repair remains separately gated.
 
 ## Next Immediate Action
-Predeclare the extended exploratory schedule and chronological split, acquire the December 2022 event buffer, and build a versioned 2023?2026 bundle preserving prior artifacts and consumed-validation labels.
+Audit original-release/consensus provenance for the selected claims hypothesis and record a frozen prospective shadow-evaluation contract without deploying a live signal.
 
 ## Last Updated
 2026-09-18.
