@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=20260903-backtesting-development-v1" />
+  <link rel="stylesheet" href="styles.css?v=20260919-layer1-summary" />
 </head>
 <body>
   <header class="topbar">
@@ -143,8 +143,8 @@
     <section id="overviewView" class="view active-view">
       <section class="section-header">
         <div>
-          <p class="eyebrow">Layer 1</p>
-          <h2>Raw Independent Agent Calls</h2>
+          <p class="eyebrow">Market overview</p>
+          <h2>Directional overview</h2>
         </div>
         <p id="layer1Updated">Last updated: pending</p>
       </section>
@@ -162,10 +162,26 @@
         <div id="workflowProgressNote" class="workflow-progress-note" hidden></div>
       </section>
 
+      <section class="layer1-summary-section" aria-label="Layer 1 independent 24-hour calls">
+        <div class="layer1-summary-heading">
+          <h3>Layer 1 <span>24H independent calls</span></h3>
+          <p>Select an asset for details &middot; Conviction is a model score</p>
+        </div>
+        <div id="layer1Grid" class="layer1-summary-grid"></div>
+      </section>
+
+      <section class="section-header overview-layer2-title">
+        <div>
+          <p class="eyebrow">Layer 2</p>
+          <h2>Pair Analysis</h2>
+        </div>
+        <p id="overviewLayer2Updated">Last updated: pending</p>
+      </section>
+      <section id="overviewLayer2Panel" class="layer2-panel overview-layer2-panel"></section>
+
       <section id="overviewSignalBoard" class="detail-panel overview-signal-board" aria-label="Compact signal board"></section>
       <section id="overviewBriefing" class="detail-panel overview-briefing-panel"></section>
       <section id="overviewStats" class="overview-stats"></section>
-      <section id="layer1Grid" class="agent-grid"></section>
       <section class="detail-panel overview-legend-panel" aria-label="Overview definitions legend">
         <div class="panel-head compact-panel-head">
           <div>
@@ -196,15 +212,6 @@
         <p>Generated from the latest Layer 1 timeframe calls. This is infrastructure only and will be refined later.</p>
       </section>
       <section id="overviewOutlook" class="outlook-grid"></section>
-
-      <section class="section-header overview-layer2-title">
-        <div>
-          <p class="eyebrow">Layer 2</p>
-          <h2>Pair Analysis</h2>
-        </div>
-        <p id="overviewLayer2Updated">Last updated: pending</p>
-      </section>
-      <section id="overviewLayer2Panel" class="layer2-panel overview-layer2-panel"></section>
 
       <section id="overviewStatusPanel" class="detail-panel overview-status-panel" aria-label="Overview system status"></section>
       <section id="overviewWarningsArea" class="overview-warnings-area" aria-label="Operational warnings area">
@@ -327,6 +334,6 @@
   <script src="backtester/lib/headline_confidence.js?v=20260630-headline-confidence-contract"></script>
   <script src="backtester/lib/layer2_pair_logic.js?v=20260912-eur-pair-layer2"></script>
   <script src="lib/economic_event_refresh.js?v=20260727-input-health-overview-release"></script>
-  <script src="script.js?v=20260917-all-gbp-pairs-live"></script>
+  <script src="script.js?v=20260919-layer1-summary"></script>
 </body>
 </html>

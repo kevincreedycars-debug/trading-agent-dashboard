@@ -3876,6 +3876,51 @@ function renderAgentCard(agent) {
   `;
 }
 
+function missingDataLabels(agent) {
+  const fullOutput = asObject(agent?.full_output);
+  const snapshot = asObject(fullOutput.market_snapshot);
+  const candidates = [
+    ...asArray(agent?.warnings),
+    ...asArray(fullOutput.missing_inputs),
+    ...asArray(fullOutput.data_quality?.missing),
+    ...asArray(snapshot.data_quality?.missing)
+  ];
+
+  return Array.from(new Set(candidates
+    .map(value => String(value || "").trim())
+    .filter(value => /missing|unavailable|not available|partial|failed|error/i.test(value))));
+}
+
+function renderLayer1Summary(agent) {
+  const call = getCall(agent, "24h");
+  const direction = call.direction || "PENDING";
+  const tone = directionClass(direction);
+  const arrow = ["bullish", "lean-bullish", "buy"].includes(tone) ? "\u2191"
+    : ["bearish", "lean-bearish", "sell"].includes(tone) ? "\u2193" : "\u2192";
+  const confidence = confidenceValue(call, agent, "24h");
+  const strength = normaliseDirection(confidenceStrength(call, agent, "24h") || "Unavailable");
+  const level = ({ WEAK: 1, MODERATE: 2, STRONG: 3, VERY_STRONG: 4 })[
+    String(strength).toUpperCase().replaceAll(" ", "_")
+  ] || 0;
+  const status = resolveLayer1DisplayStatus(agent);
+  const gaps = missingDataLabels(agent);
+  const icon = ({ USD: "$", EUR: "\u20ac", GOLD: "Au", SILVER: "Ag", NQ: "NQ", BTC: "\u20bf", WTI: "Oil", GBP: "\u00a3" })[agent.agent] || "\u2022";
+  const label = normaliseDirection(direction);
+  const score = confidence === null || confidence === undefined ? "\u2014" : `${Math.round(confidence)}/100`;
+  const detail = `${agent.agent}: ${label}. Conviction ${score}, ${strength}. ${validityStatusLabel(status)}.${gaps.length ? " Missing inputs." : ""} Open asset details.`;
+  return `
+    <button type="button" class="layer1-summary-tile ${escapeHtml(tone)}" data-agent="${escapeHtml(agent.agent)}" aria-label="${escapeHtml(detail)}">
+      <span class="layer1-summary-top"><span class="layer1-asset-icon" aria-hidden="true">${escapeHtml(icon)}</span><strong>${escapeHtml(agent.agent)}</strong><span class="layer1-detail-arrow" aria-hidden="true">&#8599;</span></span>
+      <span class="layer1-summary-direction"><span aria-hidden="true">${arrow}</span> ${escapeHtml(label)}</span>
+      <span class="layer1-summary-conviction" title="${escapeHtml(strength)} - model conviction, not a probability of success">
+        <span class="layer1-conviction-bars" aria-hidden="true">${[1, 2, 3, 4].map(n => `<i class="${n <= level ? "filled" : ""}"></i>`).join("")}</span>
+        <span>${escapeHtml(strength)} &middot; ${escapeHtml(score)}</span>
+      </span>
+      <span class="layer1-summary-status ${escapeHtml(validityStatusClass(status))}">${escapeHtml(validityStatusLabel(status))}${gaps.length ? " &middot; Missing inputs" : ""}</span>
+    </button>
+  `;
+}
+
 function renderLayer1(data) {
   const layer1Updated = document.getElementById("layer1Updated");
   if (layer1Updated) {
@@ -3895,7 +3940,7 @@ function renderLayer1(data) {
   const grid = document.getElementById("layer1Grid");
   if (!grid) return;
 
-  grid.innerHTML = (data.agents || []).map(renderAgentCard).join("");
+  grid.innerHTML = orderedAgents.map(name => (data.agents || []).find(agent => agent.agent === name) || { agent: name, calls: {} }).map(renderLayer1Summary).join("");
 
   grid.querySelectorAll("[data-agent]").forEach(el => {
     el.addEventListener("click", () => setTab(el.dataset.agent));
