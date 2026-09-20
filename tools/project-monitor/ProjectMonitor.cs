@@ -20,15 +20,11 @@ public class Usage { public string day, timezone, scanned_at, latest_record, sco
 public class Snapshot { public string scanned_at, controller; public int pending; public string[] errors; public Worker[] workers; public Update[] events; public Usage usage; }
 public class Preferences { public bool pin = true, alerts = true; public int x = -1, y = -1; public string[] seen = new string[0]; }
 
-// Native ListBox painting erases its background on each animation frame.
-// Compose that paint into an off-screen buffer before presenting it.
-public class BufferedWorkerList : ListBox {
+public class MonitorPanel : Form {
+    // Composite at the parent: native ListBox classes cannot safely use this style.
     protected override CreateParams CreateParams {
         get { var parameters=base.CreateParams; parameters.ExStyle |= 0x02000000; return parameters; }
     }
-}
-
-public class MonitorPanel : Form {
     readonly string root, node, storage, smoke;
     readonly JavaScriptSerializer json = new JavaScriptSerializer { MaxJsonLength = 2097152 };
     readonly Color background = Color.FromArgb(23,32,28), foreground = Color.FromArgb(225,238,231), muted = Color.FromArgb(137,164,149);
@@ -38,7 +34,7 @@ public class MonitorPanel : Form {
     [DllImport("user32.dll")] static extern IntPtr SendMessage(IntPtr hWnd,int msg,IntPtr wParam,IntPtr lParam);
     void Drag(object sender,MouseEventArgs e){if(e.Button==MouseButtons.Left){ReleaseCapture();SendMessage(Handle,0xA1,(IntPtr)2,IntPtr.Zero);}}
     void Round(){if(Width<20||Height<20)return;using(var shape=new GraphicsPath()){int d=20;shape.AddArc(0,0,d,d,180,90);shape.AddArc(Width-d,0,d,d,270,90);shape.AddArc(Width-d,Height-d,d,d,0,90);shape.AddArc(0,Height-d,d,d,90,90);shape.CloseFigure();var old=Region;Region=new Region(shape);if(old!=null)old.Dispose();}}
-    readonly ListBox list = new BufferedWorkerList();
+    readonly ListBox list = new ListBox();
     readonly CheckBox pin = new CheckBox(), alerts = new CheckBox();
     readonly NotifyIcon tray = new NotifyIcon();
     readonly System.Windows.Forms.Timer timer = new System.Windows.Forms.Timer();
@@ -162,6 +158,7 @@ public class MonitorPanel : Form {
             e.Graphics.DrawString(!String.IsNullOrEmpty(w.waiting_on)?"Waiting on: "+w.waiting_on:active?"Active report - expires after 5 minutes":"No active work reported",Font,secondary,new RectangleF(x,y+50,width,17),format);
         }
         using(var pen=new Pen(Color.FromArgb(48,68,55)))e.Graphics.DrawLine(pen,x,e.Bounds.Bottom-1,e.Bounds.Right-12,e.Bounds.Bottom-1);
+        format.Dispose();
         e.DrawFocusRectangle();
     }
     static string Compact(long n){return n>=1000000?(n/1000000d).ToString("0.00")+"M":n>=1000?(n/1000d).ToString("0.0")+"k":n.ToString();}

@@ -53,3 +53,5 @@ Authenticated runtime access works through the scoped encrypted credential runne
 2026-09-20: Central Orchestrator named workspace added without moving canonical folder. Monitor enlarged to 380x790 with seven rows, explicit waiting/input states and animated coordinator connections; inactive/stale reports do not claim work. Twelve focused tests pass; native build and normal/narrow render verified.
 
 2026-09-20 monitor flicker fix: native list now uses composited painting; animation invalidates only the connection gutter at 100ms and stops when no animated state exists. Native build passed and panel restarted. Live visual smoothness requires user observation.
+
+2026-09-20 window-handle crash correction: removed WS_EX_COMPOSITED from native ListBox and placed compositing on the parent Form. Disposed per-draw StringFormat. Native window creation/render smoke exited successfully with seven rows, normal/narrow dimensions and pin toggles; error null.
