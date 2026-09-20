@@ -122,6 +122,9 @@ function createMailbox(root = ROOT) {
 }
 if (require.main === module) {
   try {
+    const configuredRoot = readJson(path.join(ROOT, 'docs/orchestration/projects.json')).value.canonical_root;
+    requireValue(typeof configuredRoot === 'string' && path.resolve(configuredRoot).toLowerCase() === ROOT.toLowerCase(),
+      'Run the CLI from the canonical project by absolute path; worktree mailbox copies are not supported');
     const [command, option, argument, ...extra] = process.argv.slice(2);
     requireValue(extra.length === 0, 'Unexpected arguments');
     const mailbox = createMailbox();
