@@ -1,5 +1,7 @@
 # Current state
 
+2026-09-20: user confirmed gold-policy-003. Published hash-bound changes_requested reply for revision 2 and activated the correction assignment. Awaiting worker pickup; no acceptance, integration or production action. Use explicit emoji labels for user actions, agent waiting and completed steps.
+
 Strategy adviser workspace registered as the sixth worker. DeepSeek session is not started; separate notes branch and shared mailbox/monitor are ready. See tools/strategy-node/README.md.
 
 Gold research worker has FINISHED the gold-policy-002 assignment and submitted revision 2 at ccd4c37. Its clean checkout and delivery receipt were verified September 20. Status: finished, awaiting coordinator review; reported provider-calendar evidence remains blocked and substantive acceptance is not implied.

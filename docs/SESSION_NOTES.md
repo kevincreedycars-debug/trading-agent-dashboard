@@ -1,5 +1,7 @@
 # Session notes
 
+2026-09-20: user confirmed gold-policy-003. Published hash-bound changes_requested reply for revision 2 and activated the correction assignment. Awaiting worker pickup; no acceptance, integration or production action. Use explicit emoji labels for user actions, agent waiting and completed steps.
+
 2026-09-20: added isolated Strategy adviser checkout, VS Code workspace, Cline startup rules and advisory assignment strategy-advisory-001. Reads canonical project and worker evidence; owns only strategy notes, submits advice through existing mailbox, reports activity to existing monitor. No model runner or automatic dispatch enabled.
 
 2026-09-20 delivery acknowledgement and shortcut: verified Gold revision-2 submission 20260920-gold-policy-002-r2 (SHA-256 3c605c68...) and clean worker checkout at ccd4c37, with ab6619b preservation and 4630ec0 corrections present. Registered finished_awaiting_coordinator_review; worker holds and substantive review remains pending. Panel now labels ready_for_review deliveries Finished / awaiting review. No new policy acceptance or test verification claimed. Created and verified Project Monitor.lnk on C:/Users/A17/OneDrive/Desktop, launching the canonical monitor script. Green styling left unchanged.
