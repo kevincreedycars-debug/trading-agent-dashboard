@@ -34,10 +34,16 @@ Record dated user decisions, questions and recommendations here. No discussion h
      custom title bar (the shipped workbench bundle returns `"custom"` from its title-bar style
      resolver), so the `titleBar.*` colours apply without it and no application-scoped setting is
      needed.
+  6. The user then judged the full palette "all too purple" and asked for the default colour scheme
+     with only a purple tint, purely to identify the window. The colour block was replaced by a 12-key
+     tint in both places (title bar, activity bar + badge, status bar, `window.activeBorder` /
+     `window.inactiveBorder`, `focusBorder`); every editor, side-bar, tab, panel, terminal, menu and
+     list surface plus all syntax colours are back to the `Dark+` defaults.
 - Verification performed: user settings restored byte-identically (SHA256 match against the backup);
-  both the workspace file and the folder fallback parse as strict JSON, carry 90 valid hex values,
-  and use only colour ids that exist as literals in the bundles shipped with VS Code 1.136.1 (commit
-  a44adf7f53); the canonical diff is a clean +102/-1 addition with no line-ending churn; the worktree
+  both the workspace file and the folder fallback parse as strict JSON, carry only valid hex values
+  (90 keys for the full palette, 12 for the final tint), and use only colour ids that exist as
+  literals in the bundles shipped with VS Code 1.136.1 (commit a44adf7f53); the canonical diff is a
+  small additive change with no line-ending churn; the worktree
   `git status` stays clean because `.gitignore:37` (`/.vscode/`) hides the folder file.
 - Rollback: remove the `workbench.colorCustomizations` block from
   `D:\trading-agent-dashboard-codex\tools\strategy-node\Strategy.code-workspace`, delete
