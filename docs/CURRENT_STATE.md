@@ -1,5 +1,7 @@
 # Current state
 
+Strategy adviser workspace registered as the sixth worker. DeepSeek session is not started; separate notes branch and shared mailbox/monitor are ready. See tools/strategy-node/README.md.
+
 Gold research worker has FINISHED the gold-policy-002 assignment and submitted revision 2 at ccd4c37. Its clean checkout and delivery receipt were verified September 20. Status: finished, awaiting coordinator review; reported provider-calendar evidence remains blocked and substantive acceptance is not implied.
 
 Desktop coordination monitor added September 20: native Windows tray panel with always-on-top toggle, five-second local-file scans and submission/reply/blocker alerts. Heartbeat-based activity is explicitly reported, becomes stale after five minutes, and does not prove process liveness. Automated agent dispatch remains unconfigured. Launch: npm run monitor.

@@ -7,7 +7,7 @@ Central project coordination and worker handoffs.
 Review the corrected Gold session policy after the first mailbox checkpoint.
 
 ## Status
-First Gold transition reviewed; changes requested. gold-policy-002 is ready for the worker. Other agents remain closed.
+Gold revision 2 delivered and awaiting review. Strategy advisory workspace is prepared for a user-started DeepSeek session; other asset agents remain closed.
 
 ## Completed Work
 Gold coverage accepted (b8193ba / 0b0e92d). Existing dashboard alignment published as 683a840. Central coordination setup preserves those results.

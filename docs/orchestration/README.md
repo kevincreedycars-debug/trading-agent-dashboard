@@ -7,6 +7,13 @@ where they conflict. Research and live trading architecture remain unchanged.
 
 ## Central memory
 
+Strategy adviser: open `tools/strategy-node/Strategy.code-workspace` with DeepSeek.
+Its `strategy-advisory-001` assignment permits ongoing user discussion and strategy
+notes, with read access to central context and direct mailbox submissions. At each
+active coordination checkpoint, review new Strategy advice alongside worker reports;
+advice does not change implementation assignments until adopted. Startup instructions
+are in `tools/strategy-node/README.md`.
+
 - [Project register](projects.json): worker IDs, paths, assignments and last known status.
 - [Decisions](DECISIONS.md): project-wide decisions and unresolved dependencies.
 - [Agent messages](AGENT_MESSAGES.md): prompts for the existing agent windows.
