@@ -114,3 +114,20 @@ Record dated user decisions, questions and recommendations here. No discussion h
 - Still open on the live path: (a) does each Layer 1 agent already emit a 24h call on a daily
   schedule, or only when a refresh is triggered; (b) is Layer 2 the economic-events adjuster, the
   opposing-call divergence synthesizer, or events followed by divergence.
+
+## 2026-09-20 - Correction: eight tracked assets, not five
+
+- User corrected the adviser: there are **8** Layer 1 assets now. Verified in canonical:
+  `script.js` maps eight asset codes (USD, EUR, GOLD, NQ, BTC, GBP, SILVER, WTI) in its pair and
+  weekday tables, while the *published* agent set still lists five — `README.md`,
+  `data/layer1.json` (`dashboard_meta.required_agents`) and `script.js` `orderedAgents`.
+- `data/layer1.json` in the repository is dated 2026-09-07T06:14Z, so the published decision aid may
+  be showing five stale calls rather than eight current ones.
+- `data/layer2.json` names its source `layer_2_trade_selection_agent` and currently emits only
+  `avoid_today` entries (EUR/USD, XAU/USD, BTC/USD, NQ/USD) with reason "Missing 24H conviction from
+  one or both Layer 1 assets". So production Layer 2 already pairs assets for selection — closer to
+  the user's aim than the README's Eco Events description.
+- Open questions: are GBP/SILVER/WTI live in n8n and emitting 24h calls, or still worktree drafts;
+  and is the dashboard grid meant to display all eight assets?
+- Implication for advice: before recommending sequencing, the *count and live status* of Layer 1
+  producers must come from runtime evidence, not from the memory docs, which are stale on this point.
