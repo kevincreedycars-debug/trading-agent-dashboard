@@ -41,6 +41,7 @@ function snapshot(root = ROOT, now = Date.now()) {
     if (fs.existsSync(heartbeatFile)) {
       try {
         const h = read(heartbeatFile), stamp = Date.parse(h.updated_at);
+        if (h.assignment_id === w.assignment_id) {
         if (h.worker_id !== w.id || h.assignment_id !== w.assignment_id || !Number.isFinite(stamp) || stamp > now + 60000 || typeof h.task !== 'string' || !['working','blocked','paused','stopped'].includes(h.state)) throw new Error('Invalid or outdated activity record');
         pickedUp = true;
         if (!at || stamp > at) {
@@ -48,6 +49,7 @@ function snapshot(root = ROOT, now = Date.now()) {
           state = stale ? 'No recent update' : h.state === 'working' ? 'Working · reported' : h.state;
           detail = h.task; at = stamp; file = heartbeatFile;
           if (h.state === 'blocked') events.push({id:'blocked:' + w.id + ':' + h.assignment_id + ':' + h.task, worker:w.id,title:'Worker blocked',detail,time:h.updated_at,file});
+        }
         }
       } catch (e) { errors.push(w.id + ': ' + e.message); }
     }
