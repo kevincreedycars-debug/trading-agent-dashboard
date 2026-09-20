@@ -1,22 +1,11 @@
 # Active milestone
 
-## Current Feature
-Central project coordination and worker handoffs.
+Current feature: central project coordination.
 
-## Current Milestone
-Review the corrected Gold session policy after the first mailbox checkpoint.
+Current milestone: Gold individual-variable report correctness and conditioning.
 
-## Status
-Gold revision 2 reviewed with changes requested; user confirmed gold-policy-003 and instructions are published. Awaiting worker pickup. Strategy workspace is prepared; other asset agents remain closed.
+Status: reaction-004 independently reproduced but changes requested for event identity and aggregation defects. gold-reaction-005 published; awaiting worker pickup.
 
-## Completed Work
-Gold coverage accepted (b8193ba / 0b0e92d). Existing dashboard alignment published as 683a840. Central coordination setup preserves those results.
+Next immediate action: review the corrected Gold report when submitted.
 
-## Remaining Work
-Receive Gold policy proposal and current-state reports from the four existing asset/pair workers, inspect evidence, record decisions and issue the next bounded assignments.
-
-## Next Immediate Action
-Review the gold-policy-003 submission when delivered; no implementation in this coordinator session.
-
-## Last Updated
-2026-09-20.
+No integration, deployment or trading qualification. Updated 2026-09-20.

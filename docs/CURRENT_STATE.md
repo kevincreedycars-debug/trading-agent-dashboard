@@ -1,5 +1,7 @@
 # Current state
 
+Project aim (user relayed and confirmed 2026-09-20): every tracked asset provides a 24-hour directional call. Layer 2 is intended to issue a higher-conviction cross-pair call when two independent Layer 1 calls move in opposing directions. The dashboard is the decision aid for acting on those calls. This records intended product behaviour; higher conviction is not established predictive accuracy or profitability. Research/backtesting stays downstream-only.
+
 2026-09-20: gold-reaction-004 confirmed by user and published. Revision 3 corrections accepted for exploratory use after independent tests/audit; calendar verification remains blocked. Awaiting worker pickup; no integration or production change.
 
 2026-09-20: user confirmed gold-policy-003. Published hash-bound changes_requested reply for revision 2 and activated the correction assignment. Awaiting worker pickup; no acceptance, integration or production action. Use explicit emoji labels for user actions, agent waiting and completed steps.

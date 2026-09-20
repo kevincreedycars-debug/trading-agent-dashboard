@@ -1,5 +1,7 @@
 # Session notes
 
+2026-09-20: reviewed Gold reaction-004; 16 tests pass and content hash reproduced, but event identity and aggregation/conditioning defects require gold-reaction-005. Published changes_requested reply and assignment. Strategy display_name added without changing worker key. Project aim recorded.
+
 2026-09-20: gold-reaction-004 confirmed by user and published. Revision 3 corrections accepted for exploratory use after independent tests/audit; calendar verification remains blocked. Awaiting worker pickup; no integration or production change.
 
 2026-09-20: user confirmed gold-policy-003. Published hash-bound changes_requested reply for revision 2 and activated the correction assignment. Awaiting worker pickup; no acceptance, integration or production action. Use explicit emoji labels for user actions, agent waiting and completed steps.

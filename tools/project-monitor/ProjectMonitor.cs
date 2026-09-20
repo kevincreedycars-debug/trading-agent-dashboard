@@ -12,7 +12,7 @@ using System.Drawing.Drawing2D;
 using System.Web.Script.Serialization;
 using System.Windows.Forms;
 
-public class Worker { public string id, state, flow, waiting_on, task, assignment, next, updated_at, file, folder; public int? age_minutes; }
+public class Worker { public string id, name, state, flow, waiting_on, task, assignment, next, updated_at, file, folder; public int? age_minutes; }
 public class Update { public string id, worker, title, detail, time, file; }
 public class UsageProject { public string provider, project; public long input, output, cached, total; }
 public class UsageCoverage { public string source, status; public int records; }
@@ -168,7 +168,7 @@ public class MonitorPanel : Form {
         using(var dot=new SolidBrush(signal))e.Graphics.FillEllipse(dot,10,y+5,8,8);
         var format=new StringFormat { Trimming=StringTrimming.EllipsisCharacter,FormatFlags=StringFormatFlags.NoWrap };
         using(var bold=new Font(Font,FontStyle.Bold))using(var fg=new SolidBrush(foreground))using(var secondary=new SolidBrush(muted)){
-            e.Graphics.DrawString(w.id,bold,fg,new RectangleF(x,y,width,20),format);
+            e.Graphics.DrawString(String.IsNullOrEmpty(w.name)?w.id:w.name,bold,fg,new RectangleF(x,y,width,20),format);
             Color tone=signal;
             using(var brush=new SolidBrush(tone))e.Graphics.DrawString(w.state+" · "+(w.age_minutes.HasValue?w.age_minutes+"m ago":"no heartbeat"),Font,brush,new RectangleF(x,y+17,width,16),format);
             e.Graphics.DrawString(w.task,Font,secondary,new RectangleF(x,y+33,width,17),format);

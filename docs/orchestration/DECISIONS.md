@@ -43,3 +43,7 @@ This historical result is not a test result for new changes.
 ## Gold transition review: changes requested
 
 Submission 20260920-gold-policy-transition-001 was independently reproduced but not accepted. Verified two blocking bugs: close values used before candle completion and missing declared closes silently replaced. The archive-derived exception register does not independently validate source completeness. gold-policy-002 authorizes preserving the five files in the worker branch, corrective implementation/tests and a provider-evidenced proposal; canonical originals remain untouched. Earlier user research authorization remains valid; implementation preservation is not integration or permission to proceed to reaction reports. See the durable review for evidence and reported user horizon constraints.
+
+## Project aim
+
+Project aim (user relayed and confirmed 2026-09-20): every tracked asset provides a 24-hour directional call. Layer 2 is intended to issue a higher-conviction cross-pair call when two independent Layer 1 calls move in opposing directions. The dashboard is the decision aid for acting on those calls. This records intended product behaviour; higher conviction is not established predictive accuracy or profitability. Research/backtesting stays downstream-only.

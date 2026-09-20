@@ -65,7 +65,7 @@ function snapshot(root = ROOT, now = Date.now()) {
       events.push({id:'wake:' + w.id + ':' + w.assignment_id,worker:w.id,title:'YOUR ACTION: wake agent',detail,
         time:at ? new Date(at).toISOString() : new Date(fs.statSync(path.join(root,'docs/orchestration/projects.json')).mtimeMs).toISOString(),file:path.join(root,w.assignment)});
     }
-    return { id:w.id, flow, waiting_on, state, task:detail, assignment:w.assignment_id, next:w.next || '',
+    return { id:w.id, name:w.display_name || w.id, flow, waiting_on, state, task:detail, assignment:w.assignment_id, next:w.next || '',
       updated_at:at ? new Date(at).toISOString() : null, age_minutes:at ? Math.max(0,Math.floor((now-at)/60000)) : null,
       file, folder:w.path };
   });
