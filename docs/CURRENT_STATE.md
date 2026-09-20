@@ -1,10 +1,10 @@
 # Current state
 
-Updated 2026-09-18. Current branch: research/gold-pre2024-coverage.
+Updated 2026-09-19. Current branch: docs/gold-variable-research-scope.
 
 Extended Gold research is executed and documented in GOLD_EXTENDED_RESEARCH_20260918.md. Sources: five macro vintage series, 21,871 hourly candles and 5,115 calendar records. Schedule: 964 decisions, 613 training, 143 validation, 208 excluded. Retrospective search: 53,751 candidates, 69 families, 23 eligible event candidates. Training-selected claims-below-consensus bullish hypothesis scores 43/58 training and 12/16 validation, plus five validation flats; macro-only winner remains 15/28 validation. The event result is a selective retrospective lead, not live qualification: original consensus vintages, untouched testing and continuous paths remain missing. Its month-block descriptive accuracy interval spans 47.83%-100%. Full suite: 336/336.
 
-Next immediate action is original-release/consensus provenance review and a frozen prospective shadow contract for the claims hypothesis. Source coverage and the extended research run are complete; prior reports remain historical baselines.
+September 19 user clarification: individual-variable associations over meaningful horizons up to five trading days come first, including preceding weekly price and macro context; systematic combinations and daily formula qualification follow. Use deterministic programs, workflows and database queries, avoiding AI record/combinations scanning. Next immediate action is a machine-readable variable/horizon/context coverage registry and implementation gap report. The extended run is complete, but full intended-variable and multi-horizon coverage is not. See BACKTESTING_REVIEW_PLAN.md.
 
 Latest live operation remains the September 17 USD FRED gateway retry repair. Master 3992 and all children succeeded, public Pages reported success at 21:16:17 UTC. No production mutation occurred during the Gold expansion. See USD_GATEWAY_INCIDENT_20260917.md.
 

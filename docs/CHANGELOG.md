@@ -1,3 +1,7 @@
+# 2026-09-19 - Variable-first research scope agreed
+
+Recorded individual-variable association research over meaningful horizons up to five trading days, preceding weekly context, systematic combinations and later formula qualification. Added explicit program/workflow/database execution and AI-credit discipline. Updated active task and milestone; no runtime changes.
+
 # 2026-09-18 - Extended Gold research delivered
 
 Predeclared and executed 2023-2026 research in both evidence modes. Added verified archive merger, configurable plan wiring, training-selected diagnostic scorecards and paired month-block sensitivity. Usable training grew 390 to 613; 53,751 retrospective candidates yielded 23 eligible event conditions. Claims-below-consensus lead scores 12/16 directional validation outcomes, with five flats, unverified vintages and broad uncertainty; macro-only winner stays 53.57%. Full local suite 336/336. No production changes. See GOLD_EXTENDED_RESEARCH_20260918.md.

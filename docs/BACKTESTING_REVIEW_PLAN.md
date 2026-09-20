@@ -2,7 +2,21 @@
 
 Baseline date: 2026-09-07. Objective: establish what each engine actually measures, correct demonstrated measurement defects, and qualify evidence before optimization.
 
-## Research framework: the common 24-hour question
+## Current scope agreed September 19, 2026
+
+The immediate objective is descriptive variable-price research, followed by combination research and only then daily-direction formula development and qualification. This supersedes the claims-only prospective-test next action below.
+
+1. Inventory all intended Gold variables, explicitly reporting missing coverage. Measure individual relationships with price direction and return magnitude, including actual-versus-consensus surprise sign and size where applicable. Observations need event or measurement timestamps, not trading decisions.
+2. Measure reaction paths at meaningful horizons up to five trading days, including immediate, 1-hour, 4-hour and 24-hour reactions where supported. Define session calendars, horizon endpoints and gap handling explicitly; five trading days is not automatically 120 elapsed hours. Preserve the existing exact-24-hour evaluator and historical reports.
+3. Condition relationships on the preceding five trading days of price trend and separately on prior macro conditions, recent surprises, yields and dollar strength. Context must precede the observation. Test continuation, fading and reversal; do not assume negative macro pressure implies continued falling prices until another event.
+4. Expand systematically from individual variables to pairs and supported larger combinations. Report all attempted combinations, sample counts, exclusions, return distributions and stability across years/environments. Track overlapping events and dependent observations; do not search until an attractive percentage appears.
+5. Develop a daily-direction formula from supported relationships, then freeze it and test on untouched data. The greater-than-60% qualification target and separate Layer 1/Layer 2 requirements remain downstream and evidence-dependent. A selective event pattern does not establish daily-call coverage.
+
+Execution and cost: use deterministic programs, SQL/database queries and workflows for acquisition, joins, calculations, combination searches and report generation. Reuse cached/versioned inputs and incremental updates. Do not use per-record or per-combination AI calls for work programs can perform. AI supports implementation, debugging and interpretation of compact generated summaries; avoid repeated large raw-data reads. Database/production mutation and deployment remain separately scoped.
+
+Next immediate action: produce a machine-readable variable/horizon/context coverage registry and implementation gap report against existing programs and database sources. This defines the first automated individual-variable report before broadening the combination search. Original release/consensus provenance remains part of source quality, not a claims-only prerequisite for all descriptive work; unverified archive relationships must remain labelled retrospective.
+
+## Historical research framework: the common 24-hour question
 
 Current September 18 result: [Extended research delivery](GOLD_EXTENDED_RESEARCH_20260918.md). Both 2023-2026 runs completed: 964 decisions, 53,751 retrospective candidates, 23 eligible event candidates. Training-selected claims hypothesis scores 12/16 directional validation outcomes, but only 21 total matches and unverified original event vintages; macro-only winner remains 15/28. Next is claims provenance and a frozen prospective contract. The dated entries below are prior stages, not competing next actions.
 
