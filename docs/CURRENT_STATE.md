@@ -1,5 +1,7 @@
 # Current state
 
+2026-09-20 evening checkpoint: user requested stop/save for tonight. Gold corrected report dd657c5 remains accepted for exploratory use (21 tests and content hash independently reproduced). NEW inbox item 20260920-gold-findings-summary-005-r2 arrived and is pending review; do not describe the revised digest as accepted. First action next session: review this digest against the accepted artifact, then ask user before authorizing Phase 1 gold_d1_pct/gold_d5_pct/gold_d20_pct. Strategy advisory acknowledged; provider calendar/vintage blockers persist. No integration or deployment. Monitor and workspace setup saved. Preserve uncommitted Strategy.code-workspace tint and five canonical untracked Gold policy originals; do not stage/discard them. Other agent sessions were not stopped by this checkpoint.
+
 2026-09-20: gold-reaction-005 accepted as an exploratory checkpoint at dd657c5 after independent 21-test pass, source inspection and hash reproduction. No integration or trading qualification. Worker holds for next assignment; interpretation/coverage planning proposed.
 
 Project aim (user relayed and confirmed 2026-09-20): every tracked asset provides a 24-hour directional call. Layer 2 is intended to issue a higher-conviction cross-pair call when two independent Layer 1 calls move in opposing directions. The dashboard is the decision aid for acting on those calls. This records intended product behaviour; higher conviction is not established predictive accuracy or profitability. Research/backtesting stays downstream-only.
