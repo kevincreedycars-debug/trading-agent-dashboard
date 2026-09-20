@@ -154,6 +154,30 @@ Record dated user decisions, questions and recommendations here. No discussion h
 - Adviser could not query the n8n API directly (this assignment has no credential access); the
   evidence above comes from the artifacts n8n itself commits after each run.
 
+## 2026-09-20 - Why GBP is missing from the master run's step list
+
+- `exports/master_orchestrator.json` shows the status node `Build Workflow Status JSON` carries a
+  **hardcoded `stepNames` array**; the live `data/workflow-status.json` lists 16 steps — Silver and
+  WTI are present, GBP is not.
+- GBP nevertheless executes inside the refresh windows: the GBP worker's own close-out log records
+  `agent_outputs` successes at `2026-09-20T11:57:44Z` and `2026-09-20T12:46:01Z`, its row lands in
+  `data/layer1.json` before the writer commits (12:46:33Z), and today's Layer 2 evaluated GBP/USD
+  ("Mixed or low conviction 24H signals") instead of reporting a missing 24H call — which it does
+  when a Layer 1 input is absent.
+- Conclusion: GBP runs but is **absent from the hardcoded status list** — an under-reporting defect
+  in the dashboard's status surface, not a missing agent. Confidence is high but not proof: the repo
+  cannot confirm the live node list because `exports/` is stale (`master_orchestrator.json` has 17
+  nodes and also lacks Silver/WTI; `dashboard_writer.json` and `layer2_trade_selection_agent.json`
+  still describe the pre-GBP system, as the GBP worker's own log notes at commit `7f84801`).
+- Fix options, in order of preference: (a) if GBP call nodes exist in the live master, add GBP to
+  `stepNames` (single-node edit); (b) if they do not, insert the GBP call before Layer 2 and Writer;
+  (c) refresh the repo exports so this drift stops recurring. All require n8n credentials, so the
+  work belongs to the coordinator, not this adviser.
+- Related items carried forward from the GBP close-out: the live Layer 2 publisher scores only the
+  seven USD-quoted pairs (GBP-quoted crosses are dashboard-derived), `factor_edge_lab.js` still lists
+  GBP/USD as onboarding, `market_snapshots` has no GBP columns, and the platform-wide
+  `_LEAN`/same-direction NO-TRADE policy is still open.
+
 ## 2026-09-20 - Communication preference: English only
 
 - User requirement: English only in all replies and notes. One earlier chat reply accidentally opened
