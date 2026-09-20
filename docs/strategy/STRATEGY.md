@@ -17,11 +17,14 @@ dashboard is the decision aid through which those calls are acted on.
 
 Implications recorded for later sequencing:
 
-- A daily 24-hour cadence is the product requirement — this is exactly what the gold
-  session/calendar policy work exists to support, so that plumbing is on the critical path, not
-  research for its own sake.
-- "All tracked assets" makes the four unreported workers (gbp, silver, wti, eur-pairs) part of the
-  core aim rather than optional reconciliation.
+- Two tracks, not one. **(A) Live path** — the five Layer 1 agents emit 24-hour calls, Layer 2
+  synthesises opposing-call cross-pair conviction, and the dashboard is the decision aid. **(B) A
+  separate gold sub-project**, currently running, whose job is to measure how gold's input
+  variables actually relate to real price movement and then build gold's daily call formula on
+  probability-supported evidence. The gold session/calendar policy work belongs to track B and is
+  not on the live path.
+- "All tracked assets" puts the four unreported workers (gbp, silver, wti, eur-pairs) in scope for
+  the live path, not in optional reconciliation.
 - Layer 2's documented role (`README.md`: economic-event adjustment via the Eco Events Agent)
   differs from the divergence-synthesis role this aim implies. Which one is first, and whether they
   run in sequence, is unresolved.

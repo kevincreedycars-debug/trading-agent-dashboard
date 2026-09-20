@@ -101,3 +101,16 @@ Record dated user decisions, questions and recommendations here. No discussion h
 - User asked for a copy-ready instruction for the orchestrator: rename this worker's monitor card to
   "Strategy Agent" (patch `projects.json` + `monitor-state.js` + `ProjectMonitor.cs`, rebuild and
   restart the monitor; the worker id stays `strategy`) and record the aim in canonical memory.
+
+## 2026-09-20 - Correction: gold is a separate sub-project, not the live path
+
+- User clarified the aim structure: **two tracks**. The gold work currently in flight is its own
+  research sub-project — identify how gold's input variables actually relate to real price
+  movement, then build the daily call formula from real-data-supported probabilities. It is **not**
+  the live dashboard path.
+- Corrected `docs/strategy/STRATEGY.md`: the earlier note that gold session/calendar policy is on
+  the critical path for the 24h-call aim was wrong and has been replaced with the two-track
+  statement.
+- Still open on the live path: (a) does each Layer 1 agent already emit a 24h call on a daily
+  schedule, or only when a refresh is triggered; (b) is Layer 2 the economic-events adjuster, the
+  opposing-call divergence synthesizer, or events followed by divergence.
