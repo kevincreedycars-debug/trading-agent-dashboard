@@ -117,8 +117,12 @@ the policy gate passes and an untouched evaluation exists.
 
 ## 5. Ranked next steps, dependencies and alternatives
 
+R0. **Fix the live path's status reporting first (small, no research dependency).** Add GBP to the
+    Master Orchestrator's hardcoded status step list (or add the missing GBP call nodes if they are
+    absent), and refresh the stale `exports/` so the dashboard's status surface stops under-reporting
+    an agent that is actually running. Depends on: n8n credentials, so it belongs to the coordinator.
 R1. **Let `gold-policy-003` finish, then review it** with independent checks (focused test rerun and
-    reproduction of the documented audit hash) and record the outcome. This is the critical path:
+    reproduction of the documented audit hash) and record the outcome. This is the critical path for track B only (it does not gate the live path):
     the research-reporting workstream is gated on it and adding scope mid-batch would break the
     hash-bound review cycle. Depends on: worker finishing, coordinator review slot.
 R2. **Decide the calendar-provenance gate, then adopt it explicitly.** Recommended shape: a

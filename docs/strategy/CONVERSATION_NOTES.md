@@ -178,6 +178,26 @@ Record dated user decisions, questions and recommendations here. No discussion h
   GBP/USD as onboarding, `market_snapshots` has no GBP columns, and the platform-wide
   `_LEAN`/same-direction NO-TRADE policy is still open.
 
+## 2026-09-20 - Session close (overnight handoff)
+
+State saved. Nothing is running on this worker; activity is reported as stopped for the night.
+
+- **Aim recorded** in `STRATEGY.md` section 0: all tracked assets give a 24-hour call, then Layer 2
+  issues a higher-conviction cross-pair call when two Layer 1 calls disagree; the dashboard is the
+  decision aid.
+- **Live state verified** from n8n's committed outputs: eight agents live with today's 24H calls, and
+  Layer 2 produced no trade (all pairs same-direction or low conviction) — the intended mechanic.
+- **Diagnosis recorded**: GBP executes but is absent from the Master Orchestrator's hardcoded status
+  step list; `exports/` is stale and cannot confirm the live node list.
+- **Pending, awaiting the user's go-ahead**: a bounded orchestrator assignment covering (a) GBP in the
+  master status list or master call nodes, (b) the delayed-endpoint fix for the `input-health.json`
+  artifact last generated 2026-09-12, (c) refreshing the stale `exports/` so live-vs-repo drift stops
+  recurring.
+- **Open strategy questions carried over**: the Layer 2 role (economic-events adjuster vs
+  opposing-call synthesis vs both in sequence), and the stopping rule for the gold sub-project.
+- For a new session: read this file, `STRATEGY.md`, then canonical `CODEX_STARTUP.md` and the four
+  state documents; the adviser holds no chat memory across sessions.
+
 ## 2026-09-20 - Communication preference: English only
 
 - User requirement: English only in all replies and notes. One earlier chat reply accidentally opened
