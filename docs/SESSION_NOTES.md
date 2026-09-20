@@ -1,5 +1,7 @@
 # Session notes
 
+2026-09-20: gold-reaction-005 accepted as an exploratory checkpoint at dd657c5 after independent 21-test pass, source inspection and hash reproduction. No integration or trading qualification. Worker holds for next assignment; interpretation/coverage planning proposed.
+
 2026-09-20: reviewed Gold reaction-004; 16 tests pass and content hash reproduced, but event identity and aggregation/conditioning defects require gold-reaction-005. Published changes_requested reply and assignment. Strategy display_name added without changing worker key. Project aim recorded.
 
 2026-09-20: gold-reaction-004 confirmed by user and published. Revision 3 corrections accepted for exploratory use after independent tests/audit; calendar verification remains blocked. Awaiting worker pickup; no integration or production change.

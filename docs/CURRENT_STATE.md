@@ -1,5 +1,7 @@
 # Current state
 
+2026-09-20: gold-reaction-005 accepted as an exploratory checkpoint at dd657c5 after independent 21-test pass, source inspection and hash reproduction. No integration or trading qualification. Worker holds for next assignment; interpretation/coverage planning proposed.
+
 Project aim (user relayed and confirmed 2026-09-20): every tracked asset provides a 24-hour directional call. Layer 2 is intended to issue a higher-conviction cross-pair call when two independent Layer 1 calls move in opposing directions. The dashboard is the decision aid for acting on those calls. This records intended product behaviour; higher conviction is not established predictive accuracy or profitability. Research/backtesting stays downstream-only.
 
 2026-09-20: gold-reaction-004 confirmed by user and published. Revision 3 corrections accepted for exploratory use after independent tests/audit; calendar verification remains blocked. Awaiting worker pickup; no integration or production change.
