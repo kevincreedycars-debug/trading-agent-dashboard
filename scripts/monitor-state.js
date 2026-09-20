@@ -14,7 +14,7 @@ function snapshot(root = ROOT, now = Date.now()) {
   const registry = read(path.join(root, 'docs/orchestration/projects.json'));
   const scan = createMailbox(root).check();
   const events = [], errors = [...scan.errors.map(e => `${e.worker_id}: ${e.error}`)];
-  const workers = registry.workers.map(w => {
+  const workers = [...(registry.coordinator ? [registry.coordinator] : []), ...registry.workers].map(w => {
     const submissions = scan.submissions.filter(s => s.worker_id === w.id);
     let latest = null;
     for (const s of submissions) {
@@ -49,7 +49,15 @@ function snapshot(root = ROOT, now = Date.now()) {
         }
       } catch (e) { errors.push(w.id + ': ' + e.message); }
     }
-    return { id:w.id, state, task:detail, assignment:w.assignment_id, next:w.next || '',
+    let flow = 'idle', waiting_on = '';
+    if (state.startsWith('Working')) flow = 'working';
+    else if (/awaiting review|needs review/i.test(state)) { flow = 'review'; waiting_on = 'central-orchestrator'; }
+    else if (/blocked/i.test(state)) { flow = 'input'; waiting_on = 'user / coordinator'; }
+    else if (/changes requested|paused|stopped/i.test(state)) { flow = 'waiting'; waiting_on = 'instruction / resume'; }
+    if (!latest && !at) { state = 'Not started / no report'; }
+    if (flow === 'waiting') state = 'Waiting for instruction';
+    if (flow === 'input') state = 'Needs input';
+    return { id:w.id, flow, waiting_on, state, task:detail, assignment:w.assignment_id, next:w.next || '',
       updated_at:at ? new Date(at).toISOString() : null, age_minutes:at ? Math.max(0,Math.floor((now-at)/60000)) : null,
       file, folder:w.path };
   });
@@ -58,7 +66,7 @@ function snapshot(root = ROOT, now = Date.now()) {
 }
 function activity(root, workerId, state, task) {
   const registry=read(path.join(root,'docs/orchestration/projects.json'));
-  const w=registry.workers.find(w=>w.id===workerId);
+  const w=[...(registry.coordinator ? [registry.coordinator] : []), ...registry.workers].find(w=>w.id===workerId);
   if (!w || !['working','blocked','paused','stopped'].includes(state) || !task || task.length>2000) throw new Error('Expected registered worker, working|blocked|paused|stopped and task (1–2000 characters)');
   const directory=path.join(root,'.local/orchestration/activity');
   for (const p of [path.join(root,'.local'),path.join(root,'.local/orchestration'),directory]) if(fs.existsSync(p)&&fs.lstatSync(p).isSymbolicLink()) throw new Error('Activity link refused');

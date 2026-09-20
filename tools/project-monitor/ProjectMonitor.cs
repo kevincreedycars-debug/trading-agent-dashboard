@@ -12,7 +12,7 @@ using System.Drawing.Drawing2D;
 using System.Web.Script.Serialization;
 using System.Windows.Forms;
 
-public class Worker { public string id, state, task, assignment, next, updated_at, file, folder; public int? age_minutes; }
+public class Worker { public string id, state, flow, waiting_on, task, assignment, next, updated_at, file, folder; public int? age_minutes; }
 public class Update { public string id, worker, title, detail, time, file; }
 public class UsageProject { public string provider, project; public long input, output, cached, total; }
 public class UsageCoverage { public string source, status; public int records; }
@@ -34,6 +34,8 @@ public class MonitorPanel : Form {
     readonly CheckBox pin = new CheckBox(), alerts = new CheckBox();
     readonly NotifyIcon tray = new NotifyIcon();
     readonly System.Windows.Forms.Timer timer = new System.Windows.Forms.Timer();
+    readonly System.Windows.Forms.Timer animation = new System.Windows.Forms.Timer();
+    int phase;
     readonly BackgroundWorker scanner = new BackgroundWorker();
     Preferences prefs = new Preferences();
     HashSet<string> seen = new HashSet<string>();
@@ -45,14 +47,15 @@ public class MonitorPanel : Form {
         Directory.CreateDirectory(storage);
         if(smoke==null) try { if(File.Exists(Path.Combine(storage,"preferences.json"))) prefs=json.Deserialize<Preferences>(File.ReadAllText(Path.Combine(storage,"preferences.json"))); } catch { }
         seen=new HashSet<string>(prefs.seen??new string[0]); initialized=seen.Count>0;
-        Text="Project Monitor"; Icon=SystemIcons.Application; BackColor=background; ForeColor=foreground;
+        Text="Central Orchestrator"; Icon=SystemIcons.Application; BackColor=background; ForeColor=foreground;
         Font=new Font("Segoe UI",8.5f); AutoScaleMode=AutoScaleMode.Dpi; FormBorderStyle=FormBorderStyle.None; Padding=new Padding(1);
-        ClientSize=new Size(354,548); MinimumSize=new Size(324,440); TopMost=prefs.pin;
+        ClientSize=new Size(380,790); MinimumSize=new Size(324,540); TopMost=prefs.pin;
         StartPosition=FormStartPosition.Manual;
         var area=Screen.PrimaryScreen.WorkingArea;
+        Height=Math.Min(Height,area.Height-40);
         Location=new Point(prefs.x<0?area.Right-Width-20:prefs.x,prefs.y<0?area.Top+30:prefs.y);
         if(!Screen.AllScreens.Any(s=>s.WorkingArea.IntersectsWith(Bounds))) Location=new Point(area.Right-Width-20,area.Top+30);
-        var heading=new Panel { Dock=DockStyle.Top, Height=52, Padding=new Padding(12,8,12,4) };
+        var heading=new Panel { Dock=DockStyle.Top, Height=66, Padding=new Padding(12,8,12,4) };
         var title=new Label { Text="", Dock=DockStyle.Top, Height=0 };
         summary.Dock=DockStyle.Fill; summary.ForeColor=muted; summary.Text="Reading coordination files...";
         heading.Controls.Add(summary); heading.Controls.Add(title);
@@ -64,7 +67,7 @@ public class MonitorPanel : Form {
         buttons.Controls.Add(Button("Details",(s,e)=>Details())); buttons.Controls.Add(Button("Refresh",(s,e)=>Scan()));
         status.Dock=DockStyle.Bottom; status.Height=26; status.Padding=new Padding(12,4,12,2); status.ForeColor=muted; status.AutoEllipsis=true;
         list.Dock=DockStyle.Fill; list.BackColor=background; list.ForeColor=foreground; list.BorderStyle=BorderStyle.None;
-        list.DrawMode=DrawMode.OwnerDrawFixed; list.ItemHeight=56; list.IntegralHeight=false;
+        list.DrawMode=DrawMode.OwnerDrawFixed; list.ItemHeight=72; list.IntegralHeight=false;
         list.DrawItem+=DrawWorker; list.DoubleClick+=(s,e)=>Details();
         list.KeyDown+=(s,e)=>{if(e.KeyCode==Keys.Enter) Details();};
         var usagePanel=new Panel {Dock=DockStyle.Bottom,Height=116,Padding=new Padding(12,8,12,6),BackColor=Color.FromArgb(29,44,36)};
@@ -74,7 +77,7 @@ public class MonitorPanel : Form {
         usageDetail.Click+=(s,e)=>UsageDetails();usageTotal.Click+=(s,e)=>UsageDetails();
         usagePanel.Controls.Add(usageDetail);usagePanel.Controls.Add(usageTotal);usagePanel.Controls.Add(usageTitle);
         var chrome=new Panel {Dock=DockStyle.Top,Height=32,BackColor=Color.FromArgb(27,41,33)};
-        var caption=new Label {Text="\u22ee  Project monitor",Dock=DockStyle.Fill,Padding=new Padding(12,7,0,0),ForeColor=muted};caption.MouseDown+=Drag;chrome.MouseDown+=Drag;
+        var caption=new Label {Text="\u22ee  Central Orchestrator",Dock=DockStyle.Fill,Padding=new Padding(12,7,0,0),ForeColor=muted};caption.MouseDown+=Drag;chrome.MouseDown+=Drag;
         var close=Button("\u00d7",(s,e)=>{Hide();Save();});close.Dock=DockStyle.Right;close.Width=30;close.AutoSize=false;close.FlatAppearance.BorderSize=0;
         var minimize=Button("\u2212",(s,e)=>{Hide();Save();});minimize.Dock=DockStyle.Right;minimize.Width=30;minimize.AutoSize=false;minimize.FlatAppearance.BorderSize=0;
         pin.Appearance=Appearance.Button;pin.FlatStyle=FlatStyle.Flat;pin.FlatAppearance.BorderSize=0;pin.FlatAppearance.CheckedBackColor=Color.FromArgb(39,78,56);pin.ForeColor=Color.FromArgb(135,204,166);pin.Text="Pin";pin.TextAlign=ContentAlignment.MiddleCenter;pin.AutoSize=false;pin.Dock=DockStyle.Right;pin.Width=36;pin.BackColor=Color.FromArgb(35,62,47);
@@ -91,6 +94,8 @@ public class MonitorPanel : Form {
         scanner.DoWork+=(s,e)=>e.Result=ReadSnapshot();
         scanner.RunWorkerCompleted+=Scanned;
         timer.Interval=5000; timer.Tick+=(s,e)=>Scan(); timer.Start();
+        animation.Interval=80;animation.Tick+=(s,e)=>{phase=(phase+1)%24;if(Visible)list.Invalidate();};animation.Start();
+        FormClosed+=(s,e)=>animation.Dispose();
         Shown+=(s,e)=>Scan();
     }
     Button Button(string text, EventHandler click) { var b=new Button {Text=text,AutoSize=true,FlatStyle=FlatStyle.Flat,BackColor=Color.FromArgb(37,61,47),ForeColor=Color.FromArgb(166,216,185)};b.FlatAppearance.BorderColor=Color.FromArgb(53,81,62);b.Click+=click;return b; }
@@ -111,14 +116,14 @@ public class MonitorPanel : Form {
     }
     void Scanned(object sender,RunWorkerCompletedEventArgs e){
         if(IsDisposed)return;
-        if(e.Error!=null){status.Text="SCAN FAILED · last display may be stale\n"+e.Error.Message;status.ForeColor=Color.Salmon;if(smoke!=null)FinishSmoke(null,e.Error.Message);return;}
+        if(e.Error!=null){foreach(Worker row in list.Items)row.flow="idle";list.Invalidate();status.Text="SCAN FAILED · last display may be stale\n"+e.Error.Message;status.ForeColor=Color.Salmon;if(smoke!=null)FinishSmoke(null,e.Error.Message);return;}
         var data=(Snapshot)e.Result; scans++; currentUsage=data.usage;
         if(currentUsage!=null){usageTotal.Text=currentUsage.records==0?"No usage recorded today":Compact(currentUsage.total)+" tokens";usageDetail.Text="Input "+Compact(currentUsage.input)+"  \u00b7  Output "+Compact(currentUsage.output)+"\nIncludes "+Compact(currentUsage.cached)+" cached \u00b7 local projects\n"+(currentUsage.errors.Length>0?"Partial coverage \u00b7 click for details":"Updates ~30s \u00b7 click for project breakdown");}
         string selected=list.SelectedItem is Worker?((Worker)list.SelectedItem).id:null;
         list.BeginUpdate();list.Items.Clear();foreach(var w in data.workers)list.Items.Add(w);
         for(int i=0;i<list.Items.Count;i++)if(((Worker)list.Items[i]).id==selected)list.SelectedIndex=i;
         if(list.SelectedIndex<0&&list.Items.Count>0)list.SelectedIndex=0;list.EndUpdate();
-        summary.Text=data.pending+" awaiting review \u00b7 "+data.workers.Length+" projects\nAutomatic dispatch: not configured";
+        summary.Text=data.workers.Count(w=>w.flow=="working")+" working  |  "+data.pending+" awaiting review\nTeal: working  |  Amber: needs review / input\nLines connect to coordinator; dispatch is manual";
         status.ForeColor=data.errors.Length>0?Color.Salmon:muted;
         status.Text=data.errors.Length>0?"DATA NEEDS ATTENTION · "+data.errors[0]:"\u25cf Watching \u00b7 "+DateTime.Now.ToString("HH:mm:ss")+" \u00b7 refresh 5s";
         var fresh=data.events.Where(x=>!seen.Contains(x.id)).ToArray();
@@ -132,13 +137,21 @@ public class MonitorPanel : Form {
     void DrawWorker(object sender,DrawItemEventArgs e){
         if(e.Index<0)return;var w=(Worker)list.Items[e.Index];
         using(var fill=new SolidBrush((e.State&DrawItemState.Selected)!=0?Color.FromArgb(36,55,43):background))e.Graphics.FillRectangle(fill,e.Bounds);
-        var x=e.Bounds.X+12;var width=e.Bounds.Width-24;var y=e.Bounds.Y+4;
+        var x=e.Bounds.X+34;var width=e.Bounds.Width-46;var y=e.Bounds.Y+4;
+        bool active=w.flow=="working", needs=w.flow=="review"||w.flow=="input";
+        Color signal=active?Color.FromArgb(100,214,178):needs?Color.FromArgb(239,188,110):muted;
+        bool pendingPath=list.Items.Cast<Worker>().Skip(e.Index).Any(row=>row.flow=="review"||row.flow=="input");
+        bool workingPath=list.Items.Cast<Worker>().Skip(e.Index).Any(row=>row.flow=="working");
+        using(var rail=new Pen(pendingPath?Color.FromArgb(190,150,85):workingPath?Color.FromArgb(80,175,144):Color.FromArgb(67,87,77),1)){if(pendingPath||workingPath){rail.DashStyle=DashStyle.Dash;rail.DashOffset=(pendingPath?1:-1)*phase/3f;}e.Graphics.DrawLine(rail,14,e.Index==0?y+8:e.Bounds.Top,14,e.Bounds.Bottom);}
+        using(var link=new Pen(signal,2)){if(active||needs){link.DashStyle=DashStyle.Dash;link.DashOffset=active?-phase/3f:phase/3f;}e.Graphics.DrawLine(link,14,y+9,29,y+9);}
+        using(var dot=new SolidBrush(signal))e.Graphics.FillEllipse(dot,10,y+5,8,8);
         var format=new StringFormat { Trimming=StringTrimming.EllipsisCharacter,FormatFlags=StringFormatFlags.NoWrap };
         using(var bold=new Font(Font,FontStyle.Bold))using(var fg=new SolidBrush(foreground))using(var secondary=new SolidBrush(muted)){
             e.Graphics.DrawString(w.id,bold,fg,new RectangleF(x,y,width,20),format);
-            Color tone=w.state.StartsWith("Working")?Color.FromArgb(100,214,178):w.state.Contains("Blocked")||w.state.Contains("changes")?Color.FromArgb(239,188,110):muted;
+            Color tone=signal;
             using(var brush=new SolidBrush(tone))e.Graphics.DrawString(w.state+" · "+(w.age_minutes.HasValue?w.age_minutes+"m ago":"no heartbeat"),Font,brush,new RectangleF(x,y+17,width,16),format);
             e.Graphics.DrawString(w.task,Font,secondary,new RectangleF(x,y+33,width,17),format);
+            e.Graphics.DrawString(!String.IsNullOrEmpty(w.waiting_on)?"Waiting on: "+w.waiting_on:active?"Active report - expires after 5 minutes":"No active work reported",Font,secondary,new RectangleF(x,y+50,width,17),format);
         }
         using(var pen=new Pen(Color.FromArgb(48,68,55)))e.Graphics.DrawLine(pen,x,e.Bounds.Bottom-1,e.Bounds.Right-12,e.Bounds.Bottom-1);
         e.DrawFocusRectangle();

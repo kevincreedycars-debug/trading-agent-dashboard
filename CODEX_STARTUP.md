@@ -1,5 +1,12 @@
 # Project startup
 
+Workspace identity: **Central Orchestrator**. Open `Central-Orchestrator.code-workspace`
+for the named VS Code window; the canonical folder stays unchanged. At the start of
+active work, meaningful progress checkpoints and before yielding, report actual
+coordinator activity using `node scripts/monitor-state.js activity central-orchestrator
+working "Task summary"` (use `paused` when waiting for the user). Never maintain idle
+heartbeats. The monitor displays this coordinator alongside workers.
+
 Coordination entrypoint: read `docs/orchestration/README.md`, `projects.json` and `DECISIONS.md` first. This canonical checkout is the coordinator. Workers read these files by their canonical absolute path and use their assigned worktree; older shared-checkout directions are superseded. On "check submissions", run `node scripts/coordination.js check` and follow the review cycle. The desktop monitor can poll files; no automatic agent/review dispatcher is active.
 
 Read this file first, then:

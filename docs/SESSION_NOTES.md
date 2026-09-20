@@ -49,3 +49,5 @@ Local `npm test` passed 305/305. USD retry 3561 succeeded but reused earlier cac
 Existing input incompleteness stays explicit: missing historical metrics and latest economic-event fields leave snapshots partial. Workflow recovery does not establish complete inputs, causal timing or trading edge. The live incident is closed; Gold history isolation is the next objective and its prepared repair is not deployed. Separate asset-builder worktrees were untouched.
 
 Authenticated runtime access works through the scoped encrypted credential runner in `CREDENTIAL_CONTINUITY.md`. Empty environment variables outside the runner are intentional. Do not print secrets. Next action: resume Gold history isolation as the single active milestone.
+
+2026-09-20: Central Orchestrator named workspace added without moving canonical folder. Monitor enlarged to 380x790 with seven rows, explicit waiting/input states and animated coordinator connections; inactive/stale reports do not claim work. Twelve focused tests pass; native build and normal/narrow render verified.
