@@ -20,6 +20,14 @@ public class Usage { public string day, timezone, scanned_at, latest_record, sco
 public class Snapshot { public string scanned_at, controller; public int pending; public string[] errors; public Worker[] workers; public Update[] events; public Usage usage; }
 public class Preferences { public bool pin = true, alerts = true; public int x = -1, y = -1; public string[] seen = new string[0]; }
 
+// Native ListBox painting erases its background on each animation frame.
+// Compose that paint into an off-screen buffer before presenting it.
+public class BufferedWorkerList : ListBox {
+    protected override CreateParams CreateParams {
+        get { var parameters=base.CreateParams; parameters.ExStyle |= 0x02000000; return parameters; }
+    }
+}
+
 public class MonitorPanel : Form {
     readonly string root, node, storage, smoke;
     readonly JavaScriptSerializer json = new JavaScriptSerializer { MaxJsonLength = 2097152 };
@@ -30,7 +38,7 @@ public class MonitorPanel : Form {
     [DllImport("user32.dll")] static extern IntPtr SendMessage(IntPtr hWnd,int msg,IntPtr wParam,IntPtr lParam);
     void Drag(object sender,MouseEventArgs e){if(e.Button==MouseButtons.Left){ReleaseCapture();SendMessage(Handle,0xA1,(IntPtr)2,IntPtr.Zero);}}
     void Round(){if(Width<20||Height<20)return;using(var shape=new GraphicsPath()){int d=20;shape.AddArc(0,0,d,d,180,90);shape.AddArc(Width-d,0,d,d,270,90);shape.AddArc(Width-d,Height-d,d,d,0,90);shape.AddArc(0,Height-d,d,d,90,90);shape.CloseFigure();var old=Region;Region=new Region(shape);if(old!=null)old.Dispose();}}
-    readonly ListBox list = new ListBox();
+    readonly ListBox list = new BufferedWorkerList();
     readonly CheckBox pin = new CheckBox(), alerts = new CheckBox();
     readonly NotifyIcon tray = new NotifyIcon();
     readonly System.Windows.Forms.Timer timer = new System.Windows.Forms.Timer();
@@ -94,7 +102,7 @@ public class MonitorPanel : Form {
         scanner.DoWork+=(s,e)=>e.Result=ReadSnapshot();
         scanner.RunWorkerCompleted+=Scanned;
         timer.Interval=5000; timer.Tick+=(s,e)=>Scan(); timer.Start();
-        animation.Interval=80;animation.Tick+=(s,e)=>{phase=(phase+1)%24;if(Visible)list.Invalidate();};animation.Start();
+        animation.Interval=100;animation.Tick+=(s,e)=>{phase=(phase+1)%24;if(Visible&&list.Items.Cast<Worker>().Any(w=>w.flow=="working"||w.flow=="review"||w.flow=="input"))list.Invalidate(new Rectangle(0,0,31,list.ClientSize.Height));};animation.Start();
         FormClosed+=(s,e)=>animation.Dispose();
         Shown+=(s,e)=>Scan();
     }

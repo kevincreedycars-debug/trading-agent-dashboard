@@ -51,3 +51,5 @@ Existing input incompleteness stays explicit: missing historical metrics and lat
 Authenticated runtime access works through the scoped encrypted credential runner in `CREDENTIAL_CONTINUITY.md`. Empty environment variables outside the runner are intentional. Do not print secrets. Next action: resume Gold history isolation as the single active milestone.
 
 2026-09-20: Central Orchestrator named workspace added without moving canonical folder. Monitor enlarged to 380x790 with seven rows, explicit waiting/input states and animated coordinator connections; inactive/stale reports do not claim work. Twelve focused tests pass; native build and normal/narrow render verified.
+
+2026-09-20 monitor flicker fix: native list now uses composited painting; animation invalidates only the connection gutter at 100ms and stops when no animated state exists. Native build passed and panel restarted. Live visual smoothness requires user observation.
