@@ -85,3 +85,19 @@ Record dated user decisions, questions and recommendations here. No discussion h
   three files plus a monitor rebuild, which is outside this worker's write scope - pending user
   go-ahead or a coordinator change.
 - Also noted for future turns: keep chat replies short (a few lines, one or two questions).
+
+## 2026-09-20 - Project aim stated by the user
+
+- Aim: every tracked asset gives a **24-hour directional call**; Layer 2 then issues a
+  **higher-conviction cross-pair call when two Layer 1 calls move in opposing directions**. The
+  dashboard is the decision aid for acting on those calls.
+- Recorded at the top of `docs/strategy/STRATEGY.md`, with the implications: the gold
+  session/calendar policy is on the critical path (a 24h call needs a defined session interval);
+  "all tracked assets" makes the four unreported workers part of the core aim; and Layer 2's
+  documented economic-event role differs from the divergence-synthesis role the aim implies.
+- Open question put to the user: is Layer 2 the eco-event adjuster (as `README.md` documents), the
+  opposing-call divergence synthesizer (as the aim implies), or eco-event adjustment followed by
+  divergence synthesis?
+- User asked for a copy-ready instruction for the orchestrator: rename this worker's monitor card to
+  "Strategy Agent" (patch `projects.json` + `monitor-state.js` + `ProjectMonitor.cs`, rebuild and
+  restart the monitor; the worker id stays `strategy`) and record the aim in canonical memory.

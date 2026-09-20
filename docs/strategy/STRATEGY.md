@@ -9,6 +9,24 @@ and no worker report is treated as proof of completion.
 Scope limits: I read coordination artifacts, not other chat histories. I did not rerun any worker
 test suite; test numbers attributed to workers are quoted as *reported*, not verified by me.
 
+## 0. Aim (stated by the user, 2026-09-20)
+
+Every tracked asset produces a **24-hour directional call**; Layer 2 then issues a
+**higher-conviction cross-pair call when two Layer 1 calls move in opposing directions**. The
+dashboard is the decision aid through which those calls are acted on.
+
+Implications recorded for later sequencing:
+
+- A daily 24-hour cadence is the product requirement — this is exactly what the gold
+  session/calendar policy work exists to support, so that plumbing is on the critical path, not
+  research for its own sake.
+- "All tracked assets" makes the four unreported workers (gbp, silver, wti, eur-pairs) part of the
+  core aim rather than optional reconciliation.
+- Layer 2's documented role (`README.md`: economic-event adjustment via the Eco Events Agent)
+  differs from the divergence-synthesis role this aim implies. Which one is first, and whether they
+  run in sequence, is unresolved.
+
+
 ## 1. Objectives as stated by canonical memory
 
 - Product: a multi-asset trading dashboard driven by n8n — collectors → independent Layer 1 raw
