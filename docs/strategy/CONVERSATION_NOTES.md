@@ -131,3 +131,11 @@ Record dated user decisions, questions and recommendations here. No discussion h
   and is the dashboard grid meant to display all eight assets?
 - Implication for advice: before recommending sequencing, the *count and live status* of Layer 1
   producers must come from runtime evidence, not from the memory docs, which are stale on this point.
+
+## 2026-09-20 - Communication preference: English only
+
+- User requirement: English only in all replies and notes. One earlier chat reply accidentally opened
+  with a Chinese sentence; the adviser apologised, re-verified that no strategy note contains
+  non-English characters, and restated the content in English.
+- Standing rule for future turns, together with the earlier preference for short replies (a few
+  lines, at most one or two questions).
