@@ -73,3 +73,15 @@ Record dated user decisions, questions and recommendations here. No discussion h
   calendar evidence versus an adopted inferred-mode convention, and a stopping rule for the gold
   enquiry.
 - No implementation, no canonical edits, no production action arose from this review.
+
+## 2026-09-20 - Display name: "Strategy Agent"
+
+- User asked for this adviser to be labelled **Strategy Agent** in this window and on the monitor card.
+- Window title updated in the workspace file to `Strategy Agent | DeepSeek | ...`. The worker id
+  stays `strategy` everywhere it is a key (mailbox folder, register, activity file, assignment id),
+  because `coordination.js` validates the id against the register and the mailbox path.
+- Monitor card label still shows `strategy`: it renders `projects.json` worker ids through
+  `scripts/monitor-state.js` into `ProjectMonitor.cs`. A display rename needs a small patch in those
+  three files plus a monitor rebuild, which is outside this worker's write scope - pending user
+  go-ahead or a coordinator change.
+- Also noted for future turns: keep chat replies short (a few lines, one or two questions).
