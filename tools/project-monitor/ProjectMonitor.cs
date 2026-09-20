@@ -143,7 +143,7 @@ public class MonitorPanel : Form {
         summary.ForeColor=attention?Color.FromArgb(255,220,142):muted;
         actionButton.Visible=attention;
         summary.Text=attention?(actions.Length>0?"YOUR ACTION  /  "+actions.Length:"REVIEW READY  /  "+data.pending):"PROJECT ACTIVITY";
-        actionDetail.Text=attention?(actions.Length>0?actions[0].id+" needs your input":"Coordinator review needed"):data.workers.Count(w=>w.flow=="working")+" working  /  updates every 5s";
+        actionDetail.Text=attention?(actions.Length>0?actions[0].id+" needs your input":"Coordinator review needed"):data.workers.Count(w=>w.flow=="working"||w.flow=="working_unconfirmed")+" reported working  /  updates every 5s";
         status.ForeColor=data.errors.Length>0?Color.Salmon:muted;
         status.Text=data.errors.Length>0?"DATA NEEDS ATTENTION · "+data.errors[0]:"\u25cf Watching \u00b7 "+DateTime.Now.ToString("HH:mm:ss")+" \u00b7 refresh 5s";
         var fresh=data.events.Where(x=>!seen.Contains(x.id)).ToArray();
@@ -158,9 +158,9 @@ public class MonitorPanel : Form {
         if(e.Index<0)return;var w=(Worker)list.Items[e.Index];
         using(var fill=new SolidBrush((e.State&DrawItemState.Selected)!=0?Color.FromArgb(36,41,45):background))e.Graphics.FillRectangle(fill,e.Bounds);
         var x=e.Bounds.X+34;var width=e.Bounds.Width-46;var y=e.Bounds.Y+4;
-        bool active=w.flow=="working", review=w.flow=="review", waiting=w.flow=="waiting", needs=review||w.flow=="input";
-        Color signal=active?Color.FromArgb(102,185,255):review?Color.FromArgb(192,164,255):(needs||waiting)?Color.FromArgb(255,201,95):muted;
-        if(active||needs||waiting){using(var highlight=new SolidBrush(active?Color.FromArgb(25,43,61):review?Color.FromArgb(43,34,59):Color.FromArgb(55,43,25)))e.Graphics.FillRectangle(highlight,e.Bounds);using(var stripe=new SolidBrush(signal))e.Graphics.FillRectangle(stripe,e.Bounds.X,e.Bounds.Y,4,e.Bounds.Height);}
+        bool active=w.flow=="working", lastWorking=w.flow=="working_unconfirmed", review=w.flow=="review", waiting=w.flow=="waiting", needs=review||w.flow=="input";
+        Color signal=(active||lastWorking)?Color.FromArgb(102,185,255):review?Color.FromArgb(192,164,255):(needs||waiting)?Color.FromArgb(255,201,95):muted;
+        if(active||lastWorking||needs||waiting){using(var highlight=new SolidBrush((active||lastWorking)?Color.FromArgb(25,43,61):review?Color.FromArgb(43,34,59):Color.FromArgb(55,43,25)))e.Graphics.FillRectangle(highlight,e.Bounds);using(var stripe=new SolidBrush(signal))e.Graphics.FillRectangle(stripe,e.Bounds.X,e.Bounds.Y,4,e.Bounds.Height);}
         bool pendingPath=list.Items.Cast<Worker>().Skip(e.Index).Any(row=>row.flow=="review"||row.flow=="input");
         bool workingPath=list.Items.Cast<Worker>().Skip(e.Index).Any(row=>row.flow=="working");
         using(var rail=new Pen(pendingPath?Color.FromArgb(192,164,255):workingPath?Color.FromArgb(102,185,255):Color.FromArgb(90,98,105),1)){if(pendingPath||workingPath){rail.DashStyle=DashStyle.Dash;rail.DashOffset=(pendingPath?1:-1)*phase/3f;}e.Graphics.DrawLine(rail,14,e.Index==0?y+8:e.Bounds.Top,14,e.Bounds.Bottom);}
@@ -172,7 +172,7 @@ public class MonitorPanel : Form {
             Color tone=signal;
             using(var brush=new SolidBrush(tone))e.Graphics.DrawString(w.state+" · "+(w.age_minutes.HasValue?"seen "+w.age_minutes+"m ago":"no report"),Font,brush,new RectangleF(x,y+17,width,16),format);
             e.Graphics.DrawString(w.task,Font,secondary,new RectangleF(x,y+33,width,17),format);
-            e.Graphics.DrawString(!String.IsNullOrEmpty(w.waiting_on)?"Waiting on: "+w.waiting_on:active?"Working reported - freshness checked":w.flow=="recent"?"Session log updated; running state unknown":"Last seen: "+(w.activity_source??"agent report"),Font,secondary,new RectangleF(x,y+50,width,17),format);
+            e.Graphics.DrawString(!String.IsNullOrEmpty(w.waiting_on)?"Waiting on: "+w.waiting_on:lastWorking?"Report overdue - not confirmed stopped":active?"Working reported - freshness checked":w.flow=="recent"?"Session log updated; running state unknown":"Last seen: "+(w.activity_source??"agent report"),Font,secondary,new RectangleF(x,y+50,width,17),format);
         }
         using(var pen=new Pen(Color.FromArgb(48,68,55)))e.Graphics.DrawLine(pen,x,e.Bounds.Bottom-1,e.Bounds.Right-12,e.Bounds.Bottom-1);
         format.Dispose();

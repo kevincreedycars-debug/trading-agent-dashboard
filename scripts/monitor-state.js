@@ -59,6 +59,7 @@ function snapshot(root = ROOT, now = Date.now(), usage = null) {
     }
     let flow = 'idle', waiting_on = '';
     if (state.startsWith('Working') && state !== 'Working status unconfirmed') flow = 'working';
+    else if (state === 'Working status unconfirmed') { flow = 'working_unconfirmed'; state = 'Working - last reported'; }
     else if (/awaiting review|needs review/i.test(state)) { flow = 'review'; waiting_on = 'central-orchestrator'; }
     else if (/blocked/i.test(state)) { flow = 'input'; waiting_on = 'user / coordinator'; }
     else if (/changes requested|paused|stopped/i.test(state)) { flow = 'waiting'; waiting_on = 'instruction / resume'; }

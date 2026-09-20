@@ -69,3 +69,5 @@ Authenticated runtime access works through the scoped encrypted credential runne
 2026-09-20 status palette: green retained as background theme; blue working rows, amber instruction/input rows, purple review rows and neutral inactive text/buttons. Explicit state labels retained. Native build and render checked.
 
 2026-09-20 freshness fix: coordinator heartbeat refreshed; matched session log timestamps supplement report timestamps; expired work is unconfirmed rather than asserted inactivity, paused status cannot hide pending reviews. Strategy now correctly shows its pending submission. Fourteen tests pass and native smoke passes.
+
+2026-09-20: user confirms Gold actively working. Refreshed its report with explicit user provenance. Expired working reports now retain blue Working - last reported state, with Report overdue text and no working animation; expiry no longer implies stopped. Fourteen focused tests and native smoke pass.
