@@ -27,7 +27,7 @@ public class MonitorPanel : Form {
     }
     readonly string root, node, storage, smoke;
     readonly JavaScriptSerializer json = new JavaScriptSerializer { MaxJsonLength = 2097152 };
-    readonly Color background = Color.FromArgb(23,32,28), foreground = Color.FromArgb(225,238,231), muted = Color.FromArgb(137,164,149);
+    readonly Color background = Color.FromArgb(23,32,28), foreground = Color.FromArgb(233,236,239), muted = Color.FromArgb(160,168,177);
     readonly Label summary = new Label(), status = new Label(), usageTotal = new Label(), usageDetail = new Label();
     readonly Label actionDetail = new Label();
     readonly Button actionButton = new Button();
@@ -111,7 +111,7 @@ public class MonitorPanel : Form {
         FormClosed+=(s,e)=>animation.Dispose();
         Shown+=(s,e)=>Scan();
     }
-    Button Button(string text, EventHandler click) { var b=new Button {Text=text,AutoSize=true,FlatStyle=FlatStyle.Flat,BackColor=Color.FromArgb(37,61,47),ForeColor=Color.FromArgb(166,216,185)};b.FlatAppearance.BorderColor=Color.FromArgb(53,81,62);b.Click+=click;return b; }
+    Button Button(string text, EventHandler click) { var b=new Button {Text=text,AutoSize=true,FlatStyle=FlatStyle.Flat,BackColor=Color.FromArgb(41,46,49),ForeColor=Color.FromArgb(220,225,231)};b.FlatAppearance.BorderColor=Color.FromArgb(73,81,89);b.Click+=click;return b; }
     void ShowPanel(){Show();WindowState=FormWindowState.Normal;Activate();}
     protected override void WndProc(ref Message message){
         base.WndProc(ref message);
@@ -156,14 +156,14 @@ public class MonitorPanel : Form {
     }
     void DrawWorker(object sender,DrawItemEventArgs e){
         if(e.Index<0)return;var w=(Worker)list.Items[e.Index];
-        using(var fill=new SolidBrush((e.State&DrawItemState.Selected)!=0?Color.FromArgb(36,55,43):background))e.Graphics.FillRectangle(fill,e.Bounds);
+        using(var fill=new SolidBrush((e.State&DrawItemState.Selected)!=0?Color.FromArgb(36,41,45):background))e.Graphics.FillRectangle(fill,e.Bounds);
         var x=e.Bounds.X+34;var width=e.Bounds.Width-46;var y=e.Bounds.Y+4;
-        bool active=w.flow=="working", needs=w.flow=="review"||w.flow=="input";
-        if(needs){using(var highlight=new SolidBrush(Color.FromArgb(65,46,22)))e.Graphics.FillRectangle(highlight,e.Bounds);using(var stripe=new SolidBrush(Color.FromArgb(255,195,78)))e.Graphics.FillRectangle(stripe,e.Bounds.X,e.Bounds.Y,4,e.Bounds.Height);}
-        Color signal=active?Color.FromArgb(100,214,178):needs?Color.FromArgb(239,188,110):muted;
+        bool active=w.flow=="working", review=w.flow=="review", waiting=w.flow=="waiting", needs=review||w.flow=="input";
+        Color signal=active?Color.FromArgb(102,185,255):review?Color.FromArgb(192,164,255):(needs||waiting)?Color.FromArgb(255,201,95):muted;
+        if(active||needs||waiting){using(var highlight=new SolidBrush(active?Color.FromArgb(25,43,61):review?Color.FromArgb(43,34,59):Color.FromArgb(55,43,25)))e.Graphics.FillRectangle(highlight,e.Bounds);using(var stripe=new SolidBrush(signal))e.Graphics.FillRectangle(stripe,e.Bounds.X,e.Bounds.Y,4,e.Bounds.Height);}
         bool pendingPath=list.Items.Cast<Worker>().Skip(e.Index).Any(row=>row.flow=="review"||row.flow=="input");
         bool workingPath=list.Items.Cast<Worker>().Skip(e.Index).Any(row=>row.flow=="working");
-        using(var rail=new Pen(pendingPath?Color.FromArgb(190,150,85):workingPath?Color.FromArgb(80,175,144):Color.FromArgb(67,87,77),1)){if(pendingPath||workingPath){rail.DashStyle=DashStyle.Dash;rail.DashOffset=(pendingPath?1:-1)*phase/3f;}e.Graphics.DrawLine(rail,14,e.Index==0?y+8:e.Bounds.Top,14,e.Bounds.Bottom);}
+        using(var rail=new Pen(pendingPath?Color.FromArgb(192,164,255):workingPath?Color.FromArgb(102,185,255):Color.FromArgb(90,98,105),1)){if(pendingPath||workingPath){rail.DashStyle=DashStyle.Dash;rail.DashOffset=(pendingPath?1:-1)*phase/3f;}e.Graphics.DrawLine(rail,14,e.Index==0?y+8:e.Bounds.Top,14,e.Bounds.Bottom);}
         using(var link=new Pen(signal,2)){if(active||needs){link.DashStyle=DashStyle.Dash;link.DashOffset=active?-phase/3f:phase/3f;}e.Graphics.DrawLine(link,14,y+9,29,y+9);}
         using(var dot=new SolidBrush(signal))e.Graphics.FillEllipse(dot,10,y+5,8,8);
         var format=new StringFormat { Trimming=StringTrimming.EllipsisCharacter,FormatFlags=StringFormatFlags.NoWrap };

@@ -61,3 +61,5 @@ Authenticated runtime access works through the scoped encrypted credential runne
 2026-09-20 pending-action emphasis: persistent amber top banner and row highlights, click-through instructions, and a deduplicated wake-agent notification for published assignments without current-assignment pickup. Highlight clears on worker activity/submission. Thirteen focused tests pass; native normal/narrow previews and pin check pass.
 
 2026-09-20 monitor header refinement: replaced full amber text block with a compact heading, secondary project line and separate View action button. Calm activity summary when nothing needs attention. Native build and narrow render checked; Gold now reports working on gold-policy-003.
+
+2026-09-20 status palette: green retained as background theme; blue working rows, amber instruction/input rows, purple review rows and neutral inactive text/buttons. Explicit state labels retained. Native build and render checked.
