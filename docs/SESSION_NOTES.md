@@ -59,3 +59,5 @@ Authenticated runtime access works through the scoped encrypted credential runne
 2026-09-20 window-handle crash correction: removed WS_EX_COMPOSITED from native ListBox and placed compositing on the parent Form. Disposed per-draw StringFormat. Native window creation/render smoke exited successfully with seven rows, normal/narrow dimensions and pin toggles; error null.
 
 2026-09-20 pending-action emphasis: persistent amber top banner and row highlights, click-through instructions, and a deduplicated wake-agent notification for published assignments without current-assignment pickup. Highlight clears on worker activity/submission. Thirteen focused tests pass; native normal/narrow previews and pin check pass.
+
+2026-09-20 monitor header refinement: replaced full amber text block with a compact heading, secondary project line and separate View action button. Calm activity summary when nothing needs attention. Native build and narrow render checked; Gold now reports working on gold-policy-003.
