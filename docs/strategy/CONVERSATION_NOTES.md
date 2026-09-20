@@ -52,3 +52,24 @@ Record dated user decisions, questions and recommendations here. No discussion h
   `C:\Users\A17\AppData\Roaming\Code\User\settings.json.strategy-backup-20260920` as the user-level
   restore point.
 - No project/strategy decision was made in this turn, so no submission was filed.
+
+## 2026-09-20 - User asked for a project status review
+
+- User: "start a new chat session then lets review where the project is currently at?" A chat
+  session cannot be created from inside one (that is the extension's New Task action), so this
+  session carried the review instead; `docs/strategy/STRATEGY.md` and these notes are the durable
+  context a fresh session should read first.
+- Adviser produced `docs/strategy/STRATEGY.md` (review 1) from read-only evidence: canonical
+  `CURRENT_STATE.md`, `CURRENT_TASK.md`, `ACTIVE_MILESTONE.md`, `SESSION_NOTES.md`, the
+  orchestration register/decisions/README, both gold reviews, the mailbox check and the monitor
+  snapshot. Live states at review time: `gold-research` working on `gold-policy-003`; `gbp`,
+  `silver`, `wti`, `eur-pairs` not started with status-reconciliation assignments published.
+- Recommendation submitted to the coordinator mailbox as `20260920-strategy-review-001`
+  (`ready_for_review`), whose headline is the bounded assignment `gold-calendar-status-001`
+  (two-mode calendar status, one read-only provider-evidence attempt, a regression forbidding
+  verified/exact-24h labels in inferred mode, no gap fitting) plus a ranked order of work.
+- Open questions raised for the user: priority order (gold research depth vs asset-worker
+  reconciliation vs dashboard/production hygiene), realistic worker sessions per day, provider
+  calendar evidence versus an adopted inferred-mode convention, and a stopping rule for the gold
+  enquiry.
+- No implementation, no canonical edits, no production action arose from this review.
