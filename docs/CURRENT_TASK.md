@@ -1,11 +1,11 @@
 # Current task
 
-Updated 2026-09-19.
+Updated 2026-09-20.
 
 Active objective: measure individual Gold variable-price relationships over meaningful horizons up to five trading days, including prior weekly price and macro context, then systematically research combinations before developing and qualifying daily-direction formulas. Use deterministic programs, workflows and database queries rather than AI record scanning. Reliability is evidence-dependent, not promised. Follow the September 19 scope in BACKTESTING_REVIEW_PLAN.md and GOLD_RESEARCH_DELIVERY_CONTRACT.md.
 
 The user requested substantive progress. The extended 2023-2026 run is now complete in both evidence modes: 964 decisions, 613 training, 143 validation and 208 exclusions. Retrospective research tested 53,751 candidates across 69 event families; 23 event candidates meet the existing training floor. The training-selected claims-below-consensus bullish rule scored 43/58 training and 12/16 validation, plus five validation flats. The macro-only winner remains 15/28 validation. See GOLD_EXTENDED_RESEARCH_20260918.md for full scorecards, baselines and uncertainty.
 
-Next: produce a machine-readable variable/horizon/context coverage registry and implementation gap report using existing programs and database sources, leading to automated individual-variable reports. Claims is one hypothesis within this broader research, not the sole priority. Its validation remains consumed and event vintages unverified. Formula qualification and prospective testing follow descriptive and combination research.
+The coverage registry and executable audit were delivered and acceptance-verified on September 20 (b8193ba): 28 declared variables, five horizons, eight prior-context fields and 142 checks (58 passed, 17 failed, 66 unknown, 1 not applicable), with 16 of 28 variables having a local source and zero contiguous 24-hour windows in either cohort. Next: resolve the XAU/USD session calendar, hourly gap classification and trailing-return/volatility-estimator policies, then specify the first automated individual-variable reaction report on the subset those policies make measurable. Claims is one hypothesis within this broader research, not the sole priority. Its validation remains consumed and event vintages unverified. Formula qualification and prospective testing follow descriptive and combination research.
 
 Source research remains authorized. Layer 1 agents stay independent and backtesting downstream-only. Gold's operational history repair still requires separate isolated runtime validation. Latest USD gateway incident is resolved; no live changes were made during this research run. Credential access uses the scoped encrypted runner documented in CREDENTIAL_CONTINUITY.md.

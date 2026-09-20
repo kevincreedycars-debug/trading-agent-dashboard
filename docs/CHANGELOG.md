@@ -1,3 +1,7 @@
+# 2026-09-20 - Gold coverage registry accepted at checkpoint review
+
+Reviewed and committed the September 19 variable-first scope documents (f29b967) and the Gold variable/horizon/prior-context coverage registry with its audit CLI, 24 tests, fixtures and documentation (b8193ba). Independently reproduced content hash 278b4070 in two fresh output directories and registry hash 4075f110, and confirmed all reported totals, including zero contiguous 24-hour windows. Added the missing gap report, changed-file record and no-production-change confirmation to DEEPSEEK_GOLD_RESEARCH_PROGRESS.md. Focused suite 24/24; full local suite 356/360, where the four failures are the pre-existing environment-dependent secret-scanner console-width truncation reproduced identically in a clean worktree at HEAD without any milestone file. No production, Layer 1, credential or trading change.
+
 # 2026-09-19 - Variable-first research scope agreed
 
 Recorded individual-variable association research over meaningful horizons up to five trading days, preceding weekly context, systematic combinations and later formula qualification. Added explicit program/workflow/database execution and AI-credit discipline. Updated active task and milestone; no runtime changes.
