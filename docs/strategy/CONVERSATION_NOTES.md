@@ -132,6 +132,28 @@ Record dated user decisions, questions and recommendations here. No discussion h
 - Implication for advice: before recommending sequencing, the *count and live status* of Layer 1
   producers must come from runtime evidence, not from the memory docs, which are stale on this point.
 
+### Verified live state (read from n8n's own committed outputs on origin/main, 2026-09-20)
+
+- `data/layer1.json` @ `0930132` (12:46:33Z today): `required_agents` = **8** — USD, EUR, GOLD,
+  SILVER, NQ, BTC, WTI, GBP — all `status: live`, all with a 24H call from today's run:
+  USD BULLISH 60, EUR BULLISH 70, GOLD BEARISH 45, SILVER BEARISH_LEAN 24, NQ BULLISH 100,
+  BTC BULLISH 82, WTI BULLISH 62, GBP BULLISH_LEAN 32 (expiry 2026-09-21/22).
+- `data/layer2.json` @ `b0806bf`: source `layer_2_trade_selection_agent`, `trade_opportunities: []`
+  today, with seven `avoid_today` entries (EUR/USD, XAU/USD, BTC/USD, NQ/USD, WTI/USD, XAG/USD,
+  GBP/USD) explained as "Both assets point in the same 24H direction" or "Mixed or low conviction
+  24H signals". So production Layer 2 already implements the user's aim mechanic: a pair trade only
+  when the two 24H calls disagree.
+- `data/workflow-status.json` @ `1a8edd8`: `success`, "Manual Refresh Complete", 16 steps all
+  success, including Silver Collector, WTI Layer 1 Agent, Silver Layer 1 Agent, Layer 2 Trade
+  Selection Agent and Dashboard Writer. **GBP Collector and GBP Layer 1 Agent are not among the
+  recorded steps**, yet GBP has a fresh call — so GBP appears to run outside the Master run.
+- `data/input-health.json` `generated_at` = **2026-09-12T19:05:56Z**, eight days older than today's
+  successful run, so the dashboard's health badge can still be driven by a stale artifact.
+- The canonical checkout's own branch is behind origin/main for `data/`, which is why the first pass
+  saw a September 7 copy and five agents; memory docs (README, CURRENT_STATE) still say five.
+- Adviser could not query the n8n API directly (this assignment has no credential access); the
+  evidence above comes from the artifacts n8n itself commits after each run.
+
 ## 2026-09-20 - Communication preference: English only
 
 - User requirement: English only in all replies and notes. One earlier chat reply accidentally opened
