@@ -6,15 +6,11 @@ Use the correct worker window. If a worker cannot read/write the canonical mailb
 ## gold-research
 
 ```text
-This project is now coordinated centrally by Codex at D:\trading-agent-dashboard-codex.
-Read D:/trading-agent-dashboard-codex/docs/orchestration/README.md and D:/trading-agent-dashboard-codex/docs/orchestration/assignments/gold-research.md from those absolute paths.
-Your worker ID is gold-research; assignment ID is gold-policy-001.
-Use D:/trading-agent-dashboard-codex/.local/worktrees/gold-research on branch workers/gold-research-policy-20260920.
-Stop implementing in the canonical checkout. Your coverage milestone is already accepted (b8193ba / 0b0e92d). Use the new Gold worktree for the bounded policy proposal. If you have uncommitted work elsewhere, report it before moving anything.
-Copy D:/trading-agent-dashboard-codex/docs/orchestration/templates/submission.json to a local temporary file; fill in your correct worker, assignment, actual worktree/branch, unique submission ID, commits, dirty files, test evidence, blockers and questions.
-Submit using: node D:/trading-agent-dashboard-codex/scripts/coordination.js submit --file <absolute-path-to-your-submission.json>
-Do not edit central state, instructions or another worker directory. Stop after submitting and report the returned submission path.
-To check feedback when prompted: node D:/trading-agent-dashboard-codex/scripts/coordination.js check --worker gold-research
+The coordinator has reviewed your transition submission and written a changes_requested reply.
+Run: node D:/trading-agent-dashboard-codex/scripts/coordination.js check --worker gold-research
+Read the returned reply and the current canonical assignment:
+D:/trading-agent-dashboard-codex/docs/orchestration/assignments/gold-research.md
+Your new assignment is gold-policy-002. Preserve the hash-verified implementation in the isolated worktree and complete the corrections/provenance work specified there. Leave canonical originals untouched. Submit a new report when complete, then stop for review.
 ```
 
 ## gbp
