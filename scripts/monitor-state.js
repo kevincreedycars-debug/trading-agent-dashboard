@@ -36,11 +36,13 @@ function snapshot(root = ROOT, now = Date.now()) {
     }
     let state = latest ? latest.state : 'No agent update', detail = latest ? latest.detail : w.next || w.status;
     let at = latest ? latest.at : null, file = latest ? latest.file : path.join(root,w.assignment);
+    let pickedUp = submissions.some(s => s.assignment_id === w.assignment_id);
     const heartbeatFile = path.join(root,'.local/orchestration/activity',w.id + '.json');
     if (fs.existsSync(heartbeatFile)) {
       try {
         const h = read(heartbeatFile), stamp = Date.parse(h.updated_at);
         if (h.worker_id !== w.id || h.assignment_id !== w.assignment_id || !Number.isFinite(stamp) || stamp > now + 60000 || typeof h.task !== 'string' || !['working','blocked','paused','stopped'].includes(h.state)) throw new Error('Invalid or outdated activity record');
+        pickedUp = true;
         if (!at || stamp > at) {
           const stale = now - stamp > STALE_MS;
           state = stale ? 'No recent update' : h.state === 'working' ? 'Working · reported' : h.state;
@@ -57,6 +59,12 @@ function snapshot(root = ROOT, now = Date.now()) {
     if (!latest && !at) { state = 'Not started / no report'; }
     if (flow === 'waiting') state = 'Waiting for instruction';
     if (flow === 'input') state = 'Needs input';
+    if (w.status === 'instructions_published_awaiting_worker' && !pickedUp) {
+      flow = 'input'; waiting_on = 'YOU - prompt agent'; state = 'YOUR ACTION: wake agent';
+      detail = 'Tell ' + w.id + ': Check your mailbox and start ' + w.assignment_id;
+      events.push({id:'wake:' + w.id + ':' + w.assignment_id,worker:w.id,title:'YOUR ACTION: wake agent',detail,
+        time:at ? new Date(at).toISOString() : new Date(fs.statSync(path.join(root,'docs/orchestration/projects.json')).mtimeMs).toISOString(),file:path.join(root,w.assignment)});
+    }
     return { id:w.id, flow, waiting_on, state, task:detail, assignment:w.assignment_id, next:w.next || '',
       updated_at:at ? new Date(at).toISOString() : null, age_minutes:at ? Math.max(0,Math.floor((now-at)/60000)) : null,
       file, folder:w.path };

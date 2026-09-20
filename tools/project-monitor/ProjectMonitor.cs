@@ -62,6 +62,7 @@ public class MonitorPanel : Form {
         var heading=new Panel { Dock=DockStyle.Top, Height=66, Padding=new Padding(12,8,12,4) };
         var title=new Label { Text="", Dock=DockStyle.Top, Height=0 };
         summary.Dock=DockStyle.Fill; summary.ForeColor=muted; summary.Text="Reading coordination files...";
+        summary.Cursor=Cursors.Hand;summary.Click+=(s,e)=>{for(int i=0;i<list.Items.Count;i++){var row=(Worker)list.Items[i];if(row.flow=="input"||row.flow=="review"){list.SelectedIndex=i;Details();break;}}};
         heading.Controls.Add(summary); heading.Controls.Add(title);
         var buttons=new FlowLayoutPanel { Dock=DockStyle.Bottom, Height=34, Padding=new Padding(8,2,0,0), WrapContents=false };
         pin.Text="Pin"; pin.Checked=prefs.pin; pin.AutoSize=true; pin.Margin=new Padding(4,7,5,0);
@@ -128,6 +129,11 @@ public class MonitorPanel : Form {
         for(int i=0;i<list.Items.Count;i++)if(((Worker)list.Items[i]).id==selected)list.SelectedIndex=i;
         if(list.SelectedIndex<0&&list.Items.Count>0)list.SelectedIndex=0;list.EndUpdate();
         summary.Text=data.workers.Count(w=>w.flow=="working")+" working  |  "+data.pending+" awaiting review\nTeal: working  |  Amber: needs review / input\nLines connect to coordinator; dispatch is manual";
+        var actions=data.workers.Where(w=>w.flow=="input").ToArray();
+        bool attention=actions.Length>0||data.pending>0;
+        summary.BackColor=attention?Color.FromArgb(85,55,18):background;
+        summary.ForeColor=attention?Color.FromArgb(255,220,142):muted;
+        if(attention)summary.Text=(actions.Length>0?"! YOUR ACTION REQUIRED ("+actions.Length+")":"! REVIEW PENDING ("+data.pending+")")+"\n"+(actions.Length>0?actions[0].id+": "+actions[0].state:"Notify coordinator: check submissions")+"\nClick here for instructions";
         status.ForeColor=data.errors.Length>0?Color.Salmon:muted;
         status.Text=data.errors.Length>0?"DATA NEEDS ATTENTION · "+data.errors[0]:"\u25cf Watching \u00b7 "+DateTime.Now.ToString("HH:mm:ss")+" \u00b7 refresh 5s";
         var fresh=data.events.Where(x=>!seen.Contains(x.id)).ToArray();
@@ -143,6 +149,7 @@ public class MonitorPanel : Form {
         using(var fill=new SolidBrush((e.State&DrawItemState.Selected)!=0?Color.FromArgb(36,55,43):background))e.Graphics.FillRectangle(fill,e.Bounds);
         var x=e.Bounds.X+34;var width=e.Bounds.Width-46;var y=e.Bounds.Y+4;
         bool active=w.flow=="working", needs=w.flow=="review"||w.flow=="input";
+        if(needs){using(var highlight=new SolidBrush(Color.FromArgb(65,46,22)))e.Graphics.FillRectangle(highlight,e.Bounds);using(var stripe=new SolidBrush(Color.FromArgb(255,195,78)))e.Graphics.FillRectangle(stripe,e.Bounds.X,e.Bounds.Y,4,e.Bounds.Height);}
         Color signal=active?Color.FromArgb(100,214,178):needs?Color.FromArgb(239,188,110):muted;
         bool pendingPath=list.Items.Cast<Worker>().Skip(e.Index).Any(row=>row.flow=="review"||row.flow=="input");
         bool workingPath=list.Items.Cast<Worker>().Skip(e.Index).Any(row=>row.flow=="working");

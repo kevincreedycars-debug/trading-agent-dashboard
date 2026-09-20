@@ -57,3 +57,5 @@ Authenticated runtime access works through the scoped encrypted credential runne
 2026-09-20 monitor flicker fix: native list now uses composited painting; animation invalidates only the connection gutter at 100ms and stops when no animated state exists. Native build passed and panel restarted. Live visual smoothness requires user observation.
 
 2026-09-20 window-handle crash correction: removed WS_EX_COMPOSITED from native ListBox and placed compositing on the parent Form. Disposed per-draw StringFormat. Native window creation/render smoke exited successfully with seven rows, normal/narrow dimensions and pin toggles; error null.
+
+2026-09-20 pending-action emphasis: persistent amber top banner and row highlights, click-through instructions, and a deduplicated wake-agent notification for published assignments without current-assignment pickup. Highlight clears on worker activity/submission. Thirteen focused tests pass; native normal/narrow previews and pin check pass.
