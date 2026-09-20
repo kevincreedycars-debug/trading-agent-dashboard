@@ -1,5 +1,7 @@
 # Current state
 
+2026-09-20: gold-reaction-004 confirmed by user and published. Revision 3 corrections accepted for exploratory use after independent tests/audit; calendar verification remains blocked. Awaiting worker pickup; no integration or production change.
+
 2026-09-20: user confirmed gold-policy-003. Published hash-bound changes_requested reply for revision 2 and activated the correction assignment. Awaiting worker pickup; no acceptance, integration or production action. Use explicit emoji labels for user actions, agent waiting and completed steps.
 
 Strategy adviser workspace registered as the sixth worker. DeepSeek session is not started; separate notes branch and shared mailbox/monitor are ready. See tools/strategy-node/README.md.
