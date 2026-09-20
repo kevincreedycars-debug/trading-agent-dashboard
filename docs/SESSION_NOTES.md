@@ -67,3 +67,5 @@ Authenticated runtime access works through the scoped encrypted credential runne
 2026-09-20 monitor header refinement: replaced full amber text block with a compact heading, secondary project line and separate View action button. Calm activity summary when nothing needs attention. Native build and narrow render checked; Gold now reports working on gold-policy-003.
 
 2026-09-20 status palette: green retained as background theme; blue working rows, amber instruction/input rows, purple review rows and neutral inactive text/buttons. Explicit state labels retained. Native build and render checked.
+
+2026-09-20 freshness fix: coordinator heartbeat refreshed; matched session log timestamps supplement report timestamps; expired work is unconfirmed rather than asserted inactivity, paused status cannot hide pending reviews. Strategy now correctly shows its pending submission. Fourteen tests pass and native smoke passes.

@@ -55,7 +55,7 @@ function usageSnapshot(root,now=Date.now(),sources){
     }}catch(e){errors.push(source.name+': '+(e.code||'usage log unavailable'));}
     coverage.push({source:source.name,status:!available?'Not found':count?'Recorded today':'No records today',records:count});
   }
-  const projects=new Map();for(const r of rows){const key=r.provider+'|'+r.project.replaceAll('\\','/').toLowerCase();if(!projects.has(key))projects.set(key,{provider:r.provider,project:r.project,input:0,output:0,cached:0,total:0,records:0});const p=projects.get(key);for(const k of ['input','output','cached','total'])p[k]+=r[k];p.records++;}
+  const projects=new Map();for(const r of rows){const key=r.provider+'|'+r.project.replaceAll('\\','/').toLowerCase();if(!projects.has(key))projects.set(key,{provider:r.provider,project:r.project,input:0,output:0,cached:0,total:0,records:0});const p=projects.get(key);for(const k of ['input','output','cached','total'])p[k]+=r[k];p.records++;if(!p.latest_record || r.time>p.latest_record)p.latest_record=r.time;}
   const totals={input:0,output:0,cached:0,total:0};for(const p of projects.values())for(const k of Object.keys(totals))totals[k]+=p[k];
   const result={day,timezone:ZONE,scanned_at:new Date(now).toISOString(),latest_record:rows.map(r=>r.time).sort().at(-1)||null,records:rows.length,...totals,projects:[...projects.values()].sort((a,b)=>b.total-a.total),coverage,errors,scope:'Today · all locally recorded projects',note:'Processed tokens include cached input; not balance, quota or billing. Logs can lag. Other tools/devices are not covered. Cline tasks without workspace metadata are unmapped.'};
   // Persist derived counters only, never source messages or credentials.

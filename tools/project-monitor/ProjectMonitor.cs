@@ -12,7 +12,7 @@ using System.Drawing.Drawing2D;
 using System.Web.Script.Serialization;
 using System.Windows.Forms;
 
-public class Worker { public string id, name, state, flow, waiting_on, task, assignment, next, updated_at, file, folder; public int? age_minutes; }
+public class Worker { public string id, name, state, flow, waiting_on, activity_source, reported_at, task, assignment, next, updated_at, file, folder; public int? age_minutes; }
 public class Update { public string id, worker, title, detail, time, file; }
 public class UsageProject { public string provider, project; public long input, output, cached, total; }
 public class UsageCoverage { public string source, status; public int records; }
@@ -170,9 +170,9 @@ public class MonitorPanel : Form {
         using(var bold=new Font(Font,FontStyle.Bold))using(var fg=new SolidBrush(foreground))using(var secondary=new SolidBrush(muted)){
             e.Graphics.DrawString(String.IsNullOrEmpty(w.name)?w.id:w.name,bold,fg,new RectangleF(x,y,width,20),format);
             Color tone=signal;
-            using(var brush=new SolidBrush(tone))e.Graphics.DrawString(w.state+" · "+(w.age_minutes.HasValue?w.age_minutes+"m ago":"no heartbeat"),Font,brush,new RectangleF(x,y+17,width,16),format);
+            using(var brush=new SolidBrush(tone))e.Graphics.DrawString(w.state+" · "+(w.age_minutes.HasValue?"seen "+w.age_minutes+"m ago":"no report"),Font,brush,new RectangleF(x,y+17,width,16),format);
             e.Graphics.DrawString(w.task,Font,secondary,new RectangleF(x,y+33,width,17),format);
-            e.Graphics.DrawString(!String.IsNullOrEmpty(w.waiting_on)?"Waiting on: "+w.waiting_on:active?"Active report - expires after 5 minutes":"No active work reported",Font,secondary,new RectangleF(x,y+50,width,17),format);
+            e.Graphics.DrawString(!String.IsNullOrEmpty(w.waiting_on)?"Waiting on: "+w.waiting_on:active?"Working reported - freshness checked":w.flow=="recent"?"Session log updated; running state unknown":"Last seen: "+(w.activity_source??"agent report"),Font,secondary,new RectangleF(x,y+50,width,17),format);
         }
         using(var pen=new Pen(Color.FromArgb(48,68,55)))e.Graphics.DrawLine(pen,x,e.Bounds.Bottom-1,e.Bounds.Right-12,e.Bounds.Bottom-1);
         format.Dispose();

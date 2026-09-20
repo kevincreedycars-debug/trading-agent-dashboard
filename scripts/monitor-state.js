@@ -10,7 +10,7 @@ function read(file) {
   if (fs.statSync(file).size > 128 * 1024) throw new Error('Oversized coordination file');
   return JSON.parse(fs.readFileSync(file, 'utf8').replace(/^\uFEFF/, ''));
 }
-function snapshot(root = ROOT, now = Date.now()) {
+function snapshot(root = ROOT, now = Date.now(), usage = null) {
   const registry = read(path.join(root, 'docs/orchestration/projects.json'));
   const scan = createMailbox(root).check();
   const events = [], errors = [...scan.errors.map(e => `${e.worker_id}: ${e.error}`)];
@@ -46,15 +46,19 @@ function snapshot(root = ROOT, now = Date.now()) {
         pickedUp = true;
         if (!at || stamp > at) {
           const stale = now - stamp > STALE_MS;
-          state = stale ? 'No recent update' : h.state === 'working' ? 'Working · reported' : h.state;
-          detail = h.task; at = stamp; file = heartbeatFile;
+          const pendingReview = submissions.some(s => s.assignment_id === w.assignment_id && s.state === 'pending_review');
+          if (!(pendingReview && ['paused','stopped'].includes(h.state))) {
+            state = stale && h.state === 'working' ? 'Working status unconfirmed' : h.state === 'working' ? 'Working · reported' : h.state;
+            detail = h.task; file = heartbeatFile;
+          }
+          at = stamp;
           if (h.state === 'blocked') events.push({id:'blocked:' + w.id + ':' + h.assignment_id + ':' + h.task, worker:w.id,title:'Worker blocked',detail,time:h.updated_at,file});
         }
         }
       } catch (e) { errors.push(w.id + ': ' + e.message); }
     }
     let flow = 'idle', waiting_on = '';
-    if (state.startsWith('Working')) flow = 'working';
+    if (state.startsWith('Working') && state !== 'Working status unconfirmed') flow = 'working';
     else if (/awaiting review|needs review/i.test(state)) { flow = 'review'; waiting_on = 'central-orchestrator'; }
     else if (/blocked/i.test(state)) { flow = 'input'; waiting_on = 'user / coordinator'; }
     else if (/changes requested|paused|stopped/i.test(state)) { flow = 'waiting'; waiting_on = 'instruction / resume'; }
@@ -67,7 +71,17 @@ function snapshot(root = ROOT, now = Date.now()) {
       events.push({id:'wake:' + w.id + ':' + w.assignment_id,worker:w.id,title:'YOUR ACTION: wake agent',detail,
         time:at ? new Date(at).toISOString() : new Date(fs.statSync(path.join(root,'docs/orchestration/projects.json')).mtimeMs).toISOString(),file:path.join(root,w.assignment)});
     }
-    return { id:w.id, name:w.display_name || w.id, flow, waiting_on, state, task:detail, assignment:w.assignment_id, next:w.next || '',
+    const normalize = p => String(p || '').replaceAll('\\','/').replace(/\/$/,'').toLowerCase();
+    const logTimes = (usage?.projects || []).filter(p => normalize(p.project) === normalize(w.path))
+      .map(p => Date.parse(p.latest_record)).filter(t => Number.isFinite(t) && t <= now + 60000);
+    const logAt = logTimes.length ? Math.max(...logTimes) : null;
+    const reportAt = at;
+    let activity_source = 'agent report';
+    if (logAt && (!at || logAt > at)) {
+      at = logAt; activity_source = 'recorded session activity';
+      if (flow === 'idle' && now - logAt <= STALE_MS) { state = 'Recent session activity'; flow = 'recent'; }
+    }
+    return { id:w.id, name:w.display_name || w.id, flow, waiting_on, activity_source, reported_at:reportAt ? new Date(reportAt).toISOString() : null, state, task:detail, assignment:w.assignment_id, next:w.next || '',
       updated_at:at ? new Date(at).toISOString() : null, age_minutes:at ? Math.max(0,Math.floor((now-at)/60000)) : null,
       file, folder:w.path };
   });
@@ -93,7 +107,7 @@ if(require.main===module) {
     const registry=read(path.join(ROOT,'docs/orchestration/projects.json'));
     if(path.resolve(registry.canonical_root).toLowerCase()!==ROOT.toLowerCase()) throw new Error('Use the canonical monitor-state.js by absolute path');
     const [command,...args]=process.argv.slice(2);
-    if(command==='snapshot'&&args.length===0) console.log(JSON.stringify({...snapshot(),usage:usageSnapshot(ROOT)}));
+    if(command==='snapshot'&&args.length===0) { const usage=usageSnapshot(ROOT); console.log(JSON.stringify({...snapshot(ROOT,Date.now(),usage),usage})); }
     else if(command==='activity'&&args.length===3) console.log(JSON.stringify(activity(ROOT,...args)));
     else throw new Error('Usage: monitor-state.js snapshot | activity WORKER STATE "Task summary"');
   } catch(e) { console.error(e.message);process.exitCode=1; }

@@ -78,3 +78,5 @@ ignored at `.local/project-monitor/token-cache.json`; prompt text is never saved
 there. Tests: `npm run test:monitor`.
 
 Panel identity: Central Orchestrator. Default 380x790 (screen-height capped), with seven rows including coordinator. Teal animated connections indicate recent reported work; amber connections indicate pending review/input, not active computation. Waiting and no-report states are explicit. Details exposes truncated summaries. Coordinator reports working/paused through monitor-state.js activity central-orchestrator; no automatic liveness detection.
+
+Activity freshness: last seen includes exact-workspace matches from local token/session records when available. This is evidence of recent activity, not process liveness. Unmapped/missing logs are not guessed. Expired working reports show Working status unconfirmed; paused/blocked states persist and paused reports do not hide pending reviews.
