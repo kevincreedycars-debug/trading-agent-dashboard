@@ -14,7 +14,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File tools/project-monitor/start.
 
 The launcher builds on first use. Rebuild after source changes with `build.ps1`
 (exit the tray app first). Binary and user preferences live in ignored
-`.local/project-monitor/`. No startup-at-login entry or desktop shortcut is installed.
+`.local/project-monitor/`. A Project Monitor shortcut is installed on the user's OneDrive Desktop. No startup-at-login entry is installed.
 
 - Pin toggles always-on-top (default on); Alerts toggles tray balloon notifications.
 - Closing the window hides it to the tray. Double-click the tray icon to reopen;

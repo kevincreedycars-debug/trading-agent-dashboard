@@ -23,7 +23,7 @@ function snapshot(root = ROOT, now = Date.now()) {
       const item = { id: 'submission:' + s.sha256, worker: w.id, title: 'Submission ready', detail: report.summary,
         time: new Date(reportAt).toISOString(), file: s.submission_path };
       events.push(item);
-      let state = s.state === 'pending_review' ? (report.status === 'blocked' ? 'Blocked · needs review' : 'Awaiting review') : s.state.replaceAll('_', ' ');
+      let state = s.state === 'pending_review' ? (report.status === 'blocked' ? 'Blocked · needs review' : report.status === 'ready_for_review' ? 'Finished · awaiting review' : 'Status received · needs review') : s.state.replaceAll('_', ' ');
       let at = reportAt, detail = report.summary, file = s.submission_path;
       if (s.reply_path) {
         const reply = read(s.reply_path);

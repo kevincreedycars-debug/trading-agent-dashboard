@@ -1,5 +1,7 @@
 # Current state
 
+Gold research worker has FINISHED the gold-policy-002 assignment and submitted revision 2 at ccd4c37. Its clean checkout and delivery receipt were verified September 20. Status: finished, awaiting coordinator review; reported provider-calendar evidence remains blocked and substantive acceptance is not implied.
+
 Desktop coordination monitor added September 20: native Windows tray panel with always-on-top toggle, five-second local-file scans and submission/reply/blocker alerts. Heartbeat-based activity is explicitly reported, becomes stale after five minutes, and does not prove process liveness. Automated agent dispatch remains unconfigured. Launch: npm run monitor.
 
 Gold transition reviewed September 20: preservation and audit reproducibility verified; session implementation is NOT accepted. Prior-close timing and missing-close fallback bugs reproduced independently. New assignment gold-policy-002 covers isolated preservation, fixes and calendar provenance. The reported 964/965 and 5106/5115 session-contiguous windows remain results under an unaccepted archive-derived policy, not verified usable research coverage.
