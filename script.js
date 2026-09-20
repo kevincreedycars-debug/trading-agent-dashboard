@@ -3914,7 +3914,7 @@ function renderLayer1Summary(agent) {
       <span class="layer1-summary-direction"><span aria-hidden="true">${arrow}</span> ${escapeHtml(label)}</span>
       <span class="layer1-summary-conviction" title="${escapeHtml(strength)} - model conviction, not a probability of success">
         <span class="layer1-conviction-bars" aria-hidden="true">${[1, 2, 3, 4].map(n => `<i class="${n <= level ? "filled" : ""}"></i>`).join("")}</span>
-        <span>${escapeHtml(strength)} &middot; ${escapeHtml(score)}</span>
+        <span>${escapeHtml(score)}</span>
       </span>
       <span class="layer1-summary-status ${escapeHtml(validityStatusClass(status))}">${escapeHtml(validityStatusLabel(status))}${gaps.length ? " &middot; Missing inputs" : ""}</span>
     </button>
