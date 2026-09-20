@@ -1,5 +1,7 @@
 # Documentation index
 
+Central coordination: start with [the protocol](orchestration/README.md), [project register](orchestration/projects.json) and [agent messages](orchestration/AGENT_MESSAGES.md).
+
 ## Current navigation
 
 - `../CODEX_STARTUP.md`: session startup and working rules.

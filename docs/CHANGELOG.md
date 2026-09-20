@@ -1,5 +1,9 @@
 # 2026-09-20 - Gold coverage registry accepted at checkpoint review
 
+## 2026-09-20 - Central coordinator and worker mailboxes
+
+Added a project register, shared coordination protocol, bounded worker assignments, ready-to-paste messages and an immutable JSON submission/reply CLI. Replies bind to report hashes; scan reports malformed/stale submissions explicitly. Added four focused transport tests and npm run test:coordination. No production changes or automatic agent startup. Gold coverage acceptance is preserved and further policy work moves to its own worktree.
+
 Reviewed and committed the September 19 variable-first scope documents (f29b967) and the Gold variable/horizon/prior-context coverage registry with its audit CLI, 24 tests, fixtures and documentation (b8193ba). Independently reproduced content hash 278b4070 in two fresh output directories and registry hash 4075f110, and confirmed all reported totals, including zero contiguous 24-hour windows. Added the missing gap report, changed-file record and no-production-change confirmation to DEEPSEEK_GOLD_RESEARCH_PROGRESS.md. Focused suite 24/24; full local suite 356/360, where the four failures are the pre-existing environment-dependent secret-scanner console-width truncation reproduced identically in a clean worktree at HEAD without any milestone file. No production, Layer 1, credential or trading change.
 
 # 2026-09-19 - Variable-first research scope agreed

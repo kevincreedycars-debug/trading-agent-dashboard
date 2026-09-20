@@ -1,5 +1,7 @@
 # DeepSeek Gold research handoff
 
+September 20 superseding setup: the coverage milestone is accepted (b8193ba / 0b0e92d). Do not repeat it or implement in the canonical checkout. Read `D:/trading-agent-dashboard-codex/docs/orchestration/assignments/gold-research.md` and the central protocol for the separate worktree and next bounded policy proposal. The original assignment below is historical.
+
 Assignment date: 2026-09-19. Intended runner: DeepSeek through Cline or another coding extension in a second VS Code window.
 
 ## 1. Operator setup

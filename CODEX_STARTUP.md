@@ -1,5 +1,7 @@
 # Project startup
 
+Coordination entrypoint: read `docs/orchestration/README.md`, `projects.json` and `DECISIONS.md` first. This canonical checkout is the coordinator. Workers read these files by their canonical absolute path and use their assigned worktree; older shared-checkout directions are superseded. On "check submissions", run `node scripts/coordination.js check` and follow the review cycle. No automatic watcher is active.
+
 Read this file first, then:
 
 1. `docs/CURRENT_STATE.md`

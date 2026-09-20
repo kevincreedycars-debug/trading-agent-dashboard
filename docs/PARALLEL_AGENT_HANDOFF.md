@@ -1,5 +1,7 @@
 # Parallel development handoff
 
+September 20 coordination update: `docs/orchestration/README.md` and its project register/assignments now control worker ownership and communication. The historical paths and implementation briefs below remain provenance. Do not resume old assignments without reading the current central assignment.
+
 Updated 2026-09-07 after consolidation. This document supersedes the earlier instruction to park all additional Layer 1 development while reviewing backtesting.
 
 ## Authorized workstreams

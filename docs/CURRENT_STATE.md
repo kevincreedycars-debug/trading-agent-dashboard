@@ -1,5 +1,7 @@
 # Current state
 
+September 20 orchestration update: the canonical checkout is now the central coordinator on `orchestration/control-plane-20260920`. `docs/orchestration/projects.json` records five workers and shared dependencies; immutable file submissions/replies use the ignored `.local/orchestration` mailbox. Gold coverage is already accepted; the next worker assignment is the session/gap/return-policy proposal in a separate worktree. Existing asset workers first submit current-state reports. No background runner is enabled. The dated research facts below remain evidence; older branch and next-action statements are superseded by the central register.
+
 Updated 2026-09-20. Current branch: docs/gold-variable-research-scope.
 
 Extended Gold research is executed and documented in GOLD_EXTENDED_RESEARCH_20260918.md. Sources: five macro vintage series, 21,871 hourly candles and 5,115 calendar records. Schedule: 964 decisions, 613 training, 143 validation, 208 excluded. Retrospective search: 53,751 candidates, 69 families, 23 eligible event candidates. Training-selected claims-below-consensus bullish hypothesis scores 43/58 training and 12/16 validation, plus five validation flats; macro-only winner remains 15/28 validation. The event result is a selective retrospective lead, not live qualification: original consensus vintages, untouched testing and continuous paths remain missing. Its month-block descriptive accuracy interval spans 47.83%-100%. Full suite: 336/336.
