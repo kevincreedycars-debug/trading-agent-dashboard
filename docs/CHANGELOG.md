@@ -1,5 +1,9 @@
 # 2026-09-20 - Gold coverage registry accepted at checkpoint review
 
+## 2026-09-20 - Compact green monitor and local token usage
+
+Restyled the native monitor to the user reference and added today's semi-live token footer across locally recorded projects. Includes source coverage and input/output/cache breakdowns; does not infer remaining quota or costs. Eleven focused tests and native layout checks pass. No production changes.
+
 ## 2026-09-20 - Desktop project monitor
 
 Added native pinnable Windows tray panel, local monitor snapshot/activity commands, deduplicated change alerts and explicit stale/activity/controller states. No AI calls for polling. Seven focused tests and native default/narrow rendering/pin smoke checks pass. No production publication or auto-dispatch.

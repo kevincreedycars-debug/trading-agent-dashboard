@@ -3,6 +3,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
 const { createMailbox } = require('./coordination');
+const { usageSnapshot } = require('./token-usage');
 const ROOT = path.resolve(__dirname, '..');
 const STALE_MS = 5 * 60 * 1000;
 function read(file) {
@@ -74,7 +75,7 @@ if(require.main===module) {
     const registry=read(path.join(ROOT,'docs/orchestration/projects.json'));
     if(path.resolve(registry.canonical_root).toLowerCase()!==ROOT.toLowerCase()) throw new Error('Use the canonical monitor-state.js by absolute path');
     const [command,...args]=process.argv.slice(2);
-    if(command==='snapshot'&&args.length===0) console.log(JSON.stringify(snapshot()));
+    if(command==='snapshot'&&args.length===0) console.log(JSON.stringify({...snapshot(),usage:usageSnapshot(ROOT)}));
     else if(command==='activity'&&args.length===3) console.log(JSON.stringify(activity(ROOT,...args)));
     else throw new Error('Usage: monitor-state.js snapshot | activity WORKER STATE "Task summary"');
   } catch(e) { console.error(e.message);process.exitCode=1; }
