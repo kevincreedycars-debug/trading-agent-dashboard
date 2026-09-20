@@ -1,0 +1,949 @@
+{
+  "version": "gold-variable-horizon-context-v1",
+  "created": "2026-09-19",
+  "status": "scope_declaration_not_results",
+  "research_only": true,
+  "objective": "Declare every intended Gold explanatory variable, the candidate reaction horizons, and the prior-context fields, so individual-variable coverage can be audited deterministically before combination research. This file declares scope and mappings; it contains no measurements and no success claims.",
+  "declared_inventory_source": {
+    "module": "backtester/lib/gold_source_readiness.js",
+    "constant": "GOLD_VARIABLES",
+    "declared_count": 28,
+    "logic_document": "logic/agent_gold_direction.md",
+    "derivation": "Ten weighted Layer 1 factors (F1-F10) plus explicit event decomposition. Twenty of the twenty-eight entries are levels or transformations of five macro/price series; they are not twenty independent raw inputs.",
+    "original_research_document_coverage_verified": false,
+    "original_research_document_gap": "The originally supplied external research documents were not available in this checkout. Coverage below is verified against the repository logic document and local versioned sources only."
+  },
+  "fact_classes": {
+    "verified": "Observed directly in a named local file, module constant or checked-in document during this milestone.",
+    "proposed": "A mapping or transformation declared as intended but not yet demonstrated against a source.",
+    "unavailable": "Required by the declared inventory but no local source and no verified mapping exists. Retained explicitly rather than dropped."
+  },
+  "coverage_status_values": [
+    "verified_local_source",
+    "verified_derived_from_local_source",
+    "proposed_mapping",
+    "unavailable_no_local_source",
+    "not_in_declared_inventory"
+  ],
+  "audit_status_values": [
+    "audited",
+    "audited_with_caveat",
+    "pending_resolution",
+    "unsupported_by_local_resolution",
+    "unknown"
+  ],
+  "horizons": [
+    {
+      "id": "immediate_event_window",
+      "label": "Immediate event window (sub-hourly)",
+      "anchor": "event_release_timestamp",
+      "end_offset": { "kind": "sub_hourly_offset", "elapsed_ms": null, "declared_value": null },
+      "required_resolution": "sub_hourly (1-15 minutes)",
+      "local_source_resolution": "H1 only",
+      "applicability": "not_applicable_with_local_sources",
+      "audit_status": "unsupported_by_local_resolution",
+      "session_policy": "not_applicable",
+      "notes": "Hourly candles cannot establish a minute-level reaction. No minute-level reaction is claimed or inferred from H1 bars; the offset stays undeclared."
+    },
+    {
+      "id": "h1_post_event",
+      "label": "One hour after anchor",
+      "anchor": "any",
+      "end_offset": { "kind": "elapsed", "elapsed_ms": 3600000, "declared_value": "PT1H" },
+      "required_resolution": "H1",
+      "local_source_resolution": "H1",
+      "applicability": "supported_with_policy",
+      "audit_status": "pending_anchor_to_candle_alignment_policy",
+      "session_policy": "pending_unresolved",
+      "notes": "Most US releases occur at 13:30Z or 15:00Z, which are not H1 candle boundaries. The anchor-to-candle alignment rule, and whether partial bars are admitted, must be declared before measurement."
+    },
+    {
+      "id": "h4_post_event",
+      "label": "Four hours after anchor",
+      "anchor": "any",
+      "end_offset": { "kind": "elapsed", "elapsed_ms": 14400000, "declared_value": "PT4H" },
+      "required_resolution": "H1",
+      "local_source_resolution": "H1",
+      "applicability": "supported_with_policy",
+      "audit_status": "pending_anchor_to_candle_alignment_policy",
+      "session_policy": "pending_unresolved",
+      "notes": "Endpoints can fall inside session closures. Continuity of the four intervening hourly bars is reported separately from endpoint existence."
+    },
+    {
+      "id": "h24_post_event",
+      "label": "Twenty-four elapsed hours after anchor",
+      "anchor": "any",
+      "end_offset": { "kind": "elapsed", "elapsed_ms": 86400000, "declared_value": "PT24H" },
+      "required_resolution": "H1",
+      "local_source_resolution": "H1",
+      "applicability": "supported",
+      "audit_status": "audited_endpoint_and_continuity",
+      "session_policy": "none_declared_elapsed_clock",
+      "notes": "Preserves the existing exact-24-hour contract. This milestone does not modify the strict 24-hour evaluator; the audit reads endpoint and continuity availability only."
+    },
+    {
+      "id": "d5_trading_days_post_event",
+      "label": "Five trading days after anchor",
+      "anchor": "any",
+      "end_offset": { "kind": "trading_day_offset", "trading_days": 5, "elapsed_ms": null, "declared_value": null },
+      "required_resolution": "daily session close",
+      "local_source_resolution": "H1 bars aggregated to a declared session close",
+      "applicability": "supported_with_unresolved_calendar",
+      "audit_status": "pending_session_calendar_policy",
+      "session_policy": "pending_unresolved",
+      "notes": "Five trading days is explicitly NOT 120 elapsed hours. A declared XAU/USD session open/close, holiday list, early-close rule and rollover handling are required before this horizon is measured."
+    }
+  ],
+  "prior_context": [
+    {
+      "id": "gold_trailing_5d_return_pct",
+      "class": "price_trend",
+      "definition": "Return of the Gold mid price from the session close five trading days before the observation to the last observation strictly before it.",
+      "required_inputs": ["gold_price"],
+      "cutoff_rule": "strictly_before_observation_time",
+      "leakage_guard": "The window ends before the observation begins and never includes the observation's own outcome window.",
+      "availability": "unknown_pending_session_calendar",
+      "audit_status": "pending_session_calendar_policy"
+    },
+    {
+      "id": "gold_trailing_5d_realized_volatility",
+      "class": "price_trend",
+      "definition": "Realized volatility of Gold H1 mid-price returns over the trailing five trading days. Estimator (simple vs log returns), sampling window and annualisation must be declared before use.",
+      "required_inputs": ["gold_price"],
+      "cutoff_rule": "strictly_before_observation_time",
+      "leakage_guard": "Uses completed bars only; the bar containing the observation is excluded.",
+      "availability": "unknown_pending_estimator_and_session_calendar",
+      "audit_status": "pending_resolution"
+    },
+    {
+      "id": "us_10y_real_yield_prior_5obs_change_bps",
+      "class": "macro",
+      "definition": "Change in basis points between the real-yield observations at index -1 and -6 in observation order, strictly before the cutoff. This is an observation-index lookback and is not a claim about five calendar trading days.",
+      "required_inputs": ["us_10y_real_yield"],
+      "cutoff_rule": "strictly_before_observation_time",
+      "leakage_guard": "A vintage becomes available at realtime_start plus the declared conservative lag; the vintage date and the observation date must both precede the cutoff.",
+      "availability": "computable_from_local_fred_vintages",
+      "audit_status": "audited_with_caveat"
+    },
+    {
+      "id": "us_2y_yield_prior_5obs_change_bps",
+      "class": "macro",
+      "definition": "Change in basis points between the two-year yield observations at index -1 and -6 strictly before the cutoff, on the same observation-index basis.",
+      "required_inputs": ["us_2y_yield"],
+      "cutoff_rule": "strictly_before_observation_time",
+      "leakage_guard": "Same vintage-availability guard as the real-yield lookback.",
+      "availability": "computable_from_local_fred_vintages",
+      "audit_status": "audited_with_caveat"
+    },
+    {
+      "id": "us_10y_yield_prior_5obs_change_bps",
+      "class": "macro",
+      "definition": "Change in basis points between the nominal 10-year yield observations at index -1 and -6 strictly before the cutoff. The series exists in local vintages but is not one of the declared 28 variables.",
+      "required_inputs": ["us_10y_yield"],
+      "cutoff_rule": "strictly_before_observation_time",
+      "leakage_guard": "Same vintage-availability guard as the real-yield lookback.",
+      "availability": "computable_from_local_fred_vintages",
+      "audit_status": "audited_with_caveat",
+      "in_declared_inventory": false
+    },
+    {
+      "id": "broad_usd_index_prior_5obs_change_pct",
+      "class": "macro",
+      "definition": "Percentage change between the broad trade-weighted US dollar index observations at index -1 and -6 strictly before the cutoff.",
+      "required_inputs": ["broad_usd_index"],
+      "cutoff_rule": "strictly_before_observation_time",
+      "leakage_guard": "Same vintage-availability guard as the yield lookbacks.",
+      "availability": "computable_from_local_fred_vintages",
+      "audit_status": "audited_with_caveat",
+      "in_declared_inventory": false,
+      "caveat": "DTWEXBGS is a broad trade-weighted index, not ICE DXY. It must not be relabelled as the declared dxy_* variables."
+    },
+    {
+      "id": "recent_event_surprise_state",
+      "class": "macro_event",
+      "definition": "Sign, event family and relative size of the most recent US release strictly before the cutoff. Surprise differences are comparable only inside one event family; they are not a cross-family numeric score.",
+      "required_inputs": ["event_type", "event_actual", "event_consensus"],
+      "cutoff_rule": "strictly_before_observation_time",
+      "leakage_guard": "Uses the release timestamp and the archive lastUpdated vintage. Archived consensus values are not authenticated pre-release vintages, so this field stays retrospective.",
+      "availability": "computable_retrospective_only",
+      "audit_status": "audited_with_caveat"
+    },
+    {
+      "id": "hours_since_last_release",
+      "class": "macro_event",
+      "definition": "Elapsed hours between the release timestamp of the most recent US release strictly before the cutoff and the cutoff itself.",
+      "required_inputs": ["event_type"],
+      "cutoff_rule": "strictly_before_observation_time",
+      "leakage_guard": "Only releases with a release timestamp strictly before the cutoff can be selected.",
+      "availability": "computable_retrospective_only",
+      "audit_status": "audited_with_caveat"
+    }
+  ],
+  "forbidden_context": [
+    {
+      "id": "same_week_realized_direction",
+      "reason": "The eventual direction of the observation's own horizon is the label, not context. Conditioning on it leaks the outcome and is prohibited."
+    },
+    {
+      "id": "future_vintage_value",
+      "reason": "A value whose realtime_start or lastUpdated falls after the cutoff is a revision, not information available at observation time."
+    },
+    {
+      "id": "own_horizon_window_price",
+      "reason": "Any price used for context must come from strictly before the observation anchor; the observation's own reaction window is never context."
+    }
+  ],
+  "variables": [
+    {
+      "id": "us_10y_real_yield",
+      "label": "US 10-year real yield",
+      "declared_inventory_index": 1,
+      "factor": "F1",
+      "definition": "10-year constant-maturity real yield level (FRED DFII10).",
+      "units": "percent_per_annum",
+      "value_kind": "numeric_level",
+      "event_type": "non_event",
+      "transformations": ["us_10y_real_yield_d5_bps", "us_10y_real_yield_d20_bps"],
+      "source_mapping": {
+        "status": "verified_local_source",
+        "kind": "fred_vintage_archive",
+        "series_id": "DFII10",
+        "file_pattern": "DFII10.json",
+        "record_shape": "observations[] with { date, realtime_start, realtime_end, value }"
+      },
+      "timestamp_semantics": {
+        "observation_time": "FRED daily observation date",
+        "availability": "realtime_start plus the conservative 36-hour lag used by backtester/lib/gold_macro_vintage_dataset.js",
+        "timing_basis": "vintage_date_plus_36h_conservative_proxy",
+        "verified": false,
+        "note": "The lag is a documented conservative proxy, not an authenticated publication time. Intraday availability is not established."
+      },
+      "horizons": ["h1_post_event", "h4_post_event", "h24_post_event", "d5_trading_days_post_event"],
+      "known_gaps": ["Authenticated release time unavailable.", "Daily values cannot attribute a sub-daily reaction to this series."],
+      "research_status": "declared_inventory_verified_local"
+    },
+    {
+      "id": "us_10y_real_yield_d5_bps",
+      "label": "US 10-year real yield five-observation change",
+      "declared_inventory_index": 2,
+      "factor": "F1",
+      "definition": "Change in the 10-year real yield level, in basis points, between the current observation and the observation five positions earlier.",
+      "units": "basis_points",
+      "value_kind": "numeric_change",
+      "event_type": "non_event",
+      "transformations": [],
+      "source_mapping": {
+        "status": "verified_derived_from_local_source",
+        "kind": "derived",
+        "derived_from": ["us_10y_real_yield"],
+        "rule": "100 * (level_t - level_t-5) on FRED daily observations in observation order",
+        "implemented_in": "backtester/lib/gold_macro_vintage_dataset.js"
+      },
+      "timestamp_semantics": {
+        "observation_time": "inherits the FRED observation date",
+        "availability": "the later of the two source vintages plus the conservative 36-hour lag",
+        "timing_basis": "vintage_date_plus_36h_conservative_proxy",
+        "verified": false
+      },
+      "horizons": ["h24_post_event", "d5_trading_days_post_event"],
+      "known_gaps": ["A five-observation lookback is not five calendar trading days and must not be described as such.", "FRED holidays shorten the effective calendar span."],
+      "research_status": "declared_transformation_not_independent_variable"
+    },
+    {
+      "id": "us_10y_real_yield_d20_bps",
+      "label": "US 10-year real yield twenty-observation change",
+      "declared_inventory_index": 3,
+      "factor": "F1",
+      "definition": "Change in the 10-year real yield level, in basis points, between the current observation and the observation twenty positions earlier.",
+      "units": "basis_points",
+      "value_kind": "numeric_change",
+      "event_type": "non_event",
+      "transformations": [],
+      "source_mapping": {
+        "status": "verified_derived_from_local_source",
+        "kind": "derived",
+        "derived_from": ["us_10y_real_yield"],
+        "rule": "100 * (level_t - level_t-20) on FRED daily observations in observation order",
+        "implemented_in": "backtester/lib/gold_macro_vintage_dataset.js"
+      },
+      "timestamp_semantics": {
+        "observation_time": "inherits the FRED observation date",
+        "availability": "the later of the two source vintages plus the conservative 36-hour lag",
+        "timing_basis": "vintage_date_plus_36h_conservative_proxy",
+        "verified": false
+      },
+      "horizons": ["d5_trading_days_post_event"],
+      "known_gaps": ["Early rows lack twenty prior observations and are excluded rather than back-filled.", "Not independent of its source level."],
+      "research_status": "declared_transformation_not_independent_variable"
+    },
+    {
+      "id": "dxy_level",
+      "label": "ICE US Dollar Index level",
+      "declared_inventory_index": 4,
+      "factor": "F2",
+      "definition": "ICE DXY index level as read by the live Gold agent.",
+      "units": "index_points",
+      "value_kind": "numeric_level",
+      "event_type": "non_event",
+      "transformations": ["dxy_d1", "dxy_d5", "dxy_d20"],
+      "source_mapping": {
+        "status": "unavailable_no_local_source",
+        "kind": "none",
+        "note": "No ICE DXY archive exists in this checkout. The local DTWEXBGS broad trade-weighted index is a different instrument and is not an acceptable substitute for the declared variable."
+      },
+      "timestamp_semantics": {
+        "observation_time": "unresolved",
+        "availability": "unresolved",
+        "timing_basis": "unknown",
+        "verified": false
+      },
+      "horizons": ["h1_post_event", "h4_post_event", "h24_post_event", "d5_trading_days_post_event"],
+      "known_gaps": ["No local source.", "No verified mapping between DTWEXBGS and ICE DXY.", "Sub-daily DXY availability unknown."],
+      "research_status": "declared_variable_unavailable_locally"
+    },
+    {
+      "id": "dxy_d1",
+      "label": "ICE DXY one-day change",
+      "declared_inventory_index": 5,
+      "factor": "F2",
+      "definition": "One-day percentage change of the ICE DXY index level.",
+      "units": "percent",
+      "value_kind": "numeric_change",
+      "event_type": "non_event",
+      "transformations": [],
+      "source_mapping": { "status": "unavailable_no_local_source", "kind": "derived", "derived_from": ["dxy_level"], "note": "Blocked by the missing dxy_level source." },
+      "timestamp_semantics": { "observation_time": "unresolved", "availability": "unresolved", "timing_basis": "unknown", "verified": false },
+      "horizons": ["h24_post_event"],
+      "known_gaps": ["Inherits the missing ICE DXY source."],
+      "research_status": "declared_variable_unavailable_locally"
+    },
+    {
+      "id": "dxy_d5",
+      "label": "ICE DXY five-day change",
+      "declared_inventory_index": 6,
+      "factor": "F2",
+      "definition": "Five-day percentage change of the ICE DXY index level.",
+      "units": "percent",
+      "value_kind": "numeric_change",
+      "event_type": "non_event",
+      "transformations": [],
+      "source_mapping": { "status": "unavailable_no_local_source", "kind": "derived", "derived_from": ["dxy_level"], "note": "Blocked by the missing dxy_level source." },
+      "timestamp_semantics": { "observation_time": "unresolved", "availability": "unresolved", "timing_basis": "unknown", "verified": false },
+      "horizons": ["h24_post_event", "d5_trading_days_post_event"],
+      "known_gaps": ["Inherits the missing ICE DXY source.", "The five-day window has no declared session calendar."],
+      "research_status": "declared_variable_unavailable_locally"
+    },
+    {
+      "id": "dxy_d20",
+      "label": "ICE DXY twenty-day change",
+      "declared_inventory_index": 7,
+      "factor": "F2",
+      "definition": "Twenty-day percentage change of the ICE DXY index level.",
+      "units": "percent",
+      "value_kind": "numeric_change",
+      "event_type": "non_event",
+      "transformations": [],
+      "source_mapping": { "status": "unavailable_no_local_source", "kind": "derived", "derived_from": ["dxy_level"], "note": "Blocked by the missing dxy_level source." },
+      "timestamp_semantics": { "observation_time": "unresolved", "availability": "unresolved", "timing_basis": "unknown", "verified": false },
+      "horizons": ["d5_trading_days_post_event"],
+      "known_gaps": ["Inherits the missing ICE DXY source."],
+      "research_status": "declared_variable_unavailable_locally"
+    },
+    {
+      "id": "fed_bias",
+      "label": "Fed policy bias",
+      "declared_inventory_index": 8,
+      "factor": "F3",
+      "definition": "Categorical Federal Reserve bias state as consumed by the live Gold agent.",
+      "units": "categorical",
+      "value_kind": "categorical_state",
+      "categorical_values": ["hawkish", "dovish", "neutral", "unknown"],
+      "event_type": "non_event",
+      "transformations": [],
+      "source_mapping": {
+        "status": "unavailable_no_local_source",
+        "kind": "none",
+        "note": "The live agent reads a fed_bias field from its snapshot, but no local archive of the producing model, its derivation rule or its revision history exists in this checkout."
+      },
+      "timestamp_semantics": {
+        "observation_time": "unresolved",
+        "availability": "unresolved",
+        "timing_basis": "unknown",
+        "verified": false,
+        "note": "Without a declared derivation rule the bias state cannot be reconstructed causally and must not be inferred from realised policy decisions."
+      },
+      "horizons": ["h1_post_event", "h4_post_event", "h24_post_event", "d5_trading_days_post_event"],
+      "known_gaps": ["No local source.", "No published derivation or revision rule.", "A categorical state has no natural surprise measure."],
+      "research_status": "declared_variable_unavailable_locally"
+    },
+    {
+      "id": "us_2y_yield",
+      "label": "US 2-year Treasury yield",
+      "declared_inventory_index": 9,
+      "factor": "F4",
+      "definition": "2-year constant-maturity Treasury yield level (FRED DGS2).",
+      "units": "percent_per_annum",
+      "value_kind": "numeric_level",
+      "event_type": "non_event",
+      "transformations": ["us_2y_d5_bps", "us_2y_d20_bps"],
+      "source_mapping": {
+        "status": "verified_local_source",
+        "kind": "fred_vintage_archive",
+        "series_id": "DGS2",
+        "file_pattern": "DGS2.json",
+        "record_shape": "observations[] with { date, realtime_start, realtime_end, value }"
+      },
+      "timestamp_semantics": {
+        "observation_time": "FRED daily observation date",
+        "availability": "realtime_start plus the conservative 36-hour lag used by backtester/lib/gold_macro_vintage_dataset.js",
+        "timing_basis": "vintage_date_plus_36h_conservative_proxy",
+        "verified": false
+      },
+      "horizons": ["h1_post_event", "h4_post_event", "h24_post_event", "d5_trading_days_post_event"],
+      "known_gaps": ["Authenticated release time unavailable.", "Daily values cannot attribute a sub-daily reaction to this series."],
+      "research_status": "declared_inventory_verified_local"
+    },
+    {
+      "id": "us_2y_d5_bps",
+      "label": "US 2-year yield five-observation change",
+      "declared_inventory_index": 10,
+      "factor": "F4",
+      "definition": "Change in the 2-year yield level, in basis points, between the current observation and the observation five positions earlier.",
+      "units": "basis_points",
+      "value_kind": "numeric_change",
+      "event_type": "non_event",
+      "transformations": [],
+      "source_mapping": {
+        "status": "verified_derived_from_local_source",
+        "kind": "derived",
+        "derived_from": ["us_2y_yield"],
+        "rule": "100 * (level_t - level_t-5) on FRED daily observations in observation order",
+        "implemented_in": "backtester/lib/gold_macro_vintage_dataset.js"
+      },
+      "timestamp_semantics": { "observation_time": "inherits the FRED observation date", "availability": "the later of the two source vintages plus the conservative 36-hour lag", "timing_basis": "vintage_date_plus_36h_conservative_proxy", "verified": false },
+      "horizons": ["h24_post_event", "d5_trading_days_post_event"],
+      "known_gaps": ["A five-observation lookback is not five calendar trading days.", "Not independent of its source level."],
+      "research_status": "declared_transformation_not_independent_variable"
+    },
+    {
+      "id": "us_2y_d20_bps",
+      "label": "US 2-year yield twenty-observation change",
+      "declared_inventory_index": 11,
+      "factor": "F4",
+      "definition": "Change in the 2-year yield level, in basis points, between the current observation and the observation twenty positions earlier.",
+      "units": "basis_points",
+      "value_kind": "numeric_change",
+      "event_type": "non_event",
+      "transformations": [],
+      "source_mapping": {
+        "status": "verified_derived_from_local_source",
+        "kind": "derived",
+        "derived_from": ["us_2y_yield"],
+        "rule": "100 * (level_t - level_t-20) on FRED daily observations in observation order",
+        "implemented_in": "backtester/lib/gold_macro_vintage_dataset.js"
+      },
+      "timestamp_semantics": { "observation_time": "inherits the FRED observation date", "availability": "the later of the two source vintages plus the conservative 36-hour lag", "timing_basis": "vintage_date_plus_36h_conservative_proxy", "verified": false },
+      "horizons": ["d5_trading_days_post_event"],
+      "known_gaps": ["Early rows lack twenty prior observations and are excluded rather than back-filled.", "Not independent of its source level."],
+      "research_status": "declared_transformation_not_independent_variable"
+    },
+    {
+      "id": "gold_price",
+      "label": "Gold spot price",
+      "declared_inventory_index": 12,
+      "factor": "F5",
+      "definition": "XAU/USD spot price level used for outcome measurement and for price context.",
+      "units": "usd_per_troy_ounce",
+      "value_kind": "numeric_level",
+      "event_type": "non_event",
+      "transformations": ["gold_d1_pct", "gold_d5_pct", "gold_d20_pct"],
+      "source_mapping": {
+        "status": "verified_local_source",
+        "kind": "oanda_hourly_candle_archive",
+        "instrument": "XAU_USD",
+        "granularity": "H1",
+        "file_pattern": "candles.json",
+        "record_shape": "candles[] with { time, complete, volume, bid{o,h,l,c}, mid{o,h,l,c}, ask{o,h,l,c} }",
+        "price_basis": "mid"
+      },
+      "timestamp_semantics": {
+        "observation_time": "candle open time in UTC",
+        "availability": "H1 bar open time; a bar is only complete at open time plus one hour",
+        "timing_basis": "bar_boundary",
+        "verified": true,
+        "note": "Bar time is the nominal hourly boundary. Partial session bars and closures are not classified by the source."
+      },
+      "horizons": ["immediate_event_window", "h1_post_event", "h4_post_event", "h24_post_event", "d5_trading_days_post_event"],
+      "known_gaps": ["No declared trading-session calendar, so session boundaries and early closes are unresolved.", "The immediate sub-hourly window is not measurable at H1 resolution.", "Candle completeness is a source flag only; it does not certify continuous trading."],
+      "research_status": "declared_inventory_verified_local"
+    },
+    {
+      "id": "gold_d1_pct",
+      "label": "Gold one-day percentage change",
+      "declared_inventory_index": 13,
+      "factor": "F5",
+      "definition": "Percentage change of the Gold price over the preceding one trading day.",
+      "units": "percent",
+      "value_kind": "numeric_change",
+      "event_type": "non_event",
+      "transformations": [],
+      "source_mapping": {
+        "status": "proposed_mapping",
+        "kind": "derived",
+        "derived_from": ["gold_price"],
+        "rule": "percentage change between the current session close and the previous session close, on a declared session calendar",
+        "implemented_in": null,
+        "note": "No local module derives this from the Gold H1 archive. The name appears only as an input field in the live agent, the replay cores and asset-builder outputs, so the research mapping is proposed, not verified."
+      },
+      "timestamp_semantics": { "observation_time": "session close, definition pending", "availability": "pending session calendar", "timing_basis": "unknown", "verified": false },
+      "horizons": ["h24_post_event"],
+      "known_gaps": [
+        "No local derivation exists; the session close and calendar are undeclared.",
+        "Stored production snapshots show the live pipeline falling back to this field when gold_d5_pct is missing, so the same name can carry different lookbacks."
+      ],
+      "research_status": "declared_transformation_unmapped"
+    },
+    {
+      "id": "gold_d5_pct",
+      "label": "Gold five-day percentage change",
+      "declared_inventory_index": 14,
+      "factor": "F5",
+      "definition": "Percentage change of the Gold price over the preceding five trading days.",
+      "units": "percent",
+      "value_kind": "numeric_change",
+      "event_type": "non_event",
+      "transformations": [],
+      "source_mapping": {
+        "status": "proposed_mapping",
+        "kind": "derived",
+        "derived_from": ["gold_price"],
+        "rule": "percentage change between the current session close and the close five trading days earlier, on a declared session calendar",
+        "implemented_in": null,
+        "note": "Proposed. Five trading days is not 120 elapsed hours and no session calendar is declared yet."
+      },
+      "timestamp_semantics": { "observation_time": "session close, definition pending", "availability": "pending session calendar", "timing_basis": "unknown", "verified": false },
+      "horizons": ["h24_post_event", "d5_trading_days_post_event"],
+      "known_gaps": ["No local derivation exists.", "The five-trading-day span is undefined without a calendar.", "Observed in production to be absent, with the live pipeline substituting the one-day change."],
+      "research_status": "declared_transformation_unmapped"
+    },
+    {
+      "id": "gold_d20_pct",
+      "label": "Gold twenty-day percentage change",
+      "declared_inventory_index": 15,
+      "factor": "F5",
+      "definition": "Percentage change of the Gold price over the preceding twenty trading days.",
+      "units": "percent",
+      "value_kind": "numeric_change",
+      "event_type": "non_event",
+      "transformations": [],
+      "source_mapping": {
+        "status": "proposed_mapping",
+        "kind": "derived",
+        "derived_from": ["gold_price"],
+        "rule": "percentage change between the current session close and the close twenty trading days earlier, on a declared session calendar",
+        "implemented_in": null,
+        "note": "Proposed. Requires the same pending session calendar as the five-day change."
+      },
+      "timestamp_semantics": { "observation_time": "session close, definition pending", "availability": "pending session calendar", "timing_basis": "unknown", "verified": false },
+      "horizons": ["d5_trading_days_post_event"],
+      "known_gaps": ["No local derivation exists.", "Observed as null in a stored production snapshot, so absence is a real observed state and must not be treated as zero."],
+      "research_status": "declared_transformation_unmapped"
+    },
+    {
+      "id": "vix_level",
+      "label": "CBOE Volatility Index level",
+      "declared_inventory_index": 16,
+      "factor": "F6",
+      "definition": "VIX close level (FRED VIXCLS) used as the risk-regime input.",
+      "units": "index_points",
+      "value_kind": "numeric_level",
+      "event_type": "non_event",
+      "transformations": ["vix_d1", "vix_d5"],
+      "source_mapping": {
+        "status": "verified_local_source",
+        "kind": "fred_vintage_archive",
+        "series_id": "VIXCLS",
+        "file_pattern": "VIXCLS.json",
+        "record_shape": "observations[] with { date, realtime_start, realtime_end, value }"
+      },
+      "timestamp_semantics": {
+        "observation_time": "FRED daily observation date",
+        "availability": "realtime_start plus the conservative 36-hour lag used by backtester/lib/gold_macro_vintage_dataset.js",
+        "timing_basis": "vintage_date_plus_36h_conservative_proxy",
+        "verified": false
+      },
+      "horizons": ["h1_post_event", "h4_post_event", "h24_post_event", "d5_trading_days_post_event"],
+      "known_gaps": ["Authenticated release time unavailable.", "The VIX close is a daily value and cannot support a sub-daily reaction claim."],
+      "research_status": "declared_inventory_verified_local"
+    },
+    {
+      "id": "vix_d1",
+      "label": "VIX one-observation change",
+      "declared_inventory_index": 17,
+      "factor": "F6",
+      "definition": "Percentage change of the VIX level between the current observation and the observation one position earlier.",
+      "units": "percent",
+      "value_kind": "numeric_change",
+      "event_type": "non_event",
+      "transformations": [],
+      "source_mapping": {
+        "status": "verified_derived_from_local_source",
+        "kind": "derived",
+        "derived_from": ["vix_level"],
+        "rule": "100 * (level_t - level_t-1) / level_t-1 on FRED daily observations in observation order",
+        "implemented_in": "backtester/lib/gold_macro_vintage_dataset.js",
+        "implemented_name": "vix_level_change_1_pct",
+        "naming_note": "The declared shorthand vix_d1 differs from the implemented feature name; the audit resolves the declared ID through this alias."
+      },
+      "timestamp_semantics": { "observation_time": "inherits the FRED observation date", "availability": "the later of the two source vintages plus the conservative 36-hour lag", "timing_basis": "vintage_date_plus_36h_conservative_proxy", "verified": false },
+      "horizons": ["h24_post_event"],
+      "known_gaps": ["A one-observation change is one FRED business day, not a guaranteed calendar day.", "Not independent of the VIX level."],
+      "research_status": "declared_transformation_verified_alias"
+    },
+    {
+      "id": "vix_d5",
+      "label": "VIX five-observation change",
+      "declared_inventory_index": 18,
+      "factor": "F6",
+      "definition": "Percentage change of the VIX level between the current observation and the observation five positions earlier.",
+      "units": "percent",
+      "value_kind": "numeric_change",
+      "event_type": "non_event",
+      "transformations": [],
+      "source_mapping": {
+        "status": "verified_derived_from_local_source",
+        "kind": "derived",
+        "derived_from": ["vix_level"],
+        "rule": "100 * (level_t - level_t-5) / level_t-5 on FRED daily observations in observation order",
+        "implemented_in": "backtester/lib/gold_macro_vintage_dataset.js",
+        "implemented_name": "vix_level_change_5_pct",
+        "naming_note": "The declared shorthand vix_d5 differs from the implemented feature name; the audit resolves the declared ID through this alias."
+      },
+      "timestamp_semantics": { "observation_time": "inherits the FRED observation date", "availability": "the later of the two source vintages plus the conservative 36-hour lag", "timing_basis": "vintage_date_plus_36h_conservative_proxy", "verified": false },
+      "horizons": ["h24_post_event", "d5_trading_days_post_event"],
+      "known_gaps": ["A five-observation lookback is not five calendar trading days.", "Not independent of the VIX level."],
+      "research_status": "declared_transformation_verified_alias"
+    },
+    {
+      "id": "inflation_signal",
+      "label": "Inflation signal",
+      "declared_inventory_index": 19,
+      "factor": "F8",
+      "definition": "Categorical inflation-regime input consumed by the live Gold agent alongside the latest US event.",
+      "units": "categorical",
+      "value_kind": "categorical_state",
+      "event_type": "non_event",
+      "transformations": [],
+      "source_mapping": {
+        "status": "unavailable_no_local_source",
+        "kind": "none",
+        "note": "The live agent reads an inflation_signal field, but no local module or archive defines how the state is derived, versioned or revised. It is not the same thing as an inflation event actual-versus-consensus surprise."
+      },
+      "timestamp_semantics": { "observation_time": "unresolved", "availability": "unresolved", "timing_basis": "unknown", "verified": false },
+      "horizons": ["h24_post_event", "d5_trading_days_post_event"],
+      "known_gaps": ["No local source.", "No derivation rule, so a categorical state cannot be reconstructed causally.", "Inflation event surprises are a separate, event-anchored measurement and must not be reported as this variable."],
+      "research_status": "declared_variable_unavailable_locally"
+    },
+    {
+      "id": "risk_headline_context",
+      "label": "Risk headline context",
+      "declared_inventory_index": 20,
+      "factor": "F9",
+      "definition": "Free-text or categorical safe-haven context consumed by the live Gold agent alongside the latest US event.",
+      "units": "text_or_categorical",
+      "value_kind": "unstructured_context",
+      "event_type": "non_event",
+      "transformations": [],
+      "source_mapping": {
+        "status": "unavailable_no_local_source",
+        "kind": "none",
+        "note": "No local archive of headlines, their timestamps or their classification exists. A related alias geopolitical_risk_flag is read from stored snapshots without a published derivation rule."
+      },
+      "timestamp_semantics": { "observation_time": "unresolved", "availability": "unresolved", "timing_basis": "unknown", "verified": false, "note": "Headline timestamps are the crux of causal use; without them any relationship would be retrospective." },
+      "horizons": ["h1_post_event", "h24_post_event", "d5_trading_days_post_event"],
+      "known_gaps": ["No local source.", "No timestamped headline archive, so the immediate event window is unusable for this class.", "No deterministic classifier is declared."],
+      "research_status": "declared_variable_unavailable_locally"
+    },
+    {
+      "id": "equities_regime",
+      "label": "Equities regime",
+      "declared_inventory_index": 21,
+      "factor": "F10",
+      "definition": "Categorical equity-market regime input consumed by the live Gold agent.",
+      "units": "categorical",
+      "value_kind": "categorical_state",
+      "event_type": "non_event",
+      "transformations": [],
+      "source_mapping": {
+        "status": "unavailable_no_local_source",
+        "kind": "none",
+        "note": "No local module defines the equity regime state or its inputs. An NQ price series exists in other asset paths but no declared Gold mapping connects them."
+      },
+      "timestamp_semantics": { "observation_time": "unresolved", "availability": "unresolved", "timing_basis": "unknown", "verified": false },
+      "horizons": ["h24_post_event", "d5_trading_days_post_event"],
+      "known_gaps": ["No local source and no derivation rule.", "Weight in the live model is 2 of 100, so coverage here is low priority but still must be reported as missing."],
+      "research_status": "declared_variable_unavailable_locally"
+    },
+    {
+      "id": "growth_regime",
+      "label": "Growth regime",
+      "declared_inventory_index": 22,
+      "factor": "F10",
+      "definition": "Categorical growth/liquidity regime input consumed by the live Gold agent.",
+      "units": "categorical",
+      "value_kind": "categorical_state",
+      "event_type": "non_event",
+      "transformations": [],
+      "source_mapping": {
+        "status": "unavailable_no_local_source",
+        "kind": "none",
+        "note": "No local module defines the growth regime state. A stored-snapshot alias global_growth_regime is read without a published derivation rule and must not be silently equated with this variable."
+      },
+      "timestamp_semantics": { "observation_time": "unresolved", "availability": "unresolved", "timing_basis": "unknown", "verified": false, "note": "Regime revisions would change historical state; no revision history is available." },
+      "horizons": ["h24_post_event", "d5_trading_days_post_event"],
+      "known_gaps": ["No local source and no derivation rule.", "Alias fields must not be treated as equivalent without a reviewed mapping."],
+      "research_status": "declared_variable_unavailable_locally"
+    },
+    {
+      "id": "event_type",
+      "label": "US economic event family",
+      "declared_inventory_index": 23,
+      "factor": "F7",
+      "definition": "Identity of the released US economic indicator, used both as the event anchor and as the family label for surprise comparisons.",
+      "units": "categorical",
+      "value_kind": "categorical_state",
+      "event_type": "event",
+      "transformations": [],
+      "source_mapping": {
+        "status": "verified_local_source",
+        "kind": "event_calendar_archive",
+        "file_pattern": "events.json",
+        "record_shape": "array of { id, eventId, name, dateUtc, periodDateUtc, periodType, countryCode, currencyCode, unit, volatility, potency, actual, revised, consensus, previous, ratioDeviation, isBetterThanExpected, lastUpdated, ... }",
+        "fields_used": ["eventId", "name", "dateUtc", "countryCode", "volatility"],
+        "observed_scope": "This local merged archive contains only countryCode=US rows."
+      },
+      "timestamp_semantics": {
+        "observation_time": "dateUtc release timestamp",
+        "availability": "the archive exposes a lastUpdated epoch field, but its meaning is archive-update time, not authenticated original publication time",
+        "timing_basis": "release_timestamp_present_vintage_unverified",
+        "verified": true
+      },
+      "horizons": ["immediate_event_window", "h1_post_event", "h4_post_event", "h24_post_event", "d5_trading_days_post_event"],
+      "known_gaps": ["Family identity is stable, but releases repeat and one daily observation can span several families.", "No mapping exists between archive family names and the live agent's latest_us_event vocabulary.", "Higher unemployment is not the same economic signal as higher payrolls; direction conventions must stay family-specific."],
+      "research_status": "declared_inventory_verified_local"
+    },
+    {
+      "id": "event_actual",
+      "label": "Released value of the event",
+      "declared_inventory_index": 24,
+      "factor": "F7",
+      "definition": "Reported actual value of the release as stored in the archive.",
+      "units": "depends_on_event_family",
+      "value_kind": "numeric_level",
+      "event_type": "event",
+      "transformations": [],
+      "source_mapping": {
+        "status": "verified_local_source",
+        "kind": "event_calendar_archive",
+        "file_pattern": "events.json",
+        "fields_used": ["actual", "unit", "periodType"]
+      },
+      "timestamp_semantics": { "observation_time": "dateUtc release timestamp", "availability": "present at release; the archive value is the current archived value, not a proven original release print", "timing_basis": "release_timestamp_present_vintage_unverified", "verified": true },
+      "horizons": ["immediate_event_window", "h1_post_event", "h4_post_event", "h24_post_event", "d5_trading_days_post_event"],
+      "known_gaps": ["Null actuals occur for unpublished, tentative, preliminary or speech rows and must not be coerced to zero.", "Units differ per family, so cross-family numeric comparison is invalid."],
+      "research_status": "declared_inventory_verified_local"
+    },
+    {
+      "id": "event_consensus",
+      "label": "Pre-release consensus for the event",
+      "declared_inventory_index": 25,
+      "factor": "F7",
+      "definition": "Consensus expectation stored alongside the release.",
+      "units": "depends_on_event_family",
+      "value_kind": "numeric_level",
+      "event_type": "event",
+      "transformations": [],
+      "source_mapping": {
+        "status": "verified_local_source",
+        "kind": "event_calendar_archive",
+        "file_pattern": "events.json",
+        "fields_used": ["consensus"]
+      },
+      "timestamp_semantics": {
+        "observation_time": "intended to be the pre-release consensus",
+        "availability": "unverified. The archive stores a single consensus value with no vintage; it may be a revised or post-release figure.",
+        "timing_basis": "vintage_unverified_retrospective_only",
+        "verified": false,
+        "note": "This is the central provenance gap for event research: without an authenticated pre-release vintage an actual-versus-consensus surprise is retrospective evidence."
+      },
+      "horizons": ["immediate_event_window", "h1_post_event", "h4_post_event", "h24_post_event", "d5_trading_days_post_event"],
+      "known_gaps": ["No consensus vintage.", "Nulls exist and are a genuine missing state.", "Consensus for preliminary rows can refer to different period definitions."],
+      "research_status": "declared_inventory_verified_local_with_provenance_gap"
+    },
+    {
+      "id": "event_previous_as_released",
+      "label": "Previous value as originally released",
+      "declared_inventory_index": 26,
+      "factor": "F7",
+      "definition": "The prior period value as it stood at that prior release, before any restatement.",
+      "units": "depends_on_event_family",
+      "value_kind": "numeric_level",
+      "event_type": "event",
+      "transformations": [],
+      "source_mapping": {
+        "status": "proposed_mapping",
+        "kind": "derived",
+        "derived_from": ["event_actual"],
+        "rule": "the actual value recorded for the same event family at its preceding release",
+        "implemented_in": null,
+        "note": "The archive exposes a `previous` field and a `previousIsPreliminary` flag, but no as-released history. The archived previous value may already include a restatement, so it must not be used as the original print."
+      },
+      "timestamp_semantics": {
+        "observation_time": "the preceding release timestamp",
+        "availability": "retrospective only; the archived previous value carries no vintage",
+        "timing_basis": "vintage_unverified_retrospective_only",
+        "verified": false
+      },
+      "horizons": ["h24_post_event", "d5_trading_days_post_event"],
+      "known_gaps": ["No as-released previous-value history.", "Restatements are indistinguishable from original prints.", "Requires the per-family release sequence to be built deterministically."],
+      "research_status": "declared_variable_mapping_proposed"
+    },
+    {
+      "id": "event_surprise",
+      "label": "Event surprise direction and family-relative size",
+      "declared_inventory_index": 27,
+      "factor": "F7",
+      "definition": "Sign and, within one event family, magnitude of the difference between the release actual and the consensus.",
+      "units": "family_specific",
+      "value_kind": "derived_direction_and_magnitude",
+      "event_type": "event",
+      "transformations": [],
+      "source_mapping": {
+        "status": "proposed_mapping",
+        "kind": "derived",
+        "derived_from": ["event_actual", "event_consensus"],
+        "rule": "direction is actual > consensus, actual = consensus or actual < consensus; a numeric difference is comparable only within the same family and unit",
+        "implemented_in": "backtester/lib/gold_research_experiments.js",
+        "implemented_name": "event_surprise_direction",
+        "also_available": "the archive carries ratioDeviation and isBetterThanExpected, but neither formula or scaling is declared in this repository"
+      },
+      "timestamp_semantics": {
+        "observation_time": "the release timestamp",
+        "availability": "inherits the unverified consensus vintage, so the surprise is retrospective only",
+        "timing_basis": "vintage_unverified_retrospective_only",
+        "verified": false
+      },
+      "horizons": ["immediate_event_window", "h1_post_event", "h4_post_event", "h24_post_event", "d5_trading_days_post_event"],
+      "known_gaps": [
+        "Direction is well defined; comparable magnitude is not, because units differ per family.",
+        "ratioDeviation and isBetterThanExpected are stored but undocumented, so they are not admissible as a cross-family score.",
+        "The live agent's rule treats a positive surprise as bearish for Gold, which is a hypothesis to test rather than an established relationship."
+      ],
+      "research_status": "declared_variable_mapping_proposed"
+    },
+    {
+      "id": "event_age_hours",
+      "label": "Hours since the event release",
+      "declared_inventory_index": 28,
+      "factor": "F7",
+      "definition": "Elapsed hours between the release timestamp and the observation anchor.",
+      "units": "hours",
+      "value_kind": "numeric_elapsed",
+      "event_type": "event",
+      "transformations": [],
+      "source_mapping": {
+        "status": "verified_derived_from_local_source",
+        "kind": "derived",
+        "derived_from": ["event_type"],
+        "rule": "anchor time minus dateUtc, in hours",
+        "implemented_in": "backtester/lib/gold_research_experiments.js",
+        "implemented_name": "event_age_hours"
+      },
+      "timestamp_semantics": { "observation_time": "inherits the release timestamp", "availability": "non-negative by construction; a negative value means the anchor preceded the release and must be rejected", "timing_basis": "release_timestamp_present_vintage_unverified", "verified": true },
+      "horizons": ["immediate_event_window", "h1_post_event", "h4_post_event", "h24_post_event", "d5_trading_days_post_event"],
+      "known_gaps": ["Releases repeat per family, so age alone does not identify which release is being measured.", "Rows with null or unparsable dateUtc must be excluded rather than assigned an age."],
+      "research_status": "declared_variable_verified_derived"
+    }
+  ],
+  "additional_local_series": [
+    {
+      "id": "us_10y_yield",
+      "label": "US 10-year nominal Treasury yield",
+      "in_declared_inventory": false,
+      "coverage_status": "not_in_declared_inventory",
+      "definition": "10-year constant-maturity nominal Treasury yield level (FRED DGS10). Present in the local vintage archive and used by the extended macro research, but absent from the declared 28-variable inventory.",
+      "units": "percent_per_annum",
+      "source_mapping": { "status": "verified_local_source", "kind": "fred_vintage_archive", "series_id": "DGS10", "file_pattern": "DGS10.json" },
+      "timestamp_semantics": { "observation_time": "FRED daily observation date", "availability": "realtime_start plus the conservative 36-hour lag", "timing_basis": "vintage_date_plus_36h_conservative_proxy", "verified": false },
+      "known_gaps": ["Not part of the declared inventory, so any use must be declared explicitly rather than folded into an existing variable."],
+      "research_status": "additional_local_series_declared"
+    },
+    {
+      "id": "broad_usd_index",
+      "label": "Broad trade-weighted US dollar index",
+      "in_declared_inventory": false,
+      "coverage_status": "not_in_declared_inventory",
+      "definition": "FRED DTWEXBGS broad trade-weighted US dollar index level. Present locally and previously used as a dollar proxy.",
+      "units": "index_points",
+      "source_mapping": { "status": "verified_local_source", "kind": "fred_vintage_archive", "series_id": "DTWEXBGS", "file_pattern": "DTWEXBGS.json" },
+      "timestamp_semantics": { "observation_time": "FRED daily observation date", "availability": "realtime_start plus the conservative 36-hour lag", "timing_basis": "vintage_date_plus_36h_conservative_proxy", "verified": false },
+      "known_gaps": ["This is not ICE DXY and must not be reported as the declared dxy_* variables.", "Its publication is weekly-weighted with longer revisions, so the fixed 36-hour lag is a weaker assumption here than for the daily yield series."],
+      "research_status": "additional_local_series_declared"
+    }
+  ],
+  "derived_name_aliases": {
+    "note": "The local macro engine emits derived feature names as <source>_change_<lag>_<unit>. The declared inventory uses shorthand IDs. This map is the verified correspondence; a declared ID absent from this map has no implemented derivation in this checkout.",
+    "implemented_by": "backtester/lib/gold_macro_vintage_dataset.js",
+    "map": {
+      "us_10y_real_yield_d5_bps": "us_10y_real_yield_change_5_bps",
+      "us_10y_real_yield_d20_bps": "us_10y_real_yield_change_20_bps",
+      "us_2y_d5_bps": "us_2y_yield_change_5_bps",
+      "us_2y_d20_bps": "us_2y_yield_change_20_bps",
+      "vix_d1": "vix_level_change_1_pct",
+      "vix_d5": "vix_level_change_5_pct"
+    },
+    "implemented_but_not_declared": [
+      "us_10y_real_yield_change_1_bps",
+      "us_2y_yield_change_1_bps",
+      "us_10y_yield_change_1_bps",
+      "us_10y_yield_change_5_bps",
+      "us_10y_yield_change_20_bps",
+      "vix_level_change_20_pct",
+      "broad_usd_index_change_1_pct",
+      "broad_usd_index_change_5_pct",
+      "broad_usd_index_change_20_pct"
+    ],
+    "declared_without_implementation": [
+      "dxy_d1",
+      "dxy_d5",
+      "dxy_d20",
+      "gold_d1_pct",
+      "gold_d5_pct",
+      "gold_d20_pct"
+    ]
+  },
+  "production_snapshot_observation": {
+    "statement": "Several declared variables without a local versioned archive were observed as exact top-level fields in stored production snapshot exports during earlier work. That evidence is retrospective: storage timestamps are proxies and no publication or vintage metadata accompanies the values.",
+    "reported_by": ["docs/CURRENT_STATE.md", "docs/GOLD_RESEARCH_DELIVERY_CONTRACT.md"],
+    "coverage_claim": "Earlier work reported nineteen of the twenty-eight declared variables present as exact top-level values and nine requiring missing, nested or alias review.",
+    "admissible_for": "descriptive retrospective association only, with the storage-proxy label retained",
+    "not_admissible_for": ["timestamped or causal claims", "authenticated surprise measurement", "counting as verified local source coverage"],
+    "verified_in_this_milestone": false
+  },
+  "unresolved_policies": [
+    "XAU/USD trading-session open, close, holiday and early-close calendar for the five-trading-day horizon.",
+    "Anchor-to-candle alignment rule for the one-hour and four-hour horizons when a release does not fall on an H1 boundary.",
+    "Whether partial or incomplete H1 bars are admissible, and how they are labelled.",
+    "Volatility estimator, sampling window and annualisation for trailing price volatility.",
+    "Revival or replacement decision for the ICE DXY, Fed-bias and regime variables that have no local source.",
+    "Whether repeated releases in one daily observation are treated as one observation or as separate overlapping events."
+  ],
+  "known_gaps": [
+    "Nine declared variables and their transformations (dxy_level, dxy_d1, dxy_d5, dxy_d20, fed_bias, inflation_signal, risk_headline_context, equities_regime, growth_regime) have no verified local source.",
+    "Six declared transformations have no implemented derivation: dxy_d1, dxy_d5, dxy_d20, gold_d1_pct, gold_d5_pct and gold_d20_pct. Their names exist only as live-agent or asset-builder inputs.",
+    "Archived event consensus values are not authenticated pre-release vintages, so every event surprise remains retrospective evidence.",
+    "The immediate sub-hourly event window is unsupported at the available H1 resolution and must not be approximated from H1 bars.",
+    "No trading-session calendar is declared, so five-trading-day horizon and trailing five-day context coverage cannot yet be reported as passed or failed.",
+    "The originally supplied external research documents were unavailable, so originally claimed input sets beyond the repository logic document remain unverified."
+  ]
+}
