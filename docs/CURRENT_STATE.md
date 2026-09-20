@@ -1,5 +1,7 @@
 # Current state
 
+Desktop coordination monitor added September 20: native Windows tray panel with always-on-top toggle, five-second local-file scans and submission/reply/blocker alerts. Heartbeat-based activity is explicitly reported, becomes stale after five minutes, and does not prove process liveness. Automated agent dispatch remains unconfigured. Launch: npm run monitor.
+
 Gold transition reviewed September 20: preservation and audit reproducibility verified; session implementation is NOT accepted. Prior-close timing and missing-close fallback bugs reproduced independently. New assignment gold-policy-002 covers isolated preservation, fixes and calendar provenance. The reported 964/965 and 5106/5115 session-contiguous windows remain results under an unaccepted archive-derived policy, not verified usable research coverage.
 
 September 20 orchestration update: the canonical checkout is now the central coordinator on `orchestration/control-plane-20260920`. `docs/orchestration/projects.json` records five workers and shared dependencies; immutable file submissions/replies use the ignored `.local/orchestration` mailbox. Gold coverage is already accepted; the next worker assignment is the session/gap/return-policy proposal in a separate worktree. Existing asset workers first submit current-state reports. No background runner is enabled. The dated research facts below remain evidence; older branch and next-action statements are superseded by the central register.

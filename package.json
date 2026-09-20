@@ -4,6 +4,8 @@
   "version": "1.0.0",
   "description": "Asset Directional Movement Dashboard local test dependencies",
   "scripts": {
+    "monitor": "powershell -NoProfile -ExecutionPolicy Bypass -File tools/project-monitor/start.ps1",
+    "test:monitor": "node --test tests/monitor_state.test.js tests/coordination.test.js",
     "test:coordination": "node --test tests/coordination.test.js",
     "test": "node scripts/test-local.js",
     "test:refresh-harness": "node --test tests/refresh_workflow_harness.test.js",

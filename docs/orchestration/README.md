@@ -82,7 +82,8 @@ worktree. Do not move, reset, stash or discard any uncommitted work during the
 transition; report it first. Historical asset worktrees have not been refreshed
 or reset by this setup. Their initial assignment is status reconciliation only.
 
-There is **no watcher, scheduled run, running agent or automatic notification**.
+There is **no automatic agent/review dispatcher or scheduled AI run**.
+The desktop monitor described below provides local-file scans and notifications.
 The user starts each worker with the provided message, and says "check submissions"
 here to trigger review. Worker sessions must also be prompted to check replies
 unless their own runner is already active. No conversation history is shared.
@@ -94,3 +95,24 @@ deduplication; it is a separate implementation, not enabled by these files.
 `npm run test:coordination` is the focused local suite for the mailbox.
 It is also discovered by `npm test` and `npm run test:unit`. `check` is read-only
 and reports malformed reports as errors rather than silently skipping them.
+
+## Desktop monitor and progress
+
+Run `npm run monitor` in the canonical project for the native Windows tray panel.
+Pin keeps it on top; closing hides it to the tray; Exit stops it. It scans every
+five seconds and alerts on new submissions/replies/blockers without AI calls.
+This file monitor does not start agents or automate coordinator review.
+
+Workers report activity at task start, milestones, at least once per minute during
+long active work, and when paused/stopped/blocked. Use the canonical command:
+
+```powershell
+node D:/trading-agent-dashboard-codex/scripts/monitor-state.js activity gold-research working "Checking session policy"
+```
+
+Replace worker, state and task as appropriate; states are working, blocked, paused,
+stopped. Report actual activity, never a heartbeat from an unattended timer that
+implies work is continuing. Five-minute-old activity becomes No recent update.
+Existing agents must read these updated instructions before progress reporting
+can be expected. Submission/reply notifications work without heartbeats.
+See `tools/project-monitor/README.md` for launch, notifications and verification.

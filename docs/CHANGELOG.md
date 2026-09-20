@@ -1,5 +1,9 @@
 # 2026-09-20 - Gold coverage registry accepted at checkpoint review
 
+## 2026-09-20 - Desktop project monitor
+
+Added native pinnable Windows tray panel, local monitor snapshot/activity commands, deduplicated change alerts and explicit stale/activity/controller states. No AI calls for polling. Seven focused tests and native default/narrow rendering/pin smoke checks pass. No production publication or auto-dispatch.
+
 ## 2026-09-20 - Central coordinator and worker mailboxes
 
 Added a project register, shared coordination protocol, bounded worker assignments, ready-to-paste messages and an immutable JSON submission/reply CLI. Replies bind to report hashes; scan reports malformed/stale submissions explicitly. Added four focused transport tests and npm run test:coordination. No production changes or automatic agent startup. Gold coverage acceptance is preserved and further policy work moves to its own worktree.
