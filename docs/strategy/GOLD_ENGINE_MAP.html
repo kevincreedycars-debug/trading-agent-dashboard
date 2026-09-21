@@ -28,7 +28,7 @@
   table { width: 100%; border-collapse: collapse; }
   th { font-size: 6.4pt; letter-spacing: .08em; text-transform: uppercase; color: #5b6b8c; text-align: left;
        border-bottom: .8pt solid #b9c6dd; padding: .5mm 1mm; }
-  td { font-size: 6.6pt; padding: .42mm 1mm; border-bottom: .5pt solid #e4e9f2; vertical-align: top; }
+  td { font-size: 6.6pt; padding: .34mm 1mm; border-bottom: .5pt solid #e4e9f2; vertical-align: top; }
   tr:nth-child(even) td { background: #f7f9fd; }
   .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 3mm; }
   code, .path { font-family: Consolas, "Cascadia Mono", monospace; font-size: 6.4pt; color: #44386b; word-break: break-word; }
@@ -39,6 +39,11 @@
   .p-blk { background: #fff1d6; color: #8a4f00; border: .6pt solid #eec27c; }
   .p-new { background: #e9eff9; color: #274784; border: .6pt solid #b6c8e6; }
   .num { color: #8797b8; font-weight: 700; }
+  table.drv { table-layout: fixed; }
+  table.drv th:nth-child(1), table.drv td:nth-child(1) { width: 10.5mm; }
+  table.drv th:nth-child(2), table.drv td:nth-child(2) { width: 33mm; }
+  table.drv th:nth-child(3), table.drv td:nth-child(3) { width: 34mm; }
+  table.drv th:nth-child(4), table.drv td:nth-child(4) { width: 15mm; }
   .box { border: .8pt solid #ccd6e6; border-radius: 1.4mm; padding: 1.5mm 2mm; background: #fbfcfe; }
   .box h3 { margin: 0 0 1mm; font-size: 7.2pt; letter-spacing: .1em; text-transform: uppercase; color: #274784; }
   .box p { margin: 0 0 1mm; }
@@ -57,8 +62,8 @@
 <div class="sheet">
   <header class="hdr">
     <div>
-      <p class="eyebrow">Gold backtest engine &middot; reference sheet</p>
-      <h1>What the engine tests, with what data, and where the results sit</h1>
+      <p class="eyebrow">Backtesting agent architecture</p>
+      <h1>Backtesting agent architecture &mdash; XAU (Gold)</h1>
       <p class="lede">Gold is the first asset through a standalone engine: it measures every driver of gold's Layer&nbsp;1 call against what gold actually did next. Association only &mdash; no prediction, no formula, no trading result.</p>
     </div>
     <div class="stamp">
@@ -80,35 +85,53 @@
     </div>
   </section>
 
-    <p class="lede">These 28 names are the live gold Layer&nbsp;1 inputs: the ten weighted factors <b>F1&ndash;F10</b> of the current algorithm, where <b>F7</b> is its event decomposition. Rows marked <span class="pill p-ok">measured</span> carry real numbers in the accepted report; the rest are the next batches of work.</p>
+    <p class="lede">The two-column list below is every declared driver: the ten weighted factors <b>F1&ndash;F10</b> of the live gold Layer&nbsp;1 algorithm and their transformations. <span class="pill p-ok">measured</span> = has real numbers in the accepted report.</p>
     <div class="two-col">
       <div>
-        <table>
-          <thead><tr><th>#&nbsp;/&nbsp;F</th><th>Driver &mdash; and why it is in the call</th><th>Source</th><th>Status</th></tr></thead>
+        <table class="drv">
+          <thead><tr><th># &middot; F</th><th>Driver</th><th>Why it is in the call &middot; source</th><th>Status</th></tr></thead>
           <tbody>
-            <tr><td class="num">F1</td><td><b>Real rates</b> &mdash; <b>us_10y_real_yield</b> <i>(real cost of money, gold's classic anchor)</i>, <b>us_10y_real_yield_d5_bps</b>, <b>us_10y_real_yield_d20_bps</b> <i>(1-week and 1-month direction)</i></td><td>FRED DFII10 + derived</td><td><span class="pill p-ok">3 measured</span></td></tr>
-            <tr><td class="num">F4</td><td><b>Rate expectations</b> &mdash; <b>us_2y_yield</b> <i>(front end)</i>, <b>us_2y_d5_bps</b>, <b>us_2y_d20_bps</b></td><td>FRED DGS2 + derived</td><td><span class="pill p-ok">3 measured</span></td></tr>
-            <tr><td class="num">F5</td><td><b>Gold itself</b> &mdash; <b>gold_price</b> <i>(level, used as regime context)</i>, <b>gold_d1_pct</b>, <b>gold_d5_pct</b>, <b>gold_d20_pct</b> <i>(own momentum; added this batch)</i></td><td>OANDA H1 + derived</td><td><span class="pill p-ok">4 measured</span></td></tr>
-            <tr><td class="num">F6</td><td><b>Risk appetite</b> &mdash; <b>vix_level</b>, <b>vix_d1</b>, <b>vix_d5</b></td><td>FRED VIXCLS + derived</td><td><span class="pill p-ok">3 measured</span></td></tr>
-            <tr><td class="num">F7</td><td><b>Events, identity</b> &mdash; <b>event_type</b> <i>(which release, kept family-scoped)</i>, <b>event_age_hours</b></td><td>event archive + derived</td><td><span class="pill p-ok">2 measured</span></td></tr>
+            <tr><td class="num">1&middot;F1</td><td><b>us_10y_real_yield</b></td><td>real cost of money &middot; DFII10</td><td><span class="pill p-ok">measured</span></td></tr>
+            <tr><td class="num">2&middot;F1</td><td><b>us_10y_real_yield_d5_bps</b></td><td>1-wk real-rate dir &middot; derived</td><td><span class="pill p-ok">measured</span></td></tr>
+            <tr><td class="num">3&middot;F1</td><td><b>us_10y_real_yield_d20_bps</b></td><td>1-mo real-rate trend &middot; derived</td><td><span class="pill p-ok">measured</span></td></tr>
+            <tr><td class="num">4&middot;F2</td><td><b>dxy_level</b></td><td>dollar index level &middot; none</td><td><span class="pill p-src">no source</span></td></tr>
+            <tr><td class="num">5&middot;F2</td><td><b>dxy_d1</b></td><td>1-day dollar move &middot; none</td><td><span class="pill p-src">blocked</span></td></tr>
+            <tr><td class="num">6&middot;F2</td><td><b>dxy_d5</b></td><td>1-week dollar move &middot; none</td><td><span class="pill p-src">blocked</span></td></tr>
+            <tr><td class="num">7&middot;F2</td><td><b>dxy_d20</b></td><td>1-month dollar move &middot; none</td><td><span class="pill p-src">blocked</span></td></tr>
+            <tr><td class="num">8&middot;F3</td><td><b>fed_bias</b></td><td>policy stance &middot; rule only</td><td><span class="pill p-new">no data</span></td></tr>
+            <tr><td class="num">9&middot;F4</td><td><b>us_2y_yield</b></td><td>front-end rates &middot; DGS2</td><td><span class="pill p-ok">measured</span></td></tr>
+            <tr><td class="num">10&middot;F4</td><td><b>us_2y_d5_bps</b></td><td>1-wk 2-year dir &middot; derived</td><td><span class="pill p-ok">measured</span></td></tr>
+            <tr><td class="num">11&middot;F4</td><td><b>us_2y_d20_bps</b></td><td>1-mo 2-year trend &middot; derived</td><td><span class="pill p-ok">measured</span></td></tr>
+            <tr><td class="num">12&middot;F5</td><td><b>gold_price</b></td><td>own level / context &middot; OANDA</td><td><span class="pill p-ok">measured</span></td></tr>
+            <tr><td class="num">13&middot;F5</td><td><b>gold_d1_pct</b></td><td>own 1-session mom. <i>(new)</i></td><td><span class="pill p-ok">measured</span></td></tr>
+            <tr><td class="num">14&middot;F5</td><td><b>gold_d5_pct</b></td><td>own 1-week mom. <i>(new)</i></td><td><span class="pill p-ok">measured</span></td></tr>
           </tbody>
         </table>
       </div>
       <div>
-        <table>
-          <thead><tr><th>#&nbsp;/&nbsp;F</th><th>Driver &mdash; and why it is in the call</th><th>Source</th><th>Status</th></tr></thead>
+        <table class="drv">
+          <thead><tr><th># &middot; F</th><th>Driver</th><th>Why it is in the call &middot; source</th><th>Status</th></tr></thead>
           <tbody>
-            <tr><td class="num">F7</td><td><b>Events, content</b> &mdash; <b>event_actual</b>, <b>event_consensus</b>, <b>event_previous_as_released</b>, <b>event_surprise</b> <i>(actual vs consensus, by family)</i></td><td>event archive + derived</td><td><span class="pill p-ok">4 measured</span></td></tr>
-            <tr><td class="num">F2</td><td><b>US dollar</b> &mdash; <b>dxy_level</b>, <b>dxy_d1</b>, <b>dxy_d5</b>, <b>dxy_d20</b> <i>(gold is dollar-priced; no ICE DXY series exists locally, and the broad index is not relabelled as DXY)</i></td><td>none</td><td><span class="pill p-src">no source</span></td></tr>
-            <tr><td class="num">F3</td><td><b>Fed stance</b> &mdash; <b>fed_bias</b>; rule now declared from the Fed target-range direction</td><td>rule only</td><td><span class="pill p-new">awaiting data</span></td></tr>
-            <tr><td class="num">F8</td><td><b>Inflation</b> &mdash; <b>inflation_signal</b>; rule now declared on the 5-year breakeven, 20-observation change</td><td>rule only</td><td><span class="pill p-new">awaiting data</span></td></tr>
-            <tr><td class="num">F9<br>F10</td><td><b>News tone and regimes</b> &mdash; <b>risk_headline_context</b> <i>(needs a licensed timestamped corpus)</i>, <b>equities_regime</b>, <b>growth_regime</b></td><td>none</td><td><span class="pill p-src">no source</span></td></tr>
+            <tr><td class="num">15&middot;F5</td><td><b>gold_d20_pct</b></td><td>own 1-month mom. <i>(new)</i></td><td><span class="pill p-ok">measured</span></td></tr>
+            <tr><td class="num">16&middot;F6</td><td><b>vix_level</b></td><td>risk appetite &middot; VIXCLS</td><td><span class="pill p-ok">measured</span></td></tr>
+            <tr><td class="num">17&middot;F6</td><td><b>vix_d1</b></td><td>1-day risk shift &middot; derived</td><td><span class="pill p-ok">measured</span></td></tr>
+            <tr><td class="num">18&middot;F6</td><td><b>vix_d5</b></td><td>1-week risk shift &middot; derived</td><td><span class="pill p-ok">measured</span></td></tr>
+            <tr><td class="num">19&middot;F8</td><td><b>inflation_signal</b></td><td>implied inflation &middot; rule only</td><td><span class="pill p-new">no data</span></td></tr>
+            <tr><td class="num">20&middot;F9</td><td><b>risk_headline_context</b></td><td>news tone &middot; none</td><td><span class="pill p-src">deferred</span></td></tr>
+            <tr><td class="num">21&middot;F10</td><td><b>equities_regime</b></td><td>risk-on / risk-off &middot; none</td><td><span class="pill p-src">no source</span></td></tr>
+            <tr><td class="num">22&middot;F10</td><td><b>growth_regime</b></td><td>growth backdrop &middot; none</td><td><span class="pill p-src">no source</span></td></tr>
+            <tr><td class="num">23&middot;F7</td><td><b>event_type</b></td><td>which release &middot; archive</td><td><span class="pill p-ok">measured</span></td></tr>
+            <tr><td class="num">24&middot;F7</td><td><b>event_actual</b></td><td>released value &middot; archive</td><td><span class="pill p-ok">measured</span></td></tr>
+            <tr><td class="num">25&middot;F7</td><td><b>event_consensus</b></td><td>expected value &middot; archive</td><td><span class="pill p-ok">measured</span></td></tr>
+            <tr><td class="num">26&middot;F7</td><td><b>event_previous_as_released</b></td><td>prior print &middot; archive</td><td><span class="pill p-ok">measured</span></td></tr>
+            <tr><td class="num">27&middot;F7</td><td><b>event_surprise</b></td><td>surprise by family &middot; derived</td><td><span class="pill p-ok">measured</span></td></tr>
+            <tr><td class="num">28&middot;F7</td><td><b>event_age_hours</b></td><td>time since release &middot; derived</td><td><span class="pill p-ok">measured</span></td></tr>
           </tbody>
         </table>
-        <p style="margin-top:1.2mm;font-size:6.6pt;color:#4a5878"><b>Why 19 and not 21:</b> fed_bias and inflation_signal now have declared measurement rules (Fed target-range direction; 5-year breakeven 20-observation change), but the archive the accepted report ran on carries neither series, so they produced no values. The batch in flight is acquiring exactly those two series.</p>
       </div>
-
     </div>
+
+    <p style="margin-top:1.2mm;font-size:6.6pt;color:#4a5878"><b>19 measured, 9 not yet:</b> F2 dollar (no local ICE DXY series; the broad index is not relabelled as DXY), F3 Fed stance and F8 inflation now have rules declared but no data in the accepted run &mdash; the batch in flight is fetching both series &mdash;, and F9 news tone along with the F10 equity and growth regimes have no source at all.</p>
 
   <section class="band two-col">
     <section>
@@ -121,10 +144,9 @@
             <tr><td><b>+1h</b></td><td>Persistence check only: did the first hour hold? Declared diagnostic &mdash; never a formula input.</td><td>same</td></tr>
             <tr><td><b>+4h</b></td><td>Same question at short-medium range; also a diagnostic, never an input.</td><td>same</td></tr>
             <tr><td><b>5 sessions</b></td><td>Medium-term reaction, and the horizon the L2L / 0.5&nbsp;L2L question lives on. Ends on a session close, never treated as 120 hours.</td><td>same</td></tr>
-            <tr><td><b>sub-hourly</b></td><td>Declared but impossible with hourly bars: not measured and not inferred from H1.</td><td>none</td></tr>
           </tbody>
         </table>
-        <p style="margin-top:1.2mm"><b>And three endpoint kinds, never pooled:</b> exact 24h elapsed (the realised interval equals the offset), delayed endpoint (the endpoint bar arrived late), session close (the 5-session calendar end). For daily +24h that is 766 exact + 198 delayed = 964. Pooling them would let a missing bar look like market behaviour.</p>
+        <p style="margin-top:1.2mm"><b>And three endpoint kinds, never pooled:</b> exact 24h elapsed, delayed endpoint (the endpoint bar arrived late) and session close (the 5-session calendar end). Daily +24h is 766 exact + 198 delayed = 964; pooling them would let a missing bar look like market behaviour.</p>
       </div>
     </section>
 
@@ -162,8 +184,8 @@
     <section>
       <div class="box">
         <h3>Two terms worth pinning down</h3>
-        <p><span class="k">Anchor</span> = the t&nbsp;=&nbsp;0 of one test. There are two kinds: a weekday 14:00&nbsp;UTC grid slot (the daily cohort, 964 of them) and an actual release timestamp (the event cohort, 5,106). The entry price is the close of the candle that contains the anchor &mdash; and that price only exists once the candle completes an hour later, which is why the report discloses an entry delay. Everything is then measured forward from there, and one anchor feeds every driver, horizon and conditioning cell, so the counts overlap heavily.</p>
-        <p><span class="k">The 36-hour rule</span> = FRED gives a <i>date</i> for each vintage, not the minute the number reached the wire. The engine therefore treats a macro value as available at <i>vintage date + 36&nbsp;hours</i>. Conservative means later than reality, never earlier, so no future information can leak into a measurement. The cost is visible: a macro driver can look up to a day and a half staler than it really was, and every calendar- or vintage-dependent number stays labelled archive-fit exploratory, not verified.</p>
+        <p><span class="k">Anchor</span> = the t&nbsp;=&nbsp;0 of one test: a weekday 14:00&nbsp;UTC grid slot (964 of them) or a real release instant (5,106). The entry price is the close of the candle containing the anchor, available only when that candle completes an hour later &mdash; hence the disclosed entry delay. One anchor feeds every driver, horizon and cell, so the counts overlap heavily.</p>
+        <p><span class="k">The 36-hour rule</span> = FRED gives a <i>date</i> per vintage, not the minute the number was published, so a macro value counts as available at <i>vintage date + 36&nbsp;hours</i> (<span class="path">gold_macro_vintage_dataset.js</span>). Conservative means later than reality, never earlier, so nothing future can leak in; the cost is that a macro driver can look up to a day and a half staler than it was, and calendar- or vintage-dependent numbers stay labelled archive-fit exploratory.</p>
         <p><span class="k">Scale in one line:</span> 964 daily + 5,106 event anchors, each scored at four horizons and four endpoint kinds in two cohorts &mdash; then repeated for every driver state and every prior-context state.</p>
       </div>
     </section>

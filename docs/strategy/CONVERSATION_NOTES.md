@@ -407,6 +407,22 @@ State re-verified at the start of the turn (canonical CLI + absolute-path reads)
   convention already exists in practice as `archive_fit_exploratory` with `verified_continuity`
   blocked, so what remains is a policy decision, not an implementation gap.
 
+
+## 2026-09-21 - User: retitle the gold sheet and restore the full driver list
+
+- Three changes requested and made to `docs/strategy/GOLD_ENGINE_MAP.html`: title is now
+  "Backtesting agent architecture - XAU (Gold)"; the driver section lists all 28 drivers individually
+  again (one row each, numbered with its factor id, why, source and status) instead of grouping them
+  by factor; and the sub-hourly row was removed from the time-frames table because that horizon is not
+  being measured.
+- To fit one A4 with 28 individual rows: the driver tables use a fixed layout (10.5 / 33 / 34 / 15 mm),
+  the "why" text carries the source after a separator so the separate source column could go, and the
+  long paragraphs in the data box were tightened. Re-measured with `tmp/check-gold-engine-map.js`:
+  198.0 x 283.0 mm, one PDF page, 4 tables, 28 driver rows (36 rows including the frames and archive
+  tables), 29 status pills, no unrendered entities. Intermediate builds measured 348.5 mm (28 rows with
+  five columns), 300 mm, 297.2 mm, 283 mm.
+- The page keeps the "19 measured, 9 not yet" note, now naming the blocks rather than two rows.
+
 Strategic reading recorded for the user (advice, not adopted):
 
 1. **The constraint is decision and review bandwidth, not measurement capacity.** One coordinator
