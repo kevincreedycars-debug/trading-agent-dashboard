@@ -420,6 +420,54 @@ State re-verified at the start of the turn (canonical CLI + absolute-path reads)
   long paragraphs in the data box were tightened. Re-measured with `tmp/check-gold-engine-map.js`:
   198.0 x 283.0 mm, one PDF page, 4 tables, 28 driver rows (36 rows including the frames and archive
   tables), 29 status pills, no unrendered entities. Intermediate builds measured 348.5 mm (28 rows with
+
+## 2026-09-21 - Session close (user: "save here for tonight")
+
+State saved. Nothing is running on this worker; activity is reported as stopped for the night. Worktree
+`D:/trading-agent-dashboard-codex/.local/worktrees/strategy` is clean on `workers/strategy-advisory-20260920`
+at `cd7606c`; all advisor writes are under `docs/strategy/` (STRATEGY.md, CONVERSATION_NOTES.md,
+PROGRAM_MAP.html, GOLD_ENGINE_MAP.html) plus ignored `tmp/` scratch.
+
+Advisor submissions: review 1 (`20260920-strategy-review-001`) is still the only one, acknowledged; mailbox
+`check --worker strategy` returns `pending 0`, `errors []`, nothing new addressed to this worker.
+
+What was delivered today: the two printable A4 maps (programme map; gold architecture sheet, retitled
+"Backtesting agent architecture - XAU (Gold)" with the full 28-driver list), the staged programme recorded in
+`STRATEGY.md` section 0b, and these notes. Verification for the sheets is in `tmp/check-program-map.js` and
+`tmp/check-gold-engine-map.js` (print media, A4 width, page count); extraction scripts and outputs are in
+`tmp/extract-gold-facts.js`, `tmp/archive-facts.js`, `tmp/peek-report-inputs.js` and their `.txt` outputs.
+
+State of the project at close (read from the canonical mailbox and monitor):
+
+- Gold coverage moved twice today after the sheet was built: coverage-006 accepted (19 of 28 measured), then
+  **coverage-008 submitted and reviewed with changes requested** - core evidence reproduced (fresh report content
+  hash `14447d8fd995900dbe9b80b7b98f233dbd20ffd7ec8faa1268d8f191d565ccb4`, focused tests 70/70, local 410/410, all
+  19 earlier variable blocks invariant) but one provenance contradiction must be corrected: the digest says no
+  final-test split was consumed, while the accepted manifest records the L2L final-test period
+  2025-10-01 through 2026-04-30 as consumed and ineligible as a fresh test. Coverage is now **21 of 28 measured**
+  (fed_bias via FRED DFEDTARU policy-step direction; inflation_signal via T5YIE 20-observation change), with
+  **7 variables remaining** and Phase 1b shown complete in that digest.
+- That resolves the registry-versus-digest wording discrepancy I flagged this afternoon: both series now have
+  data, and the count is 21 rather than 19.
+- Coordinator: auto coordinator paused, waiting for instruction; gold worker wake notification sent for
+  coverage-008 with pickup unconfirmed ("check worker window if this persists").
+- Unchanged: `gbp`, `silver`, `wti`, `eur-pairs` have never submitted; the live-path hygiene items (GBP missing
+  from the Master status list, stale `input-health.json`, drifted `exports/`) are still open; the L2L final-test
+  interval being consumed means no fresh gold holdout is reserved while that manifest stands.
+
+First tasks for the next session, in order:
+
+1. Refresh `docs/strategy/GOLD_ENGINE_MAP.html` to 21 of 28 (fed_bias and inflation_signal become measured with
+   their declared redefinitions; the remaining 7 are the DXY block, risk_headline_context, equities_regime,
+   growth_regime) and to the newer digest revision, then re-run the print check.
+2. Re-read the coverage-008 revision and review before any advice that depends on those counts.
+3. Decide with the user whether to send the coordinator the live-path hygiene batch (GBP status list,
+   input-health freshness, stale exports) - the only open item from my side that is not gold research.
+
+Still open for the user, carried forward: the Layer 2 role (economic-events adjuster vs opposing-call synthesis
+vs both), a stopping rule for the gold sub-project, and whether the live-path hygiene batch should be authorized
+now. No implementation, canonical edit, credential use or production action arose from this session.
+
   five columns), 300 mm, 297.2 mm, 283 mm.
 - The page keeps the "19 measured, 9 not yet" note, now naming the blocks rather than two rows.
 
