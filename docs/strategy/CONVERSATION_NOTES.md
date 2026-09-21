@@ -205,3 +205,38 @@ State saved. Nothing is running on this worker; activity is reported as stopped 
   non-English characters, and restated the content in English.
 - Standing rule for future turns, together with the earlier preference for short replies (a few
   lines, at most one or two questions).
+
+## 2026-09-21 - User request: "check inboxes"
+
+- Ran the canonical mailbox check (`coordination.js check`, per worker and global) and the monitor
+  snapshot. Result: **pending submissions 0**, **zero validation errors**, and **nothing new
+  addressed to `strategy`**. The only file in `inbox/strategy` is the adviser's own
+  `20260920-strategy-review-001`, whose reply file is a hash-bound `acknowledged`.
+- Inbox contents by worker: `gold-research` 7 submissions (policy-transition-001, policy-002-r2,
+  policy-003-r3, reaction-004-r1, reaction-005-r1, findings-summary-005-r1 and -r2); `gbp`,
+  `silver`, `wti`, `eur-pairs` have empty inbox and reply folders. Registered status of each of
+  those four is still `awaiting_status_submission`, so no reconciliation report exists yet.
+- New since the adviser's last session (2026-09-20 21:29 local): the coordinator completed its own
+  inbox sweep at 07:42-07:43 today and published
+  `docs/orchestration/reviews/20260921-gold-findings-summary-005-r2.md` - decision **changes
+  requested**, documentation classification only - plus updated `projects.json`,
+  `CURRENT_TASK.md`, `ACTIVE_MILESTONE.md` and `SESSION_NOTES.md` to 2026-09-21.
+- Substance of that review, recorded because it changes one earlier adviser assumption: revision 2's
+  pooled-sign totals reproduce exactly (47/29/314, 48/21/298, 6/50/231), but the between-year
+  classification still counts single-year states as agreement. Required correction moves six pooled
+  and seven exact single-year states to not-assessable, giving corrected between-year totals of
+  pooled 43/27/320, exact 41/21/305, delayed 6/50/231. Also requested: narrow the reproduction-scope
+  wording (primary-horizon traversal describes consistency/conditioning counts, while the baseline
+  table covers four horizons) and drop an unverified page-count assertion.
+- `projects.json` for `gold-research` now reads `findings_digest_changes_requested`,
+  `last_verified: 2026-09-21`, next action "Read revision-2 reply; correct between-year
+  classification and submit a new digest. Phase 1 remains unassigned." The accepted measurement
+  report stays accepted for exploratory use; the digest is not accepted.
+- Adviser actions taken: none beyond reading and reporting. No submission filed, because no
+  materially revised recommendation arose from an inbox check (the assignment says not to submit
+  every chat turn). No canonical file, other worker or live system was touched.
+- Open questions for the user, unchanged from the overnight handoff: (a) authorize the bounded
+  orchestrator hygiene batch (GBP in the Master status list, the stale `input-health.json`
+  artifact, refreshing stale `exports/`); (b) whether Phase 1 Gold return transformations should be
+  assigned at all; (c) the Layer 2 role (economic-events adjuster vs opposing-call synthesis vs
+  both); (d) a stopping rule for the gold sub-project.
