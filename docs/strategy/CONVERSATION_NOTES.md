@@ -241,6 +241,37 @@ State saved. Nothing is running on this worker; activity is reported as stopped 
   assigned at all; (c) the Layer 2 role (economic-events adjuster vs opposing-call synthesis vs
   both); (d) a stopping rule for the gold sub-project.
 
+## 2026-09-21 - User challenge: "we are building out the backtesting engine through gold, no? Has this objective got lost?"
+
+- The user is substantially right. `docs/BACKTESTING_REVIEW_PLAN.md` (baseline 2026-09-07) does
+  frame Gold as the first bounded review of the **existing** engine: `gold_asof_dataset.js` /
+  `gold_stored_call_evidence.js` are marked "First review target", `gold_timestamped_evaluation.js`
+  "First evaluator target", and "other assets follow Gold qualification". Working discipline is
+  explicit: "Avoid building another engine until this inventory demonstrates why an existing path
+  cannot answer the question."
+- What has genuinely advanced the engine: shared harness `backtester/lib/variable_event_research.js`
+  with its contract doc, the 28-variable coverage registry (b8193ba, accepted 0b0e92d), the
+  timestamped evaluator contract v2, and the accepted exploratory reaction report.
+- What has not moved (engine gates named in the same plan and in
+  `GOLD_RESEARCH_DELIVERY_CONTRACT.md`): dependence-adjusted inference ("remains to implement"),
+  a predeclared untouched Gold holdout, original release/consensus vintage provenance, the
+  executable-research gate (`executable_trade_validated: false`), and asset-by-asset extension of
+  the proven contract.
+- Where the drift came from: the 2026-09-19 scope change made descriptive variable-price research
+  the immediate objective, so coverage (a dataset objective) took precedence over the engine gates.
+  The last three Gold cycles (policy-002/003, reaction-004/005, findings-digest r1-r3) were
+  documentation/classification correctness on one report - valuable, but no new engine capability.
+- Phase 1 as recorded for the user: `gold_d1_pct`, `gold_d5_pct`, `gold_d20_pct` declared in the
+  policy registry before outcomes, implemented as prior 1/5/20-session close-to-close windows from
+  the hourly archive already on disk with strict prior cutoffs, boundary unit tests, no acquisition.
+  Effect is measured coverage 16/28 -> 19/28. It is a coverage step; it does not touch the calendar,
+  vintage, dependence or holdout limits.
+- Adviser position: if the objective is the engine, the next Gold cycle should be bound to an engine
+  gate (dependence/overlap-aware uncertainty plus a predeclared holdout split), with Phase 1 folded
+  in as the small data-side step; if the objective is coverage, Phase 1 alone is fine but should be
+  labelled a coverage step. Recorded question put to the user: (a) Phase 1 only, (b) Phase 1 plus an
+  engine gate, or (c) engine gate only.
+
 ## 2026-09-21 - Standing rule: short chat replies (reinforced)
 
 - User: "these messages are too long". Hard rule for this adviser from now on: chat replies are a
