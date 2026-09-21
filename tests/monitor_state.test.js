@@ -11,3 +11,15 @@ test('coordinator activity and waiting states are explicit; stale work stops ani
 test('published assignment raises one stable wake action until worker pickup',t=>{const root=setup(t),p=path.join(root,'docs/orchestration/projects.json');const r=JSON.parse(fs.readFileSync(p));r.workers[0].status='instructions_published_awaiting_worker';fs.writeFileSync(p,JSON.stringify(r));const before=snapshot(root);assert.equal(before.workers[0].state,'YOUR ACTION: wake agent');assert.equal(before.workers[0].flow,'input');assert.deepEqual(before.events,snapshot(root).events);activity(root,'gold','working','Picked up');assert.equal(snapshot(root).workers[0].flow,'working');assert.equal(snapshot(root).events.filter(e=>e.id.startsWith('wake:')).length,0);assert.equal(snapshot(root,Date.now()+STALE_MS+1000).workers[0].flow,'working_unconfirmed');});
 
 test('recent matching session logs refresh last seen without asserting active work',t=>{const root=setup(t);activity(root,'gold','working','Earlier task');const now=Date.now()+STALE_MS+2000;const usage={projects:[{project:'D:/worker',latest_record:new Date(now-1000).toISOString()}]};const w=snapshot(root,now,usage).workers[0];assert.equal(w.flow,'working_unconfirmed');assert.equal(w.age_minutes,0);assert.equal(w.activity_source,'recorded session activity');assert.notEqual(w.reported_at,w.updated_at);assert.equal(snapshot(root,now,{projects:[{project:'D:/other',latest_record:new Date(now).toISOString()}]}).workers[0].flow,'working_unconfirmed');});
+
+test('mailbox prompts target the recipient and clear after reported pickup, not unrelated logs',t=>{
+ const root=setup(t),m=createMailbox(root);
+ const receipt=m.submit({schema_version:1,worker_id:'gold',assignment_id:'policy-001',submission_id:'prompt',status:'ready_for_review',summary:'Done',worktree:'D:/worker',branch:'worker/gold',base_commit:'a',head_commit:'b',commits:[],changed_files:[],dirty_files:[],tests:[{command:'not run',result:'documentation only'}],artifacts:[],blockers:[],questions:[],production_changes:'None'});
+ assert.equal(snapshot(root).workers[0].action_target,'Central Orchestrator');
+ m.reply({schema_version:1,worker_id:'gold',assignment_id:'policy-001',submission_id:'prompt',submission_sha256:receipt.sha256,decision:'changes_requested',instructions:'Correct digest'});
+ assert.equal(snapshot(root).workers[0].action_target,'gold');
+ assert.match(snapshot(root,Date.now(),{projects:[{project:'D:/worker',latest_record:new Date().toISOString()}]}).workers[0].action_prompt,/Check your inbox/);
+ activity(root,'gold','working','Read reply');
+ const file=path.join(root,'.local/orchestration/activity/gold.json'),h=JSON.parse(fs.readFileSync(file));h.updated_at=new Date(Date.now()+1000).toISOString();fs.writeFileSync(file,JSON.stringify(h));
+ assert.equal(snapshot(root,Date.now()+2000).workers[0].action_prompt,'');
+});

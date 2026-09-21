@@ -16,7 +16,7 @@ function snapshot(root = ROOT, now = Date.now(), usage = null) {
   const events = [], errors = [...scan.errors.map(e => `${e.worker_id}: ${e.error}`)];
   const workers = [...(registry.coordinator ? [registry.coordinator] : []), ...registry.workers].map(w => {
     const submissions = scan.submissions.filter(s => s.worker_id === w.id);
-    let latest = null;
+    let latest = null, currentReply = null, pickupAt = 0;
     for (const s of submissions) {
       const report = read(s.submission_path);
       const reportAt = fs.statSync(s.submission_path).mtimeMs;
@@ -27,7 +27,9 @@ function snapshot(root = ROOT, now = Date.now(), usage = null) {
       let at = reportAt, detail = report.summary, file = s.submission_path;
       if (s.reply_path) {
         const reply = read(s.reply_path);
-        at = fs.statSync(s.reply_path).mtimeMs; detail = reply.instructions; file = s.reply_path;
+        at = fs.statSync(s.reply_path).mtimeMs;
+        if (s.assignment_id === w.assignment_id && (!currentReply || at > currentReply.at)) currentReply = { at, file:s.reply_path };
+        detail = reply.instructions; file = s.reply_path;
         events.push({ id: 'reply:' + s.sha256 + ':' + crypto.createHash('sha256').update(JSON.stringify(reply)).digest('hex'), worker:w.id,
           title:'Review: ' + reply.decision.replaceAll('_',' '), detail, time:new Date(at).toISOString(), file });
         if (reply.decision === 'accepted') state = 'Accepted · not deployment';
@@ -44,6 +46,7 @@ function snapshot(root = ROOT, now = Date.now(), usage = null) {
         if (h.assignment_id === w.assignment_id) {
         if (h.worker_id !== w.id || h.assignment_id !== w.assignment_id || !Number.isFinite(stamp) || stamp > now + 60000 || typeof h.task !== 'string' || !['working','blocked','paused','stopped'].includes(h.state)) throw new Error('Invalid or outdated activity record');
         pickedUp = true;
+        pickupAt = stamp;
         if (!at || stamp > at) {
           const stale = now - stamp > STALE_MS;
           const pendingReview = submissions.some(s => s.assignment_id === w.assignment_id && s.state === 'pending_review');
@@ -72,6 +75,13 @@ function snapshot(root = ROOT, now = Date.now(), usage = null) {
       events.push({id:'wake:' + w.id + ':' + w.assignment_id,worker:w.id,title:'YOUR ACTION: wake agent',detail,
         time:at ? new Date(at).toISOString() : new Date(fs.statSync(path.join(root,'docs/orchestration/projects.json')).mtimeMs).toISOString(),file:path.join(root,w.assignment)});
     }
+    let action_target = '', action_prompt = '';
+    const pendingReview = submissions.some(s => s.assignment_id === w.assignment_id && s.state === 'pending_review');
+    if (pendingReview) { action_target = 'Central Orchestrator'; action_prompt = 'Check inboxes'; }
+    else if (state === 'YOUR ACTION: wake agent' || (currentReply && latest && latest.file === currentReply.file && pickupAt <= currentReply.at)) {
+      action_target = w.display_name || w.id; action_prompt = 'Check your inbox and follow the latest coordinator reply.';
+      if (state === 'YOUR ACTION: wake agent') action_prompt = 'Check your inbox and read your current assignment.';
+    }
     const normalize = p => String(p || '').replaceAll('\\','/').replace(/\/$/,'').toLowerCase();
     const logTimes = (usage?.projects || []).filter(p => normalize(p.project) === normalize(w.path))
       .map(p => Date.parse(p.latest_record)).filter(t => Number.isFinite(t) && t <= now + 60000);
@@ -82,7 +92,7 @@ function snapshot(root = ROOT, now = Date.now(), usage = null) {
       at = logAt; activity_source = 'recorded session activity';
       if (flow === 'idle' && now - logAt <= STALE_MS) { state = 'Recent session activity'; flow = 'recent'; }
     }
-    return { id:w.id, name:w.display_name || w.id, flow, waiting_on, activity_source, reported_at:reportAt ? new Date(reportAt).toISOString() : null, state, task:detail, assignment:w.assignment_id, next:w.next || '',
+    return { id:w.id, name:w.display_name || w.id, action_target, action_prompt, flow, waiting_on, activity_source, reported_at:reportAt ? new Date(reportAt).toISOString() : null, state, task:detail, assignment:w.assignment_id, next:w.next || '',
       updated_at:at ? new Date(at).toISOString() : null, age_minutes:at ? Math.max(0,Math.floor((now-at)/60000)) : null,
       file, folder:w.path };
   });

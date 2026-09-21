@@ -1,5 +1,7 @@
 # 2026-09-20 - Gold coverage registry accepted at checkpoint review
 
+2026-09-21 monitor mailbox prompts: added slowly flashing attention icons, explicit recipient and short prompt in the header/rows, and Copy prompt in Details. Pending submissions direct the user to Central Orchestrator; replies awaiting reported pickup direct the user to the worker. Session logs alone cannot clear the prompt. Native build and normal/narrow visual checks passed; 15 focused monitor/mailbox/usage tests passed. Manual dispatch remains unchanged. Gold digest revision 3 is received and pending review. Unrelated Strategy workspace and Gold originals preserved.
+
 ## 2026-09-20 - Compact green monitor and local token usage
 
 Restyled the native monitor to the user reference and added today's semi-live token footer across locally recorded projects. Includes source coverage and input/output/cache breakdowns; does not infer remaining quota or costs. Eleven focused tests and native layout checks pass. No production changes.

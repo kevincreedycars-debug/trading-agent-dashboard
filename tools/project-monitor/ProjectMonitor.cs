@@ -12,7 +12,7 @@ using System.Drawing.Drawing2D;
 using System.Web.Script.Serialization;
 using System.Windows.Forms;
 
-public class Worker { public string id, name, state, flow, waiting_on, activity_source, reported_at, task, assignment, next, updated_at, file, folder; public int? age_minutes; }
+public class Worker { public string id, name, action_target, action_prompt, state, flow, waiting_on, activity_source, reported_at, task, assignment, next, updated_at, file, folder; public int? age_minutes; }
 public class Update { public string id, worker, title, detail, time, file; }
 public class UsageProject { public string provider, project; public long input, output, cached, total; }
 public class UsageCoverage { public string source, status; public int records; }
@@ -29,7 +29,8 @@ public class MonitorPanel : Form {
     readonly JavaScriptSerializer json = new JavaScriptSerializer { MaxJsonLength = 2097152 };
     readonly Color background = Color.FromArgb(23,32,28), foreground = Color.FromArgb(233,236,239), muted = Color.FromArgb(160,168,177);
     readonly Label summary = new Label(), status = new Label(), usageTotal = new Label(), usageDetail = new Label();
-    readonly Label actionDetail = new Label();
+    readonly Label actionDetail = new Label(), attentionIcon = new Label();
+    bool hasAttention;
     readonly Button actionButton = new Button();
     Usage currentUsage;
     [DllImport("user32.dll")] static extern bool ReleaseCapture();
@@ -61,17 +62,20 @@ public class MonitorPanel : Form {
         Height=Math.Min(Height,area.Height-40);
         Location=new Point(prefs.x<0?area.Right-Width-20:prefs.x,prefs.y<0?area.Top+30:prefs.y);
         if(!Screen.AllScreens.Any(s=>s.WorkingArea.IntersectsWith(Bounds))) Location=new Point(area.Right-Width-20,area.Top+30);
-        var heading=new Panel { Dock=DockStyle.Top, Height=70, Padding=new Padding(12,8,12,8) };
+        var heading=new Panel { Dock=DockStyle.Top, Height=100, Padding=new Padding(12,8,12,8) };
         var title=new Label { Text="", Dock=DockStyle.Top, Height=0 };
         summary.Dock=DockStyle.Top; summary.Height=22; summary.ForeColor=muted; summary.Text="Reading updates...";
         actionDetail.Dock=DockStyle.Fill;actionDetail.ForeColor=muted;actionDetail.AutoEllipsis=true;
         actionDetail.Padding=new Padding(0,3,6,0);
+        attentionIcon.Text="!";attentionIcon.Dock=DockStyle.Left;attentionIcon.Width=22;
+        attentionIcon.Font=new Font("Segoe UI",14,FontStyle.Bold);attentionIcon.ForeColor=Color.FromArgb(255,201,95);
+        attentionIcon.AccessibleName="User action required";attentionIcon.Visible=false;
         actionButton.Text="View action";actionButton.Dock=DockStyle.Right;actionButton.Width=90;
         actionButton.FlatStyle=FlatStyle.Flat;actionButton.FlatAppearance.BorderColor=Color.FromArgb(112,88,43);
         actionButton.BackColor=Color.FromArgb(55,46,29);actionButton.ForeColor=Color.FromArgb(255,216,139);
-        actionButton.Visible=false;actionButton.Click+=(s,e)=>{var target=list.Items.Cast<Worker>().FirstOrDefault(w=>w.flow=="input")??list.Items.Cast<Worker>().FirstOrDefault(w=>w.flow=="review");if(target!=null){list.SelectedItem=target;Details();}};
-        summary.Cursor=Cursors.Hand;summary.Click+=(s,e)=>{for(int i=0;i<list.Items.Count;i++){var row=(Worker)list.Items[i];if(row.flow=="input"||row.flow=="review"){list.SelectedIndex=i;Details();break;}}};
-        heading.Controls.Add(actionDetail);heading.Controls.Add(summary);heading.Controls.Add(actionButton); heading.Controls.Add(title);
+        actionButton.Visible=false;actionButton.Click+=(s,e)=>{var target=list.Items.Cast<Worker>().FirstOrDefault(w=>!String.IsNullOrEmpty(w.action_prompt))??list.Items.Cast<Worker>().FirstOrDefault(w=>w.flow=="input")??list.Items.Cast<Worker>().FirstOrDefault(w=>w.flow=="review");if(target!=null){list.SelectedItem=target;Details();}};
+        summary.Cursor=Cursors.Hand;summary.Click+=(s,e)=>{for(int i=0;i<list.Items.Count;i++){var row=(Worker)list.Items[i];if(!String.IsNullOrEmpty(row.action_prompt)||row.flow=="input"||row.flow=="review"){list.SelectedIndex=i;Details();break;}}};
+        heading.Controls.Add(actionDetail);heading.Controls.Add(summary);heading.Controls.Add(actionButton); heading.Controls.Add(title);heading.Controls.Add(attentionIcon);
         var buttons=new FlowLayoutPanel { Dock=DockStyle.Bottom, Height=34, Padding=new Padding(8,2,0,0), WrapContents=false };
         pin.Text="Pin"; pin.Checked=prefs.pin; pin.AutoSize=true; pin.Margin=new Padding(4,7,5,0);
         alerts.Text="Alerts"; alerts.Checked=prefs.alerts; alerts.AutoSize=true; alerts.Margin=new Padding(3,7,5,0);
@@ -107,7 +111,7 @@ public class MonitorPanel : Form {
         scanner.DoWork+=(s,e)=>e.Result=ReadSnapshot();
         scanner.RunWorkerCompleted+=Scanned;
         timer.Interval=5000; timer.Tick+=(s,e)=>Scan(); timer.Start();
-        animation.Interval=100;animation.Tick+=(s,e)=>{phase=(phase+1)%24;if(Visible&&list.Items.Cast<Worker>().Any(w=>w.flow=="working"||w.flow=="review"||w.flow=="input"))list.Invalidate(new Rectangle(0,0,31,list.ClientSize.Height));};animation.Start();
+        animation.Interval=100;animation.Tick+=(s,e)=>{phase=(phase+1)%24;if(hasAttention)attentionIcon.ForeColor=phase<12?Color.FromArgb(255,201,95):Color.FromArgb(130,106,60);if(Visible&&list.Items.Cast<Worker>().Any(w=>!String.IsNullOrEmpty(w.action_prompt)||w.flow=="working"||w.flow=="review"||w.flow=="input"))list.Invalidate(new Rectangle(0,0,31,list.ClientSize.Height));};animation.Start();
         FormClosed+=(s,e)=>animation.Dispose();
         Shown+=(s,e)=>Scan();
     }
@@ -137,13 +141,14 @@ public class MonitorPanel : Form {
         for(int i=0;i<list.Items.Count;i++)if(((Worker)list.Items[i]).id==selected)list.SelectedIndex=i;
         if(list.SelectedIndex<0&&list.Items.Count>0)list.SelectedIndex=0;list.EndUpdate();
         summary.Text=data.workers.Count(w=>w.flow=="working")+" working  |  "+data.pending+" awaiting review\nTeal: working  |  Amber: needs review / input\nLines connect to coordinator; dispatch is manual";
-        var actions=data.workers.Where(w=>w.flow=="input").ToArray();
+        var actions=data.workers.Where(w=>!String.IsNullOrEmpty(w.action_prompt)||w.flow=="input").ToArray();
         bool attention=actions.Length>0||data.pending>0;
+        hasAttention=attention;attentionIcon.Visible=attention;
         summary.BackColor=background;
         summary.ForeColor=attention?Color.FromArgb(255,220,142):muted;
         actionButton.Visible=attention;
         summary.Text=attention?(actions.Length>0?"YOUR ACTION  /  "+actions.Length:"REVIEW READY  /  "+data.pending):"PROJECT ACTIVITY";
-        actionDetail.Text=attention?(actions.Length>0?actions[0].id+" needs your input":"Coordinator review needed"):data.workers.Count(w=>w.flow=="working"||w.flow=="working_unconfirmed")+" reported working  /  updates every 5s";
+        actionDetail.Text=attention?(actions.Length>0?(String.IsNullOrEmpty(actions[0].action_prompt)?actions[0].id+" needs your input":"Send to "+actions[0].action_target+":\n"+(actions[0].action_target=="Central Orchestrator"?"Check inboxes":"Check your inbox")):"Coordinator review needed"):data.workers.Count(w=>w.flow=="working"||w.flow=="working_unconfirmed")+" reported working  /  updates every 5s";
         status.ForeColor=data.errors.Length>0?Color.Salmon:muted;
         status.Text=data.errors.Length>0?"DATA NEEDS ATTENTION · "+data.errors[0]:"\u25cf Watching \u00b7 "+DateTime.Now.ToString("HH:mm:ss")+" \u00b7 refresh 5s";
         var fresh=data.events.Where(x=>!seen.Contains(x.id)).ToArray();
@@ -165,14 +170,15 @@ public class MonitorPanel : Form {
         bool workingPath=list.Items.Cast<Worker>().Skip(e.Index).Any(row=>row.flow=="working");
         using(var rail=new Pen(pendingPath?Color.FromArgb(192,164,255):workingPath?Color.FromArgb(102,185,255):Color.FromArgb(90,98,105),1)){if(pendingPath||workingPath){rail.DashStyle=DashStyle.Dash;rail.DashOffset=(pendingPath?1:-1)*phase/3f;}e.Graphics.DrawLine(rail,14,e.Index==0?y+8:e.Bounds.Top,14,e.Bounds.Bottom);}
         using(var link=new Pen(signal,2)){if(active||needs){link.DashStyle=DashStyle.Dash;link.DashOffset=active?-phase/3f:phase/3f;}e.Graphics.DrawLine(link,14,y+9,29,y+9);}
-        using(var dot=new SolidBrush(signal))e.Graphics.FillEllipse(dot,10,y+5,8,8);
+        using(var dot=new SolidBrush(!String.IsNullOrEmpty(w.action_prompt)&&phase>=12?Color.FromArgb(130,106,60):signal))e.Graphics.FillEllipse(dot,9,y+4,11,11);
+        if(!String.IsNullOrEmpty(w.action_prompt))using(var ink=new SolidBrush(background))e.Graphics.DrawString("!",Font,ink,9,y+1);
         var format=new StringFormat { Trimming=StringTrimming.EllipsisCharacter,FormatFlags=StringFormatFlags.NoWrap };
         using(var bold=new Font(Font,FontStyle.Bold))using(var fg=new SolidBrush(foreground))using(var secondary=new SolidBrush(muted)){
             e.Graphics.DrawString(String.IsNullOrEmpty(w.name)?w.id:w.name,bold,fg,new RectangleF(x,y,width,20),format);
             Color tone=signal;
             using(var brush=new SolidBrush(tone))e.Graphics.DrawString(w.state+" · "+(w.age_minutes.HasValue?"seen "+w.age_minutes+"m ago":"no report"),Font,brush,new RectangleF(x,y+17,width,16),format);
-            e.Graphics.DrawString(w.task,Font,secondary,new RectangleF(x,y+33,width,17),format);
-            e.Graphics.DrawString(!String.IsNullOrEmpty(w.waiting_on)?"Waiting on: "+w.waiting_on:lastWorking?"Report overdue - not confirmed stopped":active?"Working reported - freshness checked":w.flow=="recent"?"Session log updated; running state unknown":"Last seen: "+(w.activity_source??"agent report"),Font,secondary,new RectangleF(x,y+50,width,17),format);
+            e.Graphics.DrawString(String.IsNullOrEmpty(w.action_prompt)?w.task:"SEND TO: "+w.action_target,Font,secondary,new RectangleF(x,y+33,width,17),format);
+            e.Graphics.DrawString(!String.IsNullOrEmpty(w.action_prompt)?(w.action_target=="Central Orchestrator"?"Say: Check inboxes":"Say: Check your inbox"):!String.IsNullOrEmpty(w.waiting_on)?"Waiting on: "+w.waiting_on:lastWorking?"Report overdue - not confirmed stopped":active?"Working reported - freshness checked":w.flow=="recent"?"Session log updated; running state unknown":"Last seen: "+(w.activity_source??"agent report"),Font,secondary,new RectangleF(x,y+50,width,17),format);
         }
         using(var pen=new Pen(Color.FromArgb(48,68,55)))e.Graphics.DrawLine(pen,x,e.Bounds.Bottom-1,e.Bounds.Right-12,e.Bounds.Bottom-1);
         format.Dispose();
@@ -184,9 +190,11 @@ public class MonitorPanel : Form {
         var w=list.SelectedItem as Worker;if(w==null)return;
         using(var dialog=new Form {Text=w.id+" · project details",ClientSize=new Size(590,420),MinimumSize=new Size(360,300),StartPosition=FormStartPosition.CenterParent,BackColor=background,ForeColor=foreground,TopMost=TopMost}){
             var text=new TextBox {Multiline=true,ReadOnly=true,ScrollBars=ScrollBars.Vertical,Dock=DockStyle.Fill,BackColor=background,ForeColor=foreground,Font=Font,BorderStyle=BorderStyle.None};
-            text.Text=w.id+Environment.NewLine+w.state+Environment.NewLine+"Assignment: "+w.assignment+Environment.NewLine+"Last update: "+(w.updated_at??"None")+Environment.NewLine+Environment.NewLine+w.task+Environment.NewLine+Environment.NewLine+"Next / assigned scope:"+Environment.NewLine+w.next;
+            text.Text=(String.IsNullOrEmpty(w.action_prompt)?"":"YOUR ACTION - send to "+w.action_target+Environment.NewLine+w.action_prompt+Environment.NewLine+Environment.NewLine)+w.id+Environment.NewLine+w.state+Environment.NewLine+"Assignment: "+w.assignment+Environment.NewLine+"Last update: "+(w.updated_at??"None")+Environment.NewLine+Environment.NewLine+w.task+Environment.NewLine+Environment.NewLine+"Next / assigned scope:"+Environment.NewLine+w.next;
             var open=Button("Open report / assignment",(s,e)=>OpenFile(w.file));open.Dock=DockStyle.Bottom;open.Height=36;
-            dialog.Padding=new Padding(12);dialog.Controls.Add(text);dialog.Controls.Add(open);dialog.ShowDialog(this);
+            dialog.Padding=new Padding(12);dialog.Controls.Add(text);dialog.Controls.Add(open);
+            if(!String.IsNullOrEmpty(w.action_prompt)){var copy=Button("Copy prompt for "+w.action_target,(s,e)=>{Clipboard.SetText(w.action_prompt);});copy.Dock=DockStyle.Bottom;copy.Height=36;dialog.Controls.Add(copy);}
+            dialog.ShowDialog(this);
         }
     }
     void OpenFile(string file){try{Process.Start(new ProcessStartInfo(file){UseShellExecute=true});}catch(Exception e){MessageBox.Show(this,e.Message,"Could not open file");}}
