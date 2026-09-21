@@ -11,6 +11,21 @@ function read(file) {
   return JSON.parse(fs.readFileSync(file, 'utf8').replace(/^\uFEFF/, ''));
 }
 function snapshot(root = ROOT, now = Date.now(), usage = null) {
+  let controller = 'Not configured · manual review', controllerState = 'unconfigured';
+  const controllerDir = path.join(root,'.local/orchestration/controller');
+  try {
+    if (fs.existsSync(path.join(controllerDir,'config.json'))) {
+      const config = read(path.join(controllerDir,'config.json'));
+      const status = read(path.join(controllerDir,'status.json'));
+      let alive = false;
+      if (Number.isInteger(status.pid) && status.pid > 0) { try { process.kill(status.pid,0); alive=true; } catch(e) { alive=e.code==='EPERM'; } }
+      const reviewing = status.state==='reviewing' && fs.existsSync(path.join(controllerDir,'run.lock')) && read(path.join(controllerDir,'run.lock')).pid===status.pid;
+      const fresh = now-Date.parse(status.updated_at)<30000;
+      controllerState = !alive || (!fresh && !reviewing) ? 'offline' : reviewing ? 'reviewing' : !config.enabled ? 'paused' : status.state;
+      controller = ({watching:'Auto coordinator watching for submissions',reviewing:'Background review running; avoid shared edits',paused:'Auto coordinator paused',offline:'Auto coordinator offline',waiting:'Auto review waiting for interactive coordinator',budget_limit:'Auto review daily limit reached',blocked:'Auto coordinator blocked',needs_attention:'Auto review needs attention'})[controllerState] || 'Auto coordinator: '+controllerState;
+    }
+  } catch(e) { controllerState='blocked'; controller='Auto coordinator status unavailable'; }
+  const autoReview = ['watching','reviewing','waiting'].includes(controllerState);
   const registry = read(path.join(root, 'docs/orchestration/projects.json'));
   const scan = createMailbox(root).check();
   const events = [], errors = [...scan.errors.map(e => `${e.worker_id}: ${e.error}`)];
@@ -83,6 +98,21 @@ function snapshot(root = ROOT, now = Date.now(), usage = null) {
       if (state === 'YOUR ACTION: wake agent') action_prompt = 'Check your inbox and read your current assignment.';
     }
     const normalize = p => String(p || '').replaceAll('\\','/').replace(/\/$/,'').toLowerCase();
+    if (action_target && action_target!=='Central Orchestrator') {
+      const dispatchDir=path.join(root,'.local/orchestration/dispatch',w.id);
+      if (fs.existsSync(dispatchDir)) {
+        try {
+          const event=require('../tools/agent-mailbox-bridge/core').workerEvent(root,w,scan);
+          const delivered=event && fs.readdirSync(dispatchDir).filter(f=>f.endsWith('.json')).map(f=>read(path.join(dispatchDir,f))).find(r=>r.key===event.key && r.state==='sent_unconfirmed');
+          if (delivered) { state='Wake sent / pickup unconfirmed'; flow='waiting'; waiting_on='worker acknowledgement'; detail='Notification sent for '+w.assignment_id+'; check worker window if this persists'; action_target=''; action_prompt=''; }
+        } catch(e) { errors.push(w.id+': dispatch status unavailable'); }
+      }
+    }
+    if (pendingReview && autoReview) { action_target=''; action_prompt=''; waiting_on='automatic coordinator'; }
+    if (w.id === 'central-orchestrator' && (controllerState==='reviewing' || (controllerState==='watching' && flow!=='working'))) {
+      state=controllerState==='reviewing'?'Background review running':'Watching for submissions';
+      detail=controller; flow=controllerState==='reviewing'?'working':'idle'; waiting_on=''; action_target=''; action_prompt='';
+    }
     const logTimes = (usage?.projects || []).filter(p => normalize(p.project) === normalize(w.path))
       .map(p => Date.parse(p.latest_record)).filter(t => Number.isFinite(t) && t <= now + 60000);
     const logAt = logTimes.length ? Math.max(...logTimes) : null;
@@ -96,7 +126,7 @@ function snapshot(root = ROOT, now = Date.now(), usage = null) {
       updated_at:at ? new Date(at).toISOString() : null, age_minutes:at ? Math.max(0,Math.floor((now-at)/60000)) : null,
       file, folder:w.path };
   });
-  return { schema_version:1, scanned_at:new Date(now).toISOString(), controller:'Not configured · manual review', pending:scan.pending,
+  return { schema_version:1, scanned_at:new Date(now).toISOString(), controller, controller_state:controllerState, pending:scan.pending,
     errors, workers, events:events.sort((a,b)=>a.time.localeCompare(b.time)).slice(-200) };
 }
 function activity(root, workerId, state, task) {

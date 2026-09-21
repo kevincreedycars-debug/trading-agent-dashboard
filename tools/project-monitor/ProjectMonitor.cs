@@ -17,7 +17,7 @@ public class Update { public string id, worker, title, detail, time, file; }
 public class UsageProject { public string provider, project; public long input, output, cached, total; }
 public class UsageCoverage { public string source, status; public int records; }
 public class Usage { public string day, timezone, scanned_at, latest_record, scope, note; public long input, output, cached, total; public int records; public UsageProject[] projects; public UsageCoverage[] coverage; public string[] errors; }
-public class Snapshot { public string scanned_at, controller; public int pending; public string[] errors; public Worker[] workers; public Update[] events; public Usage usage; }
+public class Snapshot { public string scanned_at, controller, controller_state; public int pending; public string[] errors; public Worker[] workers; public Update[] events; public Usage usage; }
 public class Preferences { public bool pin = true, alerts = true; public int x = -1, y = -1; public string[] seen = new string[0]; }
 
 public class MonitorPanel : Form {
@@ -142,13 +142,18 @@ public class MonitorPanel : Form {
         if(list.SelectedIndex<0&&list.Items.Count>0)list.SelectedIndex=0;list.EndUpdate();
         summary.Text=data.workers.Count(w=>w.flow=="working")+" working  |  "+data.pending+" awaiting review\nTeal: working  |  Amber: needs review / input\nLines connect to coordinator; dispatch is manual";
         var actions=data.workers.Where(w=>!String.IsNullOrEmpty(w.action_prompt)||w.flow=="input").ToArray();
-        bool attention=actions.Length>0||data.pending>0;
+        bool autoReview=data.controller_state=="watching"||data.controller_state=="reviewing"||data.controller_state=="waiting";
+        bool attention=actions.Length>0||(data.pending>0&&!autoReview);
         hasAttention=attention;attentionIcon.Visible=attention;
         summary.BackColor=background;
         summary.ForeColor=attention?Color.FromArgb(255,220,142):muted;
         actionButton.Visible=attention;
         summary.Text=attention?(actions.Length>0?"YOUR ACTION  /  "+actions.Length:"REVIEW READY  /  "+data.pending):"PROJECT ACTIVITY";
         actionDetail.Text=attention?(actions.Length>0?(String.IsNullOrEmpty(actions[0].action_prompt)?actions[0].id+" needs your input":"Send to "+actions[0].action_target+":\n"+(actions[0].action_target=="Central Orchestrator"?"Check inboxes":"Check your inbox")):"Coordinator review needed"):data.workers.Count(w=>w.flow=="working"||w.flow=="working_unconfirmed")+" reported working  /  updates every 5s";
+        if(!attention) {
+            summary.Text=data.controller_state=="reviewing"?"BACKGROUND REVIEW RUNNING":"PROJECT ACTIVITY";
+            actionDetail.Text=data.controller+"\n"+data.workers.Count(w=>w.flow=="working")+" working / "+data.pending+" awaiting review";
+        }
         status.ForeColor=data.errors.Length>0?Color.Salmon:muted;
         status.Text=data.errors.Length>0?"DATA NEEDS ATTENTION · "+data.errors[0]:"\u25cf Watching \u00b7 "+DateTime.Now.ToString("HH:mm:ss")+" \u00b7 refresh 5s";
         var fresh=data.events.Where(x=>!seen.Contains(x.id)).ToArray();

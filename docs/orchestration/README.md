@@ -123,3 +123,5 @@ implies work is continuing. Five-minute-old activity becomes No recent update.
 Existing agents must read these updated instructions before progress reporting
 can be expected. Submission/reply notifications work without heartbeats.
 See `tools/project-monitor/README.md` for launch, notifications and verification.
+
+New worker assignments must use registry status `instructions_published_awaiting_worker` exactly; the bridge uses it to generate a wake event. Monitor controller status distinguishes watching from active review; notification sent is not proof of worker pickup.

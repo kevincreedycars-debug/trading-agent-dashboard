@@ -1,5 +1,7 @@
 # Session notes
 
+2026-09-21 communication repair: source-007 r2 review published coverage-008 with an unsupported registry status, so no assignment wake was generated. Corrected to instructions_published_awaiting_worker and made that spelling explicit in the background review prompt. Bridge sent at 20:25:10Z; Gold confirmed working on coverage-008 at 20:25:35Z. Native monitor now exposes controller watching/reviewing/paused/offline state and distinguishes sent notifications from acknowledged work. Background review suppresses redundant manual review prompts. Sixteen focused tests and normal/narrow native visual checks passed. Automatic review/correction round trip is now observed, not merely configured.
+
 2026-09-21 source-007 r2 review: exact mailbox hash 6ebd739b verified at clean
 worker 3b10d73. The four-file diff resolves all three requested provenance issues.
 Committed regeneration reproduced manifest ac58a430 and unchanged audit registry
