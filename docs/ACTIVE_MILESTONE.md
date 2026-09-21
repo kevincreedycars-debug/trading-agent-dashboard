@@ -1,6 +1,6 @@
 # Active milestone
 
-Current milestone: corrected Gold source-007 provenance submission.
-Status: revision 1 reviewed; hash-bound changes_requested reply published for three bounded corrections.
-Next immediate action: review the worker's unique source-007 revision when submitted.
-No production changes or accuracy qualification. Updated 2026-09-21.
+Current milestone: Gold two-variable source coverage batch.
+Status: source-007 r2 accepted; gold-coverage-008 published from worker HEAD 3b10d73.
+Next immediate action: await reported worker pickup, then review its unique submission.
+No combinations, formula fitting, holdout use, production changes or accuracy qualification. Updated 2026-09-21.

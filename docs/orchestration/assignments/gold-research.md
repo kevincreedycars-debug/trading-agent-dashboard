@@ -1,49 +1,51 @@
-# Gold remaining-source audit and qualification prerequisites
+# Gold two-variable source coverage batch
 
-Assignment: gold-source-007. Worker: gold-research. Published 2026-09-21.
+Assignment: gold-coverage-008. Worker: gold-research. Published 2026-09-21.
 Worktree: D:/trading-agent-dashboard-codex/.local/worktrees/gold-research
-Branch: workers/gold-research-policy-20260920. Starting HEAD: 4e051ca.
-Read canonical coordination README/DECISIONS and coverage-006 acceptance review.
-This batch is authorized now under standing user direction. Do not ask again
-for permission to perform this bounded research.
+Branch: workers/gold-research-policy-20260920. Starting HEAD: 3b10d73.
+Read the canonical coordination README/DECISIONS, the accepted source-007 r2
+review and its consumed-data manifest. This bounded batch is authorized under the
+user's standing research direction; do not ask again for permission to perform it.
 
-1. Investigate genuine ICE DXY source availability using documented provider
-   sources and existing project access. Establish instrument identity, available
-   history/resolution, observation/publication timing, revision policy and usage
-   rights. Compare with existing DTWEXBGS as a separately named broad-dollar
-   alternative; preserve original DXY identities as unavailable until justified.
-   Recommend the best evidenced route, stating any real cost/access decision.
-   Do not purchase, subscribe, accept new terms or silently relabel a proxy.
-2. Audit all nine remaining declared variables. For fed_bias, inflation_signal,
-   equities_regime and growth_regime distinguish raw source availability from an
-   absent derivation rule. Propose explicit outcome-independent rules and source
-   lineage; do not derive them from another Layer 1 agent's output. Headline
-   context may remain deferred with a precise reason. Produce a source matrix
-   with URLs, access dates, fields, timing/vintage evidence and missing items.
-3. Make a bounded provider-documentation check for OANDA XAU_USD calendar/session
-   and historical holiday evidence. Reuse previous lookup records, avoid repeating
-   known failures, and stop a route after two failed attempts. Never fit calendar
-   exceptions to price gaps. Missing evidence remains an explicit limitation.
-4. Record exact consumed date ranges, cohorts, horizons, source hashes and all
-   known exploratory/validation uses in a machine-readable JSON manifest. Include
-   earlier 2023-2026 searches from canonical research records, not only 005/006.
-   Unknown provenance must remain unknown, not untouched. Specify requirements
-   for a future chronological or prospective test; do not consume a final test.
-5. Deliver a compact evidence-based recommendation and concrete implementation
-   contract for the next coverage batch, prioritizing what existing access can
-   support. Separate actual access evidence from proposals. Existing-file reads,
-   public primary documentation and minimal read-only sample requests through
-   existing access are allowed. Read CREDENTIAL_CONTINUITY.md before authenticated
-   access; never print secrets. No bulk acquisition or new measurement search.
+1. Add only `fed_bias` from FRED `DFEDTARU` and the market-implied
+   `inflation_signal` from FRED `T5YIE`. Before reading any Gold outcomes, commit
+   their identities, state mappings, availability rule, missing-history behavior
+   and exactly one outcome-independent inflation lookback. Use the proposed Fed
+   rule: direction of the most recent strictly available change in the target
+   range upper limit, mapped explicitly to hawkish/neutral/dovish. Select the one
+   inflation lookback from source cadence and research semantics, explain it, and
+   do not sweep alternatives or tune a threshold against outcomes.
+2. Use existing project access only. Acquire the minimum bounded 2022-2026 source
+   span plus declared warm-up needed for the accepted observation schedule into a
+   new ignored worker-local archive. Record source URL, retrieval time, raw file
+   hash, exact date range, units, copyright/citation tag and row exclusions. Keep
+   the existing conservative `realtime_start` plus 36-hour availability proxy for
+   comparability; label it a convention, not publication proof. Do not introduce
+   an ALFRED-vintage method in this batch, accept terms, purchase access, or mutate
+   the canonical source archives.
+3. Extend the individual-variable report for these two variables only, preserving
+   daily and event cohorts, all declared horizons and endpoint groups, strict
+   before-anchor availability, explicit unavailable states, year breakdowns and
+   existing consistency rules. Update the consumed-data manifest with the new raw
+   source and this exploratory use. Regenerate the compact findings digest and
+   exhaustive companion.
+4. Prove byte-for-byte or structured invariance for all 19 previously measured
+   variable blocks, matched baselines, outcomes, exclusions and their existing
+   conditioning cells. Add boundary tests for strict cutoff, the 36-hour proxy,
+   stale/missing observations, first Fed change, no-change periods and insufficient
+   inflation lookback. Reconcile counts and source hashes in machine-readable form.
+5. Report coverage and descriptive associations only. Keep ICE DXY and its three
+   transforms unavailable; do not relabel DTWEXBGS. Do not implement NASDAQCOM,
+   growth regime or headline context, retry the closed OANDA route, search
+   combinations, fit a formula, compare alternative rules, claim causality or
+   accuracy, or read/reserve a final holdout.
 
-Owned files: new worker docs/GOLD_REMAINING_SOURCE_AUDIT.md, machine-readable
-backtester/registries/gold_remaining_source_audit.v1.json and
-backtester/registries/gold_consumed_data_manifest.v1.json; a small reproducible
-read-only audit script/test if needed; worker progress/findings documentation.
-Raw responses and lookup evidence belong in ignored worker scratch only.
-Preserve accepted reports, registries, implementation and other workers.
-No live workflow, warehouse mutation, formula fitting, combination search,
-production deployment or proxy replacement. Run appropriate checks for changed
-code; documentation-only changes need source/JSON consistency validation.
-Commit, submit under gold-source-007 with exact evidence and blockers, then pause
-for coordinator review. Report actual activity at start and progress checkpoints.
+Owned scope: the existing individual-variable report registry/library/runner and
+focused tests as needed; new ignored source/output directories; regenerated report,
+digest, companion and consumed-data manifest; concise progress/findings docs. Do
+not modify accepted prior report artifacts. Commit the pre-outcome declaration
+separately before executing the report, then commit the scoped implementation and
+submit a unique `gold-coverage-008` envelope with both commit IDs, exact commands,
+hashes, denominators, invariance evidence and full-suite result. No live workflow,
+warehouse, Layer 1, dashboard, deployment, purchase or credential change. Pause
+after submission and report actual monitor activity throughout.

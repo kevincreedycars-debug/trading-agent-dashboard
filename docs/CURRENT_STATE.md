@@ -1,12 +1,13 @@
 # Current state
 
-2026-09-21 source-007 revision 1 at faaf9ee reviewed with changes requested.
-Official source claims, exact scope, 27 archive/report hashes and byte-identical
-registry regeneration were independently verified; focused tests passed 5/5 and
-the full local suite passed 407/407. Acceptance is blocked only on correcting the
-manifest's contradictory final-test-consumption wording, recording coverage-006
-as accepted rather than submitted, and making the claimed generator plus archive
-hash verification durable. No new assignment, measurement or production action.
+2026-09-21 source-007 revision 2 accepted at clean worker `3b10d73`. The corrected
+manifest marks the prior L2L final-test interval consumed, records coverage-006 as
+the accepted baseline and has a committed reproducible generator with actual
+archive-hash checks. Independent regeneration reproduced both registries; focused
+tests passed 5/5 and the full local suite passed 407/407. Published bounded
+gold-coverage-008 for DFEDTARU `fed_bias` and T5YIE market-implied
+`inflation_signal`, with rules frozen before outcomes and 19-variable invariance.
+No production change, formula search, accuracy qualification or fresh holdout use.
 
 2026-09-21 background coordinator configured on user request. Codex CLI live read-only smoke succeeded with gpt-5.6-sol after replacing unsupported inherited gpt-5.4 default. Event-driven new current submissions only; single daemon/run lock, hash receipts before invocation, 6 runs/day, 20min/run, workspace-write sandbox and approval policy never. Failures pause; no silent retries. Reads canonical notes in fresh CLI turns rather than injecting this IDE chat. Interactive coordinator must pause/wait before edits, then re-enable. Gold Cline bridge remains separate and must be connected. Full research-review round trip awaits a new submission.
 

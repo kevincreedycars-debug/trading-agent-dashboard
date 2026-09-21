@@ -1,5 +1,11 @@
 # 2026-09-20 - Gold coverage registry accepted at checkpoint review
 
+2026-09-21 source-007 revision 2 accepted at 3b10d73 after independent
+byte-identical registry regeneration, archive-hash verification, 5/5 focused tests
+and 407/407 full local tests. Published gold-coverage-008 for two documented FRED
+variables with pre-outcome rules and invariance gates. No holdout, formula,
+integration or production action.
+
 2026-09-21 background coordinator configured on user request. Codex CLI live read-only smoke succeeded with gpt-5.6-sol after replacing unsupported inherited gpt-5.4 default. Event-driven new current submissions only; single daemon/run lock, hash receipts before invocation, 6 runs/day, 20min/run, workspace-write sandbox and approval policy never. Failures pause; no silent retries. Reads canonical notes in fresh CLI turns rather than injecting this IDE chat. Interactive coordinator must pause/wait before edits, then re-enable. Gold Cline bridge remains separate and must be connected. Full research-review round trip awaits a new submission.
 
 2026-09-21 automatic communication work: built and installed local VS Code extension trading-local.trading-agent-mailbox 0.1.0. Cline 4.1.19 legacy/next expose sendMessage; companion polls validated mailbox every 5s, binds explicitly to registered worker window, deduplicates before sending, caps attempts and never clicks approvals. Six bridge tests plus four mailbox tests pass. Live end-to-end delivery is NOT verified: worker window must connect to its existing Cline task. Binding expires on reload because API has no task-ID selector/receipt. Current Codex IDE chat has no verified injection API; background coordinator vs current-chat choice asked, not answered. No automatic coordinator installed. Documentation: tools/agent-mailbox-bridge/README.md. Gold source-007 remains the research assignment.

@@ -1,5 +1,18 @@
 # Central decisions
 
+## 2026-09-21: Gold source-007 accepted; two-variable coverage proceeds
+
+Revision 2 at clean worker `3b10d73` corrects final-test consumption wording,
+records coverage-006 as the accepted baseline and commits the reproducible
+generator plus real archive-hash checks. Independent regeneration and tests pass.
+The supported next bounded batch is `gold-coverage-008`: DFEDTARU-derived
+`fed_bias` and T5YIE market-implied `inflation_signal`, with source-semantic rules
+committed before outcomes and invariance for all 19 existing measured variables.
+The conservative 36-hour FRED proxy remains an explicitly exploratory convention.
+DXY licensing, OANDA calendar continuity, NASDAQCOM redistribution, growth identity
+and headline corpus remain unresolved and out of scope. No final holdout exists;
+all manifested periods are consumed and ineligible as a fresh final test.
+
 ## 2026-09-21: Gold source-007 revision 1 requires provenance correction
 
 The DXY/source audit conclusions at faaf9ee are supported by official ICE/FRED

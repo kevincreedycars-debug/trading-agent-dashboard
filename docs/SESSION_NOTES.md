@@ -1,5 +1,14 @@
 # Session notes
 
+2026-09-21 source-007 r2 review: exact mailbox hash 6ebd739b verified at clean
+worker 3b10d73. The four-file diff resolves all three requested provenance issues.
+Committed regeneration reproduced manifest ac58a430 and unchanged audit registry
+a025f587; focused 5/5 and full local 407/407 passed independently. Accepted reply
+published. Under standing direction, gold-coverage-008 now authorizes only
+DFEDTARU fed_bias and T5YIE market-implied inflation_signal, with a separate
+pre-outcome rule commit, 19-variable invariance and no formula/holdout/production
+action. Durable review: docs/orchestration/reviews/20260921-gold-source-007-r2.md.
+
 2026-09-21 source-007 r1 review: hash-bound submission 3a29eed at clean worker
 faaf9ee received changes_requested. Official ICE/FRED claims and all 27 manifested
 archive/report hashes verified; builder reproduced both registries byte-for-byte;
