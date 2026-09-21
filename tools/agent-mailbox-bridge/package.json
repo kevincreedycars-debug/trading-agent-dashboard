@@ -1,0 +1,18 @@
+{
+  "name": "trading-agent-mailbox",
+  "displayName": "Trading Agent Mailbox",
+  "description": "Wake a bound Cline worker when its central mailbox changes.",
+  "version": "0.1.0",
+  "publisher": "trading-local",
+  "engines": { "vscode": "^1.85.0" },
+  "main": "extension.js",
+  "activationEvents": ["onStartupFinished"],
+  "capabilities": { "untrustedWorkspaces": { "supported": false } },
+  "contributes": {
+    "commands": [
+      { "command": "tradingMailbox.connect", "title": "Mailbox: Connect This Cline Worker" },
+      { "command": "tradingMailbox.disconnect", "title": "Mailbox: Disconnect This Window" },
+      { "command": "tradingMailbox.status", "title": "Mailbox: Show Delivery Status" }
+    ]
+  }
+}

@@ -1,6 +1,8 @@
 # Active milestone
 
-Current milestone: Gold remaining-source audit and qualification prerequisites.
-Status: coverage-006 accepted; gold-source-007 published, awaiting pickup.
-Next immediate action: review gold-source-007 source evidence and recommended coverage route when delivered.
-No integration or deployment. Updated 2026-09-21.
+Current milestone: automatic mailbox communication.
+Status: Cline worker bridge built, tested and installed; live connection pending.
+Next immediate action: connect Gold's dedicated Cline window and verify one mailbox notification is received.
+Coordinator automation awaits choice between a background Codex session and this exact IDE chat.
+Gold source-007 remains assigned; no research or production behavior changed.
+Updated 2026-09-21.

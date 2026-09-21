@@ -89,7 +89,11 @@ worktree. Do not move, reset, stash or discard any uncommitted work during the
 transition; report it first. Historical asset worktrees have not been refreshed
 or reset by this setup. Their initial assignment is status reconciliation only.
 
-There is **no automatic agent/review dispatcher or scheduled AI run**.
+There is **no automatic coordinator/review dispatcher or scheduled AI run**.
+An optional local Cline worker wake bridge is installed; see
+[worker bridge](../../tools/agent-mailbox-bridge/README.md). It requires a one-time
+connection in each dedicated worker window after reload. Installation alone does
+not establish live delivery. The bridge does not wake this Codex coordinator.
 The desktop monitor described below provides local-file scans and notifications.
 The user starts each worker with the provided message, and says "check submissions"
 here to trigger review. Worker sessions must also be prompted to check replies
