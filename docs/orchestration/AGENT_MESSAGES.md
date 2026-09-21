@@ -6,11 +6,14 @@ Use the correct worker window. If a worker cannot read/write the canonical mailb
 ## gold-research
 
 ```text
-The coordinator has reviewed your transition submission and written a changes_requested reply.
-Run: node D:/trading-agent-dashboard-codex/scripts/coordination.js check --worker gold-research
-Read the returned reply and the current canonical assignment:
+Check your inbox for the coordinator's reply, then read your current assignment from the canonical project:
+node D:/trading-agent-dashboard-codex/scripts/coordination.js check --worker gold-research
 D:/trading-agent-dashboard-codex/docs/orchestration/assignments/gold-research.md
-Your new assignment is gold-policy-002. Preserve the hash-verified implementation in the isolated worktree and complete the corrections/provenance work specified there. Leave canonical originals untouched. Submit a new report when complete, then stop for review.
+Your current assignment is gold-coverage-006. The revision-3 acceptance reply needs no reply; do not re-request the earlier Phase 1 approval, which this assignment supersedes.
+Use D:/trading-agent-dashboard-codex/.local/worktrees/gold-research on branch workers/gold-research-policy-20260920, starting HEAD ffa380c. Implement the three prior Gold return variables, integrate them into the individual-variable reporter, add the boundary regressions and deliver the remaining-coverage and qualification plan exactly as specified there.
+Preserve the accepted 005 artifacts and leave canonical originals, other workers and production untouched. Run the focused suites and npm test (local suite only), disclose exact failures, then submit a new immutable report:
+node D:/trading-agent-dashboard-codex/scripts/coordination.js submit --file <absolute-path-to-your-submission.json>
+Report actual activity at start and checkpoints, pause after submitting, and report the returned submission path. Stop for coordinator review.
 ```
 
 ## gbp
