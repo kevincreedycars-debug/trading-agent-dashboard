@@ -1,5 +1,7 @@
 # Session notes
 
+2026-09-21 NIGHT CHECKPOINT: user requested save for the night. Automatic coordinator disabled; verified no active review. Coverage-008 r1 at 35e8384 measures 21/28 variables; independent regeneration, 19-variable invariance, 70 focused tests and 410 full-suite tests passed. Acceptance withheld only for consumed-test-data wording in the digest. Gold has committed correction de775b5; its revised submission/review must be checked next session before acceptance. Worker notification was already sent; pausing the coordinator does not stop an existing Cline turn. No production change. Resume: inspect mailbox and worker state, review the correction if submitted, then explicitly re-enable automatic dispatch with node scripts/coordinator-dispatch.js enable (or start the dispatcher if absent). Preserve unrelated Strategy workspace changes and five untracked canonical Gold policy originals.
+
 2026-09-21 coverage-008 r1 review: exact mailbox hash `1a272270...` verified at
 clean worker `35e8384`, with declaration commit `f1da8ef` preceding implementation.
 Independent source/hash checks, structured 19-variable invariance, fresh report
