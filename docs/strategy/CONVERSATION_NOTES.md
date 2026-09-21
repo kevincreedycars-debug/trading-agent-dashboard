@@ -240,3 +240,66 @@ State saved. Nothing is running on this worker; activity is reported as stopped 
   artifact, refreshing stale `exports/`); (b) whether Phase 1 Gold return transformations should be
   assigned at all; (c) the Layer 2 role (economic-events adjuster vs opposing-call synthesis vs
   both); (d) a stopping rule for the gold sub-project.
+
+## 2026-09-21 - User request: "lets think on the strategy here"
+
+State re-verified at the start of the turn (canonical CLI + absolute-path reads):
+
+- `gold-research` submitted findings-digest revision 3 and the coordinator **accepted** it at
+  `ffa380c` (`reviews/20260921-gold-findings-summary-005-r3.md`): corrected between-year totals
+  reproduced (pooled 43/27/320, exact 41/21/305, delayed 6/50/231), digest and companion regenerated
+  byte-for-byte. `projects.json` now reads `accepted_exploratory_awaiting_next_assignment`,
+  next action "Hold; Phase 1 prior Gold return transformations proposed, awaiting user confirmation
+  and new assignment." `CURRENT_TASK.md` and `ACTIVE_MILESTONE.md` both reduce the immediate
+  decision to Phase 1 authorization.
+- `DECISIONS.md` gained the consistency rule (two supported years required for any between-year
+  claim) at 07:44 today.
+- Unchanged: `gbp`, `silver`, `wti`, `eur-pairs` still `awaiting_status_submission` with empty
+  inboxes and no session; coordinator idle; mailbox `pending 0`, `errors []`.
+- Adviser's earlier `gold-calendar-status-001` proposal is largely overtaken: the two-mode
+  convention already exists in practice as `archive_fit_exploratory` with `verified_continuity`
+  blocked, so what remains is a policy decision, not an implementation gap.
+
+Strategic reading recorded for the user (advice, not adopted):
+
+1. **The constraint is decision and review bandwidth, not measurement capacity.** One coordinator
+   review slot and one user session gate every worker cycle, so the question is which decision a
+   proposed cycle unlocks - not how much can be measured.
+2. **The gold sub-project has a criteria hole.** Its order is direction AND magnitude ->
+   conditioning -> combinations with year stability -> frozen formula and untouched
+   qualification, but nothing declares the numeric bar (minimum n, minimum magnitude, flat-band /
+   neutral definition, how many attempts are accounted for, whether archive-inferred calendar can
+   ever support a formula input). The accepted digest is explicitly ineligible as formula input and
+   shows why: pooled directions sit near balance (daily h24 964 = 483/482/0), medians are small and
+   positive at every horizon, conditioning cells are mostly below `min_n` (daily 321/929; event
+   1411/6843 at or above), and only 43 of 390 pooled states can be assessed for between-year
+   agreement. Without a declared bar, each new variable adds rows, not decisions.
+3. **Phase 1 is cheap but buys coverage, not evidence.** The three transformations
+   (`gold_d1_pct`, `gold_d5_pct`, `gold_d20_pct`) use the existing hourly archive, no acquisition,
+   and would lift measured coverage from 16/28 to 19/28. They cannot lift the calendar,
+   vintage or independence limitations and they are not on the live path.
+4. **The live path is the stated product promise and is cheaper to finish than to keep
+   documenting.** Eight Layer 1 agents are live; the remaining gaps are honesty and observability:
+   GBP absent from the Master status step list, `input-health.json` still a stale artifact,
+   `exports/` drift, and the repo's published agent set still reading five. None of that depends on
+   gold research, and the four unreconciled asset workers are the real "all tracked assets" risk.
+
+Options put to the user, with the adviser's lean:
+
+- **A. Gold-forward:** authorize Phase 1 now, and require the same assignment (or a small parallel
+  one) to declare the qualification bar and the open decisions (flat band, delay strata, DXY path)
+  so Phase 1 output is interpretable on arrival.
+- **B. Live-path-first:** run the bounded hygiene batch (GBP status list, `input-health.json`,
+  `exports/` refresh) plus one asset worker status reconciliation, and leave gold holding.
+- **C. Gate-first:** define the qualification bar and Phase 2/DXY decisions before any further
+  measurement, accepting an idle gold worker.
+
+Adviser recommendation: **A and B together, one item per lane** - they consume different resources
+(gold worker cycle vs coordinator/credential path), both are small, and neither blocks the other.
+Do not authorize both Phase 1 and a Phase 2 source hunt in the same batch, and do not let more than
+one gold assignment be in flight at a time. Standing caution restated: nothing in the accepted gold
+work is a trading result, and coverage growth is not evidence growth.
+
+Open questions for the user from this turn: (1) authorize Phase 1 as recommended, hold gold, or
+gate-first; (2) authorize the live-path hygiene batch (and if so, which asset worker reconciles
+first).
