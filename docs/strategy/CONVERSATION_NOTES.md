@@ -241,6 +241,15 @@ State saved. Nothing is running on this worker; activity is reported as stopped 
   assigned at all; (c) the Layer 2 role (economic-events adjuster vs opposing-call synthesis vs
   both); (d) a stopping rule for the gold sub-project.
 
+## 2026-09-21 - Standing rule: short chat replies (reinforced)
+
+- User: "these messages are too long". Hard rule for this adviser from now on: chat replies are a
+  few short lines - headline plus at most one or two questions. No tables, no multi-section
+  strategy essays in chat. All depth goes into `docs/strategy/` notes instead, and links to them.
+- Applies retroactively to the previous two turns: the strategy framing was delivered as a long
+  reply; the same content is already in this file (2026-09-21 strategy options A/B/C) and that is
+  where it belongs.
+
 ## 2026-09-21 - User request: "lets think on the strategy here"
 
 State re-verified at the start of the turn (canonical CLI + absolute-path reads):
