@@ -1,5 +1,15 @@
 # Session notes
 
+2026-09-21 source-007 r1 review: hash-bound submission 3a29eed at clean worker
+faaf9ee received changes_requested. Official ICE/FRED claims and all 27 manifested
+archive/report hashes verified; builder reproduced both registries byte-for-byte;
+focused 5/5 and full local 407/407 passed. Required correction is narrow: reconcile
+the statement that no final test was consumed with the listed consumed L2L final
+period, record coverage-006 as accepted, and commit a durable generator/equivalent
+with real archive-hash recomputation. No next batch issued; no holdout, acquisition,
+measurement, integration or production change. Durable review:
+docs/orchestration/reviews/20260921-gold-source-007-r1.md.
+
 2026-09-21 background coordinator configured on user request. Codex CLI live read-only smoke succeeded with gpt-5.6-sol after replacing unsupported inherited gpt-5.4 default. Event-driven new current submissions only; single daemon/run lock, hash receipts before invocation, 6 runs/day, 20min/run, workspace-write sandbox and approval policy never. Failures pause; no silent retries. Reads canonical notes in fresh CLI turns rather than injecting this IDE chat. Interactive coordinator must pause/wait before edits, then re-enable. Gold Cline bridge remains separate and must be connected. Full research-review round trip awaits a new submission.
 
 2026-09-21 automatic communication work: built and installed local VS Code extension trading-local.trading-agent-mailbox 0.1.0. Cline 4.1.19 legacy/next expose sendMessage; companion polls validated mailbox every 5s, binds explicitly to registered worker window, deduplicates before sending, caps attempts and never clicks approvals. Six bridge tests plus four mailbox tests pass. Live end-to-end delivery is NOT verified: worker window must connect to its existing Cline task. Binding expires on reload because API has no task-ID selector/receipt. Current Codex IDE chat has no verified injection API; background coordinator vs current-chat choice asked, not answered. No automatic coordinator installed. Documentation: tools/agent-mailbox-bridge/README.md. Gold source-007 remains the research assignment.

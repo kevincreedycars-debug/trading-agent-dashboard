@@ -4,9 +4,11 @@ Updated 2026-09-21.
 
 Coordinate Gold research toward evidence-backed Layer 1 directional calls under
 the user's standing instruction to advance the analysis. Current assignment:
-gold-source-007, published from accepted 4e051ca; awaiting worker pickup.
-Coverage-006 is accepted with 19 variables measured. Investigate remaining sources,
-DXY feasibility and exact consumed-data ranges before the next coverage batch. Review delivery, then issue the next bounded batch
+gold-source-007, published from accepted 4e051ca. Revision 1 at faaf9ee was
+reviewed with source findings supported, but provenance/reproducibility corrections
+were requested: reconcile consumed final-test wording, record coverage-006 as the
+accepted baseline, and make the claimed generator/hash verification durable.
+Await a unique corrected revision, then review it and issue the next bounded batch
 without repeating approval requests for already-authorized research.
 
 Keep remaining source/calendar/vintage gaps explicit. Follow individual-variable

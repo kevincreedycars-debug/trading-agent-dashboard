@@ -1,5 +1,13 @@
 # Current state
 
+2026-09-21 source-007 revision 1 at faaf9ee reviewed with changes requested.
+Official source claims, exact scope, 27 archive/report hashes and byte-identical
+registry regeneration were independently verified; focused tests passed 5/5 and
+the full local suite passed 407/407. Acceptance is blocked only on correcting the
+manifest's contradictory final-test-consumption wording, recording coverage-006
+as accepted rather than submitted, and making the claimed generator plus archive
+hash verification durable. No new assignment, measurement or production action.
+
 2026-09-21 background coordinator configured on user request. Codex CLI live read-only smoke succeeded with gpt-5.6-sol after replacing unsupported inherited gpt-5.4 default. Event-driven new current submissions only; single daemon/run lock, hash receipts before invocation, 6 runs/day, 20min/run, workspace-write sandbox and approval policy never. Failures pause; no silent retries. Reads canonical notes in fresh CLI turns rather than injecting this IDE chat. Interactive coordinator must pause/wait before edits, then re-enable. Gold Cline bridge remains separate and must be connected. Full research-review round trip awaits a new submission.
 
 2026-09-21 automatic communication work: built and installed local VS Code extension trading-local.trading-agent-mailbox 0.1.0. Cline 4.1.19 legacy/next expose sendMessage; companion polls validated mailbox every 5s, binds explicitly to registered worker window, deduplicates before sending, caps attempts and never clicks approvals. Six bridge tests plus four mailbox tests pass. Live end-to-end delivery is NOT verified: worker window must connect to its existing Cline task. Binding expires on reload because API has no task-ID selector/receipt. Current Codex IDE chat has no verified injection API; background coordinator vs current-chat choice asked, not answered. No automatic coordinator installed. Documentation: tools/agent-mailbox-bridge/README.md. Gold source-007 remains the research assignment.

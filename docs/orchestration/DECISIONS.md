@@ -1,5 +1,16 @@
 # Central decisions
 
+## 2026-09-21: Gold source-007 revision 1 requires provenance correction
+
+The DXY/source audit conclusions at faaf9ee are supported by official ICE/FRED
+documentation and independent file-hash/test reproduction, but the batch is not
+accepted yet. Its manifest simultaneously says no final-test split was consumed
+and lists the prior L2L final-test period as consumed; it also misstates accepted
+coverage-006 as merely submitted and relies on an ignored generator for its
+reproducibility claim. A hash-bound revision request limits work to correcting
+those records and making generation/archive-hash verification durable. No new
+measurement batch is assigned until the corrected provenance is accepted.
+
 ## 2026-09-20: coordinator and workers
 
 - This canonical project owns overall architecture, priorities, integration,
