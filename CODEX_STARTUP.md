@@ -12,7 +12,7 @@ coordinator activity using `node scripts/monitor-state.js activity central-orche
 working "Task summary"` (use `paused` when waiting for the user). Never maintain idle
 heartbeats. The monitor displays this coordinator alongside workers.
 
-Coordination entrypoint: read `docs/orchestration/README.md`, `projects.json` and `DECISIONS.md` first. This canonical checkout is the coordinator. Workers read these files by their canonical absolute path and use their assigned worktree; older shared-checkout directions are superseded. On "check submissions", run `node scripts/coordination.js check` and follow the review cycle. The desktop monitor can poll files; no automatic agent/review dispatcher is active.
+Coordination entrypoint: read `docs/orchestration/README.md`, `projects.json` and `DECISIONS.md` first. This canonical checkout is the coordinator. Workers read these files by their canonical absolute path and use their assigned worktree; older shared-checkout directions are superseded. On "check submissions", run `node scripts/coordination.js check` and follow the review cycle. A background coordinator dispatcher is configured; see tools/agent-mailbox-bridge/README.md. Before interactive coordinator mutations, run node scripts/coordinator-dispatch.js pause, then status; wait until activeRun is false. Background dispatcher turns already own the run lock and must not pause themselves. After interactive work, report paused and re-enable dispatch. Never run a manual review concurrently with a background review.
 
 Read this file first, then:
 

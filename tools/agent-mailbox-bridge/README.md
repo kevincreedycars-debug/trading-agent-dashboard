@@ -24,11 +24,30 @@ or crashes is never automatically repeated. Inspect status and actual worker
 activity before manually retrying. Attempts are capped at 12 per worker per UTC
 day. No model is polled merely to watch files.
 
-The current Codex IDE chat has no verified injection interface. A separate
-Codex App Server coordinator is a possible second adapter but is not configured
-by this extension. Until that adapter is chosen and implemented, coordinator
-review still requires a user turn. Do not describe this as a complete automatic
-round trip.
+The separate background coordinator now uses `codex exec` with gpt-5.6-sol,
+workspace-write sandbox and approval policy never. It uses the existing Codex
+login and reads canonical notes afresh for each event; this IDE conversation is
+not resumed or injected into. A live read-only connection check returned
+COORDINATOR_READY. A full research-review round trip still needs a new submission.
+
+Start it with `powershell -File tools/agent-mailbox-bridge/start-coordinator.ps1`.
+Pause new reviews with `node scripts/coordinator-dispatch.js pause`; inspect
+`node scripts/coordinator-dispatch.js status`. Resume with `enable` while the
+dispatcher process remains running, or run the start script after Windows restart.
+There is no login-startup registration. Pausing does not interrupt an active run.
+
+It checks validated submissions every five seconds, skips historical assignments,
+deduplicates by submission hash before invoking Codex and holds an exclusive
+daemon/run lock. Failed or interrupted attempts need inspection; they never
+silently retry. Six attempts per UTC day, twenty minutes per run. Logs, receipts,
+last responses and status are in `.local/orchestration/controller/`.
+Unknown failures pause automatic reviews. The sandbox is retained; no approval
+bypass, production change or expanded trading authority is granted.
+
+Before interactive coordinator edits: pause the dispatcher, check status and wait
+until activeRun is false. The dispatcher also defers while the coordinator activity
+record says working. This is cooperative coordination, not an OS write lock against
+other applications. After finishing interactive changes, report paused and enable.
 
 Build: `python tools/agent-mailbox-bridge/package-vsix.py`.
 Test: `node --test tests/agent_mailbox_bridge.test.js`.

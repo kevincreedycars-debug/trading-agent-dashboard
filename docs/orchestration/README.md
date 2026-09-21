@@ -89,17 +89,13 @@ worktree. Do not move, reset, stash or discard any uncommitted work during the
 transition; report it first. Historical asset worktrees have not been refreshed
 or reset by this setup. Their initial assignment is status reconciliation only.
 
-There is **no automatic coordinator/review dispatcher or scheduled AI run**.
-An optional local Cline worker wake bridge is installed; see
-[worker bridge](../../tools/agent-mailbox-bridge/README.md). It requires a one-time
-connection in each dedicated worker window after reload. Installation alone does
-not establish live delivery. The bridge does not wake this Codex coordinator.
-The desktop monitor described below provides local-file scans and notifications.
-The user starts each worker with the provided message, and says "check submissions"
-here to trigger review. Worker sessions must also be prompted to check replies
-unless their own runner is already active. No conversation history is shared.
-Future automation must use explicit budgets, exclusive coordinator locking and
-deduplication; it is a separate implementation, not enabled by these files.
+Automatic worker notification and background coordinator review are now configured.
+See [communication runner](../../tools/agent-mailbox-bridge/README.md) for start,
+pause, limits, receipts and connection requirements. Cline windows must remain
+connected; the background coordinator uses a separate Codex CLI turn and canonical
+notes. It does not wake this exact IDE chat. No unattended approval bypass or
+production action is enabled. Before interactive coordinator edits, pause dispatch
+and wait for any active run to finish. Other workers remain independently scoped.
 
 ## Validation
 

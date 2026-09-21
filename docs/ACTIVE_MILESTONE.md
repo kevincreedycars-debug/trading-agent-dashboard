@@ -1,8 +1,6 @@
 # Active milestone
 
-Current milestone: automatic mailbox communication.
-Status: Cline worker bridge built, tested and installed; live connection pending.
-Next immediate action: connect Gold's dedicated Cline window and verify one mailbox notification is received.
-Coordinator automation awaits choice between a background Codex session and this exact IDE chat.
-Gold source-007 remains assigned; no research or production behavior changed.
-Updated 2026-09-21.
+Current milestone: automatic coordinator review of the next Gold source-007 submission.
+Status: worker bridge installed and background Codex connection verified; dispatcher configured.
+Next immediate action: verify the first submission-to-review-to-worker-reply cycle when Gold submits.
+No production changes or accuracy qualification. Updated 2026-09-21.
