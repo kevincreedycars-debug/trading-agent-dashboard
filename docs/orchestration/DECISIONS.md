@@ -1,5 +1,18 @@
 # Central decisions
 
+## 2026-09-21: Gold coverage-008 revision 1 requires one provenance correction
+
+The two-variable implementation at clean worker `35e8384` is technically
+supportable: declaration preceded outcomes, source artifacts and hashes reconcile,
+fresh report generation reproduces the declared content hash, the 19 accepted
+variable blocks and existing conditioning cells are invariant, and focused 70/70
+plus full local 410/410 tests pass. Acceptance is withheld because the regenerated
+findings digest says no final-test split has been consumed, contradicting the
+accepted manifest and canonical record that the 2025-10-01 through 2026-04-30 L2L
+final-test period is consumed and cannot be reused. Revision scope is only that
+digest wording and its rendering source. No next research assignment is published
+until the corrected revision is accepted.
+
 ## 2026-09-21: Gold source-007 accepted; two-variable coverage proceeds
 
 Revision 2 at clean worker `3b10d73` corrects final-test consumption wording,

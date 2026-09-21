@@ -1,6 +1,6 @@
 # Active milestone
 
 Current milestone: Gold two-variable source coverage batch.
-Status: source-007 r2 accepted; gold-coverage-008 published from worker HEAD 3b10d73.
-Next immediate action: await coverage-008 submission for automatic review; worker pickup confirmed 2026-09-21 20:25Z.
+Status: coverage-008 revision 1 reviewed at worker HEAD 35e8384; changes requested for one consumed-data wording contradiction.
+Next immediate action: await a unique coverage-008 revision correcting the findings digest and its rendering source only.
 No combinations, formula fitting, holdout use, production changes or accuracy qualification. Updated 2026-09-21.

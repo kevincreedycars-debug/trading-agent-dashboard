@@ -1,5 +1,16 @@
 # Session notes
 
+2026-09-21 coverage-008 r1 review: exact mailbox hash `1a272270...` verified at
+clean worker `35e8384`, with declaration commit `f1da8ef` preceding implementation.
+Independent source/hash checks, structured 19-variable invariance, fresh report
+regeneration and content-hash recomputation all passed; focused tests passed 70/70
+and the full local suite passed 410/410. Changes requested only because the
+regenerated findings digest says no final-test split was consumed, contradicting
+the accepted manifest's consumed 2025-10-01 through 2026-04-30 L2L final-test
+period. No next assignment issued; no measurement rerun, holdout, integration or
+production action. Durable review:
+docs/orchestration/reviews/20260921-gold-coverage-008-r1.md.
+
 2026-09-21 communication repair: source-007 r2 review published coverage-008 with an unsupported registry status, so no assignment wake was generated. Corrected to instructions_published_awaiting_worker and made that spelling explicit in the background review prompt. Bridge sent at 20:25:10Z; Gold confirmed working on coverage-008 at 20:25:35Z. Native monitor now exposes controller watching/reviewing/paused/offline state and distinguishes sent notifications from acknowledged work. Background review suppresses redundant manual review prompts. Sixteen focused tests and normal/narrow native visual checks passed. Automatic review/correction round trip is now observed, not merely configured.
 
 2026-09-21 source-007 r2 review: exact mailbox hash 6ebd739b verified at clean
