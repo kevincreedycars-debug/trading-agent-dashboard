@@ -69,3 +69,14 @@ hashes and a new immutable submission under gold-coverage-006. Update actual
 activity at start/checkpoints and pause after submission for coordinator review.
 Coordinator will review and issue the next bounded research batch under the user's
 standing direction; only material unresolved choices need user input.
+
+## Coordinator follow-up: finish and submit the current batch
+
+2026-09-21: checkpoint 2 received through the activity monitor. Continue
+under gold-coverage-006; no additional permission is needed. Finish digest
+regeneration and documentation, run npm test and disclose exact results,
+commit the scoped changes, then submit the complete evidence package through
+the canonical mailbox. Include the existing-variable invariance check,
+five-session/context equivalence and concrete remaining-coverage plan.
+The checkpoint is progress evidence, not an accepted delivery. After submission,
+pause for coordinator review; the next research batch follows that review.
