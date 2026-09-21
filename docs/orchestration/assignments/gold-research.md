@@ -80,3 +80,27 @@ the canonical mailbox. Include the existing-variable invariance check,
 five-session/context equivalence and concrete remaining-coverage plan.
 The checkpoint is progress evidence, not an accepted delivery. After submission,
 pause for coordinator review; the next research batch follows that review.
+
+## Coordinator output inspection: completion required
+
+2026-09-21: coordinator inspected clean HEAD 2a2c3e0 and the generated
+ivr-coverage-006-20260921/individual-variable-report.json (declared content hash
+c4da8de535b028449d338b727271794b8ea632adacae86bbba5df6c7a7cc7369).
+Independent checks confirm 19 measured variables, byte-equivalent JSON for all
+16 previously measured variable blocks, unchanged baselines and 62/62 focused
+policy/report/coverage tests passing. This is a partial verification, not final
+acceptance of gold-coverage-006.
+
+Your next action is to complete delivery, not begin another measurement batch:
+1. Regenerate the findings digest and companion from the 006 report; the committed
+   digest still describes 005 and 16 measured variables. Preserve prior evidence.
+2. Update method/progress documentation and the remaining-source/qualification
+   plan required by this assignment. Record actual coverage and exclusions.
+3. Run npm test, record exact results and any unresolved failures. Do not report
+   an old full-suite result as validation of this batch.
+4. Commit those deliverables and submit a complete envelope using the canonical
+   coordination.js submit command, worker gold-research, assignment gold-coverage-006,
+   and a new unique submission ID. A chat completion or heartbeat is not delivery.
+5. Report paused after submission. If blocked or out of runtime, submit a blocked
+   status envelope now with completed commits, artifacts and precise unfinished
+   items so the coordinator can act. No additional user permission is required.

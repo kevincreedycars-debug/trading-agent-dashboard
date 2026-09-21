@@ -1,5 +1,7 @@
 # Session notes
 
+2026-09-21 Gold completion inspection: clean worker HEAD 2a2c3e0 and 006 report exist, but no submission; findings digest still points to 005. Independently confirmed 19 measured variables, unchanged prior 16 variable blocks/baselines and 62/62 focused tests. Published completion instruction in current gold-coverage-006 assignment: updated digest/docs/plan, full-suite results, commit and actual mailbox submission (or blocked envelope). Partial verification only; no acceptance or next research phase yet.
+
 2026-09-21 user authorized orchestrator to advance Gold research toward better validated Layer 1 calls. Published gold-coverage-006 from accepted ffa380c: prior 1/5/20-session Gold returns, expanded individual-variable/context report, regression tests and concrete remaining-coverage/qualification plan. Earlier Phase 1 approval hold superseded. Awaiting worker pickup; publication does not prove activity. Further bounded research assignments follow coordinator review under standing user direction; no production or accuracy claim.
 
 2026-09-21 inbox review: Gold findings digest revision 3 at ffa380c accepted for exploratory reporting. Independently reproduced corrected year-agreement totals and byte-identical digest/companion; accepted source raw hash verified. Acceptance reply published; Gold holds for next assignment. No other new submissions. Phase 1 prior Gold return transformations remain proposed pending user confirmation; no integration or deployment. Review: docs/orchestration/reviews/20260921-gold-findings-summary-005-r3.md.
