@@ -1,7 +1,6 @@
 # Active milestone
 
-Current feature: central research coordination.
-Current milestone: Gold prior-return coverage and expanded variable analysis.
-Status: gold-coverage-006 published; awaiting pickup, not reported running.
-Next immediate action: review the gold-coverage-006 submission when delivered.
-No integration, deployment or trading qualification. Updated 2026-09-21.
+Current milestone: Gold remaining-source audit and qualification prerequisites.
+Status: coverage-006 accepted; gold-source-007 published, awaiting pickup.
+Next immediate action: review gold-source-007 source evidence and recommended coverage route when delivered.
+No integration or deployment. Updated 2026-09-21.
