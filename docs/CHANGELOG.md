@@ -1,5 +1,7 @@
 # 2026-09-20 - Gold coverage registry accepted at checkpoint review
 
+2026-09-21 inbox review: Gold findings digest revision 3 at ffa380c accepted for exploratory reporting. Independently reproduced corrected year-agreement totals and byte-identical digest/companion; accepted source raw hash verified. Acceptance reply published; Gold holds for next assignment. No other new submissions. Phase 1 prior Gold return transformations remain proposed pending user confirmation; no integration or deployment. Review: docs/orchestration/reviews/20260921-gold-findings-summary-005-r3.md.
+
 2026-09-21 monitor mailbox prompts: added slowly flashing attention icons, explicit recipient and short prompt in the header/rows, and Copy prompt in Details. Pending submissions direct the user to Central Orchestrator; replies awaiting reported pickup direct the user to the worker. Session logs alone cannot clear the prompt. Native build and normal/narrow visual checks passed; 15 focused monitor/mailbox/usage tests passed. Manual dispatch remains unchanged. Gold digest revision 3 is received and pending review. Unrelated Strategy workspace and Gold originals preserved.
 
 ## 2026-09-20 - Compact green monitor and local token usage

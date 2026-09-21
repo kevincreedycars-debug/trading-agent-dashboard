@@ -2,10 +2,10 @@
 
 Current feature: central project coordination.
 
-Current milestone: corrected Gold findings digest.
+Current milestone: decide the next bounded Gold coverage assignment.
 
-Status: revision 2 reviewed; changes requested for single-year states incorrectly counted as between-year agreement. Underlying measurement report remains accepted for exploratory use.
+Status: findings digest revision 3 accepted after independent verification. Gold holds; no new assignment published.
 
-Next immediate action: review the corrected digest when submitted under gold-reaction-005.
+Next immediate action: obtain user decision on Phase 1 prior Gold return transformations from the existing hourly archive.
 
-Phase 1 coverage remains proposed, awaiting user confirmation before assignment. No integration, deployment or trading qualification. Updated 2026-09-21.
+No integration, deployment or trading qualification. Updated 2026-09-21.
