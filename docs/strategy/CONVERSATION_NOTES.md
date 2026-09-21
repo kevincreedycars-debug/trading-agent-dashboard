@@ -241,7 +241,60 @@ State saved. Nothing is running on this worker; activity is reported as stopped 
   assigned at all; (c) the Layer 2 role (economic-events adjuster vs opposing-call synthesis vs
   both); (d) a stopping rule for the gold sub-project.
 
-## 2026-09-21 - User: printable map of the gold backtest engine (A4)
+## 2026-09-21 - User: refine the gold map into a "what/why/where" reference sheet
+
+- User judged the first gold map "too messy" and asked specifically: which variables are tested and why, where each
+  stands, how they are analysed and over what time frames (and why), where the data is stored and in what form, what
+  the 28 drivers actually are, what the "36-hour FRED thing" is, what "anchor" means, and whether "pull the archive
+  once" means a database. Design was left open, so the page was rebuilt around answers rather than the earlier
+  waterfall styling.
+- Rebuilt `docs/strategy/GOLD_ENGINE_MAP.html` as a five-band reference sheet: (1) header with status; (2) the engine
+  in five moves; (3) the 28 drivers grouped by the live algorithm's factors F1-F10 with source and status;
+  (4) "over what time frames and why" beside "how each driver is analysed"; (5) "where the data lives" beside
+  "anchor and the 36-hour rule". Answering each question meant reading sources not previously opened: the coverage
+  registry, the report registry (revision 6), the session/horizon policy registry, the three archive manifests and
+  the head of the 80 MB accepted report, summarised by ignored scripts `tmp/extract-gold-facts.js`,
+  `tmp/archive-facts.js`, `tmp/peek-report-inputs.js` (outputs `tmp/gold-facts.txt`, `tmp/archive-facts.txt`).
+- Facts newly verified for the sheet:
+  - The 28 declared drivers map to ten weighted factors (F1 real yield, F2 dollar, F3 Fed stance, F4 2-year,
+    F5 gold itself, F6 VIX, F7 events, F8 inflation, F9 news tone, F10 regimes) drawn from
+    `logic/agent_gold_direction.md` plus explicit event decomposition; twenty of the twenty-eight are levels or
+    transformations of five macro/price series, so they are not twenty independent inputs.
+  - Measured today: the three 10-year real-yield rows, the three 2-year rows, gold_price and the three new
+    prior-return rows, the three VIX rows, and the six event rows = 19. Unmeasured: dxy_level plus the three dxy
+    changes, fed_bias, inflation_signal, risk_headline_context, equities_regime, growth_regime = 9.
+  - Discrepancy worth the coordinator's attention: report registry revision 6 marks `fed_bias` and
+    `inflation_signal` as **measured** by declared redefinition (Fed target-range direction from DFEDTARU; five-year
+    breakeven T5YIE, 20-observation change), while the accepted digest and its coverage plan classify both as
+    unmeasured with "unavailable source". The accepted report ran on an archive that contains neither series, so
+    both produced no values - which resolves the count to 19, but the two documents read inconsistently.
+  - Data: three JSON archives under the canonical checkout - hourly gold candles (21,871 bars, bid/mid/ask, 2023-01-02
+    to 2026-09-11, merged from 15 hashed page files), merged US HIGH/MEDIUM events (5,115 rows, 1,130 HIGH / 3,985
+    MEDIUM, 2022-12-01 to 2026-09-11), and five FRED vintage series (DFII10, DGS2, DGS10, VIXCLS, DTWEXBGS;
+    1,008-2,146 observations each, 2022-11-01 to 2026-09-12). No database and no warehouse: plain JSON, one
+    directory per acquisition, each file hashed in `manifest.json`, read-only afterwards.
+  - The 36-hour rule: FRED vintages carry a date, not a publication instant, so a macro value counts as available at
+    `vintage date + 36h` (`backtester/lib/gold_macro_vintage_dataset.js`, `vintage_date_plus_36h_conservative_proxy`);
+    conservative means later than reality, never earlier.
+  - Anchor: the t=0 of one test - a weekday 14:00 UTC grid slot (964) or a real release instant (5,106); entry price
+    is the close of the candle containing the anchor, available one hour later, which is why entry/endpoint delay is
+    disclosed, and one anchor feeds every horizon, driver and cell.
+  - Frames and why: h24 primary (the product is a 24-hour call), h1/h4 declared diagnostics that may never be formula
+    inputs, five-session close for the L2L / 0.5 L2L horizon, sub-hourly declared but unsupported at H1. Endpoint
+    kinds are never pooled; daily h24 is 766 exact + 198 delayed = 964. Analysis: pre-declared states (median split,
+    sign, event family, present/missing, surprise sign, age bucket), per-state counts/medians/quartiles with
+    subset year breakdowns, then one-variable-at-a-time conditioning over 8 prior-context fields (1,192 daily +
+    7,178 event cells), min n = 20.
+- Also observed while reading: a fresh acquisition directory `backtester/tmp/gold-fred-coverage-008-20260921/`
+  already holds DFEDTARU and T5YIE beside the older five series, i.e. the in-flight batch is fetching exactly the two
+  series the discrepancy above turns on.
+- Validation: `tmp/check-gold-engine-map.js` (Playwright, print media, A4 width) - 198.0 x 277.3 mm against the
+  285 mm printable height, one PDF page, 4 tables, 19 table rows, 4 boxes, 11 status pills, no unrendered entities.
+  Iterations measured 376.2 mm, 357.7 mm, 352.4 mm, 314.1 mm before the grouped-factor table brought it to one page.
+- No canonical file, other worker or live system touched. All extraction ran read-only against the canonical
+  archives and the gold worker's registries.
+
+## 2026-09-21 - User: printable map of the gold backtest engine (A4) - first version, later superseded
 
 - User asked for a second one-page map in the same style, this time for the gold instance of the backtest engine:
   what it does, what is tested, why it takes time, where the tests are stored and how to access them.

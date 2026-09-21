@@ -71,7 +71,8 @@ Three qualifications the plan must carry, so the stages do not over-promise:
 
 Printable artifact delivered for this: `docs/strategy/PROGRAM_MAP.html` (one A4 page, print-validated at 261.8 mm on a
 285 mm printable area, single PDF page), with a companion page for the gold engine instance at
-`docs/strategy/GOLD_ENGINE_MAP.html` (282.9 mm, single PDF page).
+`docs/strategy/GOLD_ENGINE_MAP.html` - rebuilt on 2026-09-21 as a driver-and-data reference sheet answering "which
+28 drivers, why, where they stand, over what frames, and where the data lives" (277.3 mm, single PDF page).
 
 ## 1. Objectives as stated by canonical memory
 

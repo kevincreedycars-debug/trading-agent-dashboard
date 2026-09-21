@@ -2,207 +2,176 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>Gold backtest engine - one-page map</title>
+<title>Gold backtest engine - reference sheet</title>
 <style>
   @page { size: A4 portrait; margin: 6mm; }
   * { box-sizing: border-box; }
   html, body { margin: 0; padding: 0; }
-  body {
-    font: 9pt/1.28 "Segoe UI", system-ui, -apple-system, sans-serif;
-    color: #16203a; background: #fff;
-    -webkit-print-color-adjust: exact; print-color-adjust: exact;
-  }
-  .sheet { width: 198mm; padding: 0; margin: 0 auto; }
-  .hdr { display: flex; align-items: flex-end; justify-content: space-between;
-         border-bottom: 2.2pt solid #1f3a6e; padding-bottom: 1.7mm; margin-bottom: 2.5mm; }
-  .eyebrow { margin: 0; font-size: 6.9pt; letter-spacing: .16em; text-transform: uppercase; color: #5b6b8c; }
-  h1 { margin: .7mm 0 .9mm; font-size: 12.6pt; line-height: 1.15; letter-spacing: -.01em; color: #10254d; }
-  .sub { margin: 0; font-size: 8.6pt; color: #38476b; }
-  .stamp { text-align: right; font-size: 6.9pt; color: #5b6b8c; letter-spacing: .04em; line-height: 1.5; white-space: nowrap; }
-  .stamp strong { display: block; font-size: 10pt; color: #10254d; letter-spacing: 0; }
-
-  main { display: grid; grid-template-columns: 1fr 63mm; gap: 4.2mm; align-items: start; }
-  .legend { display: flex; gap: 2.4mm; flex-wrap: wrap; margin: 0 0 2.2mm; font-size: 6.9pt; color: #5b6b8c; }
-  .legend span { display: inline-flex; align-items: center; gap: 1mm; }
-  .dot { width: 2.3mm; height: 2.3mm; border-radius: 50%; display: inline-block; }
-
-  .ladder { display: flex; flex-direction: column; }
-  .stage { border: .8pt solid #ccd6e6; border-left: 2.8pt solid var(--c, #8797b8);
-           border-radius: 1.8mm; padding: 1.7mm 2.4mm; background: #fbfcfe; }
-  .stage.now { background: #fffaf0; border-color: #eec27c; border-left-width: 3.4pt; }
-  .stage .top { display: flex; align-items: baseline; gap: 1.7mm; }
-  .num { font-size: 7.6pt; font-weight: 700; color: var(--c, #8797b8); letter-spacing: .06em; }
-  .stage h2 { margin: 0; font-size: 9.5pt; line-height: 1.16; color: #10254d; letter-spacing: -.01em; }
-  .spacer { flex: 1; }
-  .chip { font-size: 6.6pt; font-weight: 700; letter-spacing: .07em; text-transform: uppercase;
-          padding: .4mm 1.5mm; border-radius: 999px; white-space: nowrap; }
-  .chip.done { background: #e4f4ea; color: #10603a; border: .7pt solid #9fd3b6; }
-  .chip.now  { background: #ffeccb; color: #8a4f00; border: .8pt solid #e6b466; }
-  .chip.next { background: #e9eff9; color: #274784; border: .7pt solid #b6c8e6; }
-  .stage p { margin: 1mm 0 0; }
-  .flow { display: flex; flex-wrap: wrap; gap: .8mm 1.5mm; margin: 1.2mm 0 0; padding: 0; list-style: none; }
-  .flow li { font-size: 7.7pt; background: #eef3fb; border: .7pt solid #cdd9ec; border-radius: 1.3mm;
-             padding: .5mm 1.4mm; }
-  .flow li b { color: #274784; }
-  .flow li code { font-size: 7.2pt; color: #44386b; }
-  .foot { margin-top: 1.2mm; font-size: 7.6pt; color: #38476b; }
-  .arrow { text-align: center; color: #93a3c2; font-size: 6.8pt; line-height: 1; padding: .9mm 0; letter-spacing: .3em; }
-  .arrow b { letter-spacing: 0; }
-
-  .rail { display: flex; flex-direction: column; gap: 2.2mm; }
-  .card { border: .8pt solid #ccd6e6; border-radius: 1.8mm; padding: 1.8mm 2.4mm; background: #fbfcfe; }
-  .card h3 { margin: 0 0 1mm; font-size: 7.2pt; letter-spacing: .1em; text-transform: uppercase; color: #274784; }
-  .card.here { border-color: #eec27c; background: #fffaf0; }
-  .card.here h3 { color: #8a4f00; }
-  .card ul { margin: 0; padding: 0; list-style: none; }
-  .card li { font-size: 7.3pt; margin-bottom: .85mm; padding-left: 3.2mm; position: relative; }
-  .card li:last-child { margin-bottom: 0; }
-  .card li::before { content: ""; position: absolute; left: 0; top: 1.15mm; width: 1.7mm; height: 1.7mm;
-                     border-radius: 50%; background: #8797b8; }
-  .card.here li::before { background: #e0a63c; }
-  .card.gatebox li::before { background: #c96a6a; }
-  .card.store li::before { background: #4f9d74; }
-  .card .k { font-weight: 700; color: #10254d; }
-  .card code { font-size: 6.9pt; color: #44386b; word-break: break-word; }
-  footer { margin-top: 2.6mm; border-top: .8pt solid #ccd6e6; padding-top: 1.2mm;
-           font-size: 6.8pt; color: #5b6b8c; display: flex; justify-content: space-between; gap: 3mm; }
+  body { font: 7.6pt/1.28 "Segoe UI", system-ui, -apple-system, sans-serif; color: #16203a; background: #fff;
+         -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .sheet { width: 198mm; margin: 0 auto; }
+  h1 { margin: 0 0 .8mm; font-size: 13pt; line-height: 1.12; letter-spacing: -.01em; color: #10254d; }
+  .hdr { display: flex; align-items: flex-end; justify-content: space-between; gap: 4mm;
+         border-bottom: 2.2pt solid #1f3a6e; padding-bottom: 1.6mm; margin-bottom: 2.2mm; }
+  .eyebrow { margin: 0 0 .8mm; font-size: 6.6pt; letter-spacing: .18em; text-transform: uppercase; color: #5b6b8c; }
+  .lede { margin: 0; font-size: 8.2pt; color: #38476b; max-width: 132mm; }
+  .stamp { text-align: right; font-size: 6.6pt; color: #5b6b8c; white-space: nowrap; line-height: 1.5; }
+  .stamp strong { display: block; font-size: 10pt; color: #10254d; }
+  .band { margin-bottom: 2.2mm; }
+  .band > h2 { margin: 0 0 1.2mm; font-size: 7.4pt; letter-spacing: .13em; text-transform: uppercase; color: #274784; }
+  .band > h2 span { text-transform: none; letter-spacing: 0; font-weight: 400; color: #6b7a99; }
+  .flow { display: grid; grid-template-columns: repeat(5, 1fr); gap: 1.6mm; }
+  .step { border: .8pt solid #ccd6e6; border-top: 2.2pt solid #4f9d74; border-radius: 1.4mm;
+          padding: 1.2mm 1.6mm; background: #fbfcfe; }
+  .step b { display: block; font-size: 7.6pt; color: #10254d; }
+  .step span { font-size: 6.8pt; color: #4a5878; line-height: 1.22; display: block; margin-top: .4mm; }
+  table { width: 100%; border-collapse: collapse; }
+  th { font-size: 6.4pt; letter-spacing: .08em; text-transform: uppercase; color: #5b6b8c; text-align: left;
+       border-bottom: .8pt solid #b9c6dd; padding: .5mm 1mm; }
+  td { font-size: 6.6pt; padding: .42mm 1mm; border-bottom: .5pt solid #e4e9f2; vertical-align: top; }
+  tr:nth-child(even) td { background: #f7f9fd; }
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 3mm; }
+  code, .path { font-family: Consolas, "Cascadia Mono", monospace; font-size: 6.4pt; color: #44386b; word-break: break-word; }
+  .pill { display: inline-block; font-size: 5.9pt; font-weight: 700; letter-spacing: .04em; padding: .2mm 1.1mm;
+          border-radius: 999px; white-space: nowrap; }
+  .p-ok { background: #e4f4ea; color: #10603a; border: .6pt solid #9fd3b6; }
+  .p-src { background: #fde9e9; color: #962626; border: .6pt solid #efb6b6; }
+  .p-blk { background: #fff1d6; color: #8a4f00; border: .6pt solid #eec27c; }
+  .p-new { background: #e9eff9; color: #274784; border: .6pt solid #b6c8e6; }
+  .num { color: #8797b8; font-weight: 700; }
+  .box { border: .8pt solid #ccd6e6; border-radius: 1.4mm; padding: 1.5mm 2mm; background: #fbfcfe; }
+  .box h3 { margin: 0 0 1mm; font-size: 7.2pt; letter-spacing: .1em; text-transform: uppercase; color: #274784; }
+  .box p { margin: 0 0 1mm; }
+  .box p:last-child { margin-bottom: 0; }
+  .box .k { font-weight: 700; color: #10254d; }
+  .box ul { margin: 0; padding-left: 3.2mm; }
+  .box li { margin-bottom: .7mm; }
+  .box li:last-child { margin-bottom: 0; }
+  footer { margin-top: 2mm; border-top: .8pt solid #ccd6e6; padding-top: 1mm; font-size: 6.3pt; color: #6b7a99;
+           display: flex; justify-content: space-between; gap: 3mm; }
   @media screen { body { background: #eceff5; padding: 8mm 0; }
     .sheet { background: #fff; box-shadow: 0 1mm 6mm rgba(16,37,77,.18); padding: 6mm; width: 210mm; } }
 </style>
 </head>
 <body>
 <div class="sheet">
-
   <header class="hdr">
     <div>
-      <p class="eyebrow">Backtest engine &middot; gold instance &middot; how it works</p>
-      <h1>Declare &rarr; Acquire &rarr; Anchor &rarr; Measure &rarr; Condition &rarr; Publish &rarr; Reproduce</h1>
-      <p class="sub">Gold is the first asset through the engine: every known driver gets measured against real price, and every claim is reproducible from a hash.</p>
+      <p class="eyebrow">Gold backtest engine &middot; reference sheet</p>
+      <h1>What the engine tests, with what data, and where the results sit</h1>
+      <p class="lede">Gold is the first asset through a standalone engine: it measures every driver of gold's Layer&nbsp;1 call against what gold actually did next. Association only &mdash; no prediction, no formula, no trading result.</p>
     </div>
     <div class="stamp">
       <span>coverage-006 accepted</span>
       <strong>21 Sep 2026</strong>
       <span>19 of 28 drivers measured</span>
+      <span>2023&ndash;2026 &middot; 6,070 anchors</span>
     </div>
   </header>
 
-  <div class="legend">
-    <span><i class="dot" style="background:#4f9d74"></i> in place and running</span>
-    <span><i class="dot" style="background:#e0a63c"></i> where the time goes</span>
-    <span><i class="dot" style="background:#c96a6a"></i> not established</span>
-  </div>
+  <section class="band">
+    <h2>The engine in five moves <span>&mdash; each move is a rule, not a step that can be skipped</span></h2>
+    <div class="flow">
+      <div class="step"><b>1. Declare</b><span>Driver, split, horizon and context are hashed into a registry <i>before</i> any outcome is seen.</span></div>
+      <div class="step"><b>2. Anchor</b><span>The instants to test: weekday 14:00&nbsp;UTC (964) and real releases (5,106).</span></div>
+      <div class="step"><b>3. Measure</b><span>Gold's return at +1h, +4h, +24h and the 5-session close, split by endpoint kind.</span></div>
+      <div class="step"><b>4. Condition</b><span>Per driver state, then driver state &times; prior context, one variable at a time.</span></div>
+      <div class="step"><b>5. Publish &amp; verify</b><span>Immutable run, content hash, then an independent re-run by the coordinator.</span></div>
+    </div>
+  </section>
 
-  <main>
-    <section class="ladder">
-      <div class="stage" style="--c:#4f9d74">
-        <div class="top"><span class="num">1</span><h2>Declare everything before measuring</h2><span class="spacer"></span>
-          <span class="chip done">done &middot; hashed</span></div>
-        <p>Nothing is measured until it is written down: the drivers, the horizons, the prior-context fields, the session/calendar rules and the report schema all live in registries that are hashed <b>before any outcome is computed</b>.</p>
-        <ul class="flow">
-          <li>coverage registry: 28 drivers</li><li>session &amp; horizon policy (rev 4)</li><li>report registry (rev 6)</li><li>factor hypotheses</li>
-        </ul>
+    <p class="lede">These 28 names are the live gold Layer&nbsp;1 inputs: the ten weighted factors <b>F1&ndash;F10</b> of the current algorithm, where <b>F7</b> is its event decomposition. Rows marked <span class="pill p-ok">measured</span> carry real numbers in the accepted report; the rest are the next batches of work.</p>
+    <div class="two-col">
+      <div>
+        <table>
+          <thead><tr><th>#&nbsp;/&nbsp;F</th><th>Driver &mdash; and why it is in the call</th><th>Source</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr><td class="num">F1</td><td><b>Real rates</b> &mdash; <b>us_10y_real_yield</b> <i>(real cost of money, gold's classic anchor)</i>, <b>us_10y_real_yield_d5_bps</b>, <b>us_10y_real_yield_d20_bps</b> <i>(1-week and 1-month direction)</i></td><td>FRED DFII10 + derived</td><td><span class="pill p-ok">3 measured</span></td></tr>
+            <tr><td class="num">F4</td><td><b>Rate expectations</b> &mdash; <b>us_2y_yield</b> <i>(front end)</i>, <b>us_2y_d5_bps</b>, <b>us_2y_d20_bps</b></td><td>FRED DGS2 + derived</td><td><span class="pill p-ok">3 measured</span></td></tr>
+            <tr><td class="num">F5</td><td><b>Gold itself</b> &mdash; <b>gold_price</b> <i>(level, used as regime context)</i>, <b>gold_d1_pct</b>, <b>gold_d5_pct</b>, <b>gold_d20_pct</b> <i>(own momentum; added this batch)</i></td><td>OANDA H1 + derived</td><td><span class="pill p-ok">4 measured</span></td></tr>
+            <tr><td class="num">F6</td><td><b>Risk appetite</b> &mdash; <b>vix_level</b>, <b>vix_d1</b>, <b>vix_d5</b></td><td>FRED VIXCLS + derived</td><td><span class="pill p-ok">3 measured</span></td></tr>
+            <tr><td class="num">F7</td><td><b>Events, identity</b> &mdash; <b>event_type</b> <i>(which release, kept family-scoped)</i>, <b>event_age_hours</b></td><td>event archive + derived</td><td><span class="pill p-ok">2 measured</span></td></tr>
+          </tbody>
+        </table>
       </div>
-      <div class="arrow"><b>&#9660;</b></div>
-
-      <div class="stage" style="--c:#4f9d74">
-        <div class="top"><span class="num">2</span><h2>Pull the raw archives, once</h2><span class="spacer"></span>
-          <span class="chip done">done &middot; immutable</span></div>
-        <p>Three sources: gold price history (hourly and minute), FRED macro series with vintage dates (availability carries a documented 36-hour conservative proxy), and the economic-event calendar archive.</p>
-        <p class="foot">Kept in ignored scratch, losslessly deduplicated. Nothing is overwritten, gap-filled or invented.</p>
+      <div>
+        <table>
+          <thead><tr><th>#&nbsp;/&nbsp;F</th><th>Driver &mdash; and why it is in the call</th><th>Source</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr><td class="num">F7</td><td><b>Events, content</b> &mdash; <b>event_actual</b>, <b>event_consensus</b>, <b>event_previous_as_released</b>, <b>event_surprise</b> <i>(actual vs consensus, by family)</i></td><td>event archive + derived</td><td><span class="pill p-ok">4 measured</span></td></tr>
+            <tr><td class="num">F2</td><td><b>US dollar</b> &mdash; <b>dxy_level</b>, <b>dxy_d1</b>, <b>dxy_d5</b>, <b>dxy_d20</b> <i>(gold is dollar-priced; no ICE DXY series exists locally, and the broad index is not relabelled as DXY)</i></td><td>none</td><td><span class="pill p-src">no source</span></td></tr>
+            <tr><td class="num">F3</td><td><b>Fed stance</b> &mdash; <b>fed_bias</b>; rule now declared from the Fed target-range direction</td><td>rule only</td><td><span class="pill p-new">awaiting data</span></td></tr>
+            <tr><td class="num">F8</td><td><b>Inflation</b> &mdash; <b>inflation_signal</b>; rule now declared on the 5-year breakeven, 20-observation change</td><td>rule only</td><td><span class="pill p-new">awaiting data</span></td></tr>
+            <tr><td class="num">F9<br>F10</td><td><b>News tone and regimes</b> &mdash; <b>risk_headline_context</b> <i>(needs a licensed timestamped corpus)</i>, <b>equities_regime</b>, <b>growth_regime</b></td><td>none</td><td><span class="pill p-src">no source</span></td></tr>
+          </tbody>
+        </table>
+        <p style="margin-top:1.2mm;font-size:6.6pt;color:#4a5878"><b>Why 19 and not 21:</b> fed_bias and inflation_signal now have declared measurement rules (Fed target-range direction; 5-year breakeven 20-observation change), but the archive the accepted report ran on carries neither series, so they produced no values. The batch in flight is acquiring exactly those two series.</p>
       </div>
-      <div class="arrow"><b>&#9660;</b></div>
 
-      <div class="stage" style="--c:#4f9d74">
-        <div class="top"><span class="num">3</span><h2>Build the as-of dataset</h2><span class="spacer"></span>
-          <span class="chip done">done</span></div>
-        <p>Each driver is attached to each anchor using <b>strictly-before</b> cutoffs and a declared staleness ceiling, so a value is present only if it existed when the call would have been made.</p>
-        <ul class="flow"><li>strictly-before cutoff</li><li>staleness ceiling</li><li>missing stays missing</li><li>no revised value early</li></ul>
-      </div>
-      <div class="arrow"><b>&#9660;</b></div>
+    </div>
 
-      <div class="stage" style="--c:#4f9d74">
-        <div class="top"><span class="num">4</span><h2>Anchor the observations</h2><span class="spacer"></span>
-          <span class="chip done">done</span></div>
-        <p>Two cohorts are kept apart: a daily 14:00 UTC anchor (964) and actual event releases (5,106). Each anchor is scored at h1 and h4 (diagnostic) and h24 (primary), plus the five-session close.</p>
-        <ul class="flow">
-          <li>all computed</li><li>exact 24h elapsed</li><li>delayed endpoint</li><li>session close</li><li>4 separate denominators</li>
-        </ul>
-      </div>
-      <div class="arrow"><b>&#9660;</b></div>
-
-      <div class="stage" style="--c:#4f9d74">
-        <div class="top"><span class="num">5</span><h2>Measure every driver</h2><span class="spacer"></span>
-          <span class="chip done">19 of 28 measured</span></div>
-        <p>Per driver, per cohort, per horizon and per endpoint group: positive / negative / unavailable anchor counts, magnitude quartiles, and a year breakdown that sums to its own n.</p>
-        <p class="foot">408 primary-horizon driver-state rows. Warm-up losses (e.g. the 20-session lookback) stay counted as unavailable. Three new drivers were added this batch: prior 1, 5 and 20-session gold returns.</p>
-      </div>
-      <div class="arrow"><b>&#9660;</b></div>
-
-      <div class="stage now" style="--c:#e0a63c">
-        <div class="top"><span class="num">6</span><h2>Condition on prior context</h2><span class="spacer"></span>
-          <span class="chip now">where the time goes</span></div>
-        <p>Every driver state is joined with every declared prior-context state - trend, macro, recent surprises, yields, dollar strength - <b>one variable at a time</b>, each cell with its own n and year breakdown.</p>
-        <ul class="flow"><li>1,192 daily cells</li><li>7,178 event cells</li><li>1,989 at or above min n = 20</li><li>missing context = explicit state</li></ul>
-      </div>
-      <div class="arrow"><b>&#9660;</b></div>
-
-      <div class="stage" style="--c:#4f9d74">
-        <div class="top"><span class="num">7</span><h2>Publish, then prove it reproduces</h2><span class="spacer"></span>
-          <span class="chip done">per batch</span></div>
-        <p>One immutable run directory per batch: the full report, a readable Markdown report, a compact digest and an exhaustive companion. Hashes go in the submission; the coordinator re-runs the batch independently before acceptance.</p>
-        <ul class="flow"><li>report JSON 80 MB</li><li>report MD 186 KB</li><li>digest</li><li>companion tables</li><li>hash + independent rerun</li></ul>
+  <section class="band two-col">
+    <section>
+      <div class="box">
+        <h3>Over what time frames &mdash; and why those</h3>
+        <table>
+          <thead><tr><th>Frame</th><th>Why it is measured</th><th>Anchors</th></tr></thead>
+          <tbody>
+            <tr><td><b>+24h</b><br><span class="path">primary</span></td><td>The product is a 24-hour call, so this is the horizon any rebuilt formula has to earn its keep on.</td><td>964 daily<br>5,106 event</td></tr>
+            <tr><td><b>+1h</b></td><td>Persistence check only: did the first hour hold? Declared diagnostic &mdash; never a formula input.</td><td>same</td></tr>
+            <tr><td><b>+4h</b></td><td>Same question at short-medium range; also a diagnostic, never an input.</td><td>same</td></tr>
+            <tr><td><b>5 sessions</b></td><td>Medium-term reaction, and the horizon the L2L / 0.5&nbsp;L2L question lives on. Ends on a session close, never treated as 120 hours.</td><td>same</td></tr>
+            <tr><td><b>sub-hourly</b></td><td>Declared but impossible with hourly bars: not measured and not inferred from H1.</td><td>none</td></tr>
+          </tbody>
+        </table>
+        <p style="margin-top:1.2mm"><b>And three endpoint kinds, never pooled:</b> exact 24h elapsed (the realised interval equals the offset), delayed endpoint (the endpoint bar arrived late), session close (the 5-session calendar end). For daily +24h that is 766 exact + 198 delayed = 964. Pooling them would let a missing bar look like market behaviour.</p>
       </div>
     </section>
 
-    <aside class="rail">
-      <div class="card here">
-        <h3>Where the batch is now</h3>
-        <ul>
-          <li><span class="k">coverage-006 accepted</span> at <code>4e051ca</code>: 19 of 28 drivers measured; report hash <code>c4da8de5&hellip;</code>, digest rev 4 hash <code>1917b201&hellip;</code>.</li>
-          <li><span class="k">Next, already assigned:</span> <code>gold-source-007</code> &mdash; sources and timing for the remaining 9 drivers, DXY feasibility, exact consumed-date ranges.</li>
-          <li><span class="k">Checks on review:</span> focused runs 15/15, 23/23, 24/24; full suite 402 tests, 398 pass, 4 pre-existing scanner failures.</li>
-        </ul>
+    <section>
+      <div class="box">
+        <h3>How each driver is analysed</h3>
+        <ol style="margin:0;padding-left:3.6mm">
+          <li>Split each driver into states fixed <i>before</i> outcomes: levels &rarr; above/below the driver's own median; changes &rarr; sign; events &rarr; family, field present/missing, surprise sign; age &rarr; buckets; gold returns &rarr; prior-return sign.</li>
+          <li>Per state, cohort, horizon and endpoint kind: n, positive / negative / exact-zero counts, median and quartiles of the realised % return, and a year breakdown (2023&ndash;2026) summing to that state's own n.</li>
+          <li>Then each state &times; each of 8 prior-context fields (5-session trend, 5-session realised volatility, real-yield, 2-year and 10-year changes, broad-dollar change, recent surprise state, hours since release) &mdash; one variable at a time: 1,192 daily + 7,178 event cells.</li>
+          <li>min&nbsp;n&nbsp;=&nbsp;20; anything below is flagged small-sample and is not a finding.</li>
+        </ol>
+        <p style="margin-top:1.2mm"><b>The question is narrow:</b> does this driver's state change what gold does next &mdash; not which weight it deserves, and not whether it predicts. Weights come later, if at all.</p>
       </div>
+    </section>
+  </section>
 
-      <div class="card store">
-        <h3>Where it lives &middot; how to open it</h3>
-        <ul>
-          <li><span class="k">Code + commands</span> <code>backtester/lib/gold_*.js</code> &middot; <code>backtester/scripts/build_gold_*.js</code></li>
-          <li><span class="k">Declarations</span> <code>backtester/registries/gold_*.json</code></li>
-          <li><span class="k">Tests</span> <code>backtester/tests/gold_*.test.js</code></li>
-          <li><span class="k">Latest run</span> (ignored) <code>backtester/tmp/ivr-coverage-006-20260921/</code> &mdash; 80 MB JSON + 186 KB Markdown</li>
-          <li><span class="k">Digest</span> <code>docs/GOLD_VARIABLE_FINDINGS_AND_COVERAGE.md</code> &middot; full tables (ignored) <code>tmp/findings-tables-full-coverage-006-20260921.md</code></li>
-          <li><span class="k">Method + review</span> <code>docs/GOLD_INDIVIDUAL_VARIABLE_REPORT_PROGRESS.md</code> &middot; <code>docs/orchestration/reviews/20260921-gold-coverage-006-r1.md</code></li>
-          <li><span class="k">Rerun a batch</span> <code>node backtester/scripts/build_gold_individual_variable_report.js &lt;fred&gt; &lt;hourly&gt; &lt;events&gt; &lt;new-dir&gt;</code></li>
-        </ul>
+  <section class="band two-col">
+    <section>
+      <div class="box">
+        <h3>Where the data lives, and in what form</h3>
+        <table>
+          <thead><tr><th>Archive</th><th>Format &amp; contents</th><th>Window</th></tr></thead>
+          <tbody>
+            <tr><td><b>Gold prices</b></td><td>JSON candles, bid/mid/ask OHLC + completeness flag; 21,871 hourly bars merged from 15 hashed page files</td><td>2023-01-02 &rarr; 2026-09-11</td></tr>
+            <tr><td><b>US events</b></td><td>JSON releases: name, impact, actual, consensus, previous, revised, period; 5,115 rows (1,130 HIGH, 3,985 MEDIUM) merged from 3 archives</td><td>2022-12-01 &rarr; 2026-09-11</td></tr>
+            <tr><td><b>Macro (FRED)</b></td><td>5 series JSON with vintage dates: DFII10, DGS2, DGS10, VIXCLS, DTWEXBGS; 1,008&ndash;2,146 observations each</td><td>2022-11-01 &rarr; 2026-09-12</td></tr>
+            <tr><td><b>Results</b></td><td>Per batch: 80&nbsp;MB report JSON + 186&nbsp;KB readable Markdown; digest committed to git, exhaustive tables ignored</td><td>coverage-006 run</td></tr>
+          </tbody>
+        </table>
+        <p style="margin-top:1.2mm"><b>How it is stored:</b> plain JSON, one directory per acquisition, every file hashed in a <span class="path">manifest.json</span> beside it and read-only afterwards &mdash; no research database, no warehouse write. Archives live under the canonical checkout at <span class="path">backtester/tmp/</span>: <span class="path">gold-hourly-extended-20260918</span>, <span class="path">gold-calendar-extended-20260918</span>, <span class="path">gold-fred-extended-20260918</span>; results in the gold worktree at <span class="path">backtester/tmp/ivr-coverage-006-20260921/</span>. Macros and events start one to two months before the prices purely as warm-up for the 20-observation lookbacks and the daily grid; the 964 daily anchors are weekdays at 14:00&nbsp;UTC inside the price window.</p>
       </div>
+    </section>
 
-      <div class="card gatebox">
-        <h3>Why each batch takes time</h3>
-        <ul>
-          <li><span class="k">Vintages:</span> prices, FRED series and events are pulled once; FRED availability is only a 36-hour proxy and event consensus vintages are still unauthenticated.</li>
-          <li><span class="k">Scale:</span> 19 drivers &times; 2 cohorts &times; 4 horizons &times; 4 endpoint groups, each with a year breakdown; ~8,400 conditioning cells; an 80 MB report per run.</li>
-          <li><span class="k">Immutability:</span> a new directory per run, and earlier blocks must stay byte-identical &mdash; re-verified, never overwritten.</li>
-          <li><span class="k">Edge cases:</span> session closes, DST, delayed endpoints, simultaneous releases &mdash; each needs a declared rule plus a regression test.</li>
-          <li><span class="k">Review:</span> the coordinator re-runs the batch and compares hashes, so each batch is build + test + run + document + independent review.</li>
-        </ul>
+    <section>
+      <div class="box">
+        <h3>Two terms worth pinning down</h3>
+        <p><span class="k">Anchor</span> = the t&nbsp;=&nbsp;0 of one test. There are two kinds: a weekday 14:00&nbsp;UTC grid slot (the daily cohort, 964 of them) and an actual release timestamp (the event cohort, 5,106). The entry price is the close of the candle that contains the anchor &mdash; and that price only exists once the candle completes an hour later, which is why the report discloses an entry delay. Everything is then measured forward from there, and one anchor feeds every driver, horizon and conditioning cell, so the counts overlap heavily.</p>
+        <p><span class="k">The 36-hour rule</span> = FRED gives a <i>date</i> for each vintage, not the minute the number reached the wire. The engine therefore treats a macro value as available at <i>vintage date + 36&nbsp;hours</i>. Conservative means later than reality, never earlier, so no future information can leak into a measurement. The cost is visible: a macro driver can look up to a day and a half staler than it really was, and every calendar- or vintage-dependent number stays labelled archive-fit exploratory, not verified.</p>
+        <p><span class="k">Scale in one line:</span> 964 daily + 5,106 event anchors, each scored at four horizons and four endpoint kinds in two cohorts &mdash; then repeated for every driver state and every prior-context state.</p>
       </div>
-
-      <div class="card gatebox">
-        <h3>Not established</h3>
-        <ul>
-          <li>Descriptive association only; no driver is formula-eligible.</li>
-          <li>Calendar is archive-inferred; verified continuity is blocked.</li>
-          <li>Prior-return drivers share the archive that prices the outcome &mdash; not independent series.</li>
-          <li>Counts overlap (one anchor feeds many cells); no accuracy, profitability or trading claim.</li>
-        </ul>
-      </div>
-    </aside>
-  </main>
+    </section>
+  </section>
 
   <footer>
-    <span>Print A4 portrait, 100% scale. Everything is read-only research output: no live input, no accuracy or trading claim.</span>
-    <span>Sources: accepted coverage-006 report + digest, registries under <code>backtester/registries/</code>, review <code>20260921-gold-coverage-006-r1.md</code>.</span>
+    <span>Advisory reference, read-only. No prediction, accuracy, timing, profitability or trading claim; no live, warehouse or production change.</span>
+    <span>Sources: accepted coverage-006 report and digest r4, registries under <span class="path">backtester/registries/</span>, review <span class="path">20260921-gold-coverage-006-r1.md</span>, archive manifests under <span class="path">backtester/tmp/*-20260918/</span>.</span>
   </footer>
 
 </div>
