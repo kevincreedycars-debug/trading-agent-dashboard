@@ -70,7 +70,8 @@ Three qualifications the plan must carry, so the stages do not over-promise:
   inference and a declared holdout exist. Swapping the live algorithm needs explicit user authorization.
 
 Printable artifact delivered for this: `docs/strategy/PROGRAM_MAP.html` (one A4 page, print-validated at 261.8 mm on a
-285 mm printable area, single PDF page).
+285 mm printable area, single PDF page), with a companion page for the gold engine instance at
+`docs/strategy/GOLD_ENGINE_MAP.html` (282.9 mm, single PDF page).
 
 ## 1. Objectives as stated by canonical memory
 

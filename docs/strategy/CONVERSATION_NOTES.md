@@ -241,6 +241,33 @@ State saved. Nothing is running on this worker; activity is reported as stopped 
   assigned at all; (c) the Layer 2 role (economic-events adjuster vs opposing-call synthesis vs
   both); (d) a stopping rule for the gold sub-project.
 
+## 2026-09-21 - User: printable map of the gold backtest engine (A4)
+
+- User asked for a second one-page map in the same style, this time for the gold instance of the backtest engine:
+  what it does, what is tested, why it takes time, where the tests are stored and how to access them.
+- Delivered `docs/strategy/GOLD_ENGINE_MAP.html` - one A4, seven-step waterfall (declare > acquire > as-of dataset
+  > anchor > measure > condition > publish/reproduce) with a rail for "where the batch is now", "where it lives /
+  how to open it", "why each batch takes time" and "not established". Print-validated: 198.0 x 282.9 mm, one PDF
+  page, columns balanced at 242.4 / 244.6 mm (`tmp/check-gold-engine-map.js`, preview in ignored `tmp/`).
+- State re-verified while building it - the engine has moved since the previous turn:
+  **coverage-006 is accepted** (worker clean at `4e051ca`, review `reviews/20260921-gold-coverage-006-r1.md`):
+  19 of 28 drivers measured (was 16) after the three prior-return transformations were implemented and measured;
+  report content hash `c4da8de535b028449d338b727271794b8ea632adacae86bbba5df6c7a7cc7369`; digest revision 4
+  (`docs/GOLD_VARIABLE_FINDINGS_AND_COVERAGE.md`, 281 lines, sha256 `1917b201f4af2ef96fbc267a81784b0a766f0ee21b00f8a62f14fa0a6d85aa12`)
+  plus ignored companion `tmp/findings-tables-full-coverage-006-20260921.md`; coordinator reran the batch and
+  reproduced the hashes; focused runs 15/15, 23/23, 24/24; full suite 402 tests, 398 pass, four pre-existing
+  secret-scanner failures. Original 16 variable blocks and baselines are byte-identical to the accepted 005
+  report; conditioning grew from 19,170 to 20,709 cells; digest-reported conditioning cells are 1,192 daily
+  (413 at or above min_n) and 7,178 event (1,576 at or above).
+- New canonical position: `CURRENT_TASK.md` now names assignment **gold-source-007** (sources and timing for the
+  remaining drivers, DXY feasibility, exact consumed-data ranges) with a standing instruction to advance research
+  without repeated approval requests; `ACTIVE_MILESTONE.md` has moved to "automatic mailbox communication"
+  (Cline worker bridge built and installed, live connection pending). My earlier advisory review 1 sequencing and
+  the "Phase 1 awaiting user decision" line in it are therefore superseded - flagged for the next material update.
+- Adviser posture unchanged and restated on the map: descriptive association only, no driver formula-eligible,
+  archive-inferred calendar, prior-return drivers share the archive that prices the outcome, counts overlap.
+- No canonical file, other worker or live system touched.
+
 ## 2026-09-21 - User: printable programme map (A4) + full programme statement
 
 - User gave the whole programme in one message and asked for a single A4 printable waterfall map of it, confirming
