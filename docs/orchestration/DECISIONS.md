@@ -57,3 +57,9 @@ Submission 20260920-gold-policy-transition-001 was independently reproduced but 
 ## Project aim
 
 Project aim (user relayed and confirmed 2026-09-20): every tracked asset provides a 24-hour directional call. Layer 2 is intended to issue a higher-conviction cross-pair call when two independent Layer 1 calls move in opposing directions. The dashboard is the decision aid for acting on those calls. This records intended product behaviour; higher conviction is not established predictive accuracy or profitability. Research/backtesting stays downstream-only.
+
+## 2026-09-21: continue Gold research under orchestrator
+
+2026-09-21 user authorized orchestrator to advance Gold research toward better validated Layer 1 calls. Published gold-coverage-006 from accepted ffa380c: prior 1/5/20-session Gold returns, expanded individual-variable/context report, regression tests and concrete remaining-coverage/qualification plan. Earlier Phase 1 approval hold superseded. Awaiting worker pickup; publication does not prove activity. Further bounded research assignments follow coordinator review under standing user direction; no production or accuracy claim.
+
+Sequence remains coverage and individual relationships -> prior-context analysis -> systematic combinations with all attempts and chronological stability -> frozen candidate and genuinely untouched qualification. Reused exploratory/validation dates cannot become a fresh final test. Higher Layer 1 accuracy is an objective to test, not a promised outcome.

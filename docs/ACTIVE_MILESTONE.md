@@ -1,11 +1,7 @@
 # Active milestone
 
-Current feature: central project coordination.
-
-Current milestone: decide the next bounded Gold coverage assignment.
-
-Status: findings digest revision 3 accepted after independent verification. Gold holds; no new assignment published.
-
-Next immediate action: obtain user decision on Phase 1 prior Gold return transformations from the existing hourly archive.
-
+Current feature: central research coordination.
+Current milestone: Gold prior-return coverage and expanded variable analysis.
+Status: gold-coverage-006 published; awaiting pickup, not reported running.
+Next immediate action: review the gold-coverage-006 submission when delivered.
 No integration, deployment or trading qualification. Updated 2026-09-21.
