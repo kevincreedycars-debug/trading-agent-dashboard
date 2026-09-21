@@ -2,10 +2,10 @@
 
 Current feature: central project coordination.
 
-Current milestone: review corrected Gold findings digest.
+Current milestone: corrected Gold findings digest.
 
-Status: saved for the night at user request. Corrected diagnostic report accepted for exploratory use; revised findings digest 20260920-gold-findings-summary-005-r2 pending review.
+Status: revision 2 reviewed; changes requested for single-year states incorrectly counted as between-year agreement. Underlying measurement report remains accepted for exploratory use.
 
-Next immediate action: review revised digest against the accepted report. Obtain user confirmation before assigning three missing Gold-return transformations.
+Next immediate action: review the corrected digest when submitted under gold-reaction-005.
 
-No integration, deployment or trading qualification. Updated 2026-09-20.
+Phase 1 coverage remains proposed, awaiting user confirmation before assignment. No integration, deployment or trading qualification. Updated 2026-09-21.

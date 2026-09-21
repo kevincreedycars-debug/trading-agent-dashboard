@@ -36,6 +36,16 @@ or reliable predictive influence. Programs perform bulk processing; AI writes,
 debugs and interprets compact reports. Layer 1 agents remain independent and
 backtesting downstream-only.
 
+Consistency rule (2026-09-21 review of 20260920-gold-findings-summary-005-r2): a
+consistency claim requires at least two supported years. States with zero or one
+supported year are not assessable for between-year agreement, and pooled-sign
+agreement is reported separately from between-year agreement. Under that rule the
+between-year same/differ/not-assessable totals are pooled 43/27/320, exact
+41/21/305 and delayed 6/50/231 (unavailable states included). Pooled-sign totals
+47/29/314, 48/21/298 and 6/50/231 are unchanged. This applies to later
+documentation, companion tables, conditioning cells and any variable added by the
+coverage plan.
+
 Known separate defect: accepted coverage checkpoint reports 356/360 full tests;
 failures are confined to pre-existing secret-scanner console-width truncation.
 This historical result is not a test result for new changes.
