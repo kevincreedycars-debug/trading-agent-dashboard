@@ -30,6 +30,48 @@ Implications recorded for later sequencing:
   run in sequence, is unresolved.
 
 
+## 0b. Programme stages as stated by the user (2026-09-21)
+
+The user described the whole programme this session, with the backtest engine as the current focus. Recorded verbatim in
+substance, then reconciled against canonical memory:
+
+1. **Northstar:** a high-conviction 24-hour directional call based on tested macroeconomic inputs.
+2. **Layer 1** builds that call: researched inputs are pieced together by a weighted call algorithm, written in
+   JavaScript inside n8n, which pulls macro variables each time a call is requested and emits the day's call.
+3. **Layer 2** pairs assets whose Layer 1 calls point in opposite directions and gives the pair a strength rating.
+4. **Backtest engine (the current build):** a standalone system every future asset can be fed into. Gold is first:
+   all known drivers of gold's Layer 1 call are ingested, each is reviewed every day it had a chance to influence the
+   market over 24h then 5 days, then variables are combined with each other until clear patterns show which macro
+   variables truly drive price. Layer 1 is then **rebuilt on the measured weightings** and tested against the
+   baseline algorithm over 2+ years of price data: directional alignment, L2L movement and 0.5 L2L movement.
+5. **Re-qualify and swap in:** once the rebuilt Layer 1 is confirmed, it replaces the live Layer 1 on the dashboard.
+6. **Roll out:** the same engine is then run on every traded asset.
+7. **Automated bot:** only after the engine and circuit are confirmed, daily 0.5 L2L trades across assets where
+   conviction is high - consistently over 60% accuracy in the direction, L2L or 0.5 L2L.
+
+Confirmed consistent with canonical memory: the n8n-built weighted Layer 1, eight live assets, Layer 2 pairing
+already in production, gold as the first asset through the engine, the "descriptive first, then formula, then
+untouched qualification" order (`BACKTESTING_REVIEW_PLAN.md`,
+`GOLD_RESEARCH_DELIVERY_CONTRACT.md`), the engine staying downstream-only, and asset-by-asset extension.
+
+Three qualifications the plan must carry, so the stages do not over-promise:
+
+- **"Confirmed accurate and profitable" is two gates, not one.** Directional evidence and executable evidence are
+  separate; accepted gold work is explicitly `executable_trade_validated: false` and still lacks bid/ask, spread,
+  fills and adverse-boundary assumptions. Stage 5 should be gated on directional qualification, stage 7 on the
+  executable gate.
+- **"Over 60%" needs more than a point estimate.** The delivery contract requires an untouched chronological test, a
+  predeclared denominator, adequate effective sample size, dependence-aware uncertainty and a predeclared lower
+  confidence bound above 60% plus a baseline beat. Both ex-flat and all-evaluable-call denominators must be shown.
+  60% is a target, not a guaranteed deliverable.
+- **Coverage is not evidence, and replacing live Layer 1 is a production change.** The accepted digest shows
+  near-balanced directions, small positive medians, conditioning mostly below `min_n` and only 43 of 390 pooled
+  states assessable for between-year agreement; the rebuilt weights only mean something once dependence-aware
+  inference and a declared holdout exist. Swapping the live algorithm needs explicit user authorization.
+
+Printable artifact delivered for this: `docs/strategy/PROGRAM_MAP.html` (one A4 page, print-validated at 261.8 mm on a
+285 mm printable area, single PDF page).
+
 ## 1. Objectives as stated by canonical memory
 
 - Product: a multi-asset trading dashboard driven by n8n — collectors → independent Layer 1 raw

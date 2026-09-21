@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Programme map - Northstar to automation</title>
+<style>
+  @page { size: A4 portrait; margin: 6mm; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font: 9.2pt/1.3 "Segoe UI", system-ui, -apple-system, sans-serif;
+    color: #16203a; background: #fff;
+    -webkit-print-color-adjust: exact; print-color-adjust: exact;
+  }
+  .sheet { width: 198mm; padding: 0; margin: 0 auto; }
+  .hdr { display: flex; align-items: flex-end; justify-content: space-between;
+         border-bottom: 2.2pt solid #1f3a6e; padding-bottom: 1.8mm; margin-bottom: 2.8mm; }
+  .eyebrow { margin: 0; font-size: 7pt; letter-spacing: .16em; text-transform: uppercase; color: #5b6b8c; }
+  h1 { margin: .7mm 0 1mm; font-size: 13pt; line-height: 1.15; letter-spacing: -.01em; color: #10254d; }
+  .sub { margin: 0; font-size: 9pt; color: #38476b; }
+  .stamp { text-align: right; font-size: 7pt; color: #5b6b8c; letter-spacing: .04em; line-height: 1.5; white-space: nowrap; }
+  .stamp strong { display: block; font-size: 10.4pt; color: #10254d; letter-spacing: 0; }
+
+  main { display: grid; grid-template-columns: 1fr 62mm; gap: 4.4mm; align-items: start; }
+
+  .legend { display: flex; gap: 2.4mm; flex-wrap: wrap; margin: 0 0 2.4mm; font-size: 7pt; color: #5b6b8c; }
+  .legend span { display: inline-flex; align-items: center; gap: 1mm; }
+  .dot { width: 2.4mm; height: 2.4mm; border-radius: 50%; display: inline-block; }
+
+  .ladder { display: flex; flex-direction: column; }
+  .stage { border: .8pt solid #ccd6e6; border-left: 2.8pt solid var(--c, #8797b8);
+           border-radius: 1.8mm; padding: 1.9mm 2.6mm; background: #fbfcfe; }
+  .stage.now { background: #fffaf0; border-color: #eec27c; border-left-width: 3.4pt; }
+  .stage .top { display: flex; align-items: baseline; gap: 1.8mm; }
+  .num { font-size: 8pt; font-weight: 700; color: var(--c, #8797b8); letter-spacing: .06em; }
+  .stage h2 { margin: 0; font-size: 10pt; line-height: 1.16; color: #10254d; letter-spacing: -.01em; }
+  .spacer { flex: 1; }
+  .chip { font-size: 6.8pt; font-weight: 700; letter-spacing: .07em; text-transform: uppercase;
+          padding: .45mm 1.6mm; border-radius: 999px; white-space: nowrap; }
+  .chip.live { background: #e4f4ea; color: #10603a; border: .7pt solid #9fd3b6; }
+  .chip.now  { background: #ffeccb; color: #8a4f00; border: .8pt solid #e6b466; }
+  .chip.next { background: #e9eff9; color: #274784; border: .7pt solid #b6c8e6; }
+  .chip.gate { background: #fde9e9; color: #962626; border: .7pt solid #efb6b6; }
+  .stage p { margin: 1.1mm 0 0; }
+  .stage .why { color: #5b6b8c; font-size: 8pt; }
+  .flow { display: flex; flex-wrap: wrap; gap: .9mm 1.6mm; margin: 1.3mm 0 0; padding: 0; list-style: none; }
+  .flow li { font-size: 8pt; background: #eef3fb; border: .7pt solid #cdd9ec; border-radius: 1.3mm;
+             padding: .6mm 1.5mm; }
+  .flow li b { color: #274784; }
+  .foot { margin-top: 1.3mm; font-size: 7.9pt; color: #38476b; }
+  .arrow { text-align: center; color: #93a3c2; font-size: 7pt; line-height: 1; padding: 1mm 0; letter-spacing: .3em; }
+  .arrow b { letter-spacing: 0; }
+
+  .rail { display: flex; flex-direction: column; gap: 2.2mm; }
+  .card { border: .8pt solid #ccd6e6; border-radius: 1.8mm; padding: 1.9mm 2.5mm; background: #fbfcfe; }
+  .card h3 { margin: 0 0 1.1mm; font-size: 7.3pt; letter-spacing: .1em; text-transform: uppercase; color: #274784; }
+  .card.here { border-color: #eec27c; background: #fffaf0; }
+  .card.here h3 { color: #8a4f00; }
+  .card ul { margin: 0; padding: 0; list-style: none; }
+  .card li { font-size: 7.5pt; margin-bottom: .9mm; padding-left: 3.3mm; position: relative; }
+  .card li:last-child { margin-bottom: 0; }
+  .card li::before { content: ""; position: absolute; left: 0; top: 1.2mm; width: 1.8mm; height: 1.8mm;
+                     border-radius: 50%; background: #8797b8; }
+  .card.here li::before { background: #e0a63c; }
+  .card.gatebox li::before { background: #c96a6a; }
+  .card.queue li::before { background: #4f9d74; }
+  .card .k { font-weight: 700; color: #10254d; }
+  footer { margin-top: 2.8mm; border-top: .8pt solid #ccd6e6; padding-top: 1.3mm;
+           font-size: 6.9pt; color: #5b6b8c; display: flex; justify-content: space-between; gap: 3mm; }
+
+  @media screen { body { background: #eceff5; padding: 8mm 0; }
+    .sheet { background: #fff; box-shadow: 0 1mm 6mm rgba(16,37,77,.18); padding: 6mm; width: 210mm; } }
+</style>
+</head>
+<body>
+<div class="sheet">
+
+  <header class="hdr">
+    <div>
+      <p class="eyebrow">Central Orchestrator &middot; programme map</p>
+      <h1>Northstar &rarr; Layer 1 &rarr; Layer 2 &rarr; Engine &rarr; Rebuild &rarr; All assets &rarr; Bot</h1>
+      <p class="sub">One 24-hour directional call, built from macro inputs that were actually tested &mdash; then traded only where that test holds.</p>
+    </div>
+    <div class="stamp">
+      <span>adviser snapshot</span>
+      <strong>2026-09-21</strong>
+      <span>strategy-advisory-001</span>
+    </div>
+  </header>
+
+  <div class="legend">
+    <span><i class="dot" style="background:#4f9d74"></i> live today</span>
+    <span><i class="dot" style="background:#e0a63c"></i> being built now</span>
+    <span><i class="dot" style="background:#6f86b8"></i> not started</span>
+    <span><i class="dot" style="background:#c96a6a"></i> gate to pass first</span>
+  </div>
+
+  <main>
+    <section class="ladder">
+      <div class="stage" style="--c:#7a5ea8">
+        <div class="top"><span class="num">0</span><h2>Northstar</h2><span class="spacer"></span>
+          <span class="chip next">the target</span></div>
+        <p>A high-conviction 24-hour directional call, on every asset we trade, built from macro inputs whose influence was <b>measured rather than assumed</b>.</p>
+        <p class="why">Every step below is judged by one question: does it move this?</p>
+      </div>
+      <div class="arrow"><b>&#9660;</b></div>
+
+      <div class="stage" style="--c:#4f9d74">
+        <div class="top"><span class="num">1</span><h2>Live Layer 1 &mdash; the calls</h2><span class="spacer"></span>
+          <span class="chip live">live &middot; 8 assets</span></div>
+        <p>Collectors pull each asset's macro variables; a JavaScript weighted algorithm per asset runs in n8n and publishes the day's 24-hour call.</p>
+        <ul class="flow">
+          <li>collectors</li><li>macro variables</li><li>per-asset weighted algorithm <b>(n8n)</b></li><li>24-hour call</li>
+        </ul>
+        <p class="foot">Today USD, EUR, GOLD, SILVER, NQ, BTC, WTI and GBP all publish a call; the weights are still the original <i>&ldquo;what it should be&rdquo;</i> assumptions.</p>
+      </div>
+      <div class="arrow"><b>&#9660;</b></div>
+
+      <div class="stage" style="--c:#4f9d74">
+        <div class="top"><span class="num">2</span><h2>Live Layer 2 &mdash; the pairing</h2><span class="spacer"></span>
+          <span class="chip live">live &middot; pairing</span></div>
+        <p>Layer 1 calls that point in <b>opposite</b> directions are paired, then given a strength rating on the pair's direction.</p>
+        <p class="foot">Today it refuses a trade when the two calls agree or conviction is low &mdash; the dashboard is the decision aid for what follows.</p>
+      </div>
+      <div class="arrow"><b>&#9660;</b></div>
+
+      <div class="stage now" style="--c:#e0a63c">
+        <div class="top"><span class="num">3</span><h2>Backtest engine &mdash; building now</h2><span class="spacer"></span>
+          <span class="chip now">in progress &middot; gold first</span></div>
+        <p>One standalone engine, asset-agnostic, fed asset by asset. <b>Gold is the first asset through it.</b></p>
+        <ul class="flow">
+          <li><b>a</b> every known driver ingested &middot; gold: 28 declared, 16 measured</li>
+          <li><b>b</b> each driver scored on its influence over 24h, then 5 days</li>
+          <li><b>c</b> drivers tested against each other &rarr; which ones really move price</li>
+          <li><b>d</b> Layer 1 weights rebuilt from measured influence</li>
+          <li><b>e</b> new algorithm vs current baseline over 2+ years &rarr; direction, L2L, 0.5 L2L</li>
+        </ul>
+        <p class="foot">Build it once, reuse it for every asset. It stays downstream: it never feeds the live inputs.</p>
+      </div>
+      <div class="arrow"><b>&#9660;</b></div>
+
+      <div class="stage" style="--c:#c96a6a">
+        <div class="top"><span class="num">4</span><h2>Re-qualify, then swap in</h2><span class="spacer"></span>
+          <span class="chip gate">gate</span></div>
+        <p>The rebuilt formula is frozen, then tested once on untouched data. It replaces the live Layer 1 only after it beats the baseline and clears the accuracy bar.</p>
+      </div>
+      <div class="arrow"><b>&#9660;</b></div>
+
+      <div class="stage" style="--c:#6f86b8">
+        <div class="top"><span class="num">5</span><h2>Roll out to every traded asset</h2><span class="spacer"></span>
+          <span class="chip next">not started</span></div>
+        <p>The same engine runs on each asset in turn, each with its own declared data contract, session calendar and coverage registry.</p>
+      </div>
+      <div class="arrow"><b>&#9660;</b></div>
+
+      <div class="stage" style="--c:#6f86b8">
+        <div class="top"><span class="num">6</span><h2>Automated trading bot</h2><span class="spacer"></span>
+          <span class="chip next">not started</span></div>
+        <p>Daily 0.5&nbsp;L2L trades, placed only on assets whose call for that day is <b>high conviction</b> &mdash; consistently above 60% directionally, confirmed on L2L and 0.5&nbsp;L2L.</p>
+      </div>
+    </section>
+
+    <aside class="rail">
+      <div class="card here">
+        <h3>You are here &middot; stage 3 &middot; 21 Sep</h3>
+        <ul>
+          <li><span class="k">Engine:</span> mid-build on gold. 16 of 28 drivers measured; findings digest accepted on 21 Sep.</li>
+          <li><span class="k">Waiting on you:</span> Phase 1 &mdash; 3 gold-return drivers (prior 1, 5 and 20 sessions) built from data already on disk.</li>
+          <li><span class="k">Live path:</span> 8 agents publishing daily calls; Layer 2 pairing works and correctly refuses aligned calls.</li>
+          <li><span class="k">Open on live:</span> GBP missing from the master status list, stale input-health artifact, and GBP / Silver / WTI / EUR-pairs never reconciled.</li>
+        </ul>
+      </div>
+
+      <div class="card gatebox">
+        <h3>Gates that make it real</h3>
+        <ul>
+          <li>As-of only: nothing may use information unavailable when the call was made.</li>
+          <li>Descriptive first, predictive later. Overlapping days are not independent trials.</li>
+          <li>Freeze the formula, then test it once on untouched data.</li>
+          <li>Above 60% needs a predeclared lower confidence bound and a baseline beat &mdash; a point estimate is not enough.</li>
+          <li>Profit claims need executable evidence: bid/ask, spread, fills, stop ordering.</li>
+          <li>Each new asset needs its own declared contract before it enters the engine.</li>
+        </ul>
+      </div>
+
+      <div class="card gatebox">
+        <h3>Not true yet</h3>
+        <ul>
+          <li>No asset has a qualified 60%+ call.</li>
+          <li>No executable-trade validation exists.</li>
+          <li>60% is a target, not a guarantee.</li>
+          <li>The bot cannot stand on accuracy alone.</li>
+          <li>More coverage is not more evidence.</li>
+        </ul>
+      </div>
+
+      <div class="card queue">
+        <h3>Decision queue</h3>
+        <ul>
+          <li><span class="k">Phase 1</span> &mdash; the 3 gold-return drivers: go or hold.</li>
+          <li>How a <span class="k">flat / neutral</span> day is defined for the call.</li>
+          <li>Whether <span class="k">delayed endpoints</span> count as eligible outcomes.</li>
+          <li><span class="k">Dollar index:</span> license a real DXY, or re-declare the broad index under a new name.</li>
+          <li><span class="k">Calendar:</span> keep archive-inferred, or chase provider evidence.</li>
+          <li><span class="k">Live hygiene:</span> GBP status list, input-health refresh, stale exports.</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3>How to read this</h3>
+        <ul>
+          <li>Left column is the <span class="k">build order</span>; arrows are dependencies, not a schedule. Right column is what must be <span class="k">true</span> before a stage counts as done.</li>
+        </ul>
+      </div>
+    </aside>
+  </main>
+
+  <footer>
+    <span>Print A4 portrait, 100% scale, margins 6&nbsp;mm. Left column = build order; right column = the gates that make each step real.</span>
+    <span>Sources: BACKTESTING_REVIEW_PLAN &middot; GOLD_RESEARCH_DELIVERY_CONTRACT &middot; CURRENT_TASK &middot; accepted gold digest r3.</span>
+  </footer>
+
+</div>
+</body>
+</html>

@@ -241,6 +241,33 @@ State saved. Nothing is running on this worker; activity is reported as stopped 
   assigned at all; (c) the Layer 2 role (economic-events adjuster vs opposing-call synthesis vs
   both); (d) a stopping rule for the gold sub-project.
 
+## 2026-09-21 - User: printable programme map (A4) + full programme statement
+
+- User gave the whole programme in one message and asked for a single A4 printable waterfall map of it, confirming
+  it makes sense. Recorded in full in `docs/strategy/STRATEGY.md` section 0b; the map is
+  `docs/strategy/PROGRAM_MAP.html`.
+- Programme as stated: Northstar (high-conviction 24h call on tested macro inputs) -> Layer 1 weighted algorithms
+  built in n8n from researched inputs -> Layer 2 pairs opposing calls with a strength rating -> **backtest engine
+  built now, standalone and asset-agnostic, gold first** (every known gold driver ingested; each reviewed daily for
+  its 24h then 5-day influence; variables combined until clear patterns show what truly drives price; Layer 1
+  rebuilt on measured weights; new algorithm vs baseline over 2+ years on direction, L2L and 0.5 L2L) -> re-qualify
+  and swap into the live dashboard -> run the engine on all traded assets -> automated bot placing daily 0.5 L2L
+  trades only where same-day conviction is consistently above 60%.
+- Adviser confirmation given, with three qualifications: (1) "accurate and profitable" is two gates - directional
+  evidence and executable evidence (bid/ask, spread, fills, adverse boundary); accepted gold work is
+  `executable_trade_validated: false`. (2) Above 60% needs an untouched test, a predeclared denominator,
+  dependence-aware uncertainty and a predeclared lower confidence bound above 60% plus a baseline beat; 60% is a
+  target, not a guarantee. (3) Coverage is not evidence, and replacing live Layer 1 is a production change needing
+  explicit authorization.
+- Map build: one self-contained HTML page in `docs/strategy/`, print CSS `@page A4 portrait, 6 mm margin`, seven
+  numbered stages with dependency arrows, amber "you are here" on stage 3, and a right-hand rail (you are here,
+  gates, not-true-yet, decision queue, how to read it).
+- Validation, run from ignored `tmp/check-program-map.js` with Playwright from the canonical `node_modules`:
+  rendered at A4 width, print media emulated - sheet 198.0 x 261.8 mm against a 285 mm printable height, one PDF
+  page, 7 stages, 5 rail cards, 9 flow chips, both columns balanced (222.7 mm vs 226.1 mm). Preview PNG and PDF
+  stay in ignored `tmp/`. Earlier iteration measured 311.7 mm (two pages) and was trimmed before delivery.
+- No canonical file, other worker or live system touched; the map is advisory documentation only.
+
 ## 2026-09-21 - User challenge: "we are building out the backtesting engine through gold, no? Has this objective got lost?"
 
 - The user is substantially right. `docs/BACKTESTING_REVIEW_PLAN.md` (baseline 2026-09-07) does
