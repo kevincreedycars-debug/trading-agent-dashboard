@@ -514,3 +514,16 @@ work is a trading result, and coverage growth is not evidence growth.
 Open questions for the user from this turn: (1) authorize Phase 1 as recommended, hold gold, or
 gate-first; (2) authorize the live-path hygiene batch (and if so, which asset worker reconciles
 first).
+
+## 2026-09-22 - Session close: status check only, no changes
+
+- User asked the adviser to recall recent memory/work and compare the adviser model to DeepSeek;
+  no implementation, canonical edit, credential use or production action was requested or taken.
+- Adviser confirmed no persistent memory existed yet for this project (fresh memory store) and
+  read the state back from this file instead: coverage-008 changes-requested status, the 21/28
+  gold coverage count, the live-path hygiene gaps, and the three carried-forward options (A/B/C)
+  and open decisions (Layer 2 role, gold stopping rule, hygiene batch authorization) all still
+  stand unchanged from the 2026-09-21 close.
+- Adviser has now written its own persistent memory of this project state for future sessions
+  (separate from this file, which remains the canonical dated record).
+- Nothing new to carry forward beyond what the 2026-09-21 close already listed as first tasks.
