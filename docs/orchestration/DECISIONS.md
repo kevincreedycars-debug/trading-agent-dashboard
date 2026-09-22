@@ -1,5 +1,17 @@
 # Central decisions
 
+## 2026-09-22: Gold reporting-009 revision 1 requires safety corrections
+
+The clean `360f48d` implementation reproduces the accepted numerical digest and
+byte-identical exhaustive companion, and coordinator focused tests pass. It is not
+accepted because sentence-wide negation can mask a forbidden fresh-data claim,
+digest and companion paths can alias and silently replace the digest, and overwrite
+is exposed despite the new-output-only assignment. The combination protocol must
+also specify, before outcomes, how a candidate universe larger than 5,000 is fully
+bounded or selected without sort-order-prefix bias and must distinguish the pooled
+summary from separate endpoint strata. A hash-bound narrow revision is requested;
+no next research execution assignment is published yet.
+
 2026-09-22 RESUMED: user authorized building and communication. Coverage-008 revision 2 at de775b5 accepted after independent byte-identical digest/companion reproduction and unchanged report hash. Published gold-reporting-009 for a durable findings renderer, regression checks and next-stage combination protocol proposal; no search or new measurements yet. Restore background coordinator after interactive edits; worker pickup must be confirmed from actual activity. Existing source/calendar/timing limitations and all consumed-period exclusions remain. No integration or production change.
 
 ## 2026-09-21: Gold coverage-008 revision 1 requires one provenance correction
