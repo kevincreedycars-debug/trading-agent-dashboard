@@ -1,5 +1,7 @@
 # 2026-09-20 - Gold coverage registry accepted at checkpoint review
 
+2026-09-22 mailbox repair: installed local bridge 0.2.0. Gold's registered trusted workspace now auto-connects; manual connections persist across reloads, explicit Disconnect overrides auto-connect, and connection health is recorded under ignored .local/orchestration/connections. Fourteen focused bridge/mailbox tests passed, including reconnect, workspace/trust boundaries and persistent disconnect. Live activation/pickup remains pending: the already-open Gold window must load the installed update via Developer: Reload Window and retain its existing Cline task. No new delivery or Gold activity was observed during installation. Cline has no active-task query and a send return remains unconfirmed; never infer pickup from it. Research assignment reporting-009 and its latest corrections are unchanged.
+
 2026-09-22 RESUMED: user authorized building and communication. Coverage-008 revision 2 at de775b5 accepted after independent byte-identical digest/companion reproduction and unchanged report hash. Published gold-reporting-009 for a durable findings renderer, regression checks and next-stage combination protocol proposal; no search or new measurements yet. Restore background coordinator after interactive edits; worker pickup must be confirmed from actual activity. Existing source/calendar/timing limitations and all consumed-period exclusions remain. No integration or production change.
 
 2026-09-21 source-007 revision 2 accepted at 3b10d73 after independent

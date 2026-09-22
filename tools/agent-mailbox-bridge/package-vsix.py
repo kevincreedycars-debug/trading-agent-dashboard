@@ -13,6 +13,7 @@ xml = '''<?xml version="1.0" encoding="utf-8"?>
 <Metadata><Identity Language="en-US" Id="trading-agent-mailbox" Version="0.1.0" Publisher="trading-local"/><DisplayName>Trading Agent Mailbox</DisplayName><Description xml:space="preserve">Local Cline mailbox wake bridge</Description><Properties><Property Id="Microsoft.VisualStudio.Code.Engine" Value="^1.85.0"/></Properties></Metadata>
 <Installation><InstallationTarget Id="Microsoft.VisualStudio.Code"/></Installation><Dependencies/>
 <Assets><Asset Type="Microsoft.VisualStudio.Code.Manifest" Path="extension/package.json" Addressable="true"/></Assets></PackageManifest>'''
+xml = xml.replace('Version="0.1.0"', 'Version="' + manifest['version'] + '"')
 with zipfile.ZipFile(target, 'w', zipfile.ZIP_DEFLATED) as z:
     z.writestr('extension.vsixmanifest', xml)
     z.writestr('[Content_Types].xml', '<?xml version="1.0"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="json" ContentType="application/json"/><Default Extension="js" ContentType="application/javascript"/><Default Extension="md" ContentType="text/markdown"/><Default Extension="vsixmanifest" ContentType="text/xml"/></Types>')

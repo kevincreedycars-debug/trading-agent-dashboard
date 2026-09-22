@@ -5,11 +5,19 @@ installed Cline extension's exported `sendMessage` function. Both installed
 Cline 4.1.19 bundles expose this interface. No extension is patched and no
 keystrokes, clipboard insertion or automatic approval clicks are used.
 
-In the registered worker window, keep that worker's Cline conversation open,
-then run **Mailbox: Connect This Cline Worker** once from the Command Palette.
-Binding expires on reload. Disconnect before switching Cline tasks: this Cline
-API addresses the currently open task and exposes no task-ID selector or receipt.
-Opening this extension does not create or replace tasks or enable auto-approval.
+Version 0.2.0 restores a saved connection on reload in the same registered,
+trusted worker workspace. Gold is explicitly enabled through `mailbox_auto_connect`
+in the central register under the user's September 22 repair instruction. Other
+workers require **Mailbox: Connect This Cline Worker** once. Explicit Disconnect
+persists and overrides automatic connection. Keep the existing worker Cline task
+open and disconnect before switching tasks: Cline exposes no task-ID selector or
+active-task query. The bridge never creates/replaces tasks or clicks approvals.
+
+Connection health is written to `.local/orchestration/connections/WORKER.json`
+every active polling cycle. A stale timestamp does not establish a live connection.
+A send return is still unconfirmed: this Cline API even returns without an error
+when no task is open. Only actual worker activity establishes pickup. Ambiguous
+sends remain deduplicated and are never automatically retried.
 
 New current-assignment replies and published assignments trigger a scoped
 mailbox prompt. Pending review and a reported working state suppress worker

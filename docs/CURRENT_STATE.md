@@ -1,5 +1,7 @@
 # Current state
 
+2026-09-22 mailbox repair: installed local bridge 0.2.0. Gold's registered trusted workspace now auto-connects; manual connections persist across reloads, explicit Disconnect overrides auto-connect, and connection health is recorded under ignored .local/orchestration/connections. Fourteen focused bridge/mailbox tests passed, including reconnect, workspace/trust boundaries and persistent disconnect. Live activation/pickup remains pending: the already-open Gold window must load the installed update via Developer: Reload Window and retain its existing Cline task. No new delivery or Gold activity was observed during installation. Cline has no active-task query and a send return remains unconfirmed; never infer pickup from it. Research assignment reporting-009 and its latest corrections are unchanged.
+
 2026-09-22 reporting-009 revision 2 reviewed at clean worker `abcc83e`; path
 aliasing and overwrite safety are corrected, focused coordinator checks pass
 11/11 and 26/26, and the companion remains byte-identical. Acceptance is withheld:
