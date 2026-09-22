@@ -1,8 +1,9 @@
 # Active milestone
 
-Current milestone: first frozen Gold exploratory combination run.
-Status: registry-010 r3 accepted; run-011 published awaiting pickup.
-Next immediate action: confirm Gold picks up run-011 through the bridge.
-Automatic coordinator remains subject to six reviews per UTC day. No production
-changes, holdout, ranking, winner selection or accuracy qualification.
-Updated 2026-09-22.
+Current milestone: review the first frozen Gold exploratory combination run.
+Status: saved for tonight; Gold reports finished and paused, run-011 r1 pending review.
+Next immediate action: check inboxes and review 20260922-gold-combination-run-011-r1
+at worker HEAD 27fa8e9, including pre-run manifests, preserved failed preparations,
+row reconciliation and complete 2,548-candidate ledger. Results are not accepted yet.
+Automatic coordinator disabled by user request; explicitly resume when wanted.
+No new assignment, holdout, integration or production change. Updated 2026-09-22.
