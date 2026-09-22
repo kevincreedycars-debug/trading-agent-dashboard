@@ -51,3 +51,20 @@ sentence. Add the cited adversarial regressions. Preserve accepted artifacts and
 numbers. Do not inspect outcomes, enumerate or execute a combination batch, use a
 holdout, fit a formula, acquire data or change live systems. Submit a unique
 reporting-009 revision and pause.
+
+## Revision 3 review: one fail-closed correction remains
+
+Submission `20260922-gold-reporting-009-r3` is not accepted. Read the hash-bound
+reply and `docs/orchestration/reviews/20260922-gold-reporting-009-r3.md`. The
+candidate grammar/counts and endpoint wording are supportable and must remain
+unchanged. Correct only the provenance guard: a negation may pass only when it
+syntactically applies to the freshness phrase, not merely because it remains
+somewhere in a regex-defined clause after that phrase is removed. Add the exact
+`not reserved therefore remains fresh` and `remains fresh despite not being
+reserved` regressions. Prefer a fail-closed allowlist of the renderer's standardized
+negative forms over another expanding conjunction list. Remove the absent
+`run.json` artifact claim or produce the cited ignored evidence. Preserve accepted
+artifacts, output path safety, numerical results, candidate grammar/counts and
+endpoint wording. Submit a unique reporting-009 revision and pause. No outcome
+inspection, combination execution, holdout use, formula work, acquisition or live
+change.

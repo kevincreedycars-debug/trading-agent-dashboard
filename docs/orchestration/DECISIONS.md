@@ -1,5 +1,17 @@
 # Central decisions
 
+## 2026-09-22: Gold reporting-009 revision 3 still has a structural provenance bypass
+
+Revision 3 at clean `a4676ab` corrects the candidate grammar and endpoint wording.
+Independent counts reproduce 2,548 daily candidates per operator and 29,740 event
+candidates with deterministic balanced selection of 5,000; focused checks pass
+12/12 and 26/26, and accepted hashes remain unchanged. It is not accepted because
+the provenance guard still accepts any negation left elsewhere in its regex-defined
+clause: `not reserved therefore remains fresh` and `remains fresh despite not being
+reserved` both return zero violations. A narrow fail-closed relationship correction
+is requested. The cited ignored `run.json` is absent and must be reconciled. No
+outcome inspection, combination execution, holdout use or next assignment.
+
 ## 2026-09-22: Gold reporting-009 revision 2 still needs claim and grammar corrections
 
 Revision 2 at clean `abcc83e` resolves overwrite and all tested path-alias cases;

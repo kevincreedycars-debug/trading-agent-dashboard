@@ -1,5 +1,15 @@
 # Current state
 
+2026-09-22 reporting-009 revision 3 reviewed at clean worker `a4676ab`. The
+operator-specific cross-variable candidate grammar and counts reconcile, endpoint
+wording is corrected, focused coordinator checks pass 12/12 and 26/26, and accepted
+digest/companion hashes remain unchanged. Acceptance is withheld because unrelated
+negations still mask freshness claims (`not reserved therefore remains fresh` and
+`remains fresh despite not being reserved` both pass). The submission also cites an
+absent ignored `run.json`. Published a hash-bound narrow correction request. No
+combination execution, holdout use, next research assignment, integration or
+production change.
+
 2026-09-22 mailbox repair: installed local bridge 0.2.0. Gold's registered trusted workspace now auto-connects; manual connections persist across reloads, explicit Disconnect overrides auto-connect, and connection health is recorded under ignored .local/orchestration/connections. Fourteen focused bridge/mailbox tests passed, including reconnect, workspace/trust boundaries and persistent disconnect. Live activation/pickup remains pending: the already-open Gold window must load the installed update via Developer: Reload Window and retain its existing Cline task. No new delivery or Gold activity was observed during installation. Cline has no active-task query and a send return remains unconfirmed; never infer pickup from it. Research assignment reporting-009 and its latest corrections are unchanged.
 
 2026-09-22 reporting-009 revision 2 reviewed at clean worker `abcc83e`; path

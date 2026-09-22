@@ -1,5 +1,16 @@
 # Session notes
 
+2026-09-22 reporting-009 r3 review: exact mailbox hash `268d80ff...` verified at
+clean worker `a4676ab`. Coordinator focused tests passed 12/12 and 26/26; accepted
+digest `4a7cfef4...` and companion `fa6ff8eb...` hashes remain unchanged. The
+candidate generator now represents one operator per batch, excludes same-variable
+pairs and independently reproduces 2,548 daily and 29,740 event candidates with a
+5,000 balanced event selection. Changes requested because the provenance guard
+still lets unrelated negations mask freshness phrases; two independent probes pass
+with zero violations. The cited ignored `run.json` is absent. No next assignment,
+outcome inspection, search, holdout use, integration or production action. Durable
+review: `docs/orchestration/reviews/20260922-gold-reporting-009-r3.md`.
+
 2026-09-22 mailbox repair: installed local bridge 0.2.0. Gold's registered trusted workspace now auto-connects; manual connections persist across reloads, explicit Disconnect overrides auto-connect, and connection health is recorded under ignored .local/orchestration/connections. Fourteen focused bridge/mailbox tests passed, including reconnect, workspace/trust boundaries and persistent disconnect. Live activation/pickup remains pending: the already-open Gold window must load the installed update via Developer: Reload Window and retain its existing Cline task. No new delivery or Gold activity was observed during installation. Cline has no active-task query and a send return remains unconfirmed; never infer pickup from it. Research assignment reporting-009 and its latest corrections are unchanged.
 
 2026-09-22 reporting-009 r2 review: exact mailbox hash `e9f0444f...` verified at
