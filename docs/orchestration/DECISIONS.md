@@ -1,5 +1,32 @@
 # Central decisions
 
+## 2026-09-22: Gold reporting-009 accepted; freeze the first batch before execution
+
+Revision 5 at clean `7cb773a` narrows the remaining forward matcher to the exact
+standardized negative statement. Independent checks reject the four revision-4
+probes and two additional intervening-text variants; focused suites pass 12/12 and
+26/26; the revision-5 evidence exists; accepted hashes remain unchanged; and the
+declaration-only universe reproduces 2,548 daily and 29,740 event candidates.
+Reporting-009 is accepted for exploratory reporting only.
+
+The accepted protocol requires a concrete candidate registry and coordinator
+review before outcome aggregation. Under the user's standing direction,
+`gold-combination-registry-010` authorizes only the 2,548-candidate daily
+`h24_post_event` / `all_computed` / `and` registry freeze, evaluator/ledger
+scaffolding and synthetic verification. A separate later assignment is required
+to execute it on consumed data. No holdout exists or is consumed, and no accuracy,
+causation, profitability, timing or trading-edge claim is established.
+
+## 2026-09-22: Gold reporting-009 revision 4 retains a forward-form provenance bypass
+
+Revision 4 at clean `5d3f890` produces the previously absent `run.json`; focused
+checks pass 12/12 and 26/26, and accepted hashes, path safety, candidate counts and
+endpoint wording remain unchanged. It is not accepted because the forward-form
+allowlist can span arbitrary text from a freshness word to an unrelated later
+prohibition. Four independent probes reproduce the bypass. A narrow hash-bound
+correction is requested; no outcome inspection, combination execution, holdout use
+or next research assignment.
+
 ## 2026-09-22: Gold reporting-009 revision 3 still has a structural provenance bypass
 
 Revision 3 at clean `a4676ab` corrects the candidate grammar and endpoint wording.

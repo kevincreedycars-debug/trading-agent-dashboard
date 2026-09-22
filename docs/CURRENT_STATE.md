@@ -1,5 +1,24 @@
 # Current state
 
+2026-09-22 reporting-009 revision 5 accepted at clean worker `7cb773a`. The exact
+mailbox hash is `52141107245ab86db27c715bf7dd5a147c15a06cc0c7fa7da9c6f7118e2058ed`;
+independent probes reject all four forward-form bypasses plus two intervening-text
+variants, focused checks pass 12/12 and 26/26, the ignored `run.json` evidence is
+present, and accepted digest/companion hashes and candidate counts remain unchanged.
+Published `gold-combination-registry-010` to freeze and synthetically test the first
+2,548-candidate daily `and` batch before execution. Registry status is exactly
+`instructions_published_awaiting_worker`. No real combination outcome was read,
+ranked or executed; no holdout, integration or production action.
+
+2026-09-22 reporting-009 revision 4 reviewed at clean worker `5d3f890`. The cited
+`run.json` now exists, focused coordinator checks pass 12/12 and 26/26, and the
+accepted digest/companion hashes remain unchanged. Acceptance is withheld because
+the forward-form provenance allowlist spans arbitrary text and accepts an unrelated
+later prohibition as negating an earlier freshness claim; four independent probes
+reproduce the bypass. Published a hash-bound narrow correction request. No
+combination execution, holdout use, next research assignment, integration or
+production change.
+
 2026-09-22 reporting-009 revision 3 reviewed at clean worker `a4676ab`. The
 operator-specific cross-variable candidate grammar and counts reconcile, endpoint
 wording is corrected, focused coordinator checks pass 12/12 and 26/26, and accepted

@@ -1,5 +1,19 @@
 # 2026-09-20 - Gold coverage registry accepted at checkpoint review
 
+2026-09-22 reporting-009 revision 5 accepted at clean `7cb773a`. Independent
+freshness probes pass, focused checks pass 12/12 and 26/26, revision-5 evidence is
+present and accepted hashes/counts remain unchanged. Published
+gold-combination-registry-010 to freeze and synthetically verify the first daily
+2,548-candidate `and` batch before any execution. No real outcome, holdout,
+integration or production action.
+
+2026-09-22 reporting-009 revision 4 reviewed at clean `5d3f890`. The missing
+`run.json` evidence is now present, focused checks pass 12/12 and 26/26, and
+accepted evidence hashes remain unchanged. Acceptance is withheld because the
+forward-form provenance allowlist still permits unrelated-negation bypasses; a
+hash-bound narrow correction was published. No combination, holdout, integration
+or production action.
+
 2026-09-22 reporting-009 revision 3 reviewed at clean `a4676ab`. Candidate grammar,
 counts and endpoint wording reconcile, focused checks pass 12/12 and 26/26, and
 accepted evidence hashes remain unchanged. Acceptance is withheld for a structural

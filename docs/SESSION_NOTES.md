@@ -1,5 +1,32 @@
 # Session notes
 
+2026-09-22 reporting-009 r5 review: exact mailbox hash `52141107...` verified at
+clean worker `7cb773a`. Independent checks reject the four required forward-form
+bypasses and two extra intervening-text cases while the standardized negative form
+passes. Coordinator focused suites pass 12/12 and 26/26; submitted full-suite
+evidence is 418/422 with only the four known secret-scanner console-width failures.
+The revision-5 `run.json` evidence exists, companion remains `fa6ff8eb...`, frozen
+digest remains `4a7cfef4...`, and declaration-only counts remain 2,548 daily and
+29,740 event. Accepted for exploratory reporting only; hash-bound reply and durable
+review published. Under standing direction, published
+`gold-combination-registry-010` with registry status exactly
+`instructions_published_awaiting_worker`: freeze/test the first daily `and` registry
+and evaluator/ledger scaffolding using synthetic fixtures, then stop for review.
+No real combination aggregation, ranking, holdout, integration or production action.
+
+2026-09-22 reporting-009 r4 review: exact mailbox hash `b1a3363e...` verified at
+clean worker `5d3f890`. Coordinator focused tests passed 12/12 and 26/26; accepted
+digest `4a7cfef4...` and companion `fa6ff8eb...` hashes remain unchanged, and the
+previously absent ignored `run.json` now exists. Changes requested because the
+forward-form allowlist spans arbitrary text and accepts an unrelated later
+prohibition as negating an earlier fresh/untouched/pristine/unused claim; four
+independent probes return zero violations. No next assignment, outcome inspection,
+search, holdout use, integration or production action. Durable review:
+`docs/orchestration/reviews/20260922-gold-reporting-009-r4.md`. The scoped central
+commit could not be created because this run cannot create `.git/index.lock`;
+coordination files remain as explicit working-tree changes and unrelated changes
+remain untouched.
+
 2026-09-22 reporting-009 r3 review: exact mailbox hash `268d80ff...` verified at
 clean worker `a4676ab`. Coordinator focused tests passed 12/12 and 26/26; accepted
 digest `4a7cfef4...` and companion `fa6ff8eb...` hashes remain unchanged. The
