@@ -1,5 +1,16 @@
 # Current state
 
+2026-09-22 combination-registry-010 revision 1 reviewed at clean worker
+`50d3276`; the frozen registry independently reproduces SHA-256 `7e2bcff6...`,
+2,548 candidates and list hash `23d83641...`, and focused tests pass 9/9.
+Acceptance is withheld because endpoint denominators count all attempted anchors
+rather than candidate computed outcomes, eligibility uses matched anchors rather
+than computed `n`, no-context candidates are incorrectly blocked by missing
+context, and required run/registry/policy/code/manifest provenance plus the
+mutually exclusive outcome/exclusion partition are absent. Published a hash-bound
+narrow correction request. No real outcome aggregation, next execution assignment,
+holdout use, integration or production change.
+
 2026-09-22 reporting-009 revision 5 accepted at clean worker `7cb773a`. The exact
 mailbox hash is `52141107245ab86db27c715bf7dd5a147c15a06cc0c7fa7da9c6f7118e2058ed`;
 independent probes reject all four forward-form bypasses plus two intervening-text

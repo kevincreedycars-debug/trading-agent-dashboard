@@ -1,5 +1,18 @@
 # Central decisions
 
+## 2026-09-22: Gold combination registry is frozen; execution machinery needs correction
+
+Revision 1 at clean `50d3276` supports the pre-outcome registry: independent
+hashing reproduces registry `7e2bcff6...`, 2,548 candidates and candidate-list
+`23d83641...`, with focused synthetic tests passing 9/9. Execution is not
+authorized. The evaluator presently reconciles endpoint denominators to attempted
+rows rather than computed candidate observations, applies `min_n` to matched
+anchors rather than computed `n`, and makes no-context candidates depend on context
+availability. The ledger also omits the accepted run and artifact/code hashes and
+does not carry the mutually exclusive outcome/exclusion partition needed to
+reconcile attempts. A narrow hash-bound correction is requested; no real outcomes,
+holdout, ranking, formula, integration or production action.
+
 ## 2026-09-22: Gold reporting-009 accepted; freeze the first batch before execution
 
 Revision 5 at clean `7cb773a` narrows the remaining forward matcher to the exact

@@ -1,5 +1,18 @@
 # Session notes
 
+2026-09-22 combination-registry-010 r1 review: exact mailbox hash `ba0e5804...`
+verified at clean worker `50d3276`. The committed registry independently hashes to
+`7e2bcff6...`, contains all 2,548 candidates and reproduces list hash
+`23d83641...`; coordinator focused tests pass 9/9 and the submitted full log is
+427/431 with only the four known secret-scanner failures. Changes requested because
+candidate endpoint denominators count all 30 fixture attempts while candidate
+`n = 21`; a 22-match/17-outcome probe is wrongly eligible at `min_n = 20`; a
+no-context candidate with one valid row is wrongly unavailable when context is
+missing; and the required run plus registry/policy/code/manifest hashes and
+reconciled exclusion partition are absent. No real outcome aggregation, execution
+assignment, holdout, integration or production action. Durable review:
+`docs/orchestration/reviews/20260922-gold-combination-registry-010-r1.md`.
+
 2026-09-22 reporting-009 r5 review: exact mailbox hash `52141107...` verified at
 clean worker `7cb773a`. Independent checks reject the four required forward-form
 bypasses and two extra intervening-text cases while the standardized negative form
