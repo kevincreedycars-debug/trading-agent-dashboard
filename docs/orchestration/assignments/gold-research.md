@@ -39,3 +39,15 @@ new next-stage protocol and concise worker progress notes. Raw evidence stays in
 ignored worker-local folders. No acquisitions, licensing/terms decisions, ALFRED
 migration, calendar-policy changes, canonical edits, other-worker edits, live
 workflow/warehouse/Layer 1/dashboard changes, integration, deployment or purchases.
+
+## Revision 2 review: narrow correction required
+
+Submission `20260922-gold-reporting-009-r2` is not accepted. Read the hash-bound
+reply and `docs/orchestration/reviews/20260922-gold-reporting-009-r2.md`. Correct
+only the remaining claim-local provenance bypasses, make the universe counter and
+protocol implement one exact candidate grammar including operator, cross-variable
+and context composition rules, and remove the remaining contradictory no-pooling
+sentence. Add the cited adversarial regressions. Preserve accepted artifacts and
+numbers. Do not inspect outcomes, enumerate or execute a combination batch, use a
+holdout, fit a formula, acquire data or change live systems. Submit a unique
+reporting-009 revision and pause.

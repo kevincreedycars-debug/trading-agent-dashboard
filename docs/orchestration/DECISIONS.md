@@ -1,5 +1,18 @@
 # Central decisions
 
+## 2026-09-22: Gold reporting-009 revision 2 still needs claim and grammar corrections
+
+Revision 2 at clean `abcc83e` resolves overwrite and all tested path-alias cases;
+focused coordinator checks pass and the exhaustive companion remains byte-identical.
+It is not accepted because an unrelated negation earlier in the same regex clause
+still masks a fresh/untouched/unread claim about manifested consumed dates. The
+proposed universe counter also counts each atom pair once while the protocol allows
+both conjunction and disjunction, and includes same-variable state pairs without
+declaring whether they are candidates. Corrected daily counts can exceed the 5,000
+cap, so the grammar, counter and selection decision are not yet aligned. One report
+limit still incorrectly says endpoint kinds are never pooled. A hash-bound narrow
+revision is requested; no outcome inspection or next research execution assignment.
+
 ## 2026-09-22: Gold reporting-009 revision 1 requires safety corrections
 
 The clean `360f48d` implementation reproduces the accepted numerical digest and

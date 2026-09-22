@@ -1,5 +1,15 @@
 # Current state
 
+2026-09-22 reporting-009 revision 2 reviewed at clean worker `abcc83e`; path
+aliasing and overwrite safety are corrected, focused coordinator checks pass
+11/11 and 26/26, and the companion remains byte-identical. Acceptance is withheld:
+same-clause unrelated negations still bypass the consumed-period freshness guard,
+and the 2,664/66,612 universe counts do not implement the protocol's conjunction/
+disjunction grammar or define same-variable atom pairs. One touched report doc also
+retains the contradictory "never pooled" limit. Published a hash-bound narrow
+revision request. No combination execution, holdout use, next research assignment,
+integration or production change.
+
 2026-09-22 reporting-009 revision 1 reviewed at clean worker `360f48d`; numerical reproduction and the byte-identical companion are supported, but acceptance is withheld. The documented provenance guard can be bypassed by an unrelated sentence-level negation, identical digest/companion output paths silently replace the digest, and the renderer exposes overwrite despite the assignment's new-output-only boundary. The proposed 5,000-candidate cap also needs a pre-outcome complete-universe or balanced-selection rule, plus wording that distinguishes the accepted pooled summary from its separate endpoint strata. Published a hash-bound narrow correction request. No combination execution, holdout use, next research assignment, integration or production change.
 
 2026-09-22 RESUMED: user authorized building and communication. Coverage-008 revision 2 at de775b5 accepted after independent byte-identical digest/companion reproduction and unchanged report hash. Published gold-reporting-009 for a durable findings renderer, regression checks and next-stage combination protocol proposal; no search or new measurements yet. Restore background coordinator after interactive edits; worker pickup must be confirmed from actual activity. Existing source/calendar/timing limitations and all consumed-period exclusions remain. No integration or production change.

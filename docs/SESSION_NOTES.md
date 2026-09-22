@@ -1,5 +1,16 @@
 # Session notes
 
+2026-09-22 reporting-009 r2 review: exact mailbox hash `e9f0444f...` verified at
+clean worker `abcc83e`. Coordinator focused tests passed 11/11 and 26/26; the
+submitted companion independently hashes to accepted `fa6ff8eb...`. Path aliasing
+and overwrite are fixed. Changes requested because same-clause unrelated negations
+still mask freshness claims, while the universe counter counts one candidate per
+atom pair despite allowing conjunction and disjunction and includes same-variable
+state pairs; the daily corrected grammar can exceed 5,000. A stale no-pooling line
+also remains. No next assignment, outcome inspection, search, holdout use,
+integration or production action. Durable review:
+`docs/orchestration/reviews/20260922-gold-reporting-009-r2.md`.
+
 2026-09-22 reporting-009 r1 review: exact mailbox hash `7a096810...` verified at clean worker `360f48d`. Coordinator focused tests passed 7/7 and 26/26; a fresh accepted-input render reproduced the exhaustive companion SHA-256 `fa6ff8eb...` and the reported 21/28 coverage and consistency totals. Changes requested because sentence-wide negation can bypass the consumed-period freshness guard, identical digest/companion paths silently replace the digest, overwrite remains exposed, and the >5,000 candidate-universe truncation/pooled-endpoint protocol wording is not decision-ready. No next assignment, measurement, search, holdout use, integration or production action. Durable review: `docs/orchestration/reviews/20260922-gold-reporting-009-r1.md`.
 
 2026-09-22 RESUMED: user authorized building and communication. Coverage-008 revision 2 at de775b5 accepted after independent byte-identical digest/companion reproduction and unchanged report hash. Published gold-reporting-009 for a durable findings renderer, regression checks and next-stage combination protocol proposal; no search or new measurements yet. Restore background coordinator after interactive edits; worker pickup must be confirmed from actual activity. Existing source/calendar/timing limitations and all consumed-period exclusions remain. No integration or production change.
