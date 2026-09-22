@@ -1,5 +1,7 @@
 # Central decisions
 
+2026-09-22 combination-registry-010 r2 manually reviewed at e8b9a89 on user request. Focused 22/22 pass and frozen registry unchanged. Requested corrections are present, but synthetic probes reproduce min_n override (1 accepted against frozen 20), duplicate-anchor inflation (one anchor counted 20 times), and writer provenance bypass (missing inputs and mismatched registry object/file accepted). Published narrow revision-3 request. No real outcomes or production changes. Automatic six-review daily cap remains unchanged; manual review was explicitly requested.
+
 ## 2026-09-22: Gold combination registry is frozen; execution machinery needs correction
 
 Revision 1 at clean `50d3276` supports the pre-outcome registry: independent

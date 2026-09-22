@@ -1,5 +1,7 @@
 # Current state
 
+2026-09-22 combination-registry-010 r2 manually reviewed at e8b9a89 on user request. Focused 22/22 pass and frozen registry unchanged. Requested corrections are present, but synthetic probes reproduce min_n override (1 accepted against frozen 20), duplicate-anchor inflation (one anchor counted 20 times), and writer provenance bypass (missing inputs and mismatched registry object/file accepted). Published narrow revision-3 request. No real outcomes or production changes. Automatic six-review daily cap remains unchanged; manual review was explicitly requested.
+
 2026-09-22 combination-registry-010 revision 1 reviewed at clean worker
 `50d3276`; the frozen registry independently reproduces SHA-256 `7e2bcff6...`,
 2,548 candidates and list hash `23d83641...`, and focused tests pass 9/9.
