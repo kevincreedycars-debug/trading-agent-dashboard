@@ -1,5 +1,33 @@
 # Central decisions
 
+## 2026-09-23: Gold qualification-protocol-012 revision 3 accepted; prospective window awaits the user
+
+Background coordinator review of submission `20260923-gold-qualification-protocol-012-r3`
+at clean worker `67fcc09` (base `7792477`, one commit, two disclosed files),
+submission SHA-256 `868c0611f489ea8d994f2d4c86ecc60d07cd13b83aece603d83ac2352a508448`.
+Independently verified: the hash reproduces; `git diff --name-only 7792477 67fcc09`
+returns only the two requested documents (+6/-4); zero literal backslash-n sequences
+remain in tracked Markdown; the Assignment 012 table and `docs/SESSION_NOTES.md`
+record 8 tests / 72-72 / 456-452; changed-document hashes match; all fourteen
+protected artifacts re-hash byte-identical to their accepted values. Coordinator
+re-runs: focused file 8/8, eight focused Gold files 72/72, full local suite `npm
+test` 456 tests / 456 pass / 0 fail - the documented four console-width-dependent
+secret-scanner failures pass in this environment and that is an environment note,
+not a defect. Decision: **accepted**, documentation-only. Assignment 012 is complete
+as a bounded predeclaration deliverable; acceptance is not integration, merge,
+deployment, qualification or edge. Reply SHA-256
+`7dcc46fe3b12d51126dbc148880662d0524cf164412152081e3a3d159a1d189c`; durable review
+`reviews/20260923-gold-qualification-protocol-012-r3.md`. No next worker assignment
+is published in this cycle.
+
+**Open decision (needs the user).** The declaration space is 255 eligible candidates
+against a declared selection cap of 20. Whether a prospective qualification window
+opens over that pool under the frozen protocol with the declared 20-hypothesis cap,
+or the pool is narrowed before any window opens, is not decided. Until the user
+decides, no selector execution or adaptation, pool narrowing, outcome acquisition or
+read after the consumed boundary (`2026-09-14T15:00Z`), holdout reservation or use,
+candidate ranking, formula fitting, integration or production change is authorized.
+
 ## 2026-09-23: Run-011 closes; prospective Gold protocol is next
 
 Revision 3 at clean worker `cccbf47` makes only the requested results-document
@@ -259,4 +287,4 @@ candidates against a declared selection cap of 20. Whether a prospective
 qualification window opens over that pool, and whether the pool should be narrowed
 before it opens, is not decided. No selector execution, prospective anchor or
 outcome acquisition, holdout reservation/use, integration or production change is
-authorized pending that decision.Gold submitted `20260923-gold-qualification-protocol-012-r3` (mailbox SHA-256 868c0611...) after this review; it is pending and was not reviewed in this cycle, which is limited to the revision-2 decision above.
+authorized pending that decision. Revision 3 was subsequently reviewed and accepted; see the entry at the top of this file and `reviews/20260923-gold-qualification-protocol-012-r3.md`.

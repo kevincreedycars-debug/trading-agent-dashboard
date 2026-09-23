@@ -1,5 +1,21 @@
 # 2026-09-20 - Gold coverage registry accepted at checkpoint review
 
+2026-09-23 Gold `gold-qualification-protocol-012` revision 3 reviewed by the
+background central coordinator and accepted, documentation-only. Submission
+SHA-256 `868c0611...` reproduced; worker clean at 67fcc09 (one commit on 7792477,
+two disclosed documents, +6/-4); the escape defect is gone and the Assignment 012
+and session-notes counts now read 8 tests / 72-72 / 456-452. Coordinator re-runs:
+focused file 8/8, eight focused Gold files 72/72, full local suite 456 tests /
+456 pass / 0 fail (the documented four console-width-dependent secret-scanner
+failures pass in this environment). Changed-document hashes and all fourteen
+protected artifacts verified byte-identical, so nothing was rerun or regenerated.
+Assignment 012 is complete as a bounded predeclaration deliverable; acceptance is
+not integration, merge, deployment, qualification or edge. No next worker
+assignment was published: the user must decide whether a prospective qualification
+window opens over the 255-candidate eligible pool with the declared 20-hypothesis
+cap or the pool is narrowed first. No production, warehouse, credential, Layer 1,
+integration, holdout or deployment change.
+
 2026-09-23 Gold `gold-qualification-protocol-012` revision 2 reviewed by the
 background central coordinator: submission hash 413b6b17... matched, worker clean at
 7792477, the focused protocol file re-ran 8/8, the gate re-ran deterministically at

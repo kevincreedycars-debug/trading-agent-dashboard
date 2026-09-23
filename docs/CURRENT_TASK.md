@@ -1,16 +1,19 @@
 # Current task
 
-`gold-qualification-protocol-012` is the active Gold assignment and its revision 2
-is **not accepted**: the coordinator requested a documentation-only revision 3 at
-clean worker `7792477`. The gate, inventory, 37-atom/15-variable coverage, the
-fixed-offset consumed boundary and all nine run-011 artifacts were independently
-verified (deterministic 255 eligible of 2,548; focused file 8/8). Revision 3 must
-only remove the literal backslash escape in
-`docs/GOLD_INDIVIDUAL_VARIABLE_REPORT_PROGRESS.md` and correct the stale
-7-test/71-71/455-451 counts there and in `docs/SESSION_NOTES.md` to the delivered
-8-test/72-72/456-452 state. Nothing else may change.
+Decide, with the user, how the frozen prospective Gold qualification opens.
+`gold-qualification-protocol-012` revision 3 was reviewed at clean worker `67fcc09`
+and **accepted**: `868c0611...` reproduced, the diff is the two requested
+documentation corrections only, the focused file re-ran 8/8, the eight focused Gold
+files 72/72, the full local suite 456/456, and all fourteen protected artifacts
+re-hash byte-identical. The live-input inventory, the fail-closed gate (255 eligible
+of 2,548), the 37-atom/15-variable coverage, the fixed-offset consumed boundary
+(`2026-09-14T15:00Z`, first eligible anchor `2026-09-15T14:00Z`) and the frozen
+protocol are complete and independently verified.
 
-After revision 3 is accepted, the unresolved decision for the user is whether to
-authorize a prospective qualification window over the 255-candidate eligible pool
-with the declared 20-hypothesis cap, or to narrow the pool first. No selector
-execution, new outcome, holdout, integration or production change is authorized.
+No next worker assignment is published, because the remaining step is reserved to
+the user: either authorize a prospective qualification window over the 255-candidate
+eligible pool under the frozen protocol with the declared 20-hypothesis cap, or
+narrow the pool before any window opens. Until that decision, no selector execution
+or adaptation, no pool narrowing, no outcome acquisition or read after the consumed
+boundary, no holdout reservation or use, no candidate ranking, no formula fitting,
+and no integration, deployment or production change is authorized.

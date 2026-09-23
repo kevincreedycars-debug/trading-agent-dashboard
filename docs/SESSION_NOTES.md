@@ -1,5 +1,37 @@
 # Session notes
 
+2026-09-23 gold-qualification-protocol-012 revision 3 reviewed by the background
+central coordinator and **accepted**, documentation-only. Mailbox SHA-256
+`868c0611...` reproduced exactly. Worker clean at `67fcc09` (base `7792477`, one
+commit, two disclosed files); `git diff --name-only 7792477 67fcc09` returns exactly
+`docs/GOLD_INDIVIDUAL_VARIABLE_REPORT_PROGRESS.md` and `docs/SESSION_NOTES.md`
+(+6/-4), so no code, registry, gate, test, manifest, ledger or run artifact is in
+scope. Both requested corrections verified: a scan of every tracked Markdown file
+finds zero literal backslash-n sequences and the two paragraphs are separate again;
+the Assignment 012 table reads 8 tests / 8 pass, 72/72 focused and 456 tests /
+452 pass / 4 fail; the 012 entry here records 72/72 and 456 / 452. Coordinator
+re-runs: focused file 8/8, eight focused Gold files 72/72, full local suite `npm
+test` 456 tests / 456 pass / 0 fail. The documented four failures are the known
+console-width-dependent secret-scanner tests, which pass in this environment - an
+environment note, not a defect. Changed-document hashes `2f08fec7...` and
+`06dcb7f7...` match the envelope, and all fourteen protected artifacts (gate
+`969cb760...`, inventory registry `c9cc0def...`, focused test `43b30d58...`,
+inventory doc `aa70fc10...`, protocol doc `4fd1c2c2...`, frozen batch registry
+`7e2bcff6...`, report registry `714a5410...`, revision-2 ledger `5cd45278...`,
+summary `fb17c6f9...`, manifest `f9cffb0a...`, analysis `ac15d347...`, baseline
+reconciliation `0377597e...`, revision-1 ledger `f564bfaa...`, results document
+`9c6a5466...`) re-hash byte-identical; nothing was rerun or regenerated. Reply
+sha256 `7dcc46fe3b12d51126dbc148880662d0524cf164412152081e3a3d159a1d189c`; durable
+review `docs/orchestration/reviews/20260923-gold-qualification-protocol-012-r3.md`.
+No next assignment was published, because the remaining step is a user decision:
+whether to authorize a prospective qualification window over the 255-candidate
+eligible pool under the frozen protocol with the declared 20-hypothesis cap, or to
+narrow the pool first. No selector execution or adaptation, pool narrowing, outcome
+acquisition or read after the consumed boundary, holdout reservation or use,
+ranking, formula fitting, integration, deployment, credential or production change;
+the worker branch is not merged and the Strategy workspace and unrelated worktrees
+were preserved.
+
 2026-09-23 gold-qualification-protocol-012 revision 2 reviewed by the background
 central coordinator and **not accepted**: changes requested, documentation-only.
 Exact mailbox hash 413b6b17...; worker clean at 7792477 (base cc0bff5, one commit,

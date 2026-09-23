@@ -1,5 +1,26 @@
 # Current state
 
+2026-09-23 gold-qualification-protocol-012 revision 3 reviewed at clean worker
+`67fcc09` (base `7792477`, the reviewed revision-2 head; one commit, two disclosed
+files) and **accepted**, documentation-only. Mailbox SHA-256 `868c0611...`
+reproduced exactly and the diff is exactly the two narrative documents (+6/-4), so
+no code, registry, gate, test, manifest, ledger or run artifact is in scope. The
+escape defect is corrected (zero literal backslash-n sequences remain across all
+tracked Markdown) and the Assignment 012 table and `docs/SESSION_NOTES.md` now
+record the delivered counts. Coordinator re-runs: the single focused file 8/8, the
+eight focused Gold files 72/72, and the full local suite `npm test` 456 tests /
+456 pass / 0 fail - the documented 4 failures are the known console-width-dependent
+secret-scanner tests, which pass in this environment. Changed-document hashes
+`2f08fec7...` and `06dcb7f7...` match the envelope, and all fourteen protected
+artifacts re-hash byte-identical, so nothing was rerun or regenerated.
+`gold-qualification-protocol-012` is therefore complete as a bounded predeclaration
+deliverable. Acceptance is not integration, merge, deployment, qualification or
+edge; the worker branch is not merged. No next assignment was published: the open
+user decision is whether to authorize a prospective qualification window over the
+255-candidate eligible pool under the frozen protocol with the declared
+20-hypothesis cap, or to narrow the pool first. No selector execution, outcome read
+after the consumed boundary, holdout, ranking, integration or production change.
+
 2026-09-23 gold-qualification-protocol-012 revision 2 reviewed at clean worker
 7792477 (base cc0bff5, one commit, six disclosed files) and **not accepted**:
 changes requested, documentation-only. Coordinator verification reproduced the
@@ -17,9 +38,7 @@ holdout, ranking, selector execution, integration or production change. The old
 OpenAI background checker is disabled; the existing Cline DeepSeek key was securely
 migrated into the encrypted project store and the live `deepseek-flash` smoke
 returned COORDINATOR_READY. Persistent unattended start awaits explicit approval for
-repository evidence to be sent to DeepSeek; there is no OpenAI-auth fallback. The worker submitted `20260923-gold-qualification-protocol-012-r3` (mailbox
-SHA-256 868c0611...), which arrived after this cycle's review and is deliberately
-left pending and unreviewed for the next coordinator cycle.
+repository evidence to be sent to DeepSeek; there is no OpenAI-auth fallback. Revision 3 was subsequently reviewed and accepted; see the entry at the top of this file and `orchestration/reviews/20260923-gold-qualification-protocol-012-r3.md`.
 
 2026-09-23 run-011 r2 review: clean worker 1526d34, correction commit 5204894.
 Independent manifest and ledger checks validate all 2,548 records, all 81 row
