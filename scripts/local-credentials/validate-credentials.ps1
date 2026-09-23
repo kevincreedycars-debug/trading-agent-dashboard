@@ -30,15 +30,8 @@ if (-not $Quiet) {
   $statuses | ConvertTo-Json -Depth 6
 }
 
-$missingRequired = @(
-  $statuses |
-    Where-Object {
-      $_.status -eq "missing" -and
-      ((Get-AvailabilityLabel -ManifestEntry ($selectedEntries | Where-Object { $_.name -eq $_.name } | Select-Object -First 1)) -eq "required")
-    }
-)
-
-if (($statuses | Where-Object { $_.status -eq "missing" -and $_.availability -eq "required" }).Count -gt 0) {
+$missingRequired = @($statuses | Where-Object { $_.status -eq "missing" -and $_.availability -eq "required" })
+if ($missingRequired.Count -gt 0) {
   exit 1
 }
 

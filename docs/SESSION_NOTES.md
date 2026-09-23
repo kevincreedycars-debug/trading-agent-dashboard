@@ -1,5 +1,17 @@
 # Session notes
 
+2026-09-23 Gold run-011 r3 accepted at clean cccbf47, exact mailbox hash
+d6463ea2.... The two-file documentation diff is precisely scoped; Outcome now
+describes h24 only, pooled endpoint wording is internally consistent, EOF is clean,
+and coordinator focused suites pass 26/26. Published
+gold-qualification-protocol-012: map every frozen atom/variable to current live
+availability, then freeze a prospective qualification and later-selection protocol
+without candidate ranking or new outcomes. In parallel, migrated the unattended
+coordinator invocation from OpenAI gpt-5.6-sol to DeepSeek `deepseek-flash` through
+the Codex sandbox host and encrypted local credential scope. There is deliberately
+no OpenAI fallback. The previous daemon remains disabled until the DeepSeek key is
+stored and the read-only smoke passes.
+
 2026-09-23 run-011 r2 reviewed on user request. Gold had already completed the
 baseline correction and submitted at clean HEAD 1526d34. Coordinator independently
 verified the manifest, all 2,548 ordered ledger records, 81 checks and zero baseline

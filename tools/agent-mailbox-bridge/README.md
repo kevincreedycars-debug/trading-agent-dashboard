@@ -32,17 +32,22 @@ or crashes is never automatically repeated. Inspect status and actual worker
 activity before manually retrying. Attempts are capped at 12 per worker per UTC
 day. No model is polled merely to watch files.
 
-The separate background coordinator now uses `codex exec` with gpt-5.6-sol,
-workspace-write sandbox and approval policy never. It uses the existing Codex
-login and reads canonical notes afresh for each event; this IDE conversation is
-not resumed or injected into. A live read-only connection check returned
-COORDINATOR_READY. A full research-review round trip still needs a new submission.
+The separate background coordinator uses the Codex CLI as the sandboxed agent
+host, but inference is pinned to DeepSeek's Responses-compatible endpoint with
+`deepseek-flash`, low reasoning effort, workspace-write sandbox and approval
+policy never. It does not use an OpenAI model or OpenAI authentication. The
+DeepSeek key is loaded only into the daemon process from the encrypted local
+credential store. Each event reads canonical notes afresh; this IDE conversation
+is not resumed or injected into.
 
 Start it with `powershell -File tools/agent-mailbox-bridge/start-coordinator.ps1`.
 Pause new reviews with `node scripts/coordinator-dispatch.js pause`; inspect
 `node scripts/coordinator-dispatch.js status`. Resume with `enable` while the
 dispatcher process remains running, or run the start script after Windows restart.
 There is no login-startup registration. Pausing does not interrupt an active run.
+Before the first start, sync the local credential home and store
+`DEEPSEEK_API_KEY` as documented in `docs/CREDENTIAL_CONTINUITY.md`. Missing
+credentials or provider errors pause the checker; there is no OpenAI fallback.
 
 It checks validated submissions every five seconds, skips historical assignments,
 deduplicates by submission hash before invoking Codex and holds an exclusive

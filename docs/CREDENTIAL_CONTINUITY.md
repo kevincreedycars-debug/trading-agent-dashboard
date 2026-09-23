@@ -22,6 +22,8 @@ Bootstrap is non-destructive by default:
 
 The local credential system manages only continuity-relevant variables:
 
+- `DEEPSEEK_API_KEY` for the low-cost unattended coordinator checker
+
 - `N8N_BASE_URL`
 - `N8N_API_KEY`
 - `SUPABASE_URL`
@@ -65,8 +67,14 @@ Migration notes remain in:
 
 ## Scopes
 
+`deepseek-coordinator` loads only `DEEPSEEK_API_KEY`. The unattended coordinator
+uses this scope so research/provider credentials are not exposed to the agent
+host. The key exists only in the launched process tree and is never written to a
+repository file or persistent environment variable.
+
 The local validator and child runner support these scopes:
 
+- `deepseek-coordinator`
 - `n8n`
 - `backtester`
 - `market-importers`
@@ -129,6 +137,15 @@ Examples:
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts\bootstrap-local-secrets.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts\check-required-secrets.ps1 -Scope all
+```
+
+For the background checker, first sync the checked-in manifest and scripts, then
+store the key through the secure prompt (do not paste it into chat or a command):
+
+```powershell
+powershell -File scripts\create-local-secret-home.ps1
+powershell -File $env:USERPROFILE\.trading-agent-dashboard\scripts\set-credential.ps1 -Name DEEPSEEK_API_KEY
+powershell -File $env:USERPROFILE\.trading-agent-dashboard\scripts\validate-credentials.ps1 -Scope deepseek-coordinator
 ```
 
 ```powershell

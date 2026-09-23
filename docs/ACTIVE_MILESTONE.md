@@ -1,8 +1,8 @@
 # Active milestone
 
-Current milestone: finish the first frozen Gold exploratory combination report.
-Status: run-011 r2 code, baseline correction and immutable ledger pass independent
-review; a documentation-only revision 3 is requested. Next immediate action: Gold
-corrects the h24 outcome description and pooled-endpoint wording without changing
-code or rerunning outcomes, then submits revision 3. No new cell, holdout, ranking,
-integration or production change.
+Current milestone: predeclare a prospective Gold qualification boundary.
+Status: run-011 revision 3 is accepted as completed exploratory evidence. Next
+immediate action: Gold maps the frozen research inputs to live availability and
+submits a deterministic fail-closed qualification/selection protocol without
+ranking the consumed ledger or reading future outcomes. No holdout use, live
+implementation, integration or production change.

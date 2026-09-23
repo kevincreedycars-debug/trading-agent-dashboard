@@ -1,12 +1,16 @@
 [CmdletBinding()]
 param(
   [string]$LocalHome = (Join-Path $env:USERPROFILE ".trading-agent-dashboard"),
-  [string]$RepoRoot = (Split-Path -Parent $PSScriptRoot),
+  [string]$RepoRoot,
   [switch]$InitializeEmptyStoreIfMissing,
   [switch]$ForceSync
 )
 
 $ErrorActionPreference = "Stop"
+
+if ([string]::IsNullOrWhiteSpace($RepoRoot)) {
+  $RepoRoot = Split-Path -Parent $PSScriptRoot
+}
 
 $templateRoot = Join-Path $PSScriptRoot "local-credentials"
 $localConfig = Join-Path $LocalHome "config"

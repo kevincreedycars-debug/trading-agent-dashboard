@@ -1,5 +1,24 @@
 # Central decisions
 
+## 2026-09-23: Run-011 closes; prospective Gold protocol is next
+
+Revision 3 at clean worker `cccbf47` makes only the requested results-document
+wording/EOF changes and adds a narrow regression. Coordinator focused suites pass
+26/26. Run-011 is accepted as consumed exploratory evidence, not predictive or
+production qualification. `gold-qualification-protocol-012` now maps the 37 atoms
+and 15 variables to live availability and freezes the prospective qualification
+and later-selection rules before any new outcome is read. It does not rank the
+consumed ledger, name a winner, acquire data, or change live Gold.
+
+## 2026-09-23: Unattended coordinator inference moves to DeepSeek
+
+The OpenAI-backed dispatcher stays disabled. The same event, lock, deduplication,
+daily cap, timeout, sandbox and no-approval boundaries are retained, but Codex CLI
+is now only the sandboxed agent host and inference is pinned to DeepSeek
+`deepseek-flash` over its Responses-compatible API. Authentication uses only the
+encrypted local `DEEPSEEK_API_KEY`; there is no OpenAI model/auth fallback. Missing
+credentials or provider incompatibility fail closed and pause automation.
+
 ## 2026-09-23: Gold run-011 revision 2 passes substantively; wording correction remains
 
 At clean worker 1526d34, independent checks verify the corrected immutable ledger:

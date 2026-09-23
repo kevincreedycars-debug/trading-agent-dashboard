@@ -1,5 +1,14 @@
 # Current state
 
+2026-09-23 run-011 r3 accepted at clean worker cccbf47. The requested
+documentation-only corrections are complete and coordinator focused suites pass
+26/26; no outcome artifact was rerun or changed. Published
+gold-qualification-protocol-012 to map 37 research atoms/15 variables to live
+availability and predeclare a prospective qualification/selection protocol without
+ranking or new outcomes. The old OpenAI background checker is disabled; its runner
+is migrated to DeepSeek `deepseek-flash` with no OpenAI-auth fallback, pending the
+locally encrypted `DEEPSEEK_API_KEY` and live smoke test.
+
 2026-09-23 run-011 r2 review: clean worker 1526d34, correction commit 5204894.
 Independent manifest and ledger checks validate all 2,548 records, all 81 row
 checks, every aggregate and every per-candidate availability baseline with zero n
