@@ -1,5 +1,15 @@
 # Session notes
 
+2026-09-23 Gold completed shortlist 013 at clean `0d82157`; interactive coordinator
+review accepted it after the DeepSeek background turn reproduced the four ids but
+stopped before publishing a decision when its shell calls were policy-blocked.
+Mailbox and artifact hashes match; an independent rerun reproduced shortlist
+`ffa69b30...`, audit `e7c57773...`, four selected plus 251 skipped; focused Gold
+tests pass 79/79 and the full local suite passes 463/463 here. Published bounded
+`gold-qualification-window-freeze-014`: freeze the accepted four-id evaluation
+manifest and a genuinely future first anchor at 2026-09-24 14:00 UTC, with no
+backfill or prospective outcome read. No live or production change.
+
 2026-09-23 user accepted the coordinator recommendation to narrow Gold first.
 Paused the idle background dispatcher (`activeRun=false`) and published
 `gold-qualification-shortlist-013` from accepted worker HEAD `67fcc09`, using the

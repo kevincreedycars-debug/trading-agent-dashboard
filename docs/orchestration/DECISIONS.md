@@ -1,5 +1,20 @@
 # Central decisions
 
+## 2026-09-23: shortlist 013 accepted; future-only manifest is next
+
+Accepted Gold shortlist 013 at clean `0d82157`. Independent execution reproduced
+the exact four ids, 255-candidate audit and submitted hashes; focused tests passed
+79/79 and the full local suite 463/463. The smaller four-id result follows the
+frozen one-use-per-variable rule over nine eligible variables and is accepted as a
+selection checkpoint, not an edge or qualification result.
+
+Published `gold-qualification-window-freeze-014`. The 012 first-anchor date predates
+the shortlist freeze and will not be backfilled. The new manifest must begin at
+`2026-09-24T14:00:00Z`, bind the four accepted ids and their consumed reference signs
+without changing membership/order, and remain outcome-free until separately
+reviewed. No qualification execution, integration or production action is yet
+authorized.
+
 ## 2026-09-23: narrow Gold before opening the prospective window
 
 The user accepted the coordinator recommendation to narrow the pool first.

@@ -1,5 +1,14 @@
 # Current state
 
+2026-09-23 `gold-qualification-shortlist-013` revision 1 accepted at clean worker
+`0d82157`. Mailbox SHA-256 `d2046724...` and all submitted hashes reproduce. A
+fresh coordinator run reproduced the same four ids, shortlist hash `ffa69b30...`,
+audit hash `e7c57773...`, 255 = 4 selected + 251 skipped, 79/79 focused tests and
+463/463 full local tests. No prospective outcome or live change occurred. Published
+`gold-qualification-window-freeze-014` to replace the pre-shortlist 2026-09-15 date
+with a genuinely future first anchor, `2026-09-24T14:00:00Z`, prohibit backfill and
+freeze the four-id evaluation manifest before any qualification execution.
+
 2026-09-23 user decision: narrow the Gold pool before opening any prospective
 qualification window. Published `gold-qualification-shortlist-013` from accepted
 worker HEAD `67fcc09`. It authorizes one exact execution of the protocol-012

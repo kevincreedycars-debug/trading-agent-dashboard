@@ -1,17 +1,13 @@
 # Current task
 
-Freeze a bounded Gold shortlist before any prospective qualification window opens.
-The user accepted the coordinator recommendation to narrow first. Assignment
-`gold-qualification-shortlist-013` is published from accepted worker HEAD `67fcc09`.
+Freeze the Gold qualification evaluation manifest before the window opens.
+`gold-qualification-shortlist-013` is accepted at clean worker `0d82157`: a fresh
+coordinator run reproduced the four-id shortlist and complete 255-candidate audit,
+with 79/79 focused and 463/463 local tests.
 
-Gold must execute the exact selector predeclared in protocol 012 against the 255
-gate-eligible candidates and the accepted consumed run-011 ledger, using only
-`status`, supported-year count, `n`, unavailable-anchor count and `candidate_id`.
-It must freeze at most 20 candidate ids under the declared one-per-variable-pair and
-one-per-variable diversity rules, with a complete 255-candidate audit and focused
-fail-closed tests.
-
-This assignment does not open or backfill the prospective window. No outcome after
-the consumed boundary may be acquired or read, no holdout is reserved or consumed,
-and no formula, integration, deployment, Layer 1 or production change is authorized.
-Next action: await verified Gold pickup and then review the unique 013 submission.
+`gold-qualification-window-freeze-014` now requires a future-only first anchor at
+`2026-09-24T14:00:00Z`, explicitly superseding the unused pre-shortlist 012 date and
+prohibiting backfill. It must bind the accepted four ids and attach their consumed
+reference signs only after membership/order are fixed, without acquiring or reading
+prospective outcomes. Next: await pickup and review the unique 014 submission before
+authorizing any qualification execution.

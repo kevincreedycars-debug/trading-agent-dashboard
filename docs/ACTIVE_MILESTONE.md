@@ -1,13 +1,10 @@
 # Active milestone
 
-Current milestone: freeze the Gold prospective shortlist before qualification.
-Status: the user chose to narrow the accepted 255-candidate eligible pool first.
-`gold-qualification-shortlist-013` is published with the protocol-012 selector fixed
-unchanged and a maximum of 20 hypotheses.
+Current milestone: freeze a future-only Gold qualification manifest.
+Status: shortlist 013 is accepted at `0d82157`; four ids are frozen from the
+255-candidate eligible pool, with independent artifact and test reproduction.
 
-Next immediate action: Gold acknowledges and executes the deterministic selector on
-accepted consumed run-011 evidence, produces the immutable shortlist and exhaustive
-255-candidate selection audit, runs focused and local tests, submits a unique 013
-envelope, and pauses for review. Publication is not worker pickup. No prospective
-window, post-boundary outcome read, holdout, formula, integration or production
-change is authorized.
+Next immediate action: Gold completes `gold-qualification-window-freeze-014`, fixing
+the first eligible anchor at `2026-09-24T14:00:00Z`, forbidding all backfill and
+binding the four-id evaluation manifest without reading prospective outcomes. The
+window remains closed until the resulting submission is separately reviewed.

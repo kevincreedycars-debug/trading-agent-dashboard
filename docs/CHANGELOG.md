@@ -1,5 +1,10 @@
 # 2026-09-20 - Gold coverage registry accepted at checkpoint review
 
+2026-09-23 accepted Gold shortlist 013 after independent reproduction of four ids,
+the complete 255-candidate audit, 79/79 focused tests and 463/463 full local tests.
+Published future-window manifest freeze 014 with a 2026-09-24 14:00 UTC first anchor
+and an explicit no-backfill boundary. No prospective outcome or production action.
+
 2026-09-23 user chose to narrow the accepted Gold eligible pool before prospective
 qualification. Published `gold-qualification-shortlist-013` to execute the frozen
 protocol-012 selector once on consumed run-011 evidence and freeze at most 20 ids
