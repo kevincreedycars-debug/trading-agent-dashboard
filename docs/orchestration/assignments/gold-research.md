@@ -86,3 +86,21 @@ reconciliation checks, focused 57/57 and full local 441/441 passed. The correcti
 is required because 2,481 candidate availability-matched baseline denominators and
 medians differ from the universal record, and 19 comparison signs change. Do not
 change the registry, inputs, timing, min_n, cell, holdout status or production.
+
+## Revision 3 request after review of run-011 r2
+
+The revision-2 implementation, immutable run and availability-matched baselines
+pass independent review. Make a documentation-only correction; do not rerun or
+regenerate any outcome artifact.
+
+1. In `docs/GOLD_FIRST_COMBINATION_RESULTS.md`, make the Outcome row describe only
+   the executed `h24_post_event` horizon, including its exact/delayed endpoint
+   handling. Remove the 1-hour, 4-hour and fifth-session description from this run.
+2. Replace every claim that exact/delayed observations are "never merged" with the
+   accurate statement: the pooled `all_computed` row is their explicit sum, while
+   their own denominators remain separately visible alongside it; the pooled sum
+   is not an independent sample or statistic.
+3. Remove the extra blank line at EOF and add a narrow wording regression if
+   practical. Preserve all code, registry/input files, manifest, ledger, summary,
+   analysis, reconciliation and run directories byte-for-byte. Submit revision 3
+   and pause.

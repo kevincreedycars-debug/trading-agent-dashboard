@@ -1,5 +1,15 @@
 # Session notes
 
+2026-09-23 run-011 r2 reviewed on user request. Gold had already completed the
+baseline correction and submitted at clean HEAD 1526d34. Coordinator independently
+verified the manifest, all 2,548 ordered ledger records, 81 checks and zero baseline
+denominator/median mismatches; focused 61/61 passes. Core r2 evidence is sound.
+Changes requested only for two stale report statements: the Outcome row still lists
+unexecuted 1h/4h/five-session horizons, and the report says exact/delayed observations
+are never merged despite correctly reporting all_computed as their pooled sum.
+Revision 3 must change documentation only and preserve every run artifact. No rerun,
+next-stage search, holdout, integration or production change.
+
 2026-09-23 RESUMED REVIEW: run-011 r1 at clean worker 27fa8e9 received changes
 requested. Coordinator re-hashed the frozen registry, accepted inputs, 28 raw source
 artifacts and 14-module closure; independently validated all 2,548 ledger records in

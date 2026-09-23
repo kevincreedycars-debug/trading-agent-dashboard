@@ -1,5 +1,15 @@
 # Current state
 
+2026-09-23 run-011 r2 review: clean worker 1526d34, correction commit 5204894.
+Independent manifest and ledger checks validate all 2,548 records, all 81 row
+checks, every aggregate and every per-candidate availability baseline with zero n
+or median mismatches; focused suite 61/61. The corrected immutable ledger hash is
+5cd45278.... Substantive implementation passes, but acceptance awaits a narrow
+documentation-only revision: the report still lists unexecuted 1h/4h/five-session
+outcomes and contradicts its pooled all_computed sum by saying endpoint observations
+are never merged. Published revision-3 wording correction; no rerun, new research,
+holdout, integration or production action.
+
 2026-09-23 RESUMED: Gold run-011 r1 reviewed at clean worker 27fa8e9, execution
 commit 181d1c2. Independent checks verified the frozen registry, four accepted
 inputs, 28 source artifacts, 14-module closure, all 2,548 unique ledger records in

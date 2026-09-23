@@ -1,5 +1,15 @@
 # Central decisions
 
+## 2026-09-23: Gold run-011 revision 2 passes substantively; wording correction remains
+
+At clean worker 1526d34, independent checks verify the corrected immutable ledger:
+2,548 ordered records, all 81 reconstruction checks, all aggregates and zero
+availability-baseline denominator or median mismatches; focused 61/61 passes. The
+implementation and evidence pass. Acceptance awaits only a documentation revision
+that removes unexecuted 1h/4h/five-session descriptions and accurately states that
+pooled all_computed is the explicit sum of separately visible endpoint groups.
+No rerun or new research is authorized.
+
 ## 2026-09-23: Gold run-011 revision 1 needs availability-matched baselines
 
 Independent review at clean worker 27fa8e9 verified the frozen registry, execution
