@@ -41,6 +41,8 @@ credential store. Each event reads canonical notes afresh; this IDE conversation
 is not resumed or injected into.
 
 Start it with `powershell -File tools/agent-mailbox-bridge/start-coordinator.ps1`.
+The start wrapper launches `run-coordinator.ps1`, which keeps the daemon inside
+the dedicated encrypted `deepseek-coordinator` credential scope.
 Pause new reviews with `node scripts/coordinator-dispatch.js pause`; inspect
 `node scripts/coordinator-dispatch.js status`. Resume with `enable` while the
 dispatcher process remains running, or run the start script after Windows restart.
