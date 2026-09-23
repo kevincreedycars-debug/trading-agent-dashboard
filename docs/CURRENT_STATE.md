@@ -1,5 +1,15 @@
 # Current state
 
+2026-09-23 user decision: narrow the Gold pool before opening any prospective
+qualification window. Published `gold-qualification-shortlist-013` from accepted
+worker HEAD `67fcc09`. It authorizes one exact execution of the protocol-012
+selector over the 255 gate-eligible candidates and the accepted consumed run-011
+ledger, producing at most 20 fixed candidate ids plus an exhaustive selection
+audit. The selector order and diversity constraints may not be adapted. Publication
+is not pickup or completion. No post-boundary outcome acquisition/read, prospective
+window, holdout, formula, integration, deployment or production change is
+authorized.
+
 2026-09-23 gold-qualification-protocol-012 revision 3 reviewed at clean worker
 `67fcc09` (base `7792477`, the reviewed revision-2 head; one commit, two disclosed
 files) and **accepted**, documentation-only. Mailbox SHA-256 `868c0611...`

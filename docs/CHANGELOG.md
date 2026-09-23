@@ -1,5 +1,11 @@
 # 2026-09-20 - Gold coverage registry accepted at checkpoint review
 
+2026-09-23 user chose to narrow the accepted Gold eligible pool before prospective
+qualification. Published `gold-qualification-shortlist-013` to execute the frozen
+protocol-012 selector once on consumed run-011 evidence and freeze at most 20 ids
+with an exhaustive audit. No prospective outcome, holdout, live or production
+action is authorized.
+
 2026-09-23 Gold `gold-qualification-protocol-012` revision 3 reviewed by the
 background central coordinator and accepted, documentation-only. Submission
 SHA-256 `868c0611...` reproduced; worker clean at 67fcc09 (one commit on 7792477,

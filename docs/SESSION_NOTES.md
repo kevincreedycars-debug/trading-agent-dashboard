@@ -1,5 +1,17 @@
 # Session notes
 
+2026-09-23 user accepted the coordinator recommendation to narrow Gold first.
+Paused the idle background dispatcher (`activeRun=false`) and published
+`gold-qualification-shortlist-013` from accepted worker HEAD `67fcc09`, using the
+required `instructions_published_awaiting_worker` state. The bounded assignment
+executes the unchanged protocol-012 selector exactly once over the 255 gate-eligible
+candidates and accepted consumed run-011 ledger, freezes no more than 20 candidate
+ids, and requires an exhaustive 255-candidate audit, hashes and fail-closed tests.
+It explicitly does not open/backfill the prospective window or authorize any
+post-boundary outcome, holdout, formula, live, integration, deployment or production
+action. Publication is not evidence of pickup. The unrelated Strategy workspace
+change and five untracked canonical Gold policy files were preserved.
+
 2026-09-23 gold-qualification-protocol-012 revision 3 reviewed by the background
 central coordinator and **accepted**, documentation-only. Mailbox SHA-256
 `868c0611...` reproduced exactly. Worker clean at `67fcc09` (base `7792477`, one

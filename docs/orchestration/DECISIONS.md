@@ -1,5 +1,21 @@
 # Central decisions
 
+## 2026-09-23: narrow Gold before opening the prospective window
+
+The user accepted the coordinator recommendation to narrow the pool first.
+Published `gold-qualification-shortlist-013` from accepted worker HEAD `67fcc09`.
+The assignment authorizes exactly one execution of the selector frozen in protocol
+012 over the accepted 255-candidate eligible set and consumed run-011 ledger. It
+must use only the five declared selection fields, preserve the exact deterministic
+order and one-per-pair/one-per-variable diversity rules, freeze at most 20 candidate
+ids, and emit a complete 255-candidate audit with immutable provenance and tests.
+
+This resolves only the pool-narrowing decision. It does not authorize opening or
+backfilling the prospective window, reading or acquiring outcomes after the
+consumed boundary, reserving or consuming a holdout, fitting a formula, or changing
+live Gold, Layer 1, integration, deployment or production. The shortlist requires
+separate coordinator review before any prospective action.
+
 ## 2026-09-23: Gold qualification-protocol-012 revision 3 accepted; prospective window awaits the user
 
 Background coordinator review of submission `20260923-gold-qualification-protocol-012-r3`
