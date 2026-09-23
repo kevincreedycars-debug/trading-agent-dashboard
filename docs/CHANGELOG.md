@@ -1,5 +1,19 @@
 # 2026-09-20 - Gold coverage registry accepted at checkpoint review
 
+2026-09-23 Gold `gold-qualification-protocol-012` revision 2 reviewed by the
+background central coordinator: submission hash 413b6b17... matched, worker clean at
+7792477, the focused protocol file re-ran 8/8, the gate re-ran deterministically at
+255 eligible of 2,548 with reproducing fail-closed probes, the 37-atom/15-variable
+coverage and fixed-offset boundary were confirmed, and all nine run-011 artifacts
+re-hashed byte-identical. Decision: changes requested, documentation-only - a
+literal backslash escape and stale 7-test/71-71/455-451 counts in
+`docs/GOLD_INDIVIDUAL_VARIABLE_REPORT_PROGRESS.md` and `docs/SESSION_NOTES.md` must be
+corrected to the delivered 8-test/72-72/456-452 state, preserving every code,
+registry, test and run-011 artifact. No next assignment was published; the open
+decision is whether a prospective qualification window opens over the 255-candidate
+eligible pool with the declared 20-hypothesis cap or the pool is narrowed first. No
+production, warehouse, Layer 1, integration or deployment change.
+
 2026-09-23 accepted Gold run-011 revision 3 after 26/26 coordinator focused tests
 and published prospective qualification protocol 012. Migrated the unattended
 coordinator configuration from OpenAI inference to DeepSeek `deepseek-flash`, with

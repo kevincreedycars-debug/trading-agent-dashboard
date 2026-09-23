@@ -1,5 +1,26 @@
 # Session notes
 
+2026-09-23 gold-qualification-protocol-012 revision 2 reviewed by the background
+central coordinator and **not accepted**: changes requested, documentation-only.
+Exact mailbox hash 413b6b17...; worker clean at 7792477 (base cc0bff5, one commit,
+six disclosed files). Independent verification reproduced every artifact hash
+(inventory registry c9cc0def..., gate 969cb760..., focused test 43b30d58..., inventory
+doc aa70fc10..., protocol doc 4fd1c2c2...), re-ran the focused file 8/8, re-ran the
+gate (255 eligible / 2,293 ineligible, identical per-check counts, deterministic, no
+outcome-field reference, fail-closed probes reproduce), confirmed the 37-atom /
+15-variable coverage and the fixed-offset boundary, and re-hashed all nine run-011
+artifacts to their accepted values. Two documentation defects block acceptance:
+docs/GOLD_INDIVIDUAL_VARIABLE_REPORT_PROGRESS.md commits a literal backslash escape
+that joins the revision-2 paragraph to the next one and still records 7 tests /
+71-71 / 455-451, and docs/SESSION_NOTES.md records the same pre-revision counts.
+Revision 3 is limited to those notes and must preserve every code, registry, test and
+run-011 artifact byte-for-byte. No next assignment was published this cycle: the open
+user decision is whether to authorize a prospective window over the 255-candidate
+eligible pool with the declared 20-hypothesis cap or to narrow the pool first. No
+rerun, new outcome, holdout, ranking, selector execution, integration, deployment or
+production change; the Strategy workspace state and the five canonical untracked
+Gold originals were preserved.
+
 2026-09-23 Gold run-011 r3 accepted at clean cccbf47, exact mailbox hash
 d6463ea2.... The two-file documentation diff is precisely scoped; Outcome now
 describes h24 only, pooled endpoint wording is internally consistent, EOF is clean,

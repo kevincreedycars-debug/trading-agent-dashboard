@@ -1,17 +1,23 @@
 # Current state
 
-2026-09-23 run-011 r3 accepted at clean worker cccbf47. The requested
-documentation-only corrections are complete and coordinator focused suites pass
-26/26; no outcome artifact was rerun or changed. Published
-gold-qualification-protocol-012 to map 37 research atoms/15 variables to live
-availability and predeclare a prospective qualification/selection protocol without
-ranking or new outcomes. Gold submitted 012 r1 and then began unsubmitted timing-
-semantics corrections, so review is held until its worker tree is clean and a
-revision is submitted. The old OpenAI background checker is disabled; the existing
-Cline DeepSeek key was securely migrated into the encrypted project store and the
-live `deepseek-flash` smoke returned COORDINATOR_READY. Persistent unattended start
-awaits explicit approval for repository evidence to be sent to DeepSeek; there is
-no OpenAI-auth fallback.
+2026-09-23 gold-qualification-protocol-012 revision 2 reviewed at clean worker
+7792477 (base cc0bff5, one commit, six disclosed files) and **not accepted**:
+changes requested, documentation-only. Coordinator verification reproduced the
+submission hash 413b6b17..., every artifact hash, the deterministic 255-eligible /
+2,293-ineligible gate result with its fail-closed probes, the 8/8 focused file, the
+37-atom/15-variable coverage, the fixed-offset boundary and the byte-identity of
+all nine run-011 artifacts. Two durable-note defects block acceptance: the progress
+document commits a literal backslash escape and still records 7 tests / 71-71 /
+455-451, and `docs/SESSION_NOTES.md` records the same pre-revision counts; the
+delivered state is 8 tests / 72-72 / 456-452. Revision 3 is limited to those notes.
+No next research assignment was published; the open user decision is whether to
+authorize a prospective window over the 255-candidate eligible pool with the
+declared 20-hypothesis cap or to narrow the pool first. No rerun, new outcome,
+holdout, ranking, selector execution, integration or production change. The old
+OpenAI background checker is disabled; the existing Cline DeepSeek key was securely
+migrated into the encrypted project store and the live `deepseek-flash` smoke
+returned COORDINATOR_READY. Persistent unattended start awaits explicit approval for
+repository evidence to be sent to DeepSeek; there is no OpenAI-auth fallback.
 
 2026-09-23 run-011 r2 review: clean worker 1526d34, correction commit 5204894.
 Independent manifest and ledger checks validate all 2,548 records, all 81 row

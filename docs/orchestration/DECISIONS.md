@@ -240,3 +240,23 @@ The user built, installed and committed a local VS Code extension (`tools/agent-
 Limits recorded with the adoption: explicit one-time binding per window that expires on reload; delivery recorded as `sent_unconfirmed` because Cline exposes no receipt, with worker activity as the only pickup evidence; concurrent or repeated events collapse to one attempt; a bounded daily wake budget; fail-closed on any mailbox validation error or assignment path escape; and the bridge never creates or replaces a Cline task, never clicks approvals and never interpolates report text into commands. Live end-to-end delivery is not verified, and installation alone does not establish it. Delivery records live outside the inbox and replies directories, so the bridge cannot alter a submitted report or a reply.
 
 Any future coordinator-side automation still needs explicit budgets, exclusive coordinator locking and deduplication and remains a separate implementation. The open question of running the coordinator in the background versus in the current chat is unanswered.
+## 2026-09-23: gold-qualification-protocol-012 revision 2 reviewed, changes requested
+
+Background coordinator review of submission `20260923-gold-qualification-protocol-012-r2`
+at clean worker `7792477`, submission SHA-256 `413b6b173cc46bde9b2c968b058a63564addee52507137dcf104e478a0a89beb`.
+Independently verified: every artifact hash, the deterministic gate result (255
+eligible of 2,548, identical per-check counts), the reproducing fail-closed probes,
+the 37-atom/15-variable coverage, the fixed-offset consumed boundary and the
+byte-identity of all nine run-011 artifacts; focused protocol file re-ran 8/8.
+Revision 2 is not accepted. Revision 3 is limited to durable-note documentation
+defects: a literal backslash escape and stale 7-test/71-71/455-451 counts in
+`docs/GOLD_INDIVIDUAL_VARIABLE_REPORT_PROGRESS.md` and `docs/SESSION_NOTES.md`, to be
+corrected to the delivered 8-test/72-72/456-452 state. See
+`reviews/20260923-gold-qualification-protocol-012-r2.md`.
+
+**Open decision (needs the user).** The gate's declaration space is 255 eligible
+candidates against a declared selection cap of 20. Whether a prospective
+qualification window opens over that pool, and whether the pool should be narrowed
+before it opens, is not decided. No selector execution, prospective anchor or
+outcome acquisition, holdout reservation/use, integration or production change is
+authorized pending that decision.
