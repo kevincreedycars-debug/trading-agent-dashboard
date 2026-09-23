@@ -1,5 +1,19 @@
 # Session notes
 
+2026-09-23 RESUMED REVIEW: run-011 r1 at clean worker 27fa8e9 received changes
+requested. Coordinator re-hashed the frozen registry, accepted inputs, 28 raw source
+artifacts and 14-module closure; independently validated all 2,548 ledger records in
+registry order, hash f564bfaa..., all 81 reconstruction checks and submitted
+non-baseline totals. Focused tests pass 57/57; current full suite passes 441/441.
+Blocking defect: every candidate records the same n=964 cohort-wide baseline.
+Availability-matched reconstruction changes n and median for 2,481 candidates
+(range 941-964) and changes 19 comparison signs. Published a narrow correction
+under gold-combination-run-011: derive/validate per-candidate baselines, add tests,
+retain all existing evidence, execute one new immutable complete run and regenerate
+the report. Also correct pooled-endpoint/h24 wording and accurately disclose the
+first failed run has no contemporaneous exception record. No accepted results,
+next-stage search, holdout, integration or production change.
+
 2026-09-22 SAVE FOR TONIGHT: user requested stop/save. Automatic coordinator disabled; activeRun=false. Gold has finished run-011 and reports paused. Submission 20260922-gold-combination-run-011-r1 is the sole pending review, exact mailbox SHA-256 fd81a72e607f14cce57546eb74e4c97b55e39d7753ddb640ed46e75aa7af969f, worker HEAD 27fa8e9 (execution commit reported 181d1c2). Worker reports complete 2,548-record exploratory ledger, 1,245 reported / 466 ineligible / 837 empty / 0 unavailable, 81 reconstruction checks, two preserved failed preparations, focused 57/57 and full suite 440 with five reported failures. These are submitted claims, NOT accepted results. Resume by checking all inboxes and reviewing this submission, manifests, failures, ledger completeness and results before any next assignment. Keep automatic reviews paused until explicitly resumed. The bridge remains connected; pausing coordinator does not stop independent Cline turns, but Gold itself currently reports paused. Preserve unrelated Strategy workspace and five canonical untracked Gold originals.
 
 2026-09-22 evening: all six inboxes checked; Gold 010 r3 was the only pending item. Accepted a185086 after independent 50/50 focused checks and synthetic rejection probes; unchanged frozen registry verified. Published gold-combination-run-011 for the first bounded 2,548-candidate exploratory run with pre-execution manifest/code, strict reconstruction reconciliation and exhaustive ledger. Await actual pickup. Other workers have no new submissions. Automatic reviews remain capped at six per UTC day; this review was user-requested. No real combinations have run at this checkpoint and no production change occurred.

@@ -1,9 +1,11 @@
 # Current task
 
-Saved for tonight, 2026-09-22, at user request. Gold run-011 r1 is submitted and
-awaits independent review at worker HEAD 27fa8e9. Verify the frozen registry,
-pre-execution code/source manifests, two reported failed preparations, reconstruction
-checks, complete ledger, reported test failures and descriptive results. Submitted
-counts are not yet accepted research evidence. No next assignment before review.
-Automatic coordinator stays disabled until resumed. Preserve independent Layer 1,
-downstream-only research, consumed-data boundaries and unrelated working files.
+Gold run-011 revision 1 has been independently reviewed with changes requested.
+The frozen registry, manifest, 2,548-record ledger, 81 reconciliation checks and
+non-baseline totals reproduce; focused 57/57 and full local 441/441 pass. Acceptance
+is withheld because all records use the universal n=964 cohort baseline instead of
+candidate-specific feature/context-availability baselines: 2,481 denominators and
+medians differ and 19 comparison signs change. Await revision 2 under the existing
+assignment with a committed correction, synthetic regressions, a new immutable
+complete run and regenerated reporting. No alternative cell, next-stage research,
+holdout, integration or production action.

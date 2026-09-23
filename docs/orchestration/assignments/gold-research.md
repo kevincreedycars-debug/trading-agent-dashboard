@@ -54,3 +54,35 @@ No acquisition, calendar/timing redefinition, source proxy, holdout reservation 
 use, warehouse/live workflow/Layer 1/dashboard mutation, integration, deployment or
 purchase. If a required accepted input is unavailable or reconciliation fails,
 submit a concrete blocker rather than fill gaps or change policies.
+
+## Revision 2 request after review of run-011 r1
+
+Revision 1 at clean worker HEAD 27fa8e9 is not accepted. Preserve the frozen
+registry and all three existing run directories. Correct only the baseline and
+reporting issues below, then submit a unique revision 2 and pause.
+
+1. Derive each candidate's baseline from computed outcomes in the same declared
+   cohort, horizon and endpoint after requiring all of that candidate's atom
+   variables to be available and, only for a declared context option, the context
+   field to be available. Do not condition the baseline on matching the candidate's
+   states. Record and validate the resulting per-candidate n and median rather than
+   passing the universal n=964 baseline to every record.
+2. Add fail-closed synthetic tests for atom availability, context/no-context
+   availability, baseline denominator and median validation, and a comparison-sign
+   change relative to the cohort-wide baseline.
+3. Commit code and tests before outcomes, prepare a new immutable manifest/run ID,
+   and rerun all 2,548 frozen candidates once. Retain r3 unchanged; no selective
+   ledger rewrite. Reconcile all prior non-baseline totals and report all changed
+   baseline summaries.
+4. Commit the descriptive-analysis generator or equivalently bind its code plus
+   input/output hashes. Correct the results wording: pooled all_computed explicitly
+   sums separately reported endpoint groups, and this batch executed h24 only.
+   Update the machinery document's historical no-execution wording. State that the
+   first failed preparation retained a manifest/start log and source-level cause,
+   but no contemporaneous exception record.
+
+Independent review evidence: manifest and all 2,548 ledger records verified; 81/81
+reconciliation checks, focused 57/57 and full local 441/441 passed. The correction
+is required because 2,481 candidate availability-matched baseline denominators and
+medians differ from the universal record, and 19 comparison signs change. Do not
+change the registry, inputs, timing, min_n, cell, holdout status or production.
