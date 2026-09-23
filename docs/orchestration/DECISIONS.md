@@ -259,4 +259,4 @@ candidates against a declared selection cap of 20. Whether a prospective
 qualification window opens over that pool, and whether the pool should be narrowed
 before it opens, is not decided. No selector execution, prospective anchor or
 outcome acquisition, holdout reservation/use, integration or production change is
-authorized pending that decision.
+authorized pending that decision.Gold submitted `20260923-gold-qualification-protocol-012-r3` (mailbox SHA-256 868c0611...) after this review; it is pending and was not reviewed in this cycle, which is limited to the revision-2 decision above.

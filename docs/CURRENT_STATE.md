@@ -17,7 +17,9 @@ holdout, ranking, selector execution, integration or production change. The old
 OpenAI background checker is disabled; the existing Cline DeepSeek key was securely
 migrated into the encrypted project store and the live `deepseek-flash` smoke
 returned COORDINATOR_READY. Persistent unattended start awaits explicit approval for
-repository evidence to be sent to DeepSeek; there is no OpenAI-auth fallback.
+repository evidence to be sent to DeepSeek; there is no OpenAI-auth fallback. The worker submitted `20260923-gold-qualification-protocol-012-r3` (mailbox
+SHA-256 868c0611...), which arrived after this cycle's review and is deliberately
+left pending and unreviewed for the next coordinator cycle.
 
 2026-09-23 run-011 r2 review: clean worker 1526d34, correction commit 5204894.
 Independent manifest and ledger checks validate all 2,548 records, all 81 row

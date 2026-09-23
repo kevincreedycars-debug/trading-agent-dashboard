@@ -19,7 +19,7 @@ user decision is whether to authorize a prospective window over the 255-candidat
 eligible pool with the declared 20-hypothesis cap or to narrow the pool first. No
 rerun, new outcome, holdout, ranking, selector execution, integration, deployment or
 production change; the Strategy workspace state and the five canonical untracked
-Gold originals were preserved.
+Gold originals were preserved. The worker submitted `20260923-gold-qualification-protocol-012-r3` (mailbox SHA-256 868c0611...), which arrived after this cycle's review and is deliberately left pending and unreviewed for the next coordinator cycle.
 
 2026-09-23 Gold run-011 r3 accepted at clean cccbf47, exact mailbox hash
 d6463ea2.... The two-file documentation diff is precisely scoped; Outcome now
