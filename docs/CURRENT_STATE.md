@@ -5,9 +5,13 @@ documentation-only corrections are complete and coordinator focused suites pass
 26/26; no outcome artifact was rerun or changed. Published
 gold-qualification-protocol-012 to map 37 research atoms/15 variables to live
 availability and predeclare a prospective qualification/selection protocol without
-ranking or new outcomes. The old OpenAI background checker is disabled; its runner
-is migrated to DeepSeek `deepseek-flash` with no OpenAI-auth fallback, pending the
-locally encrypted `DEEPSEEK_API_KEY` and live smoke test.
+ranking or new outcomes. Gold submitted 012 r1 and then began unsubmitted timing-
+semantics corrections, so review is held until its worker tree is clean and a
+revision is submitted. The old OpenAI background checker is disabled; the existing
+Cline DeepSeek key was securely migrated into the encrypted project store and the
+live `deepseek-flash` smoke returned COORDINATOR_READY. Persistent unattended start
+awaits explicit approval for repository evidence to be sent to DeepSeek; there is
+no OpenAI-auth fallback.
 
 2026-09-23 run-011 r2 review: clean worker 1526d34, correction commit 5204894.
 Independent manifest and ledger checks validate all 2,548 records, all 81 row

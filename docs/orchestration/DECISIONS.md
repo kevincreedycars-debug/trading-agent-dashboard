@@ -19,6 +19,12 @@ is now only the sandboxed agent host and inference is pinned to DeepSeek
 encrypted local `DEEPSEEK_API_KEY`; there is no OpenAI model/auth fallback. Missing
 credentials or provider incompatibility fail closed and pause automation.
 
+The existing Cline DeepSeek credential was subsequently migrated into the encrypted
+project store without printing it, and the live read-only smoke returned
+`COORDINATOR_READY`. Persistent unattended start remains disabled until the user
+explicitly approves sending repository review evidence to DeepSeek as a third-party
+data destination.
+
 ## 2026-09-23: Gold run-011 revision 2 passes substantively; wording correction remains
 
 At clean worker 1526d34, independent checks verify the corrected immutable ledger:

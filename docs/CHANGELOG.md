@@ -3,8 +3,9 @@
 2026-09-23 accepted Gold run-011 revision 3 after 26/26 coordinator focused tests
 and published prospective qualification protocol 012. Migrated the unattended
 coordinator configuration from OpenAI inference to DeepSeek `deepseek-flash`, with
-an encrypted dedicated credential scope and no OpenAI fallback; live smoke remains
-pending local key entry.
+an encrypted dedicated credential scope and no OpenAI fallback; the live smoke was
+verified after securely migrating the existing Cline credential. Persistent daemon
+start remains disabled pending explicit third-party repository-data egress approval.
 
 2026-09-22 evening: all six inboxes checked; Gold 010 r3 was the only pending item. Accepted a185086 after independent 50/50 focused checks and synthetic rejection probes; unchanged frozen registry verified. Published gold-combination-run-011 for the first bounded 2,548-candidate exploratory run with pre-execution manifest/code, strict reconstruction reconciliation and exhaustive ledger. Await actual pickup. Other workers have no new submissions. Automatic reviews remain capped at six per UTC day; this review was user-requested. No real combinations have run at this checkpoint and no production change occurred.
 

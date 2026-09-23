@@ -9,8 +9,13 @@ availability, then freeze a prospective qualification and later-selection protoc
 without candidate ranking or new outcomes. In parallel, migrated the unattended
 coordinator invocation from OpenAI gpt-5.6-sol to DeepSeek `deepseek-flash` through
 the Codex sandbox host and encrypted local credential scope. There is deliberately
-no OpenAI fallback. The previous daemon remains disabled until the DeepSeek key is
-stored and the read-only smoke passes.
+no OpenAI fallback. Follow-up: the existing Cline DeepSeek credential was imported
+without disclosure, validation passes and the live read-only smoke returned
+COORDINATOR_READY. Starting the persistent daemon was blocked pending explicit
+approval that unattended review will transmit repository diffs/artifacts to the
+third-party DeepSeek endpoint. Gold independently submitted protocol 012 r1 at
+cc0bff5 and is now making unsubmitted timing-semantics corrections; do not review
+the stale r1 worktree until it is clean and resubmitted.
 
 2026-09-23 run-011 r2 reviewed on user request. Gold had already completed the
 baseline correction and submitted at clean HEAD 1526d34. Coordinator independently
