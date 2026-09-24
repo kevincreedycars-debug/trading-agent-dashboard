@@ -1,5 +1,31 @@
 # Session notes
 
+2026-09-24 SAVE FOR SHUTDOWN: Gold's prospective window is live and unattended. 017
+(activation package) and 018 (window activation) were both reviewed and accepted; 018
+delivered at clean `67f51e8` with a lock-guarded tick driver, exactly one scheduled task
+`GoldQualificationWindowTick018` (`Ready`, `PT10M`, result `0`, zero missed runs) and three
+real anchor-2 pre-anchor feature captures sealed (`302e4a26`, `58ece552`, `c51ad9b9`,
+coordinator-reproduced). Anchor 1 is permanently missed and sealed
+`blocked_no_reschedule`, with no backfill anywhere. `gold-coverage-completion-019` was
+published for the seven remaining drivers from four free keyless sources with the legacy
+`dxy_*` ids retired and a digest at 28 of 28, plus section 8 task hardening; its wake has no
+dispatch record yet, so it is delivered as soon as the Gold window runs bridge 0.2.1,
+otherwise by the old 0.2.0 after 01:00 local. At the user's direction the twelve-per-day
+mailbox wake cap was removed (bridge 0.2.1 built, installed and committed with the bridge
+tests at 10/10); per-event dedupe, no retry of an ambiguous send and suppression while a
+worker reports `working` all remain. The unattended reviewer is enabled and watching (pid
+41964, six reviews per day kept as a cost guard) and completed its first autonomous review
+(strategy 003-asap acknowledged, commit `8f3cd89`). The second Strategy adviser `strategy-2`
+is fully registered for the user's Option B. Platform finding recorded: hash-bound Gold
+inputs materialise with CRLF in a fresh worktree, so accepted digests break and 37 tests
+fail in the spike worktree; the spike report was answered changes requested with that fix
+list. Mailbox empty, no validation errors. Overnight: the capture task keeps ticking every
+ten minutes and the reviewer keeps watching; no lane opens until the anchor-2 entry lane at
+`2026-09-25T14:00:00Z`. Resume: reload the Gold window to start 019 immediately, otherwise
+confirm 019 pickup after 01:00; preserve the untracked Gold session-policy files, the
+modified Strategy workspace, the spike assignment and the 017 overlap record.
+
+
 2026-09-24 strategy advisory 003-asap acknowledged and the second adviser's provider line
 made explicit. The coordinator reviewed the strategy worker's priority signal
 (`20260924-strategy-second-adviser-003-asap`, mailbox SHA-256 `6a08b366...`, `status_report`,

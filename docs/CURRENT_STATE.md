@@ -1,5 +1,21 @@
 # Current state
 
+2026-09-24 save checkpoint: Gold's real qualification window is capturing unattended via
+exactly one scheduled task `GoldQualificationWindowTick018` (`Ready`, every ten minutes,
+last result `0`, zero missed runs, three real anchor-2 captures sealed at `302e4a26`,
+`58ece552` and `c51ad9b9`), with anchor 1 permanently missed and sealed
+`blocked_no_reschedule`. `018` was accepted at clean `67f51e8`; `019` (seven drivers from
+four free keyless sources, `dxy_*` retired without backfill, digest at 28 of 28, plus
+capture-task hardening) is published and queued. The twelve-per-day mailbox wake cap was
+removed at the user's direction in bridge 0.2.1, which is packaged and installed; the
+unattended reviewer is enabled and watching with a six-reviews-per-day cost guard. The
+second Strategy adviser `strategy-2` is registered for the user's Option B. Recorded
+platform defect: hash-bound Gold inputs materialise with CRLF in a fresh worktree, breaking
+accepted digests (37 failing tests in the spike worktree); the spike report carries a
+bounded change request for it. Mailbox empty; no outcome or aggregate has been read and
+evaluation stays sealed until `2027-03-25T15:00:00Z`.
+
+
 2026-09-24 strategy advisory 003-asap acknowledged; the second adviser's provider line is
 explicit. The strategy worker recorded a user priority signal asking for the second Strategy
 adviser to be built immediately on DeepSeek again. Reviewed as evidence, not instructions:

@@ -1,24 +1,18 @@
 # Active milestone
 
-Current milestone: complete Gold's declared 28-variable coverage while the accepted
-prospective window captures unattended.
+Current milestone: let the accepted Gold window capture unattended while the queued
+coverage work completes.
 
-Status: `gold-coverage-completion-019` is published from accepted `67f51e8`; its wake is
-queued behind the worker bridge's 12-per-day limit and is delivered after 01:00 local, or
-sooner if the operator pastes the agent prompt. The live lane needs no action: exactly one
-scheduled task `GoldQualificationWindowTick018` is `Ready` on a `PT10M` trigger, has run
-real ticks with anchor 1 `anchor_one_left_blocked` and anchor 2 features `already_settled`
-and nothing backfilled, and three real anchor-2 captures are sealed. 018 was accepted at
-`67f51e8`.
+Status at this save: 017 and 018 are accepted; `018` delivered the live lane at clean
+`67f51e8` with exactly one scheduled task `GoldQualificationWindowTick018` (`Ready`, every
+ten minutes, result `0`, zero missed runs) and three real anchor-2 feature captures sealed
+(`302e4a26`, `58ece552`, `c51ad9b9`, coordinator-reproduced). Anchor 1 is permanently
+missed and sealed `blocked_no_reschedule`. `019` (seven drivers from four free keyless
+sources plus task hardening) is published and queued. The twelve-per-day mailbox wake cap
+was removed at the user's direction (bridge 0.2.1, installed). The unattended reviewer is
+enabled and watching. Mailbox empty.
 
-Next immediate action: Gold declares the seven new ids, acquires the four free keyless
-sources read-only and measures them on the accepted historical path; the coordinator
-reviews that evidence while the capture task continues untouched. Anchor 2's entry lane is
-`2026-09-25T14:00:00Z`-`16:00:00Z` and needs no manual action.
-
-
-Waiting on the operator, not the coordinator: the registered second adviser (`strategy-2`) is
-published with status `instructions_published_awaiting_worker` and revision 2 names DeepSeek
-explicitly. It starts when the user opens `tools/strategy-node/StrategyLive.code-workspace`
-and connects that window once. Publication is not pickup, and it does not change the immediate
-action above.
+Next immediate action on resume: reload the Gold window so the queued `019` assignment is
+delivered immediately, then review Gold's declarations, task hardening and measurements.
+The capture task continues on its own; anchor 2's entry lane opens at
+`2026-09-25T14:00:00Z` and is captured automatically.
