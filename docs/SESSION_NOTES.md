@@ -1,5 +1,27 @@
 # Session notes
 
+2026-09-24 strategy advisory 003-asap acknowledged and the second adviser's provider line
+made explicit. The coordinator reviewed the strategy worker's priority signal
+(`20260924-strategy-second-adviser-003-asap`, mailbox SHA-256 `6a08b366...`, `status_report`,
+no changed files, tests disclosed as not run with a reason) as evidence rather than
+instructions. Its substance was already satisfied by canonical `c4948df`: `strategy-2` is
+registered with `mailbox_auto_connect` true, status `instructions_published_awaiting_worker`
+exactly, assignment `strategy-advisory-2-001`, a clean worktree at `4884339` with no
+`docs/strategy-2/` yet, the copper-tinted `StrategyLive.code-workspace` and a paste-ready
+wake prompt; adviser 1's assignment, status and notes are untouched. This review closed the
+one real gap the signal identified - revision 2 of the assignment, the wake prompt and
+`tools/strategy-node/README.md` now name DeepSeek explicitly with no new key, credential
+scope or provider configuration, and no provider field was invented in the register - and it
+declined the suggested second README file so the two copies cannot drift. Provenance notes:
+the envelope's `head_commit` `7e961ef` is one own-scope notes commit stale (actual head
+`4d49a70`, +17 lines in `docs/strategy/CONVERSATION_NOTES.md`), and its premise that
+submission `20260924-strategy-second-adviser-003` was unreplied went stale six seconds later.
+Read-only corroboration: `GoldQualificationWindowTick018` `Ready`, `LastTaskResult` 0, last
+run `21:36:01`, next `21:46`, `NumberOfMissedRuns` 0, and the Gold bridge connection `held`
+on the 12-wakes-per-day cap. No new assignment was published, because `019`,
+`strategy-advisory-2-001` and the spike revision are already published and awaiting pickup.
+No outcome, holdout, production, warehouse, Layer 1, live workflow or credential action.
+
 2026-09-24 Gold window activation accepted and running: the user authorized real window
 activation after the coordinator showed that the accepted 014 window opened at
 `2026-09-24T14:00:00Z`, that anchor 1 is permanently missed and that anchor 2's pre-anchor

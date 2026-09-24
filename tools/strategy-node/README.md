@@ -15,3 +15,18 @@ The Strategy row appears in the existing monitor automatically. Submissions aler
 the user and enter the same coordinator queue as Gold. Active sessions check files
 at turn/checkpoint boundaries; file notifications alone do not wake idle AI sessions.
 The token footer includes DeepSeek only when supported local extension logs expose usage.
+
+
+## Second workspace: Strategy Agent 2
+
+Open [StrategyLive.code-workspace](StrategyLive.code-workspace) in a second VS Code
+window, select DeepSeek in your existing agent extension there too, and run
+**Mailbox: Connect This Cline Worker** once. The register marks it
+`mailbox_auto_connect`, so it reconnects by itself after a reload. Keep adviser 1's window
+disconnected: the bridge has no task selector, so a single-shot delivery would otherwise
+race between two tasks in one workspace.
+
+Its one-time message names the same provider and points at
+`docs/orchestration/assignments/strategy-2.md` with `.local/worktrees/strategy-2` as the
+writable checkout. There is deliberately no second README file for that window - this file
+documents both workspaces so the two copies cannot drift apart.

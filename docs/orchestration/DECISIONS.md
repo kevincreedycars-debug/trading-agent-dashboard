@@ -466,3 +466,22 @@ qualification window opens over that pool, and whether the pool should be narrow
 before it opens, is not decided. No selector execution, prospective anchor or
 outcome acquisition, holdout reservation/use, integration or production change is
 authorized pending that decision. Revision 3 was subsequently reviewed and accepted; see the entry at the top of this file and `reviews/20260923-gold-qualification-protocol-012-r3.md`.
+## 2026-09-24: strategy 003-asap acknowledged; the second adviser's provider line is explicit
+
+The strategy worker recorded a user priority signal asking for the second Strategy adviser to be built
+immediately and pointed at DeepSeek again, with no new key, credential scope or provider configuration,
+and asked for two confirmations. The coordinator reviewed it as evidence, not instructions: submission
+`20260924-strategy-second-adviser-003-asap` (mailbox SHA-256 `6a08b366...`, `status_report`, no commits
+and no changed files) was acknowledged, and the build it asks for was already complete in canonical
+`c4948df` - worktree, branch, register entry with the exact `instructions_published_awaiting_worker`
+spelling, assignment, copper workspace and wake prompt. That publication did not depend on
+`gold-coverage-completion-019`, on the live capture lane or on a later checkpoint. One real gap was
+closed by this review: the provider is now named explicitly in revision 2 of
+`docs/orchestration/assignments/strategy-2.md`, in the `strategy-2` wake prompt and in
+`tools/strategy-node/README.md`; no second README file was created, because a duplicate beside the second
+workspace would drift from the first. `projects.json` still carries no provider field, because the
+provider is the user's selection in the Cline task in that window. No new worker assignment was
+published: `gold-coverage-completion-019`, `strategy-advisory-2-001` and the `backtester-spike` revision
+are already published and awaiting pickup, so a fourth would break the single-active-milestone rule, and
+publication is not pickup. Boundaries unchanged: no deployment, production, warehouse, Layer 1, live
+workflow, credential, qualification or holdout action, and the live capture lane stays untouched.

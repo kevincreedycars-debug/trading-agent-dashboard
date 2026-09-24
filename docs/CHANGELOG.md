@@ -1,5 +1,33 @@
 # 2026-09-20 - Gold coverage registry accepted at checkpoint review
 
+2026-09-24 acknowledged strategy advisory `20260924-strategy-second-adviser-003-asap`
+(mailbox SHA-256 `6a08b366...`, `status_report`, no commits and no changed files) after an
+independent background review reproduced the hash, confirmed the register, worktree,
+workspace and wake prompt created by canonical `c4948df`, verified that
+`.local/worktrees/strategy-2` is clean at `4884339` with no `docs/strategy-2/` yet, and
+corroborated the capture-lane claim by a read-only check that `GoldQualificationWindowTick018`
+is `Ready` with `LastTaskResult` 0, last run `21:36:01`, next run `21:46` and
+`NumberOfMissedRuns` 0. One gap was closed: revision 2 of
+`docs/orchestration/assignments/strategy-2.md`, the `strategy-2` wake prompt and
+`tools/strategy-node/README.md` now name DeepSeek explicitly with no new key, credential
+scope or provider configuration, and no provider field was invented in the register. The
+durable review is `docs/orchestration/reviews/20260924-strategy-second-adviser-003-asap.md`.
+No new assignment was published, and no outcome, holdout, production, warehouse, Layer 1,
+live workflow or credential action occurred.
+
+2026-09-24 reconciled the Gold 017 overlap and delivered the multi-asset one-day
+readiness spike at commit `aaa5103` in the isolated worktree
+`.local/worktrees/backtester-spike` (branch `spike/multi-asset-readiness-20260924`).
+Readiness matrix for eight assets, asset/job manifest schema, shared-cache contract
+and hash validator, deterministic concurrency-capped batch kernel with
+attempt-unique immutable shards, ordered merge, duplicate refusal, resource budgets
+and stage metrics, 8/8 focused tests. Measured 2,548 candidates x 965 anchors at
+1/2/4/8 workers: 3202/1664/905/775 ms, peak RSS about 50 MB, identical logical output
+and identical aggregate checksum at every worker count, 247 KB of compact NDJSON
+output, all resource budgets passing. No acquisition, warehouse write, scheduler
+install, evaluation, publication or research-rule change.
+
+
 2026-09-24 accepted Gold offline collectors 016 at clean worker `4eea9a8` (base
 `b5f2e27`, one commit, the four disclosed added files only; submission SHA-256
 `efe76d7c...`) after an interactive coordinator review that reproduced the accepted

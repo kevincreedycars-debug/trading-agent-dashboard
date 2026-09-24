@@ -15,3 +15,10 @@ Next immediate action: Gold declares the seven new ids, acquires the four free k
 sources read-only and measures them on the accepted historical path; the coordinator
 reviews that evidence while the capture task continues untouched. Anchor 2's entry lane is
 `2026-09-25T14:00:00Z`-`16:00:00Z` and needs no manual action.
+
+
+Waiting on the operator, not the coordinator: the registered second adviser (`strategy-2`) is
+published with status `instructions_published_awaiting_worker` and revision 2 names DeepSeek
+explicitly. It starts when the user opens `tools/strategy-node/StrategyLive.code-workspace`
+and connects that window once. Publication is not pickup, and it does not change the immediate
+action above.

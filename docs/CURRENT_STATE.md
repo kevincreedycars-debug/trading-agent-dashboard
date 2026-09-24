@@ -1,5 +1,27 @@
 # Current state
 
+2026-09-24 strategy advisory 003-asap acknowledged; the second adviser's provider line is
+explicit. The strategy worker recorded a user priority signal asking for the second Strategy
+adviser to be built immediately on DeepSeek again. Reviewed as evidence, not instructions:
+submission `20260924-strategy-second-adviser-003-asap` (mailbox SHA-256 `6a08b366...`,
+`status_report`, no commits and no changed files) was acknowledged, and its request was
+already satisfied by canonical `c4948df`. Verified independently: the `strategy-2` worktree
+is clean on `workers/strategy-advisory-2-20260924` at baseline `4884339` with no
+`docs/strategy-2/` yet, so publication is not pickup; the register entry carries
+`instructions_published_awaiting_worker` exactly and invents no provider field; the
+assignment, the copper-tinted `StrategyLive.code-workspace` and the wake prompt exist; and
+adviser 1's assignment, status (`advisory_active`) and notes are untouched. This review
+closed the one real gap: revision 2 of `docs/orchestration/assignments/strategy-2.md`, the
+`strategy-2` wake prompt and `tools/strategy-node/README.md` now name DeepSeek explicitly
+with no new key, credential scope or provider configuration; no second README file was
+created, because a duplicate beside the second workspace would drift from the first.
+Read-only corroboration of the worker's capture-lane claim: `GoldQualificationWindowTick018`
+is `Ready` with `LastTaskResult` 0, last run `2026-09-24 21:36:01` local, next run `21:46`
+and `NumberOfMissedRuns` 0, and the Gold bridge connection is `held` on the documented
+12-wakes-per-day cap. No new worker assignment was published. No outcome, holdout,
+production, warehouse, Layer 1, live workflow, dashboard, credential or deployment action
+occurred.
+
 2026-09-24 Gold's real qualification window is live. After the coordinator showed that the
 accepted 014 window had opened at `2026-09-24T14:00:00Z` with anchor 1 permanently missed
 and anchor 2's pre-anchor feature interval closing at `2026-09-25T14:00:00Z`, the user
