@@ -1,5 +1,18 @@
 # Central decisions
 
+## 2026-09-24: the four free keyless Gold sources become standing parts of the source contract
+
+The user confirmed that the four free, keyless, read-only sources authorised for
+`gold-coverage-completion-019` are permanent parts of the Gold source contract, not a
+one-off exception: keyless FRED CSV (`SP500`, with `DTWEXBGS` already archived), the San
+Francisco Fed Daily News Sentiment Index, and the Philadelphia Fed ADS all-vintages file.
+Future Gold assignments keep them, no purchase, subscription, licence or credential is
+required for them, and the Yahoo chart endpoint remains refused. Every adapter for them
+stays read-only, keyless and hash-verified, and their availability and vintage semantics
+must be declared before any measurement. This does not widen the prospective 014 window's
+frozen source set: the window keeps its accepted sources and evidence.
+
+
 ## 2026-09-24: user authorises four free keyless sources and the dxy_* retirement; 019 published
 
 Strategy advisory 002 proposed measuring the seven remaining Gold drivers from free
