@@ -1,5 +1,51 @@
 # Central decisions
 
+## 2026-09-24: user authorizes real Gold qualification window activation
+
+After the coordinator disclosed that the accepted 014 window opened at
+`2026-09-24T14:00:00Z`, that anchor 1 is permanently missed
+(`interval_closed_no_backfill`, no catch-up) and that anchor 2's pre-anchor feature
+interval closes at `2026-09-25T14:00:00Z`, the user explicitly authorized activating the
+real window. Published `gold-qualification-window-activation-018` to the registered Gold
+worktree: a lock-guarded tick driver that captures only identities whose declared
+interval currently contains the operating-system clock, exactly one installed local
+Windows scheduled task running the accepted 017 runner through the encrypted credential
+runner with only `FRED_API_KEY` and `OANDA_API_TOKEN`, missed lanes sealed as reason-coded
+blocked attempts, and anchors 2-130 captured as their declared lanes open.
+
+Boundaries that remain closed: no outcome, direction, aggregate, qualification, accuracy
+or edge read before `2027-03-25T15:00:00Z`; no backfill or rescheduling; no change to any
+accepted 014/015/016/017 artifact; no warehouse, Layer 1, live workflow, dashboard,
+integration, deployment or production action; no credential beyond the two named; no
+second writer in the worktree. Publication is not pickup: the bridge wake stays
+`sent_unconfirmed` until the worker reports activity.
+
+
+## 2026-09-24: Gold 017 overlap reconciled; multi-asset readiness spike is next
+
+Two Gold sessions ran assignment 017 in the same worktree. The pre-existing window
+detected the unfamiliar provider-client file, recorded `blocked` and stopped; the
+surviving session then halted, preserved the superseded revision with per-file
+hashes under `backtester/tmp/superseded-017-other-session-20260924/`, reconciled one
+coherent implementation and committed it at `6cbbd01` in the registered Gold
+worktree. Submission `20260924-gold-qualification-activation-package-017-r1`
+(mailbox SHA-256 `f3ac41d9...`) is awaiting review; the review must be performed by
+a session other than the author. The stale `gold-source-007` agent message, which
+pointed at the wrong HEAD, was replaced. Real anchor capture and scheduler
+installation remain unauthorized. See
+`docs/orchestration/reviews/20260924-gold-017-overlap-reconciliation.md`.
+
+Under the user's direction recorded in `docs/DEEPSEEK_PROJECT_HANDOVER_20260924.md`,
+the next milestone is a bounded **multi-asset one-day readiness spike** in an
+isolated worktree and branch: a readiness matrix for Gold, USD, EUR, NQ, BTC, GBP,
+Silver and WTI, a generic asset/job manifest schema, a shared immutable cache
+contract with hash validator, a deterministic concurrency-capped orchestrator with
+resumable shards and stage metrics, a single-worker versus parallel equivalence
+proof and a measured one-day capacity estimate. It is a rehearsal and measurement
+milestone: no research-rule change, no reacquisition of paid or live sources, no
+Layer 1, warehouse, scheduler, evaluation or production action.
+
+
 ## 2026-09-24: user authorizes bounded provider activation preparation
 
 After being told that advancing Gold requires read-only provider/network access and
