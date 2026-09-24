@@ -633,3 +633,54 @@ automatically - so only the matching bounded fix is proposed to the coordinator.
 Scope caveat: this was a read-only audit. No canonical file, mailbox file, credential, worker
 worktree or production state was modified, no test suite was run (notes-only turn), and no advice
 above has been submitted to the coordinator mailbox.
+
+## 2026-09-24 - Where the "Backtesting agent architecture" sheet and the 28 variables stand
+
+User asked where the architecture document and its 28 variables have got to. Read-only status read-back.
+
+Document: `docs/strategy/GOLD_ENGINE_MAP.html`, titled "Backtesting agent architecture - XAU (Gold)",
+built 2026-09-21 (companion `docs/strategy/PROGRAM_MAP.html`; programme stages in `STRATEGY.md` 0b).
+Its stamp is still the 21 Sep coverage-006 snapshot: "19 of 28 drivers measured". Reality today is
+**21 of 28**, and two rows it marks "no data" (`fed_bias`, `inflation_signal`) are now measured, so
+the sheet is stale and should be refreshed.
+
+The 28 declared variables (`backtester/registries/gold_variable_horizon_context.v1.json`): 21
+measured; 7 outstanding in named phases - Phase 2a `dxy_d1`/`dxy_d5`/`dxy_d20` (blocked, no DXY base
+series; the broad trade-weighted index must not be relabelled), Phase 2b `dxy_level`, `equities_regime`,
+`growth_regime` (need a documented licensed source plus a rule declared before outcomes), Phase 3
+`risk_headline_context` (deferred; needs a licensed timestamped headline corpus and a fixed coding
+rule). The accepted digest's recommended next bounded batch is to settle the documented DXY route
+first and to record the calendar and vintage gaps as declared limitations. Standing limits unchanged:
+36-hour FRED availability proxy, archive-inferred calendar with verified continuity blocked, counts
+are not independent trials, 327 pooled states are not assessable for between-year agreement, and no
+variable is eligible as a formula input on this basis.
+
+Where the programme actually is (past the sheet's "measure and condition" stage): findings digest ->
+combination registry 010 -> first bounded combination run 011 -> prospective protocol 012 -> user
+chose to narrow -> shortlist 013 (**four** hypotheses, not twenty) -> frozen manifest 014 (130
+weekday anchors, 2026-09-24T14:00Z to 2027-03-25T14:00Z, no backfill) -> execution scaffold 015 ->
+offline collectors 016 -> **activation package 017 submitted 2026-09-24 20:21 local, awaiting review**
+(commit `6cbbd01`, six files, 503 tests / 499 pass with the four known console-width scanner failures,
+four real pre-window provider smokes through the encrypted runner, inert scheduler package, no real
+anchor captured). Consequence already recorded by the worker: the frozen window opened at
+2026-09-24T14:00Z *before* 017 was published (19:00Z), so anchor 1 is permanently missed and sealed
+`blocked_no_reschedule`; 129 anchors remain, next 2026-09-25T14:00Z. Real activation and any
+scheduler install are still separately gated.
+
+Two other live threads: a new `backtester-spike` worker is in progress on
+`multi-asset-readiness-spike-001` (worktree `.../.local/worktrees/backtester-spike`, branch
+`spike/multi-asset-readiness-20260924`, start `6cbbd01`), and
+`docs/DEEPSEEK_PROJECT_HANDOVER_20260924.md` (today 20:17) is the new Gold and multi-asset handover.
+
+Incident for the user (connects to the mailbox audit above): submission 017 discloses a duplicate-wake
+concurrent session - a second gold session began the same assignment in the same registered worktree
+at 20:01 local, detected the overlap at 20:08, recorded itself blocked and stopped writing, with six
+artifacts preserved under `backtester/tmp/superseded-017-other-session-20260924/`. The submission asks
+whether the duplicate bridge wake should be reported to whoever operates the mailbox bridge. With no
+active-task query in Cline and single-shot delivery, a wake can land in the wrong session of the same
+workspace.
+
+Open items for the user: (1) authorize refreshing `GOLD_ENGINE_MAP.html` (and the stage marker in
+`PROGRAM_MAP.html`) to 21 of 28 and the current qualification stage; (2) the standing DXY decision
+(licensed ICE DXY series vs re-declare the documented broad index under a new variable id); (3) how to
+treat the duplicate-wake overlap.
