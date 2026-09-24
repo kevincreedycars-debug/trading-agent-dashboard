@@ -1,5 +1,41 @@
 # Session notes
 
+2026-09-24 Gold window activation accepted and running: the user authorized real window
+activation after the coordinator showed that the accepted 014 window opened at
+`2026-09-24T14:00:00Z`, that anchor 1 is permanently missed and that anchor 2's pre-anchor
+feature interval closes at `2026-09-25T14:00:00Z`. `gold-qualification-window-activation-018`
+was delivered at clean worker `67f51e8` (tick driver, scheduled wrapper, focused tests;
++204/-0) and accepted by an independent coordinator review (mailbox `c74356fe`, reply
+`71be5794`): focused 5/5, full local suite 508 with only four pre-existing
+environment-dependent failures, exactly one scheduled task `GoldQualificationWindowTick018`
+in `Ready` state on a `PT10M` trigger and the only capture path, a real tick already run
+with anchor 1 `anchor_one_left_blocked` and anchor 2's features `already_settled` (nothing
+backfilled), and three real anchor-2 pre-anchor feature captures sealed (`302e4a26`,
+`58ece552`, `c51ad9b9`). The worker stopped after each chunk and needed five
+assignment-version notifications; that bridge rule is now recorded in the orchestration
+README. No outcome, aggregate or evaluation was read.
+
+
+2026-09-24 multi-asset one-day readiness spike delivered: the Gold 017 overlap is
+reconciled (superseded revision preserved under
+backtester/tmp/superseded-017-other-session-20260924/, one coherent 017 commit at
+6cbbd01, submission pending review, stale gold-source-007 agent message replaced) and
+the user's handover direction was executed in a new isolated worktree
+`.local/worktrees/backtester-spike` on `spike/multi-asset-readiness-20260924`
+(commit aaa5103). Delivered: an evidence-backed readiness matrix for eight assets
+(gold/usd/eur/nq/btc one-day ready, gbp onboarding, silver and wti absent, 16
+blockers), a generic asset/job manifest schema, a shared immutable cache contract
+with hash validator, a deterministic concurrency-capped batch kernel with
+attempt-unique immutable shards, binding-checked resume, ordered merge, duplicate
+refusal, resource budgets and stage metrics, plus 8/8 focused tests. Measured: 2,548
+candidates x 965 anchors (2.46M kernel evaluations) at 1/2/4/8 workers in
+3202/1664/905/775 ms with about 50 MB peak RSS and identical logical output at every
+worker count (checksum 8edb9ea4...), so arithmetic and orchestration are not the
+bottleneck. The real Gold kernel benchmark and the two- and four-asset rehearsals
+remain for the next bounded step; nothing was acquired, published, scheduled or
+evaluated.
+
+
 2026-09-24 user authorized the disclosed next step and 017 was published. Starting
 from accepted clean Gold `4eea9a8`, `gold-qualification-activation-package-017`
 builds read-only FRED/OANDA clients, narrow encrypted credential loading, the

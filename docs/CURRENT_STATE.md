@@ -1,5 +1,20 @@
 # Current state
 
+2026-09-24 Gold's real qualification window is live. After the coordinator showed that the
+accepted 014 window had opened at `2026-09-24T14:00:00Z` with anchor 1 permanently missed
+and anchor 2's pre-anchor feature interval closing at `2026-09-25T14:00:00Z`, the user
+authorized real window activation. `gold-qualification-window-activation-018` was
+delivered at clean worker `67f51e8` and accepted by an independent review: a lock-guarded
+tick driver that only spawns the accepted 017 runner, exactly one scheduled task
+`GoldQualificationWindowTick018` (`Ready`, `PT10M`, the only capture path), a real tick
+already run with anchor 1 `anchor_one_left_blocked` and anchor 2's features
+`already_settled`, and three sealed real anchor-2 captures (`302e4a26`, `58ece552`,
+`c51ad9b9`). Focused tests 5/5; the full local suite reports 508 tests with only the four
+pre-existing environment-dependent failures. No outcome, aggregate, qualification,
+warehouse, Layer 1, live workflow, dashboard or production action occurred, and no
+backfill exists.
+
+
 2026-09-24 user authorized real Gold window activation after the coordinator showed that
 the accepted 014 window opened at `2026-09-24T14:00:00Z`, that anchor 1 is permanently
 missed, and that anchor 2's pre-anchor feature interval closes at `2026-09-25T14:00:00Z`.
