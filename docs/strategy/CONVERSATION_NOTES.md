@@ -833,3 +833,20 @@ rather than a chat-only second window. Deliverable: `docs/strategy/NEXT_WORKER_S
 - Coordinator actions are spelled out in the brief (worktree, register entry, assignment file,
   workspace file, README) with an acceptance check. Submitted as
   `20260924-strategy-second-adviser-003` (`ready_for_review`).
+
+## 2026-09-24 - 019 adopted; second-adviser priority signal sent
+
+- Coordinator reply on the free-source brief: acknowledged and supported. It corroborated the pivotal
+  claim from the repository itself (`backtester/registries/gold_live_input_inventory.v1.json` records
+  the live `dxy_level` as FRED DTWEXBGS, and the coverage registry holds DTWEXBGS as a verified local
+  source), and asked that future references cite that canonical registry path rather than the worktree
+  copy of the findings doc.
+- Assignment `gold-coverage-completion-019` is published with the user's authority recorded: the two
+  additional free keyless Fed sources, DTWEXBGS under honest new ids, the legacy `dxy_*` ids retired,
+  FRED `SP500` for equities, and the Yahoo endpoint refused as undocumented and licence-ambiguous.
+  Coordinator reports the capture task healthy (result 0, next run 21:36, zero missed lanes) with the
+  Gold wake waiting on the 01:00 wake-cap reset. Nothing further is needed from the user on 019.
+- At the user's request a priority signal was submitted for the second adviser build
+  (`20260924-strategy-second-adviser-003-asap`, mailbox SHA-256 `6a08b366...`), stating that the new
+  adviser must run on DeepSeek again through the user's existing Cline extension, with no new key,
+  credential scope or provider configuration, and that the register has no provider field to invent.
