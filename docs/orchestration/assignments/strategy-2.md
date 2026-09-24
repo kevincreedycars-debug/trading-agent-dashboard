@@ -47,6 +47,12 @@ workers, but only the coordinator publishes them. Preserve independent Layer 1 a
 downstream-only backtesting, timing provenance and untouched evaluation. No credentials
 beyond the documented runner, and never submit secrets.
 
+## Provider
+
+Run this window on DeepSeek, the same way adviser 1's window does: it is the user's
+existing Cline extension with DeepSeek selected. No new key, credential or provider
+configuration is added, and no controller or bridge setting changes.
+
 ## Wake routing
 
 Only this worker is connected to the mailbox bridge; adviser 1 stays disconnected, because
@@ -66,3 +72,30 @@ Report real activity with
 and finish by submitting one envelope from `templates/submission.json` through
 `node D:/trading-agent-dashboard-codex/scripts/coordination.js submit --file <file>`, then
 record `activity strategy-2 paused "<what finished>"` and stop.
+
+
+## Revision 2 (2026-09-24): runtime provider and the one-time message
+
+Runtime provider: select **DeepSeek** in your existing agent extension in this window,
+exactly as adviser 1 does. This adds no API key, no credential scope, no provider
+configuration and no background model runner, and `projects.json` deliberately carries no
+provider field - the provider is the user's selection in the Cline task in this window.
+
+One-time message for this window, pasted into a new Cline task after opening
+`tools/strategy-node/StrategyLive.code-workspace` and running *Mailbox: Connect This Cline
+Worker* once:
+
+> You are Strategy adviser 2. Select DeepSeek in your existing agent extension. Read
+> D:/trading-agent-dashboard-codex/docs/orchestration/assignments/strategy-2.md and follow
+> it. Your writable checkout is
+> D:/trading-agent-dashboard-codex/.local/worktrees/strategy-2. Read
+> D:/trading-agent-dashboard-codex/docs/orchestration/README.md, the register, decisions
+> and current state next, then adviser 1's notes under
+> D:/trading-agent-dashboard-codex/.local/worktrees/strategy/docs/strategy/ so the two
+> lanes do not overlap. Write only docs/strategy-2/ in your worktree plus ignored scratch.
+> Publish recommendations through the shared mailbox with
+> node D:/trading-agent-dashboard-codex/scripts/coordination.js submit --file <file>,
+> report real activity with monitor-state.js, then pause.
+
+This revision changes no duty, boundary or authority above it; it only names the provider
+and supplies the startup message.
