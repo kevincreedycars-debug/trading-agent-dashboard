@@ -766,3 +766,26 @@ series under new variable ids and measure them) rather than any purchase. The tw
 licence, commercial news/sentiment feeds) buy official naming, not extra answers, because the live
 agent's own inputs are the free series above. Stooq returned 403 from this machine, so it is not
 listed as a working option.
+
+## 2026-09-24 - User decision "measure them": coverage completion proposed as assignment 019
+
+- The user authorized measuring the seven remaining drivers from the free sources: "measure them".
+- Context verified at the same time: the coordinator accepted 017 and published 018 (real window
+  activation, a capture lane plus one local scheduled task) after the user said go on anchor capture.
+  Gold has already built the tick driver and dry-run it (three open anchor-2 lanes, anchor 1 left
+  untouched). Anchor 1 stays permanently missed; anchors 2-130 are captured as lanes open.
+- Deliverable: `docs/strategy/NEXT_ASSIGNMENT_MISSING_DRIVERS.md`, proposed id
+  `gold-coverage-completion-019`, sequenced after 018 is accepted. Declaration of the seven new
+  variable ids (source, state rule, cutoff, availability, evidence mode) must precede measurement;
+  additive only, all accepted artifacts byte-identical; two new key-free hosts
+  (`frbsf.org`, `philadelphiafed.org`) named explicitly because they sit outside the 017 provider
+  allowlist; no formula, combination, ranking, holdout, window or production action.
+- Sources and rules proposed: FRED `DTWEXBGS` for the four dollar ids (the actual live F2 input, with
+  the legacy `dxy_*` ids retired rather than backfilled); SF Fed Daily News Sentiment for
+  `risk_headline_context`; FRED `SP500` for `equities_regime`; Philadelphia Fed ADS with as-of vintages
+  for `growth_regime`.
+- Submitted to the coordinator mailbox as `20260924-strategy-missing-drivers-002`
+  (`ready_for_review`), so it can be turned into the published assignment and set to
+  `instructions_published_awaiting_worker` to wake the worker through the bridge.
+- Only open ask left to the user: automation (restart the background reviewer and apply the three
+  mailbox fixes, or keep reviews manual). Default: manual.

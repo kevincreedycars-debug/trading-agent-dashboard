@@ -219,30 +219,29 @@ confirms the mode is visible in every emitted label. Stop after delivery.
 Fallbacks if you prefer not to spend another Gold cycle: `ui-health-artifact-001` (dashboard
 stale-health honesty) or `asset-status-001` (reconcile one idle asset worker).
 
-## 7. Asks back to you (simplified, 2026-09-24)
+## 7. Asks back to you (2026-09-24)
 
-Three decisions. If you do not answer, the default is **no change** and I stop asking.
+**One open decision.** If you do not answer, the default is **no change** and I stop asking.
 
-1. **Anchor capture.** Anchor 1 of the frozen window (24 Sep 14:00 UTC) is already lost, because the
-   window opened before package 017 was published. Anchor 2 is 25 Sep 14:00 UTC and its feature lane
-   is open now. Once 017 is reviewed, authorize real capture plus the one-time scheduler install, or
-   keep the window closed? *Default: closed - anchor 2 is lost as well.*
-2. **The 7 unmeasured drivers - now a free fix.** All seven can be unblocked with data that costs
-   nothing: the four dollar ones via the broad dollar index we already hold (declared under its own
-   name, which is what the live agent actually uses) or Yahoo's free ICE index history; news tone via
-   the San Francisco Fed's free daily sentiment index; equities via FRED's S&P 500; growth via the
-   Philadelphia Fed's free daily ADS index. Say "measure them" and I will turn it into one bounded
-   instruction; say no and 21 of 28 stands. *Default: unmeasured.*
-3. **Automation.** Restart the background reviewer and apply the three mailbox fixes from the 24 Sep
+1. **Automation.** Restart the background reviewer and apply the three mailbox fixes from the 24 Sep
    audit (publish the reply before the next assignment; bound the working-suppression; confirm pickup
    on the dispatch record), or keep reviews manual? *Default: manual.*
 
-Retired or answered, so no longer asked: priority order between Gold, asset reconciliation and
-hygiene (answered by your Gold-first direction); worker sessions per day (one at a time is working);
-provider calendar evidence versus inferred mode (answered - accepted two-mode archive-inferred
-labels); the Layer 2 role, the stopping rule and the live-path hygiene batch (parked, not blocking).
-Definition questions are settled by the frozen 014 manifest: flat band, delayed endpoints, minimum n,
-stopping and multiplicity semantics.
+Answered on 2026-09-24 and now in flight:
+
+- **Anchor capture - answered: go.** Assignment `gold-qualification-window-activation-018` was published
+  and Gold picked it up: a reviewed one-time capture lane plus one local scheduled task, so anchors
+  2-130 are captured as their declared intervals open, with evaluation sealed until 2027-03-25. Anchor 1
+  stays permanently missed and is never recreated.
+- **The 7 unmeasured drivers - answered: "measure them".** Proposed as the bounded assignment
+  `gold-coverage-completion-019` in `NEXT_ASSIGNMENT_MISSING_DRIVERS.md`, sequenced after 018, using
+  free sources only. 21 of 28 drivers measured today; this batch aims at 28 of 28.
+
+Retired, no longer asked: priority order between Gold, asset reconciliation and hygiene (answered -
+Gold first); worker sessions per day (one at a time); provider calendar evidence versus inferred mode
+(answered - two-mode archive-inferred labels accepted); the Layer 2 role, the stopping rule and the
+live-path hygiene batch (parked, not blocking); flat band, delayed endpoints, minimum n, stopping and
+multiplicity semantics (settled by the frozen 014 manifest).
 
 Boundaries preserved by this advice: independent Layer 1 agents, downstream-only backtesting,
 timing provenance, untouched evaluation, and no production action arising from advice.
