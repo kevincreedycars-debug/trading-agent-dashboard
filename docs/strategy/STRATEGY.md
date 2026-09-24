@@ -196,6 +196,12 @@ Alternatives considered and rejected:
 
 ## 6. Recommended bounded assignment for the coordinator
 
+**Superseded 2026-09-24:** this recommendation was overtaken by events. The two-mode calendar labels
+were adopted through the accepted policy revisions, and the chain moved on through coverage-008, the
+findings digest, combination registry 010, run 011, prospective protocol 012, shortlist 013, the
+frozen 014 manifest, scaffold 015, collectors 016 and the activation package 017 now in review. Kept
+for history only; section 7 holds the live asks.
+
 `gold-calendar-status-001` (worker `gold-research`, starting only after the `gold-policy-003`
 review):
 
@@ -213,14 +219,27 @@ confirms the mode is visible in every emitted label. Stop after delivery.
 Fallbacks if you prefer not to spend another Gold cycle: `ui-health-artifact-001` (dashboard
 stale-health honesty) or `asset-status-001` (reconcile one idle asset worker).
 
-## 7. Asks back to you
+## 7. Asks back to you (simplified, 2026-09-24)
 
-1. Priority order among (a) Gold research depth, (b) asset-worker reconciliation and (c) dashboard
-   and production hygiene.
-2. How many worker sessions per day are realistic, so assignments can be sized to your review time.
-3. Is provider calendar evidence worth pursuing now, or should inferred mode be adopted and
-   disclosed so measurement can proceed?
-4. What would end the Gold enquiry (a stopping rule), so effort is not open-ended.
+Three decisions. If you do not answer, the default is **no change** and I stop asking.
+
+1. **Anchor capture.** Anchor 1 of the frozen window (24 Sep 14:00 UTC) is already lost, because the
+   window opened before package 017 was published. Anchor 2 is 25 Sep 14:00 UTC and its feature lane
+   is open now. Once 017 is reviewed, authorize real capture plus the one-time scheduler install, or
+   keep the window closed? *Default: closed - anchor 2 is lost as well.*
+2. **The 7 unmeasured drivers.** License a real ICE DXY series, re-declare the documented broad index
+   under a new variable id, or leave the dollar, news-tone and regime drivers unmeasured?
+   *Default: unmeasured - 21 of 28 stands.*
+3. **Automation.** Restart the background reviewer and apply the three mailbox fixes from the 24 Sep
+   audit (publish the reply before the next assignment; bound the working-suppression; confirm pickup
+   on the dispatch record), or keep reviews manual? *Default: manual.*
+
+Retired or answered, so no longer asked: priority order between Gold, asset reconciliation and
+hygiene (answered by your Gold-first direction); worker sessions per day (one at a time is working);
+provider calendar evidence versus inferred mode (answered - accepted two-mode archive-inferred
+labels); the Layer 2 role, the stopping rule and the live-path hygiene batch (parked, not blocking).
+Definition questions are settled by the frozen 014 manifest: flat band, delayed endpoints, minimum n,
+stopping and multiplicity semantics.
 
 Boundaries preserved by this advice: independent Layer 1 agents, downstream-only backtesting,
 timing provenance, untouched evaluation, and no production action arising from advice.

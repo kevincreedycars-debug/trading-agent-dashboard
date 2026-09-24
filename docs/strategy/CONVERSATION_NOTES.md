@@ -684,3 +684,24 @@ Open items for the user: (1) authorize refreshing `GOLD_ENGINE_MAP.html` (and th
 `PROGRAM_MAP.html`) to 21 of 28 and the current qualification stage; (2) the standing DXY decision
 (licensed ICE DXY series vs re-declare the documented broad index under a new variable id); (3) how to
 treat the duplicate-wake overlap.
+
+## 2026-09-24 - Asks simplified at the user's request
+
+User: "simplify the requests of me". The scattered open questions in this file (and STRATEGY.md
+sections 6-7, plus both A4 maps) are replaced by **one list of three decisions**, each with a stated
+default so silence means "no change" and no further chasing:
+
+1. **Anchor capture** - after package 017 is reviewed, capture the next real anchor (25 Sep 14:00 UTC,
+   feature lane open now) with the one-time scheduler install, or keep the window closed? Default:
+   closed (anchor 2 lost).
+2. **The 7 unmeasured drivers** - license a real ICE DXY series, re-declare the documented broad index
+   under a new variable id, or leave them unmeasured? Default: unmeasured (21 of 28).
+3. **Automation** - restart the background reviewer and apply the three mailbox fixes (reply before
+   next assignment; bounded working-suppression; pickup confirmation on the dispatch record), or keep
+   reviews manual? Default: manual.
+
+Retired as asks: priority order (answered - Gold first), sessions per day (one at a time), provider
+calendar evidence (answered - two-mode archive-inferred labels accepted), Layer 2 role, stopping rule,
+live-path hygiene batch (parked, non-blocking), flat/delayed-endpoint definitions (settled by the
+frozen 014 manifest). Also done rather than asked: `GOLD_ENGINE_MAP.html` and `PROGRAM_MAP.html` were
+refreshed to 21 of 28 drivers, the coverage-008 r2 / digest r5 basis, and the current stage.
