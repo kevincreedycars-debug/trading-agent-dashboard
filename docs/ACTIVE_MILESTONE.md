@@ -1,10 +1,12 @@
 # Active milestone
 
-Current milestone: freeze a future-only Gold qualification manifest.
-Status: shortlist 013 is accepted at `0d82157`; four ids are frozen from the
-255-candidate eligible pool, with independent artifact and test reproduction.
+Current milestone: prepare the bounded execution plan for the frozen Gold
+qualification window.
 
-Next immediate action: Gold completes `gold-qualification-window-freeze-014`, fixing
-the first eligible anchor at `2026-09-24T14:00:00Z`, forbidding all backfill and
-binding the four-id evaluation manifest without reading prospective outcomes. The
-window remains closed until the resulting submission is separately reviewed.
+Status: manifest 014 is accepted at clean worker `715c982`. Four candidate ids,
+their consumed reference signs and 130 future weekday anchors are immutable; the
+window remains closed and no prospective outcome has been read.
+
+Next immediate action: publish a separate execution/acquisition assignment that
+preserves the manifest, prevents backfill and interim result reads, and keeps all
+research downstream-only. Review that implementation before opening the window.

@@ -1,5 +1,15 @@
 # Current state
 
+2026-09-24 `gold-qualification-window-freeze-014` revision 1 accepted at clean
+worker `715c982`. Mailbox SHA-256 `bab051f2...` and submitted hashes reproduce;
+the coordinator reran the new focused file 8/8, while the worker recorded 87/87
+focused Gold and 471/471 full local tests. The immutable manifest binds the accepted
+four ids and their consumed reference signs, supersedes the unused 2026-09-15
+anchor, and freezes 130 weekday anchors from `2026-09-24T14:00:00Z` through
+`2027-03-24T14:00:00Z` with no backfill. The manifest explicitly leaves the window
+closed. No prospective outcome, acquisition, integration or production change
+occurred. A separate bounded execution plan is required before the window starts.
+
 2026-09-23 `gold-qualification-shortlist-013` revision 1 accepted at clean worker
 `0d82157`. Mailbox SHA-256 `d2046724...` and all submitted hashes reproduce. A
 fresh coordinator run reproduced the same four ids, shortlist hash `ffa69b30...`,

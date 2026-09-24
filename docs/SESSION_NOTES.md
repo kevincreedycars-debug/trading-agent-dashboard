@@ -1,5 +1,17 @@
 # Session notes
 
+2026-09-24 Gold 014 accepted and paused: the worker resumed a preserved uncommitted
+draft in its registered worktree, verified no concurrent editor or provenance drift,
+and submitted `20260924-gold-qualification-window-freeze-014-r1` at clean `715c982`
+(mailbox SHA-256 `bab051f2...`). The manifest `15cd0606...` binds the accepted four
+ids, their consumed ledger reference signs and 130 weekday anchors beginning
+`2026-09-24T14:00:00Z`; the old 2026-09-15 date is superseded-before-use and no
+backfill exists. Coordinator focused tests pass 8/8; worker focused Gold tests pass
+87/87 and full local tests pass 471/471. All protected 012/run-011 and accepted 013
+artifacts remain byte-identical. The window is still closed: no prospective outcome,
+acquisition, live, integration, deployment or production action occurred. Next is a
+separately reviewed execution/acquisition assignment with no interim result reading.
+
 2026-09-23 Gold completed shortlist 013 at clean `0d82157`; interactive coordinator
 review accepted it after the DeepSeek background turn reproduced the four ids but
 stopped before publishing a decision when its shell calls were policy-blocked.
