@@ -1,5 +1,27 @@
 # Central decisions
 
+## 2026-09-24: user authorises four free keyless sources and the dxy_* retirement; 019 published
+
+Strategy advisory 002 proposed measuring the seven remaining Gold drivers from free
+sources. The coordinator established from
+`backtester/registries/gold_live_input_inventory.v1.json` and
+`backtester/registries/gold_variable_horizon_context.v1.json` that the live F2 dollar
+input is FRED `DTWEXBGS` and must not be reported as the declared `dxy_*` variables, so
+the drivers can be closed by honest declaration rather than any purchase. The user then
+authorised the four additional free, keyless, read-only sources (keyless FRED CSV for
+`SP500`, the San Francisco Fed Daily News Sentiment Index, and the Philadelphia Fed ADS
+all-vintages file, with `DTWEXBGS` already archived), the retirement of the legacy `dxy_*`
+ids without backfill or relabelling, and publishing `gold-coverage-completion-019`.
+
+019 declares and measures seven new ids on the accepted historical path without changing a
+research rule and regenerates the findings digest at 28 of 28 variables with the 21
+existing blocks byte-identical. It must not disturb the live 014 window: the installed
+capture task keeps running, the accepted 014/015/016/017 files and the sealed window-018
+evidence stay byte-identical, and no prospective observation or outcome may be read before
+`2027-03-25T15:00:00Z`. The Yahoo chart endpoint is refused as undocumented and
+licence-ambiguous.
+
+
 ## 2026-09-24: user authorizes real Gold qualification window activation
 
 After the coordinator disclosed that the accepted 014 window opened at

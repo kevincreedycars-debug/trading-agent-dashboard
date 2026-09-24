@@ -1,18 +1,19 @@
 # Current task
 
-Activate the real Gold qualification window. Assignment
-`gold-qualification-window-activation-018` was published on 2026-09-24 under explicit
-user authority, after the accepted 014 window opened at `2026-09-24T14:00:00Z`, anchor 1
-was permanently missed and anchor 2's pre-anchor feature interval was shown to close at
-`2026-09-25T14:00:00Z`.
+Complete Gold's declared driver coverage. `gold-coverage-completion-019` was published on
+2026-09-24 under explicit user authority: declare and measure the seven remaining drivers
+from four free keyless sources (FRED `DTWEXBGS` as the live F2 dollar input under honest
+new ids, the San Francisco Fed Daily News Sentiment Index, FRED `SP500`, and the
+Philadelphia Fed ADS all-vintages file), retire the legacy `dxy_*` ids without backfill or
+relabelling, and regenerate the findings digest at 28 of 28 variables with the 21 existing
+blocks byte-identical.
 
-Gold now builds a lock-guarded capture driver plus exactly one installed local Windows
-scheduled task that runs the accepted 017 runner through the encrypted credential runner
-with only `FRED_API_KEY` and `OANDA_API_TOKEN`, and captures anchors 2-130 as their
-declared lanes open. Missed lanes are sealed `blocked_no_reschedule`; anchor 1 stays
-blocked. No outcome, aggregate, qualification or evaluation may be read before
-`2027-03-25T15:00:00Z`, and no warehouse, Layer 1, live, dashboard or production action
-is authorized.
+This runs alongside the live prospective window, which needs no action: exactly one
+installed task, `GoldQualificationWindowTick018`, captures the declared lanes and must not
+be disturbed, and no prospective observation or outcome may be read before
+`2027-03-25T15:00:00Z`.
 
-Next: Gold reports the first verified real capture and the installed task state for
-review in the mailbox. Publication is not pickup until the worker reports activity.
+Next: Gold picks up 019. The bridge wake is queued behind the worker bridge's 12-per-day
+limit and is delivered automatically after 01:00 local, or sooner if the operator pastes
+the agent prompt into the Gold window. Then Gold reports the seven declarations and
+measurements for review.
