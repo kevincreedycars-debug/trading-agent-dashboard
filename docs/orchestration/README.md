@@ -76,6 +76,36 @@ review or a new submission. A reply records review status, never permission to
 silently expand the current assignment. Only explicit user authority or a new
 coordinator assignment expands scope.
 
+## Worker completion reports
+
+Every assignment ends with a report, not with a stopped worker. On completion, on a
+blocker or at a decision point a worker submits exactly one mailbox envelope through
+`node scripts/coordination.js submit --file <file in its own ignored tmp>`, with status
+`ready_for_review`, `blocked` or `status_report`, records
+`node scripts/monitor-state.js activity <worker> paused "<what finished>"`, and stops.
+
+- A finish with no submission is not a finish. Reported completion requires the
+  submission path returned by the CLI plus the monitor activity line; a worker that
+  goes quiet with neither is treated as unfinished and its assignment does not advance.
+- A blocker is reported when it is found, not at the end of the task, so the
+  coordinator can redirect the attempt instead of discovering it afterwards.
+- A worker starts no further work, in any asset or checkout, until a reply is
+  recorded for that submission. The reply, not chat, is the decision channel.
+- The coordinator keeps the loop closed: `check`, review the actual evidence, publish
+  a hash-bound reply that states the next action towards the current objective, record
+  the review under `reviews/`, update the register and, when a new assignment is
+  needed, publish it with register status `instructions_published_awaiting_worker` so
+  the worker bridge wakes the assigned window.
+- Review is a separate session from authorship. Real capture, activation, integration
+  and production actions stay closed until a review explicitly opens them.
+- The receiving half must be live for an unattended loop: worker wakes come from the
+  bridge only while a worker window is connected, `npm run monitor` surfaces new
+  submissions and replies without AI calls, and unattended review needs the background
+  dispatcher both enabled and running
+  (`tools/agent-mailbox-bridge/start-coordinator.ps1`); `node scripts/coordinator-dispatch.js enable`
+  alone does not start a stopped daemon. While dispatch is paused, every report waits
+  for an interactive coordinator session.
+
 ## Writer boundaries
 
 Each implementation worker uses its own checkout/branch and writes only its
