@@ -527,3 +527,109 @@ first).
 - Adviser has now written its own persistent memory of this project state for future sessions
   (separate from this file, which remains the canonical dated record).
 - Nothing new to carry forward beyond what the 2026-09-21 close already listed as first tasks.
+
+## 2026-09-24 - User-requested audit: automated handoff between the Gold build and the orchestrator
+
+User asked: "we still seem to have a bit of automated communication issues between the gold
+backtesting build and the orchestrator - review both and their active logs and see what the
+issue is." Read-only audit; no canonical file, mailbox, credential, worker, test or production
+state was changed.
+
+Evidence read: canonical `coordination.js check` (pending 0, errors []), `monitor-state.js
+snapshot` (339 KB; a bare `node scripts/monitor-state.js snapshot` printed nothing in this shell,
+and `... |> Out-String` or redirecting to a file works - a capture artifact, not a repo defect),
+`.local/orchestration/{activity,connections,dispatch,replies,inbox,controller}`, canonical
+`docs/orchestration/{projects.json,README,assignments/gold-research.md,reviews}`, the handoff
+docs and git metadata (`HEAD` `c7e6d36` "Authorize Gold provider activation package", 2026-09-24
+20:00:44 +0100, clean tree; worker clean at `4eea9a8`).
+
+Verified healthy - today's 017 cycle completed end to end: assignment published 19:00:20Z with
+register status exactly `instructions_published_awaiting_worker`; the bridge dispatched the wake
+19:00:22Z (`sent_unconfirmed`); Gold reported `working` on
+`gold-qualification-activation-package-017` at 19:01:15Z and began writing
+`backtester/lib/gold_qualification_activation.js` at 19:02:38Z; the desktop monitor fired the
+wake event (`preferences.seen` contains `wake:...activation-package-017`). Publication to pickup
+took ~53 s.
+
+Findings, ranked by evidence strength:
+
+1. **Review replies are frequently never woken, so the worker never receives them.** Of the 16
+   assignments that have replies, only 4 of the 16 *latest* replies were ever dispatched
+   (`reporting-009-r5`, `protocol-012-r3`, `window-freeze-014-r1`, `collector-016-r1`); 12 have
+   no dispatch record at all. Two provable mechanisms in
+   `tools/agent-mailbox-bridge/core.js` `workerEvent()`, which delivers only *current-assignment*
+   replies and suppresses everything while the worker's activity says `working` (no staleness
+   bound):
+   a. the orchestrator publishes the next assignment before the previous review reply, so the
+      register's `assignment_id` advances first and the reply is no longer current when the bridge
+      polls. Measured gaps: `010-r3` reply 20:34:05Z vs `011` assignment wake 20:34:09Z (4 s);
+      `013-r1` reply 20:50:41Z vs `014` assignment wake 20:50:07Z (reply 34 s late); `015-r1`
+      reply 07:52:10Z vs `016` assignment wake 07:51:43Z (reply 27 s late);
+   b. a reply that lands while the worker is mid-task is suppressed indefinitely by the `working`
+      rule, with no staleness bound.
+   Cost observed: all three undelivered replies carried "NEXT ASSIGNMENT ..." plus the acceptance
+   verdict; the worker still received the assignment wake so no work was lost, but it never saw
+   the verdicts/constraints and the monitor keeps a pending-reply prompt, which is the "Wake sent
+   / pickup unconfirmed - check worker window if this persists" line. A reply whose instructions
+   differ from the assignment (stop / changes-requested) would be silently dropped the same way.
+   The 016 reply's "stop, no successor work, keep the window closed" instruction arrived only
+   because the register did not advance in that cycle.
+
+2. **Delivery is single-shot and unconfirmable.** All 22 dispatch records are
+   `sent_unconfirmed`; no `delivery_error` and no confirmed/pickup state exists, a failed or
+   ambiguous send is never retried, and delivery is capped at 12 per worker per UTC day. Pickup is
+   only ever inferred from the worker's activity file, so the monitor shows "pickup unconfirmed"
+   until the worker reports by itself.
+
+3. **The automatic-review leg of the orchestrator is off, not merely paused.**
+   `.local/orchestration/controller/config.json` is `{"enabled": false}` (written 2026-09-24
+   09:29), `status.json` is from 2026-09-23 21:07 (pid 42408, now dead), `daemon.lock` is stale
+   and the monitor reads "Auto coordinator offline". The last automatic run was `shortlist-013-r1`
+   at 2026-09-23 21:37 and ended `needs_attention`, which auto-disables dispatch
+   (`coordinator-dispatch.js` line 65); receipts are 11 `reviewed` / 3 `needs_attention`. All of
+   today's 014/015/016/017 reviews were interactive. Because the daemon process is gone,
+   `coordinator-dispatch.js enable` alone cannot restore it; the start wrapper must be run.
+
+4. **When the background coordinator does run, its sandbox refuses the canonical CLIs.** Nine
+   `rejected: blocked by policy` entries appear in
+   `.local/orchestration/controller/*.stderr.log`, including `node scripts/coordination.js check
+   [--worker gold-research]` and `node scripts/monitor-state.js activity ...`. The 012-r2/r3 runs
+   record hand-writing the reply JSON and the activity record in the documented format instead,
+   which bypasses the CLI's envelope/hash validation - a silent integrity risk in the reply
+   channel.
+
+5. **This strategy window is still not connected to the bridge** (`connections/strategy.json` is
+   `disconnected` since 2026-09-24 05:58Z), so a coordinator reply to `strategy` cannot be
+   delivered automatically here; only the `gold-research` workspace auto-connects via
+   `mailbox_auto_connect`.
+
+Recommended bounded actions (advice only, none adopted; all are canonical-side and outside this
+worker's write scope):
+
+1. **Publish order rule for the orchestrator.** Write the hash-bound reply first, then wait at
+   least one bridge poll cycle (practically >= 1 minute) before updating `projects.json`
+   `assignment_id`/`status` for the next assignment. This alone recovers most of the 12 lost
+   replies above and keeps the reply queue honest.
+2. **One small bridge change** (`tools/agent-mailbox-bridge/core.js` `workerEvent()`): also
+   deliver a reply whose file is newer than the worker's last activity/submission even after the
+   register advanced, and bound the `working` suppression with a staleness window (reuse
+   `monitor-state.js` `STALE_MS` = 5 min) instead of suppressing indefinitely. Keep the existing
+   error/limit fail-closed behaviour.
+3. **Confirm pickup on the dispatch record** (`sent_unconfirmed` -> `confirmed` once the worker's
+   activity or submission for that event appears) so the monitor clears the "pickup unconfirmed"
+   prompt without user action, while keeping the current no-auto-retry rule.
+4. **If unattended review is wanted again:** run
+   `powershell -File tools/agent-mailbox-bridge/start-coordinator.ps1` (the daemon process is
+   dead, so `enable` alone is not enough) and give the daemon a narrow command allowlist for
+   `node scripts/coordination.js` and `node scripts/monitor-state.js`, otherwise it must keep
+   hand-writing mailbox files.
+5. **If this adviser should be woken automatically,** run "Mailbox: Connect This Cline Worker" in
+   this window; the register entry already matches.
+
+Open question for the user: which symptom prompted this - a review reply the Gold window never
+acted on, the monitor's "pickup unconfirmed" prompt, or the orchestrator not reviewing
+automatically - so only the matching bounded fix is proposed to the coordinator.
+
+Scope caveat: this was a read-only audit. No canonical file, mailbox file, credential, worker
+worktree or production state was modified, no test suite was run (notes-only turn), and no advice
+above has been submitted to the coordinator mailbox.
