@@ -227,9 +227,12 @@ Three decisions. If you do not answer, the default is **no change** and I stop a
    window opened before package 017 was published. Anchor 2 is 25 Sep 14:00 UTC and its feature lane
    is open now. Once 017 is reviewed, authorize real capture plus the one-time scheduler install, or
    keep the window closed? *Default: closed - anchor 2 is lost as well.*
-2. **The 7 unmeasured drivers.** License a real ICE DXY series, re-declare the documented broad index
-   under a new variable id, or leave the dollar, news-tone and regime drivers unmeasured?
-   *Default: unmeasured - 21 of 28 stands.*
+2. **The 7 unmeasured drivers - now a free fix.** All seven can be unblocked with data that costs
+   nothing: the four dollar ones via the broad dollar index we already hold (declared under its own
+   name, which is what the live agent actually uses) or Yahoo's free ICE index history; news tone via
+   the San Francisco Fed's free daily sentiment index; equities via FRED's S&P 500; growth via the
+   Philadelphia Fed's free daily ADS index. Say "measure them" and I will turn it into one bounded
+   instruction; say no and 21 of 28 stands. *Default: unmeasured.*
 3. **Automation.** Restart the background reviewer and apply the three mailbox fixes from the 24 Sep
    audit (publish the reply before the next assignment; bound the working-suppression; confirm pickup
    on the dispatch record), or keep reviews manual? *Default: manual.*

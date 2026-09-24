@@ -734,3 +734,35 @@ step - proving those four on data the system has never seen - is not started, wh
 
 Offered to the user: draft one standing instruction with a short checklist so gold runs continuously
 and stops only to submit, instead of one tiny job per review. Held back pending the user's word.
+
+## 2026-09-24 - Free / low-cost sources for the 7 missing drivers (checked, not guessed)
+
+User asked what the missing pieces are and where to get them free or cheap. Each option below was
+tested from this machine; "checked" means the download actually returned data.
+
+- **F2 dollar, 4 drivers (`dxy_level`, `dxy_d1`, `dxy_d5`, `dxy_d20`).** The live agent does not use
+  ICE DXY at all: `docs/GOLD_LIVE_INPUT_INVENTORY.md` records `dxy_level` as `proxy_redefined` - FRED
+  `DTWEXBGS`, the broad dollar index, published under a DXY name. That series is already in our
+  archive. So the cheapest correct fix is a declaration, not a purchase: add a new id
+  (`usd_broad_index_level` plus the 1-, 5- and 20-observation changes) and measure it. If the real ICE
+  index is wanted instead: Yahoo's `DX-Y.NYB` chart endpoint returned daily data with no key
+  (checked; metadata dates back to 1971-01-04, unofficial and terms-restricted), or build an
+  index-consistent series from the six FRED H.10 pairs (checked `DEXUSEU`, `DEXJPUS`; free CSV, no
+  key) with the published weights, declared under its own id. The only way to *call* it DXY is an ICE
+  licence, which is not worth it here.
+- **F9 news tone (`risk_headline_context`).** Free: San Francisco Fed Daily News Sentiment Index
+  (checked; daily since 1980, CSV and Excel downloads, updated weekly, free). Needs a declared rule
+  and a proxy label - it is economics-news sentiment, not gold headlines. Heavier free alternative:
+  GDELT (free API, timestamped articles, needs a fixed query set and a coding rule).
+- **F10 equities regime (`equities_regime`).** Free: FRED `SP500` (checked; daily 2016-09-26 to
+  2026-09-23, key-free) or `NASDAQ100`; ten years is far more than the 2023-2026 window needs. Rule
+  must be declared first, e.g. above/below its own 200-day average.
+- **F10 growth regime (`growth_regime`).** Free: Philadelphia Fed ADS business conditions index
+  (checked; daily since 1960, current vintage XLSX plus an all-vintages file, so as-of safe) - better
+  than monthly data on a daily grid. Free alternative: FRED `CFNAI` (checked; monthly since 1967).
+
+Plain reading: all 7 drivers can be unblocked at zero cost, with one user decision (declare the free
+series under new variable ids and measure them) rather than any purchase. The two paid routes (ICE DXY
+licence, commercial news/sentiment feeds) buy official naming, not extra answers, because the live
+agent's own inputs are the free series above. Stooq returned 403 from this machine, so it is not
+listed as a working option.
