@@ -112,6 +112,8 @@ on this worktree.
 
 ## 7. Progress checkpoint (coordinator, 2026-09-24)
 
+Latest coordinator notification: 2026-09-24T20:10Z - your scheduled task fired a real tick. Finish the assignment now in this turn: the adversarial test file, the local suite, and the submission envelope. Do not end the turn before submitting or reporting a concrete blocker.
+
 Your last report sealed the three anchor-2 FRED feature identities and then ended the
 turn with the tick driver and the scheduled task still to build. This assignment is not
 complete. Continue now, in this same assignment, and do not pause again until it is
