@@ -1,5 +1,14 @@
 # Current state
 
+2026-09-24 user directed Gold to its next task. Published
+`gold-qualification-execution-scaffold-015` from accepted worker `715c982`. It
+authorizes only an offline, synthetic-tested source/evidence contract, sealed bundle
+schema and readiness gate bound to manifest 014. The gate must reconcile all 130
+anchors while reading no real feature value, price, return, sign or outcome, and
+must refuse evaluation before `2027-03-25T15:00:00Z`. Publication is not pickup or
+completion. No acquisition, qualification execution, integration or production
+change is authorized.
+
 2026-09-24 `gold-qualification-window-freeze-014` revision 1 accepted at clean
 worker `715c982`. Mailbox SHA-256 `bab051f2...` and submitted hashes reproduce;
 the coordinator reran the new focused file 8/8, while the worker recorded 87/87

@@ -1,5 +1,15 @@
 # Central decisions
 
+## 2026-09-24: Gold execution scaffold is next; the window remains closed
+
+After accepting manifest 014 at clean `715c982`, the user directed Gold to its next
+instruction. Published `gold-qualification-execution-scaffold-015` to freeze the
+outcome-blind source/evidence contract, sealed bundle schema and readiness gate
+before any real window execution. It is bound to the exact manifest, four ids and
+130-anchor schedule and must refuse evaluation before `2027-03-25T15:00:00Z`.
+Only synthetic fixtures are authorized. No real acquisition, prospective value or
+outcome read, qualification execution, integration or production action.
+
 ## 2026-09-23: shortlist 013 accepted; future-only manifest is next
 
 Accepted Gold shortlist 013 at clean `0d82157`. Independent execution reproduced

@@ -1,5 +1,13 @@
 # Session notes
 
+2026-09-24 next Gold instruction published: `gold-qualification-execution-scaffold-015`
+starts from accepted clean worker `715c982` and binds an offline readiness gate,
+source/evidence contract and sealed execution-bundle schema to manifest 014. It may
+use synthetic fixtures only, must keep all 130 real anchors pending/blocked from
+metadata alone, and must refuse any evaluation before `2027-03-25T15:00:00Z`.
+No real source acquisition, prospective value/outcome read, window execution,
+integration or production action is authorized. Await actual worker pickup.
+
 2026-09-24 Gold 014 accepted and paused: the worker resumed a preserved uncommitted
 draft in its registered worktree, verified no concurrent editor or provenance drift,
 and submitted `20260924-gold-qualification-window-freeze-014-r1` at clean `715c982`
