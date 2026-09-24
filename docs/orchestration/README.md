@@ -98,6 +98,10 @@ blocker or at a decision point a worker submits exactly one mailbox envelope thr
   the worker bridge wakes the assigned window.
 - Review is a separate session from authorship. Real capture, activation, integration
   and production actions stay closed until a review explicitly opens them.
+- A published assignment notifies its worker bridge once per content version. A worker
+  that ends its turn mid-assignment therefore stays idle until the coordinator issues a
+  new event (an edited assignment or a reply to a submission) or the operator resumes
+  that window, so check for a stalled worker instead of assuming it is still running.
 - The receiving half must be live for an unattended loop: worker wakes come from the
   bridge only while a worker window is connected, `npm run monitor` surfaces new
   submissions and replies without AI calls, and unattended review needs the background

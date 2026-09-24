@@ -110,3 +110,24 @@ consumption, accuracy or edge claims, warehouse writes, Layer 1 inputs, live wor
 changes, dashboard publication, integration, deployment, purchase, and any second writer
 on this worktree.
 
+## 7. Progress checkpoint (coordinator, 2026-09-24)
+
+Your last report sealed the three anchor-2 FRED feature identities and then ended the
+turn with the tick driver and the scheduled task still to build. This assignment is not
+complete. Continue now, in this same assignment, and do not pause again until it is
+submitted or you report a concrete blocker:
+
+1. build the lock-guarded tick driver and its focused tests, including the adversarial
+   cases in section 4;
+2. install exactly one scheduled task through the accepted runner and verify it (task
+   name, action, trigger and single capture path);
+3. prove one real capture end to end and record the envelope hash, the plan hash and the
+   row count, exposing no value;
+4. run the documented local suite in this worktree;
+5. submit one envelope and pause.
+
+The binding constraint is the clock: anchor 2's entry identity opens at
+`2026-09-25T14:00:00Z` and its exact-endpoint lane runs only from `2026-09-25T15:00:00Z`
+to `16:00:00Z`. A task installed after those lanes close cannot capture them, and they
+cannot be backfilled or reconstructed. Report activity at each step as you go.
+
