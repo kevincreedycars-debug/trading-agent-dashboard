@@ -705,3 +705,32 @@ calendar evidence (answered - two-mode archive-inferred labels accepted), Layer 
 live-path hygiene batch (parked, non-blocking), flat/delayed-endpoint definitions (settled by the
 frozen 014 manifest). Also done rather than asked: `GOLD_ENGINE_MAP.html` and `PROGRAM_MAP.html` were
 refreshed to 21 of 28 drivers, the coverage-008 r2 / digest r5 basis, and the current stage.
+
+## 2026-09-24 - User question: why does gold keep stopping instead of finishing all 28 drivers?
+
+The user's stated aim, recorded plainly: measure every driver against what gold does over 24 hours to
+5 days, build one table of all those numbers, then find the patterns and combinations that hold up for
+the 24-hour direction.
+
+Answer given (three causes, none of them random):
+
+1. **Seven drivers cannot be built yet.** They need data we do not own - a real dollar index price
+   feed (4 drivers), licensed news headlines (1) and equity/growth feeds (2). No amount of agent work
+   creates them; they need a buy-or-licence decision (the "DXY" ask). Where data did exist, coverage
+   did move: 16 -> 19 -> 21 in two batches.
+2. **The one-job-then-review cycle.** Each round is deliberately small, then stops so the work can be
+   independently checked before more is stacked on it. Some stops were send-backs after a review found
+   a defect (reporting took five rounds, the big run three, the protocol three) - that is what looks
+   like stopping in odd places.
+3. **Real blockers.** The calendar provider evidence could not be fetched; live data needed keys,
+   which needed the user's yes (that is why package 017 exists); and today a second session started
+   the same job in the same folder and had to stop and hand over.
+
+State of the user's four steps: drivers 21 of 28; the influence tables are done (each measured driver
+split into states against +1h, +4h, +24h and 5 days, late bars kept separate); the 24-hour combination
+search is done (2,548 two-driver combinations over 2023-2026, only four survived the rules); the last
+step - proving those four on data the system has never seen - is not started, which is why the
+130-anchor forward window was frozen from today, and anchor 1 has already slipped past.
+
+Offered to the user: draft one standing instruction with a short checklist so gold runs continuously
+and stops only to submit, instead of one tiny job per review. Held back pending the user's word.
