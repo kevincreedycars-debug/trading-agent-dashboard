@@ -812,3 +812,24 @@ Note recorded: the strategy worker has never been connected to the mailbox bridg
 reads `disconnected`), so no wake is delivered to any Strategy window today; the user starts each
 conversation by typing. Also worth remembering: this notes file is the only durable memory shared
 between Strategy windows.
+
+## 2026-09-24 - User chose Option B: register a second Strategy adviser
+
+After being shown both routes, the user chose Option B - a properly registered second adviser worker
+rather than a chat-only second window. Deliverable: `docs/strategy/NEXT_WORKER_SECOND_ADVISER.md`.
+
+- Proposed worker `strategy-2`, worktree `.local/worktrees/strategy-2`, branch
+  `workers/strategy-advisory-2-20260924`, assignment `docs/orchestration/assignments/strategy-2.md`
+  (`strategy-advisory-2-001`), register status `instructions_published_awaiting_worker`,
+  `mailbox_auto_connect: true`, display name "Strategy Agent 2", notes in `docs/strategy-2/`, plus a
+  copper-tinted `tools/strategy-node/StrategyLive.code-workspace` so the window opens the same way this
+  one does.
+- Lane split so the two advisers do not duplicate or contradict each other: adviser 1 keeps the gold
+  research engine (28 drivers, frozen qualification window and capture lane, the two A4 maps);
+  adviser 2 takes live Layer 1/Layer 2 honesty, the four unreconciled asset workers, the multi-asset
+  rollout and the mailbox/background-reviewer automation.
+- Wake routing: only `strategy-2` connects to the bridge; this window stays disconnected, so a
+  single-shot wake can never be split between two tasks in the same workspace.
+- Coordinator actions are spelled out in the brief (worktree, register entry, assignment file,
+  workspace file, README) with an acceptance check. Submitted as
+  `20260924-strategy-second-adviser-003` (`ready_for_review`).
