@@ -850,3 +850,45 @@ rather than a chat-only second window. Deliverable: `docs/strategy/NEXT_WORKER_S
   (`20260924-strategy-second-adviser-003-asap`, mailbox SHA-256 `6a08b366...`), stating that the new
   adviser must run on DeepSeek again through the user's existing Cline extension, with no new key,
   credential scope or provider configuration, and that the register has no provider field to invent.
+
+## 2026-09-24 22:10 local - SAVED as requested (session close)
+
+Branch `workers/strategy-advisory-20260920` at `4d49a70`, worktree clean. All four Strategy
+submissions are `acknowledged`; mailbox `pending 0`, `errors []`.
+
+Verified state at save time:
+
+- **Second adviser is ready to use.** Register entry `strategy-2` exists with assignment
+  `strategy-advisory-2-001`, status exactly `instructions_published_awaiting_worker`,
+  `mailbox_auto_connect: true`, worktree `.local/worktrees/strategy-2` present, assignment file
+  `docs/orchestration/assignments/strategy-2.md` published, workspace file
+  `tools/strategy-node/StrategyLive.code-workspace` created and the shared README updated (21:40). The
+  coordinator recorded the DeepSeek provider line in the assignment, the wake prompt and the README,
+  and committed its memory docs at `8f3cd89`.
+- **Gold:** 018 accepted at `67f51e8`; the capture task `GoldQualificationWindowTick018` is installed
+  and armed at PT10M with no hand captures and log-only health. `gold-coverage-completion-019` is
+  published and awaiting pickup; the wake waits on the bridge's daily cap reset (01:00 local).
+- **Background reviewer is switched back on** (controller `config.json` = `enabled: true`).
+- **backtester-spike:** revision requested (`changes_requested_awaiting_revision`).
+- Coordinator activity at 20:45Z: 003-asap hash `6a08b366` reproduced, reply `426d548d` bound, no new
+  assignment published because 019, `strategy-advisory-2-001` and the spike revision already await
+  pickup.
+
+Next session, in order:
+
+1. Run `coordination.js check` and the monitor snapshot; read the coordinator replies for
+   `20260924-strategy-second-adviser-003` and `-003-asap`.
+2. Second adviser handover (user action): open `tools/strategy-node/StrategyLive.code-workspace` in a
+   new window, run **Mailbox: Connect This Cline Worker** once, start a Cline task on DeepSeek and
+   paste the startup message from `tools/strategy-node/README.md`. Keep this window disconnected so a
+   wake is never split.
+3. Watch for Gold picking up 019 (seven drivers to 28 of 28) and refresh both A4 maps when the
+   measurement lands.
+4. Architecture Q&A continues: Q1 (what "declare", split, horizon and context mean) was answered on
+   2026-09-24; write the promised plain-language glossary into these notes next session so both
+   advisers use identical wording.
+5. Only live decision left: keep the background reviewer running (now on) and whether to apply the
+   three mailbox fixes; everything else the user asked for is either answered or in flight.
+
+Nothing produced in this session is accepted, merged, deployed or a trading result; it is all advice
+plus two reference sheets and this notes file.
