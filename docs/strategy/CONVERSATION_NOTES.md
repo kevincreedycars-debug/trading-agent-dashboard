@@ -789,3 +789,26 @@ listed as a working option.
   `instructions_published_awaiting_worker` to wake the worker through the bridge.
 - Only open ask left to the user: automation (restart the background reviewer and apply the three
   mailbox fixes, or keep reviews manual). Default: manual.
+
+## 2026-09-24 - User request: a second Strategy window for when this one is busy
+
+User asked whether a second Strategy window can be created so they can talk to another adviser while
+this one is occupied. Two routes were explained, neither acted on yet:
+
+- **Option A (fast, no coordinator):** open `tools/strategy-node/Strategy.code-workspace` in a new
+  window (Ctrl+Shift+N) and start a Cline/DeepSeek task there with the one-time message from
+  `tools/strategy-node/README.md`. Both windows then map to the same registered worker `strategy`:
+  same notes folder, same activity file, same mailbox. So only one may write at a time and the other
+  is chat-only - exactly the collision that forced the second Gold session to stand down today. The
+  second window has no memory of this chat and catches up by reading the assignment plus this notes
+  file, STRATEGY.md and the two maps.
+- **Option B (clean, needs the coordinator):** register a second adviser worker (for example
+  `strategy-2`) with its own worktree, branch, assignment and mailbox folder, so it appears as its own
+  monitor card and wakes independently. Costs a second review lane and needs a rule dividing scope
+  (for example adviser one on the gold engine, adviser two on the live path) so the coordinator does
+  not receive two conflicting advisories. Offered to draft the coordinator request.
+
+Note recorded: the strategy worker has never been connected to the mailbox bridge (its connection file
+reads `disconnected`), so no wake is delivered to any Strategy window today; the user starts each
+conversation by typing. Also worth remembering: this notes file is the only durable memory shared
+between Strategy windows.
