@@ -1,5 +1,13 @@
 # Central decisions
 
+## 2026-09-24: scaffold 015 accepted; offline collectors are next
+
+Accepted Gold 015 at clean `b5f2e27`: the exact manifest/contract gate, recursive
+outcome-field rejection, 130-anchor metadata reconciliation and final evaluation
+boundary pass review. Published `gold-qualification-collector-016` to implement the
+four declared source parsers and sealed capture envelopes with synthetic/pre-window
+fixtures only. Real prospective acquisition and window activation remain separate.
+
 ## 2026-09-24: Gold execution scaffold is next; the window remains closed
 
 After accepting manifest 014 at clean `715c982`, the user directed Gold to its next

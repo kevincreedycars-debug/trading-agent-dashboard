@@ -1,5 +1,13 @@
 # Session notes
 
+2026-09-24 Gold 015 accepted and 016 published: clean worker `b5f2e27`, submission
+SHA-256 `918bd8cf...`; exact manifest/contract binding, metadata-only readiness and
+no-evaluation gate verified, with coordinator 9/9 and worker 96/96 focused plus
+480/480 full tests. Assignment `gold-qualification-collector-016` now authorizes
+only offline DFII10/DGS2/VIXCLS/OANDA H1 parsers, sealed capture envelopes and a
+130-anchor plan using synthetic/pre-window fixtures. Real collection and window
+activation remain prohibited pending review.
+
 2026-09-24 next Gold instruction published: `gold-qualification-execution-scaffold-015`
 starts from accepted clean worker `715c982` and binds an offline readiness gate,
 source/evidence contract and sealed execution-bundle schema to manifest 014. It may

@@ -1,5 +1,13 @@
 # Current state
 
+2026-09-24 Gold execution scaffold 015 accepted at clean `b5f2e27`. Coordinator
+rerun passes 9/9; worker reports 96/96 focused and 480/480 full local tests. The
+scaffold binds manifest 014 and contract `208c5844...`, reports all 130 real anchors
+blocked from metadata alone and leaves evaluation unimplemented before
+`2027-03-25T15:00:00Z`. Published `gold-qualification-collector-016` for offline
+parsers, sealed capture envelopes and the 130-anchor capture plan using synthetic or
+pre-window fixtures only. No real collection, prospective read or production action.
+
 2026-09-24 user directed Gold to its next task. Published
 `gold-qualification-execution-scaffold-015` from accepted worker `715c982`. It
 authorizes only an offline, synthetic-tested source/evidence contract, sealed bundle

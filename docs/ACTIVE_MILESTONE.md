@@ -1,13 +1,11 @@
 # Active milestone
 
-Current milestone: build the bounded execution scaffold for the frozen Gold
-qualification window.
+Current milestone: build the offline collectors and sealed capture format for the
+frozen Gold qualification window.
 
-Status: manifest 014 is accepted at clean worker `715c982`. Four candidate ids,
-their consumed reference signs and 130 future weekday anchors are immutable; the
-window remains closed and no prospective outcome has been read.
+Status: execution scaffold 015 is accepted at clean worker `b5f2e27`; the accepted
+manifest, outcome-blind contract and final evaluation gate are immutable.
 
-Next immediate action: Gold completes `gold-qualification-execution-scaffold-015`,
-binding an outcome-blind readiness gate and evidence contract to manifest 014. It
-must refuse real prospective values and all evaluation before
-`2027-03-25T15:00:00Z`. Review the submission before opening the window.
+Next immediate action: Gold completes `gold-qualification-collector-016` with
+synthetic/pre-window fixtures only. Review its parsers, capture plan and immutable
+envelopes before any real prospective collection or window activation.
