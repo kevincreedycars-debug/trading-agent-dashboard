@@ -1,5 +1,17 @@
 # Central decisions
 
+## 2026-09-24: user authorises hardening the Gold capture task
+
+The user authorised hardening the installed capture task `GoldQualificationWindowTick018` so
+that a missed trigger or a logon gap cannot quietly drop a prospective lane:
+`StartWhenAvailable` becomes true and the battery-related start restrictions are cleared,
+with the task otherwise unchanged (same name, action, `PT10M` repetition, single task, no
+change to any accepted or frozen file). The change is queued inside
+`gold-coverage-completion-019` section 8, must be verified by a real tick after the change,
+and must be reverted with a reported blocker if it cannot be verified. The three sealed
+anchor-2 captures must stay byte-identical.
+
+
 ## 2026-09-24: the four free keyless Gold sources become standing parts of the source contract
 
 The user confirmed that the four free, keyless, read-only sources authorised for

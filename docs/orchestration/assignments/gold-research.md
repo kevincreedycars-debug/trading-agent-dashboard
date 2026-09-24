@@ -96,3 +96,29 @@ then record `monitor-state.js activity gold-research paused "<what finished>"` a
 Start no further work until a recorded reply arrives, and report any blocker when it is
 found rather than at the end.
 
+## 8. Task hardening (user-authorised)
+
+The user authorised hardening the installed capture task so that a missed trigger or a
+logon gap cannot quietly drop a lane. Do this before anchor 2's entry lane opens at
+`2026-09-25T14:00:00Z`, keeping it minimal:
+
+1. Set the task's `StartWhenAvailable` to true so a trigger missed while the machine was
+   off, asleep or logged off runs as soon as possible afterwards.
+2. Clear `DisallowStartIfOnBatteries` and `StopIfGoingOnBatteries` so a battery-powered
+   machine does not skip a lane.
+3. Keep the task otherwise exactly as accepted: the same name
+   `GoldQualificationWindowTick018`, the same action (the accepted wrapper through the
+   encrypted runner), the same `PT10M` repetition, `MultipleInstances` `IgnoreNew`, exactly
+   one task, no second trigger that could run the tick twice at the same instant, and no
+   change to the accepted wrapper, driver, 017 package or any other frozen file.
+4. Verify before you report: the task is `Enabled` and `Ready`, its next run time is set,
+   the settings read back as intended, and one real tick after the change completes
+   successfully and appends a metadata-only entry to `tick.log` without sealing,
+   re-attempting or disturbing any existing capture or lane.
+5. If the change cannot be verified, revert the settings to the accepted values and report
+   the blocker instead of leaving the lane unguarded.
+
+Report the before and after settings, the verification tick, and confirmation that the
+three sealed anchor-2 captures are byte-identical.
+
+
