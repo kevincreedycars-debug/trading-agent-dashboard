@@ -1,5 +1,21 @@
 # Central decisions
 
+## 2026-09-24: the mailbox wake cap is removed at the user's direction
+
+The user rejected the bridge's fixed twelve-wake-per-worker-per-day limit: while they are at
+the machine, work should simply continue. Bridge 0.2.1 therefore removes the daily cap from
+`tools/agent-mailbox-bridge/core.js`. The remaining guards are structural rather than
+budgetary: an event is delivered at most once ever (the immutable per-event record file is
+the dedupe key), an ambiguous or failed send is never retried automatically, only one
+Strategy window connects to a worker, and a worker whose reported activity is `working` is
+still never interrupted. The bridge unit test was rewritten to prove that forty distinct
+wakes all deliver while a duplicate never resends, and the bridge README plus
+`docs/orchestration/README.md` were updated. The background reviewer keeps its separate
+six-reviews-per-UTC-day ceiling in `scripts/coordinator-dispatch.js`, which bounds model
+spend rather than worker progress; that one is a cost guard the user can lift separately.
+A window running the old 0.2.0 extension keeps the old cap until it reloads.
+
+
 ## 2026-09-24: user authorises hardening the Gold capture task
 
 The user authorised hardening the installed capture task `GoldQualificationWindowTick018` so

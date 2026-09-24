@@ -18,7 +18,7 @@ function activate(context) {
     const file = path.join(dir, worker.id + '.json');
     const temp = file + '.' + process.pid + '.tmp';
     fs.writeFileSync(temp, JSON.stringify({worker_id:worker.id, state, detail,
-      extension_version:'0.2.0', updated_at:new Date().toISOString()}, null, 2)+'\n');
+      extension_version:'0.2.1', updated_at:new Date().toISOString()}, null, 2)+'\n');
     fs.renameSync(temp, file);
   }
   function findWorker() {

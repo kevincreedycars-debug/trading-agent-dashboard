@@ -5,7 +5,7 @@ installed Cline extension's exported `sendMessage` function. Both installed
 Cline 4.1.19 bundles expose this interface. No extension is patched and no
 keystrokes, clipboard insertion or automatic approval clicks are used.
 
-Version 0.2.0 restores a saved connection on reload in the same registered,
+Version 0.2.1 removes the 12-per-day wake cap and restores a saved connection on reload in the same registered,
 trusted worker workspace. Gold is explicitly enabled through `mailbox_auto_connect`
 in the central register under the user's September 22 repair instruction. Other
 workers require **Mailbox: Connect This Cline Worker** once. Explicit Disconnect
@@ -29,8 +29,8 @@ when the window is connected; handled history is not replayed.
 Delivery is recorded before sending under `.local/orchestration/dispatch/WORKER/`.
 An API return means **sent, unconfirmed**, not agent pickup. A send that fails
 or crashes is never automatically repeated. Inspect status and actual worker
-activity before manually retrying. Attempts are capped at 12 per worker per UTC
-day. No model is polled merely to watch files.
+activity before manually retrying. Distinct wake events are not capped by any daily
+budget: each event is delivered once and a duplicate or ambiguous send is never repeated automatically. No model is polled merely to watch files.
 
 The separate background coordinator uses the Codex CLI as the sandboxed agent
 host, but inference is pinned to DeepSeek's Responses-compatible endpoint with

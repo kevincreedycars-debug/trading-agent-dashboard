@@ -41,10 +41,10 @@ async function deliverOnce(directory, event, send) {
   fs.mkdirSync(directory, { recursive: true });
   const file = path.join(directory, hash(event.key) + '.json');
   if (fs.existsSync(file)) return read(file);
-  const today = new Date().toISOString().slice(0,10);
-  const count = fs.readdirSync(directory).filter(f=>f.endsWith('.json'))
-    .map(f=>read(path.join(directory,f))).filter(r=>r.attempted_at?.startsWith(today)).length;
-  if (count >= 12) throw new Error('Daily limit of 12 mailbox wake attempts reached; dispatch held');
+  // No daily wake budget: the fixed guard is the immutable per-event record file below,
+  // which makes delivery at most once per event key, plus the rule that an ambiguous
+  // send is never retried automatically. The former 12-per-day cap was removed on
+  // 2026-09-24 at the user's direction, so a stalled worker can be re-notified freely.
   const record = { key: event.key, state: 'attempting', attempted_at: new Date().toISOString() };
   try { fs.writeFileSync(file, JSON.stringify(record), { flag:'wx' }); }
   catch(e) { if(e.code==='EEXIST') return read(file); throw e; }

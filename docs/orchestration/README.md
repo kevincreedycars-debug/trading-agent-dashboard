@@ -126,7 +126,7 @@ or reset by this setup. Their initial assignment is status reconciliation only.
 Automatic worker notification and background coordinator review are now configured.
 See [communication runner](../../tools/agent-mailbox-bridge/README.md) for start,
 pause, limits, receipts and connection requirements. Cline windows must remain
-open with their worker task. Bridge 0.2.0 restores saved connections after reload
+open with their worker task. Bridge 0.2.1 removes the daily wake cap and restores saved connections after reload
 and auto-connects the explicitly enabled Gold workspace; Disconnect persists.
 Connection health is under `.local/orchestration/connections/`; stale status or
 a send receipt does not prove pickup; the background coordinator uses a separate Codex CLI turn and canonical
