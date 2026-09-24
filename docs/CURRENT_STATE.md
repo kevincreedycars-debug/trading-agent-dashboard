@@ -1,5 +1,20 @@
 # Current state
 
+2026-09-24 user authorized pushing Gold forward after the coordinator disclosed
+that the next stage needs read-only provider/network access and scoped credentials.
+Published `gold-qualification-activation-package-017` from accepted worker
+`4eea9a8`. It may load only `FRED_API_KEY` and `OANDA_API_TOKEN`, implement the
+clock-bound activation gate and perform bounded provider smokes whose requested
+intervals end before `2026-09-24T14:00:00Z`. It may not capture a real anchor or
+install/start a scheduler. No prospective observation or outcome has been read.
+
+2026-09-24 offline collectors 016 were independently accepted at clean `4eea9a8`.
+The coordinator reproduced the mailbox and accepted bindings, 10/10 focused tests,
+the 130-anchor/780-item capture plan and fail-closed tamper probes. The worker full
+suite was 490/490; the coordinator environment was 486/490 with the four known
+console-width secret-scanner failures. No network, prospective collection, window
+activation or production change occurred.
+
 2026-09-24 Gold execution scaffold 015 accepted at clean `b5f2e27`. Coordinator
 rerun passes 9/9; worker reports 96/96 focused and 480/480 full local tests. The
 scaffold binds manifest 014 and contract `208c5844...`, reports all 130 real anchors

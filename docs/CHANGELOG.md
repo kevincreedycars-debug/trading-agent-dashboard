@@ -1,5 +1,20 @@
 # 2026-09-20 - Gold coverage registry accepted at checkpoint review
 
+2026-09-24 accepted Gold offline collectors 016 at clean worker `4eea9a8` (base
+`b5f2e27`, one commit, the four disclosed added files only; submission SHA-256
+`efe76d7c...`) after an interactive coordinator review that reproduced the accepted
+manifest and contract bindings, a byte-identical independent capture plan
+`807dc73e...` over 130 anchors and 780 unique blocked items, metadata-only envelopes
+and index, the CLI's network/evaluation/real-window/escape refusals and two failing
+tamper probes; focused 10/10 and full local 490 tests with 486 pass, the four
+failures being the pre-existing console-width `secret_scanner.test.js` cases. No real
+acquisition, prospective read, window activation, integration, deployment or
+production change, and acceptance is not qualification, accuracy or edge. No
+successor assignment was published: the user must decide whether real prospective
+collection over the frozen 014 window is authorized, so the window stays closed and
+Gold stops at `4eea9a8`.
+
+
 2026-09-23 accepted Gold shortlist 013 after independent reproduction of four ids,
 the complete 255-candidate audit, 79/79 focused tests and 463/463 full local tests.
 Published future-window manifest freeze 014 with a 2026-09-24 14:00 UTC first anchor

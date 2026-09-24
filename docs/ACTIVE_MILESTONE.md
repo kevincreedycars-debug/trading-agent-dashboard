@@ -1,11 +1,14 @@
 # Active milestone
 
-Current milestone: build the offline collectors and sealed capture format for the
-frozen Gold qualification window.
+Current milestone: build the bounded Gold provider activation package while the
+real qualification window remains closed.
 
-Status: execution scaffold 015 is accepted at clean worker `b5f2e27`; the accepted
-manifest, outcome-blind contract and final evaluation gate are immutable.
+Status: offline collectors 016 are accepted at clean worker `4eea9a8`; the accepted
+manifest, outcome-blind contract, capture plan and sealed envelopes are immutable and
+no observation, value or outcome at or after `2026-09-24T14:00:00Z` has been acquired
+or read.
 
-Next immediate action: Gold completes `gold-qualification-collector-016` with
-synthetic/pre-window fixtures only. Review its parsers, capture plan and immutable
-envelopes before any real prospective collection or window activation.
+Next immediate action: Gold completes `gold-qualification-activation-package-017`
+with narrow credential loading, clock-bound capture controls, inert scheduler
+configuration and pre-window provider smokes only. Review it before installing a
+scheduler or capturing any real anchor.

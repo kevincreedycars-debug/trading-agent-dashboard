@@ -1,5 +1,29 @@
 # Session notes
 
+2026-09-24 user authorized the disclosed next step and 017 was published. Starting
+from accepted clean Gold `4eea9a8`, `gold-qualification-activation-package-017`
+builds read-only FRED/OANDA clients, narrow encrypted credential loading, the
+clock-bound capture gate and an inert scheduler/runbook package. Only small provider
+smokes ending before the first real anchor are authorized. Real-anchor capture,
+scheduler installation and qualification evaluation remain separately gated.
+
+2026-09-24 Gold 016 accepted; the prospective window still needs the user:
+interactive coordinator review accepted offline collectors 016 at clean worker
+`4eea9a8` (base `b5f2e27`, one commit, exactly the four disclosed added files,
++408/-0) with mailbox SHA-256 `efe76d7c...`. Coordinator reruns: the new focused file
+10/10; an independent fixture dry run reproducing the submitted capture plan
+`807dc73e...` byte-for-byte over 130 unique anchors and 780 unique blocked items;
+metadata-only envelope and index; refused network/evaluation/real-window/escape
+options; and two failing tamper probes, including a self-consistent rewritten
+envelope/index pair caught as `Value leakage into metadata at $.close`. The full local
+suite reports 490 tests / 486 pass, the four failures being the pre-existing
+console-width `secret_scanner.test.js` cases already tracked as a separate backlog
+item. No successor assignment was published: real prospective collection and window
+activation require network/provider access, scoped credentials and an explicit user
+decision, and the 014 first anchor `2026-09-24T14:00:00Z` is imminent. Gold remains
+stopped at `4eea9a8`; nothing is merged, deployed or qualified.
+
+
 2026-09-24 Gold 015 accepted and 016 published: clean worker `b5f2e27`, submission
 SHA-256 `918bd8cf...`; exact manifest/contract binding, metadata-only readiness and
 no-evaluation gate verified, with coordinator 9/9 and worker 96/96 focused plus

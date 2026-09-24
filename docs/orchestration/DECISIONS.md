@@ -1,5 +1,41 @@
 # Central decisions
 
+## 2026-09-24: user authorizes bounded provider activation preparation
+
+After being told that advancing Gold requires read-only provider/network access and
+scoped credentials, the user directed the coordinator to push forward. Published
+`gold-qualification-activation-package-017` from accepted clean `4eea9a8`. It may
+load only `FRED_API_KEY` and `OANDA_API_TOKEN`, implement clock-bound capture
+controls and run small pre-window provider smokes. It cannot capture a real anchor,
+install/start a scheduler, evaluate outcomes or change production. Those actions
+remain subject to review of 017.
+
+## 2026-09-24: collectors 016 accepted; real collection awaits the user
+
+Interactive coordinator review accepted Gold `gold-qualification-collector-016` at
+clean worker `4eea9a8` (base `b5f2e27`, one commit, exactly the four disclosed added
+files, +408/-0), submission SHA-256 `efe76d7c...`. Coordinator verification
+reproduced the mailbox hash, both accepted bindings, an independent fixture dry run
+whose capture plan equals the submitted `807dc73e...` byte-for-byte, the 130-anchor /
+780-item blocked-no-reschedule reconciliation, the metadata-only envelope and index,
+the CLI refusals of network, evaluation, real-window retrieval, existing output and
+path escapes, and both tamper probes (a rewritten envelope hash, and a
+self-consistent rewritten envelope/index pair, are rejected). Coordinator focused
+file 10/10; the full local suite reports 490 tests with 486 pass and four failures,
+all pre-existing console-width-dependent `secret_scanner.test.js` cases already
+recorded as a separate backlog item. No real acquisition, prospective read, window
+activation, integration, deployment or production action occurred, and acceptance is
+not qualification, accuracy or edge.
+
+No successor assignment was published. Real prospective collection and window
+activation need network/provider access, scoped credentials and an explicit user
+decision, and the 014 manifest's first anchor `2026-09-24T14:00:00Z` is imminent, so
+the window stays closed and Gold remains stopped at `4eea9a8`. **Open decision
+(needs the user):** authorize real prospective collection and window activation under
+a new bounded assignment, or keep the window closed. Until that decision no Gold
+work of any kind is authorized.
+
+
 ## 2026-09-24: scaffold 015 accepted; offline collectors are next
 
 Accepted Gold 015 at clean `b5f2e27`: the exact manifest/contract gate, recursive

@@ -1,11 +1,12 @@
 # Current task
 
-Build and review the offline Gold qualification collectors and sealed capture
-envelopes. Execution scaffold 015 is accepted at clean worker `b5f2e27` with exact
-manifest/contract binding, 130 blocked anchors and a fail-closed final evaluation
-boundary at `2027-03-25T15:00:00Z`.
+Build and review the bounded Gold provider activation package. Offline collectors
+016 are accepted at clean worker `4eea9a8`, and the user has explicitly authorized
+moving forward with the previously disclosed read-only network/provider and scoped
+credential requirement.
 
-`gold-qualification-collector-016` implements deterministic parsers for DFII10,
-DGS2, VIXCLS and archived OANDA XAU_USD H1 plus the complete 130-anchor capture
-plan, using synthetic or pre-window fixtures only. Next: await pickup and review
-the unique 016 submission before real collection or window activation.
+`gold-qualification-activation-package-017` may use only `FRED_API_KEY` and
+`OANDA_API_TOKEN`, implement the clock-bound activation gate and perform small
+provider smokes ending strictly before `2026-09-24T14:00:00Z`. It may not capture
+a real anchor or install/start a scheduler. Next: review the unique 017 submission
+before separately authorizing real window activation.

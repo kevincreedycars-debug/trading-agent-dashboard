@@ -1,53 +1,61 @@
-# Gold qualification collector implementation
+# Gold prospective collector activation package
 
-Assignment: gold-qualification-collector-016. Published 2026-09-24.
+Assignment: gold-qualification-activation-package-017. Published 2026-09-24.
 Worker: gold-research. Worktree: D:/trading-agent-dashboard-codex/.local/worktrees/gold-research
-Branch: workers/gold-research-policy-20260920. Starting HEAD: b5f2e27.
-Standing user authority to advance Gold research applies.
+Branch: workers/gold-research-policy-20260920. Starting HEAD: 4eea9a8.
 
-Assignment 015 is accepted at `b5f2e27`. Its execution contract SHA-256 is
-`208c584427c7540b6f1e712d9feac577de8e95200af2d9ad6f868390abe5910d` and it
-binds accepted manifest 014 SHA-256 `15cd0606...`. This assignment implements and
-tests deterministic collector adapters and sealed capture envelopes before any
-real prospective collection is permitted. It uses synthetic or accepted pre-window
-fixtures only and does not open or execute the real window.
+User authorization: on 2026-09-24, after being told that the next step requires
+read-only provider/network access and scoped credentials, the user explicitly said
+to push forward. Assignment 016 is accepted. This assignment may validate the two
+required credential names and make bounded read-only provider calls, but it does
+not capture a real 014 anchor, install a scheduler or read an outcome.
 
-1. Bind all collector code to the exact 015 execution contract and 014 manifest
-   paths/digests. Refuse aliases, drift, missing sources, changed source order,
-   changed anchor schedule or any path outside the registered worker root.
-2. Implement offline parser/adapters for exactly the declared sources: FRED
-   `DFII10`, `DGS2`, `VIXCLS`, and archived OANDA `XAU_USD` H1. Preserve raw bytes
-   and source timestamps. Do not add substitutes, inferred vintages or live fields.
-3. Freeze a sealed capture-envelope schema carrying source id, request identity,
-   raw SHA-256, retrieval time, observation time, availability time, coverage bounds,
-   source version/provenance and parser version. Values may exist only inside the
-   sealed raw payload; logs, indexes, readiness reports and run summaries must remain
-   metadata-only and must never expose feature values, prices, returns or directions.
-4. Implement a deterministic offline capture planner for all 130 anchors. It must
-   declare the exact pre-anchor feature captures and post-anchor Gold endpoint
-   captures, retain exact and delayed endpoints separately, never reschedule a
-   missing anchor and never compute a candidate state or outcome.
-5. Implement new-directory-only sealing and verification. A sealed envelope is
-   immutable, hash-reconciled and either complete or explicitly blocked; partial
-   writes, duplicate source/anchor identities, overwrite, path aliasing and recovery
-   that changes bytes must fail closed. Recovery may only create a new attempt that
-   references the failed attempt without replacing it.
-6. Keep real-window activation impossible. Network clients, credentials, schedulers,
-   daemons and real 014-window timestamps must be rejected by the assignment CLI.
-   Tests may use synthetic fixtures or accepted data ending strictly before
-   `2026-09-24T14:00:00Z`; synthetic timestamps must not overlap the real window.
-7. Add adversarial tests for parser/source confusion, timestamp and availability
-   drift, duplicate identities, raw-hash mismatch, value leakage into metadata,
-   overwrite/recovery, schedule completeness and attempts to enable network or real
-   timestamps. Demonstrate a byte-identical synthetic dry run, run focused tests and
-   `npm.cmd test`, submit one unique 016 envelope, and pause for review.
+Accepted bindings:
 
-Owned scope: offline adapters/parsers, sealed-envelope and capture-plan code,
-synthetic/pre-window fixtures, focused tests and scoped runbook updates. Preserve
-015, the accepted 014 artifact, 012/013 artifacts, frozen registry and run-011
-evidence byte-for-byte. Do not acquire or inspect any real observation at or after
-`2026-09-24T14:00:00Z`; do not open, execute or simulate the real window; do not
-expose an interim result, reserve/consume a holdout, fit a formula or alter ids,
-signs, schedule or rules. No network, credential, scheduler, daemon, live workflow,
-warehouse, Layer 1, dashboard, integration, deployment, purchase, weight or
-production change. Stop and submit a blocker if sealing cannot remain outcome-blind.
+- manifest 014 SHA-256 `15cd06067a1a9fee8c6498560f4e9ab191541ee5987abc1e8f0219cff3e26f05`;
+- execution contract 015 SHA-256 `208c584427c7540b6f1e712d9feac577de8e95200af2d9ad6f868390abe5910d`;
+- collector commit 016 `4eea9a8`, with the four declared source adapters and the
+  130-anchor / 780-item capture plan.
+
+1. Bind every activation artifact and command to the exact accepted 014/015/016
+   paths, digests, source order, schedule and parser code. Refuse aliases, drift,
+   alternate providers/instruments, changed anchors and paths outside the worker.
+2. Add a real-provider acquisition client for exactly FRED `DFII10`, `DGS2`,
+   `VIXCLS` and OANDA `XAU_USD` H1. Calls are read-only. Use the encrypted runner
+   with only `FRED_API_KEY` and `OANDA_API_TOKEN`; do not load Supabase, RapidAPI,
+   n8n or unrelated credentials, and never print or persist credential values.
+3. Implement an activation gate that accepts only a capture identity already in
+   the frozen 780-item plan, the current clock from the operating system, and a new
+   output directory. Refuse clock overrides, manual anchor overrides, backfill,
+   future capture, duplicate/retry overwrite, schedule changes and any capture whose
+   allowed acquisition interval has not opened.
+4. Define exact acquisition intervals for pre-anchor FRED feature evidence, the
+   OANDA entry candle, exact 24-hour endpoint and delayed endpoint lane. Preserve
+   strictly-before-anchor availability, complete-candle semantics, no rescheduling,
+   and exact/delayed separation. An unavailable call becomes a sealed reason-coded
+   blocked attempt; it is never filled, retried into the same identity or shifted.
+5. Keep operator-visible output metadata-only. Provider bytes and parsed values may
+   exist only inside the sealed 016 envelope. Logs, stdout, indexes, monitor state
+   and summaries must expose only ids, hashes, timestamps, row counts and statuses.
+6. Perform only bounded pre-window provider smokes in this assignment: one small
+   FRED response per declared series and one small OANDA XAU_USD H1 response whose
+   requested observation interval ends strictly before `2026-09-24T14:00:00Z`.
+   Seal them under a new ignored evidence directory and verify hashes/parsers. Do
+   not request, acquire or inspect any observation at or after the first real anchor.
+7. Produce a reviewable activation package and runbook for a later one-time install:
+   exact command, credential names, capture cadence, lock/deduplication, retry and
+   missed-anchor behavior, health metadata, shutdown, recovery and uninstall. The
+   package may include scheduler configuration as inert text, but must not install,
+   enable or start a scheduler/daemon/background process.
+8. Add adversarial tests for credential overbreadth, redaction, provider/source
+   confusion, clock and anchor override, early/future/backfill calls, output reuse,
+   metadata leakage, missed-anchor handling and scheduler activation attempts. Run
+   focused tests and `npm.cmd test`, submit one unique 017 envelope, and pause.
+
+Owned scope: read-only provider clients, activation gate, inert scheduler package,
+focused tests, pre-window ignored smoke evidence and scoped documentation. Preserve
+all accepted artifacts byte-for-byte. No real 014-window capture, no observation at
+or after `2026-09-24T14:00:00Z`, no outcome/readiness aggregate, no qualification
+evaluation, formula, holdout, warehouse write, live workflow, Layer 1, dashboard,
+integration, deployment, purchase, weight or production change. Scheduler install
+and real window activation require separate coordinator review of 017.
