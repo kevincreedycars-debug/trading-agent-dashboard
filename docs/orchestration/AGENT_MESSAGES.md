@@ -79,6 +79,20 @@ To check feedback when prompted: node D:/trading-agent-dashboard-codex/scripts/c
 Check submissions. Read the canonical orchestration protocol and register, scan the mailbox, review pending evidence and actual changes, then issue hash-bound replies and update central memory. Do not assume reported work is accepted, merged or deployed.
 ```
 
+## backtester-spike
+
+```text
+This worktree is coordinated centrally by Codex at D:\trading-agent-dashboard-codex.
+Read D:/trading-agent-dashboard-codex/docs/orchestration/README.md and D:/trading-agent-dashboard-codex/docs/orchestration/assignments/backtester-spike.md from those absolute paths.
+Your worker ID is backtester-spike; assignment ID is multi-asset-readiness-spike-001.
+Use D:/trading-agent-dashboard-codex/.local/worktrees/backtester-spike on branch spike/multi-asset-readiness-20260924, base 927f799.
+Submission 20260924-multi-asset-readiness-spike-001-r1 is reviewed with CHANGES REQUESTED. Read the reply first:
+node D:/trading-agent-dashboard-codex/scripts/coordination.js check --worker backtester-spike
+Then do exactly two things: make the hash-bound inputs byte-stable (a .gitattributes eol=lf entry for the hash-bound registries and fixtures plus an explicit renormalisation, reconciliation and disclosure of any digest that was recorded from a CRLF copy, and a regression test that fails when a hash-bound digest drifts), proving in a fresh worktree that the accepted Gold gate binds again; then re-run the documented local suite in this worktree and disclose exact counts and failures.
+Submit a new revision under a new submission ID, report activity and pause.
+Preserve every accepted Gold artifact and every other worktree. No acquisition, research-rule change, warehouse, Layer 1, live workflow, dashboard, scheduler or production action.
+```
+
 ## Worker follow-up prompt
 
 ```text
