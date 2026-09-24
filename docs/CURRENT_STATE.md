@@ -1,5 +1,19 @@
 # Current state
 
+2026-09-24 user authorized real Gold window activation after the coordinator showed that
+the accepted 014 window opened at `2026-09-24T14:00:00Z`, that anchor 1 is permanently
+missed, and that anchor 2's pre-anchor feature interval closes at `2026-09-25T14:00:00Z`.
+Published `gold-qualification-window-activation-018` for a lock-guarded capture driver
+and exactly one installed scheduled task using only `FRED_API_KEY` and `OANDA_API_TOKEN`;
+anchors 2-130 are captured as their declared lanes open and missed lanes are sealed
+`blocked_no_reschedule`. Evaluation remains sealed until `2027-03-25T15:00:00Z`; no
+outcome, aggregate, warehouse, Layer 1, live workflow, dashboard or production action is
+authorized. 017 was accepted at clean worker `6cbbd01` after an independent coordinator
+review: focused 13/13, full local suite 503 with only the three pre-existing
+console-width secret-scanner failures, evidence hashes reproduced, and an inert scheduler
+package with no installed task.
+
+
 2026-09-24 user authorized pushing Gold forward after the coordinator disclosed
 that the next stage needs read-only provider/network access and scoped credentials.
 Published `gold-qualification-activation-package-017` from accepted worker

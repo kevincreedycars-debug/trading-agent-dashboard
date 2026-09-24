@@ -1,12 +1,18 @@
 # Current task
 
-Build and review the bounded Gold provider activation package. Offline collectors
-016 are accepted at clean worker `4eea9a8`, and the user has explicitly authorized
-moving forward with the previously disclosed read-only network/provider and scoped
-credential requirement.
+Activate the real Gold qualification window. Assignment
+`gold-qualification-window-activation-018` was published on 2026-09-24 under explicit
+user authority, after the accepted 014 window opened at `2026-09-24T14:00:00Z`, anchor 1
+was permanently missed and anchor 2's pre-anchor feature interval was shown to close at
+`2026-09-25T14:00:00Z`.
 
-`gold-qualification-activation-package-017` may use only `FRED_API_KEY` and
-`OANDA_API_TOKEN`, implement the clock-bound activation gate and perform small
-provider smokes ending strictly before `2026-09-24T14:00:00Z`. It may not capture
-a real anchor or install/start a scheduler. Next: review the unique 017 submission
-before separately authorizing real window activation.
+Gold now builds a lock-guarded capture driver plus exactly one installed local Windows
+scheduled task that runs the accepted 017 runner through the encrypted credential runner
+with only `FRED_API_KEY` and `OANDA_API_TOKEN`, and captures anchors 2-130 as their
+declared lanes open. Missed lanes are sealed `blocked_no_reschedule`; anchor 1 stays
+blocked. No outcome, aggregate, qualification or evaluation may be read before
+`2027-03-25T15:00:00Z`, and no warehouse, Layer 1, live, dashboard or production action
+is authorized.
+
+Next: Gold reports the first verified real capture and the installed task state for
+review in the mailbox. Publication is not pickup until the worker reports activity.
