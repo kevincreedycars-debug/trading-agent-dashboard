@@ -1,6 +1,27 @@
 # Session notes
 
-2026-09-25 evening (latest): 020 reviewed interactively, its blocker upheld, an urgent live-lane defect
+2026-09-25 (latest): 021 reviewed and accepted, 022 published. Recognised from the canonical coordinator
+checkout, not from the report text: submission `20260925-gold-coverage-021-r1` (mailbox SHA-256
+`8a2edb6a...`) is accepted. Gold worktree clean at `a9bb3654` from base `35ad4bb5`, one commit, exactly
+nine files; the four new v2 files, the four amended files (prior LF digests at base `6de0dbfd`,
+`25ecb4cf`, `f7b1f394`, `dcc420e8`) and the five pinned v1 files including the scheduler package
+`6b0eaf07...` all reproduce; the frozen 013 shortlist `ffa69b30...`, the 013 audit `e7c57773...`, the
+frozen 014 manifest `15cd0606...` and the three sealed anchor-2 captures `302e4a26`, `58ece552`,
+`c51ad9b9` are byte-identical; focused tests re-ran 7/7, 7/7 and 8/8. Outcome-identity was re-derived in
+`tmp/coordinator-verify-shortlist-021-20260925` (four frozen ids in order, pool 2548/255, 4 selected,
+255 audit entries byte-identical, only the embedded inventory digest differing). The installed task was
+read back: `GoldQualificationWindowTick018` now runs the v2 wrapper, every other setting identical,
+exactly one Gold task, last result `0`, `tick.log` at 71 metadata-only blocks with no value words. One
+environment case, not a defect: this coordinator shell exports `DEEPSEEK_API_KEY`, which the
+credential-scope guard correctly refuses as overbreadth; the suite is 7/7 once it is cleared. Reply
+`adcaaf91...`; review `docs/orchestration/reviews/20260925-gold-coverage-021-r1.md`. The next bounded
+assignment `gold-coverage-022` is published (register `instructions_published_awaiting_worker`, baseline
+`a9bb3654`): close the two deferred coverage-test expectations, then observe the repaired entry lane at
+the first reachable anchor `2026-09-28T14:00:00Z`. Unchanged boundaries: no outcome, holdout,
+exploration, production, warehouse, Layer 1, live-workflow or credential action; evaluation sealed until
+`2027-03-25T15:00:00Z`; opening a fresh exploratory combination stage remains an unauthorised user
+decision.
+2026-09-25 evening: 020 reviewed interactively, its blocker upheld, an urgent live-lane defect
 found and 021 published. Resume state: canonical `orchestration/control-plane-20260920`; Gold worktree
 clean at `35ad4bb5`; register `gold-coverage-021`, status `instructions_published_awaiting_worker`,
 baseline `35ad4bb5`; mailbox empty; dispatcher enabled and running (pid was 37640, restarted after the

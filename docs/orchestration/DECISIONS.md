@@ -1,5 +1,39 @@
 # Central decisions
 
+## 2026-09-25: gold-coverage-021 accepted; gold-coverage-022 published
+
+The background Central Orchestrator (a controller-locked run, a session separate from authorship)
+reviewed only `20260925-gold-coverage-021-r1` (mailbox SHA-256 `8a2edb6a...`, reproduced) and accepted
+it. The verdict rests on reproduced evidence: the Gold worktree is clean at `a9bb3654` from base
+`35ad4bb5` with exactly one commit and the nine disclosed files; the four new v2 files, the four amended
+files (with their prior LF digests at base) and the five pinned v1 files including the scheduler package
+all reproduce their digests; the frozen 013 shortlist `ffa69b30...`, the 013 audit `e7c57773...`, the
+frozen 014 manifest `15cd0606...` and the three sealed anchor-2 captures are byte-identical; focused
+tests re-ran 7/7, 7/7 and 8/8. The v2 entry-eligibility logic was inspected and is correct - the OANDA
+end is clamped to the observed clock minus the declared one-hour availability lag, a future-dated
+request is refused before any provider call, and the v2 tick returns `not_yet_eligible` without sealing,
+creating a directory or consuming the identity. Outcome-identity was re-derived independently against
+the amended default in `tmp/coordinator-verify-shortlist-021-20260925` (four frozen ids in order, pool
+2548/255, 4 selected, 255 audit entries byte-identical, `reconciliation_ok` true, only the embedded
+inventory digest differing, now `b7687622` normalised with raw `863c4e02` recorded beside it). The
+installed task was read back from the host: `GoldQualificationWindowTick018` now runs the v2 wrapper
+with every other setting identical and exactly one Gold task, last result `0`, and `tick.log` holds 71
+metadata-only blocks with no value words. One environment case was recorded, not a defect: this
+coordinator shell exports `DEEPSEEK_API_KEY`, which the credential-scope guard correctly refuses as
+overbreadth; the suite is 7/7 once it is cleared, so the guard works and the worker's 7/7 reproduces.
+Answers: the amendment-aware frozen-manifest comparison is accepted (rebuilding the frozen artifact is
+forbidden and no check is weakened); keep v2 installed with v1 as the documented rollback and do not
+retire v1 until a real capture is proven; the `blocked_no_reschedule` -> `interval_closed_no_backfill`
+mapping is accepted and the sealer vocabulary is not extended now. Reply published (SHA-256
+`adcaaf91...`), durable review recorded at
+`docs/orchestration/reviews/20260925-gold-coverage-021-r1.md`. Because acceptance is a checkpoint, the
+next bounded assignment `gold-coverage-022` was published with the register at
+`instructions_published_awaiting_worker`, the literal Worker-status spelling the bridge requires: close
+the two deferred coverage-test expectations and observe (never trigger) the repaired entry lane at the
+first reachable anchor `2026-09-28T14:00:00Z`. The precise unresolved decision remains the user's:
+whether to open a fresh exploratory combination stage over the 28 measured variables, which stays
+unauthorised. No outcome, holdout, exploration, production, warehouse, Layer 1, live-workflow or
+credential action occurred, and evaluation stays sealed until `2027-03-25T15:00:00Z`.
 ## 2026-09-25: urgent live entry-lane repair authorised; the shortlist binding is re-accepted in normalised form
 
 The interactive review of `20260925-gold-coverage-020-r1` upheld Gold's blocker and found a second,

@@ -1,5 +1,36 @@
 # Current state
 
+2026-09-25 later: 021 accepted and 022 published. The background Central Orchestrator (a
+controller-locked run, a session separate from authorship) reviewed only
+`20260925-gold-coverage-021-r1` (mailbox SHA-256 `8a2edb6a...`, reproduced) and accepted it from the
+actual diff and artifacts, not the report text. Gold is clean at `a9bb3654` from base `35ad4bb5`, one
+commit, exactly nine files; the four new v2 files, the four amended files (prior LF digests at base
+`6de0dbfd`, `25ecb4cf`, `f7b1f394`, `dcc420e8`) and the five pinned v1 files including the scheduler
+package `6b0eaf07...` all reproduce; the frozen 013 shortlist `ffa69b30...`, the 013 audit
+`e7c57773...`, the frozen 014 manifest `15cd0606...` and the three sealed anchor-2 captures `302e4a26`,
+`58ece552`, `c51ad9b9` are byte-identical; focused tests re-ran 7/7, 7/7 and 8/8. The v2
+entry-eligibility logic is correct on inspection - the OANDA end is clamped to the observed clock minus
+the declared one-hour availability lag, a future-dated request is refused before any provider call, and
+the v2 tick reports `not_yet_eligible` without sealing, creating a directory or consuming the identity.
+Outcome-identity was re-derived independently against the amended default in
+`tmp/coordinator-verify-shortlist-021-20260925`: the four frozen ids in frozen order, pool 2548/255, 4
+selected, 255 audit entries byte-identical, `reconciliation_ok` true, with only the embedded inventory
+digest differing (now `b7687622...` normalised, raw `863c4e02...` recorded beside it). The installed
+task was read back: `GoldQualificationWindowTick018` now runs the v2 wrapper, every other setting
+identical, exactly one Gold task, last result `0`, `tick.log` at 71 metadata-only blocks with no value
+words. One environment case, not a defect: this coordinator shell exports `DEEPSEEK_API_KEY`, which the
+credential-scope guard correctly refuses as overbreadth; the suite is 7/7 once it is cleared. Answers:
+the amendment-aware frozen-manifest comparison is accepted; keep v2 installed with v1 as the documented
+rollback and do not retire v1 until a real capture is proven; the `blocked_no_reschedule` ->
+`interval_closed_no_backfill` mapping is accepted and the sealer vocabulary is not extended now. Reply
+`adcaaf91...`; durable review at `docs/orchestration/reviews/20260925-gold-coverage-021-r1.md`. The next
+bounded assignment `gold-coverage-022` is published with the register at
+`instructions_published_awaiting_worker`, baseline `a9bb3654`: close the two deferred coverage-test
+expectations and observe (never trigger) the repaired entry lane at the first reachable anchor
+`2026-09-28T14:00:00Z`. The precise unresolved decision remains the user's: opening a fresh exploratory
+combination stage over the 28 measured variables is not authorised. No outcome, holdout, exploration,
+production, warehouse, Layer 1, live-workflow or credential action occurred, and evaluation stays
+sealed until `2027-03-25T15:00:00Z`.
 2026-09-25 evening: 020 reviewed interactively, blocker upheld, urgent live-lane defect found, 021
 published. The automatic reviewer picked up `20260925-gold-coverage-020-r1` at `15:15:42Z` and its run
 timed out at `15:35:42Z` (receipt `b6c28b72...`, `needs_attention`, `timedOut` true), which disables
