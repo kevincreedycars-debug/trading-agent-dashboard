@@ -1,5 +1,36 @@
 # Current state
 
+2026-09-25 20:45: the 28-factor exploratory circuit is closed and the verdict page is commissioned. The
+background reviewer accepted `gold-coverage-024` revision 2 (reply `40eaccc4...`, review
+`docs/orchestration/reviews/20260925-gold-coverage-024-r2.md`, acceptance commit `41210c1`): worktree clean at
+`cdd350af` from base `6fd501a7`, one additive test file `backtester/tests/gold_combination_engine_024.test.js`
+(132 lines) with the repaired adapter, the ledger and the analysis byte-identical to the revisions already
+verified, the focused file re-run 6 of 6 with substantive assertions (the four-argument `loadMacroHistories`
+call carrying `prospectiveBoundary(registry)` and the carried `seriesRules`, `SF_FED_DNSI` 168 h / 14 d and
+`PHILLY_FED_ADS` 36 h / 14 d asserted to differ from the module defaults, a same-variable pair refused, an
+undeclared registry and a moved approved digest refused, the v1/v2 version and pre-execution status gates
+accepting the declared values while `v3` and `after_outcomes` are refused, the reconciliation guard asserted by
+source plus its retained rev2 firing evidence), and the documented local suite at 545 tests with only the known
+CRLF-materialisation and console-width secret-scanner cases failing. Recorded honestly: those failure counts
+vary by session (Gold 536 pass / 9 fail, reviewer 539 pass / 6 fail) because the cases are environment-dependent,
+and neither run shows a failure attributable to this work. Circuit figures, all verified on the artifacts:
+declaration `5fe48767` (v2 registry `c19315e6`, 51 atoms over 22 applicable variables, 1,239 cross-variable
+pairs, 4 context options, universe 4,956, candidate list `db96c728`, complete enumeration, no ranking, no
+truncation); run `gold-combination-run-024-20260926-rev3` exit 0 in 43.1 s; ledger `f02a88cb` with 4,956
+records (2,745 reported / 704 ineligible / 1,507 empty / 0 unavailable); 4,782,540 attempts over 441,781
+matched anchors; 441,319 observations; denominators `350,283 + 91,036 + 0 = 441,319`; manifest `1ec2a382`;
+summary `d594646d` declaring `exploratory: true` with `prediction_claimed`, `accuracy_claimed` and
+`trading_result_computed` false. On the user's direction `gold-coverage-025` was published (register exactly
+`instructions_published_awaiting_worker`, baseline `cdd350af`): a documentation-only verdict page,
+`docs/GOLD_BACKTEST_VERDICT_20260925.md`, one page of plain English stating what was asked and run, what the
+numbers say, what cannot be concluded and why, what a real verdict would need (the sealed prospective window at
+`2027-03-25T15:00:00Z` or new licensed data, neither authorised), and where to check every number, with the
+28-block digest and every accepted artifact left byte-identical. The reviewer has no daily cap (lifted at the
+user's direction) and forty minutes per run. The only other obligation is the carried 022 item A anchor envelope
+for `2026-09-28T14:00:00Z|gold|entry`, due at or after the `2026-09-28T16:00:00Z` lane close; after it Gold
+stops. No outcome, holdout, production, warehouse, Layer 1, live workflow or deployment action occurred, and
+evaluation stays sealed until `2027-03-25T15:00:00Z`.
+
 2026-09-25 20:39: gold-coverage-024 accepted; the 28-factor exploratory circuit closes as exploratory. The background Central Orchestrator (a controller-locked run, a session separate from authorship) reviewed only `20260925-gold-coverage-024-r2` (mailbox SHA-256 `5dcfaf79...`, reproduced; reply `40eaccc4...`) from the actual diff, the artifacts and the tests rather than the report text. Gold is clean at `cdd350af` from base `6fd501a7` (an ancestor); the one new commit adds exactly one file, `backtester/tests/gold_combination_engine_024.test.js`, with `2c3606dd` still its parent, so the repaired adapter and ledger and `docs/GOLD_COMBINATION_ANALYSIS_023.md` are byte-identical to the revisions already verified in `20260925-gold-coverage-024-r1`. Reproduced independently: the focused file re-ran 6 of 6 with substantive assertions (the four-argument `loadMacroHistories` call carrying `prospectiveBoundary(registry)`, the carried `parts.seriesRules`, the declared `SF_FED_DNSI` 168 h / 14 d and `PHILLY_FED_ADS` 36 h / 14 d rules asserted to differ from the 36 h / 7 d defaults, the version and status gates accepting the declared v1 and v2 versions and the two pre-execution statuses while refusing anything else before a record is written, the same-variable pair and undeclared-registry refusals, and the reconciliation guard with its retained firing evidence); the local suite ran 545 tests with 539 pass and 6 fail - the five pre-existing CRLF materialisation cases (97, 98, 101, 102, 103) plus 210, which fails closed on the ambient `DEEPSEEK_API_KEY` in this coordinator shell, where the worker instead reported the four console-width secret-scanner cases, an environment split rather than new work; the ledger `f02a88cb` at 23,948,174 bytes was re-derived from the artifact itself to 4,956 records, 2,745 reported / 704 ineligible / 1,507 empty / 0 unavailable, 4,673 candidates with an unavailable anchor and every record reconciling to 441,319 = 350,283 + 91,036 + 0; the summary `d594646d`, manifest `1ec2a382` and row reconciliation `a23f65d1` reproduce; and the frozen 014 manifest's eight bound paths and every preserved artifact still match on disk. Dependency impact is nil: the only cross-module consumer `parseCandidateId` is untouched and no bound path is an edited file, so the accepted gate cannot move. One nuance recorded rather than hidden: the frozen manifest's recorded selector digest `8f3a3896` is the pre-amendment value against `771e844e` on disk, which is the accepted gold-coverage-021 amendment declared by the window suite, not drift. Honest reading of the stage: the 28 measured factors are declared, evaluated over 4,956 candidates and reported descriptively; nothing here is accuracy, ranking, timing or edge evidence and none is possible from spent intervals, and the batch must not be re-run because rev1, rev2 and rev3 are spent and immutable. No new assignment is published: the register keeps `gold-coverage-024` at status exactly `instructions_published_awaiting_worker`, whose section 0 governs the one outstanding envelope (022 item A, due at or after `2026-09-28T16:00:00Z`, which needs a fresh wake because a reply or assignment notifies a bridge once per content version). The precise unresolved decision remains the user's: whether to authorise any further exploratory stage over the spent intervals, since the undeclared `event_releases` cell at 40,324 would need a selection rule and the other horizons, context fields and endpoint groups sit in the same consumed calendar. The live lane was neither touched nor re-queried in this cycle, and evaluation stays sealed until `2027-03-25T15:00:00Z`.
 
 2026-09-25 20:25: the 28-factor exploratory circuit ran and is verified; `024` is changes-requested on two

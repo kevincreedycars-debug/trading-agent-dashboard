@@ -1,5 +1,28 @@
 # Session notes
 
+2026-09-25 20:45 (latest): circuit closed, verdict page commissioned. The background reviewer **accepted**
+`gold-coverage-024` revision 2 (reply `40eaccc4...`, review
+`docs/orchestration/reviews/20260925-gold-coverage-024-r2.md`, acceptance commit `41210c1`), so the 28-factor
+exploratory circuit is closed as exploratory: declaration `5fe48767`, run
+`gold-combination-run-024-20260926-rev3` exit 0 in 43.1 s with ledger `f02a88cb`, 4,956 of 4,956 candidates
+(2,745 reported / 704 ineligible / 1,507 empty / 0 unavailable), 4,782,540 attempts over 441,781 matched
+anchors, denominators `350,283 + 91,036 + 0 = 441,319` reconciled on the artifacts, and both required evidence
+items delivered (focused file 6 of 6, reproduced by the coordinator, and the local suite 545 tests with only the
+disclosed environment failures - the failure count differs by session, 536/9 for Gold against 539/6 for the
+reviewer, because those cases are environment-dependent). Under the user's direction that the finish line
+includes a written conclusion, `gold-coverage-025` was published (register exactly
+`instructions_published_awaiting_worker`, baseline `cdd350af`): one documentation-only deliverable,
+`docs/GOLD_BACKTEST_VERDICT_20260925.md`, ~500-700 words of plain English covering what was asked and run, what
+the numbers say, what cannot be concluded and why, what a real verdict would need (the sealed prospective window
+at `2027-03-25T15:00:00Z` or new licensed data, neither authorised), and where to check every number; no new
+measurement, run, source, credential or rule change, and every accepted artifact stays byte-identical. Also
+recorded this session: the automatic-review daily cap was lifted at the user's direction (`DAILY_REVIEW_CAP = 0`,
+forty minutes per run, asserted by `tests/coordinator_dispatch.test.js` 4 of 4, commit `abf5421`), which let the
+reviewer finish 024-r2 immediately instead of idling until the UTC rollover. Remaining obligation: the carried
+022 item A anchor envelope for `2026-09-28T14:00:00Z|gold|entry`, due at or after the `2026-09-28T16:00:00Z`
+lane close, after which Gold stops. No outcome, holdout, production, warehouse, Layer 1, live workflow or
+deployment action occurred; evaluation stays sealed until `2027-03-25T15:00:00Z`.
+
 2026-09-25 20:39 (latest): 024 accepted in a background coordinator cycle and the 28-factor circuit closed as exploratory. Reviewed only `20260925-gold-coverage-024-r2` (mailbox `5dcfaf79...`, reproduced; reply `40eaccc4...`, durable review `docs/orchestration/reviews/20260925-gold-coverage-024-r2.md`) from the worker checkout, the diff, the artifacts and the tests, not the report. Clean at `cdd350af` from base `6fd501a7`; the one new commit adds only `backtester/tests/gold_combination_engine_024.test.js` and leaves `2c3606dd` as its parent, so the repaired adapter and ledger and the analysis document are unchanged from the revisions already verified. Reproduced: focused 6 of 6; local suite 545 tests, 539 pass, 6 fail (five pre-existing CRLF cases plus 210, which fails closed on the exported `DEEPSEEK_API_KEY` here where the worker saw the four console-width secret-scanner cases instead); ledger `f02a88cb` re-derived to 4,956 records with statuses 2,745 / 704 / 1,507 / 0 and denominators `350,283 + 91,036 + 0 = 441,319`, 4,673 candidates carrying an unavailable anchor; summary `d594646d`, manifest `1ec2a382`, row reconciliation `a23f65d1`; frozen 014 manifest bound paths and every preserved artifact byte-identical; dependency impact nil because `parseCandidateId` is untouched and no bound path is an edited file. Two coordination facts for the next session: no new assignment is published, so the register keeps `gold-coverage-024` at status exactly `instructions_published_awaiting_worker` with its section 0 governing the 022 item A envelope due at or after `2026-09-28T16:00:00Z`, and that envelope needs a fresh wake because a reply notifies the bridge once per content version. The unresolved decision stays with the user: any further exploratory stage over the spent intervals (the undeclared `event_releases` cell at 40,324 would need a selection rule; other horizons, context fields and endpoint groups sit in the same consumed calendar), with the sealed prospective window (`2027-03-25T15:00:00Z`) or new licensed data as the only paths to a real verdict. No outcome, holdout, acquisition, credential, production, warehouse, Layer 1, live workflow or deployment action, and the live capture lane was not touched or re-queried.
 
 2026-09-25 20:25 (latest): the 28-factor circuit ran and 024 is changes-requested on evidence only. The

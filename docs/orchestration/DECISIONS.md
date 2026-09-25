@@ -1,5 +1,32 @@
 # Central decisions
 
+## 2026-09-25: the 28-factor circuit closes as exploratory; the verdict page is published as 025
+
+`gold-coverage-024` revision 2 was accepted by the background reviewer (reply `40eaccc4...`, review
+`docs/orchestration/reviews/20260925-gold-coverage-024-r2.md`, acceptance commit `41210c1`), so the 28-factor
+exploratory circuit is **closed as exploratory**. Verified in that review from the checkout and the artifacts:
+the worktree is clean at `cdd350af`, the single new commit adds only
+`backtester/tests/gold_combination_engine_024.test.js` (132 lines, additive) with the repaired adapter, the
+ledger and the analysis byte-identical to the revisions already verified, the focused file re-ran 6 of 6 with
+substantive assertions (the four-argument `loadMacroHistories` call carrying `prospectiveBoundary(registry)` and
+the carried `seriesRules`; `SF_FED_DNSI` 168 h / 14 d and `PHILLY_FED_ADS` 36 h / 14 d asserted to differ from
+the module defaults; a same-variable pair refused; an undeclared registry and a moved approved digest refused;
+the v1/v2 version and the two pre-execution statuses accepted while `v3` and `after_outcomes` are refused; the
+reconciliation guard asserted by source plus its retained firing evidence from rev2), and the documented local
+suite ran 545 tests with only the known CRLF-materialisation and console-width secret-scanner cases failing and
+no new failure. Recorded honestly: the suite failure count differs between sessions (Gold reported 536 pass /
+9 fail, the reviewer 539 pass / 6 fail) because those cases are environment-dependent; the worker disclosed
+them rather than hiding them, and the reviewer confirmed none is attributable to this work. On the user's
+direction, `gold-coverage-025` was published with the register at exactly
+`instructions_published_awaiting_worker` and baseline `cdd350af`: a **documentation-only** verdict deliverable,
+`docs/GOLD_BACKTEST_VERDICT_20260925.md`, one page of plain English stating what the backtest does and does not
+establish - what was asked and run, what the numbers say, what cannot be concluded and why, what a real verdict
+would need (the sealed prospective window at `2027-03-25T15:00:00Z` or new licensed data, neither authorised),
+and where to check every number. No new measurement, run, source, credential or rule change is authorised, and
+every accepted artifact stays byte-identical. The carried 022 item A anchor envelope remains due at or after
+`2026-09-28T16:00:00Z`, after which Gold stops. No outcome, holdout, production, warehouse, Layer 1, live
+workflow or deployment action occurred.
+
 ## 2026-09-25: gold-coverage-024 accepted; the 28-factor exploratory circuit closes as exploratory
 
 Background review of `20260925-gold-coverage-024-r2` (mailbox SHA-256 `5dcfaf79...`, reproduced) in a controller-locked run separate from authorship, decided from the worker checkout, the diff, the artifacts and the tests rather than the report text. The stage verified in the previous cycle stands, both required evidence items are delivered, and the repair is closed: the adapter assembles the accepted measurement engine exactly (declared series rules carried on the parts and the four-argument `loadMacroHistories` call carrying `prospectiveBoundary(registry)`) and the ledger accepts the declared v1 and v2 versions and the two pre-execution statuses while refusing anything else before a record is written, with the v1 default bit-for-bit. Reproduced or re-derived: focused 6 of 6; local suite 545 tests with 539 pass and 6 environment failures; ledger `f02a88cb` to 4,956 records, 2,745 / 704 / 1,507 / 0 unavailable, every record reconciling `350,283 + 91,036 + 0 = 441,319`, 4,673 candidates with an unavailable anchor; summary `d594646d`, manifest `1ec2a382`, row reconciliation `a23f65d1`; frozen 014 manifest bound paths and all preserved artifacts byte-identical; dependency impact nil because the only cross-module consumer `parseCandidateId` is untouched and no bound path is an edited file. Honest reading: the 28 measured factors are declared, evaluated over 4,956 candidates and reported descriptively, and nothing in the stage is accuracy, ranking, timing or edge evidence, nor can it be from spent intervals; rev1, rev2 and rev3 are spent and immutable, so the batch must not be re-run. No new assignment is published and the one active milestone is unchanged: the register keeps `gold-coverage-024` at status exactly `instructions_published_awaiting_worker`, whose section 0 carries the 022 item A envelope due at or after `2026-09-28T16:00:00Z`, and that envelope needs a fresh wake because a reply or assignment notifies a bridge once per content version. The residual verification limit is recorded rather than hidden: the ledger stores per-candidate attempt and anchor counts, not anchor instants, so pre-boundary compliance rests on the accepted engine plus the declared boundary, and the review declined a documentation cycle for it. Reply `40eaccc4...` accepted; review recorded at `docs/orchestration/reviews/20260925-gold-coverage-024-r2.md`.
