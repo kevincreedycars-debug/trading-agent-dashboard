@@ -1,5 +1,35 @@
 # Current state
 
+2026-09-25 20:25: the 28-factor exploratory circuit ran and is verified; `024` is changes-requested on two
+evidence items only. Declaration `5fe48767`: v2 registry `c19315e6`, 51 atoms over 22 applicable variables,
+1,239 cross-variable pairs, 4 context options, declared universe **4,956** inside the 20,000 cap, complete
+enumeration, no ranking, no truncation, candidate list `db96c728`, and the undeclared event cell reported at
+40,324 with `balanced_selection` and left undeclared rather than silently selected. Run
+`gold-combination-run-024-20260926-rev3`: exit `0` in 43.1 s, ledger `f02a88cb` (23,948,174 bytes, 4,956
+records, 2,745 reported / 704 ineligible / 1,507 empty / 0 unavailable, 4,673 candidates with at least one
+unavailable anchor), manifest `1ec2a382`, 965 anchors with 964 computed outcomes, 4,782,540 attempts over
+441,781 matched anchors, and the endpoint denominators summing from the ledger itself to
+`441,319 = 350,283 + 91,036 + 0`. The summary declares `exploratory: true` with `prediction_claimed`,
+`accuracy_claimed` and `trading_result_computed` all false. `docs/GOLD_COMBINATION_ANALYSIS_023.md` states the
+declared cell and universe, the per-variable table for all 28 (the six event-cohort variables contribute no
+daily atom), every exclusion with counts, candidate-n quantiles (median 74, q1 0, q3 156), the dependence
+statement, the research-definition caveat and an explicit no-accuracy/no-ranking/no-edge close. Verified by the
+coordinator from the artifacts rather than the report: the ledger hash and every count reproduce, the
+denominators reconcile on the artifact, and the preserved artifacts are byte-identical (v1 registry
+`7e2bcff6`, v2 `c19315e6`, run-011 ledger `5cd45278`, 014 manifest `15cd0606`, 013 shortlist `ffa69b30`, 013
+audit `e7c57773`, report registry revision 8 `2be6701c`, revised inventory `863c4e02`, audit v2 `1a6af31d`).
+The two harness edits are additive and fail-closed: the ledger accepts the declared v1 and v2 registry versions
+and the two pre-execution statuses and refuses anything else before a record is written, with the v1 default
+intact; the rows adapter passes the declared series rules and the declared prospective boundary. Review: reply
+`b51baa2f...` published as changes requested - acceptance needs only the focused tests for the two repaired
+modules and the documented local suite with exact counts and every failure disclosed; the batch must not be
+re-run because rev1, rev2 and rev3 are spent and immutable. One verification limit is recorded rather than
+hidden: the ledger carries per-candidate attempt and anchor counts, not anchor instants, so the pre-boundary
+claim rests on the accepted engine and the declared prospective boundary rather than a per-anchor audit. Live
+state untouched: one v2 capture task, result `0`, `PT10M`, zero missed runs. Honest reading of the circuit: the
+28 measured factors are declared, evaluated and described; nothing here is accuracy, ranking, timing or edge
+evidence, and none can be, because every interval is spent. Evaluation stays sealed until `2027-03-25T15:00:00Z`.
+
 2026-09-25 late evening: 023 reviewed - declaration accepted, blocker upheld, `gold-coverage-024` published.
 Gold delivered `gold-coverage-023` as a blocked report (mailbox `fae926bb...`, reproduced) rather than leaving
 the tree uncommitted, and the background Central Orchestrator reviewed only that submission from the actual

@@ -1,5 +1,27 @@
 # Central decisions
 
+## 2026-09-25: gold-coverage-024 stage verified; changes requested for two evidence items
+
+Interactive review of `20260925-gold-coverage-024-r1` (mailbox SHA-256 `0ca796e3...`) under the user's strict
+close-out standard: the declaration, run, ledger and analysis stage is verified and stands, and acceptance
+waits only on the two evidence items Gold itself disclosed as not run - focused tests for the two repaired
+modules and the documented local suite. Reproduced rather than trusted: the ledger is `f02a88cb...` at
+23,948,174 bytes with 4,956 records (2,745 reported / 704 ineligible / 1,507 empty / 0 unavailable and 4,673
+candidates with at least one unavailable anchor), the endpoint denominators sum from the ledger itself to
+441,319 = 350,283 + 91,036 + 0, the manifest is `1ec2a382...`, the summary declares `exploratory: true` with
+`prediction_claimed`, `accuracy_claimed` and `trading_result_computed` all false, 965 anchors with 964 computed
+outcomes and 4,782,540 attempts over 441,781 matched anchors; the preserved artifacts are byte-identical (v1
+registry `7e2bcff6`, v2 `c19315e6`, run-011 ledger `5cd45278`, 014 manifest `15cd0606`, 013 shortlist
+`ffa69b30`, 013 audit `e7c57773`, report registry revision 8 `2be6701c`, revised inventory `863c4e02`, audit v2
+`1a6af31d`); and the two harness edits are additive and fail-closed (approved v1/v2 registry versions and the
+two pre-execution statuses, refused before a record is written, with the v1 default intact). Review recorded at
+`docs/orchestration/reviews/20260925-gold-coverage-024-r1.md`; reply `b51baa2f...` published. Circuit status,
+stated honestly: the 28 measured factors are declared, evaluated across 4,956 candidates and reported
+descriptively; nothing in this stage is accuracy, ranking, timing or edge evidence and none is possible from
+spent intervals. The batch must not be re-run - rev1, rev2 and rev3 are spent and immutable. The 022 item A
+anchor envelope remains due at or after `2026-09-28T16:00:00Z`. No outcome, holdout, acquisition, credential,
+production, warehouse, Layer 1, live workflow or deployment action occurred.
+
 ## 2026-09-25: gold-coverage-023 reviewed - declaration accepted, blocker upheld, gold-coverage-024 published
 
 The background Central Orchestrator (a controller-locked run, a session separate from authorship) reviewed

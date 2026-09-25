@@ -1,5 +1,25 @@
 # Session notes
 
+2026-09-25 20:25 (latest): the 28-factor circuit ran and 024 is changes-requested on evidence only. The
+declared stage executed at `2c3606d` from base `6fd501a7`: declaration `5fe48767` (v2 registry `c19315e6`,
+51 atoms / 22 applicable variables, 1,239 cross-variable pairs, 4 context options, universe 4,956, candidate
+list `db96c728`, complete enumeration, no ranking, no truncation, event cell left undeclared because it returns
+`balanced_selection`), run `gold-combination-run-024-20260926-rev3` exit `0` in 43.1 s with ledger `f02a88cb`,
+4,956 of 4,956 candidates (2,745 reported / 704 ineligible / 1,507 empty / 0 unavailable), 4,782,540 attempts
+over 441,781 matched anchors, denominators `350,283 + 91,036 + 0 = 441,319` reconciled on the artifact itself,
+manifest `1ec2a382`, and an honest analysis document with the per-variable table, every exclusion, the
+dependence statement and no accuracy/ranking/edge claim. The coordinator reproduced the ledger hash, the counts
+and the denominators and confirmed every preserved artifact byte-identical; the two harness edits are additive
+and fail-closed with the v1 default intact. Reply `b51baa2f...` (changes requested) requires only the focused
+tests for the two repaired modules and the documented local suite with exact counts and every failure
+disclosed, then a `ready_for_review` re-submission; the batch must not be re-run. Carried obligations: the 022
+item A anchor envelope at or after `2026-09-28T16:00:00Z`, the live v2 capture lane untouched (one task, result
+`0`, `PT10M`, zero missed runs), and the 022/023 assignment texts archived. The circuit's honest conclusion is
+descriptive only - the 28 measured factors are declared, evaluated and reported, and no accuracy, ranking,
+timing or edge evidence is possible from spent intervals; the only paths to a real verdict remain the sealed
+prospective window (evaluation `2027-03-25T15:00:00Z`) or new licensed data. No outcome, holdout, acquisition,
+credential, production, warehouse, Layer 1, live workflow or deployment action occurred.
+
 2026-09-25 late evening (latest): 023 reviewed as the background Central Orchestrator (controller-locked, a
 session separate from authorship) on exactly `20260925-gold-coverage-023-r1` (status `blocked`, mailbox
 `fae926bb9305277f75764885dd0a47d91cb5bdeffa5747adbadf9713434f5bbb`, reproduced). Verdict: the delivered
