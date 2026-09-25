@@ -1,0 +1,154 @@
+{
+  "schema_version": "gold-28-factor-outcomes-v1",
+  "research_only": true,
+  "exploratory": true,
+  "prediction_claimed": false,
+  "accuracy_claimed": false,
+  "trading_result_computed": false,
+  "headline": "Exploratory census of the 28 measured Gold factors on already-consumed intervals: it can describe the space, it cannot choose from it.",
+  "run_id": "gold-combination-run-024-20260926-rev3",
+  "declaration": {
+    "commit": "5fe48767",
+    "registry_path": "backtester/registries/gold_combination_batch_daily_h24_and.v2.json",
+    "registry_sha256": "c19315e696e9e1a7ef6dd35725b949f6037e2d3c47d566093f1eb83e7b6d058a",
+    "candidate_list_sha256": "db96c728d597b59f274f0e2b2b2d64f105f029a4e8508fb3ada1e946923c7c15",
+    "cell": {
+      "cohort": "daily_snapshot_anchors",
+      "horizon": "h24_post_event",
+      "endpoint_group": "all_computed",
+      "operator": "and",
+      "context_field": "prior_5session_return_sign"
+    },
+    "atoms_declared": 51,
+    "applicable_variables": 22,
+    "cross_variable_pairs": 1239,
+    "context_options": 4,
+    "candidates_declared": 4956,
+    "cap": 20000,
+    "selection": "complete_enumeration",
+    "ranking": "none",
+    "truncation": "none",
+    "declared_before_evaluation": true
+  },
+  "coverage": {
+    "candidates_declared": 4956,
+    "candidates_evaluated": 4956,
+    "status_totals": {
+      "reported": 2745,
+      "ineligible": 704,
+      "empty": 1507,
+      "unavailable": 0
+    },
+    "attempts": 4782540,
+    "matched_anchors": 441781,
+    "observations": 441319,
+    "direction_split": {
+      "positive": 245784,
+      "negative": 195535,
+      "exact_zero": 0
+    },
+    "anchors": {
+      "scheduled": 965,
+      "computed_outcomes": 964
+    },
+    "duration_ms": 43124
+  },
+  "denominators": {
+    "rule": "exact_offset_elapsed + delayed_offset_endpoint + session_close_endpoint = all_computed",
+    "all_computed": 441319,
+    "exact_offset_elapsed": 350283,
+    "delayed_offset_endpoint": 91036,
+    "session_close_endpoint": 0,
+    "reconciled": true
+  },
+  "candidate_n": {
+    "median": 74,
+    "q1": 0,
+    "q3": 156,
+    "min": 0,
+    "max": 481,
+    "reported_by_bucket": {
+      "20_to_99": 660,
+      "100_to_299": 1993,
+      "300_to_599": 92
+    },
+    "year_support_buckets": {
+      "0": 107,
+      "1": 145,
+      "2+": 2493
+    }
+  },
+  "exclusions": [
+    {
+      "label": "Candidates below the declared min_n of 20",
+      "count": 704
+    },
+    {
+      "label": "Candidates whose atoms and context never coexisted on one anchor",
+      "count": 1507
+    },
+    {
+      "label": "Candidates with at least one unavailable input on an anchor (median 8, maximum 51)",
+      "count": 4673
+    },
+    {
+      "label": "Matched outcomes not computed",
+      "count": 462
+    }
+  ],
+  "limits": [
+    "Exploratory association only: no prediction, accuracy, timing, profitability or trading edge.",
+    "Candidates share anchors and endpoint groups overlap in calendar time, so attempts are dependent and no significance claim is supported.",
+    "The seven unmeasured variables stay visible and unmeasured; fed_bias and inflation_signal remain local redefinitions, not the live Layer 1 fields."
+  ],
+  "dependence": {
+    "shared_anchors_across_candidates": true,
+    "same_instant_releases_share_outcome": true,
+    "endpoint_groups_overlap_in_calendar_time": true,
+    "serial_dependence_expected": true,
+    "significance_claim_made": false,
+    "effective_sample_size_estimated": false,
+    "statement": "Every candidate shares anchors with many others, so attempts are dependent, pooled counts are not independent samples and no significance claim is supported."
+  },
+  "verdict": {
+    "path": "docs/GOLD_BACKTEST_VERDICT_20260925.md",
+    "sha256": "7198e24e45755632e2314f09c50fe6ff3151a120f0226c87976133d97d85d765",
+    "quotes": [
+      "the 2023-2026 archive can describe this space, but it cannot support choosing from it",
+      "Nothing here is a verdict on accuracy, prediction, timing or edge.",
+      "The attempts are dependent, because every candidate shares anchors, so their results move together.",
+      "Two things could settle the question, and neither is authorized by this assignment."
+    ]
+  },
+  "what_would_change_it": [
+    "The sealed prospective window, whose evaluation stays sealed until 2027-03-25T15:00:00Z.",
+    "A new licensed dataset with declared vintages; either path needs its own bounded assignment, and neither exists today."
+  ],
+  "sources": [
+    {
+      "label": "Declaration registry",
+      "path": "backtester/registries/gold_combination_batch_daily_h24_and.v2.json",
+      "sha256": "c19315e696e9e1a7ef6dd35725b949f6037e2d3c47d566093f1eb83e7b6d058a"
+    },
+    {
+      "label": "Run ledger",
+      "path": "combination-ledger.jsonl",
+      "sha256": "f02a88cb5d03097e982c66081827a3403f34086dc2ae16c2e10279bceabc6707"
+    },
+    {
+      "label": "Run summary",
+      "path": "combination-summary.json",
+      "sha256": "d594646d2e0ae30158fd95fa464de5b5c9cd20b6f530f116e0e8f4db98bd38d5"
+    },
+    {
+      "label": "Run manifest",
+      "path": "execution-manifest.json",
+      "sha256": "1ec2a382f9944cd598993444cb478a8741244b004fd199fa49c04f335dcb34d4"
+    },
+    {
+      "label": "Accepted verdict page",
+      "path": "docs/GOLD_BACKTEST_VERDICT_20260925.md",
+      "sha256": "7198e24e45755632e2314f09c50fe6ff3151a120f0226c87976133d97d85d765"
+    }
+  ]
+}

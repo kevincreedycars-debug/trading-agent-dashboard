@@ -1,6 +1,40 @@
 # Session notes
 
-2026-09-25 20:52 (latest): the verdict page is delivered and accepted; the 28-factor stage is complete. In a
+2026-09-25 21:53 (latest): built the dashboard surface for the accepted 28-factor outcomes, on the user's
+request, without publishing anything. One new self-contained research page now exists in the canonical folder -
+`gold-backtest-outcomes.html`, rendered by `backtester/scripts/build_gold_backtest_outcomes.js` from
+`backtester/lib/gold_backtest_outcomes.js` plus `backtester/templates/gold-outcomes.html` - with a durable
+machine-readable copy at `data/gold-28-factor-outcomes-20260925.json`, and a single `topbar-link` in `index.html`
+("Gold Backtest") so the dashboard can reach it. Design decision recorded rather than improvised: the page
+*reads* accepted evidence and never measures anything, so it cannot become a fresh claim. It shows the declared
+cell before evaluation (commit `5fe48767`, registry `c19315e6`, candidate list `db96c728`, 51 atoms over 22
+applicable variables, 1,239 cross-variable pairs, 4 context options, complete enumeration, no ranking, no
+truncation), the census (4,956 candidates; 2,745 reportable / 704 below the min_n floor / 1,507 never matched /
+0 unavailable; 4,782,540 attempts over 441,781 matched anchors; 441,319 observations), the endpoint split
+`350,283 + 91,036 + 0 = 441,319`, the direction split (245,784 / 195,535 / 0) labelled explicitly as a property
+of the archive, the exclusion reasons with counts (including 4,673 candidates with an unavailable anchor, median
+8, maximum 51, and 462 matched outcomes not computed), the per-candidate sample spread (median 74, q1 0, q3 156,
+min 0, max 481), the three recorded limits, the dependence statement, and the accepted verdict quoted verbatim
+from `docs/GOLD_BACKTEST_VERDICT_20260925.md` (`7198e24e`) instead of paraphrased. Fail-closed behaviour was
+tested, not assumed: the builder throws if a count drifts from the accepted run, if the status totals stop
+summing to 4,956, if the endpoint denominators stop reconciling, if the summary stops declaring `exploratory:
+true` with `prediction_claimed`, `accuracy_claimed` and `trading_result_computed` false, or if the unavailability
+and not-computed totals disappear - which is how a wrong key name and a whitespace-wrapped verdict quote were
+caught during the build instead of shipping a silent zero. Validation: `backtester/tests/gold_backtest_outcomes.test.js`
+3 of 3 pass (portable invariants over the committed data file, reading no ignored artifact) and
+`backtester/tests/gold_backtest_outcomes_page.browser.test.js` 1 of 1 passes (Playwright at 1440 and 390: every
+figure, zero page errors, no horizontal overflow, no clipped metric value), with screenshots inspected at both
+widths and the narrow tables reflowed first - the 8-digit attempt total was wrapping mid-number and the source
+hashes were being crushed into unreadable columns before that pass. Honest limits: nothing was pushed, so GitHub
+Pages and the public dashboard are unchanged, and this page is not published; the generator depends on the local
+run artifacts in the worker worktree, so regeneration fails closed rather than inventing numbers, and the
+committed JSON is the durable record. The live capture lane, the frozen 014 manifest paths, the accepted
+artifacts, the sealed evaluation at `2027-03-25T15:00:00Z` and the reviewer were not touched, and no outcome,
+warehouse, Layer 1 or deployment action occurred. The only open obligation is still the 022 item A Monday
+envelope, which needs an explicit wake at or after `2026-09-28T16:00:00Z`.
+
+
+2026-09-25 20:52: the verdict page is delivered and accepted; the 28-factor stage is complete. In a
 background coordinator cycle (controller-locked, a session separate from authorship) only
 `20260925-gold-coverage-025` was reviewed - mailbox SHA-256 `a1543786b6feba0ebcf57ff3aca32fcb17d4d9358865a2255990dcbc26b333d6`,
 reproduced from the submitted file and equal to the requested hash - and it was **accepted** (reply
