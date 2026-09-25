@@ -15,6 +15,6 @@ keeps ticking every ten minutes as the only capture path (`Ready`, result `0`, z
 its tick log holds 71 metadata-only blocks (68 v1 plus three v2). Opening a fresh exploratory
 combination stage over the 28 measured variables remains an open user decision and is not authorized.
 
-Next immediate action on resume: confirm Gold picked up `022` from its own activity record, then review
+Gold picked up `022` at `2026-09-25T18:03:50Z` (activity state `working`, item B first; item A observation pending the first reachable anchor `2026-09-28T14:00:00Z`). Next immediate action on resume: review
 the two coverage-test closures and, at or after the 2026-09-28 anchor, the observed live entry-lane
 evidence. The capture task continues on its own and must not be disturbed.

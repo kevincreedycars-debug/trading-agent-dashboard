@@ -27,7 +27,7 @@ rollback and do not retire v1 until a real capture is proven; the `blocked_no_re
 bounded assignment `gold-coverage-022` is published with the register at
 `instructions_published_awaiting_worker`, baseline `a9bb3654`: close the two deferred coverage-test
 expectations and observe (never trigger) the repaired entry lane at the first reachable anchor
-`2026-09-28T14:00:00Z`. The precise unresolved decision remains the user's: opening a fresh exploratory
+`2026-09-28T14:00:00Z`. Gold picked up `gold-coverage-022` at `2026-09-25T18:03:50Z` (activity state `working`, item B first; item A observation pending the first reachable anchor `2026-09-28T14:00:00Z`). The precise unresolved decision remains the user's: opening a fresh exploratory
 combination stage over the 28 measured variables is not authorised. No outcome, holdout, exploration,
 production, warehouse, Layer 1, live-workflow or credential action occurred, and evaluation stays
 sealed until `2027-03-25T15:00:00Z`.

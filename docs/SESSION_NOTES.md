@@ -1,5 +1,6 @@
 # Session notes
 
+2026-09-25 pickup: Gold picked up `gold-coverage-022` at `2026-09-25T18:03:50Z` (activity state `working`, item B first; item A observation pending the first reachable anchor `2026-09-28T14:00:00Z`). The register keeps the literal status `instructions_published_awaiting_worker`.
 2026-09-25 (latest): 021 reviewed and accepted, 022 published. Recognised from the canonical coordinator
 checkout, not from the report text: submission `20260925-gold-coverage-021-r1` (mailbox SHA-256
 `8a2edb6a...`) is accepted. Gold worktree clean at `a9bb3654` from base `35ad4bb5`, one commit, exactly
