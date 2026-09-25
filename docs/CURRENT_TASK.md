@@ -1,31 +1,11 @@
 # Current task
 
-Finish the 28-factor work by executing the declared exploratory combination stage: make the batch adapter
-assemble the accepted measurement engine exactly as the accepted 019 builder does, then run the accepted
-harness and publish the analysis - while the accepted prospective window keeps capturing unattended.
+Hold at the closed 28-factor exploratory circuit and take the one outstanding prospective envelope.
 
-`gold-coverage-023` was reviewed on 2026-09-25 and its declaration is accepted at clean `6fd501a7`:
-`backtester/registries/gold_combination_batch_daily_h24_and.v2.json` (raw = LF `c19315e6`), 4956 candidates,
-list `db96c728`, 51 eligible atoms over 22 contributing variables, 36 same-variable exclusions, 1239
-cross-variable pairs, 4 context options, cap 20000, complete enumeration with no ranking and no truncation.
-The stage could not execute and the blocker is upheld: `buildAcceptedParts` never sets `parts.seriesRules`,
-so the declared availability rule fell back to the module default and every `risk_headline_context` state
-became `observation_stale_beyond_declared_age`, which the reconciliation guard correctly refused. The
-continuation is published as `gold-coverage-024`, which must set `parts.seriesRules`, pass
-`prospectiveBoundary(registry)` as the fourth argument of `loadMacroHistories`, add no parallel
-provider-file loader, and cover the repair with focused tests including the 28-variable rebuilt-count
-reconciliation.
+`gold-coverage-024` was reviewed on 2026-09-25 and accepted, so the circuit is closed as exploratory: the declaration `5fe48767` (v2 registry `c19315e6`), the repaired adapter and ledger, the executed run `gold-combination-run-024-20260926-rev3` (ledger `f02a88cb`, 4,956 of 4,956 candidates, denominators `350,283 + 91,036 + 0 = 441,319`), the analysis `docs/GOLD_COMBINATION_ANALYSIS_023.md` and both required evidence items are verified - the focused file 6 of 6 and the local suite 545 tests with 539 pass and 6 disclosed environment failures. Nothing in the stage is accuracy, ranking, timing or edge evidence and none is possible from spent intervals, and rev1, rev2 and rev3 are spent and immutable, so the batch must not be re-run.
 
-The live window needs no action: exactly one scheduled task, `GoldQualificationWindowTick018`, captures the
-declared lanes every ten minutes through the v2 wrapper and must not be disturbed. Its observed state is
-unchanged (`Ready`, action the v2 wrapper, one `PT10M` trigger, `IgnoreNew`, `StartWhenAvailable` true,
-battery flags false, `LastTaskResult` 0, zero missed runs); the evidence root holds exactly four directories;
-the sealed anchor-2 captures `302e4a26`/`58ece552`/`c51ad9b9` and the blocked attempt `e7c197f0` reproduce;
-and no directory exists for `2026-09-28T14:00:00.000Z|gold|entry`. No prospective observation or outcome may
-be read before `2027-03-25T15:00:00Z`.
+The only outstanding obligation is the 022 item A observation envelope for the `2026-09-28T14:00:00Z|gold|entry` identity, due at or after the `2026-09-28T16:00:00Z` lane close, delivered from the worker's ignored `tmp/` as one envelope before stopping. Because a reply or assignment notifies a worker bridge once per content version, that envelope needs a fresh wake at or after the lane close - an operator resume of the Gold window or a later coordinator event.
 
-Next: review `gold-coverage-024` when Gold reports - the repair, its focused tests, the new run id and
-ledger, the denominators reconciliation, and `docs/GOLD_COMBINATION_ANALYSIS_023.md` - and, separately, the
-still-open 022 item A envelope at or after the `2026-09-28T16:00:00Z` lane close. The register keeps status
-exactly `instructions_published_awaiting_worker`. The CRLF materialisation and the accepted-inputs raw/LF
-digest asymmetry stay owned by the `backtester-spike` change request and are not to be repaired here.
+The live window needs no action: exactly one scheduled task, `GoldQualificationWindowTick018`, keeps capturing through the v2 wrapper and must not be disturbed. Its state was last independently verified in `20260925-gold-coverage-022-r1` and was not re-queried in this cycle. No prospective observation or outcome may be read before `2027-03-25T15:00:00Z`.
+
+Next: hold, and take the 022 item A envelope at the lane close. No further research is authorised. The precise unresolved decision is the user's: whether to open another exploratory stage over the spent intervals, since the undeclared `event_releases` cell at 40,324 would need a selection rule and the other horizons, context fields and endpoint groups sit in the same already-consumed calendar. The CRLF materialisation and the accepted-inputs raw/LF digest asymmetry stay owned by the `backtester-spike` change request and are not to be repaired here.
