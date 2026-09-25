@@ -1,5 +1,43 @@
 # Current state
 
+2026-09-25 late evening: the user directed Gold to finish the 28-factor work, and `gold-coverage-023` was
+published to do it. The directive answers the decision the 019 and 022 reviews had left open ("a fresh
+exploratory combination stage over the 28 measured variables stays unopened: it needs the user's decision
+on opening a new exploratory candidate space"), so the stage was published under the accepted next-stage
+protocol `docs/GOLD_NEXT_STAGE_PROTOCOL.md` rather than as new research rules. What `023` requires: one new
+declaration file `backtester/registries/gold_combination_batch_daily_h24_and.v2.json` over the 28 measured
+variables in the accepted cell (cohort `daily_snapshot_anchors`, horizon `h24_post_event`, endpoint group
+`all_computed`, operator `and`, context field `prior_5session_return_sign`), cross-variable pairs only, at
+most one context atom, complete enumeration with no ranking and no truncation, `min_n` 20, the accepted
+session/horizon/endpoint/availability/exclusion rules unchanged, inputs bound by hash (the 019 report
+artifact under `backtester/tmp/ivr-coverage-019-20260925-r2/`, report registry revision 8 `2be6701c...`, the
+coverage registry, the consumed-data manifest and the accepted timing rules), a per-variable atom table, a
+declared cap of at most 20000 and the declaration committed before any candidate is evaluated; if the
+declared universe exceeds 20000 or the accepted counter returns `balanced_selection`, Gold stops and reports
+the counts instead of truncating or ranking. Then the accepted harness runs unchanged
+(`run_gold_combination_batch.js prepare/verify/execute`, then `analyze_gold_combination_ledger.js`) into
+`backtester/tmp/combination-run-023-20260926-rev1`, every anchor staying inside the accepted consumed
+intervals and strictly before the frozen `2026-09-24T14:00:00Z` boundary, and Gold publishes
+`docs/GOLD_COMBINATION_ANALYSIS_023.md` with the declared cell, the counts evaluated, the denominators
+reconciliation (`exact_offset_elapsed + delayed_offset_endpoint + session_close_endpoint = all_computed`),
+the dependence statement, every exclusion and no accuracy, ranking, timing or edge claim. The v1 batch
+registry `7e2bcff6...`, the run-011 ledger `5cd45278...`, the frozen 014 manifest `15cd0606...`, the 013
+shortlist and audit, the 28-block individual-variable digest and every sealed window artifact stay
+byte-identical; the 022 item A anchor envelope remains due at or after `2026-09-28T16:00:00Z`. Coordinator
+verification of the live lane immediately before publication: `GoldQualificationWindowTick018` runs the v2
+wrapper with every other setting unchanged (`Ready`, result `0`, one `PT10M` trigger, `IgnoreNew`,
+`StartWhenAvailable` true, battery flags false, zero missed runs), `tick.log` holds 75 metadata-only blocks
+(68 v1 plus 7 v2) with zero v2 attempts and zero blocks, the evidence root holds exactly four directories
+with no directory for the Monday entry identity, and the frozen artifacts (`ffa69b30`, `e7c57773`,
+`15cd0606`, `c8b41e55`, `2be6701c`, `863c4e02`, `1a6af31d`, `a025f587`, `302e4a26`, `58ece552`, `c51ad9b9`)
+all reproduce byte-identical; the focused suites re-ran 22 of 22. Register at
+`instructions_published_awaiting_worker`, baseline `134e8148`, delivered commit `134e8148`, submission
+`20260925-gold-coverage-022-r1`; workstream `gold_coverage_023_published_awaiting_worker`. Mailbox empty,
+zero validation errors. Exploiting nothing: no outcome, holdout, prospective observation, production,
+warehouse, Layer 1, live workflow, credential or deployment action, and evaluation stays sealed until
+`2027-03-25T15:00:00Z`.
+
+
 2026-09-25 late evening: 022 item B accepted; item A pending its anchor. The background Central Orchestrator (a controller-locked run, a session separate from authorship) reviewed only `20260925-gold-coverage-022-r1` (mailbox SHA-256 `82b96efb...`, reproduced) and accepted it from the actual diff, artifacts and host state, not the report text. Gold is clean at `134e8148` from base `a9bb3654` (an ancestor), one commit, exactly two files, both test-and-documentation only; the changed test reproduces raw `269f290d` / LF `9e6406d0` with committed blob `68fdfbd` carrying the LF digest and zero CR bytes, and the base `280622bd` as disclosed; the coverage suite re-ran 24 of 24. Both deferred 020 expectations are genuinely closed: the coverage class is now asserted absent with `hasOwnProperty` plus a tally reconciliation to `declared_inventory_total` in both the fixture and the absent-source runs, and the `fed_bias` missing-series verdict pins `registry_coverage_status`, `reason` and `series_id` with `DFEDTARU`. No dependency impact: the frozen 014 manifest binds exactly eight paths and no test file, so the accepted gate cannot move. All seven hash-bound artifacts reproduce byte-identical (013 shortlist `ffa69b30`, 013 audit `e7c57773`, 014 manifest `15cd0606`, coverage declaration `c8b41e55`, revision-8 report registry `2be6701c`, revised inventory `863c4e02`, audit v2 `1a6af31d`), the evidence root still holds exactly four directories, the immutable blocked attempt `e7c197f0` and the three sealed anchor-2 captures `302e4a26`/`58ece552`/`c51ad9b9` are unchanged, and no directory exists for `2026-09-28T14:00:00.000Z|gold|entry`, so nothing consumed it. The installed `GoldQualificationWindowTick018` was read, never touched: one Gold task, action the v2 wrapper, one `PT10M` trigger, `IgnoreNew`, `StartWhenAvailable` true, battery flags false, `Last Result` `0` at `19:06:01` local, zero missed runs, and `tick.log` at 72 metadata-only blocks with `attempted 0` and an empty open set, four of them v2 (the extra block over the reported 71 is the 19:06Z tick that fired after the envelope, expected rather than a discrepancy). One environment case, not a defect: this coordinator shell exports `DEEPSEEK_API_KEY`, so the in-lane capture test fails closed as credential overbreadth; clearing it makes the v2 suite 7 of 7, so the worker's figure reproduces. Reply `44467da1...`; durable review at `docs/orchestration/reviews/20260925-gold-coverage-022-r1.md`. Item A stays open under `gold-coverage-022` (register status exactly `instructions_published_awaiting_worker`) with one post-close envelope requested at or after `2026-09-28T16:00:00Z`. No new assignment is published: item B is closed and item A is blocked only on wall-clock. The precise unresolved decision remains the user's: opening a fresh exploratory combination stage over the 28 measured variables is not authorised. No outcome, holdout, exploration, production, warehouse, Layer 1, live-workflow or credential action occurred, and evaluation stays sealed until `2027-03-25T15:00:00Z`.
 2026-09-25 later: 021 accepted and 022 published. The background Central Orchestrator (a
 controller-locked run, a session separate from authorship) reviewed only

@@ -1,5 +1,31 @@
 # Session notes
 
+2026-09-25 late evening (latest): the user directed Gold to finish the 28-factor work, and
+`gold-coverage-023` was published to do it. This answers the open decision the 019 and 022 reviews recorded
+(a fresh exploratory combination stage over the 28 measured variables), so the stage was published under the
+accepted next-stage protocol `docs/GOLD_NEXT_STAGE_PROTOCOL.md` and stays inside the accepted cell
+(`daily_snapshot_anchors` / `h24_post_event` / `all_computed` / operator `and` / context
+`prior_5session_return_sign`), cross-variable pairs only, at most one context atom, complete enumeration
+with no ranking and no truncation, `min_n` 20, the accepted session/horizon/endpoint/availability/exclusion
+rules unchanged, all anchors inside the consumed intervals and strictly before the frozen
+`2026-09-24T14:00:00Z` boundary, inputs bound by hash (019 report artifact, report registry revision 8
+`2be6701c...`, coverage registry, consumed manifest, timing rules), a per-variable atom table, a declared cap
+of at most 20000, the declaration committed before any candidate is evaluated, and a stop-and-report rule if
+the universe exceeds the cap or the counter would return `balanced_selection`. Deliverables: the new
+`gold_combination_batch_daily_h24_and.v2.json`, a run under
+`backtester/tmp/combination-run-023-20260926-rev1` through the accepted harness, and
+`docs/GOLD_COMBINATION_ANALYSIS_023.md` with the denominators reconciliation, the dependence statement,
+every exclusion and no accuracy, ranking or edge claim. `022` item A is carried into `023` and its anchor
+observation envelope remains due at or after `2026-09-28T16:00:00Z`; the v2 capture lane must not be
+disturbed and every accepted artifact stays byte-identical. Register: `gold-coverage-023`, status exactly
+`instructions_published_awaiting_worker`, baseline `134e8148`, delivered commit `134e8148`, submission
+`20260925-gold-coverage-022-r1`; workstream `gold_coverage_023_published_awaiting_worker`. The 022 assignment
+text is archived at `docs/orchestration/assignments/gold-coverage-022-archive.md`; the paste-ready message
+and `DECISIONS.md` are updated. No outcome, holdout, prospective observation, production, warehouse, Layer 1,
+live workflow, credential or deployment action occurred; evaluation stays sealed until
+`2027-03-25T15:00:00Z`.
+
+
 2026-09-25 interactive check (latest): 021 and 022 accepted, mailbox empty, nothing pending, and the live
 lane is repaired and waiting on the clock. Read-only coordinator verification: `GoldQualificationWindowTick018`
 runs the v2 wrapper with every other setting unchanged (`Ready`, one `PT10M` trigger, `IgnoreNew`,

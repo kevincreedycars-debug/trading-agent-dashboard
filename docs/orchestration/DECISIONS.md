@@ -1,5 +1,31 @@
 # Central decisions
 
+## 2026-09-25: user directs Gold to finish the 28-factor work; gold-coverage-023 published
+
+On 2026-09-25 the user directed that Gold finish the 28-factor work rather than idle until the next
+anchor. That is the decision the 019 and 022 reviews had explicitly left open, so one fresh exploratory
+combination stage over the 28 measured variables was published as `gold-coverage-023` under the accepted
+next-stage protocol `docs/GOLD_NEXT_STAGE_PROTOCOL.md` and its preconditions. The stage stays inside the
+accepted cell shape and rules: cohort `daily_snapshot_anchors`, horizon `h24_post_event`, endpoint group
+`all_computed`, operator `and`, context field `prior_5session_return_sign`, cross-variable pairs only, at
+most one context atom, complete enumeration with no ranking and no truncation, `min_n` 20, the accepted
+session/horizon/endpoint/availability/exclusion rules unchanged, and every anchor inside the accepted
+consumed intervals and strictly before the frozen `2026-09-24T14:00:00Z` boundary. The declaration is a
+new file, `gold_combination_batch_daily_h24_and.v2.json`, committed before any candidate is evaluated,
+with the 019 report artifact, report registry revision 8, coverage registry, consumed manifest and
+timing rules bound by hash plus a per-variable atom table; the accepted v1 registry `7e2bcff6...` and the
+run-011 ledger `5cd45278...` stay byte-identical. The declared cap is at most 20000 and, if the declared
+universe exceeds it or the accepted counter returns `balanced_selection`, Gold stops and reports the
+counts rather than truncating, ranking or letting a selection rule choose candidates. Results are
+exploratory association over spent intervals: no qualification, holdout, prospective read, accuracy,
+ranking or edge claim, and the five declared research definitions that are not live fields
+(`fed_bias`, `inflation_signal`, `risk_headline_context`, `equities_regime`, `growth_regime`) may never be
+reported as validating a live Layer 1 field. The 022 item A obligation continues and its anchor
+observation envelope is due at or after `2026-09-28T16:00:00Z`; the live v2 capture lane must not be
+disturbed. Register status stays exactly `instructions_published_awaiting_worker`, baseline `134e8148`.
+No outcome, holdout, production, warehouse, Layer 1, live workflow, credential or deployment action is
+authorized by this decision.
+
 ## 2026-09-25: gold-coverage-022 item B accepted; item A stays open at its anchor
 
 The background Central Orchestrator reviewed only `20260925-gold-coverage-022-r1` (mailbox SHA-256
