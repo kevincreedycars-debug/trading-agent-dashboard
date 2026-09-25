@@ -5,6 +5,14 @@ const ROOT=path.resolve(__dirname,'..');
 const STORE=path.join(ROOT,'.local/orchestration/controller');
 const CLI='D:/npm-global/node_modules/@openai/codex/bin/codex.js';
 const PROVIDER={id:'deepseek',name:'DeepSeek',model:'deepseek-flash',baseUrl:'https://api.deepseek.com',envKey:'DEEPSEEK_API_KEY'};
+// Automatic-review budget guard. 0 means no daily cap. The user lifted the former six-per-UTC-day
+// guard on 2026-09-25, because the only objective is to finish the Gold backtesting run and worker
+// progress must not be bounded by model spend. Set this above 0 only if the user asks for a budget
+// guard again. The six-per-day mailbox *wake* cap was already removed in bridge 0.2.1.
+const DAILY_REVIEW_CAP=0;
+// One review gets forty minutes. The former twenty-minute cap timed out on the 020 submission, which
+// spent an attempt, disabled automatic dispatch and forced an interactive review.
+const REVIEW_TIMEOUT_MS=40*60*1000;
 const read=f=>JSON.parse(fs.readFileSync(f,'utf8').replace(/^\uFEFF/,''));
 function save(file,data){const temp=file+'.'+process.pid+'.tmp';fs.writeFileSync(temp,JSON.stringify(data,null,2)+'\n');fs.renameSync(temp,file);}
 function candidates(scan,receipts){if(scan.errors.length)throw new Error('Mailbox validation errors; dispatch held');return scan.submissions.filter(s=>s.state==='pending_review'&&!s.stale_assignment&&!receipts.some(r=>r.hash===s.sha256));}
@@ -21,7 +29,7 @@ function providerArgs(){return [
  '-c','model_reasoning_effort="low"',
  '-c','model_supports_reasoning_summaries=false'
  ];}
-function invoke(prompt,base,{smoke=false,timeoutMs=20*60*1000}={}){
+function invoke(prompt,base,{smoke=false,timeoutMs=REVIEW_TIMEOUT_MS}={}){
  return new Promise((resolve,reject)=>{
   if(!process.env[PROVIDER.envKey])return reject(new Error(`${PROVIDER.envKey} is not loaded; automatic coordinator remains fail-closed`));
   const args=[CLI,'exec','--model',PROVIDER.model,...providerArgs(),'--sandbox',smoke?'read-only':'workspace-write','-c','approval_policy="never"','--ephemeral','--json','--color','never','-C',ROOT,'-o',base+'.last.txt','-'];
@@ -53,7 +61,7 @@ async function serve(){
     const manualBusy=fs.existsSync(activityFile)&&read(activityFile).state==='working';
     const daily=receipts.filter(r=>r.started_at.startsWith(new Date().toISOString().slice(0,10))).length;
     if(manualBusy)status('waiting','Interactive coordinator reports working; review deferred');
-    else if(daily>=6)status('budget_limit','Six automatic reviews per UTC day reached');
+    else if(DAILY_REVIEW_CAP>0&&daily>=DAILY_REVIEW_CAP)status('budget_limit',`${DAILY_REVIEW_CAP} automatic reviews per UTC day reached`);
     else if(!queue.length)status('watching','Waiting for new submissions');
     else{
      const s=queue[0],base=path.join(STORE,s.sha256),receipt={hash:s.sha256,submission:s.submission_id,state:'attempting',started_at:new Date().toISOString()};
@@ -78,4 +86,4 @@ async function main(){
  throw new Error('Usage: coordinator-dispatch.js serve|enable|pause|status|smoke');
 }
 if(require.main===module)main().catch(e=>{console.error(e.message);process.exitCode=1;});
-module.exports={PROVIDER,candidates,promptFor,providerArgs};
+module.exports={DAILY_REVIEW_CAP,PROVIDER,REVIEW_TIMEOUT_MS,candidates,promptFor,providerArgs};

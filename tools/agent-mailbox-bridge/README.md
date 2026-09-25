@@ -54,7 +54,10 @@ credentials or provider errors pause the checker; there is no OpenAI fallback.
 It checks validated submissions every five seconds, skips historical assignments,
 deduplicates by submission hash before invoking Codex and holds an exclusive
 daemon/run lock. Failed or interrupted attempts need inspection; they never
-silently retry. Six attempts per UTC day, twenty minutes per run. Logs, receipts,
+silently retry. No daily attempt cap: the user lifted the former six-per-UTC-day
+guard on 2026-09-25 so worker progress is not bounded by model spend; forty minutes
+per run, because the earlier twenty-minute cap timed out on the 020 submission.
+Logs, receipts,
 last responses and status are in `.local/orchestration/controller/`.
 Unknown failures pause automatic reviews. The sandbox is retained; no approval
 bypass, production change or expanded trading authority is granted.

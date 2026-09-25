@@ -1,5 +1,22 @@
 # Central decisions
 
+## 2026-09-25: the automatic-review daily cap is lifted; forty minutes per run
+
+The user asked why the reviewer had a daily limit and directed that the only objective is to finish the Gold
+backtesting run, so the guard is lifted. `scripts/coordinator-dispatch.js` now carries `DAILY_REVIEW_CAP = 0`
+(0 means no cap), the former `daily>=6` check is replaced by a cap-aware check that only fires when the
+constant is above zero, and `REVIEW_TIMEOUT_MS = 40 * 60 * 1000` replaces the twenty-minute per-run timeout
+that timed out on the 020 submission, spent an attempt, disabled automatic dispatch and forced an interactive
+review. Both constants are exported and asserted by `tests/coordinator_dispatch.test.js` (4 of 4 pass).
+Provenance: the six-per-UTC-day ceiling was the coordinator's own guard on model spend, deliberately kept
+separate from the worker-progress guard, and was recorded as liftable when the six-per-day mailbox *wake* cap
+was removed in bridge 0.2.1. Worker progress is therefore no longer bounded by reviewer budget. What remains,
+because it protects integrity rather than spend: the per-event wake dedupe, the no-retry rule for an ambiguous
+send, the no-interrupt rule for a worker reporting `working`, the exclusive daemon/run lock, the
+`needs_attention` pause on an unknown failure, and the per-review prompt limits (no production, no warehouse, no
+self-approval, one review cycle). `tools/agent-mailbox-bridge/README.md` records the same change. No worker
+assignment, capture lane, credential or production behaviour changed.
+
 ## 2026-09-25: gold-coverage-024 stage verified; changes requested for two evidence items
 
 Interactive review of `20260925-gold-coverage-024-r1` (mailbox SHA-256 `0ca796e3...`) under the user's strict
