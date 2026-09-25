@@ -17,6 +17,10 @@ test('Gold evidence page works offline at desktop and narrow widths', async () =
       await page.goto(pathToFileURL(path.resolve(__dirname, '../../gold-backtesting.html')).href);
       assert.equal(await page.locator('#total').textContent(), String(artifact.coverage.source_rows));
       assert.equal(await page.locator('#factors tr').count(), 10);
+      const crossLink = page.locator('header a[href="gold-backtest-outcomes.html"]');
+      assert.equal(await crossLink.count(), 1, 'the header must link to the 28-factor outcomes page');
+      assert.equal(await crossLink.isVisible(), true);
+      assert.match(await crossLink.textContent(), /28-factor outcomes/);
       assert.equal(await page.locator('#stored-pilot').isVisible(), true);
       assert.equal(await page.locator('#pilot-calls').textContent(), '154');
       assert.equal(await page.locator('#pilot-strict').textContent(), '0');
