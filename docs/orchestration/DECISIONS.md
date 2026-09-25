@@ -1,5 +1,29 @@
 # Central decisions
 
+## 2026-09-25: gold-coverage-022 item B accepted; item A stays open at its anchor
+
+The background Central Orchestrator reviewed only `20260925-gold-coverage-022-r1` (mailbox SHA-256
+`82b96efb...`, reproduced) and accepted it from the actual diff, artifacts and host state. Gold is clean
+at `134e8148` from base `a9bb3654` with exactly one commit and two test-and-documentation files; the two
+deferred 020 coverage-test expectations are genuinely closed (the coverage class is asserted absent with
+`hasOwnProperty` plus a tally reconciliation to `declared_inventory_total`, and the `fed_bias`
+missing-series verdict pins `registry_coverage_status`, `reason` and `series_id` with `DFEDTARU`), the
+coverage suite re-ran 24 of 24, and the frozen 014 manifest binds exactly eight paths with no test file
+among them, so the accepted gate cannot move. Item A stays observation-only: the repaired v2 entry lane
+has no live proof yet, the first reachable anchor is `2026-09-28T14:00:00Z` with its entry lane
+`15:00-16:00Z`, and Gold delivers one post-close envelope instead of acting early. Verified read-only by
+the coordinator afterwards: `GoldQualificationWindowTick018` runs the v2 wrapper with every other setting
+unchanged (`Ready`, one `PT10M` trigger, `IgnoreNew`, `StartWhenAvailable` true, both battery flags
+false, `Last Result` `0`, zero missed runs), `tick.log` holds 75 metadata-only blocks of which 7 are v2
+with zero attempts and zero blocks, the evidence root holds exactly four directories with no directory
+for the Monday entry identity, and the frozen artifacts - 013 shortlist `ffa69b30`, 013 audit `e7c57773`,
+014 manifest `15cd0606`, coverage declaration `c8b41e55`, revision-8 report registry `2be6701c`, revised
+inventory `863c4e02`, audit v2 `1a6af31d`, sealed anchor-2 captures `302e4a26`/`58ece552`/`c51ad9b9` -
+all reproduce byte-identical. The register was corrected to record the delivery at `134e8148` and
+submission `20260925-gold-coverage-022-r1`. Opening a fresh exploratory combination stage over the 28
+measured variables remains an explicit user decision and is not authorized; no outcome, holdout,
+production, warehouse, Layer 1, live workflow, credential or deployment action occurred.
+
 ## 2026-09-25: gold-coverage-021 accepted; gold-coverage-022 published
 
 The background Central Orchestrator (a controller-locked run, a session separate from authorship)
