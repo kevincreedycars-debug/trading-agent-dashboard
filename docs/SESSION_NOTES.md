@@ -1,6 +1,32 @@
 # Session notes
 
-2026-09-25 21:53 (latest): built the dashboard surface for the accepted 28-factor outcomes, on the user's
+2026-09-25 22:16 (latest): connected the two Gold research pages and proved the regeneration before running it.
+On the user's instruction the older evidence page now links to the new outcomes page:
+`backtester/templates/gold-research.html` gained a `nav.pilot-links` header holding `Gold 28-factor outcomes`
+beside `Dashboard`, and `gold-backtesting.html` was rebuilt with
+`node backtester/scripts/build_gold_evidence_audit.js data/backtester-checker-gold-24h-2024-2026.json
+data/gold-evidence-audit.json gold-backtesting.html data/gold-stored-call-pilot-20260906.json
+data/gold-snapshot-lineage-audit-20260906.json`. The safety step came first, because regenerating a 292 KB
+generated artifact can quietly rewrite embedded evidence: the same command was run to scratch paths in ignored
+`tmp/` and both outputs matched the committed files byte for byte - page 292,155 bytes, `data/gold-evidence-audit.json`
+identical - so the in-place rebuild was known to differ by exactly one header line. The staged diff confirms it:
+`1 1` for `gold-backtesting.html`, nothing for the audit JSON, and no embedded number, hash or record moved. The
+link reuses the existing link-row pattern rather than new CSS, so at 390 px it wraps under the intro instead of
+overflowing, and the evidence page browser test now asserts the cross-link exists, is visible and is named.
+Reachability is proven by doing the hop, not by inspecting an href: the new
+`backtester/tests/gold_outcomes_dashboard_link.browser.test.js` loads `index.html`, clicks the `Gold Backtest`
+topbar link, waits for `gold-backtest-outcomes.html` and asserts the page shows 4,956 candidates plus the quoted
+verdict sentence. Validation: the four Gold page test files run 6 of 6 (`gold_outcomes_dashboard_link`,
+`gold_backtest_outcomes_page`, `gold_research_page` including the new cross-link assertion, and the three data
+invariants). Commits `d593163` and `aeaa8ba` sit on `orchestration/control-plane-20260920` and are local only:
+nothing was pushed, so GitHub Pages and the public dashboard are unchanged and both the outcomes page and its
+link remain unpublished until the user decides otherwise. Untouched: the live capture lane, the frozen 014
+manifest paths, every accepted artifact, the sealed evaluation at `2027-03-25T15:00:00Z`, and the other agent's
+in-progress session-policy files, which are still uncommitted in the working tree. The only open obligation is
+still the 022 item A Monday envelope wake at or after `2026-09-28T16:00:00Z`.
+
+
+2026-09-25 21:53: built the dashboard surface for the accepted 28-factor outcomes, on the user's
 request, without publishing anything. One new self-contained research page now exists in the canonical folder -
 `gold-backtest-outcomes.html`, rendered by `backtester/scripts/build_gold_backtest_outcomes.js` from
 `backtester/lib/gold_backtest_outcomes.js` plus `backtester/templates/gold-outcomes.html` - with a durable
