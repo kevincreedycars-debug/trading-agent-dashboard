@@ -1,5 +1,52 @@
 # Central decisions
 
+## 2026-09-25: gold-coverage-023 reviewed - declaration accepted, blocker upheld, gold-coverage-024 published
+
+The background Central Orchestrator (a controller-locked run, a session separate from authorship) reviewed
+only `20260925-gold-coverage-023-r1` (submission status `blocked`; mailbox SHA-256
+`fae926bb9305277f75764885dd0a47d91cb5bdeffa5747adbadf9713434f5bbb`, reproduced) from the actual diff,
+artifacts, tests and host state rather than the report text. Gold is clean at `6fd501a7` from base
+`134e8148` (verified an ancestor), two commits in the declared order (`5fe48767` declaration first, then
+`6fd501a7` repair), exactly the four disclosed files. The new declaration
+`backtester/registries/gold_combination_batch_daily_h24_and.v2.json` reproduces at raw = LF
+`c19315e6...`, its candidate list at `db96c728...`, and its counts re-derive independently: 51 eligible
+atoms, 36 excluded same-variable pairs, 1239 cross-variable pairs, 4 context options, 4956 unique
+cross-variable two-atom candidates inside cap 20000, complete enumeration with no ranking and no
+truncation. The counter re-run returns `complete_enumeration` for the declared cell and
+`balanced_selection` at 40324 for the undeclared `event_releases` cell, which was reported for
+transparency rather than declared, truncated or rotation-selected - exactly the stop-and-report rule the
+assignment imposed. No candidate was evaluated: both run directories stopped in `prepare_or_reconstruction`,
+produced no ledger and refuse re-entry. The stage blocker is upheld and its mechanism was reproduced
+read-only through the adapter own `buildBatchRows`: `buildAcceptedParts` never sets
+`parts.seriesRules`, which the accepted builder sets at `gold_individual_variable_report.js:813` and
+`buildContext` copies into every context at `:634`; with it undefined, `seriesLevelAt` falls back to
+`MAX_AGE_DAYS[seriesId] ?? DEFAULT_MAX_AGE_DAYS` (7 days) and `DEFAULT_AVAILABILITY_LAG_HOURS` (36 h), so
+every `risk_headline_context` state became `observation_stale_beyond_declared_age` (0 of 965 available,
+median null) and the guard correctly refused with
+`atom_n:risk_headline_context:above_own_median is 0, not 471`. The adapter also omits the
+`prospectiveBoundary(registry)` argument the accepted builder passes as the fourth argument of
+`loadMacroHistories`. Focused tests re-ran 6 of 6 and the accepted harness suite 2 of 7 with only the five
+known CRLF cases, whose cause is the pre-existing raw `48161ff9...` against the pinned LF `714a5410...`
+materialisation of the revision-7 report registry owned by the `backtester-spike` change request. No
+dependency impact: the frozen 014 manifest reproduces at `15cd0606...`, binds eight distinct paths, and the
+only combination artifact among them is the unchanged v1 registry `7e2bcff6...`; neither edited module nor
+the new test is bound, so the accepted qualification gate cannot move. The frozen 014 manifest selector
+binding `8f3a3896...` against the working tree `771e844e...` / `55a4d292...` is the pre-existing 021
+amendment case, not new drift. Reply published (SHA-256 `bd2caf4f...`) and the durable review recorded at
+`docs/orchestration/reviews/20260925-gold-coverage-023-r1.md`. Because the assignment objective is not
+complete, the next bounded assignment `gold-coverage-024` was published with the register at exactly
+`instructions_published_awaiting_worker` and baseline `6fd501a7`: assemble the accepted measurement engine
+exactly as the accepted builder does - set `parts.seriesRules`, pass the boundary argument, no parallel
+provider-file loader - cover it with focused tests including the 28-variable rebuilt-count reconciliation,
+then run the accepted harness into a new run id and publish `docs/GOLD_COMBINATION_ANALYSIS_023.md`. The
+worker three questions are answered in the reply and carried into the assignment. The 022 item A anchor
+obligation continues, observation-only, with its envelope due at or after `2026-09-28T16:00:00Z`, and it is
+delivered first if it collides with the run. No outcome, return, direction, sign, aggregate, qualification,
+accuracy or edge value was read, computed or reported; no holdout was reserved or consumed, no interval is
+fresh, and the prospective evaluation stays sealed until `2027-03-25T15:00:00Z`. No production, live
+workflow, warehouse, Layer 1, dashboard, credential, purchase, deployment or scheduler action occurred, and
+no final holdout was touched.
+
 ## 2026-09-25: user directs Gold to finish the 28-factor work; gold-coverage-023 published
 
 On 2026-09-25 the user directed that Gold finish the 28-factor work rather than idle until the next

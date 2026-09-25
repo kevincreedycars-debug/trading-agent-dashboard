@@ -1,5 +1,40 @@
 # Session notes
 
+2026-09-25 late evening (latest): 023 reviewed as the background Central Orchestrator (controller-locked, a
+session separate from authorship) on exactly `20260925-gold-coverage-023-r1` (status `blocked`, mailbox
+`fae926bb9305277f75764885dd0a47d91cb5bdeffa5747adbadf9713434f5bbb`, reproduced). Verdict: the delivered
+declaration and its additive harness changes are accepted and verified; the blocker is upheld; nothing needs
+revision; the stage continues as `gold-coverage-024`. Verified from the actual diff, artifacts, tests and
+host state: clean worktree at `6fd501a7` from base `134e8148` (an ancestor), two commits in the declared
+order, exactly the four disclosed files; v2 declaration raw = LF `c19315e6`; candidate list `db96c728`
+re-derived; 51 atoms, 36 same-variable exclusions, 1239 cross-variable pairs, 4 context options, 4956
+unique two-atom cross-variable candidates inside cap 20000; the counter re-run returns
+`complete_enumeration` for the declared cell and `balanced_selection` at 40324 for the undeclared
+`event_releases` cell, correctly reported rather than declared. No candidate was evaluated: both run
+directories stopped in `prepare_or_reconstruction` with no ledger and refuse re-entry (manifests `5da36782`,
+`97b33093`). The upheld blocker mechanism was reproduced read-only through the adapter own `buildBatchRows`:
+`parts.seriesRules` and `contexts[0].seriesRules` are `undefined`, `risk_headline_context` has 0 available
+states of 965 with the single reason `observation_stale_beyond_declared_age`, median `null`, 965 rebuilt rows
+with 964 computed outcomes - exactly the refused
+`atom_n:risk_headline_context:above_own_median is 0, not 471`, because the declared rules differ from the
+module defaults (`SF_FED_DNSI` 168 h / 14 d, `PHILLY_FED_ADS` 36 h / 14 d). The adapter also calls
+`loadMacroHistories` with three arguments where the accepted builder passes `prospectiveBoundary(registry)`
+as the fourth. Tests re-run by the coordinator: 6 of 6 focused, and the harness suite 2 of 7 with only the
+five known CRLF cases; the worker did not re-run the documented local suite, so that stays an obligation of
+the continuation. Reply published
+(`.local/orchestration/replies/gold-research/20260925-gold-coverage-023-r1.json`, SHA-256 `bd2caf4f...`),
+durable review at `docs/orchestration/reviews/20260925-gold-coverage-023-r1.md`, 023 assignment text archived
+at `docs/orchestration/assignments/gold-coverage-023-archive.md`. Next bounded assignment `gold-coverage-024`:
+assemble the accepted measurement engine exactly as the accepted builder does (set `parts.seriesRules`, pass
+the boundary argument, no parallel provider-file loader), cover it with focused tests including the
+28-variable rebuilt-count reconciliation, run the accepted harness into a new run id
+`combination-run-024-20260926-rev1`, and publish `docs/GOLD_COMBINATION_ANALYSIS_023.md`. Register:
+`gold-coverage-024`, status exactly `instructions_published_awaiting_worker`, baseline `6fd501a7`,
+delivered commit `6fd501a7`, submission `20260925-gold-coverage-023-r1`; workstream
+`gold_coverage_024_published_awaiting_worker`. Read-only lane check unchanged. No outcome, holdout,
+prospective observation, production, warehouse, Layer 1, live workflow, credential, purchase or deployment
+action; evaluation stays sealed until `2027-03-25T15:00:00Z`.
+
 2026-09-25 late evening (latest): the user directed Gold to finish the 28-factor work, and
 `gold-coverage-023` was published to do it. This answers the open decision the 019 and 022 reviews recorded
 (a fresh exploratory combination stage over the 28 measured variables), so the stage was published under the
