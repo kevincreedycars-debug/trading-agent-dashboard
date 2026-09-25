@@ -1,5 +1,41 @@
 # Central decisions
 
+## 2026-09-25: 019 accepted and gold-coverage-020 published for declaration reconciliation
+
+The background Central Orchestrator reviewed only `20260925-gold-coverage-completion-019-r1` (mailbox
+SHA-256 `87a6cfde...`, reproduced) in a session separate from authorship and accepted it. The verdict
+rests on reproduced evidence, not the submission text: the Gold worktree is clean at `3240f598` from
+the declared base `67f51e8`, two commits in the declared order, fifteen changed files with no accepted
+014-018 artifact touched; every disclosed digest reproduces; an independent comparison re-derives the
+central claim (21 previously measured blocks byte-identical, exactly the seven declared new ids,
+strata, baselines and exclusions identical, cells 21,746 to 25,063); revision 7 is preserved with an
+LF-normalised digest that still reproduces the frozen combination pin; the four `dxy_*` ids are a
+declared retirement with reasons and a refusal guard; and no prospective observation was read. Reply
+published (SHA-256 `09e1a168...`), durable review recorded at
+`docs/orchestration/reviews/20260925-gold-coverage-completion-019-r1.md`.
+
+Because acceptance is checkpoint-only, the coordinator then published the next bounded assignment,
+`gold-coverage-020` (Reconcile the accepted declarations the gate and the audit still read as stale),
+and set the `gold-research` register entry to assignment `gold-coverage-020`, baseline `3240f598` and
+status exactly `instructions_published_awaiting_worker`, the literal Worker-status spelling the bridge
+requires in order to deliver. 020 is deliberately data-only: it corrects the live-input inventory stale
+`research` statuses and its retired `dxy_*` F2 vocabulary, writes a versioned
+`gold_remaining_source_audit.v2.json` (v1 stays byte-identical), revises `fed_bias` and
+`inflation_signal` in the horizon-context registry, and proves gate resolution from the revised
+declarations without editing `gold_qualification_gate.js`; a required code change is a blocker, not a
+scope expansion. Two findings were recorded and did not block acceptance: a revision-8 candidate
+cannot yet be gated truthfully from the stale inventory, and the live lane sealed the anchor-2 gold
+entry identity `2026-09-25T14:00:00.000Z` as a blocked attempt (`provider_error`, HTTP 400, no
+reschedule, later ticks `already_settled`). The five local-suite failures are the pre-existing
+hash-bound CRLF materialisation owned by the `backtester-spike` change request and stay there.
+
+**Open user decision, deliberately not taken by the coordinator: whether to open a fresh exploratory
+combination stage over the 28 measured variables.** It is not authorized here; opening it would
+require an explicit user decision and a truthful materialisation fix, and it must not begin before 020
+reconciles the declarations that the gate reads. No outcome or aggregate was read, evaluation stays
+sealed until `2027-03-25T15:00:00Z`, and no production, warehouse, Layer 1, live workflow, credential,
+purchase or deployment action occurred.
+
 ## 2026-09-25: 019 re-notified by assignment revision; the unattended reviewer was restarted
 
 The Gold window reconnected on bridge 0.2.1 at `2026-09-25T11:26:26Z` and the queued

@@ -1,5 +1,38 @@
 # Session notes
 
+2026-09-25 019 accepted; gold-coverage-020 published. One review cycle as the background Central
+Orchestrator (controller-locked, a session separate from authorship) on exactly
+`20260925-gold-coverage-completion-019-r1` (mailbox `87a6cfde...`, reproduced). Verdict accepted.
+Verified from the actual diff and artifacts, not from the submission text: clean worktree `3240f598`
+from base `67f51e8`, two commits in the declared order (declaration `f24f76f` first, measurement
+`3240f59` second), 15 changed files with no accepted 014-018 artifact touched; every disclosed digest
+reproduced (`d2307a74...`, registry `2be6701c...`, coverage declaration `34fcd310...`, report
+`ffcd9cbc...`, companion `35153fd2...`, ledger `2cc1606a...`, code `74534a0c...` equal to the HEAD
+bytes of `gold_individual_variable_report.js`); the central claim re-derived independently (21 prior
+blocks byte-identical against coverage-008, exactly seven new ids, strata, baselines and exclusions
+identical, cells 21,746 to 25,063); revision 7 preserved with LF-normalised `714a5410...` reproducing
+the frozen pin; `dxy_*` retired with reasons and a refusal guard, no relabel or back-fill; no
+prospective read (boundary equals `first_anchor_utc`); section 8 verified live (one `Ready` task,
+`StartWhenAvailable` true, battery flags cleared, `PT10M`, last run `15:46:01` result `0`, zero missed
+runs, three sealed anchor-2 captures unchanged). Test reruns: focused 12/12, group 75/75,
+`node scripts/test-local.js` 520 tests with 515 pass and 5 fail, the five being the pre-existing
+hash-bound CRLF materialisation owned by the `backtester-spike` request; the four console-width
+secret-scanner cases disclosed in the submission did not reproduce, confirming they are
+environment-dependent. Reply published at
+`.local/orchestration/replies/gold-research/20260925-gold-coverage-completion-019-r1.json` (SHA-256
+`09e1a168760b8b21a6a2424a2fc17729113bdc8d0c2c4025f10e5b4083fff3f8`), durable review at
+`docs/orchestration/reviews/20260925-gold-coverage-completion-019-r1.md`. Next bounded assignment
+published as `gold-coverage-020` (declaration reconciliation: the stale live-input inventory research
+statuses and the retired `dxy_*` F2 vocabulary, a new `gold_remaining_source_audit.v2.json` with v1
+byte-identical, the `fed_bias` and `inflation_signal` source mapping, and a data-only gate-resolution
+proof; no rule, no candidate space, no prospective read). Register updated: `gold-research` assignment
+`gold-coverage-020`, baseline `3240f598`, status exactly `instructions_published_awaiting_worker`. An
+open user decision is recorded and left unanswered: whether to open a fresh exploratory combination
+stage over the 28 measured variables. Preserve the untracked Gold session-policy files, the modified
+Strategy workspace and the spike assignment. No outcome, holdout, production, warehouse, Layer 1, live
+workflow, dashboard, credential, purchase or deployment action; the capture lane keeps running
+untouched and evaluation stays sealed until `2027-03-25T15:00:00Z`.
+
 2026-09-25 019 re-notified; live lane corroborated; reviewer restarted. The Gold window reconnected
 on bridge 0.2.1 at `11:26:26Z` (connection `sent_unconfirmed`, polling every five seconds, extension
 0.2.1) and the queued `gold-coverage-completion-019` wake was delivered at that moment (dispatch

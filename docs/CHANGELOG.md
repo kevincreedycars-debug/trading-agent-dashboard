@@ -1,3 +1,27 @@
+# 2026-09-25 - Gold coverage-completion-019 accepted; gold-coverage-020 published
+
+2026-09-25 reviewed and accepted Gold submission `20260925-gold-coverage-completion-019-r1` (mailbox
+SHA-256 `87a6cfdeb99d1381d27341c5d0088102dde545a2e4022afa4165a2b26869df36`, reproduced) in a
+background Central Orchestrator cycle that is separate from authorship. Accepted at clean `3240f598`
+from the declared base `67f51e8`: the seven remaining drivers were declared before measurement and
+sourced keylessly (FRED `DTWEXBGS` under honest `usd_broad_index_*` ids, the San Francisco Fed Daily
+News Sentiment Index, FRED `SP500`, and the Philadelphia Fed ADS all-vintages file), the four legacy
+`dxy_*` ids were retired with declared reasons and without relabel or back-fill, the findings digest
+was regenerated at 28 of 28 with the 21 previously measured blocks byte-identical, and section 8
+hardened the installed capture task. Every disclosed digest was reproduced by the coordinator, the
+central claim was re-derived independently, no prospective observation was read, and the live capture
+lane was verified untouched (one `Ready` `GoldQualificationWindowTick018`, `StartWhenAvailable` true,
+`PT10M`, last run `15:46:01` result `0`, zero missed runs, three sealed anchor-2 captures unchanged).
+Local suite: 520 tests, 515 pass, 5 fail, the five being the pre-existing hash-bound CRLF
+materialisation owned by the `backtester-spike` change request. The durable review is
+`docs/orchestration/reviews/20260925-gold-coverage-completion-019-r1.md` (reply SHA-256
+`09e1a168760b8b21a6a2424a2fc17729113bdc8d0c2c4025f10e5b4083fff3f8`). The next bounded assignment,
+`gold-coverage-020` (Reconcile the accepted declarations the gate and the audit still read as stale),
+was published for declaration reconciliation only, with the `gold-research` register entry set to
+status exactly `instructions_published_awaiting_worker`. Opening a fresh exploratory combination stage
+over the 28 measured variables is left as an explicit user decision. No outcome, holdout, production,
+warehouse, Layer 1, live workflow, credential or deployment action occurred.
+
 # 2026-09-20 - Gold coverage registry accepted at checkpoint review
 
 2026-09-24 acknowledged strategy advisory `20260924-strategy-second-adviser-003-asap`

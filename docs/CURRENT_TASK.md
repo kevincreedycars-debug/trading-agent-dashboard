@@ -1,22 +1,21 @@
 # Current task
 
-Gold's prospective qualification window runs unattended, and its coverage work is queued.
-`gold-coverage-completion-019` was published on 2026-09-24 under explicit user authority:
-declare and measure the seven remaining drivers from four free keyless sources (FRED
-`DTWEXBGS` as the live F2 dollar input under honest new ids, the San Francisco Fed Daily
-News Sentiment Index, FRED `SP500`, and the Philadelphia Fed ADS all-vintages file, all now
-standing parts of the source contract), retire the legacy `dxy_*` ids without backfill, and
-regenerate the findings digest at 28 of 28 variables with the 21 existing blocks
-byte-identical. Section 8 of that assignment hardens the installed capture task
-(`StartWhenAvailable` true, battery start restrictions cleared, verification tick required,
-revert if unverifiable).
+The Gold prospective qualification window runs unattended, and its accepted declarations are being
+reconciled. `gold-coverage-completion-019` was reviewed and accepted on 2026-09-25 at clean `3240f598`:
+all 28 declared variables are measured, the 21 earlier blocks are byte-identical, the legacy `dxy_*`
+ids are retired without back-fill, and section 8 hardened the installed capture task. The next bounded
+assignment, `gold-coverage-020`, is published and awaiting Gold: correct the live-input inventory stale
+`research` statuses for the newly measured ids and its retired `dxy_*` F2 vocabulary, write
+`gold_remaining_source_audit.v2.json` (v1 byte-identical), revise the `fed_bias` and `inflation_signal`
+source mapping in the horizon-context registry, and prove from the revised declarations that the
+accepted gate can resolve a revision-8 candidate atom - data-only, stopping with a blocker if a code
+change would be required.
 
-The live window needs no action: exactly one scheduled task,
-`GoldQualificationWindowTick018`, captures the declared lanes every ten minutes and must not
-be disturbed; anchor 1 stays blocked; no prospective observation or outcome may be read
-before `2027-03-25T15:00:00Z`.
+The live window needs no action: exactly one scheduled task, `GoldQualificationWindowTick018`, captures
+the declared lanes every ten minutes and must not be disturbed; anchor 1 stays blocked and the anchor-2
+entry identity `2026-09-25T14:00:00.000Z` was sealed as a blocked attempt (`provider_error`, HTTP 400,
+no reschedule); no prospective observation or outcome may be read before `2027-03-25T15:00:00Z`.
 
-Next: Gold picks up 019. The appointment is queued with no dispatch record written, so it is
-delivered immediately when the Gold window runs bridge 0.2.1 (reload the window), otherwise
-by the old 0.2.0 after 01:00 local. Then Gold reports the seven declarations, the hardening
-and the measurements for review.
+Next: Gold picks up `gold-coverage-020` (status `instructions_published_awaiting_worker`) and reports
+the reconciliation for review. Opening a fresh exploratory combination stage over the 28 measured
+variables remains an open user decision and is not authorized.

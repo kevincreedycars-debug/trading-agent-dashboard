@@ -1,5 +1,43 @@
 # Current state
 
+2026-09-25 019 accepted and gold-coverage-020 published. The background Central Orchestrator (a
+controller-locked run, a session separate from authorship) reviewed only
+`20260925-gold-coverage-completion-019-r1` (mailbox SHA-256 `87a6cfde...`, reproduced) and accepted
+it: the Gold worktree is clean at `3240f598` from the declared base `67f51e8`, exactly the two
+disclosed commits in the declared order (declaration first, then measurement), the 15 changed files
+match the submission, and no accepted 014/015/016/017/018 artifact, frozen manifest, consumed-data
+manifest, combination batch or live-input inventory was touched. Every disclosed digest was
+reproduced rather than trusted (`d2307a74...`, `2be6701c...`, `34fcd310...`, `ffcd9cbc...`,
+`35153fd2...`, `2cc1606a...`, and code `74534a0c...` equal to the HEAD bytes of
+`gold_individual_variable_report.js`), and the central claim was re-derived with an independent
+comparison: 21 previously measured blocks byte-identical against the accepted coverage-008 report,
+newly measured exactly the seven declared ids, and conditioning cells purely additive (21,746 to
+25,063). Revision 7 is preserved byte-for-byte and its LF-normalised SHA-256 still reproduces the
+digest `714a5410...` pinned by the frozen combination batch; the four `dxy_*` ids are a declared
+retirement with reasons, a refusal guard and no relabel or back-fill. No prospective read: the
+declared boundary equals the frozen manifest `first_anchor_utc`, and section 8 was verified live (one
+`Ready` Gold task, `StartWhenAvailable` true, both battery restrictions cleared, one `PT10M` trigger,
+last run `15:46:01` result `0`, zero missed runs, the three sealed anchor-2 captures unchanged).
+Coordinator test reruns: the new focused file 12/12, the focused group 75/75, and the local suite 520
+tests with 515 pass and 5 fail, the five being the pre-existing CRLF materialisation of the hash-bound
+revision-7 registry that the `backtester-spike` change request already owns; the four console-width
+`secret_scanner` cases disclosed in the submission did not reproduce here, so they are
+environment-dependent rather than caused by 019. Reply published (SHA-256 `09e1a168...`) and the
+durable review recorded at `docs/orchestration/reviews/20260925-gold-coverage-completion-019-r1.md`.
+Next bounded step published as `gold-coverage-020` (Reconcile the accepted declarations the gate and
+the audit still read as stale): correct the live-input inventory stale `research` statuses and its
+retired `dxy_*` F2 vocabulary, write a versioned `gold_remaining_source_audit.v2.json` while v1 stays
+byte-identical, revise `fed_bias` and `inflation_signal` in the horizon-context registry, and prove
+gate resolution from the revised declarations data-only without editing `gold_qualification_gate.js`.
+`docs/orchestration/projects.json` carries `gold-research` at assignment `gold-coverage-020` with
+status exactly `instructions_published_awaiting_worker`. Two coordinator findings recorded, neither an
+019 defect: a revision-8 candidate cannot yet be gated truthfully from the stale inventory, and the
+live lane sealed the anchor-2 gold entry identity `2026-09-25T14:00:00.000Z` as a blocked attempt
+(`provider_error`, HTTP 400, no reschedule, later ticks `already_settled`). Opening a fresh
+exploratory combination stage over the 28 measured variables stays an explicit user decision. No
+outcome or aggregate read, no production, warehouse, Layer 1, live workflow, credential or deployment
+action, and evaluation stays sealed until `2027-03-25T15:00:00Z`.
+
 2026-09-25 019 delivered and re-notified; the reviewer daemon was found stopped and restarted. The
 Gold window reconnected on bridge 0.2.1 at `11:26:26Z` and the queued
 `gold-coverage-completion-019` wake was delivered then (dispatch record `a3761088`, state
