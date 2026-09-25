@@ -1,5 +1,38 @@
 # Central decisions
 
+## 2026-09-25: gold-coverage-025 accepted; the verdict page is delivered and no successor stage is published
+
+The background Central Orchestrator reviewed only `20260925-gold-coverage-025` in a controller-locked run
+separate from authorship (mailbox SHA-256 `a1543786...`, reproduced; reply `bd4804c1...`; durable review
+`docs/orchestration/reviews/20260925-gold-coverage-025.md`) and **accepted** it. Decided from the Gold
+checkout, the actual diff and the artifacts on disk rather than from the report text: the worktree is clean at
+`65e8b3a4` from base `cdd350af` (an ancestor) and the single new commit adds exactly one file,
+`docs/GOLD_BACKTEST_VERDICT_20260925.md` (59 lines, 518 words, sha256 `7198e24e...`), so every accepted
+artifact of 019 through 024 stays byte-identical. Every number in the page was re-checked against the accepted
+artifacts (4,956 candidates; 2,745 reported / 704 ineligible / 1,507 empty / 0 unavailable; 4,782,540 attempts
+over 441,781 matched anchors; 441,319 observations; `350,283 + 91,036 + 0 = 441,319`; positive 245,784 /
+negative 195,535; 965 anchors with 964 computed outcomes; ledger `f02a88cb`, manifest `1ec2a382`, row
+reconciliation `a23f65d1` all reproduced byte-identical), and the five distribution figures the worker disclosed
+it had not independently re-derived were confirmed by the coordinator from `descriptive-analysis.json`, so that
+residual gap is closed rather than carried. Dependency impact is nil and was checked: the new path is
+documentation only, it is outside the frozen 014 manifest's eight bound paths, and no test enumerates `docs/`.
+The live capture lane was observed read-only and undisturbed. Decisions taken: (1) the page stays standalone as
+delivered, because acceptance is not integration and the file exists only in the worker checkout - promoting it
+into the canonical `docs/` path is a separate central decision, not taken here; (2) no successor assignment is
+published, because no evidence supports a further stage - revisions 1, 2 and 3 of the 024 run are spent and
+immutable and must not be re-run - and the register deliberately keeps `gold-coverage-025` published at status
+exactly `instructions_published_awaiting_worker` so the delivery trigger path stays intact for the carried 022
+item A anchor observation envelope for `2026-09-28T14:00:00Z|gold|entry`, due at or after the
+`2026-09-28T16:00:00Z` lane close, which needs a fresh wake then (an operator resume of the Gold window or a
+later coordinator event) because a reply or assignment notifies a bridge once per content version. Unresolved and
+the user's to decide: whether to authorise any further exploratory stage over the spent intervals, since the
+undeclared `event_releases` cell at 40,324 would need a selection rule and the other horizons, context fields
+and endpoint groups sit in the same already-consumed calendar, so no interval in scope can serve as a fresh
+final test; and whether to promote the accepted page into the canonical checkout. Until that first decision, the
+only paths to a real verdict remain the sealed prospective window, whose evaluation stays sealed until
+`2027-03-25T15:00:00Z`, or new licensed data. No outcome, holdout, production, warehouse, Layer 1, live
+workflow, credential, purchase, external message or deployment action occurred, and no final holdout was
+consumed.
 ## 2026-09-25: the 28-factor circuit closes as exploratory; the verdict page is published as 025
 
 `gold-coverage-024` revision 2 was accepted by the background reviewer (reply `40eaccc4...`, review

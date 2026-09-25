@@ -1,11 +1,37 @@
 # Current task
 
-Hold at the closed 28-factor exploratory circuit and take the one outstanding prospective envelope.
+Hold at the completed 28-factor stage and take the one outstanding prospective envelope.
 
-`gold-coverage-024` was reviewed on 2026-09-25 and accepted, so the circuit is closed as exploratory: the declaration `5fe48767` (v2 registry `c19315e6`), the repaired adapter and ledger, the executed run `gold-combination-run-024-20260926-rev3` (ledger `f02a88cb`, 4,956 of 4,956 candidates, denominators `350,283 + 91,036 + 0 = 441,319`), the analysis `docs/GOLD_COMBINATION_ANALYSIS_023.md` and both required evidence items are verified - the focused file 6 of 6 and the local suite 545 tests with 539 pass and 6 disclosed environment failures. Nothing in the stage is accuracy, ranking, timing or edge evidence and none is possible from spent intervals, and rev1, rev2 and rev3 are spent and immutable, so the batch must not be re-run.
+`gold-coverage-025` was reviewed and accepted on 2026-09-25 (mailbox `a1543786...` reproduced, reply
+`bd4804c1...`, review `docs/orchestration/reviews/20260925-gold-coverage-025.md`, a controller-locked run
+separate from authorship), so the plain-English verdict page is delivered: one additive file,
+`docs/GOLD_BACKTEST_VERDICT_20260925.md`, 59 lines and 518 words, sha256 `7198e24e...`, committed as `65e8b3a4`
+from base `cdd350af`. Every number in it was verified against the accepted artifacts and every accepted
+artifact of 019 through 024 stays byte-identical. The page currently exists only in the Gold worker checkout
+(`.local/worktrees/gold-research`, branch `workers/gold-research-policy-20260920`), not in this canonical
+folder, because acceptance is not integration.
 
-The only outstanding obligation is the 022 item A observation envelope for the `2026-09-28T14:00:00Z|gold|entry` identity, due at or after the `2026-09-28T16:00:00Z` lane close, delivered from the worker's ignored `tmp/` as one envelope before stopping. Because a reply or assignment notifies a worker bridge once per content version, that envelope needs a fresh wake at or after the lane close - an operator resume of the Gold window or a later coordinator event.
+Nothing in the circuit is accuracy, ranking, timing or edge evidence, and none is possible from spent
+intervals; rev1, rev2 and rev3 are spent and immutable, so the batch must not be re-run and no ranking may be
+presented as a result. The five declared research definitions (`fed_bias`, `inflation_signal`,
+`risk_headline_context`, `equities_regime`, `growth_regime`) are not live Layer 1 fields.
 
-The live window needs no action: exactly one scheduled task, `GoldQualificationWindowTick018`, keeps capturing through the v2 wrapper and must not be disturbed. Its state was last independently verified in `20260925-gold-coverage-022-r1` and was not re-queried in this cycle. No prospective observation or outcome may be read before `2027-03-25T15:00:00Z`.
+The only outstanding obligation is the 022 item A observation envelope for the `2026-09-28T14:00:00Z|gold|entry`
+identity, due at or after the `2026-09-28T16:00:00Z` lane close, delivered from the worker's ignored `tmp/` as
+one envelope before stopping. Because a reply or assignment notifies a worker bridge once per content version,
+that envelope needs a fresh wake at or after the lane close - an operator resume of the Gold window or a later
+coordinator event. The register keeps `gold-coverage-025` published at status exactly
+`instructions_published_awaiting_worker` for exactly that reason.
 
-Next: hold, and take the 022 item A envelope at the lane close. No further research is authorised. The precise unresolved decision is the user's: whether to open another exploratory stage over the spent intervals, since the undeclared `event_releases` cell at 40,324 would need a selection rule and the other horizons, context fields and endpoint groups sit in the same already-consumed calendar. The CRLF materialisation and the accepted-inputs raw/LF digest asymmetry stay owned by the `backtester-spike` change request and are not to be repaired here.
+The live window needs no action: exactly one scheduled task, `GoldQualificationWindowTick018`, keeps capturing
+through the v2 wrapper and must not be disturbed. It was observed read-only in this review (Ready, one `PT10M`
+trigger, `LastRun` 20:46:01 local, `LastTaskResult` 0, zero missed runs). No prospective observation or outcome
+may be read before `2027-03-25T15:00:00Z`.
+
+Next: hold, and take the 022 item A envelope at the lane close. No further research is authorised. Two precise
+unresolved decisions are the user's: whether to open another exploratory stage over the spent intervals, since
+the undeclared `event_releases` cell at 40,324 would need a selection rule and the other horizons, context
+fields and endpoint groups sit in the same already-consumed calendar; and whether to promote the accepted
+verdict page from the worker checkout into this canonical checkout. The CRLF materialisation and the
+accepted-inputs raw/LF digest asymmetry stay owned by the `backtester-spike` change request and are not to be
+repaired here.

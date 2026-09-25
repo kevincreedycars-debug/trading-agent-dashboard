@@ -1,5 +1,40 @@
 # Session notes
 
+2026-09-25 20:52 (latest): the verdict page is delivered and accepted; the 28-factor stage is complete. In a
+background coordinator cycle (controller-locked, a session separate from authorship) only
+`20260925-gold-coverage-025` was reviewed - mailbox SHA-256 `a1543786b6feba0ebcf57ff3aca32fcb17d4d9358865a2255990dcbc26b333d6`,
+reproduced from the submitted file and equal to the requested hash - and it was **accepted** (reply
+`bd4804c1...` at `.local/orchestration/replies/gold-research/20260925-gold-coverage-025.json`, durable review
+`docs/orchestration/reviews/20260925-gold-coverage-025.md`). Decided from the checkout, the actual diff and the
+artifacts rather than the report: Gold is clean at `65e8b3a4` from base `cdd350af` (an ancestor), and the single
+new commit adds exactly one file, `docs/GOLD_BACKTEST_VERDICT_20260925.md` (59 lines, 518 words, sha256
+`7198e24e...`), so every accepted artifact of 019 through 024 - the findings page, the analysis, all registries -
+is byte-identical. Reproduced rather than trusted: every number in the page re-checked against
+`combination-summary.json` `d594646d` (4,956 candidates; 2,745 / 704 / 1,507 / 0; 4,782,540 attempts over
+441,781 matched anchors; 441,319 observations; `350,283 + 91,036 + 0 = 441,319`; positive 245,784 / negative
+195,535; 965 anchors with 964 computed outcomes), the ledger re-hashed byte-identical at `f02a88cb`, manifest
+`1ec2a382` and row reconciliation `a23f65d1`; and the five distribution figures the worker honestly disclosed it
+had not re-derived were confirmed by the coordinator from `descriptive-analysis.json` (candidate-n median 74 /
+q1 0 / q3 156; 4,673 candidates with at least one unavailable anchor, median 8, maximum 51; 462 matched outcomes
+not computed), closing that residual gap instead of carrying it. Dependency impact nil and checked: the new path
+is documentation only, it is not among the eight paths the frozen 014 manifest binds, and no test enumerates
+`docs/`. The live lane was read only and undisturbed (`GoldQualificationWindowTick018` Ready, one enabled `PT10M`
+trigger, `LastRun` 20:46:01 local, `LastTaskResult` 0, zero missed runs). Answers recorded as decisions, not
+deferrals: the page stays standalone as delivered - acceptance is not integration and it exists only in the
+worker checkout - and the Monday envelope needs a fresh wake at or after the lane close. No successor assignment
+was published because no evidence supports a further stage; the register deliberately keeps `gold-coverage-025`
+published at status exactly `instructions_published_awaiting_worker` so the delivery trigger path stays intact
+for the carried 022 item A anchor envelope for `2026-09-28T14:00:00Z|gold|entry`, due at or after the
+`2026-09-28T16:00:00Z` lane close, after which Gold stops. Two operational notes for the next session: the
+monitor's `central-orchestrator` activity record is written by the controller that owns the background run, and a
+direct `node scripts/monitor-state.js activity` write from inside it is declined by the sandbox policy, so the
+snapshot was used read-only (`pending` 0, no errors) and the reply delivery shows only `Wake sent / pickup
+unconfirmed`; and answer to the worker's second question is that promotion of the accepted page into the
+canonical checkout is a separate central decision. Unresolved and the user's: any further exploratory stage over
+the spent intervals (the undeclared `event_releases` cell at 40,324 would need a selection rule, and the other
+horizons, context fields and endpoint groups sit in the same consumed calendar), and promotion of the page. No
+outcome, holdout, production, warehouse, Layer 1, live workflow or deployment action occurred, the live capture
+lane was not disturbed, and evaluation stays sealed until `2027-03-25T15:00:00Z`.
 2026-09-25 20:45 (latest): circuit closed, verdict page commissioned. The background reviewer **accepted**
 `gold-coverage-024` revision 2 (reply `40eaccc4...`, review
 `docs/orchestration/reviews/20260925-gold-coverage-024-r2.md`, acceptance commit `41210c1`), so the 28-factor
