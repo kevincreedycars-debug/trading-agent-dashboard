@@ -1,6 +1,34 @@
 # Session notes
 
-2026-09-25 22:16 (latest): connected the two Gold research pages and proved the regeneration before running it.
+2026-09-25 22:25 (latest): saved here for the night; the repo is committed, the lane is running and the Monday
+obligation is unchanged. HEAD is `a824a7e` on `orchestration/control-plane-20260920`, carrying this session's
+three commits: `d593163` (the outcomes page `gold-backtest-outcomes.html`, its generator
+`backtester/scripts/build_gold_backtest_outcomes.js`, library, template, durable data
+`data/gold-28-factor-outcomes-20260925.json`, two test files and the `index.html` topbar link), `aeaa8ba` (the
+cross-link from the older evidence page plus its click-through test) and `a824a7e` (these notes). Nothing was
+pushed, so GitHub Pages is unchanged and neither page is public; the publication decision is the user's. Left
+untouched and uncommitted, because another session owns them: modified `tools/strategy-node/Strategy.code-workspace`
+and untracked `backtester/docs/gold_session_horizon_policy.md`, `backtester/lib/gold_session_policy.js`,
+`backtester/registries/gold_session_horizon_policy.v1.json`, `backtester/scripts/audit_gold_session_policy.js`,
+`backtester/tests/gold_session_policy.test.js`. One cosmetic trap resolved honestly rather than ignored: the
+regeneration rewrote `data/gold-evidence-audit.json` with LF while `core.autocrlf` is true, so it showed as
+modified; the filtered blob hash proved the content identical at `59f6b950` and the CRLF working copy was
+restored, leaving a clean tree. Lane state, read only, at close: `GoldQualificationWindowTick018` `Ready`, one Gold
+task on the v2 wrapper, one `PT10M` trigger, `LastRunTime` 22:16:01 local, `LastTaskResult` 0, `NextRunTime`
+22:26:00 local, zero missed runs - so the tick keeps firing through the weekend and can still attempt the Monday
+entry identity in-lane. Resume order for the next session: (1) check the in-lane capture of
+`2026-09-28T14:00:00.000Z|gold|entry` around 15:06Z and record whether it was captured or sealed blocked with a
+reason; (2) deliver the carried 022 item A wake at or after `2026-09-28T16:00:00Z` - a paused worker only wakes on
+a new assignment version or reply, which is why `gold-coverage-022` and `gold-coverage-025` stay at
+`instructions_published_awaiting_worker` - then review the envelope when submitted and stop Gold;
+(3) the publication decision above. Re-verification commands if needed: `node backtester/scripts/build_gold_backtest_outcomes.js`
+(regenerates the page; fails closed without the local run artifacts), `node --test backtester/tests/gold_outcomes_dashboard_link.browser.test.js backtester/tests/gold_backtest_outcomes_page.browser.test.js backtester/tests/gold_research_page.browser.test.js backtester/tests/gold_backtest_outcomes.test.js`
+(6 of 6 at close) and `npm test` (last full run 404 pass of 408, the four failures being the known console-width
+`secret_scanner` cases). Do not re-run rev1, rev2 or rev3, do not disturb the capture lane or any frozen artifact,
+and keep evaluation sealed until `2027-03-25T15:00:00Z`.
+
+
+2026-09-25 22:16: connected the two Gold research pages and proved the regeneration before running it.
 On the user's instruction the older evidence page now links to the new outcomes page:
 `backtester/templates/gold-research.html` gained a `nav.pilot-links` header holding `Gold 28-factor outcomes`
 beside `Dashboard`, and `gold-backtesting.html` was rebuilt with
