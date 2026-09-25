@@ -1,5 +1,33 @@
 # Current state
 
+2026-09-25 019 delivered and re-notified; the reviewer daemon was found stopped and restarted. The
+Gold window reconnected on bridge 0.2.1 at `11:26:26Z` and the queued
+`gold-coverage-completion-019` wake was delivered then (dispatch record `a3761088`, state
+`sent_unconfirmed`, connection `sent_unconfirmed` and polling every five seconds). No worker
+activity followed: Gold's activity record still reads
+`gold-qualification-window-activation-018` / `paused` from `2026-09-24T20:15:42Z`, and its worktree
+is clean at `67f51e8` with no `019` work. Because a `sent_unconfirmed` send that reaches no open
+Cline task is a silent no-op and is never retried automatically, the coordinator applied the
+recorded assignment-version re-notification rule: revision 2 of
+`docs/orchestration/assignments/gold-research.md` adds a section 7 continuation notice (also filling
+the 6-to-8 numbering gap), which changes the event key so the bridge delivers it immediately to the
+connected window. The notice fixes the work order (section 8 hardening first, before
+`2026-09-25T14:00:00Z`), forbids line-ending renormalisation or a repository-level `.gitattributes`
+fix while the digest must stay byte-identical, and repeats the live-lane rule. Read-only
+corroboration of the lane: `GoldQualificationWindowTick018` `Ready`, `LastTaskResult` 0, last run
+`2026-09-25 12:26:01` local, next `12:36`, `NumberOfMissedRuns` 0, `tick.log` written `12:26:02`,
+and the three sealed anchor-2 captures unchanged at `302e4a26`, `58ece552` and `c51ad9b9`. Recorded
+operational defect: the unattended reviewer was not running - `status.json` still carried pid 41964
+with `updated_at 2026-09-24T21:20:41Z` and that process does not exist, so no automatic review would
+have run; `tools/agent-mailbox-bridge/start-coordinator.ps1` was run and a live pid is confirmed.
+Line-ending assessment for `019`: the registered Gold worktree has `core.autocrlf=true` and six older
+hash-bound registries materialise as CRLF while the newer accepted registries are LF, so the
+fresh-worktree digest defect stays real and stays with the assigned `backtester-spike` change request;
+in the Gold worktree itself the focused digest-bound tests pass (`gold_variable_findings_render`
+12/12), so the `019` path is not locally blocked. Mailbox empty, no outcome or aggregate read,
+evaluation stays sealed until `2027-03-25T15:00:00Z`.
+
+
 2026-09-24 save checkpoint: Gold's real qualification window is capturing unattended via
 exactly one scheduled task `GoldQualificationWindowTick018` (`Ready`, every ten minutes,
 last result `0`, zero missed runs, three real anchor-2 captures sealed at `302e4a26`,

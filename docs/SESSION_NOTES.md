@@ -1,5 +1,30 @@
 # Session notes
 
+2026-09-25 019 re-notified; live lane corroborated; reviewer restarted. The Gold window reconnected
+on bridge 0.2.1 at `11:26:26Z` (connection `sent_unconfirmed`, polling every five seconds, extension
+0.2.1) and the queued `gold-coverage-completion-019` wake was delivered at that moment (dispatch
+record `a3761088`). Seven minutes later Gold had reported nothing: its activity record still reads
+`gold-qualification-window-activation-018` / `paused` from `2026-09-24T20:15:42Z`, and its worktree is
+clean at `67f51e8`. Since a send into a window with no open Cline task silently no-ops and is never
+retried by the bridge, the coordinator used the recorded assignment-version rule and republished the
+assignment as revision 2 with a section 7 continuation notice, which yields a new event key and
+immediate redelivery. The notice also fixes the order of work (section 8 hardening before anchor 2's
+entry lane at `2026-09-25T14:00:00Z`), forbids line-ending renormalisation or a repo-level
+`.gitattributes` entry while 21 digest blocks must stay byte-identical, and repeats the do-not-disturb
+rule for the capture task. Independently corroborated, read-only: `GoldQualificationWindowTick018`
+`Ready`, result `0`, last run `12:26:01`, next `12:36`, zero missed runs, `tick.log` written
+`12:26:02`, three sealed anchor-2 captures unchanged; mailbox `pending 0`, `errors 0`. Defect found
+and fixed operationally: the unattended reviewer was dead - stale `status.json` carried pid 41964
+(`2026-09-24T21:20:41Z`) with no such process, so no automatic review would have run; the daemon was
+restarted through `start-coordinator.ps1` with a live pid. Line-ending assessment: in the Gold
+worktree `core.autocrlf=true` and six older hash-bound registries are CRLF on disk while the newer
+accepted ones are LF, so the fresh-worktree digest defect remains real and belongs to the assigned
+spike change request; inside the Gold worktree the digest-bound focused tests pass
+(`gold_variable_findings_render` 12/12), so `019` is not blocked locally. Preserve the untracked Gold
+session-policy files, the modified Strategy workspace, the spike assignment and the 017/018 records.
+No outcome, holdout, production, warehouse, Layer 1, live workflow, dashboard or credential action.
+
+
 2026-09-24 SAVE FOR SHUTDOWN: Gold's prospective window is live and unattended. 017
 (activation package) and 018 (window activation) were both reviewed and accepted; 018
 delivered at clean `67f51e8` with a lock-guarded tick driver, exactly one scheduled task

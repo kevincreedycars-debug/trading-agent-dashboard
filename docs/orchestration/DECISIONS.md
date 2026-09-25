@@ -1,5 +1,26 @@
 # Central decisions
 
+## 2026-09-25: 019 re-notified by assignment revision; the unattended reviewer was restarted
+
+The Gold window reconnected on bridge 0.2.1 at `2026-09-25T11:26:26Z` and the queued
+`gold-coverage-completion-019` wake was delivered then (dispatch record `a3761088`,
+`sent_unconfirmed`). No worker activity followed, and the bridge never retries an ambiguous send, so
+the coordinator applied the assignment-version rule it recorded during 018: revision 2 of
+`docs/orchestration/assignments/gold-research.md` adds a section 7 continuation notice, which changes
+the event key and produced a fresh immediate delivery (dispatch record `1d8e899e`, event
+`7f4eed0d...`). The revision states the same assignment, fixes the work order (section 8 hardening
+before anchor 2's entry lane at `2026-09-25T14:00:00Z`) and forbids line-ending renormalisation or a
+repository-level `.gitattributes` entry, because a hash-bound materialisation defect already sits with
+the `backtester-spike` change request and Gold must stop and report rather than publish a changed
+block. Independently corroborated, read-only: the capture task `GoldQualificationWindowTick018` is
+`Ready` with result `0`, last run `12:26:01` local, next `12:36`, zero missed runs and a `tick.log`
+written `12:26:02`, and the three sealed anchor-2 captures are unchanged. A real operational defect was
+found and corrected: the unattended reviewer was not running - `status.json` still carried pid 41964
+from `2026-09-24T21:20:41Z` with no such process - so automatic review would not have run; the daemon
+now runs again with a live pid. Publication is still not pickup: `019` stays awaiting worker activity
+and no outcome, holdout, production, warehouse, Layer 1, live workflow, credential or deployment action
+occurred.
+
 ## 2026-09-24: the mailbox wake cap is removed at the user's direction
 
 The user rejected the bridge's fixed twelve-wake-per-worker-per-day limit: while they are at

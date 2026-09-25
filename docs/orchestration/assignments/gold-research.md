@@ -96,6 +96,32 @@ then record `monitor-state.js activity gold-research paused "<what finished>"` a
 Start no further work until a recorded reply arrives, and report any blocker when it is
 found rather than at the end.
 
+## 7. Continuation notice (coordinator, 2026-09-25)
+
+Latest coordinator notification: `2026-09-25T11:26:26Z` - `gold-coverage-completion-019` was
+published and delivered through bridge 0.2.1 when this window reconnected. No worker activity was
+recorded after that delivery, so this revision republishes the same assignment under the recorded
+assignment-version rule. If you already have this assignment open, this is the same work: resume it,
+do not restart it and do not repeat finished steps.
+
+Report activity first (`monitor-state.js activity gold-research working "<step>"`), then work in
+this order inside this one assignment:
+
+1. section 8 task hardening first, because anchor 2's entry lane opens at `2026-09-25T14:00:00Z`;
+2. section 1 declarations, then section 2 acquisition, section 3 measurement and the 28 of 28
+   digest, section 4 evidence and validation, section 5 boundaries and section 6 reporting.
+
+Two clarifications for this run only, which do not widen or narrow sections 0 to 8:
+
+- Do not renormalise line endings, rewrite or re-check-out accepted files, and do not add a
+  repository-level `.gitattributes` entry. A hash-bound materialisation defect is already under a
+  separate assigned change request, so a global fix here would collide with it. If an accepted
+  digest cannot be reproduced, stop and report it under section 3 rather than publishing a changed
+  block.
+- The live lane keeps running while you work: the capture task ticks every ten minutes, the sealed
+  anchor-2 captures stay byte-identical, and no hand capture, task change or scheduler test may
+  touch them.
+
 ## 8. Task hardening (user-authorised)
 
 The user authorised hardening the installed capture task so that a missed trigger or a
