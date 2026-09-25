@@ -1,24 +1,25 @@
 # Active milestone
 
-Current milestone: let the accepted Gold window capture unattended while the accepted `019`
-declarations are reconciled to the measured state under the published `gold-coverage-020` assignment.
+Current milestone: repair the live Gold entry lane and re-accept the stale shortlist input binding
+(`gold-coverage-021`), while the accepted window keeps capturing unattended.
 
-Status at 2026-09-25, after the 019 review: `017`, `018` and `019` are accepted. `019` delivered at
-clean `3240f598` (base `67f51e8`) with the seven remaining drivers declared before measurement and
-sourced keylessly (FRED `DTWEXBGS` under honest `usd_broad_index_*` ids, the San Francisco Fed Daily
-News Sentiment Index, FRED `SP500`, and the Philadelphia Fed ADS all-vintages file), the four legacy
-`dxy_*` ids retired with declared reasons and no back-fill or relabel, the findings digest regenerated
-at 28 of 28 with the 21 previously measured blocks byte-identical, and section 8 hardening the
-installed capture task. Coordinator review reproduced every digest, the 21-block byte-identity,
-focused 12/12 and 75/75, and the local suite at 520 tests with 515 pass; the five failures are the
-pre-existing CRLF materialisation of the hash-bound revision-7 registry owned by the `backtester-spike`
-change request. The capture lane is untouched: one `Ready` task `GoldQualificationWindowTick018`,
-`StartWhenAvailable` true, battery restrictions cleared, one `PT10M` trigger, last run `15:46:01`
-local result `0`, zero missed runs, and the three sealed anchor-2 captures unchanged at `302e4a26`,
-`58ece552` and `c51ad9b9`.
+Status at 2026-09-25 19:00 local: `017`, `018` and `019` are accepted; `020` is closed
+changes-requested with its blocker upheld and its verified items 1-5 standing. `021` is published and
+awaiting pickup, register status `instructions_published_awaiting_worker`, baseline `35ad4bb5`, and the
+register records the delivery of `020` at that commit. Two live-lane facts drive the urgency: the entry
+capture always requests a range ending up to an hour in the future, which OANDA refuses with HTTP 400
+(`Invalid value specified for 'from'. Time is in the future`), and the sealed blocked attempt at
+`2026-09-25T14:06:03.033Z` permanently consumed `2026-09-25T14:00:00.000Z|gold|entry`; the first
+still-reachable anchor is `2026-09-28T14:00:00Z`. Anchor 1 stays permanently missed and sealed
+`blocked_no_reschedule`, the three sealed anchor-2 captures are unchanged at `302e4a26`, `58ece552` and
+`c51ad9b9`, and `GoldQualificationWindowTick018` keeps ticking every ten minutes as the only capture
+path (`Ready`, result `0`, zero missed runs). The stale shortlist binding is re-accepted in
+LF-normalised form after the coordinator proved outcome-identity in
+`tmp/coordinator-verify-shortlist-020-20260925` (identical four ids, order, pool 2548/255, counts
+255/4/251, byte-identical audit entries, frozen artifact `ffa69b30...` unchanged). The unattended
+reviewer is enabled and running again after its 020 run timed out and disabled dispatch. Mailbox empty,
+zero validation errors.
 
-Next immediate action on resume: await Gold pickup of `gold-coverage-020` (declaration reconciliation)
-and review its revised live-input inventory, the versioned `gold_remaining_source_audit.v2.json`, the
-`fed_bias` and `inflation_signal` source mapping and the data-only gate-resolution proof. The capture
-task continues on its own and must not be disturbed. Opening a fresh exploratory combination stage
-over the 28 measured variables is an explicit user decision and is not authorized.
+Next immediate action on resume: confirm Gold picked up `021` from its own activity record, then review
+the v2 entry-eligibility guard, the task-action swap and verification tick, and the normalised binding
+re-acceptance at 7/7. The capture task continues on its own and must not be disturbed.

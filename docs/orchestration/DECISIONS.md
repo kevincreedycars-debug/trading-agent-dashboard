@@ -1,5 +1,36 @@
 # Central decisions
 
+## 2026-09-25: urgent live entry-lane repair authorised; the shortlist binding is re-accepted in normalised form
+
+The interactive review of `20260925-gold-coverage-020-r1` upheld Gold's blocker and found a second,
+more serious defect Gold could not see from inside its assignment. (a) The accepted 013 shortlist binds
+`gold_live_input_inventory.v1.json` by a digest recorded from a **CRLF materialisation** (`c9cc0def...`,
+git-blob LF `c1a5c305...`), so the declaration-only revision delivered in 020 (`863c4e02...` raw,
+`b7687622...` normalised) fails the two reproduction checks. The user authorised re-accepting that
+binding in LF-normalised form with the historical values retained, after
+`tmp/coordinator-verify-shortlist-020-20260925` proved outcome-identity: the accepted selection re-run
+against the revised inventory returned the identical four candidate ids in identical order, pool 2548
+declared / 255 eligible, counts 255 entries / 4 selected / 251 skipped and audit `entries`
+byte-identical, with the frozen artifact `ffa69b30...` unchanged. (b) The live entry lane is broken:
+`requestWindowForItem` builds the entry request as `[anchor, anchor+1h]` while `captureInterval` opens
+that lane at the anchor, so the first tick after every anchor asks OANDA for a range ending up to an
+hour in the future. A read-only coordinator probe through the documented credential runner reproduced
+the provider's refusal - pre-window range HTTP 200 with three candles, future-dated range HTTP 400
+`Invalid value specified for 'from'. Time is in the future` - and `sealBlockedAttempt` permanently
+consumed `2026-09-25T14:00:00.000Z|gold|entry` at `14:06:03.033Z`. With anchor 1 already permanently
+missed, the window is two identities down with 128 anchors still capturable. The user authorised an
+urgent bounded repair through a versioned v2 activation path that adds the eligibility guard (no
+future-dated provider request, and such a request is refused before any call without consuming the
+identity), keeps every accepted v1 file byte-identical, repoints the existing task action only after
+focused tests and a dry verification that consumes no identity, proves one real tick with result `0`,
+and restores the v1 wrapper if verification fails. Published as `gold-coverage-021` with the register at
+`instructions_published_awaiting_worker`. Recorded and structural, not to be worked around: a Friday
+anchor's 24-hour target falls on a closed-market Saturday, so its exact and delayed endpoint identities
+are expected misses. Recorded operationally: the automatic reviewer timed out on 020 (`needs_attention`,
+which disables dispatch - the reason this review was interactive); the live task kept ticking every ten
+minutes throughout. No outcome, holdout, production, warehouse, Layer 1, live workflow, credential or
+deployment action occurred.
+
 ## 2026-09-25: 019 accepted and gold-coverage-020 published for declaration reconciliation
 
 The background Central Orchestrator reviewed only `20260925-gold-coverage-completion-019-r1` (mailbox

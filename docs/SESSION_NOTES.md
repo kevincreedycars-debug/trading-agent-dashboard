@@ -1,5 +1,31 @@
 # Session notes
 
+2026-09-25 evening (latest): 020 reviewed interactively, its blocker upheld, an urgent live-lane defect
+found and 021 published. Resume state: canonical `orchestration/control-plane-20260920`; Gold worktree
+clean at `35ad4bb5`; register `gold-coverage-021`, status `instructions_published_awaiting_worker`,
+baseline `35ad4bb5`; mailbox empty; dispatcher enabled and running (pid was 37640, restarted after the
+020 timeout disabled it); capture task `GoldQualificationWindowTick018` alive (`Ready`, result `0`,
+`PT10M`, zero missed runs) as the only capture path. Review facts: the automatic reviewer timed out on
+020 at `15:35:42Z` (`needs_attention`), so this was an interactive review; Gold's 020 evidence
+reproduced exactly (focused 6/6, 32/32, live-window 8/8, shortlist 5/7) and its blocker is upheld - the
+accepted 013 shortlist binding `c9cc0def...` is a CRLF-materialisation hash, so it cannot be stable, and
+outcome-identity was proven by re-running the accepted selection against the revised inventory
+(identical four ids and order, pool 2548/255, counts 255/4/251, byte-identical audit entries, frozen
+artifact `ffa69b30...` unchanged). New urgent finding: the entry capture requests `[anchor, anchor+1h]`
+at a tick right after the anchor, so every entry request is future-dated and OANDA refuses it with HTTP
+400 - reproduced read-only through the credential runner - and the sealed blocked attempt at
+`14:06:03.033Z` permanently consumed `2026-09-25T14:00:00.000Z|gold|entry`. `021` therefore repoints a
+versioned v2 activation path with the eligibility guard (v1 bytes preserved, task action swapped only
+after verification, real verification tick, revert on failure) and re-accepts the binding in
+LF-normalised form. Deadline: the fix must be verified before `2026-09-28T14:00:00Z`. Also recorded: a
+Friday anchor's 24-hour target falls on a closed-market Saturday, so its exact and delayed endpoint
+identities are expected misses. Reply `a69516cc...` and the durable review are published; the 020
+assignment text is archived at `docs/orchestration/assignments/gold-coverage-020-archive.md`. Preserve
+the untracked Gold session-policy files, the modified Strategy workspace and the 017/018 records. No
+outcome, holdout, production, warehouse, Layer 1, live workflow, credential or deployment action
+occurred; evaluation stays sealed until `2027-03-25T15:00:00Z`.
+
+
 2026-09-25 019 accepted; gold-coverage-020 published. One review cycle as the background Central
 Orchestrator (controller-locked, a session separate from authorship) on exactly
 `20260925-gold-coverage-completion-019-r1` (mailbox `87a6cfde...`, reproduced). Verdict accepted.

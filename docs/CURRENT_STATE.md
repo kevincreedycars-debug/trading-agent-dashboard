@@ -1,5 +1,45 @@
 # Current state
 
+2026-09-25 evening: 020 reviewed interactively, blocker upheld, urgent live-lane defect found, 021
+published. The automatic reviewer picked up `20260925-gold-coverage-020-r1` at `15:15:42Z` and its run
+timed out at `15:35:42Z` (receipt `b6c28b72...`, `needs_attention`, `timedOut` true), which disables
+automatic dispatch; no partial reply, commit or file was left behind, and the run's verification work
+in `tmp/coordinator-verify-shortlist-020-20260925` was kept. The interactive review reproduced the
+worker's evidence: worktree clean at `35ad4bb5` with exactly seven changed files and no accepted or
+frozen artifact touched; `gold_remaining_source_audit.v1.json` still `a025f587...`, audit v2
+`1a6af31d...`, coverage declaration `c8b41e55...`, revision-8 report registry `2be6701c...`; focused
+6/6, protocol/coverage/audit 32/32, live-window binding 8/8, shortlist 5/7 with exactly the two
+reported drift failures. The blocker is upheld and explained: the accepted 013 binding `c9cc0def...` is
+the CRLF materialisation of the pre-revision inventory (git-blob LF `c1a5c305...`), so it can never be
+stable across worktrees, and the revised file is `863c4e02...` raw / `b7687622...` normalised. Blast
+radius verified: the frozen 014 manifest binds shortlist, audit, ledger, registry, protocol, selector
+and code only, so the live capture path is unaffected. Outcome-identity was proven by re-running the
+accepted selection against the revised inventory (`tmp/coordinator-verify-shortlist-020-20260925`,
+`--expected-inventory 863c4e02...`): identical four ids and order, pool 2548/255, counts 255/4/251,
+audit `entries` byte-identical, frozen artifact `ffa69b30...` unchanged. Second and more serious
+finding, outside 020: the live entry lane is broken. `requestWindowForItem` builds the entry request as
+`[anchor, anchor+1h]` while `captureInterval` opens that lane at the anchor, so the first tick after
+every anchor asks OANDA for a range ending up to an hour in the future; a coordinator read-only probe
+through the documented credential runner reproduced the refusal (pre-window range `HTTP 200` with three
+candles, future-dated range `HTTP 400`, `Invalid value specified for 'from'. Time is in the future`),
+and `sealBlockedAttempt` permanently consumed `2026-09-25T14:00:00.000Z|gold|entry` at
+`14:06:03.033Z` (`blocked-attempt.json`, no reschedule, no retry). Anchor 1 is already permanently
+missed, so the prospective window is two identities down with 128 anchors still capturable; the first
+still-reachable anchor is `2026-09-28T14:00:00Z`. Structural and not to be worked around: a Friday
+anchor's 24-hour target falls on a closed-market Saturday, so its exact and delayed endpoint identities
+are expected misses. Under explicit user authority, `gold-coverage-021` was published: item A adds the
+missing eligibility guard through a versioned v2 activation path (no future-dated provider request;
+refused before any call without consuming the identity), keeps every accepted v1 file byte-identical,
+repoints the installed task action only after focused tests and a dry verification that consumes no
+identity, proves one real tick with result `0`, and restores the v1 wrapper if verification fails; item
+B re-accepts the shortlist binding in normalised form with the historical `c9cc0def...`/`c1a5c305...`
+values retained, after Gold reproduces the outcome-identity proof. Register at
+`instructions_published_awaiting_worker`, baseline `35ad4bb5`; reply `a69516cc...` published and the
+durable review recorded at `docs/orchestration/reviews/20260925-gold-coverage-020-r1.md`. The capture
+task kept ticking throughout. Mailbox empty, zero validation errors, and no outcome, holdout,
+production, warehouse, Layer 1, live workflow, credential or deployment action occurred.
+
+
 2026-09-25 019 accepted and gold-coverage-020 published. The background Central Orchestrator (a
 controller-locked run, a session separate from authorship) reviewed only
 `20260925-gold-coverage-completion-019-r1` (mailbox SHA-256 `87a6cfde...`, reproduced) and accepted

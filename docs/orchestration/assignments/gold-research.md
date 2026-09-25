@@ -1,115 +1,139 @@
-# Reconcile the accepted declarations the gate and the audit still read as stale
+# Restore the live entry lane and re-accept the shortlist input binding
 
-Assignment: `gold-coverage-020`. Published 2026-09-25.
+Assignment: `gold-coverage-021`. Published 2026-09-25.
 Worker: `gold-research`. Worktree: `D:/trading-agent-dashboard-codex/.local/worktrees/gold-research`.
-Branch: `workers/gold-research-policy-20260920`. Starting commit: `3240f598` (019 accepted).
-Predecessor: `gold-coverage-completion-019`, accepted on 2026-09-25 and recorded in
-`docs/orchestration/reviews/20260925-gold-coverage-completion-019-r1.md`.
+Branch: `workers/gold-research-policy-20260920`. Starting commit: `35ad4bb5` (020 delivered, blocker upheld).
+Predecessor: `gold-coverage-020`, reviewed with changes requested in
+`docs/orchestration/reviews/20260925-gold-coverage-020-r1.md`. Its verified items 1-5 stand; this
+assignment completes the acceptance, so do not repeat them.
 
-Standing user direction: the coverage and individual-relationship lane continues under the
-orchestrator, with bounded assignments published after coordinator review. This revision was
-published by the coordinator after accepting 019, because the review found that two accepted
-declarations the qualification gate and the audit read are now factually stale. It adds no new
-research rule, opens no candidate space and reads no outcome.
+User authority: on 2026-09-25 the user authorised (a) an urgent bounded repair of the live capture
+lane's entry eligibility through a versioned v2 activation path, with every accepted v1 file preserved
+byte-identical, the installed task action repointed only after verification, and the v1 wrapper restored
+if verification fails, and (b) resolving the stale shortlist input binding by re-accepting it against
+the revised inventory digest recorded in LF-normalised form with the historical CRLF value retained.
 
-## Why this is the next bounded step
+## 0. First rule: the live lane keeps running
 
-019 measured all 28 declared variables honestly, but three accepted declarations still describe the
-pre-019 state, and one of them is read by the accepted qualification gate:
+`GoldQualificationWindowTick018` is the only capture path and must keep ticking every ten minutes. Keep
+its name, trigger, cadence, `MultipleInstances` `IgnoreNew`, `StartWhenAvailable` true and the cleared
+battery restrictions exactly as accepted, keep exactly one task, and keep every sealed envelope and
+blocked attempt under `backtester/tmp/gold-qualification-window-018/` byte-identical. No hand capture,
+hand sealing, backfill, reschedule or re-attempt of any identity, and no provider request for any
+observation at or after a closed lane. Report the observed task state in your preflight line.
 
-1. `backtester/registries/gold_live_input_inventory.v1.json` still carries
-   `research.status: unavailable_no_local_source` for `risk_headline_context`, `equities_regime` and
-   `growth_regime`, and its F2 entries use the retired `dxy_*` ids while the measured research ids are
-   now `usd_broad_index_*`. `backtester/lib/gold_qualification_gate.js` resolves every candidate atom
-   through this inventory and records `atom_variable_declared`, `atom_research_measured` and
-   `atom_timing_rule_declared`, so a revision-8 candidate cannot currently be gated truthfully.
-2. `backtester/registries/gold_remaining_source_audit.v1.json` still states that its nine audited
-   variables are `unavailable_no_local_source`.
-3. `backtester/registries/gold_variable_horizon_context.v1.json` still shows the original unsourced
-   `source_mapping` and `timestamp_semantics` for `fed_bias` and `inflation_signal`, although both
-   have been measured since coverage-008 through the declared macro source additions.
+## 1. Item A (urgent, first): entry eligibility in a versioned v2 path
 
-## Scope
+Proven defect, coordinator-reproduced: `backtester/lib/gold_qualification_activation.js`
+`requestWindowForItem` builds the entry request as `[anchor_utc, anchor_utc + 1h]`, while
+`captureInterval` opens that role's lane at the anchor. The first tick after every anchor therefore asks
+OANDA for a range ending up to an hour in the future, the provider refuses any future-dated range with
+HTTP 400 (`Invalid value specified for 'from'. Time is in the future`), and `sealBlockedAttempt`
+consumes the identity permanently. `2026-09-25T14:00:00.000Z|gold|entry` was lost exactly this way at
+`14:06:03.033Z` and its lane closed at `16:00:00Z`, so it cannot be recovered. Every remaining anchor is
+exposed; the first is `2026-09-28T14:00:00.000Z`.
 
-1. **Live-input inventory (declared in-place revision).** In `gold_live_input_inventory.v1.json`,
-   correct only the declaration facts that 019 made stale: the `research` block of each variable the
-   accepted report registry revision 8 now measures (status, measurement kind, series and route
-   reference), the F2 id vocabulary so the live field name and the measured research id are both
-   stated explicitly for the four dollar variables, and a revision note naming this assignment and the
-   accepted predecessor declaration. Do not change any `live` status, live field name, factor key or
-   weight, the atoms list, the candidate universe, the consumed boundary or the context field. Add a
-   declared retirement/replacement note for the retired `dxy_*` ids instead of deleting their history.
-2. **Remaining-source audit (new versioned file).** Write `gold_remaining_source_audit.v2.json`
-   superseding `gold_remaining_source_audit.v1.json`, which stays byte-identical: every one of the nine
-   audited variables carries the accepted revision-8 measurement status with the evidence hash it is
-   taken from, and the audit's own scope note states that the nine-variable unmeasured scope is closed
-   by `gold-coverage-008` and `gold-coverage-completion-019`.
-3. **Coverage declaration (declared in-place revision).** In
-   `gold_variable_horizon_context.v1.json`, correct only the `source_mapping`,
-   `timestamp_semantics`, `known_gaps` and research-status text of `fed_bias` and `inflation_signal`
-   so they match the sources already declared in the accepted report registry, and update the gap note
-   that currently records this discrepancy. No other declared variable block may change; the 28-id
-   order, the horizons, the context fields, the forbidden context and the unresolved policies stay
-   exactly as accepted.
-4. **Gate compatibility, data-only.** Prove from the revised declarations, with a focused test, that
-   the accepted gate can resolve a candidate atom whose research variable id is a revision-8 id and
-   still fails closed on an undeclared, `absent_live` or `proxy_redefined` variable. Reading the gate
-   is in scope; changing `backtester/lib/gold_qualification_gate.js`, the combination ledger, the batch
-   registry or any accepted protocol artifact is not. If truthful gating needs a code change, stop and
-   submit that as the blocker with the exact failing check instead of editing the code.
-5. **Record every before/after digest.** For each file you revise in place, record its SHA-256 before
-   and after in your progress document, and state the LF-normalised value where the file is
-   hash-bound.
+Required: add the missing eligibility guard through a new versioned v2 activation path. The accepted 017
+semantics stay identical; only the following behaviour is added:
 
-## Owned scope
+1. never call the provider with a request interval containing any time later than the observed clock
+   minus the declared one-hour OANDA availability lag; for the entry role the identity is therefore
+   attemptable only inside the still-open lane, from `anchor + 1h` until the lane closes at
+   `anchor + 2h`;
+2. a request that would be future-dated is refused before any provider call and must not seal, consume
+   or otherwise terminate the identity: the tick reports it not yet eligible and the next tick
+   re-evaluates it inside the lane;
+3. the accepted lane boundaries, the `blocked_no_reschedule` missing rule, the validation rules (entry
+   candle at or after the anchor; an endpoint candle exactly at the target), the credential scope, the
+   declared source set and the single-task rule are unchanged;
+4. every accepted v1 file stays byte-identical, and the v2 path re-verifies the accepted digests before
+   it acts, so a drifted v1 file fails closed instead of being captured against;
+5. no retry of a sealed identity, no reschedule, no backfill, no new source, no new credential, no
+   second task, no second writer;
+6. when a lane closes without a successful capture, the accepted `blocked_no_reschedule` reason code is
+   sealed exactly as v1 does.
 
-Write only inside your own worktree/branch: the three registries above, its focused test file, the
-progress and decision documents that describe this revision, and ignored raw evidence under
-`backtester/tmp/`. Do not write to the canonical checkout, another worktree or another mailbox copy.
+Acceptance criteria, all shown in your submission:
 
-## Accepted bindings
+- focused tests: a future-dated request is refused before any provider call and leaves the identity
+  unconsumed; the entry identity is captured inside `[anchor + 1h, anchor + 2h]` against an injected
+  fake provider; a lane that closes without a capture still seals `blocked_no_reschedule`; a sealed
+  identity is never retried; a drifted v1 file fails closed; the v1 files are byte-identical;
+- a dry verification through the v2 wrapper that consumes no identity, reporting the observed set of
+  open identities, which must be empty when you run it;
+- the installed task action repointed to the v2 wrapper only after those pass, with the task otherwise
+  identical, followed by one real tick that completes with task result `0`, appends metadata-only to
+  `tick.log` and consumes no identity;
+- if any step cannot be verified, restore the v1 wrapper as the task action and report the blocker with
+  the exact failure instead of leaving the lane unprotected.
 
-Re-verify before acting: `docs/orchestration/reviews/20260925-gold-coverage-completion-019-r1.md`;
-the accepted report registry `backtester/registries/gold_individual_variable_report.v2.json`
-(SHA-256 `2be6701ccbc169d8e12e6933c234bb185b48523161ff60364663d71209ccb497`); the preserved revision-7
-file `backtester/registries/gold_individual_variable_report.v1.json` (LF-normalised SHA-256
-`714a5410cc14ab0762f6d8a364b5a53b2524ab7716cf597b6d5bed1844d6c042`); the frozen manifest
-`backtester/registries/gold_qualification_window_manifest.v1.json` with `first_anchor_utc`
-`2026-09-24T14:00:00.000Z`; the frozen execution contract and scheduler package.
+Deadline: working and verified before `2026-09-28T14:00:00Z`, the first anchor whose entry lane is still
+open. Report activity at each step as you go.
 
-## Boundaries
+## 2. Item B: re-accept the shortlist input binding, in normalised form
 
-No production, live workflow, warehouse, Layer 1, dashboard, credential, scheduler, deployment or
-purchase action. No change to the prospective window, its task, wrapper, driver or sealed evidence,
-and no hand capture. No research-rule, threshold, band, tercile or formula change. No candidate
-space may be declared or opened, no selector may run, no outcome, aggregate, qualification or
-evaluation value may be read, and the evaluation stays sealed until `2027-03-25T15:00:00Z`. Do not
-revive, relabel or back-fill a retired `dxy_*` id, and do not report `DTWEXBGS` under a `dxy_*` name.
-Do not fix the CRLF materialisation defect here: it belongs to the assigned `backtester-spike` change
-request, and a global line-ending change would collide with it. One writer per worktree. Stop at the
-review boundary.
+The accepted 013 binding `c9cc0def...` is the CRLF materialisation of the pre-revision inventory (its
+git-blob LF digest is `c1a5c305...`); the revised inventory is `863c4e02...` raw and `b7687622...`
+normalised. The coordinator has already established outcome-identity, and you must reproduce it as your own evidence: the accepted selection was re-run against the revised inventory into
+`tmp/coordinator-verify-shortlist-020-20260925` (run record `selection-run.json`, invoked with
+`--expected-inventory 863c4e02...`) and returned the identical four candidate ids in identical order,
+pool 2548 declared / 255 eligible, counts 255 entries / 4 selected / 251 skipped, an `entries` array
+byte-identical to the frozen audit, `reconciliation_ok` true, and the frozen artifact unchanged at
+`ffa69b30...`. Only the embedded provenance expected-digest differs, which is why the re-run file hash
+differs while every selection field is identical. Prove outcome-identity yourself before you re-bind anything:
 
-## Evidence and validation
+1. run the accepted selection into a NEW output directory (the accepted script refuses to overwrite) and
+   compare the four frozen candidate ids in frozen order, `declared_candidates` 2548,
+   `eligible_candidates` 255, `selected_count` 4, the 255 audit entries, `reconciliation_ok` true, and
+   the frozen artifacts `ffa69b30...`/`e7c57773...` unchanged;
+2. only if every one of those is identical: set `ACCEPTED_DIGESTS.inventory` to `b7687622...`, make the
+   inventory role compare the LF-normalised digest with the raw value retained beside it, record the
+   historical `c9cc0def...`/`c1a5c305...` pair as disclosed history, leave every other role, the drift
+   refusal and the selection logic exactly as accepted, add the amendment note to
+   `docs/GOLD_PROSPECTIVE_SHORTLIST_20260923.md`, and drive
+   `backtester/tests/gold_qualification_shortlist.test.js` to 7/7 and
+   `gold_qualification_window.test.js` to 8/8;
+3. if any value differs, stop and report the exact difference; do not accept, relabel, amend or re-run a
+   changed selection and do not touch the frozen artifacts.
 
-Focused tests first, covering: the revised research status and id vocabulary resolve; the retired ids
-are still refused; a candidate naming a revision-8 id is not refused for being undeclared; an
-`absent_live`, `proxy_redefined` or unmeasured variable still fails closed; the v1 artifacts are
-unchanged byte-for-byte where they must be; and the before/after digests are reproducible. Then run
-the documented local suite and report exact counts and every failure, disclosing the known
-CRLF-materialisation and console-width cases as environment, not as new work.
+## 3. Hard rules
 
-## Reporting (mandatory)
+No outcome, return, direction, sign, aggregate, qualification, accuracy or edge value may be read or
+computed, and evaluation stays sealed until `2027-03-25T15:00:00Z`. No research-rule, threshold, band,
+tercile, horizon or formula change; no new source, credential or provider; no candidate space may be
+opened; no selector execution beyond the outcome-identity proof in item B. Do not fix the CRLF
+materialisation defect globally, do not add a repository-level `.gitattributes` entry and do not
+renormalise accepted files: that remains the assigned `backtester-spike` change request. Preserve every
+accepted 005/006/008 report and registry and every 014/015/016/017/018/019/020 artifact byte-identical,
+including the sealed window evidence, the immutable blocked attempt and the two registries you revised
+in 020.
 
-Report activity first, then work in this order: item 1, then 2, then 3, then 4, then 5. Finish only by
-reporting. On completion, on a blocker or at a decision point:
+## 4. Evidence and validation
 
-1. write one envelope from `templates/submission.json` into your own ignored `tmp/` with status
-   `ready_for_review`, `blocked` or `status_report`, the observed worktree/branch/base/HEAD, changed
-   files, exact test commands and results, artifact hashes, blockers, questions and production
-   disclosure;
-2. submit it with `node D:/trading-agent-dashboard-codex/scripts/coordination.js submit --file <that file>`;
-3. record `node D:/trading-agent-dashboard-codex/scripts/monitor-state.js activity gold-research paused "<what finished>"`;
-4. stop. Start no further work, in any asset or checkout, until a recorded reply arrives; read it with
-   `node D:/trading-agent-dashboard-codex/scripts/coordination.js check --worker gold-research`.
+Focused tests first, then the documented local suite with exact counts and every failure disclosed;
+disclose the known CRLF and console-width environment cases as environment, not as new work. Raw
+evidence stays in your ignored `backtester/tmp/`. Record the exact before/after digests of every file
+you change and of every preserved artifact you re-verify.
 
-A blocker is submitted when it is found, not at the end of the task.
+## 5. Boundaries
+
+No production, live workflow, warehouse, Layer 1, dashboard, credential, purchase or deployment action,
+and no scheduler action beyond repointing the existing task action to the v2 wrapper exactly as
+authorised above. No change to the prospective window manifest, its anchors, its lanes, its sealed
+evidence or its evaluation boundary. One writer in this worktree. Stop at the review boundary.
+
+## 6. Reporting (mandatory)
+
+Report activity first, and report after each step: the v2 path and its focused tests, the dry
+verification, the task action swap with the real verification tick, then item B. On completion, on a
+blocker or at a decision point, write one envelope from `templates/submission.json` into your own
+ignored `tmp/` with status `ready_for_review`, `blocked` or `status_report`, the observed
+worktree/branch/base/HEAD, changed files, exact test commands and results, artifact hashes, the observed
+task settings before and after the swap, blockers, questions and production disclosure; submit it with
+`node D:/trading-agent-dashboard-codex/scripts/coordination.js submit --file <that file>`; record
+`node D:/trading-agent-dashboard-codex/scripts/monitor-state.js activity gold-research paused "<what finished>"`;
+then stop and wait for a recorded reply. Also record, as an observation only and without working around
+it, that a Friday anchor's 24-hour target falls on a closed-market Saturday, so its exact and delayed
+endpoint identities are expected misses.
+
+
