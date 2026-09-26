@@ -1,6 +1,35 @@
 # Session notes
 
-2026-09-25 22:25 (latest): saved here for the night; the repo is committed, the lane is running and the Monday
+2026-09-26 18:45 (latest): resumed from the overnight park, re-validated the delivered work and recorded new
+capture-lane evidence. Nothing of mine moved while parked: HEAD is still `b9de447`, the tree still shows only the
+other session's session-policy paths, and the focused Gold page tests re-run 6 of 6 (`node --test
+backtester/tests/gold_outcomes_dashboard_link.browser.test.js backtester/tests/gold_backtest_outcomes_page.browser.test.js
+backtester/tests/gold_research_page.browser.test.js backtester/tests/gold_backtest_outcomes.test.js`), with the three
+deliverables tracked-clean - outcomes page 19,347 bytes sha `61EA4C31`, evidence page 292,291 bytes sha `498E585A`,
+outcomes data 5,398 bytes sha `762BBD6A`. The lane stayed healthy all night on its own: `GoldQualificationWindowTick018`
+`Ready`, one `PT10M` trigger, `LastRunTime` 18:36:01 local with `LastTaskResult` 0, `NextRunTime` 18:46, zero missed
+runs, `tick.log` grown to 156,410 bytes (sha `B33114B7`) at 108 metadata-only blocks, the growth over the 72
+recorded at acceptance being ordinary weekend ticking. New evidence, all read-only: `2026-09-25T14:00:00.000Z|gold|exact`
+attempted `2026-09-26T15:15:29Z` and `2026-09-25T14:00:00.000Z|gold|delayed` attempted `2026-09-26T16:06:02Z`, both
+sealed blocked with `parse_refused` and detail `OANDA XAU_USD candles missing` (`blocked-attempt.json` only,
+sha `B6271E01` and `64504F57`, `rescheduled` false and `retry_same_identity` false). The 25th anchor is therefore
+blocked in all three gold price roles, since its `entry` role is the documented immutable blocked attempt `E7C197F0`
+(reason `provider_error`, HTTP 400 at `2026-09-25T14:06:03Z`), and `settled` is 0 in every log block; the only sealed
+captures stay the three FRED feature envelopes `302E4A26`/`58ECE552`/`C51AD9B9` with indexes
+`9D9497A0`/`26BFE51A`/`D8A3819E` and plan `807DC73E`, all re-hash-verified this cycle. No credential material is in
+the log: zero occurrences of `FRED_API_KEY`, `OANDA_API_TOKEN`, `Bearer`, `api_key`, `apikey` or `Authorization`.
+Consequence to carry into Monday: the lane will attempt the `2026-09-28T14:00:00Z|gold|entry` item A identity in-window
+at about 15:06Z, and the likely delivery is another reason-coded blocked envelope rather than a capture, because every
+gold price attempt so far has failed closed. That still meets the obligation as one envelope before stopping; turning
+it into a real capture would need a look at the provider path (endpoint, requested window, credential scope), which is
+a separate authorised operation. Deliberately not done: no wake, reply or assignment was sent, since that spends the
+once-per-content-version bridge notification and could wake the worker before the lane close; no scheduled-task
+change; no retry, reschedule or re-run; no publication. Note for whoever reads the log next: `Get-Content -Tail`
+returns empty on it because the wrapper's `Out-File -Encoding UTF8` writes a BOM under PowerShell 5.1 and the file is
+appended concurrently - use `[System.IO.File]::ReadAllLines`, which reads all 5,509 lines cleanly.
+
+
+2026-09-25 22:25: saved here for the night; the repo is committed, the lane is running and the Monday
 obligation is unchanged. HEAD is `a824a7e` on `orchestration/control-plane-20260920`, carrying this session's
 three commits: `d593163` (the outcomes page `gold-backtest-outcomes.html`, its generator
 `backtester/scripts/build_gold_backtest_outcomes.js`, library, template, durable data
