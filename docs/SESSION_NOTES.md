@@ -1,6 +1,42 @@
 # Session notes
 
-2026-09-26 18:45 (latest): resumed from the overnight park, re-validated the delivered work and recorded new
+2026-09-26 21:58 (latest): answered the review-readiness question on the 28 Gold variables and saved the user's
+standing answer-format preference; no product file changed and nothing was re-run. The question was whether the data
+for all 28 measured Gold variables is actually in the accepted archive and whether it is now ready to be reviewed, and
+the read (all read-only, from the accepted artifacts) answers yes on coverage and "already accepted" on review. From
+`.local/worktrees/gold-research/backtester/tmp/ivr-coverage-019-20260925-r2/individual-variable-report.json`:
+`inventory.declared_variables` is 28 and there are 28 report rows, every one `measurement_status` `measured`, so there
+is no unmeasured or missing variable; the reason the count still reads 28 after the source change is the documented
+registry correction revision 8, which retires the four legacy `dxy_*` declarations with stated reasons and lets the four
+`usd_broad_index_*` ids occupy their declared positions rather than carrying unmeasured rows. Of those 28, exactly 22 can
+appear in the daily cell - 51 atoms - and the 6 event-cohort variables (`event_type`, `event_actual`, `event_consensus`,
+`event_previous_as_released`, `event_surprise`, `event_age_hours`) are `not_applicable_to_cohort` for daily anchors,
+measured in the event cohort instead (5,115 event rows), which is exactly what `docs/GOLD_COMBINATION_ANALYSIS_023.md`
+already states as "all 28 measured variables named; the six event-cohort variables contribute no daily atom and are
+recorded as such rather than dropped". Checked directly against the ledger rather than the prose: the atoms in
+`combination-run-024-20260926-rev3/combination-ledger.jsonl` resolve to exactly those 22 variable ids across its 4,956
+records (2,745 `reported`, 704 `ineligible`, 1,507 `empty`, 0 `unavailable`). The `event_releases` cell stays undeclared
+at 40,324 for the same reason as before, so the event variables have single-variable coverage but no declared combination
+cell. Review status is therefore not pending but complete: `gold-coverage-024` revision 2 was accepted 2026-09-25 at clean
+`cdd350af` and `gold-coverage-025` published the accepted plain-English verdict, the circuit is closed as exploratory,
+rev1/rev2/rev3 stay spent and immutable so the batch must not be re-run, and no ranking, accuracy, timing or edge claim
+may be presented from it. The two loose ends are the user's decisions rather than data gaps: whether to open another
+exploratory stage over the already-spent intervals, and whether to promote `docs/GOLD_BACKTEST_VERDICT_20260925.md` from
+the worker checkout into this canonical folder; the publication decision on the two local Gold pages is still open too.
+One correction to record so it is not carried as a live-rule result: the earlier F1 follow-up used the report's
+any-size-change states, not the live 5 bps thresholds, so its "falling real yields lean Gold up in all four years,
+rising yields wrong in two of four" reading describes the archive's measured states only and is not a test of the live
+rule. Preference saved at the user's instruction: `AGENTS.md` now carries the line "Answer format: default to short
+bullet points in plain English, no maths unless asked. Expand into prose or tables only when the user requests it", so
+the default survives into future sessions. Housekeeping: the three read-only node scripts used for this read were written
+under `.local` and deleted; the only path I touched is `AGENTS.md`, and the other session's session-policy paths were left
+untouched and uncommitted. Nothing was pushed, nothing was retried or re-run, the capture lane was not touched, and
+evaluation stays sealed until `2027-03-25T15:00:00Z`. For tomorrow's review, in order: (1) the two decisions above; (2)
+the publication decision on the two Gold pages; (3) the carried 022 item A envelope for
+`2026-09-28T14:00:00Z|gold|entry`, due at or after the `2026-09-28T16:00:00Z` lane close, which on present evidence is
+likelier to arrive as another reason-coded blocked record than as a capture.
+
+2026-09-26 18:45: resumed from the overnight park, re-validated the delivered work and recorded new
 capture-lane evidence. Nothing of mine moved while parked: HEAD is still `b9de447`, the tree still shows only the
 other session's session-policy paths, and the focused Gold page tests re-run 6 of 6 (`node --test
 backtester/tests/gold_outcomes_dashboard_link.browser.test.js backtester/tests/gold_backtest_outcomes_page.browser.test.js

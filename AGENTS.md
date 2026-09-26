@@ -2,6 +2,8 @@
 
 Read `CODEX_STARTUP.md`, then the current state, task, milestone and session notes in `docs/`.
 
+Answer format: default to short bullet points in plain English, no maths unless asked. Expand into prose or tables only when the user requests it.
+
 The canonical working folder is `D:\trading-agent-dashboard-codex`. This is the consolidated project, not the old isolated trial dashboard. Historical trial instructions are preserved on `trial-foundation-m1`.
 
 Preserve unrelated work. Inspect branch and status before edits. Follow the user's existing authorization without repeatedly asking for the same approval.
