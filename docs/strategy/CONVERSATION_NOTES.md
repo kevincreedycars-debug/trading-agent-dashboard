@@ -892,3 +892,100 @@ Next session, in order:
 
 Nothing produced in this session is accepted, merged, deployed or a trading result; it is all advice
 plus two reference sheets and this notes file.
+
+## 2026-09-26 - User report: a black "sys32" console window flashing every few minutes
+
+- User asked whether an intermittent black console window (opens and closes within seconds, several
+  times an hour) comes from the background reviewer they set up earlier, then said: *"I just want the
+  screen to stop flashing up, if its no longer needed pause it from running."*
+- **Diagnosis (read-only, no change made by this worker): it is not the reviewer.** Every visible
+  flashing console on this machine comes from the Gold capture task
+  `\GoldQualificationWindowTick018`: registered `2026-09-24T21:06` by `DESKTOP-UD0L47I\A17`, one
+  `TimeTrigger` repeating `PT10M`, principal `A17` with `LogonType Interactive`, `Hidden False`,
+  `MultipleInstances IgnoreNew`, `StartWhenAvailable true`, action
+  `powershell -NoProfile -ExecutionPolicy Bypass -File
+  D:\trading-agent-dashboard-codex\.local\worktrees\gold-research\backtester\scripts\run_gold_qualification_window_tick_v2.ps1`.
+  A console action run in the interactive session creates a real window; it lasts one to two seconds.
+- Corroboration: last run `26/09/2026 21:36:01` local, `LastTaskResult 0`, next `21:46:00`; its
+  `tick.log` was written `21:36:02`; distinct tick timestamps in that log run continuously at
+  `:06/:16/:26/:36/:46/:56` from `2026-09-24T20:06Z` through `2026-09-26T20:36Z` with no gaps. The
+  newest block is metadata-only: `attempted 0`, `settled 0`, `open_identities []`,
+  `eligible_identities []`, `dry_run false`, `observed_clock_utc 2026-09-26T20:36:02.544Z`.
+  `Settings.Hidden` was **not** the cause of visibility: that element only hides a task inside the
+  Task Scheduler list, never its window.
+- The reviewer is a different mechanism and is **not running**: `scripts/coordinator-dispatch.js`
+  started by `tools/agent-mailbox-bridge/start-coordinator.ps1`, which launches the daemon with
+  `Start-Process -WindowStyle Hidden`, so it has no window even while live. `controller/status.json`
+  still records `state watching`, `pid 15124`, `updated_at 2026-09-25T21:34:32Z`, and that pid does
+  not exist; no `coordinator-dispatch` node process is alive. `controller/config.json` is
+  `{"enabled": true}`, which only means "not paused" - per `docs/orchestration/README.md` lines
+  105-111, `enable` alone does not start a stopped daemon. Bridge connections: `gold-research`
+  `watching` on 0.2.1, `strategy` `disconnected`.
+- Ruled out as the flasher: HP `SoftLandingDeferralTask` (PT15M, empty `Execute`, COM handler -
+  silent), `\Microsoft\Windows\Hotpatch\Monitoring` (rare), Brave/Zoom/Adobe updaters (hourly or
+  longer), Office/OneDrive tasks (disabled). The Task Scheduler operational event log is disabled on
+  this machine (`IsEnabled False`), so there is no Event Viewer history; task metadata plus `tick.log`
+  are the evidence.
+- **Answer to "pause it if it is no longer needed": it is still needed.** The lane's one remaining
+  job is the target identity `2026-09-28T14:00:00.000Z|gold|entry` with accepted lane
+  `[2026-09-28T14:00:00Z, 2026-09-28T16:00:00Z)`, currently `not_open`, whose observation envelope is
+  due at or after `2026-09-28T16:00:00Z`. Canonical DECISIONS entries of 2026-09-25 state that "the
+  live v2 capture lane must not be disturbed". Disabling the task now would drop the only live proof
+  of the repaired v2 entry lane under `blocked_no_reschedule` with no backfill, which is exactly the
+  silent loss the 2026-09-24 hardening was authorised to prevent.
+- Recommended fix (offered to the user, **not applied by this worker**): add `-WindowStyle Hidden` to
+  the task action, keeping the same name, task, `PT10M` trigger, `IgnoreNew`, `StartWhenAvailable`,
+  principal and log redirect, so only window visibility changes. The log write and the exit code are
+  unaffected, so a real tick still records `LastTaskResult 0` and a new metadata-only block. The 24 Sep
+  precedent applies to whoever makes the change: it must be verified by a real tick and reverted with
+  a reported blocker if it cannot be.
+- Not applied here because this worker's assignment forbids editing live systems or another worker's
+  assets; the task belongs to the Gold lane. Escalation path offered: a bounded coordinator request so
+  the Gold worker applies and verifies the change. Residual fallback if a flash persists:
+  hidden-launch wrapper (`wscript` window style `0`) or `conhost --headless`; switching the principal
+  to S4U / "run whether user is logged on or not" must not be done without the Gold worker validating
+  the credential runner, whose store this worker has not inspected.
+- Open question for the user: (a) hide the window now, recommended, capturing continues; or
+  (b) time-boxed disable re-enabled before `2026-09-28T14:00Z`, which is riskier because a missed
+  anchor is unrecoverable.
+
+### 2026-09-26 - CHANGE APPLIED at the user's instruction: capture task window hidden
+
+- The user first asked for the diagnosis, then twice directed "just stop the flashing", so this worker
+  applied the hide-the-window fix itself rather than only proposing it. Disclosed to the coordinator in
+  submission `20260926-strategy-window-flash-fix-004` (`status_report`) because the change touches the
+  Gold lane and makes the action as recorded in `docs/orchestration/DECISIONS.md` (2026-09-24 hardening
+  entry) stale; the coordinator owns that record.
+- Change, applied with `Set-ScheduledTask -TaskName 'GoldQualificationWindowTick018' -Action <new>`:
+  action arguments became
+  `-NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File D:\...\run_gold_qualification_window_tick_v2.ps1`
+  (was `-NoProfile -ExecutionPolicy Bypass -File ...`). Nothing else was touched: task name, one
+  `PT10M` trigger `start 2026-09-24T21:06:00`, `Hidden False`, `StartWhenAvailable true`,
+  `MultipleInstances IgnoreNew`, `ExecutionTimeLimit PT72H`, principal `A17` `Interactive` `Limited`,
+  state `Ready`, `missed 0`.
+- Why it is safe: the wrapper only sets `$ErrorActionPreference`, appends to `tick.log` with `Out-File`
+  and `exit $LASTEXITCODE`, so a host window-style flag cannot change its behaviour, its logging or the
+  task exit code. No accepted or frozen artifact, no code, no data and no trigger was altered.
+- Verification status: definition read-back before/after proves the only difference is the added flag
+  (before: last run 21:46:01 result 0 next 21:56:00; after: identical plus the flag). Behavioural
+  confirmation is the next real tick at `2026-09-26T20:56:00Z`, whose acceptance check is
+  `LastTaskResult 0`, a fresh metadata-only `tick.log` block and no visible window. Per the 24 Sep
+  precedent, if a real tick does not run after the change it must be reverted with a reported blocker;
+  the exact revert action is the same command without `-WindowStyle Hidden`.
+- Residual fallback if a flash still appears: hidden-launch wrapper (`wscript` window style `0`) or
+  `conhost --headless`. Do not move the principal to S4U / "run whether user is logged on or not"
+  without the Gold worker validating its credential runner first.
+- Not touched: the background reviewer is still stopped and its `status.json` pid still stale, and no
+  other task, worker, artifact or credential was read or changed.
+
+### Standing user preference recorded 2026-09-26: short, plain answers
+
+- The user asked that the default reply to them be **3-4 short bullet points in simple, easy-to-
+  understand language**. The user is the audience and the decision-maker, and asked for brevity.
+- Apply this as the default shape of every future user-facing answer in this worker: at most four
+  bullets, short sentences, no internal jargon unless the user uses it first, and no tables,
+  evidence dumps or command transcripts unless the user asks for detail.
+- Keep the full reasoning, evidence, hashes, file paths and open questions in this notes file (and in
+  submissions) as the durable record, and compress only what is said in the chat to the user.
+- Detail is still given on request, and a safety-critical point (for example data that cannot be
+  recovered once lost) stays in the short reply even when it costs a bullet.
