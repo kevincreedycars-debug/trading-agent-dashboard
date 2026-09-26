@@ -1,14 +1,25 @@
 {
   "dashboard_meta": {
-    "last_updated_et": "2026-09-25T08:24:39.242Z",
+    "last_updated_et": "2026-09-26T17:50:50.533Z",
     "source": "layer_2_trade_selection_agent"
   },
-  "trade_opportunities": [],
-  "avoid_today": [
+  "trade_opportunities": [
     {
       "instrument": "EUR/USD",
-      "reason": "Mixed or low conviction 24H signals."
+      "direction": "SELL",
+      "confidence": 68,
+      "reason": "USD is independently bullish while EUR is independently bearish during today's session.",
+      "rank": 1
     },
+    {
+      "instrument": "WTI/USD",
+      "direction": "SELL",
+      "confidence": 67,
+      "reason": "USD is independently bullish while WTI is independently bearish during today's session.",
+      "rank": 2
+    }
+  ],
+  "avoid_today": [
     {
       "instrument": "XAU/USD",
       "reason": "Mixed or low conviction 24H signals."
@@ -22,16 +33,12 @@
       "reason": "Both assets point in the same 24H direction, so there is no clear relative edge."
     },
     {
-      "instrument": "WTI/USD",
-      "reason": "Mixed or low conviction 24H signals."
-    },
-    {
       "instrument": "XAG/USD",
       "reason": "Mixed or low conviction 24H signals."
     },
     {
       "instrument": "GBP/USD",
-      "reason": "Mixed or low conviction 24H signals."
+      "reason": "Both assets point in the same 24H direction, so there is no clear relative edge."
     }
   ]
 }
