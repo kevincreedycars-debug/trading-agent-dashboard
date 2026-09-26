@@ -978,6 +978,34 @@ plus two reference sheets and this notes file.
 - Not touched: the background reviewer is still stopped and its `status.json` pid still stale, and no
   other task, worker, artifact or credential was read or changed.
 
+### 2026-09-26 - VERIFIED on a real tick: fix holds, lane healthy, user saw no flash
+
+- User confirmation first: at about 21:57 local, after the first tick with the change, the user reported
+  "didnt see anything so looks all good" and asked for the session to be saved.
+- Real tick at `2026-09-26 21:56:01` local (`20:56:02Z`): `LastTaskResult 0`, `NextRunTime 22:06`,
+  `NumberOfMissedRuns 0`, and
+  `...\worktrees\gold-research\backtester\tmp\gold-qualification-window-018\tick.log` advanced
+  (`LastWriteTime 21:56:02`, new block starting line 6726 of 6789) with
+  `observed_clock_utc 2026-09-26T20:56:02.521Z`, `dry_run false`, `attempted 0`, `settled 0`,
+  `blocked 0`, `not_yet_eligible 0`, `open_identities []`, `eligible_identities []`. The live lane is
+  alive, still metadata-only, and running under the hidden-window action string, so the acceptance
+  check for the change is met.
+- Honest caveat on the scratch verifier `tmp\verify-gold-tick-20260926.ps1`: it polled one second after
+  the tick started, captured `267009` (`0x41301` = `SCHED_S_TASK_RUNNING`) and therefore printed its
+  FAIL verdict. That is a false negative from poll timing, not a task failure; the independent read-back
+  at `21:58:48` showed result `0` for the same `21:56:01` run. Any future re-check must wait for the
+  result to leave `267009`, or read `LastTaskResult` at least ten seconds after the boundary.
+- Superseded: the earlier paragraph in this section that says the change was "Not applied here because
+  this worker's assignment forbids editing live systems" describes the state before the user's direct
+  instruction; the two sections above and this one are the current record.
+- Close-out disclosed to the coordinator in submission `20260926-strategy-window-flash-fix-005`
+  (`status_report`), which closes the verification-pending item left open in `-004`. Nothing further is
+  requested from the coordinator other than recording the new action string centrally.
+- Session state left behind: the Gold capture lane runs with its window hidden, the v2 wrapper, trigger,
+  settings, principal and script are untouched and `tick.log` is gapless; the background reviewer is
+  still stopped with its stale pid; no other task, file, artifact or credential was changed, and the
+  user's standing preference of three to four short plain-language bullets is in force.
+
 ### Standing user preference recorded 2026-09-26: short, plain answers
 
 - The user asked that the default reply to them be **3-4 short bullet points in simple, easy-to-
