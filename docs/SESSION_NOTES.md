@@ -1,6 +1,39 @@
 # Session notes
 
-2026-09-26 21:58 (latest): answered the review-readiness question on the 28 Gold variables and saved the user's
+2026-09-27 15:54 (latest): resumed, re-validated the delivered work live and recorded new capture-lane evidence; no product file
+changed, nothing re-run, nothing pushed. The last session's notes are committed as `9533679`, and the tree holds nothing else
+of mine. Re-validated rather than assumed: the four focused Gold page test files run 6 of 6, and the three deliverables are
+unchanged on disk - `gold-backtest-outcomes.html` 19,347 bytes sha `61EA4C31`, `gold-backtesting.html` 292,291 bytes sha
+`498E585A`, `data/gold-28-factor-outcomes-20260925.json` 5,398 bytes sha `762BBD6A`. The lane was read, never touched:
+`GoldQualificationWindowTick018` is `Ready`, `LastRunTime` 15:46:02 local with result `0`, `NextRunTime` 15:56, zero missed
+runs, and `tick.log` has grown from 156,410 bytes to 251,879 bytes holding 158 blocks, the last observed at
+`2026-09-27T14:46:03.101Z`. The material new evidence is in block 153 at `2026-09-27T14:06:02.801Z`, the first capture
+activity since the two blocked gold attempts yesterday: `attempted 3, settled 3, blocked 0`, because the three
+`2026-09-28T14:00:00.000Z|feature|...` identities were captured and sealed as `complete_sealed_real_capture` -
+`fred_dfii10_daily` (5 observations, raw `5047e5f6`, envelope sha `5228a35b`), `fred_dgs2_daily` (5 observations, raw
+`033b28c6`, envelope sha `d40c2133`) and `fred_vixcls_daily` (3 observations, raw `41db1603`, envelope sha `4adc72be`), each
+with `http_status` 200, `synthetic` false, mode `real_capture`, coverage 2026-09-18 to 2026-09-24 and an acquisition
+interval of `2026-09-27T14:00:00Z` to `2026-09-28T14:00:00Z` under `availability_strictly_before_close`. Two checks make
+this trustworthy rather than a directory that merely exists: every index's declared `envelope_sha256` equals the envelope
+file's own hash on disk, and the three earlier 09-25 envelopes are byte-identical to yesterday's recorded values
+(`302E4A26`/`58ECE552`/`C51AD9B9` with indexes `9D9497A0`/`26BFE51A`/`D8A3819E`), so nothing frozen was rewritten. The
+capture plan is also unchanged - all six pre-anchor feature captures bind the same `807DC73E` plan, 245,739 bytes - so the
+success came from the provider path rather than from a re-declared plan. Consequence for Monday: the 09-28 anchor now starts
+with its three feature roles already sealed, which leaves only the three gold price roles open, and those have failed closed
+on every attempt so far (09-25 entry `provider_error` HTTP 400, 09-25 exact and delayed `parse_refused` "OANDA XAU_USD
+candles missing"), so the carried 022 item A envelope at about 15:06Z is still likelier to arrive as a reason-coded blocked
+record than a capture; nothing here changes that obligation or its timing. The last five blocks are metadata-only with
+attempted, settled and blocked all zero, so no new blocked attempts and no retries. A credential sweep of all 22 files in
+the lane directory for `FRED_API_KEY`, `OANDA_API_TOKEN`, `Bearer`, `api_key`, `apikey` and `Authorization` is clean.
+Reading note for the next session: block 0 fails a naive `JSON.parse` only because the wrapper's `Out-File -Encoding UTF8`
+prefixes a BOM; the remaining 158 blocks parse, and reading the concurrently appended file with `readFileSync` or
+`ReadAllLines` stays clean. Housekeeping: one read-only scratch script, `.local/tmp-tick-blocks.js`, was written and deleted;
+the only paths I touched remain the two docs and `AGENTS.md`, the other session's session-policy paths stay uncommitted, and
+evaluation stays sealed until `2027-03-25T15:00:00Z`. The review queue is unchanged: whether to open another exploratory
+stage over the spent intervals, whether to promote the accepted verdict page into this canonical folder, the publication
+decision on the two local Gold pages, and the 022 item A envelope at or after the `2026-09-28T16:00:00Z` lane close.
+
+2026-09-26 21:58: answered the review-readiness question on the 28 Gold variables and saved the user's
 standing answer-format preference; no product file changed and nothing was re-run. The question was whether the data
 for all 28 measured Gold variables is actually in the accepted archive and whether it is now ready to be reviewed, and
 the read (all read-only, from the accepted artifacts) answers yes on coverage and "already accepted" on review. From
