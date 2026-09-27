@@ -1017,3 +1017,65 @@ plus two reference sheets and this notes file.
   submissions) as the durable record, and compress only what is said in the chat to the user.
 - Detail is still given on request, and a safety-critical point (for example data that cannot be
   recovered once lost) stays in the short reply even when it costs a bullet.
+
+## 2026-09-27 - Correction: `-WindowStyle Hidden` did NOT stop the flash; hidden `wscript` launcher applied and verified
+
+- User, 2026-09-27 mid-afternoon: *"the screen is still popping up."* The 2026-09-26 close-out that
+  recorded "the user saw no flash" was true for that one tick but did not hold, so the earlier fix is
+  corrected here rather than defended. Nothing else about yesterday's diagnosis changes.
+- **Still the same task, and the lane is healthy.** `\GoldQualificationWindowTick018` still repeats
+  `PT10M`; before today's change its last run was `2026-09-27 15:46:02` with `LastTaskResult 0`, next
+  `15:56:00`; its `tick.log` grew from 6789 lines (2026-09-26 21:56) to 8786 lines
+  (`LastWriteTime 15:46:03`) with a write at every `:x6` boundary through the night, so the flasher and
+  the capture lane are the same object and the lane never missed a tick.
+- **Why `-WindowStyle Hidden` was insufficient - measured, not assumed.** The console window is created
+  by the console host *before* `powershell.exe` parses its own flag, and on this machine the visible
+  window is not even a classic console: a deliberate positive-control launch (`cmd`, default window
+  style, 2026-09-27 `15:47:00`) produced a NEW visible window owned by `WindowsTerminal`
+  (`class CASCADIA_HOSTING_WINDOW_CLASS`, pid 33624) with `conhost`/`cmd` children, i.e. the default
+  terminal application is Windows Terminal, a GUI app that does not honour the hidden show-state hint
+  the way `conhost` does. Every hidden launch in the same window produced **no** window event at all.
+- Method: ignored scratch watcher `tmp\watch-windows-20260927.ps1` (hidden, read-only, no task start,
+  no credentials), polling visible top-level windows every 300 ms via `user32`
+  (`EnumWindows`/`IsWindowVisible`/`GetWindowText`/`GetClassName`/`GetWindowThreadProcessId`) plus
+  process-start sampling for `powershell`/`conhost`/`wscript`/`cmd`/`node`/`mshta`, logging to
+  `tmp\window-watch-20260927.log`. The watcher was itself validated with a positive control (it caught
+  the deliberate visible window) and a negative control (it saw nothing for a hidden launch), so its
+  silence at the tick is meaningful rather than a blind spot.
+- **Change applied 2026-09-27 15:47 local** (user-instructed exception to this worker's live-system
+  restriction, disclosed below). New neutral helper
+  `C:\Users\A17\.trading-agent-dashboard\scripts\run-hidden.vbs` - four functional lines, no data, no
+  credentials: build `WScript.Shell`, `shell.Run command, 0, True`, then `WScript.Quit` with the
+  child's exit code. Task action changed from
+  `powershell -NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File <wrapper>` to
+  `wscript.exe "C:\Users\A17\.trading-agent-dashboard\scripts\run-hidden.vbs" "powershell.exe -NoProfile -ExecutionPolicy Bypass -File D:\trading-agent-dashboard-codex\.local\worktrees\gold-research\backtester\scripts\run_gold_qualification_window_tick_v2.ps1"`.
+  Read-back unchanged: one action, one `TimeTrigger` `PT10M` from `2026-09-24T21:06`, `Hidden False`,
+  `StartWhenAvailable True`, `MultipleInstances IgnoreNew`, principal `A17` `Interactive` `Limited`.
+  The inner command line is byte-identical to the original pre-2026-09-26 action, so the change adds a
+  launcher and nothing else.
+- Launcher probed before use: `wscript.exe run-hidden.vbs "cmd.exe /c exit 7"` returned exit code **7**
+  and created no window, so scheduled-task result codes keep their meaning (`0` still means success and
+  a real failure still surfaces as a non-zero `LastTaskResult`).
+- **Verified on the real tick at 2026-09-27 15:56:01 local:** `LastTaskResult 0`, `NextRunTime
+  16:06:00`, `NumberOfMissedRuns 0`, `tick.log` advanced 8786 -> 8862 lines (`LastWriteTime 15:56:02`),
+  and the watcher logged **no visible window** anywhere in `15:54`-`15:57` - the only window events in
+  that span are the user's own Chrome windows. The tick ran to completion under the launcher and the
+  screen no longer opened a window for it.
+- Revert (one command), back to the original 2026-09-24 action:
+  `Set-ScheduledTask -TaskName 'GoldQualificationWindowTick018' -Action (New-ScheduledTaskAction -Execute 'powershell' -Argument '-NoProfile -ExecutionPolicy Bypass -File D:\trading-agent-dashboard-codex\.local\worktrees\gold-research\backtester\scripts\run_gold_qualification_window_tick_v2.ps1')`.
+  Do **not** delete `run-hidden.vbs` on its own: the tick would then have nothing to launch. Delete it
+  only after the action has been reverted.
+- Residual fallback if a flash ever reappears: `conhost --headless`, or moving the principal to a
+  non-interactive logon - the latter only with the Gold worker validating its credential runner first,
+  because DPAPI user-scope decryption is the known risk with S4U.
+- Correction disclosed to the coordinator in submission `20260927-strategy-window-flash-fix-006`
+  (`status_report`): it supersedes the action-string recommendation in `-004` and the visual
+  "fix holds" claim in `-005`, both of which were still `pending_review` when checked today. That
+  submission's factual content (tick ran, `LastTaskResult 0`, log advanced) still stands; only the
+  conclusion "no flash" was wrong. The request to record the current action string centrally also still
+  stands, now with the launcher path included.
+- Untouched: the background reviewer is still stopped with its stale `status.json` pid; no other task,
+  worker, artifact, frozen window, credential or Layer 1/evaluation input was read or changed. The
+  watcher keeps running until `16:20` local, which covers the `16:06` and `16:16` ticks as extra
+  confidence.
+
