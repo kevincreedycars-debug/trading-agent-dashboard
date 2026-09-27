@@ -1,5 +1,40 @@
 # Session notes
 
+2026-09-27 17:40 (cont.): the user corrected the method, not the question - a marginal comparison against the cohort
+baseline was the wrong instrument, because what was wanted was per-factor "which way should it have gone, which way did
+it go". Rebuilt it as a direction check, read-only again over the same accepted report. New paths:
+`backtester/registries/gold_factor_direction_expectations.v1.json` maps all 28 measured variables and their states onto
+the rules in `logic/agent_gold_direction.md` (v2.0), each entry carrying provenance `declared` (the document states it,
+with the rule quoted verbatim), `interpreted` (the document's condition had to be read onto the report's label) or
+`not_declared` (no directional statement covers the state, so it is printed and never scored);
+`backtester/scripts/report_gold_factor_direction_check.js` scores each state against its own side and writes the JSON,
+markdown and console tables, with `backtester/tests/gold_factor_direction_check.test.js` covering the registry
+validation, the exact-then-suffix expectation lookup, the hit-rate and benchmark arithmetic, every verdict branch, the
+pooled rollup and the committed registry's own invariants (10 tests, all passing); the write-up is
+`docs/GOLD_FACTOR_DIRECTION_CHECK_20260927.md` and local evidence is `tmp/gold-factor-direction-check-20260927.json`,
+`.md` and `.txt`. Method: hit rate is the expected side over that state's directional outcomes, and the benchmark is the
+same side's unconditioned rate for the same horizon, so 60.51% on the session is measured against 55.81% rather than
+against nothing; a state counts as reliable only with n of at least 100, an edge of at least 5pp and the same edge sign
+in every year with at least 20 observations. The answer is stark: of the 25 states that carry a declared direction, none
+is reliable - 25 of 25 are `no_information` on the session, 24 of 25 on the week, and the twenty-fifth
+(`risk_headline_context` above its own median at 60.51% session and 63.69% week, the only state above 60% at a usable
+count) is unstable across years. Twenty of the 25 do point the right way relative to their own drift, so the factors are
+not wrong, they are uninformative: the pooled edges are F1 +1.17pp, F2 +0.35pp, F3 +1.16pp, F4 +2.57pp, F5 +0.60pp, F8
+-1.61pp and F9 the single 60.51%/63.69% reading whose stress-versus-calm mapping is an interpretation and whose calm
+half the document forbids scoring as bearish. Three factors cannot be tested against this report at all: F6 (VIX, weight
+10) because the document's rule is absolute bands and the report splits at its own median, F7 (surprise, weight 6)
+because the sign strata are family-scoped and per-family conventions are declared unestablished, and F10 (regimes,
+weight 2) because the report does not reproduce the agent's categorical regime names. 26 of the 62 daily-cohort states
+are published unscored with raw rates, including `usd_broad_index_level` above its own median, which was the tone cut's
+largest week reading (65.63% up, n=480) and which the document simply does not make a claim about. Two error paths worth
+recording: the first version counted the report's 11 `unavailable` cells as unmapped states, so availability labels are
+now classified separately and the unmapped count is zero, and the doc's tables are spliced from the generated artifact
+rather than retyped so the numbers in the write-up are the numbers measured. Live: the check ran on
+`ivr-coverage-019-20260925-r2/individual-variable-report.json` and the full local suite passes afterwards. Still open:
+the verifier and both extractors remain read-only, no new data was collected, no Layer 1 logic changed, the combination
+circuit stays closed and evaluation stays sealed until `2027-03-25T15:00:00Z`; the three user decisions from this
+morning are still unanswered.
+
 2026-09-27 17:05 (cont.): ran the factor-tone question the user asked first, read-only over the accepted report, and the
 answer is thin rather than promising. New paths: `backtester/scripts/report_gold_factor_tone.js`, its test file
 `backtester/tests/gold_factor_tone.test.js` and `docs/GOLD_FACTOR_TONE_20260927.md`, with local evidence at
