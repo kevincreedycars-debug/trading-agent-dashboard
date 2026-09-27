@@ -1,0 +1,105 @@
+{
+  "version": "gold-data-verifier-sampling-v1",
+  "created": "2026-09-27",
+  "status": "sampling_policy_declaration_not_evidence",
+  "research_only": true,
+  "objective": "Declare, before any run, how the independent data verifier draws random samples from already-gathered backtester output and what it re-checks against that same artefact. This file declares sampling policy and tolerances only. It contains no results, no accuracy claim and no edge claim.",
+  "independence_rule": "The verifier re-derives each checked value from the artefact itself: arithmetic identities, ledger partitions, price-to-outcome recomputation and payload hashes. It never trusts a stored summary, never re-runs the evaluation, and never writes to the ledger, a capture lane, a registry or the sealed prospective window.",
+  "sampling": {
+    "method": "seeded_fisher_yates_without_replacement",
+    "generator": "mulberry32_uint32",
+    "seed": 20260927,
+    "default_sample_size": 40,
+    "max_sample_size": 5000,
+    "unit": "prediction_row_or_ledger_record_or_report_cell_or_capture_envelope",
+    "replacement": false,
+    "reproducibility": "The same seed, sample size and source ordering reproduce the same sampled units. Every sampled unit key is written into the report, so any finding can be replayed by hand."
+  },
+  "targets": [
+    {
+      "id": "checker_rows",
+      "unit": "stored-vs-recomputed prediction row",
+      "population_expected": 608,
+      "default_source": "data/backtester-checker-gold-24h-2024-2026.json",
+      "checks": [
+        "every compared field present on both sides is equal",
+        "every nested block present on both sides is equal",
+        "every difference entry and factor comparison carries a PASS status",
+        "net edge equals bull case minus bear case",
+        "participation equals active directional weight",
+        "active directional weight equals bull plus bear weighted totals",
+        "case split is 100 or explicitly absent",
+        "the stored evaluation label reproduces from the recorded open/close prices and flat threshold",
+        "the declared row summary reconciles with a whole-file recount"
+      ]
+    },
+    {
+      "id": "combination_ledger",
+      "unit": "candidate record",
+      "population_expected": 4956,
+      "default_source": "<gold-research worktree>/tmp/combination-run-024-20260926-rev3/combination-ledger.jsonl",
+      "checks": [
+        "direction counts sum to the record n",
+        "magnitude observations equal the record n",
+        "n never exceeds matched anchors",
+        "the four exclusion reasons partition every attempt",
+        "endpoint denominators sum to all computed",
+        "year breakdown sums to the record n and each year's directions sum to that year's n",
+        "eligibility min_n is the declared value and matches the reported or ineligible status",
+        "whole-file census reconciles with the accepted 28-factor census"
+      ]
+    },
+    {
+      "id": "report_cells",
+      "unit": "variable, cohort, horizon, group and state cell",
+      "population_expected": 4129,
+      "default_source": "<gold-research worktree>/tmp/ivr-coverage-019-20260925-r2/individual-variable-report.json",
+      "checks": [
+        "direction counts sum to the cell n",
+        "magnitude observations equal the cell n",
+        "a year breakdown never sums to more than its own cell n",
+        "each year's directions sum to that year's n",
+        "small_sample flag matches the declared minimum observations"
+      ]
+    },
+    {
+      "id": "capture_envelopes",
+      "unit": "sealed capture envelope with its index entry",
+      "population_expected": null,
+      "default_source": "<gold-research worktree>/backtester/tmp (recursive capture_envelope.json)",
+      "checks": [
+        "the decoded payload hash equals the declared raw hash",
+        "the index payload hash equals the envelope metadata raw hash",
+        "the envelope file hash equals the index envelope hash",
+        "index metadata and bindings match the envelope metadata and bindings",
+        "the envelope state is complete_sealed",
+        "the payload observation count matches the declared observation count when the payload exposes one"
+      ],
+      "fixture_rule": "Envelopes whose metadata declares synthetic true are the drift and recovery fixtures that exist to prove the collectors detect tampering. Their value disagreements are counted and reported as injected fixture behaviour, and never reported as live faults. Envelopes with synthetic false are real captures and every disagreement is a fault."
+    }
+  ],
+  "tolerances": {
+    "float_absolute": 1e-9,
+    "counts": "exact_integer",
+    "hashes": "sha256_exact",
+    "strings": "exact"
+  },
+  "fixture_lane_patterns": [
+    "gold-016-drift-",
+    "gold-016-recovery-",
+    "gold-016-seal-",
+    "gold-016-bind-",
+    "gold-017-t-seal-",
+    "gold-017-t-smoke-",
+    "coord-016-review-"
+  ],
+  "fixture_lane_note": "These path fragments identify the collector test lanes that exist to prove drift, recovery and sealing detection, including lanes whose stored index hash is intentionally stale. They are classified as fixtures so their injected disagreements are reported as fixture behaviour rather than live faults. Declare an empty list (or pass --fixture-pattern '') to judge those lanes as faults as well; envelopes whose metadata declares synthetic true are always treated as fixtures.",
+  "declared_min_n": 20,
+  "status_enum": ["reported", "ineligible", "empty"],
+  "limits": [
+    "Independent re-checking of recorded output only. The verifier cannot confirm anything the sources never recorded, and it cannot confirm that a provider sent what the envelope claims.",
+    "Random sampling bounds effort, not error. A clean sample is consistent with, not proof of, a clean population; sample sizes and the seed are declared so the covered units are known.",
+    "No measurement is added, no new data is gathered, no Layer 1 logic is touched and the sealed prospective window is not read.",
+    "A passing verification run is not evidence of predictive accuracy, timing, profitability or trading edge."
+  ]
+}

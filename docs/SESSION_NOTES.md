@@ -1,5 +1,47 @@
 # Session notes
 
+2026-09-27 16:49 (latest): built the random-verification sub-project the user asked for and ran it live against the
+acceptance artefacts; no product file, registry, ledger, capture lane or sealed window was touched, nothing was re-run
+and nothing was pushed. New paths, all read-only in effect: `backtester/lib/gold_data_verifier.js` (the logic),
+`backtester/scripts/run_gold_data_verifier.js` (the runner), `backtester/registries/gold_data_verifier_sampling.v1.json`
+(the sampling policy declared before any run: seed `20260927`, 40 units per target, tolerances, target checks, fixture-lane
+patterns, limits), `backtester/tests/gold_data_verifier.test.js` and `docs/GOLD_DATA_VERIFIER.md`. Method rather than
+promise: a seeded mulberry32 generator drives a Fisher-Yates draw without replacement, so the same seed, sample size and
+source order reproduce the same units and every sampled unit key is written into the report. Four targets are re-derived
+from the artefact itself instead of trusted: the 608-row checker dataset (every compared field and nested block that
+exists on both sides must be equal, every difference entry and factor comparison must be PASS with a zero difference, the
+score identities must hold, and the stored evaluation label is recomputed from the recorded open and close prices and the
+flat threshold - that recomputation reproduced 563 of 563 evaluable rows and correctly left the 45 not-evaluable rows
+alone); the 4,956-record combination ledger (direction counts summing to n, magnitude n equal to n, n inside matched
+anchors, the four exclusion reasons partitioning each attempt, endpoint denominators summing to all computed, year
+breakdowns summing to n, min_n and status agreement, plus a whole-file census reconciled against the accepted 28-factor
+census); the 4,129 report cells across all 28 measured variables (direction and magnitude arithmetic, year breakdowns that
+must not exceed their own cell n, the small-sample flag against the declared minimum observations); and all 324 capture
+envelopes (payload hash against the declared raw hash, index payload hash against the envelope metadata, envelope file
+hash against the index, index metadata and bindings against the envelope, sealed state, and payload observation count).
+Results, not expectations: seeds `20260927` at 40 units per target and `424242` at 150 units per target both finished
+`pass` with zero mismatches - 160 and 600 units re-checked - the ledger recount reproduces 4,956 records (2,745 reported /
+704 ineligible / 1,507 empty), 441,319 observations, 441,781 matched anchors and the 245,784 positive / 195,535 negative /
+0 exact-zero split exactly as accepted, the checker summary recounts 608 of 608 pass with 608 exact matches, and the six
+real `2026-09-28` feature envelopes in `gold-qualification-window-018` verify 6 of 6. Four properties of the recorded data
+are now on record because the first run surfaced them: the accepted census declares a status class `unavailable` of 0 that
+no ledger record carries (the check now treats an absent class as zero); an event-cohort year breakdown can sum below its
+own cell n (12 of 40 sampled cells, 80 unattributed observations) because some observations carry no attributable year
+(the check now forbids exceeding n and records the shortfall); the `gold-017-t-seal-*` test lanes carry index hashes that
+do not cover their envelope bytes while the real window-018 captures hash exactly (declared fixture patterns now classify
+them, and `--strict-fixtures` judges them as faults); and the checker's `conviction_model` carries three keys the stored
+block omits, which are recorded as composition notes while every shared key is compared. Validation: the new test file is
+11 of 11, and the full local suite runs 420 tests with 417 passing; the three failures are the pre-existing
+`backtester/tests/secret_scanner.test.js` cases, which build their own temporary git repositories and copy only
+`scripts/check-repo-for-secrets.ps1`, so they are independent of this change and the tree's only tracked modification
+remains the other session's `tools/strategy-node/Strategy.code-workspace`. Still open and deliberately untouched: the
+factor-tone exploration the user asked for first (which states consistently point the same way, whether any clears a
+sixty-per-cent same-direction rate, and whether a bullish reading sets the next session or the next week) is specified but
+not started, so no result from it exists yet; there is no further data collection; and no Layer 1 logic was changed.
+Housekeeping: the read-only scratch scripts in `.local/` were deleted, the verifier reports sit in the ignored `tmp/`
+folder as local evidence, and evaluation stays sealed until `2027-03-25T15:00:00Z`.
+
+
 2026-09-27 15:54 (latest): resumed, re-validated the delivered work live and recorded new capture-lane evidence; no product file
 changed, nothing re-run, nothing pushed. The last session's notes are committed as `9533679`, and the tree holds nothing else
 of mine. Re-validated rather than assumed: the four focused Gold page test files run 6 of 6, and the three deliverables are
