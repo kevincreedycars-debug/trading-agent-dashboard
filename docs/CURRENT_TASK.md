@@ -28,10 +28,13 @@ through the v2 wrapper and must not be disturbed. It was observed read-only in t
 trigger, `LastRun` 20:46:01 local, `LastTaskResult` 0, zero missed runs). No prospective observation or outcome
 may be read before `2027-03-25T15:00:00Z`.
 
-One local page was added on 2026-09-27 and changes nothing above: `gold-direction-scorecard.html` renders the accepted
+One page was added on 2026-09-27 and changes nothing above: `gold-direction-scorecard.html` renders the accepted
 direction check as a self-contained research surface (25 scored states, every hit rate beside its own drift floor, with
-the unscored, neutral and unreadable states printed rather than hidden). It measures nothing new, exists in this folder
-only and is not published, so publishing it belongs with the same open decision as the older local Gold pages.
+the unscored, neutral and unreadable states printed rather than hidden). It measures nothing new. The user authorised
+publication on the evening of 2026-09-27 and chose the three-page scope, so the scorecard with its two sibling Gold
+pages is public in production `main` `c91bd6f` behind a `Gold Direction` link on the dashboard; the deeper repo-relative
+evidence links inside those pages stay local-only, and whether to publish those evidence artefacts is the part of the
+publication decision that remains open.
 
 Next: hold, and take the 022 item A envelope at the lane close. No further research is authorised. Two precise
 unresolved decisions are the user's: whether to open another exploratory stage over the spent intervals, since

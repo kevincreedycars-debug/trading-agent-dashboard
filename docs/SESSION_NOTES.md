@@ -1,5 +1,24 @@
 # Session notes
 
+2026-09-27 22:05 (cont.): published the Gold research trio. The user authorised publication and chose the three-page
+scope - the new scorecard plus `gold-backtesting.html` and `gold-backtest-outcomes.html`, so the cross-links between
+them resolve - which leaves the deeper repo-relative evidence links local on purpose. Public is production `main`
+`c91bd6f` ("Publish the Gold direction scorecard page with its two sibling Gold pages"), built on production `ea50402`
+fetched first and never on this branch, and it adds exactly three root pages and one line: a `Gold Direction` topbar
+link beside `North Star Brief` and `Standing Dashboard` in the published `index.html`. Method: cut the release worktree
+at `.local/gold-direction-release` (`release/gold-direction-scorecard-20260927`), took the three pages from `f280f3c`
+with `git checkout`, and checked each released file against the canonical one after line-ending normalisation - all
+three identical - so the published bytes are the bytes the existing guards measured. Verified after the push: the Pages
+build for `c91bd6f` reported `built` with no error, all four live URLs return 200, the live `index.html` carries the new
+link, and the live scorecard page is byte-identical to the committed file (143102 characters, first difference index
+-1). Known and accepted: the eleven repo-relative links inside the three published pages (the expectations registry,
+the direction-check write-up, six data and backtester evidence paths on the evidence page, three docs on the outcomes
+page) point at files that are still local-only, so they 404 from the public site; publishing those artefacts is a
+separate decision that stays open. Nothing else moved: no Layer 1 change, no live workflow or warehouse action, the
+combination circuit stays closed and evaluation stays sealed until `2027-03-25T15:00:00Z`.
+
+
+
 2026-09-27 21:30 (cont.): turned the accepted direction check into a page, then repaired the layout that the first
 draft exposed. The page is generated rather than typed: `backtester/lib/gold_direction_scorecard.js` shapes an
 already-built direction check into a `gold-direction-scorecard-v1` payload and refuses to shape anything whose
