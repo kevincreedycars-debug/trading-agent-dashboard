@@ -28,6 +28,11 @@ through the v2 wrapper and must not be disturbed. It was observed read-only in t
 trigger, `LastRun` 20:46:01 local, `LastTaskResult` 0, zero missed runs). No prospective observation or outcome
 may be read before `2027-03-25T15:00:00Z`.
 
+One local page was added on 2026-09-27 and changes nothing above: `gold-direction-scorecard.html` renders the accepted
+direction check as a self-contained research surface (25 scored states, every hit rate beside its own drift floor, with
+the unscored, neutral and unreadable states printed rather than hidden). It measures nothing new, exists in this folder
+only and is not published, so publishing it belongs with the same open decision as the older local Gold pages.
+
 Next: hold, and take the 022 item A envelope at the lane close. No further research is authorised. Two precise
 unresolved decisions are the user's: whether to open another exploratory stage over the spent intervals, since
 the undeclared `event_releases` cell at 40,324 would need a selection rule and the other horizons, context

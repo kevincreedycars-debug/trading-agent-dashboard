@@ -1,5 +1,52 @@
 # Session notes
 
+2026-09-27 21:30 (cont.): turned the accepted direction check into a page, then repaired the layout that the first
+draft exposed. The page is generated rather than typed: `backtester/lib/gold_direction_scorecard.js` shapes an
+already-built direction check into a `gold-direction-scorecard-v1` payload and refuses to shape anything whose
+accepted counts have moved (28 declared variables, 965 daily anchors with 964 carrying an outcome, 5,115 event rows,
+session n 964 against a 55.81% floor and week n 960 against 58.23%, 25 scored states, 26 unscored, 10 factors and
+100 weight points), `backtester/scripts/build_gold_direction_scorecard.js` re-cuts the accepted 019 revision 2 report
+through `backtester/registries/gold_factor_direction_expectations.v1.json` and writes
+`data/gold-direction-scorecard-20260927.json` plus the self-contained `gold-direction-scorecard.html` from
+`backtester/templates/gold-direction-scorecard.html`, and neither file measures, selects, ranks or predicts anything.
+The page puts the drift floor above the factor tables on purpose and reads: 25 scored states, each hit rate beside its
+own benchmark, 7 of 10 factors carrying at least one scored state, 20 states printed unscored with the reason, 6
+declared neutral, 39 unreadable rules, 22 per-variable coverage rows and 4 source digests; the verdict line is 25 of
+25 no information on the session and 24 plus one unstable-across-years on the week. A fresh build reproduces those
+counts, and once the build timestamp is normalised the committed page is byte-identical to a rebuild, so the artifact
+is not stale. Cross-links were added from `index.html` (`Gold Direction`), `gold-backtesting.html` and
+`gold-backtest-outcomes.html`, the root files carrying the same nav line as their templates.
+
+The defect worth recording is the layout, and its cause was not the tables but one CSS shorthand. The first render
+starved tables inside the side-by-side two-column cards, so headers and cells broke mid-token ("Weig ht", "decla
+red") and a card quietly gained a horizontal scrollbar: 146 geometry violations measured across twelve widths.
+`overflow-wrap:anywhere` on `th,td` lowers a table's min-content width, so a fixed `1fr 1fr` card grid was free to
+squeeze a dense table into half a screen until tokens broke. The fix stops starving the track instead of breaking
+words: `.columns.wide-tables` uses `repeat(auto-fit,minmax(min(100%,640px),1fr))` so two dense tables share a row only
+while a 640px track each still fits and stack below that, cells use `break-word`, long identifiers and 64-character
+digests carry deliberate `<wbr>` points (after separators, and every eight digest characters) so any break lands
+where a reader expects it, the table's old `min-width:720px` is gone, and the compact density query moved from 720px
+to 860px. Measured after: 0 violations at 1440, 1100, 900, 861, 860, 800, 768, 740, 721, 720, 640 and 390 px, every
+card at least as wide as the table inside it, no horizontal document scroll. Two traps recorded. First, the audit that
+produced those numbers (`tmp/gold-direction-scorecard-geometry.cjs`) is git-ignored and could regress silently, so the
+durable form is a browser probe: `starvedCells` in
+`backtester/tests/gold_direction_scorecard_page.browser.test.js` measures the longest unbreakable run in every header
+and body cell at 1440, 860, 768, 721 and 390 px against that cell's own content box, treats a `<wbr>` as a deliberate
+boundary, flags any card whose wrapper scrolls, skips stacked tables so a narrow layout is not judged as starving, and
+asserts the document never scrolls sideways; it caught a real gap on its first run, because Scored states overflowed
+its card by 46px at 721px while compact density still began at 720px, and the 860px breakpoint cleared that with 78px
+of headroom. Second, the root `gold-direction-scorecard.html` is a build artifact: edit the template and rebuild
+through the script, never by hand. Guards now: 9 scorecard shaping tests, 10 direction-check tests and 3 browser tests
+(2 page, 1 dashboard link), all passing, and the local suite re-ran over 87 files at 445 tests with 443 passing and
+all three browser cases ok, the only two failures being the console-width secret-scanner cases, where the scanner's
+own output table truncates `assignment-known-secret` to `assignment-known...` and the assertion regex then misses; they
+fail identically in isolation with the scanner script and its test unmodified and they are the shell-dependent family
+already in this folder's older suite logs, not a property of this change. Read-only throughout: no new data, no Layer 1
+change, no live workflow or warehouse action, the combination circuit stays closed and evaluation stays sealed until
+`2027-03-25T15:00:00Z`; the page is in-repo only and unpublished, so publication joins the open decisions rather than
+being assumed.
+
+
 2026-09-27 17:40 (cont.): the user corrected the method, not the question - a marginal comparison against the cohort
 baseline was the wrong instrument, because what was wanted was per-factor "which way should it have gone, which way did
 it go". Rebuilt it as a direction check, read-only again over the same accepted report. New paths:
