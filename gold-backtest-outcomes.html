@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Gold 28-Factor Outcomes · Research only</title>
+<style>
+:root{color-scheme:dark;--bg:#080e16;--panel:#101b29;--line:#304358;--text:#e8eef5;--muted:#b2c1d0;--amber:#f2c167;--blue:#8acfff;--warn:#ffd2be}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:15px/1.55 "IBM Plex Sans",system-ui,sans-serif}
+main{max-width:1380px;margin:auto;padding:28px 24px 60px}h1,h2,h3,p{margin:0 0 12px;overflow-wrap:anywhere}
+h1{font-size:clamp(26px,4vw,40px);line-height:1.15}h2{font-size:21px}h3{font-size:16px}a{color:var(--blue)}
+header{display:flex;gap:24px;justify-content:space-between;align-items:flex-start;margin-bottom:20px}
+header>*{min-width:0}.links{display:flex;gap:16px;flex-wrap:wrap}.links>*{min-width:0;overflow-wrap:anywhere}
+.eyebrow{font:12px/1.5 "IBM Plex Mono",monospace;letter-spacing:.12em;color:var(--amber);text-transform:uppercase}
+.muted,small{color:var(--muted)}
+.notice{border:1px solid #81642f;background:#211e17;padding:18px;margin:18px 0;color:#ffe0a2;overflow-wrap:anywhere}
+.notice.critical{border-color:#9b5744;background:#281a18;color:var(--warn)}
+.metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:18px 0}
+.metric,.panel{border:1px solid var(--line);background:var(--panel);padding:18px;min-width:0;overflow-wrap:anywhere}
+.metric strong{display:block;font:30px/1.35 "IBM Plex Mono",monospace;overflow-wrap:anywhere}
+.metric span{color:var(--muted)}
+.panel{margin-top:18px}.columns{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:18px}
+.columns .panel{margin-top:0}
+.table-wrap{overflow-x:auto;max-width:100%}
+table{width:100%;min-width:0;border-collapse:collapse;text-align:left;font-size:14px}
+table.counts td:last-child{text-align:right;font:13px/1.5 "IBM Plex Mono",monospace;white-space:normal}
+table.counts th:last-child{text-align:right;min-width:6em;overflow-wrap:normal}
+table.wide{min-width:520px}
+th,td{padding:10px 12px;border-bottom:1px solid var(--line);overflow-wrap:anywhere;vertical-align:top}
+th{color:var(--muted);font-weight:500}td:first-child{overflow-wrap:anywhere}
+.hash{font:12px/1.6 monospace;overflow-wrap:anywhere;color:var(--muted)}
+ul.limits{margin:0;padding-left:20px}ul.limits li{margin-bottom:10px;overflow-wrap:anywhere}
+blockquote{margin:0 0 12px;padding-left:14px;border-left:3px solid var(--amber);overflow-wrap:anywhere}
+footer{margin-top:26px;padding-top:16px;border-top:1px solid var(--line);color:var(--muted);overflow-wrap:anywhere}
+@media(max-width:860px){.columns{grid-template-columns:1fr}}
+@media(max-width:720px){main{padding:18px 12px 40px}header{flex-direction:column;gap:10px}.metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.metric,.panel{padding:14px}.metric strong{font-size:clamp(17px,5.5vw,28px)}th,td{padding:9px 7px}table{font-size:13px}
+table.wide{min-width:0}table.wide thead{position:absolute;left:-9999px}table.wide tr{display:block;border-bottom:1px solid var(--line)}table.wide td{display:block;border:0;padding:4px 0}table.wide td:first-child{color:var(--muted)}}
+@media(max-width:380px){.metrics{grid-template-columns:1fr}}
+</style>
+</head>
+<body><main>
+<header>
+  <div>
+    <p class="eyebrow">XAU/USD · Research only · Exploratory</p>
+    <h1>Gold 28-factor backtest outcomes</h1>
+    <p class="muted" id="headline">—</p>
+  </div>
+  <nav class="links" aria-label="Related pages">
+    <a href="gold-backtesting.html">Gold evidence page ↗</a>
+    <a href="gold-direction-scorecard.html">Direction scorecard ↗</a>
+    <a href="index.html">Dashboard ↗</a>
+  </nav>
+</header>
+
+<div class="notice critical">
+  <strong>Read this first.</strong> This page reports an <em>exploratory census</em> of 28 already-measured Gold research
+  variables over intervals that are already spent. It is <strong>not</strong> a prediction, an accuracy score, a ranking,
+  a signal or a trading result, and no combination shown here may be treated as one.
+  <span id="flags" class="hash"></span>
+</div>
+
+<p class="eyebrow">Headline counts</p>
+<div class="metrics" aria-label="Headline candidate counts">
+  <div class="metric"><span>Candidates evaluated</span><strong id="c-evaluated">—</strong></div>
+  <div class="metric"><span>With a reportable sample</span><strong id="c-reported">—</strong></div>
+  <div class="metric"><span>Below the 20-observation floor</span><strong id="c-ineligible">—</strong></div>
+  <div class="metric"><span>Never matched an anchor</span><strong id="c-empty">—</strong></div>
+</div>
+<div class="metrics" aria-label="Headline observation counts">
+  <div class="metric"><span>Attempts evaluated</span><strong id="c-attempts">—</strong></div>
+  <div class="metric"><span>Matched anchors</span><strong id="c-anchors">—</strong></div>
+  <div class="metric"><span>Observations</span><strong id="c-observations">—</strong></div>
+  <div class="metric"><span>Median observations per candidate</span><strong id="c-median">—</strong></div>
+</div>
+
+<section class="panel">
+  <h2>Declared before anything was evaluated</h2>
+  <p class="muted">The candidate space and its rules were fixed and committed first, so no threshold, horizon or
+  combination could be chosen after seeing a result. Nothing was ranked and nothing was truncated.</p>
+  <div class="table-wrap" tabindex="0" role="region" aria-label="Declared cell details">
+    <table><tbody id="declaration"></tbody></table>
+  </div>
+  <p class="hash" id="declaration-hashes"></p>
+</section>
+<section class="columns">
+  <div class="panel">
+    <h2>Where every observation came from</h2>
+    <p class="muted">Each observation is one anchor and one endpoint definition. The three endpoint groups must add
+    up to the total; they are shown separately and never merged.</p>
+    <div class="table-wrap" tabindex="0" role="region" aria-label="Endpoint denominators">
+      <table class="counts"><thead><tr><th scope="col">Endpoint group</th><th scope="col">Observations</th></tr></thead><tbody id="denominators"></tbody></table>
+    </div>
+    <p class="muted" id="anchors-note">—</p>
+  </div>
+  <div class="panel">
+    <h2>Direction split (not a result)</h2>
+    <p class="muted">Directional outcomes are simply what the archive contains. A near balance here is a property of
+    the data, not a finding about Gold, and no significance test is applied or possible.</p>
+    <div class="table-wrap" tabindex="0" role="region" aria-label="Direction split">
+      <table class="counts"><thead><tr><th scope="col">Outcome</th><th scope="col">Observations</th></tr></thead><tbody id="directions"></tbody></table>
+    </div>
+  </div>
+</section>
+
+<section class="panel">
+  <h2>Why candidates did not qualify</h2>
+  <p class="muted">These are structural limits of the archive, not evidence about Gold. A candidate can appear in more
+  than one row.</p>
+  <div class="table-wrap" tabindex="0" role="region" aria-label="Exclusions with counts">
+    <table class="counts"><thead><tr><th scope="col">Reason</th><th scope="col">Candidates</th></tr></thead><tbody id="exclusions"></tbody></table>
+  </div>
+</section>
+
+<section class="panel">
+  <h2>How thin the evidence per candidate is</h2>
+  <p class="muted">The spread matters more than the median: a third of candidates had no matched anchor at all, which
+  is why the archive can describe this space but cannot be used to choose from it.</p>
+  <div class="columns">
+    <div class="table-wrap" tabindex="0" role="region" aria-label="Candidate observation quantiles">
+      <table class="counts"><thead><tr><th scope="col">Statistic</th><th scope="col">Observations</th></tr></thead><tbody id="quantiles"></tbody></table>
+    </div>
+    <div class="table-wrap" tabindex="0" role="region" aria-label="Reportable sample size buckets">
+      <table class="counts"><thead><tr><th scope="col">Reportable sample band</th><th scope="col">Candidates</th></tr></thead><tbody id="buckets"></tbody></table>
+    </div>
+  </div>
+</section>
+
+<section class="panel">
+  <h2>What this page does not claim</h2>
+  <ul class="limits" id="limits"></ul>
+  <p class="muted" id="dependence">—</p>
+</section>
+
+<section class="panel">
+  <h2>The accepted verdict, quoted</h2>
+  <p class="muted">Taken verbatim from the accepted one-page verdict so the wording is the reviewer's, not a
+  rephrasing. Read the whole page for the reasoning.</p>
+  <div id="quotes"></div>
+  <p class="hash" id="verdict-ref"></p>
+</section>
+
+<section class="panel">
+  <h2>What would change the answer</h2>
+  <ul class="limits" id="change-it"></ul>
+  <p class="muted">Neither path is authorised by this work, and this page must never be read as licence to start one.</p>
+</section>
+
+<section class="panel">
+  <h2>Where to check every number</h2>
+  <p class="muted">Local research artifacts, retained with hashes. Raw provider data and the run ledger stay out of
+  the published page; the hashes below are the evidence.</p>
+  <div class="table-wrap" tabindex="0" role="region" aria-label="Source artifacts and hashes">
+    <table class="wide"><thead><tr><th scope="col">Artifact</th><th scope="col">Path</th><th scope="col">SHA-256</th></tr></thead><tbody id="sources"></tbody></table>
+  </div>
+  <p class="muted">Durable documents: <a href="docs/GOLD_BACKTEST_VERDICT_20260925.md">verdict page</a> ·
+  <a href="docs/GOLD_COMBINATION_ANALYSIS_023.md">stage analysis</a> ·
+  <a href="docs/GOLD_VARIABLE_FINDINGS_AND_COVERAGE.md">28-variable digest</a>.</p>
+</section>
+
+<footer>
+  <p id="footer-line">—</p>
+  <p>Research only. Backtesting is downstream of the live agents, it never drives them, and a passing replay or a
+  descriptive result is not proof of deployment, timing or edge.</p>
+</footer>
+<script type="application/json" id="outcomes-data">{"schema_version":"gold-28-factor-outcomes-v1","research_only":true,"exploratory":true,"prediction_claimed":false,"accuracy_claimed":false,"trading_result_computed":false,"headline":"Exploratory census of the 28 measured Gold factors on already-consumed intervals: it can describe the space, it cannot choose from it.","run_id":"gold-combination-run-024-20260926-rev3","declaration":{"commit":"5fe48767","registry_path":"backtester/registries/gold_combination_batch_daily_h24_and.v2.json","registry_sha256":"c19315e696e9e1a7ef6dd35725b949f6037e2d3c47d566093f1eb83e7b6d058a","candidate_list_sha256":"db96c728d597b59f274f0e2b2b2d64f105f029a4e8508fb3ada1e946923c7c15","cell":{"cohort":"daily_snapshot_anchors","horizon":"h24_post_event","endpoint_group":"all_computed","operator":"and","context_field":"prior_5session_return_sign"},"atoms_declared":51,"applicable_variables":22,"cross_variable_pairs":1239,"context_options":4,"candidates_declared":4956,"cap":20000,"selection":"complete_enumeration","ranking":"none","truncation":"none","declared_before_evaluation":true},"coverage":{"candidates_declared":4956,"candidates_evaluated":4956,"status_totals":{"reported":2745,"ineligible":704,"empty":1507,"unavailable":0},"attempts":4782540,"matched_anchors":441781,"observations":441319,"direction_split":{"positive":245784,"negative":195535,"exact_zero":0},"anchors":{"scheduled":965,"computed_outcomes":964},"duration_ms":43124},"denominators":{"rule":"exact_offset_elapsed + delayed_offset_endpoint + session_close_endpoint = all_computed","all_computed":441319,"exact_offset_elapsed":350283,"delayed_offset_endpoint":91036,"session_close_endpoint":0,"reconciled":true},"candidate_n":{"median":74,"q1":0,"q3":156,"min":0,"max":481,"reported_by_bucket":{"20_to_99":660,"100_to_299":1993,"300_to_599":92},"year_support_buckets":{"0":107,"1":145,"2+":2493}},"exclusions":[{"label":"Candidates below the declared min_n of 20","count":704},{"label":"Candidates whose atoms and context never coexisted on one anchor","count":1507},{"label":"Candidates with at least one unavailable input on an anchor (median 8, maximum 51)","count":4673},{"label":"Matched outcomes not computed","count":462}],"limits":["Exploratory association only: no prediction, accuracy, timing, profitability or trading edge.","Candidates share anchors and endpoint groups overlap in calendar time, so attempts are dependent and no significance claim is supported.","The seven unmeasured variables stay visible and unmeasured; fed_bias and inflation_signal remain local redefinitions, not the live Layer 1 fields."],"dependence":{"shared_anchors_across_candidates":true,"same_instant_releases_share_outcome":true,"endpoint_groups_overlap_in_calendar_time":true,"serial_dependence_expected":true,"significance_claim_made":false,"effective_sample_size_estimated":false,"statement":"Every candidate shares anchors with many others, so attempts are dependent, pooled counts are not independent samples and no significance claim is supported."},"verdict":{"path":"docs/GOLD_BACKTEST_VERDICT_20260925.md","sha256":"7198e24e45755632e2314f09c50fe6ff3151a120f0226c87976133d97d85d765","quotes":["the 2023-2026 archive can describe this space, but it cannot support choosing from it","Nothing here is a verdict on accuracy, prediction, timing or edge.","The attempts are dependent, because every candidate shares anchors, so their results move together.","Two things could settle the question, and neither is authorized by this assignment."]},"what_would_change_it":["The sealed prospective window, whose evaluation stays sealed until 2027-03-25T15:00:00Z.","A new licensed dataset with declared vintages; either path needs its own bounded assignment, and neither exists today."],"sources":[{"label":"Declaration registry","path":"backtester/registries/gold_combination_batch_daily_h24_and.v2.json","sha256":"c19315e696e9e1a7ef6dd35725b949f6037e2d3c47d566093f1eb83e7b6d058a"},{"label":"Run ledger","path":"combination-ledger.jsonl","sha256":"f02a88cb5d03097e982c66081827a3403f34086dc2ae16c2e10279bceabc6707"},{"label":"Run summary","path":"combination-summary.json","sha256":"d594646d2e0ae30158fd95fa464de5b5c9cd20b6f530f116e0e8f4db98bd38d5"},{"label":"Run manifest","path":"execution-manifest.json","sha256":"1ec2a382f9944cd598993444cb478a8741244b004fd199fa49c04f335dcb34d4"},{"label":"Accepted verdict page","path":"docs/GOLD_BACKTEST_VERDICT_20260925.md","sha256":"7198e24e45755632e2314f09c50fe6ff3151a120f0226c87976133d97d85d765"}]}</script>
+<script>
+(function render(){
+  const data = JSON.parse(document.getElementById('outcomes-data').textContent);
+  const set = (id, text) => { document.getElementById(id).textContent = text; };
+  const count = value => Number(value).toLocaleString('en-GB');
+  const row = (target, cells) => {
+    const tr = document.createElement('tr');
+    for (const cell of cells) { const td = document.createElement('td'); td.textContent = String(cell); tr.appendChild(td); }
+    document.getElementById(target).appendChild(tr);
+  };
+  const list = (target, items) => {
+    const host = document.getElementById(target);
+    for (const item of items) { const li = document.createElement('li'); li.textContent = String(item); host.appendChild(li); }
+  };
+
+  set('headline', data.headline);
+  set('flags', `Acceptance flags recorded in the run summary: exploratory ${data.exploratory}, prediction claimed ${data.prediction_claimed}, accuracy claimed ${data.accuracy_claimed}, trading result computed ${data.trading_result_computed}.`);
+  set('c-evaluated', count(data.coverage.candidates_evaluated));
+  set('c-reported', count(data.coverage.status_totals.reported));
+  set('c-ineligible', count(data.coverage.status_totals.ineligible));
+  set('c-empty', count(data.coverage.status_totals.empty));
+  set('c-attempts', count(data.coverage.attempts));
+  set('c-anchors', count(data.coverage.matched_anchors));
+  set('c-observations', count(data.coverage.observations));
+  set('c-median', count(data.candidate_n.median));
+
+  const cell = data.declaration.cell;
+  row('declaration', ['Cohort', cell.cohort]);
+  row('declaration', ['Horizon', cell.horizon]);
+  row('declaration', ['Endpoint group', cell.endpoint_group]);
+  row('declaration', ['Operator', cell.operator]);
+  row('declaration', ['Context field', cell.context_field]);
+  row('declaration', ['Atoms and variables', `${count(data.declaration.atoms_declared)} atoms across ${count(data.declaration.applicable_variables)} applicable measured variables`]);
+  row('declaration', ['Cross-variable pairs', count(data.declaration.cross_variable_pairs)]);
+  row('declaration', ['Candidates declared', count(data.declaration.candidates_declared)]);
+  row('declaration', ['Declared cap', count(data.declaration.cap)]);
+  row('declaration', ['Selection, ranking, truncation', `${data.declaration.selection.replace(/_/g, ' ')} · ranking ${data.declaration.ranking} · truncation ${data.declaration.truncation}`]);
+  set('declaration-hashes', `Declaration commit ${data.declaration.commit} · registry SHA-256 ${data.declaration.registry_sha256} · candidate-list SHA-256 ${data.declaration.candidate_list_sha256}`);
+
+  row('denominators', ['Exact offset elapsed', count(data.denominators.exact_offset_elapsed)]);
+  row('denominators', ['Delayed offset endpoint', count(data.denominators.delayed_offset_endpoint)]);
+  row('denominators', ['Session close endpoint', count(data.denominators.session_close_endpoint)]);
+  row('denominators', ['All computed (total)', count(data.denominators.all_computed)]);
+  set('anchors-note', `${count(data.coverage.anchors.scheduled)} scheduled anchors were reconstructed and ${count(data.coverage.anchors.computed_outcomes)} carry a computed outcome; the run took ${count(Math.round(data.coverage.duration_ms / 1000))} seconds.`);
+
+  row('directions', ['Positive', count(data.coverage.direction_split.positive)]);
+  row('directions', ['Negative', count(data.coverage.direction_split.negative)]);
+  row('directions', ['Exact zero', count(data.coverage.direction_split.exact_zero)]);
+
+  for (const item of data.exclusions) row('exclusions', [item.label, count(item.count)]);
+  row('quantiles', ['Median', count(data.candidate_n.median)]);
+  row('quantiles', ['Lower quartile', count(data.candidate_n.q1)]);
+  row('quantiles', ['Upper quartile', count(data.candidate_n.q3)]);
+  row('quantiles', ['Minimum', count(data.candidate_n.min)]);
+  row('quantiles', ['Maximum', count(data.candidate_n.max)]);
+  const bandLabel = key => `${key.replace(/_/g, ' ')} observations`;
+  for (const [key, value] of Object.entries(data.candidate_n.reported_by_bucket)) row('buckets', [bandLabel(key), count(value)]);
+
+  list('limits', data.limits);
+  set('dependence', data.dependence.statement || 'Dependence statement unavailable.');
+  for (const quote of data.verdict.quotes) { const block = document.createElement('blockquote'); block.textContent = quote; document.getElementById('quotes').appendChild(block); }
+  set('verdict-ref', `Source: ${data.verdict.path} · SHA-256 ${data.verdict.sha256}`);
+  list('change-it', data.what_would_change_it);
+  for (const source of data.sources) row('sources', [source.label, source.path, source.sha256 || 'not recorded']);
+  set('footer-line', `Run ${data.run_id} · generated from accepted artifacts only (schema ${data.schema_version}).`);
+})();
+</script>
+</body></html>
+
+
