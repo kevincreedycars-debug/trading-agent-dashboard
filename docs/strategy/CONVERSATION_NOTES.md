@@ -1075,7 +1075,15 @@ plus two reference sheets and this notes file.
   conclusion "no flash" was wrong. The request to record the current action string centrally also still
   stands, now with the launcher path included.
 - Untouched: the background reviewer is still stopped with its stale `status.json` pid; no other task,
-  worker, artifact, frozen window, credential or Layer 1/evaluation input was read or changed. The
-  watcher keeps running until `16:20` local, which covers the `16:06` and `16:16` ticks as extra
-  confidence.
+  worker, artifact, frozen window, credential or Layer 1/evaluation input was read or changed.
+- Second and third confirmations after the change: the `16:06:01` tick also ran with
+  `LastTaskResult 0`, `NextRunTime 16:16:00`, `NumberOfMissedRuns 0` and `tick.log` at 8938 lines
+  (`LastWriteTime 16:06:02`), with no `NEW WINDOW` event anywhere near the boundary, so the launch
+  change is holding tick after tick and not on one lucky run.
+- Unrelated window source noticed while watching, deliberately not touched: two visible windows from
+  `C:\Program Files\Cold Turkey\CTServiceInstaller.exe` appeared at `15:47:42` and `16:03:42` (a
+  WindowsForms window, 16 minutes apart, while `CTMsgHostChrome` is running). Cold Turkey is a website
+  blocker installed by the user, not part of this project, and its windows are GUI dialogs rather than
+  the black console the user reported; it is recorded so a later "popping up" report can be checked
+  against it rather than blamed on the capture lane again.
 
