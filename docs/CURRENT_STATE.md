@@ -1,5 +1,22 @@
 # Current state
 
+2026-09-27 17:05: answered the factor-tone question from the accepted archive rather than from new data, and the answer
+is that nothing here is consistent enough to act on. The extractor is `backtester/scripts/report_gold_factor_tone.js`
+with tests in `backtester/tests/gold_factor_tone.test.js` and the write-up in `docs/GOLD_FACTOR_TONE_20260927.md`; local
+evidence sits at `tmp/gold-factor-tone-20260927b.json`. It covers every variable state in the daily cohort at the 24-hour
+and five-session horizons and asks the threshold question twice - same-direction rate above 60%, and excess over the
+cohort's own baseline for that horizon - because gold rose unconditioned in 55.81% of 24-hour windows (n=964) and 58.23%
+of five-session windows (n=960), which makes a bare 60% week reading meaningless. Results: nothing clears five points of
+24-hour excess at a usable count; at n of at least 100 the strongest session lean is `risk_headline_context` above its own
+median (60.51% positive, n=471, +4.70pp) followed by `usd_broad_index_level` above its own median (59.38%, n=480,
++3.57pp), each merely the mirror of its other half; the week horizon is stronger but still only those two variables
+(+7.40pp and +5.46pp); 16 of 62 states flip the sign of their excess between the session and the week; and exactly one
+week-horizon excess is stable across years. Consequence recorded rather than acted on: no factor reading justifies changing
+Layer 1 direction logic yet, and no new data was collected to test it. The three user decisions from this morning remain
+open (open another exploratory stage or stop, promote the verdict page into this canonical folder, publish the two local
+Gold pages), and evaluation stays sealed until `2027-03-25T15:00:00Z`.
+
+
 2026-09-27 16:49: built the requested random-verification sub-project and verified it live against the acceptance
 artefacts; no product file changed, nothing re-run, nothing pushed. The five new paths are
 `backtester/lib/gold_data_verifier.js`, `backtester/scripts/run_gold_data_verifier.js`,

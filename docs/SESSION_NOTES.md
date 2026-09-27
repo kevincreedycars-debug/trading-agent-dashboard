@@ -1,5 +1,29 @@
 # Session notes
 
+2026-09-27 17:05 (cont.): ran the factor-tone question the user asked first, read-only over the accepted report, and the
+answer is thin rather than promising. New paths: `backtester/scripts/report_gold_factor_tone.js`, its test file
+`backtester/tests/gold_factor_tone.test.js` and `docs/GOLD_FACTOR_TONE_20260927.md`, with local evidence at
+`tmp/gold-factor-tone-20260927b.json`. Method: every variable state in the daily cohort, `all_computed` group, at the 24h
+and five-session horizons, with two questions asked because one alone misleads - does a state point the same way more than
+60% of the time, and does it sit meaningfully above the cohort's own baseline rate for the same horizon. The baseline is
+the reason for the caution: gold rose in 55.81% of the 24-hour windows (n=964) and 58.23% of the five-session windows
+(n=960) unconditioned, so a 60% week reading is mostly drift. Findings: of 62 state rows, nothing at all clears five
+points of excess over the 24-hour baseline at a usable count (the only two that do are `exact_zero` cells of five-session
+change variables with 39 and 47 observations, and they flip on the week horizon, which is small-cell behaviour); with n of
+at least 100 the strongest session lean is `risk_headline_context` above its own median at 60.51% positive, n=471,
++4.70pp, and second is `usd_broad_index_level` above its own median at 59.38%, n=480, +3.57pp, both being one variable
+read twice; the week horizon is stronger but again only two variables (`usd_broad_index_level` +7.40pp and
+`risk_headline_context` +5.46pp against baseline, each with its mirror half); and a bullish reading does not reliably set
+a bullish week, because once the baseline is removed 16 of 62 states flip the sign of their excess between the session
+and the week even though 59 of 62 keep the same raw majority. Exactly one week-horizon excess keeps its sign in every
+year with at least 20 observations (`risk_headline_context` at or below its own median, a -5.26pp bearish lean). Reading
+for the user's plan: no factor here is consistent or stable enough to justify touching Layer 1 direction logic, which is
+what the user asked to establish before any change; the report's own cell arithmetic underpinning these numbers was
+independently re-checked by the new verifier on 150 sampled cells with no disagreement. Still open: the verifier and the
+tone extractor are both read-only, no new data was collected, no Layer 1 logic changed, and evaluation stays sealed until
+`2027-03-25T15:00:00Z`.
+
+
 2026-09-27 16:49 (latest): built the random-verification sub-project the user asked for and ran it live against the
 acceptance artefacts; no product file, registry, ledger, capture lane or sealed window was touched, nothing was re-run
 and nothing was pushed. New paths, all read-only in effect: `backtester/lib/gold_data_verifier.js` (the logic),
