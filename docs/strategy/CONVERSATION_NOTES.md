@@ -1281,7 +1281,8 @@ The user asked a second time for simplified answers. Standing instruction from h
 and the summary at the top of any document written for them, are 3–4 bullets maximum, in plain language, with
 no long prose.** The plan's section 2 ("The answer in one screen") was rewritten from five paragraphs into
 four bullets under that instruction; the numbers are unchanged and no advice changed. The long replies earlier
-in this session are the failure this entry records.
+in this session are the failure this entry records. The user also capped question sets at **7 at a time**, so
+the 50-question set below is delivered in batches of seven, waiting for answers before the next batch.
 
 
 The user asked: "keep the language simple — are you saying that long term there are no factors at all out of
