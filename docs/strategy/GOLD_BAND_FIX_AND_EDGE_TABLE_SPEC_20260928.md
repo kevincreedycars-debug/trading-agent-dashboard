@@ -1,5 +1,12 @@
 # Gold: declared-band measurement mode + factor edge table — exact specification
 
+> **Reading order changed 2026-09-28.** The readable version is now
+> `docs/strategy/GOLD_VIX_BOTH_AND_FACTOR_TABLE_PLAN_20260928.md` (short plan, four decisions, both VIX
+> streams). This file is kept as the **mechanical appendix** to that plan — registry rows, code line
+> numbers, the measurement command, the JSON shapes and the test list. Where the two disagree, the short
+> plan wins and this file gets fixed. Section 9 of this file (the fifteen decisions D1–D15) is superseded by
+> the plan's four decisions D1–D4.
+
 Advisory recommendation from worker `strategy` (`strategy-advisory-001`), 2026-09-28.
 Advisory only: this is a proposal for the coordinator, not an applied change. Every claim below was
 re-measured on 2026-09-28 in this worker's checkout and is cited with its absolute path and, where

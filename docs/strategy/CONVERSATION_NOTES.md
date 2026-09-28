@@ -1243,3 +1243,35 @@ advisory notes and owns no executable lane. Nothing outside `docs/strategy/` and
 written. No credential, live system or sealed-window value was read (the prospective window stays
 sealed until 2027-03-25T15:00:00Z).
 
+
+## 2026-09-28 (later) — simplified to a short plan, and both VIX streams kept
+
+The user said "simplify this", then, in place of the simplification question, asked to **keep both VIX data
+and see which ones show the correlations we are interested in**. Recorded and acted on as: keep the absolute
+level bands *and* the change states, and report which states clear a stated interest bar.
+
+Facts found while answering it (read-only, 2026-09-28):
+
+- the gold document's F6 lists `vix_level`, `vix_d1`, `vix_d5` as inputs (lines 279–295) but writes rules
+  for the level only, so the document itself asks for both streams and defined one;
+- only one VIX series exists in the archive (`VIXCLS.json`, 97,074 bytes), so "both" means two uses of one
+  series, not two sources;
+- the change states' raw numbers **already exist** in the accepted scorecard's `unscored` blocks: `vix_d1`
+  positive session 52.86% n 437 and week 60.51% n 433; `vix_d1` negative 58.32%/56.60%; `vix_d5` positive
+  59.21%/59.82%; `vix_d5` negative 52.86%/56.92%; `vix_level` median split 56.96%/58.84% and 54.66%/57.62%
+  (drift session 55.81% n 964, week 58.23% n 960);
+- **no VIX state clears 60% on the session**, the project's main horizon; the only cell that touches the bar
+  is `vix_d1` positive at the week horizon, 60.51% n 433, which is one of twelve looks (six change legs × two
+  horizons) and a post-hoc read of spent data, with its own session number below drift at 52.86%. Its 60.51%
+  is a coincidence of value with F9's session hit rate, not a shared count (262/433 versus 285/471).
+
+Delivered: `docs/strategy/GOLD_VIX_BOTH_AND_FACTOR_TABLE_PLAN_20260928.md`, the short plan that supersedes the
+long spec for reading — the decision list dropped from fifteen to four (D1 both VIX streams incl. a declared
+1/2/5 and 2/5/10 sweep with `looks_counted`; D2 full page versus minimum version; D3 rebuild F9; D4 keep the
+`>= 60` and n≥100 bar), the interest bar is one six-condition test carried as `clears_interest_bar`, and a
+"minimum version" box states what to drop for the smallest change. The long spec
+`GOLD_BAND_FIX_AND_EDGE_TABLE_SPEC_20260928.md` was retitled in place as the mechanical appendix to it, with
+its §9 (D1–D15) marked superseded. Tests still not run: this checkout is scoped to advisory notes and owns no
+executable lane. Nothing outside `docs/strategy/` and ignored `tmp/` was written; no credential, live system
+or sealed-window value was read; the prospective window stays sealed until 2027-03-25T15:00:00Z.
+
