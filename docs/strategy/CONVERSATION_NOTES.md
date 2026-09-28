@@ -1275,7 +1275,14 @@ its §9 (D1–D15) marked superseded. Tests still not run: this checkout is scop
 executable lane. Nothing outside `docs/strategy/` and ignored `tmp/` was written; no credential, live system
 or sealed-window value was read; the prospective window stays sealed until 2027-03-25T15:00:00Z.
 
-## 2026-09-28 (later still) — "does it move" asked separately from "which way"
+## 2026-09-28 (format) — standing instruction: answers are 3–4 bullets
+
+The user asked a second time for simplified answers. Standing instruction from here on: **replies to the user,
+and the summary at the top of any document written for them, are 3–4 bullets maximum, in plain language, with
+no long prose.** The plan's section 2 ("The answer in one screen") was rewritten from five paragraphs into
+four bullets under that instruction; the numbers are unchanged and no advice changed. The long replies earlier
+in this session are the failure this entry records.
+
 
 The user asked: "keep the language simple — are you saying that long term there are no factors at all out of
 the 28 that cause Gold to move directional in a consistent pattern? We aren't talking up or down, we are

@@ -26,34 +26,27 @@ fifteen questions to five.
 
 ## 2. The answer in one screen
 
-Your question has two halves inside it, and only one of them has been tested.
+Four bullets, every number measured on 2026-09-28:
 
-**Tested: "which way".** The live document declares 10 factors over 28 variables. The accepted measurement
-run turned those into **51 states**: 25 carry a declared direction, 20 have no rule in the document at all,
-and 6 are declared NEUTRAL. Only the 25 could be scored, and none of them is reliable: 25 of 25 are
-`no_information` on the session, 24 of 25 on the week, and the twenty-fifth is `unstable_across_years`.
-20 of the 25 do lean the way the document says, but the lean only runs from −2.54pp to +5.46pp, and the
-accepted gate needs 5pp plus the same sign in every year.
+- **Which way: tested, empty.** Of 51 states, 25 carry a declared direction, 20 have no rule in the document
+  at all, and 6 are declared NEUTRAL — so 26 were never testable. None of the 25 is reliable: 25 of 25 are
+  `no_information` on the session, 24 of 25 on the week, the last `unstable_across_years`. 20 of the 25 lean
+  the document's way, but only from −2.54pp to +5.46pp, and the accepted gate needs 5pp with the same sign in
+  every year.
 
-**How big the best row really is.** The best row is F9: +4.70pp on the session and +5.46pp on the week
-against its own drift. As standard errors that is z 2.05 and z 2.40. If nothing were real, 25 rows scored on
-two horizons would still be expected to produce about **2.3 rows** that size by chance. One turned up. That
-is the noise floor, not a candidate.
+- **Best row = noise floor.** The largest row, F9, is +4.70pp on the session and +5.46pp on the week against
+  its own drift — z 2.05 and z 2.40. If nothing were real, 25 rows on two horizons would still throw up about
+  **2.3 rows** that size by chance. One did. That is the noise floor, not a candidate.
 
-**Not tested: "if a move happens".** The direction test sorts every anchor into up or down and has no flat
-bucket: across the 25 rows the `exact_zero` counts total **0 on the session and 0 on the week**, and the two
-baselines are exact complements (55.81% up / 44.19% down). A session where gold moves three cents and a
-session where it moves 3% count the same. So the archive has never asked whether a factor is followed by a
-move.
+- **"If a move happens": never tested.** The test sorts every anchor into up or down and has no flat bucket:
+  across the 25 rows `exact_zero` totals **0 on the session and 0 on the week**, and the baselines are exact
+  complements (55.81% / 44.19%). A three-cent day counts the same as a 3% day, so the archive has never asked
+  whether a factor is followed by a move.
 
-**And the direction test is small.** With about 470 anchors per state, one standard error is about 2.3pp. A
-real 3pp edge would pass the gate about 6% of the time, a real 5pp edge about 28%, and only an edge near
-8pp is found reliably (77%). So `no_information` means "nothing large showed up", not "there is nothing
-there".
-
-**The plain answer.** On today's evidence none of the tested factors tells you which way gold goes better
-than its own base rate does, and the test is too small to see anything but large effects. What has never
-been measured is whether these factors tell you a *move* is coming. That is stage 1, and it goes first.
+- **The test is small, so "if" goes first.** One standard error is ~2.3pp at ~470 anchors per state: a true
+  3pp edge passes the gate ~6% of the time, a real 5pp edge ~28%, only ~8pp reliably (77%). So the verdict is
+  "nothing large showed up", not "nothing is there". The movement numbers stage 1 needs already exist and were
+  never used (147,465 each of `median`, `q1`, `q3`), which makes asking "if" close to free.
 
 ## 3. Stage 1 — "if a move happens": the part we can read today
 
