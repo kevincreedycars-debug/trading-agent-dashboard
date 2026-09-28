@@ -1,0 +1,288 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>How backtesting flows into the dashboard · System map</title>
+<!-- Visual work in this project consults $trading-dashboard-aesthetic-rules and $dashboard-layout-safety-rules first. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{color-scheme:dark;--bg:#080e16;--panel:#101b29;--panel-2:#0c1521;--line:#304358;--text:#e8eef5;--muted:#b2c1d0;--dim:#8296a9;--amber:#f2c167;--blue:#8acfff;--teal:#63d3c8;--good:#8fe0a8;--bad:#ff9d8a;--mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;--sans:"IBM Plex Sans",system-ui,sans-serif;--display:"Space Grotesk","IBM Plex Sans",system-ui,sans-serif}
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(1200px 620px at 18% -10%,rgba(94,161,255,.10),transparent 62%),var(--bg);color:var(--text);font:15px/1.55 var(--sans)}
+main{max-width:1560px;margin:auto;padding:28px 24px 56px}
+h1,h2,h3,p,li{margin:0;overflow-wrap:anywhere}
+h1{font:600 clamp(26px,3.4vw,38px)/1.15 var(--display);letter-spacing:-.01em}
+h2{font:600 19px/1.3 var(--display)}
+h3{font:600 15px/1.3 var(--display)}
+a{color:var(--blue)}
+.eyebrow{font:12px/1.5 var(--mono);letter-spacing:.12em;color:var(--amber);text-transform:uppercase}
+.muted{color:var(--muted)}
+header{display:flex;gap:26px;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;margin-bottom:22px}
+header>*{min-width:0}
+.lede{margin-top:12px;color:var(--muted);font-size:16px;max-width:900px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;list-style:none;padding:0}
+.chips li{border:1px solid var(--line);border-radius:999px;padding:3px 10px;font:11.5px/1.6 var(--mono);color:var(--muted);min-width:0}
+/* Lane = one pipeline. The left rail carries the lane colour. The flow stays horizontal while six
+   ~180px cards still fit and stacks below that, so a card is never squeezed until a word breaks
+   mid-word (the failure mode the shared layout-safety rules call out). */
+.lane{border:1px solid var(--line);border-left:3px solid var(--lane,var(--line));background:linear-gradient(180deg,rgba(255,255,255,.022),transparent 42%),var(--panel-2);padding:18px;margin:0 0 14px}
+.lane-live{--lane:var(--blue)}
+.lane-research{--lane:var(--amber)}
+.lane-head{display:flex;gap:18px;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;margin-bottom:14px}
+.lane-head>*{min-width:0}
+.lane-head h2{margin-top:6px}
+.lane-note{color:var(--muted);font-size:13.5px;max-width:560px}
+.flow{display:flex;flex-wrap:nowrap;gap:10px;list-style:none;align-items:stretch;padding:0}
+.node{--accent:var(--blue);flex:1 1 0;min-width:0;display:flex;flex-direction:column;gap:7px;border:1px solid var(--line);border-top:2px solid var(--accent);background:var(--panel);padding:13px 13px 12px}
+.node[data-kind="store"]{--accent:var(--muted)}
+.node[data-kind="publish"]{--accent:var(--teal)}
+.node[data-kind="copy"]{--accent:var(--amber);border-style:dashed;background:#141308}
+.node[data-kind="research"]{--accent:var(--amber)}
+.node[data-kind="view"]{--accent:var(--teal)}
+.node .step{font:11px/1 var(--mono);letter-spacing:.1em;color:var(--accent)}
+.node strong{font:600 14.5px/1.3 var(--display)}
+.node .body{color:var(--muted);font-size:13px}
+.node .tagline{margin-top:auto;font:11.5px/1.45 var(--mono);color:var(--dim);padding-top:6px;border-top:1px solid rgba(255,255,255,.07)}
+.arrow{flex:0 0 auto;align-self:center;color:#5c7690;font:15px/1 var(--mono)}
+.arrow::after{content:"\2192"}
+@media (max-width:1180px){
+  .flow{flex-direction:column;gap:8px}
+  .arrow::after{content:"\2193"}
+}
+/* The boundary is the point of the page, so it gets its own band with both directions spelled out. */
+.barrier{border:1px dashed #7a5f2c;background:#161406;padding:16px 18px;margin:0 0 14px}
+.barrier-head{display:flex;gap:14px;align-items:baseline;flex-wrap:wrap}
+.barrier-head strong{font:600 15px/1.3 var(--display);color:#ffe0a2}
+.barrier>p{margin-top:8px;color:#e8d6b0;font-size:14px}
+.barrier-pair{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0 0}
+.barrier-pair>div{border:1px solid rgba(255,255,255,.09);background:rgba(0,0,0,.22);padding:10px 12px;min-width:0}
+.barrier-pair dt{font:11px/1.5 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--dim)}
+.barrier-pair dd{margin:4px 0 0;font-size:13px;color:#f0e2c4}
+.barrier-pair .no dd{color:var(--muted)}
+.columns{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}
+.panel{border:1px solid var(--line);background:var(--panel);padding:18px;min-width:0}
+.panel h3{margin-bottom:10px}
+.panel ul{padding-left:18px}
+.panel li{margin-bottom:8px;color:var(--muted);font-size:14px}
+.panel li strong{color:var(--text)}
+.panel .note{margin-top:10px;color:var(--dim);font-size:13px}
+.legend{display:flex;flex-wrap:wrap;gap:8px 18px;list-style:none;padding:0;margin-top:6px}
+.legend li{display:flex;align-items:center;gap:8px;font:12px/1.6 var(--mono);color:var(--muted);min-width:0}
+.legend i{width:14px;height:2px;background:currentColor;flex:0 0 auto}
+.legend .k-run{color:var(--blue)}.legend .k-store{color:var(--muted)}.legend .k-publish{color:var(--teal)}
+.legend .k-copy{color:var(--amber)}.legend .k-research{color:var(--amber)}
+footer{margin-top:24px;padding-top:16px;border-top:1px solid var(--line);color:var(--muted);font-size:13.5px}
+.links{display:flex;flex-wrap:wrap;gap:14px;margin-bottom:8px}
+.links a{font:12.5px/1.6 var(--mono)}
+@media (max-width:860px){
+  .barrier-pair,.columns{grid-template-columns:1fr}
+  main{padding:22px 16px 44px}
+}
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <div>
+      <p class="eyebrow">System map · downstream-only research</p>
+      <h1>How backtesting flows into the dashboard</h1>
+      <p class="lede">The upper lane is the production chain that produces the Layer 1 and Layer 2 calls you act on. The lower lane is backtesting: a read-only copy of what production already stored, measured and republished as evidence. The two lanes meet on the dashboard screen, and nowhere else.</p>
+    </div>
+    <ul class="chips">
+      <li>read-only copy</li>
+      <li>no write-back</li>
+      <li>Layer 1 stays sealed</li>
+      <li>reviewed 2026-09-28</li>
+    </ul>
+  <section class="lane lane-live" aria-labelledby="lane-live-title">
+    <div class="lane-head">
+      <div>
+        <p class="eyebrow">Lane A · live production</p>
+        <h2 id="lane-live-title">Every refresh: where the Layer 1 and Layer 2 calls come from</h2>
+      </div>
+      <p class="lane-note">Five sealed Layer 1 agents each run on their own logic document. Nothing on this lane reads research, and no Layer 1 agent reads another agent.</p>
+    </div>
+    <ol class="flow">
+      <li class="node" data-kind="run">
+        <span class="step">01 · COLLECT</span>
+        <strong>Collectors (n8n)</strong>
+        <span class="body">Eco Events plus the USD, EUR, Gold, NQ and BTC collectors store one market snapshot per refresh.</span>
+        <span class="tagline">writes market_snapshots</span>
+      </li>
+      <li class="arrow" aria-hidden="true"></li>
+      <li class="node" data-kind="store">
+        <span class="step">02 · STORE</span>
+        <strong>Supabase market_snapshots</strong>
+        <span class="body">The canonical market context that agents read and research later copies.</span>
+        <span class="tagline">runtime table</span>
+      </li>
+      <li class="arrow" aria-hidden="true"></li>
+      <li class="node" data-kind="run">
+        <span class="step">03 · LAYER 1</span>
+        <strong>Five sealed agents</strong>
+        <span class="body">Each agent reads only its own logic document and the latest usable snapshot, then writes one raw 24-hour directional call.</span>
+        <span class="tagline">writes agent_outputs</span>
+      </li>
+      <li class="arrow" aria-hidden="true"></li>
+      <li class="node" data-kind="store">
+        <span class="step">04 · STORE</span>
+        <strong>Supabase agent_outputs</strong>
+        <span class="body">Raw calls kept exactly as written, separately per asset.</span>
+        <span class="tagline">runtime table</span>
+      </li>
+      <li class="arrow" aria-hidden="true"></li>
+      <li class="node" data-kind="run">
+        <span class="step">05 · LAYER 2</span>
+        <strong>Pair selection</strong>
+        <span class="body">Downstream of Layer 1: it reads the finished calls and raises the cross-pair call when two assets oppose. It combines, it does not re-derive.</span>
+        <span class="tagline">writes layer2.json</span>
+      </li>
+      <li class="arrow" aria-hidden="true"></li>
+      <li class="node" data-kind="publish">
+        <span class="step">06 · PUBLISH</span>
+        <strong>Dashboard Writer → GitHub Pages</strong>
+        <span class="body">Publishes layer1.json, layer2.json and the workflow status the browser reads.</span>
+        <span class="tagline">→ Layer 1 tiles · Layer 2 grid</span>
+      </li>
+    </ol>
+  </section>
+
+  <section class="barrier" aria-labelledby="barrier-title">
+    <div class="barrier-head">
+      <strong id="barrier-title">Read-only boundary</strong>
+      <span class="muted">the only crossing between the two lanes</span>
+    </div>
+    <p>Backtesting copies the stored tables, the market history and the frozen logic documents. Production never reads a research artifact, so a backtest cannot change a Layer 1 or Layer 2 call, a workflow, or a stored row.</p>
+    <dl class="barrier-pair">
+      <div>
+        <dt>Research may read</dt>
+        <dd>agent_outputs · market_snapshots · frozen logic documents · registries · market history</dd>
+      </div>
+      <div class="no">
+        <dt>Research may never write</dt>
+        <dd>n8n workflows · Supabase runtime tables · live call path · another agent's input</dd>
+      </div>
+    </dl>
+  <section class="lane lane-research" aria-labelledby="lane-research-title">
+    <div class="lane-head">
+      <div>
+        <p class="eyebrow">Lane B · backtesting (downstream only)</p>
+        <h2 id="lane-research-title">How a backtest earns the right to be shown</h2>
+      </div>
+      <p class="lane-note">One build order, in this sequence. A step is only trusted after the one before it reproduces the live behaviour it claims to replay.</p>
+    </div>
+    <ol class="flow">
+      <li class="node" data-kind="copy">
+        <span class="step">01 · COPY</span>
+        <strong>Frozen inputs</strong>
+        <span class="body">A read-only copy of stored calls, market history, registries and the logic documents as they stood.</span>
+        <span class="tagline">no live read-write</span>
+      </li>
+      <li class="arrow" aria-hidden="true"></li>
+      <li class="node" data-kind="research">
+        <span class="step">02 · REBUILD</span>
+        <strong>Snapshot builders</strong>
+        <span class="body">Reconstruct exactly the input the agent saw at time T, with vintages and timestamps recorded honestly.</span>
+        <span class="tagline">parity fixture first</span>
+      </li>
+      <li class="arrow" aria-hidden="true"></li>
+      <li class="node" data-kind="research">
+        <span class="step">03 · REPLAY</span>
+        <strong>Replay runners</strong>
+        <span class="body">Re-run the frozen live logic asset by asset. Assets are never blended, and a parity gate has to pass before anything counts.</span>
+        <span class="tagline">same rules, new dates</span>
+      </li>
+      <li class="arrow" aria-hidden="true"></li>
+      <li class="node" data-kind="research">
+        <span class="step">04 · SCORE</span>
+        <strong>Outcome evaluation</strong>
+        <span class="body">Score each replayed call against the next 24 hours, with a drift floor so a flat market is not read as a win.</span>
+        <span class="tagline">hit rate vs drift floor</span>
+      </li>
+      <li class="arrow" aria-hidden="true"></li>
+      <li class="node" data-kind="research">
+        <span class="step">05 · CHECK</span>
+        <strong>Checker artifacts</strong>
+        <span class="body">PASS with 0 fail, 0 missing, 0 tolerance, and the coverage gaps, limits and blocked items recorded next to it.</span>
+        <span class="tagline">evidence + limits</span>
+      </li>
+      <li class="arrow" aria-hidden="true"></li>
+      <li class="node" data-kind="publish">
+        <span class="step">06 · PUBLISH</span>
+        <strong>Research artifacts</strong>
+        <span class="body">Frozen, versioned JSON committed alongside the pages that read it.</span>
+        <span class="tagline">data/*.json</span>
+      </li>
+    </ol>
+  </section>
+
+  <section class="columns" aria-label="Where the two lanes meet">
+    <article class="panel">
+      <p class="eyebrow">Lane A lands here · live</p>
+      <h3>The dashboard's calls</h3>
+      <ul>
+        <li><strong>Layer 1 tiles:</strong> the five raw 24-hour directions, with published time and freshness.</li>
+        <li><strong>Layer 2 grid:</strong> the pair selection built from those finished calls.</li>
+        <li>Updated by the Dashboard Writer on every refresh. Nothing else writes to these fields.</li>
+      </ul>
+    </article>
+    <article class="panel">
+      <p class="eyebrow">Lane B lands here · evidence</p>
+      <h3>The dashboard's research readouts</h3>
+      <ul>
+        <li><strong>Evidence tabs:</strong> Backtest / Accuracy, Backtest Engine, Research Proof Map, Factor Edge Lab, Shadow Logic Backtest.</li>
+        <li><strong>Standalone pages:</strong> the Gold direction scorecard, Gold backtesting and Gold backtest outcomes read the same frozen artifacts.</li>
+        <li>Read-only. A tab can be reshaped or retired without touching a live call.</li>
+      </ul>
+      <p class="note">Two lanes, one screen: research adds context beside the call, never inside it.</p>
+    </article>
+  </section>
+
+  <section class="columns" aria-label="What this map does and does not claim">
+    <article class="panel">
+      <p class="eyebrow">Reading the lines</p>
+      <h3>What this map claims</h3>
+      <ul>
+        <li><strong>One production chain:</strong> collectors write snapshots, five independent Layer 1 agents write raw calls, Layer 2 combines those finished calls, the Dashboard Writer publishes them.</li>
+        <li><strong>One research chain:</strong> backtesting copies stored data and frozen logic, replays it, scores it, checks it and publishes artifacts.</li>
+        <li><strong>One crossing:</strong> research reads production. Production reads no research, and no Layer 1 agent reads another agent, Layer 2, or a research artifact.</li>
+      </ul>
+    </article>
+    <article class="panel">
+      <p class="eyebrow">Keep the picture honest</p>
+      <h3>What this map does not claim</h3>
+      <ul>
+        <li><strong>Not live edge:</strong> a passing replay or checker shows history parity for frozen rules on frozen data, not causality, accuracy or profit.</li>
+        <li><strong>Not deployment:</strong> a local export or a green test run is not proof that a live workflow changed.</li>
+        <li><strong>Not full coverage:</strong> where source vintages or storage timestamps are only proxies, the gap is listed on the research pages instead of being smoothed over.</li>
+      </ul>
+    </article>
+  </section>
+
+  <section class="panel" aria-label="Legend">
+    <h3>Legend</h3>
+    <ul class="legend">
+      <li><i class="k-run" aria-hidden="true"></i><span class="k-run">live step (blue)</span></li>
+      <li><i class="k-store" aria-hidden="true"></i><span class="k-store">Supabase store (slate)</span></li>
+      <li><i class="k-publish" aria-hidden="true"></i><span class="k-publish">published artifact (teal)</span></li>
+      <li><i class="k-copy" aria-hidden="true"></i><span class="k-copy">read-only copy (dashed amber)</span></li>
+      <li><i class="k-research" aria-hidden="true"></i><span class="k-research">backtest step (solid amber)</span></li>
+    </ul>
+  </section>
+
+  <footer>
+    <div class="links">
+      <a href="index.html">Open the dashboard</a>
+      <a href="gold-direction-scorecard.html">Gold direction scorecard</a>
+      <a href="gold-backtesting.html">Gold backtesting</a>
+      <a href="gold-backtest-outcomes.html">Gold backtest outcomes</a>
+      <a href="docs/ARCHITECTURE.md">Architecture note</a>
+      <a href="backtester/README.md">Backtester rules</a>
+    </div>
+    <p>Research surface, not a live call. Replay is trusted only after the parity gate and the checker pass. Guarded by backtester/tests/backtest_flow_page.browser.test.js, which re-renders this map offline at desktop and narrow widths.</p>
+  </footer>
+</main>
+</body>
+</html>
