@@ -1080,10 +1080,166 @@ plus two reference sheets and this notes file.
   `LastTaskResult 0`, `NextRunTime 16:16:00`, `NumberOfMissedRuns 0` and `tick.log` at 8938 lines
   (`LastWriteTime 16:06:02`), with no `NEW WINDOW` event anywhere near the boundary, so the launch
   change is holding tick after tick and not on one lucky run.
+## Read-only evidence chain assembled for the "what did the Gold backtest actually show / is LLM analysis viable" question
+
+Asked 2026-09-27 evening, after the user said the engine "has isolated single variables and has not found any
+major correlations". Nothing below was produced by this worker: every figure is quoted from an accepted
+artifact or a canonical file named beside it, and no live system, credential or frozen window was touched.
+
+**1. What the Gold work measured.** Accepted single-variable report `ivr-coverage-019-20260925-r2`
+(`backtester/lib/gold_variable_coverage.js`, tests `backtester/tests/gold_variable_coverage.test.js`): 28 of 28
+declared variables measured, 965 daily anchors / 964 with an outcome, 5,115 event rows, 62 state rows, cohort
+`daily_snapshot_anchors`, endpoint group `all_computed`, horizons `h24_post_event` and `d5_trading_days_post_event`.
+
+**2. Tonight's two cuts over that report** (both in canonical `docs/`, both read-only re-cuts, no new data):
+- `docs/GOLD_FACTOR_TONE_20260927.md` (scorer `backtester/scripts/report_gold_factor_tone.js`): unconditioned
+  drift is **55.81% up on the session (n=964)** and **58.23% on the week (n=960)**; at n>=100 the strongest
+  session excess is **+4.70pp** (`risk_headline_context` above its own median, 60.51%); week excesses reach
+  **+7.40pp** (`usd_broad_index_level`) and **+5.46pp** (`risk_headline_context`); exactly **one** week-horizon
+  excess keeps its sign in every usable year (`risk_headline_context` at/below median, -5.26pp). Verdict: mostly
+  drift, "almost none of it is stable across years".
+- `docs/GOLD_FACTOR_DIRECTION_CHECK_20260927.md` + `data/gold-direction-scorecard-20260927.json`
+  (`backtester/lib/gold_direction_scorecard.js`, expectations
+  `backtester/registries/gold_factor_direction_expectations.v1.json`): of **25 states carrying a declared
+  direction, 0 are `reliable`** - 25/25 `no_information` on the session, 24/25 on the week, the 25th
+  `unstable_across_years`; 20 of 25 sit on the right side of their own drift but the edges run **-2.54pp to
+  +5.46pp**. **26 states are unscored** because `logic/agent_gold_direction.md` declares no rule for them
+  (own-median level splits, regime labels, retired ids, event-cohort-only variables, availability labels).
+
+**3. Combination stage.** `gold-combination-run-024-20260926-rev3` (declaration `5fe48767`, registry `c19315e6`):
+4,956 declared candidates, 2,745 reported / 704 ineligible / 1,507 empty / 0 unavailable, 441,319 observations,
+245,784 positive against 195,535 negative attempts. No ranking, no selection, and rev1/rev2/rev3 are spent.
+Plain-English verdict (`GOLD_BACKTEST_VERDICT_20260925.md`): the archive "can *describe* this space, but it
+cannot support *choosing* from it".
+
+**4. The LLM-based side already exists and has already been measured.** `logic/agent_gold_direction.md` is
+titled "GOLD LAYER 1 DIRECTION AGENT - WEIGHTED ANALYSIS ENGINE" v2.0 (weights F1..F10 = 22/18/14/8/8/10/6/6/6/2);
+the n8n agent calls a model to emit the JSON call and a deterministic gate seals it. It was graded against the
+designated session close in `data/l2l-trading-day-directional-v1.json` and frozen in
+`data/l2l-directional-research-verdict-v1.json` (`backtester/lib/l2l_directional_research_verdict.js`,
+`validateVerdict` hard-fails if either layer reaches 50%):
+- population **4,085 eligible rows** = 2,493 Layer 1 + 1,592 Layer 2 (duplicate ids across layers are not
+  independent evidence);
+- **Layer 1 47.65%** (1,188/2,493, Wilson 45.70-49.62) against an **always-bullish baseline of 53.19%**;
+  **Layer 2 47.99%** (764/1,592) against **53.45%**; bullish 50.69% / bearish 42.96% (L1), 51.12% / 42.33% (L2),
+  so `BEARISH_CALL_FAILURE_DOMINATES`;
+- headline confidence is reproducible from preserved inputs but **not monotonic with accuracy**; Layer 2 adds
+  **0** net improvement (0 improved, 0 worsened of 1,592 matched);
+- the 97% / 70.52% and 97.3% / 72.3% "excursion" figures are **path_dependent_intraday_excursion_only** and are
+  listed as prohibited future claims, not accuracy;
+- accepted root cause (`data/l2l-signal-construction-audit-v1.json`, `bestExplainedBy`):
+  **`horizon_mismatch`** - the traced path produces a "following 24hrs" call while the research question is the
+  designated session close; no implementation or mapping defect was found;
+- `finalConclusion.validatedPredictorOfDesignatedSessionDirection: false`.
+Dashboard already surfaces this: L2L Directional Accuracy panel, Confidence Calibration
+(`data/confidence-calibration.json`, layer1/layer2 pooled), the Research tab matrix (evaluated calls / wins /
+losses from the Supabase research views), and tonight `gold-direction-scorecard.html` (untracked in canonical).
+
+**5. Project policy already recorded** (`docs/BACKTESTING_REVIEW_PLAN.md`, scope agreed 2026-09-19): deterministic
+programs/SQL for acquisition, joins, calculations, combination search and report generation; "Do not use
+per-record or per-combination AI calls for work programs can perform"; AI is for implementation, debugging and
+interpretation of compact summaries.
+
+**6. The only untouched long-horizon test that exists**: `docs/GOLD_PROSPECTIVE_QUALIFICATION_PROTOCOL.md`
+(2026-09-23) - first eligible anchor 2026-09-15T14:00:00Z, 26 weeks, `ctx=none` only, 2,548 declared / **255
+gate-eligible** candidates, cap 20, frozen shortlist of **4** ids from selector-013, no interim outcome read, and
+evaluation sealed until **2027-03-25T15:00:00Z**. The de-flashed `GoldQualificationWindowTick018` capture is what
+keeps that window fed.
+
+**Interpretation this worker is willing to stand behind:** "no major correlations found" is not (only) an
+instruction error in the engine. Three measured reasons are visible in the artifacts: drift of ~56-58% swamps a
+few-point factor lean; the per-year stability test kills almost everything that survives the baseline test; and
+26 of the Layer 1 document's states cannot even be tested against the report's state vocabulary, so the
+"instruction" gap is real but it is a *vocabulary/contract* gap, not a missing-analysis gap. The engine cannot be
+asked to confirm a selection on intervals that are already spent, and the only clean test of anything
+LLM-based or code-based runs to 2027-03-25.
+
 - Unrelated window source noticed while watching, deliberately not touched: two visible windows from
   `C:\Program Files\Cold Turkey\CTServiceInstaller.exe` appeared at `15:47:42` and `16:03:42` (a
   WindowsForms window, 16 minutes apart, while `CTMsgHostChrome` is running). Cold Turkey is a website
   blocker installed by the user, not part of this project, and its windows are GUI dialogs rather than
   the black console the user reported; it is recorded so a later "popping up" report can be checked
   against it rather than blamed on the capture lane again.
+
+---
+
+## 2026-09-28 — Gold vocabulary fix: user decisions, spec delivered, three corrections to my own earlier notes
+
+**User decisions confirmed on 2026-09-28 (6 of 6):** (1) use the logic document's own numbers —
+VIX above 25 / below 16 and the 0.30% dollar threshold; (2) build a ranked factor-state to
+forward-move table, in the dashboard, under the Gold Backtester submenu; (3) plain code and table
+lookups only — no LLM call, no token spend; (4) the bar is 60% directional significance; (5) use the
+existing 2023–2026 dataset only, no new data; (6) a new dashboard page beside the existing accuracy
+panel.
+
+**Delivered this turn (advisory only, docs scope):**
+`docs/strategy/GOLD_BAND_FIX_AND_EDGE_TABLE_SPEC_20260928.md`, 454 lines, 11 sections — the exact
+spec, test list, provenance and handoff for two proposed assignments:
+`gold-declared-band-measurement-026` (the measurement lane) and `dashboard-gold-factor-edge-page-001`
+(the page lane).
+
+**Three corrections to what this worker wrote earlier, all measured today:**
+
+1. **The raw 019 FRED series are not in canonical.** They are at
+   `D:\trading-agent-dashboard-codex\.local\worktrees\gold-research\backtester\tmp\gold-019-sources-20260925\series`
+   (10 files, 2,778,424 bytes). Earlier notes implied a canonical `backtester/tmp` path; that path does
+   not exist. The two other accepted inputs *are* canonical and present:
+   `backtester/tmp/gold-hourly-extended-20260918` (17 files, 12,099,758 bytes) and
+   `backtester/tmp/gold-calendar-extended-20260918` (2 files, 3,456,639 bytes).
+2. **The accepted report cannot be re-cut into the document's bands.** A streaming scan of
+   `.local/worktrees/gold-research/backtester/tmp/ivr-coverage-019-20260925-r2/individual-variable-report.json`
+   (95,842,994 bytes, generated 2026-09-25T14:44:33.370Z) found **zero** occurrences of the field
+   `"values"`: the report carries states and counts, never the raw value at an anchor. So "the declared
+   band is computable with no new data" is true about *data* (nothing to download, all three input
+   directories still on disk) but false about *effort*: it needs a new measurement run into a new output
+   directory, respecting the report's write-once rule.
+3. **The report's own library, builder and registry are not in canonical either.**
+   `gold_individual_variable_report.js`, `build_gold_individual_variable_report.js` and
+   `gold_individual_variable_report.v2.json` exist only in the gold-research worktree, so the
+   measurement lane belongs there (or needs a declared move of those files). This is a real dependency
+   the coordinator must sequence, not a detail.
+
+**The gap, pinned to code and counts (not inference).** `logic/agent_gold_direction.md` v2.0 declares
+absolute bands and magnitude thresholds. The report's registry declares the opposite in writing
+(`variable_state_strata.median_split_revision_8`: "the live agent's categorical regime names are not
+reproduced and no threshold, band or tercile is introduced"), and
+`gold_individual_variable_report.js` forces the median split for any level variable: line 1042
+`levelVariable = ['fred_level','hourly_level','external_level'].includes(kind)`, line 1060 computes the
+median, line 1064 `return levelVariable ? medianSplitState(...) : state.state`, line 1104 sets
+`stratification: levelVariable ? 'median_split_of_own_distribution' : measurement.strata` — so the
+registry's own `strata` field is ignored. The document's 25/16 band therefore never reaches a cell.
+Cost, from `data/gold-direction-scorecard-20260927.json`: 25 states scored; 20 printed unscored
+(`level_band_not_declared` 8, `change_rule_absent` 6, `threshold_is_absolute_band` 2,
+`regime_label_not_reproduced` 4); 6 more declared NEUTRAL (26 unscored-equivalent in total); coverage
+28/28 variables, 965 anchors of which 964 carry an outcome, 5,115 event rows; `summary` shows 25/25
+session verdicts `no_information`, 24/25 week the same with one `unstable_across_years`, and exactly one
+row at or above 60% on each horizon.
+
+**The one row above 60% is the weakest row, not the best.** It is F9
+`risk_headline_context:above_own_median`, provenance **interpreted** (`interpreted_regime_mapping`):
+session 60.51% (+4.70pp), week 63.69% (+5.46pp), `years_same_edge_sign` false on both horizons, week
+verdict `unstable_across_years`, with per-year session edges 2023 −1.54pp, 2024 −0.18pp, 2025 +6.52pp,
+2026 +15.84pp. The document's F9 input is not the news-sentiment index at all — the registry records the
+live field as VIX above 25 plus war/geopolitical/conflict/sanction event names. So the fix does not
+merely remove a false unscored pair; it replaces the table's best-looking row with a test of the input
+the live engine actually consumes.
+
+**Sizing check before the run (approximate, scratch, not through the availability rule).** From
+`VIXCLS.json` directly, Monday–Friday observations 2023-01-03 to 2026-09-21 (954 of them): 41 (4.3%)
+above 25, 400 (41.9%) below 16, 513 (53.8%) inside. The document's "VIX >25 = BULLISH" leg will land at
+roughly 40 anchors and is therefore thin by construction (below the 100-observation floor); the other
+two legs are testable. Recorded so the run's real numbers cannot surprise the reading.
+
+**Fifteen open decisions D1–D15 are listed with conservative defaults in §9 of the spec** (leave
+no-rule states unscored; show them without a direction; do not invent F5's unnamed magnitude; do not
+score VIX change states; F8 remains a pair and waits; F9 gets a declared rule built the way the live
+field is built; F10 stays unscored; standalone page linked from the Gold Backtest nav; boundary
+semantics exactly as the document words them; keep the existing `>= 60` bar with its n≥100 floor; two
+sequenced writers). Every default invents nothing and removes nothing.
+
+**Status:** decided six of six user decisions are recorded; the decision list in §9 is still open, so
+this spec is filed for review rather than applied; tests not run because this checkout is scoped to
+advisory notes and owns no executable lane. Nothing outside `docs/strategy/` and ignored `tmp/` was
+written. No credential, live system or sealed-window value was read (the prospective window stays
+sealed until 2027-03-25T15:00:00Z).
 
