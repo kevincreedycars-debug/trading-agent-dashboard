@@ -1336,3 +1336,49 @@ lane 2 `dashboard-gold-factor-edge-page-001`. Tests still not run — this check
 nothing outside `docs/strategy/` and ignored `tmp/` was written; no credential, live system or sealed-window
 value was read; the prospective window stays sealed until 2027-03-25T15:00:00Z.
 
+
+## 2026-09-28 (questions) — yes/no question set for the user's intent
+
+The user asked for a set of yes/no questions to pin down what they actually want from this data. Recorded here
+so the answers become durable context; each carries the default this worker would implement if the user
+agrees with it.
+
+**What counts as a move**
+
+1. Should a "move" be close-to-close, not intraday high-to-low? (default: yes)
+2. Should the minimum size be fixed in advance rather than fitted to the data? (default: yes — 0.30% session,
+   1.00% week, with 0.50% and 2.00% published as sensitivity)
+3. Do you also want the daily size of the move reported, or only the yes/no "a move happened"? (default: both,
+   size alongside the count)
+
+**What you want out of it**
+
+4. Is "a move is coming" enough on its own, with direction as a separate second step? (default: yes)
+5. Do you want a simple on/off flag per factor — "moves are bigger when this is on" — rather than a score or a
+   ranking? (default: yes, a flag plus the raw shares)
+6. Would you rather have a factor that fires rarely but strongly, or one that is on often with a small edge?
+   (default: strong and rare; the small-edge version needs a sample we do not have)
+7. Would you act on an edge smaller than 5pp? (default: no — the accepted gate stays 5pp)
+
+**Scope**
+
+8. Are all 28 variables in scope, including the 20 with no rule in the document? (default: yes, and any new
+   rule for them must be declared before it is measured)
+9. Should pairs and combinations stay out for now? (default: yes, single factors only)
+
+**Sample and honesty**
+
+10. May hourly data be used when daily cannot detect effects below about 8pp, accepting that hourly outcomes
+    overlap? (default: yes, with the overlap disclosed and the horizon re-declared)
+11. Is a declared floor acceptable, given the data contains no "no move" bucket to discover one from?
+    (default: yes)
+12. Should every survivor be re-tested out of sample before you would act on it? (default: yes)
+
+**Deliverable**
+
+13. Do you want one page listing every factor with its raw movement numbers and no direction claim? (default:
+    yes)
+14. Should the direction layer be rebuilt only after you have agreed the movement layer? (default: yes)
+
+If the user answers "all defaults", the two lanes already scoped can proceed unchanged.
+
