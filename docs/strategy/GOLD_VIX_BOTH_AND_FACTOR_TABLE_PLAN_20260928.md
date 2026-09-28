@@ -1,4 +1,4 @@
-# Gold: both VIX streams + the factor to forward-move table — short plan
+# Gold: first does it move, then which way — short plan (both VIX streams kept)
 
 Advisory recommendation from worker `strategy` (`strategy-advisory-001`), 2026-09-28. Every number below
 was read on 2026-09-28 from files named in-line with read-only commands. Nothing here is a prediction, an
@@ -7,19 +7,96 @@ accuracy claim, a signal or a trading result; every interval involved is already
 Mechanical detail for the two implementation lanes lives in
 `docs/strategy/GOLD_BAND_FIX_AND_EDGE_TABLE_SPEC_20260928.md` (registry rows, code line numbers, the run
 command, the JSON shapes). **This file is the readable version and it decides; the other file is the
-appendix.** If the two ever disagree, this one wins and the other gets fixed.
+appendix.** If the two ever disagree, this one wins and the other gets fixed. **Sections 2–4 answer the split
+this revision adds — first "if a move happens", then "which way" — and sections 5–8 keep the VIX and table
+design from the previous revision.**
 
 ## 1. What you asked for
 
 1. Simplify the plan.
 2. **Keep both VIX streams** — the absolute level bands *and* the change states — and see which of them
    show the kind of correlation we care about.
+3. **Split the question in two: first "if a move happens", then "why up or down"** — and rebuild the
+   analysis engine once those two are on solid ground.
 
-Both are answered below. The simplification is real, not cosmetic: the VIX-change half turns out to be
-mostly answerable **from a file that already exists**, so it costs no new run, and the decision list drops
-from fifteen questions to four.
+All three are answered below. The simplification is real, not cosmetic: the VIX-change half turns out to be
+mostly answerable **from a file that already exists**, so it costs no new run; the "does it move" half has
+never been asked and the data for it is already measured and unused; and the decision list drops from
+fifteen questions to five.
 
-## 2. The VIX streams, and which of them we can already read
+## 2. The answer in one screen
+
+Your question has two halves inside it, and only one of them has been tested.
+
+**Tested: "which way".** The live document declares 10 factors over 28 variables. The accepted measurement
+run turned those into **51 states**: 25 carry a declared direction, 20 have no rule in the document at all,
+and 6 are declared NEUTRAL. Only the 25 could be scored, and none of them is reliable: 25 of 25 are
+`no_information` on the session, 24 of 25 on the week, and the twenty-fifth is `unstable_across_years`.
+20 of the 25 do lean the way the document says, but the lean only runs from −2.54pp to +5.46pp, and the
+accepted gate needs 5pp plus the same sign in every year.
+
+**How big the best row really is.** The best row is F9: +4.70pp on the session and +5.46pp on the week
+against its own drift. As standard errors that is z 2.05 and z 2.40. If nothing were real, 25 rows scored on
+two horizons would still be expected to produce about **2.3 rows** that size by chance. One turned up. That
+is the noise floor, not a candidate.
+
+**Not tested: "if a move happens".** The direction test sorts every anchor into up or down and has no flat
+bucket: across the 25 rows the `exact_zero` counts total **0 on the session and 0 on the week**, and the two
+baselines are exact complements (55.81% up / 44.19% down). A session where gold moves three cents and a
+session where it moves 3% count the same. So the archive has never asked whether a factor is followed by a
+move.
+
+**And the direction test is small.** With about 470 anchors per state, one standard error is about 2.3pp. A
+real 3pp edge would pass the gate about 6% of the time, a real 5pp edge about 28%, and only an edge near
+8pp is found reliably (77%). So `no_information` means "nothing large showed up", not "there is nothing
+there".
+
+**The plain answer.** On today's evidence none of the tested factors tells you which way gold goes better
+than its own base rate does, and the test is too small to see anything but large effects. What has never
+been measured is whether these factors tell you a *move* is coming. That is stage 1, and it goes first.
+
+## 3. Stage 1 — "if a move happens": the part we can read today
+
+**The move size is already measured and unused.** The accepted report defines and stores it: its
+`outcome_definition.magnitude` reads "counts, median, first quartile and third quartile of the realized
+return percentage per state", and a scan of the 95,842,994-byte report counts 147,465 `median`, 147,465
+`q1` and 147,465 `q3` fields. No cut has used them. So stage 1 can begin with **no new run**: for every
+state, compare its realized-return spread (q1, q3, and the distance between them) with the cohort's, on both
+horizons. A state whose spread is wider is a state in which gold moves more while it is on.
+
+**What is missing is a floor, and it has to be drawn, not found.** The report stores no per-anchor return,
+so "how often does a move cross a floor" needs either the floor declared before a re-run or a join from the
+anchors to the price series. The data cannot supply the floor on its own: with zero `exact_zero` outcomes
+there is no "no move" bucket to discover, only a line to draw. (The series the accepted report itself used
+is available for such a join: `backtester/tmp/gold-hourly-extended-20260918/candles.json`, XAU_USD, hourly
+from 2023-01-02.)
+
+**Recommended floor, declared before any number is read.** Session 0.30% and week 1.00% — 0.30% is the
+document's own smallest material number (F2), so nothing is invented. Report the share of anchors above the
+floor beside the cohort's own share, and the same shares at 0.50% and 2.00% as one sensitivity line, with a
+single `looks_counted` for the whole sweep. The floor is a parameter; the page shows all of it, not the best
+cell.
+
+**Same bar as everywhere else.** A stage-1 state is interesting only if `n >= 100`, the gap against the
+cohort's own share is at least 5pp, and the sign holds in every year with n >= 20. No new threshold is
+introduced anywhere.
+
+## 4. Stage 2 — "which way", once a move is on the table
+
+Direction is only worth asking about for states that pass stage 1: a factor that does not change how much
+gold moves cannot change which way it moves on average. Today stage 2 is the 25 rows above, and the answer
+is empty. It stays published that way, with the z-accounting in §2 so that no reader mistakes a 2.4-sigma
+cell for a finding.
+
+**What stage 2 would need to be answerable — the rebuild's real constraint.** 80% power to see a 3pp edge
+needs about **2,100 anchors per state**; today there are about 470. A 5pp edge needs about 774. The same
+archive holds roughly 23,000 hourly XAU_USD bars from 2023-01, so that sample can be had at hourly
+granularity — but hourly entries with a 24-hour endpoint overlap each other, so the effective count sits
+below the raw count and the horizon would have to be re-declared. The honest conclusion for the engine: the
+direction layer cannot be rebuilt on 965 daily anchors, and a rebuild should fix its sample size and its
+floor first, then measure.
+
+## 5. The VIX streams, and which of them we can already read
 
 The live Layer 1 document declares F6's inputs as `vix_level`, `vix_d1`, `vix_d5`
 (`logic/agent_gold_direction.md`, lines 279–295) but writes rules for **the level only**: "VIX >25 =
@@ -60,7 +137,7 @@ magnitude is also a coincidence: 60.51% is also F9's session hit rate, from diff
 versus 285 of 471). Any future claim about this row needs a fresh out-of-sample read after the sealed
 window opens, not a re-captioning of this table.
 
-## 3. Where the "correlations we care about" bar is
+## 6. Where the "correlations we care about" bar is
 
 One bar, stated once, used everywhere (unchanged from the accepted scorecard's own parameters: `min_n`
 100, `min_year_n` 20, `edge_pp` 5, `threshold_pct` 60):
@@ -75,7 +152,11 @@ they are published as raw context instead, which is the honest shape for a rule 
 Per-year drift, so the 60% figure cannot be read as a 60% expectation:
 2023 51.54%, 2024 59.16%, 2025 60.15%, 2026 50.83% (session).
 
-## 4. Design: both streams, one table, three row types
+The same bar governs the movement stage with condition (2) replaced: instead of a 60% hit rate, a state needs
+a 5pp gap against the cohort's own share of anchors above the declared floor. Everything else — n >= 100, the
+year-sign test, no invented direction — is unchanged.
+
+## 7. Design: both streams, one table, four row blocks
 
 **Stream A rows — level bands, scored.** `vix_level` gets the document's own numbers as its declared
 stratum: `above_25` (>25 strictly), `below_16` (<16 strictly), `inside_16_25` (25.00 and 16.00 land here,
@@ -104,6 +185,13 @@ interest bar; it exists to answer "is there anything here worth declaring a rule
 and it must be read expecting several cells to beat drift by chance. The change legs run n≈430–520, so
 thresholds of 1 or 2 points cost few observations while 5 points on `vix_d1` thins quickly.
 
+**Block D — the movement screen, read first.** Before any direction row is read, the table carries block D:
+for every state, the realized-return q1, q3 and the q1-to-q3 distance on both horizons beside the cohort's
+own, all of it from fields the accepted report already contains. Once lane 1 has run, block D gains the share
+of anchors above the declared floor at 0.30% (session), 1.00% (week), 0.50% and 2.00%. Nothing in block D
+carries a direction, and its states are marked with the same bar as stage 2 but a 5pp gap against the
+cohort's own share instead of the 60% level.
+
 **One project precedent, for honesty.** `logic/agent_usd_direction.md` (line 154) does carry a VIX-change
 rule — "VIX rising sharply over 1d or 5d = BULLISH modifier" — but that is the USD document and "sharply" is
 unnamed there too. Gold's change stream therefore has no declared number anywhere; if a direction is ever
@@ -112,10 +200,11 @@ wanted for it, it must be declared as **new** and tested out of sample, not read
 **Not proposed.** No combination, no pair, no weighting, no composite score, no model, no LLM call, no new
 data source, no Layer 1 edit. Pairs stay closed until the single factors are settled; that stays deferred.
 
-## 5. The table and the page
+## 8. The table and the page
 
 One artifact (`data/gold-factor-edge-<YYYYMMDD>.json`, schema `gold-factor-edge-v1`) and one page, with
-three row blocks in this order: (A) rows that clear the interest bar — expected to be empty; (B) all other
+four row blocks in this order: (D) the movement screen from §7, no direction column; (A) rows that clear
+the interest bar — expected to be empty; (B) all other
 scored declared-band rows, session hit rate as the main number with the week rate beside it and the drift
 edge on every row; (C) the VIX change rows (B1 context, then B2 sweep) with the direction column empty. Row
 keys are reused from the accepted scorecard so a reader can move between the two pages, and the bar is that
@@ -137,21 +226,24 @@ builder patch in an existing page, and touches nothing else. It still answers "w
 anything" for every stream, because the B1 numbers already exist and the level bands come from the run
 either way.
 
-## 6. Four decisions
+## 9. Five decisions
 
-Fifteen became four. Everything else that was open is now a stated default in §7 and needs no answer.
+Fifteen became five. **D1 is new in this revision and is the one to answer first**, because it decides
+whether we ask "if" before we ask "which way". Everything else that was open is now a stated default in §10
+and needs no answer.
 
 | # | Question | Recommended default | Alternative |
 | --- | --- | --- | --- |
-| D1 | What to do with the VIX change stream | Both streams, as designed in §4: level bands scored, change legs published as raw context (B1) plus the declared 1/2/5 and 2/5/10 sweep with `looks_counted` (B2), no direction invented | Reject B2 (context only, the minimum version), or drop the change stream back to unscored |
-| D2 | Size of the deliverable | Full version: new page beside the accuracy panel, linked from the two Gold Backtest pages | Minimum version in §5: block C appended to the existing scorecard page, no new template, no nav edits |
-| D3 | F9 `risk_headline_context` | Rebuild it as a declared rule the way the live field is built (VIX>25 **or** war/geopolitical/conflict/sanction event names), because today's only bar-clearing row is an `interpreted` mapping with an unstable sign | Leave the `interpreted` row as the accepted artifact has it and publish it with its caveats |
-| D4 | The interest bar | Keep the existing implementation unchanged: `hit_rate_pct >= 60` **and** `n >= 100`, plus the six conditions in §3 | Strict `> 60` — changes no existing row, since none sits at exactly 60.00% |
+| D1 | **The "if" stage (new; answer this one first)** | Run the free movement screen first (per-state realized-return q1/q3 spread, no new run), then declare the 0.30% / 1.00% floor and measure the share of anchors above it, under the same n>=100 / 5pp / year-sign bar | Do only the floor measurement and skip the free screen, or keep stage 1 out and treat the 25 direction rows as the whole answer |
+| D2 | What to do with the VIX change stream | Both streams, as designed in §7: level bands scored, change legs published as raw context (B1) plus the declared 1/2/5 and 2/5/10 sweep with `looks_counted` (B2), no direction invented | Reject B2 (context only, the minimum version), or drop the change stream back to unscored |
+| D3 | Size of the deliverable | Full version: new page beside the accuracy panel, linked from the two Gold Backtest pages | Minimum version in §8: block C appended to the existing scorecard page, no new template, no nav edits |
+| D4 | F9 `risk_headline_context` | Rebuild it as a declared rule the way the live field is built (VIX>25 **or** war/geopolitical/conflict/sanction event names), because today's only bar-clearing row is an `interpreted` mapping with an unstable sign | Leave the `interpreted` row as the accepted artifact has it and publish it with its caveats |
+| D5 | The rebuild's sample size | Decide it before rebuilding: state the size the effect needs (about 2,100 anchors per state for 3pp) and get it from hourly entries with a re-declared horizon, because 965 daily anchors cannot support direction claims below about 8pp | Keep daily anchors and accept that only large effects will ever be visible, or hold the direction layer until more daily history exists |
 
 Defaults are conservative: they invent no direction, remove no coverage and change no accepted artifact. If
-no answer arrives, D1–D4 defaults are what the two lanes implement.
+no answer arrives, D1–D5 defaults are what the two lanes implement.
 
-## 7. Defaults that need no answer
+## 10. Defaults that need no answer
 
 Documented here so the plan is complete without fifteen questions:
 
@@ -167,8 +259,13 @@ Documented here so the plan is complete without fifteen questions:
   worktree at `backtester/tmp/gold-019-sources-20260925/series`, not in canonical, and the report library,
   its builder and the v2 registry exist **only** there — which is why the measurement lane belongs in that
   worktree.
+- **The interest bar does not change.** It stays the accepted scorecard's own: `hit_rate_pct >= 60` **and**
+  `n >= 100`, plus the six conditions in §6. The movement stage uses the same bar with a 5pp gap against the
+  cohort's own share instead of the 60% level, which is all a share can honestly support.
+- **The move floor is declared, never fitted.** 0.30% session and 1.00% week are this project's parameters,
+  published with the 0.50% and 2.00% variants and one `looks_counted`; they are not facts about gold.
 
-## 8. Tests the lanes must write (five, one line each)
+## 11. Tests the lanes must write (six, one line each)
 
 1. `gold_declared_band_state.test.js` — boundary cases 25.01 / 25.00 / 24.99 and 16.01 / 16.00 / 15.99 land
    in the right legs; F1 5.00 inclusive, F4 5.00 exclusive, F2 0.30% exclusive.
@@ -179,18 +276,21 @@ Documented here so the plan is complete without fifteen questions:
    scorecard, and deterministic row order.
 4. `gold_factor_edge_page.test.js` — one placeholder replaced once, the embedded JSON parses, no `fetch`, no
    external script, no model endpoint.
-5. Byte-level regression — `data/gold-direction-scorecard-20260927.json`,
+5. `gold_move_share.test.js` — the share above the floor counts anchors on the right side of the boundary
+   (`>=` floor, not `>`), the 0.50% and 2.00% variants are both published, `looks_counted` equals the states
+   times variants examined, and no stage-1 row carries a direction field.
+6. Byte-level regression — `data/gold-direction-scorecard-20260927.json`,
    `gold_factor_direction_expectations.v1.json`, `gold_individual_variable_report.v2.json` and the accepted
    019 report are unchanged afterwards.
 
-## 9. Handoff, limits, provenance
+## 12. Handoff, limits, provenance
 
 **Order, two lanes, one writer per worktree.** Lane 1 `gold-declared-band-measurement-026`, in the
 gold-research worktree: the v3 register (both VIX streams declared, thresholds written down before any
-outcome is read), the report mode change, the run into a new output directory, expectations v2, tests 1, 2
-and 5, and a one-page summary of the raw splits with no direction claim. Lane 2
+outcome is read), the report mode change, the run into a new output directory, expectations v2, tests 1, 2, 5
+and 6, and a one-page summary of the raw splits and the movement screen, with no direction claim. Lane 2
 `dashboard-gold-factor-edge-page-001`, only after lane 1 is accepted: the table builder, the artifact, the
-template, the page and the two nav entries, tests 3, 4 and 5. No network, no credential, no new data, no
+template, the page and the two nav entries, tests 3, 4 and 6. No network, no credential, no new data, no
 Layer 1 change, no warehouse or scheduled-task action, and nothing in the sealed prospective window is read.
 
 **Limits, so the page can copy them.** Associations only, on intervals already spent. Every state shares
@@ -203,9 +303,21 @@ finding. The band register is a declared reading of the document against the rep
 after the accepted report existed; it is not a pre-registration. No formula is fitted, and the prospective
 window stays sealed until `2027-03-25T15:00:00Z`.
 
+**Two limits that govern how every verdict may be read.** First, the direction test cannot see small
+effects: one standard error is about 2.3pp at these state sizes, so a real 3pp edge passes the gate about 6%
+of the time and even a 5pp edge only about 28%; `no_information` therefore means "nothing large", not
+"nothing exists". Second, the archive has no flat bucket — `exact_zero` totals 0 on both horizons across the
+25 rows — so "a move happened" is not a fact in the data but a line this project draws, and every share
+always travels with the floor that produced it.
+
 **Provenance.** Read-only on 2026-09-28: `logic/agent_gold_direction.md` (F6 inputs, lines 279–295),
 `logic/agent_usd_direction.md` (line 154), `data/gold-direction-scorecard-20260927.json` (`rows`,
 `unscored`, `baselines`, `summary`, `factors`), `VIXCLS.json` (97,074 bytes) for the sizing estimate, and a
-streaming scan of the 95,842,994-byte 019 report for the missing-`values` finding. The only program written
-is the ignored scratch reader `tmp/inspect-report-20260928.js`. Tests were **not run**: this checkout is
-scoped to advisory notes and owns no executable lane; the five tests above belong to the two lanes.
+streaming scan of the 95,842,994-byte 019 report, both for the missing-`values` finding and for the movement
+fields it does carry (147,465 occurrences each of `median`, `q1`, `q3`), and
+`backtester/tmp/gold-hourly-extended-20260918/candles.json` (XAU_USD, hourly, from 2023-01-02) for the join
+option. The z-scores, the `exact_zero` totals (0 session, 0 week), the expected-by-chance row count (2.3) and
+the power table were recomputed here from the accepted scorecard's own baselines. Scratch scripts written and
+ignored: `tmp/inspect-report-20260928.js`, `tmp/scan-report-20260928.js`, `tmp/power-20260928.js`,
+`tmp/plan-rework-20260928.js`. Tests were **not run**: this checkout is scoped to advisory notes and owns no
+executable lane; the six tests above belong to the two lanes.

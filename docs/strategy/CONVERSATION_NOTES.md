@@ -1275,3 +1275,57 @@ its §9 (D1–D15) marked superseded. Tests still not run: this checkout is scop
 executable lane. Nothing outside `docs/strategy/` and ignored `tmp/` was written; no credential, live system
 or sealed-window value was read; the prospective window stays sealed until 2027-03-25T15:00:00Z.
 
+## 2026-09-28 (later still) — "does it move" asked separately from "which way"
+
+The user asked: "keep the language simple — are you saying that long term there are no factors at all out of
+the 28 that cause Gold to move directional in a consistent pattern? We aren't talking up or down, we are
+simply talking directional move. We first want to know *if* a directional move happens, then *why* up or down,
+then we can rebuild the analysis engine."
+
+**The answer given, one line each.** Direction was tested and comes back empty; "if a move happens" was never
+asked at all; and the direction test is too small to see anything but large effects.
+
+Evidence, all read-only or recomputed here on 2026-09-28:
+
+- **The shape of the coverage.** The document declares 10 factors over 28 variables; the accepted run turns
+  them into 51 states — 25 carry a declared direction, 20 have no rule in the document, 6 are declared
+  NEUTRAL — so 25 states could be scored and 26 were never tested at all.
+- **The best row is the noise floor.** Recomputed from the artifact's own baselines: F9 is the largest row
+  at z 2.05 (session, +4.70pp) and z 2.40 (week, +5.46pp); exactly one of the 25 rows reaches |z| ≥ 2 on
+  either horizon, where about 2.3 rows would be expected by chance across 25 rows × 2 horizons. The cell
+  closest to interesting is what noise produces.
+- **"If" was never measured.** `exact_zero` totals 0 on the session and 0 on the week across the 25 rows, and
+  the baselines are exact complements (55.81%/44.19% and 58.23%/41.77%), so the framework has no flat bucket:
+  a three-cent day and a 3% day are the same unit.
+- **The test is too small for anything but big effects.** One standard error is 2.29pp at about 470 anchors
+  per state. A true 3pp edge passes the accepted gate about 6% of the time, a 5pp edge about 28%, and only an
+  edge near 8pp is found reliably (77%). 80% power needs about 774 anchors per state at 5pp and about 2,149 at
+  3pp, against about 470 today; the same archive holds roughly 23,000 hourly XAU_USD bars from 2023-01, so the
+  sample could be had at hourly granularity at the cost of overlapping outcomes and a re-declared horizon.
+- **The movement data already exists.** The accepted report's `outcome_definition.magnitude` promises "counts,
+  median, first quartile and third quartile of the realized return percentage per state", and a scan of the
+  95,842,994-byte report counts 147,465 occurrences each of `median`, `q1` and `q3` (and still zero `values`).
+  So a per-state movement screen costs no new run; a share-above-a-floor measure needs a declared floor plus a
+  re-run or a join (the report's own price input is
+  `backtester/tmp/gold-hourly-extended-20260918/candles.json`, XAU_USD hourly from 2023-01-02).
+
+Delivered (the short plan revised in place, 323 lines, sha256 `D870C12FAF20EC493698A44F78045ED19AA71B709B42A42478E3016C75256D17`):
+sections 2–4 now lead with the two stages ("if", then "which way"); the table design gains block D (the
+movement screen, carrying no direction column); the bar section states the movement-stage variant (same bar,
+with a 5pp gap against the cohort's own share instead of the 60% hit-rate condition); the test list is six,
+with a new `gold_move_share.test.js`; the defaults record that the interest bar is unchanged and that the
+floor is declared and never fitted; and the handoff, limits and provenance carry the new facts. Decisions are
+now five: D1 the "if" stage (answer first — free movement screen, then the 0.30%/1.00% floor with 0.50%/2.00%
+sensitivity and one `looks_counted`), D2 both VIX streams, D3 size, D4 F9, D5 the rebuild's sample size. The
+old "keep the bar" decision moved into the defaults because it changes nothing. The long spec's header note
+was updated to point at five decisions and the two-stage frame. This revision rewrites a file whose previous
+revision was filed as submission `-008`, so `-008`'s plan hash is superseded by the hash above; `-008` stays
+the record of what was filed at that point, and the appendix's own change is a header note only.
+
+**Open with the user:** D1–D5 unanswered. If none arrives, the defaults stand, with D1's default being the
+free movement screen first. Sequencing unchanged: lane 1 `gold-declared-band-measurement-026` in the
+gold-research worktree (both VIX streams declared before any outcome is read, plus the movement cut), then
+lane 2 `dashboard-gold-factor-edge-page-001`. Tests still not run — this checkout owns no executable lane;
+nothing outside `docs/strategy/` and ignored `tmp/` was written; no credential, live system or sealed-window
+value was read; the prospective window stays sealed until 2027-03-25T15:00:00Z.
+

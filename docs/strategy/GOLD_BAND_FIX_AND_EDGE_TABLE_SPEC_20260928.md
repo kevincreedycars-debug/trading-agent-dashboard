@@ -5,7 +5,9 @@
 > streams). This file is kept as the **mechanical appendix** to that plan — registry rows, code line
 > numbers, the measurement command, the JSON shapes and the test list. Where the two disagree, the short
 > plan wins and this file gets fixed. Section 9 of this file (the fifteen decisions D1–D15) is superseded by
-> the plan's four decisions D1–D4.
+> the plan's five decisions D1–D5. The plan was revised again on 2026-09-28 to lead with two stages — first
+> "if a move happens", then "which way" — and that framing lives in the plan's sections 2–4; this appendix
+> stays the mechanical detail for the two lanes.
 
 Advisory recommendation from worker `strategy` (`strategy-advisory-001`), 2026-09-28.
 Advisory only: this is a proposal for the coordinator, not an applied change. Every claim below was
