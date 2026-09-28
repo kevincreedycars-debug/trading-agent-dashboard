@@ -79,6 +79,11 @@ test('the system map renders offline at desktop and narrow widths', async () => 
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto(pathToFileURL(PAGE).href);
     assert.equal(await page.evaluate(() => getComputedStyle(document.querySelector('.lane-live .flow')).flexDirection), 'row', 'wide screens read each lane as one left-to-right run');
+    // The header and the boundary band each wrap a run of sections, so a dropped closing tag silently
+    // drags the lanes, the panels and the footer inside them while still looking nearly right. Assert
+    // the two bands close before what follows them.
+    assert.equal(await page.evaluate(() => document.querySelectorAll('header section, .barrier .lane, .barrier .columns, .barrier footer, header footer').length), 0, 'the header and the boundary band must close before the lanes and panels that follow them');
+    assert.equal(await page.evaluate(() => document.querySelectorAll('main > .lane-live, main > .barrier, main > .lane-research').length), 3, 'both lanes and the boundary band sit directly in main');
     assert.match(await page.locator('section.columns').first().textContent(), /Layer 1 tiles/);
     assert.match(await page.locator('section.columns').first().textContent(), /Layer 2 grid/);
     assert.match(await page.locator('footer').textContent(), /backtest_flow_page/);

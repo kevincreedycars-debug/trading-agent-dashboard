@@ -3,6 +3,10 @@
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>How backtesting flows into the dashboard · System map</title>
+<meta name="description" content="A plain-language map of how the live trading calls are made, and how backtesting copies and checks them without ever writing back.">
+<meta property="og:title" content="How backtesting flows into the dashboard">
+<meta property="og:description" content="Two lanes: the live calls on top, backtesting (a read-only copy of the same data) below. The map shows where they meet, and what it does not claim.">
+<meta property="og:type" content="article">
 <!-- Visual work in this project consults $trading-dashboard-aesthetic-rules and $dashboard-layout-safety-rules first. -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -86,64 +90,66 @@ footer{margin-top:24px;padding-top:16px;border-top:1px solid var(--line);color:v
 <main>
   <header>
     <div>
-      <p class="eyebrow">System map · downstream-only research</p>
+      <p class="eyebrow">System map · research only reads, never writes</p>
       <h1>How backtesting flows into the dashboard</h1>
-      <p class="lede">The upper lane is the production chain that produces the Layer 1 and Layer 2 calls you act on. The lower lane is backtesting: a read-only copy of what production already stored, measured and republished as evidence. The two lanes meet on the dashboard screen, and nowhere else.</p>
+      <p class="lede">Two lanes are drawn below. The top lane is how a live call gets made: the market facts are collected and saved, five separate robots each write one 24-hour call, and Layer 2 combines them. The bottom lane is backtesting: it works on a copy of what was already saved, re-runs the old rules over it, and shows the result as evidence. The two lanes meet only on this dashboard.</p>
     </div>
     <ul class="chips">
-      <li>read-only copy</li>
-      <li>no write-back</li>
-      <li>Layer 1 stays sealed</li>
+      <li>copy only</li>
+      <li>never writes back</li>
+      <li>live calls untouched</li>
       <li>reviewed 2026-09-28</li>
     </ul>
+  </header>
+
   <section class="lane lane-live" aria-labelledby="lane-live-title">
     <div class="lane-head">
       <div>
-        <p class="eyebrow">Lane A · live production</p>
-        <h2 id="lane-live-title">Every refresh: where the Layer 1 and Layer 2 calls come from</h2>
+        <p class="eyebrow">Lane A · live calls</p>
+        <h2 id="lane-live-title">Where the live calls come from, every refresh</h2>
       </div>
-      <p class="lane-note">Five sealed Layer 1 agents each run on their own logic document. Nothing on this lane reads research, and no Layer 1 agent reads another agent.</p>
+      <p class="lane-note">Five robots, one per asset. Each one reads only its own rulebook and the newest usable facts, then posts one call. Nothing here reads the backtesting side, and no robot sees another robot's answer.</p>
     </div>
     <ol class="flow">
       <li class="node" data-kind="run">
         <span class="step">01 · COLLECT</span>
         <strong>Collectors (n8n)</strong>
-        <span class="body">Eco Events plus the USD, EUR, Gold, NQ and BTC collectors store one market snapshot per refresh.</span>
-        <span class="tagline">writes market_snapshots</span>
+        <span class="body">Six collectors (Eco Events plus one each for USD, EUR, Gold, NQ and BTC) fetch the market facts and save one snapshot per refresh.</span>
+        <span class="tagline">saves market_snapshots</span>
       </li>
       <li class="arrow" aria-hidden="true"></li>
       <li class="node" data-kind="store">
         <span class="step">02 · STORE</span>
         <strong>Supabase market_snapshots</strong>
-        <span class="body">The canonical market context that agents read and research later copies.</span>
-        <span class="tagline">runtime table</span>
+        <span class="body">The one saved set of market facts. The live robots read it now, and backtesting copies it later.</span>
+        <span class="tagline">saved market facts</span>
       </li>
       <li class="arrow" aria-hidden="true"></li>
       <li class="node" data-kind="run">
         <span class="step">03 · LAYER 1</span>
         <strong>Five sealed agents</strong>
-        <span class="body">Each agent reads only its own logic document and the latest usable snapshot, then writes one raw 24-hour directional call.</span>
-        <span class="tagline">writes agent_outputs</span>
+        <span class="body">Each robot reads only its own rulebook and the newest usable facts, then posts one call: up or down over the next 24 hours.</span>
+        <span class="tagline">saves agent_outputs</span>
       </li>
       <li class="arrow" aria-hidden="true"></li>
       <li class="node" data-kind="store">
         <span class="step">04 · STORE</span>
         <strong>Supabase agent_outputs</strong>
-        <span class="body">Raw calls kept exactly as written, separately per asset.</span>
-        <span class="tagline">runtime table</span>
+        <span class="body">Those calls saved exactly as written, kept apart for each asset.</span>
+        <span class="tagline">saved calls</span>
       </li>
       <li class="arrow" aria-hidden="true"></li>
       <li class="node" data-kind="run">
         <span class="step">05 · LAYER 2</span>
         <strong>Pair selection</strong>
-        <span class="body">Downstream of Layer 1: it reads the finished calls and raises the cross-pair call when two assets oppose. It combines, it does not re-derive.</span>
-        <span class="tagline">writes layer2.json</span>
+        <span class="body">Built on top of Layer 1: it reads the five finished calls and adds one extra call when two assets point opposite ways. It only combines what it was given; it never recalculates a call.</span>
+        <span class="tagline">saves layer2.json</span>
       </li>
       <li class="arrow" aria-hidden="true"></li>
       <li class="node" data-kind="publish">
         <span class="step">06 · PUBLISH</span>
         <strong>Dashboard Writer → GitHub Pages</strong>
-        <span class="body">Publishes layer1.json, layer2.json and the workflow status the browser reads.</span>
+        <span class="body">Writes the files this dashboard reads: the five calls, the Layer 2 call and the job status.</span>
         <span class="tagline">→ Layer 1 tiles · Layer 2 grid</span>
       </li>
     </ol>
@@ -152,67 +158,69 @@ footer{margin-top:24px;padding-top:16px;border-top:1px solid var(--line);color:v
   <section class="barrier" aria-labelledby="barrier-title">
     <div class="barrier-head">
       <strong id="barrier-title">Read-only boundary</strong>
-      <span class="muted">the only crossing between the two lanes</span>
+      <span class="muted">the one link between the two lanes, and it only goes one way</span>
     </div>
-    <p>Backtesting copies the stored tables, the market history and the frozen logic documents. Production never reads a research artifact, so a backtest cannot change a Layer 1 or Layer 2 call, a workflow, or a stored row.</p>
+    <p>Backtesting copies the saved tables, the market history and the rulebooks as they stood. Production never reads a research artifact, so nothing a backtest does can change a live call, a workflow or a saved row.</p>
     <dl class="barrier-pair">
       <div>
         <dt>Research may read</dt>
-        <dd>agent_outputs · market_snapshots · frozen logic documents · registries · market history</dd>
+        <dd>agent_outputs · market_snapshots · the rulebooks as they stood · registries · market history</dd>
       </div>
       <div class="no">
         <dt>Research may never write</dt>
-        <dd>n8n workflows · Supabase runtime tables · live call path · another agent's input</dd>
+        <dd>n8n workflows · Supabase runtime tables · live call path · another robot's input</dd>
       </div>
     </dl>
+  </section>
+
   <section class="lane lane-research" aria-labelledby="lane-research-title">
     <div class="lane-head">
       <div>
-        <p class="eyebrow">Lane B · backtesting (downstream only)</p>
+        <p class="eyebrow">Lane B · backtesting (reads a copy only)</p>
         <h2 id="lane-research-title">How a backtest earns the right to be shown</h2>
       </div>
-      <p class="lane-note">One build order, in this sequence. A step is only trusted after the one before it reproduces the live behaviour it claims to replay.</p>
+      <p class="lane-note">Six steps, always in this order. A step is only believed once the step before it reproduces what the live system actually did on that date.</p>
     </div>
     <ol class="flow">
       <li class="node" data-kind="copy">
         <span class="step">01 · COPY</span>
         <strong>Frozen inputs</strong>
-        <span class="body">A read-only copy of stored calls, market history, registries and the logic documents as they stood.</span>
-        <span class="tagline">no live read-write</span>
+        <span class="body">A copy of the saved calls, the market history, the registries and the rulebooks exactly as they stood. Nothing live is touched.</span>
+        <span class="tagline">copy taken, nothing touched</span>
       </li>
       <li class="arrow" aria-hidden="true"></li>
       <li class="node" data-kind="research">
         <span class="step">02 · REBUILD</span>
         <strong>Snapshot builders</strong>
-        <span class="body">Reconstruct exactly the input the agent saw at time T, with vintages and timestamps recorded honestly.</span>
-        <span class="tagline">parity fixture first</span>
+        <span class="body">Rebuilds the exact facts the robot saw at that moment, and says honestly where a fact was missing or only a stand-in.</span>
+        <span class="tagline">match the live run first</span>
       </li>
       <li class="arrow" aria-hidden="true"></li>
       <li class="node" data-kind="research">
         <span class="step">03 · REPLAY</span>
         <strong>Replay runners</strong>
-        <span class="body">Re-run the frozen live logic asset by asset. Assets are never blended, and a parity gate has to pass before anything counts.</span>
+        <span class="body">Re-runs the old rulebook one asset at a time, on the copied facts. Assets are never mixed, and a replay has to match what the live run did before its results count.</span>
         <span class="tagline">same rules, new dates</span>
       </li>
       <li class="arrow" aria-hidden="true"></li>
       <li class="node" data-kind="research">
         <span class="step">04 · SCORE</span>
         <strong>Outcome evaluation</strong>
-        <span class="body">Score each replayed call against the next 24 hours, with a drift floor so a flat market is not read as a win.</span>
-        <span class="tagline">hit rate vs drift floor</span>
+        <span class="body">Checks what the price actually did over the next 24 hours. A call only counts as right if the move beat the market's ordinary noise.</span>
+        <span class="tagline">right call vs normal noise</span>
       </li>
       <li class="arrow" aria-hidden="true"></li>
       <li class="node" data-kind="research">
         <span class="step">05 · CHECK</span>
         <strong>Checker artifacts</strong>
-        <span class="body">PASS with 0 fail, 0 missing, 0 tolerance, and the coverage gaps, limits and blocked items recorded next to it.</span>
+        <span class="body">An automatic checker has to pass with no failures and nothing missing, and whatever it could not cover is written down next to the result.</span>
         <span class="tagline">evidence + limits</span>
       </li>
       <li class="arrow" aria-hidden="true"></li>
       <li class="node" data-kind="publish">
         <span class="step">06 · PUBLISH</span>
         <strong>Research artifacts</strong>
-        <span class="body">Frozen, versioned JSON committed alongside the pages that read it.</span>
+        <span class="body">Saved as fixed, dated files that cannot change quietly, next to the pages that read them.</span>
         <span class="tagline">data/*.json</span>
       </li>
     </ol>
@@ -220,43 +228,43 @@ footer{margin-top:24px;padding-top:16px;border-top:1px solid var(--line);color:v
 
   <section class="columns" aria-label="Where the two lanes meet">
     <article class="panel">
-      <p class="eyebrow">Lane A lands here · live</p>
-      <h3>The dashboard's calls</h3>
+      <p class="eyebrow">Lane A shows up here</p>
+      <h3>What the live lane puts on screen</h3>
       <ul>
-        <li><strong>Layer 1 tiles:</strong> the five raw 24-hour directions, with published time and freshness.</li>
-        <li><strong>Layer 2 grid:</strong> the pair selection built from those finished calls.</li>
-        <li>Updated by the Dashboard Writer on every refresh. Nothing else writes to these fields.</li>
+        <li><strong>Layer 1 tiles:</strong> the five 24-hour calls, each with the time it was published and how old it is.</li>
+        <li><strong>Layer 2 grid:</strong> the extra call built from those five finished calls.</li>
+        <li>Only the Dashboard Writer updates these boxes. Nothing on the page can change a call.</li>
       </ul>
     </article>
     <article class="panel">
-      <p class="eyebrow">Lane B lands here · evidence</p>
-      <h3>The dashboard's research readouts</h3>
+      <p class="eyebrow">Lane B shows up here</p>
+      <h3>What the backtesting lane puts on screen</h3>
       <ul>
-        <li><strong>Evidence tabs:</strong> Backtest / Accuracy, Backtest Engine, Research Proof Map, Factor Edge Lab, Shadow Logic Backtest.</li>
-        <li><strong>Standalone pages:</strong> the Gold direction scorecard, Gold backtesting and Gold backtest outcomes read the same frozen artifacts.</li>
-        <li>Read-only. A tab can be reshaped or retired without touching a live call.</li>
+        <li><strong>Evidence tabs:</strong> Backtest / Accuracy, Backtest Engine, Research Proof Map, Factor Edge Lab, Shadow Logic Backtest, each a read-only view of the same saved results.</li>
+        <li><strong>Standalone pages:</strong> the Gold direction scorecard, Gold backtesting and Gold backtest outcomes read the same fixed files.</li>
+        <li>All read-only: a tab can be redesigned or dropped without touching a live call.</li>
       </ul>
-      <p class="note">Two lanes, one screen: research adds context beside the call, never inside it.</p>
+      <p class="note">Two lanes, one screen: the research sits beside the live call, never inside it.</p>
     </article>
   </section>
 
-  <section class="columns" aria-label="What this map does and does not claim">
+  <section class="columns" aria-label="What this page does and does not say">
     <article class="panel">
       <p class="eyebrow">Reading the lines</p>
-      <h3>What this map claims</h3>
+      <h3>What this page does say</h3>
       <ul>
-        <li><strong>One production chain:</strong> collectors write snapshots, five independent Layer 1 agents write raw calls, Layer 2 combines those finished calls, the Dashboard Writer publishes them.</li>
-        <li><strong>One research chain:</strong> backtesting copies stored data and frozen logic, replays it, scores it, checks it and publishes artifacts.</li>
-        <li><strong>One crossing:</strong> research reads production. Production reads no research, and no Layer 1 agent reads another agent, Layer 2, or a research artifact.</li>
+        <li><strong>One live chain:</strong> the collectors save snapshots, five separate robots each write one call, Layer 2 combines those finished calls, and the Dashboard Writer puts them on the page.</li>
+        <li><strong>One research chain:</strong> backtesting copies saved data and the old rules, replays them, scores them, checks them, and saves the result as evidence.</li>
+        <li><strong>One crossing, one direction:</strong> research reads production. Production reads no research, and no Layer 1 robot reads another robot, Layer 2, or a research file.</li>
       </ul>
     </article>
     <article class="panel">
       <p class="eyebrow">Keep the picture honest</p>
-      <h3>What this map does not claim</h3>
+      <h3>What this page does not say</h3>
       <ul>
-        <li><strong>Not live edge:</strong> a passing replay or checker shows history parity for frozen rules on frozen data, not causality, accuracy or profit.</li>
-        <li><strong>Not deployment:</strong> a local export or a green test run is not proof that a live workflow changed.</li>
-        <li><strong>Not full coverage:</strong> where source vintages or storage timestamps are only proxies, the gap is listed on the research pages instead of being smoothed over.</li>
+        <li><strong>Not proof of skill:</strong> a replay that matches the past only shows the old rules were followed on old data. It is not proof that the calls cause anything, are accurate, or make money.</li>
+        <li><strong>Not a live change:</strong> a file exported on this machine, or a test passing here, does not mean anything in the live system changed.</li>
+        <li><strong>Not complete:</strong> where a date or a value is only a stand-in for the real thing, the gap is written down on the research pages instead of being smoothed over.</li>
       </ul>
     </article>
   </section>
@@ -265,10 +273,10 @@ footer{margin-top:24px;padding-top:16px;border-top:1px solid var(--line);color:v
     <h3>Legend</h3>
     <ul class="legend">
       <li><i class="k-run" aria-hidden="true"></i><span class="k-run">live step (blue)</span></li>
-      <li><i class="k-store" aria-hidden="true"></i><span class="k-store">Supabase store (slate)</span></li>
-      <li><i class="k-publish" aria-hidden="true"></i><span class="k-publish">published artifact (teal)</span></li>
+      <li><i class="k-store" aria-hidden="true"></i><span class="k-store">saved in Supabase (slate)</span></li>
+      <li><i class="k-publish" aria-hidden="true"></i><span class="k-publish">published file (teal)</span></li>
       <li><i class="k-copy" aria-hidden="true"></i><span class="k-copy">read-only copy (dashed amber)</span></li>
-      <li><i class="k-research" aria-hidden="true"></i><span class="k-research">backtest step (solid amber)</span></li>
+      <li><i class="k-research" aria-hidden="true"></i><span class="k-research">backtest step (amber)</span></li>
     </ul>
   </section>
 
@@ -281,7 +289,7 @@ footer{margin-top:24px;padding-top:16px;border-top:1px solid var(--line);color:v
       <a href="docs/ARCHITECTURE.md">Architecture note</a>
       <a href="backtester/README.md">Backtester rules</a>
     </div>
-    <p>Research surface, not a live call. Replay is trusted only after the parity gate and the checker pass. Guarded by backtester/tests/backtest_flow_page.browser.test.js, which re-renders this map offline at desktop and narrow widths.</p>
+    <p>This page is research, not a live call. A replay only counts once it matches the live run and the checker passes. Guarded by backtester/tests/backtest_flow_page.browser.test.js, which re-renders this map offline at desktop and narrow widths.</p>
   </footer>
 </main>
 </body>
