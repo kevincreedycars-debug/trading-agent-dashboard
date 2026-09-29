@@ -1505,5 +1505,69 @@ with batch 3, and the closing note that 33 does not reduce D5), `GOLD_VIX_BOTH_A
 and this entry.
 
 **Status.** 16 of 50 answered. Open: **8 and 13** (both restated again), and D1 is still with the coordinator.
+That count was wrong - see the next entry - it is 14 of 50.
+
+## 2026-09-29 - batch 3 replies: 8 and 13 answered, the correlation question, and the direction read
+
+**Both outstanding questions came back answered, and the count in the entry above was wrong.** The user replied to
+the restatements of 8 and 13 and, in the same message, asked a question of their own: *"understood on the factoir
+side so we are looking for something thats 5% more right than normal movement? IUs that what you mean? If so arent
+we simply tracking correlation?"*
+
+**Correction of the record, because two filed submissions carry it.** The sheet's status line and the summaries in
+submissions `-014` and `-015` said **16 of 50** answered. The correct figure is **14** (1, 2, 3, 4, 5, 6, 7, 8, 9,
+10, 13, 14, 27, 33): question 2 was counted once for being asked in batch 1 and again for being answered in batch
+2, and question 33 the same way. Filed submissions are not rewritten; the correction is carried in the sheet and in
+submission `-016`.
+
+**"Aren't we simply tracking correlation?" - yes, and the answer says so in that word.** The tables measure an
+association between a state observable *before* the session and what price did *during* it. No row claims cause,
+and the wording in the deliverable will not imply it. The useful question is not whether it is correlation but
+which correlation would still hold up on days not yet seen, so the three guards are now stated for the reader
+(sheet, new section; plan §6): the baseline is the cohort's own rate and never 50% (gold closed up on 56.84% of
+the archived sessions, and the path-side baselines are higher still - a 0.50 L2L move happens either way on
+97.89% of sessions, an L2L move on 75.26%); the sign has to hold in each year, not only pooled; and the overlap
+matrix stops correlated factors from being printed as independent confirmations. Their "5% more right" was read
+back to them in counts: it is 5 days in 100 above the cohort's own rate, not 5% of price.
+
+**8 answered, and it reorders what the table shows first.** Verbatim: *"Yes its the 0.5l2l and l2l directional
+movement happened that we are interested in primarily, then we want to see if the directional call was correct for
+the l2l that occured"*. So the **movement that happened**, read at **0.50 L2L and L2L** and counted in either
+direction, is the first number, and the direction question is asked **after** it and **conditioned on it**: was the
+call's direction the move that occurred. The fixed 0.80% they declared earlier is not in conflict with this - it is
+the current-chart instance of 0.50 L2L (0.80 / 1.68) - and it stays published as a sensitivity row beside the fixed
+0.30%, so nothing declared is discarded. D1's wording is updated: the "if" stage is unchanged, its order is now
+the user's.
+
+**The direction read was then measured, because their criterion is now a number anyone can run: and it is a
+deficit, not an edge.** Scan `tmp/l2l-scan7-20260929.js` (read-only, spent intervals; it asserts that
+`favourable >= 0.50 L2L` reproduces the archive's own `reachedHalfAdr20` at 64.04% and `>= L2L` reproduces
+`reachedFullAdr20` at 38.42% - both assertions pass, which is also what caught a first draft of the scan that had
+the call-relative fields mapped the wrong way round). The findings are in the sheet's fact table and plan §4: the
+0.50 L2L move happens either way in **97.89%** of sessions (so that floor cannot sort days), the L2L move in
+**75.26%**; the call's own direction reached the floor 64.04% and 38.42%; and among the sessions where the move ran
+**one side only**, that side was the call's direction **45.63%** (162/355) at 0.50 L2L and **46.56%** (183/393) at
+L2L, against **61.13%** and **56.23%** for always saying "up" on the same rows, with the per-year series at 0.50 L2L
+running 47.88%, 40.29%, 52.94%. That is the accepted verdict reached by the user's own route: the calls do not beat
+the drift on the days a one-sided move occurred. Two consequences are now written into the plan: both-sided
+sessions (36.38% of moved sessions at 0.50 L2L) are excluded from the matched/missed count and printed as their own
+split row, and the one-sided figures must never be compared against the unconditional 64.04% / 38.42%, because they
+are different universes.
+
+**13 answered "yes", with the sample limit attached.** Verbatim: *"Not sure why we are asking this, we want to find
+anything that giuves us an adge so yes?"* The bar is 5 days in 100 and they will act on it. Their "anything" also
+fixes what happens below the bar, tied to question 9: a smaller gap is still printed, flagged as indistinguishable
+from chance on today's sample, never hidden. The caveat travels with the answer: about 470 anchors can show a 5pp
+gap but not confirm it (about 774 for 80% power), which is D5's case.
+
+**Files changed.** `INTENT_QUESTIONS_ANSWER_SHEET_20260929.md` (status line corrected to 14 of 50, rows 8 and 13
+answered, the answer log, the correction note, a new "Is this just correlation?" section, and the
+movement-then-direction fact table), `GOLD_VIX_BOTH_AND_FACTOR_TABLE_PLAN_20260928.md` (§3 gains the reordered
+floor set and the association statement, §4 gains the measured conditional read, §6 states what the bar measures,
+D1 updated), and this entry.
+
+**Status.** 14 of 50 answered, and every question asked so far is closed. Next is the first batch of fresh numbers:
+11, 12, 15, 16, 17, 18, 19. D1's ordering is settled by the user; the coordinator confirmation of the two-unit
+print is still pending, and D2-D5 are unchanged.
 
 

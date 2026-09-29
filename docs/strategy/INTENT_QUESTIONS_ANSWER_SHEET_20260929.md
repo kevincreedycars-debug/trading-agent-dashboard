@@ -12,12 +12,12 @@ message is superseded.
 - Or list only the numbers you disagree with, for example `3 no, 12 often, 27 no`.
 - Questions are put to you at most seven at a time, in numbering order, skipping anything already asked.
 
-**Status:** 16 of 50 answered on 2026-09-29. Batch 1 (1, 2, 10, 13, 14, 27, 33): 4 usable (1, 10, 14, 27) and 3
-that asked for plainer wording (2, 13, 33). Batch 2 (3-9): **3, 4, 5, 6, 7 and 9 answered**, 2 confirmed as "push
-ahead" with the user's own L2L correction, and 8 came back twice as not understood. Batch 3: **9 answered "no"**
-(thin states stay visible) and **33 answered "no, not yet"** (nothing is being fitted yet, so no unseen-data test
-applies). Still open and restated in the plainest words available: **8 and 13**. Next fresh numbers after those:
-11, 12, 15.
+**Status:** 14 of 50 answered on 2026-09-29 — **corrected down from 16, which double-counted** question 2
+(answered in batch 2 after being asked in batch 1) and question 33 (asked in batch 1, answered in batch 3). The
+answered set is 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 13, 14, 27, 33. Every question asked so far has now been answered:
+8 and 13, the two that came back as "what do you mean" and "is that 0.05%", were closed in the batch-3 reply,
+which also answered the user's own question about correlation and turned question 8's answer into a measurement.
+Next batch is fresh numbers: 11, 12, 15, 16, 17, 18, 19.
 
 **Two of these answers changed the plan.** The user wants **both** stages and **all 28** variables, and they
 declared a movement size of their own: **0.80% of price, in the direction of the call, within the 24-hour
@@ -49,7 +49,7 @@ median instead of today's rolling value. Both statements are kept, each labelled
 | 5 | Publish "no move" as its own bucket, so the three counts sum to the total | yes | batch 2 | **yes**, with a refinement from the user: "the 0.8% is on XAU/USD right, most days move that much even if they dont close that much". Confirmed XAU/USD, and measured: **74.39%** of sessions reach 0.80% from the open in one direction or the other, so only **25.61%** are a *path* no-move, while only **41.58%** close beyond 0.80%, so **58.42%** are a *close* no-move. The bucket is therefore published twice and labelled with which definition it is |
 | 6 | Floor as a percentage of price, not a dollar amount | yes | batch 2 | **yes** - "Yes as percentage of price" |
 | 7 | Same floor every year, no per-year tuning | yes | batch 2 | **yes** - "Yes as the l2l model is fixed percentage ranges". Read as: the floor is fixed in advance and never fitted per year; the L2L unit exists precisely so the *same* bet is read in each year's own ranges |
-| 8 | q1-to-q3 spread as the headline measure, with the share above the floor beside it | yes | batch 2, 3 | **still not clear** - "what do you mean headline and floor?". Both words were mine and both were jargon, so they are retired in the wording used to the user: *headline* becomes "the one number in large text at the top of the page", and *floor* becomes "your own 0.8% minimum, the smallest move we count as a move". The proposal in plain words: the top number is how big a normal day is, and immediately beside it, how often 0.8% gets reached. Default assumed unless corrected |
+| 8 | q1-to-q3 spread as the headline measure, with the share above the floor beside it | yes | batch 2, 3 | **answered, and it changes which number comes first** - after asking what "headline" and "floor" meant, the user said: *"Yes its the 0.5l2l and l2l directional movement happened that we are interested in primarily, then we want to see if the directional call was correct for the l2l that occured"*. So the first number is the **movement that happened**, read at **0.50 L2L and L2L** and counted in either direction; only then is the call's direction checked against the move that occurred. The 0.80% declared on 2026-09-29 is the *current-chart instance* of 0.50 L2L (0.80 / 1.68 = 0.48), so the two declarations agree. Measured on 2026-09-29 (`tmp/l2l-scan7-20260929.js`, cross-checked against the archive's own `reachedHalfAdr20` / `reachedFullAdr20`): a 0.50 L2L move happened either way in **97.89%** of sessions and an L2L move in **75.26%**; the call's own direction reached 0.50 L2L in **64.04%** and L2L in **38.42%**. The conditional read the user asked for is the one that matters: among sessions where the move happened on **one side only** (n 355 at 0.50 L2L, n 393 at L2L), the call's direction was the side that moved **45.63%** and **46.56%** of the time, against **61.13%** and **56.23%** for always saying up on the same rows. Stage 2 therefore stays conditional, and today's answer under this criterion is not a small edge but a deficit |
 | 9 | Drop a state that has fewer than 100 anchors | yes | batch 2, 3 | **no** - "No if its relevant we always need to be aware of its impact on the market". This reverses the default: a thin state is **never dropped and never hidden**. Every state is listed with its day count, and one with too few days to judge is printed unscored with "few days" beside it so its market context stays visible. The `n >= 100` bar survives only as a *labelling and scoring* gate - it decides whether the row can carry an interest flag or clear the 60% gate, and it decides nothing about whether the row is shown |
 
 ## B. What you want out of it (10-13)
@@ -59,7 +59,7 @@ median instead of today's rolling value. Both statements are kept, each labelled
 | 10 | "A move is coming" is enough, direction is a separate second step | yes | batch 1 | **no** - "both, i want to see any edge we can find": the movement stage and the direction stage are both wanted. Direction is not optional, and the two stages stay separate so the direction answer is read after the movement answer |
 | 11 | A simple on/off flag per factor, not a score or a ranking | yes | | |
 | 12 | Prefer factors that fire rarely but strongly over often with a small edge | rare + strong | | |
-| 13 | You would act on an edge smaller than 5pp | no | batch 1, 3 | **still not clear** - "what does 5 percentage points mean as in 0.05%?" Restated in the reply with plain counts only: 5 points means **5 days in every 100**, not 0.05% (which would be one day in two thousand). Worked example used: gold closes up on about 57 days in 100 (324 of the 570 archived sessions, 56.84%), and a factor that fires on up-closes 62 days in 100 is 5 points ahead of that baseline; 5% *of price* would be about 227 dollars on the last archived session open of 4,540.13, a different unit entirely. Default assumed unless corrected: an edge is acted on from 5 points of frequency |
+| 13 | You would act on an edge smaller than 5pp | no | batch 1, 3, 4 | **yes** - *"Not sure why we are asking this, we want to find anything that giuves us an adge so yes?"*. The bar is **5 days in 100** (not 0.05%, not 5% of price) and the user will act on it. Their "anything that gives us an edge" also fixes the reporting rule for smaller gaps, tied to question 9: a gap below the bar is still **printed**, flagged as indistinguishable from chance on today's sample, and never hidden. The caveat that travels with this answer: 5pp needs about 774 anchors for 80% power and the archive has about 470, so a 5pp row here is *reportable and worth watching, not confirmable* - which is what D5 (the hourly rebuild) is for |
 
 ## C. Horizon (14-17)
 
@@ -149,14 +149,23 @@ median instead of today's rolling value. Both statements are kept, each labelled
 | --- | --- | --- | --- |
 | 2026-09-29 | 1 | 1, 2, 10, 13, 14, 27, 33 | 7 replies. Usable: 1 both measures, 10 both stages, 14 session primary with a morning-flag process, 27 all 28 in scope. Restatements requested and given: 2 (floor), 13 (5pp vs 0.8%), 33 (out of sample). Also declared: 0.80% in the direction of the call within the session, which replaces the 0.30% session default |
 | 2026-09-29 | 2 | 3-9 | 7 replies, 5 usable (3, 4, 5, 6, 7). 4 count both directions; 5 publish the no-move bucket; 6 floor as a percentage of price; 7 the floor is the same every year. 2 was settled here: "push ahead but clarify that the real L2L size is actually 1.68% at present on the charts I use". 8 and 9 came back as not understood |
-| 2026-09-29 | 3 | 8, 9, 13, 33 (restatements) | 4 replies. **9 answered "no"** - a relevant state is never dropped, its market impact must stay visible. **33 answered "no, not yet"** - nothing is being fitted at this stage, the work is observing the data and confirming what price did and did not do. 8 asked what "headline" and "floor" mean; 13 asked whether 5 percentage points means 0.05%. Both words are retired from the wording and both questions are restated in counts only |
+| 2026-09-29 | 3 | 8, 9, 13, 33 (restatements) | 4 replies, and all four are now answered. **9: "no"** - a relevant state is never dropped, its market impact must stay visible. **33: "no, not yet"** - nothing is being fitted at this stage, the work is observing the data and confirming what price did and did not do. **8: yes**, and it moved the primary measure to the **0.50 L2L and L2L movement that happened**, with the directional read taken afterwards on that movement. **13: yes** - "we want to find anything that giuves us an adge". The reply also asked whether this is simply tracking correlation, which it is; the answer and its three guards are recorded in the section below |
 
-Batches continue in numbering order, at most seven at a time, skipping anything already asked. Batch 3 closed **2
-and 33** (2 in batch 2 with the 1.68% correction) and left **8 and 13** outstanding in their plainest wording. Two
-lanes are still waiting on D1-D5; D1's default is no longer "movement screen then a 0.30% floor" but "movement
-screen then the user's declared 0.80% / 1.00-L2L floor", with the direction stage kept in scope. Question 33's
-answer removes nothing from D5 - it says the *stage we are in* is observation, so the out-of-sample check binds a
-future declared rule rather than today's tables.
+Batches continue in numbering order, at most seven at a time, skipping anything already asked. Batch 3 closed all
+four questions it asked: **9** (thin states stay visible), **33** (observation stage, so no unseen-data test on
+today's tables), **8** (0.50 L2L and L2L movement first, direction read after) and **13** (act from 5 days in
+100, and print anything smaller with its chance caveat). Batch 4 is therefore the first batch of fresh numbers:
+**11, 12, 15, 16, 17, 18, 19**. Two lanes are still waiting on D1-D5; D1's default is no longer "movement screen
+then a 0.30% floor" but "movement screen, then the 0.50 L2L and L2L movement that happened, then the direction
+read on that movement", with the fixed 0.80% and 0.30% kept as sensitivity rows. Question 33's answer removes
+nothing from D5 - it says the *stage we are in* is observation, so the out-of-sample check binds a future declared
+rule rather than today's tables.
+
+**Correction recorded here, because a filed submission carries the wrong count.** The submissions `-014` and
+`-015` and the earlier version of the status line above said **16 of 50** answered. The correct figure is **14**
+(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 13, 14, 27, 33): question 2 was counted twice, once for being asked in batch 1
+and once for being answered in batch 2, and question 33 was counted twice for the same reason. Filed submissions
+are not rewritten; the correction is carried forward in `-016`.
 
 ## Batch 1 (2026-09-29) - the replies verbatim, in canonical order
 
@@ -194,6 +203,40 @@ user - the VIX 25.00/16.00 band *is* written in the document and is simply not r
 median split, and the same is true of the four regime labels. The remaining two need a number: 8 level bands
 the document never declares, and 6 change rules with no rule at all.
 
+## Is this just correlation? (the user's own question, batch 3)
+
+The user asked: *"understood on the factor side so we are looking for something thats 5% more right than normal
+movement? IUs that what you mean? If so arent we simply tracking correlation?"* Three answers, in order.
+
+**Yes, it is correlation, and it is stated as correlation.** What the tables measure is whether a state that is
+known *before* the session starts lines up with what price did *during* it. No row claims the state caused the
+move, and no wording in the deliverable will imply it. The useful question is not "is this correlation" but
+"which correlation would still hold up on days we have not seen yet", and that is what the guards below test.
+
+**Not "5% more right", "5 days in 100 more often than normal".** The comparison is a rate against a rate: gold
+closed up on 56.84% of the archived sessions, so a state that closes up 62 days in 100 is 5 points ahead of that
+baseline, and 5% of price (about 227 dollars on the last session's open) is a different unit that never enters
+this comparison. The bar is stated in counts only, per question 13.
+
+**Three guards, each aimed at a known way a raw correlation misleads.** (1) *The baseline is the cohort's own
+rate, never 50%*: gold drifts up, so a factor that merely fires on the up days would otherwise look skilful - and
+on the path side the baseline is just as high (a 0.50 L2L move happens either way on 97.89% of sessions, an L2L
+move on 75.26%), which is why every share is printed beside the share the whole cohort gets on the same rows.
+(2) *The sign has to hold in each year, not only pooled*: the fixed-0.80% rows show the failure directly, with
+the reach-in-call-direction share running 32.40%, 38.43%, 62.82% across 2024-2026 while the L2L form runs 39.60%,
+37.19%, 38.46% - a fixed percentage of price is a different bet each year, which is why the L2L unit is used.
+(3) *Overlap is subtracted, not ignored*: 28 variables on one instrument will agree by construction, so the
+correlation/overlap matrix from the accepted plan is what stops three correlated factors from being presented as
+three independent confirmations. A fourth limit is arithmetic rather than methodological: about 470 daily anchors
+can *show* a 5-point gap but cannot *confirm* it (about 774 are needed for 80% power on that size), which is the
+case for D5 and the hourly rebuild.
+
+**The direction read just measured is the counter-example, and it is worth keeping in view.** If "the L2L move
+happened and the call was right" were an edge, the calls would beat the drift on the days a one-sided move
+occurred. They do not: 45.63% at 0.50 L2L and 46.56% at L2L against 61.13% and 56.23% for always saying "up" on
+the same rows. So this criterion, applied to the accepted calls, reads as a deficit rather than an edge - and the
+same test is what will be applied to any state that *does* clear the bar, which is the point of running it first.
+
 ## Gold L2L facts (read 2026-09-29, read-only, every interval already spent)
 
 Definition chain, verbatim from the accepted artifacts: "Current standard L2L distance is ADR20 * 0.5 from the
@@ -224,6 +267,35 @@ ADR20 * 0.25".
 | the same 0.80% against the period-median L2L | 1.11x |
 | sessions reaching 0.80% either way (path) vs closing beyond it (close) | 74.39% vs 41.58% |
 | no-move bucket at 0.80%, path vs close | 25.61% vs 58.42% |
+
+**The movement-then-direction read, batch 3 (scan `tmp/l2l-scan7-20260929.js`, read-only).** Sides are read from
+the archive's own excursions, which are stated **relative to the call**: the figure marked *up* is
+`maxFavourableExcursion` for a bullish call and `maxAdverseExcursion` for a bearish one. The mapping is verified in
+the scan itself, because `favourable >= 0.50 L2L` has to reproduce `reachedHalfAdr20` (64.04%) and
+`favourable >= L2L` has to reproduce `reachedFullAdr20` (38.42%); both assertions pass.
+
+| Gold, movement that happened, then direction | 0.50 L2L (ADR20 x 0.25) | L2L (ADR20 x 0.50) | fixed 0.80% |
+| --- | ---: | ---: | ---: |
+| a move of that size happened, either direction | **97.89%** | **75.26%** | 74.39% |
+| no move of that size | 2.11% | 24.74% | 25.61% |
+| of the moved sessions, up only / down only / both sides | 38.89% / 24.73% / 36.38% | 51.52% / 40.09% / 8.39% | 52.12% / 36.32% / 11.56% |
+| call's own direction reached the floor | 64.04% | 38.42% | 39.12% |
+| among the moved sessions, the move went the call's way | 65.41% | 51.05% | 52.59% |
+| one-sided sessions only: call matched the side that moved | **45.63%** (162/355) | **46.56%** (183/393) | 46.40% (174/375) |
+| always saying up on those same rows | **61.13%** | 56.23% | 58.93% |
+| call matched the side that moved, by year (one-sided) | 47.88% (79/165), 40.29% (56/139), 52.94% (27/51) | 48.55% (84/173), 42.69% (73/171), 53.06% (26/49) | - |
+| reached the floor and then reversed by the close | 20.18% | 6.32% | 20.18% |
+
+Two readings matter and pull in opposite directions. The movement stage is nearly always "yes" at 0.50 L2L
+(97.89%), so 0.50 L2L is a floor that almost every session clears - it cannot sort the days. The direction stage is
+the unexpected one: on the sessions where the move went one way only, the call's direction was right 45.63% (0.50
+L2L) and 46.56% (L2L) of the time, while always saying "up" on those same rows would have been right 61.13% and
+56.23% of the time. It is the same finding the accepted verdict already carries (call right at the close 46.32%
+against 56.84% up-closes), now read through the user's own criterion, and it does not depend on the floor: at a
+fixed 0.80% the calls score 46.40% against 58.93%. Sessions where both sides reached the floor are excluded from
+the matched/missed count (a call is "right" either way once both sides have been touched) and are shown in the
+split row instead. First-touch order is not recoverable from the archive, so "the side that moved" means the side
+with the larger excursion, which is the only side ordering these fields support.
 
 **Year stability, which is the argument for the L2L unit.** The share of sessions reaching the floor in the
 call's direction, per year: at a *fixed* 0.80% of price, 32.40% (2024), 38.43% (2025), 62.82% (2026, n 78); as

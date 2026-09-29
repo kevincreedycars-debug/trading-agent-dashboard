@@ -92,6 +92,27 @@ that can be re-tested. On today's chart values the same three rows read as the f
 price against L2L 1.68%), **1.00 L2L** (1.68%) and **0.50 L2L** (0.84%) — so the user's fixed 0.80% *is* the
 0.5 L2L row in the current regime, which is the other reason both units are printed rather than one.
 
+**The user's batch-3 answer reorders the floors, and it is now the ruling one.** Asked to confirm the two-unit
+default in plain words they answered: *"Yes its the 0.5l2l and l2l directional movement happened that we are
+interested in primarily, then we want to see if the directional call was correct for the l2l that occured"*. So
+the published floor set is ordered **0.50 L2L (ADR20 x 0.25; 0.3618% at the period median, 0.84% on today's
+chart) first, L2L (ADR20 x 0.50; 0.7236% and 1.68%) second**, both counted in *either* direction as the movement
+that happened, with the fixed **0.80%** kept as the chart-current instance of 0.50 L2L and **0.30%** kept as the
+fixed sensitivity row. The structural change is in stage 2: the direction question is asked **after** the
+movement and **conditioned on it** - "was the call's direction the move that occurred" - so direction is read on
+the sessions that reached the floor, never on all sessions. D1 had said "ask if before which way"; the user has
+now said the same thing with "if" spelled out as 0.50 L2L and L2L. Their answer also removes the last of the
+jargon: the words *headline* and *floor* are retired from user-facing wording entirely, replaced by "the one
+number in large text" and "the smallest move we count as a move".
+
+**Association, not cause - and the user has been told so in those words.** They asked whether this is simply
+tracking correlation. It is, and §6 states it explicitly: every published number is an association between a
+state observable *before* the session and what price did *during* it, compared with the cohort's own rate on the
+same rows, and no row claims the state caused the move. An association earns a table row when it survives three
+guards - cohort baseline rather than 50%, per-year sign, and the overlap matrix that stops correlated factors
+being counted as independent confirmations - and one arithmetic limit: about 470 daily anchors can *show* a 5pp
+gap but cannot *confirm* it (about 774 are needed for 80% power on that size), which is the case for D5.
+
 **Week floor.** 1.00% week stays as the plan's default until the user says otherwise. Its L2L form is *not*
 proposed yet: a 5-session extension is not a fixed multiple of the 1-session range, and inventing that
 multiple is exactly what this section refuses to do.
@@ -123,6 +144,21 @@ Direction is only worth asking about for states that pass stage 1: a factor that
 gold moves cannot change which way it moves on average. Today stage 2 is the 25 rows above, and the answer
 is empty. It stays published that way, with the z-accounting in §2 so that no reader mistakes a 2.4-sigma
 cell for a finding.
+
+**The user's own stage-2 criterion, measured once (2026-09-29, read-only).** Read exactly as they asked - the
+movement that happened at 0.50 L2L and L2L, then the direction of that movement against the call - the archive
+says: a 0.50 L2L move happened either way in **97.89%** of the 570 sessions and an L2L move in **75.26%**; the
+call's own direction reached the floor 64.04% and 38.42% of the time (the archive's own `reachedHalfAdr20` and
+`reachedFullAdr20`, reproduced exactly by the scan as a standing assertion); and among the sessions where the
+move went **one side only**, that side was the call's direction **45.63%** (162/355) at 0.50 L2L and **46.56%**
+(183/393) at L2L, against **61.13%** and **56.23%** for always saying "up" on the same rows. By year at 0.50 L2L
+the same figure runs 47.88%, 40.29%, 52.94%. The criterion therefore does not rescue the calls: under it they sit
+*below* the drift, which is the same conclusion as the close-based base rate above, reached by a different route.
+Two side facts to carry: 0.50 L2L cannot sort days (only 2.11% of sessions fail to move that far), and 36.38% of
+the sessions that do move that far touch the floor both ways - so stage 2 has to be read on the unambiguous
+one-sided split, not on the reach count, and the published tables must print that split. Excluding both-sided
+sessions is also why the one-sided figures cannot be compared with the unconditional 64.04% / 38.42%: they are
+different universes, and the row that holds them has to say so.
 
 **What stage 2 would need to be answerable — the rebuild's real constraint.** 80% power to see a 3pp edge
 needs about **2,100 anchors per state**; today there are about 470. A 5pp edge needs about 774. The same
@@ -201,6 +237,21 @@ Per-year drift, so the 60% figure cannot be read as a 60% expectation:
 The same bar governs the movement stage with condition (2) replaced: instead of a 60% hit rate, a state needs
 a 5pp gap against the cohort's own share of anchors above the declared floor. Everything else — n >= 100, the
 year-sign test, no invented direction — is unchanged.
+
+**What the bar is measuring, stated for the reader (the user asked, batch 3).** Every number in this table is an
+**association**, not a cause: a state that is observable *before* the session, set against what price did
+*during* it, compared with the cohort's own rate on the same rows. The table says "gold rose on 62 of these 100
+sessions while this state was on, against 57 of 100 for the cohort", and never "this state pushed gold up". The
+three conditions above are exactly the guards a raw correlation needs to pass before it is worth a row: the
+comparison is the cohort's own drift and not 50% (condition 4 — gold closed up on 56.84% of the archived gold
+sessions, so an always-bullish rule beats a coin flip without any factor at all), the sign has to hold in each
+year rather than only pooled (condition 5, because gold's volatility regime moved ADR20 from 1.32% to 3.12%
+across the period, which alone flips any fixed-percentage threshold), and the overlap matrix from §7 keeps
+correlated factors from being presented as independent confirmations (28 variables on one instrument will agree
+by construction). Condition 1 is there because a state with no written direction can carry a raw rate but can
+never carry a claim. One limit is arithmetic, not methodological: about 470 daily anchors can *show* a 5pp gap
+but cannot *confirm* it (about 774 are needed for 80% power on that size), so a bar-clearing table row today is
+reportable and worth watching, not established — which is what the D5 rebuild is for.
 
 ## 7. Design: both streams, one table, four row blocks
 
@@ -286,7 +337,7 @@ and needs no answer.
 
 | # | Question | Recommended default | Alternative |
 | --- | --- | --- | --- |
-| D1 | **The "if" stage (new; answer this one first)** | Run the free movement screen first (per-state realized-return q1/q3 spread, no new run), then measure the share of anchors above the **user's declared 0.80% floor in the direction of the call** *and* the same floor as **1.00 L2L = 0.50 x ADR20 (0.7236% today)**, publishing 0.50 L2L (0.3618%) and 0.30% as fixed sensitivity rows, under the same n>=100 / 5pp / year-sign bar. The user answered on 2026-09-29 that **both stages stay in scope** (question 10) and that **all 28 variables stay in scope** (question 27) | Do only the floor measurement and skip the free screen, or keep stage 1 out and treat the 25 direction rows as the whole answer |
+| D1 | **The "if" stage, and now its order (answered by the user, 2026-09-29)** | Run the free movement screen first (per-state realized-return q1/q3 spread, no new run), then measure the share of anchors with a **0.50 L2L and an L2L movement in either direction**, and read the direction of that movement against the call **on the sessions that moved** — the user's batch-3 answer to question 8: *"its the 0.5l2l and l2l directional movement happened that we are interested in primarily, then we want to see if the directional call was correct for the l2l that occured"*. The fixed **0.80%** (the chart-current instance of 0.50 L2L) and **0.30%** stay published as sensitivity rows under the same `looks_counted`, and the `n >= 100` / 5pp / per-year-sign conditions are guards on **labelling and scoring only** — never a reason to omit a row (question 9). The user confirmed **both stages stay in scope** (question 10) and **all 28 variables stay in scope** (question 27). Coordinator confirmation of the two-unit print is still pending, but the ordering is no longer open | Do only the floor measurement and skip the free screen, or read direction on all sessions instead of the moved subset |
 | D2 | What to do with the VIX change stream | Both streams, as designed in §7: level bands scored, change legs published as raw context (B1) plus the declared 1/2/5 and 2/5/10 sweep with `looks_counted` (B2), no direction invented | Reject B2 (context only, the minimum version), or drop the change stream back to unscored |
 | D3 | Size of the deliverable | Full version: new page beside the accuracy panel, linked from the two Gold Backtest pages | Minimum version in §8: block C appended to the existing scorecard page, no new template, no nav edits |
 | D4 | F9 `risk_headline_context` | Rebuild it as a declared rule the way the live field is built (VIX>25 **or** war/geopolitical/conflict/sanction event names), because today's only bar-clearing row is an `interpreted` mapping with an unstable sign | Leave the `interpreted` row as the accepted artifact has it and publish it with its caveats |
