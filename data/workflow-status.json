@@ -1,10 +1,10 @@
 {
-  "status": "success",
-  "last_run_started_at": "2026-09-28T08:26:51.596Z",
-  "last_run_finished_at": "2026-09-28T08:26:51.596Z",
+  "status": "failed",
+  "last_run_started_at": "2026-09-29T08:06:46.081Z",
+  "last_run_finished_at": "2026-09-29T08:06:46.081Z",
   "triggered_by": "dashboard_or_manual",
-  "message": "Manual Refresh Complete",
-  "failed_step": null,
+  "message": "Master Orchestrator finished with errors.",
+  "failed_step": "USD Collector",
   "steps": [
     {
       "name": "Call '1. Economic Events Collector'",
@@ -12,7 +12,8 @@
     },
     {
       "name": "USD Collector",
-      "status": "success"
+      "status": "failed",
+      "error": "Service unavailable - try again later or consider setting this node to retry automatically (in the node settings)"
     },
     {
       "name": "EUR Collector",
@@ -20,19 +21,23 @@
     },
     {
       "name": "Gold Collector",
-      "status": "success"
+      "status": "failed",
+      "error": "The service was not able to process your request"
     },
     {
       "name": "NQ Collector",
-      "status": "success"
+      "status": "failed",
+      "error": "Service unavailable - try again later or consider setting this node to retry automatically (in the node settings)"
     },
     {
       "name": "BTC Collector",
-      "status": "success"
+      "status": "failed",
+      "error": "Service unavailable - try again later or consider setting this node to retry automatically (in the node settings)"
     },
     {
       "name": "Silver Collector",
-      "status": "success"
+      "status": "failed",
+      "error": "Bad request - please check your parameters"
     },
     {
       "name": "USD Layer 1 Agent",
@@ -71,5 +76,8 @@
       "status": "success"
     }
   ],
-  "error": null
+  "error": {
+    "step": "USD Collector",
+    "reason": "Service unavailable - try again later or consider setting this node to retry automatically (in the node settings)"
+  }
 }
