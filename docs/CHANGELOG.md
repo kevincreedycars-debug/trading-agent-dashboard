@@ -1,3 +1,33 @@
+# 2026-09-29 (cont.) - strategy submission 20260927-strategy-window-flash-fix-006 reviewed with changes requested
+
+A third controller-locked background cycle reviewed exactly one submission, `20260927-strategy-window-flash-fix-006` from
+the `strategy` worker, and requested changes rather than accepting it. The mailbox SHA-256 `a057ca77...` was reproduced
+twice from the immutable inbox file, the reply `e1eb71db...` is published at
+`.local/orchestration/replies/strategy/20260927-strategy-window-flash-fix-006.json` bound to that hash, and the durable
+review is `docs/orchestration/reviews/20260927-strategy-window-flash-fix-006.md`. Provenance was checked from the
+checkout: `.local/worktrees/strategy` is clean on `workers/strategy-advisory-20260920`, and `f7c0cc7` (+62 lines) and
+`4fc6109` (+11/-3) touch only `docs/strategy/CONVERSATION_NOTES.md`, inside the worker's owned scope with no dependency on
+the notes path or the capture-task action.
+
+The submitted fix is verified live, not taken on report: the launcher
+`C:/Users/A17/.trading-agent-dashboard/scripts/run-hidden.vbs` exists and matches its described neutral body, and read-only
+task state shows `GoldQualificationWindowTick018` `Ready` with exactly one `wscript.exe` launcher action,
+`LastTaskResult` 0, last run 2026-09-29 20:46:01 local, next 20:56 and zero missed runs. The withdrawal of the `-005`
+"fix held" claim is honest and recorded, and the two verification ticks it cites are real in `tick.log`
+(`2026-09-27T14:56:02Z` and `2026-09-27T15:06:02Z`, both `attempted 0`). Changes were requested for three documentation
+defects: the commit adds a fresh unqualified gaplessness claim around line 1030 ("a write at every `:x6` boundary through
+the night" so "the lane never missed a tick") of exactly the class `-004` and `-005` already required to be removed, while
+the log holds a 780.0-minute gap (`2026-09-26T20:56:02Z` to `2026-09-27T09:56:04Z`) inside that span and an `attempted 3`
+block at `2026-09-27T14:06:02Z`; the line ~911 and ~1005 revisions are still outstanding at that head because the commit
+only appends text at the end of the file; and the reported base `0802dd74` is not the parent of `f7c0cc7` (the parent is
+`0d7808c`, `rev-list --count` 3), with the notes' applied minute 15:47 disagreeing with the central record's 15:46 local.
+The submission's request to record the capture-task action string centrally was already answered by `DECISIONS.md`, which
+carries the windowless launcher including its path. Boundary unchanged: the live-system edit stays recorded as disclosed,
+validated and superseded, not as precedent. No production, dashboard, credential, warehouse, Layer 1, workflow, purchase,
+deployment or holdout action occurred, the capture lane was observed read-only, and the sealed prospective window stays
+sealed until `2027-03-25T15:00:00Z`. No new worker assignment was published; the queue holds seven `pending_review`
+`strategy` submissions dated 2026-09-28 to 2026-09-29.
+
 # 2026-09-29 (cont.) - strategy submission 20260926-strategy-window-flash-fix-005 reviewed with changes requested
 
 A second controller-locked background cycle reviewed exactly one submission, `20260926-strategy-window-flash-fix-005` from

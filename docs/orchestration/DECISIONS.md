@@ -1,4 +1,47 @@
-# Central decisions
+﻿# Central decisions
+
+## 2026-09-29: strategy 20260927-strategy-window-flash-fix-006 reviewed with changes requested; the capture-window flash fix is confirmed live
+
+The background Central Orchestrator reviewed only submission `20260927-strategy-window-flash-fix-006` in
+the controller-locked run holding `run.lock` (mailbox SHA-256 `a057ca77...` reproduced twice; reply
+`e1eb71db...`; durable review `docs/orchestration/reviews/20260927-strategy-window-flash-fix-006.md`)
+and **requested changes** rather than accepting it. Verified from the worker checkout, the host and the
+log, not from the report text: `.local/worktrees/strategy` is clean on
+`workers/strategy-advisory-20260920`; commits `f7c0cc7` (+62 lines) and `4fc6109` (+11/-3) touch only
+`docs/strategy/CONVERSATION_NOTES.md`; dependency impact nil. The disclosed live change is real in
+effect: the launcher `C:/Users/A17/.trading-agent-dashboard/scripts/run-hidden.vbs` exists and matches
+its description, and read-only `Get-ScheduledTask`/`Get-ScheduledTaskInfo` confirm
+`GoldQualificationWindowTick018` is `Ready` with exactly one action, `wscript.exe` plus that launcher,
+`LastTaskResult` 0, last run 2026-09-29 20:46:01 local, next 20:56 and zero missed runs. Two earlier
+observations are also confirmed: the withdrawal of the `-005` "fix held" claim is honest, and the two
+claimed verification ticks are real (`tick.log` blocks at `2026-09-27T14:56:02Z` and
+`2026-09-27T15:06:02Z`, both `attempted 0`).
+
+Three defects, all documentation. (1) `f7c0cc7` adds a fresh instance of the claim class `-004` and
+`-005` already required to be removed: the notes now say `tick.log` shows "a write at every `:x6`
+boundary through the night" so "the lane never missed a tick". The log shows a 780.0-minute gap
+(`2026-09-26T20:56:02Z` to `2026-09-27T09:56:04Z`) inside that span and an `attempted 3` block at
+`2026-09-27T14:06:02Z`; the current log holds 343 blocks with seven real gaps. (2) The line ~911 ("run
+continuously ... with no gaps") and line ~1005 ("`tick.log` is gapless") revisions are still outstanding
+at this head, because `f7c0cc7` only appends text at the end of the file. (3) The reported `base_commit`
+`0802dd74` is not the parent of `f7c0cc7` - the parent is `0d7808c` and
+`rev-list --count 0802dd74..4fc6109` is 3 - and the notes' applied minute (15:47) disagrees with this
+record's (15:46 local), so the notes must carry the minute the change actually took effect. The required
+revision is one bounded documentation pass under a new submission ID; no revert, no further live-system
+edit, no research and no canonical-file change.
+
+Boundary unchanged: editing a live system is outside the strategy assignment even at a direct user
+instruction, so the capture-task edit stays recorded as disclosed, validated and superseded, **not as
+precedent**. No credential, warehouse, Layer 1, live-workflow, dashboard, production, purchase,
+deployment or holdout action occurred, `GoldQualificationWindowTick018` was observed read-only and not
+disturbed, and the sealed prospective window stays sealed until `2027-03-25T15:00:00Z`. Standing state
+unchanged: no new worker assignment is published, because the submission ends `changes_requested` and
+the register already keeps `gold-research` at status exactly `instructions_published_awaiting_worker`
+for the carried 022 item A obligation. The strategy queue now holds 7 `pending_review` submissions
+(2026-09-28 to 2026-09-29), taken one per cycle. As in the previous cycle the harness refused
+`monitor-state.js activity central-orchestrator ...` by policy, so the activity record was written
+directly to `.local/orchestration/activity/central-orchestrator.json`; monitor, bridge and controller
+code and settings were not changed.
 
 ## 2026-09-29: strategy 20260926-strategy-window-flash-fix-004 reviewed with changes requested; the Gold capture task's action record is corrected
 

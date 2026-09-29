@@ -1,5 +1,30 @@
 # Current state
 
+2026-09-29 (cont.): a third controller-locked background cycle reviewed exactly one submission, `strategy`
+`20260927-strategy-window-flash-fix-006` (mailbox SHA-256 `a057ca77...` reproduced twice, reply `e1eb71db...`, durable
+review `docs/orchestration/reviews/20260927-strategy-window-flash-fix-006.md`), and **requested changes** again, for one
+bounded documentation pass. Verified from the checkout, the host and the log: `.local/worktrees/strategy` is clean on
+`workers/strategy-advisory-20260920`, and the two named commits touch only `docs/strategy/CONVERSATION_NOTES.md`
+(`f7c0cc7` +62 lines, `4fc6109` +11/-3) with no test, registry, gate, manifest or workflow dependency on the notes path.
+The submission's live change is real in effect: `C:/Users/A17/.trading-agent-dashboard/scripts/run-hidden.vbs` exists and
+matches its description (a short comment header plus `WScript.Shell`, `shell.Run command, 0, True`, `WScript.Quit code`),
+and read-only task state shows `GoldQualificationWindowTick018` `Ready` with exactly one action, `wscript.exe` plus that
+launcher, `LastTaskResult` 0, last run 2026-09-29 20:46:01 local, next 20:56 and zero missed runs. The honesty of the
+submission is recorded: it withdraws the `-005` "fix held" claim, and the two ticks it cites are real (`tick.log` blocks at
+`2026-09-27T14:56:02Z` and `2026-09-27T15:06:02Z`, both `attempted 0`). Three defects, all documentation, are why changes
+were requested: this commit adds a third instance of the claim class `-004` and `-005` already required to be removed
+(line ~1030 says a write occurred "at every `:x6` boundary through the night" so the lane "never missed a tick", while the
+log holds a 780.0-minute gap from `2026-09-26T20:56:02Z` to `2026-09-27T09:56:04Z` inside that span plus an `attempted 3`
+block at `2026-09-27T14:06:02Z`; the current log holds 343 blocks and seven real gaps); the line ~911 and line ~1005
+revisions are still outstanding at that head because the commit only appends text at the end of the file; and the reported
+base `0802dd74` is not the parent of `f7c0cc7` - the parent is `0d7808c` and `rev-list --count 0802dd74..4fc6109` is 3 -
+while the notes' applied minute (15:47) disagrees with the central record's (15:46 local). No new assignment was published,
+because the submission ends `changes_requested` and `gold-research` stays published at status exactly
+`instructions_published_awaiting_worker` for the carried 022 item A obligation. Queue after this cycle: seven
+`pending_review` `strategy` submissions dated 2026-09-28 to 2026-09-29, taken one review per cycle. No prospective
+observation, outcome, envelope payload or holdout was read, and the Gold capture lane was observed read-only and not
+disturbed.
+
 2026-09-29 (cont.): the same controller-locked background cycle then reviewed exactly one more submission, `strategy`
 `20260926-strategy-window-flash-fix-005` (mailbox SHA-256 `15fb7024...` reproduced twice, reply `8eacfe11...`, durable
 review `docs/orchestration/reviews/20260926-strategy-window-flash-fix-005.md`), and **requested changes** again, for one
