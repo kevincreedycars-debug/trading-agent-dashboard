@@ -1,5 +1,31 @@
 # Current state
 
+2026-09-29 (cont., third cycle): opened the seven non-Gold asset backtester lanes as their own VS Code
+windows at the user's instruction - "we want to do 7 at the same time for the other assets in the dashboard
+... we first just need to build the 7 VSCs and open them for each backtesting agent", with the backtesters
+themselves deferred until the Gold loop's lessons are complete and understood. Registered USD, EUR, NQ, BTC,
+GBP, Silver and WTI (the readiness matrix's seven non-Gold assets) in `docs/orchestration/projects.json` as
+`backtester-<asset>` at status exactly `instructions_published_awaiting_worker` with `mailbox_auto_connect`
+true and baseline `1bb3395`; wrote `docs/orchestration/assignments/backtester-<asset>.md`; cut seven worktrees
+`.local/worktrees/backtester-<asset>` on branches `workers/backtester-<asset>-20260929` from the
+control-plane tip; created `tools/backtester-<asset>-node/Backtester<Asset>.code-workspace` plus READMEs with
+seven distinct tints, the worker checkout as folder 1; added the seven startup messages to `AGENT_MESSAGES.md`
+and the lane paragraph to `docs/orchestration/README.md`; and recorded the decision in `DECISIONS.md`. Each
+lane is a readiness and standby lane: one `docs/backtester-<asset>/READINESS.md`, one `status_report`, then
+pause, with no builder, checker, registry, session policy, outcome definition, adapter or batch buildable and
+no outcome, holdout or prospective observation readable. **This is seven windows and seven written boundaries,
+not seven backtesters or any backtesting capability.** The honest starting picture is unchanged and now
+written per asset: USD/EUR/NQ/BTC have real checkers, parity fixtures and checker data but no registry; GBP
+has a replay core, no builder and no checker; Silver and WTI have nothing beyond their historical Layer 1
+worktrees; and the multi-asset platform code (`asset_adapters.js`, `run_asset_matrix.js`,
+`run_asset_real_shard.js`) exists only on `spike/multi-asset-readiness-20260924` under an open change request,
+so it is context and not a foundation. The dispatcher was found **paused** (`config.json`
+`{"enabled": false}`, `status.json` paused at `2026-09-29T20:35:00.029Z`, pid 34192, `activeRun` false) and
+was left exactly as found; this session issued no controller command. The review queue still holds eight
+`pending_review` submissions, all `strategy` or `strategy-2`-era `strategy` work, and the seven new lanes will
+each add one `status_report` when their windows are connected, so the one-review-per-cycle queue grows before
+it shrinks.
+
 2026-09-29 (cont., second cycle): a fifth controller-locked background cycle reviewed exactly one submission, `strategy` `20260928-strategy-gold-band-edge-table-008` (mailbox SHA-256 `a4156f0a...` reproduced twice, reply `08b208b5...`, durable review `docs/orchestration/reviews/20260928-strategy-gold-band-edge-table-008.md`), and **accepted** it as an accurate docs-only advisory - the short plan that answers the user's "simplify this / keep both VIX streams" follow-up. Verified from the checkout and the artifacts: `.local/worktrees/strategy` is clean on `workers/strategy-advisory-20260920`, base `9d4403ec` is the direct parent of the single head `1576e898` (`rev-list --count` 1), the commit is +250/-0 across three `docs/strategy/` files, and the three artifact byte hashes reproduce exactly (plan `A2B680BD...` from its CRLF bytes at 211 lines, retitled spec `F5747BC5...`, notes `C392CEA8...`). Every load-bearing figure was re-derived and is exact: F6 declares `vix_level`/`vix_d1`/`vix_d5` with a rule for the level only; the scorecard `unscored` blocks carry the plan's Stream B table cell-for-cell; baselines 55.81% n 964 and 58.23% n 960; exactly one cell is at or above 60% on either horizon (`vix_d1` positive **week** 60.51% n 433, one of twelve looks, session 52.86% below drift, 262 of 433 and not F9's 285 of 471); the accepted 019 report is exactly 95,842,994 bytes with zero occurrences of the field `"values"`; `VIXCLS.json` is 97,074 bytes and the only VIX series; and the sizing estimate reproduces exactly (954 / 41 / 400 / 513). One minor citation slip is recorded as a note: section 4 labels the sizing window end `2026-09-21` where the file's last in-range observation is `2026-09-11` (the 954 count and all three band counts are exact). No new assignment was published - the worker's later `-009`/`-010` submissions rewrite this plan and `-011` changes D1's floor default, all still queued; `gold-research` deliberately stays at status exactly `instructions_published_awaiting_worker` for the carried 022 item A envelope; and the page lane still has no registered worker. The mailbox now holds 5 `pending_review` `strategy` submissions (2026-09-28 to 2026-09-29).
 
 2026-09-29 (cont.): a fourth controller-locked background cycle reviewed exactly one submission, `strategy`

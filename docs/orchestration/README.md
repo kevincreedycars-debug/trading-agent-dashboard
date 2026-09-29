@@ -22,6 +22,15 @@ The authority boundary - a read-only feed, execution on a demo account, or real-
 on a funded account - is the user's and stays open. Startup instructions are in
 `tools/live-trading-node/README.md`.
 
+Seven asset backtester lanes: for USD, EUR, NQ, BTC, GBP, Silver and WTI - the seven non-Gold assets of the
+2026-09-24 readiness matrix - open `tools/backtester-<asset>-node/Backtester<Asset>.code-workspace` with
+DeepSeek. Each is a readiness and standby lane under `backtester-<asset>-001`: it writes only
+`docs/backtester-<asset>/` with one `READINESS.md`, it builds no builder, checker, registry, session policy,
+outcome definition, adapter or batch, it runs no batch, it reads no outcome, holdout or prospective
+observation, and it puts the build decision back to the user. The seven backtesters are built later, once the
+Gold backtesting loop's lessons are complete and understood. Startup instructions are in each
+`tools/backtester-<asset>-node/README.md` and in this folder's `AGENT_MESSAGES.md`.
+
 - [Project register](projects.json): worker IDs, paths, assignments and last known status.
 - [Decisions](DECISIONS.md): project-wide decisions and unresolved dependencies.
 - [Agent messages](AGENT_MESSAGES.md): prompts for the existing agent windows.

@@ -137,3 +137,94 @@ Preserve every accepted Gold artifact and every other worktree. No acquisition, 
 ```text
 Check your central mailbox replies using your worker ID. Read the reply and current assignment from the canonical project. Address only the assigned feedback, submit under a new unique submission ID, and stop for review.
 ```
+
+## backtester-usd
+
+```text
+This project is coordinated centrally by Codex at D:\trading-agent-dashboard-codex.
+Read D:/trading-agent-dashboard-codex/docs/orchestration/README.md and D:/trading-agent-dashboard-codex/docs/orchestration/assignments/backtester-usd.md from those absolute paths.
+Your worker ID is backtester-usd; assignment ID is backtester-usd-001. Select DeepSeek in your existing agent extension for this window; this adds no API key, credential scope or provider configuration.
+Use D:/trading-agent-dashboard-codex/.local/worktrees/backtester-usd on branch workers/backtester-usd-20260929 (created 2026-09-29 from canonical 1bb3395).
+Your lane is the USD backtesting lane, readiness and standby only. Write only docs/backtester-usd/ in your worktree plus ignored scratch, produce docs/backtester-usd/READINESS.md exactly as the assignment's stage A specifies, and build nothing: no builder, checker, registry, session policy, outcome definition, adapter or batch, no acquisition, no warehouse, no Layer 1, dashboard, credential or production change, and no outcome, holdout or prospective observation read. The seven asset backtesters are built later, once the Gold loop's lessons are complete and understood and the user authorises it.
+Submit using: node D:/trading-agent-dashboard-codex/scripts/coordination.js submit --file <absolute-path-to-your-submission.json>
+Do not edit central state, instructions or another worker directory. Report real activity with monitor-state.js activity backtester-usd working|paused|blocked "task", then pause.
+To check feedback when prompted: node D:/trading-agent-dashboard-codex/scripts/coordination.js check --worker backtester-usd
+```
+
+## backtester-eur
+
+```text
+This project is coordinated centrally by Codex at D:\trading-agent-dashboard-codex.
+Read D:/trading-agent-dashboard-codex/docs/orchestration/README.md and D:/trading-agent-dashboard-codex/docs/orchestration/assignments/backtester-eur.md from those absolute paths.
+Your worker ID is backtester-eur; assignment ID is backtester-eur-001. Select DeepSeek in your existing agent extension for this window; this adds no API key, credential scope or provider configuration.
+Use D:/trading-agent-dashboard-codex/.local/worktrees/backtester-eur on branch workers/backtester-eur-20260929 (created 2026-09-29 from canonical 1bb3395).
+Your lane is the EUR backtesting lane, readiness and standby only. Write only docs/backtester-eur/ in your worktree plus ignored scratch, produce docs/backtester-eur/READINESS.md exactly as the assignment's stage A specifies, and build nothing: no builder, checker, registry, session policy, outcome definition, adapter or batch, no acquisition, no warehouse, no Layer 1, dashboard, credential or production change, and no outcome, holdout or prospective observation read. The seven asset backtesters are built later, once the Gold loop's lessons are complete and understood and the user authorises it. The historical D:/trading-agent-dashboard-codex.worktrees/agent-eur-pairs checkout belongs to the eur-pairs worker and is read-only for you.
+Submit using: node D:/trading-agent-dashboard-codex/scripts/coordination.js submit --file <absolute-path-to-your-submission.json>
+Do not edit central state, instructions or another worker directory. Report real activity with monitor-state.js activity backtester-eur working|paused|blocked "task", then pause.
+To check feedback when prompted: node D:/trading-agent-dashboard-codex/scripts/coordination.js check --worker backtester-eur
+```
+
+## backtester-nq
+
+```text
+This project is coordinated centrally by Codex at D:\trading-agent-dashboard-codex.
+Read D:/trading-agent-dashboard-codex/docs/orchestration/README.md and D:/trading-agent-dashboard-codex/docs/orchestration/assignments/backtester-nq.md from those absolute paths.
+Your worker ID is backtester-nq; assignment ID is backtester-nq-001. Select DeepSeek in your existing agent extension for this window; this adds no API key, credential scope or provider configuration.
+Use D:/trading-agent-dashboard-codex/.local/worktrees/backtester-nq on branch workers/backtester-nq-20260929 (created 2026-09-29 from canonical 1bb3395).
+Your lane is the NQ backtesting lane, readiness and standby only. Write only docs/backtester-nq/ in your worktree plus ignored scratch, produce docs/backtester-nq/READINESS.md exactly as the assignment's stage A specifies, and build nothing: no builder, checker, registry, session policy, outcome definition, adapter or batch, no acquisition, no warehouse, no Layer 1, dashboard, credential or production change, and no outcome, holdout or prospective observation read. The seven asset backtesters are built later, once the Gold loop's lessons are complete and understood and the user authorises it.
+Submit using: node D:/trading-agent-dashboard-codex/scripts/coordination.js submit --file <absolute-path-to-your-submission.json>
+Do not edit central state, instructions or another worker directory. Report real activity with monitor-state.js activity backtester-nq working|paused|blocked "task", then pause.
+To check feedback when prompted: node D:/trading-agent-dashboard-codex/scripts/coordination.js check --worker backtester-nq
+```
+
+## backtester-btc
+
+```text
+This project is coordinated centrally by Codex at D:\trading-agent-dashboard-codex.
+Read D:/trading-agent-dashboard-codex/docs/orchestration/README.md and D:/trading-agent-dashboard-codex/docs/orchestration/assignments/backtester-btc.md from those absolute paths.
+Your worker ID is backtester-btc; assignment ID is backtester-btc-001. Select DeepSeek in your existing agent extension for this window; this adds no API key, credential scope or provider configuration.
+Use D:/trading-agent-dashboard-codex/.local/worktrees/backtester-btc on branch workers/backtester-btc-20260929 (created 2026-09-29 from canonical 1bb3395).
+Your lane is the BTC backtesting lane, readiness and standby only. Write only docs/backtester-btc/ in your worktree plus ignored scratch, produce docs/backtester-btc/READINESS.md exactly as the assignment's stage A specifies, and build nothing: no builder, checker, registry, session policy, outcome definition, adapter or batch, no acquisition, no warehouse, no Layer 1, dashboard, credential or production change, and no outcome, holdout or prospective observation read. The seven asset backtesters are built later, once the Gold loop's lessons are complete and understood and the user authorises it.
+Submit using: node D:/trading-agent-dashboard-codex/scripts/coordination.js submit --file <absolute-path-to-your-submission.json>
+Do not edit central state, instructions or another worker directory. Report real activity with monitor-state.js activity backtester-btc working|paused|blocked "task", then pause.
+To check feedback when prompted: node D:/trading-agent-dashboard-codex/scripts/coordination.js check --worker backtester-btc
+```
+
+## backtester-gbp
+
+```text
+This project is coordinated centrally by Codex at D:\trading-agent-dashboard-codex.
+Read D:/trading-agent-dashboard-codex/docs/orchestration/README.md and D:/trading-agent-dashboard-codex/docs/orchestration/assignments/backtester-gbp.md from those absolute paths.
+Your worker ID is backtester-gbp; assignment ID is backtester-gbp-001. Select DeepSeek in your existing agent extension for this window; this adds no API key, credential scope or provider configuration.
+Use D:/trading-agent-dashboard-codex/.local/worktrees/backtester-gbp on branch workers/backtester-gbp-20260929 (created 2026-09-29 from canonical 1bb3395).
+Your lane is the GBP backtesting lane, readiness and standby only. Write only docs/backtester-gbp/ in your worktree plus ignored scratch, produce docs/backtester-gbp/READINESS.md exactly as the assignment's stage A specifies, and build nothing: no builder, checker, registry, session policy, outcome definition, adapter or batch, no acquisition, no warehouse, no Layer 1, dashboard, credential or production change, and no outcome, holdout or prospective observation read. GBP is the least-ready of the seven in the 2026-09-24 matrix: onboarding, replay core only, no builder or checker. The seven asset backtesters are built later, once the Gold loop's lessons are complete and understood and the user authorises it. The historical D:/trading-agent-dashboard-codex.worktrees/agent-gbp checkout belongs to the gbp worker and is read-only for you.
+Submit using: node D:/trading-agent-dashboard-codex/scripts/coordination.js submit --file <absolute-path-to-your-submission.json>
+Do not edit central state, instructions or another worker directory. Report real activity with monitor-state.js activity backtester-gbp working|paused|blocked "task", then pause.
+To check feedback when prompted: node D:/trading-agent-dashboard-codex/scripts/coordination.js check --worker backtester-gbp
+```
+
+## backtester-silver
+
+```text
+This project is coordinated centrally by Codex at D:\trading-agent-dashboard-codex.
+Read D:/trading-agent-dashboard-codex/docs/orchestration/README.md and D:/trading-agent-dashboard-codex/docs/orchestration/assignments/backtester-silver.md from those absolute paths.
+Your worker ID is backtester-silver; assignment ID is backtester-silver-001. Select DeepSeek in your existing agent extension for this window; this adds no API key, credential scope or provider configuration.
+Use D:/trading-agent-dashboard-codex/.local/worktrees/backtester-silver on branch workers/backtester-silver-20260929 (created 2026-09-29 from canonical 1bb3395).
+Your lane is the Silver backtesting lane, readiness and standby only. Write only docs/backtester-silver/ in your worktree plus ignored scratch, produce docs/backtester-silver/READINESS.md exactly as the assignment's stage A specifies, and build nothing: no builder, checker, registry, session policy, outcome definition, adapter or batch, no acquisition, no warehouse, no Layer 1, dashboard, credential or production change, and no outcome, holdout or prospective observation read. Silver is recorded as absent in the 2026-09-24 matrix, so establish the absence with exact searches rather than making progress. The seven asset backtesters are built later, once the Gold loop's lessons are complete and understood and the user authorises it. The historical D:/trading-agent-dashboard-codex.worktrees/agent-silver checkout belongs to the silver worker and is read-only for you.
+Submit using: node D:/trading-agent-dashboard-codex/scripts/coordination.js submit --file <absolute-path-to-your-submission.json>
+Do not edit central state, instructions or another worker directory. Report real activity with monitor-state.js activity backtester-silver working|paused|blocked "task", then pause.
+To check feedback when prompted: node D:/trading-agent-dashboard-codex/scripts/coordination.js check --worker backtester-silver
+```
+
+## backtester-wti
+
+```text
+This project is coordinated centrally by Codex at D:\trading-agent-dashboard-codex.
+Read D:/trading-agent-dashboard-codex/docs/orchestration/README.md and D:/trading-agent-dashboard-codex/docs/orchestration/assignments/backtester-wti.md from those absolute paths.
+Your worker ID is backtester-wti; assignment ID is backtester-wti-001. Select DeepSeek in your existing agent extension for this window; this adds no API key, credential scope or provider configuration.
+Use D:/trading-agent-dashboard-codex/.local/worktrees/backtester-wti on branch workers/backtester-wti-20260929 (created 2026-09-29 from canonical 1bb3395).
+Your lane is the WTI backtesting lane, readiness and standby only. Write only docs/backtester-wti/ in your worktree plus ignored scratch, produce docs/backtester-wti/READINESS.md exactly as the assignment's stage A specifies, and build nothing: no builder, checker, registry, session policy, outcome definition, adapter or batch, no acquisition, no warehouse, no Layer 1, dashboard, credential or production change, and no outcome, holdout or prospective observation read. WTI is recorded as absent in the 2026-09-24 matrix, so establish the absence with exact searches rather than making progress. The seven asset backtesters are built later, once the Gold loop's lessons are complete and understood and the user authorises it. The historical D:/trading-agent-dashboard-codex.worktrees/agent-wti checkout belongs to the wti worker and is read-only for you.
+Submit using: node D:/trading-agent-dashboard-codex/scripts/coordination.js submit --file <absolute-path-to-your-submission.json>
+Do not edit central state, instructions or another worker directory. Report real activity with monitor-state.js activity backtester-wti working|paused|blocked "task", then pause.
+To check feedback when prompted: node D:/trading-agent-dashboard-codex/scripts/coordination.js check --worker backtester-wti
+```

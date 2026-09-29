@@ -1,5 +1,54 @@
 # Session notes
 
+2026-09-29 (cont., third cycle): opened the seven non-Gold asset backtester lanes as their own windows, at the
+user's instruction that the seven backtesters replace nothing existing and come later: "we want to do 7 at the
+same time for the other assets in the dashboard ... we first just need to build the 7 VSCs and open them for
+each backtesting agent", then "we will once we have completed and understood all the lessons from the gold
+backtesting loop build out each of the 7 backtesters". The seven assets are the non-Gold rows of the 2026-09-24
+readiness matrix: USD, EUR, NQ, BTC, GBP, Silver and WTI (the matrix is
+`.local/worktrees/backtester-spike/docs/MULTI_ASSET_READINESS_SPIKE.md`, and the review of that spike is
+`docs/orchestration/reviews/20260924-multi-asset-readiness-spike-001-r1.md`). What was published: worker rows
+`backtester-<asset>` in `docs/orchestration/projects.json` at status exactly
+`instructions_published_awaiting_worker`, `mailbox_auto_connect` true, baseline `1bb3395`, display names
+"USD Backtester" through "WTI Backtester"; assignments `docs/orchestration/assignments/backtester-<asset>.md`
+(`backtester-<asset>-001`); seven startup sections in `docs/orchestration/AGENT_MESSAGES.md`; the
+`Seven asset backtester lanes` paragraph in `docs/orchestration/README.md`; the decision entry at the top of
+`docs/orchestration/DECISIONS.md`; and seven `tools/backtester-<asset>-node/` directories, each with a
+`Backtester<Asset>.code-workspace` and a `README.md`. The worktrees were cut with
+`git worktree add .local/worktrees/backtester-<asset> -b workers/backtester-<asset>-20260929 1bb3395`, i.e.
+from the current control-plane tip rather than the older local `main` at `6c43cbb`, so every window sees the
+newest dashboard files; the register records the baseline explicitly for that reason. Each workspace's first
+folder is the worker checkout because `tools/agent-mailbox-bridge/extension.js` binds the mailbox to the first
+workspace folder's registered `path`, and the canonical project is the second folder, read-only by convention.
+Each `<Asset> Backtester` row appears in `npm run monitor` from the register with no monitor, bridge or
+extension change.
+
+Honest scope: this delivery is the windows and the written boundaries, not seven backtesters. Each lane's
+stage A is one file - `docs/backtester-<asset>/READINESS.md` - plus one `status_report` envelope and a pause;
+its assignment forbids creating, editing or running any builder, checker, validator, registry, fixture,
+session policy, outcome definition, adapter, matrix runner or scheduler, forbids acquisition, import,
+warehouse, n8n, Layer 1, dashboard, credential, production and deployment action, forbids reading any outcome,
+holdout or prospective observation, and keeps the historical `gbp`, `silver`, `wti` and `eur-pairs` checkouts
+read-only for the new windows. The per-asset starting picture is the matrix's own and is written into each
+assignment to be re-verified rather than trusted: USD, EUR, NQ and BTC are called ready with real checkers,
+parity fixtures and checker data but no versioned session-policy and outcome registry; GBP is at onboarding
+with only `backtester/replay/gbp/gbp_replay_core.js` and its test; Silver and WTI are absent, with no
+backtester path or source contract. Two facts were checked before the assignments were written and are
+repeated in them: `backtester/registries/` holds only `gold_*` registries at this commit, no canonical
+filename contains `asset`, and the multi-asset platform code named by the review
+(`backtester/lib/asset_adapters.js`, `backtester/scripts/run_asset_matrix.js`,
+`backtester/scripts/run_asset_real_shard.js`) exists only on `spike/multi-asset-readiness-20260924`, which
+carries an open change request - so the seven lanes must not build on it as if it were accepted.
+
+Controller state at the time of this work: `node scripts/coordinator-dispatch.js status` reported
+`{"config": {"enabled": false}}` with `status.state` `paused`, detail "Automatic coordinator paused", pid
+34192, `updated_at` `2026-09-29T20:35:00.029Z` and `activeRun` false, and `node scripts/coordination.js check`
+reported eight `pending_review` submissions. No controller command was issued in this cycle and none was
+needed, because the dispatcher was already paused and held no active run - the one condition the protocol
+requires before central edits. The seven new lanes will each submit one `status_report` once their windows are
+connected, so the queue is expected to grow by up to seven before it drains.
+
+
 2026-09-29 (cont., second cycle): ran a fifth controller-locked background review cycle and stopped there, one cycle per dispatch as the standing direction requires. The controller lock already owned the run, so no pause, stop, enable or other controller command was issued and no second coordinator process was started. Exactly one submission was reviewed: 20260928-strategy-gold-band-edge-table-008, worker strategy, mailbox SHA-256 a4156f0a1ba05b37928658cf9637f7e103d7a24b7b87b9c24847a3b902aa8a11 reproduced twice from the immutable inbox file and matching the hash in the run brief, reply 08b208b5ab4f90dd3234d8f97ccb0fa70ba4d7d1ccf3da6ada175e081e82742d published through the canonical CLI and bound to that hash, decision accepted, durable review docs/orchestration/reviews/20260928-strategy-gold-band-edge-table-008.md. check --worker strategy then reported 5 pending_review with errors [] and stale_assignment false for this report. Verified from the checkout: .local/worktrees/strategy clean on workers/strategy-advisory-20260920, base 9d4403ec the direct parent of the single head 1576e898 (rev-list --count 1), the commit +250/-0 lines in three docs/strategy/ files only (new plan +211 at 211 lines, spec +7, notes +32), dependency impact nil, and the three artifact byte hashes reproducing exactly (plan A2B680BD... from its CRLF bytes, spec F5747BC5..., notes C392CEA8...). Substantively every load-bearing figure reproduced exactly from data/gold-direction-scorecard-20260927.json and the gold-research worktree artifacts: F6 declares both VIX streams and rules the level only, the unscored blocks carry the Stream B table cell-for-cell, baselines 55.81% n 964 and 58.23% n 960, exactly one cell at or above 60% on either horizon (vix_d1 positive week 60.51% n 433, one of twelve looks, session 52.86% below drift, 262 of 433 and not F9's 285 of 471), the accepted 019 report exactly 95,842,994 bytes with zero occurrences of the field "values", VIXCLS.json 97,074 bytes as the only VIX series, the USD document's change rule present at line 154, and the sizing estimate exactly 954 / 41 / 400 / 513. One minor citation slip was recorded as a note, not a required change: section 4 labels the sizing window end 2026-09-21 while the last in-range observation is 2026-09-11, the same slip review 007 noted on the spec. No new assignment was published: the worker's later -009 (head 73e64852) and -010 (head 45b7864a) rewrite this plan and -011 changes D1's floor default, all still queued behind the one-review-per-cycle rule; gold-research deliberately stays at register status exactly instructions_published_awaiting_worker for the carried 022 item A envelope, so a second assignment to that lane would break the one-active-milestone rule; and the proposed page lane dashboard-gold-factor-edge-page-001 still has no registered worker. The mailbox now holds 5 pending_review strategy submissions (2026-09-28 to 2026-09-29). The monitor, bridge and controller code and settings were not changed, no controller pause/stop was issued, no subagent was spawned, and no credential, warehouse, Layer 1, live-workflow, dashboard, production, purchase, deployment or holdout action occurred or was authorised; the sealed prospective window stays sealed until 2027-03-25T15:00:00Z.
 
 2026-09-29 (cont.): ran a fourth controller-locked background review cycle and stopped there, one cycle per dispatch as the

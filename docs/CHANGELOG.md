@@ -1,3 +1,45 @@
+# 2026-09-29 (cont.) - seven asset backtester lanes opened as windows; every backtester build is deferred
+
+At the user's instruction - "we want to do 7 at the same time for the other assets in the dashboard ... we
+first just need to build the 7 VSCs and open them for each backtesting agent", with the builds following "once
+we have completed and understood all the lessons from the gold backtesting loop" - the seven non-Gold assets of
+the 2026-09-24 readiness matrix were registered as their own VS Code windows and mailbox lanes: USD, EUR, NQ,
+BTC, GBP, Silver and WTI.
+
+Created and published: seven worker rows `backtester-<asset>` in `docs/orchestration/projects.json` at status
+exactly `instructions_published_awaiting_worker` with `mailbox_auto_connect` true and baseline `1bb3395`;
+`docs/orchestration/assignments/backtester-<asset>.md` for each (`backtester-<asset>-001`); seven Git worktrees
+`.local/worktrees/backtester-<asset>` on branches `workers/backtester-<asset>-20260929` cut from the
+control-plane tip with `git worktree add`; `tools/backtester-<asset>-node/Backtester<Asset>.code-workspace`
+plus a README per lane, each with its own tint and the worker checkout as the first workspace folder because
+the bridge binds the mailbox to the first folder's registered path; seven startup messages in
+`docs/orchestration/AGENT_MESSAGES.md`; the `Seven asset backtester lanes` paragraph in
+`docs/orchestration/README.md`; and the decision entry in `docs/orchestration/DECISIONS.md`. The
+`<Asset> Backtester` rows appear in `npm run monitor` from the register with no monitor, bridge or extension
+code change.
+
+What the lanes may not do, in the assignment's own words: create, edit or run any builder, checker, validator,
+registry, fixture, session policy, outcome definition, adapter, matrix runner or scheduler; acquire or import
+data; touch the warehouse, n8n, Layer 1, the dashboard, credentials, production or deployment; read any
+outcome, holdout or prospective observation; or touch the Gold capture lane, the canonical folder's five
+untracked Gold session-policy files, the historical `gbp`/`silver`/`wti`/`eur-pairs` checkouts or another
+worker's files. Stage A is one file, `docs/backtester-<asset>/READINESS.md`, plus one `status_report` through
+the shared mailbox, a monitor activity line and a pause. The reason is that the multi-asset platform code
+(`backtester/lib/asset_adapters.js`, `backtester/scripts/run_asset_matrix.js`,
+`backtester/scripts/run_asset_real_shard.js`) is unmerged on `spike/multi-asset-readiness-20260924` under a
+change request, `backtester/registries/` holds only `gold_*` registries, and building seven backtesters on an
+unfinished platform would repeat the Gold loop's mistakes seven times at once.
+
+Honest scope: this is seven windows and seven written boundaries, not seven backtesters, and no backtesting
+capability. Registration is not pickup, and a connected window or a send receipt is not proof that an agent
+started. The dispatcher was found paused - `config.json` `{"enabled": false}`, `status.json` paused at
+`2026-09-29T20:35:00.029Z` with pid 34192 and `activeRun` false - and was left untouched; no controller command
+was issued. The queue held eight `pending_review` submissions before this change and will grow by up to seven
+`status_report` envelopes once the windows are connected. No credential, warehouse, Layer 1, live-workflow,
+dashboard, production, purchase, deployment or holdout action occurred, `GoldQualificationWindowTick018` was not
+disturbed, and the sealed prospective window stays sealed until `2027-03-25T15:00:00Z`.
+
+
 # 2026-09-29 (cont.) - strategy submission 20260928-strategy-gold-band-edge-table-008 accepted as an accurate short-plan advisory
 
 A fifth controller-locked background cycle reviewed exactly one submission, `20260928-strategy-gold-band-edge-table-008` from the `strategy` worker, and accepted it. The mailbox SHA-256 `a4156f0a...` was reproduced twice from the immutable inbox file, the reply `08b208b5...` is published at `.local/orchestration/replies/strategy/20260928-strategy-gold-band-edge-table-008.json` bound to that hash, and the durable review is `docs/orchestration/reviews/20260928-strategy-gold-band-edge-table-008.md`. Acceptance is of the advisory and its record only; it opens neither `gold-declared-band-measurement-026` nor `dashboard-gold-factor-edge-page-001`, and it authorises no research, integration or live-system action. `check --worker strategy` then reported 5 `pending_review` with `errors: []`.

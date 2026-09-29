@@ -1,5 +1,44 @@
 # Central decisions
 
+## 2026-09-29: seven asset backtester lanes opened as windows; every build is deliberately deferred
+
+At the user's instruction on 2026-09-29 - "we want to do 7 at the same time for the other assets in the
+dashboard ... we first just need to build the 7 VSCs and open them for each backtesting agent" - the seven
+non-Gold assets of the 2026-09-24 readiness matrix were registered as their own VS Code windows and mailbox
+lanes: **USD, EUR, NQ, BTC, GBP, Silver and WTI**. What was created: worker rows `backtester-usd`,
+`backtester-eur`, `backtester-nq`, `backtester-btc`, `backtester-gbp`, `backtester-silver` and
+`backtester-wti` in `docs/orchestration/projects.json`, each at status exactly
+`instructions_published_awaiting_worker` with `mailbox_auto_connect` true and baseline `1bb3395`; the
+assignment `docs/orchestration/assignments/backtester-<asset>.md` (`backtester-<asset>-001`); seven separate
+Git worktrees `.local/worktrees/backtester-<asset>` on branches `workers/backtester-<asset>-20260929`; seven
+`tools/backtester-<asset>-node/` windows with their own tints and READMEs; the startup messages in
+`AGENT_MESSAGES.md`; and the paragraph in `docs/orchestration/README.md`.
+
+Why the build is deferred: the user's own words are that the seven backtesters come "once we have completed
+and understood all the lessons from the gold backtesting loop", and the repository supports that reading
+rather than contradicting it. The multi-asset platform code - `backtester/lib/asset_adapters.js`,
+`backtester/scripts/run_asset_matrix.js`, `backtester/scripts/run_asset_real_shard.js` - exists only on
+`spike/multi-asset-readiness-20260924` and carries an open change request; `backtester/registries/` holds only
+`gold_*` registries; and the only per-asset backtester work in the canonical folder is the Gold chain plus the
+USD/EUR/NQ/BTC checkers, the GBP replay core and nothing at all for Silver or WTI. Building seven backtesters
+on top of an unfinished platform would repeat the Gold loop's mistakes seven times at once.
+
+What each lane may do in stage A, and nothing more: read the project and the Gold evidence, write exactly one
+`docs/backtester-<asset>/READINESS.md` in its own worktree with the register identity, the per-asset inventory
+(every claim path-bound, and hash-bound paths re-derived), the Gold lessons it actually finds, ranked blockers
+with owners, its open questions for the user, and an explicit "not built" statement; submit one `status_report`
+through the shared mailbox; record activity; then pause. No builder, checker, validator, registry, fixture,
+session policy, outcome definition, adapter, matrix runner or scheduler may be created, edited or run; no
+acquisition, import, warehouse, n8n, Layer 1, dashboard, credential, production or deployment action; and no
+outcome, holdout or prospective observation may be read. The historical `gbp`, `silver`, `wti` and `eur-pairs`
+asset lanes keep their existing statuses and checkouts; those remain read-only for the new windows.
+
+Honest scope: this delivery is seven windows and seven written boundaries, not seven backtesters, and not one
+line of backtesting capability. Registration is not pickup; a connected window and a send receipt are not proof
+an agent has started. The register takes no provider field, because the provider is the user's DeepSeek
+selection in each Cline task. The `backtester-spike` change request, the CRLF/raw-byte input materialisation
+issue and the accepted Gold artifacts are untouched by this decision.
+
 ## 2026-09-29: strategy 20260928-strategy-gold-band-edge-table-008 accepted; the short plan is verified and no lane is opened
 
 The background Central Orchestrator reviewed only submission `20260928-strategy-gold-band-edge-table-008` in the controller-locked run holding `run.lock` (mailbox SHA-256 `a4156f0a...` reproduced twice; reply `08b208b5...`; durable review `docs/orchestration/reviews/20260928-strategy-gold-band-edge-table-008.md`) and **accepted** it as an accurate docs-only advisory. Verified from the checkout and the artifacts, not the report text: `.local/worktrees/strategy` is clean on `workers/strategy-advisory-20260920`, base `9d4403ec` is the direct parent of the single head `1576e898` (`rev-list --count` 1), the commit is exactly +250/-0 lines across three `docs/strategy/` files, and the three artifact byte hashes reproduce exactly against the commit (plan `A2B680BD...` from its CRLF bytes at 211 lines, retitled spec `F5747BC5...`, notes `C392CEA8...`). Every load-bearing number was re-derived and is exact: the Gold F6 document declares `vix_level`/`vix_d1`/`vix_d5` with a rule for the level only; the scorecard `unscored` blocks carry the plan's Stream B table cell-for-cell; baselines 55.81% n 964 and 58.23% n 960; exactly one cell is at or above 60% on either horizon (`vix_d1` positive **week** 60.51% n 433, one of twelve looks, session 52.86% below drift, 262 of 433 - not F9's 285 of 471); the accepted 019 report is exactly 95,842,994 bytes with zero occurrences of the field `"values"`; `VIXCLS.json` is 97,074 bytes and the only VIX series; and the sizing scratch estimate reproduces exactly (954 / 41 / 400 / 513). One minor citation slip is recorded as a note, not a required change: section 4 labels the sizing window end `2026-09-21` where the file's last in-range observation is `2026-09-11`, the same slip review 007 noted on the spec.
