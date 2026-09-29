@@ -76,17 +76,17 @@ median instead of today's rolling value. Both statements are kept, each labelled
 
 | # | Yes/no question | Default | Asked | Your answer |
 | --- | --- | --- | --- | --- |
-| 18 | Ask direction only for states that pass the movement stage | yes | | |
-| 19 | Up or down only, no "how far up" | yes | | |
-| 20 | A direction claim needs the same sign in every year | yes | | |
-| 21 | Keep the accepted 60% hit-rate gate alongside the 5pp gap | yes | | |
+| 18 | Ask direction only for states that pass the movement stage | yes | batch 5 | |
+| 19 | Up or down only, no "how far up" | yes | batch 5 | |
+| 20 | A direction claim needs the same sign in every year | yes | batch 5 | |
+| 21 | Keep the accepted 60% hit-rate gate alongside the 5pp gap | yes | batch 5 | |
 
 ## E. Which factors (22-28)
 
 | # | Yes/no question | Default | Asked | Your answer |
 | --- | --- | --- | --- | --- |
-| 22 | Test the 10 declared factors before the 20 undeclared variables | yes | | |
-| 23 | Write new rules for the 20 undeclared variables before reading any outcome | yes | | |
+| 22 | Test the 10 declared factors before the 20 undeclared variables | yes | batch 5 | |
+| 23 | Write new rules for the 20 undeclared variables before reading any outcome | yes | batch 5 | |
 | 24 | Keep NEUTRAL states out of every hit rate | yes | | |
 | 25 | Keep the DTWEXBGS-not-DXY caveat on every dollar row | yes | | |
 | 26 | Keep the document's own boundaries verbatim (VIX 25.00/16.00, >0.30%, 5bps+) | yes | | |
