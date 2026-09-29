@@ -1,5 +1,44 @@
 # Session notes
 
+2026-09-29: opened the live-trading lane as a registered advisory window, at the user's request for another Cline
+window on DeepSeek connected to the wider project and the dashboard so the live-trading path through a MetaTrader 5
+connection can be discussed in its own window before anything is built. What was published: worker `live-trading`
+(`display_name` "Live Trading Agent") in `docs/orchestration/projects.json` at status exactly
+`instructions_published_awaiting_worker` with `mailbox_auto_connect` true, baseline `5ff1bf3`, path
+`.local/worktrees/live-trading`, branch `workers/live-trading-20260929`; the assignment
+`docs/orchestration/assignments/live-trading.md` (`live-trading-001`); the startup message section in
+`docs/orchestration/AGENT_MESSAGES.md`; a `Live trading adviser` paragraph in
+`docs/orchestration/README.md`; the decision entry at the top of `docs/orchestration/DECISIONS.md`; and the window
+`tools/live-trading-node/LiveTrading.code-workspace` with its own `README.md`. The worktree was cut with
+`git worktree add .local/worktrees/live-trading -b workers/live-trading-20260929 5ff1bf3`, i.e. from the current
+control-plane tip rather than the older local `main` at `6c43cbb`, so the window sees the newest dashboard files
+(`backtest-flow.html`, `gold-direction-scorecard.html`, the plain-language map) - the register records the baseline
+explicitly for that reason. The window's first folder is the worker checkout because
+`tools/agent-mailbox-bridge/extension.js` binds the mailbox to the first workspace folder's registered `path`; the
+canonical project is the second, read-only by convention, which is how the agent reads the dashboard, the logic
+documents and central state. The `Live Trading Agent` row appears in `npm run monitor` from the register with no
+monitor or bridge code change.
+
+Honest scope: this delivery is the window and the written boundary, not a trading capability. Verified before
+publishing rather than assumed - no MT5 connector, client, bridge or order path exists anywhere in the repository;
+MT5 is a declared gap in `data/research-proof-map.json` (the `needs_you` "Provide an MT5 data export or read-only
+feed" item, with `executable_trade_validated` false), the 2026-08-21 visual direction in
+`docs/MT5_MIRRORED_EXECUTION_CHART_REFERENCE.md`, and a prerequisite named by `docs/BACKTESTING_REVIEW_PLAN.md` and
+`docs/GOLD_TIMESTAMPED_EVALUATION_CONTRACT.md`. Two MT5 terminals are installed on this machine
+(`C:\Program Files\MetaTrader 5`, `C:\Program Files\RL Crates MT5 Terminal`) and Python 3.13.7 is present, but the
+`MetaTrader5` Python package is not installed - a fact the window may use, not a step already taken. The assignment
+therefore authorizes no connection to any terminal, broker server or account, no package or Expert Advisor
+installation, no MT5 credential and no credential-manifest or scope change, no order placement, modification,
+cancellation or arming, no funded-account history read, and no dashboard, n8n, Layer 1, production or warehouse
+action; the user's open decision - read-only feed, demo execution, or real-money execution - is recorded in
+`DECISIONS.md` and must not be settled by starting to build. Coordination discipline: the background dispatcher was
+paused before these central-memory edits (`pause`, then `status` with `activeRun` false) and re-enabled after.
+Two facts observed while doing this and not caused by it: seven Strategy submissions were pending review in the
+mailbox, none stale, and the dispatcher's status record is stamped `2026-09-25` on pid 15124, so those submissions
+need unattended review re-established rather than being reviewed here. Nothing else moved: the Gold hold and the
+022 item A envelope obligation, the sealed prospective window whose evaluation stays closed until
+`2027-03-25T15:00:00Z`, and every accepted artifact are unchanged.
+
 2026-09-27 22:05 (cont.): published the Gold research trio. The user authorised publication and chose the three-page
 scope - the new scorecard plus `gold-backtesting.html` and `gold-backtest-outcomes.html`, so the cross-links between
 them resolve - which leaves the deeper repo-relative evidence links local on purpose. Public is production `main`

@@ -1,3 +1,30 @@
+# 2026-09-29 - Live-trading window registered as an advisory lane
+
+The user asked for another registered Cline window, on DeepSeek, connected to the wider project and the
+dashboard, so the live-trading path through a MetaTrader 5 (MT5) connection can be discussed in its own window
+before anything is built. Published worker `live-trading` in `docs/orchestration/projects.json` with
+`display_name` "Live Trading Agent", `mailbox_auto_connect` true, baseline `5ff1bf3`, worktree
+`.local/worktrees/live-trading` and branch `workers/live-trading-20260929`, at register status exactly
+`instructions_published_awaiting_worker`; the assignment is `docs/orchestration/assignments/live-trading.md`
+(`live-trading-001`), the startup message is in `docs/orchestration/AGENT_MESSAGES.md`, the register note is in
+`docs/orchestration/README.md`, the decision is at the top of `docs/orchestration/DECISIONS.md`, and the window is
+`tools/live-trading-node/LiveTrading.code-workspace` with its own `README.md`. The monitor's `Live Trading Agent`
+row is derived from the register, so no monitor or bridge code changed. Verified before publishing rather than
+assumed: no MT5 connector, client, bridge or order path exists in this repository - MT5 is the declared `needs_you`
+gap in `data/research-proof-map.json` with `executable_trade_validated` false, the 2026-08-21 visual direction in
+`docs/MT5_MIRRORED_EXECUTION_CHART_REFERENCE.md`, and a prerequisite named by `docs/BACKTESTING_REVIEW_PLAN.md` and
+`docs/GOLD_TIMESTAMPED_EVALUATION_CONTRACT.md`. The assignment is advisory and design-only: it authorizes no
+connection to any MT5 terminal, broker server or account, no `MetaTrader5` package or Expert Advisor installation,
+no MT5 credential and no credential-manifest or scope change, no order placement, modification, cancellation or
+arming, no funded-account history read, and no dashboard, n8n, Layer 1, production, warehouse, scheduler or
+deployment action; its deliverables are `docs/live-trading/STRATEGY_LIVE.md` and
+`docs/live-trading/CONVERSATION_NOTES.md`, and the authority boundary - read-only feed, demo execution, or
+real-money execution - is recorded as the user's open decision. Two facts observed while doing this and not caused
+by it: seven Strategy submissions were pending review in the mailbox, none stale, and the dispatcher's status
+record is stamped `2026-09-25` on pid 15124. No MT5 connection, credential, order, dashboard, Layer 1, production
+or warehouse action occurred; the Gold hold, the sealed prospective window whose evaluation stays closed until
+`2027-03-25T15:00:00Z`, and every accepted artifact are unchanged. Local suite after the change: `npm run test:monitor` 15 tests, 15 pass, and `npm test` 447 tests with 444 pass and 3 fail, the three being `backtester/tests/secret_scanner.test.js` console-width cases that fail the same way before this change (that file alone: 5 tests, 2 pass, 3 fail) - a pre-existing environment split, not caused here. That run also picked up the untracked `backtester/tests/gold_session_policy.test.js`, which belongs to another workstream and is not part of this change.
+
 # 2026-09-25 - Gold coverage-024 accepted; the 28-factor exploratory circuit closed
 
 2026-09-25 reviewed and accepted Gold submission `20260925-gold-coverage-024-r2` (mailbox SHA-256 `5dcfaf796a7685a18b6df423d7eb9cf11290fda0b81d5afc39c45fc16b64838e`, reproduced) in a background Central Orchestrator cycle separate from authorship. Accepted at clean `cdd350af` from the declared base `6fd501a7` (an ancestor): the single new commit adds exactly one file, `backtester/tests/gold_combination_engine_024.test.js`, and `2c3606dd` is still its parent, so the repaired adapter and ledger and `docs/GOLD_COMBINATION_ANALYSIS_023.md` are byte-identical to the revisions verified in `20260925-gold-coverage-024-r1`. Both required evidence items are delivered and independently reproduced: the focused file re-ran 6 of 6, and the local suite ran 545 tests with 539 pass and 6 fail, the five CRLF materialisation cases plus 210, which fails closed on the coordinator shell's exported `DEEPSEEK_API_KEY` where the worker reported the four console-width secret-scanner cases instead - an environment split, disclosed rather than normalised. The ledger reproduces at `f02a88cb` (23,948,174 bytes) and was re-derived from the artifact: 4,956 records, 2,745 reported / 704 ineligible / 1,507 empty / 0 unavailable, 4,673 candidates with an unavailable anchor, every record reconciling `350,283 + 91,036 + 0 = 441,319`; summary `d594646d`, manifest `1ec2a382`, row reconciliation `a23f65d1`. Dependency impact is nil: the only cross-module consumer `parseCandidateId` is untouched, and the frozen 014 manifest's eight bound paths and every preserved artifact still match on disk, so the accepted gate cannot move. The batch was not re-run and rev1, rev2 and rev3 remain spent and immutable. Accepted decision: the 28-factor circuit is closed as exploratory and reports descriptive counts only - no accuracy, ranking, timing or edge claim is made or possible from spent intervals. No new assignment was published; the register keeps `gold-coverage-024` at status exactly `instructions_published_awaiting_worker` with its section 0 carrying the 022 item A envelope due at or after `2026-09-28T16:00:00Z`. The durable review is `docs/orchestration/reviews/20260925-gold-coverage-024-r2.md` (reply SHA-256 `40eaccc4a2734f80e1d83945bac19d5565397cc6748736abe43e5ef5e48cec99`). No outcome, holdout, acquisition, credential, production, warehouse, Layer 1, live workflow or deployment action occurred; the live capture lane was neither touched nor re-queried, and evaluation stays sealed until `2027-03-25T15:00:00Z`.

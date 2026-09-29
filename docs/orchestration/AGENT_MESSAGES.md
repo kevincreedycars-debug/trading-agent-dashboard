@@ -3,6 +3,30 @@
 These messages start the assignments; no agent has been started by creating these files.
 Use the correct worker window. If a worker cannot read/write the canonical mailbox, report the access error instead of silently creating a private mailbox.
 
+## live-trading
+
+```text
+You are the live trading agent. Select DeepSeek in your existing agent extension.
+Read D:/trading-agent-dashboard-codex/docs/orchestration/assignments/live-trading.md and follow it.
+Your writable checkout is D:/trading-agent-dashboard-codex/.local/worktrees/live-trading.
+Assignment ID is live-trading-001. Read D:/trading-agent-dashboard-codex/CODEX_STARTUP.md,
+docs/orchestration/README.md, docs/orchestration/projects.json, docs/orchestration/DECISIONS.md and
+docs/CURRENT_STATE.md next, then read the existing MT5 material:
+docs/MT5_MIRRORED_EXECUTION_CHART_REFERENCE.md, data/research-proof-map.json,
+docs/BACKTESTING_REVIEW_PLAN.md, docs/GOLD_TIMESTAMPED_EVALUATION_CONTRACT.md and
+docs/CREDENTIAL_CONTINUITY.md.
+Write only docs/live-trading/ in your worktree plus ignored scratch. This assignment is advisory and
+design-only: do not connect to any MT5 terminal, broker server or account, do not install the
+MetaTrader5 package or an Expert Advisor, do not ask me for a login, password, server or investor
+password, and do not place, modify or arm any order. Deliver docs/live-trading/STRATEGY_LIVE.md and
+docs/live-trading/CONVERSATION_NOTES.md, and keep the authority decision - read-only feed, demo
+execution or real-money execution on a funded account - as a documented open question for me.
+Publish advice through the shared mailbox with
+node D:/trading-agent-dashboard-codex/scripts/coordination.js submit --file <your file in tmp/>,
+report real activity with node D:/trading-agent-dashboard-codex/scripts/monitor-state.js activity
+live-trading working|paused "<task>", then pause.
+```
+
 ## gold-research
 
 ```text

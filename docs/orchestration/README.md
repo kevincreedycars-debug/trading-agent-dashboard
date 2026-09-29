@@ -14,6 +14,14 @@ active coordination checkpoint, review new Strategy advice alongside worker repo
 advice does not change implementation assignments until adopted. Startup instructions
 are in `tools/strategy-node/README.md`.
 
+Live trading adviser: open `tools/live-trading-node/LiveTrading.code-workspace` with DeepSeek.
+Its `live-trading-001` assignment is a discussion and design lane for the live-trading path
+through a MetaTrader 5 connection. It writes only `docs/live-trading/` in its own worktree and
+authorizes no MT5 connection, no credential, no package installation and no order or arming.
+The authority boundary - a read-only feed, execution on a demo account, or real-money execution
+on a funded account - is the user's and stays open. Startup instructions are in
+`tools/live-trading-node/README.md`.
+
 - [Project register](projects.json): worker IDs, paths, assignments and last known status.
 - [Decisions](DECISIONS.md): project-wide decisions and unresolved dependencies.
 - [Agent messages](AGENT_MESSAGES.md): prompts for the existing agent windows.

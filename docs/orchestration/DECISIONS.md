@@ -1,5 +1,44 @@
 # Central decisions
 
+## 2026-09-29: the live-trading lane opens as a registered advisory window; the MT5 execution authority stays the user's
+
+The user asked on 2026-09-29 for another registered agent window running Cline with DeepSeek,
+connected to the wider project and the dashboard, so the live-trading path through a MetaTrader 5
+(MT5) connection can be discussed in its own window before anything is built. Published
+`live-trading-001` to the new worker `live-trading` (worktree
+`D:/trading-agent-dashboard-codex/.local/worktrees/live-trading`, branch
+`workers/live-trading-20260929`, baseline `5ff1bf3`, register status exactly
+`instructions_published_awaiting_worker`, `mailbox_auto_connect` true) with owned scope
+`docs/live-trading/` only and deliverables `docs/live-trading/STRATEGY_LIVE.md` and
+`CONVERSATION_NOTES.md`. The window is `tools/live-trading-node/LiveTrading.code-workspace` (own
+worktree as the first folder, canonical project second, DeepSeek selected by the user, one Cline
+task, mailbox connected once); its monitor row comes from the register with no monitor code or
+setting change.
+
+Verified before publishing, not assumed: no MT5 connector, client, bridge or order path exists
+anywhere in this repository. MT5 appears only as a declared gap - `data/research-proof-map.json`
+lists *"Provide an MT5 data export or read-only feed"* as `needs_you` and keeps
+`executable_trade_validated` false - as the 2026-08-21 visual target in
+`docs/MT5_MIRRORED_EXECUTION_CHART_REFERENCE.md`, and as a prerequisite named by
+`docs/BACKTESTING_REVIEW_PLAN.md` and `docs/GOLD_TIMESTAMPED_EVALUATION_CONTRACT.md`. Machine facts
+noted for later: two MT5 terminals are installed (`C:\Program Files\MetaTrader 5`,
+`C:\Program Files\RL Crates MT5 Terminal`), Python 3.13.7 is present, and the `MetaTrader5` Python
+package is not installed.
+
+Decided: the lane is advisory and design-only. The assignment authorizes no connection to any MT5
+terminal, broker server or account, no `MetaTrader5` package or Expert Advisor installation, no MT5
+credential of any kind and no credential-manifest or scope change, no order placement, modification,
+cancellation or arming, no funded-account history read, and no dashboard, n8n, Layer 1, production,
+warehouse, scheduler or deployment action. The authority boundary the user has not yet chosen - a
+read-only feed, execution on a demo account, or real-money execution on a funded account - is
+recorded as open, is the next decision in that window, and must not be settled by quietly starting
+to build. Two further facts were observed while doing this and are not caused by it: seven Strategy
+submissions were pending review in the mailbox with none stale, and the background dispatcher's
+status record is stamped `2026-09-25` on pid 15124, so unattended review of those submissions has to
+be re-established separately from this change. Nothing else moved: the Gold hold, the sealed
+prospective window whose evaluation stays closed until `2027-03-25T15:00:00Z`, and every accepted
+artifact are unchanged.
+
 ## 2026-09-25: gold-coverage-025 accepted; the verdict page is delivered and no successor stage is published
 
 The background Central Orchestrator reviewed only `20260925-gold-coverage-025` in a controller-locked run
