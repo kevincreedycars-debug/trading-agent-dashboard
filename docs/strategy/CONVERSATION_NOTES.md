@@ -1461,3 +1461,49 @@ the chart-current value and its window, and block D prints the no-move bucket tw
 
 
 
+## 2026-09-29 — batch 3 (restatements 8, 9, 13, 33): two answers, two words retired
+
+Filed as submission `20260929-strategy-user-intent-batch3-015`. No new measurement was run for this entry; it
+records the user's statements and the document changes they force. Nothing here is a finding.
+
+**9 answered "no", and it reverses the default.** Verbatim: *"No if its relevant we always need to be aware of
+its impact on the market"*. The plan's thin-state default was to print "too few days to judge" and leave the row
+out of the scored set; the user's instruction is stronger than that, so the plan now says a thin state is **never
+dropped and never hidden**. Every state is listed with its day count; `n >= 100` survives only as the gate for an
+interest flag and for the 60% hit-rate gate, never as a reason to omit a row. This is the same principle as
+question 10 ("both, i want to see any edge we can find") and question 27 (all 28 variables in scope): coverage
+is not traded away for cleanliness.
+
+**33 answered "no, not yet", and the reason is sharper than the default it replaces.** Verbatim: *"No not yet, we
+are trying to fit anything we are just observing the data and then confirm what price did and did not do"*, read
+as *"we are **not** trying to fit anything"*. That is consistent with everything else they have said: the floor
+is their own fixed 0.80% (question 2, and question 7's "the l2l model is fixed percentage ranges"), so nothing in
+stage 1 or stage 2 is estimated from outcomes, and there is no fitted object for an unseen-data test to check. The
+out-of-sample requirement is therefore **not withdrawn but re-attached**: it binds a declared rule - a rule
+written before its outcome is read, which is exactly what question 23 already requires for the 20 undeclared
+variables - and not an observation table. Their own words also name the current method correctly: observe, then
+confirm what price did and did not do.
+
+**8 is still not clear, and the failure is vocabulary, mine.** Verbatim: *"what do you mean headline and floor?"*
+Both words are now retired from anything the user reads. *Headline* becomes "the one number in large text at the
+top of the page"; *floor* becomes "your own 0.8% minimum, the smallest move we count as a move". The question in
+plain words: should the top number be how big a normal day is, with how often 0.8% is reached printed beside it?
+Default assumed unless corrected.
+
+**13 was read as 0.05%, not 5%, and the answer is now given in counts only.** Verbatim: *"what does 5 percentage
+points mean as in 0.05%?"* The reply uses no symbols at all: 5 points means five days in every hundred; gold
+closes up on 324 of the 570 archived sessions (56.84%, called "about 57 days in 100" to the user), so a factor
+that fires on up-closes 62 days in 100 is 5 points ahead of the 57% baseline. The contrast with price is stated
+the same way: 5% of price on the last archived session open (4,540.13, 2026-04-30) is about **227 dollars**,
+which is a completely different sentence from 5 days in 100, and the batch-1 reading ("thats huge on gold") is
+recorded as the same misreading of the unit. Default assumed unless corrected: act on an edge from 5 points of
+frequency.
+
+**Files changed.** `INTENT_QUESTIONS_ANSWER_SHEET_20260929.md` (status line, rows 8, 9, 13 and 33, the answer log
+with batch 3, and the closing note that 33 does not reduce D5), `GOLD_VIX_BOTH_AND_FACTOR_TABLE_PLAN_20260928.md`
+(§3 gains "thin states are shown, never dropped", "nothing here is fitted" and the counts-only definition of 5pp),
+and this entry.
+
+**Status.** 16 of 50 answered. Open: **8 and 13** (both restated again), and D1 is still with the coordinator.
+
+

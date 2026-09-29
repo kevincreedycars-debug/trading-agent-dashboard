@@ -12,10 +12,12 @@ message is superseded.
 - Or list only the numbers you disagree with, for example `3 no, 12 often, 27 no`.
 - Questions are put to you at most seven at a time, in numbering order, skipping anything already asked.
 
-**Status:** 14 of 50 answered on 2026-09-29. Batch 1 (1, 2, 10, 13, 14, 27, 33): 4 usable (1, 10, 14, 27) and 3
-that asked for plainer wording (2, 13, 33). Batch 2 (3-9): **3, 4, 5, 6 and 7 answered**, 2 confirmed as "push
-ahead" with the user's own L2L correction, and **8 and 9 came back as not understood** - both are re-asked in
-plainer words in batch 3 together with 13 and 33. Next fresh numbers after that: 11, 12, 15.
+**Status:** 16 of 50 answered on 2026-09-29. Batch 1 (1, 2, 10, 13, 14, 27, 33): 4 usable (1, 10, 14, 27) and 3
+that asked for plainer wording (2, 13, 33). Batch 2 (3-9): **3, 4, 5, 6, 7 and 9 answered**, 2 confirmed as "push
+ahead" with the user's own L2L correction, and 8 came back twice as not understood. Batch 3: **9 answered "no"**
+(thin states stay visible) and **33 answered "no, not yet"** (nothing is being fitted yet, so no unseen-data test
+applies). Still open and restated in the plainest words available: **8 and 13**. Next fresh numbers after those:
+11, 12, 15.
 
 **Two of these answers changed the plan.** The user wants **both** stages and **all 28** variables, and they
 declared a movement size of their own: **0.80% of price, in the direction of the call, within the 24-hour
@@ -47,8 +49,8 @@ median instead of today's rolling value. Both statements are kept, each labelled
 | 5 | Publish "no move" as its own bucket, so the three counts sum to the total | yes | batch 2 | **yes**, with a refinement from the user: "the 0.8% is on XAU/USD right, most days move that much even if they dont close that much". Confirmed XAU/USD, and measured: **74.39%** of sessions reach 0.80% from the open in one direction or the other, so only **25.61%** are a *path* no-move, while only **41.58%** close beyond 0.80%, so **58.42%** are a *close* no-move. The bucket is therefore published twice and labelled with which definition it is |
 | 6 | Floor as a percentage of price, not a dollar amount | yes | batch 2 | **yes** - "Yes as percentage of price" |
 | 7 | Same floor every year, no per-year tuning | yes | batch 2 | **yes** - "Yes as the l2l model is fixed percentage ranges". Read as: the floor is fixed in advance and never fitted per year; the L2L unit exists precisely so the *same* bet is read in each year's own ranges |
-| 8 | q1-to-q3 spread as the headline measure, with the share above the floor beside it | yes | batch 2 | **not understood** - "Dont undertsand this question". Re-asked in batch 3 in plain words: we show the middle half of past moves (how big a normal day is) and, beside it, how many days clear the floor |
-| 9 | Drop a state that has fewer than 100 anchors | yes | batch 2 | **not understood** - "dont understand, please simplify". Re-asked in batch 3 in plain words: a state is a day a factor was switched on; if it has only a handful of days we do not score it, we print "too few days" |
+| 8 | q1-to-q3 spread as the headline measure, with the share above the floor beside it | yes | batch 2, 3 | **still not clear** - "what do you mean headline and floor?". Both words were mine and both were jargon, so they are retired in the wording used to the user: *headline* becomes "the one number in large text at the top of the page", and *floor* becomes "your own 0.8% minimum, the smallest move we count as a move". The proposal in plain words: the top number is how big a normal day is, and immediately beside it, how often 0.8% gets reached. Default assumed unless corrected |
+| 9 | Drop a state that has fewer than 100 anchors | yes | batch 2, 3 | **no** - "No if its relevant we always need to be aware of its impact on the market". This reverses the default: a thin state is **never dropped and never hidden**. Every state is listed with its day count, and one with too few days to judge is printed unscored with "few days" beside it so its market context stays visible. The `n >= 100` bar survives only as a *labelling and scoring* gate - it decides whether the row can carry an interest flag or clear the 60% gate, and it decides nothing about whether the row is shown |
 
 ## B. What you want out of it (10-13)
 
@@ -57,7 +59,7 @@ median instead of today's rolling value. Both statements are kept, each labelled
 | 10 | "A move is coming" is enough, direction is a separate second step | yes | batch 1 | **no** - "both, i want to see any edge we can find": the movement stage and the direction stage are both wanted. Direction is not optional, and the two stages stay separate so the direction answer is read after the movement answer |
 | 11 | A simple on/off flag per factor, not a score or a ranking | yes | | |
 | 12 | Prefer factors that fire rarely but strongly over often with a small edge | rare + strong | | |
-| 13 | You would act on an edge smaller than 5pp | no | batch 1 | **not answered, question restated** - the reply read "5pp" as 5% of price ("thats huge on gold"). It means 5 *percentage points of frequency*: a state that delivers the move 44% of the time where the cohort delivers 39% is +5pp. Re-asked in batch 3 |
+| 13 | You would act on an edge smaller than 5pp | no | batch 1, 3 | **still not clear** - "what does 5 percentage points mean as in 0.05%?" Restated in the reply with plain counts only: 5 points means **5 days in every 100**, not 0.05% (which would be one day in two thousand). Worked example used: gold closes up on about 57 days in 100 (324 of the 570 archived sessions, 56.84%), and a factor that fires on up-closes 62 days in 100 is 5 points ahead of that baseline; 5% *of price* would be about 227 dollars on the last archived session open of 4,540.13, a different unit entirely. Default assumed unless corrected: an edge is acted on from 5 points of frequency |
 
 ## C. Horizon (14-17)
 
@@ -102,7 +104,7 @@ median instead of today's rolling value. Both statements are kept, each labelled
 
 | # | Yes/no question | Default | Asked | Your answer |
 | --- | --- | --- | --- | --- |
-| 33 | Re-test any survivor out of sample before acting on it | yes | batch 1 | **not answered** - "not sure I understand the question". Explained in the batch-1 reply and re-asked in batch 3 |
+| 33 | Re-test any survivor out of sample before acting on it | yes | batch 1, 3 | **no, not yet** - "No not yet, we are trying to fit anything we are just observing the data and then confirm what price did and did not do" (read as *"we are not trying to fit anything"*). This is the sharper answer of the pair: the current stage is **description, not fitting**. Nothing is estimated from outcomes - the floor is the user's own fixed 0.8% and no threshold, weight or window is tuned - so there is no fitted object for an unseen-data test to check. The out-of-sample requirement stays on the books and attaches to a **declared rule** (a rule stated before its outcome is read, such as the undeclared-variable rules in question 23), not to an observation table. Deferred by user instruction, to be re-raised if and when a rule is declared |
 | 34 | Size the rebuild for a 3pp effect, about 2,100 anchors per state | yes | | |
 | 35 | Allow hourly entries to reach that sample, horizon re-declared, overlap disclosed | yes | | |
 | 36 | Accept a declared floor, since the data has no "no move" bucket to find one in | yes | | |
@@ -146,12 +148,15 @@ median instead of today's rolling value. Both statements are kept, each labelled
 | Date | Batch | Questions asked | Answers received |
 | --- | --- | --- | --- |
 | 2026-09-29 | 1 | 1, 2, 10, 13, 14, 27, 33 | 7 replies. Usable: 1 both measures, 10 both stages, 14 session primary with a morning-flag process, 27 all 28 in scope. Restatements requested and given: 2 (floor), 13 (5pp vs 0.8%), 33 (out of sample). Also declared: 0.80% in the direction of the call within the session, which replaces the 0.30% session default |
-| 2026-09-29 | 2 | 3-9 | asked, pending |
+| 2026-09-29 | 2 | 3-9 | 7 replies, 5 usable (3, 4, 5, 6, 7). 4 count both directions; 5 publish the no-move bucket; 6 floor as a percentage of price; 7 the floor is the same every year. 2 was settled here: "push ahead but clarify that the real L2L size is actually 1.68% at present on the charts I use". 8 and 9 came back as not understood |
+| 2026-09-29 | 3 | 8, 9, 13, 33 (restatements) | 4 replies. **9 answered "no"** - a relevant state is never dropped, its market impact must stay visible. **33 answered "no, not yet"** - nothing is being fitted at this stage, the work is observing the data and confirming what price did and did not do. 8 asked what "headline" and "floor" mean; 13 asked whether 5 percentage points means 0.05%. Both words are retired from the wording and both questions are restated in counts only |
 
-The three restatements (2, 13, 33) are re-asked in batch 3. Batches continue in numbering order, at most seven
-at a time, skipping anything already asked. Two lanes are still waiting on D1-D5; D1's default is no longer
-"movement screen then a 0.30% floor" but "movement screen then the user's declared 0.80% / 1.00-L2L floor",
-with the direction stage kept in scope.
+Batches continue in numbering order, at most seven at a time, skipping anything already asked. Batch 3 closed **2
+and 33** (2 in batch 2 with the 1.68% correction) and left **8 and 13** outstanding in their plainest wording. Two
+lanes are still waiting on D1-D5; D1's default is no longer "movement screen then a 0.30% floor" but "movement
+screen then the user's declared 0.80% / 1.00-L2L floor", with the direction stage kept in scope. Question 33's
+answer removes nothing from D5 - it says the *stage we are in* is observation, so the out-of-sample check binds a
+future declared rule rather than today's tables.
 
 ## Batch 1 (2026-09-29) - the replies verbatim, in canonical order
 

@@ -100,6 +100,23 @@ multiple is exactly what this section refuses to do.
 cohort's own share is at least 5pp, and the sign holds in every year with n >= 20. No new threshold is
 introduced anywhere.
 
+**Thin states are shown, never dropped** (user, 2026-09-29, batch 3: *"No if its relevant we always need to be
+aware of its impact on the market"*). Every state is listed with its day count, and a state with too few days to
+judge is printed unscored with "few days" beside it. The `n >= 100` bar decides only whether the row may carry
+an interest flag or clear the 60% gate; it decides nothing about whether the row is shown. In plain words, which
+is how it must be said to the user: `n` is how many past days the state covers, and "5pp" means **5 days in every
+100**, not 0.05% of price — a factor that fires on up-closes 62 times in 100 where gold closes up 57 times in 100
+is 5pp ahead of its baseline (the measured gold baseline is 324 of 570 sessions, 56.84%; 5% of price would be
+about 227 dollars on the 4,540.13 open of the last archived session).
+
+**Nothing here is fitted** (user, same day: *"we are trying to fit anything we are just observing the data and
+then confirm what price did and did not do"*, read as *not* trying to fit). Stage 1 and stage 2 as specified are
+description: the floor is the user's own fixed 0.80% (or its L2L translation), and no threshold, weight or window
+is estimated from outcomes. The out-of-sample requirement of question 33 therefore attaches to a **declared
+rule** — a rule written down before its outcome is read, as question 23 requires for the undeclared variables —
+and not to an observation table. It is **deferred by user instruction**, to be re-raised if and when a rule is
+declared.
+
 ## 4. Stage 2 — "which way", once a move is on the table
 
 Direction is only worth asking about for states that pass stage 1: a factor that does not change how much
