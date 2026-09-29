@@ -1,5 +1,28 @@
 # Session notes
 
+2026-09-29 (cont.): diagnosed and undid the dispatcher pause left by the live-trading work. `.local/orchestration/`
+`controller/config.json` was `{"enabled": false}`, written 20:28 local by this session's own `pause` before the
+central-memory edits, while `controller/status.json` was stamped `2026-09-25T21:34:32.765Z` on pid 15124 and
+`daemon.lock` held that same dead pid. Mechanism rather than guess: `status.json` is written only inside a live
+`serve()` loop in `scripts/coordinator-dispatch.js`, so the four-day-old record means no dispatcher has run since
+2026-09-25 21:34Z, and the fresh `config.json` and activity timestamps came from interactive commands.
+`run.lock` was absent, so there was no half-finished review to inspect, and `serve()` removes a stale `daemon.lock`
+whose pid is dead. `tools/agent-mailbox-bridge/start-coordinator.ps1` validated the `deepseek-coordinator` credential
+scope, enabled dispatch (`config.json` now `{"enabled": true}`) and spawned `run-coordinator.ps1`; the daemon is pid
+34192 and re-created `daemon.lock`. It first reported `waiting` with "Interactive coordinator reports working; review
+deferred" because this session's activity flag still said `working` from 19:28:53Z - the guard that prevents two
+reviewers working the same mailbox - so the flag was reported `paused` at 19:39:20Z and the daemon moved to
+`reviewing` on `20260926-strategy-window-flash-fix-004` at 19:39:22Z, with `run.lock` present and pid 34192 alive.
+Queue measured at nine `pending_review` submissions, all `strategy`, 2026-09-26 to 2026-09-29, none stale and none
+with a receipt, so all nine are candidates at one review per cycle, forty-minute timeout, `DAILY_REVIEW_CAP` 0; a
+review that ends `needs_attention` writes `{"enabled": false}` by design, so the lane can pause itself and needs
+inspection before it resumes. This session's files were committed as `ab71d53` on
+`orchestration/control-plane-20260920` - ten files: the register, the assignment, the startup message, the decisions
+entry, the orchestration README note, the current state, the session notes, the changelog and
+`tools/live-trading-node/` - while unrelated in-progress work was left untouched: `AGENTS.md` and
+`tools/strategy-node/Strategy.code-workspace` remain modified and five `backtester` gold session-policy files remain
+untracked.
+
 2026-09-29: opened the live-trading lane as a registered advisory window, at the user's request for another Cline
 window on DeepSeek connected to the wider project and the dashboard so the live-trading path through a MetaTrader 5
 connection can be discussed in its own window before anything is built. What was published: worker `live-trading`
@@ -32,7 +55,10 @@ installation, no MT5 credential and no credential-manifest or scope change, no o
 cancellation or arming, no funded-account history read, and no dashboard, n8n, Layer 1, production or warehouse
 action; the user's open decision - read-only feed, demo execution, or real-money execution - is recorded in
 `DECISIONS.md` and must not be settled by starting to build. Coordination discipline: the background dispatcher was
-paused before these central-memory edits (`pause`, then `status` with `activeRun` false) and re-enabled after.
+paused before these central-memory edits (`pause`, then `status` with `activeRun` false) and re-enabled after. That
+last clause was written ahead of the fact, because the re-enable had not actually run yet; the coordination follow-up
+entry above records the diagnosis and the real restoration.
+
 Two facts observed while doing this and not caused by it: seven Strategy submissions were pending review in the
 mailbox, none stale, and the dispatcher's status record is stamped `2026-09-25` on pid 15124, so those submissions
 need unattended review re-established rather than being reviewed here. Nothing else moved: the Gold hold and the

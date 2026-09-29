@@ -1,3 +1,31 @@
+# 2026-09-29 (cont.) - the paused background dispatcher was diagnosed and restored
+
+A later pass in the same session diagnosed the background Central Orchestrator pause that the live-trading work left
+behind, and restored unattended review. `.local/orchestration/controller/config.json` was `{"enabled": false}`,
+written 2026-09-29 20:28 local by this session's own `pause` command before the central-memory edits, while
+`.local/orchestration/controller/status.json` was stamped `2026-09-25T21:34:32.765Z` on pid 15124 and `daemon.lock`
+held that same dead pid. The diagnosis is a mechanism fact rather than a guess: `status.json` is written only inside
+a live `serve()` loop in `scripts/coordinator-dispatch.js`, so a four-day-old record means no dispatcher has run
+since 2026-09-25 21:34Z, and the fresh `config.json` and activity timestamps came from interactive commands, not from
+a running daemon. `run.lock` was absent, so no unfinished review required inspection, and `serve()` unlinks a stale
+`daemon.lock` whose pid is no longer running. Restoration used the documented launcher
+`tools/agent-mailbox-bridge/start-coordinator.ps1`, which validated the `deepseek-coordinator` credential scope, ran
+`enable` so `config.json` is now `{"enabled": true}`, and spawned `run-coordinator.ps1`; the new daemon stamped
+`status.json` with pid 34192 and re-created `daemon.lock`. It began in `waiting` with the detail *"Interactive
+coordinator reports working; review deferred"*, because this session's own
+`.local/orchestration/activity/central-orchestrator.json` still reported `working` from 19:28:53Z - the intended guard
+against two reviewers working the same mailbox - so the flag was reported `paused` at 19:39:20Z and the daemon moved
+to `reviewing` on `20260926-strategy-window-flash-fix-004` at 19:39:22Z, with `run.lock` present and pid 34192 alive.
+The queue as measured at that moment is nine `pending_review` submissions, all from the `strategy` worker, dated
+2026-09-26 to 2026-09-29, none stale and none carrying a receipt, so all nine are dispatch candidates, taken one
+review at a time with a forty-minute timeout and `DAILY_REVIEW_CAP` 0. One design property matters because it can
+switch the lane off by itself: a review that ends `needs_attention` writes `{"enabled": false}` and pauses dispatch
+until the receipt and log are inspected. This entry also corrects the record in the live-trading entry below, which
+states that the dispatcher was "re-enabled after" the edits - that clause was written ahead of the fact and the
+re-enable had not run until this pass. No controller or bridge code or setting changed, and no MT5 connection,
+credential, order, dashboard, Layer 1, production or warehouse action occurred; the Gold hold, the sealed prospective
+window whose evaluation stays closed until `2027-03-25T15:00:00Z`, and every accepted artifact are unchanged.
+
 # 2026-09-29 - Live-trading window registered as an advisory lane
 
 The user asked for another registered Cline window, on DeepSeek, connected to the wider project and the
