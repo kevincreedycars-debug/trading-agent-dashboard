@@ -1414,4 +1414,50 @@ words each**, and **each question one to two lines carrying a short reason or ex
 `REPLY_STYLE.md` were updated to that wording and the change was filed to the coordinator as submission
 `20260929-strategy-reply-style-rule-013`.
 
+## 2026-09-29 — batch 2 of the intent questions (canonical 3-9), and the user's L2L correction
+
+Filed as submission `20260929-strategy-user-intent-batch2-014`. Everything in this entry is read-only
+measurement on already-spent intervals plus the user's own statements; nothing here is a finding.
+
+**Answers, five usable of seven.** 4 — count moves both ways: *"Yes count them all we are loking for directional
+move data then will discern if what the data shows is typically up/down in whichever direction"*. 5 — publish the
+no-move bucket: yes, with a refinement (*"the 0.8% is on XAU/USD right, most days move that much even if they
+dont close that much"*). 6 — floor as a percentage of price: yes. 7 — same floor every year: yes, on the reasoning
+that *"the l2l model is fixed percentage ranges"*. 2 — the floor question from batch 1 is now settled: *"Okay
+fine, push ahead but clarify that the real L2L size is actually 1.68% at present on the charts I use"*. 8 and 9 —
+*"Dont undertsand this question"* and *"dont understand, please simplify"*; both are re-asked in plainer words in
+batch 3 alongside 13 and 33.
+
+**The L2L correction is the substantive item, and the user is right.** L2L is a rolling figure — 0.50 × ADR20
+over the most recent 20 sessions — so a chart value is not the same statistic as a period median. The 0.7236%
+recorded in batch 1 is the **period** median (median ADR20 1.4472% over the 570 gold sessions). By year the same
+rows give median ADR20 1.32% (2024), 1.43% (2025) and **3.12% (2026)**, i.e. chart-current L2L 0.66%, 0.71% and
+**1.56%**, and **1.83%** on the final 20 sessions (2026-04-01 to 04-30, ADR20 3.65%). Their **1.68% implies ADR20
+3.36%** and sits inside that recent band, so their chart agrees with this archive once the window is matched.
+Consequence: their 0.80% floor is **0.48 L2L today**, so their original "that is 0.5 l2l" was correct for the
+current regime and the 1.11x figure was correct only against the whole-period median. Both are kept, labelled by
+window, and the plan now requires L2L to be printed with the window it was measured over. D1's "publish both
+units" therefore stays, with a sharper reason than before.
+
+**Where the question's own examples came from, since the user asked.** The 0.5% and 3% in the batch-2 wording
+were mine, not the archive's, and the 3% one was badly chosen: measured on the same 570 sessions, a **0.5%
+close-to-close** move happens in **59.12%** of sessions (34.91% up, 24.21% down), so the user is right that 0.5%
+is not drift, and a **3% close-to-close** move happens in **3.86%**, so they are right that 3% days are rare. The
+3% I had in mind was the **intraday range**: ranges ≥ 3% occur in 6.14% of sessions overall and **25.64% in
+2026**. The rule this produces: never quote a size threshold without naming whether it is measured on the close
+or on the path.
+
+**Path versus close, which is the user's own point measured.** Question 5's refinement is exactly right. At
+0.80%, **74.39%** of sessions travel 0.80% from the open in one direction or the other, so only **25.61%** are a
+path no-move; but only **41.58%** close beyond 0.80%, so **58.42%** are a close no-move. The no-move bucket is
+therefore published twice, labelled with its definition, and no single "days with no move" number is allowed.
+
+**Files changed.** `INTENT_QUESTIONS_ANSWER_SHEET_20260929.md` (status line, the L2L correction section, rows 2-9
+answered, nine new fact rows), `GOLD_VIX_BOTH_AND_FACTOR_TABLE_PLAN_20260928.md` (the floor section now leads with
+the chart-current value and its window, and block D prints the no-move bucket twice), and this entry.
+
+**Scratch.** `tmp/l2l-scan6-20260929.js`, read-only, reproduces every number above from
+`data/l2l-trading-day-directional-v1.json` (570 gold rows, 2024-01-04 to 2026-04-30).
+
+
 

@@ -12,8 +12,10 @@ message is superseded.
 - Or list only the numbers you disagree with, for example `3 no, 12 often, 27 no`.
 - Questions are put to you at most seven at a time, in numbering order, skipping anything already asked.
 
-**Status:** 7 of 50 answered on 2026-09-29: 4 usable (1, 10, 14, 27) and 3 that asked for a plainer
-restatement (2, 13, 33) and are re-asked in batch 3. The next batch is canonical 3-9.
+**Status:** 14 of 50 answered on 2026-09-29. Batch 1 (1, 2, 10, 13, 14, 27, 33): 4 usable (1, 10, 14, 27) and 3
+that asked for plainer wording (2, 13, 33). Batch 2 (3-9): **3, 4, 5, 6 and 7 answered**, 2 confirmed as "push
+ahead" with the user's own L2L correction, and **8 and 9 came back as not understood** - both are re-asked in
+plainer words in batch 3 together with 13 and 33. Next fresh numbers after that: 11, 12, 15.
 
 **Two of these answers changed the plan.** The user wants **both** stages and **all 28** variables, and they
 declared a movement size of their own: **0.80% of price, in the direction of the call, within the 24-hour
@@ -22,19 +24,31 @@ shows that 0.80% is **1.11x gold's own standard L2L distance (0.7236%)**, *not* 
 floor written as a fixed percentage of price drifts 32%→63% across years on gold while the same floor written
 in L2L units stays flat within 2.4pp.
 
+**The user's L2L correction, 2026-09-29 — and they are right about it.** They said "the real L2L size is
+actually 1.68% at present on the charts I use". L2L is a *rolling* figure wherever it is drawn on a chart:
+0.50 × ADR20 over the most recent 20 sessions, so its value moves with the regime. Every L2L number in this
+document is the **period median** (median ADR20 1.4472% over the 570 gold sessions, so 0.7236%), which is a
+different statistic from today's chart value. Read by year on the same rows the median ADR20 is 1.32% (2024),
+1.43% (2025) and **3.12% (2026)**, so the chart-current L2L is 0.66%, 0.71% and **1.56%**; on the final 20
+sessions (2026-04-01 to 2026-04-30) it is **1.83%** (ADR20 3.65%). The user's **1.68% implies ADR20 3.36%** and
+sits inside that recent 1.56%–1.83% band, so their chart agrees with the archive once the window is matched. It
+also means their first statement — that 0.80% "is 0.5 l2l" — was **correct for the current charts**
+(0.80 / 1.68 = 0.48 L2L), and the 1.11x figure recorded earlier in this file was measured against the whole-period
+median instead of today's rolling value. Both statements are kept, each labelled with its window.
+
 ## A. What counts as a move (1-9)
 
 | # | Yes/no question | Default | Asked | Your answer |
 | --- | --- | --- | --- | --- |
 | 1 | Measure a move close-to-close, not intraday high-to-low | yes | batch 1 | **both** - "we also want to see if l2l and 0.5 l2l is found": keep close-to-close *and* add the path-based L2L and 0.5 L2L reach rows (`data/l2l-trading-day-directional-v1.json` already measures both) |
-| 2 | Fix the minimum size in advance (0.30% session / 1.00% week) instead of fitting it | yes | batch 1 | **asked for a plainer restatement** - "not sure, explain the question better". The user separately declared **0.80% in the direction of the call within the session**, which is the size this row is about, so the floor becomes theirs; re-asked as a confirm in batch 3 |
-| 3 | Report the size of the move too, not only the yes/no | yes | | |
-| 4 | Count a move in either direction, ignoring the sign | yes | | |
-| 5 | Publish "no move" as its own bucket, so the three counts sum to the total | yes | | |
-| 6 | Floor as a percentage of price, not a dollar amount | yes | | |
-| 7 | Same floor every year, no per-year tuning | yes | | |
-| 8 | q1-to-q3 spread as the headline measure, with the share above the floor beside it | yes | | |
-| 9 | Drop a state that has fewer than 100 anchors | yes | | |
+| 2 | Fix the minimum size in advance (0.30% session / 1.00% week) instead of fitting it | yes | batch 1 | **asked for a plainer restatement** - "not sure, explain the question better". The user separately declared **0.80% in the direction of the call within the session**, which is the size this row is about, so the floor becomes theirs; confirmed in batch 2 with "Okay fine, push ahead but clarify that the real L2L size is actually 1.68% at present on the charts I use" - their L2L is the rolling chart value and they are right about it (see "The user's L2L correction" above) |
+| 3 | Report the size of the move too, not only the yes/no | yes | batch 2 | **yes** - "0.5% isnt drift thats meaningful directional movement I would say, 3% days rarely happen on gold ever, where have you got these targets from?". The two examples in the question were mine and one was badly chosen, so here is the measurement. On the same 570 gold sessions a move of 0.5% or more **close-to-close** happens in **59.12%** of sessions (34.91% up, 24.21% down), so the user is right that 0.5% is not drift. A move of 3% or more close-to-close happens in **3.86%**, so they are right there too. The "3%" in the question was the **intraday range** in the recent regime (range ≥ 3%: 6.14% of sessions all period, **25.64% in 2026**), not a close. The size row stands and both definitions get reported |
+| 4 | Count a move in either direction, ignoring the sign | yes | batch 2 | **yes** - "Yes count them all we are loking for directional move data then will discern if what the data shows is typically up/down in whichever direction". Both directions counted on the way in; the up/down reading is the separate stage-2 step, in that order |
+| 5 | Publish "no move" as its own bucket, so the three counts sum to the total | yes | batch 2 | **yes**, with a refinement from the user: "the 0.8% is on XAU/USD right, most days move that much even if they dont close that much". Confirmed XAU/USD, and measured: **74.39%** of sessions reach 0.80% from the open in one direction or the other, so only **25.61%** are a *path* no-move, while only **41.58%** close beyond 0.80%, so **58.42%** are a *close* no-move. The bucket is therefore published twice and labelled with which definition it is |
+| 6 | Floor as a percentage of price, not a dollar amount | yes | batch 2 | **yes** - "Yes as percentage of price" |
+| 7 | Same floor every year, no per-year tuning | yes | batch 2 | **yes** - "Yes as the l2l model is fixed percentage ranges". Read as: the floor is fixed in advance and never fitted per year; the L2L unit exists precisely so the *same* bet is read in each year's own ranges |
+| 8 | q1-to-q3 spread as the headline measure, with the share above the floor beside it | yes | batch 2 | **not understood** - "Dont undertsand this question". Re-asked in batch 3 in plain words: we show the middle half of past moves (how big a normal day is) and, beside it, how many days clear the floor |
+| 9 | Drop a state that has fewer than 100 anchors | yes | batch 2 | **not understood** - "dont understand, please simplify". Re-asked in batch 3 in plain words: a state is a day a factor was switched on; if it has only a handful of days we do not score it, we print "too few days" |
 
 ## B. What you want out of it (10-13)
 
@@ -197,6 +211,14 @@ ADR20 * 0.25".
 | accuracy, 270 bullish calls / 300 bearish calls | 53.33% / 40.00% |
 | \|close-to-close\| >= 0.30% / >= 0.80%; no-move bucket at 0.80% | 73.86% / 41.58%; 58.42% |
 | median \|close-to-close\| | 0.6701% |
+| median range from the open (path, either direction) | 1.14% |
+| ADR20 / L2L, period median vs chart-current | 1.4472% / 0.7236% vs **3.12% / 1.56%** (2026 rows) |
+| ADR20 / L2L on the final 20 sessions (2026-04-01 to 04-30) | 3.65% / **1.83%** |
+| user's chart L2L, 2026-09-29 | **1.68%** (implies ADR20 3.36%) |
+| the user's 0.80% floor as a multiple of that current L2L | **0.48x** - their "0.5 l2l" reading was right for today's chart |
+| the same 0.80% against the period-median L2L | 1.11x |
+| sessions reaching 0.80% either way (path) vs closing beyond it (close) | 74.39% vs 41.58% |
+| no-move bucket at 0.80%, path vs close | 25.61% vs 58.42% |
 
 **Year stability, which is the argument for the L2L unit.** The share of sessions reaching the floor in the
 call's direction, per year: at a *fixed* 0.80% of price, 32.40% (2024), 38.43% (2025), 62.82% (2026, n 78); as

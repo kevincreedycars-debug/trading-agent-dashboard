@@ -72,13 +72,25 @@ gold call sessions, 2024-01-04 to 2026-04-30, `data/l2l-trading-day-directional-
 1.11x. Both are published, together with **0.50 L2L** (0.3618% of price) and the plan's earlier 0.30% as fixed
 sensitivity rows, under a single `looks_counted` for the whole sweep.
 
+**The user's own L2L figure, 2026-09-29, and it settles the unit question.** They reported L2L **1.68%** "at
+present on the charts I use". L2L is a rolling number wherever it is drawn — 0.50 × ADR20 over the most recent
+20 sessions — so a chart value and a period median are different statistics. The 0.7236% above is the
+**period** median (median ADR20 1.4472% across the 570 sessions); read by year the same rows give ADR20 1.32%
+(2024), 1.43% (2025) and **3.12% (2026)**, so the chart-current L2L is 0.66%, 0.71% and **1.56%**, and **1.83%**
+on the final 20 sessions (2026-04-01 to 04-30). Their **1.68% implies ADR20 3.36%** and matches that recent band,
+so their chart is consistent with this archive. It also means their 0.80% is **0.48 L2L today** (0.80 / 1.68), so
+their original "that is 0.5 l2l" was right for the current regime, and the 1.11x figure is only right against the
+whole-period median. **Print L2L with its window.**
+
 **Why both units, measured.** The share of gold sessions whose favourable excursion reaches the floor is
 32.40% (2024), 38.43% (2025) and 62.82% (2026, n 78) when the floor is a *fixed* 0.80% of price — a 30pp
 swing, because gold's median ADR20 went from 1.32% to 3.12% over the same period. Written as 1.00 L2L the same
 floor gives 39.60%, 37.19% and 38.46%, flat within 2.4pp, and 0.50 L2L gives 63.60%, 64.88% and 62.82%. A
 fixed percentage of price is a different bet each year on this instrument, and the year-sign test would then
 flag a volatility regime as instability in the factor. The user's level is honoured; the L2L row is the one
-that can be re-tested.
+that can be re-tested. On today's chart values the same three rows read as the floor at **0.48 L2L** (0.80% of
+price against L2L 1.68%), **1.00 L2L** (1.68%) and **0.50 L2L** (0.84%) — so the user's fixed 0.80% *is* the
+0.5 L2L row in the current regime, which is the other reason both units are printed rather than one.
 
 **Week floor.** 1.00% week stays as the plan's default until the user says otherwise. Its L2L form is *not*
 proposed yet: a 5-session extension is not a fixed multiple of the 1-session range, and inventing that
@@ -205,9 +217,13 @@ thresholds of 1 or 2 points cost few observations while 5 points on `vix_d1` thi
 **Block D — the movement screen, read first.** Before any direction row is read, the table carries block D:
 for every state, the realized-return q1, q3 and the q1-to-q3 distance on both horizons beside the cohort's
 own, all of it from fields the accepted report already contains. Once lane 1 has run, block D gains the share
-of anchors above the declared floor at 0.80% of price in the call's direction, at 1.00 L2L (0.50 x ADR20,
-0.7236% today), at 0.50 L2L (0.3618%) and at 1.00% (week), with the plan's earlier 0.30% kept as one fixed
-sensitivity row and one `looks_counted` for the whole sweep. Nothing in block D
+of anchors above the declared floor at 0.80% of price in the call's direction, at 1.00 L2L (0.50 x ADR20: 0.7236%
+at the period median, **1.68% on the user's current chart**), at 0.50 L2L (0.3618% at the period median, 0.84%
+on today's chart) and at 1.00% (week), with the plan's earlier 0.30% kept as one fixed sensitivity row and one
+`looks_counted` for the whole sweep. The **"no move" bucket is printed twice and labelled**, because the user's
+own reading ("most days move that much even if they dont close that much") is measured and is exactly right: at
+0.80%, **74.39%** of sessions reach 0.80% from the open in one direction or the other, so only **25.61%** are a
+*path* no-move, while only **41.58%** close beyond 0.80%, so **58.42%** are a *close* no-move. Nothing in block D
 carries a direction, and its states are marked with the same bar as stage 2 but a 5pp gap against the
 cohort's own share instead of the 60% level.
 
