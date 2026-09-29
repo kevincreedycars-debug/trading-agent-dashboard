@@ -64,11 +64,25 @@ there is no "no move" bucket to discover, only a line to draw. (The series the a
 is available for such a join: `backtester/tmp/gold-hourly-extended-20260918/candles.json`, XAU_USD, hourly
 from 2023-01-02.)
 
-**Recommended floor, declared before any number is read.** Session 0.30% and week 1.00% — 0.30% is the
-document's own smallest material number (F2), so nothing is invented. Report the share of anchors above the
-floor beside the cohort's own share, and the same shares at 0.50% and 2.00% as one sensitivity line, with a
-single `looks_counted` for the whole sweep. The floor is a parameter; the page shows all of it, not the best
-cell.
+**The floor is now the user's, declared on 2026-09-29, and it is written in two units at once.** They asked
+for "minimum 0.8% movement in the direction of the call during the 24hr session" — so the session floor is
+**0.80% of price, in the direction of the call**, and beside it the same floor in the archive's own L2L units:
+**1.00 L2L = 0.50 x ADR20**, which is **0.7236%** of the session open at gold's median ADR20 (1.4472%, 570
+gold call sessions, 2024-01-04 to 2026-04-30, `data/l2l-trading-day-directional-v1.json`). The two differ by
+1.11x. Both are published, together with **0.50 L2L** (0.3618% of price) and the plan's earlier 0.30% as fixed
+sensitivity rows, under a single `looks_counted` for the whole sweep.
+
+**Why both units, measured.** The share of gold sessions whose favourable excursion reaches the floor is
+32.40% (2024), 38.43% (2025) and 62.82% (2026, n 78) when the floor is a *fixed* 0.80% of price — a 30pp
+swing, because gold's median ADR20 went from 1.32% to 3.12% over the same period. Written as 1.00 L2L the same
+floor gives 39.60%, 37.19% and 38.46%, flat within 2.4pp, and 0.50 L2L gives 63.60%, 64.88% and 62.82%. A
+fixed percentage of price is a different bet each year on this instrument, and the year-sign test would then
+flag a volatility regime as instability in the factor. The user's level is honoured; the L2L row is the one
+that can be re-tested.
+
+**Week floor.** 1.00% week stays as the plan's default until the user says otherwise. Its L2L form is *not*
+proposed yet: a 5-session extension is not a fixed multiple of the 1-session range, and inventing that
+multiple is exactly what this section refuses to do.
 
 **Same bar as everywhere else.** A stage-1 state is interesting only if `n >= 100`, the gap against the
 cohort's own share is at least 5pp, and the sign holds in every year with n >= 20. No new threshold is
@@ -88,6 +102,16 @@ granularity — but hourly entries with a 24-hour endpoint overlap each other, s
 below the raw count and the horizon would have to be re-declared. The honest conclusion for the engine: the
 direction layer cannot be rebuilt on 965 daily anchors, and a rebuild should fix its sample size and its
 floor first, then measure.
+
+**The gold base rate for stage 2 is measured, and it is not 50%.** On the same 570 gold call sessions the call
+is right at the session close **46.32%** of the time while gold closed up **56.84%** of them, so an
+always-bullish rule beat the calls by 10.5pp. The loss sits almost entirely in the bearish calls: 300 of the
+570 calls were bearish and were right 40.00% of the time, against 53.33% for the 270 bullish calls and the
+56.84% always-up rate. At the user's own 0.80% floor the unconditional figures are 39.12% of sessions reaching
+0.80% in the call's direction, 43.86% reaching 0.80% against it, and 32.63% reaching it *and* still closing
+the call's way. So a stage-2 claim has to beat 56.84%, not 50%, and a stage-1 claim has to beat 39.12%. These
+are sizing facts read after the interval was spent, not findings, and they are also the reason the direction
+layer's failure is better described as "the bearish half is broken" than as "gold is unpredictable".
 
 ## 5. The VIX streams, and which of them we can already read
 
@@ -181,7 +205,9 @@ thresholds of 1 or 2 points cost few observations while 5 points on `vix_d1` thi
 **Block D — the movement screen, read first.** Before any direction row is read, the table carries block D:
 for every state, the realized-return q1, q3 and the q1-to-q3 distance on both horizons beside the cohort's
 own, all of it from fields the accepted report already contains. Once lane 1 has run, block D gains the share
-of anchors above the declared floor at 0.30% (session), 1.00% (week), 0.50% and 2.00%. Nothing in block D
+of anchors above the declared floor at 0.80% of price in the call's direction, at 1.00 L2L (0.50 x ADR20,
+0.7236% today), at 0.50 L2L (0.3618%) and at 1.00% (week), with the plan's earlier 0.30% kept as one fixed
+sensitivity row and one `looks_counted` for the whole sweep. Nothing in block D
 carries a direction, and its states are marked with the same bar as stage 2 but a 5pp gap against the
 cohort's own share instead of the 60% level.
 
@@ -227,7 +253,7 @@ and needs no answer.
 
 | # | Question | Recommended default | Alternative |
 | --- | --- | --- | --- |
-| D1 | **The "if" stage (new; answer this one first)** | Run the free movement screen first (per-state realized-return q1/q3 spread, no new run), then declare the 0.30% / 1.00% floor and measure the share of anchors above it, under the same n>=100 / 5pp / year-sign bar | Do only the floor measurement and skip the free screen, or keep stage 1 out and treat the 25 direction rows as the whole answer |
+| D1 | **The "if" stage (new; answer this one first)** | Run the free movement screen first (per-state realized-return q1/q3 spread, no new run), then measure the share of anchors above the **user's declared 0.80% floor in the direction of the call** *and* the same floor as **1.00 L2L = 0.50 x ADR20 (0.7236% today)**, publishing 0.50 L2L (0.3618%) and 0.30% as fixed sensitivity rows, under the same n>=100 / 5pp / year-sign bar. The user answered on 2026-09-29 that **both stages stay in scope** (question 10) and that **all 28 variables stay in scope** (question 27) | Do only the floor measurement and skip the free screen, or keep stage 1 out and treat the 25 direction rows as the whole answer |
 | D2 | What to do with the VIX change stream | Both streams, as designed in §7: level bands scored, change legs published as raw context (B1) plus the declared 1/2/5 and 2/5/10 sweep with `looks_counted` (B2), no direction invented | Reject B2 (context only, the minimum version), or drop the change stream back to unscored |
 | D3 | Size of the deliverable | Full version: new page beside the accuracy panel, linked from the two Gold Backtest pages | Minimum version in §8: block C appended to the existing scorecard page, no new template, no nav edits |
 | D4 | F9 `risk_headline_context` | Rebuild it as a declared rule the way the live field is built (VIX>25 **or** war/geopolitical/conflict/sanction event names), because today's only bar-clearing row is an `interpreted` mapping with an unstable sign | Leave the `interpreted` row as the accepted artifact has it and publish it with its caveats |
@@ -255,8 +281,11 @@ Documented here so the plan is complete without fifteen questions:
 - **The interest bar does not change.** It stays the accepted scorecard's own: `hit_rate_pct >= 60` **and**
   `n >= 100`, plus the six conditions in §6. The movement stage uses the same bar with a 5pp gap against the
   cohort's own share instead of the 60% level, which is all a share can honestly support.
-- **The move floor is declared, never fitted.** 0.30% session and 1.00% week are this project's parameters,
-  published with the 0.50% and 2.00% variants and one `looks_counted`; they are not facts about gold.
+- **The move floor is declared, never fitted.** The session floor is the user's 0.80% of price in the call's
+  direction (declared 2026-09-29) *and* its L2L form 1.00 L2L = 0.50 x ADR20 (0.7236% today), published with
+  0.50 L2L (0.3618%), 0.30% and 1.00% - 2.00% week rows and one `looks_counted`; none of these is a fact about
+  gold, they are parameters. The week floor stays at 1.00% until the user says otherwise, and its L2L form
+  needs its own measurement before it is proposed.
 
 ## 11. Tests the lanes must write (six, one line each)
 
@@ -270,7 +299,9 @@ Documented here so the plan is complete without fifteen questions:
 4. `gold_factor_edge_page.test.js` — one placeholder replaced once, the embedded JSON parses, no `fetch`, no
    external script, no model endpoint.
 5. `gold_move_share.test.js` — the share above the floor counts anchors on the right side of the boundary
-   (`>=` floor, not `>`), the 0.50% and 2.00% variants are both published, `looks_counted` equals the states
+   (`>=` floor, not `>`), the 0.80% and 1.00 L2L variants and the 0.50 L2L and 0.30% sensitivity rows are all
+   published, the L2L row's threshold is recomputed from the same ADR20 the artifact stores (no constant),
+   `looks_counted` equals the states
    times variants examined, and no stage-1 row carries a direction field.
 6. Byte-level regression — `data/gold-direction-scorecard-20260927.json`,
    `gold_factor_direction_expectations.v1.json`, `gold_individual_variable_report.v2.json` and the accepted

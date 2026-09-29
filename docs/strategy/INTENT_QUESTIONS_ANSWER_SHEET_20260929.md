@@ -12,15 +12,22 @@ message is superseded.
 - Or list only the numbers you disagree with, for example `3 no, 12 often, 27 no`.
 - Questions are put to you at most seven at a time, in numbering order, skipping anything already asked.
 
-**Status:** 0 of 50 answered. Batch 1 (canonical 1, 2, 10, 13, 14, 27, 33) was asked on 2026-09-29 and has no
-answer yet. The next batch is canonical 3-9.
+**Status:** 7 of 50 answered on 2026-09-29: 4 usable (1, 10, 14, 27) and 3 that asked for a plainer
+restatement (2, 13, 33) and are re-asked in batch 3. The next batch is canonical 3-9.
+
+**Two of these answers changed the plan.** The user wants **both** stages and **all 28** variables, and they
+declared a movement size of their own: **0.80% of price, in the direction of the call, within the 24-hour
+session**. So the session floor is no longer the plan's 0.30% default. The "Gold L2L facts" section below
+shows that 0.80% is **1.11x gold's own standard L2L distance (0.7236%)**, *not* 0.5 L2L (0.3618%), and that a
+floor written as a fixed percentage of price drifts 32%→63% across years on gold while the same floor written
+in L2L units stays flat within 2.4pp.
 
 ## A. What counts as a move (1-9)
 
 | # | Yes/no question | Default | Asked | Your answer |
 | --- | --- | --- | --- | --- |
-| 1 | Measure a move close-to-close, not intraday high-to-low | yes | batch 1 | |
-| 2 | Fix the minimum size in advance (0.30% session / 1.00% week) instead of fitting it | yes | batch 1 | |
+| 1 | Measure a move close-to-close, not intraday high-to-low | yes | batch 1 | **both** - "we also want to see if l2l and 0.5 l2l is found": keep close-to-close *and* add the path-based L2L and 0.5 L2L reach rows (`data/l2l-trading-day-directional-v1.json` already measures both) |
+| 2 | Fix the minimum size in advance (0.30% session / 1.00% week) instead of fitting it | yes | batch 1 | **asked for a plainer restatement** - "not sure, explain the question better". The user separately declared **0.80% in the direction of the call within the session**, which is the size this row is about, so the floor becomes theirs; re-asked as a confirm in batch 3 |
 | 3 | Report the size of the move too, not only the yes/no | yes | | |
 | 4 | Count a move in either direction, ignoring the sign | yes | | |
 | 5 | Publish "no move" as its own bucket, so the three counts sum to the total | yes | | |
@@ -33,16 +40,16 @@ answer yet. The next batch is canonical 3-9.
 
 | # | Yes/no question | Default | Asked | Your answer |
 | --- | --- | --- | --- | --- |
-| 10 | "A move is coming" is enough, direction is a separate second step | yes | batch 1 | |
+| 10 | "A move is coming" is enough, direction is a separate second step | yes | batch 1 | **no** - "both, i want to see any edge we can find": the movement stage and the direction stage are both wanted. Direction is not optional, and the two stages stay separate so the direction answer is read after the movement answer |
 | 11 | A simple on/off flag per factor, not a score or a ranking | yes | | |
 | 12 | Prefer factors that fire rarely but strongly over often with a small edge | rare + strong | | |
-| 13 | You would act on an edge smaller than 5pp | no | batch 1 | |
+| 13 | You would act on an edge smaller than 5pp | no | batch 1 | **not answered, question restated** - the reply read "5pp" as 5% of price ("thats huge on gold"). It means 5 *percentage points of frequency*: a state that delivers the move 44% of the time where the cohort delivers 39% is +5pp. Re-asked in batch 3 |
 
 ## C. Horizon (14-17)
 
 | # | Yes/no question | Default | Asked | Your answer |
 | --- | --- | --- | --- | --- |
-| 14 | Session (1 day) is the primary horizon | yes | batch 1 | |
+| 14 | Session (1 day) is the primary horizon | yes | batch 1 | **yes** - "im mainly interested in the current 24h session as I would run the agents in the morning then trade throughout the day". The process detail matters: the flag must exist *before* the session it applies to, which makes 39 (intend to trade), 41 and 42 live rather than hypothetical |
 | 15 | Week (5 sessions) is the secondary horizon | yes | | |
 | 16 | Publish a 1/3/5-day sweep as one sensitivity line with one `looks_counted` | yes | | |
 | 17 | Disclose overlapping horizons rather than avoid them | yes | | |
@@ -65,7 +72,7 @@ answer yet. The next batch is canonical 3-9.
 | 24 | Keep NEUTRAL states out of every hit rate | yes | | |
 | 25 | Keep the DTWEXBGS-not-DXY caveat on every dollar row | yes | | |
 | 26 | Keep the document's own boundaries verbatim (VIX 25.00/16.00, >0.30%, 5bps+) | yes | | |
-| 27 | All 28 variables in scope, not only the declared 10 | yes | batch 1 | |
+| 27 | All 28 variables in scope, not only the declared 10 | yes | batch 1 | **yes** - "the variables are just being tracked then to see if there is an outcome that is predictable". Confirmed as recorded, with the one limit in the "No written rule" section below: the 20 states with no usable written statement can be published as raw context but can never carry a hit rate |
 | 28 | Pairs, weighting, composites and models stay out for now | yes | | |
 
 ## F. VIX (29-32)
@@ -81,7 +88,7 @@ answer yet. The next batch is canonical 3-9.
 
 | # | Yes/no question | Default | Asked | Your answer |
 | --- | --- | --- | --- | --- |
-| 33 | Re-test any survivor out of sample before acting on it | yes | batch 1 | |
+| 33 | Re-test any survivor out of sample before acting on it | yes | batch 1 | **not answered** - "not sure I understand the question". Explained in the batch-1 reply and re-asked in batch 3 |
 | 34 | Size the rebuild for a 3pp effect, about 2,100 anchors per state | yes | | |
 | 35 | Allow hourly entries to reach that sample, horizon re-declared, overlap disclosed | yes | | |
 | 36 | Accept a declared floor, since the data has no "no move" bucket to find one in | yes | | |
@@ -124,8 +131,86 @@ answer yet. The next batch is canonical 3-9.
 
 | Date | Batch | Questions asked | Answers received |
 | --- | --- | --- | --- |
-| 2026-09-29 | 1 | 1, 2, 10, 13, 14, 27, 33 | none yet |
+| 2026-09-29 | 1 | 1, 2, 10, 13, 14, 27, 33 | 7 replies. Usable: 1 both measures, 10 both stages, 14 session primary with a morning-flag process, 27 all 28 in scope. Restatements requested and given: 2 (floor), 13 (5pp vs 0.8%), 33 (out of sample). Also declared: 0.80% in the direction of the call within the session, which replaces the 0.30% session default |
+| 2026-09-29 | 2 | 3-9 | asked, pending |
 
-No answer of any kind has been received, so the defaults in the plan stand: D1's default is the free movement
-screen first, then the declared 0.30% / 1.00% floor. Answering this sheet is the only thing blocking the two
-scoped lanes from starting.
+The three restatements (2, 13, 33) are re-asked in batch 3. Batches continue in numbering order, at most seven
+at a time, skipping anything already asked. Two lanes are still waiting on D1-D5; D1's default is no longer
+"movement screen then a 0.30% floor" but "movement screen then the user's declared 0.80% / 1.00-L2L floor",
+with the direction stage kept in scope.
+
+## Batch 1 (2026-09-29) - the replies verbatim, in canonical order
+
+1. "Both, i want to see any edge we can find" -> question 10. Both stages stay in scope; direction is not
+   optional.
+2. "both, we also want to see if l2l and 0.5 l2l is found" -> question 1. Close-to-close *and* the path-based
+   L2L and 0.5 L2L measures. Both are already computed in the archive (see the L2L section below), so this
+   costs no new run.
+3. "not sure, explain the question better" -> question 2, the pre-declared floor. Restated; re-asked in
+   batch 3.
+4. "Yes im mainly interested in the current 24h session as I would run the agents in the morning then trade
+   throughout the day" -> question 14. Session primary, and the flag has to exist before the session starts
+   (questions 41 and 42), which also implies question 39 is yes and puts costs (question 40) in play.
+5. "what do you mean no written rules. The variables are just being tracked then to see if there is an outcome
+   that is predictable." -> question 27. All 28 variables in scope. The phrase is explained in the next
+   section; it does not contradict the user's reading.
+6. "5pp? as in 5 percentage points, thats huge on gold. I am really looking for minimum 0.8% movement in the
+   direction of the call during the 24hr session (that is 0.5 l2l)" -> question 13, restated. The 0.80% is a
+   *size* declaration, so it belongs to question 2; "5pp" is a *frequency* bar (44% of sessions instead of
+   39%), not 5% of price.
+7. "Not sure I understand the question." -> question 33, the out-of-sample re-test. Restated; re-asked in
+   batch 3.
+
+## "No written rule" - what the phrase means (answer to reply 5)
+
+The user's reading is right in substance: the undeclared variables *are* tracked, and tracking them to see
+whether an outcome is predictable is exactly what the accepted report does. The narrower point is what a
+finished table can print for them. Of the 51 declared states in
+`data/gold-direction-scorecard-20260927.json`: **25** carry a written direction, **6** are declared NEUTRAL,
+and **20** have no usable written statement - `level_band_not_declared` 8, `change_rule_absent` 6,
+`threshold_is_absolute_band` 2, `regime_label_not_reproduced` 4. For those 20 the table can print "gold rose
+57% of the time while this state was on" (raw context, no direction) but never "the factor was right 57% of
+the time", and they can never enter the 60% hit-rate gate. Two of the four reasons are fixable without the
+user - the VIX 25.00/16.00 band *is* written in the document and is simply not reproduced by the report's
+median split, and the same is true of the four regime labels. The remaining two need a number: 8 level bands
+the document never declares, and 6 change rules with no rule at all.
+
+## Gold L2L facts (read 2026-09-29, read-only, every interval already spent)
+
+Definition chain, verbatim from the accepted artifacts: "Current standard L2L distance is ADR20 * 0.5 from the
+existing L2L 1H Sequence Research builder" and "Half target distance is 0.5 * current standard, which equals
+ADR20 * 0.25".
+
+| Gold (XAU_USD), 570 LAYER_1 call sessions, 2024-01-04 to 2026-04-30 | Value |
+| --- | ---: |
+| median ADR20, as % of the session open | 1.4472% |
+| standard L2L = ADR20 x 0.50 | **0.7236%** |
+| 0.5 L2L = ADR20 x 0.25 | **0.3618%** |
+| 0.5 L2L touched in the call's direction | 64.04% |
+| standard L2L touched in the call's direction | 38.42% |
+| standard L2L touched *and* still the call's way at the close | 32.11% (reached but reversed: 6.32%) |
+| favourable excursion >= 0.80% of the session open | **39.12%** |
+| favourable excursion >= 0.80% *and* call right at the close | 32.63% |
+| adverse excursion >= 0.80% of the session open | 43.86% |
+| call right at the session close | **46.32%** |
+| gold closed up (always-bullish baseline on the same rows) | **56.84%** |
+| accuracy, 270 bullish calls / 300 bearish calls | 53.33% / 40.00% |
+| \|close-to-close\| >= 0.30% / >= 0.80%; no-move bucket at 0.80% | 73.86% / 41.58%; 58.42% |
+| median \|close-to-close\| | 0.6701% |
+
+**Year stability, which is the argument for the L2L unit.** The share of sessions reaching the floor in the
+call's direction, per year: at a *fixed* 0.80% of price, 32.40% (2024), 38.43% (2025), 62.82% (2026, n 78); as
+1.00 L2L, 39.60%, 37.19%, 38.46%; as 0.50 L2L, 63.60%, 64.88%, 62.82%. Gold's median ADR20 went from 1.32% to
+3.12% over the period, which is why the fixed number drifts: a fixed percentage of price is a different bet
+each year on this instrument, while the L2L form is the same bet.
+
+Provenance: `data/half-l2l-reach-research.json` sha256
+`0d2955248066be6dff0741ae89fbe3e7de4ead6294c6bec16aa09a1aa452e9b8`,
+`data/l2l-trading-day-directional-v1.json` sha256
+`75a81e8429a1515de42b326fd29cb60ee81c24cc6e0d111a3cb954a9e6d41c59`, and
+`data/l2l-directional-research-verdict-v1.json`, whose unchanged verdict is "The current Layer 1 and Layer 2
+calls are not validated predictors of the designated trading session's closing direction". The reach figures
+that verdict disclaims (96.99% half, 70.52% full) are the path-dependent original metric; the reconciled
+figures are 64.04% and 38.42% above. Nothing in this section is a finding - the intervals are consumed, so
+these are sizing facts and base rates only.
+

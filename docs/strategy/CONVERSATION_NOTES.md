@@ -1355,3 +1355,42 @@ Asked so far: batch 1 on 2026-09-29 covered canonical 1, 2, 10, 13, 14, 27 and 3
 numbering order, at most seven at a time, skipping anything already asked, and every answer is logged in the
 sheet. If the user answers "all defaults", the two lanes already scoped can proceed unchanged.
 
+
+## 2026-09-29 (batch 1 answered) - the user declared the floor, and it turns out to be an L2L question
+
+The user answered all seven batch-1 questions (canonical 1, 2, 10, 13, 14, 27, 33). Four are usable: both
+measures (question 1, "we also want to see if l2l and 0.5 l2l is found"), both stages (question 10), session
+primary with a process detail - "I would run the agents in the morning then trade throughout the day", so the
+flag must exist before the session it applies to (question 14, which also makes 39/41/42 live rather than
+hypothetical) - and all 28 variables in scope (question 27). Three asked for plainer wording and are re-asked
+in batch 3: the pre-declared floor (2), "5pp" (13, read as 5% of price) and out of sample (33). Batch 2
+(canonical 3-9) went out with the answers.
+
+The substantive change is the floor. The user declared "minimum 0.8% movement in the direction of the call
+during the 24hr session (that is 0.5 l2l)". Their arithmetic does not match the archive's own vocabulary, and
+the mismatch is worth having: `data/half-l2l-reach-research.json` defines "Current standard L2L distance is
+ADR20 * 0.5 from the existing L2L 1H Sequence Research builder" and "Half target distance is 0.5 * current
+standard, which equals ADR20 * 0.25". On the 570 gold call sessions in
+`data/l2l-trading-day-directional-v1.json` (2024-01-04 to 2026-04-30) median ADR20 is 1.4472% of the session
+open, so standard L2L is 0.7236% and 0.5 L2L is 0.3618%. The user's 0.80% is therefore 1.11x standard L2L, not
+0.5 L2L. Both units are now published, and the L2L one is the one that would survive the year-sign test: at a
+fixed 0.80% of price the share of sessions reaching the floor in the call's direction is 32.40% / 38.43% /
+62.82% (2024/2025/2026, last n 78), because gold's median ADR20 went 1.32% -> 3.12% over the same period; at
+1.00 L2L it is 39.60% / 37.19% / 38.46%, flat within 2.4pp, and at 0.50 L2L 63.60% / 64.88% / 62.82%. A fixed
+percentage of price is a different bet each year on this instrument.
+
+Also read this session, all read-only and all on spent intervals: gold's always-up baseline on those same 570
+sessions is 56.84%, the calls are right 46.32% of the time (270 bullish calls right 53.33%, 300 bearish calls
+right 40.00%), the reconciled reach rates are 64.04% (0.5 L2L) and 38.42% (standard L2L) against the
+96.99%/70.52% the verdict file explicitly disclaims as path-dependent, and at the user's 0.80% floor the
+unconditional figures are 39.12% favourable excursion, 43.86% adverse, and 32.63% favourable *and* still the
+call's way at the close. These are sizing facts and base rates, not findings.
+
+Files: the plan now carries the user's floor in section 3, the gold base rates in section 4, the revised D1 in
+section 9, block D's new floor rows in section 7 and the floor bullet in section 10; the answer sheet logs
+every answer verbatim plus the L2L table and the "no written rule" explanation; the three scratch scans live
+in ignored `tmp/` (`l2l-scan3`/`4`/`5-20260929.js`). Filed to the coordinator as submission
+`20260929-strategy-user-intent-batch1-011`. Nothing outside `docs/strategy/` and ignored `tmp/` was written;
+no credential, live system or sealed-window value was read; the prospective window stays sealed until
+2027-03-25T15:00:00Z.
+
