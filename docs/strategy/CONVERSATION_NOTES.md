@@ -1407,4 +1407,11 @@ same block to the canonical workspace template and the assignment file. No conte
 numbers, explanations and the L2L table all stay in `INTENT_QUESTIONS_ANSWER_SHEET_20260929.md`. Batch 2
 (canonical 3-9) is unchanged and still awaiting an answer, and the user can now reply "all defaults".
 
+**Same-day revision.** The user then said "this is too simple, give a little bit more context, as questions 1-2
+lines max per question", so the rule was re-set the same day to a middle setting: **max 3 bullets of about 50
+words each**, and **each question one to two lines carrying a short reason or example**. The first version's
+25-word cap was too terse and its no-explanation rule forced an extra round trip. The startup blocks and
+`REPLY_STYLE.md` were updated to that wording and the change was filed to the coordinator as submission
+`20260929-strategy-reply-style-rule-013`.
+
 
