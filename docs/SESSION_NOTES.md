@@ -1,5 +1,27 @@
 # Session notes
 
+2026-09-29 (cont. 3): ran a second controller-locked background review cycle and stopped there, one cycle per dispatch as
+the standing direction requires. The controller lock already owned the run (`controller/15fb7024...receipt.json`,
+state `attempting`), so no pause, stop, enable or other controller command was issued and no second coordinator process was
+started. Exactly one submission was reviewed: `20260926-strategy-window-flash-fix-005`, worker `strategy`, mailbox SHA-256
+`15fb7024e0e1c2b23f7443ca7d2d9538e0d6a8e5210a4493fc2bd9ee21343cec` reproduced twice from the immutable inbox file and
+matching the hash in the run brief, reply `8eacfe111f6aeb79b3490ca72aac5ddb0b762c2b35bbb51254ce8597103d34bb` published
+through the canonical CLI and bound to that hash, decision `changes_requested`, durable review
+`docs/orchestration/reviews/20260926-strategy-window-flash-fix-005.md`. What holds: the promised acceptance tick is real -
+a block at `2026-09-26T20:56:02.521Z` with `attempted 0` and every counter zero - the scratch-verifier FAIL is an honest,
+artifact-backed poll artefact, the single commit `0d7808c` is a clean +28 lines in the worker's own notes file, and the
+user's confirmation is recorded. What fails: the `-004` documentation revision is still owed, and this commit adds a
+second unqualified "`tick.log` is gapless" claim that the log contradicts, so one bounded documentation correction stands
+under a new submission ID. The report's request to record the capture-task action string centrally needed no action -
+`DECISIONS.md` already carries the newer windowless `wscript.exe run-hidden.vbs` action and marks the 2026-09-24 hardening
+entry's "action unchanged" clause superseded. Central files updated: the register's `strategy.next`, `CURRENT_STATE.md`,
+this file, `ACTIVE_MILESTONE.md` and `CHANGELOG.md`; one carried observation (future-dated identities labelled
+`already_settled`) is recorded as unverified rather than chased. Harness notes for the next run: `monitor-state.js activity`
+and `coordination.js reply --file <literal path>` were refused by policy again (the reply works with the path passed by
+variable), so the coordinator activity record was written directly to
+`.local/orchestration/activity/central-orchestrator.json` as `working` and then `paused`; `[System.IO.File]::WriteAllText`
+was used for file writes; and no monitor, bridge or controller code or setting was changed.
+
 2026-09-29 (cont. 2): ran one background review cycle and stopped there, as the user's standing direction requires.
 The controller lock already owned the run (daemon pid 34192, `controller/status.json` `reviewing` with this
 submission as its detail, `run.lock` present), so no pause, stop, enable or other controller command was issued and

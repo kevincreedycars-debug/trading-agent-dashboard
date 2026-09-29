@@ -1,3 +1,55 @@
+# 2026-09-29 (cont.) - strategy submission 20260926-strategy-window-flash-fix-005 reviewed with changes requested
+
+A second controller-locked background cycle reviewed exactly one submission, `20260926-strategy-window-flash-fix-005` from
+the `strategy` worker, and requested changes rather than accepting it. The mailbox SHA-256 `15fb7024...` was reproduced
+twice from the immutable inbox file, the reply `8eacfe11...` is published at
+`.local/orchestration/replies/strategy/20260926-strategy-window-flash-fix-005.json` bound to that hash, and the durable
+review is `docs/orchestration/reviews/20260926-strategy-window-flash-fix-005.md`. Provenance was checked from the checkout:
+`.local/worktrees/strategy` is clean on `workers/strategy-advisory-20260920`, base `0802dd74` is the direct parent of head
+`0d7808cc` with a single commit in between, and `0d7808c` is exactly +28 lines in `docs/strategy/CONVERSATION_NOTES.md` and
+nothing else, inside the worker's owned scope with no test, registry, gate, manifest or workflow dependency on the notes
+path or the capture-task action.
+
+The submission's positive claim is confirmed rather than accepted on report. `tick.log` holds 342 blocks from
+`2026-09-24T20:06:27Z` to `2026-09-29T19:36:02Z`, and the block at `2026-09-26T20:56:02.521Z` has `dry_run false`,
+`attempted 0`, `settled 0`, `blocked 0`, `not_yet_eligible 0`, `open_identities []` and `eligible_identities []`, so the
+promised acceptance tick ran at the next boundary and the lane stayed metadata-only. The disclosed scratch-verifier FAIL is
+honest and artifact-backed: `tmp/gold-tick-verify-20260926.txt` records `last_run=09/26/2026 21:56:01 result=267009` with its
+FAIL verdict, and `267009` is `0x41301` `SCHED_S_TASK_RUNNING`, so the verdict is a poll artefact and the reported read-back
+of result 0 is the correct reading. The user's visual confirmation is recorded, and the flasher identification stands on
+mechanism as before.
+
+Changes were requested for documentation only, twice over. First, the revision required by `-004` is still outstanding:
+line ~911 of the notes still asserts that the `:06/:16/:26/:36/:46/:56` timestamps run "with no gaps" from
+`2026-09-24T20:06Z` through `2026-09-26T20:36Z`, and the log again shows otherwise - a 630.0-minute gap
+(`2026-09-24T21:16:01Z` to `2026-09-25T07:46:03Z`), a 19.8-minute skipped slot (`2026-09-25T15:16:02Z` to
+`2026-09-25T15:35:52Z`), a 1069.4-minute gap (`2026-09-25T21:26:02Z` to `2026-09-26T15:15:29Z`) and exactly three
+`attempted 1` blocks, 126 blocks in total by a `20:36:59Z` boundary with 123 metadata-only and 3 not. Second, this commit
+adds a new instance of the same error, saying "`tick.log` is gapless" in its close-out section, which was false when
+written because the cited tick is followed by a 780.0-minute overnight gap (`2026-09-26T20:56:02Z` to
+`2026-09-27T09:56:04Z`) and six further non-metadata blocks from `2026-09-27T14:06:02Z` onward. The required revision is one
+bounded edit in the worker's own notes file under a new submission ID, keeping the flasher conclusion, the verification
+record and the verifier caveat, which do not depend on gaplessness.
+
+The report's request to record the capture-task action string centrally needed no action. `docs/orchestration/DECISIONS.md`
+already carries the current action of `GoldQualificationWindowTick018` - the windowless `wscript.exe run-hidden.vbs`
+launcher applied on 2026-09-27 15:46 local, the worker's own named residual fallback - and marks the 2026-09-24 hardening
+entry's "action unchanged" clause superseded; the `-WindowStyle Hidden` string this report verified is recorded as interim,
+no revert is wanted and no worker action is needed. Read-only task state today: `Ready`, `LastTaskResult` 0, last run
+2026-09-29 20:36:01 local, next 20:46, zero missed runs, action the `wscript` launcher. Editing a live system remains
+outside the strategy assignment even at a direct user instruction, recorded as disclosed, validated and superseded rather
+than as precedent.
+
+No new worker assignment was published: the submission carries no research recommendation, and the register already keeps
+`gold-research` published at status exactly `instructions_published_awaiting_worker` for the carried 022 item A obligation,
+so a second publication would break the one-active-milestone rule. One observation is recorded as unverified, not as a
+finding, and was not chased: the newest block reproduces the `-004` cycle's flag that `2026-09-30T14:00:00.000Z` is
+labelled `already_settled` while `attempted` is 0 and `not_yet_eligible` is 0, and `2026-09-28T14:00:00.000Z` and
+`2026-09-29T14:00:00.000Z` now carry the same label; interpreting it needs the Gold lane's driver source and its owner. No
+production, dashboard, credential, warehouse, Layer 1, workflow, purchase, deployment or holdout action occurred, the sealed
+prospective window stays sealed until `2027-03-25T15:00:00Z`, and the queue now holds eight `pending_review` `strategy`
+submissions dated 2026-09-26 to 2026-09-29, taken one review per cycle.
+
 # 2026-09-29 (cont.) - strategy submission 20260926-strategy-window-flash-fix-004 reviewed with changes requested
 
 A controller-locked background cycle reviewed exactly one submission, `20260926-strategy-window-flash-fix-004`

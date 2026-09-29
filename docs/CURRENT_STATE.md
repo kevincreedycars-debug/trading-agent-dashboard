@@ -1,5 +1,35 @@
 # Current state
 
+2026-09-29 (cont.): the same controller-locked background cycle then reviewed exactly one more submission, `strategy`
+`20260926-strategy-window-flash-fix-005` (mailbox SHA-256 `15fb7024...` reproduced twice, reply `8eacfe11...`, durable
+review `docs/orchestration/reviews/20260926-strategy-window-flash-fix-005.md`), and **requested changes** again, for one
+bounded documentation correction. Verified from the checkout rather than the report text: `.local/worktrees/strategy` is
+clean on `workers/strategy-advisory-20260920`, base `0802dd74` is the direct parent of head `0d7808cc` with
+`rev-list --count` 1, and the single commit `0d7808c` is exactly +28 lines in `docs/strategy/CONVERSATION_NOTES.md`,
+inside the worker's own scope with no test, registry, gate, manifest or workflow dependency on the notes path or the
+capture-task action. The submission's positive claim is confirmed: `tick.log` holds 342 blocks from
+`2026-09-24T20:06:27Z` to `2026-09-29T19:36:02Z` and a real block at `2026-09-26T20:56:02.521Z` with `attempted 0`,
+`settled 0`, `blocked 0`, `not_yet_eligible 0` and `open_identities []`, so the promised acceptance tick ran and the lane
+stayed metadata-only; the disclosed scratch-verifier FAIL is honest and artifact-backed
+(`tmp/gold-tick-verify-20260926.txt` records `result=267009` = `0x41301` `SCHED_S_TASK_RUNNING`), and the user's visual
+confirmation is recorded. The defect is documentation, twice over, and it is why changes were requested: the revision
+required by `-004` is still outstanding, because line ~911 of the notes still asserts a gapless
+`2026-09-24T20:06Z`..`2026-09-26T20:36Z` window (re-verified here: a 630.0-minute and a 1069.4-minute overnight gap, a
+19.8-minute skipped slot, and exactly three `attempted 1` blocks; with the window closed at `20:36:59Z` there are 126
+blocks, 123 metadata-only and 3 not), and this commit adds a second unqualified gaplessness claim ("`tick.log` is
+gapless") that was already false when written, since the cited tick is followed by a 780.0-minute overnight gap and six
+further non-metadata blocks from `2026-09-27T14:06:02Z` onward. The submission's request to record the capture-task action
+string centrally was already answered: `DECISIONS.md` carries the newer windowless `wscript.exe run-hidden.vbs` action,
+and the `-WindowStyle Hidden` string this report verified is recorded as interim, with no revert wanted and no worker
+action needed. Read-only task state today: `Ready`, `LastTaskResult` 0, last run 2026-09-29 20:36:01 local, next 20:46,
+zero missed runs. No new assignment was published - the submission carries no research recommendation and `gold-research`
+stays published at status exactly `instructions_published_awaiting_worker` for the carried 022 item A obligation - and no
+prospective observation, outcome, envelope payload or holdout was read. The carried unverified observation reproduces at
+metadata level and is recorded rather than chased: `2026-09-30T14:00:00.000Z` is labelled `already_settled` in the newest
+block while `attempted` is 0 and `not_yet_eligible` is 0, and `2026-09-28T14:00:00.000Z` and `2026-09-29T14:00:00.000Z`
+carry the same label. Queue after this cycle: eight `pending_review` `strategy` submissions dated 2026-09-26 to 2026-09-29,
+taken one review per cycle.
+
 2026-09-29 (cont.): the controller-locked background cycle reviewed exactly one submission, `strategy`
 `20260926-strategy-window-flash-fix-004` (mailbox SHA-256 `e3615716...` reproduced, reply `dcd739d6...`,
 durable review `docs/orchestration/reviews/20260926-strategy-window-flash-fix-004.md`), and **requested

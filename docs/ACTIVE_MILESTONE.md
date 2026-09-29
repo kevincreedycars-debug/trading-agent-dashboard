@@ -25,8 +25,12 @@ or edge evidence, nor can it be from spent intervals. No successor assignment wa
 stays intact for the carried 022 item A envelope.
 
 Next immediate action on resume: work the strategy review queue one cycle at a time. The 2026-09-29 background
-cycle reviewed `20260926-strategy-window-flash-fix-004` and requested changes (reply `dcd739d6...`, review
-`docs/orchestration/reviews/20260926-strategy-window-flash-fix-004.md`), leaving nine `pending_review` `strategy`
+cycle reviewed `20260926-strategy-window-flash-fix-004` and requested changes (reply `dcd739d6...`, 
+review `docs/orchestration/reviews/20260926-strategy-window-flash-fix-004.md`), and then reviewed
+`20260926-strategy-window-flash-fix-005` (mailbox `15fb7024...`, reply `8eacfe11...`, review
+`docs/orchestration/reviews/20260926-strategy-window-flash-fix-005.md`), also with changes requested - the acceptance
+tick is confirmed and the verifier FAIL confirmed as a poll artefact, but the -004 correction is still owed and a
+second unqualified gaplessness claim was added - leaving eight `pending_review` `strategy`
 submissions dated 2026-09-26 to 2026-09-29. In parallel, hold on Gold: the accepted verdict page still lives only
 in the worker checkout and promoting it is a central decision, the 022 item A anchor observation envelope for
 `2026-09-28T14:00:00Z|gold|entry` was due at or after the `2026-09-28T16:00:00Z` lane close and still needs a fresh
