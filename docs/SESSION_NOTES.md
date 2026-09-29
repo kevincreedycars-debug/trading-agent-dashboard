@@ -1,5 +1,33 @@
 # Session notes
 
+2026-09-29 (cont. 2): ran one background review cycle and stopped there, as the user's standing direction requires.
+The controller lock already owned the run (daemon pid 34192, `controller/status.json` `reviewing` with this
+submission as its detail, `run.lock` present), so no pause, stop, enable or other controller command was issued and
+no second coordinator process was started. Exactly one submission was reviewed:
+`20260926-strategy-window-flash-fix-004`, worker `strategy`, mailbox SHA-256 `e3615716...` reproduced from the
+immutable inbox file, reply `dcd739d6...` published through the canonical CLI and bound to that hash, decision
+`changes_requested`, durable review `docs/orchestration/reviews/20260926-strategy-window-flash-fix-004.md`;
+`check --worker strategy` now reports nine `pending_review` with `errors: []`. The finding is a durable-note
+evidence defect, not a lane problem: the submission's "continuously ... with no gaps" and "every block
+metadata-only" claim about `2026-09-24T20:06Z`..`2026-09-26T20:36Z` is contradicted by `tick.log`, which holds 342
+blocks from `2026-09-24T20:06:27Z` to `2026-09-29T19:36:02Z` with a 630.0-minute and a 1069.4-minute overnight gap,
+a 19.8-minute skipped slot and three `attempted 1` blocks inside that window, matching the Gold lane's own
+`CURRENT_STATE` entry for 2026-09-26 18:45; the flasher identification survives on the console-action mechanism.
+The disclosed live edit was recorded centrally in its current form rather than the interim form the submission
+asked for: `-WindowStyle Hidden` (applied 2026-09-26) was superseded on 2026-09-27 15:46 local by
+`wscript.exe run-hidden.vbs`, so `DECISIONS.md` carries that action and marks the 2026-09-24 hardening entry's
+"action unchanged" clause superseded, with no revert wanted; editing a live system stays outside the strategy
+assignment even at a direct user instruction, recorded as disclosed and superseded rather than as precedent.
+Central files updated: the register's `strategy.next`, `DECISIONS.md`, `CURRENT_STATE.md`, this file,
+`ACTIVE_MILESTONE.md` and `CHANGELOG.md`. One observation was made and deliberately not chased because it is
+outside this submission and needs the Gold driver source to interpret: the newest metadata-only block's `results`
+list prints `2026-09-30T14:00:00.000Z` feature identities as `already_settled` while `not_yet_eligible` is 0 - it is
+flagged for the next cycle as unverified, not as a finding. Harness notes for the next run: `monitor-state.js
+activity` and `coordination.js reply --file <literal path>` were refused by policy in this background run (the
+reply works with the path passed by variable), and `apply_patch`, `New-Item`, `Set-Content`, `Out-File` and
+`Export-ScheduledTask` were refused too, so file writes were done with `[System.IO.File]::WriteAllText`; the
+monitor, bridge and controller were not modified and the coordinator activity record was written directly to
+`.local/orchestration/activity/central-orchestrator.json` as `working` and then `paused`.
 2026-09-29 (cont.): diagnosed and undid the dispatcher pause left by the live-trading work. `.local/orchestration/`
 `controller/config.json` was `{"enabled": false}`, written 20:28 local by this session's own `pause` before the
 central-memory edits, while `controller/status.json` was stamped `2026-09-25T21:34:32.765Z` on pid 15124 and

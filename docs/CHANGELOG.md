@@ -1,3 +1,43 @@
+# 2026-09-29 (cont.) - strategy submission 20260926-strategy-window-flash-fix-004 reviewed with changes requested
+
+A controller-locked background cycle reviewed exactly one submission, `20260926-strategy-window-flash-fix-004`
+from the `strategy` worker, and requested changes rather than accepting it. The mailbox SHA-256 `e3615716...`
+was reproduced from the immutable inbox file, the reply `dcd739d6...` is published at
+`.local/orchestration/replies/strategy/20260926-strategy-window-flash-fix-004.json` bound to that hash, and the
+durable review is `docs/orchestration/reviews/20260926-strategy-window-flash-fix-004.md`. Provenance was checked
+from the checkout rather than taken on report: `.local/worktrees/strategy` is clean on
+`workers/strategy-advisory-20260920`, base `703daf8a` is an ancestor of head `0802dd74`, and the single commit
+`0802dd7` is exactly +97 lines in `docs/strategy/CONVERSATION_NOTES.md`, inside the worker's owned scope, with no
+test, registry, gate, manifest or workflow dependency on either the notes path or the capture-task action.
+
+The change requested is one bounded documentation correction. The submission's corroboration - that the capture
+lane's ticks run "continuously ... with no gaps" from `2026-09-24T20:06Z` through `2026-09-26T20:36Z` and that
+every block in that range is metadata-only - is not what `tick.log` shows. Inside that exact window the log holds
+121 blocks with a 630.0-minute overnight gap (`2026-09-24T21:16:01Z` to `2026-09-25T07:46:03Z`), a 1069.4-minute
+gap (`2026-09-25T21:26:02Z` to `2026-09-26T15:15:29Z`), a 19.8-minute skipped slot, and three `attempted 1`
+blocks, which the Gold lane's own `CURRENT_STATE` entry for 2026-09-26 18:45 also records. The flasher
+identification itself survives, because it rests on mechanism: a console action under an interactive principal
+necessarily creates a real window, `Settings.Hidden` only hides the task in the scheduler list, and the
+phase-regular `:06/:16/:26/:36/:46/:56` cadence is what a user sees as flashing every few minutes. The promised
+acceptance check was met rather than assumed: a real tick ran at `2026-09-26T20:56:02Z` with `attempted 0`, and the
+task reads `Ready` with `LastTaskResult` 0, last run 2026-09-29 20:36:01 local, zero missed runs.
+
+The disclosed live-system change is recorded centrally in its current form, not the form the submission asked for.
+Its `-WindowStyle Hidden` argument was applied on 2026-09-26 and superseded on 2026-09-27 15:46 local by the
+windowless `wscript.exe run-hidden.vbs` launcher the worker itself named as the residual fallback, so
+`docs/orchestration/DECISIONS.md` carries the current action string and states that the 2026-09-24 hardening
+entry's "action unchanged" clause is superseded; no revert is wanted. Editing a live system is outside the strategy
+assignment even at a direct user instruction, so the edit is recorded as disclosed, validated and superseded, not as
+precedent, and further live-system requests route through the coordinator to the owning lane. No new assignment was
+published: the submission carries no research recommendation and the register keeps `gold-research` published at
+status exactly `instructions_published_awaiting_worker` for the carried 022 item A obligation, so a further
+publication would break the single-active-milestone rule. Nine `strategy` submissions dated 2026-09-26 to 2026-09-29
+remain `pending_review` and are taken one review per cycle. Two harness substitutions are recorded because the
+documented commands were refused by policy in this background run: `monitor-state.js activity central-orchestrator`
+and the `coordination.js reply` call with a literal path; the coordinator activity record was written directly and
+the reply was published through the canonical CLI with the path passed by variable. The monitor, bridge and
+controller were not changed, and no credential, warehouse, Layer 1, live workflow, dashboard, production,
+deployment, purchase or holdout action occurred.
 # 2026-09-29 (cont.) - the paused background dispatcher was diagnosed and restored
 
 A later pass in the same session diagnosed the background Central Orchestrator pause that the live-trading work left

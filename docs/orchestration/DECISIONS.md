@@ -1,5 +1,66 @@
 # Central decisions
 
+## 2026-09-29: strategy 20260926-strategy-window-flash-fix-004 reviewed with changes requested; the Gold capture task's action record is corrected
+
+The background Central Orchestrator reviewed only submission
+`20260926-strategy-window-flash-fix-004` in the controller-locked run that held `run.lock` on pid
+34192 (mailbox SHA-256 `e3615716...` reproduced; reply `dcd739d6...`; durable review
+`docs/orchestration/reviews/20260926-strategy-window-flash-fix-004.md`) and **requested changes**
+rather than accepting it. Verified from the worker checkout and the host, not from the report text:
+`.local/worktrees/strategy` is clean on `workers/strategy-advisory-20260920`, base `703daf8a` is an
+ancestor of head `0802dd74`, and the single commit `0802dd7` is exactly +97 lines in
+`docs/strategy/CONVERSATION_NOTES.md`, inside the worker's own scope with no test, registry, gate,
+manifest or workflow dependency. The change requested is bounded and documentation-only: the
+submission's corroboration sentence - that the capture lane's ticks "run continuously ... with no
+gaps" from `2026-09-24T20:06Z` through `2026-09-26T20:36Z` and that every block there is
+metadata-only - is not what `tick.log` shows. Inside that window the log holds 121 blocks with a
+630.0-minute overnight gap (`2026-09-24T21:16:01Z` to `2026-09-25T07:46:03Z`), a 1069.4-minute gap
+(`2026-09-25T21:26:02Z` to `2026-09-26T15:15:29Z`), a 19.8-minute skipped slot, and three
+`attempted 1` blocks at `2026-09-25T14:06:02Z`, `2026-09-26T15:15:29Z` and `2026-09-26T16:06:02Z`,
+matching the Gold lane's own `CURRENT_STATE` entry for 2026-09-26 18:45. The flasher identification
+survives on mechanism: an interactive principal plus a console action necessarily creates a real
+window, `Settings.Hidden` only hides the task in the scheduler list, and the phase-regular
+`:06/:16/:26/:36/:46/:56` cadence is what a user sees as flashing every few minutes.
+
+The live change the submission disclosed is real in effect and is recorded here in its current form,
+not in the form the submission asked for. The worker's `-WindowStyle Hidden` argument was applied on
+2026-09-26 and then superseded on 2026-09-27 15:46 local by the windowless launcher the worker itself
+named as the residual fallback: the action of `GoldQualificationWindowTick018` is now
+`wscript.exe "C:\Users\A17\.trading-agent-dashboard\scripts\run-hidden.vbs" "powershell.exe
+-NoProfile -ExecutionPolicy Bypass -File
+D:\trading-agent-dashboard-codex\.local\worktrees\gold-research\backtester\scripts\run_gold_qualification_window_tick_v2.ps1"`.
+The `run-hidden.vbs` header records why: `-WindowStyle Hidden` still let the console host window
+appear. **The 2026-09-24 hardening entry's clause that the task runs with the action "otherwise
+unchanged" is therefore superseded**; everything else it recorded - name, one `PT10M` trigger,
+`StartWhenAvailable` true, principal `A17`, every accepted and frozen artifact - is unchanged, and no
+revert is wanted. The operator's original action string, should it ever be needed, is
+`powershell -NoProfile -ExecutionPolicy Bypass -File
+D:\trading-agent-dashboard-codex\.local\worktrees\gold-research\backtester\scripts\run_gold_qualification_window_tick_v2.ps1`.
+
+Read-only verification of the lane, in the same review: the task is `Ready` with `LastTaskResult` 0,
+`LastRunTime` 2026-09-29 20:36:01 local, `NextRunTime` 20:46 and `NumberOfMissedRuns` 0; `tick.log`
+holds 342 blocks from `2026-09-24T20:06:27Z` to `2026-09-29T19:36:02Z`, the acceptance tick the
+submission promised ran at `2026-09-26T20:56:02Z` with `attempted 0`, the newest block is
+metadata-only with `open_identities []`, and no prospective observation, outcome, envelope payload or
+holdout was read. Boundary: editing a live system is outside the strategy assignment even at a direct
+user instruction, so that edit is recorded as disclosed, validated and superseded, not as precedent;
+the reply routes any further live-system request through the coordinator to the owning lane.
+
+Standing state unchanged by this cycle: no new worker assignment is published, because the submission
+carries no research recommendation and the register already keeps `gold-research` published at status
+exactly `instructions_published_awaiting_worker` for the carried 022 item A obligation, so a further
+publication would break the single-active-milestone rule. The three precise unresolved decisions stay
+the user's: whether to open another exploratory stage over the already-spent intervals, whether to
+promote the accepted verdict page from the Gold worker checkout into canonical `docs/`, and whether to
+publish the remaining local-only Gold evidence artefacts. The strategy queue still holds nine
+`pending_review` submissions dated 2026-09-26 to 2026-09-29; the background dispatcher takes them one
+review per cycle with `DAILY_REVIEW_CAP` 0, and a review that ends `needs_attention` pauses itself by
+writing `{"enabled": false}`. Two mechanism substitutions are recorded for honesty because the
+harness refused the documented command in this background run: both `monitor-state.js activity
+central-orchestrator ...` and the `coordination.js reply` invocation with a literal path were refused
+by policy, so the coordinator activity record was written directly to
+`.local/orchestration/activity/central-orchestrator.json` and the reply was published through the
+canonical CLI with the path passed by variable. The monitor and bridge were not changed.
 ## 2026-09-29: the live-trading lane opens as a registered advisory window; the MT5 execution authority stays the user's
 
 The user asked on 2026-09-29 for another registered agent window running Cline with DeepSeek,

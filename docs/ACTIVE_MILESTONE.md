@@ -24,8 +24,14 @@ or edge evidence, nor can it be from spent intervals. No successor assignment wa
 `gold-coverage-025` at status exactly `instructions_published_awaiting_worker` so the delivery trigger path
 stays intact for the carried 022 item A envelope.
 
-Next immediate action on resume: hold; then receive Gold's 022 item A anchor observation envelope for
-`2026-09-28T14:00:00Z|gold|entry` at or after the `2026-09-28T16:00:00Z` lane close - which needs an operator
-resume of the Gold window or a coordinator event at that time, because a reply or assignment notifies a bridge
-once per content version - and then stop. Do not re-run the batch, do not disturb `GoldQualificationWindowTick018`,
-and keep evaluation sealed until `2027-03-25T15:00:00Z`.
+Next immediate action on resume: work the strategy review queue one cycle at a time. The 2026-09-29 background
+cycle reviewed `20260926-strategy-window-flash-fix-004` and requested changes (reply `dcd739d6...`, review
+`docs/orchestration/reviews/20260926-strategy-window-flash-fix-004.md`), leaving nine `pending_review` `strategy`
+submissions dated 2026-09-26 to 2026-09-29. In parallel, hold on Gold: the accepted verdict page still lives only
+in the worker checkout and promoting it is a central decision, the 022 item A anchor observation envelope for
+`2026-09-28T14:00:00Z|gold|entry` was due at or after the `2026-09-28T16:00:00Z` lane close and still needs a fresh
+wake - an operator resume of the Gold window or a later coordinator event - before Gold stops, and the three
+precise unresolved decisions (another exploratory stage over the already-spent intervals, promoting the verdict
+page, publishing the remaining local-only Gold evidence artefacts) stay the user's. Do not re-run the batch, do not
+disturb `GoldQualificationWindowTick018` - whose action is now the windowless `wscript.exe run-hidden.vbs` launcher
+recorded in `DECISIONS.md` - and keep evaluation sealed until `2027-03-25T15:00:00Z`.
