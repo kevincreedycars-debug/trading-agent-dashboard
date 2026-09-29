@@ -4,6 +4,7 @@ Central coordination: start with [the protocol](orchestration/README.md), [proje
 
 ## Current navigation
 
+- `PLAIN_LANGUAGE_SUMMARY.md`: the project, its process and its honest limits explained for a reader outside it.
 - `../CODEX_STARTUP.md`: session startup and working rules.
 - `CURRENT_STATE.md`: current consolidated repository status.
 - `CURRENT_TASK.md`: one active objective.
