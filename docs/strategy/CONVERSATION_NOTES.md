@@ -1341,107 +1341,17 @@ value was read; the prospective window stays sealed until 2027-03-25T15:00:00Z.
 ## 2026-09-28 (questions) — yes/no question set for the user's intent
 
 The user asked for a set of yes/no questions to pin down what they actually want from this data, then asked for a
-long version; the list below is the long form (50 questions), grouped. Each carries the default this worker
-would implement if the user agrees with it.
+long one, then capped the pace at seven at a time. The questions were first written here and in the chat in two
+different orders; both numberings are superseded by `docs/strategy/INTENT_QUESTIONS_ANSWER_SHEET_20260929.md`.
 
-**What counts as a move**
+## Question set - canonical list now lives in the answer sheet
 
-1. Should a "move" be close-to-close, not intraday high-to-low? (default: yes)
-2. Should the minimum size be fixed in advance rather than fitted to the data? (default: yes — 0.30% session,
-   1.00% week, with 0.50% and 2.00% published as sensitivity)
-3. Do you also want the daily size of the move reported, or only the yes/no "a move happened"? (default: both,
-   size alongside the count)
+The numbered list that used to sit here has moved to `docs/strategy/INTENT_QUESTIONS_ANSWER_SHEET_20260929.md`,
+which is now the single numbering authority for the fifty questions that decide what this project measures.
+The chat list and this file had drifted into two different numberings of the same questions, which would have
+made the user's answers ambiguous; the sheet supersedes both.
 
-**What you want out of it**
-
-4. Is "a move is coming" enough on its own, with direction as a separate second step? (default: yes)
-5. Do you want a simple on/off flag per factor — "moves are bigger when this is on" — rather than a score or a
-   ranking? (default: yes, a flag plus the raw shares)
-6. Would you rather have a factor that fires rarely but strongly, or one that is on often with a small edge?
-   (default: strong and rare; the small-edge version needs a sample we do not have)
-7. Would you act on an edge smaller than 5pp? (default: no — the accepted gate stays 5pp)
-
-**Scope**
-
-8. Are all 28 variables in scope, including the 20 with no rule in the document? (default: yes, and any new
-   rule for them must be declared before it is measured)
-9. Should pairs and combinations stay out for now? (default: yes, single factors only)
-
-**Sample and honesty**
-
-10. May hourly data be used when daily cannot detect effects below about 8pp, accepting that hourly outcomes
-    overlap? (default: yes, with the overlap disclosed and the horizon re-declared)
-11. Is a declared floor acceptable, given the data contains no "no move" bucket to discover one from?
-    (default: yes)
-12. Should every survivor be re-tested out of sample before you would act on it? (default: yes)
-
-**Deliverable**
-
-13. Do you want one page listing every factor with its raw movement numbers and no direction claim? (default:
-    yes)
-14. Should the direction layer be rebuilt only after you have agreed the movement layer? (default: yes)
-
-**The move itself**
-
-15. Should a move count in either direction, ignoring the sign? (default: yes)
-16. Should "no move" be its own published bucket, so the three counts always sum to the total? (default: yes)
-17. Should the floor be a percentage of price rather than a dollar amount? (default: yes)
-18. Should the same floor apply to every year, with no per-year tuning? (default: yes)
-19. Should the q1-to-q3 spread be the headline movement measure, with the share above the floor beside it?
-    (default: yes)
-20. Should a state be dropped when it has fewer than 100 anchors? (default: yes)
-
-**Horizon**
-
-21. Is the session (1 day) the primary horizon? (default: yes)
-22. Is the week (5 sessions) the secondary horizon? (default: yes)
-23. Do you want a 1 / 3 / 5-day sweep published as one sensitivity line? (default: yes, with one looks_counted)
-24. Should overlapping horizons be disclosed rather than avoided? (default: yes)
-
-**Direction — stage 2**
-
-25. Should direction only be asked for states that pass the movement stage? (default: yes)
-26. Is the direction question up or down only, with no "how far up"? (default: yes)
-27. Should a direction claim need the same sign in every year? (default: yes)
-28. Should the existing 60% hit-rate gate stay, alongside the 5pp gap? (default: yes)
-
-**Which factors**
-
-29. Should the 10 declared factors be tested before the 20 undeclared variables? (default: yes)
-30. Should the 20 undeclared variables get new rules, written down before any outcome is read? (default: yes)
-31. Should NEUTRAL states stay out of every hit rate? (default: yes)
-32. Should the dollar factors keep the DTWEXBGS-not-DXY caveat? (default: yes)
-33. Should the document's own boundaries (VIX 25.00 and 16.00, >0.30%, 5bps+) be kept verbatim? (default: yes)
-
-**VIX specifically**
-
-34. Keep both VIX streams? (default: yes)
-35. Publish the VIX change legs as raw context with no direction? (default: yes)
-36. Keep the 1/2/5 and 2/5/10 threshold sweep? (default: yes, with looks_counted)
-37. Rebuild F9 as a declared rule (VIX>25 or war/geopolitical/conflict/sanction events)? (default: yes)
-
-**Sample and confirmation**
-
-38. Should the rebuild be sized for a 3pp effect, which needs about 2,100 anchors per state? (default: yes)
-39. May hourly entries be used to raise the sample, with the horizon re-declared and the overlap disclosed?
-    (default: yes for the movement stage)
-40. Should the sealed prospective window stay untouched until 2027-03-25? (default: yes)
-41. Should surviving factors be re-checked on that window when it opens? (default: yes)
-
-**Tradability, only if you plan to act on the flags**
-
-42. Do you intend to trade these flags? (default: not assumed — answer matters)
-43. Should spread and slippage be subtracted before any claim? (default: yes, if 42 is yes)
-44. Should the outcome always start at the next session open after the flag is observed? (default: yes)
-45. Do you want the flag available before the session it applies to, with no look-ahead? (default: yes)
-
-**Deliverable and process**
-
-46. Should every published number carry its n and the floor that produced it? (default: yes)
-47. Should a ranked list never be presented as a winner? (default: yes)
-48. Should the page state the number of looks examined? (default: yes)
-49. Should the direction rebuild wait until the movement page is accepted? (default: yes)
-50. Should each answer here be recorded as a user decision before any lane starts? (default: yes)
-
-If the user answers "all defaults", the two lanes already scoped can proceed unchanged.
+Asked so far: batch 1 on 2026-09-29 covered canonical 1, 2, 10, 13, 14, 27 and 33. Batches continue in
+numbering order, at most seven at a time, skipping anything already asked, and every answer is logged in the
+sheet. If the user answers "all defaults", the two lanes already scoped can proceed unchanged.
 
