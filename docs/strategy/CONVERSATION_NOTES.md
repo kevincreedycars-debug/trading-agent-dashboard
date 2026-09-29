@@ -1394,3 +1394,17 @@ in ignored `tmp/` (`l2l-scan3`/`4`/`5-20260929.js`). Filed to the coordinator as
 no credential, live system or sealed-window value was read; the prospective window stays sealed until
 2027-03-25T15:00:00Z.
 
+## 2026-09-29 (rule) - the user capped replies at three short bullets
+
+The user refused to read the batch-1 reply ("simple answers god damn can you please update your rules I dont
+have time to read these massive responses"), so the earlier "3-4 bullets maximum" standing rule is replaced by
+a strict one: **max 3 bullets, max 25 words each, plain words, no tables, hashes, paths, provenance or jargon;
+questions one line each, at most 7, no explanation unless asked; everything long goes in `docs/strategy/` and
+the mailbox, never in the reply.** The rule is written into `docs/strategy/REPLY_STYLE.md` and mirrored into
+this worktree's `AGENTS.md` and `.clinerules/strategy.md`, which are the files read at startup; those two are
+outside the assignment's `docs/strategy/` write scope, so a submission asks the coordinator to propagate the
+same block to the canonical workspace template and the assignment file. No content was deleted: the batch-1
+numbers, explanations and the L2L table all stay in `INTENT_QUESTIONS_ANSWER_SHEET_20260929.md`. Batch 2
+(canonical 3-9) is unchanged and still awaiting an answer, and the user can now reply "all defaults".
+
+
