@@ -36,10 +36,25 @@ pages is public in production `main` `c91bd6f` behind a `Gold Direction` link on
 evidence links inside those pages stay local-only, and whether to publish those evidence artefacts is the part of the
 publication decision that remains open.
 
-Next: hold, and take the 022 item A envelope at the lane close. No further research is authorised. Two precise
-unresolved decisions are the user's: whether to open another exploratory stage over the spent intervals, since
-the undeclared `event_releases` cell at 40,324 would need a selection rule and the other horizons, context
-fields and endpoint groups sit in the same already-consumed calendar; and whether to promote the accepted
-verdict page from the worker checkout into this canonical checkout. The CRLF materialisation and the
-accepted-inputs raw/LF digest asymmetry stay owned by the `backtester-spike` change request and are not to be
-repaired here.
+2026-09-29 review outcome, recorded without changing the objective: `strategy` submission
+`20260928-strategy-gold-band-edge-table-007` (mailbox `835fb83e...`, reply `dc79147a...`, review
+`docs/orchestration/reviews/20260928-strategy-gold-band-edge-table-007.md`) was **accepted** as an accurate
+specification advisory, not as authority to open either lane it proposes. Its finding is now recorded: the Gold
+Layer 1 document declares absolute bands and magnitude thresholds (VIX >25 / <16, 5 bps, 0.30%) while the accepted
+measurement vocabulary forces a median split or a bare sign, so the document's own band never reaches a report cell;
+both sides declare the gap in writing and the code forces it at `lib/gold_individual_variable_report.js` lines
+1042/1060/1064/1104. That is a vocabulary and contract gap, not evidence of edge, and it is exploratory only. No
+assignment was published from it: the same spec file was already rewritten in place by the still-queued `-008`/`-009`
+submissions with `-010` revising again, the material forks D6/D8/D4/D15 in its own section 9 are open, and the proposed
+page lane has no registered worker - `projects.json` carries a `dashboard` coordinator workstream rather than a worker.
+`gold-research` stays published at status exactly `instructions_published_awaiting_worker` for the 022 item A envelope.
+
+Next: hold, and take the 022 item A envelope at the lane close. No further research is authorised. The precise
+unresolved decisions are the user's: whether to open another exploratory stage over the spent intervals at all, since
+the undeclared `event_releases` cell at 40,324 would need a selection rule and the other horizons, context fields and
+endpoint groups sit in the same already-consumed calendar (the declared-band measurement proposed by `-007` is one such
+candidate and would need the D1-D15 forks answered); if such a stage is opened, whether one writer or two sequenced
+lanes should carry it; whether a Gold factor edge page may be built at all while the page lane has no registered owner,
+given the dashboard workstream's standing "user-requested UI changes only" policy; and whether to promote the accepted
+verdict page from the worker checkout into this canonical checkout. The CRLF materialisation and the accepted-inputs
+raw/LF digest asymmetry stay owned by the `backtester-spike` change request and are not to be repaired here.

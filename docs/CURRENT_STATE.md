@@ -1,5 +1,37 @@
 # Current state
 
+2026-09-29 (cont.): a fourth controller-locked background cycle reviewed exactly one submission, `strategy`
+`20260928-strategy-gold-band-edge-table-007` (mailbox SHA-256 `835fb83e...` reproduced twice, reply `dc79147a...`, durable
+review `docs/orchestration/reviews/20260928-strategy-gold-band-edge-table-007.md`), and **accepted** it as an accurate
+specification-only advisory - acceptance of the analysed record, not authority to open either proposed lane. Verified from
+the checkout and the artifacts: `.local/worktrees/strategy` is clean on `workers/strategy-advisory-20260920`, base `4fc61096`
+is the direct parent of the single head `9d4403ec` (`rev-list --count` 1), and the commit is +610 lines across two files
+inside the owned `docs/strategy/` scope (spec +454, at head 454 lines; notes +156, at head 1245 lines). Every quoted figure
+reproduced exactly: scorecard parameters 100/20/5/60, baselines 55.81% n 964 and 58.23% n 960, coverage 28/28 with 965
+anchors of which 964 carry an outcome and 5115 event rows, 25 scored / 20 unscored / 6 neutral, unscored reasons 8
+`level_band_not_declared` / 6 `change_rule_absent` / 2 `threshold_is_absolute_band` / 4 `regime_label_not_reproduced`, the
+two `threshold_is_absolute_band` rows being exactly the `vix_level` band rows (session n 481 and 483), 25/25 session
+`no_information` with 24 week `no_information` plus one `unstable_across_years`, exactly one row at or above 60% per
+horizon, and the F9 `risk_headline_context:above_own_median` row (interpreted, 60.51% n 471 and 63.69% n 471,
+`years_same_edge_sign` false on both horizons, per-year session -1.54 / -0.18 / +6.52 / +15.84 pp). The 60% bar is verbatim
+at `backtester/scripts/report_gold_factor_direction_check.js` lines 204 and 387; `gold_individual_variable_report.js` lines
+1042/1060/1064/1104, the v2 registry's `vix_level` strata and the `variable_state_strata.median_split_revision_8` text are
+character-for-character as quoted, so the forced median split and the ignored `strata` field are real; the accepted 019
+report is exactly 95,842,994 bytes, version `gold-individual-variable-report-v1`, generated `2026-09-25T14:44:33.370Z`, with
+zero occurrences of the quoted `"values"` token; all three of the worker's self-corrections hold (019 series 10 files /
+2,778,424 bytes in the gold-research worktree only, the two canonical input directories present at 17 files / 12,099,758
+bytes and 2 files / 3,456,639 bytes, the report library/builder/v2 registry absent from canonical); and the VIX sizing
+check reproduces exactly (954 weekday observations, 41 above 25, 400 below 16, 513 inside). Two minor citation slips are
+recorded as notes and not as required changes: section 3.7 labels the VIX window end 2026-09-21 where the file's last
+in-range observation is 2026-09-11, and the scorecard's embedded JSON is line 211 rather than 214. No new assignment was
+published, for three reasons recorded in the review: the delivered spec was already rewritten in place by the still-queued
+`-008` (head `1576e89`) and `-009` (head `73e64852`) submissions with `-010` (head `45b7864a`) revising again, the material
+forks D6/D8/D4/D15 in its own section 9 are open, and the page lane has no owner because `projects.json` carries a
+`dashboard` coordinator workstream rather than a registered worker. `gold-research` deliberately stays published at status
+exactly `instructions_published_awaiting_worker` for the carried 022 item A envelope. Queue after this cycle: six
+`pending_review` `strategy` submissions dated 2026-09-28 to 2026-09-29, taken one review per cycle. No prospective
+observation, outcome, envelope payload or holdout was read, and the Gold capture lane was observed read-only and not
+disturbed.
 2026-09-29 (cont.): a third controller-locked background cycle reviewed exactly one submission, `strategy`
 `20260927-strategy-window-flash-fix-006` (mailbox SHA-256 `a057ca77...` reproduced twice, reply `e1eb71db...`, durable
 review `docs/orchestration/reviews/20260927-strategy-window-flash-fix-006.md`), and **requested changes** again, for one

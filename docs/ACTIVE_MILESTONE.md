@@ -25,20 +25,24 @@ or edge evidence, nor can it be from spent intervals. No successor assignment wa
 stays intact for the carried 022 item A envelope.
 
 Next immediate action on resume: work the strategy review queue one cycle at a time. The 2026-09-29 background
-cycle reviewed `20260926-strategy-window-flash-fix-004` and requested changes (reply `dcd739d6...`, review
+cycles reviewed `20260926-strategy-window-flash-fix-004` and requested changes (reply `dcd739d6...`, review
 `docs/orchestration/reviews/20260926-strategy-window-flash-fix-004.md`), then `20260926-strategy-window-flash-fix-005`
 (mailbox `15fb7024...`, reply `8eacfe11...`, review `docs/orchestration/reviews/20260926-strategy-window-flash-fix-005.md`),
-also with changes requested, and then `20260927-strategy-window-flash-fix-006` (mailbox `a057ca77...`, reply
-`e1eb71db...`, review `docs/orchestration/reviews/20260927-strategy-window-flash-fix-006.md`), again with changes
-requested - the capture-window flash fix itself is confirmed live (the `run-hidden.vbs` launcher exists and matches its
-description, the task is `Ready` with exactly one `wscript.exe` launcher action, `LastTaskResult` 0, zero missed runs)
-and the withdrawal of the -005 claim is honest, but the commit adds a third unqualified gaplessness claim and the -004
-and -005 revisions are still outstanding - leaving seven `pending_review` `strategy` submissions dated 2026-09-28 to
-2026-09-29. In parallel, hold on Gold: the accepted verdict page still lives only
-in the worker checkout and promoting it is a central decision, the 022 item A anchor observation envelope for
-`2026-09-28T14:00:00Z|gold|entry` was due at or after the `2026-09-28T16:00:00Z` lane close and still needs a fresh
-wake - an operator resume of the Gold window or a later coordinator event - before Gold stops, and the three
-precise unresolved decisions (another exploratory stage over the already-spent intervals, promoting the verdict
-page, publishing the remaining local-only Gold evidence artefacts) stay the user's. Do not re-run the batch, do not
-disturb `GoldQualificationWindowTick018` - whose action is now the windowless `wscript.exe run-hidden.vbs` launcher
-recorded in `DECISIONS.md` - and keep evaluation sealed until `2027-03-25T15:00:00Z`.
+then `20260927-strategy-window-flash-fix-006` (mailbox `a057ca77...`, reply `e1eb71db...`, review
+`docs/orchestration/reviews/20260927-strategy-window-flash-fix-006.md`), all with changes requested for documentation
+defects in the notes file, and then reviewed `20260928-strategy-gold-band-edge-table-007` (mailbox `835fb83e...`, reply
+`dc79147a...`, review `docs/orchestration/reviews/20260928-strategy-gold-band-edge-table-007.md`) and **accepted** it:
+every quoted figure reproduced exactly from the accepted scorecard and the gold-research artifacts, provenance this time
+is exact (base `4fc61096` is the direct parent of head `9d4403ec`), and the two citation slips found are notes rather
+than required changes. No assignment was published from it, because the same spec file has already been rewritten in
+place by the still-queued `-008`/`-009`/`-010` submissions, the material forks D6/D8/D4/D15 are open, and the proposed
+page lane has no registered worker (`projects.json` has a `dashboard` coordinator workstream, not a worker). The queue
+now holds six `pending_review` `strategy` submissions dated 2026-09-28 to 2026-09-29. In parallel, hold on Gold: the
+accepted verdict page still lives only in the worker checkout and promoting it is a central decision, the 022 item A
+anchor observation envelope for `2026-09-28T14:00:00Z|gold|entry` was due at or after the `2026-09-28T16:00:00Z` lane
+close and still needs a fresh wake - an operator resume of the Gold window or a later coordinator event - before Gold
+stops, and the precise unresolved decisions (whether to open another exploratory stage over the already-spent intervals
+at all, which writer model if so, whether the page lane may run while it has no owner, promoting the verdict page, and
+publishing the remaining local-only Gold evidence artefacts) stay the user's. Do not re-run the batch, do not disturb
+`GoldQualificationWindowTick018` - whose action is the windowless `wscript.exe run-hidden.vbs` launcher recorded in
+`DECISIONS.md` - and keep evaluation sealed until `2027-03-25T15:00:00Z`.

@@ -1,3 +1,66 @@
+# 2026-09-29 (cont.) - strategy submission 20260928-strategy-gold-band-edge-table-007 accepted as an accurate specification advisory
+
+A fourth controller-locked background cycle reviewed exactly one submission, `20260928-strategy-gold-band-edge-table-007`
+from the `strategy` worker, and accepted it. The mailbox SHA-256 `835fb83e...` was reproduced twice from the immutable
+inbox file, the reply `dc79147a...` is published at
+`.local/orchestration/replies/strategy/20260928-strategy-gold-band-edge-table-007.json` bound to that hash, and the durable
+review is `docs/orchestration/reviews/20260928-strategy-gold-band-edge-table-007.md`. Acceptance is of the advisory and its
+record only; it opens neither `gold-declared-band-measurement-026` nor `dashboard-gold-factor-edge-page-001`.
+
+Provenance was checked from the checkout this time rather than assumed: `.local/worktrees/strategy` is clean on
+`workers/strategy-advisory-20260920`, the reported base `4fc61096` is the direct parent of the single head commit
+`9d4403ec` (`git rev-list --count 4fc61096..9d4403ec` is 1), and the commit is +610 lines across exactly two files, both
+inside the worker's owned `docs/strategy/` scope: `GOLD_BAND_FIX_AND_EDGE_TABLE_SPEC_20260928.md` +454 (454 lines at that
+head) and `CONVERSATION_NOTES.md` +156 (1245 lines at that head). No test, registry, gate, manifest or workflow file names
+either path, so dependency impact is nil.
+
+Every quoted figure reproduced exactly against the canonical artifacts. From `data/gold-direction-scorecard-20260927.json`:
+parameters `min_n` 100 / `min_year_n` 20 / `edge_pp` 5 / `threshold_pct` 60; baselines session 55.81% n 964 and week 58.23%
+n 960; coverage 28/28 variables, 965 anchors of which 964 carry an outcome, 5115 event rows, 25 scored, 20 unscored, 6
+neutral, 7 factors scored; unscored by reason 8 `level_band_not_declared`, 6 `change_rule_absent`, 2
+`threshold_is_absolute_band`, 4 `regime_label_not_reproduced`; the two `threshold_is_absolute_band` rows are exactly
+`vix_level:above_own_median` (session n 481) and `vix_level:at_or_below_own_median` (session n 483); the six neutral states
+are the four `exact_zero` change states plus `inflation_signal:exact_zero` and
+`risk_headline_context:at_or_below_own_median`; 25/25 session verdicts `no_information` with 24 week `no_information` plus
+one `unstable_across_years`; exactly one row at or above 60% per horizon. That row is the F9
+`risk_headline_context:above_own_median` entry, provenance `interpreted` with caveat `interpreted_regime_mapping`, session
+60.51% n 471 (+4.70pp), week 63.69% n 471 (+5.46pp), `years_same_edge_sign` false on both horizons, per-year session edges
+-1.54 / -0.18 / +6.52 / +15.84 pp.
+
+The dependency claims are real, not inferred. The 60% bar is verbatim at
+`backtester/scripts/report_gold_factor_direction_check.js` lines 204 and 387. `lib/gold_individual_variable_report.js`
+lines 1042, 1060, 1064 and 1104 match the quoted text character-for-character, including the forced
+`stratification: levelVariable ? 'median_split_of_own_distribution' : variable.measurement.strata`, and the v2 registry
+really declares `vix_level` as `{"kind":"fred_level","series_id":"VIXCLS","strata":"median_split"}` with the
+`variable_state_strata.median_split_revision_8` text verbatim as quoted, so the declared `strata` field is genuinely
+ignored for level variables. The accepted 019 report is exactly 95,842,994 bytes, version
+`gold-individual-variable-report-v1`, generated `2026-09-25T14:44:33.370Z`, with zero occurrences of the quoted `"values"`
+token, so the re-cut really is impossible. All three of the worker's self-corrections hold: the 019 series directory is in
+the gold-research worktree only (10 files, 2,778,424 bytes), the two other input directories are canonical and present (17
+files / 12,099,758 bytes and 2 files / 3,456,639 bytes), and the report library, builder and v2 registry are absent from
+canonical. The scratch VIX sizing check reproduces exactly: 954 Monday-Friday observations in range, 41 above 25, 400 below
+16, 513 between 16 and 25.
+
+Two minor citation slips were recorded as notes rather than as required changes, because neither alters a number or a
+conclusion: section 3.7 labels the VIX window "2023-01-03 to 2026-09-21" while the file's last in-range observation is
+2026-09-11 (the count and all three band counts are exact, and section 3.6 states the correct end date), and the section 8
+reference to the scorecard's embedded JSON as line 214 is line 211 in both the built page and the template.
+
+No new worker assignment was published, and no register status changed, for three recorded reasons: the delivered spec has
+already been rewritten in place by the worker's own still-queued `-008` (head `1576e89`) and `-009` (head `73e64852`)
+submissions with `-010` (head `45b7864a`) revising the plan again; the material forks D6, D8, D4 and D15 in the spec's own
+section 9 are open; and the proposed page lane has no owner because `docs/orchestration/projects.json` carries a `dashboard`
+coordinator workstream rather than a registered worker. `gold-research` deliberately stays published at status exactly
+`instructions_published_awaiting_worker` for the carried 022 item A obligation, and the queue now holds six
+`pending_review` `strategy` submissions dated 2026-09-28 to 2026-09-29, taken one review per cycle.
+
+Boundary unchanged: no production, dashboard, credential, warehouse, Layer 1, workflow, purchase, deployment or holdout
+action occurred or is authorised, no credential value was read, the sealed prospective window is untouched and stays sealed
+until `2027-03-25T15:00:00Z`, and `GoldQualificationWindowTick018` was observed read-only and not disturbed. Review was a
+separate session from authorship. Mechanism note: `node scripts/monitor-state.js activity central-orchestrator ...` was
+accepted by the harness this cycle and used directly, unlike the two previous cycles that were refused by policy and fell
+back to writing the activity JSON by hand.
+
 # 2026-09-29 (cont.) - strategy submission 20260927-strategy-window-flash-fix-006 reviewed with changes requested
 
 A third controller-locked background cycle reviewed exactly one submission, `20260927-strategy-window-flash-fix-006` from

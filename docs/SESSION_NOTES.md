@@ -1,5 +1,38 @@
 # Session notes
 
+2026-09-29 (cont.): ran a fourth controller-locked background review cycle and stopped there, one cycle per dispatch as the
+standing direction requires. The controller lock already owned the run, so no pause, stop, enable or other controller
+command was issued and no second coordinator process was started. Exactly one submission was reviewed:
+20260928-strategy-gold-band-edge-table-007, worker strategy, mailbox SHA-256
+835fb83eda81b8282d44a7e9ffb1f8c18e7094ce98dfce4773d67003d2b59fda reproduced twice from the immutable inbox file and
+matching the hash in the run brief, reply dc79147a87b148f44b8d57397a54e97bf20eaf5fdb292fb908689145c8cbba60 published
+through the canonical CLI and bound to that hash, decision accepted, durable review
+docs/orchestration/reviews/20260928-strategy-gold-band-edge-table-007.md. check --worker strategy then reported this report
+accepted with errors [] and stale_assignment false, leaving six pending_review strategy submissions. Verified from the
+checkout: .local/worktrees/strategy clean on workers/strategy-advisory-20260920, base 4fc61096 the direct parent of the
+single head 9d4403ec (rev-list --count 1), the commit +610 lines in two docs/strategy/ files only (spec +454 at 454 lines,
+notes +156 at 1245 lines at that head), dependency impact nil. Substantively every quoted figure reproduced exactly from
+data/gold-direction-scorecard-20260927.json and the gold-research worktree artifacts: the scorecard parameters, the two
+baselines, coverage 28/28 with 965 anchors and 5115 event rows, 25 scored / 20 unscored / 6 neutral, unscored reasons
+8/6/2/4, the two threshold_is_absolute_band rows being exactly the vix_level band rows at session n 481 and 483, 25/25
+session no_information with 24 week no_information plus one unstable_across_years, one clearing row per horizon, and the F9
+risk_headline_context:above_own_median row with its interpreted provenance, 60.51%/63.69% hit rates, false
+years_same_edge_sign and per-year edges -1.54/-0.18/+6.52/+15.84 pp; the 60% bar verbatim at
+report_gold_factor_direction_check.js lines 204 and 387; gold_individual_variable_report.js lines 1042/1060/1064/1104 and
+the v2 registry vix_level strata plus the median_split_revision_8 text character-for-character as quoted; the accepted 019
+report exactly 95,842,994 bytes with zero occurrences of the quoted "values" token; and the VIX sizing check exactly 954
+weekday observations / 41 / 400 / 513. Two minor citation slips were recorded as notes, not as required changes: section
+3.7 labels the VIX window end 2026-09-21 while the file's last in-range observation is 2026-09-11, and the scorecard's
+embedded JSON is line 211 rather than 214. No new assignment was published. The three reasons are in the review: the
+delivered spec has already been rewritten in place by the worker's own still-queued -008 and -009 submissions with -010
+revising again, the material forks D6/D8/D4/D15 in the spec's own section 9 are open, and the proposed page lane has no
+registered worker because projects.json carries a dashboard coordinator workstream rather than a worker entry. gold-research
+deliberately stays published at status exactly instructions_published_awaiting_worker for the carried 022 item A obligation.
+Register, DECISIONS.md, CURRENT_STATE.md, CHANGELOG.md and this file updated in one scoped coordination commit; no
+controller, bridge, production, credential, warehouse, Layer 1, dashboard, purchase, deployment or holdout action occurred
+and the capture lane was observed read-only. Mechanism note: node scripts/monitor-state.js activity central-orchestrator ...
+was accepted by the harness this cycle and used directly for the working and paused records, unlike the two previous cycles
+that were refused by policy and fell back to writing .local/orchestration/activity/central-orchestrator.json by hand.
 2026-09-29 (cont. 3): ran a second controller-locked background review cycle and stopped there, one cycle per dispatch as
 the standing direction requires. The controller lock already owned the run (`controller/15fb7024...receipt.json`,
 state `attempting`), so no pause, stop, enable or other controller command was issued and no second coordinator process was
