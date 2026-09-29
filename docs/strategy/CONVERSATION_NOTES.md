@@ -1571,3 +1571,76 @@ D1 updated), and this entry.
 print is still pending, and D2-D5 are unchanged.
 
 
+
+
+## 2026-09-29 (batch 4 answered) - the horizon becomes a ladder, and the ladder says the move is same-day
+
+The user answered four of the five batch-4 questions (11, 12, 15, 16, 17) and asked for the fifth in plainer words,
+then added one standing instruction of their own. Verbatim, in numbering order:
+
+- **11 - "Simplify this question I dont know what you mean".** Not an answer: the words *flag*, *score* and
+  *ranking* are retired, and the question returns in batch 5 as "should each factor get one of two lights -
+  'worth watching today' or 'nothing here today' - or a number out of 100 with the factors ordered best to worst".
+  The default (the on/off light) stands until they answer.
+- **12 - "Yes keep both even if rare its still something to factor into the analysis agent".** The plan's default
+  had been to prefer rare-and-strong factors over often-and-small ones; the user removes the preference entirely.
+  No rarity filter, no demotion, nothing dropped for firing ten times a year: it is printed with its own day count,
+  unscored where the bar is not met, and fed to the analysis agent the same way a common state is. That is question
+  9 ("no", nothing is dropped) and question 13 ("anything") stated a third time, now about rarity.
+- **15 - rewritten by the user into a horizon ladder**: *"24h, 48h, 3d, 5d we are just trying to understand is it a
+  24h impact or does it set the tone for a few days so we can safely treade in that direction"*. The single week
+  horizon is gone; the horizon set is 1, 2, 3 and 5 sessions, and the question it exists to answer is persistence -
+  same-day event or multi-day tone. Measured below.
+- **16 - "Yes".** The sweep stays one line under one `looks_counted`; because the ladder is the user's own, the
+  sweep is now four windows instead of three.
+- **17 - "Yes fine".** Overlap is disclosed rather than avoided: four windows, one anchor, one look.
+- **The completeness instruction, in the same reply: "just fill the gaps so we have all data clear".** Now a rule
+  for every table: no blank cell, no ellipsis, no omitted window and no row withheld because the number is thin.
+
+**The ladder, measured (scan `tmp/l2l-scan8-20260929.js`, read-only, spent intervals).** The 570 gold call sessions
+are re-read window by window from each row's own session open, for *w* times that row's own session length in
+hourly bars, against the hourly series the accepted report itself used (canonical
+`backtester/tmp/gold-hourly-extended-20260918/candles.json`, 21,871 complete H1 mid bars, 2023-01-02 to
+2026-09-11). Three assertions pass: the hourly index is strictly ascending, `fullDistance = 0.50 x ADR20` and
+`halfDistance = 0.25 x ADR20` on all 570 rows, and the **1-session column reproduces the archive's own
+`reachedHalfAdr20` (64.04% vs 64.04%) and `reachedFullAdr20` (38.42% vs 38.42%) exactly** - the join is aligned, so
+the longer columns are the same measurement with more time in it.
+
+
+| 0.50 L2L, n 570 per column | 1 session | 2 | 3 | 5 |
+| --- | ---: | ---: | ---: | ---: |
+| moved either way | 97.89% | 99.82% | 99.82% | 99.82% |
+| the call's direction reached the floor | 64.04% | 75.26% | 78.95% | 82.63% |
+| the call's direction reached a full L2L | 38.42% | 54.74% | 62.28% | 69.12% |
+| one-sided windows: the call named the side | 45.63% | 47.57% | 45.66% | 44.32% |
+| always saying up on those same rows | 61.13% | 61.42% | 64.38% | 67.05% |
+| the window closed on the call's side | 46.32% | 51.40% | 48.07% | 45.79% |
+| reached the floor and still on the right side at the close | 68.49% | 67.13% | 59.33% | 55.20% |
+
+The answer to their question, in their frame: **the move is the 24-hour part and it stays true; the direction never
+arrives.** "Will it move 0.50 L2L" is 97.89% at a day and 99.82% at five, so the floor cannot sort days at any
+length; the call-direction reach rises only because more time gives more chances; on the one-sided windows the call
+names the side 45.63% at one session and 44.32% at five while always-up improves from 61.13% to 67.05%, widening the
+gap from 15.5pp to 22.7pp; and the move is handed back rather than carried - of the calls that did reach the floor,
+68.49% were still on the right side at the one-session close but only 55.20% at the five-session close. Per year the
+one-sided match stays in the same band at every window (2024 ~48%, 2025 40.29% -> 36.99%, 2026 ~53-57%). The
+wall-clock reading (24h/48h/3d/5d as the user said it, weekends inside the window) gives the same answer and is
+disclosed as the sensitivity: 458 of 570 five-session wall-clock windows hold fewer open hours than the label
+implies (median 69 hourly bars of 120 clock hours), which is why the open-hours ladder is the published form.
+Limits: **48h and 3d exist in no accepted artifact** - the archive measures one session per row - so the four
+windows are a lane-1 deliverable with a re-declared horizon; the four columns overlap and are never independent;
+the anchors stop at 2026-04-30 while the candle series runs to 2026-09-11; mid prices, no spread or slippage, and a
+blocked move back to the open is not a stop, a target or a path.
+
+**Files changed.** `INTENT_QUESTIONS_ANSWER_SHEET_20260929.md` (status 18 of 50, rows 11, 12, 15, 16 and 17
+answered, the batch-4 log row, the completeness rule, the decision map extended to 11/12/15-17, and a new "Horizon
+ladder, measured" section with the table, method, wall-clock sensitivity and limits),
+`GOLD_VIX_BOTH_AND_FACTOR_TABLE_PLAN_20260928.md` (header revision note; section 3 replaces the single week horizon
+with the measured ladder and keeps the refusal to invent a multi-session L2L multiple; section 4 gains the
+longer-window direction read; section 7 block D moves the share rows onto the ladder; section 8 requires the table
+to be complete; D1 records the window set; section 10 gains the ladder and the nothing-dropped-for-rarity defaults;
+test 5 asserts the 1-session column against the archive and the new `looks_counted`), and this entry.
+
+**Status.** 18 of 50 answered (1-10, 12-17, 27, 33); batch 5 re-asks 11 in plainer words with 18, 19, 20, 21, 22 and
+23. D1's ordering, floor set and window set are the user's; the coordinator confirmation of the two-unit print is
+still pending, D2-D4 are unchanged, and D5 now also carries the declared 1/2/3/5 windows as part of the rebuild.

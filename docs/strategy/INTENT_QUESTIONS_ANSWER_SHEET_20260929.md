@@ -12,12 +12,14 @@ message is superseded.
 - Or list only the numbers you disagree with, for example `3 no, 12 often, 27 no`.
 - Questions are put to you at most seven at a time, in numbering order, skipping anything already asked.
 
-**Status:** 14 of 50 answered on 2026-09-29 — **corrected down from 16, which double-counted** question 2
-(answered in batch 2 after being asked in batch 1) and question 33 (asked in batch 1, answered in batch 3). The
-answered set is 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 13, 14, 27, 33. Every question asked so far has now been answered:
-8 and 13, the two that came back as "what do you mean" and "is that 0.05%", were closed in the batch-3 reply,
-which also answered the user's own question about correlation and turned question 8's answer into a measurement.
-Next batch is fresh numbers: 11, 12, 15, 16, 17, 18, 19.
+**Status:** 18 of 50 answered on 2026-09-29. The answered set is 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 13, 14, 15,
+16, 17, 27, 33. Batch 4 (11, 12, 15, 16, 17) returned four answers and one request to simplify: **12**, **15**,
+**16** and **17** are closed, and **11** came back as "Simplify this question I dont know what you mean", so 11 is
+re-asked in plainer words in batch 5 with 18, 19, 20, 21, 22, 23. Batch 4 also produced a measurement: the user
+rewrote the horizon question from "is 5 sessions the secondary horizon" into **"24h, 48h, 3d, 5d"** to find out
+"is it a 24h impact or does it set the tone for a few days", so the ladder is now measured and is in the
+"Horizon ladder, measured" section below. An earlier version of this line said **16 of 50**, which double-counted
+questions 2 and 33; the figure has been 14 until this batch and is 18 now.
 
 **Two of these answers changed the plan.** The user wants **both** stages and **all 28** variables, and they
 declared a movement size of their own: **0.80% of price, in the direction of the call, within the 24-hour
@@ -57,8 +59,8 @@ median instead of today's rolling value. Both statements are kept, each labelled
 | # | Yes/no question | Default | Asked | Your answer |
 | --- | --- | --- | --- | --- |
 | 10 | "A move is coming" is enough, direction is a separate second step | yes | batch 1 | **no** - "both, i want to see any edge we can find": the movement stage and the direction stage are both wanted. Direction is not optional, and the two stages stay separate so the direction answer is read after the movement answer |
-| 11 | A simple on/off flag per factor, not a score or a ranking | yes | | |
-| 12 | Prefer factors that fire rarely but strongly over often with a small edge | rare + strong | | |
+| 11 | A simple on/off flag per factor, not a score or a ranking | yes | batch 4, 5 | **asked for a simpler restatement** - "Simplify this question I dont know what you mean". The words *flag*, *score* and *ranking* are retired from the restatement; batch 5 asks it as "should each factor get just one of two lights - 'worth watching today' or 'nothing here today' - or a number out of 100 with the factors ordered best to worst". Default stands until answered: the on/off light |
+| 12 | Prefer factors that fire rarely but strongly over often with a small edge | rare + strong | batch 4 | **no, keep both** - "Yes keep both even if rare its still something to factor into the analysis agent". There is no rarity filter and no preference rule: a state that fires ten times a year is kept, printed with its own small day count, and fed to the analysis agent exactly like a common one. This is the same instruction as question 9 (nothing is dropped) and question 13 (any edge counts), now stated a third time, so rarity is never a reason to omit or to demote a row |
 | 13 | You would act on an edge smaller than 5pp | no | batch 1, 3, 4 | **yes** - *"Not sure why we are asking this, we want to find anything that giuves us an adge so yes?"*. The bar is **5 days in 100** (not 0.05%, not 5% of price) and the user will act on it. Their "anything that gives us an edge" also fixes the reporting rule for smaller gaps, tied to question 9: a gap below the bar is still **printed**, flagged as indistinguishable from chance on today's sample, and never hidden. The caveat that travels with this answer: 5pp needs about 774 anchors for 80% power and the archive has about 470, so a 5pp row here is *reportable and worth watching, not confirmable* - which is what D5 (the hourly rebuild) is for |
 
 ## C. Horizon (14-17)
@@ -66,9 +68,9 @@ median instead of today's rolling value. Both statements are kept, each labelled
 | # | Yes/no question | Default | Asked | Your answer |
 | --- | --- | --- | --- | --- |
 | 14 | Session (1 day) is the primary horizon | yes | batch 1 | **yes** - "im mainly interested in the current 24h session as I would run the agents in the morning then trade throughout the day". The process detail matters: the flag must exist *before* the session it applies to, which makes 39 (intend to trade), 41 and 42 live rather than hypothetical |
-| 15 | Week (5 sessions) is the secondary horizon | yes | | |
-| 16 | Publish a 1/3/5-day sweep as one sensitivity line with one `looks_counted` | yes | | |
-| 17 | Disclose overlapping horizons rather than avoid them | yes | | |
+| 15 | Week (5 sessions) is the secondary horizon | yes | batch 4 | **rewritten by the user, and answered as a ladder** - "24h, 48h, 3d, 5d we are just trying to understand is it a 24h impact or does it set the tone for a few days so we can safely treade in that direction". So the secondary horizon is no longer a single 5-session number: the horizon set is **1, 2, 3 and 5 sessions**, and the question it answers is whether a call is a same-day event or sets the tone for several days. The ladder is measured - see "Horizon ladder, measured" below. The measured answer is that the *movement* is certain at every length while the *direction* is not: the floor is reached in the call's direction 64.04% at 1 session rising to 82.63% at 5 (mechanical - more time, more chance), and the call is no better at 5 sessions than at 1 at naming the side |
+| 16 | Publish a 1/3/5-day sweep as one sensitivity line with one `looks_counted` | yes | batch 4 | **yes**, and the sweep is now the user's own ladder, so it is **1/2/3/5 sessions** (four windows, not three). Confirmed: one line, one `looks_counted` covering the whole sweep - the count is states x 4 windows x the floor variants, and it rises by a third against the plan's earlier 1/3/5 version. Nothing here is presented as independent evidence |
+| 17 | Disclose overlapping horizons rather than avoid them | yes | batch 4 | **yes, "yes fine"**. Overlap is disclosed, not avoided: the four windows share the same anchors and each is a strict extension of the one before it, so a 5-session number can never be read as four independent confirmations. The mechanics are already measured and are in the ladder section: of the calls whose direction reached 0.5 L2L inside the window, the share still on the correct side at the window's end falls 68.49% (1 session) -> 67.13% -> 59.33% -> **55.20%** (5 sessions), i.e. the longer the window the more of the move is handed back before it closes |
 
 ## D. Direction, stage 2 (18-21)
 
@@ -137,11 +139,15 @@ median instead of today's rolling value. Both statements are kept, each labelled
 
 | Plan decision (section 9 of the plan) | Questions that decide it |
 | --- | --- |
-| D1, the "if" stage | 1-9, 10, 36 |
+| D1, the "if" stage | 1-9, 10, 11, 12, 15-17, 36 |
 | D2, the VIX change stream | 29-31 |
 | D3, the size of the deliverable | 43-46, 49 |
 | D4, the F9 rebuild | 32 |
 | D5, the rebuild's sample size | 33-35, 38 |
+
+The horizon ladder (questions 15-17) also feeds D5, because 48h and 3d exist in no accepted artifact: a declared
+1/2/3/5-session window set is part of what that rebuild has to produce, and every extra window is an extra look in
+the single `looks_counted`.
 
 ## Answer log
 
@@ -150,12 +156,18 @@ median instead of today's rolling value. Both statements are kept, each labelled
 | 2026-09-29 | 1 | 1, 2, 10, 13, 14, 27, 33 | 7 replies. Usable: 1 both measures, 10 both stages, 14 session primary with a morning-flag process, 27 all 28 in scope. Restatements requested and given: 2 (floor), 13 (5pp vs 0.8%), 33 (out of sample). Also declared: 0.80% in the direction of the call within the session, which replaces the 0.30% session default |
 | 2026-09-29 | 2 | 3-9 | 7 replies, 5 usable (3, 4, 5, 6, 7). 4 count both directions; 5 publish the no-move bucket; 6 floor as a percentage of price; 7 the floor is the same every year. 2 was settled here: "push ahead but clarify that the real L2L size is actually 1.68% at present on the charts I use". 8 and 9 came back as not understood |
 | 2026-09-29 | 3 | 8, 9, 13, 33 (restatements) | 4 replies, and all four are now answered. **9: "no"** - a relevant state is never dropped, its market impact must stay visible. **33: "no, not yet"** - nothing is being fitted at this stage, the work is observing the data and confirming what price did and did not do. **8: yes**, and it moved the primary measure to the **0.50 L2L and L2L movement that happened**, with the directional read taken afterwards on that movement. **13: yes** - "we want to find anything that giuves us an adge". The reply also asked whether this is simply tracking correlation, which it is; the answer and its three guards are recorded in the section below |
+| 2026-09-29 | 4 | 11, 12, 15, 16, 17 | 5 replies, 4 of them answers: **12 "Yes keep both even if rare its still something to factor into the analysis agent"** (no rarity filter, nothing dropped for firing rarely), **15 rewritten by the user** into the horizon ladder "24h, 48h, 3d, 5d ... is it a 24h impact or does it set the tone for a few days so we can safely treade in that direction", **16 "Yes"** (the sweep stays one line with one `looks_counted`, now over four windows), **17 "Yes fine"** (overlap disclosed, not avoided). **11 came back as "Simplify this question I dont know what you mean"** and is re-asked in plainer words in batch 5. The extra request in the same reply - "just fill the gaps so we have all data clear" - is logged as the completeness rule below |
 
-Batches continue in numbering order, at most seven at a time, skipping anything already asked. Batch 3 closed all
-four questions it asked: **9** (thin states stay visible), **33** (observation stage, so no unseen-data test on
-today's tables), **8** (0.50 L2L and L2L movement first, direction read after) and **13** (act from 5 days in
-100, and print anything smaller with its chance caveat). Batch 4 is therefore the first batch of fresh numbers:
-**11, 12, 15, 16, 17, 18, 19**. Two lanes are still waiting on D1-D5; D1's default is no longer "movement screen
+Batches continue in numbering order, at most seven at a time, skipping anything already asked. Batch 4 closed four
+of the five questions it asked: **12** (rare and common states are equally kept), **15** (the horizon set is
+1/2/3/5 sessions, measured, and the movement is same-day while the direction never appears), **16** (one line, one
+`looks_counted`, now four windows) and **17** (overlap disclosed). **11** came back as "Simplify this question I
+dont know what you mean" and is re-asked in plainer words with **18, 19, 20, 21, 22, 23** in batch 5. The same
+reply carried a standing completeness instruction - **"just fill the gaps so we have all data clear"** - which is
+now the rule for every table: no blank cell, no ellipsis, no omitted window and no "not measured" row where the
+number exists; a thin number is printed with its own day count instead of being left out, which is question 9's
+instruction applied to the shape of the table rather than to one row. Two lanes are still waiting on D1-D5;
+D1's default is no longer "movement screen
 then a 0.30% floor" but "movement screen, then the 0.50 L2L and L2L movement that happened, then the direction
 read on that movement", with the fixed 0.80% and 0.30% kept as sensitivity rows. Question 33's answer removes
 nothing from D5 - it says the *stage we are in* is observation, so the out-of-sample check binds a future declared
@@ -302,6 +314,61 @@ call's direction, per year: at a *fixed* 0.80% of price, 32.40% (2024), 38.43% (
 1.00 L2L, 39.60%, 37.19%, 38.46%; as 0.50 L2L, 63.60%, 64.88%, 62.82%. Gold's median ADR20 went from 1.32% to
 3.12% over the period, which is why the fixed number drifts: a fixed percentage of price is a different bet
 each year on this instrument, while the L2L form is the same bet.
+
+**Horizon ladder, measured (batch 4, question 15; scratch scan `tmp/l2l-scan8-20260929.js`, read-only).** The user
+replaced "is 5 sessions the secondary horizon" with **"24h, 48h, 3d, 5d"**, asked because they want to know
+"is it a 24h impact or does it set the tone for a few days so we can safely treade in that direction". So the
+ladder is measured on the same 570 gold call sessions, window by window, using the hourly series the accepted
+report itself used (canonical `backtester/tmp/gold-hourly-extended-20260918/candles.json`, 21,871 complete H1 mid
+bars, 2023-01-02 to 2026-09-11). Each window runs from the row's own session open for *w* times that row's own
+session length in hourly bars (median 23 bars per session), so 5 sessions is 5 sessions of market-open time and
+never 120 clock hours - the plan's own rule for this horizon.
+
+Alignment is asserted, not assumed: the hourly index is strictly ascending (PASS), `fullDistance = 0.50 x ADR20`
+and `halfDistance = 0.25 x ADR20` on every row (PASS), and the **1-session column reproduces the archive's own
+fields exactly** - `reachedHalfAdr20` 64.04% vs 64.04% and `reachedFullAdr20` 38.42% vs 38.42% (PASS). The longer
+columns are the same measurement with a longer window.
+
+| Gold, 0.50 L2L, n 570 per column | 1 session | 2 sessions | 3 sessions | 5 sessions |
+| --- | ---: | ---: | ---: | ---: |
+| a 0.50 L2L move happened, either direction | 97.89% | 99.82% | 99.82% | 99.82% |
+| the call's own direction reached 0.50 L2L | 64.04% | 75.26% | 78.95% | 82.63% |
+| the call's own direction reached a full L2L | 38.42% | 54.74% | 62.28% | 69.12% |
+| one-sided windows only: the call named the side that moved | **45.63%** (162/355) | 47.57% | 45.66% | **44.32%** |
+| always saying up on those same rows | 61.13% | 61.42% | 64.38% | **67.05%** |
+| the window closed on the call's side | 46.32% | 51.40% | 48.07% | 45.79% |
+| always-up close baseline on the same rows | 56.84% | 59.12% | 60.35% | 65.09% |
+| of the calls that reached 0.50 L2L, closed the window beyond the floor | 48.49% | 48.95% | 47.56% | 47.13% |
+| of those same calls, still on the correct side at the close | 68.49% | 67.13% | 59.33% | **55.20%** |
+
+Read in the user's own words: **the move is the same-day part and it stays true; the direction is not there at
+any length.** The floor is reached at a day 97.89% of the time and at five days 99.82% of the time, so "will it
+move" is certain and useless as a signal at every window. Direction gets no better with time: on the one-sided
+windows the call named the side 45.63% at one session and **44.32% at five**, while always saying up on those same
+rows improved from 61.13% to 67.05%, so the gap widens from 15.5pp to 22.7pp. At the close it is the same story in
+a different unit - the call's side wins 46.32% at one session, 45.79% at five, against 56.84% and 65.09% for up.
+And the move is handed back rather than carried: of the calls that reached the floor, 68.49% were still on the
+right side at the one-session close but only **55.20%** at the five-session close. There is no multi-day "tone"
+in this data to trade - it is a same-day spike that fades, and holding longer makes the calls look worse while the
+direction stays unknown. Per year, one-sided call match at 1 / 2 / 3 / 5 sessions: 2024 47.88% / 47.97% / 47.47% /
+48.05%; 2025 40.29% / 43.14% / 40.23% / **36.99%**; 2026 52.94% / 57.14% / 54.55% / 53.85%.
+
+**The wall-clock version, disclosed (it is how the user said it).** The same ladder measured as 24h / 48h / 72h /
+120h of clock time from the session open, with the daily break and the weekend sitting inside the window, gives
+0.50 L2L either way 97.89% / 99.47% / 99.65% / 100%, call-direction reach 64.04% / 72.81% / 74.74% / 80.53%, and
+one-sided call match 45.63% / 46.67% / 45.80% / 45.05% against always-up 61.13% / 61.75% / 61.83% / 65.84%. It
+answers the same way, and it is the version a trader lives through, but a weekend falls inside the later windows:
+458 of the 570 five-session wall-clock windows contain fewer open hours than the label implies (median 69 hourly
+bars of the 120 clock hours), so the open-hours ladder above is the one to publish and this one travels as its
+sensitivity.
+
+**Limits carried with the ladder.** (1) **48h and 3d do not exist in any accepted artifact** - the archive
+measures one session per row - so a lane-1 run that declares the 1/2/3/5 windows is required before these rows
+can ship; what is measured above is the hourly series joined to the same anchors, not a published artifact.
+(2) The four columns overlap and each is a strict extension of the one before it, so they are four looks at one
+anchor and never four independent confirmations (question 17). (3) The anchors stop at 2026-04-30 while the candle
+series runs to 2026-09-11; no new anchors were created and no outcome was invented. (4) Mid prices, no spread, no
+slippage, and a blocked move back to the open is not a stop, a target or a path.
 
 Provenance: `data/half-l2l-reach-research.json` sha256
 `0d2955248066be6dff0741ae89fbe3e7de4ead6294c6bec16aa09a1aa452e9b8`,

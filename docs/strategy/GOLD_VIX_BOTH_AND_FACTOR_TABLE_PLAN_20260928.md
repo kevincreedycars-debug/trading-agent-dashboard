@@ -11,6 +11,14 @@ appendix.** If the two ever disagree, this one wins and the other gets fixed. **
 this revision adds — first "if a move happens", then "which way" — and sections 5–8 keep the VIX and table
 design from the previous revision.**
 
+**Revised 2026-09-29 after batches 1-4 of the intent sheet (18 of 50 answered).** Four things changed and nothing
+else did: the session floor is the user's own **0.80% of price in the call's direction**, published beside its L2L
+form; the **order** is now movement first and direction second, read on the moved subset (D1); the horizon is now a
+**ladder of 1, 2, 3 and 5 sessions** rather than a single week, measured in §3, because the user wants to know
+whether a call is a 24-hour event or sets the tone for several days; and **no row is ever dropped for being thin or
+rare** (questions 9 and 12). The user also asked for every table to be complete - "just fill the gaps so we have
+all data clear" - so no cell is left blank where a number exists.
+
 ## 1. What you asked for
 
 1. Simplify the plan.
@@ -113,9 +121,33 @@ guards - cohort baseline rather than 50%, per-year sign, and the overlap matrix 
 being counted as independent confirmations - and one arithmetic limit: about 470 daily anchors can *show* a 5pp
 gap but cannot *confirm* it (about 774 are needed for 80% power on that size), which is the case for D5.
 
-**Week floor.** 1.00% week stays as the plan's default until the user says otherwise. Its L2L form is *not*
-proposed yet: a 5-session extension is not a fixed multiple of the 1-session range, and inventing that
-multiple is exactly what this section refuses to do.
+**Horizon ladder (user, 2026-09-29, batch 4, question 15).** The user replaced the single week horizon with a
+ladder and said why: *"24h, 48h, 3d, 5d we are just trying to understand is it a 24h impact or does it set the
+tone for a few days so we can safely treade in that direction"*. So the horizon set is **1, 2, 3 and 5 sessions**,
+each measured from the row's own session open for *w* times that row's own session length (5 sessions is 5
+sessions of open market, never 120 clock hours), and the ladder has been read on the hourly series the accepted
+report itself used. The 1-session column reproduces the archive's own fields exactly (64.04% and 38.42%, asserted
+in the scan), so the longer columns are the same measurement with a longer window.
+
+The answer is that **the movement is same-day and the direction never arrives**: a 0.50 L2L move happens in 97.89%
+of sessions and in 99.82% of five-session windows, so the floor cannot sort days at any length; the call's own
+direction reaches it 64.04% -> 82.63% across the ladder, which is the arithmetic of more time, not of a stronger
+signal; on the one-sided windows the call names the side **45.63% at 1 session and 44.32% at 5**, while always
+saying up on those same rows goes 61.13% -> **67.05%**, so the gap widens from 15.5pp to 22.7pp; at the close the
+call's side wins 46.32% at 1 session and 45.79% at 5 against 56.84% and 65.09% for up; and of the calls whose
+direction did reach the floor, 68.49% were still on that side at the one-session close but only **55.20%** at the
+five-session close. Per year the one-sided match stays in the same band at every window (2024 ~48%, 2025
+40.29% -> 36.99%, 2026 ~53-57%). So there is no multi-day tone here to trade: the pattern is a same-day extension
+that fades, holding longer makes the calls look worse, and no window rescues direction. The wall-clock reading
+(24h/48h/3d/5d as the user said it, weekends inside the window) gives the same answer and is disclosed as the
+sensitivity; the open-hours ladder is the published form. Full numbers, method and limits: the sheet's
+"Horizon ladder, measured" section, scan `tmp/l2l-scan8-20260929.js`.
+
+**Week floor, and its L2L form.** 1.00% stays the plan's fixed week floor until the user says otherwise, and its
+L2L form is *not* proposed: a multi-session extension is not a fixed multiple of the 1-session range, and inventing
+that multiple is exactly what this section refuses to do. The ladder changes which rows exist, not how the floor is
+written. **48h and 3d exist in no accepted artifact** - the archive measures one session per row - so the four
+windows above are a lane-1 deliverable with a re-declared horizon, not something the current archive can publish.
 
 **Same bar as everywhere else.** A stage-1 state is interesting only if `n >= 100`, the gap against the
 cohort's own share is at least 5pp, and the sign holds in every year with n >= 20. No new threshold is
@@ -159,6 +191,16 @@ the sessions that do move that far touch the floor both ways - so stage 2 has to
 one-sided split, not on the reach count, and the published tables must print that split. Excluding both-sided
 sessions is also why the one-sided figures cannot be compared with the unconditional 64.04% / 38.42%: they are
 different universes, and the row that holds them has to say so.
+
+**The same stage-2 criterion on the longer windows (question 15, read-only, scan `tmp/l2l-scan8-20260929.js`).**
+The ladder does not rescue direction; it makes it look worse. On the one-sided windows the call names the side
+45.63% at 1 session, 47.57% at 2, 45.66% at 3 and **44.32% at 5**, while always saying up on those same rows goes
+61.13%, 61.42%, 64.38% and **67.05%**, so the gap widens from 15.5pp to 22.7pp. At the close the call's side wins
+46.32% -> 45.79% against 56.84% -> 65.09% for up. And the move is handed back rather than carried: of the calls
+whose direction reached 0.50 L2L, 68.49% were still on the right side at the 1-session close but only **55.20%** at
+the 5-session close. Per year the one-sided match stays in the same band at every window. So a stage-2 row read at
+5 sessions is the same empty answer as at 1, and the published 5-session rate must never be presented as a
+confirmation of the 1-session one: four windows, one anchor, one look (question 17).
 
 **What stage 2 would need to be answerable — the rebuild's real constraint.** 80% power to see a 3pp edge
 needs about **2,100 anchors per state**; today there are about 470. A 5pp edge needs about 774. The same
@@ -287,8 +329,9 @@ for every state, the realized-return q1, q3 and the q1-to-q3 distance on both ho
 own, all of it from fields the accepted report already contains. Once lane 1 has run, block D gains the share
 of anchors above the declared floor at 0.80% of price in the call's direction, at 1.00 L2L (0.50 x ADR20: 0.7236%
 at the period median, **1.68% on the user's current chart**), at 0.50 L2L (0.3618% at the period median, 0.84%
-on today's chart) and at 1.00% (week), with the plan's earlier 0.30% kept as one fixed sensitivity row and one
-`looks_counted` for the whole sweep. The **"no move" bucket is printed twice and labelled**, because the user's
+on today's chart) and at 1.00%, each one read on the **1/2/3/5-session ladder of question 15** instead of on a
+single week, with the plan's earlier 0.30% kept as one fixed sensitivity row and one `looks_counted` for the
+whole sweep (states x 4 windows x floor variants, question 16). The **"no move" bucket is printed twice and labelled**, because the user's
 own reading ("most days move that much even if they dont close that much") is measured and is exactly right: at
 0.80%, **74.39%** of sessions reach 0.80% from the open in one direction or the other, so only **25.61%** are a
 *path* no-move, while only **41.58%** close beyond 0.80%, so **58.42%** are a *close* no-move. Nothing in block D
@@ -308,8 +351,9 @@ data source, no Layer 1 edit. Pairs stay closed until the single factors are set
 One artifact (`data/gold-factor-edge-<YYYYMMDD>.json`, schema `gold-factor-edge-v1`) and one page, with
 four row blocks in this order: (D) the movement screen from §7, no direction column; (A) rows that clear
 the interest bar — expected to be empty; (B) all other
-scored declared-band rows, session hit rate as the main number with the week rate beside it and the drift
-edge on every row; (C) the VIX change rows (B1 context, then B2 sweep) with the direction column empty. Row
+scored declared-band rows, the hit rate on every window of the ladder (1, 2, 3 and 5 sessions) and the drift
+edge on every row, complete for every state - no blank cell, no ellipsis, no omitted window (the user's own
+"just fill the gaps so we have all data clear", 2026-09-29); (C) the VIX change rows (B1 context, then B2 sweep) with the direction column empty. Row
 keys are reused from the accepted scorecard so a reader can move between the two pages, and the bar is that
 scorecard's own, verbatim: `hit_rate_pct >= 60` **and** `n >= 100`.
 
@@ -337,7 +381,7 @@ and needs no answer.
 
 | # | Question | Recommended default | Alternative |
 | --- | --- | --- | --- |
-| D1 | **The "if" stage, and now its order (answered by the user, 2026-09-29)** | Run the free movement screen first (per-state realized-return q1/q3 spread, no new run), then measure the share of anchors with a **0.50 L2L and an L2L movement in either direction**, and read the direction of that movement against the call **on the sessions that moved** — the user's batch-3 answer to question 8: *"its the 0.5l2l and l2l directional movement happened that we are interested in primarily, then we want to see if the directional call was correct for the l2l that occured"*. The fixed **0.80%** (the chart-current instance of 0.50 L2L) and **0.30%** stay published as sensitivity rows under the same `looks_counted`, and the `n >= 100` / 5pp / per-year-sign conditions are guards on **labelling and scoring only** — never a reason to omit a row (question 9). The user confirmed **both stages stay in scope** (question 10) and **all 28 variables stay in scope** (question 27). Coordinator confirmation of the two-unit print is still pending, but the ordering is no longer open | Do only the floor measurement and skip the free screen, or read direction on all sessions instead of the moved subset |
+| D1 | **The "if" stage, and now its order (answered by the user, 2026-09-29)** | Run the free movement screen first (per-state realized-return q1/q3 spread, no new run), then measure the share of anchors with a **0.50 L2L and an L2L movement in either direction**, and read the direction of that movement against the call **on the sessions that moved** — the user's batch-3 answer to question 8: *"its the 0.5l2l and l2l directional movement happened that we are interested in primarily, then we want to see if the directional call was correct for the l2l that occured"*. The fixed **0.80%** (the chart-current instance of 0.50 L2L) and **0.30%** stay published as sensitivity rows under the same `looks_counted`, and the `n >= 100` / 5pp / per-year-sign conditions are guards on **labelling and scoring only** — never a reason to omit a row (question 9). The user confirmed **both stages stay in scope** (question 10) and **all 28 variables stay in scope** (question 27). Coordinator confirmation of the two-unit print is still pending, but the ordering is no longer open. The **window set is the user ladder, 1/2/3/5 sessions** (§3, question 15), read as one sweep under one looks_counted (question 16) with the overlap disclosed (question 17); no state is dropped for firing rarely (question 12), and no cell is left blank where a number exists | Do only the floor measurement and skip the free screen, or read direction on all sessions instead of the moved subset |
 | D2 | What to do with the VIX change stream | Both streams, as designed in §7: level bands scored, change legs published as raw context (B1) plus the declared 1/2/5 and 2/5/10 sweep with `looks_counted` (B2), no direction invented | Reject B2 (context only, the minimum version), or drop the change stream back to unscored |
 | D3 | Size of the deliverable | Full version: new page beside the accuracy panel, linked from the two Gold Backtest pages | Minimum version in §8: block C appended to the existing scorecard page, no new template, no nav edits |
 | D4 | F9 `risk_headline_context` | Rebuild it as a declared rule the way the live field is built (VIX>25 **or** war/geopolitical/conflict/sanction event names), because today's only bar-clearing row is an `interpreted` mapping with an unstable sign | Leave the `interpreted` row as the accepted artifact has it and publish it with its caveats |
@@ -367,9 +411,16 @@ Documented here so the plan is complete without fifteen questions:
   cohort's own share instead of the 60% level, which is all a share can honestly support.
 - **The move floor is declared, never fitted.** The session floor is the user's 0.80% of price in the call's
   direction (declared 2026-09-29) *and* its L2L form 1.00 L2L = 0.50 x ADR20 (0.7236% today), published with
-  0.50 L2L (0.3618%), 0.30% and 1.00% - 2.00% week rows and one `looks_counted`; none of these is a fact about
-  gold, they are parameters. The week floor stays at 1.00% until the user says otherwise, and its L2L form
-  needs its own measurement before it is proposed.
+  0.50 L2L (0.3618%), 0.30% and 1.00% rows and one `looks_counted`; none of these is a fact about gold, they are
+  parameters. The week floor stays at 1.00% until the user says otherwise, and its L2L form needs its own
+  measurement before it is proposed.
+- **The window set is the user's ladder (question 15, 2026-09-29): 1, 2, 3 and 5 sessions.** Every share and
+  every hit rate is published on all four windows in one line, with the overlap disclosed and one `looks_counted`
+  over the whole sweep. 48h and 3d appear in no accepted artifact, so lane 1 has to declare and produce them; the
+  ladder is not four independent tests and one window never confirms another.
+- **Nothing is dropped for being rare or thin** (questions 9 and 12). A state that fires on ten days a year is
+  published with its ten days beside it, unscored where the bar is not met but never removed, because "even if
+  rare its still something to factor into the analysis agent".
 
 ## 11. Tests the lanes must write (six, one line each)
 
@@ -384,9 +435,10 @@ Documented here so the plan is complete without fifteen questions:
    external script, no model endpoint.
 5. `gold_move_share.test.js` — the share above the floor counts anchors on the right side of the boundary
    (`>=` floor, not `>`), the 0.80% and 1.00 L2L variants and the 0.50 L2L and 0.30% sensitivity rows are all
-   published, the L2L row's threshold is recomputed from the same ADR20 the artifact stores (no constant),
-   `looks_counted` equals the states
-   times variants examined, and no stage-1 row carries a direction field.
+   published on all four ladder windows, the L2L row's threshold is recomputed from the same ADR20 the artifact
+   stores (no constant), the 1-session column reproduces the archive's own `reachedHalfAdr20` (64.04%) and
+   `reachedFullAdr20` (38.42%) exactly, `looks_counted` equals the states times windows times variants examined,
+   and no stage-1 row carries a direction field.
 6. Byte-level regression — `data/gold-direction-scorecard-20260927.json`,
    `gold_factor_direction_expectations.v1.json`, `gold_individual_variable_report.v2.json` and the accepted
    019 report are unchanged afterwards.
