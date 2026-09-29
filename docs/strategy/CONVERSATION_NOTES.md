@@ -1644,3 +1644,55 @@ test 5 asserts the 1-session column against the archive and the new `looks_count
 **Status.** 18 of 50 answered (1-10, 12-17, 27, 33); batch 5 re-asks 11 in plainer words with 18, 19, 20, 21, 22 and
 23. D1's ordering, floor set and window set are the user's; the coordinator confirmation of the two-unit print is
 still pending, D2-D4 are unchanged, and D5 now also carries the declared 1/2/3/5 windows as part of the rebuild.
+
+## 2026-09-29 (batch 5 answered) - the light gets a reason line, four stage-2 answers, and two words sent back
+
+Batch 5 asked **11** in plainer words plus **18-23**. Five came back as answers and two as a request for plain
+English. The same message ended the day - *"for now hold here for tonight, we will continue here again tomorrow"* -
+so this is the last record until the next session.
+
+**11 - the light, with a why line under it.** *"Okay lets go with the light but an explanation of why its yes/no
+briefly underneath"*. The per-factor output is therefore the two-light reading the plan already used as its default
+(*worth watching today* / *nothing here today*), plus **one short plain line underneath saying why**. The line
+carries the size of the move and the day count ("0.6% more than a normal day, on 112 days"); it carries no direction
+and never says a factor works. No score out of 100, no ordering of the factors best to worst, no winner. A thin or
+rare factor still shows a light - *nothing here today* with its day count - because questions 9 and 12 forbid
+removing rows; the light is a reading, not a verdict. The two words that caused the earlier confusion (*flag*,
+*score*) and *ranking* stay out of every user-facing surface.
+
+**18-21 - four defaults became the user's own declarations.** *"yes makes sense"* (18), *"okay"* (19), *"yes every
+year"* (20), *"okay"* (21). Consequences, in order: direction is asked **only** on states that passed the movement
+stage, so a state that does not change how far gold moves is never asked which way it went; stage 2 answers the
+**side only**, never "how far", so no target, stop or path is read into it; a direction claim must hold **the same
+sign in every year** with n >= 20 in the year; and both accepted bars stay exactly as the scorecard has them -
+`hit_rate_pct >= 60` **and** `n >= 100` - with the 5pp gap against the cohort's own share on the movement stage,
+where a share is the only honest unit. No number in any table moves because of these four; what changes is that no
+lane may soften any of them without the user. The per-year rule is the one with teeth: the measured fixed-0.80% rows
+run 32.40% / 38.43% / 62.82% across 2024-2026 and fail it, while the L2L form runs 39.60% / 37.19% / 38.46% and
+holds - which is why the L2L unit is a necessity and not a preference.
+
+**22 and 23 - not answers, two phrases retired.** *"what do you mean written rule? Explain this part simply"* and
+*"Again what do you mean unwritten factors."* Both phrases - *written rule*, *unwritten*, *undeclared* - are
+retired from anything the user is asked. The plain version is now in the answer sheet: some of the tracked things
+already come with a sentence written down by the project before any numbers were run ("VIX above 25 - expect gold
+up; below 16 - expect gold down; between 16 and 25 - no view"), and those can be checked against what price did;
+others are **only tracked**, the number is collected daily and no document says what it should mean. The counts, so
+the distinction is never vague again: of the 51 states the report declares, **25 have that sentence, 6 are declared
+no-view, and 20 have none** - 8 level bands with no threshold declared, 6 change rules with no rule at all, 2 that
+sit on an absolute dollar band, 4 regime labels the report invents. Those twenty can be shown as context ("gold
+rose 57% of the time while this was on") but can never be called right or wrong, which is exactly what question 23
+decides. Batch 6 re-asks the pair in that wording with a one-line reason each, so no further explanation round is
+needed, and both defaults (yes) stand meanwhile, so the order of the work is the only thing waiting.
+
+**Files changed.** `INTENT_QUESTIONS_ANSWER_SHEET_20260929.md` (status **23 of 50**, rows 11, 18, 19, 20 and 21
+answered with their verbatim replies, rows 22 and 23 marked asked in batches 5-6 with the plain restatement, the
+batch-5 answer-log row, a batch-5 progress paragraph, the decision map's D1 row extended to 18-21, and a new
+"Written rule / no written rule, in plain words" section), `GOLD_VIX_BOTH_AND_FACTOR_TABLE_PLAN_20260928.md`
+(§4 records the four stage-2 answers as declarations rather than defaults; §8 adds the light-plus-reason-line
+rendering rule; §10 adds three bullets - the reason line, the four declarations, and the two questions still open;
+D1's row notes the reason line), and this entry.
+
+**Status.** 23 of 50 answered (1-21, 27, 33). Holding overnight at the user's instruction; batch 6 (22 and 23 in
+plain words) goes out next session. Nothing else is open: D2, D3 and D4 remain the plan's defaults, D5 carries the
+declared 1/2/3/5 windows, and the coordinator's confirmation of the two-unit print (0.80% beside 1.00 L2L) is still
+pending, with the plan implementing it as the default in the meantime.

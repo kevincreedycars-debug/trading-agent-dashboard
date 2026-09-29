@@ -12,14 +12,20 @@ message is superseded.
 - Or list only the numbers you disagree with, for example `3 no, 12 often, 27 no`.
 - Questions are put to you at most seven at a time, in numbering order, skipping anything already asked.
 
-**Status:** 18 of 50 answered on 2026-09-29. The answered set is 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 13, 14, 15,
-16, 17, 27, 33. Batch 4 (11, 12, 15, 16, 17) returned four answers and one request to simplify: **12**, **15**,
-**16** and **17** are closed, and **11** came back as "Simplify this question I dont know what you mean", so 11 is
-re-asked in plainer words in batch 5 with 18, 19, 20, 21, 22, 23. Batch 4 also produced a measurement: the user
-rewrote the horizon question from "is 5 sessions the secondary horizon" into **"24h, 48h, 3d, 5d"** to find out
-"is it a 24h impact or does it set the tone for a few days", so the ladder is now measured and is in the
-"Horizon ladder, measured" section below. An earlier version of this line said **16 of 50**, which double-counted
-questions 2 and 33; the figure has been 14 until this batch and is 18 now.
+**Status:** 23 of 50 answered on 2026-09-29. The answered set is 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14,
+15, 16, 17, 18, 19, 20, 21, 27 and 33. Batch 5 (11, 18, 19, 20, 21, 22, 23) closed **five**: **11** came back as
+*"Okay lets go with the light but an explanation of why its yes/no briefly underneath"*, so the per-factor output
+is a two-light display with one short line of why underneath; **18** *"yes makes sense"*; **19** *"okay"*; **20**
+*"yes every year"*; **21** *"okay"*. The last two, **22** and **23**, came back as requests for plain English
+rather than as answers - *"what do you mean written rule? Explain this part simply"* and *"Again what do you mean
+unwritten factors"* - so both phrases are retired from the ask and the pair is re-stated in plainer words in batch
+6; the section "Written rule / no written rule, in plain words" below is that restatement. Batch 4 produced a
+measurement: the user rewrote the horizon question from "is 5 sessions the secondary horizon" into **"24h, 48h,
+3d, 5d"** to find out "is it a 24h impact or does it set the tone for a few days", so the ladder is now measured
+and is in the "Horizon ladder, measured" section below. An earlier version of this line said **16 of 50**, which
+double-counted questions 2 and 33; the figure ran 14 until batch 4 and is 23 now. The user also asked to **hold
+overnight** at the end of batch 5 - *"for now hold here for tonight, we will continue here again tomorrow"* - so
+nothing further goes out tonight and batch 6 is sent on the next session.
 
 **Two of these answers changed the plan.** The user wants **both** stages and **all 28** variables, and they
 declared a movement size of their own: **0.80% of price, in the direction of the call, within the 24-hour
@@ -59,7 +65,7 @@ median instead of today's rolling value. Both statements are kept, each labelled
 | # | Yes/no question | Default | Asked | Your answer |
 | --- | --- | --- | --- | --- |
 | 10 | "A move is coming" is enough, direction is a separate second step | yes | batch 1 | **no** - "both, i want to see any edge we can find": the movement stage and the direction stage are both wanted. Direction is not optional, and the two stages stay separate so the direction answer is read after the movement answer |
-| 11 | A simple on/off flag per factor, not a score or a ranking | yes | batch 4, 5 | **asked for a simpler restatement** - "Simplify this question I dont know what you mean". The words *flag*, *score* and *ranking* are retired from the restatement; batch 5 asks it as "should each factor get just one of two lights - 'worth watching today' or 'nothing here today' - or a number out of 100 with the factors ordered best to worst". Default stands until answered: the on/off light |
+| 11 | A simple on/off flag per factor, not a score or a ranking | yes | batch 4, 5 | **yes, the light - but with a reason line under it** - *"Okay lets go with the light but an explanation of why its yes/no briefly underneath"*. So each factor gets one of the two lights (worth watching today / nothing here today) and, underneath it, **one short line in plain words saying why** - for example "moved 0.6% more than a normal day, on 112 days". No score out of 100, no ordered list of best to worst, no winner. The reason line is short by design: it carries the size of the move and the day count, it does not carry a direction claim and it never says a factor "works". This is the shape the user's earlier answers already implied (nothing dropped, every number printed with its own day count) and it is what the page has to render per factor |
 | 12 | Prefer factors that fire rarely but strongly over often with a small edge | rare + strong | batch 4 | **no, keep both** - "Yes keep both even if rare its still something to factor into the analysis agent". There is no rarity filter and no preference rule: a state that fires ten times a year is kept, printed with its own small day count, and fed to the analysis agent exactly like a common one. This is the same instruction as question 9 (nothing is dropped) and question 13 (any edge counts), now stated a third time, so rarity is never a reason to omit or to demote a row |
 | 13 | You would act on an edge smaller than 5pp | no | batch 1, 3, 4 | **yes** - *"Not sure why we are asking this, we want to find anything that giuves us an adge so yes?"*. The bar is **5 days in 100** (not 0.05%, not 5% of price) and the user will act on it. Their "anything that gives us an edge" also fixes the reporting rule for smaller gaps, tied to question 9: a gap below the bar is still **printed**, flagged as indistinguishable from chance on today's sample, and never hidden. The caveat that travels with this answer: 5pp needs about 774 anchors for 80% power and the archive has about 470, so a 5pp row here is *reportable and worth watching, not confirmable* - which is what D5 (the hourly rebuild) is for |
 
@@ -76,17 +82,17 @@ median instead of today's rolling value. Both statements are kept, each labelled
 
 | # | Yes/no question | Default | Asked | Your answer |
 | --- | --- | --- | --- | --- |
-| 18 | Ask direction only for states that pass the movement stage | yes | batch 5 | |
-| 19 | Up or down only, no "how far up" | yes | batch 5 | |
-| 20 | A direction claim needs the same sign in every year | yes | batch 5 | |
-| 21 | Keep the accepted 60% hit-rate gate alongside the 5pp gap | yes | batch 5 | |
+| 18 | Ask direction only for states that pass the movement stage | yes | batch 5 | **yes** - *"yes makes sense"*. Direction is asked only where the movement stage showed something; a state that does not change how much gold moves cannot change which way it moves on average. Confirms §4 of the plan as written |
+| 19 | Up or down only, no "how far up" | yes | batch 5 | **yes** - *"okay"*. Stage 2 answers one question, the side; the distance is already answered by stage 1, so no row carries a how-far claim and no target, stop or path is read into it |
+| 20 | A direction claim needs the same sign in every year | yes | batch 5 | **yes, and it is emphatic** - *"yes every year"*. One sign, every year, with n >= 20 in the year; a factor that leans the right way pooled but flips in one year fails. This is the guard that the fixed-0.80% rows already fail (32.40% / 38.43% / 62.82% across 2024-2026) while the L2L form holds (39.60% / 37.19% / 38.46%) |
+| 21 | Keep the accepted 60% hit-rate gate alongside the 5pp gap | yes | batch 5 | **yes** - *"okay"*. Both bars stay, verbatim from the accepted scorecard: `hit_rate_pct >= 60` **and** `n >= 100`, with the 5pp gap against the cohort's own share used on the movement stage where a share is the honest unit. Neither bar is a reason to hide a row (question 9) |
 
 ## E. Which factors (22-28)
 
 | # | Yes/no question | Default | Asked | Your answer |
 | --- | --- | --- | --- | --- |
-| 22 | Test the 10 declared factors before the 20 undeclared variables | yes | batch 5 | |
-| 23 | Write new rules for the 20 undeclared variables before reading any outcome | yes | batch 5 | |
+| 22 | Test the 10 declared factors before the 20 undeclared variables | yes | batch 5, 6 | **asked what the phrase means** - *"what do you mean written rule? Explain this part simply"*. The ask is re-stated without the phrase in batch 6 as: the ten factors that already have a rule written down for them get checked first, because those rules can be checked against the archive the same day. Default stands until answered: **yes, written-down rules first, in any order within each group** |
+| 23 | Write new rules for the 20 undeclared variables before reading any outcome | yes | batch 5, 6 | **asked what the phrase means** - *"Again what do you mean unwritten factors"*. Re-stated in batch 6 as: for the twenty that have no rule written anywhere, agree what each one should mean *before* looking at what price did, otherwise the rule is only a description of the past that has already happened. Default stands until answered: **yes, agree the rule first, then read the outcome** |
 | 24 | Keep NEUTRAL states out of every hit rate | yes | | |
 | 25 | Keep the DTWEXBGS-not-DXY caveat on every dollar row | yes | | |
 | 26 | Keep the document's own boundaries verbatim (VIX 25.00/16.00, >0.30%, 5bps+) | yes | | |
@@ -139,7 +145,7 @@ median instead of today's rolling value. Both statements are kept, each labelled
 
 | Plan decision (section 9 of the plan) | Questions that decide it |
 | --- | --- |
-| D1, the "if" stage | 1-9, 10, 11, 12, 15-17, 36 |
+| D1, the "if" stage | 1-9, 10, 11, 12, 15-17, 18-21, 36 |
 | D2, the VIX change stream | 29-31 |
 | D3, the size of the deliverable | 43-46, 49 |
 | D4, the F9 rebuild | 32 |
@@ -157,6 +163,7 @@ the single `looks_counted`.
 | 2026-09-29 | 2 | 3-9 | 7 replies, 5 usable (3, 4, 5, 6, 7). 4 count both directions; 5 publish the no-move bucket; 6 floor as a percentage of price; 7 the floor is the same every year. 2 was settled here: "push ahead but clarify that the real L2L size is actually 1.68% at present on the charts I use". 8 and 9 came back as not understood |
 | 2026-09-29 | 3 | 8, 9, 13, 33 (restatements) | 4 replies, and all four are now answered. **9: "no"** - a relevant state is never dropped, its market impact must stay visible. **33: "no, not yet"** - nothing is being fitted at this stage, the work is observing the data and confirming what price did and did not do. **8: yes**, and it moved the primary measure to the **0.50 L2L and L2L movement that happened**, with the directional read taken afterwards on that movement. **13: yes** - "we want to find anything that giuves us an adge". The reply also asked whether this is simply tracking correlation, which it is; the answer and its three guards are recorded in the section below |
 | 2026-09-29 | 4 | 11, 12, 15, 16, 17 | 5 replies, 4 of them answers: **12 "Yes keep both even if rare its still something to factor into the analysis agent"** (no rarity filter, nothing dropped for firing rarely), **15 rewritten by the user** into the horizon ladder "24h, 48h, 3d, 5d ... is it a 24h impact or does it set the tone for a few days so we can safely treade in that direction", **16 "Yes"** (the sweep stays one line with one `looks_counted`, now over four windows), **17 "Yes fine"** (overlap disclosed, not avoided). **11 came back as "Simplify this question I dont know what you mean"** and is re-asked in plainer words in batch 5. The extra request in the same reply - "just fill the gaps so we have all data clear" - is logged as the completeness rule below |
+| 2026-09-29 | 5 | 11, 18, 19, 20, 21, 22, 23 | 5 answers and 2 requests for plain English. **11: the light, with a reason line under it** (*"Okay lets go with the light but an explanation of why its yes/no briefly underneath"*) - the two lights stay, and one short why sits underneath each one. **18: "yes makes sense"**, **19: "okay"**, **20: "yes every year"**, **21: "okay"** - the four direction-stage defaults are confirmed as the user's own answers, so stage 2 is asked only on states that moved, answers the side only, must hold its sign in every year, and keeps both accepted bars. **22 and 23: not understood** - *"what do you mean written rule? Explain this part simply"* and *"Again what do you mean unwritten factors"* - so the words *written rule* and *unwritten* are retired and the pair goes back in batch 6 in the plainer wording recorded in the "in plain words" section below. The same message ends the day: *"for now hold here for tonight, we will continue here again tomorrow"*, so the batch-6 send waits |
 
 Batches continue in numbering order, at most seven at a time, skipping anything already asked. Batch 4 closed four
 of the five questions it asked: **12** (rare and common states are equally kept), **15** (the horizon set is
@@ -172,6 +179,18 @@ then a 0.30% floor" but "movement screen, then the 0.50 L2L and L2L movement tha
 read on that movement", with the fixed 0.80% and 0.30% kept as sensitivity rows. Question 33's answer removes
 nothing from D5 - it says the *stage we are in* is observation, so the out-of-sample check binds a future declared
 rule rather than today's tables.
+
+Batch 5 closed five of its seven questions and sent two back for rewording. **11** is now the user's own design:
+the two lights stay, with **one short line of why underneath each** - the light says whether the factor is worth
+watching today, the line says what the size of the move and the day count were, in plain words, with no direction
+claim in it. **18** and **19** settle the shape of stage 2 (direction asked only on states that passed the movement
+stage, and only up or down, never how far), **20** makes the per-year sign rule the user's own (*"yes every year"*),
+and **21** keeps the accepted 60% hit-rate bar beside the 5pp gap. That is **23 of 50** answered (1-21, 27, 33).
+**22** and **23** came back not as answers but as a request to drop the jargon - *"what do you mean written rule?
+Explain this part simply"* and *"Again what do you mean unwritten factors"*. Both phrases are retired from the ask,
+the meaning is written out in the "in plain words" section below, and batch 6 asks the pair again in those words.
+Nothing else about those two questions changes, and their defaults stand until the user answers. The user then
+paused the round: *"for now hold here for tonight, we will continue here again tomorrow"*.
 
 **Correction recorded here, because a filed submission carries the wrong count.** The submissions `-014` and
 `-015` and the earlier version of the status line above said **16 of 50** answered. The correct figure is **14**
@@ -215,7 +234,37 @@ user - the VIX 25.00/16.00 band *is* written in the document and is simply not r
 median split, and the same is true of the four regime labels. The remaining two need a number: 8 level bands
 the document never declares, and 6 change rules with no rule at all.
 
-## Is this just correlation? (the user's own question, batch 3)
+## Written rule / no written rule, in plain words (answer to reply 6, and the batch-6 ask)
+
+The user asked twice what these phrases mean - *"what do you mean written rule? Explain this part simply"* and
+*"Again what do you mean unwritten factors"* - so the phrases are retired from the ask. Here is the whole idea in
+ordinary words.
+
+**What "already written down" means.** Some of the 28 tracked things come with a sentence in the project's own
+documents that says what they should mean for gold. One of them reads, in effect: *"VIX above 25 - expect gold up;
+below 16 - expect gold down; between 16 and 25 - no view"*. That sentence was written down by the project **before**
+anyone ran the numbers, so checking it against what price actually did is a fair test. That is the entire meaning of
+"written rule": somebody already said what the thing is meant to say.
+
+**What "not written down" means.** Other things are only *tracked*: the number is collected every day and no
+document anywhere says whether a high reading should mean up or down. For example one tracks which of the last 5, 10
+or 20 sessions gold rose in most often, and another tracks how far today's price sits above its own 50-day average -
+the data exists, the direction sentence does not. Of the 51 states the report declares, **25** have that sentence,
+**6** are declared "no view", and **20** have none at all (8 level bands with no threshold declared, 6 change rules
+with no rule, 2 that sit on an absolute dollar band, 4 regime labels the report makes up itself). That is the entire
+meaning of "unwritten": tracked, but nobody has said what it should mean. Those twenty can still be shown as context
+("gold rose 57% of the time while this was on") but they can never be called right or wrong and can never pass the
+60% bar, which is exactly what question 23 is about.
+
+**The two questions, asked again in those words (batch 6).**
+- **22 - check the ten that already have a written sentence first?** Reason: those ten can be checked against the
+  archive straight away, so the first honest answer arrives the same day; the other twenty still get their context
+  printed in the same run, just without a right/wrong verdict. Default if no reply: **yes**.
+- **23 - for the twenty with no sentence, agree what each should mean before looking at what price did?** Reason: if
+  we look at price first and then write the sentence, the sentence only describes the past that already happened - it
+  will always look good and it will tell us nothing about tomorrow. Default if no reply: **yes**.
+
+
 
 The user asked: *"understood on the factor side so we are looking for something thats 5% more right than normal
 movement? IUs that what you mean? If so arent we simply tracking correlation?"* Three answers, in order.

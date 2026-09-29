@@ -19,6 +19,16 @@ whether a call is a 24-hour event or sets the tone for several days; and **no ro
 rare** (questions 9 and 12). The user also asked for every table to be complete - "just fill the gaps so we have
 all data clear" - so no cell is left blank where a number exists.
 
+**Revised again 2026-09-29 after batch 5 (23 of 50 answered).** This revision adds no new measurement and moves no
+number. Five of seven questions came back as answers and two as a request for plain English: each factor's reading is
+the **two-light** form with **one short reason line underneath it** (question 11), the four stage-2 rules are now the
+user's own declarations rather than the plan's defaults (questions 18-21: direction only where the movement stage
+showed something, the side only and never how far, the same sign in every year, both accepted bars kept), and
+questions 22 and 23 - whether the ten factors that already have a written sentence are checked first, and whether the
+twenty with no sentence get their meaning agreed before any outcome is read - are re-asked in plainer words with
+their defaults (yes) standing, so the order of the work is the only thing waiting. The user then asked to hold
+overnight, so nothing further is sent tonight.
+
 ## 1. What you asked for
 
 1. Simplify the plan.
@@ -173,7 +183,10 @@ declared.
 ## 4. Stage 2 — "which way", once a move is on the table
 
 Direction is only worth asking about for states that pass stage 1: a factor that does not change how much
-gold moves cannot change which way it moves on average. Today stage 2 is the 25 rows above, and the answer
+gold moves cannot change which way it moves on average. That is now the user's own instruction and not a default
+(question 18, batch 5: *"yes makes sense"*), together with the other three stage-2 rules (question 19: the side
+only, no "how far"; question 20: *"yes every year"*, the sign must hold in every year; question 21: keep the
+accepted 60% bar beside the 5pp gap). Today stage 2 is the 25 rows above, and the answer
 is empty. It stays published that way, with the z-accounting in §2 so that no reader mistakes a 2.4-sigma
 cell for a finding.
 
@@ -365,6 +378,14 @@ anywhere on the page. Navigation follows the existing pattern (one embedded
 `<script type="application/json">` block, no `fetch`, no external script), and the page is linked from the
 "Related pages" nav of `gold-backtest-outcomes.html` and `gold-direction-scorecard.html`.
 
+**One light per factor, with one plain line under it (question 11, answered 2026-09-29).** Each factor gets one of
+two lights - *worth watching today* or *nothing here today* - and, directly underneath, **one short line in plain
+words saying why**, carrying the size of the move and the day count and nothing else, for example "0.6% more than a
+normal day, on 112 days". No score out of 100, no ordering of the factors best to worst, no winner, and the reason
+line never states a direction or says a factor "works". A factor that cannot clear the bar still shows its light as
+"nothing here today" with its day count in the line, per questions 9 and 12: the light is a reading, not a verdict,
+and no row is ever removed for being thin or rare.
+
 **Minimum version, if you want the smallest thing that answers the question.** Drop the new page and render
 block C as a section appended to the existing `gold-direction-scorecard.html` (no new template, no nav
 edits); drop the B2 sweep and keep B1 as the accepted artifact already publishes it; skip the expectations
@@ -381,7 +402,9 @@ and needs no answer.
 
 | # | Question | Recommended default | Alternative |
 | --- | --- | --- | --- |
-| D1 | **The "if" stage, and now its order (answered by the user, 2026-09-29)** | Run the free movement screen first (per-state realized-return q1/q3 spread, no new run), then measure the share of anchors with a **0.50 L2L and an L2L movement in either direction**, and read the direction of that movement against the call **on the sessions that moved** — the user's batch-3 answer to question 8: *"its the 0.5l2l and l2l directional movement happened that we are interested in primarily, then we want to see if the directional call was correct for the l2l that occured"*. The fixed **0.80%** (the chart-current instance of 0.50 L2L) and **0.30%** stay published as sensitivity rows under the same `looks_counted`, and the `n >= 100` / 5pp / per-year-sign conditions are guards on **labelling and scoring only** — never a reason to omit a row (question 9). The user confirmed **both stages stay in scope** (question 10) and **all 28 variables stay in scope** (question 27). Coordinator confirmation of the two-unit print is still pending, but the ordering is no longer open. The **window set is the user ladder, 1/2/3/5 sessions** (§3, question 15), read as one sweep under one looks_counted (question 16) with the overlap disclosed (question 17); no state is dropped for firing rarely (question 12), and no cell is left blank where a number exists | Do only the floor measurement and skip the free screen, or read direction on all sessions instead of the moved subset |
+| D1 | **The "if" stage, and now its order (answered by the user, 2026-09-29)** | Run the free movement screen first (per-state realized-return q1/q3 spread, no new run), then measure the share of anchors with a **0.50 L2L and an L2L movement in either direction**, and read the direction of that movement against the call **on the sessions that moved** — the user's batch-3 answer to question 8: *"its the 0.5l2l and l2l directional movement happened that we are interested in primarily, then we want to see if the directional call was correct for the l2l that occured"*. The fixed **0.80%** (the chart-current instance of 0.50 L2L) and **0.30%** stay published as sensitivity rows under the same `looks_counted`, and the `n >= 100` / 5pp / per-year-sign conditions are guards on **labelling and scoring only** — never a reason to omit a row (question 9). The user confirmed **both stages stay in scope** (question 10) and **all 28 variables stay in scope** (question 27). Coordinator confirmation of the two-unit print is still pending, but the ordering is no longer open. The **window set is the user ladder, 1/2/3/5 sessions** (§3, question 15), read as one sweep under one looks_counted (question 16) with the overlap disclosed (question 17); no state is dropped for firing rarely (question 12), no cell is left blank where a number exists, and each factor's
+two-light reading carries one plain reason line underneath it (question 11, *"an explanation of why its yes/no
+briefly underneath"*) | Do only the floor measurement and skip the free screen, or read direction on all sessions instead of the moved subset |
 | D2 | What to do with the VIX change stream | Both streams, as designed in §7: level bands scored, change legs published as raw context (B1) plus the declared 1/2/5 and 2/5/10 sweep with `looks_counted` (B2), no direction invented | Reject B2 (context only, the minimum version), or drop the change stream back to unscored |
 | D3 | Size of the deliverable | Full version: new page beside the accuracy panel, linked from the two Gold Backtest pages | Minimum version in §8: block C appended to the existing scorecard page, no new template, no nav edits |
 | D4 | F9 `risk_headline_context` | Rebuild it as a declared rule the way the live field is built (VIX>25 **or** war/geopolitical/conflict/sanction event names), because today's only bar-clearing row is an `interpreted` mapping with an unstable sign | Leave the `interpreted` row as the accepted artifact has it and publish it with its caveats |
@@ -421,6 +444,19 @@ Documented here so the plan is complete without fifteen questions:
 - **Nothing is dropped for being rare or thin** (questions 9 and 12). A state that fires on ten days a year is
   published with its ten days beside it, unscored where the bar is not met but never removed, because "even if
   rare its still something to factor into the analysis agent".
+- **The per-factor output is the light plus one reason line** (question 11, answered 2026-09-29: *"Okay lets go with
+  the light but an explanation of why its yes/no briefly underneath"*). Two lights only, one plain sentence of why
+  underneath, no score out of 100 and no ordering best-to-worst. §8 carries the rendering rule.
+- **The four stage-2 rules are the user's own as of 2026-09-29** (questions 18-21, answered *"yes makes sense"*,
+  *"okay"*, *"yes every year"*, *"okay"*): direction is asked only where the movement stage showed something, it
+  answers the side only and never "how far", its sign has to hold in every year with n >= 20 in the year, and both
+  accepted bars (`hit_rate_pct >= 60` **and** `n >= 100`) stay exactly as the scorecard has them, with the 5pp gap
+  against the cohort's own share on the movement stage. These were the plan's defaults; they are now declarations,
+  so no lane may soften any of the four without the user.
+- **Two questions are still open and are re-asked in plainer words** (questions 22 and 23): whether the ten factors
+  that already have a written direction sentence are checked first, and whether the twenty with no written sentence
+  get their meaning agreed *before* any outcome is read. Both defaults are yes, so a lane may start; the ask only
+  affects the order of the work, not its shape. The plain-word restatement is in the answer sheet.
 
 ## 11. Tests the lanes must write (six, one line each)
 
