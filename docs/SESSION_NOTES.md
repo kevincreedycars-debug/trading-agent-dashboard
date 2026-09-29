@@ -1,5 +1,52 @@
 # Session notes
 
+2026-09-29 evening, project-wide consolidation (19:45-21:50 local, branch `orchestration/control-plane-20260920`
+at `5d7bd38`). Five threads ran this evening and are recorded here in one place; the per-thread detail stays in
+the entries and changelog sections below.
+
+(1) Strategy was the evening's main thread. It started with one canonical question sheet of 50 yes/no rows
+(`e2e28d2`) and the plain-language rewrite with the repaired map structure, then became an interactive loop of
+five intent batches: batch 1 (`c69d652`) logged the user's declared movement floor of 0.80% with a 1.00 L2L
+ratio, batches 2-5 (`07b6ab1`, `258278b`, `a911b70`, `e4d5e70`, `45b2ccb`) logged the remaining yes/no answers,
+closed intents 8 and 13, corrected the count to 14 answered, and answered the correlation question. The reply
+style was capped twice by the user and is now three short bullets of about 50 words plus one or two one-line
+questions (`34a0f59`, `92aa6ab`), and the same rule is recorded project-wide in `AGENTS.md` (`a28dcdc`).
+
+(2) Five controller-locked review cycles ran one submission at a time, as the standing direction requires:
+`20260926-strategy-window-flash-fix-004` (`75865d5`), `-005` (`0aec316`) and `-006` (`50b4af5`) were all
+**changes requested** for documentation defects, then `20260928-strategy-gold-band-edge-table-007` (`e457206`)
+and `-008` (`1bb3395`) were **accepted** as accurate docs-only advisories after every load-bearing figure was
+reproduced from the checkout and the artifacts. Each cycle bound its reply to the reproduced inbox SHA-256 and
+wrote a durable review under `docs/orchestration/reviews/`.
+
+(3) Two new lanes were opened. The live-trading advisory lane was registered as its own window (`ab71d53`) and
+its worker committed the harness plus the verified starting state at `f6a62cb` on
+`workers/live-trading-20260929`, with `20260929-live-trading-harness-001` and its `-r1` revision waiting in the
+inbox. The seven non-Gold asset backtester lanes - USD, EUR, NQ, BTC, GBP, Silver and WTI - were registered as
+`backtester-<asset>` rows with their own windows and worktrees and committed at `5d7bd38`; every backtester
+build is deferred until the Gold loop's lessons are frozen and the user authorises it.
+
+(4) The dispatcher was diagnosed rather than assumed: `.local/orchestration/controller/config.json` reads
+`{"enabled": false}` and `status.json` reads state `paused`, "Automatic coordinator paused", pid 34192,
+`updated_at` `2026-09-29T20:47:59.893Z`. No pause, stop, enable or other controller command was issued and no
+second coordinator was started (`132f215`).
+
+(5) Gold is unchanged: the 28-factor circuit stays closed as exploratory, the carried 022 item A envelope is
+still the one obligation, `GoldQualificationWindowTick018` was not disturbed, and the sealed prospective window
+stays sealed until `2027-03-25T15:00:00Z`.
+
+State at close, measured and not assumed: the mailbox holds 12 `pending_review` submissions - 10 `strategy`
+(the two band-edge-table revisions, two reply-style-rule notes and six intent-loop reports) and 2
+`live-trading` - with `errors` empty; the register holds 16 rows
+(`strategy`, `strategy-2`, `gold-research`, `gbp`, `silver`, `wti`, `eur-pairs`, `backtester-spike`,
+`live-trading` and the seven `backtester-<asset>` rows); the strategy inbox holds 19 reports and
+`gold-research` 41. Honest scope: registration is not pickup, a committed harness is not a running lane, an
+accepted advisory is not deployment or edge, and no credential, warehouse, Layer 1, live-workflow, dashboard,
+production, purchase, deployment or holdout action occurred. The canonical folder's five untracked Gold
+session-policy files and the modified `tools/strategy-node/Strategy.code-workspace` remain untouched and
+uncommitted by design.
+
+
 2026-09-29 (cont., third cycle): opened the seven non-Gold asset backtester lanes as their own windows, at the
 user's instruction that the seven backtesters replace nothing existing and come later: "we want to do 7 at the
 same time for the other assets in the dashboard ... we first just need to build the 7 VSCs and open them for
