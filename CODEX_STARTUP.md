@@ -31,7 +31,7 @@ Preserve unrelated changes. Keep credentials out of Git and logs. Ignore `.claud
 
 The canonical project folder is `D:\trading-agent-dashboard-codex`. Local `main` is the consolidated baseline. Use short-lived task branches for subsequent changes and reconcile them promptly. Do not leave months of unrelated work in one research checkout.
 
-Keep production and research boundaries explicit: backtesting never drives live Layer 1 inputs; parity does not establish edge; local export edits do not apply themselves to n8n. A push to production `main` may publish GitHub Pages, so do not use it as an incidental backup operation.
+Keep production and research boundaries explicit: backtesting never drives live Layer 1 inputs; parity does not establish edge; local export edits do not apply themselves to n8n. A push to production `main` may publish GitHub Pages, so do not use it as an incidental backup operation. `data/layer1.json` and `data/layer2.json` are published artefacts the live pipeline refreshes directly on `main`, so a checkout copy is only as new as its branch: read live values with `git fetch origin` then `git show origin/main:data/layer2.json`, and never quote a checkout copy as today's dashboard or its empty `trade_opportunities` as "no trades" (see `docs/ARCHITECTURE.md`, "Published data snapshots").
 
 Run appropriate local tests (`npm test`, `npm run test:unit`, `npm run test:browser`). The local runner excludes linked-warehouse mutation suites. Review dashboard changes at desktop and narrow widths using the repository visual skills.
 

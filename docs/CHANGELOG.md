@@ -1,3 +1,30 @@
+# 2026-09-29 (cont.) - a checkout copy of the dashboard data is a snapshot, not the live feed
+
+The live-trading coworker read `data/layer1.json` and `data/layer2.json` inside its own worktree and reported the
+feed as "stale and empty". The user checked the live site and was precise: Layer 1 live carries all 8 agents (USD,
+EUR, GOLD, SILVER, NQ, BTC, WTI, GBP, published 2026-09-29 08:06Z) and Layer 2 live carries 6 pairs with one live
+opportunity, WTI/USD SELL confidence 75 rank 1. Both statements are true of different copies.
+
+Cause, verified: the two files are tracked published artefacts that the live pipeline (Dashboard Writer, trade
+selection agent) commits straight to `main` - `6d81f7e` and `043274f`, 2026-09-29 09:06, matching the published
+pages' `dashboard_meta.last_updated_et` of `2026-09-29T08:06:35.263Z` (Layer 2) and `2026-09-29T08:06:43.090Z`
+(Layer 1) - and GitHub Pages serves `main`, so the dashboard is current by construction. Every lane branch in
+this repository forks from `125d871` (2026-09-07 07:15 - the merge base of `HEAD` and `origin/main`) and no
+branch here has merged `main` since, so a worktree holds the 2026-09-07 refresh: `layer1.json` with 5 of the 8
+`required_agents` and `layer2.json` with no `trade_opportunities`. `git show origin/main:data/layer1.json` counts
+8 agents and `git show origin/main:data/layer2.json` shows the live WTI/USD row; `HEAD` shows 5 and no rows.
+Nothing in the dashboard, the pipeline or the publication path is stale or broken, and `script.js` fetches
+`./data/layer1.json` from the site it is served on, not from a checkout.
+
+Recorded as a reading rule, not a rewrite: `CODEX_STARTUP.md` gains it beside the other production/research
+boundaries, and `docs/ARCHITECTURE.md` gains a `Published data snapshots` subsection under GitHub Pages with the
+commands for reading live values (`git fetch origin`, then `git show origin/main:data/layer2.json`). No merge of
+`main` into any branch, no rewrite of the tracked data files, no dashboard, workflow, credential, warehouse or
+production action occurred. One `git fetch origin --no-tags` refreshed the previously stale local remote ref
+(`b649ef1` -> `b1b8747`) so the comparison could be made. The decision whether to merge `main` into the
+orchestration line, or to sync just the two data files, remains open with the user.
+
+
 # 2026-09-29 (cont.) - seven asset backtester lanes opened as windows; every backtester build is deferred
 
 At the user's instruction - "we want to do 7 at the same time for the other assets in the dashboard ... we

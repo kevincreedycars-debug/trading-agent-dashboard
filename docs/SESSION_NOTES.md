@@ -1,5 +1,17 @@
 # Session notes
 
+2026-09-29 late, the dashboard data in a checkout was explained and documented. A coworker read
+`data/layer1.json` and `data/layer2.json` in its own worktree and reported the feed as "stale and empty"; the
+user checked the live site and was right that the dashboard is current (8 Layer 1 agents, one live WTI/USD SELL
+opportunity at 75). Both files are tracked published artefacts that the live pipeline commits straight to `main`
+(`6d81f7e` / `043274f`, 2026-09-29 09:06, matching the published `last_updated_et` of 2026-09-29T08:06Z), and
+GitHub Pages serves `main`. The worktree copy is three weeks old because every branch here forks from `125d871`
+(2026-09-07 07:15) and none has merged `main` since, so it shows 5 of 8 `required_agents` and no
+`trade_opportunities`. Recorded as a reading rule in `CODEX_STARTUP.md` and `docs/ARCHITECTURE.md` ("Published
+data snapshots", with the `git fetch origin` + `git show origin/main:data/layer2.json` recipe). No merge, no data
+rewrite, no dashboard action; the merge decision is still the user's. One `git fetch origin --no-tags` refreshed
+the stale remote ref `b649ef1` -> `b1b8747`.
+
 2026-09-29 late, the seven asset windows connected themselves. Opening each
 `tools/backtester-<asset>-node/Backtester<Asset>.code-workspace` was enough: because the register marks every
 `backtester-<asset>` row `mailbox_auto_connect`, the bridge bound the mailbox on activation without any command

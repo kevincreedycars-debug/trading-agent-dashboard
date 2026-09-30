@@ -1,6 +1,6 @@
 # Architecture — AI Trading Platform
 
-Last updated: 2026-06-19
+Last updated: 2026-09-29
 
 ## High-Level System
 
@@ -68,6 +68,23 @@ Key tables:
 GitHub Pages hosts the Layered Directional Command Dashboard.
 
 The dashboard displays Layer 1 raw calls and, later, Layer 2 adjusted calls separately.
+
+### Published data snapshots
+
+`data/layer1.json` and `data/layer2.json` are published artefacts, not a live feed. The live pipeline (Dashboard
+Writer, trade selection agent) commits a refreshed copy straight to `main` - commit messages `Update layer1
+dashboard data from agent outputs` and `Update layer2 dashboard data from trade selection agent` - and GitHub
+Pages serves `main`, so the dashboard is current wherever it is opened.
+
+A checkout only holds the snapshot that was on its branch when the branch was cut. Observed on 2026-09-29: the
+lane branches forked from `125d871` (2026-09-07 07:15) and nothing had merged `main` since, so their copies were
+the 2026-09-07 refresh - `layer1.json` with 5 of the 8 `required_agents` and `layer2.json` with no
+`trade_opportunities` - while `main` and the published site carried the 2026-09-29 08:06Z refresh with 8 agents
+and one live WTI/USD SELL opportunity (confidence 75, rank 1).
+
+Read live values with `git fetch origin` then `git show origin/main:data/layer2.json` (or the published
+`data/layer2.json` on the GitHub Pages URL). Never quote the checkout copy as today's dashboard, and never treat
+its empty `trade_opportunities` as "no trades".
 
 ## Layer 1 Rules
 
