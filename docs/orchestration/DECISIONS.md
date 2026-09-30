@@ -1,5 +1,39 @@
 # Central decisions
 
+## 2026-09-30 (cont.): the user chose funded trading authority, and the gates that stand in front of it
+
+On 2026-09-30 the user answered the first of the five live-trading questions in plain words: the authority level for
+the live-trading desk is **funded trading**. Recorded as a user decision, not a lane action. It answers the question
+the harness pass deliberately left open, and by itself it authorises nothing: no order, no connector, no credential,
+no arming, no package installation and no lane opening. The lane's own ranking - read-only feed first, then demo
+execution, funded last - stands as advice; the destination is now the user's funded account on `FTMO-Server` (login
+`***614`, USD 10,000, zero positions and zero orders at the last read), and the gates the harness pass and the FTMO
+terms review set are unchanged and still unmet: written FTMO confirmation of the terms for automated trading on this
+account; a call-to-order contract fixing the decision and publication timestamps, the staleness tolerance, the
+instrument and time mapping, and the execution and risk rules; a rehearsal that proves the whole path without a live
+order; and a credential plan that keeps no credential in the repository. The coordinator publishes the contract as
+the lane's next bounded assignment rather than letting a lane start to build. Four questions stay open and the
+user's: broker/terminal and symbol set; the source of truth for timing and the acceptable staleness; whether the
+mirrored execution view is local or published; and the written FTMO confirmation.
+
+## 2026-09-30 (cont.): the published snapshot was refreshed on the user's word, and its fresh window is fifteen minutes
+
+The user answered "yes" to the offer to refresh the panel so it stopped reading `STALE`. The published page reads a
+Git artifact, not a live socket, so no lane can make it fresh by running the producer: the coordinator ran the lane's
+own read-only producer against the user's logged-in terminal with its output written to the coordinator's ignored
+scratch (`.local/orchestration/tmp/live-trading-refresh.json`, never into the lane's worktree), validated it with the
+lane's own validator (PASS, `stale_after_seconds` 900, `read_only` true, `order_functions_called` false, no order
+path), and published it. Release commit `599c686` on production `main` carries `data/live-trading.json` (26,906
+bytes, sha256 `f158e22b...`, `generated_at_utc` `2026-09-30T20:44:34Z`, account `***614`, zero positions and zero
+orders, all four instruments on a current M5 bar with the tick a few seconds old) and a one-line bump of
+`liveTradingUrl`'s cache-buster from `v=20260930-live-trading-v1` to `-v2` in `script.js`. Verified live rather than
+assumed: all four files serve byte-identical to the commit and the headless page reads `FRESH` with four cards, zero
+order controls and no script error. **The rule this teaches is recorded for later refreshing:** a published snapshot
+is fresh only inside the file's own 900-second window and then ages to `STALE` by design, so keeping the panel fresh
+needs the producer to run and the file to be re-published, and that re-publish is a coordinator production action,
+never a lane's own push. The producer, the validator and the tests stay off the published site, and the refresh
+authorises no connection, credential, arming or order.
+
 ## 2026-09-30 (cont.): strategy 029 accepted as a request - the gold tab merge is specified, and the three decisions stay the user's
 
 The background coordinator reviewed `strategy` submission `20260930-strategy-gold-tabs-merge-request-029`

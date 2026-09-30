@@ -1,5 +1,35 @@
 # Session notes
 
+2026-09-30 (cont. 2), funded-authority, refresh and new-window cycle: this interactive coordinator run took the two
+questions it had left with the user and acted on both, then opened the window the user asked for. Authority: the user
+answered "funded trading", and it is recorded in `docs/orchestration/DECISIONS.md` as their decision with the harness
+pass's gates still unmet - written FTMO confirmation, a call-to-order contract, a rehearsal that proves the path without
+a live order, and a credential plan with no credential in the repository. Nothing was armed, connected, installed or
+credentialed by this run, and the lane's own ranking (read-only feed, then demo, funded last) stands as advice. Refresh:
+the user answered "yes", and the coordinator did the refresh itself because the published page reads a Git artifact and
+no lane can make it fresh by running the producer. The exact route, so a later cycle can repeat it: `terminal64.exe` was
+confirmed running and Python 3.13.7 present, the lane's producer was run from its own worktree with
+`--out D:/trading-agent-dashboard-codex/.local/orchestration/tmp/live-trading-refresh.json` so nothing was written into
+the lane's checkout, the lane's validator returned `PASS` on that file with `stale_after_seconds` 900, `read_only` true
+and `order_functions_called` false, the release worktree `.local/live-trading-release` was fetched and cut to
+`release/live-trading-refresh-20260930` at `origin/main` `bc538d7`, the artifact was copied to `data/live-trading.json`,
+`liveTradingUrl`'s cache-buster was bumped `-v1` to `-v2` in `script.js` with a one-line edit, and commit `599c686` was
+pushed to `refs/heads/main` (2 files, +438/-438). Live verification: `.local/orchestration/tmp/verify-live-live-trading.js`
+was re-run and reported all four files HTTP 200 and byte-identical to the commit blobs (`index.html` 18,901 /
+`eff9f91d...`, `script.js` 706,463 / `ffe9244d...`, `styles.css` 192,724 / `7a9d221c...`, `data/live-trading.json`
+26,906 / `f158e22b...`) and the headless page reading rail label `Live Trading` under group `Live`, badge `FRESH`,
+four cards, `orderControls` 0 and no page errors, with the update line reading
+`FRESH - snapshot 2026-09-30T20:44:34.261008+00:00`. New window: worker `backtester-harness` was registered
+(`docs/orchestration/projects.json`, status `instructions_published_awaiting_worker`, `mailbox_auto_connect` true,
+baseline `ab21177`), its worktree was created at `.local/worktrees/backtester-harness` on branch
+`workers/backtester-harness-20260930`, and its assignment, workspace and README were written
+(`docs/orchestration/assignments/backtester-harness.md`, `tools/backtester-harness-node/`), with the paste message in
+`docs/orchestration/AGENT_MESSAGES.md`. It is a design lane: two documents in `docs/backtester-harness/`, no harness,
+builder, checker, validator, registry, fixture, session policy, outcome definition, adapter, matrix runner or scheduler,
+no batch, and no outcome, holdout or prospective read. The concurrent strategy-029 coordinator cycle's files in
+`docs/orchestration/reviews/` and `projects.json` were left alone, and the one mailbox review this cycle owned (the
+live-trading harness report) was already closed in the previous entry.
+
 2026-09-30 (cont.), strategy 029 review cycle: the background coordinator took the one review it owned, `strategy`
 submission `20260930-strategy-gold-tabs-merge-request-029`, and decided **accepted, as an advisory request and
 recommendation only** - not a publish, merge, deployment or lane opening, so the live dashboard is unchanged and no

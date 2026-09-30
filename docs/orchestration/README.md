@@ -31,6 +31,13 @@ observation, and it puts the build decision back to the user. The seven backtest
 Gold backtesting loop's lessons are complete and understood. Startup instructions are in each
 `tools/backtester-<asset>-node/README.md` and in this folder's `AGENT_MESSAGES.md`.
 
+Backtester harness architect: open `tools/backtester-harness-node/BacktesterHarness.code-workspace` with DeepSeek. Its
+`backtester-harness-001` assignment is a design lane for the one shared backtesting harness the seven asset lanes will
+later run on. It writes only `docs/backtester-harness/` in its own worktree, builds no harness, builder, checker,
+validator, registry, fixture, session policy, outcome definition, adapter, matrix runner or scheduler, runs no batch, and
+reads no outcome, holdout or prospective observation. Startup instructions are in
+`tools/backtester-harness-node/README.md` and this folder's `AGENT_MESSAGES.md`.
+
 - [Project register](projects.json): worker IDs, paths, assignments and last known status.
 - [Decisions](DECISIONS.md): project-wide decisions and unresolved dependencies.
 - [Agent messages](AGENT_MESSAGES.md): prompts for the existing agent windows.

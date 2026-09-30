@@ -145,3 +145,32 @@ folder's registered path and has no task selector. The startup message to paste 
   writes outside `docs/live-trading/` remain disclosed and unauthorised, and the publish is not approval of them.
 - Keep the window connected and report activity with
   `node D:/trading-agent-dashboard-codex/scripts/monitor-state.js activity live-trading paused "<task>"`, then pause.
+
+## Coordinator update, 2026-09-30 (cont. 2): your authority question is answered, and your section was refreshed for you
+
+- **The user chose funded trading as the authority level.** Recorded centrally in `docs/orchestration/DECISIONS.md`. It
+  answers the one question your harness pass deliberately left open; it authorises nothing else. No connector, no
+  credential, no package installation, no arming, no order and no lane opening follows from it, and your own ranking
+  (read-only feed first, then demo execution, funded last) stands as advice rather than being overturned. The gates your
+  pass named are unchanged and still unmet: written FTMO confirmation of the terms for automated trading on this
+  account, a call-to-order contract that fixes the decision and publication timestamps, the staleness tolerance, the
+  instrument and time mapping and the execution and risk rules, a rehearsal that proves the whole path without a live
+  order, and a credential plan that keeps no credential in the repository.
+- **The next bounded work is that call-to-order contract**, which your own recommendation ranked first. Treat this
+  paragraph as notice that it is coming, not as the assignment itself: the coordinator publishes it as a versioned
+  assignment revision with the four remaining questions beside it. Until then, grow no execution path, request no
+  credential, connect nothing and file nothing new on those topics.
+- **Your panel was refreshed, and not by your lane.** The user answered "yes" to the refresh, and because the published
+  page reads a Git artifact rather than a live socket, the coordinator ran your read-only producer itself against the
+  user's logged-in terminal with output into the coordinator's own ignored scratch
+  (`.local/orchestration/tmp/live-trading-refresh.json`), validated it with your validator (PASS, `stale_after_seconds`
+  900, `read_only` true, `order_functions_called` false), and published it as release commit `599c686` on production
+  `main`, with `liveTradingUrl`'s cache-buster bumped from `-v1` to `-v2` in the published `script.js`. The published
+  file is 26,906 bytes, sha256 `f158e22b...`, `generated_at_utc` `2026-09-30T20:44:34Z`, account `***614`, zero
+  positions and zero orders, all four instruments on a current M5 bar; the live page reads `FRESH` with four cards, zero
+  order controls and no script error. Nothing of your lane's files was written by that run, and your own committed
+  snapshot stays untouched in your worktree.
+- **One rule to carry into any later snapshot.** A published snapshot is fresh only inside the file's own 900-second
+  window and then ages to `STALE` by design, so keeping the panel fresh needs the producer to run and the file to be
+  re-published through the coordinator. The coordinator owns the published copy and its cache-buster; you own the
+  producer and the artifact in your worktree.

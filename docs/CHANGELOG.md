@@ -1,3 +1,38 @@
+# 2026-09-30 (cont. 2) - funded trading is the user's chosen authority level, the published panel was refreshed, and a harness architect window is open
+
+The user answered the two questions this run had left with them, and both answers were acted on rather than noted. On
+"funded trading", the live-trading desk's authority level is now recorded in `docs/orchestration/DECISIONS.md` as the
+user's own decision, with the gates the harness pass named still unmet: written FTMO confirmation of the terms for
+automated trading on this account, a call-to-order contract that fixes the decision and publication timestamps, the
+staleness tolerance, the instrument and time mapping and the execution and risk rules, a rehearsal that proves the whole
+path without a live order, and a credential plan that keeps no credential in the repository. Nothing was armed, no
+connector or credential was created, the lane's own ranking (read-only feed, then demo, funded last) stands as advice,
+and four questions stay the user's: broker/terminal and symbol set, the timing source of truth and acceptable staleness,
+whether the mirrored view is local or published, and the written FTMO confirmation.
+
+On "yes" the panel stopped reading `STALE`. Because the published page reads a Git artifact rather than a live socket,
+the coordinator ran the lane's read-only producer itself against the user's logged-in terminal, with the output written
+into the coordinator's own ignored scratch and never into the lane's worktree, validated it with the lane's own validator
+(PASS, `stale_after_seconds` 900, `read_only` true, `order_functions_called` false, no order path), and published it:
+release commit `599c686` on production `main` carrying `data/live-trading.json` (26,906 bytes, sha256 `f158e22b...`,
+`generated_at_utc` `2026-09-30T20:44:34Z`, account `***614`, zero positions and zero orders, all four instruments on a
+current M5 bar) and a one-line bump of `liveTradingUrl`'s cache-buster from `-v1` to `-v2` in `script.js`. Live checked
+rather than assumed: all four files serve byte-identical to the commit (`index.html` 18,901 / `eff9f91d...`,
+`script.js` 706,463 / `ffe9244d...`, `styles.css` 192,724 / `7a9d221c...`, `data/live-trading.json` 26,906 /
+`f158e22b...`) and the headless page reads `FRESH` with four cards, zero order controls and no script error. Recorded
+rule: a published snapshot is fresh only inside the file's own 900-second window and then ages to `STALE` by design, so
+keeping the panel fresh needs a producer run and a re-publish, which is a coordinator production action, never a lane's
+own push.
+
+The third change is a new window, at the user's request: worker `backtester-harness` ("backtester harness architect"),
+assignment `backtester-harness-001`, workspace `tools/backtester-harness-node/BacktesterHarness.code-workspace`,
+worktree `.local/worktrees/backtester-harness` on branch `workers/backtester-harness-20260930` from `ab21177`, register
+status `instructions_published_awaiting_worker`. It is a design lane for the one shared harness - two documents in
+`docs/backtester-harness/` - and it builds nothing: no harness, builder, checker, validator, registry, fixture, session
+policy, outcome definition, adapter, matrix runner or scheduler, no batch, and no outcome, holdout or prospective read.
+No credential, workflow, warehouse, Layer 1, Layer 2, dashboard or production action followed from any of the three
+changes.
+
 # 2026-09-30 (cont.) - the Live Trading section is published live on the user's word, and the lane's harness report is accepted as a record
 
 This cycle did two things the previous one had queued and left blocked on the user. First, the publish: on the user's

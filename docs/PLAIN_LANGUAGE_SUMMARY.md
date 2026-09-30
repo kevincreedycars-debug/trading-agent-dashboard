@@ -1,6 +1,21 @@
 # The project in plain words
 
-Last updated 2026-09-29. Written for a reader who does not work in this project and does not need to.
+Last updated 2026-09-30. Written for a reader who does not work in this project and does not need to.
+
+## What changed today, 30 September 2026
+
+- You chose **funded trading** as the level of authority for the live-trading desk. It is recorded, and nothing was
+  switched on: no connection to a broker, no password, no arming and no order. Four questions are still yours - which
+  terminal and which markets, what clock the decisions follow and how old a reading may be, whether the mirrored trading
+  view lives on your own PC or on the public page, and whether FTMO has put in writing that automated trading is allowed
+  on this account.
+- You said yes to refreshing the live panel, so it stopped saying STALE and now reads FRESH with four cards, and no
+  button anywhere on it can place an order. One honest limit: FRESH lasts only fifteen minutes after each reading. The
+  page shows a file kept in the project, not a live line to the terminal, so a fresh panel needs a fresh reading and a
+  fresh upload each time, and the upload is always done from the coordinator's side.
+- A new helper window was opened, called **backtester harness architect**. Its job is design only: to work out how one
+  shared testing harness should look before anyone builds seven separate ones. It builds nothing, runs nothing and reads
+  no results.
 
 ## In short
 

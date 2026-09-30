@@ -3,6 +3,25 @@
 Current milestone: the 28-factor Gold stage is complete and its plain-English verdict page is accepted; hold
 until the one carried observation envelope at the lane close, then stop.
 
+Next immediate action, 2026-09-30 (cont. 2): the user answered the two questions this run had queued, so the queue moved.
+(a) The live-trading desk's authority level is **funded trading**, recorded in `docs/orchestration/DECISIONS.md` with the
+gates still unmet; the next bounded work is the **call-to-order contract** the harness pass ranked first, to be published
+as a versioned revision of `docs/orchestration/assignments/live-trading.md` with the four open questions beside it:
+broker/terminal and symbol set, the timing source of truth and acceptable staleness, whether the mirrored execution view
+is local or published, and the written FTMO confirmation. No connector, credential, arming or order exists or is
+authorised. (b) The published panel was refreshed on the user's word: release `599c686` on production `main`,
+`data/live-trading.json` 26,906 bytes sha256 `f158e22b...` generated `2026-09-30T20:44:34Z`, cache-buster `-v2`, live
+`FRESH` with four cards and zero order controls; freshness lasts only the file's own 900 seconds, so keeping it fresh
+needs the producer to run and the coordinator to re-publish - the producer ran into the coordinator's ignored scratch,
+not the lane's worktree. (c) A new window is open: worker `backtester-harness` ("backtester harness architect"),
+assignment `backtester-harness-001`, workspace `tools/backtester-harness-node/BacktesterHarness.code-workspace`, worktree
+`.local/worktrees/backtester-harness` on `workers/backtester-harness-20260930` from `ab21177`, status
+`instructions_published_awaiting_worker`; it still needs the user's click on **Mailbox: Connect This Cline Worker**, and
+it is a design lane that builds nothing. Still open from before and unchanged: the 022 item A anchor observation envelope
+(gold-research, overdue), the strategy window's mailbox click, the publish call on the gold factor draft page revision 2
+(24,398 bytes LF, sha256 `b0aa8afe...`), the seven `sent_unconfirmed` backtester windows, and the public-visibility
+caveat on the FTMO snapshot that is now on the open web.
+
 Status at 2026-09-25 20:52 local: `gold-coverage-024` revision 2 is accepted at clean `cdd350af` from base
 `6fd501a7` (reply `40eaccc4...`, review `docs/orchestration/reviews/20260925-gold-coverage-024-r2.md`,
 acceptance commit `41210c1`) and the 28-factor circuit is **closed as exploratory**. `gold-coverage-025` is

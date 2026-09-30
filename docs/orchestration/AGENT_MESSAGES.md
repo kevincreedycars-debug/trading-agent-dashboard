@@ -332,3 +332,48 @@ window, which stays closed until `2027-03-25T15:00:00Z`.
 Seven lane windows have sat `sent_unconfirmed` since 2026-09-29T20:47Z. Check your own mailbox and report activity, so the
 coordinator can tell a stalled window from an idle one. Nothing in this note widens any lane's authority: no connection
 to a live system, credential, warehouse, Layer 1 path, workflow, dashboard or production change follows from it.
+
+## Coordinator notes, 2026-09-30 (cont.): funded authority recorded, the panel refreshed, and a new harness window
+
+The user answered two questions in this cycle. The authority level for the live-trading desk is **funded trading**,
+recorded centrally with its gates still unmet; and the panel refresh was authorised ("yes") and carried out by the
+coordinator, because the published page reads a Git artifact rather than a live socket - release commit `599c686` on
+production `main` carries a snapshot produced at `2026-09-30T20:44:34Z` from the user's own terminal, and the page now
+reads `FRESH`. That freshness lasts about fifteen minutes and then ages to `STALE` by the file's own window, so keeping
+it fresh needs the producer to run and the file to be re-published. Neither answer widens any lane's authority: no lane
+may connect, install, arm, order or push.
+
+### live-trading
+Your five questions have their first answer: **funded trading** is the user's choice of authority level. That does not
+authorise a connector, a credential, an arming or an order, and your own ranking (read-only feed, then demo, then
+funded) stands as advice. The next bounded work is the call-to-order contract your harness pass recommended; the
+coordinator publishes it as an assignment with the four remaining questions beside it. Your section is live at
+`https://kevincreedycars-debug.github.io/trading-agent-dashboard/index.html` and now reads `FRESH`; the coordinator
+owns the live copy and its cache-buster, so any further snapshot comes through the coordinator. Keep the window
+connected and report activity while paused.
+
+### backtester-harness
+A new window was opened at the user's request: worker `backtester-harness`, assignment `backtester-harness-001`,
+workspace `tools/backtester-harness-node/BacktesterHarness.code-workspace`, worktree
+`.local/worktrees/backtester-harness` on branch `workers/backtester-harness-20260930` from `ab21177`. It is a design
+lane for the one shared harness and it builds nothing. Its paste message is below.
+
+## backtester-harness
+
+> You are the backtester harness architect. Select DeepSeek in your existing agent extension. Read
+> D:/trading-agent-dashboard-codex/docs/orchestration/assignments/backtester-harness.md and follow it exactly as its
+> stage A is written. Your writable checkout is
+> D:/trading-agent-dashboard-codex/.local/worktrees/backtester-harness. Read
+> D:/trading-agent-dashboard-codex/CODEX_STARTUP.md, docs/orchestration/README.md, the register, DECISIONS.md and the
+> current state next, then the material this lane inherits: docs/BACKTESTING_REVIEW_PLAN.md,
+> docs/backtester_master_logic.md, docs/CORE_RESEARCH_PHILOSOPHY.md, docs/GOLD_TIMESTAMPED_EVALUATION_CONTRACT.md,
+> docs/GOLD_RESEARCH_DELIVERY_CONTRACT.md, docs/ARCHITECTURE.md and
+> docs/orchestration/reviews/20260924-multi-asset-readiness-spike-001-r1.md. Write only docs/backtester-harness/ in
+> your worktree plus ignored scratch. Build nothing: no builder, checker, validator, registry, fixture, session policy,
+> outcome definition, adapter, matrix runner, scheduler or harness source, no data acquisition, no warehouse, no Layer 1,
+> Layer 2, dashboard or production change, and do not read any outcome, holdout or prospective observation. Produce
+> docs/backtester-harness/HARNESS_ARCHITECTURE.md and docs/backtester-harness/CONVERSATION_NOTES.md with the sections
+> the assignment lists, publish one status_report through the shared mailbox with
+> node D:/trading-agent-dashboard-codex/scripts/coordination.js submit --file <file>, report real activity with
+> monitor-state.js, then pause.
+
