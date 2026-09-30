@@ -2107,3 +2107,24 @@ same inbox. Nothing else changes: no submission, no artifact, no measurement, an
 re-issuing, and the two standing coordinator items (the two-unit print and the rung keys) are unaffected. The one
 practical consequence is that a note addressed to the "orchestrator" needs no second filing; it is the same addressee this
 worker already writes to.
+
+## 2026-09-30 (same session) - batch 9 and batch 10 restated simply, as sent
+
+The user asked for the remaining questions "in a list and ensure the questions are simple and easy to understand", so the
+same ten - 41-47 from batch 9 and 48-50 from batch 10 - were put a second time in shorter words. Recorded here in the
+wording as re-sent, because the answers will be recorded against this version. Meaning is unchanged from the answer
+sheet's own wording: this is a plainer rendition, not a new question set, and the defaults are the same.
+
+1. **41** Count from the next open - a flag known after Friday is counted from Monday's open. *(yes)*
+2. **42** Nothing in the count may use anything from the day it measures; the flag must be visible before that session starts. *(yes)*
+3. **43** One page, every factor, showing only how much price moved - no up or down call anywhere on it. *(yes)*
+4. **44** Every number shows two things beside it: how many sessions it used, and how big a move counted. *(yes)*
+5. **45** A table sorted best-first is just a list, never called the winner or the pick. *(yes)*
+6. **46** The page says up front how many factors and how many separate cuts were looked at. *(yes)*
+7. **47** Finish and agree the movement tables first; rebuild the old direction work after that. *(yes)*
+8. **48** Write these answers down as decisions before any work lane starts. *(yes)*
+9. **49** The live page is a page of its own beside the accuracy panel, not a small block added to the scorecard page. *(full page)*
+10. **50** Do the movement screen first, before anything else. *(yes)*
+
+Nothing in the restatement moves a measurement, artifact, bar, boundary, lane or hash, and the answered set stays at 40 of
+50 until the ten come back.
