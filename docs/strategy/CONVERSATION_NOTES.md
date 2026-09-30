@@ -2096,3 +2096,14 @@ with what was actually asked. Every default is **yes**; the sheet's "asked" colu
 
 **What is not asked and not assumed.** Nothing in this batch changes a measurement, artifact, bar, boundary or lane; the
 answered set stands at 40 of 50 until the seven come back.
+
+## 2026-09-30 (same session) - the user's own wording: coordinator and orchestrator are one thing
+
+*"the coordinator is the orchestrator I use those terms intervchangably."* Recorded verbatim as a terminology decision so
+the record does not read as two separate parties and no future entry tries to "correct" one word into the other. What this
+worker files will keep one word - **coordinator** - for the reviewing party, on the grounds that the coordination script,
+the mailbox folder and the register all use that name, and the user's word *orchestrator* refers to the same party and the
+same inbox. Nothing else changes: no submission, no artifact, no measurement, and no wording already filed needs
+re-issuing, and the two standing coordinator items (the two-unit print and the rung keys) are unaffected. The one
+practical consequence is that a note addressed to the "orchestrator" needs no second filing; it is the same addressee this
+worker already writes to.
