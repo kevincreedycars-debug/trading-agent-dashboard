@@ -91,5 +91,7 @@ Seven standby desks are not seven backtesters, and a written report is not a wor
   https://kevincreedycars-debug.github.io/trading-agent-dashboard/backtest-flow.html
 - The gold evidence pages, same address with these names: `gold-backtesting.html`,
   `gold-backtest-outcomes.html` and `gold-direction-scorecard.html`.
+- The gold factor draft, the page being written now, labelled as a draft in the menu:
+  https://kevincreedycars-debug.github.io/trading-agent-dashboard/gold-factor-wip.html
 - The project's own record: `docs/SESSION_NOTES.md` (what happened, dated) and `docs/CHANGELOG.md` (what was
   completed, with the detail).

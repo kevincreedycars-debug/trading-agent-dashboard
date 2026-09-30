@@ -1,3 +1,35 @@
+# 2026-09-30 (cont.) - the gold factor draft page is live at the user's request
+
+The user answered the publish question in one line - "yes show it live" - so the coordinator published the strategy
+worker's frozen draft page as a production publication of its own, following the two earlier page releases: a release
+worktree cut from production `main`, the page taken verbatim, exactly one added topbar line, one push, and a live check
+against the committed blob.
+
+Released: `.local/gold-factor-wip-release` on `release/gold-factor-wip-20260930` cut from `origin/main` `9b20360`,
+commit `a2b0e13` (`9b20360..a2b0e13`, `refs/heads/main` now `a2b0e134cf722212cc85baecf7d8f08c7941d4e0`), carrying
+`gold-factor-wip.html` and exactly one added line in production `index.html`:
+`<a class="topbar-link" href="gold-factor-wip.html">Gold Factor (draft)</a>`. Live at
+`https://kevincreedycars-debug.github.io/trading-agent-dashboard/gold-factor-wip.html`, verified this run: HTTP 200,
+21,281 bytes, sha256 `5dbe1364...`, byte-identical to the committed blob, with the live dashboard `index.html`
+HTTP 200 and carrying the draft link. No other file was touched: no stylesheet edit, no shared script edit, no lane,
+credential, workflow, warehouse, Layer 1 or Layer 2 action.
+
+The frozen copy was re-verified from `.local/worktrees/strategy` before copying: 21,541 bytes, 260 CRLF lines, no bare
+LF, sha256 `675fc9da...`. That copy and its published form differ only in line endings, and the mechanism is the
+repository's own: `core.autocrlf` is `true` and there is no `.gitattributes`, so the commit stored the LF form (21,281
+bytes, sha256 `5dbe1364...`), which is exactly the frozen file with CRLF-to-LF applied - proved by rebuilding it from
+the frozen bytes. Earlier published pages were stored the same way (`gold-direction-scorecard.html`: blob 143,102
+bytes, working copy 143,517). It is recorded because the strategy worker's refresh rule is a hash check: a later
+refresh must compare the CRLF-to-LF conversion, or an exact live copy will look mismatched.
+
+The canonical working branch (`orchestration/control-plane-20260920`) committed `561cf6b`: the same page copy at
+`gold-factor-wip.html`, the same one topbar line, and a new guard
+`backtester/tests/gold_factor_wip_dashboard_link.browser.test.js` (the dashboard hop, the draft label, the banner
+count, self-containment and no external request). That guard and the two existing page guards pass 5 of 5. The
+line-ending note, the live identity and the refresh rule are recorded in `docs/orchestration/DECISIONS.md` and
+`docs/orchestration/assignments/strategy.md`.
+
+
 # 2026-09-30 (cont.) - live-trading feed-002 reviewed: changes requested, one bounded documentation correction
 
 The background coordinator took the one review it owned, live-trading submission `20260930-live-trading-feed-002`, and

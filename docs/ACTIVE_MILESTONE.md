@@ -24,16 +24,30 @@ or edge evidence, nor can it be from spent intervals. No successor assignment wa
 `gold-coverage-025` at status exactly `instructions_published_awaiting_worker` so the delivery trigger path
 stays intact for the carried 022 item A envelope.
 
-Next immediate action, 2026-09-30 (cont.): publish the gold factor draft page to the live dashboard - a
-coordinator step, not a worker lane - from the frozen copy the coordinator reproduced itself
-(`docs/strategy/WORK_IN_PROGRESS_GOLD_FACTOR_TABLES.html` in `.local/worktrees/strategy`, 21,541 bytes, sha256
-`675fc9da...`), copied byte for byte with one top-bar entry whose label says it is a draft, because the user asked
-repeatedly to see this work on the live dashboard while it is still being edited; then review the live-trading
-harness report `20260929-live-trading-harness-001-r1`. Every submission that was waiting has already been
-answered (`pending 0`), so nothing is held behind that publish except the harness review. The gold factor page's
-own four publish defaults stand as the strategy worker filed them, and the provisional lane id
-`dashboard-gold-factor-wip-page-001` stays unregistered: the publish is a coordinator action under the existing
-`dashboard` workstream.
+Done, 2026-09-30 (cont.): the gold factor draft page is published live, on the user's own answer "yes show it live" -
+a coordinator action, not a worker lane, and the publish run the coordinator reproduced itself from the frozen copy
+(`docs/strategy/WORK_IN_PROGRESS_GOLD_FACTOR_TABLES.html` in `.local/worktrees/strategy`, re-verified at 21,541 bytes,
+260 CRLF lines, no bare LF, sha256 `675fc9da...`). Route as the two earlier page releases: `.local/gold-factor-wip-release`
+on `release/gold-factor-wip-20260930` cut from `origin/main` `9b20360`, the page copied verbatim to `gold-factor-wip.html`,
+exactly one added topbar line `<a class="topbar-link" href="gold-factor-wip.html">Gold Factor (draft)</a>` in production
+`index.html`, commit `a2b0e13` pushed to `refs/heads/main`, and the live site checked rather than assumed:
+`https://kevincreedycars-debug.github.io/trading-agent-dashboard/gold-factor-wip.html` returns HTTP 200 with 21,281 bytes
+and sha256 `5dbe1364...`, byte-identical to the committed blob, and the live dashboard `index.html` returns HTTP 200 and
+carries the draft link. The frozen CRLF copy and the published bytes differ only by the repository's own line-ending
+normalisation (`core.autocrlf=true`, no `.gitattributes`), which is recorded for the worker's hash-based refresh rule.
+Nothing else changed: no stylesheet or shared script edit, no lane registered (the provisional
+`dashboard-gold-factor-wip-page-001` stays unregistered under the existing `dashboard` workstream), and no credential,
+workflow, warehouse, Layer 1 or Layer 2 action.
+
+Next immediate action, 2026-09-30 (cont.): review the live-trading harness report `20260929-live-trading-harness-001-r1`,
+the queue position the coordinator set second behind the publish - read-only, authorising nothing - and then put the five
+live-trading harness questions to the user in plain words. After that, the live-trading lane's own hand-over
+`20260930-live-trading-publish-003` is the one submission in the shared mailbox with no reply (`check` reports
+`pending 1`, `errors 0`): the route for its read-only section - the PC route with its stale-when-the-machine-is-off
+consequence, a separate feed repository, or a worktree preview only - is a coordinator production decision that follows the
+harness review rather than the gold factor page's publish, which was the user's own instruction.
+
+
 
 2026-09-30 (cont.), live-trading review: the one review this coordinator run owned was taken and closed -
 `20260930-live-trading-feed-002` was decided **changes requested, documentation only** (mailbox `088e8a95...`, reply

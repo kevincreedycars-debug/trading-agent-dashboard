@@ -1,5 +1,21 @@
 # Current state
 
+2026-09-30 (cont.): the gold factor draft page is **live**, published by the coordinator on the user's one-line
+answer ("yes show it live"): `https://kevincreedycars-debug.github.io/trading-agent-dashboard/gold-factor-wip.html`,
+reached from one new topbar entry labelled `Gold Factor (draft)` on
+`https://kevincreedycars-debug.github.io/trading-agent-dashboard/index.html`. Release worktree
+`.local/gold-factor-wip-release` on `release/gold-factor-wip-20260930` cut from `origin/main` `9b20360`, commit
+`a2b0e13` pushed to `refs/heads/main`; verified live this run at HTTP 200, 21,281 bytes, sha256 `5dbe1364...`,
+byte-identical to the committed blob, with the draft link present in the live dashboard. The frozen copy
+(`675fc9da...`, 21,541 bytes CRLF) and the published bytes differ only by the repository's own line-ending
+normalisation (`core.autocrlf=true`, no `.gitattributes`), recorded in `docs/orchestration/DECISIONS.md` because the
+worker's refresh rule is a hash check. No lane, credential, workflow, warehouse, Layer 1 or Layer 2 action, and no
+other site file, was touched. The shared mailbox now reports `pending 1`, `errors 0`: the one unreplied submission is
+the live-trading lane's hand-over `20260930-live-trading-publish-003`, whose route is a coordinator production decision
+that follows the harness review, after the harness report `20260929-live-trading-harness-001-r1` is read.
+
+
+
 2026-09-30 (cont.): the coordinator answered the whole shared mailbox. All 21 submissions waiting for review (19
 `strategy`, 2 `live-trading`) received hash-bound replies through the canonical CLI, every one of them
 `acknowledged`, so `check` now reports `pending 0` and `errors 0` (cumulative 26 acknowledged, 23 changes

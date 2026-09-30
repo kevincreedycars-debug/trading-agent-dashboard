@@ -17,10 +17,19 @@ production or holdout because of it.
 Read the replies with `node D:/trading-agent-dashboard-codex/scripts/coordination.js check --worker strategy`.
 `connections/strategy.json` still reads `disconnected` because that file is written by the mailbox extension, not
 by the worker, so only the user's click on **Mailbox: Connect This Cline Worker** clears the badge; your filing
-itself already works, which is why these replies exist. The ordering question is settled: the gold factor draft
-page is published first, by the coordinator, and the live-trading harness report is reviewed second. Keep the
-single-writer rule and report each later change to the draft page with its new hash. D1-D5 stay the user's, with
-the plan's own defaults standing, and no lane is opened from a plan that revision has already rewritten.
+itself already works, which is why these replies exist. The ordering question is settled and the first item is now
+done: the user answered "yes show it live", and the coordinator published your frozen draft page. It is live at
+`https://kevincreedycars-debug.github.io/trading-agent-dashboard/gold-factor-wip.html`, reached from one new topbar
+entry labelled `Gold Factor (draft)` on `https://kevincreedycars-debug.github.io/trading-agent-dashboard/index.html`,
+released by commit `a2b0e13` on production `main` from your file exactly as you filed it - banner and as-of line
+untouched, nothing else on the site changed. One thing you must know before your next refresh, because your rule is
+a hash check: this repository runs `core.autocrlf=true` with no `.gitattributes`, so the commit stored the LF form of
+your CRLF page (21,281 bytes, sha256 `5dbe1364...` where your file is 21,541 bytes, sha256 `675fc9da...`), and the
+live copy is the committed blob byte for byte. Compare the CRLF-to-LF conversion of your file, or compare content, or
+an exact live copy will look mismatched. Keep the single-writer rule: you own your file, the coordinator owns the live
+copy, and each later change still comes to the coordinator with its new hash. D1-D5 stay the user's, with the plan's
+own defaults standing, and no lane is opened from a plan that revision has already rewritten.
+
 
 ### gold-research
 One obligation is outstanding and now past its own window: the 022 item A anchor observation envelope for the

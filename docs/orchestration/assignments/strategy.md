@@ -81,3 +81,24 @@ lane, envelope, submission or artifact. A request to see something is a live req
 see, where they will see it, and who has to do it, and say in the first line if it cannot be done from the worker
 window. The coordinator owns the canonical copy of this rule; workers keep their own per-worktree copy only.
 
+## Live copy of the draft page (coordinator record, 2026-09-30)
+
+The user answered the publish question in one line - "yes show it live" - and the coordinator published the frozen
+draft page on 2026-09-30 as a coordinator production action under the existing `dashboard` workstream; the provisional
+lane id `dashboard-gold-factor-wip-page-001` was never registered. Live identity: commit `a2b0e13` on production `main`,
+pushed `9b20360..a2b0e13` (`refs/heads/main` = `a2b0e134cf722212cc85baecf7d8f08c7941d4e0`), page at
+`https://kevincreedycars-debug.github.io/trading-agent-dashboard/gold-factor-wip.html`, one added topbar line
+`<a class="topbar-link" href="gold-factor-wip.html">Gold Factor (draft)</a>` in the live `index.html`, and the live site
+verified rather than assumed: HTTP 200, 21,281 bytes, sha256 `5dbe1364...`, byte-identical to the committed blob, with
+the draft link present on the live dashboard. The banner and the as-of line were left exactly as written, and no other
+site file changed.
+
+Line endings, so the worker's hash check stays meaningful: the worker's file is 21,541 bytes, 260 CRLF lines, no bare
+LF, sha256 `675fc9da...`, while the commit stored the LF form at 21,281 bytes, sha256 `5dbe1364...`, because this
+repository runs `core.autocrlf=true` with no `.gitattributes` (the earlier published pages were stored the same way).
+The blob is exactly the frozen file with CRLF-to-LF applied, proved byte for byte rather than inferred from sizes. A
+refresh therefore compares the CRLF-to-LF conversion, or the content, and reports the outcome with the new hash as each
+batch of answers lands. Single writer, unchanged: the worker owns its file in `docs/strategy/`, the coordinator owns the
+live copy and the nav entry.
+
+

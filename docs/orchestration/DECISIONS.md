@@ -1,5 +1,38 @@
 # Central decisions
 
+## 2026-09-30 (cont.): the gold factor draft page is published live, and the publish standard is the committed blob
+
+The user answered the publish question in one line - "yes show it live" - so the coordinator published the strategy
+worker's frozen draft page to the live dashboard. This was the first item in the queue order the coordinator set, and it
+was run as a coordinator production action under the existing `dashboard` workstream, not as a lane: the provisional id
+`dashboard-gold-factor-wip-page-001` stays unregistered.
+
+**What was published, and how it was checked.** Release worktree `.local/gold-factor-wip-release` on
+`release/gold-factor-wip-20260930`, cut from production `origin/main` `9b20360` exactly as the two earlier page releases
+were, carrying the worker's page at `gold-factor-wip.html` and exactly one added line in production `index.html` -
+`<a class="topbar-link" href="gold-factor-wip.html">Gold Factor (draft)</a>` - because the user asked to see the work
+while it is still being written and the label has to say so by itself. Commit `a2b0e13` pushed `9b20360..a2b0e13` to
+`refs/heads/main`; `ls-remote` reproduces `a2b0e134cf722212cc85baecf7d8f08c7941d4e0`. Verified from the public site
+rather than assumed: `gold-factor-wip.html` returns HTTP 200 with 21,281 bytes and sha256 `5dbe1364...`, byte-identical
+to the committed blob, and the live `index.html` returns HTTP 200 and carries the draft link.
+
+**The frozen copy and the published bytes differ only in line endings, and the repository does it.** Re-verified before
+copying: the worker's file is 21,541 bytes, 260 CRLF lines, no bare LF, sha256 `675fc9da...`. The commit stored 21,281
+bytes at `5dbe1364...` because `core.autocrlf` is `true` and there is no `.gitattributes`, and that blob is exactly the
+frozen file with CRLF-to-LF applied - proved by rebuilding it from the frozen bytes and comparing byte for byte, not
+inferred from the sizes. The earlier published page was stored the same way (`gold-direction-scorecard.html`: blob
+143,102 bytes, working copy 143,517). This is recorded because the worker's refresh rule is a hash-bound check: the
+live copy is the serving standard, and a later refresh must compare the CRLF-to-LF conversion, or an exact live copy
+will look mismatched. The decision taken is to keep the repository's convention rather than add a path-scoped
+`.gitattributes` rule, which the worker's own request ruled out by asking for no change beyond the one link.
+
+**What was deliberately not done.** No stylesheet edit, no shared script edit, no change to `index.html` beyond the one
+link, no other page republished, no lane opened, no worker status altered, and no credential, workflow, warehouse,
+Layer 1, Layer 2 or backtest action. The page's own draft banner and as-of line were left as written, as the worker
+required. The outcome is carried to the worker in `docs/orchestration/AGENT_MESSAGES.md` and in
+`docs/orchestration/assignments/strategy.md`, with a fresh hash-bound reply to accompany its next submission.
+
+
 ## 2026-09-30 (cont.): live-trading feed-002 reviewed - one bounded documentation correction, and the boundary stays the user's
 
 The one review cycle this run owned took `live-trading` submission `20260930-live-trading-feed-002` (mailbox
