@@ -106,3 +106,26 @@ this default.
 
 **Priority note for the lane.** The user has now asked for the page to be visible three times in two days, the last time
 in the form of the instruction quoted above. If the lane can publish only one item from this worker, publish this one.
+
+## 8. Where the live copy stands, measured on 2026-09-30
+
+The page is live. `gold-factor-wip.html` in the canonical checkout was added by the coordinator in commit
+`561cf6b` (20:51, 2026-09-30) with the one top-bar link **Gold Factor (draft)** in `index.html` and a browser test
+guarding the link. The live bytes are **revision 1** - 21,541 bytes, 260 CRLF lines, sha256
+`675fc9da41529817c112c0f287db8daa6c29fb2269231c9bde0958dc268ecd0b` - and still read 40 of 50.
+
+**Revision 2 in section 7 is the refresh to publish.** Nothing else on the page needs to change; the coordinator's own
+review of submission `-028` verified those bytes and agreed the live copy is revision 1, and it records the go-ahead
+to publish revision 2 as the user's decision rather than its own. Until that go-ahead, the live copy stays as it is.
+
+**Where the factor evidence already on the dashboard sits.** The user's question - where is all the factor data on
+this gold dashboard - is worth answering precisely: the top-bar **Gold Direction** page scores all ten declared
+factors with their weights, states scored and drift edges; **Gold Backtest** carries the 28-factor outcomes census;
+the gold backtesting page carries historical factor diagnostics; and the main dashboard's **Factor Edge Lab** tab
+reads its own factor artifact. All of that is earlier work. None of it is this page's factor table, which is the
+movement-then-direction table the closed question round defines.
+
+**The factor tables this page is a draft of do not exist yet.** The page carries the user's decisions and base rates
+read from the gold record that already existed; the factor numbers come from the movement-screen measurement run,
+whose opening the coordinator also records as the user's decision, because it runs into the standing hold on the gold
+lane. The user was told this plainly rather than left to look for numbers that have not been produced.

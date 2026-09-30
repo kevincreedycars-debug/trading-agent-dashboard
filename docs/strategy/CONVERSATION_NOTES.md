@@ -2197,8 +2197,9 @@ as the queue order: the gold factor draft page is published first, then the live
 Both replies end with the same sentence: *"This reply is a receipt of record, not acceptance: nothing is adopted,
 merged, installed or deployed, and no lane is opened by it."*
 
-**What that means for the page.** Nothing is live yet. The coordinator has verified revision 1 and put the publish
-first in its queue, but the publish step itself has not happened. The copy it verified is now one revision behind -
+**What that means for the page.** (Corrected in the next entry, after measuring rather than assuming: the publish had
+already been taken at 20:51 that evening, so the page was live as revision 1 while this was written.) The copy the
+coordinator verified is one revision behind -
 revision 2 was prepared minutes later with the new hash - so submission
 `20260930-strategy-batch9-10-answers-and-page-refresh-028` carries the refreshed copy and says what to do either way:
 publish revision 2 if those bytes are not already copied, or publish revision 1 rather than wait and treat revision 2
@@ -2216,3 +2217,54 @@ answer changes with it.
 **Status after this entry.** The question round is closed at **50 of 50**; the page is refreshed with revision 2 in
 the coordinator's hands; the open items are the two during-session defaults with the user, the coordinator's publish
 step, and nothing else.
+
+## 2026-09-30 (same session) - where the data is: the draft is live, the factor numbers do not exist yet
+
+The user asked where the factor data is on the gold dashboard. Checking rather than answering from memory found two
+things, one of them a correction to this log.
+
+**The page is already live, as revision 1.** The canonical checkout carries `gold-factor-wip.html` in its root, added
+by the coordinator at 20:51 on 2026-09-30 in commit `561cf6b` ("publish the draft gold factor page with one
+draft-labelled topbar link and its guard"): the one top-bar link **Gold Factor (draft)** now sits in `index.html`
+beside the other gold links, and a new browser test guards the link. The live bytes measure **21,541 bytes, 260 CRLF
+lines, sha256 `675fc9da...`** - this worker's revision-1 file exactly - and they still read **40 of 50** in the draft
+banner, the progress line and the "not finished" bullet. The previous entry in this log says "nothing is live yet";
+that was wrong, and the paragraph has been marked as corrected rather than rewritten, because the sequence matters:
+the publication happened without a further filing from this worker, and the `-026` receipt's "the publish is a
+coordinator action" was the coordinator describing a step it then took itself.
+
+**No factor data for this work exists yet, and the page says so.** No factor table for this work has been built. It is
+worth being exact here, because the dashboard does carry factor data from earlier work: the **Gold Direction** scorecard
+scores all ten of the declared factors with their weights, states scored and drift edges; the **Gold Backtest** page
+carries the 28-factor outcomes census; the gold backtesting page carries historical factor diagnostics; and the main
+dashboard's **Factor Edge Lab** tab reads its own factor artifact. None of that is this work's factor table and none of
+it answers the movement-then-direction question. What the live draft page carries
+is (a) the user's decisions, each with the answer number it came from, and (b) base rates read from the gold record
+that already existed - 570 archived gold call sessions, 2024-01-04 to 2026-04-30 - such as the 56.84% up-close
+baseline, the 97.89% / 75.26% range-reach rates at 0.50 L2L and full L2L, and the 45.63% matched-direction figure
+against 61.13% for always saying "up". Those are the same numbers the existing gold pages show; this page adds no
+measurement of its own. The underlying record lives in the canonical `data/` folder
+(`l2l-trading-day-directional-v1.json`, `half-l2l-reach-research.json`, `adr-reach-research.json`,
+`gold-direction-scorecard-20260927.json`, `gold-evidence-audit.json`, `backtester-checker-gold-24h-2024-2026.json`),
+and the pages that present it live are the gold direction scorecard, the gold backtesting page and the outcomes page.
+
+**The coordinator's review of `-028` is in, and its decision is `accepted`.** It reproduced the envelope by hash,
+re-ran this worker's static check on the revision-2 bytes (`ALL CHECKS PASSED (20)`), confirmed the patch is narrative
+only with no number moved, confirmed the record is present (sheet at 50 of 50, rows 41-50 in the user's own words,
+`D18` a real row in the appendix decision table), and recorded one labelling nuance that needs no revision: the `D18`
+tag exists only in the appendix table, so a reader of the plan alone will not find the string. It also measured the
+live copy from the published blob and reached the same conclusion as the check above: live is revision 1, stale by
+ten answers, contradicting nothing.
+
+**Two decisions the coordinator leaves to the user, and neither is this worker's to take.** First, the go-ahead to
+publish revision 2, which is a production action of the same kind as the revision-1 publication and one the
+background run states it has no authority to take; until it is ruled on, the live dashboard keeps revision 1. Second,
+whether to open the movement-screen measurement lane at all: answers 47 and 50 put the movement screen first, but
+building it is a measurement lane over already-spent intervals and it runs into the user's standing hold on the gold
+lane, so opening it is a scope expansion the user owns. **Until that second decision, no factor data can exist**, and
+the honest answer to "where is the factor data" is that this work's factor numbers do not exist anywhere in the
+system yet - the factor evidence visible on the dashboard today is all from earlier workstreams.
+
+**Status after this entry.** The question round is closed at 50 of 50; the draft page is live as revision 1 with
+revision 2 verified and waiting on the user's go-ahead; this work's factor tables do not exist yet and await the
+user's decision to open the measurement lane.
