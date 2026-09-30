@@ -1745,3 +1745,41 @@ sealed-window value was touched.
 
 **Status.** Unchanged for the user: 23 of 50 answered, holding, and batch 6 (22 and 23 in plain words) goes out
 next session. This revision is lane-facing plumbing, so it asks nothing of anyone.
+
+## 2026-09-30 (batch 6 sent) - the held-over pair reactivated, in plain words
+
+The session opened with one instruction from the user: *"You gave me a list of question ont he gold backtester which
+I said save here and Ill answer tomorrow, find and reactivate those questions here for me"*. Reading: the round was
+paused at the end of batch 5 (*"for now hold here for tonight, we will continue here again tomorrow"*), so the
+questions held over are the pair batch 5 sent back for plain English - **22** and **23** - with **24, 25 and 26** as
+the next three never-asked questions in numbering order.
+
+**Sent (batch 6, 2026-09-30): five questions, one short reason each, all defaulting to yes.**
+
+- **22** - check the ten that already have a written sentence first? Those ten can be checked against the archive the
+  same day; the other twenty still print their context, just without a right-or-wrong verdict.
+- **23** - for the twenty with no sentence, agree what each should mean before looking at what price did? Look at
+  price first and the sentence only describes the past that already happened.
+- **24** - keep the "no view" states out of every hit rate? VIX between 16 and 25 is declared no view, so scoring it
+  would put a number on days the project never claimed anything about.
+- **25** - keep the dollar caveat on every dollar row? The measured series is the Fed's broad index (`DTWEXBGS`), not
+  the DXY number on a chart, and the two move differently.
+- **26** - keep the project's own numbers exactly as written (VIX 25.00/16.00, >0.30%, 5bps+)? Rounding one silently
+  changes the share of days on each side of it and makes today's table disagree with the archive.
+
+**Why five and not two.** The sheet's own rule is at most seven at a time, in numbering order, skipping anything
+already asked, so the restated pair was sent with the next three never-asked questions behind it rather than leaving
+the round stopped. **Why nothing was answered.** The user's message carried the request and no answers, so the
+answered set is still 1-21, 27 and 33 - **23 of 50** - and it only moves on their reply.
+
+**What did not change.** No measurement, no run, no credential, no number and no decision. The plan and the
+implementation appendix are untouched by this batch: nothing asked here is a new decision until the user replies,
+and every default is exactly what both files already implement.
+
+**Files changed.** `INTENT_QUESTIONS_ANSWER_SHEET_20260929.md` (the status paragraph records the batch-6 send at the
+user's request, rows 24-26 are marked asked in batch 6, a batch-6 answer-log row is added, and the "in plain words"
+section now carries the three extra questions with their reasons), plus this entry.
+
+**Status.** 23 of 50 answered, batch 6 out and unanswered, all five defaulting to yes. Still open and unchanged: the
+coordinator's confirmation of the two-unit print (the user's 0.80% beside the 1.00 L2L form), implemented as the
+default in the meantime, and the ladder rung names before lane 1 re-declares that horizon.

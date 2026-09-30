@@ -25,7 +25,15 @@ measurement: the user rewrote the horizon question from "is 5 sessions the secon
 and is in the "Horizon ladder, measured" section below. An earlier version of this line said **16 of 50**, which
 double-counted questions 2 and 33; the figure ran 14 until batch 4 and is 23 now. The user also asked to **hold
 overnight** at the end of batch 5 - *"for now hold here for tonight, we will continue here again tomorrow"* - so
-nothing further goes out tonight and batch 6 is sent on the next session.
+nothing further went out that night and batch 6 waited for the next session.
+
+**Batch 6 was sent on 2026-09-30, at the user's own request.** The session opened with one instruction - *"You gave me
+a list of question ont he gold backtester which I said save here and Ill answer tomorrow, find and reactivate those
+questions here for me"*. The questions held over are therefore the pair batch 5 sent back for plain English (**22**
+and **23**), and they went out again that day in the wording recorded in the section below, with the next three
+never-asked questions in numbering order beside them so the round moves: **22, 23, 24, 25, 26**. Five questions, one
+short reason each, every one defaulting to **yes**. The answered count is unchanged at **23 of 50** - a reply now
+changes the order of the work and the wording of the tables, and silence changes nothing because the defaults hold.
 
 **Two of these answers changed the plan.** The user wants **both** stages and **all 28** variables, and they
 declared a movement size of their own: **0.80% of price, in the direction of the call, within the 24-hour
@@ -93,9 +101,9 @@ median instead of today's rolling value. Both statements are kept, each labelled
 | --- | --- | --- | --- | --- |
 | 22 | Test the 10 declared factors before the 20 undeclared variables | yes | batch 5, 6 | **asked what the phrase means** - *"what do you mean written rule? Explain this part simply"*. The ask is re-stated without the phrase in batch 6 as: the ten factors that already have a rule written down for them get checked first, because those rules can be checked against the archive the same day. Default stands until answered: **yes, written-down rules first, in any order within each group** |
 | 23 | Write new rules for the 20 undeclared variables before reading any outcome | yes | batch 5, 6 | **asked what the phrase means** - *"Again what do you mean unwritten factors"*. Re-stated in batch 6 as: for the twenty that have no rule written anywhere, agree what each one should mean *before* looking at what price did, otherwise the rule is only a description of the past that has already happened. Default stands until answered: **yes, agree the rule first, then read the outcome** |
-| 24 | Keep NEUTRAL states out of every hit rate | yes | | |
-| 25 | Keep the DTWEXBGS-not-DXY caveat on every dollar row | yes | | |
-| 26 | Keep the document's own boundaries verbatim (VIX 25.00/16.00, >0.30%, 5bps+) | yes | | |
+| 24 | Keep NEUTRAL states out of every hit rate | yes | batch 6 | |
+| 25 | Keep the DTWEXBGS-not-DXY caveat on every dollar row | yes | batch 6 | |
+| 26 | Keep the document's own boundaries verbatim (VIX 25.00/16.00, >0.30%, 5bps+) | yes | batch 6 | |
 | 27 | All 28 variables in scope, not only the declared 10 | yes | batch 1 | **yes** - "the variables are just being tracked then to see if there is an outcome that is predictable". Confirmed as recorded, with the one limit in the "No written rule" section below: the 20 states with no usable written statement can be published as raw context but can never carry a hit rate |
 | 28 | Pairs, weighting, composites and models stay out for now | yes | | |
 
@@ -164,6 +172,7 @@ the single `looks_counted`.
 | 2026-09-29 | 3 | 8, 9, 13, 33 (restatements) | 4 replies, and all four are now answered. **9: "no"** - a relevant state is never dropped, its market impact must stay visible. **33: "no, not yet"** - nothing is being fitted at this stage, the work is observing the data and confirming what price did and did not do. **8: yes**, and it moved the primary measure to the **0.50 L2L and L2L movement that happened**, with the directional read taken afterwards on that movement. **13: yes** - "we want to find anything that giuves us an adge". The reply also asked whether this is simply tracking correlation, which it is; the answer and its three guards are recorded in the section below |
 | 2026-09-29 | 4 | 11, 12, 15, 16, 17 | 5 replies, 4 of them answers: **12 "Yes keep both even if rare its still something to factor into the analysis agent"** (no rarity filter, nothing dropped for firing rarely), **15 rewritten by the user** into the horizon ladder "24h, 48h, 3d, 5d ... is it a 24h impact or does it set the tone for a few days so we can safely treade in that direction", **16 "Yes"** (the sweep stays one line with one `looks_counted`, now over four windows), **17 "Yes fine"** (overlap disclosed, not avoided). **11 came back as "Simplify this question I dont know what you mean"** and is re-asked in plainer words in batch 5. The extra request in the same reply - "just fill the gaps so we have all data clear" - is logged as the completeness rule below |
 | 2026-09-29 | 5 | 11, 18, 19, 20, 21, 22, 23 | 5 answers and 2 requests for plain English. **11: the light, with a reason line under it** (*"Okay lets go with the light but an explanation of why its yes/no briefly underneath"*) - the two lights stay, and one short why sits underneath each one. **18: "yes makes sense"**, **19: "okay"**, **20: "yes every year"**, **21: "okay"** - the four direction-stage defaults are confirmed as the user's own answers, so stage 2 is asked only on states that moved, answers the side only, must hold its sign in every year, and keeps both accepted bars. **22 and 23: not understood** - *"what do you mean written rule? Explain this part simply"* and *"Again what do you mean unwritten factors"* - so the words *written rule* and *unwritten* are retired and the pair goes back in batch 6 in the plainer wording recorded in the "in plain words" section below. The same message ends the day: *"for now hold here for tonight, we will continue here again tomorrow"*, so the batch-6 send waits |
+| 2026-09-30 | 6 | 22, 23, 24, 25, 26 | **Sent, not yet answered.** The user opened the session with *"find and reactivate those questions here for me"*, so the held-over pair **22** and **23** went out again in the plain wording recorded in the "in plain words" section below (no *written rule*, no *unwritten*), and **24, 25, 26** went with them as the next three never-asked questions in numbering order. Five questions, one short reason each, all defaulting to yes. Nothing was answered in this message, so the answered set is still 1-21, 27 and 33 - **23 of 50** |
 
 Batches continue in numbering order, at most seven at a time, skipping anything already asked. Batch 4 closed four
 of the five questions it asked: **12** (rare and common states are equally kept), **15** (the horizon set is
@@ -234,7 +243,7 @@ user - the VIX 25.00/16.00 band *is* written in the document and is simply not r
 median split, and the same is true of the four regime labels. The remaining two need a number: 8 level bands
 the document never declares, and 6 change rules with no rule at all.
 
-## Written rule / no written rule, in plain words (answer to reply 6, and the batch-6 ask)
+## Written rule / no written rule, in plain words (answer to reply 6; the batch-6 ask, sent 2026-09-30)
 
 The user asked twice what these phrases mean - *"what do you mean written rule? Explain this part simply"* and
 *"Again what do you mean unwritten factors"* - so the phrases are retired from the ask. Here is the whole idea in
@@ -256,13 +265,23 @@ meaning of "unwritten": tracked, but nobody has said what it should mean. Those 
 ("gold rose 57% of the time while this was on") but they can never be called right or wrong and can never pass the
 60% bar, which is exactly what question 23 is about.
 
-**The two questions, asked again in those words (batch 6).**
+**The two questions, asked again in those words (batch 6, sent 2026-09-30).**
 - **22 - check the ten that already have a written sentence first?** Reason: those ten can be checked against the
   archive straight away, so the first honest answer arrives the same day; the other twenty still get their context
   printed in the same run, just without a right/wrong verdict. Default if no reply: **yes**.
 - **23 - for the twenty with no sentence, agree what each should mean before looking at what price did?** Reason: if
   we look at price first and then write the sentence, the sentence only describes the past that already happened - it
   will always look good and it will tell us nothing about tomorrow. Default if no reply: **yes**.
+
+**The other three sent with them (batch 6, 2026-09-30).** Each is one line, and each defaults to **yes**.
+- **24 - keep the "no view" states out of every hit rate?** Reason: VIX between 16 and 25 is declared *no view*, so
+  scoring it as right or wrong would put a number on days the project never claimed anything about; those days still
+  appear in the day count, they just never count as a win or a loss.
+- **25 - keep the dollar caveat on every dollar row?** Reason: the dollar series measured is the Fed's broad index
+  (`DTWEXBGS`), not the DXY number on a chart - the two move differently, so a row read as DXY would be read wrongly.
+- **26 - keep the project's own numbers exactly as written (VIX 25.00/16.00, >0.30%, 5bps+)?** Reason: they are the
+  boundaries the existing report already uses, and rounding or restating one silently changes the share of days on
+  each side of it, which would make today's table disagree with the archive.
 
 
 
