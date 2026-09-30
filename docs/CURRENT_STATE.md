@@ -1,5 +1,30 @@
 # Current state
 
+2026-09-30 (cont.): the coordinator reviewed the strategy lane's closing report and page refresh -
+`20260930-strategy-batch9-10-answers-and-page-refresh-028` (mailbox sha256
+`f72a80300ca6f38c7772507f85c7aa9f69c0601809fd02b8908b125f1a3fb76e` reproduced from the immutable inbox file at 9,406
+bytes, reply `8b74e9b2178907d1a4148c76fef791ac24f8e38eb8f245cbb82c09ab1715efe5` at 5,311 bytes, decision **accepted**,
+durable review `docs/orchestration/reviews/20260930-strategy-batch9-10-answers-and-page-refresh-028.md`) - and did
+**not** publish: this background run carries no production authority, so the live dashboard is unchanged and no
+release worktree was cut. Verified from the checkout rather than trusted: commit `8cfc1f2` is `+242/-49` across
+exactly the six named `docs/strategy/` files, its only parent is the reported base `61d998d`, the page reproduces
+byte-exactly (24,687 bytes, 289 CRLF lines, 0 bare LF, sha256 `aa9e104c...`), the worker's own static checker was
+re-run here and prints `ALL CHECKS PASSED (20)`, the page patch is narrative only so no number moved and no table was
+added or removed, the sheet and answer log carry 50 of 50 with batch 9 closed and batch 10 logged, and `D18` is a
+real appendix decision row (the plan records the same decision in prose without the tag - a labelling note, not a
+defect). The lane tip is `05fa9fb`, one commit ahead of the reported head, and that is only
+`CONVERSATION_NOTES.md` (+33/-1): the page blob `7ff48a93` is identical at both heads, so the offered copy is exactly
+what the lane holds now. The live page is still revision 1, measured here from the published blob rather than from
+the record - `a2b0e13:gold-factor-wip.html`, 21,281 bytes LF, sha256 `5dbe1364...`, the same git object `1094c0bf`
+the worker's revision-1 file committed - so it is ten answers stale but holds nothing the ten answers contradict. The
+rule for a future publish is recorded: revision 2 is the 24,687-byte CRLF file, and the commit will store its LF
+form, measured at 24,398 bytes sha256 `b0aa8afe...`. No new assignment was published and no worker status changed -
+`strategy` stays `advisory_active` under `strategy-advisory-001`. **The precise unresolved decisions are the user's:**
+the go-ahead to publish revision 2 live; and whether to open the movement-screen measurement lane at all, and on
+which worker, since answers 47 and 50 put the movement screen first but building it is a measurement lane over
+already-spent intervals that runs into the standing hold on the Gold lane. Queue position 2 is unchanged and still
+the user's: the live-trading authority level and the port recipe for that section.
+
 2026-09-30 (cont.): the coordinator closed the live-trading lane's owed correction - `20260930-live-trading-feed-004`
 (mailbox sha256 `aa651b87258899bf5c452594a2b9961f243021e55ed48b303b7dc09d51dbe773` reproduced from the immutable inbox
 file at 7,970 bytes, reply `90b4d40fac3e1ad4fbd9f69a69df455ced72a88333ff98516877441bdc276303` at 6,234 bytes, decision

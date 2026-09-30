@@ -1,5 +1,27 @@
 # Session notes
 
+2026-09-30 (cont.), strategy 028 review cycle: the background coordinator took the one review it owned, `strategy`
+submission `20260930-strategy-batch9-10-answers-and-page-refresh-028`, and decided **accepted, advisory record and
+page refresh only** - not a publish, merge or deployment, so the live dashboard is unchanged and no release worktree
+was cut (mailbox `f72a80300ca6f38c7772507f85c7aa9f69c0601809fd02b8908b125f1a3fb76e` reproduced from the immutable
+inbox file at 9,406 bytes, reply `8b74e9b2...` at 5,311 bytes, durable review
+`docs/orchestration/reviews/20260930-strategy-batch9-10-answers-and-page-refresh-028.md`). The submission closes the
+intent round at 50 of 50, records answer 42's second during-session stream as `D18`, and refreshes the draft page.
+Verified from the checkout, not trusted: commit `8cfc1f2` is `+242/-49` across exactly the six named files, its only
+parent is the reported base `61d998d`, the page reproduces byte-exactly (24,687 bytes, 289 CRLF, 0 bare LF, sha256
+`aa9e104c...`), the worker's own checker was re-run here and prints `ALL CHECKS PASSED (20)`, the page patch is
+narrative only so no number moved and no table was added or removed, the sheet and answer log carry 50 of 50 with
+batch 9 closed and batch 10 logged, and `D18` is a real appendix decision row. The lane tip `05fa9fb` is one commit
+ahead of the reported head (`CONVERSATION_NOTES.md` only) with the page blob `7ff48a93` identical at both heads.
+The live page stays revision 1, re-measured from the published blob (`a2b0e13:gold-factor-wip.html`, 21,281 bytes LF,
+sha256 `5dbe1364...`, the same git object `1094c0bf` the worker's revision-1 file committed), and a future publish
+must reproduce revision 2's LF form at 24,398 bytes sha256 `b0aa8afe...`. Not done: no publish, no push, no release
+worktree, no new assignment and no worker status change - `strategy` stays `advisory_active` under
+`strategy-advisory-001`. Unresolved and the user's: the go-ahead to publish revision 2, and whether to open the
+movement-screen measurement lane at all, and on which worker, while the Gold hold stands. This cycle's command policy
+allowed `node`, so the mailbox CLI, the worker's static checker and `scripts/monitor-state.js activity` were all run
+directly rather than worked around.
+
 2026-09-30 (cont.), live-trading feed-004 review cycle: the background coordinator took the one review it owned,
 `live-trading` submission `20260930-live-trading-feed-004`, the revision of `-002` that the earlier
 `changes_requested` reply required, and decided **accepted, documentation only** - not a merge, publish or

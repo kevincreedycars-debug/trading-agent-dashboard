@@ -1,3 +1,28 @@
+# 2026-09-30 (cont.) - strategy 028 accepted: the intent round closes at 50 of 50, the draft page refreshes, and the publish stays the user's
+
+This cycle's single review took `strategy` submission `20260930-strategy-batch9-10-answers-and-page-refresh-028` (mailbox
+SHA-256 `f72a80300ca6f38c7772507f85c7aa9f69c0601809fd02b8908b125f1a3fb76e`, reproduced from the immutable inbox file
+at 9,406 bytes; reply `8b74e9b2...` at 5,311 bytes; durable review
+`docs/orchestration/reviews/20260930-strategy-batch9-10-answers-and-page-refresh-028.md`) and accepted it as advisory
+record and page refresh only. It closes the user-intent round at 50 of 50 with nothing left on a default, records
+answer 42's second during-session measurement stream as decision `D18`, and refreshes the work-in-progress draft page.
+
+Verified from the checkout rather than trusted: commit `8cfc1f2` in `.local/worktrees/strategy` is `+242/-49` across
+exactly the six named `docs/strategy/` files, its only parent is the reported base `61d998d`, the refreshed page
+reproduces byte-exactly (24,687 bytes, 289 CRLF lines, 0 bare LF, sha256 `aa9e104c...`), the worker's own static
+checker was re-run here and prints `ALL CHECKS PASSED (20)`, the page patch is narrative only so no number moved and no
+table was added or removed, the answer sheet and log carry 50 of 50 with batch 9 closed and batch 10 logged, and `D18`
+is a real appendix decision row. The lane tip `05fa9fb` is one commit ahead of the reported head
+(`CONVERSATION_NOTES.md` only), with the page blob `7ff48a93` identical at both heads.
+
+Not done: no publish, push, release worktree, deployment or production action, and no new worker assignment - this
+background run carries no production authority and the two remaining items are the user's. The live page is still
+revision 1, re-measured from the published blob (`a2b0e13:gold-factor-wip.html`, 21,281 bytes LF, sha256 `5dbe1364...`,
+the same git object `1094c0bf` the worker's revision-1 file committed), and the recorded rule for a future publish is
+revision 2's LF form at 24,398 bytes sha256 `b0aa8afe...`. The register keeps `strategy` at `advisory_active` under
+`strategy-advisory-001`. Unresolved and the user's: the go-ahead to publish revision 2 live, and whether to open the
+movement-screen measurement lane that answers 47 and 50 put first, and on which worker, while the Gold hold stands.
+
 # 2026-09-30 (cont.) - live-trading feed-004 accepted: the -002 correction lands, and the coordinator's own byte figure was wrong
 
 The second of this run's two reviews took `live-trading` submission `20260930-live-trading-feed-004` (mailbox SHA-256

@@ -101,4 +101,14 @@ refresh therefore compares the CRLF-to-LF conversion, or the content, and report
 batch of answers lands. Single writer, unchanged: the worker owns its file in `docs/strategy/`, the coordinator owns the
 live copy and the nav entry.
 
+Refresh record, 2026-09-30 (coordinator): the question round closed at 50 of 50 and the worker refreshed its own file to
+revision 2 - 24,687 bytes, 289 CRLF lines, sha256 `aa9e104c81b6e479ca59b05b9b31840877b4626624e54c5a0170dc202a98dd1e`
+- filed as submission `20260930-strategy-batch9-10-answers-and-page-refresh-028` and reviewed and accepted on the same
+day (reply `8b74e9b2...`, review `reviews/20260930-strategy-batch9-10-answers-and-page-refresh-028.md`). The refresh was
+**not** published: the background review run carried no production authority and the publish is the same kind of
+coordinator production action as the revision-1 release `a2b0e13`, so the live copy still holds revision 1 (blob
+`1094c0bf`, 21,281 bytes LF, sha256 `5dbe1364...`) and is ten answers stale without contradicting any of them. When a
+publish is authorised, revision 2 is the copy and the stored blob will be its LF form - 24,398 bytes sha256
+`b0aa8afea8145a24e64d4464ec952d91ed1a8ab11c935a8ee5f254ff40dc37e6` - which is the hash a live check must reproduce.
+The single-writer rule is unchanged.
 

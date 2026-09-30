@@ -1,5 +1,45 @@
 # Central decisions
 
+## 2026-09-30 (cont.): strategy 028 accepted - the question round closes at 50 of 50, the page refreshes, and the publish stays the user's
+
+The background coordinator reviewed `strategy` submission `20260930-strategy-batch9-10-answers-and-page-refresh-028`
+(mailbox SHA-256 `f72a80300ca6f38c7772507f85c7aa9f69c0601809fd02b8908b125f1a3fb76e`, reproduced from the immutable
+inbox file at 9,406 bytes; reply `8b74e9b2178907d1a4148c76fef791ac24f8e38eb8f245cbb82c09ab1715efe5` at 5,311 bytes;
+durable review `reviews/20260930-strategy-batch9-10-answers-and-page-refresh-028.md`) and decided **accepted** as
+advisory record and page refresh only. It closes the intent round at 50 of 50 with nothing left on a default, records
+answer 42's second during-session measurement stream as decision **D18**, and refreshes the work-in-progress draft
+page. Acceptance is not a publish, merge, deployment, lane opening or accuracy claim.
+
+Verified from the checkout rather than trusted: commit `8cfc1f2` in `.local/worktrees/strategy` is `+242/-49` across
+exactly the six named `docs/strategy/` files, its only parent is the reported base `61d998d`, no code, test,
+dashboard, register, assignment, credential or other worker file is in the changed set, and the page reproduces
+byte-exactly at 24,687 bytes, 289 CRLF lines, 0 bare LF, sha256
+`aa9e104c81b6e479ca59b05b9b31840877b4626624e54c5a0170dc202a98dd1e`. The worker's own static checker was re-run here
+and prints `ALL CHECKS PASSED (20)` on those bytes. The page patch is narrative only - banner, full progress bar, the
+section-1 card, two decided rows, the section-4 note, the not-finished bullet and the footer - so no number moved and
+no table was added or removed. The sheet and answer log carry 50 of 50 with batch 9 closed and batch 10 logged, and
+`D18` is a real appendix decision row carrying both blocks, the never-pooled rule, the trigger bar, `looks_counted`
+and the two refused alternatives. The lane tip is `05fa9fb`, one commit ahead of the reported head
+(`CONVERSATION_NOTES.md` only, +33/-1), and the page blob `7ff48a93` is identical at both heads, so the offered copy
+is exactly what the lane holds now.
+
+**No publish, and the reason is structural.** This run carries no production authority, so no copy was taken, no
+release worktree was cut, nothing was pushed and no live check was run. The live page is still revision 1, measured
+here from the published blob rather than from the record: `a2b0e13:gold-factor-wip.html`, 21,281 bytes in its LF
+form, sha256 `5dbe13645fac400fab052edee69528dd06195fe0a17d2a93d2fae351154e95c7`, and the same git object `1094c0bf`
+that the worker's own revision-1 file committed - ten answers stale, but holding nothing the ten answers contradict.
+The rule recorded for a future publish is the worker's default made precise: revision 2 is the 24,687-byte CRLF file,
+and because this repository runs `core.autocrlf=true` with no `.gitattributes` the commit stores its LF form, measured
+here at 24,398 bytes sha256 `b0aa8afea8145a24e64d4464ec952d91ed1a8ab11c935a8ee5f254ff40dc37e6`, agreeing with the
+committed blob identity.
+
+No new assignment was published and no worker status changed: `projects.json` keeps `strategy` at `advisory_active`
+under `strategy-advisory-001`, and the submission is spent. **The precise unresolved decisions are the user's:** the
+go-ahead to publish revision 2 live, which is a coordinator production action of the same kind as the `a2b0e13`
+publication of revision 1; and whether to open the movement-screen measurement lane at all, and on which worker,
+because answers 47 and 50 put the movement screen first but building it is a measurement lane over already-spent
+intervals that runs into the user's standing hold on the Gold lane.
+
 ## 2026-09-30 (cont.): live-trading feed-004 accepted; the coordinator's own byte figure was the wrong one
 
 The second review of this run took `live-trading` submission `20260930-live-trading-feed-004` (mailbox SHA-256

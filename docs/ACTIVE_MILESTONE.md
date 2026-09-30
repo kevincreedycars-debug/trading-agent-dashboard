@@ -79,7 +79,8 @@ lessons should be written up as one frozen document that all seven lanes inherit
 any build), and in what order the seven assets should then be built - the matrix itself places USD, EUR, NQ and
 BTC ahead of GBP, and records no source contract at all for Silver and WTI.
 
-Next immediate action, 2026-09-30 (cont.), after the live-trading feed-004 cycle: the lane's owed documentation correction is
+Superseded 2026-09-30 (cont.) by the strategy 028 cycle recorded below; kept for provenance. The former next action,
+after the live-trading feed-004 cycle, recorded that the lane's owed documentation correction is
 closed and accepted - `20260930-live-trading-feed-004` (mailbox `aa651b87...`, reply `90b4d40f...`, review
 `docs/orchestration/reviews/20260930-live-trading-feed-004.md`), documentation only, +36/-5 across
 `docs/live-trading/CONVERSATION_NOTES.md` and `tools/mt5-bridge/README.md`, both digests reproduced, all three `-002`
@@ -91,3 +92,20 @@ port recipe for the verified Live Trading section onto `origin/main` and push, o
 open items stay with the user too - the FTMO written confirmation for automated and news trading inside a Swing
 evaluation, and the 660-second M5 freshness limit with its fifteen-minute staleness badge. No further live-trading
 submission is owed on the correction topic, and no new worker assignment is published while those decisions are open.
+
+Next immediate action, 2026-09-30 (cont.), after the strategy 028 cycle: nothing is executable, because both remaining
+items are the user's. `strategy` submission `20260930-strategy-batch9-10-answers-and-page-refresh-028` was reviewed and
+accepted as advisory record and page refresh only (mailbox `f72a8030...`, reply `8b74e9b2...`, review
+`docs/orchestration/reviews/20260930-strategy-batch9-10-answers-and-page-refresh-028.md`): the intent round closes at 50
+of 50, answer 42's second during-session stream is recorded as `D18`, and the draft page refreshes to 24,687 bytes
+sha256 `aa9e104c...` with the worker's own checker re-run here and passing 20 of 20. The publish was **not** taken - this
+background run carries no production authority - so the live dashboard still shows revision 1
+(`a2b0e13:gold-factor-wip.html`, 21,281 bytes LF, sha256 `5dbe1364...`, the same git object `1094c0bf` the worker's
+revision-1 file committed), and the recorded rule for a future publish is revision 2's LF form at 24,398 bytes sha256
+`b0aa8afe...`. Nothing was merged, pushed, deployed or assigned, and no worker status changed: `strategy` stays
+`advisory_active` under `strategy-advisory-001`. First question for the user: publish the refreshed revision 2 page
+live, yes or hold? Second: open the movement-screen measurement lane that answers 47 and 50 put first, and if so on
+which worker, given that it measures already-spent intervals and the Gold lane stays on the user's hold with its
+register entry deliberately published for the carried 022 item A envelope. The live-trading items stay open behind
+those two: the three-way authority level, the already-ruled port recipe for the verified section, the FTMO written
+confirmation, and the 660-second M5 freshness limit with its fifteen-minute badge.
