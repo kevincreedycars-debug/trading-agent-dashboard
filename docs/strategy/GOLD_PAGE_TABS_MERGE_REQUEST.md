@@ -143,3 +143,31 @@ earlier note:
    console error, hashes reopen the right tab, arrow keys move the selection. Harness: `tmp/site-sim/check-candidate.js`
    in this worker's ignored scratch. The verification is a script result recorded in this worker's notes, not a claim.
 
+## 10. Amendment after the package review: which `index.html` is live
+
+The review of the release package (submission `-030`, accepted) measured a divergence this document should carry,
+because it changes the edit rather than the intent: the bar the guards read is not the bar the site serves.
+
+- **Live**, `origin/main` at `599c686a`: `index.html` 18,901 bytes, LF, five topbar links - North Star Brief, Standing
+  Dashboard, **Gold Direction (line 19)**, Backtest Flow (line 20), **Gold Factor (draft) (line 21)**. Two gold entries
+  and no "Gold Backtest" entry, and it carries the Silver, WTI, GBP and Live Trading work.
+- **This checkout**, `HEAD` at `6cc608ef`: `index.html` 19,332 bytes, LF, six topbar links and three gold entries at
+  lines 19, 20 and 22 - so item 1 above is exactly right about this file. Silver, WTI, GBP and Live Trading are absent
+  from it.
+- `git diff origin/main -- index.html` is 39 insertions and 33 deletions; 275 commits exist only on `origin/main` and
+  179 only on this branch.
+
+Item 1 above therefore describes the checkout file and the "two" this document originally assumed describes the live
+file; both are true of their own tree. The release **edits the published `index.html`** - remove its two gold lines,
+put one `gold.html` entry in their place, leave Backtest Flow alone - and must not copy the checkout file over it, or
+the live Silver, WTI, GBP and Live Trading work and the newer cache-buster strings go with the intended change. On the
+live site the outcomes page has no bar route today, which is why the outcomes tab's guard rewrite is load-bearing
+rather than cosmetic: it is the only thing that will exercise that page's first route.
+
+Two smaller amendments, applied to the package rather than asked of the reader. The candidate is now **revision 2**
+(5,839 bytes, 106 CRLF lines, sha256 `de60c2b7...`): its header comment describes the page and names no internal
+document beyond the build brief, so nothing in it claims to be a build candidate or repeats a bar-link count that would
+be wrong on the live file. And the three hop guards open the `index.html` beside them over `file://`
+(`path.resolve(__dirname, '../../index.html')`), so whichever tree they are run from must carry the single `gold.html`
+entry; the two workable routes are in section 5 of the build brief.
+

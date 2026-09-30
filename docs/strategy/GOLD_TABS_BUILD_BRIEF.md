@@ -7,24 +7,35 @@ still open.
 
 The user's instruction the same evening was to save this for tonight and be ready to push it live in the morning, so
 this brief is written as a checklist: every edit, in order, with the exact text it replaces, and one acceptance run at
-the end. The shell is written, verified in a real browser and committed, so the morning's work is mechanical.
+the end. The shell is written, verified in a real browser and committed, so the morning's work is mechanical. This
+revision also records what the coordinator's review of the release package measured, and it changes one instruction:
+the bar that goes live is a different file from the bar in this checkout, so the edit in E2 belongs on the published
+file, not on the checkout copy (section 3).
 
 ## 1. What is ready now
 
 | Artifact | Where | Measured |
 | --- | --- | --- |
-| The shell to publish as `gold.html` | `docs/strategy/GOLD_TABS_SHELL_CANDIDATE.html` (this worktree) | 6,199 bytes, 109 CRLF lines, 0 bare LF, sha256 `74dd93c8fe6daa179718322d1fb6f339dcdb95f1acb752d534af3af832446eea` |
+| The shell to publish as `gold.html` | `docs/strategy/GOLD_TABS_SHELL_CANDIDATE.html` (this worktree), revision 2 | 5,839 bytes, 106 CRLF lines, 0 bare LF, sha256 `de60c2b7c452aa74ac282d475707e15d2d68977c77c4cd2a505cb4d205e64da6` |
 | The spec, routes and couplings | `docs/strategy/GOLD_PAGE_TABS_MERGE_REQUEST.md` | 8 sections, unchanged |
 | What the user can open tonight | `tmp/preview/gold-tabs-preview.html` (ignored scratch) | frames local copies of the four published pages; not publishable and never to be published |
 | The harness that proved the candidate | `tmp/site-sim/check-candidate.js` (ignored scratch) | serves the candidate as `gold.html` beside the four pages plus `styles.css` and drives it with Playwright |
 
 One note on that hash, because it is the one step a copy can slip on: the recorded sha256 is the file **as it sits on
-disk** in this worktree (CRLF, 6,199 bytes). Git stores the same page as an LF blob of 6,090 bytes, because both this
-worktree and the canonical checkout set `core.autocrlf=true` - exactly as it stores the published pages, where
-`index.html` is a 19,332-byte LF blob on disk as 19,698 CRLF bytes, the draft page a 21,281-byte LF blob on disk as
-21,541 CRLF bytes, and the scorecard a 143,102-byte LF blob on disk as 143,517 CRLF bytes. So copy the file from the
-checkout or the worktree, not the output of `git cat-file`. Both forms render identically; only the checkout copy
-matches the recorded hash.
+disk** in this worktree (CRLF, 5,839 bytes). Git stores the same page as an LF blob of 5,733 bytes, because both this
+worktree and the canonical checkout set `core.autocrlf=true` - exactly as it stores the published pages, where the draft
+page is a 21,281-byte LF blob on disk as 21,541 CRLF bytes and the scorecard a 143,102-byte LF blob on disk as 143,517
+CRLF bytes. So copy the file from the checkout or the worktree, not the output of `git cat-file`. Both forms render
+identically; only the checkout copy matches the recorded hash.
+
+Revision 2 is the accepted revision 1 with two edits and nothing else, proved by rebuilding revision 2 from revision 1
+with only those edits applied and comparing (`tmp/check-candidate-rev2.js`, identical): the header comment was replaced,
+and one word in the first style comment changed from "the candidate" to "this page". Revision 1 said in its own source
+that it was a build candidate not to be published and that two gold bar links would be replaced; both would have gone
+live inside the published file, and the second was wrong for the file that is live (section 3). Revision 2 says what the
+page is - one tab strip over four pages that already exist - and names no internal document except the brief, for the
+next person reading the source. The file name keeps the word `CANDIDATE` because it lives in `docs/strategy`, which is
+this worker's folder: it is a source file for the lane, not a live page (section 7).
 
 The candidate is a normal site page: one stylesheet link to the site's own `styles.css`, a small `<style>` block of its
 own so it still stands up if the shared nav is not reused, four `<iframe>` elements pointing at sibling pages, and about
@@ -47,28 +58,49 @@ and not a change to the four gold pages themselves.
 
 ## 3. The five edits, in order
 
-**E1. Add the page.** Copy `docs/strategy/GOLD_TABS_SHELL_CANDIDATE.html` to the site root as `gold.html`, byte for
-byte. Do not reword the tab labels; the draft label is deliberate.
+**E1. Add the page.** Copy `docs/strategy/GOLD_TABS_SHELL_CANDIDATE.html` (revision 2) to the site root as `gold.html`,
+byte for byte. Do not reword the tab labels; the draft label is deliberate. Revision 2's own header comment is written
+to be published - it describes the page and names no internal note except this brief - so nothing needs stripping at
+copy time. The word `CANDIDATE` in the file name is folder naming, not content.
 
-**E2. One bar entry instead of three.** `index.html` carries three gold bar links today, at lines 19, 20 and 22 - the
-merge request above assumed two, because the third was added after it was written:
+**E2. One bar entry instead of three, on the file the site actually serves.** Two `index.html` files matter here and
+they are not the same file. Measured from git objects tonight, not assumed (`tmp/check-published-bar.js`):
+
+- **Published** - `origin/main` at `599c686a`: 18,901 bytes, 0 CRLF, 360 bare LF, sha256 `eff9f91d...`, five topbar
+  links - North Star Brief, Standing Dashboard, **Gold Direction (line 19)**, Backtest Flow (line 20), **Gold Factor
+  (draft) (line 21)**. It carries the Silver, WTI, GBP and Live Trading work, and no `gold.html` link, so E1 is
+  genuinely additive. It has **two** gold entries and no "Gold Backtest" entry at all, which is what the merge request
+  originally described.
+- **Checkout** - `HEAD` at `6cc608ef`: 19,332 bytes, 0 CRLF, 366 bare LF, sha256 `eeab9f47...`, six topbar links, three
+  gold entries - **Gold Backtest (line 19), Gold Direction (line 20)**, Backtest Flow (line 21), **Gold Factor (draft)
+  (line 22)**. It has no Silver, WTI, GBP or Live Trading section.
+- `git diff origin/main -- index.html` is 39 insertions and 33 deletions; 275 commits exist only on `origin/main` and
+  179 only on this branch.
+
+**The release rule that follows: edit the published file; do not copy the checkout file over it.** Copying the checkout
+`index.html` into the release would revert the live Silver, WTI, GBP and Live Trading work and the newer cache-buster
+strings along with the intended one-entry change. So start the release from `origin/main` and remove its two gold lines,
+replacing them with one, keeping Backtest Flow where it is:
 
 ```html
-      <a class="topbar-link" href="gold-backtest-outcomes.html">Gold Backtest</a>
-      <a class="topbar-link" href="gold-direction-scorecard.html">Gold Direction</a>
-      ...line 21 (Backtest Flow) stays where it is...
-      <a class="topbar-link" href="gold-factor-wip.html">Gold Factor (draft)</a>
+      <a class="topbar-link" href="gold-direction-scorecard.html">Gold Direction</a>   <!-- published line 19 -->
+      ...
+      <a class="topbar-link" href="gold-factor-wip.html">Gold Factor (draft)</a>       <!-- published line 21 -->
 ```
-
-Replace those three lines with one, leaving the rest of the bar in its present order:
 
 ```html
       <a class="topbar-link" href="gold.html">Gold</a>
 ```
 
+The published bar then reads: North Star Brief, Standing Dashboard, Gold, Backtest Flow - same order, one gold entry.
+On the checkout copy the same edit is three lines (19, 20 and 22), because that copy still carries a Gold Backtest entry
+the live bar does not have. One consequence to take deliberately: on the live site the outcomes page has no bar route
+today, so this release gives it its first one, which is why the outcomes guard's rewrite in E4 is load-bearing rather
+than cosmetic.
+
 The draft status does not disappear: it is on the draft tab's own label inside the page, and on the page's banner. The
-side-rail `Gold` button at `index.html` line 45 is an in-page dashboard tab that already existed and is unrelated;
-leave it alone.
+in-page `Gold` tab button - published `index.html` line 44, the checkout copy's line 45 - is a dashboard tab that
+already existed and is unrelated; leave it alone.
 
 **E3, E4, E5. The three hop guards.** Each guard today finds its own bar link, clicks it and lands on the page. With
 one entry those links no longer exist, so each guard takes the same hop a person now takes: the bar link, then the tab.
@@ -127,15 +159,27 @@ arrow keys move between tabs; and the three old addresses plus the draft page st
 today as a baseline, the guards pass in their present form (2 tests, 2 pass, on the draft guard when run against the
 canonical root), so any failure after the change belongs to the change.
 
+**One thing to settle before the guards are run, because they do not read the published file.** Each hop guard opens
+`path.resolve(__dirname, '../../index.html')` - the `index.html` beside the guards, in whichever tree they are run from -
+over `file://` (`gold_outcomes_dashboard_link.browser.test.js` line 14 is the pattern). So a guard that asserts exactly
+one `a.topbar-link[href="gold.html"]` passes only in a tree whose `index.html` carries that entry. Two workable routes,
+the lane's choice: run the guards in the release worktree built from `origin/main`, whose `index.html` is the edited
+published file; or bring the checkout copy's bar to the same one-entry state in the same change. What would not work is
+editing only the checkout copy and calling the result live - the guards would be green about a file the site does not
+serve - or pushing the checkout file over the published one, which section 3 rules out.
+
 ## 6. Rollback
 
-Undo E2 (restore the three bar links), delete `gold.html`, and revert the three guard hops. That is the whole of it:
-the four gold pages, the generators, the artifacts, the shared stylesheet and every other page were never touched, so
-there is nothing else to put back. The old addresses never stopped working, so a rollback costs no broken link.
+Undo E2 (restore the bar lines - two on the published file, the three on the checkout copy), delete `gold.html`, and
+revert the three guard hops. That is the whole of it: the four gold pages, the generators, the artifacts, the shared
+stylesheet and every other page were never touched, so there is nothing else to put back. The old addresses never
+stopped working, so a rollback costs no broken link.
 
 ## 7. Boundaries the lane should keep
 
 - Do not edit the four gold pages, their generators, their templates or their data artifacts for this change.
+- Do not copy the checkout `index.html` over the published one. They are different files (section 3) and copying would
+  revert live work; make the bar edit on the file the site serves.
 - Do not publish the candidate from `docs/strategy/`; it is a source file for this lane, not a live page. In
   particular do not publish the scratch preview: it frames local files and would break the rule that a published page
   stands on its own.
@@ -151,4 +195,11 @@ Three things were waiting before this brief and are still waiting, none of which
 (the one-line guard move in section 4 is ready either way); and whether to open the movement-screen measurement lane,
 which is the only thing that can put real factor numbers in the Factor tables tab. The user's "be ready to push this
 live tomorrow morning" is read as route A, ready as briefed, with the revision-2 copy taken only on a second word.
+
+Two further questions were raised by the review of the release package and are answered rather than left open. The
+candidate's header comment said it was a build candidate and to replace two gold bar links: revision 2 removes both
+statements, so there is nothing to strip at copy time (section 1). And the fourth tab - the outcomes page, the one the
+user did not name, which this release also gives its first bar route - is kept, because it is where the site's own
+"Gold Backtest" entry points in the checkout copy; if the user would rather have three tabs than four, dropping it is
+one `<section>`, one button and one `<iframe>` in the shell and nothing else.
 

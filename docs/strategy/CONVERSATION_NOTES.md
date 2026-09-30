@@ -2388,3 +2388,54 @@ opens, which is the only source of real factor numbers and therefore decides whe
 show anything measured. On the user's word the morning's first action is to hand E1 to E5 to lane
 `dashboard-gold-tabs-001` and run `node scripts/test-local.js browser`; until then the worker stays paused and
 reachable.
+**The package review came back, and it moved the release onto the published bar.** Both submissions were accepted while this note was
+being written - the merge request at 21:29 and the release package at 21:57, each bound to the mailbox hash it was read
+at. The package was accepted as a verified advisory release package and not as a publish, merge, deployment, lane
+opening or route selection: the review reproduced the candidate byte-exactly, re-drove it in its own browser harness
+(`CANDIDATE OK (coordinator re-run)`: all four tabs, 1398 px wide frames, the pages' own values, zero 404s, zero
+console errors), reproduced the revision-2 coupling that is the technical value of the package, and kept this worker at
+advisory_active under `strategy-advisory-001` with no new assignment - the copy and the publish are the coordinator's
+own production work under the single-writer rule. One number of mine was corrected: the brief measures 9,941 bytes in
+its checkout, not the 9,943 filed with the package. Two bytes, immaterial to the release, recorded here because the
+point of these notes is that numbers get checked rather than repeated.
+
+**The finding that matters, and it is about the release rather than the package.** The bar the guards read is not the
+bar the site serves. Measured here from git objects, read-only, with `tmp/check-published-bar.js`: the published
+`index.html` on `origin/main` at `599c686a` is 18,901 bytes, LF, with five topbar links - North Star Brief, Standing
+Dashboard, Gold Direction (line 19), Backtest Flow (line 20), Gold Factor (draft) (line 21) - so **two** gold entries,
+no "Gold Backtest" entry at all, and it carries the Silver, WTI, GBP and Live Trading work. The checkout copy at
+`6cc608ef` is 19,332 bytes, LF, six links and **three** gold entries at lines 19, 20 and 22, with those four live
+sections absent. `git diff origin/main -- index.html` is 39 insertions and 33 deletions, and 275 commits exist only on
+`origin/main` against 179 only on this branch. So the merge request's original "two" describes production and this
+worker's "three" describes the checkout, and both are true of their own file. The rule the release inherits: edit the
+published file, and do not copy the checkout file over it, or the live Silver, WTI, GBP, Live Trading and cache-buster
+work would be reverted along with the intended one-entry change. A second, connected point: the hop guards open the
+`index.html` beside them over `file://` (`path.resolve(__dirname, '../../index.html')`, line 14 of the outcomes guard),
+so whichever tree they run from must carry the single `gold.html` entry, or they would be green about a file the site
+does not serve. On the live site the outcomes page has no bar route today, which is why that guard's rewrite is
+load-bearing rather than cosmetic.
+
+**Two amendments came out of the review, both applied before the evening ended.** The candidate is now revision 2:
+5,839 bytes, 106 CRLF lines, sha256 `de60c2b7c452aa74ac282d475707e15d2d68977c77c4cd2a505cb4d205e64da6` - revision 1
+with exactly two edits and nothing else, proved by rebuilding revision 2 from revision 1 with only those edits applied
+and comparing (`tmp/check-candidate-rev2.js`, identical). The header comment was replaced and one word in the first
+style comment changed from "the candidate" to "this page". Revision 1 said in its own source that it was a build
+candidate not to be published and that two gold bar links would be replaced; both statements would have gone live
+inside the published file, and the second is wrong for the file the site serves. Revision 2 claims no such thing, and no
+word "candidate" or internal path survives in it: four frames, one script tag, and references only to `styles.css`,
+`index.html` and the four sibling pages. It was re-driven afterwards and the harness still ends `CANDIDATE OK as it
+would run on the site`. The build brief carries the rest: E1 says revision 2 and that nothing needs stripping at copy
+time, E2 is rewritten for the published file with both trees' measurements and the rule above, a new paragraph in
+section 5 sets out which `index.html` the guards read and the two routes that satisfy them, and the rollback, boundaries
+and open-decisions sections were brought in line. Section 10 of the merge request records the same amendment where the
+request is read, so a reader cannot act on the old "three links" line without meeting the correction.
+
+**State at the end of the evening.** The branch is parked with a clean tree, and nothing is live: no page, bar entry,
+generator, data artifact, guard or number was touched by this worker, and no claim of completion, acceptance or trading
+edge is made. Submission `-031` (the evening save) is pending review and `-032` files these two amendments with their
+measurements. Four things remain the user's and none of them blocks the build: the route (route A as briefed, or route
+B's single generated document later); whether revision 2 of the draft page travels in the same release with the pinned
+`40 of 50` guard line moved to `50 of 50`; whether the movement-screen measurement lane opens, still the only source of
+measured factor numbers; and whether the fourth tab - the outcomes page, the one the user did not name, which this
+release would give its first bar route - stays. On the morning's word the first action is unchanged: hand E1 to E5 of
+the brief to the dashboard lane and run the browser guards.
