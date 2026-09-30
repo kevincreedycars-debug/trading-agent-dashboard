@@ -377,3 +377,17 @@ lane for the one shared harness and it builds nothing. Its paste message is belo
 > node D:/trading-agent-dashboard-codex/scripts/coordination.js submit --file <file>, report real activity with
 > monitor-state.js, then pause.
 
+## Coordinator note, 2026-09-30 evening close
+
+Work is parked for the evening and nothing is mid-flight. All three of today's changes are committed as `6669257`, the
+coordination suite passes 4 of 4, and the mailbox holds no pending submission and no error. One fix applies to the
+`backtester-harness` lane: its checkout was fast-forwarded from `ab21177` to the control-plane tip `c673ea7`, so the
+worktree now carries its own assignment and `tools/backtester-harness-node/`; nothing else about that lane changed and the
+paste message above still stands. The published live panel has aged past its 900-second window and reads `STALE` again,
+which is the designed behaviour; a fresh reading needs the user's word and a coordinator re-publish, never a lane's own
+push. Open items, unchanged: the written FTMO confirmation and the call-to-order contract, the user's paste and mailbox
+click in the harness window, the gold-research 022 item A anchor observation envelope, the publish call on the gold factor
+draft page revision 2 and on the strategy 030 release package, and the seven asset windows that have sat
+`sent_unconfirmed` since 2026-09-29T20:47Z. No lane's authority widens: no connection, credential, arming, order,
+warehouse, Layer 1, Layer 2, workflow, dashboard or production change follows from this note.
+

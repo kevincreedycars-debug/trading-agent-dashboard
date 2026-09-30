@@ -1,5 +1,30 @@
 # Session notes
 
+2026-09-30 evening close, the stop point for the evening. The day is committed and the tree is parked. On
+`orchestration/control-plane-20260920`: `6669257` (this session - the funded-trading authority recorded, the published live
+panel refreshed on the user's word as release `599c686` with the cache-buster at `-v2`, and the `backtester-harness`
+design lane registered with its assignment, workspace, README, monitor row and open window), on top of the background
+coordinator's `c673ea7` (strategy 030 release package reviewed and accepted, no publish taken) and `36e61ca` (strategy 029
+merge request accepted as a request, its three decisions left to the user). One coordination defect was found at this
+close and fixed rather than left for the next session: the new lane's checkout had been cut from `ab21177`, which predates
+its own assignment file and `tools/backtester-harness-node/`, so `workers/backtester-harness-20260930` was fast-forwarded
+to the control-plane tip `c673ea7` and the register row's `baseline` now reads `c673ea7`; the worktree is clean and carries
+its own assignment and workspace. Measured at the stop, not assumed: the mailbox holds 0 pending submissions and 0 errors
+across 77 recorded submissions; the register holds 17 worker rows; the "Backtester Harness Architect" window is open (its
+window title was read back from the running editor) with its row at `instructions_published_awaiting_worker` until the user
+pastes the one-time message and clicks **Mailbox: Connect This Cline Worker**; the seven asset backtester windows are still
+`sent_unconfirmed` since 2026-09-29T20:47Z; and the published live panel has aged past its own 900 seconds again
+(`generated_at_utc` 2026-09-30T20:44:34Z, so `STALE` from 20:59:34Z), which is the designed behaviour rather than a fault -
+a fresh reading needs the user's word plus a re-publish. Nothing was armed, connected, credentialed or ordered, no outcome,
+holdout or prospective observation was read, and no warehouse, Layer 1, Layer 2, workflow or n8n action occurred. Left
+untouched on purpose: the canonical folder's five untracked Gold session-policy files and the modified
+`tools/strategy-node/Strategy.code-workspace`, both uncommitted by design, and every other worker checkout. Open in order
+for the next session: the written FTMO confirmation and the call-to-order contract (the live lane's next bounded
+assignment), the user's paste and mailbox click in the harness window, the gold-research 022 item A anchor observation
+envelope (overdue), the user's publish call on the gold factor draft page revision 2 and on the strategy 030 release
+package, and the seven sleeping backtester windows.
+
+
 2026-09-30 (cont. 3), strategy 030 release-package review cycle: the background coordinator took the one review it owned,
 `strategy` submission `20260930-strategy-gold-tabs-release-ready-030`, and decided **accepted, as a verified advisory
 release package** - not a publish, merge, deployment, lane opening, route selection or accuracy claim, so the live

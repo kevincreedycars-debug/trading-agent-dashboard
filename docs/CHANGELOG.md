@@ -1,3 +1,18 @@
+# 2026-09-30 evening close - the day parked, with one coordination defect fixed on the way out
+
+Nothing new was authorised at the close. Three things were done. First, the day's records were committed on
+`orchestration/control-plane-20260920` as `6669257` (funded-trading authority, the refreshed published panel, the new
+harness lane) above the background coordinator's `c673ea7` and `36e61ca`, and the last check ran green: the coordination
+suite 4 of 4, the mailbox 0 pending and 0 errors across 77 recorded submissions. Second, a registration defect was found
+and fixed: the `backtester-harness` worktree had been cut from `ab21177`, which predates both its own assignment file and
+`tools/backtester-harness-node/`, so `workers/backtester-harness-20260930` was fast-forwarded to the control-plane tip
+`c673ea7` and that register row's `baseline` moved from `ab21177` to `c673ea7`; the checkout is clean and now carries its
+own assignment and workspace. Third, the honest state of the published panel was recorded rather than glossed: the snapshot
+generated at `2026-09-30T20:44:34Z` ages to `STALE` at `20:59:34Z` by its own 900-second rule, so the panel is correctly
+stale again and a fresh one needs the user's word and a coordinator re-publish, never a lane's own push. No production,
+warehouse, credential, Layer 1, Layer 2, workflow or n8n action, and no holdout, outcome or prospective read.
+
+
 # 2026-09-30 (cont. 2) - funded trading is the user's chosen authority level, the published panel was refreshed, and a harness architect window is open
 
 The user answered the two questions this run had left with them, and both answers were acted on rather than noted. On
