@@ -8305,3 +8305,55 @@ body {
 .layer1-summary-status.status-active { color: #9db5c8; }
 @media (max-width: 1250px) { .layer1-summary-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
 @media (max-width: 560px) { .layer1-summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+/* Live Trading: read-only FTMO/MT5 broker snapshot. */
+.live-trading-panel { display: grid; gap: 14px; min-width: 0; }
+.live-trading-banner { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; min-width: 0; padding: 12px 14px; border: 1px solid #26374b; border-left: 3px solid #5ea1ff; border-radius: 8px; background: #0e1927; }
+.live-trading-banner p { margin: 0; min-width: 0; color: #b3c1d1; font-size: 12px; line-height: 1.5; overflow-wrap: anywhere; }
+.live-trading-banner.fresh { border-left-color: #4fd1a5; }
+.live-trading-banner.stale { border-left-color: #e0a53c; }
+.live-trading-banner.error { border-left-color: #ff6b7a; }
+.live-trading-banner.unknown { border-left-color: #7b8ea6; }
+.live-trading-badge { flex: 0 0 auto; padding: 4px 9px; border: 1px solid #35485f; border-radius: 999px; color: #cfdcec; font: 700 10px 'IBM Plex Mono', monospace; letter-spacing: .06em; }
+.live-trading-badge.fresh { color: #7ef0c4; border-color: #2b6b57; background: rgba(79, 209, 165, .12); }
+.live-trading-badge.stale { color: #f0c274; border-color: #7a5a24; background: rgba(224, 165, 60, .12); }
+.live-trading-badge.error { color: #ff9aa4; border-color: #7a3a44; background: rgba(255, 107, 122, .12); }
+.live-trading-badge.unknown { color: #b9c8d9; border-color: #35485f; background: rgba(123, 142, 166, .12); }
+.live-trading-chips { display: flex; flex-wrap: wrap; gap: 6px; min-width: 0; }
+.live-trading-chip { display: inline-flex; align-items: baseline; gap: 6px; min-width: 0; padding: 5px 9px; border: 1px solid #26374b; border-radius: 6px; background: #0c1622; color: #dbe6f3; font: 500 11px 'IBM Plex Mono', monospace; overflow-wrap: anywhere; }
+.live-trading-chip b { color: #8ea6c0; font-size: 9.5px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; }
+.live-trading-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; min-width: 0; }
+.live-trading-card { display: grid; gap: 10px; min-width: 0; padding: 14px; border: 1px solid #26374b; border-radius: 10px; background: linear-gradient(180deg, #111c2b, #0c1520); }
+.live-trading-card.unavailable { border-style: dashed; }
+.live-trading-card-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; min-width: 0; }
+.live-trading-card-id { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.live-trading-asset { display: grid; place-items: center; flex: 0 0 auto; min-width: 30px; padding: 4px 6px; border: 1px solid #3d516a; border-radius: 6px; color: #c6d9ed; font: 600 11px 'IBM Plex Mono', monospace; }
+.live-trading-symbol { min-width: 0; color: #eaf2fb; font: 600 15px 'IBM Plex Mono', monospace; overflow-wrap: anywhere; }
+.live-trading-direction { flex: 0 0 auto; padding: 3px 8px; border: 1px solid #35485f; border-radius: 999px; color: #a9bdd4; font: 700 10px 'IBM Plex Mono', monospace; letter-spacing: .06em; }
+.live-trading-direction.up { color: #7ef0c4; border-color: #2b6b57; }
+.live-trading-direction.down { color: #ff9aa4; border-color: #7a3a44; }
+.live-trading-direction.stale { color: #f0c274; border-color: #7a5a24; background: rgba(224, 165, 60, .12); }
+.live-trading-description { margin: 0; color: #90a4bb; font-size: 11px; line-height: 1.45; overflow-wrap: anywhere; }
+.live-trading-quote { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 0; }
+.live-trading-quote div { min-width: 0; padding: 8px 10px; border: 1px solid #233246; border-radius: 8px; background: #0a1420; }
+.live-trading-quote dt, .live-trading-levels dt { color: #8ea6c0; font: 600 9.5px 'IBM Plex Mono', monospace; letter-spacing: .07em; text-transform: uppercase; }
+.live-trading-quote dd { margin: 2px 0 0; color: #f2f7fd; font: 600 20px 'IBM Plex Mono', monospace; overflow-wrap: anywhere; }
+.live-trading-meta { display: flex; flex-wrap: wrap; gap: 6px 12px; min-width: 0; color: #c3d2e2; font: 500 11px 'IBM Plex Mono', monospace; overflow-wrap: anywhere; }
+.live-trading-meta b { margin-right: 4px; color: #8ea6c0; font-size: 9.5px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; }
+.live-trading-levels { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin: 0; }
+.live-trading-levels div { min-width: 0; }
+.live-trading-levels dd { margin: 2px 0 0; color: #dbe6f3; font: 600 12px 'IBM Plex Mono', monospace; overflow-wrap: anywhere; }
+.live-trading-bars { display: flex; align-items: flex-end; gap: 2px; height: 56px; padding: 6px 8px; border: 1px solid #233246; border-radius: 8px; background: #0a1420; }
+.live-trading-bar { flex: 1 1 0; min-width: 2px; border-radius: 1px 1px 0 0; background: #3d516a; }
+.live-trading-bar.up { background: #43c8b0; }
+.live-trading-bar.down { background: #e2606e; }
+.live-trading-alert { margin: 0; padding: 8px 10px; border: 1px solid #7a5a24; border-left: 3px solid #e0a53c; border-radius: 8px; background: rgba(224, 165, 60, .08); color: #f0c274; font: 500 11px 'IBM Plex Mono', monospace; line-height: 1.5; overflow-wrap: anywhere; }
+.live-trading-caption { display: flex; flex-wrap: wrap; gap: 4px 14px; margin: 0; color: #8ea6c0; font: 500 10.5px 'IBM Plex Mono', monospace; overflow-wrap: anywhere; }
+.live-trading-empty { margin: 0; color: #a9bdd4; font-size: 12px; line-height: 1.5; overflow-wrap: anywhere; }
+.live-trading-provenance { display: grid; gap: 4px; padding: 12px 14px; border: 1px solid #233246; border-radius: 8px; background: #0a1420; }
+.live-trading-provenance p { margin: 0; color: #90a4bb; font-size: 11px; line-height: 1.5; overflow-wrap: anywhere; }
+.live-trading-provenance b { color: #dbe6f3; }
+.live-trading-mono { color: #c6d9ed; font: 500 11px 'IBM Plex Mono', monospace; overflow-wrap: anywhere; }
+@media (max-width: 1100px) { .live-trading-levels { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 760px) { .live-trading-grid { grid-template-columns: minmax(0, 1fr); } }
+

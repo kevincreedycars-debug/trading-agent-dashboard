@@ -24,6 +24,7 @@ const confidenceCalibrationUrl = "./data/confidence-calibration.json?v=20260728-
 const confidenceBandDeliveryUrl = "./data/confidence-band-delivery.json?v=20260728-confidence-band-delivery-v1";
 const researchProofMapUrl = "./data/research-proof-map.json?v=20260902-proof-map-v1";
 const backtestEngineUrl = "./data/backtest-engine.json?v=20260903-engine-v1";
+const liveTradingUrl = "./data/live-trading.json?v=20260930-live-trading-v1";
 const architectureManifestUrlDefault = "./data/architecture-map.json?v=20260721-architecture-mirror-v1";
 const researchSupabaseUrl = "https://eaolqbrlywczinfordvg.supabase.co/rest/v1";
 const researchSupabaseKey = "sb_publishable_k6YbEuuk3GyB9GVTQDtNVA_J1gCRYaY";
@@ -270,6 +271,7 @@ let phase2ShadowBacktestData = null;
 let confidenceBandDeliveryData = null;
 let researchProofMapData = null;
 let backtestEngineData = null;
+let liveTradingData = null;
 let economicEventRefreshData = null;
 let economicEventsSourceData = null;
 let inputHealthData = null;
@@ -13842,6 +13844,250 @@ function setupArchitectureControls() {
   });
 }
 
+// The Live Trading section renders one read-only broker snapshot. It has no order code: every field
+// it shows comes from data/live-trading.json, written by tools/mt5-bridge/live-trading-snapshot.py.
+function liveTradingTimestampLabel(value) {
+  if (!value) return displayDash();
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return String(value);
+  return `${String(parsed.getUTCHours()).padStart(2, "0")}:${String(parsed.getUTCMinutes()).padStart(2, "0")}Z`;
+}
+
+function liveTradingAgeSeconds(data) {
+  const generated = Date.parse(data?.generated_at_utc || "");
+  if (Number.isNaN(generated)) return null;
+  return Math.max(0, Math.round((Date.now() - generated) / 1000));
+}
+
+function liveTradingAgeLabel(seconds) {
+  if (seconds === null) return "age unknown";
+  if (seconds < 60) return `${seconds}s ago`;
+  if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
+  if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ${Math.floor((seconds % 3600) / 60)}m ago`;
+  return `${Math.floor(seconds / 86400)}d ago`;
+}
+
+function liveTradingFreshness(data) {
+  if (data?.meta?.error) {
+    return { tone: "error", label: "SNAPSHOT UNAVAILABLE", detail: String(data.meta.error) };
+  }
+  const age = liveTradingAgeSeconds(data);
+  const window = Number(data?.stale_after_seconds) > 0 ? Number(data.stale_after_seconds) : 900;
+  if (age === null) {
+    return { tone: "unknown", label: "AGE UNKNOWN", detail: "generated_at_utc is missing or unreadable" };
+  }
+  if (age <= window) {
+    return {
+      tone: "fresh",
+      label: "FRESH",
+      detail: `Snapshot ${liveTradingAgeLabel(age)}, inside the ${Math.round(window / 60)}m window${liveTradingBarsCoverage(data)}`
+    };
+  }
+  return {
+    tone: "stale",
+    label: "STALE",
+    detail: `Last snapshot ${liveTradingAgeLabel(age)}. Nothing is writing to this file: the producer runs on the machine holding the terminal, so the feed only moves while that machine is up.`
+  };
+}
+
+function liveTradingPrice(value, digits) {
+  if (value === null || value === undefined || value === "") return displayDash();
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) return displayDash();
+  return numeric.toFixed(Number.isInteger(Number(digits)) ? Number(digits) : 2);
+}
+
+function liveTradingSigned(value, digits) {
+  if (value === null || value === undefined) return displayDash();
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) return displayDash();
+  return `${numeric > 0 ? "+" : ""}${numeric.toFixed(Number.isInteger(Number(digits)) ? Number(digits) : 2)}`;
+}
+
+// Per-instrument M5 freshness. A quote can be live while the bar series beside it is hours old, so
+// each card states the age of its own newest bar rather than inheriting the snapshot's FRESH badge.
+function liveTradingBarFreshness(m5) {
+  const age = Number(m5?.bar_age_seconds);
+  const ageSeconds = Number.isFinite(age) ? Math.round(age) : null;
+  return {
+    stale: m5?.stale === true,
+    ageSeconds,
+    label: ageSeconds === null ? "age unknown" : liveTradingAgeLabel(ageSeconds)
+  };
+}
+
+function liveTradingBarsCoverage(data) {
+  const instruments = (Array.isArray(data?.instruments) ? data.instruments : [])
+    .filter(instrument => instrument?.available === true && instrument?.m5);
+  if (!instruments.length) return "";
+  const current = instruments.filter(instrument => instrument.m5.stale !== true).length;
+  return current === instruments.length
+    ? `; all ${instruments.length} instruments on a current M5 bar`
+    : `; ${current} of ${instruments.length} instruments on a current M5 bar`;
+}
+
+function liveTradingSeriesBars(series, digits) {
+  const points = Array.isArray(series) ? series.slice(-24).filter(point => Number.isFinite(Number(point?.close))) : [];
+  if (!points.length) return `<p class="live-trading-empty">No M5 candles in this snapshot.</p>`;
+  const closes = points.map(point => Number(point.close));
+  const min = Math.min(...closes);
+  const max = Math.max(...closes);
+  const span = max - min || 1;
+  const bars = points.map(point => {
+    const height = 14 + Math.round(((Number(point.close) - min) / span) * 74);
+    const direction = ["up", "down", "flat"].includes(point.direction) ? point.direction : "flat";
+    const title = `${liveTradingTimestampLabel(point.time_utc)} ${liveTradingPrice(point.close, digits)}`;
+    return `<i class="live-trading-bar ${direction}" style="height:${height}%" title="${escapeHtml(title)}"></i>`;
+  }).join("");
+  return `<div class="live-trading-bars" role="img" aria-label="Last ${points.length} five-minute closes">${bars}</div>`;
+}
+
+function liveTradingInstrumentCard(instrument, data) {
+  const symbol = escapeHtml(instrument?.symbol || "Unknown symbol");
+  const asset = escapeHtml(instrument?.dashboard_asset || "n/a");
+  const digits = Number.isInteger(Number(instrument?.digits)) ? Number(instrument.digits) : 2;
+
+  if (!instrument || instrument.available !== true) {
+    return `
+      <article class="live-trading-card unavailable">
+        <header class="live-trading-card-head">
+          <div class="live-trading-card-id">
+            <span class="live-trading-asset">${asset}</span>
+            <span class="live-trading-symbol">${symbol}</span>
+          </div>
+          <span class="live-trading-direction flat">NOT SERVED</span>
+        </header>
+        <p class="live-trading-empty">${escapeHtml(instrument?.note || "This terminal does not serve this symbol.")}</p>
+      </article>
+    `;
+  }
+
+  const quote = instrument.quote || {};
+  const m5 = instrument.m5 || {};
+  const last = m5.last_close || {};
+  const direction = ["up", "down", "flat"].includes(m5.direction) ? m5.direction : "flat";
+  const directionLabel = direction === "up" ? "5M UP" : direction === "down" ? "5M DOWN" : "5M FLAT";
+  const bars = liveTradingBarFreshness(m5);
+  // A stale series must not wear the live direction colours, so the badge says what it is and the
+  // last bar's direction moves into the metadata line as a labelled fact.
+  const badgeLabel = bars.stale ? "5M STALE" : directionLabel;
+  const badgeClass = bars.stale ? "stale" : direction;
+  const staleNote = bars.stale
+    ? `<p class="live-trading-alert">${escapeHtml(m5.note || `The newest M5 bar in this snapshot is ${bars.label}, so this card is not a current 5M read.`)}</p>`
+    : "";
+  const staleDirection = bars.stale ? `<span><b>Last 5M bar</b> ${escapeHtml(directionLabel)}</span>` : "";
+  const spreadLabel = Number.isFinite(Number(quote.spread_points))
+    ? `${Number(quote.spread_points)} pts / ${liveTradingPrice(quote.spread_price, digits)}`
+    : displayDash();
+  const tickAge = Number.isFinite(Number(quote.tick_age_seconds))
+    ? ` (${liveTradingAgeLabel(Math.round(Number(quote.tick_age_seconds)))})`
+    : "";
+  const changePct = Number.isFinite(Number(m5.change_pct))
+    ? ` (${liveTradingSigned(m5.change_pct, 2)}%)`
+    : "";
+  const modeNote = data?.source?.scope ? escapeHtml(data.source.scope) : "read-only snapshot";
+
+  return `
+    <article class="live-trading-card">
+      <header class="live-trading-card-head">
+        <div class="live-trading-card-id">
+          <span class="live-trading-asset">${asset}</span>
+          <span class="live-trading-symbol">${symbol}</span>
+        </div>
+        <span class="live-trading-direction ${badgeClass}">${escapeHtml(badgeLabel)}</span>
+      </header>
+      <p class="live-trading-description">${escapeHtml(instrument.description || "")}</p>
+
+      <dl class="live-trading-quote">
+        <div><dt>Bid</dt><dd>${liveTradingPrice(quote.bid, digits)}</dd></div>
+        <div><dt>Ask</dt><dd>${liveTradingPrice(quote.ask, digits)}</dd></div>
+      </dl>
+
+      <div class="live-trading-meta">
+        <span><b>Spread</b> ${escapeHtml(spreadLabel)}</span>
+        <span><b>State</b> ${escapeHtml(quote.market_state || displayDash())}</span>
+        <span><b>Tick</b> ${escapeHtml(liveTradingTimestampLabel(quote.time_utc) + tickAge)}</span>
+        <span><b>Newest M5 bar</b> ${escapeHtml(bars.label + (bars.stale ? " (stale)" : ""))}</span>
+        ${staleDirection}
+      </div>
+
+      <dl class="live-trading-levels">
+        <div><dt>M5 close</dt><dd>${liveTradingPrice(last.close, digits)}</dd></div>
+        <div><dt>High</dt><dd>${liveTradingPrice(last.high, digits)}</dd></div>
+        <div><dt>Low</dt><dd>${liveTradingPrice(last.low, digits)}</dd></div>
+        <div><dt>Change</dt><dd>${escapeHtml(liveTradingSigned(m5.change_points, digits) + changePct)}</dd></div>
+      </dl>
+
+      ${liveTradingSeriesBars(m5.close_series, digits)}
+
+      ${staleNote}
+
+      <p class="live-trading-caption">
+        <span>${escapeHtml(`${m5.candle_count || 0} M5 candles`)}</span>
+        <span>Last close ${escapeHtml(liveTradingTimestampLabel(last.time_utc))} UTC / ${escapeHtml(liveTradingTimestampLabel(last.time_server))} server</span>
+      </p>
+      <p class="live-trading-caption">
+        <span>Min ${escapeHtml(String(instrument.min_lot))} lot / step ${escapeHtml(String(instrument.lot_step))}</span>
+        <span>Contract ${escapeHtml(String(instrument.contract_size))} / stops level ${escapeHtml(String(instrument.stops_level))}</span>
+        <span>${modeNote}</span>
+      </p>
+    </article>
+  `;
+}
+
+function renderLiveTrading(data) {
+  const panel = document.getElementById("liveTradingPanel");
+  const updated = document.getElementById("liveTradingUpdated");
+  if (!panel) return;
+
+  const freshness = liveTradingFreshness(data);
+  const instruments = Array.isArray(data?.instruments) ? data.instruments : [];
+  const account = data?.account || {};
+  const terminal = data?.terminal || {};
+  const source = data?.source || {};
+
+  if (updated) {
+    updated.textContent = `${freshness.label} · snapshot ${data?.generated_at_utc || "unknown"}`;
+  }
+
+  const accountChips = [
+    ["Login", account.login_masked || displayDash()],
+    ["Server", account.server || displayDash()],
+    ["Currency", account.currency || displayDash()],
+    ["Leverage", account.leverage ? `1:${account.leverage}` : displayDash()],
+    ["Balance", liveTradingPrice(account.balance, 2)],
+    ["Equity", liveTradingPrice(account.equity, 2)],
+    ["Free margin", liveTradingPrice(account.margin_free, 2)],
+    ["Open positions", String(account.positions_open ?? 0)],
+    ["Open orders", String(account.orders_open ?? 0)],
+    ["Terminal", terminal.build ? `build ${terminal.build}` : displayDash()],
+    ["Connection", terminal.connected === true ? "connected" : terminal.connected === false ? "disconnected" : displayDash()],
+    ["Account trading", terminal.trade_allowed === true ? "allowed" : terminal.trade_allowed === false ? "blocked" : displayDash()]
+  ].map(([label, value]) => `<span class="live-trading-chip"><b>${escapeHtml(label)}</b>${escapeHtml(value)}</span>`).join("");
+
+  const cards = instruments.length
+    ? instruments.map(instrument => liveTradingInstrumentCard(instrument, data)).join("")
+    : `<p class="live-trading-empty">No instruments in this snapshot. ${escapeHtml(data?.meta?.error || data?.note || "The producer found no reachable terminal.")}</p>`;
+
+  panel.innerHTML = `
+    <div class="live-trading-banner ${freshness.tone}">
+      <span class="live-trading-badge ${freshness.tone}">${escapeHtml(freshness.label)}</span>
+      <p>${escapeHtml(freshness.detail)}</p>
+    </div>
+
+    <div class="live-trading-chips">${accountChips}</div>
+
+    <div class="live-trading-grid">${cards}</div>
+
+    <div class="live-trading-provenance">
+      <p><b>Read-only.</b> Quotes, account facts and M5 candles only. This section has no order code: it cannot place, modify, close or cancel anything.</p>
+      <p>Producer <span class="live-trading-mono">${escapeHtml(source.producer || "tools/mt5-bridge/live-trading-snapshot.py")}</span> · ${escapeHtml(source.platform || "MetaTrader 5")} · ${escapeHtml(source.package || "package unknown")} · cadence ${escapeHtml(source.cadence || "5m")}</p>
+      <p>Snapshot ${escapeHtml(data?.generated_at_utc || "unknown")} UTC · server clock ${escapeHtml(data?.time_server || "unknown")} (offset ${escapeHtml(String(data?.server_offset_seconds ?? "unknown"))}s)</p>
+      <p>The 5m close-beyond-level rule is the entry confirmation to mark against. It is not a validated profit rule, and this panel is not a signal.</p>
+    </div>
+  `;
+}
+
 function setTab(tab) {
   const availableTabs = getAvailableTopLevelTabs();
   const fallbackTab = availableTabs.includes("overview") ? "overview" : (availableTabs[0] || "overview");
@@ -13859,6 +14105,7 @@ function setTab(tab) {
   const researchProofMapView = document.getElementById("researchProofMapView");
   const factorEdgeLabView = document.getElementById("factorEdgeLabView");
   const shadowLogicBacktestView = document.getElementById("shadowLogicBacktestView");
+  const liveTradingView = document.getElementById("liveTradingView");
   const architectureView = document.getElementById("architectureView");
   const agentView = document.getElementById("agentView");
 
@@ -13869,6 +14116,7 @@ function setTab(tab) {
   if (researchProofMapView) researchProofMapView.classList.toggle("active-view", activeTab === "research-proof-map");
   if (factorEdgeLabView) factorEdgeLabView.classList.toggle("active-view", activeTab === "factor-edge-lab");
   if (shadowLogicBacktestView) shadowLogicBacktestView.classList.toggle("active-view", activeTab === "shadow-logic-backtest");
+  if (liveTradingView) liveTradingView.classList.toggle("active-view", activeTab === "live-trading");
   if (architectureView) architectureView.classList.toggle("active-view", activeTab === "architecture");
   if (agentView) agentView.classList.toggle("active-view", orderedAgents.includes(activeTab));
 
@@ -13878,6 +14126,7 @@ function setTab(tab) {
   if (activeTab === "research-proof-map") renderResearchProofMap(researchProofMapData || {});
   if (activeTab === "factor-edge-lab") renderFactorEdgeLab(factorEdgeLabData || {});
   if (activeTab === "shadow-logic-backtest") renderShadowLogicBacktest(phase2ShadowBacktestData || {});
+  if (activeTab === "live-trading") renderLiveTrading(liveTradingData || {});
   if (activeTab === "architecture") {
     renderArchitecture();
     loadArchitectureManifest().catch(() => {});
@@ -14312,7 +14561,7 @@ async function fetchResearchDashboardData() {
 }
 
 async function loadDashboard() {
-  const [layer1Result, layer2Result, researchResult, factorEdgeLabResult, phase2ShadowBacktestResult, confidenceBandDeliveryResult, researchProofMapResult, backtestEngineResult, economicEventRefreshResult, economicEventsSourceResult, inputHealthResult] = await Promise.allSettled([
+  const [layer1Result, layer2Result, researchResult, factorEdgeLabResult, phase2ShadowBacktestResult, confidenceBandDeliveryResult, researchProofMapResult, backtestEngineResult, economicEventRefreshResult, economicEventsSourceResult, inputHealthResult, liveTradingResult] = await Promise.allSettled([
     fetch(layer1Url, { cache: "no-store" }),
     fetch(layer2Url, { cache: "no-store" }),
     fetchResearchDashboardData(),
@@ -14323,7 +14572,8 @@ async function loadDashboard() {
     fetchLocalJson(backtestEngineUrl),
     fetchLocalJson(economicEventRefreshUrl),
     fetchLocalJson(economicEventsSourceUrl),
-    fetchLocalJson(inputHealthUrl)
+    fetchLocalJson(inputHealthUrl),
+    fetchLocalJson(liveTradingUrl)
   ]);
 
   try {
@@ -14360,6 +14610,19 @@ async function loadDashboard() {
       },
       accuracy: {},
       infrastructure: {}
+    };
+  }
+
+  if (liveTradingResult.status === "fulfilled") {
+    liveTradingData = liveTradingResult.value;
+  } else {
+    console.error(liveTradingResult.reason);
+    liveTradingData = {
+      generated_at_utc: new Date().toISOString(),
+      read_only: true,
+      order_functions_called: false,
+      meta: { error: liveTradingResult.reason?.message || String(liveTradingResult.reason) },
+      instruments: []
     };
   }
 
@@ -14463,6 +14726,7 @@ async function loadDashboard() {
   renderBacktestEngine(backtestEngineData);
   renderFactorEdgeLab(factorEdgeLabData);
   renderShadowLogicBacktest(phase2ShadowBacktestData);
+  renderLiveTrading(liveTradingData);
   renderWorkflowStatus(workflowStatus);
   renderOverviewStatusPanel();
   renderOverviewConfidenceBandPanel();
