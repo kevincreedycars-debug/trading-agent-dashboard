@@ -24,7 +24,7 @@ const confidenceCalibrationUrl = "./data/confidence-calibration.json?v=20260728-
 const confidenceBandDeliveryUrl = "./data/confidence-band-delivery.json?v=20260728-confidence-band-delivery-v1";
 const researchProofMapUrl = "./data/research-proof-map.json?v=20260902-proof-map-v1";
 const backtestEngineUrl = "./data/backtest-engine.json?v=20260903-engine-v1";
-const liveTradingUrl = "./data/live-trading.json?v=20260930-live-trading-v1";
+const liveTradingUrl = "./data/live-trading.json?v=20260930-live-trading-v2";
 const architectureManifestUrlDefault = "./data/architecture-map.json?v=20260721-architecture-mirror-v1";
 const researchSupabaseUrl = "https://eaolqbrlywczinfordvg.supabase.co/rest/v1";
 const researchSupabaseKey = "sb_publishable_k6YbEuuk3GyB9GVTQDtNVA_J1gCRYaY";
