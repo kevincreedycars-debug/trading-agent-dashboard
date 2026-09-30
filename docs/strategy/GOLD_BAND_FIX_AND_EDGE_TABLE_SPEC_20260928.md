@@ -424,9 +424,16 @@ artifact, the page or the tests may count them as more. A rung whose benchmark i
    `looks_counted`: a single integer for the row, never one look per rung, never one look per reading, and
    never four (or eight) verdicts. The user's rule is four windows, one look; charging the same evidence
    twice would make it look stronger than it is.
-2. **NEUTRAL legs never enter a hit rate.** `inside_16_25`, `inside_5bps`, `inside_0_30pct` and every
-   document-declared NEUTRAL state are listed in `neutral_rows` with their raw up/down split and
-   nothing else. A NEUTRAL state cannot be right or wrong, so it must not inflate or dilute a win rate.
+2. **NEUTRAL legs never enter a hit rate, and they are printed so they cannot hide.** `inside_16_25`,
+   `inside_5bps`, `inside_0_30pct` and every document-declared NEUTRAL state are listed in `neutral_rows` with their
+   raw up/down split. A NEUTRAL state cannot be right or wrong, so it must not inflate or dilute a win rate. **Added
+   2026-09-30, per the user's answer to question 24:** each entry carries `state`, `n`, `positive`, `negative`,
+   `exact_zero`, `up_share_pct` and **`benchmark_pct`** - the same-cohort rate the scored rows use, on the same
+   window - so a reader can see what the excluded days did, and the state counts once in `looks_counted`. The reason
+   is coverage, not symmetry: `inside_16_25` holds the largest share of days (the plan's scratch sizing: 513 of 954
+   weekday VIX observations), so a headline rate without this line describes the minority of sessions. A gap between
+   `up_share_pct` and `benchmark_pct` that persists across years is the trigger to **declare a rule for that band**,
+   never a reason to drop the row.
 3. Denominator is directional outcomes only: `hit_rate_pct = expected_count / (positive + negative)`,
    with `exact_zero` excluded, exactly as the accepted report declares.
 4. **Every row carries its own drift benchmark** from the same cohort and window (session 55.81%,
@@ -547,8 +554,8 @@ acceptance gate for the two lanes, written out so they cannot be skipped.
    directories.
 3. `backtester/tests/gold_factor_edge_table.test.js` — `61.0%` with `n 200` and stable years clears the
    bar, is not thin and ranks first; `60.0%` with `n 99` does not clear and carries `thin: true`;
-   `59.9%` with `n 300` outranks a `52.0%` row by absolute edge; a NEUTRAL leg lands in `neutral_rows`
-   and contributes nothing to any hit rate; the drift arithmetic reproduces the accepted scorecard's
+   `59.9%` with `n 300` outranks a `52.0%` row by absolute edge; a NEUTRAL leg lands in `neutral_rows`, contributes nothing to any hit
+   rate, and carries its `n`, its split, its `benchmark_pct` and its single place in `looks_counted`; the drift arithmetic reproduces the accepted scorecard's
    own row (`60.51 − 55.81 = 4.70`); `year_warning` fires when a year's edge has the opposite sign;
    ordering is deterministic under ties; the module imports nothing network-, model- or
    credential-related.

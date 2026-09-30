@@ -284,7 +284,9 @@ A state is **interesting** only if all six hold — (1) the document declares a 
 `years_same_edge_sign` true, (6) `n >= 20` in at least two of 2023–2026. The table carries a
 `clears_interest_bar` boolean per row so the page can show, without commentary, that **nothing clears it
 today** — and will show that again whenever it runs. Rows without a declared direction can never clear it;
-they are published as raw context instead, which is the honest shape for a rule that does not exist yet.
+they are published as raw context instead, which is the honest shape for a rule that does not exist yet. (The
+*reliability percentages* added 2026-09-30 by the user's answer to question 23 are published in that same block and
+are labelled as observations of the archive: the bar is for declared rules only.)
 
 Per-year drift, so the 60% figure cannot be read as a 60% expectation:
 2023 51.54%, 2024 59.16%, 2025 60.15%, 2026 50.83% (session).
@@ -304,7 +306,23 @@ year rather than only pooled (condition 5, because gold's volatility regime move
 across the period, which alone flips any fixed-percentage threshold), and the overlap matrix from §7 keeps
 correlated factors from being presented as independent confirmations (28 variables on one instrument will agree
 by construction). Condition 1 is there because a state with no written direction can carry a raw rate but can
-never carry a claim. One limit is arithmetic, not methodological: about 470 daily anchors can *show* a 5pp gap
+never carry a claim.
+
+**Amended 2026-09-30 by the user's answers to questions 23 and 24.** Two declarative changes, neither fitted.
+(1) *The twenty with no written sentence now carry an assigned direction and a reliability percentage*, by the
+user's own method (answer 23: *"you know what the factors are then we see what price did then we assign a
+correlation"* - an up-implying factor that sees price up 70% of the time is *70% reliable*), so the earlier
+precondition that their meaning be agreed before any outcome is read is **withdrawn**. The assigned direction is
+written down with the date it was set, the percentage is printed beside the cohort's own rate on the same rows
+(gold drifts up: 56.84%), the pair is labelled a **description of the archive**, it cannot clear condition (1), and
+question 33's deferred out-of-sample step attaches to the sealed window instead (question 38). (2) *NEUTRAL rows
+get the cohort benchmark and a look*: a declared NEUTRAL state still never enters a hit rate, but its raw up/down
+split now prints beside the same-cohort rate on the same row, it is charged to `looks_counted`, and a persistent
+gap is the trigger to declare a rule for that band rather than a reason to drop it. The band `inside_16_25` is why
+that matters: it holds the largest share of days, so a headline rate without its line would describe the minority
+of sessions.
+
+One limit is arithmetic, not methodological: about 470 daily anchors can *show* a 5pp gap
 but cannot *confirm* it (about 774 are needed for 80% power on that size), so a bar-clearing table row today is
 reportable and worth watching, not established — which is what the D5 rebuild is for.
 
@@ -313,7 +331,9 @@ reportable and worth watching, not established — which is what the D5 rebuild 
 **Stream A rows — level bands, scored.** `vix_level` gets the document's own numbers as its declared
 stratum: `above_25` (>25 strictly), `below_16` (<16 strictly), `inside_16_25` (25.00 and 16.00 land here,
 because the document writes ">25" and "<16", not ">="). `above_25` gets the document's BULLISH, `below_16`
-gets BEARISH, `inside_16_25` is a declared NEUTRAL and never enters a hit rate. Sizing checked before the
+gets BEARISH, `inside_16_25` is a declared NEUTRAL and never enters a hit rate; per the user's answer to question 24
+(2026-09-30) its raw split prints beside the same-cohort rate on the same row and it counts in `looks_counted`, so
+an edge inside the no-view band stays visible instead of disappearing. Sizing checked before the
 run from `VIXCLS.json` itself (weekday observations 2023-01-03 to 2026-09-21, 954 of them): 41 above 25
 (4.3%), 400 below 16 (41.9%), 513 inside. So `below_16` will be testable and `above_25` will be **thin by
 construction** — roughly 40 anchors against a 100-observation floor, which the table must label rather than
@@ -453,10 +473,14 @@ Documented here so the plan is complete without fifteen questions:
   accepted bars (`hit_rate_pct >= 60` **and** `n >= 100`) stay exactly as the scorecard has them, with the 5pp gap
   against the cohort's own share on the movement stage. These were the plan's defaults; they are now declarations,
   so no lane may soften any of the four without the user.
-- **Two questions are still open and are re-asked in plainer words** (questions 22 and 23): whether the ten factors
+- **Two questions that were open are now answered** (questions 22 and 23): whether the ten factors
   that already have a written direction sentence are checked first, and whether the twenty with no written sentence
-  get their meaning agreed *before* any outcome is read. Both defaults are yes, so a lane may start; the ask only
-  affects the order of the work, not its shape. The plain-word restatement is in the answer sheet.
+  get their meaning agreed *before* any outcome is read. **Both came back on 2026-09-30: 22 is yes** - the ten with
+  a written sentence are checked first - and **23 is no**, which withdraws the precondition and puts the user's own
+  method in its place: implied direction from what the factor is, then the observed share, printed as a reliability
+  percentage and labelled a description of the archive (see the amendment in section 6). Neither answer changes the
+  shape or the order of lane 1's work. The plain-word restatement and the five replies verbatim are in the answer
+  sheet.
 
 ## 11. Tests the lanes must write (six, one line each)
 
@@ -465,7 +489,8 @@ Documented here so the plan is complete without fifteen questions:
 2. `gold_individual_variable_report_band.test.js` — the band register is declared before the run, the report
    refuses to overwrite, its content hash is stable, and the registry's sha256 is recorded in provenance.
 3. `gold_factor_edge_table.test.js` — the bar, the `thin` flag at n<100, NEUTRAL excluded from every hit
-   rate, `looks_counted` correct, drift arithmetic reproducing 60.51 − 55.81 = 4.70 from the accepted
+   rate while still printed with its raw split, its `n` and the same-cohort benchmark beside it and charged to
+   `looks_counted`, `looks_counted` correct, drift arithmetic reproducing 60.51 − 55.81 = 4.70 from the accepted
    scorecard, and deterministic row order.
 4. `gold_factor_edge_page.test.js` — one placeholder replaced once, the embedded JSON parses, no `fetch`, no
    external script, no model endpoint.

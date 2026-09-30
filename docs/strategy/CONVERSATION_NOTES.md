@@ -1783,3 +1783,82 @@ section now carries the three extra questions with their reasons), plus this ent
 **Status.** 23 of 50 answered, batch 6 out and unanswered, all five defaulting to yes. Still open and unchanged: the
 coordinator's confirmation of the two-unit print (the user's 0.80% beside the 1.00 L2L form), implemented as the
 default in the meantime, and the ladder rung names before lane 1 re-declares that horizon.
+
+## 2026-09-30 - Batch 6 answers: 23 reversed, 24 confirmed with a double-check, answered set now 28 of 50
+
+The five questions that went out earlier the same day came back the same day, so batch 6 is closed. Four replies
+confirm a default and **one reverses a rule**, which is why this entry is mostly about question 23 and about the one
+check the user asked for in question 24.
+
+**The replies, verbatim.** **22** *"Okay"*. **23** *"No you know what the factors are then we see what price did then
+we assign a correlation. e.g if F15 implies price moves up and price moves up 70% of the time is a 70% reliable
+factor."* **24** *"Okay, however double check that logic anything that could give an edge we need to be aware of"*.
+**25** *"Okay"*. **26** *"Okay"*.
+
+**23 withdraws the precondition, and two measured numbers take its place.** The plan claimed that the twenty states
+with no written sentence must have their meaning agreed *before* any price outcome is read, otherwise the sentence
+only describes the past that already happened. The answer is no. The user's method: the factor already tells you
+what it implies, then you look at what price did, then you assign the correlation - an up-implying factor that sees
+price up 70% of the time is *70% reliable*. So each of the twenty now carries an **assigned direction** and a
+**reliability percentage**. That is a real gain in what the table publishes: a number the archive can support for
+every one of the 28 variables, instead of 8 context-only rows.
+
+Three things are recorded with the number, all aimed at keeping it honest without arguing with the instruction. The
+direction is set after the archive is read, so the pair is labelled a **description of the archive**, not a test of a
+rule written before it; the direction line is written down **with the date it was set** so it cannot be silently
+re-picked later; and the percentage is printed beside the cohort's own rate (56.84% of archived sessions closed up),
+because an up-implying factor starts about 57 points in for free - which is the user's own earlier reading, *"5% more
+right than normal movement"*. The declared-rule bar is untouched: the 60% / 5pp / per-year-sign gate still means a
+sentence written down before its outcome was read, and question 33's deferred out-of-sample step attaches to the
+sealed window (question 38), which opens 2027-03-25.
+
+**One distinction is written down because the two answers are easy to merge by mistake.** A declared NEUTRAL state
+is the document saying *no direction* ("16-25 = NEUTRAL"). A state with no written sentence is the document saying
+*nothing at all*. Question 24 decides the first; question 23 decides the second. They now behave differently on
+purpose: NEUTRAL never gets a hit rate, and the twenty now get a reliability percentage.
+
+**24 keeps the exclusion, and the double-check added one table requirement.** The check was run against the
+documents, not by a new measurement, because this checkout owns no run. What it found:
+
+- *The arithmetic is right.* A declared NEUTRAL state cannot be right or wrong, so scoring it would inflate or
+  dilute a win rate with days the project never claimed anything about.
+- *The real risk is not inclusion, it is disappearance.* `inside_16_25` is the largest VIX band: on the plan's own
+  scratch sizing - 41 above 25, 400 below 16, 513 inside, out of 954 weekday VIX observations, explicitly labelled a
+  scratch estimate and not the run's numbers - about **54%** of days sit inside it. A headline rate computed on the
+  other 46% therefore describes the minority, and with no line for the band a reader can never see what those days
+  did. That is exactly the "edge we would not be aware of" the user asked about.
+- *The six declared NEUTRAL states, named so the requirement is specific:* the two `us_10y_real_yield_*_bps` and two
+  `us_2y_*bps` `exact_zero` states, `inflation_signal:exact_zero`, and `risk_headline_context:at_or_below_own_median`.
+- *Requirement added* (plan and table specification, 2026-09-30): a NEUTRAL row keeps its raw up/down split and its
+  `n`, **and** prints the same-cohort rate beside it in the same table, is charged once to `looks_counted`, and never
+  enters a hit rate. A gap that persists across years is the trigger to *declare a rule for the band*, never a reason
+  to drop the row.
+- *No new number was produced for the check.* It is coverage and arithmetic on rules already in the accepted
+  specification, plus the one requirement above; the sizing re-used is the plan's own scratch estimate, quoted as
+  scratch.
+
+**What did not change.** No measured gold figure, no accepted artifact, no bar, no boundary, no lane envelope and no
+sealed-window value. The twenty's reliability work is a stage-2 table addition rather than a stage-1 change, so *no
+stage-1 row carries a direction field* still holds, and the two lanes' scopes are the same as before. The two open
+items are also unchanged: coordinator confirmation of the two-unit print (0.80% beside 1.00 L2L, implemented as the
+default), and confirmation of the rung keys `two_sessions` / `three_sessions` before lane 1 opens its envelope.
+
+**Where each answer is written so it cannot be lost.**
+
+- Answer sheet: rows 22-26 now carry the answers verbatim, the status line and the send paragraph record the close
+  and the new count, the answer log has a batch-6 answers row, the two earlier sections that answer 23 supersedes
+  ("No written rule" and the plain-words section) are amended in place, and a new "Batch 6 answers" section holds the
+  replies verbatim plus what each changes.
+- Plan: section 6 carries the amendment ("Amended 2026-09-30 by the user's answers to questions 23 and 24"), the
+  interest-bar note says the reliability numbers are observations rather than bar-clearing claims, the Stream A
+  description of `inside_16_25` gets the answer-24 requirement, the "two questions are open" bullet in section 10 now
+  reads "answered", and test 3 carries the neutral-row requirement.
+- Table specification: rule 2 becomes "NEUTRAL legs never enter a hit rate, and they are printed so they cannot
+  hide", naming the required neutral-row fields (`state`, `n`, `positive`, `negative`, `exact_zero`, `up_share_pct`,
+  `benchmark_pct`) and the `looks_counted` charge; test 3 mirrors it.
+
+**Status after this entry.** **28 of 50 answered** (1-26, 27, 33). Batch 7 - questions **28, 29, 30, 31, 32**, the
+rest of group E and all of group F - went out with the acknowledgement, one short reason each, all defaulting to
+yes, so nothing is held. Nothing from the user's side is outstanding except that batch, and the 17 questions that
+have never been asked follow it in numbering order.
+
