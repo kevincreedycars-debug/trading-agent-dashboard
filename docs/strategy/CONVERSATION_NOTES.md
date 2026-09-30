@@ -1970,3 +1970,11 @@ this entry.
 acknowledgement: the surviving measurement pair plus all of the deliverable group. The two standing coordinator
 items (the two-unit print, and the rung keys) are unchanged. No measurement, credential or sealed-window value was
 read, no lane envelope was opened, and nothing already measured moved.
+
+**Filed as submission `20260930-strategy-user-intent-batch8-answers-025`** out of commit `2af0a41`, sha256
+`9fac57f1f073f9b666960830baddd9697e7fe15ae0adbb53e31dc459f77d0916` in the coordinator inbox
+(`pending_review` when this line was written). The filing was checked after it landed: the inbox copy parses to content
+identical to the working file, the only difference being that the coordinator's submitter writes LF where the working
+file is CRLF, and `coordination.js check --worker strategy` lists `-025` and returns `errors: []`. This bookkeeping line
+was committed after the filing, so the submission's recorded `head_commit` is the commit it actually left from rather
+than the commit now at the tip of the branch.
