@@ -1,5 +1,54 @@
 # Session notes
 
+2026-09-30 (cont. 3), strategy 030 release-package review cycle: the background coordinator took the one review it owned,
+`strategy` submission `20260930-strategy-gold-tabs-release-ready-030`, and decided **accepted, as a verified advisory
+release package** - not a publish, merge, deployment, lane opening, route selection or accuracy claim, so the live
+dashboard is unchanged, `gold.html` is absent from the canonical checkout and no release worktree was cut (mailbox
+`8522d1292cc3966a46f6815ca14c9598001daf0a679fe10ce5ce70507dcde52f` reproduced from the immutable inbox file at 8,183
+bytes, reply `08847820edd18d3937d8e03f0db27fa2be2ebe5db46a841360073c8645a68df2` at 8,560 bytes, durable review
+`docs/orchestration/reviews/20260930-strategy-gold-tabs-release-ready-030.md`). The controller lock owned this run - the
+controller status carried state `reviewing` with this submission's id and pid 24000 - so no interactive pause or stop was
+run, and the dispatcher, the bridge, the controller and every other worker checkout were left untouched; no subagent was
+spawned and no production, warehouse, credential or external action was taken.
+
+Verified from the checkout rather than trusted: `2466cf9` (+16/-0) and `1c2678b` (+310/-0) across exactly the four
+`docs/strategy/` files the envelope names, on the reported base `c3b5e209` through `e6db6f7`, with a clean worktree; the
+shell candidate byte-exact at 6,199 bytes / 109 CRLF / 0 bare LF / sha256 `74dd93c8...`; the merge request at 11,807
+bytes / 145 CRLF / 9 sections with section 9 present; the conversation notes at 197,841 bytes; the brief measuring 9,941
+bytes rather than the reported 9,943 (2 bytes, the only arithmetic slip, recorded as a note); the revision-2 draft page
+at 24,687 bytes / 289 CRLF / sha256 `aa9e104c...` with 5 `h2`, one `.draft` banner, `50 of 50 answered` and the same
+as-of line; `gold_factor_wip_dashboard_link.browser.test.js` line 28 exactly the `/40 of 50 answered/` pin, with that
+guard re-run here green at 2 of 2; the four page figures and every quoted bar line (19, 20, 21, 22, and the line-45 rail
+button the brief preserves) reproduced; and no fourth topbar-dependent guard beyond `backtest_flow_page.browser.test.js`,
+whose assertion is about the `backtest-flow.html` entry E2 keeps. The shell was also re-driven in a real browser by the
+coordinator's own harness rather than the worker's script - ignored scratch
+`.local/orchestration/tmp/review-030-sim.js`, copies of `styles.css`, `index.html`, the four gold pages and the candidate
+as `gold.html` in an ignored folder, served on loopback, Playwright Chromium 1440x900 - and returned
+`CANDIDATE OK (coordinator re-run)`: all four tabs select, each open frame measures 1398 px wide and reads its own page's
+values (`#c-scored` 25 with 25 rows, `Gold backtesting evidence`, `#c-evaluated` 4,956, the draft banner's
+`40 of 50 answered`), `gold.html#factor` reopens that tab after a reload, the arrow key moves the selection, every
+address answers 200, and there are zero 404s and zero console errors.
+
+The material finding is the release's, not the package's: **the checkout bar is not the published bar.** `origin/main` is
+`599c686`, the lines have diverged by 275 commits (179 the other way), and `git diff origin/main -- index.html` is 39
+insertions and 33 deletions. Production carries two gold bar entries (`Gold Direction`, `Gold Factor (draft)`) plus
+`Backtest Flow` and no `Gold Backtest` entry, together with the Live Trading section, the Silver/WTI/GBP rail tabs and
+newer `styles.css`/`script.js` cache-busters; the checkout carries three gold entries and lacks all of those. So the
+merge request's original two links describe production and the worker's measured three describe the checkout, and both
+are right about their own file. The release rule this records: build the change on the published `index.html`, or it
+would revert live work and cache-busters along with the intended one-entry change; and because the outcomes page has no
+live route today, this merge would be the first thing to give it one, which is why the E4 guard rewrite is load-bearing.
+Two further notes, neither a defect: the candidate's own header comment is stale in one clause (it still says two bar
+links) and carries a build-candidate banner, so E1's byte-for-byte copy would put both into the published file's HTML
+comment; and the fourth tab, `gold-backtest-outcomes.html`, remains the one tab the user did not name.
+
+Not done, deliberately: no publish, no push, no release worktree, no page copied into the site root, no bar or guard
+edit, no new assignment, no lane registered, and no worker status change - `strategy` stays `advisory_active` under
+`strategy-advisory-001` and the submission is spent. The precise unresolved decisions remain the user's: the morning
+go-ahead for Route A; whether revision 2 of the draft page travels in the same release with the pinned assertion moved
+to 50 of 50 in the same change; whether to strip the stale header comment and whether the four-tab set is confirmed; and
+whether to open the movement-screen measurement lane at all, and on which worker, while the Gold hold stands.
+
 2026-09-30 (cont. 2), funded-authority, refresh and new-window cycle: this interactive coordinator run took the two
 questions it had left with the user and acted on both, then opened the window the user asked for. Authority: the user
 answered "funded trading", and it is recorded in `docs/orchestration/DECISIONS.md` as their decision with the harness

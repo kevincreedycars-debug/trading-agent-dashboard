@@ -1,5 +1,47 @@
 # Central decisions
 
+## 2026-09-30 (cont. 3): strategy 030 accepted - the gold tab shell is verified and release-ready, and the publish stays the user's
+
+The background coordinator reviewed `strategy` submission `20260930-strategy-gold-tabs-release-ready-030` (mailbox
+SHA-256 `8522d1292cc3966a46f6815ca14c9598001daf0a679fe10ce5ce70507dcde52f`, reproduced from the immutable inbox file at
+8,183 bytes; reply `08847820edd18d3937d8e03f0db27fa2be2ebe5db46a841360073c8645a68df2` at 8,560 bytes; durable review
+`reviews/20260930-strategy-gold-tabs-release-ready-030.md`) and decided **accepted**, as a verified advisory release
+package. Acceptance is not a publish, merge, deployment, lane opening, route selection or accuracy claim: this run
+carries no production authority, the live dashboard is unchanged, and `gold.html` does not exist in the canonical
+checkout.
+
+Verified from the checkout rather than trusted: commits `2466cf9` (+16/-0) and `1c2678b` (+310/-0) across exactly the
+four named `docs/strategy/` files on the reported base `c3b5e209` through `e6db6f7`, a clean worktree, the candidate
+byte-exact at 6,199 bytes / 109 CRLF / 0 bare LF / sha256 `74dd93c8...`, the merge request at 11,807 bytes / 145 CRLF /
+9 sections with section 9 present, the brief measuring 9,941 bytes rather than the reported 9,943 (2 bytes, the only
+arithmetic slip), the revision-2 draft page at 24,687 bytes / 289 CRLF / `aa9e104c...` with 5 `h2`, one `.draft` banner,
+`50 of 50 answered` and the same as-of line, the guard's line 28 exactly the `/40 of 50 answered/` pin with that guard
+re-run green at 2 of 2, the four page figures and the quoted bar lines reproduced, and no fourth topbar-dependent guard
+beyond `backtest_flow_page.browser.test.js`. The shell was re-driven by the coordinator's own harness in ignored scratch
+(loopback server, Playwright Chromium 1440x900) and returned `CANDIDATE OK`: four tabs, each frame reading its own
+page's values, the hash reopening the factor tab, the arrow keys moving the selection, every address 200, and no 404 or
+console error.
+
+**The decision rule this cycle records:** the release must be built on the published `index.html`, not by copying the
+checkout file over it. The two lines have diverged - 275 commits exist only on `origin/main` (`599c686`), `git diff
+origin/main -- index.html` is 39 insertions and 33 deletions - and production carries two gold bar entries
+(`Gold Direction`, `Gold Factor (draft)`) with no `Gold Backtest` entry, the Live Trading section, the Silver/WTI/GBP
+rail tabs and newer `styles.css`/`script.js` cache-busters, while the checkout carries three gold entries and lacks all
+of those. The link count is therefore two on the published file and three on the checkout, and both the merge request
+and the worker's correction are right about their own file. A related consequence: the outcomes page has no live route
+today, so this merge would be the first change to give it one.
+
+No new assignment is published and no worker status changed: `projects.json` keeps `strategy` at `advisory_active` under
+`strategy-advisory-001`. The build is the coordinator's own dashboard work under the single-writer rule and the publish
+is a production action of the same kind as `a2b0e13`, so a worker assignment would put a second writer on the same
+files.
+
+**Unresolved and the user's:** the morning go-ahead for Route A; whether revision 2 of the draft page travels in the same
+release with the pinned assertion moved to 50 of 50 in the same change; whether to strip the candidate's stale header
+comment (it still says two bar links and that it is a build candidate not to be published) and whether the four-tab set,
+including the outcomes tab the user did not name, is confirmed; and whether to open the movement-screen measurement lane
+at all, and on which worker, while the Gold hold stands.
+
 ## 2026-09-30 (cont.): the user chose funded trading authority, and the gates that stand in front of it
 
 On 2026-09-30 the user answered the first of the five live-trading questions in plain words: the authority level for
