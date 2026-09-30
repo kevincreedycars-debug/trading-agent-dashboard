@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gold factor work in progress (draft)</title>
+<style>
+:root{--ink:#1c1b19;--muted:#5c574f;--line:#dcd7ce;--paper:#fff;--bg:#f5f3ef;--purple:#4b3f72;--amber:#8a5200;--amberbg:#fdf4e3;--good:#1f6f4a;--bad:#9b2c2c}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 "Segoe UI",system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif}
+.wrap{max-width:1020px;margin:0 auto;padding:26px 20px 70px}
+a{color:var(--purple)}
+h1{font-size:27px;line-height:1.24;margin:4px 0 8px}
+h2{font-size:20px;margin:34px 0 10px;padding-bottom:6px;border-bottom:2px solid var(--line)}
+h3{font-size:16px;margin:22px 0 8px}
+p{margin:10px 0}
+ul{margin:10px 0 10px 20px;padding:0}
+li{margin:5px 0}
+small{color:var(--muted)}
+.draft{background:var(--amberbg);border:1px solid #e8d2a6;border-left:6px solid var(--amber);border-radius:8px;padding:14px 18px;margin:0 0 20px}
+.draft strong{color:var(--amber)}
+.kicker{color:var(--muted);text-transform:uppercase;letter-spacing:.09em;font-size:12px;margin:0}
+.meta{color:var(--muted);font-size:13px;margin:0 0 4px}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:16px 18px;margin:14px 0}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin:14px 0}
+.kpi{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.kpi b{display:block;font-size:24px;line-height:1.2}
+.kpi span{color:var(--muted);font-size:13px}
+table{border-collapse:collapse;width:100%;margin:12px 0;background:var(--paper);font-size:15px}
+th,td{border:1px solid var(--line);padding:7px 9px;text-align:left;vertical-align:top}
+th{background:#efebe3;font-weight:600}
+td.n,th.n{text-align:right;white-space:nowrap}
+.flag{display:inline-block;font-size:12px;font-weight:600;border-radius:999px;padding:2px 9px;border:1px solid var(--line);background:#efebe3;color:var(--muted)}
+.flag.yes{border-color:#bcd9c9;background:#eaf5ef;color:var(--good)}
+.flag.no{border-color:#e6c3c3;background:#fbecec;color:var(--bad)}
+.bar{height:10px;background:#e7e2d8;border-radius:999px;overflow:hidden;margin:10px 0 4px}
+.bar i{display:block;height:100%;width:80%;background:var(--purple)}
+.note{border-left:4px solid var(--purple);background:#f2f0f7;padding:10px 14px;border-radius:0 8px 8px 0;margin:14px 0}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:760px){.grid2{grid-template-columns:1fr}}
+footer{margin-top:40px;border-top:1px solid var(--line);padding-top:14px;color:var(--muted);font-size:13px}
+@media print{body{background:#fff}.draft{border-color:#999}}
+</style>
+</head>
+<body>
+<main class="wrap">
+
+  <div class="draft">
+    <p class="kicker">Draft &middot; work in progress</p>
+    <p style="margin:6px 0 0"><strong>This page is a live draft, published early on request.</strong> The round of
+    questions that settles how the gold factor tables are built is <strong>40 of 50 answered</strong>; no factor table
+    has been built yet; and nothing on this page is a result. It is here so the direction of the work can be seen
+    while it is still being written, and it is refreshed as each batch of answers lands.</p>
+  </div>
+
+  <p class="kicker">Gold factors &mdash; what we are building, and what the data already says</p>
+  <h1>First does it move, then which way</h1>
+  <p class="meta">As of 30 September 2026 &middot; advisory work by the strategy agent &middot; every interval used here is
+  already spent &middot; no forecast, no signal, no trading result</p>
+
+  <h2>1. Where the questions stand</h2>
+  <div class="bar"><i></i></div>
+  <p style="margin:4px 0 0"><small>40 of 50 answers in. The answered set is questions 1&ndash;40 with no gap.</small></p>
+  <div class="card">
+    <p>The ten still open are the last two measurement rules and the shape of the finished page. Seven of them
+    (41 to 47) are already with the user, and the last three follow with the next batch. Each is asked with one short reason, and if no answer comes the default stands, so the work never stalls:</p>
+    <ul>
+      <li><strong>41</strong> &mdash; measure the outcome from the next session open after the state is seen (the
+      session it could actually apply to, not the one it was seen in).</li>
+      <li><strong>42</strong> &mdash; the state must be known before the session it applies to, so no row can quietly
+      use the future.</li>
+      <li><strong>43</strong> &mdash; one page listing every factor with its raw movement numbers and no direction
+      claim.</li>
+      <li><strong>44</strong> &mdash; every published number carries its own day count and the floor that produced it.</li>
+      <li><strong>45</strong> &mdash; a ranked list is never presented as a winner.</li>
+      <li><strong>46</strong> &mdash; the page states how many looks were examined, so the best cell is never read as
+      the only one.</li>
+      <li><strong>47</strong> &mdash; rebuild the direction layer only after the movement layer is agreed.</li>
+      <li><strong>48</strong> &mdash; record the answers as decisions before any lane starts.</li>
+      <li><strong>49</strong> &mdash; a full page beside the accuracy panel rather than the minimum version appended to
+      the scorecard page.</li>
+      <li><strong>50</strong> &mdash; the movement question is answered before anything else is built.</li>
+    </ul>
+  </div>
+  <h2>2. What is already settled</h2>
+  <p>These are the rulings that shape the tables. Each one is the user's own answer, in the plain words of the
+  question round; the number is the question it came from.</p>
+  <table>
+    <tr><th style="width:30%">Decision</th><th>What it says</th><th class="n" style="width:86px">Answer</th></tr>
+    <tr><td><strong>The ranges that count as a move</strong></td><td>The user's own two: <strong>0.50 L2L</strong>
+      (ADR20 &times; 0.25) and <strong>full L2L</strong> (ADR20 &times; 0.50). Nothing new is invented, and the older
+      fixed 0.80% and 0.30% rows stay published only as labelled sensitivities.</td><td class="n">8, 36</td></tr>
+    <tr><td><strong>Order of work</strong></td><td>Movement first, direction second. The direction question is asked
+      only about states that changed how far gold moved, and only on the sessions that moved.</td><td class="n">8, 10, 18</td></tr>
+    <tr><td><strong>Direction is a side only</strong></td><td>Up or down. Never how far, so no target, stop or path is
+      read into any row.</td><td class="n">19</td></tr>
+    <tr><td><strong>A claim has to hold every year</strong></td><td>The same sign in every year, on at least 20 days
+      in the year. This is the test the fixed 0.80% rows fail and the L2L form passes (section 3).</td><td class="n">20</td></tr>
+    <tr><td><strong>The bars stay as accepted</strong></td><td>A 60% hit rate <em>and</em> at least 100 days, with a
+      5-point gap against gold's own baseline used on the movement stage.</td><td class="n">21</td></tr>
+    <tr><td><strong>One horizon ladder, one look</strong></td><td>Every row prints 1, 2, 3 and 5 sessions in one line,
+      the overlap is admitted, and the four windows count as one examination &mdash; never four confirmations.</td><td class="n">15, 16, 17</td></tr>
+    <tr><td><strong>Nothing is dropped</strong></td><td>A state that fires ten days a year is printed with its ten
+      days; no row is removed for being thin, rare or failing, and no cell is left blank where a number exists.</td><td class="n">9, 12</td></tr>
+    <tr><td><strong>Every number travels with its context</strong></td><td>Its own day count, the floor that produced
+      it, and how many looks were examined.</td><td class="n">17, 44, 46</td></tr>
+    <tr><td><strong>Ten first, then twenty</strong></td><td>The ten factors that already have a direction written down
+      are checked first; the twenty without one get an implied direction from what the factor is, then a reliability
+      percentage read off the past, labelled a <em>description of the archive</em>.</td><td class="n">22, 23</td></tr>
+    <tr><td><strong>Both VIX streams stay</strong></td><td>The level bands are scored; the change states are published
+      beside them as raw context, with no direction invented for them.</td><td class="n">29, 30</td></tr>
+    <tr><td><strong>The F9 safe-haven trigger</strong></td><td>Chosen by printed sample size: every candidate
+      definition is measured on the same window, the widest sample becomes the headline state, and the losers stay on
+      the page as counts.</td><td class="n">32</td></tr>
+    <tr><td><strong>Sizing the rebuild</strong></td><td>A 3-point effect needs about 2,100 days per state, which daily
+      rows cannot supply, so hourly rows are allowed with the horizon re-declared and the overlap disclosed.</td><td class="n">34, 35</td></tr>
+    <tr><td><strong>The flags are not traded</strong></td><td>Not yet, and no row may be called a signal. Their stated
+      purpose is to reassemble the daily-call logic from what the factors are shown to have done &mdash; a later,
+      separate step.</td><td class="n">39</td></tr>
+    <tr><td><strong>No dealing cost, no profit figure</strong></td><td>This is a data-correlation exercise only: no
+      spread, no slippage, no cost-adjusted number, no profit and loss, no entry or exit.</td><td class="n">40</td></tr>
+  </table>
+  <h2>3. What the data already says</h2>
+  <p>All of this is read from the gold record that already exists &mdash; the 570 archived gold call sessions from
+  4 January 2024 to 30 April 2026 &mdash; and every interval involved is already spent. These are base rates and
+  sizing facts, not findings.</p>
+
+  <div class="kpis">
+    <div class="kpi"><b>570</b><span>gold call sessions read (2024-01-04 to 2026-04-30)</span></div>
+    <div class="kpi"><b>56.84%</b><span>of those days gold closed up &mdash; the baseline any factor has to beat</span></div>
+    <div class="kpi"><b>97.89%</b><span>of days clear the 0.50 L2L range in one direction or the other</span></div>
+    <div class="kpi"><b>45.63%</b><span>of one-sided days the call named the side that moved</span></div>
+  </div>
+
+  <h3>3.1 The record, in one table</h3>
+  <table>
+    <tr><th>Gold, on the 570 call sessions</th><th class="n">Value</th></tr>
+    <tr><td>median day range (ADR20), as a share of the session open</td><td class="n">1.4472%</td></tr>
+    <tr><td>that range in the L2L units the tables use: full L2L</td><td class="n">0.7236%</td></tr>
+    <tr><td>and half of it: 0.50 L2L</td><td class="n">0.3618%</td></tr>
+    <tr><td>median move close to close, ignoring direction</td><td class="n">0.6701%</td></tr>
+    <tr><td>days the call was right at the close</td><td class="n">46.32%</td></tr>
+    <tr><td>days gold closed up (always-bullish baseline on the same rows)</td><td class="n">56.84%</td></tr>
+    <tr><td>days the call's own direction reached half the L2L range</td><td class="n">64.04%</td></tr>
+    <tr><td>days the call's own direction reached the full L2L range</td><td class="n">38.42%</td></tr>
+  </table>
+
+  <h3>3.2 Movement first, then direction &mdash; the user's own criterion</h3>
+  <table>
+    <tr><th>On the same 570 sessions</th><th class="n">0.50 L2L</th><th class="n">full L2L</th></tr>
+    <tr><td>a move of that size happened, either direction</td><td class="n">97.89%</td><td class="n">75.26%</td></tr>
+    <tr><td>of the days that moved: only up / only down / both sides</td><td class="n">38.89 / 24.73 / 36.38%</td><td class="n">51.52 / 40.09 / 8.39%</td></tr>
+    <tr><td>the call's own direction reached the range</td><td class="n">64.04%</td><td class="n">38.42%</td></tr>
+    <tr><td>one-sided days only: the call named the side that moved</td><td class="n"><strong>45.63%</strong></td><td class="n"><strong>46.56%</strong></td></tr>
+    <tr><td>always saying &ldquo;up&rdquo; on those same rows</td><td class="n"><strong>61.13%</strong></td><td class="n"><strong>56.23%</strong></td></tr>
+  </table>
+  <div class="note">
+    <p style="margin-top:0"><strong>Two readings, and they pull opposite ways.</strong> The movement stage is almost
+    always &ldquo;yes&rdquo; at 0.50 L2L &mdash; 97.89% of days &mdash; so at that size the range cannot sort the
+    days. The direction stage is the weak part: on the days that moved one way only, the call named that side
+    <strong>45.63%</strong> of the time while simply saying &ldquo;up&rdquo; every day would have been right
+    <strong>61.13%</strong> of the time. It is the same finding the accepted verdict already carries (call right at the
+    close 46.32% against 56.84% up-closes), read here through the user's own criterion. Days where both sides reached
+    the range are left out of the matched count, because a call is right either way once both sides are touched.</p>
+  </div>
+  <h3>3.3 Does it last? 1, 2, 3 and 5 sessions</h3>
+  <p>The user's own ladder: is this a one-day event, or does it set the tone for a few days? Same measure, longer
+  windows (the four columns overlap, so they are one examination, not four).</p>
+  <table>
+    <tr><th>0.50 L2L, on the same anchors</th><th class="n">1 session</th><th class="n">2 sessions</th><th class="n">3 sessions</th><th class="n">5 sessions</th></tr>
+    <tr><td>a move of that size happened, either direction</td><td class="n">97.89%</td><td class="n">99.82%</td><td class="n">99.82%</td><td class="n">99.82%</td></tr>
+    <tr><td>the call's own direction reached the range</td><td class="n">64.04%</td><td class="n">75.26%</td><td class="n">78.95%</td><td class="n">82.63%</td></tr>
+    <tr><td>one-sided windows: the call named the side that moved</td><td class="n">45.63%</td><td class="n">47.57%</td><td class="n">45.66%</td><td class="n">44.32%</td></tr>
+    <tr><td>always saying &ldquo;up&rdquo; on those same rows</td><td class="n">61.13%</td><td class="n">61.42%</td><td class="n">64.38%</td><td class="n">67.05%</td></tr>
+    <tr><td>of the calls that reached the range, still on the right side at the close</td><td class="n">68.49%</td><td class="n">67.13%</td><td class="n">59.33%</td><td class="n">55.20%</td></tr>
+  </table>
+  <p><small>Read plainly: the move is the same-day part and it stays true &mdash; the range is reached on 97.89% of
+  days and on 99.82% of five-day windows, so &ldquo;will it move&rdquo; is certain and useless for sorting days.
+  Direction never arrives with time: the call names the side 45.63% at one session and 44.32% at five, while always
+  saying up improves from 61.13% to 67.05%. And the move is handed back rather than carried: of the calls that
+  reached the range, 68.49% were still on the right side at the one-session close but only 55.20% at the five-session
+  close.</small></p>
+
+  <h3>3.4 Why the ranges are read in L2L, not as a fixed percentage</h3>
+  <table>
+    <tr><th>The call's own direction reaches the range, by year</th><th class="n">2024</th><th class="n">2025</th><th class="n">2026</th><th>Same sign every year?</th></tr>
+    <tr><td>a fixed 0.80% of price</td><td class="n">32.40%</td><td class="n">38.43%</td><td class="n">62.82%</td><td><span class="flag no">fails</span></td></tr>
+    <tr><td>the same 0.80% read as the full L2L range</td><td class="n">39.60%</td><td class="n">37.19%</td><td class="n">38.46%</td><td><span class="flag yes">holds</span></td></tr>
+    <tr><td>read as 0.50 L2L</td><td class="n">63.60%</td><td class="n">64.88%</td><td class="n">62.82%</td><td><span class="flag yes">holds</span></td></tr>
+  </table>
+  <p><small>Gold's median day range ran from 1.32% to 3.12% across the period, so a fixed percentage of price is a
+  different bet each year, while the L2L form is the same bet. That is why the user's ranges are the ones the tables
+  use, and why the fixed rows stay visible only as labelled sensitivities.</small></p>
+
+  <h3>3.5 Nothing clears the bar yet</h3>
+  <p>The accepted bar is a 60% hit rate and at least 100 days, with the sign holding in every year. On the session
+  &mdash; the horizon this project treats as primary &mdash; <strong>no VIX state clears 60%</strong>; the closest is
+  59.21% and the drift alone is 55.81%. One row touches the bar at the week horizon at 60.51%, and it must not be
+  presented as a result: it is one of twelve looks on data already spent, and the same state's session number is
+  52.86%, below gold's own drift. The 60% figure is also not a 60% expectation, because the yearly drift moves a lot:
+  51.54% (2023), 59.16% (2024), 60.15% (2025), 50.83% (2026).</p>
+  <h2>4. What comes next</h2>
+  <ol style="margin:10px 0 10px 22px;padding:0">
+    <li style="margin:8px 0"><strong>The measurement run.</strong> The band rules are written down first &mdash; VIX
+    level bands, both VIX streams, the direction document's own thresholds &mdash; then the run measures every state
+    against the movement ranges, prints the 1/2/3/5 ladder, and produces one page of raw splits with no direction
+    claim in it.</li>
+    <li style="margin:8px 0"><strong>The factor table, then the page.</strong> Every factor gets one light
+    (&ldquo;worth watching today&rdquo; or &ldquo;nothing here today&rdquo;) with one short plain reason line
+    underneath carrying the size of the move and the day count &mdash; no score out of 100, no ranking, no winner. The
+    page sits beside the accuracy panel and every number carries its day count and the range that produced it.</li>
+    <li style="margin:8px 0"><strong>Later, and separately agreed: the daily-call logic.</strong> The user's stated
+    purpose for this work is to reassemble the algorithm behind the daily calls from what the factors are shown to
+    have done. That is a later step and it is not part of the current work.</li>
+  </ol>
+  <p><small>This page is the draft of the eventual factor page: it is published now, marked as a draft, and rewritten
+  as the answers arrive and the tables are built.</small></p>
+
+  <h2>5. What this page is not</h2>
+  <div class="card">
+    <ul style="margin:0 0 0 20px">
+      <li><strong>Not a forecast.</strong> Nothing here looks forward, and no window is held back for a future test;
+      a date range on this page says which record was read and nothing more.</li>
+      <li><strong>Not a trading result.</strong> No spread or slippage is subtracted, and there is no cost-adjusted
+      figure, no profit and loss and no entry, stop or target anywhere in this work.</li>
+      <li><strong>Not a signal.</strong> The flags are not traded. Every row is a reading of what the factors did
+      historically &mdash; the user's own example: a factor that implies up, on days gold then rose 70% of the time, is
+      a 70% reliable factor, and that is an account of the past rather than a recommendation.</li>
+      <li><strong>Not a verdict on any factor.</strong> Nothing clears the interest bar today, and the tables will say
+      so on the page rather than in a footnote.</li>
+      <li><strong>Correlation, not cause.</strong> Each state is compared with gold's own behaviour on the same days,
+      never with a coin flip; the factors overlap by construction, one moment can feed several of them, and the counts
+      are not independent trials.</li>
+      <li><strong>Bounded by the data.</strong> About 470 days can show a 5-point gap but not confirm it (about 774 are
+      needed), and at these group sizes a real 3-point effect is invisible, so &ldquo;nothing found&rdquo; means
+      &ldquo;nothing large&rdquo; and not &ldquo;nothing there&rdquo;. The record has no flat bucket either &mdash; no
+      session closed exactly unchanged &mdash; so &ldquo;a move happened&rdquo; is a line drawn here, and it always
+      travels with the range that drew it.</li>
+      <li><strong>Not finished.</strong> The question round is 40 of 50, no factor table exists yet, and this page is
+      a draft by its own description.</li>
+    </ul>
+  </div>
+
+  <footer>
+    <p><strong>Where the numbers come from.</strong> The 570 gold call sessions and every figure in section 3 are read
+    from the accepted gold record (the L2L reach research file and the trading-day directional file, with the direction
+    verdict unchanged), re-read here with read-only commands; the 1/2/3/5 ladder is measured window by window on the
+    same anchors using the hourly price series the accepted report itself used, with the one-session column
+    reproducing the archive's own fields exactly. Every interval involved is already spent. Figures are carried at the
+    precision they were measured at and are not re-derived on this page.</p>
+    <p><strong>Where the decisions come from.</strong> The question round is recorded answer by answer, in the user's
+    own words, with the answers to questions 36&ndash;40 (the ranges, the withdrawn forward-looking items, and the
+    no-cost / no-trade rulings) written into the plan and the technical appendix before any lane starts.</p>
+    <p><strong>Status of this page.</strong> Draft, version 1, as of 30 September 2026 &middot; refreshed as each batch
+    of answers lands &middot; prepared by the strategy advisory worker; published on this dashboard by its owner.</p>
+  </footer>
+
+</main>
+</body>
+</html>
