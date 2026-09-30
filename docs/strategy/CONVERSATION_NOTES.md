@@ -2036,3 +2036,12 @@ so neither side writes the other's file.
 
 **Status.** 41-47 remain with the user. Submission `-025` is still pending review; this turn files `-026`, whose whole
 purpose is the hand-over, so the request does not have to be found inside a batch of answers.
+
+**Filed as submission `20260930-strategy-live-draft-page-handover-026`** out of commit `a3f2fdc`, sha256 `2fe4894a...`
+in the working copy and `1579c4a7...` as the coordinator's submitter stored it - the same content, since the submitter
+writes LF where this worker writes CRLF, and the two files are identical once line endings are normalised and their parsed
+objects are deep-equal. `coordination.js check --worker strategy` lists `-026` with state `pending_review` and
+`errors: []`. The submission carries five checks, the frozen copy's hash, the four publish asks with a default for each,
+and one question that names the thing standing in the way plainly: no dashboard worker exists, so publishing the page is
+the coordinator's action. This bookkeeping line was committed after the filing, so the submission's recorded `head_commit`
+is the commit it actually left from rather than the commit now at the tip of the branch.
