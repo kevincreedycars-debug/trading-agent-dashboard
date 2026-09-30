@@ -2070,3 +2070,11 @@ queue decision rather than a dependency, and the publish itself is one copy plus
 **What the user has to do.** Click **Mailbox: Connect This Cline Worker** so the coordinator sees a live connection
 rather than a disconnected badge. Nothing else is needed from the user: the request, the frozen copy with its hash, the
 four asks with a default each, and the report-each-change rule are all already filed and unchanged.
+
+**Filed as submission `20260930-strategy-live-page-priority-027`** out of commit `a2c0baa`, a `status_report` rather than a
+deliverable, because its content is an answer and not work to review: publish the gold page first, review the harness
+report second, with a default for each other branch. sha256 `5d6761da...` in the working copy and `27bc00c5...` as the
+submitter stored it, identical once line endings are normalised. `coordination.js check --worker strategy` lists `-026`
+and `-027` as `pending_review` and returns `errors: []`, with the inbox at 28 files and 19 pending. The report also
+records the two checks that matter for the snag the coordinator raised: the connection badge is written by the mailbox
+extension and not by this worker, and it did not stop either filing, since both landed well after 07:06Z.
