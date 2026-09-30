@@ -55,7 +55,7 @@ Proposed bounded assignments (see "Handoff" for why it is two writers):
 - `dashboard-gold-factor-edge-page-001` — page lane; the coordinator should renumber this to the
   dashboard lane's own next free id if that lane numbers differently.
 
-## 1. User decisions already recorded (2026-09-28)
+## 1. User decisions already recorded (2026-09-28, extended 2026-09-29 in §1.2)
 
 1. Use the logic document's own numbers: VIX above 25 / below 16, and DXY move threshold 0.30%.
 2. Deliver a **ranked factor-state to forward-move table**, in the dashboard, under the Gold
