@@ -1,5 +1,53 @@
 # Central decisions
 
+## 2026-09-30 (cont.): live-trading publish-003 accepted as a hand-over; the publish itself is the user's decision
+
+The one review cycle this run owned took `live-trading` submission `20260930-live-trading-publish-003` (mailbox
+`5160e8298150d9459e8e9ac250deac1921ebd9ff1c84d16c0a69c18f5362ca0e`, reproduced from the immutable inbox file at
+16,823 bytes and equal to the requested hash; reply `78f28b9e...`, decision `accepted`; durable review
+`reviews/20260930-live-trading-publish-003.md`). The envelope is a hand-over, not a deliverable: it offers four
+artifacts and a mechanical port recipe for the Live Trading section and asks the coordinator to perform the publish.
+Everything it asserts was re-derived from the checkout and reproduces - the four artifact hashes byte-exactly, the
+validator `PASS`, the 18-of-18 contract suite, a read-only producer with no order call in the changed set, the four
+port anchors present once each on the published line, no live-trading reference or data file on `origin/main`, and the
+section in exactly one copy.
+
+**The publish was deliberately not performed.** A push to production `main` can publish GitHub Pages, so it is a
+production change, and this background review run carries no production authority. Nothing was pushed, merged, tagged,
+deployed or republished, no release worktree was cut and no site file was touched. The precedent for the one page that
+did go live this date is the standard: the gold factor draft page was published only after the user's own one-line
+answer, as a coordinator production action under the `dashboard` workstream rather than a lane. **The precise
+unresolved decision, and it is the user's: authorise the coordinator to apply the verified recipe onto `origin/main`
+and push, or hold the section in the worktree.** Once that is given, the coordinator ports the hunks, records the
+commit, the line and the address, and the lane confirms the user actually sees the tab.
+
+**The recipe is settled so that the decision is the only thing open.** Port the hunks onto `origin/main` rather than
+merging or fast-forwarding local `main` (now 8 ahead and 273 behind, and `docs/CONSOLIDATION_20260907.md` warns a push
+would publish eight unrelated commits); do not take whole files from the lane's branch, which would revert the
+published line and drop the Silver, WTI and GBP rail entries plus the gold draft link; one rail entry labelled
+`Live Trading` under a new `Live` group; `data/live-trading.json` ships as a refreshable artifact with its cache-buster
+bumped rather than as page code; the published site takes only `index.html`, `script.js`, `styles.css` and
+`data/live-trading.json`, with the producer, validator and tests staying on the repository line; and the lane's
+standing obligation is to confirm the tab is visible after the publish, not to assume it.
+
+**Boundaries, unchanged.** The disclosed overrun - the MetaTrader5 5.0.6231 install, the read-only read of the user's
+own live evaluation account and the writes outside `docs/live-trading/` - stays recorded as disclosed and not
+authorised, and a publish would not be approval of it. The three-way authority level (read-only feed, demo execution,
+funded execution) stays the user's and open. The panel is a read-only display surface: it is not accuracy, ranking,
+timing or edge evidence, nothing in it can reach Layer 1 or any trading path, and the sealed prospective window stays
+sealed until 2027-03-25T15:00:00Z. No new worker assignment was published, because no evidence supports one while the
+publish decision is open, and the register keeps `live-trading` at status exactly
+`instructions_published_awaiting_worker` with this outcome in `next`.
+
+**Correction to a coordinator figure.** Both the worker's report and this coordinator's own `-002` review said
+`styles.css` adds 50 live-trading-scoped lines. The raw insertion count is 52 - 50 non-blank lines made of 47
+`.live-trading` selectors, 2 scoped `@media` rules and 1 comment - with nothing deleted. The load-bearing claim, that
+every added line is live-trading-scoped and nothing was removed, holds.
+
+**Next cycle.** The worker filed its `-002` correction revision as `20260930-live-trading-feed-004` (head `4d82bb3`,
+two documentation files) at 20:56:50Z during this cycle. It is `pending_review` and was deliberately not taken, because
+this run was scoped to `-003` only.
+
 ## 2026-09-30 (cont.): the gold factor draft page is published live, and the publish standard is the committed blob
 
 The user answered the publish question in one line - "yes show it live" - so the coordinator published the strategy

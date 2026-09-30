@@ -1,5 +1,39 @@
 # Session notes
 
+2026-09-30 (cont.), live-trading publish-003 review cycle: the background coordinator took the one review it owned,
+`live-trading` submission `20260930-live-trading-publish-003`, and decided **accepted, as a verified hand-over** -
+which is not a publish, merge or deployment, and the live dashboard is unchanged (mailbox
+`5160e8298150d9459e8e9ac250deac1921ebd9ff1c84d16c0a69c18f5362ca0e` reproduced from the immutable inbox file, reply
+`78f28b9e27d8817bfd442b9278268ff67de97570956a0c46efb1cfd590a11b25`, durable review
+`docs/orchestration/reviews/20260930-live-trading-publish-003.md`). Verified from the checkout, not trusted: all four
+offered artifacts reproduce byte-exactly at the offered head (`9a68050`, an ancestor of the now-current tip `4d82bb3`,
+which is the worker's own `-002` correction commit), the validator `PASS`es and `node --test
+tests/live_trading_feed.test.js` is 18 of 18, the producer stays read-only by construction with no `order_send`,
+`order_check` or positions-close call anywhere in the changed set, the port anchors exist once each on `origin/main`
+(`shadowLogicBacktestPanel`, `architectureView`, `const tabs`, `.backtest-panel`), `origin/main` carries no
+live-trading reference and no `data/live-trading.json`, and the section exists in exactly one copy - this worktree's.
+
+The publish itself was **not** taken, and that is the point of the reply: a push to production `main` can publish
+GitHub Pages, this background run carries no production authority, and no site file was touched and no release
+worktree was cut. The **precise unresolved decision is the user's: authorise the coordinator to apply the verified
+recipe onto `origin/main` and push, or hold the section in the worktree.** The recipe is ruled so the decision is the
+only thing left: port the hunks onto `origin/main`; never push local `main` (8 ahead and 273 behind, and
+`docs/CONSOLIDATION_20260907.md` warns it would publish eight unrelated commits); never take the whole three files
+from the branch, which would revert the published line and drop the Silver, WTI and GBP rail entries and the gold
+draft link now live; one rail entry labelled `Live Trading` under a new `Live` group; `data/live-trading.json` ships as
+a refreshable artifact rather than page code; only the four files go to the published site; and at publish time the
+commit, the line and the URL are recorded. The lane's six questions were all answered and its disclosed scope overrun
+stays recorded and not authorised, with the three-way authority level (read-only feed, demo execution, funded
+execution) still the user's. No new assignment was published: no evidence supports one while the publish decision is
+open, so the register keeps `live-trading` at status exactly `instructions_published_awaiting_worker`. One note, not a
+defect: the styles.css figure in the report (and in this coordinator's own `-002` review) should read 52 raw
+insertions, 50 of them non-blank - 47 selectors, 2 scoped `@media` rules and 1 comment - with nothing deleted.
+
+Two handoff facts. The worker filed its `-002` correction revision as `20260930-live-trading-feed-004` at 20:56:50Z
+during this cycle (head `4d82bb3`, two documentation files); it is `pending_review` and this run deliberately did not
+take it, because the cycle was scoped to `-003` only. And the command policy again refused nothing this cycle: unlike
+the `-002` round, `node scripts/coordination.js reply`, `node scripts/monitor-state.js activity` and file writes all
+worked here, so the reply went through the canonical CLI rather than by hand.
 2026-09-30 (cont.), live-trading review cycle: the background coordinator took the one review it owned, `live-trading`
 submission `20260930-live-trading-feed-002`, and decided **changes requested, documentation only** (mailbox
 `088e8a9515fddcc149edd6bc41230952f141d8075a16bf7ba04b4e429e4c0f21` reproduced from the immutable inbox file, reply

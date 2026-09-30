@@ -1,5 +1,28 @@
 # Current state
 
+2026-09-30 (cont.): the coordinator reviewed the live-trading lane's hand-over `20260930-live-trading-publish-003`
+(mailbox sha256 `5160e8298150d9459e8e9ac250deac1921ebd9ff1c84d16c0a69c18f5362ca0e` reproduced from the immutable inbox
+file at 16,823 bytes, reply `78f28b9e27d8817bfd442b9278268ff67de97570956a0c46efb1cfd590a11b25`, decision **accepted**,
+durable review `docs/orchestration/reviews/20260930-live-trading-publish-003.md`) and did **not** publish: this
+background run carries no production authority, so the live dashboard is unchanged and no release worktree was cut.
+Verified from the checkout rather than trusted: all four offered artifacts reproduce byte-exactly (index.html 20,315
+bytes `b5faf31b...`, script.js 737,240 `fb211f15...`, styles.css 216,158 `e003d4b9...`, data/live-trading.json 27,727
+`b3db6cc5...`), the validator PASSes and `tests/live_trading_feed.test.js` is 18 of 18 in the worktree, the producer is
+read-only by construction with no order call in the changed set, the port anchors exist once each on `origin/main`
+(`shadowLogicBacktestPanel`, `architectureView`, `const tabs`, `.backtest-panel`), `origin/main` carries no
+live-trading reference and no `data/live-trading.json`, and the section exists in exactly one copy, in
+`.local/worktrees/live-trading`. The recipe is ruled - port the hunks onto `origin/main`, never push local `main` (now
+8 ahead and 273 behind), never take the whole three files from the branch, one rail entry for Live Trading under a new
+Live group, `data/live-trading.json` as a refreshable artifact with the cache-buster bumped, only the four files on
+the published site, and the commit, line and URL recorded at publish time - and the **precise unresolved decision is
+the user's: authorise the coordinator to apply it onto `origin/main` and push, or hold the section in the worktree.**
+The disclosed scope overrun (the MetaTrader5 install, the read-only read of the user's own evaluation account and the
+writes outside `docs/live-trading/`) stays recorded and not authorised, and the three-way authority level stays the
+user's. One note, not a defect: the styles.css figure should read 52 raw insertions (50 non-blank: 47 selectors, 2
+scoped `@media` rules, 1 comment), which also corrects the `-002` review's own count. The register keeps `live-trading`
+at status exactly `instructions_published_awaiting_worker` with this outcome in `next`, and no new assignment was
+published. The worker filed its `-002` correction revision as `20260930-live-trading-feed-004` during this cycle; it is
+`pending_review` and was deliberately not taken, because this run was scoped to `-003` only.
 2026-09-30 (cont.): the gold factor draft page is **live**, published by the coordinator on the user's one-line
 answer ("yes show it live"): `https://kevincreedycars-debug.github.io/trading-agent-dashboard/gold-factor-wip.html`,
 reached from one new topbar entry labelled `Gold Factor (draft)` on

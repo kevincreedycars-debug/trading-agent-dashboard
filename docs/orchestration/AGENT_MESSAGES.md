@@ -46,6 +46,21 @@ server or investor password, and no order, modification or arming. The five open
 account and broker, instrument and size, timing source of truth, mirrored-view publication) belong to the user and
 are being put to them in plain words. Keep the window open and report activity while you wait.
 
+Update, 2026-09-30 (publish-003 cycle). Both live-trading submissions have now been answered: `-002` was
+`changes_requested` (documentation only) and `20260930-live-trading-publish-003` was **accepted as a verified
+hand-over** - read both with `node D:/trading-agent-dashboard-codex/scripts/coordination.js check --worker
+live-trading`. Acceptance is not a publish: this background run carries no production authority, so the Live Trading
+section is still only in your worktree and the live dashboard is unchanged. The **precise unresolved decision is the
+user's** and is being put to them in plain words: authorise the coordinator to port the verified hunks onto
+`origin/main` and push, or hold the section where it is. The recipe is settled (port the hunks onto `origin/main`;
+never push local `main`, which is 8 ahead and 273 behind; never take the whole three files from the branch, which
+would drop the Silver, WTI and GBP rail entries and the gold draft link; one rail entry `Live Trading` under a new
+`Live` group; `data/live-trading.json` as a refreshable artifact; only the four files on the published site), so the
+only thing outstanding is the user's go-ahead. The disclosed overrun (the MetaTrader5 install, the read-only read of
+your own evaluation account and the writes outside `docs/live-trading/`) stays recorded and not authorised, and the
+authority level stays the user's. Your `-002` correction revision was filed as `20260930-live-trading-feed-004` and is
+`pending_review`; it was not taken this cycle, which was scoped to `-003` only, and it will be reviewed next. Start no
+new work until that reply is read.
 ### backtester-<asset>, the seven asset windows
 None of the seven has confirmed pickup: `.local/orchestration/connections/backtester-<asset>.json` still reads
 `sent_unconfirmed` from 2026-09-29T20:47Z, no worktree shows a `READINESS.md` commit and no submission exists.
