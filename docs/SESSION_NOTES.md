@@ -14,8 +14,9 @@ across 77 recorded submissions; the register holds 17 worker rows; the "Backtest
 the lane up and filed its own evening save as commit `31a6281` (`docs/backtester-harness/CONVERSATION_NOTES.md`, 83 lines,
 5,158 bytes, worktree clean), and the mailbox bridge for that worker reads state `watching` (`Connected; no worker wake
 due`, extension 0.2.1, 2026-09-30T21:02:11Z), so that register row moved from `instructions_published_awaiting_worker` to
-`awaiting_status_submission`; the lane still owes one `status_report`, because it has written no activity line and
-submitted no envelope, and its notes carry two open questions - whether stage A begins now, which is the user's call, and
+`awaiting_status_submission`; the lane's own activity line followed at `2026-09-30T21:02:09Z` (state `paused`, "Evening save filed: opening session only,
+CONVERSATION_NOTES.md committed, stage A not started") and it still owes one `status_report`, because no envelope has been
+submitted, and its notes carry two open questions - whether stage A begins now, which is the user's call, and
 the connection question the bridge record has now answered; the seven asset backtester windows are still
 `sent_unconfirmed` since 2026-09-29T20:47Z; and the published live panel has aged past its own 900 seconds again
 (`generated_at_utc` 2026-09-30T20:44:34Z, so `STALE` from 20:59:34Z), which is the designed behaviour rather than a fault -

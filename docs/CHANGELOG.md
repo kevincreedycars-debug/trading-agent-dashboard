@@ -13,9 +13,10 @@ stale again and a fresh one needs the user's word and a coordinator re-publish, 
 found on the way out rather than planned: the new harness window's agent had already picked its lane up and filed its own
 evening save as `31a6281` (`docs/backtester-harness/CONVERSATION_NOTES.md`, 83 lines, 5,158 bytes, worktree clean), with
 the bridge record for that worker reading state `watching` at `2026-09-30T21:02:11Z`, so the register row moved from
-`instructions_published_awaiting_worker` to `awaiting_status_submission` and that lane owes one `status_report`; its notes
-carry two open questions, one of which is the user's (does stage A begin now) and one of which the bridge record has
-answered. No production, warehouse, credential, Layer 1, Layer 2, workflow or n8n action, and no holdout, outcome or
+`instructions_published_awaiting_worker` to `awaiting_status_submission` and that lane owes one `status_report`, its own
+activity line reading `paused` (task "Evening save filed: opening session only, CONVERSATION_NOTES.md committed, stage A not
+started", `2026-09-30T21:02:09Z`); its notes carry two open questions, one of which is the user's (does stage A begin now)
+and one of which the bridge record has answered. No production, warehouse, credential, Layer 1, Layer 2, workflow or n8n action, and no holdout, outcome or
 prospective read.
 
 

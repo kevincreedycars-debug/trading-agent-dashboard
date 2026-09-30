@@ -11,7 +11,8 @@ the way out: the lane's clean worktree was fast-forwarded from the starting comm
 coordination suite 4 of 4, the register at 17 worker rows, the "Backtester Harness Architect" window open with its agent already
 working - its own evening save committed as `31a6281` (`docs/backtester-harness/CONVERSATION_NOTES.md`, 83 lines, worktree
 clean), the mailbox bridge for that worker reading state `watching` at `2026-09-30T21:02:11Z`, the register row moved to
-`awaiting_status_submission` with one `status_report` still owed - the seven asset lanes still `sent_unconfirmed` since 2026-09-29T20:47Z, and the published
+`awaiting_status_submission` - its own activity line now reads `paused` (task "Evening save filed: opening session only,
+CONVERSATION_NOTES.md committed, stage A not started", `2026-09-30T21:02:09Z`) with one `status_report` still owed - the seven asset lanes still `sent_unconfirmed` since 2026-09-29T20:47Z, and the published
 panel correctly aged to `STALE` at 20:59:34Z because a snapshot's freshness lasts 900 seconds by design. Nothing was
 armed, connected, credentialed or ordered, nothing was published beyond the two authorised releases (`bc538d7`, `599c686`),
 and no outcome, holdout or prospective observation was read.

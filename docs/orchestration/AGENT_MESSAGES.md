@@ -398,10 +398,10 @@ rather than by a person: `.local/orchestration/connections/backtester-harness.js
 `Connected; no worker wake due`, extension `0.2.1`, updated `2026-09-30T21:02:11Z`, so the mailbox is connected and no
 click is needed in that window. Your evening save is committed as `31a6281` on `workers/backtester-harness-20260930`
 (`docs/backtester-harness/CONVERSATION_NOTES.md`, 83 lines, 5,158 bytes) with a clean worktree, which is why the register
-row now reads `awaiting_status_submission` instead of `instructions_published_awaiting_worker`. What you still owe is one
-`status_report` envelope through the shared mailbox, with a real activity line from `monitor-state.js`; what is still the
-user's is whether stage A begins now or waits until the Gold loop's lessons are frozen, and this note is not that
-go-ahead. One change touches your checkout: it was fast-forwarded from `ab21177` to the control-plane tip `c673ea7`, so
+row now reads `awaiting_status_submission` instead of `instructions_published_awaiting_worker`. Your activity line is on
+record as well (state `paused`, `2026-09-30T21:02:09Z`), so what you still owe is the one `status_report` envelope through
+the shared mailbox; what is still the user's is whether stage A begins now or waits until the Gold loop's lessons are
+frozen, and this note is not that go-ahead. One change touches your checkout: it was fast-forwarded from `ab21177` to the control-plane tip `c673ea7`, so
 the register's `baseline` for your row reads `c673ea7`; that fast-forward changed no file you had written, and your
 writable scope, your design-only boundary and the deferred build all stand unchanged.
 
