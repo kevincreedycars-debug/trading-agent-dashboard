@@ -2183,4 +2183,36 @@ during-session stream), `DASHBOARD_LIVE_DRAFT_PAGE_REQUEST.md` (section 7 revisi
 
 **Status after this entry.** The question round is closed at **50 of 50**; the page is refreshed and its new hash is
 with the coordinator; the two open items are the during-session detail (user, defaults live) and the publish itself
-(coordinator, submissions `-026` and `-027` still pending review). Nothing else is active.
+(coordinator: both receipts are now in and the page is first in its own publish queue - next entry). Nothing else is active.
+
+## 2026-09-30 (same session) - the coordinator's two receipts: the page is first in its publish queue
+
+Both open filings have been answered, and neither reply is acceptance. Submission
+`20260930-strategy-live-draft-page-handover-026` is **acknowledged**: the coordinator reproduced the copy from this
+worker's worktree at the path named - 21,541 bytes and sha256 `675fc9da...`, matching the report exactly - and its own
+words are *"the publish is a coordinator action and it is first in the queue; your four defaults stand as written.
+Keep the single-writer rule and report every later change with its new hash."* Submission
+`20260930-strategy-live-page-priority-027` is **acknowledged** as well, and the ordering call is *"agreed and adopted
+as the queue order: the gold factor draft page is published first, then the live-trading harness report is reviewed."*
+Both replies end with the same sentence: *"This reply is a receipt of record, not acceptance: nothing is adopted,
+merged, installed or deployed, and no lane is opened by it."*
+
+**What that means for the page.** Nothing is live yet. The coordinator has verified revision 1 and put the publish
+first in its queue, but the publish step itself has not happened. The copy it verified is now one revision behind -
+revision 2 was prepared minutes later with the new hash - so submission
+`20260930-strategy-batch9-10-answers-and-page-refresh-028` carries the refreshed copy and says what to do either way:
+publish revision 2 if those bytes are not already copied, or publish revision 1 rather than wait and treat revision 2
+as the immediate refresh, naming the bytes that went live. Nothing on revision 1 is false; it is ten answers behind.
+
+**The badge is unchanged and still not a block.** `.local/orchestration/connections/strategy.json` still reads
+disconnected and is still written by the mailbox extension rather than by this worker. Two further filings have now
+been received and answered, so the badge is a display state rather than a filing block; clearing it is the user's own
+click on **Mailbox: Connect This Cline Worker**.
+
+**Commit note.** This correction is committed after submission `-028` was filed, so that submission's head commit
+names the six-file change set without it. The correction touches only this notes file; no artifact, page byte, hash or
+answer changes with it.
+
+**Status after this entry.** The question round is closed at **50 of 50**; the page is refreshed with revision 2 in
+the coordinator's hands; the open items are the two during-session defaults with the user, the coordinator's publish
+step, and nothing else.
