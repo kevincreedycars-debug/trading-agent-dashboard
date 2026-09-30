@@ -12,14 +12,16 @@ message is superseded.
 - Or list only the numbers you disagree with, for example `3 no, 12 often, 27 no`.
 - Questions are put to you at most seven at a time, in numbering order, skipping anything already asked.
 
-**Status:** **40 of 50 answered**, as of 2026-09-30. The answered set is 1-40, with no gap. Batch 8 (**34-40**) came
+**Status:** **50 of 50 answered**, as of 2026-09-30 - **the question round is closed**. The answered set is 1-50, with no gap and nothing left running on a default. Batch 8 (**34-40**) came
 back the same day: **34** *"Okay"* and **35** *"Y"* confirm defaults, while **36, 37, 38 and 40 revise the plan**
 rather than confirm it - the movement ranges are the already-stated **0.50 L2L and L2L** (36), no forward-looking or
 holdout purpose is claimed because this work is not a forecast (37, 38), and no dealing cost is subtracted because
 it is *"pureply a data corrleation exercise nothing else"* (40). **39** answered *"not yet"* with the purpose stated:
 the flags are not traded now, and the daily-call algorithm is to be re-pieced together from this work later. The
 same reply also told this worker to put the work on the **live dashboard** while it is still being edited, so a
-draft page and a publish request were prepared. The full record is the "Batch 8 answers" section below.
+draft page and a publish request were prepared.
+
+**Batches 9 (41-47) and 10 (48-50) came back together, in one reply, the same day they went out: the round closes at 50 of 50.** Nine are *"Yes"* - 41, 44, 45, 46, 47, 48, 49 and 50 - and 43 is *"Yes, we will be doing calls int he next step"*, which is the later stage answer 39 names rather than a change to this page. **42** is *"Currently yes, can we do both pre session and during session?"*: the no-look-ahead rule stands as the headline count's bar, and the **during-session stream** is accepted as a second, separately labelled measurement that is never pooled with it, with two details left to the user and defaults that stand (the "Batches 9 and 10 answers" section below holds the whole shape). **49** confirms the full page rather than the minimum version, so the draft live page is that page. No number already measured moved with any of them. The full record is the "Batch 8 answers" section below.
 Batch 7 (**28, 29, 30, 31, 32**) went out with the batch-6 acknowledgement and came back the same day: **28, 29, 30
 and 31 okay**, and **32** answered as *"whichever gives us the most data we can then refer back to"*, so the F9
 trigger is chosen by printed sample size rather than by preference. **23** came back with a clarification: at this
@@ -170,29 +172,29 @@ still cannot do is clear the declared-rule bar, which needs a rule written befor
 | --- | --- | --- | --- | --- |
 | 39 | You intend to trade these flags | answer matters | batch 8 | **not yet, and the purpose is stated** - *"Not yet but we will repiece together the algorithm we use to make the daily calls from this work"* (2026-09-30). The flags are not traded and no row may be called a signal: the tables exist so that the logic behind the daily calls can be **reassembled from what the factors are shown to have done**, which is a later, separately-agreed step. Because 39 is "not yet", 40 is answered no, and 41-42 survive only as measurement questions (when the outcome starts, and whether the state is known before the session it applies to). |
 | 40 | Subtract spread and slippage before any claim | yes if 39 is yes | batch 8 | **no** - *"No this is pureply a data corrleation exercise nothing else."* (2026-09-30). No spread or slippage is subtracted, no cost-adjusted figure is produced, and no P&L, entry, stop or target exists. This closes the tradability group; 41 and 42 are asked in batch 9 in their measurement sense only. |
-| 41 | Start the outcome at the next session open after the flag is observed | yes | batch 9 | |
-| 42 | The flag is available before the session it applies to, with no look-ahead | yes | batch 9 | |
+| 41 | Start the outcome at the next session open after the flag is observed | yes | batch 9 | **yes** - *"Yes"* (2026-09-30). The outcome is counted from the **next session's open** after the state is seen - a Friday state starts from Monday's open - so no row counts the session the state was seen in, and no count uses a price from the day it measures (42). |
+| 42 | The flag is available before the session it applies to, with no look-ahead | yes | batch 9 | **yes, with a second stream requested** - *"Currently yes, can we do both pre session and during session?"* (2026-09-30). The no-look-ahead rule stands and is the headline count's bar: the state must be knowable before the session it is scored against. The during-session stream asked for in the same line is accepted as a **second, separately labelled measurement** - never pooled or averaged with the before-session count - and its two remaining details are recorded in the "Batches 9 and 10 answers" section below, with defaults that stand if no answer comes. |
 
 ## I. Deliverable and process (43-50)
 
 | # | Yes/no question | Default | Asked | Your answer |
 | --- | --- | --- | --- | --- |
-| 43 | One page listing every factor with raw movement numbers and no direction claim | yes | batch 9 | |
-| 44 | Every published number carries its n and the floor that produced it | yes | batch 9 | |
-| 45 | A ranked list is never presented as a winner | yes | batch 9 | |
-| 46 | The page states the number of looks examined | yes | batch 9 | |
-| 47 | Rebuild the direction layer only after the movement layer is agreed | yes | batch 9 | |
-| 48 | Record these answers as decisions before any lane starts | yes | | |
-| 49 | Full new page beside the accuracy panel, rather than the minimum version appended to the scorecard page | full page | | |
-| 50 | Answer D1 first: the movement screen before anything else | yes | | |
+| 43 | One page listing every factor with raw movement numbers and no direction claim | yes | batch 9 | **yes, and the next step is named** - *"Yes, we will be doing calls int he next step"* (2026-09-30). One page, every factor, raw movement numbers only, and no direction claim anywhere on it; the calls are the later step answer 39 already names, not this page. |
+| 44 | Every published number carries its n and the floor that produced it | yes | batch 9 | **yes** - *"yES"* (2026-09-30). Every published number carries its own day count and the floor that produced it. |
+| 45 | A ranked list is never presented as a winner | yes | batch 9 | **yes** - *"Yes"* (2026-09-30). A ranked list stays a list: never the winner, never the pick. |
+| 46 | The page states the number of looks examined | yes | batch 9 | **yes** - *"Yes"* (2026-09-30). The page states how many factors and how many cuts were examined in total; the during-session stream's looks go inside that same total, not a second one. |
+| 47 | Rebuild the direction layer only after the movement layer is agreed | yes | batch 9 | **yes** - *"Yes"* (2026-09-30). The direction layer is rebuilt only after the movement layer is agreed. |
+| 48 | Record these answers as decisions before any lane starts | yes |  | **yes** - *"Yes"* (2026-09-30). The fifty answers are written down as decisions - this sheet, the plan and the technical appendix - before any lane starts; this turn does that for 41-50. |
+| 49 | Full new page beside the accuracy panel, rather than the minimum version appended to the scorecard page | full page |  | **yes** - *"Yes"* (2026-09-30), confirming the default choice: the deliverable is the **full page beside the accuracy panel**, not the minimum version appended to the scorecard page. The draft live page is that page, published early on the user's own instruction. |
+| 50 | Answer D1 first: the movement screen before anything else | yes |  | **yes** - *"Yes"* (2026-09-30). The movement screen is built before anything else. |
 
 ## Which plan decision each group feeds
 
 | Plan decision (section 9 of the plan) | Questions that decide it |
 | --- | --- |
-| D1, the "if" stage | 1-9, 10, 11, 12, 15-17, 18-21, 36 |
+| D1, the "if" stage | 1-9, 10, 11, 12, 15-17, 18-21, 36, 41, 42 |
 | D2, the VIX change stream | 29-31 |
-| D3, the size of the deliverable | 43-46, 49 |
+| D3, the size of the deliverable | 43-46, 49, 50 |
 | D4, the F9 rebuild | 32 |
 | D5, the rebuild's sample size | 33, 34, 35; 36 restates the movement pair; 37 and 38 withdrawn |
 
@@ -219,7 +221,8 @@ the single `looks_counted`.
 | 2026-09-30 | 6 answers | 22, 23, 24, 25, 26 | **Closed the same day: 22 yes** (the ten with a written sentence are checked first), **23 NO** - *"you know what the factors are then we see what price did then we assign a correlation"*, so the twenty get an implied direction from what the factor is and then a reliability percentage read off the archive, and the "agree the rule first" precondition is withdrawn - **24 yes with a double-check** (*"anything that could give an edge we need to be aware of"*), which added the requirement that a "no view" band prints its raw split beside the same-cohort rate in the same table - **25 yes**, **26 yes**. Answered set was then **28 of 50** (1-26, 27, 33), and is **33 of 50** after batch 7 |
 | 2026-09-30 | 7 | 28, 29, 30, 31, 32 | **Sent with the batch-6 acknowledgement**, being the rest of group E and all of group F in numbering order, one short reason each, all defaulting to yes | **Closed the same day.** Four replies are *"Y"*: **28** pairs, weighting, composites and models stay out for now, **29** both VIX streams stay, **30** the change legs stay raw context with no direction, **31** the 1/2/5 and 2/5/10 sweep stays under one `looks_counted`. **32** is not a plain yes - *"Which ever gives us the most data we can then refer back to"* - so the F9 trigger is chosen by printed sample size rather than by preference; the four rules attached to it are in the "Batch 7 answers" section. The same reply carried the **23** clarification, recorded in that row. Answered set is now **33 of 50** (1-33) |
 | 2026-09-30 | 8 | 34, 35, 36, 37, 38, 39, 40 | **Sent with the batch-7 acknowledgement**, being the rest of group G (the rebuild's size and the data window) and the first two of group H, one short reason each. **39** was flagged as not defaulted, because it asks whether the user intends to trade the flags at all and governs 40 | **Closed the same day: two confirmations and four revisions.** **34** *"Okay"* and **35** *"Y"* confirm defaults (the 3pp sizing; hourly entries with the horizon re-declared, the overlap disclosed and the daily-only column kept beside them). **36 is a correction to the question, not to the plan**: no new floor is needed - *"how would that make sense it should be the previously stated direction ranges, l2l and 0.5l2l"* - so the movement stage is measured at the user's own 0.50 L2L and L2L, with the fixed 0.80% and 0.30% kept as labelled sensitivities that gate nothing. **37 and 38 are withdrawn as inapplicable** - *"We arent looking forward, this isnt about that we have clarified this twice."* and *"No again not needed currently"* - so no holdout or sealed-window purpose is claimed anywhere and the re-check on an opening window is dropped. **39 is "not yet" with the purpose stated**: *"Not yet but we will repiece together the algorithm we use to make the daily calls from this work"* - nothing is traded, no row may be called a signal, and the tables exist to reassemble the daily-call logic later. **40 is "no"**: *"No this is pureply a data corrleation exercise nothing else"* - no spread, slippage, cost-adjusted figure or P&L. The same reply asked for the work to be visible on the live dashboard while it is still being edited, so a draft page and a publish request were prepared. Answered set is now **40 of 50** (1-40) |
-| 2026-09-30 | 9 | 41, 42, 43, 44, 45, 46, 47 | **Sent with the batch-8 acknowledgement**: the surviving measurement pair (41, 42 - now that 39 is "not yet" and 40 is "no") and all of the deliverable group I (43-47), one short reason each, all defaulting to yes. 48-50 follow in batch 10 | **Not yet answered.** Nothing in the answered set depends on it: 41 and 42 are measurement rules and 43-47 decide the shape of the deliverable, and both currently stand on their defaults |
+| 2026-09-30 | 9 | 41, 42, 43, 44, 45, 46, 47 | **Sent with the batch-8 acknowledgement**: the surviving measurement pair (41, 42 - now that 39 is "not yet" and 40 is "no") and all of the deliverable group I (43-47), one short reason each, all defaulting to yes. 48-50 follow in batch 10 | **Closed the same day: seven confirmations and one request.** 41 *"Yes"*, 43 *"Yes, we will be doing calls int he next step"*, 44 *"yES"*, 45-47 *"Yes"* - and **42** is *"Currently yes, can we do both pre session and during session?"*, so the rule stands while the during-session stream is accepted as a second, separately labelled measurement (its two remaining details are in the "Batches 9 and 10 answers" section below). Answered set is now **47 of 50** (1-47) |
+| 2026-09-30 | 10 | 48, 49, 50 | **Sent with the batch-9 acknowledgement**, being the last of group I: record the answers as decisions before any lane starts (48), the full page beside the accuracy panel rather than the minimum version (49), and the movement screen before anything else (50), one short reason each | **Closed the same day, in the same reply as batch 9: all three *"Yes"*.** 48 makes this sheet, the plan and the appendix the record of decisions; 49 confirms the full page, so the live draft page *is* the deliverable's page rather than a block on the scorecard page; 50 fixes the order of work. Answered set closes at **50 of 50** (1-50) and the question round is over |
 
 Batches continue in numbering order, at most seven at a time, skipping anything already asked. Batch 4 closed four
 of the five questions it asked: **12** (rare and common states are equally kept), **15** (the horizon set is
@@ -548,6 +551,57 @@ nav entry, the draft marking, and the rule that the page may never carry a forec
 confirm defaults, 36 restates the pair already in force, 37, 38 and 40 remove claims that are not needed rather than
 adding measurements, and 39 states a purpose for a later stage. The answered set is now **40 of 50** (1-40,
 contiguous).
+
+## Batches 9 and 10 answers (2026-09-30) - the round closes at 50 of 50
+
+Batches 9 (41-47) and 10 (48-50) went out together in plain words and came back together in one reply, ten lines long,
+in the user's own numbering. Recorded here in that order, verbatim, with what each one settles.
+
+| # | The reply, verbatim | What it settles |
+| --- | --- | --- |
+| 41 | "Yes" | The outcome is counted from the **next session's open** after the state is seen - a Friday state starts from Monday's open - so no row counts the session the state was seen in and no count uses a price from the day it measures. |
+| 42 | "Currently yes, can we do both pre session and during session?" | The no-look-ahead rule stands: the state must be knowable before the session it is scored against. The question inside the same line is answered below - a **during-session stream** is accepted as a second, separately labelled measurement, never pooled with the before-session count. |
+| 43 | "Yes, we will be doing calls int he next step" | One page, every factor, raw movement numbers only, no direction claim. The calls are the next step - the later stage answer 39 already names - and not this page. |
+| 44 | "yES" | Every published number carries its own day count and the floor that produced it. |
+| 45 | "Yes" | A ranked list stays a list: never the winner, never the pick. |
+| 46 | "Yes" | The page states how many factors and how many cuts were examined in total. The during-session stream's looks go inside the same total, not a second one. |
+| 47 | "Yes" | The direction layer is rebuilt only after the movement layer is agreed. |
+| 48 | "Yes" | The fifty answers are written down as decisions - this sheet, the plan and the technical appendix - before any lane starts. This turn does that for 41-50. |
+| 49 | "Yes" | The deliverable is the **full page beside the accuracy panel**, not the minimum version appended to the scorecard page. The draft live page is that page, published early on the user's own instruction. |
+| 50 | "Yes" | The movement screen is built before anything else. |
+
+**Nothing in the ten changes a number.** No measurement was taken this turn, no artifact, bar, boundary or lane moved,
+and the only file that changed shape is the draft live page, whose answered count and progress bar now read 50 of 50.
+The answered set is 1-50, contiguous, and the question round is closed.
+
+### The during-session stream - the one point still open (from the reply to 42)
+
+The user asks for both measurements: a state known **before** the session (the headline count, ruled by 41) and a state
+that only appears **during** the session. Both are agreed in principle, and the shape below is what this worker will
+build unless the user says otherwise.
+
+- **Two streams, never one number.** The before-session stream keeps the next-open rule of 41. The during-session
+  stream is timed from the bar that first shows the state and measured to that session's close, with the same window
+  extended to the next session's close printed beside it as a second labelled column. The two streams are never
+  averaged or pooled, because their windows are different lengths and they overlap; each prints its own `n`, its own
+  floor and its own denominator.
+- **No look-ahead inside the session either.** The state is computed only from data available at the bar that
+  triggers it: nothing from the rest of that day's prices, and nothing from that session's close.
+- **One look, honestly counted.** An intraday state and a same-day daily state are the same look rather than two, and
+  the hourly bars overlap each other by construction; the overlap is disclosed and the looks count covers both
+  streams.
+- **The data already exists.** The trigger uses the hourly price series the accepted report itself used, so this adds
+  no new data source and no new input directory.
+
+Two details are still with the user, each with a default that stands if no answer comes:
+
+1. **What the during-session trigger reads** - default: the accepted hourly bars already used in this work; anything
+   finer would be a data decision first.
+2. **Where its headline window ends** - default: at that session's close, with the next-session-close figure printed
+   beside it rather than as the headline.
+
+Until those are answered the headline tables are unchanged: every count published from here is the before-session
+count under 41 and 42, and **no during-session number has been measured yet**.
 
 ## Gold L2L facts (read 2026-09-29, read-only, every interval already spent)
 

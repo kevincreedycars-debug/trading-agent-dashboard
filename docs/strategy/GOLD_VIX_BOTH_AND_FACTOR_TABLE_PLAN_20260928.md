@@ -44,6 +44,24 @@ is a separate future step. (4) **The work has to be visible on the live dashboar
 (the user's own instruction, quoted in §12): a draft page is prepared here and published by the dashboard lane, and
 it may never carry a forecast, a holdout or a trading result.
 
+**Revised 2026-09-30 after batches 9 and 10 (50 of 50 answered - the question round is closed).** The last ten
+answers decide **when a count starts, what the page carries and in what order the work happens**, and nothing else.
+(1) **The count starts at the next session's open** (answer 41) and may use nothing from the day it measures (42): a
+Friday state begins at Monday's open. (2) **A second, during-session stream is added** - the request inside answer 42,
+*"can we do both pre session and during session?"*: a state that only appears inside the session is timed from the bar
+that first shows it and measured to that session's close, with the next session's close printed beside it, kept
+separately labelled and never pooled or averaged with the before-session count, because the two windows differ in
+length and overlap; the state uses only what was available at the trigger bar; the same-day overlaps count once in
+`looks_counted`; and no new data is needed, because the trigger uses the hourly series the accepted report itself
+used. Two details of it are with the user, defaults standing: the trigger reads the accepted hourly bars, and its
+headline window ends at that session's close. (3) **The deliverable is the full page beside the accuracy panel**
+(answer 49), not the minimum version appended to the scorecard page, carrying no direction claim (43) and never
+calling a ranked row the winner (45). (4) **The order of work is fixed** (answers 47 and 50): the movement screen is
+built first, and the direction layer is rebuilt only after the movement layer is agreed. (5) **The answers are
+recorded as decisions before any lane starts** (48) - this paragraph, the answer sheet, the appendix and the draft
+page are that record. No number already measured moves with any of it, and no lane's scope grows: the during-session
+stream is one more labelled block inside the same measurement lane, not a new lane.
+
 ## 1. What you asked for
 
 1. Simplify the plan.

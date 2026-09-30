@@ -2128,3 +2128,59 @@ sheet's own wording: this is a plainer rendition, not a new question set, and th
 
 Nothing in the restatement moves a measurement, artifact, bar, boundary, lane or hash, and the answered set stays at 40 of
 50 until the ten come back.
+
+## 2026-09-30 (same session) - batches 9 and 10 answered: the round closes at 50 of 50
+
+The ten questions still open - 41-47 from batch 9 and 48-50 from batch 10, put in plain words twice - came back in one
+reply, in the user's own numbering: **1 Yes**, **2 "Currently yes, can we do both pre session and during session?"**,
+**3 "Yes, we will be doing calls int he next step"**, **4 yES**, **5 to 10 Yes**. Read against the restatement recorded
+above that is 41 yes, 42 yes with a request, 43 yes, 44 yes, 45 yes, 46 yes, 47 yes, 48 yes, 49 yes (the full page),
+50 yes. The question round is therefore **closed at 50 of 50** - questions 1-50, contiguous, nothing running on a
+default.
+
+**What the ten settle.** 41 fixes where a count starts: the next session's open after the state is seen, so a Friday
+state begins at Monday's open. 42 keeps the no-look-ahead bar. 43 keeps the page free of any direction claim, and its
+same line names the next step - the calls - which is 39's later stage. 44 keeps each number's day count and floor
+beside it. 45 keeps a ranked list a list. 46 keeps the looks count on the page. 47 puts the direction rebuild after
+the movement layer is agreed. 48 makes this sheet, the plan and the appendix the record of decisions before any lane
+starts. 49 confirms the full page rather than the minimum version. 50 fixes the order of work.
+
+**The one answer that asks for something new: 42's during-session stream.** "Can we do both pre session and during
+session?" is answered **yes, as a second stream rather than a bigger first one**: the before-session count keeps 41's
+next-open rule, and a state that only appears during the session is timed from the bar that first shows it and
+measured to that session's close, with the same window taken to the next session's close printed beside it. The two
+are never pooled or averaged, because their windows differ in length and overlap; each prints its own `n`, floor and
+denominator; the state is computed only from what was available at the trigger bar; the same-day overlaps count once
+in `looks_counted`; and the trigger uses the hourly series the accepted report itself used, so no new data source is
+needed and lane 1's scope does not grow. **Two details go back to the user with defaults that stand if no answer
+comes**: what the during-session trigger reads (default: the accepted hourly bars) and where its headline window ends
+(default: that session's close, with the next-session-close figure beside it). Until then every published count is the
+before-session count and **no during-session number has been measured**. The shape is recorded in the answer sheet's
+"Batches 9 and 10 answers" section, on the page itself in section 1, and as new decision **D18** in the appendix.
+
+**The page was refreshed in the same turn, as the standing rule requires.**
+`docs/strategy/WORK_IN_PROGRESS_GOLD_FACTOR_TABLES.html` now reads 50 of 50 with a full progress bar; the "where the
+questions stand" card was rewritten from "ten still open" into what each of 41-50 settles; two decided rows were added
+to "what is already settled" (the next-open count, and the full page beside the accuracy panel); "what comes next" now
+says each state is measured twice, before the session and during it, in two blocks that are never pooled; the footer
+names questions 36-50; and the "not finished" bullet carries the one open point. **No number on the page moved, and no
+table was added or removed.** New copy: 24,687 bytes, 289 CRLF lines, no bare LF, sha256
+`aa9e104c81b6e479ca59b05b9b31840877b4626624e54c5a0170dc202a98dd1e` (was 21,541 bytes, 261 CRLF lines, sha256
+`675fc9da41529817c112c0f287db8daa6c29fb2269231c9bde0958dc268ecd0b`). The static checks were re-run on the new bytes:
+no `script`, `link`, `img`, `iframe`, `form`, `fetch(`, `http://`, `https://`, `@import` or `url(` anywhere, line
+endings CRLF with no bare LF, and every tag pair balances (div 10/10, table 5/5, ul 2/2, li 20/20, p 18/18, em 6/6,
+strong 55/55, small 4/4, span 7/7, h2 5/5, h3 5/5, ol 1/1, plus main, footer, body, html, head and style 1/1 each).
+Section 7 of `DASHBOARD_LIVE_DRAFT_PAGE_REQUEST.md` now carries revision 2 of the hand-over with both copies in a
+history table, and submission `20260930-strategy-batch9-10-answers-and-page-refresh-028` carries the new hash to the
+coordinator.
+
+**Files changed.** `INTENT_QUESTIONS_ANSWER_SHEET_20260929.md` (status 50 of 50; the answer column filled for 41-50;
+batch 9 closed and batch 10 added in the answer log; the new "Batches 9 and 10 answers" section; the plan-decision map
+now shows 41 and 42 under D1 and 50 under D3), `GOLD_VIX_BOTH_AND_FACTOR_TABLE_PLAN_20260928.md` (batches 9 and 10
+revision paragraph), `GOLD_BAND_FIX_AND_EDGE_TABLE_SPEC_20260928.md` (the same revision note plus **D18**, the
+during-session stream), `DASHBOARD_LIVE_DRAFT_PAGE_REQUEST.md` (section 7 revision 2, hand-over history, what changed),
+`WORK_IN_PROGRESS_GOLD_FACTOR_TABLES.html` (the refresh above), and this entry.
+
+**Status after this entry.** The question round is closed at **50 of 50**; the page is refreshed and its new hash is
+with the coordinator; the two open items are the during-session detail (user, defaults live) and the publish itself
+(coordinator, submissions `-026` and `-027` still pending review). Nothing else is active.

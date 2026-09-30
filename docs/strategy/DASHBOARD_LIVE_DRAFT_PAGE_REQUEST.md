@@ -68,14 +68,31 @@ this checkout at the moment of the hand-over, identified so the lane cannot publ
 | Item | Value |
 | --- | --- |
 | File | `docs/strategy/WORK_IN_PROGRESS_GOLD_FACTOR_TABLES.html` |
-| Size and shape | 21,541 bytes, 261 CRLF lines, no bare LF |
-| sha256 | `675fc9da41529817c112c0f287db8daa6c29fb2269231c9bde0958dc268ecd0b` |
+| Size and shape | **24,687 bytes, 289 CRLF lines, no bare LF** |
+| sha256 | `aa9e104c81b6e479ca59b05b9b31840877b4626624e54c5a0170dc202a98dd1e` |
 | Readable from | `D:/trading-agent-dashboard-codex/.local/worktrees/strategy/docs/strategy/WORK_IN_PROGRESS_GOLD_FACTOR_TABLES.html` |
 | Committed on | branch `workers/strategy-advisory-20260920` in this worker's worktree |
 
 Copy that file byte for byte. If the copied file hashes differently, the copy is wrong rather than the page being out of
 date, so re-copy it from the path above. Nothing else about the page is required: it is one document that renders
 as it stands.
+
+**Hand-over history.** Revision 2 is the copy in the table above; revision 1 is the copy first offered for publication.
+
+| Revision | Answered when handed over | Size and shape | sha256 |
+| --- | --- | --- | --- |
+| 1 | 40 of 50 | 21,541 bytes, 261 CRLF lines, no bare LF | `675fc9da41529817c112c0f287db8daa6c29fb2269231c9bde0958dc268ecd0b` |
+| 2 (this one) | **50 of 50 - the round is closed** | **24,687 bytes, 289 CRLF lines, no bare LF** | `aa9e104c81b6e479ca59b05b9b31840877b4626624e54c5a0170dc202a98dd1e` |
+
+**What changed in revision 2.** The last ten questions came back, so the answered count moved from 40 of 50 to
+**50 of 50** and the round is closed. On the page: the banner, the progress bar (now full) and the "where the questions
+stand" card were rewritten from "ten still open" into what each of 41-50 settles; two decided rows were added to "what
+is already settled" (the next-open count; the full page beside the accuracy panel); "what comes next" now says each
+state is measured twice, once before the session and once during it, in two blocks that are never pooled; and the footer
+now names questions 36-50. The checks in section 5 were re-run on the revision-2 bytes and the tag counts still balance.
+**No number anywhere on the page moved**, no table was added or removed, and the page is still a draft: the one point
+still open (how the during-session stream is timed) is printed on the page as open and awaiting the user, not answered
+by this worker.
 
 **Rule 2 - report every later change as it happens, not in a bundle.** Each time a batch of answers lands or a
 measurement lane is accepted, this worker does three things in the same turn: rewrites its own file, updates this request

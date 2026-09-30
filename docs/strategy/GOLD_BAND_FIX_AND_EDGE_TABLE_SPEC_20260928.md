@@ -59,6 +59,24 @@
 >   visible on the live dashboard now, marked as a draft and refreshed as answers land - see
 >   `docs/strategy/DASHBOARD_LIVE_DRAFT_PAGE_REQUEST.md`;
 > - 34 and 35 confirm the sizing and the hourly route as defaults, so lane 1 keeps the shape it already has.
+>
+> **Revised again 2026-09-30 (batches 9 and 10, questions 41-50; the round is closed).** The last ten answers add one
+> mechanical rule and confirm the rest. No figure already measured moves, and no input directory is added.
+>
+> - **the count starts at the next session's open** after the state is seen (answer 41) and no count may use a price
+>   from the day it measures (42) - a Friday state begins at Monday's open, so every row's outcome window starts at the
+>   next session's open rather than at the session the state was seen in;
+> - **a during-session block is added** (the request inside answer 42, new decision D18): states that only appear
+>   inside the session are timed from the bar that first shows them and measured to that session's close, with the next
+>   session's close printed beside it; the block is separately labelled, is never pooled or averaged with the
+>   before-session rows, uses only what was available at the trigger bar, and counts its same-day overlaps once in
+>   `looks_counted`; the trigger reuses the accepted hourly series, so no new input is added;
+> - **the deliverable is the full page** (49) beside the accuracy panel, with no direction claim (43) and no ranked
+>   winner (45);
+> - **the order is fixed** (47, 50): the movement stage is built first, and the direction layer is rebuilt only after
+>   the movement layer is agreed;
+> - **41-50 are recorded as decisions before any lane starts** (48); the during-session block sits inside lane 1's
+>   existing scope rather than becoming a lane of its own.
 
 Advisory recommendation from worker `strategy` (`strategy-advisory-001`), 2026-09-28.
 Advisory only: this is a proposal for the coordinator, not an applied change. Every claim below was
@@ -561,6 +579,7 @@ then write the rule that fits.
 | D15 | Writer count | Two writers, sequenced: measurement lane first, page lane second, one writer per worktree; the draft live page (D17) is a third, small, independent envelope in the dashboard lane and is not sequenced behind them | One writer doing both, if the coordinator prefers a single envelope |
 | D16 | Trading result and dealing cost **(39 and 40 answered 2026-09-30)** | **Neither lane computes a trading result.** The flags are not traded (*"Not yet but we will repiece together the algorithm we use to make the daily calls from this work"*), no spread or slippage is subtracted, and no cost-adjusted figure, P&L, entry, stop or target exists — *"this is pureply a data corrleation exercise nothing else"*. The user's stated later use is to reassemble the daily-call logic from what the factors are shown to have done | Compute a cost-adjusted or tradable variant — refused by the user |
 | D17 | The draft live page (user instruction, 2026-09-30) | Publish the prepared page on the live dashboard behind one top-bar link, marked **work in progress**, carrying its as-of date and the three things it may never claim (forecast, holdout, trading result), refreshed each time a batch of answers lands | Wait until the measurement lanes finish — refused: the user asked for it live while it is still being edited |
+| D18 | The during-session stream **(answer 42, 2026-09-30)** | Measure every state twice. The headline count uses states knowable **before** the session, with its window starting at the next session's open (answer 41). A **separately labelled during-session block** measures states that only appear inside the session: timed from the bar that first shows them, measured to that session's close, with the same window taken to the next session's close printed beside it. The two blocks are never pooled, averaged or compared as one rate, because their windows differ in length and overlap; the state uses only what was available at the trigger bar; same-day overlaps count once in `looks_counted`; and the trigger reuses the accepted hourly series, so no new data source or input directory is added | Mix the two blocks into one hit rate, or treat the during-session state as a new lane - both refused: the first would compare windows of different lengths, the second would widen the scope the user bounded with answers 34 and 35 |
 
 ## 10. Tests the owner worker must write and run (this worker could not run them)
 
