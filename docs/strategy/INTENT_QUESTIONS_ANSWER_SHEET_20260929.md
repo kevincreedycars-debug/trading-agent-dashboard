@@ -12,7 +12,14 @@ message is superseded.
 - Or list only the numbers you disagree with, for example `3 no, 12 often, 27 no`.
 - Questions are put to you at most seven at a time, in numbering order, skipping anything already asked.
 
-**Status:** **33 of 50 answered**, as of 2026-09-30. The answered set is 1-33, with no gap.
+**Status:** **40 of 50 answered**, as of 2026-09-30. The answered set is 1-40, with no gap. Batch 8 (**34-40**) came
+back the same day: **34** *"Okay"* and **35** *"Y"* confirm defaults, while **36, 37, 38 and 40 revise the plan**
+rather than confirm it - the movement ranges are the already-stated **0.50 L2L and L2L** (36), no forward-looking or
+holdout purpose is claimed because this work is not a forecast (37, 38), and no dealing cost is subtracted because
+it is *"pureply a data corrleation exercise nothing else"* (40). **39** answered *"not yet"* with the purpose stated:
+the flags are not traded now, and the daily-call algorithm is to be re-pieced together from this work later. The
+same reply also told this worker to put the work on the **live dashboard** while it is still being edited, so a
+draft page and a publish request were prepared. The full record is the "Batch 8 answers" section below.
 Batch 7 (**28, 29, 30, 31, 32**) went out with the batch-6 acknowledgement and came back the same day: **28, 29, 30
 and 31 okay**, and **32** answered as *"whichever gives us the most data we can then refer back to"*, so the F9
 trigger is chosen by printed sample size rather than by preference. **23** came back with a clarification: at this
@@ -146,23 +153,23 @@ still cannot do is clear the declared-rule bar, which needs a rule written befor
 | 31 | Keep the 1/2/5 and 2/5/10 threshold sweep, with `looks_counted` | yes | batch 7 | **yes** - *"Y"* (2026-09-30). The sweep stays under the single `looks_counted`, so the best single cell can never be presented as the only one examined. |
 | 32 | Rebuild F9 `risk_headline_context` as a declared rule (VIX>25 or war/geopolitical/conflict/sanction names) | yes | batch 7 | **not a plain yes** - *"Which ever gives us the most data we can then refer back to"* (2026-09-30). The rebuild happens and the **trigger is chosen by printed sample size**: every candidate definition is measured on the same window with its own day count on the same row, the headline `safe_haven_stress` state uses the candidate with the most observations, and the candidates that lose stay on the page as counts so the question can be reopened from the same table. The union (VIX above 25 **or** an archived event named war / geopolitical / conflict / sanction) is the most inclusive candidate and therefore the expected headline, but it is **not assumed** - the printed counts decide. The `interpreted` news-tone row keeps its *assumption the document does not contain* flag meanwhile. |
 
-## G. Sample and confirmation (33-38)
+## G. Sample and confirmation (33-38; 37 and 38 withdrawn 2026-09-30)
 
 | # | Yes/no question | Default | Asked | Your answer |
 | --- | --- | --- | --- | --- |
-| 33 | Re-test any survivor out of sample before acting on it | yes | batch 1, 3 | **no, not yet** - "No not yet, we are trying to fit anything we are just observing the data and then confirm what price did and did not do" (read as *"we are not trying to fit anything"*). This is the sharper answer of the pair: the current stage is **description, not fitting**. Nothing is estimated from outcomes - the floor is the user's own fixed 0.8% and no threshold, weight or window is tuned - so there is no fitted object for an unseen-data test to check. The out-of-sample requirement stays on the books and attaches to a **declared rule** (a rule stated before its outcome is read, such as the undeclared-variable rules in question 23), not to an observation table. Deferred by user instruction, to be re-raised if and when a rule is declared |
-| 34 | Size the rebuild for a 3pp effect, about 2,100 anchors per state | yes | | |
-| 35 | Allow hourly entries to reach that sample, horizon re-declared, overlap disclosed | yes | | |
-| 36 | Accept a declared floor, since the data has no "no move" bucket to find one in | yes | | |
-| 37 | Leave the sealed prospective window untouched until 2027-03-25T15:00:00Z | yes | | |
-| 38 | Re-check survivors on that window when it opens | yes | | |
+| 33 | Re-test any survivor out of sample before acting on it | yes | batch 1, 3 | **no, not yet** - "No not yet, we are trying to fit anything we are just observing the data and then confirm what price did and did not do" (read as *"we are not trying to fit anything"*). This is the sharper answer of the pair: the current stage is **description, not fitting**. Nothing is estimated from outcomes - the floor is the user's own fixed 0.8% and no threshold, weight or window is tuned - so there is no fitted object for an unseen-data test to check. The out-of-sample requirement stays on the books and attaches to a **declared rule** (a rule stated before its outcome is read, such as the undeclared-variable rules in question 23), not to an observation table. Deferred by user instruction, to be re-raised if and when a rule is declared; the window-based version of that idea (questions 37 and 38) was withdrawn on 2026-09-30 as inapplicable, because this work is not a forecast |
+| 34 | Size the rebuild for a 3pp effect, about 2,100 anchors per state | yes | batch 8 | **yes** - *"Okay"* (2026-09-30). The rebuild is sized for a 3pp effect, which needs about 2,100 anchors per state; the route to that sample is question 35, because about 965 daily anchors cannot support direction claims below roughly 8pp. |
+| 35 | Allow hourly entries to reach that sample, horizon re-declared, overlap disclosed | yes | batch 8 | **yes** - *"Y"* (2026-09-30). Hourly entries are allowed to reach the sample, the horizon is re-declared rather than stretched (rungs 2 and 3 exist in no accepted artifact), the overlap is disclosed as one look, and the daily-only column (about 965 anchors) stays printed beside it. |
+| 36 | Accept a declared floor, since the data has no "no move" bucket to find one in | yes | batch 8 | **the question was mis-framed; the answer is the already-stated pair** - *"how would that make sense it should be the previously stated direction ranges, l2l and 0.5l2l"* (2026-09-30). Nothing new is declared and nothing needs to be: the movement stage is measured at the user's own **0.50 L2L (ADR20 x 0.25)** and **L2L (ADR20 x 0.50)**, the pair recorded from question 8. The fixed 0.80% (the chart-current instance of 0.50 L2L) and 0.30% rows stay printed as labelled sensitivity rows under the same `looks_counted`, because question 9 forbids removing a published row; neither gates anything new. Full record in the "Batch 8 answers" section. |
+| 37 | Leave the sealed prospective window untouched until 2027-03-25T15:00:00Z | yes | batch 8 | **withdrawn as inapplicable** - *"We arent looking forward, this isnt about that we have clarified this twice."* (2026-09-30). The work is not a forecast, so there is no future test to protect: no page, row, limit or comment carries a holdout, sealed-window or "when the window opens" purpose, and a date range printed on a page is a scope statement about which archive was read. The archive's own end date is unchanged as a fact; what is withdrawn is the purpose that had been attached to it. |
+| 38 | Re-check survivors on that window when it opens | yes | batch 8 | **no, dropped from scope** - *"No again not needed currently"* (2026-09-30). The re-check on an opening window goes with 37. Question 33's deferred out-of-sample step keeps its real basis, which is a rule written down before its outcome is read, not a calendar window. |
 
-## H. Tradability - answer this group only if you intend to trade the flags (39-42)
+## H. Tradability - 39 answered "not yet" (2026-09-30), so 40 is no and 41-42 are measurement questions (39-42)
 
 | # | Yes/no question | Default | Asked | Your answer |
 | --- | --- | --- | --- | --- |
-| 39 | You intend to trade these flags | answer matters | | |
-| 40 | Subtract spread and slippage before any claim | yes if 39 is yes | | |
+| 39 | You intend to trade these flags | answer matters | batch 8 | **not yet, and the purpose is stated** - *"Not yet but we will repiece together the algorithm we use to make the daily calls from this work"* (2026-09-30). The flags are not traded and no row may be called a signal: the tables exist so that the logic behind the daily calls can be **reassembled from what the factors are shown to have done**, which is a later, separately-agreed step. Because 39 is "not yet", 40 is answered no, and 41-42 survive only as measurement questions (when the outcome starts, and whether the state is known before the session it applies to). |
+| 40 | Subtract spread and slippage before any claim | yes if 39 is yes | batch 8 | **no** - *"No this is pureply a data corrleation exercise nothing else."* (2026-09-30). No spread or slippage is subtracted, no cost-adjusted figure is produced, and no P&L, entry, stop or target exists. This closes the tradability group; 41 and 42 are asked in batch 9 in their measurement sense only. |
 | 41 | Start the outcome at the next session open after the flag is observed | yes | | |
 | 42 | The flag is available before the session it applies to, with no look-ahead | yes | | |
 
@@ -187,7 +194,14 @@ still cannot do is clear the declared-rule bar, which needs a rule written befor
 | D2, the VIX change stream | 29-31 |
 | D3, the size of the deliverable | 43-46, 49 |
 | D4, the F9 rebuild | 32 |
-| D5, the rebuild's sample size | 33-35, 38 |
+| D5, the rebuild's sample size | 33, 34, 35; 36 restates the movement pair; 37 and 38 withdrawn |
+
+**One more deliverable, added by the user on 2026-09-30.** *"I want to see this work on the dashboard so I can
+confirm we are going in the right direction please put it live even thjough we are editing it."* The work must be
+visible on the **live dashboard** while it is still being edited, so a **draft page** is prepared by this worker and
+published by the dashboard lane: the page states that it is a draft, carries its as-of date, and claims none of the
+things answers 37 and 40 rule out (no forecast, no holdout, no trading result). Questions 43-46 and 49 govern what
+such a page may say. The page file and the publish request are named in the "Batch 8 answers" section.
 
 The horizon ladder (questions 15-17) also feeds D5, because 48h and 3d exist in no accepted artifact: a declared
 1/2/3/5-session window set is part of what that rebuild has to produce, and every extra window is an extra look in
@@ -204,7 +218,8 @@ the single `looks_counted`.
 | 2026-09-29 | 5 | 11, 18, 19, 20, 21, 22, 23 | 5 answers and 2 requests for plain English. **11: the light, with a reason line under it** (*"Okay lets go with the light but an explanation of why its yes/no briefly underneath"*) - the two lights stay, and one short why sits underneath each one. **18: "yes makes sense"**, **19: "okay"**, **20: "yes every year"**, **21: "okay"** - the four direction-stage defaults are confirmed as the user's own answers, so stage 2 is asked only on states that moved, answers the side only, must hold its sign in every year, and keeps both accepted bars. **22 and 23: not understood** - *"what do you mean written rule? Explain this part simply"* and *"Again what do you mean unwritten factors"* - so the words *written rule* and *unwritten* are retired and the pair goes back in batch 6 in the plainer wording recorded in the "in plain words" section below. The same message ends the day: *"for now hold here for tonight, we will continue here again tomorrow"*, so the batch-6 send waits |
 | 2026-09-30 | 6 answers | 22, 23, 24, 25, 26 | **Closed the same day: 22 yes** (the ten with a written sentence are checked first), **23 NO** - *"you know what the factors are then we see what price did then we assign a correlation"*, so the twenty get an implied direction from what the factor is and then a reliability percentage read off the archive, and the "agree the rule first" precondition is withdrawn - **24 yes with a double-check** (*"anything that could give an edge we need to be aware of"*), which added the requirement that a "no view" band prints its raw split beside the same-cohort rate in the same table - **25 yes**, **26 yes**. Answered set was then **28 of 50** (1-26, 27, 33), and is **33 of 50** after batch 7 |
 | 2026-09-30 | 7 | 28, 29, 30, 31, 32 | **Sent with the batch-6 acknowledgement**, being the rest of group E and all of group F in numbering order, one short reason each, all defaulting to yes | **Closed the same day.** Four replies are *"Y"*: **28** pairs, weighting, composites and models stay out for now, **29** both VIX streams stay, **30** the change legs stay raw context with no direction, **31** the 1/2/5 and 2/5/10 sweep stays under one `looks_counted`. **32** is not a plain yes - *"Which ever gives us the most data we can then refer back to"* - so the F9 trigger is chosen by printed sample size rather than by preference; the four rules attached to it are in the "Batch 7 answers" section. The same reply carried the **23** clarification, recorded in that row. Answered set is now **33 of 50** (1-33) |
-| 2026-09-30 | 8 | 34, 35, 36, 37, 38, 39, 40 | **Sent with the batch-7 acknowledgement**: the rest of group G (34-38, the rebuild's sample size and the sealed window) and the first two of the tradability group H (39-40), one short reason each. **39** is not defaulted - it asks whether the user intends to trade the flags at all, and it governs 40 - so both are marked as such in the ask | **Not yet answered.** Nothing in the answered set depends on it: 39-42 only bind if the user says the flags are to be traded |
+| 2026-09-30 | 8 | 34, 35, 36, 37, 38, 39, 40 | **Sent with the batch-7 acknowledgement**, being the rest of group G (the rebuild's size and the data window) and the first two of group H, one short reason each. **39** was flagged as not defaulted, because it asks whether the user intends to trade the flags at all and governs 40 | **Closed the same day: two confirmations and four revisions.** **34** *"Okay"* and **35** *"Y"* confirm defaults (the 3pp sizing; hourly entries with the horizon re-declared, the overlap disclosed and the daily-only column kept beside them). **36 is a correction to the question, not to the plan**: no new floor is needed - *"how would that make sense it should be the previously stated direction ranges, l2l and 0.5l2l"* - so the movement stage is measured at the user's own 0.50 L2L and L2L, with the fixed 0.80% and 0.30% kept as labelled sensitivities that gate nothing. **37 and 38 are withdrawn as inapplicable** - *"We arent looking forward, this isnt about that we have clarified this twice."* and *"No again not needed currently"* - so no holdout or sealed-window purpose is claimed anywhere and the re-check on an opening window is dropped. **39 is "not yet" with the purpose stated**: *"Not yet but we will repiece together the algorithm we use to make the daily calls from this work"* - nothing is traded, no row may be called a signal, and the tables exist to reassemble the daily-call logic later. **40 is "no"**: *"No this is pureply a data corrleation exercise nothing else"* - no spread, slippage, cost-adjusted figure or P&L. The same reply asked for the work to be visible on the live dashboard while it is still being edited, so a draft page and a publish request were prepared. Answered set is now **40 of 50** (1-40) |
+| 2026-09-30 | 9 | 41, 42, 43, 44, 45, 46, 47 | **Sent with the batch-8 acknowledgement**: the surviving measurement pair (41, 42 - now that 39 is "not yet" and 40 is "no") and all of the deliverable group I (43-47), one short reason each, all defaulting to yes. 48-50 follow in batch 10 | **Not yet answered.** Nothing in the answered set depends on it: 41 and 42 are measurement rules and 43-47 decide the shape of the deliverable, and both currently stand on their defaults |
 
 Batches continue in numbering order, at most seven at a time, skipping anything already asked. Batch 4 closed four
 of the five questions it asked: **12** (rare and common states are equally kept), **15** (the horizon set is
@@ -467,6 +482,72 @@ twenty behind the declared-rule bar, so it is asked back in batch 8 instead of b
 no sealed-window value. Four of the five answers confirm a default; the fifth (32) changes how a state that **does
 not exist yet** is defined, so nothing already measured or published moves. The answered set is now **33 of 50**
 (1-33, contiguous), and batch 8 - questions 34 to 40 - went out with this acknowledgement.
+
+## Batch 8 answers (2026-09-30) - two confirmations, four revisions, and the point of the flags
+
+Batch 8 asked **34-40** (the rest of group G and the first two of the tradability group H) with the batch-7
+acknowledgement, and all seven came back the same day. Verbatim, in numbering order:
+
+- **34** *"Okay"*
+- **35** *"Y"*
+- **36** *"how would that make sense it should be the previously stated direction ranges, l2l and 0.5l2l"*
+- **37** *"We arent looking forward, this isnt about that we have clarified this twice."*
+- **38** *"No again not needed currently"*
+- **39** *"Not yet but we will repiece together the algorithm we use to make the daily calls from this work"*
+- **40** *"No this is pureply a data corrleation exercise nothing else."*
+
+The same reply carried one instruction of the user's own, which is not a numbered answer and is recorded in full
+below: *"I want to see this work on the dashboard so I can confirm we are going in the right direction please put it
+live even thjough we are editing it."*
+
+**34 and 35 change nothing; they take the two standing defaults off the table.** 34 confirms the sizing - a 3pp
+effect needs about 2,100 anchors per state - and 35 confirms the route to that sample: hourly entries with the
+horizon re-declared rather than stretched, the overlap disclosed, and the daily-only column (about 965 anchors)
+printed beside it, because daily anchors alone cannot support direction claims below roughly 8pp. Both were already
+the plan's defaults, so nothing waits on them.
+
+**36 corrects the question rather than the plan.** The question offered "accept a declared floor"; the user's answer
+is that no new floor is needed because the ranges were already stated: *l2l and 0.5l2l*. The movement stage is
+therefore measured at the user's own **0.50 L2L (ADR20 x 0.25)** and **L2L (ADR20 x 0.50)** - the pair recorded from
+question 8 - and nothing is newly declared. The fixed 0.80% (the chart-current instance of 0.50 L2L) and 0.30% rows
+stay printed as labelled sensitivity rows under the same `looks_counted`, because question 9 forbids removing a row
+that is already published; they gate nothing and define nothing new. At the period medians the two ranges are
+0.3618% and 0.7236%.
+
+**37 and 38 are withdrawn as inapplicable.** Both assumed a forward-looking purpose, namely protecting a future
+test, and the user says plainly that the work is not looking forward and that this has been clarified twice.
+Consequences: no page, row, limit or comment carries a holdout, sealed-window or "when the window opens" purpose; a
+date range printed on a page is a **scope statement** about which archive was read and nothing more; and question
+38's "re-check the survivors when the window opens" is dropped from scope. The archive's own end date is unchanged
+as a fact - what is withdrawn is the purpose that had been attached to it. Question 33's deferred out-of-sample step
+keeps its real basis, which is a rule written down before its outcome is read, not a calendar window.
+
+**39 answers "not yet", and says what the flags are for.** The flags are not traded, and no row may be called a
+signal. *"...we will repiece together the algorithm we use to make the daily calls from this work"* - so the eventual
+use of these tables is to **reassemble the daily-call logic from what the factors are shown to have done
+historically**. That re-assembly is a later, separately-agreed step; nothing in the current work directs a trade or
+reads a broker, a position or a fill.
+
+**40 says no, and closes the tradability group.** *"this is pureply a data corrleation exercise nothing else"*: no
+spread or slippage is subtracted, no cost-adjusted figure exists, and there is no P&L, entry, stop or target. The
+group's two tradability items are therefore resolved, and **41 and 42 survive only in their measurement sense** -
+when the outcome is measured from, and whether the state is known before the session it applies to. Both are asked
+in batch 9 in those words.
+
+**The live-dashboard instruction, and what was done about it.** The user had already asked for the link on
+2026-09-30 and now asks for the work itself to be visible while it is still being edited. The answer to that is not
+a document: a **draft page has to exist on the live site**. Because this worker may write only `docs/strategy/`, the
+page is prepared here and published by the dashboard lane. Prepared:
+`docs/strategy/WORK_IN_PROGRESS_GOLD_FACTOR_TABLES.html` (a self-contained page - no script, no fetch, no external
+file - showing where the question round stands, what is already decided, and the gold facts already measured, with a
+draft banner and an as-of date). Requested: `docs/strategy/DASHBOARD_LIVE_DRAFT_PAGE_REQUEST.md`, which asks for one
+nav entry, the draft marking, and the rule that the page may never carry a forecast, a holdout or a trading result
+(answers 37 and 40). Questions 41-47 went out with this acknowledgement.
+
+**What did not change.** No measured gold figure, no accepted artifact, no bar and no boundary moves: 34 and 35
+confirm defaults, 36 restates the pair already in force, 37, 38 and 40 remove claims that are not needed rather than
+adding measurements, and 39 states a purpose for a later stage. The answered set is now **40 of 50** (1-40,
+contiguous).
 
 ## Gold L2L facts (read 2026-09-29, read-only, every interval already spent)
 

@@ -1920,3 +1920,53 @@ two-unit print, and the rung keys `two_sessions` / `three_sessions`) are unchang
 implemented as defaults. No measurement, credential or sealed-window value was touched, and no lane envelope was
 opened.
 
+
+## 2026-09-30 (batch 8 answered) - two confirmations, four revisions, and the user asks for the work to be live now
+
+Batch 8 - questions **34, 35, 36, 37, 38, 39, 40** - came back the same day it went out. Verbatim: **34** *"Okay"*;
+**35** *"Y"*; **36** *"how would that make sense it should be the previously stated direction ranges, l2l and
+0.5l2l"*; **37** *"We arent looking forward, this isnt about that we have clarified this twice."*; **38** *"No again
+not needed currently"*; **39** *"Not yet but we will repiece together the algorithm we use to make the daily calls
+from this work"*; **40** *"No this is pureply a data corrleation exercise nothing else."* The same reply carried one
+instruction of the user's own:
+
+> "I want to see this work on the dashboard so I can confirm we are going in the right direction please put it live
+> even thjough we are editing it."
+
+**What each reply does.** **34** and **35** confirm defaults - the 3pp sizing and the hourly route with the horizon
+re-declared and the overlap disclosed - so D5 keeps its shape and nothing waits on them. **36 is a correction to my
+question rather than to the plan:** I offered "accept a declared floor", and the user's answer is that the ranges
+were already stated, *l2l and 0.5l2l*, which is the pair recorded from question 8. So nothing new is declared, and
+the fixed 0.80% and 0.30% rows stay published as labelled sensitivities under one `looks_counted`. **37 and 38
+assumed a forward-looking purpose and are withdrawn as inapplicable:** no page, row, limit or comment claims a
+holdout or a sealed window, a printed date range is a scope statement only, and question 38's re-check is dropped.
+**39** states that the flags are not traded and says what they are for - reassembling the daily-call logic from what
+the factors are shown to have done, later - and **40** closes the tradability group: no spread, slippage,
+cost-adjusted figure, P&L, entry, stop or target. **41** and **42** survive only as measurement questions and go out
+in batch 9.
+
+**The live-dashboard instruction, handled honestly.** This is the second dashboard request in one day - the first
+asked for the link, recorded in the batch-7 entry - and it is not satisfiable with another link: the user wants the
+work itself visible while it is still being edited. Nothing from this work was on the live site, because the
+question round and the factor rules are worker documents that reach a lane only through the coordinator. Since this
+worker may write only `docs/strategy/`, two things were produced: a **self-contained draft page** (one file, no
+script, no fetch, no external dependency, so a static host renders it) and a **bounded publish request** for the
+dashboard lane. The page carries a work-in-progress banner, its as-of date, where the question round stands, what is
+already decided, the gold facts already measured, and what it must never claim (no forecast, no holdout, no trading
+result - answers 37 and 40). The draft page is a first version and is expected to be revised as the round closes.
+
+**Files changed.** `INTENT_QUESTIONS_ANSWER_SHEET_20260929.md` (status 40 of 50 with the batch-8 summary in it, rows
+33-40, the group G and group H headings, the decision map, a paragraph on the new deliverable, a new "Batch 8
+answers" section, the answer log with a batch-8 answers row and a batch-9 send row),
+`GOLD_VIX_BOTH_AND_FACTOR_TABLE_PLAN_20260928.md` (a batch-8 revision note in the header, the movement pair in §3's
+bar text, the F9 note's reference to the sealed window corrected, D1 and D5 amended, the floor bullet in §10, and §12's
+handoff, limits and closing paragraph), `GOLD_BAND_FIX_AND_EDGE_TABLE_SPEC_20260928.md` (a batch-8 block in the
+header, the movement-gate bullet, the lane list with the draft-page envelope, D14 rewritten and D16/D17 added, the
+lane-1 deliverable, the both-lanes rule and the limits tail), a new draft page
+(`WORK_IN_PROGRESS_GOLD_FACTOR_TABLES.html`), a new publish request (`DASHBOARD_LIVE_DRAFT_PAGE_REQUEST.md`), and
+this entry.
+
+**Status.** **40 of 50 answered** (1-40, contiguous). Batch 9 - **41, 42, 43, 44, 45, 46, 47** - went out with the
+acknowledgement: the surviving measurement pair plus all of the deliverable group. The two standing coordinator
+items (the two-unit print, and the rung keys) are unchanged. No measurement, credential or sealed-window value was
+read, no lane envelope was opened, and nothing already measured moved.

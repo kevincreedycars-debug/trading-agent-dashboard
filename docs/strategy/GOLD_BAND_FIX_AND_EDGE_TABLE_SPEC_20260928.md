@@ -14,8 +14,9 @@
 > implementing anything below. Section 1.2 states what arrived; sections 5.3, 7 and 10 now carry the
 > mechanics of it.
 >
-> - the movement stage is the user's **fixed 0.80% of gold's own price**, published beside the same floor in
->   the archive's own L2L units (the plan's §3; their 0.80% is the chart-current instance of 0.50 L2L), and
+> - the movement stage is measured at the user's declared **0.50 L2L (ADR20 x 0.25)** and **L2L (ADR20 x 0.50)** — the
+>   pair restated by answer 36 — with the fixed 0.80% of gold's own price (the chart-current instance of 0.50 L2L)
+>   and the 0.30% row kept as labelled sensitivities under the same `looks_counted`, gating nothing new; and
 >   the per-year sign
 >   rule has teeth on it (measured in the plan's §3: the fixed 0.80% rows run 32.40% / 38.43% / 62.82% across 2024–2026 and
 >   fail; the L2L form runs 39.60% / 37.19% / 38.46% and holds);
@@ -42,6 +43,22 @@
 > The readable, authoritative version of all of it is the plan's §3, §8, §11 and §12 and rows 11 and 18–23 of
 > `docs/strategy/INTENT_QUESTIONS_ANSWER_SHEET_20260929.md`; this appendix carries only the mechanical
 > consequences.
+>
+> **Revised again 2026-09-30 (batch 8, questions 34-40).** Four of the seven replies revise this appendix rather
+> than confirm a default, and every one of them is about the **claims** the lanes may make - no figure already
+> measured moves, and no new measurement was taken here.
+>
+> - the movement stage is measured at the user's already-stated **0.50 L2L (ADR20 x 0.25)** and **L2L (ADR20 x
+>   0.50)** (answer 36); nothing new is declared, and the fixed 0.80% and 0.30% rows stay published as labelled
+>   sensitivities that gate nothing;
+> - **the forward-looking material is withdrawn** (answers 37 and 38): D14 no longer claims a prospective or sealed
+>   window, no lane holds rows back for a future evaluation, and a printed date range is a scope statement only;
+> - **no trading result is computed** (answers 39 and 40, new decision D16): no spread or slippage, no
+>   cost-adjusted figure, no P&L, no entry, stop or target, and no row may be labelled a signal;
+> - **a draft live page is added** (the user's own instruction, new decision D17): the work in progress has to be
+>   visible on the live dashboard now, marked as a draft and refreshed as answers land - see
+>   `docs/strategy/DASHBOARD_LIVE_DRAFT_PAGE_REQUEST.md`;
+> - 34 and 35 confirm the sizing and the hourly route as defaults, so lane 1 keeps the shape it already has.
 
 Advisory recommendation from worker `strategy` (`strategy-advisory-001`), 2026-09-28.
 Advisory only: this is a proposal for the coordinator, not an applied change. Every claim below was
@@ -54,6 +71,11 @@ Proposed bounded assignments (see "Handoff" for why it is two writers):
 - `gold-declared-band-measurement-026` — measurement lane, in the `gold-research` worktree.
 - `dashboard-gold-factor-edge-page-001` — page lane; the coordinator should renumber this to the
   dashboard lane's own next free id if that lane numbers differently.
+- `dashboard-gold-factor-wip-page-001` — the **draft live page** the user asked for on 2026-09-30 (*"please put it
+  live even thjough we are editing it"*): publish the prepared page, link it from the top bar, mark it a draft and
+  refresh it as answers land. Independent of lanes 1 and 2, claiming nothing they do not; the page file and the
+  request are `docs/strategy/WORK_IN_PROGRESS_GOLD_FACTOR_TABLES.html` and
+  `docs/strategy/DASHBOARD_LIVE_DRAFT_PAGE_REQUEST.md`, and the rule is D17.
 
 ## 1. User decisions already recorded (2026-09-28, extended 2026-09-29 in §1.2)
 
@@ -532,8 +554,10 @@ then write the rule that fits.
 | D11 | Navigation surfaces | `gold-backtest-outcomes.html` and `gold-direction-scorecard.html` "Related pages" nav | Also add a topbar link in `index.html` |
 | D12 | Show the old median/sign rows on the new page | No: the page carries declared-band rows only, and links to the existing scorecard page | Merge both tables on one page |
 | D13 | Refresh policy | One frozen artifact with a stated as-of date, regenerated only when a new measurement run is accepted | Rebuild on every publish |
-| D14 | Data window | 2023–2026 only, stated on the page, with the prospective window (first eligible anchor 2026-09-15T14:00:00Z, evaluation sealed until 2027-03-25T15:00:00Z) explicitly untouched | Read the sealed window — refused |
-| D15 | Writer count | Two writers, sequenced: measurement lane first, page lane second, one writer per worktree | One writer doing both, if the coordinator prefers a single envelope |
+| D14 | Data window **(amended 2026-09-30, answers 37 and 38)** | 2023–2026 only, stated on the page as a **scope statement**: the archive read ends at its own last accepted anchor. The earlier prospective-window wording is **retired**, not restated — nothing in this work looks forward, so no page, row, limit or comment claims a holdout, a sealed window or a re-check when a window opens | Read data past the archive's own end date — refused as a scope boundary, not as a holdout test |
+| D15 | Writer count | Two writers, sequenced: measurement lane first, page lane second, one writer per worktree; the draft live page (D17) is a third, small, independent envelope in the dashboard lane and is not sequenced behind them | One writer doing both, if the coordinator prefers a single envelope |
+| D16 | Trading result and dealing cost **(39 and 40 answered 2026-09-30)** | **Neither lane computes a trading result.** The flags are not traded (*"Not yet but we will repiece together the algorithm we use to make the daily calls from this work"*), no spread or slippage is subtracted, and no cost-adjusted figure, P&L, entry, stop or target exists — *"this is pureply a data corrleation exercise nothing else"*. The user's stated later use is to reassemble the daily-call logic from what the factors are shown to have done | Compute a cost-adjusted or tradable variant — refused by the user |
+| D17 | The draft live page (user instruction, 2026-09-30) | Publish the prepared page on the live dashboard behind one top-bar link, marked **work in progress**, carrying its as-of date and the three things it may never claim (forecast, holdout, trading result), refreshed each time a batch of answers lands | Wait until the measurement lanes finish — refused: the user asked for it live while it is still being edited |
 
 ## 10. Tests the owner worker must write and run (this worker could not run them)
 
@@ -603,8 +627,8 @@ envelope per lane; pause at the review boundary.
 1. **Lane 1 — `gold-declared-band-measurement-026`** (the worker that owns the report library, i.e. the
    gold-research worktree, where `gold_individual_variable_report.js`, the builder and the v2 registry
    actually live; none of the three exists in canonical): deliverables A, B and C — the v3 register,
-   the mode, the run, the expectations v2 — plus the **0.80% movement gate** (with its L2L form and its
-   per-year sign test beside it) computed in the same
+   the mode, the run, the expectations v2 — plus the movement gate at the user's declared **0.50 L2L and L2L**
+   (answer 36), with the fixed 0.80% and 0.30% sensitivities and their per-year sign test beside it, computed in the same
    pass, the **rungs 2 and 3 definitions** (two sessions and three sessions, which exist in no accepted
    artifact, so this is new declared work) with their wall-clock twins and their own benchmarks, the raw
    up/down splits of the 24 band states at all four rungs and both readings, and tests 1, 2, 5 and 6 (the
@@ -614,8 +638,9 @@ envelope per lane; pause at the review boundary.
    entries — plus the ladder columns with one `looks_counted`, the per-factor light and its one-line
    plain reason, the three-block completeness rule, tests 3, 4, 5, 6 (the rendering half) and 7.
 3. Both lanes: no new data, no network, no credential, no change to Layer 1 logic, the frozen registry,
-   the manifest, the capture lane, the scheduled task or the 130-anchor plan; nothing in the sealed
-   prospective window is read; the combination circuit stays closed; factor **pairs** wait until the
+   the manifest, the capture lane, the scheduled task or the 130-anchor plan; nothing past the accepted
+   archive's own end date is read (a scope boundary, not a holdout — answers 37 and 38); the combination
+   circuit stays closed; factor **pairs** wait until the
    single factors have been fixed (that is decision D5).
 
 **Limits, restated so the page can copy them.** Associations only, on intervals already spent. Every
@@ -627,8 +652,9 @@ may never be added, multiplied, or read as four independent tests.
 The drift is 55.81% on the session and 58.23% on the week, which dominates any few-point factor lean.
 The per-year test kills most of what survives the baseline test. The band register is a declared
 reading of the document against the report's vocabulary, written after the accepted report existed; it
-is not a pre-registration. No Layer 1 change is proposed here, no formula is fitted, and evaluation of
-the prospective window stays sealed until `2027-03-25T15:00:00Z`.
+is not a pre-registration. No Layer 1 change is proposed here, no formula is fitted, no forecast is claimed
+and no trading result is computed: the forward-looking items (37, 38), the dealing cost and any tradable
+variant (39, 40) are withdrawn by the user's own answers of 2026-09-30.
 
 **Provenance of this document.** Every count in §3 was read on 2026-09-28 from
 `data/gold-direction-scorecard-20260927.json` and

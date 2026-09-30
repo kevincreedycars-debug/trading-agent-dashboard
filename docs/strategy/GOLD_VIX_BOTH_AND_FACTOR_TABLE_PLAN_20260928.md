@@ -29,6 +29,21 @@ twenty with no sentence get their meaning agreed before any outcome is read - ar
 their defaults (yes) standing, so the order of the work is the only thing waiting. The user then asked to hold
 overnight, so nothing further is sent tonight.
 
+**Revised again 2026-09-30 after batch 8 (40 of 50 answered).** Seven questions came back - the rest of the sample
+group and the first two of the tradability group - and they change the **claims** this deliverable makes rather than
+any number it holds. No new measurement was taken for this revision and nothing already measured moves.
+(1) **The movement ranges are the user's already-stated pair** (answer 36: *"it should be the previously stated
+direction ranges, l2l and 0.5l2l"*), so the stage-1 milestone is **0.50 L2L (ADR20 x 0.25)** and **L2L (ADR20 x
+0.50)** with the fixed 0.80% and 0.30% rows kept as labelled sensitivities - nothing new is declared and nothing is
+fitted. (2) **The forward-looking framing is withdrawn** (answers 37 and 38): this work is not a forecast, so no
+page, row, limit or comment carries a holdout, a sealed window or a "re-check when it opens" step, and a printed
+date range is a scope statement about which archive was read. (3) **No dealing cost is subtracted and no trading
+result exists** (answer 40: *"this is pureply a data corrleation exercise nothing else"*), and the flags are not
+traded now (answer 39) - their stated purpose is to **reassemble the daily-call logic from this work later**, which
+is a separate future step. (4) **The work has to be visible on the live dashboard while it is still being edited**
+(the user's own instruction, quoted in §12): a draft page is prepared here and published by the dashboard lane, and
+it may never carry a forecast, a holdout or a trading result.
+
 ## 1. What you asked for
 
 1. Simplify the plan.
@@ -271,8 +286,10 @@ twelve looks (six change legs across two horizons), it is a post-hoc read of an 
 spent when the accepted report was published, and the same state's session number is 52.86% — *below* the
 55.81% drift, i.e. the opposite of interesting on the horizon this project treats as primary. Its
 magnitude is also a coincidence: 60.51% is also F9's session hit rate, from different counts (262 of 433
-versus 285 of 471). Any future claim about this row needs a fresh out-of-sample read after the sealed
-window opens, not a re-captioning of this table.
+versus 285 of 471). Any future claim about this row needs a fresh read on rows the reader has not already seen, not
+a re-captioning of this table. The forward-looking version of that idea - protecting a window and re-checking
+survivors when it opens (questions 37 and 38) - is **withdrawn by the user's own answers**, because this work is not
+a forecast; what remains is the plain rule that a *claim* waits for a declared rule, which is question 33.
 
 ## 6. Where the "correlations we care about" bar is
 
@@ -315,7 +332,9 @@ correlation"* - an up-implying factor that sees price up 70% of the time is *70%
 precondition that their meaning be agreed before any outcome is read is **withdrawn**. The assigned direction is
 written down with the date it was set, the percentage is printed beside the cohort's own rate on the same rows
 (gold drifts up: 56.84%), the pair is labelled a **description of the archive**, it cannot clear condition (1), and
-question 33's deferred out-of-sample step attaches to the sealed window instead (question 38). (2) *NEUTRAL rows
+question 33's deferred out-of-sample step attaches to a declared rule read on rows the reader has not already seen -
+and, by the user's batch-8 answers to 37 and 38, **not** to a window held back for a future test: that framing is
+withdrawn because this work is not a forecast. (2) *NEUTRAL rows
 get the cohort benchmark and a look*: a declared NEUTRAL state still never enters a hit rate, but its raw up/down
 split now prints beside the same-cohort rate on the same row, it is charged to `looks_counted`, and a persistent
 gap is the trigger to declare a rule for that band rather than a reason to drop it. The band `inside_16_25` is why
@@ -331,6 +350,10 @@ rebuilt. The *assumption the document does not contain* flag stays on the `inter
 The clarification of answer 23 changes no rule: the user is stating that the present goal is understanding how the
 factors historically moved price, so the reliability percentage stays an account of past reactions rather than a
 forecast, which is the label already attached to it.
+**Added 2026-09-30 by the batch-8 answers (34-40):** that batch fits nothing either. 36 restates the movement pair
+already in force, 37 and 38 withdraw the forward-looking items, 40 withdraws cost netting and any trading result,
+and 39 states the purpose of the flags for a later stage. The only change to this section is that condition (1) is
+now the only route to interest for a claimed rule, since no prospective test is claimed anywhere.
 
 One limit is arithmetic, not methodological: about 470 daily anchors can *show* a 5pp gap
 but cannot *confirm* it (about 774 are needed for 80% power on that size), so a bar-clearing table row today is
@@ -434,11 +457,14 @@ and needs no answer.
 | --- | --- | --- | --- |
 | D1 | **The "if" stage, and now its order (answered by the user, 2026-09-29)** | Run the free movement screen first (per-state realized-return q1/q3 spread, no new run), then measure the share of anchors with a **0.50 L2L and an L2L movement in either direction**, and read the direction of that movement against the call **on the sessions that moved** — the user's batch-3 answer to question 8: *"its the 0.5l2l and l2l directional movement happened that we are interested in primarily, then we want to see if the directional call was correct for the l2l that occured"*. The fixed **0.80%** (the chart-current instance of 0.50 L2L) and **0.30%** stay published as sensitivity rows under the same `looks_counted`, and the `n >= 100` / 5pp / per-year-sign conditions are guards on **labelling and scoring only** — never a reason to omit a row (question 9). The user confirmed **both stages stay in scope** (question 10) and **all 28 variables stay in scope** (question 27). Coordinator confirmation of the two-unit print is still pending, but the ordering is no longer open. The **window set is the user ladder, 1/2/3/5 sessions** (§3, question 15), read as one sweep under one looks_counted (question 16) with the overlap disclosed (question 17); no state is dropped for firing rarely (question 12), no cell is left blank where a number exists, and each factor's
 two-light reading carries one plain reason line underneath it (question 11, *"an explanation of why its yes/no
-briefly underneath"*) | Do only the floor measurement and skip the free screen, or read direction on all sessions instead of the moved subset |
+briefly underneath"*). **Answer 36 (2026-09-30) confirms the pair this ordering uses**: the movement ranges are the
+user's already-stated **0.50 L2L (ADR20 x 0.25)** and **L2L (ADR20 x 0.50)**, not a newly declared floor, and the
+fixed 0.80% and 0.30% rows stay published as labelled sensitivities under the same `looks_counted` | Do only the
+floor measurement and skip the free screen, or read direction on all sessions instead of the moved subset |
 | D2 | What to do with the VIX change stream | Both streams, as designed in §7: level bands scored, change legs published as raw context (B1) plus the declared 1/2/5 and 2/5/10 sweep with `looks_counted` (B2), no direction invented | Reject B2 (context only, the minimum version), or drop the change stream back to unscored |
 | D3 | Size of the deliverable | Full version: new page beside the accuracy panel, linked from the two Gold Backtest pages | Minimum version in §8: block C appended to the existing scorecard page, no new template, no nav edits |
 | D4 | F9 `risk_headline_context` **(answered by the user, 2026-09-30: question 32)** | Rebuild it as a declared rule the way the live field is built (VIX>25 **or** war/geopolitical/conflict/sanction event names), because today's only bar-clearing row is an `interpreted` mapping with an unstable sign. The trigger is then **chosen by printed sample size**: every candidate (the union, VIX alone, the event-name branch alone) is measured on the same window with its own day count on the same row, the headline state uses the candidate with the most observations, and the candidates that lose stay visible as counts so the question can be referred back to - the user's *"Which ever gives us the most data we can then refer back to"* | Leave the `interpreted` row as the accepted artifact has it and publish it with its caveats (superseded for the headline state; that row keeps its "assumption the document does not contain" flag) |
-| D5 | The rebuild's sample size | Decide it before rebuilding: state the size the effect needs (about 2,100 anchors per state for 3pp) and get it from hourly entries with a re-declared horizon, because 965 daily anchors cannot support direction claims below about 8pp | Keep daily anchors and accept that only large effects will ever be visible, or hold the direction layer until more daily history exists |
+| D5 | The rebuild's sample size **(34 and 35 answered 2026-09-30; 37 and 38 withdrawn)** | Decide it before rebuilding: state the size the effect needs (about 2,100 anchors per state for 3pp) and get it from hourly entries with a re-declared horizon, because 965 daily anchors cannot support direction claims below about 8pp. 34 confirms the sizing and 35 the hourly route; **37 and 38 are withdrawn as inapplicable**, because the user is not looking forward and says so twice, so the rebuild carries no sealed window and no "re-check when it opens" step | Keep daily anchors and accept that only large effects will ever be visible, or hold the direction layer until more daily history exists |
 
 Defaults are conservative: they invent no direction, remove no coverage and change no accepted artifact. If
 no answer arrives, D1–D5 defaults are what the two lanes implement.
@@ -462,11 +488,14 @@ Documented here so the plan is complete without fifteen questions:
 - **The interest bar does not change.** It stays the accepted scorecard's own: `hit_rate_pct >= 60` **and**
   `n >= 100`, plus the six conditions in §6. The movement stage uses the same bar with a 5pp gap against the
   cohort's own share instead of the 60% level, which is all a share can honestly support.
-- **The move floor is declared, never fitted.** The session floor is the user's 0.80% of price in the call's
+- **The move floor is declared, never fitted, and the declared pair is the user's own (amended 2026-09-30,
+  answer 36).** The movement ranges are the already-stated **0.50 L2L (ADR20 x 0.25)** and **L2L (ADR20 x 0.50)** -
+  answer 36: *"how would that make sense it should be the previously stated direction ranges, l2l and 0.5l2l"* - so
+  nothing new is declared by this project. The session floor is the user's 0.80% of price in the call's
   direction (declared 2026-09-29) *and* its L2L form 1.00 L2L = 0.50 x ADR20 (0.7236% today), published with
   0.50 L2L (0.3618%), 0.30% and 1.00% rows and one `looks_counted`; none of these is a fact about gold, they are
-  parameters. The week floor stays at 1.00% until the user says otherwise, and its L2L form needs its own
-  measurement before it is proposed.
+  parameters. Answer 36 names no week floor, so the week floor stays at 1.00% as declared until the user says
+  otherwise, and its L2L form still needs its own measurement before it is proposed.
 - **The window set is the user's ladder (question 15, 2026-09-29): 1, 2, 3 and 5 sessions.** Every share and
   every hit rate is published on all four windows in one line, with the overlap disclosed and one `looks_counted`
   over the whole sweep. 48h and 3d appear in no accepted artifact, so lane 1 has to declare and produce them; the
@@ -522,7 +551,17 @@ outcome is read), the report mode change, the run into a new output directory, e
 and 6, and a one-page summary of the raw splits and the movement screen, with no direction claim. Lane 2
 `dashboard-gold-factor-edge-page-001`, only after lane 1 is accepted: the table builder, the artifact, the
 template, the page and the two nav entries, tests 3, 4 and 6. No network, no credential, no new data, no
-Layer 1 change, no warehouse or scheduled-task action, and nothing in the sealed prospective window is read.
+Layer 1 change, no warehouse or scheduled-task action, and nothing past the accepted archive's own end date is read
+(a scope boundary, not a holdout test - answers 37 and 38).
+
+**One independent addition, asked for by the user on 2026-09-30.** *"I want to see this work on the dashboard so I
+can confirm we are going in the right direction please put it live even thjough we are editing it."* A **draft page**
+carrying this work in progress therefore has to be **live on the dashboard now**, published by the dashboard lane
+behind a top-bar link and refreshed as each batch of answers lands. The page is prepared in this worker's checkout
+(`docs/strategy/WORK_IN_PROGRESS_GOLD_FACTOR_TABLES.html`) and the publish request is
+`docs/strategy/DASHBOARD_LIVE_DRAFT_PAGE_REQUEST.md` (one nav entry, draft marking, as-of date, and the rule that it
+may never carry a forecast, a holdout or a trading result). It is independent of lanes 1 and 2, claims nothing they
+do not, and blocks nothing: lanes 1 and 2 keep the order they already have.
 
 **Limits, so the page can copy them.** Associations only, on intervals already spent. Every state shares
 anchors with the others, one instant can feed several variables, and the two halves of a band split are
@@ -531,8 +570,16 @@ session and 58.23% week, which dominates any few-point factor lean, and the per-
 survives the baseline test — a nominal 60% is a different thing in 2023 (drift 51.54%) than in 2025 (drift
 60.15%). The VIX-up week row at 60.51% is a post-hoc read of twelve looks on spent data and is not a
 finding. The band register is a declared reading of the document against the report's vocabulary, written
-after the accepted report existed; it is not a pre-registration. No formula is fitted, and the prospective
-window stays sealed until `2027-03-25T15:00:00Z`.
+after the accepted report existed; it is not a pre-registration. No formula is fitted, no forecast is claimed and no
+trading result is computed: the user has withdrawn the forward-looking framing (answers 37 and 38) and the cost
+netting (answer 40), so no page, row or limit carries a prediction, a holdout, a P&L or a cost-adjusted figure.
+
+**Not a trading exercise (answers 39 and 40).** Nothing here is a trade instruction: no spread or slippage is
+subtracted, no cost-adjusted figure exists, and no entry, stop or target is produced. The user's stated purpose for
+the flags is to **re-piece together the algorithm that makes the daily calls, from this work, later** - *"Not yet but
+we will repiece together the algorithm we use to make the daily calls from this work"* - and that re-assembly is a
+separate, future step rather than part of either lane. It also settles the shape of the page: a reading, never a
+signal, and never a reason to act.
 
 **Two limits that govern how every verdict may be read.** First, the direction test cannot see small
 effects: one standard error is about 2.3pp at these state sizes, so a real 3pp edge passes the gate about 6%
