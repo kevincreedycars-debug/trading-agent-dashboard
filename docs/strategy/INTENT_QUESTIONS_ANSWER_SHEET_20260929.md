@@ -170,18 +170,18 @@ still cannot do is clear the declared-rule bar, which needs a rule written befor
 | --- | --- | --- | --- | --- |
 | 39 | You intend to trade these flags | answer matters | batch 8 | **not yet, and the purpose is stated** - *"Not yet but we will repiece together the algorithm we use to make the daily calls from this work"* (2026-09-30). The flags are not traded and no row may be called a signal: the tables exist so that the logic behind the daily calls can be **reassembled from what the factors are shown to have done**, which is a later, separately-agreed step. Because 39 is "not yet", 40 is answered no, and 41-42 survive only as measurement questions (when the outcome starts, and whether the state is known before the session it applies to). |
 | 40 | Subtract spread and slippage before any claim | yes if 39 is yes | batch 8 | **no** - *"No this is pureply a data corrleation exercise nothing else."* (2026-09-30). No spread or slippage is subtracted, no cost-adjusted figure is produced, and no P&L, entry, stop or target exists. This closes the tradability group; 41 and 42 are asked in batch 9 in their measurement sense only. |
-| 41 | Start the outcome at the next session open after the flag is observed | yes | | |
-| 42 | The flag is available before the session it applies to, with no look-ahead | yes | | |
+| 41 | Start the outcome at the next session open after the flag is observed | yes | batch 9 | |
+| 42 | The flag is available before the session it applies to, with no look-ahead | yes | batch 9 | |
 
 ## I. Deliverable and process (43-50)
 
 | # | Yes/no question | Default | Asked | Your answer |
 | --- | --- | --- | --- | --- |
-| 43 | One page listing every factor with raw movement numbers and no direction claim | yes | | |
-| 44 | Every published number carries its n and the floor that produced it | yes | | |
-| 45 | A ranked list is never presented as a winner | yes | | |
-| 46 | The page states the number of looks examined | yes | | |
-| 47 | Rebuild the direction layer only after the movement layer is agreed | yes | | |
+| 43 | One page listing every factor with raw movement numbers and no direction claim | yes | batch 9 | |
+| 44 | Every published number carries its n and the floor that produced it | yes | batch 9 | |
+| 45 | A ranked list is never presented as a winner | yes | batch 9 | |
+| 46 | The page states the number of looks examined | yes | batch 9 | |
+| 47 | Rebuild the direction layer only after the movement layer is agreed | yes | batch 9 | |
 | 48 | Record these answers as decisions before any lane starts | yes | | |
 | 49 | Full new page beside the accuracy panel, rather than the minimum version appended to the scorecard page | full page | | |
 | 50 | Answer D1 first: the movement screen before anything else | yes | | |

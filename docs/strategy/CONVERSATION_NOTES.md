@@ -2078,3 +2078,21 @@ submitter stored it, identical once line endings are normalised. `coordination.j
 and `-027` as `pending_review` and returns `errors: []`, with the inbox at 28 files and 19 pending. The report also
 records the two checks that matter for the snag the coordinator raised: the connection badge is written by the mailbox
 extension and not by this worker, and it did not stop either filing, since both landed well after 07:06Z.
+
+## 2026-09-30 (same session) - batch 9 put to the user: 41-47 in plain words
+
+The user asked for the questions rather than an acknowledgement, so batch 9 went out in chat in the same plain register as
+batches 6-8, each question carrying its short reason. Recorded here in the wording as sent, so the answers can be paired
+with what was actually asked. Every default is **yes**; the sheet's "asked" column now reads `batch 9` for 41-47, and
+48-50 follow in batch 10.
+
+1. **41 - start counting the outcome at the next session's open.** A flag can only be read once the session that produced it has closed, so counting that same session's open would use a price already known when the flag appeared; a Friday flag would be counted from Monday's open.
+2. **42 - every flag must have been knowable before the session it is scored against.** Otherwise the percentage is a rule written after seeing the day rather than a count of what followed a state that was visible at the time.
+3. **43 - one page, every factor, only how far price moved, with no up-or-down call.** This is the movement screen the user asked to see first, and a direction column would turn the page into the forecast that answer 33 and 37 say it is not.
+4. **44 - every printed number shows how many sessions it is based on and the size of move that counted.** Sixty-four per cent from twenty sessions and sixty-four per cent from six hundred are different claims; the live page already prints both.
+5. **45 - a ranked table stays a ranking and is never labelled the best or the winner.** With around thirty factors examined, the top row is often the quietest kind of noise, and a plain ranked list keeps the page a description.
+6. **46 - the page states how many factors and how many cuts were looked at in total.** That is what tells a reader whether a top row stands out, or whether it is one of many tries.
+7. **47 - finish agreeing the movement tables before rebuilding the old direction work.** The direction tables depend on which factors and which sizes survive the movement stage, so rebuilding first would mean doing that work twice.
+
+**What is not asked and not assumed.** Nothing in this batch changes a measurement, artifact, bar, boundary or lane; the
+answered set stands at 40 of 50 until the seven come back.
