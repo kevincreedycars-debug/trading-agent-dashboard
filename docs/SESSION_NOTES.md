@@ -1,5 +1,38 @@
 # Session notes
 
+2026-09-30 (cont.), live-trading feed-004 review cycle: the background coordinator took the one review it owned,
+`live-trading` submission `20260930-live-trading-feed-004`, the revision of `-002` that the earlier
+`changes_requested` reply required, and decided **accepted, documentation only** - not a merge, publish or
+deployment, so the live dashboard is unchanged and no release worktree was cut (mailbox
+`aa651b87258899bf5c452594a2b9961f243021e55ed48b303b7dc09d51dbe773` reproduced from the immutable inbox file at 7,970
+bytes, reply `90b4d40f...` at 6,234 bytes, durable review
+`docs/orchestration/reviews/20260930-live-trading-feed-004.md`). Verified from the checkout, not trusted: commit
+`4d82bb3` (parent `9a68050`, base `5ff1bf3` an ancestor, worktree clean, 15 commits in range) is +36/-5 across exactly
+`docs/live-trading/CONVERSATION_NOTES.md` and `tools/mt5-bridge/README.md`; both digests reproduce
+(`D41DE6A9...` at 35,678 bytes, `6A8338CD...` at 4,341 bytes); the four quotes the `-002` summary mis-attributed
+reproduce in the ignored scratch `tmp/live-trading.real.json` at `19:15:25.891323Z` while the committed artifact is the
+later `19:28:37.575240Z` run (bid 1.1331/ask 1.13312, 4153.3/4153.71, 30558.33/30559.78, 83739.2/83740.2, same
+spreads and account facts); the README block now states its run time; and the unreproducible figure is gone. One
+coordinator error is corrected in this cycle and belongs in the handoff: the canonical `HEAD:index.html` blob is
+**19,332** bytes, not the `19,251` recorded in the `-002` reply and review - the worker measured it correctly and
+flagged the disagreement rather than resolving it silently - with `origin/main:index.html` at 18,219, 19,616 being the
+seven `backtester-<asset>` copies and 19,373 the four other worktrees. The load-bearing one-copy claim was reconfirmed:
+`live-trading` appears in exactly one `index.html` (this worktree's, 2 hits, 20,315 bytes); the canonical checkout, the
+eleven other worktrees and the four release copies carry zero; and the four `-003` file figures all reproduce
+(`b5faf31b`, `fb211f15`, `e003d4b9`, `b3db6cc5`). Session limitation, recorded because it changes how this cycle ran:
+the command policy refused `node` here, so the suite, `scripts/validate_live_trading_feed.js` and the mailbox CLI could
+not be re-run; the suite file holds 18 `test()` declarations, the validator is present at 11,119 bytes, the earlier
+PASS and 18-of-18 stand as the last reproduced evidence rather than this cycle's own, and the reply was published by
+writing the identical validated envelope bytes and confirming identity, hash, decision and instructions parse. The
+correction owed on `-002` is closed, so `-002` and `-004` are both spent and no further submission on that topic is
+owed. No new assignment was published and no worker status was altered: the register keeps `live-trading` at status
+exactly `instructions_published_awaiting_worker`. The precise unresolved decisions are the user's and unchanged: the
+three-way authority level (read-only feed, demo execution, funded execution); whether to apply the already-ruled port
+recipe onto `origin/main` and push, or hold the section in the worktree; the FTMO written confirmation for automated
+and news trading inside a Swing evaluation; and the 660-second M5 freshness limit with its fifteen-minute badge. The
+lane's disclosed scope overrun (the MetaTrader5 install, the read-only read of the user's own evaluation account, the
+writes outside `docs/live-trading/`) stays recorded and not authorised.
+
 2026-09-30 (cont.), live-trading publish-003 review cycle: the background coordinator took the one review it owned,
 `live-trading` submission `20260930-live-trading-publish-003`, and decided **accepted, as a verified hand-over** -
 which is not a publish, merge or deployment, and the live dashboard is unchanged (mailbox

@@ -79,3 +79,15 @@ lessons should be written up as one frozen document that all seven lanes inherit
 any build), and in what order the seven assets should then be built - the matrix itself places USD, EUR, NQ and
 BTC ahead of GBP, and records no source contract at all for Silver and WTI.
 
+Next immediate action, 2026-09-30 (cont.), after the live-trading feed-004 cycle: the lane's owed documentation correction is
+closed and accepted - `20260930-live-trading-feed-004` (mailbox `aa651b87...`, reply `90b4d40f...`, review
+`docs/orchestration/reviews/20260930-live-trading-feed-004.md`), documentation only, +36/-5 across
+`docs/live-trading/CONVERSATION_NOTES.md` and `tools/mt5-bridge/README.md`, both digests reproduced, all three `-002`
+defects fixed, and the coordinator's own `19,251` figure for the canonical `HEAD:index.html` blob corrected to `19,332`
+from the worker's measurement. Nothing was merged, published, deployed or assigned, and the register keeps `live-trading`
+at status exactly `instructions_published_awaiting_worker`. The only thing left, and it is the user's: rule the three-way
+authority level for the lane (read-only feed, demo execution, funded execution) and say whether to apply the already-ruled
+port recipe for the verified Live Trading section onto `origin/main` and push, or hold it in the worktree. Two smaller
+open items stay with the user too - the FTMO written confirmation for automated and news trading inside a Swing
+evaluation, and the 660-second M5 freshness limit with its fifteen-minute staleness badge. No further live-trading
+submission is owed on the correction topic, and no new worker assignment is published while those decisions are open.

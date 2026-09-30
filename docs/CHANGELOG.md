@@ -1,3 +1,35 @@
+# 2026-09-30 (cont.) - live-trading feed-004 accepted: the -002 correction lands, and the coordinator's own byte figure was wrong
+
+The second of this run's two reviews took `live-trading` submission `20260930-live-trading-feed-004` (mailbox SHA-256
+`aa651b87258899bf5c452594a2b9961f243021e55ed48b303b7dc09d51dbe773`, reproduced from the immutable inbox file at 7,970
+bytes; reply `90b4d40f...` at 6,234 bytes; durable review
+`docs/orchestration/reviews/20260930-live-trading-feed-004.md`) and accepted it as documentation only. It is the
+revision the `-002` reply required: one commit `4d82bb3` in `.local/worktrees/live-trading`, parent `9a68050`, base
+`5ff1bf3` verified an ancestor, worktree clean, `+36/-5` across exactly `docs/live-trading/CONVERSATION_NOTES.md` and
+`tools/mt5-bridge/README.md`, both artifact digests reproduced (`D41DE6A9...` at 35,678 bytes, `6A8338CD...` at 4,341
+bytes). All three defects are fixed and were checked rather than trusted: the four quotes the `-002` summary attached to
+the `19:28:37Z` run reproduce in the ignored scratch `tmp/live-trading.real.json` at `19:15:25.891323Z`, the fifth
+session entry now labels each quote set with its own run and gives the committed artifact's own values (bid 1.1331 /
+ask 1.13312, 4153.3 / 4153.71, 30558.33 / 30559.78, 83739.2 / 83740.2), the README example block carries its run time
+and says it is one real read, and the unreproducible figure is dropped and replaced with measured sizes.
+
+One coordinator error is corrected by this cycle. The canonical `HEAD:index.html` blob is `19,332` bytes, not the
+`19,251` the `-002` reply and review recorded: `git ls-tree -l HEAD -- index.html` and `git cat-file -s` agree, the
+canonical working copy is `19,698`, `origin/main:index.html` is `18,219`, and `19,616` is the seven
+`backtester-<asset>` worktree copies with `19,373` for the four other worktrees. The worker measured it correctly and
+flagged the disagreement instead of resolving it silently. The claim the figure carried is unaffected and was
+reconfirmed: `live-trading` appears in exactly one `index.html` - the worker worktree's, 2 hits at 20,315 bytes - while
+the canonical checkout, the eleven other worktrees and the four release copies carry zero, and the four `-003` file
+figures all reproduce (`b5faf31b`, `fb211f15`, `e003d4b9`, `b3db6cc5`).
+
+Not done: no merge, publish, deployment or production action, no release worktree, and no new worker assignment -
+no evidence supports one while the authority level and the publish route are the user's. This run's command policy
+refused `node`, so the suite, the validator and the mailbox CLI could not be re-run here; the suite file holds 18
+`test()` declarations and the validator is present at 11,119 bytes, the earlier PASS and 18-of-18 stand as the last
+reproduced evidence rather than this cycle's own, and the reply was published by writing the identical validated
+envelope bytes. The register keeps `live-trading` at status exactly `instructions_published_awaiting_worker`, and the
+correction owed on `-002` is closed, so `-002` and `-004` are both spent.
+
 # 2026-09-30 (cont.) - the gold factor draft page is live at the user's request
 
 The user answered the publish question in one line - "yes show it live" - so the coordinator published the strategy

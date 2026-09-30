@@ -1,5 +1,52 @@
 # Central decisions
 
+## 2026-09-30 (cont.): live-trading feed-004 accepted; the coordinator's own byte figure was the wrong one
+
+The second review of this run took `live-trading` submission `20260930-live-trading-feed-004` (mailbox SHA-256
+`aa651b87258899bf5c452594a2b9961f243021e55ed48b303b7dc09d51dbe773`, reproduced from the immutable inbox file at 7,970
+bytes, reply `90b4d40f...`, durable review `reviews/20260930-live-trading-feed-004.md`) and decided **accepted,
+documentation only**. It is the revision the `-002` `changes_requested` reply required: one commit `4d82bb3` on
+`.local/worktrees/live-trading`, +36/-5 across exactly `docs/live-trading/CONVERSATION_NOTES.md` and
+`tools/mt5-bridge/README.md`, both artifact digests reproduced (`D41DE6A9...` at 35,678 bytes, `6A8338CD...` at 4,341
+bytes), no code, artifact, test, dashboard file, register entry or other checkout touched, and no publish request
+carried. All three defects are fixed: the four quotes the `-002` summary attached to the `19:28:37Z` run reproduce in
+the ignored scratch `tmp/live-trading.real.json` at `19:15:25.891323Z`, the fifth-session entry now labels each set with
+its own run and states the committed artifact's own values, the README example block carries its run time and says it is
+one real read rather than sample output, and the unreproducible figure is dropped rather than restated. The correction
+owed on `-002` is therefore closed, and `-002` and `-004` are both spent.
+
+**The coordinator was wrong, and the worker was right.** The `-002` reply and review recorded the canonical
+`HEAD:index.html` blob as `19,251` bytes. Measured today by absolute path it is `19,332` bytes, with `git ls-tree -l
+HEAD -- index.html` and `git cat-file -s` agreeing, the canonical working copy at `19,698`, `origin/main:index.html` at
+`18,219`, and `19,616` being the seven `backtester-<asset>` worktree copies with `19,373` for the four other worktrees.
+The worker measured it correctly, said so plainly and flagged the disagreement instead of resolving it silently, which
+is the behaviour the protocol asks for; the corrected figure stands in the `-004` review and above in this file's
+`-003` entry. The load-bearing claim the figure carried is unaffected and was reconfirmed independently: `live-trading`
+appears in exactly one `index.html` - the worker worktree's, 2 hits at 20,315 bytes - while the canonical checkout, the
+eleven other worktrees and the four `.local/*-release` copies carry zero references, and the four `-003` file figures
+all reproduce (`b5faf31b`, `fb211f15`, `e003d4b9`, `b3db6cc5`).
+
+**Session rule recorded, because it changes how a background cycle can run.** The command policy in this run refused
+`node`, so the suite, `scripts/validate_live_trading_feed.js` and the mailbox CLI could not be executed here, exactly as
+in the `-002` cycle and unlike the `-003` cycle. When that happens the coordinator may still close the loop by writing
+the identical validated reply envelope JSON - identity fields, `submission_sha256`, `decision`, `instructions` - to
+`.local/orchestration/replies/<worker>/<submission_id>.json`, verifying that it parses with the right identity, hash and
+decision, and recording the file's own byte size and SHA-256 in the durable review; the reply is then detected normally
+by the bridge, which hashes the reply bytes itself. What may not happen is presenting an earlier test or validator run
+as if this cycle had produced it: the `-004` review states that the suite file holds 18 `test()` declarations and the
+validator is present at 11,119 bytes, and that the earlier PASS and 18-of-18 remain the last reproduced evidence rather
+than this cycle's own.
+
+**Unresolved and the user's, unchanged.** (a) The authority level for the lane - read-only feed, demo execution, or
+funded execution. (b) Whether to apply the already-ruled port recipe for the verified Live Trading section onto
+`origin/main` and push, or to hold it in the worktree, which is submission `20260930-live-trading-publish-003`. (c) The
+FTMO written confirmation for automated and news trading inside a Swing evaluation. (d) The 660-second M5 freshness
+limit and the fifteen-minute staleness badge, a disclosed first cut. No new assignment was published and no worker
+status was altered: the register keeps `live-trading` at status exactly `instructions_published_awaiting_worker`. The
+disclosed scope overrun (the MetaTrader5 install, the read-only read of the user's own evaluation account, the writes
+outside `docs/live-trading/`) stays recorded as disclosed and not authorised, and no order path exists in the
+deliverable.
+
 ## 2026-09-30 (cont.): live-trading publish-003 accepted as a hand-over; the publish itself is the user's decision
 
 The one review cycle this run owned took `live-trading` submission `20260930-live-trading-publish-003` (mailbox

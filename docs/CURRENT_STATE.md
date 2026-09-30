@@ -1,5 +1,35 @@
 # Current state
 
+2026-09-30 (cont.): the coordinator closed the live-trading lane's owed correction - `20260930-live-trading-feed-004`
+(mailbox sha256 `aa651b87258899bf5c452594a2b9961f243021e55ed48b303b7dc09d51dbe773` reproduced from the immutable inbox
+file at 7,970 bytes, reply `90b4d40fac3e1ad4fbd9f69a69df455ced72a88333ff98516877441bdc276303` at 6,234 bytes, decision
+**accepted**, durable review `docs/orchestration/reviews/20260930-live-trading-feed-004.md`) - and did **not** publish:
+this background run still carries no production authority, so the live dashboard is unchanged, no release worktree was
+cut and no new assignment was published. Verified from the checkout rather than trusted: commit `4d82bb3` (parent
+`9a68050`, base `5ff1bf3` verified an ancestor, worktree clean, 15 commits in range) changes exactly the two
+documentation files it names, +36/-5, and both artifact digests reproduce exactly (`docs/live-trading/CONVERSATION_NOTES.md`
+35,678 bytes sha256 `D41DE6A9...`, `tools/mt5-bridge/README.md` 4,341 bytes sha256 `6A8338CD...`). All three `-002`
+defects are fixed: the four mis-attributed quotes reproduce in the ignored scratch `tmp/live-trading.real.json`
+(`19:15:25.891323Z`, spreads 2/41/145/100) while the committed artifact is the later `19:28:37.575240Z` run (bid
+1.1331/ask 1.13312, 4153.3/4153.71, 30558.33/30559.78, 83739.2/83740.2 - the trailing-zero-trimmed JSON form - build
+6231, FTMO-Server, zero positions and orders), the README example block now carries its run time, and the
+unreproducible figure is dropped and replaced with measured sizes. One coordinator error is corrected in this cycle:
+the canonical `HEAD:index.html` blob is **19,332** bytes, not the `19,251` the `-002` reply and review recorded - the
+worker's own measurement was right and it flagged the disagreement instead of resolving it silently - and
+`origin/main:index.html` is 18,219, 19,616 being the seven `backtester-<asset>` worktree copies and 19,373 the four
+other worktrees. The load-bearing claim holds: `live-trading` appears in exactly one `index.html`, this worktree's at
+2 hits and 20,315 bytes, while the canonical checkout, the eleven other worktrees and the four release copies carry
+zero; the four `-003` file figures reproduce (`b5faf31b`, `fb211f15`, `e003d4b9`, `b3db6cc5`). Session limitation
+recorded: the command policy refused `node` in this run, so the suite, the validator and the mailbox CLI could not be
+re-run here; the suite file holds 18 `test()` declarations and the validator is present at 11,119 bytes, the earlier
+PASS and 18-of-18 stand as the last reproduced evidence rather than as this cycle's own, and the reply was published as
+the identical validated envelope bytes instead of through the CLI. **The precise unresolved decisions are the user's
+and unchanged:** the three-way authority level (read-only feed, demo execution, funded execution); whether to authorise
+applying the already-ruled port recipe onto `origin/main` and pushing, or to hold the section in the worktree; the FTMO
+written confirmation for automated and news trading inside a Swing evaluation; and the 660-second M5 freshness limit
+with its fifteen-minute badge. The correction owed on `-002` is closed, so `-002` and `-004` are both spent. No worker
+status was altered and the register keeps `live-trading` at status exactly `instructions_published_awaiting_worker`.
+
 2026-09-30 (cont.): the coordinator reviewed the live-trading lane's hand-over `20260930-live-trading-publish-003`
 (mailbox sha256 `5160e8298150d9459e8e9ac250deac1921ebd9ff1c84d16c0a69c18f5362ca0e` reproduced from the immutable inbox
 file at 16,823 bytes, reply `78f28b9e27d8817bfd442b9278268ff67de97570956a0c46efb1cfd590a11b25`, decision **accepted**,
