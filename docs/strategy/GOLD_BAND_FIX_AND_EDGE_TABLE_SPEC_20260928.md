@@ -8,6 +8,40 @@
 > the plan's five decisions D1–D5. The plan was revised again on 2026-09-28 to lead with two stages — first
 > "if a move happens", then "which way" — and that framing lives in the plan's sections 2–4; this appendix
 > stays the mechanical detail for the two lanes.
+>
+> **Revised again 2026-09-29 (through batch 5 of the question round).** Five more answers came back from the
+> user, and they change shapes in this appendix rather than only wording, so read this block before
+> implementing anything below. Section 1.2 states what arrived; sections 5.3, 7 and 10 now carry the
+> mechanics of it.
+>
+> - the movement stage is the user's **fixed 0.80% of gold's own price**, published beside the same floor in
+>   the archive's own L2L units (the plan's §3; their 0.80% is the chart-current instance of 0.50 L2L), and
+>   the per-year sign
+>   rule has teeth on it (measured in the plan's §3: the fixed 0.80% rows run 32.40% / 38.43% / 62.82% across 2024–2026 and
+>   fail; the L2L form runs 39.60% / 37.19% / 38.46% and holds);
+> - every row prints the user's ladder in one row — rung 1 (24 h), rung 2 (two sessions), rung 3 (three
+>   sessions) and rung 5 (five trading days, the accepted "week" number) — with the wall-clock reading the
+>   user said out loud (48 h, 3 days, weekends inside the window) printed beside it as a disclosed
+>   sensitivity, and **one `looks_counted`** over all of it: never four verdicts, never four separate looks.
+>   The archive measures one session per row, so rungs 2 and 3 exist in no accepted artifact and are a lane-1
+>   deliverable with a re-declared horizon (§7 rule 1, §10 test 6);
+> - **no row is ever dropped** for being thin, rare, empty or failing; it is printed with its raw split and
+>   its flag (§5.3, §7 rules 9–10);
+> - what the user actually reads per factor is **one light with one short plain reason line underneath** —
+>   the size of the move and how many days it covers — with no direction, no score out of 100 and no ranking
+>   (§7 rule 8, §8);
+> - direction is asked **only for states that passed the movement stage**, and answered as a side only,
+>   never as how far (§7 rules 8–9);
+> - the four stage-2 rules are now the user's own declarations rather than defaults: direction only on a
+>   moved state; side only; the same sign in every year at `n >= 20`; and both accepted bars kept side by
+>   side (`hit_rate_pct >= 60` **and** `n >= 100`);
+> - questions 22 and 23 were re-stated in plain words and stand on a **yes** default: test the ten rules the
+>   document already states before the twenty readings it never defines, and give those twenty a written
+>   meaning before any outcome is read.
+>
+> The readable, authoritative version of all of it is the plan's §3, §8, §11 and §12 and rows 11 and 18–23 of
+> `docs/strategy/INTENT_QUESTIONS_ANSWER_SHEET_20260929.md`; this appendix carries only the mechanical
+> consequences.
 
 Advisory recommendation from worker `strategy` (`strategy-advisory-001`), 2026-09-28.
 Advisory only: this is a proposal for the coordinator, not an applied change. Every claim below was
@@ -30,6 +64,23 @@ Proposed bounded assignments (see "Handoff" for why it is two writers):
 4. The bar is **60% directional significance**.
 5. Use the existing 2023–2026 dataset only. No new data acquisition.
 6. A new dashboard page beside the existing accuracy panel.
+
+**1.2 What the user declared afterwards (2026-09-29, batches 1–5), and where each item lands.** These are
+declarations, not defaults: no lane may soften one without asking the user again.
+
+| Item | Declaration, as the user gave it | Mechanical consequence in this appendix |
+| --- | --- | --- |
+| Movement unit and threshold | 0.80% of gold's own price, with its L2L form published beside it | The stage-1 gate is computed in the same pass as the states and stored on the anchor record, so stage 1 and stage 2 cannot drift apart; the readable version is the plan's §3 and its D1 |
+| Per-year sign rule on the unit | the floor must keep the same sign in every year | Applied to the gate itself, not only to scored rows: the fixed 0.80% form fails it, its L2L form holds it |
+| Windows | the user's ladder printed together: 24 h / 48 h / 3 days / 5 days as they said it, published as the open-hours ladder 1/2/3/5 sessions with the wall-clock reading beside it as a disclosed sensitivity | §7 rule 1 (rung order, the re-declared horizon for rungs 2–3, the wall-clock twin) and §10 test 6 |
+| Looks | one look across all of it, never one look per rung and never per reading | §7 rule 1 (`looks_counted` is a single integer per row) and §10 test 6 |
+| No dropping | thin, rare and empty readings stay visible | §5.3 and §7 rules 9–10, §10 test 7 |
+| Factor summary | one light per factor plus one short plain reason line (move size and day count) | §7 rule 8 and §8 page furniture |
+| Stage 1 answer | never given a direction | §7 rule 8 |
+| Stage 2 answer | only for a moved state; side only, never how far | §7 rule 8 |
+| Bars | both accepted bars kept and shown together: `hit_rate_pct >= 60` and `n >= 100` | §7 rules 4–5 and D10 |
+| Completeness | every reading the document mentions appears somewhere | §5.3, §7 rule 10, §10 test 7 |
+| Questions 22 and 23 (asked again, standing default yes) | test the ten readings the document already describes before the twenty it never describes; give those twenty a written meaning before reading any outcome | §4 rows 1, 4, 9, 12–15 and 17–22 (the twenty `not_declared` rows); §9 D1–D2 |
 
 ## 2. What is actually wrong (one paragraph)
 
@@ -230,6 +281,25 @@ min n 20 with the `small_sample` flag; year breakdown 2023/2024/2025/2026; every
 including empty and unavailable rows; report written once into a new output directory and refusing
 overwrite; deterministic content hash.
 
+**5.3.1 Added 2026-09-29 with the user's answers** — four invariants that were previously habits and are now
+declared:
+
+- **Completeness.** No row is dropped, hidden or merged because it is thin, rare, empty or failing. Every
+  state in the v3 register appears exactly once across the three page blocks with its raw split, its `n`
+  and its flags; the only permitted absence is a state that does not exist in this archive, and then the
+  row is printed `unavailable` with the reason.
+- **The ladder, one look.** The rungs (1, 2, 3 and 5 sessions) and their wall-clock twins are printed
+  together for every row, and `looks_counted` is a single integer for the row, not one look per rung and not
+  one look per reading. The user's rule is that looking across the ladder is still one look; charging the
+  same evidence once per rung would make it look several times stronger than it is.
+- **The per-year sign rule gates the claim.** It is no longer only a `year_warning` chip: a direction claim
+  requires the same sign in every year at `n >= 20` per year, and a row that fails it may be shown but may
+  not be described as holding.
+- **The gate is the user's own floor** — the fixed 0.80% of gold's price, the chart-current instance of
+  0.50 L2L, with the L2L form published beside it and both charged to one look — computed in the same pass as
+  the states and carried on the anchor record, so the movement stage and the direction stage can never be
+  computed from two different versions of "a move happened".
+
 **5.4 The run.** From the gold-research worktree, a new output directory:
 
 ```powershell
@@ -293,7 +363,11 @@ between the two pages):
   "research_only": true, "exploratory": true,
   "prediction_claimed": false, "accuracy_claimed": false, "trading_result_computed": false,
   "parameters": { "cohort": "daily_snapshot_anchors", "group": "all_computed",
-    "horizons": ["h24_post_event", "d5_trading_days_post_event"],
+    "horizons": ["h24_post_event", "two_sessions_post_event", "three_sessions_post_event",
+                 "d5_trading_days_post_event"],
+    "wall_clock_horizons": { "two_sessions_post_event": "h48_post_event",
+                             "three_sessions_post_event": "d3_trading_days_post_event" },
+    "looks_counted": 1,
     "min_n": 100, "min_year_n": 20, "edge_pp": 5, "threshold_pct": 60 },
   "baselines": { "session": { "n": 964, "positive_rate_pct": 55.81 },
                  "week":    { "n": 960, "positive_rate_pct": 58.23 } },
@@ -309,27 +383,60 @@ between the two pages):
       "hit_rate_pct": null, "benchmark_pct": 55.81, "drift_edge_pp": null,
       "clears_majority_threshold": false, "small_sample": true, "thin": true,
       "years_observed": 0, "years_same_edge_sign": false, "years": [] },
+    "two_sessions": { "wall_clock": { } },
+    "three_sessions": { "wall_clock": { } },
     "week": { },
-    "session_verdict": "small_sample", "week_verdict": "small_sample",
+    "looks_counted": 1,
+    "session_verdict": "small_sample", "two_sessions_verdict": "small_sample",
+    "three_sessions_verdict": "small_sample", "week_verdict": "small_sample",
     "year_warning": "thin sample: n is below 100" }],
   "neutral_rows": [ ], "unscored": [ ], "limits": [ ], "what_would_change_it": [ ],
   "sources": [ ]
 }
 ```
 
+Window keys and aliases, so lane 2 does not have to invent a shape (added 2026-09-29): the four keys
+`session`, `two_sessions`, `three_sessions`, `week` **are** the user's ladder in order — rung 1 (24 h), rung 2
+(two sessions), rung 3 (three sessions), rung 5 (five trading days) — and each block has exactly the same
+fields as the `session` block above (`horizon`, `n`, `resolved`, `positive`, `negative`, `exact_zero`,
+`expected_side`, `expected_count`, `other_count`, `hit_rate_pct`, `benchmark_pct`, `drift_edge_pp`,
+`clears_majority_threshold`, `small_sample`, `thin`, `years_observed`, `years_same_edge_sign`, `years`). The
+published ladder is the open-hours one; each block also carries a `wall_clock` twin with the same fields for
+the wall-clock reading the user said out loud (48 h for rung 2, 3 days for rung 3), and the twin is charged to
+the **same** `looks_counted` — it is a disclosed sensitivity, not a second test. `session_verdict` and
+`week_verdict` keep their accepted names so the new page and the accepted scorecard line up, with two
+additions in the same form: `two_sessions_verdict` and `three_sessions_verdict`. `looks_counted` is `1` on
+every row and `1` in `parameters`, because the user's rule is that the windows are one look; nothing in the
+artifact, the page or the tests may count them as more. A rung whose benchmark is not reproducible carries
+`"benchmark_pct": "not_reproduced"` and `drift_edge_pp: null` rather than a substitute number.
+
 **Table rules (they are the whole point of the page).**
 
-1. One row per declared-band state; **session (24h) hit rate is the main number**, the 5-day week hit
-   rate sits immediately beside it, so a state that only works at one horizon is visible as such.
+1. One row per declared-band state, and every row prints the user's ladder in the fixed order **rung 1 (24 h, one
+   session), rung 2 (two sessions), rung 3 (three sessions), rung 5 (five trading days)**. Rung 1 is the
+   accepted session number and rung 5 is the accepted "week" number; **rungs 2 and 3 exist in no accepted
+   artifact** (the archive measures one session per row), so lane 1 re-declares the horizon for them before
+   its run, in the v3 registry, and reports each rung with its own `n`, its own per-year rows and its own
+   benchmark. The published form is the **open-hours ladder**; the wall-clock reading the user said out loud
+   (48 h and 3 days after the anchor, weekends inside the window) is printed **beside** it as a disclosed
+   sensitivity, because the plan measured that both readings give the same answer — one `wall_clock` twin per
+   rung in the row, the same counts, under the same look. All rungs and both readings are charged as **one**
+   `looks_counted`: a single integer for the row, never one look per rung, never one look per reading, and
+   never four (or eight) verdicts. The user's rule is four windows, one look; charging the same evidence
+   twice would make it look stronger than it is.
 2. **NEUTRAL legs never enter a hit rate.** `inside_16_25`, `inside_5bps`, `inside_0_30pct` and every
    document-declared NEUTRAL state are listed in `neutral_rows` with their raw up/down split and
    nothing else. A NEUTRAL state cannot be right or wrong, so it must not inflate or dilute a win rate.
 3. Denominator is directional outcomes only: `hit_rate_pct = expected_count / (positive + negative)`,
    with `exact_zero` excluded, exactly as the accepted report declares.
-4. **Every row carries its own drift benchmark** from the same cohort and horizon (session 55.81%,
+4. **Every row carries its own drift benchmark** from the same cohort and window (session 55.81%,
    n 964; week 58.23%, n 960), plus `drift_edge_pp = hit_rate_pct - benchmark_pct`. A 60% session hit
    is only +4.19pp against what the session did anyway; the page must show both numbers or it is
-   misleading by construction.
+   misleading by construction. With four rungs the row shows four benchmarks, and the wall-clock twins carry
+   theirs: the two accepted ones are quoted verbatim (session 55.81%, n 964; week 58.23%, n 960, the latter
+   being rung 5), and the rungs 2 and 3 benchmarks are recomputed by the same code path over the same cohort
+   and anchors. If a rung's benchmark cannot be reproduced from the accepted arithmetic, that cell reads
+   `not_reproduced` and no number is invented for it.
 5. `thin` is `n < 100` and is shown as a chip in the row; a thin row is never described as a finding.
    The report's own `small_sample` flag is `n < 20` and is also carried through.
 6. `year_warning` is derived, not editorialised: it is non-empty when any year's edge has the opposite
@@ -340,6 +447,25 @@ between the two pages):
    absolute `drift_edge_pp` descending, then thin rows by n descending; ties broken by `n` descending
    then variable id. There is no composite score, no weighting and no "pick" — the table ranks
    measurements, and the page says in one line that a ranked table of spent intervals cannot choose.
+8. **The line the user actually reads is one light plus one short plain reason, not a ranked cell** (answer of
+   2026-09-29, question 11). The light is binary — *worth watching today* / *nothing here today* — and the
+   line under it says only what moved and for how long, e.g. "gold moved 1.4% over the last 3 days". No
+   direction word, no target, no score out of 100, no ordering and no winner; the light is not a prediction
+   and the page must not imply it is. The ranked table stays behind the light for anyone who wants the
+   counts. Wording rule: the reason line is allowed to state the size of the move and the number of days it
+   covers, and nothing else derived from an outcome.
+9. **Stage 1 and stage 2 are never mixed in one line.** Stage 1 asks only whether a move happened, against the
+   user's floor (the fixed 0.80%, with its L2L form beside it, one look), and is printed with no direction
+   attached. Stage 2 asks which way, only for
+   states that passed stage 1, and answers with the side only — never how far, never a target, never a size.
+   A state that fails stage 1 is printed as *nothing here today* with its reason line, and that is not a
+   directional miss.
+10. **Nothing is dropped for looking bad, and nothing is invented to look complete.** Every declared state
+   appears on the page in exactly one of three blocks — cleared the bars, did not clear the bars, or the
+   document defines no rule for it — and the union of the three equals the v3 register. A thin, rare, empty
+   or failing row keeps its place, its raw up/down split, its `n` and its flag; a state that does not exist
+   in this archive is printed `unavailable` with the reason rather than removed. Where a number cannot be
+   reproduced the cell says so (rule 4) instead of carrying an estimate.
 
 ## 8. Deliverable E — the dashboard page
 
@@ -360,13 +486,29 @@ Follow the existing generated-page pattern exactly, because it is already in use
   "Research only · Exploratory" eyebrow, a read-this-first notice that this is an exploratory
   association census on spent intervals, the two drift baselines stated in the open, the full limits
   list, the sources with sha256, and a footer naming the run and the schema version;
-- the table is horizontally scrollable with the session columns first, and on narrow screens it stacks
-  like the existing tables (the existing `table.wide` breakpoint pattern) rather than squashing numbers.
+- the light and its reason line, above the table (answers of 2026-09-29): one binary light per factor —
+  *worth watching today* / *nothing here today* — with one short plain sentence underneath stating the size
+  of the move and how many days it covers, e.g. "gold moved 1.4% over the last 3 days". No direction word,
+  no target, no score out of 100, no ordering and no winner, and no sentence anywhere claiming the light
+  predicts price. The ranked table stays underneath it for anyone who wants the counts;
+- the table is horizontally scrollable with the ladder columns first, in the user's order (rung 1 = 24 h,
+  rung 2 = two sessions / 48 h, rung 3 = three sessions / 3 days, rung 5 = five trading days), each rung with
+  its wall-clock twin beside it, and on narrow screens it stacks like the existing tables (the existing
+  `table.wide` breakpoint pattern) rather than squashing numbers.
 
 ## 9. Open decisions, with the default this worker will build against
 
 Each one is a real fork; the default is what the owner worker should implement if the user does not
 answer, and every default is the conservative option (no invented direction, nothing removed).
+
+**Superseded again on 2026-09-29 (batch 5).** The plan's five decisions (its §3, §8 and §9) govern; the rows below
+stay as the mechanical detail for whatever the plan does not cover. Four items that used to be defaults in
+this list are now the user's declarations and may not be re-opened by a lane: the movement stage (0.80% of
+gold's own price, with its L2L form beside it), the ladder of windows with one look, the per-year sign rule as a gate rather than a
+warning, and the pair of accepted bars kept side by side. D1 and D2 below are also re-scoped by the answers to
+questions 22 and 23: the twenty readings the document never defines still get their raw split printed, and
+their written meaning is agreed **before** any outcome is read, so a lane may not read outcomes for them and
+then write the rule that fits.
 
 | # | Decision | Default (conservative) | Alternative |
 | --- | --- | --- | --- |
@@ -419,6 +561,24 @@ acceptance gate for the two lanes, written out so they cannot be skipped.
    `backtester/registries/gold_individual_variable_report.v2.json` and the accepted 019 report are all
    unchanged after both lanes finish.
 
+Added 2026-09-29, from the user's answers; lane 1 owns test 6's data half, lane 2 owns its rendering half:
+
+6. `backtester/tests/gold_factor_edge_windows.test.js` — on a fixture row all four rungs appear in the
+   declared order under the keys `session`, `two_sessions`, `three_sessions`, `week` with the horizon names
+   `h24_post_event`, `two_sessions_post_event`, `three_sessions_post_event`,
+   `d5_trading_days_post_event`; each of rungs 2 and 3 carries its `wall_clock` twin and the twin's counts are
+   charged to the same row `looks_counted`; `looks_counted` is the integer `1` in `parameters` and on every
+   row, and no row carries per-rung look fields; the rung-1 and rung-5 blocks are byte-identical to the
+   accepted scorecard's session and week rows for the same state; a rung whose benchmark cannot be reproduced
+   prints `benchmark_pct: "not_reproduced"` and `drift_edge_pp: null` rather than a number; two runs over the
+   same inputs give the same content hash, the same rung order and the same twin values.
+7. `backtester/tests/gold_factor_edge_completeness.test.js` — the three blocks partition the v3 register
+   exactly once and their union count equals the register count; a state with `n 0`, a state with `n 12` and
+   a state that fails the bars all remain present with their raw split and their `thin` / `small_sample`
+   flags; a fixture in which every row fails still renders one light per factor, and every light line
+   contains a move size and a day count and no direction word, no target and no score out of 100; the built
+   page count of light lines equals the factor count, so no factor is silently missing from the summary.
+
 ## 11. Acceptance, handoff and limits
 
 **Acceptance.** Input hashes recorded for the three directories in §3.6; the declaration committed
@@ -426,7 +586,9 @@ before the run, in its own commit; the 24 band states reconciled against the acc
 anchor denominators (965 anchors, 964 with an outcome, 5,115 event rows); the edge artifact's
 `baselines` block equal to the accepted scorecard's (session 55.81%, n 964; week 58.23%, n 960), because
 a mismatch means the two tables are not comparable; the page saying in plain words that this is
-exploratory, on spent intervals, and cannot choose; one writer per worktree; one unique submission
+exploratory, on spent intervals, and cannot choose; the three page blocks covering the v3 register exactly
+once with `looks_counted` = 1 on every row; and no light line carrying a direction word, a target or a score
+out of 100; one writer per worktree; one unique submission
 envelope per lane; pause at the review boundary.
 
 **Handoff order.**
@@ -434,11 +596,16 @@ envelope per lane; pause at the review boundary.
 1. **Lane 1 — `gold-declared-band-measurement-026`** (the worker that owns the report library, i.e. the
    gold-research worktree, where `gold_individual_variable_report.js`, the builder and the v2 registry
    actually live; none of the three exists in canonical): deliverables A, B and C — the v3 register,
-   the mode, the run, the expectations v2 — plus tests 1, 2 and 5 and a one-page summary that states the
-   raw up/down splits of the 24 states with no direction claim.
+   the mode, the run, the expectations v2 — plus the **0.80% movement gate** (with its L2L form and its
+   per-year sign test beside it) computed in the same
+   pass, the **rungs 2 and 3 definitions** (two sessions and three sessions, which exist in no accepted
+   artifact, so this is new declared work) with their wall-clock twins and their own benchmarks, the raw
+   up/down splits of the 24 band states at all four rungs and both readings, and tests 1, 2, 5 and 6 (the
+   data half). One-page summary, no direction claim.
 2. **Lane 2 — `dashboard-gold-factor-edge-page-001`** (dashboard owner), only after lane 1 is accepted:
    deliverables D and E — the table builder, the artifact, the template, the page and the two nav
-   entries — plus tests 3, 4 and 5.
+   entries — plus the ladder columns with one `looks_counted`, the per-factor light and its one-line
+   plain reason, the three-block completeness rule, tests 3, 4, 5, 6 (the rendering half) and 7.
 3. Both lanes: no new data, no network, no credential, no change to Layer 1 logic, the frozen registry,
    the manifest, the capture lane, the scheduled task or the 130-anchor plan; nothing in the sealed
    prospective window is read; the combination circuit stays closed; factor **pairs** wait until the
@@ -447,6 +614,9 @@ envelope per lane; pause at the review boundary.
 **Limits, restated so the page can copy them.** Associations only, on intervals already spent. Every
 state shares anchors with the others, one instant can feed several variables, and the two halves of a
 band split are complements rather than independent trials, so counts are not independent trial counts.
+The rungs of the ladder overlap — a state that moved within one session is inside the longer rungs too — and
+the wall-clock twin is the same evidence read a second way, so the ladder plus its twin is **one** look and
+may never be added, multiplied, or read as four independent tests.
 The drift is 55.81% on the session and 58.23% on the week, which dominates any few-point factor lean.
 The per-year test kills most of what survives the baseline test. The band register is a declared
 reading of the document against the report's vocabulary, written after the accepted report existed; it
@@ -460,4 +630,12 @@ using read-only commands; the only program this worker wrote for it is the ignor
 scratch file `tmp/inspect-report-20260928.js` (streaming reader, no writes to any artifact). No
 credential, no live system and no sealed-window value was read. Tests were **not run** because this
 checkout is scoped to advisory notes and owns no executable lane.
+
+**Revised 2026-09-29 (batch 5).** Sections 1.2, 5.3.1, 7, 8, 9, 10 and 11 were extended from the user's own
+answers in batches 1–5 of the question round, as recorded verbatim in
+`docs/strategy/INTENT_QUESTIONS_ANSWER_SHEET_20260929.md` (rows 11 and 18–23) and in the plan's §3, §8 and §12.
+Nothing measured on 2026-09-28 was changed, and no new measurement was taken for this revision: the yearly
+shares quoted in the header and in §1.2 come from the plan's own stage-1 scan of 2026-09-29, not from a run
+by this worker. No credential, no live system and no sealed-window value was read for this revision, and no
+test was run here.
 

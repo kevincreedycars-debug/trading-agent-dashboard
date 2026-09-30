@@ -1696,3 +1696,52 @@ D1's row notes the reason line), and this entry.
 plain words) goes out next session. Nothing else is open: D2, D3 and D4 remain the plan's defaults, D5 carries the
 declared 1/2/3/5 windows, and the coordinator's confirmation of the two-unit print (0.80% beside 1.00 L2L) is still
 pending, with the plan implementing it as the default in the meantime.
+
+## 2026-09-29 (batch 5b, same session) - the implementation appendix is brought into line with the answers
+
+Why this entry exists: the two implementation lanes read `GOLD_BAND_FIX_AND_EDGE_TABLE_SPEC_20260928.md`, not the
+plan, and that file had not been touched since 2026-09-28. It still described a session-plus-week table, a
+direction for every state, no ladder, no light and no completeness rule. A lane starting from it would have built
+the superseded shape, so the file was revised in place. The edits are mechanical, and none of them is a new
+decision.
+
+**What changed, in order.**
+
+- header: a second revision note listing the six things the batches changed, with the per-year figures and a
+  pointer to the plan's §3, §8, §11-§12 and the sheet's rows 11 and 18-23.
+- new §1.2: what the user declared, item by item, each row naming the section of this appendix that now carries it.
+- new §5.3.1: four invariants promoted from habit to declared - completeness (nothing dropped), the ladder charged
+  as one look, the per-year sign rule as a gate rather than a warning, and the gate computed in the same pass as
+  the states so stage 1 and stage 2 cannot drift apart.
+- §7 rule 1, rewritten: the row prints the user's ladder in the fixed order rung 1 (24 h), rung 2 (two sessions),
+  rung 3 (three sessions), rung 5 (five trading days). **Rungs 2 and 3 exist in no accepted artifact** - the
+  archive measures one session per row - so lane 1 re-declares that horizon before its run and reports each rung
+  with its own n, its own per-year rows and its own benchmark. The published form is the open-hours ladder; the
+  wall-clock reading the user said out loud (48 h, 3 days, weekends inside the window) is a `wall_clock` twin
+  beside it, charged to the same look.
+- §7 rule 4: four benchmarks on the row plus their twins, and `not_reproduced` where a number cannot be
+  reproduced from the accepted arithmetic instead of an invented one.
+- §7 rules 8-10, new: the light plus one plain reason line (the size of the move and the day count, nothing else,
+  no direction, no score out of 100, no ranking); stage 1 and stage 2 never mixed in one line; nothing dropped for
+  looking thin, rare or bad, and nothing invented to look complete.
+- §7 artifact shape: `parameters` now carries the four ladder horizons, the wall-clock mapping and
+  `looks_counted: 1`; the row carries `session`, `two_sessions` (with its `wall_clock` twin), `three_sessions`
+  (same), `week`, one `looks_counted`, and verdict keys with `two_sessions_verdict` and `three_sessions_verdict`
+  added in the accepted form. A legend paragraph lists each block's fields, so lane 2 does not invent a shape.
+- §8: the ladder columns with their twins first, and the light-plus-reason-line furniture above the table.
+- §9: the plan's five decisions govern; the four items that used to be defaults here are named as declarations no
+  lane may re-open, and D1/D2 are re-scoped so no outcome is read before the meaning of a state is written.
+- §10 and §11: two new tests (ladder order with one look; completeness and light wording), acceptance now requires
+  the three page blocks to cover the register exactly once with `looks_counted` = 1 and no direction word in any
+  light line, and the limits note that the rungs overlap and the twin is the same evidence read a second way, so
+  the ladder plus its twin is one look and may never be added or multiplied.
+
+**What did not change.** No measured number, no threshold, no window and no decision of 2026-09-28. The only
+figures quoted are the plan's own stage-1 scan of 2026-09-29 (32.40% / 38.43% / 62.82% for the fixed floor against
+39.60% / 37.19% / 38.46% for its L2L form). No run was made, no credential was read, no network was used and no
+sealed-window value was touched.
+
+**Files changed.** `GOLD_BAND_FIX_AND_EDGE_TABLE_SPEC_20260928.md` only (+190 / -12), plus this entry.
+
+**Status.** Unchanged for the user: 23 of 50 answered, holding, and batch 6 (22 and 23 in plain words) goes out
+next session. This revision is lane-facing plumbing, so it asks nothing of anyone.
