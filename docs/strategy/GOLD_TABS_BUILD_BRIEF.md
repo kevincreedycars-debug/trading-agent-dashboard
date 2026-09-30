@@ -18,6 +18,14 @@ the end. The shell is written, verified in a real browser and committed, so the 
 | What the user can open tonight | `tmp/preview/gold-tabs-preview.html` (ignored scratch) | frames local copies of the four published pages; not publishable and never to be published |
 | The harness that proved the candidate | `tmp/site-sim/check-candidate.js` (ignored scratch) | serves the candidate as `gold.html` beside the four pages plus `styles.css` and drives it with Playwright |
 
+One note on that hash, because it is the one step a copy can slip on: the recorded sha256 is the file **as it sits on
+disk** in this worktree (CRLF, 6,199 bytes). Git stores the same page as an LF blob of 6,090 bytes, because both this
+worktree and the canonical checkout set `core.autocrlf=true` - exactly as it stores the published pages, where
+`index.html` is a 19,332-byte LF blob on disk as 19,698 CRLF bytes, the draft page a 21,281-byte LF blob on disk as
+21,541 CRLF bytes, and the scorecard a 143,102-byte LF blob on disk as 143,517 CRLF bytes. So copy the file from the
+checkout or the worktree, not the output of `git cat-file`. Both forms render identically; only the checkout copy
+matches the recorded hash.
+
 The candidate is a normal site page: one stylesheet link to the site's own `styles.css`, a small `<style>` block of its
 own so it still stands up if the shared nav is not reused, four `<iframe>` elements pointing at sibling pages, and about
 forty lines of vanilla JavaScript for the tabs. It contains no data, no figure, no claim about the work.

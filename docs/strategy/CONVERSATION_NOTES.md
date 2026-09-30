@@ -2349,3 +2349,42 @@ on the dashboard lane, one word away. The user's "tomorrow morning" is read as r
 only on a separate word. The three decisions still the user's - the route, the revision-2 publish, and the
 movement-screen lane that is the only source of real factor numbers - are unchanged, and the last one still decides
 whether the Factor tables tab can ever show anything measured.
+
+**Saved for the evening: the branch is parked with everything committed, and the worker stands by.** The user closed the
+evening with "save here for the evening", so the night ends with the work written down and nothing left only in a
+chat: `GOLD_TABS_SHELL_CANDIDATE.html` (the page to publish), `GOLD_TABS_BUILD_BRIEF.md` (the release checklist),
+section 9 of `GOLD_PAGE_TABS_MERGE_REQUEST.md` (the ready artifact inside the request it answers) and these notes are
+committed as `1c2678b` on `workers/strategy-advisory-20260920`, based on `c3b5e209`, with the tree clean and no
+`tmp/` file tracked. The package went to the coordinator as submission
+`20260930-strategy-gold-tabs-release-ready-030` at 21:52, `ready_for_review`, five tests and three questions, so the
+coordinator owns the next move and this worker owns none. This closing entry is a second, notes-only commit: the
+deliverable and the commit the submission names are unchanged.
+
+**The one thing found while double-checking the save, and it is a copying trap rather than a defect.** The recorded
+sha256 `74dd93c8...` is the file as it sits on disk in the worktree - CRLF, 6,199 bytes. Git stores the very same page
+as an LF blob of 6,090 bytes, sha256 `c78d4d7c...`, because both this worktree and the canonical checkout set
+`core.autocrlf=true`. It is not special to this file: `index.html` is a 19,332-byte LF blob on disk as 19,698 CRLF
+bytes, `gold-factor-wip.html` a 21,281-byte LF blob on disk as 21,541 CRLF bytes, and
+`gold-direction-scorecard.html` a 143,102-byte LF blob on disk as 143,517 CRLF bytes, which is where the two published
+hashes already on record (`5dbe1364...` for the blob, `675fc9da...` for the disk file) come from. Both forms render
+identically, but a copy taken from `git cat-file` will not match the recorded hash. Measured with
+`tmp/check-blob-endings.js`; the build brief gained one paragraph so the lane copying the page sees it where the copy
+step is described. No other artifact changed, and the candidate itself was not touched: re-run tonight,
+`tmp/site-sim/check-candidate.js` still ends `CANDIDATE OK as it would run on the site`.
+
+**What is saved where, and what deliberately is not.** Committed in `docs/strategy/`, this worker's only writable
+folder: the candidate page, the brief, the merge request and these notes. Ignored and untracked, therefore never
+pushed and never to be published: the site simulation harness, the user's local preview in `tmp/preview/`, and the
+submission builders. That is not a gap in the record - the brief carries the acceptance run step by step, so the
+evidence can be reproduced without any scratch file existing, which is the property a published page here needs: it
+must stand on its own.
+
+**State at the end of the evening, unchanged from the previous entry.** Nothing is live, no live file, bar entry,
+generator, data artifact, guard or number was touched, and no claim of completion, acceptance or trading edge is
+made. Three decisions are still the user's and all three are cheap to answer: route A (the tab shell, verified and
+ready) against route B (one generated document, costed but unbuilt); whether revision 2 of the draft page is copied
+in the same change, which needs the one guard line moved with it; and whether the movement-screen measurement lane
+opens, which is the only source of real factor numbers and therefore decides whether the Factor tables tab can ever
+show anything measured. On the user's word the morning's first action is to hand E1 to E5 to lane
+`dashboard-gold-tabs-001` and run `node scripts/test-local.js browser`; until then the worker stays paused and
+reachable.
