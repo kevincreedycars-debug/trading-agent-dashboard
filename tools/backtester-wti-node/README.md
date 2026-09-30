@@ -1,9 +1,10 @@
 # WTI backtester agent window
 
-Open [BacktesterWti.code-workspace](BacktesterWti.code-workspace) in its own VS Code window, select
-**DeepSeek** in your existing agent extension, and run **Mailbox: Connect This Cline Worker** once. The
-register marks worker `backtester-wti` `mailbox_auto_connect`, so the mailbox connection is restored
-automatically after a reload. Explicit Disconnect persists and overrides that.
+Open [BacktesterWti.code-workspace](BacktesterWti.code-workspace) in its own VS Code window and select **DeepSeek** in your existing agent extension. The
+register marks worker `backtester-wti` `mailbox_auto_connect`, so this window connects to the mailbox on open and reconnects
+after a reload with no command; until a session log shows the agent has picked the assignment up, the monitor
+and the status bar read `Wake sent / pickup unconfirmed`. Run **Mailbox: Connect This Cline Worker** once only
+if the status bar does not read "Sent; awaiting pickup". Explicit Disconnect persists and overrides that.
 
 This is the window for the WTI backtesting lane. It is a readiness and standby lane: it reads the project and
 the Gold evidence, it writes only `docs/backtester-wti/` in its own checkout, and it builds no builder,

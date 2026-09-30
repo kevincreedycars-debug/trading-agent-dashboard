@@ -1,5 +1,16 @@
 # Session notes
 
+2026-09-29 late, the seven asset windows connected themselves. Opening each
+`tools/backtester-<asset>-node/Backtester<Asset>.code-workspace` was enough: because the register marks every
+`backtester-<asset>` row `mailbox_auto_connect`, the bridge bound the mailbox on activation without any command
+and wrote a connection record for each lane (`.local/orchestration/connections/backtester-<asset>.json`, state
+`sent_unconfirmed`, extension `0.2.1`, 20:47Z), which `npm run monitor` now reads as "Wake sent / pickup
+unconfirmed" instead of "YOUR ACTION: wake agent". That is delivery evidence only: no `activity/backtester-*.json`
+line exists, no lane has published a `status_report`, and no `docs/backtester-<asset>/READINESS.md` exists in any
+of the seven worktrees, so all seven remain unpicked-up. The seven lane READMEs were corrected to match - they
+now say the window connects on open and that **Mailbox: Connect This Cline Worker** is needed only if the status
+bar does not read "Sent; awaiting pickup". The rest of the evening is consolidated below.
+
 2026-09-29 evening, project-wide consolidation (19:45-21:50 local, branch `orchestration/control-plane-20260920`
 at `5d7bd38`). Five threads ran this evening and are recorded here in one place; the per-thread detail stays in
 the entries and changelog sections below.

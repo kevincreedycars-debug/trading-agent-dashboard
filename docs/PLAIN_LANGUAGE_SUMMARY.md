@@ -2,6 +2,20 @@
 
 Last updated 2026-09-29. Written for a reader who does not work in this project and does not need to.
 
+## In short
+
+A five-line version of the evening of 29 September 2026, for sharing as plain text:
+
+- We answered a long list of simple yes/no questions about how the trading calls should be judged, and turned two
+  answers into rules.
+- We checked five written reports one at a time: three went back for small mistakes, two were accepted as
+  accurate records.
+- We opened two new desks - one for live-trading advice, and seven standby desks for the markets with no
+  backtester yet (dollar, euro, Nasdaq, bitcoin, pound, silver, oil).
+- We found the automatic helper that queues reports for review had switched itself off, left it alone, and noted
+  that twelve reports are waiting.
+- Gold was left untouched, nothing was deployed, and nothing was shown to make money.
+
 ## What it is
 
 It is a dashboard that watches five markets - the US dollar, the euro, gold, the Nasdaq and bitcoin - and shows
