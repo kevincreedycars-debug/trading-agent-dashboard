@@ -121,3 +121,25 @@ Suggested lane id `dashboard-gold-tabs-001` (registered this time, unlike the dr
 writer: the dashboard lane owns the merged page, the bar entry and the guards. The strategy worker keeps editing only
 its own file in `docs/strategy/`, reports every change with its new hash, and does not touch the merged page once it
 exists.
+
+## 9. Build candidate ready, and how it was verified (added 2026-09-30, later the same evening)
+
+The shell described in section 2 is no longer only described. `docs/strategy/GOLD_TABS_SHELL_CANDIDATE.html` holds it -
+6,199 bytes, 109 CRLF lines, no bare LF, sha256 `74dd93c8fe6daa179718322d1fb6f339dcdb95f1acb752d534af3af832446eea` -
+and `docs/strategy/GOLD_TABS_BUILD_BRIEF.md` is the release checklist: the five edits with the exact text they replace,
+the acceptance run, the rollback, and the one coupling if revision 2 of the draft page is published in the same
+release. The user's instruction was to save this for tonight and be ready to push it live in the morning, so the route
+is read as **route A** and the candidate is committed ready to copy in as `gold.html`.
+
+Two things the work turned up that amend this request, both from measuring the live tree rather than trusting an
+earlier note:
+
+1. `index.html` carries **three** gold bar links today - lines 19, 20 and 22, "Gold Backtest" to the outcomes page,
+   "Gold Direction" to the scorecard and "Gold Factor (draft)" to the draft - not the two this document assumed. The
+   change is to replace all three with one. The draft label's meaning moves to the tab label and the page banner, so
+   no status is lost.
+2. The candidate was verified on a served host with the four pages and `styles.css` as siblings, not only on `file://`
+   (Playwright Chromium, 1440x900): four tabs select, all four frames load and read the pages' own values, no 404, no
+   console error, hashes reopen the right tab, arrow keys move the selection. Harness: `tmp/site-sim/check-candidate.js`
+   in this worker's ignored scratch. The verification is a script result recorded in this worker's notes, not a claim.
+

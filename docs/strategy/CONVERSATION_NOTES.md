@@ -2316,3 +2316,36 @@ the address reopens the same tab on reload and the arrow keys move the selection
 than a claim about it: a tab shell around the existing pages demonstrably works in a browser, so the recommended route
 is not the risky one. No live file, bar entry, guard or number was touched, and this preview carries no authority to
 publish anything.
+
+**Saved for tonight and made release-ready: the tab shell is written, verified and ready to copy in.** The user's instruction was "save here for
+tonight - but be ready to push this live tomorrow morning", so the request stopped being a request. Two new committed
+files carry it. `docs/strategy/GOLD_TABS_SHELL_CANDIDATE.html` is the shell itself - 6,199 bytes, 109 CRLF lines, no
+bare LF, sha256 `74dd93c8...` - a normal site page with one link to the shared stylesheet, a small style block of its
+own, four frames pointing at sibling pages and about forty lines of vanilla script for the tabs; no data, no figure, no
+claim about the work. `docs/strategy/GOLD_TABS_BUILD_BRIEF.md` is the release checklist: the five edits with the exact
+text each replaces, the acceptance run, the rollback, the boundaries, and the coupling below. Section 9 of the merge
+request was added in the same commit so a reader of the request finds the ready artifact.
+
+**The shell was verified as it would run on the site, not by inspection.** `tmp/site-sim/check-candidate.js` (ignored
+scratch) copies the candidate in as `gold.html` beside the four published pages and `styles.css`, serves that folder on
+127.0.0.1 and drives it with Playwright Chromium at 1440x900: all four tabs select, every frame loads and reads the
+page's own values - 25 scored, "Gold backtesting evidence", 4,956 evaluated, the draft banner's "40 of 50 answered" -
+each open frame measures 1398x750, no request returns 404, no console error, `gold.html#factor` reopens that tab after a
+reload, the arrow keys move the selection, and all four old addresses still answer. The run ends `CANDIDATE OK as it
+would run on the site`. The same file produced the user's local preview in `tmp/preview/`, which is scratch and must
+never be published: it frames local files, and a published page here stands on its own.
+
+**A correction the work turned up, and the one coupling.** The merge request said two gold bar links would become one;
+measuring `index.html` shows **three** - lines 19, 20 and 22 ("Gold Backtest" to the outcomes page, "Gold Direction" to
+the scorecard, "Gold Factor (draft)" to the draft) - so the change replaces all three, with the draft status moving to
+the tab label and the page banner. Separately, revision 2 of the draft page measures 24,687 bytes, 289 CRLF, sha256
+`aa9e104c...`, still five `<h2>` sections, one draft banner and the same as-of line, so publishing it needs exactly one
+guard line moved with it: `/40 of 50 answered/` to `/50 of 50 answered/` in
+`backtester/tests/gold_factor_wip_dashboard_link.browser.test.js` line 28, in the same change, because there is no CI
+here to catch it later. The draft guard passes today in its present form (2 tests, 2 pass) against the canonical root.
+
+**Status after this entry.** Nothing is live and no live file changed: the build is a candidate and a checklist waiting
+on the dashboard lane, one word away. The user's "tomorrow morning" is read as route A, with the revision-2 copy taken
+only on a separate word. The three decisions still the user's - the route, the revision-2 publish, and the
+movement-screen lane that is the only source of real factor numbers - are unchanged, and the last one still decides
+whether the Factor tables tab can ever show anything measured.

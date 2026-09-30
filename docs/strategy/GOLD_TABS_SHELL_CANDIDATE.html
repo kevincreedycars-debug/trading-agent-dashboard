@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Gold - one page with tabs</title>
+<meta name="description" content="The gold work on one page: direction scorecard, backtesting evidence, 28-factor outcomes and the factor tables draft, reached from one tab strip.">
+<!--
+  BUILD CANDIDATE for the dashboard owner, not a published page and not to be published from this folder.
+  Route A of docs/strategy/GOLD_PAGE_TABS_MERGE_REQUEST.md: one shell, four tabs, each framing a page that already
+  exists at this site's root. To use it: copy it to the site root as gold.html, replace the two gold bar links in
+  index.html with one ("Gold"), update the three hop guards as docs/strategy/GOLD_TABS_BUILD_BRIEF.md lists, and run
+  the checks. Behaviour was verified in a real browser (Playwright Chromium, 1440x900, served over http with the four
+  pages as siblings): all four frames render, the probes read the pages' own values, hashes reopen the right tab and
+  the arrow keys move the selection. Numbers, tables and generators are untouched by this file.
+-->
+<link rel="stylesheet" href="styles.css">
+<style>
+/* Minimal shell styling so the candidate stands alone if the site's shared nav is not reused. The shared
+   stylesheet is linked first, so this only fills gaps and can be dropped without breaking the tabs. */
+.goldtabs-wrap{max-width:1600px;margin:0 auto;padding:18px 20px 0}
+.goldtabs-head{display:flex;flex-wrap:wrap;gap:12px;align-items:baseline;justify-content:space-between;margin-bottom:12px}
+.goldtabs-head h1{margin:0;font-size:22px}
+.goldtabs-head p{margin:0;font-size:13px;opacity:.75;max-width:640px}
+.goldtabs-tabs{display:flex;flex-wrap:wrap;gap:6px;border-bottom:1px solid rgba(255,255,255,.16)}
+.goldtabs-tab{appearance:none;border:1px solid rgba(255,255,255,.16);border-bottom:0;background:rgba(255,255,255,.05);
+color:inherit;padding:9px 15px;border-radius:8px 8px 0 0;font:inherit;font-size:14px;cursor:pointer}
+.goldtabs-tab:hover{background:rgba(255,255,255,.1)}
+.goldtabs-tab[aria-selected="true"]{background:rgba(255,255,255,.16);font-weight:600}
+.goldtabs-tab:focus-visible{outline:2px solid #8acfff;outline-offset:2px}
+.goldtabs-draft{color:#f2c167}
+.goldtabs-panels{border:1px solid rgba(255,255,255,.16);border-top:0}
+.goldtabs-panel{display:none}
+.goldtabs-panel.is-open{display:block}
+.goldtabs-panel iframe{display:block;width:100%;height:calc(100vh - 150px);min-height:520px;border:0;background:#fff}
+.goldtabs-foot{padding:10px 2px 22px;font-size:12.5px;opacity:.7}
+</style>
+</head>
+
+<body>
+<div class="goldtabs-wrap">
+  <header class="goldtabs-head">
+    <div>
+      <h1>Gold</h1>
+      <p>Everything the gold work holds, on one page. Each tab is the page it always was, with its own numbers and
+      its own warnings; nothing here is recalculated.</p>
+    </div>
+    <p><a href="index.html">Back to the dashboard</a></p>
+  </header>
+
+  <div class="goldtabs-tabs" role="tablist" aria-label="Gold pages">
+    <button class="goldtabs-tab" role="tab" id="tab-direction" aria-controls="panel-direction" aria-selected="true">Direction</button>
+    <button class="goldtabs-tab" role="tab" id="tab-backtesting" aria-controls="panel-backtesting" aria-selected="false">Backtest evidence</button>
+    <button class="goldtabs-tab" role="tab" id="tab-outcomes" aria-controls="panel-outcomes" aria-selected="false">28-factor outcomes</button>
+    <button class="goldtabs-tab" role="tab" id="tab-factor" aria-controls="panel-factor" aria-selected="false">Factor tables <span class="goldtabs-draft">(draft)</span></button>
+  </div>
+
+  <div class="goldtabs-panels">
+    <section class="goldtabs-panel is-open" id="panel-direction" role="tabpanel" aria-labelledby="tab-direction" tabindex="0">
+      <iframe title="Gold direction scorecard" src="gold-direction-scorecard.html"></iframe>
+    </section>
+    <section class="goldtabs-panel" id="panel-backtesting" role="tabpanel" aria-labelledby="tab-backtesting" tabindex="0">
+      <iframe title="Gold backtesting evidence" src="gold-backtesting.html" loading="lazy"></iframe>
+    </section>
+    <section class="goldtabs-panel" id="panel-outcomes" role="tabpanel" aria-labelledby="tab-outcomes" tabindex="0">
+      <iframe title="Gold 28-factor outcomes" src="gold-backtest-outcomes.html" loading="lazy"></iframe>
+    </section>
+    <section class="goldtabs-panel" id="panel-factor" role="tabpanel" aria-labelledby="tab-factor" tabindex="0">
+      <iframe title="Gold factor tables (draft)" src="gold-factor-wip.html" loading="lazy"></iframe>
+    </section>
+  </div>
+
+  <p class="goldtabs-foot">The earlier pages stay reachable at their own addresses, so old links keep working.
+  The draft tab is a live draft: its own banner says what it is and what it is not.</p>
+</div>
+
+<script>
+(function () {
+  const order = ['direction', 'backtesting', 'outcomes', 'factor'];
+  const tabs = order.map(name => document.getElementById('tab-' + name));
+  const panels = order.map(name => document.getElementById('panel-' + name));
+
+  function show(name, focus) {
+    if (!order.includes(name)) name = 'direction';
+    order.forEach((key, index) => {
+      const open = key === name;
+      tabs[index].setAttribute('aria-selected', open ? 'true' : 'false');
+      tabs[index].tabIndex = open ? 0 : -1;
+      panels[index].classList.toggle('is-open', open);
+    });
+    if (history.replaceState) history.replaceState(null, '', '#' + name);
+    if (focus) tabs[order.indexOf(name)].focus();
+  }
+
+  tabs.forEach((tab, index) => {
+    tab.addEventListener('click', () => show(order[index], false));
+    tab.addEventListener('keydown', event => {
+      const step = event.key === 'ArrowRight' ? 1 : event.key === 'ArrowLeft' ? -1 : 0;
+      if (!step) return;
+      event.preventDefault();
+      show(order[(index + step + order.length) % order.length], true);
+    });
+  });
+
+  window.addEventListener('hashchange', () => show(location.hash.replace('#', ''), false));
+  show(location.hash.replace('#', ''), false);
+})();
+</script>
+</body>
+</html>
