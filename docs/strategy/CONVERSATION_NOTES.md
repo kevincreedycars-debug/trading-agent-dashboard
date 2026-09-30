@@ -1978,3 +1978,33 @@ identical to the working file, the only difference being that the coordinator's 
 file is CRLF, and `coordination.js check --worker strategy` lists `-025` and returns `errors: []`. This bookkeeping line
 was committed after the filing, so the submission's recorded `head_commit` is the commit it actually left from rather
 than the commit now at the tip of the branch.
+
+## 2026-09-30 (same session, after batch 8) - "what do you mean round and batch", and the live-page ask restated
+
+**What the user asked.** Straight after the batch-8 reply: *"what do you mean round and batch, I just want to see the
+data in the live dashboard?"* Two things are in that sentence. The reply used this worker's own shorthand for its own
+process, which is a failure of wording rather than of content; and the dashboard request has now been made three times
+in two days - the link in batch 7, "put it live even thjough we are editing it" with batch 8, and this.
+
+**What the two words mean.** "Round" is the whole set of fifty questions in the answer sheet; "batch" is the six or
+seven of them sent at a time so nothing long arrives at once. Answers 1-40 are in, 41-47 are out, 48-50 follow. Nothing
+about the work depends on those words, and the reply style rule now forbids them in a reply to the user.
+
+**Why the data is not on the live site yet, plainly.** The live dashboard is a GitHub Pages site served from the root of
+the main repository (records in the canonical `README.md`), and this worker's checkout is a separate worktree that is
+not part of it. Publication is not something this worker can do: the assignment allows writes only inside
+`docs/strategy/`, and the site's `index.html`, its shared stylesheet and its `data/` files belong to the coordinator. No
+dashboard worker exists in the assignment register, so the coordinator is the publisher. The prepared page is one file
+waiting for a home: it needs a copy at the site root and one line in the top bar.
+
+**What was done about it.** Submission `-025` (filed earlier this session) carries the publish request as its first
+question. A monitor activity entry now says the user is waiting to see the data on the live dashboard, so the request is
+visible outside the review queue as well. `REPLY_STYLE.md` gained a vocabulary rule so the next reply says "the
+questions", "the work" and "the dashboard" rather than internals.
+
+**Fastest routes to the user seeing the data.** Two. Open the prepared file directly in a browser from this folder
+today, with no publication step at all; or have the coordinator copy it to the site root and add the link, which is the
+version that appears at the dashboard address. The page is readable as it stands: forty questions answered, the settled
+decisions, the measured gold facts, and a banner and limits stating what it is not.
+
+**Status.** 41-47 remain outstanding with the user; nothing else changed with this turn.

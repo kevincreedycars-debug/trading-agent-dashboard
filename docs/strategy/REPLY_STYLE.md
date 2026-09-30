@@ -27,3 +27,16 @@ shape rule and not a content cut.
 overshot: the user replied "this is too simple, give a little bit more context, as questions 1-2 lines max per
 question". The rule above is that middle setting - short bullets that still carry a number and a cause, and
 every question with a one-line reason so no question needs a follow-up explanation round.
+
+## Vocabulary (user instruction, 2026-09-30)
+
+The user answered a batch-8 reply with "what do you mean round and batch, I just want to see the data in the live
+dashboard?". The content was right; the words were this worker's own shorthand, and the user had to ask what they meant.
+
+1. **Use the user's words for the user's things.** Say "the questions", "the work", "the numbers", "the dashboard". Do
+   not say round, batch, lane, envelope, submission, artifact or provenance in a reply to the user.
+2. **If process must be mentioned, say it in one plain clause** - "I ask the questions a few at a time" - and never
+   expect the user to hold the shorthand for it.
+3. **A request to see something is a live request, not background.** If the user asks for something to be visible, lead
+   the reply with what they will see, where they will see it, and who has to do it; if it cannot be done from here, say
+   so in the first line rather than at the end.
