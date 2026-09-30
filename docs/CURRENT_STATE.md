@@ -12,6 +12,22 @@ user's click on **Mailbox: Connect This Cline Worker** clears it; its filings ar
 `live-trading` `watching`, and the seven `backtester-<asset>` windows still `sent_unconfirmed` from 2026-09-29.
 
 
+- 2026-09-30 (cont.), live-trading: submission `20260930-live-trading-feed-002` was reviewed and decided **changes
+  requested, documentation only** (mailbox `088e8a9515fddcc149edd6bc41230952f141d8075a16bf7ba04b4e429e4c0f21`
+  reproduced from the immutable inbox file, reply `0e24fda5...`, review
+  `docs/orchestration/reviews/20260930-live-trading-feed-002.md`). Verified from the checkout: the MT5 producer is
+  read-only by construction with an import-allowlist test and no order call in the changed set, the validator PASSes on
+  the committed `data/live-trading.json` (27,727 bytes, sha256 `b3db6cc5...`, generated `2026-09-30T19:28:37.575240Z`),
+  `tests/live_trading_feed.test.js` is 18 of 18, and the dashboard section exists in exactly one copy across every
+  worktree and release copy. Owed under a new submission ID: a documentation pass correcting the mis-attributed
+  19:15:25Z scratch quotes, the unlabelled `tools/mt5-bridge/README.md` example, and the quoted canonical `index.html`
+  size of 19,616 bytes (canonical HEAD is 19,251, the working copy 19,698). The lane's disclosed overrun - the
+  MetaTrader5 install, the read-only read of the user's own evaluation account and the writes outside
+  `docs/live-trading/` - is recorded as disclosed and **not authorised**; the authority level (read-only feed, demo,
+  funded) remains the user's open decision. Nothing was merged, published or deployed, no new assignment was published,
+  and `20260930-live-trading-publish-003` stays `pending_review`. The live-trading lane's artifacts are a read-only
+  display surface: they are not accuracy, ranking, timing or edge evidence, and no message from them can reach Layer 1
+  or any trading path.
 2026-09-29 (cont., third cycle): opened the seven non-Gold asset backtester lanes as their own VS Code
 windows at the user's instruction - "we want to do 7 at the same time for the other assets in the dashboard
 ... we first just need to build the 7 VSCs and open them for each backtesting agent", with the backtesters

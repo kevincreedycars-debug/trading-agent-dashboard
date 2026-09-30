@@ -50,6 +50,28 @@ page lane has no registered worker - `projects.json` carries a `dashboard` coord
 `gold-research` stays published at status exactly `instructions_published_awaiting_worker` for the 022 item A envelope.
 
 2026-09-29 review outcome (same day, second cycle), recorded without changing the objective: `strategy` submission `20260928-strategy-gold-band-edge-table-008` (mailbox `a4156f0a...`, reply `08b208b5...`, review `docs/orchestration/reviews/20260928-strategy-gold-band-edge-table-008.md`) was **accepted** as an accurate docs-only advisory - the short plan answering the user's "simplify this / keep both VIX streams" follow-up, with the decision list cut from fifteen to four (D1 both VIX streams incl. a declared 1/2/5 and 2/5/10 sweep with `looks_counted`; D2 full page versus minimum version; D3 rebuild F9; D4 keep `>= 60` and `n >= 100`). Verified from the checkout and the artifacts: base `9d4403ec` is the direct parent of head `1576e898` (`rev-list --count` 1), the commit is +250/-0 lines across three `docs/strategy/` files only, the three artifact byte hashes reproduce exactly, and every load-bearing figure is exact - F6 asks for both VIX streams and rules the level only, the scorecard's `unscored` blocks already carry the change-state numbers, baselines 55.81% n 964 and 58.23% n 960, exactly one cell is at or above 60% on either horizon (`vix_d1` positive **week** 60.51% n 433, one of twelve looks, session 52.86% below drift, 262 of 433 and not F9's 285 of 471), the accepted 019 report is exactly 95,842,994 bytes with zero occurrences of the field `"values"`, and the sizing estimate is exactly 954 / 41 / 400 / 513. One minor citation slip is recorded as a note: section 4 labels the sizing window end `2026-09-21` where the file's last in-range observation is `2026-09-11` (the same slip review 007 noted on the spec). No assignment was published from it, for the same structural reasons as `-007` plus one: the worker's own later `-009`/`-010` submissions already rewrite this plan (live file now 287 lines, sha256 `A5DF999D...`) and `-011` changes D1's floor default, all still queued behind the one-review-per-cycle rule; the D1-D4 forks remain open; `gold-research` deliberately stays published at status exactly `instructions_published_awaiting_worker` for the 022 item A envelope; and the page lane still has no registered owner.
+2026-09-30 review outcome (live-trading lane), recorded without changing the objective: `live-trading` submission
+`20260930-live-trading-feed-002` was reviewed and decided **changes requested, documentation only** (mailbox
+`088e8a9515fddcc149edd6bc41230952f141d8075a16bf7ba04b4e429e4c0f21` reproduced from the immutable inbox file, reply
+`0e24fda54cf6e5a3924a8970f81782bb881f1700ad4dd8f44eee943beef62c7c`, review
+`docs/orchestration/reviews/20260930-live-trading-feed-002.md`). Verified from the checkout rather than trusted: the
+producer `tools/mt5-bridge/live-trading-snapshot.py` is read-only by construction and holds no order call, its import
+allowlist test passes, `scripts/validate_live_trading_feed.js` returns PASS on the committed `data/live-trading.json`
+(27,727 bytes, sha256 `b3db6cc5...`, generated `2026-09-30T19:28:37.575240Z`, four instruments, masked `***614`, zero
+positions and zero orders), `tests/live_trading_feed.test.js` is 18 of 18 in the worktree, and the dashboard section
+exists in exactly one copy - the canonical checkout, the other eleven worktrees and the four `*-release` copies carry
+zero references to it. One bounded documentation correction is owed under a new submission ID: the report's live-evidence
+line attributes the 19:15:25.891323Z reading in the ignored scratch file `tmp/live-trading.real.json` to the committed
+19:28:37.575240Z run, whose own quotes are EURUSD 1.13310/1.13312, XAUUSD 4153.30/4153.71, US100.cash 30558.33/30559.78
+and BTCUSD 83739.20/83740.20; the same scratch console text is `tools/mt5-bridge/README.md`'s example without its run
+time; and the quoted canonical `index.html` size of 19,616 bytes is the seven `backtester-<asset>` worktrees' size
+(canonical HEAD 19,251, working copy 19,698). The lane's disclosed scope overrun - the `MetaTrader5` 5.0.6231 install into
+the user's Python, the read-only attach to the user's own logged-in terminal and the read of facts about the user's own
+evaluation account, and the writes outside `docs/live-trading/` - is recorded as disclosed and not authorised, and the
+three-way authority question (read-only feed, demo execution, funded execution) stays the user's open decision, so no
+lane was opened and no order path exists. No new assignment was published and the register keeps `live-trading` at status
+exactly `instructions_published_awaiting_worker` so the reply stays deliverable; `20260930-live-trading-publish-003` stays
+`pending_review` and its publish route is a coordinator production decision taken in that submission's own review.
 
 Next: hold, and take the 022 item A envelope at the lane close. No further research is authorised. The precise
 unresolved decisions are the user's: whether to open another exploratory stage over the spent intervals at all, since

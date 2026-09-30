@@ -1,3 +1,34 @@
+# 2026-09-30 (cont.) - live-trading feed-002 reviewed: changes requested, one bounded documentation correction
+
+The background coordinator took the one review it owned, live-trading submission `20260930-live-trading-feed-002`, and
+decided `changes_requested` (documentation only). Mailbox SHA-256
+`088e8a9515fddcc149edd6bc41230952f141d8075a16bf7ba04b4e429e4c0f21` reproduced from the immutable inbox file; reply
+`.local/orchestration/replies/live-trading/20260930-live-trading-feed-002.json` (3,908 bytes, sha256 `0e24fda5...`);
+durable review `docs/orchestration/reviews/20260930-live-trading-feed-002.md`; `check --worker live-trading` returns
+state `changes_requested` with zero errors.
+
+Verified from the checkout rather than trusted: `tools/mt5-bridge/live-trading-snapshot.py` is read-only by
+construction, with no order call anywhere in the changed set and an import-allowlist test that would fail if one were
+added; `scripts/validate_live_trading_feed.js` returns PASS on the committed `data/live-trading.json` (27,727 bytes,
+sha256 `b3db6cc5...`, generated `2026-09-30T19:28:37.575240Z`, four instruments, masked `***614`, zero positions and
+orders); `tests/live_trading_feed.test.js` is 18 of 18 in the worktree; the `index.html` (+2 rail, +15 section),
+`script.js` and `styles.css` (+50, nothing deleted) additions are additive and live-trading-scoped; and the section
+exists in exactly one copy, since the canonical checkout, eleven other worktrees and four `*-release` copies carry zero
+references to it. Base `5ff1bf3` is the assignment baseline and the reported head `65557be` is an ancestor of the
+current tip `9a68050`.
+
+One documentation correction is owed under a new submission ID: the report attributes the 19:15:25.891323Z reading in
+the ignored scratch file `tmp/live-trading.real.json` to the committed 19:28:37.575240Z run, whose own quotes are
+EURUSD 1.13310/1.13312, XAUUSD 4153.30/4153.71, US100.cash 30558.33/30559.78 and BTCUSD 83739.20/83740.20; the same
+scratch console text is the `tools/mt5-bridge/README.md` example without its run time; and the quoted canonical
+`index.html` size of 19,616 bytes is the seven `backtester-<asset>` worktrees' size, not the canonical file's.
+
+The lane's disclosed scope overrun - the `MetaTrader5` 5.0.6231 install into the user's Python, the read-only attach to
+the user's own logged-in terminal and the read of facts about the user's own evaluation account, and the writes outside
+`docs/live-trading/` - is recorded as disclosed and not authorised. The authority question (read-only feed, demo
+execution, funded execution) stays the user's open decision. No new assignment was published, no worker status was
+altered, nothing was merged, published or deployed, and submission `20260930-live-trading-publish-003` remains
+`pending_review` with its publish route undecided.
 # 2026-09-30 (cont.) - coordinator answered every waiting submission; the draft gold factor page is next
 
 At the user's instruction to "communicate with the other VSC to ensure you have everything", the coordinator read

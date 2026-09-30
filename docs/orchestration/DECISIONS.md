@@ -1,5 +1,46 @@
 # Central decisions
 
+## 2026-09-30 (cont.): live-trading feed-002 reviewed - one bounded documentation correction, and the boundary stays the user's
+
+The one review cycle this run owned took `live-trading` submission `20260930-live-trading-feed-002` (mailbox
+`088e8a9515fddcc149edd6bc41230952f141d8075a16bf7ba04b4e429e4c0f21`, reproduced from the immutable inbox file and equal
+to the requested hash; reply `0e24fda54cf6e5a3924a8970f81782bb881f1700ad4dd8f44eee943beef62c7c`; durable review
+`docs/orchestration/reviews/20260930-live-trading-feed-002.md`) and decided **changes requested, documentation only**,
+confirmed by `node scripts/coordination.js check --worker live-trading` returning state `changes_requested` with no
+errors. Everything the lane built except one sentence was verified from the checkout rather than trusted: the producer
+`tools/mt5-bridge/live-trading-snapshot.py` is read-only by construction with no order call anywhere in the changed set
+and an allowlist test that would fail if one were added; `scripts/validate_live_trading_feed.js` returns PASS on the
+committed `data/live-trading.json` (27,727 bytes, sha256 `b3db6cc5...`, generated `2026-09-30T19:28:37.575240Z`, four
+instruments, masked account `***614`, zero positions and orders); `tests/live_trading_feed.test.js` is 18 of 18 in the
+worktree; the `index.html`, `script.js` and `styles.css` additions are additive and live-trading-scoped; and the section
+exists in exactly one copy, because the canonical checkout, the eleven other worktrees and the four `*-release` copies
+carry zero references to it.
+
+The correction owed is one documentation pass under a new submission ID. The report's live-evidence line attributes
+quotes from the 19:15:25Z run in the ignored scratch file `tmp/live-trading.real.json` to the 19:28:37Z committed
+artifact, whose own quotes are EURUSD 1.13310/1.13312, XAUUSD 4153.30/4153.71, US100.cash 30558.33/30559.78 and BTCUSD
+83739.20/83740.20; the same scratch console text is the `tools/mt5-bridge/README.md` example without its run time; and
+the quoted canonical `index.html` size of 19,616 bytes is the seven `backtester-<asset>` worktrees' size, not the
+canonical file's (HEAD 19,251, working copy 19,698), though the claim it supports - that no other copy carries the
+section - is true. None of this changes the read-only finding, which stands.
+
+Three things were decided and recorded rather than granted. First, the scope overrun the lane disclosed - the
+`MetaTrader5` 5.0.6231 install into the user's Python, the read-only attach to the user's own logged-in terminal and the
+read of facts about the user's own evaluation account, and the writes outside `docs/live-trading/` - is recorded as
+disclosed and **not authorised**; the coordinator does not retroactively authorise it or read it as approval. Second,
+the authority question - read-only feed, demo execution, or funded execution - stays the user's open decision, exactly
+as the published assignment requires, and the coordinator did not open a lane to settle it. Third, no new assignment
+was published and no worker status was altered: `live-trading` keeps status exactly
+`instructions_published_awaiting_worker` so the hash-bound reply stays deliverable, and the register's `next` now
+carries the review outcome.
+
+Deliberately out of scope for this cycle: submission `20260930-live-trading-publish-003`, the lane's hand-over asking
+the coordinator to publish the section to the live dashboard, is still `pending_review`. The publish route - the PC
+route with its stale-when-the-machine-is-off consequence, a separate feed repository, or a worktree preview only - is
+that submission's own review and a coordinator production decision, and nothing was published, merged or deployed by
+this cycle. The other unresolved items stay the user's: the FTMO written confirmation for automated trading and for
+news trading inside a Swing evaluation (the repository holds an in-chat answer, not the written confirmation), and
+whether the 660-second M5 freshness limit and the fifteen-minute staleness badge are accepted as the first cut.
 ## 2026-09-30: the whole mailbox was answered; the gold factor draft page goes live first, the harness review second
 
 The user's instruction was "you are the coordinator/orchestrator - please communicate with the other VSC to ensure

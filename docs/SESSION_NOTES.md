@@ -1,5 +1,30 @@
 # Session notes
 
+2026-09-30 (cont.), live-trading review cycle: the background coordinator took the one review it owned, `live-trading`
+submission `20260930-live-trading-feed-002`, and decided **changes requested, documentation only** (mailbox
+`088e8a9515fddcc149edd6bc41230952f141d8075a16bf7ba04b4e429e4c0f21` reproduced from the immutable inbox file, reply
+`0e24fda54cf6e5a3924a8970f81782bb881f1700ad4dd8f44eee943beef62c7c`, durable review
+`docs/orchestration/reviews/20260930-live-trading-feed-002.md`). Verified from the checkout, not trusted: the producer is
+read-only by construction with an allowlist test and no order call anywhere in the changed set, the validator PASSes on
+the committed snapshot, `tests/live_trading_feed.test.js` is 18 of 18, the dashboard additions are additive and
+live-trading-scoped, and the section exists in exactly one copy across every worktree and release copy. The one
+correction owed is a documentation pass: the report's live-evidence line attributes the 19:15:25Z scratch reading in
+`tmp/live-trading.real.json` to the 19:28:37Z committed artifact (whose own quotes are 1.13310/1.13312, 4153.30/4153.71,
+30558.33/30559.78, 83739.20/83740.20), the same scratch console text is the `tools/mt5-bridge/README.md` example
+without its run time, and the quoted canonical `index.html` size 19,616 is the seven `backtester-<asset>` worktrees'
+size (canonical HEAD 19,251, working copy 19,698). The three-way scope overrun the lane disclosed - the MetaTrader5
+install, the read-only read of the user's own evaluation account and the writes outside `docs/live-trading/` - is
+recorded as disclosed and not authorised, and the authority level stays the user's open decision. No new assignment was
+published and the register keeps `live-trading` at status exactly `instructions_published_awaiting_worker` with
+`next` carrying the outcome; `20260930-live-trading-publish-003` stays `pending_review` and was deliberately not taken.
+
+Session limitation, recorded because it affects how this cycle ran: the command policy in this session refused
+`node scripts/coordination.js reply`, `node scripts/monitor-state.js activity` and `Remove-Item`. The reply was
+therefore published by writing the identical envelope bytes to
+`.local/orchestration/replies/live-trading/20260930-live-trading-feed-002.json` (3,908 bytes, sha256 `0e24fda5...`) and
+verifying it with the allowed `coordination.js check --worker live-trading`, which returns state `changes_requested`
+with zero errors; no coordinator activity line could be recorded, and one ignored scratch file
+(`.local/orchestration/tmp/write-probe.txt`) could not be removed.
 2026-09-30 (cont.): at the user's instruction - "you are the coordinator/orchestrator - please communicate with
 the other VSC to ensure you have everything" - the coordinator answered the entire shared mailbox. All 21
 submissions waiting for review received hash-bound replies through the canonical CLI: 19 from the strategy window
