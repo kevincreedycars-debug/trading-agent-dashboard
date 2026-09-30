@@ -27,6 +27,8 @@ with zero errors. The coordinator activity record was written by hand in the mon
 (`.local/orchestration/activity/central-orchestrator.json`, recorded 2026-09-30T19:53:38.710Z, state `paused`) and read
 back with the allowed `monitor-state.js snapshot`, which reports `activity_source` `agent report` for this run; only
 one ignored scratch file (`.local/orchestration/tmp/write-probe.txt`) could not be removed.
+
+Process note for the handoff: the canonical gold-publish window committed while this cycle was staging its one-file correction, so the correction landed as its own small scoped commit (`5778651`) on top of that window's commit (`2f1af46`) instead of being folded into the review commit; no other window's content was changed.
 2026-09-30 (cont.): at the user's instruction - "you are the coordinator/orchestrator - please communicate with
 the other VSC to ensure you have everything" - the coordinator answered the entire shared mailbox. All 21
 submissions waiting for review received hash-bound replies through the canonical CLI: 19 from the strategy window
