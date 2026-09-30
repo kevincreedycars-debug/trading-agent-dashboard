@@ -67,3 +67,17 @@ This publishes directly to the coordinator's existing review queue and notificat
 No copying messages between windows is needed. It does not wake an idle coordinator,
 start a closed agent or automatically apply advice. The active coordinator reviews
 strategy submissions during coordination checkpoints alongside implementation reports.
+
+## Reply style (user instruction, adopted canonically 2026-09-30)
+
+Replies to the user obey the rule recorded in `docs/strategy/REPLY_STYLE.md`, reproduced here so later strategy
+windows inherit it without editing any canonical file. At most three bullets of about fifty words each in plain
+words; no tables, no hashes, no file paths, no provenance and no jargon in a reply to the user. Each question one
+to two lines with a short reason, at most seven, and the stated default stands if the user does not reply.
+Everything long goes in a file in `docs/strategy/` and in the mailbox submission, never in the chat reply; if it
+will not fit, keep the headline and name the file. Use the user's own words for the user's things - the questions,
+the work, the numbers, the dashboard - and never expect the user to hold worker shorthand such as round, batch,
+lane, envelope, submission or artifact. A request to see something is a live request: lead with what the user will
+see, where they will see it, and who has to do it, and say in the first line if it cannot be done from the worker
+window. The coordinator owns the canonical copy of this rule; workers keep their own per-worktree copy only.
+

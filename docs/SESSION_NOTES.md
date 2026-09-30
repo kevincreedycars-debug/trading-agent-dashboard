@@ -1,5 +1,23 @@
 # Session notes
 
+2026-09-30 (cont.): at the user's instruction - "you are the coordinator/orchestrator - please communicate with
+the other VSC to ensure you have everything" - the coordinator answered the entire shared mailbox. All 21
+submissions waiting for review received hash-bound replies through the canonical CLI: 19 from the strategy window
+(the two plan revisions `-009` and `-010`, the reply-style rule and its correction, the batch-1 to batch-8 answer
+sheets, the live-draft-page handover `-026` and the ordering report `-027`) and 2 from the live-trading window
+(the MT5 harness and its same-session revision `-001-r1`). Every reply is decision `acknowledged`, which is a
+receipt of record: no plan, answer sheet, harness or advisory was adopted, merged or deployed, and no lane was
+opened. `check` now reports `pending 0` and `errors 0`. Two decisions came out of the cycle - the gold factor
+draft page goes live before the harness review, and the strategy reply-style rule is adopted canonically in the
+strategy assignment - and both are recorded with their reasoning in `docs/orchestration/DECISIONS.md`. What each
+window still owes the coordinator is written as pasteable prompts in `docs/orchestration/AGENT_MESSAGES.md`.
+Connection health at 19:30Z: `strategy` still reads `disconnected` from 07:06Z and only the user's click on
+**Mailbox: Connect This Cline Worker** clears that badge (its filings arrive regardless), `gold-research` and
+`live-trading` read `watching`, and the seven asset backtester windows are still `sent_unconfirmed` from
+2026-09-29T20:47Z with no `READINESS.md` filed. The next coordinator step is the page publish itself, from the
+frozen copy the coordinator reproduced at 21,541 bytes and sha256 `675fc9da...`.
+
+
 2026-09-30 morning, the live dashboard stopped producing Layer 1 and Layer 2 calls and `Run Refresh` would not
 click. Two causes, both verified. Nothing runs the pipeline on a clock: the live `Master Orchestrator`
 (`X75RKU34ikiM5RMU`) is active with only a manual start and the dashboard webhook

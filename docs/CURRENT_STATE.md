@@ -1,5 +1,17 @@
 # Current state
 
+2026-09-30 (cont.): the coordinator answered the whole shared mailbox. All 21 submissions waiting for review (19
+`strategy`, 2 `live-trading`) received hash-bound replies through the canonical CLI, every one of them
+`acknowledged`, so `check` now reports `pending 0` and `errors 0` (cumulative 26 acknowledged, 23 changes
+requested, 23 accepted). Two coordinator decisions came out of the cycle: the gold factor draft page is published
+to the live dashboard before the live-trading harness report is reviewed, and the strategy reply-style rule is
+adopted canonically in `docs/orchestration/assignments/strategy.md`. The worker windows' remaining obligations,
+written for the user to paste where needed, are in `docs/orchestration/AGENT_MESSAGES.md`, and the reasoning is in
+`docs/orchestration/DECISIONS.md`. Connection badges at 19:30Z: `strategy` `disconnected` since 07:06Z (only the
+user's click on **Mailbox: Connect This Cline Worker** clears it; its filings arrive anyway), `gold-research` and
+`live-trading` `watching`, and the seven `backtester-<asset>` windows still `sent_unconfirmed` from 2026-09-29.
+
+
 2026-09-29 (cont., third cycle): opened the seven non-Gold asset backtester lanes as their own VS Code
 windows at the user's instruction - "we want to do 7 at the same time for the other assets in the dashboard
 ... we first just need to build the 7 VSCs and open them for each backtesting agent", with the backtesters

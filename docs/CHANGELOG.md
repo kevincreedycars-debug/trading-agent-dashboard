@@ -1,3 +1,19 @@
+# 2026-09-30 (cont.) - coordinator answered every waiting submission; the draft gold factor page is next
+
+At the user's instruction to "communicate with the other VSC to ensure you have everything", the coordinator read
+the whole shared mailbox and answered all 21 submissions waiting for review - 19 from `strategy` and 2 from
+`live-trading` - with hash-bound replies published through `node scripts/coordination.js reply`, each bound to the
+mailbox SHA-256 of that exact file and each decision `acknowledged`, a receipt of record rather than an adoption.
+`check` now reports `pending 0` with `errors 0`; the cumulative totals are 26 acknowledged, 23 changes requested
+and 23 accepted. Nothing was merged or deployed and no lane was opened.
+
+Two coordinator decisions were recorded in `docs/orchestration/DECISIONS.md`: the gold factor draft page is
+published to the live dashboard ahead of the live-trading harness review, and the strategy reply-style rule is
+adopted canonically. The per-window obligations that remain are written in
+`docs/orchestration/AGENT_MESSAGES.md`, including the past-due 022 item A anchor observation envelope for
+`gold-research` and the seven `backtester-<asset>` windows that have never confirmed pickup.
+
+
 # 2026-09-30 - no fresh Layer 1 or Layer 2 run: the orchestrator has no clock, and the button was blocked in one browser profile
 
 The user reported that the live dashboard had stopped producing Layer 1 and Layer 2 calls and that `Run Refresh`

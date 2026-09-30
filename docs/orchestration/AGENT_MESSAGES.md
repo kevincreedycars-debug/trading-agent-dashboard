@@ -3,6 +3,50 @@
 These messages start the assignments; no agent has been started by creating these files.
 Use the correct worker window. If a worker cannot read/write the canonical mailbox, report the access error instead of silently creating a private mailbox.
 
+## Coordinator notes, 2026-09-30: what each window still owes
+
+The coordinator read the whole shared mailbox on 2026-09-30 and answered every submission that was waiting for
+review: all 21 of them (19 `strategy`, 2 `live-trading`) got a hash-bound reply through the canonical CLI, each
+decision `acknowledged`, so `check` now reports `pending 0` with `errors 0` and the totals are 26 acknowledged, 23
+changes requested and 23 accepted. Acknowledged means a receipt of record: no plan, report or answer sheet was
+adopted, merged or deployed. What is still outstanding per window is below; nothing here widens any lane's
+authority, and no lane may connect to a live system, credential, warehouse, Layer 1 path, workflow, dashboard,
+production or holdout because of it.
+
+### strategy
+Read the replies with `node D:/trading-agent-dashboard-codex/scripts/coordination.js check --worker strategy`.
+`connections/strategy.json` still reads `disconnected` because that file is written by the mailbox extension, not
+by the worker, so only the user's click on **Mailbox: Connect This Cline Worker** clears the badge; your filing
+itself already works, which is why these replies exist. The ordering question is settled: the gold factor draft
+page is published first, by the coordinator, and the live-trading harness report is reviewed second. Keep the
+single-writer rule and report each later change to the draft page with its new hash. D1-D5 stay the user's, with
+the plan's own defaults standing, and no lane is opened from a plan that revision has already rewritten.
+
+### gold-research
+One obligation is outstanding and now past its own window: the 022 item A anchor observation envelope for the
+`2026-09-28T14:00:00Z|gold|entry` identity, due at or after the `2026-09-28T16:00:00Z` lane close. File it as a
+single `ready_for_review` envelope from your own ignored `tmp/`, or file a `blocked` report saying plainly what
+stopped it; silence is the only unhelpful answer. Do not reopen the closed 28-factor circuit and do not disturb
+`GoldQualificationWindowTick018` or the sealed prospective window. The assignment carries the same note.
+
+### live-trading
+`20260929-live-trading-harness-001-r1` is received as the live revision of this lane and `-001` is superseded by
+it. The review is queued second, after the gold page publish, and it authorises nothing: no terminal, broker
+server or account connection, no MetaTrader5 package or Expert Advisor install, no request for a login, password,
+server or investor password, and no order, modification or arming. The five open questions (authority level,
+account and broker, instrument and size, timing source of truth, mirrored-view publication) belong to the user and
+are being put to them in plain words. Keep the window open and report activity while you wait.
+
+### backtester-<asset>, the seven asset windows
+None of the seven has confirmed pickup: `.local/orchestration/connections/backtester-<asset>.json` still reads
+`sent_unconfirmed` from 2026-09-29T20:47Z, no worktree shows a `READINESS.md` commit and no submission exists.
+Open `tools/backtester-<asset>-node/Backtester<Asset>.code-workspace`, paste that window's own block below, then
+run `node D:/trading-agent-dashboard-codex/scripts/coordination.js check --worker backtester-<asset>` and report
+activity with `monitor-state.js`. Readiness and standby only: build nothing, and leave the deferred build decision
+to the user. Report a `blocked` envelope if the window cannot read or write the canonical mailbox.
+
+
+
 ## live-trading
 
 ```text

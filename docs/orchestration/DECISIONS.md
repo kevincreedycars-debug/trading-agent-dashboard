@@ -1,5 +1,39 @@
 # Central decisions
 
+## 2026-09-30: the whole mailbox was answered; the gold factor draft page goes live first, the harness review second
+
+The user's instruction was "you are the coordinator/orchestrator - please communicate with the other VSC to ensure
+you have everything". What was done, entirely inside the shared mailbox and the central documents, with the
+background dispatcher already paused and `activeRun` false: every one of the 21 submissions waiting for review was
+answered through the canonical CLI with a reply bound to the mailbox SHA-256 of that exact file - 19 `strategy`,
+2 `live-trading`, every decision `acknowledged`. `node scripts/coordination.js check` now reports `pending 0` with
+`errors 0`, and the cumulative totals are 26 `acknowledged`, 23 `changes_requested` and 23 `accepted`.
+Acknowledged is exactly what those replies are: receipts of record. No plan revision, answer sheet, harness or
+advisory was adopted, merged or deployed by this cycle, and no lane, credential, warehouse, Layer 1, live
+workflow, production or holdout action occurred in it.
+
+Two decisions were taken, both inside the coordinator's own remit. First, queue order: the gold factor draft page
+is published to the live dashboard before the live-trading harness report is reviewed, on the strategy worker's
+reasoning - the page is the user's own instruction repeated over two days with the user waiting to see it, while
+the harness report has no user instruction attached and nobody depending on its order, and the two touch
+different files. The coordinator independently reproduced the frozen copy from the worker checkout at the stated
+21,541 bytes and sha256 `675fc9da...` before agreeing. Second, process: the reply-style rule recorded in
+`docs/strategy/REPLY_STYLE.md` is adopted canonically and now also lives in
+`docs/orchestration/assignments/strategy.md`, so later strategy windows inherit it without editing a canonical
+file. The four page-publish defaults in the handover stand as written - a byte-for-byte copy, one top-bar entry
+whose label says it is a draft, a refresh per batch of answers, and the single-writer rule with every change
+reported by its new hash - and the provisional lane id `dashboard-gold-factor-wip-page-001` is deliberately not
+registered as a worker, because `projects.json` carries a `dashboard` coordinator workstream and this publish is a
+coordinator action, not a lane.
+
+Unresolved and unchanged: D1-D5 stay the user's with the plan's own defaults standing; the five live-trading
+questions (authority level, account and broker, instrument and size, timing source of truth, mirrored-view
+publication) are the user's and are being put to them; the seven `backtester-<asset>` windows have still confirmed
+no pickup since 2026-09-29T20:47Z (`sent_unconfirmed`, no `READINESS.md` filed); the carried 022 item A anchor
+observation envelope is past its own lane close and was nudged through its assignment on this date; and the sealed
+prospective window stays sealed until `2027-03-25T15:00:00Z`.
+
+
 ## 2026-09-29: seven asset backtester lanes opened as windows; every build is deliberately deferred
 
 At the user's instruction on 2026-09-29 - "we want to do 7 at the same time for the other assets in the

@@ -68,3 +68,17 @@ sha256, the source artifact for each number, production disclosure and questions
 `node D:/trading-agent-dashboard-codex/scripts/monitor-state.js activity gold-research paused "<what finished>"`;
 then stop and wait for a recorded reply. The anchor envelope for `2026-09-28T14:00:00Z|gold|entry` remains due at
 or after `2026-09-28T16:00:00Z`.
+
+## Coordinator note, 2026-09-30: the 022 item A envelope is the only outstanding obligation
+
+`node D:/trading-agent-dashboard-codex/scripts/coordination.js check --worker gold-research` reports no submission
+awaiting review from this lane, and the carried 022 item A obligation is now past its own window: the anchor
+observation envelope for the `2026-09-28T14:00:00Z|gold|entry` identity was due at or after the
+`2026-09-28T16:00:00Z` lane close. File it as a single `ready_for_review` envelope from your own ignored `tmp/`
+through the canonical CLI, or file a `blocked` report that states plainly what stopped it - either answer is
+useful, silence is not. Nothing else changes: the 28-factor circuit stays closed as exploratory and immutable, no
+new measurement, candidate, source, ranking, winner, signal, formula, accuracy, win-rate, timing, profitability or
+edge claim may be made, `GoldQualificationWindowTick018` is not to be disturbed, and the sealed prospective window
+stays sealed until `2027-03-25T15:00:00Z`. Keep the window connected; `connections/gold-research.json` last read
+`watching`. The same note is in `docs/orchestration/AGENT_MESSAGES.md`.
+
