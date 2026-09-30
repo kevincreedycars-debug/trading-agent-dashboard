@@ -1,5 +1,42 @@
 # Current state
 
+2026-09-30 (cont.): the coordinator published the verified Live Trading section on the user's own word - the go-ahead
+the previous cycle recorded as the only thing missing - and reviewed the live-trading harness report in the same cycle.
+Publish: release worktree `.local/live-trading-release` on `release/live-trading-20260930` cut from `origin/main`
+`a2b0e13`, the lane's verified hunks ported rather than the branch's whole files taken, commit `bc538d7` pushed to
+`refs/heads/main`. Five files: `index.html` (+17 - two side-rail lines under a new `Live` group and the 15-line section
+before `architectureView`), `script.js` (+227/-2 of live-trading code; the port's five conflict regions were resolved by
+keeping the published line's own neighbours, because the lane's base carries a structure map and a backtesting
+development tracker the published line never had, so those context lines and identifiers were deliberately not carried
+in), `styles.css` (+52 - 47 `.live-trading` selectors, 2 scoped `@media` rules, 1 comment and 2 separators),
+`data/live-trading.json` (848 lines: 27,727 bytes CRLF / 26,879 LF, sha256 `b3db6cc5...` CRLF and `b00c71b5...` LF,
+byte-identical to the artifact the lane offered), and one new browser guard
+`tests/live_trading_dashboard.browser.test.js`. Live verified rather than assumed: `index.html` 18,901 bytes sha256
+`eff9f91d...`, `script.js` 706,463 bytes `fdca034f...`, `styles.css` 192,724 bytes `7a9d221c...` and
+`data/live-trading.json` 26,879 bytes `b00c71b5...` all serve byte-identical to the committed blobs; the published page
+opens the tab labelled `Live Trading` under the `Live` group, renders all four cards with bid, ask, spread, M5 close and
+the 24-bar series, carries zero order controls, raises no script error, and labels the snapshot `STALE` because nothing
+has written the file since `19:28:37Z`. Tests reproduced on the release candidate before the push: the new guard 2 of 2,
+`tests/refresh_progress.browser.test.js` 26 of 26, `tests/backtesting_development_release.browser.test.js` 1 of 1, the
+lane's validator `PASS`, and the lane's own `tests/live_trading_feed.test.js` 18 of 18. The lane's harness report
+`20260929-live-trading-harness-001-r1` is reviewed and accepted as a record - mailbox `781094d2...` reproduced from the
+immutable inbox file at 9,653 bytes, review `docs/orchestration/reviews/20260929-live-trading-harness-001-r1.md`: both
+artifact hashes are the CRLF materialisation of the lane's own blobs at `f6a62cb` and reproduce exactly; four of the six
+cited central digests reproduce byte-exactly and the two that miss are explained (`docs/ARCHITECTURE.md` `68569020...` is
+the lane's own base blob `722ded94`, replaced on the canonical line at 2026-09-30T08:39 by `4e9902ee`, and
+`config/credential-manifest.json` `69230DD5...` is the CRLF form of blob `5dc1c713`, still canonical `HEAD`'s blob); the
+lane's 11-of-11 coordination re-run reproduced, its probe evidence is unmodified, and its starting picture still holds on
+the published line. **Deliberately not done:** the producer, validator and tests stay off the published site (the four
+page files, plus the guard that belongs with the page); no lane was registered (the provisional
+`dashboard-gold-factor-wip-page-001` stays unregistered); and no new assignment was published. **The precise unresolved
+decisions are the user's:** the three-way authority level for the lane; which broker, terminal and symbol a path would
+start from; the timing source of truth and the acceptable staleness; whether the mirrored view is local or published; the
+FTMO written confirmation; and the 660-second M5 freshness limit with its fifteen-minute badge. Two mechanism notes
+belong in the handoff: a reply is immutable per submission, so the harness review's outcome could not be filed as a
+second reply on `-r1` (the CLI refuses an existing file) and went to the review doc, the assignment update and the
+coordinator notes instead; and the section reached the published line only on the user's word, not by the lane's own
+action.
+
 2026-09-30 (cont.): the coordinator reviewed the strategy lane's closing report and page refresh -
 `20260930-strategy-batch9-10-answers-and-page-refresh-028` (mailbox sha256
 `f72a80300ca6f38c7772507f85c7aa9f69c0601809fd02b8908b125f1a3fb76e` reproduced from the immutable inbox file at 9,406

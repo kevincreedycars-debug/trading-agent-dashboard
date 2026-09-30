@@ -109,3 +109,44 @@ which worker, given that it measures already-spent intervals and the Gold lane s
 register entry deliberately published for the carried 022 item A envelope. The live-trading items stay open behind
 those two: the three-way authority level, the already-ruled port recipe for the verified section, the FTMO written
 confirmation, and the 660-second M5 freshness limit with its fifteen-minute badge.
+
+Done, 2026-09-30 (cont.): the verified Live Trading section is published live, on the user's own word, and the
+live-trading harness report is accepted as a record - both queued in the previous cycles and both blocked on the user.
+Publish route as ruled: release worktree `.local/live-trading-release` on `release/live-trading-20260930` cut from
+`origin/main` `a2b0e13`, the lane's hunks ported rather than the branch's files taken, commit `bc538d7` pushed to
+`refs/heads/main`. The published site gains one side-rail entry `Live Trading` under a new `Live` group, the 15-line
+section before `architectureView`, 52 live-trading-scoped style lines, 227 lines of self-contained script, the
+`data/live-trading.json` snapshot byte-identical to the artifact the lane offered, and one guard that travels with the
+page (`tests/live_trading_dashboard.browser.test.js`). Verified live rather than assumed: all four files serve
+byte-identical to the committed blobs (`eff9f91d...`, `fdca034f...`, `7a9d221c...`, `b00c71b5...`), the published page
+opens the tab, renders four cards, offers zero order controls and raises no script error, and the panel reads `STALE`
+because the producer has not run since `19:28:37Z`. The five `script.js` conflict regions were resolved by keeping the
+published line's own neighbours: the lane's base carries a structure map and a backtesting development tracker the
+published line never had, and carrying their identifiers in would have broken the dashboard at load. The harness review
+decided **accepted as a record** (mailbox `781094d2...`, review
+`docs/orchestration/reviews/20260929-live-trading-harness-001-r1.md`): both artifact hashes are the CRLF form of the
+lane's own blobs at `f6a62cb`, four of six cited central digests reproduce byte-exactly, and the two that miss are a
+moved measurement and a materialisation difference on an unchanged blob. No lane was registered, no worker status
+changed and the producer, validator and tests stay off the published site.
+
+Superseded 2026-09-30 (cont.) by this cycle; kept for provenance. The former next action, after the strategy 028 cycle,
+recorded that nothing was executable because both remaining items were the user's: the go-ahead to publish the refreshed
+gold factor draft page revision 2 (rule recorded - 24,398 bytes LF, sha256 `b0aa8afe...`, against live revision 1 at
+21,281 bytes sha256 `5dbe1364...`, the same git object `1094c0bf` the worker committed), and whether to open the
+movement-screen measurement lane that answers 47 and 50 put first, and on which worker, while the Gold lane stays on the
+user's hold with its register entry deliberately published for the carried 022 item A envelope. The live-trading items
+stayed open behind those: the three-way authority level, the already-ruled port recipe (now applied in this cycle), the
+FTMO written confirmation, and the 660-second M5 freshness limit with its fifteen-minute badge.
+
+Next immediate action, 2026-09-30 (cont.), after the live-trading publish and harness review: nothing is executable,
+because every remaining item is the user's. First and oldest: the gold-research lane's overdue 022 item A anchor
+observation envelope for the `2026-09-28T14:00:00Z|gold|entry` identity is still unfiled, and seven backtester windows
+have sat `sent_unconfirmed` since 2026-09-29T20:47Z. Second: the gold factor draft page's revision 2 publish remains the
+user's call, with the rule recorded (24,398 bytes LF, sha256 `b0aa8afe...` against live revision 1 `5dbe1364...`), and so
+does opening the movement-screen measurement lane. Third: the live-trading lane's five questions - authority level,
+broker/terminal/symbol, timing source of truth and acceptable staleness, mirrored view local or published, and the FTMO
+written confirmation - are with the user; the lane grows no execution path until they answer, and the coordinator opens
+no lane for one. Two mechanical items stay with the user as well: the strategy worker window still shows `disconnected`
+until the user clicks **Mailbox: Connect This Cline Worker** in that window (its filings already work), and the
+`data/live-trading.json` snapshot is as old as the user's last producer run, so the published panel will keep reading
+`STALE` until that machine runs the producer again.

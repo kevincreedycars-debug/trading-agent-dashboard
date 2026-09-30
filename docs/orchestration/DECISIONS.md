@@ -1,5 +1,54 @@
 # Central decisions
 
+## 2026-09-30 (cont.): the Live Trading section is published live on the user's word - the port keeps the published line's own neighbours, and the lane's harness report is accepted as a record
+
+Two decisions were taken this cycle, both on the user's own word and neither by a lane's own action.
+
+**Published: the verified Live Trading section.** On the user's "yes do it", the coordinator applied the port recipe
+already ruled in the review of `20260930-live-trading-publish-003` to production `main`: release worktree
+`.local/live-trading-release`, branch `release/live-trading-20260930` cut from `origin/main` `a2b0e13`, commit
+`bc538d7` pushed to `refs/heads/main`. The published site gains `index.html` (+17 lines: a new `Live` side-rail group
+with one `Live Trading` button after Pair Analysis, and the 15-line section before `architectureView`), `styles.css`
+(+52 live-trading-scoped lines), `script.js` (+227/-2), `data/live-trading.json` (848 lines, byte-identical to the
+artifact the lane offered: sha256 `b3db6cc5...` in its CRLF form, `b00c71b5...` as committed), and one guard that
+travels with the page, `tests/live_trading_dashboard.browser.test.js`. The route stays a coordinator production action
+under the existing `dashboard` workstream; no lane was registered and the provisional
+`dashboard-gold-factor-wip-page-001` stays unregistered.
+
+**The resolution of the five `script.js` conflict regions is the load-bearing part, and it is a decision, not a
+mechanical step.** The lane's base carries a structure map and a backtesting development tracker that the published
+line never had, so the merge's "theirs" side contained `structureMapView`, `backtestingDevelopmentUrl` and
+`backtestingDevelopmentResult` context that does not exist on the published line; carrying it in would have thrown a
+`ReferenceError` at load and broken the whole dashboard. The port therefore keeps the published line's own
+destructuring, fetch list and result handling and adds only `liveTradingResult`, `fetchLocalJson(liveTradingUrl)` and
+the live-trading render block. The added-line lists were then compared line by line with the lane's own diff: 266 on
+each side, differing in exactly those two intended places. Rule for future ports of this kind: a clean
+`git apply --3way` on the page files does not prove the port is safe; the surrounding line must be checked for
+identifiers the target line does not define.
+
+**Recorded: the acceptance of `20260929-live-trading-harness-001-r1` as a record.** Mailbox
+`781094d2...` reproduced from the immutable inbox file at 9,653 bytes; review
+`reviews/20260929-live-trading-harness-001-r1.md`. Both artifact hashes are the CRLF materialisation of the lane's own
+committed blobs at `f6a62cb` (11,229 and 3,809 LF bytes) and were reproduced byte for byte. Four of the six cited
+central digests reproduce byte-exactly; the two that miss are explained and neither is a content error:
+`docs/ARCHITECTURE.md` `68569020...` is the lane's own base-and-tip blob `722ded94`, which the canonical line replaced
+at 2026-09-30T08:39 with `4e9902ee`, and `config/credential-manifest.json` `69230DD5...` is the CRLF form of blob
+`5dc1c713`, which is still canonical `HEAD`'s blob, the working copy being 7,497 bytes with mixed endings that git
+reports clean. Acceptance is a reviewed record only: nothing is adopted, merged, installed, deployed or published by
+it, and the lane's five questions stay the user's.
+
+**Recorded limit: a reply is immutable per submission.** Reviewing `-r1` after its receipt could not produce a second
+reply - `scripts/coordination.js reply` refuses an existing reply file - so this review's outcome is carried by the
+durable review, the assignment update and the coordinator notes in `AGENT_MESSAGES.md` instead. A future cycle that
+means to review a submission must do it before filing its receipt, or accept that the later outcome travels on the
+documentation channel.
+
+**Standing, unchanged:** the three-way authority level for the live-trading lane is the user's and open; the
+`MetaTrader5` install, the read-only read of the user's own live account and the writes outside `docs/live-trading/`
+stay disclosed and unauthorised; the FTMO written confirmation is still an in-chat answer rather than a document; the
+660-second M5 freshness limit and the fifteen-minute staleness badge are a disclosed first cut; the Sealed prospective
+Gold window stays closed until `2027-03-25T15:00:00Z`; and nothing in this cycle is accuracy, timing or edge evidence.
+
 ## 2026-09-30 (cont.): strategy 028 accepted - the question round closes at 50 of 50, the page refreshes, and the publish stays the user's
 
 The background coordinator reviewed `strategy` submission `20260930-strategy-batch9-10-answers-and-page-refresh-028`

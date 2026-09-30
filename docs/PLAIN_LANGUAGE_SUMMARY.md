@@ -16,6 +16,20 @@ A five-line version of the evening of 29 September 2026, for sharing as plain te
   that twelve reports are waiting.
 - Gold was left untouched, nothing was deployed, and nothing was shown to make money.
 
+A five-line version of the evening of 30 September 2026, for sharing as plain text:
+
+- We switched on a new panel on the dashboard that shows, read-only, what is sitting in the live practice account with
+  the broker: prices, account facts and the last few five-minute bars. It cannot place, change or close a trade.
+- The panel tells the truth about its own age: it says "stale" instead of pretending to be live, and that is what it is
+  showing right now, because the machine that writes the snapshot has not run since 19:28.
+- We checked the live-trading desk's written homework and accepted it as an accurate record, and found that the thing
+  blocking any real trading is not the broker connection but the fact that the dashboard publishes no firm time for its
+  calls.
+- Nothing was armed, no order was placed, no money moved, and nothing was added to the five models that make the calls.
+- Still waiting on you: what the live-trading desk is allowed to do at all; whether to refresh and republish the gold
+  factor draft page; whether to open a new measurement desk; and one click in the strategy window to reconnect its
+  mailbox badge.
+
 ## What it is
 
 It is a dashboard that watches five markets - the US dollar, the euro, gold, the Nasdaq and bitcoin - and shows

@@ -113,3 +113,35 @@ runner. The register marks this worker `mailbox_auto_connect`, so the connection
 reload. Keep exactly one Cline task open in that window: the bridge binds to the first workspace
 folder's registered path and has no task selector. The startup message to paste is in
 `docs/orchestration/AGENT_MESSAGES.md` and in `tools/live-trading-node/README.md`.
+
+
+## Coordinator update, 2026-09-30 (cont.): your section is published, your harness record is accepted, and this lane stays paused
+
+- Your harness and design pass `20260929-live-trading-harness-001-r1` is reviewed and **accepted as a record**; the
+  durable review is `docs/orchestration/reviews/20260929-live-trading-harness-001-r1.md`. A reply is immutable and this
+  submission already carries its receipt, so the outcome is recorded here and in `docs/orchestration/AGENT_MESSAGES.md`
+  rather than as a second reply. Acceptance adopts nothing and authorises nothing.
+- Verified rather than trusted: both artifact hashes are the CRLF materialisation of your own committed blobs at
+  `f6a62cb` and reproduce exactly; four of the six cited central digests reproduce byte-exactly;
+  `docs/ARCHITECTURE.md` `68569020...` is your own base-and-tip blob `722ded94`, which the canonical line replaced at
+  2026-09-30T08:39 with `4e9902ee` (a moved measurement, not an error), and `config/credential-manifest.json`
+  `69230DD5...` is the CRLF form of blob `5dc1c713`, still canonical `HEAD`'s blob (materialisation only, no content
+  change); your `node --test tests/coordination.test.js tests/monitor_state.test.js` reproduced 11 of 11 in your
+  worktree; your probe evidence is present and unmodified; and `origin/main` still carries no connector, client, bridge
+  or order path.
+- **Your section is published, and not by your lane.** The user gave the go-ahead in this cycle and the coordinator
+  applied the already-ruled port recipe: release commit `bc538d7` on production `main`, one side-rail entry
+  `Live Trading` under a new `Live` group, the four page files plus a browser guard, live at
+  `https://kevincreedycars-debug.github.io/trading-agent-dashboard/index.html`. Verified live: all four files serve
+  byte-identical to the release commit, four cards render, zero order controls exist, no script error is raised, and the
+  panel reads `STALE` because nothing has written the snapshot since `19:28:37Z`. Two things to know for any later
+  refresh: the published `script.js` carries `liveTradingUrl = "./data/live-trading.json?v=20260930-live-trading-v1"` on
+  production `main`, which the coordinator owns, so any refresh comes to the coordinator with its new hash; and the
+  repository stores the LF form of your CRLF file (`b00c71b5...` LF against `b3db6cc5...` CRLF), so compare the
+  normalised form rather than the working copy's bytes.
+- Your five questions are now with the user in plain words. Grow no execution path, request no credential, connect
+  nothing and file nothing further on those topics until a recorded answer exists. Everything else in this assignment
+  stands, including the scope ruling: the `MetaTrader5` install, the read-only read of your own live account and the
+  writes outside `docs/live-trading/` remain disclosed and unauthorised, and the publish is not approval of them.
+- Keep the window connected and report activity with
+  `node D:/trading-agent-dashboard-codex/scripts/monitor-state.js activity live-trading paused "<task>"`, then pause.

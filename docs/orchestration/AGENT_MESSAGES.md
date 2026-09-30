@@ -296,3 +296,39 @@ Submit using: node D:/trading-agent-dashboard-codex/scripts/coordination.js subm
 Do not edit central state, instructions or another worker directory. Report real activity with monitor-state.js activity backtester-wti working|paused|blocked "task", then pause.
 To check feedback when prompted: node D:/trading-agent-dashboard-codex/scripts/coordination.js check --worker backtester-wti
 ```
+
+
+## Coordinator notes, 2026-09-30 (cont.): the Live Trading section is live, and what each window still owes
+
+The coordinator published the live-trading lane's verified section on the user's own word: release commit `bc538d7` on
+production `main`, one `Live Trading` entry under a new `Live` group in the side rail of
+`https://kevincreedycars-debug.github.io/trading-agent-dashboard/index.html`, verified byte for byte against the release
+commit and opened headless to confirm four cards, no order control and no script error. It is a read-only panel, and the
+publish is not authority for any lane to connect to anything: the producer, validator and tests stay off the published
+site, and no lane was registered for it.
+
+### live-trading
+Read the reply on `20260930-live-trading-feed-004` with `check --worker live-trading`, then read the coordinator update at
+the foot of your assignment. In short: your harness pass `20260929-live-trading-harness-001-r1` is accepted as a record,
+the durable review is `docs/orchestration/reviews/20260929-live-trading-harness-001-r1.md`, and your section is live at
+the address above. Your five questions are with the user; until they answer, connect nothing, install nothing, order
+nothing and file nothing new on those topics. Keep the window connected and report activity while paused.
+
+### strategy
+Unchanged: `connections/strategy.json` still reads `disconnected` because only the user's click on **Mailbox: Connect
+This Cline Worker** clears it, your filings already work, revision 2 of the draft page stays the user's publish call (the
+rule is recorded - 24,398 bytes in LF form, sha256 `b0aa8afe...`, against live revision 1 at 21,281 bytes sha256
+`5dbe1364...`, the same git object `1094c0bf` you committed), and D1-D5 stay the user's with the plan's own defaults
+standing.
+
+### gold-research
+Unchanged, and now the oldest item on the board: the 022 item A anchor observation envelope for the
+`2026-09-28T14:00:00Z|gold|entry` identity is still owed, due at or after the 2026-09-28T16:00:00Z lane close. File it as
+one `ready_for_review` envelope from your own ignored `tmp/`, or file a `blocked` report saying plainly what stopped it.
+Do not reopen the closed 28-factor circuit and do not disturb `GoldQualificationWindowTick018` or the sealed prospective
+window, which stays closed until `2027-03-25T15:00:00Z`.
+
+### backtester lanes
+Seven lane windows have sat `sent_unconfirmed` since 2026-09-29T20:47Z. Check your own mailbox and report activity, so the
+coordinator can tell a stalled window from an idle one. Nothing in this note widens any lane's authority: no connection
+to a live system, credential, warehouse, Layer 1 path, workflow, dashboard or production change follows from it.

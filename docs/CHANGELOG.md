@@ -1,3 +1,53 @@
+# 2026-09-30 (cont.) - the Live Trading section is published live on the user's word, and the lane's harness report is accepted as a record
+
+This cycle did two things the previous one had queued and left blocked on the user. First, the publish: on the user's
+"yes do it", the coordinator applied the already-ruled port recipe of submission `20260930-live-trading-publish-003` to
+production `main` - release worktree `.local/live-trading-release`, branch `release/live-trading-20260930` cut from
+`origin/main` `a2b0e13`, commit `bc538d7` pushed to `refs/heads/main`. Five files: `index.html` (+17: one `Live`
+side-rail group with a `Live Trading` button, and the 15-line section before `architectureView`), `script.js` (+227/-2),
+`styles.css` (+52, all live-trading scoped), `data/live-trading.json` (848 lines, byte-identical to the artifact the lane
+offered: `b3db6cc5...` CRLF = `b00c71b5...` LF), and one new guard, `tests/live_trading_dashboard.browser.test.js`.
+Second, the queued review: `20260929-live-trading-harness-001-r1` accepted as a record (mailbox `781094d2...` reproduced
+from the immutable inbox file at 9,653 bytes, review
+`docs/orchestration/reviews/20260929-live-trading-harness-001-r1.md`).
+
+The port is not a copy and the difference matters. The lane's base carries a structure map and a backtesting development
+tracker the published line never had, so the five `script.js` conflict regions were resolved by keeping the published
+line's own destructuring, fetch list and result handling and adding only `liveTradingResult`,
+`fetchLocalJson(liveTradingUrl)` and the live-trading render block. Taking the merge's "theirs" side would have put
+`backtestingDevelopmentUrl` and `backtestingDevelopmentResult` references into a page that defines neither, breaking the
+whole dashboard with a `ReferenceError` at load. The added-line lists were compared line by line against the lane's own
+diff afterwards: 266 lines on both sides, differing in exactly those two intended places.
+
+Verified before pushing, on the release candidate: the new guard 2 of 2 (run twice),
+`tests/refresh_progress.browser.test.js` 26 of 26, `tests/backtesting_development_release.browser.test.js` 1 of 1, the
+lane's `scripts/validate_live_trading_feed.js` `PASS` on the shipped snapshot, and the lane's own
+`tests/live_trading_feed.test.js` 18 of 18. Verified after pushing, from the live site: all four files HTTP 200 and
+byte-identical to the committed blobs (`index.html` 18,901 bytes sha256 `eff9f91d...`, `script.js` 706,463 bytes
+`fdca034f...`, `styles.css` 192,724 bytes `7a9d221c...`, `data/live-trading.json` 26,879 bytes `b00c71b5...`), and a
+headless open of `https://kevincreedycars-debug.github.io/trading-agent-dashboard/index.html` reaches the `Live Trading`
+tab under the `Live` group, renders four cards, offers zero order controls and raises no script error. The banner reads
+`STALE` with the M5 coverage sentence withheld, which is the lane's own honesty rule working: the producer has not run
+since `19:28:37Z`, so the panel says so instead of presenting the snapshot as a live read.
+
+The harness review found the submission accurate, with two digests explained rather than wrong. Both artifact hashes are
+the CRLF materialisation of the lane's own committed blobs at `f6a62cb` and were reproduced byte for byte; four of the
+six cited central digests reproduce byte-exactly from the canonical checkout; `docs/ARCHITECTURE.md` `68569020...` is
+the lane's own base-and-tip blob `722ded94`, which the canonical line replaced at 2026-09-30T08:39 with `4e9902ee` (a
+moved measurement, not an error), and `config/credential-manifest.json` `69230DD5...` is the CRLF form of blob
+`5dc1c713`, still canonical `HEAD`'s blob, so only the working-copy materialisation differs. The lane's
+`node --test tests/coordination.test.js tests/monitor_state.test.js` reproduced at 11 of 11 in its worktree, its probe
+evidence is present and unmodified, and the published line still carries no connector, client, bridge or order path.
+Acceptance is a reviewed record: nothing was adopted, merged, installed or deployed by it, and the lane's five open
+questions stay the user's.
+
+Not done: no new assignment was published, no lane was registered (the provisional `dashboard-gold-factor-wip-page-001`
+stays unregistered), no worker status changed - `live-trading` stays `instructions_published_awaiting_worker` so its
+replies stay deliverable - and the producer, validator and tests stay off the published site. One mechanism limit is
+recorded for future cycles: a reply is immutable per submission, so a review outcome that arrives after a submission's
+receipt cannot be filed as a second reply; the CLI refuses an existing reply file. The outcome goes to the durable
+review, the assignment update and the coordinator notes instead.
+
 # 2026-09-30 (cont.) - strategy 028 accepted: the intent round closes at 50 of 50, the draft page refreshes, and the publish stays the user's
 
 This cycle's single review took `strategy` submission `20260930-strategy-batch9-10-answers-and-page-refresh-028` (mailbox
