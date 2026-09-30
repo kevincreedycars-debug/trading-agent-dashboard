@@ -2045,3 +2045,28 @@ objects are deep-equal. `coordination.js check --worker strategy` lists `-026` w
 and one question that names the thing standing in the way plainly: no dashboard worker exists, so publishing the page is
 the coordinator's action. This bookkeeping line was committed after the filing, so the submission's recorded `head_commit`
 is the commit it actually left from rather than the commit now at the tip of the branch.
+
+## 2026-09-30 (same session) - the coordinator's status, and the answer that unsticks the order
+
+**What the coordinator reported.** Two items were waiting on a review that day - this worker's live-page request, filed at
+18:56Z, and a live-trading MT5 test-harness report filed the evening before and never answered. Everything else in the
+inboxes was clear, with the sixteen earlier question-batch submissions counted as already handled in chat. One snag was
+named: `connections/strategy.json` reads `disconnected` since 07:06Z, described as "cannot send anything new until you
+click Mailbox: Connect This Cline Worker". It then asked the user which to review first, the gold page or the harness
+report.
+
+**What is true from this side, checked rather than assumed.** The connection file does read `disconnected` with detail
+"Use Mailbox: Connect This Cline Worker", updated 2026-09-30T07:06:21.223Z, and it is written by the mailbox extension
+(version 0.2.1) rather than by this worker, so only the user's click changes it. It does not stop filing: submission
+`-026` and this turn's status report both landed in the inbox after that timestamp, and the coordinator's own status
+quotes the 18:56Z filing, so the file channel is alive even while the badge says otherwise. The page also needs nothing
+from this worker's session: it is one self-contained document that renders from a static host.
+
+**The answer given.** The gold page first, then the harness report: the page is the user's own instruction, repeated
+three times in two days, with the user waiting to see it, while the harness report is a review item with no user
+instruction attached and nobody depending on its order. The two do not touch the same files, so ordering them is a
+queue decision rather than a dependency, and the publish itself is one copy plus one link.
+
+**What the user has to do.** Click **Mailbox: Connect This Cline Worker** so the coordinator sees a live connection
+rather than a disconnected badge. Nothing else is needed from the user: the request, the frozen copy with its hash, the
+four asks with a default each, and the report-each-change rule are all already filed and unchanged.
