@@ -2268,3 +2268,35 @@ system yet - the factor evidence visible on the dashboard today is all from earl
 **Status after this entry.** The question round is closed at 50 of 50; the draft page is live as revision 1 with
 revision 2 verified and waiting on the user's go-ahead; this work's factor tables do not exist yet and await the
 user's decision to open the measurement lane.
+**User instruction, 2026-09-30 evening: the three gold pages should be one page with tabs.** The user named the three
+live pages by address - the gold backtesting page, the direction scorecard and the draft factor page - and asked for
+them to be merged "into tabs so I can nivagate it easiy". That is a request for a live dashboard change and it is not
+this worker's to build: this worker writes only `docs/strategy/` in its own worktree, and the live pages, the top bar
+and the shared stylesheet are the coordinator's and its dashboard lane's. What was produced instead is a
+decision-complete request, `docs/strategy/GOLD_PAGE_TABS_MERGE_REQUEST.md`: one top-bar entry ("Gold") opening one
+tabbed page with a tab per named page - Direction, Backtest evidence, 28-factor outcomes, Factor tables (draft) - with
+hash-addressable, keyboard-operable tabs, the three old addresses kept alive, and no number re-derived. Two routes are
+costed: a tab shell that frames the three existing pages (recommended, because the three older pages are each generated
+by their own script, so copying their markup into one file would create a second home for the same numbers) and a
+single generated document of roughly 450 KB that needs a new composition step and repointed guards. The request also
+records what the user's own list exposed: the backtesting page has **no top-bar entry today**, so the user could reach
+it only by direct address.
+
+**One coupling found while writing the request, and it bears on the publish decision.** The guard test for the draft
+page's top-bar hop also pins the live answered count at "40 of 50 answered". Publishing revision 2 (50 of 50) without
+changing that assertion in the same commit leaves a failing test in the tree, and because this repository has no CI
+workflow - the tests are run by hand with `node scripts/test-local.js browser` - nothing else would catch it. The
+assertion should move to 50 of 50 in the same change that publishes revision 2.
+
+**Answer to the user's second question, "do I need to answer the final 10 questions?".** No. The round is closed at
+50 of 50; rows 41-50 are the batch-9/10 answers already reviewed and accepted. The reason the factor numbers are not
+visible is not unanswered questions but that the movement-screen measurement lane has never been opened: answers 47
+and 50 put the movement screen first, and opening that lane is a measurement over already-spent intervals that runs
+into the user's standing hold on the gold lane, which makes it the user's decision rather than the coordinator's.
+Until it is taken, no factor table for this work can exist, and the draft tab shows only the user's decisions and the
+base rates already carried by the existing gold record.
+
+**Status after this entry.** Unchanged on numbers: the live draft is revision 1, revision 2 is verified and waiting on
+the user's go-ahead, and this work's factor tables do not exist. New: the tab-merge request is filed as submission
+`20260930-strategy-gold-tabs-merge-request-029`, carrying the recommended route, the guard coupling above and the
+acceptance checks a building lane can run.
