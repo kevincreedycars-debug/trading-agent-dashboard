@@ -561,7 +561,11 @@ behind a top-bar link and refreshed as each batch of answers lands. The page is 
 (`docs/strategy/WORK_IN_PROGRESS_GOLD_FACTOR_TABLES.html`) and the publish request is
 `docs/strategy/DASHBOARD_LIVE_DRAFT_PAGE_REQUEST.md` (one nav entry, draft marking, as-of date, and the rule that it
 may never carry a forecast, a holdout or a trading result). It is independent of lanes 1 and 2, claims nothing they
-do not, and blocks nothing: lanes 1 and 2 keep the order they already have.
+do not, and blocks nothing: lanes 1 and 2 keep the order they already have. On 2026-09-30 the user added two standing
+instructions: hand over the copy that exists now rather than waiting for the question set to close (*"we should have
+enough to send to it to put on the live dashboard"*), and report every later change to the page to the coordinator as it
+happens rather than in a bundle. The copy handed over, its size and hash, and the reporting rule are in §7 of the
+publish request.
 
 **Limits, so the page can copy them.** Associations only, on intervals already spent. Every state shares
 anchors with the others, one instant can feed several variables, and the two halves of a band split are

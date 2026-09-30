@@ -2008,3 +2008,31 @@ version that appears at the dashboard address. The page is readable as it stands
 decisions, the measured gold facts, and a banner and limits stating what it is not.
 
 **Status.** 41-47 remain outstanding with the user; nothing else changed with this turn.
+
+## 2026-09-30 (same session) - hand the page over now, and report each later change as it happens
+
+**What the user said.** *"send updates to the orchestrator when we make further changes but for now we should have
+enough to send to it to put on the live dashboard"* - that is, stop waiting for the question set to close, give the
+coordinator the copy that exists now, and from here on report each change rather than letting the live copy drift away
+from this worker's file.
+
+**What changed in the documents.** The publish request gained a §7 with the two standing rules: the exact copy offered
+(21,541 bytes, 261 CRLF lines, sha256 `675fc9da...`, and the absolute path the lane can read it from), and the reporting
+rule - on each batch of answers, rewrite this worker's own file, update the request's count, as-of date and hash, and
+file a short note to the coordinator with the new hash and what changed. The same two sentences were added to the
+specification's lane clause (D17's bullet) and to the plan's closing paragraph, so all three documents that carry the
+live-page instruction carry the hand-over rule as well. The refresh cadence stays per batch, which the user has not
+contradicted.
+
+**Why the hand-over is safe while the work is unfinished.** The page is one self-contained document - no script, no
+fetch, no stylesheet, no image, no external reference at all - so a static host renders it as it stands. It carries no
+credential and no value outside the spent archive, and it states its own limits: no forecast, no holdout, no trading
+result, no signal. It can therefore go up now and be replaced later without any gate by the lanes that are still open.
+
+**What "updates to the orchestrator" means from here.** A page change is not a page change until three things have
+happened in the same turn: this worker's file is rewritten, the request's count, as-of date and hash are updated, and the
+coordinator gets a short note carrying the new hash and what moved. The live copy itself stays with the dashboard lane,
+so neither side writes the other's file.
+
+**Status.** 41-47 remain with the user. Submission `-025` is still pending review; this turn files `-026`, whose whole
+purpose is the hand-over, so the request does not have to be found inside a batch of answers.

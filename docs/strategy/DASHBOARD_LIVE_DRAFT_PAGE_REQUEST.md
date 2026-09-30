@@ -55,3 +55,37 @@ The dashboard lane owns the live copy and the nav entry. This worker keeps editi
 
 Publish the file behind the single nav entry and change nothing else: no site CSS edits, no shared script edits, no
 changes to `index.html` beyond the one link.
+
+## 7. Hand-over now, and how later changes are reported
+
+The user's instruction on 2026-09-30, after being told that publication is the coordinator's action rather than this
+worker's: *"send updates to the orchestrator when we make further changes but for now we should have enough to send to
+it to put on the live dashboard."* That is two standing rules for this lane.
+
+**Rule 1 - hand over the copy that exists now, without waiting for the work to finish.** The copy offered is the one in
+this checkout at the moment of the hand-over, identified so the lane cannot publish a different file by accident:
+
+| Item | Value |
+| --- | --- |
+| File | `docs/strategy/WORK_IN_PROGRESS_GOLD_FACTOR_TABLES.html` |
+| Size and shape | 21,541 bytes, 261 CRLF lines, no bare LF |
+| sha256 | `675fc9da41529817c112c0f287db8daa6c29fb2269231c9bde0958dc268ecd0b` |
+| Readable from | `D:/trading-agent-dashboard-codex/.local/worktrees/strategy/docs/strategy/WORK_IN_PROGRESS_GOLD_FACTOR_TABLES.html` |
+| Committed on | branch `workers/strategy-advisory-20260920` in this worker's worktree |
+
+Copy that file byte for byte. If the copied file hashes differently, the copy is wrong rather than the page being out of
+date, so re-copy it from the path above. Nothing else about the page is required: it is one document that renders
+as it stands.
+
+**Rule 2 - report every later change as it happens, not in a bundle.** Each time a batch of answers lands or a
+measurement lane is accepted, this worker does three things in the same turn: rewrites its own file, updates this request
+with the new answered count, as-of date and hash, and files a short note to the coordinator carrying the new hash and
+what changed on the page. No change is to reach the live copy silently, and no live copy is to be refreshed by this
+worker - both directions stay with one writer each.
+
+**Cadence.** Refresh on each batch of answers rather than waiting for the whole question set to close; the user asked to
+see the work while it is still being written, so a stale live copy defeats the request. The user has not contradicted
+this default.
+
+**Priority note for the lane.** The user has now asked for the page to be visible three times in two days, the last time
+in the form of the instruction quoted above. If the lane can publish only one item from this worker, publish this one.

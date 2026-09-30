@@ -75,7 +75,10 @@ Proposed bounded assignments (see "Handoff" for why it is two writers):
   live even thjough we are editing it"*): publish the prepared page, link it from the top bar, mark it a draft and
   refresh it as answers land. Independent of lanes 1 and 2, claiming nothing they do not; the page file and the
   request are `docs/strategy/WORK_IN_PROGRESS_GOLD_FACTOR_TABLES.html` and
-  `docs/strategy/DASHBOARD_LIVE_DRAFT_PAGE_REQUEST.md`, and the rule is D17.
+  `docs/strategy/DASHBOARD_LIVE_DRAFT_PAGE_REQUEST.md`, and the rule is D17. The user then instructed on 2026-09-30 that
+  the copy prepared now be handed over for publication **without waiting for the question set to close**, and that each
+  later change to the page be reported to the coordinator as it happens; the copy handed over (bytes, lines and hash),
+  and that reporting rule, are in §7 of the request.
 
 ## 1. User decisions already recorded (2026-09-28, extended 2026-09-29 in §1.2)
 
