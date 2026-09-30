@@ -308,7 +308,7 @@ correlated factors from being presented as independent confirmations (28 variabl
 by construction). Condition 1 is there because a state with no written direction can carry a raw rate but can
 never carry a claim.
 
-**Amended 2026-09-30 by the user's answers to questions 23 and 24.** Two declarative changes, neither fitted.
+**Amended 2026-09-30 by the user's answers to questions 23, 24 and 28-32.** Three declarative changes, none fitted, plus one clarification of the first.
 (1) *The twenty with no written sentence now carry an assigned direction and a reliability percentage*, by the
 user's own method (answer 23: *"you know what the factors are then we see what price did then we assign a
 correlation"* - an up-implying factor that sees price up 70% of the time is *70% reliable*), so the earlier
@@ -321,6 +321,16 @@ split now prints beside the same-cohort rate on the same row, it is charged to `
 gap is the trigger to declare a rule for that band rather than a reason to drop it. The band `inside_16_25` is why
 that matters: it holds the largest share of days, so a headline rate without its line would describe the minority
 of sessions.
+
+(3) *The F9 rebuild's trigger is chosen by printed sample size* (answer 32: *"Which ever gives us the most data we
+can then refer back to"*). The union (VIX above 25 **or** an archived war / geopolitical / conflict / sanction
+event), the VIX branch alone and the event-name branch alone are each measured on the same window with their own
+day count printed on the same row; the state `safe_haven_stress` uses the candidate with the most observations; and
+the candidates that lose stay on the page as counts, so the choice can be revisited from the same table rather than
+rebuilt. The *assumption the document does not contain* flag stays on the `interpreted` news-tone row meanwhile.
+The clarification of answer 23 changes no rule: the user is stating that the present goal is understanding how the
+factors historically moved price, so the reliability percentage stays an account of past reactions rather than a
+forecast, which is the label already attached to it.
 
 One limit is arithmetic, not methodological: about 470 daily anchors can *show* a 5pp gap
 but cannot *confirm* it (about 774 are needed for 80% power on that size), so a bar-clearing table row today is
@@ -427,7 +437,7 @@ two-light reading carries one plain reason line underneath it (question 11, *"an
 briefly underneath"*) | Do only the floor measurement and skip the free screen, or read direction on all sessions instead of the moved subset |
 | D2 | What to do with the VIX change stream | Both streams, as designed in §7: level bands scored, change legs published as raw context (B1) plus the declared 1/2/5 and 2/5/10 sweep with `looks_counted` (B2), no direction invented | Reject B2 (context only, the minimum version), or drop the change stream back to unscored |
 | D3 | Size of the deliverable | Full version: new page beside the accuracy panel, linked from the two Gold Backtest pages | Minimum version in §8: block C appended to the existing scorecard page, no new template, no nav edits |
-| D4 | F9 `risk_headline_context` | Rebuild it as a declared rule the way the live field is built (VIX>25 **or** war/geopolitical/conflict/sanction event names), because today's only bar-clearing row is an `interpreted` mapping with an unstable sign | Leave the `interpreted` row as the accepted artifact has it and publish it with its caveats |
+| D4 | F9 `risk_headline_context` **(answered by the user, 2026-09-30: question 32)** | Rebuild it as a declared rule the way the live field is built (VIX>25 **or** war/geopolitical/conflict/sanction event names), because today's only bar-clearing row is an `interpreted` mapping with an unstable sign. The trigger is then **chosen by printed sample size**: every candidate (the union, VIX alone, the event-name branch alone) is measured on the same window with its own day count on the same row, the headline state uses the candidate with the most observations, and the candidates that lose stay visible as counts so the question can be referred back to - the user's *"Which ever gives us the most data we can then refer back to"* | Leave the `interpreted` row as the accepted artifact has it and publish it with its caveats (superseded for the headline state; that row keeps its "assumption the document does not contain" flag) |
 | D5 | The rebuild's sample size | Decide it before rebuilding: state the size the effect needs (about 2,100 anchors per state for 3pp) and get it from hourly entries with a re-declared horizon, because 965 daily anchors cannot support direction claims below about 8pp | Keep daily anchors and accept that only large effects will ever be visible, or hold the direction layer until more daily history exists |
 
 Defaults are conservative: they invent no direction, remove no coverage and change no accepted artifact. If

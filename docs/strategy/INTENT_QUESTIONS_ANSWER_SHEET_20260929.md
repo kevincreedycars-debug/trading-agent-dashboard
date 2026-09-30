@@ -12,7 +12,12 @@ message is superseded.
 - Or list only the numbers you disagree with, for example `3 no, 12 often, 27 no`.
 - Questions are put to you at most seven at a time, in numbering order, skipping anything already asked.
 
-**Status:** **28 of 50 answered**, as of 2026-09-30. The answered set is 1-26, 27 and 33. Batch 6 (**22, 23, 24,
+**Status:** **33 of 50 answered**, as of 2026-09-30. The answered set is 1-33, with no gap.
+Batch 7 (**28, 29, 30, 31, 32**) went out with the batch-6 acknowledgement and came back the same day: **28, 29, 30
+and 31 okay**, and **32** answered as *"whichever gives us the most data we can then refer back to"*, so the F9
+trigger is chosen by printed sample size rather than by preference. **23** came back with a clarification: at this
+stage the work is *understanding how the factors historically influenced price*, not prediction (its row and the
+"Batch 7 answers" section below). Batch 6 (**22, 23, 24,
 25, 26**) came back the same day it went out: **22, 24, 25 and 26 okay**, and **23 answered no**, which withdraws
 the "agree the rule before reading the outcome" precondition for the twenty states that have no written sentence
 and puts the user's own method in its place - the factor's own meaning gives the implied direction, the archive is
@@ -39,7 +44,7 @@ and **23**), and they went out again that day in the wording recorded in the sec
 never-asked questions in numbering order beside them so the round moves: **22, 23, 24, 25, 26**. Five questions, one
 short reason each, every one defaulting to **yes**. The answered count was unchanged at **23 of 50** when that batch went out - a reply changes the order of the work
 and the wording of the tables, and silence changes nothing because the defaults hold. The reply arrived the same
-day, so **the batch is closed and the count is 28 of 50**; see the "Batch 6 answers" section below. Four of the
+day, so **the batch is closed**; see the "Batch 6 answers" section below. Four of the
 five replies confirm a default and **one reverses a rule**, so that section is the load-bearing part of this file.
 
 **Two of these answers changed the plan.** The user wants **both** stages and **all 28** variables, and they
@@ -113,23 +118,33 @@ correlation. e.g if F15 implies price moves up and price moves up 70% of the tim
 (2026-09-30). The precondition is withdrawn: what the factor is supplies the implied direction, the archive is then
 read, and the reliability percentage is the share of sessions price did what the factor implied. The *F15* in the
 quote is the user's own illustration and is recorded as written. The rules for storing and publishing those pairs
-are in the "Batch 6 answers" section. |
+are in the "Batch 6 answers" section. **Clarified the same day (2026-09-30), replying to the caution that a
+direction chosen after reading the past describes the past:** *"Yes Im aware but remeber this at present is about
+prediction its about understanding how the factors histrotically influence price based on past reactions, thats all
+we are trying to solve."* Recorded verbatim. Read as the user **acknowledging** the limit rather than contesting
+it - the percentage is an account of past reactions and is published as that - so the *description of the archive*
+label already attached to it stands and nothing about question 33 changes. The sentence as typed runs *"is about
+prediction its about understanding"* together, so a word is missing after *is*; the reading above supplies *not*,
+which is the only reading consistent with answer 33 (*"we are trying to fit anything we are just observing the
+data"*) and with the caution it answers. If the user meant the opposite - that the figure is a forecasting claim -
+the label comes off and the twenty move behind the declared-rule bar; that is asked back in batch 8 rather than
+assumed. |
 | 24 | Keep NEUTRAL states out of every hit rate | yes | batch 6 | **yes, with a double-check** - *"Okay, however double check that logic anything that could give an edge we need to be aware of"* (2026-09-30). The exclusion stands, and the check added one table requirement: a declared NEUTRAL state keeps its raw up/down split **and** now prints the same-cohort rate beside it, in the same table, charged to `looks_counted`, so an edge inside a "no view" band is visible instead of hidden. The check itself is written up in the "Batch 6 answers" section. |
 | 25 | Keep the DTWEXBGS-not-DXY caveat on every dollar row | yes | batch 6 | **yes** - *"Okay"* (2026-09-30). The caveat stays on every dollar row: the measured series is the Fed's broad index `DTWEXBGS`, not the DXY number on a chart. |
 | 26 | Keep the document's own boundaries verbatim (VIX 25.00/16.00, >0.30%, 5bps+) | yes | batch 6 | **yes** - *"Okay"* (2026-09-30). The document's own numbers stay verbatim: VIX 25.00 and 16.00 inside the middle band, `>0.30%` and `5bps+` read exactly as written. |
 | 27 | All 28 variables in scope, not only the declared 10 | yes | batch 1 | **yes** - "the variables are just being tracked then to see if there is an outcome that is predictable". Confirmed as recorded, with the one limit in the "No written rule" section below: the 20 states with no usable written statement can be published as raw context and, **since the 2026-09-30 answer
 to question 23**, also carry an assigned direction and a reliability percentage measured off the archive; what they
 still cannot do is clear the declared-rule bar, which needs a rule written before its outcome is read |
-| 28 | Pairs, weighting, composites and models stay out for now | yes | | |
+| 28 | Pairs, weighting, composites and models stay out for now | yes | batch 7 | **yes** - *"Y"* (2026-09-30). Each factor is read on its own first, so no effect gets buried inside a combined score, and the overlap matrix still keeps correlated factors from being presented as independent confirmations. |
 
 ## F. VIX (29-32)
 
 | # | Yes/no question | Default | Asked | Your answer |
 | --- | --- | --- | --- | --- |
-| 29 | Keep both VIX streams (level bands and change states) | yes | | |
-| 30 | Publish the VIX change legs as raw context with no direction | yes | | |
-| 31 | Keep the 1/2/5 and 2/5/10 threshold sweep, with `looks_counted` | yes | | |
-| 32 | Rebuild F9 `risk_headline_context` as a declared rule (VIX>25 or war/geopolitical/conflict/sanction names) | yes | | |
+| 29 | Keep both VIX streams (level bands and change states) | yes | batch 7 | **yes** - *"Y"* (2026-09-30). Both streams stay: the level bands are scored and the change states are published beside them, because the document asks for both and only ever wrote the level band down. |
+| 30 | Publish the VIX change legs as raw context with no direction | yes | batch 7 | **yes** - *"Y"* (2026-09-30). The change legs print as raw context with no invented direction: nothing in the document says whether a rising VIX means gold up or down, so a direction there would be this project's guess rather than the document's rule. |
+| 31 | Keep the 1/2/5 and 2/5/10 threshold sweep, with `looks_counted` | yes | batch 7 | **yes** - *"Y"* (2026-09-30). The sweep stays under the single `looks_counted`, so the best single cell can never be presented as the only one examined. |
+| 32 | Rebuild F9 `risk_headline_context` as a declared rule (VIX>25 or war/geopolitical/conflict/sanction names) | yes | batch 7 | **not a plain yes** - *"Which ever gives us the most data we can then refer back to"* (2026-09-30). The rebuild happens and the **trigger is chosen by printed sample size**: every candidate definition is measured on the same window with its own day count on the same row, the headline `safe_haven_stress` state uses the candidate with the most observations, and the candidates that lose stay on the page as counts so the question can be reopened from the same table. The union (VIX above 25 **or** an archived event named war / geopolitical / conflict / sanction) is the most inclusive candidate and therefore the expected headline, but it is **not assumed** - the printed counts decide. The `interpreted` news-tone row keeps its *assumption the document does not contain* flag meanwhile. |
 
 ## G. Sample and confirmation (33-38)
 
@@ -187,8 +202,9 @@ the single `looks_counted`.
 | 2026-09-29 | 3 | 8, 9, 13, 33 (restatements) | 4 replies, and all four are now answered. **9: "no"** - a relevant state is never dropped, its market impact must stay visible. **33: "no, not yet"** - nothing is being fitted at this stage, the work is observing the data and confirming what price did and did not do. **8: yes**, and it moved the primary measure to the **0.50 L2L and L2L movement that happened**, with the directional read taken afterwards on that movement. **13: yes** - "we want to find anything that giuves us an adge". The reply also asked whether this is simply tracking correlation, which it is; the answer and its three guards are recorded in the section below |
 | 2026-09-29 | 4 | 11, 12, 15, 16, 17 | 5 replies, 4 of them answers: **12 "Yes keep both even if rare its still something to factor into the analysis agent"** (no rarity filter, nothing dropped for firing rarely), **15 rewritten by the user** into the horizon ladder "24h, 48h, 3d, 5d ... is it a 24h impact or does it set the tone for a few days so we can safely treade in that direction", **16 "Yes"** (the sweep stays one line with one `looks_counted`, now over four windows), **17 "Yes fine"** (overlap disclosed, not avoided). **11 came back as "Simplify this question I dont know what you mean"** and is re-asked in plainer words in batch 5. The extra request in the same reply - "just fill the gaps so we have all data clear" - is logged as the completeness rule below |
 | 2026-09-29 | 5 | 11, 18, 19, 20, 21, 22, 23 | 5 answers and 2 requests for plain English. **11: the light, with a reason line under it** (*"Okay lets go with the light but an explanation of why its yes/no briefly underneath"*) - the two lights stay, and one short why sits underneath each one. **18: "yes makes sense"**, **19: "okay"**, **20: "yes every year"**, **21: "okay"** - the four direction-stage defaults are confirmed as the user's own answers, so stage 2 is asked only on states that moved, answers the side only, must hold its sign in every year, and keeps both accepted bars. **22 and 23: not understood** - *"what do you mean written rule? Explain this part simply"* and *"Again what do you mean unwritten factors"* - so the words *written rule* and *unwritten* are retired and the pair goes back in batch 6 in the plainer wording recorded in the "in plain words" section below. The same message ends the day: *"for now hold here for tonight, we will continue here again tomorrow"*, so the batch-6 send waits |
-| 2026-09-30 | 6 answers | 22, 23, 24, 25, 26 | **Closed the same day: 22 yes** (the ten with a written sentence are checked first), **23 NO** - *"you know what the factors are then we see what price did then we assign a correlation"*, so the twenty get an implied direction from what the factor is and then a reliability percentage read off the archive, and the "agree the rule first" precondition is withdrawn - **24 yes with a double-check** (*"anything that could give an edge we need to be aware of"*), which added the requirement that a "no view" band prints its raw split beside the same-cohort rate in the same table - **25 yes**, **26 yes**. Answered set is now **28 of 50** (1-26, 27, 33) |
-| 2026-09-30 | 7 | 28, 29, 30, 31, 32 | **Sent with the batch-6 acknowledgement**, being the rest of group E and all of group F in numbering order, one short reason each, all defaulting to yes | **Sent, and answered the same day - see the batch-6 answers row below.** The user opened the session with *"find and reactivate those questions here for me"*, so the held-over pair **22** and **23** went out again in the plain wording recorded in the "in plain words" section below (no *written rule*, no *unwritten*), and **24, 25, 26** went with them as the next three never-asked questions in numbering order. Five questions, one short reason each, all defaulting to yes. Nothing was answered in that message itself |
+| 2026-09-30 | 6 answers | 22, 23, 24, 25, 26 | **Closed the same day: 22 yes** (the ten with a written sentence are checked first), **23 NO** - *"you know what the factors are then we see what price did then we assign a correlation"*, so the twenty get an implied direction from what the factor is and then a reliability percentage read off the archive, and the "agree the rule first" precondition is withdrawn - **24 yes with a double-check** (*"anything that could give an edge we need to be aware of"*), which added the requirement that a "no view" band prints its raw split beside the same-cohort rate in the same table - **25 yes**, **26 yes**. Answered set was then **28 of 50** (1-26, 27, 33), and is **33 of 50** after batch 7 |
+| 2026-09-30 | 7 | 28, 29, 30, 31, 32 | **Sent with the batch-6 acknowledgement**, being the rest of group E and all of group F in numbering order, one short reason each, all defaulting to yes | **Closed the same day.** Four replies are *"Y"*: **28** pairs, weighting, composites and models stay out for now, **29** both VIX streams stay, **30** the change legs stay raw context with no direction, **31** the 1/2/5 and 2/5/10 sweep stays under one `looks_counted`. **32** is not a plain yes - *"Which ever gives us the most data we can then refer back to"* - so the F9 trigger is chosen by printed sample size rather than by preference; the four rules attached to it are in the "Batch 7 answers" section. The same reply carried the **23** clarification, recorded in that row. Answered set is now **33 of 50** (1-33) |
+| 2026-09-30 | 8 | 34, 35, 36, 37, 38, 39, 40 | **Sent with the batch-7 acknowledgement**: the rest of group G (34-38, the rebuild's sample size and the sealed window) and the first two of the tradability group H (39-40), one short reason each. **39** is not defaulted - it asks whether the user intends to trade the flags at all, and it governs 40 - so both are marked as such in the ask | **Not yet answered.** Nothing in the answered set depends on it: 39-42 only bind if the user says the flags are to be traded |
 
 Batches continue in numbering order, at most seven at a time, skipping anything already asked. Batch 4 closed four
 of the five questions it asked: **12** (rare and common states are equally kept), **15** (the horizon set is
@@ -399,8 +415,58 @@ the documents rather than by a new measurement (this checkout owns no run).
 **What did not change.** No measured gold figure, no accepted artifact, no bar, no boundary, no lane envelope and
 no sealed-window value. Four of the five answers confirm a default that was already implemented, and the twenty's
 reliability work is a stage-2 table addition rather than a stage-1 change, so *no stage-1 row carries a direction
-field* still holds. The answered set is now **28 of 50** (1-26, 27, 33), and batch 7 - questions 28 to 32, the rest
-of group E and all of group F - went out with this acknowledgement, one short reason each, all defaulting to yes.
+field* still holds. The answered set stood at **28 of 50** (1-26, 27, 33) when batch 7 went out, and batch 7 -
+of group E and all of group F - went out with this acknowledgement, one short reason each, all defaulting to yes,
+and came back the same day it went out, so the answered set is now **33 of 50** (1-33, contiguous).
+
+## Batch 7 answers (2026-09-30) - four yeses, one "use whichever gives the most data", and a clarification of 23
+
+The five questions went out with the batch-6 acknowledgement and came back the same day. The replies, as written:
+
+- **28** - *"Y"*.
+- **29** - *"Y"*.
+- **30** - *"Y"*.
+- **31** - *"Y"*.
+- **32** - *"Which ever gives us the most data we can then refer back to"*.
+
+**What 28 to 31 change: nothing.** Pairs, weighting, composites and models stay out until the single factors are
+fixed (28); both VIX streams stay, with the level bands scored and the change states published beside them (29);
+the change legs keep their no-invented-direction rule (30, because the document never says whether a rising VIX
+means gold up or down); and the 1/2/5 and 2/5/10 sweep stays under the single `looks_counted` (31, so the best
+single cell is never the only cell shown).
+
+**What 32 changes: the F9 trigger is chosen by data, not by preference.** The instruction is *whichever gives us
+the most data*, so the rule is written as a comparison rather than a pick:
+
+1. Every candidate definition of `safe_haven_stress` is measured on the **same window**: the union (VIX above 25
+   **or** an archived event named war / geopolitical / conflict / sanction), VIX above 25 alone, and the
+   event-name branch alone.
+2. Each candidate prints **its own day count** (`n`, and its share of the window) on the same row, so "most data"
+   is shown rather than asserted.
+3. The **headline state is the candidate with the most observations**. That is expected to be the union, because a
+   union cannot have fewer days than either branch, but it is not assumed: if the event archive turns out to start
+   late enough that the union and the VIX branch are close, the printed counts settle it.
+4. The candidates that lose **stay on the page as counts**, so the question can be reopened later from the same
+   table without a rebuild, which is what *"we can then refer back to"* asks for.
+
+The `interpreted` news-tone row is untouched by this: it keeps its *assumption the document does not contain* flag,
+and the old mapping does not become F9's headline state.
+
+**The clarification attached to answer 23, in the same reply.** *"Yes Im aware but remeber this at present is about
+prediction its about understanding how the factors histrotically influence price based on past reactions, thats all
+we are trying to solve."* It answers the caution that a direction chosen after reading the past describes the past
+rather than predicting it. Read as written, the user is **not contesting** the caution but stating the present goal:
+understanding how each factor moved price historically, from past reactions. That is what the reliability
+percentage is - an account of past reactions - so the *description of the archive* label stays and question 33's
+deferred out-of-sample step still waits on a declared rule. One thing is flagged rather than silently fixed: the
+sentence as typed omits a word (*"is about prediction its about understanding"*), and the reading above supplies
+*not*; the other reading - that the percentage is meant as a forecasting claim - would remove the label and put the
+twenty behind the declared-rule bar, so it is asked back in batch 8 instead of being assumed.
+
+**What did not change.** No measured gold figure, no accepted artifact, no bar, no boundary, no lane envelope and
+no sealed-window value. Four of the five answers confirm a default; the fifth (32) changes how a state that **does
+not exist yet** is defined, so nothing already measured or published moves. The answered set is now **33 of 50**
+(1-33, contiguous), and batch 8 - questions 34 to 40 - went out with this acknowledgement.
 
 ## Gold L2L facts (read 2026-09-29, read-only, every interval already spent)
 

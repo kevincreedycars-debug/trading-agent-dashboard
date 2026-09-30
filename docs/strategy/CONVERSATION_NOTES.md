@@ -1862,3 +1862,61 @@ rest of group E and all of group F - went out with the acknowledgement, one shor
 yes, so nothing is held. Nothing from the user's side is outstanding except that batch, and the 17 questions that
 have never been asked follow it in numbering order.
 
+## 2026-09-30 - Batch 7 answers: 28-31 confirmed, 32 chooses by sample size, and 23 is clarified rather than reversed
+
+Batch 7 - questions **28, 29, 30, 31, 32** - went out with the batch-6 acknowledgement and came back the same day.
+The replies, verbatim: **28** *"Y"*; **29** *"Y"*; **30** *"Y"*; **31** *"Y"*; **32** *"Which ever gives us the most
+data we can then refer back to"*. The same reply closed the loop on answer 23 with one sentence:
+
+> "Yes Im aware but remeber this at present is about prediction its about understanding how the factors
+> histrotically influence price based on past reactions, thats all we are trying to solve."
+
+**What 28-31 change: nothing.** Pairs, weighting, composites and models stay out until the single factors are
+fixed (28); both VIX streams stay, with the level bands scored and the change states published beside them (29);
+the change legs keep their no-invented-direction rule (30); and the 1/2/5 and 2/5/10 sweep stays under the single
+`looks_counted` (31). All four were already implemented as defaults, so the effect is that nothing waits on them.
+
+**What 32 changes: a selection rule instead of a preference.** *"Whichever gives us the most data we can then refer
+back to"* is not a pick between the union trigger and its two branches, so the plan and the specification now carry
+a comparison: measure every candidate definition on the same window, print each candidate's own day count on the
+same row, give the headline `safe_haven_stress` state to the candidate with the most observations, and leave the
+losing candidates on the page as counts so the choice can be referred back to without a rebuild. The union (VIX
+above 25 **or** an archived war / geopolitical / conflict / sanction event) is the widest trigger and therefore the
+expected headline, but that is recorded as an expectation and not as the answer: if the event archive starts late
+enough that the union and the VIX branch are close, the printed counts decide. This moves nothing that is already
+measured or published, because `safe_haven_stress` does not exist yet; the `interpreted` news-tone row keeps its
+*assumption the document does not contain* flag and does not become F9's headline state.
+
+**What the 23 sentence does: not a reversal, a statement of the goal.** The caution it answers was that a direction
+chosen after reading the past describes the past and cannot predict it. The user is aware of that and says the
+present work is *understanding how each factor historically influenced price* - which is exactly what the
+reliability percentage is. So the *description of the archive* label stays, the dated-direction rule stays, and
+question 33's deferred out-of-sample step still waits on a declared rule. One word is flagged rather than silently
+repaired: the sentence as typed runs *"is about prediction its about understanding"* together, and the reading
+recorded supplies *not*; the other reading - that the percentage is meant as a forecasting claim - would remove the
+description label and put the twenty behind the declared-rule bar, so it is asked back in batch 8. That single
+reading is the only non-quote in this batch.
+
+**One side question, answered.** The user asked for the live dashboard link, so it is recorded here: it is
+`https://kevincreedycars-debug.github.io/trading-agent-dashboard/` (GitHub Pages, per the repository README), and
+the closest surface to this work is the **Factor Edge Lab** tab, which renders a checked-in research-only factor
+artifact from saved results; the gold evidence pages and `backtest-flow.html` sit beside it. **Nothing from this
+advisory work is on the dashboard**: the question round and the factor rules are documents until a lane builds the
+tables, and the dashboard's own *Current focus* line is about signal trust rather than gold factors. No page, link
+or file was changed to answer it.
+
+**Where each answer is written.** Answer sheet: rows 23 and 28-32, the status line (**33 of 50**), the new "Batch 7
+answers" section, and the answer log (a batch-7 answers row plus a batch-8 send row; the stray batch-6 narrative
+that had been pasted into the batch-7 row's answer cell is gone). Plan: the section-6 amendment note now reads
+*"questions 23, 24 and 28-32"* and carries a third declarative change for the F9 trigger, and decision D4 is marked
+answered by question 32 with the sample-size comparison restated. Specification: decision D6 carries the same
+amendment, so the page lane's rule and the plan agree.
+
+**Status after this entry.** **33 of 50 answered** (1-33, contiguous). Batch 8 - questions **34, 35, 36, 37, 38,
+39, 40** - went out with the acknowledgement: the rest of group G (the rebuild's sample size and the sealed window)
+plus the first two of the tradability group H. **39** asks whether the flags are to be traded at all and governs
+**40**, so neither is defaulted. Nothing is blocked by the open items: the two standing coordinator questions (the
+two-unit print, and the rung keys `two_sessions` / `three_sessions`) are unchanged, since both were already
+implemented as defaults. No measurement, credential or sealed-window value was touched, and no lane envelope was
+opened.
+
