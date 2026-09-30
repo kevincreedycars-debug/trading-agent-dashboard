@@ -1,5 +1,60 @@
 # Central decisions
 
+## 2026-09-30 (cont.): strategy 029 accepted as a request - the gold tab merge is specified, and the three decisions stay the user's
+
+The background coordinator reviewed `strategy` submission `20260930-strategy-gold-tabs-merge-request-029`
+(mailbox SHA-256 `e3d0f7301759de0fb34c1df642fae0baa4d1101c55446fbb7cae2b4887346cfe`, reproduced from the immutable
+inbox file at 7,985 bytes; reply `ef4bf66abcb0ede01deea6d2be46f90dadb9fc0e81dad33fa1a7cee5c4f8c1b7` at 8,223 bytes;
+durable review `reviews/20260930-strategy-gold-tabs-merge-request-029.md`) and decided **accepted** as an advisory
+request and recommendation only. The user's own instruction - that the gold pages be merged into one page with
+navigation tabs - is turned into one specification with acceptance criteria, two costed routes and an explicit
+writer boundary, and the worker asks for three decisions instead of taking any. Acceptance is not a publish, merge,
+deployment, lane opening, route selection or accuracy claim.
+
+Verified from the checkout rather than trusted: commit `e6db6f7` in `.local/worktrees/strategy` is `+155/-0` across
+exactly `docs/strategy/GOLD_PAGE_TABS_MERGE_REQUEST.md` (10,033 bytes, 123 CRLF lines, 0 bare LF, no BOM, 8 numbered
+sections) and `docs/strategy/CONVERSATION_NOTES.md` (192,814 bytes), its only parent is the reported base
+`c3b5e209`, the worktree is clean, and no code, test, generated page, guard, generator, register entry, assignment or
+credential file is in the changed set. Every figure in the request's own table of live pages reproduces, including
+its line-ending shape: `gold-direction-scorecard.html` 143,517 bytes / 415 CRLF / `0caf0559...`;
+`gold-backtesting.html` 292,270 / LF / `60dca907...`; `gold-backtest-outcomes.html` 19,420 / 234 CRLF / `a72a25eb...`;
+`gold-factor-wip.html` 21,541 / 260 CRLF / `675fc9da...`. Every generator, template and data artifact the table names
+exists. The three hop guards are quoted exactly (one `a.topbar-link` each, then 25 scored with 25 rows, 4,956
+evaluated, and a `/draft/i`-labelled link with `/40 of 50 answered/` and `/As of 30 September 2026/`), and the three
+page-level guards are present unchanged. The claim that `gold-backtesting.html` has no bar entry holds, and the page
+is reachable from `backtest-flow.html` line 287. The answer sheet is closed at 50 of 50 with rows 47 and 50 both
+`Yes`, row 50 reading that the movement screen is built before anything else.
+
+**The coupling the worker found is verified, and it is the technical value of the submission.** The live draft is
+revision 1 - `origin/main:gold-factor-wip.html` is git object `1094c0bf`, 21,281 bytes, sha256
+`5dbe13645fac400fab052edee69528dd06195fe0a17d2a93d2fae351154e95c7` - and the checkout copy it normalises from reads
+`40 of 50 answered` with `As of 30 September 2026`, exactly what
+`gold_factor_wip_dashboard_link.browser.test.js` pins. Revision 2, `docs/strategy/WORK_IN_PROGRESS_GOLD_FACTOR_TABLES.html`,
+re-verified at 24,687 bytes, 289 CRLF, sha256 `aa9e104c81b6e479ca59b05b9b31840877b4626624e54c5a0170dc202a98dd1e`,
+reads `50 of 50 answered`. Publishing revision 2 without moving that assertion in the same change therefore leaves a
+failing guard in the tree, and this repository has no CI workflow at all (there is no `.github` directory). One
+refinement in the worker's favour: `scripts/test-local.js` includes `*.browser.*` files in mode `all`, so the default
+`npm test` run carries that guard, not only `npm run test:browser`.
+
+**Three notes, each a note and not a defect.** (1) The checkout the guards read carries the three gold-ish bar links
+the worker names, but the published bar does not: `origin/main:index.html` has only `Gold Direction` and
+`Gold Factor (draft)` plus `Backtest Flow`, so on the published site the outcomes page has no bar entry either and
+its guard passes only against the checkout copy - the merge lane must decide which `index.html` it edits, and a
+locally green guard is not evidence about the published page. (2) The fourth tab adds `gold-backtest-outcomes.html`,
+which the user did not name; it is disclosed, and section 1 hands the lane the wording and order, but it is the one
+tab that does not come from the user's own list and should be confirmed. (3) Route A's frames live in the new shell,
+so the draft page's own "loads no script, stylesheet, image or frame" guard is untouched.
+
+No publish was taken and none could be: this run carries no production authority, so the live dashboard keeps
+revision 1 and no release worktree was cut. The rule for a future publish is unchanged from 028: revision 2 is the
+24,687-byte CRLF file, the commit stores its LF form at 24,398 bytes sha256
+`b0aa8afea8145a24e64d4464ec952d91ed1a8ab11c935a8ee5f254ff40dc37e6`, and the publish must move the pinned
+`40 of 50 answered` assertion to `50 of 50` in the same change. No new assignment was published and no worker status
+changed: `projects.json` keeps `strategy` at `advisory_active` under `strategy-advisory-001`. **The precise
+unresolved decisions are the user's:** (a) Route A now or Route B; (b) the go-ahead to publish revision 2 with the
+pinned assertion moved in the same change; (c) whether to open the movement-screen measurement lane at all, and on
+which worker, while the Gold hold stands - the question round is closed at 50 of 50, so no factor number is missing
+for want of an answer, and that lane is a measurement over already-spent intervals.
 ## 2026-09-30 (cont.): the Live Trading section is published live on the user's word - the port keeps the published line's own neighbours, and the lane's harness report is accepted as a record
 
 Two decisions were taken this cycle, both on the user's own word and neither by a lane's own action.

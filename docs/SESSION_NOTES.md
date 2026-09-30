@@ -1,5 +1,30 @@
 # Session notes
 
+2026-09-30 (cont.), strategy 029 review cycle: the background coordinator took the one review it owned, `strategy`
+submission `20260930-strategy-gold-tabs-merge-request-029`, and decided **accepted, as an advisory request and
+recommendation only** - not a publish, merge, deployment or lane opening, so the live dashboard is unchanged and no
+release worktree was cut (mailbox `e3d0f7301759de0fb34c1df642fae0baa4d1101c55446fbb7cae2b4887346cfe` reproduced from
+the immutable inbox file at 7,985 bytes, reply `ef4bf66a...` at 8,223 bytes, durable review
+`docs/orchestration/reviews/20260930-strategy-gold-tabs-merge-request-029.md`). The controller lock owned this run -
+`run.lock` and the controller status both name this submission - so no interactive pause/stop was run, and the
+mailbox CLI, the worker's own checks and `scripts/monitor-state.js activity` were all run directly because this
+session's command policy allowed `node`. Verified from the checkout, not trusted: commit `e6db6f7` is `+155/-0`
+across exactly the two named `docs/strategy/` files, its only parent is the reported base `c3b5e209`, the worktree is
+clean, and no code, test, page, guard, generator, register entry or credential file is in the changed set. All four
+page figures reproduce with their line-ending shape, every named generator, template and data artifact exists, the
+three hop guards are quoted exactly, the answer sheet is closed at 50 of 50, and `gold-backtesting.html` has no bar
+entry (it is reachable from `backtest-flow.html` line 287). The worker's coupling finding reproduces and is the point
+worth carrying forward: the live draft is revision 1 (`1094c0bf`, 21,281 bytes, sha256 `5dbe1364...`) reading
+`40 of 50 answered` while revision 2 (`aa9e104c...`, 24,687 bytes) reads `50 of 50`, so publishing revision 2
+without moving the pinned assertion in `gold_factor_wip_dashboard_link.browser.test.js` in the same change leaves a
+failing guard, and there is no CI workflow to catch it - with the refinement that `scripts/test-local.js` mode `all`
+includes the `*.browser.*` files, so the default `npm test` carries it too. Three notes, none a defect: the published
+bar has no `Gold Backtest` entry so the outcomes guard passes only against the checkout `index.html`; the fourth tab
+adds `gold-backtest-outcomes.html`, which the user did not name; and Route A's frames leave the draft page's own
+no-frame guard untouched. Not done: no publish, no push, no release worktree, no new assignment, no lane registered
+and no worker status change - `strategy` stays `advisory_active` under `strategy-advisory-001`. Unresolved and the
+user's: Route A now or Route B; the go-ahead to publish revision 2 together with the assertion move; and whether to
+open the movement-screen measurement lane at all, and on which worker, while the Gold hold stands.
 2026-09-30 (cont.), live-trading publish and harness review cycle: the user's word on the one thing the previous cycle
 recorded as missing arrived - "yes do it" - so the coordinator published the Live Trading section the lane handed over
 in `20260930-live-trading-publish-003`, and then took the review that was queued second, the lane's harness report
