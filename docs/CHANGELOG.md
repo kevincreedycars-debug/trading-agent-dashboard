@@ -1,3 +1,40 @@
+# 2026-09-30 - no fresh Layer 1 or Layer 2 run: the orchestrator has no clock, and the button was blocked in one browser profile
+
+The user reported that the live dashboard had stopped producing Layer 1 and Layer 2 calls and that `Run Refresh`
+could not be clicked. Both reports are correct, and they have two different causes.
+
+Cause one, verified: nothing starts the pipeline on a schedule. The live `Master Orchestrator`
+(`X75RKU34ikiM5RMU`) is active and exposes only `Manual Start - Run All Agents` and `Dashboard Trigger - Run All
+Agents` (`POST master-orchestrator-dashboard-refresh`) - no schedule trigger exists on any active workflow in the
+workspace, and the published `data/layer1.json` states the same (`refresh_schedule` `07:00`,
+`refresh_schedule_status` `PROVISIONAL`, `validity_schedule_note` "No authoritative orchestrator cron exists in
+the repository"). The n8n execution history shows one webhook-triggered orchestrator run per day on 25-29
+September and none on 30 September, and the 29 September run published `last_updated_et`
+`2026-09-29T08:06:43.090Z` with USD `expires_at` `2026-09-30T08:04:36.805Z` - so by the morning of 30 September
+the dashboard was serving expired calls with no replacement.
+
+Cause two, verified: the published dashboard itself is healthy, so the unclickable button is browser-local.
+Opening the live site in a clean browser profile leaves `Run Refresh` enabled ("Trigger the n8n Master
+Orchestrator"), with no page errors and an empty refresh lock; the only console noise is an unrelated 404 for
+`data/half-l2l-reach-research.json`. The button is disabled while a non-terminal request sits in the
+`dashboard-workflow-refresh-state` localStorage key ("A refresh request is already being tracked in this browser
+profile") or while `data/workflow-control.json` has no webhook URL - and that control file is correctly
+configured on the served branch.
+
+Fix applied: the refresh was triggered through the live webhook (the same POST the button makes) at
+2026-09-30T10:08:40Z. Orchestrator execution `4352` succeeded (10:08:41Z -> 10:13:18Z) with every collector
+succeeding this time, and the pipeline published `data/layer1.json` `last_updated_et`
+`2026-09-30T10:13:13.937Z` with all 8 agents and `data/layer2.json` at `2026-09-30T10:13:10.354Z` with one live
+opportunity (WTI/USD SELL 77, rank 1). The published `data/workflow-status.json` now reads `success`, and the
+browser probe of the live site shows "Last run completed 30 Sept 2026, 11:13:16".
+
+Recorded for the next operator: `docs/N8N_INTEGRATION.md` gains a `Live Refresh Triggering` section with the
+trigger inventory, the read-only inspection commands (local credential runner), the direct webhook call, the ~5
+minute refresh-plus-publication timing, and the two reasons the `Run Refresh` button can be disabled. No workflow
+was edited, deactivated or activated; no data file was rewritten by hand; the only state change was the single
+webhook trigger the user asked for. Adding a real 07:00 ET schedule trigger to the orchestrator - the durable fix -
+is a live workflow change and is left to the user's decision.
+
 # 2026-09-29 (cont.) - a checkout copy of the dashboard data is a snapshot, not the live feed
 
 The live-trading coworker read `data/layer1.json` and `data/layer2.json` inside its own worktree and reported the

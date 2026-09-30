@@ -1,5 +1,27 @@
 # Session notes
 
+2026-09-30 morning, the live dashboard stopped producing Layer 1 and Layer 2 calls and `Run Refresh` would not
+click. Two causes, both verified. Nothing runs the pipeline on a clock: the live `Master Orchestrator`
+(`X75RKU34ikiM5RMU`) is active with only a manual start and the dashboard webhook
+(`POST master-orchestrator-dashboard-refresh`), no active workflow anywhere in the workspace has a schedule
+trigger, and the published `layer1.json` says so itself (`refresh_schedule` `07:00`, `refresh_schedule_status`
+`PROVISIONAL`, `validity_schedule_note` "No authoritative orchestrator cron exists in the repository"). n8n
+recorded one webhook-triggered orchestrator run per day on 25-29 September and none on the 30th, and the 29
+September USD call carried `expires_at` `2026-09-30T08:04:36.805Z`, so the site had been serving expired calls
+since 08:04Z. Separately, the published page is healthy: a clean-profile browser probe of the live site finds
+`Run Refresh` enabled, an empty refresh lock and no page errors (only an unrelated 404 for
+`data/half-l2l-reach-research.json`), so the button that would not click is browser-local - either the
+`dashboard-workflow-refresh-state` localStorage lock left by an earlier request or a missing webhook URL in
+`data/workflow-control.json`, which is correctly configured on the served branch. Fixed by POSTing the webhook, the
+same call the button makes, at 10:08:40Z: orchestrator `4352` succeeded (10:08:41Z-10:13:18Z) with every collector
+succeeding, and the pipeline published `layer1.json` `last_updated_et` `2026-09-30T10:13:13.937Z` with all 8 agents
+and `layer2.json` at `2026-09-30T10:13:10.354Z` with one live opportunity (WTI/USD SELL 77, rank 1), and
+`workflow-status.json` now reads `success`. No workflow was edited, activated or deactivated, and no data file was
+hand-written; the only state change was that single refresh trigger. The durable fix - a real 07:00 ET schedule
+trigger on the orchestrator - is a live workflow change and stays the user's decision. Commands and the trigger
+inventory are recorded in `docs/N8N_INTEGRATION.md` under "Live Refresh Triggering".
+
+
 2026-09-29 late, the dashboard data in a checkout was explained and documented. A coworker read
 `data/layer1.json` and `data/layer2.json` in its own worktree and reported the feed as "stale and empty"; the
 user checked the live site and was right that the dashboard is current (8 Layer 1 agents, one live WTI/USD SELL
