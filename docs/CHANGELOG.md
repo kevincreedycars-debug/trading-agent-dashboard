@@ -9,8 +9,14 @@ and fixed: the `backtester-harness` worktree had been cut from `ab21177`, which 
 `c673ea7` and that register row's `baseline` moved from `ab21177` to `c673ea7`; the checkout is clean and now carries its
 own assignment and workspace. Third, the honest state of the published panel was recorded rather than glossed: the snapshot
 generated at `2026-09-30T20:44:34Z` ages to `STALE` at `20:59:34Z` by its own 900-second rule, so the panel is correctly
-stale again and a fresh one needs the user's word and a coordinator re-publish, never a lane's own push. No production,
-warehouse, credential, Layer 1, Layer 2, workflow or n8n action, and no holdout, outcome or prospective read.
+stale again and a fresh one needs the user's word and a coordinator re-publish, never a lane's own push. One thing was
+found on the way out rather than planned: the new harness window's agent had already picked its lane up and filed its own
+evening save as `31a6281` (`docs/backtester-harness/CONVERSATION_NOTES.md`, 83 lines, 5,158 bytes, worktree clean), with
+the bridge record for that worker reading state `watching` at `2026-09-30T21:02:11Z`, so the register row moved from
+`instructions_published_awaiting_worker` to `awaiting_status_submission` and that lane owes one `status_report`; its notes
+carry two open questions, one of which is the user's (does stage A begin now) and one of which the bridge record has
+answered. No production, warehouse, credential, Layer 1, Layer 2, workflow or n8n action, and no holdout, outcome or
+prospective read.
 
 
 # 2026-09-30 (cont. 2) - funded trading is the user's chosen authority level, the published panel was refreshed, and a harness architect window is open

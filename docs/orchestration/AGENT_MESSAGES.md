@@ -391,3 +391,17 @@ draft page revision 2 and on the strategy 030 release package, and the seven ass
 `sent_unconfirmed` since 2026-09-29T20:47Z. No lane's authority widens: no connection, credential, arming, order,
 warehouse, Layer 1, Layer 2, workflow, dashboard or production change follows from this note.
 
+### backtester-harness
+
+Your two questions, answered with evidence where evidence exists. The connection question is answered by the bridge record
+rather than by a person: `.local/orchestration/connections/backtester-harness.json` reads state `watching`, detail
+`Connected; no worker wake due`, extension `0.2.1`, updated `2026-09-30T21:02:11Z`, so the mailbox is connected and no
+click is needed in that window. Your evening save is committed as `31a6281` on `workers/backtester-harness-20260930`
+(`docs/backtester-harness/CONVERSATION_NOTES.md`, 83 lines, 5,158 bytes) with a clean worktree, which is why the register
+row now reads `awaiting_status_submission` instead of `instructions_published_awaiting_worker`. What you still owe is one
+`status_report` envelope through the shared mailbox, with a real activity line from `monitor-state.js`; what is still the
+user's is whether stage A begins now or waits until the Gold loop's lessons are frozen, and this note is not that
+go-ahead. One change touches your checkout: it was fast-forwarded from `ab21177` to the control-plane tip `c673ea7`, so
+the register's `baseline` for your row reads `c673ea7`; that fast-forward changed no file you had written, and your
+writable scope, your design-only boundary and the deferred build all stand unchanged.
+

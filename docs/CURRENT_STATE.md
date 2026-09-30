@@ -8,8 +8,10 @@ read-only, zero order controls), and the `backtester-harness` design lane regist
 the way out: the lane's clean worktree was fast-forwarded from the starting commit `ab21177` to the control-plane tip
 `c673ea7`, because that cut predated its own assignment and `tools/backtester-harness-node/`, and its register row's
 `baseline` was moved to `c673ea7` to match. Measured at the stop: mailbox 0 pending and 0 errors across 77 submissions, the
-coordination suite 4 of 4, the register at 17 worker rows, the "Backtester Harness Architect" window open and awaiting the
-user's paste and mailbox click, the seven asset lanes still `sent_unconfirmed` since 2026-09-29T20:47Z, and the published
+coordination suite 4 of 4, the register at 17 worker rows, the "Backtester Harness Architect" window open with its agent already
+working - its own evening save committed as `31a6281` (`docs/backtester-harness/CONVERSATION_NOTES.md`, 83 lines, worktree
+clean), the mailbox bridge for that worker reading state `watching` at `2026-09-30T21:02:11Z`, the register row moved to
+`awaiting_status_submission` with one `status_report` still owed - the seven asset lanes still `sent_unconfirmed` since 2026-09-29T20:47Z, and the published
 panel correctly aged to `STALE` at 20:59:34Z because a snapshot's freshness lasts 900 seconds by design. Nothing was
 armed, connected, credentialed or ordered, nothing was published beyond the two authorised releases (`bc538d7`, `599c686`),
 and no outcome, holdout or prospective observation was read.

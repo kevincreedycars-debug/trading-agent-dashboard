@@ -10,9 +10,13 @@ close and fixed rather than left for the next session: the new lane's checkout h
 its own assignment file and `tools/backtester-harness-node/`, so `workers/backtester-harness-20260930` was fast-forwarded
 to the control-plane tip `c673ea7` and the register row's `baseline` now reads `c673ea7`; the worktree is clean and carries
 its own assignment and workspace. Measured at the stop, not assumed: the mailbox holds 0 pending submissions and 0 errors
-across 77 recorded submissions; the register holds 17 worker rows; the "Backtester Harness Architect" window is open (its
-window title was read back from the running editor) with its row at `instructions_published_awaiting_worker` until the user
-pastes the one-time message and clicks **Mailbox: Connect This Cline Worker**; the seven asset backtester windows are still
+across 77 recorded submissions; the register holds 17 worker rows; the "Backtester Harness Architect" window is open (its title was read back from the running editor), its agent has picked
+the lane up and filed its own evening save as commit `31a6281` (`docs/backtester-harness/CONVERSATION_NOTES.md`, 83 lines,
+5,158 bytes, worktree clean), and the mailbox bridge for that worker reads state `watching` (`Connected; no worker wake
+due`, extension 0.2.1, 2026-09-30T21:02:11Z), so that register row moved from `instructions_published_awaiting_worker` to
+`awaiting_status_submission`; the lane still owes one `status_report`, because it has written no activity line and
+submitted no envelope, and its notes carry two open questions - whether stage A begins now, which is the user's call, and
+the connection question the bridge record has now answered; the seven asset backtester windows are still
 `sent_unconfirmed` since 2026-09-29T20:47Z; and the published live panel has aged past its own 900 seconds again
 (`generated_at_utc` 2026-09-30T20:44:34Z, so `STALE` from 20:59:34Z), which is the designed behaviour rather than a fault -
 a fresh reading needs the user's word plus a re-publish. Nothing was armed, connected, credentialed or ordered, no outcome,
