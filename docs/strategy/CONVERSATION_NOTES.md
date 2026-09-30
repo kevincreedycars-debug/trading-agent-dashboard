@@ -2300,3 +2300,19 @@ base rates already carried by the existing gold record.
 the user's go-ahead, and this work's factor tables do not exist. New: the tab-merge request is filed as submission
 `20260930-strategy-gold-tabs-merge-request-029`, carrying the recommended route, the guard coupling above and the
 acceptance checks a building lane can run.
+
+**Preview built so the user can see the tab shape tonight, in scratch only.** The user asked "okay where is it?", meaning the merged page, and the honest
+answer is that no such page exists yet: the coordinator's own review of `-029` (commit `36e61ca`) accepted the request
+and recorded that building the merge is its own dashboard work under the single-writer rule, gated on the user
+choosing between the two routes. So that the user is not left with nothing to open, this worker built a local,
+unpublished preview in ignored scratch (`tmp/preview/`): `gold-tabs-preview.html`, a shell with the four tabs -
+Direction, Backtest evidence, 28-factor outcomes, Factor tables (draft) - framing byte-identical copies of the four
+published pages taken from the canonical checkout at `0caf0559`, `60dca907`, `a72a25eb` and `675fc9da`. It is scratch
+on purpose rather than a `docs/strategy/` artifact: it frames local files, and every page this project publishes must
+be self-contained, so it must never be published and must not become a second home for other lanes' numbers. Verified
+in a real browser (Playwright Chromium, 1440x900, `file://`): all four frames render, the probes read the pages' own
+values - 25 scored, 4,956 evaluated, and the draft banner's "40 of 50 answered" - with no console errors; a hash in
+the address reopens the same tab on reload and the arrow keys move the selection. That is evidence for Route A rather
+than a claim about it: a tab shell around the existing pages demonstrably works in a browser, so the recommended route
+is not the risky one. No live file, bar entry, guard or number was touched, and this preview carries no authority to
+publish anything.
