@@ -14,7 +14,13 @@ queue: route N1, the same dark header and rail on every served page including th
 gold release. `20261001-backtester-harness-stage-a-r1` was accepted as the stage-A design record only -
 `docs/backtester-harness/HARNESS_ARCHITECTURE.md` reproduces byte-exactly at 46,554 bytes / sha256 `34160779...`, stage
 B stays closed pending the user's answers to its seven section-8 questions, and its branch tip (`40d2546`, not the
-reported `aea87e4`) owes a disclosure of `79c7370` and `40d2546` in its next status report. Reviews:
+reported `aea87e4`) owes a disclosure of `79c7370` and `40d2546` in its next status report, and that disclosure arrived
+while this cycle was running as `20261001-backtester-harness-artifacts-r2` (mailbox `042525b1...`, reply `54aab231...`,
+review `docs/orchestration/reviews/20261001-backtester-harness-artifacts-r2.md`) and was accepted: HEAD `40d2546` with
+exactly the reported blob ids, `ASSET_ENGINE_CYCLE_TIME_PLAN.md` at 11,878 bytes / sha256 `bfc73213...` and
+`DATA_ANALYSIS_STRATEGY.md` at 13,198 bytes / sha256 `e6e9d2fa...` both design-only, the accepted documents unchanged,
+and the six new questions joined to the seven as one user block - with the repeated report copies, the 201,540,447-byte
+XLSX and its zip left untouched until the user rules. Reviews:
 `docs/orchestration/reviews/20261001-*.md`; register updated on the `dashboard` and `backtester-harness` rows; the
 user's two navigation answers logged in `docs/DECISIONS.md`. Next, and still the user's: the go-ahead to execute the
 release, the movement-screen lane `gold-declared-band-measurement-026`, and the stale coordinator lock described below.

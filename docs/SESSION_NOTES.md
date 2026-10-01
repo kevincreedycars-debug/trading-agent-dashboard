@@ -14,7 +14,13 @@ carry no `styles.css` reference, and its guard coupling confirmed at
 everywhere, after the gold release. The harness stage-A report was accepted as a design record only, its architecture
 document reproducing byte-exactly at 46,554 bytes / sha256 `34160779`, with the branch tip now `40d2546` rather than the
 reported `aea87e4` and two undisclosed commits (`79c7370`, `40d2546`) to be disclosed in its next status report; stage B
-stays closed pending the user's answers to its seven questions. Nothing was published, merged, deployed or opened this
+stays closed pending the user's answers to its seven questions. That disclosure then arrived while this cycle was
+running - `20261001-backtester-harness-artifacts-r2` (mailbox `042525b1...`, reply `54aab231...`) - and was accepted:
+HEAD `40d2546` with exactly the reported blob ids, `ASSET_ENGINE_CYCLE_TIME_PLAN.md` at 11,878 bytes / sha256
+`bfc73213...` and `DATA_ANALYSIS_STRATEGY.md` at 13,198 bytes / sha256 `e6e9d2fa...`, both design-only, the accepted
+documents unchanged, the rev-3 ledger confirmed at 23,948,174 bytes and the remaining figures recorded as the lane's own
+readings; its six questions join the seven as one user block, and the repeated report copies, the 201,540,447-byte XLSX
+and its zip stay untouched. Nothing was published, merged, deployed or opened this
 cycle, and no worker status was set to a publish state. The stale pid-`24000` lock and the dispatch restart remain
 untouched and the user's to call, as do the release go-ahead and the movement-screen lane.
 

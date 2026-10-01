@@ -1,7 +1,7 @@
-# 2026-10-01 afternoon - the mailbox is empty: four items reviewed, the navigation item adopted on route N1, and stage A accepted as a design record only
+# 2026-10-01 afternoon - the mailbox is empty: five items reviewed, the navigation item adopted on route N1, and the harness design records accepted
 
-All four open submissions were reviewed by hand from the canonical checkout and four replies were published; the mailbox
-now reads `pending 0, errors 0`, with the inbox empty for the first time since the outage.
+All five open submissions were reviewed by hand from the canonical checkout and five replies were published; the mailbox
+now reads `pending 0, errors 0`, with the inbox empty and no unanswered item anywhere.
 
 - `20261001-strategy-user-goahead-publish-033` (mailbox `a20f7056...`, reply `9c6654aa...`, review
   `docs/orchestration/reviews/20261001-strategy-user-goahead-publish-033.md`) - `acknowledged` as the record of the
@@ -36,6 +36,16 @@ now reads `pending 0, errors 0`, with the inbox empty for the first time since t
   139 lines) and `40d2546` (`DATA_ANALYSIS_STRATEGY.md`, 170 lines) filed after the status report and undisclosed;
   both must be disclosed with digests in the next status report, and stage B stays closed until the user rules on the
   seven questions as one block.
+- `20261001-backtester-harness-artifacts-r2` (mailbox `042525b1...`, reply `54aab231...`, review
+  `docs/orchestration/reviews/20261001-backtester-harness-artifacts-r2.md`, filed while this review cycle was running) -
+  `accepted`. It is the disclosure the stage-A reply demanded, and it closes that gap: HEAD `40d2546`, worktree clean,
+  still no upstream, with `git ls-tree` returning exactly the reported blob ids. `ASSET_ENGINE_CYCLE_TIME_PLAN.md`
+  reproduces at 11,878 bytes / 139 CRLF / sha256 `bfc73213...` and `DATA_ANALYSIS_STRATEGY.md` at 13,198 bytes /
+  170 CRLF / sha256 `e6e9d2fa...`, both design-only; the two already-accepted documents are unchanged at this head. The
+  rev-3 combination ledger is confirmed at 23,948,174 bytes in the Gold worktree; the other readings are the lane's own
+  descriptive figures from probes in its ignored `tmp/`, recorded as readings and not re-derived here. The six new
+  questions join the seven as one user block, and nothing is pruned or rewritten: the 702 MB of repeated report copies,
+  the 201,540,447-byte XLSX and its zip stay untouched until the user rules.
 
 No production change was made by this cycle: nothing was published, copied, merged, deployed or opened, no lane was
 opened, no worker status was set to a publish state, and no credential, workflow, warehouse, Layer 1 or Layer 2
