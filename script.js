@@ -25,6 +25,7 @@ const confidenceBandDeliveryUrl = "./data/confidence-band-delivery.json?v=202607
 const researchProofMapUrl = "./data/research-proof-map.json?v=20260902-proof-map-v1";
 const backtestEngineUrl = "./data/backtest-engine.json?v=20260903-engine-v1";
 const liveTradingUrl = "./data/live-trading.json?v=20260930-live-trading-v2";
+const liveTradingLevelsUrl = "./data/l2l-levels.json?v=20261001-l2l-levels-v1";
 const architectureManifestUrlDefault = "./data/architecture-map.json?v=20260721-architecture-mirror-v1";
 const researchSupabaseUrl = "https://eaolqbrlywczinfordvg.supabase.co/rest/v1";
 const researchSupabaseKey = "sb_publishable_k6YbEuuk3GyB9GVTQDtNVA_J1gCRYaY";
@@ -13904,6 +13905,720 @@ function liveTradingSigned(value, digits) {
   return `${numeric > 0 ? "+" : ""}${numeric.toFixed(Number.isInteger(Number(digits)) ? Number(digits) : 2)}`;
 }
 
+// The mirrored MT5 chart. MT5 draws OHLC candles at a price scale with the newest bar still forming;
+// this draws the same picture from the snapshot, plus any marked L2L level lines. It is a view of the
+// feed, not a signal, and it never reads anything the producer did not publish.
+let liveTradingChartSymbol = null;
+let liveTradingChartMode = "candles";
+
+function liveTradingChartLevelsFor(instrument) {
+  return Array.isArray(instrument?.levels)
+    ? instrument.levels.filter(level => Number.isFinite(Number(level?.price)))
+    : [];
+}
+
+// Marked L2L levels live in their own small artifact (data/l2l-levels.json), written by the local
+// marking tool. The dashboard only ever reads it: the page is static, so a marked level becomes part
+// of the published view by committing the file, not by clicking.
+let liveTradingLevelsData = { instruments: [] };
+// null until the local tool answers. The marking controls only exist when it does, so the published
+// page can never show a control that has nothing to write to.
+let liveTradingLevelsEndpoint = null;
+let liveTradingMarking = false;
+let liveTradingMarkStatus = "";
+// The plot's price scale, kept from the last render so a click can be turned back into a price.
+let liveTradingChartScale = null;
+
+function liveTradingLevelPriceText(value, digits) {
+  const numeric = Number(value);
+  const places = Number.isInteger(Number(digits)) ? Number(digits) : 2;
+  return Number.isFinite(numeric) ? numeric.toFixed(places) : String(value ?? "");
+}
+
+// The published feed and the marked levels are two artifacts joined on the broker symbol. An
+// instrument the feed does not carry is ignored rather than invented.
+function applyLiveTradingLevels(data, levelsData) {
+  if (!data || typeof data !== "object") return data;
+  const bySymbol = {};
+  (Array.isArray(levelsData?.instruments) ? levelsData.instruments : []).forEach(entry => {
+    if (entry && typeof entry.symbol === "string") bySymbol[entry.symbol] = entry;
+  });
+  const instruments = (Array.isArray(data.instruments) ? data.instruments : []).map(instrument => {
+    const marked = bySymbol[instrument?.symbol];
+    if (!marked) return instrument;
+    return { ...instrument, levels: liveTradingChartLevelsFor(marked) };
+  });
+  return {
+    ...data,
+    instruments,
+    levels_generated_at_utc: levelsData?.generated_at_utc || null,
+    levels_marked_by: levelsData?.marked_by || null
+  };
+}
+
+// How far apart the marked levels sit, in price and in points. The distance between two levels is what
+// the rule is about, so it is stated rather than left to be read off a price scale.
+function liveTradingLevelSpacing(instrument) {
+  const levels = liveTradingChartLevelsFor(instrument);
+  if (levels.length < 2) return null;
+  const point = Number(instrument?.point);
+  const prices = levels.map(level => Number(level.price)).sort((a, b) => a - b);
+  const gaps = prices.slice(1).map((price, index) => price - prices[index]);
+  const minGap = Math.min(...gaps);
+  return {
+    count: levels.length,
+    minGap,
+    minGapPoints: Number.isFinite(point) && point > 0 ? minGap / point : null
+  };
+}
+
+function liveTradingLevelBadge(instrument) {
+  const levels = liveTradingChartLevelsFor(instrument);
+  const spacing = liveTradingLevelSpacing(instrument);
+  if (!spacing) return `${levels.length} lvl`;
+  const gap = spacing.minGapPoints === null
+    ? liveTradingLevelPriceText(spacing.minGap, instrument?.digits)
+    : `${Math.round(spacing.minGapPoints)} pts`;
+  return `${spacing.count} lvl · ${gap}`;
+}
+
+function liveTradingChartInstrument() {
+  const instruments = Array.isArray(liveTradingData?.instruments) ? liveTradingData.instruments : [];
+  return instruments.find(instrument => instrument?.symbol === liveTradingChartSymbol) || instruments[0] || null;
+}
+
+// A marked level is a price a trader would type into MT5, so it snaps to the instrument's point grid.
+function liveTradingSnapPrice(instrument, price) {
+  const digits = Number.isInteger(Number(instrument?.digits)) ? Number(instrument.digits) : 2;
+  const point = Number(instrument?.point);
+  const snapped = Number.isFinite(point) && point > 0 ? Math.round(price / point) * point : price;
+  return Number(snapped.toFixed(Math.min(8, Math.max(digits, 2))));
+}
+
+// The marking tool serves this page on loopback and answers on the same origin. Anywhere else (the
+// published host, a plain file:// open) the probe fails and the section stays read-only.
+async function probeLiveTradingLevelsTool() {
+  try {
+    const response = await fetch("/api/l2l-levels", { cache: "no-store" });
+    if (!response.ok) return null;
+    const body = await response.json();
+    if (body?.ok !== true || body?.tool !== "l2l-levels-tool") return null;
+    if (body.state) liveTradingLevelsData = body.state;
+    return { path: body.state_path || "data/l2l-levels.json" };
+  } catch (err) {
+    return null;
+  }
+}
+
+async function saveLiveTradingLevel(payload) {
+  const response = await fetch("/api/l2l-levels", {
+    method: "POST",
+    cache: "no-store",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
+  });
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok || body?.ok !== true) {
+    throw new Error(body?.error || `HTTP ${response.status}`);
+  }
+  return body;
+}
+
+// The svg is drawn in a fixed viewBox and scaled to fit its box, so a pointer has to be mapped back
+// into viewBox units before it can mean a price on the plot's scale.
+function liveTradingPointerToView(svg, clientX, clientY) {
+  const scale = liveTradingChartScale;
+  if (!svg || !scale) return null;
+  const rect = svg.getBoundingClientRect();
+  if (!(rect.width > 0) || !(rect.height > 0)) return null;
+  const factor = Math.min(rect.width / scale.width, rect.height / scale.height);
+  if (!(factor > 0)) return null;
+  return {
+    x: (clientX - rect.left - (rect.width - scale.width * factor) / 2) / factor,
+    y: (clientY - rect.top - (rect.height - scale.height * factor) / 2) / factor
+  };
+}
+
+function liveTradingMarkedPriceFromPointer(svg, clientY) {
+  const scale = liveTradingChartScale;
+  if (!svg || !scale || !(scale.max > scale.min || scale.min > scale.max)) return null;
+  const view = liveTradingPointerToView(svg, 0, clientY);
+  if (!view) return null;
+  const span = scale.max - scale.min;
+  if (!(span > 0)) return null;
+  const price = scale.max - ((view.y - scale.plotY0) / (scale.plotY1 - scale.plotY0)) * span;
+  return Math.min(scale.max, Math.max(scale.min, price));
+}
+
+// Price scales label round numbers, not arbitrary fractions of the window: the raw span is rounded
+// onto the 1 / 2 / 2.5 / 5 / 10 ladder so each gridline reads like a price off MT5.
+function liveTradingGridStep(span, target) {
+  if (!(span > 0)) return 1;
+  const rough = span / Math.max(1, target);
+  const magnitude = Math.pow(10, Math.floor(Math.log10(rough)));
+  const normalized = rough / magnitude;
+  const factor = normalized <= 1 ? 1 : normalized <= 2 ? 2 : normalized <= 2.5 ? 2.5 : normalized <= 5 ? 5 : 10;
+  return factor * magnitude;
+}
+
+function liveTradingVolumeLabel(value) {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric) || numeric <= 0) return displayDash();
+  if (numeric >= 1000000) return `${(numeric / 1000000).toFixed(1)}M`;
+  if (numeric >= 1000) return `${(numeric / 1000).toFixed(1)}K`;
+  return String(Math.round(numeric));
+}
+
+const LIVE_TRADING_MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+// A time scale labels the clock, and gives the first tick of a new day the date so a reader can tell
+// 09:00 today from 09:00 yesterday.
+function liveTradingTimeTickLabel(value, withDate) {
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return String(value || displayDash());
+  const clock = `${String(parsed.getUTCHours()).padStart(2, "0")}:${String(parsed.getUTCMinutes()).padStart(2, "0")}`;
+  if (!withDate) return clock;
+  return `${String(parsed.getUTCDate()).padStart(2, "0")} ${LIVE_TRADING_MONTHS[parsed.getUTCMonth()]} ${clock}`;
+}
+
+// The median gap between bars, not the first one: a series read while MT5 was still syncing can skip
+// minutes, and the time scale has to stay readable either way.
+function liveTradingBarGapSeconds(points) {
+  const times = points.map(point => Date.parse(point?.time_utc)).filter(time => !Number.isNaN(time));
+  if (times.length < 2) return 300;
+  const gaps = [];
+  for (let index = 1; index < times.length; index += 1) {
+    const gap = (times[index] - times[index - 1]) / 1000;
+    if (gap > 0) gaps.push(gap);
+  }
+  if (!gaps.length) return 300;
+  gaps.sort((a, b) => a - b);
+  return gaps[Math.floor(gaps.length / 2)];
+}
+
+// Ticks land on round clock times (09:30, 10:00) rather than on every n-th bar. A gappy series that
+// never hits a round time still gets an evenly spaced scale rather than an empty one.
+function liveTradingTimeTicks(points) {
+  const gap = liveTradingBarGapSeconds(points);
+  const ladder = [300, 900, 1800, 3600, 7200, 14400, 21600, 43200, 86400];
+  const times = points.map(point => Date.parse(point?.time_utc));
+  const known = times.filter(time => !Number.isNaN(time));
+  const span = known.length > 1 ? (known[known.length - 1] - known[0]) / 1000 : 0;
+  const step = ladder.find(candidate => candidate >= gap && span / candidate <= 8) || ladder[ladder.length - 1];
+  const ticks = [];
+  let previousDay = null;
+  points.forEach((point, index) => {
+    const time = times[index];
+    if (Number.isNaN(time)) return;
+    if (Math.round(time / 1000) % step !== 0) return;
+    const day = new Date(time).toISOString().slice(0, 10);
+    ticks.push({ index, label: liveTradingTimeTickLabel(point.time_utc, day !== previousDay) });
+    previousDay = day;
+  });
+  if (ticks.length >= 2) return ticks;
+  const count = Math.min(6, points.length);
+  return Array.from({ length: count }, (_, index) => {
+    const pointIndex = Math.round(((points.length - 1) * index) / Math.max(1, count - 1));
+    return { index: pointIndex, label: liveTradingTimeTickLabel(points[pointIndex]?.time_utc, index === 0) };
+  });
+}
+
+// The legend reads like a terminal's chart legend: the instrument, its timeframe and the open, high,
+// low and close of the newest bar. The crosshair repaints it for whichever bar the pointer is over,
+// so the numbers on screen always belong to a bar the reader can point at.
+function liveTradingChartLegend(instrument, points, digits) {
+  const last = points[points.length - 1] || {};
+  const hasOhlc = Number.isFinite(Number(last.open)) && Number.isFinite(Number(last.close));
+  const cells = hasOhlc
+    ? [["open", "O", last.open], ["high", "H", last.high], ["low", "L", last.low], ["close", "C", last.close]]
+      .map(([key, tag, value]) =>
+        `<b>${tag}</b><i data-live-legend="${key}">${escapeHtml(liveTradingPrice(value, digits))}</i>`).join("")
+    : `<b>C</b><i data-live-legend="close">${escapeHtml(liveTradingPrice(last.value ?? last.close, digits))}</i>`;
+  const open = Number(last.open);
+  const close = Number(last.close);
+  const change = hasOhlc
+    ? `${liveTradingSigned(close - open, digits)}${open ? ` (${liveTradingSigned(((close - open) / open) * 100, 2)}%)` : ""}`
+    : "";
+  const changeCell = hasOhlc
+    ? `<i class="live-trading-chart-legend-change" data-live-legend="change">${escapeHtml(change)}</i>`
+    : "";
+  const tone = hasOhlc ? (close >= open ? "up" : "down") : "flat";
+  const lastBar = JSON.stringify({
+    open: Number.isFinite(open) ? open : null,
+    high: Number.isFinite(Number(last.high)) ? Number(last.high) : null,
+    low: Number.isFinite(Number(last.low)) ? Number(last.low) : null,
+    close: Number.isFinite(close) ? close : null,
+    value: Number.isFinite(Number(last.value)) ? Number(last.value) : null
+  });
+  return `
+        <div class="live-trading-chart-legend ${tone}" data-live-chart-legend data-live-last="${escapeHtml(lastBar)}">
+          <span class="live-trading-chart-legend-symbol">${escapeHtml(instrument?.symbol || "")}</span>
+          <span class="live-trading-chart-legend-tf">M5</span>
+          <span class="live-trading-chart-legend-values" data-live-legend-values>${cells}${changeCell}</span>
+        </div>`;
+}
+
+function liveTradingChartPaintLegend(plot, source, digits) {
+  const legend = plot?.querySelector?.("[data-live-chart-legend]");
+  if (!legend || !source) return;
+  const set = (key, text) => {
+    const node = legend.querySelector(`[data-live-legend="${key}"]`);
+    if (node) node.textContent = text;
+  };
+  const open = Number(source.open);
+  const close = Number(source.close);
+  if (Number.isFinite(open) && Number.isFinite(close)) {
+    set("open", liveTradingPrice(open, digits));
+    set("high", liveTradingPrice(source.high, digits));
+    set("low", liveTradingPrice(source.low, digits));
+    set("close", liveTradingPrice(close, digits));
+    set("change", `${liveTradingSigned(close - open, digits)}${open ? ` (${liveTradingSigned(((close - open) / open) * 100, 2)}%)` : ""}`);
+    legend.classList.toggle("up", close >= open);
+    legend.classList.toggle("down", close < open);
+    return;
+  }
+  set("close", liveTradingPrice(source.value ?? close, digits));
+  legend.classList.remove("up", "down");
+}
+
+// Leaving the plot puts the legend back on the newest bar: the crosshair is a reading, not a state.
+function liveTradingChartResetCrosshair(plot) {
+  const group = plot?.querySelector?.(".live-trading-chart-crosshair");
+  if (group) group.style.display = "none";
+  const legend = plot?.querySelector?.("[data-live-chart-legend]");
+  if (!legend) return;
+  let remembered = {};
+  try {
+    remembered = JSON.parse(legend.dataset.liveLast || "{}");
+  } catch (err) {
+    remembered = {};
+  }
+  liveTradingChartPaintLegend(plot, remembered, liveTradingChartScale?.view?.digits);
+}
+
+async function markLiveTradingLevel(price) {
+  const instrument = liveTradingChartInstrument();
+  if (!instrument || !liveTradingLevelsEndpoint) return;
+  const snapped = liveTradingSnapPrice(instrument, price);
+  const label = `${instrument.symbol} ${liveTradingLevelPriceText(snapped, instrument.digits)}`;
+  liveTradingMarkStatus = `Saving ${label}…`;
+  renderLiveTrading(liveTradingData || {});
+  try {
+    const body = await saveLiveTradingLevel({
+      action: "add",
+      symbol: instrument.symbol,
+      price: snapped,
+      kind: "l2l",
+      direction: "both",
+      timeframe: "M5"
+    });
+    liveTradingLevelsData = body.state;
+    liveTradingData = applyLiveTradingLevels(liveTradingData, liveTradingLevelsData);
+    liveTradingMarkStatus = `Marked ${label}. Commit data/l2l-levels.json to publish it.`;
+  } catch (err) {
+    liveTradingMarkStatus = `Could not save the level: ${err.message}`;
+  }
+  renderLiveTrading(liveTradingData || {});
+}
+
+async function removeLiveTradingLevel(price) {
+  const instrument = liveTradingChartInstrument();
+  if (!instrument || !liveTradingLevelsEndpoint || !Number.isFinite(price)) return;
+  const label = `${instrument.symbol} ${liveTradingLevelPriceText(price, instrument.digits)}`;
+  liveTradingMarkStatus = `Removing ${label}…`;
+  renderLiveTrading(liveTradingData || {});
+  try {
+    const body = await saveLiveTradingLevel({ action: "remove", symbol: instrument.symbol, price });
+    liveTradingLevelsData = body.state;
+    liveTradingData = applyLiveTradingLevels(liveTradingData, liveTradingLevelsData);
+    liveTradingMarkStatus = `Removed ${label}. Commit data/l2l-levels.json to publish it.`;
+  } catch (err) {
+    liveTradingMarkStatus = `Could not remove the level: ${err.message}`;
+  }
+  renderLiveTrading(liveTradingData || {});
+}
+
+
+
+// The mirrored MT5 chart, drawn the way a charting terminal draws one: a price scale down the right
+// edge, a time scale along the bottom, the volume histogram under the price pane, the newest bar's
+// price tagged on the scale and a crosshair that follows the pointer. Every mark on the canvas is a
+// reading of the published snapshot - the candles are the producer's OHLC bars, the level lines are
+// hand-marked prices - and none of it is an order, a signal or a forecast. A snapshot written before
+// the producer published OHLC bars falls back to the close line that `close_series` actually holds.
+function liveTradingChartPlot(instrument, mode) {
+  const digits = Number.isInteger(Number(instrument?.digits)) ? Number(instrument.digits) : 2;
+  const m5 = instrument?.m5 || {};
+  const bars = (Array.isArray(m5.bars) ? m5.bars : []).filter(bar =>
+    Number.isFinite(Number(bar?.open)) && Number.isFinite(Number(bar?.high)) &&
+    Number.isFinite(Number(bar?.low)) && Number.isFinite(Number(bar?.close)));
+  const closes = (Array.isArray(m5.close_series) ? m5.close_series : [])
+    .filter(point => Number.isFinite(Number(point?.close)));
+  const levels = liveTradingChartLevelsFor(instrument);
+
+  // An OHLC-less snapshot still gets a close line rather than an empty box, so the chart appears from
+  // the artifact that is published today and upgrades to candles when the producer next runs.
+  const effectiveMode = bars.length && mode !== "line" ? "candles" : "line";
+  if (!bars.length && !closes.length) {
+    return `<p class="live-trading-empty">No M5 candles in this snapshot, so there is nothing to chart.</p>`;
+  }
+
+  const points = bars.length
+    ? bars.map(bar => ({
+      time_utc: bar.time_utc,
+      open: Number(bar.open),
+      high: Number(bar.high),
+      low: Number(bar.low),
+      close: Number(bar.close),
+      tick_volume: Number.isFinite(Number(bar.tick_volume)) ? Number(bar.tick_volume) : null
+    }))
+    : closes.map(point => ({ time_utc: point.time_utc, value: Number(point.close) }));
+
+  const prices = bars.length
+    ? bars.flatMap(bar => [Number(bar.high), Number(bar.low)])
+    : points.map(point => point.value);
+  levels.forEach(level => prices.push(Number(level.price)));
+  let min = Math.min(...prices);
+  let max = Math.max(...prices);
+  if (!(max > min)) {
+    const pad = Math.abs(max) * 0.001 || 1;
+    min -= pad;
+    max += pad;
+  }
+  const headroom = (max - min) * 0.06;
+  min -= headroom;
+  max += headroom;
+
+  const width = 1600;
+  const height = 640;
+  const axisWidth = 96;
+  const axisHeight = 34;
+  const plotX0 = 10;
+  const plotX1 = width - axisWidth;
+  const timeScaleY = height - axisHeight;
+  const volumes = points.map(point => (Number.isFinite(point.tick_volume) && point.tick_volume > 0 ? point.tick_volume : 0));
+  const maxVolume = volumes.length ? Math.max(...volumes) : 0;
+  const volumeHeight = maxVolume > 0 ? 96 : 0;
+  const volumeY0 = timeScaleY - volumeHeight;
+  const plotY0 = 14;
+  const plotY1 = (volumeHeight ? volumeY0 : timeScaleY) - 10;
+  const plotW = plotX1 - plotX0;
+  const plotH = plotY1 - plotY0;
+  const xAt = index => plotX0 + (plotW * (index + 0.5)) / points.length;
+  const yAt = price => plotY0 + ((max - price) / (max - min)) * plotH;
+  const yVolume = value => volumeY0 + volumeHeight - volumeHeight * Math.min(1, value / maxVolume);
+  // Bars carry `close`, a legacy close_series carries `value`: the line and area fallbacks read whichever
+  // of the two the snapshot actually holds, so toggling to the line never draws an empty scale.
+  const closeOf = point => (Number.isFinite(Number(point?.close)) ? Number(point.close) : Number(point?.value));
+
+  // Kept for the marking click: the same geometry turns a pointer position back into a price.
+  liveTradingChartScale = { width, height, plotY0, plotY1, min, max };
+  // The crosshair needs the rest of the same geometry, plus where each bar sits on the canvas.
+  liveTradingChartScale.bars = points.map((point, index) => Object.assign({ x: xAt(index) }, point));
+  liveTradingChartScale.view = { plotX0, plotX1, plotY0, plotY1, timeScaleY, axisWidth, digits, mode: effectiveMode };
+  const bodyWidth = Math.max(1.2, Math.min(16, (plotW / points.length) * 0.68));
+  const gridStep = liveTradingGridStep(max - min, 8);
+  const gridLines = [];
+  const priceLabels = [];
+  const firstPrice = Math.ceil(min / gridStep) * gridStep;
+  for (let index = 0; index < 64; index += 1) {
+    const price = firstPrice + index * gridStep;
+    if (price > max) break;
+    const gy = yAt(price);
+    gridLines.push(`<line x1="${plotX0}" y1="${gy.toFixed(2)}" x2="${plotX1}" y2="${gy.toFixed(2)}" class="live-trading-chart-grid"></line>`);
+    priceLabels.push(`<text x="${plotX1 + 10}" y="${(gy + 5).toFixed(2)}" class="live-trading-chart-axis">${escapeHtml(liveTradingPrice(price, digits))}</text>`);
+  }
+
+  const ticks = liveTradingTimeTicks(points);
+  const timeGrid = ticks.map(tick =>
+    `<line x1="${xAt(tick.index).toFixed(2)}" y1="${plotY0}" x2="${xAt(tick.index).toFixed(2)}" y2="${timeScaleY}" class="live-trading-chart-grid"></line>`).join("");
+  const timeLabels = ticks.map(tick => {
+    const x = xAt(tick.index);
+    const anchor = x < plotX0 + 44 ? "start" : (x > plotX1 - 44 ? "end" : "middle");
+    return `<text x="${x.toFixed(2)}" y="${timeScaleY + 22}" text-anchor="${anchor}" class="live-trading-chart-axis">${escapeHtml(tick.label)}</text>`;
+  }).join("");
+
+  const volumeMarks = volumeHeight
+    ? points.map((point, index) => {
+      const volume = volumes[index];
+      if (!(volume > 0)) return "";
+      const top = yVolume(volume);
+      const up = Number.isFinite(Number(point.open)) ? point.close >= point.open : point.close >= points[0].close;
+      return `<rect x="${(xAt(index) - bodyWidth / 2).toFixed(2)}" y="${top.toFixed(2)}" width="${bodyWidth.toFixed(2)}" height="${Math.max(1, volumeY0 + volumeHeight - top).toFixed(2)}" class="live-trading-chart-volume ${up ? "up" : "down"}"></rect>`;
+    }).join("")
+    : "";
+  const volumeFurniture = volumeHeight
+    ? `<line x1="${plotX0}" y1="${volumeY0}" x2="${plotX1}" y2="${volumeY0}" class="live-trading-chart-separator"></line>`
+      + `<text x="${plotX1 + 10}" y="${(volumeY0 + 5).toFixed(2)}" class="live-trading-chart-axis">${escapeHtml(liveTradingVolumeLabel(maxVolume))}</text>`
+    : "";
+  const marks = effectiveMode === "candles"
+    ? points.map((bar, index) => {
+      const up = bar.close >= bar.open;
+      const cls = up ? "up" : "down";
+      const cx = xAt(index);
+      const yOpen = yAt(bar.open);
+      const yClose = yAt(bar.close);
+      const top = Math.min(yOpen, yClose);
+      const bodyHeight = Math.max(1.2, Math.abs(yClose - yOpen));
+      return `<line x1="${cx.toFixed(2)}" y1="${yAt(bar.high).toFixed(2)}" x2="${cx.toFixed(2)}" y2="${yAt(bar.low).toFixed(2)}" class="live-trading-chart-wick ${cls}"></line>`
+        + `<rect x="${(cx - bodyWidth / 2).toFixed(2)}" y="${top.toFixed(2)}" width="${bodyWidth.toFixed(2)}" height="${bodyHeight.toFixed(2)}" class="live-trading-chart-body ${cls}"></rect>`;
+    }).join("")
+    : `<polygon class="live-trading-chart-area" points="${points.map((point, index) => `${xAt(index).toFixed(2)},${yAt(closeOf(point)).toFixed(2)}`).join(" ")} ${plotX1.toFixed(2)},${plotY1.toFixed(2)} ${plotX0.toFixed(2)},${plotY1.toFixed(2)}"></polygon>`
+      + `<polyline class="live-trading-chart-line" points="${points.map((point, index) => `${xAt(index).toFixed(2)},${yAt(closeOf(point)).toFixed(2)}`).join(" ")}"></polyline>`;
+
+  const lastBar = points[points.length - 1];
+  const lastValue = Number.isFinite(Number(lastBar.close)) ? Number(lastBar.close) : Number(lastBar.value);
+  const firstClose = Number.isFinite(Number(points[0]?.close)) ? Number(points[0].close) : Number(points[0]?.value);
+  const lastUp = Number.isFinite(Number(lastBar.open))
+    ? Number(lastBar.close) >= Number(lastBar.open)
+    : Number(lastValue) >= firstClose;
+  const lastY = Math.min(plotY1, Math.max(plotY0, yAt(lastValue)));
+  const lastLine = `<line x1="${plotX0}" y1="${lastY.toFixed(2)}" x2="${plotX1}" y2="${lastY.toFixed(2)}" class="live-trading-chart-last"></line>`
+    + `<rect x="${plotX1 + 2}" y="${(lastY - 10).toFixed(2)}" width="${axisWidth - 4}" height="20" rx="3" class="live-trading-chart-last-tag ${lastUp ? "up" : "down"}"></rect>`
+    + `<text x="${(plotX1 + axisWidth / 2).toFixed(2)}" y="${(lastY + 5).toFixed(2)}" text-anchor="middle" class="live-trading-chart-last-tag-text">${escapeHtml(liveTradingPrice(lastValue, digits))}</text>`;
+
+  // L2L levels, once they are published for this instrument, ride on the same scale as the candles.
+  const levelLines = levels.map(level => {
+    const price = Number(level.price);
+    const ly = Math.min(plotY1, Math.max(plotY0, yAt(price)));
+    const label = String(level.label || level.name || "level");
+    const tag = `${label} ${liveTradingPrice(price, digits)}`;
+    return `<line x1="${plotX0}" y1="${ly.toFixed(2)}" x2="${plotX1}" y2="${ly.toFixed(2)}" class="live-trading-chart-level"></line>`
+      + `<text x="${plotX0 + 6}" y="${(ly - 6).toFixed(2)}" class="live-trading-chart-level-tag">${escapeHtml(tag)}</text>`
+      + `<rect x="${plotX1 + 2}" y="${(ly - 9).toFixed(2)}" width="${axisWidth - 4}" height="18" rx="3" class="live-trading-chart-level-box"></rect>`
+      + `<text x="${(plotX1 + axisWidth / 2).toFixed(2)}" y="${(ly + 4).toFixed(2)}" text-anchor="middle" class="live-trading-chart-level-box-text">${escapeHtml(liveTradingPrice(price, digits))}</text>`;
+  }).join("");
+  const crosshair = `<g class="live-trading-chart-crosshair" style="display:none">
+        <line class="live-trading-chart-crosshair-y" x1="0" y1="${plotY0}" x2="0" y2="${timeScaleY}"></line>
+        <line class="live-trading-chart-crosshair-x" x1="${plotX0}" y1="0" x2="${plotX1}" y2="0"></line>
+        <rect class="live-trading-chart-crosshair-price-box" x="${plotX1 + 2}" y="0" width="${axisWidth - 4}" height="20" rx="3"></rect>
+        <text class="live-trading-chart-crosshair-price-text" x="${(plotX1 + axisWidth / 2).toFixed(2)}" y="0" text-anchor="middle"></text>
+        <rect class="live-trading-chart-crosshair-time-box" x="0" y="${timeScaleY + 4}" width="72" height="20" rx="3"></rect>
+        <text class="live-trading-chart-crosshair-time-text" x="0" y="${timeScaleY + 19}" text-anchor="middle"></text>
+      </g>`;
+
+  const watermark = `${instrument?.symbol || ""} \u00b7 M5`;
+  const aria = `M5 ${effectiveMode === "candles" ? "candles" : "close line"} for ${instrument?.symbol || "instrument"}, ${points.length} bars`;
+  return `
+    <div class="live-trading-chart-canvas">
+      ${liveTradingChartLegend(instrument, points, digits)}
+      <svg class="live-trading-chart-svg" viewBox="0 0 ${width} ${height}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="${escapeHtml(aria)}">
+      <rect x="0" y="0" width="${width}" height="${height}" class="live-trading-chart-bg"></rect>
+      <text x="${((plotX0 + plotX1) / 2).toFixed(2)}" y="${((plotY0 + plotY1) / 2).toFixed(2)}" text-anchor="middle" class="live-trading-chart-watermark">${escapeHtml(watermark)}</text>
+      ${gridLines}
+      ${timeGrid}
+      ${volumeFurniture}
+      <line x1="${plotX1}" y1="0" x2="${plotX1}" y2="${timeScaleY}" class="live-trading-chart-separator"></line>
+      <line x1="0" y1="${timeScaleY}" x2="${plotX1}" y2="${timeScaleY}" class="live-trading-chart-separator"></line>
+      ${volumeMarks}
+      ${marks}
+      ${lastLine}
+      ${levelLines}
+      ${priceLabels}
+      ${timeLabels}
+      ${crosshair}
+      </svg>
+    </div>
+  `;
+}
+// The crosshair behaves the way a terminal's does: a dashed pair of lines, the price under the pointer
+// labelled on the price scale, the bar's time labelled on the time scale, and the legend switching to
+// that bar's open, high, low and close. It reads the pointer; it writes nothing.
+function liveTradingChartCrosshair(plot, event) {
+  const scale = liveTradingChartScale;
+  const view = scale?.view;
+  const svg = plot?.querySelector?.(".live-trading-chart-svg");
+  const group = plot?.querySelector?.(".live-trading-chart-crosshair");
+  if (!svg || !group || !view || !(scale.max > scale.min || scale.min > scale.max)) return;
+  const local = liveTradingPointerToView(svg, event.clientX, event.clientY);
+  if (!local) return;
+  const bars = Array.isArray(scale.bars) ? scale.bars : [];
+  if (!bars.length) return;
+
+  const x = Math.min(view.plotX1, Math.max(view.plotX0, local.x));
+  const y = Math.min(view.plotY1, Math.max(view.plotY0, local.y));
+  const price = scale.max - ((y - scale.plotY0) / (scale.plotY1 - scale.plotY0)) * (scale.max - scale.min);
+  let nearest = bars[0];
+  bars.forEach(bar => {
+    if (Math.abs(bar.x - x) < Math.abs(nearest.x - x)) nearest = bar;
+  });
+
+  group.style.display = "";
+  const vertical = group.querySelector(".live-trading-chart-crosshair-y");
+  const horizontal = group.querySelector(".live-trading-chart-crosshair-x");
+  const priceBox = group.querySelector(".live-trading-chart-crosshair-price-box");
+  const priceText = group.querySelector(".live-trading-chart-crosshair-price-text");
+  const timeBox = group.querySelector(".live-trading-chart-crosshair-time-box");
+  const timeText = group.querySelector(".live-trading-chart-crosshair-time-text");
+  if (vertical) {
+    vertical.setAttribute("x1", nearest.x.toFixed(2));
+    vertical.setAttribute("x2", nearest.x.toFixed(2));
+  }
+  if (horizontal) {
+    horizontal.setAttribute("y1", y.toFixed(2));
+    horizontal.setAttribute("y2", y.toFixed(2));
+  }
+  if (priceBox) priceBox.setAttribute("y", (y - 10).toFixed(2));
+  if (priceText) {
+    priceText.setAttribute("y", (y + 5).toFixed(2));
+    priceText.textContent = liveTradingPrice(price, view.digits);
+  }
+  const timeLabel = liveTradingTimeTickLabel(nearest.time_utc, true);
+  const boxWidth = Math.max(56, timeLabel.length * 8.6 + 12);
+  if (timeBox) {
+    timeBox.setAttribute("width", boxWidth.toFixed(2));
+    timeBox.setAttribute("x", Math.min(view.plotX1 - boxWidth, Math.max(view.plotX0, nearest.x - boxWidth / 2)).toFixed(2));
+  }
+  if (timeText) {
+    timeText.setAttribute("x", Math.min(view.plotX1 - 40, Math.max(view.plotX0 + 40, nearest.x)).toFixed(2));
+    timeText.textContent = timeLabel;
+  }
+  liveTradingChartPaintLegend(plot, nearest, view.digits);
+}
+
+function liveTradingChartShell(data) {
+  const instruments = (Array.isArray(data?.instruments) ? data.instruments : [])
+    .filter(instrument => instrument?.available === true);
+  if (!instruments.length) return "";
+
+  const selected = instruments.find(instrument => instrument?.symbol === liveTradingChartSymbol) || instruments[0];
+  liveTradingChartSymbol = selected.symbol;
+  const bars = Array.isArray(selected?.m5?.bars) ? selected.m5.bars : [];
+  const closes = Array.isArray(selected?.m5?.close_series) ? selected.m5.close_series : [];
+  const mode = bars.length ? liveTradingChartMode : "line";
+  const digits = Number.isInteger(Number(selected?.digits)) ? Number(selected.digits) : 2;
+  const quote = selected?.quote || {};
+  const freshness = liveTradingBarFreshness(selected?.m5);
+
+  const symbolButtons = instruments.map(instrument => {
+    const spread = Number.isFinite(Number(instrument?.quote?.spread_points))
+      ? `${Number(instrument.quote.spread_points)} pts`
+      : displayDash();
+    const levelBadge = liveTradingLevelBadge(instrument);
+    const barState = instrument?.m5?.stale === true ? "stale" : "fresh";
+    return `
+      <button type="button" class="live-trading-chart-symbol${instrument.symbol === selected.symbol ? " active" : ""}" data-live-chart-symbol="${escapeHtml(instrument.symbol)}">
+        <span class="live-trading-chart-symbol-asset">${escapeHtml(instrument.dashboard_asset || "")}</span>
+        <span class="live-trading-chart-symbol-name">${escapeHtml(instrument.symbol)}</span>
+        <span class="live-trading-chart-symbol-badges">
+          <i class="live-trading-chart-badge ${barState}">${barState === "stale" ? "STALE" : "LIVE"}</i>
+          <i class="live-trading-chart-badge">${escapeHtml(spread)}</i>
+          <i class="live-trading-chart-badge">${escapeHtml(levelBadge)}</i>
+        </span>
+      </button>
+    `;
+  }).join("");
+
+  const modeButtons = ["candles", "line"].map(value => `
+    <button type="button" class="live-trading-chart-mode${mode === value ? " active" : ""}" data-live-chart-mode="${value}"${bars.length ? "" : " disabled"}>${value === "candles" ? "Candles" : "Line"}</button>
+  `).join("");
+
+  const barCount = bars.length
+    ? `${bars.length} OHLC bars`
+    : `${closes.length} closes (OHLC not in this snapshot yet)`;
+
+  const markedLevels = liveTradingChartLevelsFor(selected);
+  const levelChips = markedLevels.length
+    ? markedLevels.map(level => {
+      const price = Number(level.price);
+      const caption = `${String(level.label || level.kind || "level")} ${liveTradingLevelPriceText(price, digits)}`;
+      const remove = liveTradingLevelsEndpoint
+        ? `<button type="button" class="live-trading-chart-level-remove" data-live-level-remove="${escapeHtml(String(price))}" title="Remove this marked level">&#215;</button>`
+        : "";
+      return `<span class="live-trading-chart-level-chip"><b>${escapeHtml(caption)}</b>${remove}</span>`;
+    }).join("")
+    : `<span class="live-trading-chart-level-chip empty">Nothing marked for this symbol yet</span>`;
+
+  // The marking controls exist only when the local tool answers the probe, so the published page has no
+  // control that could look like it writes anywhere.
+  const markingControls = liveTradingLevelsEndpoint
+    ? `
+          <button type="button" class="live-trading-chart-mark${liveTradingMarking ? " active" : ""}" data-live-chart-mark aria-pressed="${liveTradingMarking ? "true" : "false"}">${liveTradingMarking ? "Click the chart" : "Mark level"}</button>
+    `
+    : "";
+
+  const markStatus = liveTradingLevelsEndpoint
+    ? `<p class="live-trading-chart-mark-status${liveTradingMarking ? " active" : ""}">${escapeHtml(liveTradingMarkStatus || `Marking writes ${liveTradingLevelsEndpoint.path} through the local tool. Commit it to publish.`)}</p>`
+    : `<p class="live-trading-chart-mark-status">Levels are read from <span class="live-trading-mono">data/l2l-levels.json</span>. Run <span class="live-trading-mono">node scripts/l2l-levels-tool.js</span> and open the page from that server to mark them.</p>`;
+
+  return `
+    <div class="live-trading-chart">
+      <div class="live-trading-chart-toolbar">
+        <div class="live-trading-chart-symbols">${symbolButtons}</div>
+        <div class="live-trading-chart-controls">
+          <span class="live-trading-chart-tf">M5</span>
+          <div class="live-trading-chart-modes">${modeButtons}</div>${markingControls}
+        </div>
+      </div>
+      <div class="live-trading-chart-plot${liveTradingMarking ? " marking" : ""}">${liveTradingChartPlot(selected, liveTradingChartMode)}</div>
+      <div class="live-trading-chart-levels">${levelChips}</div>
+      ${markStatus}
+      <p class="live-trading-chart-caption">
+        <span>${escapeHtml(selected.symbol)} &middot; ${escapeHtml(selected.description || "")}</span>
+        <span>Bid ${escapeHtml(liveTradingPrice(quote.bid, digits))} / Ask ${escapeHtml(liveTradingPrice(quote.ask, digits))}</span>
+        <span>Newest M5 bar ${escapeHtml(freshness.label)}${freshness.stale ? " (stale)" : ""}</span>
+        <span>${escapeHtml(barCount)}</span>
+        <span>${markedLevels.length} marked level${markedLevels.length === 1 ? "" : "s"}</span>
+      </p>
+    </div>
+  `;
+}
+
+function setupLiveTradingChart(panel) {
+  if (!panel || panel.dataset.liveTradingChartBound === "true") return;
+  panel.dataset.liveTradingChartBound = "true";
+  panel.addEventListener("click", event => {
+    const markButton = event.target.closest("[data-live-chart-mark]");
+    if (markButton) {
+      liveTradingMarking = !liveTradingMarking;
+      liveTradingMarkStatus = liveTradingMarking
+        ? "Click the chart at the price you want to mark, or press the button again to stop."
+        : "";
+      renderLiveTrading(liveTradingData || {});
+      return;
+    }
+    const removeButton = event.target.closest("[data-live-level-remove]");
+    if (removeButton) {
+      removeLiveTradingLevel(Number(removeButton.dataset.liveLevelRemove));
+      return;
+    }
+    const symbolButton = event.target.closest("[data-live-chart-symbol]");
+    if (symbolButton) {
+      liveTradingChartSymbol = symbolButton.dataset.liveChartSymbol || liveTradingChartSymbol;
+      renderLiveTrading(liveTradingData || {});
+      return;
+    }
+    const modeButton = event.target.closest("[data-live-chart-mode]");
+    if (modeButton && !modeButton.disabled) {
+      liveTradingChartMode = modeButton.dataset.liveChartMode || "candles";
+      renderLiveTrading(liveTradingData || {});
+      return;
+    }
+    // A keyboard-activated click carries no coordinates, so only a real pointer marks a level.
+    const plot = event.target.closest(".live-trading-chart-plot");
+    if (plot && liveTradingMarking && liveTradingLevelsEndpoint && event.clientY > 0) {
+      const svg = plot.querySelector(".live-trading-chart-svg");
+      const price = liveTradingMarkedPriceFromPointer(svg, event.clientY);
+      if (price !== null) markLiveTradingLevel(price);
+    }
+  });
+  // The crosshair reads the pointer over the canvas only. Anywhere else on the panel puts it away and
+  // leaves the legend on the newest bar, so the canvas never shows a stale reading.
+  panel.addEventListener("pointermove", event => {
+    const plot = event.target?.closest?.(".live-trading-chart-plot");
+    if (plot) {
+      liveTradingChartCrosshair(plot, event);
+      return;
+    }
+    const openPlot = panel.querySelector(".live-trading-chart-plot");
+    if (openPlot) liveTradingChartResetCrosshair(openPlot);
+  });
+  panel.addEventListener("pointerleave", () => {
+    const plot = panel.querySelector(".live-trading-chart-plot");
+    if (plot) liveTradingChartResetCrosshair(plot);
+  });
+}
+
 // Per-instrument M5 freshness. A quote can be live while the bar series beside it is hours old, so
 // each card states the age of its own newest bar rather than inheriting the snapshot's FRESH badge.
 function liveTradingBarFreshness(m5) {
@@ -13926,20 +14641,74 @@ function liveTradingBarsCoverage(data) {
     : `; ${current} of ${instruments.length} instruments on a current M5 bar`;
 }
 
-function liveTradingSeriesBars(series, digits) {
-  const points = Array.isArray(series) ? series.slice(-24).filter(point => Number.isFinite(Number(point?.close))) : [];
-  if (!points.length) return `<p class="live-trading-empty">No M5 candles in this snapshot.</p>`;
-  const closes = points.map(point => Number(point.close));
-  const min = Math.min(...closes);
-  const max = Math.max(...closes);
-  const span = max - min || 1;
-  const bars = points.map(point => {
-    const height = 14 + Math.round(((Number(point.close) - min) / span) * 74);
-    const direction = ["up", "down", "flat"].includes(point.direction) ? point.direction : "flat";
-    const title = `${liveTradingTimestampLabel(point.time_utc)} ${liveTradingPrice(point.close, digits)}`;
-    return `<i class="live-trading-bar ${direction}" style="height:${height}%" title="${escapeHtml(title)}"></i>`;
-  }).join("");
-  return `<div class="live-trading-bars" role="img" aria-label="Last ${points.length} five-minute closes">${bars}</div>`;
+// The card chart is the same reading at card size: mini candles when the snapshot carries OHLC bars,
+// and an area line of the closes when it carries only `close_series`. It replaces the strip of hanging
+// bars, which showed each close's direction but nothing a reader could line up with the M5 chart above.
+function liveTradingCardChart(m5, digits, symbol) {
+  const bars = (Array.isArray(m5?.bars) ? m5.bars : []).filter(bar =>
+    Number.isFinite(Number(bar?.high)) && Number.isFinite(Number(bar?.low)) && Number.isFinite(Number(bar?.close)));
+  const closes = (Array.isArray(m5?.close_series) ? m5.close_series : [])
+    .filter(point => Number.isFinite(Number(point?.close)));
+  const source = (bars.length ? bars : closes).slice(-48);
+  if (source.length < 2) return `<p class="live-trading-empty">No M5 candles in this snapshot.</p>`;
+
+  const candles = bars.length > 0;
+  const points = source.map(bar => ({
+    time_utc: bar.time_utc,
+    open: Number.isFinite(Number(bar.open)) ? Number(bar.open) : Number(bar.close),
+    high: Number.isFinite(Number(bar.high)) ? Number(bar.high) : Number(bar.close),
+    low: Number.isFinite(Number(bar.low)) ? Number(bar.low) : Number(bar.close),
+    close: Number(bar.close)
+  }));
+  const width = 560;
+  const height = 90;
+  const plotX0 = 2;
+  const plotX1 = width - 62;
+  const plotY0 = 8;
+  const plotY1 = height - 10;
+  const plotW = plotX1 - plotX0;
+  const plotH = plotY1 - plotY0;
+  const values = points.flatMap(point => [point.high, point.low]);
+  let min = Math.min(...values);
+  let max = Math.max(...values);
+  if (!(max > min)) {
+    const pad = Math.abs(max) * 0.001 || 1;
+    min -= pad;
+    max += pad;
+  }
+  const headroom = (max - min) * 0.08;
+  min -= headroom;
+  max += headroom;
+  const xAt = index => plotX0 + (plotW * (index + 0.5)) / points.length;
+  const yAt = value => plotY0 + ((max - value) / (max - min)) * plotH;
+
+  const firstClose = points[0].close;
+  const last = points[points.length - 1];
+  const tone = last.close >= firstClose ? "up" : "down";
+  const bodyWidth = Math.max(1.2, Math.min(9, (plotW / points.length) * 0.66));
+  const marks = candles
+    ? points.map((point, index) => {
+      const cls = point.close >= point.open ? "up" : "down";
+      const cx = xAt(index);
+      const top = Math.min(yAt(point.open), yAt(point.close));
+      return `<line x1="${cx.toFixed(2)}" y1="${yAt(point.high).toFixed(2)}" x2="${cx.toFixed(2)}" y2="${yAt(point.low).toFixed(2)}" class="live-trading-card-chart-wick ${cls}"></line>`
+        + `<rect x="${(cx - bodyWidth / 2).toFixed(2)}" y="${top.toFixed(2)}" width="${bodyWidth.toFixed(2)}" height="${Math.max(1, Math.abs(yAt(point.close) - yAt(point.open))).toFixed(2)}" class="live-trading-card-chart-body ${cls}"></rect>`;
+    }).join("")
+    : `<polygon class="live-trading-card-chart-area ${tone}" points="${points.map((point, index) => `${xAt(index).toFixed(2)},${yAt(point.close).toFixed(2)}`).join(" ")} ${plotX1.toFixed(2)},${plotY1.toFixed(2)} ${plotX0.toFixed(2)},${plotY1.toFixed(2)}"></polygon>`
+      + `<polyline class="live-trading-card-chart-line ${tone}" points="${points.map((point, index) => `${xAt(index).toFixed(2)},${yAt(point.close).toFixed(2)}`).join(" ")}"></polyline>`;
+
+  const lastY = Math.min(plotY1, Math.max(plotY0, yAt(last.close)));
+  const midY = (plotY0 + plotY1) / 2;
+  const aria = `Last ${points.length} M5 ${candles ? "candles" : "closes"} for ${symbol || "instrument"}`;
+  return `<div class="live-trading-card-chart">
+      <svg class="live-trading-card-chart-svg" viewBox="0 0 ${width} ${height}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="${escapeHtml(aria)}">
+        <rect x="0" y="0" width="${width}" height="${height}" class="live-trading-card-chart-bg"></rect>
+        <line x1="${plotX0}" y1="${midY.toFixed(2)}" x2="${plotX1}" y2="${midY.toFixed(2)}" class="live-trading-card-chart-grid"></line>
+        ${marks}
+        <line x1="${plotX0}" y1="${lastY.toFixed(2)}" x2="${plotX1}" y2="${lastY.toFixed(2)}" class="live-trading-card-chart-last"></line>
+        <text x="${plotX1 + 8}" y="${(lastY + 4).toFixed(2)}" class="live-trading-card-chart-price ${tone}">${escapeHtml(liveTradingPrice(last.close, digits))}</text>
+      </svg>
+    </div>`;
 }
 
 function liveTradingInstrumentCard(instrument, data) {
@@ -14018,7 +14787,7 @@ function liveTradingInstrumentCard(instrument, data) {
         <div><dt>Change</dt><dd>${escapeHtml(liveTradingSigned(m5.change_points, digits) + changePct)}</dd></div>
       </dl>
 
-      ${liveTradingSeriesBars(m5.close_series, digits)}
+      ${liveTradingCardChart(m5, digits, instrument.symbol)}
 
       ${staleNote}
 
@@ -14069,6 +14838,10 @@ function renderLiveTrading(data) {
     ? instruments.map(instrument => liveTradingInstrumentCard(instrument, data)).join("")
     : `<p class="live-trading-empty">No instruments in this snapshot. ${escapeHtml(data?.meta?.error || data?.note || "The producer found no reachable terminal.")}</p>`;
 
+  const levelsStamp = data?.levels_generated_at_utc
+    ? `, last marked ${data.levels_generated_at_utc}`
+    : ", nothing marked yet";
+
   panel.innerHTML = `
     <div class="live-trading-banner ${freshness.tone}">
       <span class="live-trading-badge ${freshness.tone}">${escapeHtml(freshness.label)}</span>
@@ -14077,15 +14850,20 @@ function renderLiveTrading(data) {
 
     <div class="live-trading-chips">${accountChips}</div>
 
+    ${liveTradingChartShell(data)}
+
     <div class="live-trading-grid">${cards}</div>
 
     <div class="live-trading-provenance">
       <p><b>Read-only.</b> Quotes, account facts and M5 candles only. This section has no order code: it cannot place, modify, close or cancel anything.</p>
+      <p>Marked L2L levels come from <span class="live-trading-mono">data/l2l-levels.json</span>${escapeHtml(levelsStamp)}. They are prices marked by hand on the chart, not levels the producer detected, and marking only writes through the local tool.</p>
       <p>Producer <span class="live-trading-mono">${escapeHtml(source.producer || "tools/mt5-bridge/live-trading-snapshot.py")}</span> · ${escapeHtml(source.platform || "MetaTrader 5")} · ${escapeHtml(source.package || "package unknown")} · cadence ${escapeHtml(source.cadence || "5m")}</p>
       <p>Snapshot ${escapeHtml(data?.generated_at_utc || "unknown")} UTC · server clock ${escapeHtml(data?.time_server || "unknown")} (offset ${escapeHtml(String(data?.server_offset_seconds ?? "unknown"))}s)</p>
       <p>The 5m close-beyond-level rule is the entry confirmation to mark against. It is not a validated profit rule, and this panel is not a signal.</p>
     </div>
   `;
+
+  setupLiveTradingChart(panel);
 }
 
 function setTab(tab) {
@@ -14561,7 +15339,7 @@ async function fetchResearchDashboardData() {
 }
 
 async function loadDashboard() {
-  const [layer1Result, layer2Result, researchResult, factorEdgeLabResult, phase2ShadowBacktestResult, confidenceBandDeliveryResult, researchProofMapResult, backtestEngineResult, economicEventRefreshResult, economicEventsSourceResult, inputHealthResult, liveTradingResult] = await Promise.allSettled([
+  const [layer1Result, layer2Result, researchResult, factorEdgeLabResult, phase2ShadowBacktestResult, confidenceBandDeliveryResult, researchProofMapResult, backtestEngineResult, economicEventRefreshResult, economicEventsSourceResult, inputHealthResult, liveTradingResult, liveTradingLevelsResult] = await Promise.allSettled([
     fetch(layer1Url, { cache: "no-store" }),
     fetch(layer2Url, { cache: "no-store" }),
     fetchResearchDashboardData(),
@@ -14573,7 +15351,8 @@ async function loadDashboard() {
     fetchLocalJson(economicEventRefreshUrl),
     fetchLocalJson(economicEventsSourceUrl),
     fetchLocalJson(inputHealthUrl),
-    fetchLocalJson(liveTradingUrl)
+    fetchLocalJson(liveTradingUrl),
+    fetchLocalJson(liveTradingLevelsUrl)
   ]);
 
   try {
@@ -14625,6 +15404,19 @@ async function loadDashboard() {
       instruments: []
     };
   }
+
+  if (liveTradingLevelsResult.status === "fulfilled") {
+    liveTradingLevelsData = liveTradingLevelsResult.value;
+  } else {
+    // The published page still draws the chart without marked levels, so this is a warning with a
+    // reason rather than a fatal error.
+    console.error(liveTradingLevelsResult.reason);
+  }
+  // Only the local marking tool holds the write endpoint, so the marking controls appear only when it
+  // answers this probe.
+  liveTradingLevelsEndpoint = await probeLiveTradingLevelsTool();
+  // The feed and the marked levels are joined once, here, so every later re-render already has them.
+  liveTradingData = applyLiveTradingLevels(liveTradingData, liveTradingLevelsData);
 
   if (factorEdgeLabResult.status === "fulfilled") {
     factorEdgeLabData = factorEdgeLabResult.value;

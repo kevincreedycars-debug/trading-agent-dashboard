@@ -147,7 +147,27 @@ test("the published dashboard opens the read-only Live Trading section", async (
     assert.match(provenance, /not a signal/);
 
     const controls = '#liveTradingView button, #liveTradingView input, #liveTradingView select, #liveTradingView form, #liveTradingView textarea';
-    assert.equal(await page.locator(controls).count(), 0, "the read-only section must offer no control that could be mistaken for an order path");
+    // The section now draws the mirrored MT5 chart, which brings read-only controls of its own: the
+    // symbol row and the candles/line toggle. The guard keeps its original meaning by requiring that
+    // the chart's controls are the ONLY controls present, that each is named by the data attribute the
+    // chart binds to, and that none of them reads like an order path.
+    assert.equal(
+      await page.locator("#liveTradingView input, #liveTradingView select, #liveTradingView form, #liveTradingView textarea").count(),
+      0,
+      "the read-only section must carry no form control"
+    );
+    const chartControls = await page.locator("#liveTradingView [data-live-chart-symbol], #liveTradingView [data-live-chart-mode]").count();
+    assert.ok(chartControls > 0, "the chart must render its symbol row and its candles/line toggle");
+    assert.equal(
+      await page.locator(controls).count(),
+      chartControls,
+      "the chart's own read-only controls must be the only controls in the section"
+    );
+    assert.equal(
+      await page.locator('#liveTradingView button:text-matches("(buy|sell|order|position|close|modify|cancel|trade)", "i")').count(),
+      0,
+      "no control in the read-only section may read like an order path"
+    );
 
     assert.equal(snapshot.read_only, true, "the shipped snapshot must declare itself read-only");
     assert.equal(snapshot.order_functions_called, false, "the shipped snapshot must record that the producer called no order function");
