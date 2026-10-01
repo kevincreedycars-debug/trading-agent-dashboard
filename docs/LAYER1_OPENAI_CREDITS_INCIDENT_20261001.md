@@ -1,10 +1,56 @@
 # Layer 1 Agent model outage - the OpenAI account is out of credits, 2026-10-01
 
+**Resolved the same day.** The account was funded, and the recheck refresh run at `2026-10-01T13:01:56.963Z`
+(orchestrator 4460) completed the whole chain green with genuinely fresh Layer 1 - see "Resolution" below.
+
 Both refreshes on the morning of 2026-10-01 failed at the Layer 1 model node for all seven assets. This is not a
 rate limit and not a workflow defect: the OpenAI account behind the n8n credential has no credits left, so the
 already-deployed retries and a second run ten minutes later both returned the same provider error. No dashboard,
 workflow, credential or repository change is the repair - the account has to be funded, or the model provider
 replaced.
+
+## Resolution: the recheck refresh of 2026-10-01T13:01:56.963Z ran the whole chain green
+
+After the user confirmed the top-up, a refresh was triggered with the documented webhook POST at
+`2026-10-01T13:01:56.963Z`. Orchestrator execution 4460 finished `success` at `2026-10-01T13:08:26.633Z`, and this time
+every Layer 1 agent reached the end of its workflow:
+
+| Asset | Execution | Started | Stopped | Result |
+| --- | --- | --- | --- | --- |
+| USD | 4468 | 13:05:16.766Z | 13:05:31.262Z | success, last node `Create a row` |
+| EUR | 4469 | 13:05:32.613Z | 13:05:48.401Z | success, last node `Create a row` |
+| GOLD | 4470 | 13:05:49.733Z | 13:06:05.427Z | success, last node `Create a row` |
+| NQ | 4471 | 13:06:06.677Z | 13:06:23.891Z | success, last node `Create a row` |
+| BTC | 4472 | 13:06:25.124Z | 13:06:44.753Z | success, last node `Create a row` |
+| WTI | 4473 | 13:06:46.170Z | 13:07:39.290Z | success, last node `Create a row` |
+| GBP | 4474 | 13:07:39.395Z | 13:07:58.853Z | success, last node `Create a row` |
+| SILVER | 4475 | 13:07:58.961Z | 13:08:13.488Z | success, last node `Create a row` |
+
+Layer 2 4476 then ran `13:08:14.686Z`-`13:08:19.658Z` (success) and the Dashboard Writer 4477 ran
+`13:08:20.308Z`-`13:08:24.332Z` (success), publishing the run to production `main`: `21b2ae6` (layer 2, `13:08:18Z`),
+`5871944` (layer 1, `13:08:23Z`) and `104716a` (status, `13:08:25Z`). The published status file reads `success`,
+`Manual Refresh Complete`, `last_run_finished_at` `2026-10-01T13:08:24.979Z`.
+
+Published `data/layer1.json` carries `dashboard_meta.last_updated_et` `2026-10-01T13:08:22.451Z` and eight distinct agent
+`sealed_at` values from `2026-10-01T13:05:31.194527Z` to `2026-10-01T13:08:13.210016Z`, each within a second of its own
+execution above, with `expires_at` 24 hours later - this is a genuinely fresh Layer 1, not a restamped one. Published
+`data/layer2.json` reads `last_updated_et` `2026-10-01T13:08:18.294Z`, built from those fresh Layer 1 inputs. The stale
+stamp the refused 09:29Z run had left behind is superseded.
+
+There was also an earlier healthy run between them: orchestrator 4442 (`10:27:16.901Z`-`10:32:31.332Z`, success) with
+agents 4450-4457 succeeding `10:29:50Z`-`10:32:17Z` and its publish `bc60764`/`e07f501`/`9213bc7`/`1f82c55` at `10:32Z`.
+So the balance was restored between the failed SILVER at `2026-10-01T09:28:55Z` and the succeeded USD at
+`2026-10-01T10:29:50Z`, and the live chain has now produced fresh Layer 1 twice.
+
+Nothing was changed to achieve this: no workflow, credential, dashboard or repository edit, no error suppression, no
+republish of stale data. The only open observation is pre-existing and unrelated to the outage - published payloads still
+carry `source_run_id: null` with `source_run_id_consistency: UNKNOWN`, so freshness has to be read from `sealed_at` and
+`expires_at` rather than from a run id.
+
+The artifact reached the browser-facing surface too: the live Pages copy at
+`https://kevincreedycars-debug.github.io/trading-agent-dashboard/data/layer1.json` still returned the 10:32:27Z version while
+the deploy propagated and flipped to `last_updated_et` `2026-10-01T13:08:22.451Z` at `2026-10-01T13:13:59Z`, about five and
+a half minutes after the writer pushed it.
 
 ## Confirmed failure
 

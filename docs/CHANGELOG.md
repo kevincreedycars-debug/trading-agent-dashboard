@@ -1,3 +1,33 @@
+# 2026-10-01 lunchtime - the Layer 1 outage is closed: the funded account runs the chain green with genuinely fresh data
+
+The user confirmed the top-up, and the recheck refresh triggered with the documented webhook POST at
+`2026-10-01T13:01:56.963Z` came back green end to end. Orchestrator execution 4460 finished `success` at
+`2026-10-01T13:08:26.633Z` with all eight Layer 1 agents completing instead of stopping at `Message a model` - USD 4468
+(`13:05:16.766Z`-`13:05:31.262Z`), EUR 4469, GOLD 4470, NQ 4471, BTC 4472, WTI 4473, GBP 4474 and SILVER 4475
+(`13:07:58.961Z`-`13:08:13.488Z`), every one ending on its final node `Create a row`. Layer 2 4476 ran
+`13:08:14.686Z`-`13:08:19.658Z` and Dashboard Writer 4477 `13:08:20.308Z`-`13:08:24.332Z`, both `success`, publishing the
+run to production `main` as `21b2ae6` (layer 2), `5871944` (layer 1) and `104716a` (status, `Manual Refresh Complete`,
+`last_run_finished_at` `2026-10-01T13:08:24.979Z`).
+
+Freshness was checked in the published artifact rather than inferred from the green status: `data/layer1.json` carries
+`dashboard_meta.last_updated_et` `2026-10-01T13:08:22.451Z` and eight distinct agent `sealed_at` values from
+`2026-10-01T13:05:31.194527Z` to `2026-10-01T13:08:13.210016Z`, each within a second of its own execution, with
+`expires_at` 24 hours later; `data/layer2.json` reads `last_updated_et` `2026-10-01T13:08:18.294Z`, built from those fresh
+Layer 1 inputs. This is new data, not a restamped copy of yesterday's, so the panel leaves its stale state; the live Pages
+copy of `data/layer1.json` flipped to that `13:08:22.451Z` version at `2026-10-01T13:13:59Z`, about five and a half minutes
+after the writer pushed it. An earlier
+healthy run, orchestrator 4442 (`10:27:16.901Z`-`10:32:31.332Z`, agents 4450-4457, publish `bc60764`/`e07f501`/`9213bc7`/
+`1f82c55` at `10:32Z`), places the restore between the failed SILVER at `2026-10-01T09:28:55Z` and the succeeded USD at
+`2026-10-01T10:29:50Z`.
+
+The repair was the account holder's and nothing else was touched: no workflow, credential, dashboard or repository change,
+no error suppression and no republish of stale data. The only observation left is pre-existing and unrelated - published
+payloads still carry `source_run_id: null` with `source_run_id_consistency: UNKNOWN`, so freshness has to be read from
+`sealed_at` and `expires_at` rather than from a run id. Record updated:
+`docs/LAYER1_OPENAI_CREDITS_INCIDENT_20261001.md`; read-only evidence and the `tmp/` helpers stay ignored. The stale
+coordinator lock from dead pid `24000` remains in place, so dispatch is still stopped until the user says to clear it.
+
+
 # 2026-10-01 late morning - the post-top-up recheck refresh was refused by the same exhausted OpenAI balance
 
 The user reported the OpenAI account funded and asked for a recheck. A refresh was triggered outside the browser with the

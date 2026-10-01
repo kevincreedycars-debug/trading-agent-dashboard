@@ -1,6 +1,27 @@
 # Current state
 
-2026-10-01 late morning, credits recheck: the user reported the OpenAI account funded and asked for a recheck, so a
+2026-10-01 lunchtime, live refresh outage resolved and verified. The user confirmed the OpenAI top-up, and a refresh
+triggered with the documented webhook POST at `2026-10-01T13:01:56.963Z` ran the entire chain green: orchestrator 4460
+(`success`, stopped `13:08:26.633Z`), all eight Layer 1 agents succeeding end-to-end (USD 4468 `13:05:16Z`, EUR 4469,
+GOLD 4470, NQ 4471, BTC 4472, WTI 4473, GBP 4474, SILVER 4475 `13:07:58Z`-`13:08:13Z`, each finishing on `Create a row`),
+then Layer 2 4476 (`13:08:14Z`-`13:08:19Z`) and the Dashboard Writer 4477 (`13:08:20Z`-`13:08:24Z`). Production `main`
+received `21b2ae6` (layer 2), `5871944` (layer 1) and `104716a` (status, `Manual Refresh Complete`), and the published
+`data/layer1.json` carries `last_updated_et` `2026-10-01T13:08:22.451Z` with eight distinct `sealed_at` values from
+`13:05:31.194527Z` to `13:08:13.210016Z` expiring 24 hours later - genuinely fresh Layer 1, not a restamped one, so the
+panel is out of `STALE`; the live Pages copy of `data/layer1.json` flipped to that `13:08:22.451Z` version at
+`2026-10-01T13:13:59Z`, about five and a half minutes after the writer pushed it. An earlier healthy run 4442
+(`10:27:16Z`-`10:32:31Z`, agents 4450-4457, publish at `10:32Z`) shows
+the balance came back between the failed SILVER at `09:28:55Z` and the succeeded USD at `10:29:50Z`. Nothing was changed to
+fix it: no workflow, credential, dashboard or repository edit, no suppression and no republish. Resolved record:
+`docs/LAYER1_OPENAI_CREDITS_INCIDENT_20261001.md`; read-only evidence and helpers under ignored `tmp/`. Pre-existing and
+unrelated: published payloads still carry `source_run_id: null` (`source_run_id_consistency: UNKNOWN`), so freshness is
+read from `sealed_at`/`expires_at`. Separately still open: the stale coordinator lock from dead pid `24000` sits in
+`.local/orchestration/controller` (`daemon.lock`, `run.lock` on `20260930-strategy-evening-save-031`, `status.json`
+`reviewing` at `2026-09-30T21:02:00Z`) with no dispatch daemon process alive, so dispatch will not self-start until that
+lock is cleared on the user's word.
+
+2026-10-01 late morning, credits recheck (superseded by the entry above): the user reported the OpenAI account funded and
+asked for a recheck, so a
 controlled refresh was run at `2026-10-01T09:22:24.966Z` with the documented instance webhook POST (the same request the
 dashboard button makes). It reproduced the outage exactly: orchestrator 4424 finished `success` at `09:29:10Z` while all
 eight Layer 1 agents failed - USD 4432 (`09:25:23Z`), EUR 4433, GOLD 4434, NQ 4435, BTC 4436, WTI 4437, GBP 4438 and

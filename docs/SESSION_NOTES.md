@@ -1,5 +1,24 @@
 # Session notes
 
+2026-10-01 lunchtime, outage closed: the user confirmed the top-up and a refresh triggered at `2026-10-01T13:01:56.963Z`
+with the documented webhook POST came back green through the whole chain. Orchestrator 4460 finished `success` at
+`13:08:26.633Z` with all eight Layer 1 agents completing rather than stopping at the model node - USD 4468 (`13:05:16Z`),
+EUR 4469, GOLD 4470, NQ 4471, BTC 4472, WTI 4473, GBP 4474, SILVER 4475 (`13:07:58Z`-`13:08:13Z`), every one ending on
+`Create a row` - followed by Layer 2 4476 and the Dashboard Writer 4477. Production `main` took `21b2ae6` (layer 2),
+`5871944` (layer 1) and `104716a` (status, `Manual Refresh Complete`, `13:08:24.979Z`), and the published
+`data/layer1.json` carries `last_updated_et` `2026-10-01T13:08:22.451Z` with eight distinct agent `sealed_at` values from
+`13:05:31.194527Z` to `13:08:13.210016Z`, each matching its own execution, expiring 24 hours later - fresh data, so the
+panel's stale state is cleared. An earlier healthy run 4442 (`10:27:16Z`-`10:32:31Z`, agents 4450-4457, published
+`10:32Z`) brackets the restore: the balance came back between the failed SILVER at `09:28:55Z` and the succeeded USD at
+`10:29:50Z`. The fix was the account holder's alone; no workflow, credential, dashboard or repository change was made, no
+error was suppressed and no stale payload was restamped. The previously noted gap is unchanged and unrelated: published
+payloads carry `source_run_id: null` with `source_run_id_consistency: UNKNOWN`, so freshness is read from
+`sealed_at`/`expires_at`. Still open from before, in the previous order: the stale coordinator lock from dead pid `24000`
+in `.local/orchestration/controller` (dispatch stays stopped until the user says to clear it), the written FTMO
+confirmation and the call-to-order contract, the overdue gold-research 022 item A envelope, the user's publish calls on
+the gold factor draft page revision 2 and the strategy 030 release package, the harness window's paste and mailbox click,
+and the seven sleeping backtester windows.
+
 2026-10-01 late morning, credits recheck: the user said the account was funded and asked for a recheck, so a refresh was
 triggered at `2026-10-01T09:22:24.966Z` with the documented webhook POST and it failed exactly as before. Orchestrator 4424
 reported `success` at `09:29:10Z` while every one of the eight Layer 1 agents failed - USD 4432 (`09:25:23Z`), EUR 4433,
