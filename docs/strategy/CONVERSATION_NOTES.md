@@ -2439,3 +2439,20 @@ B's single generated document later); whether revision 2 of the draft page trave
 measured factor numbers; and whether the fourth tab - the outcomes page, the one the user did not name, which this
 release would give its first bar route - stays. On the morning's word the first action is unchanged: hand E1 to E5 of
 the brief to the dashboard lane and run the browser guards.
+
+## 2026-10-01 (morning) - what is next on the gold work, answered to the user
+
+The user asked what is next on the refining of the gold backtesting work. Answered in the plain register - three
+bullets and four questions, no vote changed and nothing filed. The release package is ready (candidate revision 2,
+5,839 bytes, sha256 `de60c2b7...`, accepted with the request as `-029`/`-030`), so on the morning's word the first action
+is the one the notes already end on: hand E1-E5 of `GOLD_TABS_BUILD_BRIEF.md` to the coordinator's dashboard lane, run the
+browser guards, and publish `gold.html` plus the single top-bar entry. The one refining step still unopened is the
+movement screen (answers 47 and 50 put it first), which is the only source of measured factor numbers and needs the user
+to open the measurement work; the Gold hold stands until then.
+
+Four decisions remain the user's, unchanged from `-030`/`-032`: the route (A as briefed, or B's single generated
+document later); whether revision 2 of the draft page travels in the same release with the pinned `40 of 50` guard line
+moved to `50 of 50`; whether the movement-screen measurement opens; and whether the fourth (outcomes) tab stays. This
+entry changed no file but this one: no measurement, artifact, page, bar, guard or number was touched, and no claim of
+completion, acceptance or edge is made.
+
