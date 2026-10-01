@@ -49,6 +49,36 @@ rejected for the same reason.
    copies, it replaces the model that produces Layer 1 signals, and it needs an explicit authorisation and a
    strict-JSON output validation pass before any publish.
 
+## Recheck after the top-up: the 2026-10-01T09:22Z refresh was still refused
+
+The user reported the account funded and asked for a recheck. A controlled refresh was triggered outside the browser with
+the documented POST (`master-orchestrator-dashboard-refresh`) at `2026-10-01T09:22:24.966Z`. Orchestrator execution 4424
+finished `success` at `2026-10-01T09:29:10Z`, and inside it all eight Layer 1 agents failed the same way: USD 4432
+(`09:25:23Z`), EUR 4433, GOLD 4434, NQ 4435, BTC 4436, WTI 4437, GBP 4438 and SILVER 4439 (`09:28:24Z`, stopped
+`09:28:55Z`), every one at `Message a model` with HTTP `429` and `You have no credits remaining.`. The balance is
+therefore still exhausted as seen by the key behind credential `OpenAI account 2` at `09:25Z`-`09:29Z` on 1 October: a
+top-up that had reached that organisation would have cleared at least the later agents, which failed seven minutes into
+the run.
+
+Two facts for whoever is checking billing:
+
+- All eight active Layer 1 agents use one credential: node `Message a model` (`@n8n/n8n-nodes-langchain.openAi`, model
+  `gpt-4.1-mini`) with `openAiApi` credential id `VY1FMMlFQNwU3Ctt`, name `OpenAI account 2`. The workspace's workflow
+  definitions reference exactly two OpenAI credentials: that one (13 workflows) and `OpenAI account`
+  (`BIioMOGj8DJHGGhb`), referenced only by the inactive `Gold Agent` (`7vVmN27XFZrW9vgc`), which has no recorded
+  executions at all - not a working fallback.
+- The same refusal is returned for an exhausted balance, a spend cap, and a key belonging to a different organisation or
+  project than the one that was funded. The check that matters is that the funded organisation owns the key behind
+  `VY1FMMlFQNwU3Ctt`.
+
+The refused run still published: Layer 2 4440 (`09:28:56Z`, success, the workflow carries no model node) and Dashboard
+Writer 4441 (`09:29:02Z`, success) pushed production `main` commits `c77b268` (layer 2) and `b065224` (layer 1). Published
+`data/layer1.json` now carries `dashboard_meta.last_updated_et` `2026-10-01T09:29:05.981Z` while all eight agent payloads
+inside it are sealed `2026-09-30T10:19:54Z`-`2026-09-30T10:21:51Z` and expire `2026-10-01T10:19Z`-`2026-10-01T10:21Z`. A
+Master run that reports `success` is therefore still not proof of fresh Layer 1, and the cards go stale and then expire
+again inside the hour. No rollback of that publication was taken: it carries yesterday's own calls, and rewriting
+production files is a publish decision, not a repair.
+
 ## Evidence
 
 Instance kind and credential inventory were read from the API without printing any value: the instance is n8n Cloud,
@@ -56,4 +86,7 @@ Instance kind and credential inventory were read from the API without printing a
 only - no DeepSeek credential exists in n8n today. Raw evidence stays ignored: `tmp/layer1-429-summary.txt`,
 `tmp/usd-timeline.txt`, `tmp/llm-nodes.txt`, `tmp/instance.txt`, `tmp/n8n-evidence/*-latest-execution.json`, and the
 read-only helpers `tmp/inspect-layer1-429.js`, `tmp/inspect-usd-timeline.js`, `tmp/inspect-llm-nodes.js`,
-`tmp/inspect-instance.js`.
+`tmp/inspect-instance.js`. Added for the recheck: `tmp/recheck-layer1-status.js`,
+`tmp/inspect-orchestrator-executions.js`, `tmp/inspect-run-children.js`, `tmp/inspect-openai-credential.js`,
+`tmp/scan-openai-credentials.js`, `tmp/list-workflows.js`, `tmp/inspect-executions.js`,
+`tmp/inspect-executions-gold-agent.js`, `tmp/summarize-published.js`.

@@ -1,3 +1,34 @@
+# 2026-10-01 late morning - the post-top-up recheck refresh was refused by the same exhausted OpenAI balance
+
+The user reported the OpenAI account funded and asked for a recheck. A refresh was triggered outside the browser with the
+documented instance webhook POST at `2026-10-01T09:22:24.966Z` (the same request the dashboard button makes), and it failed
+exactly as the morning's two runs did.
+
+Read-only inspection through the CLIXML runner (scope `n8n`): orchestrator execution 4424 finished `success` at
+`2026-10-01T09:29:10Z` while all eight Layer 1 agents failed at `Message a model` with `NodeApiError`, HTTP `429` and
+`You have no credits remaining. Add credits to continue using the API at
+https://platform.openai.com/settings/organization/billing/.` - USD 4432 (`2026-10-01T09:25:23Z`), EUR 4433, GOLD 4434,
+NQ 4435, BTC 4436, WTI 4437, GBP 4438 and SILVER 4439 (started `09:28:24Z`, stopped `09:28:55Z`). SILVER ran seven minutes
+into the run, so a restored balance would have cleared at least the later agents: the credited organisation is not the one
+that owns the key behind credential `OpenAI account 2` (`VY1FMMlFQNwU3Ctt`, `gpt-4.1-mini`), or the balance is still empty
+or capped. All eight active agents use that single credential; the workflow definitions reference exactly one other OpenAI
+credential, `OpenAI account` (`BIioMOGj8DJHGGhb`), used only by the inactive `Gold Agent` (`7vVmN27XFZrW9vgc`) which has no
+recorded executions, so there is no funded spare to switch to.
+
+The refused run still published. Layer 2 4440 (that workflow has no model node) started `09:28:56Z` and Dashboard Writer
+4441 started `09:29:02Z`, both `success`, pushing production `main` commits `c77b268` (layer 2) and `b065224` (layer 1). The
+published `data/layer1.json` therefore carries `dashboard_meta.last_updated_et` `2026-10-01T09:29:05.981Z` while every agent
+payload inside it is still sealed `2026-09-30T10:19:54Z`-`2026-09-30T10:21:51Z` and expires `2026-10-01T10:19Z`-
+`2026-10-01T10:21Z`. Fresh stamp, yesterday's calls, expiring inside the hour: a `success` Master is still not proof of
+fresh Layer 1. No rollback and no republish was taken, because rewriting production files is a publish decision and not a
+repair. The open item is the user's: confirm which OpenAI organisation was funded and that it owns the key behind
+`VY1FMMlFQNwU3Ctt` - an exhausted balance, a spend cap and a key from a different project or organisation all return the
+same refusal - then one refresh proves it. Separately, the stale coordinator lock from dead pid `24000` is still in
+`.local/orchestration/controller` with no dispatch daemon alive, so nothing self-starts until the user says to clear it.
+Record updated: `docs/LAYER1_OPENAI_CREDITS_INCIDENT_20261001.md`; new read-only helpers under ignored `tmp/`; no credential
+value read or printed.
+
+
 # 2026-10-01 mid-morning - the live refresh fails at Layer 1 because the OpenAI account behind the n8n credential has no credit left
 
 The user reported a fresh post-request workflow failure and asked for it fixed. It was diagnosed to a cause no

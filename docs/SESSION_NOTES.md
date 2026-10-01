@@ -1,5 +1,24 @@
 # Session notes
 
+2026-10-01 late morning, credits recheck: the user said the account was funded and asked for a recheck, so a refresh was
+triggered at `2026-10-01T09:22:24.966Z` with the documented webhook POST and it failed exactly as before. Orchestrator 4424
+reported `success` at `09:29:10Z` while every one of the eight Layer 1 agents failed - USD 4432 (`09:25:23Z`), EUR 4433,
+GOLD 4434, NQ 4435, BTC 4436, WTI 4437, GBP 4438, SILVER 4439 (`09:28:24Z`-`09:28:55Z`) - at `Message a model`, HTTP `429`,
+"You have no credits remaining...". Because SILVER ran seven minutes into the run, the balance seen by the live key is
+still empty, so the top-up has not landed on the organisation behind credential `OpenAI account 2`
+(`VY1FMMlFQNwU3Ctt`). Every active agent uses that single credential; the workspace's only other OpenAI credential,
+`OpenAI account` (`BIioMOGj8DJHGGhb`), is used by the inactive `Gold Agent` (`7vVmN27XFZrW9vgc`) that has no executions at
+all, so there is no spare funded credential to switch to. The refused run still published - Layer 2 4440 and Writer 4441
+pushed `main` `c77b268`/`b065224` - leaving `data/layer1.json` with a `last_updated_et` of `2026-10-01T09:29:05.981Z` over
+payloads sealed `2026-09-30T10:19Z`-`10:21Z` that expire `2026-10-01T10:19Z`-`10:21Z`: fresh stamp, yesterday's calls. No
+rollback or republish was taken because production publication is a publish decision, not a repair. The open question for
+the user is which organisation was funded and whether it owns the key behind `VY1FMMlFQNwU3Ctt` - the same refusal comes
+back for an exhausted balance, a spend cap, or a key from a different project or organisation. The stale coordinator lock
+from dead pid `24000` is still in place with no dispatch daemon running, so nothing self-starts until the user says to
+clear it. Unchanged and still open, in the previous order: the written FTMO confirmation and the call-to-order contract,
+the overdue gold-research 022 item A envelope, the user's publish calls on the gold factor draft page revision 2 and the
+strategy 030 release package, the harness window's paste and mailbox click, and the seven sleeping backtester windows.
+
 2026-10-01 mid-morning, live refresh outage: the morning's two refreshes failed at every Layer 1 agent for a billing
 reason, not a rate limit, and the fix is one action only the user can take. All seven agents (USD 4396 at
 `2026-10-01T08:45:26Z` and 4414 at `08:56:08Z`, EUR 4415, GOLD 4416, NQ 4417, BTC 4418, WTI 4419, GBP 4420, SILVER 4421)

@@ -1,5 +1,28 @@
 # Current state
 
+2026-10-01 late morning, credits recheck: the user reported the OpenAI account funded and asked for a recheck, so a
+controlled refresh was run at `2026-10-01T09:22:24.966Z` with the documented instance webhook POST (the same request the
+dashboard button makes). It reproduced the outage exactly: orchestrator 4424 finished `success` at `09:29:10Z` while all
+eight Layer 1 agents failed - USD 4432 (`09:25:23Z`), EUR 4433, GOLD 4434, NQ 4435, BTC 4436, WTI 4437, GBP 4438 and
+SILVER 4439 (stopped `09:28:55Z`) - each at `Message a model` with HTTP `429` and "You have no credits remaining. Add
+credits to continue using the API at https://platform.openai.com/settings/organization/billing/.". The run reached SILVER
+seven minutes in, so a balance that had actually been restored would have cleared the later agents: the money has not
+reached the organisation that owns the key behind credential `OpenAI account 2` (`VY1FMMlFQNwU3Ctt`, `gpt-4.1-mini`, used
+by all eight agents). The workflow definitions reference exactly two OpenAI credentials, and the only other one,
+`OpenAI account` (`BIioMOGj8DJHGGhb`), is referenced solely by the inactive `Gold Agent` (`7vVmN27XFZrW9vgc`) with no
+executions recorded, so it is not a usable fallback. The refused run still published: Layer 2 4440 (no model node in that
+workflow) and Dashboard Writer 4441 succeeded and pushed production `main` `c77b268`/`b065224`, so published
+`data/layer1.json` carries `dashboard_meta.last_updated_et` `2026-10-01T09:29:05.981Z` over payloads sealed
+`2026-09-30T10:19Z`-`10:21Z` that expire `2026-10-01T10:19Z`-`10:21Z` - fresh stamp, yesterday's calls, expiring inside the
+hour. No rollback and no republish was taken, because rewriting production files is a publish decision and not a repair.
+Next: confirm which OpenAI organisation was funded and that it owns the key behind `VY1FMMlFQNwU3Ctt`, then one refresh
+proves it; a `success` Master on its own still does not prove fresh Layer 1. Record kept in
+`docs/LAYER1_OPENAI_CREDITS_INCIDENT_20261001.md`, read-only evidence and helpers under ignored `tmp/`, no credential value
+read or printed. Separately, the stale coordinator lock from dead pid `24000` still sits in
+`.local/orchestration/controller` (`daemon.lock`, `run.lock` on `20260930-strategy-evening-save-031`, `status.json`
+`reviewing` at `2026-09-30T21:02:00Z`) with no dispatch daemon process alive - the only `node` processes running are the
+editor's MCP GitHub servers - so dispatch will not self-start until that lock is cleared on the user's word.
+
 2026-10-01 mid-morning, live refresh incident: the user reported a fresh post-request workflow failure and asked for it
 fixed, and it diagnoses to the one thing no repository or workflow change can repair - the OpenAI account behind the
 live Layer 1 credential has no credits left. Read-only authenticated inspection through the CLIXML runner (scope `n8n`)
