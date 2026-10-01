@@ -1,5 +1,24 @@
 # Current state
 
+2026-10-01 afternoon, mailbox empty: all four open submissions were reviewed by hand from the canonical checkout and
+answered (`pending 0, errors 0`). `20261001-strategy-user-goahead-publish-033` was `acknowledged` as the record of the
+user's go-ahead, with the live `gold.html` publish, the single top-bar entry, the pinned guard line and the draft-page
+refresh left as the coordinator's production action to be taken with the user's word in-session; the release candidate
+was verified at 5,839 bytes / 106 CRLF / sha256
+`de60c2b7c452aa74ac282d475707e15d2d68977c77c4cd2a505cb4d205e64da6`, the CRLF form of a 5,733-byte LF blob identical
+from `e9cd53c` through the tip, while review -030's 6,199 bytes / `74dd93c8...` is revision 1 at `1c2678b`/`bcceb29`.
+`20261001-strategy-dashboard-nav-consistency-034` was acknowledged and closed as superseded by `-035`, its page
+measurements reproducing on `origin/main` `104716a` with one correction (five, not six, of the eight root pages carry
+no `styles.css` reference). `20261001-strategy-nav-answers-notify-035` was accepted and adopted into the dashboard
+queue: route N1, the same dark header and rail on every served page including the light draft page, sequenced after the
+gold release. `20261001-backtester-harness-stage-a-r1` was accepted as the stage-A design record only -
+`docs/backtester-harness/HARNESS_ARCHITECTURE.md` reproduces byte-exactly at 46,554 bytes / sha256 `34160779...`, stage
+B stays closed pending the user's answers to its seven section-8 questions, and its branch tip (`40d2546`, not the
+reported `aea87e4`) owes a disclosure of `79c7370` and `40d2546` in its next status report. Reviews:
+`docs/orchestration/reviews/20261001-*.md`; register updated on the `dashboard` and `backtester-harness` rows; the
+user's two navigation answers logged in `docs/DECISIONS.md`. Next, and still the user's: the go-ahead to execute the
+release, the movement-screen lane `gold-declared-band-measurement-026`, and the stale coordinator lock described below.
+
 2026-10-01 lunchtime, live refresh outage resolved and verified. The user confirmed the OpenAI top-up, and a refresh
 triggered with the documented webhook POST at `2026-10-01T13:01:56.963Z` ran the entire chain green: orchestrator 4460
 (`success`, stopped `13:08:26.633Z`), all eight Layer 1 agents succeeding end-to-end (USD 4468 `13:05:16Z`, EUR 4469,

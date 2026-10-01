@@ -129,3 +129,28 @@ citation slips (rejected: neither slip alters a number or a conclusion, and the 
 Unresolved and the user's: whether to open any further exploratory stage over the already-spent intervals at all; if opened,
 which writer model; whether the page lane may run while it has no registered worker; and, separately, whether to promote
 the accepted Gold verdict page from the worker checkout into canonical `docs/`.
+
+## 2026-10-01 — Dashboard navigation: same theme everywhere, and after the gold page
+
+Decision: the navigation-consistency work the user asked for is adopted as a coordinator dashboard queue item on route
+N1 and sequenced after the gold tabs release. Every served page carries the same dark header and the same dark side
+rail, including the light draft page `gold-factor-wip.html`, with no light variant and no runtime script: one canonical
+fragment injected as bytes at build time.
+
+Reason: the user's own two answers of 2026-10-01 (`same theme everywhere`; `after`), recorded in
+`docs/strategy/DASHBOARD_NAV_CONSISTENCY_REQUEST.md` and reviewed at
+`docs/orchestration/reviews/20261001-strategy-nav-answers-notify-035.md`. Route N1 is the only route that keeps
+`gold-factor-wip.html` passing its own guard, which asserts a count of 0 for `script, link, img, iframe` on that page
+(`backtester/tests/gold_factor_wip_dashboard_link.browser.test.js` line 44). Sequencing the change after the release
+means the fingerprint it settles already holds the single `gold.html` top-bar entry, so no candidate revision 3 is
+needed.
+
+Alternatives considered: N2, a shared `nav.js` plus a `styles.css` link on every page (rejected: it breaks the draft
+page's self-containment guard); N3, hand-paste with one byte-fingerprint guard (kept as fallback only); nav first, so
+the shell ships as candidate revision 3 (rejected: the user chose `after`); a light variant of the header for the draft
+page (rejected: the user chose `same theme everywhere`).
+
+Unresolved and the user's: the go-ahead to execute the gold tabs release, which is a coordinator production action
+taken with the user's word in-session; whether to open the movement-screen measurement lane
+`gold-declared-band-measurement-026`, not opened, with the standing Gold hold unchanged until it is; and the stale
+coordinator lock from dead pid `24000`, which keeps dispatch from self-starting until it is cleared.

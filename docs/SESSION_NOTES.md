@@ -1,5 +1,23 @@
 # Session notes
 
+2026-10-01 afternoon, the mailbox is empty: all four open submissions were reviewed by hand from the canonical checkout
+and four replies were published, so `coordination.js check` now reads `pending 0, errors 0` with no unanswered item
+anywhere. `20261001-strategy-user-goahead-publish-033` was acknowledged as the record of the user's go-ahead rather than
+an execution - the live publish stays the coordinator's production action, taken with the user's word in-session - with
+the release candidate verified at 5,839 bytes / 106 CRLF / sha256 `de60c2b7`, the CRLF form of a 5,733-byte LF blob
+identical from `e9cd53c` through the tip, and review -030's 6,199 bytes / `74dd93c8` identified as revision 1 at
+`1c2678b`/`bcceb29`. `20261001-strategy-dashboard-nav-consistency-034` was acknowledged and closed as superseded, its
+measurements reproducing on `origin/main` `104716a` with the one correction that five, not six, of the eight root pages
+carry no `styles.css` reference, and its guard coupling confirmed at
+`backtester/tests/gold_factor_wip_dashboard_link.browser.test.js` line 44.
+`20261001-strategy-nav-answers-notify-035` was accepted and adopted into the dashboard queue - route N1, same theme
+everywhere, after the gold release. The harness stage-A report was accepted as a design record only, its architecture
+document reproducing byte-exactly at 46,554 bytes / sha256 `34160779`, with the branch tip now `40d2546` rather than the
+reported `aea87e4` and two undisclosed commits (`79c7370`, `40d2546`) to be disclosed in its next status report; stage B
+stays closed pending the user's answers to its seven questions. Nothing was published, merged, deployed or opened this
+cycle, and no worker status was set to a publish state. The stale pid-`24000` lock and the dispatch restart remain
+untouched and the user's to call, as do the release go-ahead and the movement-screen lane.
+
 2026-10-01 lunchtime, outage closed: the user confirmed the top-up and a refresh triggered at `2026-10-01T13:01:56.963Z`
 with the documented webhook POST came back green through the whole chain. Orchestrator 4460 finished `success` at
 `13:08:26.633Z` with all eight Layer 1 agents completing rather than stopping at the model node - USD 4468 (`13:05:16Z`),

@@ -1,3 +1,50 @@
+# 2026-10-01 afternoon - the mailbox is empty: four items reviewed, the navigation item adopted on route N1, and stage A accepted as a design record only
+
+All four open submissions were reviewed by hand from the canonical checkout and four replies were published; the mailbox
+now reads `pending 0, errors 0`, with the inbox empty for the first time since the outage.
+
+- `20261001-strategy-user-goahead-publish-033` (mailbox `a20f7056...`, reply `9c6654aa...`, review
+  `docs/orchestration/reviews/20261001-strategy-user-goahead-publish-033.md`) - `acknowledged` as the record of the
+  user's go-ahead, not as an execution. The live copy of `gold.html`, the single top-bar entry, the pinned guard line
+  and the draft-page refresh are the coordinator's production action and are taken with the user's word in-session.
+  Verified: worktree clean at `33a6d85`, pushed to origin at `33a6d85` (the `55e33f4` the envelope reports is the
+  branch as it stood when it filed), changed set `docs/strategy/` only. The release candidate reproduces byte-exactly
+  at 5,839 bytes / 106 CRLF / 0 bare LF / sha256
+  `de60c2b7c452aa74ac282d475707e15d2d68977c77c4cd2a505cb4d205e64da6` - the CRLF form of a 5,733-byte LF blob
+  byte-identical from `e9cd53c` through the tip - while review -030's 6,199 bytes / 109 CRLF / sha256 `74dd93c8...` is
+  revision 1 at `1c2678b` and `bcceb29`. One file, two materialisations, two revisions: the acceptance must name the
+  materialisation it serves, because that choice alone decides the served fingerprint.
+- `20261001-strategy-dashboard-nav-consistency-034` (mailbox `15050acb...`, reply `3d856334...`) - `acknowledged` and
+  closed as superseded by -035. Its page-by-page measurement of the eight root pages reproduces on today's
+  `origin/main` `104716a` (the base moved from `1f82c55` and every size is unchanged), with one corrected number:
+  five, not six, of the eight pages carry no `styles.css` reference, and `backtest-flow.html`'s only `link` elements
+  are two Google Fonts preconnects. The guard coupling it identified is confirmed at
+  `backtester/tests/gold_factor_wip_dashboard_link.browser.test.js` line 44.
+- `20261001-strategy-nav-answers-notify-035` (mailbox `9e573ba7...`, reply `c6dffab6...`) - `accepted` and adopted
+  into the coordinator's dashboard queue: route N1 (one canonical fragment injected as bytes at build time), the same
+  dark header and rail on every served page including the light draft page, sequenced after the gold page release. The
+  request document reproduces at 13,500 bytes / 153 CRLF / sha256 `f678f622...` at `33a6d85` against 12,444 bytes / 143
+  CRLF / sha256 `36f875e0...` at `372bcf8`, so only the two answered sections moved.
+- `20261001-backtester-harness-stage-a-r1` (mailbox `95119dd1...`, reply `9a139f21...`) - `accepted` as the stage-A
+  design record only. `docs/backtester-harness/HARNESS_ARCHITECTURE.md` reproduces byte-exactly at 46,554 bytes /
+  598 CRLF / 599 lines / sha256 `3416077955bddcf968d6b765cd24a40b431bd8a26a1001c0222f7ce4fb10a0f7`, with the nine
+  sections the assignment lists and seven numbered user-only questions in section 8; the branch has no upstream, so
+  nothing was pushed. Recorded rather than treated as report defects: the CRLF/autocrlf materialisation problem means
+  no harness gate can bind until the `eol=lf` fix and its regression test exist, and the assignment's starting commit
+  `ab21177` against the register's baseline `c673ea7` is the register being newer than the assignment. One disclosure
+  gap: the branch tip is now `40d2546`, not the reported `aea87e4`, with `79c7370` (`ASSET_ENGINE_CYCLE_TIME_PLAN.md`,
+  139 lines) and `40d2546` (`DATA_ANALYSIS_STRATEGY.md`, 170 lines) filed after the status report and undisclosed;
+  both must be disclosed with digests in the next status report, and stage B stays closed until the user rules on the
+  seven questions as one block.
+
+No production change was made by this cycle: nothing was published, copied, merged, deployed or opened, no lane was
+opened, no worker status was set to a publish state, and no credential, workflow, warehouse, Layer 1 or Layer 2
+artefact was touched. The register carries the adopted queue on the `dashboard` workstream
+(`queue_adopted_gold_release_then_nav_n1`) and stage A's acceptance on `backtester-harness`
+(`stage_a_design_accepted_awaiting_user`), and the user's two navigation answers are logged in `docs/DECISIONS.md`.
+Still the user's: the go-ahead to execute the gold release, the movement-screen lane `gold-declared-band-measurement-026`,
+and the stale coordinator lock from dead pid `24000` that keeps dispatch from self-starting.
+
 # 2026-10-01 lunchtime - the Layer 1 outage is closed: the funded account runs the chain green with genuinely fresh data
 
 The user confirmed the top-up, and the recheck refresh triggered with the documented webhook POST at
