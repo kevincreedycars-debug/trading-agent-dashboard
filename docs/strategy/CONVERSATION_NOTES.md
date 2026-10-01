@@ -2456,3 +2456,16 @@ moved to `50 of 50`; whether the movement-screen measurement opens; and whether 
 entry changed no file but this one: no measurement, artifact, page, bar, guard or number was touched, and no claim of
 completion, acceptance or edge is made.
 
+## 2026-10-01 (morning, same session) - the user says "okay push everything": the go-ahead, recorded
+
+The user's one-line answer to the four questions was **"okay push everything"**, read as yes to all four with the publish
+first: route A as briefed, four tabs kept, revision 2 of the draft page in the same release with the pinned `40 of 50`
+guard line moved to `50 of 50`, and the movement-screen measurement opened. What this worker can and cannot do is
+unchanged and was said plainly: the live copy of `gold.html`, the single top-bar entry and the guard edits are the
+coordinator's production action under the single-writer rule, so this window cannot put anything on the site. It did the
+maximum in scope in the same turn - pushed its records branch `workers/strategy-advisory-20260920` to origin as a new
+remote branch (HEAD moved to this commit) and filed the go-ahead as submission
+`20261001-strategy-user-goahead-publish-033` for the coordinator to execute E1-E5 of the build brief and open the
+measurement lane. No page, bar, guard, generator, data artifact or number changed; nothing is live as a result of this
+turn; no accuracy, edge, completion or deployment claim is made.
+
