@@ -1,3 +1,37 @@
+# 2026-10-01 mid-morning - the live refresh fails at Layer 1 because the OpenAI account behind the n8n credential has no credit left
+
+The user reported a fresh post-request workflow failure and asked for it fixed. It was diagnosed to a cause no
+repository or workflow change can repair: the OpenAI account behind the live credential is out of credit, so all seven
+Layer 1 agents fail at their single model node and the published Layer 1 stays at yesterday's run.
+
+Confirmed by authenticated, read-only n8n inspection through the CLIXML credential runner (scope `n8n`): USD 4396
+(`2026-10-01T08:45:26Z`) and USD 4414 (`08:56:08Z`), with EUR 4415, GOLD 4416, NQ 4417, BTC 4418, WTI 4419, GBP 4420
+and SILVER 4421, each failing at node `Message a model` (`@n8n/n8n-nodes-langchain.openAi`, `gpt-4.1-mini`, credential
+reference `OpenAI account 2`) with `NodeApiError`, HTTP `429` and the provider's own description `You have no credits
+remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.` The
+status code reads like a rate limit; the description names an exhausted balance, and the same error in two runs ten
+minutes apart behaves like a balance. USD Layer 1's last success was 4378 at `2026-09-30T10:19:42Z`, which is exactly
+the payload the panel still shows, so the balance ran out between `2026-09-30T10:19Z` and `2026-10-01T08:45Z`.
+
+The rest of the chain was not broken: collectors 4409-4413 succeeded, Layer 2 4422 (no LLM node in that workflow)
+rebuilt from Layer 1's stale outputs, and Writer 4423 succeeded, so the Master finished with a failed status while
+still publishing a fresh ingest stamp. Five of the seven agent nodes already carry `retryOnFail: true` with
+`waitBetweenTries: 5000` (USD, EUR, GOLD, NQ, BTC; WTI and GBP carry none) and each agent burned 29-31 seconds, so the
+deployed retries were exercised and returned the same balance error. No workflow, credential or dashboard change was
+made: retries cannot create credits, and no error was suppressed, no stale Layer 1 was republished as fresh and no
+status schema was touched.
+
+The repair is the account holder's: fund the OpenAI organization behind `OpenAI account 2`, or replace that credential
+with a funded one, after which one refresh re-runs the collectors, the seven agents, Layer 2 and the writer. The
+alternative, if that account is not coming back, is a provider switch to the only locally funded model key
+(`DEEPSEEK_API_KEY` in the CLIXML store) across seven active workflows plus the four isolated
+`TEST - ... - ISOLATED - 20260723` copies, which needs an explicit authorisation and a strict-JSON output validation
+pass first, because it replaces the model that produces Layer 1 signals. Record:
+`docs/LAYER1_OPENAI_CREDITS_INCIDENT_20261001.md`; raw read-only evidence stays ignored under `tmp/`. No credential
+value was read or printed and the instance kind and credential inventory were read without exposing values (n8n Cloud,
+45 workflows, no DeepSeek credential in n8n today).
+
+
 # 2026-09-30 evening close - the day parked, with one coordination defect fixed on the way out
 
 Nothing new was authorised at the close. Three things were done. First, the day's records were committed on

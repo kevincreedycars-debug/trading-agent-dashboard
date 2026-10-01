@@ -1,5 +1,27 @@
 # Current state
 
+2026-10-01 mid-morning, live refresh incident: the user reported a fresh post-request workflow failure and asked for it
+fixed, and it diagnoses to the one thing no repository or workflow change can repair - the OpenAI account behind the
+live Layer 1 credential has no credits left. Read-only authenticated inspection through the CLIXML runner (scope `n8n`)
+shows USD 4396 (`08:45:26Z`) and USD 4414 (`08:56:08Z`) plus EUR 4415, GOLD 4416, NQ 4417, BTC 4418, WTI 4419, GBP 4420
+and SILVER 4421, every one failing at its single node `Message a model` (`gpt-4.1-mini`, credential `OpenAI account 2`)
+with HTTP `429` and the provider's own description "You have no credits remaining. Add credits to continue using the API
+at https://platform.openai.com/settings/organization/billing/.". USD Layer 1's last success was 4378 at
+`2026-09-30T10:19:42Z`, which is the payload the panel still renders, so the balance ran out between `2026-09-30T10:19Z`
+and `2026-10-01T08:45Z`. The rest of the chain held: collectors 4409-4413 succeeded, Layer 2 4422 (that workflow carries
+no LLM node) rebuilt from the stale Layer 1 outputs, and Writer 4423 succeeded, so the Master published a fresh ingest
+stamp and a Layer 2 file on top of yesterday's Layer 1. The deployed retry policy was exercised rather than assumed -
+five of the seven nodes already carry `retryOnFail: true` with `waitBetweenTries: 5000` (WTI and GBP carry none) and
+each agent burned 29-31 seconds - so no workflow, credential or dashboard change was made, no error was suppressed, no
+stale Layer 1 was republished as fresh and no status schema was touched. The repair is the account holder's: fund the
+OpenAI organization behind `OpenAI account 2` (or replace that credential with a funded one), after which one refresh
+re-runs the whole chain; the only alternative, if that account is not coming back, is a provider switch to the locally
+funded `DEEPSEEK_API_KEY` across seven active workflows plus the four isolated `TEST - ... - ISOLATED - 20260723`
+copies, which needs an explicit authorisation and a strict-JSON output validation pass first because it replaces the
+model that produces Layer 1 signals. Record `docs/LAYER1_OPENAI_CREDITS_INCIDENT_20261001.md`; raw evidence ignored
+under `tmp/`; no credential value was read or printed.
+
+
 2026-09-30 evening close - work stops here for the evening and nothing is mid-flight. Everything from this session is
 committed as `6669257` on `orchestration/control-plane-20260920`, on top of the background coordinator's `c673ea7` and
 `36e61ca`: the funded-trading authority recorded in `docs/orchestration/DECISIONS.md` with its gates still unmet, the

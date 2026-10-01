@@ -1,5 +1,26 @@
 # Session notes
 
+2026-10-01 mid-morning, live refresh outage: the morning's two refreshes failed at every Layer 1 agent for a billing
+reason, not a rate limit, and the fix is one action only the user can take. All seven agents (USD 4396 at
+`2026-10-01T08:45:26Z` and 4414 at `08:56:08Z`, EUR 4415, GOLD 4416, NQ 4417, BTC 4418, WTI 4419, GBP 4420, SILVER 4421)
+stopped at their single node `Message a model` with HTTP `429` and the provider description "You have no credits
+remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/." - the
+OpenAI account behind the n8n credential `OpenAI account 2` is out of credit. USD Layer 1's last success was 4378 at
+`2026-09-30T10:19:42Z`, which is why every panel card reads `STALE`. The collectors, the Layer 2 workflow (no model node
+in it) and the Dashboard Writer all succeeded, so the refresh published a fresh ingest stamp and a Layer 2 selection on
+top of yesterday's Layer 1 inputs. Nothing was changed to chase it: the retry policy already deployed on five of the
+seven model nodes (three tries, five seconds) ran inside each 29-31 second failure and returned the same balance error,
+and retries cannot create credits, so no workflow, credential, dashboard, error-suppression or republish action was
+taken. To restore the refresh the user funds that OpenAI account, or points the credential at a funded one; the only
+alternative is a switch of the Layer 1 model nodes to the locally funded DeepSeek key across seven active workflows and
+their four isolated test copies, which needs an explicit authorisation and a JSON-output validation pass first. Full
+evidence and the read-only inspection method are in `docs/LAYER1_OPENAI_CREDITS_INCIDENT_20261001.md`; nothing is
+pending on the coordinator side of this incident. Still open and untouched by it, in the previous close's order: the
+written FTMO confirmation and the call-to-order contract, the gold-research 022 item A observation envelope (overdue),
+the user's publish calls on the gold factor draft page revision 2 and the strategy 030 release package, the harness
+window's paste and mailbox click, and the seven sleeping backtester windows.
+
+
 2026-09-30 evening close, the stop point for the evening. The day is committed and the tree is parked. On
 `orchestration/control-plane-20260920`: `6669257` (this session - the funded-trading authority recorded, the published live
 panel refreshed on the user's word as release `599c686` with the cache-buster at `-v2`, and the `backtester-harness`
