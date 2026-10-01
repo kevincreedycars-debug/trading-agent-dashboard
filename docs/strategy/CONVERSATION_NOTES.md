@@ -2469,3 +2469,32 @@ remote branch (HEAD moved to this commit) and filed the go-ahead as submission
 measurement lane. No page, bar, guard, generator, data artifact or number changed; nothing is live as a result of this
 turn; no accuracy, edge, completion or deployment claim is made.
 
+## 2026-10-01 (morning, same session) - "same header and side bar on every page": the next dashboard work, queued
+
+The user's follow-up: *"okay well queue up the next work for the coordinator to add to the dashboard and make sure all
+pages across the dashboard have the same header and side bar menu."* Taken as two asks. First, the next dashboard item goes
+on the coordinator's queue, and that item is the second sentence; the gold release and the movement screen already in the
+queue are not replaced. Second, every served page must carry the same header and the same side-bar menu.
+
+What was measured before writing it (read-only from `origin/main` at `1f82c55`, not the working tree): the site is the
+GitHub Pages publish of `origin/main`, and of its eight root pages **only `index.html` has the header and the rail**. The
+other seven - northstar, standing, backtest-flow and the four gold pages - carry their own `<header>` with a couple of
+inline links, or no header element at all; six of the eight do not even link the shared `styles.css`. The request is
+written as `docs/strategy/DASHBOARD_NAV_CONSISTENCY_REQUEST.md`, sections 1-11: the measured state of every page, the two
+blocks quoted as they are live, the couplings, three routes with one recommended, the fingerprint a guard holds, the
+acceptance run, the boundaries, the sequencing against the pending release, and the rollback.
+
+The couplings recorded, each measured rather than assumed: the rail entries are `<button data-tab>` driven by `script.js`,
+so off the dashboard they must become real anchors or do nothing; the draft page's guard asserts zero `script, link, img,
+iframe` (line 44), so a shared `nav.js` or a `styles.css` link on that page fails its own guard and its header/rail must be
+inline markup; the four gold pages are generated, so the change belongs in `backtester/templates/*`, not in the served
+`.html`; the draft page is a light theme against seven dark ones; and the three hop guards read the "link back"
+(`a[href="index.html"]`), so those assertions move into the shared bar. The one coupling that touches the pending release:
+`gold.html` as written carries its own bespoke header and no rail - exactly what the user is complaining about - so it
+must be brought into line. Section 9 of `GOLD_TABS_BUILD_BRIEF.md` now records that, either release-first (simplest; the
+fingerprint already holds the single entry) or nav-first (the shell becomes candidate revision 3).
+
+This turn changed only this worker's notes and the two documents above; no page, bar, guard, generator, stylesheet, data
+artifact or number was touched, and nothing is live as a result. The go-ahead recorded in the previous entry still stands:
+the live publish of `gold.html` and the opening of the movement screen remain the coordinator's actions.
+

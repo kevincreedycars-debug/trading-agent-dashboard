@@ -203,3 +203,16 @@ user did not name, which this release also gives its first bar route - is kept, 
 "Gold Backtest" entry points in the checkout copy; if the user would rather have three tabs than four, dropping it is
 one `<section>`, one button and one `<iframe>` in the shell and nothing else.
 
+## 9. Coupling added 2026-10-01: the shared header and side bar
+
+The user's instruction on 2026-10-01 - *"make sure all pages across the dashboard have the same header and side bar
+menu"* - lands directly on this release, because `gold.html` as written carries its own bespoke header (`.goldtabs-head`
+with a "Back to the dashboard" link) and **no side rail**, which is the exact inconsistency the user is asking to remove.
+The full requirement, the measured state of every served page and the couplings are in
+`docs/strategy/DASHBOARD_NAV_CONSISTENCY_REQUEST.md`; this section is only the note that the release cannot ignore it. Two
+clean orders: publish this release first and bring `gold.html` into line with the other pages in the nav change (simplest
+- the fingerprint then already holds the single `gold.html` entry), or do the nav change first and ship the shell as
+candidate revision 3, already carrying the shared header and rail. Either way E1-E5 are otherwise unchanged; what changes
+is whether the copied shell keeps its own header or arrives with the shared one. Do not publish `gold.html` with its
+bespoke header and treat the other seven pages as a separate job the user did not ask for.
+
