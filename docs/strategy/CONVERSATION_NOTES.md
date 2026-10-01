@@ -2498,3 +2498,22 @@ This turn changed only this worker's notes and the two documents above; no page,
 artifact or number was touched, and nothing is live as a result. The go-ahead recorded in the previous entry still stands:
 the live publish of `gold.html` and the opening of the movement screen remain the coordinator's actions.
 
+## 2026-10-01 (same session) - the two navigation questions answered: same theme everywhere, and after
+
+The user answered both questions in one line - *"1. same theme everywhere 2. after"* - and asked for the coordinator to be
+notified. Read as: (1) the header and the rail are the same dark blocks on every page, including the light draft page,
+with no light variant and no seam left to decide; and (2) the navigation-consistency change happens **after** the gold
+page is live, so the release ships first as its candidate stands and the following change brings `gold.html` into line
+with the other eight pages.
+
+Both answers are now written into `DASHBOARD_NAV_CONSISTENCY_REQUEST.md` in place: a note at the top, section 4.4
+resolved as same-theme-everywhere, and section 9 resolved as after-the-release (the fingerprint that change settles
+therefore already holds the single `gold.html` topbar entry, and no candidate revision 3 is needed). Nothing else in that
+request changed, and the recommended route (N1, one canonical fragment injected as bytes at build time) is unchanged. The
+answers were then filed to the coordinator as a materially revised recommendation under a new submission ID, because the
+assignment requires a new ID for a material revision rather than editing the open one.
+
+This turn changed only this worker's notes and the request document; no page, bar, guard, generator, stylesheet, data
+artifact or number was touched, and nothing is live as a result. The go-ahead in `-033` (publish `gold.html`, open the
+movement screen) still stands and is untouched: with answer 2, the release comes first, then this navigation work.
+

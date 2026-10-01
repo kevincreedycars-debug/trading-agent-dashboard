@@ -5,6 +5,10 @@ instruction, verbatim: *"okay well queue up the next work for the coordinator to
 pages across the dashboard have the same header and side bar menu."* Advice only: nothing here is adopted, no page is
 changed by this file, and no claim of completion is made.
 
+**Both open points were answered by the user on 2026-10-01: "same theme everywhere" and "after".** So the header and rail
+are the same dark blocks on every page, and this navigation work is sequenced after the gold page release. Sections 4.4
+and 9 below now record those answers in place; nothing else in the request changed.
+
 ## 1. What is asked
 
 Two things in one line:
@@ -100,6 +104,10 @@ design. Dropping the dark topbar onto the light page will show a seam. The lane 
 bar as the site's header on every page including the light one, or give the draft page a light variant of the same bar -
 and say so; this file does not decide it.
 
+**Resolved by the user, 2026-10-01: "same theme everywhere".** The dark header and the dark rail are carried on every
+page, including the light draft page - the same theme across all of them, with no light variant. The draft page keeps its
+pale body and its inline markup (4.2); its header and rail are the same dark blocks as the rest of the site.
+
 **4.5 The existing hop guards read the "link back" on the gold pages.**
 `gold_direction_dashboard_link.browser.test.js` line 22 asserts a visible `a[href="index.html"]`; the outcomes and draft
 guards assert the topbar entry and the page's own markers. If the bespoke headers are replaced by the shared bar, the
@@ -162,6 +170,11 @@ fingerprint. Two clean orders:
 Either order is fine; doing both in one change is cleanest. What is not fine is the release shipping `gold.html` with its
 own bespoke header while the other seven pages look different - that is exactly the inconsistency the user asked to
 remove. Section 9 of `GOLD_TABS_BUILD_BRIEF.md` records this coupling.
+
+**Resolved by the user, 2026-10-01: "after".** The navigation change happens after the gold page is live. The release
+ships first, as the candidate stands, and the following nav change brings `gold.html` into line with the other eight
+pages; the fingerprint that change settles therefore already holds the single `gold.html` topbar entry, and no candidate
+revision 3 is needed.
 
 ## 10. Rollback
 
