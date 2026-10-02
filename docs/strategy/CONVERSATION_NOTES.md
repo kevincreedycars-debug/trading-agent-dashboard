@@ -2517,3 +2517,36 @@ This turn changed only this worker's notes and the request document; no page, ba
 artifact or number was touched, and nothing is live as a result. The go-ahead in `-033` (publish `gold.html`, open the
 movement screen) still stands and is untouched: with answer 2, the release comes first, then this navigation work.
 
+## 2026-10-02 - "the coordinator says the inbox is empty": checked, and nothing is missing
+
+The user reports that the coordinator says its inbox is empty. Checked rather than assumed, read-only, and the finding
+is that **nothing this worker filed is lost and nothing is awaiting a reader**:
+
+- The shared mailbox folder for this worker holds **35 submission files**, the newest being
+  `20261001-strategy-nav-answers-notify-035.json` (4,488 bytes), `-034` (6,332 bytes) and `-033` (4,977 bytes).
+- `node scripts/coordination.js check` returns **`pending: 0`**, and `check --worker strategy` lists the recent items
+  with their outcomes: `-035` **accepted**, `-033` **acknowledged**, `-034` **acknowledged (closed as superseded)**.
+  Durable reviews exist for all three under `docs/orchestration/reviews/` (`...nav-answers-notify-035.md` 3,974 bytes
+  and its pair), so the submissions were received, hash-bound and reviewed, not missed.
+- An empty inbox therefore means **nothing new to read**, not that the work vanished: the coordinator has already
+  processed everything this worker sent.
+- The two adopted items are already written into the canonical register: workstream `dashboard`, status
+  `queue_adopted_gold_release_then_nav_n1`, evidence `683a840; docs/orchestration/reviews/20261001-strategy-nav-answers-notify-035.md`,
+  with the order recorded as the gold tabs release first (brief steps E1-E5, including the materialisation choice that
+  decides the served fingerprint) and the navigation-consistency change second on route N1. The register states both
+  are **user-goahead-gated production changes and neither is started by the reviews** - which is why the queue can look
+  idle while holding two accepted items.
+
+One operational fact found while checking, and it is the coordinator's to clear, not this worker's: the background
+review runner looks stuck off. `.local/orchestration/controller/status.json` still reads `"state": "reviewing"`, pinned
+to `20260930-strategy-evening-save-031`, and `.local/orchestration/controller/run.lock` names PID 24000 and that same
+submission with a timestamp roughly 47 hours old; the process is no longer running and the monitor reports the
+controller `offline`. A stale lock is a plausible reason the automatic half reports nothing and picks up nothing, but
+it is a diagnosis offered as a candidate cause, not a verified one, and this worker did not touch the lock, the
+controller directory or any coordinator state.
+
+Nothing was filed this turn: with `pending: 0` and an open accepted queue behind it, another identical "please start"
+submission would be noise, and a material revision gets a new ID only when the recommendation actually changes. The
+turn changed this notes file only; no page, bar, guard, generator, stylesheet, data artifact, number, mailbox file or
+register entry was touched, and nothing is live as a result.
+
