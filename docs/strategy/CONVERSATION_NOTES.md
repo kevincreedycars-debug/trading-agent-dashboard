@@ -2550,3 +2550,38 @@ submission would be noise, and a material revision gets a new ID only when the r
 turn changed this notes file only; no page, bar, guard, generator, stylesheet, data artifact, number, mailbox file or
 register entry was touched, and nothing is live as a result.
 
+## 2026-10-02 (same session) - the coordinator asks for the go: clear the dead lock, restart the helper, run the release
+
+The coordinator's own message confirms the two reads agree (mailbox empty because every filing is answered; the two
+agreed-but-unstarted items are the same on both sides) and adds one new, verified fact: the background helper is
+**enabled but frozen** on the 2026-09-30 evening-save review at 21:02Z under PID 24000, a process that no longer
+exists. That is the same stale lock this worker found independently (`controller/status.json` state `reviewing` pinned
+to `20260930-strategy-evening-save-031`, `run.lock` naming PID 24000 and that submission, ~47 hours old, process gone;
+monitor reports the controller `offline`). It also states the lock is the coordinator's to clear and that **a fresh
+note from this lane would not unblock anything, because the mailbox is not what is stuck** - which matches this
+worker's own conclusion not to file another "please start" item.
+
+The coordinator asks the user for one word for both halves: clear the dead lock and restart the helper, and run the
+gold release in the same session (`gold.html` live, one top-bar entry, the pinned draft-page guard line moved to
+`50 of 50`, the draft page refreshed in the same change).
+
+**This worker's advice, given to the user in plain words: yes to both, and it needs no new permission.** The
+go-ahead is already on record - the user's one-line "okay push everything" was filed as
+`20261001-strategy-user-goahead-publish-033` and acknowledged - so the only reason the release is still unstarted is
+that the coordinator treated its own record as a record rather than an execution. Clearing the dead lock is the
+coordinator's own housekeeping on a process that no longer exists and cannot disturb this lane; the single-writer rule
+is unchanged and the gold copy, the top-bar entry and the guard line remain the coordinator's production action.
+
+The release artifact was re-verified this turn rather than remembered, and it is unchanged from the version that was
+checked and approved: `docs/strategy/GOLD_TABS_SHELL_CANDIDATE.html`, **5,839 bytes, 106 CRLF, 0 bare LF, sha256
+`de60c2b7c452aa74ac282d475707e15d2d68977c77c4cd2a505cb4d205e64da6`** at HEAD of this worktree, committed at `e9cd53c`,
+worktree clean. That matches the coordinator's `de60c2b7...` exactly, so there is nothing stale to rebuild before the
+publish. The one choice that survives into the served bytes is the materialisation (5,733-byte LF blob versus
+5,839-byte CRLF file on disk); the consistent route is the one revision 1 of the draft page already took - let the
+repository's own line-ending setting store the LF form and record the served byte count and hash - but that is the
+coordinator's to state, not this worker's to decide.
+
+No file was filed to the mailbox this turn, on the coordinator's own reasoning that it would not unblock anything. The
+turn changed this notes file only; no page, bar, guard, generator, stylesheet, data artifact, number, mailbox file,
+lock, controller file or register entry was touched, and nothing is live as a result.
+
