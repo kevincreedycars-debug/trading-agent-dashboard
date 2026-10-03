@@ -7,6 +7,11 @@ User authorization: on 2026-09-29 the user asked for another registered agent wi
 Cline with DeepSeek, connected to the wider project and the dashboard, so the live-trading path
 through a MetaTrader 5 connection can be discussed in its own window before anything is built.
 
+**Current assignment: `live-trading-002` (published 2026-10-03, background review).** The `live-trading-001`
+body below still binds in full; the newest section at the end of this file is the current bounded work, and
+the register row in `docs/orchestration/projects.json` carries the id `live-trading-002` at status exactly
+`instructions_published_awaiting_worker`.
+
 ## Purpose and lane
 
 This is an **advisory and design lane**, not an execution lane. Its subject is the one thing the
@@ -174,3 +179,69 @@ folder's registered path and has no task selector. The startup message to paste 
   window and then ages to `STALE` by design, so keeping the panel fresh needs the producer to run and the file to be
   re-published through the coordinator. The coordinator owns the published copy and its cache-buster; you own the
   producer and the artifact in your worktree.
+## Assignment revision, `live-trading-002` (2026-10-03, background review): prepare the live port candidate for review
+
+Assignment: `live-trading-002`. Published 2026-10-03. This supersedes `live-trading-001` as the register's
+current assignment id for this lane - `docs/orchestration/projects.json` now carries `live-trading-002` at status
+exactly `instructions_published_awaiting_worker` - and every boundary, owned-scope rule and accepted binding in
+the body above still binds. This revision adds the bounded work below and nothing else.
+
+User authorization, the user's own words as recorded in the lane's envelope
+`20261003-live-trading-marking-store-and-live-port-r1` and adopted with it: for the store, that the
+reader-token GitHub commit route is kept; for the port, *"just get the ability for me to scroll out to the 1h
+and 4h to set the L2L levels from there"*; and the order of work the user set after it - the port, then the
+seed levels marked on the 1h and 4h charts and the ladder read against them, then the entry rule from the 5m
+close-beyond-level trigger of section 10, then the agent reading the live dashboard and the live 5m charts on
+each market, then execution, then testing real automated trades, then the scaling rules.
+
+### One bounded deliverable: the port candidate, prepared and evidenced, not published
+
+1. Cut a local release candidate from the verified `origin/main` tip - `f8bc80f` as measured in the review;
+   re-verify it yourself and record the tip you actually built from. Use a new local branch and, if you need a
+   separate tree, a new worktree under the ignored `.local/worktrees/` path, so the candidate has one writer and
+   `workers/live-trading-20260929` keeps its branch, files and history exactly as they are.
+2. Carry the eight files by the already-ruled hunk recipe, not by a merge: `script.js`, `index.html`,
+   `styles.css`, `lib/l2l_levels_store.js`, `lib/l2l_ladder.js`, the rewritten `scripts/l2l-levels-tool.js`,
+   `tests/l2l_levels.test.js` and `scripts/README-l2l-levels-tool.md`. Leave `data/l2l-levels.json` as main
+   already carries it - blob `2a0aef4f`, byte-identical to your worktree - and leave the published
+   `liveTradingUrl` and its cache-buster alone, because both are the coordinator's on `main`.
+3. Prove the candidate on its own bytes: `git diff --stat` and `--numstat` against the tip you built from, the
+   blob and sha256 of each ported file at the candidate head, `node --check` on the changed JavaScript, and the
+   focused node tests that run without `node_modules` (`tests/l2l_levels.test.js`,
+   `tests/live_trading_feed.test.js` and anything your hunks touch beyond those). Where the repository browser
+   tooling is present, look at the candidate page at desktop and narrow widths under the repository visual
+   skills; where it is not, say so plainly instead of installing anything.
+4. File one mailbox submission with status `ready_for_review`, carrying the candidate ref, the diff, the
+   hashes, the exact commands and their real results, and anything you could not run. Keep the candidate local.
+5. Do not push, do not open a pull request, do not publish, do not commit to production `main`. The
+   fast-forward onto `main` is the coordinator's step in a user-authorised cycle after this candidate is
+   reviewed, and this revision authorises preparation and evidence only.
+
+### Owned scope
+
+The candidate branch and its tree, `docs/live-trading/` in your own worktree as before, and ignored scratch under
+`tmp/`. Nothing in the canonical checkout, the register, another assignment, or another worker's worktree or
+mailbox.
+
+### Boundaries
+
+Unchanged from the body above and restated for this revision: no production change, push, merge, pull request,
+publication, workflow, warehouse or broker action; no order path and no arming; no broker connection; no MT5 or
+other credential, key or table; Layer 1 stays independent and backtesting stays downstream-only; the sealed Gold
+prospective window stays sealed until `2027-03-25T15:00:00Z`; the port is a chart and tooling change, so nothing
+in it is edge, accuracy, causal feature-timing or profit evidence; and the code files stay a disclosed overrun
+until the port is reviewed on its own bytes.
+
+### Evidence and validation
+
+Focused first - `node --check` and the two node test files above on the candidate tree - then the wider local
+variant only if it runs without installing anything, with the honest result recorded either way. Every declared
+digest must reproduce from the commit, and a declared blob or hash that does not must be corrected in the filing
+rather than explained away.
+
+### Reporting (mandatory)
+
+File one envelope from `templates/submission.json` with `assignment_id` `live-trading-002`, submit it with the
+canonical CLI at your absolute path, record `node .../scripts/monitor-state.js activity live-trading paused
+"<what finished>"`, and stop at the review boundary. A blocker is filed when it is found, and the candidate tree
+is left in place for the reviewer.
