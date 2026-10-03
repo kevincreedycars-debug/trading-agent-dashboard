@@ -10,6 +10,8 @@
 - Added `docs/SITE_NAV_CONSISTENCY_20261003.md` as the handoff note for this change.
 - Added `layer1-call-flow.html`, the printable one-page map of how the eight Layer 1 calls are made, with the four-test guard that holds it (`tests/layer1_call_flow.browser.test.js`) and the incident note its footer cites as a source (`docs/LAYER1_OPENAI_CREDITS_INCIDENT_20261001.md`).
 - Added `docs/LAYER1_CALL_FLOW_PUBLICATION_20261003.md` as the handoff note for this release.
+- Added `lib/l2l_ladder.js` and `lib/l2l_levels_store.js`, loaded by `index.html` ahead of `script.js`, so the Live Trading section draws the 1h and 4h views, the L2L ladder and the levels marking the user asked for.
+- Added `docs/LIVE_TRADING_PORT_20261003.md` as the handoff note for that publish.
 
 ### Changed
 
@@ -21,6 +23,9 @@
 - Added a fifth bar entry, `Layer 1 Calls`, to both bar variants in `backtester/partials/shared_nav.html` and wrote it into the nine published pages, so every page reaches the printable Layer 1 call map; the rail is unchanged at seventeen entries, because the rail drives dashboard views by `data-tab` and the map is a page a reader prints.
 - Extended `backtester/tests/site_nav_consistency.browser.test.js` to pin the fifth bar label, its href, its `target="_top"` and its landing place, and re-pointed the fourth test of `tests/layer1_call_flow.browser.test.js` at the shared bar rather than at the hand-written entry it was written against.
 - Recorded in `docs/LAYER1_CALL_FLOW_PUBLICATION_20261003.md` that the checkout on `workers/analysis-engine-20261003` carries a rail entry of its own against the hand-written rail `a94fb55` replaced, and that a rail entry for a printable page is a change to the navigation contract rather than a port of that work.
+- Published the port candidate the `live-trading` worker filed as `20261003-live-trading-live-port-candidate-r1` - eight files, +2,892/-324, cut from `a94fb550` by the already-ruled hunk recipe with no merge commit, and re-cut on this tip by the same recipe once another lane had published `3350a89` - so the Live Trading section carries the M5, 1h and 4h views, the L2L ladder and the levels marking, with `data/l2l-levels.json` and `liveTradingUrl` left exactly as `main` carried them.
+- Widened `tests/live_trading_dashboard.browser.test.js` from "the read-only section must carry no form control" to "every control must be one the section binds with its own live data attribute": the ruled marking panel's six fields are allowed, a form, dropdown or free-text area is not, the token field must stay a password field, the panel must say the token is only ever sent to `api.github.com`, and no control may read like an order path. The guard is 1 of 2 on the candidate before the widening and 2 of 2 after it.
+- Bumped the `script.js` cache-buster token in `index.html` to `20261003-live-trading-port`, so a returning reader is not served the pre-port `script.js` from cache under the old token; the two new library tags keep the lane's own tokens.
 
 ## 2026-07-21
 

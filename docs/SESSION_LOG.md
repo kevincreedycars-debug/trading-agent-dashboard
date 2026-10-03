@@ -132,4 +132,25 @@ The rail stays at seventeen entries. The builder refuses an `href` inside the da
 - Decide whether the map should also be a rail entry, which needs `backtester/scripts/build_shared_nav.js` and its guard widened to eighteen entries with one outbound entry allowed.
 - Re-point the fourth test in that checkout's copy of `tests/layer1_call_flow.browser.test.js` when it moves onto the published navigation.
 
+## 2026-10-03 (live trading port publish)
 
+### Session Goal
+
+Put the 1h and 4h chart views and the L2L levels marking on the live dashboard, which is the port the user's own words asked for and then put above every other queued item.
+
+### Completed
+
+- Reviewed the `live-trading` worker's filed candidate `20261003-live-trading-live-port-candidate-r1` on its own bytes: `a6ae075` on `workers/live-trading-port-tip-a94fb550`, parent `a94fb550`, eight files and +2,892/-324 reproduced exactly, zero conflict markers, `node --check` clean on the four code files, `tests/l2l_levels.test.js` 48 of 48 and the two neighbouring node suites 15 of 15.
+- Cut a release worktree `.local/live-trading-port-release` on the candidate and made the two companion changes the publish owes: `tests/live_trading_dashboard.browser.test.js` widened from "the read-only section must carry no form control" to "every control must be one the section binds with its own live data attribute", which takes that guard from 1 of 2 to 2 of 2, and one cache-buster token bumped in `index.html` so a returning reader is not served the pre-port `script.js` from cache.
+- Re-cut the port on the tip that moved under it: another lane published the printable Layer 1 call map as `3350a89` at 21:24:59 while this publish was being prepared, so the candidate was replayed on it by the same hunk recipe and the eight files came across with the same +2,892/-324 and no conflict.
+- Ran the release's own local suite: 225 of 230 pass and the same five fail as on a separate worktree checked out at the pristine tip `a94fb55` - four recorded `secret_scanner` cases and `confidence_band_delivery`'s SILVER delivery row - so the port adds no failure.
+- Fast-forwarded `origin/main` from `3350a89` to the release commit and verified the live page afterwards.
+
+### Important Note
+
+The port is code only. The published snapshot still carries `quote` and `m5` with no `h1` or `h4` block, so the two new view buttons draw disabled until the producer refreshes `data/live-trading.json` and the coordinator republishes it; the levels file still carries four instruments at zero levels because nothing has been marked yet; and marking publishes to the repository with the reader's own token, sent only to `api.github.com`.
+
+### Next
+
+- The lane's producer run that emits the `h1` and `h4` blocks, filed for republish, so the zoom-out works on the live page.
+- The seed levels marked on the 1h and 4h charts with the ladder read against them, then the entry rule from the 5m close-beyond-level trigger, in the order the user set out.

@@ -147,21 +147,41 @@ test("the published dashboard opens the read-only Live Trading section", async (
     assert.match(provenance, /not a signal/);
 
     const controls = '#liveTradingView button, #liveTradingView input, #liveTradingView select, #liveTradingView form, #liveTradingView textarea';
-    // The section now draws the mirrored MT5 chart, which brings read-only controls of its own: the
-    // symbol row and the candles/line toggle. The guard keeps its original meaning by requiring that
-    // the chart's controls are the ONLY controls present, that each is named by the data attribute the
-    // chart binds to, and that none of them reads like an order path.
-    assert.equal(
-      await page.locator("#liveTradingView input, #liveTradingView select, #liveTradingView form, #liveTradingView textarea").count(),
-      0,
-      "the read-only section must carry no form control"
-    );
+    // The section draws two families of read-only controls of its own: the mirrored MT5 chart's symbol
+    // row, timeframe row, candles/line toggle and its level marking, and the ruled L2L marking panel,
+    // which publishes the marked levels to the reader's own repository with the reader's own token. The
+    // guard keeps its original meaning - no control in the read-only section may be anything the section
+    // did not declare, nothing may submit anywhere, and none may read like an order path - by requiring
+    // that every control present carries one of the section's own live data bindings, that the chart's
+    // deck and the marking panel's own fields are both rendered, that the token field stays a password
+    // field, and that the panel says where that token is sent.
     const chartControls = await page.locator("#liveTradingView [data-live-chart-symbol], #liveTradingView [data-live-chart-mode]").count();
     assert.ok(chartControls > 0, "the chart must render its symbol row and its candles/line toggle");
+    const chartFrames = await page.locator("#liveTradingView [data-live-chart-timeframe]").count();
+    assert.ok(chartFrames > 0, "the chart must render its timeframe row");
+    const markFields = await page.locator("#liveTradingView [data-live-ladder-above], #liveTradingView [data-live-ladder-below], #liveTradingView [data-live-publish-repo], #liveTradingView [data-live-publish-branch], #liveTradingView [data-live-publish-token], #liveTradingView [data-live-publish-remember]").count();
+    assert.ok(markFields > 0, "the marking panel must render the fields the reader marks and publishes with");
+    assert.deepEqual(
+      await page.locator(controls).evaluateAll(nodes => nodes
+        .filter(node => !Object.keys(node.dataset).some(key => key.startsWith("live")))
+        .map(node => node.outerHTML.slice(0, 120))),
+      [],
+      "every control in the read-only section must be one the section binds with its own live data attribute"
+    );
     assert.equal(
-      await page.locator(controls).count(),
-      chartControls,
-      "the chart's own read-only controls must be the only controls in the section"
+      await page.locator("#liveTradingView form, #liveTradingView select, #liveTradingView textarea").count(),
+      0,
+      "the read-only section must carry no form, dropdown or free-text area"
+    );
+    assert.equal(
+      await page.locator("#liveTradingView [data-live-publish-token]").getAttribute("type"),
+      "password",
+      "the token the reader pastes must stay a password field"
+    );
+    assert.match(
+      await page.locator("#liveTradingView .live-trading-chart-publish-note").textContent(),
+      /only ever sent to api\.github\.com/,
+      "the marking panel must say where the reader's token is sent"
     );
     assert.equal(
       await page.locator('#liveTradingView button:text-matches("(buy|sell|order|position|close|modify|cancel|trade)", "i")').count(),
