@@ -81,6 +81,8 @@ Reports include branch, HEAD, working-tree changes, exact tests/results, blocker
 questions, artifact paths and production-change disclosure. State unavailable
 information explicitly rather than inventing a commit or test result.
 
+An envelope whose summary asserts live mailbox state (for example "no unreplied item on this lane", or the newest reply it read) may carry an optional top-level `mailbox_read_at` field: an ISO-8601 UTC stamp of the mailbox read that sentence rests on. Validation is presence-based and rejects no extra key, so the field is optional and changes no existing envelope and no bridge event key - `workerEvent()` still keys on the reply file bytes or on `assignment_id` plus the assignment file bytes. The stamp also stays useful written plainly in the summary sentence, so nothing depends on the field surviving.
+
 `submit` validates the envelope and publishes an immutable JSON file under
 `inbox/<worker>/<submission_id>.json`. Concurrent workers use separate files;
 duplicate IDs cannot overwrite existing submissions. An interrupted write does
