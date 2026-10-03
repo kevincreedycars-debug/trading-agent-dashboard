@@ -2911,3 +2911,63 @@ One side observation recorded rather than acted on: the canonical checkout's unr
 as found by the review, and is not this lane's to touch. This turn changed only this notes file and ignored `tmp/`
 scratch. No page, bar, stylesheet, script, template, builder, guard, generator, data artifact, number, register entry,
 lock, controller or bridge file was touched by this worker, and nothing was published, refreshed or triggered.
+
+## 2026-10-03 — the user returns to the gold backtest data: "it's still useless data for me"
+
+The user's instruction this turn, verbatim: *"Send whatever you need to the coordinator, for now lets return to the
+gold backtest data and analysis, its still usless data for me."* Two things follow from it: the nav work order stays
+queued and untouched (it is the coordinator's, and the user has not answered its three choices), and the lane turns
+back to the gold numbers and files a new recommendation rather than a repeat of `-039`. The review outcome for `-039`
+was already recorded in the previous entry; nothing in it changed.
+
+**What the user is looking at, measured read-only from `origin/main` today.** Four served pages carry the gold
+result: `gold-backtest-outcomes.html` (blob 19,186 B) is a census of 4,956 candidates — 2,745 reported, 704 below the
+20-observation floor, 1,507 that never matched an anchor, 441,319 observations, median 74 per candidate — whose own
+quoted verdict is that the archive "can describe this space, but it cannot support choosing from it";
+`gold-direction-scorecard.html` (143,102 B) scores 965 daily anchors, 28 variables and 25 states at a 60% bar with a
+5pp edge and returns **25 of 25 `no_information`** on the session and 24 of 25 on the week, against a 55.81% up-close
+baseline; `gold-backtesting.html` (292,270 B) carries the stored-call pilot — 154 calls, **0 evaluable under the
+strict contiguous read**, 97 on the endpoint read, 45 right / 37 wrong, 54.88% against 52.44% always-bullish — plus the
+collector defect in its own banner; and the live draft `gold-factor-wip.html` (24,398 B) states the user's own first
+stage plainly: 97.89% of days clear the 0.50 L2L range either way, so "will it move" cannot sort days, and the call
+named the moved side 45.63% of the time against always-up's 61.13%. A fifth surface, the backtester app's Gold window
+(`data/backtester-checker-gold-24h-2024-2026.json`), is a parity check: 608 rows, 608 pass, 608 exact matches on 15
+stored fields — no trade, no entry, no exit, no P&L.
+
+**Why it reads as useless, and it is arithmetic rather than a finding about gold.** 80% power to see a 3pp edge needs
+about 2,100 anchors per state and a 5pp edge about 774; the archive holds 965 anchors and about 470 per state, with a
+standard error already near 2.3pp. The best-looking row (+4.70pp / +5.46pp, z 2.05 / 2.40) is inside the noise floor,
+which would throw up about 2.3 rows of that size across 25 rows and two horizons with nothing real present. The
+movement stage answers "yes" 97.89% of the time at the user's own 0.50 L2L, and the direction half under it loses to
+always-up. The only call-level record is 82 scored calls, an interval of roughly ±11pp, and the production Gold
+collector still reads 25 unordered history rows: `docs/GOLD_HISTORY_PATCH_VALIDATION.md` still says installed
+validation and production application are outstanding, and `docs/CURRENT_STATE.md` still lists it as a live input
+defect, so any record written today inherits it.
+
+**What the lane measured fresh today, and what it is worth.** `tmp/l2l-scan8-20260929.js` re-ran, exit 0, both
+assertions PASS, on 21,871 hourly bars from 2023-01-02 to 2026-09-11 over the 570 archived gold call sessions
+(2024-01-04 to 2026-04-30), reproducing every headline figure above. `tmp/count-report-fields.js` re-counted the
+accepted individual-variable report (95,842,994 bytes) and found **147,465 each of `median`, `q1` and `q3` and 148,920
+`exact_zero` fields** — the movement data the user's own first stage needs already exists on disk and no accepted cut
+has ever used it. The honest headline the user will not like: at the close the calls are right 46.32% of the time while
+gold closed up 56.84% of the same days, and the loss is concentrated in the bearish half (300 bearish calls right
+40.00%, 270 bullish 53.33%, measured 2026-09-28 on the same rows). "The bearish half is broken" is a more useful
+sentence than "gold is unpredictable", and it is the one actionable fact this archive currently holds.
+
+**Filed this turn: `20261003-strategy-gold-data-usefulness-040`, a new recommendation.** `docs/strategy/GOLD_DATA_USEFULNESS_READ_20261003.md`
+carries the whole read: what the five surfaces show, the four measured reasons it reads as useless, the ten base rates
+that are usable today in the user's own units, and four routes in the order the lane would take them — R1 the
+movement table by factor state (the user's own agreed first stage, answerable with no new run from the 147,465 stored
+spread fields, needing the coordinator to open the provisional `gold-declared-band-measurement-026` lane and the
+user's go-ahead); R2 the calls scoreboard, up against down by year, which is presentation of numbers already
+measured; R3 applying the validated collector patch before any forward record is trusted; and R4 starting the forward
+record now with the ten written rules declared first and the sample size acknowledged (~774 anchors per state for a
+5pp edge, ~2,100 for 3pp). The submission also records the two things I do not recommend — another direction pass over
+the same 965 anchors, and any bar moved after the result — and it asks the coordinator for nothing beyond adoption and
+sequencing. No page, number, data artifact, register entry, assignment or production file was touched by this worker,
+which holds no credentials for this advisory assignment.
+
+**Fixed for the next turn.** When the user answers, the lane's own order is: R1 first if the coordinator opens the
+lane, R2 as a page or a block beside the accuracy panel, R3 as the coordinator's production priority, R4 as the only
+route that can ever settle direction. The three nav choices remain unanswered and unchanged, and on silence the nav
+work order simply stays queued.
