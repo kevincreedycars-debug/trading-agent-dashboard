@@ -3015,3 +3015,52 @@ Whether the collector patch becomes the production priority. (e) Newly explicit 
 should be re-derived with one added median print or left as the marked 2026-09-28 measurement. This turn changed only this notes
 file and ignored `tmp/` scratch: no page, number, data artifact, register entry, assignment, lock, controller or bridge file was
 touched, and nothing was published, refreshed or triggered.
+
+## 2026-10-03 (same session) - the user answers: one tabbed page, the fault fixed first, and the forward record dropped
+
+The user answered the open questions this turn, in his own words. The four from the last reply: *"Yes this thread was
+interrupted we want to see and analyse all the gold data as per above."*; *"fix the fault."*; *"The current display of data
+isnt enough we need it tidying up and simplified preferrably all on one page with tabs."*; *"what choices again?"*. And on
+the earlier six: *"Yes start here, make it very visually easy to find where this data is and how to interpret it. Remeber we
+want to see direction, l2l and 0.5l2l data always"*, "yes", "yes", *"why do we need a forward record this is just
+analysing histrotical data to find patterns/correlations"*, "yes", "not sure yet". He also asked for the link to the live
+place the gold data is shown.
+
+**The link, and what it turned out to hold, measured live today rather than remembered.** Every gold page answers HTTP 200:
+the dashboard 18,775 bytes; `gold.html` 5,733 bytes titled "Gold - one page with tabs"; the direction scorecard 143,102; the
+backtesting evidence page 292,270; the 28-factor outcomes census 19,186; the draft factor page 24,398. The live top bar
+carries exactly one gold entry - `gold.html`, labelled "Gold" - beside North Star Brief, Standing Dashboard and Backtest
+Flow, so the old scattered Gold Backtest / Gold Direction / Gold Factor links are gone. `gold.html` is route A of the
+tab-merge request: one tab strip framing four pages in order - direction scorecard, backtesting evidence, 28-factor
+outcomes, factor tables (draft) - and its own text says nothing is recalculated. The live draft tab reads 50 of 50
+answered, "As of 30 September 2026", so the refreshed revision is the copy that is live. **So the one-page-with-tabs half
+of the request is already built**; what the user is missing is inside it - two of the four tabs are archive censuses whose
+own verdict is that the archive cannot support choosing from it, the direction tab is 25 of 25 `no_information` at a 60%
+bar, and no tab shows the direction read beside the two movement ranges he named.
+
+**What the answers settle, in the lane's reading.** The gold work is wanted in full rather than parked, so the movement
+measurement (R1 of `-040`, the cut answerable from the 147,465 stored spread fields with no new run) is to be opened. The
+collector fault fix (R3) goes **first**, ahead of the display work, on the user's plain words "fix the fault". The display
+is to be tidied and simplified on one tabbed page with direction, full L2L and half L2L shown together wherever a rate is
+printed. The forward record (R4) is **questioned and withdrawn** - his reason is right for his use: he wants patterns and
+correlations in historical data, and a forward record answers a different question, whether a pattern still holds after it
+has been found. The consequence is recorded rather than argued: every figure on these tabs is picked by looking at the
+same history it is measured on, so nothing tests it later, and no later filing may quote the ten base rates as a
+pre-declared test. The one "not sure yet" is the four day-size figures, so the stated default stands and they stay as the
+marked 2026-09-28 measurement.
+
+**Filed this turn: `20261003-strategy-gold-view-and-fault-first-042`, a new recommendation.**
+`docs/strategy/GOLD_VIEW_TIDY_AND_FAULT_FIRST_ORDER_20261003.md` carries the order: the live state with its measured byte
+counts, the "always together" rule for direction with both ranges, a five-tab layout that demotes the two census pages
+while deleting nothing, the fault-first sequence, the withdrawal of R4, and the three navigation choices restated in plain
+words. It asks the coordinator for four things - sequence the fault fix first, put the tidy on the dashboard lane folded in
+with the navigation work, open the movement lane, and record the R4 withdrawal - and asks the user for nothing new beyond
+the three navigation choices. The coupling is named in the filing, because `gold.html` carries a bespoke header and no side
+rail today, so the tidy and the navigation work both edit that one page and Task 0 has to land before either or the same
+three guards get re-pointed twice.
+
+**Boundaries kept.** This turn changed only the new `docs/strategy/` file, this notes file and ignored `tmp/` scratch. No
+page, stylesheet, script, template, builder, guard, generator, data artifact, number, register entry, assignment, lock,
+controller or bridge file was touched; no patch was applied; nothing was published, refreshed or triggered; the patch's
+validation status is recorded as outstanding rather than claimed; and the window sealed until `2027-03-25T15:00:00Z` was
+not read.
