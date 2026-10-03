@@ -3188,3 +3188,58 @@ builder, guard, generator, data artifact, number, register entry, assignment, lo
 the two revision-3 documents keep the exact bytes the -044 filing records, and the only commits after it on this branch are
 this note and whatever the addendum itself requires. `gold-research` stays at `instructions_published_awaiting_worker` and
 this lane stays `advisory_active` under `strategy-advisory-001`, unchanged by the reply.
+
+## 2026-10-03 — the addendum reply read back: accepted, and -044 deliberately left next in the queue
+
+The reply to `20261003-strategy-user-confirmed-all-five-044-addendum` is `accepted` (seventeenth cycle, 2026-10-03), under
+the controller lock whose detail names that submission id (`controller/status.json` state `reviewing`, pid 8184, with
+`.local/orchestration/controller/ee793cac….receipt.json` as the submission's own lock record). The mailbox hash is
+reproduced rather than trusted: `ee793cac54f4942d0a35a69c1c6751adc0aac40f2f3d33714ee3946cca186f63`, independent from the
+immutable inbox file at 8,583 bytes. The scope is reproduced too: base `6e2c831`, HEAD `d95a493` as filed, `d95a493` the
+sole child of `6e2c831`, the change set exactly `docs/strategy/CONVERSATION_NOTES.md` modified with 30 insertions and 0
+deletions, tree clean with no untracked file, and `git ls-remote` answering `refs/heads/workers/strategy-advisory-20260920 =
+d95a493`, so the recorded head is the branch tip on the remote. Acceptance is not adoption: this cycle published no page,
+applied no patch and copied, merged, deployed, refreshed or triggered nothing.
+
+**Both corrections in the addendum reproduce, and one of them is a rounding rather than a discrepancy.** The reply to
+`20261003-strategy-gold-page-nav-match-and-answers-043` exists, carries `accepted` and `submission_sha256` `c4114c16…`,
+hashes to `b19c1b9532bf8d2a32185db07de60f6463050f55423f5d9b1a78d60b9d15d663` and is stamped `2026-10-03T17:28:31.735+01:00`
+against the -044 inbox file's `17:28:42.062+01:00` — a 10.33 s gap, so the -044 summary's closing sentence was already
+false when that immutable file was written. The addendum's "eleven seconds" is the same gap read on whole seconds. The
+second correction is answered by the record: `7c7023b` is "strategy: record the -043 filing in the notes", parent
+`1604389`, 16 insertions and 0 deletions on `docs/strategy/CONVERSATION_NOTES.md` only, an ancestor of the -044 filing's
+head `6e2c831`, with every non-blank line it added present in the -044 filing's own notes artifact (`de1cf66d`, 272,481
+bytes) and in the notes blob at the addendum's head. The -043 reply's point (d) is closed in substance: that revision is
+now declared inside a submitted, hash-bound envelope and bounded to one commit, one file and 16 lines. Strictly it still
+has no submission ID of its own, and the review that covers those bytes is -044's own, which is still pending.
+
+**The bytes the addendum declared are unchanged, in both forms, and the two revision-3 documents stand.** This lane's
+notes are 278,522 bytes, 3,190 line endings, 0 bare LF, sha256 `7b83fea8618417bd1d3b06d2083b9ff247f5b7532ee4d740ccb11b0c5073e91f`,
+LF form 275,332 bytes / `26c8c49883e24cf9a0e8aacbfbf5086f0983afd63480388b30d063149cd74c3a`, git object `b530649a`.
+`COORDINATOR_NAV_TIDY_HANDOVER_20261003.md` is 27,661 bytes / 324 lines / 0 bare LF / `4543bca4…`, LF 27,337 /
+`faa8491e…`, object `ea3a514e`; `GOLD_VIEW_TIDY_AND_FAULT_FIRST_ORDER_20261003.md` is 22,775 / 264 / 0 bare LF /
+`6dea881a…`, LF 22,511 / `1cb04ba3…`, object `101adada`. Each matches the artifact line the -044 filing recorded, so
+those lines remain the ones to check and only the notes moved.
+
+**What is still open, and where it sits.** The four precise unresolved decisions are unchanged. Three are production and
+the interactive coordinator's — applying the validated Gold history patch to close the live collector's 25-row unordered
+read as the Gold priority; building the single combined published-site change for `gold.html` (bar, rail, tidied view,
+site-wide navigation, Task 0 first); and adding the one median/q1/q3 print so the four day-size figures carry one run and
+one as-of line, judged as ever against the user's own words, "just make it all consistent with the homepage". The fourth
+is the queue: the next item is the earlier filing `20261003-strategy-user-confirmed-all-five-044` itself, left untouched at
+`pending_review` by this cycle, with the run's lock and reply bound to the addendum's hash alone — and this lane reads that
+at the mailbox rather than from the reply's word. The one research lane stays open and awaiting pickup: `gold-research` is
+at register status exactly `instructions_published_awaiting_worker` on `gold-declared-band-measurement-026`, its wake is
+outstanding rather than masked (the lane's own activity record still carries `gold-coverage-025`, so the same-assignment
+guard does not apply; two dispatch records for the current content, `fb01d8a4…` at 16:20:33Z and `607cd6e5…` at 16:21:48Z,
+stand at `sent_unconfirmed`, and `connections/gold-research.json` names the latter at 16:32:29Z), and its last activity
+record is still that old assignment paused at 2026-09-25T19:54Z, so an operator resume of that window remains the real
+resume and no wake is reported here. This lane stays `advisory_active` under `strategy-advisory-001`.
+
+**Nothing production was touched, and the only change this entry makes is on the record.** No page, stylesheet, script,
+template, builder, guard, generator, data artifact, number, register entry, assignment, lock, controller or bridge file was
+read-modified or written; no patch was applied; nothing was published, refreshed or triggered; the sealed window (reading
+prohibited until `2027-03-25T15:00:00Z`) was not touched. Writes are one entry in these notes, one commit and the branch
+push, plus ignored `tmp/` scratch. Filed with this entry as
+`20261003-strategy-user-confirmed-all-five-044-addendum-accepted-045`, status `status_report`, carrying no new
+recommendation and no new measurement.
