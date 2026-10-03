@@ -1,3 +1,32 @@
+# 2026-10-03 (seventeenth cycle) - the strategy addendum's two corrections of record are accepted, no new lane is opened, and the queue's next item is the earlier -044 filing
+
+Reviewed the strategy lane's same-turn addendum to the -044 filing, reproduced both corrections and every declared artifact,
+accepted it as a docs-only correction of record, and published no new assignment.
+
+- `20261003-strategy-user-confirmed-all-five-044-addendum` reviewed under the controller lock and answered **accepted**:
+  mailbox `ee793cac...` reproduced from the immutable inbox file at 8,583 bytes, reply `ad18b75b...`, durable review
+  `docs/orchestration/reviews/20261003-strategy-user-confirmed-all-five-044-addendum.md`.
+- Reproduced rather than trusted: HEAD `d95a493` sole child of the filed head `6e2c831` (`rev-list --count` 1) with exactly
+  one file changed, `docs/strategy/CONVERSATION_NOTES.md` at 30/0, clean tree, and `git ls-remote` answering the branch tip
+  `d95a493`, so the push the filing reports is real.
+- Correction (1): the -043 reply `b19c1b95...` (decision `accepted`, `submission_sha256` `c4114c16...`) is stamped
+  `2026-10-03T17:28:31.735+01:00` and the 10,046-byte -044 file `d4b3ff83...` is stamped `17:28:42.062+01:00` - 10.33 s
+  later - so -043 had been answered, not left awaiting review, before -044 was written; the addendum's "eleven seconds"
+  is that gap on whole seconds.
+- Correction (2): `7c7023b` is 16 insertions and 0 deletions on the notes file only, parent `1604389`, an ancestor of
+  `6e2c831`, and every non-blank line it added is present in the -044 notes blob `de1cf66d` (272,481 bytes) and in the
+  notes at `d95a493`, so nothing the -043 filing left behind is lost.
+- Artifacts: notes `278,522` CRLF / 3,190 line endings / 0 bare LF / `7b83fea8...`, LF `275,332` / `26c8c498...`, object
+  `b530649a` at 275,332 bytes; both revision-3 documents unchanged and matching -044's own artifact lines in both forms
+  (`4543bca4` / `faa8491e`, `6dea881a` / `1cb04ba3`), so only the notes moved.
+- Point (d) of the -043 reply is closed in substance: `7c7023b` is now declared and bounded inside a submitted,
+  hash-bound envelope, with the residual that it still has no submission ID of its own and those bytes are covered by
+  -044's own review, still pending.
+- No new bounded research assignment published: the addendum carries no research ask, `gold-research` already holds
+  `gold-declared-band-measurement-026` at exactly `instructions_published_awaiting_worker`, the remaining asks are
+  production, the Gold circuit is spent or sealed to `2027-03-25T15:00:00Z`, and no dashboard worker exists. Its wake is
+  outstanding rather than masked (activity record still `gold-coverage-025`; two dispatch records both `sent_unconfirmed`;
+  connection detail naming the `607cd6e5` key) but pickup is unproven. `strategy` stays `advisory_active`.
 # 2026-10-03 (sixteenth cycle) - the gold page's nav match is accepted as an accurate advisory, no new lane is opened, and both blocking items stay with the user
 
 Reviewed the strategy lane's gold page navigation filing, confirmed every declared fact against the checkout and the
