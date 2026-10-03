@@ -3243,3 +3243,53 @@ prohibited until `2027-03-25T15:00:00Z`) was not touched. Writes are one entry i
 push, plus ignored `tmp/` scratch. Filed with this entry as
 `20261003-strategy-user-confirmed-all-five-044-addendum-accepted-045`, status `status_report`, carrying no new
 recommendation and no new measurement.
+
+## 2026-10-03 — the -044 reply read back (accepted), and the -045 status line corrected
+
+The reply to `20261003-strategy-user-confirmed-all-five-044` is `accepted` (eighteenth cycle, 2026-10-03), under the
+controller lock whose detail names that submission id (`controller/status.json` state `reviewing`, pid 8184, `updated_at`
+16:35:31.730Z). The mailbox hash is reproduced rather than trusted: `d4b3ff837e7ab911343d2df7797850e1a40e0ab983230f252c68a4b2a31e9979`,
+independent from the immutable inbox file at 10,046 bytes. Its stamp is 16:38:46.625Z and this lane's -045 filing landed at
+16:41:44.973Z, 2 m 58.348 s later, so the -045 status line - "20261003-strategy-user-confirmed-all-five-044
+`pending_review` with `reply_path` null" - was true when the mailbox was read for that filing and false by the time the file
+landed. It stands in the immutable -045 mailbox file and is corrected here rather than edited there. The -045 summary's
+framing of -044 as "the queue's next item" is superseded the same way: that review closed with "No strategy filing is left
+in the queue for review by this cycle."
+
+**What the -044 reply accepts, and what it deliberately does not do.** Scope is reproduced rather than trusted: base
+`7c7023b`, filed head `6e2c831`, the sole child of it, `git diff --name-status` naming exactly the three declared
+`docs/strategy` files at 97 insertions and 1 deletion, worktree clean with no dirty or untracked file, and `git ls-remote`
+answering the branch tip `d95a493`, which is the already-reviewed addendum's own commit. The artifacts reproduce in both
+forms at the filed head: nav 27,661 bytes / `4543bca4…`, LF 27,337 / `faa8491e…`, object `ea3a514e` at 324 line endings and
+0 bare LF; tidy 22,775 / `6dea881a…`, LF 22,511 / `1cb04ba3…`, object `101adada` at 264 line endings and 0 bare LF; and the
+notes at that head 275,641 / `b945a28f…`, LF 272,481. Acceptance is not adoption: that cycle published no page, applied no
+patch and copied, merged, deployed, refreshed or triggered nothing.
+
+**The five confirmations are read as final for this order, and the route is not changed.** The user's words are relayed
+verbatim and in order, they appear identically in both revision-3 documents, and the review opens no further user round on
+the census tabs, the rail behaviour, the date and clock, the four day-size figures or the start order - with one standing
+condition on this lane: if it later reads any of the five differently, it must say which in its next filing rather than
+adopt a different route silently. The three precise unresolved decisions are unchanged: (a) whether to apply the validated
+Gold history patch and close the live Gold collector's 25-row unordered read as the Gold production priority, with
+validation status read at the time of the change; (b) whether to build the single combined published-site change with Task 0
+first, bounded by the user's own words, the same labels, order, look and behaviour as the home page and nothing the home page
+does not carry; (c) whether to add the one median/q1/q3 print to the same scan so the four day-size figures carry one run and
+one as-of line, with the lane's marked 2026-09-28 figures standing until that print lands. No new bounded research
+assignment is published, and the review states its reasons: `gold-research` already holds `gold-declared-band-measurement-026`
+at register status exactly `instructions_published_awaiting_worker`, a second assignment there would break the
+one-assignment rule, the other lanes hold their own, the Gold circuit's intervals are spent or sealed to
+`2027-03-25T15:00:00Z`, and no registered dashboard worker exists to own a page lane.
+
+**Observed on the unopened research lane, recorded rather than repeated.** The 026 dispatch records for the current content
+are the keys `fb01d8a4…` (16:20:33.663Z) and `607cd6e5…` (16:21:48.845Z), both `sent_unconfirmed`;
+`connections/gold-research.json` names the second and is being rewritten every five seconds (16:38:10.494Z at that read), so
+that window is connected and the event has been delivered to it. What is outstanding is pickup, not publication: the lane's
+own activity record still reads `assignment_id` `gold-coverage-025` paused at 2026-09-25T19:54Z and no submission has been
+filed there. Whether the operator must still resume that Cline task is not observable from this lane, so an operator resume
+remains the real resume and no wake is reported here.
+
+**Nothing production was touched by this correction.** No page, stylesheet, script, template, builder, guard, generator,
+data artifact, number, register entry, assignment, lock, controller or bridge file was read-modified or written; no patch was
+applied; nothing was published, refreshed or triggered; the sealed window (reading prohibited until `2027-03-25T15:00:00Z`)
+was not touched. Writes are one entry in these notes, one commit, the branch push and ignored `tmp/` scratch. Filed as
+`20261003-strategy-044-accepted-and-the-045-status-correction-046`, status `status_report`, carrying no new recommendation.
