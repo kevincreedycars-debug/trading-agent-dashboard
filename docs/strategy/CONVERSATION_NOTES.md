@@ -2749,3 +2749,45 @@ This turn changed only this notes file, `docs/strategy/COORDINATOR_HANDOVER_2026
 committed on `workers/strategy-advisory-20260920`. No page, bar, guard, generator, stylesheet, data artifact, number,
 mailbox filing, lock or controller file was touched by this worker, and the gold page being live is the coordinator's
 production action, not this worker's.
+
+## 2026-10-03 (same session) - the coordinator's reply to `-038`: accepted, with one wording note and the refresh question answered
+
+The follow-up filing `20261003-strategy-handover-corrections-and-release-verified-038` (mailbox sha256
+`c1172c2db47867c383fe85c5b8d94207c3e2bd7547037f7c2249653cc7d8d869`, reproduced from the immutable inbox file) was decided
+at 15:38: **accepted**, the second accepted filing of this sequence. It is the first review to read the handover *after*
+the release landed, and every checkable claim reproduces: both commits and the change set (`52/0` and `79/14` across two
+files, all inside `docs/strategy/`), both files byte-exactly at the recorded fingerprints, the released `gold.html` blob
+of 5,733 bytes as the LF form of the 5,839-byte CRLF candidate under `core.autocrlf=true`, the released `index.html` with
+exactly one gold `href`, the guard line at `/50 of 50 answered/` on `779a701`, and the panel still stale at
+`2026-10-02T07:29:28.874Z`. Acceptance again carries the same caveat in its own words, "acceptance is not integration and
+not production": nothing was published, copied, merged, deployed, refreshed or triggered in that cycle, no lock,
+controller or bridge file was touched, no lane opened and no worker status changed.
+
+**Two limits it states about its own run, kept here rather than smoothed over.** Everything measurable only from this side
+is recorded as stated and not reproduced - the live HTTP reads and the branch push - because that review run has no
+network; the committed blob corroborates the served bytes, but the distinction is the coordinator's. And one wording
+imprecision of this lane's is recorded as a note, not a required change: the `-038` filing said the guard pin moved "in
+the same push" as the release, when `779a701` is on the canonical orchestration branch and the production push carried
+`2f25c8c` and `7ce136e`. The substance reproduces, the handover already separates the two branches, and the rule kept for
+later filings is to name the branch a pin is on instead of saying "the same push".
+
+**The question this lane put in the envelope is answered on the record**: the refresh needs no new user word - the `-036`
+go-ahead covers it and is acknowledged - what stands between the stale panel and a fresh reading is the interactive
+coordinator performing it, and a background review carries no production authority to trigger it. So my own earlier
+loose phrasing, that the refresh "needs your word", is corrected to the precise form: the word exists, the hand is the
+coordinator's.
+
+**No new assignment was published and the register was untouched.** The review states the evidence does not support a
+further research stage: no new recommendation came with the filing, the remaining Gold paths sit on spent intervals or on
+the window sealed until 2027-03-25, the movement-screen lane `gold-declared-band-measurement-026` is uncovered by the
+go-ahead, and the live-trading call-to-order contract is already directed inside `live-trading-001` at
+`instructions_published_awaiting_worker`, so re-publishing it would add nothing. `strategy` stays `advisory_active` under
+`strategy-advisory-001`. Its closing list of three unresolved decisions is unchanged from the previous entry and only the
+first is covered by the go-ahead. One side observation, not this lane's to act on and left as found: the canonical
+checkout carries unrelated dirty state - a modified `tools/strategy-node/Strategy.code-workspace` and five untracked
+backtester gold session-policy files.
+
+The `-038` reply is folded into the handover as its own section, and the closing provenance there now lists all seven
+commits. This turn changed only this notes file, `docs/strategy/COORDINATOR_HANDOVER_20261003.md` and ignored `tmp/`
+scratch. No page, bar, guard, generator, stylesheet, data artifact, number, register entry, lock, controller or bridge
+file was touched by this worker, and nothing was published, refreshed or triggered.

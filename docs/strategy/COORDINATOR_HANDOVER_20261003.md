@@ -5,7 +5,10 @@ word this session. Filed as submission `20261003-strategy-gold-release-and-helpe
 `2a8606a092885d2207436c485f7ed5e35203b5ad98fd2ecbf0c032f05975655e`; decision **acknowledged** by the coordinator on
 2026-10-03 at 15:19). Filed a second time as submission `20261003-strategy-coordinator-handover-doc-037` (mailbox
 sha256 `0dd8a2fa46f0b85bfd84f735df2d869a4f0ea8aa610fcf604fca63c34ad8e0d8`; decision **accepted** on 2026-10-03 at
-15:30), which is what placed this document in the coordinator's inbox.
+15:30), which is what placed this document in the coordinator's inbox. Filed a third time as
+`20261003-strategy-handover-corrections-and-release-verified-038` (mailbox sha256
+`c1172c2db47867c383fe85c5b8d94207c3e2bd7547037f7c2249653cc7d8d869`; decision **accepted** on 2026-10-03 at 15:38),
+which is the filing that carried the corrections in this document.
 
 **Status of this document as of 2026-10-03 15:45.** It is the lane's own record of the user's go-ahead and of what a
 coordinator needed in order to act on it. It is **not** the instruction set for the release any more: the release was
@@ -82,6 +85,42 @@ substance:
 The coordinator's own list of what is now unresolved replaces the list above, and only the first is covered by the
 go-ahead: (a) run the live data refresh now; (b) open the movement-screen lane `gold-declared-band-measurement-026`;
 (c) whether navigation route N1 proceeds now that the release it was sequenced behind has landed.
+
+### The coordinator's reply to `-038`, received 2026-10-03 15:38
+
+Decision: **accepted** - the second accepted filing in this sequence, on the review of
+`20261003-strategy-handover-corrections-and-release-verified-038`. It is the first review to read this document *after*
+the release landed, so its reading of the published state is the coordinator's own record, and every checkable claim in
+the filing reproduces: both commits and the whole change set (`52/0` and `79/14` across two files, all inside
+`docs/strategy/`), both files byte-exactly at the fingerprints recorded in this document, the released `gold.html` blob
+(5,733 bytes, `5ae6c22a...`) as the LF form of the 5,839-byte CRLF candidate under this repository's `core.autocrlf=true`,
+the released `index.html` with exactly one gold `href`, the guard line reading `/50 of 50 answered/` at `779a701`, and
+the panel still stale at `2026-10-02T07:29:28.874Z`.
+
+Three things in it are worth keeping in view:
+
+- **What was measured only from this side is recorded as stated, not reproduced**: the live HTTP reads and the branch
+  push, because that review run has no network. The substance is unchanged - the committed blob corroborates the served
+  bytes - but the distinction is the coordinator's, and later filings should keep making it rather than blur it.
+- **One wording imprecision of this lane's, recorded as a note and not a required change**: the `-038` filing said the
+  guard pin moved "in the same push" as the release. `779a701` is on the canonical orchestration branch; the production
+  push carried `2f25c8c` and `7ce136e`. The substance reproduces, and this document already separates the two branches
+  where it matters ("the same change, as required" in Task 2 means the same release change, pinned on the orchestration
+  branch, not the same commit). The rule kept for later: name the branch a pin is on rather than saying "the same push".
+- **The question this lane asked is answered on the record**: the refresh needs no new user word - the `-036` go-ahead
+  covers it and is acknowledged - what stands between the stale panel and a fresh reading is the interactive coordinator
+  performing it, and a background review carries no production authority to trigger it.
+
+No new assignment was published and the register was left untouched. The review states that the evidence does not support
+a further research stage: this lane carried no new recommendation and proposed none, the remaining paths in the Gold
+circuit sit on spent intervals or on the window sealed until 2027-03-25, the movement-screen lane
+`gold-declared-band-measurement-026` is not covered by the go-ahead, and the only other recorded next bounded work - the
+live-trading call-to-order contract - is already directed inside `live-trading-001` at
+`instructions_published_awaiting_worker`, so re-publishing it would add nothing. `strategy` therefore stays
+`advisory_active` under `strategy-advisory-001`. Two side notes kept for accuracy: its item (a) is the same first item as
+its list below, and the canonical checkout carries unrelated dirty state (a modified
+`tools/strategy-node/Strategy.code-workspace` and five untracked backtester gold session-policy files) which that review
+left exactly as found and which is not part of this lane's change set.
 
 ## Task 1 - the stale lock and the frozen helper: already done, nothing outstanding
 
@@ -190,12 +229,14 @@ values. Report what the live panel then shows.
 
 Advice only. This worker's write scope is `docs/strategy/` in
 `D:/trading-agent-dashboard-codex/.local/worktrees/strategy`; it cannot publish a page, edit the bar, clear a lock or
-trigger a refresh. This turn it changed only `docs/strategy/CONVERSATION_NOTES.md` (the go-ahead entry, the handover
-entry, the `-036` reply entry and the `-037` reply entry) and this file, committed on
+trigger a refresh. Across this session it changed only `docs/strategy/CONVERSATION_NOTES.md` (the go-ahead entry, the
+handover entry, and the `-036`, `-037` and `-038` reply entries) and this file, committed on
 `workers/strategy-advisory-20260920`: `5e76c53` the go-ahead, `f310242` the handover and the notes repair, `406fa3a`
-the `-036` reply recorded, `091f706` the provenance correction, and the later `-037` update recorded here; all pushed
-to origin, where `git ls-remote origin refs/heads/workers/strategy-advisory-20260920` answers
-`091f7069ff0f9dccea25250eb2fbfb9b38fd8831`, equal to local HEAD before that last commit.
+the `-036` reply recorded, `091f706` the provenance correction, `084667e` the `-037` reply and the release landing,
+`5eb3cd6` which version the review saw, and the commit carrying this `-038` section. All of them are pushed;
+`git ls-remote origin refs/heads/workers/strategy-advisory-20260920` answered
+`5eb3cd60b915bf5b47a22abd921697dbb07209bd`, equal to local HEAD before the `-038` commit, and the same check is repeated
+after it.
 No page, bar, guard, generator, stylesheet, data artifact, number, lock, controller file or register entry was touched,
 and nothing is live as a result of it. The gold page is live because the coordinator published it, not because of
 anything this worker did; the data refresh is still owed.
