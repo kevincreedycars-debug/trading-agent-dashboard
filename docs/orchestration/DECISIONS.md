@@ -1,5 +1,29 @@
 # Central decisions
 
+## 2026-10-03 (fourth cycle): the eight relaunched windows are attached, and an operator resume is a dispatch-record reset
+
+The connection facts recorded earlier today are corrected by observation. The user relaunched the eight closed worker windows, and two samples of
+`.local/orchestration/connections/` taken inside one five-second polling cycle at `2026-10-03T14:33:2xZ` show all eleven worker files rewriting with
+`extension_version` `0.2.1` and mtimes one to five seconds old, against this morning's reads of `gold-research` last written `2026-09-29T20:31:39Z`, the seven
+`backtester-<asset>` lanes `sent_unconfirmed` from `2026-09-29T20:43Z`-`20:43:37Z` and `strategy` `disconnected`. A fresh file is the extension's own tick, so all eleven
+windows are bound; no click is outstanding, because the ten auto-connect lanes carry `mailbox_auto_connect` true and `strategy` is live from the saved binding that its
+one-time click created, which the extension restores on reload.
+
+The decision recorded earlier today that the stalled windows "need an operator resume or a coordinator revision" is unchanged in substance and now has a mechanical
+form. Because `deliverOnce` in `tools/agent-mailbox-bridge/core.js` keys delivery on `worker:assignment:kind:content-hash` and returns the existing record without
+calling the adapter when that record exists, and because an ambiguous send is never automatically retried, an attached window whose stale record still exists sits
+`sent_unconfirmed` as a dedupe echo and is never sent again: the seven asset lanes are connected but idle for exactly that reason. An operator resume is therefore the
+deletion of that one lane's record file under `.local/orchestration/dispatch/<worker>/`, after which the next tick rebuilds the same key, writes a fresh record and sends
+the assignment notification; editing the assignment is the automatic equivalent, because a new content hash is a new key. The procedure, its preconditions (no active
+run, no pending review, no `working` activity record) and its prohibitions (never another worker's record, never a bridge or register change to force a wake) are
+recorded standing in `docs/orchestration/README.md`. `strategy-2` remains the one lane that has never connected, and its published assignment event, having no dispatch
+record, will fire on its first connect.
+
+Nothing in this correction changes authority: no assignment was published, no worker status was set to a publish state, no review ran, and no controller or bridge file,
+setting or limit was touched. The dispatcher stays `enabled` with `activeRun` false and `watching` "Waiting for new submissions" at `2026-10-03T14:33:40Z` on pid `8184`,
+after the `central-orchestrator` activity record was rewritten `paused` at `14:31:49.111Z`.
+
+
 ## 2026-10-03 (third cycle, background review): the gold release the user's go-ahead covered has landed, and strategy 037's handover is accepted
 
 The background coordinator reviewed `strategy` submission `20261003-strategy-coordinator-handover-doc-037` (mailbox SHA-256

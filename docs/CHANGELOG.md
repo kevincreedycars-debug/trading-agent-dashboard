@@ -1,3 +1,27 @@
+# 2026-10-03 (fourth cycle) - the eight relaunched worker windows are attached, and a resume is now a dispatch-record reset
+
+Verified the user's relaunch of the eight closed windows against the bridge's own records rather than against the reopen actions.
+
+- Connection sampling inside one five-second polling cycle (`2026-10-03T14:33:2xZ`, read twice) shows all eleven worker files rewriting with `extension_version` `0.2.1`
+  and file mtimes one to five seconds old: `backtester-usd`, `backtester-gbp`, `backtester-silver`, `backtester-nq`, `backtester-btc`, `backtester-wti`,
+  `backtester-eur`, `gold-research`, plus `strategy`, `live-trading` and `backtester-harness`. The eight relaunched windows are therefore bound and live, and this
+  supersedes this morning's audit, which read `gold-research` as last written `2026-09-29T20:31:39Z`, the seven asset lanes as `sent_unconfirmed` from
+  `2026-09-29T20:43:01Z`-`20:43:37Z` and `strategy` as `disconnected`.
+- Three readings are now distinguished by mechanism, checked in `tools/agent-mailbox-bridge/core.js` and `extension.js` rather than inferred: `watching`
+  (`backtester-harness`, `live-trading`, `gold-research`) means no wake is due; `strategy`'s `sent_unconfirmed` on the `67df9d95` reply is a real send (its dispatch
+  record was written `2026-10-03T14:30:37Z`, before the adapter ran, and only the bound extension calls the adapter), so both review replies are now in that window and
+  its own `14:30:35.819Z` activity record is pickup evidence; the seven asset lanes' `sent_unconfirmed` is a dedupe echo of the `2026-09-29` dispatch of unchanged
+  assignments, so no send occurred and none will occur while the content stands.
+- An operator resume is now a documented mechanical procedure rather than a paste-only fallback: delete that lane's per-event record under
+  `.local/orchestration/dispatch/WORKER/` while its window is attached, and the next five-second tick rebuilds the same event key, writes a fresh record and sends the
+  assignment notification; an edited assignment wakes it automatically because a new content hash is a new key. The procedure, its preconditions and its prohibitions
+  are added to `docs/orchestration/README.md`.
+- State this cycle changed: none. `check` reads pending 0, errors 0; the dispatcher reads `enabled` true, `activeRun` false, `watching` "Waiting for new submissions" at
+  `2026-10-03T14:33:40Z` on pid `8184` after the `central-orchestrator` activity record was rewritten `paused` at `14:31:49.111Z`; no assignment was published, no worker
+  status was set to a publish state, nothing was deployed, refreshed, merged or opened, no review ran, no other coordinator process was started, and no controller or
+  bridge file or setting was touched.
+
+
 # 2026-10-03 (third cycle) - strategy 037 reviewed and accepted; the gold release it describes has since landed
 
 Reviewed the one open submission from the canonical checkout; the strategy mailbox now reads `pending 0, errors 0`.

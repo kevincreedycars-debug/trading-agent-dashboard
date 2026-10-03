@@ -2,6 +2,21 @@
 
 Current milestone: the 28-factor Gold stage is complete and its plain-English verdict page is accepted; hold
 until the one carried observation envelope at the lane close, then stop.
+Next immediate action, 2026-10-03 (fourth cycle, window relaunch): the eight relaunched worker windows are attached and every one of the eleven registered windows is
+polling the bridge, so the connection half of the earlier audit is closed and only the work half remains. Two reads of `.local/orchestration/connections/` inside one
+five-second tick (`2026-10-03T14:33:2xZ`) show all eleven files rewriting with extension `0.2.1` and mtimes one to five seconds old - `backtester-usd`, `backtester-eur`,
+`backtester-nq`, `backtester-btc`, `backtester-gbp`, `backtester-silver`, `backtester-wti`, `gold-research`, `strategy`, `live-trading`, `backtester-harness` - and the
+reading is confirmed by mechanism, not by the badge: `watching` on `backtester-harness`, `live-trading` and `gold-research` means no wake is due; `strategy`'s
+`sent_unconfirmed` is a real send of the `67df9d95` reply at `14:30:37Z`, so both review replies are now in that window; and the seven asset lanes' `sent_unconfirmed` is a
+dedupe echo of their `2026-09-29T20:43Z` dispatch, so they are connected but idle and will not be woken by unchanged content. The immediate action is therefore the
+user's, in two shapes: to put those attached-but-idle lanes back to work, reset the target lane's per-event record under `.local/orchestration/dispatch/<worker>/` (the
+procedure now standing in `docs/orchestration/README.md`) or edit its assignment, which wakes it on the next tick; and to sequence the unchanged substantive queue - the
+live data refresh, route N1 now that the release it waited behind has landed, the overdue gold-research 022 item A anchor observation envelope, the harness
+thirteen-question block, the live-trading call-to-order contract with the written FTMO confirmation, the seven asset readiness reconciliations, the never-opened
+`strategy-2` window, and the movement-screen lane `gold-declared-band-measurement-026`. Nothing here is executable by a background cycle: this one published no
+assignment, changed no worker status, ran no review and touched no controller or bridge file.
+
+
 Next immediate action, 2026-10-03 (third cycle, background review): strategy submission 037 was reviewed and accepted from the canonical checkout at
 mailbox sha256 0dd8a2fa (reply 67df9d95, review docs/orchestration/reviews/20261003-strategy-coordinator-handover-doc-037.md), and the strategy
 mailbox reads pending 0, errors 0. It is a docs-only handover with no new recommendation, and no new assignment was published and no worker status

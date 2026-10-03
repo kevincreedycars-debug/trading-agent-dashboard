@@ -459,3 +459,36 @@ window that is not bound. Two further mechanical notes: the coordinator's own st
 runs again (pid `8184`), and the canonical checkout still carries one modified strategy workspace file and five untracked Gold session-policy
 files that belong to no lane of this cycle and were left exactly as found.
 
+
+## Coordinator note, 2026-10-03 (fourth cycle): all eleven windows are attached, and what a resume means now
+
+The user relaunched the eight closed windows and all eight are live, so the standing claims above that `strategy` reads `disconnected` and that `gold-research` and the
+seven `backtester-<asset>` windows have written nothing since 2026-09-29 are superseded by observation. Two samples of `.local/orchestration/connections/` taken inside
+one five-second polling cycle at `2026-10-03T14:33:2xZ` show every worker file rewriting with extension `0.2.1` and mtimes one to five seconds old: `backtester-usd`
+`14:33:24.610Z`, `backtester-gbp` `23.186Z`, `backtester-silver` `22.260Z`, `backtester-harness` `23.086Z`, `gold-research` `23.095Z`, `strategy` `22.639Z`,
+`backtester-nq` `21.583Z`, `backtester-btc` `21.537Z`, `backtester-wti` `21.136Z`, `live-trading` `20.797Z`, `backtester-eur` `20.613Z`. No click is outstanding: the ten
+`mailbox_auto_connect` lanes reconnect themselves and `strategy` is live from the saved binding its one-time click created.
+
+What each window is actually doing, read from the bridge rather than from the badge:
+
+- `backtester-harness`, `live-trading`, `gold-research`: `watching`, `Connected; no worker wake due`. Nothing is pending for any of them. `gold-research` is idle because
+  its own `2026-09-25T19:54:06.758Z` pause is newer than its last event, and the harness lane is idle because its register status is `design_records_accepted_awaiting_user`
+  with no newer reply; both are idle by design, not stalled.
+- `strategy`: `sent_unconfirmed` on the `67df9d95` reply, and this is a real send - the record under `.local/orchestration/dispatch/strategy/` was written
+  `2026-10-03T14:30:37Z` before the adapter ran, with the earlier `14:20:00Z` record carrying `961c56ef` - so both review replies are now in that window. Its own activity
+  record at `14:30:35.819Z` ("Filed status report -037 ...") is pickup evidence that the window is live. Nothing further is owed to it: the release it described has
+  landed, and D1-D5, route N1, the data refresh and the movement-screen lane stay the user's.
+- the seven `backtester-<asset>` lanes: `sent_unconfirmed` as a **dedupe echo**, not a send. Their only event is the unchanged `instructions_published_awaiting_worker`
+  assignment, whose key was already dispatched `2026-09-29T20:43:01Z`-`20:43:37Z`; `deliverOnce` returns that record without calling the adapter, so the relaunch restored
+  reachability but no work reached them and none will while the content stands.
+- `strategy-2`: no connection file has ever been written and its window was not relaunched; its published assignment has no dispatch record, so its event will fire on its
+  first connect.
+
+To resume an attached-but-idle lane, the standing procedure is now in `docs/orchestration/README.md`: with the window open and connected, confirm nothing is in flight,
+then delete only that lane's stale record file under `.local/orchestration/dispatch/WORKER/` and let the next five-second tick re-send the identical event key; editing
+the assignment is the automatic equivalent. The prompts above still serve if you prefer to paste instead of resetting a record, and the seven asset lanes' paste text is
+unchanged with the id swapped. `strategy-2` needs no reset at all - only its window opened, per the note at its own section.
+
+Nothing in this note widens any lane's authority: no connection, credential, warehouse, order, arming, Layer 1, Layer 2, workflow, dashboard or production change follows
+from it, and no assignment, register status or per-event record was modified to write it.
+

@@ -158,6 +158,19 @@ notes. It does not wake this exact IDE chat. No unattended approval bypass or
 production action is enabled. Before interactive coordinator edits, pause dispatch
 and wait for any active run to finish. Other workers remain independently scoped.
 
+### Operator resume for a window that is attached but idle
+
+An attached window is not a woken window, and the two states must not be read from the connection badge alone. Delivery is at most once per event key - the worker's
+newest reply, otherwise its assignment while the register status is exactly `instructions_published_awaiting_worker` - and the proof of that delivery is the immutable
+record under `.local/orchestration/dispatch/WORKER/<sha256-of-key>.json`, which is written before the adapter is called. A connection file that reads
+`sent_unconfirmed` while its dispatch record is old is therefore a dedupe echo, not a send: the window is bound, the worker is idle, and it will stay idle until the
+event changes or the record is reset. `watching` is the other idle state and means nothing is pending at all. To resume an attached lane: confirm first that no work is
+in flight (`node scripts/coordinator-dispatch.js status` shows `activeRun false`, `node scripts/coordination.js check --worker WORKER` shows no `pending_review`, and the
+worker's `.local/orchestration/activity/WORKER.json` is not `working`), then delete only that lane's stale record file under `.local/orchestration/dispatch/WORKER/`; the
+extension rebuilds the identical event key on its next five-second tick, writes a fresh record and sends the assignment notification to that window. Editing the
+assignment is the other, self-serving path, because a new content hash is a new event key and fires automatically. Never delete another worker's record, never force a
+wake by editing the bridge, the register or the mailbox CLI, and never treat a send return as pickup: only worker activity confirms that.
+
 ## Validation
 
 `npm run test:coordination` is the focused local suite for the mailbox.

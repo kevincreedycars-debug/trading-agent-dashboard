@@ -1,5 +1,27 @@
 # Session notes
 
+2026-10-03, fourth cycle (window relaunch), all eleven windows are attached: the user relaunched the eight closed worker windows and every one of them is now bound and
+polling. Two reads of `.local/orchestration/connections/` inside one polling cycle - `2026-10-03T14:33:2xZ` and again seconds later, with both samples agreeing - show
+all eleven files rewriting with `extension_version` `0.2.1` and file mtimes one to five seconds old: `backtester-usd` `14:33:24.610Z`, `backtester-gbp` `23.186Z`,
+`backtester-silver` `22.260Z`, `backtester-harness` `23.086Z`, `gold-research` `23.095Z`, `strategy` `22.639Z`, `backtester-nq` `21.583Z`, `backtester-btc`
+`21.537Z`, `backtester-wti` `21.136Z`, `live-trading` `20.797Z`, `backtester-eur` `20.613Z`, which is the five-second tick rather than stale files. The mechanism was
+checked in `core.js` and `extension.js` instead of inferred, and it separates three genuinely different readings: `backtester-harness`, `live-trading` and
+`gold-research` are `watching` with `Connected; no worker wake due`, so nothing is pending for them - the wake rule drops an event older than a matching activity record,
+which is why `gold-research` is idle (its own `2026-09-25T19:54:06.758Z` pause is newer than its last event) and not stalled; `strategy` reads `sent_unconfirmed` on the
+`67df9d95` reply and that is a real send, because the record under `.local/orchestration/dispatch/strategy/` was written `2026-10-03T14:30:37Z` before the adapter ran and
+only the bound extension calls the adapter, so that window has now been handed both review replies (`961c56ef` at `14:20:00Z`, `67df9d95` at `14:30:37Z`) and its own
+activity record at `14:30:35.819Z` is independent pickup evidence; the seven `backtester-<asset>` lanes read `sent_unconfirmed` as a dedupe echo of the
+`2026-09-29T20:43:01Z`-`20:43:37Z` dispatch of their unchanged assignments, so no send happened and none will happen while the content stands. No click is outstanding
+anywhere: the ten auto-connect lanes carry `mailbox_auto_connect` true and `strategy` is live from its saved binding, which is the one-time click restored on reload. The
+consequence is that the relaunch restores reachability, not work: the resume for a lane whose window is attached but idle is now a mechanical reset of that lane's
+per-event record under `.local/orchestration/dispatch/<worker>/`, after which the next tick rebuilds the same key and sends, while an edited assignment (new content hash,
+new key) wakes it automatically; the procedure is recorded standing in `docs/orchestration/README.md`. `gold-research` has no wake due, so only its owed 022 item A
+envelope is resumable; `strategy-2` still has never written a connection file and its unseen assignment event will fire on its first connect. The loop is otherwise idle
+and ready: `check` reads pending 0, errors 0, `strategy` `advisory_active`, `strategy-2` `instructions_published_awaiting_worker`, and the dispatcher reads `enabled`
+true with `activeRun` false and `watching` "Waiting for new submissions" at `2026-10-03T14:33:40Z` on pid `8184` because the `central-orchestrator` activity record was
+rewritten `paused` at `14:31:49.111Z`. This cycle deployed, refreshed, merged and opened nothing, published no assignment, set no worker status to a publish state, ran
+no review, started no other coordinator process and touched no controller or bridge file; the canonical unrelated dirty state and every worktree were left as found.
+
 2026-10-03, third cycle (background review), the mailbox is empty again: strategy submission 037 was reviewed by hand from the canonical checkout
 and accepted, so coordination.js check reads pending 0, errors 0 for that worker. The deliverable is the docs-only handover
 docs/strategy/COORDINATOR_HANDOVER_20261003.md; it and CONVERSATION_NOTES.md reproduce byte-exactly (sha256 3f88488a and 86667626), the change set
