@@ -1,3 +1,22 @@
+# 2026-10-03 (twenty-fifth cycle) - the backtester-harness NQ-series decision is accepted, the spine key convention is settled, and no assignment is published
+
+Reviewed the backtester-harness lane's `r7` filing under the controller lock that owns this run, reproduced its scope, digests and production
+claims from the checkout, the mailbox and `origin/main` rather than from its summary, and accepted it as a docs-only status report. No
+assignment is published and no worker status changed.
+
+- Mailbox `20261003-backtester-harness-nq-series-decision-r7`, 13,470 bytes, sha256
+  `20142d878e57e786780aa1f036a54659a1e539d3489b88e6be7bdd69770ecaaa`, reproduced from the immutable inbox file; reply
+  `fa3c55fd8f743af7d07dba590a3939e47b3f21e1bf3162b6df894c214585e54c`, 8,401 bytes, published with the canonical CLI, `errors: []`;
+  review `docs/orchestration/reviews/20261003-backtester-harness-nq-series-decision-r7.md`.
+- Scope reproduced rather than trusted: HEAD `a351f0c`, clean tree, no upstream, so no commit and no push this cycle; the staged patch file
+  `tmp/pending-doc-updates-20261003-r6.md` reproduces at 17,124 bytes / `b2ff7ae2...` and supersedes r6's 11,828-byte version; the NQ probe
+  reproduces at `fb565ea4...`.
+- Adopted: the NQ `/USD` series is the QQQ proxy (evidence re-measured from `origin/main` at `f8bc80f`), with its limitation travelling with
+  the data; the lowercase spine key convention with only `gbpusd` and `xagusd_spot` added, withdrawing r6's uppercase-at-price-row
+  recommendation; and the shared USD macro and FRED pull having one owner that runs once.
+- Answered: r7's two numbered questions - the spine key convention and the pull split. Recorded two dependency notes (FRED writes the macro
+  table, so WTI needs a price importer; the gold importer hardcodes the Coinbase `XAU-USD` URL, so Silver is a real gap) and one
+  non-load-bearing correction of record (the r3 reply measures 6,033 bytes, not the 6,101 the r3 cycle recorded).
 # 2026-10-03 (twenty-fourth cycle) - the backtester-harness hold-divergence disclosure is accepted and the hold is ruled prospective
 
 Reviewed the backtester-harness lane's `r5` filing under the controller lock that owns this run, reproduced its scope, digests and timing
