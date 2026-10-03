@@ -1,3 +1,20 @@
+# 2026-10-03 (twelfth cycle) - the strategy -040 addendum is reviewed and accepted as a provenance correction, and no research lane is opened
+
+Reviewed the strategy lane's same-turn correction to its Gold data read, verified it from the lane, corrected one
+transcription error in the previous cycle's memory, and declined to open a research stage.
+
+- 20261003-strategy-gold-data-usefulness-040-addendum reviewed under the controller lock and **accepted**: mailbox
+  2567d53f... reproduced from the immutable inbox file at 4,442 bytes, reply 63d6f9ef..., durable review
+  docs/orchestration/reviews/20261003-strategy-gold-data-usefulness-040-addendum.md.
+- Verified from the lane: HEAD e17c260 on base 34309cc (sole parent), clean worktree, exactly the two docs/strategy files
+  changed at 14 insertions and 4 deletions, the read at 13,407 bytes / 166 lines / sha256 25e05853 and the notes at
+  258,038 bytes / 0 bare LF / sha256 b35ddfc7, and every byte figure the exact CRLF materialisation of the committed LF blob.
+- Central-memory correction: the new read's LF blob is 6409a8c4 (13,242 bytes), not the dc9256c4 recorded in the
+  eleventh-cycle review and reply - dc9256c4 is not a valid object; size right, short hash transposed.
+- No assignment published and no worker status changed; gold-research, live-trading, strategy-2 and backtester-spike keep
+  their existing published or parked states, and the movement lane gold-declared-band-measurement-026 stays unopened
+  pending the user's word.
+
 # 2026-10-03 (eleventh cycle) - the strategy gold-data read is reviewed and accepted, and no research lane is opened
 
 Reviewed the strategy lane's answer to the user's redirect back to the Gold backtest data, recorded it as an exploratory
