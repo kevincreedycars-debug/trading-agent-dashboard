@@ -2,7 +2,8 @@
 
 Prepared by worker `strategy` (`strategy-advisory-001`) for the dashboard lane and the coordinator, on the user's own
 word this session. Filed as submission `20261003-strategy-gold-release-and-helper-go-ahead-036` (mailbox sha256
-`2a8606a092885d2207436c485f7ed5e35203b5ad98fd2ecbf0c032f05975655e`).
+`2a8606a092885d2207436c485f7ed5e35203b5ad98fd2ecbf0c032f05975655e`; decision **acknowledged** by the coordinator on
+2026-10-03 at 15:19).
 
 ## Authority
 
@@ -13,35 +14,56 @@ The user was asked, in plain words, at the close of a status check:
 
 The user answered **"yes"**. That one word authorises the three actions below and nothing beyond them. It does not
 authorise a new assignment, a new lane, a page redesign, a navigation change, a credential, a warehouse action or any
-trading authority. Reading it back: (1) clear the dead lock and restart the helper, (2) publish the gold release now,
+trading authority. Reading it back: (1) clear the dead lock and restart the helper - **already done by the coordinator itself, see Task 1**,
+(2) publish the gold release now,
 (3) refresh the live data panel. The user's earlier one-line "okay push everything" (submission
 `20261001-strategy-user-goahead-publish-033`, acknowledged) remains the broader go-ahead for the gold release; this
 turn supplies the missing piece, the user's word for the refresh and for the lock clearing.
 
 ## Order, and why
 
-1. **Clear the dead lock and restart the helper first.** Nothing reviews or publishes while the helper is frozen, so
-   this is the enabling step.
-2. **Publish the gold release second.** It is the item both the register and the accepted reviews have held as next
-   since 2026-10-01, and it must land before the navigation change by the user's own answer "after".
-3. **Refresh the data third (or in parallel).** It is independent of the release and takes minutes.
+1. **Clear the dead lock and restart the helper - ALREADY DONE, see Task 1 below.** The coordinator cleared it itself
+   while this handover was being written.
+2. **Publish the gold release.** It is the item both the register and the accepted reviews have held as next since
+   2026-10-01, and it must land before the navigation change by the user's own answer "after".
+3. **Refresh the data (or in parallel).** It is independent of the release and takes minutes.
 
-## Task 1 - clear the dead lock and restart the background review helper
+## The coordinator's reply to `-036`, received 2026-10-03 15:19
 
-Verified this turn, read-only, and unchanged since 2026-09-30:
+Decision: **acknowledged** - "the user's one-word go-ahead is recorded as the user's answer to the three named questions
+and as nothing beyond them", with the explicit warning that "acknowledgement is not an execution: nothing was published,
+copied, merged, deployed, refreshed or armed in this cycle". It reproduced the candidate byte-exactly (5,839 bytes,
+sha256 `de60c2b7...`), confirmed the release is unpublished and the panel stale (origin/main still `16104a3`, published
+`data/layer1.json` `last_updated_et` `2026-10-02T07:29:28.874Z`), and confirmed the guard coupling is real: the factor
+guard pins `/40 of 50 answered/`, the live draft page reads `40 of 50`, and revision 2 reads `50 of 50`, so that line
+must move in the same change as the copy.
 
-- `.local/orchestration/controller/run.lock` still names PID `24000` and submission
-  `20260930-strategy-evening-save-031`.
-- `.local/orchestration/controller/status.json` still reads `"state": "reviewing"`, `"detail":
+It corrects one item of this worker's: **item (1) was already done** - the coordinator removed the dead pid-24000
+`run.lock` and `daemon.lock` and restarted the dispatcher this morning; at review time pid `8184` was alive and
+`status.json` read `reviewing`. Verified here just now: no `run.lock` exists and `status.json` reads `watching`, pid
+`8184`, `2026-10-03T14:23:54.880Z`.
+
+It names the three things still outstanding, and says all three are the **interactive coordinator's** production
+actions taken with the user's word in-session, not the background review's:
+
+- (a) whether the gold release is executed now, naming the materialisation that is served;
+- (b) whether the live panel is refreshed now;
+- (c) whether to open the movement-screen lane `gold-declared-band-measurement-026` - not covered by the go-ahead, and
+  needs the user's word and a register edit.
+
+## Task 1 - the stale lock and the frozen helper: already done, nothing outstanding
+
+**No action needed.** The reading below is kept only as the record of what the three-day freeze looked like before the
+coordinator cleared it.
+
+- `.local/orchestration/controller/run.lock` named PID `24000` and submission
+  `20260930-strategy-evening-save-031` - **now removed** (verified: the file does not exist).
+- `.local/orchestration/controller/status.json` read `"state": "reviewing"`, `"detail":
   "20260930-strategy-evening-save-031"`, `"pid": 24000`, `"updated_at": "2026-09-30T21:02:00.315Z"` - roughly three
-  days stale.
-- The process is gone and `node scripts/monitor-state.js snapshot` reports the controller `offline`.
-
-What to do: clear the stale lock and return the controller to an idle state, then restart the helper so new filings are
-picked up. This is coordinator housekeeping on a process that no longer exists; it cannot disturb the strategy lane's
-worktree, its notes or its mailbox. Confirm the outcome by re-running `node scripts/monitor-state.js snapshot` and
-`node scripts/coordination.js check` and reporting the controller state. Do not touch any other worker's files, any
-accepted artifact or any production file while doing this.
+  days stale. **Now** `"state": "watching"`, `"detail": "Waiting for new submissions"`, `"pid": 8184`,
+  `"updated_at": "2026-10-03T14:23:54.880Z"`.
+- The monitor had reported the controller `offline`; it now answers normally (run
+  `scripts/monitor-state.js` by absolute path from the canonical checkout).
 
 ## Task 2 - publish the gold release
 

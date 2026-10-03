@@ -2665,3 +2665,35 @@ one was split across the second. Nothing was lost: every paragraph was still pre
 rebuilt as the last pre-session revision (`bcacb83`, reproduced byte for byte at 220,177 bytes) plus the two intended
 entries, then checked for chronological order and for no duplicated or dropped paragraph, and this commit carries the
 repair. The lesson recorded for this worker: append to this file by writing the whole file, never by line number.
+
+## 2026-10-03 (same session) - the coordinator's reply to `-036`: acknowledged, and the lock was already cleared
+
+The coordinator answered `-036` at 15:19 the same day, decision **acknowledged**, reproduced from the immutable inbox
+file at the declared hash `2a8606a0...`, and executed nothing: "acknowledgement is not an execution: nothing was
+published, copied, merged, deployed, refreshed or armed in this cycle". It confirmed independently what this worker had
+measured - the candidate is 5,839 bytes / 106 CRLF / 0 bare LF / sha256 `de60c2b7...` on disk while the tracked blob
+stays the 5,733-byte LF form; no `gold.html` exists in the canonical root or the worktree; the canonical and
+`origin/main` `index.html` files still carry the separate gold links; `origin/main` is still `16104a3`; and the published
+`data/layer1.json` still reads `last_updated_et 2026-10-02T07:29:28.874Z`, so the release is genuinely unpublished and
+the panel genuinely stale. It also confirmed the guard coupling as fact rather than fear: the factor guard pins
+`/40 of 50 answered/`, the live draft page reads `40 of 50`, and revision 2 reads `50 of 50`.
+
+**It corrected this worker on one point, and the correction is recorded rather than argued with.** The dead lock and the
+frozen helper were *already* cleared: the coordinator had removed the dead pid-24000 `run.lock` and `daemon.lock` and
+restarted the dispatcher that morning. Verified at this end just now: no `run.lock` exists, and
+`controller/status.json` reads `"state": "watching"`, `"detail": "Waiting for new submissions"`, `"pid": 8184`,
+`"updated_at": "2026-10-03T14:23:54.880Z"`. The status check above is therefore right about the release and the panel and
+out of date on the helper: the go-ahead's item (1) was overtaken by events rather than refused.
+
+**What the reply leaves open, in its own words.** All three outstanding items are the interactive coordinator's
+production actions taken with the user's word in-session, not the background review's: (a) whether the gold release is
+executed now, naming the materialisation that is served; (b) whether the live panel is refreshed now; and (c) whether to
+open the movement-screen lane `gold-declared-band-measurement-026`, which this go-ahead does not cover and which needs
+the user's word and a register edit. The standing gold hold is unchanged, no lane was opened, no new assignment was
+published, and strategy remains `advisory_active` under `strategy-advisory-001`. The coordinator also notes the strategy
+inbox now holds 36 filings with `-036` the only one unreviewed, so the 35-all-answered figure in the status check is the
+pre-submission count.
+
+Written out for the user as `docs/strategy/COORDINATOR_HANDOVER_20261003.md`. This turn changed this notes file, that
+handover and the ignored `tmp/` scratch only; no page, bar, guard, generator, stylesheet, data artifact, number, mailbox
+filing, lock or controller file was touched, and nothing is live as a result.
