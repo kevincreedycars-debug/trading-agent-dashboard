@@ -1,5 +1,43 @@
 # Central decisions
 
+## 2026-10-03 (tenth cycle, background review): the harness inventory defect, and which tree is authoritative
+
+The backtester-harness filing `20261003-backtester-harness-asset-store-and-tabs-r1` was reviewed from the canonical
+checkout under the controller lock (mailbox `7d3563b71b0af1be53df2d243d41789182ff461fe42b093206e2190a5072c848`,
+reply `f4f40e5ae6ca70f42b1d237b518004c14c09614123579a8a95206e6761040ef2`, review
+`docs/orchestration/reviews/20261003-backtester-harness-asset-store-and-tabs-r1.md`) and answered **changes
+requested** - a documentation revision owed under a new submission ID, with no change to the lane's design-only
+authority and Stage B still closed.
+
+The substantive finding is a tree-provenance defect, and it decides a standing rule. **`origin/main` is the
+authoritative tree for any statement about what exists per asset.** The canonical checkout and every worker
+worktree sit on the orchestration control-plane lineage, which diverged from production at `125d871` on
+2026-09-07 - this branch 200 commits on, `origin/main` 297 on, of which 262 are automated data refreshes.
+Measured against `origin/main`: `logic/agent_silver_direction.md` and `logic/agent_wti_direction.md` both exist
+since 2026-09-12, and `data/layer1.json` (`last_updated_et` 2026-10-02T07:29:28.874Z) carries eight live agents
+(USD, EUR, GOLD, SILVER, NQ, BTC, WTI, GBP), each with a `logic_document` pointer and a sealed call. So the
+plan's "six logic documents", "five agents only", "Silver and WTI have nothing but a dashboard tab" and "GBP has
+no Layer 1 output" are all readings of the divergent branch rather than of production. The defect runs the other
+way too: `backtester/replay/gbp/gbp_replay_core.js` and its test exist on the orchestration branch and nowhere on
+production, so a branch reading can also overstate production readiness.
+
+Two consequences are recorded here. First, an existing central note is corrected: the `analysis-engine`
+assignment repeats the "no silver and no wti document" reading, and that sentence is stale for the same reason.
+Second, the harness lane's user decision 2 is re-framed rather than answered - with factor definitions already in
+production, the real gap for Silver and WTI is the backtester-side store (snapshot table, builder, checker data,
+price importer), so those two assets need a decision about the **store**, not about whether a factor list should be
+written first.
+
+Also recorded from the same review: the lane filed a superseding `20261003-backtester-harness-asset-store-and-tabs-r2`
+(12,820 bytes, sha256 `a727c850ca032436ce86888b9f38fc90977fa74abcd81c7c72b04dcd3f1f3d71`) at 16:43:46, after this
+cycle's queue read; it is left untouched and pending as the next cycle's first item. And the lane's undeclared
+post-report commits are the second occurrence of that defect class in this lane - the stage-A acceptance recorded
+the first - so the reply requires the next report to be HEAD-bound or to state explicitly what is withdrawn.
+
+Unresolved and the user's: store shape A versus B, the Silver and WTI store scope, one assignment versus seven,
+whether the rail accordion lands before the data build, and whether the four-year window is fixed for every asset.
+No outcome, holdout or prospective observation was read, and nothing was published, deployed, merged, refreshed or
+mutated.
 ## 2026-10-03 (ninth cycle, coordinator): a new Analysis Engine window, four register rows read correctly, and the coordinator owns the order
 
 The user asked for a second strategy window named **Analysis Engine**, where the coordinator and the user can
