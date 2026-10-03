@@ -129,7 +129,8 @@ values. Report what the live panel then shows.
 
 Advice only. This worker's write scope is `docs/strategy/` in
 `D:/trading-agent-dashboard-codex/.local/worktrees/strategy`; it cannot publish a page, edit the bar, clear a lock or
-trigger a refresh. This turn it changed only `docs/strategy/CONVERSATION_NOTES.md` (the dated go-ahead entry) and added
-this file, committed on `workers/strategy-advisory-20260920` and pushed to origin at `5e76c53`. No page, bar, guard,
-generator, stylesheet, data artifact, number, lock, controller file or register entry was touched, and nothing is live
-as a result of it.
+trigger a refresh. This turn it changed only `docs/strategy/CONVERSATION_NOTES.md` (the go-ahead entry, the handover
+entry and the `-036` reply entry) and added this file, committed on `workers/strategy-advisory-20260920` and pushed to
+origin, which now stands at `406fa3a` (`5e76c53` go-ahead, `f310242` handover and notes repair, `406fa3a` this update).
+No page, bar, guard, generator, stylesheet, data artifact, number, lock, controller file or register entry was touched,
+and nothing is live as a result of it.
