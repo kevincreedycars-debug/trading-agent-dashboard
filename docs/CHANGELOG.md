@@ -1,3 +1,33 @@
+# 2026-10-03 (twenty-fourth cycle) - the backtester-harness hold-divergence disclosure is accepted and the hold is ruled prospective
+
+Reviewed the backtester-harness lane's `r5` filing under the controller lock that owns this run, reproduced its scope, digests and timing
+from the checkout and the mailbox rather than from its summary, and accepted it as a docs-only disclosure of a real divergence. No
+assignment is published and no worker status changed.
+
+- Mailbox `20261003-backtester-harness-hold-divergence-r5`, 8,243 bytes, sha256
+  `8d19b71ee8b954dd9758beed5c411da1574de54021b2c53644575bbb06e6174c`, reproduced from the immutable inbox file and equal to the requested
+  hash; reply `dd2554471b74359bb5da7e84cd7b275c05934ed6ec755eca9be9d3867beac948`, 8,363 bytes, decision `accepted`, published with
+  `node scripts/coordination.js reply`; review `docs/orchestration/reviews/20261003-backtester-harness-hold-divergence-r5.md`.
+- Scope reproduces: tip `a351f0c521f580f14324c962a18f6cae880fa6ff` with parent `ef8019bf6b47ebe66de31b1552a012c32f5640e9`, clean tree,
+  `git diff a351f0c^ a351f0c` exactly the two declared files at 29/0 and 18/3 and nothing outside `docs/backtester-harness/`, no upstream
+  and no remote ref (so nothing was pushed), and every declared digest byte-exact in CRLF form with its blob - work order
+  `88a7cafd`/`9ece382c`, notes `410a88c2`/`2df92bb6`, companions `d4f0bbdd`/`4a3491c9`, `db68299e`/`a03e1c24`, `34160779`/`3548290a`,
+  `e6e9d2fa`/`fb204d49`, `bfc73213`/`b0b5061a`.
+- Adjudicated on a measured 57-second gap: `a351f0c` is stamped 17:10:16 +0100 and the r2 reply carrying the hold landed at 17:11:13
+  +0100, with `r4` filed at 17:11:33 and this filing at 17:12:22. Ruling: no revert is ordered, because a direction to hold at `ef8019b`
+  cannot bind a commit that predates its publication and literal compliance would itself require a write the same instruction forbids;
+  `a351f0c` stands as the tip and the record, the freeze now runs from it, and the next revision must declare it. `r3`'s declared head is
+  therefore behind the tip, disclosed in `r4` and this filing, so the r1 undeclared-commit class is not repeated.
+- Both questions answered: the hold freezes no content written before it and forbids all content after it; prompt disclosure may fold into
+  an already-in-flight filing rather than a separate one, and the disclosure practice stays.
+- No assignment published and the register keeps `backtester-harness` at `design_records_accepted_awaiting_decisions`, so no
+  `instructions_published_awaiting_worker` state was set or disturbed. The open items are `r4`, `r6` and `r7`, all still
+  `pending_review`, and the decisions they do not answer: the production rail-accordion publish, the store shape, one acquisition
+  assignment versus seven with the shared USD and FRED pull, the window reading, and the DeepSeek scope.
+- Nothing was published, deployed, merged, refreshed or mutated; no outcome, holdout or prospective observation was read; no controller or
+  bridge file or setting was changed, no controller pause or stop was run, no other coordinator process was started, no subagent was spawned
+  and no external message was sent; the unrelated canonical dirty state and every worker checkout were left exactly as found.
+
 ﻿# 2026-10-03 (twenty-third cycle) - the strategy queue-closing status report is accepted and no assignment is opened
 
 Reviewed the strategy lane's `-047` filing under the controller lock that owns this run, reproduced its scope, artifacts, both
