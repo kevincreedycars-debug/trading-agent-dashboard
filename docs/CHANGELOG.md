@@ -1,3 +1,43 @@
+# 2026-10-03 (twenty-first cycle) - the live-trading state correction is accepted, the page-side commit route stays stopped, and no assignment is opened
+
+Reviewed the live-trading correction envelope under the controller lock that owns this run, reproduced its scope, artifacts,
+route and withdrawals from the checkout rather than from its summary, and accepted it as the state correction and single
+declaration the previous `changes_requested` reply required.
+
+- Mailbox `20261003-live-trading-live-marking-and-ladder-r2`, 13,222 bytes, sha256 `e9470238...`, reproduced from the
+  immutable inbox file; reply `6f97555d...`, decision `accepted`; review
+  `docs/orchestration/reviews/20261003-live-trading-live-marking-and-ladder-r2.md`.
+- Range and scope reproduce: `31a3bb67` is the sole child of `2ac080a2`, whose sole parent is `482aabc4`; the two commits
+  (+1784/-461 and +240/-2) sum to the declared 10 files +2024/-463; the declared `changed_files` list is exactly the union of
+  the two commits files; `git status --porcelain` at that head prints nothing, so `dirty_files: []` is a fact.
+- All twelve declared artifacts are byte-exact in the worktree copy at that head in their CRLF materialisation with matching
+  git blobs, and the two files declared unchanged are unchanged: `data/l2l-levels.json` `c383997c` and `lib/l2l_ladder.js`
+  `344a499d`.
+- The route was read from the code: the GitHub contents API `PUT` carries `branch` in the body with no pull request, review
+  branch or approval step anywhere in the file; the token is only the reader own, kept in session storage unless remembered and
+  cleared by Disconnect; `commitLevels` refuses a state its own checker rejects and refuses to overwrite a moved remote sha.
+- Both sentences the previous reply required withdrawn are corrected in place in the fourth entry, the sixth entry and
+  `STRATEGY_LIVE.md` section 21, all inside `31a3bb67`; `node --check` is clean on four files and the focused suite re-runs
+  82 of 82.
+- Two notes of record, neither changing the decision: `base_commit` names the register baseline `5ff1bf3` rather than the
+  range parent `482aabc4`; and the declared repo-wide line (515/511/4) does not reproduce here, where `npm test` reads
+  449 of 449 and the focused `backtester/tests/secret_scanner.test.js` 5 of 5, leaving the four console-width cases as the
+  documented environment-dependent pre-existing condition already tracked in `CURRENT_STATE.md`.
+- Production and dependency facts recorded: `git ls-remote origin` answers `refs/heads/main` only with the strategy worker ref
+  the sole worker ref, so `workers/live-trading-20260929` is unpushed; `origin/main` has moved to `f8bc80f`
+  (2026-10-03 15:30:19 +0100) with `2f25c8c`, `7ce136e` and `f8bc80f` after `16104a3`; `origin/main:script.js` carries the
+  endpoint-only marking with no `liveTradingLevelsCanMark`, no `liveTradingPublish` and no `L2LLevelsStore`, and its
+  `index.html` loads neither `lib/l2l_ladder.js` nor `lib/l2l_levels_store.js`; and main already holds the lane earlier
+  `scripts/l2l-levels-tool.js` `a2540603`, `tests/l2l_levels.test.js` `3ff25f13`, `scripts/README-l2l-levels-tool.md`
+  `87663048` and `data/l2l-levels.json` `2a0aef4f`, so the port manifest is larger than `script.js` plus the store.
+- The code files stay a disclosed overrun outside the assignment owned scope, nothing merged or accepted, and no assignment is
+  published; the register keeps `live-trading` at status exactly `instructions_published_awaiting_worker` so the reply stays
+  deliverable. The two decisions stay the user: first the marking-store ruling with three entries, then the production
+  port go-ahead on the already-ruled hunk recipe.
+- No production change, deployment, purchase, credential change, external message or warehouse mutation; no controller or
+  bridge file or setting touched, no controller pause or stop run, no other coordinator process started and no subagent
+  spawned. The unrelated canonical dirty state and every worker checkout were left exactly as found.
+
 # 2026-10-03 (twentieth cycle) - the -046 correction-of-record status report is accepted, and no new lane or assignment is opened
 
 Reviewed the strategy lane status report that corrects one sentence and one framing in its own `-045` filing,
