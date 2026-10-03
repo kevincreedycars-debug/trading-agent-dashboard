@@ -7,7 +7,7 @@ Worker strategy; assignment strategy-advisory-001; branch workers/strategy-advis
 ## User replies: style (user instruction, 2026-09-29; revised the same day after "this is too simple")
 
 - Max 3 bullets, about 50 words each. Plain words; no tables, hashes, file paths, provenance or jargon.
-- Each question: one to two lines including a short reason or example. At most 7; if unanswered, the default is assumed.
+- Each question: a simple numbered list, one to two lines per item including a short reason or example. At most 7; if unanswered, the default is assumed.
 - Long evidence, numbers, decisions, open points and provenance go in docs/strategy/ and the mailbox, never in the reply.
 - If it will not fit, cut it and name the file that holds it. See docs/strategy/REPLY_STYLE.md.
 

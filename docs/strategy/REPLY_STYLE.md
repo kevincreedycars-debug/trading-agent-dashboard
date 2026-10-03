@@ -9,7 +9,7 @@ startup.
 
 1. **Max 3 bullets, about 50 words each, plain words.** No tables, no hashes, no file paths, no provenance, no
    jargon in a reply to the user. Enough context to be read on its own, not a page.
-2. **Questions: one to two lines each, at most 7, each with a short reason or example.** If the user does not
+2. **Questions: a simple numbered list, one to two lines each, at most 7, each with a short reason or example.** If the user does not
    reply, the default is assumed and the work continues.
 3. **Everything long goes in a file.** Evidence, numbers, decisions, open points and provenance belong in
    `docs/strategy/` and in the mailbox submission, never in the chat reply.
