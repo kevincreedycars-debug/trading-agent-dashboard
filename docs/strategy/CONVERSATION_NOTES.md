@@ -2791,3 +2791,76 @@ The `-038` reply is folded into the handover as its own section, and the closing
 commits. This turn changed only this notes file, `docs/strategy/COORDINATOR_HANDOVER_20261003.md` and ignored `tmp/`
 scratch. No page, bar, guard, generator, stylesheet, data artifact, number, register entry, lock, controller or bridge
 file was touched by this worker, and nothing was published, refreshed or triggered.
+
+## 2026-10-03 (same session) - User instruction: craft the instructions for the site-wide top-bar and side-bar tidy-up, and a question about the coordinator's single-publisher queue
+
+User, verbatim (both halves of one message): *"yeo craft the instructiosn to tidy up the top and side bar menu to ensure
+consistency site wide. also do it make sense that the coordinator is the only thing that can push changes and it has a
+queue that it reviews and looks at how to most efficiently do certain tasks"*. Two deliverables, no permission asked: the
+first is an instruction set the coordinator can execute, the second is an advisory answer. Neither changes a served file,
+and nothing in either is adopted by being written.
+
+**The work order, and why it is not the 2026-10-01 request again.** `DASHBOARD_NAV_CONSISTENCY_REQUEST.md` was written
+before the release and its page table is one release old, so its measurements were re-taken read-only from `origin/main`
+at `f8bc80f` on 2026-10-03 with `git ls-tree` / `git show`, from this worktree, without consulting any working-tree file
+for a claim. The new file is `docs/strategy/COORDINATOR_NAV_TIDY_HANDOVER_20261003.md`, thirteen sections: the settled
+answers, the site measured, the fingerprint, Task 0, the route, all nine pages page-by-page, the rail off the dashboard,
+the live clock, the guards, acceptance, rollback, boundaries and provenance. Current state in one line: nine root pages,
+**the bar and the rail on `index.html` and on no other page** - four of the nine link `styles.css`, five keep everything
+in their own inline `<style>`, four carry a bespoke `<header>` whose only navigation is a "Related pages" row, and two
+north-star pages plus the draft page carry no `<header>` at all.
+
+**Two measurements changed the plan, and both are corrections of this lane's own earlier advice.**
+`script.js` drives the rail with `btn.dataset.tab` and `setTab` (lines 14,875 and 14,931-14,932) and reads
+`location.hash` nowhere - `git grep` finds it in no published script - so the 2026-10-01 request's suggested
+`<a href="index.html#gold">` degradation would open the dashboard on its default tab and not on Gold. `gold.html` already
+solves exactly that problem for its own tabs (lines 101-102, on load and on `hashchange`), so the work order offers the
+ten-line `script.js` fix that mirrors it. Second: the bar's live date and clock spans need `script.js`, which no other
+page loads, so a literal copy of the bar would leave eight pages reading "Loading date..." forever - named as the single
+allowed difference, with a baked static date line as the honest alternative.
+
+**Task 0 - the release left the served bar and the tree's bar disagreeing, and three guards are green against the stale
+one.** Production `index.html` carries four bar entries (North Star Brief, Standing Dashboard, Gold, Backtest Flow). The
+canonical checkout on `orchestration/control-plane-20260920` at `30d853b` does not contain the release commit `2f25c8c` at
+all (`git merge-base --is-ancestor 2f25c8c HEAD` exits 1), its `index.html` is clean against its own HEAD and was last
+written by `561cf6b` on 2026-09-30, and it still carries six entries. So
+`gold_direction_dashboard_link.browser.test.js:15`, `gold_outcomes_dashboard_link.browser.test.js:15` and
+`gold_factor_wip_dashboard_link.browser.test.js:20` assert bar entries that no longer exist in production, and pass only
+because they read the mirror; and no guard anywhere asserts the new single `gold.html` bar entry (searched every
+`backtester/tests/*.js`). Task 0 of the work order is to level the mirror, re-point those three assertions at the
+published route, add the missing assertion and record the stale-mirror fact - before the bar is touched, so the same three
+guards are not re-pointed twice.
+
+**The route, and the two choices left to the user rather than decided here.** Recommended: N1a - one partial
+(`backtester/partials/shared_nav.html`) holding the bar, the rail in two named variants (dashboard buttons / standalone
+anchors) and the nav CSS subset, injected as bytes by a new builder (`backtester/scripts/build_shared_nav.js`) between
+`<!-- SHARED-NAV:START -->` / `END` markers, so no page gains a stylesheet link, every page still renders offline from
+`file://`, and the draft page's self-containment guard (`script, link, img, iframe` count exactly 0) stays green
+untouched. N1b (link `styles.css` everywhere) is rejected because five pages currently load nothing and a global sheet
+would restyle research pages; N3 (hand-paste) because nine copies drift and four pages are generated. Per-page notes that
+would otherwise be missed: `backtest-flow.html` must take the block **before `<main>`** (its guard asserts `header
+section`/`header footer` counts of 0 and exactly three direct children of `main`), and the draft page must add no heading
+(its guard counts five `h2`). Left to the user: whether the rail's links on the other eight pages should actually select a
+dashboard tab (needs the `script.js` hash fix - recommended) or just open the default view; and whether the clock is
+omitted off-dashboard (recommended) or baked as a static date.
+
+**The queue question, answered in `docs/strategy/PUBLISH_QUEUE_MODEL_NOTE_20261003.md`.** Yes to one publisher - a
+published page is a promise, coupled files should move atomically, provenance stays answerable, and the coordinator's own
+rule that acceptance is not integration and not production only bites when one hand pushes. Yes to a reviewing queue for
+*how*: route choice, ordering by coupling, refusing re-introductions of things a release removed, batching items that
+touch the same file. Three costs measured in this project rather than asserted: the panel is still showing
+`2026-10-02T07:29:28.874Z` while the go-ahead for a refresh is on record and acknowledged, so the latency is the model's
+and not the work's; the bar drift above, which a served-state check inside acceptance would have caught; and one filing
+reviewed twice by concurrent runs. Six numbered suggestions follow - publishing as a cadence rather than a per-item
+decision, pre-authorising lanes that cannot reach production, batching by file, a served-state check, reviewer separate
+from publisher only for production changes, and no change at all to the user's authority or to any worker's push rights.
+
+**Filed, not published.** Commit `bbf4f73` carries both documents (two new files, 326 insertions, `docs/strategy/` only),
+pushed; local HEAD equals the origin tip `bbf4f732bca98325bbd18977322b9a3bd32e75b0`. Submission
+`20261003-strategy-nav-tidy-work-order-039`, status `ready_for_review`, was filed to the coordinator through the canonical
+`coordination.js` (mailbox sha256 `e8f547551a3a2ee4bc00a48224eba676309032f1bd7b6013443861c3fd68c91e`), asking for the work
+order to be queued with Task 0 first and naming the two user-side choices. This turn changed only the two new
+`docs/strategy/` files, this notes file and ignored `tmp/` scratch. No page, bar, stylesheet, script, template, builder,
+guard, generator, data artifact, number, register entry, lock, controller or bridge file was touched by this worker, and
+nothing was published, refreshed or triggered.
+
