@@ -5,6 +5,11 @@ instruction, verbatim: *"okay well queue up the next work for the coordinator to
 pages across the dashboard have the same header and side bar menu."* Advice only: nothing here is adopted, no page is
 changed by this file, and no claim of completion is made.
 
+**Superseded in measurement, kept as the request: the executable work order is now
+`COORDINATOR_NAV_TIDY_HANDOVER_20261003.md`** (2026-10-03), written against the site as served after the release. This
+file remains the record of the request, of the user's two answers, and of the couplings found on 2026-10-01; where the two
+disagree on a number or a route, the handover is the current reading.
+
 **Both open points were answered by the user on 2026-10-01: "same theme everywhere" and "after".** So the header and rail
 are the same dark blocks on every page, and this navigation work is sequenced after the gold page release. Sections 4.4
 and 9 below now record those answers in place; nothing else in the request changed.
