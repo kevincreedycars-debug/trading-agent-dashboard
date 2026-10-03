@@ -25,7 +25,7 @@ test('the dashboard reaches the draft gold factor page', async () => {
     await page.waitForURL(/gold-factor-wip\.html$/);
     assert.equal(await page.title(), 'Gold factor work in progress (draft)');
     assert.equal(await page.locator('.draft').count(), 1, 'the draft banner must survive the copy');
-    assert.match(await page.locator('.draft').textContent(), /40 of 50 answered/);
+    assert.match(await page.locator('.draft').textContent(), /50 of 50 answered/);
     assert.match(await page.locator('.meta').first().textContent(), /As of 30 September 2026/);
   } finally { await browser.close(); }
 });
