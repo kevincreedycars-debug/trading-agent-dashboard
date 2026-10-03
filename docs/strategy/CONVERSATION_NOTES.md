@@ -2231,6 +2231,34 @@ lines, sha256 `675fc9da...`** - this worker's revision-1 file exactly - and they
 banner, the progress line and the "not finished" bullet. The previous entry in this log says "nothing is live yet";
 that was wrong, and the paragraph has been marked as corrected rather than rewritten, because the sequence matters:
 the publication happened without a further filing from this worker, and the `-026` receipt's "the publish is a
+
+## 2026-10-03 - status check with the user: where the project got up to
+
+The user asked where we got up to. Everything below was verified read-only this turn from the canonical checkout
+rather than recalled from this log, and the answer was given in plain words:
+
+- **The combined gold page is built and approved but still not live.** The canonical root carries no single gold page
+  and `index.html` still shows three separate gold links beside the older draft page, so the four-tab release the user
+  authorised with "okay push everything" has not been executed. The release candidate is unchanged at 5,839 bytes /
+  106 CRLF / 0 bare LF / sha256 `de60c2b7...` at the tip of this worktree (`bcacb83`, clean).
+- **The dashboard workstream's own status line still reads `queue_adopted_gold_release_then_nav_n1`** - the gold
+  release first, the navigation-consistency change (same dark header and rail on every page, route N1) second, both
+  adopted and neither started. This matches the accepted review of `-035` and needs no new filing.
+- **The background review helper is still frozen.** `controller/status.json` still reads `state: reviewing` pinned to
+  `20260930-strategy-evening-save-031` under PID 24000 with a 2026-09-30T21:02Z timestamp, `run.lock` still names that
+  PID and submission, the process is gone and the monitor still reports the controller `offline`. That stale lock and
+  the fresh Layer 1 panel (aged out of its freshness window again, so the live board reads stale) are the coordinator's
+  housekeeping and production action, not this worker's.
+- **Nothing of this worker's is waiting.** The mailbox folder holds 35 filings, all answered; `check --worker strategy`
+  returns `pending: 0` with the newest item (`-035`) accepted and `-033` acknowledged, and no filing dated after
+  2026-10-01 exists. An idle queue here is an answered queue, not a lost one.
+
+Advice given, unchanged in substance: the two outstanding actions are the coordinator's - clear the dead lock and
+restart the helper, and publish the gold release in the same session - and neither needs a new permission, because the
+user's own go-ahead is already on record. This turn changed this notes file only; no page, bar, guard, generator,
+stylesheet, data artifact, number, mailbox file, lock, controller file or register entry was touched, and nothing is
+live as a result.
+
 coordinator action" was the coordinator describing a step it then took itself.
 
 **No factor data for this work exists yet, and the page says so.** No factor table for this work has been built. It is
