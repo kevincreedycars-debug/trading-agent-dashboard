@@ -1,3 +1,41 @@
+# 2026-10-03 (fifteenth cycle) - the gold view order is accepted, the movement measurement lane is opened on the Gold worker, and the fault fix and the page tidy stay with the user
+
+Reviewed the strategy lane's gold view order, confirmed every declared fact against the checkout and the served pages,
+accepted it as a docs-only advisory, and published the movement measurement lane it asked for while leaving the two
+production items with the user.
+
+- `20261003-strategy-gold-view-and-fault-first-042` reviewed under the controller lock and answered **accepted**:
+  mailbox `56e70c36...` reproduced from the immutable inbox file at 12,025 bytes, reply `2c21ebdf...`, durable review
+  `docs/orchestration/reviews/20261003-strategy-gold-view-and-fault-first-042.md`. It orders the collector fault fixed
+  first, the gold view tidied onto one tabbed page, the movement measurement opened, and the forward record withdrawn.
+- Reproduced rather than trusted: HEAD `8a08113a` sole child of `2147cac2` with exactly the two `docs/strategy/` files
+  at 239/0; the LF blobs `a527d45d` 15,624 and `330e0dcdfa` 263,604, whose CRLF forms `ce3f4b32` 15,814 and `6567387`
+  266,670 are the declared artifact sizes; the served page sizes and titles from `origin/main` `f8bc80fe` (index 18,775;
+  gold 5,733 "Gold - one page with tabs", zero topbar and zero side-rail; scorecard 143,102; backtesting 292,270;
+  outcomes 19,186; factor-wip 24,398); the 25-row unordered collector defect with its unapplied offline-validated patch;
+  and the four pre-existing 2026-09-28 headline figures.
+- One precision note only: the patch is unchanged since `3dc68c6` on 2026-09-07, the file's own last commit, not the
+  2026-09-09 prepared date of the validation document.
+- Undeclared post-filing divergence recorded, not penalised: the lane committed `1604389` at 17:15:16 (+163/-30, three
+  `docs/strategy/` files) after the 17:05:49 filing while the envelope's clean-tree claim was true at filing, answering
+  a later user turn and closing `-039`'s three navigation choices; the reviewed bytes are no longer the branch tip and
+  that revision needs its own submission ID before any coordinator action relies on it.
+- Assignment published: `gold-research` moves from `gold-coverage-025` to `gold-declared-band-measurement-026` at
+  register status exactly `instructions_published_awaiting_worker`, work order
+  `docs/orchestration/assignments/gold-research.md`, superseded order archived at
+  `docs/orchestration/assignments/gold-coverage-025-archive.md`, carried 022 item A envelope kept as section 0. The
+  measurement is exploratory, downstream-only, declarative-nothing, derived only from already-accepted artifacts.
+- The forward record (R4 of `-040`) is withdrawn at the user's instruction and recorded in `DECISIONS.md`, so no later
+  review expects a forward record, a declared rule set or a review date.
+- The two blocking items are the user's: applying the validated Gold history patch and closing the 25-row unordered
+  read, a production change to a live workflow; and building the tidied one-page tabbed gold view, a published-site
+  edit; both folded into the navigation work so `gold.html` is edited once after Task 0.
+- Nothing was published, deployed, merged, pushed, refreshed or mutated; no outcome, holdout or prospective observation
+  was read; no controller or bridge file was changed, no controller pause or stop was run, no other coordinator process
+  was started, no subagent was spawned and no external message was sent; the unrelated canonical dirty state was left
+  as found. A later strategy filing `20261003-strategy-gold-page-nav-match-and-answers-043` (11,304 bytes) was left
+  pending and untouched as the next cycle's first item.
+
 # 2026-10-03 (fourteenth cycle) - the harness r2 filing verifies byte-for-byte but keeps the wrong-tree inventory, and the rail publish and the four-year build stay with the user
 
 Reviewed the harness lane's r2 filing, confirmed every declared byte, closed three of the r1 defects, and declined to
