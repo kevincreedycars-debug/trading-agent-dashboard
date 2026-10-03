@@ -405,3 +405,57 @@ frozen, and this note is not that go-ahead. One change touches your checkout: it
 the register's `baseline` for your row reads `c673ea7`; that fast-forward changed no file you had written, and your
 writable scope, your design-only boundary and the deferred build all stand unchanged.
 
+
+## Coordinator note, 2026-10-03: connection audit and what each window still owes
+
+Measured at `2026-10-03T14:06Z` from the canonical checkout, not assumed. Two worker windows are connected and polling:
+`backtester-harness` and `live-trading` both wrote `watching` / "Connected; no worker wake due" at `2026-10-03T14:06:10Z`, and neither has a
+pending event (their newest replies were delivered `2026-10-01T13:57:30Z` and `2026-09-30T21:02:47Z`), so both are idle by design, not
+stalled. The `strategy` window is open - its connection file was written by the extension at `2026-10-03T12:40:16Z` - but reads
+`disconnected`, which only the user's click on **Mailbox: Connect This Cline Worker** clears; its filing and reading already work and every
+submission it filed has an answer. The `gold-research` window and the seven `backtester-<asset>` windows have written nothing since
+`2026-09-29T20:31:39Z` and `2026-09-29T20:47Z`, so they are closed; `strategy-2` has never written a connection file.
+
+The wake rule matters here, so it is stated plainly: the bridge sends at most one message per event key - the worker's newest reply, else its
+assignment while the register status is exactly `instructions_published_awaiting_worker` - records the attempt under
+`.local/orchestration/dispatch/<worker>/` before sending, and never retries an ambiguous send. The seven asset lanes' assignment events were
+consumed on `2026-09-29T20:43Z`-`20:47Z` and gold-research's last event on `2026-09-25T20:44Z`, so those eight windows cannot be woken again
+by unchanged content: they need an operator resume with a prompt below, or a coordinator revision of their assignment, because a new content
+hash is a new event. `strategy-2` is the opposite case - its published assignment event has no dispatch record at all, so opening
+`tools/strategy-node/StrategyLive.code-workspace` with its Cline task kept open delivers it automatically, with no click needed.
+
+What each window owes, unchanged in substance and widest authority unchanged:
+
+- `strategy`: nothing owed beyond the click. The gold-tabs package 030 is accepted and its publish is the coordinator's; the navigation item
+  is adopted on route N1 behind the gold release; D1-D5 stay the user's.
+- `strategy-2`: its whole first assignment - `docs/strategy-2/STRATEGY_LIVE.md` and `CONVERSATION_NOTES.md`, then one `status_report`.
+- `gold-research`: the 022 item A anchor observation envelope for the `2026-09-28T14:00:00Z|gold|entry` identity, overdue since the
+  `2026-09-28T16:00:00Z` lane close. File it or file `blocked`; do not reopen the closed 28-factor circuit and do not disturb
+  `GoldQualificationWindowTick018` or the sealed prospective window.
+- `backtester-harness`: one `status_report` envelope. The thirteen design questions are one user block, and stage A and stage B stay
+  design-only with nothing built.
+- `live-trading`: the call-to-order contract revision with its four open questions, the written FTMO confirmation, and the `-002`
+  documentation correction.
+- the seven `backtester-<asset>` lanes: the single `READINESS.md` status reconciliation each already holds an assignment for.
+- `dashboard`, `research-reporting`: nothing queued beyond the paused queue row `queue_adopted_gold_release_then_nav_n1`.
+
+Paste the matching prompt in the window if it needs a resume. The first wording serves the seven asset lanes with the id swapped:
+
+    Resumed by the operator after a stall. Read D:/trading-agent-dashboard-codex/docs/orchestration/README.md, run
+    node D:/trading-agent-dashboard-codex/scripts/coordination.js check --worker <asset>, then read your current assignment at
+    D:/trading-agent-dashboard-codex/docs/orchestration/assignments/<asset>.md and follow only that assignment. Do not repeat completed
+    work, report real activity with monitor-state.js, submit exactly one envelope, then report paused and stop.
+
+    gold-research: your only outstanding obligation is the 022 item A anchor observation envelope for the
+    2026-09-28T14:00:00Z|gold|entry identity, due at or after the 2026-09-28T16:00:00Z lane close. File it as one ready_for_review envelope
+    from your own ignored tmp/, or file blocked saying plainly what stopped it. Do not reopen the closed 28-factor circuit and do not disturb
+    GoldQualificationWindowTick018 or the sealed prospective window. Then report paused and stop.
+
+    backtester-harness: file the one status_report envelope your assignment still owes through the shared mailbox, report paused and stop.
+    Stage A and stage B stay design-only and the thirteen questions stay the user's.
+
+Connection state is written by the mailbox extension, never by a worker, so a `disconnected` badge never means a filing problem - only a
+window that is not bound. Two further mechanical notes: the coordinator's own stale controller lock is cleared and its background dispatcher
+runs again (pid `8184`), and the canonical checkout still carries one modified strategy workspace file and five untracked Gold session-policy
+files that belong to no lane of this cycle and were left exactly as found.
+

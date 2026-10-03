@@ -1,5 +1,44 @@
 # Current state
 
+2026-10-03 morning, connection audit and the stale controller lock cleared: the user asked the coordinator to make sure the other project
+windows can reach it and then to review what is pending, so the loop was measured rather than assumed. `node scripts/coordination.js check`
+reads `pending 0, errors 0` in `manual-file-mailbox` mode - nothing waits for review. Connection health read from
+`.local/orchestration/connections/` at `2026-10-03T14:06Z` and re-read seconds later: `backtester-harness` and `live-trading` are `watching`
+and rewriting every few seconds (both `2026-10-03T14:06:10Z`), so two worker windows are live; `strategy` reads `disconnected` from its
+`2026-10-03T12:40:16Z` activation, so that window is open but unbound and only the user's click on **Mailbox: Connect This Cline Worker**
+clears it; `gold-research` (`watching`, last write `2026-09-29T20:31:39Z`) and the seven `backtester-<asset>` lanes (`sent_unconfirmed`, last
+write `2026-09-29T20:47Z`) have written nothing since 2026-09-29, so those eight windows are closed; `strategy-2` has never written a
+connection file. Delivery is once per event key - the newest reply, else the assignment while register status is exactly
+`instructions_published_awaiting_worker` - recorded under `.local/orchestration/dispatch/<worker>/` before sending and never retried, so the
+seven asset lanes' consumed assignment events (`2026-09-29T20:43Z`-`20:47Z`) and gold-research's last event (`2026-09-25T20:44Z`) cannot wake
+those windows again without an operator resume or an edited assignment, while `strategy-2`'s published assignment event has no dispatch record
+and will fire on its first connect. `backtester-harness` and `live-trading` carry no pending event (their newest replies were delivered
+`2026-10-01T13:57:30Z` and `2026-09-30T21:02:47Z`) and are idle by design rather than stalled.
+
+The stale controller lock is cleared on the user's word. `controller/run.lock`
+(`{"pid":24000,"submission":"20260930-strategy-evening-save-031"}`) and `controller/daemon.lock` (`{"pid":24000}`) both named pid `24000`,
+which is dead - `Get-Process -Id 24000` returns nothing, no `coordinator-dispatch.js serve` process exists, and the only `node` processes are
+the editor's two MCP GitHub servers - so the two lock files and the stale `status.json` (`reviewing` at `2026-09-30T21:02:00Z`) were copied to
+`.local/orchestration/tmp/stale-controller-lock-20261003/` and the two locks removed; `node scripts/coordinator-dispatch.js status` then read
+`activeRun false` with `config {"enabled": true}`. The dispatcher was restored with
+`powershell -File tools/agent-mailbox-bridge/start-coordinator.ps1` after the `deepseek-coordinator` credential scope validated (exit 0):
+dispatcher pid `8184`, `status.json` `waiting` - "Interactive coordinator reports working; review deferred" - at `2026-10-03T14:07:43.381Z`,
+which is the designed deferral while this session works. No controller or bridge code, setting or limit changed and no review ran.
+
+Published freshness is unchanged and now aged out: `origin/main` is still `16104a3` (2026-10-02 08:29 local) and the published
+`data/layer1.json` carries `dashboard_meta.last_updated_et` `2026-10-02T07:29:28.874Z`, so nothing has published since 2026-10-02 morning and
+a fresh panel needs a refresh run plus the Dashboard Writer's own push - never a coordinator or lane edit. Preserved and reported again, not
+touched: the canonical checkout still carries `M tools/strategy-node/Strategy.code-workspace` and five untracked Gold session-policy files
+under `backtester/` (`docs/gold_session_horizon_policy.md`, `lib/gold_session_policy.js`,
+`registries/gold_session_horizon_policy.v1.json`, `scripts/audit_gold_session_policy.js`, `tests/gold_session_policy.test.js`); they are not
+this session's work and were not staged, moved or discarded. The pending queue is unchanged in substance and still the user's to sequence: the
+gold `gold.html` release (`-033` go-ahead recorded, never executed), its dependent route N1, the `strategy` window click, the never-started
+`strategy-2` window, the seven asset lanes' `READINESS.md` reconciliation, the overdue gold-research 022 item A envelope, the harness
+thirteen-question block, the live-trading call-to-order contract with the written FTMO confirmation, the strategy 030 gold-tabs package, the
+movement-screen lane `gold-declared-band-measurement-026`, and panel freshness. Per-window detail and resume prompts:
+`docs/orchestration/AGENT_MESSAGES.md`.
+
+
 2026-10-01 afternoon, mailbox empty: all four open submissions were reviewed by hand from the canonical checkout and
 answered (`pending 0, errors 0`). `20261001-strategy-user-goahead-publish-033` was `acknowledged` as the record of the
 user's go-ahead, with the live `gold.html` publish, the single top-bar entry, the pinned guard line and the draft-page

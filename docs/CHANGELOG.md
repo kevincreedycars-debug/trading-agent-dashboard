@@ -1,3 +1,21 @@
+# 2026-10-03 - connection audit, the stale controller lock cleared, and the background dispatcher restored
+
+The user asked the coordinator to make sure the other project windows can reach it and then to review what is pending. Measured, not assumed:
+`coordination.js check` reads `pending 0, errors 0`; two windows are connected (`backtester-harness` and `live-trading`, both `watching` at
+`2026-10-03T14:06:10Z`); `strategy` is open but `disconnected`, so one click binds it; `gold-research` and the seven `backtester-<asset>`
+windows have written nothing since 2026-09-29 and `strategy-2` never has. Delivery is once per event key and never retried, so the eight
+stalled lanes need an edited assignment or an operator resume, while `strategy-2`'s pending assignment event fires on its first connect.
+
+- Controller recovery: `run.lock` and `daemon.lock` (both dead pid `24000`, written 2026-09-30) and the stale `status.json` backed up to
+  `.local/orchestration/tmp/stale-controller-lock-20261003/` and the locks removed, `activeRun` false, then
+  `start-coordinator.ps1` restored the dispatcher after the `deepseek-coordinator` credential scope validated - pid `8184`, `waiting`. No
+  controller or bridge code, setting, limit or authority changed, and no review ran.
+- Records: `docs/CURRENT_STATE.md`, `docs/ACTIVE_MILESTONE.md`, `docs/orchestration/AGENT_MESSAGES.md`,
+  `docs/orchestration/DECISIONS.md` and `docs/SESSION_NOTES.md` carry the entry; the register is unchanged.
+- Unchanged: nothing published since `16104a3` (2026-10-02), no lane opened, no production, credential, warehouse, Layer 1, Layer 2 or
+  trading action taken, and the five untracked Gold session-policy files plus the modified strategy workspace file left exactly as found.
+
+
 # 2026-10-01 afternoon - the mailbox is empty: five items reviewed, the navigation item adopted on route N1, and the harness design records accepted
 
 All five open submissions were reviewed by hand from the canonical checkout and five replies were published; the mailbox

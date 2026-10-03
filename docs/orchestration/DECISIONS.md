@@ -1,5 +1,24 @@
 # Central decisions
 
+## 2026-10-03: the stale controller lock is cleared and the background dispatcher runs again; the wake rule is once per content version
+
+On the user's word this session cleared the stale controller lock - `run.lock` and `daemon.lock`, both naming dead pid `24000` since
+2026-09-30 - backing the two files and the stale `status.json` up to `.local/orchestration/tmp/stale-controller-lock-20261003/`, and restored
+unattended review with `tools/agent-mailbox-bridge/start-coordinator.ps1` after the `deepseek-coordinator` credential scope validated:
+dispatcher pid `8184`, `waiting` while this session reports working. This is a mechanical recovery of the documented setting, not a new
+authority: dispatch stays `enabled` as the user last set it, and the DeepSeek provider pin, the forty-minute run limit, `DAILY_REVIEW_CAP` 0,
+the sandbox, the fail-closed missing-credential rule and the "no unattended approval bypass or production action" rule are unchanged.
+Clearing the lock grants no production, credential, warehouse, Layer 1, Layer 2, holdout or trading authority, and no review ran on it.
+
+The connection facts behind the user's request are recorded rather than assumed: `backtester-harness` and `live-trading` are connected and
+`watching`; `strategy` is open but `disconnected` (one click on **Mailbox: Connect This Cline Worker** binds it); `gold-research` and the seven
+`backtester-<asset>` windows have written nothing since 2026-09-29 and `strategy-2` never has. Because the bridge delivers at most once per
+event key - the newest reply, else the assignment while register status is exactly `instructions_published_awaiting_worker` - and never retries
+an ambiguous send, the eight stalled windows need an operator resume or a coordinator revision (an edited assignment is a new content version
+and therefore a new event), while `strategy-2`'s unpublished-to-date assignment event will fire on its first connect. Nothing in this decision
+changes any worker's writable scope, and no assignment, register status or lane authority is modified by it.
+
+
 ## 2026-09-30 (cont. 3): strategy 030 accepted - the gold tab shell is verified and release-ready, and the publish stays the user's
 
 The background coordinator reviewed `strategy` submission `20260930-strategy-gold-tabs-release-ready-030` (mailbox

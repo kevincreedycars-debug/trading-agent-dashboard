@@ -2,6 +2,16 @@
 
 Current milestone: the 28-factor Gold stage is complete and its plain-English verdict page is accepted; hold
 until the one carried observation envelope at the lane close, then stop.
+Next immediate action, 2026-10-03: the connection audit is done and the stale controller lock is cleared, so the loop can run again and what
+remains is the user's call. Two worker windows are live (`backtester-harness`, `live-trading`, both `watching`); the `strategy` window is open
+but unbound (one click); the `gold-research` window and the seven `backtester-<asset>` windows are closed and cannot be re-woken by unchanged
+content, so each needs an operator resume or an edited assignment; `strategy-2` has never been opened. The background dispatcher is running
+again (pid `8184`, `waiting`). The substantive queue is unchanged: the gold `gold.html` release first (go-ahead recorded, not executed), then
+route N1, the overdue gold-research 022 item A envelope, the harness thirteen-question block, the live-trading call-to-order contract with the
+written FTMO confirmation, the seven asset readiness reconciliations, and the movement-screen lane `gold-declared-band-measurement-026`.
+Published data is from 2026-10-02 and has aged past its own horizon; a fresh panel is a refresh-run decision, not an edit.
+
+
 
 Next immediate action, 2026-09-30 (cont. 2): the user answered the two questions this run had queued, so the queue moved.
 (a) The live-trading desk's authority level is **funded trading**, recorded in `docs/orchestration/DECISIONS.md` with the
