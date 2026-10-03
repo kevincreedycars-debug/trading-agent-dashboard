@@ -109,3 +109,27 @@ The change is committed locally on `site/nav-consistency-20261003`; nothing is p
 - Run the GOLD view tidy and fault-first order per `codex-045-GOLD_VIEW_TIDY_AND_FAULT_FIRST_ORDER_20261003.md`.
 - Re-point the three gold hop guards in the checkout that holds them at the published bar: three bar links and one Gold entry.
 
+## 2026-10-03 - the printable Layer 1 call map published, one new bar entry
+
+### Session Goal
+
+Make the Layer 1 call-flow one-pager reachable from the live site and publish it, on the user's instruction.
+
+### Completed
+
+- Published `layer1-call-flow.html`, the printable one-page map of how the eight Layer 1 calls are made, carried over byte for byte from `e919dbc`.
+- Added the fifth bar entry, `Layer 1 Calls`, to both bar variants in `backtester/partials/shared_nav.html` and wrote it into the nine published pages with `node backtester/scripts/build_shared_nav.js --write`: one added line per page, `--check` reading `9 pages, 17 rail entries, 0 change(s)`.
+- Added the two files the page promises: `docs/LAYER1_OPENAI_CREDITS_INCIDENT_20261001.md`, which its footer cites as a source, and `tests/layer1_call_flow.browser.test.js`, which its footer names as its guard - with the fourth test re-pointed at the shared bar, since it was written against the hand-written bar `a94fb55` replaced.
+- Pinned the fifth bar label, its href, its `target="_top"` and its landing place in `backtester/tests/site_nav_consistency.browser.test.js`; 5/5 green in about 29s, including the hop from `index.html` to the map.
+- Ran the map's own guard 4/4 against the published copy: offline render at five widths, one A4 landscape sheet, the honesty flags, the shared bar hop.
+
+### Important Note
+
+The rail stays at seventeen entries. The builder refuses an `href` inside the dashboard's `rail-dashboard` variant and the standalone rail must mirror it entry for entry, so a rail entry for a printable page is a change to the navigation contract rather than a port. The checkout's own rail entry therefore stays on `workers/analysis-engine-20261003`, unmerged.
+
+### Next
+
+- Decide whether the map should also be a rail entry, which needs `backtester/scripts/build_shared_nav.js` and its guard widened to eighteen entries with one outbound entry allowed.
+- Re-point the fourth test in that checkout's copy of `tests/layer1_call_flow.browser.test.js` when it moves onto the published navigation.
+
+

@@ -8,6 +8,8 @@
 - Added `backtester/scripts/build_shared_nav.js` (`--write`, `--check`, `--print`) to render that partial into all nine published pages between the `SHARED-NAV` markers, in each page's own line endings.
 - Added `backtester/tests/site_nav_consistency.browser.test.js`, a five-test guard over byte equality with the partial, the bar and rail fingerprint, every link's landing place (including from inside `gold.html`'s frames and from a stale hash), the draft page's one-request budget, and the block's layout cost at six widths.
 - Added `docs/SITE_NAV_CONSISTENCY_20261003.md` as the handoff note for this change.
+- Added `layer1-call-flow.html`, the printable one-page map of how the eight Layer 1 calls are made, with the four-test guard that holds it (`tests/layer1_call_flow.browser.test.js`) and the incident note its footer cites as a source (`docs/LAYER1_OPENAI_CREDITS_INCIDENT_20261001.md`).
+- Added `docs/LAYER1_CALL_FLOW_PUBLICATION_20261003.md` as the handoff note for this release.
 
 ### Changed
 
@@ -15,6 +17,10 @@
 - Replaced the hand-written bar and rail on `index.html` and the one-line related-pages headers on the three gold research pages with that block, keeping each page's own content and tabs.
 - Added `tabFromHash` / `setupHashTabs` to `script.js` so a rail entry that names a dashboard view (`index.html#<view>`) opens that view on load and on `hashchange`, with an unknown hash falling back to the dashboard's default view.
 - Recorded that the three gold hop guards pass only because the checkout on `orchestration/control-plane-20260920` mirrors a six-entry bar (`Gold Backtest`, `Gold Direction`, `Gold Factor (draft)`) that production no longer serves: `origin/main` already carries the published four-entry bar, and re-pointing those three assertions at the published route belongs in the checkout that holds them, per `codex-045` section 4.
+
+- Added a fifth bar entry, `Layer 1 Calls`, to both bar variants in `backtester/partials/shared_nav.html` and wrote it into the nine published pages, so every page reaches the printable Layer 1 call map; the rail is unchanged at seventeen entries, because the rail drives dashboard views by `data-tab` and the map is a page a reader prints.
+- Extended `backtester/tests/site_nav_consistency.browser.test.js` to pin the fifth bar label, its href, its `target="_top"` and its landing place, and re-pointed the fourth test of `tests/layer1_call_flow.browser.test.js` at the shared bar rather than at the hand-written entry it was written against.
+- Recorded in `docs/LAYER1_CALL_FLOW_PUBLICATION_20261003.md` that the checkout on `workers/analysis-engine-20261003` carries a rail entry of its own against the hand-written rail `a94fb55` replaced, and that a rail entry for a printable page is a change to the navigation contract rather than a port of that work.
 
 ## 2026-07-21
 

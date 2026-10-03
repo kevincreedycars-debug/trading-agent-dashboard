@@ -22,10 +22,12 @@ const root = nav.ROOT;
 const builder = path.join(root, "backtester", "scripts", "build_shared_nav.js");
 
 // The navigation the user asked for, label by label and in order, pinned here so a partial that drifts fails
-// rather than quietly redefining the agreement.
+// rather than quietly redefining the agreement. The bar's fifth entry is the printable Layer 1 call map: it is
+// a page a reader opens and prints rather than a dashboard view, so it carries no rail of its own, is not one
+// of the builder's nav pages, and is reached the same way from every page.
 const BRAND = "Asset Directional Movement Dashboard";
-const BAR_LABELS = ["North Star Brief", "Standing Dashboard", "Gold", "Backtest Flow"];
-const BAR_HREFS = ["dashboard-northstar.html", "standing-dashboard.html", "gold.html", "backtest-flow.html"];
+const BAR_LABELS = ["North Star Brief", "Standing Dashboard", "Gold", "Backtest Flow", "Layer 1 Calls"];
+const BAR_HREFS = ["dashboard-northstar.html", "standing-dashboard.html", "gold.html", "backtest-flow.html", "layer1-call-flow.html"];
 const GROUPS = ["Operate", "Live", "Evidence", "System"];
 const RAIL_LABELS = [
   "Overview", "USD", "EUR", "Gold", "Silver", "NQ", "BTC", "WTI", "GBP", "Pair Analysis",
@@ -137,7 +139,7 @@ test("the partial is the navigation that was agreed, in both variants", () => {
     assert.deepEqual(
       rows(block, /<a class="topbar-link" href="([^"]+)" target="_top">([^<]+)<\/a>/g),
       BAR_HREFS.map((href, index) => [href, BAR_LABELS[index]]),
-      `the ${variant} bar must offer the four pages in order`,
+      `the ${variant} bar must offer the pages in order`,
     );
     assert.equal(block.includes('<span id="currentDate">'), variant === "dashboard", "only the dashboard bar may carry the live spans");
     assert.deepEqual(
@@ -182,7 +184,7 @@ test("all nine served pages show one bar and one rail, and every link it offers 
       assert.deepEqual(
         seen.barEntries.map(entry => [entry.href, entry.label, entry.target]),
         BAR_HREFS.map((href, index) => [href, BAR_LABELS[index], "_top"]),
-        `${where} must offer the four pages in the order agreed`,
+        `${where} must offer the pages in the order agreed`,
       );
       BAR_HREFS.forEach(href => assert.ok(fs.existsSync(path.join(root, href)), `${where} bar points at ${href}, which is not published`));
       assert.equal(seen.liveSpans, page.variant === "dashboard" ? 2 : 0, `${where} must carry the live spans on the dashboard only`);
@@ -267,6 +269,18 @@ test("a rail entry lands on the view its label names, from any page and from ins
     await view.waitForFunction(() => {
       const tab = document.querySelector("#tab-direction");
       return !!tab && tab.getAttribute("aria-selected") === "true";
+    });
+
+    // The bar's Layer 1 entry leaves the dashboard set for the printable call map, which is what its label
+    // names: the heading a reader came for, seven steps, and no rail of its own on arrival.
+    await view.goto(`${base}/index.html`, { waitUntil: "load" });
+    await view.locator(".topbar .topbar-link", { hasText: "Layer 1 Calls" }).click();
+    await view.waitForURL(/layer1-call-flow\.html$/);
+    await view.waitForFunction(() => {
+      const heading = document.querySelector("h1");
+      return !!heading
+        && heading.textContent.trim() === "How the Layer 1 calls are made"
+        && document.querySelectorAll("ol.flow > li.node").length === 7;
     });
 
     // gold.html frames four of these pages. An entry clicked inside one of those frames has to move the whole

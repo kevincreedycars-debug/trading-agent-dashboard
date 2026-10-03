@@ -1,0 +1,320 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>How the Layer 1 calls are made · one-page map</title>
+<meta name="description" content="A printable one-page map of how each of the eight Layer 1 agents is called, what facts it is allowed to read, and where its 24-hour call is published.">
+<meta property="og:title" content="How the Layer 1 calls are made">
+<meta property="og:description" content="Seven shared steps, eight sealed agents, one 24-hour call each. The same chain runs for every asset on every refresh.">
+<meta property="og:type" content="article">
+<!-- Visual work in this project consults $trading-dashboard-aesthetic-rules and $dashboard-layout-safety-rules first. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{color-scheme:dark;--bg:#080e16;--panel:#101b29;--panel-2:#0c1521;--line:#304358;--text:#e8eef5;--muted:#b2c1d0;--dim:#8296a9;--amber:#f2c167;--blue:#8acfff;--teal:#63d3c8;--good:#8fe0a8;--bad:#ff9d8a;--mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;--sans:"IBM Plex Sans",system-ui,sans-serif;--display:"Space Grotesk","IBM Plex Sans",system-ui,sans-serif}
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(1200px 620px at 18% -10%,rgba(94,161,255,.10),transparent 62%),var(--bg);color:var(--text);font:15px/1.55 var(--sans)}
+main{max-width:1560px;margin:auto;padding:28px 24px 40px}
+h1,h2,h3,p,li,td,th,dt,dd,ul,ol{margin:0;overflow-wrap:anywhere}
+h1{font:600 clamp(25px,3.2vw,36px)/1.15 var(--display);letter-spacing:-.01em}
+h2{font:600 18px/1.3 var(--display)}
+h3{font:600 15px/1.3 var(--display)}
+a{color:var(--blue)}
+.eyebrow{font:12px/1.5 var(--mono);letter-spacing:.12em;color:var(--amber);text-transform:uppercase}
+.muted{color:var(--muted)}
+header{display:flex;gap:26px;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;margin-bottom:18px}
+header>*{min-width:0}
+.lede{margin-top:10px;color:var(--muted);font-size:15.5px;max-width:940px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;list-style:none;padding:0}
+.chips li{border:1px solid var(--line);border-radius:999px;padding:3px 10px;font:11.5px/1.6 var(--mono);color:var(--muted);min-width:0}
+/* Band = one pipeline. The rail on the left carries the band colour. The run stays horizontal while
+   seven ~150px cards still fit and stacks below that, so a card is never squeezed until a word
+   breaks mid-word (the failure mode the shared layout-safety rules call out). */
+.band{border:1px solid var(--line);border-left:3px solid var(--accent,var(--line));background:linear-gradient(180deg,rgba(255,255,255,.022),transparent 42%),var(--panel-2);padding:18px;margin:0 0 14px}
+.band-chain{--accent:var(--blue)}
+.band-work{--accent:var(--teal)}
+.band-head{display:flex;gap:18px;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;margin-bottom:14px}
+.band-head>*{min-width:0}
+.band-head h2{margin-top:6px}
+.band-note{color:var(--muted);font-size:13.5px;max-width:620px}
+.flow{display:flex;flex-wrap:nowrap;gap:9px;list-style:none;align-items:stretch;padding:0}
+.node{--accent:var(--blue);flex:1 1 0;min-width:0;display:flex;flex-direction:column;gap:6px;border:1px solid var(--line);border-top:2px solid var(--accent);background:var(--panel);padding:11px 11px 10px}
+.node[data-kind="store"]{--accent:var(--muted)}
+.node[data-kind="seal"]{--accent:var(--amber)}
+.node[data-kind="publish"]{--accent:var(--teal)}
+.node .step{font:10.5px/1 var(--mono);letter-spacing:.09em;color:var(--accent)}
+.node strong{font:600 13.5px/1.28 var(--display)}
+.node .body{color:var(--muted);font-size:12.2px}
+.node .tagline{margin-top:auto;font:11px/1.4 var(--mono);color:var(--dim);padding-top:6px;border-top:1px solid rgba(255,255,255,.07)}
+.arrow{flex:0 0 auto;align-self:center;color:#5c7690;font:14px/1 var(--mono)}
+.arrow::after{content:"\2192"}
+@media (max-width:1180px){
+  .flow{flex-direction:column;gap:7px}
+  .arrow::after{content:"\2193"}
+}
+/* Two-up band: the work inside one agent beside the list of assets that run it. */
+.two-up{display:grid;grid-template-columns:1.06fr .94fr;gap:14px;margin:0 0 14px}
+.two-up>*{min-width:0}
+.panel{border:1px solid var(--line);background:var(--panel);padding:17px;min-width:0}
+.panel h3{margin-bottom:4px}
+.panel .sub{color:var(--dim);font:11.5px/1.5 var(--mono);margin-bottom:10px}
+.panel ul,.panel ol{padding-left:16px}
+.panel li{margin-bottom:7px;color:var(--muted);font-size:13.2px}
+.panel li strong{color:var(--text)}
+.steps{list-style:none;padding:0;counter-reset:step}
+.steps li{counter-increment:step;display:flex;gap:9px;border-top:1px solid rgba(255,255,255,.07);padding:6px 0 6px 0;margin:0;min-width:0}
+.steps li:first-child{border-top:0}
+.steps li::before{content:counter(step,decimal-leading-zero);flex:0 0 auto;font:11px/1.6 var(--mono);color:var(--teal)}
+.steps .what{min-width:0}
+.steps .what strong{display:block;font:600 13px/1.3 var(--display);color:var(--text)}
+.steps .what span{color:var(--muted);font-size:12.4px}
+.tool{width:100%;border-collapse:collapse;table-layout:fixed}
+.tool th{font:10.5px/1.4 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--dim);text-align:left;border-bottom:1px solid var(--line);padding:0 8px 6px 0}
+.tool td{font-size:12.4px;color:var(--muted);border-bottom:1px solid rgba(255,255,255,.06);padding:6px 8px 6px 0;vertical-align:top}
+.tool tr:last-child td{border-bottom:0}
+.tool td:first-child{color:var(--text);font:600 13px/1.35 var(--display)}
+.tool .doc{display:block;font:11px/1.45 var(--mono);color:var(--muted);overflow-wrap:anywhere}
+.tool .flag{display:block;margin-top:3px;font:10.5px/1.4 var(--mono);color:var(--amber)}
+.tool .col-a{width:15%}.tool .col-b{width:29%}.tool .col-c{width:56%}
+.panel ol.steps{padding:0;margin:0}
+.columns{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}
+.legend{display:flex;flex-wrap:wrap;gap:8px 18px;list-style:none;padding:0;margin-top:14px}
+.legend li{display:flex;align-items:center;gap:8px;font:11.5px/1.6 var(--mono);color:var(--muted);min-width:0}
+.legend i{width:14px;height:2px;background:currentColor;flex:0 0 auto}
+.legend .k-run{color:var(--blue)}.legend .k-store{color:var(--muted)}.legend .k-seal{color:var(--amber)}.legend .k-publish{color:var(--teal)}
+footer{margin-top:20px;padding-top:14px;border-top:1px solid var(--line);color:var(--muted);font-size:13px}
+.links{display:flex;flex-wrap:wrap;gap:14px;margin-bottom:8px}
+.links a{font:12px/1.6 var(--mono)}
+@media (max-width:900px){
+  .two-up,.columns{grid-template-columns:1fr}
+  main{padding:22px 16px 36px}
+}
+/* Printable one-pager: the on-screen dark workstation look is swapped for ink-on-paper so the page
+   can be printed without a background-ink flood, while the accent colours keep their meaning. */
+@page{size:A4 landscape;margin:8mm}
+@media print{
+  :root{color-scheme:light;--bg:#fff;--panel:#f7fafc;--panel-2:#eef3f8;--line:#b9c4d1;--text:#0f1720;--muted:#3c4a58;--dim:#5b6a78;--amber:#845c00;--blue:#0f4f88;--teal:#0c6a61;--good:#14682f;--bad:#a02a1e}
+  body{background:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact;font-size:9.6px;line-height:1.38}
+  main{max-width:none;padding:0}
+  /* The chips sit beside the title instead of wrapping under it, which on a printed sheet buys a
+     whole line of height back for the chain below. */
+  header{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:start;margin-bottom:6px}
+  h1{font-size:19px}h2{font-size:12.5px}h3{font-size:11px}
+  .eyebrow{font-size:8px;letter-spacing:.1em}
+  .lede{font-size:8.4px;max-width:none;margin-top:3px}
+  .chips{gap:5px}
+  .chips li{font-size:7.6px;padding:0 6px}
+  .band{padding:8px 9px;margin-bottom:6px}
+  .band-head{margin-bottom:6px;gap:14px}
+  .band-head h2{margin-top:2px}
+  .band-note{font-size:8px;max-width:none}
+  /* The A4 landscape page box is about 1060px wide, so the 1180px rule above would stack the seven
+     steps into a tall column and spill the one-pager onto a second sheet. Print keeps the run
+     horizontal and closes the density up instead. */
+  .flow{flex-direction:row;flex-wrap:nowrap;gap:5px}
+  .arrow::after{content:"\2192"}
+  .node{padding:5px 5px 4px;gap:3px}
+  .node .step{font-size:7.8px}
+  .node strong{font-size:8.6px}
+  .node .body{font-size:8px}
+  .node .tagline{font-size:7.6px;padding-top:3px}
+  /* One sheet, three columns. The chain still spans the top, then the four panels read as
+     steps | assets | guarantees over limits: that uses the landscape width instead of stacking two
+     wide rows, which is what pushed the page onto a second sheet. The two wrappers drop out of the
+     flow so their panels become grid items of main, and the gaps replace every section margin. */
+  main{display:grid;grid-template-columns:1.04fr .96fr 1fr;gap:6px;align-items:start}
+  header{margin-bottom:0}
+  .band{margin-bottom:0}
+  .two-up,.columns{display:contents}
+  .legend{margin-top:0}
+  footer{margin-top:0}
+  header{grid-column:1/-1;grid-row:1}
+  .band{grid-column:1/-1;grid-row:2}
+  .panel-steps{grid-column:1;grid-row:3/5}
+  .panel-assets{grid-column:2;grid-row:3/5}
+  .panel-guarantees{grid-column:3;grid-row:3}
+  .panel-limits{grid-column:3;grid-row:4}
+  .legend{grid-column:1/-1;grid-row:5}
+  footer{grid-column:1/-1;grid-row:6}
+  .panel{padding:7px 8px}
+  .panel .sub{font-size:8px;margin-bottom:3px}
+  .panel li{font-size:8.2px;margin-bottom:1px}
+  .steps li{padding:1px 0;gap:5px;break-inside:avoid}
+  .steps li::before{font-size:7.8px}
+  .steps .what strong{font-size:8.6px}
+  .steps .what span{font-size:8.2px}
+  .tool th{font-size:7.8px;padding-bottom:2px}
+  .tool td{font-size:7.8px;padding:1px 5px 1px 0}
+  .tool td:first-child{font-size:8.2px}
+  .tool .doc{font-size:7.8px}
+  .tool .flag{font-size:7.8px;margin-top:1px}
+  .legend{margin-top:4px;gap:5px 14px}
+  .legend li{font-size:8px}
+  footer{margin-top:4px;padding-top:4px;font-size:8px}
+  .links{gap:8px;margin-bottom:2px}
+  .links a{font-size:7.8px}
+  .band,.panel,section,article,.node,.steps li,tr{break-inside:avoid}
+  footer{break-inside:avoid}
+}
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <div>
+      <p class="eyebrow">Live pipeline · printable one-pager</p>
+      <h1>How the Layer 1 calls are made</h1>
+      <p class="lede">Every refresh runs the same seven steps. The market facts are collected and saved once, each of the eight Layer 1 agents reads only its own rulebook and the newest usable facts, and each posts one 24-hour call. Layer 2 then combines the finished calls, and the Dashboard Writer publishes the files the dashboard reads. Nothing later in the chain can reach back and change an earlier call.</p>
+    </div>
+    <ul class="chips">
+      <li>8 assets</li>
+      <li>1 call each</li>
+      <li>sealed agents</li>
+      <li>24-hour horizon</li>
+      <li>reviewed 2026-10-03</li>
+    </ul>
+  </header>
+
+  <section class="band band-chain" aria-labelledby="chain-title">
+    <div class="band-head">
+      <div>
+        <p class="eyebrow">The whole chain · same order every run</p>
+        <h2 id="chain-title">From collected facts to a published call</h2>
+      </div>
+      <p class="band-note">Steps 01 to 03 happen once for the whole system. Step 04 is where the eight assets split apart, each into its own sealed agent. Steps 05 to 07 gather the results back up and publish them.</p>
+    </div>
+    <ol class="flow">
+      <li class="node" data-kind="run">
+        <span class="step">01 · TRIGGER</span>
+        <strong>Master Orchestrator</strong>
+        <span class="body">The dashboard's Refresh button, or a manual run, starts it. It then calls the collectors and the agents in a fixed order.</span>
+        <span class="tagline">webhook · master-orchestrator-<wbr>dashboard-refresh</span>
+      </li>
+      <li class="arrow" aria-hidden="true"></li>
+      <li class="node" data-kind="run">
+        <span class="step">02 · COLLECT</span>
+        <strong>Collectors + Eco Events</strong>
+        <span class="body">One collector per market, plus the economic-calendar collector, fetch the market facts and the day's scheduled events.</span>
+        <span class="tagline">FRED · Coinbase · Alpha Vantage · Finnhub</span>
+      </li>
+      <li class="arrow" aria-hidden="true"></li>
+      <li class="node" data-kind="store">
+        <span class="step">03 · STORE</span>
+        <strong>Supabase market_snapshots</strong>
+        <span class="body">One shared table: every collector writes the same superset row, so every agent reads the same newest row. A stale row means no new call.</span>
+        <span class="tagline">newest usable snapshot wins</span>
+      </li>
+      <li class="arrow" aria-hidden="true"></li>
+      <li class="node" data-kind="seal">
+        <span class="step">04 · SEALED LAYER 1</span>
+        <strong>Eight independent agents</strong>
+        <span class="body">Each agent sees only its own rulebook and the newest usable facts. It may not read another agent, Layer 2, the dashboard, or anything later.</span>
+        <span class="tagline">8 calls written separately</span>
+      </li>
+      <li class="arrow" aria-hidden="true"></li>
+      <li class="node" data-kind="store">
+        <span class="step">05 · STORE</span>
+        <strong>Supabase agent_outputs</strong>
+        <span class="body">Each call is kept as written: one new row per asset per run, so a call can always be re-read later.</span>
+        <span class="tagline">audit trail · insert only</span>
+      </li>
+      <li class="arrow" aria-hidden="true"></li>
+      <li class="node" data-kind="run">
+        <span class="step">06 · LAYER 2</span>
+        <strong>Pair selection</strong>
+        <span class="body">Reads the finished Layer 1 calls and adds a pair call only when the two legs point opposite ways. It never recalculates one.</span>
+        <span class="tagline">combines · never recomputes</span>
+      </li>
+      <li class="arrow" aria-hidden="true"></li>
+      <li class="node" data-kind="publish">
+        <span class="step">07 · PUBLISH</span>
+        <strong>Dashboard Writer → GitHub</strong>
+        <span class="body">Writes the files the dashboard reads: the eight calls, the Layer 2 call, and the job status. GitHub Pages serves them to the page.</span>
+        <span class="tagline">data/<wbr>layer1.json · layer2.json · workflow-<wbr>status.json</span>
+      </li>
+    </ol>
+  </section>
+
+  <section class="two-up" aria-label="Inside one agent, and the eight assets that run it">
+    <article class="panel panel-steps">
+      <p class="eyebrow">Step 04 in detail</p>
+      <h3>Inside one Layer 1 agent</h3>
+      <p class="sub">The same nine nodes run for every asset · logic/agent_&lt;asset&gt;_direction.md</p>
+      <ol class="steps">
+        <li><span class="what"><strong>Called by the orchestrator</strong><span>It starts as a sub-workflow, so it only ever runs when the chain runs.</span></span></li>
+        <li><span class="what"><strong>Read the newest facts</strong><span>Supabase Get Many pulls the market_snapshots rows; the newest usable one is chosen.</span></span></li>
+        <li><span class="what"><strong>Build this asset's input pack</strong><span>A code node keeps only the fields this asset needs and lists whatever is missing. Missing facts score neutral, never guessed.</span></span></li>
+        <li><span class="what"><strong>Fetch its own rulebook</strong><span>It downloads its logic file from GitHub, so it scores against the committed rules, not a private copy.</span></span></li>
+        <li><span class="what"><strong>Combine rulebook and facts</strong><span>The rulebook text and the input pack are joined into one payload before the model is asked anything.</span></span></li>
+        <li><span class="what"><strong>Ask the model for factor signals</strong><span>Message a model (OpenAI gpt-4.1-mini) must answer strict JSON: one signal per factor plus a short reason, using only the facts supplied.</span></span></li>
+        <li><span class="what"><strong>Parse the answer</strong><span>A code node rejects anything that is not the expected JSON, so a malformed answer cannot become a call.</span></span></li>
+        <li><span class="what"><strong>Calculate conviction in code</strong><span>A deterministic gate turns the factor signals into the 24-hour direction and conviction. The model never sets conviction.</span></span></li>
+        <li><span class="what"><strong>Write the call</strong><span>One row goes into agent_outputs with the direction, conviction, the factor breakdown and the raw model answer.</span></span></li>
+      </ol>
+    </article>
+
+    <article class="panel panel-assets">
+      <p class="eyebrow">Step 04 · who is in the run</p>
+      <h3>The eight assets</h3>
+      <p class="sub">One agent each · one rulebook each · one 24-hour call each</p>
+      <table class="tool">
+        <thead>
+          <tr><th class="col-a">Asset</th><th class="col-b">Market</th><th class="col-c">Rulebook in logic/</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>USD</td><td>US Dollar (DXY)</td><td><span class="doc">agent_usd_direction.md · v2.1</span>production baseline</td></tr>
+          <tr><td>EUR</td><td>Euro (EUR/USD)</td><td><span class="doc">agent_eur_direction.md · v2.0</span>production baseline candidate</td></tr>
+          <tr><td>GOLD</td><td>Gold (XAU/USD)</td><td><span class="doc">agent_gold_direction.md · v2.0</span>production baseline</td></tr>
+          <tr><td>SILVER</td><td>Silver (XAG/USD)</td><td><span class="doc">agent_silver_direction.md · v1.0</span>header still says inactive draft<span class="flag">read with care</span></td></tr>
+          <tr><td>NQ</td><td>Nasdaq 100 (NQ)</td><td><span class="doc">agent_nq_direction.md · v2.0</span>production baseline candidate</td></tr>
+          <tr><td>BTC</td><td>Bitcoin (BTC/USD)</td><td><span class="doc">agent_btc_direction.md · v2.0</span>production baseline candidate</td></tr>
+          <tr><td>WTI</td><td>Crude oil (WTI)</td><td><span class="doc">agent_wti_direction.md · v0.2</span>header still says research only<span class="flag">no WTI columns in the shared snapshot</span></td></tr>
+          <tr><td>GBP</td><td>Sterling (GBP/USD)</td><td><span class="doc">agent_gbp_direction.md · v0.1</span>header still says research only<span class="flag">read with care</span></td></tr>
+        </tbody>
+      </table>
+    </article>
+  </section>
+  <section class="columns" aria-label="What is always true, and what this page does not claim">
+    <article class="panel panel-guarantees">
+      <p class="eyebrow">The guarantees the design holds to</p>
+      <h3>What is always true</h3>
+      <ul>
+        <li><strong>One rulebook each.</strong> An agent reads only its own logic document and the newest usable facts. It never sees another agent's answer.</li>
+        <li><strong>One call each.</strong> Every agent writes exactly one 24-hour call per usable run. A stale or unusable snapshot produces no row at all.</li>
+        <li><strong>Code decides conviction.</strong> The model returns factor signals only. The deterministic gate sets direction and conviction, so the same facts give the same call.</li>
+        <li><strong>Layer 2 only combines.</strong> It reads finished Layer 1 calls and never recomputes one.</li>
+        <li><strong>Research never writes back.</strong> Backtests and replays work on copies and cannot touch a live call.</li>
+      </ul>
+    </article>
+    <article class="panel panel-limits">
+      <p class="eyebrow">Limits, stated on the page itself</p>
+      <h3>Read this page honestly</h3>
+      <ul>
+        <li><strong>The saved workflow exports are a partial mirror.</strong> The exported Layer 2 and Dashboard Writer flows in this repo still name only the original five assets, so the live eight-asset wiring is visible in the published data/layer1.json and the run log, not in exports/.</li>
+        <li><strong>Three rulebooks still carry draft headers.</strong> SILVER, WTI and GBP are marked inactive or research-only even though their rows publish as live. Treat their calls as unproven.</li>
+        <li><strong>One extra data path.</strong> WTI is the exception: the shared snapshot has no WTI columns, so its agent reads the FRED crude series itself just before scoring.</li>
+        <li><strong>A published call is not a proven edge.</strong> This page shows how the calls are made, not whether they are right.</li>
+      </ul>
+    </article>
+  </section>
+
+  <ul class="legend">
+    <li><i class="k-run"></i>runs a step</li>
+    <li><i class="k-store"></i>saved facts or calls</li>
+    <li><i class="k-seal"></i>sealed agent</li>
+    <li><i class="k-publish"></i>published to the dashboard</li>
+  </ul>
+
+  <footer>
+    <div class="links">
+      <a href="backtest-flow.html">backtest-flow.html · the two-lane system map</a>
+      <a href="workflows/WORKFLOW_INVENTORY.md">workflows/WORKFLOW_INVENTORY.md</a>
+      <a href="docs/LAYER1_OPENAI_CREDITS_INCIDENT_20261001.md">docs · Layer 1 credit incident</a>
+    </div>
+    <p>This page shows how the calls are made, not whether they are right. The committed rulebooks in logic/, the workflow inventory and the published data/*.json files remain the source of truth. Guarded by tests/layer1_call_flow.browser.test.js, which re-renders this page offline at desktop and narrow widths.</p>
+  </footer>
+</main>
+</body>
+</html>
+
