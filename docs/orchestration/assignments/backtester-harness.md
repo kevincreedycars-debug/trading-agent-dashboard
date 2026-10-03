@@ -7,6 +7,12 @@ User authorization: on 2026-09-30 the user asked for another registered agent wi
 harness architect", after the seven non-Gold asset backtester windows were opened on 2026-09-29 as
 readiness and standby lanes whose build is deferred.
 
+**Current assignment: revision 2 (published 2026-10-03, background review).** The
+`backtester-harness-001` body below still binds in full, including the design-only lane, the
+write scope and the stage-B prohibition. The newest section at the end of this file carries the
+current bounded work; the register row in `docs/orchestration/projects.json` keeps the id
+`backtester-harness-001` and carries status exactly `instructions_published_awaiting_worker`.
+
 ## Purpose and lane
 
 This is a **design lane, not a build lane**. It owns the architecture question the seven asset lanes cannot
@@ -113,3 +119,63 @@ this worker `mailbox_auto_connect`, so the connection is restored after a reload
 open in that window: the bridge binds to the first workspace folder's registered path and has no task
 selector. The startup message is in `docs/orchestration/AGENT_MESSAGES.md` and
 `tools/backtester-harness-node/README.md`.
+
+## Revision 2: the coordinator's two design decisions, recorded, and the production re-base (2026-10-03)
+
+The r9 filing is accepted and the two r3 corrections of record are closed. Nothing in this section
+authorises a build, an acquisition, a warehouse write, a migration, a dashboard edit, an n8n change,
+a credential action or a publication. It is design and measurement only, inside
+`docs/backtester-harness/` plus ignored `tmp/`.
+
+Two decisions are now the coordinator's of record. They were taken this cycle on the evidence in
+your own documents and on the schema that already exists. Record them as decided, not as open
+choices:
+
+1. **The store shape is the shared spine.** `historical_price_series` for price rows and
+   `historical_macro_series` for the macro and FRED block, one row set per instrument, with the
+   lowercase `instrument_key` convention the r7 reply settled (`eurusd`, `xauusd_spot`,
+   `qqq_nq_proxy`, `btc_usd_spot`, legacy `gold_spot_usd`) and only the two missing siblings
+   `gbpusd` and `xagusd_spot` to add; the uppercase `XAUUSD`, `BTCUSD` and `QQQ_NQ_PROXY` strings
+   stay as evaluation-layer labels only. Rows are appended, never rebuilt, and the eleven deferred
+   non-`/USD` crosses must stay appendable without a per-asset table or a further migration. Seven
+   Gold-shaped per-asset tables are rejected: seven tables cannot hold the eleven deferred crosses
+   without eleven more migrations.
+2. **The shared USD macro block and the FRED pull are one owner and one pull**, not seven, which
+   confirms what r7 answered in principle. Publishing or running that acquisition is not part of
+   this assignment; it waits on a user-authorised cycle.
+
+Before either decision is written back into the documents, re-verify it against the files, not
+against this text: the `historical_price_series` and `historical_macro_series` definitions in
+`backtester/sql/003_generic_historical_warehouse.sql` (including the `daily` interval constraint
+your own section 11 item 8 records), the six importers and five builders that already read the
+spine, and the keys production already holds. If anything contradicts a decision, say so plainly
+in the submission as a blocker rather than reinterpreting it.
+
+Bounded work, all docs-only:
+
+1. Fold decision 1 into `docs/backtester-harness/FOUNDATION_BUILD_WORK_ORDER_20261003.md` - at
+   least section 5 and the section 7 blocker table, plus section 2.1 where the store is described -
+   and into `docs/backtester-harness/ASSET_DATA_AND_TABS_PLAN.md` where the store shape is stated.
+2. Fold decision 2 into the same two documents, naming it as the coordinator's confirmation of the
+   r7 answer rather than as a new question.
+3. Re-base the production-facing figures that can now be re-measured against the current
+   `origin/main` head `a94fb550` ("site-nav: one canonical top bar and side rail on all nine
+   published pages", 2026-10-03T18:53:09+01:00, 1,024 commits, 16 paths and 1,729 insertions ahead
+   of `f8bc80f`): `RAIL_ACCORDION_SPEC_20261003.md` section 1 at least, and any other line you
+   judge stale, keeping every figure that is kept at `f8bc80f` labelled as that head. Record the
+   generated-rail edit path in the spec: the rail is rendered from
+   `backtester/partials/shared_nav.html` by `backtester/scripts/build_shared_nav.js`, whose
+   `--check` mode compares bytes and is guarded by
+   `backtester/tests/site_nav_consistency.browser.test.js`, so the change belongs in the partial or
+   in the generator and must never be hand-edited into `index.html`.
+4. Land all of it in exactly one docs-only commit inside `docs/backtester-harness/`, on top of
+   `81977eb`; commit nothing else, edit no other lane's files, push nothing, and declare the new
+   head in the envelope. File one submission when it lands, or one blocker the moment you find
+   something that contradicts a decision.
+
+Still not yours and still not authorised: publishing the rail accordion to production, and the n8n
+executor and its scope, new backtester-side flows only or also the production Layer 1 model swap.
+Both need a user-authorised cycle; do not prepare or attempt either.
+
+Then report as usual: one envelope, `monitor-state.js activity backtester-harness paused "<what
+finished>"`, and stop.
