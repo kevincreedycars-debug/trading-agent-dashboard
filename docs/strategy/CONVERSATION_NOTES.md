@@ -2254,6 +2254,44 @@ rather than recalled from this log, and the answer was given in plain words:
   2026-10-01 exists. An idle queue here is an answered queue, not a lost one.
 
 Advice given, unchanged in substance: the two outstanding actions are the coordinator's - clear the dead lock and
+
+## 2026-10-03 (same session) - the user's go-ahead: "yes" to clearing the frozen helper, publishing the gold release and refreshing the data
+
+Offered in plain words at the close of the status check above: *"do you want me to tell the coordinator to clear the
+frozen helper and publish the gold page now? Default is yes, go ahead - and the data refresh needs your word at the
+same time."* The user answered **"yes"**, one word, answering the whole of that question. It is recorded as the user's
+go-ahead for the three actions it named, and for nothing beyond them:
+
+1. **Clear the dead lock and restart the background review helper** - coordinator housekeeping on a process (PID 24000)
+   that no longer exists, taken with the user's word in-session.
+2. **Publish the gold release now** - the single tabbed `gold.html` with its one top-bar entry, the draft-page pinned
+   guard line moved to `50 of 50`, and revision 2 of the draft page carried in the same change. Steps E1-E5 of
+   `docs/strategy/GOLD_TABS_BUILD_BRIEF.md`; the coordinator's own accepted review of `-033` already says this publish
+   is a coordinator production action, not a worker assignment, and the single-writer rule is unchanged.
+3. **The live data refresh** - the panel has aged out of its freshness window and reads stale again; the standing rule is
+   that a fresh reading needs the user's word and a coordinator re-publish, never a lane's own push, and this is that
+   word.
+
+The release candidate was re-verified this turn rather than remembered: `docs/strategy/GOLD_TABS_SHELL_CANDIDATE.html` is
+**5,839 bytes, 106 CRLF lines, 0 bare LF, sha256 `de60c2b7c452aa74ac282d475707e15d2d68977c77c4cd2a505cb4d205e64da6`**
+at HEAD `d2aa17f`, worktree clean - unchanged from the version the coordinator checked and approved. Nothing needs
+rebuilding before the publish. The one choice that survives into the served bytes is the materialisation (the 5,733-byte
+LF blob the repository stores versus the 5,839-byte CRLF file on disk); the consistent route is the one revision 1 of the
+draft page already took - let the repository's line-ending setting store the LF form and record the served byte count and
+hash - but that remains the coordinator's to state, not this worker's to decide.
+
+Two standing items are named rather than reopened, because this go-ahead does not cover them and neither is a blocker:
+the **navigation-consistency change** stays queued behind the release (route N1, same theme everywhere - answer 2 in the
+user's own words was "after"), and the **movement-screen measurement** stays the recommended next lane because it is the
+only thing that can put real factor numbers in the Factor tables tab (recommended as `gold-declared-band-measurement-026`
+in `-033`; still unopened).
+
+Filed to the coordinator as a materially new recommendation under a new submission ID,
+`20261003-strategy-gold-release-and-helper-go-ahead-036`, status `ready_for_review`, with the candidate hash and this
+entry as evidence. This turn changed this notes file only; no page, bar, guard, generator, stylesheet, data artifact,
+number, mailbox file, lock, controller file or register entry was touched by this worker, and nothing is live as a result
+of it.
+
 restart the helper, and publish the gold release in the same session - and neither needs a new permission, because the
 user's own go-ahead is already on record. This turn changed this notes file only; no page, bar, guard, generator,
 stylesheet, data artifact, number, mailbox file, lock, controller file or register entry was touched, and nothing is
