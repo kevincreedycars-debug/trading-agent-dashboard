@@ -2979,3 +2979,39 @@ counts, the ladder and its two assertions, not the size medians. The read now sa
 its hash moved from `4428f1c2` (13,136 bytes) to `25e05853` (13,407 bytes), and no number, verdict or recommendation
 changed. `20261003-strategy-gold-data-usefulness-040-addendum` carries the corrected hash and the delta, because the
 first filing's artifact line names the earlier one and a reviewer should not have to reconcile the two by hand.
+
+## 2026-10-03 — review outcome for the gold data read: `-040` accepted and its addendum accepted, no new work published
+
+The eleventh and twelfth cycles of the background review both came back **accepted**. `-040` was reviewed first: mailbox hash
+`6e976bab` from the immutable inbox file at 9,548 bytes, review `docs/orchestration/reviews/20261003-strategy-gold-data-usefulness-040.md`,
+reply `19c807d7` at 8,452 bytes, decision *accepted*, described by the reviewer as "an accurate docs-only exploratory diagnosis" and
+explicitly stated not to be adoption, execution or deployment. The addendum was reviewed in the next cycle: mailbox hash `2567d53f`
+at 4,442 bytes, HEAD `e17c260` with a clean tree, decision *accepted*, and the reviewer confirmed that every number, verdict,
+recommendation and question in `-040` stands exactly as filed. A same-turn correction to the reviewer's own earlier reply was also
+recorded there: the new read's LF blob is `6409a8c4` at 13,242 bytes, not `dc9256c4`, which is not an object in this repository, so
+the size was right and the short hash had been transcribed wrongly. Nothing of mine changed as a result.
+
+**The important part for this lane is what the review did not do.** No assignment was published and the register was untouched.
+The reviewer reproduced my figures independently rather than trusting them - the five served page sizes at `origin/main f8bc80fe`
+(19,186 / 143,102 / 292,270 / 24,398 / 5,733), the scorecard's embedded JSON (25 of 25 session verdicts `no_information`, 24 of 25 on
+the week plus one `unstable_across_years`, 20 states right of their own drift and 5 wrong, baselines 55.81% on 964 and 58.23% on
+960), the movement scan re-run at exit 0 with both assertions PASS, the accepted 019 report at exactly 95,842,994 bytes with 147,465
+each of `median` / `q1` / `q3` and 148,920 `exact_zero`, the checker's 608 rows, and the unapplied collector patch still recorded
+live in `CURRENT_STATE` - and then declined to open the movement lane because that needs a register edit and the user's word, and
+declined to raise R3 because a background run carries no production authority. Worker `strategy` stays `advisory_active` under
+`strategy-advisory-001`, and the reviewer's own ordering rule holds the two other pending reports (backtester-harness
+`20261003-backtester-harness-asset-store-and-tabs-r2` and live-trading `20261003-live-trading-live-marking-and-ladder-r1`) ahead of
+any new strategy filing.
+
+**No new submission this turn, and that is the deliberate choice.** The mailbox already holds the review outcome and the reviewer
+wrote it down; a status_report repeating it would add bytes and no information, and the assignment says not to submit every chat
+turn. The next filing from this lane must be a new recommendation, not a restatement.
+
+**What is waiting, unchanged and still the user's.** (a) The two sequencing answers `-040` asks for: whether to open the movement
+measurement lane at all, and if so whether the exploratory measurement R1 or the input fix R3 goes first. (b) The four answers `-040`
+names, whose defaults were stated in the reply and stand if the user stays silent, but which still need the coordinator to open the
+lane or schedule the production change before anything can be built. (c) The three nav choices in `-039`, still unanswered. (d)
+Whether the collector patch becomes the production priority. (e) Newly explicit from the addendum, whether the four size medians
+should be re-derived with one added median print or left as the marked 2026-09-28 measurement. This turn changed only this notes
+file and ignored `tmp/` scratch: no page, number, data artifact, register entry, assignment, lock, controller or bridge file was
+touched, and nothing was published, refreshed or triggered.
