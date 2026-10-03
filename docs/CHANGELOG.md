@@ -12,6 +12,8 @@
 - Added `docs/LAYER1_CALL_FLOW_PUBLICATION_20261003.md` as the handoff note for this release.
 - Added `lib/l2l_ladder.js` and `lib/l2l_levels_store.js`, loaded by `index.html` ahead of `script.js`, so the Live Trading section draws the 1h and 4h views, the L2L ladder and the levels marking the user asked for.
 - Added `docs/LIVE_TRADING_PORT_20261003.md` as the handoff note for that publish.
+- Added `backtester/tests/gold_view_tidy.browser.test.js`, a seven-test guard for the tidied gold page: the five views and their order, the four pages still framed with their own honesty lines, every printed rate carrying its sample count and plain words, the direction-and-two-ranges block on each view written into the page, the landing view's dates and disclaimers, the hash and keyboard behaviour including the old census hashes, and the layout at six widths.
+- Added `docs/GOLD_VIEW_TIDY_20261003.md` as the handoff note for the gold view tidy.
 
 ### Changed
 
@@ -26,6 +28,11 @@
 - Published the port candidate the `live-trading` worker filed as `20261003-live-trading-live-port-candidate-r1` - eight files, +2,892/-324, cut from `a94fb550` by the already-ruled hunk recipe with no merge commit, and re-cut on this tip by the same recipe once another lane had published `3350a89` - so the Live Trading section carries the M5, 1h and 4h views, the L2L ladder and the levels marking, with `data/l2l-levels.json` and `liveTradingUrl` left exactly as `main` carried them.
 - Widened `tests/live_trading_dashboard.browser.test.js` from "the read-only section must carry no form control" to "every control must be one the section binds with its own live data attribute": the ruled marking panel's six fields are allowed, a form, dropdown or free-text area is not, the token field must stay a password field, the panel must say the token is only ever sent to `api.github.com`, and no control may read like an order path. The guard is 1 of 2 on the candidate before the widening and 2 of 2 after it.
 - Bumped the `script.js` cache-buster token in `index.html` to `20261003-live-trading-port`, so a returning reader is not served the pre-port `script.js` from cache under the old token; the two new library tags keep the lane's own tokens.
+- Tidied `gold.html` into five views - Start here, Direction, Movement - L2L and half L2L, Factor tables (draft) and Archive census - so the direction read, the full-L2L share and the half-L2L share are printed together wherever a rate appears, each with its own sample count and plain-words line, and the two archive censuses moved from the front of the strip to the last view, where they are labelled as being about the archive.
+- Wrote the caller's own record, the per-side split and the scorecard's per-year up-day baseline into the gold page's Direction view, and the movement base rates into its Movement view, every figure quoted from what the site or the accepted read already publishes, with the 2026-09-28 figures marked as that measurement and the two honest omissions stated rather than filled in.
+- Kept every old address working: the four framed pages are unchanged and still framed, and a link that named one of the two censuses (`gold.html#backtesting`, `gold.html#outcomes`) opens the Archive census view and scrolls to the page it names.
+- Re-pointed the navigation guard's gold assertions at the tidied page (+28 / -8) - five views rather than four, the same four frames, the rail's gold entry naming a view that exists, the bar's gold entry landing on the page's first view, and the frame hop opening the Direction view before it reads the frame - and left the shared navigation block untouched (`9 pages, 17 rail entries, 0 change(s)`).
+- Published the gold view tidy on the user's word: the branch `gold/view-tidy-20261003` fast-forwarded onto `main` over the live-trading port that preceded it, with the live `gold.html` re-read afterwards and every old gold address still landing.
 
 ## 2026-07-21
 

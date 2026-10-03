@@ -3,12 +3,16 @@
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Gold - one page with tabs</title>
-<meta name="description" content="The gold work on one page: direction scorecard, backtesting evidence, 28-factor outcomes and the factor tables draft, reached from one tab strip.">
+<meta name="description" content="The gold work on one page: the caller's own record beside the two movement ranges, how far gold moves, the factor tables draft and the archive censuses, reached from one tab strip.">
 <!--
-  Gold on one page: one tab strip over the four gold pages that already exist at this site's root -
-  gold-direction-scorecard.html, gold-backtesting.html, gold-backtest-outcomes.html and gold-factor-wip.html.
-  Each tab shows the page it names in a frame; none of those pages is copied, rewritten or re-measured here, so
-  no figure on this page is new to the site. Release steps and acceptance checks: GOLD_TABS_BUILD_BRIEF.md.
+  Gold on one page. The tab strip runs: Start here, Direction, Movement - L2L and half L2L, Factor tables (draft)
+  and Archive census. Start here, Direction and Movement are written into this page and carry no number that is
+  not already published; the other tabs frame the pages that already exist at this site's root -
+  gold-direction-scorecard.html, gold-factor-wip.html (draft), gold-backtesting.html and
+  gold-backtest-outcomes.html (the two archive censuses). No framed page is copied, rewritten or re-measured here,
+  every old address still works, and no figure on this page is new to the site. Every rate printed here carries
+  the direction read, the half-L2L share and the full-L2L share together, each with its own sample count and its
+  own plain-words line, which is the rule the user set on 2026-10-03.
 -->
 <link rel="stylesheet" href="styles.css">
 <style>
@@ -30,6 +34,29 @@ color:inherit;padding:9px 15px;border-radius:8px 8px 0 0;font:inherit;font-size:
 .goldtabs-panel.is-open{display:block}
 .goldtabs-panel iframe{display:block;width:100%;height:calc(100vh - 150px);min-height:520px;border:0;background:#fff}
 .goldtabs-foot{padding:10px 2px 22px;font-size:12.5px;opacity:.7}
+
+/* The panels that are written into this page rather than framed. They carry no number that is not already
+   published, so they need nothing but readable type, one table that scrolls on a narrow screen and one block that
+   shows the direction read beside the two movement ranges wherever a rate is printed. */
+.goldtabs-note{padding:16px 18px 6px;max-width:1100px}
+.goldtabs-note p{margin:0 0 10px}
+.goldtabs-lede{font-size:14.5px}
+.goldtabs-list{margin:0 0 10px;padding-left:20px;font-size:14px;line-height:1.5}
+.goldtabs-list li{margin:0 0 7px}
+.goldtabs-trio{border:1px solid rgba(255,255,255,.16);border-radius:10px;padding:12px 14px;margin:14px 0;background:rgba(255,255,255,.04)}
+.goldtabs-trio-head{margin:0 0 10px;font-size:12px;opacity:.8;letter-spacing:.05em;text-transform:uppercase}
+.goldtabs-cards{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
+.goldtabs-card{border:1px solid rgba(255,255,255,.14);border-radius:8px;padding:10px 12px;font-size:13.5px;line-height:1.45}
+.goldtabs-card b{display:block;margin-bottom:4px;font-size:13px}
+.goldtabs-scroll{overflow-x:auto;margin:0 0 10px}
+.goldtabs-table{border-collapse:collapse;width:100%;min-width:640px;font-size:13.5px}
+.goldtabs-table caption{caption-side:top;text-align:left;font-size:12.5px;opacity:.75;padding:0 0 8px}
+.goldtabs-table th,.goldtabs-table td{border-bottom:1px solid rgba(255,255,255,.12);padding:7px 9px;text-align:left;vertical-align:top}
+.goldtabs-table th{font-size:11.5px;letter-spacing:.05em;text-transform:uppercase;opacity:.8;white-space:nowrap}
+.goldtabs-table td.n{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+.goldtabs-table tbody tr:last-child td{border-bottom:0}
+.goldtabs-caveat{font-size:12.5px;opacity:.78;max-width:920px;margin:0 0 12px}
+.goldtabs-sets{font-size:13px;opacity:.85;margin:4px 0 8px;max-width:920px}
 </style>
 </head>
 
@@ -132,54 +159,238 @@ body > aside.site-nav.side-rail ~ *{margin-left:232px;max-width:calc(100% - 232p
   <header class="goldtabs-head">
     <div>
       <h1>Gold</h1>
-      <p>Everything the gold work holds, on one page. Each tab is the page it always was, with its own numbers and
-      its own warnings; nothing here is recalculated.</p>
+      <p>Everything the gold work holds, on one page - tidied so the direction read, the full L2L range and the half
+      L2L range are always shown together, and the archive censuses sit at the end where they belong. Each framed tab
+      is the page it always was, with its own numbers and its own warnings; nothing here is recalculated.</p>
     </div>
     <p><a href="index.html">Back to the dashboard</a></p>
   </header>
 
-  <div class="goldtabs-tabs" role="tablist" aria-label="Gold pages">
-    <button class="goldtabs-tab" role="tab" id="tab-direction" aria-controls="panel-direction" aria-selected="true">Direction</button>
-    <button class="goldtabs-tab" role="tab" id="tab-backtesting" aria-controls="panel-backtesting" aria-selected="false">Backtest evidence</button>
-    <button class="goldtabs-tab" role="tab" id="tab-outcomes" aria-controls="panel-outcomes" aria-selected="false">28-factor outcomes</button>
+  <div class="goldtabs-tabs" role="tablist" aria-label="Gold views">
+    <button class="goldtabs-tab" role="tab" id="tab-start" aria-controls="panel-start" aria-selected="true">Start here</button>
+    <button class="goldtabs-tab" role="tab" id="tab-direction" aria-controls="panel-direction" aria-selected="false">Direction</button>
+    <button class="goldtabs-tab" role="tab" id="tab-movement" aria-controls="panel-movement" aria-selected="false">Movement - L2L and half L2L</button>
     <button class="goldtabs-tab" role="tab" id="tab-factor" aria-controls="panel-factor" aria-selected="false">Factor tables <span class="goldtabs-draft">(draft)</span></button>
+    <button class="goldtabs-tab" role="tab" id="tab-archive" aria-controls="panel-archive" aria-selected="false">Archive census</button>
   </div>
 
   <div class="goldtabs-panels">
-    <section class="goldtabs-panel is-open" id="panel-direction" role="tabpanel" aria-labelledby="tab-direction" tabindex="0">
+    <section class="goldtabs-panel is-open" id="panel-start" role="tabpanel" aria-labelledby="tab-start" tabindex="0">
+      <div class="goldtabs-note">
+        <p class="goldtabs-lede">Six lines, then the tabs above for the detail. Nothing on this page is recalculated
+        and no figure on it is new to the site.</p>
+        <ul class="goldtabs-list">
+          <li><b>What this page is.</b> The gold analysis the dashboard already holds, gathered in one place: the
+          caller's own record beside the two movement ranges, how far gold moves, the factor tables draft and the
+          archive censuses. Each framed tab is the page it always was, with its own numbers and its own warnings.</li>
+          <li><b>As of.</b> The movement counts, the shares and the direction reads were re-read on 3 October 2026; the
+          four day-size figures are the 28 September 2026 measurement of the same sessions and stay marked as such
+          until the same run that prints the movement counts re-prints them. No figure here carries any other date.</li>
+          <li><b>The three sizes, in plain words.</b> A usual day travels 1.4472% of the session open (median range,
+          ADR20). The full L2L range is 0.7236% and half of it is 0.3618%; the median close-to-close move is 0.6701%,
+          direction ignored.</li>
+          <li><b>Where the numbers come from.</b> The agent's own 570 archived gold call sessions (4 January 2024 to
+          30 April 2026) and 21,871 complete hourly XAU/USD bars (2 January 2023 to 11 September 2026), both already
+          stored. The census tabs carry the pages that already exist at this site's root, unchanged.</li>
+          <li><b>What the page is not.</b> Not a signal, not a forecast and not a trading result. Every interval it
+          uses was already spent, the sessions are calls the agent already made, and no row on it is an edge. Nothing
+          here tests whether a pattern still holds after it has been found, so no row may later be read as one.</li>
+          <li><b>The collector fault.</b> The live Gold collector still reads an unordered 25-row history window, so
+          its recent inputs cannot be recovered by sorting them afterwards. That fix is outstanding, is separate from
+          this page, and is the prerequisite the user asked for ahead of any forward record.</li>
+        </ul>
+        <div class="goldtabs-trio">
+          <p class="goldtabs-trio-head">The three reads together - shown with every rate on this page</p>
+          <div class="goldtabs-cards">
+            <div class="goldtabs-card"><b>Direction - 570 days</b><span>gold closed up on 56.84% of the 570 archived
+            call days; the call itself was right at the close on 46.32% of the same 570 days. Plain words: the calls
+            lose to simply saying "up".</span></div>
+            <div class="goldtabs-card"><b>Half L2L - 558 of 570 days</b><span>97.89% of days clear the half range
+            (0.3618%) in one direction or the other. Plain words: at half the range, "does it move" is almost always
+            yes, so it cannot sort days.</span></div>
+            <div class="goldtabs-card"><b>Full L2L - 429 of 570 days</b><span>75.26% of days clear the full range
+            (0.7236%) in one direction or the other. Plain words: at the full range, one day in four does not move
+            that far.</span></div>
+          </div>
+        </div>
+        <p class="goldtabs-caveat">Descriptive base rates on spent intervals, read on 3 October 2026 - not findings
+        and not forecasts.</p>
+      </div>
+    </section>
+
+    <section class="goldtabs-panel" id="panel-direction" role="tabpanel" aria-labelledby="tab-direction" tabindex="0">
+      <div class="goldtabs-note">
+        <p class="goldtabs-lede">The caller's own record on the 570 archived sessions, in the user's own units. Every
+        rate is printed with the sample it was measured on and with a plain line beside it; the movement shares the
+        direction reads sit on are in the block below and in the Movement tab, never shown apart.</p>
+        <div class="goldtabs-trio">
+          <p class="goldtabs-trio-head">The three reads together - shown with every rate on this page</p>
+          <div class="goldtabs-cards">
+            <div class="goldtabs-card"><b>Direction - 570 days</b><span>gold closed up on 56.84% of the 570 days; the
+            call was right at the close on 46.32% of them.</span></div>
+            <div class="goldtabs-card"><b>Half L2L - 558 of 570 days</b><span>97.89% of days clear 0.3618% either
+            way.</span></div>
+            <div class="goldtabs-card"><b>Full L2L - 429 of 570 days</b><span>75.26% of days clear 0.7236% either
+            way.</span></div>
+          </div>
+        </div>
+        <p class="goldtabs-sets">The caller's own record, one row per question. Set: the 570 archived gold call
+        sessions, 4 January 2024 to 30 April 2026, re-read 3 October 2026.</p>
+        <div class="goldtabs-scroll">
+          <table class="goldtabs-table">
+            <caption>Direction reads on the same 570 sessions - each figure with its own sample and its own plain words.</caption>
+            <thead><tr><th>Read</th><th>Figure</th><th>Sample</th><th>In plain words</th></tr></thead>
+            <tbody>
+              <tr><td>Gold closed up</td><td class="n">56.84%</td><td class="n">570 days</td><td>The baseline any call has to beat.</td></tr>
+              <tr><td>The call was right at the close</td><td class="n">46.32%</td><td class="n">570 days</td><td>The calls lose to saying "up" every day by about 10.5 points.</td></tr>
+              <tr><td>The call named the side that moved</td><td class="n">45.63%</td><td class="n">355 one-sided days</td><td>Days where only one side of half L2L was reached.</td></tr>
+              <tr><td>Always saying "up" on those same days</td><td class="n">61.13%</td><td class="n">same 355 days</td><td>What a stopped clock scores on the same rows.</td></tr>
+              <tr><td>The call's own direction reached half L2L</td><td class="n">64.04%</td><td class="n">570 days</td><td>It moved the way the call said, as far as 0.3618%.</td></tr>
+              <tr><td>The call's own direction reached full L2L</td><td class="n">38.42%</td><td class="n">570 days</td><td>It moved the way the call said, as far as 0.7236%.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="goldtabs-sets">Where the loss sits: the same 570 sessions, split by the side the call took. Marked as
+        the 28 September 2026 measurement of those same sessions.</p>
+        <div class="goldtabs-scroll">
+          <table class="goldtabs-table">
+            <thead><tr><th>Side the call took</th><th>Right at the close</th><th>Sample</th><th>In plain words</th></tr></thead>
+            <tbody>
+              <tr><td>Bearish calls</td><td class="n">40.00%</td><td class="n">300 calls</td><td>The bearish half is where the loss sits.</td></tr>
+              <tr><td>Bullish calls</td><td class="n">53.33%</td><td class="n">270 calls</td><td>The bullish half runs close to its own baseline.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="goldtabs-sets">A second set, kept separate on purpose: the direction scorecard's own 964 daily
+        anchors, a different question on a different set of rows. Its per-year up-day baseline appears here because it
+        is the drift these calls were measured against. The calls' own split by year is not printed on this page yet,
+        because the accepted read this page quotes does not carry its per-year counts, and nothing here is guessed.</p>
+        <div class="goldtabs-scroll">
+          <table class="goldtabs-table">
+            <caption>Days that closed up, by year - the scorecard's own anchors: 965 in all, 964 with an outcome.</caption>
+            <thead><tr><th>Year</th><th>Days closed up</th><th>Anchors</th></tr></thead>
+            <tbody>
+              <tr><td>2023</td><td class="n">51.54%</td><td class="n">260</td></tr>
+              <tr><td>2024</td><td class="n">59.16%</td><td class="n">262</td></tr>
+              <tr><td>2025</td><td class="n">60.15%</td><td class="n">261</td></tr>
+              <tr><td>2026</td><td class="n">50.83%</td><td class="n">181</td></tr>
+              <tr><td>All four years</td><td class="n">55.81%</td><td class="n">964</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="goldtabs-caveat">Read on 3 October 2026 from the pages already published here and the accepted read
+        behind them; the per-side split and the four day-size figures are the 28 September 2026 measurement of the
+        same 570 sessions and are marked rather than presented as re-measured. The intervals are spent, the sessions
+        are calls the agent already made, and no accuracy, prediction, timing or profitability claim is made anywhere
+        on this tab.</p>
+      </div>
       <iframe title="Gold direction scorecard" src="gold-direction-scorecard.html"></iframe>
     </section>
-    <section class="goldtabs-panel" id="panel-backtesting" role="tabpanel" aria-labelledby="tab-backtesting" tabindex="0">
-      <iframe title="Gold backtesting evidence" src="gold-backtesting.html" loading="lazy"></iframe>
-    </section>
-    <section class="goldtabs-panel" id="panel-outcomes" role="tabpanel" aria-labelledby="tab-outcomes" tabindex="0">
-      <iframe title="Gold 28-factor outcomes" src="gold-backtest-outcomes.html" loading="lazy"></iframe>
+
+    <section class="goldtabs-panel" id="panel-movement" role="tabpanel" aria-labelledby="tab-movement" tabindex="0">
+      <div class="goldtabs-note">
+        <p class="goldtabs-lede">The user's own first question - does it move - answered at his own two ranges, half
+        L2L (0.3618%) and full L2L (0.7236%), on the 570 archived call sessions. Every share carries its own day count
+        and the direction read it belongs with.</p>
+        <div class="goldtabs-trio">
+          <p class="goldtabs-trio-head">The three reads together - shown with every rate on this page</p>
+          <div class="goldtabs-cards">
+            <div class="goldtabs-card"><b>Direction - 570 days</b><span>gold closed up on 56.84% of the 570 days; the
+            call was right at the close on 46.32% of them.</span></div>
+            <div class="goldtabs-card"><b>Half L2L - 558 of 570 days</b><span>97.89% of days clear 0.3618% either
+            way.</span></div>
+            <div class="goldtabs-card"><b>Full L2L - 429 of 570 days</b><span>75.26% of days clear 0.7236% either
+            way.</span></div>
+          </div>
+        </div>
+        <p class="goldtabs-sets">The movement counts, re-read 3 October 2026 against 21,871 complete hourly XAU/USD
+        bars (2 January 2023 to 11 September 2026), measured on the 570 archived gold call sessions.</p>
+        <div class="goldtabs-scroll">
+          <table class="goldtabs-table">
+            <caption>How far gold moved, with the count each share was measured on.</caption>
+            <thead><tr><th>Question</th><th>Share</th><th>Sample</th><th>In plain words</th></tr></thead>
+            <tbody>
+              <tr><td>Days that cleared half L2L either way</td><td class="n">97.89%</td><td class="n">558 of 570 days</td><td>"Does it move" is almost always yes at half the range.</td></tr>
+              <tr><td>Days that cleared full L2L either way</td><td class="n">75.26%</td><td class="n">429 of 570 days</td><td>One day in four does not reach the full range at all.</td></tr>
+              <tr><td>Full-range days that went up only</td><td class="n">51.52%</td><td class="n">429 days that reached it</td><td>Of the days that reached the full range, half reached it one way only.</td></tr>
+              <tr><td>Full-range days that went down only</td><td class="n">40.09%</td><td class="n">same 429 days</td><td>Fewer full-range days are down-only than up-only.</td></tr>
+              <tr><td>Full-range days that touched both sides</td><td class="n">8.39%</td><td class="n">same 429 days</td><td>Few days reach the full range and come back through it.</td></tr>
+              <tr><td>Day-one floor-reachers still on side after one session</td><td class="n">68.49%</td><td class="n">570 rows</td><td>About two in three keep their side into the next day.</td></tr>
+              <tr><td>Day-one floor-reachers still on side after five sessions</td><td class="n">55.20%</td><td class="n">570 rows</td><td>Barely better than a coin toss by the fifth session.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="goldtabs-caveat">The per-factor columns - every declared factor state, at half L2L and full L2L, on
+        the 1/2/3/5-session ladder, nothing dropped, every row with its own day count - are not printed yet: they
+        arrive with the declared-band movement measurement, which has to be opened by the coordinator. This tab is
+        not blank and it is not a promise dressed as a number: it carries the base rates above, all descriptive reads
+        of already spent intervals. One further read exists but with no day count carried in the accepted read - at
+        half the range a five-session read clears it 99.82% of the time - so it stays that sentence and not a table
+        row. The direction read these shares belong with is the row above every table here, and on the Direction tab.</p>
+      </div>
     </section>
     <section class="goldtabs-panel" id="panel-factor" role="tabpanel" aria-labelledby="tab-factor" tabindex="0">
+      <div class="goldtabs-note">
+        <p class="goldtabs-lede">The work-in-progress factor tables page, unchanged: its own banner, its own answered
+        count, its own as-of line and its own "what this page is not" section are all intact, because that page's
+        honesty mechanism is the reason the draft can be shown here at all.</p>
+      </div>
       <iframe title="Gold factor tables (draft)" src="gold-factor-wip.html" loading="lazy"></iframe>
+    </section>
+
+    <section class="goldtabs-panel" id="panel-archive" role="tabpanel" aria-labelledby="tab-archive" tabindex="0">
+      <div class="goldtabs-note">
+        <p class="goldtabs-lede">Two pages that describe the 2023-2026 archive rather than gold itself, kept reachable
+        and moved to the end of the strip. Both are the pages they always were, with nothing added, removed or
+        re-measured; their own addresses still work.</p>
+        <p class="goldtabs-caveat">Their own verdict, published on the outcomes page: the archive "can describe this
+        space, but it cannot support choosing from it". The evidence page carries the pilot the site always showed -
+        154 stored calls, none evaluable under the strict contiguous-endpoint read, 82 scored calls on the endpoint
+        read - and it names the collector defect in its own banner. These pages answer a question about the archive,
+        not about gold. The direction read and the two movement ranges these numbers belong beside are on the
+        Direction and Movement tabs, and none of the three is shown here without the others being one tab away.</p>
+      </div>
+      <iframe title="Gold backtesting evidence" src="gold-backtesting.html" loading="lazy" id="frame-backtesting"></iframe>
+      <iframe title="Gold 28-factor outcomes" src="gold-backtest-outcomes.html" loading="lazy" id="frame-outcomes"></iframe>
     </section>
   </div>
 
-  <p class="goldtabs-foot">The earlier pages stay reachable at their own addresses, so old links keep working.
-  The draft tab is a live draft: its own banner says what it is and what it is not.</p>
+  <p class="goldtabs-foot">The four framed pages stay reachable at their own addresses, so old links keep working;
+  a shared link that names one of the two censuses (#backtesting, #outcomes) opens the archive tab and scrolls to the
+  page it names. The draft tab is a live draft: its own banner says what it is and what it is not. Nothing on this
+  page is recalculated, no figure on it is new to the site, and every rate it prints carries the direction read, the
+  half-L2L share and the full-L2L share together with their sample counts.</p>
 </div>
 
 <script>
 (function () {
-  const order = ['direction', 'backtesting', 'outcomes', 'factor'];
+  const order = ['start', 'direction', 'movement', 'factor', 'archive'];
+  // The two archive censuses were tabs of their own before the tidy, so a bookmark or a shared link that named one
+  // of them must still land on it: it opens the archive tab and scrolls to that page. The rail's gold entry and the
+  // user's own #direction keep meaning exactly what they meant.
+  const aliases = {
+    backtesting: { tab: 'archive', anchor: 'frame-backtesting' },
+    evidence: { tab: 'archive', anchor: 'frame-backtesting' },
+    outcomes: { tab: 'archive', anchor: 'frame-outcomes' },
+  };
   const tabs = order.map(name => document.getElementById('tab-' + name));
   const panels = order.map(name => document.getElementById('panel-' + name));
 
   function show(name, focus) {
-    if (!order.includes(name)) name = 'direction';
+    const alias = aliases[name];
+    const target = order.includes(name) ? name : alias ? alias.tab : 'start';
     order.forEach((key, index) => {
-      const open = key === name;
-      tabs[index].setAttribute('aria-selected', open ? 'true' : 'false');
-      tabs[index].tabIndex = open ? 0 : -1;
-      panels[index].classList.toggle('is-open', open);
+      const isOpen = key === target;
+      tabs[index].setAttribute('aria-selected', isOpen ? 'true' : 'false');
+      tabs[index].tabIndex = isOpen ? 0 : -1;
+      panels[index].classList.toggle('is-open', isOpen);
     });
-    if (history.replaceState) history.replaceState(null, '', '#' + name);
-    if (focus) tabs[order.indexOf(name)].focus();
+    if (history.replaceState) history.replaceState(null, '', '#' + target);
+    if (focus) tabs[order.indexOf(target)].focus();
+    if (alias && !focus) {
+      const frame = document.getElementById(alias.anchor);
+      if (frame && frame.scrollIntoView) frame.scrollIntoView({ block: 'start' });
+    }
   }
 
   tabs.forEach((tab, index) => {

@@ -164,8 +164,20 @@ test("the partial is the navigation that was agreed, in both variants", () => {
   });
 });
 test("all nine served pages show one bar and one rail, and every link it offers goes somewhere", async () => {
-  const goldHashes = Array.from(read("gold.html").matchAll(/class="goldtabs-tab"[^>]*id="tab-([^"]+)"/g), match => match[1]);
-  assert.deepEqual(goldHashes, ["direction", "backtesting", "outcomes", "factor"], "gold.html must keep the four gold tabs the rail's gold entry names");
+  // The gold page's strip was re-ordered and widened on 2026-10-03 - Start here, Direction, Movement - L2L and half
+  // L2L, Factor tables (draft) and Archive census - so the direction read and the two movement ranges sit together
+  // and the two archive censuses moved to the end. What this guard owns is that the rail's gold entry still names a
+  // view that exists, that the four pages the strip frames are still framed, and that a hash naming one of them
+  // still lands on it; the tidied page's own guard, gold_view_tidy.browser.test.js, holds the rest.
+  const goldTabs = Array.from(read("gold.html").matchAll(/class="goldtabs-tab"[^>]*id="tab-([^"]+)"/g), match => match[1]);
+  assert.deepEqual(goldTabs, ["start", "direction", "movement", "factor", "archive"], "gold.html must carry the five agreed views in order");
+  assert.ok(goldTabs.includes(RAIL_HREFS[3].split("#")[1]), "the rail's gold entry must name a view the gold page opens");
+  const goldFrames = Array.from(read("gold.html").matchAll(/<iframe[^>]*src="([^"]+)"/g), match => match[1]);
+  assert.deepEqual(
+    goldFrames,
+    ["gold-direction-scorecard.html", "gold-factor-wip.html", "gold-backtesting.html", "gold-backtest-outcomes.html"],
+    "gold.html must still frame the four pages it always framed",
+  );
   const server = await serve();
   const browser = await chromium.launch({ headless: true });
   const base = `http://127.0.0.1:${server.address().port}`;
@@ -203,7 +215,7 @@ test("all nine served pages show one bar and one rail, and every link it offers 
         RAIL_HREFS.forEach(href => {
           const [file, hash] = href.split("#");
           assert.ok(fs.existsSync(path.join(root, file)), `${where} rail points at ${file}, which is not published`);
-          assert.ok((file === "gold.html" ? goldHashes : RAIL_TABS).includes(hash), `${where} rail points at ${href}, which names no view`);
+          assert.ok((file === "gold.html" ? goldTabs : RAIL_TABS).includes(hash), `${where} rail points at ${href}, which names no view`);
         });
       }
       // The draft page is served with no navigation of its own, so the block has to be the whole of what it
@@ -262,13 +274,17 @@ test("a rail entry lands on the view its label names, from any page and from ins
       return !!tab && tab.getAttribute("aria-selected") === "true" && !!panel && panel.classList.contains("is-open");
     });
 
-    // The bar's gold entry is the one entry the three published gold guards ask for, on the draft page too.
+    // The bar's gold entry is the one entry the three published gold guards ask for, on the draft page too. It
+    // opens the gold page with no hash, so it lands on that page's own first view - Start here since the 2026-10-03
+    // tidy - while the rail's gold entry keeps naming Direction. Either way the reader lands on a view the page
+    // opens, never on a bare strip.
     await view.goto(`${base}/${DRAFT_PAGE}`, { waitUntil: "load" });
     await view.locator(".topbar .topbar-link", { hasText: "Gold" }).click();
     await view.waitForURL(/gold\.html$/);
     await view.waitForFunction(() => {
-      const tab = document.querySelector("#tab-direction");
-      return !!tab && tab.getAttribute("aria-selected") === "true";
+      const tab = document.querySelector("#tab-start");
+      const panel = document.querySelector("#panel-start");
+      return !!tab && tab.getAttribute("aria-selected") === "true" && !!panel && panel.classList.contains("is-open");
     });
 
     // The bar's Layer 1 entry leaves the dashboard set for the printable call map, which is what its label
@@ -284,8 +300,12 @@ test("a rail entry lands on the view its label names, from any page and from ins
     });
 
     // gold.html frames four of these pages. An entry clicked inside one of those frames has to move the whole
-    // window, not open the dashboard inside the frame and leave the reader with two rails.
-    await view.goto(`${base}/gold.html`, { waitUntil: "load" });
+    // window, not open the dashboard inside the frame and leave the reader with two rails. The tidy makes Start
+    // here the page's own first view, so the frame is opened the way a reader opens it - by naming the view.
+    await view.goto(`${base}/gold.html#direction`, { waitUntil: "load" });
+    // The tab leads with the caller's own record and shows the framed scorecard under it, so a reader scrolls to
+    // the frame before using it; the guard does the same rather than reading the frame from off-screen.
+    await view.locator('iframe[title="Gold direction scorecard"]').scrollIntoViewIfNeeded();
     await view.frameLocator('iframe[title="Gold direction scorecard"]').locator(".side-rail nav a.tab-button", { hasText: "Architecture" }).click();
     await view.waitForURL(/#architecture$/);
     assert.ok(view.url().endsWith("/index.html#architecture"), "an entry inside a frame must open the view in the whole window");

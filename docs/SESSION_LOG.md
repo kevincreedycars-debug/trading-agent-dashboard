@@ -102,7 +102,7 @@ Make the top bar and the side rail the same on every published page, so the gold
 
 ### Important Note
 
-The change is committed locally on `site/nav-consistency-20261003`; nothing is published, and publication to GitHub Pages remains a separate operation.
+The change was committed on `site/nav-consistency-20261003` and then published in a separate step at the user's word: `f8bc80f..a94fb55 site/nav-consistency-20261003 -> main`, the remote `main` ref verified at `a94fb55`, and the live pages re-read afterwards (`index.html` 18,775 to 24,821 bytes, `gold.html` 5,733 to 14,388 bytes, both carrying the shared block and the rail's `gold.html#direction` entry).
 
 ### Next
 
@@ -154,3 +154,30 @@ The port is code only. The published snapshot still carries `quote` and `m5` wit
 
 - The lane's producer run that emits the `h1` and `h4` blocks, filed for republish, so the zoom-out works on the live page.
 - The seed levels marked on the 1h and 4h charts with the ladder read against them, then the entry rule from the 5m close-beyond-level trigger, in the order the user set out.
+
+## 2026-10-03 - Gold view tidy
+
+### Session Goal
+
+Tidy the gold page so the direction read and the two movement ranges are always shown together, carry the two archive
+censuses to the end of the strip, and record the collector fault as the first outstanding item instead of working
+around it.
+
+### Completed
+
+- Tidied `gold.html` into five views: Start here, Direction, Movement - L2L and half L2L, Factor tables (draft) and Archive census. Every rate on the page carries its own sample count and plain-words line, and the direction read sits beside the half-L2L and full-L2L shares on every view written into the page.
+- Wrote the caller's own record (the 570 archived sessions), the per-side split and the scorecard's per-year up-day baseline into the Direction view, and the movement base rates into the Movement view, quoting only figures this site or the accepted read already publishes, with the 2026-09-28 figures marked as that measurement.
+- Kept every old address working, including `gold.html#backtesting` and `gold.html#outcomes`, which open the Archive census view and scroll to the page they name, and left the four framed pages byte-identical.
+- Added `backtester/tests/gold_view_tidy.browser.test.js` (seven tests, 7/7 in about 4.2s) and re-pointed the navigation guard's gold assertions (+28 / -8, 5/5 in about 23s), leaving the shared navigation block untouched at `9 pages, 17 rail entries, 0 change(s)`.
+- Recorded in `docs/GOLD_VIEW_TIDY_20261003.md` that the collector fault fix remains unapplied production work, that two old gold hop guards in the checkout that holds them need one line each, and that the movement measurement lane is the only route to the per-factor columns.
+- Re-cut the tidy on the tip that moved under it and published it in the same session the live-trading port was published: `gold/view-tidy-20261003` fast-forwarded onto `main` over the port, with the gold page's guard and the navigation guard re-run on the re-cut tree and the live `gold.html` re-read afterwards.
+
+### Important Note
+
+The page change is published; the fault fix the user asked for first is a live n8n change that needs credentials and an isolated runtime acceptance, so it is recorded here and not run.
+
+### Next
+
+- Apply the validated Gold history patch to the live `Data Collector - GOLD` node, after the isolated runtime acceptance `docs/GOLD_HISTORY_PATCH_VALIDATION.md` requires.
+- Re-point the two stale gold hop guards in the checkout that holds them, plus the three stale bar-hop assertions recorded from the navigation change.
+- Open the movement measurement lane (`gold-declared-band-measurement-026`) so the Movement view's per-factor columns and the four day-size figures' re-print can land.
