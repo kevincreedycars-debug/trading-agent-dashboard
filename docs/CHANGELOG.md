@@ -1,3 +1,26 @@
+# 2026-10-03 (eleventh cycle) - the strategy gold-data read is reviewed and accepted, and no research lane is opened
+
+Reviewed the strategy lane's answer to the user's redirect back to the Gold backtest data, recorded it as an exploratory
+diagnosis rather than an accuracy qualification, and declined to open a research stage.
+
+- 20261003-strategy-gold-data-usefulness-040 reviewed under the controller lock and **accepted**: mailbox
+  6e976bab... reproduced from the immutable inbox file at 9,548 bytes, reply 19c807d7... at 8,452 bytes, durable review
+  docs/orchestration/reviews/20261003-strategy-gold-data-usefulness-040.md. Docs-only inside docs/strategy/; the change
+  set is one commit at HEAD 34309cc on base ddac5a0 with a clean tree.
+- Reproduced rather than trusted: the five served page sizes from origin/main 8bc80f (19,186 / 143,102 / 292,270 /
+  24,398 / 5,733); the scorecard's own embedded JSON (25 of 25 session verdicts 
+o_information, 24 of 25 week verdicts
+  plus one unstable_across_years, 20 states right of their own drift and 5 wrong, baselines 55.81 percent on 964 and
+  58.23 percent on 960); the movement ladder re-run at exit 0 with both assertions PASS; the accepted 019 report at
+  exactly 95,842,994 bytes with 147,465 each of median/q1/q3 and 148,920 exact_zero; the 608-row parity artifact; and the
+  still-live unordered 25-row collector defect with its patch unapplied.
+- Hash reconciliation: the filing's artifact line is the CRLF form of the document as committed at 34309cc, and the lane's
+  own same-turn addendum 20261003-strategy-gold-data-usefulness-040-addendum corrected four attributions in commit
+  e17c260, moving the document to 13,407 bytes / sha256 25e05853...; the addendum is a separate filing and stays pending.
+- Steering recorded centrally: the user's redirect is acknowledged, the nav work order -039 stays queued rather than
+  dropped, R1 is not registered because opening gold-declared-band-measurement-026 needs a register edit and the user's
+  word, and R3 is not raised as production priority because a background run carries no production authority. No assignment
+  published, no publish status set, no lane opened, no controller or bridge file changed, no holdout read.
 # 2026-10-03 (ninth cycle) - the Analysis Engine window is opened on the user's instruction, a register reading is corrected, and no other lane is touched
 
 Opened the discussion window the user asked for, recorded the coordinator's standing queue order, and corrected a
