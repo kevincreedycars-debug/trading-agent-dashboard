@@ -2971,3 +2971,11 @@ which holds no credentials for this advisory assignment.
 lane, R2 as a page or a block beside the accuracy panel, R3 as the coordinator's production priority, R4 as the only
 route that can ever settle direction. The three nav choices remain unanswered and unchanged, and on silence the nav
 work order simply stays queued.
+
+**Correction filed inside the same turn as `-040`, before any review.** Two sentences of the read first attributed all
+ten base rates to today's re-run. Four of them - the day range 1.4472%, full L2L 0.7236%, half L2L 0.3618% and the
+median close-to-close move 0.6701% - came from this lane's own 2026-09-28 measurement: the scan prints the movement
+counts, the ladder and its two assertions, not the size medians. The read now says so in section 3 and in section 6,
+its hash moved from `4428f1c2` (13,136 bytes) to `25e05853` (13,407 bytes), and no number, verdict or recommendation
+changed. `20261003-strategy-gold-data-usefulness-040-addendum` carries the corrected hash and the delta, because the
+first filing's artifact line names the earlier one and a reviewer should not have to reconcile the two by hand.

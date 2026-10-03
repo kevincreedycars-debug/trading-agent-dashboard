@@ -74,7 +74,9 @@ confirms the app reproduces it. It contains no trade, no entry, no exit, no P&L 
 
 All read from the 570 archived gold call sessions (2024-01-04 to 2026-04-30), re-run today with
 `tmp/l2l-scan8-20260929.js` against the 21,871 complete hourly XAU/USD bars from 2023-01-02 to
-2026-09-11. Descriptive base rates on spent intervals, not findings and not forecasts:
+2026-09-11 — except the four day-size figures (day range, full L2L, half L2L, median close-to-close move),
+which the scan does not print and which are quoted from this lane's own 2026-09-28 measurement of the same
+570 sessions. Descriptive base rates on spent intervals, not findings and not forecasts:
 
 | Plain question | Answer | Sample |
 | --- | --- | --- |
@@ -153,9 +155,9 @@ exact matches; `docs/GOLD_HISTORY_PATCH_VALIDATION.md`, `docs/CURRENT_STATE.md` 
 `backtester/drafts/gold_collector_history_query_patch.json` for the unapplied-collector status; and this
 lane's own plan of 2026-09-28 with its 2026-09-29/30 revisions
 (`docs/strategy/GOLD_VIX_BOTH_AND_FACTOR_TABLE_PLAN_20260928.md`, §2, §3 and §4) for the power, noise-floor
-and per-side figures. Every plan figure quoted above that the scan reproduces was re-verified today; the
-per-side call split (300 bearish / 270 bullish) is quoted from the 2026-09-28 measurement and is marked
-as such rather than claimed as re-measured.
+and per-side figures. Every plan figure quoted above that the scan reproduces was re-verified today; the four
+day-size medians and the per-side call split (300 bearish / 270 bullish) come from the 2026-09-28 measurement
+of the same 570 sessions and are marked as such rather than claimed as re-measured.
 
 Limits: the intervals are spent, so nothing above is evidence about the future; the 570 sessions are calls
 the agent already made, so it is not an untouched holdout; the 97 evaluable pilot calls are 154 stored
