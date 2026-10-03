@@ -1,4 +1,39 @@
-﻿# 2026-10-03 (twenty-second cycle) - the backtester-harness foundation work order is accepted, two side figures are corrected, and no assignment is opened
+﻿# 2026-10-03 (twenty-third cycle) - the strategy queue-closing status report is accepted and no assignment is opened
+
+Reviewed the strategy lane's `-047` filing under the controller lock that owns this run, reproduced its scope, artifacts, both
+recorded acceptances and every lane-state claim from the checkout and the mailbox rather than from its summary, and accepted it
+as a docs-only advisory status report that closes that lane's mailbox queue.
+
+- Mailbox `20261003-strategy-045-and-046-accepted-queue-closed-047`, 17,604 bytes, sha256
+  `8c2efba10a8614d795c8fac4fcfe5f37bd0f94ec1636437894559c6b97f37c42`, reproduced from the immutable inbox file and equal to the
+  requested hash; reply `eea24783ac9b0d56c2868740e31ba587eb0911586071e83b598058049d6dc6f6`, 10,498 bytes, decision `accepted`,
+  published with `node scripts/coordination.js reply`; review
+  `docs/orchestration/reviews/20261003-strategy-045-and-046-accepted-queue-closed-047.md`.
+- Scope reproduces: filed head `6d11590` is exactly two commits on the declared base `5e80ec0` (`03c588c` then `6d11590`), one
+  file changed at 72 insertions and 0 deletions, a clean tree with no untracked file, and `git ls-remote` answering the reviewed
+  head, so the reviewed bytes are the branch tip on the remote.
+- Artifacts byte-exact in both forms at that head: notes `354c6d25` / `026c7951` / object `ea700b28` at 293,468 bytes with 3,367
+  line endings, 0 bare LF and 82 level-2 headings; the nav `4543bca4` / `faa8491e` / `ea3a514e` and tidy
+  `6dea881a` / `1cb04ba3` / `101adada` orders unchanged.
+- Both recorded acceptances reproduce from the canonical reply files (`1ecbe248` at 12,011 bytes and `54f617ad` at 8,586 bytes),
+  the `-046` controller receipt reads 351 bytes / `reviewed` / code 0 / `finished_at 16:54:27.431Z`, the four-instance
+  read-before-write pattern reproduces (10.327 s, 178.348 s, 135 s, 29.431 s; my own stamps 1 ms below on two of them), and
+  `check --worker strategy` reports no unreplied item beyond this filing.
+- Adopted, and in force from this cycle: the read-stamp practice - any envelope that asserts live mailbox state carries the stamp
+  of the read it rests on in the sentence, and the mailbox is re-read immediately before the write. Declined here and put to the
+  user: the optional envelope field, because `scripts/coordination.js` and the bridge are shared central surfaces this run may not
+  edit; recorded with it that validation rejects no extra key and that no bridge event key would change.
+- No assignment published: `gold-research` already holds `gold-declared-band-measurement-026` at exactly
+  `instructions_published_awaiting_worker`, the other lanes hold their own, the remaining asks are production, the Gold circuit is
+  spent or sealed to `2027-03-25T15:00:00Z`, and no dashboard worker is registered. `strategy` stays `advisory_active` under
+  `strategy-advisory-001` and no worker status changed.
+- Nothing was published, deployed, merged, refreshed or mutated; no outcome, holdout or prospective observation was read; no
+  controller or bridge file or setting was changed; no controller pause or stop was run; no other coordinator process was
+  started; no subagent was spawned; no external message was sent; and the canonical unrelated dirty state and every worktree were
+  left exactly as found.
+
+
+# 2026-10-03 (twenty-second cycle) - the backtester-harness foundation work order is accepted, two side figures are corrected, and no assignment is opened
 
 Reviewed the harness lane's foundation work order under the controller lock that owns this run, reproduced its scope, artifacts and
 every production measurement from the checkout and `origin/main` rather than from its summary, and accepted it as a docs-only
