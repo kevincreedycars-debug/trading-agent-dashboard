@@ -2,6 +2,15 @@
 
 Current milestone: the 28-factor Gold stage is complete and its plain-English verdict page is accepted; hold
 until the one carried observation envelope at the lane close, then stop.
+Next immediate action, 2026-10-03 (background review cycle): strategy submission 036 was reviewed and acknowledged from the canonical checkout at
+mailbox sha256 2a8606a0 (reply 961c56ef, review docs/orchestration/reviews/20261003-strategy-gold-release-and-helper-go-ahead-036.md), and the
+strategy mailbox reads pending 0, errors 0. It is a status_report with no deliverable - it records the user one-word go-ahead for three
+coordinator production actions and performed none of them - and no new assignment was published and no worker status set to a publish state,
+because no evidence supports a further research stage. The one immediate action is unchanged and is the user own: name the materialisation and
+execute the gold release in the interactive session, refresh the live panel, or open the movement-screen lane
+gold-declared-band-measurement-026. Nothing is executable by a background cycle, and nothing was published, deployed, refreshed, opened or
+touched by this one.
+
 Next immediate action, 2026-10-03: the connection audit is done and the stale controller lock is cleared, so the loop can run again and what
 remains is the user's call. Two worker windows are live (`backtester-harness`, `live-trading`, both `watching`); the `strategy` window is open
 but unbound (one click); the `gold-research` window and the seven `backtester-<asset>` windows are closed and cannot be re-woken by unchanged

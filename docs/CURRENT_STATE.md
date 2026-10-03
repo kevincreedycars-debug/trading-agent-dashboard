@@ -1,3 +1,22 @@
+2026-10-03, second cycle (background review): strategy submission 20261003-strategy-gold-release-and-helper-go-ahead-036 was reviewed and
+acknowledged at mailbox sha256 2a8606a092885d2207436c485f7ed5e35203b5ad98fd2ecbf0c032f05975655e (reply
+961c56effa32261acc19946e1790b2582a79d9fe00a48617f78bbb55e003a389, review
+docs/orchestration/reviews/20261003-strategy-gold-release-and-helper-go-ahead-036.md), so the strategy mailbox reads pending 0, errors 0. The
+submission is a status_report with no deliverable of its own: it records the user one-word go-ahead for three coordinator production actions -
+clear the dead lock and restart the helper, publish the single tabbed gold.html with one top-bar entry and the draft-page guard line moved to
+50 of 50, and the live data refresh - and states it performed none of them. Verified independently and read-only: the release candidate
+reproduces byte-exactly at 5,839 bytes / 106 CRLF / 0 bare LF / sha256 de60c2b7c452aa74ac282d475707e15d2d68977c77c4cd2a505cb4d205e64da6,
+the release is genuinely unpublished (no gold.html in the canonical root or the worktree; the canonical and origin/main index.html still carry
+the separate gold links), the panel is genuinely stale (origin/main still 16104a3, published data/layer1.json last_updated_et
+2026-10-02T07:29:28.874Z), and the guard coupling is real (backtester/tests/gold_factor_wip_dashboard_link.browser.test.js line 28 still pins
+/40 of 50 answered/ while revision 2 of the draft page reads 50 of 50). One item is corrected: item (1) was already completed this morning -
+the dead pid-24000 locks were cleared and the dispatcher restored, pid 8184 alive and status.json reviewing - so no lock or helper
+housekeeping is outstanding. No new assignment was published and no worker status was set to a publish state: no evidence supports a further
+research stage, every remaining research path sits on spent intervals or the sealed prospective window, and this advisory carries no
+deliverable. The precise unresolved decision stays the user own: whether to execute the gold release in the interactive session naming the
+materialisation served, whether to refresh the live panel now, and whether to open the movement-screen lane gold-declared-band-measurement-026.
+This background cycle published nothing, deployed nothing, refreshed nothing, opened no lane and touched no lock, controller or bridge file.
+
 # Current state
 
 2026-10-03 morning, connection audit and the stale controller lock cleared: the user asked the coordinator to make sure the other project

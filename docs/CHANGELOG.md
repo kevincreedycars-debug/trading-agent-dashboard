@@ -1,3 +1,22 @@
+# 2026-10-03 (second cycle) - strategy 036 reviewed and acknowledged; no assignment published, nothing executed
+
+Reviewed the one open submission from the canonical checkout; the strategy mailbox now reads `pending 0, errors 0`.
+
+- `20261003-strategy-gold-release-and-helper-go-ahead-036` (mailbox `2a8606a0...` reproduced from the immutable inbox file at 5,432 bytes, reply
+  `961c56ef...` at 4,994 bytes, review `docs/orchestration/reviews/20261003-strategy-gold-release-and-helper-go-ahead-036.md`) - `acknowledged`
+  as the record of the user one-word go-ahead for three coordinator production actions, not as an execution. The worker, worktree
+  `.local/worktrees/strategy`, is clean at `5e76c535...` on `workers/strategy-advisory-20260920` and on origin at that head; its commit changed
+  `docs/strategy/CONVERSATION_NOTES.md` only.
+- Verified independently rather than trusted: the release candidate reproduces byte-exactly at 5,839 bytes / 106 CRLF / 0 bare LF / sha256
+  `de60c2b7...`; the release is genuinely unpublished (no `gold.html`; the canonical and `origin/main` `index.html` still carry the separate gold
+  links); the panel is genuinely stale (`origin/main` still `16104a3`, published `data/layer1.json` `last_updated_et` `2026-10-02T07:29:28.874Z`);
+  and the guard coupling is real (`backtester/tests/gold_factor_wip_dashboard_link.browser.test.js` line 28 still pins `/40 of 50 answered/`
+  while revision 2 of the draft page reads `50 of 50`). Item (1) is corrected: the dead pid-`24000` locks were already cleared and the dispatcher
+  restored this morning, so no housekeeping is outstanding.
+- Published: the reply and the review only. No new assignment, no worker status set to a publish state, no page, bar, guard, stylesheet,
+  generator, data artefact, number, register entry, lock, controller or bridge file touched; no lane opened, no deployment, refresh or production
+  action; the canonical unrelated dirty state and every other worktree left as found.
+
 # 2026-10-03 - connection audit, the stale controller lock cleared, and the background dispatcher restored
 
 The user asked the coordinator to make sure the other project windows can reach it and then to review what is pending. Measured, not assumed:
