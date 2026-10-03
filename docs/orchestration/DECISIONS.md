@@ -1,5 +1,30 @@
 # Central decisions
 
+## 2026-10-03 (third cycle, background review): the gold release the user's go-ahead covered has landed, and strategy 037's handover is accepted
+
+The background coordinator reviewed `strategy` submission `20261003-strategy-coordinator-handover-doc-037` (mailbox SHA-256
+`0dd8a2fa46f0b85bfd84f735df2d869a4f0ea8aa610fcf604fca63c34ad8e0d8`, reproduced from the immutable inbox file at 8,203 bytes; reply
+`67df9d9530ed25fe9f9dd8959a69026bfa4592f6ba586d6029d8702e25f522fc`) and **accepted** it as a clean, docs-only deliverable: the handover file
+`docs/strategy/COORDINATOR_HANDOVER_20261003.md` reproduces byte-exactly at 10,080 bytes / 136 CRLF / 0 bare LF / sha256 `3f88488a`, with
+`CONVERSATION_NOTES.md` at 230,561 bytes / `86667626` and pure addition against `bcacb83` (112 insertions, 0 deletions). Acceptance is not an
+execution and this cycle published only its reply and review.
+
+The material finding for the record is that the gold release the user's one-word go-ahead covered has been **executed**, and the handover document's
+"still unpublished" premise is therefore superseded. `origin/main` moved from `16104a3` to `2f25c8c` *"Publish the gold tabs page as gold.html, one
+gold bar entry and the draft factor page at 50 of 50"*, committed and pushed 2026-10-03 15:27:22 BST from the release worktree
+`.local/gold-tabs-release` on `release/gold-tabs-20261003`. Verified read-only in this review: the commit changes `gold.html` (+106, published as the
+5,733-byte LF materialisation of the 5,839-byte CRLF candidate `de60c2b7`), `index.html` (+1/-2, now a single
+`<a class="topbar-link" href="gold.html">Gold</a>` with no separate *Gold Direction* / *Gold Factor* links) and `gold-factor-wip.html` (+61/-32, now
+`50 of 50`); the paired guard pin moved in the same change on the canonical orchestration branch at `779a701`, whose `backtester/tests/gold_factor_wip_dashboard_link.browser.test.js` line 28 now reads `/50 of 50 answered/`. The same push carried `7ce136e`, the refreshed live-trading MT5
+snapshot. The data refresh (Task 3) has **not** run: `origin/main`'s published `data/layer1.json` still reads `last_updated_et`
+`2026-10-02T07:29:28.874Z`. This is recorded as observed repository state, not as this background lane's action: the three named actions remain the
+interactive coordinator's production actions taken with the user's word in-session, and no lane authority, credential, warehouse, Layer 1/2 or
+trading authority is created or changed here. `strategy` stays `advisory_active` under `strategy-advisory-001`, the dashboard workstream moved from
+`queue_adopted_gold_release_then_nav_n1` to `gold_release_published_nav_n1_next`, and no worker status was set to `instructions_published_awaiting_worker`.
+
+The precise unresolved decision remains the user's: whether to run the live data refresh now; whether to open the movement-screen lane
+`gold-declared-band-measurement-026`, still unopened and not covered by the go-ahead; and whether the navigation-consistency change on route N1
+proceeds now that the release it was sequenced behind has landed.
 ## 2026-10-03: the stale controller lock is cleared and the background dispatcher runs again; the wake rule is once per content version
 
 On the user's word this session cleared the stale controller lock - `run.lock` and `daemon.lock`, both naming dead pid `24000` since

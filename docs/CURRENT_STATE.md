@@ -1,3 +1,22 @@
+2026-10-03, third cycle (background review): strategy submission 20261003-strategy-coordinator-handover-doc-037 was reviewed and accepted at
+mailbox sha256 0dd8a2fa46f0b85bfd84f735df2d869a4f0ea8aa610fcf604fca63c34ad8e0d8 (reply
+67df9d9530ed25fe9f9dd8959a69026bfa4592f6ba586d6029d8702e25f522fc, review
+docs/orchestration/reviews/20261003-strategy-coordinator-handover-doc-037.md), so the strategy mailbox reads pending 0, errors 0. The deliverable
+is the docs-only handover docs/strategy/COORDINATOR_HANDOVER_20261003.md; it and docs/strategy/CONVERSATION_NOTES.md reproduce byte-exactly
+(10,080 bytes / 136 CRLF / 0 bare LF / sha256 3f88488ab7fe0c1031a4a5a0df834ca593e8ddad4960ec98ebac7dd6c81220ea; 230,561 bytes / 2,699 CRLF / 0 bare
+LF / sha256 86667626e1ef44e626e80c519f549bd4b1ce6c18c89414a0746cfdeb1ae713bb, the latter pure addition against bcacb83 at 112 insertions, 0
+deletions), the change set is docs/strategy only (2 files, 248 insertions, 66 deletions across f310242, 406fa3a, 091f706), and the worker worktree
+is clean at 091f7069ff0f9dccea25250eb2fbfb9b38fd8831. One premise is superseded by real coordinator activity and recorded as such: Task 2, the gold
+release, has been executed - origin/main is now 2f25c8c, pushed 2026-10-03 15:27:22 BST from the release worktree .local/gold-tabs-release,
+carrying gold.html behind one topbar-link (the 5,733-byte LF materialisation), index.html with one gold entry and no separate gold links, and
+gold-factor-wip.html at 50 of 50, with the guard pin moved in the same change at 779a701; the dashboard workstream status therefore moved from
+queue_adopted_gold_release_then_nav_n1 to gold_release_published_nav_n1_next. Task 1 stands as the worker recorded it, already done with nothing
+outstanding. Task 3, the live data refresh, is still outstanding: origin/main published data/layer1.json last_updated_et 2026-10-02T07:29:28.874Z.
+No new assignment was published and no worker status was set to a publish state: this advisory carries no deliverable to build on and no further
+research stage is supported, every remaining path sitting on spent intervals or the sealed prospective window. The precise unresolved decision
+stays the user own: whether to run the live data refresh now, whether to open the movement-screen lane gold-declared-band-measurement-026, and
+whether the navigation-consistency change on route N1 proceeds now that the release it was sequenced behind has landed. This cycle published only
+this reply and review, deployed nothing, refreshed nothing, opened no lane and touched no lock, controller or bridge file.
 2026-10-03, second cycle (background review): strategy submission 20261003-strategy-gold-release-and-helper-go-ahead-036 was reviewed and
 acknowledged at mailbox sha256 2a8606a092885d2207436c485f7ed5e35203b5ad98fd2ecbf0c032f05975655e (reply
 961c56effa32261acc19946e1790b2582a79d9fe00a48617f78bbb55e003a389, review

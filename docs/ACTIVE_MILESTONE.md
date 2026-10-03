@@ -2,6 +2,14 @@
 
 Current milestone: the 28-factor Gold stage is complete and its plain-English verdict page is accepted; hold
 until the one carried observation envelope at the lane close, then stop.
+Next immediate action, 2026-10-03 (third cycle, background review): strategy submission 037 was reviewed and accepted from the canonical checkout at
+mailbox sha256 0dd8a2fa (reply 67df9d95, review docs/orchestration/reviews/20261003-strategy-coordinator-handover-doc-037.md), and the strategy
+mailbox reads pending 0, errors 0. It is a docs-only handover with no new recommendation, and no new assignment was published and no worker status
+set to a publish state, because no evidence supports a further research stage. The material change is that the gold release it describes has since
+landed: origin/main is 2f25c8c with gold.html behind one top-bar entry and the draft page at 50 of 50, Task 1 was already done and Task 3, the live
+data refresh, is still outstanding. The immediate action is the user own: run the live data refresh now, open the movement-screen lane
+gold-declared-band-measurement-026, or take route N1 now that the release it was sequenced behind has landed. Nothing is executable by a background
+cycle, and nothing was published, deployed, refreshed, opened or touched by this one.
 Next immediate action, 2026-10-03 (background review cycle): strategy submission 036 was reviewed and acknowledged from the canonical checkout at
 mailbox sha256 2a8606a0 (reply 961c56ef, review docs/orchestration/reviews/20261003-strategy-gold-release-and-helper-go-ahead-036.md), and the
 strategy mailbox reads pending 0, errors 0. It is a status_report with no deliverable - it records the user one-word go-ahead for three

@@ -1,3 +1,22 @@
+# 2026-10-03 (third cycle) - strategy 037 reviewed and accepted; the gold release it describes has since landed
+
+Reviewed the one open submission from the canonical checkout; the strategy mailbox now reads `pending 0, errors 0`.
+
+- `20261003-strategy-coordinator-handover-doc-037` (mailbox `0dd8a2fa...` reproduced from the immutable inbox file at 8,203 bytes, reply
+  `67df9d95...` at 5,173 bytes, review `docs/orchestration/reviews/20261003-strategy-coordinator-handover-doc-037.md`) - `accepted` as a clean
+  docs-only deliverable. `docs/strategy/COORDINATOR_HANDOVER_20261003.md` reproduces byte-exactly at 10,080 bytes / 136 CRLF / sha256
+  `3f88488a...`, `CONVERSATION_NOTES.md` at 230,561 bytes / 2,699 CRLF / sha256 `86667626...` and pure addition against `bcacb83` (112/0), the
+  change set is `docs/strategy` only (2 files, 248 insertions, 66 deletions), and the worker worktree is clean at `091f7069...`.
+- One premise superseded by real coordinator activity and recorded as such: Task 2, the gold release, has been executed - `origin/main` is now
+  `2f25c8c` "Publish the gold tabs page as gold.html, one gold bar entry and the draft factor page at 50 of 50", pushed 2026-10-03 15:27:22 BST from
+  the release worktree `.local/gold-tabs-release` (`gold.html` +106 as the 5,733-byte LF materialisation, `index.html` +1/-2 to one top-bar entry,
+  `gold-factor-wip.html` +61/-32 to 50 of 50), with the guard pin moved in the same change on the canonical orchestration branch at `779a701`. The
+  dashboard workstream status moved from `queue_adopted_gold_release_then_nav_n1` to `gold_release_published_nav_n1_next`. Task 3, the live data
+  refresh, is still outstanding (`origin/main` published `data/layer1.json` `last_updated_et` `2026-10-02T07:29:28.874Z`); Task 1 stands as already
+  done.
+- Published: the reply and the review, plus the register and these memory docs. No new assignment, no worker status set to a publish state, no lane
+  opened, no deployment, refresh or production action; no lock, controller or bridge file touched; the canonical unrelated dirty state and every
+  other worktree left as found.
 # 2026-10-03 (second cycle) - strategy 036 reviewed and acknowledged; no assignment published, nothing executed
 
 Reviewed the one open submission from the canonical checkout; the strategy mailbox now reads `pending 0, errors 0`.

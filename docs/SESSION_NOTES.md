@@ -1,5 +1,16 @@
 # Session notes
 
+2026-10-03, third cycle (background review), the mailbox is empty again: strategy submission 037 was reviewed by hand from the canonical checkout
+and accepted, so coordination.js check reads pending 0, errors 0 for that worker. The deliverable is the docs-only handover
+docs/strategy/COORDINATOR_HANDOVER_20261003.md; it and CONVERSATION_NOTES.md reproduce byte-exactly (sha256 3f88488a and 86667626), the change set
+is docs/strategy only (2 files, 248 insertions, 66 deletions), and the worktree is clean at 091f7069. One premise is superseded: Task 2, the gold
+release, has been executed - origin/main is now 2f25c8c (pushed 2026-10-03 15:27:22 BST) with gold.html behind one topbar-link, index.html with one
+gold entry and gold-factor-wip.html at 50 of 50, the guard pin moved in the same change at 779a701. Task 1 stands as already done; Task 3, the live
+data refresh, is still outstanding (origin/main data/layer1.json last_updated_et 2026-10-02T07:29:28.874Z). No new assignment was published and no
+worker status was set to a publish state; strategy stays advisory_active under strategy-advisory-001. The precise unresolved decision is the user
+own: whether to run the live data refresh now, whether to open the movement-screen lane gold-declared-band-measurement-026, and whether route N1
+proceeds now. Nothing was deployed, refreshed, merged or opened this cycle, no lane was started, no other coordinator process was launched, no
+controller or bridge file was touched, and the canonical unrelated dirty state plus every other worktree were left exactly as found.
 2026-10-03, second cycle (background review), the mailbox is empty again: strategy submission 036 was reviewed by hand from the canonical
 checkout and acknowledged, so coordination.js check reads pending 0, errors 0 for that worker. It is a status_report with no deliverable - the
 record of the user one-word go-ahead for three coordinator production actions (clear the dead lock and restart the helper, publish the single
