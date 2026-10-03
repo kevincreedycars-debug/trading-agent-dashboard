@@ -15,7 +15,7 @@ test('recent matching session logs refresh last seen without asserting active wo
 test('mailbox prompts target the recipient and clear after reported pickup, not unrelated logs',t=>{
  const root=setup(t),m=createMailbox(root);
  const receipt=m.submit({schema_version:1,worker_id:'gold',assignment_id:'policy-001',submission_id:'prompt',status:'ready_for_review',summary:'Done',worktree:'D:/worker',branch:'worker/gold',base_commit:'a',head_commit:'b',commits:[],changed_files:[],dirty_files:[],tests:[{command:'not run',result:'documentation only'}],artifacts:[],blockers:[],questions:[],production_changes:'None'});
- assert.equal(snapshot(root).workers[0].action_target,'Central Orchestrator');
+ assert.equal(snapshot(root).workers[0].action_target,'trading-agent-dashboard-codex-coordinator');
  m.reply({schema_version:1,worker_id:'gold',assignment_id:'policy-001',submission_id:'prompt',submission_sha256:receipt.sha256,decision:'changes_requested',instructions:'Correct digest'});
  assert.equal(snapshot(root).workers[0].action_target,'gold');
  assert.match(snapshot(root,Date.now(),{projects:[{project:'D:/worker',latest_record:new Date().toISOString()}]}).workers[0].action_prompt,/Check your inbox/);

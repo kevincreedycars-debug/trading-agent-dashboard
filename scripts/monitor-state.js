@@ -92,13 +92,13 @@ function snapshot(root = ROOT, now = Date.now(), usage = null) {
     }
     let action_target = '', action_prompt = '';
     const pendingReview = submissions.some(s => s.assignment_id === w.assignment_id && s.state === 'pending_review');
-    if (pendingReview) { action_target = 'Central Orchestrator'; action_prompt = 'Check inboxes'; }
+    if (pendingReview) { action_target = 'trading-agent-dashboard-codex-coordinator'; action_prompt = 'Check inboxes'; }
     else if (state === 'YOUR ACTION: wake agent' || (currentReply && latest && latest.file === currentReply.file && pickupAt <= currentReply.at)) {
       action_target = w.display_name || w.id; action_prompt = 'Check your inbox and follow the latest coordinator reply.';
       if (state === 'YOUR ACTION: wake agent') action_prompt = 'Check your inbox and read your current assignment.';
     }
     const normalize = p => String(p || '').replaceAll('\\','/').replace(/\/$/,'').toLowerCase();
-    if (action_target && action_target!=='Central Orchestrator') {
+    if (action_target && action_target!=='trading-agent-dashboard-codex-coordinator') {
       const dispatchDir=path.join(root,'.local/orchestration/dispatch',w.id);
       if (fs.existsSync(dispatchDir)) {
         try {

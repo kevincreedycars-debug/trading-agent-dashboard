@@ -5,7 +5,7 @@ delegated waiting with **⏳ WAITING ON AGENT**, and completed steps with **✅ 
 Keep coordination updates concise. Do not imply a published assignment has started
 until the worker reports activity. The user requested this session act as orchestrator.
 
-Workspace identity: **Central Orchestrator**. Open `Central-Orchestrator.code-workspace`
+Workspace identity: **trading-agent-dashboard-codex-coordinator**. Open `trading-agent-dashboard-codex-coordinator.code-workspace`
 for the named VS Code window; the canonical folder stays unchanged. At the start of
 active work, meaningful progress checkpoints and before yielding, report actual
 coordinator activity using `node scripts/monitor-state.js activity central-orchestrator

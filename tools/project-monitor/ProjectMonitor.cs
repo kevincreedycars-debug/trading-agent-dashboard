@@ -54,7 +54,7 @@ public class MonitorPanel : Form {
         Directory.CreateDirectory(storage);
         if(smoke==null) try { if(File.Exists(Path.Combine(storage,"preferences.json"))) prefs=json.Deserialize<Preferences>(File.ReadAllText(Path.Combine(storage,"preferences.json"))); } catch { }
         seen=new HashSet<string>(prefs.seen??new string[0]); initialized=seen.Count>0;
-        Text="Central Orchestrator"; Icon=SystemIcons.Application; BackColor=background; ForeColor=foreground;
+        Text="trading-agent-dashboard-codex-coordinator"; Icon=SystemIcons.Application; BackColor=background; ForeColor=foreground;
         Font=new Font("Segoe UI",8.5f); AutoScaleMode=AutoScaleMode.Dpi; FormBorderStyle=FormBorderStyle.None; Padding=new Padding(1);
         ClientSize=new Size(380,790); MinimumSize=new Size(324,540); TopMost=prefs.pin;
         StartPosition=FormStartPosition.Manual;
@@ -94,7 +94,7 @@ public class MonitorPanel : Form {
         usageDetail.Click+=(s,e)=>UsageDetails();usageTotal.Click+=(s,e)=>UsageDetails();
         usagePanel.Controls.Add(usageDetail);usagePanel.Controls.Add(usageTotal);usagePanel.Controls.Add(usageTitle);
         var chrome=new Panel {Dock=DockStyle.Top,Height=32,BackColor=Color.FromArgb(27,41,33)};
-        var caption=new Label {Text="\u22ee  Central Orchestrator",Dock=DockStyle.Fill,Padding=new Padding(12,7,0,0),ForeColor=muted};caption.MouseDown+=Drag;chrome.MouseDown+=Drag;
+        var caption=new Label {Text="\u22ee  trading-agent-dashboard-codex-coordinator",Dock=DockStyle.Fill,Padding=new Padding(12,7,0,0),ForeColor=muted,AutoEllipsis=true};caption.MouseDown+=Drag;chrome.MouseDown+=Drag;
         var close=Button("\u00d7",(s,e)=>{Hide();Save();});close.Dock=DockStyle.Right;close.Width=30;close.AutoSize=false;close.FlatAppearance.BorderSize=0;
         var minimize=Button("\u2212",(s,e)=>{Hide();Save();});minimize.Dock=DockStyle.Right;minimize.Width=30;minimize.AutoSize=false;minimize.FlatAppearance.BorderSize=0;
         pin.Appearance=Appearance.Button;pin.FlatStyle=FlatStyle.Flat;pin.FlatAppearance.BorderSize=0;pin.FlatAppearance.CheckedBackColor=Color.FromArgb(39,78,56);pin.ForeColor=Color.FromArgb(135,204,166);pin.Text="Pin";pin.TextAlign=ContentAlignment.MiddleCenter;pin.AutoSize=false;pin.Dock=DockStyle.Right;pin.Width=36;pin.BackColor=Color.FromArgb(35,62,47);
@@ -149,7 +149,7 @@ public class MonitorPanel : Form {
         summary.ForeColor=attention?Color.FromArgb(255,220,142):muted;
         actionButton.Visible=attention;
         summary.Text=attention?(actions.Length>0?"YOUR ACTION  /  "+actions.Length:"REVIEW READY  /  "+data.pending):"PROJECT ACTIVITY";
-        actionDetail.Text=attention?(actions.Length>0?(String.IsNullOrEmpty(actions[0].action_prompt)?actions[0].id+" needs your input":"Send to "+actions[0].action_target+":\n"+(actions[0].action_target=="Central Orchestrator"?"Check inboxes":"Check your inbox")):"Coordinator review needed"):data.workers.Count(w=>w.flow=="working"||w.flow=="working_unconfirmed")+" reported working  /  updates every 5s";
+        actionDetail.Text=attention?(actions.Length>0?(String.IsNullOrEmpty(actions[0].action_prompt)?actions[0].id+" needs your input":"Send to "+actions[0].action_target+":\n"+(actions[0].action_target=="trading-agent-dashboard-codex-coordinator"?"Check inboxes":"Check your inbox")):"Coordinator review needed"):data.workers.Count(w=>w.flow=="working"||w.flow=="working_unconfirmed")+" reported working  /  updates every 5s";
         if(!attention) {
             summary.Text=data.controller_state=="reviewing"?"BACKGROUND REVIEW RUNNING":"PROJECT ACTIVITY";
             actionDetail.Text=data.controller+"\n"+data.workers.Count(w=>w.flow=="working")+" working / "+data.pending+" awaiting review";
@@ -183,7 +183,7 @@ public class MonitorPanel : Form {
             Color tone=signal;
             using(var brush=new SolidBrush(tone))e.Graphics.DrawString(w.state+" · "+(w.age_minutes.HasValue?"seen "+w.age_minutes+"m ago":"no report"),Font,brush,new RectangleF(x,y+17,width,16),format);
             e.Graphics.DrawString(String.IsNullOrEmpty(w.action_prompt)?w.task:"SEND TO: "+w.action_target,Font,secondary,new RectangleF(x,y+33,width,17),format);
-            e.Graphics.DrawString(!String.IsNullOrEmpty(w.action_prompt)?(w.action_target=="Central Orchestrator"?"Say: Check inboxes":"Say: Check your inbox"):!String.IsNullOrEmpty(w.waiting_on)?"Waiting on: "+w.waiting_on:lastWorking?"Report overdue - not confirmed stopped":active?"Working reported - freshness checked":w.flow=="recent"?"Session log updated; running state unknown":"Last seen: "+(w.activity_source??"agent report"),Font,secondary,new RectangleF(x,y+50,width,17),format);
+            e.Graphics.DrawString(!String.IsNullOrEmpty(w.action_prompt)?(w.action_target=="trading-agent-dashboard-codex-coordinator"?"Say: Check inboxes":"Say: Check your inbox"):!String.IsNullOrEmpty(w.waiting_on)?"Waiting on: "+w.waiting_on:lastWorking?"Report overdue - not confirmed stopped":active?"Working reported - freshness checked":w.flow=="recent"?"Session log updated; running state unknown":"Last seen: "+(w.activity_source??"agent report"),Font,secondary,new RectangleF(x,y+50,width,17),format);
         }
         using(var pen=new Pen(Color.FromArgb(48,68,55)))e.Graphics.DrawLine(pen,x,e.Bounds.Bottom-1,e.Bounds.Right-12,e.Bounds.Bottom-1);
         format.Dispose();
