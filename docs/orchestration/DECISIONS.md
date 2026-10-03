@@ -1,5 +1,59 @@
 # Central decisions
 
+## 2026-10-03 (fourteenth cycle, background review): the harness r2 filing verifies byte-for-byte but keeps the wrong-tree inventory, and the rail publish and the four-year build stay with the user
+
+The backtester-harness filing `20261003-backtester-harness-asset-store-and-tabs-r2` was reviewed from the canonical
+checkout under the controller lock that owns this run (mailbox
+`a727c850ca032436ce86888b9f38fc90977fa74abcd81c7c72b04dcd3f1f3d71`, reproduced from the immutable inbox file at
+12,820 bytes; reply `3de35a0cd08714d816baf42ac906ada3888007b568f9af8c6edf694a6002e80d` at 6,053 bytes; review
+`docs/orchestration/reviews/20261003-backtester-harness-asset-store-and-tabs-r2.md`) and answered
+**changes_requested** on the reviewed bytes only. No Stage B, no build, no acquisition, no dashboard edit, no
+publication and no authority change follows, and no assignment was published.
+
+Every declared fact reproduces, and that is the envelope's strength. HEAD `b778c956b6c7857be070c4e43954f3d61bff662e`
+was the branch tip when it was filed at 16:43:46 and the worktree is clean; the commit is purely additive (3 files,
+466 insertions, 0 deletions); the blobs hold (`RAIL_ACCORDION_SPEC_20261003.md` `4a3491c9`, `ASSET_DATA_AND_TABS_PLAN.md`
+`90ab0311`, `CONVERSATION_NOTES.md` `a06b1eb1`); all three declared raw-byte CRLF digests reproduce at their declared
+sizes and line counts (`d4f0bbdd` 16,995 bytes / 363 lines, `e193d39e` 25,247 / 345, `456aa774` 16,512 / 245); the
+companions reproduce unchanged (`34160779`, `e6e9d2fa`, `bfc73213`); and nothing outside those documents and the
+lane's ignored `tmp/` was written. Three r1 defects are closed by these bytes: the undeclared-material defect
+(`b778c95` is the envelope's own declared head and no reviewed head was left behind the tip - the later `3d362b3` at
+16:53:24 and `ef8019b` at 17:03:29 are declared in the lane's own `r3` and its activity reads paused), the
+materialisation defect, and the rail-region citation correction with its publisher warning that a rail edit must start
+from `git show origin/main:index.html` or it silently reverts the Silver, WTI and GBP tabs.
+
+What is not closed is the per-asset inventory, and it is the same defect as before. Sections 3 and 8 still read
+`data/layer1.json` as five agents, still say no `agent_silver_direction.md` and no `agent_wti_direction.md` exist, and
+still show GBP with no Layer 1 output, while `origin/main` at `f8bc80f` carries both documents and eight agents at
+`dashboard_meta.last_updated_et 2026-10-02T07:29:28.874Z`. `backtester/replay/gbp/gbp_replay_core.js` is still cited
+although it does not exist on `origin/main`; blocker 3 and question 5 still ask whether Silver and WTI need a factor
+definition first when production carries one for each and the real gap is the backtester-side store; the new section 15
+states the Gold checker as 2024-01-02 to 2026-06-30 when the artifact's own `meta.date_range` ends 2026-04-30 with 608
+rows and 2026-06-30 is its `generated_at` date; and the gold-named script count is tree-dependent, 42 in this canonical
+control-plane checkout against 41 in the worker worktree, so the repair is a tree label rather than an off-by-one.
+
+The lane's own superseding filing `20261003-backtester-harness-foundation-build-work-order-r3` (19,642 bytes, filed
+17:05:44, HEAD `ef8019b` from base `b778c95`, clean tree) is left `pending_review` and untouched, and is the next
+cycle's first item: every correction above is to be adjudicated on its bytes, so no further submission ID is owed for
+`r2` and the lane is directed to hold. The register row moves from `changes_requested_awaiting_revision` to
+`revision_filed_awaiting_review`.
+
+Two items are the user's and are the only things blocking. (a) **The rail accordion publish.** The user authorised it
+in the quoted 2026-10-03 reply, but it is a coordinator change to the published dashboard and this background run has
+no production authority; the executor-ready specification is `docs/backtester-harness/RAIL_ACCORDION_SPEC_20261003.md`
+(16,995 bytes, sha256 `d4f0bbdd`, 363 lines), and any rail edit must start from `git show origin/main:index.html`
+because the checkout copy carries no Silver, WTI or GBP tab. (b) **The four-year acquisition has no owner.** The
+window question is answered by the user's own instruction - four years for every asset with a VS Code backtesting
+window, alongside Gold - but the seven `backtester-<asset>` lanes are readiness and standby lanes that build nothing
+and this lane's Stage B is closed, leaving the store shape, the build owner, one assignment versus seven, the split of
+the shared USD and FRED pull from the per-asset pulls, and the now store-first Silver and WTI framing open. No new
+bounded research assignment is published: publishing one before those choices would either duplicate the shared pull
+seven times or assign work no lane is authorised to do.
+
+Nothing was published, deployed, merged, pushed, refreshed or mutated; no outcome, holdout or prospective observation
+was read; no controller or bridge file was changed, no other coordinator process was started, no subagent was spawned,
+no external message was sent, and the unrelated canonical dirty state was left exactly as found.
+
 ## 2026-10-03 (thirteenth cycle, background review): the live-trading live-marking request is sent back for a state correction, and the marking route stays the user's
 
 The live-trading filing `20261003-live-trading-live-marking-and-ladder-r1` was reviewed from the canonical checkout

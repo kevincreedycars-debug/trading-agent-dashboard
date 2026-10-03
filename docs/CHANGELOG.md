@@ -1,3 +1,37 @@
+# 2026-10-03 (fourteenth cycle) - the harness r2 filing verifies byte-for-byte but keeps the wrong-tree inventory, and the rail publish and the four-year build stay with the user
+
+Reviewed the harness lane's r2 filing, confirmed every declared byte, closed three of the r1 defects, and declined to
+accept it as filed while publishing no assignment and taking no production action.
+
+- `20261003-backtester-harness-asset-store-and-tabs-r2` reviewed under the controller lock and answered **changes
+  requested** on the reviewed bytes only: mailbox `a727c850...` reproduced from the immutable inbox file at 12,820
+  bytes, reply `3de35a0c...`, durable review
+  `docs/orchestration/reviews/20261003-backtester-harness-asset-store-and-tabs-r2.md`. Stage B stays closed and the
+  lane's design-only authority is unchanged. The register row moves to `revision_filed_awaiting_review`.
+- Reproduced rather than trusted: HEAD `b778c95` was the branch tip when the envelope was filed at 16:43:46, the
+  commit is purely additive (3 files, 466 insertions, 0 deletions), the blobs hold (`4a3491c9`, `90ab0311`,
+  `a06b1eb1`), all three declared raw-byte CRLF digests reproduce at their declared sizes and line counts
+  (`d4f0bbdd` 16,995 / 363; `e193d39e` 25,247 / 345; `456aa774` 16,512 / 245), and the companions are unchanged
+  (`34160779`, `e6e9d2fa`, `bfc73213`).
+- Closed by these bytes: the undeclared-material defect (`b778c95` is the declared head and the later `3d362b3` and
+  `ef8019b` are declared in the lane's own `r3`), the materialisation defect, and the rail-region citation correction
+  with its publisher warning that a rail edit must start from `git show origin/main:index.html` or it silently
+  reverts the Silver, WTI and GBP tabs.
+- Still open, and why it was not accepted: sections 3 and 8 keep the wrong-tree inventory, although `origin/main` at
+  `f8bc80f` carries `logic/agent_silver_direction.md` and `logic/agent_wti_direction.md` and eight Layer 1 agents at
+  `last_updated_et 2026-10-02T07:29:28.874Z`; `backtester/replay/gbp/gbp_replay_core.js` is still cited although it
+  does not exist on `origin/main`; blocker 3 and question 5 still ask whether Silver and WTI need a factor definition
+  first; the new section 15 gives the Gold checker as 2024-01-02 to 2026-06-30 when `meta.date_range` ends 2026-04-30
+  with 608 rows; and the gold-named script count is tree-dependent (42 canonical, 41 in the worker worktree).
+- The lane's own superseding `20261003-backtester-harness-foundation-build-work-order-r3` (19,642 bytes, filed
+  17:05:44, HEAD `ef8019b` from base `b778c95`, clean tree) is left `pending_review` and untouched as the next cycle's
+  first item, so no further submission ID is owed for `r2` and the lane is directed to hold.
+- No assignment was published and no worker status was set to a publish state: the rail accordion publish the user
+  authorised is a coordinator production change this background run has no authority to make, and the four-year
+  acquisition has no owner because the seven asset lanes build nothing and Stage B is closed.
+- Nothing was published, deployed, merged, pushed, refreshed or mutated; no outcome, holdout or prospective
+  observation was read; no subagent was spawned, no controller pause or stop was run, and no external message was sent.
+
 # 2026-10-03 (thirteenth cycle) - the live-trading live-marking request is sent back for a state correction, and the marking route stays the user's
 
 Reviewed the live-trading lane's hand-over asking the coordinator to put L2L level marking on the live dashboard and to
