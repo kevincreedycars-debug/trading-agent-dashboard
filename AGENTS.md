@@ -2,7 +2,7 @@
 
 Read `CODEX_STARTUP.md`, then the current state, task, milestone and session notes in `docs/`.
 
-Answer format, the default in every reply and for every lane: at most 3 short bullets of one line each in plain words, most important fact first, then at most 2 questions of one line each. No headings, no labels, no bold section blocks, no tables, no hashes, no pasted logs, no walls of prose. Whatever does not fit goes in the committed doc, named in one bullet, not in the reply. Longer or more detailed answers only when the user asks for them in that message.
+Answer format, the default in every reply and for every lane: at most 3 short bullets of one line each in plain words, most important fact first, then any questions as a short numbered list, at most 2 questions of one line each. No headings, no labels, no bold section blocks, no tables, no hashes, no pasted logs, no walls of prose. Whatever does not fit goes in the committed doc, named in one bullet, not in the reply. Longer or more detailed answers only when the user asks for them in that message.
 
 The canonical working folder is `D:\trading-agent-dashboard-codex`. This is the consolidated project, not the old isolated trial dashboard. Historical trial instructions are preserved on `trial-foundation-m1`.
 
