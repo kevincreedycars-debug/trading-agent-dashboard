@@ -1,3 +1,36 @@
+﻿# 2026-10-03 (twenty-second cycle) - the backtester-harness foundation work order is accepted, two side figures are corrected, and no assignment is opened
+
+Reviewed the harness lane's foundation work order under the controller lock that owns this run, reproduced its scope, artifacts and
+every production measurement from the checkout and `origin/main` rather than from its summary, and accepted it as a docs-only
+status report carrying the user's second 2026-10-03 instruction as a coordinator queue request.
+
+- Mailbox `20261003-backtester-harness-foundation-build-work-order-r3`, 19,642 bytes, sha256 `2770c547...`, reproduced from the
+  immutable inbox file; reply `d588f7e4...`, decision `accepted`; review
+  `docs/orchestration/reviews/20261003-backtester-harness-foundation-build-work-order-r3.md`.
+- Scope reproduces: `ef8019b` was the branch tip when the envelope was filed, it descends from the declared base `b778c95`
+  through `3d362b3` and `ef8019b`, the changed set is exactly the three declared files at 596 insertions and 0 deletions, and the
+  worktree is clean.
+- Artifacts are byte-exact at `ef8019b` in their CRLF materialisation with matching blobs: work order 513 lines / 40,294 bytes /
+  `c21dd558` / `1ab68274`; `CONVERSATION_NOTES.md` 290 / 20,347 / `36e79d48` / `396ef3f6`; `ASSET_DATA_AND_TABS_PLAN.md`
+  383 / 28,241 / `db68299e` / `a03e1c24`; companions unchanged at `d4f0bbdd`, `34160779`, `e6e9d2fa` and `bfc73213`.
+- Every r1 and r2 defect is closed on these bytes, re-measured from `origin/main` at `f8bc80f` (1,023 commits, not an ancestor of
+  this branch): the Silver and WTI factor documents exist with the framing now store-first, `data/layer1.json` carries eight agents
+  at `dashboard_meta.last_updated_et` 2026-10-02T07:29:28.874Z, production has no `gbp` replay directory, the Gold checker
+  artifact is 2024-01-02 to 2026-04-30 with 608 rows, `backtester/registries` is empty, `backtester/lib` has no session-policy
+  library, and the store's interval check accepts `daily` not `1d`.
+- Two corrections of record, neither load-bearing: production `gold-direction-scorecard.html` is 143,102 bytes at blob
+  `d2af334d` and 5,733 bytes is `gold.html` at `d9045914` (the 5,733 figure is wrong in the work order's section 2.3, its
+  folder summary and the plan's appended corrections bullet); and the "931 commits on the worker branch" figure is a tree mislabel -
+  the lane branch is 914 commits at `ef8019b` while 931 is the canonical control-plane checkout's count.
+- The reviewed head is no longer the tip: `a351f0c` was committed at 17:10:16 after the filing and is disclosed in the lane's own
+  pending `r5`, so the `r2` hold at `ef8019b` continues on the accepted document set.
+- No assignment is published and the lane moves to `design_records_accepted_awaiting_decisions`, which is not a publish state: the
+  rail accordion publish, the store shape, one assignment versus seven with the shared USD and FRED pull, the window reading and the
+  DeepSeek scope all remain coordinator or user decisions, and the seven lanes cannot be woken by unchanged assignment content.
+- Four filings for this lane remain `pending_review` and untouched (`r4` 11,326 bytes, `r5` 8,243, `r6` 12,229, `r7` 13,470).
+- Boundaries held: no production change, deployment, purchase, credential change or warehouse mutation; no outcome, holdout or
+  prospective observation read; Layer 1 independent and backtesting downstream-only; no controller or bridge change, no controller
+  pause or stop, no other coordinator process, no subagent; the unrelated canonical dirty state and every worker checkout left as found.
 # 2026-10-03 (twenty-first cycle) - the live-trading state correction is accepted, the page-side commit route stays stopped, and no assignment is opened
 
 Reviewed the live-trading correction envelope under the controller lock that owns this run, reproduced its scope, artifacts,
