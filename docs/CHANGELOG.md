@@ -1,3 +1,13 @@
+# 2026-10-03 (twenty-sixth cycle) - the backtester-harness user window and packaging settlement is adopted, and no assignment is published
+
+Reviewed the backtester-harness lane's `r4` filing under the controller lock that owns this run, reproduced its scope, digests and commit from the checkout and the mailbox rather than from its summary, and accepted it as a docs-only status report. No assignment is published and no worker status changed.
+
+- Mailbox `20261003-backtester-harness-user-decisions-r4`, 11,326 bytes, sha256 `7c80986ab837df7c35794f2a18127f4816ec6a0107745de75c80eeca6b78826e`, reproduced from the immutable inbox file and equal to the requested hash; reply `30f585963ebd2eccfe4944a81235ba9dc8c71b4529b774e1cd7c1309f65e81c6`, 9,135 bytes, published with the canonical CLI, `errors: []`; review `docs/orchestration/reviews/20261003-backtester-harness-user-decisions-r4.md`.
+- Scope reproduced rather than trusted: HEAD `a351f0c`, clean tree, no upstream, so no commit and no push this cycle; parent `ef8019b`; the diff is exactly the two declared files (`CONVERSATION_NOTES.md` 29/0, `FOUNDATION_BUILD_WORK_ORDER_20261003.md` 18/3) with nothing outside `docs/backtester-harness/`.
+- Digests reproduced byte-exactly in CRLF materialisation with matching blobs: work order 528 lines / 41,688 bytes / 528 CRLF / 0 bare LF / `88a7cafd`/`9ece382c`; notes 319 / 22,628 / 319 / 0 / `410a88c2`/`2df92bb6`; companions `d4f0bbdd`/`4a3491c9`, `db68299e`/`a03e1c24`, `34160779`/`3548290a`, `e6e9d2fa`/`fb204d49`, `bfc73213`/`b0b5061a`.
+- Adopted: the window is Reading A with the achieved-start and append-not-rebuild rules - the target `2022-10-01` -> `2026-09-30` for all seven, a short source accepted with its achieved start and the reason recorded, nothing interpolated, a loaded series appended to rather than rebuilt - which is the reading the r7 review deferred to this filing; and the packaging collapse to one revision per lane carrying the stage-A readiness note and the stage-B build in one pass.
+- Corrections of record, non-load-bearing: r3's five questions are one fully withdrawn (the window) and one half-withdrawn (the packaging half of queue item 2), so four items stay open - three coordinator decisions (rail accordion, store shape, one-vs-seven plus the shared pull) and the DeepSeek scope as a user action.
+
 # 2026-10-03 (twenty-fifth cycle) - the backtester-harness NQ-series decision is accepted, the spine key convention is settled, and no assignment is published
 
 Reviewed the backtester-harness lane's `r7` filing under the controller lock that owns this run, reproduced its scope, digests and production
