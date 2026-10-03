@@ -3396,3 +3396,93 @@ directive, a material user turn or an observed change. This turn therefore files
 one entry in these notes, one commit and the push. Nothing production was touched by it - no page, stylesheet,
 script, template, builder, guard, generator, data artifact, number, register entry, assignment, lock, controller or
 bridge file - and the sealed window (reading prohibited until `2027-03-25T15:00:00Z`) was not touched.
+
+## 2026-10-03 — the user answers the four open points: the stamp field is adopted, the three production jobs are authorised, the research pickup is left alone, and the factor table is named as the thing he wants to see
+
+The user answered all four points this lane put to him, verbatim and in the order they were put: *"1. yes"* / *"2. yes"* /
+*"3. okay"*, and then the fourth not as a confirmation but as a request, verbatim: *"what I want to see is the factor
+breakdown table we have previously discussed, super improtant."* That last sentence is the material part of the turn and
+it is treated as a directive, not as a preference: the factor table is now the thing this lane works towards.
+
+**Answer 1, the extra stamp field: adopted by the user's own word.** The -047 reply had declined it for its own cycle on
+ownership grounds - the CLI and the bridge are shared central surfaces a background cycle may not edit - and put it to
+the user with the facts: validation is presence-based and rejects no extra key, and a new field would change no bridge
+event key, so it was available at his word at the cost of template and README churn only. He has now given that word, so
+this lane's envelopes carry the read stamp from this filing onward, under the proposed key `mailbox_read_at` (ISO-8601
+UTC), until the coordinator adopts a different name: the template and README change belongs to the coordinator, and until
+it lands the stamp is also written in the summary sentence, so nothing depends on the field surviving. This turn's own
+filing is the first instance.
+
+**Answer 2, the three production jobs: authorised, in the order they were put - and the second one is already live.**
+The order he authorised was the collector fault fix, then the single combined published-site change that gives the gold
+page the home page's bar and rail, then the one added `median`/`q1`/`q3` print. Measured live this turn rather than
+remembered: the page change has landed from another lane. Remote `main` is `a94fb55030d67cff0a76ea04e92482bf7bc838f6`,
+"site-nav: one canonical top bar and side rail on all nine published pages", 16 files and 1,729 insertions, and the live
+Gold page now carries `<header class="topbar site-nav">` with the same four bar entries as the home page - North Star
+Brief, Standing Dashboard, Gold, Backtest Flow - and one `<aside class="side-rail site-nav">`, at 14,388 bytes against
+the 5,733 it served before. `index.html` serves 24,821 bytes with both blocks. So of the three jobs, the middle one is
+done and owes nothing; the collector fault still reads outstanding in `docs/GOLD_HISTORY_PATCH_VALIDATION.md`
+("installed n8n validation and production application remain outstanding") and the extra print has not been run. One
+consequence recorded for whoever edits that page next: the bar and rail on the gold page are no longer hand-written
+markup - `a94fb55` generates them from `backtester/partials/shared_nav.html` through
+`backtester/scripts/build_shared_nav.js`, which has a `--check` mode that compares bytes, and
+`backtester/tests/site_nav_consistency.browser.test.js` guards the result - so a direct edit in `gold.html` would be
+reverted by the next generator run.
+
+**Answer 3, the research pickup: left as it is, and that is exactly what the table waits on.** The user's "okay" leaves
+the unproven pickup of the `gold-research` lane as his own item, which is where this lane has reported it since the -047
+reply. It matters more now than it did this morning: the window's activity record still names the previous assignment
+(`gold-coverage-025`, state `paused`, updated 2026-09-25T19:54:06.758Z) with no submission filed since, and its two
+dispatch records (`fb01d8a4…` at 16:20:33.663Z and `607cd6e5…` at 16:21:48.845Z) stand at `sent_unconfirmed`, while its
+register row carries the new assignment at status exactly `instructions_published_awaiting_worker`. The lane is open, the
+worker is not running, and nothing else stands in front of the factor table.
+
+**Answer 4, the factor table: it has a published home already, and this entry records exactly what it is.** By the time
+he asked, the coordinator's fifteenth cycle had already published the measurement lane from this lane's accepted filing
+`20261003-strategy-gold-view-and-fault-first-042` (review
+`docs/orchestration/reviews/20261003-strategy-gold-view-and-fault-first-042.md`, line 7): assignment
+`gold-declared-band-measurement-026` on `gold-research`, work order `docs/orchestration/assignments/gold-research.md`,
+register status exactly `instructions_published_awaiting_worker`, baseline `cdd350af`. That work order quotes his own
+authority - *"we want to see direction, l2l and 0.5l2l data always"* and *"we want to see and analyse all the gold data
+as per above"* - and asks for the share of sessions clearing full L2L and half L2L, on the accepted 1/2/3/5-session
+ladder, for the already-accepted factor states, derived **only** from already-accepted artifacts: the accepted
+individual-variable report of 2026-09-25 (the `ivr-coverage-019` revision-2 artifact at 95,842,994 bytes) and its stored
+per-state, per-horizon `median`, `q1`, `q3` and `exact_zero` fields (147,465 each of median/q1/q3; 148,920 `exact_zero`),
+which no accepted cut has ever used. Its section 0 first duty is the carried 022 item A anchor-observation envelope for
+the `2026-09-28T14:00:00Z|gold|entry` identity, overdue since that window closed on 2026-09-28T16:00:00Z, to be filed or
+closed by a blocked report before the measurement continues. Its section 3 deliverables are one machine-readable table
+artifact with a declared schema, one plain-English page in the worker's own worktree and one covering note naming the
+accepted artifact, path and hash behind every number, and it states plainly that the coordinator's dashboard lane owns
+the page build that consumes the table.
+
+**The new artifact this turn: the shape of the table, written down in his words.** Because he said "super important",
+the shape is recorded where a building lane and a reviewer can check against it rather than remembered:
+`docs/strategy/FACTOR_TABLE_SPEC_20261003.md`. It states the table in one place - one row per factor state grouped under
+its factor; whether gold travelled more or less than usual while that state was on, printed as the share of sessions
+clearing his own two ranges (half L2L and full L2L) rather than as a fixed percentage; the 1/2/3/5-session ladder he
+wrote himself; a day count on every row and no row dropped for being thin or rare; one light - *worth watching today* or
+*nothing here today* - with one plain reason line underneath carrying the size of the move and the day count; the
+direction read beside each row without the table picking a side; and his completeness rule, no blank cell, with a gap
+reported in words and its reason rather than a number invented, and one `looks_counted` for the whole sweep. It records
+the four blocks in reading order (D movement first, A the rows that clear the bar, B every other declared-band row, C the
+VIX change rows with an empty direction column), where he will see it - the live Gold page's last tab, **Factor tables**,
+which today frames the draft page reading "50 of 50" with five tables and forty-two rows of record and base rates and no
+factor-by-factor numbers - and who does what in what order. It states what the table costs (no new data, feed, credential
+or method; one run inside an already-open lane plus one page edit), what it will not say (no direction call, ranking,
+winner, forecast, holdout or trading result; no published number relabelled) and the checks the finished table is held
+to, all of them his own rules.
+
+**The read-stamp practice, applied to this filing.** The mailbox was read at this turn's stamp through
+`node scripts/coordination.js check --worker strategy` (errors `[]`, no unreplied item, queue otherwise empty, latest
+reply the -047 acceptance stamped 2026-10-03T17:11:20.925Z) and re-read immediately before the write, and the summary
+sentence and the `mailbox_read_at` field both carry that stamp, as the adopted practice requires.
+
+**What this turn changed and what it did not.** Writes are one new `docs/strategy/` file, one entry in these notes, one
+commit and the branch push, plus ignored `tmp/` scratch. No page, stylesheet, script, template, builder, guard,
+generator, data artifact, number, register entry, assignment, lock, controller or bridge file was touched; no patch was
+applied; nothing was published, refreshed, triggered, copied, merged or deployed; no measurement was run and no outcome,
+holdout or prospective observation was read; the sealed window (reading prohibited until `2027-03-25T15:00:00Z`) was not
+touched. The live pages and the remote tip were read read-only over HTTPS and from the shared object store, and nothing
+was written to them. Filed as
+`20261003-strategy-user-answers-stamp-field-and-factor-table-048`, status `ready_for_review`.
+
