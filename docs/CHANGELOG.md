@@ -1,3 +1,31 @@
+# 2026-10-03 (eighteenth cycle) - the five user confirmations are accepted as recorded, no new lane is opened, and no strategy filing is left in the queue
+
+Reviewed the strategy lane revision-3 filing that records the user own five confirmations, reproduced its scope, artifacts and tests,
+accepted it as a docs-only advisory status report, and published no new assignment.
+
+- `20261003-strategy-user-confirmed-all-five-044` reviewed under the controller lock and answered **accepted**: mailbox `d4b3ff83...`
+  reproduced from the immutable inbox file at 10,046 bytes, reply `cf0766b2...`, durable review
+  `docs/orchestration/reviews/20261003-strategy-user-confirmed-all-five-044.md`.
+- Reproduced rather than trusted: HEAD `6e2c831` sole child of the declared base `7c7023b` (`rev-list --count` 1) with exactly three
+  `docs/strategy/` files at 97/1, clean tree, and `git ls-remote` answering the branch tip `d95a493` - the sole child of the filed
+  head and the already-reviewed addendum.
+- Artifacts byte-exact in both forms at the filed head: nav order `4543bca4` / LF `faa8491e` / object `ea3a514e`, tidy order
+  `6dea881a` / `1cb04ba3` / `101adada`, notes `b945a28f` / `7493b20f` / `de1cf66d`, each 0 bare LF, all equal to the filing own
+  artifact lines and the idempotent-append test.
+- Coordinator records the revision cites reproduce: `projects.json` line 36 `gold-declared-band-measurement-026` on the
+  `gold-research` row at exactly `instructions_published_awaiting_worker`, the `gold-research.md` work order quoting the user two
+  directions, and the register recording the R4 withdrawal.
+- One defect of record, already answered by the accepted addendum: the summary closing sentence about `-043` was already false when
+  the immutable file was written (reply `17:28:31.735`, filing `17:28:42.062`), and the filing own mailbox-read test records the
+  same stale read. Recorded, not edited, and not decision-changing.
+- No new assignment: `gold-research` already holds `026` at the delivery status, the other lanes hold their own, the remaining asks
+  are production, the Gold circuit is spent or sealed to `2027-03-25T15:00:00Z`, and no dashboard worker is registered.
+- Recorded coordination fact: the `026` event is delivered to a connected `gold-research` window (dispatch keys `fb01d8a4...` and
+  `607cd6e5...`, both `sent_unconfirmed`, connection file rewriting every five seconds) while pickup is unproven, so the outstanding
+  item is a worker report rather than a publication.
+- Nothing was published, deployed, merged, pushed, refreshed or mutated; no holdout or prospective observation was read; no
+  controller or bridge file, worker status, lock or unrelated worktree was changed. `strategy` stays `advisory_active`.
+
 # 2026-10-03 (seventeenth cycle) - the strategy addendum's two corrections of record are accepted, no new lane is opened, and the queue's next item is the earlier -044 filing
 
 Reviewed the strategy lane's same-turn addendum to the -044 filing, reproduced both corrections and every declared artifact,
