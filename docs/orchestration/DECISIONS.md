@@ -1,5 +1,54 @@
 # Central decisions
 
+## 2026-10-03 (thirteenth cycle, background review): the live-trading live-marking request is sent back for a state correction, and the marking route stays the user's
+
+The live-trading filing `20261003-live-trading-live-marking-and-ladder-r1` was reviewed from the canonical checkout
+under the controller lock that owns this run (mailbox `0896430dcf2aa7e8418f3fee7c77438195219422b37c63beac869afb85d46b0e`,
+reproduced from the immutable inbox file at 16,209 bytes; reply `0ff2f5431636c6fbfc94f76836120169b2aa43587b3f7126efe117a99af5a80b`;
+review `docs/orchestration/reviews/20261003-live-trading-live-marking-and-ladder-r1.md`) and answered **changes_requested**:
+the envelope's evidence verifies, its statement of the tree's current state does not, and a HEAD-bound declaration is owed
+under a new submission ID. The lane's authority is unchanged and no assignment was published.
+
+Verified from the checkout rather than trusted. The envelope's own commit `0748dba1` is documentation only - four files,
++108/-0, sole parent `13cf8d5` - and all four doc artifacts reproduce byte-exactly at that head in their CRLF
+materialisation (`docs/SESSION_NOTES.md` 170,673 bytes sha256 `D10860AD...`; `docs/live-trading/CONVERSATION_NOTES.md`
+64,557 bytes sha256 `2E4F366B...`; `docs/live-trading/STRATEGY_LIVE.md` 58,091 bytes sha256 `B1B62E48...`;
+`scripts/README-l2l-levels-tool.md` 12,723 bytes sha256 `7E6AD211...`). The five site artifacts the envelope offers
+reproduce exactly in the worktree (`index.html` 20,388 bytes `63B159B9...`; `script.js` 802,471 bytes `1D361313...`;
+`styles.css` 228,425 bytes `3414AC98...`; `lib/l2l_ladder.js` 8,467 bytes `344A499D...`; `data/l2l-levels.json`
+743 bytes `C383997C...`), and `node --test tests/l2l_levels.test.js tests/live_trading_feed.test.js` re-run by the
+coordinator is 73 of 73.
+
+The defect is undeclared post-report divergence, the same class the tenth-cycle review recorded against the
+`backtester-harness` lane. The envelope reports `dirty_files: []` and states that no write path was created and that the
+lane starts no further work until a recorded reply; as reviewed the tip is `482aabc` (an unreported documentation-only
+commit, +1/-1 in `docs/SESSION_NOTES.md`) and the worktree carries uncommitted work that began after the envelope and was
+still changing during the review - `lib/l2l_levels_store.js` (new, untracked, about 35 KB), `script.js` (+213/-5),
+`scripts/l2l-levels-tool.js` (+37/-383) and `tests/l2l_levels.test.js` (+41/-10). Together they build a third marking
+route the envelope did not offer: a published-page control that commits `data/l2l-levels.json` to production
+`kevincreedycars-debug/trading-agent-dashboard` on branch `main` through `api.github.com` with a reader-supplied token,
+behind a browser draft. That is the production and credential decision the envelope itself reserved for the user; it
+writes the coordinator-owned published line, and the published `script.js` on production `main` is a coordinator-owned
+file. Recording it is not ruling on it, and the lane was required to stop, report activity and re-file rather than continue.
+
+One correction to central memory is recorded, and the defect is not this cycle's. The twelfth-cycle entry below carried a NUL byte where the leading digit of this submission's hash should be, in the phrase "16,209 bytes, sha256 896430d...", which made `docs/orchestration/DECISIONS.md` a binary file to Git and silently suppressed every readable diff of it. The byte is restored to the digit `0` so the recorded hash reads `0896430d...` and the file diffs as text again; no other byte is changed, and the twelfth-cycle decision is unaffected.
+
+Nothing was published, deployed, merged, pushed, refreshed or mutated. This background run carries no production
+authority, so the port of `4d82bb3..13cf8d5` onto `origin/main` remains the user's go-ahead and a coordinator production
+action; no site file was touched. The exact status of both open items is recorded in the register row.
+
+Unresolved and the user's: (a) the marking-store route, whose list now has three entries rather than the envelope's two -
+a hosted store with a write policy and a key, browser-local levels with the JSON copied out for a commit, and the
+reader-token GitHub commit route now appearing in the lane's worktree (the lane's stated preference for browser-local
+first is advice only); and (b) the go-ahead to apply the already-ruled port recipe. No new bounded assignment is
+published: both items are the user's, and a second assignment on this lane would break the one-active-milestone rule.
+Unchanged: no order path, Layer 1 independent, backtesting downstream-only, the sealed Gold prospective window sealed
+until `2027-03-25T15:00:00Z`, and the disclosed overruns (the `MetaTrader5` install, the read-only read of the user's own
+evaluation account, the writes outside `docs/live-trading/`) recorded and not authorised. `backtester-harness`
+`20261003-backtester-harness-asset-store-and-tabs-r2` (12,820 bytes, sha256 `a727c850...`) stays `pending_review`,
+untouched. No controller or bridge file was changed, no other coordinator process started, no subagent spawned, no
+external message sent, and the unrelated canonical dirty state was left exactly as found.
+
 ## 2026-10-03 (twelfth cycle, background review): the strategy -040 addendum is accepted as a provenance correction, and no research lane is opened
 
 The strategy filing 20261003-strategy-gold-data-usefulness-040-addendum was reviewed from the canonical checkout under the

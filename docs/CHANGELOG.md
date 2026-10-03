@@ -1,3 +1,37 @@
+# 2026-10-03 (thirteenth cycle) - the live-trading live-marking request is sent back for a state correction, and the marking route stays the user's
+
+Reviewed the live-trading lane's hand-over asking the coordinator to put L2L level marking on the live dashboard and to
+publish the ladder work, verified its evidence byte-for-byte, found its statement of the tree's state false, and declined
+to accept it as filed while publishing no assignment.
+
+- `20261003-live-trading-live-marking-and-ladder-r1` reviewed under the controller lock and answered **changes
+  requested**: mailbox `0896430d...` reproduced from the immutable inbox file at 16,209 bytes, reply `0ff2f543...`, durable
+  review `docs/orchestration/reviews/20261003-live-trading-live-marking-and-ladder-r1.md`. The register keeps `live-trading`
+  at status exactly `instructions_published_awaiting_worker` so the reply stays deliverable.
+- Verified from the checkout, not trusted: the envelope's own commit `0748dba1` is documentation only (four files,
+  +108/-0, sole parent `13cf8d5`); the four doc artifacts reproduce byte-exactly in their CRLF materialisation
+  (`SESSION_NOTES.md` 170,673 / `D10860AD`, `CONVERSATION_NOTES.md` 64,557 / `2E4F366B`, `STRATEGY_LIVE.md` 58,091 /
+  `B1B62E48`, `scripts/README-l2l-levels-tool.md` 12,723 / `7E6AD211`); the five offered site artifacts reproduce exactly
+  (`index.html` 20,388 / `63B159B9`, `script.js` 802,471 / `1D361313`, `styles.css` 228,425 / `3414AC98`,
+  `lib/l2l_ladder.js` 8,467 / `344A499D`, `data/l2l-levels.json` 743 / `C383997C`); the focused suite is 73 of 73.
+- The defect, and the reason for the revision: the envelope reports `dirty_files: []` and states that no write path was
+  created and that no further work will start, but the tip is `482aabc` (an unreported documentation-only commit) and the
+  worktree carries uncommitted, still-changing work - `lib/l2l_levels_store.js` (new, untracked, about 35 KB), `script.js`
+  +213/-5, `scripts/l2l-levels-tool.js` +37/-383, `tests/l2l_levels.test.js` +41/-10 - which builds a third marking route
+  the envelope did not offer: a published-page control committing `data/l2l-levels.json` to production `main` through
+  `api.github.com` with a reader-supplied token. Same defect class as the tenth-cycle undeclared post-report commits on the
+  `backtester-harness` lane.
+- Carried to the user and not decided here: the marking-store route (three entries now, not two) and the go-ahead to port
+  `4d82bb3..13cf8d5` onto `origin/main`, a coordinator production action this background run had no authority to take.
+- One correction to central memory, and the defect is not this cycle's: the twelfth-cycle entry carried a NUL byte where the
+  leading `0` of this submission's hash belonged, which made `docs/orchestration/DECISIONS.md` binary to Git and suppressed
+  its readable diffs. The byte is restored so the hash reads `0896430d...` and the file diffs as text again.
+
+- Nothing was published, deployed, merged, pushed, refreshed or mutated; no order path, credential, scope, key, table,
+  workflow, warehouse, Layer 1 or Layer 2 action; no controller or bridge change, no subagent, no external message, no
+  holdout or prospective observation read.
+- `backtester-harness` `20261003-backtester-harness-asset-store-and-tabs-r2` stays `pending_review` and untouched as the
+  next cycle's first item.
 # 2026-10-03 (twelfth cycle) - the strategy -040 addendum is reviewed and accepted as a provenance correction, and no research lane is opened
 
 Reviewed the strategy lane's same-turn correction to its Gold data read, verified it from the lane, corrected one
