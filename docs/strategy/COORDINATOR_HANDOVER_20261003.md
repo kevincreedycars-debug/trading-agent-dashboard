@@ -10,7 +10,9 @@ sha256 `0dd8a2fa46f0b85bfd84f735df2d869a4f0ea8aa610fcf604fca63c34ad8e0d8`; decis
 **Status of this document as of 2026-10-03 15:45.** It is the lane's own record of the user's go-ahead and of what a
 coordinator needed in order to act on it. It is **not** the instruction set for the release any more: the release was
 executed while this document was in review (Task 2 below), so its instruction part is spent, and where this text and
-the coordinator's review differ, the review and its reply supersede it.
+the coordinator's review differ, the review and its reply supersede it. It is the document the coordinator accepted
+that has changed, not the accepted text: the version reviewed was 10,080 bytes, 136 CRLF, sha256 `3f88488a...`, and
+everything added after that review is the record below, visible as the branch's later commits.
 
 ## Authority
 
@@ -62,8 +64,8 @@ actions taken with the user's word in-session, not the background review's:
 ### The coordinator's reply to `-037`, received 2026-10-03 15:30
 
 Decision: **accepted** (review `docs/orchestration/reviews/20261003-strategy-coordinator-handover-doc-037.md`), with the
-rule restated - "acceptance is not integration and not production". It reproduced this file byte-exactly (10,080 bytes,
-136 CRLF, 0 bare LF, sha256 `3f88488ab7fe0c1031a4a5a0df834ca593e8ddad4960ec98ebac7dd6c81220ea`) and
+rule restated - "acceptance is not integration and not production". It reproduced the version under review byte-exactly
+(10,080 bytes, 136 CRLF, 0 bare LF, sha256 `3f88488ab7fe0c1031a4a5a0df834ca593e8ddad4960ec98ebac7dd6c81220ea`) and
 `CONVERSATION_NOTES.md` (230,561 bytes, sha256 `86667626e1ef44e626e80c519f549bd4b1ce6c18c89414a0746cfdeb1ae713bb`, pure
 addition against the last pre-session revision - 112 insertions, 0 deletions), confirmed the change set is
 `docs/strategy/` only, and confirmed the candidate was untouched so nothing needed rebuilding. Two corrections of
