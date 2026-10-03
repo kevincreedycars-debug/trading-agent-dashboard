@@ -13910,6 +13910,41 @@ function liveTradingSigned(value, digits) {
 // feed, not a signal, and it never reads anything the producer did not publish.
 let liveTradingChartSymbol = null;
 let liveTradingChartMode = "candles";
+// The timeframes the snapshot publishes. M5 carries the 5m close-beyond-level trigger; H1 and H4 are
+// the zoomed-out views the two L2L seed levels are marked on and the duplicated ladder is read against.
+const LIVE_TRADING_TIMEFRAMES = [
+  { key: "m5", label: "M5" },
+  { key: "h1", label: "H1" },
+  { key: "h4", label: "H4" }
+];
+let liveTradingChartTimeframe = "m5";
+// How many levels a duplication generates beyond each seed level, how many an extension adds when the
+// price reaches a bound, and the shared module that owns the arithmetic both numbers feed. The module is
+// loaded ahead of this file by index.html; without it the page still draws the ladder it is published
+// with and simply raises no alert rather than inventing a bound of its own.
+const LIVE_TRADING_LADDER_DEFAULT_STEPS = 10;
+const LIVE_TRADING_LADDER_MAX_STEPS = 60;
+const LIVE_TRADING_LADDER_EXTEND_STEPS = 10;
+const liveTradingLadderMath = (typeof globalThis !== "undefined" && globalThis.L2LLadder) || null;
+let liveTradingLadderSteps = { above: null, below: null };
+// The price scale is the bars' own range unless the reader asks for the whole ladder: ten steps each way
+// span far more than the bars they were measured against, and folding every line into the window would
+// squash the candles into a stripe.
+let liveTradingChartFitLevels = false;
+
+function liveTradingTimeframeMeta(key) {
+  return LIVE_TRADING_TIMEFRAMES.find(entry => entry.key === key) || LIVE_TRADING_TIMEFRAMES[0];
+}
+
+// One timeframe's bars for an instrument. A block the snapshot does not carry is no chart rather than
+// an error: the button is drawn disabled and the selection falls back to a timeframe that has bars.
+function liveTradingTimeframeBlock(instrument, key) {
+  const block = instrument?.[key];
+  if (!block || typeof block !== "object") return null;
+  const bars = Array.isArray(block.bars) ? block.bars : [];
+  const closes = Array.isArray(block.close_series) ? block.close_series : [];
+  return bars.length || closes.length ? { ...block, bars, close_series: closes } : null;
+}
 
 function liveTradingChartLevelsFor(instrument) {
   return Array.isArray(instrument?.levels)
@@ -13917,15 +13952,40 @@ function liveTradingChartLevelsFor(instrument) {
     : [];
 }
 
-// Marked L2L levels live in their own small artifact (data/l2l-levels.json), written by the local
-// marking tool. The dashboard only ever reads it: the page is static, so a marked level becomes part
-// of the published view by committing the file, not by clicking.
+// Marked L2L levels live in their own small artifact (data/l2l-levels.json). Two places can write it: the
+// loopback marking tool on this machine, and - on the published page - the reader's own GitHub account
+// through lib/l2l_levels_store.js. A mark made in a published browser is kept in that browser's own draft
+// first, and the commit is what makes it durable and visible to everyone else.
 let liveTradingLevelsData = { instruments: [] };
-// null until the local tool answers. The marking controls only exist when it does, so the published
-// page can never show a control that has nothing to write to.
+// null until the local tool answers. When it does, the tool's file on this machine is the local store and
+// the page posts to it; when it does not, the browser draft plus a GitHub commit is the store.
 let liveTradingLevelsEndpoint = null;
 let liveTradingMarking = false;
 let liveTradingMarkStatus = "";
+// The shared document module the loopback tool also uses: the edit rules, the ladder arithmetic, the
+// browser draft and the GitHub request builders. index.html loads it ahead of this file.
+const liveTradingLevelsStore = (typeof globalThis !== "undefined" && globalThis.L2LLevelsStore) || null;
+// Marking is possible through either store: the loopback tool that writes this machine's file, or the
+// shared module writing this browser's draft and publishing it to the reader's own GitHub account. A page
+// with neither has nothing to write to, so its marking controls are never shown.
+function liveTradingLevelsCanMark() {
+  return Boolean(liveTradingLevelsEndpoint || liveTradingLevelsStore);
+}
+// The publishing half of the two-tier store. The repository is the durable copy everyone reads; the draft
+// above is what has not been published yet. The token is the reader's own, pasted here by them, sent only
+// to api.github.com, and kept only where they asked it to be kept.
+let liveTradingPublish = {
+  repo: (liveTradingLevelsStore && liveTradingLevelsStore.DEFAULT_REPO) || "kevincreedycars-debug/trading-agent-dashboard",
+  branch: (liveTradingLevelsStore && liveTradingLevelsStore.DEFAULT_BRANCH) || "main",
+  token: "",
+  remember: false,
+  token_scope: "none",
+  remote_sha: null,
+  remote_missing: true,
+  draft_saved_at_utc: null,
+  conflict: false,
+  status: ""
+};
 // The plot's price scale, kept from the last render so a click can be turned back into a price.
 let liveTradingChartScale = null;
 
@@ -13982,6 +14042,89 @@ function liveTradingLevelBadge(instrument) {
   return `${spacing.count} lvl · ${gap}`;
 }
 
+// The seed levels are the prices the user marked by hand; the derived ones are the copies a duplication
+// drew from the distance between the two seeds. The ladder is only ever read off the seeds, so the two
+// are counted apart rather than summed into one number.
+function liveTradingSeedLevels(instrument) {
+  return liveTradingChartLevelsFor(instrument).filter(level => level?.role !== "derived");
+}
+
+function liveTradingDerivedLevelCount(instrument) {
+  return liveTradingChartLevelsFor(instrument).filter(level => level?.role === "derived").length;
+}
+
+function liveTradingPointOf(instrument) {
+  const point = Number(instrument?.point);
+  return Number.isFinite(point) && point > 0 ? point : null;
+}
+
+// The ladder's own geometry - the outermost line each way, the step distance, how many steps sit outside
+// the seed pair - read from the published levels through the shared module. A symbol with no derived
+// levels reports no ladder rather than a bound nobody published.
+function liveTradingLadderStats(instrument) {
+  if (!liveTradingLadderMath) return null;
+  const stats = liveTradingLadderMath.ladderStats(liveTradingChartLevelsFor(instrument), { point: liveTradingPointOf(instrument) });
+  return stats.available ? stats : null;
+}
+
+// The price the alert is judged against: the live mid when the quote carries both sides, else the bid,
+// else the newest M5 close. A snapshot with none of those raises no alert rather than a made-up price.
+function liveTradingAlertPrice(instrument) {
+  const quote = instrument?.quote || {};
+  const bid = Number(quote.bid);
+  const ask = Number(quote.ask);
+  if (Number.isFinite(bid) && Number.isFinite(ask)) return (bid + ask) / 2;
+  if (Number.isFinite(bid)) return bid;
+  const last = Number(quote.last);
+  if (Number.isFinite(last)) return last;
+  const bars = liveTradingTimeframeBlock(instrument, "m5")?.bars || [];
+  const newest = bars[bars.length - 1];
+  return newest && Number.isFinite(Number(newest.close)) ? Number(newest.close) : null;
+}
+
+// An alert is a reading, not a rule: it says the live price is within one ladder step of the outermost
+// published line, or already past it, which is the moment the grid stops covering the range it is read
+// against. It places nothing, and the ladder is extended by hand or not at all.
+function liveTradingLadderAlert(instrument) {
+  if (!liveTradingLadderMath) return null;
+  const price = liveTradingAlertPrice(instrument);
+  if (price === null) return null;
+  return liveTradingLadderMath.ladderAlert(liveTradingChartLevelsFor(instrument), price, {
+    point: liveTradingPointOf(instrument),
+    steps: LIVE_TRADING_LADDER_EXTEND_STEPS
+  });
+}
+
+// The sentence the reader sees. The module says which bound and by how much; the wording is the page's.
+function liveTradingLadderAlertNotice(alert, instrument, digits) {
+  if (!alert || !alert.active) return "";
+  const symbol = instrument?.symbol || "instrument";
+  const side = alert.side === "high" ? "upper" : "lower";
+  const price = liveTradingPrice(alert.price, digits);
+  const level = liveTradingPrice(alert.level, digits);
+  const points = Number.isFinite(alert.distancePoints) ? ` (${Math.abs(alert.distancePoints)} pts)` : "";
+  const next = alert.nextSteps || {};
+  const sentence = alert.state === "beyond"
+    ? `Ladder alert: ${symbol} ${price} is past the ${side} ladder bound ${level}${points}, so the published grid no longer covers price.`
+    : `Ladder alert: ${symbol} ${price} is within one ladder step of the ${side} bound ${level}${points}, so the grid is about to run out.`;
+  if (!next.addedAbove && !next.addedBelow) {
+    return `${sentence} The ladder is already at its ${LIVE_TRADING_LADDER_MAX_STEPS}-level cap, so the seeds have to be re-read.`;
+  }
+  const where = next.addedAbove && next.addedBelow ? "above and below" : (next.addedAbove ? "above" : "below");
+  const count = Math.max(next.addedAbove, next.addedBelow);
+  return `${sentence} Repeat the same L2L distance for ${count} more levels ${where} to keep the ladder ahead of price.`;
+}
+
+// The plan the alert offers: the same measurement repeated ten more steps on the side that ran out. It is
+// built from the published counts, so pressing it asks for exactly what the file already holds plus ten.
+function liveTradingLadderExtensionPlan(instrument) {
+  if (!liveTradingLadderMath) return null;
+  const stats = liveTradingLadderStats(instrument);
+  const alert = liveTradingLadderAlert(instrument);
+  if (!stats || !alert?.active) return null;
+  return liveTradingLadderMath.ladderExtension(stats, alert.side, { steps: LIVE_TRADING_LADDER_EXTEND_STEPS });
+}
+
 function liveTradingChartInstrument() {
   const instruments = Array.isArray(liveTradingData?.instruments) ? liveTradingData.instruments : [];
   return instruments.find(instrument => instrument?.symbol === liveTradingChartSymbol) || instruments[0] || null;
@@ -14010,7 +14153,11 @@ async function probeLiveTradingLevelsTool() {
   }
 }
 
+// A mark goes to whichever store this page actually has. The loopback tool writes the file on this
+// machine; anywhere else - the published host, a plain file:// open - the same edit is applied through the
+// shared module and kept in this browser until the reader publishes it to their own repository.
 async function saveLiveTradingLevel(payload) {
+  if (!liveTradingLevelsEndpoint) return applyLiveTradingLevelEdit(payload);
   const response = await fetch("/api/l2l-levels", {
     method: "POST",
     cache: "no-store",
@@ -14023,6 +14170,226 @@ async function saveLiveTradingLevel(payload) {
   }
   return body;
 }
+
+// The reader's own copy. localStorage holds what is meant to survive a reload, sessionStorage holds what
+// should not outlive the tab, and a browser that refuses either of them still marks: the marks stay in the
+// page for this session and the commit is the way out.
+function liveTradingLevelsStorage(scope) {
+  try {
+    return scope === "session" ? window.sessionStorage : window.localStorage;
+  } catch (err) {
+    return null;
+  }
+}
+
+function liveTradingLoadPublishSettings() {
+  if (!liveTradingLevelsStore) return;
+  const settings = liveTradingLevelsStore.readSettings(
+    liveTradingLevelsStorage("persistent"),
+    liveTradingLevelsStorage("session")
+  );
+  liveTradingPublish = { ...liveTradingPublish, ...settings, status: liveTradingPublish.status };
+}
+
+function liveTradingSavePublishSettings() {
+  if (!liveTradingLevelsStore) return null;
+  return liveTradingLevelsStore.writeSettings(
+    liveTradingLevelsStorage("persistent"),
+    liveTradingLevelsStorage("session"),
+    {
+      repo: liveTradingPublish.repo,
+      branch: liveTradingPublish.branch,
+      token: liveTradingPublish.token,
+      remember: liveTradingPublish.remember
+    }
+  );
+}
+
+// The publishing box is read without redrawing the panel, for the same reason the ladder boxes are: a
+// re-render on every keystroke would take the caret out of the box the reader is typing in. The values are
+// only acted on when a button is pressed.
+function liveTradingReadPublishInputs(panel) {
+  const read = attribute => panel?.querySelector?.(`[${attribute}]`) || null;
+  const repo = read("data-live-publish-repo");
+  const branch = read("data-live-publish-branch");
+  const token = read("data-live-publish-token");
+  const remember = read("data-live-publish-remember");
+  if (repo) liveTradingPublish.repo = String(repo.value || "").trim();
+  if (branch) liveTradingPublish.branch = String(branch.value || "").trim();
+  if (token) liveTradingPublish.token = String(token.value || "").trim();
+  if (remember) liveTradingPublish.remember = remember.checked === true;
+  return liveTradingPublish;
+}
+
+function liveTradingReadDraft() {
+  if (!liveTradingLevelsStore) return null;
+  return liveTradingLevelsStore.readDraft(liveTradingLevelsStorage("persistent"));
+}
+
+function liveTradingWriteDraft() {
+  if (!liveTradingLevelsStore) return false;
+  const nowIso = new Date().toISOString();
+  const saved = liveTradingLevelsStore.writeDraft(liveTradingLevelsStorage("persistent"), liveTradingLevelsData, {
+    saved_at_utc: nowIso,
+    base_sha: liveTradingPublish.remote_sha
+  });
+  if (saved) liveTradingPublish.draft_saved_at_utc = nowIso;
+  return saved;
+}
+
+function liveTradingClearDraft() {
+  if (!liveTradingLevelsStore) return;
+  liveTradingLevelsStore.clearDraft(liveTradingLevelsStorage("persistent"));
+  liveTradingPublish.draft_saved_at_utc = null;
+}
+
+function liveTradingDisconnectPublish() {
+  if (!liveTradingLevelsStore) return;
+  liveTradingLevelsStore.clearSettings(liveTradingLevelsStorage("persistent"), liveTradingLevelsStorage("session"));
+  liveTradingPublish = { ...liveTradingPublish, token: "", remember: false, token_scope: "none" };
+}
+
+// A copy of what this browser holds, for a reader whose storage was refused or who wants the file in hand
+// before committing it. It is the same serialised document the commit sends.
+function liveTradingExportLevels() {
+  if (!liveTradingLevelsStore) return;
+  const blob = new Blob([liveTradingLevelsStore.serialiseState(liveTradingLevelsData)], {
+    type: "application/json;charset=utf-8"
+  });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "l2l-levels.json";
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+}
+
+// What a mark still needs before everyone else can see it. The wording depends on the store this page has,
+// so a reader is never told to commit a file they do not have.
+function liveTradingPublishHint() {
+  if (liveTradingLevelsEndpoint) return `Commit ${liveTradingLevelsEndpoint.path} to publish it.`;
+  return "Saved in this browser: publish it to make it live.";
+}
+
+// The same edit the loopback tool would make, applied in the page through the module both writers share,
+// so the two stores cannot disagree about what a mark means.
+function applyLiveTradingLevelEdit(payload) {
+  if (!liveTradingLevelsStore) throw new Error("the levels module did not load on this page");
+  const nowIso = new Date().toISOString();
+  const parsed = liveTradingLevelsStore.normaliseEdit(payload, nowIso);
+  if (parsed.error) throw new Error(parsed.error);
+  const applied = liveTradingLevelsStore.applyLevelEdit(
+    liveTradingLevelsData,
+    parsed.edit,
+    nowIso,
+    liveTradingLevelsStore.MARKED_BY.dashboard
+  );
+  if (applied.error) throw new Error(applied.error);
+  liveTradingLevelsData = applied.state;
+  liveTradingWriteDraft();
+  return { ok: true, state: applied.state, generated: applied.generated };
+}
+function liveTradingPublishTarget() {
+  if (!liveTradingLevelsStore) return { ok: false, error: "The levels module did not load on this page." };
+  return liveTradingLevelsStore.normalisePublishTarget({
+    repo: liveTradingPublish.repo,
+    branch: liveTradingPublish.branch,
+    path: liveTradingLevelsStore.DEFAULT_STATE_PATH
+  });
+}
+
+// Publishing is the second tier: the browser draft becomes a commit in the reader's own repository, with
+// their own token. It reads one file and writes one file, it refuses to write a document the shared
+// checker would reject, and it refuses to replace a published file that moved since this page read it
+// unless the reader says so - which is what makes it safe to hold a draft at all.
+async function publishLiveTradingLevels(force, panel) {
+  liveTradingReadPublishInputs(panel);
+  const target = liveTradingPublishTarget();
+  if (!target.ok) {
+    liveTradingPublish.status = target.error;
+    renderLiveTrading(liveTradingData || {});
+    return;
+  }
+  if (!liveTradingPublish.token) {
+    liveTradingPublish.status = "Publishing needs a GitHub token with Contents: read and write on this repository. Paste one below.";
+    renderLiveTrading(liveTradingData || {});
+    return;
+  }
+  liveTradingPublish.status = `Publishing ${liveTradingLevelsStore.DEFAULT_STATE_PATH} to ${target.owner}/${target.repo}\u2026`;
+  liveTradingPublish.conflict = false;
+  renderLiveTrading(liveTradingData || {});
+  const result = await liveTradingLevelsStore.commitLevels({
+    owner: target.owner,
+    repo: target.repo,
+    branch: target.branch,
+    token: liveTradingPublish.token,
+    path: target.path,
+    state: liveTradingLevelsData,
+    message: `Mark L2L levels on the live dashboard (${new Date().toISOString()})`,
+    expectedSha: liveTradingPublish.remote_sha,
+    force: force === true
+  });
+  if (!result.ok) {
+    liveTradingPublish.conflict = result.conflict === true;
+    liveTradingPublish.status = result.error;
+    renderLiveTrading(liveTradingData || {});
+    return;
+  }
+  liveTradingPublish.remote_sha = result.sha;
+  liveTradingPublish.remote_missing = false;
+  // The published file now holds exactly what the draft held, so the draft has nothing left to keep.
+  liveTradingClearDraft();
+  const commit = result.commit_sha ? ` (commit ${result.commit_sha.slice(0, 7)})` : "";
+  liveTradingPublish.status = `Published ${target.path} to ${target.owner}/${target.repo} on ${target.branch}${commit}. The page reads it back on the next load.`;
+  renderLiveTrading(liveTradingData || {});
+}
+
+// Reading the published file back is how a reader checks what everyone else sees, and how a browser
+// holding a stale draft returns to the published state.
+async function loadLiveTradingLevelsFromGitHub(panel) {
+  liveTradingReadPublishInputs(panel);
+  const target = liveTradingPublishTarget();
+  if (!target.ok) {
+    liveTradingPublish.status = target.error;
+    renderLiveTrading(liveTradingData || {});
+    return;
+  }
+  if (!liveTradingPublish.token) {
+    liveTradingPublish.status = "Reading the published file needs a GitHub token with Contents: read on this repository.";
+    renderLiveTrading(liveTradingData || {});
+    return;
+  }
+  liveTradingPublish.status = "Reading the published levels\u2026";
+  renderLiveTrading(liveTradingData || {});
+  const remote = await liveTradingLevelsStore.readRemoteLevels({
+    owner: target.owner,
+    repo: target.repo,
+    branch: target.branch,
+    token: liveTradingPublish.token,
+    path: target.path
+  });
+  if (!remote.ok) {
+    liveTradingPublish.status = remote.error;
+    renderLiveTrading(liveTradingData || {});
+    return;
+  }
+  liveTradingPublish.remote_sha = remote.sha;
+  liveTradingPublish.remote_missing = remote.missing === true;
+  if (remote.state) {
+    liveTradingLevelsData = remote.state;
+    liveTradingData = applyLiveTradingLevels(liveTradingData, liveTradingLevelsData);
+    liveTradingPublish.status = `Loaded the published ${liveTradingLevelsStore.DEFAULT_STATE_PATH} from ${target.owner}/${target.repo}.`;
+  } else if (remote.missing) {
+    liveTradingPublish.status = `There is no ${liveTradingLevelsStore.DEFAULT_STATE_PATH} in ${target.owner}/${target.repo} yet: the first publish creates it.`;
+  } else {
+    liveTradingPublish.status = "The published file could not be read as a levels document, so nothing was replaced.";
+  }
+  renderLiveTrading(liveTradingData || {});
+}
+
+
 
 // The svg is drawn in a fixed viewBox and scaled to fit its box, so a pointer has to be mapped back
 // into viewBox units before it can mean a price on the plot's scale.
@@ -14100,7 +14467,9 @@ function liveTradingBarGapSeconds(points) {
 // never hits a round time still gets an evenly spaced scale rather than an empty one.
 function liveTradingTimeTicks(points) {
   const gap = liveTradingBarGapSeconds(points);
-  const ladder = [300, 900, 1800, 3600, 7200, 14400, 21600, 43200, 86400];
+  // The ladder widens with the timeframe: a session's ticks on M5, whole days on H1 and whole weeks on
+  // H4, so the zoomed-out views label a handful of dates rather than every fourth hourly bar.
+  const ladder = [300, 900, 1800, 3600, 7200, 14400, 21600, 43200, 86400, 172800, 604800];
   const times = points.map(point => Date.parse(point?.time_utc));
   const known = times.filter(time => !Number.isNaN(time));
   const span = known.length > 1 ? (known[known.length - 1] - known[0]) / 1000 : 0;
@@ -14153,7 +14522,7 @@ function liveTradingChartLegend(instrument, points, digits) {
   return `
         <div class="live-trading-chart-legend ${tone}" data-live-chart-legend data-live-last="${escapeHtml(lastBar)}">
           <span class="live-trading-chart-legend-symbol">${escapeHtml(instrument?.symbol || "")}</span>
-          <span class="live-trading-chart-legend-tf">M5</span>
+          <span class="live-trading-chart-legend-tf">${escapeHtml(liveTradingTimeframeMeta(liveTradingChartTimeframe).label)}</span>
           <span class="live-trading-chart-legend-values" data-live-legend-values>${cells}${changeCell}</span>
         </div>`;
 }
@@ -14198,7 +14567,7 @@ function liveTradingChartResetCrosshair(plot) {
 
 async function markLiveTradingLevel(price) {
   const instrument = liveTradingChartInstrument();
-  if (!instrument || !liveTradingLevelsEndpoint) return;
+  if (!instrument || !liveTradingLevelsCanMark()) return;
   const snapped = liveTradingSnapPrice(instrument, price);
   const label = `${instrument.symbol} ${liveTradingLevelPriceText(snapped, instrument.digits)}`;
   liveTradingMarkStatus = `Saving ${label}…`;
@@ -14210,11 +14579,14 @@ async function markLiveTradingLevel(price) {
       price: snapped,
       kind: "l2l",
       direction: "both",
-      timeframe: "M5"
+      // A level marked by hand is a seed. The duplicated lines are derived from two of these, so the
+      // tool never mistakes a generated price for a measurement the user made.
+      role: "seed",
+      timeframe: liveTradingTimeframeMeta(liveTradingChartTimeframe).label
     });
     liveTradingLevelsData = body.state;
     liveTradingData = applyLiveTradingLevels(liveTradingData, liveTradingLevelsData);
-    liveTradingMarkStatus = `Marked ${label}. Commit data/l2l-levels.json to publish it.`;
+    liveTradingMarkStatus = `Marked ${label}. ${liveTradingPublishHint()}`;
   } catch (err) {
     liveTradingMarkStatus = `Could not save the level: ${err.message}`;
   }
@@ -14223,7 +14595,7 @@ async function markLiveTradingLevel(price) {
 
 async function removeLiveTradingLevel(price) {
   const instrument = liveTradingChartInstrument();
-  if (!instrument || !liveTradingLevelsEndpoint || !Number.isFinite(price)) return;
+  if (!instrument || !liveTradingLevelsCanMark() || !Number.isFinite(price)) return;
   const label = `${instrument.symbol} ${liveTradingLevelPriceText(price, instrument.digits)}`;
   liveTradingMarkStatus = `Removing ${label}…`;
   renderLiveTrading(liveTradingData || {});
@@ -14231,9 +14603,86 @@ async function removeLiveTradingLevel(price) {
     const body = await saveLiveTradingLevel({ action: "remove", symbol: instrument.symbol, price });
     liveTradingLevelsData = body.state;
     liveTradingData = applyLiveTradingLevels(liveTradingData, liveTradingLevelsData);
-    liveTradingMarkStatus = `Removed ${label}. Commit data/l2l-levels.json to publish it.`;
+    liveTradingMarkStatus = `Removed ${label}. ${liveTradingPublishHint()}`;
   } catch (err) {
     liveTradingMarkStatus = `Could not remove the level: ${err.message}`;
+  }
+  renderLiveTrading(liveTradingData || {});
+}
+
+// The L2L distance is not typed in: it is measured from the two seed levels the user marked by hand.
+// Duplicating repeats that distance above the top seed and below the bottom seed, which is what turns
+// two marked prices into the ladder the chart is read against. The arithmetic lives in the shared module
+// both writers use, so the dashboard posts an edit (or applies it through that module) rather than a list
+// of prices it worked out itself. Extending is the same request with a larger count on the side the alert
+// named, which is why both actions share this.
+async function requestLiveTradingLadder(above, below, describe) {
+  const instrument = liveTradingChartInstrument();
+  if (!instrument || !liveTradingLevelsCanMark()) return;
+  const frame = liveTradingTimeframeMeta(liveTradingChartTimeframe);
+  liveTradingMarkStatus = `${describe} the L2L distance for ${instrument.symbol}\u2026`;
+  renderLiveTrading(liveTradingData || {});
+  try {
+    const body = await saveLiveTradingLevel({
+      action: "duplicate",
+      symbol: instrument.symbol,
+      timeframe: frame.label,
+      above,
+      below,
+      point: Number.isFinite(Number(instrument.point)) ? Number(instrument.point) : null
+    });
+    liveTradingLevelsData = body.state;
+    liveTradingData = applyLiveTradingLevels(liveTradingData, liveTradingLevelsData);
+    // The boxes beside the button now show what the file holds, so a later manual duplication repeats it.
+    liveTradingLadderSteps = { above, below };
+    const generated = body.generated || {};
+    const points = Number.isFinite(Number(generated.spacing_points)) ? ` (${generated.spacing_points} points)` : "";
+    liveTradingMarkStatus = generated.count
+      ? `${describe === "Extending" ? "Extended to" : "Generated"} ${generated.count} level${generated.count === 1 ? "" : "s"} ${liveTradingLevelPriceText(generated.spacing_price, instrument.digits)} apart${points} around the seeds ${liveTradingLevelPriceText(generated.anchor_low, instrument.digits)} to ${liveTradingLevelPriceText(generated.anchor_high, instrument.digits)}. ${liveTradingPublishHint()}`
+      : `Nothing new to duplicate for ${instrument.symbol}.`;
+  } catch (err) {
+    liveTradingMarkStatus = `Could not duplicate the levels: ${err.message}`;
+  }
+  renderLiveTrading(liveTradingData || {});
+}
+
+async function duplicateLiveTradingLevels() {
+  const above = liveTradingLadderSteps.above === null ? LIVE_TRADING_LADDER_DEFAULT_STEPS : liveTradingLadderSteps.above;
+  const below = liveTradingLadderSteps.below === null ? LIVE_TRADING_LADDER_DEFAULT_STEPS : liveTradingLadderSteps.below;
+  await requestLiveTradingLadder(above, below, "Duplicating");
+}
+
+// The one action the alert offers: repeat the same measurement for ten more steps on the side that ran
+// out, so the ladder covers price again without the two seeds being re-marked. The count comes from the
+// published ladder plus ten, so pressing it twice cannot ask for less than the file already holds.
+async function extendLiveTradingLadder(side) {
+  const instrument = liveTradingChartInstrument();
+  const plan = instrument ? liveTradingLadderExtensionPlan(instrument) : null;
+  if (!plan) {
+    liveTradingMarkStatus = "There is no ladder to extend here: mark the two seed levels and duplicate them first.";
+    renderLiveTrading(liveTradingData || {});
+    return;
+  }
+  liveTradingMarkStatus = `Extending the ladder ${side === "low" ? "below" : "above"} by ${Math.max(plan.addedAbove, plan.addedBelow)} levels\u2026`;
+  await requestLiveTradingLadder(plan.above, plan.below, "Extending");
+}
+
+// A ladder is meant to be iterated on: move a seed, duplicate again, and the derived lines are replaced
+// rather than stacked. Clearing starts that over from nothing for one symbol.
+async function clearLiveTradingLevels() {
+  const instrument = liveTradingChartInstrument();
+  if (!instrument || !liveTradingLevelsCanMark()) return;
+  liveTradingMarkStatus = `Clearing the marked levels for ${instrument.symbol}\u2026`;
+  renderLiveTrading(liveTradingData || {});
+  try {
+    const body = await saveLiveTradingLevel({ action: "clear", symbol: instrument.symbol });
+    liveTradingLevelsData = body.state;
+    liveTradingData = applyLiveTradingLevels(liveTradingData, liveTradingLevelsData);
+    // Nothing is left to duplicate for that symbol, so the boxes go back to the default ladder width.
+    liveTradingLadderSteps = { above: null, below: null };
+    liveTradingMarkStatus = `Cleared ${instrument.symbol}. ${liveTradingPublishHint()}`;
+  } catch (err) {
+    liveTradingMarkStatus = `Could not clear the levels: ${err.message}`;
   }
   renderLiveTrading(liveTradingData || {});
 }
@@ -14246,13 +14695,17 @@ async function removeLiveTradingLevel(price) {
 // reading of the published snapshot - the candles are the producer's OHLC bars, the level lines are
 // hand-marked prices - and none of it is an order, a signal or a forecast. A snapshot written before
 // the producer published OHLC bars falls back to the close line that `close_series` actually holds.
-function liveTradingChartPlot(instrument, mode) {
+function liveTradingChartPlot(instrument, mode, timeframeKey) {
+  const frame = liveTradingTimeframeMeta(timeframeKey);
+  // A render that ends early - a snapshot with no bars for this timeframe - must not leave the previous
+  // instrument's line count on the caption, so the last view is dropped before this one is drawn.
+  if (liveTradingChartScale) liveTradingChartScale.levelView = null;
   const digits = Number.isInteger(Number(instrument?.digits)) ? Number(instrument.digits) : 2;
-  const m5 = instrument?.m5 || {};
-  const bars = (Array.isArray(m5.bars) ? m5.bars : []).filter(bar =>
+  const block = liveTradingTimeframeBlock(instrument, frame.key) || {};
+  const bars = (Array.isArray(block.bars) ? block.bars : []).filter(bar =>
     Number.isFinite(Number(bar?.open)) && Number.isFinite(Number(bar?.high)) &&
     Number.isFinite(Number(bar?.low)) && Number.isFinite(Number(bar?.close)));
-  const closes = (Array.isArray(m5.close_series) ? m5.close_series : [])
+  const closes = (Array.isArray(block.close_series) ? block.close_series : [])
     .filter(point => Number.isFinite(Number(point?.close)));
   const levels = liveTradingChartLevelsFor(instrument);
 
@@ -14260,7 +14713,7 @@ function liveTradingChartPlot(instrument, mode) {
   // the artifact that is published today and upgrades to candles when the producer next runs.
   const effectiveMode = bars.length && mode !== "line" ? "candles" : "line";
   if (!bars.length && !closes.length) {
-    return `<p class="live-trading-empty">No M5 candles in this snapshot, so there is nothing to chart.</p>`;
+    return `<p class="live-trading-empty">No ${escapeHtml(frame.label)} candles in this snapshot, so there is nothing to chart.</p>`;
   }
 
   const points = bars.length
@@ -14277,9 +14730,19 @@ function liveTradingChartPlot(instrument, mode) {
   const prices = bars.length
     ? bars.flatMap(bar => [Number(bar.high), Number(bar.low)])
     : points.map(point => point.value);
-  levels.forEach(level => prices.push(Number(level.price)));
   let min = Math.min(...prices);
   let max = Math.max(...prices);
+  // The ladder only widens the window when the reader asks for it. Ten steps each way span far more than
+  // the bars they were measured against, so a ladder folded into the scale by default would leave the
+  // candles as a stripe; what falls outside the window is counted on the caption instead, and Fit levels
+  // widens the window to the outermost published line on request.
+  if (liveTradingChartFitLevels) {
+    const fitted = levels.map(level => Number(level.price));
+    if (fitted.length) {
+      min = Math.min(min, ...fitted);
+      max = Math.max(max, ...fitted);
+    }
+  }
   if (!(max > min)) {
     const pad = Math.abs(max) * 0.001 || 1;
     min -= pad;
@@ -14377,13 +14840,24 @@ function liveTradingChartPlot(instrument, mode) {
     + `<rect x="${plotX1 + 2}" y="${(lastY - 10).toFixed(2)}" width="${axisWidth - 4}" height="20" rx="3" class="live-trading-chart-last-tag ${lastUp ? "up" : "down"}"></rect>`
     + `<text x="${(plotX1 + axisWidth / 2).toFixed(2)}" y="${(lastY + 5).toFixed(2)}" text-anchor="middle" class="live-trading-chart-last-tag-text">${escapeHtml(liveTradingPrice(lastValue, digits))}</text>`;
 
-  // L2L levels, once they are published for this instrument, ride on the same scale as the candles.
-  const levelLines = levels.map(level => {
+  // L2L levels ride the same price scale as the candles. A line whose price sits outside the drawn
+  // window is counted rather than clamped onto the edge, which would draw a ladder that is not there,
+  // and the outermost line the live price has reached is marked so the bound is visible on the chart.
+  const ladderAlert = liveTradingLadderAlert(instrument);
+  const inView = levels.filter(level => Number(level.price) >= min && Number(level.price) <= max);
+  liveTradingChartScale.levelView = {
+    total: levels.length,
+    drawn: inView.length,
+    above: levels.filter(level => Number(level.price) > max).length,
+    below: levels.filter(level => Number(level.price) < min).length
+  };
+  const levelLines = inView.map(level => {
     const price = Number(level.price);
-    const ly = Math.min(plotY1, Math.max(plotY0, yAt(price)));
+    const ly = yAt(price);
     const label = String(level.label || level.name || "level");
     const tag = `${label} ${liveTradingPrice(price, digits)}`;
-    return `<line x1="${plotX0}" y1="${ly.toFixed(2)}" x2="${plotX1}" y2="${ly.toFixed(2)}" class="live-trading-chart-level"></line>`
+    const alerting = ladderAlert?.active === true && Math.abs(price - ladderAlert.level) < 1e-9;
+    return `<line x1="${plotX0}" y1="${ly.toFixed(2)}" x2="${plotX1}" y2="${ly.toFixed(2)}" class="live-trading-chart-level${alerting ? " alert" : ""}"></line>`
       + `<text x="${plotX0 + 6}" y="${(ly - 6).toFixed(2)}" class="live-trading-chart-level-tag">${escapeHtml(tag)}</text>`
       + `<rect x="${plotX1 + 2}" y="${(ly - 9).toFixed(2)}" width="${axisWidth - 4}" height="18" rx="3" class="live-trading-chart-level-box"></rect>`
       + `<text x="${(plotX1 + axisWidth / 2).toFixed(2)}" y="${(ly + 4).toFixed(2)}" text-anchor="middle" class="live-trading-chart-level-box-text">${escapeHtml(liveTradingPrice(price, digits))}</text>`;
@@ -14397,8 +14871,8 @@ function liveTradingChartPlot(instrument, mode) {
         <text class="live-trading-chart-crosshair-time-text" x="0" y="${timeScaleY + 19}" text-anchor="middle"></text>
       </g>`;
 
-  const watermark = `${instrument?.symbol || ""} \u00b7 M5`;
-  const aria = `M5 ${effectiveMode === "candles" ? "candles" : "close line"} for ${instrument?.symbol || "instrument"}, ${points.length} bars`;
+  const watermark = `${instrument?.symbol || ""} \u00b7 ${frame.label}`;
+  const aria = `${frame.label} ${effectiveMode === "candles" ? "candles" : "close line"} for ${instrument?.symbol || "instrument"}, ${points.length} bars`;
   return `
     <div class="live-trading-chart-canvas">
       ${liveTradingChartLegend(instrument, points, digits)}
@@ -14475,6 +14949,64 @@ function liveTradingChartCrosshair(plot, event) {
   }
   liveTradingChartPaintLegend(plot, nearest, view.digits);
 }
+// The line the marking controls carry when the reader has not done anything yet: which store this page
+// writes to, said plainly, so the two tiers are never ambiguous.
+function liveTradingLevelsDefaultStatus() {
+  if (liveTradingLevelsEndpoint) {
+    return `Marking writes ${liveTradingLevelsEndpoint.path} through the local tool on this machine. Commit it to publish.`;
+  }
+  return `Marking is saved in this browser first, then published to ${liveTradingPublish.repo} as a commit through your own GitHub account. Nothing is sent anywhere else.`;
+}
+
+// The publishing box's own line: what the page knows about the two stores, so a reader never has to guess
+// whether their mark is in the browser or in the repository.
+function liveTradingPublishStatusText() {
+  if (liveTradingPublish.status) return liveTradingPublish.status;
+  const scope = liveTradingPublish.token_scope === "device"
+    ? "Kept on this device until Disconnect."
+    : (liveTradingPublish.token_scope === "session" ? "Kept for this tab only." : "No token connected yet.");
+  const draft = liveTradingPublish.draft_saved_at_utc
+    ? ` The version shown was saved in this browser at ${liveTradingPublish.draft_saved_at_utc} and is not published yet.`
+    : "";
+  return `${scope}${draft}`;
+}
+
+// The publishing box is drawn only where this browser is the store: with the loopback tool on this machine
+// the file is already the local copy and there is nothing to publish from the page. The token field is a
+// password field, the token is never rendered anywhere else, and Disconnect removes it.
+function liveTradingPublishPanel() {
+  if (!liveTradingLevelsCanMark() || liveTradingLevelsEndpoint) return "";
+  const tokenState = liveTradingPublish.token
+    ? (liveTradingPublish.token_scope === "device" ? "saved on this device" : "saved for this tab")
+    : "not connected";
+  return `
+      <div class="live-trading-chart-publish">
+        <div class="live-trading-chart-publish-row">
+          <label class="live-trading-chart-publish-label" for="liveTradingPublishRepo">Repository</label>
+          <input class="live-trading-chart-publish-input" id="liveTradingPublishRepo" type="text" spellcheck="false" autocomplete="off" value="${escapeHtml(liveTradingPublish.repo)}" data-live-publish-repo placeholder="owner/repo" title="The GitHub repository the levels file is published to">
+          <label class="live-trading-chart-publish-label" for="liveTradingPublishBranch">Branch</label>
+          <input class="live-trading-chart-publish-input branch" id="liveTradingPublishBranch" type="text" spellcheck="false" autocomplete="off" value="${escapeHtml(liveTradingPublish.branch)}" data-live-publish-branch placeholder="main" title="The branch the levels file is published on">
+        </div>
+        <div class="live-trading-chart-publish-row">
+          <label class="live-trading-chart-publish-label" for="liveTradingPublishToken">GitHub token</label>
+          <input class="live-trading-chart-publish-input token" id="liveTradingPublishToken" type="password" spellcheck="false" autocomplete="off" value="${escapeHtml(liveTradingPublish.token)}" data-live-publish-token placeholder="Needs Contents: read and write on this repository" title="Your own token, used only to call api.github.com">
+          <label class="live-trading-chart-publish-remember"><input type="checkbox" data-live-publish-remember${liveTradingPublish.remember ? " checked" : ""}> Remember on this device</label>
+        </div>
+        <div class="live-trading-chart-publish-actions">
+          <button type="button" class="live-trading-chart-mark" data-live-publish-save>${liveTradingPublish.token ? "Save token" : "Connect"}</button>
+          <button type="button" class="live-trading-chart-mark publish" data-live-level-publish>Publish levels</button>
+          ${liveTradingPublish.conflict ? `<button type="button" class="live-trading-chart-mark" data-live-level-publish-force>Publish anyway</button>` : ""}
+          <button type="button" class="live-trading-chart-mark" data-live-level-reload>Reload from GitHub</button>
+          <button type="button" class="live-trading-chart-mark" data-live-level-export>Save a copy</button>
+          <button type="button" class="live-trading-chart-mark" data-live-level-disconnect${liveTradingPublish.token_scope === "none" ? " disabled" : ""}>Disconnect</button>
+        </div>
+        <p class="live-trading-chart-publish-status" role="status" aria-live="polite">${escapeHtml(liveTradingPublishStatusText())}</p>
+        <p class="live-trading-chart-publish-note">Token ${escapeHtml(tokenState)}. It is only ever sent to api.github.com and never written into the levels file or the page.</p>
+      </div>
+  `;
+}
+
+
 
 function liveTradingChartShell(data) {
   const instruments = (Array.isArray(data?.instruments) ? data.instruments : [])
@@ -14483,12 +15015,32 @@ function liveTradingChartShell(data) {
 
   const selected = instruments.find(instrument => instrument?.symbol === liveTradingChartSymbol) || instruments[0];
   liveTradingChartSymbol = selected.symbol;
-  const bars = Array.isArray(selected?.m5?.bars) ? selected.m5.bars : [];
-  const closes = Array.isArray(selected?.m5?.close_series) ? selected.m5.close_series : [];
+  // The snapshot publishes three timeframes; a block it does not carry is not drawn as an empty box.
+  // The selection falls back to a timeframe that has bars, and the missing button is disabled.
+  if (!liveTradingTimeframeBlock(selected, liveTradingChartTimeframe)) {
+    const fallback = LIVE_TRADING_TIMEFRAMES.find(entry => liveTradingTimeframeBlock(selected, entry.key));
+    if (fallback) liveTradingChartTimeframe = fallback.key;
+  }
+  const frame = liveTradingTimeframeMeta(liveTradingChartTimeframe);
+  const block = liveTradingTimeframeBlock(selected, frame.key) || {};
+  const bars = Array.isArray(block.bars) ? block.bars : [];
+  const closes = Array.isArray(block.close_series) ? block.close_series : [];
   const mode = bars.length ? liveTradingChartMode : "line";
   const digits = Number.isInteger(Number(selected?.digits)) ? Number(selected.digits) : 2;
   const quote = selected?.quote || {};
-  const freshness = liveTradingBarFreshness(selected?.m5);
+  // The freshness line follows the timeframe on screen: on H4 a block can lag its own tick for hours
+  // and still be the current H4 read, while the same lag on M5 would be a stale series.
+  const freshness = liveTradingBarFreshness(block);
+
+  // The marked levels, and the ladder they make. `seed` is a price the user marked by hand, `derived`
+  // is a copy the ladder generated from the distance between two seeds; the alert is the live price
+  // judged against the outermost derived line, and the plan is the one action that answers it.
+  const markedLevels = liveTradingChartLevelsFor(selected);
+  const seedLevels = liveTradingSeedLevels(selected);
+  const derivedLevels = liveTradingDerivedLevelCount(selected);
+  const ladderStats = liveTradingLadderStats(selected);
+  const ladderAlert = liveTradingLadderAlert(selected);
+  const ladderPlan = liveTradingLadderExtensionPlan(selected);
 
   const symbolButtons = instruments.map(instrument => {
     const spread = Number.isFinite(Number(instrument?.quote?.spread_points))
@@ -14496,6 +15048,11 @@ function liveTradingChartShell(data) {
       : displayDash();
     const levelBadge = liveTradingLevelBadge(instrument);
     const barState = instrument?.m5?.stale === true ? "stale" : "fresh";
+    // A symbol whose price has reached the outer end of its ladder says so here, so the reader can see
+    // which instrument needs looking at without opening each one in turn.
+    const alertBadge = liveTradingLadderAlert(instrument)?.active
+      ? `<i class="live-trading-chart-badge alert" title="Live price has reached the outermost published L2L level">AT BOUND</i>`
+      : "";
     return `
       <button type="button" class="live-trading-chart-symbol${instrument.symbol === selected.symbol ? " active" : ""}" data-live-chart-symbol="${escapeHtml(instrument.symbol)}">
         <span class="live-trading-chart-symbol-asset">${escapeHtml(instrument.dashboard_asset || "")}</span>
@@ -14503,7 +15060,7 @@ function liveTradingChartShell(data) {
         <span class="live-trading-chart-symbol-badges">
           <i class="live-trading-chart-badge ${barState}">${barState === "stale" ? "STALE" : "LIVE"}</i>
           <i class="live-trading-chart-badge">${escapeHtml(spread)}</i>
-          <i class="live-trading-chart-badge">${escapeHtml(levelBadge)}</i>
+          <i class="live-trading-chart-badge">${escapeHtml(levelBadge)}</i>${alertBadge}
         </span>
       </button>
     `;
@@ -14513,52 +15070,96 @@ function liveTradingChartShell(data) {
     <button type="button" class="live-trading-chart-mode${mode === value ? " active" : ""}" data-live-chart-mode="${value}"${bars.length ? "" : " disabled"}>${value === "candles" ? "Candles" : "Line"}</button>
   `).join("");
 
+  // One set of buttons, two axes: the timeframe chooses which series is drawn, the mode chooses how it
+  // is drawn. Both read as a terminal's toolbar, and both are disabled for a series not in the feed.
+  const timeframeButtons = LIVE_TRADING_TIMEFRAMES.map(entry => `
+    <button type="button" class="live-trading-chart-mode${frame.key === entry.key ? " active" : ""}" data-live-chart-timeframe="${entry.key}"${liveTradingTimeframeBlock(selected, entry.key) ? "" : " disabled"}>${entry.label}</button>
+  `).join("");
+
+  // Fit levels is a view control, not a write: with a ten-step ladder either side the outermost lines sit
+  // far outside the bars they were measured against, so the reader chooses between reading the candles
+  // and seeing the whole published grid. Without a ladder there is nothing to fit, so it is disabled.
+  const fitButton = `
+    <button type="button" class="live-trading-chart-mode${liveTradingChartFitLevels ? " active" : ""}" data-live-chart-fit-levels aria-pressed="${liveTradingChartFitLevels ? "true" : "false"}"${markedLevels.length ? "" : " disabled"} title="Widen the price scale to the outermost published L2L level">Fit levels</button>
+  `;
+
   const barCount = bars.length
-    ? `${bars.length} OHLC bars`
+    ? `${bars.length} ${frame.label} OHLC bars`
     : `${closes.length} closes (OHLC not in this snapshot yet)`;
 
-  const markedLevels = liveTradingChartLevelsFor(selected);
+  // A chip says which of the two kinds the line is: `seed` is a price the user marked, `derived` is a
+  // copy the ladder generated from the distance between two seeds.
   const levelChips = markedLevels.length
     ? markedLevels.map(level => {
       const price = Number(level.price);
-      const caption = `${String(level.label || level.kind || "level")} ${liveTradingLevelPriceText(price, digits)}`;
-      const remove = liveTradingLevelsEndpoint
+      const role = level.role === "derived" ? "derived" : "seed";
+      const caption = `${role} ${liveTradingLevelPriceText(price, digits)}`;
+      const detail = String(level.note || level.label || "");
+      const remove = liveTradingLevelsCanMark()
         ? `<button type="button" class="live-trading-chart-level-remove" data-live-level-remove="${escapeHtml(String(price))}" title="Remove this marked level">&#215;</button>`
         : "";
-      return `<span class="live-trading-chart-level-chip"><b>${escapeHtml(caption)}</b>${remove}</span>`;
+      return `<span class="live-trading-chart-level-chip${level.role === "derived" ? " derived" : ""}" title="${escapeHtml(detail)}"><b>${escapeHtml(caption)}</b>${remove}</span>`;
     }).join("")
     : `<span class="live-trading-chart-level-chip empty">Nothing marked for this symbol yet</span>`;
 
-  // The marking controls exist only when the local tool answers the probe, so the published page has no
-  // control that could look like it writes anywhere.
-  const markingControls = liveTradingLevelsEndpoint
+  // The marking controls exist whenever there is a store to write to: the loopback tool on this machine, or
+  // - on the published page - this browser's own draft and the reader's own GitHub commit. A page with
+  // neither shows the levels read-only. Duplicating needs the two seed levels first: the distance it
+  // repeats is measured from them, not typed in.
+  const markingControls = liveTradingLevelsCanMark()
     ? `
           <button type="button" class="live-trading-chart-mark${liveTradingMarking ? " active" : ""}" data-live-chart-mark aria-pressed="${liveTradingMarking ? "true" : "false"}">${liveTradingMarking ? "Click the chart" : "Mark level"}</button>
+          ${ladderPlan ? `<button type="button" class="live-trading-chart-mark extend" data-live-level-extend="${ladderAlert?.side === "low" ? "low" : "high"}">Add ${Math.max(ladderPlan.addedAbove, ladderPlan.addedBelow)} more ${ladderPlan.addedAbove && ladderPlan.addedBelow ? "above and below" : (ladderPlan.addedAbove ? "above" : "below")}</button>` : ""}
+          <span class="live-trading-chart-ladder">
+            <label class="live-trading-chart-ladder-label" for="liveTradingLadderAbove">Duplicate</label>
+            <input class="live-trading-chart-ladder-step" id="liveTradingLadderAbove" type="number" inputmode="numeric" min="0" max="${LIVE_TRADING_LADDER_MAX_STEPS}" step="1" value="${liveTradingLadderSteps.above === null ? LIVE_TRADING_LADDER_DEFAULT_STEPS : liveTradingLadderSteps.above}" data-live-ladder-above title="Levels generated above the top seed level">
+            <input class="live-trading-chart-ladder-step" id="liveTradingLadderBelow" type="number" inputmode="numeric" min="0" max="${LIVE_TRADING_LADDER_MAX_STEPS}" step="1" value="${liveTradingLadderSteps.below === null ? LIVE_TRADING_LADDER_DEFAULT_STEPS : liveTradingLadderSteps.below}" data-live-ladder-below title="Levels generated below the bottom seed level">
+            <button type="button" class="live-trading-chart-mark" data-live-level-duplicate${seedLevels.length >= 2 ? "" : " disabled"}>Duplicate levels</button>
+            <button type="button" class="live-trading-chart-mark" data-live-level-clear${markedLevels.length ? "" : " disabled"}>Clear</button>
+          </span>
     `
     : "";
 
-  const markStatus = liveTradingLevelsEndpoint
-    ? `<p class="live-trading-chart-mark-status${liveTradingMarking ? " active" : ""}">${escapeHtml(liveTradingMarkStatus || `Marking writes ${liveTradingLevelsEndpoint.path} through the local tool. Commit it to publish.`)}</p>`
+  const markStatus = liveTradingLevelsCanMark()
+    ? `<p class="live-trading-chart-mark-status${liveTradingMarking ? " active" : ""}">${escapeHtml(liveTradingMarkStatus || liveTradingLevelsDefaultStatus())}</p>`
     : `<p class="live-trading-chart-mark-status">Levels are read from <span class="live-trading-mono">data/l2l-levels.json</span>. Run <span class="live-trading-mono">node scripts/l2l-levels-tool.js</span> and open the page from that server to mark them.</p>`;
+
+  // The plot is drawn first because the caption's line count is a reading of the scale it used: how many
+  // published levels are inside the window, and how many sit outside it.
+  const plotHtml = liveTradingChartPlot(selected, liveTradingChartMode, frame.key);
+  const levelView = liveTradingChartScale?.levelView || null;
+  const levelViewNote = levelView && levelView.total
+    ? ` \u00b7 ${levelView.drawn}/${levelView.total} lines in view${levelView.above || levelView.below ? ` (${levelView.above} above, ${levelView.below} below)` : ""}`
+    : "";
+  // The outermost published lines, stated even when nothing is alerting, so the panel always says where
+  // the ladder starts and ends rather than leaving the reader to find the last line by eye.
+  const ladderBounds = ladderStats
+    ? ` \u00b7 ladder ${liveTradingLevelPriceText(ladderStats.outerLow, digits)} to ${liveTradingLevelPriceText(ladderStats.outerHigh, digits)}`
+    : "";
+  const ladderNotice = ladderAlert?.active
+    ? `<p class="live-trading-chart-ladder-alert ${escapeHtml(ladderAlert.state)}" role="status" aria-live="polite">${escapeHtml(liveTradingLadderAlertNotice(ladderAlert, selected, digits))}</p>`
+    : "";
 
   return `
     <div class="live-trading-chart">
       <div class="live-trading-chart-toolbar">
         <div class="live-trading-chart-symbols">${symbolButtons}</div>
         <div class="live-trading-chart-controls">
-          <span class="live-trading-chart-tf">M5</span>
-          <div class="live-trading-chart-modes">${modeButtons}</div>${markingControls}
+          <div class="live-trading-chart-modes" role="group" aria-label="Chart timeframe">${timeframeButtons}</div>
+          <div class="live-trading-chart-modes" role="group" aria-label="Chart style and scale">${modeButtons}${fitButton}</div>${markingControls}
         </div>
       </div>
-      <div class="live-trading-chart-plot${liveTradingMarking ? " marking" : ""}">${liveTradingChartPlot(selected, liveTradingChartMode)}</div>
+      <div class="live-trading-chart-plot${liveTradingMarking ? " marking" : ""}">${plotHtml}</div>
+      ${ladderNotice}
       <div class="live-trading-chart-levels">${levelChips}</div>
       ${markStatus}
+      ${liveTradingPublishPanel()}
       <p class="live-trading-chart-caption">
         <span>${escapeHtml(selected.symbol)} &middot; ${escapeHtml(selected.description || "")}</span>
         <span>Bid ${escapeHtml(liveTradingPrice(quote.bid, digits))} / Ask ${escapeHtml(liveTradingPrice(quote.ask, digits))}</span>
-        <span>Newest M5 bar ${escapeHtml(freshness.label)}${freshness.stale ? " (stale)" : ""}</span>
+        <span>Newest ${escapeHtml(frame.label)} bar ${escapeHtml(freshness.label)}${freshness.stale ? " (stale)" : ""}</span>
         <span>${escapeHtml(barCount)}</span>
-        <span>${markedLevels.length} marked level${markedLevels.length === 1 ? "" : "s"}</span>
+        <span>${seedLevels.length} seed level${seedLevels.length === 1 ? "" : "s"} \u00b7 ${derivedLevels} derived${escapeHtml(levelViewNote)}${escapeHtml(ladderBounds)}</span>
       </p>
     </div>
   `;
@@ -14582,9 +15183,79 @@ function setupLiveTradingChart(panel) {
       removeLiveTradingLevel(Number(removeButton.dataset.liveLevelRemove));
       return;
     }
+    const duplicateButton = event.target.closest("[data-live-level-duplicate]");
+    if (duplicateButton && !duplicateButton.disabled) {
+      duplicateLiveTradingLevels();
+      return;
+    }
+    const clearButton = event.target.closest("[data-live-level-clear]");
+    if (clearButton && !clearButton.disabled) {
+      clearLiveTradingLevels();
+      return;
+    }
+    // The alert's one action: repeat the same measurement ten more steps on the side that ran out.
+    const extendButton = event.target.closest("[data-live-level-extend]");
+    if (extendButton && !extendButton.disabled) {
+      extendLiveTradingLadder(extendButton.dataset.liveLevelExtend || null);
+      return;
+    }
+    // The publishing box. Each of these is a write to, or a read from, the reader's own GitHub account, and
+    // none of them exists when the loopback tool on this machine is the store.
+    const publishButton = event.target.closest("[data-live-level-publish]");
+    if (publishButton && !publishButton.disabled) {
+      publishLiveTradingLevels(false, panel);
+      return;
+    }
+    const publishForceButton = event.target.closest("[data-live-level-publish-force]");
+    if (publishForceButton && !publishForceButton.disabled) {
+      publishLiveTradingLevels(true, panel);
+      return;
+    }
+    const reloadButton = event.target.closest("[data-live-level-reload]");
+    if (reloadButton && !reloadButton.disabled) {
+      loadLiveTradingLevelsFromGitHub(panel);
+      return;
+    }
+    const exportButton = event.target.closest("[data-live-level-export]");
+    if (exportButton && !exportButton.disabled) {
+      liveTradingExportLevels();
+      return;
+    }
+    const saveTokenButton = event.target.closest("[data-live-publish-save]");
+    if (saveTokenButton && !saveTokenButton.disabled) {
+      liveTradingReadPublishInputs(panel);
+      const saved = liveTradingSavePublishSettings();
+      liveTradingPublish.status = saved?.stored
+        ? `Connected: the token is kept ${saved.token_scope === "device" ? "on this device" : "for this tab only"} and is only ever sent to api.github.com.`
+        : "The browser refused to store the token, so it is held in this page only. Publishing still works while this tab stays open.";
+      renderLiveTrading(liveTradingData || {});
+      return;
+    }
+    const disconnectButton = event.target.closest("[data-live-level-disconnect]");
+    if (disconnectButton && !disconnectButton.disabled) {
+      liveTradingDisconnectPublish();
+      liveTradingPublish.status = "Disconnected: the token has been removed from this device and from this tab.";
+      renderLiveTrading(liveTradingData || {});
+      return;
+    }
+
+    // A view control rather than a write: it only decides whether the price scale stops at the bars or
+    // widens to the outermost published line.
+    const fitButton = event.target.closest("[data-live-chart-fit-levels]");
+    if (fitButton && !fitButton.disabled) {
+      liveTradingChartFitLevels = !liveTradingChartFitLevels;
+      renderLiveTrading(liveTradingData || {});
+      return;
+    }
     const symbolButton = event.target.closest("[data-live-chart-symbol]");
     if (symbolButton) {
       liveTradingChartSymbol = symbolButton.dataset.liveChartSymbol || liveTradingChartSymbol;
+      renderLiveTrading(liveTradingData || {});
+      return;
+    }
+    const timeframeButton = event.target.closest("[data-live-chart-timeframe]");
+    if (timeframeButton && !timeframeButton.disabled) {
+      liveTradingChartTimeframe = timeframeButton.dataset.liveChartTimeframe || "m5";
       renderLiveTrading(liveTradingData || {});
       return;
     }
@@ -14596,11 +15267,32 @@ function setupLiveTradingChart(panel) {
     }
     // A keyboard-activated click carries no coordinates, so only a real pointer marks a level.
     const plot = event.target.closest(".live-trading-chart-plot");
-    if (plot && liveTradingMarking && liveTradingLevelsEndpoint && event.clientY > 0) {
+    if (plot && liveTradingMarking && liveTradingLevelsCanMark() && event.clientY > 0) {
       const svg = plot.querySelector(".live-trading-chart-svg");
       const price = liveTradingMarkedPriceFromPointer(svg, event.clientY);
       if (price !== null) markLiveTradingLevel(price);
     }
+  });
+  // The two step counts are read without redrawing the panel: a re-render on every keystroke would take
+  // the caret out of the box the reader is typing in. An empty or out-of-range box falls back to the
+  // default rather than to a number nobody chose. The publishing box is read the same way and for the same
+  // reason; its values are only acted on when one of its buttons is pressed.
+  panel.addEventListener("input", event => {
+    const input = event.target?.closest?.("[data-live-ladder-above], [data-live-ladder-below]");
+    if (!input) {
+      if (event.target?.closest?.("[data-live-publish-repo], [data-live-publish-branch], [data-live-publish-token], [data-live-publish-remember]")) {
+        liveTradingReadPublishInputs(panel);
+      }
+      return;
+    }
+    const parsed = Math.round(Number(input.value));
+    const value = Number.isFinite(parsed) && parsed >= 0 && parsed <= LIVE_TRADING_LADDER_MAX_STEPS ? parsed : null;
+    if (input.hasAttribute("data-live-ladder-above")) liveTradingLadderSteps.above = value;
+    else liveTradingLadderSteps.below = value;
+  });
+  // A checkbox fires change as well as input in some browsers, and a tick must survive either one.
+  panel.addEventListener("change", event => {
+    if (event.target?.closest?.("[data-live-publish-remember]")) liveTradingReadPublishInputs(panel);
   });
   // The crosshair reads the pointer over the canvas only. Anywhere else on the panel puts it away and
   // leaves the legend on the newest bar, so the canvas never shows a stale reading.
@@ -15436,9 +16128,22 @@ async function loadDashboard() {
     // reason rather than a fatal error.
     console.error(liveTradingLevelsResult.reason);
   }
-  // Only the local marking tool holds the write endpoint, so the marking controls appear only when it
-  // answers this probe.
+  // The loopback marking tool holds the write endpoint, so a page served by it posts its marks to the file
+  // on this machine. The repository, branch and any stored token are read back either way, so the page
+  // states the same publishing target it would commit to.
   liveTradingLevelsEndpoint = await probeLiveTradingLevelsTool();
+  if (liveTradingLevelsStore) {
+    liveTradingLoadPublishSettings();
+    // Without that tool the browser itself is the local store, so a draft this reader has not published yet
+    // is the version shown: their mark survives a reload on the page they made it on, while GitHub stays
+    // what everyone else reads.
+    const draft = liveTradingLevelsEndpoint ? null : liveTradingReadDraft();
+    if (draft) {
+      liveTradingLevelsData = draft.state;
+      liveTradingPublish.draft_saved_at_utc = draft.saved_at_utc;
+      liveTradingPublish.remote_sha = draft.base_sha || null;
+    }
+  }
   // The feed and the marked levels are joined once, here, so every later re-render already has them.
   liveTradingData = applyLiveTradingLevels(liveTradingData, liveTradingLevelsData);
 

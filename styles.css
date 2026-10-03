@@ -8384,8 +8384,10 @@ body {
 .live-trading-chart-badge { padding: 2px 6px; border: 1px solid #35485f; border-radius: 999px; color: #a9bdd4; font: 600 9px 'IBM Plex Mono', monospace; font-style: normal; letter-spacing: .04em; }
 .live-trading-chart-badge.fresh { color: #7ef0c4; border-color: #2b6b57; }
 .live-trading-chart-badge.stale { color: #f0c274; border-color: #7a5a24; }
-.live-trading-chart-controls { display: flex; align-items: center; gap: 8px; }
-.live-trading-chart-tf { padding: 3px 8px; border: 1px solid #35485f; border-radius: 6px; color: #c6d9ed; font: 600 10px 'IBM Plex Mono', monospace; letter-spacing: .06em; }
+/* A symbol whose live price has reached the outer end of its ladder says so on its own button, so the
+   reader sees which instrument to look at without opening each one. */
+.live-trading-chart-badge.alert { color: #f0c274; border-color: #b9832a; background: rgba(240, 194, 116, .12); }
+.live-trading-chart-controls { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 8px; }
 .live-trading-chart-modes { display: inline-flex; overflow: hidden; border: 1px solid #26374b; border-radius: 8px; }
 .live-trading-chart-mode { padding: 5px 10px; border: 0; background: #0c1622; color: #a9bdd4; font: 500 11px 'IBM Plex Mono', monospace; cursor: pointer; }
 .live-trading-chart-mode + .live-trading-chart-mode { border-left: 1px solid #26374b; }
@@ -8420,6 +8422,9 @@ body {
 .live-trading-chart-level-tag { fill: #7ef0c4; font: 600 14px 'IBM Plex Mono', monospace; }
 .live-trading-chart-level-box { fill: #4fd1a5; }
 .live-trading-chart-level-box-text { fill: #08131a; font: 700 13px 'IBM Plex Mono', monospace; }
+/* The outermost line the live price has reached is drawn in the alert colour: the ladder line itself is
+   still the price it always was, and only its weight marks it as the end of the published range. */
+.live-trading-chart-level.alert { stroke: #f0c274; stroke-width: 2; stroke-dasharray: 2 3; }
 /* The legend sits on the canvas the way a terminal's does: the instrument, its timeframe and the bar
    the pointer is over. It is a reading, not a control, so it never takes a click. */
 .live-trading-chart-legend { position: absolute; top: 8px; left: 12px; display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; max-width: calc(100% - 130px); pointer-events: none; color: #b2b5be; font: 600 12px 'IBM Plex Mono', monospace; text-shadow: 0 1px 2px rgba(0, 0, 0, .6); }
@@ -8435,20 +8440,59 @@ body {
 .live-trading-chart-crosshair-price-text, .live-trading-chart-crosshair-time-text { fill: #f0f3fa; font: 500 14px 'IBM Plex Mono', monospace; }
 
 .live-trading-chart-caption { display: flex; flex-wrap: wrap; gap: 4px 14px; margin: 0; color: #8ea6c0; font: 500 10.5px 'IBM Plex Mono', monospace; overflow-wrap: anywhere; }
-/* Marking is a local-only affordance: these controls are not rendered at all unless the loopback tool
-   answered the probe, so the published page never offers a write it cannot perform. */
+/* The out-of-bounds alert: a reading of the live price against the outermost published line, stated in
+   the ladder's own unit. It is not a signal and it is not an instruction - it says the grid has stopped
+   covering price, which is the moment a reader decides whether to extend it. */
+.live-trading-chart-ladder-alert { margin: 0; padding: 6px 9px; border: 1px solid #7a5a24; border-radius: 8px; background: rgba(240, 194, 116, .08); color: #f0c274; font: 500 10.5px 'IBM Plex Mono', monospace; overflow-wrap: anywhere; }
+.live-trading-chart-ladder-alert.beyond { border-color: #8c3b3b; background: rgba(226, 96, 110, .10); color: #f08a97; }
+/* Marking writes to whichever store the page has: the loopback tool on this machine, or - on a published
+   page - this browser's own draft plus a commit to the reader's own repository, so these controls are not
+   rendered at all when neither exists. */
 .live-trading-chart-mark { padding: 5px 10px; border: 1px solid #2b6b57; border-radius: 8px; background: rgba(79, 209, 165, .08); color: #7ef0c4; font: 600 10px 'IBM Plex Mono', monospace; letter-spacing: .04em; cursor: pointer; }
 .live-trading-chart-mark:hover { border-color: #4fd1a5; color: #eaf2fb; }
 .live-trading-chart-mark.active { border-color: #4fd1a5; background: rgba(79, 209, 165, .22); color: #eaf2fb; }
+.live-trading-chart-mark:disabled { border-color: #26374b; background: #0c1622; color: #4b5c72; cursor: not-allowed; }
+/* Extending is the one action the alert offers: the same measurement repeated ten more steps on the side
+   that ran out. It appears beside Duplicate levels, and only once a ladder and an alert exist. */
+.live-trading-chart-mark.extend { border-color: #b9832a; background: rgba(240, 194, 116, .12); color: #f0c274; }
+.live-trading-chart-mark.extend:hover { border-color: #f0c274; color: #eaf2fb; }
+/* The ladder controls: how many levels a duplication generates beyond each seed, and the button that
+   measures the distance from the two seed levels and repeats it. Drawn wherever marking is possible, like
+   the rest of the marking surface. */
+.live-trading-chart-ladder { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 5px; padding: 3px 7px; border: 1px solid #26374b; border-radius: 8px; background: #0c1622; }
+.live-trading-chart-ladder-label { color: #8ea6c0; font: 600 10px 'IBM Plex Mono', monospace; letter-spacing: .04em; }
+.live-trading-chart-ladder-step { width: 44px; padding: 3px 4px; border: 1px solid #35485f; border-radius: 6px; background: #101a28; color: #eaf2fb; font: 600 10px 'IBM Plex Mono', monospace; text-align: center; }
+.live-trading-chart-ladder-step:focus { border-color: #4fd1a5; outline: none; }
+.live-trading-chart-ladder .live-trading-chart-mark { padding: 3px 8px; }
 .live-trading-chart-plot.marking { cursor: crosshair; box-shadow: inset 0 0 0 1px rgba(79, 209, 165, .35); }
 .live-trading-chart-levels { display: flex; flex-wrap: wrap; gap: 6px; min-width: 0; }
 .live-trading-chart-level-chip { display: inline-flex; align-items: center; gap: 6px; padding: 3px 8px; border: 1px solid #2b6b57; border-radius: 999px; color: #a9bdd4; font: 600 10px 'IBM Plex Mono', monospace; }
 .live-trading-chart-level-chip b { color: #7ef0c4; font-weight: 600; }
 .live-trading-chart-level-chip.empty { border-style: dashed; border-color: #35485f; color: #7f93aa; }
+/* A derived line is a copy the ladder generated, so its chip is drawn apart from the hand-marked seed
+   chips it came from rather than looking like one more price the user typed. */
+.live-trading-chart-level-chip.derived { border-style: dashed; border-color: #35485f; }
+.live-trading-chart-level-chip.derived b { color: #c6d9ed; }
 .live-trading-chart-level-remove { padding: 0 3px; border: 0; background: none; color: #8ea6c0; font: 700 12px 'IBM Plex Mono', monospace; line-height: 1; cursor: pointer; }
 .live-trading-chart-level-remove:hover { color: #e2606e; }
 .live-trading-chart-mark-status { margin: 0; color: #8ea6c0; font: 500 10.5px 'IBM Plex Mono', monospace; overflow-wrap: anywhere; }
 .live-trading-chart-mark-status.active { color: #7ef0c4; }
+/* The publishing box: the durable tier of the store. It is drawn only where this browser is the local
+   copy, because a page served by the loopback tool already writes the file on this machine. The token
+   field is a password field, the token is never rendered anywhere else and never enters the artifact. */
+.live-trading-chart-publish { display: flex; flex-direction: column; gap: 6px; margin: 0; padding: 8px 10px; border: 1px solid #26374b; border-radius: 10px; background: #0c1622; }
+.live-trading-chart-publish-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.live-trading-chart-publish-label { color: #8ea6c0; font: 600 10px 'IBM Plex Mono', monospace; letter-spacing: .04em; }
+.live-trading-chart-publish-input { flex: 1 1 200px; min-width: 0; padding: 3px 6px; border: 1px solid #35485f; border-radius: 6px; background: #101a28; color: #eaf2fb; font: 600 10px 'IBM Plex Mono', monospace; }
+.live-trading-chart-publish-input:focus { border-color: #4fd1a5; outline: none; }
+.live-trading-chart-publish-input.branch { flex: 0 1 110px; }
+.live-trading-chart-publish-input.token { flex: 2 1 260px; letter-spacing: .08em; }
+.live-trading-chart-publish-remember { display: inline-flex; align-items: center; gap: 4px; color: #8ea6c0; font: 600 10px 'IBM Plex Mono', monospace; }
+.live-trading-chart-publish-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+/* Publishing is written the accent colour of the marking surface: it is the same act, one tier further on. */
+.live-trading-chart-mark.publish { border-color: #2b6b57; background: rgba(79, 209, 165, .16); }
+.live-trading-chart-publish-status { margin: 0; color: #a9bdd4; font: 500 10.5px 'IBM Plex Mono', monospace; overflow-wrap: anywhere; }
+.live-trading-chart-publish-note { margin: 0; color: #7f93aa; font: 500 10px 'IBM Plex Mono', monospace; overflow-wrap: anywhere; }
 @media (max-width: 1100px) { .live-trading-levels { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 760px) { .live-trading-grid { grid-template-columns: minmax(0, 1fr); } .live-trading-chart-toolbar { align-items: flex-start; } }
 
