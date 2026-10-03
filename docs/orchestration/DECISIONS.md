@@ -1,5 +1,42 @@
 # Central decisions
 
+## 2026-10-03 (ninth cycle, coordinator): a new Analysis Engine window, four register rows read correctly, and the coordinator owns the order
+
+The user asked for a second strategy window named **Analysis Engine**, where the coordinator and the user can
+discuss how the analysis and the daily calls are made today and whether that logic can be improved, and the
+coordinator opened it: worker `analysis-engine`, branch `workers/analysis-engine-20261003` cut from `4fbde41`,
+worktree `D:/trading-agent-dashboard-codex/.local/worktrees/analysis-engine`, window
+`tools/analysis-engine-node/AnalysisEngine.code-workspace` with its own `README.md`, assignment
+`analysis-engine-001` at status exactly `instructions_published_awaiting_worker`, register row added, a
+paste-ready startup block in `docs/orchestration/AGENT_MESSAGES.md` and a paragraph in this folder's `README.md`.
+It is an audit and advisory lane: it writes only `docs/analysis-engine/`, changes no logic document, export,
+published artifact, workflow, dashboard file or backtester file, runs no batch, reads no holdout, sealed
+prospective window or outcome dataset, makes no live claim, and puts every proposed change to the user. Layer 1
+stays independent and backtesting stays downstream-only. The monitor row appears automatically from the
+register; no monitor code or setting changed.
+
+**The user also reserved the coordinator role and the ordering of the queue for the coordinator.** The standing
+order recorded here is: close a pending report before opening anything new; then the seven asset lanes'
+`READINESS.md` filings as they land; then resume the lanes that are already assigned and merely idle; then
+surface operator-parked or undelivered rows; then the discussion lanes. Questions go to the user only where the
+answer is genuinely the user's - an authority level, a publish, a spend, or a choice between named options -
+not for permission to follow this protocol.
+
+**Correction, because the sixth-cycle sweep read it misleadingly:** `gbp`, `silver`, `wti` and `eur-pairs` are
+**not** the dashboard pairs and **not** the seven backtester windows. They are pre-consolidation Layer 1
+direction-agent rows whose worktrees sit under the old root
+`D:/trading-agent-dashboard-codex.worktrees/agent-*`, last verified 2026-09-20, status
+`awaiting_status_submission`, with no connection record and no event at all. The only windows opened for this
+project are the backtesting ones. Those four rows are left exactly as they are; the reading is corrected here,
+in `docs/orchestration/README.md` and on the new register row.
+
+**Verified in the installed extension, for the user's editor-focus complaint:** Cline 4.1.22 runs each command
+in its own `Cline` terminal and calls `terminal.show()` with no argument, so `preserveFocus` defaults to false
+and VS Code focuses that terminal; the extension contributes no VS Code settings, so no Cline or VS Code toggle
+disables it. The working remedies are Cline's own `cline.focusChatInput` ("Jump to Chat Input", `Ctrl+'` on
+Windows) and doing read-only inspection with file and search tools instead of shell commands. Recorded standing
+in `docs/orchestration/README.md`.
+
 ## 2026-10-03 (eighth cycle, background review): strategy 039 addendum acknowledged - a docs-only filing correction, no new assignment
 
 The background coordinator reviewed `strategy` submission `20261003-strategy-nav-work-order-039-addendum` (mailbox SHA-256 `64942d41e4c587e23b35ed50f1eeca93affad02f51b2f920d0e520e3d6350190`, reproduced from the immutable inbox file at 4,417 bytes; reply `3a97623216a123b00e3bb5fdb023a7e3e3e0a8be5d4e6e088e4e6f56feddad25` at 6,109 bytes; durable review `reviews/20261003-strategy-nav-work-order-039-addendum.md`) and decided **acknowledged**. It is a `status_report` and a filing correction, not new advice: it records that two docs-only commits landed after the `-039` filing, so a reviewer comparing the recorded head `bbf4f73` with the branch tip would see a gap. Acknowledgement is not adoption, execution or production, and this cycle set no worker status to a publish state.

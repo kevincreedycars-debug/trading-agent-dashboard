@@ -1,3 +1,19 @@
+Next immediate action, 2026-10-03 (ninth cycle, coordinator): the Analysis Engine window the user asked for is open -
+worker `analysis-engine`, window `tools/analysis-engine-node/AnalysisEngine.code-workspace`, branch
+`workers/analysis-engine-20261003` cut from `4fbde41`, assignment `analysis-engine-001` at
+`instructions_published_awaiting_worker` - so the user's one remaining step is to open that window, select DeepSeek,
+press **Mailbox: Connect This Cline Worker** once and paste the block in `docs/orchestration/AGENT_MESSAGES.md`.
+The queue order is the coordinator's to set and it is fixed as: (1) the one pending report,
+`20261003-backtester-harness-asset-store-and-tabs-r1`; (2) the seven `backtester-<asset>` lanes' `READINESS.md`
+filings when they land; (3) the two attached-and-idle lanes whose published assignment is masked by an older reply and
+by their own newer pause record (`gold-research` `gold-coverage-025`, `live-trading` `live-trading-001`) - a bare record
+reset is suppressed for these two, so the live event must be proven with the bridge's own `core.workerEvent` before a
+wake is claimed, and the real resumes are revised assignment content or the operator resuming that window's task; (4)
+operator-parked or never-delivered rows (`strategy-2`, `backtester-spike`); (5) the Analysis Engine discussion.
+Reading correction carried here: `gbp`, `silver`, `wti` and `eur-pairs` are pre-consolidation Layer 1 rows under
+`D:/trading-agent-dashboard-codex.worktrees/agent-*`, not the dashboard pairs and not the seven backtester windows.
+
+
 # Active milestone
 
 Next immediate action, 2026-10-03 (eighth cycle, background review): the strategy addendum 20261003-strategy-nav-work-order-039-addendum is reviewed and acknowledged - a docs-only filing correction that moved the lane branch to 646c5e5 and left every -039 document unchanged - so the coordinator next item is the one remaining pending report, the backtester-harness filing 20261003-backtester-harness-asset-store-and-tabs-r1 (9,963 bytes, sha256 7d3563b71b0af1be53df2d243d41789182ff461fe42b093206e2190a5072c848), which the ordering rule closes before any new work is designed. Nothing else is executable by a background cycle, because the substantive nav decision is still the user and still has three parts - (a) the rail deep-link choice (add the roughly ten lines to script.js so index.html#GOLD selects a tab; recommended; or anchor the other eight pages to plain index.html), (b) the date and clock choice (omit the live spans on the other eight pages; recommended; or bake a static line), and (c) whether the coordinator dashboard lane now executes Task 0 and the N1a build the reviewed work order describes. Still open and unchanged: the live data refresh the -036 go-ahead already covers, the movement-screen lane gold-declared-band-measurement-026, the carried 022 item A anchor envelope for gold-research, and the live-trading call-to-order contract with its written FTMO confirmation inside live-trading-001. The review is docs/orchestration/reviews/20261003-strategy-nav-work-order-039-addendum.md.

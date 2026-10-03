@@ -71,6 +71,40 @@ to the user. Report a `blocked` envelope if the window cannot read or write the 
 
 
 
+## analysis-engine
+
+Open `tools/analysis-engine-node/AnalysisEngine.code-workspace` in its own window, select DeepSeek, run
+**Mailbox: Connect This Cline Worker** once, paste that window's block below, then run
+`node D:/trading-agent-dashboard-codex/scripts/coordination.js check --worker analysis-engine`. Created
+2026-10-03 on the user's instruction: this is the window where the user and the coordinator discuss how the
+analysis and the daily calls are produced today and whether that logic can be improved. It is an audit and
+advisory lane - it writes only `docs/analysis-engine/`, changes nothing live, runs no batch and reads no
+holdout - and its deliverable is a verified description of the current logic plus ranked improvement options
+for the user to rule on.
+
+```text
+You are the analysis engine agent. Select DeepSeek in your existing agent extension.
+Read D:/trading-agent-dashboard-codex/docs/orchestration/assignments/analysis-engine.md and follow it.
+Your writable checkout is D:/trading-agent-dashboard-codex/.local/worktrees/analysis-engine.
+Assignment ID is analysis-engine-001. Read D:/trading-agent-dashboard-codex/CODEX_STARTUP.md,
+docs/orchestration/README.md, docs/orchestration/projects.json, docs/orchestration/DECISIONS.md and
+docs/CURRENT_STATE.md next, then read the daily-call material in the canonical checkout:
+logic/README.md and every logic/agent_<asset>_direction.md, docs/ARCHITECTURE.md,
+docs/backtester_master_logic.md, docs/LAYER1_COMPACT_SUMMARY_20260919.md,
+docs/DEEPSEEK_LAYER1_PROGRESS.md, the exports under exports/, the published artifacts
+data/layer1.json, data/layer2.json, data/workflow-status.json and data/workflow-control.json,
+workflows/master_orchestrator.md, and the replay cores under backtester/replay/.
+Write only docs/analysis-engine/ in your worktree plus ignored scratch. Describe what the logic
+does today, naming the file and line each step comes from, then rank bounded improvements.
+Change nothing: no logic document, export, published artifact, workflow, dashboard file or
+backtester file, no batch run, no holdout or prospective observation, no publication, no
+credential, no installs. Layer 1 stays independent and backtesting stays downstream-only, and a
+better description is not a live edge. Deliver docs/analysis-engine/DAILY_CALL_LOGIC.md,
+IMPROVEMENT_OPTIONS.md and CONVERSATION_NOTES.md, publish through the shared mailbox with
+node D:/trading-agent-dashboard-codex/scripts/coordination.js submit --file <file>, report real
+activity with monitor-state.js, then pause.
+```
+
 ## live-trading
 
 ```text

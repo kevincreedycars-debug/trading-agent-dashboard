@@ -22,6 +22,14 @@ The authority boundary - a read-only feed, execution on a demo account, or real-
 on a funded account - is the user's and stays open. Startup instructions are in
 `tools/live-trading-node/README.md`.
 
+Analysis Engine adviser: open `tools/analysis-engine-node/AnalysisEngine.code-workspace` with DeepSeek.
+Its `analysis-engine-001` assignment is a discussion and audit lane for the logic that produces the daily
+directional calls - how one call is made today, step by step and factor by factor, and which bounded
+improvements the user might consider. It writes only `docs/analysis-engine/` in its own worktree, changes no
+logic document, export, published artifact, workflow, dashboard file or backtester file, runs no batch and
+reads no holdout or prospective observation; Layer 1 stays independent and backtesting stays downstream-only.
+Startup instructions are in `tools/analysis-engine-node/README.md`.
+
 Seven asset backtester lanes: for USD, EUR, NQ, BTC, GBP, Silver and WTI - the seven non-Gold assets of the
 2026-09-24 readiness matrix - open `tools/backtester-<asset>-node/Backtester<Asset>.code-workspace` with
 DeepSeek. Each is a readiness and standby lane under `backtester-<asset>-001`: it writes only
@@ -184,7 +192,7 @@ The coordinator sweeps its own inboxes before each publication and at the start 
 Ordering rules, applied by the coordinator and recorded in the milestone note when the order changes:
 
 - Close before you open: review and reply to a pending submission before designing or publishing new work.
-- Wake before you re-plan: a lane that is already assigned and whose window is already open is resumed with the record reset before a new assignment is written for it.
+- Wake before you re-plan: a lane that is already assigned and whose window is already open is resumed with the record reset before a new assignment is written for it. The reset is only enough when no matching activity record beats the event: the bridge suppresses an event older than the lane's own record for the same assignment, and a `working` activity holds a lane whatever the deadlines say. Two lanes sit in exactly that second case - `gold-research` (`gold-coverage-025`) and `live-trading` (`live-trading-001`), each paused after its last reply - so their published assignment is masked by the reply and by their own pause record, a bare reset is suppressed there, and neither may be reported as woken. Prove the live event with the bridge's own `core.workerEvent` before claiming a wake, and treat "revised assignment content" and "the operator resuming that window's task" as the real resumes for those two.
 - Surface user-blocked work immediately instead of queueing it behind bridge work: a lane with no open window, an unanswered question block, or a decision only the user can make is reported as the user's item in the reply, not held silently.
 - Publish last, and only onto a window that can receive it: a lane whose window is closed cannot be woken by the bridge, so publishing to it is a queued event that fires on first connect, not progress. Distinguish that state from a broken lane before reporting a fault.
 
@@ -216,3 +224,35 @@ can be expected. Submission/reply notifications work without heartbeats.
 See `tools/project-monitor/README.md` for launch, notifications and verification.
 
 New worker assignments must use registry status `instructions_published_awaiting_worker` exactly; the bridge uses it to generate a wake event. Monitor controller status distinguishes watching from active review; notification sent is not proof of worker pickup.
+
+## Reading the register without fooling yourself
+
+Two readings have caused real confusion and are worth stating once:
+
+- `gbp`, `silver`, `wti` and `eur-pairs` are **not** the dashboard pairs and **not** the backtester windows.
+  They are pre-consolidation Layer 1 direction-agent rows cut on 2026-09-07 whose worktrees live under the old
+  root `D:/trading-agent-dashboard-codex.worktrees/agent-*`, last verified 2026-09-20, status
+  `awaiting_status_submission`, with no connection record and no event. Report them as historical rows, never
+  as the assets on the dashboard and never as the seven `backtester-<asset>` lanes, whose worktrees are under
+  `D:/trading-agent-dashboard-codex/.local/worktrees/`.
+- The seven asset lanes the user opened are readiness and standby lanes only. The dashboard's own pairs are
+  live data on a different surface, and none of the agent windows writes them.
+
+## Editor focus when an agent runs a command
+
+Verified in the installed extension rather than guessed: `saoudrizwan.claude-dev` 4.1.22 runs every command in
+its own `Cline` terminal and calls `terminal.show()` with no argument - `TerminalManager` logs `Running command
+on terminal ...` and then calls `terminal.show()`, and the one-shot path is
+`window.createTerminal({ name: 'Cline', ... }); terminal.show(); terminal.sendText(...)`. Because
+`preserveFocus` defaults to false, VS Code moves keyboard focus into that terminal. The extension contributes
+no VS Code settings at all, so there is no Cline or VS Code toggle that turns the focus move off: a command
+that runs will take the cursor.
+
+What actually helps:
+
+- **Jump to Chat Input** is Cline's own command `cline.focusChatInput`, bound by default to `Ctrl+'` on
+  Windows. One keystroke returns the cursor to the chat box.
+- Prefer the file and search tools over shell commands for read-only inspection. Reads, greps and directory
+  listings never touch a terminal, so they cannot take focus; keep the shell for what only the shell can do
+  (`git`, `node`, `npm`) and batch it into as few commands as possible.
+
