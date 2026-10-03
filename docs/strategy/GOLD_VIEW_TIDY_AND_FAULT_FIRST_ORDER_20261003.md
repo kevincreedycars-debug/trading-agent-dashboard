@@ -6,6 +6,37 @@ to the coordinator and its dashboard lane under the single-writer rule, not an a
 production patch. Nothing here re-derives a number, publishes anything, touches the collector, or reads the window sealed
 until `2027-03-25T15:00:00Z`.
 
+## Revision 2, 2026-10-03 - the user's answers, and one instruction that puts this work beside the navigation change
+
+The user answered in the same session and added a direct instruction, verbatim: *"make sure the top and side bar menus of
+this gold page match the homepage of the dashboard."* Five things change in this revision. No measurement, number, route
+or boundary in revision 1 changes.
+
+| # | What he said | Where it lands |
+| --- | --- | --- |
+| 1 | Keep the two archive census tabs "for now" | Section 4 keeps them, as one `Archive census` tab at the end of the strip. Nothing is deleted, no address breaks, and the demotion is presentation only |
+| 2 | On the small menu, "both" | Closed in `COORDINATOR_NAV_TIDY_HANDOVER_20261003.md` section 7: each entry opens the dashboard and lands on the view its label names |
+| 3 | The date and clock, "whatever is most effective" | Delegated to this lane's judgement and recorded in section 8 of that same file: omitted on the eight non-dashboard pages, never faked |
+| 4 | The shared header and menu, "yes" - start now | This tidy and the nav change are one change on `gold.html`, so the page is edited once: it gains the home page's bar and rail above its four tabs |
+| 5 | The four day-size figures, "use your judgement" | Judged in this revision: re-printed by the same run as the rest of the page. Sections 3, 5 and 6 carry it |
+
+**The judgement on the four day-size figures, in one line and then its reason.** He most likely needs numbers whose date he
+does not have to check, and a page that mixes one run's figures with another day's four is a caveat a reader cannot see. So
+the four medians - day range 1.4472%, full L2L 0.7236%, half L2L 0.3618%, median close-to-close 0.6701% - are to be
+re-printed by the same scan that prints the movement counts and the ladder: one added print of `median`, `q1` and `q3`, no
+new data, no new method, no re-cut of anything. Until that print runs the figures stay exactly as they are, marked as the
+lane's own 2026-09-28 measurement, and the default recorded in revision 1 still stands.
+
+**What the re-print must not do.** It must not silently relabel or round a published figure. If the re-run's median differs
+from the marked one, both numbers are shown with their own date and the difference is recorded, because the page's whole
+value is that a reader can trust what it says about itself. The page's single as-of line follows the print, not the other
+way round.
+
+**And the instruction that touches this filing directly.** `gold.html` today has a bespoke header and no side-bar menu; the
+home page has both. The nav change gives the gold page the home page's bar and rail above its own title block and tabs, so
+the two works are the same edit on the same file and must land together with Task 0 of the nav work order in front of them.
+Section 4's coupling paragraph and section 6 carry this.
+
 ## 1. What the user said, and how it is read
 
 Verbatim, this turn: *"Yes this thread was interrupted we want to see and analyse all the gold data as per above."* /
@@ -24,7 +55,7 @@ find where this data is and how to interpret it. Remeber we want to see directio
 | Earlier 1 | Yes - start here, make the data easy to find and to read, and always show direction with L2L and 0.5 L2L | Section 4, the "always together" rule |
 | Earlier 2, 3, 5 | Yes to the presentation routes and to applying the collector patch | Sections 4 and 5 |
 | Earlier 4 | The forward record is questioned: this is pattern-finding on history | R4 withdrawn, section 5, with the one consequence stated |
-| Earlier 6 | "not sure yet" on re-deriving the four day-size numbers | Default stands: they stay as the marked 2026-09-28 measurement |
+| Earlier 6 | "not sure yet" on re-deriving the four day-size numbers | Revision 2: re-printed by the same scan as the rest of the page (one added print); the marked 2026-09-28 figures stand until it runs |
 
 ## 2. Where the data is, live, measured today
 
@@ -99,7 +130,9 @@ Recommended tab set (the dashboard lane owns exact wording and order; this is th
 5. **Archive census.** The outcomes census and the evidence page, kept reachable and plainly labelled as being about the
    archive, not about gold. Two census tabs leading the page is a large part of why the user reads the gold work as
    useless; demoting them is the "tidy and simplify" he asked for, and deleting nothing keeps every old address, bookmark
-   and guard working.
+   and guard working. **Confirmed by the user on 2026-10-03 - keep them "for now"** - so this tab stays and what changes is
+   where it sits, not whether it exists. "For now" is read as: he can drop it later if he says so, and nothing in this
+   build makes that harder.
 
 **Not negotiable, from the existing briefs:** no number is re-derived, re-cut or re-rendered; the four framed pages and
 their generators, templates and data artifacts are not edited for this change; the old addresses keep working; the draft
@@ -110,7 +143,9 @@ anywhere.
 inconsistency the user asked to remove on 2026-10-01. The nav tidy
 (`docs/strategy/COORDINATOR_NAV_TIDY_HANDOVER_20261003.md`, `docs/strategy/DASHBOARD_NAV_CONSISTENCY_REQUEST.md`) and this
 content change both edit that page, and Task 0 (the served bar versus the tree's bar) still has to land before either, or
-the same three guards get re-pointed twice.
+the same three guards get re-pointed twice. The user named `gold.html` directly on 2026-10-03, so it is the first page that
+change fixes: it gains the home page's bar and side-bar menu, above its own title block and four tabs, in the same edit as
+this tidy.
 
 ## 5. The sequencing the user chose, and the one route he withdrew
 
@@ -134,10 +169,12 @@ the same three guards get re-pointed twice.
    the numbers describe the past, nothing tests them afterwards, and no row on them should be read as an edge. Ten rules
    are no longer declared ahead of looking, so no later filing may quote the ten base rates as a pre-declared test.
 
-**Default that stands unasked:** the four day-size figures stay as the lane's marked 2026-09-28 measurement rather than
-being re-derived with one added median print, since the user answered "not sure yet" and the stated default holds. It is a
-presentation-accuracy point only - the scan that re-runs today prints the movement counts and the ladder, not the size
-medians - and it can be closed later at the cost of one added print.
+**Superseded by revision 2 on 2026-10-03:** the four day-size figures are to be re-printed by the same scan that prints the
+movement counts and the ladder - one added print of `median`, `q1` and `q3`, no new data, no new method - so the page
+carries one run and one as-of line. Until that print lands, the figures stay exactly as they are, marked as the lane's
+2026-09-28 measurement, and no published number is relabelled or rounded in the meantime. The point is
+presentation-accuracy: the scan that re-runs today prints the movement counts, the ladder and its two assertions, not the
+size medians, which is why this one caveat exists at all.
 
 ## 6. What is asked of the coordinator, and what is still the user's
 
@@ -145,20 +182,26 @@ Asked of the coordinator, and nothing beyond it:
 
 1. **Sequence the fault fix first** as the production priority on the Gold input, using the user's word recorded here.
 2. **Put the gold-view tidy on the dashboard lane** with section 4 as the brief, folded in with the navigation work rather
-   than run against it, so the page is edited once.
+   than run against it, so the page is edited once. That one edit also gives `gold.html` the home page's top bar and
+   side-bar menu, above its own title block and four tabs - the user's instruction this turn - with Task 0 of
+   `COORDINATOR_NAV_TIDY_HANDOVER_20261003.md` landing in front of it.
 3. **Open the movement measurement**: a register edit for `gold-declared-band-measurement-026` and a decision on whether
    that lane is `gold-research` or another one. An advisory worker cannot touch the register.
 4. **Record that R4 is withdrawn** so no later review expects a forward record, a declared rule set or a review date.
 
-Still the user's, and restated in plain words here because he asked for them again:
+**Answered by the user on 2026-10-03, so nothing in this list is still open:**
 
-1. On the eight pages other than the dashboard, should the small menu actually switch the dashboard to the right view
-   (this needs about ten lines of code added, which the gold page already does for its own tabs), or should it only open
-   the dashboard's front view? Recommended: make it switch.
-2. On those same pages, should the date and clock be left off (recommended, because no other page loads the code that
-   fills them, so a copy would sit on "Loading date..." forever), or should a fixed date line be baked in by the builder?
-3. Should the dashboard lane start the shared header and side-menu tidy-up now? The release it was queued behind - the
-   gold page - is live, so nothing is waiting on it any more. Recommended: yes, Task 0 first.
+1. The small menu on the other pages: **"both"** - it opens the dashboard and lands on the view its label names, and every
+   page is reachable from every other. Settled route recorded in `COORDINATOR_NAV_TIDY_HANDOVER_20261003.md` section 7.
+2. The date and clock on those pages: delegated to this lane's judgement - omitted, never faked, with the reasons recorded
+   in section 8 of that file.
+3. Start the shared header and side-menu tidy-up now: **"yes"**. This tidy and that change are one edit on `gold.html`.
+4. The four day-size figures: delegated to this lane's judgement, recorded in revision 2 - re-printed from the same run,
+   with the marked 2026-09-28 figures standing until that print lands.
+
+**The one thing still owed by others, and named so it is not lost:** the collector fault fix is production work only the
+coordinator can sequence, and the movement lane needs a register edit only the coordinator can make. Both are asked for in
+section 6 above; neither can be done from this window.
 
 ## 7. What this filing does not do
 

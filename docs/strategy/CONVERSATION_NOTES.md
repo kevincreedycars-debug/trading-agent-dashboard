@@ -3064,3 +3064,49 @@ page, stylesheet, script, template, builder, guard, generator, data artifact, nu
 controller or bridge file was touched; no patch was applied; nothing was published, refreshed or triggered; the patch's
 validation status is recorded as outstanding rather than claimed; and the window sealed until `2027-03-25T15:00:00Z` was
 not read.
+
+## 2026-10-03 — the user names the gold page's bar and menu, and answers the five open choices
+
+**His instruction this turn, verbatim:** *"make sure the top and side bar menus of this gold page match the homepage of
+the dashboard."* Then five answers to the questions put to him: keep the two archive census tabs "for now"; on the menu
+behaviour "not sure, both, just make the pages easy to navigate to and make it consistent with how the homepage looks";
+the date and clock "whatever is most effective relative to the project objectives"; the shared header and menu tidy "yes";
+and the four day-size figures "not sure again use your judgement on what I am most likely to need based on the projects
+objectives".
+
+**Measured live this turn, read-only over HTTPS, and unchanged from `-042`'s reading.** `index.html` HTTP 200 at 18,775
+bytes carries one `.topbar` and one `aside.side-rail`: brand `Asset Directional Movement Dashboard`, bar entries exactly
+North Star Brief, Standing Dashboard, Gold, Backtest Flow; rail head `ADM` / `Control Room`, four groups in order Operate,
+Live, Evidence, System, foot "Published dashboard"; it loads `styles.css` and `script.js`. `gold.html` HTTP 200 at 5,733
+bytes carries **zero** `.topbar` and **zero** side-rail references, links `styles.css`, loads no script, and holds its own
+`<header class="goldtabs-head">` - h1 "Gold", one sentence and a single "Back to the dashboard" link - above its four tabs
+(Direction, Backtest evidence, 28-factor outcomes, Factor tables (draft)). `origin/main` is still `f8bc80f`. So the split
+the user is complaining about is exactly as `-039` measured it: the bar and the rail are on the home page and on no other
+page, and the gold page is the newest page without them.
+
+**Both filings moved to revision 2, and neither changes a measurement.** `COORDINATOR_NAV_TIDY_HANDOVER_20261003.md` now
+names `gold.html` as the first page to fix, closes the rail question as "both" - each entry opens the dashboard *and* lands
+on the view its label names, with the plain-anchor fallback so it still works without the script - and settles the clock by
+delegated judgement: the bar is identical everywhere and the two live spans are omitted on the eight other pages, with the
+reasons written out (those pages' own as-of and updated lines already carry currency; loading the ~14,900-line `script.js`
+onto them buys no navigation, cannot work on the draft page, and adds unknown side effects; a baked date would be a fixed
+number wearing a live number's clothes). Its section 6 row for `gold.html` now says the block goes above `.goldtabs-wrap`
+byte-identical to the home page's two blocks, keeping the page's title block, back-link, four tabs and foot note.
+
+The second revision, on `GOLD_VIEW_TIDY_AND_FAULT_FIRST_ORDER_20261003.md`, records answer 1 (the two census tabs stay, as
+one `Archive census` tab at the end - demotion is presentation, nothing deleted, no address broken) and the judgement on
+the day-size figures: they are to be re-printed by the same scan that prints the movement counts and the ladder, one added
+print of `median`, `q1` and `q3`, so the page carries one run and one as-of line; until that print lands the four figures
+stay exactly as they are, marked as the lane's own 2026-09-28 measurement, and no published number is relabelled or
+rounded. If the re-run's median differs from the marked one, both are shown with their own date. Section 6's list of open
+questions is now an answered list, and the item it asks the coordinator to sequence - the fault fix first - is unchanged.
+
+**The `-042` submission landed.** `coordination.js check --worker strategy` reads
+`20261003-strategy-gold-view-and-fault-first-042` as `pending_review`, so the earlier empty tool output was a capture
+problem rather than a failed submit, and nothing needed re-filing. No assignment has been published and the register is
+untouched.
+
+**Boundaries kept.** This turn changed only the two `docs/strategy/` filings, this notes file and ignored `tmp/` scratch.
+No page, stylesheet, script, template, builder, guard, generator, data artifact, number, register entry, assignment, lock,
+controller or bridge file was touched; no patch was applied; nothing was published, refreshed or triggered; and the window
+sealed until `2027-03-25T15:00:00Z` was not read.

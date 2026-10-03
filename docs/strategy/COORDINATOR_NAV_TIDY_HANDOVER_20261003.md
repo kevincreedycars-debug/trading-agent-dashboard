@@ -5,6 +5,32 @@ instructiosn to tidy up the top and side bar menu to ensure consistency site wid
 no page or stylesheet is touched by this worker, and no claim of completion is made. This file is the executable form of
 `DASHBOARD_NAV_CONSISTENCY_REQUEST.md` (2026-10-01); where the two disagree, this file holds the current measurement.
 
+## Revision 2, 2026-10-03 - the gold page named, and the three open choices closed
+
+The user returned with a direct instruction, verbatim: *"make sure the top and side bar menus of this gold page match the
+homepage of the dashboard."* He also answered the three open choices, and where he declined to choose he delegated the
+call to this lane's judgement. Nothing measured in revision 1 changed; what changed is that the work no longer carries
+open questions:
+
+1. **The gold page is named as the page to fix first.** `gold.html` (5,733 bytes live) carries **no** top bar and **no**
+   side-bar menu today: its own `<header class="goldtabs-head">` holds a title, one sentence and a single "Back to the
+   dashboard" link, beside its four tabs. The home page carries one `.topbar` (brand `Asset Directional Movement
+   Dashboard`, then North Star Brief, Standing Dashboard, Gold, Backtest Flow) and one `aside.side-rail`. The instruction
+   is that the gold page carries those same two blocks, above its own tabs.
+2. **The rail's behaviour off the dashboard is "both"** - his word: each entry opens the dashboard *and* lands on the view
+   its own label names, which is route (a) plus the plain-anchor fallback of route (b). Section 7 is rewritten.
+3. **The date and clock were delegated to this lane's judgement**; the judgement is the revision-1 recommendation and is
+   recorded in section 8, with the reasons written out so the call can be re-opened on facts rather than taste.
+4. **Start now** - his word, "yes": the shared bar and rail are built now, on the gold page and the other seven, in one
+   change. The release this work was sequenced behind landed on 2026-10-03, so nothing is waiting on it any more.
+
+Verified live again this revision, read-only over HTTPS, and unchanged from revision 1: `index.html` HTTP 200 at 18,775
+bytes, one `.topbar` and one `aside.side-rail`, `styles.css` and `script.js` loaded, bar labels exactly `North Star Brief |
+Standing Dashboard | Gold | Backtest Flow`, rail head `ADM` / `Control Room` and four groups in order `Operate`, `Live`,
+`Evidence`, `System`, foot `Published dashboard`; `gold.html` HTTP 200 at 5,733 bytes, **zero** `.topbar` and **zero**
+`side-rail` references, `styles.css` linked, no `script.js`, tabs `Direction`, `Backtest evidence`, `28-factor outcomes`,
+`Factor tables (draft)`. `origin/main` is still `f8bc80f`, so revision 1's page table stands as written.
+
 ## 1. What is asked, and what is already settled
 
 One requirement over the whole served site: **the same top bar and the same side-bar menu on every page.** It is a
@@ -115,7 +141,7 @@ next build.
 | Page | What to do | Generated? |
 | --- | --- | --- |
 | `index.html` | Replace the existing bar and rail with the canonical dashboard variants, keeping `id="agentTabs"` on the nav and every `data-tab` value: `script.js` binds `.tab-button` clicks and reads `dataset.tab` (lines 14,875 and 14,931-14,932), so a renamed or re-ordered entry silently stops working. Keep the `.dashboard-frame` layout. | no |
-| `gold.html` | Insert the bar and rail at the top of `<body>`, above `.goldtabs-wrap`. Keep the page's own title block, the "Back to the dashboard" link, the four tabs and the foot note. | yes (own builder) |
+| `gold.html` | **The page the user named (revision 2).** Insert the bar and rail at the top of `<body>`, above `.goldtabs-wrap`, byte-identical to `index.html`'s two blocks. Keep the page's own title block, the "Back to the dashboard" link, the four tabs and the foot note: the shared block is added above them and nothing is removed. `.goldtabs-wrap`'s top padding becomes the content offset for the rail (section 7). This is the first page the change must fix, so a reader who opens Gold from the bar sees the same chrome as the home page. | yes (own builder) |
 | `dashboard-northstar.html` | No `<header>` exists: insert the block at the top of `<body>`, before `<main class="northstar-shell">`. Keep the hero, the action row and its `index.html` link. | no |
 | `standing-dashboard.html` | Same insertion as the north star page. Keep the "Now" bar and the hero. | no |
 | `backtest-flow.html` | Insert the block **before `<main>`**, not inside it: that page's guard asserts `header section` and `header footer` counts of 0 and exactly three direct children of `main` (`.lane-live`, `.barrier`, `.lane-research`), so a block dropped inside `main` or an extra `section` inside a header fails it. Keep the page's own title, lede and chips. | no |
@@ -139,14 +165,22 @@ data-tab="...">` and its `script.js` behaviour, and `id="agentTabs"` stays dashb
 `index.html#gold` (its section 4.1) does not select a tab. `gold.html` does honour the hash, on load and on `hashchange`
 (lines 101-102) - the pattern already exists in the site.
 
-Two honest choices, and the lane should pick one and say which:
+**Settled by the user on 2026-10-03: "both".** Every rail entry on the eight non-dashboard pages is a real `<a>` to the
+dashboard *and* lands on the view its label names - that is route (a) carrying the (b) fallback, so the entry still works
+if the script does not run:
 
-- **(a) recommended - give the dashboard the hash handling `gold.html` already has**: about ten lines in `script.js`, on
-  load and on `hashchange`, mapping the hash to `setTab`. Then `index.html#GOLD` lands where the label says, a rail click
-  from any page means something, and a guard can pin one deep link end to end. Cost: one bounded `script.js` change, in a
-  file the release already touches.
-- **(b) anchor to plain `index.html` and say so**: nothing to change, but seventeen labels all land on the same default
-  view, so the rail on those pages is decoration that navigates to the dashboard rather than navigation.
+- **(a) give the dashboard the hash handling `gold.html` already has**: about ten lines in `script.js`, on load and on
+  `hashchange`, mapping the hash to `setTab`. Then `index.html#GOLD` lands where the label says, a rail click from any page
+  means something, and a guard can pin one deep link end to end. Cost: one bounded `script.js` change, in a file the
+  release already touches.
+- **(b) the fallback that makes "both" true**: the same entry is a plain `index.html` link, so with no script - or if a
+  hash is not recognised - the reader still lands on the dashboard rather than on nothing, and reverting (a) breaks no
+  address.
+
+The one thing not to do is the revision-1 (b) alone: seventeen labels landing on the same default view is a rail that
+navigates to the dashboard rather than navigation, which is the opposite of the user's "make the pages easy to navigate
+to". "Easy to navigate to" cuts both ways as well - every page reachable from every other page through the bar and the
+rail - so the change is not finished until a reader can get from a research page to any other named view, and back.
 
 **The gold entries.** On non-dashboard pages the rail's `Gold` entry should point at `gold.html#direction` (the tabs page,
 whose hash handling already works), not at `index.html#GOLD`.
@@ -164,10 +198,17 @@ already use (1440, 1180, 860, 768, 721, 390) assert that no page scrolls sideway
 showing "Loading date..." forever, and a copy plus a script is barred on the draft page by its own guard and is an
 unwanted dependency elsewhere.
 
-Recommended: the bar on the other eight pages carries the brand and the four entries and **omits the two live spans** -
-the single deliberate difference, named here and in the guard, with the rail and everything else matching exactly. If the
-user wants a date visible on every page, the honest second option is a static date line baked by the builder at build
-time, stated with its source like any other number. Do not fake a ticking clock.
+**Settled on 2026-10-03: the user delegated this to the lane's judgement - "whatever is most effective relative to the
+project objectives" - and the judgement is the revision-1 recommendation.** The bar on the other eight pages carries the
+brand and the four entries and **omits the two live spans** - the single deliberate difference, named here and asserted by
+the guard, with the rail and everything else matching exactly. The reasons, so the call can be re-opened on facts rather
+than taste: the clock's only job is to show the site is live, and these eight pages are built reports whose own as-of and
+updated lines already say what they are made of; loading the dashboard's ~14,900-line `script.js` onto them buys no
+navigation and adds an unknown side-effect surface plus a hard failure on the draft page, which may load no script at all;
+and a baked date line would be a fixed number wearing a live number's clothes, which is worse than an absent one for a
+reader checking currency - the project's whole point on these pages is that what a page says about itself can be trusted.
+If the user later wants a date visible on every page, the honest route stands as written: a static line baked at build
+time and stated with its source like any other number. Do not fake a ticking clock.
 
 ## 9. Guard work
 
@@ -222,8 +263,11 @@ address stops working.
   verification (section 10).
 - One change, one push. Splitting the bar and the rail into two pushes leaves the site visibly half-done in between; if it
   must be split, bar first, rail second, with the guard written to pass on both halves.
-- The user's two open answers here, if they want to change them, are the rail's deep links (7a/7b) and the clock (section
-  8); everything else follows from what they already said on 2026-10-01.
+- Both of the user's open answers here were closed on 2026-10-03: the rail off the dashboard is "both" (section 7) and
+  the clock is settled by delegated judgement (section 8). If he changes his mind on either, those two are the only knobs;
+  everything else follows from what he already said on 2026-10-01 and 2026-10-03.
+- The gold page is named, not implied (revision 2): it is the first page this change fixes, because it is the page he was
+  looking at when he asked.
 
 ## 13. Provenance
 
