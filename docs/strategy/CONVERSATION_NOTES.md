@@ -2697,3 +2697,55 @@ pre-submission count.
 Written out for the user as `docs/strategy/COORDINATOR_HANDOVER_20261003.md`. This turn changed this notes file, that
 handover and the ignored `tmp/` scratch only; no page, bar, guard, generator, stylesheet, data artifact, number, mailbox
 filing, lock or controller file was touched, and nothing is live as a result.
+
+## 2026-10-03 (same session) - the coordinator's reply to `-037`, and the gold release went live while it was in review
+
+The handover was filed for the coordinator's inbox as `20261003-strategy-coordinator-handover-doc-037` (8,203 bytes,
+mailbox sha256 `0dd8a2fa46f0b85bfd84f735df2d869a4f0ea8aa610fcf604fca63c34ad8e0d8`) on the branch tip `091f706`, and the
+background dispatcher picked it up within seconds (controller `reviewing`, pid 8184, `run.lock` held). Decision at 15:30
+the same day: **accepted** (review `docs/orchestration/reviews/20261003-strategy-coordinator-handover-doc-037.md`), with
+the rule restated - "acceptance is not integration and not production". It reproduced both changed files byte-exactly: the
+handover at 10,080 bytes / 136 CRLF / 0 bare LF / sha256 `3f88488ab7fe0c1031a4a5a0df834ca593e8ddad4960ec98ebac7dd6c81220ea`,
+and this notes file at 230,561 bytes / 2,699 CRLF / sha256 `86667626e1ef44e626e80c519f549bd4b1ce6c18c89414a0746cfdeb1ae713bb`,
+pure addition against the last pre-session revision `bcacb83` - 112 insertions, 0 deletions, 2,587 lines to 2,699 - so no
+pre-session note text was lost in the un-interleaving. It confirmed the change set stayed inside `docs/strategy/` and that
+the release candidate was untouched, so nothing needed rebuilding.
+
+**The news that matters: the release was published while this document was in review, so item (2) of the user's three is
+done and the handover's instruction part is spent.** Production `main` carries `2f25c8c` "Publish the gold tabs page as
+gold.html, one gold bar entry and the draft factor page at 50 of 50" (168 insertions, 34 deletions over `gold.html` +106,
+`index.html` +1/-2 and `gold-factor-wip.html` +61/-32), pushed at 15:27 BST from the release worktree
+`.local/gold-tabs-release`; a later `f8bc80f` sits on top of it for the live-trading snapshot only. Verified from this
+worktree and from the live site rather than taken from the reply:
+
+- **The materialisation served is the LF form**, which answers the one choice this lane insisted had to be stated out
+  loud. The live page is 5,733 bytes with zero CRLF and sha256
+  `5ae6c22a9f7a47ad59fd5b0260450951004c4781e0b243f9eda7eb59f8b51460`, byte-identical to the committed blob, so the
+  5,839-byte CRLF worktree file was never the copy that went out. A later check reproduces 5,733 / `5ae6c22a...`.
+- The live `index.html` carries exactly one `href="gold.html"` top-bar entry and **no** old Gold Direction or Gold Factor
+  link, and the live gold page answers HTTP 200 titled "Gold - one page with tabs".
+- The guard pin moved in the same change, as required: `779a701` on the canonical orchestration branch, line 28 now
+  `/50 of 50 answered/`, with the live draft factor page reading 50 of 50.
+- The same push carried `7ce136e`, the refreshed live-trading MT5 snapshot - data for a different page, not the Layer 1
+  panel, and no refresh of that panel.
+
+**The panel is still stale, so item (3) is the one item of the user's three that nothing has yet done.** Re-read after the
+release: `data/layer1.json` at `origin/main` still carries `last_updated_et 2026-10-02T07:29:28.874Z`, and the last run in
+`data/workflow-status.json` is `2026-10-02T07:29:31.991Z`, `success`, "Manual Refresh Complete", `failed_step: null`.
+
+**Corrections folded into the handover, so it stays the lane's accurate record rather than a plan for work already done:**
+Task 1 marked already done, Task 2 retitled as published with the record above and its checklist marked spent, Task 3
+marked outstanding with the fresh stale reading, the order rewritten, the `-037` reply added in its own words, and the
+queued navigation route annotated as unblocked by the landing release. The review recorded one claim as stated rather
+than reproduced - that this branch is pushed to origin, because that run had no network and the canonical checkout holds
+no remote-tracking ref for the worker branch; verified from this side instead, `git ls-remote origin
+refs/heads/workers/strategy-advisory-20260920` answers `091f7069ff0f9dccea25250eb2fbfb9b38fd8831`, equal to local HEAD.
+
+**Left to the user, and only the first is covered by the go-ahead:** (a) run the live data refresh now; (b) open the
+movement-screen lane `gold-declared-band-measurement-026`; (c) whether navigation route N1 proceeds now that its sequence
+condition, the release, has landed.
+
+This turn changed only this notes file, `docs/strategy/COORDINATOR_HANDOVER_20261003.md` and ignored `tmp/` scratch, all
+committed on `workers/strategy-advisory-20260920`. No page, bar, guard, generator, stylesheet, data artifact, number,
+mailbox filing, lock or controller file was touched by this worker, and the gold page being live is the coordinator's
+production action, not this worker's.

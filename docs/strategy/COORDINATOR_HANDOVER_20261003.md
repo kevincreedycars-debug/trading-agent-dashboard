@@ -3,7 +3,14 @@
 Prepared by worker `strategy` (`strategy-advisory-001`) for the dashboard lane and the coordinator, on the user's own
 word this session. Filed as submission `20261003-strategy-gold-release-and-helper-go-ahead-036` (mailbox sha256
 `2a8606a092885d2207436c485f7ed5e35203b5ad98fd2ecbf0c032f05975655e`; decision **acknowledged** by the coordinator on
-2026-10-03 at 15:19).
+2026-10-03 at 15:19). Filed a second time as submission `20261003-strategy-coordinator-handover-doc-037` (mailbox
+sha256 `0dd8a2fa46f0b85bfd84f735df2d869a4f0ea8aa610fcf604fca63c34ad8e0d8`; decision **accepted** on 2026-10-03 at
+15:30), which is what placed this document in the coordinator's inbox.
+
+**Status of this document as of 2026-10-03 15:45.** It is the lane's own record of the user's go-ahead and of what a
+coordinator needed in order to act on it. It is **not** the instruction set for the release any more: the release was
+executed while this document was in review (Task 2 below), so its instruction part is spent, and where this text and
+the coordinator's review differ, the review and its reply supersede it.
 
 ## Authority
 
@@ -22,11 +29,12 @@ turn supplies the missing piece, the user's word for the refresh and for the loc
 
 ## Order, and why
 
-1. **Clear the dead lock and restart the helper - ALREADY DONE, see Task 1 below.** The coordinator cleared it itself
-   while this handover was being written.
-2. **Publish the gold release.** It is the item both the register and the accepted reviews have held as next since
-   2026-10-01, and it must land before the navigation change by the user's own answer "after".
-3. **Refresh the data (or in parallel).** It is independent of the release and takes minutes.
+1. ~~Clear the dead lock and restart the helper~~ - **DONE by the coordinator itself**, before this document was filed
+   (Task 1).
+2. ~~Publish the gold release~~ - **DONE**, 2026-10-03 15:27 BST, `2f25c8c` on production `main` (Task 2). It landed
+   before the navigation change, which is the order the user's own answer "after" required.
+3. **Refresh the data - still outstanding, and now the only item of the three left** (Task 3). It is independent of the
+   release and takes minutes; it needed the user's word, which the "yes" above gave.
 
 ## The coordinator's reply to `-036`, received 2026-10-03 15:19
 
@@ -51,6 +59,28 @@ actions taken with the user's word in-session, not the background review's:
 - (c) whether to open the movement-screen lane `gold-declared-band-measurement-026` - not covered by the go-ahead, and
   needs the user's word and a register edit.
 
+### The coordinator's reply to `-037`, received 2026-10-03 15:30
+
+Decision: **accepted** (review `docs/orchestration/reviews/20261003-strategy-coordinator-handover-doc-037.md`), with the
+rule restated - "acceptance is not integration and not production". It reproduced this file byte-exactly (10,080 bytes,
+136 CRLF, 0 bare LF, sha256 `3f88488ab7fe0c1031a4a5a0df834ca593e8ddad4960ec98ebac7dd6c81220ea`) and
+`CONVERSATION_NOTES.md` (230,561 bytes, sha256 `86667626e1ef44e626e80c519f549bd4b1ce6c18c89414a0746cfdeb1ae713bb`, pure
+addition against the last pre-session revision - 112 insertions, 0 deletions), confirmed the change set is
+`docs/strategy/` only, and confirmed the candidate was untouched so nothing needed rebuilding. Two corrections of
+substance:
+
+- **Task 2 had already been executed** while this document was in review - the release was in production before the
+  review ran - so the instruction part of this document is spent and the review supersedes it. Its own question
+  ("does the handover stand as the instruction set?") is answered that way.
+- It recorded one claim as **stated, not reproduced**: that this branch was pushed to origin, because that review run
+  had no network and no local remote-tracking ref exists for the worker branch in the canonical checkout. Verified here
+  instead: `git ls-remote origin refs/heads/workers/strategy-advisory-20260920` answers
+  `091f7069ff0f9dccea25250eb2fbfb9b38fd8831`, equal to local HEAD.
+
+The coordinator's own list of what is now unresolved replaces the list above, and only the first is covered by the
+go-ahead: (a) run the live data refresh now; (b) open the movement-screen lane `gold-declared-band-measurement-026`;
+(c) whether navigation route N1 proceeds now that the release it was sequenced behind has landed.
+
 ## Task 1 - the stale lock and the frozen helper: already done, nothing outstanding
 
 **No action needed.** The reading below is kept only as the record of what the three-day freeze looked like before the
@@ -65,7 +95,29 @@ coordinator cleared it.
 - The monitor had reported the controller `offline`; it now answers normally (run
   `scripts/monitor-state.js` by absolute path from the canonical checkout).
 
-## Task 2 - publish the gold release
+## Task 2 - the gold release: PUBLISHED 2026-10-03 15:27 BST
+
+**Done, and verified here read-only. The plan below it is kept as the record of what was intended; it is spent.**
+
+What went live, reproduced independently rather than taken from the reply:
+
+- Production `main` carries `2f25c8c` "Publish the gold tabs page as gold.html, one gold bar entry and the draft factor
+  page at 50 of 50" (168 insertions, 34 deletions: `gold.html` +106, `index.html` +1/-2, `gold-factor-wip.html` +61/-32),
+  pushed from the release worktree `.local/gold-tabs-release` on `release/gold-tabs-20261003`. A later `f8bc80f` sits
+  on top of it for the live-trading snapshot only.
+- **The materialisation served is the LF form**, which settles the one choice this document said must be stated out
+  loud: the page served is 5,733 bytes with zero CRLF, sha256
+  `5ae6c22a9f7a47ad59fd5b0260450951004c4781e0b243f9eda7eb59f8b51460`, byte-identical to the committed blob. The
+  5,839-byte CRLF worktree file was never the copy that went out, and a later check reproduces 5,733 / `5ae6c22a...`.
+- Live by HTTP rather than by assumption: `gold.html` answers 200 at 5,733 bytes, hash-equal to the blob, titled "Gold -
+  one page with tabs"; the live `index.html` answers 200 carrying exactly one `href="gold.html"` bar link and **no** old
+  Gold Direction or Gold Factor links.
+- The guard pin moved in the same change, as required: `779a701` on the canonical orchestration branch, whose line 28
+  now reads `/50 of 50 answered/`, and the live draft factor page reads 50 of 50.
+- The same push carried `7ce136e`, the refreshed live-trading MT5 snapshot. That is data for a different page, not the
+  Layer 1 panel of Task 3, and it does not refresh Task 3.
+
+### The plan, kept as the record (spent)
 
 Follow `docs/strategy/GOLD_TABS_BUILD_BRIEF.md` (this worktree) steps **E1-E5** exactly. The short form, with the two
 places a copy can slip:
@@ -100,7 +152,11 @@ places a copy can slip:
   four gold pages, their generators, artifacts and the shared stylesheet are untouched, and the old addresses never stop
   working.
 
-## Task 3 - refresh the live data panel
+## Task 3 - refresh the live data panel: still outstanding
+
+Re-verified after the release, so this is not a remembered reading: at `origin/main` the published `data/layer1.json`
+still carries `last_updated_et 2026-10-02T07:29:28.874Z`, and the last run in `data/workflow-status.json` is
+`2026-10-02T07:29:31.991Z`, `success`, "Manual Refresh Complete", `failed_step: null`.
 
 The panel has aged out of its freshness window and reads stale again. The standing rule is that a fresh reading needs
 the user's word and a coordinator re-publish, never a lane's own push; the user's "yes" above is that word. Trigger the
@@ -119,18 +175,25 @@ values. Report what the live panel then shows.
 ## Still queued after this, not covered by the go-ahead
 
 - **Navigation consistency** - route N1, same dark header and rail on every served page, the user's own answer
-  "same theme everywhere", sequenced "after" this release. Request and measurements in
-  `docs/strategy/DASHBOARD_NAV_CONSISTENCY_REQUEST.md`; adopted in the accepted review of
+  "same theme everywhere", sequenced "after" this release. **The release has now landed** (`2f25c8c`), so the sequence
+  condition is met and only the user's word and a coordinator decision stand between the route and the work. Request
+  and measurements in `docs/strategy/DASHBOARD_NAV_CONSISTENCY_REQUEST.md`; adopted in the accepted review of
   `20261001-strategy-nav-answers-notify-035`.
 - **Movement-screen measurement** - recommended lane `gold-declared-band-measurement-026`, still unopened; it is the
-  only thing that can put real factor numbers in the Factor tables tab.
+  only thing that can put real factor numbers in the Factor tables tab, and the page that now serves those tables shows
+  the same 50 of 50 answers with no factor numbers behind them.
+- **The data refresh**, Task 3 above, is the one item of the user's original three that nothing has yet done.
 
 ## What this worker did, and did not do
 
 Advice only. This worker's write scope is `docs/strategy/` in
 `D:/trading-agent-dashboard-codex/.local/worktrees/strategy`; it cannot publish a page, edit the bar, clear a lock or
 trigger a refresh. This turn it changed only `docs/strategy/CONVERSATION_NOTES.md` (the go-ahead entry, the handover
-entry and the `-036` reply entry) and added this file, committed on `workers/strategy-advisory-20260920` and pushed to
-origin, which now stands at `406fa3a` (`5e76c53` go-ahead, `f310242` handover and notes repair, `406fa3a` this update).
+entry, the `-036` reply entry and the `-037` reply entry) and this file, committed on
+`workers/strategy-advisory-20260920`: `5e76c53` the go-ahead, `f310242` the handover and the notes repair, `406fa3a`
+the `-036` reply recorded, `091f706` the provenance correction, and the later `-037` update recorded here; all pushed
+to origin, where `git ls-remote origin refs/heads/workers/strategy-advisory-20260920` answers
+`091f7069ff0f9dccea25250eb2fbfb9b38fd8831`, equal to local HEAD before that last commit.
 No page, bar, guard, generator, stylesheet, data artifact, number, lock, controller file or register entry was touched,
-and nothing is live as a result of it.
+and nothing is live as a result of it. The gold page is live because the coordinator published it, not because of
+anything this worker did; the data refresh is still owed.
