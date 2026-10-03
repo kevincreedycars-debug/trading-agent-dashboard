@@ -3301,7 +3301,10 @@ cycle, 12,011 bytes, file sha256 `1ecbe2482cbea528f3065e1e2b939702ed508fd8e056ad
 16:46:04.286Z, submission hash `8ec9f279…`. `20261003-strategy-044-accepted-and-the-045-status-correction-046` is the
 twentieth cycle, 8,586 bytes, file sha256 `54f617addf5244de793b28706beff60d47dc8f10f3bbf3eeb4117be6e3486508`, stamped
 16:52:22.839Z, submission hash `61f1508f…`, under the controller lock whose own receipt is
-`controller/61f1508f….receipt.json` (234 bytes, 16:48:31.112Z). With those two, all four of the recent filings - `-044`,
+`controller/61f1508f….receipt.json` - 234 bytes with `started_at` 16:48:31.107Z as the review opened it, and since finalised
+by that run (`state` `reviewed`, code 0, `finished_at` 16:54:27.431Z, 351 bytes), after which the controller moved on to a
+different lane's submission (`controller/status.json` detail `20261003-live-trading-live-marking-and-ladder-r2` at
+16:54:32.649Z). With those two, all four of the recent filings - `-044`,
 its addendum, `-045` and `-046` - are accepted, and `coordination.js check --worker strategy` reports no unreplied item
 on this lane, so the queue that `-045`'s own closing line described is closed.
 
@@ -3326,14 +3329,19 @@ median/q1/q3 print - and none of the three is a background cycle's to execute; (
 delivered, pickup unproven and reported as the user's item. No new bounded research assignment is published, for the
 same stated reasons, and `strategy` stays `advisory_active` under `strategy-advisory-001`.
 
-**One statement overtaken, and the third instance of the same race.** The -046 filing recorded that no reply to `-045`
+**One statement overtaken, and the fourth instance of the same race - this lane's own.** The -046 filing recorded that no reply to `-045`
 existed when it was generated. That was true: its own immutable file is stamped 16:43:49.269Z, and the `-045` reply was
 published 135 s later at 16:46:04.286Z. The correction itself is unaffected and nothing in the artifacts, scope or tests
-moves - the -045 status line was and remains corrected. Counted together, this lane has now met the same pattern three
+moves - the -045 status line was and remains corrected. Counted together, this lane has now met the same pattern four
 times in one afternoon: the `-043` reply at 16:28:31.735Z against the `-044` inbox file at 16:28:42.062Z (10.327 s); the
 `-044` reply at 16:38:46.625Z against the `-045` inbox file at 16:41:44.973Z (178.348 s), which is what made the `-045`
-status line false; and the `-046` file at 16:43:49.269Z against the `-045` reply at 16:46:04.286Z (135 s), which is what
-made the -046 note about a missing reply true when written and stale on arrival. The pattern is structural rather than
+status line false; the `-046` file at 16:43:49.269Z against the `-045` reply at 16:46:04.286Z (135 s), which is what
+made the -046 note about a missing reply true when written and stale on arrival; and the fourth is this entry's own
+first commit - `03c588c`, authored 16:53:58Z, quoting the -046 controller receipt at 234 bytes, a receipt that was
+finalised 29.431 s later at 16:54:27.431Z (`state` `reviewed`, code 0, 351 bytes). That one is corrected here, in place,
+by this turn's second commit, on the same reasoning the -046 filing used for the -045 status line: a mailbox file
+already written is immutable, but this lane's own notes are not, so a known-stale line in them is fixed rather than left
+standing. The pattern is structural rather than
 carelessness: a mailbox read and the immutable write that quotes it are separated by minutes while the controller
 reviews. **Proposal, offered as advice and not executed here:** an envelope that asserts live mailbox state should carry
 the stamp of the read it rests on - either in the sentence itself, "read at 16:43:49.269Z", or as a field in the
@@ -3348,12 +3356,12 @@ the interactive coordinator and the user, and the unopened movement lane waits o
 Filing another report whose subject is the acceptance of the previous report would add review load without adding
 evidence, so the next filing from this lane will be triggered by a directive, by a user turn that raises something
 material, or by an observed change that affects the advice - not by an acceptance. It holds here, paused, with the
-branch at `5e80ec0f` and nothing outstanding on it.
+branch at its pushed tip and nothing outstanding on it.
 
 **Nothing production was touched by this record.** No page, stylesheet, script, template, builder, guard, generator,
 data artifact, number, register entry, assignment, lock, controller or bridge file was changed; no patch was applied;
 nothing was published, refreshed, triggered, copied, merged or deployed; no outcome, holdout or prospective observation
 was read; the sealed window (reading prohibited until `2027-03-25T15:00:00Z`) was not touched. Writes are one entry in
-these notes, one commit, the branch push and ignored `tmp/` scratch. Filed as
+these notes, two commits, the branch push and ignored `tmp/` scratch. Filed as
 `20261003-strategy-045-and-046-accepted-queue-closed-047`, status `status_report`, carrying one new recommendation - the
 read-stamp proposal above - and no change to any earlier advice.
