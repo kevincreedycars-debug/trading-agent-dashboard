@@ -2864,3 +2864,50 @@ order to be queued with Task 0 first and naming the two user-side choices. This 
 guard, generator, data artifact, number, register entry, lock, controller or bridge file was touched by this worker, and
 nothing was published, refreshed or triggered.
 
+
+## 2026-10-03 (same session) - Review outcome: the work order accepted, the addendum acknowledged, and the three choices still the user's
+
+The coordinator reviewed both filings. `20261003-strategy-nav-tidy-work-order-039` is **accepted** (seventh cycle,
+background dispatcher run, mailbox sha256 `e8f54755...` reproduced from the immutable inbox file; base `8177637`, head
+`bbf4f73`, worktree clean) and `20261003-strategy-nav-work-order-039-addendum` is **acknowledged** (eighth cycle, same
+conditions, head `646c5e5`). Neither asked for a change. The review reproduced the substance from `origin/main` rather
+than from the report: exactly nine root pages, the bar and the rail each counting 1 on `index.html` and 0 on the other
+eight, all nine blob sizes byte for byte, four pages linking `styles.css` and five inline-only, `location.hash` absent
+from `script.js` and present in `gold.html` at lines 101-102, the guards' `h2` / header-footer / self-containment counts,
+the template-to-builder mapping, and the stale mirror itself. Both new documents reproduced byte-exactly at the digests
+filed (handover 19,906 bytes / 247 CRLF / 0 bare LF, sha256 `ba45df12...`; queue note 6,334 bytes / 79 CRLF, sha256
+`5bfe9f5a...`), and the two addendum commits were confirmed to leave both untouched.
+
+**Two precision notes, neither a required change.** The work order cites the canonical checkout at `30d853b`; canonical
+HEAD has since advanced to `3a8c1a0`, and `index.html` there still carries six bar entries with
+`git merge-base --is-ancestor 2f25c8c HEAD` still exiting 1, so Task 0's premise holds unchanged on the current HEAD.
+And section 9 lists `tests/live_trading_dashboard.browser.test.js` as a guard to keep green, which exists on `origin/main`
+but not in the canonical checkout - the same one-release-behind drift Task 0 describes, and the reason leveling the
+mirror is what would bring it in. Both are facts about the mirror, not about the plan.
+
+**No new assignment was published, and the register was untouched.** The review gives the reason plainly: the nav
+tidy-up is coordinator-owned dashboard work under the single-writer rule recorded in `DECISIONS.md`, not worker research,
+and building the partial and builder, re-pointing the guards and pushing the pages would put a second writer on the same
+served files while no dashboard worker is registered. Nor does the evidence support a research stage: every remaining
+Gold path sits on spent intervals or on the window sealed until `2027-03-25T15:00:00Z`, the movement-screen lane
+`gold-declared-band-measurement-026` is not covered by the go-ahead, and the live-trading call-to-order contract is
+already directed inside `live-trading-001` at `instructions_published_awaiting_worker`. `strategy` therefore stays
+`advisory_active` under `strategy-advisory-001`, and the lane's next submission is a new recommendation, not a repeat of
+this one.
+
+**The three open decisions are unchanged and remain the user's.** (a) Whether the rail's links on the other eight pages
+should actually select a dashboard tab, which needs about ten lines added to `script.js` to read `location.hash` as
+`gold.html` already does (the work order's recommendation), or should simply open the dashboard's default view. (b)
+Whether the dashboard's live date and clock are omitted on the other eight pages (recommended, since no other page loads
+`script.js`) or baked as a static date line. (c) Whether the coordinator's dashboard lane executes Task 0 and the N1a
+build now that the release they were sequenced behind has landed. The queue note's two authority suggestions - publish as
+a cadence, pre-authorise the lanes that cannot reach production - are named as proposals only and change no worker's
+rights without the user's word. The addendum's second point stands as filed: the branch tip moved after the -039 filing
+with two docs-only record commits, and this entry is a third, so the version of the two documents that was reviewed is
+`bbf4f73` and the current tip carries nothing but the lane's own record.
+
+One side observation recorded rather than acted on: the canonical checkout's unrelated dirty state (a modified
+`tools/strategy-node/Strategy.code-workspace` and five untracked backtester gold session-policy files) was left exactly
+as found by the review, and is not this lane's to touch. This turn changed only this notes file and ignored `tmp/`
+scratch. No page, bar, stylesheet, script, template, builder, guard, generator, data artifact, number, register entry,
+lock, controller or bridge file was touched by this worker, and nothing was published, refreshed or triggered.
