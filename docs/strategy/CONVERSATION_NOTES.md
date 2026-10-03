@@ -3293,3 +3293,67 @@ data artifact, number, register entry, assignment, lock, controller or bridge fi
 applied; nothing was published, refreshed or triggered; the sealed window (reading prohibited until `2027-03-25T15:00:00Z`)
 was not touched. Writes are one entry in these notes, one commit, the branch push and ignored `tmp/` scratch. Filed as
 `20261003-strategy-044-accepted-and-the-045-status-correction-046`, status `status_report`, carrying no new recommendation.
+
+## 2026-10-03 — the -045 and -046 replies read back: accepted, the queue closed, and one small envelope proposal
+
+Both replies are `accepted`. `20261003-strategy-user-confirmed-all-five-044-addendum-accepted-045` is the nineteenth
+cycle, 12,011 bytes, file sha256 `1ecbe2482cbea528f3065e1e2b939702ed508fd8e056ade17d72ce2f5113c1c5`, stamped
+16:46:04.286Z, submission hash `8ec9f279…`. `20261003-strategy-044-accepted-and-the-045-status-correction-046` is the
+twentieth cycle, 8,586 bytes, file sha256 `54f617addf5244de793b28706beff60d47dc8f10f3bbf3eeb4117be6e3486508`, stamped
+16:52:22.839Z, submission hash `61f1508f…`, under the controller lock whose own receipt is
+`controller/61f1508f….receipt.json` (234 bytes, 16:48:31.112Z). With those two, all four of the recent filings - `-044`,
+its addendum, `-045` and `-046` - are accepted, and `coordination.js check --worker strategy` reports no unreplied item
+on this lane, so the queue that `-045`'s own closing line described is closed.
+
+**What the -046 reply accepted, reproduced rather than trusted.** Base `c7c8bb2`, filed head `5e80ec0f` the sole child of
+it, `git diff` naming exactly one file (`docs/strategy/CONVERSATION_NOTES.md`) at 50 insertions and 0 deletions, worktree
+clean with no dirty or untracked file, and `git ls-remote` answering `5e80ec0f` for
+`refs/heads/workers/strategy-advisory-20260920`, so the recorded head is the branch tip on the remote. The notes at that
+head reproduce in both forms: 289,326 bytes CRLF / `23ad7a81…`, LF 286,031 / `23e7dc6b…`, git object `da3d0a5a`, 3,295
+line endings, 0 bare LF and 81 level-2 headings - with the reply noting that a broader `#{1,6}` count gives 86, so the
+filing's "81 headings" is the level-2 convention rather than an error, exactly one more than the 80 the -045 filing
+recorded. The two revision-3 documents are unchanged and still reproduce in both forms (nav 27,661 / `4543bca4…`, LF
+27,337 / `faa8491e…`, object `ea3a514e`; tidy 22,775 / `6dea881a…`, LF 22,511 / `1cb04ba3…`, object `101adada`), and so
+do the correction's facts: the -044 reply at 9,973 bytes and `d4b3ff83…`, the -045 inbox file at 13,466 bytes and
+`8ec9f279…`, the gap between their stamps at 178.348 s on the rounded stamps and 178.3473374 s raw, and the earlier
+`-043` reply's own 10.327 s gap, together with the `projects.json`, `assignments/gold-research.md` and `DECISIONS.md`
+records the filing cites. Its three answers are on the record: (1) the correction is heard and read together with `-045`,
+and nothing else in `-045` is retracted; (2) the three production decisions stay exactly where the accepted `-042` and
+`-044` replies put them - the Gold history patch and the live collector's 25-row unordered read with validation status
+read at the time of the change, then the single combined published-site change with Task 0 first, then the one
+median/q1/q3 print - and none of the three is a background cycle's to execute; (3) the research lane stays as recorded,
+`gold-declared-band-measurement-026` at register status exactly `instructions_published_awaiting_worker`, event
+delivered, pickup unproven and reported as the user's item. No new bounded research assignment is published, for the
+same stated reasons, and `strategy` stays `advisory_active` under `strategy-advisory-001`.
+
+**One statement overtaken, and the third instance of the same race.** The -046 filing recorded that no reply to `-045`
+existed when it was generated. That was true: its own immutable file is stamped 16:43:49.269Z, and the `-045` reply was
+published 135 s later at 16:46:04.286Z. The correction itself is unaffected and nothing in the artifacts, scope or tests
+moves - the -045 status line was and remains corrected. Counted together, this lane has now met the same pattern three
+times in one afternoon: the `-043` reply at 16:28:31.735Z against the `-044` inbox file at 16:28:42.062Z (10.327 s); the
+`-044` reply at 16:38:46.625Z against the `-045` inbox file at 16:41:44.973Z (178.348 s), which is what made the `-045`
+status line false; and the `-046` file at 16:43:49.269Z against the `-045` reply at 16:46:04.286Z (135 s), which is what
+made the -046 note about a missing reply true when written and stale on arrival. The pattern is structural rather than
+carelessness: a mailbox read and the immutable write that quotes it are separated by minutes while the controller
+reviews. **Proposal, offered as advice and not executed here:** an envelope that asserts live mailbox state should carry
+the stamp of the read it rests on - either in the sentence itself, "read at 16:43:49.269Z", or as a field in the
+submission schema - so that a reply landing afterwards can only date the sentence, never falsify it. A fresh read of the
+mailbox immediately before the write is the fallback remedy if the coordinator prefers no schema change. Either is the
+coordinator's to adopt or decline, and this lane applies no patch, edits no envelope and changes no schema. The standing
+condition the `-044` review set is not triggered: nothing here reads any of the five confirmations differently.
+
+**The lane stops filing acceptance-of-acceptance, and holds.** All four recent filings are accepted, this lane's mailbox
+queue is empty, no new assignment is published and no directive is outstanding; the three production decisions wait on
+the interactive coordinator and the user, and the unopened movement lane waits on pickup rather than on publication.
+Filing another report whose subject is the acceptance of the previous report would add review load without adding
+evidence, so the next filing from this lane will be triggered by a directive, by a user turn that raises something
+material, or by an observed change that affects the advice - not by an acceptance. It holds here, paused, with the
+branch at `5e80ec0f` and nothing outstanding on it.
+
+**Nothing production was touched by this record.** No page, stylesheet, script, template, builder, guard, generator,
+data artifact, number, register entry, assignment, lock, controller or bridge file was changed; no patch was applied;
+nothing was published, refreshed, triggered, copied, merged or deployed; no outcome, holdout or prospective observation
+was read; the sealed window (reading prohibited until `2027-03-25T15:00:00Z`) was not touched. Writes are one entry in
+these notes, one commit, the branch push and ignored `tmp/` scratch. Filed as
+`20261003-strategy-045-and-046-accepted-queue-closed-047`, status `status_report`, carrying one new recommendation - the
+read-stamp proposal above - and no change to any earlier advice.
