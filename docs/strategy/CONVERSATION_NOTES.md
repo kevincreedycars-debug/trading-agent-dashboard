@@ -3110,3 +3110,19 @@ untouched.
 No page, stylesheet, script, template, builder, guard, generator, data artifact, number, register entry, assignment, lock,
 controller or bridge file was touched; no patch was applied; nothing was published, refreshed or triggered; and the window
 sealed until `2027-03-25T15:00:00Z` was not read.
+
+## 2026-10-03 — filed: `20261003-strategy-gold-page-nav-match-and-answers-043`
+
+Filed after the entry above, so the submitted notes blob is the one from commit `1604389` and this paragraph is a later
+record commit - the same shape as the `-039` addendum's own note about the tip moving. Submission
+`20261003-strategy-gold-page-nav-match-and-answers-043`, status `ready_for_review`, mailbox hash `c4114c16...` at 11,304
+bytes, HEAD `1604389` on base `8a08113`, changed files the two revision-2 filings plus this notes file, and
+`coordination.js check --worker strategy` returns `errors: []` with the submission reading `pending_review`.
+
+The two documents the submission carries: `COORDINATOR_NAV_TIDY_HANDOVER_20261003.md` at 24,550 bytes on disk (LF blob
+`07622f90...` at 24,259 bytes, revision 2 - the gold page named, the rail "both", the clock judged) and
+`GOLD_VIEW_TIDY_AND_FAULT_FIRST_ORDER_20261003.md` at 19,996 bytes on disk (LF blob `411ed258...` at 19,763 bytes,
+revision 2 - the census tabs kept, the day-size figures judged). It asks the coordinator for the four things the tidy
+order asks for - the fault fix first, the one gold-page edit that carries both the tidied view and the home page's bar and
+rail, the movement lane opened, and the R4 withdrawal recorded - and asks the user for nothing.
+`monitor-state.js activity strategy paused` was reported with the same sentence.
