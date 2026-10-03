@@ -1,3 +1,25 @@
+# 2026-10-03 (sixth cycle) - the seven asset readiness lanes are woken by a proven delivery reset, and the queue order is fixed by a full delivery sweep
+
+Woke the seven attached-but-idle asset lanes instead of leaving them to a stale record, and used the same sweep to order the queue.
+
+- Preconditions read before the reset, not assumed: `node scripts/coordinator-dispatch.js status` reads `watching` with `activeRun false`, `node scripts/coordination.js check`
+  reads `pending 0` with `errors []`, and no lane carries a `working` activity record. The reset was then proven before it was performed - recomputing each lane's event key
+  with the bridge's own `workerEvent` reproduces exactly the record file already on disk, so the live event is still the unchanged `backtester-<asset>-001` assignment.
+- The seven `2026-09-29T20:43Z` records were moved to `.local/orchestration/tmp/relaunch-20261003T152341Z/` (seven files, 200-208 bytes) rather than deleted, and each
+  window's own five-second tick rebuilt the identical key and sent inside one tick: `backtester-silver` `15:23:42.290Z`, `backtester-gbp` `43.034Z`, `backtester-usd`
+  `44.600Z`, `backtester-eur` `45.639Z`, `backtester-wti` `46.055Z`, `backtester-nq` `46.380Z`, `backtester-btc` `46.439Z`, every record back to `sent_unconfirmed` on the
+  unchanged key with the connection files rewriting in the same seconds - a real per-window send, not an echo.
+- Pickup is not yet observable and is recorded as such: about four minutes after the send, all seven worktrees were clean, no `activity/backtester-<asset>.json` existed and
+  no `docs/backtester-<asset>/READINESS.md` had been filed. A later read at `15:27:39.988Z`-`15:27:43.397Z`, still inside the extension's five-second tick, found all seven connection files rewriting under extension `0.2.1` with no activity record and no READINESS.md, so the windows are alive and reachable while the pickup half stays open.
+- Full delivery sweep of all seventeen register entries, which is what fixed the queue order: never delivered and parked on the operator because a closed window cannot be
+  woken - `strategy-2` and `backtester-spike`; no event at all under `awaiting_status_submission` - `gbp`, `silver`, `wti`, `eur-pairs`; and two assignments silently masked
+  by an older reply - `gold-research`'s `gold-coverage-025` and `live-trading`'s `live-trading-001`, both attached but idle.
+- Standing procedure updated in `docs/orchestration/README.md`: the queue review sweep itself, the ordering rules (review before publishing, resume before re-planning,
+  surface user-blocked lanes immediately, publish last and only onto a reachable window), and the correction that the record to reset is the one for the event the
+  connection file currently reports, which can be an older reply and still wakes the lane.
+- Changed: seven delivery records cleared, five memory docs. No assignment or reply published, no worker status changed, no lane opened, no review run, no deployment or
+  refresh; no bridge, register, controller or mailbox source touched, no subagent spawned; the canonical unrelated dirty state and every worktree were left as found.
+
 # 2026-10-03 (fifth cycle) - strategy 038 reviewed and accepted; the release re-verified, no assignment published
 
 Reviewed the one open submission from the canonical checkout; the strategy mailbox reads `pending 0, errors 0` again.

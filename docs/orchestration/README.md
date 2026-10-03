@@ -171,6 +171,23 @@ extension rebuilds the identical event key on its next five-second tick, writes 
 assignment is the other, self-serving path, because a new content hash is a new event key and fires automatically. Never delete another worker's record, never force a
 wake by editing the bridge, the register or the mailbox CLI, and never treat a send return as pickup: only worker activity confirms that.
 
+One trap that rule hides, and it decides which file to reset: the selected event is the newest reply whenever a reply exists, whatever the assignment's date, so an assignment published after a lane's last reply is never announced while that reply's record stands - `gold-research` for `gold-coverage-025` and `live-trading` for `live-trading-001` both sat in exactly that state on 2026-10-03, attached and idle, with no event record for their current assignment at all. Reset the event the connection file currently reports rather than the one you expect: read `detail` in `.local/orchestration/connections/WORKER.json`, hash that whole key, and clear `.local/orchestration/dispatch/WORKER/<sha256-of-key>.json`. Re-sending an older reply notification is still an effective wake even when the assignment is newer, because the notification prompt directs the worker to read its current assignment file. Move the cleared record to `.local/orchestration/tmp/` instead of deleting it, so the cleared state and the key it carried stay inspectable.
+
+## Queue review and ordering
+
+The coordinator sweeps its own inboxes before each publication and at the start of every cycle, because a lane that is attached and idle looks identical to a lane that is working until the records are read.
+
+1. `node scripts/coordination.js check` - pending reports and validation errors. A pending report is reviewed first; it is the only thing that unblocks the lane that produced it.
+2. `node scripts/coordinator-dispatch.js status` - `enabled` and `activeRun false` before any interactive edit; wait for a running background review rather than editing beside it.
+3. Per-worker delivery sweep, one row per register entry: `.local/orchestration/connections/WORKER.json` (`state`, `detail`), the per-event records under `.local/orchestration/dispatch/WORKER/`, and `.local/orchestration/activity/WORKER.json`. Read it as follows - `watching` means nothing is pending; `sent_unconfirmed` with a record whose `attempted_at` is seconds old means the event was sent and the window is reachable; `sent_unconfirmed` with an old record means a dedupe echo and an idle lane; a recorded event with no record file means it was never delivered; `activity` `working` means do not interrupt, whatever the deadlines say.
+
+Ordering rules, applied by the coordinator and recorded in the milestone note when the order changes:
+
+- Close before you open: review and reply to a pending submission before designing or publishing new work.
+- Wake before you re-plan: a lane that is already assigned and whose window is already open is resumed with the record reset before a new assignment is written for it.
+- Surface user-blocked work immediately instead of queueing it behind bridge work: a lane with no open window, an unanswered question block, or a decision only the user can make is reported as the user's item in the reply, not held silently.
+- Publish last, and only onto a window that can receive it: a lane whose window is closed cannot be woken by the bridge, so publishing to it is a queued event that fires on first connect, not progress. Distinguish that state from a broken lane before reporting a fault.
+
 ## Validation
 
 `npm run test:coordination` is the focused local suite for the mailbox.
