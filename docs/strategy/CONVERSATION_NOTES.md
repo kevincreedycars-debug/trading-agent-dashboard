@@ -2231,72 +2231,6 @@ lines, sha256 `675fc9da...`** - this worker's revision-1 file exactly - and they
 banner, the progress line and the "not finished" bullet. The previous entry in this log says "nothing is live yet";
 that was wrong, and the paragraph has been marked as corrected rather than rewritten, because the sequence matters:
 the publication happened without a further filing from this worker, and the `-026` receipt's "the publish is a
-
-## 2026-10-03 - status check with the user: where the project got up to
-
-The user asked where we got up to. Everything below was verified read-only this turn from the canonical checkout
-rather than recalled from this log, and the answer was given in plain words:
-
-- **The combined gold page is built and approved but still not live.** The canonical root carries no single gold page
-  and `index.html` still shows three separate gold links beside the older draft page, so the four-tab release the user
-  authorised with "okay push everything" has not been executed. The release candidate is unchanged at 5,839 bytes /
-  106 CRLF / 0 bare LF / sha256 `de60c2b7...` at the tip of this worktree (`bcacb83`, clean).
-- **The dashboard workstream's own status line still reads `queue_adopted_gold_release_then_nav_n1`** - the gold
-  release first, the navigation-consistency change (same dark header and rail on every page, route N1) second, both
-  adopted and neither started. This matches the accepted review of `-035` and needs no new filing.
-- **The background review helper is still frozen.** `controller/status.json` still reads `state: reviewing` pinned to
-  `20260930-strategy-evening-save-031` under PID 24000 with a 2026-09-30T21:02Z timestamp, `run.lock` still names that
-  PID and submission, the process is gone and the monitor still reports the controller `offline`. That stale lock and
-  the fresh Layer 1 panel (aged out of its freshness window again, so the live board reads stale) are the coordinator's
-  housekeeping and production action, not this worker's.
-- **Nothing of this worker's is waiting.** The mailbox folder holds 35 filings, all answered; `check --worker strategy`
-  returns `pending: 0` with the newest item (`-035`) accepted and `-033` acknowledged, and no filing dated after
-  2026-10-01 exists. An idle queue here is an answered queue, not a lost one.
-
-Advice given, unchanged in substance: the two outstanding actions are the coordinator's - clear the dead lock and
-
-## 2026-10-03 (same session) - the user's go-ahead: "yes" to clearing the frozen helper, publishing the gold release and refreshing the data
-
-Offered in plain words at the close of the status check above: *"do you want me to tell the coordinator to clear the
-frozen helper and publish the gold page now? Default is yes, go ahead - and the data refresh needs your word at the
-same time."* The user answered **"yes"**, one word, answering the whole of that question. It is recorded as the user's
-go-ahead for the three actions it named, and for nothing beyond them:
-
-1. **Clear the dead lock and restart the background review helper** - coordinator housekeeping on a process (PID 24000)
-   that no longer exists, taken with the user's word in-session.
-2. **Publish the gold release now** - the single tabbed `gold.html` with its one top-bar entry, the draft-page pinned
-   guard line moved to `50 of 50`, and revision 2 of the draft page carried in the same change. Steps E1-E5 of
-   `docs/strategy/GOLD_TABS_BUILD_BRIEF.md`; the coordinator's own accepted review of `-033` already says this publish
-   is a coordinator production action, not a worker assignment, and the single-writer rule is unchanged.
-3. **The live data refresh** - the panel has aged out of its freshness window and reads stale again; the standing rule is
-   that a fresh reading needs the user's word and a coordinator re-publish, never a lane's own push, and this is that
-   word.
-
-The release candidate was re-verified this turn rather than remembered: `docs/strategy/GOLD_TABS_SHELL_CANDIDATE.html` is
-**5,839 bytes, 106 CRLF lines, 0 bare LF, sha256 `de60c2b7c452aa74ac282d475707e15d2d68977c77c4cd2a505cb4d205e64da6`**
-at HEAD `d2aa17f`, worktree clean - unchanged from the version the coordinator checked and approved. Nothing needs
-rebuilding before the publish. The one choice that survives into the served bytes is the materialisation (the 5,733-byte
-LF blob the repository stores versus the 5,839-byte CRLF file on disk); the consistent route is the one revision 1 of the
-draft page already took - let the repository's line-ending setting store the LF form and record the served byte count and
-hash - but that remains the coordinator's to state, not this worker's to decide.
-
-Two standing items are named rather than reopened, because this go-ahead does not cover them and neither is a blocker:
-the **navigation-consistency change** stays queued behind the release (route N1, same theme everywhere - answer 2 in the
-user's own words was "after"), and the **movement-screen measurement** stays the recommended next lane because it is the
-only thing that can put real factor numbers in the Factor tables tab (recommended as `gold-declared-band-measurement-026`
-in `-033`; still unopened).
-
-Filed to the coordinator as a materially new recommendation under a new submission ID,
-`20261003-strategy-gold-release-and-helper-go-ahead-036`, status `ready_for_review`, with the candidate hash and this
-entry as evidence. This turn changed this notes file only; no page, bar, guard, generator, stylesheet, data artifact,
-number, mailbox file, lock, controller file or register entry was touched by this worker, and nothing is live as a result
-of it.
-
-restart the helper, and publish the gold release in the same session - and neither needs a new permission, because the
-user's own go-ahead is already on record. This turn changed this notes file only; no page, bar, guard, generator,
-stylesheet, data artifact, number, mailbox file, lock, controller file or register entry was touched, and nothing is
-live as a result.
-
 coordinator action" was the coordinator describing a step it then took itself.
 
 **No factor data for this work exists yet, and the page says so.** No factor table for this work has been built. It is
@@ -2651,3 +2585,83 @@ No file was filed to the mailbox this turn, on the coordinator's own reasoning t
 turn changed this notes file only; no page, bar, guard, generator, stylesheet, data artifact, number, mailbox file,
 lock, controller file or register entry was touched, and nothing is live as a result.
 
+
+## 2026-10-03 - status check with the user: where the project got up to
+
+The user asked where we got up to. Everything below was verified read-only this turn from the canonical checkout
+rather than recalled from this log, and the answer was given in plain words:
+
+- **The combined gold page is built and approved but still not live.** The canonical root carries no single gold page
+  and `index.html` still shows three separate gold links beside the older draft page, so the four-tab release the user
+  authorised with "okay push everything" has not been executed. The release candidate is unchanged at 5,839 bytes /
+  106 CRLF / 0 bare LF / sha256 `de60c2b7...` at the tip of this worktree (`bcacb83`, clean).
+- **The dashboard workstream's own status line still reads `queue_adopted_gold_release_then_nav_n1`** - the gold
+  release first, the navigation-consistency change (same dark header and rail on every page, route N1) second, both
+  adopted and neither started. This matches the accepted review of `-035` and needs no new filing.
+- **The background review helper is still frozen.** `controller/status.json` still reads `state: reviewing` pinned to
+  `20260930-strategy-evening-save-031` under PID 24000 with a 2026-09-30T21:02Z timestamp, `run.lock` still names that
+  PID and submission, the process is gone and the monitor still reports the controller `offline`. That stale lock and
+  the fresh Layer 1 panel (aged out of its freshness window again, so the live board reads stale) are the coordinator's
+  housekeeping and production action, not this worker's.
+- **Nothing of this worker's is waiting.** The mailbox folder holds 35 filings, all answered; `check --worker strategy`
+  returns `pending: 0` with the newest item (`-035`) accepted and `-033` acknowledged, and no filing dated after
+  2026-10-01 exists. An idle queue here is an answered queue, not a lost one.
+
+Advice given, unchanged in substance: the two outstanding actions are the coordinator's - clear the dead lock and
+restart the helper, and publish the gold release in the same session - and neither needs a new permission, because the
+user's own go-ahead is already on record. This turn changed this notes file only; no page, bar, guard, generator,
+stylesheet, data artifact, number, mailbox file, lock, controller file or register entry was touched, and nothing is
+live as a result.
+## 2026-10-03 (same session) - the user's go-ahead: "yes" to clearing the frozen helper, publishing the gold release and refreshing the data
+
+Offered in plain words at the close of the status check above: *"do you want me to tell the coordinator to clear the
+frozen helper and publish the gold page now? Default is yes, go ahead - and the data refresh needs your word at the
+same time."* The user answered **"yes"**, one word, answering the whole of that question. It is recorded as the user's
+go-ahead for the three actions it named, and for nothing beyond them:
+
+1. **Clear the dead lock and restart the background review helper** - coordinator housekeeping on a process (PID 24000)
+   that no longer exists, taken with the user's word in-session.
+2. **Publish the gold release now** - the single tabbed `gold.html` with its one top-bar entry, the draft-page pinned
+   guard line moved to `50 of 50`, and revision 2 of the draft page carried in the same change. Steps E1-E5 of
+   `docs/strategy/GOLD_TABS_BUILD_BRIEF.md`; the coordinator's own accepted review of `-033` already says this publish
+   is a coordinator production action, not a worker assignment, and the single-writer rule is unchanged.
+3. **The live data refresh** - the panel has aged out of its freshness window and reads stale again; the standing rule is
+   that a fresh reading needs the user's word and a coordinator re-publish, never a lane's own push, and this is that
+   word.
+
+The release candidate was re-verified this turn rather than remembered: `docs/strategy/GOLD_TABS_SHELL_CANDIDATE.html` is
+**5,839 bytes, 106 CRLF lines, 0 bare LF, sha256 `de60c2b7c452aa74ac282d475707e15d2d68977c77c4cd2a505cb4d205e64da6`**
+at HEAD `d2aa17f`, worktree clean - unchanged from the version the coordinator checked and approved. Nothing needs
+rebuilding before the publish. The one choice that survives into the served bytes is the materialisation (the 5,733-byte
+LF blob the repository stores versus the 5,839-byte CRLF file on disk); the consistent route is the one revision 1 of the
+draft page already took - let the repository's line-ending setting store the LF form and record the served byte count and
+hash - but that remains the coordinator's to state, not this worker's to decide.
+
+Two standing items are named rather than reopened, because this go-ahead does not cover them and neither is a blocker:
+the **navigation-consistency change** stays queued behind the release (route N1, same theme everywhere - answer 2 in the
+user's own words was "after"), and the **movement-screen measurement** stays the recommended next lane because it is the
+only thing that can put real factor numbers in the Factor tables tab (recommended as `gold-declared-band-measurement-026`
+in `-033`; still unopened).
+
+Filed to the coordinator as a materially new recommendation under a new submission ID,
+`20261003-strategy-gold-release-and-helper-go-ahead-036`, status `ready_for_review`, with the candidate hash and this
+entry as evidence. This turn changed this notes file only; no page, bar, guard, generator, stylesheet, data artifact,
+number, mailbox file, lock, controller file or register entry was touched by this worker, and nothing is live as a result
+of it.
+## 2026-10-03 (same session) - the coordinator handover, and a repair note on the two entries above
+
+Asked by the user for "the instructions for the coordinator", this worker wrote them out as
+`docs/strategy/COORDINATOR_HANDOVER_20261003.md`: the authority (the user's one-word "yes" and what it does not cover),
+the order of the three actions and why; Task 1, the stale lock and the frozen helper; Task 2, the publish (E1-E5, the two
+copy traps, the guard coupling, revision 2 of the draft page and the pinned `50 of 50` line in the same change, the
+acceptance run, the one materialisation choice to state out loud, and the rollback); Task 3, the data refresh (the
+webhook `POST` and the verification); what stays queued after it; and what this worker did not do. It carries the same
+recommendation as `-036`, so it was not filed as a second submission and the mailbox was left alone.
+
+**Repair note.** The two entries above - the status check and the go-ahead - were first written into this file with
+line-number inserts, and the line numbers the tool used did not match this file's real line count. The result, committed
+at `d2aa17f` and `5e76c53` and pushed, was that both entries landed in the middle of the 2026-09-30 entry and the first
+one was split across the second. Nothing was lost: every paragraph was still present, only out of order. The file was
+rebuilt as the last pre-session revision (`bcacb83`, reproduced byte for byte at 220,177 bytes) plus the two intended
+entries, then checked for chronological order and for no duplicated or dropped paragraph, and this commit carries the
+repair. The lesson recorded for this worker: append to this file by writing the whole file, never by line number.
