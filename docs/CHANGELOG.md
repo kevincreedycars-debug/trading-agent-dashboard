@@ -1,5 +1,21 @@
 # Changelog
 
+## 2026-10-03
+
+### Added
+
+- Added `backtester/partials/shared_nav.html`, the one canonical source for the dashboard's top bar and side rail, with the rail in two named variants and the nav's CSS subset inside `<style id="shared-nav-css">`, so no page needs a new stylesheet link.
+- Added `backtester/scripts/build_shared_nav.js` (`--write`, `--check`, `--print`) to render that partial into all nine published pages between the `SHARED-NAV` markers, in each page's own line endings.
+- Added `backtester/tests/site_nav_consistency.browser.test.js`, a five-test guard over byte equality with the partial, the bar and rail fingerprint, every link's landing place (including from inside `gold.html`'s frames and from a stale hash), the draft page's one-request budget, and the block's layout cost at six widths.
+- Added `docs/SITE_NAV_CONSISTENCY_20261003.md` as the handoff note for this change.
+
+### Changed
+
+- Gave `index.html`, `gold.html`, `dashboard-northstar.html`, `standing-dashboard.html`, `backtest-flow.html`, `gold-direction-scorecard.html`, `gold-backtest-outcomes.html`, `gold-backtesting.html` and `gold-factor-wip.html` the same bar - four entries, one `Gold` entry into `gold.html` - and the same seventeen-entry, four-group rail with the `ADM` / `Control Room` head and the `Published dashboard` foot.
+- Replaced the hand-written bar and rail on `index.html` and the one-line related-pages headers on the three gold research pages with that block, keeping each page's own content and tabs.
+- Added `tabFromHash` / `setupHashTabs` to `script.js` so a rail entry that names a dashboard view (`index.html#<view>`) opens that view on load and on `hashchange`, with an unknown hash falling back to the dashboard's default view.
+- Recorded that the three gold hop guards pass only because the checkout on `orchestration/control-plane-20260920` mirrors a six-entry bar (`Gold Backtest`, `Gold Direction`, `Gold Factor (draft)`) that production no longer serves: `origin/main` already carries the published four-entry bar, and re-pointing those three assertions at the published route belongs in the checkout that holds them, per `codex-045` section 4.
+
 ## 2026-07-21
 
 ### Added

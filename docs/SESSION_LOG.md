@@ -83,3 +83,29 @@ Add the visual dashboard shell for Backtest / Accuracy without building the data
 - No Layer 2 logic changed.
 - No Dashboard Writer workflow changed.
 - No Supabase schema or backtest calculation engine added.
+
+## 2026-10-03
+
+### Session Goal
+
+Make the top bar and the side rail the same on every published page, so the gold pages match the dashboard homepage, and settle Task 0's stale navigation mirror.
+
+### Completed
+
+- Added `backtester/partials/shared_nav.html` as the one canonical source for the top bar and the side rail, in two named variants, with the nav's own CSS inside a `<style id="shared-nav-css">` block.
+- Added `backtester/scripts/build_shared_nav.js` (`--write` / `--check` / `--print`), which renders the partial into all nine pages between the `SHARED-NAV` markers in each page's own line endings; `--check` reports `9 pages, 17 rail entries, 0 change(s)`.
+- Wrote that block into `index.html`, `gold.html`, `dashboard-northstar.html`, `standing-dashboard.html`, `backtest-flow.html`, `gold-direction-scorecard.html`, `gold-backtest-outcomes.html`, `gold-backtesting.html` and `gold-factor-wip.html`, and removed the hand-written bar and rail from `index.html` plus the one-line related-pages headers from the three gold research pages.
+- Added `tabFromHash` / `setupHashTabs` to `script.js` so a rail entry that names a dashboard view opens that view on load and on `hashchange`, with an unknown hash falling back to the dashboard's own default view.
+- Added `backtester/tests/site_nav_consistency.browser.test.js` (five tests, all green in about 12s) guarding byte equality with the partial, the bar and rail fingerprint, every link's landing place including from inside `gold.html`'s frames, the draft page's one-request budget and the block's layout cost at 1440, 1180, 860, 768, 721 and 390px.
+- Re-ran the existing page guards from this worktree with their files and data artifacts copied in for the run: `backtest_flow_page` 2/2, `gold_research_page`, `gold_direction_scorecard_page` 2/2 and `gold_backtest_outcomes_page` all pass against the new block.
+- Recorded in `docs/SITE_NAV_CONSISTENCY_20261003.md` that the checkout on `orchestration/control-plane-20260920` mirrors a six-entry bar, so the three gold hop guards that live there pass against a bar production no longer serves, while `origin/main` already carries the published four-entry bar.
+
+### Important Note
+
+The change is committed locally on `site/nav-consistency-20261003`; nothing is published, and publication to GitHub Pages remains a separate operation.
+
+### Next
+
+- Run the GOLD view tidy and fault-first order per `codex-045-GOLD_VIEW_TIDY_AND_FAULT_FIRST_ORDER_20261003.md`.
+- Re-point the three gold hop guards in the checkout that holds them at the published bar: three bar links and one Gold entry.
+

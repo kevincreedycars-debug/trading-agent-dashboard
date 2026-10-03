@@ -14937,6 +14937,30 @@ function setupTabs() {
   });
 }
 
+// The rail on the other eight pages links back here as index.html#<tab>, so the hash names the view the
+// reader asked for. gold.html has read its own hash since it was published; this is the same rule on the
+// dashboard, on load and on hashchange. An absent or unrecognised hash changes nothing, so the view
+// restored from storage stands and a link still works when a tab is missing or the script is not run.
+function tabFromHash() {
+  let hash = location.hash.replace(/^#/, "");
+  try {
+    hash = decodeURIComponent(hash);
+  } catch (err) {
+    return "";
+  }
+  hash = hash.trim();
+  return getAvailableTopLevelTabs().includes(hash) ? hash : "";
+}
+
+function setupHashTabs() {
+  window.addEventListener("hashchange", () => {
+    const tab = tabFromHash();
+    if (tab) setTab(tab);
+  });
+  const tab = tabFromHash();
+  if (tab) setTab(tab);
+}
+
 function setupBacktestEvidenceControls() {
   const panel = document.getElementById("backtestPanel");
   if (!panel) return;
@@ -15536,6 +15560,8 @@ createWorkflowRefreshTabId();
 restoreWorkflowRefreshState();
 setBacktestTab(activeBacktestTab, { skipRender: true });
 setTab(activeTab);
+// A hash in the address names the view, and wins over the view restored from storage.
+setupHashTabs();
 setupWorkflowControls();
 renderWorkflowStatus();
 setupWorkflowRefreshStorageSync();
