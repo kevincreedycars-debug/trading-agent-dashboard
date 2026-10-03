@@ -38,6 +38,13 @@ Verified the user's relaunch of the eight closed windows against the bridge's ow
   `2026-10-03T14:33:40Z` on pid `8184` after the `central-orchestrator` activity record was rewritten `paused` at `14:31:49.111Z`; no assignment was published, no worker
   status was set to a publish state, nothing was deployed, refreshed, merged or opened, no review ran, no other coordinator process was started, and no controller or
   bridge file or setting was touched.
+- Concurrency recorded rather than claimed: the background lane's own separate Codex CLI turn ran while this cycle wrote, reading `reviewing` on strategy `-038` from
+  `14:36:41Z` with `activeRun` true, accepting it and committing at `14:40:31Z`, with the dispatcher then `watching`, `Waiting for new submissions`, `activeRun` false
+  at `2026-10-03T14:42:04.891Z` on pid `8184`; that acceptance and review document are the background lane's, not this cycle's, and the commit seen here as `dca8b2e`
+  was recreated as `e3d58e4` with the same author date and subject.
+- Validation: `npm run test:coordination` 4 of 4 pass; `npm test` 449 tests, 445 pass, 4 fail, all four being the pre-existing console-width
+  `backtester/tests/secret_scanner.test.js` cases that earlier entries already track, so no failure is attributable to this change.
+
 
 
 # 2026-10-03 (third cycle) - strategy 037 reviewed and accepted; the gold release it describes has since landed

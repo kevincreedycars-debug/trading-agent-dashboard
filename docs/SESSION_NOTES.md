@@ -42,6 +42,9 @@ true with `activeRun` false and `watching` "Waiting for new submissions" at `202
 rewritten `paused` at `14:31:49.111Z`. This cycle deployed, refreshed, merged and opened nothing, published no assignment, set no worker status to a publish state, ran
 no review, started no other coordinator process and touched no controller or bridge file; the canonical unrelated dirty state and every worktree were left as found.
 
+Accuracy note, same cycle: the background lane's own separate Codex CLI turn ran concurrently and not by this cycle, reading `reviewing` on strategy `-038` from `14:36:41Z` with `activeRun` true, accepting it and committing at `14:40:31Z`, after which the dispatcher read `watching`, `Waiting for new submissions`, `activeRun` false at `2026-10-03T14:42:04.891Z` on pid `8184` - that acceptance and its review document are recorded in the entry above and in a commit this cycle did not make, and the commit seen here as `dca8b2e` was recreated as `e3d58e4` with the same author date and subject. Validation for this cycle was `npm run test:coordination` 4 of 4 and `npm test` 449 tests with 445 pass and 4 fail, the four being the pre-existing console-width `backtester/tests/secret_scanner.test.js` cases already tracked by earlier entries, so nothing here is caused by this change.
+
+
 2026-10-03, third cycle (background review), the mailbox is empty again: strategy submission 037 was reviewed by hand from the canonical checkout
 and accepted, so coordination.js check reads pending 0, errors 0 for that worker. The deliverable is the docs-only handover
 docs/strategy/COORDINATOR_HANDOVER_20261003.md; it and CONVERSATION_NOTES.md reproduce byte-exactly (sha256 3f88488a and 86667626), the change set
