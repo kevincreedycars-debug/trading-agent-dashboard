@@ -1,5 +1,25 @@
 # Session notes
 
+2026-10-03, fifth cycle (background review), the mailbox is empty again: strategy submission 038 was reviewed from the canonical checkout under the controller lock that
+owns this run and accepted, so coordination.js check reads pending 0 with errors [] for that worker. It is a status_report rather than advice: the lane folded the -037
+review's corrections into its own handover, re-verified the gold release from its side and restated the one item of the user's three still undone. Verified here instead
+of trusted: the change set is docs/strategy/ only (52/0 on CONVERSATION_NOTES.md, 79/14 on COORDINATOR_HANDOVER_20261003.md across the two reported commits 084667e
+and 5eb3cd6), the worktree is clean at 5eb3cd60b915bf5b47a22abd921697dbb07209bd on workers/strategy-advisory-20260920, the handover reproduces byte-exactly at
+15,847 bytes / 201 CRLF / 0 bare LF / sha256 1eccb258b7e101fe9f7ec3142d03a42229f268f1738dcf368b33582939b66427 and the notes at 235,377 bytes / 2,751 CRLF /
+sha256 ff5f0e7ea3fe63934005792b83ce269b7bc2a9443d8d9fc87d2feaa0fc290b50, still a pure addition against bcacb83 (164 insertions, 0 deletions). The release reading
+reproduces from local refs and the release worktree: origin/main 2f25c8c changes gold.html +106, index.html +1/-2 and gold-factor-wip.html +61/-32, index.html carries
+exactly one gold.html bar entry and no old gold link, the released gold.html blob is 5,733 bytes and its bytes hash to the lane's live value 5ae6c22a9f7a47ad59fd5b0260450951004c4781e0b243f9eda7eb59f8b51460 as the LF form of the 5,839-byte / de60c2b7 worktree candidate, the guard pin at 779a701 line 28 reads
+/50 of 50 answered/ and the canonical working tree carries the same line, and the panel is genuinely stale (origin/main data/layer1.json last_updated_et
+2026-10-02T07:29:28.874Z with the 2026-10-02T07:29:31.991Z success run in data/workflow-status.json). Two claims are the lane's own evidence and are recorded as stated
+rather than reproduced, because this run has no network: the live HTTP reads and its git ls-remote push confirmation; the local tip equals the reported head. One
+wording slip is a note, not a required change: the guard pin is on the canonical orchestration branch, not in the production push. No new assignment was published and
+no worker status was set to a publish state - the advisory proposed nothing, every remaining Gold path is spent or sealed to 2027-03-25T15:00:00Z, the movement-screen
+lane is not covered by the go-ahead, and the live-trading call-to-order contract is already directed inside live-trading-001 at instructions_published_awaiting_worker -
+so strategy stays advisory_active under strategy-advisory-001 and the precise unresolved decision remains the user's: run the live data refresh now, open
+gold-declared-band-measurement-026, or let route N1 proceed. This cycle published, deployed, refreshed, merged and opened nothing, started no other coordinator process,
+spawned no subagent, changed no controller or bridge file or setting, ran no controller pause or stop, consumed no holdout and mutated no warehouse; the canonical
+unrelated dirty state (a modified tools/strategy-node/Strategy.code-workspace and five untracked backtester/ gold session-policy files) and every other worktree were
+left exactly as found.
 2026-10-03, fourth cycle (window relaunch), all eleven windows are attached: the user relaunched the eight closed worker windows and every one of them is now bound and
 polling. Two reads of `.local/orchestration/connections/` inside one polling cycle - `2026-10-03T14:33:2xZ` and again seconds later, with both samples agreeing - show
 all eleven files rewriting with `extension_version` `0.2.1` and file mtimes one to five seconds old: `backtester-usd` `14:33:24.610Z`, `backtester-gbp` `23.186Z`,

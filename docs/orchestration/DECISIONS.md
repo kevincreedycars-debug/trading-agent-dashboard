@@ -1,5 +1,43 @@
 # Central decisions
 
+## 2026-10-03 (fifth cycle, background review): strategy 038 accepted - the release verified from the lane's side, no new assignment, and the reason
+
+The background coordinator reviewed `strategy` submission `20261003-strategy-handover-corrections-and-release-verified-038` (mailbox SHA-256
+`c1172c2db47867c383fe85c5b8d94207c3e2bd7547037f7c2249653cc7d8d869`, reproduced from the immutable inbox file at 6,757 bytes; reply
+`4bff3e49120f3b6a9bf69c83060e9e8ed409ebb7c92abd372f65cbec56e65633` at 6,691 bytes; durable review
+`reviews/20261003-strategy-handover-corrections-and-release-verified-038.md`) and decided **accepted**. It is a `status_report`, not a
+recommendation: it folds the `-037` review's corrections into the lane's own handover, re-verifies the gold release from the lane's side
+instead of repeating it, and states the one item of the user's three still undone. Acceptance is not integration and not production: this
+cycle published no page, copied nothing, merged nothing, deployed nothing, refreshed nothing, triggered nothing and armed nothing, and set no
+worker status to a publish state.
+
+Verified from the checkout rather than trusted: the change set is `docs/strategy/` only (52/0 on `CONVERSATION_NOTES.md`, 79/14 on
+`COORDINATOR_HANDOVER_20261003.md`, across the two reported commits `084667e` and `5eb3cd6`), the worktree is clean at `5eb3cd60` on
+`workers/strategy-advisory-20260920`, `CONVERSATION_NOTES.md` is still a pure addition against `bcacb83` (164 insertions, 0 deletions), the
+handover reproduces byte-exactly at 15,847 bytes / 201 CRLF / 0 bare LF / sha256 `1eccb258...`, the notes at 235,377 bytes / 2,751 CRLF /
+sha256 `ff5f0e7e...`, the release `2f25c8c` changes exactly `gold.html` +106, `index.html` +1/-2 and `gold-factor-wip.html` +61/-32 with a single
+`href="gold.html"` bar entry and no old gold link, the released `gold.html` blob is 5,733 bytes and its bytes hash to the lane's live value
+`5ae6c22a...` as the LF form of the 5,839-byte / `de60c2b7` CRLF candidate under this repository's `core.autocrlf=true`, the guard pin at
+`779a701` line 28 reads `/50 of 50 answered/`, and the panel is genuinely stale (`data/layer1.json` `last_updated_et` `2026-10-02T07:29:28.874Z`
+with the `2026-10-02T07:29:31.991Z` success run reading `Manual Refresh Complete` and `failed_step` null).
+
+Two claims are recorded as stated rather than reproduced, because this run has no network: the live HTTP reads (gold.html 200 at 5,733 bytes,
+the live `index.html` link count) and the lane's own `git ls-remote` confirmation that its branch is at `5eb3cd60` on origin. The local branch
+tip equals the reported head, the worktree is clean and the blob corroborates the served bytes, so nothing contradicts them. One wording slip
+is a note, not a required change: the guard pin is on the canonical orchestration branch at `779a701`, not in the production push that carried
+`7ce136e` and `2f25c8c`, and the lane's separate mention of the later `f8bc80f` is correct - it touches `data/live-trading.json` only.
+
+**No new bounded research assignment is published, and the register is untouched.** Evidence does not support a further stage: this advisory
+proposed nothing, every remaining path in the Gold circuit sits on spent intervals or on the prospective window sealed until
+`2027-03-25T15:00:00Z`, the movement-screen lane `gold-declared-band-measurement-026` is not covered by the go-ahead, and the queue's other
+named next bounded work - the live-trading call-to-order contract - is already directed inside assignment `live-trading-001`, whose register
+status is already exactly `instructions_published_awaiting_worker`, so re-publishing it would add nothing while `gold-research` and `strategy-2`
+sit at the same status for their own carried items. `strategy` therefore stays `advisory_active` under `strategy-advisory-001`.
+
+**The precise unresolved decision stays the user's:** (a) whether the interactive coordinator runs the live data refresh now, which the `-036`
+go-ahead already covers and which this background run has no authority to trigger; (b) whether to open the movement-screen lane
+`gold-declared-band-measurement-026`, still the only route to real factor numbers; and (c) whether the navigation-consistency change on route N1
+proceeds now that the release it was sequenced behind has landed.
 ## 2026-10-03 (fourth cycle): the eight relaunched windows are attached, and an operator resume is a dispatch-record reset
 
 The connection facts recorded earlier today are corrected by observation. The user relaunched the eight closed worker windows, and two samples of
