@@ -31,6 +31,39 @@ Standing Dashboard | Gold | Backtest Flow`, rail head `ADM` / `Control Room` and
 `side-rail` references, `styles.css` linked, no `script.js`, tabs `Direction`, `Backtest evidence`, `28-factor outcomes`,
 `Factor tables (draft)`. `origin/main` is still `f8bc80f`, so revision 1's page table stands as written.
 
+## Revision 3, 2026-10-03 - the user confirmed all five, so the order carries no open question
+
+He answered the five points this lane put to him, verbatim and in the order they were put: "1. Yes" / "2. Okay just make
+it all consistent with the homepage" / "3. Okay" / "4. okay" / "5. okay". Nothing measured, recommended or bounded in
+revisions 1 and 2 changes. What changes is that every point is now the user's, and this order needs no further round
+before the coordinator builds it. The five, and what each confirmation fixes here:
+
+1. **The census tabs stay "for now"**, as the single `Archive census` tab at the end of the strip - the confirmation of the
+   answer recorded in `GOLD_VIEW_TIDY_AND_FAULT_FIRST_ORDER_20261003.md` revision 2.
+2. **The rail off the dashboard is "both", and consistency with the home page is the test.** His own words this turn - "just
+   make it all consistent with the homepage" - accept section 7's route (a) plus the (b) fallback and set the standard the
+   finished change is judged against: the same labels, the same order, the same look, the same behaviour, and nothing the
+   home page does not have. Section 7's two prohibitions therefore stand as the boundaries of the work rather than as
+   preferences: no revision-1 (b) alone, where seventeen labels land on the dashboard's default view, and no new
+   navigation idea the home page does not carry.
+3. **The two live spans are omitted on the eight other pages and are never faked** - section 8 stands as written, with its
+   reasons, and that pair of spans is the one deliberate difference between the bar on `gold.html` and the bar on
+   `index.html`.
+4. **The four day-size figures are re-printed from the one run**, and the lane's marked 2026-09-28 figures stand until that
+   print lands - the confirmation of the judgement in the tidy order, revision 2.
+5. **Start now, as one change**: the bar and rail are built on `gold.html` first, together with the tidied one-page view,
+   and the collector fault fix goes ahead of both. Section 6's `gold.html` row is the brief for that page.
+
+**Cross-reference, recorded here because it changed on the coordinator's side after revision 2.** Of the tidy order's four
+asks, two are already answered by the coordinator's accepted review of the `-042` filing: the movement measurement is
+published as `gold-declared-band-measurement-026` - verified read-only this turn, `docs/orchestration/projects.json` carries
+exactly that `assignment_id` on the `gold-research` row, its work order is
+`docs/orchestration/assignments/gold-research.md`, the superseded `gold-coverage-025` order is archived at
+`docs/orchestration/assignments/gold-coverage-025-archive.md`, and the register status is
+`instructions_published_awaiting_worker` - and the R4 withdrawal is recorded in `docs/orchestration/DECISIONS.md`. The two
+remaining asks, the collector fault fix and this one gold-page edit, are production changes and stay with the interactive
+coordinator, exactly as that review states. Nothing in this revision is waiting on the user or on this lane.
+
 ## 1. What is asked, and what is already settled
 
 One requirement over the whole served site: **the same top bar and the same side-bar menu on every page.** It is a

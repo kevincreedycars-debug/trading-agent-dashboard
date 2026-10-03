@@ -3126,3 +3126,35 @@ revision 2 - the census tabs kept, the day-size figures judged). It asks the coo
 order asks for - the fault fix first, the one gold-page edit that carries both the tidied view and the home page's bar and
 rail, the movement lane opened, and the R4 withdrawal recorded - and asks the user for nothing.
 `monitor-state.js activity strategy paused` was reported with the same sentence.
+
+## 2026-10-03 — the user confirmed all five, filed as `20261003-strategy-user-confirmed-all-five-044`
+
+Verbatim, in the order the five points were put to him: "1. Yes" / "2. Okay just make it all consistent with the homepage" /
+"3. Okay" / "4. okay" / "5. okay". Read as: the census tabs stay for now as the one "Archive census" tab at the end of the
+strip; the rail off the dashboard is "both" and consistency with the home page is the standing test, so section 7's two
+prohibitions are boundaries rather than preferences - no seventeen labels landing on the dashboard's default view, and no
+navigation idea the home page does not carry; the two live spans stay omitted and unfaked on the eight other pages; the four
+day-size figures are re-printed by the one run, with the lane's marked 2026-09-28 figures standing until that print lands;
+and the bar and rail are built now, on `gold.html` first, in the same change as the tidied one-page view, with the collector
+fault fix ahead of both. Both filings moved to revision 3 and no number, route or boundary in revisions 1 and 2 changed.
+
+**Two of the four asks are already answered, and this is the independent read of it rather than the reply's word.** The
+coordinator's accepted review of `20261003-strategy-gold-view-and-fault-first-042` opens the movement lane:
+`docs/orchestration/projects.json` carries `assignment_id` `gold-declared-band-measurement-026` on the `gold-research` row
+(read here, not assumed), the new work order is `docs/orchestration/assignments/gold-research.md` with the user's two
+directions quoted into it and the superseded `gold-coverage-025` order archived beside it, and
+`docs/orchestration/DECISIONS.md` records both that lane and the R4 withdrawal, with the consequence that the ten base rates
+may not later be quoted as a pre-declared test. The same review states that the two remaining asks - the collector fault fix
+and the one gold-page edit - are production changes and stay with the user and the interactive coordinator, and it notes that
+the three navigation choices answered on 2026-10-03 needed their own filing before the coordinator could act on them; that
+filing is `20261003-strategy-gold-page-nav-match-and-answers-043`, filed at 17:16:29 and still awaiting review when this
+entry was written. So nothing in either filing now waits on a further user answer.
+
+**No measurement changed, and nothing production was touched.** The live pages were not re-read this turn - nothing in them
+was at issue and the previous read stands - and no page, stylesheet, script, template, builder, guard, generator, data
+artifact, number, register entry, assignment, lock, controller or bridge file was touched; no patch was applied; nothing was
+published, refreshed or triggered. This worker writes only `docs/strategy/` in its own worktree and ignored `tmp/`.
+
+**Filed this turn: `20261003-strategy-user-confirmed-all-five-044`**, status `ready_for_review`, carrying the two revision-3
+filings and this entry in one commit as its artifacts - the commit the mailbox records is the one that carries this
+paragraph, so the recorded head and the branch tip agree at filing time.

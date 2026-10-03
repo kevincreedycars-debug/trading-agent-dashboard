@@ -37,6 +37,36 @@ home page has both. The nav change gives the gold page the home page's bar and r
 the two works are the same edit on the same file and must land together with Task 0 of the nav work order in front of them.
 Section 4's coupling paragraph and section 6 carry this.
 
+## Revision 3, 2026-10-03 - the user confirmed all five, and two of the four asks are already answered
+
+He answered the five points this lane put to him, verbatim and in the order they were put: "1. Yes" / "2. Okay just make it
+all consistent with the homepage" / "3. Okay" / "4. okay" / "5. okay". Revision 2's table is unaffected and is confirmed by
+them: the census tabs stay "for now", the rail off the dashboard is "both" with consistency with the home page as the
+standing test, the date and clock stay omitted and unfaked on the eight other pages, the four day-size figures are
+re-printed from the one run, and the shared header and menu are built now as one change with the fault fix ahead of them.
+Nothing measured, judged or bounded in revisions 1 and 2 changes, so no number and no route in this filing is reopened.
+Two things this revision adds.
+
+**First, asks 3 and 4 of section 6 are answered - verified read-only this turn rather than taken on the review's word.**
+The coordinator's accepted review of `20261003-strategy-gold-view-and-fault-first-042` publishes the movement measurement
+as `gold-declared-band-measurement-026`: `docs/orchestration/projects.json` now carries exactly that `assignment_id` on the
+`gold-research` row, the new work order is `docs/orchestration/assignments/gold-research.md` with the user's direction and
+the downstream-only boundary written into it, the superseded order is archived at
+`docs/orchestration/assignments/gold-coverage-025-archive.md`, and `docs/orchestration/DECISIONS.md` records both the lane
+and the withdrawal of the forward record (R4) with the consequence section 5 states - the ten base rates may not later be
+quoted as a pre-declared test. Both are the coordinator's own records; this lane read them and touched neither.
+
+**Second, what is left is two asks, both production and both the interactive coordinator's.** Section 6's list is now:
+
+1. **Fix the collector fault first** - a production patch to the Gold input, offline-validated and unapplied, on the user's
+   "fix the fault" and his confirmation this turn.
+2. **Make the one gold-page edit** - the tidied one-page view (section 4) and the gold page's own bar and rail
+   (`COORDINATOR_NAV_TIDY_HANDOVER_20261003.md` sections 6 and 7) in the same change, with Task 0 in front of it.
+
+Neither can be done from this lane: this worker holds no production authority for this assignment and writes only
+`docs/strategy/`. With the user's five confirmations recorded here and in the nav order, nothing in this filing is waiting
+on a further user answer.
+
 ## 1. What the user said, and how it is read
 
 Verbatim, this turn: *"Yes this thread was interrupted we want to see and analyse all the gold data as per above."* /
@@ -178,7 +208,8 @@ size medians, which is why this one caveat exists at all.
 
 ## 6. What is asked of the coordinator, and what is still the user's
 
-Asked of the coordinator, and nothing beyond it:
+Asked of the coordinator, and nothing beyond it. **Status at revision 3, 2026-10-03: items 3 and 4 are answered and
+recorded in revision 3 above; items 1 and 2 remain, both production, both the interactive coordinator's.**
 
 1. **Sequence the fault fix first** as the production priority on the Gold input, using the user's word recorded here.
 2. **Put the gold-view tidy on the dashboard lane** with section 4 as the brief, folded in with the navigation work rather
