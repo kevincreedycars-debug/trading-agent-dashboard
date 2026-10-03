@@ -1,3 +1,15 @@
+# 2026-10-03 (eighth cycle) - strategy 039 addendum acknowledged, a docs-only filing correction, no assignment published
+
+Closed the addendum the seventh cycle deliberately deferred, acknowledged it as a bookkeeping correction, and left the reviewed nav work order exactly as accepted.
+
+- Submission `20261003-strategy-nav-work-order-039-addendum` reproduced from the immutable inbox file at 4,417 bytes, mailbox SHA-256 `64942d41e4c587e23b35ed50f1eeca93affad02f51b2f920d0e520e3d6350190` equal to the requested hash; reply `3a97623216a123b00e3bb5fdb023a7e3e3e0a8be5d4e6e088e4e6f56feddad25` at 6,109 bytes, decision `acknowledged`; review `docs/orchestration/reviews/20261003-strategy-nav-work-order-039-addendum.md`.
+- Reproduced from the lane: HEAD `646c5e5ed5ca3e967157b87d58ac915f8d848831` on base `8177637` with a clean worktree; `ffc47e2` = `CONVERSATION_NOTES.md` 73/0 and `646c5e5` = `DASHBOARD_NAV_CONSISTENCY_REQUEST.md` 5/0; the two `-039` deliverables unchanged (`git diff bbf4f73 646c5e5` limited to them is empty) and still byte-exact - handover 19,906 bytes / 247 CRLF / sha256 `ba45df12...`, queue note 6,334 bytes / 79 CRLF / sha256 `5bfe9f5a...`; notes 246,666 bytes / 2,866 CRLF / 0 bare LF / sha256 `a730854a...` with the idempotency marker at line 2795.
+- One claim stays the lane own evidence, this run having no network: "local HEAD equal to the origin tip"; the local branch ref does read `646c5e5`.
+- No new assignment and no register status change: the addendum adds no research evidence, the nav tidy-up is coordinator-owned single-writer dashboard work, the Gold circuit is spent or sealed to `2027-03-25T15:00:00Z`, the movement-screen lane is uncovered, and the live-trading call-to-order contract is already directed inside `live-trading-001`; `strategy` stays `advisory_active`.
+- Queue: the one remaining pending report is `backtester-harness` `20261003-backtester-harness-asset-store-and-tabs-r1` (9,963 bytes, sha256 `7d3563b71b0af1be53df2d243d41789182ff461fe42b093206e2190a5072c848`), the next cycle first item.
+- Coordination-integrity note: a write-capability probe overwrote `.local/orchestration/activity/strategy.json` with a one-word test value and it was immediately repaired to a faithful paused record; no mailbox, inbox or reply file was affected.
+- Nothing published, deployed, refreshed, merged or opened; no holdout consumed; no warehouse mutation; controller, bridge and settings untouched; the canonical unrelated dirty state and every worktree left exactly as found.
+
 # 2026-10-03 (seventh cycle) - strategy 039 accepted, the nav tidy-up work order and its stale-bar Task 0 verified, no assignment published
 
 Reviewed the strategy lane's nav tidy-up work order and accepted it as an accurate, executable advisory; verified every load-bearing measurement from the lane and from `origin/main` instead of trusting the report, and published the hash-bound reply and durable review.
