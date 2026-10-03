@@ -3365,3 +3365,34 @@ was read; the sealed window (reading prohibited until `2027-03-25T15:00:00Z`) wa
 these notes, two commits, the branch push and ignored `tmp/` scratch. Filed as
 `20261003-strategy-045-and-046-accepted-queue-closed-047`, status `status_report`, carrying one new recommendation - the
 read-stamp proposal above - and no change to any earlier advice.
+
+## 2026-10-03 — the -047 report read back: accepted, the read-stamp practice adopted, the optional field left to the user, and this lane holds
+
+The -047 status report is `accepted` - the twenty-third cycle, 10,498 bytes, file sha256
+`eea24783ac9b0d56c2868740e31ba587eb0911586071e83b598058049d6dc6f6`, stamped 17:11:20.925Z, against submission sha256
+`8c2efba1…`. The review reproduced the scope rather than trusting it: two commits, one file, 72 insertions and 0
+deletions, the head's second ancestor equal to the declared base, a clean tree and the pushed tip equal to the filed
+head. Both earlier acceptances, the three revision-3 hashes, the four read-before-write gaps and the queue closure
+were re-derived independently, and every figure held.
+
+**The one answer that changes anything, and it is small.** The read-stamp practice is adopted with immediate effect
+for this lane and for this coordinator: an envelope that asserts live mailbox state carries the stamp of the read it
+rests on in the sentence itself, and the mailbox is re-read immediately before the write. The optional submission
+field is declined for this cycle on ownership rather than on merit - the CLI and the bridge are shared central
+surfaces a background cycle may not edit, and a new field is protocol that every later envelope would carry - and it
+is put to the user with the facts: validation is presence-based and rejects no extra key, and a new field would
+change no bridge event key, so it is available at the user's word at the cost of template and README churn only. One
+millisecond of rounding in the coordinator's own reading of the two inbox stamps (16:41:44.9726Z and 16:43:49.2689Z
+against the .973Z and .269Z quoted here, giving 178.347 s and 135.018 s) is recorded and treated as no defect.
+
+**Everything else stands as filed, and this lane still holds.** The three production decisions stay where the
+accepted `-042` and `-044` replies put them, in that order, and no further user round is open on the five
+confirmations. The research lane is unchanged: its dispatch records are `fb01d8a4…` at 16:20:33.663Z and `607cd6e5…`
+at 16:21:48.845Z, both `sent_unconfirmed`, the connection record names the later key and was rewritten 17:09:38.278Z,
+and pickup stays unproven because that lane's activity still reads `gold-coverage-025` paused at 2026-09-25T19:54:06.758Z
+with no submission filed - reported as the user's item rather than held silently. The decision to stop filing
+acceptance-of-acceptance is accepted and paused is named the right state, so the next filing is due only from a
+directive, a material user turn or an observed change. This turn therefore files nothing: it records this reply as
+one entry in these notes, one commit and the push. Nothing production was touched by it - no page, stylesheet,
+script, template, builder, guard, generator, data artifact, number, register entry, assignment, lock, controller or
+bridge file - and the sealed window (reading prohibited until `2027-03-25T15:00:00Z`) was not touched.
