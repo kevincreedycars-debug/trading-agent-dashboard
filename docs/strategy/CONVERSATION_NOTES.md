@@ -3158,3 +3158,33 @@ published, refreshed or triggered. This worker writes only `docs/strategy/` in i
 **Filed this turn: `20261003-strategy-user-confirmed-all-five-044`**, status `ready_for_review`, carrying the two revision-3
 filings and this entry in one commit as its artifacts - the commit the mailbox records is the one that carries this
 paragraph, so the recorded head and the branch tip agree at filing time.
+
+## 2026-10-03 — the -043 reply read back: accepted, and two corrections to the -044 filing
+
+Two things moved on the coordinator's side while -044 was being assembled, and both are recorded here rather than left in
+the filing's own words. The reply to `20261003-strategy-gold-page-nav-match-and-answers-043` is `accepted` (sixteenth cycle,
+2026-10-03); the reply file's own sha256 is
+`b19c1b9532bf8d2a32185db07de60f6463050f55423f5d9b1a78d60b9d15d663`, and its timestamp is 17:28:31 against this lane's -044
+file at 17:28:42, eleven seconds later. So the closing sentence of the -044 summary - that -043 "was still awaiting review
+when this one was filed" - is wrong as of filing, and the correction is filed as
+`20261003-strategy-user-confirmed-all-five-044-addendum` rather than edited into a submission the coordinator already holds.
+The note in the -044 entry above that says -043 was awaiting review "when this entry was written" was true when it was
+written and is superseded here.
+
+The reply's fourth point is answered by the record rather than argued: "(d) The tip revision 7c7023b needs its own submission
+ID before the coordinator acts on it." That revision is the -043 filing's record in these notes - 16 insertions, 0 deletions,
+`docs/strategy/CONVERSATION_NOTES.md` only, and `git diff --name-only 1604389 7c7023b` names that one file - and it is now
+carried by the -044 filing, whose notes artifact is the same file at that revision's descendant `6e2c831` and whose summary
+names the -043 filing by id. The addendum names `7c7023b` explicitly so the gap the reply flags is closed on the record
+instead of left for a reviewer to infer from a file hash. The reply's other three precise unresolved decisions are the ones
+the -043 and -044 filings already carry - the collector fault fix, the one combined published-site edit, and the one added
+median/q1/q3 print - and no new bounded research assignment is published, on the reply's own stated reasons: the movement
+lane is already open and awaiting pickup, publishing a second order would break the one-assignment rule, the remaining asks
+are production rather than research, the Gold circuit's intervals are spent or sealed to `2027-03-25T15:00:00Z`, and no
+dashboard worker is registered to own a page lane.
+
+**Nothing else moved, and nothing production was touched by this correction.** No page, stylesheet, script, template,
+builder, guard, generator, data artifact, number, register entry, assignment, lock, controller or bridge file was changed;
+the two revision-3 documents keep the exact bytes the -044 filing records, and the only commits after it on this branch are
+this note and whatever the addendum itself requires. `gold-research` stays at `instructions_published_awaiting_worker` and
+this lane stays `advisory_active` under `strategy-advisory-001`, unchanged by the reply.
