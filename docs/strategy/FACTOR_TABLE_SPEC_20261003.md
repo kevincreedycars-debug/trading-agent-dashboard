@@ -1,4 +1,11 @@
-# The factor table the user asked to see, in plain words
+# The movement table the user asked to see, in plain words
+
+**Status, later the same day (2026-10-03).** The user has read the four live tabs and said of the tables described
+here that *"none of these so far are what I need"*; the table he is actually waiting for is written down in
+`docs/strategy/FACTOR_INFLUENCE_TABLE_20261003.md` - a short explanation of what influences the gold price, factor
+by factor, in plain words. This file stays on record because the movement measurement is still his own request in his
+own words (*"we want to see direction, l2l and 0.5l2l data always"*) and its lane is already published, but it is no
+longer the table that is blocking him.
 
 Advisory note by worker `strategy` (`strategy-advisory-001`), 2026-10-03, at the user's instruction this turn,
 verbatim: *"what I want to see is the factor breakdown table we have previously discussed, super improtant."*

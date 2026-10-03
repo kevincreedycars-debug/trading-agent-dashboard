@@ -3486,3 +3486,92 @@ touched. The live pages and the remote tip were read read-only over HTTPS and fr
 was written to them. Filed as
 `20261003-strategy-user-answers-stamp-field-and-factor-table-048`, status `ready_for_review`.
 
+## 2026-10-03 - he cannot find the 28-factor table, and says the table he wants is a plain explanation of what influences price
+
+Four more answers this turn, verbatim and in order: *"1. okay do it"* / *"2. I cant find that table give me the eact
+link to it on the dashboard."* / *"3. Dont understand the question just use your logic"* / *"4. no please see my
+requirements for the tbale I actually want, none of these so far are what I need, a simple table that clearly
+explains what factors influence price."* Two sentences of his own framing open the turn: *"I cant see anywhere this
+28 factors table?"* and *"the current 4 tabs done show me what im looking for."*
+
+**Where the 28-factor table is, measured this turn rather than remembered.** He asked for the exact link, so every
+URL below was fetched live over HTTPS and its byte count and title read from the response:
+
+- `https://kevincreedycars-debug.github.io/trading-agent-dashboard/gold-backtest-outcomes.html` - HTTP 200, 27,841
+  bytes, title "Gold 28-Factor Outcomes - Research only". This is the **28-factor table**, and it is the third tab of
+  the Gold page. It is a *census*: its first table is "Declared before anything was evaluated", and its sections count
+  observations and explain why candidates did not qualify. It answers "was this tested, and why did nothing qualify",
+  which is not the question he is asking.
+- `.../gold-factor-wip.html` - HTTP 200, 33,053 bytes, title "Gold factor work in progress (draft)": the fourth tab,
+  still reading "50 of 50" and carrying no factor-by-factor numbers, because the measurement it waits for has not run.
+- `.../gold.html` - HTTP 200, 14,388 bytes, title "Gold - one page with tabs", framing the four tabs in the order
+  Direction (`gold-direction-scorecard.html`, 151,757 bytes), Backtest evidence (`gold-backtesting.html`, 300,925),
+  28-factor outcomes (27,841) and Factor tables draft (33,053).
+
+So the link to give him is the Gold page and its third tab, **28-factor outcomes**. Nothing was missing from the
+site; what was missing is the explanation he actually wants, which no tab carries today.
+
+**The table he wants is now written down as an explanation, not a measurement.** New file
+`docs/strategy/FACTOR_INFLUENCE_TABLE_20261003.md` drafts it in full so it can be checked rather than imagined: ten
+rows, one per declared factor - real interest rates (weight 22), the dollar (18), Fed stance (14), the two-year US
+yield (8), gold's own recent move (8), market fear / VIX (10), US data surprises (6), inflation news (6), safe-haven
+demand (6) and liquidity and growth (2) - each row saying in one line what the factor is, which way it moves gold
+with the threshold the system uses (real yields and the 2-year `+/-5bps`, the dollar `+/-0.30%`, VIX above 25 or
+below 16), why, and how big a part of the picture it is. The weights and the direction rules are quoted from
+`logic/agent_gold_direction.md`, the checked-in logic document, and its own words that the top four are the primary
+drivers and that agreement raises conviction while conflict lowers it are carried into the page's reading note. The
+file also accounts for the number he keeps asking about - the 28 readings behind the ten rows, taken from
+`backtester/lib/gold_source_readiness.js` (`GOLD_VARIABLES`) and
+`backtester/registries/gold_variable_horizon_context.v1.json` (`declared_count: 28`, with the registry's own
+derivation that twenty of the twenty-eight are levels or transformations of five series and are not twenty
+independent inputs) - and it states the dollar's honest caveat: the series read for it is FRED `DTWEXBGS`, a broad
+trade-weighted index, not the classic ICE DXY.
+
+Two honesty rules are written into it, because a table of directions invites the reading that they are proven. First,
+the directions are the system's **declared expectations**, written by the logic document, not findings. Second, the
+archive has already been scored against them and returned nothing usable: the live Direction tab's own embedded
+summary reads 25 session states scored with all 25 verdicts `no_information`, and on the week 24 `no_information`
+with one `unstable_across_years`, with exactly one session row at or above the interest threshold - the row this lane
+has already reported as sitting at the noise floor. The earlier movement spec
+(`docs/strategy/FACTOR_TABLE_SPEC_20261003.md`) is not withdrawn, because the movement measurement is still his own
+request in his own words and its lane is published, but its opening now carries a status line saying it is no longer
+the table blocking him and naming the new file as the one he actually asked to see.
+
+**The third point, answered by this lane's own logic.** *"Dont understand the question just use your logic"* settles
+the production sequence the way this lane had recommended: the collector fault stays first among the production jobs,
+the added `median`/`q1`/`q3` print stays third, and the gold page's bar-and-rail item is recorded as landed at
+`a94fb55030d67cff0a76ea04e92482bf7bc838f6` rather than outstanding. The five defaults the new spec rests on - tab
+named "What moves gold" first in the Gold page's strip; the 28 readings as a collapsed second table; one "what the
+archive showed" line per row; the declared weights printed out of 100; and one plain line at the top saying the
+directions are expectations - are listed in the file so any of them can be changed by one word.
+
+**The first point, "okay do it", is filed as a request rather than performed, because this lane cannot perform it.**
+Waking the `gold-research` window is a coordinator action, not a worker one: the register row already reads
+`gold-declared-band-measurement-026` at `instructions_published_awaiting_worker`, the activity record still names
+`gold-coverage-025`, state `paused`, updated `2026-09-25T19:54:06.758Z`, and nothing has been filed since, while the
+lane's two dispatch records stand at `sent_unconfirmed`. The filing asks for the pickup to be pressed and the outcome
+recorded - and asks it while stating that the table he now wants does **not** depend on that lane, because everything
+in it is already written down.
+
+**A central defect found this turn, reported and not touched.** `node scripts/coordination.js check --worker strategy`
+now fails on this lane with `Bad control character in string literal in JSON at position 318 (line 8 column 20)` for
+`20261003-strategy-user-answers-stamp-field-and-factor-table-048`. Reproduced and localised: the submission itself is
+valid (19,736 bytes, sha256 `7019d954ddfd39db5e74b3962e750e546512d81dbb545eba321a21d936814233`, parsing clean, every
+raw control byte in it an ordinary line feed), and the failure is in the **reply** file
+`.local/orchestration/replies/strategy/20261003-strategy-user-answers-stamp-field-and-factor-table-048.json` (10,344
+bytes, written 2026-10-03T20:14:50.224Z), whose `instructions` value begins with a raw newline immediately after its
+opening quote instead of an escaped `\n`. One of the fifty reply files in that directory fails to parse and it is
+this one; the reviewer's copy at `.local/orchestration/tmp/reply-048.json` carries the same bytes. The consequence is
+live and checkable: `check` reports the error, exits 1, and no longer lists -048 as accepted, although the reply
+file's own text reads `"decision": "accepted"` and its recorded hash matches. This is a shared central surface this
+lane may not edit, and it is reported in the filing so the acceptance can be re-issued in parseable form (or the
+reply's `instructions` escaped) rather than left as a standing error against this worker.
+
+**What this turn changed and what it did not.** Writes are one new `docs/strategy/` file, the status line added to
+the earlier spec, one entry in these notes, one commit on `workers/strategy-advisory-20260920` and its push, plus
+ignored `tmp/` scratch. No page, stylesheet, script, template, builder, guard, generator, data artifact, number,
+register entry, assignment, lock, controller or bridge file was touched; nothing was published, refreshed, triggered,
+copied, merged or deployed; no measurement was run and no outcome, holdout or prospective observation was read; the
+sealed window (reading prohibited until `2027-03-25T15:00:00Z`) was not touched. Live pages, `origin/main` blobs and
+the remote tip were read read-only, and nothing was written to them. Filed as
+`20261003-strategy-factor-influence-table-and-the-28-factor-link-049`, status `ready_for_review`.
