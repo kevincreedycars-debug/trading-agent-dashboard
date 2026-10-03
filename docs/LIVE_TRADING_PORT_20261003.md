@@ -57,8 +57,41 @@ keep the lane's own tokens.
 
 ## What this publish does not do
 
-- The published snapshot still carries `quote` and `m5` only, with no `h1` or `h4` block, so the two new view buttons draw disabled until the producer refreshes `data/live-trading.json` and the coordinator republishes it. The port is code; the data is not in it.
+- The published snapshot still carries `quote` and `m5` only, with no `h1` or `h4` block, so the two new view buttons draw disabled until the producer refreshes `data/live-trading.json` and the coordinator republishes it. The port is code; the data is not in it. Closed the same session by the snapshot publish below.
 - `data/l2l-levels.json` still carries four instruments at zero levels, because the seeds are the user's judgement marked on the chart.
 - Marking stays the reader's own: levels are held in the browser and published to `data/l2l-levels.json` with the reader's own token, sent only to `api.github.com` and never written into the page. No hosted store, key or table was added, and the lane's browser-local-first advice stays overruled by the user's ruling rather than re-argued.
 - No order path, no broker connection, no MT5 credential and no arming. A rendered chart, a marked ladder and two marked levels are not an edge, an accuracy claim, a causal feature-timing proof or a profit rule.
 - The lane's guard worktree `live-trading-guard`, created at `a6ae075`, is not needed: the guard change is published here, and a ninth file would now duplicate it.
+
+## The snapshot the port needed, published the same session
+
+The port is code and the feed was still `quote` and `m5` only, so both new view buttons drew disabled.
+The user was shown that state, asked for the publish, and answered "Yes immediately" to publishing now
+and "yep save to the repo cloud so its always accdesible" to the store question.
+
+| Item | Value |
+| --- | --- |
+| Producer | `tools/mt5-bridge/live-trading-snapshot.py` against the user's own running, logged-in FTMO terminal |
+| Run | `2026-10-03T20:47:34Z`; server offset `10800s` measured from BTCUSD; account `***614` FTMO-Server; 0 positions / 0 orders; `--candles 120 --h1-candles 168 --h4-candles 120 --stale-seconds 900` |
+| Blocks | M5 120, H1 168, H4 120 on all four instruments, none `stale`; the read carries `read_only: true` and `order_functions_called: false` |
+| Validator | `node scripts/validate_live_trading_feed.js data/live-trading.json` - PASS, `live-trading-feed-v2`, four instruments, three timeframes |
+| Feed cache-buster | `script.js`'s `liveTradingUrl` moves to `?v=20261003-h1h4-snapshot`; `index.html`'s `script.js` tag moves to `?v=20261003-live-trading-h1h4-snapshot` |
+| Evidence on this very tree | published-page guard 2 of 2; `tests/l2l_levels.test.js` 48 of 48; `node --check` exits 0 on `script.js`, `lib/l2l_levels_store.js` and `lib/l2l_ladder.js` |
+
+Why the feed token moves too: the snapshot URL's token was last set on 2026-09-30 while the feed itself
+changed on `main` today, so a browser that had already fetched `data/live-trading.json` under the old
+token could be served the cached `m5`-only copy and draw both view buttons disabled again - the same
+fault class the `script.js` token bump above closes for the script. The two changes have to land
+together: a bumped script reading an old feed, or a new feed under an old token, both leave the reader
+with the buttons they already had.
+
+Browser evidence on this tree, driven against the tree rather than a description of it: the H1 view
+draws `168 H1 OHLC bars` and the H4 view `120 H4 OHLC bars`, with all three timeframe buttons enabled;
+two seed levels marked on the H4 view ladder to 20 derived levels (22 chips) and clear back to none;
+zero page errors and no horizontal overflow at 1440 and at 390. The marked levels in that probe are the
+probe's own clicks, not the user's judgement, and a rendered chart is still not an edge, an accuracy
+claim, a causal feature-timing proof or a profit rule.
+
+The producer and its validator are lane tooling and are not in this publish, so `main` still names
+`tools/mt5-bridge/live-trading-snapshot.py` in a comment without carrying the file.
+
