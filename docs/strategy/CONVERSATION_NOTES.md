@@ -3973,3 +3973,50 @@ approved as answer 32 - and a declared historical Fed bias); and run the bounded
 rebuild approved as answer 3. Nothing here changed a weight, a live file, a collector, or another
 worker's work; no credentials were used and the sealed window was not read.
 
+
+**2026-10-04, filing -059 reviewed and accepted; the lane holds for a lane decision.**
+
+The review of `20261004-strategy-gold-factor-gaps-and-sixty-percent-route-059` came back **accepted**, on the
+reviewed bytes only (reply `20261004-strategy-gold-factor-gaps-and-sixty-percent-route-059.json`, 9,159
+bytes, decision `accepted`, its `submission_sha256` equal to the inbox hash
+`ac73d3b7af8b91596eb8d1df56510ce28cc6f98c704e0ad55da6d4183e60a667`). It re-hashed the envelope from the
+immutable inbox file, the branch head `4294922` with sole parent `3815ee2`, the exact two-file diff, the
+pushed remote tip and both documents byte for byte - this notes file at 369,275 bytes, sha256
+`f1b7916bd776d54a3a8edb60464872a217407f9e01ff4a05982b2dc142048476`; the new document at 19,488 bytes,
+sha256 `a2ed807242eeda3cde5c680ed80b5b34ba779feacead67ce7519f0c61936eb17`. It re-derived every code-level
+finding from the canonical checkout instead of reading the filing back: F8 is a hardcoded NEUTRAL
+(`gold_replay_core.js:178-183`); F9 has no producer on the historical path (`geopolitical_risk_flag: null`,
+builder line 294); F3 is a real live column on 145 of 147 rows that the builder writes as `fed_bias: null`
+(line 285); F10 is the vocabulary defect (`"contracting".includes("contraction")` is false, engine lines
+198/201 against builder lines 290-292); F2's implemented thresholds are 0.15, not the declared 0.30 (lines
+96/99); F5's band is the invented +/-0.3 percent (lines 135/138); and two 100-point vectors really are in
+the tree (engine `LIVE_24H_FACTOR_WEIGHTS` 26/22/12/10/10/8/8/2/1/1 against the document's
+22/18/14/8/8/10/6/6/6/2). The sample and event arithmetic reproduced to the same figures: 60.63 percent
+always-up, CORRECT 223 / WRONG 173 / FLAT 141 / NOT_EVALUABLE 45 / NO_CALL 26, about 196 / 784 / 2,178
+independent days, and 905 release days of which 656 are usable.
+
+**One note of record, which is not an error.** The filing's high-impact figures (303 days, of which 165
+usable) reproduce exactly, but as the **potency** field's HIGH set (654 rows, 303 days, 328 usable rows, 165
+usable days), not as `volatility === "HIGH"`, which selects a larger and different set (1,130 rows, 500 days,
+723 usable rows, 383 usable days). The probe line attributed the count to the volatility field while the
+numbers are the potency field's; the review records this as loose attribution and states that nothing in the
+argument moves, because the decisive quantity is the 656 usable release days and a smaller high-impact
+subset strengthens rather than weakens the conclusion that only a ten-point-or-bigger effect is provable on
+data already held. Nothing here changes those figures either way.
+
+**No assignment was published, and the reason is the register, not the substance.** The requested job - the
+five defect fixes, the three missing producers, and a build guard against vocabulary drift - is accepted as
+the concrete next candidate: the fixes are code-level, they use data already on disk, and no weighting or
+calibration depends on them. What blocks it is the one-assignment rule: `gold-research` still holds
+`gold-declared-band-measurement-026` at `instructions_published_awaiting_worker` with its window attached
+but idle (its own activity paused at `gold-coverage-025` since 2026-09-25T19:54:06.758Z), the seven
+`backtester-<asset>` lanes hold their published Stage B revisions in tandem, and `backtester-harness` holds
+its own published assignment. Choosing the lane, superseding 026, or scheduling the availability-lag rebuild
+and the event-day study the user already approved is the user's or the operator's decision, and it is the
+one item this lane leaves open beside the Phase-2 gold baseline reconciliation.
+
+**State.** The lane holds, paused, with no new work started: no weight, live call, builder, collector,
+dashboard file, artifact, workflow, register entry or other worker was touched, no credential was used, no
+outcome or holdout was read and the sealed prospective window stays unread. This entry is the lane's own
+record of an acceptance; no further report is filed on the acceptance of a report, and the next filing
+follows a lane decision.
