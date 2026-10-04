@@ -3815,3 +3815,103 @@ worker's worktree touched; the sealed window remains prohibited until 2027-03-25
 `20261004-strategy-live-call-reliability-and-rebalance-evidence-056`, companion to
 `WEIGHT_BALANCE_CHECK_20261004.md` and to `-055`. No prediction, accuracy, timing or profitability claim is made.
 
+**2026-10-04, later again - he asks what the optimal weighting actually is, why the factors show nothing
+predictable on gold, and whether we are missing factors.** His words, verbatim: *"I want you to figure out what is
+the optimal weighting. And why do you think these factors dont show anything truly predicatable on gold are we
+missing some additional factors surely there is some logic behind why gold moves everydya?"* Answered read-only
+from disk in `docs/strategy/GOLD_WEIGHTING_OPTIMUM_AND_FACTOR_GAPS_20261004.md` - a first-principles weighting
+experiment over the stored Gold checker artifact, plus the archive's own timing. No live system, weight, collector,
+dashboard file, assignment or other worker was touched, no credentials were used, the sealed window was not read,
+and no weight was changed anywhere.
+
+**What was done, so the answer is not another opinion.** Every weight vector is scored at *equal coverage* - the
+same number of strongest-score days - with the best constant call on those same days printed beside it, against
+3,000 random weight vectors drawn from the ten declared factors, on the 563 stored calls that carry a usable
+24-hour window (2024-01-02 to 2026-04-30). The sample drifts hard: 60.63% of non-flat days are up days and the
+average 24h move is +0.167% with a 1.099% standard deviation (t = 3.61), so every raw hit rate in it overstates
+everything.
+
+**The optimal weighting, measured, is not a weighting: it is "all the weight on the dollar factor".** At 30% / 50%
+/ all-days coverage: declared 22/18/14/8/8/10/6/6/6/2 reads 65.25% / 62.44% / 55.47%, equal weights 58.25% /
+56.73% / 56.14%, **the dollar factor alone 69.70% / 66.67% / 71.95%**, and the declared vector with the dollar
+factor removed **50.00% / 53.09% / 51.80%** - i.e. worse than saying "up" every day. Across the random pool the
+in-sample hit rate is **0.747 / 0.736 / 0.696 correlated with how much weight a vector gives the dollar factor**
+(and nothing else), the best of the pool reaches 76.23% at 30% coverage, and a 300-shuffle test puts that above
+every shuffled world (p = 0.003). The train/test split (332 days / 82 days, 50% coverage) cannot separate the
+vectors: fitted-on-train 72.50% on test against 62.50% for the constant, declared 64.10% against 66.67%, equal
+69.70% against 60.61%, dollar-only 72.22% against 72.22% - on 33-40 test calls.
+
+**And that optimum should not be adopted, because inside this artifact the readings and the window are not
+separated in time.** Four measurements: the scored window for a call dated *t* is the UTC day, **00:00Z on *t*
+to 00:00Z on the next weekday** (hourly gold bars reproduce the stored returns at 0.969 correlation and 0.130%
+median difference when anchored at 00:00Z, monotonically worse at every other hour; 565 of 565 consecutive
+open/previous-close prices are equal to the cent, so no day is double-counted); the snapshot builder derives every
+input as `previousValue(series, snapshotDate, n)` with **no availability lag**; the stored dollar factor's
+direction equals **the negation of that same day's dollar change on 101 of 101 days** where the change exceeds
+0.3% (138 of 138 on the looser filter) and agrees with the previous day's change only 48.1% of the time; and on
+the 98 such days with a vote and a non-flat outcome the window's gold return correlates **-0.514** with the
+same-day dollar move (-0.547 winsorised at 1%, -0.504 after dropping the ten largest days), the factor hitting
+76.53% against 54.08% for the best constant. FRED publishes a day's macro value in the evening (about 20:15Z) -
+roughly 20 hours into a window that began at 00:00Z that day. The project's own
+`backtester/docs/gold_timestamped_backtesting.md` already warns that this legacy window is a call-date reference
+price to the next weekday close and that "numerical checker parity" is not proof of causal timing, and its
+feature contract demands "actual availability, not the economic observation date".
+
+**Two careful paths measure the same factor and both say nothing, which is the tell.** The vintage-aware
+scorecard over 2023-2026 (965 anchors, 964 with an outcome, availability lagged) rates 25 factor states and
+concludes *no information* for all 25 on the session horizon and 24 of 25 weekly (the 25th "unstable across
+years"), with 1 state at the 60% threshold, 13 of 25 at or above 50%, and 20 of 25 on the right side of their own
+drift. The accepted single-variable report, re-run read-only for the companion `WEIGHT_BALANCE_CHECK_20261004.md`,
+measures the dollar factor at **50.69% on 2,892 rows (+0.35pp against the drift)** and the real-yield factor at
+50.80% on 1,864 rows (+1.17pp), with 82 of the 100 weight points testable and 18 not testable at all. So the same
+factor reads **71.95% here and 50.69% there** on thousands of rows each: the disagreement is about input timing,
+not about the idea behind the factor. (The artifact's dollar is not ICE DXY either: no licensed DXY series exists
+locally, and the registry refuses presenting the broad trade-weighted index under a `dxy_*` name - the stored
+reading simply lines up with that index's same-day change.)
+
+**What the factor-by-factor table says about the design itself.** Only six of the ten declared factors ever speak
+in these 608 days: **Fed bias, inflation signal, safe haven and liquidity/growth are neutral on every day, so 28
+of the 100 weight points are on factors that never fired.** Of the six that do: real yield (weight 22) hits 53.39%
+but is **-6.36pp against the drift** and decays year by year (59.1% / 48.6% / 41.7%); risk/VIX (weight 10) is
+**reliably wrong, 39.71% with -21.57pp, stable across years** (39.1 / 42.4 / 30.0) - a candidate sign error or
+stale proxy, which no weighting can repair; gold's own price agrees with the previous 24 hours 98.5% of the time
+and with the next 24 hours 50.74% (no daily autocorrelation to harvest); US 2Y is 56.67% but -4.17pp; economic
+surprise speaks on 12 days. The weights are also not identifiable in principle here: F1 and F4 move together on
+175 days (correlation 0.94), 349 of 414 days have two or more factors speaking with sign disagreement on 224 of
+them, only 138 distinct vote patterns ever occur out of 59,049 possible, and on 51 days exactly one factor speaks.
+
+**Why nothing shows up, in one paragraph, and the power arithmetic that settles it.** Gold's 24-hour noise (1.099%)
+is six times its drift (0.167%), so the systematic part of a single day is small; four factors have empty inputs;
+two of the live six are wrongly signed or decaying; there is no daily autocorrelation in gold itself; and the only
+factor that looks strong is the one whose input is taken from inside the window. With 563 scored windows the
+standard error of a 50% rate is 2.11pp, so the smallest edge this archive can detect is **5.9pp**, and proving a
+true 1pp edge would need about **19,600 days** (2pp about 4,900; 3pp about 2,178). Every honest factor effect in
+this project is 0-3pp wide, so no reweighting decision can be evidenced by this archive at all.
+
+**What we are missing, and what it would take.** The model covers the slow macro story with five series held
+locally (10-year real yield, 10-year and 2-year nominal, broad dollar index, VIX) and none of the fast,
+gold-specific story. Cheapest additions computable today: real-yield *surprise* rather than level, real-yield and
+dollar co-movement regime, intraday session structure (21,871 hourly bars are local), curve shape, and
+event-conditional behaviour on the existing 5,115-row event archive. Small acquisitions with no licence change:
+inflation breakevens, an equity regime series, gold implied volatility or skew, gold lease/GOFO or the gold-silver
+ratio. Real acquisitions: official-sector (central bank) buying, ETF tonnage and flows, CFTC positioning, physical
+demand premiums, and global dollar liquidity - the drivers that can explain why gold rose for two years the model
+merely rides.
+
+**Five recommendations, and the boundary.** (1) Do not reweight now and adopt no vector from this artifact. (2)
+Settle the timing question first, under one bounded job owned by the gold worker: rebuild the same snapshots with
+each input the last value actually available at decision time, then re-run the same six factors; if the dollar
+factor collapses, the artifact is retired for calibration. (3) Fix or mute the two defective factors (wrong sign,
+empty inputs) rather than tuning weights around them. (4) If a real edge is wanted, change the question - an
+event-conditional study with a declared threshold and a holdout - because this archive cannot answer "which
+weighting is best". (5) Freeze one candidate weighting for the sealed window only after 1-3, accepting the seal
+opens 2027-03-25T15:00:00Z. Boundaries: read-only, no live logic or weight touched, no credentials used, sealed
+window unread, the timing finding established from the stored artifact plus local archives (the database-backed
+snapshot build is not readable from this checkout, so the owning worker should confirm it), all edges quoted
+against the best constant on the same days, observations dependent so the intervals are optimistic, and no claim
+of accuracy, prediction, timing or money. Filed as submission
+`20261004-strategy-gold-weighting-optimum-and-dollar-input-timing-057`, companion to
+`WEIGHT_BALANCE_CHECK_20261004.md` and to `-056`.
+
+
+
