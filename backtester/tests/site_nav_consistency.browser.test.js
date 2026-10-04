@@ -1,6 +1,6 @@
-// The same top bar and the same side rail on all nine served pages is a promise about the bytes a reader is
+// The same top bar and the same side rail on all ten served pages is a promise about the bytes a reader is
 // served, so this guard proves both halves of it: first that each page's marker block is the partial's render
-// byte for byte, then that the nine pages, opened in a browser, show one bar, one rail, working links and no
+// byte for byte, then that the ten pages, opened in a browser, show one bar, one rail, working links and no
 // layout damage. A page edited on its own, a lost or re-ordered entry, a renamed label, a rail entry that
 // points at nothing, a rail that covers a table or a page the block widened all fail here.
 //
@@ -24,10 +24,11 @@ const builder = path.join(root, "backtester", "scripts", "build_shared_nav.js");
 // The navigation the user asked for, label by label and in order, pinned here so a partial that drifts fails
 // rather than quietly redefining the agreement. The bar's fifth entry is the printable Layer 1 call map: it is
 // a page a reader opens and prints rather than a dashboard view, so it carries no rail of its own, is not one
-// of the builder's nav pages, and is reached the same way from every page.
+// of the builder's nav pages, and is reached the same way from every page. The sixth is the what-moves-gold
+// page published 2026-10-04, which is a builder page and carries the block like the other standalone pages.
 const BRAND = "Asset Directional Movement Dashboard";
-const BAR_LABELS = ["North Star Brief", "Standing Dashboard", "Gold", "Backtest Flow", "Layer 1 Calls"];
-const BAR_HREFS = ["dashboard-northstar.html", "standing-dashboard.html", "gold.html", "backtest-flow.html", "layer1-call-flow.html"];
+const BAR_LABELS = ["North Star Brief", "Standing Dashboard", "Gold", "Backtest Flow", "Layer 1 Calls", "What moves gold"];
+const BAR_HREFS = ["dashboard-northstar.html", "standing-dashboard.html", "gold.html", "backtest-flow.html", "layer1-call-flow.html", "what-moves-gold.html"];
 const GROUPS = ["Operate", "Live", "Evidence", "System"];
 const RAIL_LABELS = [
   "Overview", "USD", "EUR", "Gold", "Silver", "NQ", "BTC", "WTI", "GBP", "Pair Analysis",
@@ -113,7 +114,7 @@ test("every page carries the partial's render byte for byte, in the page's own l
   } catch (error) {
     report = error.stdout || "";
   }
-  assert.match(report, /--check: 9 pages, 17 rail entries, 0 change\(s\)/, "--check must find all nine pages current");
+  assert.match(report, /--check: 10 pages, 17 rail entries, 0 change\(s\)/, "--check must find all ten pages current");
   assert.doesNotMatch(report, /: (refreshed|placed)$/m, "no page may still need the block written into it");
   nav.PAGES.forEach(page => {
     const source = read(page.file);
@@ -163,7 +164,7 @@ test("the partial is the navigation that was agreed, in both variants", () => {
     }
   });
 });
-test("all nine served pages show one bar and one rail, and every link it offers goes somewhere", async () => {
+test("all ten served pages show one bar and one rail, and every link it offers goes somewhere", async () => {
   // The gold page's strip was re-ordered and widened on 2026-10-03 - Start here, Direction, Movement - L2L and half
   // L2L, Factor tables (draft) and Archive census - so the direction read and the two movement ranges sit together
   // and the two archive censuses moved to the end. What this guard owns is that the rail's gold entry still names a
@@ -279,7 +280,7 @@ test("a rail entry lands on the view its label names, from any page and from ins
     // tidy - while the rail's gold entry keeps naming Direction. Either way the reader lands on a view the page
     // opens, never on a bare strip.
     await view.goto(`${base}/${DRAFT_PAGE}`, { waitUntil: "load" });
-    await view.locator(".topbar .topbar-link", { hasText: "Gold" }).click();
+    await view.locator('.topbar .topbar-link[href="gold.html"]').click();
     await view.waitForURL(/gold\.html$/);
     await view.waitForFunction(() => {
       const tab = document.querySelector("#tab-start");

@@ -1,0 +1,251 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>What moves the gold price</title>
+<meta name="description" content="The ten declared factors that influence the gold price, which way each one pushes it and its declared weight, with the 28 declared readings they are read from, in plain words.">
+<style>
+:root{color-scheme:dark;--bg:#080e16;--panel:#101b29;--line:#304358;--text:#e8eef5;--muted:#b2c1d0;--amber:#f2c167;--blue:#8acfff;--warn:#ffd2be}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:15px/1.55 "IBM Plex Sans",system-ui,sans-serif}
+main{max-width:1380px;margin:auto;padding:28px 24px 60px}h1,h2,h3,p{margin:0 0 12px;overflow-wrap:anywhere}
+h1{font-size:clamp(26px,4vw,40px);line-height:1.15}h2{font-size:21px}h3{font-size:16px}a{color:var(--blue)}
+header{display:flex;gap:24px;justify-content:space-between;align-items:flex-start;margin-bottom:20px}
+header>*{min-width:0}.links{display:flex;gap:16px;flex-wrap:wrap}.links>*{min-width:0;overflow-wrap:anywhere}
+.eyebrow{font:12px/1.5 "IBM Plex Mono",monospace;letter-spacing:.12em;color:var(--amber);text-transform:uppercase}
+.muted,small{color:var(--muted)}
+.notice{border:1px solid #81642f;background:#211e17;padding:18px;margin:18px 0;color:#ffe0a2;overflow-wrap:anywhere}
+.notice.critical{border-color:#9b5744;background:#281a18;color:var(--warn)}
+.metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:18px 0}
+.metric,.panel{border:1px solid var(--line);background:var(--panel);padding:18px;min-width:0;overflow-wrap:anywhere}
+.metric strong{display:block;font:30px/1.35 "IBM Plex Mono",monospace;overflow-wrap:anywhere}
+.metric span{color:var(--muted)}
+.panel{margin-top:18px}.columns{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:18px}
+.columns .panel{margin-top:0}
+.table-wrap{overflow-x:auto;max-width:100%}
+table{width:100%;min-width:0;border-collapse:collapse;text-align:left;font-size:14px}
+table.counts td:last-child{text-align:right;font:13px/1.5 "IBM Plex Mono",monospace;white-space:normal}
+table.counts th:last-child{text-align:right;min-width:6em;overflow-wrap:normal}
+table.wide{min-width:520px}
+th,td{padding:10px 12px;border-bottom:1px solid var(--line);overflow-wrap:anywhere;vertical-align:top}
+th{color:var(--muted);font-weight:500}td:first-child{overflow-wrap:anywhere}
+.hash{font:12px/1.6 monospace;overflow-wrap:anywhere;color:var(--muted)}
+ul.limits{margin:0;padding-left:20px}ul.limits li{margin-bottom:10px;overflow-wrap:anywhere}
+blockquote{margin:0 0 12px;padding-left:14px;border-left:3px solid var(--amber);overflow-wrap:anywhere}
+footer{margin-top:26px;padding-top:16px;border-top:1px solid var(--line);color:var(--muted);overflow-wrap:anywhere}
+@media(max-width:860px){.columns{grid-template-columns:1fr}}
+@media(max-width:720px){main{padding:18px 12px 40px}header{flex-direction:column;gap:10px}.metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.metric,.panel{padding:14px}.metric strong{font-size:clamp(17px,5.5vw,28px)}th,td{padding:9px 7px}table{font-size:13px}
+table.wide{min-width:0}table.wide thead{position:absolute;left:-9999px}table.wide tr{display:block;border-bottom:1px solid var(--line)}table.wide td{display:block;border:0;padding:4px 0}table.wide td:first-child{color:var(--muted)}}
+@media(max-width:380px){.metrics{grid-template-columns:1fr}}
+.num{text-align:right;font-family:"IBM Plex Mono",Consolas,monospace}
+tr.group th{background:rgba(255,255,255,.04);color:var(--amber);font-family:"IBM Plex Mono",Consolas,monospace;font-size:12px;letter-spacing:.08em;text-transform:uppercase}
+tfoot th,tfoot td{border-top:1px solid var(--line);border-bottom:0}
+.panel h2{margin-top:0}.panel p:last-child{margin-bottom:0}
+</style>
+</head>
+<body>
+<!-- SHARED-NAV:START -->
+<header class="topbar site-nav">
+  <div class="topbar-brand">Asset Directional Movement Dashboard</div>
+  <div class="topbar-meta">
+    <a class="topbar-link" href="dashboard-northstar.html" target="_top">North Star Brief</a>
+    <a class="topbar-link" href="standing-dashboard.html" target="_top">Standing Dashboard</a>
+    <a class="topbar-link" href="gold.html" target="_top">Gold</a>
+    <a class="topbar-link" href="backtest-flow.html" target="_top">Backtest Flow</a>
+    <a class="topbar-link" href="layer1-call-flow.html" target="_top">Layer 1 Calls</a>
+    <a class="topbar-link" href="what-moves-gold.html" target="_top">What moves gold</a>
+  </div>
+</header>
+<aside class="side-rail site-nav" aria-label="Primary navigation">
+  <div class="side-rail-head">
+    <span class="side-rail-mark">ADM</span>
+    <span class="side-rail-label">Control Room</span>
+  </div>
+  <nav class="tab-bar side-rail-tabs" aria-label="Site navigation">
+    <span class="side-rail-group">Operate</span>
+    <a class="tab-button" href="index.html#overview" target="_top">Overview</a>
+    <a class="tab-button" href="index.html#USD" target="_top">USD</a>
+    <a class="tab-button" href="index.html#EUR" target="_top">EUR</a>
+    <a class="tab-button" href="gold.html#direction" target="_top">Gold</a>
+    <a class="tab-button" href="index.html#SILVER" target="_top">Silver</a>
+    <a class="tab-button" href="index.html#NQ" target="_top">NQ</a>
+    <a class="tab-button" href="index.html#BTC" target="_top">BTC</a>
+    <a class="tab-button" href="index.html#WTI" target="_top">WTI</a>
+    <a class="tab-button" href="index.html#GBP" target="_top">GBP</a>
+    <a class="tab-button" href="index.html#layer2" target="_top">Pair Analysis</a>
+    <span class="side-rail-group">Live</span>
+    <a class="tab-button" href="index.html#live-trading" target="_top">Live Trading</a>
+    <span class="side-rail-group">Evidence</span>
+    <a class="tab-button" href="index.html#backtest" target="_top">Backtest / Accuracy</a>
+    <a class="tab-button" href="index.html#backtest-engine" target="_top">Backtest Engine</a>
+    <a class="tab-button" href="index.html#research-proof-map" target="_top">Research Proof Map</a>
+    <a class="tab-button" href="index.html#factor-edge-lab" target="_top">Factor Edge Lab</a>
+    <a class="tab-button" href="index.html#shadow-logic-backtest" target="_top">Shadow Logic Backtest</a>
+    <span class="side-rail-group">System</span>
+    <a class="tab-button" href="index.html#architecture" target="_top">Architecture</a>
+  </nav>
+  <div class="side-rail-foot">
+    <span class="side-rail-status-dot" aria-hidden="true"></span>
+    <span>Published dashboard</span>
+  </div>
+</aside>
+<style id="shared-nav-css">
+/* Values copied from the published styles.css nav subset (.topbar*, .side-rail*, .tab-bar, .tab-button),
+   scoped to .site-nav so no page's own rules can leak in or be disturbed. The rail splits in two again
+   by structure: inside .dashboard-frame it is the grid column it already was (sticky, 58px under the bar);
+   as a direct child of <body> it is fixed to the left edge and the following blocks are shifted clear.
+   Under 901px the rail becomes the horizontal strip it already becomes on the dashboard, and the block
+   still adds nothing that needs a script. */
+.site-nav.topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;justify-content:space-between;gap:22px;min-height:58px;padding:0 32px;background:rgba(5,8,13,.92);border-bottom:1px solid rgba(255,255,255,.06);backdrop-filter:blur(18px)}
+.site-nav.topbar .topbar-brand{color:#f5f8fc;font-family:"Space Grotesk","IBM Plex Sans",system-ui,sans-serif;font-size:17px;font-weight:700;letter-spacing:.01em;white-space:nowrap}
+.site-nav.topbar .topbar-meta{display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-end;gap:8px}
+.site-nav.topbar .topbar-meta span{border:1px solid rgba(255,255,255,.08);border-radius:999px;color:#d8e4f3;background:rgba(7,11,17,.84);font-family:"IBM Plex Mono",Consolas,monospace;font-size:11px;padding:5px 10px;white-space:nowrap}
+.site-nav.topbar .topbar-dual-clock{font-variant-numeric:tabular-nums}
+.site-nav.topbar .topbar-link{display:inline-flex;align-items:center;border:1px solid rgba(94,161,255,.22);border-radius:999px;color:#d8e4f3;background:rgba(94,161,255,.1);font-family:"IBM Plex Mono",Consolas,monospace;font-size:11px;padding:5px 10px;text-decoration:none;transition:background-color 160ms ease,border-color 160ms ease,color 160ms ease}
+.site-nav.topbar .topbar-link:hover,.site-nav.topbar .topbar-link:focus-visible{background:rgba(94,161,255,.18);border-color:rgba(94,161,255,.36);color:#fff}
+.site-nav.side-rail{display:flex;flex-direction:column;min-width:0;padding:18px 12px 16px;border-right:1px solid rgba(142,169,198,.15);background:linear-gradient(180deg,rgba(12,18,27,.98),rgba(7,12,19,.99))}
+.site-nav .side-rail-head{display:flex;align-items:center;gap:10px;min-width:0;padding:0 8px 18px;border-bottom:1px solid rgba(142,169,198,.13)}
+.site-nav .side-rail-mark{display:grid;place-items:center;width:32px;height:32px;border:1px solid rgba(236,182,85,.42);border-radius:8px;background:rgba(185,137,39,.12);color:#f2c86f;font-family:"IBM Plex Mono",Consolas,monospace;font-size:10px;font-weight:700;letter-spacing:.08em}
+.site-nav .side-rail-label,.site-nav .side-rail-group,.site-nav .side-rail-foot{font-family:"IBM Plex Mono",Consolas,monospace;text-transform:uppercase}
+.site-nav .side-rail-label{min-width:0;color:#e9f0f8;font-size:11px;font-weight:700;letter-spacing:.08em;overflow-wrap:anywhere}
+.site-nav .side-rail-tabs{display:flex;flex:1;flex-direction:column;gap:3px;min-width:0;margin:0;padding:15px 0;overflow-y:auto;overflow-x:hidden;border:0;border-radius:0;background:transparent;box-shadow:none}
+.site-nav .side-rail-group{display:block;margin:14px 8px 6px;color:#697f96;font-size:9px;font-weight:700;letter-spacing:.14em}
+.site-nav .side-rail-group:first-child{margin-top:0}
+.site-nav .side-rail-tabs .tab-button{position:relative;display:block;width:100%;min-width:0;min-height:38px;margin:0;padding:9px 14px 9px 18px;border:1px solid transparent;border-radius:8px;background:transparent;color:#a8b9ca;font-family:"IBM Plex Sans",system-ui,sans-serif;font-size:12px;font-weight:600;letter-spacing:.01em;line-height:1.25;text-align:left;text-decoration:none;text-transform:none;white-space:normal;overflow-wrap:anywhere;word-break:break-word;cursor:pointer}
+.site-nav .side-rail-tabs .tab-button::before{content:"";position:absolute;top:8px;bottom:8px;left:0;width:3px;border-radius:0 4px 4px 0;background:transparent}
+.site-nav .side-rail-tabs .tab-button:hover{border-color:rgba(116,155,198,.22);background:rgba(78,113,150,.13);color:#f2f7fb}
+.site-nav .side-rail-tabs .tab-button.active{border-color:rgba(212,164,68,.2);background:linear-gradient(90deg,rgba(190,139,41,.22),rgba(190,139,41,.06));color:#f3cf81;box-shadow:inset 0 1px 0 rgba(255,228,159,.06)}
+.site-nav .side-rail-tabs .tab-button.active::before{background:#e4af4d}
+.site-nav .side-rail-foot{display:flex;align-items:center;gap:8px;min-width:0;padding:14px 8px 0;border-top:1px solid rgba(142,169,198,.13);color:#8095aa;font-size:9px;font-weight:600;letter-spacing:.08em;overflow-wrap:anywhere}
+.site-nav .side-rail-status-dot{flex:0 0 auto;width:7px;height:7px;border-radius:50%;background:#48c69a;box-shadow:0 0 12px rgba(72,198,154,.62)}
+@media (min-width:901px){
+.site-nav.side-rail{position:sticky;top:58px;height:calc(100vh - 58px)}
+body > aside.site-nav.side-rail{position:fixed;left:0;top:58px;width:232px;height:calc(100vh - 58px);z-index:19;overflow-y:auto}
+body > aside.site-nav.side-rail ~ *{margin-left:232px;max-width:calc(100% - 232px)}
+}
+@media (max-width:900px){
+.site-nav.side-rail{position:sticky;top:58px;z-index:19;display:block;width:100%;height:auto;padding:0;border-right:0;border-bottom:1px solid rgba(142,169,198,.16)}
+.site-nav .side-rail-head,.site-nav .side-rail-foot,.site-nav .side-rail-group{display:none}
+.site-nav .side-rail-tabs{display:flex;flex-direction:row;gap:6px;margin:0;padding:9px 16px;box-sizing:border-box;max-width:100%;contain:paint;overflow-x:auto;overflow-y:hidden}
+.site-nav .side-rail-tabs .tab-button{flex:0 0 auto;width:auto;min-height:34px;padding:8px 12px;border-radius:7px;white-space:nowrap}
+.site-nav .side-rail-tabs .tab-button::before{top:auto;right:9px;bottom:0;left:9px;width:auto;height:2px;border-radius:2px 2px 0 0}
+}
+@media (max-width:780px){
+.site-nav.topbar{position:static;flex-wrap:wrap;min-height:0;gap:12px;padding:14px 18px}
+.site-nav.topbar .topbar-brand,.site-nav.topbar .topbar-meta{width:100%;justify-content:flex-start}
+.site-nav.topbar .topbar-brand{white-space:normal;overflow-wrap:anywhere}
+.site-nav.topbar .topbar-link{order:-1}
+}
+</style>
+<!-- SHARED-NAV:END -->
+<main>
+  <header>
+    <div>
+      <p class="eyebrow">Gold &middot; what moves the price</p>
+      <h1>What moves the gold price</h1>
+      <p class="muted">Which things influence the gold price, which way each one pushes it, and how big a part of the picture it is - in one table, for a reader who has never opened a research page.</p>
+    </div>
+    <div class="links">
+      <span class="muted">As of 4 October 2026</span>
+      <a href="gold.html" target="_top">Back to the Gold page</a>
+    </div>
+  </header>
+
+  <div class="notice">
+    <strong>These directions are the system&#39;s own written expectations, not results.</strong>
+    <p>They are the rules the gold agent works to. The archive has been scored against them and has not produced a usable direction, so read every row as &quot;this is what the system expects, and why&quot; rather than as a promise. The measured verdict lives on the Direction tab of the Gold page.</p>
+  </div>
+
+  <section class="panel">
+    <h2>The ten factors</h2>
+    <p class="muted">The weight is the share of the picture the system gives a factor, out of 100. It is not a probability, not a confidence and not a forecast.</p>
+  <div class="table-wrap">
+  <table class="wide">
+    <thead><tr><th>Factor</th><th>What it is, in one line</th><th>Which way it pushes gold</th><th>Why</th><th class="num">Weight</th></tr></thead>
+    <tbody>
+    <tr><td><strong>Real interest rates</strong></td><td>The return on 10-year US government bonds once inflation is taken out</td><td>Rising more than 5 basis points pushes gold down; falling more than 5 pushes it up</td><td>Gold pays no interest, so higher real yields make holding it costlier</td><td class="num">22</td></tr>
+    <tr><td><strong>The US dollar</strong></td><td>How strong the dollar is against a basket of other currencies</td><td>Dollar up more than 0.30% pushes gold down; down more than 0.30% pushes it up</td><td>Gold is priced in dollars, so a stronger dollar makes it dearer for everyone else</td><td class="num">18</td></tr>
+    <tr><td><strong>Fed stance</strong></td><td>Whether the Federal Reserve is leaning towards tightening or easing</td><td>More hawkish pushes gold down; more dovish pushes it up</td><td>Fed policy drives real yields and how much money is around</td><td class="num">14</td></tr>
+    <tr><td><strong>Two-year US yield</strong></td><td>The interest rate the market expects from the Fed over the next two years</td><td>Up more than 5 basis points pushes gold down; down more than 5 pushes it up</td><td>It is the market&#39;s own bet on policy, and it moves real yields</td><td class="num">8</td></tr>
+    <tr><td><strong>Gold&#39;s own recent move</strong></td><td>What gold has already done over the last day to month</td><td>Strongly up pushes gold up; strongly down pushes it down</td><td>Confirmation only: the system never lets it outrank the macro rows above</td><td class="num">8</td></tr>
+    <tr><td><strong>Market fear (VIX)</strong></td><td>How much US share-price volatility the market is pricing</td><td>Above 25 pushes gold up; below 16 pushes it down; in between, neutral</td><td>Gold gets bought when investors are frightened</td><td class="num">10</td></tr>
+    <tr><td><strong>US data surprises</strong></td><td>Whether this week&#39;s US releases came in above or below expectations</td><td>Stronger than expected pushes gold down; weaker pushes it up</td><td>Strong data raises the odds of a more hawkish Fed; weak data raises the odds of cuts</td><td class="num">6</td></tr>
+    <tr><td><strong>Inflation news</strong></td><td>Whether inflation is running hot or cooling</td><td>Hot inflation while cuts are expected pushes gold up; cooling pushes it down</td><td>Gold is often bought as protection against inflation</td><td class="num">6</td></tr>
+    <tr><td><strong>Safe-haven demand</strong></td><td>Wars, financial accidents and other stress headlines</td><td>Stress pushes gold up; calm is neutral; it is never allowed to say down</td><td>Money runs to gold in a crisis</td><td class="num">6</td></tr>
+    <tr><td><strong>Liquidity and growth</strong></td><td>Whether money is being added to the system or withdrawn</td><td>Expanding pushes gold up; contracting pushes it down</td><td>More money in the system tends to lift hard assets</td><td class="num">2</td></tr>
+    </tbody>
+    <tfoot><tr><th colspan="4">Total weight</th><td class="num"><strong>100</strong></td></tr></tfoot>
+  </table>
+  </div>
+    <p class="muted">The top four rows are the system&#39;s own primary drivers: when they disagree it lowers its confidence in the call, and when they agree it raises it.</p>
+  </section>
+
+  <section class="panel">
+    <h2>Where the number 28 comes from</h2>
+    <p>The gold agent is allowed to read 28 declared readings. They are not 28 separate ideas: ten of them are the ten factors above, and the rest are the levels, changes and event fields those factors are read from. The declaration itself puts it this way - ten weighted factors plus explicit event decomposition - and twenty of the twenty-eight are levels or transformations of five market series, so they are not twenty independent inputs.</p>
+  <div class="table-wrap">
+  <table class="wide">
+    <thead><tr><th>The reading, as the system declares it</th><th>What it means in plain words</th><th>Its factor</th></tr></thead>
+    <tbody>
+      <tr class="group"><th colspan="3">Real interest rates</th></tr>
+      <tr><td><span class="hash">us_10y_real_yield</span></td><td>The 10-year real yield itself</td><td>Real interest rates</td></tr>
+      <tr><td><span class="hash">us_10y_real_yield_d5_bps</span></td><td>How much that yield has moved over five observations</td><td>Real interest rates</td></tr>
+      <tr><td><span class="hash">us_10y_real_yield_d20_bps</span></td><td>How much that yield has moved over twenty observations</td><td>Real interest rates</td></tr>
+      <tr class="group"><th colspan="3">The US dollar</th></tr>
+      <tr><td><span class="hash">dxy_level</span></td><td>The dollar index level itself</td><td>The US dollar</td></tr>
+      <tr><td><span class="hash">dxy_d1</span></td><td>The dollar&#39;s move over one day</td><td>The US dollar</td></tr>
+      <tr><td><span class="hash">dxy_d5</span></td><td>The dollar&#39;s move over five days</td><td>The US dollar</td></tr>
+      <tr><td><span class="hash">dxy_d20</span></td><td>The dollar&#39;s move over twenty days</td><td>The US dollar</td></tr>
+      <tr class="group"><th colspan="3">Fed stance</th></tr>
+      <tr><td><span class="hash">fed_bias</span></td><td>Which way the Fed is leaning</td><td>Fed stance</td></tr>
+      <tr class="group"><th colspan="3">Two-year US yield</th></tr>
+      <tr><td><span class="hash">us_2y_yield</span></td><td>The two-year Treasury yield itself</td><td>Two-year US yield</td></tr>
+      <tr><td><span class="hash">us_2y_d5_bps</span></td><td>How much that yield has moved over five observations</td><td>Two-year US yield</td></tr>
+      <tr><td><span class="hash">us_2y_d20_bps</span></td><td>How much that yield has moved over twenty observations</td><td>Two-year US yield</td></tr>
+      <tr class="group"><th colspan="3">Gold&#39;s own recent move</th></tr>
+      <tr><td><span class="hash">gold_price</span></td><td>The gold spot price itself</td><td>Gold&#39;s own recent move</td></tr>
+      <tr><td><span class="hash">gold_d1_pct</span></td><td>What gold has done over one day</td><td>Gold&#39;s own recent move</td></tr>
+      <tr><td><span class="hash">gold_d5_pct</span></td><td>What gold has done over five days</td><td>Gold&#39;s own recent move</td></tr>
+      <tr><td><span class="hash">gold_d20_pct</span></td><td>What gold has done over twenty days</td><td>Gold&#39;s own recent move</td></tr>
+      <tr class="group"><th colspan="3">Market fear (VIX)</th></tr>
+      <tr><td><span class="hash">vix_level</span></td><td>The volatility index level itself</td><td>Market fear (VIX)</td></tr>
+      <tr><td><span class="hash">vix_d1</span></td><td>How much that index has moved over one observation</td><td>Market fear (VIX)</td></tr>
+      <tr><td><span class="hash">vix_d5</span></td><td>How much that index has moved over five observations</td><td>Market fear (VIX)</td></tr>
+      <tr class="group"><th colspan="3">US data surprises</th></tr>
+      <tr><td><span class="hash">event_type</span></td><td>Which family of US economic event it is</td><td>US data surprises</td></tr>
+      <tr><td><span class="hash">event_actual</span></td><td>The number the release actually printed</td><td>US data surprises</td></tr>
+      <tr><td><span class="hash">event_consensus</span></td><td>What was expected before the release</td><td>US data surprises</td></tr>
+      <tr><td><span class="hash">event_previous_as_released</span></td><td>The previous figure, as it was first published</td><td>US data surprises</td></tr>
+      <tr><td><span class="hash">event_surprise</span></td><td>How far the release beat or missed expectations</td><td>US data surprises</td></tr>
+      <tr><td><span class="hash">event_age_hours</span></td><td>How many hours ago the release happened</td><td>US data surprises</td></tr>
+      <tr class="group"><th colspan="3">Inflation news</th></tr>
+      <tr><td><span class="hash">inflation_signal</span></td><td>Whether inflation is read as hot or cooling</td><td>Inflation news</td></tr>
+      <tr class="group"><th colspan="3">Safe-haven demand</th></tr>
+      <tr><td><span class="hash">risk_headline_context</span></td><td>Whether the news is a stress headline or a calm one</td><td>Safe-haven demand</td></tr>
+      <tr class="group"><th colspan="3">Liquidity and growth</th></tr>
+      <tr><td><span class="hash">equities_regime</span></td><td>Whether share markets are in a risk-on or risk-off regime</td><td>Liquidity and growth</td></tr>
+      <tr><td><span class="hash">growth_regime</span></td><td>Whether growth is read as expanding or contracting</td><td>Liquidity and growth</td></tr>
+    </tbody>
+  </table>
+  </div>
+    <p class="muted">One honest caveat travels with the dollar rows: the series the live agent reads is a broad trade-weighted dollar index, not the classic ICE dollar index, so the row says &quot;how strong the dollar is&quot; rather than naming a contract.</p>
+  </section>
+
+  <section class="panel">
+    <h2>What the archive has shown about these directions</h2>
+    <ul class="limits">
+      <li>The directions above are the agent&#39;s declared expectations, written by the system, not findings from the data.</li>
+      <li>The archive has been scored against them and returned no usable direction: on the daily read all 25 scored states came back with the same verdict, no information; on the weekly read 24 of 25 did, and one was marked unstable across years.</li>
+      <li>Exactly one daily row reached the level the system calls interesting, against roughly two and a half rows that would land there by chance among the rows tested. That is the noise floor, not an edge.</li>
+    </ul>
+    <p class="muted">Those figures are the ones the Direction tab of the Gold page already publishes. Nothing new is measured here.</p>
+  </section>
+
+  <section class="panel">
+    <h2>What this page is not</h2>
+    <p>It is not a forecast, a pick, a ranking, a score, a signal or a trading result. It does not claim that any row works, it does not replace the measured verdict on the Direction tab, and it answers one question only: what influences the gold price, which way, and how much of the picture it is.</p>
+  </section>
+
+  <footer>Built from the system&#39;s own written rules and its declared reading list, both already in the project. No market data was read or recalculated to make this page, no figure on it is new to the site, and nothing on it is advice.</footer>
+</main>
+</body>
+</html>
