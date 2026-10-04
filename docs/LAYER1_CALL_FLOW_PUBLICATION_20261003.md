@@ -33,6 +33,13 @@ copy of the guard - but it was written against the hand-written rail that `a94fb
 is portable as it stands and none of it is in this release. That copy's fourth test still asserts the old
 bar and its rail entry, and needs re-pointing when that checkout moves onto the published navigation.
 
+Superseded on 2026-10-04: the rail entry was written for real, in the shared partial, on branch
+`release/layer1-call-flow-rail-20261004`; see `docs/LAYER1_CALL_FLOW_RAIL_ENTRY_20261004.md`. The paragraphs
+above still describe the state at this publication - the rail entry is not in this release - while the
+`workers/analysis-engine-20261003` checkout's own copy of the link and its `styles.css` rules are now a
+duplicate of the rail the published partial renders, so that copy needs the same re-pointing as its fourth
+test and its `.side-rail-link` CSS must not be carried over.
+
 ## Verified before publication
 
 - `node backtester/scripts/build_shared_nav.js --check`: `9 pages, 17 rail entries, 0 change(s)`.

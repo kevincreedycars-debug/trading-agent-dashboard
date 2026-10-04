@@ -181,3 +181,28 @@ The page change is published; the fault fix the user asked for first is a live n
 - Apply the validated Gold history patch to the live `Data Collector - GOLD` node, after the isolated runtime acceptance `docs/GOLD_HISTORY_PATCH_VALIDATION.md` requires.
 - Re-point the two stale gold hop guards in the checkout that holds them, plus the three stale bar-hop assertions recorded from the navigation change.
 - Open the movement measurement lane (`gold-declared-band-measurement-026`) so the Movement view's per-factor columns and the four day-size figures' re-print can land.
+
+## 2026-10-04
+
+### Session Goal
+
+Put the printable Layer 1 call map on the rail, under the architecture entry the user looks at, so the dashboard reaches it in one click and the map still prints as one sheet.
+
+### Completed
+
+- Added the shared rail's first outbound entry, `Layer 1 Calls`, to both rail variants in `backtester/partials/shared_nav.html` - an anchor with no `data-tab`, directly under `Architecture` in the `System` group, keeping a tab's shape with a blue marker bar and a `&#8599;` arrow - and wrote it into all ten published pages (`index.html` +12, the other nine +10); `--check` reads `10 pages, 17 rail entries, 1 outbound, 0 change(s)`.
+- Taught `backtester/scripts/build_shared_nav.js` the word outbound (`OUTBOUND` regex, `outboundOf` / `withoutOutbound`, a both-variants parity check and a presence check), so an outbound entry added to one variant or removed altogether now fails the builder.
+- Extended `backtester/tests/site_nav_consistency.browser.test.js` with the outbound fingerprint, the new report line, the file check and a click-through from `index.html` and from inside `gold.html`'s gold-direction frame (5/5), and re-pointed the fourth test of `tests/layer1_call_flow.browser.test.js` from the hand-written rail the page never published at the shared rail's outbound link (4/4).
+- Re-ran the neighbouring guards on this tree with no npm runner: gold view tidy, backtesting development release, live trading dashboard, dashboard writer selection, refresh progress and architecture-map validation, all green (the last four 43/43).
+- Captured the rail at 1440px and 390px for `index.html` and `gold-backtesting.html` in the ignored `.local/scratch/` folder: the entry sits under `Architecture` with the blue bar and the arrow, and folds into the horizontal dock below 900px.
+- Re-cut the change on `ae9a1f0` after another lane published the tenth page, `what-moves-gold.html`, while this branch waited: the bar and rail hunks merged as they were, the only conflict was the navigation guard's `--check` report line, `--write` refreshed `what-moves-gold.html`, and the three navigation comments that still said nine pages were brought up to ten.
+
+### Important Note
+
+The rail still holds the same seventeen dashboard views and the map still carries no navigation of its own, so the print path is unchanged. This branch is fast-forwardable onto `origin/main` at `4a99258`; publication is a single fast-forward push, and the local workflow export is not proof of live deployment.
+
+### Next
+
+- Fast-forward `origin/main` to `release/layer1-call-flow-rail-20261004` and re-read the live dashboard's rail.
+- Re-point the `workers/analysis-engine-20261003` checkout's own rail entry and its fourth test at the published navigation, dropping the `.side-rail-link` CSS it duplicates.
+

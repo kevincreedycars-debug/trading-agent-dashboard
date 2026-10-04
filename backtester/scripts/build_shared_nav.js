@@ -117,7 +117,7 @@ function applyPage(source, page) {
 }
 
 // The two variants must stay one navigation, not two: same bar but for the live spans, same rail but for
-// the way an entry is driven. These checks fail loudly here rather than quietly in nine pages.
+// the way an entry is driven. These checks fail loudly here rather than quietly in ten pages.
 function selfChecks() {
   const parts = readParts();
   const liveSpans = /\n? {0,6}<span id="currentDate">[\s\S]*?UK --:-- \| ET --:--<\/span>/;
@@ -128,8 +128,12 @@ function selfChecks() {
   if (dashboardBar !== parts['bar-standalone']) {
     throw new Error('bar-dashboard must differ from bar-standalone only by the two live spans');
   }
-  const dashboardEntries = entriesOf(parts['rail-dashboard'], 'data-tab="([^"]+)"');
-  const standaloneEntries = entriesOf(parts['rail-standalone'], 'href="([^"]+)"');
+  // The outbound entries are not tabs: they leave the dashboard set for a page of their own, so both variants
+  // write them as links and they are held out of the entry comparison below.
+  const dashboardTabs = withoutOutbound(parts['rail-dashboard']);
+  const standaloneLinks = withoutOutbound(parts['rail-standalone']);
+  const dashboardEntries = entriesOf(dashboardTabs, 'data-tab="([^"]+)"');
+  const standaloneEntries = entriesOf(standaloneLinks, 'href="([^"]+)"');
   const expected = dashboardEntries.map(({ label, target }) => ({
     label,
     target: target === 'GOLD' ? 'gold.html#direction' : `index.html#${target}`,
@@ -140,7 +144,15 @@ function selfChecks() {
   if (dashboardEntries.length !== 17) {
     throw new Error(`the rail must offer the 17 dashboard tabs, found ${dashboardEntries.length}`);
   }
-  if (/data-tab=/.test(parts['rail-standalone']) || /\bhref=/.test(parts['rail-dashboard'])) {
+  const dashboardOutbound = outboundOf(parts['rail-dashboard']);
+  const standaloneOutbound = outboundOf(parts['rail-standalone']);
+  if (JSON.stringify(dashboardOutbound) !== JSON.stringify(standaloneOutbound)) {
+    throw new Error('the two rail variants must offer the same outbound entries in the same order');
+  }
+  if (!dashboardOutbound.length) {
+    throw new Error('the rail must keep its outbound entry to the printable Layer 1 call map');
+  }
+  if (/data-tab=/.test(standaloneLinks) || /\bhref=/.test(dashboardTabs)) {
     throw new Error('the standalone rail must be plain links and the dashboard rail must be data-tab buttons');
   }
   ['dashboard', 'standalone'].forEach(variant => {
@@ -152,12 +164,25 @@ function selfChecks() {
   if (/id="agentTabs"/.test(parts['rail-standalone'])) {
     throw new Error('only the dashboard rail may own the agentTabs id');
   }
-  return dashboardEntries;
+  return { entries: dashboardEntries, outbound: dashboardOutbound };
 }
 
 function entriesOf(rail, targetPattern) {
   const pattern = new RegExp(`<(?:button|a)\\b[^>]*${targetPattern}[^>]*>([^<]+)</(?:button|a)>`, 'g');
   return Array.from(rail.matchAll(pattern), match => ({ label: match[2].trim(), target: match[1] }));
+}
+
+// The rail's outbound entries: the one kind of rail entry that leaves the dashboard set for a page of its own.
+// Both variants must write them the same way, in one line, or this file cannot read them back and the guard
+// cannot pin them. They are links in both variants, so they never carry a data-tab.
+const OUTBOUND = /^ *<a class="side-rail-link" href="([^"]+)" target="_top">([^<]+)<\/a>$/gm;
+
+function outboundOf(rail) {
+  return Array.from(rail.matchAll(OUTBOUND), match => ({ label: match[2].trim(), target: match[1] }));
+}
+
+function withoutOutbound(rail) {
+  return rail.replace(OUTBOUND, '');
 }
 
 function main(argv) {
@@ -169,7 +194,7 @@ function main(argv) {
   if (mode !== '--check' && mode !== '--write') {
     throw new Error('usage: build_shared_nav.js [--check|--write|--print <dashboard|standalone>]');
   }
-  const entries = selfChecks();
+  const { entries, outbound } = selfChecks();
   let changes = 0;
   PAGES.forEach(page => {
     const file = path.join(ROOT, page.file);
@@ -180,7 +205,7 @@ function main(argv) {
     }
     console.log(`${page.file} [${page.variant}]: ${result.action}`);
   });
-  console.log(`${mode}: ${PAGES.length} pages, ${entries.length} rail entries, ${changes} change(s)`);
+  console.log(`${mode}: ${PAGES.length} pages, ${entries.length} rail entries, ${outbound.length} outbound, ${changes} change(s)`);
   if (mode === '--check' && changes) process.exitCode = 1;
 }
 

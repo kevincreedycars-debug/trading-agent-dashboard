@@ -1,5 +1,20 @@
 # Changelog
 
+## 2026-10-04
+
+### Added
+
+- Added the rail's first outbound entry, `Layer 1 Calls`, to both rail variants in `backtester/partials/shared_nav.html` - an anchor with no `data-tab`, directly under `Architecture` in the `System` group, keeping a tab's shape with a blue marker bar and a `&#8599;` arrow - and wrote it into all ten published pages (`index.html` +12, the other nine +10), so the printable call map is one click from the rail as well as from the bar.
+- Added `docs/LAYER1_CALL_FLOW_RAIL_ENTRY_20261004.md` as the handoff note for this change.
+
+### Changed
+
+- Taught `backtester/scripts/build_shared_nav.js` the word *outbound*: an `OUTBOUND` regex over the rail parts, `outboundOf` / `withoutOutbound` helpers, an assertion that both rail variants carry the same outbound lines and an assertion that they carry one at all; the summary now reads `10 pages, 17 rail entries, 1 outbound, 0 change(s)`.
+- Extended `backtester/tests/site_nav_consistency.browser.test.js` with `RAIL_OUTBOUND_HREFS` / `RAIL_OUTBOUND_LABELS`, the updated `--check` report line, outbound assertions in the static and live-DOM blocks, the entry's file-existence check and a click-through from `index.html` and from inside `gold.html`'s gold-direction frame; the guard is 5/5.
+- Re-pointed the fourth test of `tests/layer1_call_flow.browser.test.js` from the hand-written rail the page never published to the shared rail's outbound link - label, `target="_top"`, no `data-tab`, and a click that lands on the map; the guard is 4/4.
+- Recorded in `docs/LAYER1_CALL_FLOW_PUBLICATION_20261003.md` that its note about the rail entry being written against a hand-written rail is now superseded by this change.
+- Re-cut this change on `ae9a1f0` after another lane published the tenth page, `what-moves-gold.html`, mid-branch: the bar and rail hunks merged as they were, the only conflict was the navigation guard's `--check` report line, `--write` refreshed `what-moves-gold.html`, and the three navigation comments that still said nine pages were brought up to ten.
+
 ## 2026-10-03
 
 ### Added

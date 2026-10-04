@@ -1,7 +1,7 @@
 <!--
   Shared navigation block: the one canonical source for the bar, the rail and their CSS.
 
-  This file is not served. backtester/scripts/build_shared_nav.js renders it into the nine published pages,
+  This file is not served. backtester/scripts/build_shared_nav.js renders it into the ten published pages,
   between the <!-- SHARED-NAV:START --> and <!-- SHARED-NAV:END --> markers, and
   backtester/tests/site_nav_consistency.browser.test.js compares the bytes of every copy with the render.
   To change the navigation, change this file, then run
@@ -11,10 +11,15 @@
   Two named variants, because the pages are built two ways:
     dashboard  index.html: the rail is the first column of .dashboard-frame and every entry is the
                data-tab button script.js already drives.
-    standalone the other eight pages: the rail is a direct child of <body> and every entry is a plain
+    standalone the other nine pages: the rail is a direct child of <body> and every entry is a plain
                link, so nothing outside the page is needed to move around the site. Those links carry
                target="_top" because gold.html shows four of them in frames: an entry clicked inside a
                frame opens the page it names in the window, exactly as it does on a page opened directly.
+
+  Both rails end with the same outbound entry: a link to the printable Layer 1 call map, which leaves the
+  dashboard set for a page of its own rather than opening a view. It is written as a link in both variants
+  for that reason, carries no data-tab so the dashboard's tab binder leaves it alone, and carries
+  target="_top" so the same click inside a gold frame opens the map in the whole window.
 
   The block brings its own CSS inside <style id="shared-nav-css"> so it looks the same on a page that
   links styles.css and on gold-factor-wip.html, which loads nothing at all. No <link>, <script>, image,
@@ -80,6 +85,9 @@
     <button class="tab-button" data-tab="shadow-logic-backtest">Shadow Logic Backtest</button>
     <span class="side-rail-group">System</span>
     <button class="tab-button" data-tab="architecture">Architecture</button>
+    <!-- The rail's one outbound entry. It leaves the dashboard for the printable call map, so it is an anchor
+         with no data-tab and the tab binder never sees it. -->
+    <a class="side-rail-link" href="layer1-call-flow.html" target="_top">Layer 1 Calls</a>
   </nav>
   <div class="side-rail-foot">
     <span class="side-rail-status-dot" aria-hidden="true"></span>
@@ -114,6 +122,7 @@
     <a class="tab-button" href="index.html#shadow-logic-backtest" target="_top">Shadow Logic Backtest</a>
     <span class="side-rail-group">System</span>
     <a class="tab-button" href="index.html#architecture" target="_top">Architecture</a>
+    <a class="side-rail-link" href="layer1-call-flow.html" target="_top">Layer 1 Calls</a>
   </nav>
   <div class="side-rail-foot">
     <span class="side-rail-status-dot" aria-hidden="true"></span>
@@ -150,6 +159,12 @@
 .site-nav .side-rail-tabs .tab-button:hover{border-color:rgba(116,155,198,.22);background:rgba(78,113,150,.13);color:#f2f7fb}
 .site-nav .side-rail-tabs .tab-button.active{border-color:rgba(212,164,68,.2);background:linear-gradient(90deg,rgba(190,139,41,.22),rgba(190,139,41,.06));color:#f3cf81;box-shadow:inset 0 1px 0 rgba(255,228,159,.06)}
 .site-nav .side-rail-tabs .tab-button.active::before{background:#e4af4d}
+/* The rail's outbound entries keep a tab's shape, so the rail still reads as one column, but the marker bar is
+   the link blue and an arrow sits at the right edge where a tab shows nothing. */
+.site-nav .side-rail-tabs .side-rail-link{position:relative;display:block;width:100%;min-width:0;min-height:38px;margin:0;padding:9px 28px 9px 18px;border:1px solid transparent;border-radius:8px;background:transparent;color:#a8b9ca;font-family:"IBM Plex Sans",system-ui,sans-serif;font-size:12px;font-weight:600;letter-spacing:.01em;line-height:1.25;text-align:left;text-decoration:none;white-space:normal;overflow-wrap:anywhere;word-break:break-word;cursor:pointer}
+.site-nav .side-rail-tabs .side-rail-link::before{content:"";position:absolute;top:8px;bottom:8px;left:0;width:3px;border-radius:0 4px 4px 0;background:rgba(94,161,255,.8)}
+.site-nav .side-rail-tabs .side-rail-link::after{content:"\2197";position:absolute;top:50%;right:11px;transform:translateY(-50%);color:#7fade8;font-family:"IBM Plex Mono",Consolas,monospace;font-size:11px;line-height:1}
+.site-nav .side-rail-tabs .side-rail-link:hover,.site-nav .side-rail-tabs .side-rail-link:focus-visible{border-color:rgba(94,161,255,.3);background:rgba(78,113,150,.18);color:#f2f7fb}
 .site-nav .side-rail-foot{display:flex;align-items:center;gap:8px;min-width:0;padding:14px 8px 0;border-top:1px solid rgba(142,169,198,.13);color:#8095aa;font-size:9px;font-weight:600;letter-spacing:.08em;overflow-wrap:anywhere}
 .site-nav .side-rail-status-dot{flex:0 0 auto;width:7px;height:7px;border-radius:50%;background:#48c69a;box-shadow:0 0 12px rgba(72,198,154,.62)}
 @media (min-width:901px){
@@ -163,6 +178,9 @@ body > aside.site-nav.side-rail ~ *{margin-left:232px;max-width:calc(100% - 232p
 .site-nav .side-rail-tabs{display:flex;flex-direction:row;gap:6px;margin:0;padding:9px 16px;box-sizing:border-box;max-width:100%;contain:paint;overflow-x:auto;overflow-y:hidden}
 .site-nav .side-rail-tabs .tab-button{flex:0 0 auto;width:auto;min-height:34px;padding:8px 12px;border-radius:7px;white-space:nowrap}
 .site-nav .side-rail-tabs .tab-button::before{top:auto;right:9px;bottom:0;left:9px;width:auto;height:2px;border-radius:2px 2px 0 0}
+.site-nav .side-rail-tabs .side-rail-link{flex:0 0 auto;width:auto;min-height:34px;padding:8px 12px;border-radius:7px;white-space:nowrap}
+.site-nav .side-rail-tabs .side-rail-link::before{top:auto;right:9px;bottom:0;left:9px;width:auto;height:2px;border-radius:2px 2px 0 0}
+.site-nav .side-rail-tabs .side-rail-link::after{display:none}
 }
 @media (max-width:780px){
 .site-nav.topbar{position:static;flex-wrap:wrap;min-height:0;gap:12px;padding:14px 18px}

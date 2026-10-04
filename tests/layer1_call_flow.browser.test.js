@@ -11,10 +11,11 @@ const { chromium } = require('playwright');
 // rulebooks are still drafts. It also holds the page to the two things it promises about itself:
 // no text may outgrow its own card, and the whole page must still fit one A4 landscape sheet when
 // printed, without the print type being shrunk under the legibility floor.
-// The page is reached from the shared top bar, so the last test makes that hop rather than reading
-// the entry's href. The entry itself lives in backtester/partials/shared_nav.html and is rendered
-// into all nine published pages by backtester/scripts/build_shared_nav.js, which is what keeps the
-// dashboard's own copy of it in step with every other page's.
+// The page is reached from the shared top bar and, since 2026-10-04, from the rail's one outbound entry,
+// so the last test makes both hops rather than reading either entry's href. Both entries live in
+// backtester/partials/shared_nav.html and are rendered into all ten published pages by
+// backtester/scripts/build_shared_nav.js, which is what keeps the dashboard's own copy of them in step
+// with every other page's.
 const PAGE = path.resolve(__dirname, '../layer1-call-flow.html');
 const WIDTHS = [1440, 1180, 860, 721, 390];
 // The box Chrome lays the printed sheet out in: 297x210mm A4 landscape minus the 8mm page margin.
@@ -182,7 +183,7 @@ test('the call map keeps its honesty flags and its guard test', async () => {
   } finally { await browser.close(); }
 });
 
-test('the dashboard reaches the Layer 1 call map from the shared top bar', async () => {
+test('the dashboard reaches the Layer 1 call map from the shared top bar and the rail', async () => {
   const browser = await chromium.launch({ headless: true });
   try {
     const page = await browser.newPage();
@@ -192,12 +193,18 @@ test('the dashboard reaches the Layer 1 call map from the shared top bar', async
     // bar entry the shared navigation renders instead of reading its href: an entry that was
     // renamed, hidden or pointed at a missing file fails here, the same way the site-nav guard holds
     // the other four bar entries. The map is a page a reader prints rather than a dashboard view, so
-    // it is a bar entry and not a rail tab: the rail drives views by data-tab and this is not one.
+    // where the rail offers it - it has since 2026-10-04, in the System group beside Architecture - it
+    // offers it as an outbound link, never as a tab: the rail's tabs drive dashboard views by data-tab
+    // and this is not one.
     const bar = page.locator('.topbar.site-nav a.topbar-link[href="layer1-call-flow.html"]');
     assert.equal(await bar.count(), 1, 'the dashboard bar must link to the call map');
     assert.equal(await bar.textContent(), 'Layer 1 Calls', 'the bar entry must carry the label the navigation agreed');
     assert.equal(await bar.getAttribute('target'), '_top', 'the bar entry must leave any frame it is shown in');
-    assert.equal(await page.locator('nav#agentTabs a[href="layer1-call-flow.html"]').count(), 0, 'the map must not be a rail tab: the rail drives dashboard views');
+    const rail = page.locator('nav#agentTabs a.side-rail-link[href="layer1-call-flow.html"]');
+    assert.equal(await rail.count(), 1, 'the rail must offer the map as one of its outbound entries');
+    assert.equal(await rail.textContent(), 'Layer 1 Calls', 'the rail entry must carry the label the navigation agreed');
+    assert.equal(await rail.getAttribute('target'), '_top', 'the rail entry must leave any frame it is shown in');
+    assert.equal(await page.locator('nav#agentTabs a[href="layer1-call-flow.html"][data-tab]').count(), 0, 'the map must not be a rail tab: the rail drives dashboard views');
     assert.equal(await bar.isVisible(), true, 'the bar entry must be visible in a 1440px window');
     await bar.click();
     await page.waitForURL(/layer1-call-flow\.html$/);
@@ -205,6 +212,10 @@ test('the dashboard reaches the Layer 1 call map from the shared top bar', async
     assert.match(await page.locator('h1').textContent(), /How the Layer 1 calls are made/);
     await page.goBack();
     await page.waitForURL(/index\.html$/);
+    // The rail entry is the second way in, from the same page.
+    await rail.click();
+    await page.waitForURL(/layer1-call-flow\.html$/);
+    assert.equal(await page.locator('ol.flow > .node').count(), 7, 'the rail entry opens the map with all seven chain steps');
   } finally { await browser.close(); }
 });
 

@@ -43,6 +43,11 @@ const RAIL_TABS = [
 // Off the dashboard the gold entry is the gold tabs page rather than the dashboard's own gold view: that page
 // is what the label names, and its hash handling already works with no script of its own.
 const RAIL_HREFS = RAIL_TABS.map((tab, index) => (index === 3 ? "gold.html#direction" : `index.html#${tab}`));
+// The rail also ends with one outbound entry, added 2026-10-04: like the bar's fifth entry it leaves the
+// dashboard set for the printable Layer 1 call map, so it is written as a link in both variants rather than as a
+// data-tab button, and it is pinned here for the same reason the labels are.
+const RAIL_OUTBOUND_HREFS = ["layer1-call-flow.html"];
+const RAIL_OUTBOUND_LABELS = ["Layer 1 Calls"];
 const MARK = "ADM";
 const HEAD_LABEL = "Control Room";
 const FOOT = "Published dashboard";
@@ -103,6 +108,11 @@ async function fingerprint(page) {
         target: entry.getAttribute("target"),
       })),
       foot: text(rail && rail.querySelector(".side-rail-foot > span:not(.side-rail-status-dot)")),
+      outbound: rail ? Array.from(rail.querySelectorAll("nav .side-rail-link")).map(link => ({
+        label: link.textContent.trim(),
+        href: link.getAttribute("href"),
+        target: link.getAttribute("target"),
+      })) : [],
       dots: rail ? rail.querySelectorAll(".side-rail-foot .side-rail-status-dot").length : 0,
     };
   });
@@ -114,7 +124,7 @@ test("every page carries the partial's render byte for byte, in the page's own l
   } catch (error) {
     report = error.stdout || "";
   }
-  assert.match(report, /--check: 10 pages, 17 rail entries, 0 change\(s\)/, "--check must find all ten pages current");
+  assert.match(report, /--check: 10 pages, 17 rail entries, 1 outbound, 0 change\(s\)/, "--check must find all ten pages current");
   assert.doesNotMatch(report, /: (refreshed|placed)$/m, "no page may still need the block written into it");
   nav.PAGES.forEach(page => {
     const source = read(page.file);
@@ -154,13 +164,21 @@ test("the partial is the navigation that was agreed, in both variants", () => {
     assert.ok(block.includes('<style id="shared-nav-css">'), `the ${variant} block must carry its own styling`);
     const entries = rows(block, /<(?:button|a) class="tab-button[^"]*" (data-tab|href)="([^"]+)"[^>]*>([^<]+)<\/(?:button|a)>/g);
     assert.deepEqual(entries.map(entry => entry[2]), RAIL_LABELS, `the ${variant} rail must offer the same seventeen labels in order`);
+    // The outbound entry is not one of the seventeen: it leaves the dashboard set, so it is a link in both
+    // variants and the dashboard's tab binder never sees it. Both variants must carry the same one.
+    assert.deepEqual(
+      rows(block, /<a class="side-rail-link" href="([^"]+)" target="_top">([^<]+)<\/a>/g).map(row => [row[0], row[1]]),
+      RAIL_OUTBOUND_HREFS.map((href, index) => [href, RAIL_OUTBOUND_LABELS[index]]),
+      `the ${variant} rail must carry the same outbound entries`,
+    );
     if (variant === "dashboard") {
       assert.deepEqual(entries.map(entry => entry[1]), RAIL_TABS, "the dashboard rail must name the tabs its script knows");
       assert.deepEqual(entries.map(entry => entry[0]), RAIL_TABS.map(() => "data-tab"), "the dashboard rail must drive the views by data-tab");
+      assert.equal((block.match(/class="side-rail-link"/g) || []).length, RAIL_OUTBOUND_HREFS.length, "an outbound entry must never be written as a tab");
     } else {
       assert.deepEqual(entries.map(entry => entry[1]), RAIL_HREFS, "the standalone rail must link to the pages and hashes its labels name");
       assert.deepEqual(entries.map(entry => entry[0]), RAIL_HREFS.map(() => "href"), "the standalone rail must be plain links");
-      assert.equal((block.match(/target="_top"/g) || []).length, BAR_HREFS.length + RAIL_HREFS.length, "every standalone link must leave any frame it is shown in");
+      assert.equal((block.match(/target="_top"/g) || []).length, BAR_HREFS.length + RAIL_HREFS.length + RAIL_OUTBOUND_HREFS.length, "every standalone link must leave any frame it is shown in");
     }
   });
 });
@@ -207,6 +225,12 @@ test("all ten served pages show one bar and one rail, and every link it offers g
       assert.equal(seen.foot, FOOT, `${where} must carry the rail's foot`);
       assert.equal(seen.dots, 1, `${where} must show one status dot`);
       assert.deepEqual(seen.entries.map(entry => entry.label), RAIL_LABELS, `${where} must offer the same seventeen labels in order`);
+      assert.deepEqual(
+        seen.outbound.map(entry => [entry.href, entry.label, entry.target]),
+        RAIL_OUTBOUND_HREFS.map((href, index) => [href, RAIL_OUTBOUND_LABELS[index], "_top"]),
+        `${where} must carry the rail's outbound entries`,
+      );
+      RAIL_OUTBOUND_HREFS.forEach(href => assert.ok(fs.existsSync(path.join(root, href)), `${where} rail points at ${href}, which is not published`));
       if (page.variant === "dashboard") {
         assert.ok(seen.railIds.includes("agentTabs"), `${where} must keep the tab list id its script drives`);
         assert.deepEqual(seen.entries.map(entry => [entry.tag, entry.tab, entry.href]), RAIL_TABS.map(tab => ["button", tab, null]), `${where} must drive the views by data-tab`);
@@ -299,6 +323,21 @@ test("a rail entry lands on the view its label names, from any page and from ins
         && heading.textContent.trim() === "How the Layer 1 calls are made"
         && document.querySelectorAll("ol.flow > li.node").length === 7;
     });
+
+    // The rail carries the same outbound entry the bar does, so a reader who works from the rail reaches the
+    // printable call map the same way: straight from the dashboard, and from inside a gold frame in the whole
+    // window rather than inside the frame.
+    await view.goto(`${base}/index.html`, { waitUntil: "load" });
+    await view.locator(".side-rail nav .side-rail-link", { hasText: "Layer 1 Calls" }).click();
+    await view.waitForURL(/layer1-call-flow\.html$/);
+    await view.waitForFunction(() => {
+      const heading = document.querySelector("h1");
+      return !!heading && heading.textContent.trim() === "How the Layer 1 calls are made";
+    });
+    await view.goto(`${base}/gold.html#direction`, { waitUntil: "load" });
+    await view.locator('iframe[title="Gold direction scorecard"]').scrollIntoViewIfNeeded();
+    await view.frameLocator('iframe[title="Gold direction scorecard"]').locator(".side-rail nav a.side-rail-link").click();
+    await view.waitForURL(/\/layer1-call-flow\.html$/);
 
     // gold.html frames four of these pages. An entry clicked inside one of those frames has to move the whole
     // window, not open the dashboard inside the frame and leave the reader with two rails. The tidy makes Start
