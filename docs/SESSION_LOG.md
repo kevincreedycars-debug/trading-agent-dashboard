@@ -107,3 +107,16 @@ The served `what-moves-gold.html` is 26,134 bytes rather than 24,467 because the
 
 - Work the queue the dispatcher now holds: the harness lane's `r10`-outcome-and-pause `r11` and placement correction `r11b`, and the live-trading lane's feed-cadence `r1`.
 - What remains is the user's or production work: the optional "What moves gold" first tab on the live Gold page, the isolated n8n acceptance for the Gold collector patch, and the movement measurement lane `gold-declared-band-measurement-026`, whose pickup is the user's.
+
+## 2026-10-04 - background review cycles close the dispatcher queue
+
+### Completed
+
+- Reviewed the filings the 13:1xZ interactive pass left queued, each under the controller lock that owned its run and each accepted on its reviewed bytes only: the harness lane's `r10`-outcome-and-pause `r11`, its separate placement correction `r11b`, and the live-trading feed-cadence `r1`.
+- Recorded the harness lane's self-corrected placement defect: the `r11` filing's own narrative put the fourteen-line production paragraph in the session 10 note when at the head it named the block sat inside the session 8 span; the lane amended to `8b88821` (a pure fourteen-line move, `git diff 4dff3c9 8b88821` 14/14 in one file, every other digest unchanged) and filed the correction before any reply.
+- Published no assignment in any of the three cycles and changed no worker status: the register rows keep status exactly `instructions_published_awaiting_worker` and the seven paste-ready revision texts stay where they were written.
+
+### Next
+
+- Await the user's decision on the open items: who publishes the left-rail accordion, whether the 2026-10-04 seven-lane authorisation is confirmed and in what packaging, the DeepSeek/n8n scope, the seven unfiled stage-A `READINESS.md` with the price-series gaps, and the harness lane's offered `RAIL_ACCORDION_SPEC_20261003.md` re-base against `origin/main` at `8a976e3`. Nothing in the queue is executable by a coordinator cycle until then.
+- Production and research work that remains open and is not the coordinator's: the optional `What moves gold` first tab, the isolated n8n acceptance for the Gold collector patch, and the movement measurement lane `gold-declared-band-measurement-026`, whose pickup is the user's.
