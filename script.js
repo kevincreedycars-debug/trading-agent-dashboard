@@ -15632,7 +15632,7 @@ function liveTradingRulePanel(data, ruleState) {
         <p class="live-trading-table-meta">${meta}</p>
       </div>
       ${table}
-      <p class="live-trading-table-caption">Read by <span class="live-trading-mono">lib/l2l_strategy.js</span> from the sealed Layer 1 calls, the marked ladder in <span class="live-trading-mono">data/l2l-levels.json</span> and the snapshot's own M5 bars: a five-minute close beyond a marked level in the call's own direction, a limit back at that level, the stop behind the leg that made the deviation, and the target at five times the risk. A confirmed row is a ticket to place by hand - this table places, sizes, amends and cancels nothing, the order tool is the only thing here that can send one, and the smallest size is the value typed into it. A call whose own window has closed is not read as a direction at all.</p>
+      <p class="live-trading-table-caption">Read by <span class="live-trading-mono">lib/l2l_strategy.js</span> from the sealed Layer 1 calls, the marked ladder in <span class="live-trading-mono">data/l2l-levels.json</span> and the snapshot's own M5 bars: a five-minute close beyond a marked level in the call's own direction, a limit back at that level, the stop behind the leg that made the deviation, and the target at five times the risk. A confirmed row is a ticket to place by hand - this table places, sizes, amends and cancels nothing, the order tool is the only thing here that can send one, and the size it sends is not a number typed in: it is that instrument's own smallest tradable size, read from the terminal rather than supplied, until the size is scaled deliberately. A call whose own window has closed is not read as a direction at all.</p>
     </section>
   `;
 }
