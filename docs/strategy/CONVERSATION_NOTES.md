@@ -3759,3 +3759,59 @@ assignment, lock, controller or bridge file was touched; the scorer writes only 
 market measurement was taken - the re-run re-cuts consumed intervals inside an accepted report as the 2026-09-27 cut did;
 no outcome, holdout or prospective observation was read; the sealed window was untouched. No prediction, accuracy,
 timing, profitability or trading edge is claimed.
+
+**User question, 2026-10-04: "is the current live layer 1 calls being made each day actually somewhat reliable and the
+attempt to figure out if the weighting needs to be rebalanced is actually not statistically better than the original
+model?"** Answered from artifacts already on disk, read-only, in
+`docs/strategy/LIVE_CALL_RELIABILITY_READ_20261004.md` (17,391 bytes, 207 CRLF lines, no bare LF, sha256
+`0cc1dcda...`).
+The short form: **the live calls are about a coin flip and on the session definition slightly worse than one, and the
+re-weighting attempt is not shown to be better, only unmeasured.** Both halves are caveats as much as findings - "not
+demonstrably reliable" is not "proven worthless", and "no gain shown" is not "a gain disproved".
+
+**The four artifacts, and why the same system reads 47% and 97% at once.** (1) Session direction, `data/l2l-trading-day-directional-v1.json`
+(2026-08-15) and the verdict `data/l2l-directional-research-verdict-v1.json`: Layer 1 scored **47.65%** on the designated
+session's open-to-close across 2,493 calls, Wilson 95% 45.70-49.62, against a majority-direction baseline of 53.19% -
+i.e. calling "up" every day beat the system by 5.5 points; bullish 50.69%, **bearish 42.96%**, gold bearish **40.0%**
+(n 300); by fold TRAIN 49.95 (n 1,089, base 54.18), VALIDATION 43.84 (n 796, whole interval below base 54.52),
+FINAL_TEST 48.52 (n 608, base 50.33); confidence monotonicity false; Layer 2 vs Layer 1 net improvement 0 of 1,592; and
+the file's own conclusion is verbatim that the calls "are not validated predictors of the designated trading session's
+closing direction" with `final_test_consumed: true`. (2) Following 24 hours by confidence band,
+`data/confidence-band-delivery.json` (2026-07-28, this is the panel the user sees): pooled Layer 1 **54.39%** (2,132 of
+3,920 directional calls), about +1.2pp on the same window's 53.19% bullish share and inside noise (SE ~0.8pp);
+**gold alone 56.31%** (446 of 792) against gold's own up-drift of 55.81% session / 58.23% week; and the confidence curve
+is **not** monotone above the 60s - 60-69 59.6% (n 374), 70-79 **52.9%** (n 140), 80-89 57.8%, 90-100 90.9% on 11 calls.
+(3) Stored live gold outputs, `backtester/docs/gold_stored_call_pilot_20260906.md`: 154 outputs, 7 June-6 September, and
+the finding is the collector defect - 143 of 147 linked snapshots imply the same 4266.066005 reference price in
+`gold_d1_pct`; fixing only that input changes 97 of 154 F5 signals and **19 final direction labels**; the pilot itself
+says "Do not use the pilot to calibrate weights before correcting and validating collection". (4) The re-weighting
+attempt, `data/phase-2-shadow-backtest.json`.
+
+**The two faults in the re-weighting headline, which is the direct answer to the second half of the question.** The gold
+rows report original 18.4% ex-flat over 563 directional calls and shadow 58.0% over 395, status `PASS`,
+`ex_flat_change_pct_points 39.6`, 178 shadow no-calls. First, **18.4% cannot be true**: the same calls measure 46.32%
+(session, n 570), 56.31% (24h, n 792) and gold's down-frequency is 60%, and the file's own factor text calls 18.4% the
+"asset baseline" while measuring agreement at 56.3% - so the +39.6pp is a gap between two unknown quantities, not a
+gain. Second, **58.0% is the base rate**: gold's unconditional up-drift is 56.84-58.23%, so the re-weighted arm is
+indistinguishable from always calling "up", and it got there partly by declining to call 178 times, comparing different
+populations of days. The file contains no interval, no significance and no paired test, its 2-improved/0-degraded across
+five assets is what multiple testing produces from noise, and its own framing says the metrics do not qualify live
+calls.
+
+**Three bounded next steps proposed, none touching live logic, and none requested as an assignment.** (1) Reconcile the
+18.4% by recomputing the shadow file's original gold arm with an explicit win definition and the unconditional up/down
+frequency printed beside it - arithmetic over stored inputs. (2) Score calls with risk attached rather than direction
+alone, using the reach and terminal-reversal fields already in the session artifact (both in the 20-60% range) with a
+cost assumption - the honest name for the missing piece is that no artifact has entry, stop, target, spread or sizing
+attached, so a 47% hit rate is not yet a statement about money. (3) Start a clean dated observation period after the
+collection repair is validated, because **no artifact scores the calls being made today**: coverage stops at 2026-04-30
+(session), 2026-07-28 (24h panel) and 6 September (stored gold, partly defective inputs), and the only clean held-back
+fold inside the session artifact is already consumed. Until then this lane holds at "not measurable at today's weights".
+
+**Boundaries.** Read-only throughout: no live system, live call, weight, collector, dashboard file, assignment or other
+worker's worktree touched; the sealed window remains prohibited until 2027-03-25T15:00:00Z and
+`gold-declared-band-measurement-026` remains paused since 2026-09-25; nothing recomputed except sums of published fields
+(pooled and gold totals, and one standard error), each stated as such. Filed as submission
+`20261004-strategy-live-call-reliability-and-rebalance-evidence-056`, companion to
+`WEIGHT_BALANCE_CHECK_20261004.md` and to `-055`. No prediction, accuracy, timing or profitability claim is made.
+
