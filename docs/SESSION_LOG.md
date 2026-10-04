@@ -115,6 +115,7 @@ The served `what-moves-gold.html` is 26,134 bytes rather than 24,467 because the
 - Reviewed the filings the 13:1xZ interactive pass left queued, each under the controller lock that owned its run and each accepted on its reviewed bytes only: the harness lane's `r10`-outcome-and-pause `r11`, its separate placement correction `r11b`, and the live-trading feed-cadence `r1`.
 - Recorded the harness lane's self-corrected placement defect: the `r11` filing's own narrative put the fourteen-line production paragraph in the session 10 note when at the head it named the block sat inside the session 8 span; the lane amended to `8b88821` (a pure fourteen-line move, `git diff 4dff3c9 8b88821` 14/14 in one file, every other digest unchanged) and filed the correction before any reply.
 - Published no assignment in any of the three cycles and changed no worker status: the register rows keep status exactly `instructions_published_awaiting_worker` and the seven paste-ready revision texts stay where they were written.
+- Closed the queue's own follow-up under the controller lock: the harness lane's r12 close `20261004-backtester-harness-r11-and-r11b-accepted-and-pause-r12` (mailbox 13,038 bytes / `e6facf42...`, reply 7,583 bytes / `7342144b...`, decision `accepted`, `pending 0`) was reproduced from the checkout - commit `5db6f6b2` one file 65/0 on `8b88821`, notes 46,161 / 582 / 581 CRLF / `c9616e3e`, placement 388 / 407 / 412 / 440 / 446 / 495 / 509 / 518 / 574, focused suite 15 of 15 - and no assignment was published.
 
 ### Next
 
