@@ -119,3 +119,107 @@ this worker `mailbox_auto_connect`, so the connection is restored after a reload
 open in that window: the bridge binds to the first workspace folder's registered path and has no task
 selector. The startup message is in `docs/orchestration/AGENT_MESSAGES.md` and
 `tools/backtester-silver-node/README.md`.
+
+---
+
+## Stage B revision, published 2026-10-04: the Silver foundation data build is authorised
+
+Published by the coordinator as the user's delegate on 2026-10-04, on the user's own instruction recorded in
+`docs/orchestration/DECISIONS.md` ("the seven `backtester-<asset>` foundation-data revisions are published in
+tandem"). Everything above remains the readiness record it already is; this section supersedes only the stage-A
+sentence that forbids building, and only for the actions named here.
+
+Stage B: foundation data build for Silver. Authorised by the user on 2026-10-03, confirmed by the user on 2026-10-04 and published on 2026-10-04.
+
+Until now this lane was a readiness and standby lane: one docs/backtester-silver/READINESS.md and no
+build. The user has now asked for the per-day foundation series for Silver to be ready inside this
+backtester, built the same way XAU/USD's is, so that when the analysis method is settled this lane can run
+without a second acquisition round. Your deliverable in this stage is data plus provenance, not analysis.
+
+Do, in this order, and re-verify every claim from the files rather than from this text:
+
+1. Inventory, in your own worktree, what already exists for Silver: backtester/sql/*, backtester/importers/*,
+   backtester/lib/historical_common.js, backtester/replay/*, backtester/scripts/*, data/backtester-checker-*.
+   State what is absent and show the search that establishes it.
+2. Store, **in the shape the coordinator decided in revision 2**: load the accepted four-year window into
+   the shared `historical_price_series` table in `backtester/sql/003_generic_historical_warehouse.sql` with
+   lowercase `instrument_key = `xagusd_spot`` and `interval = daily`, appending to what is already loaded
+   rather than rebuilding it; the macro and FRED rows go to `historical_macro_series`. Seven Gold-shaped
+   per-asset tables are **rejected**, so step 0NN is no longer an alternative here. Every loaded row must
+   link to one `historical_source_manifests` row carrying coverage_start, coverage_end, row_count, checksum
+   and import_mode = 'historical_backfill'.
+3. Acquisition over `2022-10-01` -> `2026-09-30`, with the existing plumbing and no new vendor, and **over a 3-year minimum
+   per the user's fifth reply of 2026-10-03** (the agreed target is the longer one: `2022-10-01` ->
+   `2026-09-30`). The instrument-parameterised `backtester/importers/oanda/download_oanda_candles.js`
+   (granularity D) for `xagusd_spot`, plus the shared macro block from
+   `backtester/importers/fred/import_fred_macro.js`, which already carries the USD series every pair
+   reuses. The provider and the missing piece per asset, measured this cycle and **Silver-specific**, are
+   in the table below: a lane starts from the piece its own row names, and never from a symbol guess.
+   Run the importers through the local credential runner so no value is printed:
+   %USERPROFILE%\.trading-agent-dashboard\scripts\run-with-credentials.ps1 -Scope market-importers
+   -Command node -Arguments <script> <args>
+
+Per-asset provider and the missing piece, measured from production this cycle. A lane's own row is the one
+that binds it; `Silver` is substituted per lane. All paths are read with `git show origin/main:<path>`,
+and "nothing" means no importer, no SQL table, no builder and no checker data:
+
+| Asset (`/USD` pair) | Provider path that exists | Piece that is missing for a 3+ year series |
+| --- | --- | --- |
+| Gold (XAU/USD) | `backtester/importers/gold/import_gold_daily.js`, `DEFAULT_START = "2000-01-01"`, Coinbase `XAU-USD` by date plus a FRED LBMA path; `sql/008`; `builders/gold` | Nothing structural: backfill the front from 2023-01-02 and pull a fresh tail past 2026-04-30 (fresh tail only). |
+| USD (shared block) | `importers/fred/import_fred_macro.js` with five series (`DGS2`, `DGS10`, `DFII10`, `VIXCLS`, `DTWEXBGS`); `sql/002`; `builders/usd` | Macro backfill to the front; the file's `SERIES_CONFIG` is the fixed list, so a series outside it needs a config entry. |
+| EUR (EUR/USD) | `importers/eurusd/` (FRED `DEXUSEU`); `sql/007`; `builders/eur` | Front backfill only; the importer's default start is already pre-2022. |
+| NQ (NQ/USD) | `importers/qqq/import_qqq_daily.js` writing `qqq_nq_proxy`; `sql/009`; `builders/nq` | Front backfill only; the series is the QQQ proxy by decision, not NQ futures. |
+| BTC (BTC/USD) | `importers/btc/` writing `btc_usd_spot`; `sql/010`; `builders/btc` | Front backfill only; the importer's default start is already `2010-07-18`. |
+| GBP (GBP/USD) | none: `backtester/importers/` has no `gbp` directory and `backtester/sql/` stops at `010` | **All of it**: a `gbpusd` price series (OANDA `GBP_USD` on `download_oanda_candles.js`, or FRED `DEXUSUK` through the EUR importer's shape), the `gbpusd` spine key, then a builder. |
+| Silver (XAG/USD) | none: no `silver`/`xag` importer and no table | **All of it**: a `xagusd_spot` price series - the gold importer's Coinbase call is hardcoded to `XAU-USD`, so it needs a symbol parameter or a sibling preset - then a builder. |
+| WTI (WTI/USD) | none as a price series: `DCOILWTICO` is **not** in the FRED importer's `SERIES_CONFIG` (five series, none of them WTI) | **All of it**: either a priced `wti_usd_spot` series or a decision to hold WTI as a macro series (`series_key = 'DCOILWTICO'`), plus a `SERIES_CONFIG` entry in the first case; then a builder. |
+
+Sizing, unchanged and repeated here because it is the "asap" answer: Gold needs about three months of front
+backfill; USD, EUR, NQ and BTC need roughly 2.75 years more each; GBP, Silver and WTI start from zero. The
+downloaders are not the limit - only the raw evidence is short.
+
+4. Prove the load, do not assert it: rows loaded, min and max date, day count per calendar year, the gaps
+   and their cause (weekend, exchange holiday, source outage), duplicate check on the natural key, and the
+   sha256 of the bundle you loaded. Where a source cannot reach 2022-10-01, report the achieved start and
+   the reason; never interpolate, back-fill silently or fabricate a row.
+5. Keep the raw pull and the load log in your own worktree's ignored tmp/, and file the two written
+   deliverables: docs/backtester-silver/READINESS.md (still owed from stage A, now with a foundation
+   section listing the achieved window per series and the digest of the load) and one envelope through
+   node D:/trading-agent-dashboard-codex/scripts/coordination.js submit --file <file> with the exact
+   commands, results, artifact hashes, blockers and questions.
+6. Record activity with node D:/trading-agent-dashboard-codex/scripts/monitor-state.js activity
+   backtester-silver working|paused "<task>".
+
+Boundaries, unchanged and non-negotiable:
+
+- Layer 1 stays sealed and independent, and backtesting stays downstream only. No Layer 1 workflow, no
+  Layer 2, no dashboard file, no production publish, no scheduler, no order or broker path.
+- No outcome, holdout or prospective observation is read in this stage, and no session policy, outcome
+  definition, factor ranking or edge claim is written. Those wait until the analysis method is settled.
+- Nothing you build may be wired into a daily call, so an import is inert by design.
+- Write only your own worktree plus ignored tmp/; submit only through the canonical mailbox; never edit the
+  canonical folder, the register, an assignment, or another lane's worktree or inbox.
+- One acquisition per asset, plus the single shared USD macro pull: coordinate with the coordinator rather
+  than duplicating the FRED and USD pull seven times.
+- Provider: run this window on DeepSeek in the existing Cline extension, exactly as the coordinator's own
+  checker runs, and name the provider in the register-identity section of READINESS.md.
+- A fresh worktree has no node_modules. If a package install is genuinely needed, report it as a blocker
+  and wait; do not install silently, and do not run the documented local suite here and report its
+  environment failures as your own findings.
+
+### Your own row, measured from production on 2026-10-03
+
+| Asset (`/USD` pair) | Provider path that exists | Piece that is missing for a 3+ year series |
+| --- | --- | --- |
+| Silver (XAG/USD) | none: no `silver`/`xag` importer and no table | **All of it**: a `xagusd_spot` price series - the gold importer's Coinbase call is hardcoded to `XAU-USD`, so it needs a symbol parameter or a sibling preset - then a builder. |
+
+Lane-specific facts to confirm rather than assume:
+
+- Dashboard pair it must match: `XAG_USD` / `XAG/USD`
+- Price series for the instrument, as the evidence stands: the production factor contract already names the instrument: "analyses SILVER as the XAG/USD instrument only", with "XAG/USD spot: Coinbase `XAG-USD` spot, the same provider pattern already used for Gold's"; confirm Coinbase
+- Factor document: `logic/agent_silver_direction.md`, 5,542 B, blob `40d96173`
+- This lane holds the second new sibling spine key, `xagusd_spot`. Gold's Coinbase call is hardcoded to `XAU-USD`, so the work is a symbol parameter or a sibling preset, and `XAG_USD` is the only one of the 18 dashboard configs carrying no explicit `quoteAssetCode`, so confirm the pair rather than infer it.
+
+Reporting is unchanged from this file's own "Reporting (mandatory)" section: one envelope through the shared
+mailbox, `monitor-state.js activity backtester-silver working|paused "<task>"`, then pause. File a
+blocker when it is found, not at the end.

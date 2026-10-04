@@ -1,5 +1,59 @@
 # Central decisions
 
+## 2026-10-04 (user-authorised publication relayed by the operator): the seven `backtester-<asset>` foundation-data revisions are published in tandem and their windows are woken
+
+The user authorised this publication directly on 2026-10-04 in the `backtester-harness` window: first the
+seven-lane foundation-build authorisation itself, and then, once the background cycle had recorded that the choice
+of packaging was the user's, the explicit packaging decision - **seven per-lane revisions, published in tandem (all
+at once), each revision appended to that lane's existing assignment file**. This entry is the authorisation record
+the r10 and r11 replies asked for; it rests on the user's own instruction, relayed and executed in the canonical
+folder by the `backtester-harness` lane acting as the user's delegate.
+
+Method, so a later reader can reproduce or fault it: the background dispatcher was paused first
+(`node scripts/coordinator-dispatch.js pause`, `enabled false`) and the run in flight was allowed to drain, so no
+concurrent cycle wrote the same files; the seven revisions were then appended, the seven register rows updated and
+this entry written. Nothing else in the canonical tree was touched: the pre-existing modification to
+`tools/strategy-node/Strategy.code-workspace` and the five untracked Gold session-policy files under `backtester/`
+were left exactly as found.
+
+Published in `docs/orchestration/assignments/backtester-<asset>.md`, appended as a "Stage B revision, published
+2026-10-04" section, one per lane, each carrying the shared body of
+`docs/backtester-harness/FOUNDATION_BUILD_WORK_ORDER_20261003.md` section 5.2 with placeholders substituted, plus
+that lane's own measured provider row and missing piece from section 5.2 and its pair, series and factor-document
+lines from section 5.3:
+
+- `backtester-usd.md` - 17500 bytes, sha256 `6747adb7ba0d6a3b24cb49e434e79f19f24f937d94de69871c39dc936f441e2e`
+- `backtester-eur.md` - 17215 bytes, sha256 `56612e3ecd916b4512936094c4414e86baa5127395e47bfea29a1b5ee4f1c94d`
+- `backtester-nq.md` - 17110 bytes, sha256 `9b373aeeb98d928c49f68e506cb7f333a5bdf2848efbebd4aead16b4289ac241`
+- `backtester-btc.md` - 17309 bytes, sha256 `9258cff9bd128f87e91f3817a1ba09143880d333c901b5ffeaeaa8fe3150ee06`
+- `backtester-gbp.md` - 17961 bytes, sha256 `659404845aa50050cbefde4d74dc32bfdc278b7e0e7f9e80771718f0a4365826`
+- `backtester-silver.md` - 18003 bytes, sha256 `a074b8d0f093effa5c8145f85c8c5b254964f69f1add2dabb7916c591e930814`
+- `backtester-wti.md` - 17985 bytes, sha256 `cc56c8f970ac0252a26abad2b95aba422b6a470b5422ec08f6b087ec258002e1`
+
+All seven register rows keep status exactly `instructions_published_awaiting_worker`, which is what the bridge's
+wake rule requires; `assignment_id` stays `backtester-<asset>-001` so no reference in
+`docs/orchestration/AGENT_MESSAGES.md` or in the seven windows' workspace briefs is invalidated; `last_verified`
+moves to 2026-10-04 and `next` is rewritten to the stage-B mandate.
+
+Authorised per lane: its own four-year daily acquisition over `2022-10-01` -> `2026-09-30` through the existing
+importer paths, the two new sibling spine keys `gbpusd` and `xagusd_spot`, the shared USD macro pull owned once by
+`backtester-usd`, the load and provenance proof, `docs/backtester-<asset>/READINESS.md` with a foundation section,
+one mailbox envelope and its own activity records. Not authorised, and still refused: any Layer 1 or Layer 2 change,
+dashboard file, production publish, scheduler, order or broker path, session policy, outcome definition, factor
+ranking or edge claim, any read of an outcome, holdout or prospective observation, and any wiring into a daily call.
+A local load, a passing suite or a shared store is not edge, accuracy, causal feature-timing or live-deployment
+evidence.
+
+Why this wakes them when an operator reset would not: the bridge's event key binds the assignment id to the
+assignment file's bytes, so new content is a new event, while the seven lanes' old `sent_unconfirmed` state was a
+dedupe echo of unchanged content. Delivery lands in each window's open Cline task, and pickup is proven only by that
+lane's own activity record.
+
+Still owed by the background cycle and untouched here: the r14b, r13 and r14 filings in
+`.local/orchestration/inbox/backtester-harness/` predate this publication, stand for review, and are not answered by
+this entry.
+
+
 ## 2026-10-04 (forty-third cycle, background review): the strategy weighting-balanced-evidence advisory is accepted with four corrections of record, and no assignment is published
 
 The strategy advisory `20261004-strategy-weighting-balanced-evidence-055` was reviewed from the canonical checkout under the controller lock that owns this run (controller/status.json state `reviewing`, detail this submission, pid 32960, updated `2026-10-04T14:46:25.329Z`) against the immutable inbox file - 14,226 bytes, sha256 `265ce97f166b6367d71508e25c1456aff20480f27a01ff7864536688fe44ce3a`, equal to the requested hash - and answered **accepted** on the reviewed bytes only, as a docs-only advisory (reply 9,672 bytes at sha256 `0dc11d0fce8c9476549434a2c749dc52224bee99b50f9d55ff9a06164aeadd83`, published with the canonical CLI, after which `check --worker strategy` reports this filing `accepted` with `errors []`; review `docs/orchestration/reviews/20261004-strategy-weighting-balanced-evidence-055.md`). Nothing follows from it for production.
