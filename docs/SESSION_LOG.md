@@ -83,3 +83,27 @@ Add the visual dashboard shell for Backtest / Accuracy without building the data
 - No Layer 2 logic changed.
 - No Dashboard Writer workflow changed.
 - No Supabase schema or backtest calculation engine added.
+
+## 2026-10-04 - coordinator pass: the levels guard re-pointed and what-moves-gold published, and the review queue closed
+
+### Session Goal
+
+Act as coordinator for the user's instruction to push the factor table live to the dashboard he reads: clear the review queue, take the levels-guard decision now that the marks are confirmed as his own, publish the page, and leave the register and the handoff current.
+
+### Completed
+
+- Accepted four filings on their reviewed bytes - strategy `-049`, `-050`, `-051` and the live-trading `r2` - with the `-048` acceptance reply repaired in parseable form, after which `node scripts/coordination.js check --worker strategy` exits 0 with `errors []` and no standing error on that lane.
+- Re-pointed `tests/l2l_levels.test.js` from "the committed artifact starts every published symbol at zero levels" to a check that every published symbol is a known symbol carrying a valid mark (`a492c51`, one file, +5/-2), because the user confirmed the BTCUSD ladder the marking store committed is his own; the focused set (`l2l_levels` + `live_trading_dashboard` + `layer1_call_flow` + `gold_view_tidy`) is 61 of 61 and the four remaining suite failures are the pre-existing `secret_scanner` cases.
+- Published the page (`ae9a1f0`): `what-moves-gold.html` at the site root, the shared bar grown to a sixth entry across ten pages, and the `index.html` styles token moved to `?v=20261003-l2l-levels-and-timeframes`, which also closed the live-trading `r2` token residual. The served page is the filed candidate plus exactly one 88-byte bar line and its newline, so the commit message's "byte-identical" describes the copy step's input; the served CRLF form is 24,718 bytes at sha256 `b34ab618...`.
+- Wrote the durable review the `r2` reply named (`docs/orchestration/reviews/20261003-live-trading-port-publish-combination-r2.md`) and corrected two figures in the `-051` review by measurement: the published page's CRLF form is 24,718 bytes and not 24,556, and `gold.html`'s blob is 32,334 and not 32,333.
+- Updated the register (the strategy row's record and the live-trading row, whose earlier status `marks_published_provenance_unconfirmed_guard_red` is superseded by `marks_published_verified_guard_green`), the changelog's thirty-third cycle entry (the guard outcome, the publish, the live re-read and the release evidence) and `docs/SESSION_NOTES.md`; the coordination record is committed as `757e235` on `orchestration/control-plane-20260920`, which is local-only by design.
+- Left the background dispatcher resumed: it reviewed `-049`, `-051`, the harness `r10` and `-052` while this pass ran, closed the `-050` review gap itself, and is now working the filings that arrived behind them.
+
+### Important Note
+
+The served `what-moves-gold.html` is 26,134 bytes rather than 24,467 because the rail publish re-cut on top of it added the Layer 1 Calls rail entry to all ten pages; the page, its bar entry and the navigation guard all survived that publish. A push to `main` triggers a Pages publish, so the page went out on the user's explicit instruction and not as a backup.
+
+### Next
+
+- Work the queue the dispatcher now holds: the harness lane's `r10`-outcome-and-pause `r11` and placement correction `r11b`, and the live-trading lane's feed-cadence `r1`.
+- What remains is the user's or production work: the optional "What moves gold" first tab on the live Gold page, the isolated n8n acceptance for the Gold collector patch, and the movement measurement lane `gold-declared-band-measurement-026`, whose pickup is the user's.
