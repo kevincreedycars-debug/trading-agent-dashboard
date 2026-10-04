@@ -4020,3 +4020,24 @@ dashboard file, artifact, workflow, register entry or other worker was touched, 
 outcome or holdout was read and the sealed prospective window stays unread. This entry is the lane's own
 record of an acceptance; no further report is filed on the acceptance of a report, and the next filing
 follows a lane decision.
+
+**2026-10-04, the user delegated the lane choice to the coordinator; filing -060 asks for it.**
+
+The user's instruction, in substance: "let the coordinator decide best course of action." It answers the one item
+the accepted -059 review left open - who takes the five defect fixes and the three missing producers, whether
+`gold-declared-band-measurement-026` is superseded, and how that job is sequenced against the availability-lag
+rebuild and the event-day study the user already approved. This lane does not choose its own routing and does not
+take another worker's window, so the decision is passed to the coordinator through the mailbox as a filing of its
+own rather than settled in chat.
+
+Filed as `20261004-strategy-coordinator-to-choose-the-factor-fix-lane-060`, status `blocked`, asking the
+coordinator to name the lane that takes the fixes (or authorise superseding 026) and to give the order in which
+the five fixes, the vocabulary guard, the three missing producers, the availability-lag rebuild and the event-day
+walk-forward should run. The substance of the work is not reopened: the -059 review accepted the fix list as the
+concrete next candidate, and this filing adds no new finding, no new figure and no change of position. The lane
+remains available and unblocked for the work itself - what was missing was a lane, not capacity or evidence.
+
+Boundaries. This turn changed nothing but this notes file and the filing itself. No weight, live call, builder,
+collector, dashboard file, artifact, workflow, register entry, assignment, lock, controller or bridge file and no
+other worker was touched; no credential was used; no outcome or holdout was read and the sealed prospective window
+stays unread.
