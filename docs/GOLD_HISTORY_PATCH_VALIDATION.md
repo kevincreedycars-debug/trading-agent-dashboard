@@ -2,6 +2,8 @@
 
 Prepared 2026-09-09. Status: offline consumer checks passed; installed n8n validation and production application remain outstanding.
 
+Package index for the current run: `docs/GOLD_HISTORY_PATCH_ISOLATION_PACKAGE_20261003.md`, built on 2026-10-03 with the fixed-date isolation bundle in `tmp/gold-history-isolation-20261003/` and the offline report in `tmp/gold-history-validation-20261003.json` (both ignored local evidence).
+
 The unchanged patch is `backtester/drafts/gold_collector_history_query_patch.json`. It replaces the unordered 25-row read with a bounded 60-calendar-day, prior-UTC-date query ordered by snapshot date, run time and ID descending. `returnAll: true` requests all pages. This does not itself prove the installed node executes that query or paginates correctly.
 
 ## Reproduce the offline evidence
