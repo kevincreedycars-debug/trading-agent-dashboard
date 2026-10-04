@@ -104,3 +104,14 @@ not part of this branch), all green:
 - The seven rail entries that name a dashboard view are links, not the dashboard's own tab buttons, so the
   dashboard script reads the hash on load: `script.js` gained `tabFromHash` / `setupHashTabs` for exactly
   that, and an unknown hash falls back to the dashboard's default view.
+
+## Superseded on 2026-10-04
+
+Two things this note records have moved on, both on `origin/main`, both after it was written:
+
+- The rail is no longer seventeen `data-tab` entries and nothing else. It ends with one **outbound** entry,
+  `<a class="side-rail-link" href="layer1-call-flow.html" target="_top">Layer 1 Calls</a>`, directly under
+  `Architecture`, written the same way in both variants and carrying no `data-tab`. The builder now parses that
+  kind of entry out of the rail before it checks the tabs, and its `--check` report reads
+  `10 pages, 17 rail entries, 1 outbound, 0 change(s)`. See `docs/LAYER1_CALL_FLOW_RAIL_ENTRY_20261004.md`.
+- The served set is ten pages, not nine: `what-moves-gold.html` was published with its own bar entry.
