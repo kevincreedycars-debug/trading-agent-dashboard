@@ -528,3 +528,39 @@ unchanged with the id swapped. `strategy-2` needs no reset at all - only its win
 Nothing in this note widens any lane's authority: no connection, credential, warehouse, order, arming, Layer 1, Layer 2, workflow, dashboard or production change follows
 from it, and no assignment, register status or per-event record was modified to write it.
 
+## 2026-10-04 (forty-eighth cycle): gold-research takes the dark-factor repair under a superseding assignment
+
+The user delegated the routing question the accepted `-059` review left open - *"let the coordinator decide best course
+of action"* - and the coordinator took the third route offered by `20261004-strategy-coordinator-to-choose-the-factor-fix-lane-060`:
+`gold-declared-band-measurement-026` is superseded by `gold-dark-factor-repair-027` on the `gold-research` lane. The
+register row keeps status exactly `instructions_published_awaiting_worker`, and the assignment file content is new, so
+the bridge has a new event to raise on first connect. The superseded work order is preserved verbatim at
+`docs/orchestration/assignments/gold-declared-band-measurement-026-archive.md`; the durable review is
+`docs/orchestration/reviews/20261004-strategy-coordinator-to-choose-the-factor-fix-lane-060.md`.
+
+Paste-ready text for that window, if the user prefers to paste rather than let the bridge fire (open
+`tools/...` for the Gold lane, run *Mailbox: Connect This Cline Worker* once, then start a task with this text):
+
+```text
+You are the Gold research worker. Read D:/trading-agent-dashboard-codex/docs/orchestration/assignments/gold-research.md
+in full and follow it; it is assignment gold-dark-factor-repair-027 and it supersedes gold-declared-band-measurement-026.
+Your writable checkout is D:/trading-agent-dashboard-codex/.local/worktrees/gold-research on branch
+workers/gold-research-policy-20260920. First duty, unchanged and overdue: file the ONE carried 022 item A anchor
+observation envelope for the 2026-09-28T14:00:00Z|gold|entry identity as a single ready_for_review envelope from your
+own ignored tmp/, or file blocked saying plainly what stopped it. Then the bounded job: make the historical Gold path
+able to speak for the four dark factors - emit the fed_bias the live snapshots already carry instead of null,
+reconcile the builder's growth vocabulary with the engine's matcher, build F8 inflation_signal and F9
+risk_headline_context as declared offline producers over data already on disk, and add one guard that fails when the
+builder's vocabulary and the engine's matcher disagree - then re-run the archive and report which factors now carry
+information. Exploratory only: no accuracy, edge, timing or qualification claim, and no live Layer 1, collector, n8n,
+published artifact or dashboard change. Out of scope and not to be re-asked: the canonical weight vector, F2's and
+F5's live-facing thresholds, F6's re-weighting, the availability-lag rebuild, the event-day walk-forward and the 026
+movement-by-state measurement job, which is re-pointed to run after this repair. Do not re-run gold-combination-run-024
+revisions 1-3 and do not disturb GoldQualificationWindowTick018. Read no outcome, holdout or prospective observation;
+the sealed window stays sealed until 2027-03-25T15:00:00Z. Report activity with monitor-state.js and submit through
+coordination.js, then stop and wait for a recorded reply.
+```
+
+No lane's authority widens: the repair is downstream research code and local data already on disk, no live Layer 1
+input, collector, n8n flow, published artifact, dashboard surface or warehouse row is in scope, and no weight,
+threshold or sign is changed anywhere.
