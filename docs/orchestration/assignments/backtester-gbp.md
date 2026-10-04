@@ -15,9 +15,8 @@ time sections". Every session-open and end-of-day boundary in this lane's work i
 New York time (`America/New_York`, US Eastern) - not in UTC and not in a data provider's own clock - and
 any artefact this lane writes states that basis at the point where it states a session boundary. This is
 the same basis the Gold session-horizon policy already records - "US Eastern Time drives the session; UTC
-hours shift by one when US daylight saving changes", `backtester/registries/gold_session_horizon_policy.v1.json`
-
-- so a Gold session timing is not a precedent for any other clock, and it does not need to be re-derived.
+hours shift by one when US daylight saving changes", `backtester/registries/gold_session_horizon_policy.v1.json` -
+so a Gold session timing is not a precedent for any other clock, and it does not need to be re-derived.
 
 This ruling settles the session clock only. Any session-clock question this lane recorded earlier is
 answered by it and is not re-asked. It does not authorize stage B, and it does not settle the daily-series
