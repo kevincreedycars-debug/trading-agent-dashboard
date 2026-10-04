@@ -3673,3 +3673,89 @@ outcome, holdout or prospective observation was read; the sealed window (reading
 **What the page already says about proof, and it matters to his reading of the direction column.** The page's own first paragraph calls the directions the system's own written expectations and not results; section "What the archive has shown about these directions" prints that all 25 daily scored states returned `no information`, that 24 of 25 weekly ones did with one `unstable across years`, and that exactly one daily row reached the level the system calls interesting against roughly two and a half expected by chance among the rows tested - the noise floor. One caveat also travels with the dollar rows: the live series is a broad trade-weighted index, not the classic ICE dollar index, so the page says "how strong the dollar is" rather than naming a contract. My answer to him this turn repeated that caveat in one line, because a reader told "which way it pushes gold" will otherwise take the column as a proven result.
 
 **What this turn changed: this entry, one commit on `workers/strategy-advisory-20260920` and its push, and ignored `tmp/` scratch** (`tmp/extract-10factor.js`, `tmp/dump-page-text.js`, `tmp/anchors.js`, `tmp/reg2.txt`, `tmp/page-text.txt`). All reads this turn were read-only: the live page over HTTPS; `logic/agent_gold_direction.md`; the canonical registry `gold_variable_horizon_context.v1.json`; this lane's own `FACTOR_INFLUENCE_TABLE_20261003.md` and `FACTOR_TABLE_SPEC_20261003.md`. No page, stylesheet, script, builder, guard, generator, data artifact, number, register entry, assignment, lock, controller or bridge file was touched; nothing was published, refreshed, triggered, copied, merged or deployed; no market data was read or recalculated and no outcome, holdout or prospective observation was read; the sealed window (reading prohibited until `2027-03-25T15:00:00Z`) was untouched. No submission is filed: nothing here needs a review decision, `check` is clean, and the lane's filings `-049` to `-052` all read `accepted`. The measurement table on the 1/2/3/5-session ladder remains specified and unbuilt, blocked on `gold-declared-band-measurement-026`.
+
+## 2026-10-04 — -055: is the weighting balanced? Measured on the archive we now hold: 18 of the 100 weight points cannot be tested, every testable one sits inside the noise band, and the ordering evidence runs against the weights
+
+**His question, verbatim, and where it came from.** Reading the live page's own sentence - "The directions above are the
+agent's declared expectations, written by the system, not findings from the data" - he asked: *"from this bit how do we
+find if the weighting is balanced correctly from the actual data we now have?"* The subject is the weight column,
+22/18/14/8/8/10/6/6/6/2, not the directions. Answer filed this turn as `20261004-strategy-weighting-balanced-evidence-055`,
+`ready_for_review`, with its evidence in `docs/strategy/WEIGHT_BALANCE_CHECK_20261004.md`.
+
+**Three questions hide inside the word "balanced", and only one of them is answerable today.** One: does each factor
+move gold the declared way, and by how much - measurable now, right in sign, unreadable in size. Two: does the size of
+each weight match the size of its realised effect - this is the real question, and the data, such as it is, orders the
+factors the other way. Three: would different weights make the calls better - the decisive test, not built at today's
+weights. One stale run exists for it and its baseline does not reconcile with anything else in the record.
+
+**Re-run this turn, read-only, on the accepted bytes.** `backtester/scripts/report_gold_factor_direction_check.js`,
+unmodified, against
+`.local/worktrees/gold-research/backtester/tmp/ivr-coverage-019-20260925-r2/individual-variable-report.json`
+(95,842,994 bytes, sha256 `ffcd9cbc3b16fc08449b7fa305188f9ad77358422a4fc1ea0f222e9d01e5c6b6`), with `--out` and
+`--markdown` pointed at this lane's own `tmp/` (`dircheck-20261004.json` 159,014 bytes, `dircheck-20261004.md` 12,258
+bytes, generated `2026-10-04T13:32:09.755Z`). It reproduces the September cut exactly: 7 factors scored, 25 rows, 25 of
+25 `no_information` on the session, 24 of 25 on the week with F9 `unstable_across_years`, and exactly 1 row in 25 at the
+60% the system calls interesting against roughly 2.5 expected by chance. Baselines: session 55.81% up (n 964), week
+58.23% up (n 960); minimum n 100, minimum year n 20, interest band 5pp.
+
+**The weight-by-weight picture, which is the answer to his question.** F1 weight 22: +1.17pp session, -0.80pp week. F2
+weight 18: +0.35 / -0.16. F3 weight 14: +1.16 / +1.76. F4 weight 8: +2.57 / +0.36. F5 weight 8: +0.60 / -0.51. F8 weight
+6: -1.61 / -2.01, the one factor that leans the wrong way. F9 weight 6: +4.70 / +5.46, the largest reading in the table
+and unstable by year. F6 weight 10, F7 weight 6 and F10 weight 2 cannot be scored at all as the report cuts the
+variables - a VIX change has no declared direction because the document's rule is an absolute band, the surprise sign
+conventions are not established per event family, and the report's level split is not the document's regime label. So
+**82 of 100 weight points are testable and 18 are not**, and more than half the model's weight (F1, F2, F3 = 54 points)
+sits on the three flattest measured edges in the table. Rank comparison over the seven scoreable factors:
+Spearman(weight, |session edge|) = -0.64, Spearman(weight, |week edge|) = -0.54. At seven factors that is not
+significant - the critical value near p=0.05 is about 0.71 - so the honest reading is "the data give the declared
+ordering no support", not "the declared ordering is disproved". Noise scale, so the numbers are read at the right size:
+with n near 1,900 the standard error of a hit rate is about 1.1pp, so the 5pp band is roughly four standard errors, and
+a weight spread of 22 down to 2 implies a far wider spread of true effects than anything measured here.
+
+**Overlap is a design fault, not a measurement gap, and more data will not fix it.** The registry's own derivation line
+says twenty of the 28 readings are levels or transformations of five macro and price series. F1 and F4 are both yield
+(30 of 100 points), F2 and F5 are the dollar and gold's own price (26 points), every scored state shares anchors with the
+others, and the two halves of a median split are complements rather than independent trials. A scheme that counts them
+as separate voices is not adding information when it adds weight.
+
+**The two tools already built for exactly this question, and the defect each carries.** `data/factor-edge-lab.json`
+(2026-07-06, gold, 24H, 2024-01-02 to 2026-04-30, 608 observations) does carry weight against realised evidence: per
+factor its weight, the realised bullish and bearish hit rates, a combined reliability, a mismatch figure and a review
+label. But it is built on the **pre-revision** weights - F1 26, F2 22, F3 12, F4 10, F5 10, F6 8, F7 8, F8 2, F9 1, F10
+1, differing from today's set on five of ten factors and by a factor of three or more on F8, F9 and F10 - and its own
+summary lists no reliable single factor for gold at all, names F7 as the biggest weight mismatch on 7 directional
+observations only, and names F6 as the weakest. `data/phase-2-shadow-backtest.json` (2026-07-07, same window) is the
+actual re-weighting experiment: gold original 18.4% ex-flat on 563 directional calls (76 wins, 338 losses) against shadow
+58.0% on 395 calls (170 wins, 123 losses), a headline +39.6pp, with F6 moved 8 to 6.56, F1 26 to 23.4, F2 22 to 19.8, F4
+10 to 9 and F5 10 to 9. **The defect must travel with those numbers**: an original side losing four calls in five cannot
+be squared with the factor-level cut, where the declared directions are right 50.8% to 60.5% of the time, so either that
+run's original side encodes a different rule or its scoring of the original side is wrong. Until re-derived, the +39.6pp
+is a number in a file, not the value of re-weighting.
+
+**What would actually settle it, and what it needs.** A whole-call run for gold with a settable weight vector compared
+three ways - declared weights, equal weights, and a weighting fitted on one part of the archive and scored on another -
+scored on data not used to choose the weights. If the declared weights cannot beat equal weights out of sample, the
+honest publication is equal weights plus the measured per-factor table and the weighting becomes decoration. It needs a
+re-point of the existing shadow machinery at the current document and the 019 report, held-back data (the sealed window,
+reading prohibited until `2027-03-25T15:00:00Z`, is the only clean sample in existence), and the movement lane
+`gold-declared-band-measurement-026`, paused since 2026-09-25, which tests how far gold travels while a state is on
+rather than which way it ends.
+
+**What I told him, and what I did not.** Three short bullets: the directions column is a statement of intent and the
+archive neither confirms nor refutes the weighting; more than half the weight sits on the flat readings while the one
+reading with any lean is a light one that flips by year; and the practical test is whether the stated weights beat equal
+weights on held-back data, which needs new data rather than more arithmetic - while the weight-check tab on the
+dashboard was computed on the older weights and does not describe the page he is reading. Nothing here proposes changing
+any weight now: with every factor inside the noise band, a re-weighting today would be fitted to noise.
+
+**What this turn changed.** Writes are `docs/strategy/WEIGHT_BALANCE_CHECK_20261004.md`, this entry, the submission
+envelope, one commit on `workers/strategy-advisory-20260920` with its push, and ignored `tmp/` scratch
+(`dircheck-20261004.json`, `dircheck-20261004.md`, `probe-weight-balance.js`, `probe-weight-balance2.js`,
+`probe-weight-vs-evidence.js`, `probe-dircheck.js`, `probe-july-lab.js`, and their text outputs). Reads were read-only:
+the accepted 019 report by hash; the scorer and its expectations registry; `data/factor-edge-lab.json`;
+`data/phase-2-shadow-backtest.json`; `logic/agent_gold_direction.md` section 4; `coordination.js check` and the monitor
+snapshot. No page, stylesheet, script, template, builder, guard, generator, data artifact, number, register entry,
+assignment, lock, controller or bridge file was touched; the scorer writes only to the two paths it was given. No new
+market measurement was taken - the re-run re-cuts consumed intervals inside an accepted report as the 2026-09-27 cut did;
+no outcome, holdout or prospective observation was read; the sealed window was untouched. No prediction, accuracy,
+timing, profitability or trading edge is claimed.
