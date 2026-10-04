@@ -279,6 +279,9 @@ white palette a reader can check on screen before printing, because a dark sheet
   switcher, and a headless reader on the live Pages URL sees the bar and the rail on screen with the map clear of
   the rail, the paper view white behind dark ink, and in print the bar, the rail and the switcher all
   `display:none` with `main` at the sheet's own left edge and no script errors.
+- The reader then took the two open questions, and both stand as shipped: the bar and the rail keep their dark
+  chrome in the paper view, because only the map body is printed, and the rail's fixed 232px with the chain
+  stacking in a 1440px window is accepted. The note records both as decisions rather than as gaps.
 
 ### Important Note
 

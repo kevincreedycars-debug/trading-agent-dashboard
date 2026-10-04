@@ -85,11 +85,22 @@ and is measured in millimetres.
   the page white behind dark ink, and under `print` media the bar, the rail and the switcher all read
   `display:none` with `main` at the sheet's own left edge.
 
+## Decisions, as asked
+
+Both were put to the reader after the live check, and both stand as shipped:
+
+- The bar and the rail keep their dark chrome in the paper view. Only the map body is printed, and the print
+  block takes the whole block off the sheet, so a white bar on screen would buy the reader nothing while making
+  the block a two-palette shared file that eleven pages would have to agree on.
+- The rail's fixed 232px, and the chain stacking beneath it in a 1440px window, are accepted as they are: the
+  run comes back onto one line as soon as the window can pay for seven cards beside the rail, and the printed
+  sheet never sees the rail at all.
+
 ## What this does not do
 
-- The navigation keeps its own dark chrome in the paper view: the switcher changes the sheet's palette, not the
-  bar's and the rail's, and the block is one shared file that eleven pages wear. Either way a reader printing
-  gets the map alone.
+- The navigation keeps its own dark chrome in the paper view, by decision above: the switcher changes the sheet's
+  palette, not the bar's and the rail's, and the block is one shared file that eleven pages wear. Either way a
+  reader printing gets the map alone.
 - No other page's bytes move: the block's render is identical to what the eleven pages already carried, so
   `--write` touched only `layer1-call-flow.html`.
 - Nothing about the other seventeen rail entries or the other five bar entries moves.
