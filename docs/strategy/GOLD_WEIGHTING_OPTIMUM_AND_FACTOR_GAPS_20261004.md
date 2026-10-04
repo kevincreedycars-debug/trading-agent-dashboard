@@ -71,14 +71,19 @@ points sit on factors that never fired.
 | F7 Economic surprise | 6 | 12 | 71.43% | 35.9-91.8 | +0.548 | +14.29pp | - |
 | F3, F8, F9, F10 | 28 | 0 | - | - | - | - | - |
 
+"Days it spoke" counts every day the factor was not neutral; each hit rate is measured over the
+subset of those days whose outcome was also outside the 0.3 percent band (F1 236, F2 221, F4 240,
+F5 270, F6 204, F7 7 days), which is also the denominator behind each 95 percent interval.
+
 Three readings of that table matter:
 
 1. **The dollar factor is the only factor with a large, year-stable number.** 67.7, 74.3 and 85.7
    percent in 2024, 2025 and 2026. Section 6 explains why that number should not be believed.
-2. **The risk/VIX factor is reliably wrong, not noisy.** 39.71 percent on 278 days, stable across
-   years (39.1 / 42.4 / 30.0). Its declared rule is "VIX above 25 is bullish gold". A factor that
-   is wrong with that consistency is a candidate sign error or a stale proxy, and no weight can
-   repair it - setting it near zero is the only defensible treatment until it is re-derived.
+2. **The risk/VIX factor is reliably wrong, not noisy.** 39.71 percent on the 204 of its days with
+   a non-flat outcome, stable across years (39.1 / 42.4 / 30.0). Its declared rule is "VIX above
+   25 is bullish gold". A factor that is wrong with that consistency is a candidate sign error or a
+   stale proxy, and no weight can repair it - setting it near zero is the only defensible treatment
+   until it is re-derived.
 3. **Gold's own price carries nothing here** (50.74 percent), and the real-yield factor - the
    highest-weight factor in the design - does worse than the drift (-6.36pp), degrading year by
    year (59.1 to 48.6 to 41.7 percent).
