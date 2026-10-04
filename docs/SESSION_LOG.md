@@ -274,6 +274,11 @@ white palette a reader can check on screen before printing, because a dark sheet
   `docs/CALL_MAP_LAYER2_20261004.md` that its "no bar and no rail of its own" line is superseded.
 - Re-cut the change on `6f4e91b` after another lane published two live-trading snapshots (`data/live-trading.json`
   only) mid-branch; no file here overlapped them and the rebase was clean.
+- Pushed `e571106` onto `origin/main` as a fast-forward over `6f4e91b` and read both delivery paths back:
+  `raw.githubusercontent.com` and GitHub Pages both serve 38,446 bytes of the map carrying the block and the
+  switcher, and a headless reader on the live Pages URL sees the bar and the rail on screen with the map clear of
+  the rail, the paper view white behind dark ink, and in print the bar, the rail and the switcher all
+  `display:none` with `main` at the sheet's own left edge and no script errors.
 
 ### Important Note
 

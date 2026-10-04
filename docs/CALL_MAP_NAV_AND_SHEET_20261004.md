@@ -69,8 +69,21 @@ and is measured in millimetres.
 - `node --test tests/backtesting_development_release.browser.test.js tests/live_trading_dashboard.browser.test.js
   tests/refresh_progress.browser.test.js tests/dashboard_writer_selection.test.js tests/l2l_levels.test.js
   tests/validate_architecture_map.test.js backtester/tests/gold_view_tidy.browser.test.js` - 101/101.
-- The measured figures come from the lane's ignored scratch harness, `tmp/sheet-probe.cjs` and
-  `tmp/print-probe2.cjs` in this checkout.
+- The measured figures come from the lane's ignored scratch harness, `tmp/sheet-probe.cjs`, `tmp/print-probe2.cjs`
+  and `tmp/live-check.cjs` in this checkout.
+
+## Verified live, after the push
+
+`e571106` was pushed onto `origin/main` as a fast-forward over `6f4e91b`, and both delivery paths were read back:
+
+- `raw.githubusercontent.com/.../main/layer1-call-flow.html` - 38,446 bytes, carrying the `SHARED-NAV` block and
+  `#sheetToggle` and the print rule that takes the block off the sheet.
+- `https://kevincreedycars-debug.github.io/trading-agent-dashboard/layer1-call-flow.html` - 38,446 bytes, the
+  same file, after the Pages build finished at 15:22:41Z.
+- A headless Chromium opening the Pages URL sees the bar and the rail on screen (`main` at 232px), the switcher
+  labelled `Paper sheet · print preview`, seven chain steps and five panels, no script errors; clicking it turns
+  the page white behind dark ink, and under `print` media the bar, the rail and the switcher all read
+  `display:none` with `main` at the sheet's own left edge.
 
 ## What this does not do
 
