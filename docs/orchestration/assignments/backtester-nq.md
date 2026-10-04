@@ -8,6 +8,22 @@ and opened now - "we first just need to build the 7 VSCs and open them for each 
 stated that the seven backtesters themselves are built later, "once we have completed and understood all the
 lessons from the gold backtesting loop".
 
+## Session timing (user ruling, 2026-10-04)
+
+Decided by the user on 2026-10-04, in these words: "we use the NY timings for all open and end of day
+time sections". Every session-open and end-of-day boundary in this lane's work is therefore declared in
+New York time (`America/New_York`, US Eastern) - not in UTC and not in a data provider's own clock - and
+any artefact this lane writes states that basis at the point where it states a session boundary. This is
+the same basis the Gold session-horizon policy already records - "US Eastern Time drives the session; UTC
+hours shift by one when US daylight saving changes", `backtester/registries/gold_session_horizon_policy.v1.json`
+
+- so a Gold session timing is not a precedent for any other clock, and it does not need to be re-derived.
+
+This ruling settles the session clock only. Any session-clock question this lane recorded earlier is
+answered by it and is not re-asked. It does not authorize stage B, and it does not settle the daily-series
+basis: a close-only daily series still cannot reconstruct an exact 24-hour open-to-close window without a
+second intraday source or a re-declared close-to-close basis, which stays an open question for the user.
+
 ## Purpose and lane
 
 This window exists so the NQ lane is registered, open and able to read the project. It is a **readiness and
