@@ -75,8 +75,13 @@ n8n workflow, a published artifact or a dashboard file.
 
 ## 4. Explicitly out of scope - do not do these, and do not ask again for them
 
-- **Which of the two 100-point weight vectors is the project's own.** Undeclared, and the user's or the operator's.
-  Do not choose one, do not align the two, do not reweight anything.
+- **Which of the two 100-point weight vectors is the project's own.** Declared on 2026-10-04 by the interactive
+  coordinator under the user's own delegation (*"No idea you pick which ever you think is right"*): the project's own
+  vector is the logic document's `22/18/14/8/8/10/6/6/6/2` (`logic/agent_gold_direction.md` section 4, lines 103-116),
+  and the `26/22/12/10/10/8/8/2/1/1` in `backtester/replay/gold/gold_replay_core.js` is the `"24h"` row of the live
+  export's own `TIMEFRAME_WEIGHTS` table, an implementation and not a rival declaration. That settles the referent for
+  you and changes nothing you do: do not choose or align a vector, do not reweight anything, and change no weight,
+  signed rule or threshold.
 - **F2's threshold and F5's threshold.** The implemented `0.15` against the document's declared `0.30`, and the
   invented plus-or-minus `0.3`, live in the replay engine the live path mirrors; repairing them is a live-engine
   reconciliation and is not yours. Record what you find, change nothing.
