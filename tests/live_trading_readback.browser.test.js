@@ -115,6 +115,54 @@ async function startServer(feed) {
   };
 }
 
+// The newest bars of the committed feed with a round trip hung on two of them, so the markers on the canvas
+// can be asserted by where the bars actually are. The trade itself is synthetic and says so: what is under
+// test is where a trade is drawn - the bar its own time falls in and the price the terminal reported - not
+// whether a real one happened, which the read-back test above covers against the trade this lane placed.
+function feedWithMarkedBars() {
+  const feed = JSON.parse(fs.readFileSync(feedPath, "utf8"));
+  feed.generated_at_utc = new Date().toISOString();
+  const instrument = feed.instruments.find(entry => entry.symbol === "BTCUSD");
+  const bars = instrument.m5.bars;
+  assert.ok(Array.isArray(bars) && bars.length >= 6, "the committed feed must carry BTCUSD M5 bars");
+  const entryBar = bars[bars.length - 4];
+  const exitBar = bars[bars.length - 2];
+  // 30 and 90 seconds into their own bars, so each time belongs to exactly one drawn bar and is not on a
+  // boundary where "the bar it happened in" would be a matter of opinion.
+  const entryTime = new Date(Date.parse(entryBar.time_utc) + 30000).toISOString();
+  const exitTime = new Date(Date.parse(exitBar.time_utc) + 90000).toISOString();
+  // Prices well inside the bars' own range but far apart on the scale, so a marker drawn at the wrong price
+  // cannot pass as a marker drawn at the right one.
+  const lows = Math.min(...bars.map(bar => Number(bar.low)));
+  const highs = Math.max(...bars.map(bar => Number(bar.high)));
+  const entryPrice = Number((lows + (highs - lows) * 0.1).toFixed(2));
+  const exitPrice = Number((highs - (highs - lows) * 0.1).toFixed(2));
+  feed.closed_trades = [
+    {
+      position_id: 297645550,
+      symbol: "BTCUSD",
+      dashboard_asset: "BTC",
+      side: "buy",
+      volume: 0.01,
+      price_open: entryPrice,
+      price_close: exitPrice,
+      profit: 0.19,
+      commission: -0.56,
+      swap: 0,
+      net_profit: -0.37,
+      magic: 20261004,
+      comment: "live-trading-marker-fixture",
+      deal_count: 2,
+      entry_deal: 278466153,
+      exit_deal: 278466158,
+      opened: { time_server: entryBar.time_server, time_utc: entryTime },
+      closed: { time_server: exitBar.time_server, time_utc: exitTime },
+      duration_seconds: Math.round((Date.parse(exitTime) - Date.parse(entryTime)) / 1000)
+    }
+  ];
+  return { feed, entryTime, exitTime, entryPrice, exitPrice };
+}
+
 test("the Live Trading section renders the position and the closed trade it read back", async () => {
   const server = await startServer(feedWithRoundTrip());
   const browser = await chromium.launch({ headless: true });
@@ -171,6 +219,90 @@ test("the Live Trading section renders the position and the closed trade it read
     const empty = await page.innerText("#liveTradingPanel .live-trading-table-panel");
     assert.match(empty, /None open on this account/);
     assert.match(empty, /Nothing is open, so there is no position to read back/);
+
+    // And a snapshot that carries no position block at all still says the one fact it has: the account it
+    // read reports nothing open, so nothing has been open since the last publish.
+    await page.evaluate(async () => {
+      const feed = await (await fetch("./data/live-trading.json", { cache: "no-store" })).json();
+      feed.generated_at_utc = new Date().toISOString();
+      feed.account.positions_open = 0;
+      delete feed.positions;
+      renderLiveTrading(feed);
+    });
+    const noBlock = await page.innerText("#liveTradingPanel .live-trading-table-panel");
+    assert.match(noBlock, /carries no position block/);
+    assert.match(noBlock, /nothing has been open since the last publish/);
+  } finally {
+    await browser.close();
+    await server.close();
+  }
+});
+
+// The canvas marks are the read-back drawn where the levels are: E for the entry of an executed trade and X
+// for its exit, each on the bar its own time falls in and at the price the terminal reported.
+test("the chart marks an executed round trip with an E and an X", async () => {
+  const fixture = feedWithMarkedBars();
+  const server = await startServer(fixture.feed);
+  const browser = await chromium.launch({ headless: true });
+  try {
+    const page = await browser.newPage();
+    await page.goto(`${server.origin}/index.html`, { waitUntil: "domcontentloaded" });
+    await page.click('.tab-button[data-tab="live-trading"]');
+    await page.waitForSelector('[data-live-chart-symbol="BTCUSD"]', { timeout: 20000 });
+    await page.click('[data-live-chart-symbol="BTCUSD"]');
+    await page.waitForFunction(
+      () => document.querySelectorAll(".live-trading-chart-trade").length === 2,
+      null,
+      { timeout: 20000 }
+    );
+
+    // The first point of each triangle is its apex, which is the price point moved by the marker's own size.
+    // Both triangles are the same size, and the price point is the apex moved back towards the base.
+    const MARKER_SIZE = 11; // script.js: `const size = 11;` in liveTradingChartTrades, pinned by tests/live_trading_feed.test.js
+    const marks = await page.$$eval(".live-trading-chart-trade", nodes => nodes.map(node => {
+      const points = (node.querySelector("polygon")?.getAttribute("points") || "").trim().split(/\s+/);
+      const [x, y] = (points[0] || "").split(",").map(Number);
+      return {
+        classes: node.getAttribute("class") || "",
+        label: node.querySelector("text")?.textContent || "",
+        title: node.querySelector("title")?.textContent || "",
+        x,
+        y
+      };
+    }));
+    const entry = marks.find(mark => mark.classes.includes("entry"));
+    const exit = marks.find(mark => mark.classes.includes("exit"));
+    assert.ok(entry && exit, "one entry marker and one exit marker");
+    assert.equal(entry.label, "E");
+    assert.equal(exit.label, "X");
+    // A buy points up and the sell that closed it points down, the way a terminal draws the pair.
+    assert.match(entry.classes, /\bbuy\b/);
+    assert.match(exit.classes, /\bsell\b/);
+
+    // Each marker sits on the bar its own trade time falls in: the entry is four bars back, the exit two.
+    assert.ok(entry.x < exit.x, "the entry is drawn left of the exit");
+    // And at the price the terminal reported, on a canvas where a higher price is a smaller y.
+    const entryPointY = entry.y + MARKER_SIZE;
+    const exitPointY = exit.y - MARKER_SIZE;
+    assert.equal(Math.sign(entryPointY - exitPointY), Math.sign(fixture.exitPrice - fixture.entryPrice));
+    assert.match(entry.title, new RegExp(`^Entry BUY ${fixture.entryPrice.toFixed(2)} BTCUSD at ${fixture.entryTime}$`));
+    assert.match(exit.title, new RegExp(`^Exit SELL ${fixture.exitPrice.toFixed(2)} BTCUSD at ${fixture.exitTime}$`));
+
+    const caption = await page.innerText("#liveTradingPanel .live-trading-chart-caption");
+    assert.match(caption, /1 executed trade on this chart \(E entry, X exit\)/);
+    const panels = await page.$$("#liveTradingPanel .live-trading-table-panel");
+    const closedTrades = await panels[1].innerText();
+    assert.match(closedTrades, /an entry is a triangle lettered E and its exit a triangle lettered X/);
+
+    // A symbol with nothing read back carries no markers, and the caption claims none.
+    await page.click('[data-live-chart-symbol="EURUSD"]');
+    await page.waitForFunction(
+      () => document.querySelectorAll(".live-trading-chart-trade").length === 0,
+      null,
+      { timeout: 20000 }
+    );
+    const eurCaption = await page.innerText("#liveTradingPanel .live-trading-chart-caption");
+    assert.equal(/executed trade/.test(eurCaption), false);
   } finally {
     await browser.close();
     await server.close();

@@ -14717,12 +14717,83 @@ async function clearLiveTradingLevels() {
 // price tagged on the scale and a crosshair that follows the pointer. Every mark on the canvas is a
 // reading of the published snapshot - the candles are the producer's OHLC bars, the level lines are
 // hand-marked prices - and none of it is an order, a signal or a forecast. A snapshot written before
-// the producer published OHLC bars falls back to the close line that `close_series` actually holds.
+// The executed trades the snapshot read back, placed on the bars they happened in: the entry as a triangle
+// lettered E and the exit as a triangle lettered X, each one at the price the terminal reported and on the bar
+// whose window holds its time. The triangle points the way that side was taken - up for a buy, down for a sell -
+// so a long and the exit that closed it read as the pair they are. It is the read-back the table below states in
+// numbers, drawn on the same scale as the levels: it places nothing, signals nothing, and a trade whose time
+// falls outside the bars on screen is counted by the caption rather than clamped onto an edge that is not its.
+function liveTradingChartTrades(instrument, points, geometry, digits) {
+  const { xAt, yAt, plotY0, plotY1 } = geometry;
+  const trades = Array.isArray(liveTradingData?.closed_trades)
+    ? liveTradingData.closed_trades.filter(trade => trade?.symbol === instrument?.symbol)
+    : [];
+  const times = points.map(point => Date.parse(point.time_utc));
+  if (!trades.length || !points.length) return { html: "", count: 0, offWindow: 0 };
+
+  // The bar a trade belongs to is the last one that opened at or before its own time. A time before the first
+  // bar on screen belongs to no drawn bar, and is reported rather than moved onto one.
+  const barIndexFor = stamp => {
+    const ms = Date.parse(stamp);
+    if (!Number.isFinite(ms)) return null;
+    for (let index = times.length - 1; index >= 0; index -= 1) {
+      if (Number.isFinite(times[index]) && times[index] <= ms) return index;
+    }
+    return -1;
+  };
+
+  const size = 11;
+  const half = size * 0.86;
+  const withinPlot = value => Math.min(plotY1 - size, Math.max(plotY0 + size, yAt(value)));
+  let count = 0;
+  let offWindow = 0;
+
+  const marker = (trade, kind) => {
+    const isEntry = kind === "entry";
+    const stamp = isEntry ? trade?.opened?.time_utc : trade?.closed?.time_utc;
+    const price = Number(isEntry ? trade?.price_open : trade?.price_close);
+    const index = barIndexFor(stamp);
+    if (index === null || !Number.isFinite(price)) return "";
+    if (index < 0) {
+      if (isEntry) offWindow += 1;
+      return "";
+    }
+    if (isEntry) count += 1;
+    const side = isEntry
+      ? (trade?.side === "sell" ? "sell" : "buy")
+      : (trade?.side === "sell" ? "buy" : "sell");
+    const up = side === "buy";
+    const x = xAt(index);
+    const y = withinPlot(price);
+    const shape = up
+      ? `${x.toFixed(2)},${(y - size).toFixed(2)} ${(x - half).toFixed(2)},${(y + size * 0.6).toFixed(2)} ${(x + half).toFixed(2)},${(y + size * 0.6).toFixed(2)}`
+      : `${x.toFixed(2)},${(y + size).toFixed(2)} ${(x - half).toFixed(2)},${(y - size * 0.6).toFixed(2)} ${(x + half).toFixed(2)},${(y - size * 0.6).toFixed(2)}`;
+    const labelY = up ? y + size * 0.42 : y - size * 0.28;
+    const title = `${isEntry ? "Entry" : "Exit"} ${side.toUpperCase()} ${liveTradingPrice(price, digits)} ${trade?.symbol || ""} at ${stamp || ""}`;
+    return `<g class="live-trading-chart-trade ${kind} ${side}" data-live-trade="${kind}">`
+      + `<title>${escapeHtml(title)}</title>`
+      + `<polygon class="live-trading-chart-trade-shape" points="${shape}"></polygon>`
+      + `<text x="${x.toFixed(2)}" y="${labelY.toFixed(2)}" text-anchor="middle" class="live-trading-chart-trade-label">${isEntry ? "E" : "X"}</text>`
+      + "</g>";
+  };
+
+  const html = trades.map(trade => `${marker(trade, "entry")}${marker(trade, "exit")}`).join("");
+  return { html, count, offWindow };
+}
+
+// The mirrored MT5 chart, drawn the way a charting terminal draws one: a price scale down the right
+// edge, a time scale along the bottom, the volume histogram under the price pane, the newest bar's
+// price tagged on the scale and a crosshair that follows the pointer. Every mark on the canvas is a
+// reading of the published snapshot - the candles are the producer's OHLC bars, the level lines are
+// hand-marked prices, the E and X triangles are trades the terminal already executed - and none of it
+// is an order, a signal or a forecast. A snapshot written before the producer published OHLC bars
+// falls back to the close line that `close_series` actually holds.
 function liveTradingChartPlot(instrument, mode, timeframeKey) {
   const frame = liveTradingTimeframeMeta(timeframeKey);
   // A render that ends early - a snapshot with no bars for this timeframe - must not leave the previous
   // instrument's line count on the caption, so the last view is dropped before this one is drawn.
   if (liveTradingChartScale) liveTradingChartScale.levelView = null;
+  if (liveTradingChartScale) liveTradingChartScale.tradeView = null;
   const digits = Number.isInteger(Number(instrument?.digits)) ? Number(instrument.digits) : 2;
   const block = liveTradingTimeframeBlock(instrument, frame.key) || {};
   const bars = (Array.isArray(block.bars) ? block.bars : []).filter(bar =>
@@ -14910,6 +14981,12 @@ function liveTradingChartPlot(instrument, mode, timeframeKey) {
       + `<rect x="${plotX1 + 2}" y="${(ly - 9).toFixed(2)}" width="${axisWidth - 4}" height="18" rx="3" class="live-trading-chart-level-box"></rect>`
       + `<text x="${(plotX1 + axisWidth / 2).toFixed(2)}" y="${(ly + 4).toFixed(2)}" text-anchor="middle" class="live-trading-chart-level-box-text">${escapeHtml(liveTradingPrice(price, digits))}</text>`;
   }).join("");
+  // The executed trades the snapshot read back ride the same bars and the same price scale as the candles and
+  // the levels, so an entry reads against the ladder line it happened at. The count is kept on the scale the
+  // caption reads, the same way the level view is.
+  const tradeView = liveTradingChartTrades(instrument, points, { xAt, yAt, plotY0, plotY1 }, digits);
+  liveTradingChartScale.tradeView = { count: tradeView.count, offWindow: tradeView.offWindow };
+  const tradeMarks = tradeView.html;
   const crosshair = `<g class="live-trading-chart-crosshair" style="display:none">
         <line class="live-trading-chart-crosshair-y" x1="0" y1="${plotY0}" x2="0" y2="${timeScaleY}"></line>
         <line class="live-trading-chart-crosshair-x" x1="${plotX0}" y1="0" x2="${plotX1}" y2="0"></line>
@@ -14936,6 +15013,7 @@ function liveTradingChartPlot(instrument, mode, timeframeKey) {
       ${marks}
       ${lastLine}
       ${levelLines}
+      ${tradeMarks}
       ${levelEdgeTabs}
       ${priceLabels}
       ${timeLabels}
@@ -15187,6 +15265,12 @@ function liveTradingChartShell(data) {
   const ladderBounds = ladderStats
     ? ` \u00b7 ladder ${liveTradingLevelPriceText(ladderStats.outerLow, digits)} to ${liveTradingLevelPriceText(ladderStats.outerHigh, digits)}`
     : "";
+  // How many executed trades the canvas just placed, in words as well as in shapes, and how many closed
+  // outside the bars on screen - a marker that is not there is named rather than silently dropped.
+  const tradeMarkers = liveTradingChartScale?.tradeView || null;
+  const tradeViewNote = tradeMarkers && tradeMarkers.count
+    ? `${tradeMarkers.count} executed trade${tradeMarkers.count === 1 ? "" : "s"} on this chart (E entry, X exit${tradeMarkers.offWindow ? `, ${tradeMarkers.offWindow} outside this window` : ""})`
+    : "";
   const ladderNotice = ladderAlert?.active
     ? `<p class="live-trading-chart-ladder-alert ${escapeHtml(ladderAlert.state)}" role="status" aria-live="polite">${escapeHtml(liveTradingLadderAlertNotice(ladderAlert, selected, digits))}</p>`
     : "";
@@ -15211,6 +15295,7 @@ function liveTradingChartShell(data) {
         <span>Newest ${escapeHtml(frame.label)} bar ${escapeHtml(freshness.label)}${freshness.stale ? " (stale)" : ""}</span>
         <span>${escapeHtml(barCount)}</span>
         <span>${seedLevels.length} seed level${seedLevels.length === 1 ? "" : "s"} \u00b7 ${derivedLevels} derived${escapeHtml(levelViewNote)}${escapeHtml(ladderBounds)}</span>
+        ${tradeViewNote ? `<span>${escapeHtml(tradeViewNote)}</span>` : ""}
       </p>
     </div>
   `;
@@ -15600,14 +15685,20 @@ function liveTradingPositions(data) {
   `;
 
   if (!positions.length) {
+    // "Nothing open" is one reading of two different facts, and the panel says which one it is: an account
+    // that held nothing on this run, or a snapshot that carries no position block at all - in which case the
+    // account's own open count is the evidence, and it is the count the run that published this snapshot read.
+    const accountOpen = Number(account?.positions_open);
+    const nothingOpen = Number.isFinite(accountOpen) && accountOpen === 0;
+    const emptyText = hasBlock
+      ? "Nothing is open, so there is no position to read back. A trade placed by the order tool appears here on the next producer run, with its entry, its current price and its floating result."
+      : nothingOpen
+        ? "This snapshot carries no position block, and the account it read reports 0 open positions: nothing has been open since the last publish. The next run writes the block, and the first trade the order tool places appears here with its entry, its current price and its floating result."
+        : "Run the producer again to publish a snapshot with position detail.";
     return `
       <section class="live-trading-table-panel">
         ${head}
-        <p class="live-trading-table-empty">${
-          hasBlock
-            ? "Nothing is open, so there is no position to read back. A trade placed by the order tool appears here on the next producer run, with its entry, its current price and its floating result."
-            : "Run the producer again to publish a snapshot with position detail."
-        }</p>
+        <p class="live-trading-table-empty">${emptyText}</p>
       </section>
     `;
   }
@@ -15760,7 +15851,7 @@ function liveTradingClosedTrades(data) {
       </div>
       <p class="live-trading-table-caption">Paired from the terminal's deal history: the entry deal and the exit deal of one position, read over ${
         escapeHtml(windowLabel)
-      }${dealCount === null ? "" : ` (${escapeHtml(String(dealCount))} deal${dealCount === 1 ? "" : "s"} read)`}. Net is profit plus commission plus swap. A trade that closed before this window is not in the list.</p>
+      }${dealCount === null ? "" : ` (${escapeHtml(String(dealCount))} deal${dealCount === 1 ? "" : "s"} read)`}. Net is profit plus commission plus swap. A trade that closed before this window is not in the list. On the chart above, an entry is a triangle lettered E and its exit a triangle lettered X, each on the bar it happened in.</p>
     </section>
   `;
 }

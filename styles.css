@@ -8447,6 +8447,16 @@ body {
 .live-trading-chart-level-tag { fill: #7ef0c4; font: 600 14px 'IBM Plex Mono', monospace; }
 .live-trading-chart-level-box { fill: #4fd1a5; }
 .live-trading-chart-level-box-text { fill: #08131a; font: 700 13px 'IBM Plex Mono', monospace; }
+/* The trades the snapshot read back, drawn on the bars and prices the terminal reported: a triangle lettered
+   E for the entry and one lettered X for the exit, pointing the way that side was taken - up for a buy, down
+   for a sell. They are a reading of executed trades, not a signal, and the tooltip on each one carries the
+   exact time and price. */
+.live-trading-chart-trade { pointer-events: none; }
+.live-trading-chart-trade.buy .live-trading-chart-trade-shape { fill: #26a69a; }
+.live-trading-chart-trade.sell .live-trading-chart-trade-shape { fill: #ef5350; }
+.live-trading-chart-trade.entry .live-trading-chart-trade-shape { stroke: #eaf2fb; stroke-width: 1.2; vector-effect: non-scaling-stroke; }
+.live-trading-chart-trade.exit .live-trading-chart-trade-shape { fill-opacity: .68; stroke: #0d1117; stroke-width: 1; vector-effect: non-scaling-stroke; }
+.live-trading-chart-trade-label { fill: #08131a; font: 700 13px 'IBM Plex Mono', monospace; }
 /* The outermost line the live price has reached is drawn in the alert colour: the ladder line itself is
    still the price it always was, and only its weight marks it as the end of the published range. */
 .live-trading-chart-level.alert { stroke: #f0c274; stroke-width: 2; stroke-dasharray: 2 3; }
