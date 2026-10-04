@@ -4041,3 +4041,53 @@ Boundaries. This turn changed nothing but this notes file and the filing itself.
 collector, dashboard file, artifact, workflow, register entry, assignment, lock, controller or bridge file and no
 other worker was touched; no credential was used; no outcome or holdout was read and the sealed prospective window
 stays unread.
+
+## 2026-10-04 - -060 accepted: the coordinator took the third route and published 027
+
+- Filed, reviewed, accepted. The lane's -060 routing request went by mailbox, not by chat: the immutable inbox copy
+  `.local/orchestration/inbox/strategy/20261004-strategy-coordinator-to-choose-the-factor-fix-lane-060.json` is 9,626 bytes
+  at sha256 `f3d8fc1b1e7584d67525df28231f472590a8b3f47ec93dfa940cd237e6abc04c`, equal to the hash the review bound to and
+  byte-identical to this lane's own `tmp/submission-060.json`. Decision: accepted, by the forty-eighth coordination cycle,
+  reply `.local/orchestration/replies/strategy/20261004-strategy-coordinator-to-choose-the-factor-fix-lane-060.json`,
+  durable review `docs/orchestration/reviews/20261004-strategy-coordinator-to-choose-the-factor-fix-lane-060.md`.
+
+- The routing decision was taken rather than passed back: the third of the three routes offered. The fix work does not wait
+  and the 026 measurement is not dropped. A fresh assignment, `gold-dark-factor-repair-027`, supersedes
+  `gold-declared-band-measurement-026` for the gold-research lane. Verified on disk after the cycle closed rather than
+  taken on the reply's word: `docs/orchestration/assignments/gold-research.md` is now titled "Make the historical Gold path
+  able to speak for the four dark factors" (9,088 bytes), the 026 work order is preserved at
+  `docs/orchestration/assignments/gold-declared-band-measurement-026-archive.md` (6,858 bytes), and the register row for
+  `gold-research` reads assignment `gold-dark-factor-repair-027` at status `instructions_published_awaiting_worker`
+  (updated 2026-10-04). That wake belongs to the gold lane. strategy stays `advisory_active` under `strategy-advisory-001`,
+  and no further report is asked of this lane for -060.
+
+- Why the third route, in the review's own evidence: the live snapshot store carries `fed_bias` on 145 of its 147 rows and
+  `global_growth_regime` on 142, so F3 and F10 are defects of the historical rebuild while the live path already holds the
+  data; `inflation_signal` and `risk_headline_context` are null on all 147 rows, so F8 and F9 need producers built from data
+  already on disk. Leaving the fixes queued was rejected because the lane has been idle since `2026-09-25T19:54:06.758Z`;
+  moving the lane onto the fixes without replacing 026 was rejected because it would silently drop a measurement the user
+  asked for on 2026-10-03.
+
+- Order of the already approved work, each its own bounded job and none of them started by this lane: the dark-factor
+  repair, then the movement-by-state measurement re-pointed onto the repaired artifacts, then the availability-lag rebuild,
+  then the event-day walk-forward.
+
+- Correction of record to this lane's own -060 notes entry: the parenthetical blob hash filed there (`2ff53b25...`) is not
+  the stored blob and does not reproduce from any form tested here. Reproduced at head `ea5744d` instead: `git rev-parse
+  HEAD:docs/strategy/CONVERSATION_NOTES.md` is `92891c0e7bef90f94c4a7b479f8eb8a8c294c66a`, which is the review's own
+  figure and is the LF form git stores under this repository's `core.autocrlf=true` with no `.gitattributes`. The worktree
+  file is 375,233 bytes at sha256 `d0bc8a3c...`, 4,043 CRLF endings, 0 bare LF and 413 non-ASCII bytes, exactly as filed
+  and as reviewed. The review's auxiliary raw-CRLF figure (`10fa6481...`) does not reproduce either - the worktree CRLF
+  sha1 is `393d2992...` - so that parenthetical is non-load-bearing; the substantive claim it supports, that the committed
+  content and the working-tree file are the same file, holds, proved by the matching sha256 and a clean tree. Rule adopted
+  for future filings: quote the stored blob from `git rev-parse HEAD:<path>`, and say which form any other hash describes.
+
+- Not reopened, and restated by the reply and by the new assignment's own out-of-scope list: which of the two 100-point
+  weight vectors is the project's own is still undeclared; the F2 threshold (0.15 implemented against the document's 0.30)
+  and F5's invented plus-or-minus 0.3 percent are live-engine reconciliation rather than research edits; F6's re-derivation
+  or zeroing is a weighting change the user has excluded for now. All three stay with the user or the operator.
+
+- Lane state after this: nothing to build, nothing to re-file, and the check snapshot agrees - `check --worker strategy`
+  reports no errors, no pending item, -060 accepted and not stale, and no strategy submission in `pending_review`. User
+  discussion continues. If the routing needs revisiting, the reply asks for that to be said here in the notes rather than
+  re-filed, and this lane will be read at the next coordination checkpoint.
