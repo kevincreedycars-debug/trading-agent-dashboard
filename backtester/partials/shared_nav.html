@@ -1,7 +1,7 @@
 <!--
   Shared navigation block: the one canonical source for the bar, the rail and their CSS.
 
-  This file is not served. backtester/scripts/build_shared_nav.js renders it into the ten published pages,
+  This file is not served. backtester/scripts/build_shared_nav.js renders it into the eleven published pages,
   between the <!-- SHARED-NAV:START --> and <!-- SHARED-NAV:END --> markers, and
   backtester/tests/site_nav_consistency.browser.test.js compares the bytes of every copy with the render.
   To change the navigation, change this file, then run
@@ -11,7 +11,7 @@
   Two named variants, because the pages are built two ways:
     dashboard  index.html: the rail is the first column of .dashboard-frame and every entry is the
                data-tab button script.js already drives.
-    standalone the other nine pages: the rail is a direct child of <body> and every entry is a plain
+    standalone the other ten pages: the rail is a direct child of <body> and every entry is a plain
                link, so nothing outside the page is needed to move around the site. Those links carry
                target="_top" because gold.html shows four of them in frames: an entry clicked inside a
                frame opens the page it names in the window, exactly as it does on a page opened directly.
@@ -20,6 +20,11 @@
   dashboard set for a page of its own rather than opening a view. It is written as a link in both variants
   for that reason, carries no data-tab so the dashboard's tab binder leaves it alone, and carries
   target="_top" so the same click inside a gold frame opens the map in the whole window.
+
+  The printable call map carries this block itself since 2026-10-04: the bar and the rail reach it like any
+  other page, and the map's own @media print block takes both off the sheet, so what a reader prints is still
+  the map alone on one page. A page that carries the block and is meant to print must say so itself - the
+  block never hides itself, because on a dashboard view it is the navigation.
 
   The block brings its own CSS inside <style id="shared-nav-css"> so it looks the same on a page that
   links styles.css and on gold-factor-wip.html, which loads nothing at all. No <link>, <script>, image,

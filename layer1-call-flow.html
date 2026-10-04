@@ -23,8 +23,17 @@ h3{font:600 15px/1.3 var(--display)}
 a{color:var(--blue)}
 .eyebrow{font:12px/1.5 var(--mono);letter-spacing:.12em;color:var(--amber);text-transform:uppercase}
 .muted{color:var(--muted)}
-header{display:flex;gap:26px;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;margin-bottom:18px}
-header>*{min-width:0}
+/* The page's own title block. `main > header` is deliberate: the shared navigation bar is a <header> of its
+   own, written into the page above <main>, and it must not inherit the title block's layout or margins. */
+main > header{display:flex;gap:26px;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;margin-bottom:18px}
+/* The sheet switcher: the map is a dark screen page and a white printed sheet at once, so the reader can
+   preview the second without leaving the first. It is never printed (see the print block below), and it
+   stays hidden until the script that drives it has run, so no reader is offered a control that does nothing. */
+.sheet-toggle{flex:0 0 auto;align-self:flex-start;border:1px solid var(--line);border-radius:999px;padding:6px 12px;background:transparent;color:var(--text);font:11.5px/1.6 var(--mono);cursor:pointer}
+.sheet-toggle:hover{border-color:var(--blue);color:var(--blue)}
+.sheet-toggle:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+.sheet-toggle[aria-pressed="true"]{border-color:var(--amber);color:var(--amber)}
+main > header>*{min-width:0}
 .lede{margin-top:10px;color:var(--muted);font-size:15.5px;max-width:940px}
 .chips{display:flex;flex-wrap:wrap;gap:8px;list-style:none;padding:0}
 .chips li{border:1px solid var(--line);border-radius:999px;padding:3px 10px;font:11.5px/1.6 var(--mono);color:var(--muted);min-width:0}
@@ -49,7 +58,14 @@ header>*{min-width:0}
 .node .tagline{margin-top:auto;font:11px/1.4 var(--mono);color:var(--dim);padding-top:6px;border-top:1px solid rgba(255,255,255,.07)}
 .arrow{flex:0 0 auto;align-self:center;color:#5c7690;font:14px/1 var(--mono)}
 .arrow::after{content:"\2192"}
-@media (max-width:1180px){
+/* The chain runs left to right while the map's own column can hold seven cards without breaking a word, and
+   stacks below that. The column, not the window, is what matters: the shared rail takes a fixed 232px off
+   this page's column from 901px up, so a window-wide breakpoint would keep the run going in a column too
+   narrow for it - the failure the shared layout-safety rules call out - while the same window with no rail
+   would stack early. 1216px is the width the seven cards need with their longest word intact. The print
+   block below puts the run back on one line, because the sheet has no rail and is measured in millimetres. */
+main{container-type:inline-size}
+@container (max-width:1216px){
   .flow{flex-direction:column;gap:7px}
   .arrow::after{content:"\2193"}
 }
@@ -90,6 +106,19 @@ footer{margin-top:20px;padding-top:14px;border-top:1px solid var(--line);color:v
   .two-up,.columns{grid-template-columns:1fr}
   main{padding:22px 16px 36px}
 }
+/* Screen paper theme, added 2026-10-04: the same ink-on-paper palette the printed sheet uses, so a reader
+   can see on screen what the printer will lay down and print straight from the view being read. The
+   switcher in the title block writes data-theme="paper" on <html>; only the dark palette's hard-coded
+   washes, hairlines and one dim grey need overriding, because every other colour on the page reads var().
+   Printing does not depend on this: the print block below sets the same palette, and the script forces the
+   attribute for the length of a print job. */
+html[data-theme="paper"]{color-scheme:light;--bg:#fff;--panel:#f7fafc;--panel-2:#eef3f8;--line:#b9c4d1;--text:#0f1720;--muted:#3c4a58;--dim:#5b6a78;--amber:#845c00;--blue:#0f4f88;--teal:#0c6a61;--good:#14682f;--bad:#a02a1e}
+html[data-theme="paper"] body{background:#fff}
+html[data-theme="paper"] .band{background:var(--panel-2)}
+html[data-theme="paper"] .arrow{color:var(--dim)}
+html[data-theme="paper"] .node .tagline{border-top-color:rgba(15,23,32,.13)}
+html[data-theme="paper"] .steps li{border-top-color:rgba(15,23,32,.13)}
+html[data-theme="paper"] .tool td{border-bottom-color:rgba(15,23,32,.13)}
 /* Printable one-pager: the on-screen dark workstation look is swapped for ink-on-paper so the page
    can be printed without a background-ink flood, while the accent colours keep their meaning. */
 @page{size:A4 landscape;margin:8mm}
@@ -99,7 +128,7 @@ footer{margin-top:20px;padding-top:14px;border-top:1px solid var(--line);color:v
   main{max-width:none;padding:0}
   /* The chips sit beside the title instead of wrapping under it, which on a printed sheet buys a
      whole line of height back for the chain below. */
-  header{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:start;margin-bottom:6px}
+  main > header{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:start;margin-bottom:6px}
   h1{font-size:19px}h2{font-size:12.5px}h3{font-size:11px}
   .eyebrow{font-size:8px;letter-spacing:.1em}
   .lede{font-size:8.4px;max-width:none;margin-top:3px}
@@ -124,12 +153,12 @@ footer{margin-top:20px;padding-top:14px;border-top:1px solid var(--line);color:v
      stacking two wide rows, which is what pushed the page onto a second sheet. The two wrappers drop
      out of the flow so their panels become grid items of main, and the gaps replace every section margin. */
   main{display:grid;grid-template-columns:1.04fr .96fr 1fr;gap:6px;align-items:start}
-  header{margin-bottom:0}
+  main > header{margin-bottom:0}
   .band{margin-bottom:0}
   .two-up,.columns{display:contents}
   .legend{margin-top:0}
   footer{margin-top:0}
-  header{grid-column:1/-1;grid-row:1}
+  main > header{grid-column:1/-1;grid-row:1}
   .band{grid-column:1/-1;grid-row:2}
   .panel-steps{grid-column:1;grid-row:3/5}
   .panel-assets{grid-column:2;grid-row:3}
@@ -167,10 +196,123 @@ footer{margin-top:20px;padding-top:14px;border-top:1px solid var(--line);color:v
   .links a{font-size:7.8px}
   .band,.panel,section,article,.node,.steps li,tr{break-inside:avoid}
   footer{break-inside:avoid}
+  /* The map is reached from the shared bar and rail since 2026-10-04, but a printed sheet is the map alone:
+     the block is taken off the sheet, and with it the 232px the rail shifts its siblings by. The bar is named
+     with both its classes because the block's own `.site-nav.topbar` carries two, and a print rule that named
+     only one would leave the 63px bar on the sheet; the last two selectors out-specify the block's
+     fixed-rail rules, which arrive later in the document. */
+  body > header.site-nav.topbar,body > aside.site-nav.side-rail{display:none}
+  body > aside.site-nav.side-rail ~ main{margin-left:0;max-width:100%}
+  .sheet-toggle{display:none}
 }
 </style>
 </head>
 <body>
+<!-- SHARED-NAV:START -->
+<header class="topbar site-nav">
+  <div class="topbar-brand">Asset Directional Movement Dashboard</div>
+  <div class="topbar-meta">
+    <a class="topbar-link" href="dashboard-northstar.html" target="_top">North Star Brief</a>
+    <a class="topbar-link" href="standing-dashboard.html" target="_top">Standing Dashboard</a>
+    <a class="topbar-link" href="gold.html" target="_top">Gold</a>
+    <a class="topbar-link" href="backtest-flow.html" target="_top">Backtest Flow</a>
+    <a class="topbar-link" href="layer1-call-flow.html" target="_top">Call Map</a>
+    <a class="topbar-link" href="what-moves-gold.html" target="_top">What moves gold</a>
+  </div>
+</header>
+<aside class="side-rail site-nav" aria-label="Primary navigation">
+  <div class="side-rail-head">
+    <span class="side-rail-mark">ADM</span>
+    <span class="side-rail-label">Control Room</span>
+  </div>
+  <nav class="tab-bar side-rail-tabs" aria-label="Site navigation">
+    <span class="side-rail-group">Operate</span>
+    <a class="tab-button" href="index.html#overview" target="_top">Overview</a>
+    <a class="tab-button" href="index.html#USD" target="_top">USD</a>
+    <a class="tab-button" href="index.html#EUR" target="_top">EUR</a>
+    <a class="tab-button" href="gold.html#direction" target="_top">Gold</a>
+    <a class="tab-button" href="index.html#SILVER" target="_top">Silver</a>
+    <a class="tab-button" href="index.html#NQ" target="_top">NQ</a>
+    <a class="tab-button" href="index.html#BTC" target="_top">BTC</a>
+    <a class="tab-button" href="index.html#WTI" target="_top">WTI</a>
+    <a class="tab-button" href="index.html#GBP" target="_top">GBP</a>
+    <a class="tab-button" href="index.html#layer2" target="_top">Pair Analysis</a>
+    <span class="side-rail-group">Live</span>
+    <a class="tab-button" href="index.html#live-trading" target="_top">Live Trading</a>
+    <span class="side-rail-group">Evidence</span>
+    <a class="tab-button" href="index.html#backtest" target="_top">Backtest / Accuracy</a>
+    <a class="tab-button" href="index.html#backtest-engine" target="_top">Backtest Engine</a>
+    <a class="tab-button" href="index.html#research-proof-map" target="_top">Research Proof Map</a>
+    <a class="tab-button" href="index.html#factor-edge-lab" target="_top">Factor Edge Lab</a>
+    <a class="tab-button" href="index.html#shadow-logic-backtest" target="_top">Shadow Logic Backtest</a>
+    <span class="side-rail-group">System</span>
+    <a class="tab-button" href="index.html#architecture" target="_top">Architecture</a>
+    <a class="side-rail-link" href="layer1-call-flow.html" target="_top">Call Map</a>
+  </nav>
+  <div class="side-rail-foot">
+    <span class="side-rail-status-dot" aria-hidden="true"></span>
+    <span>Published dashboard</span>
+  </div>
+</aside>
+<style id="shared-nav-css">
+/* Values copied from the published styles.css nav subset (.topbar*, .side-rail*, .tab-bar, .tab-button),
+   scoped to .site-nav so no page's own rules can leak in or be disturbed. The rail splits in two again
+   by structure: inside .dashboard-frame it is the grid column it already was (sticky, 58px under the bar);
+   as a direct child of <body> it is fixed to the left edge and the following blocks are shifted clear.
+   Under 901px the rail becomes the horizontal strip it already becomes on the dashboard, and the block
+   still adds nothing that needs a script. */
+.site-nav.topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;justify-content:space-between;gap:22px;min-height:58px;padding:0 32px;background:rgba(5,8,13,.92);border-bottom:1px solid rgba(255,255,255,.06);backdrop-filter:blur(18px)}
+.site-nav.topbar .topbar-brand{color:#f5f8fc;font-family:"Space Grotesk","IBM Plex Sans",system-ui,sans-serif;font-size:17px;font-weight:700;letter-spacing:.01em;white-space:nowrap}
+.site-nav.topbar .topbar-meta{display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-end;gap:8px}
+.site-nav.topbar .topbar-meta span{border:1px solid rgba(255,255,255,.08);border-radius:999px;color:#d8e4f3;background:rgba(7,11,17,.84);font-family:"IBM Plex Mono",Consolas,monospace;font-size:11px;padding:5px 10px;white-space:nowrap}
+.site-nav.topbar .topbar-dual-clock{font-variant-numeric:tabular-nums}
+.site-nav.topbar .topbar-link{display:inline-flex;align-items:center;border:1px solid rgba(94,161,255,.22);border-radius:999px;color:#d8e4f3;background:rgba(94,161,255,.1);font-family:"IBM Plex Mono",Consolas,monospace;font-size:11px;padding:5px 10px;text-decoration:none;transition:background-color 160ms ease,border-color 160ms ease,color 160ms ease}
+.site-nav.topbar .topbar-link:hover,.site-nav.topbar .topbar-link:focus-visible{background:rgba(94,161,255,.18);border-color:rgba(94,161,255,.36);color:#fff}
+.site-nav.side-rail{display:flex;flex-direction:column;min-width:0;padding:18px 12px 16px;border-right:1px solid rgba(142,169,198,.15);background:linear-gradient(180deg,rgba(12,18,27,.98),rgba(7,12,19,.99))}
+.site-nav .side-rail-head{display:flex;align-items:center;gap:10px;min-width:0;padding:0 8px 18px;border-bottom:1px solid rgba(142,169,198,.13)}
+.site-nav .side-rail-mark{display:grid;place-items:center;width:32px;height:32px;border:1px solid rgba(236,182,85,.42);border-radius:8px;background:rgba(185,137,39,.12);color:#f2c86f;font-family:"IBM Plex Mono",Consolas,monospace;font-size:10px;font-weight:700;letter-spacing:.08em}
+.site-nav .side-rail-label,.site-nav .side-rail-group,.site-nav .side-rail-foot{font-family:"IBM Plex Mono",Consolas,monospace;text-transform:uppercase}
+.site-nav .side-rail-label{min-width:0;color:#e9f0f8;font-size:11px;font-weight:700;letter-spacing:.08em;overflow-wrap:anywhere}
+.site-nav .side-rail-tabs{display:flex;flex:1;flex-direction:column;gap:3px;min-width:0;margin:0;padding:15px 0;overflow-y:auto;overflow-x:hidden;border:0;border-radius:0;background:transparent;box-shadow:none}
+.site-nav .side-rail-group{display:block;margin:14px 8px 6px;color:#697f96;font-size:9px;font-weight:700;letter-spacing:.14em}
+.site-nav .side-rail-group:first-child{margin-top:0}
+.site-nav .side-rail-tabs .tab-button{position:relative;display:block;width:100%;min-width:0;min-height:38px;margin:0;padding:9px 14px 9px 18px;border:1px solid transparent;border-radius:8px;background:transparent;color:#a8b9ca;font-family:"IBM Plex Sans",system-ui,sans-serif;font-size:12px;font-weight:600;letter-spacing:.01em;line-height:1.25;text-align:left;text-decoration:none;text-transform:none;white-space:normal;overflow-wrap:anywhere;word-break:break-word;cursor:pointer}
+.site-nav .side-rail-tabs .tab-button::before{content:"";position:absolute;top:8px;bottom:8px;left:0;width:3px;border-radius:0 4px 4px 0;background:transparent}
+.site-nav .side-rail-tabs .tab-button:hover{border-color:rgba(116,155,198,.22);background:rgba(78,113,150,.13);color:#f2f7fb}
+.site-nav .side-rail-tabs .tab-button.active{border-color:rgba(212,164,68,.2);background:linear-gradient(90deg,rgba(190,139,41,.22),rgba(190,139,41,.06));color:#f3cf81;box-shadow:inset 0 1px 0 rgba(255,228,159,.06)}
+.site-nav .side-rail-tabs .tab-button.active::before{background:#e4af4d}
+/* The rail's outbound entries keep a tab's shape, so the rail still reads as one column, but the marker bar is
+   the link blue and an arrow sits at the right edge where a tab shows nothing. */
+.site-nav .side-rail-tabs .side-rail-link{position:relative;display:block;width:100%;min-width:0;min-height:38px;margin:0;padding:9px 28px 9px 18px;border:1px solid transparent;border-radius:8px;background:transparent;color:#a8b9ca;font-family:"IBM Plex Sans",system-ui,sans-serif;font-size:12px;font-weight:600;letter-spacing:.01em;line-height:1.25;text-align:left;text-decoration:none;white-space:normal;overflow-wrap:anywhere;word-break:break-word;cursor:pointer}
+.site-nav .side-rail-tabs .side-rail-link::before{content:"";position:absolute;top:8px;bottom:8px;left:0;width:3px;border-radius:0 4px 4px 0;background:rgba(94,161,255,.8)}
+.site-nav .side-rail-tabs .side-rail-link::after{content:"\2197";position:absolute;top:50%;right:11px;transform:translateY(-50%);color:#7fade8;font-family:"IBM Plex Mono",Consolas,monospace;font-size:11px;line-height:1}
+.site-nav .side-rail-tabs .side-rail-link:hover,.site-nav .side-rail-tabs .side-rail-link:focus-visible{border-color:rgba(94,161,255,.3);background:rgba(78,113,150,.18);color:#f2f7fb}
+.site-nav .side-rail-foot{display:flex;align-items:center;gap:8px;min-width:0;padding:14px 8px 0;border-top:1px solid rgba(142,169,198,.13);color:#8095aa;font-size:9px;font-weight:600;letter-spacing:.08em;overflow-wrap:anywhere}
+.site-nav .side-rail-status-dot{flex:0 0 auto;width:7px;height:7px;border-radius:50%;background:#48c69a;box-shadow:0 0 12px rgba(72,198,154,.62)}
+@media (min-width:901px){
+.site-nav.side-rail{position:sticky;top:58px;height:calc(100vh - 58px)}
+body > aside.site-nav.side-rail{position:fixed;left:0;top:58px;width:232px;height:calc(100vh - 58px);z-index:19;overflow-y:auto}
+body > aside.site-nav.side-rail ~ *{margin-left:232px;max-width:calc(100% - 232px)}
+}
+@media (max-width:900px){
+.site-nav.side-rail{position:sticky;top:58px;z-index:19;display:block;width:100%;height:auto;padding:0;border-right:0;border-bottom:1px solid rgba(142,169,198,.16)}
+.site-nav .side-rail-head,.site-nav .side-rail-foot,.site-nav .side-rail-group{display:none}
+.site-nav .side-rail-tabs{display:flex;flex-direction:row;gap:6px;margin:0;padding:9px 16px;box-sizing:border-box;max-width:100%;contain:paint;overflow-x:auto;overflow-y:hidden}
+.site-nav .side-rail-tabs .tab-button{flex:0 0 auto;width:auto;min-height:34px;padding:8px 12px;border-radius:7px;white-space:nowrap}
+.site-nav .side-rail-tabs .tab-button::before{top:auto;right:9px;bottom:0;left:9px;width:auto;height:2px;border-radius:2px 2px 0 0}
+.site-nav .side-rail-tabs .side-rail-link{flex:0 0 auto;width:auto;min-height:34px;padding:8px 12px;border-radius:7px;white-space:nowrap}
+.site-nav .side-rail-tabs .side-rail-link::before{top:auto;right:9px;bottom:0;left:9px;width:auto;height:2px;border-radius:2px 2px 0 0}
+.site-nav .side-rail-tabs .side-rail-link::after{display:none}
+}
+@media (max-width:780px){
+.site-nav.topbar{position:static;flex-wrap:wrap;min-height:0;gap:12px;padding:14px 18px}
+.site-nav.topbar .topbar-brand,.site-nav.topbar .topbar-meta{width:100%;justify-content:flex-start}
+.site-nav.topbar .topbar-brand{white-space:normal;overflow-wrap:anywhere}
+.site-nav.topbar .topbar-link{order:-1}
+}
+</style>
+<!-- SHARED-NAV:END -->
+
 <main>
   <header>
     <div>
@@ -185,6 +327,7 @@ footer{margin-top:20px;padding-top:14px;border-top:1px solid var(--line);color:v
       <li>threshold 60</li>
       <li>reviewed 2026-10-04</li>
     </ul>
+    <button class="sheet-toggle" id="sheetToggle" type="button" aria-pressed="false" hidden title="Shows the page on the white paper palette the printer uses, and stays off the printed sheet">Paper sheet · print preview</button>
   </header>
 
   <section class="band band-chain" aria-labelledby="chain-title">
@@ -343,6 +486,36 @@ footer{margin-top:20px;padding-top:14px;border-top:1px solid var(--line);color:v
     <p>This page shows how the calls are made, not whether they are right. The committed rulebooks in logic/, the workflow exports, the workflow inventory and the published data/*.json files remain the source of truth. Guarded by tests/layer1_call_flow.browser.test.js, which re-renders the page offline at desktop and narrow widths and holds it to one printed sheet.</p>
   </footer>
 </main>
+<script>
+// The sheet switcher, added 2026-10-04 with the shared navigation: the map is a dark screen page and a white
+// printed sheet at once, so the reader can preview the second without leaving the first. The attribute is the
+// whole state, and the print block sets the same palette, so printing works from either view: the attribute
+// is forced onto the paper palette for the length of a print job, so a reader who prints from the dark view
+// still gets ink on paper rather than pale text on white. A storage that refuses to be read - Chrome blocks
+// localStorage on some origins - costs the reader nothing but the memory of the choice.
+(function () {
+  var root = document.documentElement;
+  var button = document.getElementById('sheetToggle');
+  var KEY = 'call-map-sheet';
+  function read() {
+    try { return localStorage.getItem(KEY); } catch (error) { return null; }
+  }
+  function remember() {
+    try { localStorage.setItem(KEY, chosen ? 'paper' : 'dark'); } catch (error) { /* the choice is not remembered */ }
+  }
+  function show(paper) {
+    if (paper) root.setAttribute('data-theme', 'paper');
+    else root.removeAttribute('data-theme');
+    button.setAttribute('aria-pressed', paper ? 'true' : 'false');
+  }
+  var chosen = read() === 'paper';
+  button.hidden = false;
+  show(chosen);
+  button.addEventListener('click', function () { chosen = !chosen; remember(); show(chosen); });
+  window.addEventListener('beforeprint', function () { show(true); });
+  window.addEventListener('afterprint', function () { show(chosen); });
+})();
+</script>
 </body>
 </html>
 

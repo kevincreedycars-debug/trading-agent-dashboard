@@ -1,6 +1,6 @@
-// The same top bar and the same side rail on all ten served pages is a promise about the bytes a reader is
+// The same top bar and the same side rail on all eleven served pages is a promise about the bytes a reader is
 // served, so this guard proves both halves of it: first that each page's marker block is the partial's render
-// byte for byte, then that the ten pages, opened in a browser, show one bar, one rail, working links and no
+// byte for byte, then that the eleven pages, opened in a browser, show one bar, one rail, working links and no
 // layout damage. A page edited on its own, a lost or re-ordered entry, a renamed label, a rail entry that
 // points at nothing, a rail that covers a table or a page the block widened all fail here.
 //
@@ -22,10 +22,11 @@ const root = nav.ROOT;
 const builder = path.join(root, "backtester", "scripts", "build_shared_nav.js");
 
 // The navigation the user asked for, label by label and in order, pinned here so a partial that drifts fails
-// rather than quietly redefining the agreement. The bar's fifth entry is the printable call map: it is
-// a page a reader opens and prints rather than a dashboard view, so it carries no rail of its own, is not one
-// of the builder's nav pages, and is reached the same way from every page. The sixth is the what-moves-gold
-// page published 2026-10-04, which is a builder page and carries the block like the other standalone pages.
+// rather than quietly redefining the agreement. The bar's fifth entry is the printable call map: a page a
+// reader opens and prints rather than a dashboard view, which since 2026-10-04 is one of the builder's nav
+// pages like the sixth, and is reached the same way from every page. The sixth is the what-moves-gold page
+// published 2026-10-04: both carry the block, and the call map's own print block keeps the bar and the rail
+// off the sheet a reader prints.
 const BRAND = "Asset Directional Movement Dashboard";
 const BAR_LABELS = ["North Star Brief", "Standing Dashboard", "Gold", "Backtest Flow", "Call Map", "What moves gold"];
 const BAR_HREFS = ["dashboard-northstar.html", "standing-dashboard.html", "gold.html", "backtest-flow.html", "layer1-call-flow.html", "what-moves-gold.html"];
@@ -53,7 +54,7 @@ const HEAD_LABEL = "Control Room";
 const FOOT = "Published dashboard";
 // The widths the other page guards already use. gold-factor-wip.html scrolled 59px sideways at 390px before
 // this change - measured by opening the published page, which carries no rail and no bar - so the draft page
-// is held to that ceiling while the eight other pages are held to the viewport.
+// is held to that ceiling while the nine other pages are held to the viewport.
 const WIDTHS = [1440, 1180, 860, 768, 721, 390];
 const PUBLISHED_OVERFLOW = { "gold-factor-wip.html": 59 };
 const ONE_REQUEST_PAGES = ["gold-factor-wip.html"];
@@ -124,7 +125,7 @@ test("every page carries the partial's render byte for byte, in the page's own l
   } catch (error) {
     report = error.stdout || "";
   }
-  assert.match(report, /--check: 10 pages, 17 rail entries, 1 outbound, 0 change\(s\)/, "--check must find all ten pages current");
+  assert.match(report, /--check: 11 pages, 17 rail entries, 1 outbound, 0 change\(s\)/, "--check must find all eleven pages current");
   assert.doesNotMatch(report, /: (refreshed|placed)$/m, "no page may still need the block written into it");
   nav.PAGES.forEach(page => {
     const source = read(page.file);
@@ -182,7 +183,7 @@ test("the partial is the navigation that was agreed, in both variants", () => {
     }
   });
 });
-test("all ten served pages show one bar and one rail, and every link it offers goes somewhere", async () => {
+test("all eleven served pages show one bar and one rail, and every link it offers goes somewhere", async () => {
   // The gold page's strip was re-ordered and widened on 2026-10-03 - Start here, Direction, Movement - L2L and half
   // L2L, Factor tables (draft) and Archive census - so the direction read and the two movement ranges sit together
   // and the two archive censuses moved to the end, and it gained a first tab on 2026-10-04, What moves gold, framing
@@ -314,7 +315,7 @@ test("a rail entry lands on the view its label names, from any page and from ins
     });
 
     // The bar's Call Map entry leaves the dashboard set for the printable call map, which is what its label
-    // names: the heading a reader came for, seven steps, and no rail of its own on arrival.
+    // names: the heading a reader came for, seven steps, and the shared bar and rail on arrival.
     await view.goto(`${base}/index.html`, { waitUntil: "load" });
     await view.locator(".topbar .topbar-link", { hasText: "Call Map" }).click();
     await view.waitForURL(/layer1-call-flow\.html$/);

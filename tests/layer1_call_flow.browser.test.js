@@ -13,10 +13,13 @@ const { chromium } = require('playwright');
 // no text may outgrow its own card, and the whole page must still fit one A4 landscape sheet when
 // printed, without the print type being shrunk under the legibility floor.
 // The page is reached from the shared top bar and, since 2026-10-04, from the rail's one outbound entry,
-// so the last test makes both hops rather than reading either entry's href. Both entries live in
-// backtester/partials/shared_nav.html and are rendered into all ten published pages by
+// so the fourth test makes both hops rather than reading either entry's href. Both entries live in
+// backtester/partials/shared_nav.html and are rendered into all eleven published pages by
 // backtester/scripts/build_shared_nav.js, which is what keeps the dashboard's own copy of them in step
-// with every other page's.
+// with every other page's. Since the same date this page carries that block itself - the map is a page a
+// reader navigates to, not only a sheet - so the fifth test holds the block's two promises about it: the
+// bar and the rail are on screen and off the printed sheet, and the sheet is still the map alone, with the
+// white palette the switcher previews held to a contrast floor rather than only to a colour list.
 const PAGE = path.resolve(__dirname, '../layer1-call-flow.html');
 const WIDTHS = [1440, 1180, 860, 721, 390];
 // The box Chrome lays the printed sheet out in: 297x210mm A4 landscape minus the 8mm page margin.
@@ -89,7 +92,14 @@ test('the Layer 1 call map renders offline at desktop and narrow widths', async 
     }
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto(pathToFileURL(PAGE).href);
-    assert.equal(await page.evaluate(() => getComputedStyle(document.querySelector('.flow')).flexDirection), 'row', 'wide screens read the chain as one left-to-right run');
+    // The shared rail takes a fixed 232px off the map's column from 901px up, so the chain's run is measured
+    // against the column the map actually has rather than against the window: at 1440px with the rail beside
+    // it there is no room for seven cards on one line, and the map stacks them rather than breaking a word.
+    // Given the column back - a wider window, so the rail's 232px no longer decides - the run returns.
+    assert.equal(await page.evaluate(() => getComputedStyle(document.querySelector('.flow')).flexDirection), 'column', 'the shared rail leaves the chain stacked at 1440px');
+    await page.setViewportSize({ width: 1600, height: 900 });
+    await page.goto(pathToFileURL(PAGE).href);
+    assert.equal(await page.evaluate(() => getComputedStyle(document.querySelector('.flow')).flexDirection), 'row', 'a window wide enough to hold the map beside the rail reads the chain as one run');
     assert.equal(await page.evaluate(() => getComputedStyle(document.querySelector('.two-up')).gridTemplateColumns.split(' ').length), 2, 'wide screens read the two-up band as two columns');
     assert.equal(await page.evaluate(() => getComputedStyle(document.querySelector('.columns')).gridTemplateColumns.split(' ').length), 3, 'wide screens read the columns band as three columns');
     const shot = process.env.LAYER1_FLOW_SHOT;
@@ -236,5 +246,86 @@ test('the dashboard reaches the call map from the shared top bar and the rail', 
   } finally { await browser.close(); }
 });
 
+
+
+test('the map carries the shared navigation on screen, and prints as the map alone', async () => {
+  const browser = await chromium.launch({ headless: true });
+  try {
+    const page = await browser.newPage();
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto(pathToFileURL(PAGE).href);
+    await page.locator('ol.flow').waitFor();
+    // One bar, one rail, one switcher, and the map clear of the fixed rail. The rail is 232px wide at this
+    // width, so the two facts worth holding are that the block is on the page and that it is beside the map
+    // rather than over it.
+    assert.equal(await page.locator('body > header.site-nav.topbar').count(), 1, 'the page must carry the shared bar as its own');
+    assert.equal(await page.locator('body > aside.site-nav.side-rail').count(), 1, 'the page must carry the shared rail');
+    assert.equal(await page.locator('.topbar.site-nav a.topbar-link[href="layer1-call-flow.html"]').count(), 1, 'the map must be reachable from the bar on its own page');
+    const toggle = page.locator('#sheetToggle');
+    assert.equal(await toggle.count(), 1, 'the title block must offer the sheet switcher');
+    assert.equal(await toggle.isVisible(), true, 'the switcher must be visible in a 1440px window');
+    assert.equal(await toggle.getAttribute('aria-pressed'), 'false', 'the page opens on the dark screen palette');
+    const shifted = await page.evaluate(() => document.querySelector('main').getBoundingClientRect().left);
+    assert.equal(Math.round(shifted), 232, `the fixed rail must sit beside the map, main starts at ${Math.round(shifted)}px`);
+    // The switcher's own promise: the sheet turns white and the ink turns dark, and every colour the reader
+    // reads words in - heading, lede, eyebrow, link, arrow, tagline - stays above the floor the paper
+    // palette was chosen for. The ratios are measured from the page rather than from a list of hex values.
+    const ink = () => page.evaluate(() => {
+      const channel = value => { const part = value / 255; return part <= 0.03928 ? part / 12.92 : Math.pow((part + 0.055) / 1.055, 2.4); };
+      const lum = value => value.match(/[\d.]+/g).slice(0, 3).map(Number).map(channel)
+        .reduce((sum, part, index) => sum + part * [0.2126, 0.7152, 0.0722][index], 0);
+      const ratio = (fore, back) => {
+        const [high, low] = [lum(fore), lum(back)].sort((a, b) => b - a);
+        return (high + 0.05) / (low + 0.05);
+      };
+      const inkOf = selector => getComputedStyle(document.querySelector(selector)).color;
+      const back = getComputedStyle(document.body).backgroundColor;
+      return {
+        paper: document.documentElement.getAttribute('data-theme'),
+        back,
+        readings: ['h1', '.lede', '.eyebrow', 'footer a', '.flow .arrow', '.node .tagline']
+          .map(selector => [selector, Math.round(ratio(inkOf(selector), back) * 100) / 100]),
+      };
+    });
+    const dark = await ink();
+    assert.equal(dark.paper, null, 'the page opens with no paper attribute on it');
+    await toggle.click();
+    const paper = await ink();
+    assert.equal(paper.paper, 'paper', 'the switcher must mark the page as the paper sheet');
+    assert.equal(await toggle.getAttribute('aria-pressed'), 'true', 'the switcher must report its own state');
+    assert.equal(paper.back, 'rgb(255, 255, 255)', 'the paper sheet must be white behind the map');
+    assert.notEqual(dark.back, paper.back, 'the two views must not read the same behind the map');
+    assert.deepEqual(paper.readings.filter(([, value]) => value < 4.5), [], 'every colour on the paper sheet must stay legible');
+    assert.equal(paper.readings[0][1] >= 7, true, `the heading's own ink must stay well above legibility, got ${paper.readings[0][1]}`);
+    // Turning the palette over may not cost a card its text, at a wide or a narrow window.
+    assert.deepEqual(await page.evaluate(starvedText), [], 'the paper sheet may not starve a card of its text');
+    await page.setViewportSize({ width: 390, height: 900 });
+    assert.deepEqual(await page.evaluate(starvedText), [], 'the paper sheet may not starve a card of its text at 390px');
+    assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, 'the paper sheet must not scroll sideways at 390px');
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await toggle.click();
+    assert.equal(await page.evaluate(() => document.documentElement.hasAttribute('data-theme')), false, 'the switcher must turn back to the dark screen sheet');
+    // Print, from the dark view: the bar, the rail and the switcher leave the sheet, the sheet starts at its
+    // own left edge rather than 232px in, and it lands on paper ink whatever the screen shows.
+    await page.emulateMedia({ media: 'print' });
+    const sheet = await page.evaluate(() => {
+      const style = getComputedStyle(document.body);
+      return {
+        bar: getComputedStyle(document.querySelector('body > header.site-nav')).display,
+        rail: getComputedStyle(document.querySelector('body > aside.site-nav.side-rail')).display,
+        toggle: getComputedStyle(document.querySelector('#sheetToggle')).display,
+        left: Math.round(document.querySelector('main').getBoundingClientRect().left),
+        ink: style.color,
+        back: style.backgroundColor,
+      };
+    });
+    assert.equal(sheet.bar, 'none', 'the printed sheet must carry no navigation bar');
+    assert.equal(sheet.rail, 'none', 'the printed sheet must carry no side rail');
+    assert.equal(sheet.toggle, 'none', 'the printed sheet must carry no screen control');
+    assert.equal(sheet.left, 0, `the printed sheet must start at its own left edge, started at ${sheet.left}px`);
+    assert.equal(sheet.ink, 'rgb(15, 23, 32)', 'print must land on the paper ink even from the dark view');
+    assert.equal(sheet.back, 'rgb(255, 255, 255)', 'print must land on white paper even from the dark view');
+  } finally { await browser.close(); }
+});
 
 

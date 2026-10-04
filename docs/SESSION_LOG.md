@@ -233,3 +233,57 @@ The gold page shows one more framed view and no new figure: nothing on `what-mov
 - Fast-forward `origin/main` onto `release/gold-whatmoves-tab-20261004` and re-read the live gold page's strip.
 - Read the live page as a reader would at 390px and 1440px and confirm the landed frame renders the published page.
 
+
+## 2026-10-04 - the call map carries the navigation, and prints without it
+
+### Session Goal
+
+Put the shared bar and rail on the printable call map, keep both off the printed sheet, and give the page a
+white palette a reader can check on screen before printing, because a dark sheet does not print.
+
+### Completed
+
+- Registered `layer1-call-flow.html` as the builder's eleventh nav page and wrote the block into it with
+  `node backtester/scripts/build_shared_nav.js --write` (that one page reported `placed`); `--check` now reads
+  `11 pages, 17 rail entries, 1 outbound, 0 change(s)`. The block's render is unchanged, so no other page's bytes
+  moved and the partial's edit is its own header comment.
+- Added the sheet switcher to the page's title block: a `Paper sheet · print preview` button (`#sheetToggle`) that
+  writes `data-theme="paper"` on `<html>`, a paper palette that reuses the print block's own ink colours, a button
+  that stays `hidden` until its script has run and reports its state with `aria-pressed`, and `beforeprint` /
+  `afterprint` so a print job started from the dark view still lands on ink and paper.
+- Made the page's print block the block's own off-switch: `body > header.site-nav.topbar` and
+  `body > aside.site-nav.side-rail` are `display:none` on paper, `body > aside.site-nav.side-rail ~ main` gets its
+  left edge and full width back, and the switcher is hidden. The bar rule names both of its classes because the
+  block's own `.site-nav.topbar` carries two, and a first cut that named one left a 63px bar above the sheet and
+  pushed the map to 780px of 733px.
+- Replaced the chain's window-wide `@media (max-width:1180px)` stacking rule with `main{container-type:inline-size}`
+  and `@container (max-width:1216px)`: the rail's fixed 232px leaves a 1440px window about 1145px of column, where
+  the old rule kept the run going and `market_snapshots` broke mid-word. The print block still puts the run back on
+  one line.
+- Extended `tests/layer1_call_flow.browser.test.js` with a fifth test - the bar, the rail and the switcher on
+  screen, the 232px the fixed rail holds, six measured contrast ratios on the paper sheet, no card starved in the
+  paper view at 1440px or 390px, and the printed sheet carrying none of the three - and re-pointed its wide-screen
+  chain assertions at the map's own column; 5/5.
+- Re-pointed `backtester/tests/site_nav_consistency.browser.test.js` at eleven served pages (the report pin, the
+  test name and two comments that still called the map a page carrying no navigation of its own); 5/5, with the map
+  now inside the per-page fingerprint and the six-width layout pass.
+- Re-ran the neighbouring guards on the same tree with no npm runner - backtesting development release, live
+  trading dashboard, refresh progress, dashboard writer selection, L2L levels, architecture-map validation and gold
+  view tidy - 101/101.
+- Wrote `docs/CALL_MAP_NAV_AND_SHEET_20261004.md` as the handoff note, and recorded in
+  `docs/CALL_MAP_LAYER2_20261004.md` that its "no bar and no rail of its own" line is superseded.
+- Re-cut the change on `6f4e91b` after another lane published two live-trading snapshots (`data/live-trading.json`
+  only) mid-branch; no file here overlapped them and the rebase was clean.
+
+### Important Note
+
+The switcher changes the sheet's palette, not the navigation's: the bar and the rail keep the dark chrome they wear
+on all eleven pages, and they are off the sheet in print either way. The printed grid itself is unchanged - 709.94px
+of 733px with the smallest type at 7.6px, measured with the web font blocked for both versions. Publication is a
+push onto `origin/main`, and a rendered local page is not proof of live deployment.
+
+### Next
+
+- Push the branch onto `origin/main` and re-read the live map: the bar and rail on screen, the paper sheet, and the
+  one-page print preview.
+

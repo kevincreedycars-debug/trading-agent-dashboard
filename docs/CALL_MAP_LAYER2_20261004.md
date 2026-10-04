@@ -68,6 +68,9 @@ printed type went below the guard's 7.5px floor.
 
 - No Layer 1 or Layer 2 agent, workflow, credential, dataset, Supabase row or backend file is touched: the
   map describes the chain, it is not part of it, and no figure on it is a new claim or a restamped one.
+- The page now carries the shared bar and rail (2026-10-04, superseding the note below): it is one of the
+  builder's eleven nav pages, and its own print block takes the block off the printed sheet, so it still prints
+  as the map alone. Nothing else in this note changes.
 - The page still carries no bar and no rail of its own, so it stays outside the builder's ten nav pages and
   still prints as one sheet; only its two labels changed.
 - Nothing about the other seventeen rail entries or the other five bar entries moves.

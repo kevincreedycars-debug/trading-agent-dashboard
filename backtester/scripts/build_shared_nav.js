@@ -1,7 +1,7 @@
 'use strict';
 
 // Renders the shared navigation block from backtester/partials/shared_nav.html into the published pages,
-// so the ten copies cannot drift apart again.
+// so the eleven copies cannot drift apart again.
 //
 //   node backtester/scripts/build_shared_nav.js --check            verify every page carries the render
 //   node backtester/scripts/build_shared_nav.js --write            place or refresh the block
@@ -27,9 +27,9 @@ const ORDER = {
   standalone: ['bar-standalone', 'rail-standalone', 'css'],
 };
 
-// The ten published pages. "place" says what a first placement does: index.html already carries a bar and a
+// The eleven published pages. "place" says what a first placement does: index.html already carries a bar and a
 // rail, so its anchor is the whole span they occupy, from the line break before the bar to the line break
-// after the rail, and the block replaces it rather than joining it. The other nine carry neither, so the
+// after the rail, and the block replaces it rather than joining it. The other ten carry neither, so the
 // block goes in under the body tag and nothing already on the page moves. Once a page carries the markers
 // the anchor is never consulted again.
 const PAGES = [
@@ -43,6 +43,11 @@ const PAGES = [
   { file: 'gold-backtesting.html', variant: 'standalone', place: { mode: 'after', pattern: /<body\b[^>]*>/ } },
   { file: 'gold-factor-wip.html', variant: 'standalone', place: { mode: 'after', pattern: /<body\b[^>]*>/ } },
   { file: 'what-moves-gold.html', variant: 'standalone', place: { mode: 'after', pattern: /<body\b[^>]*>/ } },
+  // Added 2026-10-04, the eleventh page: the printable call map was written as a sheet with no navigation of
+  // its own, and the bar and the rail reached it from the other pages. It is a page a reader navigates from
+  // now, so it carries the block like every other standalone page, and its own print block takes the bar and
+  // the rail off the printed sheet, so what a reader prints is still the map alone on one page.
+  { file: 'layer1-call-flow.html', variant: 'standalone', place: { mode: 'after', pattern: /<body\b[^>]*>/ } },
 ];
 
 function readParts() {
@@ -117,7 +122,7 @@ function applyPage(source, page) {
 }
 
 // The two variants must stay one navigation, not two: same bar but for the live spans, same rail but for
-// the way an entry is driven. These checks fail loudly here rather than quietly in ten pages.
+// the way an entry is driven. These checks fail loudly here rather than quietly in eleven pages.
 function selfChecks() {
   const parts = readParts();
   const liveSpans = /\n? {0,6}<span id="currentDate">[\s\S]*?UK --:-- \| ET --:--<\/span>/;
