@@ -1,0 +1,2337 @@
+const http = require("http");
+const fs = require("fs");
+const path = require("path");
+const { chromium } = require("playwright");
+
+const rootDir = __dirname;
+const screenshotDir = path.join(rootDir, "tmp", "playwright-dashboard-smoke");
+
+function contentType(filePath) {
+  const ext = path.extname(filePath).toLowerCase();
+  if (ext === ".html") return "text/html; charset=utf-8";
+  if (ext === ".js") return "application/javascript; charset=utf-8";
+  if (ext === ".css") return "text/css; charset=utf-8";
+  if (ext === ".json") return "application/json; charset=utf-8";
+  if (ext === ".svg") return "image/svg+xml";
+  return "text/plain; charset=utf-8";
+}
+
+function createServer() {
+  return http.createServer((req, res) => {
+    const urlPath = decodeURIComponent((req.url || "/").split("?")[0]);
+    const relativePath = urlPath === "/" ? "index.html" : urlPath.replace(/^\/+/, "");
+    const filePath = path.resolve(rootDir, relativePath);
+
+    if (!filePath.startsWith(rootDir) || !fs.existsSync(filePath) || fs.statSync(filePath).isDirectory()) {
+      res.writeHead(404, { "Content-Type": "text/plain; charset=utf-8" });
+      res.end("Not found");
+      return;
+    }
+
+    res.writeHead(200, { "Content-Type": contentType(filePath) });
+    res.end(fs.readFileSync(filePath));
+  });
+}
+
+function rectanglesOverlap(a, b) {
+  return !(a.x + a.width <= b.x || b.x + b.width <= a.x || a.y + a.height <= b.y || b.y + b.height <= a.y);
+}
+
+function segmentIntersectsInterior(segment, rect, inset = 18) {
+  const inner = {
+    x: rect.x + inset,
+    y: rect.y + inset,
+    width: Math.max(0, rect.width - inset * 2),
+    height: Math.max(0, rect.height - inset * 2)
+  };
+
+  if (inner.width <= 0 || inner.height <= 0) return false;
+
+  const minX = Math.min(segment.x1, segment.x2);
+  const maxX = Math.max(segment.x1, segment.x2);
+  const minY = Math.min(segment.y1, segment.y2);
+  const maxY = Math.max(segment.y1, segment.y2);
+
+  if (segment.y1 === segment.y2) {
+    return segment.y1 >= inner.y
+      && segment.y1 <= inner.y + inner.height
+      && maxX >= inner.x
+      && minX <= inner.x + inner.width;
+  }
+
+  if (segment.x1 === segment.x2) {
+    return segment.x1 >= inner.x
+      && segment.x1 <= inner.x + inner.width
+      && maxY >= inner.y
+      && minY <= inner.y + inner.height;
+  }
+
+  return false;
+}
+
+function nearlyEqual(a, b, epsilon = 0.75) {
+  return Math.abs(Number(a || 0) - Number(b || 0)) <= epsilon;
+}
+
+async function run() {
+  fs.mkdirSync(screenshotDir, { recursive: true });
+  const server = createServer();
+  await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
+  const address = server.address();
+  const baseUrl = `http://127.0.0.1:${address.port}/`;
+
+  const browser = await chromium.launch({ headless: true });
+  const page = await browser.newPage();
+
+  try {
+    const assertOverviewStrengthLayout = async (viewportLabel) => {
+      const audit = await page.evaluate(() => {
+        const minimumReadableFontPx = 12;
+        const cards = Array.from(document.querySelectorAll("#layer1Grid .agent-card")).map((card) => {
+          const heading = card.querySelector("h3")?.textContent?.trim() || "";
+          const strengthChip = Array.from(card.querySelectorAll(".agent-metric-chip")).find((chip) => {
+            const label = chip.querySelector("span")?.textContent?.trim() || "";
+            return label.toUpperCase() === "STRENGTH";
+          }) || null;
+          const value = strengthChip?.querySelector("strong") || null;
+          if (!strengthChip || !value) {
+            return {
+              asset: heading,
+              missing: true
+            };
+          }
+
+          const chipRect = strengthChip.getBoundingClientRect();
+          const valueRect = value.getBoundingClientRect();
+          const computed = getComputedStyle(value);
+          const lineHeight = Number.parseFloat(computed.lineHeight);
+          const fontSize = Number.parseFloat(computed.fontSize);
+          const rectHeight = valueRect.height;
+          const inferredSingleLine = Number.isFinite(lineHeight)
+            ? rectHeight <= lineHeight * 1.35
+            : nearlyEqual(rectHeight, fontSize, Math.max(1.5, fontSize * 0.45));
+
+          return {
+            asset: heading,
+            text: value.textContent?.trim() || "",
+            missing: false,
+            fontSize,
+            lineHeight,
+            rectHeight,
+            inferredSingleLine,
+            whiteSpace: computed.whiteSpace,
+            wordBreak: computed.wordBreak,
+            overflowWrap: computed.overflowWrap,
+            scrollWidth: value.scrollWidth,
+            clientWidth: value.clientWidth,
+            withinChipBounds: valueRect.left >= chipRect.left - 0.5
+              && valueRect.right <= chipRect.right + 0.5
+              && valueRect.top >= chipRect.top - 0.5
+              && valueRect.bottom <= chipRect.bottom + 0.5,
+            notClipped: value.scrollWidth <= value.clientWidth + 1 && value.scrollHeight <= value.clientHeight + 1,
+            minimumReadableFontPx
+          };
+        });
+
+        const uniqueTexts = Array.from(new Set(cards.filter((card) => !card.missing).map((card) => card.text)));
+        return {
+          cards,
+          gridHasHorizontalOverflow: document.getElementById("layer1Grid")?.scrollWidth > document.getElementById("layer1Grid")?.clientWidth + 1
+        };
+      });
+
+      if (audit.gridHasHorizontalOverflow) {
+        throw new Error(`Layer 1 grid overflowed while checking Strength layout at ${viewportLabel}.\n${JSON.stringify(audit, null, 2)}`);
+      }
+
+      for (const card of audit.cards) {
+        if (card.missing) {
+          throw new Error(`Missing Strength metric chip in Layer 1 card at ${viewportLabel}.\n${JSON.stringify(card, null, 2)}`);
+        }
+        if (card.whiteSpace !== "nowrap" || card.wordBreak !== "normal" || card.overflowWrap !== "normal") {
+          throw new Error(`Strength value CSS contract regressed at ${viewportLabel}.\n${JSON.stringify(card, null, 2)}`);
+        }
+        if (!card.inferredSingleLine) {
+          throw new Error(`Strength value wrapped to multiple lines in ${card.asset} at ${viewportLabel}.\n${JSON.stringify(card, null, 2)}`);
+        }
+        if (!card.withinChipBounds || !card.notClipped) {
+          throw new Error(`Strength value overflowed or clipped in ${card.asset} at ${viewportLabel}.\n${JSON.stringify(card, null, 2)}`);
+        }
+        if (!(card.fontSize >= card.minimumReadableFontPx)) {
+          throw new Error(`Strength value font size fell below the readable minimum in ${card.asset} at ${viewportLabel}.\n${JSON.stringify(card, null, 2)}`);
+        }
+      }
+    };
+
+    const assertSyntheticStrengthVariants = async (viewportLabel) => {
+      const audit = await page.evaluate(() => {
+        const strengths = ["WEAK", "MODERATE", "STRONG", "VERY STRONG"];
+        const host = document.createElement("div");
+        host.style.position = "fixed";
+        host.style.left = "-10000px";
+        host.style.top = "0";
+        host.style.width = "100%";
+        host.setAttribute("data-test-strength-host", "true");
+        document.body.appendChild(host);
+
+        host.innerHTML = strengths.map((strength, index) => globalThis.__dashboardTestHooks.renderAgentCard({
+          agent: `TEST_${index + 1}`,
+          status: "live",
+          summary: "",
+          sealed_at: "2026-07-29T05:56:00.000Z",
+          valid_from: "2026-07-29T05:56:00.000Z",
+          refresh_due_at: "2026-07-29T11:00:00.000Z",
+          expires_at: "2026-07-29T21:00:00.000Z",
+          status_at_build: "LIVE",
+          effective_status: "LIVE",
+          status_resolved_at: "2026-07-29T05:56:00.000Z",
+          display_metrics: {
+            confidence: 64,
+            bull_case: 70,
+            bear_case: 30,
+            net_edge: 40,
+            participation: 55,
+            verdict_strength: strength
+          },
+          calls: {
+            "24h": {
+              direction: "BULLISH",
+              conviction: 64,
+              status_at_build: "LIVE",
+              effective_status: "LIVE",
+              valid_from: "2026-07-29T05:56:00.000Z",
+              refresh_due_at: "2026-07-29T11:00:00.000Z",
+              expires_at: "2026-07-29T21:00:00.000Z",
+              conviction_model: {
+                bullish_argument_pct: 70,
+                bearish_argument_pct: 30,
+                directional_participation_pct: 55,
+                net_edge_pct: 40,
+                confidence_strength: strength
+              }
+            }
+          },
+          priority_call: {
+            direction: "BULLISH",
+            conviction: 64,
+            status_at_build: "LIVE",
+            effective_status: "LIVE",
+            valid_from: "2026-07-29T05:56:00.000Z",
+            refresh_due_at: "2026-07-29T11:00:00.000Z",
+            expires_at: "2026-07-29T21:00:00.000Z"
+          }
+        })).join("");
+
+        const cards = Array.from(host.querySelectorAll(".agent-card")).map((card) => {
+          const strengthChip = Array.from(card.querySelectorAll(".agent-metric-chip")).find((chip) => {
+            const label = chip.querySelector("span")?.textContent?.trim() || "";
+            return label.toUpperCase() === "STRENGTH";
+          }) || null;
+          const value = strengthChip?.querySelector("strong") || null;
+          const chipRect = strengthChip?.getBoundingClientRect() || null;
+          const valueRect = value?.getBoundingClientRect() || null;
+          const computed = value ? getComputedStyle(value) : null;
+          const lineHeight = computed ? Number.parseFloat(computed.lineHeight) : NaN;
+          const fontSize = computed ? Number.parseFloat(computed.fontSize) : NaN;
+          const rectHeight = valueRect ? valueRect.height : NaN;
+          return {
+            text: value?.textContent?.trim() || "",
+            whiteSpace: computed?.whiteSpace || "",
+            wordBreak: computed?.wordBreak || "",
+            overflowWrap: computed?.overflowWrap || "",
+            fontSize,
+            inferredSingleLine: Number.isFinite(lineHeight) ? rectHeight <= lineHeight * 1.35 : false,
+            withinChipBounds: Boolean(chipRect && valueRect)
+              && valueRect.left >= chipRect.left - 0.5
+              && valueRect.right <= chipRect.right + 0.5
+              && valueRect.top >= chipRect.top - 0.5
+              && valueRect.bottom <= chipRect.bottom + 0.5,
+            notClipped: Boolean(value) && value.scrollWidth <= value.clientWidth + 1 && value.scrollHeight <= value.clientHeight + 1
+          };
+        });
+
+        host.remove();
+        return cards;
+      });
+
+      const expectedStrengths = ["WEAK", "MODERATE", "STRONG", "VERY STRONG"];
+      for (const strength of expectedStrengths) {
+        const row = audit.find((entry) => entry.text === strength);
+        if (!row) {
+          throw new Error(`Synthetic Strength card for '${strength}' did not render at ${viewportLabel}.\n${JSON.stringify(audit, null, 2)}`);
+        }
+        if (row.whiteSpace !== "nowrap" || row.wordBreak !== "normal" || row.overflowWrap !== "normal") {
+          throw new Error(`Synthetic Strength CSS contract regressed for '${strength}' at ${viewportLabel}.\n${JSON.stringify(row, null, 2)}`);
+        }
+        if (!row.inferredSingleLine || !row.withinChipBounds || !row.notClipped) {
+          throw new Error(`Synthetic Strength value '${strength}' did not fit on one line at ${viewportLabel}.\n${JSON.stringify(row, null, 2)}`);
+        }
+      }
+    };
+
+    const consoleErrors = [];
+    page.on("console", (message) => {
+      if (message.type() === "error") {
+        consoleErrors.push(message.text());
+      }
+    });
+
+    await page.goto(baseUrl, { waitUntil: "networkidle" });
+
+    const topbarClockContract = await page.evaluate(() => {
+      const clock = document.getElementById("topbarClock");
+      const date = document.getElementById("currentDate");
+      const text = clock?.textContent?.trim() || "";
+      const title = clock?.getAttribute("title") || "";
+      const ariaLabel = clock?.getAttribute("aria-label") || "";
+      const clockPattern = /^UK \d{2}:\d{2} \| ET \d{2}:\d{2}$/;
+      return {
+        text,
+        title,
+        ariaLabel,
+        currentDate: date?.textContent?.trim() || "",
+        matchesPattern: clockPattern.test(text)
+      };
+    });
+
+    if (!topbarClockContract.matchesPattern) {
+      throw new Error(`Topbar dual clock did not render the expected UK/ET format.\n${JSON.stringify(topbarClockContract, null, 2)}`);
+    }
+
+    if (!topbarClockContract.title.includes("GMT and BST") || !topbarClockContract.title.includes("EST and EDT")) {
+      throw new Error(`Topbar dual clock did not preserve the DST tooltip guidance.\n${JSON.stringify(topbarClockContract, null, 2)}`);
+    }
+
+    if (!topbarClockContract.ariaLabel.includes("UK time") || !topbarClockContract.ariaLabel.includes("Eastern Time")) {
+      throw new Error(`Topbar dual clock did not expose the expected accessible live label.\n${JSON.stringify(topbarClockContract, null, 2)}`);
+    }
+
+    if (!topbarClockContract.currentDate) {
+      throw new Error(`Topbar date label did not render alongside the dual clock.\n${JSON.stringify(topbarClockContract, null, 2)}`);
+    }
+
+    const overviewBriefingText = await page.locator("[data-overview-briefing='true']").innerText();
+    const normalizedOverviewBriefingText = overviewBriefingText.toLowerCase();
+
+    if (!normalizedOverviewBriefingText.includes("24h market conditions")) {
+      throw new Error(`Overview briefing did not render the 24H Market Conditions section.\n${overviewBriefingText}`);
+    }
+
+    if (!normalizedOverviewBriefingText.includes("week ahead / what could change")) {
+      throw new Error(`Overview briefing did not render the Week Ahead / What Could Change section.\n${overviewBriefingText}`);
+    }
+
+    const overviewStatusPanel = await page.evaluate(() => {
+      const panel = document.querySelector("[data-overview-status='true']");
+      return {
+        rendered: Boolean(panel),
+        heading: panel?.querySelector("h3")?.textContent?.trim() || "",
+        badge: panel?.querySelector(".overview-status-badge")?.textContent?.trim() || "",
+        text: panel?.innerText || "",
+        hasHorizontalOverflow: panel ? panel.scrollWidth > panel.clientWidth + 1 : false
+      };
+    });
+
+    if (!overviewStatusPanel.rendered) {
+      throw new Error("Overview system-status panel did not render on the Overview.");
+    }
+
+    const normalizedOverviewStatusText = overviewStatusPanel.text.toLowerCase();
+    for (const expectedText of [
+      "system status",
+      "input health",
+      "latest refresh",
+      "layer 1 calls",
+      "economic-event source"
+    ]) {
+      if (!normalizedOverviewStatusText.includes(expectedText)) {
+        throw new Error(`Overview system-status panel did not render expected copy: ${expectedText}\n${overviewStatusPanel.text}`);
+      }
+    }
+
+    if (overviewStatusPanel.heading !== "SYSTEM STATUS") {
+      throw new Error(`Overview system-status panel did not render the expected heading.\n${JSON.stringify(overviewStatusPanel, null, 2)}`);
+    }
+
+    if (!["HEALTHY", "NEEDS REVIEW", "CRITICAL", "REFRESH FAILED"].some((label) => overviewStatusPanel.badge.includes(label))) {
+      throw new Error(`Overview system-status panel did not render a valid badge.\n${JSON.stringify(overviewStatusPanel, null, 2)}`);
+    }
+
+    if (overviewStatusPanel.hasHorizontalOverflow) {
+      throw new Error(`Overview system-status panel overflowed horizontally.\n${JSON.stringify(overviewStatusPanel, null, 2)}`);
+    }
+
+    const overviewPerformancePanel = await page.evaluate(() => {
+      const panel = document.getElementById("overviewPerformancePanel");
+      const rows = Array.from(panel?.querySelectorAll("tbody tr") || []).map((row) => row.innerText || "");
+      return {
+        rendered: Boolean(panel),
+        heading: panel?.querySelector("h3")?.textContent?.trim() || "",
+        meta: panel?.querySelector(".overview-performance-meta")?.textContent?.trim() || "",
+        copy: panel?.querySelector(".overview-performance-copy")?.textContent?.trim() || "",
+        text: panel?.innerText || "",
+        rowCount: rows.length,
+        rows,
+        hasHorizontalOverflow: panel ? panel.scrollWidth > panel.clientWidth + 1 : false
+      };
+    });
+
+    if (!overviewPerformancePanel.rendered || overviewPerformancePanel.heading !== "PAIR PERFORMANCE") {
+      throw new Error(`Overview pair performance panel did not render.\n${JSON.stringify(overviewPerformancePanel, null, 2)}`);
+    }
+
+    if (!overviewPerformancePanel.meta.includes("Historical results snapshot") || !overviewPerformancePanel.meta.includes("Last updated 20 July 2026")) {
+      throw new Error(`Overview pair performance panel did not render the required update metadata.\n${JSON.stringify(overviewPerformancePanel, null, 2)}`);
+    }
+
+    if (!overviewPerformancePanel.copy.includes("Completed tracked trades only.") || !overviewPerformancePanel.copy.includes("not updated by the live refresh workflow")) {
+      throw new Error(`Overview pair performance panel did not render the required non-live qualifier.\n${JSON.stringify(overviewPerformancePanel, null, 2)}`);
+    }
+
+    if (overviewPerformancePanel.rowCount !== 4) {
+      throw new Error(`Overview pair performance panel did not render four rows.\n${JSON.stringify(overviewPerformancePanel, null, 2)}`);
+    }
+
+    for (const expectedText of ["BTCUSD", "EURUSD", "US100.cash", "XAUUSD", "$302.17", "-$309.26"]) {
+      if (!overviewPerformancePanel.text.includes(expectedText)) {
+        throw new Error(`Overview pair performance panel did not render expected snapshot value '${expectedText}'.\n${overviewPerformancePanel.text}`);
+      }
+    }
+
+    const overviewDefinitionsPanel = await page.evaluate(() => {
+      const panel = document.querySelector(".overview-legend-panel");
+      return {
+        rendered: Boolean(panel),
+        text: panel?.innerText || ""
+      };
+    });
+
+    if (!overviewDefinitionsPanel.rendered) {
+      throw new Error("Overview definitions panel did not render.");
+    }
+
+    for (const expectedText of [
+      "A 0-100 composite score",
+      "weighted share of expected model evidence",
+      "minimum net-edge and participation gates"
+    ]) {
+      if (!overviewDefinitionsPanel.text.includes(expectedText)) {
+        throw new Error(`Overview definitions panel did not render expected definition copy '${expectedText}'.\n${overviewDefinitionsPanel.text}`);
+      }
+    }
+
+    const overviewOrder = await page.evaluate(() => {
+      function top(selector) {
+        const element = document.querySelector(selector);
+        if (!element) return null;
+        return element.getBoundingClientRect().top;
+      }
+
+      return {
+        layer1Top: top("#layer1Grid"),
+        layer2Top: top("#overviewLayer2Panel"),
+        systemStatusTop: top("#overviewStatusPanel"),
+        inputHealthTop: top("#operationalWarningsPanel"),
+        economicEventTop: top("#economicEventRefreshPanel"),
+        pairPerformanceTop: top("#overviewPerformancePanel"),
+        confidenceBandTop: top("#overviewConfidenceBandPanel")
+      };
+    });
+
+    if (
+      overviewOrder.layer1Top === null
+      || overviewOrder.layer2Top === null
+      || overviewOrder.systemStatusTop === null
+      || overviewOrder.inputHealthTop === null
+      || overviewOrder.economicEventTop === null
+      || overviewOrder.pairPerformanceTop === null
+      || overviewOrder.confidenceBandTop === null
+    ) {
+      throw new Error(`Overview priority-order anchors were missing.\n${JSON.stringify(overviewOrder, null, 2)}`);
+    }
+
+    if (!(overviewOrder.layer1Top < overviewOrder.layer2Top)) {
+      throw new Error(`Overview order regression: Layer 1 did not render before Layer 2.\n${JSON.stringify(overviewOrder, null, 2)}`);
+    }
+
+    if (!(overviewOrder.layer2Top < overviewOrder.systemStatusTop)) {
+      throw new Error(`Overview order regression: Layer 2 did not render before System Status.\n${JSON.stringify(overviewOrder, null, 2)}`);
+    }
+
+    if (!(overviewOrder.systemStatusTop < overviewOrder.economicEventTop)) {
+      throw new Error(`Overview order regression: System Status did not render before Economic Event Status.\n${JSON.stringify(overviewOrder, null, 2)}`);
+    }
+
+    if (!(overviewOrder.economicEventTop < overviewOrder.pairPerformanceTop)) {
+      throw new Error(`Overview order regression: Economic Event Status did not render before Pair Performance.\n${JSON.stringify(overviewOrder, null, 2)}`);
+    }
+
+    if (!(overviewOrder.pairPerformanceTop < overviewOrder.confidenceBandTop)) {
+      throw new Error(`Overview order regression: Pair Performance did not render before the confidence-band accuracy section.\n${JSON.stringify(overviewOrder, null, 2)}`);
+    }
+
+    const overviewConfidenceBandPanel = await page.evaluate(async () => {
+      const panel = document.getElementById("overviewConfidenceBandPanel");
+      const response = await fetch("./data/confidence-band-delivery.json", { cache: "no-store" });
+      const delivery = await response.json();
+      const layer1Response = await fetch("./data/layer1.json", { cache: "no-store" });
+      const layer1 = await layer1Response.json();
+      const layer2Response = await fetch("./data/layer2.json", { cache: "no-store" });
+      const layer2 = await layer2Response.json();
+
+      function rowTexts(selector) {
+        return Array.from(panel?.querySelectorAll(selector) || []).map((row) => row.innerText || "");
+      }
+
+      function tableSnapshot(selector) {
+        const table = panel?.querySelector(selector);
+        const rows = Array.from(table?.querySelectorAll("tbody tr") || []).map((row) => ({
+          text: row.innerText || "",
+          cells: Array.from(row.querySelectorAll("th, td")).map((cell) => (cell.textContent || "").trim()),
+          currentBand: row.classList.contains("is-current-band")
+        }));
+        return {
+          rendered: Boolean(table),
+          header: Array.from(table?.querySelectorAll("thead th") || []).map((cell) => (cell.textContent || "").trim()),
+          rowCount: rows.length,
+          rows
+        };
+      }
+
+      return {
+        rendered: Boolean(panel),
+        heading: panel?.querySelector("h3")?.textContent?.trim() || "",
+        text: panel?.innerText || "",
+        eyebrow: panel?.querySelector(".eyebrow")?.textContent?.trim() || "",
+        hasHorizontalOverflow: panel ? panel.scrollWidth > panel.clientWidth + 1 : false,
+        tabLabels: Array.from(panel?.querySelectorAll("[data-overview-confidence-tab]") || []).map((button) => button.textContent?.trim() || ""),
+        activeTabLabel: panel?.querySelector("[data-overview-confidence-tab].is-active")?.textContent?.trim() || "",
+        currentSummaryTables: {
+          layer1: tableSnapshot("[data-overview-confidence-current-summary='Layer 1'] table"),
+          layer2: tableSnapshot("[data-overview-confidence-current-summary='Layer 2'] table")
+        },
+        visibleAnalysisTables: Array.from(panel?.querySelectorAll("[data-overview-confidence-analysis-table]") || []).length,
+        layer1DirectionalCalls: Array.isArray(layer1?.agents)
+          ? layer1.agents.filter((agent) => {
+                const direction = String(agent?.calls?.["24h"]?.direction || "").toUpperCase();
+                return direction.startsWith("BULLISH") || direction.startsWith("BEARISH");
+            }).map((agent) => ({
+              market: agent.agent,
+              direction: String(agent?.calls?.["24h"]?.direction || "").toUpperCase().startsWith("BULLISH") ? "BULLISH" : "BEARISH"
+            }))
+          : [],
+        layer2NoTradePairs: Array.isArray(layer2?.pairs)
+          ? layer2.pairs.filter((pair) => String(pair?.decision || "").toUpperCase() === "NO_TRADE").map((pair) => pair.pair_code)
+          : [],
+        layer2DirectionalPairs: Array.isArray(layer2?.pairs)
+          ? layer2.pairs.filter((pair) => {
+              const decision = String(pair?.decision || "").toUpperCase();
+              const direction = String(pair?.direction || "").toUpperCase();
+              return (decision === "TRADE" || decision === "BUY" || decision === "SELL") && (direction === "BUY" || direction === "SELL");
+            }).map((pair) => ({
+              pair: pair.pair_code,
+              direction: String(pair.direction || "").toUpperCase()
+            }))
+          : [],
+        deliveryBands: delivery?.coverage?.confidence_bands || [],
+        thresholds: delivery?.sample_size_thresholds || {},
+        wordingHasHistoricalCalls: (panel?.innerText || "").toLowerCase().includes("historical calls"),
+        wordingAvoidsSampleLabel: !(panel?.innerText || "").toLowerCase().includes("directional sample"),
+        wordingIncludesDefinitions: ["Confidence", "Participation", "Strength"].every((label) => (document.querySelector(".overview-legend-panel")?.innerText || "").includes(label))
+      };
+    });
+
+    if (!overviewConfidenceBandPanel.rendered) {
+      throw new Error("Overview confidence-band accuracy panel did not render.");
+    }
+
+    if (overviewConfidenceBandPanel.heading !== "Current Live Calls and Historical Accuracy" || overviewConfidenceBandPanel.eyebrow !== "Current Live Calls and Historical Accuracy") {
+      throw new Error(`Overview confidence-band accuracy heading regressed.\n${JSON.stringify(overviewConfidenceBandPanel, null, 2)}`);
+    }
+
+    for (const expectedText of [
+      "Today’s live directional calls compared with the full historical accuracy record under the locked following-24-hours contract.",
+      "Confidence is the model's internal conviction score, not a guaranteed probability.",
+      "does not feed back into live call generation",
+      "Forecast horizon: following 24hrs",
+      "Checker contract: locked following-24-hours checker contract"
+    ]) {
+      if (!overviewConfidenceBandPanel.text.includes(expectedText)) {
+        throw new Error(`Overview confidence-band accuracy panel did not render expected note '${expectedText}'.\n${overviewConfidenceBandPanel.text}`);
+      }
+    }
+
+    if (overviewConfidenceBandPanel.hasHorizontalOverflow) {
+      throw new Error(`Overview confidence-band accuracy panel overflowed horizontally.\n${JSON.stringify(overviewConfidenceBandPanel, null, 2)}`);
+    }
+
+    if (overviewConfidenceBandPanel.visibleAnalysisTables !== 1) {
+      throw new Error(`Overview confidence-band dashboard should render exactly one major analysis table at a time.\n${JSON.stringify(overviewConfidenceBandPanel, null, 2)}`);
+    }
+
+    if (JSON.stringify(overviewConfidenceBandPanel.tabLabels) !== JSON.stringify(["Layer 1", "Layer 2", "Strength Bands", "Directional Asymmetry", "Pooled Reference"])) {
+      throw new Error(`Overview confidence-band dashboard tabs regressed.\n${JSON.stringify(overviewConfidenceBandPanel.tabLabels, null, 2)}`);
+    }
+
+    if (!overviewConfidenceBandPanel.wordingHasHistoricalCalls || !overviewConfidenceBandPanel.wordingAvoidsSampleLabel) {
+      throw new Error(`Overview confidence-band dashboard did not preserve the required plain-language wording.\n${JSON.stringify(overviewConfidenceBandPanel, null, 2)}`);
+    }
+
+    if (!overviewConfidenceBandPanel.wordingIncludesDefinitions) {
+      throw new Error("Overview definitions for Confidence, Participation, and Strength were not all present.");
+    }
+
+    if (overviewConfidenceBandPanel.currentSummaryTables.layer1.rowCount !== 5 || overviewConfidenceBandPanel.currentSummaryTables.layer2.rowCount !== 4) {
+      throw new Error(`Overview confidence-band current summaries did not render one row per live market.\n${JSON.stringify(overviewConfidenceBandPanel.currentSummaryTables, null, 2)}`);
+    }
+
+    for (const expectedHeader of ["Historical calls", "Directional accuracy", "Evidence quality", "Forecast horizon"]) {
+      if (!overviewConfidenceBandPanel.currentSummaryTables.layer1.header.includes(expectedHeader) && expectedHeader !== "Forecast horizon") {
+        throw new Error(`Layer 1 current summary is missing header ${expectedHeader}.`);
+      }
+      if (!overviewConfidenceBandPanel.currentSummaryTables.layer2.header.includes(expectedHeader) && expectedHeader !== "Forecast horizon") {
+        throw new Error(`Layer 2 current summary is missing header ${expectedHeader}.`);
+      }
+    }
+
+    for (const expectedHeader of ["Current live call", "Historical comparison used", "Comparison"]) {
+      if (!overviewConfidenceBandPanel.currentSummaryTables.layer1.header.includes(expectedHeader)) {
+        throw new Error(`Layer 1 current summary is missing header ${expectedHeader}.`);
+      }
+      if (!overviewConfidenceBandPanel.currentSummaryTables.layer2.header.includes(expectedHeader)) {
+        throw new Error(`Layer 2 current summary is missing header ${expectedHeader}.`);
+      }
+    }
+
+    for (const expectedText of [
+      "Current Live Layer 1 Calls — Historical Accuracy",
+      "Current Live Layer 2 Calls — Historical Accuracy",
+      "These rows show the currently live Layer 1 directional calls and how often comparable historical calls were correct over the following 24 hours.",
+      "These rows show the currently live Layer 2 trade decisions and how often comparable historical BUY or SELL calls were correct over the following 24 hours.",
+      "How to read this section: the live call is shown first, followed by the historical delivery rate for comparable past calls. Directional accuracy excludes flat outcomes; all-outcome accuracy includes them."
+    ]) {
+      if (!overviewConfidenceBandPanel.text.includes(expectedText)) {
+        throw new Error(`Overview confidence-band panel did not render expected live-call wording '${expectedText}'.\n${overviewConfidenceBandPanel.text}`);
+      }
+    }
+
+    if (overviewConfidenceBandPanel.layer1DirectionalCalls.length === 0) {
+      throw new Error("Expected active directional Layer 1 markets in the current summary.");
+    }
+
+    for (const call of overviewConfidenceBandPanel.layer1DirectionalCalls) {
+      const row = overviewConfidenceBandPanel.currentSummaryTables.layer1.rows.find((entry) => entry.text.includes(call.market));
+      if (!row || !row.text.includes("LIVE CALL")) {
+        throw new Error(`Layer 1 current summary row for ${call.market} did not render LIVE CALL.\n${JSON.stringify(row, null, 2)}`);
+      }
+      if (!row.text.includes("EXACT MATCH") && !row.text.includes("FALLBACK")) {
+        throw new Error(`Layer 1 current summary row for ${call.market} did not render comparison badge.\n${JSON.stringify(row, null, 2)}`);
+      }
+      if (!row.text.includes("Exact match: same market, direction and confidence band")
+        && !row.text.includes("Fallback: same market and confidence band, both directions")
+        && !row.text.includes("Fallback: pooled Layer 1, same direction and confidence band")
+        && !row.text.includes("Fallback: pooled Layer 1 confidence band")) {
+        throw new Error(`Layer 1 current summary row for ${call.market} did not render the historical reference label.\n${JSON.stringify(row, null, 2)}`);
+      }
+    }
+
+    for (const pairKey of overviewConfidenceBandPanel.layer2NoTradePairs) {
+      const row = overviewConfidenceBandPanel.currentSummaryTables.layer2.rows.find((entry) => entry.text.includes(pairKey));
+      if (!row || !row.text.includes("LIVE STATE") || !row.text.includes("Current live state: NO TRADE. No directional historical accuracy is shown because there is no active BUY or SELL call.")) {
+        throw new Error(`Layer 2 non-directional summary row for ${pairKey} did not stay non-directional.\n${JSON.stringify(row, null, 2)}`);
+      }
+    }
+
+    for (const pairCall of overviewConfidenceBandPanel.layer2DirectionalPairs) {
+      const row = overviewConfidenceBandPanel.currentSummaryTables.layer2.rows.find((entry) => entry.text.includes(pairCall.pair));
+      if (!row || !row.text.includes(pairCall.direction) || !row.text.includes("LIVE TRADE") || row.text.includes("Current live state: NO TRADE")) {
+        throw new Error(`Layer 2 directional summary row for ${pairCall.pair} did not render the live directional state.\n${JSON.stringify(row, null, 2)}`);
+      }
+    }
+
+    const selectedLayer1Call = overviewConfidenceBandPanel.layer1DirectionalCalls[0];
+    await page.locator(`[data-overview-confidence-layer1-market='${selectedLayer1Call.market}']`).click();
+    await page.locator(`[data-overview-confidence-layer1-direction='${selectedLayer1Call.direction}']`).click();
+    const layer1HistoricalTable = await page.evaluate(() => {
+      const table = document.getElementById("overviewLayer1HistoricalAccuracyTable");
+      return {
+        rendered: Boolean(table),
+        rowCount: table?.querySelectorAll("tbody tr").length || 0,
+        currentBandText: table?.querySelector("tbody tr.is-current-band")?.innerText || "",
+        currentDirectionChipCurrent: Array.from(document.querySelectorAll("[data-overview-confidence-layer1-direction]")).some((button) => button.classList.contains("is-current-live") && button.classList.contains("is-active")),
+        onlyOneAnalysisTable: document.querySelectorAll("[data-overview-confidence-analysis-table]").length,
+        hasScrollShell: Boolean(table?.closest(".overview-confidence-band-table-scroll")),
+        headers: Array.from(table?.querySelectorAll("thead th") || []).map((cell) => cell.textContent?.trim() || "")
+      };
+    });
+
+    if (!layer1HistoricalTable.rendered || layer1HistoricalTable.rowCount !== 10) {
+      throw new Error(`Layer 1 historical accuracy table did not render all ten bands.\n${JSON.stringify(layer1HistoricalTable, null, 2)}`);
+    }
+    if (!layer1HistoricalTable.currentBandText.toLowerCase().includes("current call band")) {
+      throw new Error(`Layer 1 historical accuracy table did not visibly mark the EUR bullish current band.\n${JSON.stringify(layer1HistoricalTable, null, 2)}`);
+    }
+    if (!layer1HistoricalTable.currentDirectionChipCurrent || layer1HistoricalTable.onlyOneAnalysisTable !== 1 || !layer1HistoricalTable.hasScrollShell) {
+      throw new Error(`Layer 1 historical accuracy controls regressed.\n${JSON.stringify(layer1HistoricalTable, null, 2)}`);
+    }
+
+    await page.locator("[data-overview-confidence-tab='layer2']").click();
+    const layer2HistoricalTable = await page.evaluate(() => {
+      const table = document.getElementById("overviewLayer2HistoricalAccuracyTable");
+      return {
+        activeTab: document.querySelector("[data-overview-confidence-tab].is-active")?.textContent?.trim() || "",
+        rendered: Boolean(table),
+        rowCount: table?.querySelectorAll("tbody tr").length || 0,
+        note: document.querySelector("[data-overview-confidence-analysis='layer2']")?.innerText || "",
+        onlyOneAnalysisTable: document.querySelectorAll("[data-overview-confidence-analysis-table]").length
+      };
+    });
+
+    if (layer2HistoricalTable.activeTab !== "Layer 2" || !layer2HistoricalTable.rendered || layer2HistoricalTable.rowCount !== 10) {
+      throw new Error(`Layer 2 historical accuracy tab did not render correctly.\n${JSON.stringify(layer2HistoricalTable, null, 2)}`);
+    }
+    if (!layer2HistoricalTable.note.includes("NO TRADE summary") || layer2HistoricalTable.onlyOneAnalysisTable !== 1) {
+      throw new Error(`Layer 2 historical accuracy tab did not preserve the NO TRADE summary or single-table layout.\n${JSON.stringify(layer2HistoricalTable, null, 2)}`);
+    }
+
+    await page.locator("[data-overview-confidence-tab='strength']").click();
+    const strengthTable = await page.evaluate(() => {
+      const table = document.querySelector("[data-overview-confidence-strength-table='true']");
+      return {
+        rendered: Boolean(table),
+        rowCount: table?.querySelectorAll("tbody tr").length || 0,
+        activeTab: document.querySelector("[data-overview-confidence-tab].is-active")?.textContent?.trim() || "",
+        onlyOneAnalysisTable: document.querySelectorAll("[data-overview-confidence-analysis-table]").length
+      };
+    });
+    if (strengthTable.activeTab !== "Strength Bands" || !strengthTable.rendered || strengthTable.rowCount !== 4 || strengthTable.onlyOneAnalysisTable !== 1) {
+      throw new Error(`Strength-band accuracy tab regressed.\n${JSON.stringify(strengthTable, null, 2)}`);
+    }
+
+    await page.locator("[data-overview-confidence-tab='asymmetry']").click();
+    const asymmetryTable = await page.evaluate(() => {
+      const table = document.querySelector("[data-overview-confidence-asymmetry-table='true']");
+      return {
+        rendered: Boolean(table),
+        rowCount: table?.querySelectorAll("tbody tr").length || 0,
+        activeTab: document.querySelector("[data-overview-confidence-tab].is-active")?.textContent?.trim() || "",
+        text: document.querySelector("[data-overview-confidence-analysis='asymmetry']")?.innerText || ""
+      };
+    });
+    if (asymmetryTable.activeTab !== "Directional Asymmetry" || !asymmetryTable.rendered || asymmetryTable.rowCount === 0) {
+      throw new Error(`Directional asymmetry tab did not render expected rows.\n${JSON.stringify(asymmetryTable, null, 2)}`);
+    }
+
+    await page.locator("[data-overview-confidence-tab='pooled']").click();
+    const pooledLayer1Table = await page.evaluate(() => {
+      const table = document.getElementById("overviewPooledLayer1Table");
+      return {
+        rendered: Boolean(table),
+        rowCount: table?.querySelectorAll("tbody tr").length || 0,
+        text: document.querySelector("[data-overview-confidence-analysis='pooled']")?.innerText || "",
+        activeTab: document.querySelector("[data-overview-confidence-tab].is-active")?.textContent?.trim() || ""
+      };
+    });
+    if (pooledLayer1Table.activeTab !== "Pooled Reference" || !pooledLayer1Table.rendered || pooledLayer1Table.rowCount !== 10 || !pooledLayer1Table.text.includes("not market-specific")) {
+      throw new Error(`Pooled Layer 1 reference table did not render correctly.\n${JSON.stringify(pooledLayer1Table, null, 2)}`);
+    }
+
+    await page.locator("[data-overview-confidence-pooled-layer='Layer 2']").click();
+    const pooledLayer2Table = await page.evaluate(() => {
+      const table = document.getElementById("overviewPooledLayer2Table");
+      const highlighted = Array.from(table?.querySelectorAll("tbody tr.is-current-band") || []).map((row) => row.innerText || "");
+      return {
+        rendered: Boolean(table),
+        rowCount: table?.querySelectorAll("tbody tr").length || 0,
+        highlightedCount: highlighted.length
+      };
+    });
+    if (!pooledLayer2Table.rendered || pooledLayer2Table.rowCount !== 10 || pooledLayer2Table.highlightedCount !== 0) {
+      throw new Error(`Pooled Layer 2 reference table regressed.\n${JSON.stringify(pooledLayer2Table, null, 2)}`);
+    }
+
+    const economicEventContract = await page.evaluate(async () => {
+      const response = await fetch("./data/economic-event-refresh.json", { cache: "no-store" });
+      const payload = await response.json();
+      return {
+        panelState: payload?.summary?.panel_state || "SOURCE_UNAVAILABLE",
+        warnings: Array.isArray(payload?.summary?.data_quality_warnings) ? payload.summary.data_quality_warnings : [],
+        eventCount: Array.isArray(payload?.events) ? payload.events.filter((event) => event?.state !== "CLEARED").length : 0
+      };
+    });
+
+    const renderedEconomicEventPanel = await page.evaluate(() => {
+      const panel = document.querySelector("[data-economic-event-panel='true']");
+      return {
+        rendered: Boolean(panel),
+        state: panel?.getAttribute("data-economic-event-panel-state") || "",
+        heading: panel?.querySelector("h3")?.textContent?.trim() || "",
+        badge: panel?.querySelector(".economic-event-status-badge")?.textContent?.trim() || "",
+        text: panel?.innerText || "",
+        cardCount: panel?.querySelectorAll("[data-economic-event-card='true']").length || 0,
+        hasHorizontalOverflow: panel ? panel.scrollWidth > panel.clientWidth + 1 : false
+      };
+    });
+
+    if (!renderedEconomicEventPanel.rendered) {
+      throw new Error("Economic event refresh panel did not render in the Overview.");
+    }
+
+    if (renderedEconomicEventPanel.heading !== "ECONOMIC EVENT STATUS") {
+      throw new Error(`Economic event module did not render the required heading.\n${JSON.stringify(renderedEconomicEventPanel, null, 2)}`);
+    }
+
+    const expectedEconomicPanelState = economicEventContract.warnings.includes("no_source_rows_available")
+      ? "SOURCE_UNAVAILABLE"
+      : economicEventContract.panelState;
+    if (renderedEconomicEventPanel.state !== expectedEconomicPanelState) {
+      throw new Error(`Economic event refresh panel state did not match the published artifact.\nExpected: ${economicEventContract.panelState}\nRendered: ${renderedEconomicEventPanel.state}`);
+    }
+
+    const expectedEventBadge = expectedEconomicPanelState.replaceAll("_", " ");
+    if (!renderedEconomicEventPanel.badge.includes(expectedEventBadge)) {
+      throw new Error(`Economic event refresh panel badge did not match the artifact state.\nExpected badge to include: ${expectedEventBadge}\nRendered: ${renderedEconomicEventPanel.badge}`);
+    }
+
+    if (renderedEconomicEventPanel.cardCount !== economicEventContract.eventCount) {
+      throw new Error(`Economic event refresh panel card count did not match the published artifact.\nExpected: ${economicEventContract.eventCount}\nRendered: ${renderedEconomicEventPanel.cardCount}`);
+    }
+
+    if (renderedEconomicEventPanel.hasHorizontalOverflow) {
+      throw new Error(`Economic event refresh panel overflowed horizontally.\n${JSON.stringify(renderedEconomicEventPanel, null, 2)}`);
+    }
+
+    if (
+      economicEventContract.warnings.includes("no_source_rows_available")
+      && !renderedEconomicEventPanel.text.toLowerCase().includes("economic-event timing is currently unavailable")
+    ) {
+      throw new Error(`Economic event refresh panel did not surface the no-source-rows data-quality warning.\n${renderedEconomicEventPanel.text}`);
+    }
+
+    const renderedOperationalPanel = await page.evaluate(() => {
+      const panel = document.querySelector("[data-input-health-panel='true']");
+      return {
+        rendered: Boolean(panel),
+        heading: panel?.querySelector("h3")?.textContent?.trim() || "",
+        state: panel?.getAttribute("data-input-health-panel-state") || "",
+        badge: panel?.querySelector(".economic-event-status-badge")?.textContent?.trim() || "",
+        text: panel?.innerText || "",
+        hasHorizontalOverflow: panel ? panel.scrollWidth > panel.clientWidth + 1 : false
+      };
+    });
+
+    if (!renderedOperationalPanel.rendered) {
+      throw new Error("Operational warnings panel did not render in the Overview.");
+    }
+
+    if (renderedOperationalPanel.heading !== "INPUT HEALTH") {
+      throw new Error(`Input health module did not render the required heading.\n${JSON.stringify(renderedOperationalPanel, null, 2)}`);
+    }
+
+    if (renderedOperationalPanel.state !== "CRITICAL" || !renderedOperationalPanel.badge.includes("CRITICAL")) {
+      throw new Error(`Input health module did not render the current critical state.\n${JSON.stringify(renderedOperationalPanel, null, 2)}`);
+    }
+
+    if (!renderedOperationalPanel.text.toLowerCase().includes("calls produced with degraded event inputs")) {
+      throw new Error(`Input health module did not render expected degraded-event copy.\n${renderedOperationalPanel.text}`);
+    }
+
+    if (renderedOperationalPanel.hasHorizontalOverflow) {
+      throw new Error(`Operational warnings panel overflowed horizontally.\n${JSON.stringify(renderedOperationalPanel, null, 2)}`);
+    }
+
+    await page.screenshot({ path: path.join(screenshotDir, "overview-desktop.png"), fullPage: false });
+
+    const overviewAgentPanels = await page.locator("#layer1Grid .agent-card").first().locator("[data-overview-validation-panels='true'] [data-validation-panel]").allInnerTexts();
+    const normalizedOverviewAgentPanels = overviewAgentPanels.map(text => text.toLowerCase());
+
+    if (overviewAgentPanels.length !== 2) {
+      throw new Error(`Overview Layer 1 card did not render both validation panels.\n${overviewAgentPanels.join("\n")}`);
+    }
+
+    if (!normalizedOverviewAgentPanels.some(text => text.includes("l2l"))) {
+      throw new Error(`Overview Layer 1 card is missing the L2L validation panel.\n${overviewAgentPanels.join("\n")}`);
+    }
+
+    if (!normalizedOverviewAgentPanels.some(text => text.includes("directional"))) {
+      throw new Error(`Overview Layer 1 card is missing the directional validation panel.\n${overviewAgentPanels.join("\n")}`);
+    }
+
+    const btcOverviewCard = page.locator("#layer1Grid .agent-card", { has: page.locator("h3:text('BTC')") }).first();
+    const btcL2lPanel = btcOverviewCard.locator("[data-validation-panel='l2l']");
+    const btcDirectionalPanel = btcOverviewCard.locator("[data-validation-panel='directional']");
+
+    if (!await btcL2lPanel.isVisible()) {
+      throw new Error("BTC Overview card did not visibly render the L2L validation panel.");
+    }
+
+    if (!await btcDirectionalPanel.isVisible()) {
+      throw new Error("BTC Overview card did not visibly render the directional validation panel.");
+    }
+
+    const btcL2lText = (await btcL2lPanel.innerText()).toLowerCase();
+    const btcDirectionalText = (await btcDirectionalPanel.innerText()).toLowerCase();
+
+    if (!btcL2lText.includes("l2l tradable") && !btcL2lText.includes("l2l not tradable")) {
+      throw new Error(`BTC Overview card L2L panel did not render an expected status.\n${btcL2lText}`);
+    }
+
+    if (!btcDirectionalText.includes("directional viable") && !btcDirectionalText.includes("directional not viable")) {
+      throw new Error(`BTC Overview card directional panel did not render an expected status.\n${btcDirectionalText}`);
+    }
+
+    await page.click("[data-tab='backtest']");
+    await page.waitForTimeout(500);
+
+    const confidenceCalibrationPanel = await page.evaluate(() => {
+      const panel = Array.from(document.querySelectorAll(".research-section")).find((section) =>
+        (section.innerText || "").includes("Research-only confidence-band calibration on the current checker contract")
+      );
+      return {
+        rendered: Boolean(panel),
+        text: panel?.innerText || ""
+      };
+    });
+
+    if (!confidenceCalibrationPanel.rendered) {
+      throw new Error("Confidence calibration research section did not render in Backtest / Accuracy.");
+    }
+
+    for (const expectedText of [
+      "What already existed before this artifact",
+      "Layer 1 Pooled",
+      "Layer 2 Pooled",
+      "What was missing before this artifact"
+    ]) {
+      if (!confidenceCalibrationPanel.text.includes(expectedText)) {
+        throw new Error(`Confidence calibration section did not render expected text '${expectedText}'.\n${confidenceCalibrationPanel.text}`);
+      }
+    }
+
+    await page.getByRole("button", { name: "Overview", exact: true }).click();
+    await page.waitForSelector("#layer1Grid .agent-card", { timeout: 15000 });
+
+    const overviewExpiryContract = await page.evaluate(async () => {
+      const response = await fetch("./data/layer1.json", { cache: "no-store" });
+      const payload = await response.json();
+      const agents = Array.isArray(payload?.agents)
+        ? payload.agents.filter((agent) => String(agent?.status || "").toLowerCase() === "live")
+        : [];
+      const formatExpiry = (value, timeZone = "America/New_York") => {
+        if (!value) return null;
+        return `${new Intl.DateTimeFormat("en-GB", {
+          timeZone,
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: false
+        }).format(new Date(value))} ET`;
+      };
+      const formatUkExpiry = (value) => {
+        if (!value) return null;
+        const formatter = new Intl.DateTimeFormat("en-GB", {
+          timeZone: "Europe/London",
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: false,
+          timeZoneName: "short"
+        });
+        const parts = formatter.formatToParts(new Date(value));
+        const zoneLabel = parts.find((part) => part.type === "timeZoneName")?.value || "UK";
+        const formatted = parts
+          .filter((part) => part.type !== "timeZoneName")
+          .map((part) => part.value)
+          .join("")
+          .trim()
+          .replace(/\s+,/g, ",");
+        return `UK time: ${formatted} ${zoneLabel}`.trim();
+      };
+
+      return agents.map((agent) => ({
+        asset: agent.agent,
+        forecastWindowEnd: agent.forecast_window_end || null,
+        expiresAt: agent.expires_at || null,
+        expectedExpiry: formatExpiry(agent.forecast_window_end || agent.expires_at, agent.timezone || "America/New_York"),
+        expectedUkTooltip: formatUkExpiry(agent.forecast_window_end || agent.expires_at),
+        expectedStatus: String(agent.effective_status || agent.status_at_build || "UNAVAILABLE").toUpperCase()
+      }));
+    });
+
+    const overviewExpiryCards = await page.locator("#layer1Grid .agent-card").evaluateAll((cards) => cards.map((card) => ({
+      asset: card.querySelector("h3")?.textContent?.trim() || "",
+      expiryLabel: card.querySelector("[data-overview-expiry-card='true'] .validity-label")?.textContent?.trim() || "",
+      expiryValue: card.querySelector(".overview-expiry-value")?.textContent?.trim() || "",
+      expiryStatus: card.querySelector(".overview-expiry-badge")?.textContent?.trim() || "",
+      expiryTooltip: card.querySelector(".overview-expiry-tooltip")?.textContent?.trim() || "",
+      expiryTooltipRole: card.querySelector(".overview-expiry-tooltip")?.getAttribute("role") || "",
+      expiryTooltipVisibleOnHover: false,
+      expiryTooltipVisibleOnFocus: false,
+      expiryTriggerTag: card.querySelector(".overview-expiry-trigger")?.tagName || "",
+      expiryTriggerDescribedBy: card.querySelector(".overview-expiry-trigger")?.getAttribute("aria-describedby") || "",
+      expiryTriggerLabel: card.querySelector(".overview-expiry-trigger")?.getAttribute("aria-label") || "",
+      directionalPanelGap: (() => {
+        const directional = card.querySelector("[data-validation-panel='directional']");
+        const metrics = card.querySelector(".agent-metrics");
+        if (!directional || !metrics) return null;
+        const directionalRect = directional.getBoundingClientRect();
+        const metricsRect = metrics.getBoundingClientRect();
+        return Number((metricsRect.top - directionalRect.bottom).toFixed(2));
+      })(),
+      validationStackGap: (() => {
+        const validationStack = card.querySelector(".overview-validation-panel-stack");
+        const metrics = card.querySelector(".agent-metrics");
+        if (!validationStack || !metrics) return null;
+        const validationStackRect = validationStack.getBoundingClientRect();
+        const metricsRect = metrics.getBoundingClientRect();
+        return Number((metricsRect.top - validationStackRect.bottom).toFixed(2));
+      })(),
+      text: card.innerText || "",
+      hasHorizontalOverflow: card.scrollWidth > card.clientWidth + 1
+    })));
+
+    if (overviewExpiryCards.length !== overviewExpiryContract.length) {
+      throw new Error(`Overview Layer 1 card count did not match the available artifact rows.\nRendered: ${overviewExpiryCards.length}\nArtifact: ${overviewExpiryContract.length}`);
+    }
+
+    for (const expected of overviewExpiryContract) {
+      if (!expected.forecastWindowEnd) {
+        throw new Error(`Artifact row ${expected.asset} did not expose forecast_window_end for the Overview expiry contract.`);
+      }
+
+      if (expected.forecastWindowEnd !== expected.expiresAt) {
+        throw new Error(`Artifact row ${expected.asset} did not preserve expires_at as the alias of forecast_window_end.\n${JSON.stringify(expected, null, 2)}`);
+      }
+
+      const rendered = overviewExpiryCards.find((card) => card.asset === expected.asset);
+      if (!rendered) {
+        throw new Error(`Overview Layer 1 card for ${expected.asset} did not render.`);
+      }
+
+      if (rendered.expiryLabel !== "24H call valid until") {
+        throw new Error(`Overview Layer 1 card ${expected.asset} did not render the required expiry label.\n${JSON.stringify(rendered, null, 2)}`);
+      }
+
+      if (rendered.expiryValue !== expected.expectedExpiry) {
+        throw new Error(`Overview Layer 1 card ${expected.asset} did not render the artifact-backed expiry value.\nExpected: ${expected.expectedExpiry}\nRendered: ${rendered.expiryValue}`);
+      }
+
+      if (rendered.expiryTooltip !== expected.expectedUkTooltip) {
+        throw new Error(`Overview Layer 1 card ${expected.asset} did not render the expected UK tooltip.\nExpected: ${expected.expectedUkTooltip}\nRendered: ${rendered.expiryTooltip}`);
+      }
+
+      if (rendered.expiryTooltipRole !== "tooltip" || !rendered.expiryTriggerDescribedBy || !rendered.expiryTriggerLabel.includes(expected.expectedExpiry) || !rendered.expiryTriggerLabel.includes(expected.expectedUkTooltip.replace("UK time: ", ""))) {
+        throw new Error(`Overview Layer 1 card ${expected.asset} did not expose the expiry tooltip accessibly.\n${JSON.stringify(rendered, null, 2)}`);
+      }
+
+      if (rendered.expiryStatus !== expected.expectedStatus) {
+        throw new Error(`Overview Layer 1 card ${expected.asset} did not render the expected validity status.\nExpected: ${expected.expectedStatus}\nRendered: ${rendered.expiryStatus}`);
+      }
+
+      const normalizedRenderedText = rendered.text.toLowerCase();
+      if (normalizedRenderedText.includes("weighted verdicts calculated deterministically")) {
+        throw new Error(`Overview Layer 1 card ${expected.asset} still rendered the weighted-verdict summary prose.\n${rendered.text}`);
+      }
+
+      if (rendered.hasHorizontalOverflow) {
+        throw new Error(`Overview Layer 1 card ${expected.asset} overflowed horizontally after the expiry block was added.\n${JSON.stringify(rendered, null, 2)}`);
+      }
+
+      if (rendered.validationStackGap === null || rendered.validationStackGap < 8) {
+        throw new Error(`Overview Layer 1 card ${expected.asset} did not preserve visible spacing beneath the validation panel stack.\n${JSON.stringify(rendered, null, 2)}`);
+      }
+    }
+
+    for (const expected of overviewExpiryContract) {
+      const card = page.locator(`#layer1Grid .agent-card[data-agent="${expected.asset}"]`).first();
+      const trigger = card.locator(".overview-expiry-trigger");
+      const tooltip = card.locator(".overview-expiry-tooltip");
+
+      await trigger.hover();
+      await page.waitForFunction((element) => {
+        if (!element) return false;
+        const style = getComputedStyle(element);
+        return style.visibility === "visible" && Number(style.opacity) > 0.5;
+      }, await tooltip.elementHandle());
+      if (!(await tooltip.isVisible())) {
+        throw new Error(`Overview Layer 1 card ${expected.asset} did not reveal the expiry tooltip on hover.`);
+      }
+
+      await trigger.focus();
+      await page.waitForFunction((element) => {
+        if (!element) return false;
+        const style = getComputedStyle(element);
+        return style.visibility === "visible" && Number(style.opacity) > 0.5;
+      }, await tooltip.elementHandle());
+      if (!(await tooltip.isVisible())) {
+        throw new Error(`Overview Layer 1 card ${expected.asset} did not reveal the expiry tooltip on keyboard focus.`);
+      }
+
+      await page.locator("#runWorkflowButton").focus();
+      await page.waitForFunction((element) => {
+        if (!element) return true;
+        const style = getComputedStyle(element);
+        return style.visibility === "hidden" || Number(style.opacity) < 0.1;
+      }, await tooltip.elementHandle());
+    }
+
+    const overviewLayout = await page.evaluate(() => {
+      const doc = document.documentElement;
+      const grid = document.getElementById("layer1Grid");
+      const topbar = document.querySelector(".topbar");
+      const cards = Array.from(document.querySelectorAll("#layer1Grid .agent-card"));
+      const performanceWrap = document.querySelector(".overview-performance-table-wrap");
+      return {
+        pageHasHorizontalOverflow: doc.scrollWidth > doc.clientWidth + 1,
+        topbarHasHorizontalOverflow: topbar ? topbar.scrollWidth > topbar.clientWidth + 1 : false,
+        gridHasHorizontalOverflow: grid ? grid.scrollWidth > grid.clientWidth + 1 : false,
+        overflowingCards: cards.filter((card) => card.scrollWidth > card.clientWidth + 1).length,
+        performanceWrapHasOverflow: performanceWrap ? performanceWrap.scrollWidth > performanceWrap.clientWidth + 1 : false
+      };
+    });
+
+    if (overviewLayout.pageHasHorizontalOverflow || overviewLayout.topbarHasHorizontalOverflow || overviewLayout.gridHasHorizontalOverflow || overviewLayout.overflowingCards > 0) {
+      throw new Error(`Overview Layer 1 expiry presentation introduced horizontal overflow.\n${JSON.stringify(overviewLayout, null, 2)}`);
+    }
+
+    await assertOverviewStrengthLayout("1440x900");
+    await assertSyntheticStrengthVariants("1440x900");
+
+    const syntheticNoCallCard = await page.evaluate(() => {
+      const html = globalThis.__dashboardTestHooks.renderAgentCard({
+        agent: "TEST_NO_CALL",
+        status: "live",
+        summary: "Synthetic no-call validation card.",
+        sealed_at: "2026-07-11T05:56:00.000Z",
+        valid_from: "2026-07-11T05:56:00.000Z",
+        refresh_due_at: "2026-07-11T11:00:00.000Z",
+        expires_at: null,
+        status_at_build: "NO_CALL",
+        effective_status: "NO_CALL",
+        status_resolved_at: "2026-07-11T05:56:00.000Z",
+        display_metrics: {},
+        calls: {
+          "24h": {
+            direction: "NO 24H CALL",
+            conviction: null,
+            status_at_build: "NO_CALL",
+            effective_status: "NO_CALL",
+            valid_from: "2026-07-11T05:56:00.000Z",
+            refresh_due_at: "2026-07-11T11:00:00.000Z",
+            expires_at: null
+          }
+        },
+        priority_call: {
+          direction: "NO 24H CALL",
+          conviction: null,
+          status_at_build: "NO_CALL",
+          effective_status: "NO_CALL",
+          valid_from: "2026-07-11T05:56:00.000Z",
+          refresh_due_at: "2026-07-11T11:00:00.000Z",
+          expires_at: null
+        }
+      });
+
+      const host = document.createElement("div");
+      host.innerHTML = html;
+      const card = host.querySelector(".agent-card");
+      const directional = card?.querySelector("[data-validation-panel='directional']")?.innerText || "";
+      const l2l = card?.querySelector("[data-validation-panel='l2l']")?.innerText || "";
+      const expiryLabel = card?.querySelector("[data-overview-expiry-card='true'] .validity-label")?.textContent || "";
+      const expiryValue = card?.querySelector(".overview-expiry-value")?.textContent || "";
+      const expiryStatus = card?.querySelector(".overview-expiry-badge")?.textContent || "";
+      const expiryTooltip = card?.querySelector(".overview-expiry-tooltip")?.textContent || "";
+      return { l2l, directional, expiryLabel, expiryValue, expiryStatus, expiryTooltip, text: card?.innerText || "" };
+    });
+
+    const syntheticDirectionalText = String(syntheticNoCallCard.directional || "").toLowerCase();
+    const syntheticL2lText = String(syntheticNoCallCard.l2l || "").toLowerCase();
+    const syntheticCardText = String(syntheticNoCallCard.text || "").toLowerCase();
+
+    if (!syntheticDirectionalText.includes("directional not viable") || !syntheticDirectionalText.includes("no 24h call")) {
+      throw new Error(`Synthetic no-call Overview card did not render the required directional no-call state.\n${syntheticNoCallCard.directional}`);
+    }
+
+    if (!syntheticL2lText.includes("l2l not tradable") || !syntheticL2lText.includes("no valid call")) {
+      throw new Error(`Synthetic no-call Overview card did not render the required L2L no-call state.\n${syntheticNoCallCard.l2l}`);
+    }
+
+    if (String(syntheticNoCallCard.expiryLabel || "").trim() !== "24H call valid until" || String(syntheticNoCallCard.expiryValue || "").trim() !== "No active 24H expiry" || String(syntheticNoCallCard.expiryStatus || "").trim() !== "NO CALL") {
+      throw new Error(`Synthetic no-call Overview card did not render the expected no-call expiry presentation.\n${JSON.stringify(syntheticNoCallCard, null, 2)}`);
+    }
+
+    if (String(syntheticNoCallCard.expiryTooltip || "").trim() !== "") {
+      throw new Error(`Synthetic no-call Overview card should not render a UK expiry tooltip when no active expiry exists.\n${JSON.stringify(syntheticNoCallCard, null, 2)}`);
+    }
+
+    if (syntheticCardText.includes("synthetic no-call validation card")) {
+      throw new Error(`Synthetic no-call Overview card still rendered the summary paragraph.\n${syntheticNoCallCard.text}`);
+    }
+
+    const fallbackBriefingContract = await page.evaluate(() => {
+      return globalThis.__dashboardTestHooks.buildOverviewBriefing({
+        layer1Calls: [
+          { agent: "USD", direction: "BULLISH", confidence: 68, warnings: [], missingInputs: [], participation: 42, marketInputs: {} },
+          { agent: "EUR", direction: "BEARISH", confidence: 61, warnings: [], missingInputs: [], participation: 39, marketInputs: {} },
+          { agent: "NQ", direction: "BEARISH", confidence: 44, warnings: [], missingInputs: [], participation: 29, marketInputs: {} }
+        ],
+        derivedLayer2: {
+          tradeOpportunities: [],
+          avoidToday: [{ instrument: "EUR/USD", reason: "No trade" }]
+        },
+        macroContext: {
+          upcomingEvents: [],
+          highImpactEvents: [],
+          latestUsEvent: null,
+          latestEzEvent: null,
+          fedBias: null,
+          ecbBias: null,
+          dxyFiveDayMove: null,
+          vixFiveDayMove: null,
+          realYieldFiveDayMove: null
+        }
+      });
+    });
+
+    if (
+      !fallbackBriefingContract
+      || typeof fallbackBriefingContract.marketConditions !== "string"
+      || typeof fallbackBriefingContract.weekAhead !== "string"
+      || !fallbackBriefingContract.weekAhead.toLowerCase().includes("high-impact")
+    ) {
+      throw new Error(`Overview briefing fallback contract failed when event data was missing.\n${JSON.stringify(fallbackBriefingContract, null, 2)}`);
+    }
+
+    const browserPairContract = await page.evaluate(() => {
+      const result = globalThis.Layer2PairLogic.deriveLayer2PairSignal({
+        instrument: "TEST/USD",
+        targetDirection: "BEARISH",
+        usdDirection: "BULLISH",
+        targetConfidence: 42,
+        usdConfidence: 86
+      });
+
+      return {
+        tradable: result.tradable,
+        direction: result.direction,
+        combinedConfidence: result.combinedConfidence,
+        strengthBucket: result.strengthBucket,
+        strengthBucketKey: result.strengthBucketKey
+      };
+    });
+
+    if (
+      browserPairContract.tradable !== true
+      || browserPairContract.direction !== "SELL"
+      || browserPairContract.combinedConfidence !== 42
+      || browserPairContract.strengthBucketKey !== "WEAK"
+      || browserPairContract.strengthBucket !== "Weak"
+    ) {
+      throw new Error(`Browser Layer 2 pair contract failed.\n${JSON.stringify(browserPairContract, null, 2)}`);
+    }
+
+    await page.getByRole("button", { name: "Pair Analysis" }).click();
+    await page.waitForSelector("text=Layer 2 Trade Selection", { timeout: 15000 });
+    const layer2Text = await page.locator("#layer2View").innerText();
+    const normalizedLayer2Text = layer2Text.toLowerCase();
+
+    if (!normalizedLayer2Text.includes("combined confidence is always the lower layer 1 confidence")) {
+      throw new Error(`Layer 2 live summary did not render the min-confidence invariant.\n${layer2Text}`);
+    }
+
+    if (!normalizedLayer2Text.includes("no trade") || !normalizedLayer2Text.includes("target 24h signal is non-directional")) {
+      throw new Error(`Layer 2 live cards did not render expected tradable/no-trade state.\n${layer2Text}`);
+    }
+
+    const usdDetailReasoning = await page.evaluate(async () => {
+      const response = await fetch("./data/layer1.json", { cache: "no-store" });
+      const payload = await response.json();
+      const agent = payload?.agents?.find((entry) => entry.agent === "USD") || null;
+      return {
+        callReason: agent?.calls?.["24h"]?.reason || ""
+      };
+    });
+
+    await page.getByRole("button", { name: "Overview" }).click();
+    await page.waitForSelector("#layer1Grid .agent-card", { timeout: 15000 });
+    await page.locator("#layer1Grid .agent-card", { has: page.locator("h3:text('USD')") }).locator("[data-agent='USD']").click();
+    await page.waitForFunction(() => {
+      const activeView = document.querySelector(".active-view");
+      const heading = document.querySelector("#agentView h2");
+      return activeView?.id === "agentView" && heading && heading.textContent.includes("USD");
+    }, { timeout: 15000 });
+
+    const usdDetailReasoningText = await page.locator("#agentView").innerText();
+    const expectedUsdDetailReason = String(usdDetailReasoning?.callReason || "").replace(/^24h\s+/i, "");
+    const normalizedExpectedUsdDetailReason = expectedUsdDetailReason.toLowerCase().replace(/_/g, " ").replace(/\s+/g, " ").trim();
+    const normalizedUsdDetailReasoningText = usdDetailReasoningText.toLowerCase().replace(/_/g, " ").replace(/\s+/g, " ").trim();
+    if (!normalizedExpectedUsdDetailReason || !normalizedUsdDetailReasoningText.includes(normalizedExpectedUsdDetailReason)) {
+      throw new Error(`USD detail view did not preserve the detailed 24H reasoning text.\nExpected call reason: ${expectedUsdDetailReason}\nRendered: ${usdDetailReasoningText}`);
+    }
+
+    if (!usdDetailReasoningText.toLowerCase().includes("why today's call was made")) {
+      throw new Error(`USD detail view did not retain the detailed reasoning section.\n${usdDetailReasoningText}`);
+    }
+
+    await page.getByRole("button", { name: "Overview" }).click();
+    await page.waitForSelector("#layer1Grid .agent-card", { timeout: 15000 });
+    await page.setViewportSize({ width: 900, height: 1280 });
+    await page.waitForTimeout(250);
+
+    await assertOverviewStrengthLayout("900x1280");
+    await assertSyntheticStrengthVariants("900x1280");
+
+    const tabletEconomicEventLayout = await page.evaluate(() => {
+      const doc = document.documentElement;
+      const panel = document.querySelector("[data-economic-event-panel='true']");
+      return {
+        pageHasHorizontalOverflow: doc.scrollWidth > doc.clientWidth + 1,
+        panelHasHorizontalOverflow: panel ? panel.scrollWidth > panel.clientWidth + 1 : false
+      };
+    });
+
+    if (tabletEconomicEventLayout.pageHasHorizontalOverflow || tabletEconomicEventLayout.panelHasHorizontalOverflow) {
+      throw new Error(`Economic event panel overflowed at tablet width.\n${JSON.stringify(tabletEconomicEventLayout, null, 2)}`);
+    }
+
+    await page.setViewportSize({ width: 390, height: 1280 });
+    await page.waitForTimeout(250);
+
+    await assertOverviewStrengthLayout("390x1280");
+    await assertSyntheticStrengthVariants("390x1280");
+
+    const narrowClockLayout = await page.evaluate(() => {
+      const doc = document.documentElement;
+      const topbar = document.querySelector(".topbar");
+      const clock = document.getElementById("topbarClock");
+      const economicPanel = document.querySelector("[data-economic-event-panel='true']");
+      const cardGaps = Array.from(document.querySelectorAll("#layer1Grid .agent-card")).map((card) => {
+        const validationStack = card.querySelector(".overview-validation-panel-stack");
+        const metrics = card.querySelector(".agent-metrics");
+        if (!validationStack || !metrics) return null;
+        return Number((metrics.getBoundingClientRect().top - validationStack.getBoundingClientRect().bottom).toFixed(2));
+      });
+      return {
+        clockText: clock?.textContent?.trim() || "",
+        pageHasHorizontalOverflow: doc.scrollWidth > doc.clientWidth + 1,
+        topbarHasHorizontalOverflow: topbar ? topbar.scrollWidth > topbar.clientWidth + 1 : false,
+        economicPanelHasHorizontalOverflow: economicPanel ? economicPanel.scrollWidth > economicPanel.clientWidth + 1 : false,
+        gridHasHorizontalOverflow: document.getElementById("layer1Grid")?.scrollWidth > document.getElementById("layer1Grid")?.clientWidth + 1,
+        overviewCardOverflowCount: Array.from(document.querySelectorAll("#layer1Grid .agent-card")).filter((card) => card.scrollWidth > card.clientWidth + 1).length,
+        cardGaps
+      };
+    });
+
+    if (!/^UK \d{2}:\d{2} \| ET \d{2}:\d{2}$/.test(narrowClockLayout.clockText)) {
+      throw new Error(`Topbar dual clock did not survive the narrow viewport layout.\n${JSON.stringify(narrowClockLayout, null, 2)}`);
+    }
+
+    if (narrowClockLayout.pageHasHorizontalOverflow || narrowClockLayout.topbarHasHorizontalOverflow || narrowClockLayout.economicPanelHasHorizontalOverflow || narrowClockLayout.gridHasHorizontalOverflow || narrowClockLayout.overviewCardOverflowCount > 0) {
+      throw new Error(`Dual clock or Layer 1 cards caused overflow at the narrow viewport.\n${JSON.stringify(narrowClockLayout, null, 2)}`);
+    }
+
+    if (narrowClockLayout.cardGaps.some((gap) => gap === null || gap < 10)) {
+      throw new Error(`Layer 1 cards did not preserve the validation-to-metrics gap at the narrow viewport.\n${JSON.stringify(narrowClockLayout, null, 2)}`);
+    }
+
+    await page.screenshot({ path: path.join(screenshotDir, "overview-mobile.png"), fullPage: false });
+
+    await page.setViewportSize({ width: 1920, height: 1080 });
+    await page.waitForTimeout(250);
+    await assertOverviewStrengthLayout("1920x1080");
+    await assertSyntheticStrengthVariants("1920x1080");
+
+    const missingArtifactState = await page.evaluate(async () => {
+      globalThis.__dashboardTestHooks.setOperationalArtifactUrlsForTest({
+        economicEventRefreshUrl: "./tests/fixtures/missing-economic-event-refresh.json",
+        economicEventsSourceUrl: "./tests/fixtures/missing-economic-event-refresh.json",
+        inputHealthUrl: "./tests/fixtures/missing-input-health.json",
+        workflowStatusUrl: "./data/workflow-status.json"
+      });
+      return globalThis.__dashboardTestHooks.reloadDashboardForTest();
+    });
+    await page.waitForFunction(() => {
+      const economic = document.querySelector("[data-economic-event-panel='true']");
+      const input = document.querySelector("[data-input-health-panel='true']");
+      return economic?.getAttribute("data-economic-event-panel-state") === "DATA_UNAVAILABLE"
+        && input?.getAttribute("data-input-health-panel-state") === "DATA_UNAVAILABLE";
+    }, { timeout: 15000 });
+
+    const missingArtifactPanels = await page.evaluate(() => {
+      const economic = document.querySelector("[data-economic-event-panel='true']");
+      const input = document.querySelector("[data-input-health-panel='true']");
+      const doc = document.documentElement;
+      return {
+        economicHeading: economic?.querySelector("h3")?.textContent?.trim() || "",
+        economicBadge: economic?.querySelector(".economic-event-status-badge")?.textContent?.trim() || "",
+        economicText: economic?.innerText || "",
+        inputHeading: input?.querySelector("h3")?.textContent?.trim() || "",
+        inputBadge: input?.querySelector(".economic-event-status-badge")?.textContent?.trim() || "",
+        inputText: input?.innerText || "",
+        pageHasHorizontalOverflow: doc.scrollWidth > doc.clientWidth + 1
+      };
+    });
+
+    if (missingArtifactState.economicEventPanelState !== "DATA_UNAVAILABLE" || missingArtifactState.inputHealthPanelState !== "DATA_UNAVAILABLE") {
+      throw new Error(`Missing-artifact fallback state did not render correctly.\n${JSON.stringify({ missingArtifactState, missingArtifactPanels }, null, 2)}`);
+    }
+
+    if (!missingArtifactPanels.economicHeading.includes("ECONOMIC EVENT STATUS") || !missingArtifactPanels.economicBadge.includes("DATA UNAVAILABLE") || !missingArtifactPanels.economicText.toLowerCase().includes("could not be loaded")) {
+      throw new Error(`Economic event missing-artifact fallback did not render the required visible shell.\n${JSON.stringify(missingArtifactPanels, null, 2)}`);
+    }
+
+    if (!missingArtifactPanels.inputHeading.includes("INPUT HEALTH") || !missingArtifactPanels.inputBadge.includes("DATA UNAVAILABLE") || !missingArtifactPanels.inputText.toLowerCase().includes("could not be loaded")) {
+      throw new Error(`Input health missing-artifact fallback did not render the required visible shell.\n${JSON.stringify(missingArtifactPanels, null, 2)}`);
+    }
+
+    if (missingArtifactPanels.pageHasHorizontalOverflow) {
+      throw new Error(`Missing-artifact fallback caused horizontal overflow.\n${JSON.stringify(missingArtifactPanels, null, 2)}`);
+    }
+
+    await page.screenshot({ path: path.join(screenshotDir, "overview-missing-artifact.png"), fullPage: false });
+
+    const healthyFixtureState = await page.evaluate(async () => {
+      globalThis.__dashboardTestHooks.setOperationalArtifactUrlsForTest({
+        economicEventRefreshUrl: "./tests/fixtures/economic-event-refresh.healthy.json",
+        economicEventsSourceUrl: "./tests/fixtures/economic-events-source.healthy.json",
+        inputHealthUrl: "./tests/fixtures/input-health.healthy.json",
+        workflowStatusUrl: "./data/workflow-status.json"
+      });
+      return globalThis.__dashboardTestHooks.reloadDashboardForTest();
+    });
+    await page.waitForFunction(() => {
+      const economic = document.querySelector("[data-economic-event-panel='true']");
+      const input = document.querySelector("[data-input-health-panel='true']");
+      return economic?.getAttribute("data-economic-event-panel-state") === "NO_MAJOR_EVENTS"
+        && input?.getAttribute("data-input-health-panel-state") === "HEALTHY";
+    }, { timeout: 15000 });
+
+    const healthyFixturePanels = await page.evaluate(() => {
+      const economic = document.querySelector("[data-economic-event-panel='true']");
+      const input = document.querySelector("[data-input-health-panel='true']");
+      return {
+        economicHeading: economic?.querySelector("h3")?.textContent?.trim() || "",
+        economicBadge: economic?.querySelector(".economic-event-status-badge")?.textContent?.trim() || "",
+        inputHeading: input?.querySelector("h3")?.textContent?.trim() || "",
+        inputBadge: input?.querySelector(".economic-event-status-badge")?.textContent?.trim() || "",
+        overviewBadge: document.querySelector("[data-overview-status='true'] .overview-status-badge")?.textContent?.trim() || "",
+        overviewText: document.querySelector("[data-overview-status='true']")?.innerText || ""
+      };
+    });
+
+    if (healthyFixtureState.economicEventPanelState !== "NO_MAJOR_EVENTS" || healthyFixtureState.inputHealthPanelState !== "HEALTHY") {
+      throw new Error(`Healthy fixture state did not render correctly.\n${JSON.stringify({ healthyFixtureState, healthyFixturePanels }, null, 2)}`);
+    }
+
+    if (!healthyFixturePanels.economicHeading.includes("ECONOMIC EVENT STATUS") || !healthyFixturePanels.inputHeading.includes("INPUT HEALTH") || !healthyFixturePanels.economicBadge.includes("NO MAJOR EVENTS") || !healthyFixturePanels.inputBadge.includes("HEALTHY")) {
+      throw new Error(`Healthy fixture did not preserve both visible module shells.\n${JSON.stringify(healthyFixturePanels, null, 2)}`);
+    }
+
+    const healthyOverviewText = healthyFixturePanels.overviewText.toLowerCase();
+    const healthyOverviewAccepted = (
+      healthyFixturePanels.overviewBadge.includes("HEALTHY")
+      && healthyOverviewText.includes("all critical inputs are available")
+    ) || (
+      healthyFixturePanels.overviewBadge.includes("NEEDS REVIEW")
+      && healthyOverviewText.includes("published input-health snapshot predates the current layer 1 calls")
+      && healthyOverviewText.includes("published economic-event warning snapshot predates the current layer 1 calls")
+    );
+
+    if (!["success", "warning"].includes(healthyFixtureState.workflowStatusTone) || !healthyOverviewAccepted) {
+      throw new Error(`Healthy fixture did not render the expected overview system-status state.\n${JSON.stringify({ healthyFixtureState, healthyFixturePanels }, null, 2)}`);
+    }
+
+    await page.screenshot({ path: path.join(screenshotDir, "overview-healthy.png"), fullPage: false });
+
+    const malformedArtifactState = await page.evaluate(async () => {
+      globalThis.__dashboardTestHooks.setOperationalArtifactUrlsForTest({
+        economicEventRefreshUrl: "./tests/fixtures/economic-event-refresh.malformed.json",
+        economicEventsSourceUrl: "./tests/fixtures/economic-event-refresh.malformed.json",
+        inputHealthUrl: "./tests/fixtures/input-health.malformed.json",
+        workflowStatusUrl: "./data/workflow-status.json"
+      });
+      return globalThis.__dashboardTestHooks.reloadDashboardForTest();
+    });
+    await page.waitForFunction(() => {
+      const economic = document.querySelector("[data-economic-event-panel='true']");
+      const input = document.querySelector("[data-input-health-panel='true']");
+      return economic?.getAttribute("data-economic-event-panel-state") === "DATA_UNAVAILABLE"
+        && input?.getAttribute("data-input-health-panel-state") === "DATA_UNAVAILABLE";
+    }, { timeout: 15000 });
+
+    if (malformedArtifactState.economicEventPanelState !== "DATA_UNAVAILABLE" || malformedArtifactState.inputHealthPanelState !== "DATA_UNAVAILABLE") {
+      throw new Error(`Malformed-artifact fallback state did not render correctly.\n${JSON.stringify(malformedArtifactState, null, 2)}`);
+    }
+
+    const failedRetainedState = await page.evaluate(async () => {
+      globalThis.__dashboardTestHooks.setOperationalArtifactUrlsForTest({
+        economicEventRefreshUrl: "./tests/fixtures/economic-event-refresh.healthy.json",
+        economicEventsSourceUrl: "./tests/fixtures/economic-events-source.healthy.json",
+        inputHealthUrl: "./tests/fixtures/input-health.healthy.json",
+        workflowStatusUrl: "./tests/fixtures/workflow-status.failed-retained.json"
+      });
+      return globalThis.__dashboardTestHooks.reloadDashboardForTest();
+    });
+    await page.waitForFunction(() => {
+      const overview = document.querySelector("[data-overview-status='true']");
+      return overview?.getAttribute("data-overview-status-tone") === "critical";
+    }, { timeout: 15000 });
+
+    const failedRetainedPanels = await page.evaluate(() => {
+      const overview = document.querySelector("[data-overview-status='true']");
+      return {
+        badge: overview?.querySelector(".overview-status-badge")?.textContent?.trim() || "",
+        text: overview?.innerText || "",
+        layer1Cards: document.querySelectorAll("#layer1Grid .agent-card").length,
+        layer2Cards: document.querySelectorAll("#overviewLayer2Panel .trade-opportunity-card, #overviewLayer2Panel .warning-card").length
+      };
+    });
+
+    if (failedRetainedState.workflowStatusTone !== "critical" || !failedRetainedPanels.badge.includes("REFRESH FAILED")) {
+      throw new Error(`Failed-latest-run state did not render the expected critical overview state.\n${JSON.stringify({ failedRetainedState, failedRetainedPanels }, null, 2)}`);
+    }
+
+    if (!failedRetainedPanels.text.toLowerCase().includes("latest refresh failed") || !failedRetainedPanels.text.toLowerCase().includes("still showing the most recently published calls")) {
+      throw new Error(`Failed-latest-run state did not explain retained calls truthfully.\n${JSON.stringify(failedRetainedPanels, null, 2)}`);
+    }
+
+    if (failedRetainedPanels.layer1Cards === 0 || failedRetainedPanels.layer2Cards === 0) {
+      throw new Error(`Failed-latest-run state hid valid retained cards.\n${JSON.stringify(failedRetainedPanels, null, 2)}`);
+    }
+
+    await page.screenshot({ path: path.join(screenshotDir, "overview-failed-retained.png"), fullPage: false });
+
+    await page.evaluate(async () => {
+      globalThis.__dashboardTestHooks.resetOperationalArtifactUrlsForTest();
+      return globalThis.__dashboardTestHooks.reloadDashboardForTest();
+    });
+    await page.waitForFunction(() => {
+      const economic = document.querySelector("[data-economic-event-panel='true']");
+      const input = document.querySelector("[data-input-health-panel='true']");
+      return economic?.getAttribute("data-economic-event-panel-state") === "SOURCE_UNAVAILABLE"
+        && input?.getAttribute("data-input-health-panel-state") === "CRITICAL";
+    }, { timeout: 15000 });
+
+    await page.setViewportSize({ width: 1280, height: 2200 });
+    await page.waitForTimeout(250);
+
+    await page.getByRole("button", { name: "Pair Analysis" }).click();
+    await page.waitForSelector("text=Layer 2 Trade Selection", { timeout: 15000 });
+
+    const overviewLayer2Panels = await page.locator("#overviewLayer2Panel .trade-opportunity-card").first().locator("[data-overview-validation-panels='true'] [data-validation-panel]").allInnerTexts();
+    const normalizedOverviewLayer2Panels = overviewLayer2Panels.map(text => text.toLowerCase());
+
+    if (overviewLayer2Panels.length !== 2) {
+      throw new Error(`Overview Layer 2 card did not render both validation panels.\n${overviewLayer2Panels.join("\n")}`);
+    }
+
+    if (!normalizedOverviewLayer2Panels.some(text => text.includes("l2l"))) {
+      throw new Error(`Overview Layer 2 card is missing the L2L validation panel.\n${overviewLayer2Panels.join("\n")}`);
+    }
+
+    if (!normalizedOverviewLayer2Panels.some(text => text.includes("directional"))) {
+      throw new Error(`Overview Layer 2 card is missing the directional validation panel.\n${overviewLayer2Panels.join("\n")}`);
+    }
+
+    await page.getByRole("button", { name: "Backtest / Accuracy" }).click();
+    await page.getByRole("button", { name: "Accuracy Tables" }).click();
+
+    await page.waitForSelector("text=Gold 24H direction by strength", { timeout: 15000 });
+    await page.waitForSelector("text=NQ 24H direction by strength", { timeout: 15000 });
+    await page.waitForSelector("text=BTC 24H direction by strength", { timeout: 15000 });
+    await page.waitForTimeout(2000);
+    const backtestText = await page.locator("#backtestPanel").innerText();
+
+    if (backtestText.includes("Research view unavailable") || backtestText.includes("Research data unavailable")) {
+      throw new Error(`Backtest panel fell back to full error state after ancillary 500.\n${backtestText}`);
+    }
+
+    const goldMatrixIndex = 2;
+    const summaryText = await page.locator(".matrix-summary-grid").nth(goldMatrixIndex).innerText();
+    const normalizedSummary = summaryText.toUpperCase();
+
+    if (
+      !normalizedSummary.includes("CORRECT") || !normalizedSummary.includes("223")
+      || !normalizedSummary.includes("WRONG") || !normalizedSummary.includes("173")
+      || !normalizedSummary.includes("FLAT") || !normalizedSummary.includes("141")
+      || !normalizedSummary.includes("NO CALL") || !normalizedSummary.includes("26")
+      || !normalizedSummary.includes("NOT EVALUABLE") || !normalizedSummary.includes("45")
+    ) {
+      throw new Error(`Gold matrix summary did not include expected totals.\n${summaryText}`);
+    }
+
+    if (!backtestText.includes("BTC 24H direction by strength")) {
+      throw new Error(`BTC matrix section did not render.\n${backtestText}`);
+    }
+
+    await page.getByRole("button", { name: "Backtest Checker" }).click();
+    await page.waitForSelector("text=BTC 24H", { timeout: 15000 });
+    const checkerText = await page.locator("#backtestPanel").innerText();
+
+    if (!checkerText.includes("BTC 24H")) {
+      throw new Error(`BTC checker section did not render.\n${checkerText}`);
+    }
+
+    await page.getByRole("button", { name: "Weekday Breakdown" }).click();
+    await page.waitForSelector("[data-weekday-breakdown-asset='BTC']", { timeout: 15000 });
+    const weekdayText = await page.locator("#backtestPanel").innerText();
+    const normalizedWeekdayText = weekdayText.toLowerCase();
+
+    if (!weekdayText.includes("Day-of-week performance by displayed headline confidence")) {
+      throw new Error(`Weekday Breakdown tab header did not render.\n${weekdayText}`);
+    }
+
+    const btcWeekdayHeaders = await page.locator("[data-weekday-breakdown-asset='BTC'] thead th").allInnerTexts();
+    const usdWeekdayHeaders = await page.locator("[data-weekday-breakdown-asset='USD'] thead th").allInnerTexts();
+
+    const normalizedBtcHeaders = btcWeekdayHeaders.map(text => text.trim().toLowerCase());
+    const normalizedUsdHeaders = usdWeekdayHeaders.map(text => text.trim().toLowerCase());
+
+    if (!normalizedBtcHeaders.includes("saturday") || !normalizedBtcHeaders.includes("sunday")) {
+      throw new Error(`BTC weekday table did not include weekend columns.\n${btcWeekdayHeaders.join(" | ")}`);
+    }
+
+    if (normalizedUsdHeaders.includes("saturday") || normalizedUsdHeaders.includes("sunday")) {
+      throw new Error(`USD weekday table unexpectedly included weekend columns.\n${usdWeekdayHeaders.join(" | ")}`);
+    }
+
+    if (!normalizedWeekdayText.includes("ex-flat")) {
+      throw new Error(`Weekday Breakdown did not render ex-flat rate copy.\n${weekdayText}`);
+    }
+
+    if (!weekdayText.includes("W /") || !weekdayText.includes("L /") || !weekdayText.includes("F /") || !weekdayText.includes("T")) {
+      throw new Error(`Weekday Breakdown did not render W/L/F/T count lines.\n${weekdayText}`);
+    }
+
+    if (!normalizedWeekdayText.includes("day totals") || !normalizedWeekdayText.includes("all confidence buckets")) {
+      throw new Error(`Weekday Breakdown did not render day-level totals above the bucket table.\n${weekdayText}`);
+    }
+
+    if (!normalizedWeekdayText.includes("flat rate") || !normalizedWeekdayText.includes("ex-flat win rate")) {
+      throw new Error(`Weekday Breakdown summary totals did not render flat-aware metrics.\n${weekdayText}`);
+    }
+
+    await page.getByRole("button", { name: "Pair Trade Research" }).click();
+    await page.waitForSelector("[data-pair-trade-asset='EUR_USD']", { timeout: 15000 });
+    const pairTradeText = await page.locator("#backtestPanel").innerText();
+    const normalizedPairTradeText = pairTradeText.toLowerCase();
+
+    if (!pairTradeText.includes("Layer 2 pair confirmation research from Layer 1 checker artifacts")) {
+      throw new Error(`Pair Trade Research tab header did not render.\n${pairTradeText}`);
+    }
+
+    if (!pairTradeText.includes("EUR/USD") || !normalizedPairTradeText.includes("conflict / no-trade summary")) {
+      throw new Error(`Pair Trade Research did not render expected pair sections.\n${pairTradeText}`);
+    }
+
+    if (!normalizedPairTradeText.includes("layer 2 pair summary") || !normalizedPairTradeText.includes("strong+")) {
+      throw new Error(`Layer 2 Pair Summary did not render above the pair sections.\n${pairTradeText}`);
+    }
+
+    const pairSectionOrder = await page.locator("#backtestPanel .pair-trade-summary-section, #backtestPanel .pair-trade-section").evaluateAll((elements) => {
+      return elements.map((element) => element.className);
+    });
+    if (!pairSectionOrder.length || !String(pairSectionOrder[0]).includes("pair-trade-summary-section")) {
+      throw new Error(`Layer 2 Pair Summary did not appear before the detailed pair sections.\n${pairSectionOrder.join(" | ")}`);
+    }
+
+    const pairSummaryGridCount = await page.locator("[data-pair-trade-card-grid]").count();
+    if (pairSummaryGridCount !== 4) {
+      throw new Error(`Expected 4 pair summary-card grids, found ${pairSummaryGridCount}.`);
+    }
+
+    if (!normalizedPairTradeText.includes("trade days % = the share of matched historical days where the pair logic produced an actual tradable signal")) {
+      throw new Error(`Layer 2 Pair Summary helper copy did not render.\n${pairTradeText}`);
+    }
+
+    const topSummaryRowCount = await page.locator("[data-layer2-pair-summary-row]").count();
+    if (topSummaryRowCount !== 4) {
+      throw new Error(`Expected 4 Layer 2 summary rows, found ${topSummaryRowCount}.`);
+    }
+
+    const topSummaryGridColumns = await page.locator("[data-layer2-pair-summary='comparison-grid']").evaluate((element) => {
+      const columns = getComputedStyle(element).gridTemplateColumns.split(" ").filter(Boolean);
+      return columns.length;
+    });
+    if (topSummaryGridColumns < 3) {
+      throw new Error(`Layer 2 Pair Summary did not render as a compact comparison grid.\nColumns: ${topSummaryGridColumns}`);
+    }
+
+    const legacySummaryTableCount = await page.locator("[data-layer2-pair-summary='true'], .layer2-pair-summary-table").count();
+    if (legacySummaryTableCount !== 0) {
+      throw new Error(`Legacy Layer 2 summary table still rendered.\nCount: ${legacySummaryTableCount}`);
+    }
+
+    const legacySummaryCardCount = await page.locator("[data-layer2-pair-summary-card]").count();
+    if (legacySummaryCardCount !== 0) {
+      throw new Error(`Legacy Layer 2 summary cards still rendered.\nCount: ${legacySummaryCardCount}`);
+    }
+
+    const firstPairGridColumns = await page.locator("[data-pair-trade-card-grid='EUR_USD']").evaluate((element) => {
+      const columns = getComputedStyle(element).gridTemplateColumns.split(" ").filter(Boolean);
+      return columns.length;
+    });
+    if (firstPairGridColumns < 4) {
+      throw new Error(`Pair summary cards did not render as a desktop multi-column grid.\nColumns: ${firstPairGridColumns}`);
+    }
+
+    const pairBucketOverflow = await page.locator(".pair-trade-table-scroll").first().evaluate((element) => getComputedStyle(element).overflowX);
+    if (pairBucketOverflow !== "auto" && pairBucketOverflow !== "scroll") {
+      throw new Error(`Pair confidence bucket table wrapper did not allow horizontal scrolling.\nOverflowX: ${pairBucketOverflow}`);
+    }
+
+    const pairBucketWhiteSpace = await page.locator(".pair-trade-bucket-table td:nth-child(3) .research-cell strong").first().evaluate((element) => getComputedStyle(element).whiteSpace);
+    if (pairBucketWhiteSpace !== "nowrap") {
+      throw new Error(`Pair confidence bucket percentage values were still wrapping.\nwhite-space: ${pairBucketWhiteSpace}`);
+    }
+
+    const pairTradeBtcHeaders = await page.locator("[data-pair-trade-asset='BTC_USD'] thead th").allInnerTexts();
+    const normalizedPairTradeBtcHeaders = pairTradeBtcHeaders.map(text => text.trim().toLowerCase());
+
+    if (!normalizedPairTradeBtcHeaders.includes("saturday") || !normalizedPairTradeBtcHeaders.includes("sunday")) {
+      throw new Error(`BTC/USD pair trade breakdown did not include weekend columns.\n${pairTradeBtcHeaders.join(" | ")}`);
+    }
+
+    await page.getByRole("button", { name: "L2L 1H Sequence Research" }).click();
+    await page.waitForSelector("[data-adr-reach-layer1-summary='true']", { timeout: 15000 });
+    const adrReachText = await page.locator("#backtestPanel").innerText();
+    const normalizedAdrReachText = adrReachText.toLowerCase();
+
+    if (!adrReachText.includes("L2L 1H Sequence Research")) {
+      throw new Error(`L2L 1H Sequence Research tab header did not render.\n${adrReachText}`);
+    }
+
+    if (!normalizedAdrReachText.includes("layer 1 by asset") || !normalizedAdrReachText.includes("layer 2 by pair")) {
+      throw new Error(`L2L 1H Sequence Research summary tables did not render.\n${adrReachText}`);
+    }
+
+    if (!normalizedAdrReachText.includes("this measures whether 1h intraday candles show price moved at least the required l2l distance")) {
+      throw new Error(`L2L 1H Sequence Research did not render the expected research note copy.\n${adrReachText}`);
+    }
+
+    if (!normalizedAdrReachText.includes("nq 1h sequence research from layer 1 checker artifacts") || !normalizedAdrReachText.includes("nq/usd 1h sequence research from existing pair trade research signal selection")) {
+      throw new Error(`L2L 1H Sequence Research did not render the supported NQ detail sections.\n${adrReachText}`);
+    }
+
+    if (!normalizedAdrReachText.includes("confidence breakdown") || !normalizedAdrReachText.includes("weekday totals across all confidence buckets") || !normalizedAdrReachText.includes("by confidence bucket and weekday")) {
+      throw new Error(`L2L 1H Sequence Research did not render the required detail tables.\n${adrReachText}`);
+    }
+
+    for (const expectedAvailableText of [
+      "eur 1h sequence research from layer 1 checker artifacts",
+      "nq 1h sequence research from layer 1 checker artifacts",
+      "btc 1h sequence research from layer 1 checker artifacts",
+      "eur/usd 1h sequence research from existing pair trade research signal selection",
+      "nq/usd 1h sequence research from existing pair trade research signal selection",
+      "btc/usd 1h sequence research from existing pair trade research signal selection"
+    ]) {
+      if (!normalizedAdrReachText.includes(expectedAvailableText)) {
+        throw new Error(`L2L 1H Sequence Research did not render expected available section: ${expectedAvailableText}\n${adrReachText}`);
+      }
+    }
+
+    for (const expectedUnavailableText of [
+      "layer 1 unavailable reasons",
+      "l2l unavailable source blockers"
+    ]) {
+      if (!normalizedAdrReachText.includes(expectedUnavailableText)) {
+        throw new Error(`L2L 1H Sequence Research did not preserve expected unavailable section: ${expectedUnavailableText}\n${adrReachText}`);
+      }
+    }
+
+    const adrUnavailableAuditText = (await page.locator("[data-adr-unavailable-audit='true']").textContent() || "").toLowerCase();
+    if (!adrUnavailableAuditText.includes("no supportable repo-local dxy daily plus 1h source is staged")) {
+      throw new Error(`L2L unavailable audit details did not preserve the USD/DXY blocker.\n${adrUnavailableAuditText}`);
+    }
+
+    const adrAuditText = (await page.locator("[data-adr-reach-layer1-summary='true']").innerText()).toLowerCase();
+    for (const expectedAuditText of [
+      "oanda v20 candles",
+      "binance spot klines",
+      "fixed ref"
+    ]) {
+      if (!adrAuditText.includes(expectedAuditText)) {
+        throw new Error(`Warehouse Audit did not render current OHLC source text: ${expectedAuditText}\n${adrAuditText}`);
+      }
+    }
+
+    const adrSummaryTableText = (await page.locator(".adr-summary-table").allInnerTexts()).join("\n").toLowerCase();
+    for (const forbiddenAdrTableString of [
+      "50% adr20 target",
+      "stored displayed headline confidence",
+      "combined confidence bucket",
+      " losses",
+      " total",
+      "65+ confidence"
+    ]) {
+      if (adrSummaryTableText.includes(forbiddenAdrTableString)) {
+        throw new Error(`ADR summary tables still included verbose repeated copy: ${forbiddenAdrTableString}\n${adrSummaryTableText}`);
+      }
+    }
+
+    const adrConfidenceTableText = (await page.locator(".adr-confidence-table").allInnerTexts()).join("\n").toLowerCase();
+    for (const forbiddenConfidenceTableString of [
+      "50% adr20 target",
+      "stored displayed headline confidence",
+      "combined confidence bucket"
+    ]) {
+      if (adrConfidenceTableText.includes(forbiddenConfidenceTableString)) {
+        throw new Error(`ADR confidence tables still included verbose repeated copy: ${forbiddenConfidenceTableString}\n${adrConfidenceTableText}`);
+      }
+    }
+
+    const adrHeadingMatches = adrReachText.match(/L2L 1H Sequence Research/g) || [];
+    if (adrHeadingMatches.length > 1) {
+      throw new Error(`L2L 1H Sequence Research heading was repeated too many times.\nCount: ${adrHeadingMatches.length}\n${adrReachText}`);
+    }
+
+    const adrReachNqHeaders = await page.locator("[data-adr-reach-asset='NQ'] thead th").allInnerTexts();
+    const normalizedAdrReachNqHeaders = adrReachNqHeaders.map(text => text.trim().toLowerCase());
+    if (normalizedAdrReachNqHeaders.includes("saturday") || normalizedAdrReachNqHeaders.includes("sunday")) {
+      throw new Error(`NQ L2L range weekday table unexpectedly included weekend columns.\n${adrReachNqHeaders.join(" | ")}`);
+    }
+
+    const adrReachPairHeaders = await page.locator("[data-adr-reach-pair='NQ_USD'] thead th").allInnerTexts();
+    const normalizedAdrReachPairHeaders = adrReachPairHeaders.map(text => text.trim().toLowerCase());
+    if (normalizedAdrReachPairHeaders.includes("saturday") || normalizedAdrReachPairHeaders.includes("sunday")) {
+      throw new Error(`NQ/USD L2L range weekday table unexpectedly included weekend columns.\n${adrReachPairHeaders.join(" | ")}`);
+    }
+
+    const adrSummaryOverflow = await page.locator(".adr-summary-scroll").first().evaluate((element) => getComputedStyle(element).overflowX);
+    if (adrSummaryOverflow !== "auto" && adrSummaryOverflow !== "scroll") {
+      throw new Error(`ADR summary table wrapper did not allow horizontal scrolling.\nOverflowX: ${adrSummaryOverflow}`);
+    }
+
+    const adrSummaryPercentWhiteSpace = await page.locator(".adr-summary-table .adr-table-tight-cell strong").first().evaluate((element) => getComputedStyle(element).whiteSpace);
+    if (adrSummaryPercentWhiteSpace !== "nowrap") {
+      throw new Error(`ADR summary percentage values were still wrapping.\nwhite-space: ${adrSummaryPercentWhiteSpace}`);
+    }
+
+    const adrSummaryLastCellPadding = await page.locator(".adr-summary-table td:last-child").first().evaluate((element) => getComputedStyle(element).paddingRight);
+    if (parseFloat(adrSummaryLastCellPadding) < 16) {
+      throw new Error(`ADR summary last column padding is too small.\nPaddingRight: ${adrSummaryLastCellPadding}`);
+    }
+
+    await page.getByRole("button", { name: "L2L Threshold Sensitivity" }).click();
+    await page.waitForSelector("text=Layer 1 Sensitivity", { timeout: 15000 });
+    const adrThresholdText = await page.locator("#backtestPanel").innerText();
+    const normalizedAdrThresholdText = adrThresholdText.toLowerCase();
+
+    if (!normalizedAdrThresholdText.includes("production baseline is 50% adr20")) {
+      throw new Error(`L2L Threshold Sensitivity did not render the expected explanatory copy.\n${adrThresholdText}`);
+    }
+
+    if (!normalizedAdrThresholdText.includes("layer 1 sensitivity") || !normalizedAdrThresholdText.includes("layer 2 sensitivity")) {
+      throw new Error(`L2L Threshold Sensitivity did not render both sensitivity tables.\n${adrThresholdText}`);
+    }
+
+    for (const thresholdLabel of ["40%", "50%", "55%", "60%", "65%", "70%"]) {
+      if (!adrThresholdText.includes(thresholdLabel)) {
+        throw new Error(`L2L Threshold Sensitivity did not render threshold column ${thresholdLabel}.\n${adrThresholdText}`);
+      }
+    }
+
+    if (!normalizedAdrThresholdText.includes("high reliability") || !normalizedAdrThresholdText.includes("below target")) {
+      throw new Error(`L2L Threshold Sensitivity did not render the expected reliability labels.\n${adrThresholdText}`);
+    }
+
+    if (!normalizedAdrThresholdText.includes("55% adr20 l2l trust summary") || !normalizedAdrThresholdText.includes("can use") || !normalizedAdrThresholdText.includes("do not use")) {
+      throw new Error(`L2L Threshold Sensitivity did not render the 55% trust summary.\n${adrThresholdText}`);
+    }
+
+    await page.getByRole("button", { name: "Directional Trust Summary" }).click();
+    await page.waitForSelector("text=Layer 1 Directional Trust", { timeout: 15000 });
+    const directionalTrustText = await page.locator("#backtestPanel").innerText();
+    const normalizedDirectionalTrustText = directionalTrustText.toLowerCase();
+
+    if (!normalizedDirectionalTrustText.includes("directional trust summary")) {
+      throw new Error(`Directional Trust Summary tab did not render the expected heading.\n${directionalTrustText}`);
+    }
+
+    if (!normalizedDirectionalTrustText.includes("layer 1 directional trust") || !normalizedDirectionalTrustText.includes("layer 2 directional trust")) {
+      throw new Error(`Directional Trust Summary did not render both layer tables.\n${directionalTrustText}`);
+    }
+
+    if (!normalizedDirectionalTrustText.includes("combined directional") || !normalizedDirectionalTrustText.includes("clean directional only") || !normalizedDirectionalTrustText.includes("lean directional only")) {
+      throw new Error(`Directional Trust Summary did not render all call groups.\n${directionalTrustText}`);
+    }
+
+    if (!normalizedDirectionalTrustText.includes("strong+") || !normalizedDirectionalTrustText.includes("very strong")) {
+      throw new Error(`Directional Trust Summary did not render all strength cohorts.\n${directionalTrustText}`);
+    }
+
+    if (!normalizedDirectionalTrustText.includes("can use") || !normalizedDirectionalTrustText.includes("do not use")) {
+      throw new Error(`Directional Trust Summary did not render trust-status labels.\n${directionalTrustText}`);
+    }
+
+    await page.getByRole("button", { name: "Factor Edge Lab" }).click();
+    await page.waitForSelector("text=Research-Only Factor Evidence Review", { timeout: 15000 });
+    const factorEdgeText = await page.locator("#factorEdgeLabPanel").innerText();
+    const normalizedFactorEdgeText = factorEdgeText.toLowerCase();
+
+    if (!normalizedFactorEdgeText.includes("factor evidence for later weighting review")) {
+      throw new Error(`Factor Edge Lab did not render the expected status heading.\n${factorEdgeText}`);
+    }
+
+    if (!normalizedFactorEdgeText.includes("this dashboard reads only from the checked-in")) {
+      throw new Error(`Factor Edge Lab did not render the read-only artifact contract.\n${factorEdgeText}`);
+    }
+
+    for (const expectedEntity of ["usd", "eur", "gold", "nq", "btc", "eur/usd", "xau/usd", "nq/usd", "btc/usd"]) {
+      if (!normalizedFactorEdgeText.includes(expectedEntity)) {
+        throw new Error(`Factor Edge Lab did not render expected entity ${expectedEntity}.\n${factorEdgeText}`);
+      }
+    }
+
+    if (!normalizedFactorEdgeText.includes("unavailable")) {
+      throw new Error(`Factor Edge Lab did not preserve explicit unavailable ADR/L2L states.\n${factorEdgeText}`);
+    }
+
+    if (!normalizedFactorEdgeText.includes("factor-level adr/l2l opportunity reliability is marked unavailable")) {
+      throw new Error(`Factor Edge Lab did not render the explicit ADR/L2L methodology guardrail.\n${factorEdgeText}`);
+    }
+
+    const factorEdgeUnavailablePillCount = await page.locator(".factor-edge-pill.unavailable").count();
+    if (factorEdgeUnavailablePillCount < 20) {
+      throw new Error(`Factor Edge Lab rendered too few unavailable ADR/L2L pills.\nCount: ${factorEdgeUnavailablePillCount}`);
+    }
+
+    for (const expectedPairSideText of [
+      "base side",
+      "quote/usd side",
+      "eur · direct",
+      "usd · inverse",
+      "gold · direct",
+      "btc · direct",
+      "nq · direct"
+    ]) {
+      if (!normalizedFactorEdgeText.includes(expectedPairSideText)) {
+        throw new Error(`Factor Edge Lab did not render expected pair-side mapping text: ${expectedPairSideText}\n${factorEdgeText}`);
+      }
+    }
+
+    if (!normalizedFactorEdgeText.includes("using the existing checked-in qqq proxy semantics")) {
+      throw new Error(`Factor Edge Lab did not preserve the explicit NQ/USD mapping note.\n${factorEdgeText}`);
+    }
+
+    for (const expectedCombinationText of [
+      "factor combinations",
+      "two-factor",
+      "three-factor",
+      "exploratory",
+      "top evidence",
+      "review summary",
+      "candidate increase weight",
+      "candidate reduce weight",
+      "insufficient evidence",
+      "base side combinations",
+      "quote/usd side combinations"
+    ]) {
+      if (!normalizedFactorEdgeText.includes(expectedCombinationText)) {
+        throw new Error(`Factor Edge Lab did not render expected combination analysis text: ${expectedCombinationText}\n${factorEdgeText}`);
+      }
+    }
+
+    const factorEdgeLayout = await page.evaluate(() => {
+      const doc = document.documentElement;
+      const panel = document.getElementById("factorEdgeLabPanel");
+      const tableScrolls = Array.from(document.querySelectorAll(".factor-edge-table-scroll")).map((node) => ({
+        clientWidth: node.clientWidth,
+        scrollWidth: node.scrollWidth,
+        overflows: node.scrollWidth > node.clientWidth + 1
+      }));
+
+      return {
+        pageHasHorizontalOverflow: doc.scrollWidth > doc.clientWidth + 1,
+        panelHasHorizontalOverflow: panel ? panel.scrollWidth > panel.clientWidth + 1 : false,
+        overflowingTableScrollCount: tableScrolls.filter((entry) => entry.overflows).length,
+        tableScrollCount: tableScrolls.length
+      };
+    });
+
+    if (factorEdgeLayout.pageHasHorizontalOverflow) {
+      throw new Error(`Factor Edge Lab caused page-level horizontal overflow.\n${JSON.stringify(factorEdgeLayout, null, 2)}`);
+    }
+
+    if (factorEdgeLayout.panelHasHorizontalOverflow) {
+      throw new Error(`Factor Edge Lab panel overflowed horizontally instead of containing overflow inside its local table scrollers.\n${JSON.stringify(factorEdgeLayout, null, 2)}`);
+    }
+
+    if (factorEdgeLayout.tableScrollCount === 0) {
+      throw new Error(`Factor Edge Lab did not render any local table scroll shells.\n${JSON.stringify(factorEdgeLayout, null, 2)}`);
+    }
+
+    await page.getByRole("button", { name: "Shadow Logic Backtest" }).click();
+    await page.waitForSelector("text=Research-Only Shadow Logic Comparison", { timeout: 15000 });
+    const shadowBacktestText = await page.locator("#shadowLogicBacktestPanel").innerText();
+    const normalizedShadowBacktestText = shadowBacktestText.toLowerCase();
+
+    for (const expectedShadowText of [
+      "original logic vs evidence-reweighted shadow logic",
+      "data/phase-2-shadow-backtest.json",
+      "original logic",
+      "shadow logic",
+      "shadow factor weight changes",
+      "increase candidate",
+      "reduce candidate",
+      "confirmation only",
+      "insufficient evidence",
+      "asset comparison"
+    ]) {
+      if (!normalizedShadowBacktestText.includes(expectedShadowText)) {
+        throw new Error(`Shadow Logic Backtest did not render expected text: ${expectedShadowText}\n${shadowBacktestText}`);
+      }
+    }
+
+    for (const expectedAsset of ["usd", "eur", "gold", "nq", "btc"]) {
+      if (!normalizedShadowBacktestText.includes(expectedAsset)) {
+        throw new Error(`Shadow Logic Backtest did not render expected asset ${expectedAsset}.\n${shadowBacktestText}`);
+      }
+    }
+
+    const shadowLayout = await page.evaluate(() => {
+      const doc = document.documentElement;
+      const panel = document.getElementById("shadowLogicBacktestPanel");
+      const tableScrolls = Array.from(document.querySelectorAll(".shadow-backtest-table-scroll")).map((node) => ({
+        clientWidth: node.clientWidth,
+        scrollWidth: node.scrollWidth,
+        overflows: node.scrollWidth > node.clientWidth + 1
+      }));
+
+      return {
+        pageHasHorizontalOverflow: doc.scrollWidth > doc.clientWidth + 1,
+        panelHasHorizontalOverflow: panel ? panel.scrollWidth > panel.clientWidth + 1 : false,
+        overflowingTableScrollCount: tableScrolls.filter((entry) => entry.overflows).length,
+        tableScrollCount: tableScrolls.length
+      };
+    });
+
+    if (shadowLayout.pageHasHorizontalOverflow) {
+      throw new Error(`Shadow Logic Backtest caused page-level horizontal overflow.\n${JSON.stringify(shadowLayout, null, 2)}`);
+    }
+
+    if (shadowLayout.panelHasHorizontalOverflow) {
+      throw new Error(`Shadow Logic Backtest panel overflowed horizontally instead of containing overflow inside local table scrollers.\n${JSON.stringify(shadowLayout, null, 2)}`);
+    }
+
+    if (shadowLayout.tableScrollCount === 0) {
+      throw new Error(`Shadow Logic Backtest did not render any local table scroll shells.\n${JSON.stringify(shadowLayout, null, 2)}`);
+    }
+
+    const requiredOverviewOrder = [
+      "External Data",
+      "Collection and Storage",
+      "Master Orchestration",
+      "Layer 1 Agents",
+      "Layer 2 Selection",
+      "Artifact Publication",
+      "Dashboard",
+      "Research System"
+    ];
+
+    const collectArchitectureAudit = async () => page.evaluate(() => {
+      const doc = document.documentElement;
+      const panel = document.getElementById("architecturePanel");
+      const shell = document.querySelector("[data-architecture-shell='true']");
+      const canvas = document.querySelector("[data-architecture-canvas='true']");
+      const detail = document.querySelector("[data-architecture-detail='true']");
+      const controls = document.querySelector("[data-architecture-view-controls='true']");
+      const legend = document.querySelector("[data-architecture-legend='true']");
+      const rectPayload = (node) => {
+        const rect = node.getBoundingClientRect();
+        return {
+          left: rect.left,
+          right: rect.right,
+          top: rect.top,
+          bottom: rect.bottom,
+          width: rect.width,
+          height: rect.height
+        };
+      };
+
+      const stageRects = Array.from(document.querySelectorAll("[data-architecture-stage]")).map((node) => ({
+        id: node.getAttribute("data-architecture-stage") || "",
+        index: Number(node.getAttribute("data-architecture-stage-index") || 0),
+        title: node.querySelector(".architecture-stage-heading")?.textContent?.trim() || "",
+        ...rectPayload(node)
+      }));
+
+      const nodeRects = Array.from(document.querySelectorAll("[data-architecture-node]")).map((node) => {
+        const style = window.getComputedStyle(node);
+        const nodeRect = node.getBoundingClientRect();
+        return {
+          id: node.getAttribute("data-architecture-node") || "",
+          title: node.querySelector(".architecture-node-title")?.textContent?.trim() || "",
+          position: style.position,
+          transform: style.transform,
+          overflowX: style.overflowX,
+          overflowY: style.overflowY,
+          labelOverflow: Array.from(node.querySelectorAll(".architecture-node-title, .architecture-node-purpose")).some((child) => {
+            const childRect = child.getBoundingClientRect();
+            return childRect.left < nodeRect.left - 1
+              || childRect.right > nodeRect.right + 1
+              || childRect.top < nodeRect.top - 1
+              || childRect.bottom > nodeRect.bottom + 1;
+          }),
+          ...rectPayload(node)
+        };
+      });
+
+      return {
+        activeView: document.querySelector("[data-architecture-view][aria-pressed='true']")?.getAttribute("data-architecture-view") || "",
+        activeViewLabel: document.querySelector("[data-architecture-view][aria-pressed='true']")?.textContent?.trim() || "",
+        detailHeading: document.querySelector("[data-architecture-detail='true'] h3")?.textContent?.trim() || "",
+        selectedNode: document.querySelector(".architecture-node.is-selected")?.getAttribute("data-architecture-node") || "",
+        overviewNodeCount: nodeRects.length,
+        overviewStageTitles: stageRects.map((entry) => entry.title),
+        pageScrollWidth: doc.scrollWidth,
+        pageClientWidth: doc.clientWidth,
+        panelScrollWidth: panel?.scrollWidth || 0,
+        panelClientWidth: panel?.clientWidth || 0,
+        shellScrollWidth: shell?.scrollWidth || 0,
+        shellClientWidth: shell?.clientWidth || 0,
+        canvasScrollWidth: canvas?.scrollWidth || 0,
+        canvasClientWidth: canvas?.clientWidth || 0,
+        shellRect: shell ? rectPayload(shell) : null,
+        canvasRect: canvas ? rectPayload(canvas) : null,
+        detailRect: detail ? rectPayload(detail) : null,
+        controlsRect: controls ? rectPayload(controls) : null,
+        legendSummary: legend?.querySelector("summary")?.textContent?.trim() || "",
+        stageRects,
+        nodeRects,
+        geometryHook: globalThis.__dashboardTestHooks.getArchitectureGeometryForTest()
+      };
+    });
+
+    const assertArchitectureAudit = (audit, viewportLabel) => {
+      if (!audit.activeViewLabel) {
+        throw new Error(`Architecture active view control was not identifiable at ${viewportLabel}.\n${JSON.stringify(audit, null, 2)}`);
+      }
+
+      if (!audit.selectedNode || !audit.detailHeading) {
+        throw new Error(`Architecture default or current selection was missing at ${viewportLabel}.\n${JSON.stringify(audit, null, 2)}`);
+      }
+
+      if (!audit.canvasRect || !audit.shellRect || !audit.detailRect) {
+        throw new Error(`Architecture layout shells were incomplete at ${viewportLabel}.\n${JSON.stringify(audit, null, 2)}`);
+      }
+
+      if (audit.pageScrollWidth > audit.pageClientWidth + 1 || audit.panelScrollWidth > audit.panelClientWidth + 1 || audit.canvasScrollWidth > audit.canvasClientWidth + 1 || audit.shellScrollWidth > audit.shellClientWidth + 1) {
+        throw new Error(`Architecture overflowed horizontally at ${viewportLabel}.\n${JSON.stringify(audit, null, 2)}`);
+      }
+
+      if (audit.canvasRect.width < audit.shellRect.width * 0.94) {
+        throw new Error(`Architecture canvas did not use the intended content width at ${viewportLabel}.\n${JSON.stringify(audit, null, 2)}`);
+      }
+
+      if (audit.detailRect.top < audit.canvasRect.bottom - 1) {
+        throw new Error(`Architecture detail panel did not remain below the canvas at ${viewportLabel}.\n${JSON.stringify(audit, null, 2)}`);
+      }
+
+      for (let index = 0; index < audit.stageRects.length - 1; index += 1) {
+        const current = audit.stageRects[index];
+        const next = audit.stageRects[index + 1];
+        if (current.bottom > next.top + 1) {
+          throw new Error(`Architecture stages overlapped at ${viewportLabel}: ${current.id} vs ${next.id}.`);
+        }
+        if (current.top > next.top) {
+          throw new Error(`Architecture stages were not in monotonic top-to-bottom order at ${viewportLabel}: ${current.id} vs ${next.id}.`);
+        }
+      }
+
+      for (const node of audit.nodeRects) {
+        if (node.position === "absolute" || node.position === "fixed" || node.transform !== "none") {
+          throw new Error(`Architecture node ${node.id} used forbidden layout positioning at ${viewportLabel}.\n${JSON.stringify(node, null, 2)}`);
+        }
+        if (node.left < audit.canvasRect.left - 1 || node.right > audit.canvasRect.right + 1) {
+          throw new Error(`Architecture node ${node.id} exceeded the canvas bounds at ${viewportLabel}.\n${JSON.stringify({ node, canvasRect: audit.canvasRect }, null, 2)}`);
+        }
+        if (node.labelOverflow) {
+          throw new Error(`Architecture node label overflowed in ${node.id} at ${viewportLabel}.\n${JSON.stringify(node, null, 2)}`);
+        }
+      }
+
+      for (let index = 0; index < audit.nodeRects.length; index += 1) {
+        const first = audit.nodeRects[index];
+        for (let compareIndex = index + 1; compareIndex < audit.nodeRects.length; compareIndex += 1) {
+          const second = audit.nodeRects[compareIndex];
+          if (rectanglesOverlap({
+            x: first.left,
+            y: first.top,
+            width: first.width,
+            height: first.height
+          }, {
+            x: second.left,
+            y: second.top,
+            width: second.width,
+            height: second.height
+          })) {
+            throw new Error(`Architecture nodes overlapped at ${viewportLabel}: ${first.id} vs ${second.id}`);
+          }
+        }
+      }
+    };
+
+    const architectureViewportAudits = [];
+
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.getByRole("button", { name: "Architecture" }).click();
+    await page.waitForSelector("[data-architecture-canvas='true']", { timeout: 15000 });
+
+    const architectureOverviewText = await page.locator("#architecturePanel").innerText();
+    if (!architectureOverviewText.includes("Overview Map")) {
+      throw new Error(`Architecture tab did not render the Overview Map controls.\n${architectureOverviewText}`);
+    }
+
+    const architectureDefaultSelection = await collectArchitectureAudit();
+    if (architectureDefaultSelection.activeView !== "overview-map") {
+      throw new Error(`Architecture tab did not default to Overview Map.\n${JSON.stringify(architectureDefaultSelection, null, 2)}`);
+    }
+    if (architectureDefaultSelection.overviewNodeCount !== 8) {
+      throw new Error(`Overview Map should render exactly 8 grouped stages.\n${JSON.stringify(architectureDefaultSelection, null, 2)}`);
+    }
+    if (JSON.stringify(architectureDefaultSelection.overviewStageTitles) !== JSON.stringify(requiredOverviewOrder)) {
+      throw new Error(`Overview stages were not rendered in the required vertical order.\n${JSON.stringify(architectureDefaultSelection, null, 2)}`);
+    }
+    assertArchitectureAudit(architectureDefaultSelection, "1440x900 overview");
+
+    await page.locator("[data-architecture-view='layer2']").click();
+    await page.waitForSelector("[data-architecture-canvas='true']", { timeout: 15000 });
+    const architectureLayer2Text = await page.locator("#architecturePanel").innerText();
+    if (!architectureLayer2Text.toLowerCase().includes("unverified")) {
+      throw new Error(`Architecture Layer 2 view did not preserve explicit unverified relationships.\n${architectureLayer2Text}`);
+    }
+
+    await page.locator("[data-architecture-node='layer2_trade_selection_agent']").click();
+    const architectureClickSelection = await page.locator("[data-architecture-detail='true'] h3").textContent() || "";
+    if (!architectureClickSelection.includes("Layer 2 Trade Selection Agent")) {
+      throw new Error(`Architecture click selection did not update the detail panel.\n${architectureClickSelection}`);
+    }
+
+    await page.locator("[data-architecture-node='layer2_json']").focus();
+    await page.keyboard.press("Enter");
+    const architectureKeyboardSelection = await page.locator("[data-architecture-detail='true'] h3").textContent() || "";
+    if (!architectureKeyboardSelection.includes("data/layer2.json")) {
+      throw new Error(`Architecture keyboard selection did not update the detail panel.\n${architectureKeyboardSelection}`);
+    }
+
+    await page.locator("[data-architecture-filter='verified-only']").click();
+    const verifiedOnlyState = await page.locator("[data-architecture-filter='verified-only']").getAttribute("aria-pressed");
+    if (verifiedOnlyState !== "true") {
+      throw new Error(`Architecture verified-only filter did not toggle on.\nState: ${verifiedOnlyState}`);
+    }
+    await page.locator("[data-architecture-filter='verified-only']").click();
+    const verifiedOnlyResetState = await page.locator("[data-architecture-filter='verified-only']").getAttribute("aria-pressed");
+    if (verifiedOnlyResetState !== "false") {
+      throw new Error(`Architecture verified-only filter did not toggle back off.\nState: ${verifiedOnlyResetState}`);
+    }
+
+    const viewportMatrix = [
+      { width: 1440, height: 900, label: "1440x900" },
+      { width: 1920, height: 1080, label: "1920x1080" },
+      { width: 1024, height: 768, label: "1024x768" },
+      { width: 390, height: 844, label: "390x844" }
+    ];
+
+    for (const viewport of viewportMatrix) {
+      await page.setViewportSize({ width: viewport.width, height: viewport.height });
+      await page.getByRole("button", { name: "Architecture" }).click();
+      await page.waitForSelector("[data-architecture-canvas='true']", { timeout: 15000 });
+      const viewIds = await page.locator("[data-architecture-view]").evaluateAll((buttons) => buttons.map((button) => button.getAttribute("data-architecture-view")).filter(Boolean));
+      for (const viewId of viewIds) {
+        await page.locator(`[data-architecture-view="${viewId}"]`).click();
+        await page.waitForTimeout(30);
+        const audit = await collectArchitectureAudit();
+        assertArchitectureAudit(audit, `${viewport.label} ${viewId}`);
+        architectureViewportAudits.push({
+          viewport: viewport.label,
+          viewId,
+          stageCount: audit.stageRects.length,
+          nodeCount: audit.nodeRects.length
+        });
+      }
+    }
+
+    const missingManifestState = await page.evaluate(async () => {
+      globalThis.__dashboardTestHooks.setArchitectureManifestUrlForTest("./tests/fixtures/architecture-map.unavailable.json");
+      return globalThis.__dashboardTestHooks.reloadArchitectureManifestForTest();
+    });
+    await page.waitForSelector("[data-architecture-state='unavailable']", { timeout: 15000 });
+    const missingManifestText = await page.locator("#architecturePanel").innerText();
+    if (missingManifestState.status !== "unavailable" || !missingManifestText.toLowerCase().includes("could not load a valid manifest")) {
+      throw new Error(`Architecture unavailable state did not fail closed for a missing manifest.\n${JSON.stringify({ missingManifestState, missingManifestText }, null, 2)}`);
+    }
+
+    const malformedManifestState = await page.evaluate(async () => {
+      globalThis.__dashboardTestHooks.setArchitectureManifestUrlForTest("./tests/fixtures/architecture-map.malformed.json");
+      return globalThis.__dashboardTestHooks.reloadArchitectureManifestForTest();
+    });
+    await page.waitForSelector("[data-architecture-state='unavailable']", { timeout: 15000 });
+    const malformedManifestText = await page.locator("#architecturePanel").innerText();
+    if (malformedManifestState.status !== "unavailable" || !malformedManifestText.toLowerCase().includes("manifest validation failed")) {
+      throw new Error(`Architecture malformed-manifest state did not fail closed.\n${JSON.stringify({ malformedManifestState, malformedManifestText }, null, 2)}`);
+    }
+
+    const restoredManifestState = await page.evaluate(async () => {
+      globalThis.__dashboardTestHooks.resetArchitectureManifestUrlForTest();
+      return globalThis.__dashboardTestHooks.reloadArchitectureManifestForTest();
+    });
+    await page.waitForSelector("[data-architecture-canvas='true']", { timeout: 15000 });
+    if (restoredManifestState.status !== "ready") {
+      throw new Error(`Architecture manifest did not recover after resetting the test hook.\n${JSON.stringify(restoredManifestState, null, 2)}`);
+    }
+
+    await page.getByRole("button", { name: "Overview", exact: true }).click();
+    await page.waitForSelector("[data-overview-briefing='true']", { timeout: 15000 });
+    const overviewStillWorksText = await page.locator("#overviewBriefing").innerText();
+    if (!overviewStillWorksText.toLowerCase().includes("24h market conditions")) {
+      throw new Error(`Overview did not recover cleanly after Architecture tab testing.\n${overviewStillWorksText}`);
+    }
+
+    const blockingConsoleErrors = consoleErrors.filter((message) => {
+      if (message.includes("Failed to load resource: the server responded with a status of 500 ()")) return false;
+      if (message.includes("missing-economic-event-refresh.json 404")) return false;
+      if (message.includes("missing-input-health.json 404")) return false;
+      if (message.includes("Expected property name or '}' in JSON")) return false;
+      if (message.includes("Failed to load resource: the server responded with a status of 404 (Not Found)")) return false;
+      return true;
+    });
+
+    if (blockingConsoleErrors.length) {
+      throw new Error(`Console errors were emitted during dashboard smoke.\n${blockingConsoleErrors.join("\n")}`);
+    }
+
+    console.log(JSON.stringify({
+      status: "PASS",
+      target: "Overview, research tabs, and Architecture Mirror",
+      matrix_summary_excerpt: summaryText,
+      btc_weekday_headers: btcWeekdayHeaders,
+      usd_weekday_headers: usdWeekdayHeaders,
+      pair_trade_btc_headers: pairTradeBtcHeaders,
+      adr_reach_nq_headers: adrReachNqHeaders,
+      adr_reach_pair_headers: adrReachPairHeaders,
+      factor_edge_unavailable_pill_count: factorEdgeUnavailablePillCount,
+      factor_edge_layout: factorEdgeLayout,
+      shadow_backtest_layout: shadowLayout,
+      architecture_default_selection: architectureDefaultSelection,
+      architecture_geometry_audits: architectureViewportAudits,
+      pair_trade_grid_columns: firstPairGridColumns,
+      pair_trade_overflow_x: pairBucketOverflow,
+      top_summary_row_count: topSummaryRowCount,
+      top_summary_grid_columns: topSummaryGridColumns
+    }, null, 2));
+  } finally {
+    await browser.close();
+    await new Promise((resolve) => server.close(resolve));
+  }
+}
+
+run().catch((error) => {
+  console.error("Dashboard smoke failed.");
+  console.error(error.stack || error.message || String(error));
+  process.exit(1);
+});
