@@ -2,10 +2,10 @@
 <html lang="en">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>How the Layer 1 calls are made · one-page map</title>
-<meta name="description" content="A printable one-page map of how each of the eight Layer 1 agents is called, what facts it is allowed to read, and where its 24-hour call is published.">
-<meta property="og:title" content="How the Layer 1 calls are made">
-<meta property="og:description" content="Seven shared steps, eight sealed agents, one 24-hour call each. The same chain runs for every asset on every refresh.">
+<title>How the calls are made · one-page map</title>
+<meta name="description" content="A printable one-page map of how the eight sealed Layer 1 agents are called, what each is allowed to read, how one Layer 2 pass turns their finished 24-hour calls into ranked pair trades, and where every file is published.">
+<meta property="og:title" content="How the calls are made">
+<meta property="og:description" content="Seven shared chain steps, eight sealed agents with one 24-hour call each, then one Layer 2 node that pairs each asset against USD and keeps only the opposed, high-conviction pairs.">
 <meta property="og:type" content="article">
 <!-- Visual work in this project consults $trading-dashboard-aesthetic-rules and $dashboard-layout-safety-rules first. -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -76,9 +76,9 @@ header>*{min-width:0}
 .tool td:first-child{color:var(--text);font:600 13px/1.35 var(--display)}
 .tool .doc{display:block;font:11px/1.45 var(--mono);color:var(--muted);overflow-wrap:anywhere}
 .tool .flag{display:block;margin-top:3px;font:10.5px/1.4 var(--mono);color:var(--amber)}
-.tool .col-a{width:15%}.tool .col-b{width:29%}.tool .col-c{width:56%}
+.tool .col-a{width:17%}.tool .col-b{width:29%}.tool .col-c{width:83%}
 .panel ol.steps{padding:0;margin:0}
-.columns{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}
+.columns{display:grid;grid-template-columns:1.04fr .96fr 1fr;gap:14px;margin-top:14px}
 .legend{display:flex;flex-wrap:wrap;gap:8px 18px;list-style:none;padding:0;margin-top:14px}
 .legend li{display:flex;align-items:center;gap:8px;font:11.5px/1.6 var(--mono);color:var(--muted);min-width:0}
 .legend i{width:14px;height:2px;background:currentColor;flex:0 0 auto}
@@ -119,10 +119,10 @@ footer{margin-top:20px;padding-top:14px;border-top:1px solid var(--line);color:v
   .node strong{font-size:8.6px}
   .node .body{font-size:8px}
   .node .tagline{font-size:7.6px;padding-top:3px}
-  /* One sheet, three columns. The chain still spans the top, then the four panels read as
-     steps | assets | guarantees over limits: that uses the landscape width instead of stacking two
-     wide rows, which is what pushed the page onto a second sheet. The two wrappers drop out of the
-     flow so their panels become grid items of main, and the gaps replace every section margin. */
+  /* One sheet, three columns. The chain still spans the top, then the five panels read as
+     steps | assets over Layer 2 | guarantees over limits: that uses the landscape width instead of
+     stacking two wide rows, which is what pushed the page onto a second sheet. The two wrappers drop
+     out of the flow so their panels become grid items of main, and the gaps replace every section margin. */
   main{display:grid;grid-template-columns:1.04fr .96fr 1fr;gap:6px;align-items:start}
   header{margin-bottom:0}
   .band{margin-bottom:0}
@@ -132,7 +132,8 @@ footer{margin-top:20px;padding-top:14px;border-top:1px solid var(--line);color:v
   header{grid-column:1/-1;grid-row:1}
   .band{grid-column:1/-1;grid-row:2}
   .panel-steps{grid-column:1;grid-row:3/5}
-  .panel-assets{grid-column:2;grid-row:3/5}
+  .panel-assets{grid-column:2;grid-row:3}
+  .panel-layer2{grid-column:2;grid-row:4}
   .panel-guarantees{grid-column:3;grid-row:3}
   .panel-limits{grid-column:3;grid-row:4}
   .legend{grid-column:1/-1;grid-row:5}
@@ -144,6 +145,16 @@ footer{margin-top:20px;padding-top:14px;border-top:1px solid var(--line);color:v
   .steps li::before{font-size:7.8px}
   .steps .what strong{font-size:8.6px}
   .steps .what span{font-size:8.2px}
+  /* One printed line per asset: the mono rulebook name and the plain status run on together, which is
+     what lets the eight rows share column two with the Layer 2 panel below them. */
+  .tool .doc{display:inline}
+  .tool .doc::after{content:" · "}
+  .tool .flag{display:inline;margin-top:0}
+  .tool .flag::before{content:" · "}
+  .panel-layer2 .steps .what span{font-size:7.9px}
+  .panel-layer2 .panel li,.panel-layer2 .steps .what strong{font-size:8.4px}
+  .tool .col-a{width:13%}
+  .tool .col-c{width:87%}
   .tool th{font-size:7.8px;padding-bottom:2px}
   .tool td{font-size:7.8px;padding:1px 5px 1px 0}
   .tool td:first-child{font-size:8.2px}
@@ -163,16 +174,16 @@ footer{margin-top:20px;padding-top:14px;border-top:1px solid var(--line);color:v
 <main>
   <header>
     <div>
-      <p class="eyebrow">Live pipeline · printable one-pager</p>
-      <h1>How the Layer 1 calls are made</h1>
-      <p class="lede">Every refresh runs the same seven steps. The market facts are collected and saved once, each of the eight Layer 1 agents reads only its own rulebook and the newest usable facts, and each posts one 24-hour call. Layer 2 then combines the finished calls, and the Dashboard Writer publishes the files the dashboard reads. Nothing later in the chain can reach back and change an earlier call.</p>
+      <p class="eyebrow">Layer 1 and Layer 2 · printable one-pager</p>
+      <h1>How the calls are made</h1>
+      <p class="lede">Seven steps every refresh: the facts are saved once, each of the eight Layer 1 agents reads only its own rulebook and posts one 24-hour call, then one Layer 2 code node pairs those calls against USD - and nothing later can change an earlier call.</p>
     </div>
     <ul class="chips">
-      <li>8 assets</li>
-      <li>1 call each</li>
-      <li>sealed agents</li>
-      <li>24-hour horizon</li>
-      <li>reviewed 2026-10-03</li>
+      <li>8 sealed agents</li>
+      <li>1 call each · 24h</li>
+      <li>Layer 2 pairs USD</li>
+      <li>threshold 60</li>
+      <li>reviewed 2026-10-04</li>
     </ul>
   </header>
 
@@ -182,56 +193,56 @@ footer{margin-top:20px;padding-top:14px;border-top:1px solid var(--line);color:v
         <p class="eyebrow">The whole chain · same order every run</p>
         <h2 id="chain-title">From collected facts to a published call</h2>
       </div>
-      <p class="band-note">Steps 01 to 03 happen once for the whole system. Step 04 is where the eight assets split apart, each into its own sealed agent. Steps 05 to 07 gather the results back up and publish them.</p>
+      <p class="band-note">Steps 01 to 03 happen once for the whole system, step 04 splits the eight assets into their own sealed agents, steps 05 to 07 pair the finished calls and publish them.</p>
     </div>
     <ol class="flow">
       <li class="node" data-kind="run">
         <span class="step">01 · TRIGGER</span>
         <strong>Master Orchestrator</strong>
-        <span class="body">The dashboard's Refresh button, or a manual run, starts it. It then calls the collectors and the agents in a fixed order.</span>
-        <span class="tagline">webhook · master-orchestrator-<wbr>dashboard-refresh</span>
+        <span class="body">Refresh button or a manual run starts the chain.</span>
+        <span class="tagline">webhook · refresh</span>
       </li>
       <li class="arrow" aria-hidden="true"></li>
       <li class="node" data-kind="run">
         <span class="step">02 · COLLECT</span>
         <strong>Collectors + Eco Events</strong>
-        <span class="body">One collector per market, plus the economic-calendar collector, fetch the market facts and the day's scheduled events.</span>
-        <span class="tagline">FRED · Coinbase · Alpha Vantage · Finnhub</span>
+        <span class="body">One collector per market plus the economic calendar.</span>
+        <span class="tagline">FRED · Coinbase · Finnhub</span>
       </li>
       <li class="arrow" aria-hidden="true"></li>
       <li class="node" data-kind="store">
         <span class="step">03 · STORE</span>
         <strong>Supabase market_snapshots</strong>
-        <span class="body">One shared table: every collector writes the same superset row, so every agent reads the same newest row. A stale row means no new call.</span>
-        <span class="tagline">newest usable snapshot wins</span>
+        <span class="body">Every collector writes the same newest shared row.</span>
+        <span class="tagline">newest usable row wins</span>
       </li>
       <li class="arrow" aria-hidden="true"></li>
       <li class="node" data-kind="seal">
         <span class="step">04 · SEALED LAYER 1</span>
         <strong>Eight independent agents</strong>
-        <span class="body">Each agent sees only its own rulebook and the newest usable facts. It may not read another agent, Layer 2, the dashboard, or anything later.</span>
-        <span class="tagline">8 calls written separately</span>
+        <span class="body">Own rulebook and newest usable facts only.</span>
+        <span class="tagline">8 calls, kept apart</span>
       </li>
       <li class="arrow" aria-hidden="true"></li>
       <li class="node" data-kind="store">
         <span class="step">05 · STORE</span>
         <strong>Supabase agent_outputs</strong>
-        <span class="body">Each call is kept as written: one new row per asset per run, so a call can always be re-read later.</span>
-        <span class="tagline">audit trail · insert only</span>
+        <span class="body">One new row per asset per run, kept as written.</span>
+        <span class="tagline">insert only</span>
       </li>
       <li class="arrow" aria-hidden="true"></li>
       <li class="node" data-kind="run">
         <span class="step">06 · LAYER 2</span>
         <strong>Pair selection</strong>
-        <span class="body">Reads the finished Layer 1 calls and adds a pair call only when the two legs point opposite ways. It never recalculates one.</span>
-        <span class="tagline">combines · never recomputes</span>
+        <span class="body">One code node pairs the finished calls with USD.</span>
+        <span class="tagline">never recomputes</span>
       </li>
       <li class="arrow" aria-hidden="true"></li>
       <li class="node" data-kind="publish">
         <span class="step">07 · PUBLISH</span>
         <strong>Dashboard Writer → GitHub</strong>
-        <span class="body">Writes the files the dashboard reads: the eight calls, the Layer 2 call, and the job status. GitHub Pages serves them to the page.</span>
-        <span class="tagline">data/<wbr>layer1.json · layer2.json · workflow-<wbr>status.json</span>
+        <span class="body">Writes the files the dashboard reads to GitHub.</span>
+        <span class="tagline">layer1 · layer2 · status</span>
       </li>
     </ol>
   </section>
@@ -242,15 +253,15 @@ footer{margin-top:20px;padding-top:14px;border-top:1px solid var(--line);color:v
       <h3>Inside one Layer 1 agent</h3>
       <p class="sub">The same nine nodes run for every asset · logic/agent_&lt;asset&gt;_direction.md</p>
       <ol class="steps">
-        <li><span class="what"><strong>Called by the orchestrator</strong><span>It starts as a sub-workflow, so it only ever runs when the chain runs.</span></span></li>
-        <li><span class="what"><strong>Read the newest facts</strong><span>Supabase Get Many pulls the market_snapshots rows; the newest usable one is chosen.</span></span></li>
-        <li><span class="what"><strong>Build this asset's input pack</strong><span>A code node keeps only the fields this asset needs and lists whatever is missing. Missing facts score neutral, never guessed.</span></span></li>
-        <li><span class="what"><strong>Fetch its own rulebook</strong><span>It downloads its logic file from GitHub, so it scores against the committed rules, not a private copy.</span></span></li>
-        <li><span class="what"><strong>Combine rulebook and facts</strong><span>The rulebook text and the input pack are joined into one payload before the model is asked anything.</span></span></li>
-        <li><span class="what"><strong>Ask the model for factor signals</strong><span>Message a model (OpenAI gpt-4.1-mini) must answer strict JSON: one signal per factor plus a short reason, using only the facts supplied.</span></span></li>
-        <li><span class="what"><strong>Parse the answer</strong><span>A code node rejects anything that is not the expected JSON, so a malformed answer cannot become a call.</span></span></li>
-        <li><span class="what"><strong>Calculate conviction in code</strong><span>A deterministic gate turns the factor signals into the 24-hour direction and conviction. The model never sets conviction.</span></span></li>
-        <li><span class="what"><strong>Write the call</strong><span>One row goes into agent_outputs with the direction, conviction, the factor breakdown and the raw model answer.</span></span></li>
+        <li><span class="what"><strong>Called by the orchestrator</strong><span>It runs as a sub-workflow: only when the chain runs.</span></span></li>
+        <li><span class="what"><strong>Read the newest facts</strong><span>Supabase Get Many pulls market_snapshots; the newest usable row wins.</span></span></li>
+        <li><span class="what"><strong>Build this asset's input pack</strong><span>Keeps only the fields this asset needs; missing facts score neutral.</span></span></li>
+        <li><span class="what"><strong>Fetch its own rulebook</strong><span>It downloads its logic file from GitHub, so it scores committed rules.</span></span></li>
+        <li><span class="what"><strong>Combine rulebook and facts</strong><span>Rulebook text and input pack are joined before the model is asked.</span></span></li>
+        <li><span class="what"><strong>Ask the model for factor signals</strong><span>OpenAI gpt-4.1-mini must answer strict JSON: one signal per factor.</span></span></li>
+        <li><span class="what"><strong>Parse the answer</strong><span>A code node rejects anything that is not the expected JSON.</span></span></li>
+        <li><span class="what"><strong>Calculate conviction in code</strong><span>The deterministic gate sets the 24-hour direction and conviction.</span></span></li>
+        <li><span class="what"><strong>Write the call</strong><span>One row into agent_outputs: direction, conviction, factor breakdown.</span></span></li>
       </ol>
     </article>
 
@@ -260,30 +271,45 @@ footer{margin-top:20px;padding-top:14px;border-top:1px solid var(--line);color:v
       <p class="sub">One agent each · one rulebook each · one 24-hour call each</p>
       <table class="tool">
         <thead>
-          <tr><th class="col-a">Asset</th><th class="col-b">Market</th><th class="col-c">Rulebook in logic/</th></tr>
+          <tr><th class="col-a">Asset</th><th class="col-c">Rulebook in logic/ · status</th></tr>
         </thead>
         <tbody>
-          <tr><td>USD</td><td>US Dollar (DXY)</td><td><span class="doc">agent_usd_direction.md · v2.1</span>production baseline</td></tr>
-          <tr><td>EUR</td><td>Euro (EUR/USD)</td><td><span class="doc">agent_eur_direction.md · v2.0</span>production baseline candidate</td></tr>
-          <tr><td>GOLD</td><td>Gold (XAU/USD)</td><td><span class="doc">agent_gold_direction.md · v2.0</span>production baseline</td></tr>
-          <tr><td>SILVER</td><td>Silver (XAG/USD)</td><td><span class="doc">agent_silver_direction.md · v1.0</span>header still says inactive draft<span class="flag">read with care</span></td></tr>
-          <tr><td>NQ</td><td>Nasdaq 100 (NQ)</td><td><span class="doc">agent_nq_direction.md · v2.0</span>production baseline candidate</td></tr>
-          <tr><td>BTC</td><td>Bitcoin (BTC/USD)</td><td><span class="doc">agent_btc_direction.md · v2.0</span>production baseline candidate</td></tr>
-          <tr><td>WTI</td><td>Crude oil (WTI)</td><td><span class="doc">agent_wti_direction.md · v0.2</span>header still says research only<span class="flag">no WTI columns in the shared snapshot</span></td></tr>
-          <tr><td>GBP</td><td>Sterling (GBP/USD)</td><td><span class="doc">agent_gbp_direction.md · v0.1</span>header still says research only<span class="flag">read with care</span></td></tr>
+          <tr><td>USD</td><td><span class="doc">agent_usd_direction.md · v2.1</span>production baseline</td></tr>
+          <tr><td>EUR</td><td><span class="doc">agent_eur_direction.md · v2.0</span>production baseline candidate</td></tr>
+          <tr><td>GOLD</td><td><span class="doc">agent_gold_direction.md · v2.0</span>production baseline</td></tr>
+          <tr><td>SILVER</td><td><span class="doc">agent_silver_direction.md · v1.0</span><span class="flag">inactive draft</span></td></tr>
+          <tr><td>NQ</td><td><span class="doc">agent_nq_direction.md · v2.0</span>production baseline candidate</td></tr>
+          <tr><td>BTC</td><td><span class="doc">agent_btc_direction.md · v2.0</span>production baseline candidate</td></tr>
+          <tr><td>WTI</td><td><span class="doc">agent_wti_direction.md · v0.2</span><span class="flag">header: research only</span></td></tr>
+          <tr><td>GBP</td><td><span class="doc">agent_gbp_direction.md · v0.1</span><span class="flag">header: research only</span></td></tr>
         </tbody>
       </table>
     </article>
   </section>
-  <section class="columns" aria-label="What is always true, and what this page does not claim">
+  <section class="columns" aria-label="How Layer 2 pairs the finished calls, what is always true and what this page does not claim">
+    <article class="panel panel-layer2">
+      <p class="eyebrow">Step 06 in detail</p>
+      <h3>How Layer 2 picks a pair</h3>
+      <p class="sub">No rulebook and no model: one code node over the finished Layer 1 rows</p>
+      <ol class="steps">
+        <li><span class="what"><strong>Read the stored calls</strong><span>Newest 24-hour row per agent from Supabase agent_outputs.</span></span></li>
+        <li><span class="what"><strong>Pair each asset with USD</strong><span>Seven pairs, named under this list.</span></span></li>
+        <li><span class="what"><strong>Average the two convictions</strong><span>confidence = round((base + USD) / 2), clamped to 0-100.</span></span></li>
+        <li><span class="what"><strong>Keep only a disagreeing pair</strong><span>Both legs 60 or more, neither with no clear bias, opposed.</span></span></li>
+        <li><span class="what"><strong>Rank them, then write the file</strong><span>Rank 1..n, then write trade_opportunities and avoid_today.</span></span></li>
+      </ol>
+      <p class="sub">Base bullish with USD bearish reads BUY; the reverse reads SELL.</p>
+      <p class="sub">Live pairs: EUR/USD · XAU/USD · XAG/USD · BTC/USD · NQ/USD · WTI/USD · GBP/USD → data/layer2.json.</p>
+    </article>
     <article class="panel panel-guarantees">
       <p class="eyebrow">The guarantees the design holds to</p>
       <h3>What is always true</h3>
       <ul>
-        <li><strong>One rulebook each.</strong> An agent reads only its own logic document and the newest usable facts. It never sees another agent's answer.</li>
+        <li><strong>One rulebook each.</strong> An agent reads only its own logic document and the newest usable facts, never another agent's answer.</li>
         <li><strong>One call each.</strong> Every agent writes exactly one 24-hour call per usable run. A stale or unusable snapshot produces no row at all.</li>
         <li><strong>Code decides conviction.</strong> The model returns factor signals only. The deterministic gate sets direction and conviction, so the same facts give the same call.</li>
-        <li><strong>Layer 2 only combines.</strong> It reads finished Layer 1 calls and never recomputes one.</li>
+        <li><strong>Layer 2 only combines.</strong> It reads finished Layer 1 calls, averages the two legs of a pair and never recomputes one.</li>
+        <li><strong>A pair is a selection, not an order.</strong> Nothing downstream of data/layer2.json places a trade.</li>
         <li><strong>Research never writes back.</strong> Backtests and replays work on copies and cannot touch a live call.</li>
       </ul>
     </article>
@@ -291,9 +317,11 @@ footer{margin-top:20px;padding-top:14px;border-top:1px solid var(--line);color:v
       <p class="eyebrow">Limits, stated on the page itself</p>
       <h3>Read this page honestly</h3>
       <ul>
-        <li><strong>The saved workflow exports are a partial mirror.</strong> The exported Layer 2 and Dashboard Writer flows in this repo still name only the original five assets, so the live eight-asset wiring is visible in the published data/layer1.json and the run log, not in exports/.</li>
-        <li><strong>Three rulebooks still carry draft headers.</strong> SILVER, WTI and GBP are marked inactive or research-only even though their rows publish as live. Treat their calls as unproven.</li>
-        <li><strong>One extra data path.</strong> WTI is the exception: the shared snapshot has no WTI columns, so its agent reads the FRED crude series itself just before scoring.</li>
+        <li><strong>The saved exports are a partial mirror.</strong> The Layer 2 and Writer flows in this repo still name only the original five assets, while the live data/layer2.json names seven pairs - read data/*.json, not exports/.</li>
+        <li><strong>Three rulebooks still carry draft headers.</strong> SILVER, WTI and GBP are marked inactive or research-only, yet both layers use them. Treat those calls as unproven.</li>
+        <li><strong>One extra data path.</strong> The WTI agent is the exception: the shared snapshot has no WTI columns, so it reads the FRED crude series itself just before scoring.</li>
+        <li><strong>The pair number is an average, not a probability.</strong> It is the mean of two Layer 1 convictions, on a different scale from either leg. It is not a chance a trade wins.</li>
+        <li><strong>A dormant path can outrank the gate.</strong> If a Layer 1 row carries model-authored today_call direction or confidence, Layer 2 prefers it. Null for all eight agents today.</li>
         <li><strong>A published call is not a proven edge.</strong> This page shows how the calls are made, not whether they are right.</li>
       </ul>
     </article>
@@ -312,7 +340,7 @@ footer{margin-top:20px;padding-top:14px;border-top:1px solid var(--line);color:v
       <a href="workflows/WORKFLOW_INVENTORY.md">workflows/WORKFLOW_INVENTORY.md</a>
       <a href="docs/LAYER1_OPENAI_CREDITS_INCIDENT_20261001.md">docs · Layer 1 credit incident</a>
     </div>
-    <p>This page shows how the calls are made, not whether they are right. The committed rulebooks in logic/, the workflow inventory and the published data/*.json files remain the source of truth. Guarded by tests/layer1_call_flow.browser.test.js, which re-renders this page offline at desktop and narrow widths.</p>
+    <p>This page shows how the calls are made, not whether they are right. The committed rulebooks in logic/, the workflow exports, the workflow inventory and the published data/*.json files remain the source of truth. Guarded by tests/layer1_call_flow.browser.test.js, which re-renders the page offline at desktop and narrow widths and holds it to one printed sheet.</p>
   </footer>
 </main>
 </body>

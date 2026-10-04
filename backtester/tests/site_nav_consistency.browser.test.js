@@ -22,12 +22,12 @@ const root = nav.ROOT;
 const builder = path.join(root, "backtester", "scripts", "build_shared_nav.js");
 
 // The navigation the user asked for, label by label and in order, pinned here so a partial that drifts fails
-// rather than quietly redefining the agreement. The bar's fifth entry is the printable Layer 1 call map: it is
+// rather than quietly redefining the agreement. The bar's fifth entry is the printable call map: it is
 // a page a reader opens and prints rather than a dashboard view, so it carries no rail of its own, is not one
 // of the builder's nav pages, and is reached the same way from every page. The sixth is the what-moves-gold
 // page published 2026-10-04, which is a builder page and carries the block like the other standalone pages.
 const BRAND = "Asset Directional Movement Dashboard";
-const BAR_LABELS = ["North Star Brief", "Standing Dashboard", "Gold", "Backtest Flow", "Layer 1 Calls", "What moves gold"];
+const BAR_LABELS = ["North Star Brief", "Standing Dashboard", "Gold", "Backtest Flow", "Call Map", "What moves gold"];
 const BAR_HREFS = ["dashboard-northstar.html", "standing-dashboard.html", "gold.html", "backtest-flow.html", "layer1-call-flow.html", "what-moves-gold.html"];
 const GROUPS = ["Operate", "Live", "Evidence", "System"];
 const RAIL_LABELS = [
@@ -44,10 +44,10 @@ const RAIL_TABS = [
 // is what the label names, and its hash handling already works with no script of its own.
 const RAIL_HREFS = RAIL_TABS.map((tab, index) => (index === 3 ? "gold.html#direction" : `index.html#${tab}`));
 // The rail also ends with one outbound entry, added 2026-10-04: like the bar's fifth entry it leaves the
-// dashboard set for the printable Layer 1 call map, so it is written as a link in both variants rather than as a
+// dashboard set for the printable call map, so it is written as a link in both variants rather than as a
 // data-tab button, and it is pinned here for the same reason the labels are.
 const RAIL_OUTBOUND_HREFS = ["layer1-call-flow.html"];
-const RAIL_OUTBOUND_LABELS = ["Layer 1 Calls"];
+const RAIL_OUTBOUND_LABELS = ["Call Map"];
 const MARK = "ADM";
 const HEAD_LABEL = "Control Room";
 const FOOT = "Published dashboard";
@@ -313,15 +313,15 @@ test("a rail entry lands on the view its label names, from any page and from ins
       return !!tab && tab.getAttribute("aria-selected") === "true" && !!panel && panel.classList.contains("is-open");
     });
 
-    // The bar's Layer 1 entry leaves the dashboard set for the printable call map, which is what its label
+    // The bar's Call Map entry leaves the dashboard set for the printable call map, which is what its label
     // names: the heading a reader came for, seven steps, and no rail of its own on arrival.
     await view.goto(`${base}/index.html`, { waitUntil: "load" });
-    await view.locator(".topbar .topbar-link", { hasText: "Layer 1 Calls" }).click();
+    await view.locator(".topbar .topbar-link", { hasText: "Call Map" }).click();
     await view.waitForURL(/layer1-call-flow\.html$/);
     await view.waitForFunction(() => {
       const heading = document.querySelector("h1");
       return !!heading
-        && heading.textContent.trim() === "How the Layer 1 calls are made"
+        && heading.textContent.trim() === "How the calls are made"
         && document.querySelectorAll("ol.flow > li.node").length === 7;
     });
 
@@ -329,11 +329,11 @@ test("a rail entry lands on the view its label names, from any page and from ins
     // printable call map the same way: straight from the dashboard, and from inside a gold frame in the whole
     // window rather than inside the frame.
     await view.goto(`${base}/index.html`, { waitUntil: "load" });
-    await view.locator(".side-rail nav .side-rail-link", { hasText: "Layer 1 Calls" }).click();
+    await view.locator(".side-rail nav .side-rail-link", { hasText: "Call Map" }).click();
     await view.waitForURL(/layer1-call-flow\.html$/);
     await view.waitForFunction(() => {
       const heading = document.querySelector("h1");
-      return !!heading && heading.textContent.trim() === "How the Layer 1 calls are made";
+      return !!heading && heading.textContent.trim() === "How the calls are made";
     });
     await view.goto(`${base}/gold.html#direction`, { waitUntil: "load" });
     await view.locator('iframe[title="Gold direction scorecard"]').scrollIntoViewIfNeeded();
