@@ -3915,3 +3915,61 @@ of accuracy, prediction, timing or money. Filed as submission
 
 
 
+## 2026-10-04 (later) - User answers on the Gold factor gaps; why four factors are dark, and the route past 60 percent
+
+The user answered the five questions filed under `-057`/`-058`: (1) **yes**, leave the weights alone,
+and keep working until a genuine statistical edge better than 60 percent directional accuracy is
+found; (2) **yes**, why are factors missing at all - all data needs to be there; (3) **okay** to the
+bounded availability-lag rebuild; (4) **okay** to the event-day study on data already held; (5)
+**no**, we are not waiting until March 2027, we are solving this now. Answer 5 removes the sealed
+window from the critical path; answer 1 keeps the weights untouched.
+
+**Why four of ten factors are dark, at the line of code (new this turn, all read-only).** The rule
+engine is `backtester/replay/gold/gold_replay_core.js` and the historical builder is
+`backtester/builders/gold/build_gold_historical_snapshots.js`. (a) **F8 inflation signal** is a
+hardcoded stub - the engine returns NEUTRAL with the reason "Collector does not currently provide a
+top-level inflation_signal column", and the field is absent from all 147 rows of
+`backtester/tmp/gold-stored-20260906/snapshot-inputs.json` and from all 801 rows of
+`snapshot-history.json`. (b) **F9 safe haven** reads `risk_headline_context` or
+`geopolitical_risk_flag === true`; `risk_headline_context` never exists anywhere and the flag is
+`null` on 143 of 147 rows and `false` on the other four, so the factor cannot speak. (c) **F3 Fed
+bias** is a *real* live column (145 of 147 snapshots: 132 neutral, 12 hawkish, 1 dovish) but the
+historical builder writes `fed_bias: null`, so every backtest is blind to it by construction. (d)
+**F10 liquidity/growth** has its data and is still dark on a word: the builder emits `"expanding"` /
+`"contracting"` while the engine matches `"expansion"` / `"contraction"`, and
+`"contracting".includes("contraction")` is false - proven by running the matcher over both
+vocabularies (`tmp/probe-f10-vocabulary.js`). The live collector uses a third vocabulary
+(`growth_weakening`, `liquidity_expansion`) which does match. So the model is wired twice, with two
+vocabularies, and the path every backtest uses can never speak.
+
+**Five defects no weighting can repair.** F2's dollar threshold is declared 0.30 percent but
+implemented at 0.15 percent; F10's implemented sign is inverted against the document (declared
+expansion = BULLISH, implemented expansion = BEARISH); F5's "rising strongly" is implemented as an
+invented +/-0.3 percent; F6's VIX rule faithfully implements the document (VIX >25 BULLISH, <16
+BEARISH) but is calibrated to crisis-driven gold, which is why it is wrong 60 percent of the time in
+this sample; and two different 100-point weight vectors are in the tree (document 22/18/14/8/8/10/
+6/6/6/2 versus engine and factor lab 26/22/12/10/10/8/8/2/1/1), so there is no single "current
+weighting" anyone can be told to leave alone until that is settled.
+
+**The route past 60 percent, with the arithmetic.** In this sample always saying "up" already scores
+60.63 percent of non-flat days, so the bar is an edge over the drift, not 60 raw. Proving an edge
+needs about 196 independent days for 10pp, 784 for 5pp, 2,178 for 3pp. The local event archive
+(`backtester/tmp/gold-calendar-extended-20260918/events.json`, 5,115 rows, 2022-12-01 to
+2026-09-11) holds 905 distinct release days, 656 of them with both an actual and a consensus, and 165
+usable high-impact days. That is enough to prove a 10pp-or-bigger event-day effect and *not* enough
+to prove a 5pp one. Horizons do not multiply the sample (1h/4h/24h after one release is one
+observation), and the 2026 validation interval is already consumed, so the honest ways forward are a
+declared, hypothesis-capped walk-forward on the 656 usable release days, plus a prospective paper
+record started now. The one existing lead is claims-below-consensus then bullish gold (43/58
+training, 12/16 validation, Wilson 95 percent about 50.5-89.8) - promising, not yet evidence.
+
+**What is filed and what is requested.** Filed as submission
+`20261004-strategy-gold-factor-gaps-and-sixty-percent-route-059`, with this document
+`GOLD_FACTOR_GAPS_AND_SIXTY_PERCENT_ROUTE_20261004.md`. Requested of the owning worker (not done
+here): fix the five defects and add a build guard against vocabulary drift; wire the three missing
+producers from data already on disk (inflation signal from the archive's CPI/PCE/PPI
+actual-versus-consensus, safe haven from a declared name classifier plus VIX - the rebuild already
+approved as answer 32 - and a declared historical Fed bias); and run the bounded availability-lag
+rebuild approved as answer 3. Nothing here changed a weight, a live file, a collector, or another
+worker's work; no credentials were used and the sealed window was not read.
+
