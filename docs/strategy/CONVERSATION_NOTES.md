@@ -3575,3 +3575,55 @@ copied, merged or deployed; no measurement was run and no outcome, holdout or pr
 sealed window (reading prohibited until `2027-03-25T15:00:00Z`) was not touched. Live pages, `origin/main` blobs and
 the remote tip were read read-only, and nothing was written to them. Filed as
 `20261003-strategy-factor-influence-table-and-the-28-factor-link-049`, status `ready_for_review`.
+## 2026-10-04 — he asks for the 28-factor link again: the live Gold page was rebuilt overnight and the tab is renamed
+
+His words this turn, verbatim: *"okay give me the link to where these 28 factors are I cant see them"*. `-049` told him
+the table was the Gold page's **third tab, named "28-factor outcomes"**. That name is no longer in the live strip.
+
+**The live Gold page, re-read this turn read-only over HTTPS, not remembered.** `gold.html` answers HTTP 200 at
+**32,245 bytes** (it was 14,388 bytes when `-042`/`-043`/`-049` read it) and now carries **five** tabs, each mapped to
+the panel it opens:
+
+1. **Start here** — written into the page (six bullets; the three "reads together" cards: direction 570 days, half L2L
+   558 of 570, full L2L 429 of 570; "the movement counts, the shares and the direction reads were re-read on 3 October
+   2026").
+2. **Direction** — frames `gold-direction-scorecard.html`.
+3. **Movement - L2L and half L2L** — written into the page.
+4. **Factor tables (draft)** — frames `gold-factor-wip.html`.
+5. **Archive census** — frames `gold-backtesting.html` and `gold-backtest-outcomes.html`.
+
+**So the 28-factor table is now the last tab, "Archive census", and the words "28-factor outcomes" no longer appear
+anywhere in the strip.** The page behind it is unchanged: `gold-backtest-outcomes.html` answers HTTP 200 at 27,888
+bytes with the title "Gold 28-Factor Outcomes - Research only" and the same nine headings `-049` listed ("Declared
+before anything was evaluated", "Where every observation came from", "Direction split (not a result)", "Why candidates
+did not qualify", "How thin the evidence per candidate is", "What this page does not claim", "The accepted verdict,
+quoted", "What would change the answer", "Where to check every number"). Its parent now introduces it: "Two pages that
+describe the 2023-2026 archive rather than gold itself ... moved to the end of the strip."
+
+**The finding that actually answers him, measured rather than assumed: no live page prints the 28 names.** The
+outcomes page was scanned this turn for the registry's own field names and for the plain words a reader would look
+for — `real_yield` 0 occurrences, `vix` 0, `dxy` 0, `yield` 0, `dollar` 0, `dgs` 0, `fed` 1 (unrelated prose),
+`variables` 6, `median` 7, `anchor` 21 — so it counts candidates, anchors and observations and never names a
+variable. The names exist only in the internal digest `docs/GOLD_VARIABLE_FINDINGS_AND_COVERAGE.md`, which the page
+links as "28-variable digest" but which is not served at the site root, so that link cannot resolve on the live site.
+He is therefore not missing a link he already has: **there is no page that lists the 28 factors by name**, which is
+exactly the gap `FACTOR_INFLUENCE_TABLE_20261003.md` exists to close.
+
+**The link given him, plainly.** `https://kevincreedycars-debug.github.io/trading-agent-dashboard/gold-backtest-outcomes.html`
+- it also works on its own, and on the dashboard it is the Gold page's last tab, **Archive census**. What this
+corrects: `-049`'s "third tab" sentence, and the part of `FACTOR_INFLUENCE_TABLE_20261003.md` that proposes placing the
+new table as the first tab, both need the live five-tab strip in front of them, so the destination is one edit against
+the current 32,245-byte page, not the 14,388-byte four-tab page `-049` described.
+
+**One observation for the coordinator, recorded as an observation and not a conclusion.** The live Gold page changed
+between `-049` and this read — 14,388 to 32,245 bytes, four tabs to five, a written-in "Start here" and "Movement"
+panel added — and this lane did not make that change and cannot see its commit from here. It is recorded so the page's
+build history has the observation, and so whoever owns that page confirms it.
+
+**What this turn changed and what it did not.** Writes are one entry in these notes, one commit on
+`workers/strategy-advisory-20260920` and its push, plus ignored `tmp/` scratch. No page, stylesheet, script, template,
+builder, guard, generator, data artifact, number, register entry, assignment, lock, controller or bridge file was
+touched; nothing was published, refreshed, triggered, copied, merged or deployed; no measurement was run and no
+outcome, holdout or prospective observation was read; the sealed window (reading prohibited until
+`2027-03-25T15:00:00Z`) was not touched. Filed as
+`20261004-strategy-28-factor-link-tab-renamed-status-050`, status `status_report`.
