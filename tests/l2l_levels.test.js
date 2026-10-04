@@ -37,6 +37,8 @@ const {
   readDraft,
   writeDraft,
   clearDraft,
+  levelsStateStamp,
+  chooseLevelsView,
   readSettings,
   writeSettings,
   clearSettings,
@@ -1021,13 +1023,17 @@ test("a mark made without the loopback tool is kept in this browser first", () =
   assert.match(script, /const draft = liveTradingLevelsEndpoint \? null : liveTradingReadDraft\(\);/);
   assert.match(script, /liveTradingPublish\.draft_saved_at_utc = draft\.saved_at_utc;/);
   assert.match(script, /liveTradingPublish\.remote_sha = draft\.base_sha \|\| null;/);
+  // The draft is shown only when it is newer than the file committed to the repository, so a stale copy left
+  // in one browser cannot hide the levels every other reader sees.
+  assert.match(script, /liveTradingLevelsStore\.chooseLevelsView\(liveTradingLevelsData, draft\)/);
+  assert.match(script, /liveTradingPublish\.shown_source = view\.source;/);
   // What the reader is told, and the copy they can keep by hand even if storage was refused.
   assert.match(script, /Saved in this browser: publish it to make it live\./);
   assert.match(script, /function liveTradingExportLevels\(\) \{/);
   assert.match(script, /liveTradingLevelsStore\.serialiseState\(liveTradingLevelsData\)/);
   assert.match(script, /link\.download = "l2l-levels\.json";/);
   assert.match(script, /data-live-level-export/);
-  assert.match(script, /and is not published yet\./);
+  assert.match(script, /and is not published yet, so nobody else sees it/);
 });
 
 test("publishing sends one file to the reader's own repository and nothing else", () => {
@@ -1365,5 +1371,92 @@ test("a browser without fetch reports it instead of throwing", async () => {
   } finally {
     globalThis.fetch = realFetch;
   }
+});
+
+
+// ---- Which copy of the levels the chart shows -----------------------------------------------------------
+
+test("a mark already in the repository outranks a stale draft in one browser", () => {
+  const base = applyOrFail(createEmptyState(STAMP), addRequest({ symbol: "BTCUSD", price: 83113.66 }));
+  const published = {
+    ...applyOrFail(base, addRequest({ symbol: "BTCUSD", price: 84568.53 })),
+    generated_at_utc: "2026-10-04T13:00:00Z"
+  };
+  const draftNewer = {
+    state: {
+      ...applyOrFail(published, addRequest({ symbol: "BTCUSD", price: 87223.4 })),
+      generated_at_utc: "2026-10-04T14:00:00Z"
+    },
+    saved_at_utc: "2026-10-04T14:00:00Z"
+  };
+  const draftStale = {
+    state: { ...createEmptyState(STAMP), generated_at_utc: "2026-10-04T09:00:00Z" },
+    saved_at_utc: "2026-10-04T09:00:00Z",
+    base_sha: "abc123"
+  };
+
+  // Something marked in the repository is the durable copy, so a draft that predates it is set aside rather
+  // than hiding the published levels. This is the shape the user reported: marks committed, and a chart
+  // that showed none of them.
+  const staleView = chooseLevelsView(published, draftStale);
+  assert.equal(staleView.source, "published");
+  assert.equal(serialiseState(staleView.state), serialiseState(published));
+  assert.equal(levelsFor(staleView.state, "BTCUSD").length, 2);
+
+  // A draft made after the published file is a change nobody has published yet, so it is what the reader is
+  // shown - and the page says so rather than leaving them to guess which copy they are looking at.
+  const newerView = chooseLevelsView(published, draftNewer);
+  assert.equal(newerView.source, "draft");
+  assert.equal(levelsFor(newerView.state, "BTCUSD").length, 3);
+  assert.equal(newerView.published_at_utc, "2026-10-04T13:00:00Z");
+
+  // Nothing published yet: the draft is all there is, and it is shown.
+  assert.equal(chooseLevelsView(null, draftNewer).source, "draft");
+  assert.equal(serialiseState(chooseLevelsView(null, draftNewer).state), serialiseState(draftNewer.state));
+  // No draft: the published file is shown unchanged. Neither: nothing to show.
+  assert.equal(chooseLevelsView(published, null).source, "published");
+  assert.equal(chooseLevelsView(null, null).source, "none");
+  assert.equal(chooseLevelsView(null, null).state, null);
+
+  // A draft that cannot prove it is newer - no stamp, an unreadable one, or a published file with no stamp -
+  // never hides a committed mark, and a draft with no state at all is not a copy of anything.
+  assert.equal(chooseLevelsView(published, { state: draftNewer.state, saved_at_utc: "not a date" }).source, "published");
+  assert.equal(chooseLevelsView({ ...published, generated_at_utc: undefined }, draftNewer).source, "published");
+  assert.equal(chooseLevelsView(published, { saved_at_utc: "2026-10-04T14:00:00Z" }).source, "published");
+
+  // The stamp reading the decision rests on, in one place.
+  assert.equal(levelsStateStamp("2026-10-04T14:00:00Z") > levelsStateStamp("2026-10-04T13:00:00Z"), true);
+  assert.equal(levelsStateStamp(""), null);
+  assert.equal(levelsStateStamp(undefined), null);
+});
+
+test("the chart states a marked ladder it cannot draw, and keeps the reader's view", () => {
+  const script = fs.readFileSync(scriptPath, "utf8");
+  const css = fs.readFileSync(path.join(root, "styles.css"), "utf8");
+
+  // A ladder step is far wider than the window 120 bars span, so the marked lines can all sit outside the
+  // drawn price scale. The lines inside the window are drawn as lines; the ones outside it get a tab on the
+  // edge they sit past, naming the count and the nearest price, and that tab is the Fit levels control, so
+  // the ladder is either drawn or stated with one click to bring it into view.
+  assert.match(script, /const levelsAbove = levels\s+\.filter\(level => Number\(level\.price\) > max\)/);
+  assert.match(script, /const levelsBelow = levels\s+\.filter\(level => Number\(level\.price\) < min\)/);
+  assert.match(script, /class="live-trading-chart-level-edge \$\{side\}" data-live-chart-fit-levels role="button" tabindex="0"/);
+  assert.match(script, /nearest \$\{liveTradingPrice\(Number\(group\[0\]\.price\), digits\)\}/);
+  assert.match(script, /\$\{levelEdgeTabs\}/);
+  assert.equal(css.includes(".live-trading-chart-level-edge-box"), true);
+  assert.equal(css.includes(".live-trading-chart-level-edge-text"), true);
+
+  // The view the reader sets travels with the tab state, so a reload shows the same symbol, timeframe, style
+  // and scale instead of an unfitted default with their own lines off-screen again.
+  assert.match(script, /liveTradingChart: \{\s+symbol: liveTradingChartSymbol,\s+timeframe: liveTradingChartTimeframe,\s+mode: liveTradingChartMode,\s+fitLevels: liveTradingChartFitLevels\s+\}/);
+  assert.match(script, /const savedChart = parsed\.liveTradingChart && typeof parsed\.liveTradingChart === "object"/);
+  assert.match(script, /if \(LIVE_TRADING_TIMEFRAMES\.some\(entry => entry\.key === savedChart\.timeframe\)\) liveTradingChartTimeframe = savedChart\.timeframe;/);
+  assert.match(script, /if \(savedChart\.mode === "line" \|\| savedChart\.mode === "candles"\) liveTradingChartMode = savedChart\.mode;/);
+  assert.match(script, /liveTradingChartFitLevels = savedChart\.fitLevels === true;/);
+  // Every chart control that changes the view writes it: symbol, timeframe, style and the fit control.
+  assert.equal(
+    (script.match(/saveNavigationState\(\);\s+renderLiveTrading\(liveTradingData \|\| \{\}\);/g) || []).length,
+    4
+  );
 });
 

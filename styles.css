@@ -8323,6 +8323,31 @@ body {
 .live-trading-chip { display: inline-flex; align-items: baseline; gap: 6px; min-width: 0; padding: 5px 9px; border: 1px solid #26374b; border-radius: 6px; background: #0c1622; color: #dbe6f3; font: 500 11px 'IBM Plex Mono', monospace; overflow-wrap: anywhere; }
 .live-trading-chip b { color: #8ea6c0; font-size: 9.5px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; }
 .live-trading-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; min-width: 0; }
+/* The two read-back tables: what is open, then what closed. They sit under the four cards and scroll
+   sideways rather than wrapping, because a trade reads as a row or not at all. */
+.live-trading-table-panel { display: grid; gap: 10px; min-width: 0; padding: 14px; border: 1px solid #26374b; border-radius: 10px; background: linear-gradient(180deg, #111c2b, #0c1520); }
+.live-trading-table-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; flex-wrap: wrap; min-width: 0; }
+.live-trading-table-head h3 { margin: 0; color: #eaf2fb; font: 600 13px 'IBM Plex Mono', monospace; letter-spacing: .04em; text-transform: uppercase; }
+.live-trading-table-meta { margin: 0; color: #a9bdd4; font: 500 11px 'IBM Plex Mono', monospace; }
+.live-trading-table-scroll { overflow-x: auto; }
+.live-trading-table { width: 100%; border-collapse: collapse; min-width: 1120px; }
+.live-trading-table th,
+.live-trading-table td { padding: 7px 8px; border-bottom: 1px solid #1d2a3a; color: #dbe6f3; font: 500 11px 'IBM Plex Mono', monospace; text-align: left; white-space: nowrap; }
+.live-trading-table thead th { color: #8ea6c0; font-size: 9.5px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; }
+.live-trading-table tbody th { color: #eaf2fb; font-weight: 600; }
+.live-trading-table tbody tr:last-child th,
+.live-trading-table tbody tr:last-child td { border-bottom: 0; }
+.live-trading-table .num { text-align: right; font-variant-numeric: tabular-nums; }
+.live-trading-table .positive { color: #7ef0c4; }
+.live-trading-table .negative { color: #ff9aa4; }
+.live-trading-table-symbol { margin-left: 6px; color: #a9bdd4; font-weight: 500; }
+.live-trading-table-magic { display: block; color: #7f93aa; font-size: 9px; letter-spacing: .04em; }
+.live-trading-table-note { max-width: 220px; overflow: hidden; text-overflow: ellipsis; color: #a9bdd4; }
+.live-trading-table-empty { margin: 0; color: #a9bdd4; font: 500 11.5px 'IBM Plex Mono', monospace; overflow-wrap: anywhere; }
+.live-trading-table-caption { margin: 0; color: #7f93aa; font: 500 10.5px 'IBM Plex Mono', monospace; overflow-wrap: anywhere; }
+.live-trading-side { padding: 2px 7px; border: 1px solid #35485f; border-radius: 999px; color: #a9bdd4; font: 700 9.5px 'IBM Plex Mono', monospace; letter-spacing: .06em; }
+.live-trading-side.buy { color: #7ef0c4; border-color: #2b6b57; background: rgba(79, 209, 165, .12); }
+.live-trading-side.sell { color: #ff9aa4; border-color: #7a3a44; background: rgba(255, 107, 122, .12); }
 .live-trading-card { display: grid; gap: 10px; min-width: 0; padding: 14px; border: 1px solid #26374b; border-radius: 10px; background: linear-gradient(180deg, #111c2b, #0c1520); }
 .live-trading-card.unavailable { border-style: dashed; }
 .live-trading-card-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; min-width: 0; }
@@ -8425,6 +8450,16 @@ body {
 /* The outermost line the live price has reached is drawn in the alert colour: the ladder line itself is
    still the price it always was, and only its weight marks it as the end of the published range. */
 .live-trading-chart-level.alert { stroke: #f0c274; stroke-width: 2; stroke-dasharray: 2 3; }
+/* A marked line that falls outside the price window the candles span. The ladder is usually wider than the
+   window, so this tab is how it stays visible: it names how many lines are off-scale and the nearest one,
+   and it is the Fit levels control, so one click brings them all into view. */
+.live-trading-chart-level-edge { cursor: pointer; }
+.live-trading-chart-level-edge-box { fill: #12291f; stroke: #4fd1a5; stroke-width: 1; vector-effect: non-scaling-stroke; }
+.live-trading-chart-level-edge.above .live-trading-chart-level-edge-box { fill: #1a2a1c; }
+.live-trading-chart-level-edge.below .live-trading-chart-level-edge-box { fill: #2a1e26; }
+.live-trading-chart-level-edge-text { fill: #7ef0c4; font: 600 13px 'IBM Plex Mono', monospace; pointer-events: none; }
+.live-trading-chart-level-edge:hover .live-trading-chart-level-edge-box,
+.live-trading-chart-level-edge:focus-visible .live-trading-chart-level-edge-box { stroke: #f0c274; stroke-width: 2; }
 /* The legend sits on the canvas the way a terminal's does: the instrument, its timeframe and the bar
    the pointer is over. It is a reading, not a control, so it never takes a click. */
 .live-trading-chart-legend { position: absolute; top: 8px; left: 12px; display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; max-width: calc(100% - 130px); pointer-events: none; color: #b2b5be; font: 600 12px 'IBM Plex Mono', monospace; text-shadow: 0 1px 2px rgba(0, 0, 0, .6); }

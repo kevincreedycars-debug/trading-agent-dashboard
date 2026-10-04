@@ -579,7 +579,17 @@ function saveNavigationState() {
   try {
     window.localStorage.setItem(navigationStateKey, JSON.stringify({
       activeTab,
-      activeBacktestTab
+      activeBacktestTab,
+      // The live chart's own view travels with the tab state: which symbol, which timeframe, candlesticks or
+      // a line, and whether the price scale is fitted to the published levels. A marked ladder is often
+      // wider than the window the candles span, so the reader sets the view once and finds it the way they
+      // left it rather than hunting for their own lines again after every reload.
+      liveTradingChart: {
+        symbol: liveTradingChartSymbol,
+        timeframe: liveTradingChartTimeframe,
+        mode: liveTradingChartMode,
+        fitLevels: liveTradingChartFitLevels
+      }
     }));
   } catch (err) {
     console.warn("Could not save dashboard navigation state", err);
@@ -608,6 +618,15 @@ function restoreNavigationState() {
     activeBacktestTab = availableBacktestTabs.includes(savedBacktestTab)
       ? savedBacktestTab
       : (availableBacktestTabs.includes("accuracy") ? "accuracy" : (availableBacktestTabs[0] || "accuracy"));
+
+    // The live chart's view, restored the way the tabs are: anything missing or unrecognised falls back to
+    // the default rather than being trusted. A symbol the feed does not publish is dropped by the chart
+    // shell, which falls back to the first instrument it carries.
+    const savedChart = parsed.liveTradingChart && typeof parsed.liveTradingChart === "object" ? parsed.liveTradingChart : {};
+    if (typeof savedChart.symbol === "string" && savedChart.symbol) liveTradingChartSymbol = savedChart.symbol;
+    if (LIVE_TRADING_TIMEFRAMES.some(entry => entry.key === savedChart.timeframe)) liveTradingChartTimeframe = savedChart.timeframe;
+    if (savedChart.mode === "line" || savedChart.mode === "candles") liveTradingChartMode = savedChart.mode;
+    liveTradingChartFitLevels = savedChart.fitLevels === true;
   } catch (err) {
     console.warn("Could not restore dashboard navigation state", err);
     activeTab = availableTabs.includes("overview") ? "overview" : (availableTabs[0] || "overview");
@@ -13983,6 +14002,10 @@ let liveTradingPublish = {
   remote_sha: null,
   remote_missing: true,
   draft_saved_at_utc: null,
+  // Which of the two copies the chart is showing: the committed file (`published`) or a newer draft this
+  // browser made and has not published (`draft`). Stated on the page so the reader never has to guess
+  // whether what they can see is what everyone else can see.
+  shown_source: "published",
   conflict: false,
   status: ""
 };
@@ -14851,6 +14874,31 @@ function liveTradingChartPlot(instrument, mode, timeframeKey) {
     above: levels.filter(level => Number(level.price) > max).length,
     below: levels.filter(level => Number(level.price) < min).length
   };
+  // A ladder step is usually far wider than the window 120 bars span, so every marked line can fall outside
+  // the drawn scale: the reader then sees an empty chart while the caption claims twenty-two levels. The
+  // lines inside the window are drawn as lines; the ones outside it get a tab on the edge they sit past,
+  // naming how many there are and the nearest price, and that tab is the Fit levels control. So the ladder is
+  // never invisible - it is either drawn, or stated on the edge with one click to bring it into view.
+  const levelsAbove = levels
+    .filter(level => Number(level.price) > max)
+    .sort((a, b) => Number(a.price) - Number(b.price));
+  const levelsBelow = levels
+    .filter(level => Number(level.price) < min)
+    .sort((a, b) => Number(b.price) - Number(a.price));
+  const levelEdgeTab = (side, group) => {
+    if (!group.length) return "";
+    const count = group.length;
+    const caption = `${count} level${count === 1 ? "" : "s"} ${side} \u00b7 nearest ${liveTradingPrice(Number(group[0].price), digits)}`;
+    const y = side === "above" ? plotY0 + 18 : plotY1 - 18;
+    const width = Math.min(plotW - 8, Math.max(230, caption.length * 7.6 + 90));
+    const aria = `${caption}. Click to fit the price scale to the published levels.`;
+    return `
+        <g class="live-trading-chart-level-edge ${side}" data-live-chart-fit-levels role="button" tabindex="0" aria-label="${escapeHtml(aria)}">
+          <rect x="${(plotX0 + 4).toFixed(2)}" y="${(y - 12).toFixed(2)}" width="${width.toFixed(2)}" height="24" rx="5" class="live-trading-chart-level-edge-box"></rect>
+          <text x="${(plotX0 + 14).toFixed(2)}" y="${(y + 4).toFixed(2)}" class="live-trading-chart-level-edge-text">${side === "above" ? "\u25b2" : "\u25bc"} ${escapeHtml(caption)} \u00b7 click to fit</text>
+        </g>`;
+  };
+  const levelEdgeTabs = `${levelEdgeTab("above", levelsAbove)}${levelEdgeTab("below", levelsBelow)}`;
   const levelLines = inView.map(level => {
     const price = Number(level.price);
     const ly = yAt(price);
@@ -14888,6 +14936,7 @@ function liveTradingChartPlot(instrument, mode, timeframeKey) {
       ${marks}
       ${lastLine}
       ${levelLines}
+      ${levelEdgeTabs}
       ${priceLabels}
       ${timeLabels}
       ${crosshair}
@@ -14966,7 +15015,9 @@ function liveTradingPublishStatusText() {
     ? "Kept on this device until Disconnect."
     : (liveTradingPublish.token_scope === "session" ? "Kept for this tab only." : "No token connected yet.");
   const draft = liveTradingPublish.draft_saved_at_utc
-    ? ` The version shown was saved in this browser at ${liveTradingPublish.draft_saved_at_utc} and is not published yet.`
+    ? (liveTradingPublish.shown_source === "draft"
+      ? ` The version shown was saved in this browser at ${liveTradingPublish.draft_saved_at_utc} and is not published yet, so nobody else sees it and another machine does not carry it.`
+      : ` The published file is the one shown. A draft saved in this browser at ${liveTradingPublish.draft_saved_at_utc} is older than it, so it is set aside rather than hiding the published levels.`)
     : "";
   return `${scope}${draft}`;
 }
@@ -15244,24 +15295,28 @@ function setupLiveTradingChart(panel) {
     const fitButton = event.target.closest("[data-live-chart-fit-levels]");
     if (fitButton && !fitButton.disabled) {
       liveTradingChartFitLevels = !liveTradingChartFitLevels;
+      saveNavigationState();
       renderLiveTrading(liveTradingData || {});
       return;
     }
     const symbolButton = event.target.closest("[data-live-chart-symbol]");
     if (symbolButton) {
       liveTradingChartSymbol = symbolButton.dataset.liveChartSymbol || liveTradingChartSymbol;
+      saveNavigationState();
       renderLiveTrading(liveTradingData || {});
       return;
     }
     const timeframeButton = event.target.closest("[data-live-chart-timeframe]");
     if (timeframeButton && !timeframeButton.disabled) {
       liveTradingChartTimeframe = timeframeButton.dataset.liveChartTimeframe || "m5";
+      saveNavigationState();
       renderLiveTrading(liveTradingData || {});
       return;
     }
     const modeButton = event.target.closest("[data-live-chart-mode]");
     if (modeButton && !modeButton.disabled) {
       liveTradingChartMode = modeButton.dataset.liveChartMode || "candles";
+      saveNavigationState();
       renderLiveTrading(liveTradingData || {});
       return;
     }
@@ -15496,6 +15551,220 @@ function liveTradingInstrumentCard(instrument, data) {
   `;
 }
 
+// The two tables below the cards read back what was executed: the positions the account holds now, and the
+// trades that closed inside the snapshot's own window. They render what the terminal reports and nothing
+// else. An empty table says which of the two facts it is - nothing open, or a window that holds nothing -
+// so a reader is never left guessing whether the loop worked.
+function liveTradingToneClass(value) {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric) || numeric === 0) return "";
+  return numeric > 0 ? " positive" : " negative";
+}
+
+function liveTradingMoneyCell(value) {
+  return `<td class="num${liveTradingToneClass(value)}">${escapeHtml(liveTradingSigned(value, 2))}</td>`;
+}
+
+function liveTradingDigitsFor(data, symbol) {
+  const instruments = Array.isArray(data?.instruments) ? data.instruments : [];
+  const instrument = instruments.find(entry => entry?.symbol === symbol);
+  return Number.isInteger(Number(instrument?.digits)) ? Number(instrument.digits) : 2;
+}
+
+function liveTradingDurationLabel(seconds) {
+  const total = Number(seconds);
+  if (!Number.isFinite(total) || total < 0) return displayDash();
+  if (total < 60) return `${Math.round(total)}s`;
+  if (total < 3600) return `${Math.floor(total / 60)}m ${String(Math.round(total % 60)).padStart(2, "0")}s`;
+  return `${Math.floor(total / 3600)}h ${String(Math.floor((total % 3600) / 60)).padStart(2, "0")}m`;
+}
+
+function liveTradingPositions(data) {
+  const hasBlock = Array.isArray(data?.positions);
+  const positions = hasBlock ? data.positions : [];
+  const account = data?.account || {};
+  const currency = account.currency ? ` ${account.currency}` : "";
+  const floating = positions.reduce((total, position) => total + (Number(position?.profit) || 0), 0);
+
+  const head = `
+    <div class="live-trading-table-head">
+      <h3>Open positions</h3>
+      <p class="live-trading-table-meta">${
+        hasBlock
+          ? (positions.length
+            ? `${positions.length} open &middot; floating ${escapeHtml(liveTradingSigned(floating, 2) + currency)}`
+            : "None open on this account.")
+          : `This snapshot carries no position detail: it predates schema ${escapeHtml(String(data?.schema_version || "v3"))}.`
+      }</p>
+    </div>
+  `;
+
+  if (!positions.length) {
+    return `
+      <section class="live-trading-table-panel">
+        ${head}
+        <p class="live-trading-table-empty">${
+          hasBlock
+            ? "Nothing is open, so there is no position to read back. A trade placed by the order tool appears here on the next producer run, with its entry, its current price and its floating result."
+            : "Run the producer again to publish a snapshot with position detail."
+        }</p>
+      </section>
+    `;
+  }
+
+  const rows = positions.map(position => {
+    const side = ["buy", "sell"].includes(position?.side) ? position.side : "buy";
+    const digits = liveTradingDigitsFor(data, position?.symbol);
+    const move = position?.floating_pct === null || position?.floating_pct === undefined
+      ? displayDash()
+      : `${liveTradingSigned(position.floating_pct, 2)}%`;
+    return `
+      <tr>
+        <th scope="row">
+          <span class="live-trading-asset">${escapeHtml(position?.dashboard_asset || position?.symbol || displayDash())}</span>
+          <span class="live-trading-table-symbol">${escapeHtml(position?.symbol || displayDash())}</span>
+        </th>
+        <td><span class="live-trading-side ${side}">${escapeHtml(side.toUpperCase())}</span></td>
+        <td class="num">${escapeHtml(String(position?.volume ?? displayDash()))}</td>
+        <td class="num">${escapeHtml(liveTradingPrice(position?.price_open, digits))}</td>
+        <td class="num">${escapeHtml(liveTradingPrice(position?.price_current, digits))}</td>
+        <td class="num${liveTradingToneClass(position?.floating_pct)}">${escapeHtml(move)}</td>
+        ${liveTradingMoneyCell(position?.profit)}
+        ${liveTradingMoneyCell(position?.swap)}
+        <td class="num">${escapeHtml(position?.stop_loss === null || position?.stop_loss === undefined ? displayDash() : liveTradingPrice(position.stop_loss, digits))}</td>
+        <td class="num">${escapeHtml(position?.take_profit === null || position?.take_profit === undefined ? displayDash() : liveTradingPrice(position.take_profit, digits))}</td>
+        <td>${escapeHtml(liveTradingTimestampLabel(position?.opened?.time_utc))}</td>
+        <td class="num">#${escapeHtml(String(position?.ticket ?? displayDash()))}<span class="live-trading-table-magic">magic ${escapeHtml(String(position?.magic ?? displayDash()))}</span></td>
+        <td class="live-trading-table-note">${escapeHtml(position?.comment || "")}</td>
+      </tr>
+    `;
+  }).join("");
+
+  return `
+    <section class="live-trading-table-panel">
+      ${head}
+      <div class="live-trading-table-scroll">
+        <table class="live-trading-table">
+          <thead>
+            <tr>
+              <th scope="col">Position</th>
+              <th scope="col">Side</th>
+              <th scope="col">Volume</th>
+              <th scope="col">Entry</th>
+              <th scope="col">Current</th>
+              <th scope="col">Move</th>
+              <th scope="col">Floating</th>
+              <th scope="col">Swap</th>
+              <th scope="col">Stop</th>
+              <th scope="col">Target</th>
+              <th scope="col">Opened (UTC)</th>
+              <th scope="col">Ticket</th>
+              <th scope="col">Comment</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+      <p class="live-trading-table-caption">Read from the terminal's own <span class="live-trading-mono">positions_get</span> on the run that wrote this snapshot. Nothing on this page can open, change or close a position.</p>
+    </section>
+  `;
+}
+
+function liveTradingClosedTrades(data) {
+  const history = data?.history || {};
+  const hasBlock = Array.isArray(data?.closed_trades);
+  const trades = hasBlock ? data.closed_trades : [];
+  const windowDays = Number.isInteger(Number(history.window_days)) ? Number(history.window_days) : null;
+  const windowLabel = windowDays
+    ? `the last ${windowDays} day${windowDays === 1 ? "" : "s"}`
+    : "the window the snapshot states";
+  const net = trades.reduce((total, trade) => total + (Number(trade?.net_profit) || 0), 0);
+  const currency = data?.account?.currency ? ` ${data.account.currency}` : "";
+  const dealCount = Number.isInteger(Number(history.deal_count)) ? Number(history.deal_count) : null;
+
+  const head = `
+    <div class="live-trading-table-head">
+      <h3>Closed trades</h3>
+      <p class="live-trading-table-meta">${
+        hasBlock
+          ? (trades.length
+            ? `${trades.length} closed in ${windowLabel} &middot; net ${escapeHtml(liveTradingSigned(net, 2) + currency)}`
+            : `None closed in ${windowLabel}.`)
+          : `This snapshot carries no closed-trade history: it predates schema ${escapeHtml(String(data?.schema_version || "v3"))}.`
+      }</p>
+    </div>
+  `;
+
+  if (!trades.length) {
+    return `
+      <section class="live-trading-table-panel">
+        ${head}
+        <p class="live-trading-table-empty">${
+          hasBlock
+            ? `The terminal reported ${dealCount === null ? "no" : dealCount} deal${dealCount === 1 ? "" : "s"} in ${windowLabel}, and none of them is a completed trade. A position opened and closed on this account appears here with its entry, its exit, what it made and its fees, on the next producer run after it closes.`
+            : "Run the producer again to publish a snapshot with the closed-trade read-back."
+        }</p>
+      </section>
+    `;
+  }
+
+  const rows = trades.map(trade => {
+    const side = ["buy", "sell"].includes(trade?.side) ? trade.side : "buy";
+    const digits = liveTradingDigitsFor(data, trade?.symbol);
+    return `
+      <tr>
+        <th scope="row">${escapeHtml(liveTradingTimestampLabel(trade?.closed?.time_utc))}</th>
+        <td>
+          <span class="live-trading-asset">${escapeHtml(trade?.dashboard_asset || trade?.symbol || displayDash())}</span>
+          <span class="live-trading-table-symbol">${escapeHtml(trade?.symbol || displayDash())}</span>
+        </td>
+        <td><span class="live-trading-side ${side}">${escapeHtml(side.toUpperCase())}</span></td>
+        <td class="num">${escapeHtml(String(trade?.volume ?? displayDash()))}</td>
+        <td class="num">${escapeHtml(liveTradingPrice(trade?.price_open, digits))}</td>
+        <td class="num">${escapeHtml(liveTradingPrice(trade?.price_close, digits))}</td>
+        <td class="num">${escapeHtml(liveTradingDurationLabel(trade?.duration_seconds))}</td>
+        ${liveTradingMoneyCell(trade?.profit)}
+        ${liveTradingMoneyCell(trade?.commission)}
+        ${liveTradingMoneyCell(trade?.swap)}
+        <td class="num${liveTradingToneClass(trade?.net_profit)}"><b>${escapeHtml(liveTradingSigned(trade?.net_profit, 2))}</b></td>
+        <td class="num">#${escapeHtml(String(trade?.position_id ?? displayDash()))}<span class="live-trading-table-magic">deals ${escapeHtml(String(trade?.deal_count ?? displayDash()))}</span></td>
+        <td class="live-trading-table-note">${escapeHtml(trade?.comment || "")}</td>
+      </tr>
+    `;
+  }).join("");
+
+  return `
+    <section class="live-trading-table-panel">
+      ${head}
+      <div class="live-trading-table-scroll">
+        <table class="live-trading-table">
+          <thead>
+            <tr>
+              <th scope="col">Closed (UTC)</th>
+              <th scope="col">Trade</th>
+              <th scope="col">Side</th>
+              <th scope="col">Volume</th>
+              <th scope="col">Entry</th>
+              <th scope="col">Exit</th>
+              <th scope="col">Held</th>
+              <th scope="col">Profit</th>
+              <th scope="col">Commission</th>
+              <th scope="col">Swap</th>
+              <th scope="col">Net</th>
+              <th scope="col">Position</th>
+              <th scope="col">Comment</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+      <p class="live-trading-table-caption">Paired from the terminal's deal history: the entry deal and the exit deal of one position, read over ${
+        escapeHtml(windowLabel)
+      }${dealCount === null ? "" : ` (${escapeHtml(String(dealCount))} deal${dealCount === 1 ? "" : "s"} read)`}. Net is profit plus commission plus swap. A trade that closed before this window is not in the list.</p>
+    </section>
+  `;
+}
+
 function renderLiveTrading(data) {
   const panel = document.getElementById("liveTradingPanel");
   const updated = document.getElementById("liveTradingUpdated");
@@ -15546,8 +15815,13 @@ function renderLiveTrading(data) {
 
     <div class="live-trading-grid">${cards}</div>
 
+    ${liveTradingPositions(data)}
+
+    ${liveTradingClosedTrades(data)}
+
     <div class="live-trading-provenance">
-      <p><b>Read-only.</b> Quotes, account facts and M5 candles only. This section has no order code: it cannot place, modify, close or cancel anything.</p>
+      <p><b>Read-only.</b> Quotes, account facts, M5/H1/H4 candles, and a read-back of what was executed. This section has no order code: it cannot place, modify, close or cancel anything, and neither can the snapshot it renders.</p>
+      <p>Open positions and closed trades are read from the terminal on each producer run, so a trade placed deliberately shows up here instead of being taken on trust: its entry, its current or exit price, what it made, and its fees. Placing one is a separate, deliberate act by the local bridge tool run in the terminal session, and every trade that tool places carries its own magic number, which the ticket cell above prints.</p>
       <p>Marked L2L levels come from <span class="live-trading-mono">data/l2l-levels.json</span>${escapeHtml(levelsStamp)}. They are prices marked by hand on the chart, not levels the producer detected, and marking only writes through the local tool.</p>
       <p>Producer <span class="live-trading-mono">${escapeHtml(source.producer || "tools/mt5-bridge/live-trading-snapshot.py")}</span> · ${escapeHtml(source.platform || "MetaTrader 5")} · ${escapeHtml(source.package || "package unknown")} · cadence ${escapeHtml(source.cadence || "5m")}</p>
       <p>Snapshot ${escapeHtml(data?.generated_at_utc || "unknown")} UTC · server clock ${escapeHtml(data?.time_server || "unknown")} (offset ${escapeHtml(String(data?.server_offset_seconds ?? "unknown"))}s)</p>
@@ -16139,7 +16413,12 @@ async function loadDashboard() {
     // what everyone else reads.
     const draft = liveTradingLevelsEndpoint ? null : liveTradingReadDraft();
     if (draft) {
-      liveTradingLevelsData = draft.state;
+      // The committed file is the durable copy and a mark in it stays until somebody moves it, so a draft
+      // is shown only when it is newer than the file it would replace. A stale draft can therefore never
+      // hide the published levels, which is what a reader on a machine that never marked one sees.
+      const view = liveTradingLevelsStore.chooseLevelsView(liveTradingLevelsData, draft);
+      liveTradingLevelsData = view.state || liveTradingLevelsData;
+      liveTradingPublish.shown_source = view.source;
       liveTradingPublish.draft_saved_at_utc = draft.saved_at_utc;
       liveTradingPublish.remote_sha = draft.base_sha || null;
     }
