@@ -37,6 +37,46 @@ function workerEvent(root, worker, scan) {
     prompt: `Automatic mailbox notification for ${worker.id}. Your assigned worktree is ${worker.path}. If this conversation belongs to a different task or workspace, stop and report the mismatch. Read ${root.replaceAll('\\','/')}/docs/orchestration/README.md, run the canonical coordination.js check --worker ${worker.id}, and read your current assignment at ${assignment.replaceAll('\\','/')}. Follow only the current authorized assignment/reply. Do not repeat already completed work. Report actual activity, submit results through the mailbox, and pause when the assignment requires review. This notification does not approve pending tool permissions or authorize production changes.` };
 }
 
+// A deliberate, one-shot operator request to open the worker's Cline task. It is absent by
+// default, so the bridge keeps its rule of never creating or replacing a task on its own
+// initiative; only a written request filed by the operator switches the next start on.
+function startRequest(root, worker) {
+  const file = path.join(root, '.local', 'orchestration', 'start-task', worker.id + '.json');
+  if (!fs.existsSync(file)) return null;
+  const request = read(file);
+  if (request.worker_id !== worker.id) throw new Error('Start request names a different worker');
+  const prompt = typeof request.prompt === 'string' ? request.prompt : '';
+  if (prompt.length < 40 || prompt.length > 8000) throw new Error('Start request prompt is missing or out of range');
+  const at = Date.parse(request.created_at);
+  if (!Number.isFinite(at)) throw new Error('Start request has no valid created_at');
+  if (Date.now() - at > 2 * 60 * 60 * 1000) throw new Error('Start request is older than two hours');
+  return {file, worker_id: request.worker_id, prompt, created_at: request.created_at,
+    requested_by: String(request.requested_by || 'unknown').slice(0, 120)};
+}
+
+// The request is consumed exactly once whatever the outcome, and the report is written first:
+// like an ambiguous send, a task start is never retried automatically and must be re-armed.
+function finishStartRequest(request, report) {
+  const base = path.join(path.dirname(request.file), path.basename(request.file, '.json'));
+  const detail = {...report, worker_id: request.worker_id, prompt_sha256: hash(request.prompt),
+    requested_by: request.requested_by, finished_at: new Date().toISOString()};
+  fs.writeFileSync(base + '.report.json', JSON.stringify(detail, null, 2) + '\n');
+  fs.renameSync(request.file, base + '.consumed.json');
+  return detail;
+}
+
+// A start delivers the same event text a wake would. An existing dedup record must not suppress
+// the deliberate start, so the record is refreshed around the call rather than gating it.
+function recordTaskStart(directory, event) {
+  if (!event) return null;
+  fs.mkdirSync(directory, {recursive: true});
+  const file = path.join(directory, hash(event.key) + '.json');
+  const record = {key: event.key, state: 'sent_unconfirmed', task_start: true,
+    attempted_at: new Date().toISOString()};
+  fs.writeFileSync(file, JSON.stringify(record, null, 2) + '\n');
+  return record;
+}
+
 async function deliverOnce(directory, event, send) {
   fs.mkdirSync(directory, { recursive: true });
   const file = path.join(directory, hash(event.key) + '.json');
@@ -54,4 +94,4 @@ async function deliverOnce(directory, event, send) {
   fs.writeFileSync(file, JSON.stringify(record,null,2)+'\n');
   return record;
 }
-module.exports = { normalize, read, workerEvent, deliverOnce };
+module.exports = { normalize, read, workerEvent, deliverOnce, startRequest, finishStartRequest, recordTaskStart };

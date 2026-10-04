@@ -2,7 +2,7 @@
 const vscode = require('vscode');
 const path = require('node:path');
 const fs = require('node:fs');
-const {normalize, read, workerEvent, deliverOnce} = require('./core');
+const {normalize, read, workerEvent, deliverOnce, startRequest, finishStartRequest, recordTaskStart} = require('./core');
 const ROOT = 'D:/trading-agent-dashboard-codex';
 
 function activate(context) {
@@ -18,7 +18,7 @@ function activate(context) {
     const file = path.join(dir, worker.id + '.json');
     const temp = file + '.' + process.pid + '.tmp';
     fs.writeFileSync(temp, JSON.stringify({worker_id:worker.id, state, detail,
-      extension_version:'0.2.1', updated_at:new Date().toISOString()}, null, 2)+'\n');
+      extension_version:'0.3.0', updated_at:new Date().toISOString()}, null, 2)+'\n');
     fs.renameSync(temp, file);
   }
   function findWorker() {
@@ -26,6 +26,33 @@ function activate(context) {
     if (!first || !vscode.workspace.isTrusted) return null;
     const register = read(path.join(ROOT,'docs/orchestration/projects.json'));
     return register.workers.find(w => normalize(w.path) === normalize(first));
+  }
+  // A one-shot operator request opens the worker's Cline task through Cline's own startNewTask
+  // API. This is the only path that creates a task: without a request the bridge only ever sends
+  // into the task the window already has open, and every outcome is consumed and reported once.
+  async function startTask(worker, api, request, scan) {
+    let state = 'started', detail = '';
+    try {
+      if (typeof api.exports.startNewTask !== 'function') { state = 'unsupported'; detail = 'Cline exposes no startNewTask API'; }
+      else {
+        await revealClineView();
+        await api.exports.startNewTask(request.prompt);
+        recordTaskStart(path.join(ROOT,'.local/orchestration/dispatch',worker.id), workerEvent(ROOT, worker, scan));
+      }
+    } catch(e) { state = 'error'; detail = String(e.message).slice(0,300); }
+    const report = finishStartRequest(request, {state, detail});
+    status.text = state === 'started' ? '$(mail) Task started; watching' : '$(warning) Task start not confirmed';
+    status.tooltip = `Requested task start for ${worker.id}: ${state}${detail ? ' - ' + detail : ''}`;
+    if (detail && lastError !== detail) output.appendLine(`${worker.id} task start ${state}: ${detail}`);
+    lastError = detail;
+    health(state === 'started' ? 'task_started' : 'held', detail || request.prompt.slice(0,120));
+    return report;
+  }
+  // Best effort only: Cline posts its state to a webview, so reveal its sidebar before a start.
+  async function revealClineView() {
+    for (const id of ['claude-dev.SidebarProvider.focus','cline.SidebarProvider.focus']) {
+      try { await vscode.commands.executeCommand(id); return; } catch(e) {}
+    }
   }
   async function tick() {
     if (!bound || busy || !vscode.workspace.isTrusted) return;
@@ -37,6 +64,8 @@ function activate(context) {
       if (!api?.isActive || typeof api.exports?.sendMessage !== 'function') throw new Error('Cline is not active or its sendMessage API is unavailable');
       const {createMailbox} = require(path.join(ROOT,'scripts/coordination.js'));
       const scan = createMailbox(ROOT).check(worker.id);
+      const request = startRequest(ROOT, worker);
+      if (request) return await startTask(worker, api, request, scan);
       const event = workerEvent(ROOT, worker, scan);
       if (!event) { status.text = '$(mail) Mailbox watching'; lastError=''; health('watching','Connected; no worker wake due'); return; }
       const directory = path.join(ROOT,'.local/orchestration/dispatch',worker.id);

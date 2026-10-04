@@ -11,7 +11,23 @@ in the central register under the user's September 22 repair instruction. Other
 workers require **Mailbox: Connect This Cline Worker** once. Explicit Disconnect
 persists and overrides automatic connection. Keep the existing worker Cline task
 open and disconnect before switching tasks: Cline exposes no task-ID selector or
-active-task query. The bridge never creates/replaces tasks or clicks approvals.
+active-task query. The bridge never creates/replaces tasks on its own initiative and
+never clicks approvals: a task is opened only for a deliberate one-shot start request
+filed by the operator, described below.
+
+Version 0.3.0 adds that one-shot start. A window with no Cline task open receives
+nothing, because Cline's `sendMessage` returns without an error and without an effect;
+to open a worker's first task, file a request with
+`node scripts/mailbox-start-task.js arm WORKER` and read it back with `status`. The
+request carries that worker's own due wake text, so the task starts on the mailbox
+notification the worker would otherwise have received. The bridge consumes the request
+exactly once whatever the outcome, writes
+`.local/orchestration/start-task/WORKER.report.json` (`started`, `unsupported` or
+`error`) and renames the request to `.consumed.json`. A failed or unreadable start is
+never retried automatically and never falls back to a blind send, an unreadable request
+holds dispatch instead of guessing, and a window that is not bound to that worker ignores
+the request. `vscode://` task URLs are deliberately not used: VS Code routes those to
+whichever window it chooses, which can open a task in an unrelated worker window.
 
 Connection health is written to `.local/orchestration/connections/WORKER.json`
 every active polling cycle. A stale timestamp does not establish a live connection.
