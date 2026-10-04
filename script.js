@@ -13950,6 +13950,25 @@ let liveTradingLadderSteps = { above: null, below: null };
 // span far more than the bars they were measured against, and folding every line into the window would
 // squash the candles into a stripe.
 let liveTradingChartFitLevels = false;
+// The position sizer that labels an executed trade: what the distance to the stop and the distance to the
+// target were worth at the size the trade was taken in, and the ratio between the two. It lives in
+// lib/l2l_sizing.js, loaded ahead of this file by index.html, so the page and the tests share one reading of
+// what a stop and a target are worth. Without it the page still draws the trades and simply prints no box
+// rather than inventing one.
+const liveTradingSizing = (typeof globalThis !== "undefined" && globalThis.L2LSizing) || null;
+
+function liveTradingPositionSizer(trade, instrument, account) {
+  if (!liveTradingSizing || typeof liveTradingSizing.tradePositionSizer !== "function") {
+    return { available: false, reason: "the position sizer is not loaded" };
+  }
+  return liveTradingSizing.tradePositionSizer(trade, instrument, account);
+}
+
+function liveTradingPositionToolNote(sizers) {
+  if (!liveTradingSizing || typeof liveTradingSizing.positionToolNote !== "function") return "";
+  return liveTradingSizing.positionToolNote(sizers);
+}
+
 
 function liveTradingTimeframeMeta(key) {
   return LIVE_TRADING_TIMEFRAMES.find(entry => entry.key === key) || LIVE_TRADING_TIMEFRAMES[0];
@@ -14723,8 +14742,20 @@ async function clearLiveTradingLevels() {
 // so a long and the exit that closed it read as the pair they are. It is the read-back the table below states in
 // numbers, drawn on the same scale as the levels: it places nothing, signals nothing, and a trade whose time
 // falls outside the bars on screen is counted by the caption rather than clamped onto an edge that is not its.
+//
+// A trade the terminal reported a stop and a target for is drawn the way a charting terminal draws one: the
+// position tool, a red box from the entry down to the stop and a green one from the entry up to the target,
+// spanning the bars the trade was actually held for, each edge labelled with its price, its distance, its
+// percentage and - at the size the trade was taken in - the money it was worth, with the ratio between the
+// two on the entry line. The arithmetic is lib/l2l_sizing.js; this function only puts it where the trade is.
+// A trade with no stop or no target has no box, and says so on the caption rather than being drawn at a price
+// nobody set, and a trade that closed outside the bars on screen is counted the same way its markers are.
 function liveTradingChartTrades(instrument, points, geometry, digits) {
   const { xAt, yAt, plotY0, plotY1 } = geometry;
+  // The plot's own left and right edges, for a tool whose entry or exit bar is not on screen. A caller that
+  // passes neither still gets the markers, drawn without a box.
+  const plotX0 = Number.isFinite(geometry?.plotX0) ? geometry.plotX0 : Math.min(...points.map((point, index) => xAt(index)), 0);
+  const plotX1 = Number.isFinite(geometry?.plotX1) ? geometry.plotX1 : Math.max(...points.map((point, index) => xAt(index)), 0);
   const trades = Array.isArray(liveTradingData?.closed_trades)
     ? liveTradingData.closed_trades.filter(trade => trade?.symbol === instrument?.symbol)
     : [];
@@ -14748,6 +14779,66 @@ function liveTradingChartTrades(instrument, points, geometry, digits) {
   let count = 0;
   let offWindow = 0;
 
+  // The position tool for one trade. Its size comes from the trade's own row and the instrument's own
+  // contract facts, so nothing here is a number the page chose.
+  const barWidth = points.length > 1 ? (plotX1 - plotX0) / points.length : 12;
+  const instrumentRow = Array.isArray(liveTradingData?.instruments)
+    ? liveTradingData.instruments.find(row => row?.symbol === instrument?.symbol) || {}
+    : {};
+  const accountRow = liveTradingData?.account || {};
+  const sizers = [];
+  let tools = 0;
+
+  const tool = trade => {
+    // A trade whose entry bar is not on screen says nothing here: its marker is already counted as outside
+    // the window, and a box hung off the left edge would put its edges at bars that are not its own.
+    if (!(barIndexFor(trade?.opened?.time_utc) >= 0)) return "";
+    const sizer = liveTradingPositionSizer(trade, instrumentRow, accountRow);
+    sizers.push(sizer);
+    if (!sizer.available) return "";
+    tools += 1;
+
+    const entryIndex = barIndexFor(trade?.opened?.time_utc);
+    const exitIndex = barIndexFor(trade?.closed?.time_utc);
+    const left = xAt(entryIndex);
+    // The box ends at the bar the exit fell in. An exit outside the window, or one inside the same bar as
+    // the entry, closes the box one bar later, which is the shortest span a held trade can be drawn in.
+    const right = exitIndex > entryIndex ? xAt(exitIndex) + barWidth * 0.5 : left + barWidth;
+    const rawEntryY = yAt(sizer.entry);
+    const rawTargetY = yAt(sizer.target);
+    const rawStopY = yAt(sizer.stop);
+    const entryY = Math.min(plotY1, Math.max(plotY0, rawEntryY));
+    const targetY = Math.min(plotY1, Math.max(plotY0, rawTargetY));
+    const stopY = Math.min(plotY1, Math.max(plotY0, rawStopY));
+    // An edge the price scale cannot reach is drawn at the edge of the plot and said out loud, the way an
+    // off-window trade is: an edge clamped to the frame and left unlabelled would read as a price that is
+    // there. A buy whose target is above the bars on screen is the case this exists for.
+    const offNote = raw => (raw < plotY0 ? " \u00b7 above this window" : (raw > plotY1 ? " \u00b7 below this window" : ""));
+    const targetLabel = `${sizer.lines.target}${offNote(rawTargetY)}`;
+    const stopLabel = `${sizer.lines.stop}${offNote(rawStopY)}`;
+    // Every label ends at the box's own right edge pulled back inside the plot, so a trade at the newest bar
+    // still states its prices rather than printing them under the price scale.
+    const labelX = Math.min(right, plotX1) - 8;
+    const box = (fromY, toY, kind) =>
+      `<rect class="live-trading-chart-tool-band ${kind}" x="${left.toFixed(2)}" y="${Math.min(fromY, toY).toFixed(2)}" width="${Math.max(1, right - left).toFixed(2)}" height="${Math.max(1, Math.abs(toY - fromY)).toFixed(2)}"></rect>`;
+    // A label sits outside its own line - above the target, below the stop - unless that line has been clamped
+    // to the frame, in which case it sits inside it. The entry line carries its own label between the two.
+    const edge = (y, kind, label, above) =>
+      `<line x1="${left.toFixed(2)}" y1="${y.toFixed(2)}" x2="${right.toFixed(2)}" y2="${y.toFixed(2)}" class="live-trading-chart-tool-edge ${kind}"></line>`
+      + `<text x="${labelX.toFixed(2)}" y="${(above ? y - 6 : y + 15).toFixed(2)}" text-anchor="end" class="live-trading-chart-tool-label ${kind}">${escapeHtml(label)}</text>`;
+    const held = `held from ${trade?.opened?.time_utc || ""} to ${trade?.closed?.time_utc || ""}`;
+    const title = `${trade?.symbol || ""} ${sizer.side.toUpperCase()} ${sizer.quantity ?? "?"} lot, ${held}. ${targetLabel}. ${stopLabel}. ${sizer.lines.entry}.`;
+
+    return `<g class="live-trading-chart-tool ${sizer.side}" data-live-trade-tool="1">`
+      + `<title>${escapeHtml(title)}</title>`
+      + box(entryY, targetY, "target")
+      + box(stopY, entryY, "stop")
+      + edge(targetY, "target", targetLabel, rawTargetY > plotY0)
+      + edge(stopY, "stop", stopLabel, rawStopY > plotY1)
+      + edge(entryY, "entry", sizer.lines.entry, true)
+      + "</g>";
+  };
+
   const marker = (trade, kind) => {
     const isEntry = kind === "entry";
     const stamp = isEntry ? trade?.opened?.time_utc : trade?.closed?.time_utc;
@@ -14770,22 +14861,107 @@ function liveTradingChartTrades(instrument, points, geometry, digits) {
       : `${x.toFixed(2)},${(y + size).toFixed(2)} ${(x - half).toFixed(2)},${(y - size * 0.6).toFixed(2)} ${(x + half).toFixed(2)},${(y - size * 0.6).toFixed(2)}`;
     const labelY = up ? y + size * 0.42 : y - size * 0.28;
     const title = `${isEntry ? "Entry" : "Exit"} ${side.toUpperCase()} ${liveTradingPrice(price, digits)} ${trade?.symbol || ""} at ${stamp || ""}`;
-    return `<g class="live-trading-chart-trade ${kind} ${side}" data-live-trade="${kind}">`
+    return `<g class="live-trading-chart-trade ${kind} ${side} closed" data-live-trade="${kind}">`
       + `<title>${escapeHtml(title)}</title>`
       + `<polygon class="live-trading-chart-trade-shape" points="${shape}"></polygon>`
       + `<text x="${x.toFixed(2)}" y="${labelY.toFixed(2)}" text-anchor="middle" class="live-trading-chart-trade-label">${isEntry ? "E" : "X"}</text>`
       + "</g>";
   };
 
-  const html = trades.map(trade => `${marker(trade, "entry")}${marker(trade, "exit")}`).join("");
-  return { html, count, offWindow };
+  // The box is drawn before the two triangles, so a marker stays on top of the trade it belongs to and the
+  // ladder lines stay readable through a band whose edges happen to sit on a level.
+  const html = trades.map(trade => `${tool(trade)}${marker(trade, "entry")}${marker(trade, "exit")}`).join("");
+  return { html, count, offWindow, tools, sizers };
+}
+
+// The position this account is holding right now, drawn where the trade actually is: a translucent band from
+// its stop to its target, a line at the price it opened at and one at each of the two edges, each labelled.
+// Every number on it is read from the snapshot's own `positions` block - the same rows the Open positions
+// table states - and a symbol the account holds nothing on draws nothing at all. The band is transparent on
+// purpose, and the closed trades are drawn fainter beside it, so what is still live and what has already
+// happened are told apart by weight rather than by reading a caption. An open trade whose entry bar is older
+// than the bars on screen keeps its band from the left edge, because the trade itself is still open; that is
+// counted and named in the caption rather than hidden.
+function liveTradingChartOpenPositions(instrument, points, geometry, digits) {
+  const { xAt, yAt, plotX0, plotX1, plotY0, plotY1 } = geometry;
+  const rows = Array.isArray(liveTradingData?.positions)
+    ? liveTradingData.positions.filter(row => row?.symbol === instrument?.symbol)
+    : [];
+  if (!rows.length || !points.length) return { html: "", count: 0, bracketed: 0, beforeWindow: 0 };
+
+  // The bar an open trade started in is read the way a closed trade's is: the last bar that opened at or
+  // before its own time. A trade older than the window is not moved onto a bar that is not its own.
+  const times = points.map(point => Date.parse(point.time_utc));
+  const barIndexFor = stamp => {
+    const ms = Date.parse(stamp);
+    if (!Number.isFinite(ms)) return null;
+    for (let index = times.length - 1; index >= 0; index -= 1) {
+      if (Number.isFinite(times[index]) && times[index] <= ms) return index;
+    }
+    return -1;
+  };
+
+  const withinPlot = value => Math.min(plotY1, Math.max(plotY0, yAt(value)));
+  let count = 0;
+  let bracketed = 0;
+  let beforeWindow = 0;
+
+  const html = rows.map(row => {
+    const entry = Number(row?.price_open);
+    if (!Number.isFinite(entry)) return "";
+    const side = row?.side === "sell" ? "sell" : "buy";
+    const stop = Number(row?.stop_loss);
+    const target = Number(row?.take_profit);
+    const hasStop = Number.isFinite(stop) && stop > 0;
+    const hasTarget = Number.isFinite(target) && target > 0;
+    count += 1;
+    if (hasStop && hasTarget) bracketed += 1;
+
+    const index = barIndexFor(row?.opened?.time_utc);
+    if (!(index >= 0)) beforeWindow += 1;
+    const left = index >= 0 ? Math.max(plotX0, xAt(index)) : plotX0;
+    const right = plotX1;
+    const entryY = withinPlot(entry);
+    const targetY = hasTarget ? withinPlot(target) : entryY;
+    const stopY = hasStop ? withinPlot(stop) : entryY;
+    const top = Math.min(entryY, targetY, stopY);
+    const bottom = Math.max(entryY, targetY, stopY);
+
+    // Each edge states its own price on the left, above the target line and below the stop line, so the two
+    // read as the outside of the trade rather than as two more levels.
+    const edge = (price, kind) => {
+      const y = withinPlot(price);
+      const label = `${kind === "stop" ? "STOP" : "TARGET"} ${liveTradingPrice(price, digits)}`;
+      return `<line x1="${left.toFixed(2)}" y1="${y.toFixed(2)}" x2="${right.toFixed(2)}" y2="${y.toFixed(2)}" class="live-trading-chart-position-edge ${kind}"></line>`
+        + `<text x="${(left + 6).toFixed(2)}" y="${(kind === "stop" ? y + 16 : y - 6).toFixed(2)}" class="live-trading-chart-position-label ${kind}">${escapeHtml(label)}</text>`;
+    };
+    const title = [
+      `Open ${side.toUpperCase()}`,
+      `${instrument?.symbol || ""} from ${liveTradingPrice(entry, digits)}`,
+      hasStop ? `stop ${liveTradingPrice(stop, digits)}` : "no stop attached",
+      hasTarget ? `target ${liveTradingPrice(target, digits)}` : "no target attached",
+      row?.opened?.time_utc ? `opened ${row.opened.time_utc}` : ""
+    ].filter(Boolean).join(" ");
+
+    return `<g class="live-trading-chart-position ${side}" data-live-position="open">`
+      + `<title>${escapeHtml(title)}</title>`
+      + `<rect class="live-trading-chart-position-band" x="${left.toFixed(2)}" y="${top.toFixed(2)}" width="${Math.max(1, right - left).toFixed(2)}" height="${Math.max(1, bottom - top).toFixed(2)}"></rect>`
+      + (hasTarget ? edge(target, "target") : "")
+      + (hasStop ? edge(stop, "stop") : "")
+      + `<line x1="${left.toFixed(2)}" y1="${entryY.toFixed(2)}" x2="${right.toFixed(2)}" y2="${entryY.toFixed(2)}" class="live-trading-chart-position-edge entry"></line>`
+      + `<text x="${(right - 6).toFixed(2)}" y="${(entryY - 6).toFixed(2)}" text-anchor="end" class="live-trading-chart-position-label entry">ENTRY ${escapeHtml(liveTradingPrice(entry, digits))}</text>`
+      + "</g>";
+  }).join("");
+
+  return { html, count, bracketed, beforeWindow };
 }
 
 // The mirrored MT5 chart, drawn the way a charting terminal draws one: a price scale down the right
 // edge, a time scale along the bottom, the volume histogram under the price pane, the newest bar's
 // price tagged on the scale and a crosshair that follows the pointer. Every mark on the canvas is a
 // reading of the published snapshot - the candles are the producer's OHLC bars, the level lines are
-// hand-marked prices, the E and X triangles are trades the terminal already executed - and none of it
+// hand-marked prices, the open position is the shaded stop-to-target band the read-back states, the E
+// and X triangles are trades the terminal already executed - and none of it
 // is an order, a signal or a forecast. A snapshot written before the producer published OHLC bars
 // falls back to the close line that `close_series` actually holds.
 function liveTradingChartPlot(instrument, mode, timeframeKey) {
@@ -14794,6 +14970,7 @@ function liveTradingChartPlot(instrument, mode, timeframeKey) {
   // instrument's line count on the caption, so the last view is dropped before this one is drawn.
   if (liveTradingChartScale) liveTradingChartScale.levelView = null;
   if (liveTradingChartScale) liveTradingChartScale.tradeView = null;
+  if (liveTradingChartScale) liveTradingChartScale.positionView = null;
   const digits = Number.isInteger(Number(instrument?.digits)) ? Number(instrument.digits) : 2;
   const block = liveTradingTimeframeBlock(instrument, frame.key) || {};
   const bars = (Array.isArray(block.bars) ? block.bars : []).filter(bar =>
@@ -14981,11 +15158,29 @@ function liveTradingChartPlot(instrument, mode, timeframeKey) {
       + `<rect x="${plotX1 + 2}" y="${(ly - 9).toFixed(2)}" width="${axisWidth - 4}" height="18" rx="3" class="live-trading-chart-level-box"></rect>`
       + `<text x="${(plotX1 + axisWidth / 2).toFixed(2)}" y="${(ly + 4).toFixed(2)}" text-anchor="middle" class="live-trading-chart-level-box-text">${escapeHtml(liveTradingPrice(price, digits))}</text>`;
   }).join("");
+  // The position the account is holding on the symbol on screen, shaded from its stop to its target. It rides
+  // the same bars and the same price scale as everything else, and it is drawn under the level lines so the
+  // ladder and the closed-trade triangles stay readable on top of it. The count is kept on the scale the
+  // caption reads, the same way the level and trade views are.
+  const positionView = liveTradingChartOpenPositions(instrument, points, { xAt, yAt, plotX0, plotX1, plotY0, plotY1 }, digits);
+  liveTradingChartScale.positionView = {
+    count: positionView.count,
+    bracketed: positionView.bracketed,
+    beforeWindow: positionView.beforeWindow
+  };
+  const positionMarks = positionView.html;
   // The executed trades the snapshot read back ride the same bars and the same price scale as the candles and
-  // the levels, so an entry reads against the ladder line it happened at. The count is kept on the scale the
-  // caption reads, the same way the level view is.
-  const tradeView = liveTradingChartTrades(instrument, points, { xAt, yAt, plotY0, plotY1 }, digits);
-  liveTradingChartScale.tradeView = { count: tradeView.count, offWindow: tradeView.offWindow };
+  // the levels, so an entry reads against the ladder line it happened at, and each trade the terminal
+  // bracketed carries its own position tool - the stop, the target, the money each was worth at the size that
+  // was traded and the ratio between them. The counts are kept on the scale the caption reads, the same way
+  // the level view is.
+  const tradeView = liveTradingChartTrades(instrument, points, { xAt, yAt, plotX0, plotX1, plotY0, plotY1 }, digits);
+  liveTradingChartScale.tradeView = {
+    count: tradeView.count,
+    offWindow: tradeView.offWindow,
+    tools: tradeView.tools,
+    toolNote: liveTradingPositionToolNote(tradeView.sizers)
+  };
   const tradeMarks = tradeView.html;
   const crosshair = `<g class="live-trading-chart-crosshair" style="display:none">
         <line class="live-trading-chart-crosshair-y" x1="0" y1="${plotY0}" x2="0" y2="${timeScaleY}"></line>
@@ -15011,6 +15206,7 @@ function liveTradingChartPlot(instrument, mode, timeframeKey) {
       <line x1="0" y1="${timeScaleY}" x2="${plotX1}" y2="${timeScaleY}" class="live-trading-chart-separator"></line>
       ${volumeMarks}
       ${marks}
+      ${positionMarks}
       ${lastLine}
       ${levelLines}
       ${tradeMarks}
@@ -15271,6 +15467,21 @@ function liveTradingChartShell(data) {
   const tradeViewNote = tradeMarkers && tradeMarkers.count
     ? `${tradeMarkers.count} executed trade${tradeMarkers.count === 1 ? "" : "s"} on this chart (E entry, X exit${tradeMarkers.offWindow ? `, ${tradeMarkers.offWindow} outside this window` : ""})`
     : "";
+  // And how many of them the page could size: the box, the money at the stop and at the target, and the
+  // ratio between them. A trade with no stop or no target read back is named here rather than left as an
+  // unexplained absence of a box.
+  const positionToolNote = tradeMarkers?.toolNote || "";
+  // The same in words for the position the account is holding, and the one thing a reader has to be able to
+  // tell apart: a trade with both prices attached, and one the terminal reports without a stop or a target.
+  const positionMarkers = liveTradingChartScale?.positionView || null;
+  const positionViewNote = positionMarkers && positionMarkers.count
+    ? `${positionMarkers.count} open position${positionMarkers.count === 1 ? "" : "s"} on this chart (${positionMarkers.bracketed ? "stop and target shaded" : "no stop or target attached"}${positionMarkers.beforeWindow ? `, ${positionMarkers.beforeWindow} opened before this window` : ""})`
+    : "";
+  // The chart is a snapshot and the reader has to be told so on the chart itself: the newest bar on screen was
+  // written at a five-minute close, the served copy follows the stored snapshot by minutes, and the agent that
+  // acts on the close is therefore always ahead of what is drawn here. Naming the lag is the difference
+  // between a delayed chart and a wrong one.
+  const lagNote = `Snapshot, not a live feed: this chart draws the snapshot's own ${frame.label} bars, newest ${freshness.label}${freshness.stale ? " and past its freshness limit" : ""}, and the served copy follows the stored snapshot within about ten minutes. The agent acts on the five-minute close itself, so a trade can appear here a few minutes after it was taken.`;
   const ladderNotice = ladderAlert?.active
     ? `<p class="live-trading-chart-ladder-alert ${escapeHtml(ladderAlert.state)}" role="status" aria-live="polite">${escapeHtml(liveTradingLadderAlertNotice(ladderAlert, selected, digits))}</p>`
     : "";
@@ -15285,6 +15496,7 @@ function liveTradingChartShell(data) {
         </div>
       </div>
       <div class="live-trading-chart-plot${liveTradingMarking ? " marking" : ""}">${plotHtml}</div>
+      <p class="live-trading-chart-lag" role="note">${escapeHtml(lagNote)}</p>
       ${ladderNotice}
       <div class="live-trading-chart-levels">${levelChips}</div>
       ${markStatus}
@@ -15296,6 +15508,8 @@ function liveTradingChartShell(data) {
         <span>${escapeHtml(barCount)}</span>
         <span>${seedLevels.length} seed level${seedLevels.length === 1 ? "" : "s"} \u00b7 ${derivedLevels} derived${escapeHtml(levelViewNote)}${escapeHtml(ladderBounds)}</span>
         ${tradeViewNote ? `<span>${escapeHtml(tradeViewNote)}</span>` : ""}
+        ${positionToolNote ? `<span>${escapeHtml(positionToolNote)}</span>` : ""}
+        ${positionViewNote ? `<span>${escapeHtml(positionViewNote)}</span>` : ""}
       </p>
     </div>
   `;

@@ -8457,6 +8457,40 @@ body {
 .live-trading-chart-trade.entry .live-trading-chart-trade-shape { stroke: #eaf2fb; stroke-width: 1.2; vector-effect: non-scaling-stroke; }
 .live-trading-chart-trade.exit .live-trading-chart-trade-shape { fill-opacity: .68; stroke: #0d1117; stroke-width: 1; vector-effect: non-scaling-stroke; }
 .live-trading-chart-trade-label { fill: #08131a; font: 700 13px 'IBM Plex Mono', monospace; }
+/* The open position, shaded from its stop to its target on the same scale as everything else: a translucent
+   band, a dashed line at each edge labelled with its price, and the entry drawn through the middle of it. It
+   is a reading of the position the account is holding - the rows the Open positions table states - and it is
+   transparent on purpose so the candles under it stay readable. The closed trades are drawn fainter than it,
+   so what is still live and what has already happened are told apart by weight. */
+.live-trading-chart-position { pointer-events: none; }
+.live-trading-chart-position-band { fill-opacity: .12; }
+.live-trading-chart-position.buy .live-trading-chart-position-band { fill: #26a69a; }
+.live-trading-chart-position.sell .live-trading-chart-position-band { fill: #ef5350; }
+.live-trading-chart-position-edge { stroke-width: 1.2; stroke-dasharray: 6 4; vector-effect: non-scaling-stroke; }
+.live-trading-chart-position-edge.target { stroke: #26a69a; }
+.live-trading-chart-position-edge.stop { stroke: #ef5350; }
+.live-trading-chart-position-edge.entry { stroke: #eaf2fb; stroke-width: 1; stroke-dasharray: 2 3; }
+.live-trading-chart-position-label { font: 600 12px 'IBM Plex Mono', monospace; }
+.live-trading-chart-position-label.target { fill: #7fe0c8; }
+.live-trading-chart-position-label.stop { fill: #f2a1a6; }
+.live-trading-chart-position-label.entry { fill: #eaf2fb; }
+.live-trading-chart-trade.closed { opacity: .5; }
+/* The position tool a charting terminal draws under a trade it was given a stop and a target for: the risk
+   band in red from the entry down to the stop, the reward band in green from the entry up to the target, and
+   one label on each edge carrying the price, the distance, the percentage and the money it was worth. It is
+   deliberately lighter than the open position's own band, because it is what has already happened. */
+.live-trading-chart-tool { pointer-events: none; }
+.live-trading-chart-tool-band { fill-opacity: .09; }
+.live-trading-chart-tool-band.target { fill: #26a69a; }
+.live-trading-chart-tool-band.stop { fill: #ef5350; }
+.live-trading-chart-tool-edge { stroke-width: 1; stroke-dasharray: 5 4; vector-effect: non-scaling-stroke; }
+.live-trading-chart-tool-edge.target { stroke: #26a69a; }
+.live-trading-chart-tool-edge.stop { stroke: #ef5350; }
+.live-trading-chart-tool-edge.entry { stroke: #eaf2fb; stroke-dasharray: 2 3; }
+.live-trading-chart-tool-label { font: 600 12px 'IBM Plex Mono', monospace; }
+.live-trading-chart-tool-label.target { fill: #7fe0c8; }
+.live-trading-chart-tool-label.stop { fill: #f2a1a6; }
+.live-trading-chart-tool-label.entry { fill: #eaf2fb; }
 /* The outermost line the live price has reached is drawn in the alert colour: the ladder line itself is
    still the price it always was, and only its weight marks it as the end of the published range. */
 .live-trading-chart-level.alert { stroke: #f0c274; stroke-width: 2; stroke-dasharray: 2 3; }
@@ -8485,6 +8519,10 @@ body {
 .live-trading-chart-crosshair-price-text, .live-trading-chart-crosshair-time-text { fill: #f0f3fa; font: 500 14px 'IBM Plex Mono', monospace; }
 
 .live-trading-chart-caption { display: flex; flex-wrap: wrap; gap: 4px 14px; margin: 0; color: #8ea6c0; font: 500 10.5px 'IBM Plex Mono', monospace; overflow-wrap: anywhere; }
+/* The lag note, on the chart itself rather than in a document: the published view is the snapshot written at
+   a five-minute close and served minutes later, while the agent acts on that close as it happens. A delayed
+   chart that says so is honest; one that does not is read as a live one. */
+.live-trading-chart-lag { margin: 6px 0 0; padding: 6px 9px; border-left: 2px solid #7a5a24; background: rgba(240, 194, 116, .07); color: #cbaea1; font: 500 10.5px 'IBM Plex Mono', monospace; overflow-wrap: anywhere; }
 /* The out-of-bounds alert: a reading of the live price against the outermost published line, stated in
    the ladder's own unit. It is not a signal and it is not an instruction - it says the grid has stopped
    covering price, which is the moment a reader decides whether to extend it. */

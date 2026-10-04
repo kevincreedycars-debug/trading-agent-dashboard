@@ -137,6 +137,10 @@ function feedWithMarkedBars() {
   const highs = Math.max(...bars.map(bar => Number(bar.high)));
   const entryPrice = Number((lows + (highs - lows) * 0.1).toFixed(2));
   const exitPrice = Number((highs - (highs - lows) * 0.1).toFixed(2));
+  // The stop and the target the entry carried, on either side of it and inside the bars' own range, so the
+  // position tool's two bands can be told apart on the scale rather than from the pixels alone.
+  const stopPrice = Number((lows + (highs - lows) * 0.04).toFixed(2));
+  const targetPrice = Number((highs - (highs - lows) * 0.04).toFixed(2));
   feed.closed_trades = [
     {
       position_id: 297645550,
@@ -146,6 +150,9 @@ function feedWithMarkedBars() {
       volume: 0.01,
       price_open: entryPrice,
       price_close: exitPrice,
+      // The levels the entry deal carried, which are what the position tool is drawn from.
+      stop_loss: stopPrice,
+      take_profit: targetPrice,
       profit: 0.19,
       commission: -0.56,
       swap: 0,
@@ -160,7 +167,31 @@ function feedWithMarkedBars() {
       duration_seconds: Math.round((Date.parse(exitTime) - Date.parse(entryTime)) / 1000)
     }
   ];
-  return { feed, entryTime, exitTime, entryPrice, exitPrice };
+  // And one open position on the same symbol with a stop and a target attached, opened in the same bar the
+  // closed trade's entry marker sits on, so the shaded band can be asserted against a bar that is already
+  // located by the test below. It carries the same two levels the closed trade carried, so both bands are
+  // drawn from the same three prices and differ only in what they mean.
+  feed.account.positions_open = 1;
+  feed.positions = [
+    {
+      ticket: 297646459,
+      symbol: "BTCUSD",
+      dashboard_asset: "BTC",
+      side: "buy",
+      volume: 0.01,
+      price_open: entryPrice,
+      price_current: entryPrice,
+      stop_loss: stopPrice,
+      take_profit: targetPrice,
+      profit: 0,
+      swap: 0,
+      magic: 20261004,
+      comment: "live-trading-position-fixture",
+      opened: { time_server: entryBar.time_server, time_utc: entryTime },
+      updated: { time_server: entryBar.time_server, time_utc: entryTime }
+    }
+  ];
+  return { feed, entryTime, exitTime, entryPrice, exitPrice, stopPrice, targetPrice };
 }
 
 test("the Live Trading section renders the position and the closed trade it read back", async () => {
@@ -290,6 +321,100 @@ test("the chart marks an executed round trip with an E and an X", async () => {
 
     const caption = await page.innerText("#liveTradingPanel .live-trading-chart-caption");
     assert.match(caption, /1 executed trade on this chart \(E entry, X exit\)/);
+    assert.match(caption, /1 open position on this chart \(stop and target shaded\)/);
+
+    // The open position is shaded from its stop to its target on the same bars and the same scale as the rest:
+    // the band spans the two prices the terminal reports, the entry is drawn between them, and it starts on the
+    // bar the position was opened in - the bar the closed trade's own entry triangle is on.
+    const position = await page.$eval(".live-trading-chart-position", node => {
+      const band = node.querySelector("rect.live-trading-chart-position-band");
+      return {
+        classes: node.getAttribute("class") || "",
+        title: node.querySelector("title")?.textContent || "",
+        band: {
+          x: Number(band.getAttribute("x")),
+          y: Number(band.getAttribute("y")),
+          width: Number(band.getAttribute("width")),
+          height: Number(band.getAttribute("height"))
+        },
+        lines: [...node.querySelectorAll("line.live-trading-chart-position-edge")].map(line => ({
+          classes: line.getAttribute("class") || "",
+          y: Number(line.getAttribute("y1"))
+        })),
+        labels: [...node.querySelectorAll("text.live-trading-chart-position-label")].map(text => text.textContent)
+      };
+    });
+    assert.match(position.classes, /\bbuy\b/);
+    const edgeOf = kind => position.lines.find(line => line.classes.includes(kind));
+    assert.ok(edgeOf("target") && edgeOf("stop") && edgeOf("entry"), "a target line, a stop line and an entry line");
+    // Higher price, smaller y: the target is above the entry and the stop is below it.
+    assert.ok(edgeOf("target").y < edgeOf("entry").y, "the target is drawn above the entry");
+    assert.ok(edgeOf("entry").y < edgeOf("stop").y, "the stop is drawn below the entry");
+    // The band is exactly the span between those two edges.
+    assert.ok(Math.abs(position.band.y - edgeOf("target").y) < 0.01);
+    assert.ok(Math.abs((position.band.y + position.band.height) - edgeOf("stop").y) < 0.01);
+    assert.ok(Math.abs(position.band.x - entry.x) < 0.01, "the band starts on the bar the position was opened in");
+    assert.ok(position.band.width > 0);
+    assert.deepEqual(
+      position.labels.slice().sort(),
+      [`TARGET ${fixture.targetPrice.toFixed(2)}`, `STOP ${fixture.stopPrice.toFixed(2)}`, `ENTRY ${fixture.entryPrice.toFixed(2)}`].sort()
+    );
+    assert.match(position.title, new RegExp(`^Open BUY BTCUSD from ${fixture.entryPrice.toFixed(2)} stop ${fixture.stopPrice.toFixed(2)} target ${fixture.targetPrice.toFixed(2)} opened `));
+
+    // The closed trade the terminal bracketed carries its own position tool, drawn the way a charting
+    // terminal draws one: a band from the entry down to the stop and one from the entry up to the target,
+    // spanning the bars the trade was held for, and a line of arithmetic on each edge in the account's money
+    // at the size that was actually traded.
+    const tool = await page.$eval(".live-trading-chart-tool", node => {
+      const bands = [...node.querySelectorAll("rect.live-trading-chart-tool-band")].map(band => ({
+        classes: band.getAttribute("class") || "",
+        y: Number(band.getAttribute("y")),
+        height: Number(band.getAttribute("height")),
+        width: Number(band.getAttribute("width"))
+      }));
+      const lines = [...node.querySelectorAll("line.live-trading-chart-tool-edge")].map(line => ({
+        classes: line.getAttribute("class") || "",
+        y: Number(line.getAttribute("y1"))
+      }));
+      return {
+        classes: node.getAttribute("class") || "",
+        title: node.querySelector("title")?.textContent || "",
+        x: Number(node.querySelector("rect")?.getAttribute("x")),
+        bands,
+        lines,
+        labels: [...node.querySelectorAll("text.live-trading-chart-tool-label")].map(text => text.textContent)
+      };
+    });
+    assert.match(tool.classes, /\bbuy\b/);
+    assert.equal(tool.bands.length, 2, "one band for the risk and one for the reward");
+    const toolEdgeY = kind => tool.lines.find(line => line.classes.includes(kind))?.y;
+    assert.ok(toolEdgeY("target") < toolEdgeY("entry") && toolEdgeY("entry") < toolEdgeY("stop"), "the reward sits above the risk on a buy");
+    // The box spans the bars the trade was held for: it starts on the bar the entry triangle is on and runs
+    // past the bar the exit triangle is on, which is what makes it a tool for that trade rather than a level.
+    assert.ok(Math.abs(tool.x - entry.x) < 0.01, "the box starts on the bar the trade was entered in");
+    assert.ok(tool.x + Math.max(...tool.bands.map(band => band.width)) > exit.x, "the box reaches the bar the trade was closed in");
+    // Each edge states its own price, its distance and its percentage; the two edges state the money too, at
+    // the 0.01 lot the fixture was traded in, and the entry line carries the size and the ratio between them.
+    const price = value => value.toFixed(2);
+    const atSize = distance => (Math.round(Number(distance.toFixed(2)) * 0.01 * 100) / 100).toFixed(2);
+    const targetDistance = fixture.targetPrice - fixture.entryPrice;
+    const stopDistance = fixture.entryPrice - fixture.stopPrice;
+    const targetLabel = tool.labels.find(label => label.startsWith("Target: "));
+    const stopLabel = tool.labels.find(label => label.startsWith("Stop: "));
+    const entryLabel = tool.labels.find(label => label.startsWith("Entry: "));
+    assert.ok(targetLabel && stopLabel && entryLabel, "the tool labels the target, the stop and the entry");
+    assert.match(targetLabel, new RegExp(`^Target: ${price(fixture.targetPrice)} \u00b7 ${price(targetDistance)} \\([\\d.]+%\\) \u00b7 ${atSize(targetDistance)} USD reward$`));
+    assert.match(stopLabel, new RegExp(`^Stop: ${price(fixture.stopPrice)} \u00b7 ${price(stopDistance)} \\([\\d.]+%\\) \u00b7 ${atSize(stopDistance)} USD risk$`));
+    assert.match(entryLabel, new RegExp(`^Entry: ${price(fixture.entryPrice)} \u00b7 Qty 0\\.01 \u00b7 Risk/reward ratio [\\d.]+$`));
+    assert.match(tool.title, new RegExp(`^BTCUSD BUY 0\\.01 lot, held from ${fixture.entryTime} to ${fixture.exitTime}\\.`));
+    // And the caption counts it, so a box that failed to draw is a caption that says so.
+    assert.match(caption, /1 executed trade with the position tool drawn/);
+
+    // The lag is stated on the chart itself rather than left to a document, because a delayed chart that does
+    // not say so is read as a live one.
+    const lagNote = await page.innerText("#liveTradingPanel .live-trading-chart-lag");
+    assert.match(lagNote, /^Snapshot, not a live feed:/);
+    assert.match(lagNote, /The agent acts on the five-minute close itself/);
     const panels = await page.$$("#liveTradingPanel .live-trading-table-panel");
     const closedTrades = await panels[1].innerText();
     assert.match(closedTrades, /an entry is a triangle lettered E and its exit a triangle lettered X/);
