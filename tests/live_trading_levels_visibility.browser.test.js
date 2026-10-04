@@ -2,10 +2,11 @@
 //
 // The user's report is why it exists: the marks were published and the chart showed none of them. A BTCUSD
 // ladder step is about 1,455 points while the 120 M5 bars the window draws span a few hundred, so every
-// marked line sat outside the price scale. What is asserted here is that the ladder is visible anyway - as a
-// tab on the edge it is past, naming how many lines and the nearest price - that the tab fits the scale in
-// one click, and that the reader's choice of scale survives a reload instead of resetting to a chart with
-// their own lines off-screen again.
+// marked line sat outside the price scale. What is asserted here is that the ladder is still visible: the two
+// nearest lines each side of the bars are drawn on the scale by default - the levels a five-minute close is
+// read against - and the rest are counted on a tab on the edge they sit past, naming how many and the nearest
+// price. That tab fits the whole ladder in one click, and the reader's choice of scale survives a reload
+// instead of resetting to a chart with their own lines off-screen again.
 const test = require("node:test");
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
@@ -99,6 +100,10 @@ function chartReadout() {
   const text = value => (value?.textContent || "").replace(/\s+/g, " ").trim();
   return {
     lines: panel.querySelectorAll(".live-trading-chart-level").length,
+    // Every drawn line carries its price in the axis box beside it, which is what the per-symbol check below
+    // reads: the tag beside a line names the level, the box names the price on the scale.
+    levelBoxes: Array.from(panel.querySelectorAll(".live-trading-chart-level-box-text"))
+      .map(node => Number(text(node).replace(/,/g, ""))),
     edges: Array.from(panel.querySelectorAll(".live-trading-chart-level-edge")).map(text),
     caption: text(panel.querySelector(".live-trading-chart-caption")),
     chips: text(panel.querySelector(".live-trading-chart-levels")),
@@ -108,7 +113,7 @@ function chartReadout() {
 }
 
 
-test("the marked ladder is stated on the chart edges, fitted in one click, and the view survives a reload", async () => {
+test("the nearest marked lines each side are drawn, the rest is stated on the edges, and the scale survives a reload", async () => {
   const levels = markedLevelsState();
   const server = await startServer({ feed: tightBtcFeed(), levels });
   const browser = await chromium.launch({ headless: true });
@@ -127,14 +132,16 @@ test("the marked ladder is stated on the chart edges, fitted in one click, and t
 
     const offScale = await page.evaluate(chartReadout);
     assert.equal(offScale.symbolActive, true);
-    assert.equal(offScale.lines, 0, "no marked line falls inside the price window the candles span");
-    assert.equal(offScale.edges.length, 2, "one tab on each edge says where the lines that are out of view are");
-    assert.match(offScale.edges[0], /^\u25b2 10 levels above \u00b7 nearest 86023\.40 \u00b7 click to fit$/);
-    assert.match(offScale.edges[1], /^\u25bc 12 levels below \u00b7 nearest 84568\.53 \u00b7 click to fit$/);
-    assert.match(offScale.caption, /2 seed levels \u00b7 20 derived \u00b7 0\/22 lines in view \(10 above, 12 below\)/);
+    // The two nearest lines each side of the bars are on the scale before the reader touches anything: the
+    // level above and the level below are what a five-minute close is read against.
+    assert.equal(offScale.lines, 4, "the two nearest marked lines each side of the bars are drawn");
+    assert.equal(offScale.edges.length, 2, "one tab on each edge says where the lines past the scale are");
+    assert.match(offScale.edges[0], /^\u25b2 8 levels above \u00b7 nearest 88933\.14 \u00b7 click to fit$/);
+    assert.match(offScale.edges[1], /^\u25bc 10 levels below \u00b7 nearest 81658\.79 \u00b7 click to fit$/);
+    assert.match(offScale.caption, /2 seed levels \u00b7 20 derived \u00b7 4\/22 lines in view \(8 above, 10 below\)/);
     assert.match(offScale.caption, /ladder 68564\.96 to 99117\.23/);
     assert.match(offScale.chips, /83113\.66/);
-    assert.equal(offScale.fitActive, false, "the scale still ends at the bars until the reader asks otherwise");
+    assert.equal(offScale.fitActive, false, "Fit levels is off: the scale stops at the nearest lines, not at the outermost one");
 
     // The tab is the Fit levels control, so the whole ladder is one click from being drawn.
     await page.click("#liveTradingPanel .live-trading-chart-level-edge.below rect");
@@ -162,6 +169,59 @@ test("the marked ladder is stated on the chart edges, fitted in one click, and t
     assert.equal(reloaded.fitActive, true, "and the fitted scale is still the one in force");
     assert.equal(reloaded.lines, 22);
     assert.equal(reloaded.edges.length, 0);
+  } finally {
+    await browser.close();
+    await server.close();
+  }
+});
+
+// The user's question is per pair, so every symbol the feed publishes is opened in turn against the committed
+// levels artifact and the committed feed - not a fixture - and the price scale is measured against that
+// symbol's own bars. The floor is two marked lines above the bars and two below: the entry rule is a
+// five-minute close beyond a level, so the level above and the level below the price have to be on the scale
+// wherever the price happens to be, without the reader pressing Fit levels. A symbol the artifact carries no
+// levels for has nothing to draw, and is held to that instead of to the floor.
+test("every symbol the artifact marks draws at least two lines each side of its own bars", async () => {
+  const feed = JSON.parse(fs.readFileSync(feedPath, "utf8"));
+  const levels = JSON.parse(fs.readFileSync(path.join(repoRoot, "data", "l2l-levels.json"), "utf8"));
+  const server = await startServer({ feed, levels });
+  const browser = await chromium.launch({ headless: true });
+  try {
+    const page = await browser.newPage();
+    await page.goto(`${server.origin}/index.html`, { waitUntil: "domcontentloaded" });
+    await page.click('.tab-button[data-tab="live-trading"]');
+    await page.waitForSelector('[data-live-chart-symbol="EURUSD"]', { timeout: 20000 });
+
+    for (const entry of store.KNOWN_INSTRUMENTS) {
+      const instrument = (feed.instruments || []).find(row => row.symbol === entry.symbol) || {};
+      const marked = ((levels.instruments || []).find(row => row.symbol === entry.symbol) || {}).levels || [];
+      const bars = instrument.m5 && Array.isArray(instrument.m5.bars) ? instrument.m5.bars : [];
+      assert.ok(bars.length, `the feed publishes ${entry.dashboard_asset} M5 bars to measure the scale against`);
+
+      await page.click(`[data-live-chart-symbol="${entry.symbol}"]`);
+      // The caption opens with the symbol, so it is the signal that this chart and not the last one is drawn.
+      await page.waitForFunction(
+        symbol => (document.querySelector("#liveTradingPanel .live-trading-chart-caption")?.textContent || "")
+          .trim()
+          .startsWith(symbol),
+        entry.symbol,
+        { timeout: 20000 }
+      );
+
+      const readout = await page.evaluate(chartReadout);
+      assert.equal(readout.lines, readout.levelBoxes.length, `${entry.dashboard_asset} prices every line it draws`);
+      if (!marked.length) {
+        assert.equal(readout.lines, 0, `${entry.dashboard_asset} marks no levels, so the chart draws none`);
+        continue;
+      }
+      const prices = bars.flatMap(bar => [Number(bar.high), Number(bar.low)]);
+      const barsTop = Math.max(...prices);
+      const barsBottom = Math.min(...prices);
+      const above = readout.levelBoxes.filter(price => price > barsTop).length;
+      const below = readout.levelBoxes.filter(price => price < barsBottom).length;
+      assert.ok(above >= 2, `${entry.dashboard_asset} draws ${above} marked lines above its bars; the rule reads two`);
+      assert.ok(below >= 2, `${entry.dashboard_asset} draws ${below} marked lines below its bars; the rule reads two`);
+    }
   } finally {
     await browser.close();
     await server.close();

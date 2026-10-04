@@ -23,6 +23,7 @@ const {
   DEFAULT_DUPLICATE_STEPS,
   MAX_DUPLICATE_STEPS,
   MARKED_BY,
+  NOTE,
   DRAFT_KEY,
   SETTINGS_KEY,
   DEFAULT_REPO,
@@ -115,19 +116,50 @@ test("the committed levels artifact is present and valid", () => {
   assert.equal(state.schema_version, SCHEMA_VERSION);
 });
 
-test("the committed artifact publishes exactly the known symbols and only valid marks", () => {
+test("the committed artifact carries every published symbol and only seeds or the steps of them", () => {
   const state = JSON.parse(fs.readFileSync(levelsPath, "utf8"));
   assert.deepEqual(
     state.instruments.map(instrument => instrument.symbol),
     KNOWN_INSTRUMENTS.map(entry => entry.symbol)
   );
-  // The marks in this file are the user's own judgement, made on the mirrored chart and committed by
-  // the page's own store, so the guard keeps their shape and provenance honest rather than requiring
-  // the file to be empty. A symbol nothing is marked for still ships an empty levels array.
+  assert.ok(
+    state.marked_by === MARKED_BY.tool || state.marked_by === MARKED_BY.dashboard,
+    `${state.marked_by} must name one of the two writers`
+  );
   state.instruments.forEach(instrument => {
     assert.ok(Array.isArray(instrument.levels), `${instrument.symbol} needs a levels array`);
+    // A symbol with no levels is the state a fresh file is in: nothing has been marked for it, which is not
+    // an error. The moment it does carry levels they have to be the user's own measurement, not arithmetic
+    // that arrived from nowhere.
+    if (!instrument.levels.length) return;
+    const seeds = instrument.levels.filter(level => level.role !== "derived");
+    assert.equal(seeds.length, 2, `${instrument.symbol} publishes a ladder, so it carries its two marked seeds`);
+    const prices = seeds.map(level => Number(level.price));
+    const top = Math.max(...prices);
+    const bottom = Math.min(...prices);
+    const distance = Number((top - bottom).toFixed(6));
+    assert.ok(distance > 0, `${instrument.symbol} needs two different seed prices to measure a distance`);
+    // The one measurement the whole grid comes from, either side of the seed pair.
+    const steps = new Set();
+    for (let step = 1; step <= MAX_DUPLICATE_STEPS; step += 1) {
+      steps.add(Number((top + step * distance).toFixed(6)));
+      steps.add(Number((bottom - step * distance).toFixed(6)));
+    }
+    instrument.levels.filter(level => level.role === "derived").forEach(level => {
+      const price = Number(Number(level.price).toFixed(6));
+      assert.ok(
+        steps.has(price),
+        `${instrument.symbol} derived level ${price} is not a step of the seed distance ${distance}`
+      );
+      assert.equal(
+        Number(Number(level.spacing_price).toFixed(6)),
+        distance,
+        `${instrument.symbol} derived level ${price} must carry the distance it was stepped by`
+      );
+      assert.equal(Number(level.anchor_high), top);
+      assert.equal(Number(level.anchor_low), bottom);
+    });
   });
-  assert.deepEqual(validateLevelsState(state), []);
   assert.equal(DEFAULT_STATE_PATH, "data/l2l-levels.json");
 });
 
@@ -514,8 +546,14 @@ test("the section states the level spacing the rule cares about", () => {
 test("the levels artifact is not a second order or credential surface", () => {
   const state = JSON.parse(fs.readFileSync(levelsPath, "utf8"));
   const text = JSON.stringify(state);
-  ["password", "login", "account", "balance", "volume", "lot", "stop_loss", "take_profit"].forEach(term => {
+  const terms = ["password", "login", "account", "balance", "volume", "lot", "stop_loss", "take_profit"];
+  terms.forEach(term => {
     assert.equal(text.includes(term), false, `${term} must not appear in the levels artifact`);
+  });
+  // The note both writers carry is written once, in the shared module, so it is held to the same terms: a
+  // note that named one of them would make the next committed file fail the check above.
+  terms.forEach(term => {
+    assert.equal(NOTE.includes(term), false, `${term} must not appear in the shared note either`);
   });
   assert.equal("levels" in state.instruments[0], true);
 });
@@ -1448,15 +1486,18 @@ test("the chart states a marked ladder it cannot draw, and keeps the reader's vi
 
   // The view the reader sets travels with the tab state, so a reload shows the same symbol, timeframe, style
   // and scale instead of an unfitted default with their own lines off-screen again.
-  assert.match(script, /liveTradingChart: \{\s+symbol: liveTradingChartSymbol,\s+timeframe: liveTradingChartTimeframe,\s+mode: liveTradingChartMode,\s+fitLevels: liveTradingChartFitLevels\s+\}/);
+  assert.match(script, /liveTradingChart: \{\s+symbol: liveTradingChartSymbol,\s+timeframe: liveTradingChartTimeframe,\s+mode: liveTradingChartMode,\s+fitLevels: liveTradingChartFitLevels,\s+zoom: liveTradingChartZoom\s+\}/);
   assert.match(script, /const savedChart = parsed\.liveTradingChart && typeof parsed\.liveTradingChart === "object"/);
   assert.match(script, /if \(LIVE_TRADING_TIMEFRAMES\.some\(entry => entry\.key === savedChart\.timeframe\)\) liveTradingChartTimeframe = savedChart\.timeframe;/);
   assert.match(script, /if \(savedChart\.mode === "line" \|\| savedChart\.mode === "candles"\) liveTradingChartMode = savedChart\.mode;/);
   assert.match(script, /liveTradingChartFitLevels = savedChart\.fitLevels === true;/);
-  // Every chart control that changes the view writes it: symbol, timeframe, style and the fit control.
+  // The magnification is restored the same way, and only when it is one of the steps the toolbar offers.
+  assert.match(script, /liveTradingChartZoom = LIVE_TRADING_CHART_ZOOM_STEPS\.includes\(Number\(savedChart\.zoom\)\) \? Number\(savedChart\.zoom\) : 1;/);
+  // Every chart control that changes the view writes it: symbol, timeframe, style, the fit control, the zoom
+  // buttons and the zoom wheel.
   assert.equal(
     (script.match(/saveNavigationState\(\);\s+renderLiveTrading\(liveTradingData \|\| \{\}\);/g) || []).length,
-    4
+    6
   );
 });
 

@@ -207,12 +207,14 @@ test("the Live Trading section renders the position and the closed trade it read
     await page.waitForFunction(
       () => {
         const panel = document.getElementById("liveTradingPanel");
-        return Boolean(panel && panel.querySelectorAll(".live-trading-table-panel tbody tr").length === 2);
+        return Boolean(panel && panel.querySelectorAll(".live-trading-table-panel:not(.live-trading-rule-panel) tbody tr").length === 2);
       },
       null,
       { timeout: 20000 }
     );
-    const panels = await page.$$("#liveTradingPanel .live-trading-table-panel");
+    // The L2L rule table is a third table panel on this section, so the two read-back panels are selected by
+    // what they are not: this test is about the position and the closed trade the terminal reported.
+    const panels = await page.$$("#liveTradingPanel .live-trading-table-panel:not(.live-trading-rule-panel)");
     assert.equal(panels.length, 2, "one panel for the open positions and one for the closed trades");
 
     const positions = await panels[0].innerText();
@@ -247,7 +249,7 @@ test("the Live Trading section renders the position and the closed trade it read
       feed.positions = [];
       renderLiveTrading(feed);
     });
-    const empty = await page.innerText("#liveTradingPanel .live-trading-table-panel");
+    const empty = await page.innerText("#liveTradingPanel .live-trading-table-panel:not(.live-trading-rule-panel)");
     assert.match(empty, /None open on this account/);
     assert.match(empty, /Nothing is open, so there is no position to read back/);
 
@@ -260,7 +262,7 @@ test("the Live Trading section renders the position and the closed trade it read
       delete feed.positions;
       renderLiveTrading(feed);
     });
-    const noBlock = await page.innerText("#liveTradingPanel .live-trading-table-panel");
+    const noBlock = await page.innerText("#liveTradingPanel .live-trading-table-panel:not(.live-trading-rule-panel)");
     assert.match(noBlock, /carries no position block/);
     assert.match(noBlock, /nothing has been open since the last publish/);
   } finally {
@@ -350,10 +352,13 @@ test("the chart marks an executed round trip with an E and an X", async () => {
     // Higher price, smaller y: the target is above the entry and the stop is below it.
     assert.ok(edgeOf("target").y < edgeOf("entry").y, "the target is drawn above the entry");
     assert.ok(edgeOf("entry").y < edgeOf("stop").y, "the stop is drawn below the entry");
-    // The band is exactly the span between those two edges.
-    assert.ok(Math.abs(position.band.y - edgeOf("target").y) < 0.01);
-    assert.ok(Math.abs((position.band.y + position.band.height) - edgeOf("stop").y) < 0.01);
-    assert.ok(Math.abs(position.band.x - entry.x) < 0.01, "the band starts on the bar the position was opened in");
+    // The band is exactly the span between those two edges. Each drawn coordinate carries two decimals, so
+    // the sum of the band's own y and height can differ from the edge's y by a hundredth of a pixel - which is
+    // what it is, a rounding of the same number rather than a gap between the band and the line.
+    const EDGE_TOLERANCE = 0.02;
+    assert.ok(Math.abs(position.band.y - edgeOf("target").y) <= EDGE_TOLERANCE);
+    assert.ok(Math.abs((position.band.y + position.band.height) - edgeOf("stop").y) <= EDGE_TOLERANCE);
+    assert.ok(Math.abs(position.band.x - entry.x) <= EDGE_TOLERANCE, "the band starts on the bar the position was opened in");
     assert.ok(position.band.width > 0);
     assert.deepEqual(
       position.labels.slice().sort(),
@@ -415,7 +420,7 @@ test("the chart marks an executed round trip with an E and an X", async () => {
     const lagNote = await page.innerText("#liveTradingPanel .live-trading-chart-lag");
     assert.match(lagNote, /^Snapshot, not a live feed:/);
     assert.match(lagNote, /The agent acts on the five-minute close itself/);
-    const panels = await page.$$("#liveTradingPanel .live-trading-table-panel");
+    const panels = await page.$$("#liveTradingPanel .live-trading-table-panel:not(.live-trading-rule-panel)");
     const closedTrades = await panels[1].innerText();
     assert.match(closedTrades, /an entry is a triangle lettered E and its exit a triangle lettered X/);
 

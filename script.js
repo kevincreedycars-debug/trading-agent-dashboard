@@ -588,7 +588,8 @@ function saveNavigationState() {
         symbol: liveTradingChartSymbol,
         timeframe: liveTradingChartTimeframe,
         mode: liveTradingChartMode,
-        fitLevels: liveTradingChartFitLevels
+        fitLevels: liveTradingChartFitLevels,
+        zoom: liveTradingChartZoom
       }
     }));
   } catch (err) {
@@ -627,6 +628,7 @@ function restoreNavigationState() {
     if (LIVE_TRADING_TIMEFRAMES.some(entry => entry.key === savedChart.timeframe)) liveTradingChartTimeframe = savedChart.timeframe;
     if (savedChart.mode === "line" || savedChart.mode === "candles") liveTradingChartMode = savedChart.mode;
     liveTradingChartFitLevels = savedChart.fitLevels === true;
+    liveTradingChartZoom = LIVE_TRADING_CHART_ZOOM_STEPS.includes(Number(savedChart.zoom)) ? Number(savedChart.zoom) : 1;
   } catch (err) {
     console.warn("Could not restore dashboard navigation state", err);
     activeTab = availableTabs.includes("overview") ? "overview" : (availableTabs[0] || "overview");
@@ -13946,10 +13948,57 @@ const LIVE_TRADING_LADDER_MAX_STEPS = 60;
 const LIVE_TRADING_LADDER_EXTEND_STEPS = 10;
 const liveTradingLadderMath = (typeof globalThis !== "undefined" && globalThis.L2LLadder) || null;
 let liveTradingLadderSteps = { above: null, below: null };
-// The price scale is the bars' own range unless the reader asks for the whole ladder: ten steps each way
-// span far more than the bars they were measured against, and folding every line into the window would
-// squash the candles into a stripe.
+// How far the price scale widens beyond the bars to put the ladder on screen: the nearest published line on
+// each side of them, counted in levels rather than in points, because a ladder step is measured on H1 and the
+// bars are drawn on M5. Two each way is what the entry is read against - a five-minute close beyond a level
+// means the level above and the level below - and it is deliberately not every line: ten steps each way span
+// far more than the bars they were measured against, and folding all of them in would leave the candles as a
+// stripe. `Fit levels` is the reader's other choice, widening the window to the outermost published line.
+const LIVE_TRADING_CHART_NEAR_LEVELS = 2;
 let liveTradingChartFitLevels = false;
+// How far the price pane is magnified: 1 draws every bar the snapshot publishes for the timeframe on
+// screen, and each step after that halves the window again. The window is always the newest bars - a chart
+// that jumped to another stretch of history would not be a view of the close the rule reads - and the price
+// scale is rebuilt from the bars that are drawn, so the two nearest marked lines each side stay on screen at
+// every magnification. That is the reason the control exists: zooming in widens the candles, it never puts
+// the ladder off the picture. A floor of bars keeps the last steps a chart rather than a stripe.
+const LIVE_TRADING_CHART_ZOOM_STEPS = [1, 2, 4, 8];
+const LIVE_TRADING_CHART_MIN_BARS = 12;
+let liveTradingChartZoom = 1;
+
+// The bars the price pane draws: the newest `drawn` of the block, with what was left out stated beside it
+// rather than silently dropped. A purely geometric helper so the toolbar, the caption and the plot all read
+// the same window from the same numbers.
+function liveTradingChartWindow(points, zoom) {
+  const all = Array.isArray(points) ? points : [];
+  const step = LIVE_TRADING_CHART_ZOOM_STEPS.includes(Number(zoom)) ? Number(zoom) : 1;
+  const wanted = Math.min(all.length, Math.max(LIVE_TRADING_CHART_MIN_BARS, Math.ceil(all.length / step)));
+  return {
+    points: wanted >= all.length ? all.slice() : all.slice(all.length - wanted),
+    total: all.length,
+    drawn: wanted,
+    hidden: Math.max(0, all.length - wanted),
+    step
+  };
+}
+
+// One press moves one step along the zoom ladder, and the ends are the ends: there is no magnification past
+// the published window and none that would draw fewer than the floor of bars.
+function liveTradingChartZoomNext(current, direction) {
+  const step = LIVE_TRADING_CHART_ZOOM_STEPS.includes(Number(current)) ? Number(current) : 1;
+  const index = LIVE_TRADING_CHART_ZOOM_STEPS.indexOf(step);
+  const wanted = index + (Number(direction) > 0 ? 1 : -1);
+  return LIVE_TRADING_CHART_ZOOM_STEPS[Math.min(LIVE_TRADING_CHART_ZOOM_STEPS.length - 1, Math.max(0, wanted))];
+}
+
+// The rule the pairs are traded by, as one shared module: lib/l2l_strategy.js, loaded ahead of this file by
+// index.html. It is arithmetic over three published artifacts - the sealed Layer 1 calls, the marked ladder
+// and the M5 bars - and it hands back a stage and, when a pair is confirmed, the three prices of a ticket.
+// It places nothing: the dashboard's order tool is the only thing here that can send one, and it is run by
+// hand. Without the module the page still draws the chart and states no reading rather than guessing one.
+const liveTradingStrategy = (typeof globalThis !== "undefined" && globalThis.L2LStrategy) || null;
+// The assets the rule is read for, in the order the artifacts carry them.
+const LIVE_TRADING_RULE_ASSETS = ["EUR", "GOLD", "NQ", "BTC"];
 // The position sizer that labels an executed trade: what the distance to the stop and the distance to the
 // target were worth at the size the trade was taken in, and the ratio between the two. It lives in
 // lib/l2l_sizing.js, loaded ahead of this file by index.html, so the page and the tests share one reading of
@@ -14964,13 +15013,16 @@ function liveTradingChartOpenPositions(instrument, points, geometry, digits) {
 // and X triangles are trades the terminal already executed - and none of it
 // is an order, a signal or a forecast. A snapshot written before the producer published OHLC bars
 // falls back to the close line that `close_series` actually holds.
-function liveTradingChartPlot(instrument, mode, timeframeKey) {
+// `ruleReading` is the L2L rule's reading for this pair, handed in by the shell: when it is confirmed the
+// chart draws its three ticket prices too, and when it is absent or waiting nothing of it is drawn.
+function liveTradingChartPlot(instrument, mode, timeframeKey, ruleReading = null) {
   const frame = liveTradingTimeframeMeta(timeframeKey);
   // A render that ends early - a snapshot with no bars for this timeframe - must not leave the previous
   // instrument's line count on the caption, so the last view is dropped before this one is drawn.
   if (liveTradingChartScale) liveTradingChartScale.levelView = null;
   if (liveTradingChartScale) liveTradingChartScale.tradeView = null;
   if (liveTradingChartScale) liveTradingChartScale.positionView = null;
+  if (liveTradingChartScale) liveTradingChartScale.ruleView = null;
   const digits = Number.isInteger(Number(instrument?.digits)) ? Number(instrument.digits) : 2;
   const block = liveTradingTimeframeBlock(instrument, frame.key) || {};
   const bars = (Array.isArray(block.bars) ? block.bars : []).filter(bar =>
@@ -14987,7 +15039,7 @@ function liveTradingChartPlot(instrument, mode, timeframeKey) {
     return `<p class="live-trading-empty">No ${escapeHtml(frame.label)} candles in this snapshot, so there is nothing to chart.</p>`;
   }
 
-  const points = bars.length
+  const allPoints = bars.length
     ? bars.map(bar => ({
       time_utc: bar.time_utc,
       open: Number(bar.open),
@@ -14997,22 +15049,49 @@ function liveTradingChartPlot(instrument, mode, timeframeKey) {
       tick_volume: Number.isFinite(Number(bar.tick_volume)) ? Number(bar.tick_volume) : null
     }))
     : closes.map(point => ({ time_utc: point.time_utc, value: Number(point.close) }));
+  // The reader's zoom, applied once, here: the pane draws the newest `drawn` bars of the block and every mark
+  // on it - candles, volume, the time scale, the trades, the crosshair - is drawn from that same slice, so
+  // nothing is ever placed against a bar that is not on screen. The bars left out are counted on the caption.
+  const barWindow = liveTradingChartWindow(allPoints, liveTradingChartZoom);
+  const points = barWindow.points;
 
   const prices = bars.length
-    ? bars.flatMap(bar => [Number(bar.high), Number(bar.low)])
+    ? points.flatMap(bar => [Number(bar.high), Number(bar.low)])
     : points.map(point => point.value);
   let min = Math.min(...prices);
   let max = Math.max(...prices);
-  // The ladder only widens the window when the reader asks for it. Ten steps each way span far more than
-  // the bars they were measured against, so a ladder folded into the scale by default would leave the
-  // candles as a stripe; what falls outside the window is counted on the caption instead, and Fit levels
-  // widens the window to the outermost published line on request.
+  const levelPrices = levels
+    .map(level => Number(level.price))
+    .filter(price => Number.isFinite(price));
+  // The scale opens on the bars plus the two nearest published lines on each side of them, so the levels a
+  // five-minute close is read against are on screen from the first draw rather than counted on an edge tab.
+  // Fit levels is the reader's other choice: it widens the window to every published line at once, which is a
+  // view of the whole grid and a stripe of candles, and it is off unless the reader asks for it.
   if (liveTradingChartFitLevels) {
-    const fitted = levels.map(level => Number(level.price));
-    if (fitted.length) {
-      min = Math.min(min, ...fitted);
-      max = Math.max(max, ...fitted);
+    if (levelPrices.length) {
+      min = Math.min(min, ...levelPrices);
+      max = Math.max(max, ...levelPrices);
     }
+  } else if (levelPrices.length) {
+    const nearAbove = levelPrices
+      .filter(price => price > max)
+      .sort((a, b) => a - b)
+      .slice(0, LIVE_TRADING_CHART_NEAR_LEVELS);
+    const nearBelow = levelPrices
+      .filter(price => price < min)
+      .sort((a, b) => b - a)
+      .slice(0, LIVE_TRADING_CHART_NEAR_LEVELS);
+    if (nearAbove.length) max = Math.max(max, ...nearAbove);
+    if (nearBelow.length) min = Math.min(min, ...nearBelow);
+  }
+  // A confirmed pair's own ticket is drawn on the same scale as everything else, and the scale widens to hold
+  // all three of its prices: the limit at the level and the five-times-risk target are the prices the reader
+  // is about to place, so half a ticket hanging off the edge of the picture would be worse than no line at
+  // all. Nothing is widened for a reading that is not confirmed - there is nothing of it to draw.
+  const ruleMarkers = liveTradingStrategy ? liveTradingStrategy.planMarkerPrices(ruleReading) : [];
+  if (ruleMarkers.length) {
+    min = Math.min(min, ...ruleMarkers.map(marker => marker.price));
+    max = Math.max(max, ...ruleMarkers.map(marker => marker.price));
   }
   if (!(max > min)) {
     const pad = Math.abs(max) * 0.001 || 1;
@@ -15049,7 +15128,7 @@ function liveTradingChartPlot(instrument, mode, timeframeKey) {
   liveTradingChartScale = { width, height, plotY0, plotY1, min, max };
   // The crosshair needs the rest of the same geometry, plus where each bar sits on the canvas.
   liveTradingChartScale.bars = points.map((point, index) => Object.assign({ x: xAt(index) }, point));
-  liveTradingChartScale.view = { plotX0, plotX1, plotY0, plotY1, timeScaleY, axisWidth, digits, mode: effectiveMode };
+  liveTradingChartScale.view = { plotX0, plotX1, plotY0, plotY1, timeScaleY, axisWidth, digits, mode: effectiveMode, window: { total: barWindow.total, drawn: barWindow.drawn, hidden: barWindow.hidden, step: barWindow.step } };
   const bodyWidth = Math.max(1.2, Math.min(16, (plotW / points.length) * 0.68));
   const gridStep = liveTradingGridStep(max - min, 8);
   const gridLines = [];
@@ -15158,6 +15237,16 @@ function liveTradingChartPlot(instrument, mode, timeframeKey) {
       + `<rect x="${plotX1 + 2}" y="${(ly - 9).toFixed(2)}" width="${axisWidth - 4}" height="18" rx="3" class="live-trading-chart-level-box"></rect>`
       + `<text x="${(plotX1 + axisWidth / 2).toFixed(2)}" y="${(ly + 4).toFixed(2)}" text-anchor="middle" class="live-trading-chart-level-box-text">${escapeHtml(liveTradingPrice(price, digits))}</text>`;
   }).join("");
+  // The rule's own ticket for the pair on screen, when the row is confirmed: a dashed line at the limit, one
+  // at the stop and one at the five-times-risk target, each labelled with the price the rule handed over. The
+  // chart draws those three prices and works none of them out itself, so the picture and the panel cannot
+  // disagree about the ticket, and a pair the rule is only waiting on draws nothing at all.
+  liveTradingChartScale.ruleView = ruleMarkers.length ? { count: ruleMarkers.length } : null;
+  const ruleLines = ruleMarkers.map(marker => {
+    const markerY = yAt(marker.price);
+    return `<line x1="${plotX0}" y1="${markerY.toFixed(2)}" x2="${plotX1}" y2="${markerY.toFixed(2)}" class="live-trading-chart-rule ${marker.key}"></line>`
+      + `<text x="${plotX0 + 6}" y="${(markerY - 6).toFixed(2)}" class="live-trading-chart-rule-tag ${marker.key}">${escapeHtml(marker.label)}</text>`;
+  }).join("");
   // The position the account is holding on the symbol on screen, shaded from its stop to its target. It rides
   // the same bars and the same price scale as everything else, and it is drawn under the level lines so the
   // ladder and the closed-trade triangles stay readable on top of it. The count is kept on the scale the
@@ -15209,6 +15298,7 @@ function liveTradingChartPlot(instrument, mode, timeframeKey) {
       ${positionMarks}
       ${lastLine}
       ${levelLines}
+      ${ruleLines}
       ${tradeMarks}
       ${levelEdgeTabs}
       ${priceLabels}
@@ -15278,7 +15368,7 @@ function liveTradingLevelsDefaultStatus() {
   if (liveTradingLevelsEndpoint) {
     return `Marking writes ${liveTradingLevelsEndpoint.path} through the local tool on this machine. Commit it to publish.`;
   }
-  return `Marking is saved in this browser first, then published to ${liveTradingPublish.repo} as a commit through your own GitHub account. Nothing is sent anywhere else.`;
+  return `Marking is saved in this browser first, then published to ${liveTradingPublish.repo} as a commit through your own GitHub token. Nothing is sent anywhere else.`;
 }
 
 // The publishing box's own line: what the page knows about the two stores, so a reader never has to guess
@@ -15333,7 +15423,221 @@ function liveTradingPublishPanel() {
 
 
 
-function liveTradingChartShell(data) {
+// Layer 1's own call for a pair, with the window it was published for. The rule takes the direction the
+// asset published, so the page reads that direction the way the rest of the dashboard does - the priority
+// call, falling back to the 24h call - and the row states the call's own sealed time and expiry beside it.
+// A call whose own window has closed is not a direction any more: the artifact keeps the older call until
+// the next run overwrites it, so handing it over would size a ticket on a forecast that ended days ago. A
+// call that states no expiry at all cannot be judged live either, and is read the same way - refused, with
+// the reason on the row - rather than traded on a guess.
+function liveTradingRuleCall(asset, nowMs) {
+  const agent = getAgent(asset);
+  const validity = getLayer1Validity(agent);
+  const direction = agent?.priority_call?.direction || getCall(agent, "24h").direction || null;
+  const expiresAt = validity?.forecast_window_end || validity?.expires_at || null;
+  const expiryMs = expiresAt ? Date.parse(expiresAt) : Number.NaN;
+  const status = String(validity?.effective_status || validity?.status_at_build || "").toUpperCase();
+  const open = agent && Number.isFinite(expiryMs) && expiryMs > nowMs && status !== "EXPIRED";
+  return {
+    asset,
+    published: direction,
+    direction: open ? direction : null,
+    live: Boolean(open) && Boolean(direction),
+    status: status || null,
+    sealed_at: validity?.sealed_at || validity?.generated_at || null,
+    expires_at: expiresAt
+  };
+}
+
+function liveTradingRuleCalls(nowMs) {
+  const calls = {};
+  LIVE_TRADING_RULE_ASSETS.forEach(asset => { calls[asset] = liveTradingRuleCall(asset, nowMs); });
+  return calls;
+}
+
+// What the rule reads for every pair the feed publishes, worked out once per render from the artifacts the
+// page already holds: the sealed calls, the marked ladder joined onto the feed, and the M5 bars. The
+// arithmetic is lib/l2l_strategy.js - the page hands the three artifacts over and prints what comes back -
+// so the page and the checker cannot drift on what "confirmed", "waiting" and "blocked" mean, and the same
+// instant is handed to every pair, so a bar that is still forming is still forming for all four.
+function liveTradingRuleReadings(data, nowMs) {
+  const now = Number.isFinite(Number(nowMs)) && Number(nowMs) > 0 ? Number(nowMs) : Date.now();
+  const calls = liveTradingRuleCalls(now);
+  const instruments = (Array.isArray(data?.instruments) ? data.instruments : [])
+    .filter(instrument => instrument?.available === true);
+  const handed = {};
+  Object.keys(calls).forEach(asset => { handed[asset] = calls[asset].direction; });
+  if (!liveTradingStrategy) return { available: false, rows: [], summary: null, calls, bySymbol: {} };
+
+  const rows = liveTradingStrategy.strategyReadings({
+    instruments: instruments.map(instrument => ({
+      symbol: instrument.symbol,
+      dashboard_asset: instrument.dashboard_asset,
+      levels: instrument.levels,
+      m5: instrument.m5,
+      point: instrument.point
+    })),
+    positions: Array.isArray(data?.positions) ? data.positions : [],
+    calls: handed,
+    nowMs: now
+  });
+  const bySymbol = {};
+  rows.forEach(row => { bySymbol[row.symbol] = row; });
+  return { available: true, rows, summary: liveTradingStrategy.strategySummary(rows), calls, bySymbol };
+}
+
+// The stage as a badge tone: confirmed is the one state that carries a ticket, blocked is the cap doing its
+// work on a pair that already holds a position, and a pair the artifacts cannot judge is stated as it is
+// rather than dressed up as a live reading.
+function liveTradingStageTone(stage) {
+  if (stage === "confirmed") return "fresh";
+  if (stage === "blocked") return "stale";
+  if (stage === "no-levels" || stage === "unavailable") return "error";
+  return "unknown";
+}
+
+function liveTradingStageLabel(stage) {
+  return String(stage || "").replace(/-/g, " ").toUpperCase() || displayDash();
+}
+
+// The rule, pair by pair, on the page rather than in a file: one row for each pair the account trades,
+// stating the call that was read, the stage the rule stands in, the line it is watching or has crossed, the
+// newest closed candle, and - on a confirmed row - the three prices of the ticket. Every number is a reading
+// of an artifact that is already published: no row of this table can place, size, amend or cancel anything,
+// and the caption says so on the panel itself rather than only in the notes.
+function liveTradingRulePanel(data, ruleState) {
+  const state = ruleState || liveTradingRuleReadings(data, Date.now());
+  const rows = Array.isArray(state.rows) ? state.rows : [];
+  if (!state.available) {
+    return `
+      <section class="live-trading-table-panel live-trading-rule-panel">
+        <div class="live-trading-table-head">
+          <h3>L2L entry rule, pair by pair</h3>
+          <p class="live-trading-table-meta">The shared rule module is not loaded, so no pair is read here.</p>
+        </div>
+        <p class="live-trading-table-empty">The rule lives in <span class="live-trading-mono">lib/l2l_strategy.js</span>, loaded by the page with the other shared modules. Without it the chart still draws and no stage is stated here, rather than a stage being guessed.</p>
+      </section>
+    `;
+  }
+
+  const assetBySymbol = {};
+  (Array.isArray(data?.instruments) ? data.instruments : []).forEach(instrument => {
+    if (instrument?.symbol) assetBySymbol[instrument.symbol] = instrument.dashboard_asset;
+  });
+  const stamp = value => (value ? liveTradingTimeTickLabel(value, true) : displayDash());
+  // A call that has run out of its own window is not a direction: the row says which call the artifact still
+  // holds and when its window closed, so a reader can see the rule refusing rather than merely idle.
+  const callCell = call => {
+    if (call?.live) {
+      const side = String(call.published || "").toUpperCase().startsWith("BULLISH") ? "up" : "down";
+      return `<span class="live-trading-direction ${side}">${escapeHtml(call.published)}</span>`
+        + `<span class="live-trading-table-magic">sealed ${escapeHtml(stamp(call.sealed_at))} &middot; ends ${escapeHtml(stamp(call.expires_at))}</span>`;
+    }
+    if (!call?.published) {
+      return `<span class="live-trading-stage unknown">NO CALL</span><span class="live-trading-table-magic">nothing published for this asset</span>`;
+    }
+    return `<span class="live-trading-stage stale">NO LIVE CALL</span>`
+      + `<span class="live-trading-table-magic">${escapeHtml(call.published)} sealed ${escapeHtml(stamp(call.sealed_at))} &middot; window closed ${escapeHtml(stamp(call.expires_at))}</span>`;
+  };
+
+  const body = rows.map(row => {
+    const digits = liveTradingDigitsFor(data, row.symbol);
+    const asset = assetBySymbol[row.symbol] || "";
+    const call = state.calls ? state.calls[asset] || null : null;
+    const stage = row.stage || "unavailable";
+    const side = row.side === "long" ? "buy" : (row.side === "short" ? "sell" : null);
+    const sideCell = side
+      ? `<span class="live-trading-side ${side}">${side === "buy" ? "LONG" : "SHORT"}</span> `
+      : "";
+    const levelRow = row.level || row.watch?.level || null;
+    const levelCell = levelRow
+      ? `${escapeHtml(liveTradingPrice(levelRow.price, digits))}<span class="live-trading-table-magic">${escapeHtml(String(levelRow.role || "level"))}${levelRow.timeframe ? ` &middot; ${escapeHtml(String(levelRow.timeframe))}` : ""}</span>`
+      : displayDash();
+    const distance = row.watch?.distance || null;
+    const watchCell = distance
+      ? `<span class="live-trading-table-magic">watching &middot; ${escapeHtml(liveTradingPrice(distance.price, digits))}${Number.isFinite(Number(distance.points)) ? ` &middot; ${escapeHtml(String(distance.points))} pts away` : ""}</span>`
+      : "";
+    const confirmation = row.confirmation || null;
+    const beyond = confirmation?.beyond || null;
+    const closeCell = Number.isFinite(Number(confirmation?.close))
+      ? `${escapeHtml(liveTradingPrice(confirmation.close, digits))}<span class="live-trading-table-magic">${escapeHtml(stamp(confirmation.time_utc))}</span>`
+      : displayDash();
+    const beyondCell = beyond
+      ? `${escapeHtml(liveTradingSigned(side === "sell" ? -Number(beyond.price) : Number(beyond.price), digits))}<span class="live-trading-table-magic">${escapeHtml(`${beyond.points} pts past the level`)}</span>`
+      : displayDash();
+    const plan = row.plan || null;
+    const planCell = value => (plan && Number.isFinite(Number(value)) ? escapeHtml(liveTradingPrice(value, digits)) : displayDash());
+    const riskCell = plan && Number.isFinite(Number(plan.risk_points))
+      ? `${escapeHtml(String(plan.risk_points))} pts<span class="live-trading-table-magic">${escapeHtml(`${plan.r_multiple}R at ${plan.reward_points} pts`)}</span>`
+      : displayDash();
+    return `
+      <tr>
+        <th scope="row">
+          <span class="live-trading-asset">${escapeHtml(asset || row.symbol || displayDash())}</span>
+          <span class="live-trading-table-symbol">${escapeHtml(row.symbol || displayDash())}</span>
+        </th>
+        <td>${callCell(call)}</td>
+        <td>${sideCell}<span class="live-trading-stage ${liveTradingStageTone(stage)}">${escapeHtml(liveTradingStageLabel(stage))}</span></td>
+        <td>${levelCell}${watchCell}</td>
+        <td>${closeCell}</td>
+        <td class="num">${beyondCell}</td>
+        <td class="num">${planCell(plan?.entry)}</td>
+        <td class="num">${planCell(plan?.stop)}</td>
+        <td class="num">${planCell(plan?.target)}</td>
+        <td class="num">${riskCell}</td>
+        <td class="live-trading-rule-read">${escapeHtml(row.reason || "")}</td>
+      </tr>
+    `;
+  }).join("");
+
+  const summary = state.summary || {};
+  const meta = [
+    `${rows.length} pair${rows.length === 1 ? "" : "s"}`,
+    `${summary.confirmed || 0} confirmed`,
+    `${summary.waiting || 0} waiting`,
+    `${summary.blocked || 0} blocked`,
+    `${summary.noCall || 0} no call`,
+    `${summary.noLevels || 0} no levels`,
+    `${summary.unavailable || 0} unavailable`
+  ].join(" &middot; ");
+
+  const table = rows.length
+    ? `
+      <div class="live-trading-table-scroll">
+        <table class="live-trading-table">
+          <thead>
+            <tr>
+              <th scope="col">Pair</th>
+              <th scope="col">Layer 1 call</th>
+              <th scope="col">Stage</th>
+              <th scope="col">Level</th>
+              <th scope="col">Newest closed M5</th>
+              <th scope="col">Beyond the level</th>
+              <th scope="col">Limit</th>
+              <th scope="col">Stop</th>
+              <th scope="col">Target (5R)</th>
+              <th scope="col">Risk</th>
+              <th scope="col">What the rule reads</th>
+            </tr>
+          </thead>
+          <tbody>${body}</tbody>
+        </table>
+      </div>`
+    : `<p class="live-trading-table-empty">The feed carries no reachable instrument, so there is no pair to read the rule for.</p>`;
+
+  return `
+    <section class="live-trading-table-panel live-trading-rule-panel">
+      <div class="live-trading-table-head">
+        <h3>L2L entry rule, pair by pair</h3>
+        <p class="live-trading-table-meta">${meta}</p>
+      </div>
+      ${table}
+      <p class="live-trading-table-caption">Read by <span class="live-trading-mono">lib/l2l_strategy.js</span> from the sealed Layer 1 calls, the marked ladder in <span class="live-trading-mono">data/l2l-levels.json</span> and the snapshot's own M5 bars: a five-minute close beyond a marked level in the call's own direction, a limit back at that level, the stop behind the leg that made the deviation, and the target at five times the risk. A confirmed row is a ticket to place by hand - this table places, sizes, amends and cancels nothing, the order tool is the only thing here that can send one, and the smallest size is the value typed into it. A call whose own window has closed is not read as a direction at all.</p>
+    </section>
+  `;
+}
+
+function liveTradingChartShell(data, ruleState = null) {
   const instruments = (Array.isArray(data?.instruments) ? data.instruments : [])
     .filter(instrument => instrument?.available === true);
   if (!instruments.length) return "";
@@ -15449,9 +15753,32 @@ function liveTradingChartShell(data) {
     ? `<p class="live-trading-chart-mark-status${liveTradingMarking ? " active" : ""}">${escapeHtml(liveTradingMarkStatus || liveTradingLevelsDefaultStatus())}</p>`
     : `<p class="live-trading-chart-mark-status">Levels are read from <span class="live-trading-mono">data/l2l-levels.json</span>. Run <span class="live-trading-mono">node scripts/l2l-levels-tool.js</span> and open the page from that server to mark them.</p>`;
 
+  // The zoom control: how much of the published block the pane draws, from every bar the snapshot carries to
+  // the eight-times step. It is a view control, not a write, and it is what makes the reader's floor safe -
+  // the price scale is rebuilt from the bars that are drawn, so the two nearest marked lines each side stay
+  // on the picture at every magnification, which is the level a five-minute close is read against.
+  const drawnWindow = liveTradingChartWindow(bars.length ? bars : closes, liveTradingChartZoom);
+  const zoomIndex = LIVE_TRADING_CHART_ZOOM_STEPS.indexOf(liveTradingChartZoom);
+  const zoomedIn = zoomIndex >= LIVE_TRADING_CHART_ZOOM_STEPS.length - 1 || drawnWindow.total <= LIVE_TRADING_CHART_MIN_BARS;
+  const zoomButtons = `
+          <button type="button" class="live-trading-chart-mode zoom" data-live-chart-zoom="-1"${zoomIndex <= 0 ? " disabled" : ""} title="Zoom out: draw more of the published bars" aria-label="Zoom out on the price pane">&#8722;</button>
+          <button type="button" class="live-trading-chart-mode zoom" data-live-chart-zoom="1"${zoomedIn ? " disabled" : ""} title="Zoom in: draw fewer, wider bars" aria-label="Zoom in on the price pane">+</button>
+  `;
+  const zoomNote = drawnWindow.hidden
+    ? `${drawnWindow.drawn} of ${drawnWindow.total} ${frame.label} bars drawn (zoom ${drawnWindow.step}\u00d7)`
+    : `all ${drawnWindow.total} ${frame.label} bars drawn`;
+
   // The plot is drawn first because the caption's line count is a reading of the scale it used: how many
   // published levels are inside the window, and how many sit outside it.
-  const plotHtml = liveTradingChartPlot(selected, liveTradingChartMode, frame.key);
+  const ruleReading = ruleState?.bySymbol?.[selected.symbol] || null;
+  const plotHtml = liveTradingChartPlot(selected, liveTradingChartMode, frame.key, ruleReading);
+  // The rule's own stage for the pair on screen, and - when it is confirmed - the three prices the chart has
+  // just drawn, so the picture and the table below it read the same ticket.
+  const ruleViewNote = ruleReading
+    ? (ruleReading.stage === "confirmed" && ruleReading.plan
+      ? `L2L rule ${liveTradingStageLabel(ruleReading.stage)}: limit ${liveTradingPrice(ruleReading.plan.entry, digits)}, stop ${liveTradingPrice(ruleReading.plan.stop, digits)}, target ${liveTradingPrice(ruleReading.plan.target, digits)} (${ruleReading.plan.r_multiple}R)`
+      : `L2L rule ${liveTradingStageLabel(ruleReading.stage)}`)
+    : "";
   const levelView = liveTradingChartScale?.levelView || null;
   const levelViewNote = levelView && levelView.total
     ? ` \u00b7 ${levelView.drawn}/${levelView.total} lines in view${levelView.above || levelView.below ? ` (${levelView.above} above, ${levelView.below} below)` : ""}`
@@ -15492,7 +15819,8 @@ function liveTradingChartShell(data) {
         <div class="live-trading-chart-symbols">${symbolButtons}</div>
         <div class="live-trading-chart-controls">
           <div class="live-trading-chart-modes" role="group" aria-label="Chart timeframe">${timeframeButtons}</div>
-          <div class="live-trading-chart-modes" role="group" aria-label="Chart style and scale">${modeButtons}${fitButton}</div>${markingControls}
+          <div class="live-trading-chart-modes" role="group" aria-label="Chart style and scale">${modeButtons}${fitButton}</div>
+          <div class="live-trading-chart-modes" role="group" aria-label="Price pane zoom">${zoomButtons}</div>${markingControls}
         </div>
       </div>
       <div class="live-trading-chart-plot${liveTradingMarking ? " marking" : ""}">${plotHtml}</div>
@@ -15506,6 +15834,8 @@ function liveTradingChartShell(data) {
         <span>Bid ${escapeHtml(liveTradingPrice(quote.bid, digits))} / Ask ${escapeHtml(liveTradingPrice(quote.ask, digits))}</span>
         <span>Newest ${escapeHtml(frame.label)} bar ${escapeHtml(freshness.label)}${freshness.stale ? " (stale)" : ""}</span>
         <span>${escapeHtml(barCount)}</span>
+        <span>${escapeHtml(zoomNote)}</span>
+        ${ruleViewNote ? `<span>${escapeHtml(ruleViewNote)}</span>` : ""}
         <span>${seedLevels.length} seed level${seedLevels.length === 1 ? "" : "s"} \u00b7 ${derivedLevels} derived${escapeHtml(levelViewNote)}${escapeHtml(ladderBounds)}</span>
         ${tradeViewNote ? `<span>${escapeHtml(tradeViewNote)}</span>` : ""}
         ${positionToolNote ? `<span>${escapeHtml(positionToolNote)}</span>` : ""}
@@ -15598,6 +15928,18 @@ function setupLiveTradingChart(panel) {
       renderLiveTrading(liveTradingData || {});
       return;
     }
+    // The zoom is a view control too, and the ends are the ends: the buttons are disabled there, and a click
+    // that would not move anything redraws nothing.
+    const zoomButton = event.target.closest("[data-live-chart-zoom]");
+    if (zoomButton && !zoomButton.disabled) {
+      const next = liveTradingChartZoomNext(liveTradingChartZoom, Number(zoomButton.dataset.liveChartZoom));
+      if (next !== liveTradingChartZoom) {
+        liveTradingChartZoom = next;
+        saveNavigationState();
+        renderLiveTrading(liveTradingData || {});
+      }
+      return;
+    }
     const symbolButton = event.target.closest("[data-live-chart-symbol]");
     if (symbolButton) {
       liveTradingChartSymbol = symbolButton.dataset.liveChartSymbol || liveTradingChartSymbol;
@@ -15663,6 +16005,19 @@ function setupLiveTradingChart(panel) {
     const plot = panel.querySelector(".live-trading-chart-plot");
     if (plot) liveTradingChartResetCrosshair(plot);
   });
+  // A wheel over the price pane zooms it, the way a charting terminal does, and only there: anywhere else on
+  // the page the wheel scrolls as it always did. The listener has to be non-passive to stop that scroll, and
+  // it redraws only when the magnification actually changes.
+  panel.addEventListener("wheel", event => {
+    const plot = event.target?.closest?.(".live-trading-chart-plot");
+    if (!plot) return;
+    const next = liveTradingChartZoomNext(liveTradingChartZoom, event.deltaY < 0 ? 1 : -1);
+    if (next === liveTradingChartZoom) return;
+    event.preventDefault();
+    liveTradingChartZoom = next;
+    saveNavigationState();
+    renderLiveTrading(liveTradingData || {});
+  }, { passive: false });
 }
 
 // Per-instrument M5 freshness. A quote can be live while the bar series beside it is hours old, so
@@ -16080,6 +16435,9 @@ function renderLiveTrading(data) {
   const account = data?.account || {};
   const terminal = data?.terminal || {};
   const source = data?.source || {};
+  // The L2L rule, read for every pair once per render: the selected pair's row is what the chart draws its
+  // ticket from and the table below it states all four, so a picture and a number cannot disagree.
+  const ruleState = liveTradingRuleReadings(data);
 
   if (updated) {
     updated.textContent = `${freshness.label} · snapshot ${data?.generated_at_utc || "unknown"}`;
@@ -16116,7 +16474,9 @@ function renderLiveTrading(data) {
 
     <div class="live-trading-chips">${accountChips}</div>
 
-    ${liveTradingChartShell(data)}
+    ${liveTradingChartShell(data, ruleState)}
+
+    ${liveTradingRulePanel(data, ruleState)}
 
     <div class="live-trading-grid">${cards}</div>
 
@@ -16127,7 +16487,8 @@ function renderLiveTrading(data) {
     <div class="live-trading-provenance">
       <p><b>Read-only.</b> Quotes, account facts, M5/H1/H4 candles, and a read-back of what was executed. This section has no order code: it cannot place, modify, close or cancel anything, and neither can the snapshot it renders.</p>
       <p>Open positions and closed trades are read from the terminal on each producer run, so a trade placed deliberately shows up here instead of being taken on trust: its entry, its current or exit price, what it made, and its fees. Placing one is a separate, deliberate act by the local bridge tool run in the terminal session, and every trade that tool places carries its own magic number, which the ticket cell above prints.</p>
-      <p>Marked L2L levels come from <span class="live-trading-mono">data/l2l-levels.json</span>${escapeHtml(levelsStamp)}. They are prices marked by hand on the chart, not levels the producer detected, and marking only writes through the local tool.</p>
+      <p>Marked L2L levels come from <span class="live-trading-mono">data/l2l-levels.json</span>${escapeHtml(levelsStamp)}. They are prices marked by hand on the chart, not levels the producer detected. A mark is written by the tool on the machine holding the terminal, or by this browser into its own draft and then into the repository as a commit made with the reader's own token; the committed file is the copy everyone reads.</p>
+      <p>The L2L entry rule table below is read from those same artifacts, by <span class="live-trading-mono">lib/l2l_strategy.js</span>: the direction Layer 1 sealed for the asset, a five-minute candle that closes beyond a marked level, a limit back at that level, the stop behind the leg that made the deviation, and the target at five times the risk. It states a stage and a ticket for all four pairs and it cannot trade: it carries no order call, the only thing here that can send a ticket is the order tool run by hand, and a call whose own published window has closed is not read as a direction at all.</p>
       <p>Producer <span class="live-trading-mono">${escapeHtml(source.producer || "tools/mt5-bridge/live-trading-snapshot.py")}</span> · ${escapeHtml(source.platform || "MetaTrader 5")} · ${escapeHtml(source.package || "package unknown")} · cadence ${escapeHtml(source.cadence || "5m")}</p>
       <p>Snapshot ${escapeHtml(data?.generated_at_utc || "unknown")} UTC · server clock ${escapeHtml(data?.time_server || "unknown")} (offset ${escapeHtml(String(data?.server_offset_seconds ?? "unknown"))}s)</p>
       <p>The 5m close-beyond-level rule is the entry confirmation to mark against. It is not a validated profit rule, and this panel is not a signal.</p>
