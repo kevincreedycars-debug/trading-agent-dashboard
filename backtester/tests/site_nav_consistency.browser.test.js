@@ -185,17 +185,18 @@ test("the partial is the navigation that was agreed, in both variants", () => {
 test("all ten served pages show one bar and one rail, and every link it offers goes somewhere", async () => {
   // The gold page's strip was re-ordered and widened on 2026-10-03 - Start here, Direction, Movement - L2L and half
   // L2L, Factor tables (draft) and Archive census - so the direction read and the two movement ranges sit together
-  // and the two archive censuses moved to the end. What this guard owns is that the rail's gold entry still names a
-  // view that exists, that the four pages the strip frames are still framed, and that a hash naming one of them
-  // still lands on it; the tidied page's own guard, gold_view_tidy.browser.test.js, holds the rest.
+  // and the two archive censuses moved to the end, and it gained a first tab on 2026-10-04, What moves gold, framing
+  // the page published that day. What this guard owns is that the rail's gold entry still names a view that exists,
+  // that the pages the strip frames are still framed, and that a hash naming one of them still lands on it; the
+  // tidied page's own guard, gold_view_tidy.browser.test.js, holds the rest.
   const goldTabs = Array.from(read("gold.html").matchAll(/class="goldtabs-tab"[^>]*id="tab-([^"]+)"/g), match => match[1]);
-  assert.deepEqual(goldTabs, ["start", "direction", "movement", "factor", "archive"], "gold.html must carry the five agreed views in order");
+  assert.deepEqual(goldTabs, ["whatmoves", "start", "direction", "movement", "factor", "archive"], "gold.html must carry the six agreed views in order");
   assert.ok(goldTabs.includes(RAIL_HREFS[3].split("#")[1]), "the rail's gold entry must name a view the gold page opens");
   const goldFrames = Array.from(read("gold.html").matchAll(/<iframe[^>]*src="([^"]+)"/g), match => match[1]);
   assert.deepEqual(
     goldFrames,
-    ["gold-direction-scorecard.html", "gold-factor-wip.html", "gold-backtesting.html", "gold-backtest-outcomes.html"],
-    "gold.html must still frame the four pages it always framed",
+    ["what-moves-gold.html", "gold-direction-scorecard.html", "gold-factor-wip.html", "gold-backtesting.html", "gold-backtest-outcomes.html"],
+    "gold.html must frame the five pages the strip names",
   );
   const server = await serve();
   const browser = await chromium.launch({ headless: true });
@@ -300,15 +301,15 @@ test("a rail entry lands on the view its label names, from any page and from ins
     });
 
     // The bar's gold entry is the one entry the three published gold guards ask for, on the draft page too. It
-    // opens the gold page with no hash, so it lands on that page's own first view - Start here since the 2026-10-03
-    // tidy - while the rail's gold entry keeps naming Direction. Either way the reader lands on a view the page
-    // opens, never on a bare strip.
+    // opens the gold page with no hash, so it lands on that page's own first view - What moves gold, the tab the
+    // strip gained on 2026-10-04 - while the rail's gold entry keeps naming Direction. Either way the reader lands
+    // on a view the page opens, never on a bare strip.
     await view.goto(`${base}/${DRAFT_PAGE}`, { waitUntil: "load" });
     await view.locator('.topbar .topbar-link[href="gold.html"]').click();
     await view.waitForURL(/gold\.html$/);
     await view.waitForFunction(() => {
-      const tab = document.querySelector("#tab-start");
-      const panel = document.querySelector("#panel-start");
+      const tab = document.querySelector("#tab-whatmoves");
+      const panel = document.querySelector("#panel-whatmoves");
       return !!tab && tab.getAttribute("aria-selected") === "true" && !!panel && panel.classList.contains("is-open");
     });
 
@@ -339,9 +340,9 @@ test("a rail entry lands on the view its label names, from any page and from ins
     await view.frameLocator('iframe[title="Gold direction scorecard"]').locator(".side-rail nav a.side-rail-link").click();
     await view.waitForURL(/\/layer1-call-flow\.html$/);
 
-    // gold.html frames four of these pages. An entry clicked inside one of those frames has to move the whole
-    // window, not open the dashboard inside the frame and leave the reader with two rails. The tidy makes Start
-    // here the page's own first view, so the frame is opened the way a reader opens it - by naming the view.
+    // gold.html frames five of these pages. An entry clicked inside one of those frames has to move the whole
+    // window, not open the dashboard inside the frame and leave the reader with two rails. The strip's views are
+    // all named, so the frame is opened the way a reader opens it - by naming the view it wants.
     await view.goto(`${base}/gold.html#direction`, { waitUntil: "load" });
     // The tab leads with the caller's own record and shows the framed scorecard under it, so a reader scrolls to
     // the frame before using it; the guard does the same rather than reading the frame from off-screen.

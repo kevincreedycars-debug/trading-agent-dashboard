@@ -206,3 +206,30 @@ The rail still holds the same seventeen dashboard views and the map still carrie
 - Fast-forward `origin/main` to `release/layer1-call-flow-rail-20261004` and re-read the live dashboard's rail.
 - Re-point the `workers/analysis-engine-20261003` checkout's own rail entry and its fourth test at the published navigation, dropping the `.side-rail-link` CSS it duplicates.
 
+
+## 2026-10-04 - What moves gold as the gold page's first tab
+
+### Session Goal
+
+Open the gold page on the page published earlier the same day: put `what-moves-gold.html` on `gold.html`'s strip as
+its first tab, at the user's word, and re-point the two browser guards that pin that strip.
+
+### Completed
+
+- Added the first tab `#tab-whatmoves` (`What moves gold`) and the first panel `#panel-whatmoves` to `gold.html`, holding one short note and the lazy frame `#frame-whatmoves` onto the published `what-moves-gold.html`; `#tab-start` keeps its id, label and panel and only gives up `aria-selected="true"`. The page grew 34,423 -> 36,310 bytes (+1,887, CRLF kept), and `what-moves-gold.html` was not touched at all (26,395 bytes, unchanged sha256).
+- Moved the landing view: the strip's order is now `['whatmoves', 'start', 'direction', 'movement', 'factor', 'archive']` and its fallback for a hash it does not name now reads `order[0]` rather than the literal `start`, so a reader arriving with no hash, or with a stale one, lands on What moves gold; `#start`, `#direction`, the rail's gold entry and the two census aliases keep meaning exactly what they meant.
+- Re-pointed `backtester/tests/gold_view_tidy.browser.test.js` (13,357 -> 14,691 bytes, +1,334) at the six views and the five framed pages in document order, added `what-moves-gold.html` to the framed-page honesty markers, and added a check that the frame a reader now lands on loads; 7/7 green.
+- Re-pointed `backtester/tests/site_nav_consistency.browser.test.js` (27,340 -> 27,481 bytes, +141) at the strip's six ids and the five framed pages, and moved the bar's no-hash gold landing assertion from Start here to What moves gold; 5/5 green. This was the one pin the first pass of the edit script missed, and the guard failed on it with a 30-second `waitForFunction` timeout before the fix.
+- Proved the edit script reproduces the change rather than trusting it: re-run against a pristine `0a64ec5` worktree, it rewrote all three files to byte-identical sha256 values, with a byte delta printed per file and every anchor required to match exactly once.
+- Re-ran the neighbouring guards on the same tree with no npm runner - live trading dashboard, backtesting development release, architecture-map validation, dashboard writer selection and refresh progress - all exit 0.
+- Wrote `docs/GOLD_WHATMOVES_TAB_20261004.md` as the handoff note, naming the bytes, the hashes, the guard results and what was deliberately left alone.
+
+### Important Note
+
+The gold page shows one more framed view and no new figure: nothing on `what-moves-gold.html` was copied, rewritten or re-measured, no rail or bar entry changed, and the frame is lazy so the page pays for it only when a reader opens or reaches it. The one behaviour that did change for a reader is the landing view, which the page's own head comment now states. Publication is a single fast-forward push onto `origin/main`, and a local export is not proof of live deployment.
+
+### Next
+
+- Fast-forward `origin/main` onto `release/gold-whatmoves-tab-20261004` and re-read the live gold page's strip.
+- Read the live page as a reader would at 390px and 1440px and confirm the landed frame renders the published page.
+

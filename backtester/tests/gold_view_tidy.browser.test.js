@@ -1,10 +1,12 @@
 // The gold page was tidied on 2026-10-03: one strip, five views - Start here, Direction, Movement - L2L and half
 // L2L, Factor tables (draft) and Archive census - with the user's standing rule applied, that wherever a rate is
 // printed the direction read and the two movement shares are printed together, each with its own sample count and
-// its own plain-words line. This guard holds the parts a reader would notice if they broke: the five views and
-// their order, the four pages still framed and still carrying their own honesty lines, every printed rate carrying
-// its sample, the direction-and-two-ranges block on each view written into this page, the old census hashes still
-// landing, and a layout that does not scroll sideways at any width the other page guards check.
+// its own plain-words line. On 2026-10-04 the strip gained a first tab, What moves gold, framing the published
+// what-moves-gold.html at the user's word, and that tab is now the view a reader lands on. This guard holds the
+// parts a reader would notice if they broke: the six views and their order, the five pages framed and still
+// carrying their own honesty lines, every printed rate carrying its sample, the direction-and-two-ranges block on
+// each view written into this page, the hashes still landing where they landed, and a layout that does not scroll
+// sideways at any width the other page guards check.
 //
 // It reads gold.html's own source for the markers and opens the page in a browser for the behaviour. It never
 // edits the four framed pages: the tidy was not allowed to touch them, and this guard reads them only to prove
@@ -19,18 +21,21 @@ const { chromium } = require("playwright");
 
 const root = path.resolve(__dirname, "..", "..");
 const PAGE = "gold.html";
-const VIEWS = ["start", "direction", "movement", "factor", "archive"];
-const LABELS = ["Start here", "Direction", "Movement - L2L and half L2L", "Factor tables (draft)", "Archive census"];
+const VIEWS = ["whatmoves", "start", "direction", "movement", "factor", "archive"];
+const LABELS = ["What moves gold", "Start here", "Direction", "Movement - L2L and half L2L", "Factor tables (draft)", "Archive census"];
 const INLINE_VIEWS = ["start", "direction", "movement"];
 const FRAMES = [
+  "what-moves-gold.html",
   "gold-direction-scorecard.html",
   "gold-factor-wip.html",
   "gold-backtesting.html",
   "gold-backtest-outcomes.html",
 ];
-// The four framed pages keep their own honesty markers; the tidy may not have touched them, so the guard reads
-// them here as well as in their own guards.
+// The five framed pages keep their own honesty markers; the tidy may not have touched the four it framed, and the
+// 2026-10-04 tab framed the fifth without editing it either, so the guard reads them all here as well as in their
+// own guards.
 const FRAMED_MARKERS = {
+  "what-moves-gold.html": [/declared expectations/i, /no usable direction/i, /noise floor/i],
   "gold-direction-scorecard.html": [/Research only/i],
   "gold-factor-wip.html": [/what this page is not/i, /\bAs of\b/, /answered/i],
   "gold-backtesting.html": [/25\s+unordered/i],
@@ -72,13 +77,13 @@ function serve() {
   return new Promise(resolve => server.listen(0, "127.0.0.1", () => resolve(server)));
 }
 
-test("the strip carries the five agreed views, in order, each with its own panel", () => {
+test("the strip carries the six agreed views, in order, each with its own panel", () => {
   const source = read(PAGE);
   const tabs = Array.from(
     source.matchAll(/class="goldtabs-tab"[^>]*id="tab-([^"]+)"[^>]*>([\s\S]*?)<\/button>/g),
     match => ({ id: match[1], label: match[2].replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim() }),
   );
-  assert.deepEqual(tabs.map(tab => tab.id), VIEWS, "gold.html must carry the five agreed views in this order");
+  assert.deepEqual(tabs.map(tab => tab.id), VIEWS, "gold.html must carry the six agreed views in this order");
   assert.deepEqual(tabs.map(tab => tab.label), LABELS, "and each view must be labelled as the user confirmed it");
   VIEWS.forEach(view => {
     assert.match(source, new RegExp(`aria-controls="panel-${view}"`), `the ${view} tab must point at its own panel`);
@@ -87,10 +92,10 @@ test("the strip carries the five agreed views, in order, each with its own panel
   assert.equal((source.match(/class="goldtabs-tab"/g) || []).length, VIEWS.length, "the strip and the panels stay one for one");
 });
 
-test("the four pages are still framed, in the tidied order, and none of them was rewritten", () => {
+test("the five pages are still framed, in the strip's order, and none of them was rewritten", () => {
   const source = read(PAGE);
   const frames = Array.from(source.matchAll(/<iframe[^>]*src="([^"]+)"/g), match => match[1]);
-  assert.deepEqual(frames, FRAMES, "gold.html must frame the four pages it always framed");
+  assert.deepEqual(frames, FRAMES, "gold.html must frame the five pages the strip names");
   FRAMES.forEach(file => {
     assert.ok(fs.existsSync(path.join(root, file)), `${file} must still be published at its own address`);
   });
@@ -127,7 +132,7 @@ test("the direction read and both movement shares are printed together on every 
   });
 });
 
-test("the tidied page states what it is not, with its dates, on the view a reader lands on", () => {
+test("the tidied page states what it is not, with its dates, on the Start here view", () => {
   // Read the words, not the line breaks: the page wraps its sentences, and a claim about what the page says must
   // not depend on where a wrap fell.
   const flat = text => text.replace(/\s+/g, " ");
@@ -158,10 +163,13 @@ test("the views open by hash, by click and by arrow key, and the old census hash
   try {
     const context = await browser.newContext({ viewport: { width: 1440, height: 900 } });
     const view = await context.newPage();
-    // A reader arriving with no hash, or with a stale one, lands on Start here rather than on a blank strip.
+    // A reader arriving with no hash, or with a stale one, lands on the strip's first tab - What moves gold, added
+    // on 2026-10-04 - rather than on a blank strip.
     await view.goto(`${base}/${PAGE}`, { waitUntil: "load" });
+    await openView(view, "whatmoves");
+    // The hash the older page named still opens Start here, and the rail's gold entry still lands on Direction.
+    await view.goto(`${base}/${PAGE}#start`, { waitUntil: "load" });
     await openView(view, "start");
-    // The rail's gold entry, and any shared link, still lands on Direction.
     await view.goto(`${base}/${PAGE}#direction`, { waitUntil: "load" });
     await openView(view, "direction");
     // Each view opens by click, and the hash it writes reopens the same view on a reload.
@@ -188,7 +196,7 @@ test("the views open by hash, by click and by arrow key, and the old census hash
       assert.equal(inView, true, `#${hash} must scroll the archive view to ${anchor}`);
     }
     await view.goto(`${base}/${PAGE}#not-a-view`, { waitUntil: "load" });
-    await openView(view, "start");
+    await openView(view, "whatmoves");
     await context.close();
   } finally {
     await browser.close();
@@ -228,6 +236,16 @@ test("no view of the tidied page scrolls sideways at any width the other guards 
       .map(frame => frame.contentDocument.title));
     assert.equal(loaded.length, 2, "the archive view must frame both censuses");
     loaded.forEach(title => assert.match(title, /gold/i, "each census frame must show a gold page"));
+    // The view a reader lands on is a frame too since 2026-10-04, so it has to load like the censuses do.
+    await view.goto(`${base}/${PAGE}`, { waitUntil: "load" });
+    await openView(view, "whatmoves");
+    await view.locator("#frame-whatmoves").scrollIntoViewIfNeeded();
+    await view.waitForFunction(() => {
+      const frame = document.querySelector("#frame-whatmoves");
+      return !!frame && !!frame.contentDocument && frame.contentDocument.readyState === "complete";
+    });
+    const landed = await view.evaluate(() => document.querySelector("#frame-whatmoves").contentDocument.title);
+    assert.match(landed, /gold/i, "the frame the page lands on must show the gold page it names");
     await context.close();
   } finally {
     await browser.close();

@@ -6,6 +6,8 @@
 
 - Added the rail's first outbound entry, `Layer 1 Calls`, to both rail variants in `backtester/partials/shared_nav.html` - an anchor with no `data-tab`, directly under `Architecture` in the `System` group, keeping a tab's shape with a blue marker bar and a `&#8599;` arrow - and wrote it into all ten published pages (`index.html` +12, the other nine +10), so the printable call map is one click from the rail as well as from the bar.
 - Added `docs/LAYER1_CALL_FLOW_RAIL_ENTRY_20261004.md` as the handoff note for this change.
+- Framed the published `what-moves-gold.html` as the gold page's first tab: `gold.html` gained `#tab-whatmoves` / `#panel-whatmoves` (labelled `What moves gold`, `aria-selected="true"`) and the lazy frame `#frame-whatmoves`, the strip's order became the six views, and a reader arriving with no hash or a stale one now lands on that tab rather than on Start here (`#start` still opens Start here); +1,887 bytes.
+- Added `docs/GOLD_WHATMOVES_TAB_20261004.md` as the handoff note for this change.
 
 ### Changed
 
@@ -14,6 +16,10 @@
 - Re-pointed the fourth test of `tests/layer1_call_flow.browser.test.js` from the hand-written rail the page never published to the shared rail's outbound link - label, `target="_top"`, no `data-tab`, and a click that lands on the map; the guard is 4/4.
 - Recorded in `docs/LAYER1_CALL_FLOW_PUBLICATION_20261003.md` that its note about the rail entry being written against a hand-written rail is now superseded by this change.
 - Re-cut this change on `ae9a1f0` after another lane published the tenth page, `what-moves-gold.html`, mid-branch: the bar and rail hunks merged as they were, the only conflict was the navigation guard's `--check` report line, `--write` refreshed `what-moves-gold.html`, and the three navigation comments that still said nine pages were brought up to ten.
+
+- Re-pointed the two guards that pin `gold.html`'s strip at its six views and at the view a reader now lands on: `backtester/tests/gold_view_tidy.browser.test.js` (six views and labels, the five framed pages in document order, `what-moves-gold.html`'s three declared lines, the landing view beside `#start`'s own check, and a load check for the frame a reader now lands on; +1,334 bytes, 7/7) and `backtester/tests/site_nav_consistency.browser.test.js` (the strip's six ids, the five framed pages, and the bar's no-hash gold entry waiting on `#tab-whatmoves` rather than on Start here; +141 bytes, 5/5).
+- Moved the gold page's default view onto its first tab, What moves gold, and made the strip's fallback for a hash it does not name read `order[0]` rather than the literal `start`; `#start`, `#direction` and the two census aliases keep meaning exactly what they meant, and the page's own head comment states the new landing view so nothing is implicit.
+- Re-ran the neighbouring guards on the same tree with no npm runner - live trading dashboard, backtesting development release, architecture-map validation, dashboard writer selection and refresh progress - all green.
 
 ## 2026-10-03
 

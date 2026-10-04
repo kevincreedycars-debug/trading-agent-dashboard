@@ -3,16 +3,18 @@
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Gold - one page with tabs</title>
-<meta name="description" content="The gold work on one page: the caller's own record beside the two movement ranges, how far gold moves, the factor tables draft and the archive censuses, reached from one tab strip.">
+<meta name="description" content="The gold work on one page: what moves the gold price, the caller's own record beside the two movement ranges, how far gold moves, the factor tables draft and the archive censuses, reached from one tab strip.">
 <!--
-  Gold on one page. The tab strip runs: Start here, Direction, Movement - L2L and half L2L, Factor tables (draft)
-  and Archive census. Start here, Direction and Movement are written into this page and carry no number that is
-  not already published; the other tabs frame the pages that already exist at this site's root -
+  Gold on one page. The tab strip runs: What moves gold, Start here, Direction, Movement - L2L and half L2L, Factor
+  tables (draft) and Archive census. Start here, Direction and Movement are written into this page and carry no
+  number that is not already published; the other tabs frame the pages that already exist at this site's root -
+  what-moves-gold.html (published 2026-10-04 and framed here as the strip's first tab at the user's word),
   gold-direction-scorecard.html, gold-factor-wip.html (draft), gold-backtesting.html and
   gold-backtest-outcomes.html (the two archive censuses). No framed page is copied, rewritten or re-measured here,
-  every old address still works, and no figure on this page is new to the site. Every rate printed here carries
-  the direction read, the half-L2L share and the full-L2L share together, each with its own sample count and its
-  own plain-words line, which is the rule the user set on 2026-10-03.
+  every old address still works, and no figure on this page is new to the site. A reader arriving with no hash, or
+  with one the strip does not name, lands on the first tab, What moves gold; #start still opens Start here. Every
+  rate printed here carries the direction read, the half-L2L share and the full-L2L share together, each with its
+  own sample count and its own plain-words line, which is the rule the user set on 2026-10-03.
 -->
 <link rel="stylesheet" href="styles.css">
 <style>
@@ -172,13 +174,15 @@ body > aside.site-nav.side-rail ~ *{margin-left:232px;max-width:calc(100% - 232p
       <h1>Gold</h1>
       <p>Everything the gold work holds, on one page - tidied so the direction read, the full L2L range and the half
       L2L range are always shown together, and the archive censuses sit at the end where they belong. Each framed tab
-      is the page it always was, with its own numbers and its own warnings; nothing here is recalculated.</p>
+      is the page it always was, with its own numbers and its own warnings; nothing here is recalculated. The strip
+      opens on What moves gold, the page published on 4 October 2026.</p>
     </div>
     <p><a href="index.html">Back to the dashboard</a></p>
   </header>
 
   <div class="goldtabs-tabs" role="tablist" aria-label="Gold views">
-    <button class="goldtabs-tab" role="tab" id="tab-start" aria-controls="panel-start" aria-selected="true">Start here</button>
+    <button class="goldtabs-tab" role="tab" id="tab-whatmoves" aria-controls="panel-whatmoves" aria-selected="true">What moves gold</button>
+    <button class="goldtabs-tab" role="tab" id="tab-start" aria-controls="panel-start" aria-selected="false">Start here</button>
     <button class="goldtabs-tab" role="tab" id="tab-direction" aria-controls="panel-direction" aria-selected="false">Direction</button>
     <button class="goldtabs-tab" role="tab" id="tab-movement" aria-controls="panel-movement" aria-selected="false">Movement - L2L and half L2L</button>
     <button class="goldtabs-tab" role="tab" id="tab-factor" aria-controls="panel-factor" aria-selected="false">Factor tables <span class="goldtabs-draft">(draft)</span></button>
@@ -186,7 +190,21 @@ body > aside.site-nav.side-rail ~ *{margin-left:232px;max-width:calc(100% - 232p
   </div>
 
   <div class="goldtabs-panels">
-    <section class="goldtabs-panel is-open" id="panel-start" role="tabpanel" aria-labelledby="tab-start" tabindex="0">
+    <section class="goldtabs-panel is-open" id="panel-whatmoves" role="tabpanel" aria-labelledby="tab-whatmoves" tabindex="0">
+      <div class="goldtabs-note">
+        <p class="goldtabs-lede">The published page "What moves the gold price", framed here as the strip's first
+        view: the ten declared factors, the direction each one pushes gold, the share of the picture the system gives it
+        out of 100, and the 28 declared readings the gold agent is allowed to read. The page states its own caveat
+        before a reader reaches a row, and nothing is recalculated here.</p>
+        <p class="goldtabs-caveat">Its directions are the agent's declared expectations, written by the system and not
+        findings from the data; the page carries the archive's own verdict that it returned no usable direction, and
+        that the one daily row at the threshold is the noise floor. The page also stands alone at its own address,
+        what-moves-gold.html, and it is the same page the bar reaches from every page.</p>
+      </div>
+      <iframe id="frame-whatmoves" title="What moves the gold price" src="what-moves-gold.html" loading="lazy"></iframe>
+    </section>
+
+    <section class="goldtabs-panel" id="panel-start" role="tabpanel" aria-labelledby="tab-start" tabindex="0">
       <div class="goldtabs-note">
         <p class="goldtabs-lede">Six lines, then the tabs above for the detail. Nothing on this page is recalculated
         and no figure on it is new to the site.</p>
@@ -366,7 +384,7 @@ body > aside.site-nav.side-rail ~ *{margin-left:232px;max-width:calc(100% - 232p
     </section>
   </div>
 
-  <p class="goldtabs-foot">The four framed pages stay reachable at their own addresses, so old links keep working;
+  <p class="goldtabs-foot">The five framed pages stay reachable at their own addresses, so old links keep working;
   a shared link that names one of the two censuses (#backtesting, #outcomes) opens the archive tab and scrolls to the
   page it names. The draft tab is a live draft: its own banner says what it is and what it is not. Nothing on this
   page is recalculated, no figure on it is new to the site, and every rate it prints carries the direction read, the
@@ -375,10 +393,11 @@ body > aside.site-nav.side-rail ~ *{margin-left:232px;max-width:calc(100% - 232p
 
 <script>
 (function () {
-  const order = ['start', 'direction', 'movement', 'factor', 'archive'];
-  // The two archive censuses were tabs of their own before the tidy, so a bookmark or a shared link that named one
-  // of them must still land on it: it opens the archive tab and scrolls to that page. The rail's gold entry and the
-  // user's own #direction keep meaning exactly what they meant.
+  const order = ['whatmoves', 'start', 'direction', 'movement', 'factor', 'archive'];
+  // The published What moves gold page was framed as the strip's first tab on 2026-10-04, at the user's word, so a
+  // reader arriving with no hash lands on it. The two archive censuses were tabs of their own before the tidy, so a
+  // bookmark or a shared link that named one of them must still land on it: it opens the archive tab and scrolls to
+  // that page. #start, the rail's gold entry and the user's own #direction keep meaning exactly what they meant.
   const aliases = {
     backtesting: { tab: 'archive', anchor: 'frame-backtesting' },
     evidence: { tab: 'archive', anchor: 'frame-backtesting' },
@@ -389,7 +408,7 @@ body > aside.site-nav.side-rail ~ *{margin-left:232px;max-width:calc(100% - 232p
 
   function show(name, focus) {
     const alias = aliases[name];
-    const target = order.includes(name) ? name : alias ? alias.tab : 'start';
+    const target = order.includes(name) ? name : alias ? alias.tab : order[0];
     order.forEach((key, index) => {
       const isOpen = key === target;
       tabs[index].setAttribute('aria-selected', isOpen ? 'true' : 'false');
