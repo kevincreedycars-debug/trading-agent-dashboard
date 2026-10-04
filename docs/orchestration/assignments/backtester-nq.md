@@ -232,3 +232,61 @@ Lane-specific facts to confirm rather than assume:
 Reporting is unchanged from this file's own "Reporting (mandatory)" section: one envelope through the shared
 mailbox, `monitor-state.js activity backtester-nq working|paused "<task>"`, then pause. File a
 blocker when it is found, not at the end.
+
+---
+
+## Stage B.2 revision, published 2026-10-04: complete the authorised NQ window (the 105-day tail)
+
+Published by the coordinator as the user's delegate on 2026-10-04, under the user's own 2026-10-04 tandem
+instruction recorded in `docs/orchestration/DECISIONS.md` (the seven `backtester-<asset>` foundation-data
+revisions are published in tandem). This section bounds, and does not expand, the Stage B revision above: it
+carries the one remaining piece of that mandate's own window across `2022-10-01` -> `2026-09-30`, and nothing
+else. It was published with the acceptance of submission `20261004-backtester-nq-001-stage-b`, whose reviewed
+bytes record the front-window load and its evidence.
+
+Why it exists. The Stage B revision's step 3 authorises acquisition over the whole window, but the load it
+delivered stops at `2026-04-30`: the calendar audit finds `uncovered_tail_expected_trading_days` **105** to
+`2026-09-30`, and the lane records that as its own blocker 1. Nothing in the mandate authorised stopping at the
+front window, so the tail is authorised work that is not yet done rather than new scope.
+
+Authorised, in this order, and nothing else:
+
+1. Acquire only the tail `2026-05-01` -> `2026-09-30` from the proven, credential-free Yahoo Finance chart API
+   v8 daily route the front window already used, and import it through the production
+   `backtester/importers/qqq/import_qqq_daily.js` into `historical_price_series` for
+   `instrument_key = 'qqq_nq_proxy'`, `interval = 'daily'`, appending only. Do not re-acquire, rewrite or
+   delete the existing 897 rows, and do not re-run the front window.
+2. Keep the basis unchanged from what is already loaded: `is_adjusted = true` with
+   `adjustment_type = 'source_adjusted_close'` (Yahoo adjclose), the same basis as every existing
+   `qqq_nq_proxy` row. This section does not settle the daily-series basis question, which stays the user's; it
+   only requires the tail to match what is already in the spine. If the user answers the basis question with a
+   change before the tail is acquired, stop and re-file instead of acquiring under a superseded basis.
+3. Give the new rows their own `historical_source_manifests` row carrying `coverage_start`, `coverage_end`,
+   `row_count`, a `checksum` over the exact bytes of the normalised import bundle, and
+   `import_mode = 'historical_backfill'`, as the Stage B revision requires. Do not modify the existing manifest
+   rows, and do not touch the pre-existing `74141dc6-...` row.
+4. Prove the load, do not assert it: rows loaded, min and max date, day count per calendar year, the gaps and
+   their cause, the duplicate check on the natural key, the sha256 of the untouched vendor response and of the
+   bundle you loaded. Then re-run the calendar audit over the **full merged span** to `2026-09-30` and
+   re-measure **both** seams like-for-like - the existing `2024-01-02` join and the new `2026-05-01` join the
+   tail creates. The tail is a third acquisition vintage of an adjusted series, so its seam must be measured,
+   not assumed.
+5. Update `docs/backtester-nq/READINESS.md`: the foundation section, the calendar and seam subsections, and the
+   register-identity line whose assignment blob changes with this revision (this append moves
+   `docs/orchestration/assignments/backtester-nq.md` off blob `0165e33ed49b944298f3389b9af2fe36addaebd7`).
+6. Keep the raw pull and load log in the lane's ignored `backtester/tmp/`; file exactly one envelope through the
+   shared mailbox with the exact commands, results, artifact hashes, blockers and questions; record
+   `node D:/trading-agent-dashboard-codex/scripts/monitor-state.js activity backtester-nq working|paused
+   "<task>"`; then pause. The lane starts no further work until a recorded reply arrives.
+
+Still not authorised, unchanged from the Stage B boundaries and non-negotiable: no builder, checker, validator,
+registry, fixture, session policy, outcome definition, factor ranking, adapter, matrix runner, scheduler or
+backtester source; no read of any outcome, holdout or prospective observation; no basis change, no instrument
+change (the QQQ ETF proxy stays the instrument of record until the user rules otherwise), no window
+freeze-versus-roll decision; no Layer 1 or Layer 2 file, dashboard, n8n workflow, credential, warehouse-schema,
+production or deployment action. Layer 1 stays sealed and independent and backtesting stays downstream only.
+
+Open and the user's, unchanged and not answered here: question 1 (the daily-price basis of record), question 2
+(close-to-close versus a true NY open-to-close horizon), and question 4 (whether `qqq_nq_proxy` remains the NQ
+instrument of record). Question 3 (the window end) is answered: the window ends `2026-09-30`, as the Stage B
+revision's agreed target already states.
