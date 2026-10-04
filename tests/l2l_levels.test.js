@@ -113,16 +113,19 @@ test("the committed levels artifact is present and valid", () => {
   assert.equal(state.schema_version, SCHEMA_VERSION);
 });
 
-test("the committed artifact starts every published symbol at zero levels", () => {
+test("the committed artifact publishes exactly the known symbols and only valid marks", () => {
   const state = JSON.parse(fs.readFileSync(levelsPath, "utf8"));
   assert.deepEqual(
     state.instruments.map(instrument => instrument.symbol),
     KNOWN_INSTRUMENTS.map(entry => entry.symbol)
   );
+  // The marks in this file are the user's own judgement, made on the mirrored chart and committed by
+  // the page's own store, so the guard keeps their shape and provenance honest rather than requiring
+  // the file to be empty. A symbol nothing is marked for still ships an empty levels array.
   state.instruments.forEach(instrument => {
     assert.ok(Array.isArray(instrument.levels), `${instrument.symbol} needs a levels array`);
-    assert.equal(instrument.levels.length, 0);
   });
+  assert.deepEqual(validateLevelsState(state), []);
   assert.equal(DEFAULT_STATE_PATH, "data/l2l-levels.json");
 });
 
