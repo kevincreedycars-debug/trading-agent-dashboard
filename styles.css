@@ -8421,7 +8421,14 @@ body {
 /* The canvas is a charting terminal's, not a bar strip: one dark surface with the price scale down the
    right edge, the time scale along the bottom, the volume histogram under the price pane, the newest
    price tagged on the scale and a crosshair that follows the pointer. */
-.live-trading-chart-plot { position: relative; min-width: 0; overflow: hidden; border: 1px solid #233246; border-radius: 8px; background: #131722; }
+/* The pane is dragged, so it says so: the grab cursor is the whole advertisement, `touch-action: none` keeps a
+   finger drag on the chart from scrolling the page under it, and the text inside the canvas is not selectable,
+   because a drag across it would otherwise leave a highlight behind. Marking keeps its own crosshair cursor,
+   which is declared further down and wins over the grab while it is armed; a drag in flight wins over both,
+   because the picture is moving under the pointer and that is the one thing the cursor has to say. */
+.live-trading-chart-plot { position: relative; min-width: 0; overflow: hidden; border: 1px solid #233246; border-radius: 8px; background: #131722; cursor: grab; touch-action: none; user-select: none; }
+.live-trading-chart-plot.panning,
+.live-trading-chart-plot.panning.marking { cursor: grabbing; }
 .live-trading-chart-canvas { position: relative; min-width: 0; }
 .live-trading-chart-svg { display: block; width: 100%; height: auto; }
 .live-trading-chart-bg { fill: #131722; }

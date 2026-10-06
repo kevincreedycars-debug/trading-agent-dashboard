@@ -13957,28 +13957,89 @@ let liveTradingLadderSteps = { above: null, below: null };
 const LIVE_TRADING_CHART_NEAR_LEVELS = 2;
 let liveTradingChartFitLevels = false;
 // How far the price pane is magnified: 1 draws every bar the snapshot publishes for the timeframe on
-// screen, and each step after that halves the window again. The window is always the newest bars - a chart
-// that jumped to another stretch of history would not be a view of the close the rule reads - and the price
-// scale is rebuilt from the bars that are drawn, so the two nearest marked lines each side stay on screen at
-// every magnification. That is the reason the control exists: zooming in widens the candles, it never puts
-// the ladder off the picture. A floor of bars keeps the last steps a chart rather than a stripe.
+// screen, and each step after that halves the window again. The window opens on the newest bars - a chart
+// that jumped to another stretch of history by itself would not be a view of the close the rule reads - and
+// the price scale is rebuilt from the bars that are drawn, so the two nearest marked lines each side stay on
+// screen at every magnification. That is the reason the control exists: zooming in widens the candles, it
+// never puts the ladder off the picture. A floor of bars keeps the last steps a chart rather than a stripe.
+// The reader may then drag that window and that scale with the pointer: those two offsets are the `pan`
+// below, they are views rather than settings, and the double-click is the way back from them.
 const LIVE_TRADING_CHART_ZOOM_STEPS = [1, 2, 4, 8];
 const LIVE_TRADING_CHART_MIN_BARS = 12;
 let liveTradingChartZoom = 1;
+// The reader's drag, in the two directions a chart can be dragged: `bars` is how far the window has been slid
+// back from the newest bar, in bar widths, and `price` is how far the price scale has been pushed up or down the
+// pane, as a fraction of its height, positive when the hand went down. Both are zero on the view the page opens
+// on, so a page nobody has dragged draws exactly what it drew before the drag existed, and both stop at their
+// ends rather than wrapping: there is no published bar before the oldest, and a scale pushed clean off the pane
+// would be a blank canvas. A drag is not written to the tab state - the reader's hand is not a setting - so the
+// caption states it while it is in force and the double-click is the way back.
+let liveTradingChartPanBars = 0;
+let liveTradingChartPanPrice = 0;
+// The drag in flight, if any: the pointer it belongs to, where it was pressed, the view it started from and the
+// two numbers that turn a pointer move into a move of the pane. Null between drags, so the pointer handlers
+// know whether a pointer over the canvas is reading it with the crosshair or moving it.
+let liveTradingChartDrag = null;
+// A drag that moved ends in a click on the canvas. That click is the tail of the drag rather than a press of
+// anything, so it is swallowed once and a pan never also marks a level. It is cleared by the next press, so a
+// drag whose click never arrives cannot eat an unrelated one.
+let liveTradingChartSwallowClick = false;
+// The ends of a vertical drag, as a fraction of the pane's height: three quarters either way keeps a part of
+// the window the bars were fitted into on the picture, so the scale is moved rather than lost.
+const LIVE_TRADING_CHART_PAN_MAX_PRICE = 0.75;
+// How far the pointer must travel before a press is a drag rather than a press. Under it nothing moves and the
+// click is still the click it was going to be, which is what keeps marking a level and pressing a control
+// inside the canvas working through these handlers.
+const LIVE_TRADING_CHART_PAN_SLOP = 4;
+// The smallest move of the pane that redraws it, in canvas units - under two pixels on screen at any window
+// size. A drag is stepped rather than continuous because a redraw is the whole panel, about seven milliseconds
+// here: a step a pointer move keeps the picture with the pointer, a redraw per pixel does not.
+const LIVE_TRADING_CHART_PAN_UNITS = 2;
 
-// The bars the price pane draws: the newest `drawn` of the block, with what was left out stated beside it
-// rather than silently dropped. A purely geometric helper so the toolbar, the caption and the plot all read
-// the same window from the same numbers.
-function liveTradingChartWindow(points, zoom) {
+// How far the window of bars may be slid: back to the oldest published bar and no further, and no more than a
+// quarter of the picture past the newest one, or the floor of bars, whichever is smaller - room to take the
+// newest candle off the price scale, never room to lose the bar the rule reads. One function, so the drag, the
+// drawn window and the caption all stop at the same ends.
+function liveTradingChartPanLimit(total, fill) {
+  const bars = Math.max(0, Number(total) || 0);
+  const windowBars = Math.max(1, Number(fill) || 1);
+  return {
+    behind: Math.max(0, bars - windowBars),
+    ahead: Math.min(LIVE_TRADING_CHART_MIN_BARS, windowBars / 4)
+  };
+}
+
+// The bars the price pane draws: the newest `fill` of the block, slid `back` bars along by the reader's drag,
+// with what was left out stated beside it rather than silently dropped. A purely geometric helper, so the
+// toolbar, the caption and the plot read the same window from the same numbers, and the drag's offset is
+// clamped once here rather than at every reader of it.
+function liveTradingChartWindow(points, zoom, back = 0) {
   const all = Array.isArray(points) ? points : [];
   const step = LIVE_TRADING_CHART_ZOOM_STEPS.includes(Number(zoom)) ? Number(zoom) : 1;
-  const wanted = Math.min(all.length, Math.max(LIVE_TRADING_CHART_MIN_BARS, Math.ceil(all.length / step)));
+  const fill = Math.min(all.length, Math.max(LIVE_TRADING_CHART_MIN_BARS, Math.ceil(all.length / step)));
+  const limit = liveTradingChartPanLimit(all.length, fill);
+  const wanted = Number.isFinite(Number(back)) ? Number(back) : 0;
+  const behind = Math.min(limit.behind, Math.max(0, wanted));
+  const ahead = Math.min(limit.ahead, Math.max(0, -wanted));
+  // `left` is where the window starts on the block, counted in bars: the newest window - what the pane opens
+  // on - is at the block's own count minus the fill, and dragging slides it down from there. Bars are drawn
+  // while their centres are on the picture, so the count follows the drag and the ends cull one bar at a time
+  // rather than running half a candle off the canvas.
+  const left = Math.max(0, all.length - fill) - behind + ahead;
+  const first = Math.min(Math.max(0, Math.ceil(left - 0.5)), Math.max(0, all.length - 1));
+  const last = Math.min(all.length - 1, Math.floor(left + fill - 0.5));
+  const drawn = last >= first ? last - first + 1 : 0;
   return {
-    points: wanted >= all.length ? all.slice() : all.slice(all.length - wanted),
+    points: drawn ? all.slice(first, first + drawn) : [],
     total: all.length,
-    drawn: wanted,
-    hidden: Math.max(0, all.length - wanted),
-    step
+    fill,
+    first,
+    drawn,
+    hidden: Math.max(0, all.length - drawn),
+    step,
+    left,
+    behind,
+    ahead
   };
 }
 
@@ -13989,6 +14050,56 @@ function liveTradingChartZoomNext(current, direction) {
   const index = LIVE_TRADING_CHART_ZOOM_STEPS.indexOf(step);
   const wanted = index + (Number(direction) > 0 ? 1 : -1);
   return LIVE_TRADING_CHART_ZOOM_STEPS[Math.min(LIVE_TRADING_CHART_ZOOM_STEPS.length - 1, Math.max(0, wanted))];
+}
+
+// One axis of a drag: the offset the pointer asks for, rounded onto the smallest step the pane redraws on and
+// held between the ends it may reach. Both axes step the same way, so a drag moves in even increments whichever
+// way it is pulled and a hand that returns to where it started puts the number back exactly.
+function liveTradingChartPanStep(value, step, low, high) {
+  const size = Number(step) > 0 ? Number(step) : 1;
+  const stepped = Math.round(Number(value) / size) * size;
+  return Math.max(low, Math.min(high, stepped));
+}
+
+// The pane following one pointer move: both axes move together, so a drag is one gesture rather than two
+// controls, and both distances are the pointer's own, turned into the canvas the reader is looking at. Nothing
+// happens until the pointer has travelled far enough to be a drag, and then only when a step has been crossed,
+// so a press with a shaking hand is still a press and a slow drag is still smooth.
+function liveTradingChartPanDrag(event) {
+  const drag = liveTradingChartDrag;
+  if (!drag || !event || event.pointerId !== drag.pointerId) return;
+  if (!drag.moved) {
+    const travel = Math.max(Math.abs(event.clientX - drag.clientX), Math.abs(event.clientY - drag.clientY));
+    if (travel < LIVE_TRADING_CHART_PAN_SLOP) return;
+    drag.moved = true;
+  }
+  const across = (event.clientX - drag.clientX) / drag.factor;
+  const down = (event.clientY - drag.clientY) / drag.factor;
+  const limit = liveTradingChartPanLimit(drag.total, drag.fill);
+  const back = liveTradingChartPanStep(
+    drag.back + (across * drag.fill) / drag.plotWidth,
+    (LIVE_TRADING_CHART_PAN_UNITS * drag.fill) / drag.plotWidth,
+    -limit.ahead,
+    limit.behind
+  );
+  const price = liveTradingChartPanStep(
+    drag.price + down / drag.plotHeight,
+    LIVE_TRADING_CHART_PAN_UNITS / drag.plotHeight,
+    -LIVE_TRADING_CHART_PAN_MAX_PRICE,
+    LIVE_TRADING_CHART_PAN_MAX_PRICE
+  );
+  if (back === liveTradingChartPanBars && price === liveTradingChartPanPrice) return;
+  liveTradingChartPanBars = back;
+  liveTradingChartPanPrice = price;
+  renderLiveTrading(liveTradingData || {});
+}
+
+// Putting the view back where the page opened it: the newest window of bars and the price scale the bars and
+// their nearest lines make. The controls that change what is being looked at - another pair or timeframe, the
+// level fit - put the pane back with them, and so does a double click, which is the reader's own way back.
+function liveTradingChartResetView() {
+  liveTradingChartPanBars = 0;
+  liveTradingChartPanPrice = 0;
 }
 
 // The rule the pairs are traded by, as one shared module: lib/l2l_strategy.js, loaded ahead of this file by
@@ -14506,6 +14617,18 @@ function liveTradingMarkedPriceFromPointer(svg, clientY) {
   if (!(span > 0)) return null;
   const price = scale.max - ((view.y - scale.plotY0) / (scale.plotY1 - scale.plotY0)) * span;
   return Math.min(scale.max, Math.max(scale.min, price));
+}
+
+// The canvas a pointer is over, or null when it is over anything else on the panel. A press on the pane captures
+// the pointer so that a drag survives the redraw under it, and the browser then reports the click that ends the
+// press on the capture target rather than on the canvas the press began on: for that one gesture the click's
+// target stops being the answer to "was this on the chart". The pointer's own position is, and this is it.
+function liveTradingChartPlotAt(panel, clientX, clientY) {
+  const plot = panel?.querySelector?.(".live-trading-chart-plot");
+  if (!plot || !Number.isFinite(clientX) || !Number.isFinite(clientY)) return null;
+  const rect = plot.getBoundingClientRect();
+  const inside = clientX >= rect.left && clientX <= rect.right && clientY >= rect.top && clientY <= rect.bottom;
+  return inside ? plot : null;
 }
 
 // Price scales label round numbers, not arbitrary fractions of the window: the raw span is rounded
@@ -15049,10 +15172,11 @@ function liveTradingChartPlot(instrument, mode, timeframeKey, ruleReading = null
       tick_volume: Number.isFinite(Number(bar.tick_volume)) ? Number(bar.tick_volume) : null
     }))
     : closes.map(point => ({ time_utc: point.time_utc, value: Number(point.close) }));
-  // The reader's zoom, applied once, here: the pane draws the newest `drawn` bars of the block and every mark
-  // on it - candles, volume, the time scale, the trades, the crosshair - is drawn from that same slice, so
-  // nothing is ever placed against a bar that is not on screen. The bars left out are counted on the caption.
-  const barWindow = liveTradingChartWindow(allPoints, liveTradingChartZoom);
+  // The reader's zoom and drag, applied together, here: the pane draws the `drawn` bars of the block the window
+  // describes, and every mark on it - candles, volume, the time scale, the trades, the crosshair - is drawn from
+  // that same slice, so nothing is ever placed against a bar that is not on screen. The bars left out are
+  // counted on the caption, and how far the window has been dragged is stated there too.
+  const barWindow = liveTradingChartWindow(allPoints, liveTradingChartZoom, liveTradingChartPanBars);
   const points = barWindow.points;
 
   const prices = bars.length
@@ -15101,6 +15225,15 @@ function liveTradingChartPlot(instrument, mode, timeframeKey, ruleReading = null
   const headroom = (max - min) * 0.06;
   min -= headroom;
   max += headroom;
+  // The reader's vertical drag moves the scale rather than shrinking it: the window the bars and their nearest
+  // lines made keeps its span and is pushed the way the hand went, so a downward drag draws the whole picture
+  // lower and brings higher prices into view, and the gridlines, the candles, the levels and the crosshair all
+  // read off the one moved scale. Zero - the view the page opens on - leaves that fit exactly as the bars made it.
+  if (liveTradingChartPanPrice) {
+    const shift = Math.max(-LIVE_TRADING_CHART_PAN_MAX_PRICE, Math.min(LIVE_TRADING_CHART_PAN_MAX_PRICE, liveTradingChartPanPrice)) * (max - min);
+    min += shift;
+    max += shift;
+  }
 
   const width = 1600;
   const height = 640;
@@ -15117,7 +15250,9 @@ function liveTradingChartPlot(instrument, mode, timeframeKey, ruleReading = null
   const plotY1 = (volumeHeight ? volumeY0 : timeScaleY) - 10;
   const plotW = plotX1 - plotX0;
   const plotH = plotY1 - plotY0;
-  const xAt = index => plotX0 + (plotW * (index + 0.5)) / points.length;
+  // A bar sits where the window puts it rather than where the slice does: `first` and `left` are the window, so
+  // the picture slides through the block and the bars keep their spacing, at every magnification and every drag.
+  const xAt = index => plotX0 + (plotW * (index + barWindow.first + 0.5 - barWindow.left)) / barWindow.fill;
   const yAt = price => plotY0 + ((max - price) / (max - min)) * plotH;
   const yVolume = value => volumeY0 + volumeHeight - volumeHeight * Math.min(1, value / maxVolume);
   // Bars carry `close`, a legacy close_series carries `value`: the line and area fallbacks read whichever
@@ -15128,8 +15263,10 @@ function liveTradingChartPlot(instrument, mode, timeframeKey, ruleReading = null
   liveTradingChartScale = { width, height, plotY0, plotY1, min, max };
   // The crosshair needs the rest of the same geometry, plus where each bar sits on the canvas.
   liveTradingChartScale.bars = points.map((point, index) => Object.assign({ x: xAt(index) }, point));
-  liveTradingChartScale.view = { plotX0, plotX1, plotY0, plotY1, timeScaleY, axisWidth, digits, mode: effectiveMode, window: { total: barWindow.total, drawn: barWindow.drawn, hidden: barWindow.hidden, step: barWindow.step } };
-  const bodyWidth = Math.max(1.2, Math.min(16, (plotW / points.length) * 0.68));
+  liveTradingChartScale.view = { plotX0, plotX1, plotY0, plotY1, timeScaleY, axisWidth, digits, mode: effectiveMode, window: { total: barWindow.total, fill: barWindow.fill, drawn: barWindow.drawn, hidden: barWindow.hidden, step: barWindow.step, left: barWindow.left, behind: barWindow.behind, ahead: barWindow.ahead } };
+  // The bar width follows the same window as the bars themselves, so a drag that culls a bar at an end widens
+  // the candles to match rather than leaving them a step out of place.
+  const bodyWidth = Math.max(1.2, Math.min(16, (plotW / barWindow.fill) * 0.68));
   const gridStep = liveTradingGridStep(max - min, 8);
   const gridLines = [];
   const priceLabels = [];
@@ -15281,7 +15418,7 @@ function liveTradingChartPlot(instrument, mode, timeframeKey, ruleReading = null
       </g>`;
 
   const watermark = `${instrument?.symbol || ""} \u00b7 ${frame.label}`;
-  const aria = `${frame.label} ${effectiveMode === "candles" ? "candles" : "close line"} for ${instrument?.symbol || "instrument"}, ${points.length} bars`;
+  const aria = `${frame.label} ${effectiveMode === "candles" ? "candles" : "close line"} for ${instrument?.symbol || "instrument"}, ${points.length} bars. Drag the canvas to slide the window of bars and move the price scale; double-click puts both back.`;
   return `
     <div class="live-trading-chart-canvas">
       ${liveTradingChartLegend(instrument, points, digits)}
@@ -15757,7 +15894,7 @@ function liveTradingChartShell(data, ruleState = null) {
   // the eight-times step. It is a view control, not a write, and it is what makes the reader's floor safe -
   // the price scale is rebuilt from the bars that are drawn, so the two nearest marked lines each side stay
   // on the picture at every magnification, which is the level a five-minute close is read against.
-  const drawnWindow = liveTradingChartWindow(bars.length ? bars : closes, liveTradingChartZoom);
+  const drawnWindow = liveTradingChartWindow(bars.length ? bars : closes, liveTradingChartZoom, liveTradingChartPanBars);
   const zoomIndex = LIVE_TRADING_CHART_ZOOM_STEPS.indexOf(liveTradingChartZoom);
   const zoomedIn = zoomIndex >= LIVE_TRADING_CHART_ZOOM_STEPS.length - 1 || drawnWindow.total <= LIVE_TRADING_CHART_MIN_BARS;
   const zoomButtons = `
@@ -15767,6 +15904,21 @@ function liveTradingChartShell(data, ruleState = null) {
   const zoomNote = drawnWindow.hidden
     ? `${drawnWindow.drawn} of ${drawnWindow.total} ${frame.label} bars drawn (zoom ${drawnWindow.step}\u00d7)`
     : `all ${drawnWindow.total} ${frame.label} bars drawn`;
+  // The reader's drag, stated while it is in force, for the same reason the zoom is: a window that has moved is
+  // a view of the published block, and the reader has to be able to tell it from the block itself. A drag is not
+  // written to the tab state, so the caption is the only record of it outside the picture, and it is counted in
+  // whole bars because that is the unit the window is read in.
+  const draggedBack = Math.round(drawnWindow.behind || 0);
+  const draggedAhead = Math.round(drawnWindow.ahead || 0);
+  const panNote = draggedBack
+    ? `dragged ${draggedBack} bar${draggedBack === 1 ? "" : "s"} back from the newest`
+    : (draggedAhead ? `dragged ${draggedAhead} bar${draggedAhead === 1 ? "" : "s"} past the newest` : "");
+  // The vertical drag, stated the same way: the share is of the pane's own height, and the direction is the
+  // direction the pane moved under the hand rather than the direction the prices in the window went, because
+  // the pane is the thing the reader can check the words against. A downward drag draws the picture lower.
+  const pricePanNote = liveTradingChartPanPrice
+    ? `dragged the price scale ${Number((Math.abs(liveTradingChartPanPrice) * 100).toFixed(1))}% ${liveTradingChartPanPrice > 0 ? "down" : "up"}`
+    : "";
 
   // The plot is drawn first because the caption's line count is a reading of the scale it used: how many
   // published levels are inside the window, and how many sit outside it.
@@ -15823,7 +15975,7 @@ function liveTradingChartShell(data, ruleState = null) {
           <div class="live-trading-chart-modes" role="group" aria-label="Price pane zoom">${zoomButtons}</div>${markingControls}
         </div>
       </div>
-      <div class="live-trading-chart-plot${liveTradingMarking ? " marking" : ""}">${plotHtml}</div>
+      <div class="live-trading-chart-plot${liveTradingMarking ? " marking" : ""}${liveTradingChartDrag ? " panning" : ""}">${plotHtml}</div>
       <p class="live-trading-chart-lag" role="note">${escapeHtml(lagNote)}</p>
       ${ladderNotice}
       <div class="live-trading-chart-levels">${levelChips}</div>
@@ -15835,6 +15987,8 @@ function liveTradingChartShell(data, ruleState = null) {
         <span>Newest ${escapeHtml(frame.label)} bar ${escapeHtml(freshness.label)}${freshness.stale ? " (stale)" : ""}</span>
         <span>${escapeHtml(barCount)}</span>
         <span>${escapeHtml(zoomNote)}</span>
+        ${panNote ? `<span>${escapeHtml(panNote)}</span>` : ""}
+        ${pricePanNote ? `<span>${escapeHtml(pricePanNote)}</span>` : ""}
         ${ruleViewNote ? `<span>${escapeHtml(ruleViewNote)}</span>` : ""}
         <span>${seedLevels.length} seed level${seedLevels.length === 1 ? "" : "s"} \u00b7 ${derivedLevels} derived${escapeHtml(levelViewNote)}${escapeHtml(ladderBounds)}</span>
         ${tradeViewNote ? `<span>${escapeHtml(tradeViewNote)}</span>` : ""}
@@ -15849,6 +16003,12 @@ function setupLiveTradingChart(panel) {
   if (!panel || panel.dataset.liveTradingChartBound === "true") return;
   panel.dataset.liveTradingChartBound = "true";
   panel.addEventListener("click", event => {
+    // A drag that moved ends in a click on whatever was under the pointer. That click is the tail of the drag
+    // rather than a press of a control, so it is swallowed once: a pan must not also mark a level.
+    if (liveTradingChartSwallowClick) {
+      liveTradingChartSwallowClick = false;
+      return;
+    }
     const markButton = event.target.closest("[data-live-chart-mark]");
     if (markButton) {
       liveTradingMarking = !liveTradingMarking;
@@ -15923,6 +16083,9 @@ function setupLiveTradingChart(panel) {
     // widens to the outermost published line.
     const fitButton = event.target.closest("[data-live-chart-fit-levels]");
     if (fitButton && !fitButton.disabled) {
+      // The fit is the scale the bars and their lines make, so a dragged scale is put back with it: the reader
+      // asked for the ladder to fit the picture, not for the ladder to fit a picture they had pushed aside.
+      liveTradingChartResetView();
       liveTradingChartFitLevels = !liveTradingChartFitLevels;
       saveNavigationState();
       renderLiveTrading(liveTradingData || {});
@@ -15942,6 +16105,9 @@ function setupLiveTradingChart(panel) {
     }
     const symbolButton = event.target.closest("[data-live-chart-symbol]");
     if (symbolButton) {
+      // Another pair is another block of bars: a drag on the one before it says nothing about this one, so the
+      // pane opens on the newest window of the pair the reader has just chosen.
+      liveTradingChartResetView();
       liveTradingChartSymbol = symbolButton.dataset.liveChartSymbol || liveTradingChartSymbol;
       saveNavigationState();
       renderLiveTrading(liveTradingData || {});
@@ -15949,6 +16115,9 @@ function setupLiveTradingChart(panel) {
     }
     const timeframeButton = event.target.closest("[data-live-chart-timeframe]");
     if (timeframeButton && !timeframeButton.disabled) {
+      // Another timeframe is another block of bars as well, and one whose newest bar is the only bar the two
+      // have in common: the pane opens on that block's own newest window.
+      liveTradingChartResetView();
       liveTradingChartTimeframe = timeframeButton.dataset.liveChartTimeframe || "m5";
       saveNavigationState();
       renderLiveTrading(liveTradingData || {});
@@ -15961,9 +16130,13 @@ function setupLiveTradingChart(panel) {
       renderLiveTrading(liveTradingData || {});
       return;
     }
-    // A keyboard-activated click carries no coordinates, so only a real pointer marks a level.
-    const plot = event.target.closest(".live-trading-chart-plot");
-    if (plot && liveTradingMarking && liveTradingLevelsCanMark() && event.clientY > 0) {
+    // A keyboard-activated click carries no coordinates, so only a real pointer marks a level. The canvas is
+    // found under the pointer rather than through the event's target, because the press that ends in this click
+    // captured the pointer and the browser aimed the click at the panel instead of the canvas.
+    const plot = event.clientY > 0 && event.clientX > 0 && liveTradingMarking && liveTradingLevelsCanMark()
+      ? liveTradingChartPlotAt(panel, event.clientX, event.clientY)
+      : null;
+    if (plot) {
       const svg = plot.querySelector(".live-trading-chart-svg");
       const price = liveTradingMarkedPriceFromPointer(svg, event.clientY);
       if (price !== null) markLiveTradingLevel(price);
@@ -15990,9 +16163,95 @@ function setupLiveTradingChart(panel) {
   panel.addEventListener("change", event => {
     if (event.target?.closest?.("[data-live-publish-remember]")) liveTradingReadPublishInputs(panel);
   });
+  // A press on the canvas starts a drag: sideways slides the window of bars through the published block, up and
+  // down pushes the price scale, and both follow the pointer together. The press and the pointer are watched on
+  // the panel, and the pointer is captured there, because a drag redraws the panel: the canvas under the pointer
+  // is a different element after every step, and a listener left holding the old one would stop mid-drag. A press
+  // shorter than the slop is not a drag at all - it stays the click it was going to be, which is what keeps
+  // marking a level and the controls inside the canvas working through this handler.
+  panel.addEventListener("pointerdown", event => {
+    if (event.button !== 0 || liveTradingChartDrag) return;
+    const plot = event.target?.closest?.(".live-trading-chart-plot");
+    if (!plot) return;
+    // The level-fit tabs are controls drawn inside the canvas: a press on one is a press on a control rather than
+    // the start of a drag.
+    if (event.target?.closest?.("[data-live-chart-fit-levels]")) return;
+    const scale = liveTradingChartScale;
+    const view = scale?.view;
+    const rect = plot.querySelector(".live-trading-chart-svg")?.getBoundingClientRect?.();
+    const width = Number(scale?.width);
+    const height = Number(scale?.height);
+    const factor = rect && width > 0 && height > 0 ? Math.min(rect.width / width, rect.height / height) : 0;
+    if (!view || !(factor > 0)) return;
+    const fill = Math.max(1, Number(view.window?.fill) || Number(view.window?.drawn) || 1);
+    const total = Math.max(fill, Number(view.window?.total) || fill);
+    const limit = liveTradingChartPanLimit(total, fill);
+    // The press clears the last drag's click before it can be swallowed by it: a press begins a new gesture, and
+    // only the click at the end of this one may be eaten.
+    liveTradingChartSwallowClick = false;
+    liveTradingChartDrag = {
+      pointerId: event.pointerId,
+      clientX: event.clientX,
+      clientY: event.clientY,
+      // The view the drag starts from, clamped, so a pane already at an end is dragged back from the end it is
+      // showing rather than from a number it never had.
+      back: Math.max(-limit.ahead, Math.min(limit.behind, liveTradingChartPanBars)),
+      price: Math.max(-LIVE_TRADING_CHART_PAN_MAX_PRICE, Math.min(LIVE_TRADING_CHART_PAN_MAX_PRICE, liveTradingChartPanPrice)),
+      factor,
+      fill,
+      total,
+      plotWidth: Math.max(1, Number(view.plotX1) - Number(view.plotX0)),
+      plotHeight: Math.max(1, Number(view.plotY1) - Number(view.plotY0)),
+      moved: false
+    };
+    // The crosshair is a reading of the pointer, and the pointer is now moving the pane instead of reading it: it
+    // is put away rather than left frozen over a picture that slides under it.
+    liveTradingChartResetCrosshair(plot);
+    if (panel.setPointerCapture) panel.setPointerCapture(event.pointerId);
+  });
+  // The end of a drag: the pane stays where it was left, and a drag that moved swallows the click it ends in,
+  // because that click is the tail of the drag rather than a press of anything. A cancelled pointer - the browser
+  // taking it for a gesture of its own - ends the drag the same way and has no click to swallow.
+  const liveTradingChartEndDrag = (event, cancelled) => {
+    const drag = liveTradingChartDrag;
+    if (!drag || drag.pointerId !== event.pointerId) return;
+    liveTradingChartDrag = null;
+    liveTradingChartSwallowClick = !cancelled && drag.moved;
+    if (panel.hasPointerCapture?.(event.pointerId)) panel.releasePointerCapture(event.pointerId);
+    // The pointer is still over the canvas, so the crosshair is put back where it was released rather than
+    // waiting for the reader's next move. Nothing is redrawn on release, and the class the drag put on the
+    // picture is a state of the paint, so it is taken off here: the cursor is left as the only sign of it, and
+    // it would otherwise stand as `grabbing` over a still picture until the next refresh redrew one.
+    const plot = panel.querySelector(".live-trading-chart-plot");
+    if (plot) {
+      plot.classList.remove("panning");
+      liveTradingChartCrosshair(plot, event);
+    }
+  };
+  panel.addEventListener("pointerup", event => liveTradingChartEndDrag(event, false));
+  panel.addEventListener("pointercancel", event => liveTradingChartEndDrag(event, true));
+  // Double-click is the reader's own way back from a drag: the newest window of bars and the price scale the bars
+  // and their nearest lines make. It redraws only when there is something to put back, and it is not the marking
+  // click - a mark is one click, and a double click is not one. The canvas under the pointer is read the same way
+  // the marking click reads it, since both clicks of the double click come off captured presses.
+  panel.addEventListener("dblclick", event => {
+    if (!liveTradingChartPlotAt(panel, event.clientX, event.clientY)) return;
+    if (!liveTradingChartPanBars && !liveTradingChartPanPrice) return;
+    liveTradingChartResetView();
+    renderLiveTrading(liveTradingData || {});
+  });
   // The crosshair reads the pointer over the canvas only. Anywhere else on the panel puts it away and
   // leaves the legend on the newest bar, so the canvas never shows a stale reading.
   panel.addEventListener("pointermove", event => {
+    // A drag in flight owns the pointer: the pane follows it and the crosshair stays out of the way, because a
+    // picture sliding under a frozen crosshair reads as two positions at once. The default of the move is
+    // stopped while a drag is in flight so that a drag across the legend or the scale selects no text.
+    if (liveTradingChartDrag) {
+      if (liveTradingChartDrag.pointerId !== event.pointerId) return;
+      event.preventDefault();
+      liveTradingChartPanDrag(event);
+      return;
+    }
     const plot = event.target?.closest?.(".live-trading-chart-plot");
     if (plot) {
       liveTradingChartCrosshair(plot, event);
