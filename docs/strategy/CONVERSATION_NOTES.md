@@ -4091,3 +4091,44 @@ stays unread.
   reports no errors, no pending item, -060 accepted and not stale, and no strategy submission in `pending_review`. User
   discussion continues. If the routing needs revisiting, the reply asks for that to be said here in the notes rather than
   re-filed, and this lane will be read at the next coordination checkpoint.
+
+## 2026-10-06 - he asks whether the icons on the live dashboard can open the matching VS Code window
+
+- His question, in his words: "is there any way to get icons on the live dashboard open the associated
+  VSC instance on my desktop?" The answer given in chat: not from the published page, and the full
+  evidence and the one workable route are in `docs/strategy/DASHBOARD_ICON_TO_WINDOW_FEASIBILITY_20261006.md`.
+- What was measured, not assumed. The published dashboard was fetched read-only today: `index.html`
+  27,121 bytes and `script.js` 850,620 bytes at `script.js?v=20261004-l2l-size-not-typed`. Its Layer 1
+  strip holds eight asset tiles whose icon glyphs are USD dollar sign, EUR euro sign, GOLD `Au`, SILVER
+  `Ag`, NQ `NQ`, BTC bitcoin sign, WTI `Oil` and GBP pound sign. Each tile is a
+  `<button class="layer1-summary-tile" data-agent="...">` whose only handler is `setTab(agent)`, an
+  in-page tab switch. The live script contains no `vscode`, no `Code.exe` and no `openWindow`, and the
+  live HTML contains no `vscode` either. So there is no existing link or placeholder to point at VS Code.
+- Why the public page cannot do it. A web page may not start a desktop program; the only escape is a
+  custom-protocol link, and this project has already measured that route failing to aim: the mailbox
+  bridge records that `vscode://` task URLs are deliberately unused because VS Code routes them to
+  whichever window it chooses, and on 2026-10-04 the harness lane's probe URLs landed in the Live
+  Trading window rather than in the lane's own. The dashboard is also public, so it would disclose this
+  machine's folder names, and such a link could not be verified by the page's own guards.
+- Where it can work, and what is genuinely missing. The desktop monitor already knows each worker's
+  folder - its snapshot carries `folder` for all 18 rows, measured today - and it already holds the
+  launch route that works on this machine: `OpenFile` calls `Process.Start` with `UseShellExecute`, the
+  plain shell association that reopened the lane windows on 2026-10-04 after `Code.exe --new-window`
+  proved inert here. What does not exist is the mapping. The register holds a worktree path per worker
+  and no workspace-file field; eleven `.code-workspace` files live under `tools/`; `gold-research` has
+  none at all and is opened on its folder; and GBP and EUR each have two lanes, so which window an
+  asset icon means is the user's choice and not something to guess.
+- Recommendation filed as -062 (`ready_for_review`): one bounded change in the monitor tool only - a
+  declared worker-to-workspace mapping plus one row action per worker that shell-opens that window,
+  verified with the lane windows already open and recorded per row. Named out of scope: any dashboard
+  page or script, any new dependency, any `vscode://` URL anywhere, and any change to what the monitor
+  reports. Default if he does not choose: build nothing, because this is convenience and fixes no
+  defect; the monitor's rows also carry no per-worker icon today - only a state dot and the attention
+  marker - so an icon there would itself be a small addition and a plain label may serve him better.
+- Two limits stated rather than promised away: VS Code exposes no supported way for another program to
+  raise or focus one particular existing window, so a click may open a second window on the same folder
+  rather than bring the open one forward, and the action works only while the monitor is running.
+- Boundaries of this turn: advisory only. The only files changed are this notes entry and the new
+  feasibility note in `docs/strategy/`. No `tools/` file, dashboard page, script, style, data artifact,
+  workflow, schedule, register entry, credential or production surface was touched, nothing was
+  published, and no outcome or holdout was read.
