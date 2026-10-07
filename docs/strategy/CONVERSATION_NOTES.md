@@ -4132,3 +4132,37 @@ stays unread.
   feasibility note in `docs/strategy/`. No `tools/` file, dashboard page, script, style, data artifact,
   workflow, schedule, register entry, credential or production surface was touched, nothing was
   published, and no outcome or holdout was read.
+
+## 2026-10-07 - -062 accepted: the dashboard-icon answer stands, nothing is built
+
+- Filed, reviewed, accepted. The lane's -062 filing went by mailbox; the immutable inbox copy
+  `.local/orchestration/inbox/strategy/20261006-strategy-dashboard-icons-open-window-062.json` is
+  11,201 bytes at sha256 `403677b0e1299b60469ba92f12260241935a9112a17e40fe7e31740c9daeb1f3`, equal to
+  the `submission_sha256` the reply binds to. Decision: accepted. Reply
+  `.local/orchestration/replies/strategy/20261006-strategy-dashboard-icons-open-window-062.json`,
+  3,279 bytes at sha256 `1c8c5326afa91ed90c3304fa99d37573b9fdf2f7660d721a5ce1f93d58939476`, received
+  2026-10-07. No separate durable review file was written for this filing; the reply is the record.
+
+- What the review reproduced rather than trusted: on `workers/strategy-advisory-20260920` the head is
+  `9d1fc2d` with sole parent `e3b7918` (the declared base), one commit, exactly the two declared files
+  (CONVERSATION_NOTES.md 41/0 and DASHBOARD_ICON_TO_WINDOW_FEASIBILITY_20261006.md 171/0), a clean tree
+  with no untracked file, the note at 11,469 worktree bytes / 171 CRLF / 0 bare LF and sha256
+  `17196439...`, and the filed head present at origin, so the push landed. Tests are recorded as not run
+  because the work is documentation only, which the assignment states needs none.
+
+- What the acceptance does and does not settle. It does not publish an assignment: the register row stays
+  exactly `advisory_active` under `strategy-advisory-001`, and this lane continues as an advisory role.
+  The monitor row-action build the filing proposed is a coordinator-owned `tools/` change and is not
+  authorised by this acceptance; its do-nothing default stands until the user answers the three open
+  points in the note - where the click lives, which window each ambiguous icon means (Gold has no
+  workspace file, and GBP and EUR each have two lanes), and whether a possible second window is accepted.
+  The coordinator keeps the filing's answer as the durable reply to the user's chat question and surfaces
+  those three points and the default to the user.
+
+- Reply-to-reply is owed only if there are new measurements. There are none this turn, so no reply is sent
+  and no new work is started.
+
+- Boundaries of this turn: advisory and documentation only. The only file changed is this notes entry; no
+  `tools/` file, dashboard page, script, style, data artifact, workflow, schedule, register entry,
+  assignment, controller, bridge, credential or production surface was touched, and no outcome, holdout or
+  prospective observation was read.
