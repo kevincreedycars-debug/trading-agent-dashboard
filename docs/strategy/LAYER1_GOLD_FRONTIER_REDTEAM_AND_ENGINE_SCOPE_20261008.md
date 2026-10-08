@@ -218,6 +218,7 @@ L2L and half L2L:
 3. **Frontier review** - evidence: the returned per-element verdicts, quoted, with the model named and the date.
 4. **Red team** - evidence: the findings list, each with its severity and the measurement that would settle it.
 5. **Engine and comparison** - evidence: the engine's graded arm against the four comparison arms (section 6).
+
 Each stage needs the honest status vocabulary that already exists on that surface: complete, active, planned,
 blocked - plus one the user's own wording needs, **needs_you**, for anything waiting on a decision of his. The page
 rules the published family already holds itself to apply here too: a static page with no script, no frame and no
@@ -336,6 +337,24 @@ Limits, stated plainly:
 - **The four documents are not written yet.** They are specified here because three of their seven inputs are the
   user's own unanswered decisions, and writing the element blocks before the rule-set question is answered would
   produce a pack that contradicts the stored calls.
+
+## 10. What happens next, in order, once he answers
+
+1. **Turn his answers into the four documents.** The pack first, because the element blocks and the instructions
+   share the same wording; then the frontier brief and the red-team charter, which only quote the pack.
+2. **Put the element status table in front of him before anything runs**, so the four dark elements cannot quietly
+   become "researched" on the strength of a rule that never fires.
+3. **Hand the per-element work orders to whichever lane is given them**, with the split declared before any read and
+   the verdict vocabulary fixed. The gold research lane's two queued items come first, and its dark-factor repair
+   (`gold-dark-factor-repair-027`) is the natural home for the four dark elements.
+4. **Send the pack out to the frontier models** with the brief, collect the per-element verdicts, and print them
+   beside the evidence rather than instead of it.
+5. **Run the red team** on the same material and publish its findings with their severity, noting that none of them
+   may move a weight.
+6. **Only then build the engine**, because the engine is the thing whose output the whole pack is judged against:
+   the graded three-way arm and the comparison table against today's Layer 1 calls and the Layer 2 XAU/USD calls.
+7. **Publish the page last**, when there is a result to show, with every row naming the artifact behind it.
+
 
 
 
