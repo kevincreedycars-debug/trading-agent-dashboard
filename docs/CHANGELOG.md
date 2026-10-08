@@ -1,5 +1,21 @@
 # Changelog
 
+## 2026-10-08
+
+### Added
+
+- Added `usd-layer1-call-flow.html`, the printable one-page map of how the USD Layer 1 call is made - eight workflow steps, the ten weighted factors with their fifty per-horizon weights, the deterministic score behind the worked 2024-01-09 call, and four honesty limits - together with the five-test guard that travels with it (`tests/usd_layer1_call_flow.browser.test.js`).
+- Added `docs/USD_CALL_FLOW_PUBLICATION_20261008.md` as the handoff note for this release.
+
+### Changed
+
+- Added a seventh bar entry, `USD Call Map`, and a second outbound rail entry of the same label to both variants in `backtester/partials/shared_nav.html`, so the USD sheet is one click from the bar and from the rail on all twelve published pages; the rail keeps its seventeen `data-tab` entries, because the rail drives dashboard views and these two entries leave the dashboard set.
+- Registered the sheet as the twelfth page in `backtester/scripts/build_shared_nav.js` and wrote the block into it with `--write`: the new page placed, the other eleven refreshed, `--check` reading `12 pages, 17 rail entries, 2 outbound, 0 change(s)`.
+- Left the USD sheet's own print block to take the bar and the rail off the sheet and to return `main` to the sheet's left edge, so what a reader prints is still the map alone on one A4 landscape page; its guard holds that alongside the sheet's one-page fit, which is unchanged.
+- Extended `backtester/tests/site_nav_consistency.browser.test.js` with the seventh bar label, its href and `target`, the two outbound label pairs, the updated `--check` report pin, a USD hop from inside `gold.html`'s gold-direction frame, and whole-label filters in the two places that read `Call Map` - which `USD Call Map` now contains as a substring; the guard is 5/5.
+- Extended `tests/usd_layer1_call_flow.browser.test.js` with two tests - the hop from the bar and from the rail into the sheet, and the block on screen with the fixed rail beside the map and the bar and rail `display:none` in print - so the sheet has the same navigation guard the call map has; the guard is 5/5.
+- Re-ran the neighbouring guards on the same tree with no npm runner - the call map 5/5, live-trading dashboard 2/2, levels visibility 2/2, readback 2/2, rule panel 2/2, refresh progress 26/26, backtesting development release 1/1, gold view tidy 7/7, architecture-map validation 7/7, dashboard writer selection 8/8 - all green; `tests/live_trading_chart_pan.browser.test.js` and `tests/live_trading_chart_zoom.browser.test.js` fail identically on this change and on production `0539f1d` (`expected: 120, actual: 576`), so they are pre-existing and untouched here.
+
 ## 2026-10-04
 
 ### Added

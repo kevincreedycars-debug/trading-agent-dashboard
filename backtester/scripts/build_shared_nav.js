@@ -1,7 +1,7 @@
 'use strict';
 
 // Renders the shared navigation block from backtester/partials/shared_nav.html into the published pages,
-// so the eleven copies cannot drift apart again.
+// so the twelve copies cannot drift apart again.
 //
 //   node backtester/scripts/build_shared_nav.js --check            verify every page carries the render
 //   node backtester/scripts/build_shared_nav.js --write            place or refresh the block
@@ -27,7 +27,7 @@ const ORDER = {
   standalone: ['bar-standalone', 'rail-standalone', 'css'],
 };
 
-// The eleven published pages. "place" says what a first placement does: index.html already carries a bar and a
+// The twelve published pages. "place" says what a first placement does: index.html already carries a bar and a
 // rail, so its anchor is the whole span they occupy, from the line break before the bar to the line break
 // after the rail, and the block replaces it rather than joining it. The other ten carry neither, so the
 // block goes in under the body tag and nothing already on the page moves. Once a page carries the markers
@@ -48,6 +48,10 @@ const PAGES = [
   // now, so it carries the block like every other standalone page, and its own print block takes the bar and
   // the rail off the printed sheet, so what a reader prints is still the map alone on one page.
   { file: 'layer1-call-flow.html', variant: 'standalone', place: { mode: 'after', pattern: /<body\b[^>]*>/ } },
+  // Added 2026-10-08, the twelfth page: the USD one-pager is the printable sheet for the USD Layer 1 call, the
+  // USD-only twin of the call map, so it carries the block like the map and its own print block takes the bar and
+  // the rail back off the sheet.
+  { file: 'usd-layer1-call-flow.html', variant: 'standalone', place: { mode: 'after', pattern: /<body\b[^>]*>/ } },
 ];
 
 function readParts() {
@@ -155,7 +159,7 @@ function selfChecks() {
     throw new Error('the two rail variants must offer the same outbound entries in the same order');
   }
   if (!dashboardOutbound.length) {
-    throw new Error('the rail must keep its outbound entry to the printable Layer 1 call map');
+    throw new Error('the rail must keep its outbound entries to the printable call maps');
   }
   if (/data-tab=/.test(standaloneLinks) || /\bhref=/.test(dashboardTabs)) {
     throw new Error('the standalone rail must be plain links and the dashboard rail must be data-tab buttons');

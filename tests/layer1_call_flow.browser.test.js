@@ -14,7 +14,7 @@ const { chromium } = require('playwright');
 // printed, without the print type being shrunk under the legibility floor.
 // The page is reached from the shared top bar and, since 2026-10-04, from the rail's one outbound entry,
 // so the fourth test makes both hops rather than reading either entry's href. Both entries live in
-// backtester/partials/shared_nav.html and are rendered into all eleven published pages by
+// backtester/partials/shared_nav.html and are rendered into all twelve published pages by
 // backtester/scripts/build_shared_nav.js, which is what keeps the dashboard's own copy of them in step
 // with every other page's. Since the same date this page carries that block itself - the map is a page a
 // reader navigates to, not only a sheet - so the fifth test holds the block's two promises about it: the

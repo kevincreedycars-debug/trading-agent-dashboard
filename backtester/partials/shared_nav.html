@@ -1,7 +1,7 @@
 <!--
   Shared navigation block: the one canonical source for the bar, the rail and their CSS.
 
-  This file is not served. backtester/scripts/build_shared_nav.js renders it into the eleven published pages,
+  This file is not served. backtester/scripts/build_shared_nav.js renders it into the twelve published pages,
   between the <!-- SHARED-NAV:START --> and <!-- SHARED-NAV:END --> markers, and
   backtester/tests/site_nav_consistency.browser.test.js compares the bytes of every copy with the render.
   To change the navigation, change this file, then run
@@ -16,15 +16,16 @@
                target="_top" because gold.html shows four of them in frames: an entry clicked inside a
                frame opens the page it names in the window, exactly as it does on a page opened directly.
 
-  Both rails end with the same outbound entry: a link to the printable call map, which leaves the
-  dashboard set for a page of its own rather than opening a view. It is written as a link in both variants
-  for that reason, carries no data-tab so the dashboard's tab binder leaves it alone, and carries
-  target="_top" so the same click inside a gold frame opens the map in the whole window.
+  Both rails end with the same two outbound entries: links to the two printable call maps, the whole picture
+  and the USD one, which leave the dashboard set for pages of their own rather than opening a view. They are
+  written as links in both variants for that reason, carry no data-tab so the dashboard's tab binder leaves
+  them alone, and carry target="_top" so the same click inside a gold frame opens the map in the whole window.
 
-  The printable call map carries this block itself since 2026-10-04: the bar and the rail reach it like any
-  other page, and the map's own @media print block takes both off the sheet, so what a reader prints is still
-  the map alone on one page. A page that carries the block and is meant to print must say so itself - the
-  block never hides itself, because on a dashboard view it is the navigation.
+  The printable call maps carry this block themselves - the whole picture since 2026-10-04, the USD one since
+  2026-10-08: the bar and the rail reach them like any other page, and each map's own @media print block takes
+  both off the sheet, so what a reader prints is still the map alone on one page. A page that carries the block
+  and is meant to print must say so itself - the block never hides itself, because on a dashboard view it is the
+  navigation.
 
   The block brings its own CSS inside <style id="shared-nav-css"> so it looks the same on a page that
   links styles.css and on gold-factor-wip.html, which loads nothing at all. No <link>, <script>, image,
@@ -39,6 +40,7 @@
     <a class="topbar-link" href="gold.html" target="_top">Gold</a>
     <a class="topbar-link" href="backtest-flow.html" target="_top">Backtest Flow</a>
     <a class="topbar-link" href="layer1-call-flow.html" target="_top">Call Map</a>
+    <a class="topbar-link" href="usd-layer1-call-flow.html" target="_top">USD Call Map</a>
     <a class="topbar-link" href="what-moves-gold.html" target="_top">What moves gold</a>
     <span id="currentDate">Loading date...</span>
     <span
@@ -59,6 +61,7 @@
     <a class="topbar-link" href="gold.html" target="_top">Gold</a>
     <a class="topbar-link" href="backtest-flow.html" target="_top">Backtest Flow</a>
     <a class="topbar-link" href="layer1-call-flow.html" target="_top">Call Map</a>
+    <a class="topbar-link" href="usd-layer1-call-flow.html" target="_top">USD Call Map</a>
     <a class="topbar-link" href="what-moves-gold.html" target="_top">What moves gold</a>
   </div>
 </header>
@@ -90,9 +93,11 @@
     <button class="tab-button" data-tab="shadow-logic-backtest">Shadow Logic Backtest</button>
     <span class="side-rail-group">System</span>
     <button class="tab-button" data-tab="architecture">Architecture</button>
-    <!-- The rail's one outbound entry. It leaves the dashboard for the printable call map, so it is an anchor
-         with no data-tab and the tab binder never sees it. -->
+    <!-- The rail's outbound entries leave the dashboard for the printable call maps - the whole picture and the
+         USD one - so they are anchors written the same way in both variants, with no data-tab, and the tab binder
+         never sees them. -->
     <a class="side-rail-link" href="layer1-call-flow.html" target="_top">Call Map</a>
+    <a class="side-rail-link" href="usd-layer1-call-flow.html" target="_top">USD Call Map</a>
   </nav>
   <div class="side-rail-foot">
     <span class="side-rail-status-dot" aria-hidden="true"></span>
@@ -128,6 +133,7 @@
     <span class="side-rail-group">System</span>
     <a class="tab-button" href="index.html#architecture" target="_top">Architecture</a>
     <a class="side-rail-link" href="layer1-call-flow.html" target="_top">Call Map</a>
+    <a class="side-rail-link" href="usd-layer1-call-flow.html" target="_top">USD Call Map</a>
   </nav>
   <div class="side-rail-foot">
     <span class="side-rail-status-dot" aria-hidden="true"></span>

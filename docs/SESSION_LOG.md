@@ -295,3 +295,44 @@ push onto `origin/main`, and a rendered local page is not proof of live deployme
 - Push the branch onto `origin/main` and re-read the live map: the bar and rail on screen, the paper sheet, and the
   one-page print preview.
 
+## 2026-10-08 - the printable USD Layer 1 call map published on the bar and the rail
+
+### Session Goal
+
+Put the USD agent breakdown page on the live dashboard so the user can open it and print it, on the instruction
+"I need to see it live on the dashboard and give me the link once done".
+
+### Completed
+
+- Published `usd-layer1-call-flow.html`, the USD-only twin of the printable call map: eight chain steps, the ten
+  factors with their fifty per-horizon weights, the deterministic score behind the worked 2024-01-09 call, the four
+  honesty limits, and one A4 landscape sheet.
+- Added a seventh bar entry, `USD Call Map`, and a second outbound rail entry of the same label to both variants in
+  `backtester/partials/shared_nav.html`, then wrote the block into all twelve pages with
+  `node backtester/scripts/build_shared_nav.js --write`: `--check` reads `12 pages, 17 rail entries, 2 outbound,
+  0 change(s)`.
+- Added the sheet as the builder's twelfth page, so it carries the bar and the rail itself, and left its print
+  block to take both off the sheet and return `main` to the sheet's left edge.
+- Added the sheet's guard, `tests/usd_layer1_call_flow.browser.test.js`, with two navigation tests on top of the
+  three that hold the picture: the hop from the bar and from the rail, and the block on screen with the bar and the
+  rail gone in print; 5/5.
+- Re-pointed the navigation guard at the twelfth page and the second outbound entry: `BAR_LABELS`, `BAR_HREFS`,
+  `RAIL_OUTBOUND_HREFS`, `RAIL_OUTBOUND_LABELS`, the `--check` report pin, the test name, and the two filters that
+  read `Call Map` and now name the whole label, because `USD Call Map` contains it; 5/5.
+- Re-ran the neighbouring guards on the same tree - the call map, the live-trading set, refresh progress, the
+  backtesting development release, gold view tidy, architecture-map validation and dashboard writer selection - all
+  green.
+
+### Important Note
+
+The rail still holds seventeen dashboard views; the two outbound entries under them are links, not tabs, and the
+sheet is a page a reader prints rather than a view. Two live-trading chart guards fail on this tree and fail
+identically at production `0539f1d` in a detached worktree (`expected: 120, actual: 576`), so they are
+pre-existing and were not touched. Publication is a push onto `origin/main`; a rendered local page is not proof of
+live deployment.
+
+### Next
+
+- Read the live Pages copy back after the push and record the bytes, the hash and the two hops in
+  `docs/USD_CALL_FLOW_PUBLICATION_20261008.md`.
+- Decide whether the two live-trading chart guards should be fixed in the checkout that owns them.
