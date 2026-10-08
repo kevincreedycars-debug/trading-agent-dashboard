@@ -4273,3 +4273,60 @@ stays unread.
   no code, workflow, export, dashboard page, script, style, data artifact, register entry, assignment,
   controller, bridge, credential or production surface was touched, and no outcome, holdout or
   prospective observation was read.
+
+## 2026-10-08 (second turn) - the layer 1 pack, the frontier review, the red team and the daily engine
+
+The user opened with *"Okay lets discuss the needs here"* and then set out a seven-part brief (one shareable
+document on the gold Layer 1 logic and its weights; per-element instructions for a research agent inside the same
+document; staged element-by-element progress on the live dashboard; frontier models confirming or denying the 24hr
+call logic; instructions for a red team; a dashboard phase running a non-LLM engine over historical days and grading
+full L2L, 0.5 L2L and general direction; and a comparison against today's Layer 1 calls and the Layer 2 XAU/USD
+calls, which he said needs the USD Layer 1 calls of the old/current model), closing with *"Confirm you understand
+all this"*.
+
+Written this turn: `docs/strategy/LAYER1_GOLD_FRONTIER_REDTEAM_AND_ENGINE_SCOPE_20261008.md` - the confirmation, the
+requirement map, the honest answer to why the weights are what they are, what already exists, the four documents to
+be written (pack, per-element work orders, frontier brief, red-team charter), the dashboard's five phases and
+element table, the engine's three grades and four comparison arms, and the seven decisions with their defaults. No
+page, code, engine, artifact, weight, register entry or assignment was touched; no credential was accessed.
+
+The three findings that change his plan. **One:** the USD Layer 1 calls of the old/current model already exist on
+disk - `data/backtester-checker-usd-24h-2024-01.json` (21,108,646 bytes, 604 rows, 604 pass, 603 exact plus one
+tolerance) holds the stored call and its outcome label for every row, exactly as the gold archive does for 608 rows,
+and eur/nq/btc hold 602/604/850; the gap is that no USD row is graded under the designated-session definition
+(`data/l2l-trading-day-directional-v1.json` carries 2,493 Layer 1 rows for EUR/Gold/NQ/BTC and 1,592 Layer 2 rows,
+of which XAU/USD is 448 at 46.88%), and that USD has no pair of its own, so the honest design grades the dollars
+side through XAU/USD. **Two:** the three grades he wants already exist per call - terminal direction, half and full
+ADR20 reach, excursions and the three reversal flags, with TRAIN/VALIDATION folds - so the engine phase is mostly a
+grading pass plus a per-day input history, not a new measurement machine; six replay cores and the shared evaluator
+already exist. **Three:** the progress surface he is describing already exists as the Research Proof Map
+(`data/research-proof-map.json`, six stages, a four-point release gate whose second point already demands
+element-by-element assessment before any re-weighting, four performance tiles and a five-item todo list), and the
+page he wants has live siblings - `what-moves-gold.html` with its four sections, and today's new
+`layer1-call-flow.html` and `usd-layer1-call-flow.html`, the USD one already carrying "What moves the call, and how
+each factor votes" and "How the ten votes become the call". The pack should be the gold member of that family.
+
+The honest answer recorded for the pack: the weights are declared, not derived - one vector in the document, five in
+the workflow code, an F2 threshold of 0.30 in the document against 0.15 in code, no derivation record anywhere, and
+the repository's own comment in `backtester/lib/gold_source_readiness.js` that its inputs are *"not a claim of an
+exhaustive economic literature review"*. Four of the ten elements are dark (filed under `-059`).
+
+The seven decisions, each with the default this lane will assume: which rule set is the pack's subject (print both,
+mark the code's 24h vector as what produced the stored rows); whether the model was ever meant to contribute (no -
+guard, and recommend dropping the step); where the ten-day plan and the source book live (state plainly that no
+derivation record exists here); which session defines a trading day (keep the existing graded artifact's session and
+print it as an assumption); what the frontier and red-team work may see (the pack, the digest and the published base
+rates - never the sealed window, and not the row-level archive if a clean holdout is wanted later); whether the
+consumed archives may be used for the engine comparison (yes, they are spent data); and which lanes build the engine
+and the page and who does the per-element research (one new bounded assignment each, with the per-element work
+sequenced behind the two items already queued on the gold research lane, because the one-assignment rule suppresses
+a second job there).
+
+A process note worth keeping: the canonical working tree sits on the coordinator's control-plane branch, which does
+not carry the site pages at all, so the page inventory this turn came from `origin/main` (`e2df9f6`, release
+`usd-call-flow-20261008`) through `git ls-tree` and blob reads - thirteen top-level pages, against the nine a
+working-tree listing shows.
+
+Filed as `20261008-strategy-layer1-pack-frontier-redteam-and-engine-scope-064`, status `ready_for_review`. Nothing
+was built: the four documents wait on the answers above, and the two builds need assignments this lane cannot give
+itself.
