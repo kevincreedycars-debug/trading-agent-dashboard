@@ -38,7 +38,6 @@ or run them, and each needs its own bounded assignment (section 10). Confirmed u
 deliverable is one outside-facing pack that carries the element-by-element truth and the work orders for other
 people, and its progress and its result are then shown on the dashboard as stages, not as prose.
 
-
 ## 2. The honest answer to "why are they weighted as they are"
 
 He will ask the pack this first, so it is answered here before it is dressed up.
@@ -93,9 +92,11 @@ appears in either layer of that artifact**, so USD Layer 1 has never been graded
 **The USD calls of the old/current model do exist and are already parity-checked.** Five 24h checker archives sit on
 disk for 2024-01-02 to 2026-04-30, each holding the stored call arm and the replay-core arm row for row:
 `backtester-checker-gold-24h-2024-2026.json` (608 rows, 608 pass, 608 exact), `backtester-checker-usd-24h-2024-01.json`
-(21,108,646 bytes, 604 rows, 604 pass, 603 exact plus one tolerance pass), `-eur-` (602/602/602), `-nq-`
-(604/604/604), `-btc-` (850/850/850). Every row carries the stored arm's own `evaluation_result` and the
-`evaluation_inputs` (open price, close price, close date), and the evaluation logic is the shared
+(21,108,646 bytes, 604 rows, 604 pass, 603 exact, so exactly one passing row is not an exact match - the archive's own
+`tolerance_pass` counter reads 0, so that single non-exact pass is inferred from pass minus exact rather than read from
+the tolerance counter), `-eur-` (602/602/602), `-nq-` (604/604/604), `-btc-` (850/850/850). Every row carries the
+stored arm's own `evaluation_result` and the `evaluation_inputs` (open price, close price, close date), and the
+evaluation logic is the shared
 `backtester/lib/outcome_evaluation.js`. Outcome counts read this turn: gold CORRECT 223 / WRONG 173 / FLAT 141 /
 NO_CALL 26 / NOT_EVALUABLE 45; usd 197/175/172/15/45; eur 173/184/179/21/45; nq 179/175/177/28/45; btc
 294/187/312/56/1. In all five archives the stored arm and the checker arm agree on `evaluation_result` on every row -
@@ -121,19 +122,21 @@ not duplicated: its job is what the system does today, this pack's job is to be 
 the repository.
 
 **The plain factor table and a per-factor votes page are already live, and a USD one went out today.** Read from
-`origin/main` (`e2df9f6`, release `usd-call-flow-20261008`) rather than from the canonical working tree, which sits on
-the coordinator's control-plane branch and does not carry the site files at all - a trap this note avoided by using
-`git ls-tree` and blob reads. The site has thirteen top-level pages, not the nine the branch checkout shows.
+`origin/main` (`bf13747`, release `usd-call-flow-20261008`) rather than from the canonical working tree, which sits on
+the coordinator's control-plane branch - it carries nine top-level pages, an older set that includes
+`wireframe-next.html` and lacks all four published family pages, and this advisory branch's own checkout carries five.
+A trap this note avoided by using `git ls-tree` and blob reads. The site has **twelve** top-level pages - thirteen HTML
+files counting recursively, which adds `backtester/partials/shared_nav.html` and nothing else.
 `gold.html` carries a six-tab strip: What moves gold, Start here, Direction, Movement - L2L and half L2L, Factor tables
-(draft), Archive census. `what-moves-gold.html` (26,308 bytes, title "What moves the gold price") carries exactly four
-sections - The ten factors, Where the number 28 comes from, What the archive has shown about these directions, What
-this page is not - and mentions weights thirteen times. Published today, `layer1-call-flow.html` (38,674 bytes, "How
-the calls are made") and `usd-layer1-call-flow.html` (34,067 bytes) are the one-page maps of the chain, and the USD
-one already carries the section headings "What moves the call, and how each factor votes" and "How the ten votes
-become the call". **So the pack he is asking for is the gold member of a family that already exists**: the same four
+(draft), Archive census. `what-moves-gold.html` (26,309 bytes - its blob size, the same blob at `e2df9f6` and at the
+tip - title "What moves the gold price") carries exactly four sections - The ten factors, Where the number 28 comes
+from, What the archive has shown about these directions, What this page is not - and mentions weights thirteen times.
+Published today, `layer1-call-flow.html` (38,675 bytes, "How the calls are made") and `usd-layer1-call-flow.html`
+(34,068 bytes) are the one-page maps of the chain, and the USD one already carries the section headings "What moves
+the call, and how each factor votes" and "How the ten votes become the call". **So the pack he is asking for is the
+gold member of a family that already exists**: the same four
 sections as `what-moves-gold.html`, expanded to the eleven-field element block, plus the per-element status table.
 It extends that page rather than opening a fourth parallel surface.
-
 
 **Four of the ten elements are known dark**, filed as `-059`: the inflation signal is a hardcoded stub in the rule
 engine, safe haven has no field to read anywhere, Fed bias is a real live column that the historical builder writes
@@ -293,8 +296,11 @@ Three things, none of which this lane can do:
    for the weights exists in this project and names the day the document was last touched (2026-06-07). Reason: if a
    plan or a book exists outside the repository, it is the only place the weight rationale could be recovered from.
 4. **Which session or close defines a trading day?** Default: keep the session the existing graded artifact already
-   uses (its rows carry evaluation start and end times, roughly 00:00Z to 21:00Z) and print it as an assumption on
-   every table. Reason: this single choice re-defines every outcome in the engine phase.
+   uses and print it as an assumption on every table. Read from the artifact's own rows rather than approximated: the
+   Layer 1 window runs 22:00Z to 21:00Z over 24 hourly candles, the Layer 2 XAU/USD window 23:00Z to 21:00Z over 23
+   candles, and the artifact's stated rule is to use only candles inside the source-defined session for the
+   evaluation date and not to impose midnight-to-midnight or rolling 24-hour windows. Reason: this single choice
+   re-defines every outcome in the engine phase, and the three grades in section 2 are graded under it.
 5. **What may the frontier and red-team work see?** Default: the declared pack, the per-element digest and the
    published base rates - never the sealed window, and not the row-level archive if a clean holdout is wanted later.
    Reason: a model that is shown the outcomes will invent weights that fit them, which is the one thing the release
@@ -315,15 +321,29 @@ literature review" comment, `GOLD_VARIABLES`); `data/research-proof-map.json` (4
 four performance tiles, five todo rows); `data/l2l-trading-day-directional-v1.json` (13,785,165 bytes - meta,
 lineage, source population, the eleven comparison groups, the entity groups, one row per entity, one full row);
 `data/backtester-checker-{gold,usd,eur,nq,btc}-24h-*.json` (all five, meta, summary, one row, and the outcome counts
-across every row); `data/layer1.json` (417,783 bytes) and `data/layer2.json` (673 bytes - the latter is empty of
-opportunities today and lists XAU/USD as avoided for missing 24H conviction); `backtester/replay/` (all eleven files);
+across every row); `data/layer1.json` (417,783 bytes); `data/layer2.json` as published, read from `origin/main` rather
+than from this checkout, whose copy is stale at 673 bytes and 2026-09-07 - the live copy is 1,151 bytes, updated
+2026-10-08T05:37:28Z, and carries two opportunities (BTC/USD BUY rank 1, NQ/USD BUY rank 2) and five avoids including
+XAU/USD, whose reason reads "Mixed or low conviction 24H signals"; `backtester/replay/` (the eleven `.js` files in that
+tree - six replay cores and five runners, `gbp` having no runner - beside `usd/README.md` as the twelfth file);
 `backtester/replay/usd/README.md`; `backtester/docs/usd_historical_data_acquisition_plan.md`;
 `docs/orchestration/assignments/analysis-engine.md`; `logic/` (six agent documents, 7,794 to 35,026 bytes);
 `docs/strategy/FACTOR_INFLUENCE_TABLE_20261003.md` and `docs/strategy/FACTOR_TABLE_SPEC_20261003.md`; the site's
-thirteen top-level pages as they stand on `origin/main` `e2df9f6` (`git ls-tree --name-only origin/main`, then blob
+twelve top-level pages as they stand on `origin/main` `bf13747` (`git ls-tree --name-only origin/main`, then blob
 reads of `gold.html`, `what-moves-gold.html`, `index.html`, `layer1-call-flow.html`, `usd-layer1-call-flow.html`,
 `standing-dashboard.html`, `backtest-flow.html`), with `script.js` checked on the same commit for the proof-map
 renderer and its data URL.
+
+Corrected after review, 2026-10-08, on the review of `-064`. Five things were refreshed rather than re-filed, and
+nothing else in this note changed: **(a)** the page counts - twelve top-level pages, thirteen files counting
+recursively, with the canonical checkout carrying nine of them and this branch's own checkout five, rather than the
+thirteen top-level pages first filed; **(b)** the three page byte counts, which are the exact blob sizes at `bf13747`;
+**(c)** the USD checker's tolerance nuance in section 2, which is inferred from pass minus exact because the archive's
+own `tolerance_pass` counter reads 0; **(d)** the session window in decision 4, read from the graded rows rather than
+approximated; and **(e)** the `data/layer2.json` provenance, which is the correction of record - the note first quoted
+this checkout's stale 673-byte copy as today's dashboard, when the live file on `origin/main` is 1,151 bytes, updated
+2026-10-08T05:37:28Z, with two opportunities and a different reason for avoiding XAU/USD. No figure, finding, decision,
+question or conclusion depends on any of the five, and each correction is a reading of an artifact named in this note.
 
 Limits, stated plainly:
 - **This is advisory.** It writes a shape and the facts behind it. It builds no page, no engine, no assignment and no
@@ -340,6 +360,12 @@ Limits, stated plainly:
 
 ## 10. What happens next, in order, once he answers
 
+One part of this needs no decision from him. The weight story, the count of 28 readings, the provenance table, the
+glossary and the what-it-does-not-claim section are all describable from artifacts already on disk, so this lane can
+draft them on the stated defaults while the element blocks wait for the rule-set answer - and the review of `-064`
+raised exactly that as the only decision-free step. What cannot be drafted first is the element blocks, because every
+one of them quotes the rule set; and the frontier brief and the red-team charter quote the pack.
+
 1. **Turn his answers into the four documents.** The pack first, because the element blocks and the instructions
    share the same wording; then the frontier brief and the red-team charter, which only quote the pack.
 2. **Put the element status table in front of him before anything runs**, so the four dark elements cannot quietly
@@ -354,8 +380,3 @@ Limits, stated plainly:
 6. **Only then build the engine**, because the engine is the thing whose output the whole pack is judged against:
    the graded three-way arm and the comparison table against today's Layer 1 calls and the Layer 2 XAU/USD calls.
 7. **Publish the page last**, when there is a result to show, with every row naming the artifact behind it.
-
-
-
-
-

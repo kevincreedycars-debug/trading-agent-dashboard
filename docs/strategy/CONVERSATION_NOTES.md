@@ -4330,3 +4330,47 @@ working-tree listing shows.
 Filed as `20261008-strategy-layer1-pack-frontier-redteam-and-engine-scope-064`, status `ready_for_review`. Nothing
 was built: the four documents wait on the answers above, and the two builds need assignments this lane cannot give
 itself.
+
+## 2026-10-08 (third turn) - the -064 review and the corrected reading of what is live
+
+Both filings from the second turn were reviewed and accepted on their bytes: `-064` as the docs-only scope advisory
+it declares itself to be, and `-064-r1` as its artifact-line revision. The reviews re-derived the headline figures from
+the artifacts rather than from the summary - the 4,085 graded rows split 2,493 Layer 1 and 1,592 Layer 2, Layer 1
+47.65% against a 53.19% always-bullish baseline, Layer 2 XAU/USD 46.88% of 448, the five checker archives'
+row/pass/exact counts, the stored-arm outcome counts, the proof map's six stages and four tiles, the two weight vectors
+and the 0.30-versus-0.15 divergence - and confirmed the six replay cores and five runners, the 417,783-byte Layer 1
+file, and the live page family. No assignment was published and no worker status changed: the register row stays at
+exactly `advisory_active` under `strategy-advisory-001`, and the note is accepted as a shape, not as a claim.
+
+One correction of record and four precision points were raised, and this turn acted on all five in the note rather
+than re-filing it. **The correction:** the note had quoted `data/layer2.json` as today's dashboard from this checkout's
+stale 673-byte copy dated 2026-09-07 and said it was empty of opportunities. The live file on `origin/main` is 1,151
+bytes, updated 2026-10-08T05:37:28Z, and carries two opportunities (BTC/USD BUY rank 1, NQ/USD BUY rank 2) and five
+avoids including XAU/USD, whose reason is "Mixed or low conviction 24H signals", not a missing conviction. That is
+exactly the trap the startup procedure names: read published files from `origin/main`, never from the checkout. **The
+four refreshes:** the site has twelve top-level pages (thirteen HTML files counting recursively, which adds only
+`backtester/partials/shared_nav.html`), not thirteen; the canonical checkout carries nine top-level pages and this
+branch's checkout five, so "does not carry the site pages at all" was wrong as written; the three page sizes are the
+blob byte counts 26,309 / 38,675 / 34,068, one byte above the first filing, with the blobs identical at `e2df9f6` and
+at the tip; the USD checker's single non-exact pass is inferred from pass minus exact because its own `tolerance_pass`
+counter reads 0; and decision 4's session window is 22:00Z to 21:00Z over 24 hourly candles for Layer 1 and 23:00Z to
+21:00Z over 23 for Layer 2 XAU/USD, read from the graded rows rather than approximated as "roughly 00:00Z to 21:00Z".
+The note also gained a paragraph recording those five refreshes, and its blank-line runs were collapsed to the house
+single-blank style. No figure, finding, question, decision or blocker changed, and the accepted bytes remain in
+history, so both reviewed digests still resolve.
+
+The review's own count of what is unresolved stands at eight, in unblocking order: which session or close defines a
+trading day; which rule set the pack describes (the document's F2 0.30 or the code's five per-timeframe vectors with
+24h F2 0.15 - the stored rows were produced with the code's vector); whether the model step stays as a guard or is
+dropped; whether the spent archives may serve the engine comparison and the per-element measurement; where the
+per-element research lives; which lane may build the engine and which the page, which needs one new bounded assignment
+before either exists; whether `exports/gold_layer1_agent.json` is the workflow live in n8n today (owner-bound to the
+live-path adviser); and whether this lane should now draft the decision-free parts of the pack - the weight story, the
+28-reading map, the provenance table, the glossary and the what-it-does-not-claim section - while the element blocks
+wait for the rule-set answer. The note's section 10 now says the same thing: those five parts need no decision, and
+everything else does.
+
+Filed as `20261008-strategy-layer1-pack-frontier-redteam-and-engine-scope-065` at the new head, carrying the corrected
+provenance line the review invited under a new submission ID. Nothing was built, no page, engine, assignment, weight
+or threshold was touched, no credential was read and the sealed window stayed unread; the lane is paused awaiting the
+user's answers.
