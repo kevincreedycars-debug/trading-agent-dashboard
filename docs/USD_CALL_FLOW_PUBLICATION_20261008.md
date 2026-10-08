@@ -96,3 +96,21 @@ contrast of any printed line against what it sits on is above 4.5:1, and in the 
 colour-bearing selectors clears 4.5:1 with the heading above 7:1. `tests/usd_layer1_call_flow.browser.test.js`
 holds all of it and is 6/6 in the release worktree; the lane checkout, whose page carries no shared-navigation
 block, is 4/4.
+
+## Live read-back, after the push
+
+Pushed `e2df9f6` onto `origin/main`, a fast-forward over `0c9ccd9` - the 07:45 live-trading snapshot that landed
+while this branch waited - and read both delivery paths back rather than assuming them:
+
+- `https://kevincreedycars-debug.github.io/trading-agent-dashboard/usd-layer1-call-flow.html` returns HTTP 200 with
+  34,068 bytes and sha256 `97c9233f...`, byte-identical to the committed blob; `raw.githubusercontent.com` serves
+  the same bytes.
+- The live `index.html` (27,380 bytes, `b5e70387...`) and the live call map (38,675 bytes, `47012a69...`) are
+  unchanged, so this release moved one page and no navigation.
+- A headless reader on the live dashboard still makes the bar hop and the rail hop into the sheet, and on the live
+  page the switcher is one visible control that opens dark (`aria-pressed="false"`), turns the page white
+  (`rgb(255, 255, 255)` under `rgb(15, 23, 32)` ink) when clicked, and goes back to the dark sheet when clicked
+  again, with no script error.
+
+Evidence: `tmp/usd-verify-live.cjs` and `tmp/usd-live-verify-paper.log` in the ignored folder, with full-page
+screenshots of the live sheet in both views.

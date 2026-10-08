@@ -363,6 +363,11 @@ preview plus an ink-on-paper printed sheet - since 2026-10-04.
 - Extended the sheet's guard with that contract: 6/6 in the release worktree, 4/4 in this lane's checkout.
 - Re-ran the neighbouring guards on the same tree - the navigation guard 5/5 with `--check` reading
   `12 pages, 17 rail entries, 2 outbound, 0 change(s)`, and the call map 5/5.
+- Published `e2df9f6` onto `origin/main`, fast-forwarding over the 07:45 live-trading snapshot that landed while
+  this branch waited, and read both delivery paths back instead of assuming them: the sheet returns HTTP 200 with
+  34,068 bytes and sha256 `97c9233f...` byte-identical to the committed blob, the live `index.html` (27,380
+  bytes) and the live call map (38,675 bytes) are unchanged, both hops still open the sheet, and the live
+  switcher turns the live page white under `rgb(15, 23, 32)` ink and back to the dark sheet with no script error.
 
 ### Important Note
 
@@ -372,5 +377,4 @@ without the shared-navigation block and without these published docs, exactly as
 
 ### Next
 
-- Publish the change on `origin/main` and read the live copy back: bytes, hash, and the switcher on the live page.
 - Decide whether the call map should take the same paper inks, whose light greys are its own old choice.

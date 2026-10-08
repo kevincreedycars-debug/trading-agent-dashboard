@@ -21,6 +21,8 @@
 - Held the printed sheet to the paper palette itself: the print block now asks for `color-scheme:light` and re-points `--text`, `--muted`, `--dim`, `--amber`, `--blue`, `--teal`, `--good` and `--bad` at the call map's own paper inks, so the two sheets read alike, and only its two card washes and its two pill borders still needed overriding.
 - Extended `tests/usd_layer1_call_flow.browser.test.js` with the white-printable-version guard: the switcher and its two states, every colour the reader reads words in above 4.5:1 on the paper palette with the heading above 7:1, no card outgrowing its box at 1440px or 390px, and the printed sheet read from the dark view landing on `rgb(15, 23, 32)` ink over `rgb(255, 255, 255)` paper with the switcher gone and every printed line above 4.5:1 against whatever it sits on - so the sheet's guard is 6/6.
 
+- Published the white printable version and read it back live: `e2df9f6` on `origin/main` fast-forwarded over `0c9ccd9`, `usd-layer1-call-flow.html` returns HTTP 200 with 34,068 bytes and sha256 `97c9233f...` byte-identical to the committed blob on both delivery paths, the live `index.html` and the call map return their own unchanged bytes, both navigation hops still land on the sheet, and the live switcher turns the live page white (`rgb(255, 255, 255)` under `rgb(15, 23, 32)` ink) and back to the dark sheet with no script error.
+
 ## 2026-10-04
 
 ### Added
