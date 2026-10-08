@@ -1,0 +1,13 @@
+# Line-ending stability for markdown only, added 2026-10-08 on the user's
+# "only if it breaks nothing" instruction after measuring the tree: of the 235
+# tracked markdown files under docs/ the working copies read 126 CRLF-only, 91
+# LF-only and 18 mixed, so the file on disk is the artefact reviews digest and it
+# must never be silently rewritten. `-text` disables every EOL conversion in both
+# directions: git stores the bytes a lane actually wrote, and a checkout never
+# changes a document that has already been measured.
+#
+# Deliberately NOT a repo-wide rule. data/*.json, *.html, *.js and every other
+# *.json stay `unspecified` and under core.autocrlf, because the live feed writer
+# pushes data/*.json and the dashboard artefacts on a 15-minute cadence and nothing
+# may renormalise them.
+*.md -text
