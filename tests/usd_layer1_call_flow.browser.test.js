@@ -14,6 +14,8 @@ const { chromium } = require('playwright');
 // Since 2026-10-08 the page is reached from the shared top bar and from the rail's outbound entries, so the
 // fourth test makes both hops rather than reading either entry's href, and the fifth holds the block's promise
 // about the page: one bar and one rail on screen, both off the printed sheet, the sheet starting at its own edge.
+// The sixth test holds the white printable version: the switcher's preview, its promise that every colour on the
+// paper stays legible, and the sheet the printer lays down even for a reader who never touched the switcher.
 const PAGE = path.resolve(__dirname, '../usd-layer1-call-flow.html');
 const WIDTHS = [1440, 1180, 860, 721, 390];
 // The box Chrome lays the printed sheet out in: 297x210mm A4 landscape minus the 8mm page margin.
@@ -219,5 +221,110 @@ test('the USD call map carries the shared navigation on screen, and prints as th
     assert.equal(sheet.bar, 'none', 'the printed sheet must carry no navigation bar');
     assert.equal(sheet.rail, 'none', 'the printed sheet must carry no side rail');
     assert.equal(sheet.left, 0, `the printed sheet must start at its own left edge, started at ${sheet.left}px`);
+  } finally { await browser.close(); }
+});
+
+test('the USD call map carries a white printable version on screen and on paper', async () => {
+  const browser = await chromium.launch({ headless: true });
+  try {
+    const page = await browser.newPage();
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto(pathToFileURL(PAGE).href);
+    await page.locator('ol.flow').waitFor();
+    const toggle = page.locator('#sheetToggle');
+    assert.equal(await toggle.count(), 1, 'the title block must offer the sheet switcher');
+    assert.equal(await toggle.isVisible(), true, 'the switcher must be visible in a 1440px window');
+    assert.equal(await toggle.getAttribute('aria-pressed'), 'false', 'the page opens on the dark screen palette');
+    // Ratios are measured from the page with the WCAG relative-luminance formula, the way the call map's own
+    // guard measures its paper sheet, rather than from a list of hex values kept in this file.
+    const ink = () => page.evaluate(() => {
+      const channel = value => { const part = value / 255; return part <= 0.03928 ? part / 12.92 : Math.pow((part + 0.055) / 1.055, 2.4); };
+      const lum = value => value.match(/[\d.]+/g).slice(0, 3).map(Number).map(channel)
+        .reduce((sum, part, index) => sum + part * [0.2126, 0.7152, 0.0722][index], 0);
+      const ratio = (fore, back) => {
+        const [high, low] = [lum(fore), lum(back)].sort((a, b) => b - a);
+        return (high + 0.05) / (low + 0.05);
+      };
+      const inkOf = selector => getComputedStyle(document.querySelector(selector)).color;
+      const back = getComputedStyle(document.body).backgroundColor;
+      return {
+        paper: document.documentElement.getAttribute('data-theme'),
+        back,
+        readings: ['h1', '.lede', '.eyebrow', '.node .step', '.node .body', '.chips li', 'table.tool th', '.grid-mini span', '.pill.bull', 'footer a', 'footer p']
+          .map(selector => [selector, Math.round(ratio(inkOf(selector), back) * 100) / 100])
+      };
+    });
+    const dark = await ink();
+    assert.equal(dark.paper, null, 'the page opens with no paper attribute on it');
+    await toggle.click();
+    const paper = await ink();
+    assert.equal(paper.paper, 'paper', 'the switcher must mark the page as the paper sheet');
+    assert.equal(await toggle.getAttribute('aria-pressed'), 'true', 'the switcher must report its own state');
+    assert.equal(paper.back, 'rgb(255, 255, 255)', 'the paper sheet must be white behind the map');
+    assert.notEqual(dark.back, paper.back, 'the two views must not read the same behind the map');
+    assert.deepEqual(paper.readings.filter(([, value]) => value < 4.5), [], 'every colour on the paper sheet must stay legible');
+    assert.equal(paper.readings[0][1] >= 7, true, `the heading's own ink must stay well above legibility, got ${paper.readings[0][1]}`);
+    // Turning the palette over may not cost a card its text, at a wide or a narrow window.
+    assert.deepEqual(await page.evaluate(overflowingCards), [], 'the paper sheet may not outgrow a card');
+    await page.setViewportSize({ width: 390, height: 900 });
+    assert.deepEqual(await page.evaluate(overflowingCards), [], 'the paper sheet may not outgrow a card at 390px');
+    assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, 'the paper sheet must not scroll sideways at 390px');
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await toggle.click();
+    assert.equal(await page.evaluate(() => document.documentElement.hasAttribute('data-theme')), false, 'the switcher must turn back to the dark screen sheet');
+    await page.emulateMedia({ media: 'print' });
+    const sheet = await page.evaluate(() => {
+      const numbers = value => (value.match(/[\d.]+/g) || []).map(Number);
+      const rgb = value => numbers(value).slice(0, 3);
+      const alpha = value => (numbers(value).length > 3 ? numbers(value)[3] : 1);
+      const channel = value => { const part = value / 255; return part <= 0.03928 ? part / 12.92 : Math.pow((part + 0.055) / 1.055, 2.4); };
+      const lum = channels => channels.map(channel).reduce((sum, part, index) => sum + part * [0.2126, 0.7152, 0.0722][index], 0);
+      const contrast = (fore, back) => {
+        const [high, low] = [lum(fore), lum(back)].sort((a, b) => b - a);
+        return (high + 0.05) / (low + 0.05);
+      };
+      // A printed line sits on the nearest opaque ancestor that is not a gradient wash, or on the sheet itself.
+      const behind = element => {
+        for (let node = element; node; node = node.parentElement) {
+          const style = getComputedStyle(node);
+          if (alpha(style.backgroundColor) > 0.5 && !style.backgroundImage.includes('gradient')) return rgb(style.backgroundColor);
+        }
+        return [255, 255, 255];
+      };
+      const shown = element => {
+        const style = getComputedStyle(element);
+        if (style.display === 'none' || style.visibility === 'hidden' || style.opacity === '0') return false;
+        const box = element.getBoundingClientRect();
+        return box.width > 0 && box.height > 0;
+      };
+      const flooded = [];
+      let palest = { ink: Infinity, text: '', color: '', behind: [] };
+      for (const element of document.querySelectorAll('body *')) {
+        if (!shown(element)) continue;
+        const style = getComputedStyle(element);
+        const fill = rgb(style.backgroundColor);
+        // A pale tint is fine on paper; a card that fills with ink is not.
+        if (alpha(style.backgroundColor) > 0.5 && lum(fill) < 0.8) flooded.push(`${element.tagName.toLowerCase()}.${element.className} fills with rgb(${fill.join(', ')})`);
+        const own = [...element.childNodes].some(node => node.nodeType === 3 && node.textContent.trim());
+        if (!own) continue;
+        const ink = contrast(rgb(style.color), behind(element));
+        if (ink < palest.ink) palest = { ink, text: element.textContent.trim().slice(0, 32), color: style.color, behind: behind(element) };
+      }
+      return {
+        scheme: getComputedStyle(document.documentElement).colorScheme,
+        toggle: getComputedStyle(document.querySelector('#sheetToggle')).display,
+        ink: getComputedStyle(document.body).color,
+        back: getComputedStyle(document.body).backgroundColor,
+        flooded,
+        palest
+      };
+    });
+    // A sheet still asking for the dark scheme can round to a dark canvas in the reader's own preview.
+    assert.equal(sheet.scheme, 'light', 'the printed sheet must ask for the light scheme');
+    assert.equal(sheet.toggle, 'none', 'the printed sheet must carry no screen control');
+    assert.equal(sheet.ink, 'rgb(15, 23, 32)', 'print must land on the paper ink even from the dark view');
+    assert.equal(sheet.back, 'rgb(255, 255, 255)', 'print must land on white paper even from the dark view');
+    assert.deepEqual(sheet.flooded, [], 'no card may flood the sheet with ink');
+    assert.equal(sheet.palest.ink >= 4.5, true, `every printed line must clear 4.5:1 on the sheet, ${sheet.palest.ink.toFixed(2)}:1 was the worst: "${sheet.palest.text}" in ${sheet.palest.color} on rgb(${sheet.palest.behind.join(', ')})`);
   } finally { await browser.close(); }
 });

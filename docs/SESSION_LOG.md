@@ -340,3 +340,37 @@ live deployment.
 - Read the live Pages copy back after the push and record the bytes, the hash and the two hops in
   `docs/USD_CALL_FLOW_PUBLICATION_20261008.md`.
 - Decide whether the two live-trading chart guards should be fixed in the checkout that owns them.
+## 2026-10-08 - the USD call map gets its white printable version
+
+### Session Goal
+
+The user's one line - "again this needs to be made with a white printable version" - on the USD Layer 1 call
+map published minutes earlier: the page was dark on screen and its printed block left the dark palette's pale
+accent tints on white paper, while its twin the call map has carried a white printable version - a screen
+preview plus an ink-on-paper printed sheet - since 2026-10-04.
+
+### Completed
+
+- Re-read the call map's own version before writing anything: the `html[data-theme="paper"]` palette, the
+  `#sheetToggle` button in the title block, the `beforeprint` / `afterprint` script and the print block that sets
+  the same palette, all held by `tests/layer1_call_flow.browser.test.js` (5/5).
+- Gave the USD page the same version: the switcher in the title block, its styles, the screen paper theme, and a
+  print block that asks for the light scheme and re-points each colour variable at a paper ink, so the printed
+  sheet no longer carries the screen's pale blue step numbers, mint and amber pills or grey notes.
+- Measured the printed copy instead of assuming it: every visible text run on the sheet clears 4.5:1 against
+  what it sits on, the sheet is `rgb(255, 255, 255)` under `rgb(15, 23, 32)` ink, no card fills darker than a
+  pale tint, and the switcher is off the sheet; screenshots of both views sit in the ignored `tmp/` folder.
+- Extended the sheet's guard with that contract: 6/6 in the release worktree, 4/4 in this lane's checkout.
+- Re-ran the neighbouring guards on the same tree - the navigation guard 5/5 with `--check` reading
+  `12 pages, 17 rail entries, 2 outbound, 0 change(s)`, and the call map 5/5.
+
+### Important Note
+
+The screen view stays dark and gains only the switcher, so the page keeps the site's dark workstation look; the
+white version is the reader's choice on screen and the printer's copy on paper. The lane checkout holds the page
+without the shared-navigation block and without these published docs, exactly as it does for the call map.
+
+### Next
+
+- Publish the change on `origin/main` and read the live copy back: bytes, hash, and the switcher on the live page.
+- Decide whether the call map should take the same paper inks, whose light greys are its own old choice.

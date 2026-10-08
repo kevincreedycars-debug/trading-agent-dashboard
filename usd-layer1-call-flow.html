@@ -26,6 +26,13 @@ a{color:var(--blue)}
 .mono{font-family:var(--mono)}
 header{grid-column:1/-1;display:flex;gap:26px;justify-content:space-between;align-items:flex-start;flex-wrap:wrap}
 header>*{min-width:0}
+/* The sheet switcher: the map is a dark screen page and a white printed sheet at once, so the reader can
+   preview the second without leaving the first. It is never printed (see the print block below), and it
+   stays hidden until the script that drives it has run, so no reader is offered a control that does nothing. */
+.sheet-toggle{flex:0 0 auto;align-self:flex-start;border:1px solid var(--line);border-radius:999px;padding:6px 12px;background:transparent;color:var(--text);font:11px/1.6 var(--mono);cursor:pointer}
+.sheet-toggle:hover{border-color:var(--blue);color:var(--blue)}
+.sheet-toggle:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+.sheet-toggle[aria-pressed="true"]{border-color:var(--amber);color:var(--amber)}
 .lede{margin-top:9px;color:var(--muted);font-size:15px;max-width:860px}
 .chips{display:flex;flex-wrap:wrap;gap:7px;list-style:none;padding:0;max-width:420px}
 .chips li{border:1px solid var(--line);border-radius:999px;padding:3px 10px;font:11px/1.55 var(--mono);color:var(--muted);min-width:0}
@@ -87,49 +94,64 @@ footer p{color:var(--dim);font-size:12px;max-width:760px}
   .flow{grid-template-columns:1fr 1fr}
   .grid-mini{grid-template-columns:1fr 1fr}
 }
+/* White printable version, added 2026-10-08, the twin of the call map's since 2026-10-04: the same
+   ink-on-paper palette the printed sheet uses, so a reader can see on screen what the printer will lay down
+   and print straight from the view being read. The switcher in the title block writes data-theme="paper" on
+   <html>; only the dark palette's two card washes and its two pill borders need overriding, because every
+   other colour on the page reads var(). Printing does not depend on this: the print block below sets the same
+   palette, and the script forces the attribute for the length of a print job. */
+html[data-theme="paper"]{color-scheme:light;--bg:#fff;--panel:#f7fafc;--panel-2:#eef3f8;--line:#b9c4d1;--text:#0f1720;--muted:#3c4a58;--dim:#5b6a78;--amber:#845c00;--blue:#0f4f88;--teal:#0c6a61;--good:#14682f;--bad:#a02a1e}
+html[data-theme="paper"] body{background:#fff}
+html[data-theme="paper"] .band{background:var(--panel-2)}
+html[data-theme="paper"] .panel{background:var(--panel)}
+html[data-theme="paper"] .pill.bull,html[data-theme="paper"] .pill.conf{border-color:currentColor}
+/* Printed sheet: the white version on the printer's own terms. It asks for the light scheme and swaps the
+   dark palette for the paper one, so a reader who never touches the switcher still prints ink on white
+   rather than pale tints on white; the layout is the screen layout with the type closed up to one sheet. */
 @media print{
   @page{size:A4 landscape;margin:8mm}
-  :root{--sans:"IBM Plex Sans",Arial,sans-serif;--display:"Space Grotesk","IBM Plex Sans",Arial,sans-serif}
-  html,body{background:#fff}
-  body{font-size:6.5pt;line-height:1.28;color:#0b1622}
+  :root{color-scheme:light;--bg:#fff;--panel:#f7fafc;--panel-2:#eef3f8;--line:#b9c4d1;--text:#0f1720;--muted:#3c4a58;--dim:#5b6a78;--amber:#845c00;--blue:#0f4f88;--teal:#0c6a61;--good:#14682f;--bad:#a02a1e;
+        --sans:"IBM Plex Sans",Arial,sans-serif;--display:"Space Grotesk","IBM Plex Sans",Arial,sans-serif}
+  html,body{background:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  body{font-size:6.5pt;line-height:1.28;color:var(--text)}
   main{max-width:none;padding:0;gap:4px;grid-template-columns:repeat(12,1fr)}
   header{gap:10px;flex-wrap:nowrap;align-items:flex-start}
   header>div{flex:1 1 auto;min-width:0}
   h1{font-size:13pt}
   h2{font-size:9pt}
   h3{font-size:8pt}
-  .lede{font-size:7pt;color:#256;max-width:100%}
-  .eyebrow{font-size:6.4pt;color:#7a5a12}
+  .lede{font-size:7pt;max-width:100%}
+  .eyebrow{font-size:6.4pt}
   .chips{gap:3px;flex:0 1 36%;max-width:36%}
-  .chips li{font-size:6pt;padding:1px 6px;border-color:#b8c4d4;color:#33465c}
-  .band,.panel{background:#fff;border-color:#b8c4d4}
+  .chips li{font-size:6pt;padding:1px 6px}
+  .band{background:var(--panel-2)}
+  .panel{background:var(--panel)}
   .band{border-left-width:2.5px;padding:6px}
-  .band-chain{--accent:#2f6fd0}
-  .band-note{font-size:6.6pt;color:#3a4b60}
+  .band-note{font-size:6.6pt}
   .flow{gap:3px}
-  .node{padding:4px;background:#f6f9fd;border-color:#c6d2e0}
+  .node{padding:4px;border-color:var(--line)}
   .node .step{font-size:6pt}
   .node strong{font-size:7pt}
-  .node .body{font-size:6.2pt;color:#44586e}
+  .node .body{font-size:6.2pt}
   .panel{padding:6px}
   .panel h2{margin-top:3px;margin-bottom:6px}
   table.tool{font-size:6pt;line-height:1.15}
-  table.tool th{padding:1px 3px;font-size:6pt;color:#4a5c72}
+  table.tool th{padding:1px 3px;font-size:6pt}
   table.tool td{padding:0.7px 3px}
-  table.tool td.num{font-size:6.4pt;color:#0b1622}
-  table.tool tr td:first-child{font-size:6.2pt;color:#7a5a12}
-  .rule{color:#44586e}
+  table.tool td.num{font-size:6.4pt}
+  table.tool tr td:first-child{font-size:6.2pt}
   .grid-mini{gap:4px;margin-top:6px}
-  .grid-mini div{background:#f6f9fd;border-color:#c6d2e0;padding:4px 6px}
+  .grid-mini div{padding:4px 6px}
   .grid-mini b{font-size:8pt}
   ol.steps,ul.list{gap:3px}
-  ol.steps li,ul.list li{font-size:6.2pt;color:#3a4b60;padding-left:14px}
+  ol.steps li,ul.list li{font-size:6.2pt;padding-left:14px}
   .call{margin:6px 0 2px;gap:10px}
   .call .pill{font-size:7.6pt;padding:1px 8px}
-  footer{border-color:#b8c4d4;gap:6px;padding-top:5px}
+  .pill.bull,.pill.conf{border-color:currentColor}
+  footer{gap:6px;padding-top:5px}
   footer a{font-size:6.2pt}
-  footer p{font-size:6pt;color:#5a6b80}
-  a{color:#2f6fd0}
+  footer p{font-size:6pt}
+  .sheet-toggle{display:none}
   /* The map is reached from the shared bar and rail since 2026-10-08, but a printed sheet is the map alone:
      the block is taken off the sheet, and with it the 232px the rail shifts its siblings by. The bar is named
      with both its classes because the block's own `.site-nav.topbar` carries two, and a print rule that named
@@ -262,6 +284,7 @@ body > aside.site-nav.side-rail ~ *{margin-left:232px;max-width:calc(100% - 232p
       <li>horizon 24H · also 3d / week / next / month</li>
       <li>same snapshot → same call</li>
     </ul>
+    <button class="sheet-toggle" id="sheetToggle" type="button" aria-pressed="false" hidden title="Shows the page on the white paper palette the printer uses, and stays off the printed sheet">Paper sheet · print preview</button>
   </header>
 
   <section class="band band-chain" aria-label="The eight workflow steps">
@@ -360,5 +383,36 @@ body > aside.site-nav.side-rail ~ *{margin-left:232px;max-width:calc(100% - 232p
   </footer>
 
 </main>
+<script>
+// The sheet switcher, added 2026-10-08 with the white printable version, the twin of the call map's: the USD
+// map is a dark screen page and a white printed sheet at once, so the reader can preview the second without
+// leaving the first. The attribute is the whole state, and the print block sets the same palette, so printing
+// works from either view: the attribute is forced onto paper for the length of a print job, so a reader who
+// prints from the dark view still gets ink on paper rather than pale text on white. A storage that refuses to
+// be read - Chrome blocks localStorage on some origins - costs the reader nothing but the memory of the
+// choice; the key is this page's own, so the call map's choice does not decide this sheet's.
+(function () {
+  var root = document.documentElement;
+  var button = document.getElementById('sheetToggle');
+  var KEY = 'usd-call-map-sheet';
+  function read() {
+    try { return localStorage.getItem(KEY); } catch (error) { return null; }
+  }
+  function remember() {
+    try { localStorage.setItem(KEY, chosen ? 'paper' : 'dark'); } catch (error) { /* the choice is not remembered */ }
+  }
+  function show(paper) {
+    if (paper) root.setAttribute('data-theme', 'paper');
+    else root.removeAttribute('data-theme');
+    button.setAttribute('aria-pressed', paper ? 'true' : 'false');
+  }
+  var chosen = read() === 'paper';
+  button.hidden = false;
+  show(chosen);
+  button.addEventListener('click', function () { chosen = !chosen; remember(); show(chosen); });
+  window.addEventListener('beforeprint', function () { show(true); });
+  window.addEventListener('afterprint', function () { show(chosen); });
+})();
+</script>
 </body>
 </html>

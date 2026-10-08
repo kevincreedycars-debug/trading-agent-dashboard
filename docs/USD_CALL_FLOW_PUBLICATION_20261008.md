@@ -72,3 +72,27 @@ while this branch waited - and read both delivery paths back rather than assumin
   with no script error. The live call map still returns its own 38,675 bytes and sha256 `47012a69...`.
 
 Evidence: `tmp/usd-verify-live.cjs` and `tmp/usd-live-verify.log` in the ignored folder, with a full-page screenshot.
+
+## The white printable version, added the same day
+
+The follow-up - "again this needs to be made with a white printable version" - is the version the call map has
+carried since 2026-10-04, and the page now carries it:
+
+- On screen, a `Paper sheet · print preview` switcher (`#sheetToggle`, `aria-pressed`, hidden until its script
+  runs) writes `data-theme="paper"` on `<html>`, remembers the choice under the page's own `usd-call-map-sheet`
+  key and swaps the dark palette for the ink-on-paper one; `beforeprint` forces the paper view, so a reader who
+  prints from the dark view still gets ink on paper, and `afterprint` puts their own choice back.
+- On paper, the print block asks for `color-scheme:light` and sets the same palette, so the sheet is white under
+  dark ink whether or not the switcher was ever touched; the switcher, the bar and the rail are off the sheet and
+  the map stays on one A4 landscape page.
+- The inks are the call map's own paper inks (`--text:#0f1720`, `--muted:#3c4a58`, `--dim:#5b6a78`,
+  `--amber:#845c00`, `--blue:#0f4f88`, `--teal:#0c6a61`, `--good:#14682f`, `--bad:#a02a1e`), so the two sheets
+  read alike; the USD page needed only its two pill borders (`border-color:currentColor`) and its two card washes
+  overridden, because every other colour on it reads `var()`.
+
+Measured rather than asserted: with the dark view on screen and print media emulated, body ink is
+`rgb(15, 23, 32)` over `rgb(255, 255, 255)`, no visible element fills darker than a pale tint, the smallest
+contrast of any printed line against what it sits on is above 4.5:1, and in the paper screen view the same list of
+colour-bearing selectors clears 4.5:1 with the heading above 7:1. `tests/usd_layer1_call_flow.browser.test.js`
+holds all of it and is 6/6 in the release worktree; the lane checkout, whose page carries no shared-navigation
+block, is 4/4.
