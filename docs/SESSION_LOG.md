@@ -322,6 +322,10 @@ Put the USD agent breakdown page on the live dashboard so the user can open it a
 - Re-ran the neighbouring guards on the same tree - the call map, the live-trading set, refresh progress, the
   backtesting development release, gold view tidy, architecture-map validation and dashboard writer selection - all
   green.
+- Pushed `a8490c7` onto `origin/main` and read both delivery paths back: the live sheet returns HTTP 200 with 29,932
+  bytes and sha256 `7478e426...` byte-identical to the committed blob, the live `index.html` returns 27,380 bytes
+  and sha256 `b5e70387...` carrying both entries, and a headless reader on the live dashboard makes both hops with
+  the USD heading, eight chain steps and no script error.
 
 ### Important Note
 

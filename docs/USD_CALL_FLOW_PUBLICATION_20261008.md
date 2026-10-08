@@ -57,3 +57,18 @@ A published page is a map of how the call is made, not evidence of edge: this re
 file and changed no live logic. The lane checkout that authored the sheet (`workers/analysis-engine-20261003`) holds
 the page without the shared block, exactly as it holds the call map; the block is added to the published copy here by
 the builder.
+
+## Live read-back, after the push
+
+Pushed `a8490c7` onto `origin/main`, a fast-forward over `675140c` - the 07:15 live-trading snapshot that landed
+while this branch waited - and read both delivery paths back rather than assuming them:
+
+- `https://kevincreedycars-debug.github.io/trading-agent-dashboard/usd-layer1-call-flow.html` returns HTTP 200 with
+  29,932 bytes and sha256 `7478e426...`, byte-identical to the committed blob; the same bytes come back from
+  `raw.githubusercontent.com`.
+- The live `index.html` returns HTTP 200 with 27,380 bytes and sha256 `b5e70387...` and carries both new entries.
+- A headless reader on the live dashboard finds exactly one bar entry and one rail entry for the sheet, clicks each,
+  and lands on it with the heading `How the USD Layer 1 call is made`, all eight chain steps and the ten factor rows,
+  with no script error. The live call map still returns its own 38,675 bytes and sha256 `47012a69...`.
+
+Evidence: `tmp/usd-verify-live.cjs` and `tmp/usd-live-verify.log` in the ignored folder, with a full-page screenshot.
