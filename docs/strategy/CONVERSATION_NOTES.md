@@ -4166,3 +4166,42 @@ stays unread.
   `tools/` file, dashboard page, script, style, data artifact, workflow, schedule, register entry,
   assignment, controller, bridge, credential or production surface was touched, and no outcome, holdout or
   prospective observation was read.
+
+## 2026-10-08 - User brief: rebuild the LLM chain as a program, then backtest the whole day
+
+- The user put the dashboard-icon question on hold and gave a new brief instead: a ten-day plan to
+  deep-research every element inside the LLM analysis logic, have frontier models judge whether the
+  logic makes sense, have two frontier coding models red-team it, then rebuild the LLM logic chain as
+  a program and backtest that as a full daily analysis engine. The two problems it is meant to solve,
+  in the user's words: what is actually in this black box, and backtesting the LLM analysis without
+  spending a fortune.
+
+- What was read this turn, all read-only by absolute path: `exports/gold_layer1_agent.json` (the live
+  Gold workflow export, nine nodes), `logic/agent_gold_direction.md`,
+  `data/backtester-checker-gold-24h-2024-2026.json`, `backtester/docs/gold_stored_call_pilot_20260906.md`,
+  the `backtester/replay` layout, `docs/BACKTESTING_REVIEW_PLAN.md`, `docs/backtester_master_logic.md`,
+  `docs/ARCHITECTURE.md`, `docs/orchestration/projects.json` and the `analysis-engine` assignment.
+
+- Finding of record, from the export read node by node: the Gold chain is nine nodes - snapshot read,
+  input pack, logic document fetched from GitHub, combine, one gpt-4.1-mini call, parse, a 14,655
+  character conviction code node, and the Supabase row write. The conviction node recomputes all ten
+  factor signals from the snapshot itself, and the row write then stores the code's own direction,
+  factor breakdown, weighted score and reasoning summary; the model's directions, breakdown and
+  reasons are parsed and then overwritten. On this workflow the model is a guard, not an author.
+
+- Second finding, same node: the document declares one weight vector (F1 22, F2 18, F3 14, F4 8,
+  F5 8, F6 10, F7 6, F8 6, F9 6, F10 2) while the code carries five per-timeframe vectors and uses the
+  24h one (F1 26, F2 22, F3 12, F4 10, F5 10, F6 8, F7 8, F8 2, F9 1, F10 1). The F2 threshold is
+  0.15 on 24h in code against 0.30 stated uniformly in the document. The document was uploaded
+  2026-06-07 (commit `3f614f6`) and never revised, and its single vector is closest to the code's
+  current-week column.
+
+- Existing assets mapped for the plan: six per-asset replay cores under `backtester/replay/`, the Gold
+  live-parity fixture, the checker artifact `data/backtester-checker-gold-24h-2024-2026.json` (meta
+  2026-06-30, 608 rows, 608 pass, 608 exact matches on 15 compared fields) and the shared outcome
+  evaluator. Parity of this kind is close to guaranteed by construction because the checker and the
+  replay core are the same arithmetic, so it shows the arithmetic is reproducible, not that the
+  document or the model agrees with it; the 154-call pilot also showed the inputs were defective
+  (143 of 147 linked snapshots imply one stale Gold reference price, and repairing it changed 97 of
+  154 F5 signals and 19 final direction labels). Nothing in the project replays a whole day across
+  all five horizons.
