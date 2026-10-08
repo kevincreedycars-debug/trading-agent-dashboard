@@ -4205,3 +4205,71 @@ stays unread.
   (143 of 147 linked snapshots imply one stale Gold reference price, and repairing it changed 97 of
   154 F5 signals and 19 final direction labels). Nothing in the project replays a whole day across
   all five horizons.
+
+## 2026-10-08 - -063 accepted: the LLM-chain map stands as written, no assignment published
+
+- Filed, reviewed, accepted. The lane's -063 filing went by mailbox; the immutable inbox copy
+  `.local/orchestration/inbox/strategy/20261008-strategy-llm-chain-rebuild-and-daily-backtest-mapping-063.json`
+  is 7,517 bytes at sha256 `36df3ce2b9db8bca635b34ea11295a0c90a4d7380591493dc5913cc87763acc0`, filed
+  2026-10-08T07:30:28.644Z and equal to the `submission_sha256` the reply binds to. Decision: accepted.
+  Reply `.local/orchestration/replies/strategy/20261008-strategy-llm-chain-rebuild-and-daily-backtest-mapping-063.json`,
+  9,928 bytes at sha256 `ec972d0035d4fd529edbc93c07926f9f2e002c20e0312199eb478b1a543aa3bd`, written
+  2026-10-08T07:33:29.531Z; no separate durable review file exists, so the reply's 9,585-character
+  instruction block is the record. The mailbox was re-read inside this entry's own turn through
+  `node scripts/coordination.js check --worker strategy`, which answered `errors []` with `pending 0`,
+  the worker row `strategy` / `advisory_active` / `strategy-advisory-001`, 62 submissions with the
+  newest three all accepted, and this reply present; read stamp 2026-10-08T07:34:47.944Z.
+
+- What the review reproduced rather than trusted, measured from this lane worktree and the canonical
+  repo: head `99aea5b` with sole parent `c2ba8ac` (the declared base), one commit, exactly the two
+  declared files (CONVERSATION_NOTES.md 39/0 and
+  LLM_CHAIN_REBUILD_AND_DAILY_BACKTEST_MAPPING_20261008.md 217/0, 256 insertions and no deletion),
+  a clean tree including untracked files, and both artefacts byte for byte at the declared digests -
+  the note 14,920 bytes / sha256 `544041e9...`, the notes 389,588 bytes / sha256 `3702f1db...`.
+  Spot-checked again this turn: `git show --numstat` on head returns exactly 39/0 and 217/0, and
+  `exports/gold_layer1_agent.json` carries nine nodes with the code nodes at 2,245 / 391 / 3,044 /
+  14,655 characters, as filed.
+
+- The headline finding was verified independently, node by node, and stands as written. The chain is
+  When Executed by Another Workflow -> Supabase Get Many -> Build GOLD Input Pack -> Get GOLD Logic
+  Document -> Combine md & market snapshot -> Message a model -> Parse GOLD Agent Output -> Calculate
+  GOLD Conviction -> Create a row; the 14,655-character conviction node recomputes all ten factor
+  signals from `market_inputs` itself, and the row write stores its own direction, breakdown, weighted
+  score and reasoning summary, so the model's parsed values - even `full_output` and
+  `raw_agent_output` - are overwritten before the insert. On this workflow the gpt-4.1-mini call is a
+  guard, not an author.
+
+- The document-versus-code divergence reproduced as well: the document declares one vector
+  (F1 22, F2 18, F3 14, F4 8, F5 8, F6 10, F7 6, F8 6, F9 6, F10 2) with a uniform F2 threshold of
+  0.30, while the code carries five per-timeframe vectors, the 24h one being 26/22/12/10/10/8/8/2/1/1
+  with F2 at 0.15 on 24h and 0.3 elsewhere, and F5 carrying a second pair at 0.3 on 24h and 0.5
+  otherwise; the document's vector sits nearest the code's `current_week` column (summed absolute
+  difference 8, against 12 for 3d), and `git log --follow` returns one commit, `3f614f6` of
+  2026-06-07. The six replay cores reproduce at gold 14,794 / usd 37,283 / eur 15,886 / nq 16,825 /
+  btc 22,211 / gbp 9,932 bytes; the checker artifact reads meta 2026-06-30 with 608 rows, 608 pass,
+  608 exact matches on 15 compared fields; the pilot reads 143 of 147 snapshots, 97 of 154 F5 signals
+  and 19 direction labels. One non-material wording point was recorded rather than penalised: section
+  2 of the note calls the Gold gate node "15 KB" while section 4 measures the same file at 14.8 KB.
+  Both are roundings of one file and nothing rests on it.
+
+- What the acceptance does and does not settle: it publishes no assignment and changes no worker
+  status, the register row staying exactly `advisory_active` under `strategy-advisory-001`. The stated
+  reason is a chain of gating decisions rather than a shortage of work, and the review names seven
+  open ones - the trading-day basis; which rule set is authoritative; whether the model step stays as
+  a guard or is dropped; whether the repo export is the workflow live in n8n today, which is the
+  live-path adviser's surface; where the ten-day plan and the source book live; which lane may build
+  the shared engine, which needs one new bounded assignment before any build lane exists; and whether
+  the consumed Gold archive may serve parity and exploratory work. It also records that publishing a
+  second assignment onto the gold-research lane would break the one-assignment rule and be suppressed
+  by that lane's own record, which already carries an unstarted `gold-dark-factor-repair-027` at
+  `instructions_published_awaiting_worker` and a `gold-declared-band-measurement-026` at
+  `sent_unconfirmed`.
+
+- Reply-to-reply is owed only if there are new measurements or a new recommendation under a new
+  submission ID. There are none this turn, so nothing is filed, no new work is started, and the
+  dashboard-icon question from the accepted -062 filing stays open and unbuilt as that answer left it.
+
+- Boundaries of this turn: advisory and documentation only. The only file changed is this notes entry;
+  no code, workflow, export, dashboard page, script, style, data artifact, register entry, assignment,
+  controller, bridge, credential or production surface was touched, and no outcome, holdout or
+  prospective observation was read.
