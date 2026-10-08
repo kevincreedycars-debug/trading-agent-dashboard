@@ -8610,3 +8610,51 @@ body {
 @media (max-width: 1100px) { .live-trading-levels { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 760px) { .live-trading-grid { grid-template-columns: minmax(0, 1fr); } .live-trading-chart-toolbar { align-items: flex-start; } }
 
+
+/* Live Trade Logic: the rule the loop trades, written out in words for the System section. It is a reading of
+   the system rather than of the market, so it borrows the Live Trading surface's own palette and the teal the
+   live system is marked with, and its caveat cards carry the dashboard's amber and boundary red. Nothing on this
+   page is a control, so nothing here is styled to look like one. */
+.live-trade-logic-panel { display: grid; gap: 12px; min-width: 0; align-content: start; }
+.live-trade-logic-card { display: grid; gap: 10px; min-width: 0; padding: 14px; border: 1px solid #26374b; border-radius: 10px; background: linear-gradient(180deg, #111c2b, #0c1520); }
+.live-trade-logic-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; flex-wrap: wrap; min-width: 0; }
+.live-trade-logic-head h3 { margin: 0; min-width: 0; color: #eaf2fb; font: 600 13px 'IBM Plex Mono', monospace; letter-spacing: .04em; text-transform: uppercase; }
+.live-trade-logic-tag { flex: 0 0 auto; padding: 3px 8px; border: 1px solid #2b6b57; border-radius: 999px; color: #7ef0c4; font: 600 9.5px 'IBM Plex Mono', monospace; letter-spacing: .06em; text-transform: uppercase; }
+.live-trade-logic-card.summary { border-left: 3px solid #4fd1a5; }
+.live-trade-logic-lead { margin: 0; min-width: 0; color: #eaf2fb; font-size: 13.5px; line-height: 1.55; overflow-wrap: anywhere; }
+/* The numbered steps are the rule's own order, so they are a list and the marker is the sequence rather than
+   decoration: the entry, its two prices, its lifetime, then the two facts a reader is most likely to assume
+   wrongly - the hold and the size. */
+.live-trade-logic-steps { display: grid; gap: 9px; margin: 0; padding-left: 26px; }
+.live-trade-logic-steps li { min-width: 0; color: #a9bdd4; font-size: 12px; line-height: 1.55; overflow-wrap: anywhere; }
+.live-trade-logic-steps li::marker { color: #4fd1a5; font: 600 11px 'IBM Plex Mono', monospace; }
+.live-trade-logic-steps li b { display: block; color: #dbe6f3; font: 600 12px 'IBM Plex Mono', monospace; letter-spacing: .02em; overflow-wrap: anywhere; }
+.live-trade-logic-steps li span { display: block; margin-top: 2px; }
+/* The endings, the gates and the paths: one row per fact, labelled on the left where there is room for it and
+   stacked where there is not, because every one of these lines is short prose that has to wrap rather than clip. */
+.live-trade-logic-rows { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.live-trade-logic-rows li { display: grid; gap: 3px; min-width: 0; padding: 8px 10px; border: 1px solid #1d2a3a; border-left: 2px solid #2b6b57; border-radius: 8px; background: #0a1420; }
+.live-trade-logic-rows li b { min-width: 0; color: #c6d9ed; font: 600 11px 'IBM Plex Mono', monospace; overflow-wrap: anywhere; }
+.live-trade-logic-rows li span { min-width: 0; color: #a9bdd4; font-size: 12px; line-height: 1.55; overflow-wrap: anywhere; }
+.live-trade-logic-rows.mono li b { color: #7ef0c4; font-size: 10.5px; }
+.live-trade-logic-rows.mono li { border-left-color: #233246; }
+/* The account's limits are numbers before they are sentences, so each is a value with its own name under it. */
+.live-trade-logic-limits { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(170px, 100%), 1fr)); gap: 8px; margin: 0; padding: 0; list-style: none; }
+.live-trade-logic-limits li { display: grid; gap: 2px; min-width: 0; padding: 9px 10px; border: 1px solid #26374b; border-radius: 8px; background: #0c1622; }
+.live-trade-logic-limits li b { color: #f0c274; font: 700 18px 'IBM Plex Mono', monospace; overflow-wrap: anywhere; }
+.live-trade-logic-limit-label { min-width: 0; color: #dbe6f3; font: 600 10.5px 'IBM Plex Mono', monospace; letter-spacing: .04em; text-transform: uppercase; overflow-wrap: anywhere; }
+.live-trade-logic-limit-note { min-width: 0; color: #8ea6c0; font-size: 11px; line-height: 1.45; overflow-wrap: anywhere; }
+.live-trade-logic-footnote { margin: 0; min-width: 0; color: #7f93aa; font: 500 10.5px 'IBM Plex Mono', monospace; line-height: 1.5; overflow-wrap: anywhere; }
+/* The one disagreement between this machine's task and the rule, and the page's own boundaries. Both are stated
+   rather than hidden, so both are given the dashboard's caution treatment: amber for a state to check, the
+   boundary red for a claim that is not being made. */
+.live-trade-logic-card.note { border-left: 3px solid #e0a53c; }
+.live-trade-logic-card.note .live-trade-logic-tag { border-color: #7a5a24; color: #f0c274; }
+.live-trade-logic-card.note p { margin: 0; min-width: 0; color: #d8c4a6; font-size: 12px; line-height: 1.55; overflow-wrap: anywhere; }
+.live-trade-logic-card.caution { border-left: 3px solid #8c3b3b; }
+.live-trade-logic-card.caution .live-trade-logic-tag { border-color: #7a3a44; color: #ff9aa4; }
+.live-trade-logic-card.caution p { margin: 0; min-width: 0; color: #b9c8d9; font-size: 12px; line-height: 1.55; overflow-wrap: anywhere; }
+@media (min-width: 900px) {
+  .live-trade-logic-rows li { grid-template-columns: minmax(0, 250px) minmax(0, 1fr); align-items: baseline; column-gap: 12px; }
+}
+

@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=20261006-l2l-chart-pan" />
+  <link rel="stylesheet" href="styles.css?v=20261008-live-trade-logic" />
 </head>
 <body>
 <!-- SHARED-NAV:START -->
@@ -65,6 +65,9 @@
          never sees them. -->
     <a class="side-rail-link" href="layer1-call-flow.html" target="_top">Call Map</a>
     <a class="side-rail-link" href="usd-layer1-call-flow.html" target="_top">USD Call Map</a>
+    <!-- The system's own rule, stated in words rather than in columns: the System group's last entry, after
+         Architecture and after the rail's two outbound call-map links. -->
+    <button class="tab-button" data-tab="live-trade-logic">Live Trade Logic</button>
   </nav>
   <div class="side-rail-foot">
     <span class="side-rail-status-dot" aria-hidden="true"></span>
@@ -414,6 +417,21 @@ body > aside.site-nav.side-rail ~ *{margin-left:232px;max-width:calc(100% - 232p
 
       <section id="architecturePanel" class="backtest-panel architecture-panel"></section>
     </section>
+
+    <section id="liveTradeLogicView" class="view">
+      <section class="section-header backtest-title">
+        <div>
+          <p class="eyebrow">Live Trade Logic</p>
+          <h2>The live rule, start to finish</h2>
+        </div>
+        <p id="liveTradeLogicUpdated">Read-only walkthrough &middot; no controls on this page can trade</p>
+      </section>
+      <section
+        id="liveTradeLogicPanel"
+        class="backtest-panel live-trade-logic-panel"
+        aria-label="Plain-language walkthrough of the live rule the trading loop follows"
+      ></section>
+    </section>
     </main>
   </div>
 
@@ -424,6 +442,6 @@ body > aside.site-nav.side-rail ~ *{margin-left:232px;max-width:calc(100% - 232p
   <script src="lib/l2l_levels_store.js?v=20261004-l2l-store-note"></script>
   <script src="lib/l2l_sizing.js?v=20261004-l2l-position-tool"></script>
   <script src="lib/l2l_strategy.js?v=20261004-l2l-rule-live"></script>
-  <script src="script.js?v=20261006-l2l-chart-pan"></script>
+  <script src="script.js?v=20261008-live-trade-logic"></script>
 </body>
 </html>

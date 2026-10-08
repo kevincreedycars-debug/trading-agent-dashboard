@@ -16757,6 +16757,237 @@ function renderLiveTrading(data) {
   setupLiveTradingChart(panel);
 }
 
+// The Live Trade Logic tab: the rule the loop trades, in words rather than in columns. The Live Trading tab
+// states what each pair is doing right now; this one states what the system does at all - the four markets, the
+// trigger, the three prices, the one-trade-per-market hold, the ways a trade ends, the gates that refuse a
+// ticket before it is sent, and the account's own limits. Nothing here is computed from a feed, so the tab reads
+// the same on a page whose snapshot is stale, and nothing here can trade.
+//
+// Every number below is an established one rather than a fresh choice, so the page and the loop cannot drift
+// without a doc entry: the entry at the crossed line, the target at the next marked line and the stop at a fifth
+// of that distance are sections 40 and 43 of docs/live-trading/STRATEGY_LIVE.md, the entry's lifetime and the
+// endings are sections 42, 46 and 49, the one-trade-per-market hold is section 49, and the account's limits are
+// the ones read from FTMO on 2026-09-30. The one place these words and this machine disagree is stated on the
+// page rather than hidden: the scheduled task registered on 2026-10-05 was generated with the older hand cap
+// --max-open 1, so one working ticket across all four markets is what that task enforces until it is
+// re-registered, while the rule itself holds one trade per market.
+const LIVE_TRADE_LOGIC_SUMMARY = "One resting order per market, left at a line marked by hand and only in the direction the day's call gives. The target is the next marked line that way, the stop is a fifth of the distance to it, and nothing moves once the ticket is left.";
+
+const LIVE_TRADE_LOGIC_STEPS = [
+  {
+    title: "Four markets, and no others",
+    detail: "EUR/USD, gold (XAUUSD), the Nasdaq 100 (US100.cash) and bitcoin (BTCUSD). The rule never looks at a fifth instrument."
+  },
+  {
+    title: "The direction is the day's call",
+    detail: "Layer 1's own call for that market, and only while that call's window is still open. A market with no live direction is not traded at all, however its candles look."
+  },
+  {
+    title: "The lines are marked by hand",
+    detail: "Each chart carries a ladder of prices marked by hand on the chart and kept in the repository. No part of the system detects a level for you."
+  },
+  {
+    title: "A five-minute candle has to close through a line",
+    detail: "In the direction of the call. The close is what counts: a candle that only wicks past the line and closes back behind it is not a crossing."
+  },
+  {
+    title: "Three prices come out of that crossing",
+    detail: "The entry is the crossed line, the target is the next marked line in that same direction, and the stop is a fifth of the distance away. One unit of risk against five of reward is the geometry the whole rule is built on."
+  },
+  {
+    title: "The order is left resting at the line",
+    detail: "A limit order at the line rather than a trade at the market, so the price has to come back to the line before anything is opened."
+  },
+  {
+    title: "One trade per market, and the other three stay free",
+    detail: "A market already carrying this lane's own order or position is skipped until that trade is finished. Holding one market does not block the other three."
+  },
+  {
+    title: "The entry carries no time limit",
+    detail: "The marked levels are permanent. The ticket stands until the day's call turns, or the price reaches the target sitting behind it."
+  },
+  {
+    title: "The smallest trade the instrument allows",
+    detail: "0.01 lot, the market's own minimum size. Position size is not a setting anywhere on this page, and the loop passes no size of its own."
+  },
+  {
+    title: "The stop and the target are set once",
+    detail: "The loop never moves, trails or widens them. Both prices are fixed at the moment the ticket is left, and nothing on any page can change them."
+  },
+  {
+    title: "Nothing on this page can trade",
+    detail: "The loop places the ticket, one bridge file is the only thing that can send one, and the browser reaches no broker. No control on the dashboard can place, change or close a trade."
+  }
+];
+const LIVE_TRADE_LOGIC_ENDINGS = [
+  {
+    label: "The stop is hit",
+    detail: "The market took the risk accepted at the entry. The level stays marked and active, so a fresh five-minute close through it can put the trade on again."
+  },
+  {
+    label: "The target is taken, or reached while the entry is still resting",
+    detail: "A target only has to be touched, not closed beyond. Once it is, that level is spent and does not come back unless it is marked again."
+  },
+  {
+    label: "The day's call turns against the trade",
+    detail: "The loop takes its own resting ticket out of the market, and a position open on that market is closed at the market. The level retires with the call."
+  },
+  {
+    label: "The day's call simply ends",
+    detail: "A window closing is not the call turning. A resting ticket comes out; a position already open is left to its own stop and target."
+  },
+  {
+    label: "A trade put back at its own trigger level",
+    detail: "The same trade offered again rather than a second one, and it does not spend a place in the day's count of new trades."
+  }
+];
+
+const LIVE_TRADE_LOGIC_GATES = [
+  {
+    label: "The task has to be registered and armed",
+    detail: "Registration puts the loop on the same five-minute clock as the feed, 90 seconds after each bar close so the feed has published first. Arming is the deliberate second word: without it the loop prints the ticket it would send and sends nothing."
+  },
+  {
+    label: "The snapshot has to be fresh and the terminal readable",
+    detail: "A stale snapshot, or a terminal that cannot be read, stops the run. The loop refuses rather than trades on what it cannot see."
+  },
+  {
+    label: "Each signal candle is spent once",
+    detail: "A five-minute candle already acted on for a market is never acted on again, whether or not its ticket filled."
+  },
+  {
+    label: "The market has to be free",
+    detail: "No working order and no open position from this lane on that market, judged on the account as it stands."
+  },
+  {
+    label: "A marked line has to exist beyond the entry",
+    detail: "No line past the level means no target, and no target means no ticket: the pair is skipped rather than improvised."
+  },
+  {
+    label: "The day's count of new trades",
+    detail: "Four a day by default, which is one per market. A trade put back at the level it was triggered on is not a new trade and does not count."
+  },
+  {
+    label: "The hand cap, if a run asked for one",
+    detail: "A cap across all markets exists only for a run that passes one. The rule's own hold is the one-trade-per-market limit above."
+  }
+];
+const LIVE_TRADE_LOGIC_LIMITS = [
+  { label: "Daily loss cap", value: "5%", note: "of the account in one day" },
+  { label: "Total loss cap", value: "10%", note: "of the account over the phase" },
+  { label: "Profit target", value: "10%", note: "Challenge phase; 5% in Verification" },
+  { label: "Minimum trading days", value: "4", note: "per phase, a day counting when at least one position is opened" },
+  { label: "Automated systems", value: "1", note: "one bot on the login at a time" }
+];
+
+// The paths the tab names rather than links: the loop, the registration script, the two files it writes as it
+// runs, the document that holds the rule, and the reading it produces now.
+const LIVE_TRADE_LOGIC_FILES = [
+  { label: "scripts/run-live-trading-trader.js", detail: "the loop: reads the calls, the ladder, the bars and the account, then leaves the ticket." },
+  { label: "scripts/register-live-trading-trader-task.ps1", detail: "puts the loop on the five-minute cadence, and places nothing unless it is run armed." },
+  { label: "tmp/live-trading-trader-state.json", detail: "what the loop has attempted: every ticket, put-back and exit, with the reading behind it." },
+  { label: "tmp/live-trading-trader.log", detail: "the append-only run log, one line per run." },
+  { label: "docs/live-trading/STRATEGY_LIVE.md", detail: "the rule, and every ruling and correction behind it, in the order they were made." },
+  { label: "The Live Trading tab", detail: "the reading this rule produces now: each market's stage, the level in play, and the ticket it would take." }
+];
+function liveTradeLogicRows(rows) {
+  return rows.map(row => `
+        <li>
+          <b>${escapeHtml(row.label)}</b>
+          <span>${escapeHtml(row.detail)}</span>
+        </li>`).join("");
+}
+
+function renderLiveTradeLogic() {
+  const panel = document.getElementById("liveTradeLogicPanel");
+  if (!panel) return;
+
+  panel.innerHTML = `
+    <article class="live-trade-logic-card summary">
+      <div class="live-trade-logic-head">
+        <h3>The rule in one sentence</h3>
+        <span class="live-trade-logic-tag">One trade per market</span>
+      </div>
+      <p class="live-trade-logic-lead">${escapeHtml(LIVE_TRADE_LOGIC_SUMMARY)}</p>
+    </article>
+
+    <article class="live-trade-logic-card">
+      <div class="live-trade-logic-head">
+        <h3>Step by step</h3>
+        <span class="live-trade-logic-tag">${LIVE_TRADE_LOGIC_STEPS.length} steps</span>
+      </div>
+      <ol class="live-trade-logic-steps">
+        ${LIVE_TRADE_LOGIC_STEPS.map(step => `
+        <li>
+          <b>${escapeHtml(step.title)}</b>
+          <span>${escapeHtml(step.detail)}</span>
+        </li>`).join("")}
+      </ol>
+    </article>
+
+    <article class="live-trade-logic-card">
+      <div class="live-trade-logic-head">
+        <h3>How a trade ends</h3>
+        <span class="live-trade-logic-tag">No trailing, no timer</span>
+      </div>
+      <ul class="live-trade-logic-rows">
+        ${liveTradeLogicRows(LIVE_TRADE_LOGIC_ENDINGS)}
+      </ul>
+    </article>
+
+    <article class="live-trade-logic-card">
+      <div class="live-trade-logic-head">
+        <h3>What has to be true before anything is sent</h3>
+        <span class="live-trade-logic-tag">Each one refuses, none warns</span>
+      </div>
+      <ul class="live-trade-logic-rows">
+        ${liveTradeLogicRows(LIVE_TRADE_LOGIC_GATES)}
+      </ul>
+    </article>
+    <article class="live-trade-logic-card">
+      <div class="live-trade-logic-head">
+        <h3>The account's own limits</h3>
+        <span class="live-trade-logic-tag">FTMO's rules</span>
+      </div>
+      <ul class="live-trade-logic-limits">
+        ${LIVE_TRADE_LOGIC_LIMITS.map(row => `
+        <li>
+          <b>${escapeHtml(row.value)}</b>
+          <span class="live-trade-logic-limit-label">${escapeHtml(row.label)}</span>
+          <span class="live-trade-logic-limit-note">${escapeHtml(row.note)}</span>
+        </li>`).join("")}
+      </ul>
+      <p class="live-trade-logic-footnote">Read from FTMO on 2026-09-30, and FTMO's to change. They are the account's own rules rather than a level this system promises to reach.</p>
+    </article>
+
+    <article class="live-trade-logic-card">
+      <div class="live-trade-logic-head">
+        <h3>Where this lives</h3>
+        <span class="live-trade-logic-tag">Repository paths</span>
+      </div>
+      <ul class="live-trade-logic-rows mono">
+        ${liveTradeLogicRows(LIVE_TRADE_LOGIC_FILES)}
+      </ul>
+    </article>
+
+    <article class="live-trade-logic-card note">
+      <div class="live-trade-logic-head">
+        <h3>One thing is out of step on this machine</h3>
+        <span class="live-trade-logic-tag">Machine state, not the rule</span>
+      </div>
+      <p>The task registered on 2026-10-05 was generated with the older hand cap <span class="live-trading-mono">--max-open 1</span>, so while it stands, the loop it starts holds one working ticket across all four markets even though the rule above is one per market. Re-running <span class="live-trading-mono">scripts/register-live-trading-trader-task.ps1 -Arm</span> takes the current rule. That is a live-workflow change run deliberately at the terminal, not something a page does.</p>
+    </article>
+
+    <article class="live-trade-logic-card caution">
+      <div class="live-trade-logic-head">
+        <h3>What this page does not claim</h3>
+        <span class="live-trade-logic-tag">Not a signal</span>
+      </div>
+      <p>It describes a rule, not a record: a ticket that fills is a fact about the market, not evidence that the rule makes money. The rule is not a validated profit rule, and the five-to-one geometry is arithmetic about the three prices rather than a win rate. The account's limits are FTMO's own rules, read from FTMO, and a traded ticket is a mechanical consequence of the rule rather than a statement about where the market is going.</p>
+    </article>
+  `;
+}
+
 function setTab(tab) {
   const availableTabs = getAvailableTopLevelTabs();
   const fallbackTab = availableTabs.includes("overview") ? "overview" : (availableTabs[0] || "overview");
@@ -16776,6 +17007,7 @@ function setTab(tab) {
   const shadowLogicBacktestView = document.getElementById("shadowLogicBacktestView");
   const liveTradingView = document.getElementById("liveTradingView");
   const architectureView = document.getElementById("architectureView");
+  const liveTradeLogicView = document.getElementById("liveTradeLogicView");
   const agentView = document.getElementById("agentView");
 
   if (overviewView) overviewView.classList.toggle("active-view", activeTab === "overview");
@@ -16787,6 +17019,7 @@ function setTab(tab) {
   if (shadowLogicBacktestView) shadowLogicBacktestView.classList.toggle("active-view", activeTab === "shadow-logic-backtest");
   if (liveTradingView) liveTradingView.classList.toggle("active-view", activeTab === "live-trading");
   if (architectureView) architectureView.classList.toggle("active-view", activeTab === "architecture");
+  if (liveTradeLogicView) liveTradeLogicView.classList.toggle("active-view", activeTab === "live-trade-logic");
   if (agentView) agentView.classList.toggle("active-view", orderedAgents.includes(activeTab));
 
   if (orderedAgents.includes(activeTab)) renderAgentDetail(activeTab);
@@ -16796,6 +17029,9 @@ function setTab(tab) {
   if (activeTab === "factor-edge-lab") renderFactorEdgeLab(factorEdgeLabData || {});
   if (activeTab === "shadow-logic-backtest") renderShadowLogicBacktest(phase2ShadowBacktestData || {});
   if (activeTab === "live-trading") renderLiveTrading(liveTradingData || {});
+  // The System section's own rule page: static copy, so it renders the same whether or not a snapshot loaded,
+  // and it is rendered here rather than on load so a reader who never opens the tab pays nothing for it.
+  if (activeTab === "live-trade-logic") renderLiveTradeLogic();
   if (activeTab === "architecture") {
     renderArchitecture();
     loadArchitectureManifest().catch(() => {});
