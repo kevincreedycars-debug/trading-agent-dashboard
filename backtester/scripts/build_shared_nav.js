@@ -1,7 +1,7 @@
 'use strict';
 
 // Renders the shared navigation block from backtester/partials/shared_nav.html into the published pages,
-// so the twelve copies cannot drift apart again.
+// so the thirteen copies cannot drift apart again.
 //
 //   node backtester/scripts/build_shared_nav.js --check            verify every page carries the render
 //   node backtester/scripts/build_shared_nav.js --write            place or refresh the block
@@ -27,9 +27,9 @@ const ORDER = {
   standalone: ['bar-standalone', 'rail-standalone', 'css'],
 };
 
-// The twelve published pages. "place" says what a first placement does: index.html already carries a bar and a
+// The thirteen published pages. "place" says what a first placement does: index.html already carries a bar and a
 // rail, so its anchor is the whole span they occupy, from the line break before the bar to the line break
-// after the rail, and the block replaces it rather than joining it. The other ten carry neither, so the
+// after the rail, and the block replaces it rather than joining it. The other twelve carry neither, so the
 // block goes in under the body tag and nothing already on the page moves. Once a page carries the markers
 // the anchor is never consulted again.
 const PAGES = [
@@ -52,6 +52,12 @@ const PAGES = [
   // USD-only twin of the call map, so it carries the block like the map and its own print block takes the bar and
   // the rail back off the sheet.
   { file: 'usd-layer1-call-flow.html', variant: 'standalone', place: { mode: 'after', pattern: /<body\b[^>]*>/ } },
+  // Added 2026-10-09, the thirteenth page: the USD Layer 1 logic dossier is the reading page behind the same
+  // call, so it is reached the way the two maps are, and its own print block takes the bar and the rail off the
+  // sheet. Unlike them it is generated - backtester/scripts/build_usd_layer1_logic_page.js renders it from
+  // docs/analysis-engine/USD_LAYER1_LOGIC.md - and that builder keeps this block byte for byte, so regenerating
+  // the dossier cannot quietly take the page back off the navigation.
+  { file: 'usd-layer1-logic.html', variant: 'standalone', place: { mode: 'after', pattern: /<body\b[^>]*>/ } },
 ];
 
 function readParts() {
@@ -126,7 +132,7 @@ function applyPage(source, page) {
 }
 
 // The two variants must stay one navigation, not two: same bar but for the live spans, same rail but for
-// the way an entry is driven. These checks fail loudly here rather than quietly in eleven pages.
+// the way an entry is driven. These checks fail loudly here rather than quietly in thirteen pages.
 function selfChecks() {
   const parts = readParts();
   const liveSpans = /\n? {0,6}<span id="currentDate">[\s\S]*?UK --:-- \| ET --:--<\/span>/;

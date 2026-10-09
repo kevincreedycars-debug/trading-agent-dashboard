@@ -1,6 +1,6 @@
-// The same top bar and the same side rail on all twelve served pages is a promise about the bytes a reader is
+// The same top bar and the same side rail on all thirteen served pages is a promise about the bytes a reader is
 // served, so this guard proves both halves of it: first that each page's marker block is the partial's render
-// byte for byte, then that the twelve pages, opened in a browser, show one bar, one rail, working links and no
+// byte for byte, then that the thirteen pages, opened in a browser, show one bar, one rail, working links and no
 // layout damage. A page edited on its own, a lost or re-ordered entry, a renamed label, a rail entry that
 // points at nothing, a rail that covers a table or a page the block widened all fail here.
 //
@@ -22,15 +22,14 @@ const root = nav.ROOT;
 const builder = path.join(root, "backtester", "scripts", "build_shared_nav.js");
 
 // The navigation the user asked for, label by label and in order, pinned here so a partial that drifts fails
-// rather than quietly redefining the agreement. The bar's fifth entry is the printable call map: a page a
-// reader opens and prints rather than a dashboard view, which since 2026-10-04 is one of the builder's nav
-// pages like the seventh, the USD one-pager published 2026-10-08, and is reached the same way from every page.
-// pages like the sixth, and is reached the same way from every page. The sixth is the what-moves-gold page
-// published 2026-10-04: both carry the block, and the call map's own print block keeps the bar and the rail
-// off the sheet a reader prints.
+// rather than quietly redefining the agreement. Four of the bar's entries are pages of their own rather than
+// dashboard views: the printable call map (added 2026-10-04, the fifth), the USD one-pager (2026-10-08, the
+// sixth), the USD Layer 1 logic dossier (2026-10-09, the seventh) and the what-moves-gold page (2026-10-04, the
+// eighth). Each carries the block like every other page, each keeps the bar and the rail off its own printed
+// sheet, and each is reached the same way from every page.
 const BRAND = "Asset Directional Movement Dashboard";
-const BAR_LABELS = ["North Star Brief", "Standing Dashboard", "Gold", "Backtest Flow", "Call Map", "USD Call Map", "What moves gold"];
-const BAR_HREFS = ["dashboard-northstar.html", "standing-dashboard.html", "gold.html", "backtest-flow.html", "layer1-call-flow.html", "usd-layer1-call-flow.html", "what-moves-gold.html"];
+const BAR_LABELS = ["North Star Brief", "Standing Dashboard", "Gold", "Backtest Flow", "Call Map", "USD Call Map", "USD Logic Dossier", "What moves gold"];
+const BAR_HREFS = ["dashboard-northstar.html", "standing-dashboard.html", "gold.html", "backtest-flow.html", "layer1-call-flow.html", "usd-layer1-call-flow.html", "usd-layer1-logic.html", "what-moves-gold.html"];
 const GROUPS = ["Operate", "Live", "Evidence", "System"];
 const RAIL_LABELS = [
   "Overview", "USD", "EUR", "Gold", "Silver", "NQ", "BTC", "WTI", "GBP", "Pair Analysis",
@@ -45,11 +44,12 @@ const RAIL_TABS = [
 // Off the dashboard the gold entry is the gold tabs page rather than the dashboard's own gold view: that page
 // is what the label names, and its hash handling already works with no script of its own.
 const RAIL_HREFS = RAIL_TABS.map((tab, index) => (index === 3 ? "gold.html#direction" : `index.html#${tab}`));
-// The rail also ends with two outbound entries, added 2026-10-04 and 2026-10-08: like the matching bar entries
-// dashboard set for the printable call map, so it is written as a link in both variants rather than as a
-// data-tab button, and it is pinned here for the same reason the labels are.
-const RAIL_OUTBOUND_HREFS = ["layer1-call-flow.html", "usd-layer1-call-flow.html"];
-const RAIL_OUTBOUND_LABELS = ["Call Map", "USD Call Map"];
+// The rail also ends with three outbound entries, added 2026-10-04, 2026-10-08 and 2026-10-09: the two printable
+// call maps and the USD Layer 1 logic dossier leave the dashboard set for pages of their own, so they are written
+// as links in both variants rather than as data-tab buttons, and they are pinned here for the same reason the
+// labels are.
+const RAIL_OUTBOUND_HREFS = ["layer1-call-flow.html", "usd-layer1-call-flow.html", "usd-layer1-logic.html"];
+const RAIL_OUTBOUND_LABELS = ["Call Map", "USD Call Map", "USD Logic Dossier"];
 const MARK = "ADM";
 const HEAD_LABEL = "Control Room";
 const FOOT = "Published dashboard";
@@ -126,7 +126,7 @@ test("every page carries the partial's render byte for byte, in the page's own l
   } catch (error) {
     report = error.stdout || "";
   }
-  assert.match(report, /--check: 12 pages, 17 rail entries, 2 outbound, 0 change\(s\)/, "--check must find all twelve pages current");
+  assert.match(report, /--check: 13 pages, 17 rail entries, 3 outbound, 0 change\(s\)/, "--check must find all thirteen pages current");
   assert.doesNotMatch(report, /: (refreshed|placed)$/m, "no page may still need the block written into it");
   nav.PAGES.forEach(page => {
     const source = read(page.file);
@@ -184,7 +184,7 @@ test("the partial is the navigation that was agreed, in both variants", () => {
     }
   });
 });
-test("all twelve served pages show one bar and one rail, and every link it offers goes somewhere", async () => {
+test("all thirteen served pages show one bar and one rail, and every link it offers goes somewhere", async () => {
   // The gold page's strip was re-ordered and widened on 2026-10-03 - Start here, Direction, Movement - L2L and half
   // L2L, Factor tables (draft) and Archive census - so the direction read and the two movement ranges sit together
   // and the two archive censuses moved to the end, and it gained a first tab on 2026-10-04, What moves gold, framing
@@ -352,6 +352,18 @@ test("a rail entry lands on the view its label names, from any page and from ins
     await view.waitForFunction(() => {
       const heading = document.querySelector("h1");
       return !!heading && heading.textContent.trim() === "How the USD Layer 1 call is made";
+    });
+
+    // The rail's third outbound entry is the USD Layer 1 logic dossier, published 2026-10-09: the same click
+    // inside the same frame lands on the reading page behind that call, which opens on the dossier's own title and
+    // carries the whole text rather than a summary of it. Its own guard reads the Markdown under it and compares.
+    await view.goto(`${base}/gold.html#direction`, { waitUntil: "load" });
+    await view.locator('iframe[title="Gold direction scorecard"]').scrollIntoViewIfNeeded();
+    await view.frameLocator('iframe[title="Gold direction scorecard"]').locator(".side-rail nav a.side-rail-link", { hasText: /^USD Logic Dossier$/ }).click();
+    await view.waitForURL(/\/usd-layer1-logic\.html$/);
+    await view.waitForFunction(() => {
+      const heading = document.querySelector("h1");
+      return !!heading && heading.textContent.trim() === "USD Layer 1 — complete logic dossier";
     });
 
     // gold.html frames five of these pages. An entry clicked inside one of those frames has to move the whole

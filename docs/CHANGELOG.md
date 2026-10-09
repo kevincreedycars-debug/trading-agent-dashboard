@@ -1,5 +1,21 @@
 # Changelog
 
+## 2026-10-09
+
+### Added
+
+- Published `usd-layer1-logic.html`, the reading copy of `docs/analysis-engine/USD_LAYER1_LOGIC.md` - all 11 sections from its 713 source lines, tables and code blocks included, rendered by `backtester/scripts/build_usd_layer1_logic_page.js` through `backtester/lib/markdown_document.js` - with the plain-text download `docs/analysis-engine/USD_LAYER1_LOGIC.md.txt` (48,307 bytes) and the guard that travels with them, `tests/usd_layer1_logic_page.browser.test.js` (6/6), alongside the renderer's unit tests `backtester/tests/markdown_document.test.js` (6/6). The dossier settles the 85-versus-87 question from the code; a published page is a description of the call, not evidence about it.
+- Added an eighth bar entry, `USD Logic Dossier`, and a third outbound rail entry of the same label to both variants in `backtester/partials/shared_nav.html`, so the dossier is one click from every published page; the rail keeps its seventeen `data-tab` entries, because these three outbound entries leave the dashboard set for pages of their own.
+- Registered the dossier as the thirteenth page in `backtester/scripts/build_shared_nav.js` and wrote the block into it with `--write`: the new page placed, the other twelve refreshed, and `--check` reading `13 pages, 17 rail entries, 3 outbound, 0 change(s)`.
+
+### Changed
+
+- Taught `backtester/scripts/build_usd_layer1_logic_page.js` to keep the shared navigation block through a rebuild: it reads any `SHARED-NAV:START` .. `SHARED-NAV:END` region from the page it is about to replace, holds it byte for byte and splices it back in on the line after the body tag, so regenerating the dossier cannot take the page back off the navigation; a tree whose page carries no block is written exactly as before, and `--check` still compares whole bytes.
+- Gave `backtester/templates/usd-layer1-logic.html` what a page carrying the block has to say for itself in print: the bar and the rail are named with both of their classes and taken off the sheet, and the content margin the rail asked for is given back, so the printed dossier still starts at the left edge.
+- Extended `backtester/tests/site_nav_consistency.browser.test.js` with the eighth bar label and its href, the third outbound label pair, the updated `--check` report pin, and a third hop made from inside `gold.html`'s gold-direction frame onto the dossier's own heading; the guard is 5/5.
+- Added one footer link on `usd-layer1-call-flow.html`, `usd-layer1-logic.html · the full logic dossier`; its guard already checks that every footer link resolves to a file which ships with the page, and `tests/usd_layer1_call_flow.browser.test.js` is 6/6.
+- Added `docs/USD_LOGIC_DOSSIER_PUBLICATION_20261009.md` as the handoff note for this release.
+
 ## 2026-10-08
 
 ### Added

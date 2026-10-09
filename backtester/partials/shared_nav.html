@@ -1,7 +1,7 @@
 <!--
   Shared navigation block: the one canonical source for the bar, the rail and their CSS.
 
-  This file is not served. backtester/scripts/build_shared_nav.js renders it into the twelve published pages,
+  This file is not served. backtester/scripts/build_shared_nav.js renders it into the thirteen published pages,
   between the <!-- SHARED-NAV:START --> and <!-- SHARED-NAV:END --> markers, and
   backtester/tests/site_nav_consistency.browser.test.js compares the bytes of every copy with the render.
   To change the navigation, change this file, then run
@@ -11,21 +11,23 @@
   Two named variants, because the pages are built two ways:
     dashboard  index.html: the rail is the first column of .dashboard-frame and every entry is the
                data-tab button script.js already drives.
-    standalone the other ten pages: the rail is a direct child of <body> and every entry is a plain
+    standalone the other twelve pages: the rail is a direct child of <body> and every entry is a plain
                link, so nothing outside the page is needed to move around the site. Those links carry
-               target="_top" because gold.html shows four of them in frames: an entry clicked inside a
-               frame opens the page it names in the window, exactly as it does on a page opened directly.
+                target="_top" because gold.html shows the outbound links in frames: an entry clicked
+                inside a frame opens the page it names in the window, exactly as it does on a page
+                opened directly.
 
-  Both rails end with the same two outbound entries: links to the two printable call maps, the whole picture
-  and the USD one, which leave the dashboard set for pages of their own rather than opening a view. They are
-  written as links in both variants for that reason, carry no data-tab so the dashboard's tab binder leaves
-  them alone, and carry target="_top" so the same click inside a gold frame opens the map in the whole window.
+  Both rails end with the same three outbound entries: links to the two printable call maps, the whole picture
+  and the USD one, and to the USD Layer 1 logic dossier, which leave the dashboard set for pages of their own
+  rather than opening a view. They are written as links in both variants for that reason, carry no data-tab so
+  the dashboard's tab binder leaves them alone, and carry target="_top" so the same click inside a gold frame
+  opens the page in the whole window rather than inside the frame.
 
   The printable call maps carry this block themselves - the whole picture since 2026-10-04, the USD one since
-  2026-10-08: the bar and the rail reach them like any other page, and each map's own @media print block takes
-  both off the sheet, so what a reader prints is still the map alone on one page. A page that carries the block
-  and is meant to print must say so itself - the block never hides itself, because on a dashboard view it is the
-  navigation.
+  2026-10-08 - and so does the USD Layer 1 logic dossier, published 2026-10-09: the bar and the rail reach them
+  like any other page, and each of those pages' own @media print block takes both off the sheet, so what a reader
+  prints is still the map, or the dossier, alone on the page. A page that carries the block and is meant to print
+  must say so itself - the block never hides itself, because on a dashboard view it is the navigation.
 
   The block brings its own CSS inside <style id="shared-nav-css"> so it looks the same on a page that
   links styles.css and on gold-factor-wip.html, which loads nothing at all. No <link>, <script>, image,
@@ -41,6 +43,7 @@
     <a class="topbar-link" href="backtest-flow.html" target="_top">Backtest Flow</a>
     <a class="topbar-link" href="layer1-call-flow.html" target="_top">Call Map</a>
     <a class="topbar-link" href="usd-layer1-call-flow.html" target="_top">USD Call Map</a>
+    <a class="topbar-link" href="usd-layer1-logic.html" target="_top">USD Logic Dossier</a>
     <a class="topbar-link" href="what-moves-gold.html" target="_top">What moves gold</a>
     <span id="currentDate">Loading date...</span>
     <span
@@ -62,6 +65,7 @@
     <a class="topbar-link" href="backtest-flow.html" target="_top">Backtest Flow</a>
     <a class="topbar-link" href="layer1-call-flow.html" target="_top">Call Map</a>
     <a class="topbar-link" href="usd-layer1-call-flow.html" target="_top">USD Call Map</a>
+    <a class="topbar-link" href="usd-layer1-logic.html" target="_top">USD Logic Dossier</a>
     <a class="topbar-link" href="what-moves-gold.html" target="_top">What moves gold</a>
   </div>
 </header>
@@ -93,11 +97,12 @@
     <button class="tab-button" data-tab="shadow-logic-backtest">Shadow Logic Backtest</button>
     <span class="side-rail-group">System</span>
     <button class="tab-button" data-tab="architecture">Architecture</button>
-    <!-- The rail's outbound entries leave the dashboard for the printable call maps - the whole picture and the
-         USD one - so they are anchors written the same way in both variants, with no data-tab, and the tab binder
-         never sees them. -->
+    <!-- The rail's outbound entries leave the dashboard for pages of their own - the two printable call maps, the
+         whole picture and the USD one, and the USD Layer 1 logic dossier - so they are anchors written the same
+         way in both variants, with no data-tab, and the tab binder never sees them. -->
     <a class="side-rail-link" href="layer1-call-flow.html" target="_top">Call Map</a>
     <a class="side-rail-link" href="usd-layer1-call-flow.html" target="_top">USD Call Map</a>
+    <a class="side-rail-link" href="usd-layer1-logic.html" target="_top">USD Logic Dossier</a>
   </nav>
   <div class="side-rail-foot">
     <span class="side-rail-status-dot" aria-hidden="true"></span>
@@ -134,6 +139,7 @@
     <a class="tab-button" href="index.html#architecture" target="_top">Architecture</a>
     <a class="side-rail-link" href="layer1-call-flow.html" target="_top">Call Map</a>
     <a class="side-rail-link" href="usd-layer1-call-flow.html" target="_top">USD Call Map</a>
+    <a class="side-rail-link" href="usd-layer1-logic.html" target="_top">USD Logic Dossier</a>
   </nav>
   <div class="side-rail-foot">
     <span class="side-rail-status-dot" aria-hidden="true"></span>

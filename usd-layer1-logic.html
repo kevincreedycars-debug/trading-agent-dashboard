@@ -1,0 +1,771 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>USD Layer 1 — complete logic dossier · Asset Directional Movement Dashboard</title>
+<meta name="description" content="The committed USD Layer 1 logic dossier, published as a dashboard page: the eight-step pipeline, the snapshot contract, the written rulebook, the exported gate, the document-versus-code gaps and the frozen worked example. The same Markdown source is downloadable as plain text.">
+<meta property="og:title" content="USD Layer 1 — complete logic dossier">
+<meta property="og:description" content="How one market snapshot becomes one 24-hour dollar call, stated as the code runs it, with the document-versus-code gaps flagged.">
+<meta property="og:type" content="article">
+<!-- Visual work in this project consults $trading-dashboard-aesthetic-rules and $dashboard-layout-safety-rules first. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{color-scheme:dark;--bg:#080e16;--panel:#101b29;--panel-2:#0c1521;--line:#304358;--text:#e8eef5;--muted:#b2c1d0;--dim:#8296a9;--amber:#f2c167;--blue:#8acfff;--teal:#63d3c8;--good:#8fe0a8;--bad:#ff9d8a;--mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;--sans:"IBM Plex Sans",system-ui,sans-serif;--display:"Space Grotesk","IBM Plex Sans",system-ui,sans-serif}
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(1100px 560px at 12% -8%,rgba(94,161,255,.10),transparent 60%),var(--bg);color:var(--text);font:15px/1.62 var(--sans)}
+h1,h2,h3,h4,p,li,td,th,ol,ul,pre,figure{margin:0;overflow-wrap:anywhere}
+h1{font:600 clamp(23px,3vw,32px)/1.16 var(--display);letter-spacing:-.01em}
+h2{font:600 19.5px/1.3 var(--display)}
+h3{font:600 15.5px/1.32 var(--display)}
+h4{font:600 13px/1.4 var(--mono);letter-spacing:.04em;color:var(--muted)}
+a{color:var(--blue)}
+.eyebrow{font:12px/1.5 var(--mono);letter-spacing:.12em;color:var(--amber);text-transform:uppercase}
+/* The head carries the route back, the title, the download and the provenance, so a reader who only
+   ever sees the top of the page still knows what they are reading and where the file came from. */
+.page-head{max-width:1280px;margin:auto;padding:24px 22px 18px;display:grid;gap:11px}
+.page-head>*{min-width:0}
+.head-top{display:flex;flex-wrap:wrap;gap:14px;justify-content:space-between;align-items:baseline}
+.back,.back:visited{color:var(--muted);font:12px/1.5 var(--mono);text-decoration:none;border-bottom:1px dashed rgba(178,193,208,.5)}
+.back:hover{color:var(--blue);border-bottom-color:var(--blue)}
+.lede{color:var(--muted);font-size:15px;max-width:900px}
+.download-row{display:flex;flex-wrap:wrap;gap:12px;align-items:center;border:1px solid var(--line);border-left:3px solid var(--teal);background:linear-gradient(180deg,rgba(99,211,200,.06),transparent 60%),var(--panel-2);padding:12px 14px}
+.download{display:inline-flex;align-items:center;gap:8px;border:1px solid rgba(99,211,200,.42);border-radius:999px;background:rgba(99,211,200,.12);color:#d8fbf6;font:12.5px/1.5 var(--mono);padding:7px 13px;text-decoration:none}
+.download:hover,.download:focus-visible{background:rgba(99,211,200,.2);border-color:var(--teal);color:#fff}
+.download-note{color:var(--dim);font:12px/1.55 var(--mono);min-width:0}
+.chips{display:flex;flex-wrap:wrap;gap:7px;list-style:none;padding:0}
+.chips li{border:1px solid var(--line);border-radius:999px;padding:3px 10px;font:11px/1.55 var(--mono);color:var(--muted);min-width:0}
+.frame{max-width:1280px;margin:auto;padding:0 22px 34px;display:grid;grid-template-columns:minmax(0,252px) minmax(0,1fr);gap:24px;align-items:start}
+.frame>*{min-width:0}
+.index{position:sticky;top:14px;border:1px solid var(--line);background:var(--panel);padding:14px 14px 16px}
+.toc{list-style:none;margin:9px 0 0;padding:0;display:grid;gap:2px}
+.toc a{display:block;padding:4px 7px;border-radius:4px;color:var(--muted);text-decoration:none;font-size:13px;border-left:2px solid transparent}
+.toc a:hover,.toc a:focus-visible{background:rgba(138,207,255,.1);color:var(--text);border-left-color:var(--blue)}
+.doc{display:grid;gap:20px}
+/* A grid item's automatic minimum size is its content's, and the widest table in the dossier is wider
+   than a narrow column: without this the table would push the page sideways instead of scrolling inside
+   its own frame. */
+.doc>*{min-width:0}
+.preamble{border:1px solid var(--line);border-left:3px solid var(--blue);background:linear-gradient(180deg,rgba(255,255,255,.022),transparent 42%),var(--panel-2);padding:16px 18px}
+.chapter{border:1px solid var(--line);border-left:3px solid var(--line);background:linear-gradient(180deg,rgba(255,255,255,.022),transparent 40%),var(--panel-2);padding:17px 19px 19px;scroll-margin-top:14px}
+.chapter>*+*,.preamble>*+*{margin-top:11px}
+.chapter h3,.chapter h4{margin-top:18px;padding-top:14px;border-top:1px solid rgba(48,67,88,.72)}
+.chapter h2+p{margin-top:9px}
+ul,ol{padding-left:21px}
+li+li{margin-top:5px}
+li::marker{color:var(--dim)}
+strong{color:#fff}
+em{color:var(--amber)}
+/* Inline code is a claim about a field or a node name, so it is chipped rather than left as prose. */
+:not(pre)>code{background:rgba(138,207,255,.1);border:1px solid rgba(138,207,255,.18);border-radius:4px;padding:1px 5px;font:12.5px/1.45 var(--mono);color:#dceaf8}
+.code{background:#060a11;border:1px solid var(--line);border-left:3px solid var(--teal);padding:11px 13px;overflow-x:auto;font:12.5px/1.6 var(--mono);color:#d7e6f2;tab-size:2}
+.code code{font-family:inherit;white-space:pre}
+/* Wide tables scroll inside their own frame on purpose, so a six-column table can never push the page
+   itself sideways; everything else reflows. Numeric columns stay on one line because they hold a score. */
+.table-wrap{overflow-x:auto;border:1px solid var(--line);background:#0a1220}
+table{border-collapse:collapse;width:100%;font-size:13.5px}
+th,td{border-bottom:1px solid rgba(48,67,88,.72);padding:7px 10px;text-align:left;vertical-align:top}
+th{font:600 11px/1.5 var(--mono);letter-spacing:.07em;text-transform:uppercase;color:var(--muted);background:rgba(255,255,255,.035)}
+tbody tr:last-child td{border-bottom:0}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+td.center,th.center{text-align:center}
+hr{border:0;border-top:1px solid rgba(48,67,88,.6)}
+/* The dossier separates every section with a thematic break, and the page separates sections with panels,
+   so a break that ends a section is already drawn by the panel edge and only draws a second line. */
+.chapter>hr:last-child,.preamble>hr:last-child{display:none}
+footer{max-width:1280px;margin:auto;padding:0 22px 40px;display:grid;gap:10px;color:var(--dim);font-size:12.5px}
+footer>*{min-width:0}
+.links{display:flex;flex-wrap:wrap;gap:8px}
+.links a{border:1px solid var(--line);border-radius:999px;padding:4px 10px;font:11.5px/1.6 var(--mono);text-decoration:none;color:var(--muted)}
+.links a:hover,.links a:focus-visible{border-color:var(--blue);color:var(--blue)}
+.mono{font-family:var(--mono)}
+.source-line{font:12px/1.65 var(--mono);color:var(--dim)}
+.source-line .eyebrow{margin-right:7px}
+@media (max-width:1080px){
+  .frame{grid-template-columns:minmax(0,1fr)}
+  .index{position:static}
+  .toc{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+}
+/* The dossier is a reading document, so print does not try to keep it on one sheet: it re-points the
+   palette tokens at paper ink and lets the sections break across pages, instead of restating every rule. */
+@media print{
+  :root{color-scheme:light;--bg:#ffffff;--panel:#ffffff;--panel-2:#ffffff;--line:#c9d3de;--text:#0f1720;--muted:#3a4a5c;--dim:#4a5a6c;--amber:#8a5a00;--blue:#1d4ed8;--teal:#0f766e;--good:#166534;--bad:#b91c1c}
+  body{background:#fff;color:var(--text)}
+  /* The published copy of this page carries the shared navigation block, which never hides itself: on paper the
+     bar and the rail are not the navigation, so the page takes them off its own sheet. Both of the block's
+     classes are named because its own rules use them, and the content margin the rail asks for is given back,
+     so the printed sheet is the dossier alone, from the left edge. */
+  body > header.site-nav.topbar,body > aside.site-nav.side-rail{display:none}
+  body > aside.site-nav.side-rail ~ *{margin-left:0;max-width:100%}
+  strong{color:#0f1720}
+  .download{border-color:var(--blue);background:#fff;color:var(--blue)}
+  .code{background:#f4f7fa;color:#101d2c}
+  :not(pre)>code{background:#eef3f8;color:#101d2c}
+  .table-wrap{background:#fff}
+  th{background:#eef3f8;color:#1b2a3a}
+  td,li,p,span,h4{color:#213040}
+  .chapter{border-left:3px solid var(--blue)}
+  .index{break-inside:avoid}
+}
+</style>
+</head>
+<body>
+<!-- SHARED-NAV:START -->
+<header class="topbar site-nav">
+  <div class="topbar-brand">Asset Directional Movement Dashboard</div>
+  <div class="topbar-meta">
+    <a class="topbar-link" href="dashboard-northstar.html" target="_top">North Star Brief</a>
+    <a class="topbar-link" href="standing-dashboard.html" target="_top">Standing Dashboard</a>
+    <a class="topbar-link" href="gold.html" target="_top">Gold</a>
+    <a class="topbar-link" href="backtest-flow.html" target="_top">Backtest Flow</a>
+    <a class="topbar-link" href="layer1-call-flow.html" target="_top">Call Map</a>
+    <a class="topbar-link" href="usd-layer1-call-flow.html" target="_top">USD Call Map</a>
+    <a class="topbar-link" href="usd-layer1-logic.html" target="_top">USD Logic Dossier</a>
+    <a class="topbar-link" href="what-moves-gold.html" target="_top">What moves gold</a>
+  </div>
+</header>
+<aside class="side-rail site-nav" aria-label="Primary navigation">
+  <div class="side-rail-head">
+    <span class="side-rail-mark">ADM</span>
+    <span class="side-rail-label">Control Room</span>
+  </div>
+  <nav class="tab-bar side-rail-tabs" aria-label="Site navigation">
+    <span class="side-rail-group">Operate</span>
+    <a class="tab-button" href="index.html#overview" target="_top">Overview</a>
+    <a class="tab-button" href="index.html#USD" target="_top">USD</a>
+    <a class="tab-button" href="index.html#EUR" target="_top">EUR</a>
+    <a class="tab-button" href="gold.html#direction" target="_top">Gold</a>
+    <a class="tab-button" href="index.html#SILVER" target="_top">Silver</a>
+    <a class="tab-button" href="index.html#NQ" target="_top">NQ</a>
+    <a class="tab-button" href="index.html#BTC" target="_top">BTC</a>
+    <a class="tab-button" href="index.html#WTI" target="_top">WTI</a>
+    <a class="tab-button" href="index.html#GBP" target="_top">GBP</a>
+    <a class="tab-button" href="index.html#layer2" target="_top">Pair Analysis</a>
+    <span class="side-rail-group">Live</span>
+    <a class="tab-button" href="index.html#live-trading" target="_top">Live Trading</a>
+    <span class="side-rail-group">Evidence</span>
+    <a class="tab-button" href="index.html#backtest" target="_top">Backtest / Accuracy</a>
+    <a class="tab-button" href="index.html#backtest-engine" target="_top">Backtest Engine</a>
+    <a class="tab-button" href="index.html#research-proof-map" target="_top">Research Proof Map</a>
+    <a class="tab-button" href="index.html#factor-edge-lab" target="_top">Factor Edge Lab</a>
+    <a class="tab-button" href="index.html#shadow-logic-backtest" target="_top">Shadow Logic Backtest</a>
+    <span class="side-rail-group">System</span>
+    <a class="tab-button" href="index.html#architecture" target="_top">Architecture</a>
+    <a class="side-rail-link" href="layer1-call-flow.html" target="_top">Call Map</a>
+    <a class="side-rail-link" href="usd-layer1-call-flow.html" target="_top">USD Call Map</a>
+    <a class="side-rail-link" href="usd-layer1-logic.html" target="_top">USD Logic Dossier</a>
+  </nav>
+  <div class="side-rail-foot">
+    <span class="side-rail-status-dot" aria-hidden="true"></span>
+    <span>Published dashboard</span>
+  </div>
+</aside>
+<style id="shared-nav-css">
+/* Values copied from the published styles.css nav subset (.topbar*, .side-rail*, .tab-bar, .tab-button),
+   scoped to .site-nav so no page's own rules can leak in or be disturbed. The rail splits in two again
+   by structure: inside .dashboard-frame it is the grid column it already was (sticky, 58px under the bar);
+   as a direct child of <body> it is fixed to the left edge and the following blocks are shifted clear.
+   Under 901px the rail becomes the horizontal strip it already becomes on the dashboard, and the block
+   still adds nothing that needs a script. */
+.site-nav.topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;justify-content:space-between;gap:22px;min-height:58px;padding:0 32px;background:rgba(5,8,13,.92);border-bottom:1px solid rgba(255,255,255,.06);backdrop-filter:blur(18px)}
+.site-nav.topbar .topbar-brand{color:#f5f8fc;font-family:"Space Grotesk","IBM Plex Sans",system-ui,sans-serif;font-size:17px;font-weight:700;letter-spacing:.01em;white-space:nowrap}
+.site-nav.topbar .topbar-meta{display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-end;gap:8px}
+.site-nav.topbar .topbar-meta span{border:1px solid rgba(255,255,255,.08);border-radius:999px;color:#d8e4f3;background:rgba(7,11,17,.84);font-family:"IBM Plex Mono",Consolas,monospace;font-size:11px;padding:5px 10px;white-space:nowrap}
+.site-nav.topbar .topbar-dual-clock{font-variant-numeric:tabular-nums}
+.site-nav.topbar .topbar-link{display:inline-flex;align-items:center;border:1px solid rgba(94,161,255,.22);border-radius:999px;color:#d8e4f3;background:rgba(94,161,255,.1);font-family:"IBM Plex Mono",Consolas,monospace;font-size:11px;padding:5px 10px;text-decoration:none;transition:background-color 160ms ease,border-color 160ms ease,color 160ms ease}
+.site-nav.topbar .topbar-link:hover,.site-nav.topbar .topbar-link:focus-visible{background:rgba(94,161,255,.18);border-color:rgba(94,161,255,.36);color:#fff}
+.site-nav.side-rail{display:flex;flex-direction:column;min-width:0;padding:18px 12px 16px;border-right:1px solid rgba(142,169,198,.15);background:linear-gradient(180deg,rgba(12,18,27,.98),rgba(7,12,19,.99))}
+.site-nav .side-rail-head{display:flex;align-items:center;gap:10px;min-width:0;padding:0 8px 18px;border-bottom:1px solid rgba(142,169,198,.13)}
+.site-nav .side-rail-mark{display:grid;place-items:center;width:32px;height:32px;border:1px solid rgba(236,182,85,.42);border-radius:8px;background:rgba(185,137,39,.12);color:#f2c86f;font-family:"IBM Plex Mono",Consolas,monospace;font-size:10px;font-weight:700;letter-spacing:.08em}
+.site-nav .side-rail-label,.site-nav .side-rail-group,.site-nav .side-rail-foot{font-family:"IBM Plex Mono",Consolas,monospace;text-transform:uppercase}
+.site-nav .side-rail-label{min-width:0;color:#e9f0f8;font-size:11px;font-weight:700;letter-spacing:.08em;overflow-wrap:anywhere}
+.site-nav .side-rail-tabs{display:flex;flex:1;flex-direction:column;gap:3px;min-width:0;margin:0;padding:15px 0;overflow-y:auto;overflow-x:hidden;border:0;border-radius:0;background:transparent;box-shadow:none}
+.site-nav .side-rail-group{display:block;margin:14px 8px 6px;color:#697f96;font-size:9px;font-weight:700;letter-spacing:.14em}
+.site-nav .side-rail-group:first-child{margin-top:0}
+.site-nav .side-rail-tabs .tab-button{position:relative;display:block;width:100%;min-width:0;min-height:38px;margin:0;padding:9px 14px 9px 18px;border:1px solid transparent;border-radius:8px;background:transparent;color:#a8b9ca;font-family:"IBM Plex Sans",system-ui,sans-serif;font-size:12px;font-weight:600;letter-spacing:.01em;line-height:1.25;text-align:left;text-decoration:none;text-transform:none;white-space:normal;overflow-wrap:anywhere;word-break:break-word;cursor:pointer}
+.site-nav .side-rail-tabs .tab-button::before{content:"";position:absolute;top:8px;bottom:8px;left:0;width:3px;border-radius:0 4px 4px 0;background:transparent}
+.site-nav .side-rail-tabs .tab-button:hover{border-color:rgba(116,155,198,.22);background:rgba(78,113,150,.13);color:#f2f7fb}
+.site-nav .side-rail-tabs .tab-button.active{border-color:rgba(212,164,68,.2);background:linear-gradient(90deg,rgba(190,139,41,.22),rgba(190,139,41,.06));color:#f3cf81;box-shadow:inset 0 1px 0 rgba(255,228,159,.06)}
+.site-nav .side-rail-tabs .tab-button.active::before{background:#e4af4d}
+/* The rail's outbound entries keep a tab's shape, so the rail still reads as one column, but the marker bar is
+   the link blue and an arrow sits at the right edge where a tab shows nothing. */
+.site-nav .side-rail-tabs .side-rail-link{position:relative;display:block;width:100%;min-width:0;min-height:38px;margin:0;padding:9px 28px 9px 18px;border:1px solid transparent;border-radius:8px;background:transparent;color:#a8b9ca;font-family:"IBM Plex Sans",system-ui,sans-serif;font-size:12px;font-weight:600;letter-spacing:.01em;line-height:1.25;text-align:left;text-decoration:none;white-space:normal;overflow-wrap:anywhere;word-break:break-word;cursor:pointer}
+.site-nav .side-rail-tabs .side-rail-link::before{content:"";position:absolute;top:8px;bottom:8px;left:0;width:3px;border-radius:0 4px 4px 0;background:rgba(94,161,255,.8)}
+.site-nav .side-rail-tabs .side-rail-link::after{content:"\2197";position:absolute;top:50%;right:11px;transform:translateY(-50%);color:#7fade8;font-family:"IBM Plex Mono",Consolas,monospace;font-size:11px;line-height:1}
+.site-nav .side-rail-tabs .side-rail-link:hover,.site-nav .side-rail-tabs .side-rail-link:focus-visible{border-color:rgba(94,161,255,.3);background:rgba(78,113,150,.18);color:#f2f7fb}
+.site-nav .side-rail-foot{display:flex;align-items:center;gap:8px;min-width:0;padding:14px 8px 0;border-top:1px solid rgba(142,169,198,.13);color:#8095aa;font-size:9px;font-weight:600;letter-spacing:.08em;overflow-wrap:anywhere}
+.site-nav .side-rail-status-dot{flex:0 0 auto;width:7px;height:7px;border-radius:50%;background:#48c69a;box-shadow:0 0 12px rgba(72,198,154,.62)}
+@media (min-width:901px){
+.site-nav.side-rail{position:sticky;top:58px;height:calc(100vh - 58px)}
+body > aside.site-nav.side-rail{position:fixed;left:0;top:58px;width:232px;height:calc(100vh - 58px);z-index:19;overflow-y:auto}
+body > aside.site-nav.side-rail ~ *{margin-left:232px;max-width:calc(100% - 232px)}
+}
+@media (max-width:900px){
+.site-nav.side-rail{position:sticky;top:58px;z-index:19;display:block;width:100%;height:auto;padding:0;border-right:0;border-bottom:1px solid rgba(142,169,198,.16)}
+.site-nav .side-rail-head,.site-nav .side-rail-foot,.site-nav .side-rail-group{display:none}
+.site-nav .side-rail-tabs{display:flex;flex-direction:row;gap:6px;margin:0;padding:9px 16px;box-sizing:border-box;max-width:100%;contain:paint;overflow-x:auto;overflow-y:hidden}
+.site-nav .side-rail-tabs .tab-button{flex:0 0 auto;width:auto;min-height:34px;padding:8px 12px;border-radius:7px;white-space:nowrap}
+.site-nav .side-rail-tabs .tab-button::before{top:auto;right:9px;bottom:0;left:9px;width:auto;height:2px;border-radius:2px 2px 0 0}
+.site-nav .side-rail-tabs .side-rail-link{flex:0 0 auto;width:auto;min-height:34px;padding:8px 12px;border-radius:7px;white-space:nowrap}
+.site-nav .side-rail-tabs .side-rail-link::before{top:auto;right:9px;bottom:0;left:9px;width:auto;height:2px;border-radius:2px 2px 0 0}
+.site-nav .side-rail-tabs .side-rail-link::after{display:none}
+}
+@media (max-width:780px){
+.site-nav.topbar{position:static;flex-wrap:wrap;min-height:0;gap:12px;padding:14px 18px}
+.site-nav.topbar .topbar-brand,.site-nav.topbar .topbar-meta{width:100%;justify-content:flex-start}
+.site-nav.topbar .topbar-brand{white-space:normal;overflow-wrap:anywhere}
+.site-nav.topbar .topbar-link{order:-1}
+}
+</style>
+<!-- SHARED-NAV:END -->
+
+<header class="page-head">
+  <div class="head-top">
+    <p class="eyebrow">Analysis engine · USD · Layer 1</p>
+    <a class="back" href="index.html">← Back to the dashboard</a>
+  </div>
+  <h1>USD Layer 1 — complete logic dossier</h1>
+  <p class="lede">The whole USD Layer 1 logic, published as it is written: the eight-node pipeline, the snapshot contract, the rulebook as the document states it, the exported gate as the code runs it, every place the two disagree, and the frozen 2024-01-09 worked example. Read-only research - nothing here is a call, an accuracy claim or a trading edge.</p>
+  <div class="download-row">
+    <a class="download" href="docs/analysis-engine/USD_LAYER1_LOGIC.md.txt" download="USD_LAYER1_LOGIC.md.txt">Download the Markdown source (.txt)</a>
+    <span class="download-note">The same Markdown the sections below are rendered from, one file, byte for byte - so the download can be read without this page.</span>
+  </div>
+  <p class="source-line"><span class="eyebrow">Source</span> docs/analysis-engine/USD_LAYER1_LOGIC.md as committed · 713 lines · 48,307 bytes · sha256 f2b2fd244cd4…</p>
+  <ul class="chips">
+    <li>11 sections</li>
+    <li>read-only research</li>
+    <li>document vs code</li>
+    <li>no warehouse, workflow or live call read</li>
+  </ul>
+</header>
+<div class="frame">
+  <aside class="index" aria-label="Dossier sections">
+    <p class="eyebrow">Sections</p>
+    <ol class="toc">
+      <li><a href="#sec-1">1. One-paragraph summary</a></li>
+      <li><a href="#sec-2">2. Provenance and source of truth</a></li>
+      <li><a href="#sec-3">3. The pipeline: eight steps, one snapshot, one row</a></li>
+      <li><a href="#sec-4">4. Inputs: the snapshot contract</a></li>
+      <li><a href="#sec-5">5. The written rulebook (documented logic), v2.1</a></li>
+      <li><a href="#sec-6">6. The deterministic gate (what actually runs)</a></li>
+      <li><a href="#sec-7">7. Document vs code: the differences that matter</a></li>
+      <li><a href="#sec-8">8. Worked example: the frozen 2024-01-09 snapshot</a></li>
+      <li><a href="#sec-9">9. Downstream of the gate: headline confidence and Layer 2</a></li>
+      <li><a href="#sec-10">10. What a reviewer should scrutinise</a></li>
+      <li><a href="#sec-11">11. How this dossier was built and how to re-check it</a></li>
+    </ol>
+  </aside>
+  <main class="doc">
+    <section class="preamble" aria-label="Purpose, audience and how to read this dossier">
+<p><strong>Purpose.</strong> A single self-contained document that explains, end to end, how the Layer 1 USD directional call is produced by this platform, so that an outside reviewer (human or frontier model) can analyse the logic without access to the repository. It states both what the written rulebook says and what the running code actually does, and it flags every place where those two disagree, because that gap is the most important thing to review.</p>
+<p><strong>Audience.</strong> A frontier model asked to critique the design: factor choice, weights, thresholds, scoring, conviction construction, isolation rules, and what the output can and cannot be used for.</p>
+<p><strong>How to read it.</strong> Two categories are kept apart throughout: <code>Document</code> = the written rulebook (<code>logic/agent_usd_direction.md</code>, v2.1). <code>Code</code> = the deterministic gate that actually emits the call (<code>Calculate USD Conviction</code> in <code>exports/usd_layer1_agent.json</code>). Where the two differ, both are shown. Nothing here is a claim about trading edge, accuracy or profitability.</p>
+<hr>
+    </section>
+    <section class="chapter" id="sec-1">
+<h2 id="sec-1">1. One-paragraph summary</h2>
+<p>Once per run, a USD-only Layer 1 agent reads the newest usable market snapshot from the shared <code>market_snapshots</code> table, fetches its own prose rulebook, and asks a language model (<code>gpt-4.1-mini</code>) to classify ten named macro factors as <code>BULLISH</code>, <code>BEARISH</code> or <code>NEUTRAL</code>. The model's own direction and conviction are then <strong>discarded</strong>: a deterministic Code node re-derives every factor from the raw snapshot, multiplies each factor's sign by a fixed per-horizon weight, sums the bullish and bearish weights, and publishes one direction (<code>BULLISH</code>/<code>BULLISH_LEAN</code>/<code>BEARISH</code>/<code>BEARISH_LEAN</code>/<code>NO_CLEAR_BIAS</code>) plus a conviction number for each of five horizons (24h, 3d, current week, next week, current month). Missing inputs score <code>NEUTRAL</code> and never block a call. The agent is sealed from every other agent, from Layer 2, and from all trade logic.</p>
+<hr>
+    </section>
+    <section class="chapter" id="sec-2">
+<h2 id="sec-2">2. Provenance and source of truth</h2>
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr><th>Item</th><th>Where it lives</th><th>Status</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Rulebook (the "logic document")</td><td><code>logic/agent_usd_direction.md</code></td><td>Version 2.1, "Production baseline for USD Layer 1". Fetched from GitHub at run time, no pinned ref, so an edit changes the next call's prompt.</td></tr>
+      <tr><td>Workflow (the sealed agent)</td><td><code>exports/usd_layer1_agent.json</code></td><td>A <strong>manual snapshot</strong> of the live n8n workflow. Nothing in the repo refreshes it; the live n8n workspace is what produces today's calls.</td></tr>
+      <tr><td>Deterministic gate</td><td>Code node <code>Calculate USD Conviction</code> inside that export</td><td>The only place a direction or conviction number is produced.</td></tr>
+      <tr><td>Published row</td><td><code>data/layer1.json</code> (written by the Dashboard Writer)</td><td>Written by the live pipeline, not by this checkout.</td></tr>
+      <tr><td>Frozen worked example</td><td><code>backtester/fixtures/usd_live_replay_24h_parity_fixture.json</code></td><td>A 2024-01-09 snapshot with an expected 24h output, used as a live-vs-replay parity gate.</td></tr>
+    </tbody>
+  </table>
+</div>
+<p>Because the export is a snapshot, the code quoted here is the exported truth, not proof of what the live n8n workspace runs today. Every code quotation below was also executed locally against the frozen fixture, and the numbers in §8 are the executed output, not the documented intent.</p>
+<hr>
+    </section>
+    <section class="chapter" id="sec-3">
+<h2 id="sec-3">3. The pipeline: eight steps, one snapshot, one row</h2>
+<p>The Master Orchestrator triggers the USD agent inside a chain of collectors and agents. Inside the USD agent, the exported workflow is eight nodes:</p>
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr><th>#</th><th>Step</th><th>Node</th><th>What it does</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>01</td><td>TRIGGER</td><td><code>When Executed by Another Workflow</code></td><td>The orchestrator calls the USD agent.</td></tr>
+      <tr><td>02</td><td>READ</td><td><code>Supabase Get Many</code></td><td>Pulls <strong>every</strong> row of <code>market_snapshots</code> (<code>getAll</code>, <code>returnAll: true</code>, no filter); sorting happens in the next node.</td></tr>
+      <tr><td>03</td><td>PACK</td><td><code>Build USD Input Pack</code></td><td>Keeps the newest snapshot that passes a 14-field USD usability test, and names the missing inputs.</td></tr>
+      <tr><td>04</td><td>RULEBOOK</td><td><code>Get USD Logic Document</code></td><td>GitHub read of <code>logic/agent_usd_direction.md</code>.</td></tr>
+      <tr><td>05</td><td>MODEL</td><td><code>Message a model</code></td><td><code>gpt-4.1-mini</code>; system message carries the isolation rules; user message = rulebook + input pack + output requirement.</td></tr>
+      <tr><td>06</td><td>PARSE</td><td><code>Parse USD Agent Output</code></td><td>Reads the model's JSON into the row contract and flags missing inputs.</td></tr>
+      <tr><td>07</td><td>SCORE</td><td><code>Calculate USD Conviction</code></td><td>Re-derives every factor from the raw snapshot and computes the call. <strong>The model's numbers are overwritten here.</strong></td></tr>
+      <tr><td>08</td><td>WRITE</td><td><code>Create a row</code></td><td>Inserts the finished call into <code>agent_outputs</code>.</td></tr>
+    </tbody>
+  </table>
+</div>
+<p>Downstream: the Dashboard Writer reads the latest row per asset and writes <code>data/layer1.json</code>. The Layer 2 layer only assigns a pair trade when the target's and USD's 24h directions are <strong>opposite exact <code>BULLISH</code>/<code>BEARISH</code> calls</strong>, and it takes <code>combined_confidence = min(target, USD)</code> — the <em>lower</em> of the two, not an average (<code>backtester/lib/layer2_pair_logic.js</code>). The browser then re-derives the headline "confidence" it displays from the gate's argument percentages (§9), so the number a user sees is not the number stored in <code>conviction_*</code>.</p>
+<hr>
+    </section>
+    <section class="chapter" id="sec-4">
+<h2 id="sec-4">4. Inputs: the snapshot contract</h2>
+<p><code>Build USD Input Pack</code> keeps the newest row that carries <code>snapshot_date</code> and <code>run_time_et</code> <strong>and</strong> all fourteen of these fields non-empty:</p>
+<p><code>vix_level, dxy_level, dxy_d1, dxy_d5, us_2y_yield, us_2y_d5_bps, de_2y_yield, us_de_2y_spread, us_de_2y_spread_d5_bps, us_10y_real_yield, us_10y_real_yield_d5_bps, gold_d1_pct, nq_d1_pct, fed_bias</code></p>
+<p>Rules and fallbacks:</p>
+<ul>
+  <li><strong>Snapshot choice.</strong> The newest <em>usable</em> row wins; if none passes the test, the newest row of any kind is used (<code>latest_available_snapshot_fallback</code>). If there is no row with <code>snapshot_date</code> and <code>run_time_et</code> at all, the workflow throws <code>No valid market snapshot found</code> and writes nothing.</li>
+  <li><strong>Gold / NQ fallbacks.</strong> If <code>gold_d5_pct</code> is missing it falls back to <code>gold_d1_pct</code>; if <code>nq_d5_pct</code> is missing it falls back to <code>nq_d1_pct</code>. Each fallback is recorded as a warning.</li>
+  <li><strong>The 20-day inputs are optional.</strong> <code>us_2y_d20_bps</code>, <code>us_10y_real_yield_d20_bps</code>, <code>dxy_d20</code>, <code>gold_d20_pct</code>, <code>us_de_2y_spread_d20_bps</code> are carried only "if available".</li>
+  <li><strong>Missing inputs are scored <code>NEUTRAL</code>, never guessed</strong>, and are named in <code>missing_inputs</code> / <code>warnings</code>. The input pack explicitly lists which fields must be neutral-if-unavailable (<code>de_2y_yield</code>, the US-DE spread and its 5d delta, <code>latest_us_event</code>, <code>fed_bias</code>, <code>gold_d5_pct</code>, <code>nq_d1_pct</code>, <code>equities_regime</code>).</li>
+</ul>
+<p>Note the read shape: the agent pulls the <strong>entire</strong> <code>market_snapshots</code> table and filters in JavaScript, rather than querying the newest row.</p>
+<hr>
+    </section>
+    <section class="chapter" id="sec-5">
+<h2 id="sec-5">5. The written rulebook (documented logic), v2.1</h2>
+<h3>5.1 Role, isolation and output principle</h3>
+<p>The agent answers exactly one question: <em>"Based on confirmed value-driving factors available at execution time, what is the likely direction of USD?"</em> It analyses USD <strong>only</strong> and must not output pair calls, EUR/USD calls, Gold/NQ/BTC calls, trade entries or recommendations, consensus calls, or Layer 2 event-adjusted calls — those are downstream responsibilities.</p>
+<p><strong>Isolation rule.</strong> It may use only (1) its own supplied logic document and (2) the supplied market snapshot. It must not read or infer from other Layer 1 agents, Layer 2 outputs, consensus or pair recommendations, trade recommendation systems, or previous outputs unless those are explicitly part of the snapshot. Layer 1 output is meant to stay raw and independent.</p>
+<p><strong>Division of labour.</strong> The agent classifies each factor as <code>BULLISH</code>/<code>BEARISH</code>/<code>NEUTRAL</code> and may explain evidence, but <strong>must not calculate conviction percentages</strong> — the deterministic code node does that. Valid final directions are <code>BULLISH</code>, <code>BEARISH</code>, <code>BULLISH_LEAN</code>, <code>BEARISH_LEAN</code>, <code>NO_CLEAR_BIAS</code>; <code>NEUTRAL</code> is allowed only at factor level, never as the final default. <code>NO_CLEAR_BIAS</code> is reserved for "effectively no usable directional data".</p>
+<h3>5.2 The ten factors and the weights the rulebook states</h3>
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr><th>Factor</th><th class="num">Documented weight</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>F1 — VIX Level and Risk Regime</td><td class="num">10</td></tr>
+      <tr><td>F2 — US 2-Year Yield Delta</td><td class="num">14</td></tr>
+      <tr><td>F3 — US/Germany 2-Year Rate Differential Delta</td><td class="num">16</td></tr>
+      <tr><td>F4 — US 10-Year Real Yield Delta</td><td class="num">14</td></tr>
+      <tr><td>F5 — DXY 5-Day Delta</td><td class="num">6</td></tr>
+      <tr><td>F6 — Gold 5-Day Delta</td><td class="num">5</td></tr>
+      <tr><td>F7 — US Economic Surprise Direction</td><td class="num">3</td></tr>
+      <tr><td>F8 — Fed Bias Delta</td><td class="num">18</td></tr>
+      <tr><td>F9 — Dollar Smile Regime</td><td class="num">12</td></tr>
+      <tr><td>F10 — Equity Direction vs USD Correlation Regime</td><td class="num">2</td></tr>
+      <tr><td><strong>Total</strong></td><td class="num"><strong>100</strong></td></tr>
+    </tbody>
+  </table>
+</div>
+<p>The document names <strong>primary drivers</strong> as F2, F3, F4, F5, F7, F8 and <strong>secondary drivers</strong> as F1, F6, F9, F10, and states that primary-driver agreement should raise conviction while primary-driver conflict should reduce it. (The code does not implement this — see §7.)</p>
+<h3>5.3 The documented rule for each factor</h3>
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr><th>Factor</th><th>Inputs</th><th>Documented rule (as written)</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>F1 VIX</td><td><code>vix_level</code>, <code>vix_d1</code>, <code>vix_d5</code></td><td>VIX &gt; 25 → BULLISH (safe-haven demand); VIX 16–25 → NEUTRAL; VIX &lt; 16 → BEARISH (risk-on). VIX rising sharply over 1d or 5d → BULLISH <em>modifier</em>; falling → BEARISH modifier. If level and delta conflict, score on the stronger message and explain the conflict.</td></tr>
+      <tr><td>F2 US 2Y</td><td><code>us_2y_yield</code>, <code>us_2y_d5_bps</code>, <code>us_2y_d20_bps</code> if available</td><td>Rising ≥ +5 bps over 5 days → BULLISH; falling ≥ 5 bps → BEARISH; between −5 and +5 bps → NEUTRAL. "Use delta, not level."</td></tr>
+      <tr><td>F3 US−DE 2Y spread</td><td><code>us_de_2y_spread_d5_bps</code></td><td>Widening ≥ +5 bps → BULLISH; narrowing ≥ 5 bps → BEARISH; between → NEUTRAL. Reasoned as "the strongest USD driver because currencies are relative".</td></tr>
+      <tr><td>F4 US 10Y real yield</td><td><code>us_10y_real_yield</code>, <code>us_10y_real_yield_d5_bps</code>, <code>us_10y_real_yield_d20_bps</code> if available</td><td>Rising ≥ +5 bps over 5 days → BULLISH; falling ≥ 5 bps → BEARISH; else NEUTRAL.</td></tr>
+      <tr><td>F5 DXY</td><td><code>dxy_level</code>, <code>dxy_d1</code>, <code>dxy_d5</code>, <code>dxy_d20</code> if available</td><td>Up &gt; 0.30% over 5 days → BULLISH; down &gt; 0.30% → BEARISH; between → NEUTRAL. Described as confirmation, not a primary driver, and as the primary tiebreaker.</td></tr>
+      <tr><td>F6 Gold</td><td><code>gold_price</code>, <code>gold_d5_pct</code>, <code>gold_d1_pct</code> if available</td><td>Gold falling over 5 days → BULLISH; rising → BEARISH; flat → NEUTRAL. Flag a possible safe-haven conflict if gold rises while USD strengthens.</td></tr>
+      <tr><td>F7 US surprise</td><td><code>latest_us_event</code> (<code>event</code>, <code>actual</code>, <code>forecast</code>, <code>surprise</code>, <code>age_hours</code>)</td><td>Recent US data beat consensus → BULLISH; missed → BEARISH; no significant US data in last 72 hours → NEUTRAL. "Only count confirmed actual-vs-consensus data. Never judge a release by absolute strength."</td></tr>
+      <tr><td>F8 Fed bias</td><td><code>fed_bias</code> (<code>hawkish</code>/<code>dovish</code>/<code>neutral</code>/<code>unknown</code>)</td><td>Fed bias <strong>moved</strong> more hawkish than the prior reading → BULLISH; more dovish → BEARISH; no clear change → NEUTRAL. "The market trades the change in Fed bias, not the absolute state." Highest-weight factor.</td></tr>
+      <tr><td>F9 Dollar Smile</td><td><code>vix_level</code>, <code>vix_d1</code>, <code>vix_d5</code>, <code>latest_us_event</code>, <code>global_growth_context</code>, <code>fed_bias</code></td><td>VIX &gt; 25 or active crisis → BULLISH; US growth outperforming global growth <strong>with</strong> hawkish Fed → BULLISH; US growth moderate and global growth decent → BEARISH; insufficient evidence → NEUTRAL. Explicitly warns: "Avoid double-counting Factor 1."</td></tr>
+      <tr><td>F10 Equity regime</td><td><code>equities_regime</code>, <code>nq_d1_pct</code>, <code>nq_d5_pct</code>, <code>vix_level</code></td><td>Risk-on &amp; VIX &lt; 16 &amp; equities rising → BEARISH; risk-on &amp; equities falling → BULLISH; risk-off &amp; VIX &gt; 25 &amp; equities falling → BULLISH; neutral regime → NEUTRAL. "Do not force this factor unless the regime is clear."</td></tr>
+    </tbody>
+  </table>
+</div>
+<h3>5.4 The documented scoring process</h3>
+<p>For each run: score all ten factors; sum bullish factor weights into <code>bullish_weight</code>; sum bearish weights into <code>bearish_weight</code>; <code>active_weight = bullish_weight + bearish_weight</code>; count bullish, bearish, neutral and missing; identify whether primary drivers agree or conflict; produce provisional directional verdicts for every timeframe from factor direction alone. Neutral factors contribute 0 to both sides — <strong>but their unused weight still lowers participation and limits conviction</strong>.</p>
+<h3>5.5 The documented directional verdict rule</h3>
+<p>Step 1 — direction from weights: <code>bullish_weight &gt; bearish_weight</code> → BULLISH(_LEAN); <code>bearish_weight &gt; bullish_weight</code> → BEARISH(_LEAN); equal → use tiebreakers. <code>weight_margin</code> is the absolute difference between the two weights.</p>
+<p>Step 2 — the document says use a <code>_LEAN</code> label when <strong>any</strong> of: <code>active_weight &lt; 50</code>; <code>weight_margin &lt; 15</code>; primary drivers are conflicted; key inputs are missing; the direction was decided by tiebreaker; or <strong>conviction is below 65%</strong>. Use a full <code>BULLISH</code>/<code>BEARISH</code> when <code>active_weight ≥ 50</code>, <code>weight_margin ≥ 15</code>, primary drivers mostly agree, and conviction is ≥ 65%.</p>
+<p>Step 3 — tiebreakers, in order: DXY 5-day delta, then US 2Y 5-day delta, then US 10Y real-yield 5-day delta, then VIX 5-day delta (rising → BULLISH_LEAN, falling → BEARISH_LEAN). <code>NO_CLEAR_BIAS</code> only if there is no usable directional data at all.</p>
+<h3>5.6 The documented conviction formula (which the code does <em>not</em> use)</h3>
+<p>The document says the <strong>downstream code node</strong> computes conviction as:</p>
+<pre class="code"><code>weighted_edge   = abs(bullish_weight - bearish_weight) / 100
+raw_conviction  = 50 + (weighted_edge * 50)
+final_conviction = min(raw_conviction, participation_cap)</code></pre>
+<p>then, in order, a <strong>participation cap</strong>, a <strong>missing-input penalty</strong>, a <strong>conflict penalty</strong>, and an <strong>agreement boost</strong>:</p>
+<ul>
+  <li>Participation cap on <code>active_weight</code>: 0–29 → 55%; 30–49 → 62%; 50–69 → 72%; 70–84 → 82%; 85–100 → 92%.</li>
+  <li>Missing-input penalty: 0 → 0; 1–2 → −2 to −5; 3–4 → −5 to −10; 5+ → −10 to −15. Never below 50.</li>
+  <li>Conflict penalty: minor primary-vs-secondary conflict → −2 to −5; DXY vs rates → −5 to −10; Fed bias vs rates → −5 to −10; risk regime vs domestic drivers → −5 to −10; primary drivers split evenly → cap at 60%. Never below 50.</li>
+  <li>Agreement boost (only with enough participation): DXY + rates agree → min 65% if <code>active_weight ≥ 50</code>; Fed + rates + real yields agree → min 70% if <code>active_weight ≥ 60</code>; VIX crisis + DXY/rates confirm → min 80%; <code>active_weight &gt; 85</code> with no major conflict → may reach 90%+.</li>
+  <li>Final conviction rounded to the nearest integer, clamped to [50, 100]. Bands (labels only): 50–55 Very Weak, 56–64 Weak, 65–74 Moderate, 75–84 Strong, 85–100 Very Strong.</li>
+</ul>
+<p>The document also forbids the old method <code>winning_factor_count / non_neutral_factor_count</code> because it "inflates conviction when only a small number of factors are active".</p>
+<p><strong>This entire formula is documentation only — §6 shows what the code really computes.</strong></p>
+<h3>5.7 Documented per-timeframe rules</h3>
+<p>The same factor framework is used for every horizon but weighted differently. Each horizon must output a direction, a conviction and a short reason.</p>
+<ul>
+  <li><strong>24h:</strong> focus VIX level/delta, US 2Y 5d, real yield 5d, DXY 1d/5d, latest surprise, Fed bias. Give extra weight to DXY 1d/5d and rates; DXY 5d is the tiebreaker; a pending Tier-1 event cuts conviction by 5–10 points without removing the call; <code>_LEAN</code> if <code>active_weight &lt; 50</code>.</li>
+  <li><strong>3d:</strong> weight F2, F3, F4, F5, F6 more heavily; if 5d deltas disagree with 1d readings, cut conviction; multiple Tier-1 events within 3 days cut conviction by 5–10 points.</li>
+  <li><strong>Current week:</strong> DXY 5d vs 20d, US 2Y 5d/20d, real-yield 5d/20d, US−DE spread trend. If DXY 5d and 20d agree, conviction improves; if they disagree, cut it. Use 20d data only when supplied.</li>
+  <li><strong>Next week:</strong> structural factors only (Dollar Smile, real-yield trend, rate-differential trend, Fed bias, growth-surprise direction). Ignore short-term equity noise and single prints unless extreme. Default to <code>_LEAN</code>; conviction usually lower than 24h/3d unless several structural drivers align.</li>
+  <li><strong>Current month:</strong> a structural directional read — 20d DXY, 20d US 2Y, 20d real yield, Fed bias, Dollar Smile, surprise trend. Use 20d where available; lower-confidence lean if only 5d is available.</li>
+</ul>
+<h3>5.8 Documented missing-input rules and output format</h3>
+<p><strong>Missing inputs:</strong> never guessed. Score the factor <code>NEUTRAL</code>, add the input to <code>missing_inputs</code>, reduce conviction via the penalty, and still produce a directional call. The document names the most important missing inputs as <code>fed_bias</code>, <code>us_de_2y_spread_d5_bps</code>, <code>us_10y_real_yield_d5_bps</code>, <code>latest_us_event</code>, <code>gold_d5_pct</code>, <code>equities_regime</code>.</p>
+<p><strong>Output format:</strong> the agent must return <strong>raw JSON only</strong> (no markdown fences, no commentary). The JSON carries <code>direction_&lt;horizon&gt;</code> for all five horizons, and <strong>every <code>conviction_*</code> field must be <code>null</code></strong> — the agent must never estimate, calculate, infer or invent conviction. It also carries <code>score_bullish</code>/<code>score_bearish</code>/<code>score_neutral</code>, a <code>factor_breakdown</code> (per factor: signal, weight, evidence, reason), <code>missing_inputs</code>, <code>reasoning_summary</code>, <code>risk_flags</code> and a <code>created_at</code>. The deterministic engine fills the conviction fields afterwards.</p>
+<hr>
+    </section>
+    <section class="chapter" id="sec-6">
+<h2 id="sec-6">6. The deterministic gate (what actually runs)</h2>
+<p>Everything below is the exported Code node <code>Calculate USD Conviction</code>. This node ignores the model's direction and conviction entirely and recomputes from <code>market_inputs</code>.</p>
+<h3>6.1 Per-horizon weights (hard-coded in the node)</h3>
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr><th>Factor</th><th class="num">24h</th><th class="num">3d</th><th class="num">current week</th><th class="num">next week</th><th class="num">month</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>F1 VIX</td><td class="num">10</td><td class="num">8</td><td class="num">5</td><td class="num">4</td><td class="num">3</td></tr>
+      <tr><td>F2 US 2Y</td><td class="num">14</td><td class="num">16</td><td class="num">14</td><td class="num">12</td><td class="num">12</td></tr>
+      <tr><td>F3 US−DE 2Y</td><td class="num">10</td><td class="num">16</td><td class="num">18</td><td class="num">20</td><td class="num">18</td></tr>
+      <tr><td>F4 US 10Y real yield</td><td class="num">10</td><td class="num">16</td><td class="num">18</td><td class="num">18</td><td class="num">20</td></tr>
+      <tr><td>F5 DXY</td><td class="num">14</td><td class="num">14</td><td class="num">15</td><td class="num">6</td><td class="num">8</td></tr>
+      <tr><td>F6 Gold</td><td class="num">4</td><td class="num">8</td><td class="num">7</td><td class="num">5</td><td class="num">5</td></tr>
+      <tr><td>F7 US surprise</td><td class="num">24</td><td class="num">8</td><td class="num">5</td><td class="num">6</td><td class="num">5</td></tr>
+      <tr><td>F8 Fed bias</td><td class="num">12</td><td class="num">10</td><td class="num">12</td><td class="num">18</td><td class="num">18</td></tr>
+      <tr><td>F9 Dollar Smile</td><td class="num">1</td><td class="num">3</td><td class="num">5</td><td class="num">10</td><td class="num">10</td></tr>
+      <tr><td>F10 Equity regime</td><td class="num">1</td><td class="num">1</td><td class="num">1</td><td class="num">1</td><td class="num">1</td></tr>
+      <tr><td><strong>Total</strong></td><td class="num"><strong>100</strong></td><td class="num"><strong>100</strong></td><td class="num"><strong>100</strong></td><td class="num"><strong>100</strong></td><td class="num"><strong>100</strong></td></tr>
+    </tbody>
+  </table>
+</div>
+<p>Compare this with the single documented table in §5.2 (10, 14, 16, 14, 6, 5, 3, 18, 12, 2). Only the <strong>24h</strong> column is even close, and it still differs on F3, F4, F5, F6, F7, F9 and F10. The per-horizon table exists <strong>only inside the Code node</strong>; the rulebook never shows it.</p>
+<h3>6.2 The implemented signal per factor</h3>
+<p>The gate reads one delta per factor and applies a two-threshold test. Unless stated, a delta at or above the up-threshold is BULLISH, at or below the down-threshold is BEARISH, otherwise NEUTRAL.</p>
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr><th>Factor</th><th>Value used</th><th>BULLISH / BEARISH thresholds</th><th>Notes vs the rulebook</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>F1 VIX</td><td><code>vix_level</code></td><td>&gt; 25 BULLISH; &lt; 16 BEARISH</td><td>The documented <code>vix_d1</code>/<code>vix_d5</code> modifiers and the level-vs-delta conflict rule are <strong>not implemented</strong>.</td></tr>
+      <tr><td>F2 US 2Y</td><td><code>us_2y_d20_bps</code> for next-week/month if present, else <code>us_2y_d5_bps</code></td><td>≥ +5 / ≤ −5 bps</td><td>Matches the document in spirit; adds a 20d switch.</td></tr>
+      <tr><td>F3 US−DE 2Y</td><td><code>us_de_2y_spread_d5_bps</code> <strong>always</strong></td><td>≥ +5 / ≤ −5 bps</td><td>The 20d switch the document implies for longer horizons is <strong>not</strong> applied — F3 stays 5d on every horizon.</td></tr>
+      <tr><td>F4 US 10Y real</td><td><code>us_10y_real_yield_d20_bps</code> for next-week/month if present, else <code>_d5_bps</code></td><td>≥ +5 / ≤ −5 bps</td><td>Adds a 20d switch.</td></tr>
+      <tr><td>F5 DXY</td><td><code>dxy_d20</code> (next-week/month), <code>dxy_d1</code> (24h), else <code>dxy_d5</code></td><td>24h: ±0.15%; other horizons: ±0.3%</td><td>The document states only ±0.30% over 5 days; the ±0.15% 24h band and the 1d/20d switches are code-only.</td></tr>
+      <tr><td>F6 Gold</td><td><code>gold_d20_pct</code> (next-week/month), else <code>gold_d5_pct</code></td><td>&lt; −0.1 BULLISH; &gt; +0.1 BEARISH</td><td>The document says "falling/rising/flat" with no number; the ±0.1% band is code-only. Note 24h also uses the 5d value, never <code>gold_d1_pct</code>.</td></tr>
+      <tr><td>F7 US surprise</td><td><code>latest_us_event.usd_signal</code> string</td><td><code>"BULLISH"</code> → BULLISH; <code>"BEARISH"</code> → BEARISH; anything else NEUTRAL</td><td>Implemented as a <strong>string test on the event payload</strong>, not an actual-vs-consensus comparison, and with <strong>no 72-hour age check</strong> — the documented "only confirmed actual-vs-consensus" rule is not enforced.</td></tr>
+      <tr><td>F8 Fed bias</td><td><code>fed_bias</code> string, lowercased</td><td>contains <code>"hawkish"</code> → BULLISH; contains <code>"dovish"</code> → BEARISH; else/unknown NEUTRAL</td><td>Implemented as the <strong>absolute state</strong>, not the documented <strong>change</strong> in bias. There is no prior-reading comparison.</td></tr>
+      <tr><td>F9 Dollar Smile</td><td><code>vix_level</code> and <code>fed_bias</code></td><td>&gt; 25 BULLISH; &lt; 16 <strong>and not hawkish</strong> BEARISH; else NEUTRAL</td><td>Only the VIX legs are implemented; the growth-context and hawkish-Fed-with-growth legs of the document are absent.</td></tr>
+      <tr><td>F10 Equity regime</td><td><code>vix_level</code> and <code>nq_d1_pct</code> (24h) else <code>nq_d5_pct</code></td><td>VIX&lt;16 &amp; NQ&gt;0 BEARISH; VIX&lt;16 &amp; NQ&lt;0 BULLISH; VIX&gt;25 &amp; NQ&lt;0 BULLISH; else NEUTRAL</td><td>Matches the document's shape; VIX 16–25 is always NEUTRAL.</td></tr>
+    </tbody>
+  </table>
+</div>
+<p>Two structural points a reviewer should note:</p>
+<ol>
+  <li><strong>F1 and F9 are near-duplicates in code.</strong> When VIX &gt; 25 both fire BULLISH; when VIX &lt; 16 and the Fed is not hawkish both fire BEARISH. The document explicitly warns against double-counting Factor 1, but the code double-counts it on the VIX legs (it carries 10 + 1 = 11 points on 24h, rising to 3 + 10 = 13 on the month horizon).</li>
+  <li><strong>F8 is the highest weight (12–18) but is a single categorical string.</strong> Whether the call is hawkish, dovish or "neutral/unknown" swings a large share of the score, and the documented "change vs prior reading" (which is what the rulebook argues the market trades) is not computed.</li>
+</ol>
+<h3>6.3 Implemented scoring, direction, conviction and strength</h3>
+<p>For each of the five horizons the node runs the same routine:</p>
+<pre class="code"><code>bullish, bearish, neutral = Σ weights of factors voting each way   (per-horizon table)
+active            = bullish + bearish
+bullish_argument  = round(bullish / active * 100)      (0 if active == 0)
+bearish_argument  = round(bearish / active * 100)
+net_edge          = bullish_argument - bearish_argument
+base_direction    = BULLISH if bullish &gt; bearish, BEARISH if bearish &gt; bullish, else NO_CLEAR_BIAS
+direction         = NO_CLEAR_BIAS if tie
+                    else (base_direction + "_LEAN") if abs(net_edge) &lt; 20
+                    else base_direction
+conviction        = winning side's argument %   (0 for NO_CLEAR_BIAS)
+strength          = VERY_STRONG if abs(net_edge) &gt;= 40
+                    STRONG if &gt;= 25, MODERATE if &gt;= 15, else WEAK</code></pre>
+<p>The conviction is therefore <strong>the winning side's share of active weight, uncapped and un-penalised</strong>. It is a share of the weight that was active, not a probability, and not a share of the full 100. Every documented cap, penalty and boost in §5.6 is replaced by three constant fields that are always zero (<code>conflict_penalty: 0</code>, <code>missing_input_penalty: 0</code>, <code>agreement_boost: 0</code>), and a <code>participation_cap</code> field that is set equal to <code>active</code> (i.e. it never caps). The node keeps the legacy field names <code>weighted_edge</code>, <code>raw_conviction</code> and <code>base_conviction</code> for the dashboard, but fills them with the argument share and its arithmetic neighbour <code>abs(net_edge)/100</code>, not the documented <code>abs(bullish_weight - bearish_weight)/100</code>.</p>
+<p>Note the strength ladder here (<code>abs(net_edge)</code> at 40/25/15) is a <strong>fourth</strong> labelling scheme, different from both the documented conviction bands (§5.6) and the dashboard's own strength word (§9).</p>
+<h3>6.4 The row the gate writes</h3>
+<p>The node's returned row has three layers:</p>
+<ul>
+  <li><strong>Top level:</strong> <code>direction_*</code> and <code>conviction_*</code> for all five horizons, the legacy <code>call_&lt;h&gt;_direction</code> / <code>call_&lt;h&gt;_conviction</code> / <code>call_&lt;h&gt;_reason</code> mirrors, the 24h <code>factor_breakdown</code>, <code>reasoning_summary</code>, and the three factor <strong>counts</strong> <code>score_bullish</code> / <code>score_bearish</code> / <code>score_neutral</code>.</li>
+  <li><strong><code>full_output</code> (identical to <code>raw_agent_output</code>):</strong> all of the above plus <code>weighted_score</code> (the <strong>weight sums</strong> <code>bullish_weight</code> / <code>bearish_weight</code> / <code>neutral_weight</code> / <code>active_weight</code> / <code>weight_margin</code>), <code>conviction_model</code>, and a <code>timeframe_models</code> object holding every per-horizon model. <code>weighted_score</code> and <code>conviction_model</code> exist <strong>only</strong> here, not at the top level.</li>
+  <li><strong>Stripped before write:</strong> <code>market_inputs</code>, <code>snapshot_selection</code>, <code>input_validation_warnings</code> and <code>model_reported_warnings</code> are removed, so the inserted row keeps no raw inputs.</li>
+</ul>
+<p>Two naming traps. First, the top-level <code>score_bullish</code> / <code>score_bearish</code> / <code>score_neutral</code> are <strong>factor counts</strong> (6 / 3 / 1 on the worked example), while <code>weighted_score</code> holds the <strong>weights</strong> (84 / 15 / 1) — the same names meaning different things in two places. Second, <code>conviction_*</code> is the gate's raw argument share, <strong>not</strong> the headline confidence the dashboard displays (§9).</p>
+<hr>
+    </section>
+    <section class="chapter" id="sec-7">
+<h2 id="sec-7">7. Document vs code: the differences that matter</h2>
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr><th>#</th><th>Area</th><th>Document says</th><th>Code does</th><th>Impact</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>1</td><td>Weights</td><td>One 100-point table for all horizons</td><td>Five different per-horizon tables (F7 is 24 on 24h but 5 on the month; F9 is 1 on 24h but 10 on the month)</td><td>The same factor can flip the verdict depending on horizon; the rulebook cannot be used to predict the number.</td></tr>
+      <tr><td>2</td><td>Conviction</td><td><code>50 + edge×50</code>, then caps, penalties, boosts</td><td>Winning side's share of active weight, no caps or penalties</td><td>Conviction is systematically different from the documented number and is not comparable to the documented bands.</td></tr>
+      <tr><td>3</td><td>Primary/secondary driver agreement</td><td>Explicitly raises or lowers conviction</td><td>Not implemented at all</td><td>A documented conviction lever is silently absent.</td></tr>
+      <tr><td>4</td><td><code>_LEAN</code> rule</td><td>Lean if active&lt;50, margin&lt;15, conflict, missing inputs, tiebreaker, or conviction&lt;65</td><td>Lean <strong>only</strong> if <code>abs(net_edge) &lt; 20</code></td><td>Code produces full BULLISH/BEARISH in cases the document calls a lean, and vice versa.</td></tr>
+      <tr><td>5</td><td>F1</td><td>Level + 1d/5d modifiers + conflict handling</td><td>Level only</td><td>Two documented sub-rules dropped.</td></tr>
+      <tr><td>6</td><td>F8</td><td>Change in Fed bias vs prior reading</td><td>Absolute <code>fed_bias</code> string</td><td>The rulebook's own headline argument ("the market trades the change") is not implemented; a static hawkish regime scores BULLISH forever.</td></tr>
+      <tr><td>7</td><td>F7</td><td>Confirmed actual-vs-consensus within 72h</td><td>A <code>usd_signal</code> string, no age check</td><td>Stale or unconfirmed events can still carry 24 points on the 24h horizon.</td></tr>
+      <tr><td>8</td><td>F9</td><td>Four legs incl. growth context</td><td>VIX + Fed only</td><td>Duplicates F1 rather than measuring the smile.</td></tr>
+      <tr><td>9</td><td>Missing-input penalty</td><td>Documented ladder, never below 50</td><td>Neutral factor simply contributes 0</td><td>Letting missing inputs go NEUTRAL <em>lowers</em> the argument share, but there is no explicit floor other than 50 implied by the maths.</td></tr>
+      <tr><td>10</td><td>Warning/anomaly checks</td><td>Documented rules to ignore, down-weight or warn on outliers and stale prints</td><td>None of these checks exist in the gate</td><td>Bad-but-present inputs are scored as if normal.</td></tr>
+      <tr><td>11</td><td>What <code>conviction_*</code> means</td><td>The published conviction is the number the user sees</td><td><code>conviction_*</code> is the raw argument share; the published headline confidence is computed downstream from the same arguments and is a different number (85 vs 87 on the worked example)</td><td>Comparing a stored <code>conviction_*</code> with the dashboard badge shows a mismatch that is not an error. Shown in §8 and §9.</td></tr>
+    </tbody>
+  </table>
+</div>
+<p>Nothing in this table is a bug claim: it is a statement that the two artefacts describe different systems. Which one is "the logic" is exactly the question a reviewer should settle.</p>
+<hr>
+    </section>
+    <section class="chapter" id="sec-8">
+<h2 id="sec-8">8. Worked example: the frozen 2024-01-09 snapshot</h2>
+<p><code>backtester/fixtures/usd_live_replay_24h_parity_fixture.json</code> stores a snapshot and an expected 24h call. Running the extracted <code>Calculate USD Conviction</code> code against that snapshot (harness <code>tmp/usd-logic-doc/run-gate.cjs</code>) produced:</p>
+<ul>
+  <li><strong>24h direction <code>BULLISH</code>, gate <code>conviction_24h</code> 85, strength <code>VERY_STRONG</code>.</strong></li>
+  <li>The frozen fixture's <code>expected_live_24h.conviction_24h</code> is <strong>87</strong>.</li>
+</ul>
+<p>Those two numbers look like a parity failure. They are not; §8.3 shows they are the same call measured two different ways, and that the harness reproduces the fixture exactly once the right field is compared.</p>
+<h3>8.1 The 24h factor votes the gate produced (verbatim)</h3>
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr><th>Factor</th><th>Signal</th><th class="num">Weight (24h)</th><th>Evidence the gate read</th><th>Reason the gate attached</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>F1 VIX</td><td>BEARISH</td><td class="num">10</td><td>VIX 13</td><td>Risk-on rotation away from USD</td></tr>
+      <tr><td>F2 US 2Y</td><td>BULLISH</td><td class="num">14</td><td>US 2Y 5d bps 6</td><td>US front-end yields support USD</td></tr>
+      <tr><td>F3 US−DE 2Y</td><td>BULLISH</td><td class="num">10</td><td>US-DE 2Y spread 5d bps 6</td><td>Relative rates support USD</td></tr>
+      <tr><td>F4 US 10Y real</td><td>BULLISH</td><td class="num">10</td><td>Real yield 5d bps 7</td><td>Rising real yields support USD</td></tr>
+      <tr><td>F5 DXY</td><td>BULLISH</td><td class="num">14</td><td>DXY 1d % 0.2</td><td>DXY confirms USD strength</td></tr>
+      <tr><td>F6 Gold</td><td>BEARISH</td><td class="num">4</td><td>Gold 0.2%</td><td>Gold strength pressures USD</td></tr>
+      <tr><td>F7 US surprise</td><td>BULLISH</td><td class="num">24</td><td>US CPI</td><td>Positive US surprise supports USD</td></tr>
+      <tr><td>F8 Fed bias</td><td>BULLISH</td><td class="num">12</td><td>Fed bias hawkish</td><td>Hawkish Fed supports USD</td></tr>
+      <tr><td>F9 Dollar Smile</td><td>NEUTRAL</td><td class="num">1</td><td>No clear Dollar Smile edge</td><td>Insufficient regime evidence</td></tr>
+      <tr><td>F10 Equity regime</td><td>BEARISH</td><td class="num">1</td><td>NQ 0.5% risk-on</td><td>Risk appetite reduces USD demand</td></tr>
+    </tbody>
+  </table>
+</div>
+<p>Summing: <code>bullish_weight = 84</code>, <code>bearish_weight = 15</code>, <code>neutral_weight = 1</code>, so <code>active = 99</code> and <code>weight_margin = 69</code>. Then <code>bullish_argument = round(84 / 99 × 100) = 85</code>, <code>bearish_argument = 15</code>, <code>net_edge = +70</code>, <code>conviction = 85</code>, <code>strength = VERY_STRONG</code> (≥ 40). The whole conviction number is <code>84 / 99</code> — the share of the <strong>15 points of opposing weight plus 84</strong> that voted bullish, with the single neutral point (F9) excluded from the denominator entirely.</p>
+<h3>8.2 All five horizons from the same snapshot (verbatim)</h3>
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr><th>Horizon</th><th>Direction</th><th class="num">Conviction</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>24h</td><td>BULLISH</td><td class="num">85</td></tr>
+      <tr><td>3 day</td><td>BULLISH</td><td class="num">80</td></tr>
+      <tr><td>current week</td><td>BULLISH</td><td class="num">84</td></tr>
+      <tr><td>next week</td><td>BULLISH</td><td class="num">89</td></tr>
+      <tr><td>current month</td><td>BULLISH</td><td class="num">90</td></tr>
+    </tbody>
+  </table>
+</div>
+<p>The spread 80→90 across one snapshot is the clearest illustration of §7 row 1: the five horizons are not five estimates of one probability, they are five different weight tables applied to a few shared signals, so the numbers are not independent evidence and should not be averaged or compared as if they were.</p>
+<h3>8.3 The 85-vs-87 question, resolved</h3>
+<p>Both numbers are correct. They are <strong>different quantities stored under the same field name</strong>, and resolving the question needed three artifacts rather than two: the exported gate, the replay core the fixture is locked to, and the dashboard confidence contract.</p>
+<pre class="code"><code>winning-side argument share   85   raw share of active weight, 84/99          gate + replay core
+headline confidence           87   blended score of the gate's arguments      headline_confidence.js</code></pre>
+<p>Only the second is what the dashboard publishes. Neither is wrong; they are not interchangeable.</p>
+<p>The repository's browser/dashboard confidence contract (<code>backtester/lib/headline_confidence.js</code>, <code>computeHeadlineConfidenceData</code>) computes:</p>
+<pre class="code"><code>confidence = (max(bull_case, bear_case)/100) * 0.45
+           + (participation/100)            * 0.35
+           + (abs(net_edge)/100)            * 0.20
+           then subtract penalties (participation &lt; 40 or &lt; 25, |net_edge| &lt; 20,
+           &gt;= 3 or &gt;= 6 missing inputs, event-risk / consolidation / audit warnings)
+           final = round(clamp(confidence, 0, 1) * 100)</code></pre>
+<p>Feeding in <strong>the gate's own numbers</strong> from §8.1 — <code>bull_case 85</code>, <code>bear_case 15</code>, <code>participation 99</code>, <code>net_edge 70</code>, no warnings, no missing inputs:</p>
+<pre class="code"><code>0.85*0.45 + 0.99*0.35 + 0.70*0.20 = 0.869   -&gt;  87</code></pre>
+<p>Exactly the fixture's value. All penalties are inactive here (participation 99 ≥ 40, |net_edge| 70 ≥ 20, 0 missing inputs, no warnings), so nothing is subtracted. The harness prints this reconciliation and reports <code>match: YES - fixture stores headline confidence</code>.</p>
+<p>Where each artifact puts which number:</p>
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr><th>Artifact</th><th><code>conviction_24h</code> holds</th><th>Raw share lives in</th><th>Headline lives in</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Exported gate <code>Calculate USD Conviction</code></td><td><strong>85</strong> (raw share)</td><td><code>conviction_model.raw_conviction</code>, <code>base_conviction</code>, <code>final_conviction</code></td><td><em>nowhere — the export never computes it</em></td></tr>
+      <tr><td>Replay core <code>usd_replay_core.js</code></td><td><strong>87</strong> (headline)</td><td><code>conviction_model.raw_conviction</code>, <code>base_conviction</code>, <code>legacy_winning_side_conviction</code></td><td><code>predicted_conviction</code>, <code>conviction_model.final_confidence</code></td></tr>
+      <tr><td>Fixture <code>expected_live_24h</code> (USD)</td><td><strong>87</strong> (headline)</td><td><code>conviction_model.bullish_argument_pct</code> (85)</td><td><code>conviction_model.final_conviction</code> (87)</td></tr>
+      <tr><td>Jan-2024 checker rows</td><td><strong>headline</strong></td><td><code>predicted_conviction</code> (raw)</td><td><code>displayed_headline_confidence_pct</code>, <code>conviction_model.final_conviction</code></td></tr>
+    </tbody>
+  </table>
+</div>
+<p><strong>The five asset parity fixtures do not agree with each other.</strong> Reading all five <code>*_live_replay_24h_parity_fixture.json</code> files the same way, and recomputing each headline from its own arguments:</p>
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr><th>Fixture <code>expected_live_24h</code></th><th class="num"><code>conviction_24h</code></th><th>equals</th><th>headline stored where</th><th>strength label(s)</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>btc_...</code></td><td class="num">73</td><td><strong>raw share</strong> (73)</td><td><code>displayed_headline_confidence_pct</code> = 60</td><td><code>raw_strength_bucket</code> VERY_STRONG vs <code>headline_strength_bucket</code> MODERATE</td></tr>
+      <tr><td><code>nq_...</code></td><td class="num">86</td><td><strong>raw share</strong> (86)</td><td><code>displayed_headline_confidence_pct</code> = 28</td><td>VERY_STRONG vs WEAK</td></tr>
+      <tr><td><code>eur_...</code></td><td class="num">89</td><td><strong>raw share</strong> (89)</td><td><em>no field at all</em> — the headline (59) is unrecoverable from the fixture</td><td><code>strength_bucket</code> VERY_STRONG</td></tr>
+      <tr><td><code>usd_...</code></td><td class="num">87</td><td><strong>headline</strong> (raw share 85)</td><td><em>no field at all</em></td><td><code>strength_bucket</code> VERY_STRONG</td></tr>
+      <tr><td><code>gold_...</code></td><td class="num">0</td><td><strong>headline</strong> (raw share 50)</td><td><code>headline_confidence_pct</code> = 0</td><td><code>strength_bucket</code> WEAK</td></tr>
+    </tbody>
+  </table>
+</div>
+<p>Three separate problems are visible in that one table:</p>
+<ol>
+  <li><strong>The same field name carries two different quantities.</strong> <code>conviction_24h</code> is the raw winning-side share in the BTC, NQ and EUR fixtures and the headline in the USD and GOLD fixtures. NQ is the sharpest case: the identical call is <code>86</code>/VERY_STRONG by the raw convention and <code>28</code>/WEAK by the headline convention — a 58-point and three-bucket divergence on one snapshot. Anything comparing <code>conviction_24h</code> across assets without knowing which convention produced it is comparing two different quantities.</li>
+  <li><strong>The fixtures use three different key schemas.</strong> BTC/NQ use <code>displayed_headline_confidence_pct</code> plus two bucket fields; GOLD uses <code>headline_confidence_pct</code>; EUR, USD and the GOLD <code>conviction_model</code> mix in others again. Code written against one fixture will not find the headline in another.</li>
+  <li><strong>Some fixtures cannot yield the headline at all.</strong> The EUR fixture stores only the raw share and no headline field, so the published number that the dashboard would have shown for that call cannot be reconstructed from the parity artifact.</li>
+</ol>
+<p>This is the strongest evidence that §8.3 is a schema/semantics defect rather than a one-off naming slip: the ambiguity reproduces independently across five assets, and in a different direction each time.</p>
+<p>The replay core stamps the model it implements into its own output: <code>conviction_model.confidence_model_source = "live_dashboard_confidence_v1"</code>. So the substitution is <strong>deliberate and self-declared</strong>, not drift — the replay's author moved the raw share out of <code>conviction_24h</code> and put the headline in its place. The fixture itself says so, in its <code>meta</code> block:</p>
+<pre class="code"><code>"purpose": "One-snapshot live-vs-replay parity gate for USD 24H before any January/full-year expansion.",
+"live_source_of_truth": "exports/usd_layer1_agent.json",
+"replay_source_under_test": "backtester/replay/usd/usd_replay_core.js",
+"notes": [
+  "The expected output is frozen from the current live USD deterministic workflow logic.",
+  "This fixture intentionally uses a snapshot that exposes known live-vs-replay mismatches for 24H.",
+  "Reason text and timestamps are not parity-gated."
+]</code></pre>
+<p>Note the fixture's own scope limit: <strong>reason text and timestamps are not parity-gated</strong>, so <code>PASS</code> covers the numeric fields only.</p>
+<p><strong>What the parity gate therefore proves, and does not prove.</strong> Running the repository's own check (<code>node backtester/scripts/check_usd_live_replay_24h_parity.js</code>) prints <code>Parity result: PASS</code>. It compares replay-core output against the fixture, field by field, including <code>conviction_24h</code>. That is a real result and it is the reason the fixture is trustworthy as a <em>replay</em> gate. It does <strong>not</strong> prove the exported gate agrees, because the check never runs the export: on the same snapshot the export yields <code>conviction_24h 85</code> and <code>conviction_model.final_conviction 85</code>, the replay yields <code>87</code> and <code>87</code>. Four consequences follow:</p>
+<ol>
+  <li><strong>Two artifacts both called "live" disagree on <code>conviction_24h</code> for the same snapshot</strong> — 85 from the export named in <code>meta.live_source_of_truth</code>, 87 from the replay that <code>Parity result: PASS</code> certifies. The parity gate cannot catch this because it holds only one side of the comparison.</li>
+  <li><strong>The disagreement is confined to the conviction fields.</strong> Direction, <code>weighted_score</code> (84/15/1/99/69), the factor votes (6/3/1) and <code>factor_breakdown</code> are identical across export, replay and fixture. The gate's arithmetic is not in question; the naming is.</li>
+  <li><strong>A reader cannot tell the two apart from the field name.</strong> <code>conviction_24h = 87</code> looks exactly as authoritative as <code>conviction_24h = 85</code>. Anything downstream that reads a "conviction" and compares it across assets (BTC's <code>conviction_24h</code> is its raw share, per its own fixture) is mixing two scales.</li>
+  <li><strong>The strength labels are likewise different rules.</strong> The export labels from |net edge| alone (≥40 VERY_STRONG, ≥25 STRONG, ≥15 MODERATE); the headline contract labels from confidence <strong>and</strong> edge <strong>and</strong> participation together. They happen to agree here (<code>VERY_STRONG</code> either way) and pointedly do not on the BTC fixture (raw <code>VERY_STRONG</code> vs headline <code>MODERATE</code>).</li>
+</ol>
+<p>This is the single most consequential ambiguity in the USD layer. It is a <strong>reporting/semantics</strong> problem, not a maths bug — but it means any "is the replay faithful to live?" claim must name which field, which artifact, and which of the two numbers it is asserting.</p>
+<hr>
+    </section>
+    <section class="chapter" id="sec-9">
+<h2 id="sec-9">9. Downstream of the gate: headline confidence and Layer 2</h2>
+<p>The gate is not the last step. Two downstream contracts consume its numbers, and both are the reason the "conviction" a user sees is not the number the gate computes.</p>
+<h3>9.1 The headline confidence contract</h3>
+<p><code>backtester/lib/headline_confidence.js</code> is the repository's single published confidence rule. It is a UMD-style module usable in both the browser and Node, exposing <code>computeHeadlineConfidenceData(input)</code>.</p>
+<pre class="code"><code>input : bullCase, bearCase, participation, netEdge, direction, missingInputs,
+        warnings, weeklyCandleStatus, fallbackConfidence, strengthOverride
+    confidence = (max(bullCase, bearCase)/100) * 0.45      // evidence dominance
+               + (participation/100)          * 0.35      // how much of the book engaged
+               + (abs(netEdge)/100)           * 0.20      // size of the disagreement
+    if participation &lt;  40 -&gt; -0.10
+    if participation &lt;  25 -&gt; -0.20          // stacks with the above
+    if |netEdge|     &lt;  20 -&gt; -0.10
+    if missingInputs &gt;=  3 -&gt; -0.05
+    if missingInputs &gt;=  6 -&gt; -0.10          // stacks with the above
+    if warnings mention event risk / high impact event / tier 1 event        -&gt; -0.10
+    if weekly candle status is "consolidating" or warnings mention weekly
+       consolidation                                                         -&gt; -0.05
+    if warnings mention conviction audit / audit flag / audit warning        -&gt; -0.05
+    if warnings mention "o layer"                                            -&gt; -0.05
+    if warnings mention adr warning / session warning                        -&gt; -0.05
+    value = round(clamp(confidence, 0, 1) * 100)</code></pre>
+<p>It returns <code>{ value, strength, evidenceDominance, participation, netEdge, missingInputsCount }</code>, where <code>strength</code> comes from a <em>joint</em> test rather than from <code>value</code> alone:</p>
+<pre class="code"><code>VERY_STRONG : value &gt;= 80 AND |netEdge| &gt;= 25 AND participation &gt;= 50
+STRONG      : value &gt;= 65 AND |netEdge| &gt;= 18 AND participation &gt;= 35
+MODERATE    : value &gt;= 50 AND |netEdge| &gt;= 10 AND participation &gt;= 25
+WEAK        : value &gt; 0
+PENDING / NO_CALL otherwise</code></pre>
+<p>That joint test is why a very high headline can still print as WEAK: a 100% one-sided argument share with <code>participation 16</code> and <code>netEdge 100</code> yields <code>round(1.00*0.45 + 0.16*0.35 + 1.00*0.20) = 36</code> and the label WEAK, because participation 16 &lt; 25. This appears repeatedly in the BTC checker corpus and is intended behaviour, not a rounding artefact.</p>
+<p>If any of the four core inputs is missing the function does not compute a score at all — it returns <code>value: fallbackConfidence</code> (normally <code>null</code>). A missing input degrades the published number to a fallback instead of silently scoring a partial book.</p>
+<h3>9.2 Verification: the formula reproduces every stored USD headline</h3>
+<p>The strongest available check is the historical USD checker, <code>data/backtester-checker-usd-24h-2024-01.json</code> (604 evaluated 24h rows), which stores both the arguments and the published headline. Recomputing the headline from each row's own <code>bull_case_pct</code>, <code>bear_case_pct</code>, <code>participation_pct</code>, <code>net_edge_pct</code>, <code>missing_inputs</code> and <code>warnings</code> reproduces the stored <code>displayed_headline_confidence_pct</code>:</p>
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr><th>Check over 604 USD 24h checker rows</th><th class="num">Result</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>exact matches</td><td class="num"><strong>604</strong></td></tr>
+      <tr><td>mismatches</td><td class="num">0</td></tr>
+      <tr><td>rows where the headline could not be computed</td><td class="num">0</td></tr>
+    </tbody>
+  </table>
+</div>
+<p>So the headline contract is not a one-off reinterpretation of the 2024-01-09 snapshot; it is stable across a full month of USD calls. The same corpus makes the two-number split visible in its own structure: <code>predicted_conviction</code> holds the raw winning-side share while <code>displayed_headline_confidence_pct</code> holds the published score, and on 584 of 604 rows <code>conviction_model.final_conviction</code> agrees with the <em>headline</em> rather than with <code>predicted_conviction</code>. The historical artifact therefore carried the same ambiguity §8.3 describes.</p>
+<p>The same formula also reproduces the <strong>BTC</strong> (60, MODERATE) and <strong>NQ</strong> (28, WEAK) parity fixtures' stored headlines and strength buckets from their own arguments, so the headline contract is cross-asset rather than a USD-only convention. What is <em>not</em> consistent across assets is which field the headline is written into, and that is the §8.3 finding.</p>
+<h3>9.3 Layer 2 combines the two Layer 1 numbers with <code>min()</code>, not an average</h3>
+<p><code>backtester/lib/layer2_pair_logic.js#deriveLayer2PairSignal</code> is the pair contract. It takes a target asset's Layer 1 call and the USD Layer 1 call, and returns a pair decision. It fires only when all four gates below are satisfied:</p>
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr><th>Gate</th><th>Outcome when not met</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>target direction is exactly <code>BULLISH</code> or <code>BEARISH</code></td><td><code>unsupported_target_direction</code>, not tradable</td></tr>
+      <tr><td>USD direction is exactly <code>BULLISH</code> or <code>BEARISH</code></td><td><code>unsupported_usd_direction</code>, not tradable</td></tr>
+      <tr><td>both confidences are numeric</td><td><code>missing_combined_confidence</code>, not tradable</td></tr>
+      <tr><td>the two directions are <strong>opposite</strong></td><td><code>same_direction_conflict</code>, not tradable</td></tr>
+    </tbody>
+  </table>
+</div>
+<p>When all four hold:</p>
+<pre class="code"><code>direction          = target BULLISH + USD BEARISH -&gt; BUY
+                     target BEARISH + USD BULLISH -&gt; SELL
+combinedConfidence = min(targetConfidence, usdConfidence)
+strengthBucket     = VERY_STRONG &gt;= 80, STRONG &gt;= 65, MODERATE &gt;= 50, WEAK &gt;= 0</code></pre>
+<p>Three properties matter for anyone reasoning about USD:</p>
+<ol>
+  <li><strong><code>min()</code> means the weaker leg sets the pair's confidence.</strong> A 90-confidence target against a 55-confidence USD call produces a 55 pair. Averaging would give 72.5 and overstate the trade, so the repository deliberately takes the pessimistic bound.</li>
+  <li><strong><code>_LEAN</code> directions are excluded.</strong> The USD gate emits <code>BULLISH_LEAN</code>/<code>BEARISH_LEAN</code> whenever |net edge| &lt; 20 (see §6.3). Layer 2's <code>normalizeDirectionalSignalKey</code> returns <code>null</code> for anything other than the two exact strings, so every lean call removes USD as a pair leg entirely. The |net edge| &lt; 20 boundary in the gate is therefore a <strong>Layer 2 gate too</strong>, not merely a display choice.</li>
+  <li><strong>The pair inherits the §8.3 ambiguity.</strong> <code>min()</code> is taken over whichever number each Layer 1 artifact puts in its confidence field — raw share on the export, headline on the replay and the checkers. The pair result is only as well-defined as §8.3 is resolved.</li>
+</ol>
+<h3>9.4 The realised outcome Layer 2 is scored against</h3>
+<p>Layer 2 has no independent price series of its own: the pair outcome recorded by the calibration layer is the <strong>target-side stored checker outcome on the pair market</strong> (<code>backtester/lib/confidence_calibration.js</code>, <code>buildLayer2Observations</code>). USD contributes the confidence leg; it does not contribute the outcome. That is a deliberate design choice and also a limit — a USD-only error cannot appear as a pair loss unless it changed whether the pair fired at all.</p>
+<hr>
+    </section>
+    <section class="chapter" id="sec-10">
+<h2 id="sec-10">10. What a reviewer should scrutinise</h2>
+<p>Ordered by how much a wrong answer would cost:</p>
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr><th class="num">#</th><th>Question</th><th>Where the answer lives</th><th>Why it matters</th></tr>
+    </thead>
+    <tbody>
+      <tr><td class="num">1</td><td>Is <code>conviction_24h</code> the raw share or the headline?</td><td>§8.3; export vs <code>usd_replay_core.js</code> vs the five parity fixtures</td><td>Every cross-asset comparison and every calibration bucket depends on it, and the fixtures do not agree: BTC/NQ/EUR store the raw share, USD/GOLD the headline.</td></tr>
+      <tr><td class="num">2</td><td>Does the rulebook the analyst reads match the code that runs?</td><td>§7 diff table (11 rows)</td><td>Only the 24h weight column is close; weights, thresholds and several factors are code-only.</td></tr>
+      <tr><td class="num">3</td><td>Are the ten factors independent?</td><td>§6.2, §7</td><td>F2/F3/F4 are three rates signals and F5 is DXY; correlated votes are summed as if independent.</td></tr>
+      <tr><td class="num">4</td><td>Is the gate reading causal, correctly-timed inputs?</td><td>§4 input contract</td><td>A <code>latest_us_event</code> with <code>age_hours 120</code> still votes at weight 24 on the 24h horizon.</td></tr>
+      <tr><td class="num">5</td><td>Does the fixture prove live behaviour?</td><td>§8.3</td><td><code>Parity result: PASS</code> compares replay to fixture; it never runs the export.</td></tr>
+      <tr><td class="num">6</td><td>What does the gate do when inputs are missing?</td><td>§6.3 missing-input penalty</td><td>Missing inputs are scored NEUTRAL, which <em>reduces</em> the denominator and can raise the winning share.</td></tr>
+    </tbody>
+  </table>
+</div>
+<hr>
+    </section>
+    <section class="chapter" id="sec-11">
+<h2 id="sec-11">11. How this dossier was built and how to re-check it</h2>
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr><th>Artifact</th><th>Role</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>logic/agent_usd_direction.md</code> (rulebook v2.1)</td><td>The documented intent, quoted in §5.</td></tr>
+      <tr><td><code>exports/usd_layer1_agent.json</code> -&gt; <code>Calculate USD Conviction</code></td><td>The implemented gate, quoted in §6; extracted verbatim to <code>tmp/usd-logic-doc/Calculate_USD_Conviction.js</code>.</td></tr>
+      <tr><td><code>backtester/fixtures/usd_live_replay_24h_parity_fixture.json</code></td><td>The frozen 2024-01-09 worked example in §8.</td></tr>
+      <tr><td><code>backtester/replay/usd/usd_replay_core.js</code></td><td>The replay the fixture is locked to; origin of the headline-in-<code>conviction_24h</code> convention.</td></tr>
+      <tr><td><code>backtester/scripts/check_usd_live_replay_24h_parity.js</code></td><td>The parity gate; prints <code>Parity result: PASS</code>.</td></tr>
+      <tr><td><code>backtester/lib/headline_confidence.js</code></td><td>The published confidence contract in §9.1.</td></tr>
+      <tr><td><code>backtester/lib/layer2_pair_logic.js</code></td><td>The <code>min()</code> pair contract in §9.3.</td></tr>
+      <tr><td><code>backtester/lib/confidence_calibration.js</code></td><td>The observation builder in §9.4.</td></tr>
+      <tr><td><code>data/backtester-checker-usd-24h-2024-01.json</code></td><td>604 evaluated USD 24h rows; the corpus behind §9.2.</td></tr>
+      <tr><td><code>tmp/usd-logic-doc/run-gate.cjs</code></td><td>Local harness: runs the extracted gate on the fixture snapshot and prints the §8.1-8.3 comparison.</td></tr>
+      <tr><td><code>tmp/usd-logic-doc/verify-headline-corpus.cjs</code></td><td>Recomputes the headline over all 604 USD checker rows and counts matches (§9.2).</td></tr>
+      <tr><td><code>tmp/usd-logic-doc/verify-fixture-conventions.cjs</code></td><td>Prints, per asset fixture, whether <code>conviction_24h</code> is the raw share or the headline (§8.3).</td></tr>
+    </tbody>
+  </table>
+</div>
+<p>Re-running the checks quoted in this dossier:</p>
+<pre class="code"><code>node tmp/usd-logic-doc/run-gate.cjs                             # gate output vs fixture + headline reconciliation
+node tmp/usd-logic-doc/verify-headline-corpus.cjs               # 604/604 headline reproduction
+node tmp/usd-logic-doc/verify-fixture-conventions.cjs           # which of the five fixtures store which number
+node backtester/scripts/check_usd_live_replay_24h_parity.js     # replay vs fixture -&gt; Parity result: PASS</code></pre>
+<p>All four are read-only, local and deterministic. None touches the linked warehouse, the live workflow nor the published dashboard, so none is evidence of live deployment.</p>
+<p><strong>Standing limits.</strong> This dossier describes the logic of one agent from a frozen export and a frozen fixture. It is not proof that the pipeline runs these inputs in this order live, that the inputs were available at call time, or that any of it has trading edge. Per the repository's own discipline, a passing replay is a parity result, not an edge result.</p>
+<hr>
+    </section>
+  </main>
+</div>
+<footer>
+  <div class="links">
+    <a href="index.html">index.html · dashboard</a>
+    <a href="usd-layer1-call-flow.html">usd-layer1-call-flow.html · USD call map</a>
+    <a href="docs/analysis-engine/USD_LAYER1_LOGIC.md">docs/analysis-engine/USD_LAYER1_LOGIC.md · the dossier</a>
+    <a href="docs/analysis-engine/USD_LAYER1_LOGIC.md.txt">docs/analysis-engine/USD_LAYER1_LOGIC.md.txt · plain text</a>
+    <a href="backtester/scripts/build_usd_layer1_logic_page.js">backtester/scripts/build_usd_layer1_logic_page.js · how this page is rendered</a>
+  </div>
+  <p>This page is a reading copy of the committed dossier, generated by <span class="mono">backtester/scripts/build_usd_layer1_logic_page.js</span> from <span class="mono">docs/analysis-engine/USD_LAYER1_LOGIC.md</span>; it adds no number the document does not carry, and the file itself stays the source of truth. The code quoted in it is the exported workflow snapshot, not proof of what the live workspace runs today.</p>
+  <p>Guarded by <span class="mono">tests/usd_layer1_logic_page.browser.test.js</span>, which re-renders the page offline at desktop and narrow widths, checks that every index anchor resolves, hands the download link its file, and runs the builder's own <span class="mono">--check</span> so the page cannot drift from the dossier.</p>
+</footer>
+</body>
+</html>
+
