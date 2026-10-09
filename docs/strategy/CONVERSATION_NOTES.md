@@ -4374,3 +4374,72 @@ Filed as `20261008-strategy-layer1-pack-frontier-redteam-and-engine-scope-065` a
 provenance line the review invited under a new submission ID. Nothing was built, no page, engine, assignment, weight
 or threshold was touched, no credential was read and the sealed window stayed unread; the lane is paused awaiting the
 user's answers.
+
+## 2026-10-09 - he asks for the write-up: the pack (D1) and the per-element instructions (D2) are written
+
+He answered the standing reminder with "okay give me the write up" - the full markdown document that breaks down the
+Layer 1 logic of gold, every element, why each is used and why it carries the weight it does, with the per-element
+instructions for a research agent inside it. The seven decisions are still unanswered, and the reply-style rule says an
+unanswered question takes its stated default and the work continues, so this turn wrote both documents on those
+defaults rather than waiting: the pack prints the declared vector and the code's five vectors side by side and marks
+the code's 24h vector (26/22/12/10/10/8/8/2/1/1) as the one behind every stored row and every measurement, which is
+exactly the default the -064 review recorded for decision 1. Nothing in the pack depends on a decision that is still
+open; where a decision would change a sentence, the sentence says so and the question is listed in the pack's own
+section 11.
+
+**D1 - `docs/strategy/LAYER1_GOLD_LOGIC_PACK.md`**, 69,020 bytes, 914 lines, 12 sections, written to be read outside
+the repository: what the system is in five sentences and the one question it answers; a plain-word glossary and the
+one prohibition; the chain in ten steps; the ten elements, one block each in the same eleven fields (what it is, what
+it reads, the rule as implemented, the rule as documented and any divergence, which way it pushes, the weight, why the
+design believes it matters, what would falsify it, how to validate it, status today, the honest unknown); the weight
+story; the 28-reading map with the project's own coverage status per reading; what the record shows; the element
+status table; what the document does not claim; where every fact came from; the seven open questions; and what
+follows.
+
+**D2 - `docs/strategy/LAYER1_ELEMENT_VALIDATION_INSTRUCTIONS.md`**, 25,116 bytes, 325 lines, the companion the pack
+points at: three shared rules (a reading may only be used if it was published before the call; every hit rate is
+reported beside the drift on the same days; five verdict words only, holds / no information / unstable across years /
+dead / not scoreable), the guards that stop a check fitting itself to the data (choose anything you have to choose on
+the earlier two thirds, open the holdout once, state the definition sentence first, never read the sealed window), the
+sample-size arithmetic, then ten work orders in the pack's element order, each with question, data, test, what to
+report, guards, expected verdict basis and what retires the element. It closes with the three groups by prerequisite -
+five work orders can start on material already held, three need one declared definition each, one needs the owner to
+say which sign governs - the fixed output shape, and the ceiling on the results: they fill the status table and
+nothing else, and may not move a weight, qualify a call or rank elements that overlap.
+
+
+**Facts read this turn, not carried over from the -057 to -065 notes.** The exported gold workflow was parsed and its
+four code nodes extracted and read directly: nine nodes; the input pack names 25 fields and flags 11 as may-be-missing;
+three of the 25 (the 10-year nominal yield and its two changes) are supplied and read by no element at all, while three
+declared names (`inflation_signal`, `risk_headline_context`, `growth_regime`) are absent from the pack altogether; the
+conviction node holds the five per-timeframe weight tables and writes `conflict_penalty: 0`,
+`missing_input_penalty: 0` and `agreement_boost: 0` into every breakdown, so the logic document's own sentences - that
+conflict between the primary drivers must reduce conviction, that agreement must raise it, that missing inputs reduce
+it downstream - are documented behaviour with no implementation, while the code's null-handling is the safer of the
+two; the model node is `gpt-4.1-mini` with an isolation prompt and `conviction_fields: must_be_null`, and its values
+are overwritten by the conviction node, so the stored number is the code's. `git log` on the logic document shows a
+single commit, `3f614f6` "Add files via upload" on 2026-06-07, with no revision since, which is what makes "no
+derivation record for any of the ten weights" a checked statement rather than an impression. The three grades are the
+graded artifact's own Layer 1 block, read directly rather than quoted: `correctCount 1188` of `inputRowCount 2493`
+(`directionalAccuracyPct 47.65`, Wilson 45.70-49.62), `halfAdr20ReachRatePct 64.34`, `fullAdr20ReachRatePct 37.26`,
+`halfAdr20ReachButTerminalReversalRatePct 20.86`, `fullAdr20ReachButTerminalReversalRatePct 5.98`,
+`meanSignedReturnAdr -0.020284` and `majorityDirectionalBaselinePct 53.19`. The per-reading coverage statuses are the
+register's own, extracted 2026-10-05 and re-read today. The dollar element's instrument question is now pinned to two
+named sources that disagree: the coverage register records the ICE index as absent and refuses to relabel the broad
+trade-weighted index as DXY, while the collector handoff maps that broad index straight into `dxy_level`.
+
+**One number this turn's reading added to the weight story.** Comparing the declared vector against each of the code's
+five columns by total absolute difference gives: current week 8 points, 3-day 12, next week 20, and the 24-hour and
+current-month columns 28 each. So the published weights are nearest the horizon they were never meant for and furthest
+from the traded one, and the vector every stored call actually ran was never published anywhere.
+
+**What this turn did not do.** No live system, collector, builder, weight, threshold, register entry, dashboard file,
+assignment or other lane was touched; no credential was used; the sealed prospective window was not read; and no
+measurement was re-run, so every figure in both documents is either a declared design fact or a number already
+measured in this lane's own filed notes and named as such. The pack and the instructions each carry their own
+non-claims section and their own re-issue condition (both must be re-issued if the logic document, the exported
+workflow, the rule engine or the declared reading register changes). The frontier review brief and the red-team
+charter are the next two pieces and quote the pack, so they wait on nothing; the dashboard status page and the engine
+stay behind the seven decisions, as the -064 scope already said.
+
+Filed as `2026-10-09-strategy-layer1-pack-and-element-instructions-066` at the new head.
