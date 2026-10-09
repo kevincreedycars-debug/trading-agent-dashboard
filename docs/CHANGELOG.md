@@ -15,6 +15,8 @@
 - Extended `backtester/tests/site_nav_consistency.browser.test.js` with the eighth bar label and its href, the third outbound label pair, the updated `--check` report pin, and a third hop made from inside `gold.html`'s gold-direction frame onto the dossier's own heading; the guard is 5/5.
 - Added one footer link on `usd-layer1-call-flow.html`, `usd-layer1-logic.html · the full logic dossier`; its guard already checks that every footer link resolves to a file which ships with the page, and `tests/usd_layer1_call_flow.browser.test.js` is 6/6.
 - Added `docs/USD_LOGIC_DOSSIER_PUBLICATION_20261009.md` as the handoff note for this release.
+- Published the release and read it back live: `66e0b0b` fast-forwarded `origin/main` from `c441ba4`, so GitHub Pages serves the tree; `usd-layer1-logic.html` returns HTTP 200 with 86,940 bytes and sha256 `a983730e...` byte-identical to the committed blob on both delivery paths, the live `index.html` (28,217 bytes, `8c1655f6...`) carries the new bar and rail entry beside its unchanged seventeen `data-tab` views, `usd-layer1-call-flow.html` (34,345 bytes, `2721fdec...`) and the plain-text download (48,307 bytes, `f2b2fd24...`) return their own bytes, and a headless reader on the live dashboard makes the bar hop, the rail hop and the call map's footer hop onto the dossier's own heading with 11 chapters, 15 tables and no script error.
+
 
 ## 2026-10-08
 

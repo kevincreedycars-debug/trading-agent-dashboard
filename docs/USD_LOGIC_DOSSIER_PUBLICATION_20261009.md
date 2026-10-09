@@ -1,7 +1,9 @@
 # The USD Layer 1 logic dossier published, reachable from the bar and the rail
 
 Date: 2026-10-09. Branch: `release/usd-logic-dossier-20261009`, cut from `origin/main` at `5cfe742` (`origin/main`
-has since moved to `7d242c6` with live-trading snapshots, which this branch does not touch).
+moved to `7d242c6` and then `c441ba4` by live-trading snapshots, which this branch does not touch). Released to
+production: rebased onto `c441ba4` and pushed as `66e0b0b` (`c441ba4..66e0b0b`, fast-forward) to `origin/main`, so
+GitHub Pages serves this tree.
 
 ## What changed
 
@@ -69,8 +71,24 @@ Green on this tree, with no npm runner on the release branch: the navigation gua
 builder `13 pages, 17 rail entries, 3 outbound, 0 change(s)`, the dossier builder `0 change(s) in 2 generated
 file(s)` with the page at 86,940 bytes and the download at 48,307 bytes.
 
-Nothing here is live yet: the branch has not been pushed, so this note carries no live read-back. A link on the bar
-is a route, not evidence - the dossier describes how the USD Layer 1 call is made and settles the 85-versus-87
-question from the code, and reaching it says nothing about whether the call is right. No number, section, table or
-code block of the dossier changed here, and nothing in this release reads a warehouse, a workflow or the live
-dashboard.
+## The live read-back
+
+The release is published, not just committed. Read back from the live site with `tmp/usd-logic-verify-live.cjs`, both
+delivery paths returning HTTP 200 and bytes identical to the committed blobs:
+
+- `usd-layer1-logic.html` - 86,940 bytes, sha256 `a983730e3a7e02635cad56d0dc1eb2e856f0ed097dd5d256e73eec78e48421f0`
+- `index.html` - 28,217 bytes, sha256 `8c1655f62775b4d91ceb6edbebf11599be9db43bb564a2bdb049b3d93b6cbb68`
+- `usd-layer1-call-flow.html` - 34,345 bytes, sha256 `2721fdecc689ba570023c0336bacfa5c86f0c394a07516b058c5731bd740a0f1`
+- `docs/analysis-engine/USD_LAYER1_LOGIC.md.txt` - 48,307 bytes, sha256 `f2b2fd244cd42be2f7ca617f26139daace8b67728c756e981a5c5bd05ccfebd8`
+
+The same bytes arrive from `raw.githubusercontent.com` (`.../main/<file>`) and from the GitHub Pages copy. On the live
+dashboard a headless reader at 1440px finds exactly one bar entry and one rail entry for the dossier, beside the
+seventeen `data-tab` rail views that a cross-check of the served `index.html` still counts unchanged. The bar hop, the
+rail hop and the footer link on the live `usd-layer1-call-flow.html` each land on the live dossier carrying the heading
+`USD Layer 1 - complete logic dossier`, 11 `section.chapter` chapters, 15 tables, its own bar and rail entries and one
+download link, with zero script errors across the walk.
+
+What that does not prove: a link on the bar is a route, not evidence. The dossier describes how the USD Layer 1 call is
+made and settles the 85-versus-87 question from the code, and reaching it says nothing about whether the call is right.
+No number, section, table or code block of the dossier changed here, and nothing in this release reads a warehouse, a
+workflow or a live Layer 1 output.
