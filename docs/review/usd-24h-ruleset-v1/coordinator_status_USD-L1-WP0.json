@@ -1,0 +1,61 @@
+{
+  "task_id": "USD-L1-WP0",
+  "status": "DISCOVERED",
+  "date": "2026-10-11",
+  "coordinator": {
+    "tool": "Cline",
+    "surface": "VS Code, canonical folder D:/trading-agent-dashboard-codex",
+    "coordination": "repository manual-file-mailbox (docs/orchestration/), dispatcher paused since 2026-10-08T21:12Z"
+  },
+  "repo_commit": "7e700bbdee2d873eb2e786b46abc438e77efcb59",
+  "repo_branch": "orchestration/control-plane-20260920",
+  "live_branch_commit": "31fd44edc1ef95a5eb27b20e4d25dd84b3e3b349",
+  "live_export_hash": null,
+  "live_export_hash_note": "UNKNOWN: running n8n workflows were not read; exports/ are repository snapshots only",
+  "runtime_identity": {
+    "executor": "n8n Cloud (https://silver17.app.n8n.cloud, project ISQG9XU7TGTT6Fcu)",
+    "still_live": true,
+    "evidence": [
+      "origin/main:data/layer1.json refreshed 2026-10-11T08:55:44Z with eight agent rows run 08:51-08:55Z",
+      "origin/main commit 31fd44e 2026-10-11T18:35+01:00 live-trading M5/H1/H4 snapshot publication",
+      "exports: Get USD Logic Document fetches logic/agent_usd_direction.md from GitHub at run time"
+    ]
+  },
+  "engine_count": {
+    "brief_premise": 8,
+    "live_published": 8,
+    "repo_layer1_agent_exports": 6,
+    "repo_plus_draft": 7,
+    "note": "WTI has a rulebook on origin/main but no agent or collector export; SILVER exports exist on origin/main only; GBP exports exist only as drafts on the coordinator branch"
+  },
+  "claims": [
+    { "issue": "LLM classifications overwritten by deterministic node", "finding": "CONFIRMED", "evidence": ["exports/usd_layer1_agent.json node 'Parse USD Agent Output'", "exports/usd_layer1_agent.json node 'Calculate USD Conviction'"] },
+    { "issue": "Rulebook and export use different weights/formulas", "finding": "CONFIRMED", "evidence": ["logic/agent_usd_direction.md:108-119 (10,14,16,14,6,5,3,18,12,2)", "exports/usd_layer1_agent.json TIMEFRAME_WEIGHTS['24h'] (10,14,10,10,14,4,24,12,1,1)"] },
+    { "issue": "F7 event age / actual-versus-consensus enforcement absent", "finding": "CONFIRMED", "evidence": ["exports/usd_layer1_agent.json node 'Calculate USD Conviction' signals.F7"] },
+    { "issue": "F8 scores static hawkish/dovish state not change", "finding": "CONFIRMED", "evidence": ["exports/usd_layer1_agent.json signals.F8 on inputs.fed_bias"] },
+    { "issue": "Missing inputs shrink the denominator and inflate the winning share", "finding": "CONFIRMED", "evidence": ["exports/usd_layer1_agent.json conviction = round(bullish/(bullish+bearish)*100)", "origin/main:data/layer1.json USD row 2026-10-11T08:53:21Z bull 10 bear 90 neutral 60 conviction 90"] },
+    { "issue": "F1/F9 (and F10) repeat VIX evidence", "finding": "CONFIRMED", "evidence": ["exports/usd_layer1_agent.json signals.F1, signals.F9, signals.F10"] },
+    { "issue": "Exported, replayed and displayed confidence use different meanings", "finding": "CONFIRMED", "evidence": ["exports/usd_layer1_agent.json verdict_strength thresholds 40/25/15", "backtester/lib/headline_confidence.js:38-50 and :97-135"] },
+    { "issue": "Replay parity check does not execute the exported workflow", "finding": "CONFIRMED", "evidence": ["backtester/scripts/check_usd_live_replay_24h_parity.js:5,70-72", "backtester/fixtures/usd_live_replay_24h_parity_fixture.json meta.live_source_of_truth"] },
+    { "issue": "Five asset fixtures use incompatible confidence conventions", "finding": "CONFIRMED", "evidence": ["backtester/fixtures/{usd,eur,gold,nq,btc}_live_replay_24h_parity_fixture.json expected_live_24h key sets"] },
+    { "issue": "Raw inputs and selection details stripped before the output write", "finding": "CONFIRMED", "evidence": ["exports/usd_layer1_agent.json node 'Calculate USD Conviction' destructuring block", "exports/usd_layer1_agent.json node 'Create a row' dataToSend=autoMapInputData into agent_outputs"] },
+    { "issue": "Silent 1d->5d and 5d->20d substitution", "finding": "CONFIRMED", "evidence": ["exports/usd_layer1_agent.json node 'Build USD Input Pack' gold_d5_pct fallback", "signals F2/F4/F5/F10 lookback switching"] },
+    { "issue": "No as-of retrieval or freshness state on inputs", "finding": "CONFIRMED", "evidence": ["exports/usd_layer1_agent.json node 'Supabase Get Many' operation=getAll returnAll=true on market_snapshots", "node 'Build USD Input Pack' sortedRows.find(isUsableUsdSnapshot) || sortedRows[0]"] },
+    { "issue": "Deployment identity of live workflows", "finding": "UNKNOWN", "evidence": [] },
+    { "issue": "USD 24h outcome/label contract behind data/backtester-checker-usd-24h-2024-01.json", "finding": "UNKNOWN", "evidence": [] }
+  ],
+  "blockers": [
+    "CURRENT_LIVE_EXPORT_UNVERIFIED",
+    "SILVER_AND_WTI_CHAIN_NOT_IN_REPO",
+    "ENGINE_FAMILY_NOT_UNIFORM",
+    "F8_CATALYST_CALENDAR_AND_CLOSURE_STATES_HAVE_NO_SOURCE"
+  ],
+  "next_work_package": "WP0b: local export-vs-replay difference harness (no live access needed)",
+  "artefacts": [
+    "docs/review/usd-24h-ruleset-v1/discovery_report.md",
+    "docs/review/usd-24h-ruleset-v1/README.md",
+    "docs/review/usd-24h-ruleset-v1/USD_24h_Master_Ruleset_v1.md",
+    "docs/review/usd-24h-ruleset-v1/Central_Coordinator_USD_and_8_Engine_Brief.md",
+    "docs/review/usd-24h-ruleset-v1/USD_24h_Policy_Config_v1.json"
+  ]
+}

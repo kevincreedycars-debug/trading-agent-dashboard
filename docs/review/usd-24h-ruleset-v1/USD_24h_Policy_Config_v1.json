@@ -1,0 +1,251 @@
+{
+  "schema_version": "usd-policy-config-v1",
+  "ruleset_version": "usd-24h-v1.0",
+  "created_at": "2026-10-11",
+  "status": "PROPOSED_SHADOW_SPECIFICATION",
+  "production_enabled": false,
+  "scope": {
+    "primary_asset": "USD",
+    "total_layer1_engines": 8,
+    "other_engines": "DISCOVER_FROM_PROJECT",
+    "horizons_modified": [
+      "24h"
+    ],
+    "other_horizons": "PRESERVE_LABELLED_LEGACY"
+  },
+  "target": {
+    "candidate_series": "DXY",
+    "provider": null,
+    "instrument_id": null,
+    "cutoff_schedule": "DISCOVER_CURRENT_SCHEDULE",
+    "time_zone_storage": "UTC",
+    "horizon_seconds": 86400,
+    "closed_endpoint_policy": "SKIP",
+    "deployment_blocker_until_verified": true
+  },
+  "profiles": {
+    "legacy_frozen": {
+      "purpose": "EXACT_OBSERVED_IMPLEMENTATION",
+      "semantics": "VERSIONED_LEGACY",
+      "enable_shadow": false
+    },
+    "repair_v1": {
+      "purpose": "ENGINEERING_CORRECTIONS_PLUS_DOCUMENTED_EVENT_AND_FED_CHANGE",
+      "enable_shadow": true,
+      "trade_eligible": false,
+      "aggregation": "FACTOR_ADDITION_FIXED_DENOMINATOR",
+      "economic_sign_mappings": "LEGACY_UNLESS_SPECIFICALLY_REPAIRED"
+    },
+    "candidate_v1": {
+      "purpose": "CONDITIONAL_ECONOMIC_RULES",
+      "enable_shadow": true,
+      "trade_eligible": false,
+      "aggregation": "VERIFIED_WITHIN_FAMILY_CLUSTER",
+      "unknown_rule_policy": "CONTEXT_ONLY",
+      "unknown_cross_family_dependency": "BLOCK_FULL_CALL"
+    }
+  },
+  "factor_budget_points": {
+    "F1": 10,
+    "F2": 14,
+    "F3": 10,
+    "F4": 10,
+    "F5": 14,
+    "F6": 4,
+    "F7": 24,
+    "F8": 12,
+    "F9": 1,
+    "F10": 1
+  },
+  "parameter_provenance": {
+    "factor_budgets": "INHERITED_24H_COMPARISON_PARAMETERS_NOT_OPTIMAL",
+    "thresholds": "INHERITED_OR_PROVISIONAL_NOT_VALIDATED_EDGE",
+    "freshness": "PROVISIONAL_OPERATIONAL_CEILINGS_REQUIRING_PROVIDER_VALIDATION"
+  },
+  "fixed_score_denominator": 100,
+  "families": {
+    "MONETARY_MACRO": [
+      "F2",
+      "F3",
+      "F4",
+      "F7",
+      "F8"
+    ],
+    "RISK": [
+      "F1",
+      "F9",
+      "F10"
+    ],
+    "MOMENTUM": [
+      "F5"
+    ],
+    "CROSS_ASSET": [
+      "F6"
+    ]
+  },
+  "factor_feature_definitions": {
+    "F1": {
+      "feature": "vix_level_and_verified_regime",
+      "candidate_rule_required": true
+    },
+    "F2": {
+      "feature": "us_2y_d5_bps",
+      "bullish_gte": 5,
+      "bearish_lte": -5,
+      "candidate_mechanism_rule_required": true
+    },
+    "F3": {
+      "feature": "us_de_2y_spread_d5_bps",
+      "bullish_gte": 5,
+      "bearish_lte": -5,
+      "candidate_regime_rule_required": true
+    },
+    "F4": {
+      "feature": "us_10y_real_yield_d5_bps",
+      "bullish_gte": 5,
+      "bearish_lte": -5,
+      "candidate_regime_rule_required": true
+    },
+    "F5": {
+      "feature": "dxy_d1",
+      "unit": "pct_return",
+      "bullish_gte": 0.15,
+      "bearish_lte": -0.15,
+      "parameter_status": "INHERITED_MOMENTUM_HYPOTHESIS"
+    },
+    "F6": {
+      "feature": "gold_d5_pct",
+      "unit": "pct_return",
+      "bullish_lt": -0.1,
+      "bearish_gt": 0.1,
+      "candidate_conditional_rule_required": true
+    },
+    "F7": {
+      "feature": "validated_event_array",
+      "repair_max_age_hours": 72,
+      "repair_age_boundary_inclusive": true,
+      "candidate_direct_vote_default": false,
+      "requires_post_cutoff_persistence_rule": true
+    },
+    "F8": {
+      "feature": "relative_expected_policy_path_change_bps",
+      "static_bias_vote_allowed": false,
+      "materiality_threshold_bps": null,
+      "null_threshold_policy": "CONTEXT_ONLY",
+      "communication_baseline_required": true
+    },
+    "F9": {
+      "feature": "relative_growth_and_risk_regime",
+      "candidate_additive_vote": false
+    },
+    "F10": {
+      "feature": "nq_d1_pct_and_verified_regime",
+      "candidate_conditional_rule_required": true
+    }
+  },
+  "freshness": {
+    "unknown_policy": "UNAVAILABLE_FOR_VOTE",
+    "continuous_sources_only": {
+      "target_quote_max_age_minutes": 5,
+      "cross_asset_vix_quotes_max_age_minutes": 15,
+      "yields_ois_path_max_age_minutes": 60
+    },
+    "fed_communication_max_age_hours": 24,
+    "scheduled_publications": "LATEST_AVAILABLE_RELEASE_WITH_DECLARED_CYCLE",
+    "weekly_reports": "ACTUAL_PUBLICATION_AVAILABLE_BY_CUTOFF",
+    "closed_source_policy": "EXPLICIT_SESSION_STATE_NO_CLOCK_RESET"
+  },
+  "data_quality_states": [
+    "VALID",
+    "MISSING",
+    "STALE",
+    "INVALID",
+    "FUTURE",
+    "INAPPLICABLE"
+  ],
+  "rules": {
+    "accept_other_agent_verdicts": false,
+    "accept_other_agent_confidence": false,
+    "accept_shared_raw_market_data": true,
+    "accept_post_cutoff_data": false,
+    "coerce_missing_to_zero": false,
+    "silent_lookback_substitution": false,
+    "automatic_old_complete_snapshot_fallback": false,
+    "unknown_ingestion_historical_policy": "DECLARED_RECONSTRUCTION_WITH_PUBLICATION_AND_LATENCY",
+    "normalise_after_missingness": false,
+    "round_before_gating": false,
+    "derive_risk_from_warning_text": false,
+    "use_upstream_event_signal_as_sole_evidence": false,
+    "require_series_specific_surprise_interpretation": true
+  },
+  "direction_gates": {
+    "minimum_coverage_pct": 50,
+    "full_minimum_coverage_pct": 70,
+    "full_minimum_participation_pct": 50,
+    "full_minimum_absolute_score_points": 15,
+    "full_minimum_winning_families": 2,
+    "full_require_no_critical_conflict": true,
+    "full_require_no_unresolved_cross_family_dependency": true,
+    "full_require_catalyst_calendar": true,
+    "zero_score_direction": "NO_CLEAR_BIAS",
+    "insufficient_data_direction": "NO_CLEAR_BIAS",
+    "blocked_full_direction": "SIGNED_LEAN"
+  },
+  "cluster_policy": {
+    "dependency_assignment": "VERIFIED_LINKS_ONLY",
+    "within_family_budget": "MAX_MEMBER_WEIGHT",
+    "signed_score": "WEIGHTED_MEAN_SIGN",
+    "directional_budget": "BUDGET_TIMES_WEIGHTED_MEAN_ABSOLUTE_SIGN",
+    "global_denominator": "FIXED_100",
+    "unresolved_cross_family": "FLAG_AND_BLOCK_FULL_CALL",
+    "validation_status": "EXPERIMENTAL"
+  },
+  "output_contract": {
+    "schema_version": "layer1-output-v2",
+    "direction_strings": [
+      "BULLISH",
+      "BEARISH",
+      "BULLISH_LEAN",
+      "BEARISH_LEAN",
+      "NO_CLEAR_BIAS"
+    ],
+    "statuses": [
+      "VALID",
+      "PARTIAL",
+      "INSUFFICIENT_DATA",
+      "SKIPPED_MARKET_CLOSED"
+    ],
+    "probability_field": "p_up_24h",
+    "probability_without_calibration": null,
+    "calibration_version": null,
+    "legacy_conviction_policy": "PRESERVE_AND_DEPRECATE_NO_SEMANTIC_REUSE",
+    "typed_risk_flags": true,
+    "required_provenance": [
+      "snapshot_id",
+      "content_hash",
+      "cutoff_at_utc",
+      "forecast_end_at_utc",
+      "target_id",
+      "provider",
+      "ruleset_version",
+      "profile_id",
+      "parameter_version",
+      "engine_commit"
+    ]
+  },
+  "research_registry": [],
+  "activation_rule": "REGISTER_EXPLICIT_SHADOW_HYPOTHESES_BEFORE_CONDITIONAL_VOTES",
+  "release_blockers": [
+    "CURRENT_LIVE_SOURCE_UNVERIFIED",
+    "TARGET_PROVIDER_UNVERIFIED",
+    "COORDINATOR_INTEGRATION_UNVERIFIED",
+    "SOURCE_FRESHNESS_POLICIES_PENDING",
+    "CONSUMER_MIGRATION_PENDING",
+    "PREDICTIVE_VALIDATION_PENDING"
+  ],
+  "companion_files": [
+    "USD_24h_Master_Ruleset_v1.md",
+    "Central_Coordinator_USD_and_8_Engine_Brief.md"
+  ],
+  "note": "Policy configuration proposal, not an existing project's runnable engine or a validated production strategy. Registry and source-specific policies must be populated from verified project evidence."
+}
