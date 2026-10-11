@@ -242,3 +242,76 @@ Kept inactive or explicitly unknown, because there is no input source in the cur
 - Deployment identity is established for the USD deterministic code nodes only, at the export timestamp.
   Every other difference listed in section 2 remains unreviewed in this pass.
 - The n8n export is a point-in-time read; later edits to any workflow are not covered.
+
+## 9. Unavailable-versus-zero repair in the repository engines (2026-10-11, second action)
+
+The sharpest harness finding is repaired on the repository side. The local helper in the USD, GOLD and NQ
+calculate nodes was `function n(v) { const x = Number(v); ... }`, and `Number(null)`, `Number(undefined)`
+and `Number("")` are all finite `0`, so an input that was simply not available was converted into a real
+zero that cast a real vote at full weight. The repair inserts two checks ahead of the conversion:
+
+```js
+function n(v) {
+  if (v === null || v === undefined || v === '') return null;
+  if (typeof v === "string" && v.trim() === "") return null;
+  const x = Number(v);
+  return Number.isFinite(x) ? x : null;
+}
+```
+
+Every downstream factor builder already branched on `=== null` and reported "Missing input", so no other
+line of engine logic changed: unavailable stays unavailable, a real `0` and a negative reading keep casting
+their vote. Measured on the frozen `missing_vix_level` snapshot, running the recorded live engine with the
+repair applied in memory: F1, F9 and F10 stop voting (F1 was BEARISH at weight 10, F9 BEARISH at weight 1,
+F10 BEARISH at weight 1), directional participation falls from 99 to 88 and now equals the replay engine's
+88, missing-evidence factors rise from 0 to 2 and now equal the replay engine's 2, and the 24h conviction
+changes with them. On every case where each input is present the repaired engine returns the recorded
+verdicts unchanged, factor by factor, across all five timeframes.
+
+- `scripts/lib/layer1_null_conversion_repair.js` - pure planner (`planLayer1NullConversionRepair`,
+  `repairLayer1Source`, `repairExportFileText`) for the eight engines by name: usd `OCt1tB9yVMUgFTha`,
+  eur `Px0bsH7chlRWH9ZD`, gbp `bMv96EPR0xCXi3bi`, gold `wwBVT0EQcKu5517I`, nq `FOpFp3AzTJVYdLXe`,
+  btc `G142Blty3sGHzuOr`, silver `6IGOoTZxxTPyBpEp`, wti `8oUBopUWLiGcYU0d`.
+- `scripts/repair_layer1_null_conversion.js` - offline report (default), `--apply` for the repository
+  exports, and `--live <engine> [--apply]` for the live workflows through the scoped credential runner
+  with backup and saved/active verification. The live operation has not been run.
+- Repository drafts repaired: `exports/usd_layer1_agent.json`, `exports/gold_layer1_agent.json`,
+  `exports/nq_layer1_agent.json` - one JSON line changed each, +129 bytes, exactly the two guard lines
+  with every other byte identical. `eur` and `btc` were already guarded and are untouched. The `gbp`
+  repository file is a draft whose four code nodes have no `n(v)` helper; silver and wti still have a live
+  agent and no repository export to repair.
+- The published copy (`activeVersion.nodes`) inside each export is deliberately left exactly as the live
+  workflow wrote it, so the export still records that the deployed engine converts unavailable to zero
+  until the live update is applied and re-exported. `backtester/fixtures/usd_live_replay_harness_baseline.json`
+  and the live-export evidence are unchanged, so the frozen legacy harness stays a record of current live
+  behaviour.
+- Tests: `tests/layer1_null_conversion_repair.test.js` (planner, applier, committed draft state) and
+  `backtester/tests/layer1_null_conversion_profile.test.js` (repaired profile over the frozen cases:
+  missing, null, empty, whitespace-only, unparsable, real zero, negative, missing key).
+
+## 10. Confidence-mapping contract for the JSON behind `Build Layer 1 JSON`
+
+Three quantities were sharing names. In `backtester/lib/usd_decision_projections.js` the replay arm
+publishes its heuristic `conviction_24h` in a field named `headline_confidence_pct` while the live arm
+publishes `null` there and its conviction in `winning_side_conviction_pct`, so one field means different
+things per arm. On the published USD row the node verdict is stored as 70/`VERY_STRONG` while
+`backtester/lib/headline_confidence.js` computes 58/`MODERATE` from the same shares, and the ruleset states
+that no percentage is a probability until a calibration model exists.
+
+`backtester/lib/layer1_confidence_mapping.js` (version `layer1-confidence-map-v1`) maps a published row into
+three explicit, disjoint blocks with declared bases: `evidence_shares` (bull/bear/neutral share of the
+active weight, directional participation, net edge), `heuristic_strength` (node conviction, stored call
+conviction, headline blend, strength label, `is_probability: false`), and `calibrated_probability`
+(`p_up_24h: null`, `calibration_version: null`, `status: uncalibrated`). `assertLayer1ConfidenceMapping`
+rejects a number in the calibrated block without a named calibration version, a heuristic published under a
+probability name, a share published as a strength, and a `0` share of no active evidence (it must be null).
+The mapping is attached to the published-row check and to every case in
+`docs/review/usd-24h-ruleset-v1/usd_live_replay_comparison.json`, and the comparison script now fails rather
+than writes an invalid mapping. The frozen legacy projections are untouched: the legacy conflation is
+recorded in `backtester/fixtures/usd_live_replay_harness_baseline.json` and superseded by the new contract
+rather than silently rewritten. Tests: `backtester/tests/layer1_confidence_mapping.test.js`.
+
+Remaining, and not claimed here: the live engine still converts unavailable inputs to zero until the live
+update is applied, no calibration model exists so no calibrated percentage is published for any horizon,
+and none of this is evidence of predictive accuracy or trading edge.
+

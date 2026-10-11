@@ -16,7 +16,12 @@ logic; the pipeline was not touched.
 | `live_export_and_harness_report.md` | WP0b result: the authorised read-only n8n export, deployment identity, credential-material finding, routing trace for SILVER/WTI, and the live-versus-replay comparison |
 | `live_export_identity.json` | Machine-readable identity evidence for all 45 exported workflows: ids, versions, timestamps, per-node code hashes, routing, credential bindings, sanitized hashes |
 | `live-exports/` | Sanitized export of all 45 live workflows plus `manifest.json` and `scrub_report.json` |
-| `usd_live_replay_comparison.json` | Per-case comparison of the exported live code, the replay implementation and the dashboard calculation |
+| `usd_live_replay_comparison.json` | Per-case comparison of the exported live code, the replay implementation and the dashboard calculation, with the `layer1-confidence-map-v1` mapping per case and for the published row |
+| `../..//scripts/lib/layer1_null_conversion_repair.js` | Planner and minimal-diff applier for the unavailable-versus-zero conversion repair in the eight layer 1 engines (`scripts/repair_layer1_null_conversion.js` runs it offline or against a live workflow) |
+| `../..//backtester/lib/layer1_confidence_mapping.js` | `layer1-confidence-map-v1` contract: evidence shares, heuristic strength and calibrated probability mapped into three disjoint blocks, with a validator |
+
+New tests added with those two artefacts: `tests/layer1_null_conversion_repair.test.js`,
+`backtester/tests/layer1_null_conversion_profile.test.js`, `backtester/tests/layer1_confidence_mapping.test.js`.
 
 ## The reviewer's three questions, answered from this repository
 

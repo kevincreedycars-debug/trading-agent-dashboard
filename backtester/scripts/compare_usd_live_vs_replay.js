@@ -37,6 +37,7 @@ const {
   buildReplayOutput,
   parseLogicVersion
 } = require("../replay/usd/usd_replay_core");
+const { assertLayer1ConfidenceMapping, mapLayer1Confidence, publishedCallFromRow } = require("../lib/layer1_confidence_mapping");
 
 const rootDir = path.resolve(__dirname, "../..");
 const DEFAULT_CASES = path.join(__dirname, "../fixtures/usd_live_replay_harness_cases.json");
@@ -92,6 +93,7 @@ function runCase(caseEntry, snapshot, workflow, logicDocumentVersion) {
     live_code: liveProjection,
     replay_live_path: replayProjection,
     dashboard: dashboardProjection,
+    confidence_mapping: mapLayer1Confidence({ agent: "USD", calls: { "24h": publishedCallFromRow(live.row) } }),
     comparison,
     difference_fields: comparison.differences.map((difference) => `${difference.dimension}.${difference.field}`),
     hashes: {
@@ -144,6 +146,10 @@ function main() {
 
   const cases = casesFixture.cases.map((entry) => runCase(entry, resolveCaseSnapshot(entry, byId), loaded.workflow, logicDocumentVersion));
 
+  const publishedConfidenceMapping = publishedRow ? mapLayer1Confidence(publishedRow) : null;
+  if (publishedConfidenceMapping) assertLayer1ConfidenceMapping(publishedConfidenceMapping);
+  for (const entry of cases) assertLayer1ConfidenceMapping(entry.confidence_mapping);
+
   const result = {
     generated_at: new Date().toISOString(),
     script: "backtester/scripts/compare_usd_live_vs_replay.js",
@@ -161,7 +167,8 @@ function main() {
           source: path.relative(rootDir, publishedPath).split(path.sep).join("/"),
           contract: dashboardContractCheck(publishedRow, {
             note: "The published row nests the 24h model under calls['24h']; the writer maps it from the same deterministic fields."
-          })
+          }),
+          confidence_mapping: publishedConfidenceMapping
         }
       : { available: false, reason: "no published USD row found" },
     cases
