@@ -1,0 +1,185 @@
+{
+  "meta": {
+    "name": "usd_live_replay_harness_cases",
+    "purpose": "Identical frozen inputs for the live exported USD code, the repository replay implementation and the dashboard calculation.",
+    "live_code_source": "docs/review/usd-24h-ruleset-v1/live-exports/USD_Layer_1_Agent.json (code-node hashes identical to exports/usd_layer1_agent.json at export time)",
+    "replay_source": "backtester/replay/usd/usd_replay_core.js",
+    "dashboard_source": "backtester/lib/headline_confidence.js",
+    "notes": [
+      "Rows are shaped like the collector rows in the market snapshot table so Build USD Input Pack executes unchanged.",
+      "frozen_parity_snapshot reproduces the snapshot of backtester/fixtures/usd_live_replay_24h_parity_fixture.json.",
+      "The model step is not executed; model_report only proves which fields the deterministic node overwrites."
+    ]
+  },
+  "cases": [
+    {
+      "id": "frozen_parity_snapshot",
+      "description": "Existing frozen parity snapshot; baseline behaviour of every arm.",
+      "snapshot": {
+        "id": 2,
+        "snapshot_date": "2024-01-09",
+        "run_time_et": "2024-01-09T12:00:00.000Z",
+        "created_at": "2024-01-09T17:00:00.000Z",
+        "collector_version": "usd_collector_frozen_fixture",
+        "source_status": "frozen_fixture",
+        "vix_level": 13.0,
+        "vix_d1": -0.2,
+        "vix_d5": -0.1,
+        "dxy_level": 101.7,
+        "dxy_d1": 0.2,
+        "dxy_d5": 0.1,
+        "dxy_d20": 0.4,
+        "us_2y_yield": 4.45,
+        "us_2y_d5_bps": 6,
+        "us_2y_d20_bps": 10,
+        "de_2y_yield": 2.4,
+        "de_2y_d5_bps": 6,
+        "de_2y_d20_bps": 7,
+        "us_de_2y_spread": 2.05,
+        "us_de_2y_spread_d1_bps": 4,
+        "us_de_2y_spread_d5_bps": 6,
+        "us_de_2y_spread_d20_bps": 8,
+        "us_10y_yield": 4.02,
+        "us_10y_d5_bps": 7,
+        "us_10y_d20_bps": 11,
+        "us_10y_real_yield": 1.88,
+        "us_10y_real_yield_d5_bps": 7,
+        "us_10y_real_yield_d20_bps": 11,
+        "gold_price": 2065,
+        "gold_d1_pct": -0.2,
+        "gold_d5_pct": 0.2,
+        "gold_d20_pct": 0.4,
+        "nq_price": 407,
+        "nq_d1_pct": 0.5,
+        "nq_d5_pct": 0.1,
+        "nq_d20_pct": 1.2,
+        "equities_regime": "neutral",
+        "latest_us_event": {
+          "event": "US CPI",
+          "usd_signal": "BULLISH",
+          "surprise": "positive",
+          "surprise_direction": "positive",
+          "age_hours": 120
+        },
+        "latest_us_event_age_hours": 120,
+        "surprise_score": 2,
+        "fed_bias": "hawkish",
+        "warnings": [],
+        "missing_inputs": [],
+        "global_growth_context": "neutral"
+      }
+    },
+    {
+      "id": "model_verdict_overridden",
+      "description": "A contradicting model report is supplied; the deterministic node must still own the verdict fields.",
+      "based_on": "frozen_parity_snapshot",
+      "model_report": {
+        "direction_24h": "BEARISH",
+        "conviction_24h": 10,
+        "direction_3_day": "BEARISH",
+        "conviction_3_day": 12,
+        "reasoning_summary": "Model-side contradiction used to prove the deterministic overwrite.",
+        "risk_flags": ["model_reported_warning"],
+        "factor_breakdown": { "F1": { "signal": "BEARISH", "weight": 100 } }
+      }
+    },
+    {
+      "id": "stale_event",
+      "description": "Bullish US event label that is 200 hours old; exposes whether any arm ages the event input.",
+      "based_on": "frozen_parity_snapshot",
+      "snapshot_patch": {
+        "latest_us_event": { "event": "US CPI", "usd_signal": "BULLISH", "age_hours": 200 },
+        "latest_us_event_age_hours": 200
+      }
+    },
+    {
+      "id": "unchanged_hawkish_bias",
+      "description": "Hawkish Fed bias with every other input flat; exposes whether any arm requires a change in the bias.",
+      "based_on": "frozen_parity_snapshot",
+      "snapshot_patch": {
+        "vix_level": 20.0,
+        "vix_d1": 0,
+        "vix_d5": 0,
+        "dxy_d1": 0,
+        "dxy_d5": 0,
+        "dxy_d20": 0,
+        "us_2y_d5_bps": 0,
+        "us_2y_d20_bps": 0,
+        "us_de_2y_spread_d5_bps": 0,
+        "us_de_2y_spread_d20_bps": 0,
+        "us_10y_real_yield_d5_bps": 0,
+        "us_10y_real_yield_d20_bps": 0,
+        "gold_d1_pct": 0,
+        "gold_d5_pct": 0,
+        "gold_d20_pct": 0,
+        "nq_d1_pct": 0,
+        "nq_d5_pct": 0,
+        "nq_d20_pct": 0,
+        "latest_us_event": null,
+        "latest_us_event_age_hours": null,
+        "fed_bias": "hawkish",
+        "equities_regime": "neutral"
+      }
+    },
+    {
+      "id": "sparse_inputs",
+      "description": "Required and optional inputs removed so snapshot selection falls back and coverage collapses.",
+      "based_on": "frozen_parity_snapshot",
+      "snapshot_remove": [
+        "fed_bias",
+        "us_de_2y_spread",
+        "us_de_2y_spread_d5_bps",
+        "us_de_2y_spread_d20_bps",
+        "de_2y_yield",
+        "gold_d5_pct",
+        "nq_d5_pct",
+        "us_10y_real_yield_d20_bps",
+        "dxy_d20",
+        "latest_us_event",
+        "latest_us_event_age_hours",
+        "equities_regime"
+      ]
+    },
+    {
+      "id": "conflicting_factors",
+      "description": "Strong rate support against strong DXY, gold and equity opposition.",
+      "based_on": "frozen_parity_snapshot",
+      "snapshot_patch": {
+        "vix_level": 12.0,
+        "vix_d1": -1.5,
+        "vix_d5": -1.2,
+        "dxy_d1": -0.6,
+        "dxy_d5": -0.5,
+        "dxy_d20": -0.4,
+        "us_2y_d5_bps": 18,
+        "us_2y_d20_bps": 20,
+        "us_de_2y_spread_d5_bps": 18,
+        "us_de_2y_spread_d20_bps": 20,
+        "us_10y_real_yield_d5_bps": 18,
+        "us_10y_real_yield_d20_bps": 20,
+        "gold_d1_pct": 1.2,
+        "gold_d5_pct": 1.4,
+        "gold_d20_pct": 1.6,
+        "nq_d1_pct": 1.5,
+        "nq_d5_pct": 1.3,
+        "nq_d20_pct": 1.1,
+        "latest_us_event": null,
+        "latest_us_event_age_hours": null,
+        "fed_bias": "dovish",
+        "equities_regime": "risk_on"
+      }
+    },
+    {
+      "id": "missing_vix_level",
+      "description": "A missing level input instead of a missing delta; exposes silent zero substitution in the live node.",
+      "based_on": "frozen_parity_snapshot",
+      "snapshot_remove": ["vix_level"]
+    },
+    {
+      "id": "lookback_substitution",
+      "description": "Only short-lookback series remain, so each arm must choose between d1 fallbacks and missing values.",
+      "based_on": "frozen_parity_snapshot",
+      "snapshot_remove": ["dxy_d5", "dxy_d20", "gold_d5_pct", "gold_d20_pct", "nq_d5_pct", "nq_d20_pct", "vix_d5"]
+    }
+  ]
+}

@@ -1,0 +1,333 @@
+{
+  "id": "HIhQay9MLSzYazzI",
+  "name": "1. Economic Events EUR PMI Collector",
+  "description": null,
+  "active": false,
+  "activeVersionId": null,
+  "createdAt": "2026-06-13T19:08:35.678Z",
+  "updatedAt": "2026-06-13T19:08:35.678Z",
+  "isArchived": false,
+  "versionId": "5a25127f-798e-4877-aa13-2c50f0d18f42",
+  "versionCounter": 1,
+  "sourceWorkflowId": null,
+  "triggerCount": 0,
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {}
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        0
+      ],
+      "id": "52edb13c-9e07-46b3-a861-26b2a38adacf",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "url": "https://economic-calendar-api.p.rapidapi.com/calendar?countryCode=US&volatility=HIGH&limit=100&timezone=GMT%2B0",
+        "sendHeaders": true,
+        "specifyHeaders": "json",
+        "jsonHeaders": "{\n  \"Content-Type\": \"application/json\",\n  \"x-rapidapi-host\": \"economic-calendar-api.p.rapidapi.com\",\n  \"x-rapidapi-key\": \"cec1f7f099msh19d57fb7bd65106p1d4040jsne632a37c958b\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -16,
+        -464
+      ],
+      "id": "7eb8cae0-38d8-4584-9183-a478d8e84d12",
+      "name": "HTTP Request | RapidAPI Calendar US",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "url": "https://economic-calendar-api.p.rapidapi.com/calendar?countryCode=DE&volatility=HIGH&limit=100&timezone=GMT%2B0",
+        "sendHeaders": true,
+        "specifyHeaders": "json",
+        "jsonHeaders": "{\n  \"Content-Type\": \"application/json\",\n  \"x-rapidapi-host\": \"economic-calendar-api.p.rapidapi.com\",\n  \"x-rapidapi-key\": \"cec1f7f099msh19d57fb7bd65106p1d4040jsne632a37c958b\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        208,
+        -464
+      ],
+      "id": "f9341146-6a8f-42db-a460-ed7cdec2f684",
+      "name": "HTTP Request | RapidAPI Calendar DE",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "url": "https://economic-calendar-api.p.rapidapi.com/calendar?countryCode=FR&volatility=HIGH&limit=100&timezone=GMT%2B0",
+        "sendHeaders": true,
+        "specifyHeaders": "json",
+        "jsonHeaders": "{\n  \"Content-Type\": \"application/json\",\n  \"x-rapidapi-host\": \"economic-calendar-api.p.rapidapi.com\",\n  \"x-rapidapi-key\": \"cec1f7f099msh19d57fb7bd65106p1d4040jsne632a37c958b\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1104,
+        -384
+      ],
+      "id": "5c33b2f6-4a17-466c-aa04-2ec7bb3d050b",
+      "name": "HTTP Request | RapidAPI Calendar FR",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "url": "https://economic-calendar-api.p.rapidapi.com/calendar?countryCode=IT&volatility=HIGH&limit=100&timezone=GMT%2B0",
+        "sendHeaders": true,
+        "specifyHeaders": "json",
+        "jsonHeaders": "{\n  \"Content-Type\": \"application/json\",\n  \"x-rapidapi-host\": \"economic-calendar-api.p.rapidapi.com\",\n  \"x-rapidapi-key\": \"cec1f7f099msh19d57fb7bd65106p1d4040jsne632a37c958b\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1328,
+        -384
+      ],
+      "id": "2773dfd3-34a3-4494-bcd2-ec3a40715bda",
+      "name": "HTTP Request | RapidAPI Calendar IT",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "url": "https://economic-calendar-api.p.rapidapi.com/calendar?countryCode=ES&volatility=HIGH&limit=100&timezone=GMT%2B0",
+        "sendHeaders": true,
+        "specifyHeaders": "json",
+        "jsonHeaders": "{\n  \"Content-Type\": \"application/json\",\n  \"x-rapidapi-host\": \"economic-calendar-api.p.rapidapi.com\",\n  \"x-rapidapi-key\": \"cec1f7f099msh19d57fb7bd65106p1d4040jsne632a37c958b\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1552,
+        -384
+      ],
+      "id": "b1ac8b29-7373-4874-b491-3d07c529d5f3",
+      "name": "HTTP Request | RapidAPI Calendar ES",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "url": "https://economic-calendar-api.p.rapidapi.com/calendar?countryCode=CN&volatility=HIGH&limit=100&timezone=GMT%2B0",
+        "sendHeaders": true,
+        "specifyHeaders": "json",
+        "jsonHeaders": "{\n  \"Content-Type\": \"application/json\",\n  \"x-rapidapi-host\": \"economic-calendar-api.p.rapidapi.com\",\n  \"x-rapidapi-key\": \"cec1f7f099msh19d57fb7bd65106p1d4040jsne632a37c958b\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1344,
+        -560
+      ],
+      "id": "03751496-09a3-496a-9322-ad736dcd61d1",
+      "name": "HTTP Request | RapidAPI Calendar CN",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "jsCode": "function clean(v) {\n  if (v === null || v === undefined) return null;\n  const s = String(v).trim();\n  return s === '' ? null : s;\n}\n\nfunction num(v) {\n  if (v === null || v === undefined || v === '') return null;\n  const s = String(v)\n    .replace('%', '')\n    .replace('K', '')\n    .replace('M', '')\n    .replace(',', '')\n    .trim();\n\n  const n = Number(s);\n  return Number.isFinite(n) ? n : null;\n}\n\nfunction classifySurprise(e) {\n  const actual = num(e.actual);\n  const forecast = num(e.forecast);\n  const usual = String(e.usual_effect || '').toLowerCase();\n\n  if (actual === null || forecast === null) return 'pending';\n\n  let goodIfHigher = true;\n\n  if (\n    usual.includes('less than') ||\n    usual.includes('lower') ||\n    usual.includes('actual less')\n  ) {\n    goodIfHigher = false;\n  }\n\n  if (actual === forecast) return 'inline';\n\n  const better = goodIfHigher ? actual > forecast : actual < forecast;\n\n  return better ? 'beat' : 'miss';\n}\n\nfunction currencySignal(currency, surprise) {\n  if (surprise === 'beat') return 'BULLISH';\n  if (surprise === 'miss') return 'BEARISH';\n  if (surprise === 'inline') return 'NEUTRAL';\n  return 'PENDING';\n}\n\nfunction impactRank(impact) {\n  const s = String(impact || '').toLowerCase();\n  if (s.includes('high')) return 3;\n  if (s.includes('medium')) return 2;\n  if (s.includes('low')) return 1;\n  return 0;\n}\n\nfunction relevance(currency, name) {\n  const assets = [];\n\n  if (currency === 'EUR') {\n    assets.push('EUR', 'USD');\n  }\n\n  return [...new Set(assets)];\n}\n\nconst inputItems = $input.all().map(i => i.json);\n\nconst events = inputItems\n  .filter(e => {\n    const currency = clean(e.currency);\n    const name = String(e.name || '').toLowerCase();\n\n    return (\n      currency === 'EUR' &&\n      (\n        name.includes('pmi') ||\n        name.includes('manufacturing pmi') ||\n        name.includes('services pmi') ||\n        name.includes('composite pmi')\n      )\n    );\n  })\n  .map(e => {\n    const surprise = classifySurprise(e);\n    const currency = clean(e.currency);\n    const name = clean(e.name);\n    const signal = currencySignal(currency, surprise);\n\n    return {\n      event_date: clean(e.date),\n      event_time_text: clean(e.time),\n      event_time_utc: null,\n\n      currency,\n      impact: clean(e.impact),\n      event_name: name,\n\n      actual: clean(e.actual),\n      forecast: clean(e.forecast),\n      previous: clean(e.previous),\n      revised: null,\n\n      surprise_direction: surprise,\n      currency_signal: signal,\n      impact_rank: impactRank(e.impact),\n      asset_relevance: relevance(currency, name),\n\n      source: 'forex_factory_rapidapi_pmi_lookback',\n      raw_json: e\n    };\n  });\n\nreturn events.map(e => ({ json: e }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        608,
+        0
+      ],
+      "id": "48f2d996-2497-440a-9cf9-982efac4c224",
+      "name": "Code | Normalise Forex Factory Events"
+    },
+    {
+      "parameters": {
+        "tableId": "economic_events",
+        "dataToSend": "autoMapInputData"
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        816,
+        0
+      ],
+      "id": "cd11decb-73c5-4931-8871-468426ccb61b",
+      "name": "Supabase | Upsert Economic Events",
+      "credentials": {
+        "supabaseApi": {
+          "id": "trM35g1QCTOgQp4K",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const days = [];\n\nfor (let i = 0; i <= 21; i++) {\n  const d = new Date();\n  d.setDate(d.getDate() - i);\n\n  days.push({\n    json: {\n      year: d.getFullYear(),\n      month: d.getMonth() + 1,\n      day: d.getDate()\n    }\n  });\n}\n\nreturn days;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        208,
+        0
+      ],
+      "id": "ee65fb08-96ee-43ee-b3a0-b9a26c3920e7",
+      "name": "Code | Generate EUR PMI Lookback Dates"
+    },
+    {
+      "parameters": {
+        "url": "=https://forex-factory-scraper1.p.rapidapi.com/get_calendar_details?year={{ $json.year }}&month={{ $json.month }}&day={{ $json.day }}&currency=EUR&event_name=ALL&timezone=GMT-06%3A00%20Central%20Time%20(US%20%26%20Canada)&time_format=12h",
+        "sendHeaders": true,
+        "specifyHeaders": "json",
+        "jsonHeaders": "{\n  \"Content-Type\": \"application/json\",\n  \"x-rapidapi-host\": \"forex-factory-scraper1.p.rapidapi.com\",\n  \"x-rapidapi-key\": \"cec1f7f099msh19d57fb7bd65106p1d4040jsne632a37c958b\"\n}",
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 1,
+              "batchInterval": 2500
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        400,
+        0
+      ],
+      "id": "dda65fd8-eb7e-4cc0-88f7-5d4e4cd476cd",
+      "name": "HTTP Request | Forex Factory EUR PMI Lookback"
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Code | Generate EUR PMI Lookback Dates",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request | RapidAPI Calendar US": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request | RapidAPI Calendar DE",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request | RapidAPI Calendar DE": {
+      "main": [
+        []
+      ]
+    },
+    "HTTP Request | RapidAPI Calendar FR": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request | RapidAPI Calendar IT",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request | RapidAPI Calendar IT": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request | RapidAPI Calendar ES",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request | RapidAPI Calendar ES": {
+      "main": [
+        []
+      ]
+    },
+    "Code | Normalise Forex Factory Events": {
+      "main": [
+        [
+          {
+            "node": "Supabase | Upsert Economic Events",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Generate EUR PMI Lookback Dates": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request | Forex Factory EUR PMI Lookback",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request | Forex Factory EUR PMI Lookback": {
+      "main": [
+        [
+          {
+            "node": "Code | Normalise Forex Factory Events",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "nodeGroups": [],
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "tags": [],
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "HIhQay9MLSzYazzI",
+      "projectId": "ISQG9XU7TGTT6Fcu",
+      "project": {
+        "id": "ISQG9XU7TGTT6Fcu",
+        "name": "Daniel Silver <a17@live.co.uk>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "customTelemetryTags": [],
+        "creatorId": "eb4fba3e-5170-481b-abc5-ce65776c1113",
+        "createdAt": "2026-04-29T19:10:11.212Z",
+        "updatedAt": "2026-04-29T19:10:21.640Z"
+      },
+      "createdAt": "2026-06-13T19:08:35.681Z",
+      "updatedAt": "2026-06-13T19:08:35.681Z"
+    }
+  ],
+  "activeVersion": null
+}

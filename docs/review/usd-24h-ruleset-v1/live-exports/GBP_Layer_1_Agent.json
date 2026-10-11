@@ -1,0 +1,1243 @@
+{
+  "id": "bMv96EPR0xCXi3bi",
+  "name": "GBP Layer 1 Agent",
+  "description": null,
+  "active": true,
+  "activeVersionId": "45ca399f-7ecc-4d38-adb0-147dc14e0d42",
+  "createdAt": "2026-09-12T18:46:13.325Z",
+  "updatedAt": "2026-09-12T19:45:35.228Z",
+  "isArchived": false,
+  "versionId": "45ca399f-7ecc-4d38-adb0-147dc14e0d42",
+  "versionCounter": 18,
+  "sourceWorkflowId": null,
+  "triggerCount": 0,
+  "nodes": [
+    {
+      "name": "When Executed by Another Workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        300
+      ],
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "id": "6337880c-f0a3-4fd3-a288-609794837742"
+    },
+    {
+      "name": "HTTP Request | GBP/USD - Coinbase",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        220,
+        0
+      ],
+      "parameters": {
+        "url": "https://api.coinbase.com/v2/prices/GBP-USD/spot",
+        "options": {}
+      },
+      "onError": "continueRegularOutput",
+      "id": "853bded5-a413-4502-bff0-54108caed8eb"
+    },
+    {
+      "name": "HTTP Request | US 2Y - FRED API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        220,
+        120
+      ],
+      "parameters": {
+        "url": "https://api.stlouisfed.org/fred/series/observations?series_id=DGS2&sort_order=desc&limit=25&file_type=json&api_key=<redacted>",
+        "options": {}
+      },
+      "onError": "continueRegularOutput",
+      "id": "e9eb7151-fef9-4e79-bec0-1beafc6b27db"
+    },
+    {
+      "name": "HTTP Request | US 10Y - FRED API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        220,
+        240
+      ],
+      "parameters": {
+        "url": "https://api.stlouisfed.org/fred/series/observations?series_id=DGS10&sort_order=desc&limit=25&file_type=json&api_key=<redacted>",
+        "options": {}
+      },
+      "onError": "continueRegularOutput",
+      "id": "d13524e5-9116-440d-ada2-3a0ec4296af9"
+    },
+    {
+      "name": "HTTP Request | UK 5Y Gilt Yield - BoE IADB",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        220,
+        360
+      ],
+      "parameters": {
+        "url": "https://www.bankofengland.co.uk/boeapps/iadb/fromshowcolumns.asp?csv.x=yes&Datefrom=01/Jan/2025&Dateto=now&SeriesCodes=IUDSNPY&CSVF=TN&UsingCodes=Y&VPD=Y&VFD=N",
+        "options": {}
+      },
+      "onError": "continueRegularOutput",
+      "id": "7321b3a4-69f0-4976-b73b-50a440256640"
+    },
+    {
+      "name": "HTTP Request | UK 10Y Gilt Yield - BoE IADB",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        220,
+        480
+      ],
+      "parameters": {
+        "url": "https://www.bankofengland.co.uk/boeapps/iadb/fromshowcolumns.asp?csv.x=yes&Datefrom=01/Jan/2025&Dateto=now&SeriesCodes=IUDMNPY&CSVF=TN&UsingCodes=Y&VPD=Y&VFD=N",
+        "options": {}
+      },
+      "onError": "continueRegularOutput",
+      "id": "e012868c-5c00-4d2f-ba12-2140f6a0868a"
+    },
+    {
+      "name": "HTTP Request | UK Bank Rate - BoE IADB",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        220,
+        600
+      ],
+      "parameters": {
+        "url": "https://www.bankofengland.co.uk/boeapps/iadb/fromshowcolumns.asp?csv.x=yes&Datefrom=01/Jan/2025&Dateto=now&SeriesCodes=IUDBEDR&CSVF=TN&UsingCodes=Y&VPD=Y&VFD=N",
+        "options": {}
+      },
+      "onError": "continueRegularOutput",
+      "id": "248ceaa5-cf96-4580-b150-ac86433dbc39"
+    },
+    {
+      "name": "HTTP Request | UK 3M Interbank - FRED API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        220,
+        720
+      ],
+      "parameters": {
+        "url": "https://api.stlouisfed.org/fred/series/observations?series_id=IR3TIB01GBM156N&sort_order=desc&limit=25&file_type=json&api_key=<redacted>",
+        "options": {}
+      },
+      "onError": "continueRegularOutput",
+      "id": "28eef914-4e6a-4e6d-b441-2e76c6d3180a"
+    },
+    {
+      "name": "HTTP Request | VIX - FRED API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        220,
+        840
+      ],
+      "parameters": {
+        "url": "https://api.stlouisfed.org/fred/series/observations?series_id=VIXCLS&sort_order=desc&limit=25&file_type=json&api_key=<redacted>",
+        "options": {}
+      },
+      "onError": "continueRegularOutput",
+      "id": "530ea321-6a5a-416a-b56e-de889285ce5e"
+    },
+    {
+      "name": "HTTP Request | Broad Dollar - FRED API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        220,
+        960
+      ],
+      "parameters": {
+        "url": "https://api.stlouisfed.org/fred/series/observations?series_id=DTWEXBGS&sort_order=desc&limit=25&file_type=json&api_key=<redacted>",
+        "options": {}
+      },
+      "onError": "continueRegularOutput",
+      "id": "1fc1c43b-777c-471f-8a83-e010725daaaa"
+    },
+    {
+      "name": "HTTP Request | UK Economic Calendar",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        220,
+        720
+      ],
+      "parameters": {
+        "url": "=https://economic-calendar-api.p.rapidapi.com/calendar?countryCode=UK&limit=100&timezone=GMT%2B0&startDate={{ new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10) }}&endDate={{ new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10) }}",
+        "sendHeaders": true,
+        "specifyHeaders": "json",
+        "jsonHeaders": "{\n    \"Content-Type\": \"application/json\",\n    \"x-rapidapi-host\": \"economic-calendar-api.p.rapidapi.com\"\n}",
+        "options": {
+          "timeout": 20000
+        },
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth"
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "dtItzS0yuHuBEsTA",
+          "name": "RapidAPI Production"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 2000,
+      "onError": "continueRegularOutput",
+      "id": "744272bc-0d50-45c6-8178-f90906114ad4"
+    },
+    {
+      "name": "Code | Build GBP Input Pack",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        640,
+        300
+      ],
+      "parameters": {
+        "jsCode": "// GBP Layer 1 input pack (live shape, WTI onboarding pattern).\n// The shared market_snapshots table has no GBP columns, so the sealed GBP agent\n// reads its own approved providers at run time and records the resulting input\n// values inside its agent_outputs row (full_output / raw_agent_output). No row is\n// written to market_snapshots, so no other asset's snapshot selection changes.\nconst NODES = {\n  gbpusd: \"HTTP Request | GBP/USD - Coinbase\",\n  us2y: \"HTTP Request | US 2Y - FRED API\",\n  us10y: \"HTTP Request | US 10Y - FRED API\",\n  uk5y: \"HTTP Request | UK 5Y Gilt Yield - BoE IADB\",\n  uk10y: \"HTTP Request | UK 10Y Gilt Yield - BoE IADB\",\n  bankRate: \"HTTP Request | UK Bank Rate - BoE IADB\",\n  uk3m: \"HTTP Request | UK 3M Interbank - FRED API\",\n  vix: \"HTTP Request | VIX - FRED API\",\n  dxy: \"HTTP Request | Broad Dollar - FRED API\",\n  ukCalendar: \"HTTP Request | UK Economic Calendar\"\n};\n\nfunction node(name) {\n  try {\n    return $(name).first().json;\n  } catch (error) {\n    return {};\n  }\n}\n\nfunction num(value) {\n  if (value === null || value === undefined || value === \".\" || value === \"\") return null;\n  const parsed = Number(String(value).replace(\"%\", \"\").replace(\",\", \".\").trim());\n  return Number.isFinite(parsed) ? parsed : null;\n}\n\nfunction observations(data) {\n  return ((data && data.observations) || []).filter((item) => num(item.value) !== null);\n}\n\nfunction series(data, percent) {\n  const rows = observations(data);\n  const latest = rows[0] ? num(rows[0].value) : null;\n  const change = (index) => {\n    const prior = rows[index] ? num(rows[index].value) : null;\n    if (latest === null || prior === null || (percent && prior === 0)) return null;\n    return percent ? ((latest - prior) / prior) * 100 : latest - prior;\n  };\n  return { latest, d1: change(1), d5: change(5), date: rows[0] ? rows[0].date : null };\n}\n\n// Bank of England IADB daily CSV (the UK analogue of the Bundesbank REST pattern\n// already used live). Body shape: \"DATE,CODE\\n02 Jan 2026,3.9655\\n...\" oldest first.\nfunction boeSeries(payload) {\n  const raw = payload && payload.data !== undefined ? payload.data : payload;\n  const text = typeof raw === \"string\" ? raw : \"\";\n  const parsed = [];\n  for (const line of text.split(/\\r?\\n/)) {\n    const match = line.trim().match(/^(\\d{2} [A-Za-z]{3} \\d{4}),(-?[\\d.]+)$/);\n    if (!match) continue;\n    const date = new Date(match[1]);\n    if (!Number.isFinite(date.getTime())) continue;\n    const value = num(match[2]);\n    if (value === null) continue;\n    parsed.push({ date: date.toISOString().slice(0, 10), value });\n  }\n  parsed.sort((a, b) => a.date.localeCompare(b.date));\n  const n = parsed.length;\n  const latest = n ? parsed[n - 1].value : null;\n  const change = (back) => (n > back && latest !== null ? latest - parsed[n - 1 - back].value : null);\n  return { latest, d1: change(1), d5: change(5), date: n ? parsed[n - 1].date : null };\n}\n\n// UK economic calendar. The RapidAPI provider uses countryCode=UK for the United\n// Kingdom and reports currencyCode=GBP. Values are only ever read from the\n// provider; nothing is inferred when the provider is unavailable.\nfunction ukCalendar(payload) {\n  const rows = Array.isArray(payload && payload.data) ? payload.data : Array.isArray(payload) ? payload : [];\n  const impactRank = (value) => {\n    const t = String(value || \"\").toUpperCase();\n    return t === \"HIGH\" ? 3 : t === \"MEDIUM\" ? 2 : t === \"LOW\" ? 1 : 0;\n  };\n  const priority = (eventName) => {\n    const n = String(eventName || \"\").toLowerCase();\n    if (n.includes(\"bank rate\") || n.includes(\"mpc\")) return 100;\n    if (n.includes(\"cpi\") || n.includes(\"inflation\")) return 98;\n    if (n.includes(\"pmi\")) return 95;\n    if (n.includes(\"gdp\")) return 90;\n    if (n.includes(\"wage\") || n.includes(\"earnings\")) return 88;\n    if (n.includes(\"retail sales\")) return 80;\n    if (n.includes(\"unemployment\") || n.includes(\"claimant\")) return 75;\n    return 50;\n  };\n\n  const events = [];\n  for (const event of rows) {\n    const at = event.dateUtc || event.date_utc || event.date || null;\n    const currency = String(event.currencyCode || event.currency || \"\").toUpperCase();\n    const eventName = event.name || event.event || event.title || null;\n    if (!at || currency !== \"GBP\" || !eventName) continue;\n    const impact = event.volatility || event.impact || null;\n    events.push({\n      name: eventName,\n      at,\n      date: String(at).slice(0, 10),\n      impact,\n      impact_rank: impactRank(impact),\n      actual: num(event.actual),\n      forecast: num(event.consensus ?? event.forecast),\n      previous: num(event.previous),\n      priority: priority(eventName)\n    });\n  }\n\n  const completed = events\n    .filter((event) => event.actual !== null)\n    .sort((a, b) => {\n      const diff = new Date(b.at || 0) - new Date(a.at || 0);\n      return Number.isFinite(diff) && diff !== 0 ? diff : b.priority - a.priority;\n    });\n\n  const upcoming = events\n    .filter((event) => event.actual === null)\n    .sort((a, b) => String(a.at).localeCompare(String(b.at)))\n    .slice(0, 10);\n\n  let score = 0;\n  const reasons = [];\n  for (const event of completed.slice(0, 8)) {\n    if (event.forecast === null) continue;\n    const weight = event.impact_rank >= 3 ? 2 : 1;\n    if (event.actual > event.forecast) {\n      score += weight;\n      reasons.push(`${event.name} beat forecast`);\n    } else if (event.actual < event.forecast) {\n      score -= weight;\n      reasons.push(`${event.name} missed forecast`);\n    }\n  }\n\n  const boeBias = events.length ? (score >= 2 ? \"hawkish\" : score <= -2 ? \"dovish\" : \"neutral\") : null;\n\n  const pmiEvents = events\n    .filter((event) => /pmi/i.test(event.name) && event.actual !== null)\n    .sort((a, b) => {\n      const diff = new Date(b.date || 0) - new Date(a.date || 0);\n      if (Number.isFinite(diff) && diff !== 0) return diff;\n      return (/composite/i.test(a.name) ? 0 : 1) - (/composite/i.test(b.name) ? 0 : 1);\n    });\n  const pmi = pmiEvents[0] || null;\n  const pmiDirection = !pmi ? null : pmi.previous === null ? null : pmi.actual > pmi.previous ? \"improving\" : pmi.actual < pmi.previous ? \"deteriorating\" : \"stable\";\n\n  return {\n    boe_bias: boeBias,\n    boe_bias_score: events.length ? score : null,\n    boe_bias_reasons: reasons.slice(0, 5),\n    latest_uk_event: completed[0] || null,\n    upcoming_uk_events: upcoming,\n    uk_composite_pmi: pmi ? pmi.actual : null,\n    uk_composite_pmi_direction: pmiDirection,\n    uk_events_found: events.length\n  };\n}\n\nconst gbpusdPayload = node(NODES.gbpusd);\nconst gbpusdPrice = num(gbpusdPayload && gbpusdPayload.data && gbpusdPayload.data.amount);\nconst us2y = series(node(NODES.us2y), false);\nconst us10y = series(node(NODES.us10y), false);\nconst uk5y = boeSeries(node(NODES.uk5y));\nconst uk10y = boeSeries(node(NODES.uk10y));\nconst bankRate = boeSeries(node(NODES.bankRate));\nconst uk3m = series(node(NODES.uk3m), false);\nconst vix = series(node(NODES.vix), false);\nconst dxy = series(node(NODES.dxy), true);\nconst uk = ukCalendar(node(NODES.ukCalendar));\n\n// US-UK 10Y spread impulse: maturity-matched, both legs daily and authoritative.\nconst usUk10ySpreadD5Bps =\n  us10y.latest !== null && uk10y.latest !== null && us10y.d5 !== null && uk10y.d5 !== null\n    ? ((us10y.latest - uk10y.latest) - ((us10y.latest - us10y.d5) - (uk10y.latest - uk10y.d5))) * 100\n    : null;\n\n// Core missing input (GBP/USD spot) means no usable pack, so the agent can never\n// produce a falsely usable call.\nif (gbpusdPrice === null) {\n  return [];\n}\n\nconst missing = [];\nif (us2y.d5 === null) missing.push(\"us_2y_d5_bps\");\nif (uk5y.d5 === null) missing.push(\"uk_5y_d5_bps\");\nif (usUk10ySpreadD5Bps === null) missing.push(\"us_uk_10y_spread_d5_bps\");\nif (vix.latest === null) missing.push(\"vix_level\");\nif (dxy.latest === null) missing.push(\"dxy_level\");\nif (bankRate.latest === null) missing.push(\"uk_bank_rate\");\nif (uk.boe_bias === null) missing.push(\"boe_bias\");\nif (uk.latest_uk_event === null) missing.push(\"latest_uk_event\");\nif (uk.uk_composite_pmi === null) missing.push(\"uk_composite_pmi\");\n// No authoritative UK stress proxy exists in this platform.\nmissing.push(\"uk_stress_flag\", \"global_growth_regime\");\n\nconst availableInputs = {\n  gbpusd_price: gbpusdPrice,\n  gbpusd_price_date: new Date().toISOString().slice(0, 10),\n\n  vix_level: vix.latest,\n\n  dxy_level: dxy.latest,\n  dxy_d1_pct: dxy.d1,\n\n  us_2y_yield: us2y.latest,\n  us_2y_d5_bps: us2y.d5 === null ? null : us2y.d5 * 100,\n  us_10y_yield: us10y.latest,\n  us_10y_d5_bps: us10y.d5 === null ? null : us10y.d5 * 100,\n\n  // UK rate data. FRED has no UK 2Y series, so the front-end and relative-rate\n  // factors use the Bank of England IADB daily gilt yields (IUDSNPY / IUDMNPY) and\n  // the Official Bank Rate (IUDBEDR) - the same national-central-bank REST pattern\n  // already used live for Germany 2Y via the Bundesbank.\n  uk_2y_yield: null,\n  uk_2y_d5_bps: null,\n  us_uk_2y_spread_d5_bps: null,\n  uk_5y_yield: uk5y.latest,\n  uk_5y_d5_bps: uk5y.d5 === null ? null : uk5y.d5 * 100,\n  uk_10y_yield: uk10y.latest,\n  uk_10y_d5_bps: uk10y.d5 === null ? null : uk10y.d5 * 100,\n  uk_bank_rate: bankRate.latest,\n  uk_bank_rate_d5_bps: bankRate.d5 === null ? null : bankRate.d5 * 100,\n  uk_3m_interbank: uk3m.latest,\n  us_uk_10y_spread_d5_bps: usUk10ySpreadD5Bps,\n\n  boe_bias: uk.boe_bias,\n  boe_bias_score: uk.boe_bias_score,\n  boe_bias_reasons: uk.boe_bias_reasons,\n  latest_uk_event: uk.latest_uk_event,\n  upcoming_uk_events: uk.upcoming_uk_events,\n  uk_composite_pmi: uk.uk_composite_pmi,\n  uk_composite_pmi_direction: uk.uk_composite_pmi_direction,\n  uk_events_found: uk.uk_events_found,\n\n  uk_stress_flag: null,\n  global_growth_regime: null\n};\n\nreturn [\n  {\n    json: {\n      asset: \"GBP\",\n      snapshot_id: null,\n      snapshot_date: new Date().toISOString().slice(0, 10),\n      run_time_et: new Date().toISOString(),\n      provider_status: \"READ_AT_AGENT_RUNTIME\",\n      session_status: \"WEEKDAY_ACTIVE_TIME_V1\",\n      isolation_rule: \"This Layer 1 agent may only use the GBP input pack above and the GBP logic document. It must not read other agent outputs.\",\n      execution_question: \"Based on confirmed value-driving factors available at execution time, what is the likely 24H direction of GBP?\",\n      available_inputs: availableInputs,\n      missing_inputs: missing,\n      missing_rule: \"Unavailable inputs are scored NEUTRAL and never inferred.\"\n    }\n  }\n];"
+      },
+      "executeOnce": true,
+      "id": "33b3207b-48b1-4da3-92d8-827cb3429436"
+    },
+    {
+      "parameters": {
+        "mode": "append",
+        "numberInputs": 10
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [
+        450,
+        300
+      ],
+      "name": "Merge GBP Feeds",
+      "id": "bce8d3f9-825d-4a49-b13e-ebba4372592d"
+    },
+    {
+      "name": "Get GBP Logic Document",
+      "type": "n8n-nodes-base.github",
+      "typeVersion": 1.1,
+      "position": [
+        800,
+        300
+      ],
+      "parameters": {
+        "authentication": "oAuth2",
+        "resource": "file",
+        "operation": "get",
+        "owner": {
+          "__rl": true,
+          "value": "kevincreedycars-debug",
+          "mode": "list"
+        },
+        "repository": {
+          "__rl": true,
+          "value": "trading-agent-dashboard",
+          "mode": "list"
+        },
+        "filePath": "logic/agent_gbp_direction.md",
+        "asBinaryProperty": false,
+        "additionalParameters": {}
+      },
+      "credentials": {
+        "githubOAuth2Api": {
+          "id": "wr4dhSbWkjNonhfi",
+          "name": "GitHub account 3"
+        }
+      },
+      "webhookId": "bae8d901-0bf3-4e7b-8d5b-6c7d74f54837",
+      "id": "1fb3e239-bdbf-4da1-9a1e-eeb24cf30c5b"
+    },
+    {
+      "name": "Code | Combine GBP Logic and Inputs",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1000,
+        300
+      ],
+      "parameters": {
+        "jsCode": "const pack = $(\"Code | Build GBP Input Pack\").first().json; const logic = $(\"Get GBP Logic Document\").first().json; return [{ json: { market_snapshot: pack, logic_document: logic.content || \"\" } }];"
+      },
+      "id": "eb9a0b8e-a530-42cc-b7f2-6a088227cf70"
+    },
+    {
+      "name": "Message a model",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.3,
+      "position": [
+        1200,
+        300
+      ],
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4.1-mini",
+          "mode": "list"
+        },
+        "responses": {
+          "values": [
+            {
+              "role": "system",
+              "content": "You are the GBP Layer 1 Direction Agent.\n\nYou must follow the supplied GBP logic document exactly.\n\nYou analyse GBP only. You emit a raw 24H directional classification.\n\nYou must not produce: GBP/USD pair calls, trade recommendations, entry or exit signals, cross-asset calls, consensus calls, Layer 2 calls, or any output from another agent.\n\nLayer 1 isolation is mandatory. Use only the supplied input pack and the supplied logic document. If a required input is unavailable, score the affected factor NEUTRAL and list the field in missing_inputs. Never guess missing data.\n\nReturn valid JSON only, with this shape:\n{\"direction_24h\":\"BULLISH|BEARISH|NO_CLEAR_BIAS\",\"factor_breakdown\":{\"F1\":{\"signal\":\"BULLISH|BEARISH|NEUTRAL\",\"evidence\":\"...\",\"reason\":\"...\"},\"F2\":{},\"F3\":{},\"F4\":{},\"F5\":{},\"F6\":{},\"F7\":{},\"F8\":{},\"F9\":{},\"F10\":{}},\"missing_inputs\":[\"...\"],\"reasoning_summary\":\"...\",\"risk_flags\":[\"...\"]}\n\nRules:\n* Score every factor F1 to F10 exactly once, using the factor table and weights in the supplied GBP logic document.\n* UK 2Y yield, US-UK 2Y spread, UK stress and the global growth regime are unavailable in this draft: score the affected factors NEUTRAL and list them as missing.\n* Do not calculate conviction. Conviction is calculated downstream by a deterministic engine."
+            },
+            {
+              "content": "={{ JSON.stringify($json) }}"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {
+          "textFormat": {
+            "textOptions": {
+              "type": "json_object"
+            }
+          }
+        }
+      },
+      "credentials": {
+        "openAiApi": {
+          "id": "VY1FMMlFQNwU3Ctt",
+          "name": "OpenAI account 2"
+        }
+      },
+      "id": "dbae4af6-6d8a-4f15-9320-d027f1e2bacc"
+    },
+    {
+      "name": "Code | Parse GBP Agent Output",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1420,
+        300
+      ],
+      "parameters": {
+        "jsCode": "const source = $input.first().json; const raw = source.output?.[0]?.content?.[0]?.text ?? source.text ?? source; const report = typeof raw === \"object\" ? raw : JSON.parse(String(raw)); const pack = $(\"Code | Build GBP Input Pack\").first().json; return [{ json: { snapshot_id: pack.snapshot_id, agent_name: \"GBP\", layer: 1, run_time_et: pack.run_time_et, snapshot_date: pack.snapshot_date, market_inputs: pack.available_inputs, missing_inputs: pack.missing_inputs, factor_breakdown: report.factor_breakdown || {}, reasoning_summary: report.reasoning_summary || report.reason_24h || \"\", risk_flags: report.risk_flags || [], logic_document: \"agent_gbp_direction.md\", logic_document_version: \"0.1_research_baseline\", raw_agent_output: report } }];"
+      },
+      "id": "e1121ec3-073a-4f65-bc39-a105a0b7cb26"
+    },
+    {
+      "name": "Code | Deterministic GBP 24H Verdict Gate",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1640,
+        300
+      ],
+      "parameters": {
+        "jsCode": "// GBP Layer 1 deterministic 24H verdict gate (draft v0.2).\n// Mirrors the shared Layer 1 deterministic conviction contract used by the other\n// live asset agents field-for-field, so the Layer 2 trade selection agent and the\n// Dashboard Writer consume GBP rows with no new field handling. The model's own\n// conviction is ignored; this node is the only conviction source. Weights remain\n// provisional hypotheses pending historical replay.\nconst item = $input.first().json;\n\nconst WEIGHTS = { F1: 20, F2: 16, F3: 20, F4: 12, F5: 8, F6: 10, F7: 6, F8: 4, F9: 2, F10: 2 };\nconst LOGIC_DOCUMENT = \"agent_gbp_direction.md\";\nconst LOGIC_DOCUMENT_VERSION = \"0.1_research_baseline\";\n\nconst supplied = item.factor_breakdown && typeof item.factor_breakdown === \"object\" ? item.factor_breakdown : {};\nconst missingInputs = Array.isArray(item.missing_inputs) ? item.missing_inputs.slice() : [];\n\nlet bullish = 0;\nlet bearish = 0;\nlet neutral = 0;\nlet bullishCount = 0;\nlet bearishCount = 0;\nlet neutralCount = 0;\n\nconst factorBreakdown = {};\nfor (const [id, weight] of Object.entries(WEIGHTS)) {\n  const entry = supplied[id] && typeof supplied[id] === \"object\" ? supplied[id] : {};\n  const raw = typeof supplied[id] === \"string\" ? supplied[id] : entry.signal;\n  const signal = raw === \"BULLISH\" || raw === \"BEARISH\" ? raw : \"NEUTRAL\";\n  // Unknown or unavailable signals are scored neutral; they are never inferred.\n  factorBreakdown[id] = { ...entry, signal, weight };\n  if (signal === \"BULLISH\") {\n    bullish += weight;\n    bullishCount++;\n  } else if (signal === \"BEARISH\") {\n    bearish += weight;\n    bearishCount++;\n  } else {\n    neutral += weight;\n    neutralCount++;\n  }\n}\n\nconst active = bullish + bearish;\nconst participation = active;\nconst bullishArgument = active > 0 ? Math.round((bullish / active) * 100) : 0;\nconst bearishArgument = active > 0 ? Math.round((bearish / active) * 100) : 0;\nconst neutralPct = Math.round(neutral);\nconst netEdge = bullishArgument - bearishArgument;\nconst absEdge = Math.abs(netEdge);\nconst weightMargin = Math.abs(bullish - bearish);\n\nconst baseDirection = bullish > bearish ? \"BULLISH\" : bearish > bullish ? \"BEARISH\" : \"NO_CLEAR_BIAS\";\nconst direction =\n  baseDirection === \"NO_CLEAR_BIAS\"\n    ? \"NO_CLEAR_BIAS\"\n    : active < 50 || weightMargin < 15 || absEdge < 20\n      ? `${baseDirection}_LEAN`\n      : baseDirection;\n\nconst winningArgument =\n  baseDirection === \"BULLISH\" ? bullishArgument : baseDirection === \"BEARISH\" ? bearishArgument : 0;\nconst participationCap = Math.min(participation, 80);\nconst conviction =\n  baseDirection === \"NO_CLEAR_BIAS\" ? 0 : Math.round(winningArgument * (participationCap / 100));\n\nconst verdictStrength =\n  absEdge >= 40 && participation >= 70\n    ? \"VERY_STRONG\"\n    : absEdge >= 25 && participation >= 50\n      ? \"STRONG\"\n      : absEdge >= 15\n        ? \"MODERATE\"\n        : \"WEAK\";\n\nconst reason =\n  `24H deterministic GBP score: bull case ${bullishArgument}%, bear case ${bearishArgument}%, ` +\n  `directional participation ${participation}%, neutral/unavailable ${neutralPct}%, ` +\n  `net edge ${netEdge > 0 ? \"+\" : \"\"}${netEdge}. Missing inputs ` +\n  `(${missingInputs.length ? missingInputs.join(\", \") : \"none\"}) are scored neutral and never inferred.`;\n\nconst weightedScore = {\n  bullish_weight: bullish,\n  bearish_weight: bearish,\n  neutral_weight: neutral,\n  active_weight: active,\n  weight_margin: weightMargin\n};\n\nconst convictionModel = {\n  bull_case: bullishArgument,\n  bear_case: bearishArgument,\n  winning_side: baseDirection,\n  directional_participation: participation,\n  net_edge: netEdge,\n  final_conviction: conviction,\n  verdict_strength: verdictStrength,\n  final_conviction_logic: reason,\n\n  bullish_argument_pct: bullishArgument,\n  bearish_argument_pct: bearishArgument,\n  neutral_pct: neutralPct,\n  neutral_evidence_pct: neutralPct,\n  active_participation_pct: participation,\n  directional_participation_pct: participation,\n  net_edge_pct: netEdge,\n\n  weighted_edge: Math.abs(netEdge) / 100,\n  raw_conviction: conviction,\n  base_conviction: conviction,\n  participation,\n  participation_cap: participationCap,\n  conflict_penalty: 0,\n  missing_input_penalty: 0,\n  agreement_boost: 0,\n  bull_case_weight: bullish,\n  bear_case_weight: bearish,\n  neutral_weight: neutral\n};\n\nconst timeframeModels = {\n  \"24h\": {\n    direction,\n    conviction,\n    reason,\n    factor_breakdown: factorBreakdown,\n    weighted_score: weightedScore,\n    conviction_model: convictionModel\n  }\n};\n\nconst riskFlags = [\n  \"PROVISIONAL_WEIGHTS\",\n  \"GBP_24H_ONLY\",\n  ...(Array.isArray(item.risk_flags) ? item.risk_flags : []),\n  ...missingInputs\n];\n\nconst fullOutput = {\n  asset: \"GBP\",\n  layer: \"layer_1_raw\",\n  logic_document: LOGIC_DOCUMENT,\n  logic_document_version: LOGIC_DOCUMENT_VERSION,\n\n  direction_24h: direction,\n  conviction_24h: conviction,\n  reason_24h: reason,\n\n  factor_breakdown: factorBreakdown,\n  weighted_score: weightedScore,\n  conviction_model: convictionModel,\n  timeframe_models: timeframeModels,\n\n  score_bullish: bullishCount,\n  score_bearish: bearishCount,\n  score_neutral: neutralCount,\n  non_neutral_count: bullishCount + bearishCount,\n\n  market_inputs: item.market_inputs || {},\n  missing_inputs: missingInputs,\n  reasoning_summary: reason,\n  risk_flags: riskFlags\n};\n\n// The live agent_outputs table has no asset / market_inputs / missing_inputs /\n// timeframe_models / non_neutral_count / risk_flags columns, so those documented\n// fields live inside full_output and the run is not failed by an unknown column.\n// warnings is a real column and carries the risk flags.\nconst {\n  asset: _asset,\n  market_inputs: _marketInputs,\n  missing_inputs: _missingInputs,\n  timeframe_models: _timeframeModels,\n  non_neutral_count: _nonNeutralCount,\n  risk_flags: _riskFlags,\n  ...rowSafe\n} = item;\n\nreturn [\n  {\n    json: {\n      ...rowSafe,\n\n      agent_name: \"GBP\",\n      layer: 1,\n      logic_document: LOGIC_DOCUMENT,\n      logic_document_version: LOGIC_DOCUMENT_VERSION,\n\n      call_24h_direction: direction,\n      call_24h_conviction: conviction,\n      call_24h_reason: reason,\n      direction_24h: direction,\n      conviction_24h: conviction,\n\n      factor_breakdown: factorBreakdown,\n      weighted_score: weightedScore,\n      conviction_model: convictionModel,\n\n      score_bullish: bullishCount,\n      score_bearish: bearishCount,\n      score_neutral: neutralCount,\n\n      warnings: riskFlags,\n      reasoning_summary: reason,\n\n      full_output: fullOutput,\n      raw_agent_output: fullOutput\n    }\n  }\n];"
+      },
+      "id": "d7b915bf-9428-4d49-acb3-c419410fe67d"
+    },
+    {
+      "name": "Create a row",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1860,
+        300
+      ],
+      "parameters": {
+        "tableId": "agent_outputs",
+        "dataToSend": "autoMapInputData"
+      },
+      "credentials": {
+        "supabaseApi": {
+          "id": "trM35g1QCTOgQp4K",
+          "name": "Supabase account"
+        }
+      },
+      "id": "0a377067-cbe5-4058-b975-3d648b246283"
+    }
+  ],
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request | GBP/USD - Coinbase",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "HTTP Request | US 2Y - FRED API",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "HTTP Request | US 10Y - FRED API",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "HTTP Request | UK 5Y Gilt Yield - BoE IADB",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "HTTP Request | UK 10Y Gilt Yield - BoE IADB",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "HTTP Request | UK Bank Rate - BoE IADB",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "HTTP Request | UK 3M Interbank - FRED API",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "HTTP Request | VIX - FRED API",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "HTTP Request | Broad Dollar - FRED API",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "HTTP Request | UK Economic Calendar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request | GBP/USD - Coinbase": {
+      "main": [
+        [
+          {
+            "node": "Merge GBP Feeds",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request | US 2Y - FRED API": {
+      "main": [
+        [
+          {
+            "node": "Merge GBP Feeds",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "HTTP Request | US 10Y - FRED API": {
+      "main": [
+        [
+          {
+            "node": "Merge GBP Feeds",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "HTTP Request | UK 5Y Gilt Yield - BoE IADB": {
+      "main": [
+        [
+          {
+            "node": "Merge GBP Feeds",
+            "type": "main",
+            "index": 3
+          }
+        ]
+      ]
+    },
+    "HTTP Request | UK 10Y Gilt Yield - BoE IADB": {
+      "main": [
+        [
+          {
+            "node": "Merge GBP Feeds",
+            "type": "main",
+            "index": 4
+          }
+        ]
+      ]
+    },
+    "HTTP Request | UK Bank Rate - BoE IADB": {
+      "main": [
+        [
+          {
+            "node": "Merge GBP Feeds",
+            "type": "main",
+            "index": 5
+          }
+        ]
+      ]
+    },
+    "HTTP Request | UK 3M Interbank - FRED API": {
+      "main": [
+        [
+          {
+            "node": "Merge GBP Feeds",
+            "type": "main",
+            "index": 6
+          }
+        ]
+      ]
+    },
+    "HTTP Request | VIX - FRED API": {
+      "main": [
+        [
+          {
+            "node": "Merge GBP Feeds",
+            "type": "main",
+            "index": 7
+          }
+        ]
+      ]
+    },
+    "HTTP Request | Broad Dollar - FRED API": {
+      "main": [
+        [
+          {
+            "node": "Merge GBP Feeds",
+            "type": "main",
+            "index": 8
+          }
+        ]
+      ]
+    },
+    "HTTP Request | UK Economic Calendar": {
+      "main": [
+        [
+          {
+            "node": "Merge GBP Feeds",
+            "type": "main",
+            "index": 9
+          }
+        ]
+      ]
+    },
+    "Merge GBP Feeds": {
+      "main": [
+        [
+          {
+            "node": "Code | Build GBP Input Pack",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Build GBP Input Pack": {
+      "main": [
+        [
+          {
+            "node": "Get GBP Logic Document",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get GBP Logic Document": {
+      "main": [
+        [
+          {
+            "node": "Code | Combine GBP Logic and Inputs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Combine GBP Logic and Inputs": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Code | Parse GBP Agent Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Parse GBP Agent Output": {
+      "main": [
+        [
+          {
+            "node": "Code | Deterministic GBP 24H Verdict Gate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Deterministic GBP 24H Verdict Gate": {
+      "main": [
+        [
+          {
+            "node": "Create a row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "nodeGroups": [],
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": {},
+  "pinData": null,
+  "meta": null,
+  "tags": [],
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "bMv96EPR0xCXi3bi",
+      "projectId": "ISQG9XU7TGTT6Fcu",
+      "project": {
+        "id": "ISQG9XU7TGTT6Fcu",
+        "name": "Daniel Silver <a17@live.co.uk>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "customTelemetryTags": [],
+        "creatorId": "eb4fba3e-5170-481b-abc5-ce65776c1113",
+        "createdAt": "2026-04-29T19:10:11.212Z",
+        "updatedAt": "2026-04-29T19:10:21.640Z"
+      },
+      "createdAt": "2026-09-12T18:46:13.327Z",
+      "updatedAt": "2026-09-12T18:46:13.327Z"
+    }
+  ],
+  "activeVersion": {
+    "versionId": "45ca399f-7ecc-4d38-adb0-147dc14e0d42",
+    "workflowId": "bMv96EPR0xCXi3bi",
+    "nodes": [
+      {
+        "name": "When Executed by Another Workflow",
+        "type": "n8n-nodes-base.executeWorkflowTrigger",
+        "typeVersion": 1.2,
+        "position": [
+          0,
+          300
+        ],
+        "parameters": {
+          "inputSource": "passthrough"
+        },
+        "id": "6337880c-f0a3-4fd3-a288-609794837742"
+      },
+      {
+        "name": "HTTP Request | GBP/USD - Coinbase",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          220,
+          0
+        ],
+        "parameters": {
+          "url": "https://api.coinbase.com/v2/prices/GBP-USD/spot",
+          "options": {}
+        },
+        "onError": "continueRegularOutput",
+        "id": "853bded5-a413-4502-bff0-54108caed8eb"
+      },
+      {
+        "name": "HTTP Request | US 2Y - FRED API",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          220,
+          120
+        ],
+        "parameters": {
+          "url": "https://api.stlouisfed.org/fred/series/observations?series_id=DGS2&sort_order=desc&limit=25&file_type=json&api_key=<redacted>",
+          "options": {}
+        },
+        "onError": "continueRegularOutput",
+        "id": "e9eb7151-fef9-4e79-bec0-1beafc6b27db"
+      },
+      {
+        "name": "HTTP Request | US 10Y - FRED API",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          220,
+          240
+        ],
+        "parameters": {
+          "url": "https://api.stlouisfed.org/fred/series/observations?series_id=DGS10&sort_order=desc&limit=25&file_type=json&api_key=<redacted>",
+          "options": {}
+        },
+        "onError": "continueRegularOutput",
+        "id": "d13524e5-9116-440d-ada2-3a0ec4296af9"
+      },
+      {
+        "name": "HTTP Request | UK 5Y Gilt Yield - BoE IADB",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          220,
+          360
+        ],
+        "parameters": {
+          "url": "https://www.bankofengland.co.uk/boeapps/iadb/fromshowcolumns.asp?csv.x=yes&Datefrom=01/Jan/2025&Dateto=now&SeriesCodes=IUDSNPY&CSVF=TN&UsingCodes=Y&VPD=Y&VFD=N",
+          "options": {}
+        },
+        "onError": "continueRegularOutput",
+        "id": "7321b3a4-69f0-4976-b73b-50a440256640"
+      },
+      {
+        "name": "HTTP Request | UK 10Y Gilt Yield - BoE IADB",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          220,
+          480
+        ],
+        "parameters": {
+          "url": "https://www.bankofengland.co.uk/boeapps/iadb/fromshowcolumns.asp?csv.x=yes&Datefrom=01/Jan/2025&Dateto=now&SeriesCodes=IUDMNPY&CSVF=TN&UsingCodes=Y&VPD=Y&VFD=N",
+          "options": {}
+        },
+        "onError": "continueRegularOutput",
+        "id": "e012868c-5c00-4d2f-ba12-2140f6a0868a"
+      },
+      {
+        "name": "HTTP Request | UK Bank Rate - BoE IADB",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          220,
+          600
+        ],
+        "parameters": {
+          "url": "https://www.bankofengland.co.uk/boeapps/iadb/fromshowcolumns.asp?csv.x=yes&Datefrom=01/Jan/2025&Dateto=now&SeriesCodes=IUDBEDR&CSVF=TN&UsingCodes=Y&VPD=Y&VFD=N",
+          "options": {}
+        },
+        "onError": "continueRegularOutput",
+        "id": "248ceaa5-cf96-4580-b150-ac86433dbc39"
+      },
+      {
+        "name": "HTTP Request | UK 3M Interbank - FRED API",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          220,
+          720
+        ],
+        "parameters": {
+          "url": "https://api.stlouisfed.org/fred/series/observations?series_id=IR3TIB01GBM156N&sort_order=desc&limit=25&file_type=json&api_key=<redacted>",
+          "options": {}
+        },
+        "onError": "continueRegularOutput",
+        "id": "28eef914-4e6a-4e6d-b441-2e76c6d3180a"
+      },
+      {
+        "name": "HTTP Request | VIX - FRED API",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          220,
+          840
+        ],
+        "parameters": {
+          "url": "https://api.stlouisfed.org/fred/series/observations?series_id=VIXCLS&sort_order=desc&limit=25&file_type=json&api_key=<redacted>",
+          "options": {}
+        },
+        "onError": "continueRegularOutput",
+        "id": "530ea321-6a5a-416a-b56e-de889285ce5e"
+      },
+      {
+        "name": "HTTP Request | Broad Dollar - FRED API",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          220,
+          960
+        ],
+        "parameters": {
+          "url": "https://api.stlouisfed.org/fred/series/observations?series_id=DTWEXBGS&sort_order=desc&limit=25&file_type=json&api_key=<redacted>",
+          "options": {}
+        },
+        "onError": "continueRegularOutput",
+        "id": "1fc1c43b-777c-471f-8a83-e010725daaaa"
+      },
+      {
+        "name": "HTTP Request | UK Economic Calendar",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          220,
+          720
+        ],
+        "parameters": {
+          "url": "=https://economic-calendar-api.p.rapidapi.com/calendar?countryCode=UK&limit=100&timezone=GMT%2B0&startDate={{ new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10) }}&endDate={{ new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10) }}",
+          "sendHeaders": true,
+          "specifyHeaders": "json",
+          "jsonHeaders": "{\n    \"Content-Type\": \"application/json\",\n    \"x-rapidapi-host\": \"economic-calendar-api.p.rapidapi.com\"\n}",
+          "options": {
+            "timeout": 20000
+          },
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth"
+        },
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "dtItzS0yuHuBEsTA",
+            "name": "RapidAPI Production"
+          }
+        },
+        "retryOnFail": true,
+        "maxTries": 2,
+        "waitBetweenTries": 2000,
+        "onError": "continueRegularOutput",
+        "id": "744272bc-0d50-45c6-8178-f90906114ad4"
+      },
+      {
+        "name": "Code | Build GBP Input Pack",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          640,
+          300
+        ],
+        "parameters": {
+          "jsCode": "// GBP Layer 1 input pack (live shape, WTI onboarding pattern).\n// The shared market_snapshots table has no GBP columns, so the sealed GBP agent\n// reads its own approved providers at run time and records the resulting input\n// values inside its agent_outputs row (full_output / raw_agent_output). No row is\n// written to market_snapshots, so no other asset's snapshot selection changes.\nconst NODES = {\n  gbpusd: \"HTTP Request | GBP/USD - Coinbase\",\n  us2y: \"HTTP Request | US 2Y - FRED API\",\n  us10y: \"HTTP Request | US 10Y - FRED API\",\n  uk5y: \"HTTP Request | UK 5Y Gilt Yield - BoE IADB\",\n  uk10y: \"HTTP Request | UK 10Y Gilt Yield - BoE IADB\",\n  bankRate: \"HTTP Request | UK Bank Rate - BoE IADB\",\n  uk3m: \"HTTP Request | UK 3M Interbank - FRED API\",\n  vix: \"HTTP Request | VIX - FRED API\",\n  dxy: \"HTTP Request | Broad Dollar - FRED API\",\n  ukCalendar: \"HTTP Request | UK Economic Calendar\"\n};\n\nfunction node(name) {\n  try {\n    return $(name).first().json;\n  } catch (error) {\n    return {};\n  }\n}\n\nfunction num(value) {\n  if (value === null || value === undefined || value === \".\" || value === \"\") return null;\n  const parsed = Number(String(value).replace(\"%\", \"\").replace(\",\", \".\").trim());\n  return Number.isFinite(parsed) ? parsed : null;\n}\n\nfunction observations(data) {\n  return ((data && data.observations) || []).filter((item) => num(item.value) !== null);\n}\n\nfunction series(data, percent) {\n  const rows = observations(data);\n  const latest = rows[0] ? num(rows[0].value) : null;\n  const change = (index) => {\n    const prior = rows[index] ? num(rows[index].value) : null;\n    if (latest === null || prior === null || (percent && prior === 0)) return null;\n    return percent ? ((latest - prior) / prior) * 100 : latest - prior;\n  };\n  return { latest, d1: change(1), d5: change(5), date: rows[0] ? rows[0].date : null };\n}\n\n// Bank of England IADB daily CSV (the UK analogue of the Bundesbank REST pattern\n// already used live). Body shape: \"DATE,CODE\\n02 Jan 2026,3.9655\\n...\" oldest first.\nfunction boeSeries(payload) {\n  const raw = payload && payload.data !== undefined ? payload.data : payload;\n  const text = typeof raw === \"string\" ? raw : \"\";\n  const parsed = [];\n  for (const line of text.split(/\\r?\\n/)) {\n    const match = line.trim().match(/^(\\d{2} [A-Za-z]{3} \\d{4}),(-?[\\d.]+)$/);\n    if (!match) continue;\n    const date = new Date(match[1]);\n    if (!Number.isFinite(date.getTime())) continue;\n    const value = num(match[2]);\n    if (value === null) continue;\n    parsed.push({ date: date.toISOString().slice(0, 10), value });\n  }\n  parsed.sort((a, b) => a.date.localeCompare(b.date));\n  const n = parsed.length;\n  const latest = n ? parsed[n - 1].value : null;\n  const change = (back) => (n > back && latest !== null ? latest - parsed[n - 1 - back].value : null);\n  return { latest, d1: change(1), d5: change(5), date: n ? parsed[n - 1].date : null };\n}\n\n// UK economic calendar. The RapidAPI provider uses countryCode=UK for the United\n// Kingdom and reports currencyCode=GBP. Values are only ever read from the\n// provider; nothing is inferred when the provider is unavailable.\nfunction ukCalendar(payload) {\n  const rows = Array.isArray(payload && payload.data) ? payload.data : Array.isArray(payload) ? payload : [];\n  const impactRank = (value) => {\n    const t = String(value || \"\").toUpperCase();\n    return t === \"HIGH\" ? 3 : t === \"MEDIUM\" ? 2 : t === \"LOW\" ? 1 : 0;\n  };\n  const priority = (eventName) => {\n    const n = String(eventName || \"\").toLowerCase();\n    if (n.includes(\"bank rate\") || n.includes(\"mpc\")) return 100;\n    if (n.includes(\"cpi\") || n.includes(\"inflation\")) return 98;\n    if (n.includes(\"pmi\")) return 95;\n    if (n.includes(\"gdp\")) return 90;\n    if (n.includes(\"wage\") || n.includes(\"earnings\")) return 88;\n    if (n.includes(\"retail sales\")) return 80;\n    if (n.includes(\"unemployment\") || n.includes(\"claimant\")) return 75;\n    return 50;\n  };\n\n  const events = [];\n  for (const event of rows) {\n    const at = event.dateUtc || event.date_utc || event.date || null;\n    const currency = String(event.currencyCode || event.currency || \"\").toUpperCase();\n    const eventName = event.name || event.event || event.title || null;\n    if (!at || currency !== \"GBP\" || !eventName) continue;\n    const impact = event.volatility || event.impact || null;\n    events.push({\n      name: eventName,\n      at,\n      date: String(at).slice(0, 10),\n      impact,\n      impact_rank: impactRank(impact),\n      actual: num(event.actual),\n      forecast: num(event.consensus ?? event.forecast),\n      previous: num(event.previous),\n      priority: priority(eventName)\n    });\n  }\n\n  const completed = events\n    .filter((event) => event.actual !== null)\n    .sort((a, b) => {\n      const diff = new Date(b.at || 0) - new Date(a.at || 0);\n      return Number.isFinite(diff) && diff !== 0 ? diff : b.priority - a.priority;\n    });\n\n  const upcoming = events\n    .filter((event) => event.actual === null)\n    .sort((a, b) => String(a.at).localeCompare(String(b.at)))\n    .slice(0, 10);\n\n  let score = 0;\n  const reasons = [];\n  for (const event of completed.slice(0, 8)) {\n    if (event.forecast === null) continue;\n    const weight = event.impact_rank >= 3 ? 2 : 1;\n    if (event.actual > event.forecast) {\n      score += weight;\n      reasons.push(`${event.name} beat forecast`);\n    } else if (event.actual < event.forecast) {\n      score -= weight;\n      reasons.push(`${event.name} missed forecast`);\n    }\n  }\n\n  const boeBias = events.length ? (score >= 2 ? \"hawkish\" : score <= -2 ? \"dovish\" : \"neutral\") : null;\n\n  const pmiEvents = events\n    .filter((event) => /pmi/i.test(event.name) && event.actual !== null)\n    .sort((a, b) => {\n      const diff = new Date(b.date || 0) - new Date(a.date || 0);\n      if (Number.isFinite(diff) && diff !== 0) return diff;\n      return (/composite/i.test(a.name) ? 0 : 1) - (/composite/i.test(b.name) ? 0 : 1);\n    });\n  const pmi = pmiEvents[0] || null;\n  const pmiDirection = !pmi ? null : pmi.previous === null ? null : pmi.actual > pmi.previous ? \"improving\" : pmi.actual < pmi.previous ? \"deteriorating\" : \"stable\";\n\n  return {\n    boe_bias: boeBias,\n    boe_bias_score: events.length ? score : null,\n    boe_bias_reasons: reasons.slice(0, 5),\n    latest_uk_event: completed[0] || null,\n    upcoming_uk_events: upcoming,\n    uk_composite_pmi: pmi ? pmi.actual : null,\n    uk_composite_pmi_direction: pmiDirection,\n    uk_events_found: events.length\n  };\n}\n\nconst gbpusdPayload = node(NODES.gbpusd);\nconst gbpusdPrice = num(gbpusdPayload && gbpusdPayload.data && gbpusdPayload.data.amount);\nconst us2y = series(node(NODES.us2y), false);\nconst us10y = series(node(NODES.us10y), false);\nconst uk5y = boeSeries(node(NODES.uk5y));\nconst uk10y = boeSeries(node(NODES.uk10y));\nconst bankRate = boeSeries(node(NODES.bankRate));\nconst uk3m = series(node(NODES.uk3m), false);\nconst vix = series(node(NODES.vix), false);\nconst dxy = series(node(NODES.dxy), true);\nconst uk = ukCalendar(node(NODES.ukCalendar));\n\n// US-UK 10Y spread impulse: maturity-matched, both legs daily and authoritative.\nconst usUk10ySpreadD5Bps =\n  us10y.latest !== null && uk10y.latest !== null && us10y.d5 !== null && uk10y.d5 !== null\n    ? ((us10y.latest - uk10y.latest) - ((us10y.latest - us10y.d5) - (uk10y.latest - uk10y.d5))) * 100\n    : null;\n\n// Core missing input (GBP/USD spot) means no usable pack, so the agent can never\n// produce a falsely usable call.\nif (gbpusdPrice === null) {\n  return [];\n}\n\nconst missing = [];\nif (us2y.d5 === null) missing.push(\"us_2y_d5_bps\");\nif (uk5y.d5 === null) missing.push(\"uk_5y_d5_bps\");\nif (usUk10ySpreadD5Bps === null) missing.push(\"us_uk_10y_spread_d5_bps\");\nif (vix.latest === null) missing.push(\"vix_level\");\nif (dxy.latest === null) missing.push(\"dxy_level\");\nif (bankRate.latest === null) missing.push(\"uk_bank_rate\");\nif (uk.boe_bias === null) missing.push(\"boe_bias\");\nif (uk.latest_uk_event === null) missing.push(\"latest_uk_event\");\nif (uk.uk_composite_pmi === null) missing.push(\"uk_composite_pmi\");\n// No authoritative UK stress proxy exists in this platform.\nmissing.push(\"uk_stress_flag\", \"global_growth_regime\");\n\nconst availableInputs = {\n  gbpusd_price: gbpusdPrice,\n  gbpusd_price_date: new Date().toISOString().slice(0, 10),\n\n  vix_level: vix.latest,\n\n  dxy_level: dxy.latest,\n  dxy_d1_pct: dxy.d1,\n\n  us_2y_yield: us2y.latest,\n  us_2y_d5_bps: us2y.d5 === null ? null : us2y.d5 * 100,\n  us_10y_yield: us10y.latest,\n  us_10y_d5_bps: us10y.d5 === null ? null : us10y.d5 * 100,\n\n  // UK rate data. FRED has no UK 2Y series, so the front-end and relative-rate\n  // factors use the Bank of England IADB daily gilt yields (IUDSNPY / IUDMNPY) and\n  // the Official Bank Rate (IUDBEDR) - the same national-central-bank REST pattern\n  // already used live for Germany 2Y via the Bundesbank.\n  uk_2y_yield: null,\n  uk_2y_d5_bps: null,\n  us_uk_2y_spread_d5_bps: null,\n  uk_5y_yield: uk5y.latest,\n  uk_5y_d5_bps: uk5y.d5 === null ? null : uk5y.d5 * 100,\n  uk_10y_yield: uk10y.latest,\n  uk_10y_d5_bps: uk10y.d5 === null ? null : uk10y.d5 * 100,\n  uk_bank_rate: bankRate.latest,\n  uk_bank_rate_d5_bps: bankRate.d5 === null ? null : bankRate.d5 * 100,\n  uk_3m_interbank: uk3m.latest,\n  us_uk_10y_spread_d5_bps: usUk10ySpreadD5Bps,\n\n  boe_bias: uk.boe_bias,\n  boe_bias_score: uk.boe_bias_score,\n  boe_bias_reasons: uk.boe_bias_reasons,\n  latest_uk_event: uk.latest_uk_event,\n  upcoming_uk_events: uk.upcoming_uk_events,\n  uk_composite_pmi: uk.uk_composite_pmi,\n  uk_composite_pmi_direction: uk.uk_composite_pmi_direction,\n  uk_events_found: uk.uk_events_found,\n\n  uk_stress_flag: null,\n  global_growth_regime: null\n};\n\nreturn [\n  {\n    json: {\n      asset: \"GBP\",\n      snapshot_id: null,\n      snapshot_date: new Date().toISOString().slice(0, 10),\n      run_time_et: new Date().toISOString(),\n      provider_status: \"READ_AT_AGENT_RUNTIME\",\n      session_status: \"WEEKDAY_ACTIVE_TIME_V1\",\n      isolation_rule: \"This Layer 1 agent may only use the GBP input pack above and the GBP logic document. It must not read other agent outputs.\",\n      execution_question: \"Based on confirmed value-driving factors available at execution time, what is the likely 24H direction of GBP?\",\n      available_inputs: availableInputs,\n      missing_inputs: missing,\n      missing_rule: \"Unavailable inputs are scored NEUTRAL and never inferred.\"\n    }\n  }\n];"
+        },
+        "executeOnce": true,
+        "id": "33b3207b-48b1-4da3-92d8-827cb3429436"
+      },
+      {
+        "parameters": {
+          "mode": "append",
+          "numberInputs": 10
+        },
+        "type": "n8n-nodes-base.merge",
+        "typeVersion": 3,
+        "position": [
+          450,
+          300
+        ],
+        "name": "Merge GBP Feeds",
+        "id": "bce8d3f9-825d-4a49-b13e-ebba4372592d"
+      },
+      {
+        "name": "Get GBP Logic Document",
+        "type": "n8n-nodes-base.github",
+        "typeVersion": 1.1,
+        "position": [
+          800,
+          300
+        ],
+        "parameters": {
+          "authentication": "oAuth2",
+          "resource": "file",
+          "operation": "get",
+          "owner": {
+            "__rl": true,
+            "value": "kevincreedycars-debug",
+            "mode": "list"
+          },
+          "repository": {
+            "__rl": true,
+            "value": "trading-agent-dashboard",
+            "mode": "list"
+          },
+          "filePath": "logic/agent_gbp_direction.md",
+          "asBinaryProperty": false,
+          "additionalParameters": {}
+        },
+        "credentials": {
+          "githubOAuth2Api": {
+            "id": "wr4dhSbWkjNonhfi",
+            "name": "GitHub account 3"
+          }
+        },
+        "webhookId": "bae8d901-0bf3-4e7b-8d5b-6c7d74f54837",
+        "id": "1fb3e239-bdbf-4da1-9a1e-eeb24cf30c5b"
+      },
+      {
+        "name": "Code | Combine GBP Logic and Inputs",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1000,
+          300
+        ],
+        "parameters": {
+          "jsCode": "const pack = $(\"Code | Build GBP Input Pack\").first().json; const logic = $(\"Get GBP Logic Document\").first().json; return [{ json: { market_snapshot: pack, logic_document: logic.content || \"\" } }];"
+        },
+        "id": "eb9a0b8e-a530-42cc-b7f2-6a088227cf70"
+      },
+      {
+        "name": "Message a model",
+        "type": "@n8n/n8n-nodes-langchain.openAi",
+        "typeVersion": 2.3,
+        "position": [
+          1200,
+          300
+        ],
+        "parameters": {
+          "modelId": {
+            "__rl": true,
+            "value": "gpt-4.1-mini",
+            "mode": "list"
+          },
+          "responses": {
+            "values": [
+              {
+                "role": "system",
+                "content": "You are the GBP Layer 1 Direction Agent.\n\nYou must follow the supplied GBP logic document exactly.\n\nYou analyse GBP only. You emit a raw 24H directional classification.\n\nYou must not produce: GBP/USD pair calls, trade recommendations, entry or exit signals, cross-asset calls, consensus calls, Layer 2 calls, or any output from another agent.\n\nLayer 1 isolation is mandatory. Use only the supplied input pack and the supplied logic document. If a required input is unavailable, score the affected factor NEUTRAL and list the field in missing_inputs. Never guess missing data.\n\nReturn valid JSON only, with this shape:\n{\"direction_24h\":\"BULLISH|BEARISH|NO_CLEAR_BIAS\",\"factor_breakdown\":{\"F1\":{\"signal\":\"BULLISH|BEARISH|NEUTRAL\",\"evidence\":\"...\",\"reason\":\"...\"},\"F2\":{},\"F3\":{},\"F4\":{},\"F5\":{},\"F6\":{},\"F7\":{},\"F8\":{},\"F9\":{},\"F10\":{}},\"missing_inputs\":[\"...\"],\"reasoning_summary\":\"...\",\"risk_flags\":[\"...\"]}\n\nRules:\n* Score every factor F1 to F10 exactly once, using the factor table and weights in the supplied GBP logic document.\n* UK 2Y yield, US-UK 2Y spread, UK stress and the global growth regime are unavailable in this draft: score the affected factors NEUTRAL and list them as missing.\n* Do not calculate conviction. Conviction is calculated downstream by a deterministic engine."
+              },
+              {
+                "content": "={{ JSON.stringify($json) }}"
+              }
+            ]
+          },
+          "builtInTools": {},
+          "options": {
+            "textFormat": {
+              "textOptions": {
+                "type": "json_object"
+              }
+            }
+          }
+        },
+        "credentials": {
+          "openAiApi": {
+            "id": "VY1FMMlFQNwU3Ctt",
+            "name": "OpenAI account 2"
+          }
+        },
+        "id": "dbae4af6-6d8a-4f15-9320-d027f1e2bacc"
+      },
+      {
+        "name": "Code | Parse GBP Agent Output",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1420,
+          300
+        ],
+        "parameters": {
+          "jsCode": "const source = $input.first().json; const raw = source.output?.[0]?.content?.[0]?.text ?? source.text ?? source; const report = typeof raw === \"object\" ? raw : JSON.parse(String(raw)); const pack = $(\"Code | Build GBP Input Pack\").first().json; return [{ json: { snapshot_id: pack.snapshot_id, agent_name: \"GBP\", layer: 1, run_time_et: pack.run_time_et, snapshot_date: pack.snapshot_date, market_inputs: pack.available_inputs, missing_inputs: pack.missing_inputs, factor_breakdown: report.factor_breakdown || {}, reasoning_summary: report.reasoning_summary || report.reason_24h || \"\", risk_flags: report.risk_flags || [], logic_document: \"agent_gbp_direction.md\", logic_document_version: \"0.1_research_baseline\", raw_agent_output: report } }];"
+        },
+        "id": "e1121ec3-073a-4f65-bc39-a105a0b7cb26"
+      },
+      {
+        "name": "Code | Deterministic GBP 24H Verdict Gate",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1640,
+          300
+        ],
+        "parameters": {
+          "jsCode": "// GBP Layer 1 deterministic 24H verdict gate (draft v0.2).\n// Mirrors the shared Layer 1 deterministic conviction contract used by the other\n// live asset agents field-for-field, so the Layer 2 trade selection agent and the\n// Dashboard Writer consume GBP rows with no new field handling. The model's own\n// conviction is ignored; this node is the only conviction source. Weights remain\n// provisional hypotheses pending historical replay.\nconst item = $input.first().json;\n\nconst WEIGHTS = { F1: 20, F2: 16, F3: 20, F4: 12, F5: 8, F6: 10, F7: 6, F8: 4, F9: 2, F10: 2 };\nconst LOGIC_DOCUMENT = \"agent_gbp_direction.md\";\nconst LOGIC_DOCUMENT_VERSION = \"0.1_research_baseline\";\n\nconst supplied = item.factor_breakdown && typeof item.factor_breakdown === \"object\" ? item.factor_breakdown : {};\nconst missingInputs = Array.isArray(item.missing_inputs) ? item.missing_inputs.slice() : [];\n\nlet bullish = 0;\nlet bearish = 0;\nlet neutral = 0;\nlet bullishCount = 0;\nlet bearishCount = 0;\nlet neutralCount = 0;\n\nconst factorBreakdown = {};\nfor (const [id, weight] of Object.entries(WEIGHTS)) {\n  const entry = supplied[id] && typeof supplied[id] === \"object\" ? supplied[id] : {};\n  const raw = typeof supplied[id] === \"string\" ? supplied[id] : entry.signal;\n  const signal = raw === \"BULLISH\" || raw === \"BEARISH\" ? raw : \"NEUTRAL\";\n  // Unknown or unavailable signals are scored neutral; they are never inferred.\n  factorBreakdown[id] = { ...entry, signal, weight };\n  if (signal === \"BULLISH\") {\n    bullish += weight;\n    bullishCount++;\n  } else if (signal === \"BEARISH\") {\n    bearish += weight;\n    bearishCount++;\n  } else {\n    neutral += weight;\n    neutralCount++;\n  }\n}\n\nconst active = bullish + bearish;\nconst participation = active;\nconst bullishArgument = active > 0 ? Math.round((bullish / active) * 100) : 0;\nconst bearishArgument = active > 0 ? Math.round((bearish / active) * 100) : 0;\nconst neutralPct = Math.round(neutral);\nconst netEdge = bullishArgument - bearishArgument;\nconst absEdge = Math.abs(netEdge);\nconst weightMargin = Math.abs(bullish - bearish);\n\nconst baseDirection = bullish > bearish ? \"BULLISH\" : bearish > bullish ? \"BEARISH\" : \"NO_CLEAR_BIAS\";\nconst direction =\n  baseDirection === \"NO_CLEAR_BIAS\"\n    ? \"NO_CLEAR_BIAS\"\n    : active < 50 || weightMargin < 15 || absEdge < 20\n      ? `${baseDirection}_LEAN`\n      : baseDirection;\n\nconst winningArgument =\n  baseDirection === \"BULLISH\" ? bullishArgument : baseDirection === \"BEARISH\" ? bearishArgument : 0;\nconst participationCap = Math.min(participation, 80);\nconst conviction =\n  baseDirection === \"NO_CLEAR_BIAS\" ? 0 : Math.round(winningArgument * (participationCap / 100));\n\nconst verdictStrength =\n  absEdge >= 40 && participation >= 70\n    ? \"VERY_STRONG\"\n    : absEdge >= 25 && participation >= 50\n      ? \"STRONG\"\n      : absEdge >= 15\n        ? \"MODERATE\"\n        : \"WEAK\";\n\nconst reason =\n  `24H deterministic GBP score: bull case ${bullishArgument}%, bear case ${bearishArgument}%, ` +\n  `directional participation ${participation}%, neutral/unavailable ${neutralPct}%, ` +\n  `net edge ${netEdge > 0 ? \"+\" : \"\"}${netEdge}. Missing inputs ` +\n  `(${missingInputs.length ? missingInputs.join(\", \") : \"none\"}) are scored neutral and never inferred.`;\n\nconst weightedScore = {\n  bullish_weight: bullish,\n  bearish_weight: bearish,\n  neutral_weight: neutral,\n  active_weight: active,\n  weight_margin: weightMargin\n};\n\nconst convictionModel = {\n  bull_case: bullishArgument,\n  bear_case: bearishArgument,\n  winning_side: baseDirection,\n  directional_participation: participation,\n  net_edge: netEdge,\n  final_conviction: conviction,\n  verdict_strength: verdictStrength,\n  final_conviction_logic: reason,\n\n  bullish_argument_pct: bullishArgument,\n  bearish_argument_pct: bearishArgument,\n  neutral_pct: neutralPct,\n  neutral_evidence_pct: neutralPct,\n  active_participation_pct: participation,\n  directional_participation_pct: participation,\n  net_edge_pct: netEdge,\n\n  weighted_edge: Math.abs(netEdge) / 100,\n  raw_conviction: conviction,\n  base_conviction: conviction,\n  participation,\n  participation_cap: participationCap,\n  conflict_penalty: 0,\n  missing_input_penalty: 0,\n  agreement_boost: 0,\n  bull_case_weight: bullish,\n  bear_case_weight: bearish,\n  neutral_weight: neutral\n};\n\nconst timeframeModels = {\n  \"24h\": {\n    direction,\n    conviction,\n    reason,\n    factor_breakdown: factorBreakdown,\n    weighted_score: weightedScore,\n    conviction_model: convictionModel\n  }\n};\n\nconst riskFlags = [\n  \"PROVISIONAL_WEIGHTS\",\n  \"GBP_24H_ONLY\",\n  ...(Array.isArray(item.risk_flags) ? item.risk_flags : []),\n  ...missingInputs\n];\n\nconst fullOutput = {\n  asset: \"GBP\",\n  layer: \"layer_1_raw\",\n  logic_document: LOGIC_DOCUMENT,\n  logic_document_version: LOGIC_DOCUMENT_VERSION,\n\n  direction_24h: direction,\n  conviction_24h: conviction,\n  reason_24h: reason,\n\n  factor_breakdown: factorBreakdown,\n  weighted_score: weightedScore,\n  conviction_model: convictionModel,\n  timeframe_models: timeframeModels,\n\n  score_bullish: bullishCount,\n  score_bearish: bearishCount,\n  score_neutral: neutralCount,\n  non_neutral_count: bullishCount + bearishCount,\n\n  market_inputs: item.market_inputs || {},\n  missing_inputs: missingInputs,\n  reasoning_summary: reason,\n  risk_flags: riskFlags\n};\n\n// The live agent_outputs table has no asset / market_inputs / missing_inputs /\n// timeframe_models / non_neutral_count / risk_flags columns, so those documented\n// fields live inside full_output and the run is not failed by an unknown column.\n// warnings is a real column and carries the risk flags.\nconst {\n  asset: _asset,\n  market_inputs: _marketInputs,\n  missing_inputs: _missingInputs,\n  timeframe_models: _timeframeModels,\n  non_neutral_count: _nonNeutralCount,\n  risk_flags: _riskFlags,\n  ...rowSafe\n} = item;\n\nreturn [\n  {\n    json: {\n      ...rowSafe,\n\n      agent_name: \"GBP\",\n      layer: 1,\n      logic_document: LOGIC_DOCUMENT,\n      logic_document_version: LOGIC_DOCUMENT_VERSION,\n\n      call_24h_direction: direction,\n      call_24h_conviction: conviction,\n      call_24h_reason: reason,\n      direction_24h: direction,\n      conviction_24h: conviction,\n\n      factor_breakdown: factorBreakdown,\n      weighted_score: weightedScore,\n      conviction_model: convictionModel,\n\n      score_bullish: bullishCount,\n      score_bearish: bearishCount,\n      score_neutral: neutralCount,\n\n      warnings: riskFlags,\n      reasoning_summary: reason,\n\n      full_output: fullOutput,\n      raw_agent_output: fullOutput\n    }\n  }\n];"
+        },
+        "id": "d7b915bf-9428-4d49-acb3-c419410fe67d"
+      },
+      {
+        "name": "Create a row",
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          1860,
+          300
+        ],
+        "parameters": {
+          "tableId": "agent_outputs",
+          "dataToSend": "autoMapInputData"
+        },
+        "credentials": {
+          "supabaseApi": {
+            "id": "trM35g1QCTOgQp4K",
+            "name": "Supabase account"
+          }
+        },
+        "id": "0a377067-cbe5-4058-b975-3d648b246283"
+      }
+    ],
+    "connections": {
+      "When Executed by Another Workflow": {
+        "main": [
+          [
+            {
+              "node": "HTTP Request | GBP/USD - Coinbase",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "HTTP Request | US 2Y - FRED API",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "HTTP Request | US 10Y - FRED API",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "HTTP Request | UK 5Y Gilt Yield - BoE IADB",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "HTTP Request | UK 10Y Gilt Yield - BoE IADB",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "HTTP Request | UK Bank Rate - BoE IADB",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "HTTP Request | UK 3M Interbank - FRED API",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "HTTP Request | VIX - FRED API",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "HTTP Request | Broad Dollar - FRED API",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "HTTP Request | UK Economic Calendar",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "HTTP Request | GBP/USD - Coinbase": {
+        "main": [
+          [
+            {
+              "node": "Merge GBP Feeds",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "HTTP Request | US 2Y - FRED API": {
+        "main": [
+          [
+            {
+              "node": "Merge GBP Feeds",
+              "type": "main",
+              "index": 1
+            }
+          ]
+        ]
+      },
+      "HTTP Request | US 10Y - FRED API": {
+        "main": [
+          [
+            {
+              "node": "Merge GBP Feeds",
+              "type": "main",
+              "index": 2
+            }
+          ]
+        ]
+      },
+      "HTTP Request | UK 5Y Gilt Yield - BoE IADB": {
+        "main": [
+          [
+            {
+              "node": "Merge GBP Feeds",
+              "type": "main",
+              "index": 3
+            }
+          ]
+        ]
+      },
+      "HTTP Request | UK 10Y Gilt Yield - BoE IADB": {
+        "main": [
+          [
+            {
+              "node": "Merge GBP Feeds",
+              "type": "main",
+              "index": 4
+            }
+          ]
+        ]
+      },
+      "HTTP Request | UK Bank Rate - BoE IADB": {
+        "main": [
+          [
+            {
+              "node": "Merge GBP Feeds",
+              "type": "main",
+              "index": 5
+            }
+          ]
+        ]
+      },
+      "HTTP Request | UK 3M Interbank - FRED API": {
+        "main": [
+          [
+            {
+              "node": "Merge GBP Feeds",
+              "type": "main",
+              "index": 6
+            }
+          ]
+        ]
+      },
+      "HTTP Request | VIX - FRED API": {
+        "main": [
+          [
+            {
+              "node": "Merge GBP Feeds",
+              "type": "main",
+              "index": 7
+            }
+          ]
+        ]
+      },
+      "HTTP Request | Broad Dollar - FRED API": {
+        "main": [
+          [
+            {
+              "node": "Merge GBP Feeds",
+              "type": "main",
+              "index": 8
+            }
+          ]
+        ]
+      },
+      "HTTP Request | UK Economic Calendar": {
+        "main": [
+          [
+            {
+              "node": "Merge GBP Feeds",
+              "type": "main",
+              "index": 9
+            }
+          ]
+        ]
+      },
+      "Merge GBP Feeds": {
+        "main": [
+          [
+            {
+              "node": "Code | Build GBP Input Pack",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code | Build GBP Input Pack": {
+        "main": [
+          [
+            {
+              "node": "Get GBP Logic Document",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get GBP Logic Document": {
+        "main": [
+          [
+            {
+              "node": "Code | Combine GBP Logic and Inputs",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code | Combine GBP Logic and Inputs": {
+        "main": [
+          [
+            {
+              "node": "Message a model",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Message a model": {
+        "main": [
+          [
+            {
+              "node": "Code | Parse GBP Agent Output",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code | Parse GBP Agent Output": {
+        "main": [
+          [
+            {
+              "node": "Code | Deterministic GBP 24H Verdict Gate",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code | Deterministic GBP 24H Verdict Gate": {
+        "main": [
+          [
+            {
+              "node": "Create a row",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "nodeGroups": [],
+    "authors": "Daniel Silver",
+    "name": null,
+    "description": null,
+    "autosaved": false,
+    "createdAt": "2026-09-12T19:45:35.229Z",
+    "updatedAt": "2026-09-12T19:45:35.229Z",
+    "workflowPublishHistory": [
+      {
+        "id": 420,
+        "workflowId": "bMv96EPR0xCXi3bi",
+        "versionId": "45ca399f-7ecc-4d38-adb0-147dc14e0d42",
+        "event": "activated",
+        "userId": "eb4fba3e-5170-481b-abc5-ce65776c1113",
+        "createdAt": "2026-09-12T19:45:35.329Z"
+      }
+    ]
+  }
+}

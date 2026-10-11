@@ -973,6 +973,8 @@ module.exports = {
   REPLAY_VERSION,
   SOURCE_WORKFLOW,
   TIMEFRAME_CONFIG,
+  FACTOR_WEIGHTS,
+  LIVE_24H_FACTOR_WEIGHTS,
   buildPrediction,
   buildReplayOutput,
   normalizeSnapshotPayload,

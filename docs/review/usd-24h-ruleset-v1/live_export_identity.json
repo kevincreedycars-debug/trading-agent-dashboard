@@ -1,0 +1,5747 @@
+{
+  "generated_at": "2026-10-11T20:18:03.711Z",
+  "script": "scripts/report_live_workflow_identity.js",
+  "n8n_base_url": "https://silver17.app.n8n.cloud",
+  "export_timestamp": "2026-10-11T18:59:54.307Z",
+  "export_api": "n8n public API v1, GET only",
+  "raw_export_dir": "tmp/live/exports-2026-10-11T18-59-53-817Z",
+  "sanitized_export_dir": "docs/review/usd-24h-ruleset-v1/live-exports",
+  "sanitized_export_manifest_sha256_present": true,
+  "sanitizer": "scripts/scrub_live_workflow_exports.js",
+  "workflow_count": 45,
+  "active_workflow_count": 33,
+  "live_workflows": [
+    {
+      "file": "1._Economic_Events_EUR_PMI_Collector.json",
+      "name": "1. Economic Events EUR PMI Collector",
+      "id": "HIhQay9MLSzYazzI",
+      "active": false,
+      "is_test_named": false,
+      "version_id": "5a25127f-798e-4877-aa13-2c50f0d18f42",
+      "version_counter": 1,
+      "created_at": "2026-06-13T19:08:35.678Z",
+      "updated_at": "2026-06-13T19:08:35.678Z",
+      "node_count": 11,
+      "key": "SHARED:events",
+      "sanitized_sha256": "363e0c97342c64e667cafc75a94d52f7621c558d04a1ede6c0634d47caf49f34",
+      "sanitized_bytes": 12933,
+      "code_nodes": [
+        {
+          "name": "Code | Normalise Forex Factory Events",
+          "sha256": "7bcd7d82769fb0b36e3f20a001e827c892c94c655c86d573220d6680e517ce92",
+          "bytes": 2707
+        },
+        {
+          "name": "Code | Generate EUR PMI Lookback Dates",
+          "sha256": "18a4a39ccc6bb0004b6092cb910b7e139551f5aa7682533b5f67afef3e9d67ae",
+          "bytes": 241
+        }
+      ],
+      "credential_bindings": [
+        {
+          "node": "Supabase | Upsert Economic Events",
+          "type": "supabaseApi",
+          "name": "Supabase account"
+        }
+      ],
+      "routing": [
+        {
+          "node": "Schedule Trigger",
+          "kind": "schedule",
+          "cron_expression": null
+        }
+      ]
+    },
+    {
+      "file": "Backtest_Processor.json",
+      "name": "Backtest Processor",
+      "id": "1lT52EmkH3hHJPUL",
+      "active": false,
+      "is_test_named": false,
+      "version_id": "e62b4b92-ecbf-4ada-a43a-34855e65bed9",
+      "version_counter": 348,
+      "created_at": "2026-05-12T19:59:04.680Z",
+      "updated_at": "2026-05-14T10:07:59.092Z",
+      "node_count": 35,
+      "key": "UNCLASSIFIED:other",
+      "sanitized_sha256": "da0fa266bc9ef21cb6318dac1670fcb81f1681a01a7fdaeef60daf024656c615",
+      "sanitized_bytes": 98512,
+      "code_nodes": [
+        {
+          "name": "Code | BT Fetch Aggregator",
+          "sha256": "fa7067e07012166505628ad0114d26db3683780927c8df945a483e72584e087c",
+          "bytes": 2097
+        },
+        {
+          "name": "Code | BT Prompt Builder",
+          "sha256": "1846308b1f98af9bd20988712a7ac849bde53e374928788b1d2afc0c9a9789af",
+          "bytes": 523
+        },
+        {
+          "name": "Code | BT Extract Diagnosis Text",
+          "sha256": "e85c64e58c8208146acdd1eb047a84a1e77ba9029214570ae77ef0525b3dfc99",
+          "bytes": 365
+        },
+        {
+          "name": "Code | BT Build Extract Prompt",
+          "sha256": "4f900099275f34e4910982d893a942d1606ffb561ad0e0597463cb7a15b6cdd3",
+          "bytes": 833
+        },
+        {
+          "name": "Code | BT Parse Calls",
+          "sha256": "4d849451deea25deb1c1d0cd5cc2c38d551dc6b4a28c5c5e976f8e9134139269",
+          "bytes": 1240
+        }
+      ],
+      "credential_bindings": [],
+      "routing": []
+    },
+    {
+      "file": "Backtest_Queue_Initialiser.json",
+      "name": "Backtest Queue Initialiser",
+      "id": "4IctuVz0xl7kefJ2",
+      "active": false,
+      "is_test_named": false,
+      "version_id": "2a8f0bee-5028-4aaa-bd92-e3bb4d1ce16c",
+      "version_counter": 34,
+      "created_at": "2026-05-12T19:48:54.038Z",
+      "updated_at": "2026-05-13T17:40:20.321Z",
+      "node_count": 3,
+      "key": "UNCLASSIFIED:other",
+      "sanitized_sha256": "fdf158760e3405a461826b1c16db0a76a9e6e5d2060ed1b299660808134002fb",
+      "sanitized_bytes": 4095,
+      "code_nodes": [
+        {
+          "name": "Code | Generate Date Queue",
+          "sha256": "33a8046af8cb222326a8557edce5efce78f44c329c78ea6097d04d49b5617449",
+          "bytes": 816
+        }
+      ],
+      "credential_bindings": [],
+      "routing": []
+    },
+    {
+      "file": "Backtest_Resolver.json",
+      "name": "Backtest Resolver",
+      "id": "S7UkIcOx1SneGaZZ",
+      "active": false,
+      "is_test_named": false,
+      "version_id": "dd84278d-744f-4955-aa7e-d56dbb4e4a9c",
+      "version_counter": 197,
+      "created_at": "2026-05-13T19:05:50.354Z",
+      "updated_at": "2026-05-14T09:47:43.250Z",
+      "node_count": 16,
+      "key": "UNCLASSIFIED:other",
+      "sanitized_sha256": "6432eacce31f484d70b99b3c2bad6b9a0df18c6d0cb75adef5a4696d95c16f47",
+      "sanitized_bytes": 19918,
+      "code_nodes": [
+        {
+          "name": "Code | Group by Resolution Date",
+          "sha256": "9d0a4726b4883a3e795dcaa0e2c521eae5dbd624e625a7dd17d652481528c689",
+          "bytes": 419
+        },
+        {
+          "name": "Code in JavaScript",
+          "sha256": "2396e1be38edbd152ce675dd8160d68a69c03743d937bff609ab8ef2fe898556",
+          "bytes": 98
+        },
+        {
+          "name": "Code | Resolve Calls",
+          "sha256": "557cf55de941ebf480516ec49e99ef93fb3ff79526a8c99c2db0c9ff933edc1b",
+          "bytes": 1213
+        }
+      ],
+      "credential_bindings": [],
+      "routing": []
+    },
+    {
+      "file": "BTC_Layer_1_Agent.json",
+      "name": "BTC Layer 1 Agent",
+      "id": "G142Blty3sGHzuOr",
+      "active": true,
+      "is_test_named": false,
+      "version_id": "3b69d9c0-7f07-4a38-bfc1-eff5e61db763",
+      "version_counter": 18,
+      "created_at": "2026-06-07T18:35:58.219Z",
+      "updated_at": "2026-06-18T19:40:27.514Z",
+      "node_count": 9,
+      "key": "btc:agent",
+      "sanitized_sha256": "8f9fc6d1ff7dc50ac04fb13d21700f68995f70a2257381bf3e1d05932255c200",
+      "sanitized_bytes": 72899,
+      "code_nodes": [
+        {
+          "name": "Combine md & market snapshot",
+          "sha256": "cea4fd3e6af31dc25116abeb7581adec0fad255d0919dd278f67d8a238a26c31",
+          "bytes": 389
+        },
+        {
+          "name": "Build BTC Input Pack",
+          "sha256": "f842b8263d3c09979dc2ef733a496a3a2061113c935f9bb07fd58a6d4304095b",
+          "bytes": 3537
+        },
+        {
+          "name": "Parse BTC Agent Output",
+          "sha256": "80c587ffd0062e38267b84ac90c606d486d6c0cf6ad3820b63ea6f6de5d611fe",
+          "bytes": 4531
+        },
+        {
+          "name": "Calculate BTC Conviction",
+          "sha256": "ac4f3dc339679fbbaf99f598e28b94576f1570041cda7d5bacb88a70cde1a72f",
+          "bytes": 18535
+        }
+      ],
+      "credential_bindings": [
+        {
+          "node": "Message a model",
+          "type": "openAiApi",
+          "name": "OpenAI account 2"
+        },
+        {
+          "node": "Supabase Get Many",
+          "type": "supabaseApi",
+          "name": "Supabase account"
+        },
+        {
+          "node": "Create a row",
+          "type": "supabaseApi",
+          "name": "Supabase account"
+        },
+        {
+          "node": "Get BTC Logic Document",
+          "type": "githubOAuth2Api",
+          "name": "GitHub account 3"
+        }
+      ],
+      "routing": [
+        {
+          "node": "When Executed by Another Workflow",
+          "kind": "executeWorkflow",
+          "target_workflow_id": null,
+          "target_workflow_name_hint": null
+        }
+      ]
+    },
+    {
+      "file": "Dashboard_Writer_-_Layer_1.json",
+      "name": "Dashboard Writer - Layer 1",
+      "id": "850DrjzCKKX9fDzD",
+      "active": true,
+      "is_test_named": false,
+      "version_id": "8c5bd16c-d0ac-49e7-86b8-5eccb4a63f4c",
+      "version_counter": 56,
+      "created_at": "2026-06-06T17:08:37.617Z",
+      "updated_at": "2026-09-19T14:39:28.326Z",
+      "node_count": 18,
+      "key": "SHARED:dashboard_writer",
+      "sanitized_sha256": "a8ddf2ef3b8060abe523e202ce65ba967d852a8f0192861054fc4461ee33079d",
+      "sanitized_bytes": 118949,
+      "code_nodes": [
+        {
+          "name": "Build Layer 1 JSON",
+          "sha256": "8ee67e0d7b6ac48023869457291b484dbb5cda1f1e4aee18bdd0555c62f27341",
+          "bytes": 41458
+        }
+      ],
+      "credential_bindings": [
+        {
+          "node": "Edit a file",
+          "type": "githubOAuth2Api",
+          "name": "GitHub account 3"
+        },
+        {
+          "node": "Get latest USD rows",
+          "type": "supabaseApi",
+          "name": "Supabase account"
+        },
+        {
+          "node": "Get latest EUR rows",
+          "type": "supabaseApi",
+          "name": "Supabase account"
+        },
+        {
+          "node": "Get latest GOLD rows",
+          "type": "supabaseApi",
+          "name": "Supabase account"
+        },
+        {
+          "node": "Get latest NQ rows",
+          "type": "supabaseApi",
+          "name": "Supabase account"
+        },
+        {
+          "node": "Get latest BTC rows",
+          "type": "supabaseApi",
+          "name": "Supabase account"
+        },
+        {
+          "node": "Get latest WTI rows",
+          "type": "supabaseApi",
+          "name": "Supabase account"
+        },
+        {
+          "node": "Get latest SILVER rows",
+          "type": "supabaseApi",
+          "name": "Supabase account"
+        },
+        {
+          "node": "Get latest GBP rows",
+          "type": "supabaseApi",
+          "name": "Supabase account"
+        }
+      ],
+      "routing": [
+        {
+          "node": "When Executed by Another Workflow",
+          "kind": "executeWorkflow",
+          "target_workflow_id": null,
+          "target_workflow_name_hint": null
+        }
+      ]
+    },
+    {
+      "file": "Data_Collector_-_BTC.json",
+      "name": "Data Collector - BTC",
+      "id": "AE3Vv7ILPPiZwZHN",
+      "active": true,
+      "is_test_named": false,
+      "version_id": "2d3ab61f-4a61-46ba-b34c-7995efc40ffb",
+      "version_counter": 83,
+      "created_at": "2026-06-07T18:20:50.698Z",
+      "updated_at": "2026-09-11T07:50:56.212Z",
+      "node_count": 22,
+      "key": "btc:collector",
+      "sanitized_sha256": "276a9e8d74cbfcafc9133b87136be1312cc38792eb4178d022b611fccfddae90",
+      "sanitized_bytes": 77014,
+      "code_nodes": [
+        {
+          "name": "Normalise Market Snapshot",
+          "sha256": "1403816b31d6018f544ed528a12b0ef2958d06b93a625807ec44ae7533d18495",
+          "bytes": 15289
+        },
+        {
+          "name": "Code | Process Eco Data",
+          "sha256": "6e22f742fbfab00ceaf699a2d0b7a18cb1766670e3dae3c8d2eab08c573960aa",
+          "bytes": 2570
+        },
+        {
+          "name": "Code | Derive Fed Bias",
+          "sha256": "c8296444ca7c4587f92f7b15bf962e92441db0a0439d9dd9ecc207e0e16c3256",
+          "bytes": 593
+        },
+        {
+          "name": "Code | Derive US Eco Inputs",
+          "sha256": "2d80a0bf96a7f7d152a26a7bf1d3d2834374d8737b31c24e09cbf52354cea579",
+          "bytes": 3046
+        }
+      ],
+      "credential_bindings": [
+        {
+          "node": "Create a row",
+          "type": "supabaseApi",
+          "name": "Supabase account"
+        },
+        {
+          "node": "Supabase | Get Previous Market Snapshots",
+          "type": "supabaseApi",
+          "name": "Supabase account"
+        },
+        {
+          "node": "Supabase | Get Today US Economic Events",
+          "type": "supabaseApi",
+          "name": "Supabase account"
+        }
+      ],
+      "routing": [
+        {
+          "node": "When Executed by Another Workflow",
+          "kind": "executeWorkflow",
+          "target_workflow_id": null,
+          "target_workflow_name_hint": null
+        }
+      ]
+    },
+    {
+      "file": "Data_Collector_-_EUR.json",
+      "name": "Data Collector - EUR",
+      "id": "Z3v9kQNIM22THi2O",
+      "active": true,
+      "is_test_named": false,
+      "version_id": "59fa4957-e57a-4c81-b663-8df3410643ee",
+      "version_counter": 98,
+      "created_at": "2026-06-07T19:44:03.116Z",
+      "updated_at": "2026-09-11T07:50:36.580Z",
+      "node_count": 34,
+      "key": "eur:collector",
+      "sanitized_sha256": "28bdf355ec6023afa05b2b2e711942d5e26934d8a1b35978c6671fca8e2e54a1",
+      "sanitized_bytes": 95956,
+      "code_nodes": [
+        {
+          "name": "Normalise Market Snapshot",
+          "sha256": "92e4cf08a675ab488250b52d40582c7dfebb37d0313879b6f8b81239dd17a5e0",
+          "bytes": 14065
+        },
+        {
+          "name": "Code | Process Eco Data",
+          "sha256": "4196f3c3f7ac4369d5041919edd9463bec350abccc72efe68cc3cf5d232377d4",
+          "bytes": 4444
+        },
+        {
+          "name": "Code | Derive Fed Bias",
+          "sha256": "c8296444ca7c4587f92f7b15bf962e92441db0a0439d9dd9ecc207e0e16c3256",
+          "bytes": 593
+        },
+        {
+          "name": "Code | Derive EUR Eco Inputs",
+          "sha256": "df9aeb36006587cc83b2873d3ec53f06b7f059ca03822cce3811236262cbfcef",
+          "bytes": 2929
+        },
+        {
+          "name": "Code | Derive EUR PMI Inputs",
+          "sha256": "c4479862c049ebdc2399c7d97b726a3bca1a79fc9dd74844756cffccb4cb8b7f",
+          "bytes": 1439
+        }
+      ],
+      "credential_bindings": [
+        {
+          "node": "Create a row",
+          "type": "supabaseApi",
+          "name": "Supabase account"
+        },
+        {
+          "node": "Supabase | Get Previous Market Snapshots",
+          "type": "supabaseApi",
+          "name": "Supabase account"
+        },
+        {
+          "node": "Supabase | Get Today EUR Economic Events",
+          "type": "supabaseApi",
+          "name": "Supabase account"
+        },
+        {
+          "node": "Supabase | Get Recent EUR PMI Events",
+          "type": "supabaseApi",
+          "name": "Supabase account"
+        }
+      ],
+      "routing": [
+        {
+          "node": "When Executed by Another Workflow",
+          "kind": "executeWorkflow",
+          "target_workflow_id": null,
+          "target_workflow_name_hint": null
+        }
+      ]
+    },
+    {
+      "file": "Data_Collector_-_GOLD.json",
+      "name": "Data Collector - GOLD",
+      "id": "0z71FpOfKdL72hgW",
+      "active": true,
+      "is_test_named": false,
+      "version_id": "282a1ae4-d003-4926-889e-288d5bf707f0",
+      "version_counter": 19,
+      "created_at": "2026-06-07T20:24:52.742Z",
+      "updated_at": "2026-09-11T07:50:54.027Z",
+      "node_count": 29,
+      "key": "gold:collector",
+      "sanitized_sha256": "bdcc45cd68dd2433728c1602a5b8de8a3672f69a53cef7c7d7d01e1c6a6eaabb",
+      "sanitized_bytes": 90377,
+      "code_nodes": [
+        {
+          "name": "Normalise Market Snapshot",
+          "sha256": "12f55425141c65a335b215f8e5012cb6ca924bd5ef63e29b476b4726cef38252",
+          "bytes": 16240
+        },
+        {
+          "name": "Code | Process Eco Data",
+          "sha256": "6e22f742fbfab00ceaf699a2d0b7a18cb1766670e3dae3c8d2eab08c573960aa",
+          "bytes": 2570
+        },
+        {
+          "name": "Code | Derive Fed Bias",
+          "sha256": "c8296444ca7c4587f92f7b15bf962e92441db0a0439d9dd9ecc207e0e16c3256",
+          "bytes": 593
+        },
+        {
+          "name": "Code | Derive US Eco Inputs",
+          "sha256": "e2db453bfe8ef8b373020894f4966a93a7358a8b48d9064b2059c474ccd2ef3e",
+          "bytes": 4031
+        }
+      ],
+      "credential_bindings": [
+        {
+          "node": "Create a row",
+          "type": "supabaseApi",
+          "name": "Supabase account"
+        },
+        {
+          "node": "Supabase | Get Previous Market Snapshots",
+          "type": "supabaseApi",
+          "name": "Supabase account"
+        },
+        {
+          "node": "Supabase | Get Today US Economic Events",
+          "type": "supabaseApi",
+          "name": "Supabase account"
+        }
+      ],
+      "routing": [
+        {
+          "node": "When Executed by Another Workflow",
+          "kind": "executeWorkflow",
+          "target_workflow_id": null,
+          "target_workflow_name_hint": null
+        }
+      ]
+    },
+    {
+      "file": "Data_Collector_-_NQ.json",
+      "name": "Data Collector - NQ",
+      "id": "nYMDUSVQwEFNaH0U",
+      "active": true,
+      "is_test_named": false,
+      "version_id": "b14a0b7d-47cb-4c11-9f68-6ee616154e50",
+      "version_counter": 18,
+      "created_at": "2026-06-07T19:18:47.966Z",
+      "updated_at": "2026-09-11T07:50:55.116Z",
+      "node_count": 29,
+      "key": "nq:collector",
+      "sanitized_sha256": "a821d49fb9bd0bf99ab548649ad429c6b5e0aaed753db326f068374767ddaa4e",
+      "sanitized_bytes": 80451,
+      "code_nodes": [
+        {
+          "name": "Normalise Market Snapshot",
+          "sha256": "e9f0bbb46cc459a254f2f5b128679bdf5c6903a541d610c6de741d98ddaedf07",
+          "bytes": 11508
+        },
+        {
+          "name": "Code | Process Eco Data",
+          "sha256": "6e22f742fbfab00ceaf699a2d0b7a18cb1766670e3dae3c8d2eab08c573960aa",
+          "bytes": 2570
+        },
+        {
+          "name": "Code | Derive Fed Bias",
+          "sha256": "c8296444ca7c4587f92f7b15bf962e92441db0a0439d9dd9ecc207e0e16c3256",
+          "bytes": 593
+        },
+        {
+          "name": "Code | Derive US Eco Inputs",
+          "sha256": "e2db453bfe8ef8b373020894f4966a93a7358a8b48d9064b2059c474ccd2ef3e",
+          "bytes": 4031
+        }
+      ],
+      "credential_bindings": [
+        {
+          "node": "Create a row",
+          "type": "supabaseApi",
+          "name": "Supabase account"
+        },
+        {
+          "node": "Supabase | Get Previous Market Snapshots",
+          "type": "supabaseApi",
+          "name": "Supabase account"
+        },
+        {
+          "node": "Supabase | Get Today US Economic Events",
+          "type": "supabaseApi",
+          "name": "Supabase account"
+        }
+      ],
+      "routing": [
+        {
+          "node": "When Executed by Another Workflow",
+          "kind": "executeWorkflow",
+          "target_workflow_id": null,
+          "target_workflow_name_hint": null
+        }
+      ]
+    },
+    {
+      "file": "Data_Collector_-_SILVER.json",
+      "name": "Data Collector - SILVER",
+      "id": "xezFmvm7cmgNNypb",
+      "active": true,
+      "is_test_named": false,
+      "version_id": "93154eda-ee39-4802-9df9-ff34ece5bd09",
+      "version_counter": 10,
+      "created_at": "2026-09-12T18:33:58.158Z",
+      "updated_at": "2026-09-12T19:42:56.003Z",
+      "node_count": 32,
+      "key": "silver:collector",
+      "sanitized_sha256": "a0404844e417e92d0d18bd0d5f55e9f9a082ae2c40af5e1b0198b66f16a2ef50",
+      "sanitized_bytes": 105046,
+      "code_nodes": [
+        {
+          "name": "Normalise Market Snapshot",
+          "sha256": "18566528f43e423b28af45917329eee8367e9a1624744d29b6dff07e05677832",
+          "bytes": 21020
+        },
+        {
+          "name": "Code | Process Eco Data",
+          "sha256": "6e22f742fbfab00ceaf699a2d0b7a18cb1766670e3dae3c8d2eab08c573960aa",
+          "bytes": 2570
+        },
+        {
+          "name": "Code | Derive Fed Bias",
+          "sha256": "c8296444ca7c4587f92f7b15bf962e92441db0a0439d9dd9ecc207e0e16c3256",
+          "bytes": 593
+        },
+        {
+          "name": "Code | Derive US Eco Inputs",
+          "sha256": "e2db453bfe8ef8b373020894f4966a93a7358a8b48d9064b2059c474ccd2ef3e",
+          "bytes": 4031
+        }
+      ],
+      "credential_bindings": [
+        {
+          "node": "Create a row",
+          "type": "supabaseApi",
+          "name": "Supabase account"
+        },
+        {
+          "node": "Supabase | Get Previous Market Snapshots",
+          "type": "supabaseApi",
+          "name": "Supabase account"
+        },
+        {
+          "node": "Supabase | Get Today US Economic Events",
+          "type": "supabaseApi",
+          "name": "Supabase account"
+        }
+      ],
+      "routing": [
+        {
+          "node": "When Executed by Another Workflow",
+          "kind": "executeWorkflow",
+          "target_workflow_id": null,
+          "target_workflow_name_hint": null
+        }
+      ]
+    },
+    {
+      "file": "Data_Collector_-_USD.json",
+      "name": "Data Collector - USD",
+      "id": "P1E4ZWtbDetYz1P5",
+      "active": true,
+      "is_test_named": false,
+      "version_id": "1e99fdcd-b841-4abc-b547-71939acc7559",
+      "version_counter": 139,
+      "created_at": "2026-06-06T16:22:34.552Z",
+      "updated_at": "2026-09-17T21:11:59.657Z",
+      "node_count": 29,
+      "key": "usd:collector",
+      "sanitized_sha256": "a0bbf8cd044addba9dbd479c3dad393ab9edfa7083cd1d93b6a0d277ed660e5c",
+      "sanitized_bytes": 83636,
+      "code_nodes": [
+        {
+          "name": "Normalise Market Snapshot",
+          "sha256": "83fc559331fd427c67d70c2e27a75ac8085c4d02e485dfa4c8a457bda26e6f78",
+          "bytes": 14256
+        },
+        {
+          "name": "Code | Process Eco Data",
+          "sha256": "6e22f742fbfab00ceaf699a2d0b7a18cb1766670e3dae3c8d2eab08c573960aa",
+          "bytes": 2570
+        },
+        {
+          "name": "Code | Derive Fed Bias",
+          "sha256": "c8296444ca7c4587f92f7b15bf962e92441db0a0439d9dd9ecc207e0e16c3256",
+          "bytes": 593
+        },
+        {
+          "name": "Code | Derive USD Eco Inputs",
+          "sha256": "d6d78262fd6ef0b583e976d0441ad6d39877389241285eb70255451eaa23a443",
+          "bytes": 2975
+        }
+      ],
+      "credential_bindings": [
+        {
+          "node": "Create a row",
+          "type": "supabaseApi",
+          "name": "Supabase account"
+        },
+        {
+          "node": "Supabase | Get Previous Market Snapshots",
+          "type": "supabaseApi",
+          "name": "Supabase account"
+        },
+        {
+          "node": "Supabase | Get Today USD Economic Events",
+          "type": "supabaseApi",
+          "name": "Supabase account"
+        }
+      ],
+      "routing": [
+        {
+          "node": "When Executed by Another Workflow",
+          "kind": "executeWorkflow",
+          "target_workflow_id": null,
+          "target_workflow_name_hint": null
+        }
+      ]
+    },
+    {
+      "file": "Eco_Events_Collector.json",
+      "name": "Eco Events Collector",
+      "id": "UaSliyR8qlSVIfmk",
+      "active": true,
+      "is_test_named": false,
+      "version_id": "a35e4e66-4286-4add-9855-c1c7ff967b30",
+      "version_counter": 153,
+      "created_at": "2026-06-10T18:47:40.406Z",
+      "updated_at": "2026-09-01T11:40:08.572Z",
+      "node_count": 17,
+      "key": "SHARED:events",
+      "sanitized_sha256": "cace9e7857c0cd8806c5789d965d1ef90e5ade1de92844cbf35df384802a27b2",
+      "sanitized_bytes": 42774,
+      "code_nodes": [
+        {
+          "name": "Code | Normalise Forex Factory Events",
+          "sha256": "01de5092528ee1649a54305b837dbbd2e1fa369ded8776934b294565c187981e",
+          "bytes": 2282
+        },
+        {
+          "name": "Code | Route Existing vs New",
+          "sha256": "aae8376a799de9ae8ce4cfed7c1aa8f230e59cb54a5a70a576538aaa163553e7",
+          "bytes": 723
+        },
+        {
+          "name": "Code | Prepare Creates",
+          "sha256": "df26717ebe26c18adcb75d46a5d37e3757e4787b2c56af4c82c60022f0dcdf65",
+          "bytes": 145
+        },
+        {
+          "name": "Code | Prepare Updates",
+          "sha256": "7b5abb7d1a68cf17ea540b61e41ecf6aa5170bf718e5dc96082de8e1cf8e1e8f",
+          "bytes": 145
+        }
+      ],
+      "credential_bindings": [
+        {
+          "node": "HTTP Request | RapidAPI Calendar US",
+          "type": "httpHeaderAuth",
+          "name": "RapidAPI Production"
+        },
+        {
+          "node": "HTTP Request | RapidAPI Calendar DE",
+          "type": "httpHeaderAuth",
+          "name": "RapidAPI Production"
+        },
+        {
+          "node": "HTTP Request | RapidAPI Calendar FR",
+          "type": "httpHeaderAuth",
+          "name": "RapidAPI Production"
+        },
+        {
+          "node": "HTTP Request | RapidAPI Calendar IT",
+          "type": "httpHeaderAuth",
+          "name": "RapidAPI Production"
+        },
+        {
+          "node": "HTTP Request | RapidAPI Calendar ES",
+          "type": "httpHeaderAuth",
+          "name": "RapidAPI Production"
+        },
+        {
+          "node": "HTTP Request | RapidAPI Calendar CN",
+          "type": "httpHeaderAuth",
+          "name": "RapidAPI Production"
+        },
+        {
+          "node": "Supabase | Create Economic Events",
+          "type": "supabaseApi",
+          "name": "Supabase account"
+        },
+        {
+          "node": "Supabase | Get Existing Economic Events",
+          "type": "supabaseApi",
+          "name": "Supabase account"
+        },
+        {
+          "node": "Supabase | Update Economic Events",
+          "type": "supabaseApi",
+          "name": "Supabase account"
+        },
+        {
+          "node": "HTTP Request | Forex Factory Calendar USD",
+          "type": "httpHeaderAuth",
+          "name": "RapidAPI Production"
+        },
+        {
+          "node": "HTTP Request | Forex Factory Calendar EUR",
+          "type": "httpHeaderAuth",
+          "name": "RapidAPI Production"
+        }
+      ],
+      "routing": [
+        {
+          "node": "When Executed by Another Workflow",
+          "kind": "executeWorkflow",
+          "target_workflow_id": null,
+          "target_workflow_name_hint": null
+        }
+      ]
+    },
+    {
+      "file": "EUR_Layer_1_Agent.json",
+      "name": "EUR Layer 1 Agent",
+      "id": "Px0bsH7chlRWH9ZD",
+      "active": true,
+      "is_test_named": false,
+      "version_id": "310f6bfe-1ce0-47e6-bbfb-29fe19fc24c5",
+      "version_counter": 38,
+      "created_at": "2026-06-07T19:57:41.075Z",
+      "updated_at": "2026-06-19T09:33:04.442Z",
+      "node_count": 9,
+      "key": "eur:agent",
+      "sanitized_sha256": "4a12aefbf510e743dfd574faba6c96bdf77a28aa7f0950f822918a9933adeba9",
+      "sanitized_bytes": 71547,
+      "code_nodes": [
+        {
+          "name": "Combine md & market snapshot",
+          "sha256": "32158ba2da27bc1f1b487a75aeb82089630709193f25aa3dfdf65ff88be040e6",
+          "bytes": 389
+        },
+        {
+          "name": "Build EUR Input Pack",
+          "sha256": "fdc30207dbec8c0fdd84bc9182bd3f58afb15efe4e7c8a24d48eb157e53b9a7f",
+          "bytes": 7516
+        },
+        {
+          "name": "Parse EUR Agent Output",
+          "sha256": "78b94ceac3dcd8b182769c4ed1be9aad377e74288fda9cdb48f26e7fe99caec2",
+          "bytes": 3592
+        },
+        {
+          "name": "Calculate EUR Conviction",
+          "sha256": "11a8fa71a6a7ca84d304cbd0a00b7ee32d000a949b43fe80aa904261b1ecb075",
+          "bytes": 14732
+        }
+      ],
+      "credential_bindings": [
+        {
+          "node": "Message a model",
+          "type": "openAiApi",
+          "name": "OpenAI account 2"
+        },
+        {
+          "node": "Supabase Get Many",
+          "type": "supabaseApi",
+          "name": "Supabase account"
+        },
+        {
+          "node": "Create a row",
+          "type": "supabaseApi",
+          "name": "Supabase account"
+        },
+        {
+          "node": "Get EUR Logic Document",
+          "type": "githubOAuth2Api",
+          "name": "GitHub account 3"
+        }
+      ],
+      "routing": [
+        {
+          "node": "When Executed by Another Workflow",
+          "kind": "executeWorkflow",
+          "target_workflow_id": null,
+          "target_workflow_name_hint": null
+        }
+      ]
+    },
+    {
+      "file": "GBP_Layer_1_Agent.json",
+      "name": "GBP Layer 1 Agent",
+      "id": "bMv96EPR0xCXi3bi",
+      "active": true,
+      "is_test_named": false,
+      "version_id": "45ca399f-7ecc-4d38-adb0-147dc14e0d42",
+      "version_counter": 18,
+      "created_at": "2026-09-12T18:46:13.325Z",
+      "updated_at": "2026-09-12T19:45:35.228Z",
+      "node_count": 19,
+      "key": "gbp:agent",
+      "sanitized_sha256": "2e4175e1a3926d3474fe3c3e2de90955fad4c92321c2d387adea2fda3e478b1f",
+      "sanitized_bytes": 72139,
+      "code_nodes": [
+        {
+          "name": "Code | Build GBP Input Pack",
+          "sha256": "f8e7cdc2703e5f73dcfbc10367c84571136f502204ec476de3e7046b5e8762a9",
+          "bytes": 10362
+        },
+        {
+          "name": "Code | Combine GBP Logic and Inputs",
+          "sha256": "0ffdbc23419608994a4eed8e44ec499a346517dd74f7ed3e441ab98577d818d6",
+          "bytes": 198
+        },
+        {
+          "name": "Code | Parse GBP Agent Output",
+          "sha256": "c3efa843faeff48a5655c7b1b54ba5f211142db845a7f243aeb5f71506e9c36d",
+          "bytes": 743
+        },
+        {
+          "name": "Code | Deterministic GBP 24H Verdict Gate",
+          "sha256": "77d5f0c2646280f885bceb6be4c4e114443d66139afd63ebe8ff3d2c0b624891",
+          "bytes": 6506
+        }
+      ],
+      "credential_bindings": [
+        {
+          "node": "HTTP Request | UK Economic Calendar",
+          "type": "httpHeaderAuth",
+          "name": "RapidAPI Production"
+        },
+        {
+          "node": "Get GBP Logic Document",
+          "type": "githubOAuth2Api",
+          "name": "GitHub account 3"
+        },
+        {
+          "node": "Message a model",
+          "type": "openAiApi",
+          "name": "OpenAI account 2"
+        },
+        {
+          "node": "Create a row",
+          "type": "supabaseApi",
+          "name": "Supabase account"
+        }
+      ],
+      "routing": [
+        {
+          "node": "When Executed by Another Workflow",
+          "kind": "executeWorkflow",
+          "target_workflow_id": null,
+          "target_workflow_name_hint": null
+        }
+      ]
+    },
+    {
+      "file": "Gold_Agent.json",
+      "name": "Gold Agent",
+      "id": "7vVmN27XFZrW9vgc",
+      "active": false,
+      "is_test_named": false,
+      "version_id": "8ae92606-452a-4ac3-8e43-bc3f1e88777d",
+      "version_counter": 91,
+      "created_at": "2026-06-03T19:42:42.160Z",
+      "updated_at": "2026-06-05T07:47:48.530Z",
+      "node_count": 12,
+      "key": "gold:agent",
+      "sanitized_sha256": "9c5ac238a103d9c842b8a0aeea70d2224a46943a595d0bf1604337787328e98e",
+      "sanitized_bytes": 20540,
+      "code_nodes": [
+        {
+          "name": "Prepare Gold Macro Inputs",
+          "sha256": "1b3be4fc9dd987ec59836756329338eb0564eaa0bbd03c7294b7b175ecfaf133",
+          "bytes": 4375
+        },
+        {
+          "name": "Code in JavaScript",
+          "sha256": "8f3c867049c4870a4fe0286af8c7b372f0da1dda8653169ed48c643296ebc8ea",
+          "bytes": 255
+        }
+      ],
+      "credential_bindings": [
+        {
+          "node": "Message a model",
+          "type": "openAiApi",
+          "name": "OpenAI account"
+        },
+        {
+          "node": "Edit a file",
+          "type": "githubOAuth2Api",
+          "name": "GitHub account 2"
+        }
+      ],
+      "routing": [
+        {
+          "node": "Schedule Trigger",
+          "kind": "schedule",
+          "cron_expression": null
+        }
+      ]
+    },
+    {
+      "file": "GOLD_Layer_1_Agent.json",
+      "name": "GOLD Layer 1 Agent",
+      "id": "wwBVT0EQcKu5517I",
+      "active": true,
+      "is_test_named": false,
+      "version_id": "4a2281df-5097-46dd-837a-aa9e4473ad00",
+      "version_counter": 27,
+      "created_at": "2026-06-07T20:29:16.510Z",
+      "updated_at": "2026-06-18T19:45:32.882Z",
+      "node_count": 9,
+      "key": "gold:agent",
+      "sanitized_sha256": "ac51ac0bb7691e8762bcc06c2050b5ef8669b9dc8d7f50901163ea0762ac922f",
+      "sanitized_bytes": 60852,
+      "code_nodes": [
+        {
+          "name": "Combine md & market snapshot",
+          "sha256": "57f84ea112b2fa52daf47fb7ccbd03124aa0ede847cd39b989bb5edbf22b021b",
+          "bytes": 391
+        },
+        {
+          "name": "Build GOLD Input Pack",
+          "sha256": "32959305d4841bfbfe9c49d2e5bc308cc9e368df86015d19e3ce934562bad844",
+          "bytes": 2245
+        },
+        {
+          "name": "Parse GOLD Agent Output",
+          "sha256": "e0f2692f9387b6cfb9caf6288a499636861d0e10ae536ab19a4dffcab3472f0b",
+          "bytes": 3044
+        },
+        {
+          "name": "Calculate GOLD Conviction",
+          "sha256": "03dcbc310c3d5613d232361e8cc5ec57b520014d1c1519cff42faac076c993f2",
+          "bytes": 14655
+        }
+      ],
+      "credential_bindings": [
+        {
+          "node": "Message a model",
+          "type": "openAiApi",
+          "name": "OpenAI account 2"
+        },
+        {
+          "node": "Supabase Get Many",
+          "type": "supabaseApi",
+          "name": "Supabase account"
+        },
+        {
+          "node": "Create a row",
+          "type": "supabaseApi",
+          "name": "Supabase account"
+        },
+        {
+          "node": "Get GOLD Logic Document",
+          "type": "githubOAuth2Api",
+          "name": "GitHub account 3"
+        }
+      ],
+      "routing": [
+        {
+          "node": "When Executed by Another Workflow",
+          "kind": "executeWorkflow",
+          "target_workflow_id": null,
+          "target_workflow_name_hint": null
+        }
+      ]
+    },
+    {
+      "file": "Layer_2_Trade_Selection_Agent.json",
+      "name": "Layer 2 Trade Selection Agent",
+      "id": "ZKGSuYcWb6EfgXBE",
+      "active": true,
+      "is_test_named": false,
+      "version_id": "305a3ce0-57bb-43ce-b77d-63bde96417d2",
+      "version_counter": 24,
+      "created_at": "2026-06-19T17:31:31.649Z",
+      "updated_at": "2026-09-12T19:36:46.423Z",
+      "node_count": 18,
+      "key": "SHARED:layer2",
+      "sanitized_sha256": "cd95546551f8861e4aceab9ab197a6afaa368b611cbb5926441f048026265068",
+      "sanitized_bytes": 44325,
+      "code_nodes": [
+        {
+          "name": "Build Layer 2 Trade Selection JSON",
+          "sha256": "b1c83518df77c15e72bca489245146d7c6a88e23417c823fba658fcf930f979a",
+          "bytes": 5608
+        }
+      ],
+      "credential_bindings": [
+        {
+          "node": "Get latest USD rows",
+          "type": "supabaseApi",
+          "name": "Supabase account"
+        },
+        {
+          "node": "Get latest EUR rows",
+          "type": "supabaseApi",
+          "name": "Supabase account"
+        },
+        {
+          "node": "Get latest GOLD rows",
+          "type": "supabaseApi",
+          "name": "Supabase account"
+        },
+        {
+          "node": "Get latest NQ rows",
+          "type": "supabaseApi",
+          "name": "Supabase account"
+        },
+        {
+          "node": "Get latest BTC rows",
+          "type": "supabaseApi",
+          "name": "Supabase account"
+        },
+        {
+          "node": "Write data/layer2.json to GitHub",
+          "type": "githubOAuth2Api",
+          "name": "GitHub account 3"
+        },
+        {
+          "node": "Get latest WTI rows",
+          "type": "supabaseApi",
+          "name": "Supabase account"
+        },
+        {
+          "node": "Get latest SILVER rows",
+          "type": "supabaseApi",
+          "name": "Supabase account"
+        },
+        {
+          "node": "Get latest GBP rows",
+          "type": "supabaseApi",
+          "name": "Supabase account"
+        }
+      ],
+      "routing": [
+        {
+          "node": "When Executed by Another Workflow",
+          "kind": "executeWorkflow",
+          "target_workflow_id": null,
+          "target_workflow_name_hint": null
+        }
+      ]
+    },
+    {
+      "file": "Master_Orchestrator.json",
+      "name": "Master Orchestrator",
+      "id": "X75RKU34ikiM5RMU",
+      "active": true,
+      "is_test_named": false,
+      "version_id": "35007228-00e0-48ee-8c49-c0bca2be3182",
+      "version_counter": 62,
+      "created_at": "2026-06-18T19:36:15.843Z",
+      "updated_at": "2026-09-12T19:21:33.111Z",
+      "node_count": 24,
+      "key": "SHARED:orchestrator",
+      "sanitized_sha256": "40ff622a5b9bb8e1f5bd34b220b4eeb4e4fd0675203055272d6c91920f80f3d6",
+      "sanitized_bytes": 57432,
+      "code_nodes": [
+        {
+          "name": "Build Workflow Status JSON",
+          "sha256": "451169bb6581a1b86e63b0a63204e2fbd4a51fda510a2169a9720854e43e3fb4",
+          "bytes": 1976
+        },
+        {
+          "name": "Guard Economic Event Collector",
+          "sha256": "fbf6a6da86a8dd7d4bc7f19deaf5f48da7bf7b55a606fd1f3bfb03c88829f2ca",
+          "bytes": 121
+        },
+        {
+          "name": "Build Input Health on Economic Event Failure",
+          "sha256": "b9c28d0776bd1e2e37ff461dbf2fbd4765913e51ef80e4b0db62820a0f94cf83",
+          "bytes": 1828
+        }
+      ],
+      "credential_bindings": [
+        {
+          "node": "Publish Workflow Status",
+          "type": "githubOAuth2Api",
+          "name": "GitHub account 3"
+        },
+        {
+          "node": "Publish Input Health on Economic Event Failure",
+          "type": "githubOAuth2Api",
+          "name": "GitHub account 3"
+        }
+      ],
+      "routing": [
+        {
+          "node": "Call '1. Economic Events Collector'",
+          "kind": "executeWorkflow",
+          "target_workflow_id": "UaSliyR8qlSVIfmk",
+          "target_workflow_name_hint": "1. Economic Events Collector"
+        },
+        {
+          "node": "USD Collector",
+          "kind": "executeWorkflow",
+          "target_workflow_id": "P1E4ZWtbDetYz1P5",
+          "target_workflow_name_hint": "Data Collector - USD"
+        },
+        {
+          "node": "EUR Collector",
+          "kind": "executeWorkflow",
+          "target_workflow_id": "Z3v9kQNIM22THi2O",
+          "target_workflow_name_hint": "Data Collector - EUR"
+        },
+        {
+          "node": "Gold Collector",
+          "kind": "executeWorkflow",
+          "target_workflow_id": "0z71FpOfKdL72hgW",
+          "target_workflow_name_hint": "Data Collector - GOLD"
+        },
+        {
+          "node": "NQ Collector",
+          "kind": "executeWorkflow",
+          "target_workflow_id": "nYMDUSVQwEFNaH0U",
+          "target_workflow_name_hint": "Data Collector - NQ"
+        },
+        {
+          "node": "BTC Collector",
+          "kind": "executeWorkflow",
+          "target_workflow_id": "AE3Vv7ILPPiZwZHN",
+          "target_workflow_name_hint": "Data Collector - BTC"
+        },
+        {
+          "node": "USD Layer 1 Agent",
+          "kind": "executeWorkflow",
+          "target_workflow_id": "OCt1tB9yVMUgFTha",
+          "target_workflow_name_hint": "USD Layer 1 Agent"
+        },
+        {
+          "node": "EUR Layer 1 Agent",
+          "kind": "executeWorkflow",
+          "target_workflow_id": "Px0bsH7chlRWH9ZD",
+          "target_workflow_name_hint": "EUR Layer 1 Agent"
+        },
+        {
+          "node": "Gold Layer 1 Agent",
+          "kind": "executeWorkflow",
+          "target_workflow_id": "wwBVT0EQcKu5517I",
+          "target_workflow_name_hint": "GOLD Layer 1 Agent"
+        },
+        {
+          "node": "NQ Layer 1 Agent",
+          "kind": "executeWorkflow",
+          "target_workflow_id": "FOpFp3AzTJVYdLXe",
+          "target_workflow_name_hint": "NQ Layer 1 Agent"
+        },
+        {
+          "node": "BTC Layer 1 Agent",
+          "kind": "executeWorkflow",
+          "target_workflow_id": "G142Blty3sGHzuOr",
+          "target_workflow_name_hint": "BTC Layer 1 Agent"
+        },
+        {
+          "node": "Dashboard Writer",
+          "kind": "executeWorkflow",
+          "target_workflow_id": "850DrjzCKKX9fDzD",
+          "target_workflow_name_hint": "Dashboard Writer - Layer 1"
+        },
+        {
+          "node": "Layer 2 Trade Selection Agent",
+          "kind": "executeWorkflow",
+          "target_workflow_id": "ZKGSuYcWb6EfgXBE",
+          "target_workflow_name_hint": "Layer 2 Trade Selection Agent"
+        },
+        {
+          "node": "Dashboard Trigger - Run All Agents",
+          "kind": "webhook",
+          "webhook_path": "master-orchestrator-dashboard-refresh",
+          "http_method": "POST"
+        },
+        {
+          "node": "WTI Layer 1 Agent",
+          "kind": "executeWorkflow",
+          "target_workflow_id": "8oUBopUWLiGcYU0d",
+          "target_workflow_name_hint": "WTI Layer 1 Agent"
+        },
+        {
+          "node": "Silver Collector",
+          "kind": "executeWorkflow",
+          "target_workflow_id": "xezFmvm7cmgNNypb",
+          "target_workflow_name_hint": "Data Collector - SILVER"
+        },
+        {
+          "node": "Silver Layer 1 Agent",
+          "kind": "executeWorkflow",
+          "target_workflow_id": "6IGOoTZxxTPyBpEp",
+          "target_workflow_name_hint": "SILVER Layer 1 Agent"
+        },
+        {
+          "node": "GBP Layer 1 Agent",
+          "kind": "executeWorkflow",
+          "target_workflow_id": "bMv96EPR0xCXi3bi",
+          "target_workflow_name_hint": "GBP Layer 1 Agent"
+        }
+      ]
+    },
+    {
+      "file": "NQ_Layer_1_Agent.json",
+      "name": "NQ Layer 1 Agent",
+      "id": "FOpFp3AzTJVYdLXe",
+      "active": true,
+      "is_test_named": false,
+      "version_id": "b6c7045b-f07d-4397-a86b-9440a6e7456e",
+      "version_counter": 24,
+      "created_at": "2026-06-07T19:17:29.408Z",
+      "updated_at": "2026-06-18T19:45:55.810Z",
+      "node_count": 9,
+      "key": "nq:agent",
+      "sanitized_sha256": "e657b2a8390dd9ed9f8424c7e9ac5e52a1953c98490eab2207b43e4cec5be18b",
+      "sanitized_bytes": 61854,
+      "code_nodes": [
+        {
+          "name": "Combine md & market snapshot",
+          "sha256": "6c8a2ea4ca9c6b05c3c39838ae7483bdc39773d0e560e694465bfe0389461ac2",
+          "bytes": 387
+        },
+        {
+          "name": "Build NQ Input Pack",
+          "sha256": "5b333f0db720934c95eba1ea1987ea3f5c97ca153d64cbe3709d1effd49dd510",
+          "bytes": 2953
+        },
+        {
+          "name": "Parse NQ Agent Output",
+          "sha256": "64a57363f8845b3236bc2d4a336357f32af552101bf2f0e524f0c96c677a6e0e",
+          "bytes": 3284
+        },
+        {
+          "name": "Calculate NQ Conviction",
+          "sha256": "267a3187521e0e3a4ee53f6c45d7f7b7ff0b693f401e95b7cf599d3d19a90db5",
+          "bytes": 15044
+        }
+      ],
+      "credential_bindings": [
+        {
+          "node": "Message a model",
+          "type": "openAiApi",
+          "name": "OpenAI account 2"
+        },
+        {
+          "node": "Supabase Get Many",
+          "type": "supabaseApi",
+          "name": "Supabase account"
+        },
+        {
+          "node": "Create a row",
+          "type": "supabaseApi",
+          "name": "Supabase account"
+        },
+        {
+          "node": "Get NQ Logic Document",
+          "type": "githubOAuth2Api",
+          "name": "GitHub account 3"
+        }
+      ],
+      "routing": [
+        {
+          "node": "When Executed by Another Workflow",
+          "kind": "executeWorkflow",
+          "target_workflow_id": null,
+          "target_workflow_name_hint": null
+        }
+      ]
+    },
+    {
+      "file": "Price_fetch_old.json",
+      "name": "Price fetch old",
+      "id": "TcNF8wWesKjkK3u4",
+      "active": false,
+      "is_test_named": false,
+      "version_id": "18536969-81f0-4793-9ad1-ebc02b5784c8",
+      "version_counter": 86,
+      "created_at": "2026-05-14T08:37:47.822Z",
+      "updated_at": "2026-06-19T13:40:35.483Z",
+      "node_count": 7,
+      "key": "UNCLASSIFIED:other",
+      "sanitized_sha256": "35515a32c4677e43c6ddbe02b8926a308c2940ff45bef54d5de9b5cd629c4488",
+      "sanitized_bytes": 7867,
+      "code_nodes": [
+        {
+          "name": "Code | Transform Prices for Supabase",
+          "sha256": "93614f4e2f29c0405a31c9546103c3359e7dbd21d0e56d2d5dd446a4b91d4272",
+          "bytes": 883
+        }
+      ],
+      "credential_bindings": [],
+      "routing": []
+    },
+    {
+      "file": "SILVER_Layer_1_Agent.json",
+      "name": "SILVER Layer 1 Agent",
+      "id": "6IGOoTZxxTPyBpEp",
+      "active": true,
+      "is_test_named": false,
+      "version_id": "b4548465-3c6f-4730-8500-ad4b23cc8335",
+      "version_counter": 9,
+      "created_at": "2026-09-12T18:33:58.285Z",
+      "updated_at": "2026-09-14T09:44:18.556Z",
+      "node_count": 9,
+      "key": "silver:agent",
+      "sanitized_sha256": "916c961b886c7a72723554cdbd972a5a7625f1d4ee7912f0e7dc2acb91594986",
+      "sanitized_bytes": 123510,
+      "code_nodes": [
+        {
+          "name": "Combine md & market snapshot",
+          "sha256": "17662deaf0281dceb55b2aa7d38b5c3a78c2f8b6253b516feab6614a64ce6ff4",
+          "bytes": 395
+        },
+        {
+          "name": "Build SILVER Input Pack",
+          "sha256": "4b7277f9215d3c05cbd09a2724d8e5f1a816fee0e099c9618f7cce60e2c1f447",
+          "bytes": 3509
+        },
+        {
+          "name": "Get SILVER Logic Document",
+          "sha256": "43cff26fd28afaa781e0d4dcacddb7611759a162a6552c5cafdd75e0e03823e0",
+          "bytes": 6494
+        },
+        {
+          "name": "Parse SILVER Agent Output",
+          "sha256": "dba9b5c84f5ded52afc547840382fe7dc901fd53758501626c25e541dec2ec45",
+          "bytes": 19878
+        },
+        {
+          "name": "Calculate SILVER Conviction",
+          "sha256": "81a3b173754a7527f434e44ec4054884a5c98ea6fb969b2735665596f2a12a41",
+          "bytes": 16681
+        }
+      ],
+      "credential_bindings": [
+        {
+          "node": "Message a model",
+          "type": "openAiApi",
+          "name": "OpenAI account 2"
+        },
+        {
+          "node": "Supabase Get Many",
+          "type": "supabaseApi",
+          "name": "Supabase account"
+        },
+        {
+          "node": "Create a row",
+          "type": "supabaseApi",
+          "name": "Supabase account"
+        }
+      ],
+      "routing": [
+        {
+          "node": "When Executed by Another Workflow",
+          "kind": "executeWorkflow",
+          "target_workflow_id": null,
+          "target_workflow_name_hint": null
+        }
+      ]
+    },
+    {
+      "file": "TEST_-_BTC_Layer_1_Agent_-_ISOLATED_-_20260723.json",
+      "name": "TEST - BTC Layer 1 Agent - ISOLATED - 20260723",
+      "id": "pQPrq13PaeclUWEC",
+      "active": true,
+      "is_test_named": true,
+      "version_id": "5a9856fc-a1fc-47f9-bb43-6632c9e8baee",
+      "version_counter": 4,
+      "created_at": "2026-07-23T11:30:07.076Z",
+      "updated_at": "2026-07-27T12:53:32.992Z",
+      "node_count": 13,
+      "key": "btc:agent",
+      "sanitized_sha256": "6adf767860bdf546841939d4ebe1eafb5c09d51f3068c5cc81384477853e0247",
+      "sanitized_bytes": 96358,
+      "code_nodes": [
+        {
+          "name": "Combine md & market snapshot",
+          "sha256": "cea4fd3e6af31dc25116abeb7581adec0fad255d0919dd278f67d8a238a26c31",
+          "bytes": 389
+        },
+        {
+          "name": "Build BTC Input Pack",
+          "sha256": "f842b8263d3c09979dc2ef733a496a3a2061113c935f9bb07fd58a6d4304095b",
+          "bytes": 3537
+        },
+        {
+          "name": "Parse BTC Agent Output",
+          "sha256": "80c587ffd0062e38267b84ac90c606d486d6c0cf6ad3820b63ea6f6de5d611fe",
+          "bytes": 4531
+        },
+        {
+          "name": "Calculate BTC Conviction",
+          "sha256": "ac4f3dc339679fbbaf99f598e28b94576f1570041cda7d5bacb88a70cde1a72f",
+          "bytes": 18535
+        },
+        {
+          "name": "Tag Source Run ID",
+          "sha256": "44230f846457c31c639bb8074d9cb934d86aea40fd6d1474389d851d86384b10",
+          "bytes": 713
+        },
+        {
+          "name": "Code | Require Transient Validation Contract",
+          "sha256": "89b63bc478d1619f20996355402805371258e0bbe08cc3a1090161ce01a72dd8",
+          "bytes": 1957
+        },
+        {
+          "name": "Code | Build Transient Layer 1 Result",
+          "sha256": "70e6fc2adba961ba15c6e802ebb95f98dd53ac32be7f24472a4d386d24fd748f",
+          "bytes": 4884
+        },
+        {
+          "name": "Code | Tripwire Create a row",
+          "sha256": "647e1b355162f96e713ca2fc02d2405613c1beab94207b06a66d4ef9d88a94ac",
+          "bytes": 431
+        }
+      ],
+      "credential_bindings": [
+        {
+          "node": "Message a model",
+          "type": "openAiApi",
+          "name": "OpenAI account 2"
+        },
+        {
+          "node": "Supabase Get Many",
+          "type": "supabaseApi",
+          "name": "Supabase account"
+        },
+        {
+          "node": "Create a row",
+          "type": "supabaseApi",
+          "name": "Supabase account"
+        },
+        {
+          "node": "Get BTC Logic Document",
+          "type": "githubOAuth2Api",
+          "name": "GitHub account 3"
+        }
+      ],
+      "routing": [
+        {
+          "node": "When Executed by Another Workflow",
+          "kind": "executeWorkflow",
+          "target_workflow_id": null,
+          "target_workflow_name_hint": null
+        }
+      ]
+    },
+    {
+      "file": "TEST_-_Dashboard_Writer_-_Layer_1_-_20260722_-_modified_probe.json",
+      "name": "TEST - Dashboard Writer - Layer 1 - 20260722 - modified probe",
+      "id": "jGvWgeIQbWHw6Vfi",
+      "active": false,
+      "is_test_named": true,
+      "version_id": "5fccdca5-f9e7-4ca1-8c5d-09f3abf80551",
+      "version_counter": 1,
+      "created_at": "2026-07-23T09:12:21.509Z",
+      "updated_at": "2026-07-23T09:12:21.509Z",
+      "node_count": 4,
+      "key": "SHARED:dashboard_writer",
+      "sanitized_sha256": "6d49c6a61fe2757ab6618c5778826d4c4d7cb7dda50437889e94f2af30949d67",
+      "sanitized_bytes": 18208,
+      "code_nodes": [
+        {
+          "name": "Build Layer 1 JSON",
+          "sha256": "bfd5e0bcba77acf458b004454029109c9a86d915fc9058410712a20cef7e6cb0",
+          "bytes": 13425
+        }
+      ],
+      "credential_bindings": [
+        {
+          "node": "Get many rows",
+          "type": "supabaseApi",
+          "name": "Supabase account"
+        },
+        {
+          "node": "Edit a file",
+          "type": "githubOAuth2Api",
+          "name": "GitHub account 3"
+        }
+      ],
+      "routing": [
+        {
+          "node": "When Executed by Another Workflow",
+          "kind": "executeWorkflow",
+          "target_workflow_id": null,
+          "target_workflow_name_hint": null
+        }
+      ]
+    },
+    {
+      "file": "TEST_-_Dashboard_Writer_-_Layer_1_-_ISOLATED_-_20260723.json",
+      "name": "TEST - Dashboard Writer - Layer 1 - ISOLATED - 20260723",
+      "id": "pMPxuN3dk5WWxbYY",
+      "active": true,
+      "is_test_named": true,
+      "version_id": "467e257f-71e3-4420-9495-3ccef91d29aa",
+      "version_counter": 9,
+      "created_at": "2026-07-23T09:11:51.120Z",
+      "updated_at": "2026-07-27T18:51:59.741Z",
+      "node_count": 6,
+      "key": "SHARED:dashboard_writer",
+      "sanitized_sha256": "e5988728fd697c992594125824f70e5e09cd93c1c36b198ad462df57e95cbc01",
+      "sanitized_bytes": 29177,
+      "code_nodes": [
+        {
+          "name": "Build Layer 1 JSON",
+          "sha256": "c1bd70d033b362b4d81213d4208b0869ebad9e020a8b75301a7afe8a68b54404",
+          "bytes": 5062
+        },
+        {
+          "name": "Filter Source Run ID",
+          "sha256": "0ce058ad1f99a3f05ebb5848482ce5545b991611dc07dc5bdbf0df27812dd0ab",
+          "bytes": 1863
+        },
+        {
+          "name": "Code | Require Transient Validation Contract",
+          "sha256": "bde5f263eed159ed6501d5f1638edc22b0ec76a69c795e5f00565178491de2a1",
+          "bytes": 1638
+        },
+        {
+          "name": "Code | Build Transient Dashboard Result",
+          "sha256": "2afb9242d83b2abcf95fa418cd8bcc2d5e4e5bb75eb8acfc1ff75d7b134bc2ea",
+          "bytes": 1566
+        }
+      ],
+      "credential_bindings": [
+        {
+          "node": "Get many rows",
+          "type": "supabaseApi",
+          "name": "Supabase account"
+        }
+      ],
+      "routing": [
+        {
+          "node": "When Executed by Another Workflow",
+          "kind": "executeWorkflow",
+          "target_workflow_id": null,
+          "target_workflow_name_hint": null
+        }
+      ]
+    },
+    {
+      "file": "TEST_-_Data_Collector_-_BTC_-_20260722.json",
+      "name": "TEST - Data Collector - BTC - 20260722",
+      "id": "DMiMgjgFrdQZAOpW",
+      "active": true,
+      "is_test_named": true,
+      "version_id": "814fd523-1d60-41da-a4b5-be8a333ce2cd",
+      "version_counter": 4,
+      "created_at": "2026-07-23T09:11:50.864Z",
+      "updated_at": "2026-07-27T11:19:35.011Z",
+      "node_count": 25,
+      "key": "btc:collector",
+      "sanitized_sha256": "94fdf19628ed307ac7c6126f9bffe8926016567c73e20fa69356c61f3d7ff302",
+      "sanitized_bytes": 101196,
+      "code_nodes": [
+        {
+          "name": "Normalise Market Snapshot",
+          "sha256": "505c71a465cc6770767758eb91c614de399c1e76c3885f0c5e058189944fcda2",
+          "bytes": 15294
+        },
+        {
+          "name": "Code | Process Eco Data",
+          "sha256": "6e22f742fbfab00ceaf699a2d0b7a18cb1766670e3dae3c8d2eab08c573960aa",
+          "bytes": 2570
+        },
+        {
+          "name": "Code | Derive Fed Bias",
+          "sha256": "c8296444ca7c4587f92f7b15bf962e92441db0a0439d9dd9ecc207e0e16c3256",
+          "bytes": 593
+        },
+        {
+          "name": "Code | Derive US Eco Inputs",
+          "sha256": "957e7064b6e7b33dc0ab7bb1fbae2adcb38653e87d27eb2db7d7d52fe7be1068",
+          "bytes": 5623
+        },
+        {
+          "name": "Code | Require Transient Validation Contract",
+          "sha256": "bde5f263eed159ed6501d5f1638edc22b0ec76a69c795e5f00565178491de2a1",
+          "bytes": 1638
+        },
+        {
+          "name": "Code | Build Transient Collector Result",
+          "sha256": "ba830c3e36be0b0fde414f486b0d0ecd94fc6a391743c7df86a1055de122c56f",
+          "bytes": 1330
+        },
+        {
+          "name": "Code | Tripwire Create a row",
+          "sha256": "774e2ab1aa981673d7b1bdff26fa725ecc7a16284f7650d38ac75548667da632",
+          "bytes": 423
+        }
+      ],
+      "credential_bindings": [
+        {
+          "node": "Create a row",
+          "type": "supabaseApi",
+          "name": "Supabase account"
+        },
+        {
+          "node": "Supabase | Get Previous Market Snapshots",
+          "type": "supabaseApi",
+          "name": "Supabase account"
+        },
+        {
+          "node": "Supabase | Get Today US Economic Events",
+          "type": "supabaseApi",
+          "name": "Supabase account"
+        }
+      ],
+      "routing": [
+        {
+          "node": "When Executed by Another Workflow",
+          "kind": "executeWorkflow",
+          "target_workflow_id": null,
+          "target_workflow_name_hint": null
+        }
+      ]
+    },
+    {
+      "file": "TEST_-_Data_Collector_-_BTC_-_20260722_-_modified_probe.json",
+      "name": "TEST - Data Collector - BTC - 20260722 - modified probe",
+      "id": "xfiQRMEcHLXfWHpa",
+      "active": false,
+      "is_test_named": true,
+      "version_id": "23db38f6-cdb0-46b1-b0e6-fd2329a91aa6",
+      "version_counter": 1,
+      "created_at": "2026-07-23T09:12:21.426Z",
+      "updated_at": "2026-07-23T09:12:21.426Z",
+      "node_count": 22,
+      "key": "btc:collector",
+      "sanitized_sha256": "6bfcd903ba20022392e65184928b3923915fe979c9d36670478886bb573ad289",
+      "sanitized_bytes": 40635,
+      "code_nodes": [
+        {
+          "name": "Normalise Market Snapshot",
+          "sha256": "505c71a465cc6770767758eb91c614de399c1e76c3885f0c5e058189944fcda2",
+          "bytes": 15294
+        },
+        {
+          "name": "Code | Process Eco Data",
+          "sha256": "6e22f742fbfab00ceaf699a2d0b7a18cb1766670e3dae3c8d2eab08c573960aa",
+          "bytes": 2570
+        },
+        {
+          "name": "Code | Derive Fed Bias",
+          "sha256": "c8296444ca7c4587f92f7b15bf962e92441db0a0439d9dd9ecc207e0e16c3256",
+          "bytes": 593
+        },
+        {
+          "name": "Code | Derive US Eco Inputs",
+          "sha256": "957e7064b6e7b33dc0ab7bb1fbae2adcb38653e87d27eb2db7d7d52fe7be1068",
+          "bytes": 5623
+        }
+      ],
+      "credential_bindings": [
+        {
+          "node": "Create a row",
+          "type": "supabaseApi",
+          "name": "Supabase account"
+        },
+        {
+          "node": "Supabase | Get Previous Market Snapshots",
+          "type": "supabaseApi",
+          "name": "Supabase account"
+        },
+        {
+          "node": "Supabase | Get Today US Economic Events",
+          "type": "supabaseApi",
+          "name": "Supabase account"
+        }
+      ],
+      "routing": [
+        {
+          "node": "When Executed by Another Workflow",
+          "kind": "executeWorkflow",
+          "target_workflow_id": null,
+          "target_workflow_name_hint": null
+        }
+      ]
+    },
+    {
+      "file": "TEST_-_Data_Collector_-_EUR_-_20260722.json",
+      "name": "TEST - Data Collector - EUR - 20260722",
+      "id": "mh3CLzNirpXorGKi",
+      "active": true,
+      "is_test_named": true,
+      "version_id": "9a9f6c52-d816-4632-9c95-6a78ae1c08f4",
+      "version_counter": 3,
+      "created_at": "2026-07-22T20:01:30.368Z",
+      "updated_at": "2026-07-27T11:19:23.413Z",
+      "node_count": 37,
+      "key": "eur:collector",
+      "sanitized_sha256": "fc4ed01a8041a2d4663a20d9e13a83e0f910210e039ddc690411ec0507d995d3",
+      "sanitized_bytes": 125818,
+      "code_nodes": [
+        {
+          "name": "Normalise Market Snapshot",
+          "sha256": "92e4cf08a675ab488250b52d40582c7dfebb37d0313879b6f8b81239dd17a5e0",
+          "bytes": 14065
+        },
+        {
+          "name": "Code | Process Eco Data",
+          "sha256": "4196f3c3f7ac4369d5041919edd9463bec350abccc72efe68cc3cf5d232377d4",
+          "bytes": 4444
+        },
+        {
+          "name": "Code | Derive Fed Bias",
+          "sha256": "c8296444ca7c4587f92f7b15bf962e92441db0a0439d9dd9ecc207e0e16c3256",
+          "bytes": 593
+        },
+        {
+          "name": "Code | Derive EUR Eco Inputs",
+          "sha256": "c3ab27eb23768411f9a33be0be8af1177618c374d38b75149a0d07ad6fceeee3",
+          "bytes": 5439
+        },
+        {
+          "name": "Code | Derive EUR PMI Inputs",
+          "sha256": "c4479862c049ebdc2399c7d97b726a3bca1a79fc9dd74844756cffccb4cb8b7f",
+          "bytes": 1439
+        },
+        {
+          "name": "Code | Require Transient Validation Contract",
+          "sha256": "bde5f263eed159ed6501d5f1638edc22b0ec76a69c795e5f00565178491de2a1",
+          "bytes": 1638
+        },
+        {
+          "name": "Code | Build Transient Collector Result",
+          "sha256": "8316f502b8a7bcd4ac6a7c4b6f39364e4e7722d7a8f8804c8cb1b15ec76dff90",
+          "bytes": 1331
+        },
+        {
+          "name": "Code | Tripwire Create a row",
+          "sha256": "f96d0b4832205db3cfc2d1ae4511a873a696072f10840c90853a400f05be04ed",
+          "bytes": 423
+        }
+      ],
+      "credential_bindings": [
+        {
+          "node": "Create a row",
+          "type": "supabaseApi",
+          "name": "Supabase account"
+        },
+        {
+          "node": "Supabase | Get Previous Market Snapshots",
+          "type": "supabaseApi",
+          "name": "Supabase account"
+        },
+        {
+          "node": "Supabase | Get Today EUR Economic Events",
+          "type": "supabaseApi",
+          "name": "Supabase account"
+        },
+        {
+          "node": "Supabase | Get Recent EUR PMI Events",
+          "type": "supabaseApi",
+          "name": "Supabase account"
+        }
+      ],
+      "routing": [
+        {
+          "node": "When Executed by Another Workflow",
+          "kind": "executeWorkflow",
+          "target_workflow_id": null,
+          "target_workflow_name_hint": null
+        }
+      ]
+    },
+    {
+      "file": "TEST_-_Data_Collector_-_GOLD_-_20260722.json",
+      "name": "TEST - Data Collector - GOLD - 20260722",
+      "id": "NLGyMosysypCldMO",
+      "active": true,
+      "is_test_named": true,
+      "version_id": "cc891809-9786-4883-8c0b-727b18011110",
+      "version_counter": 4,
+      "created_at": "2026-07-23T09:11:50.944Z",
+      "updated_at": "2026-07-27T11:19:27.253Z",
+      "node_count": 32,
+      "key": "gold:collector",
+      "sanitized_sha256": "a2d689fbe993cfa1c2d6d570fc549d6d18e4d306e3f83d32ab3eb3aeee8bedde",
+      "sanitized_bytes": 116695,
+      "code_nodes": [
+        {
+          "name": "Normalise Market Snapshot",
+          "sha256": "71b6893ff9f537b3e6dd6b8cd1cd3f3ca0e44f8a60a8c43c53ff8fb1ef7c70f4",
+          "bytes": 16245
+        },
+        {
+          "name": "Code | Process Eco Data",
+          "sha256": "6e22f742fbfab00ceaf699a2d0b7a18cb1766670e3dae3c8d2eab08c573960aa",
+          "bytes": 2570
+        },
+        {
+          "name": "Code | Derive Fed Bias",
+          "sha256": "c8296444ca7c4587f92f7b15bf962e92441db0a0439d9dd9ecc207e0e16c3256",
+          "bytes": 593
+        },
+        {
+          "name": "Code | Derive US Eco Inputs",
+          "sha256": "957e7064b6e7b33dc0ab7bb1fbae2adcb38653e87d27eb2db7d7d52fe7be1068",
+          "bytes": 5623
+        },
+        {
+          "name": "Code | Require Transient Validation Contract",
+          "sha256": "bde5f263eed159ed6501d5f1638edc22b0ec76a69c795e5f00565178491de2a1",
+          "bytes": 1638
+        },
+        {
+          "name": "Code | Build Transient Collector Result",
+          "sha256": "c7bbf44142a59b5fef963b19985591bc53bec6a17ceb7e9917d270dad0944716",
+          "bytes": 1330
+        },
+        {
+          "name": "Code | Tripwire Create a row",
+          "sha256": "f62963c210946fd461eaf2e594a705b68ac04de0b1592b3328366f4fe4902fd7",
+          "bytes": 424
+        }
+      ],
+      "credential_bindings": [
+        {
+          "node": "Create a row",
+          "type": "supabaseApi",
+          "name": "Supabase account"
+        },
+        {
+          "node": "Supabase | Get Previous Market Snapshots",
+          "type": "supabaseApi",
+          "name": "Supabase account"
+        },
+        {
+          "node": "Supabase | Get Today US Economic Events",
+          "type": "supabaseApi",
+          "name": "Supabase account"
+        }
+      ],
+      "routing": [
+        {
+          "node": "When Executed by Another Workflow",
+          "kind": "executeWorkflow",
+          "target_workflow_id": null,
+          "target_workflow_name_hint": null
+        }
+      ]
+    },
+    {
+      "file": "TEST_-_Data_Collector_-_GOLD_-_20260722_-_modified_probe.json",
+      "name": "TEST - Data Collector - GOLD - 20260722 - modified probe",
+      "id": "7tk8NwIRZNcIy2xh",
+      "active": false,
+      "is_test_named": true,
+      "version_id": "15ad7e6f-5256-4d1c-9057-455fd37ee993",
+      "version_counter": 1,
+      "created_at": "2026-07-23T09:12:21.588Z",
+      "updated_at": "2026-07-23T09:12:21.588Z",
+      "node_count": 29,
+      "key": "gold:collector",
+      "sanitized_sha256": "4c110fd2aa6d57644c92aa055b527d4473b6e1a69e29edfe954aade7bf6525c1",
+      "sanitized_bytes": 46364,
+      "code_nodes": [
+        {
+          "name": "Normalise Market Snapshot",
+          "sha256": "71b6893ff9f537b3e6dd6b8cd1cd3f3ca0e44f8a60a8c43c53ff8fb1ef7c70f4",
+          "bytes": 16245
+        },
+        {
+          "name": "Code | Process Eco Data",
+          "sha256": "6e22f742fbfab00ceaf699a2d0b7a18cb1766670e3dae3c8d2eab08c573960aa",
+          "bytes": 2570
+        },
+        {
+          "name": "Code | Derive Fed Bias",
+          "sha256": "c8296444ca7c4587f92f7b15bf962e92441db0a0439d9dd9ecc207e0e16c3256",
+          "bytes": 593
+        },
+        {
+          "name": "Code | Derive US Eco Inputs",
+          "sha256": "957e7064b6e7b33dc0ab7bb1fbae2adcb38653e87d27eb2db7d7d52fe7be1068",
+          "bytes": 5623
+        }
+      ],
+      "credential_bindings": [
+        {
+          "node": "Create a row",
+          "type": "supabaseApi",
+          "name": "Supabase account"
+        },
+        {
+          "node": "Supabase | Get Previous Market Snapshots",
+          "type": "supabaseApi",
+          "name": "Supabase account"
+        },
+        {
+          "node": "Supabase | Get Today US Economic Events",
+          "type": "supabaseApi",
+          "name": "Supabase account"
+        }
+      ],
+      "routing": [
+        {
+          "node": "When Executed by Another Workflow",
+          "kind": "executeWorkflow",
+          "target_workflow_id": null,
+          "target_workflow_name_hint": null
+        }
+      ]
+    },
+    {
+      "file": "TEST_-_Data_Collector_-_NQ_-_20260722.json",
+      "name": "TEST - Data Collector - NQ - 20260722",
+      "id": "tcYXnCdetkGzsQEx",
+      "active": true,
+      "is_test_named": true,
+      "version_id": "b743e50f-ebc0-4084-95f2-940bcc50f575",
+      "version_counter": 3,
+      "created_at": "2026-07-22T20:02:41.431Z",
+      "updated_at": "2026-07-27T11:19:31.129Z",
+      "node_count": 32,
+      "key": "nq:collector",
+      "sanitized_sha256": "e560ac502cf2f6670ecc8a87aa1cfc0ad3c2112a949238210e169ba21597446d",
+      "sanitized_bytes": 106681,
+      "code_nodes": [
+        {
+          "name": "Normalise Market Snapshot",
+          "sha256": "e9f0bbb46cc459a254f2f5b128679bdf5c6903a541d610c6de741d98ddaedf07",
+          "bytes": 11508
+        },
+        {
+          "name": "Code | Process Eco Data",
+          "sha256": "6e22f742fbfab00ceaf699a2d0b7a18cb1766670e3dae3c8d2eab08c573960aa",
+          "bytes": 2570
+        },
+        {
+          "name": "Code | Derive Fed Bias",
+          "sha256": "c8296444ca7c4587f92f7b15bf962e92441db0a0439d9dd9ecc207e0e16c3256",
+          "bytes": 593
+        },
+        {
+          "name": "Code | Derive US Eco Inputs",
+          "sha256": "957e7064b6e7b33dc0ab7bb1fbae2adcb38653e87d27eb2db7d7d52fe7be1068",
+          "bytes": 5623
+        },
+        {
+          "name": "Code | Require Transient Validation Contract",
+          "sha256": "bde5f263eed159ed6501d5f1638edc22b0ec76a69c795e5f00565178491de2a1",
+          "bytes": 1638
+        },
+        {
+          "name": "Code | Build Transient Collector Result",
+          "sha256": "edc73ff631b17609fe5c77013f2bf8ade89da209e6386f004b7ed8266c15e606",
+          "bytes": 1320
+        },
+        {
+          "name": "Code | Tripwire Create a row",
+          "sha256": "ab4f0e1477b340885aca6d643c7e49f72265f77b8d3cb320a429eef0b6ea2fa2",
+          "bytes": 422
+        }
+      ],
+      "credential_bindings": [
+        {
+          "node": "Create a row",
+          "type": "supabaseApi",
+          "name": "Supabase account"
+        },
+        {
+          "node": "Supabase | Get Previous Market Snapshots",
+          "type": "supabaseApi",
+          "name": "Supabase account"
+        },
+        {
+          "node": "Supabase | Get Today US Economic Events",
+          "type": "supabaseApi",
+          "name": "Supabase account"
+        }
+      ],
+      "routing": [
+        {
+          "node": "When Executed by Another Workflow",
+          "kind": "executeWorkflow",
+          "target_workflow_id": null,
+          "target_workflow_name_hint": null
+        }
+      ]
+    },
+    {
+      "file": "TEST_-_Data_Collector_-_USD_-_20260722.json",
+      "name": "TEST - Data Collector - USD - 20260722",
+      "id": "QferKqGdVdTyhJTI",
+      "active": true,
+      "is_test_named": true,
+      "version_id": "a82828f5-1f42-4ee0-a7f3-4b65df1cf361",
+      "version_counter": 3,
+      "created_at": "2026-07-22T20:01:29.713Z",
+      "updated_at": "2026-07-27T11:19:19.439Z",
+      "node_count": 32,
+      "key": "usd:collector",
+      "sanitized_sha256": "e62c30a971b41740edcf9792551390ea3a358a77de3e1597405b9afda08c7d05",
+      "sanitized_bytes": 112636,
+      "code_nodes": [
+        {
+          "name": "Normalise Market Snapshot",
+          "sha256": "83fc559331fd427c67d70c2e27a75ac8085c4d02e485dfa4c8a457bda26e6f78",
+          "bytes": 14256
+        },
+        {
+          "name": "Code | Process Eco Data",
+          "sha256": "6e22f742fbfab00ceaf699a2d0b7a18cb1766670e3dae3c8d2eab08c573960aa",
+          "bytes": 2570
+        },
+        {
+          "name": "Code | Derive Fed Bias",
+          "sha256": "c8296444ca7c4587f92f7b15bf962e92441db0a0439d9dd9ecc207e0e16c3256",
+          "bytes": 593
+        },
+        {
+          "name": "Code | Derive USD Eco Inputs",
+          "sha256": "957e7064b6e7b33dc0ab7bb1fbae2adcb38653e87d27eb2db7d7d52fe7be1068",
+          "bytes": 5623
+        },
+        {
+          "name": "Code | Require Transient Validation Contract",
+          "sha256": "bde5f263eed159ed6501d5f1638edc22b0ec76a69c795e5f00565178491de2a1",
+          "bytes": 1638
+        },
+        {
+          "name": "Code | Build Transient Collector Result",
+          "sha256": "6bc486e93a216d5b164cdced160822cdf1b979f2125701d87a80481171ba5418",
+          "bytes": 1620
+        },
+        {
+          "name": "Code | Tripwire Create a row",
+          "sha256": "50b5df360fa65ef8ddc5754cde6eeac73b0847646ef54d3815067a9bcadc8553",
+          "bytes": 423
+        }
+      ],
+      "credential_bindings": [
+        {
+          "node": "Create a row",
+          "type": "supabaseApi",
+          "name": "Supabase account"
+        },
+        {
+          "node": "Supabase | Get Previous Market Snapshots",
+          "type": "supabaseApi",
+          "name": "Supabase account"
+        },
+        {
+          "node": "Supabase | Get Today USD Economic Events",
+          "type": "supabaseApi",
+          "name": "Supabase account"
+        }
+      ],
+      "routing": [
+        {
+          "node": "When Executed by Another Workflow",
+          "kind": "executeWorkflow",
+          "target_workflow_id": null,
+          "target_workflow_name_hint": null
+        }
+      ]
+    },
+    {
+      "file": "TEST_-_Eco_Events_Collector_-_Isolated_20260727.json",
+      "name": "TEST - Eco Events Collector - Isolated 20260727",
+      "id": "4zd3QEGWhessSGHW",
+      "active": true,
+      "is_test_named": true,
+      "version_id": "b24ff3cc-1d12-4de8-841f-dedc4a913dc7",
+      "version_counter": 10,
+      "created_at": "2026-07-22T20:01:28.861Z",
+      "updated_at": "2026-08-21T19:53:48.245Z",
+      "node_count": 23,
+      "key": "SHARED:events",
+      "sanitized_sha256": "5ccab4de02aec711aed0288226315077e00d55bea8bb7af4bb3b622ec2ef395d",
+      "sanitized_bytes": 89328,
+      "code_nodes": [
+        {
+          "name": "Code | Normalise Forex Factory Events",
+          "sha256": "cd66f16b3ca0afe03ce46b9848294dad53dbe1d1b529029083637de36cff8b99",
+          "bytes": 7778
+        },
+        {
+          "name": "Code | Route Existing vs New",
+          "sha256": "d85921740d55e3fd1a55fc74d7dffe5e098c6ca70217f96c0159013bd65f4c78",
+          "bytes": 2558
+        },
+        {
+          "name": "Code | Prepare Creates",
+          "sha256": "87fb158644cae9a2da368910eadd0c7a7b27048d36446d29577bc8af15277014",
+          "bytes": 160
+        },
+        {
+          "name": "Code | Prepare Updates",
+          "sha256": "a1d1ebbb67810d65548643b371fb6b487898ccccc4fcbcebde897b2e088b9842",
+          "bytes": 160
+        },
+        {
+          "name": "Code | Validate Economic Event Barrier",
+          "sha256": "390bd19c7af6d34b933e11e1794dabfef319557519489b111e358923ab94ea20",
+          "bytes": 7150
+        },
+        {
+          "name": "Code | Build Readback Scope",
+          "sha256": "d68aa53b401b2fe372ff6dc64fe487c2aefab4d1ba1a26e87c124d63a34bf21f",
+          "bytes": 1418
+        },
+        {
+          "name": "Code | Tripwire Create Mutation",
+          "sha256": "9813c9564b65290b7c1167d22e2a0922375db2186e96b84ace2f78b7a46a86d8",
+          "bytes": 535
+        },
+        {
+          "name": "Code | Tripwire Update Mutation",
+          "sha256": "f32c1b9812ffb331d9bd4089ecece768fef4f38eee84545508ba9808ec2a2629",
+          "bytes": 535
+        },
+        {
+          "name": "Code | Return Transient Barrier Result",
+          "sha256": "32aa8a41cc0bae56e73292ea91b350e24a3ddac63a1a838c6f8885c98d7ca977",
+          "bytes": 3647
+        }
+      ],
+      "credential_bindings": [
+        {
+          "node": "Supabase | Create Economic Events",
+          "type": "supabaseApi",
+          "name": "Supabase account"
+        },
+        {
+          "node": "Supabase | Get Existing Economic Events",
+          "type": "supabaseApi",
+          "name": "Supabase account"
+        },
+        {
+          "node": "Supabase | Update Economic Events",
+          "type": "supabaseApi",
+          "name": "Supabase account"
+        },
+        {
+          "node": "Supabase | Read Back Economic Events",
+          "type": "supabaseApi",
+          "name": "Supabase account"
+        }
+      ],
+      "routing": [
+        {
+          "node": "When Executed by Another Workflow",
+          "kind": "executeWorkflow",
+          "target_workflow_id": null,
+          "target_workflow_name_hint": null
+        }
+      ]
+    },
+    {
+      "file": "TEST_-_EUR_Layer_1_Agent_-_ISOLATED_-_20260723.json",
+      "name": "TEST - EUR Layer 1 Agent - ISOLATED - 20260723",
+      "id": "fGr45f1LqZABLlem",
+      "active": true,
+      "is_test_named": true,
+      "version_id": "12a0f369-179a-4180-b03e-6dbde735989c",
+      "version_counter": 4,
+      "created_at": "2026-07-23T11:30:07.149Z",
+      "updated_at": "2026-07-27T11:28:17.020Z",
+      "node_count": 13,
+      "key": "eur:agent",
+      "sanitized_sha256": "c2ae0051481ec1d39ad46f6dbf7117e0ed6101b7bd850313ec2b5f14702bc738",
+      "sanitized_bytes": 95106,
+      "code_nodes": [
+        {
+          "name": "Combine md & market snapshot",
+          "sha256": "32158ba2da27bc1f1b487a75aeb82089630709193f25aa3dfdf65ff88be040e6",
+          "bytes": 389
+        },
+        {
+          "name": "Build EUR Input Pack",
+          "sha256": "fdc30207dbec8c0fdd84bc9182bd3f58afb15efe4e7c8a24d48eb157e53b9a7f",
+          "bytes": 7516
+        },
+        {
+          "name": "Parse EUR Agent Output",
+          "sha256": "78b94ceac3dcd8b182769c4ed1be9aad377e74288fda9cdb48f26e7fe99caec2",
+          "bytes": 3592
+        },
+        {
+          "name": "Calculate EUR Conviction",
+          "sha256": "11a8fa71a6a7ca84d304cbd0a00b7ee32d000a949b43fe80aa904261b1ecb075",
+          "bytes": 14732
+        },
+        {
+          "name": "Tag Source Run ID",
+          "sha256": "44230f846457c31c639bb8074d9cb934d86aea40fd6d1474389d851d86384b10",
+          "bytes": 713
+        },
+        {
+          "name": "Code | Require Transient Validation Contract",
+          "sha256": "67f57cec92fabb9cc15cba435cef87fddfbb91b5a6ed56febfb0695f05964a9c",
+          "bytes": 1957
+        },
+        {
+          "name": "Code | Build Transient Layer 1 Result",
+          "sha256": "2814f639b7db237d3875e20e041b431eec6b513397b8550b66bc34eed431a093",
+          "bytes": 4896
+        },
+        {
+          "name": "Code | Tripwire Create a row",
+          "sha256": "5f4cedc2979da216ea984a6d817b2235c4665b77cb0db45bfd16dd9a82a52ac4",
+          "bytes": 431
+        }
+      ],
+      "credential_bindings": [
+        {
+          "node": "Message a model",
+          "type": "openAiApi",
+          "name": "OpenAI account 2"
+        },
+        {
+          "node": "Supabase Get Many",
+          "type": "supabaseApi",
+          "name": "Supabase account"
+        },
+        {
+          "node": "Create a row",
+          "type": "supabaseApi",
+          "name": "Supabase account"
+        },
+        {
+          "node": "Get EUR Logic Document",
+          "type": "githubOAuth2Api",
+          "name": "GitHub account 3"
+        }
+      ],
+      "routing": [
+        {
+          "node": "When Executed by Another Workflow",
+          "kind": "executeWorkflow",
+          "target_workflow_id": null,
+          "target_workflow_name_hint": null
+        }
+      ]
+    },
+    {
+      "file": "TEST_-_GOLD_Layer_1_Agent_-_ISOLATED_-_20260723.json",
+      "name": "TEST - GOLD Layer 1 Agent - ISOLATED - 20260723",
+      "id": "rtAcgTz71gFzQSZx",
+      "active": true,
+      "is_test_named": true,
+      "version_id": "e37e14ca-24b1-4f33-8acf-1bc9f2036814",
+      "version_counter": 4,
+      "created_at": "2026-07-23T11:30:07.198Z",
+      "updated_at": "2026-07-27T12:37:44.829Z",
+      "node_count": 13,
+      "key": "gold:agent",
+      "sanitized_sha256": "90f0a8a5662b69b7ceaa307e82452158a018b481f9beafa9274fa23d6219ac71",
+      "sanitized_bytes": 84339,
+      "code_nodes": [
+        {
+          "name": "Combine md & market snapshot",
+          "sha256": "57f84ea112b2fa52daf47fb7ccbd03124aa0ede847cd39b989bb5edbf22b021b",
+          "bytes": 391
+        },
+        {
+          "name": "Build GOLD Input Pack",
+          "sha256": "32959305d4841bfbfe9c49d2e5bc308cc9e368df86015d19e3ce934562bad844",
+          "bytes": 2245
+        },
+        {
+          "name": "Parse GOLD Agent Output",
+          "sha256": "e0f2692f9387b6cfb9caf6288a499636861d0e10ae536ab19a4dffcab3472f0b",
+          "bytes": 3044
+        },
+        {
+          "name": "Calculate GOLD Conviction",
+          "sha256": "03dcbc310c3d5613d232361e8cc5ec57b520014d1c1519cff42faac076c993f2",
+          "bytes": 14655
+        },
+        {
+          "name": "Tag Source Run ID",
+          "sha256": "44230f846457c31c639bb8074d9cb934d86aea40fd6d1474389d851d86384b10",
+          "bytes": 713
+        },
+        {
+          "name": "Code | Require Transient Validation Contract",
+          "sha256": "7903e1393db069d9185b5dc46cf87437a202ae3c059723823411c69a1f8af0a8",
+          "bytes": 1958
+        },
+        {
+          "name": "Code | Build Transient Layer 1 Result",
+          "sha256": "7ee12a31d9f6ce45bb046bf0e3a3d4780075e00e348a9c51aaeec2b18a0c0884",
+          "bytes": 4896
+        },
+        {
+          "name": "Code | Tripwire Create a row",
+          "sha256": "4439e633de43ccb01f3ab581dc4f087ed003b13d785e3a424596e5d85b705114",
+          "bytes": 432
+        }
+      ],
+      "credential_bindings": [
+        {
+          "node": "Message a model",
+          "type": "openAiApi",
+          "name": "OpenAI account 2"
+        },
+        {
+          "node": "Supabase Get Many",
+          "type": "supabaseApi",
+          "name": "Supabase account"
+        },
+        {
+          "node": "Create a row",
+          "type": "supabaseApi",
+          "name": "Supabase account"
+        },
+        {
+          "node": "Get GOLD Logic Document",
+          "type": "githubOAuth2Api",
+          "name": "GitHub account 3"
+        }
+      ],
+      "routing": [
+        {
+          "node": "When Executed by Another Workflow",
+          "kind": "executeWorkflow",
+          "target_workflow_id": null,
+          "target_workflow_name_hint": null
+        }
+      ]
+    },
+    {
+      "file": "TEST_-_Layer_2_Trade_Selection_Agent_-_STAGED-ONLY_-_PROPOSED_-_20260727.json",
+      "name": "TEST - Layer 2 Trade Selection Agent - STAGED-ONLY - PROPOSED - 20260727",
+      "id": "QBk8bAHkkHjJYbpK",
+      "active": true,
+      "is_test_named": true,
+      "version_id": "545ef260-3f85-4ce9-b637-56d19139768b",
+      "version_counter": 5,
+      "created_at": "2026-07-27T06:09:53.225Z",
+      "updated_at": "2026-07-27T13:19:24.157Z",
+      "node_count": 5,
+      "key": "SHARED:layer2",
+      "sanitized_sha256": "bfb5814ce308ebe5c3da05ce081542e112baa89b99ba3c0f284cdd3919959e85",
+      "sanitized_bytes": 152460,
+      "code_nodes": [
+        {
+          "name": "Build Layer 2 Trade Selection JSON",
+          "sha256": "4246f4cdec2c84fa5554522fc2e2f3bba5546355d3dedbeeffa8e2c7e5da04df",
+          "bytes": 67104
+        },
+        {
+          "name": "Code | Require Transient Validation Contract",
+          "sha256": "bde5f263eed159ed6501d5f1638edc22b0ec76a69c795e5f00565178491de2a1",
+          "bytes": 1638
+        },
+        {
+          "name": "Code | Build Transient Layer 2 Result",
+          "sha256": "c168ddc8d2bf3ce11739305f78955df93b7d803d41e395cc1fde5b53dd3a5fc6",
+          "bytes": 1310
+        }
+      ],
+      "credential_bindings": [
+        {
+          "node": "Get Layer 1 Agent Outputs",
+          "type": "supabaseApi",
+          "name": "Supabase account"
+        }
+      ],
+      "routing": [
+        {
+          "node": "When Executed by Another Workflow",
+          "kind": "executeWorkflow",
+          "target_workflow_id": null,
+          "target_workflow_name_hint": null
+        }
+      ]
+    },
+    {
+      "file": "TEST_-_Master_Orchestrator_-_ISOLATED_-_20260723.json",
+      "name": "TEST - Master Orchestrator - ISOLATED - 20260723",
+      "id": "CIvsnhyOi35zmA44",
+      "active": true,
+      "is_test_named": true,
+      "version_id": "3f07a6a2-2626-4d5f-a6b0-3b80d69beb98",
+      "version_counter": 18,
+      "created_at": "2026-07-22T20:02:43.566Z",
+      "updated_at": "2026-07-27T20:01:39.774Z",
+      "node_count": 41,
+      "key": "SHARED:orchestrator",
+      "sanitized_sha256": "c73581cdaad4ace2f0f8f4d763be96e3431af7a15cb6cddfb73979c199d06a2f",
+      "sanitized_bytes": 148199,
+      "code_nodes": [
+        {
+          "name": "Code | Require Economic Event Barrier",
+          "sha256": "7048c251c35d47bf01aba47ba2629a4535bbbf46e3497f1a9f2c1e0d80ffe663",
+          "bytes": 3346
+        },
+        {
+          "name": "Code | Build USD Collector Contract",
+          "sha256": "16ce0d1645921095ec30b8aaea15f0a5e7cc916a1156136dec9993d619489e41",
+          "bytes": 1254
+        },
+        {
+          "name": "Code | Build EUR Collector Contract",
+          "sha256": "16ce0d1645921095ec30b8aaea15f0a5e7cc916a1156136dec9993d619489e41",
+          "bytes": 1254
+        },
+        {
+          "name": "Code | Build Gold Collector Contract",
+          "sha256": "16ce0d1645921095ec30b8aaea15f0a5e7cc916a1156136dec9993d619489e41",
+          "bytes": 1254
+        },
+        {
+          "name": "Code | Build NQ Collector Contract",
+          "sha256": "16ce0d1645921095ec30b8aaea15f0a5e7cc916a1156136dec9993d619489e41",
+          "bytes": 1254
+        },
+        {
+          "name": "Code | Build BTC Collector Contract",
+          "sha256": "16ce0d1645921095ec30b8aaea15f0a5e7cc916a1156136dec9993d619489e41",
+          "bytes": 1254
+        },
+        {
+          "name": "Code | Build USD Layer 1 Contract",
+          "sha256": "1f230043cb559392064629f0aef77272102f940ac202fbad945fdce99202e75d",
+          "bytes": 724
+        },
+        {
+          "name": "Code | Build EUR Layer 1 Contract",
+          "sha256": "3c339c3e42bfda98dd0d8e01befadd115cd697eae48ec5099617f65a6b5e1c7c",
+          "bytes": 724
+        },
+        {
+          "name": "Code | Build Gold Layer 1 Contract",
+          "sha256": "d2991bad749d1959783284c72c900cefa919a7666a151f5718699978dad9aa33",
+          "bytes": 725
+        },
+        {
+          "name": "Code | Build NQ Layer 1 Contract",
+          "sha256": "58033d12a7e533c521ea73f9d2d53f03a1ee665a6144be54c474aa45aeaecf23",
+          "bytes": 723
+        },
+        {
+          "name": "Code | Build BTC Layer 1 Contract",
+          "sha256": "7b658e68774e67d4fe14329868f368d2edd57331651a44a366bd6c4372d6637f",
+          "bytes": 724
+        },
+        {
+          "name": "Code | Build Layer 2 Contract",
+          "sha256": "4969ebf5b876d35cc589305400cc0f8aee2522da4902b50197538908581353dd",
+          "bytes": 496
+        },
+        {
+          "name": "Code | Build Dashboard Writer Contract",
+          "sha256": "f4ec957541b77b1de9cc29824b40ead2b4e6292cf5e053c20eb05fd99cf4439d",
+          "bytes": 476
+        },
+        {
+          "name": "Code | Reject Duplicate Probe Request",
+          "sha256": "c2a36ceb9782576ccf5ba236d3d0ce381204c8f501c208026a03a2b55e878beb",
+          "bytes": 3484
+        },
+        {
+          "name": "Code | Build Internal Eco Fixture Contract",
+          "sha256": "391cfb03a55bfdd26a851ae5159013560ec7595f62aecd576b16c3356e5709ff",
+          "bytes": 1165
+        },
+        {
+          "name": "Code | Aggregate USD Collector Result",
+          "sha256": "00e1867925d9acf2a5281aa12e0b8b8690602ea85bcf2414aa43241c2c51a059",
+          "bytes": 1223
+        },
+        {
+          "name": "Code | Aggregate EUR Collector Result",
+          "sha256": "455c55bcf22d6429fa000568d360b2b0b6321bd3041154cf7337393af37e4387",
+          "bytes": 1302
+        },
+        {
+          "name": "Code | Aggregate GOLD Collector Result",
+          "sha256": "6bb1f567c2224fd066bfe44d8a4153e6a226011a1521acecafe7afef87c246fd",
+          "bytes": 1304
+        },
+        {
+          "name": "Code | Aggregate NQ Collector Result",
+          "sha256": "e151074061ff5c78e7fab00e54dd8b9df4410654815d03a21c4183fd4e22c37b",
+          "bytes": 1301
+        },
+        {
+          "name": "Code | Aggregate BTC Collector Result",
+          "sha256": "71a347eb665030287ecc064a6e881d0a06a431e4e127f35050407f08fff9fa2d",
+          "bytes": 1301
+        },
+        {
+          "name": "Code | Aggregate USD Layer 1 Result",
+          "sha256": "876da2a9554e73cc0d92598220822be02a4221a23c4f954f3c531cd348015e8c",
+          "bytes": 1238
+        },
+        {
+          "name": "Code | Aggregate EUR Layer 1 Result",
+          "sha256": "d299c5a1dcf248b7457ebfecc01d13db82639c426ec843135b9e731817a17123",
+          "bytes": 1312
+        },
+        {
+          "name": "Code | Aggregate GOLD Layer 1 Result",
+          "sha256": "df314241ba6a2f3c051902de4f5aedb9ed6192cd497bd1d244a3e4904d2bd7e5",
+          "bytes": 1314
+        },
+        {
+          "name": "Code | Aggregate NQ Layer 1 Result",
+          "sha256": "e495bc5111504b8d1b3521b4f5cd0fb1de92489b9967861f24199dad3b319141",
+          "bytes": 1311
+        },
+        {
+          "name": "Code | Aggregate BTC Layer 1 Result",
+          "sha256": "e789e30bc4ae654769010a438bd52226c99fddbc01bea3c52d2f21b5f3702d6b",
+          "bytes": 1311
+        },
+        {
+          "name": "Code | Aggregate Layer 2 Result",
+          "sha256": "394749ec0980953c567028e5409344b971f78b4db00c60665085648d78e96518",
+          "bytes": 720
+        }
+      ],
+      "credential_bindings": [],
+      "routing": [
+        {
+          "node": "Call '1. Economic Events Collector'",
+          "kind": "executeWorkflow",
+          "target_workflow_id": "4zd3QEGWhessSGHW",
+          "target_workflow_name_hint": "TEST - Eco Events Collector - 20260722"
+        },
+        {
+          "node": "USD Collector",
+          "kind": "executeWorkflow",
+          "target_workflow_id": "QferKqGdVdTyhJTI",
+          "target_workflow_name_hint": "TEST - Data Collector - USD - 20260722"
+        },
+        {
+          "node": "EUR Collector",
+          "kind": "executeWorkflow",
+          "target_workflow_id": "mh3CLzNirpXorGKi",
+          "target_workflow_name_hint": "TEST - Data Collector - EUR - 20260722"
+        },
+        {
+          "node": "Gold Collector",
+          "kind": "executeWorkflow",
+          "target_workflow_id": "NLGyMosysypCldMO",
+          "target_workflow_name_hint": "TEST - Data Collector - GOLD - 20260722"
+        },
+        {
+          "node": "NQ Collector",
+          "kind": "executeWorkflow",
+          "target_workflow_id": "tcYXnCdetkGzsQEx",
+          "target_workflow_name_hint": "TEST - Data Collector - NQ - 20260722"
+        },
+        {
+          "node": "BTC Collector",
+          "kind": "executeWorkflow",
+          "target_workflow_id": "DMiMgjgFrdQZAOpW",
+          "target_workflow_name_hint": "TEST - Data Collector - BTC - 20260722"
+        },
+        {
+          "node": "USD Layer 1 Agent",
+          "kind": "executeWorkflow",
+          "target_workflow_id": "GCkAH4LskXzWzT8K",
+          "target_workflow_name_hint": "USD Layer 1 Agent"
+        },
+        {
+          "node": "EUR Layer 1 Agent",
+          "kind": "executeWorkflow",
+          "target_workflow_id": "fGr45f1LqZABLlem",
+          "target_workflow_name_hint": "EUR Layer 1 Agent"
+        },
+        {
+          "node": "Gold Layer 1 Agent",
+          "kind": "executeWorkflow",
+          "target_workflow_id": "rtAcgTz71gFzQSZx",
+          "target_workflow_name_hint": "GOLD Layer 1 Agent"
+        },
+        {
+          "node": "NQ Layer 1 Agent",
+          "kind": "executeWorkflow",
+          "target_workflow_id": "Xep1shMzaqwPXvuL",
+          "target_workflow_name_hint": "NQ Layer 1 Agent"
+        },
+        {
+          "node": "BTC Layer 1 Agent",
+          "kind": "executeWorkflow",
+          "target_workflow_id": "pQPrq13PaeclUWEC",
+          "target_workflow_name_hint": "BTC Layer 1 Agent"
+        },
+        {
+          "node": "Dashboard Writer",
+          "kind": "executeWorkflow",
+          "target_workflow_id": "pMPxuN3dk5WWxbYY",
+          "target_workflow_name_hint": "TEST - Dashboard Writer - Layer 1 - 20260722"
+        },
+        {
+          "node": "Layer 2 Trade Selection Agent",
+          "kind": "executeWorkflow",
+          "target_workflow_id": "QBk8bAHkkHjJYbpK",
+          "target_workflow_name_hint": "TEST - Layer 2 Trade Selection Agent - STAGED-ONLY - PROPOSED - 20260727"
+        },
+        {
+          "node": "Dashboard Trigger - Run All Agents",
+          "kind": "webhook",
+          "webhook_path": "test-46b39359-master-orchestrator-dashboard-refresh-r2",
+          "http_method": "POST"
+        }
+      ]
+    },
+    {
+      "file": "TEST_-_Minimal_Create_Probe_-_20260722.json",
+      "name": "TEST - Minimal Create Probe - 20260722",
+      "id": "W8vbxNal94PkB45v",
+      "active": false,
+      "is_test_named": true,
+      "version_id": "110740b7-18bd-42fb-a524-ac5699a94906",
+      "version_counter": 1,
+      "created_at": "2026-07-22T19:59:36.298Z",
+      "updated_at": "2026-07-22T19:59:36.298Z",
+      "node_count": 1,
+      "key": "UNCLASSIFIED:other",
+      "sanitized_sha256": "c0c02d2f8839626c7c9beb763fbd95aaf064590f2e67b856de0bbe2bb74fbcc9",
+      "sanitized_bytes": 1421,
+      "code_nodes": [],
+      "credential_bindings": [],
+      "routing": []
+    },
+    {
+      "file": "TEST_-_NQ_Layer_1_Agent_-_ISOLATED_-_20260723.json",
+      "name": "TEST - NQ Layer 1 Agent - ISOLATED - 20260723",
+      "id": "Xep1shMzaqwPXvuL",
+      "active": true,
+      "is_test_named": true,
+      "version_id": "b2571286-db17-4a77-a884-f002b8ee7c9e",
+      "version_counter": 4,
+      "created_at": "2026-07-23T11:30:07.114Z",
+      "updated_at": "2026-07-27T12:40:29.595Z",
+      "node_count": 13,
+      "key": "nq:agent",
+      "sanitized_sha256": "d2fce120a8e58fb3619ae55d65b906811a3e734de12cfea71ee15b5a9fbef7ea",
+      "sanitized_bytes": 85309,
+      "code_nodes": [
+        {
+          "name": "Combine md & market snapshot",
+          "sha256": "6c8a2ea4ca9c6b05c3c39838ae7483bdc39773d0e560e694465bfe0389461ac2",
+          "bytes": 387
+        },
+        {
+          "name": "Build NQ Input Pack",
+          "sha256": "5b333f0db720934c95eba1ea1987ea3f5c97ca153d64cbe3709d1effd49dd510",
+          "bytes": 2953
+        },
+        {
+          "name": "Parse NQ Agent Output",
+          "sha256": "64a57363f8845b3236bc2d4a336357f32af552101bf2f0e524f0c96c677a6e0e",
+          "bytes": 3284
+        },
+        {
+          "name": "Calculate NQ Conviction",
+          "sha256": "267a3187521e0e3a4ee53f6c45d7f7b7ff0b693f401e95b7cf599d3d19a90db5",
+          "bytes": 15044
+        },
+        {
+          "name": "Tag Source Run ID",
+          "sha256": "44230f846457c31c639bb8074d9cb934d86aea40fd6d1474389d851d86384b10",
+          "bytes": 713
+        },
+        {
+          "name": "Code | Require Transient Validation Contract",
+          "sha256": "c0e5171b8ce3940ea40c09c67a4b2c1d6433780a170304fd9120eca1d7906ad5",
+          "bytes": 1956
+        },
+        {
+          "name": "Code | Build Transient Layer 1 Result",
+          "sha256": "b82cc5cb298ce7146379e133b3898bcccb3810947abf57f2cf7bfadeb819f0a8",
+          "bytes": 4884
+        },
+        {
+          "name": "Code | Tripwire Create a row",
+          "sha256": "c53afa4f2b4baeee661f1470426206eac3251ceeca34ece0458a1a156a9f6e71",
+          "bytes": 430
+        }
+      ],
+      "credential_bindings": [
+        {
+          "node": "Message a model",
+          "type": "openAiApi",
+          "name": "OpenAI account 2"
+        },
+        {
+          "node": "Supabase Get Many",
+          "type": "supabaseApi",
+          "name": "Supabase account"
+        },
+        {
+          "node": "Create a row",
+          "type": "supabaseApi",
+          "name": "Supabase account"
+        },
+        {
+          "node": "Get NQ Logic Document",
+          "type": "githubOAuth2Api",
+          "name": "GitHub account 3"
+        }
+      ],
+      "routing": [
+        {
+          "node": "When Executed by Another Workflow",
+          "kind": "executeWorkflow",
+          "target_workflow_id": null,
+          "target_workflow_name_hint": null
+        }
+      ]
+    },
+    {
+      "file": "TEST_-_USD_Layer_1_Agent_-_ISOLATED_-_20260723.json",
+      "name": "TEST - USD Layer 1 Agent - ISOLATED - 20260723",
+      "id": "GCkAH4LskXzWzT8K",
+      "active": true,
+      "is_test_named": true,
+      "version_id": "5fe22cf8-ef99-4068-a195-48b598280d4a",
+      "version_counter": 4,
+      "created_at": "2026-07-23T11:30:07.038Z",
+      "updated_at": "2026-07-27T11:25:14.369Z",
+      "node_count": 13,
+      "key": "usd:agent",
+      "sanitized_sha256": "788a1a65106ad42f79e3c56960a620d9141034e669e25203eaba1a18163a4002",
+      "sanitized_bytes": 87410,
+      "code_nodes": [
+        {
+          "name": "Build USD Input Pack",
+          "sha256": "4369b990cab6d391472860cfc84a0865840e6c2b5ab1db8c225c9302739a72ef",
+          "bytes": 5919
+        },
+        {
+          "name": "Combine md & market snapshot",
+          "sha256": "a555aa4ae503d97c6dcfbcfaa5f6432293411c424e5828406c1dbf050dd1c304",
+          "bytes": 389
+        },
+        {
+          "name": "Parse USD Agent Output",
+          "sha256": "eea58cea34646ba1189de04b0f7788962468c74b26c092ee5d40b1c77fd4be67",
+          "bytes": 4307
+        },
+        {
+          "name": "Calculate USD Conviction",
+          "sha256": "5564f2f152f819be5e5a39ded6d111cbd1ad5f83c5635aec65f3c8d6afef89eb",
+          "bytes": 12153
+        },
+        {
+          "name": "Tag Source Run ID",
+          "sha256": "44230f846457c31c639bb8074d9cb934d86aea40fd6d1474389d851d86384b10",
+          "bytes": 713
+        },
+        {
+          "name": "Code | Require Transient Validation Contract",
+          "sha256": "85cfa369c5f758686f19ddf1ceb80481ca63a5029f9a177290e1f416584b86c6",
+          "bytes": 1957
+        },
+        {
+          "name": "Code | Build Transient Layer 1 Result",
+          "sha256": "4d57515831473975add672e3462a1eda9cc53d0c67fea0de08a6001c1997c688",
+          "bytes": 4896
+        },
+        {
+          "name": "Code | Tripwire Create a row",
+          "sha256": "eb6f6f366a4637f536ee3b20207aa3b34d20e722b42fade34da112c8e82431d1",
+          "bytes": 431
+        }
+      ],
+      "credential_bindings": [
+        {
+          "node": "Message a model",
+          "type": "openAiApi",
+          "name": "OpenAI account 2"
+        },
+        {
+          "node": "Supabase Get Many",
+          "type": "supabaseApi",
+          "name": "Supabase account"
+        },
+        {
+          "node": "Create a row",
+          "type": "supabaseApi",
+          "name": "Supabase account"
+        },
+        {
+          "node": "Get USD Logic Document",
+          "type": "githubOAuth2Api",
+          "name": "GitHub account 3"
+        }
+      ],
+      "routing": [
+        {
+          "node": "When Executed by Another Workflow",
+          "kind": "executeWorkflow",
+          "target_workflow_id": null,
+          "target_workflow_name_hint": null
+        }
+      ]
+    },
+    {
+      "file": "USD_Agent.json",
+      "name": "USD Agent",
+      "id": "a6UidZyJLpc68OWu",
+      "active": false,
+      "is_test_named": false,
+      "version_id": "1014567b-8d18-4212-b4b3-a23a6c372a41",
+      "version_counter": 577,
+      "created_at": "2026-04-29T19:15:31.316Z",
+      "updated_at": "2026-08-09T07:11:12.538Z",
+      "node_count": 44,
+      "key": "usd:agent",
+      "sanitized_sha256": "5d47c5ac97334c012211dd8d3928d8bb166478c780934e7011e7647aa2b8b81f",
+      "sanitized_bytes": 172041,
+      "code_nodes": [
+        {
+          "name": "Code in JavaScript1 | Prompt Builder",
+          "sha256": "f86f35a4326859ae9bd7a166075c00229cb89fb9119488b944fba7104d9127ea",
+          "bytes": 1372
+        },
+        {
+          "name": "Code in JavaScript | Fetch Code Node",
+          "sha256": "e5525d932471ce880cf1dcc620b6621f35aca39066b2175af3553843c8ee261c",
+          "bytes": 2333
+        },
+        {
+          "name": "Extract Diagnosis Text",
+          "sha256": "5f97d4f655f3d0a5f8b55b5fb0cc49c2f5181514bd2fbee2fbcb583eac0d5be2",
+          "bytes": 184
+        },
+        {
+          "name": "Code in JavaScript | Build Extract Prompt",
+          "sha256": "04ce30c6305808290f63d35c307d3580cf388ba730573a58f450727a7a4b698d",
+          "bytes": 798
+        },
+        {
+          "name": "Code in JavaScript | Parse Calls",
+          "sha256": "72c79336831fcf3988fb9e60c0546518526f4bff615425bc3ff0ded117d5ca91",
+          "bytes": 2118
+        },
+        {
+          "name": "Code in JavaScript | O Layer Prompt Builder",
+          "sha256": "0a60c41d3bb47d94d1a6e1fc573ce2c99ab81d4a064606cf797573d48c200167",
+          "bytes": 5318
+        },
+        {
+          "name": "Code in JavaScript | Extract O Layer Diagnosis Text",
+          "sha256": "5f97d4f655f3d0a5f8b55b5fb0cc49c2f5181514bd2fbee2fbcb583eac0d5be2",
+          "bytes": 184
+        },
+        {
+          "name": "Code in JavaScript | Build O Layer Extract Prompt",
+          "sha256": "cd912b0966d288ddabae294b870caab8b8d552b07db612d705e29721bda3e0cb",
+          "bytes": 1310
+        },
+        {
+          "name": "Code in JavaScript | Parse O Layer Calls",
+          "sha256": "049403784983cb3bfe8f5eb703199decc940ad3792d4f3444cfa233c47e93e35",
+          "bytes": 1840
+        },
+        {
+          "name": "Code in JavaScript | Build Comparison",
+          "sha256": "24b6b0cd8a625219c8d37cb44a542c941e74a98783898c463df95ba0b0659573",
+          "bytes": 1139
+        },
+        {
+          "name": "Code | Process Eco Data",
+          "sha256": "6e22f742fbfab00ceaf699a2d0b7a18cb1766670e3dae3c8d2eab08c573960aa",
+          "bytes": 2570
+        },
+        {
+          "name": "Code | Error Check",
+          "sha256": "eeba38621e7e68926b1983301d79c73bca3f519369acfff01a59c0a2d6fbdd6d",
+          "bytes": 1631
+        }
+      ],
+      "credential_bindings": [
+        {
+          "node": "Send a message",
+          "type": "gmailOAuth2",
+          "name": "Gmail OAuth2 API"
+        }
+      ],
+      "routing": [
+        {
+          "node": "Schedule Trigger",
+          "kind": "schedule",
+          "cron_expression": "0 6 * * 1-5"
+        }
+      ]
+    },
+    {
+      "file": "USD_Agent_HIT_MISS_Resolution.json",
+      "name": "USD Agent — HIT/MISS Resolution",
+      "id": "mW2chtJ4yTZqFhCi",
+      "active": false,
+      "is_test_named": false,
+      "version_id": "29385877-c7ac-4ec4-b0d7-c6b367fa9be8",
+      "version_counter": 136,
+      "created_at": "2026-05-10T10:34:36.227Z",
+      "updated_at": "2026-06-28T12:49:54.406Z",
+      "node_count": 17,
+      "key": "usd:agent",
+      "sanitized_sha256": "75a4318d567e37ea03a3e7b3d0f15a6b377fba2bfe3276f2900bb1e24255e77c",
+      "sanitized_bytes": 15632,
+      "code_nodes": [
+        {
+          "name": "Code | Resolve HIT/MISS",
+          "sha256": "ce3e06b31ca4e4ff55fa999911004f6fa808f621f091146b1a6c1f5a356f2bed",
+          "bytes": 758
+        },
+        {
+          "name": "Code | Aggregate Prices",
+          "sha256": "3009b2925fc20e92d8bd40179e779f61c777aff992a116ddeff7c800350c34bd",
+          "bytes": 1206
+        },
+        {
+          "name": "Code in JavaScript",
+          "sha256": "573d4a0baa82a47f6d4d137b833dfaa2296241916e410cc21b4828d3332f472a",
+          "bytes": 441
+        }
+      ],
+      "credential_bindings": [
+        {
+          "node": "Send a message",
+          "type": "gmailOAuth2",
+          "name": "Gmail OAuth2 API"
+        }
+      ],
+      "routing": [
+        {
+          "node": "Schedule Trigger",
+          "kind": "schedule",
+          "cron_expression": "30 13,20 * * 1-5"
+        }
+      ]
+    },
+    {
+      "file": "USD_Historical_Events_Backfill_24hr_Directional_Agent_.json",
+      "name": "USD Historical Events Backfill (24hr Directional Agent)",
+      "id": "8GLw3EO4QXevCgg1",
+      "active": true,
+      "is_test_named": false,
+      "version_id": "81005e5e-926d-47fe-b219-08a7eef830f1",
+      "version_counter": 5,
+      "created_at": "2026-08-21T19:44:49.374Z",
+      "updated_at": "2026-08-21T20:31:46.479Z",
+      "node_count": 2,
+      "key": "usd:agent",
+      "sanitized_sha256": "0156fc9558cdc2088f94b5347aa12161ac1f452231e4624eb7a0a202ceaa07b9",
+      "sanitized_bytes": 7726,
+      "code_nodes": [
+        {
+          "name": "Code | Fetch USD Calendar Days (looped)",
+          "sha256": "3e7efafb225a0ed35fa4047f3fab0343dbc1e3f51dd5177f3a7d860682296a06",
+          "bytes": 1781
+        }
+      ],
+      "credential_bindings": [],
+      "routing": [
+        {
+          "node": "Webhook | Trigger Backfill Chunk",
+          "kind": "webhook",
+          "webhook_path": "usd-historical-backfill",
+          "http_method": "POST"
+        }
+      ]
+    },
+    {
+      "file": "USD_Layer_1_Agent.json",
+      "name": "USD Layer 1 Agent",
+      "id": "OCt1tB9yVMUgFTha",
+      "active": true,
+      "is_test_named": false,
+      "version_id": "aa275379-ea06-452c-97c9-238b41aed7bc",
+      "version_counter": 154,
+      "created_at": "2026-06-06T16:45:19.843Z",
+      "updated_at": "2026-06-18T19:46:03.782Z",
+      "node_count": 9,
+      "key": "usd:agent",
+      "sanitized_sha256": "e9d8db6ad5e7bcd33a57455866056af327ebb9366e7c11ef69669caedff47f93",
+      "sanitized_bytes": 63899,
+      "code_nodes": [
+        {
+          "name": "Build USD Input Pack",
+          "sha256": "4369b990cab6d391472860cfc84a0865840e6c2b5ab1db8c225c9302739a72ef",
+          "bytes": 5919
+        },
+        {
+          "name": "Combine md & market snapshot",
+          "sha256": "a555aa4ae503d97c6dcfbcfaa5f6432293411c424e5828406c1dbf050dd1c304",
+          "bytes": 389
+        },
+        {
+          "name": "Parse USD Agent Output",
+          "sha256": "eea58cea34646ba1189de04b0f7788962468c74b26c092ee5d40b1c77fd4be67",
+          "bytes": 4307
+        },
+        {
+          "name": "Calculate USD Conviction",
+          "sha256": "5564f2f152f819be5e5a39ded6d111cbd1ad5f83c5635aec65f3c8d6afef89eb",
+          "bytes": 12153
+        }
+      ],
+      "credential_bindings": [
+        {
+          "node": "Message a model",
+          "type": "openAiApi",
+          "name": "OpenAI account 2"
+        },
+        {
+          "node": "Supabase Get Many",
+          "type": "supabaseApi",
+          "name": "Supabase account"
+        },
+        {
+          "node": "Create a row",
+          "type": "supabaseApi",
+          "name": "Supabase account"
+        },
+        {
+          "node": "Get USD Logic Document",
+          "type": "githubOAuth2Api",
+          "name": "GitHub account 3"
+        }
+      ],
+      "routing": [
+        {
+          "node": "When Executed by Another Workflow",
+          "kind": "executeWorkflow",
+          "target_workflow_id": null,
+          "target_workflow_name_hint": null
+        }
+      ]
+    },
+    {
+      "file": "WTI_Layer_1_Agent.json",
+      "name": "WTI Layer 1 Agent",
+      "id": "8oUBopUWLiGcYU0d",
+      "active": true,
+      "is_test_named": false,
+      "version_id": "6f493956-93b2-4a52-9270-c4f5aaa9d4fd",
+      "version_counter": 5,
+      "created_at": "2026-09-12T17:58:31.494Z",
+      "updated_at": "2026-09-12T18:20:13.820Z",
+      "node_count": 13,
+      "key": "wti:agent",
+      "sanitized_sha256": "d31bd7546b9b21a60fe490a3a2093d39a28a7f01d367f2f6e6746f2ebba12b3a",
+      "sanitized_bytes": 45330,
+      "code_nodes": [
+        {
+          "name": "Code | Build WTI Input Pack",
+          "sha256": "68ed1025acd57850ad1fc02135196259df8160b512d808dc7704138525cd63f5",
+          "bytes": 3442
+        },
+        {
+          "name": "Code | Combine WTI Logic and Inputs",
+          "sha256": "35c38c169a85f2b7f3e4418ffd564deb441e939b608761162c2c497453255540",
+          "bytes": 198
+        },
+        {
+          "name": "Code | Parse WTI Agent Output",
+          "sha256": "d1e871017dda4f66bc56844257bcb1ae8cc33f34bd321bbb65a3b2e486add1ae",
+          "bytes": 715
+        },
+        {
+          "name": "Code | Deterministic WTI 24H Verdict Gate",
+          "sha256": "b6a80a218017552403f6445290dd42b95224e32ad88bb061221078897655f885",
+          "bytes": 6474
+        }
+      ],
+      "credential_bindings": [
+        {
+          "node": "Get WTI Logic Document",
+          "type": "githubOAuth2Api",
+          "name": "GitHub account 3"
+        },
+        {
+          "node": "Message a model",
+          "type": "openAiApi",
+          "name": "OpenAI account 2"
+        },
+        {
+          "node": "Create a row",
+          "type": "supabaseApi",
+          "name": "Supabase account"
+        }
+      ],
+      "routing": [
+        {
+          "node": "When Executed by Another Workflow",
+          "kind": "executeWorkflow",
+          "target_workflow_id": null,
+          "target_workflow_name_hint": null
+        }
+      ]
+    }
+  ],
+  "repo_exports": [
+    {
+      "file": "exports/btc_collector.json",
+      "workflow_id": "AE3Vv7ILPPiZwZHN",
+      "name": "Data Collector - BTC",
+      "version_counter": 80,
+      "updated_at": "2026-06-18T19:44:09.713Z",
+      "node_count": 22,
+      "key": "btc:collector",
+      "code_nodes": [
+        {
+          "name": "Normalise Market Snapshot",
+          "sha256": "1403816b31d6018f544ed528a12b0ef2958d06b93a625807ec44ae7533d18495",
+          "bytes": 15289
+        },
+        {
+          "name": "Code | Process Eco Data",
+          "sha256": "6e22f742fbfab00ceaf699a2d0b7a18cb1766670e3dae3c8d2eab08c573960aa",
+          "bytes": 2570
+        },
+        {
+          "name": "Code | Derive Fed Bias",
+          "sha256": "c8296444ca7c4587f92f7b15bf962e92441db0a0439d9dd9ecc207e0e16c3256",
+          "bytes": 593
+        },
+        {
+          "name": "Code | Derive US Eco Inputs",
+          "sha256": "2d80a0bf96a7f7d152a26a7bf1d3d2834374d8737b31c24e09cbf52354cea579",
+          "bytes": 3046
+        }
+      ],
+      "credential_literal_query_values": 2,
+      "expression_query_values": 16
+    },
+    {
+      "file": "exports/btc_layer1_agent.json",
+      "workflow_id": "G142Blty3sGHzuOr",
+      "name": "BTC Layer 1 Agent",
+      "version_counter": 18,
+      "updated_at": "2026-06-18T19:40:27.514Z",
+      "node_count": 9,
+      "key": "btc:agent",
+      "code_nodes": [
+        {
+          "name": "Combine md & market snapshot",
+          "sha256": "cea4fd3e6af31dc25116abeb7581adec0fad255d0919dd278f67d8a238a26c31",
+          "bytes": 389
+        },
+        {
+          "name": "Build BTC Input Pack",
+          "sha256": "f842b8263d3c09979dc2ef733a496a3a2061113c935f9bb07fd58a6d4304095b",
+          "bytes": 3537
+        },
+        {
+          "name": "Parse BTC Agent Output",
+          "sha256": "80c587ffd0062e38267b84ac90c606d486d6c0cf6ad3820b63ea6f6de5d611fe",
+          "bytes": 4531
+        },
+        {
+          "name": "Calculate BTC Conviction",
+          "sha256": "ac4f3dc339679fbbaf99f598e28b94576f1570041cda7d5bacb88a70cde1a72f",
+          "bytes": 18535
+        }
+      ],
+      "credential_literal_query_values": 0,
+      "expression_query_values": 0
+    },
+    {
+      "file": "exports/dashboard_writer.json",
+      "workflow_id": "850DrjzCKKX9fDzD",
+      "name": "Dashboard Writer - Layer 1",
+      "version_counter": 38,
+      "updated_at": "2026-06-18T19:44:22.689Z",
+      "node_count": 8,
+      "key": "SHARED:dashboard_writer",
+      "code_nodes": [
+        {
+          "name": "Build Layer 1 JSON",
+          "sha256": "c4a556520c6993a3a49de52531a8cb4f49abb92e8665550279a7f4c26aec8470",
+          "bytes": 14782
+        }
+      ],
+      "credential_literal_query_values": 0,
+      "expression_query_values": 0
+    },
+    {
+      "file": "exports/eco_events_collector.json",
+      "workflow_id": "UaSliyR8qlSVIfmk",
+      "name": "Eco Events Collector",
+      "version_counter": 152,
+      "updated_at": "2026-08-31T13:30:23.651Z",
+      "node_count": 17,
+      "key": "SHARED:events",
+      "code_nodes": [
+        {
+          "name": "Code | Normalise Forex Factory Events",
+          "sha256": "01de5092528ee1649a54305b837dbbd2e1fa369ded8776934b294565c187981e",
+          "bytes": 2282
+        },
+        {
+          "name": "Code | Route Existing vs New",
+          "sha256": "aae8376a799de9ae8ce4cfed7c1aa8f230e59cb54a5a70a576538aaa163553e7",
+          "bytes": 723
+        },
+        {
+          "name": "Code | Prepare Creates",
+          "sha256": "df26717ebe26c18adcb75d46a5d37e3757e4787b2c56af4c82c60022f0dcdf65",
+          "bytes": 145
+        },
+        {
+          "name": "Code | Prepare Updates",
+          "sha256": "7b5abb7d1a68cf17ea540b61e41ecf6aa5170bf718e5dc96082de8e1cf8e1e8f",
+          "bytes": 145
+        }
+      ],
+      "credential_literal_query_values": 0,
+      "expression_query_values": 0
+    },
+    {
+      "file": "exports/eur_collector.json",
+      "workflow_id": "Z3v9kQNIM22THi2O",
+      "name": "Data Collector - EUR",
+      "version_counter": 97,
+      "updated_at": "2026-06-18T19:44:00.836Z",
+      "node_count": 34,
+      "key": "eur:collector",
+      "code_nodes": [
+        {
+          "name": "Normalise Market Snapshot",
+          "sha256": "92e4cf08a675ab488250b52d40582c7dfebb37d0313879b6f8b81239dd17a5e0",
+          "bytes": 14065
+        },
+        {
+          "name": "Code | Process Eco Data",
+          "sha256": "4196f3c3f7ac4369d5041919edd9463bec350abccc72efe68cc3cf5d232377d4",
+          "bytes": 4444
+        },
+        {
+          "name": "Code | Derive Fed Bias",
+          "sha256": "c8296444ca7c4587f92f7b15bf962e92441db0a0439d9dd9ecc207e0e16c3256",
+          "bytes": 593
+        },
+        {
+          "name": "Code | Derive EUR Eco Inputs",
+          "sha256": "df9aeb36006587cc83b2873d3ec53f06b7f059ca03822cce3811236262cbfcef",
+          "bytes": 2929
+        },
+        {
+          "name": "Code | Derive EUR PMI Inputs",
+          "sha256": "c4479862c049ebdc2399c7d97b726a3bca1a79fc9dd74844756cffccb4cb8b7f",
+          "bytes": 1439
+        }
+      ],
+      "credential_literal_query_values": 2,
+      "expression_query_values": 28
+    },
+    {
+      "file": "exports/eur_layer1_agent.json",
+      "workflow_id": "Px0bsH7chlRWH9ZD",
+      "name": "EUR Layer 1 Agent",
+      "version_counter": 38,
+      "updated_at": "2026-06-19T09:33:04.442Z",
+      "node_count": 9,
+      "key": "eur:agent",
+      "code_nodes": [
+        {
+          "name": "Combine md & market snapshot",
+          "sha256": "32158ba2da27bc1f1b487a75aeb82089630709193f25aa3dfdf65ff88be040e6",
+          "bytes": 389
+        },
+        {
+          "name": "Build EUR Input Pack",
+          "sha256": "fdc30207dbec8c0fdd84bc9182bd3f58afb15efe4e7c8a24d48eb157e53b9a7f",
+          "bytes": 7516
+        },
+        {
+          "name": "Parse EUR Agent Output",
+          "sha256": "78b94ceac3dcd8b182769c4ed1be9aad377e74288fda9cdb48f26e7fe99caec2",
+          "bytes": 3592
+        },
+        {
+          "name": "Calculate EUR Conviction",
+          "sha256": "11a8fa71a6a7ca84d304cbd0a00b7ee32d000a949b43fe80aa904261b1ecb075",
+          "bytes": 14732
+        }
+      ],
+      "credential_literal_query_values": 0,
+      "expression_query_values": 0
+    },
+    {
+      "file": "exports/gbp_collector.json",
+      "workflow_id": null,
+      "name": "DRAFT - Data Collector - GBP",
+      "version_counter": null,
+      "updated_at": null,
+      "node_count": 10,
+      "key": "gbp:collector",
+      "code_nodes": [
+        {
+          "name": "Code | Build GBP Snapshot Row",
+          "sha256": "bf2211b9c26b5dddc775f9503dc56da3cd708ef48988bd51bb998293ef1d96fd",
+          "bytes": 6797
+        },
+        {
+          "name": "Code | Evaluate GBP Snapshot Usability",
+          "sha256": "2e4ad7b725dcdb910e8132d2c0c1bbd3c2546fc7391e3812b7d637d56d82b8a9",
+          "bytes": 361
+        }
+      ],
+      "credential_literal_query_values": 4,
+      "expression_query_values": 0
+    },
+    {
+      "file": "exports/gbp_layer1_agent.json",
+      "workflow_id": null,
+      "name": "DRAFT - GBP Layer 1 Agent",
+      "version_counter": null,
+      "updated_at": null,
+      "node_count": 9,
+      "key": "gbp:agent",
+      "code_nodes": [
+        {
+          "name": "Code | Build GBP Input Pack",
+          "sha256": "74fd3fe769d9e465801d999274cad35be7223ce80d784103bb2b9ffcd6861553",
+          "bytes": 6667
+        },
+        {
+          "name": "Code | Combine GBP logic & market snapshot",
+          "sha256": "de262b266bc568ad8048e19a3d277a7815ba658197618f7c49485b8197aa843a",
+          "bytes": 529
+        },
+        {
+          "name": "Code | Parse GBP Agent Output",
+          "sha256": "ad6354f1752bffe177ff071072744efe54c87c20676189782935b476a319b219",
+          "bytes": 2722
+        },
+        {
+          "name": "Code | Deterministic GBP 24H Verdict Gate",
+          "sha256": "b6ba7d51b925e91e58b71e6b12c939e75d8ef8212fcea985ee99f6e94e3211ed",
+          "bytes": 3220
+        }
+      ],
+      "credential_literal_query_values": 0,
+      "expression_query_values": 0
+    },
+    {
+      "file": "exports/gold_collector.json",
+      "workflow_id": "0z71FpOfKdL72hgW",
+      "name": "Data Collector - GOLD",
+      "version_counter": 18,
+      "updated_at": "2026-06-18T19:44:31.835Z",
+      "node_count": 29,
+      "key": "gold:collector",
+      "code_nodes": [
+        {
+          "name": "Normalise Market Snapshot",
+          "sha256": "12f55425141c65a335b215f8e5012cb6ca924bd5ef63e29b476b4726cef38252",
+          "bytes": 16240
+        },
+        {
+          "name": "Code | Process Eco Data",
+          "sha256": "6e22f742fbfab00ceaf699a2d0b7a18cb1766670e3dae3c8d2eab08c573960aa",
+          "bytes": 2570
+        },
+        {
+          "name": "Code | Derive Fed Bias",
+          "sha256": "c8296444ca7c4587f92f7b15bf962e92441db0a0439d9dd9ecc207e0e16c3256",
+          "bytes": 593
+        },
+        {
+          "name": "Code | Derive US Eco Inputs",
+          "sha256": "e2db453bfe8ef8b373020894f4966a93a7358a8b48d9064b2059c474ccd2ef3e",
+          "bytes": 4031
+        }
+      ],
+      "credential_literal_query_values": 2,
+      "expression_query_values": 26
+    },
+    {
+      "file": "exports/gold_layer1_agent.json",
+      "workflow_id": "wwBVT0EQcKu5517I",
+      "name": "GOLD Layer 1 Agent",
+      "version_counter": 27,
+      "updated_at": "2026-06-18T19:45:32.882Z",
+      "node_count": 9,
+      "key": "gold:agent",
+      "code_nodes": [
+        {
+          "name": "Combine md & market snapshot",
+          "sha256": "57f84ea112b2fa52daf47fb7ccbd03124aa0ede847cd39b989bb5edbf22b021b",
+          "bytes": 391
+        },
+        {
+          "name": "Build GOLD Input Pack",
+          "sha256": "32959305d4841bfbfe9c49d2e5bc308cc9e368df86015d19e3ce934562bad844",
+          "bytes": 2245
+        },
+        {
+          "name": "Parse GOLD Agent Output",
+          "sha256": "e0f2692f9387b6cfb9caf6288a499636861d0e10ae536ab19a4dffcab3472f0b",
+          "bytes": 3044
+        },
+        {
+          "name": "Calculate GOLD Conviction",
+          "sha256": "03dcbc310c3d5613d232361e8cc5ec57b520014d1c1519cff42faac076c993f2",
+          "bytes": 14655
+        }
+      ],
+      "credential_literal_query_values": 0,
+      "expression_query_values": 0
+    },
+    {
+      "file": "exports/layer2_trade_selection_agent.json",
+      "workflow_id": "ZKGSuYcWb6EfgXBE",
+      "name": "Layer 2 Trade Selection Agent",
+      "version_counter": 2,
+      "updated_at": "2026-06-19T17:44:55.411Z",
+      "node_count": 8,
+      "key": "SHARED:layer2",
+      "code_nodes": [
+        {
+          "name": "Build Layer 2 Trade Selection JSON",
+          "sha256": "9ab391eea7458df73501e1ef94ff871389f4f874b5828d4e7004f7a737173a46",
+          "bytes": 5455
+        }
+      ],
+      "credential_literal_query_values": 0,
+      "expression_query_values": 0
+    },
+    {
+      "file": "exports/master_orchestrator.json",
+      "workflow_id": "X75RKU34ikiM5RMU",
+      "name": "Master Orchestrator",
+      "version_counter": 54,
+      "updated_at": "2026-06-20T12:24:01.698Z",
+      "node_count": 17,
+      "key": "SHARED:orchestrator",
+      "code_nodes": [
+        {
+          "name": "Build Workflow Status JSON",
+          "sha256": "47cfb89f11af12a8e5f8e61f3a4460a0fafdb06f124dcac401bcf6fa9e37c1c9",
+          "bytes": 1812
+        }
+      ],
+      "credential_literal_query_values": 0,
+      "expression_query_values": 0
+    },
+    {
+      "file": "exports/nq_collector.json",
+      "workflow_id": "nYMDUSVQwEFNaH0U",
+      "name": "Data Collector - NQ",
+      "version_counter": 17,
+      "updated_at": "2026-06-18T19:43:47.989Z",
+      "node_count": 29,
+      "key": "nq:collector",
+      "code_nodes": [
+        {
+          "name": "Normalise Market Snapshot",
+          "sha256": "e9f0bbb46cc459a254f2f5b128679bdf5c6903a541d610c6de741d98ddaedf07",
+          "bytes": 11508
+        },
+        {
+          "name": "Code | Process Eco Data",
+          "sha256": "6e22f742fbfab00ceaf699a2d0b7a18cb1766670e3dae3c8d2eab08c573960aa",
+          "bytes": 2570
+        },
+        {
+          "name": "Code | Derive Fed Bias",
+          "sha256": "c8296444ca7c4587f92f7b15bf962e92441db0a0439d9dd9ecc207e0e16c3256",
+          "bytes": 593
+        },
+        {
+          "name": "Code | Derive US Eco Inputs",
+          "sha256": "e2db453bfe8ef8b373020894f4966a93a7358a8b48d9064b2059c474ccd2ef3e",
+          "bytes": 4031
+        }
+      ],
+      "credential_literal_query_values": 2,
+      "expression_query_values": 26
+    },
+    {
+      "file": "exports/nq_layer1_agent.json",
+      "workflow_id": "FOpFp3AzTJVYdLXe",
+      "name": "NQ Layer 1 Agent",
+      "version_counter": 24,
+      "updated_at": "2026-06-18T19:45:55.810Z",
+      "node_count": 9,
+      "key": "nq:agent",
+      "code_nodes": [
+        {
+          "name": "Combine md & market snapshot",
+          "sha256": "6c8a2ea4ca9c6b05c3c39838ae7483bdc39773d0e560e694465bfe0389461ac2",
+          "bytes": 387
+        },
+        {
+          "name": "Build NQ Input Pack",
+          "sha256": "5b333f0db720934c95eba1ea1987ea3f5c97ca153d64cbe3709d1effd49dd510",
+          "bytes": 2953
+        },
+        {
+          "name": "Parse NQ Agent Output",
+          "sha256": "64a57363f8845b3236bc2d4a336357f32af552101bf2f0e524f0c96c677a6e0e",
+          "bytes": 3284
+        },
+        {
+          "name": "Calculate NQ Conviction",
+          "sha256": "267a3187521e0e3a4ee53f6c45d7f7b7ff0b693f401e95b7cf599d3d19a90db5",
+          "bytes": 15044
+        }
+      ],
+      "credential_literal_query_values": 0,
+      "expression_query_values": 0
+    },
+    {
+      "file": "exports/usd_collector.json",
+      "workflow_id": "P1E4ZWtbDetYz1P5",
+      "name": "Data Collector - USD",
+      "version_counter": 137,
+      "updated_at": "2026-06-18T19:44:42.427Z",
+      "node_count": 29,
+      "key": "usd:collector",
+      "code_nodes": [
+        {
+          "name": "Normalise Market Snapshot",
+          "sha256": "83fc559331fd427c67d70c2e27a75ac8085c4d02e485dfa4c8a457bda26e6f78",
+          "bytes": 14256
+        },
+        {
+          "name": "Code | Process Eco Data",
+          "sha256": "6e22f742fbfab00ceaf699a2d0b7a18cb1766670e3dae3c8d2eab08c573960aa",
+          "bytes": 2570
+        },
+        {
+          "name": "Code | Derive Fed Bias",
+          "sha256": "c8296444ca7c4587f92f7b15bf962e92441db0a0439d9dd9ecc207e0e16c3256",
+          "bytes": 593
+        },
+        {
+          "name": "Code | Derive USD Eco Inputs",
+          "sha256": "d6d78262fd6ef0b583e976d0441ad6d39877389241285eb70255451eaa23a443",
+          "bytes": 2975
+        }
+      ],
+      "credential_literal_query_values": 2,
+      "expression_query_values": 26
+    },
+    {
+      "file": "exports/usd_layer1_agent.json",
+      "workflow_id": "OCt1tB9yVMUgFTha",
+      "name": "USD Layer 1 Agent",
+      "version_counter": 154,
+      "updated_at": "2026-06-18T19:46:03.782Z",
+      "node_count": 9,
+      "key": "usd:agent",
+      "code_nodes": [
+        {
+          "name": "Build USD Input Pack",
+          "sha256": "4369b990cab6d391472860cfc84a0865840e6c2b5ab1db8c225c9302739a72ef",
+          "bytes": 5919
+        },
+        {
+          "name": "Combine md & market snapshot",
+          "sha256": "a555aa4ae503d97c6dcfbcfaa5f6432293411c424e5828406c1dbf050dd1c304",
+          "bytes": 389
+        },
+        {
+          "name": "Parse USD Agent Output",
+          "sha256": "eea58cea34646ba1189de04b0f7788962468c74b26c092ee5d40b1c77fd4be67",
+          "bytes": 4307
+        },
+        {
+          "name": "Calculate USD Conviction",
+          "sha256": "5564f2f152f819be5e5a39ded6d111cbd1ad5f83c5635aec65f3c8d6afef89eb",
+          "bytes": 12153
+        }
+      ],
+      "credential_literal_query_values": 0,
+      "expression_query_values": 0
+    }
+  ],
+  "engine_coverage": [
+    {
+      "key": "SHARED:dashboard_writer",
+      "live_primary": {
+        "file": "Dashboard_Writer_-_Layer_1.json",
+        "name": "Dashboard Writer - Layer 1",
+        "id": "850DrjzCKKX9fDzD",
+        "active": true,
+        "version_id": "8c5bd16c-d0ac-49e7-86b8-5eccb4a63f4c",
+        "version_counter": 56,
+        "created_at": "2026-06-06T17:08:37.617Z",
+        "updated_at": "2026-09-19T14:39:28.326Z",
+        "node_count": 18,
+        "sanitized_sha256": "a8ddf2ef3b8060abe523e202ce65ba967d852a8f0192861054fc4461ee33079d",
+        "code_nodes": [
+          {
+            "name": "Build Layer 1 JSON",
+            "sha256": "8ee67e0d7b6ac48023869457291b484dbb5cda1f1e4aee18bdd0555c62f27341",
+            "bytes": 41458
+          }
+        ]
+      },
+      "live_all_candidates": [
+        {
+          "name": "Dashboard Writer - Layer 1",
+          "id": "850DrjzCKKX9fDzD",
+          "active": true,
+          "is_test_named": false,
+          "version_counter": 56,
+          "updated_at": "2026-09-19T14:39:28.326Z"
+        },
+        {
+          "name": "TEST - Dashboard Writer - Layer 1 - 20260722 - modified probe",
+          "id": "jGvWgeIQbWHw6Vfi",
+          "active": false,
+          "is_test_named": true,
+          "version_counter": 1,
+          "updated_at": "2026-07-23T09:12:21.509Z"
+        },
+        {
+          "name": "TEST - Dashboard Writer - Layer 1 - ISOLATED - 20260723",
+          "id": "pMPxuN3dk5WWxbYY",
+          "active": true,
+          "is_test_named": true,
+          "version_counter": 9,
+          "updated_at": "2026-07-27T18:51:59.741Z"
+        }
+      ],
+      "repo_exports": [
+        {
+          "file": "exports/dashboard_writer.json",
+          "workflow_id": "850DrjzCKKX9fDzD",
+          "version_counter": 38,
+          "updated_at": "2026-06-18T19:44:22.689Z",
+          "code_nodes": [
+            {
+              "name": "Build Layer 1 JSON",
+              "sha256": "c4a556520c6993a3a49de52531a8cb4f49abb92e8665550279a7f4c26aec8470",
+              "bytes": 14782
+            }
+          ]
+        }
+      ],
+      "code_node_comparison": {
+        "matched_code_nodes": [
+          "Build Layer 1 JSON"
+        ],
+        "differing_code_nodes": [
+          {
+            "node": "Build Layer 1 JSON",
+            "live_sha256": "8ee67e0d7b6ac48023869457291b484dbb5cda1f1e4aee18bdd0555c62f27341",
+            "repo_sha256": "c4a556520c6993a3a49de52531a8cb4f49abb92e8665550279a7f4c26aec8470"
+          }
+        ],
+        "only_in_live": [],
+        "only_in_repo": [],
+        "all_matched_code_nodes_identical": false
+      }
+    },
+    {
+      "key": "SHARED:events",
+      "live_primary": {
+        "file": "Eco_Events_Collector.json",
+        "name": "Eco Events Collector",
+        "id": "UaSliyR8qlSVIfmk",
+        "active": true,
+        "version_id": "a35e4e66-4286-4add-9855-c1c7ff967b30",
+        "version_counter": 153,
+        "created_at": "2026-06-10T18:47:40.406Z",
+        "updated_at": "2026-09-01T11:40:08.572Z",
+        "node_count": 17,
+        "sanitized_sha256": "cace9e7857c0cd8806c5789d965d1ef90e5ade1de92844cbf35df384802a27b2",
+        "code_nodes": [
+          {
+            "name": "Code | Normalise Forex Factory Events",
+            "sha256": "01de5092528ee1649a54305b837dbbd2e1fa369ded8776934b294565c187981e",
+            "bytes": 2282
+          },
+          {
+            "name": "Code | Route Existing vs New",
+            "sha256": "aae8376a799de9ae8ce4cfed7c1aa8f230e59cb54a5a70a576538aaa163553e7",
+            "bytes": 723
+          },
+          {
+            "name": "Code | Prepare Creates",
+            "sha256": "df26717ebe26c18adcb75d46a5d37e3757e4787b2c56af4c82c60022f0dcdf65",
+            "bytes": 145
+          },
+          {
+            "name": "Code | Prepare Updates",
+            "sha256": "7b5abb7d1a68cf17ea540b61e41ecf6aa5170bf718e5dc96082de8e1cf8e1e8f",
+            "bytes": 145
+          }
+        ]
+      },
+      "live_all_candidates": [
+        {
+          "name": "1. Economic Events EUR PMI Collector",
+          "id": "HIhQay9MLSzYazzI",
+          "active": false,
+          "is_test_named": false,
+          "version_counter": 1,
+          "updated_at": "2026-06-13T19:08:35.678Z"
+        },
+        {
+          "name": "Eco Events Collector",
+          "id": "UaSliyR8qlSVIfmk",
+          "active": true,
+          "is_test_named": false,
+          "version_counter": 153,
+          "updated_at": "2026-09-01T11:40:08.572Z"
+        },
+        {
+          "name": "TEST - Eco Events Collector - Isolated 20260727",
+          "id": "4zd3QEGWhessSGHW",
+          "active": true,
+          "is_test_named": true,
+          "version_counter": 10,
+          "updated_at": "2026-08-21T19:53:48.245Z"
+        }
+      ],
+      "repo_exports": [
+        {
+          "file": "exports/eco_events_collector.json",
+          "workflow_id": "UaSliyR8qlSVIfmk",
+          "version_counter": 152,
+          "updated_at": "2026-08-31T13:30:23.651Z",
+          "code_nodes": [
+            {
+              "name": "Code | Normalise Forex Factory Events",
+              "sha256": "01de5092528ee1649a54305b837dbbd2e1fa369ded8776934b294565c187981e",
+              "bytes": 2282
+            },
+            {
+              "name": "Code | Route Existing vs New",
+              "sha256": "aae8376a799de9ae8ce4cfed7c1aa8f230e59cb54a5a70a576538aaa163553e7",
+              "bytes": 723
+            },
+            {
+              "name": "Code | Prepare Creates",
+              "sha256": "df26717ebe26c18adcb75d46a5d37e3757e4787b2c56af4c82c60022f0dcdf65",
+              "bytes": 145
+            },
+            {
+              "name": "Code | Prepare Updates",
+              "sha256": "7b5abb7d1a68cf17ea540b61e41ecf6aa5170bf718e5dc96082de8e1cf8e1e8f",
+              "bytes": 145
+            }
+          ]
+        }
+      ],
+      "code_node_comparison": {
+        "matched_code_nodes": [
+          "Code | Normalise Forex Factory Events",
+          "Code | Route Existing vs New",
+          "Code | Prepare Creates",
+          "Code | Prepare Updates"
+        ],
+        "differing_code_nodes": [],
+        "only_in_live": [],
+        "only_in_repo": [],
+        "all_matched_code_nodes_identical": true
+      }
+    },
+    {
+      "key": "SHARED:layer2",
+      "live_primary": {
+        "file": "Layer_2_Trade_Selection_Agent.json",
+        "name": "Layer 2 Trade Selection Agent",
+        "id": "ZKGSuYcWb6EfgXBE",
+        "active": true,
+        "version_id": "305a3ce0-57bb-43ce-b77d-63bde96417d2",
+        "version_counter": 24,
+        "created_at": "2026-06-19T17:31:31.649Z",
+        "updated_at": "2026-09-12T19:36:46.423Z",
+        "node_count": 18,
+        "sanitized_sha256": "cd95546551f8861e4aceab9ab197a6afaa368b611cbb5926441f048026265068",
+        "code_nodes": [
+          {
+            "name": "Build Layer 2 Trade Selection JSON",
+            "sha256": "b1c83518df77c15e72bca489245146d7c6a88e23417c823fba658fcf930f979a",
+            "bytes": 5608
+          }
+        ]
+      },
+      "live_all_candidates": [
+        {
+          "name": "Layer 2 Trade Selection Agent",
+          "id": "ZKGSuYcWb6EfgXBE",
+          "active": true,
+          "is_test_named": false,
+          "version_counter": 24,
+          "updated_at": "2026-09-12T19:36:46.423Z"
+        },
+        {
+          "name": "TEST - Layer 2 Trade Selection Agent - STAGED-ONLY - PROPOSED - 20260727",
+          "id": "QBk8bAHkkHjJYbpK",
+          "active": true,
+          "is_test_named": true,
+          "version_counter": 5,
+          "updated_at": "2026-07-27T13:19:24.157Z"
+        }
+      ],
+      "repo_exports": [
+        {
+          "file": "exports/layer2_trade_selection_agent.json",
+          "workflow_id": "ZKGSuYcWb6EfgXBE",
+          "version_counter": 2,
+          "updated_at": "2026-06-19T17:44:55.411Z",
+          "code_nodes": [
+            {
+              "name": "Build Layer 2 Trade Selection JSON",
+              "sha256": "9ab391eea7458df73501e1ef94ff871389f4f874b5828d4e7004f7a737173a46",
+              "bytes": 5455
+            }
+          ]
+        }
+      ],
+      "code_node_comparison": {
+        "matched_code_nodes": [
+          "Build Layer 2 Trade Selection JSON"
+        ],
+        "differing_code_nodes": [
+          {
+            "node": "Build Layer 2 Trade Selection JSON",
+            "live_sha256": "b1c83518df77c15e72bca489245146d7c6a88e23417c823fba658fcf930f979a",
+            "repo_sha256": "9ab391eea7458df73501e1ef94ff871389f4f874b5828d4e7004f7a737173a46"
+          }
+        ],
+        "only_in_live": [],
+        "only_in_repo": [],
+        "all_matched_code_nodes_identical": false
+      }
+    },
+    {
+      "key": "SHARED:orchestrator",
+      "live_primary": {
+        "file": "Master_Orchestrator.json",
+        "name": "Master Orchestrator",
+        "id": "X75RKU34ikiM5RMU",
+        "active": true,
+        "version_id": "35007228-00e0-48ee-8c49-c0bca2be3182",
+        "version_counter": 62,
+        "created_at": "2026-06-18T19:36:15.843Z",
+        "updated_at": "2026-09-12T19:21:33.111Z",
+        "node_count": 24,
+        "sanitized_sha256": "40ff622a5b9bb8e1f5bd34b220b4eeb4e4fd0675203055272d6c91920f80f3d6",
+        "code_nodes": [
+          {
+            "name": "Build Workflow Status JSON",
+            "sha256": "451169bb6581a1b86e63b0a63204e2fbd4a51fda510a2169a9720854e43e3fb4",
+            "bytes": 1976
+          },
+          {
+            "name": "Guard Economic Event Collector",
+            "sha256": "fbf6a6da86a8dd7d4bc7f19deaf5f48da7bf7b55a606fd1f3bfb03c88829f2ca",
+            "bytes": 121
+          },
+          {
+            "name": "Build Input Health on Economic Event Failure",
+            "sha256": "b9c28d0776bd1e2e37ff461dbf2fbd4765913e51ef80e4b0db62820a0f94cf83",
+            "bytes": 1828
+          }
+        ]
+      },
+      "live_all_candidates": [
+        {
+          "name": "Master Orchestrator",
+          "id": "X75RKU34ikiM5RMU",
+          "active": true,
+          "is_test_named": false,
+          "version_counter": 62,
+          "updated_at": "2026-09-12T19:21:33.111Z"
+        },
+        {
+          "name": "TEST - Master Orchestrator - ISOLATED - 20260723",
+          "id": "CIvsnhyOi35zmA44",
+          "active": true,
+          "is_test_named": true,
+          "version_counter": 18,
+          "updated_at": "2026-07-27T20:01:39.774Z"
+        }
+      ],
+      "repo_exports": [
+        {
+          "file": "exports/master_orchestrator.json",
+          "workflow_id": "X75RKU34ikiM5RMU",
+          "version_counter": 54,
+          "updated_at": "2026-06-20T12:24:01.698Z",
+          "code_nodes": [
+            {
+              "name": "Build Workflow Status JSON",
+              "sha256": "47cfb89f11af12a8e5f8e61f3a4460a0fafdb06f124dcac401bcf6fa9e37c1c9",
+              "bytes": 1812
+            }
+          ]
+        }
+      ],
+      "code_node_comparison": {
+        "matched_code_nodes": [
+          "Build Workflow Status JSON"
+        ],
+        "differing_code_nodes": [
+          {
+            "node": "Build Workflow Status JSON",
+            "live_sha256": "451169bb6581a1b86e63b0a63204e2fbd4a51fda510a2169a9720854e43e3fb4",
+            "repo_sha256": "47cfb89f11af12a8e5f8e61f3a4460a0fafdb06f124dcac401bcf6fa9e37c1c9"
+          }
+        ],
+        "only_in_live": [
+          "Guard Economic Event Collector",
+          "Build Input Health on Economic Event Failure"
+        ],
+        "only_in_repo": [],
+        "all_matched_code_nodes_identical": false
+      }
+    },
+    {
+      "key": "UNCLASSIFIED:other",
+      "live_primary": {
+        "file": "Backtest_Processor.json",
+        "name": "Backtest Processor",
+        "id": "1lT52EmkH3hHJPUL",
+        "active": false,
+        "version_id": "e62b4b92-ecbf-4ada-a43a-34855e65bed9",
+        "version_counter": 348,
+        "created_at": "2026-05-12T19:59:04.680Z",
+        "updated_at": "2026-05-14T10:07:59.092Z",
+        "node_count": 35,
+        "sanitized_sha256": "da0fa266bc9ef21cb6318dac1670fcb81f1681a01a7fdaeef60daf024656c615",
+        "code_nodes": [
+          {
+            "name": "Code | BT Fetch Aggregator",
+            "sha256": "fa7067e07012166505628ad0114d26db3683780927c8df945a483e72584e087c",
+            "bytes": 2097
+          },
+          {
+            "name": "Code | BT Prompt Builder",
+            "sha256": "1846308b1f98af9bd20988712a7ac849bde53e374928788b1d2afc0c9a9789af",
+            "bytes": 523
+          },
+          {
+            "name": "Code | BT Extract Diagnosis Text",
+            "sha256": "e85c64e58c8208146acdd1eb047a84a1e77ba9029214570ae77ef0525b3dfc99",
+            "bytes": 365
+          },
+          {
+            "name": "Code | BT Build Extract Prompt",
+            "sha256": "4f900099275f34e4910982d893a942d1606ffb561ad0e0597463cb7a15b6cdd3",
+            "bytes": 833
+          },
+          {
+            "name": "Code | BT Parse Calls",
+            "sha256": "4d849451deea25deb1c1d0cd5cc2c38d551dc6b4a28c5c5e976f8e9134139269",
+            "bytes": 1240
+          }
+        ]
+      },
+      "live_all_candidates": [
+        {
+          "name": "Backtest Processor",
+          "id": "1lT52EmkH3hHJPUL",
+          "active": false,
+          "is_test_named": false,
+          "version_counter": 348,
+          "updated_at": "2026-05-14T10:07:59.092Z"
+        },
+        {
+          "name": "Backtest Queue Initialiser",
+          "id": "4IctuVz0xl7kefJ2",
+          "active": false,
+          "is_test_named": false,
+          "version_counter": 34,
+          "updated_at": "2026-05-13T17:40:20.321Z"
+        },
+        {
+          "name": "Backtest Resolver",
+          "id": "S7UkIcOx1SneGaZZ",
+          "active": false,
+          "is_test_named": false,
+          "version_counter": 197,
+          "updated_at": "2026-05-14T09:47:43.250Z"
+        },
+        {
+          "name": "Price fetch old",
+          "id": "TcNF8wWesKjkK3u4",
+          "active": false,
+          "is_test_named": false,
+          "version_counter": 86,
+          "updated_at": "2026-06-19T13:40:35.483Z"
+        },
+        {
+          "name": "TEST - Minimal Create Probe - 20260722",
+          "id": "W8vbxNal94PkB45v",
+          "active": false,
+          "is_test_named": true,
+          "version_counter": 1,
+          "updated_at": "2026-07-22T19:59:36.298Z"
+        }
+      ],
+      "repo_exports": [],
+      "code_node_comparison": null
+    },
+    {
+      "key": "btc:agent",
+      "live_primary": {
+        "file": "BTC_Layer_1_Agent.json",
+        "name": "BTC Layer 1 Agent",
+        "id": "G142Blty3sGHzuOr",
+        "active": true,
+        "version_id": "3b69d9c0-7f07-4a38-bfc1-eff5e61db763",
+        "version_counter": 18,
+        "created_at": "2026-06-07T18:35:58.219Z",
+        "updated_at": "2026-06-18T19:40:27.514Z",
+        "node_count": 9,
+        "sanitized_sha256": "8f9fc6d1ff7dc50ac04fb13d21700f68995f70a2257381bf3e1d05932255c200",
+        "code_nodes": [
+          {
+            "name": "Combine md & market snapshot",
+            "sha256": "cea4fd3e6af31dc25116abeb7581adec0fad255d0919dd278f67d8a238a26c31",
+            "bytes": 389
+          },
+          {
+            "name": "Build BTC Input Pack",
+            "sha256": "f842b8263d3c09979dc2ef733a496a3a2061113c935f9bb07fd58a6d4304095b",
+            "bytes": 3537
+          },
+          {
+            "name": "Parse BTC Agent Output",
+            "sha256": "80c587ffd0062e38267b84ac90c606d486d6c0cf6ad3820b63ea6f6de5d611fe",
+            "bytes": 4531
+          },
+          {
+            "name": "Calculate BTC Conviction",
+            "sha256": "ac4f3dc339679fbbaf99f598e28b94576f1570041cda7d5bacb88a70cde1a72f",
+            "bytes": 18535
+          }
+        ]
+      },
+      "live_all_candidates": [
+        {
+          "name": "BTC Layer 1 Agent",
+          "id": "G142Blty3sGHzuOr",
+          "active": true,
+          "is_test_named": false,
+          "version_counter": 18,
+          "updated_at": "2026-06-18T19:40:27.514Z"
+        },
+        {
+          "name": "TEST - BTC Layer 1 Agent - ISOLATED - 20260723",
+          "id": "pQPrq13PaeclUWEC",
+          "active": true,
+          "is_test_named": true,
+          "version_counter": 4,
+          "updated_at": "2026-07-27T12:53:32.992Z"
+        }
+      ],
+      "repo_exports": [
+        {
+          "file": "exports/btc_layer1_agent.json",
+          "workflow_id": "G142Blty3sGHzuOr",
+          "version_counter": 18,
+          "updated_at": "2026-06-18T19:40:27.514Z",
+          "code_nodes": [
+            {
+              "name": "Combine md & market snapshot",
+              "sha256": "cea4fd3e6af31dc25116abeb7581adec0fad255d0919dd278f67d8a238a26c31",
+              "bytes": 389
+            },
+            {
+              "name": "Build BTC Input Pack",
+              "sha256": "f842b8263d3c09979dc2ef733a496a3a2061113c935f9bb07fd58a6d4304095b",
+              "bytes": 3537
+            },
+            {
+              "name": "Parse BTC Agent Output",
+              "sha256": "80c587ffd0062e38267b84ac90c606d486d6c0cf6ad3820b63ea6f6de5d611fe",
+              "bytes": 4531
+            },
+            {
+              "name": "Calculate BTC Conviction",
+              "sha256": "ac4f3dc339679fbbaf99f598e28b94576f1570041cda7d5bacb88a70cde1a72f",
+              "bytes": 18535
+            }
+          ]
+        }
+      ],
+      "code_node_comparison": {
+        "matched_code_nodes": [
+          "Combine md & market snapshot",
+          "Build BTC Input Pack",
+          "Parse BTC Agent Output",
+          "Calculate BTC Conviction"
+        ],
+        "differing_code_nodes": [],
+        "only_in_live": [],
+        "only_in_repo": [],
+        "all_matched_code_nodes_identical": true
+      }
+    },
+    {
+      "key": "btc:collector",
+      "live_primary": {
+        "file": "Data_Collector_-_BTC.json",
+        "name": "Data Collector - BTC",
+        "id": "AE3Vv7ILPPiZwZHN",
+        "active": true,
+        "version_id": "2d3ab61f-4a61-46ba-b34c-7995efc40ffb",
+        "version_counter": 83,
+        "created_at": "2026-06-07T18:20:50.698Z",
+        "updated_at": "2026-09-11T07:50:56.212Z",
+        "node_count": 22,
+        "sanitized_sha256": "276a9e8d74cbfcafc9133b87136be1312cc38792eb4178d022b611fccfddae90",
+        "code_nodes": [
+          {
+            "name": "Normalise Market Snapshot",
+            "sha256": "1403816b31d6018f544ed528a12b0ef2958d06b93a625807ec44ae7533d18495",
+            "bytes": 15289
+          },
+          {
+            "name": "Code | Process Eco Data",
+            "sha256": "6e22f742fbfab00ceaf699a2d0b7a18cb1766670e3dae3c8d2eab08c573960aa",
+            "bytes": 2570
+          },
+          {
+            "name": "Code | Derive Fed Bias",
+            "sha256": "c8296444ca7c4587f92f7b15bf962e92441db0a0439d9dd9ecc207e0e16c3256",
+            "bytes": 593
+          },
+          {
+            "name": "Code | Derive US Eco Inputs",
+            "sha256": "2d80a0bf96a7f7d152a26a7bf1d3d2834374d8737b31c24e09cbf52354cea579",
+            "bytes": 3046
+          }
+        ]
+      },
+      "live_all_candidates": [
+        {
+          "name": "Data Collector - BTC",
+          "id": "AE3Vv7ILPPiZwZHN",
+          "active": true,
+          "is_test_named": false,
+          "version_counter": 83,
+          "updated_at": "2026-09-11T07:50:56.212Z"
+        },
+        {
+          "name": "TEST - Data Collector - BTC - 20260722",
+          "id": "DMiMgjgFrdQZAOpW",
+          "active": true,
+          "is_test_named": true,
+          "version_counter": 4,
+          "updated_at": "2026-07-27T11:19:35.011Z"
+        },
+        {
+          "name": "TEST - Data Collector - BTC - 20260722 - modified probe",
+          "id": "xfiQRMEcHLXfWHpa",
+          "active": false,
+          "is_test_named": true,
+          "version_counter": 1,
+          "updated_at": "2026-07-23T09:12:21.426Z"
+        }
+      ],
+      "repo_exports": [
+        {
+          "file": "exports/btc_collector.json",
+          "workflow_id": "AE3Vv7ILPPiZwZHN",
+          "version_counter": 80,
+          "updated_at": "2026-06-18T19:44:09.713Z",
+          "code_nodes": [
+            {
+              "name": "Normalise Market Snapshot",
+              "sha256": "1403816b31d6018f544ed528a12b0ef2958d06b93a625807ec44ae7533d18495",
+              "bytes": 15289
+            },
+            {
+              "name": "Code | Process Eco Data",
+              "sha256": "6e22f742fbfab00ceaf699a2d0b7a18cb1766670e3dae3c8d2eab08c573960aa",
+              "bytes": 2570
+            },
+            {
+              "name": "Code | Derive Fed Bias",
+              "sha256": "c8296444ca7c4587f92f7b15bf962e92441db0a0439d9dd9ecc207e0e16c3256",
+              "bytes": 593
+            },
+            {
+              "name": "Code | Derive US Eco Inputs",
+              "sha256": "2d80a0bf96a7f7d152a26a7bf1d3d2834374d8737b31c24e09cbf52354cea579",
+              "bytes": 3046
+            }
+          ]
+        }
+      ],
+      "code_node_comparison": {
+        "matched_code_nodes": [
+          "Normalise Market Snapshot",
+          "Code | Process Eco Data",
+          "Code | Derive Fed Bias",
+          "Code | Derive US Eco Inputs"
+        ],
+        "differing_code_nodes": [],
+        "only_in_live": [],
+        "only_in_repo": [],
+        "all_matched_code_nodes_identical": true
+      }
+    },
+    {
+      "key": "eur:agent",
+      "live_primary": {
+        "file": "EUR_Layer_1_Agent.json",
+        "name": "EUR Layer 1 Agent",
+        "id": "Px0bsH7chlRWH9ZD",
+        "active": true,
+        "version_id": "310f6bfe-1ce0-47e6-bbfb-29fe19fc24c5",
+        "version_counter": 38,
+        "created_at": "2026-06-07T19:57:41.075Z",
+        "updated_at": "2026-06-19T09:33:04.442Z",
+        "node_count": 9,
+        "sanitized_sha256": "4a12aefbf510e743dfd574faba6c96bdf77a28aa7f0950f822918a9933adeba9",
+        "code_nodes": [
+          {
+            "name": "Combine md & market snapshot",
+            "sha256": "32158ba2da27bc1f1b487a75aeb82089630709193f25aa3dfdf65ff88be040e6",
+            "bytes": 389
+          },
+          {
+            "name": "Build EUR Input Pack",
+            "sha256": "fdc30207dbec8c0fdd84bc9182bd3f58afb15efe4e7c8a24d48eb157e53b9a7f",
+            "bytes": 7516
+          },
+          {
+            "name": "Parse EUR Agent Output",
+            "sha256": "78b94ceac3dcd8b182769c4ed1be9aad377e74288fda9cdb48f26e7fe99caec2",
+            "bytes": 3592
+          },
+          {
+            "name": "Calculate EUR Conviction",
+            "sha256": "11a8fa71a6a7ca84d304cbd0a00b7ee32d000a949b43fe80aa904261b1ecb075",
+            "bytes": 14732
+          }
+        ]
+      },
+      "live_all_candidates": [
+        {
+          "name": "EUR Layer 1 Agent",
+          "id": "Px0bsH7chlRWH9ZD",
+          "active": true,
+          "is_test_named": false,
+          "version_counter": 38,
+          "updated_at": "2026-06-19T09:33:04.442Z"
+        },
+        {
+          "name": "TEST - EUR Layer 1 Agent - ISOLATED - 20260723",
+          "id": "fGr45f1LqZABLlem",
+          "active": true,
+          "is_test_named": true,
+          "version_counter": 4,
+          "updated_at": "2026-07-27T11:28:17.020Z"
+        }
+      ],
+      "repo_exports": [
+        {
+          "file": "exports/eur_layer1_agent.json",
+          "workflow_id": "Px0bsH7chlRWH9ZD",
+          "version_counter": 38,
+          "updated_at": "2026-06-19T09:33:04.442Z",
+          "code_nodes": [
+            {
+              "name": "Combine md & market snapshot",
+              "sha256": "32158ba2da27bc1f1b487a75aeb82089630709193f25aa3dfdf65ff88be040e6",
+              "bytes": 389
+            },
+            {
+              "name": "Build EUR Input Pack",
+              "sha256": "fdc30207dbec8c0fdd84bc9182bd3f58afb15efe4e7c8a24d48eb157e53b9a7f",
+              "bytes": 7516
+            },
+            {
+              "name": "Parse EUR Agent Output",
+              "sha256": "78b94ceac3dcd8b182769c4ed1be9aad377e74288fda9cdb48f26e7fe99caec2",
+              "bytes": 3592
+            },
+            {
+              "name": "Calculate EUR Conviction",
+              "sha256": "11a8fa71a6a7ca84d304cbd0a00b7ee32d000a949b43fe80aa904261b1ecb075",
+              "bytes": 14732
+            }
+          ]
+        }
+      ],
+      "code_node_comparison": {
+        "matched_code_nodes": [
+          "Combine md & market snapshot",
+          "Build EUR Input Pack",
+          "Parse EUR Agent Output",
+          "Calculate EUR Conviction"
+        ],
+        "differing_code_nodes": [],
+        "only_in_live": [],
+        "only_in_repo": [],
+        "all_matched_code_nodes_identical": true
+      }
+    },
+    {
+      "key": "eur:collector",
+      "live_primary": {
+        "file": "Data_Collector_-_EUR.json",
+        "name": "Data Collector - EUR",
+        "id": "Z3v9kQNIM22THi2O",
+        "active": true,
+        "version_id": "59fa4957-e57a-4c81-b663-8df3410643ee",
+        "version_counter": 98,
+        "created_at": "2026-06-07T19:44:03.116Z",
+        "updated_at": "2026-09-11T07:50:36.580Z",
+        "node_count": 34,
+        "sanitized_sha256": "28bdf355ec6023afa05b2b2e711942d5e26934d8a1b35978c6671fca8e2e54a1",
+        "code_nodes": [
+          {
+            "name": "Normalise Market Snapshot",
+            "sha256": "92e4cf08a675ab488250b52d40582c7dfebb37d0313879b6f8b81239dd17a5e0",
+            "bytes": 14065
+          },
+          {
+            "name": "Code | Process Eco Data",
+            "sha256": "4196f3c3f7ac4369d5041919edd9463bec350abccc72efe68cc3cf5d232377d4",
+            "bytes": 4444
+          },
+          {
+            "name": "Code | Derive Fed Bias",
+            "sha256": "c8296444ca7c4587f92f7b15bf962e92441db0a0439d9dd9ecc207e0e16c3256",
+            "bytes": 593
+          },
+          {
+            "name": "Code | Derive EUR Eco Inputs",
+            "sha256": "df9aeb36006587cc83b2873d3ec53f06b7f059ca03822cce3811236262cbfcef",
+            "bytes": 2929
+          },
+          {
+            "name": "Code | Derive EUR PMI Inputs",
+            "sha256": "c4479862c049ebdc2399c7d97b726a3bca1a79fc9dd74844756cffccb4cb8b7f",
+            "bytes": 1439
+          }
+        ]
+      },
+      "live_all_candidates": [
+        {
+          "name": "Data Collector - EUR",
+          "id": "Z3v9kQNIM22THi2O",
+          "active": true,
+          "is_test_named": false,
+          "version_counter": 98,
+          "updated_at": "2026-09-11T07:50:36.580Z"
+        },
+        {
+          "name": "TEST - Data Collector - EUR - 20260722",
+          "id": "mh3CLzNirpXorGKi",
+          "active": true,
+          "is_test_named": true,
+          "version_counter": 3,
+          "updated_at": "2026-07-27T11:19:23.413Z"
+        }
+      ],
+      "repo_exports": [
+        {
+          "file": "exports/eur_collector.json",
+          "workflow_id": "Z3v9kQNIM22THi2O",
+          "version_counter": 97,
+          "updated_at": "2026-06-18T19:44:00.836Z",
+          "code_nodes": [
+            {
+              "name": "Normalise Market Snapshot",
+              "sha256": "92e4cf08a675ab488250b52d40582c7dfebb37d0313879b6f8b81239dd17a5e0",
+              "bytes": 14065
+            },
+            {
+              "name": "Code | Process Eco Data",
+              "sha256": "4196f3c3f7ac4369d5041919edd9463bec350abccc72efe68cc3cf5d232377d4",
+              "bytes": 4444
+            },
+            {
+              "name": "Code | Derive Fed Bias",
+              "sha256": "c8296444ca7c4587f92f7b15bf962e92441db0a0439d9dd9ecc207e0e16c3256",
+              "bytes": 593
+            },
+            {
+              "name": "Code | Derive EUR Eco Inputs",
+              "sha256": "df9aeb36006587cc83b2873d3ec53f06b7f059ca03822cce3811236262cbfcef",
+              "bytes": 2929
+            },
+            {
+              "name": "Code | Derive EUR PMI Inputs",
+              "sha256": "c4479862c049ebdc2399c7d97b726a3bca1a79fc9dd74844756cffccb4cb8b7f",
+              "bytes": 1439
+            }
+          ]
+        }
+      ],
+      "code_node_comparison": {
+        "matched_code_nodes": [
+          "Normalise Market Snapshot",
+          "Code | Process Eco Data",
+          "Code | Derive Fed Bias",
+          "Code | Derive EUR Eco Inputs",
+          "Code | Derive EUR PMI Inputs"
+        ],
+        "differing_code_nodes": [],
+        "only_in_live": [],
+        "only_in_repo": [],
+        "all_matched_code_nodes_identical": true
+      }
+    },
+    {
+      "key": "gbp:agent",
+      "live_primary": {
+        "file": "GBP_Layer_1_Agent.json",
+        "name": "GBP Layer 1 Agent",
+        "id": "bMv96EPR0xCXi3bi",
+        "active": true,
+        "version_id": "45ca399f-7ecc-4d38-adb0-147dc14e0d42",
+        "version_counter": 18,
+        "created_at": "2026-09-12T18:46:13.325Z",
+        "updated_at": "2026-09-12T19:45:35.228Z",
+        "node_count": 19,
+        "sanitized_sha256": "2e4175e1a3926d3474fe3c3e2de90955fad4c92321c2d387adea2fda3e478b1f",
+        "code_nodes": [
+          {
+            "name": "Code | Build GBP Input Pack",
+            "sha256": "f8e7cdc2703e5f73dcfbc10367c84571136f502204ec476de3e7046b5e8762a9",
+            "bytes": 10362
+          },
+          {
+            "name": "Code | Combine GBP Logic and Inputs",
+            "sha256": "0ffdbc23419608994a4eed8e44ec499a346517dd74f7ed3e441ab98577d818d6",
+            "bytes": 198
+          },
+          {
+            "name": "Code | Parse GBP Agent Output",
+            "sha256": "c3efa843faeff48a5655c7b1b54ba5f211142db845a7f243aeb5f71506e9c36d",
+            "bytes": 743
+          },
+          {
+            "name": "Code | Deterministic GBP 24H Verdict Gate",
+            "sha256": "77d5f0c2646280f885bceb6be4c4e114443d66139afd63ebe8ff3d2c0b624891",
+            "bytes": 6506
+          }
+        ]
+      },
+      "live_all_candidates": [
+        {
+          "name": "GBP Layer 1 Agent",
+          "id": "bMv96EPR0xCXi3bi",
+          "active": true,
+          "is_test_named": false,
+          "version_counter": 18,
+          "updated_at": "2026-09-12T19:45:35.228Z"
+        }
+      ],
+      "repo_exports": [
+        {
+          "file": "exports/gbp_layer1_agent.json",
+          "workflow_id": null,
+          "version_counter": null,
+          "updated_at": null,
+          "code_nodes": [
+            {
+              "name": "Code | Build GBP Input Pack",
+              "sha256": "74fd3fe769d9e465801d999274cad35be7223ce80d784103bb2b9ffcd6861553",
+              "bytes": 6667
+            },
+            {
+              "name": "Code | Combine GBP logic & market snapshot",
+              "sha256": "de262b266bc568ad8048e19a3d277a7815ba658197618f7c49485b8197aa843a",
+              "bytes": 529
+            },
+            {
+              "name": "Code | Parse GBP Agent Output",
+              "sha256": "ad6354f1752bffe177ff071072744efe54c87c20676189782935b476a319b219",
+              "bytes": 2722
+            },
+            {
+              "name": "Code | Deterministic GBP 24H Verdict Gate",
+              "sha256": "b6ba7d51b925e91e58b71e6b12c939e75d8ef8212fcea985ee99f6e94e3211ed",
+              "bytes": 3220
+            }
+          ]
+        }
+      ],
+      "code_node_comparison": {
+        "matched_code_nodes": [
+          "Code | Build GBP Input Pack",
+          "Code | Parse GBP Agent Output",
+          "Code | Deterministic GBP 24H Verdict Gate"
+        ],
+        "differing_code_nodes": [
+          {
+            "node": "Code | Build GBP Input Pack",
+            "live_sha256": "f8e7cdc2703e5f73dcfbc10367c84571136f502204ec476de3e7046b5e8762a9",
+            "repo_sha256": "74fd3fe769d9e465801d999274cad35be7223ce80d784103bb2b9ffcd6861553"
+          },
+          {
+            "node": "Code | Parse GBP Agent Output",
+            "live_sha256": "c3efa843faeff48a5655c7b1b54ba5f211142db845a7f243aeb5f71506e9c36d",
+            "repo_sha256": "ad6354f1752bffe177ff071072744efe54c87c20676189782935b476a319b219"
+          },
+          {
+            "node": "Code | Deterministic GBP 24H Verdict Gate",
+            "live_sha256": "77d5f0c2646280f885bceb6be4c4e114443d66139afd63ebe8ff3d2c0b624891",
+            "repo_sha256": "b6ba7d51b925e91e58b71e6b12c939e75d8ef8212fcea985ee99f6e94e3211ed"
+          }
+        ],
+        "only_in_live": [
+          "Code | Combine GBP Logic and Inputs"
+        ],
+        "only_in_repo": [
+          "Code | Combine GBP logic & market snapshot"
+        ],
+        "all_matched_code_nodes_identical": false
+      }
+    },
+    {
+      "key": "gbp:collector",
+      "live_primary": null,
+      "live_all_candidates": [],
+      "repo_exports": [
+        {
+          "file": "exports/gbp_collector.json",
+          "workflow_id": null,
+          "version_counter": null,
+          "updated_at": null,
+          "code_nodes": [
+            {
+              "name": "Code | Build GBP Snapshot Row",
+              "sha256": "bf2211b9c26b5dddc775f9503dc56da3cd708ef48988bd51bb998293ef1d96fd",
+              "bytes": 6797
+            },
+            {
+              "name": "Code | Evaluate GBP Snapshot Usability",
+              "sha256": "2e4ad7b725dcdb910e8132d2c0c1bbd3c2546fc7391e3812b7d637d56d82b8a9",
+              "bytes": 361
+            }
+          ]
+        }
+      ],
+      "code_node_comparison": null
+    },
+    {
+      "key": "gold:agent",
+      "live_primary": {
+        "file": "GOLD_Layer_1_Agent.json",
+        "name": "GOLD Layer 1 Agent",
+        "id": "wwBVT0EQcKu5517I",
+        "active": true,
+        "version_id": "4a2281df-5097-46dd-837a-aa9e4473ad00",
+        "version_counter": 27,
+        "created_at": "2026-06-07T20:29:16.510Z",
+        "updated_at": "2026-06-18T19:45:32.882Z",
+        "node_count": 9,
+        "sanitized_sha256": "ac51ac0bb7691e8762bcc06c2050b5ef8669b9dc8d7f50901163ea0762ac922f",
+        "code_nodes": [
+          {
+            "name": "Combine md & market snapshot",
+            "sha256": "57f84ea112b2fa52daf47fb7ccbd03124aa0ede847cd39b989bb5edbf22b021b",
+            "bytes": 391
+          },
+          {
+            "name": "Build GOLD Input Pack",
+            "sha256": "32959305d4841bfbfe9c49d2e5bc308cc9e368df86015d19e3ce934562bad844",
+            "bytes": 2245
+          },
+          {
+            "name": "Parse GOLD Agent Output",
+            "sha256": "e0f2692f9387b6cfb9caf6288a499636861d0e10ae536ab19a4dffcab3472f0b",
+            "bytes": 3044
+          },
+          {
+            "name": "Calculate GOLD Conviction",
+            "sha256": "03dcbc310c3d5613d232361e8cc5ec57b520014d1c1519cff42faac076c993f2",
+            "bytes": 14655
+          }
+        ]
+      },
+      "live_all_candidates": [
+        {
+          "name": "Gold Agent",
+          "id": "7vVmN27XFZrW9vgc",
+          "active": false,
+          "is_test_named": false,
+          "version_counter": 91,
+          "updated_at": "2026-06-05T07:47:48.530Z"
+        },
+        {
+          "name": "GOLD Layer 1 Agent",
+          "id": "wwBVT0EQcKu5517I",
+          "active": true,
+          "is_test_named": false,
+          "version_counter": 27,
+          "updated_at": "2026-06-18T19:45:32.882Z"
+        },
+        {
+          "name": "TEST - GOLD Layer 1 Agent - ISOLATED - 20260723",
+          "id": "rtAcgTz71gFzQSZx",
+          "active": true,
+          "is_test_named": true,
+          "version_counter": 4,
+          "updated_at": "2026-07-27T12:37:44.829Z"
+        }
+      ],
+      "repo_exports": [
+        {
+          "file": "exports/gold_layer1_agent.json",
+          "workflow_id": "wwBVT0EQcKu5517I",
+          "version_counter": 27,
+          "updated_at": "2026-06-18T19:45:32.882Z",
+          "code_nodes": [
+            {
+              "name": "Combine md & market snapshot",
+              "sha256": "57f84ea112b2fa52daf47fb7ccbd03124aa0ede847cd39b989bb5edbf22b021b",
+              "bytes": 391
+            },
+            {
+              "name": "Build GOLD Input Pack",
+              "sha256": "32959305d4841bfbfe9c49d2e5bc308cc9e368df86015d19e3ce934562bad844",
+              "bytes": 2245
+            },
+            {
+              "name": "Parse GOLD Agent Output",
+              "sha256": "e0f2692f9387b6cfb9caf6288a499636861d0e10ae536ab19a4dffcab3472f0b",
+              "bytes": 3044
+            },
+            {
+              "name": "Calculate GOLD Conviction",
+              "sha256": "03dcbc310c3d5613d232361e8cc5ec57b520014d1c1519cff42faac076c993f2",
+              "bytes": 14655
+            }
+          ]
+        }
+      ],
+      "code_node_comparison": {
+        "matched_code_nodes": [
+          "Combine md & market snapshot",
+          "Build GOLD Input Pack",
+          "Parse GOLD Agent Output",
+          "Calculate GOLD Conviction"
+        ],
+        "differing_code_nodes": [],
+        "only_in_live": [],
+        "only_in_repo": [],
+        "all_matched_code_nodes_identical": true
+      }
+    },
+    {
+      "key": "gold:collector",
+      "live_primary": {
+        "file": "Data_Collector_-_GOLD.json",
+        "name": "Data Collector - GOLD",
+        "id": "0z71FpOfKdL72hgW",
+        "active": true,
+        "version_id": "282a1ae4-d003-4926-889e-288d5bf707f0",
+        "version_counter": 19,
+        "created_at": "2026-06-07T20:24:52.742Z",
+        "updated_at": "2026-09-11T07:50:54.027Z",
+        "node_count": 29,
+        "sanitized_sha256": "bdcc45cd68dd2433728c1602a5b8de8a3672f69a53cef7c7d7d01e1c6a6eaabb",
+        "code_nodes": [
+          {
+            "name": "Normalise Market Snapshot",
+            "sha256": "12f55425141c65a335b215f8e5012cb6ca924bd5ef63e29b476b4726cef38252",
+            "bytes": 16240
+          },
+          {
+            "name": "Code | Process Eco Data",
+            "sha256": "6e22f742fbfab00ceaf699a2d0b7a18cb1766670e3dae3c8d2eab08c573960aa",
+            "bytes": 2570
+          },
+          {
+            "name": "Code | Derive Fed Bias",
+            "sha256": "c8296444ca7c4587f92f7b15bf962e92441db0a0439d9dd9ecc207e0e16c3256",
+            "bytes": 593
+          },
+          {
+            "name": "Code | Derive US Eco Inputs",
+            "sha256": "e2db453bfe8ef8b373020894f4966a93a7358a8b48d9064b2059c474ccd2ef3e",
+            "bytes": 4031
+          }
+        ]
+      },
+      "live_all_candidates": [
+        {
+          "name": "Data Collector - GOLD",
+          "id": "0z71FpOfKdL72hgW",
+          "active": true,
+          "is_test_named": false,
+          "version_counter": 19,
+          "updated_at": "2026-09-11T07:50:54.027Z"
+        },
+        {
+          "name": "TEST - Data Collector - GOLD - 20260722",
+          "id": "NLGyMosysypCldMO",
+          "active": true,
+          "is_test_named": true,
+          "version_counter": 4,
+          "updated_at": "2026-07-27T11:19:27.253Z"
+        },
+        {
+          "name": "TEST - Data Collector - GOLD - 20260722 - modified probe",
+          "id": "7tk8NwIRZNcIy2xh",
+          "active": false,
+          "is_test_named": true,
+          "version_counter": 1,
+          "updated_at": "2026-07-23T09:12:21.588Z"
+        }
+      ],
+      "repo_exports": [
+        {
+          "file": "exports/gold_collector.json",
+          "workflow_id": "0z71FpOfKdL72hgW",
+          "version_counter": 18,
+          "updated_at": "2026-06-18T19:44:31.835Z",
+          "code_nodes": [
+            {
+              "name": "Normalise Market Snapshot",
+              "sha256": "12f55425141c65a335b215f8e5012cb6ca924bd5ef63e29b476b4726cef38252",
+              "bytes": 16240
+            },
+            {
+              "name": "Code | Process Eco Data",
+              "sha256": "6e22f742fbfab00ceaf699a2d0b7a18cb1766670e3dae3c8d2eab08c573960aa",
+              "bytes": 2570
+            },
+            {
+              "name": "Code | Derive Fed Bias",
+              "sha256": "c8296444ca7c4587f92f7b15bf962e92441db0a0439d9dd9ecc207e0e16c3256",
+              "bytes": 593
+            },
+            {
+              "name": "Code | Derive US Eco Inputs",
+              "sha256": "e2db453bfe8ef8b373020894f4966a93a7358a8b48d9064b2059c474ccd2ef3e",
+              "bytes": 4031
+            }
+          ]
+        }
+      ],
+      "code_node_comparison": {
+        "matched_code_nodes": [
+          "Normalise Market Snapshot",
+          "Code | Process Eco Data",
+          "Code | Derive Fed Bias",
+          "Code | Derive US Eco Inputs"
+        ],
+        "differing_code_nodes": [],
+        "only_in_live": [],
+        "only_in_repo": [],
+        "all_matched_code_nodes_identical": true
+      }
+    },
+    {
+      "key": "nq:agent",
+      "live_primary": {
+        "file": "NQ_Layer_1_Agent.json",
+        "name": "NQ Layer 1 Agent",
+        "id": "FOpFp3AzTJVYdLXe",
+        "active": true,
+        "version_id": "b6c7045b-f07d-4397-a86b-9440a6e7456e",
+        "version_counter": 24,
+        "created_at": "2026-06-07T19:17:29.408Z",
+        "updated_at": "2026-06-18T19:45:55.810Z",
+        "node_count": 9,
+        "sanitized_sha256": "e657b2a8390dd9ed9f8424c7e9ac5e52a1953c98490eab2207b43e4cec5be18b",
+        "code_nodes": [
+          {
+            "name": "Combine md & market snapshot",
+            "sha256": "6c8a2ea4ca9c6b05c3c39838ae7483bdc39773d0e560e694465bfe0389461ac2",
+            "bytes": 387
+          },
+          {
+            "name": "Build NQ Input Pack",
+            "sha256": "5b333f0db720934c95eba1ea1987ea3f5c97ca153d64cbe3709d1effd49dd510",
+            "bytes": 2953
+          },
+          {
+            "name": "Parse NQ Agent Output",
+            "sha256": "64a57363f8845b3236bc2d4a336357f32af552101bf2f0e524f0c96c677a6e0e",
+            "bytes": 3284
+          },
+          {
+            "name": "Calculate NQ Conviction",
+            "sha256": "267a3187521e0e3a4ee53f6c45d7f7b7ff0b693f401e95b7cf599d3d19a90db5",
+            "bytes": 15044
+          }
+        ]
+      },
+      "live_all_candidates": [
+        {
+          "name": "NQ Layer 1 Agent",
+          "id": "FOpFp3AzTJVYdLXe",
+          "active": true,
+          "is_test_named": false,
+          "version_counter": 24,
+          "updated_at": "2026-06-18T19:45:55.810Z"
+        },
+        {
+          "name": "TEST - NQ Layer 1 Agent - ISOLATED - 20260723",
+          "id": "Xep1shMzaqwPXvuL",
+          "active": true,
+          "is_test_named": true,
+          "version_counter": 4,
+          "updated_at": "2026-07-27T12:40:29.595Z"
+        }
+      ],
+      "repo_exports": [
+        {
+          "file": "exports/nq_layer1_agent.json",
+          "workflow_id": "FOpFp3AzTJVYdLXe",
+          "version_counter": 24,
+          "updated_at": "2026-06-18T19:45:55.810Z",
+          "code_nodes": [
+            {
+              "name": "Combine md & market snapshot",
+              "sha256": "6c8a2ea4ca9c6b05c3c39838ae7483bdc39773d0e560e694465bfe0389461ac2",
+              "bytes": 387
+            },
+            {
+              "name": "Build NQ Input Pack",
+              "sha256": "5b333f0db720934c95eba1ea1987ea3f5c97ca153d64cbe3709d1effd49dd510",
+              "bytes": 2953
+            },
+            {
+              "name": "Parse NQ Agent Output",
+              "sha256": "64a57363f8845b3236bc2d4a336357f32af552101bf2f0e524f0c96c677a6e0e",
+              "bytes": 3284
+            },
+            {
+              "name": "Calculate NQ Conviction",
+              "sha256": "267a3187521e0e3a4ee53f6c45d7f7b7ff0b693f401e95b7cf599d3d19a90db5",
+              "bytes": 15044
+            }
+          ]
+        }
+      ],
+      "code_node_comparison": {
+        "matched_code_nodes": [
+          "Combine md & market snapshot",
+          "Build NQ Input Pack",
+          "Parse NQ Agent Output",
+          "Calculate NQ Conviction"
+        ],
+        "differing_code_nodes": [],
+        "only_in_live": [],
+        "only_in_repo": [],
+        "all_matched_code_nodes_identical": true
+      }
+    },
+    {
+      "key": "nq:collector",
+      "live_primary": {
+        "file": "Data_Collector_-_NQ.json",
+        "name": "Data Collector - NQ",
+        "id": "nYMDUSVQwEFNaH0U",
+        "active": true,
+        "version_id": "b14a0b7d-47cb-4c11-9f68-6ee616154e50",
+        "version_counter": 18,
+        "created_at": "2026-06-07T19:18:47.966Z",
+        "updated_at": "2026-09-11T07:50:55.116Z",
+        "node_count": 29,
+        "sanitized_sha256": "a821d49fb9bd0bf99ab548649ad429c6b5e0aaed753db326f068374767ddaa4e",
+        "code_nodes": [
+          {
+            "name": "Normalise Market Snapshot",
+            "sha256": "e9f0bbb46cc459a254f2f5b128679bdf5c6903a541d610c6de741d98ddaedf07",
+            "bytes": 11508
+          },
+          {
+            "name": "Code | Process Eco Data",
+            "sha256": "6e22f742fbfab00ceaf699a2d0b7a18cb1766670e3dae3c8d2eab08c573960aa",
+            "bytes": 2570
+          },
+          {
+            "name": "Code | Derive Fed Bias",
+            "sha256": "c8296444ca7c4587f92f7b15bf962e92441db0a0439d9dd9ecc207e0e16c3256",
+            "bytes": 593
+          },
+          {
+            "name": "Code | Derive US Eco Inputs",
+            "sha256": "e2db453bfe8ef8b373020894f4966a93a7358a8b48d9064b2059c474ccd2ef3e",
+            "bytes": 4031
+          }
+        ]
+      },
+      "live_all_candidates": [
+        {
+          "name": "Data Collector - NQ",
+          "id": "nYMDUSVQwEFNaH0U",
+          "active": true,
+          "is_test_named": false,
+          "version_counter": 18,
+          "updated_at": "2026-09-11T07:50:55.116Z"
+        },
+        {
+          "name": "TEST - Data Collector - NQ - 20260722",
+          "id": "tcYXnCdetkGzsQEx",
+          "active": true,
+          "is_test_named": true,
+          "version_counter": 3,
+          "updated_at": "2026-07-27T11:19:31.129Z"
+        }
+      ],
+      "repo_exports": [
+        {
+          "file": "exports/nq_collector.json",
+          "workflow_id": "nYMDUSVQwEFNaH0U",
+          "version_counter": 17,
+          "updated_at": "2026-06-18T19:43:47.989Z",
+          "code_nodes": [
+            {
+              "name": "Normalise Market Snapshot",
+              "sha256": "e9f0bbb46cc459a254f2f5b128679bdf5c6903a541d610c6de741d98ddaedf07",
+              "bytes": 11508
+            },
+            {
+              "name": "Code | Process Eco Data",
+              "sha256": "6e22f742fbfab00ceaf699a2d0b7a18cb1766670e3dae3c8d2eab08c573960aa",
+              "bytes": 2570
+            },
+            {
+              "name": "Code | Derive Fed Bias",
+              "sha256": "c8296444ca7c4587f92f7b15bf962e92441db0a0439d9dd9ecc207e0e16c3256",
+              "bytes": 593
+            },
+            {
+              "name": "Code | Derive US Eco Inputs",
+              "sha256": "e2db453bfe8ef8b373020894f4966a93a7358a8b48d9064b2059c474ccd2ef3e",
+              "bytes": 4031
+            }
+          ]
+        }
+      ],
+      "code_node_comparison": {
+        "matched_code_nodes": [
+          "Normalise Market Snapshot",
+          "Code | Process Eco Data",
+          "Code | Derive Fed Bias",
+          "Code | Derive US Eco Inputs"
+        ],
+        "differing_code_nodes": [],
+        "only_in_live": [],
+        "only_in_repo": [],
+        "all_matched_code_nodes_identical": true
+      }
+    },
+    {
+      "key": "silver:agent",
+      "live_primary": {
+        "file": "SILVER_Layer_1_Agent.json",
+        "name": "SILVER Layer 1 Agent",
+        "id": "6IGOoTZxxTPyBpEp",
+        "active": true,
+        "version_id": "b4548465-3c6f-4730-8500-ad4b23cc8335",
+        "version_counter": 9,
+        "created_at": "2026-09-12T18:33:58.285Z",
+        "updated_at": "2026-09-14T09:44:18.556Z",
+        "node_count": 9,
+        "sanitized_sha256": "916c961b886c7a72723554cdbd972a5a7625f1d4ee7912f0e7dc2acb91594986",
+        "code_nodes": [
+          {
+            "name": "Combine md & market snapshot",
+            "sha256": "17662deaf0281dceb55b2aa7d38b5c3a78c2f8b6253b516feab6614a64ce6ff4",
+            "bytes": 395
+          },
+          {
+            "name": "Build SILVER Input Pack",
+            "sha256": "4b7277f9215d3c05cbd09a2724d8e5f1a816fee0e099c9618f7cce60e2c1f447",
+            "bytes": 3509
+          },
+          {
+            "name": "Get SILVER Logic Document",
+            "sha256": "43cff26fd28afaa781e0d4dcacddb7611759a162a6552c5cafdd75e0e03823e0",
+            "bytes": 6494
+          },
+          {
+            "name": "Parse SILVER Agent Output",
+            "sha256": "dba9b5c84f5ded52afc547840382fe7dc901fd53758501626c25e541dec2ec45",
+            "bytes": 19878
+          },
+          {
+            "name": "Calculate SILVER Conviction",
+            "sha256": "81a3b173754a7527f434e44ec4054884a5c98ea6fb969b2735665596f2a12a41",
+            "bytes": 16681
+          }
+        ]
+      },
+      "live_all_candidates": [
+        {
+          "name": "SILVER Layer 1 Agent",
+          "id": "6IGOoTZxxTPyBpEp",
+          "active": true,
+          "is_test_named": false,
+          "version_counter": 9,
+          "updated_at": "2026-09-14T09:44:18.556Z"
+        }
+      ],
+      "repo_exports": [],
+      "code_node_comparison": null
+    },
+    {
+      "key": "silver:collector",
+      "live_primary": {
+        "file": "Data_Collector_-_SILVER.json",
+        "name": "Data Collector - SILVER",
+        "id": "xezFmvm7cmgNNypb",
+        "active": true,
+        "version_id": "93154eda-ee39-4802-9df9-ff34ece5bd09",
+        "version_counter": 10,
+        "created_at": "2026-09-12T18:33:58.158Z",
+        "updated_at": "2026-09-12T19:42:56.003Z",
+        "node_count": 32,
+        "sanitized_sha256": "a0404844e417e92d0d18bd0d5f55e9f9a082ae2c40af5e1b0198b66f16a2ef50",
+        "code_nodes": [
+          {
+            "name": "Normalise Market Snapshot",
+            "sha256": "18566528f43e423b28af45917329eee8367e9a1624744d29b6dff07e05677832",
+            "bytes": 21020
+          },
+          {
+            "name": "Code | Process Eco Data",
+            "sha256": "6e22f742fbfab00ceaf699a2d0b7a18cb1766670e3dae3c8d2eab08c573960aa",
+            "bytes": 2570
+          },
+          {
+            "name": "Code | Derive Fed Bias",
+            "sha256": "c8296444ca7c4587f92f7b15bf962e92441db0a0439d9dd9ecc207e0e16c3256",
+            "bytes": 593
+          },
+          {
+            "name": "Code | Derive US Eco Inputs",
+            "sha256": "e2db453bfe8ef8b373020894f4966a93a7358a8b48d9064b2059c474ccd2ef3e",
+            "bytes": 4031
+          }
+        ]
+      },
+      "live_all_candidates": [
+        {
+          "name": "Data Collector - SILVER",
+          "id": "xezFmvm7cmgNNypb",
+          "active": true,
+          "is_test_named": false,
+          "version_counter": 10,
+          "updated_at": "2026-09-12T19:42:56.003Z"
+        }
+      ],
+      "repo_exports": [],
+      "code_node_comparison": null
+    },
+    {
+      "key": "usd:agent",
+      "live_primary": {
+        "file": "USD_Layer_1_Agent.json",
+        "name": "USD Layer 1 Agent",
+        "id": "OCt1tB9yVMUgFTha",
+        "active": true,
+        "version_id": "aa275379-ea06-452c-97c9-238b41aed7bc",
+        "version_counter": 154,
+        "created_at": "2026-06-06T16:45:19.843Z",
+        "updated_at": "2026-06-18T19:46:03.782Z",
+        "node_count": 9,
+        "sanitized_sha256": "e9d8db6ad5e7bcd33a57455866056af327ebb9366e7c11ef69669caedff47f93",
+        "code_nodes": [
+          {
+            "name": "Build USD Input Pack",
+            "sha256": "4369b990cab6d391472860cfc84a0865840e6c2b5ab1db8c225c9302739a72ef",
+            "bytes": 5919
+          },
+          {
+            "name": "Combine md & market snapshot",
+            "sha256": "a555aa4ae503d97c6dcfbcfaa5f6432293411c424e5828406c1dbf050dd1c304",
+            "bytes": 389
+          },
+          {
+            "name": "Parse USD Agent Output",
+            "sha256": "eea58cea34646ba1189de04b0f7788962468c74b26c092ee5d40b1c77fd4be67",
+            "bytes": 4307
+          },
+          {
+            "name": "Calculate USD Conviction",
+            "sha256": "5564f2f152f819be5e5a39ded6d111cbd1ad5f83c5635aec65f3c8d6afef89eb",
+            "bytes": 12153
+          }
+        ]
+      },
+      "live_all_candidates": [
+        {
+          "name": "TEST - USD Layer 1 Agent - ISOLATED - 20260723",
+          "id": "GCkAH4LskXzWzT8K",
+          "active": true,
+          "is_test_named": true,
+          "version_counter": 4,
+          "updated_at": "2026-07-27T11:25:14.369Z"
+        },
+        {
+          "name": "USD Agent",
+          "id": "a6UidZyJLpc68OWu",
+          "active": false,
+          "is_test_named": false,
+          "version_counter": 577,
+          "updated_at": "2026-08-09T07:11:12.538Z"
+        },
+        {
+          "name": "USD Agent — HIT/MISS Resolution",
+          "id": "mW2chtJ4yTZqFhCi",
+          "active": false,
+          "is_test_named": false,
+          "version_counter": 136,
+          "updated_at": "2026-06-28T12:49:54.406Z"
+        },
+        {
+          "name": "USD Historical Events Backfill (24hr Directional Agent)",
+          "id": "8GLw3EO4QXevCgg1",
+          "active": true,
+          "is_test_named": false,
+          "version_counter": 5,
+          "updated_at": "2026-08-21T20:31:46.479Z"
+        },
+        {
+          "name": "USD Layer 1 Agent",
+          "id": "OCt1tB9yVMUgFTha",
+          "active": true,
+          "is_test_named": false,
+          "version_counter": 154,
+          "updated_at": "2026-06-18T19:46:03.782Z"
+        }
+      ],
+      "repo_exports": [
+        {
+          "file": "exports/usd_layer1_agent.json",
+          "workflow_id": "OCt1tB9yVMUgFTha",
+          "version_counter": 154,
+          "updated_at": "2026-06-18T19:46:03.782Z",
+          "code_nodes": [
+            {
+              "name": "Build USD Input Pack",
+              "sha256": "4369b990cab6d391472860cfc84a0865840e6c2b5ab1db8c225c9302739a72ef",
+              "bytes": 5919
+            },
+            {
+              "name": "Combine md & market snapshot",
+              "sha256": "a555aa4ae503d97c6dcfbcfaa5f6432293411c424e5828406c1dbf050dd1c304",
+              "bytes": 389
+            },
+            {
+              "name": "Parse USD Agent Output",
+              "sha256": "eea58cea34646ba1189de04b0f7788962468c74b26c092ee5d40b1c77fd4be67",
+              "bytes": 4307
+            },
+            {
+              "name": "Calculate USD Conviction",
+              "sha256": "5564f2f152f819be5e5a39ded6d111cbd1ad5f83c5635aec65f3c8d6afef89eb",
+              "bytes": 12153
+            }
+          ]
+        }
+      ],
+      "code_node_comparison": {
+        "matched_code_nodes": [
+          "Build USD Input Pack",
+          "Combine md & market snapshot",
+          "Parse USD Agent Output",
+          "Calculate USD Conviction"
+        ],
+        "differing_code_nodes": [],
+        "only_in_live": [],
+        "only_in_repo": [],
+        "all_matched_code_nodes_identical": true
+      }
+    },
+    {
+      "key": "usd:collector",
+      "live_primary": {
+        "file": "Data_Collector_-_USD.json",
+        "name": "Data Collector - USD",
+        "id": "P1E4ZWtbDetYz1P5",
+        "active": true,
+        "version_id": "1e99fdcd-b841-4abc-b547-71939acc7559",
+        "version_counter": 139,
+        "created_at": "2026-06-06T16:22:34.552Z",
+        "updated_at": "2026-09-17T21:11:59.657Z",
+        "node_count": 29,
+        "sanitized_sha256": "a0bbf8cd044addba9dbd479c3dad393ab9edfa7083cd1d93b6a0d277ed660e5c",
+        "code_nodes": [
+          {
+            "name": "Normalise Market Snapshot",
+            "sha256": "83fc559331fd427c67d70c2e27a75ac8085c4d02e485dfa4c8a457bda26e6f78",
+            "bytes": 14256
+          },
+          {
+            "name": "Code | Process Eco Data",
+            "sha256": "6e22f742fbfab00ceaf699a2d0b7a18cb1766670e3dae3c8d2eab08c573960aa",
+            "bytes": 2570
+          },
+          {
+            "name": "Code | Derive Fed Bias",
+            "sha256": "c8296444ca7c4587f92f7b15bf962e92441db0a0439d9dd9ecc207e0e16c3256",
+            "bytes": 593
+          },
+          {
+            "name": "Code | Derive USD Eco Inputs",
+            "sha256": "d6d78262fd6ef0b583e976d0441ad6d39877389241285eb70255451eaa23a443",
+            "bytes": 2975
+          }
+        ]
+      },
+      "live_all_candidates": [
+        {
+          "name": "Data Collector - USD",
+          "id": "P1E4ZWtbDetYz1P5",
+          "active": true,
+          "is_test_named": false,
+          "version_counter": 139,
+          "updated_at": "2026-09-17T21:11:59.657Z"
+        },
+        {
+          "name": "TEST - Data Collector - USD - 20260722",
+          "id": "QferKqGdVdTyhJTI",
+          "active": true,
+          "is_test_named": true,
+          "version_counter": 3,
+          "updated_at": "2026-07-27T11:19:19.439Z"
+        }
+      ],
+      "repo_exports": [
+        {
+          "file": "exports/usd_collector.json",
+          "workflow_id": "P1E4ZWtbDetYz1P5",
+          "version_counter": 137,
+          "updated_at": "2026-06-18T19:44:42.427Z",
+          "code_nodes": [
+            {
+              "name": "Normalise Market Snapshot",
+              "sha256": "83fc559331fd427c67d70c2e27a75ac8085c4d02e485dfa4c8a457bda26e6f78",
+              "bytes": 14256
+            },
+            {
+              "name": "Code | Process Eco Data",
+              "sha256": "6e22f742fbfab00ceaf699a2d0b7a18cb1766670e3dae3c8d2eab08c573960aa",
+              "bytes": 2570
+            },
+            {
+              "name": "Code | Derive Fed Bias",
+              "sha256": "c8296444ca7c4587f92f7b15bf962e92441db0a0439d9dd9ecc207e0e16c3256",
+              "bytes": 593
+            },
+            {
+              "name": "Code | Derive USD Eco Inputs",
+              "sha256": "d6d78262fd6ef0b583e976d0441ad6d39877389241285eb70255451eaa23a443",
+              "bytes": 2975
+            }
+          ]
+        }
+      ],
+      "code_node_comparison": {
+        "matched_code_nodes": [
+          "Normalise Market Snapshot",
+          "Code | Process Eco Data",
+          "Code | Derive Fed Bias",
+          "Code | Derive USD Eco Inputs"
+        ],
+        "differing_code_nodes": [],
+        "only_in_live": [],
+        "only_in_repo": [],
+        "all_matched_code_nodes_identical": true
+      }
+    },
+    {
+      "key": "wti:agent",
+      "live_primary": {
+        "file": "WTI_Layer_1_Agent.json",
+        "name": "WTI Layer 1 Agent",
+        "id": "8oUBopUWLiGcYU0d",
+        "active": true,
+        "version_id": "6f493956-93b2-4a52-9270-c4f5aaa9d4fd",
+        "version_counter": 5,
+        "created_at": "2026-09-12T17:58:31.494Z",
+        "updated_at": "2026-09-12T18:20:13.820Z",
+        "node_count": 13,
+        "sanitized_sha256": "d31bd7546b9b21a60fe490a3a2093d39a28a7f01d367f2f6e6746f2ebba12b3a",
+        "code_nodes": [
+          {
+            "name": "Code | Build WTI Input Pack",
+            "sha256": "68ed1025acd57850ad1fc02135196259df8160b512d808dc7704138525cd63f5",
+            "bytes": 3442
+          },
+          {
+            "name": "Code | Combine WTI Logic and Inputs",
+            "sha256": "35c38c169a85f2b7f3e4418ffd564deb441e939b608761162c2c497453255540",
+            "bytes": 198
+          },
+          {
+            "name": "Code | Parse WTI Agent Output",
+            "sha256": "d1e871017dda4f66bc56844257bcb1ae8cc33f34bd321bbb65a3b2e486add1ae",
+            "bytes": 715
+          },
+          {
+            "name": "Code | Deterministic WTI 24H Verdict Gate",
+            "sha256": "b6a80a218017552403f6445290dd42b95224e32ad88bb061221078897655f885",
+            "bytes": 6474
+          }
+        ]
+      },
+      "live_all_candidates": [
+        {
+          "name": "WTI Layer 1 Agent",
+          "id": "8oUBopUWLiGcYU0d",
+          "active": true,
+          "is_test_named": false,
+          "version_counter": 5,
+          "updated_at": "2026-09-12T18:20:13.820Z"
+        }
+      ],
+      "repo_exports": [],
+      "code_node_comparison": null
+    }
+  ],
+  "credential_literal_findings": [
+    {
+      "file": "Data_Collector_-_BTC.json",
+      "name": "Data Collector - BTC",
+      "id": "AE3Vv7ILPPiZwZHN",
+      "active": true,
+      "literal_query_values": 18,
+      "expression_query_values": 0,
+      "parameters": {
+        "api_key": 12,
+        "apikey": 2,
+        "token": 4
+      },
+      "hosts": {
+        "api.stlouisfed.org": 12,
+        "api.coinbase.com": 4,
+        "www.alphavantage.co": 2,
+        "finnhub.io": 4,
+        "api.alternative.me": 2,
+        "api.coingecko.com": 2,
+        "farside.co.uk": 2
+      }
+    },
+    {
+      "file": "Data_Collector_-_EUR.json",
+      "name": "Data Collector - EUR",
+      "id": "Z3v9kQNIM22THi2O",
+      "active": true,
+      "literal_query_values": 30,
+      "expression_query_values": 0,
+      "parameters": {
+        "api_key": 24,
+        "apikey": 2,
+        "token": 4
+      },
+      "hosts": {
+        "api.stlouisfed.org": 24,
+        "api.coinbase.com": 12,
+        "www.alphavantage.co": 2,
+        "api.statistiken.bundesbank.de": 2,
+        "finnhub.io": 4
+      }
+    },
+    {
+      "file": "Data_Collector_-_GOLD.json",
+      "name": "Data Collector - GOLD",
+      "id": "0z71FpOfKdL72hgW",
+      "active": true,
+      "literal_query_values": 28,
+      "expression_query_values": 0,
+      "parameters": {
+        "api_key": 22,
+        "apikey": 2,
+        "token": 4
+      },
+      "hosts": {
+        "api.stlouisfed.org": 22,
+        "api.coinbase.com": 12,
+        "www.alphavantage.co": 2,
+        "api.statistiken.bundesbank.de": 2,
+        "finnhub.io": 4
+      }
+    },
+    {
+      "file": "Data_Collector_-_NQ.json",
+      "name": "Data Collector - NQ",
+      "id": "nYMDUSVQwEFNaH0U",
+      "active": true,
+      "literal_query_values": 28,
+      "expression_query_values": 0,
+      "parameters": {
+        "api_key": 22,
+        "apikey": 2,
+        "token": 4
+      },
+      "hosts": {
+        "api.stlouisfed.org": 22,
+        "api.coinbase.com": 12,
+        "www.alphavantage.co": 2,
+        "api.statistiken.bundesbank.de": 2,
+        "finnhub.io": 4
+      }
+    },
+    {
+      "file": "Data_Collector_-_SILVER.json",
+      "name": "Data Collector - SILVER",
+      "id": "xezFmvm7cmgNNypb",
+      "active": true,
+      "literal_query_values": 32,
+      "expression_query_values": 0,
+      "parameters": {
+        "api_key": 26,
+        "apikey": 2,
+        "token": 4
+      },
+      "hosts": {
+        "api.stlouisfed.org": 26,
+        "api.coinbase.com": 14,
+        "www.alphavantage.co": 2,
+        "api.statistiken.bundesbank.de": 2,
+        "finnhub.io": 4
+      }
+    },
+    {
+      "file": "Data_Collector_-_USD.json",
+      "name": "Data Collector - USD",
+      "id": "P1E4ZWtbDetYz1P5",
+      "active": true,
+      "literal_query_values": 28,
+      "expression_query_values": 0,
+      "parameters": {
+        "api_key": 22,
+        "apikey": 2,
+        "token": 4
+      },
+      "hosts": {
+        "api.stlouisfed.org": 22,
+        "api.coinbase.com": 12,
+        "www.alphavantage.co": 2,
+        "api.statistiken.bundesbank.de": 2,
+        "finnhub.io": 4
+      }
+    },
+    {
+      "file": "GBP_Layer_1_Agent.json",
+      "name": "GBP Layer 1 Agent",
+      "id": "bMv96EPR0xCXi3bi",
+      "active": true,
+      "literal_query_values": 10,
+      "expression_query_values": 0,
+      "parameters": {
+        "api_key": 10
+      },
+      "hosts": {
+        "api.coinbase.com": 2,
+        "api.stlouisfed.org": 10,
+        "www.bankofengland.co.uk": 6,
+        "economic-calendar-api.p.rapidapi.com": 2
+      }
+    },
+    {
+      "file": "TEST_-_Data_Collector_-_BTC_-_20260722.json",
+      "name": "TEST - Data Collector - BTC - 20260722",
+      "id": "DMiMgjgFrdQZAOpW",
+      "active": true,
+      "literal_query_values": 18,
+      "expression_query_values": 0,
+      "parameters": {
+        "api_key": 12,
+        "apikey": 2,
+        "token": 4
+      },
+      "hosts": {
+        "api.stlouisfed.org": 12,
+        "api.coinbase.com": 4,
+        "www.alphavantage.co": 2,
+        "finnhub.io": 4,
+        "api.alternative.me": 2,
+        "api.coingecko.com": 2,
+        "farside.co.uk": 2
+      }
+    },
+    {
+      "file": "TEST_-_Data_Collector_-_BTC_-_20260722_-_modified_probe.json",
+      "name": "TEST - Data Collector - BTC - 20260722 - modified probe",
+      "id": "xfiQRMEcHLXfWHpa",
+      "active": false,
+      "literal_query_values": 9,
+      "expression_query_values": 0,
+      "parameters": {
+        "api_key": 6,
+        "apikey": 1,
+        "token": 2
+      },
+      "hosts": {
+        "api.stlouisfed.org": 6,
+        "api.coinbase.com": 2,
+        "www.alphavantage.co": 1,
+        "finnhub.io": 2,
+        "api.alternative.me": 1,
+        "api.coingecko.com": 1,
+        "farside.co.uk": 1
+      }
+    },
+    {
+      "file": "TEST_-_Data_Collector_-_EUR_-_20260722.json",
+      "name": "TEST - Data Collector - EUR - 20260722",
+      "id": "mh3CLzNirpXorGKi",
+      "active": true,
+      "literal_query_values": 30,
+      "expression_query_values": 0,
+      "parameters": {
+        "api_key": 24,
+        "apikey": 2,
+        "token": 4
+      },
+      "hosts": {
+        "api.stlouisfed.org": 24,
+        "api.coinbase.com": 12,
+        "www.alphavantage.co": 2,
+        "api.statistiken.bundesbank.de": 2,
+        "finnhub.io": 4
+      }
+    },
+    {
+      "file": "TEST_-_Data_Collector_-_GOLD_-_20260722.json",
+      "name": "TEST - Data Collector - GOLD - 20260722",
+      "id": "NLGyMosysypCldMO",
+      "active": true,
+      "literal_query_values": 28,
+      "expression_query_values": 0,
+      "parameters": {
+        "api_key": 22,
+        "apikey": 2,
+        "token": 4
+      },
+      "hosts": {
+        "api.stlouisfed.org": 22,
+        "api.coinbase.com": 12,
+        "www.alphavantage.co": 2,
+        "api.statistiken.bundesbank.de": 2,
+        "finnhub.io": 4
+      }
+    },
+    {
+      "file": "TEST_-_Data_Collector_-_GOLD_-_20260722_-_modified_probe.json",
+      "name": "TEST - Data Collector - GOLD - 20260722 - modified probe",
+      "id": "7tk8NwIRZNcIy2xh",
+      "active": false,
+      "literal_query_values": 14,
+      "expression_query_values": 0,
+      "parameters": {
+        "api_key": 11,
+        "apikey": 1,
+        "token": 2
+      },
+      "hosts": {
+        "api.stlouisfed.org": 11,
+        "api.coinbase.com": 6,
+        "www.alphavantage.co": 1,
+        "api.statistiken.bundesbank.de": 1,
+        "finnhub.io": 2
+      }
+    },
+    {
+      "file": "TEST_-_Data_Collector_-_NQ_-_20260722.json",
+      "name": "TEST - Data Collector - NQ - 20260722",
+      "id": "tcYXnCdetkGzsQEx",
+      "active": true,
+      "literal_query_values": 28,
+      "expression_query_values": 0,
+      "parameters": {
+        "api_key": 22,
+        "apikey": 2,
+        "token": 4
+      },
+      "hosts": {
+        "api.stlouisfed.org": 22,
+        "api.coinbase.com": 12,
+        "www.alphavantage.co": 2,
+        "api.statistiken.bundesbank.de": 2,
+        "finnhub.io": 4
+      }
+    },
+    {
+      "file": "TEST_-_Data_Collector_-_USD_-_20260722.json",
+      "name": "TEST - Data Collector - USD - 20260722",
+      "id": "QferKqGdVdTyhJTI",
+      "active": true,
+      "literal_query_values": 28,
+      "expression_query_values": 0,
+      "parameters": {
+        "api_key": 22,
+        "apikey": 2,
+        "token": 4
+      },
+      "hosts": {
+        "api.stlouisfed.org": 22,
+        "api.coinbase.com": 12,
+        "www.alphavantage.co": 2,
+        "api.statistiken.bundesbank.de": 2,
+        "finnhub.io": 4
+      }
+    },
+    {
+      "file": "USD_Agent.json",
+      "name": "USD Agent",
+      "id": "a6UidZyJLpc68OWu",
+      "active": false,
+      "literal_query_values": 14,
+      "expression_query_values": 0,
+      "parameters": {
+        "api_key": 11,
+        "apikey": 1,
+        "token": 2
+      },
+      "hosts": {
+        "api.stlouisfed.org": 11,
+        "api.coinbase.com": 6,
+        "api.anthropic.com": 4,
+        "vbssvpnrxhcxwmyakijf.supabase.co": 3,
+        "www.alphavantage.co": 1,
+        "finnhub.io": 2
+      }
+    },
+    {
+      "file": "USD_Agent_HIT_MISS_Resolution.json",
+      "name": "USD Agent — HIT/MISS Resolution",
+      "id": "mW2chtJ4yTZqFhCi",
+      "active": false,
+      "literal_query_values": 2,
+      "expression_query_values": 0,
+      "parameters": {
+        "apikey": 1,
+        "token": 1
+      },
+      "hosts": {
+        "api.coinbase.com": 7,
+        "vbssvpnrxhcxwmyakijf.supabase.co": 2,
+        "www.alphavantage.co": 1,
+        "finnhub.io": 1
+      }
+    },
+    {
+      "file": "WTI_Layer_1_Agent.json",
+      "name": "WTI Layer 1 Agent",
+      "id": "8oUBopUWLiGcYU0d",
+      "active": true,
+      "literal_query_values": 10,
+      "expression_query_values": 0,
+      "parameters": {
+        "api_key": 10
+      },
+      "hosts": {
+        "api.stlouisfed.org": 10
+      }
+    }
+  ],
+  "coverage_gaps": {
+    "engines_with_live_agent": [
+      "usd",
+      "eur",
+      "gold",
+      "silver",
+      "nq",
+      "btc",
+      "wti",
+      "gbp"
+    ],
+    "engines_with_live_collector": [
+      "usd",
+      "eur",
+      "gold",
+      "silver",
+      "nq",
+      "btc"
+    ],
+    "engines_with_live_agent_without_live_collector": [
+      "wti",
+      "gbp"
+    ],
+    "engines_without_live_agent": [],
+    "engines_without_repo_export": [
+      "silver",
+      "wti"
+    ],
+    "repo_keys_without_live_counterpart": [
+      "gbp:collector"
+    ]
+  }
+}

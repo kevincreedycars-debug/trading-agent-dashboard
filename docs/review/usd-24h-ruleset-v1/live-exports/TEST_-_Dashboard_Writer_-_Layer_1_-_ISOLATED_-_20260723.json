@@ -1,0 +1,367 @@
+{
+  "id": "pMPxuN3dk5WWxbYY",
+  "name": "TEST - Dashboard Writer - Layer 1 - ISOLATED - 20260723",
+  "description": null,
+  "active": true,
+  "activeVersionId": "467e257f-71e3-4420-9495-3ccef91d29aa",
+  "createdAt": "2026-07-23T09:11:51.120Z",
+  "updatedAt": "2026-07-27T18:51:59.741Z",
+  "isArchived": false,
+  "versionId": "467e257f-71e3-4420-9495-3ccef91d29aa",
+  "versionCounter": 9,
+  "sourceWorkflowId": null,
+  "triggerCount": 0,
+  "nodes": [
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "agent_outputs",
+        "limit": 1000,
+        "filters": {
+          "conditions": []
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        208,
+        0
+      ],
+      "id": "aacf8cac-3da0-42a9-b83b-d0db3dac0a3d",
+      "name": "Get many rows",
+      "credentials": {
+        "supabaseApi": {
+          "id": "trM35g1QCTOgQp4K",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "let workflowInput = {};\ntry {\n  workflowInput = $('When Executed by Another Workflow').first().json || {};\n} catch (error) {\n  workflowInput = $input.first()?.json || {};\n}\nconst allowedFields = ['validation_mode', 'persistence_mode', 'validation_run_id', 'source_run_id', 'layer1_results', 'layer2_result'];\nfor (const key of Object.keys(workflowInput)) {\n  if (!allowedFields.includes(key)) throw new Error(`Transient Dashboard contract does not allow field '${key}'.`);\n}\nconst validationRunId = String(workflowInput.validation_run_id || '').trim();\nconst sourceRunId = String(workflowInput.source_run_id || validationRunId).trim();\nconst layer1Results = workflowInput.layer1_results || {};\nconst layer2Result = workflowInput.layer2_result || {};\nconst expectedAssets = ['USD', 'EUR', 'GOLD', 'NQ', 'BTC'];\nconst pairOrder = ['EUR/USD', 'XAU/USD', 'BTC/USD', 'NQ/USD'];\nif (workflowInput.validation_mode !== true) throw new Error('Transient Dashboard contract requires validation_mode=true.');\nif (String(workflowInput.persistence_mode || '').trim() !== 'transient_fixture') throw new Error('Transient Dashboard contract requires persistence_mode=transient_fixture.');\nif (!validationRunId || sourceRunId !== validationRunId) throw new Error('Transient Dashboard contract requires matching validation_run_id and source_run_id.');\nconst uniqueAssets = new Set(Object.keys(layer1Results));\nif (uniqueAssets.size !== expectedAssets.length) throw new Error('Transient Dashboard contract requires exactly five unique Layer 1 assets.');\nfor (const asset of uniqueAssets) {\n  if (!expectedAssets.includes(asset)) throw new Error(`Transient Dashboard received unexpected asset ${asset}.`);\n}\nconst orderedAgents = [];\nfor (const asset of expectedAssets) {\n  const result = layer1Results[asset];\n  if (!result || typeof result !== 'object') throw new Error(`Transient Dashboard contract is missing layer1_results.${asset}.`);\n  if (!result.dashboard_agent || typeof result.dashboard_agent !== 'object') throw new Error(`Transient Dashboard contract is missing layer1_results.${asset}.dashboard_agent.`);\n  if (String(result.source_run_id || '').trim() !== sourceRunId) throw new Error(`Transient Dashboard received mismatched source_run_id for ${asset}.`);\n  if (String(result.validation_run_id || '').trim() !== validationRunId) throw new Error(`Transient Dashboard received mismatched validation_run_id for ${asset}.`);\n  if (String(result.asset || '').trim() !== asset) throw new Error(`Transient Dashboard received wrong asset identity for ${asset}.`);\n  orderedAgents.push(result.dashboard_agent);\n}\nconst layer2Dashboard = layer2Result.dashboard && typeof layer2Result.dashboard === 'object' ? layer2Result.dashboard : null;\nif (!layer2Dashboard || !Array.isArray(layer2Dashboard.pairs) || layer2Dashboard.pairs.length === 0) throw new Error('Transient Dashboard contract requires a non-empty layer2_result.dashboard.pairs array.');\nconst layer2SourceRunId = String(layer2Result.source_run_id || layer2Dashboard.source_run_id || '').trim();\nconst layer2ValidationRunId = String(layer2Result.validation_run_id || layer2Dashboard.validation_run_id || '').trim();\nif (layer2SourceRunId && layer2SourceRunId !== sourceRunId) throw new Error('Transient Dashboard received mismatched Layer 2 source_run_id.');\nif (layer2ValidationRunId && layer2ValidationRunId !== validationRunId) throw new Error('Transient Dashboard received mismatched Layer 2 validation_run_id.');\nconst pairMap = new Map();\nfor (const pair of layer2Dashboard.pairs) {\n  if (!pair || typeof pair !== 'object' || !pair.pair) throw new Error('Transient Dashboard contract requires well-formed Layer 2 pair objects.');\n  if (pairMap.has(pair.pair)) throw new Error(`Transient Dashboard received duplicate Layer 2 pair ${pair.pair}.`);\n  pairMap.set(pair.pair, pair);\n}\nconst orderedPairs = [];\nfor (const pairName of pairOrder) {\n  if (!pairMap.has(pairName)) throw new Error(`Transient Dashboard contract is missing Layer 2 pair ${pairName}.`);\n  orderedPairs.push(pairMap.get(pairName));\n}\nconst generatedAt = new Date().toISOString();\nconst dashboard = {\n  schema_version: 1,\n  generated_at: generatedAt,\n  source_run_id: sourceRunId,\n  validation_run_id: validationRunId,\n  consistency_status: 'MATCHED',\n  consistency_warnings: [],\n  dashboard_meta: {\n    generated_at: generatedAt,\n    source_run_id: sourceRunId,\n    validation_run_id: validationRunId,\n    transient_mode: true,\n    transient_provenance: 'in_memory_dashboard_v1',\n    publication_attempted: false,\n    publication_confirmed: false\n  },\n  agents: orderedAgents,\n  pairs: orderedPairs,\n  trade_opportunities: Array.isArray(layer2Dashboard.trade_opportunities) ? layer2Dashboard.trade_opportunities : [],\n  avoid_today: Array.isArray(layer2Dashboard.avoid_today) ? layer2Dashboard.avoid_today : []\n};\nreturn [{ json: {\n  dashboard,\n  file_content: JSON.stringify(dashboard, null, 2),\n  generated_at: dashboard.generated_at,\n  source_run_id: sourceRunId,\n  validation_run_id: validationRunId,\n  consistency_status: 'MATCHED'\n} }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        416,
+        0
+      ],
+      "id": "3977db9f-962a-4380-bc0e-b1838e3d6b30",
+      "name": "Build Layer 1 JSON"
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "9fcc2657-4e50-4899-a618-8fbd0f848283",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "id": "3977db9f-962a-4380-bc0e-b1838e3d6b30-source-run-filter",
+      "name": "Filter Source Run ID",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        0
+      ],
+      "parameters": {
+        "jsCode": "const rows = $input.all().map((item) => item.json || {});\nlet workflowInput = {};\ntry {\n  workflowInput = $('When Executed by Another Workflow').first().json || {};\n} catch (error) {\n  workflowInput = {};\n}\nconst sourceRunId = workflowInput.source_run_id || workflowInput.sourceRunId || null;\nif (!sourceRunId) {\n  return rows.map((row) => ({ json: row }));\n}\nfunction parseMaybeJsonScoped(value) {\n  if (!value || typeof value === 'object') return value || {};\n  try {\n    return JSON.parse(value);\n  } catch (error) {\n    return {};\n  }\n}\nconst validationMode = workflowInput.validation_mode === true || workflowInput.validation_mode === 'true';\nconst validationRunId = workflowInput.validation_run_id || workflowInput.body?.validation_run_id || null;\nreturn rows\n  .filter((row) => {\n    const fullOutput = parseMaybeJsonScoped(row.full_output);\n    const rawOutput = parseMaybeJsonScoped(row.raw_agent_output);\n    const rowValidationMode = row.validation_mode === true || row.validation_mode === 'true' || fullOutput.validation_mode === true || rawOutput.validation_mode === true;\n    const rowPersistenceMode = String(row.persistence_mode || fullOutput.persistence_mode || rawOutput.persistence_mode || '').trim();\n    const rowValidationRunId = String(row.validation_run_id || fullOutput.validation_run_id || rawOutput.validation_run_id || '').trim();\n    const rowSourceRunId = String(row.source_run_id || fullOutput.source_run_id || rawOutput.source_run_id || '').trim();\n    if (!validationMode || !validationRunId) return false;\n    if (!rowValidationMode) return false;\n    if (rowPersistenceMode !== 'transient_fixture') return false;\n    if (rowValidationRunId !== String(validationRunId).trim()) return false;\n    return rowSourceRunId === sourceRunId || rowValidationRunId === String(validationRunId).trim();\n  })\n  .map((row) => ({ json: row }));"
+      }
+    },
+    {
+      "id": "pMPxuN3dk5WWxbYY-require-transient-contract",
+      "name": "Code | Require Transient Validation Contract",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        208,
+        0
+      ],
+      "parameters": {
+        "jsCode": "const rows = $input.all().map((item) => item.json || {});\nconst workflowInput = rows[0] || {};\nconst validationMode = workflowInput.validation_mode === true || workflowInput.validation_mode === 'true' || workflowInput.body?.validation_mode === true || workflowInput.body?.validation_mode === 'true';\nconst persistenceMode = String(workflowInput.persistence_mode || workflowInput.body?.persistence_mode || '').trim();\nconst validationRunId = String(workflowInput.validation_run_id || workflowInput.body?.validation_run_id || '').trim();\nconst forbiddenSelectors = ['table', 'tableId', 'write_target', 'publication_target', 'file_path', 'repository', 'owner'];\nfor (const key of forbiddenSelectors) {\n  if (workflowInput[key] !== undefined || workflowInput.body?.[key] !== undefined) {\n    throw new Error(`Transient validation contract does not allow caller-controlled ${key}.`);\n  }\n}\nif (!validationMode) throw new Error('Staged transient validation requires validation_mode=true.');\nif (persistenceMode !== 'transient_fixture') throw new Error(`Staged transient validation requires persistence_mode=transient_fixture, received '${persistenceMode || '<empty>'}'.`);\nif (!validationRunId) throw new Error('Staged transient validation requires validation_run_id.');\nconst sourceRunId = String(workflowInput.source_run_id || workflowInput.body?.source_run_id || validationRunId).trim();\nreturn rows.map((row) => ({\n  json: {\n    ...row,\n    validation_mode: true,\n    persistence_mode: 'transient_fixture',\n    validation_run_id: validationRunId,\n    source_run_id: sourceRunId,\n    write_target: null,\n    publication_target: null\n  }\n}));"
+      }
+    },
+    {
+      "id": "pMPxuN3dk5WWxbYY-build-transient-result",
+      "name": "Code | Build Transient Dashboard Result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        416,
+        0
+      ],
+      "parameters": {
+        "jsCode": "const buildOutput = $input.first()?.json || {};\nconst workflowInput = $('Code | Require Transient Validation Contract').first().json || {};\nconst validationRunId = String(workflowInput.validation_run_id || '').trim() || null;\nconst sourceRunId = String(workflowInput.source_run_id || validationRunId || '').trim() || null;\nconst dashboard = buildOutput.dashboard || (buildOutput.file_content ? JSON.parse(buildOutput.file_content) : null);\nif (!dashboard || !Array.isArray(dashboard.agents) || !Array.isArray(dashboard.pairs)) throw new Error('Transient dashboard wrapper requires non-empty agents and pairs.');\nif (dashboard.agents.length !== 5) throw new Error('Transient dashboard wrapper requires exactly five Layer 1 cards.');\nif (dashboard.pairs.length !== 4) throw new Error('Transient dashboard wrapper requires exactly four Layer 2 cards.');\nif (!validationRunId || !sourceRunId || validationRunId !== sourceRunId) throw new Error('Transient dashboard wrapper requires matching run ids.');\nreturn [{ json: {\n  workflow_id: $workflow.id || null,\n  workflow_name: $workflow.name || null,\n  validation_mode: true,\n  persistence_mode: 'transient_fixture',\n  validation_run_id: validationRunId,\n  source_run_id: sourceRunId,\n  output_count: dashboard.agents.length + dashboard.pairs.length,\n  dashboard,\n  file_content: buildOutput.file_content || JSON.stringify(dashboard, null, 2),\n  publication_attempted: false,\n  publication_confirmed: false,\n  write_attempted: false,\n  write_confirmed: false,\n  warnings: [],\n  completed_at: new Date().toISOString()\n} }];"
+      }
+    }
+  ],
+  "connections": {
+    "Get many rows": {
+      "main": [
+        [
+          {
+            "node": "Filter Source Run ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Layer 1 JSON": {
+      "main": [
+        [
+          {
+            "node": "Code | Build Transient Dashboard Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Code | Require Transient Validation Contract",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter Source Run ID": {
+      "main": [
+        [
+          {
+            "node": "Build Layer 1 JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Require Transient Validation Contract": {
+      "main": [
+        [
+          {
+            "node": "Build Layer 1 JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "nodeGroups": [],
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "pinData": {},
+  "meta": null,
+  "tags": [],
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "pMPxuN3dk5WWxbYY",
+      "projectId": "ISQG9XU7TGTT6Fcu",
+      "project": {
+        "id": "ISQG9XU7TGTT6Fcu",
+        "name": "Daniel Silver <a17@live.co.uk>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "customTelemetryTags": [],
+        "creatorId": "eb4fba3e-5170-481b-abc5-ce65776c1113",
+        "createdAt": "2026-04-29T19:10:11.212Z",
+        "updatedAt": "2026-04-29T19:10:21.640Z"
+      },
+      "createdAt": "2026-07-23T09:11:51.122Z",
+      "updatedAt": "2026-07-23T09:11:51.122Z"
+    }
+  ],
+  "activeVersion": {
+    "versionId": "467e257f-71e3-4420-9495-3ccef91d29aa",
+    "workflowId": "pMPxuN3dk5WWxbYY",
+    "nodes": [
+      {
+        "parameters": {
+          "operation": "getAll",
+          "tableId": "agent_outputs",
+          "limit": 1000,
+          "filters": {
+            "conditions": []
+          }
+        },
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          208,
+          0
+        ],
+        "id": "aacf8cac-3da0-42a9-b83b-d0db3dac0a3d",
+        "name": "Get many rows",
+        "credentials": {
+          "supabaseApi": {
+            "id": "trM35g1QCTOgQp4K",
+            "name": "Supabase account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "let workflowInput = {};\ntry {\n  workflowInput = $('When Executed by Another Workflow').first().json || {};\n} catch (error) {\n  workflowInput = $input.first()?.json || {};\n}\nconst allowedFields = ['validation_mode', 'persistence_mode', 'validation_run_id', 'source_run_id', 'layer1_results', 'layer2_result'];\nfor (const key of Object.keys(workflowInput)) {\n  if (!allowedFields.includes(key)) throw new Error(`Transient Dashboard contract does not allow field '${key}'.`);\n}\nconst validationRunId = String(workflowInput.validation_run_id || '').trim();\nconst sourceRunId = String(workflowInput.source_run_id || validationRunId).trim();\nconst layer1Results = workflowInput.layer1_results || {};\nconst layer2Result = workflowInput.layer2_result || {};\nconst expectedAssets = ['USD', 'EUR', 'GOLD', 'NQ', 'BTC'];\nconst pairOrder = ['EUR/USD', 'XAU/USD', 'BTC/USD', 'NQ/USD'];\nif (workflowInput.validation_mode !== true) throw new Error('Transient Dashboard contract requires validation_mode=true.');\nif (String(workflowInput.persistence_mode || '').trim() !== 'transient_fixture') throw new Error('Transient Dashboard contract requires persistence_mode=transient_fixture.');\nif (!validationRunId || sourceRunId !== validationRunId) throw new Error('Transient Dashboard contract requires matching validation_run_id and source_run_id.');\nconst uniqueAssets = new Set(Object.keys(layer1Results));\nif (uniqueAssets.size !== expectedAssets.length) throw new Error('Transient Dashboard contract requires exactly five unique Layer 1 assets.');\nfor (const asset of uniqueAssets) {\n  if (!expectedAssets.includes(asset)) throw new Error(`Transient Dashboard received unexpected asset ${asset}.`);\n}\nconst orderedAgents = [];\nfor (const asset of expectedAssets) {\n  const result = layer1Results[asset];\n  if (!result || typeof result !== 'object') throw new Error(`Transient Dashboard contract is missing layer1_results.${asset}.`);\n  if (!result.dashboard_agent || typeof result.dashboard_agent !== 'object') throw new Error(`Transient Dashboard contract is missing layer1_results.${asset}.dashboard_agent.`);\n  if (String(result.source_run_id || '').trim() !== sourceRunId) throw new Error(`Transient Dashboard received mismatched source_run_id for ${asset}.`);\n  if (String(result.validation_run_id || '').trim() !== validationRunId) throw new Error(`Transient Dashboard received mismatched validation_run_id for ${asset}.`);\n  if (String(result.asset || '').trim() !== asset) throw new Error(`Transient Dashboard received wrong asset identity for ${asset}.`);\n  orderedAgents.push(result.dashboard_agent);\n}\nconst layer2Dashboard = layer2Result.dashboard && typeof layer2Result.dashboard === 'object' ? layer2Result.dashboard : null;\nif (!layer2Dashboard || !Array.isArray(layer2Dashboard.pairs) || layer2Dashboard.pairs.length === 0) throw new Error('Transient Dashboard contract requires a non-empty layer2_result.dashboard.pairs array.');\nconst layer2SourceRunId = String(layer2Result.source_run_id || layer2Dashboard.source_run_id || '').trim();\nconst layer2ValidationRunId = String(layer2Result.validation_run_id || layer2Dashboard.validation_run_id || '').trim();\nif (layer2SourceRunId && layer2SourceRunId !== sourceRunId) throw new Error('Transient Dashboard received mismatched Layer 2 source_run_id.');\nif (layer2ValidationRunId && layer2ValidationRunId !== validationRunId) throw new Error('Transient Dashboard received mismatched Layer 2 validation_run_id.');\nconst pairMap = new Map();\nfor (const pair of layer2Dashboard.pairs) {\n  if (!pair || typeof pair !== 'object' || !pair.pair) throw new Error('Transient Dashboard contract requires well-formed Layer 2 pair objects.');\n  if (pairMap.has(pair.pair)) throw new Error(`Transient Dashboard received duplicate Layer 2 pair ${pair.pair}.`);\n  pairMap.set(pair.pair, pair);\n}\nconst orderedPairs = [];\nfor (const pairName of pairOrder) {\n  if (!pairMap.has(pairName)) throw new Error(`Transient Dashboard contract is missing Layer 2 pair ${pairName}.`);\n  orderedPairs.push(pairMap.get(pairName));\n}\nconst generatedAt = new Date().toISOString();\nconst dashboard = {\n  schema_version: 1,\n  generated_at: generatedAt,\n  source_run_id: sourceRunId,\n  validation_run_id: validationRunId,\n  consistency_status: 'MATCHED',\n  consistency_warnings: [],\n  dashboard_meta: {\n    generated_at: generatedAt,\n    source_run_id: sourceRunId,\n    validation_run_id: validationRunId,\n    transient_mode: true,\n    transient_provenance: 'in_memory_dashboard_v1',\n    publication_attempted: false,\n    publication_confirmed: false\n  },\n  agents: orderedAgents,\n  pairs: orderedPairs,\n  trade_opportunities: Array.isArray(layer2Dashboard.trade_opportunities) ? layer2Dashboard.trade_opportunities : [],\n  avoid_today: Array.isArray(layer2Dashboard.avoid_today) ? layer2Dashboard.avoid_today : []\n};\nreturn [{ json: {\n  dashboard,\n  file_content: JSON.stringify(dashboard, null, 2),\n  generated_at: dashboard.generated_at,\n  source_run_id: sourceRunId,\n  validation_run_id: validationRunId,\n  consistency_status: 'MATCHED'\n} }];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          416,
+          0
+        ],
+        "id": "3977db9f-962a-4380-bc0e-b1838e3d6b30",
+        "name": "Build Layer 1 JSON"
+      },
+      {
+        "parameters": {
+          "inputSource": "passthrough"
+        },
+        "type": "n8n-nodes-base.executeWorkflowTrigger",
+        "typeVersion": 1.2,
+        "position": [
+          0,
+          0
+        ],
+        "id": "9fcc2657-4e50-4899-a618-8fbd0f848283",
+        "name": "When Executed by Another Workflow"
+      },
+      {
+        "id": "3977db9f-962a-4380-bc0e-b1838e3d6b30-source-run-filter",
+        "name": "Filter Source Run ID",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          240,
+          0
+        ],
+        "parameters": {
+          "jsCode": "const rows = $input.all().map((item) => item.json || {});\nlet workflowInput = {};\ntry {\n  workflowInput = $('When Executed by Another Workflow').first().json || {};\n} catch (error) {\n  workflowInput = {};\n}\nconst sourceRunId = workflowInput.source_run_id || workflowInput.sourceRunId || null;\nif (!sourceRunId) {\n  return rows.map((row) => ({ json: row }));\n}\nfunction parseMaybeJsonScoped(value) {\n  if (!value || typeof value === 'object') return value || {};\n  try {\n    return JSON.parse(value);\n  } catch (error) {\n    return {};\n  }\n}\nconst validationMode = workflowInput.validation_mode === true || workflowInput.validation_mode === 'true';\nconst validationRunId = workflowInput.validation_run_id || workflowInput.body?.validation_run_id || null;\nreturn rows\n  .filter((row) => {\n    const fullOutput = parseMaybeJsonScoped(row.full_output);\n    const rawOutput = parseMaybeJsonScoped(row.raw_agent_output);\n    const rowValidationMode = row.validation_mode === true || row.validation_mode === 'true' || fullOutput.validation_mode === true || rawOutput.validation_mode === true;\n    const rowPersistenceMode = String(row.persistence_mode || fullOutput.persistence_mode || rawOutput.persistence_mode || '').trim();\n    const rowValidationRunId = String(row.validation_run_id || fullOutput.validation_run_id || rawOutput.validation_run_id || '').trim();\n    const rowSourceRunId = String(row.source_run_id || fullOutput.source_run_id || rawOutput.source_run_id || '').trim();\n    if (!validationMode || !validationRunId) return false;\n    if (!rowValidationMode) return false;\n    if (rowPersistenceMode !== 'transient_fixture') return false;\n    if (rowValidationRunId !== String(validationRunId).trim()) return false;\n    return rowSourceRunId === sourceRunId || rowValidationRunId === String(validationRunId).trim();\n  })\n  .map((row) => ({ json: row }));"
+        }
+      },
+      {
+        "id": "pMPxuN3dk5WWxbYY-require-transient-contract",
+        "name": "Code | Require Transient Validation Contract",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          208,
+          0
+        ],
+        "parameters": {
+          "jsCode": "const rows = $input.all().map((item) => item.json || {});\nconst workflowInput = rows[0] || {};\nconst validationMode = workflowInput.validation_mode === true || workflowInput.validation_mode === 'true' || workflowInput.body?.validation_mode === true || workflowInput.body?.validation_mode === 'true';\nconst persistenceMode = String(workflowInput.persistence_mode || workflowInput.body?.persistence_mode || '').trim();\nconst validationRunId = String(workflowInput.validation_run_id || workflowInput.body?.validation_run_id || '').trim();\nconst forbiddenSelectors = ['table', 'tableId', 'write_target', 'publication_target', 'file_path', 'repository', 'owner'];\nfor (const key of forbiddenSelectors) {\n  if (workflowInput[key] !== undefined || workflowInput.body?.[key] !== undefined) {\n    throw new Error(`Transient validation contract does not allow caller-controlled ${key}.`);\n  }\n}\nif (!validationMode) throw new Error('Staged transient validation requires validation_mode=true.');\nif (persistenceMode !== 'transient_fixture') throw new Error(`Staged transient validation requires persistence_mode=transient_fixture, received '${persistenceMode || '<empty>'}'.`);\nif (!validationRunId) throw new Error('Staged transient validation requires validation_run_id.');\nconst sourceRunId = String(workflowInput.source_run_id || workflowInput.body?.source_run_id || validationRunId).trim();\nreturn rows.map((row) => ({\n  json: {\n    ...row,\n    validation_mode: true,\n    persistence_mode: 'transient_fixture',\n    validation_run_id: validationRunId,\n    source_run_id: sourceRunId,\n    write_target: null,\n    publication_target: null\n  }\n}));"
+        }
+      },
+      {
+        "id": "pMPxuN3dk5WWxbYY-build-transient-result",
+        "name": "Code | Build Transient Dashboard Result",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          416,
+          0
+        ],
+        "parameters": {
+          "jsCode": "const buildOutput = $input.first()?.json || {};\nconst workflowInput = $('Code | Require Transient Validation Contract').first().json || {};\nconst validationRunId = String(workflowInput.validation_run_id || '').trim() || null;\nconst sourceRunId = String(workflowInput.source_run_id || validationRunId || '').trim() || null;\nconst dashboard = buildOutput.dashboard || (buildOutput.file_content ? JSON.parse(buildOutput.file_content) : null);\nif (!dashboard || !Array.isArray(dashboard.agents) || !Array.isArray(dashboard.pairs)) throw new Error('Transient dashboard wrapper requires non-empty agents and pairs.');\nif (dashboard.agents.length !== 5) throw new Error('Transient dashboard wrapper requires exactly five Layer 1 cards.');\nif (dashboard.pairs.length !== 4) throw new Error('Transient dashboard wrapper requires exactly four Layer 2 cards.');\nif (!validationRunId || !sourceRunId || validationRunId !== sourceRunId) throw new Error('Transient dashboard wrapper requires matching run ids.');\nreturn [{ json: {\n  workflow_id: $workflow.id || null,\n  workflow_name: $workflow.name || null,\n  validation_mode: true,\n  persistence_mode: 'transient_fixture',\n  validation_run_id: validationRunId,\n  source_run_id: sourceRunId,\n  output_count: dashboard.agents.length + dashboard.pairs.length,\n  dashboard,\n  file_content: buildOutput.file_content || JSON.stringify(dashboard, null, 2),\n  publication_attempted: false,\n  publication_confirmed: false,\n  write_attempted: false,\n  write_confirmed: false,\n  warnings: [],\n  completed_at: new Date().toISOString()\n} }];"
+        }
+      }
+    ],
+    "connections": {
+      "Get many rows": {
+        "main": [
+          [
+            {
+              "node": "Filter Source Run ID",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Build Layer 1 JSON": {
+        "main": [
+          [
+            {
+              "node": "Code | Build Transient Dashboard Result",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "When Executed by Another Workflow": {
+        "main": [
+          [
+            {
+              "node": "Code | Require Transient Validation Contract",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Filter Source Run ID": {
+        "main": [
+          [
+            {
+              "node": "Build Layer 1 JSON",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code | Require Transient Validation Contract": {
+        "main": [
+          [
+            {
+              "node": "Build Layer 1 JSON",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "nodeGroups": [],
+    "authors": "Daniel Silver",
+    "name": null,
+    "description": null,
+    "autosaved": false,
+    "createdAt": "2026-07-27T18:51:59.742Z",
+    "updatedAt": "2026-07-27T18:51:59.742Z",
+    "workflowPublishHistory": [
+      {
+        "id": 216,
+        "workflowId": "pMPxuN3dk5WWxbYY",
+        "versionId": "467e257f-71e3-4420-9495-3ccef91d29aa",
+        "event": "activated",
+        "userId": "eb4fba3e-5170-481b-abc5-ce65776c1113",
+        "createdAt": "2026-07-27T18:51:59.956Z"
+      },
+      {
+        "id": 215,
+        "workflowId": "pMPxuN3dk5WWxbYY",
+        "versionId": "467e257f-71e3-4420-9495-3ccef91d29aa",
+        "event": "deactivated",
+        "userId": "eb4fba3e-5170-481b-abc5-ce65776c1113",
+        "createdAt": "2026-07-27T18:51:59.865Z"
+      }
+    ]
+  }
+}

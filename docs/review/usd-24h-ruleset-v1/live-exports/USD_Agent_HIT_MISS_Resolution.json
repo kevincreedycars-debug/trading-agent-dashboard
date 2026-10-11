@@ -1,0 +1,552 @@
+{
+  "id": "mW2chtJ4yTZqFhCi",
+  "name": "USD Agent — HIT/MISS Resolution",
+  "description": null,
+  "active": false,
+  "activeVersionId": null,
+  "createdAt": "2026-05-10T10:34:36.227Z",
+  "updatedAt": "2026-06-28T12:49:54.406Z",
+  "isArchived": false,
+  "versionId": "29385877-c7ac-4ec4-b0d7-c6b367fa9be8",
+  "versionCounter": 136,
+  "sourceWorkflowId": null,
+  "triggerCount": 1,
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "30 13,20 * * 1-5"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        368,
+        -608
+      ],
+      "id": "6e610aa6-86bd-4152-b09b-ad2df991f05f",
+      "name": "Schedule Trigger",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "url": "https://api.coinbase.com/v2/prices/XAU-USD/spot",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        416,
+        -336
+      ],
+      "id": "5fcfc045-197e-4b0e-91b2-f5f7fe9d2128",
+      "name": "HTTP Request | Gold - Coinbase",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "url": "https://api.coinbase.com/v2/prices/BTC-USD/spot",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        608,
+        -336
+      ],
+      "id": "f54792d8-4460-4031-b485-a8916cee5515",
+      "name": "HTTP Request | BTC - Coinbase",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "url": "https://api.coinbase.com/v2/prices/EUR-USD/spot",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        784,
+        -336
+      ],
+      "id": "c49a6644-0aab-43c8-9330-89804ad21d9f",
+      "name": "HTTP Request | EUR/USD - Coinbase",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "url": "=https://vbssvpnrxhcxwmyakijf.supabase.co/rest/v1/calls?select=*&status=eq.OPEN&expiry_at=lt.{{ new Date().toISOString() }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "<redacted>"
+            },
+            {
+              "name": "Authorization",
+              "value": "<redacted>"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        592,
+        -608
+      ],
+      "id": "a92a5766-700c-42ea-b6a3-07eceef3fdfd",
+      "name": "HTTP Request | Fetch Expired Calls",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "url": "https://api.coinbase.com/v2/prices/GBP-USD/spot",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        960,
+        -336
+      ],
+      "id": "6720bc08-48c9-421f-8783-a0720ff30d66",
+      "name": "HTTP Request | GBP/USD - Coinbase",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "url": "https://api.coinbase.com/v2/prices/JPY-USD/spot",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1168,
+        -336
+      ],
+      "id": "9d045d30-9b02-48c6-b32e-c2c35dd85d6e",
+      "name": "HTTP Request | USD/JPY - Coinbase",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "url": "https://api.coinbase.com/v2/prices/CAD-USD/spot",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1376,
+        -336
+      ],
+      "id": "459fff20-3a3b-42b3-8701-209c16f6ecc0",
+      "name": "HTTP Request | USD/CAD - Coinbase",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "url": "https://api.coinbase.com/v2/prices/AUD-USD/spot",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1584,
+        -336
+      ],
+      "id": "89e17793-04f9-4e6d-b6dd-3457c244756f",
+      "name": "HTTP Request | AUD/USD - Coinbase",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const currentPrices  = $('Code | Aggregate Prices').first().json;\nconst expiredCalls   = $('HTTP Request | Fetch Expired Calls').all().map(i => i.json);\n\nif (!expiredCalls || expiredCalls.length === 0) return [];\n\nconst resolved = [];\n\nfor (const call of expiredCalls) {\n  if (call.direction === 'NO TRADE') continue;\n\n  const entryPrice   = parseFloat(call.entry_price);\n  const currentPrice = currentPrices[call.market];\n\n  if (!entryPrice || !currentPrice) continue;\n\n  let status;\n  if (call.direction === 'LONG')       status = currentPrice > entryPrice ? 'HIT' : 'MISS';\n  else if (call.direction === 'SHORT') status = currentPrice < entryPrice ? 'HIT' : 'MISS';\n  else continue;\n\n  resolved.push({ json: { id: call.id, status } });\n}\n\nreturn resolved;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        624,
+        -48
+      ],
+      "id": "29608f92-26ba-42c7-b4bb-8cec1ae392e7",
+      "name": "Code | Resolve HIT/MISS",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const gold   = parseFloat($('HTTP Request | Gold - Coinbase').first().json?.data?.amount);\nconst btc    = parseFloat($('HTTP Request | BTC - Coinbase').first().json?.data?.amount);\nconst eurUsd = parseFloat($('HTTP Request | EUR/USD - Coinbase').first().json?.data?.amount);\nconst gbpUsd = parseFloat($('HTTP Request | GBP/USD - Coinbase').first().json?.data?.amount);\nconst jpyRaw = parseFloat($('HTTP Request | USD/JPY - Coinbase').first().json?.data?.amount);\nconst cadRaw = parseFloat($('HTTP Request | USD/CAD - Coinbase').first().json?.data?.amount);\nconst audUsd = parseFloat($('HTTP Request | AUD/USD - Coinbase').first().json?.data?.amount);\n\nconst wtiRaw = $('HTTP Request | WTI Oil - Alpha Vantage').first().json?.data?.[0]?.value;\nconst wti    = wtiRaw ? parseFloat(wtiRaw) : null;\n\nconst nqRaw = $('HTTP Request | NQ - Alpha Vantage').first().json?.['Global Quote']?.['05. price'];\nconst nq    = nqRaw ? parseFloat(nqRaw) : null;\n\nreturn [{\n  json: {\n    'EUR/USD': eurUsd,\n    'GBP/USD': gbpUsd,\n    'USD/JPY': jpyRaw ? 1 / jpyRaw : null,\n    'USD/CAD': cadRaw ? 1 / cadRaw : null,\n    'AUD/USD': audUsd,\n    'BTC/USD': btc,\n    'XAU/USD': gold,\n    'WTI Oil': wti,\n    'NQ':      nq,\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        416,
+        -48
+      ],
+      "id": "cb4449d3-c326-4622-9de1-2c3e5644b603",
+      "name": "Code | Aggregate Prices",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://vbssvpnrxhcxwmyakijf.supabase.co/rest/v1/calls?id=eq.{{ $json.id }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "apikey",
+              "value": "<redacted>"
+            },
+            {
+              "name": "Authorization",
+              "value": "<redacted>"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=minimal"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ status: $json.status }) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        816,
+        -48
+      ],
+      "id": "0ad5cd89-7522-42d0-af66-b95ae99e3913",
+      "name": "HTTP Request",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "url": "https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=QQQ&apikey=<redacted>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2000,
+        -336
+      ],
+      "id": "22a24e09-7814-40d0-b1fa-5e8e5d8095be",
+      "name": "HTTP Request | NQ - Alpha Vantage",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "url": "https://finnhub.io/api/v1/quote?symbol=USOIL&token=<redacted>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1792,
+        -336
+      ],
+      "id": "eaaa91ae-c58f-4c20-9bb7-c429e09c8c2a",
+      "name": "HTTP Request | WTI Oil - Alpha Vantage",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const prices = $('Code | Aggregate Prices').first().json;\n\nconst nullMarkets = Object.entries(prices)\n  .filter(([market, price]) => price === null)\n  .map(([market]) => market);\n\nconst hasErrors = nullMarkets.length > 0;\n\nreturn [{\n  json: {\n    hasErrors,\n    nullMarkets,\n    message: hasErrors \n      ? `Resolution workflow completed with missing prices: ${nullMarkets.join(', ')}`\n      : 'Resolution workflow completed cleanly'\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1024,
+        -48
+      ],
+      "id": "0702003d-c49a-4e69-a33c-0c71059e6b8c",
+      "name": "Code in JavaScript",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "0c77c2d0-893c-48ea-b451-b032e8ad0092",
+              "leftValue": "={{ $json.hasErrors }}",
+              "rightValue": "true",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1040,
+        192
+      ],
+      "id": "04e338b7-ab71-4571-b980-a1f1ccbd2556",
+      "name": "If",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "sendTo": "a17@live.co.uk",
+        "subject": "Error in Workflow",
+        "message": "Error in Workflow - HIT/MISS",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1376,
+        176
+      ],
+      "id": "3ab0fe87-31ea-47b1-bfda-fa96a095e134",
+      "name": "Send a message",
+      "webhookId": "28d20731-69a6-43df-89be-628daedfce93",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "a8zQUSrZhplJsK43",
+          "name": "Gmail OAuth2 API"
+        }
+      },
+      "disabled": true,
+      "onError": "continueRegularOutput"
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request | Fetch Expired Calls",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request | Gold - Coinbase": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request | BTC - Coinbase",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request | BTC - Coinbase": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request | EUR/USD - Coinbase",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request | Fetch Expired Calls": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request | Gold - Coinbase",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request | EUR/USD - Coinbase": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request | GBP/USD - Coinbase",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request | GBP/USD - Coinbase": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request | USD/JPY - Coinbase",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request | USD/JPY - Coinbase": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request | USD/CAD - Coinbase",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request | USD/CAD - Coinbase": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request | AUD/USD - Coinbase",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request | AUD/USD - Coinbase": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request | WTI Oil - Alpha Vantage",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Aggregate Prices": {
+      "main": [
+        [
+          {
+            "node": "Code | Resolve HIT/MISS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Resolve HIT/MISS": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request | NQ - Alpha Vantage": {
+      "main": [
+        [
+          {
+            "node": "Code | Aggregate Prices",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request | WTI Oil - Alpha Vantage": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request | NQ - Alpha Vantage",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "nodeGroups": [],
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "staticData": {},
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "tags": [],
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "mW2chtJ4yTZqFhCi",
+      "projectId": "ISQG9XU7TGTT6Fcu",
+      "project": {
+        "id": "ISQG9XU7TGTT6Fcu",
+        "name": "Daniel Silver <a17@live.co.uk>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "customTelemetryTags": [],
+        "creatorId": "eb4fba3e-5170-481b-abc5-ce65776c1113",
+        "createdAt": "2026-04-29T19:10:11.212Z",
+        "updatedAt": "2026-04-29T19:10:21.640Z"
+      },
+      "createdAt": "2026-05-10T10:34:36.230Z",
+      "updatedAt": "2026-05-10T10:34:36.230Z"
+    }
+  ],
+  "activeVersion": null
+}

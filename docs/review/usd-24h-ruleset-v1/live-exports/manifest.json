@@ -1,0 +1,5349 @@
+{
+  "exported_at": "2026-10-11T18:59:54.307Z",
+  "base_url": "https://silver17.app.n8n.cloud",
+  "api": "n8n public API v1, GET only",
+  "script": "scripts/export_live_workflows.js",
+  "out_dir": "tmp/live/exports-2026-10-11T18-59-53-817Z",
+  "workflow_count": 45,
+  "workflows": [
+    {
+      "file": "1._Economic_Events_EUR_PMI_Collector.json",
+      "id": "HIhQay9MLSzYazzI",
+      "name": "1. Economic Events EUR PMI Collector",
+      "engine": "EUR",
+      "role": "collector",
+      "active": false,
+      "is_archived": false,
+      "version_id": "5a25127f-798e-4877-aa13-2c50f0d18f42",
+      "version_counter": 1,
+      "trigger_count": 0,
+      "created_at": "2026-06-13T19:08:35.678Z",
+      "updated_at": "2026-06-13T19:08:35.678Z",
+      "project_id": "ISQG9XU7TGTT6Fcu",
+      "node_count": 11,
+      "node_names": [
+        "Schedule Trigger",
+        "HTTP Request | RapidAPI Calendar US",
+        "HTTP Request | RapidAPI Calendar DE",
+        "HTTP Request | RapidAPI Calendar FR",
+        "HTTP Request | RapidAPI Calendar IT",
+        "HTTP Request | RapidAPI Calendar ES",
+        "HTTP Request | RapidAPI Calendar CN",
+        "Code | Normalise Forex Factory Events",
+        "Supabase | Upsert Economic Events",
+        "Code | Generate EUR PMI Lookback Dates",
+        "HTTP Request | Forex Factory EUR PMI Lookback"
+      ],
+      "code_nodes": [
+        {
+          "name": "Code | Normalise Forex Factory Events",
+          "js_code_sha256": "7bcd7d82769fb0b36e3f20a001e827c892c94c655c86d573220d6680e517ce92",
+          "js_code_bytes": 2707
+        },
+        {
+          "name": "Code | Generate EUR PMI Lookback Dates",
+          "js_code_sha256": "18a4a39ccc6bb0004b6092cb910b7e139551f5aa7682533b5f67afef3e9d67ae",
+          "js_code_bytes": 241
+        }
+      ],
+      "credential_bindings": [
+        {
+          "node": "Supabase | Upsert Economic Events",
+          "names": [
+            "supabaseApi"
+          ]
+        }
+      ],
+      "routing": [
+        {
+          "node": "Schedule Trigger",
+          "type": "n8n-nodes-base.scheduleTrigger",
+          "kind": "schedule",
+          "cron_expression": null
+        },
+        {
+          "node": "Supabase | Upsert Economic Events",
+          "type": "n8n-nodes-base.supabase",
+          "kind": "supabase",
+          "table": "economic_events",
+          "operation": null
+        }
+      ],
+      "sha256": "363e0c97342c64e667cafc75a94d52f7621c558d04a1ede6c0634d47caf49f34",
+      "bytes": 12933,
+      "raw_sha256": "363e0c97342c64e667cafc75a94d52f7621c558d04a1ede6c0634d47caf49f34",
+      "redaction_count": 0
+    },
+    {
+      "file": "Backtest_Processor.json",
+      "id": "1lT52EmkH3hHJPUL",
+      "name": "Backtest Processor",
+      "engine": "UNCLASSIFIED",
+      "role": "other",
+      "active": false,
+      "is_archived": false,
+      "version_id": "e62b4b92-ecbf-4ada-a43a-34855e65bed9",
+      "version_counter": 348,
+      "trigger_count": 0,
+      "created_at": "2026-05-12T19:59:04.680Z",
+      "updated_at": "2026-05-14T10:07:59.092Z",
+      "project_id": "ISQG9XU7TGTT6Fcu",
+      "node_count": 35,
+      "node_names": [
+        "When clicking ‘Execute workflow’",
+        "HTTP Request | Claim Next Pending Date",
+        "IF | Is There A Pending Date?",
+        "HTTP Request | Mark as Processing",
+        "HTTP Request | BT US 2Y - FRED",
+        "HTTP Request | BT US 10Y - FRED",
+        "HTTP Request | BT TIPS 10Y - FRED",
+        "HTTP Request | BT Germany 10Y - FRED",
+        "HTTP Request | BT VIX - FRED",
+        "HTTP Request | BT DXY - FRED",
+        "HTTP Request | BT WTI - FRED",
+        "HTTP Request | BT Brent - FRED",
+        "HTTP Request | BT Gold - FRED",
+        "HTTP Request | BT EUR/USD - FRED",
+        "HTTP Request | BT GBP/USD - FRED",
+        "HTTP Request | BT USD/JPY - FRED",
+        "HTTP Request | BT USD/CAD - FRED",
+        "HTTP Request | BT AUD/USD - FRED",
+        "HTTP Request | BT Gold - Coinbase",
+        "HTTP Request | BT BTC - CoinGecko",
+        "Code | BT Fetch Aggregator",
+        "Edit Fields | USD Ruleset",
+        "Code | BT Prompt Builder",
+        "HTTP Request | BT Diagnosis - Claude API",
+        "Code | BT Extract Diagnosis Text",
+        "Code | BT Build Extract Prompt",
+        "HTTP Request | BT Extract Calls - Claude API",
+        "Code | BT Parse Calls",
+        "HTTP Request | BT Log Calls to Supabase",
+        "Aggregate",
+        "HTTP Request | BT Mark Date Complete",
+        "HTTP Request | BT Log Prices to Supabase",
+        "HTTP Request | BT Fetch Entry Prices from DB",
+        "HTTP Request | BT Fetch Day Prices from DB",
+        "HTTP Request | Gold - Vantage API"
+      ],
+      "code_nodes": [
+        {
+          "name": "Code | BT Fetch Aggregator",
+          "js_code_sha256": "fa7067e07012166505628ad0114d26db3683780927c8df945a483e72584e087c",
+          "js_code_bytes": 2097
+        },
+        {
+          "name": "Code | BT Prompt Builder",
+          "js_code_sha256": "1846308b1f98af9bd20988712a7ac849bde53e374928788b1d2afc0c9a9789af",
+          "js_code_bytes": 523
+        },
+        {
+          "name": "Code | BT Extract Diagnosis Text",
+          "js_code_sha256": "e85c64e58c8208146acdd1eb047a84a1e77ba9029214570ae77ef0525b3dfc99",
+          "js_code_bytes": 365
+        },
+        {
+          "name": "Code | BT Build Extract Prompt",
+          "js_code_sha256": "4f900099275f34e4910982d893a942d1606ffb561ad0e0597463cb7a15b6cdd3",
+          "js_code_bytes": 833
+        },
+        {
+          "name": "Code | BT Parse Calls",
+          "js_code_sha256": "4d849451deea25deb1c1d0cd5cc2c38d551dc6b4a28c5c5e976f8e9134139269",
+          "js_code_bytes": 1240
+        }
+      ],
+      "credential_bindings": [],
+      "routing": [],
+      "sha256": "da0fa266bc9ef21cb6318dac1670fcb81f1681a01a7fdaeef60daf024656c615",
+      "bytes": 98512,
+      "raw_sha256": "d7251a339614e6b48756dba593c264c39e04249e625508fc7aeecc16196282b8",
+      "redaction_count": 31
+    },
+    {
+      "file": "Backtest_Queue_Initialiser.json",
+      "id": "4IctuVz0xl7kefJ2",
+      "name": "Backtest Queue Initialiser",
+      "engine": "UNCLASSIFIED",
+      "role": "other",
+      "active": false,
+      "is_archived": false,
+      "version_id": "2a8f0bee-5028-4aaa-bd92-e3bb4d1ce16c",
+      "version_counter": 34,
+      "trigger_count": 0,
+      "created_at": "2026-05-12T19:48:54.038Z",
+      "updated_at": "2026-05-13T17:40:20.321Z",
+      "project_id": "ISQG9XU7TGTT6Fcu",
+      "node_count": 3,
+      "node_names": [
+        "When clicking ‘Execute workflow’",
+        "Code | Generate Date Queue",
+        "HTTP Request | Seed Queue in Supabase"
+      ],
+      "code_nodes": [
+        {
+          "name": "Code | Generate Date Queue",
+          "js_code_sha256": "33a8046af8cb222326a8557edce5efce78f44c329c78ea6097d04d49b5617449",
+          "js_code_bytes": 816
+        }
+      ],
+      "credential_bindings": [],
+      "routing": [],
+      "sha256": "fdf158760e3405a461826b1c16db0a76a9e6e5d2060ed1b299660808134002fb",
+      "bytes": 4095,
+      "raw_sha256": "3b59e69500cfd437e7bc8ca81d3c301564c7c1e7526828179fffde5c7b93abc8",
+      "redaction_count": 2
+    },
+    {
+      "file": "Backtest_Resolver.json",
+      "id": "S7UkIcOx1SneGaZZ",
+      "name": "Backtest Resolver",
+      "engine": "UNCLASSIFIED",
+      "role": "other",
+      "active": false,
+      "is_archived": false,
+      "version_id": "dd84278d-744f-4955-aa7e-d56dbb4e4a9c",
+      "version_counter": 197,
+      "trigger_count": 0,
+      "created_at": "2026-05-13T19:05:50.354Z",
+      "updated_at": "2026-05-14T09:47:43.250Z",
+      "project_id": "ISQG9XU7TGTT6Fcu",
+      "node_count": 16,
+      "node_names": [
+        "When clicking ‘Execute workflow’",
+        "HTTP Request | Fetch Completed Calls",
+        "Code | Group by Resolution Date",
+        "Loop Over Items | Split in Batches",
+        "Code in JavaScript",
+        "HTTP Request | Res EUR/USD - FRED",
+        "HTTP Request | Res GBP/USD - FRED",
+        "HTTP Request | Res USD/JPY - FRED",
+        "HTTP Request | Res USD/CAD - FRED",
+        "HTTP Request | Res AUD/USD - FRED",
+        "HTTP Request | Res WTI - FRED",
+        "HTTP Request | Res Gold - Vantage",
+        "HTTP Request | Res BTC - CoinGecko",
+        "Code | Resolve Calls",
+        "HTTP Request | BT Update Call Status",
+        "HTTP Request | Fetch Resolution Prices from DB"
+      ],
+      "code_nodes": [
+        {
+          "name": "Code | Group by Resolution Date",
+          "js_code_sha256": "9d0a4726b4883a3e795dcaa0e2c521eae5dbd624e625a7dd17d652481528c689",
+          "js_code_bytes": 419
+        },
+        {
+          "name": "Code in JavaScript",
+          "js_code_sha256": "2396e1be38edbd152ce675dd8160d68a69c03743d937bff609ab8ef2fe898556",
+          "js_code_bytes": 98
+        },
+        {
+          "name": "Code | Resolve Calls",
+          "js_code_sha256": "557cf55de941ebf480516ec49e99ef93fb3ff79526a8c99c2db0c9ff933edc1b",
+          "js_code_bytes": 1213
+        }
+      ],
+      "credential_bindings": [],
+      "routing": [],
+      "sha256": "6432eacce31f484d70b99b3c2bad6b9a0df18c6d0cb75adef5a4696d95c16f47",
+      "bytes": 19918,
+      "raw_sha256": "296b73ccea35ebdf861723f2b0dc8e7f6e09da3640d29295eb934e248c521400",
+      "redaction_count": 13
+    },
+    {
+      "file": "BTC_Layer_1_Agent.json",
+      "id": "G142Blty3sGHzuOr",
+      "name": "BTC Layer 1 Agent",
+      "engine": "BTC",
+      "role": "agent",
+      "active": true,
+      "is_archived": false,
+      "version_id": "3b69d9c0-7f07-4a38-bfc1-eff5e61db763",
+      "version_counter": 18,
+      "trigger_count": 0,
+      "created_at": "2026-06-07T18:35:58.219Z",
+      "updated_at": "2026-06-18T19:40:27.514Z",
+      "project_id": "ISQG9XU7TGTT6Fcu",
+      "node_count": 9,
+      "node_names": [
+        "Message a model",
+        "Supabase Get Many",
+        "Create a row",
+        "Combine md & market snapshot",
+        "Build BTC Input Pack",
+        "Get BTC Logic Document",
+        "Parse BTC Agent Output",
+        "Calculate BTC Conviction",
+        "When Executed by Another Workflow"
+      ],
+      "code_nodes": [
+        {
+          "name": "Combine md & market snapshot",
+          "js_code_sha256": "cea4fd3e6af31dc25116abeb7581adec0fad255d0919dd278f67d8a238a26c31",
+          "js_code_bytes": 389
+        },
+        {
+          "name": "Build BTC Input Pack",
+          "js_code_sha256": "f842b8263d3c09979dc2ef733a496a3a2061113c935f9bb07fd58a6d4304095b",
+          "js_code_bytes": 3537
+        },
+        {
+          "name": "Parse BTC Agent Output",
+          "js_code_sha256": "80c587ffd0062e38267b84ac90c606d486d6c0cf6ad3820b63ea6f6de5d611fe",
+          "js_code_bytes": 4531
+        },
+        {
+          "name": "Calculate BTC Conviction",
+          "js_code_sha256": "ac4f3dc339679fbbaf99f598e28b94576f1570041cda7d5bacb88a70cde1a72f",
+          "js_code_bytes": 18535
+        }
+      ],
+      "credential_bindings": [
+        {
+          "node": "Message a model",
+          "names": [
+            "openAiApi"
+          ]
+        },
+        {
+          "node": "Supabase Get Many",
+          "names": [
+            "supabaseApi"
+          ]
+        },
+        {
+          "node": "Create a row",
+          "names": [
+            "supabaseApi"
+          ]
+        },
+        {
+          "node": "Get BTC Logic Document",
+          "names": [
+            "githubOAuth2Api"
+          ]
+        }
+      ],
+      "routing": [
+        {
+          "node": "Supabase Get Many",
+          "type": "n8n-nodes-base.supabase",
+          "kind": "supabase",
+          "table": "market_snapshots",
+          "operation": "getAll"
+        },
+        {
+          "node": "Create a row",
+          "type": "n8n-nodes-base.supabase",
+          "kind": "supabase",
+          "table": "agent_outputs",
+          "operation": null
+        },
+        {
+          "node": "Get BTC Logic Document",
+          "type": "n8n-nodes-base.github",
+          "kind": "github",
+          "owner": "kevincreedycars-debug",
+          "repository": "trading-agent-dashboard",
+          "file_path": "logic/agent_btc_direction.md"
+        },
+        {
+          "node": "When Executed by Another Workflow",
+          "type": "n8n-nodes-base.executeWorkflowTrigger",
+          "kind": "executeWorkflow",
+          "target_workflow_id": null,
+          "target_workflow_name_hint": null
+        }
+      ],
+      "sha256": "8f9fc6d1ff7dc50ac04fb13d21700f68995f70a2257381bf3e1d05932255c200",
+      "bytes": 72899,
+      "raw_sha256": "8f9fc6d1ff7dc50ac04fb13d21700f68995f70a2257381bf3e1d05932255c200",
+      "redaction_count": 0
+    },
+    {
+      "file": "Dashboard_Writer_-_Layer_1.json",
+      "id": "850DrjzCKKX9fDzD",
+      "name": "Dashboard Writer - Layer 1",
+      "engine": "SHARED",
+      "role": "dashboard_writer",
+      "active": true,
+      "is_archived": false,
+      "version_id": "8c5bd16c-d0ac-49e7-86b8-5eccb4a63f4c",
+      "version_counter": 56,
+      "trigger_count": 0,
+      "created_at": "2026-06-06T17:08:37.617Z",
+      "updated_at": "2026-09-19T14:39:28.326Z",
+      "project_id": "ISQG9XU7TGTT6Fcu",
+      "node_count": 18,
+      "node_names": [
+        "Build Layer 1 JSON",
+        "Edit a file",
+        "When Executed by Another Workflow",
+        "Get latest USD rows",
+        "Get latest EUR rows",
+        "Get latest GOLD rows",
+        "Get latest NQ rows",
+        "Get latest BTC rows",
+        "Merge USD + EUR",
+        "Merge GOLD + NQ",
+        "Merge Core Pairs",
+        "Merge Core + BTC",
+        "Get latest WTI rows",
+        "Merge Core + WTI",
+        "Get latest SILVER rows",
+        "Merge Core + SILVER",
+        "Get latest GBP rows",
+        "Merge Core + GBP"
+      ],
+      "code_nodes": [
+        {
+          "name": "Build Layer 1 JSON",
+          "js_code_sha256": "8ee67e0d7b6ac48023869457291b484dbb5cda1f1e4aee18bdd0555c62f27341",
+          "js_code_bytes": 41458
+        }
+      ],
+      "credential_bindings": [
+        {
+          "node": "Edit a file",
+          "names": [
+            "githubOAuth2Api"
+          ]
+        },
+        {
+          "node": "Get latest USD rows",
+          "names": [
+            "supabaseApi"
+          ]
+        },
+        {
+          "node": "Get latest EUR rows",
+          "names": [
+            "supabaseApi"
+          ]
+        },
+        {
+          "node": "Get latest GOLD rows",
+          "names": [
+            "supabaseApi"
+          ]
+        },
+        {
+          "node": "Get latest NQ rows",
+          "names": [
+            "supabaseApi"
+          ]
+        },
+        {
+          "node": "Get latest BTC rows",
+          "names": [
+            "supabaseApi"
+          ]
+        },
+        {
+          "node": "Get latest WTI rows",
+          "names": [
+            "supabaseApi"
+          ]
+        },
+        {
+          "node": "Get latest SILVER rows",
+          "names": [
+            "supabaseApi"
+          ]
+        },
+        {
+          "node": "Get latest GBP rows",
+          "names": [
+            "supabaseApi"
+          ]
+        }
+      ],
+      "routing": [
+        {
+          "node": "Edit a file",
+          "type": "n8n-nodes-base.github",
+          "kind": "github",
+          "owner": "kevincreedycars-debug",
+          "repository": "trading-agent-dashboard",
+          "file_path": "data/layer1.json"
+        },
+        {
+          "node": "When Executed by Another Workflow",
+          "type": "n8n-nodes-base.executeWorkflowTrigger",
+          "kind": "executeWorkflow",
+          "target_workflow_id": null,
+          "target_workflow_name_hint": null
+        },
+        {
+          "node": "Get latest USD rows",
+          "type": "n8n-nodes-base.supabase",
+          "kind": "supabase",
+          "table": "agent_outputs",
+          "operation": "getAll"
+        },
+        {
+          "node": "Get latest EUR rows",
+          "type": "n8n-nodes-base.supabase",
+          "kind": "supabase",
+          "table": "agent_outputs",
+          "operation": "getAll"
+        },
+        {
+          "node": "Get latest GOLD rows",
+          "type": "n8n-nodes-base.supabase",
+          "kind": "supabase",
+          "table": "agent_outputs",
+          "operation": "getAll"
+        },
+        {
+          "node": "Get latest NQ rows",
+          "type": "n8n-nodes-base.supabase",
+          "kind": "supabase",
+          "table": "agent_outputs",
+          "operation": "getAll"
+        },
+        {
+          "node": "Get latest BTC rows",
+          "type": "n8n-nodes-base.supabase",
+          "kind": "supabase",
+          "table": "agent_outputs",
+          "operation": "getAll"
+        },
+        {
+          "node": "Get latest WTI rows",
+          "type": "n8n-nodes-base.supabase",
+          "kind": "supabase",
+          "table": "agent_outputs",
+          "operation": "getAll"
+        },
+        {
+          "node": "Get latest SILVER rows",
+          "type": "n8n-nodes-base.supabase",
+          "kind": "supabase",
+          "table": "agent_outputs",
+          "operation": "getAll"
+        },
+        {
+          "node": "Get latest GBP rows",
+          "type": "n8n-nodes-base.supabase",
+          "kind": "supabase",
+          "table": "agent_outputs",
+          "operation": "getAll"
+        }
+      ],
+      "sha256": "a8ddf2ef3b8060abe523e202ce65ba967d852a8f0192861054fc4461ee33079d",
+      "bytes": 118949,
+      "raw_sha256": "a8ddf2ef3b8060abe523e202ce65ba967d852a8f0192861054fc4461ee33079d",
+      "redaction_count": 0
+    },
+    {
+      "file": "Data_Collector_-_BTC.json",
+      "id": "AE3Vv7ILPPiZwZHN",
+      "name": "Data Collector - BTC",
+      "engine": "UNCLASSIFIED",
+      "role": "other",
+      "active": true,
+      "is_archived": false,
+      "version_id": "2d3ab61f-4a61-46ba-b34c-7995efc40ffb",
+      "version_counter": 83,
+      "trigger_count": 0,
+      "created_at": "2026-06-07T18:20:50.698Z",
+      "updated_at": "2026-09-11T07:50:56.212Z",
+      "project_id": "ISQG9XU7TGTT6Fcu",
+      "node_count": 22,
+      "node_names": [
+        "HTTP Request | US 2Y Treasury Yield - FRED API",
+        "HTTP Request | US 10Y Treasury Yield - FRED Api",
+        "HTTP Request | TIPS 10Y Real Yield - FRED Api",
+        "HTTP Request | UK 10Y Proxy - FRED api",
+        "HTTP Request | VIX - FRED Api",
+        "HTTP Request | DXY - FRED Dollar Index - FRED API",
+        "HTTP Request | Gold - Coinbase",
+        "HTTP Request | BTC - Coinbase",
+        "HTTP Request | NQ - Alpha Vantage",
+        "Normalise Market Snapshot",
+        "Create a row",
+        "Supabase | Get Previous Market Snapshots",
+        "HTTP Request | Eco Calendar Recent - Finnhub",
+        "HTTP Request | Eco Calendar Upcoming - Finnhub",
+        "Code | Process Eco Data",
+        "Code | Derive Fed Bias",
+        "HTTP Request | Crypto Fear Greed",
+        "HTTP Request | BTC Market Data - CoinGecko",
+        "HTTP Request | BTC ETF Flows - Farside",
+        "Code | Derive US Eco Inputs",
+        "Supabase | Get Today US Economic Events",
+        "When Executed by Another Workflow"
+      ],
+      "code_nodes": [
+        {
+          "name": "Normalise Market Snapshot",
+          "js_code_sha256": "1403816b31d6018f544ed528a12b0ef2958d06b93a625807ec44ae7533d18495",
+          "js_code_bytes": 15289
+        },
+        {
+          "name": "Code | Process Eco Data",
+          "js_code_sha256": "6e22f742fbfab00ceaf699a2d0b7a18cb1766670e3dae3c8d2eab08c573960aa",
+          "js_code_bytes": 2570
+        },
+        {
+          "name": "Code | Derive Fed Bias",
+          "js_code_sha256": "c8296444ca7c4587f92f7b15bf962e92441db0a0439d9dd9ecc207e0e16c3256",
+          "js_code_bytes": 593
+        },
+        {
+          "name": "Code | Derive US Eco Inputs",
+          "js_code_sha256": "2d80a0bf96a7f7d152a26a7bf1d3d2834374d8737b31c24e09cbf52354cea579",
+          "js_code_bytes": 3046
+        }
+      ],
+      "credential_bindings": [
+        {
+          "node": "Create a row",
+          "names": [
+            "supabaseApi"
+          ]
+        },
+        {
+          "node": "Supabase | Get Previous Market Snapshots",
+          "names": [
+            "supabaseApi"
+          ]
+        },
+        {
+          "node": "Supabase | Get Today US Economic Events",
+          "names": [
+            "supabaseApi"
+          ]
+        }
+      ],
+      "routing": [
+        {
+          "node": "Create a row",
+          "type": "n8n-nodes-base.supabase",
+          "kind": "supabase",
+          "table": "market_snapshots",
+          "operation": null
+        },
+        {
+          "node": "Supabase | Get Previous Market Snapshots",
+          "type": "n8n-nodes-base.supabase",
+          "kind": "supabase",
+          "table": "market_snapshots",
+          "operation": "getAll"
+        },
+        {
+          "node": "Supabase | Get Today US Economic Events",
+          "type": "n8n-nodes-base.supabase",
+          "kind": "supabase",
+          "table": "economic_events",
+          "operation": "getAll"
+        },
+        {
+          "node": "When Executed by Another Workflow",
+          "type": "n8n-nodes-base.executeWorkflowTrigger",
+          "kind": "executeWorkflow",
+          "target_workflow_id": null,
+          "target_workflow_name_hint": null
+        }
+      ],
+      "sha256": "276a9e8d74cbfcafc9133b87136be1312cc38792eb4178d022b611fccfddae90",
+      "bytes": 77014,
+      "raw_sha256": "a09ca2f6c3eab7de7351a7e5fb9dd9028493d940a6393ffcdc155e47b5a99762",
+      "redaction_count": 18
+    },
+    {
+      "file": "Data_Collector_-_EUR.json",
+      "id": "Z3v9kQNIM22THi2O",
+      "name": "Data Collector - EUR",
+      "engine": "UNCLASSIFIED",
+      "role": "other",
+      "active": true,
+      "is_archived": false,
+      "version_id": "59fa4957-e57a-4c81-b663-8df3410643ee",
+      "version_counter": 98,
+      "trigger_count": 0,
+      "created_at": "2026-06-07T19:44:03.116Z",
+      "updated_at": "2026-09-11T07:50:36.580Z",
+      "project_id": "ISQG9XU7TGTT6Fcu",
+      "node_count": 34,
+      "node_names": [
+        "HTTP Request | US 2Y Treasury Yield - FRED API",
+        "HTTP Request | US 10Y Treasury Yield - FRED Api",
+        "HTTP Request | TIPS 10Y Real Yield - FRED Api",
+        "HTTP Request | Germany 10Y Proxy - FRED Api",
+        "HTTP Request | UK 10Y Proxy - FRED api",
+        "HTTP Request | VIX - FRED Api",
+        "HTTP Request | DXY - FRED Dollar Index - FRED API",
+        "HTTP Request | Gold - Coinbase",
+        "HTTP Request | BTC - Coinbase",
+        "HTTP Request | USD/JPY - Coinbase",
+        "HTTP Request | GBP/USD - Coinbase",
+        "HTTP Request | USD/CAD - Coinbase",
+        "HTTP Request | AUD/USD - Coinbase",
+        "HTTP Request | WTI Oil - FRED Api",
+        "HTTP Request | Brent Oil - FRED Api",
+        "HTTP Request | EURUSD - FRED API",
+        "HTTP Request | NQ - Alpha Vantage",
+        "HTTP Request | Japan 10Y Proxy - FRED API",
+        "Normalise Market Snapshot",
+        "Create a row",
+        "HTTP Request | Germany 2Y Yield",
+        "Supabase | Get Previous Market Snapshots",
+        "HTTP Request | Eco Calendar Recent - Finnhub",
+        "HTTP Request | Eco Calendar Upcoming - Finnhub",
+        "Code | Process Eco Data",
+        "Code | Derive Fed Bias",
+        "Limit",
+        "Supabase | Get Today EUR Economic Events",
+        "Code | Derive EUR Eco Inputs",
+        "HTTP Request | Eurozone Composite PMI",
+        "Supabase | Get Recent EUR PMI Events",
+        "Code | Derive EUR PMI Inputs",
+        "HTTP Request | Italy 10Y Proxy - FRED API",
+        "When Executed by Another Workflow"
+      ],
+      "code_nodes": [
+        {
+          "name": "Normalise Market Snapshot",
+          "js_code_sha256": "92e4cf08a675ab488250b52d40582c7dfebb37d0313879b6f8b81239dd17a5e0",
+          "js_code_bytes": 14065
+        },
+        {
+          "name": "Code | Process Eco Data",
+          "js_code_sha256": "4196f3c3f7ac4369d5041919edd9463bec350abccc72efe68cc3cf5d232377d4",
+          "js_code_bytes": 4444
+        },
+        {
+          "name": "Code | Derive Fed Bias",
+          "js_code_sha256": "c8296444ca7c4587f92f7b15bf962e92441db0a0439d9dd9ecc207e0e16c3256",
+          "js_code_bytes": 593
+        },
+        {
+          "name": "Code | Derive EUR Eco Inputs",
+          "js_code_sha256": "df9aeb36006587cc83b2873d3ec53f06b7f059ca03822cce3811236262cbfcef",
+          "js_code_bytes": 2929
+        },
+        {
+          "name": "Code | Derive EUR PMI Inputs",
+          "js_code_sha256": "c4479862c049ebdc2399c7d97b726a3bca1a79fc9dd74844756cffccb4cb8b7f",
+          "js_code_bytes": 1439
+        }
+      ],
+      "credential_bindings": [
+        {
+          "node": "Create a row",
+          "names": [
+            "supabaseApi"
+          ]
+        },
+        {
+          "node": "Supabase | Get Previous Market Snapshots",
+          "names": [
+            "supabaseApi"
+          ]
+        },
+        {
+          "node": "Supabase | Get Today EUR Economic Events",
+          "names": [
+            "supabaseApi"
+          ]
+        },
+        {
+          "node": "Supabase | Get Recent EUR PMI Events",
+          "names": [
+            "supabaseApi"
+          ]
+        }
+      ],
+      "routing": [
+        {
+          "node": "Create a row",
+          "type": "n8n-nodes-base.supabase",
+          "kind": "supabase",
+          "table": "market_snapshots",
+          "operation": null
+        },
+        {
+          "node": "Supabase | Get Previous Market Snapshots",
+          "type": "n8n-nodes-base.supabase",
+          "kind": "supabase",
+          "table": "market_snapshots",
+          "operation": "getAll"
+        },
+        {
+          "node": "Supabase | Get Today EUR Economic Events",
+          "type": "n8n-nodes-base.supabase",
+          "kind": "supabase",
+          "table": "economic_events",
+          "operation": "getAll"
+        },
+        {
+          "node": "Supabase | Get Recent EUR PMI Events",
+          "type": "n8n-nodes-base.supabase",
+          "kind": "supabase",
+          "table": "economic_events",
+          "operation": "getAll"
+        },
+        {
+          "node": "When Executed by Another Workflow",
+          "type": "n8n-nodes-base.executeWorkflowTrigger",
+          "kind": "executeWorkflow",
+          "target_workflow_id": null,
+          "target_workflow_name_hint": null
+        }
+      ],
+      "sha256": "28bdf355ec6023afa05b2b2e711942d5e26934d8a1b35978c6671fca8e2e54a1",
+      "bytes": 95956,
+      "raw_sha256": "ff970e34aec7b96e90ebe9a18fef09756ca213646ae4da1e5a8e550dc25a71f8",
+      "redaction_count": 30
+    },
+    {
+      "file": "Data_Collector_-_GOLD.json",
+      "id": "0z71FpOfKdL72hgW",
+      "name": "Data Collector - GOLD",
+      "engine": "UNCLASSIFIED",
+      "role": "other",
+      "active": true,
+      "is_archived": false,
+      "version_id": "282a1ae4-d003-4926-889e-288d5bf707f0",
+      "version_counter": 19,
+      "trigger_count": 0,
+      "created_at": "2026-06-07T20:24:52.742Z",
+      "updated_at": "2026-09-11T07:50:54.027Z",
+      "project_id": "ISQG9XU7TGTT6Fcu",
+      "node_count": 29,
+      "node_names": [
+        "HTTP Request | US 2Y Treasury Yield - FRED API",
+        "HTTP Request | US 10Y Treasury Yield - FRED Api",
+        "HTTP Request | TIPS 10Y Real Yield - FRED Api",
+        "HTTP Request | Germany 10Y Proxy - FRED Api",
+        "HTTP Request | UK 10Y Proxy - FRED api",
+        "HTTP Request | VIX - FRED Api",
+        "HTTP Request | DXY - FRED Dollar Index - FRED API",
+        "HTTP Request | Gold - Coinbase",
+        "HTTP Request | BTC - Coinbase",
+        "HTTP Request | USD/JPY - Coinbase",
+        "HTTP Request | GBP/USD - Coinbase",
+        "HTTP Request | USD/CAD - Coinbase",
+        "HTTP Request | AUD/USD - Coinbase",
+        "HTTP Request | WTI Oil - FRED Api",
+        "HTTP Request | Brent Oil - FRED Api",
+        "HTTP Request | EURUSD - FRED API",
+        "HTTP Request | NQ - Alpha Vantage",
+        "HTTP Request | Japan 10Y Proxy - FRED API",
+        "Normalise Market Snapshot",
+        "Create a row",
+        "HTTP Request | Germany 2Y Yield",
+        "Supabase | Get Previous Market Snapshots",
+        "HTTP Request | Eco Calendar Recent - Finnhub",
+        "HTTP Request | Eco Calendar Upcoming - Finnhub",
+        "Code | Process Eco Data",
+        "Code | Derive Fed Bias",
+        "Code | Derive US Eco Inputs",
+        "Supabase | Get Today US Economic Events",
+        "When Executed by Another Workflow"
+      ],
+      "code_nodes": [
+        {
+          "name": "Normalise Market Snapshot",
+          "js_code_sha256": "12f55425141c65a335b215f8e5012cb6ca924bd5ef63e29b476b4726cef38252",
+          "js_code_bytes": 16240
+        },
+        {
+          "name": "Code | Process Eco Data",
+          "js_code_sha256": "6e22f742fbfab00ceaf699a2d0b7a18cb1766670e3dae3c8d2eab08c573960aa",
+          "js_code_bytes": 2570
+        },
+        {
+          "name": "Code | Derive Fed Bias",
+          "js_code_sha256": "c8296444ca7c4587f92f7b15bf962e92441db0a0439d9dd9ecc207e0e16c3256",
+          "js_code_bytes": 593
+        },
+        {
+          "name": "Code | Derive US Eco Inputs",
+          "js_code_sha256": "e2db453bfe8ef8b373020894f4966a93a7358a8b48d9064b2059c474ccd2ef3e",
+          "js_code_bytes": 4031
+        }
+      ],
+      "credential_bindings": [
+        {
+          "node": "Create a row",
+          "names": [
+            "supabaseApi"
+          ]
+        },
+        {
+          "node": "Supabase | Get Previous Market Snapshots",
+          "names": [
+            "supabaseApi"
+          ]
+        },
+        {
+          "node": "Supabase | Get Today US Economic Events",
+          "names": [
+            "supabaseApi"
+          ]
+        }
+      ],
+      "routing": [
+        {
+          "node": "Create a row",
+          "type": "n8n-nodes-base.supabase",
+          "kind": "supabase",
+          "table": "market_snapshots",
+          "operation": null
+        },
+        {
+          "node": "Supabase | Get Previous Market Snapshots",
+          "type": "n8n-nodes-base.supabase",
+          "kind": "supabase",
+          "table": "market_snapshots",
+          "operation": "getAll"
+        },
+        {
+          "node": "Supabase | Get Today US Economic Events",
+          "type": "n8n-nodes-base.supabase",
+          "kind": "supabase",
+          "table": "economic_events",
+          "operation": "getAll"
+        },
+        {
+          "node": "When Executed by Another Workflow",
+          "type": "n8n-nodes-base.executeWorkflowTrigger",
+          "kind": "executeWorkflow",
+          "target_workflow_id": null,
+          "target_workflow_name_hint": null
+        }
+      ],
+      "sha256": "bdcc45cd68dd2433728c1602a5b8de8a3672f69a53cef7c7d7d01e1c6a6eaabb",
+      "bytes": 90377,
+      "raw_sha256": "afaf532cd52e8977f5183254b9093ecca849875c5d5c32646293c6f1a0d98ff4",
+      "redaction_count": 28
+    },
+    {
+      "file": "Data_Collector_-_NQ.json",
+      "id": "nYMDUSVQwEFNaH0U",
+      "name": "Data Collector - NQ",
+      "engine": "UNCLASSIFIED",
+      "role": "other",
+      "active": true,
+      "is_archived": false,
+      "version_id": "b14a0b7d-47cb-4c11-9f68-6ee616154e50",
+      "version_counter": 18,
+      "trigger_count": 0,
+      "created_at": "2026-06-07T19:18:47.966Z",
+      "updated_at": "2026-09-11T07:50:55.116Z",
+      "project_id": "ISQG9XU7TGTT6Fcu",
+      "node_count": 29,
+      "node_names": [
+        "HTTP Request | US 2Y Treasury Yield - FRED API",
+        "HTTP Request | US 10Y Treasury Yield - FRED Api",
+        "HTTP Request | TIPS 10Y Real Yield - FRED Api",
+        "HTTP Request | Germany 10Y Proxy - FRED Api",
+        "HTTP Request | UK 10Y Proxy - FRED api",
+        "HTTP Request | VIX - FRED Api",
+        "HTTP Request | DXY - FRED Dollar Index - FRED API",
+        "HTTP Request | Gold - Coinbase",
+        "HTTP Request | BTC - Coinbase",
+        "HTTP Request | USD/JPY - Coinbase",
+        "HTTP Request | GBP/USD - Coinbase",
+        "HTTP Request | USD/CAD - Coinbase",
+        "HTTP Request | AUD/USD - Coinbase",
+        "HTTP Request | WTI Oil - FRED Api",
+        "HTTP Request | Brent Oil - FRED Api",
+        "HTTP Request | EURUSD - FRED API",
+        "HTTP Request | NQ - Alpha Vantage",
+        "HTTP Request | Japan 10Y Proxy - FRED API",
+        "Normalise Market Snapshot",
+        "Create a row",
+        "HTTP Request | Germany 2Y Yield",
+        "Supabase | Get Previous Market Snapshots",
+        "HTTP Request | Eco Calendar Recent - Finnhub",
+        "HTTP Request | Eco Calendar Upcoming - Finnhub",
+        "Code | Process Eco Data",
+        "Code | Derive Fed Bias",
+        "Code | Derive US Eco Inputs",
+        "Supabase | Get Today US Economic Events",
+        "When Executed by Another Workflow"
+      ],
+      "code_nodes": [
+        {
+          "name": "Normalise Market Snapshot",
+          "js_code_sha256": "e9f0bbb46cc459a254f2f5b128679bdf5c6903a541d610c6de741d98ddaedf07",
+          "js_code_bytes": 11508
+        },
+        {
+          "name": "Code | Process Eco Data",
+          "js_code_sha256": "6e22f742fbfab00ceaf699a2d0b7a18cb1766670e3dae3c8d2eab08c573960aa",
+          "js_code_bytes": 2570
+        },
+        {
+          "name": "Code | Derive Fed Bias",
+          "js_code_sha256": "c8296444ca7c4587f92f7b15bf962e92441db0a0439d9dd9ecc207e0e16c3256",
+          "js_code_bytes": 593
+        },
+        {
+          "name": "Code | Derive US Eco Inputs",
+          "js_code_sha256": "e2db453bfe8ef8b373020894f4966a93a7358a8b48d9064b2059c474ccd2ef3e",
+          "js_code_bytes": 4031
+        }
+      ],
+      "credential_bindings": [
+        {
+          "node": "Create a row",
+          "names": [
+            "supabaseApi"
+          ]
+        },
+        {
+          "node": "Supabase | Get Previous Market Snapshots",
+          "names": [
+            "supabaseApi"
+          ]
+        },
+        {
+          "node": "Supabase | Get Today US Economic Events",
+          "names": [
+            "supabaseApi"
+          ]
+        }
+      ],
+      "routing": [
+        {
+          "node": "Create a row",
+          "type": "n8n-nodes-base.supabase",
+          "kind": "supabase",
+          "table": "market_snapshots",
+          "operation": null
+        },
+        {
+          "node": "Supabase | Get Previous Market Snapshots",
+          "type": "n8n-nodes-base.supabase",
+          "kind": "supabase",
+          "table": "market_snapshots",
+          "operation": "getAll"
+        },
+        {
+          "node": "Supabase | Get Today US Economic Events",
+          "type": "n8n-nodes-base.supabase",
+          "kind": "supabase",
+          "table": "economic_events",
+          "operation": "getAll"
+        },
+        {
+          "node": "When Executed by Another Workflow",
+          "type": "n8n-nodes-base.executeWorkflowTrigger",
+          "kind": "executeWorkflow",
+          "target_workflow_id": null,
+          "target_workflow_name_hint": null
+        }
+      ],
+      "sha256": "a821d49fb9bd0bf99ab548649ad429c6b5e0aaed753db326f068374767ddaa4e",
+      "bytes": 80451,
+      "raw_sha256": "8fc2dabc95c3567349ff511524d743d424e611e5d3c91abfbefb80303ee4fc9b",
+      "redaction_count": 28
+    },
+    {
+      "file": "Data_Collector_-_SILVER.json",
+      "id": "xezFmvm7cmgNNypb",
+      "name": "Data Collector - SILVER",
+      "engine": "UNCLASSIFIED",
+      "role": "other",
+      "active": true,
+      "is_archived": false,
+      "version_id": "93154eda-ee39-4802-9df9-ff34ece5bd09",
+      "version_counter": 10,
+      "trigger_count": 0,
+      "created_at": "2026-09-12T18:33:58.158Z",
+      "updated_at": "2026-09-12T19:42:56.003Z",
+      "project_id": "ISQG9XU7TGTT6Fcu",
+      "node_count": 32,
+      "node_names": [
+        "HTTP Request | US 2Y Treasury Yield - FRED API",
+        "HTTP Request | US 10Y Treasury Yield - FRED Api",
+        "HTTP Request | TIPS 10Y Real Yield - FRED Api",
+        "HTTP Request | Germany 10Y Proxy - FRED Api",
+        "HTTP Request | UK 10Y Proxy - FRED api",
+        "HTTP Request | VIX - FRED Api",
+        "HTTP Request | DXY - FRED Dollar Index - FRED API",
+        "HTTP Request | Gold - Coinbase",
+        "HTTP Request | BTC - Coinbase",
+        "HTTP Request | USD/JPY - Coinbase",
+        "HTTP Request | GBP/USD - Coinbase",
+        "HTTP Request | USD/CAD - Coinbase",
+        "HTTP Request | AUD/USD - Coinbase",
+        "HTTP Request | WTI Oil - FRED Api",
+        "HTTP Request | Brent Oil - FRED Api",
+        "HTTP Request | EURUSD - FRED API",
+        "HTTP Request | NQ - Alpha Vantage",
+        "HTTP Request | Japan 10Y Proxy - FRED API",
+        "Normalise Market Snapshot",
+        "Create a row",
+        "HTTP Request | Germany 2Y Yield",
+        "Supabase | Get Previous Market Snapshots",
+        "HTTP Request | Eco Calendar Recent - Finnhub",
+        "HTTP Request | Eco Calendar Upcoming - Finnhub",
+        "Code | Process Eco Data",
+        "Code | Derive Fed Bias",
+        "Code | Derive US Eco Inputs",
+        "Supabase | Get Today US Economic Events",
+        "When Executed by Another Workflow",
+        "HTTP Request | Silver - Coinbase",
+        "HTTP Request | Copper - FRED Api",
+        "HTTP Request | US Industrial Production - FRED Api"
+      ],
+      "code_nodes": [
+        {
+          "name": "Normalise Market Snapshot",
+          "js_code_sha256": "18566528f43e423b28af45917329eee8367e9a1624744d29b6dff07e05677832",
+          "js_code_bytes": 21020
+        },
+        {
+          "name": "Code | Process Eco Data",
+          "js_code_sha256": "6e22f742fbfab00ceaf699a2d0b7a18cb1766670e3dae3c8d2eab08c573960aa",
+          "js_code_bytes": 2570
+        },
+        {
+          "name": "Code | Derive Fed Bias",
+          "js_code_sha256": "c8296444ca7c4587f92f7b15bf962e92441db0a0439d9dd9ecc207e0e16c3256",
+          "js_code_bytes": 593
+        },
+        {
+          "name": "Code | Derive US Eco Inputs",
+          "js_code_sha256": "e2db453bfe8ef8b373020894f4966a93a7358a8b48d9064b2059c474ccd2ef3e",
+          "js_code_bytes": 4031
+        }
+      ],
+      "credential_bindings": [
+        {
+          "node": "Create a row",
+          "names": [
+            "supabaseApi"
+          ]
+        },
+        {
+          "node": "Supabase | Get Previous Market Snapshots",
+          "names": [
+            "supabaseApi"
+          ]
+        },
+        {
+          "node": "Supabase | Get Today US Economic Events",
+          "names": [
+            "supabaseApi"
+          ]
+        }
+      ],
+      "routing": [
+        {
+          "node": "Create a row",
+          "type": "n8n-nodes-base.supabase",
+          "kind": "supabase",
+          "table": "market_snapshots",
+          "operation": null
+        },
+        {
+          "node": "Supabase | Get Previous Market Snapshots",
+          "type": "n8n-nodes-base.supabase",
+          "kind": "supabase",
+          "table": "market_snapshots",
+          "operation": "getAll"
+        },
+        {
+          "node": "Supabase | Get Today US Economic Events",
+          "type": "n8n-nodes-base.supabase",
+          "kind": "supabase",
+          "table": "economic_events",
+          "operation": "getAll"
+        },
+        {
+          "node": "When Executed by Another Workflow",
+          "type": "n8n-nodes-base.executeWorkflowTrigger",
+          "kind": "executeWorkflow",
+          "target_workflow_id": null,
+          "target_workflow_name_hint": null
+        }
+      ],
+      "sha256": "a0404844e417e92d0d18bd0d5f55e9f9a082ae2c40af5e1b0198b66f16a2ef50",
+      "bytes": 105046,
+      "raw_sha256": "51b00aecde72bd4b950c04796a2204158039842f7d71dfd35d332e2882e2afcf",
+      "redaction_count": 32
+    },
+    {
+      "file": "Data_Collector_-_USD.json",
+      "id": "P1E4ZWtbDetYz1P5",
+      "name": "Data Collector - USD",
+      "engine": "UNCLASSIFIED",
+      "role": "other",
+      "active": true,
+      "is_archived": false,
+      "version_id": "1e99fdcd-b841-4abc-b547-71939acc7559",
+      "version_counter": 139,
+      "trigger_count": 0,
+      "created_at": "2026-06-06T16:22:34.552Z",
+      "updated_at": "2026-09-17T21:11:59.657Z",
+      "project_id": "ISQG9XU7TGTT6Fcu",
+      "node_count": 29,
+      "node_names": [
+        "HTTP Request | US 2Y Treasury Yield - FRED API",
+        "HTTP Request | US 10Y Treasury Yield - FRED Api",
+        "HTTP Request | TIPS 10Y Real Yield - FRED Api",
+        "HTTP Request | Germany 10Y Proxy - FRED Api",
+        "HTTP Request | UK 10Y Proxy - FRED api",
+        "HTTP Request | VIX - FRED Api",
+        "HTTP Request | DXY - FRED Dollar Index - FRED API",
+        "HTTP Request | Gold - Coinbase",
+        "HTTP Request | BTC - Coinbase",
+        "HTTP Request | USD/JPY - Coinbase",
+        "HTTP Request | GBP/USD - Coinbase",
+        "HTTP Request | USD/CAD - Coinbase",
+        "HTTP Request | AUD/USD - Coinbase",
+        "HTTP Request | WTI Oil - FRED Api",
+        "HTTP Request | Brent Oil - FRED Api",
+        "HTTP Request | EURUSD - FRED API",
+        "HTTP Request | NQ - Alpha Vantage",
+        "HTTP Request | Japan 10Y Proxy - FRED API",
+        "Normalise Market Snapshot",
+        "Create a row",
+        "HTTP Request | Germany 2Y Yield",
+        "Supabase | Get Previous Market Snapshots",
+        "HTTP Request | Eco Calendar Recent - Finnhub",
+        "HTTP Request | Eco Calendar Upcoming - Finnhub",
+        "Code | Process Eco Data",
+        "Code | Derive Fed Bias",
+        "Code | Derive USD Eco Inputs",
+        "Supabase | Get Today USD Economic Events",
+        "When Executed by Another Workflow"
+      ],
+      "code_nodes": [
+        {
+          "name": "Normalise Market Snapshot",
+          "js_code_sha256": "83fc559331fd427c67d70c2e27a75ac8085c4d02e485dfa4c8a457bda26e6f78",
+          "js_code_bytes": 14256
+        },
+        {
+          "name": "Code | Process Eco Data",
+          "js_code_sha256": "6e22f742fbfab00ceaf699a2d0b7a18cb1766670e3dae3c8d2eab08c573960aa",
+          "js_code_bytes": 2570
+        },
+        {
+          "name": "Code | Derive Fed Bias",
+          "js_code_sha256": "c8296444ca7c4587f92f7b15bf962e92441db0a0439d9dd9ecc207e0e16c3256",
+          "js_code_bytes": 593
+        },
+        {
+          "name": "Code | Derive USD Eco Inputs",
+          "js_code_sha256": "d6d78262fd6ef0b583e976d0441ad6d39877389241285eb70255451eaa23a443",
+          "js_code_bytes": 2975
+        }
+      ],
+      "credential_bindings": [
+        {
+          "node": "Create a row",
+          "names": [
+            "supabaseApi"
+          ]
+        },
+        {
+          "node": "Supabase | Get Previous Market Snapshots",
+          "names": [
+            "supabaseApi"
+          ]
+        },
+        {
+          "node": "Supabase | Get Today USD Economic Events",
+          "names": [
+            "supabaseApi"
+          ]
+        }
+      ],
+      "routing": [
+        {
+          "node": "Create a row",
+          "type": "n8n-nodes-base.supabase",
+          "kind": "supabase",
+          "table": "market_snapshots",
+          "operation": null
+        },
+        {
+          "node": "Supabase | Get Previous Market Snapshots",
+          "type": "n8n-nodes-base.supabase",
+          "kind": "supabase",
+          "table": "market_snapshots",
+          "operation": "getAll"
+        },
+        {
+          "node": "Supabase | Get Today USD Economic Events",
+          "type": "n8n-nodes-base.supabase",
+          "kind": "supabase",
+          "table": "economic_events",
+          "operation": "getAll"
+        },
+        {
+          "node": "When Executed by Another Workflow",
+          "type": "n8n-nodes-base.executeWorkflowTrigger",
+          "kind": "executeWorkflow",
+          "target_workflow_id": null,
+          "target_workflow_name_hint": null
+        }
+      ],
+      "sha256": "a0bbf8cd044addba9dbd479c3dad393ab9edfa7083cd1d93b6a0d277ed660e5c",
+      "bytes": 83636,
+      "raw_sha256": "a57bb8d68bf16367a16012d104e1707124380a3813741237030c5841a1342299",
+      "redaction_count": 28
+    },
+    {
+      "file": "Eco_Events_Collector.json",
+      "id": "UaSliyR8qlSVIfmk",
+      "name": "Eco Events Collector",
+      "engine": "SHARED",
+      "role": "events",
+      "active": true,
+      "is_archived": false,
+      "version_id": "a35e4e66-4286-4add-9855-c1c7ff967b30",
+      "version_counter": 153,
+      "trigger_count": 0,
+      "created_at": "2026-06-10T18:47:40.406Z",
+      "updated_at": "2026-09-01T11:40:08.572Z",
+      "project_id": "ISQG9XU7TGTT6Fcu",
+      "node_count": 17,
+      "node_names": [
+        "HTTP Request | RapidAPI Calendar US",
+        "HTTP Request | RapidAPI Calendar DE",
+        "HTTP Request | RapidAPI Calendar FR",
+        "HTTP Request | RapidAPI Calendar IT",
+        "HTTP Request | RapidAPI Calendar ES",
+        "HTTP Request | RapidAPI Calendar CN",
+        "Code | Normalise Forex Factory Events",
+        "Supabase | Create Economic Events",
+        "When Executed by Another Workflow",
+        "Supabase | Get Existing Economic Events",
+        "Code | Route Existing vs New",
+        "Code | Prepare Creates",
+        "Code | Prepare Updates",
+        "Supabase | Update Economic Events",
+        "HTTP Request | Forex Factory Calendar USD",
+        "HTTP Request | Forex Factory Calendar EUR",
+        "Merge | USD + EUR Forex Factory Events"
+      ],
+      "code_nodes": [
+        {
+          "name": "Code | Normalise Forex Factory Events",
+          "js_code_sha256": "01de5092528ee1649a54305b837dbbd2e1fa369ded8776934b294565c187981e",
+          "js_code_bytes": 2282
+        },
+        {
+          "name": "Code | Route Existing vs New",
+          "js_code_sha256": "aae8376a799de9ae8ce4cfed7c1aa8f230e59cb54a5a70a576538aaa163553e7",
+          "js_code_bytes": 723
+        },
+        {
+          "name": "Code | Prepare Creates",
+          "js_code_sha256": "df26717ebe26c18adcb75d46a5d37e3757e4787b2c56af4c82c60022f0dcdf65",
+          "js_code_bytes": 145
+        },
+        {
+          "name": "Code | Prepare Updates",
+          "js_code_sha256": "7b5abb7d1a68cf17ea540b61e41ecf6aa5170bf718e5dc96082de8e1cf8e1e8f",
+          "js_code_bytes": 145
+        }
+      ],
+      "credential_bindings": [
+        {
+          "node": "HTTP Request | RapidAPI Calendar US",
+          "names": [
+            "httpHeaderAuth"
+          ]
+        },
+        {
+          "node": "HTTP Request | RapidAPI Calendar DE",
+          "names": [
+            "httpHeaderAuth"
+          ]
+        },
+        {
+          "node": "HTTP Request | RapidAPI Calendar FR",
+          "names": [
+            "httpHeaderAuth"
+          ]
+        },
+        {
+          "node": "HTTP Request | RapidAPI Calendar IT",
+          "names": [
+            "httpHeaderAuth"
+          ]
+        },
+        {
+          "node": "HTTP Request | RapidAPI Calendar ES",
+          "names": [
+            "httpHeaderAuth"
+          ]
+        },
+        {
+          "node": "HTTP Request | RapidAPI Calendar CN",
+          "names": [
+            "httpHeaderAuth"
+          ]
+        },
+        {
+          "node": "Supabase | Create Economic Events",
+          "names": [
+            "supabaseApi"
+          ]
+        },
+        {
+          "node": "Supabase | Get Existing Economic Events",
+          "names": [
+            "supabaseApi"
+          ]
+        },
+        {
+          "node": "Supabase | Update Economic Events",
+          "names": [
+            "supabaseApi"
+          ]
+        },
+        {
+          "node": "HTTP Request | Forex Factory Calendar USD",
+          "names": [
+            "httpHeaderAuth"
+          ]
+        },
+        {
+          "node": "HTTP Request | Forex Factory Calendar EUR",
+          "names": [
+            "httpHeaderAuth"
+          ]
+        }
+      ],
+      "routing": [
+        {
+          "node": "Supabase | Create Economic Events",
+          "type": "n8n-nodes-base.supabase",
+          "kind": "supabase",
+          "table": "economic_events",
+          "operation": "create"
+        },
+        {
+          "node": "When Executed by Another Workflow",
+          "type": "n8n-nodes-base.executeWorkflowTrigger",
+          "kind": "executeWorkflow",
+          "target_workflow_id": null,
+          "target_workflow_name_hint": null
+        },
+        {
+          "node": "Supabase | Get Existing Economic Events",
+          "type": "n8n-nodes-base.supabase",
+          "kind": "supabase",
+          "table": "economic_events",
+          "operation": "getAll"
+        },
+        {
+          "node": "Supabase | Update Economic Events",
+          "type": "n8n-nodes-base.supabase",
+          "kind": "supabase",
+          "table": "economic_events",
+          "operation": "update"
+        }
+      ],
+      "sha256": "cace9e7857c0cd8806c5789d965d1ef90e5ade1de92844cbf35df384802a27b2",
+      "bytes": 42774,
+      "raw_sha256": "cace9e7857c0cd8806c5789d965d1ef90e5ade1de92844cbf35df384802a27b2",
+      "redaction_count": 0
+    },
+    {
+      "file": "EUR_Layer_1_Agent.json",
+      "id": "Px0bsH7chlRWH9ZD",
+      "name": "EUR Layer 1 Agent",
+      "engine": "EUR",
+      "role": "agent",
+      "active": true,
+      "is_archived": false,
+      "version_id": "310f6bfe-1ce0-47e6-bbfb-29fe19fc24c5",
+      "version_counter": 38,
+      "trigger_count": 0,
+      "created_at": "2026-06-07T19:57:41.075Z",
+      "updated_at": "2026-06-19T09:33:04.442Z",
+      "project_id": "ISQG9XU7TGTT6Fcu",
+      "node_count": 9,
+      "node_names": [
+        "Message a model",
+        "Supabase Get Many",
+        "Create a row",
+        "Combine md & market snapshot",
+        "Build EUR Input Pack",
+        "Get EUR Logic Document",
+        "Parse EUR Agent Output",
+        "Calculate EUR Conviction",
+        "When Executed by Another Workflow"
+      ],
+      "code_nodes": [
+        {
+          "name": "Combine md & market snapshot",
+          "js_code_sha256": "32158ba2da27bc1f1b487a75aeb82089630709193f25aa3dfdf65ff88be040e6",
+          "js_code_bytes": 389
+        },
+        {
+          "name": "Build EUR Input Pack",
+          "js_code_sha256": "fdc30207dbec8c0fdd84bc9182bd3f58afb15efe4e7c8a24d48eb157e53b9a7f",
+          "js_code_bytes": 7516
+        },
+        {
+          "name": "Parse EUR Agent Output",
+          "js_code_sha256": "78b94ceac3dcd8b182769c4ed1be9aad377e74288fda9cdb48f26e7fe99caec2",
+          "js_code_bytes": 3592
+        },
+        {
+          "name": "Calculate EUR Conviction",
+          "js_code_sha256": "11a8fa71a6a7ca84d304cbd0a00b7ee32d000a949b43fe80aa904261b1ecb075",
+          "js_code_bytes": 14732
+        }
+      ],
+      "credential_bindings": [
+        {
+          "node": "Message a model",
+          "names": [
+            "openAiApi"
+          ]
+        },
+        {
+          "node": "Supabase Get Many",
+          "names": [
+            "supabaseApi"
+          ]
+        },
+        {
+          "node": "Create a row",
+          "names": [
+            "supabaseApi"
+          ]
+        },
+        {
+          "node": "Get EUR Logic Document",
+          "names": [
+            "githubOAuth2Api"
+          ]
+        }
+      ],
+      "routing": [
+        {
+          "node": "Supabase Get Many",
+          "type": "n8n-nodes-base.supabase",
+          "kind": "supabase",
+          "table": "market_snapshots",
+          "operation": "getAll"
+        },
+        {
+          "node": "Create a row",
+          "type": "n8n-nodes-base.supabase",
+          "kind": "supabase",
+          "table": "agent_outputs",
+          "operation": null
+        },
+        {
+          "node": "Get EUR Logic Document",
+          "type": "n8n-nodes-base.github",
+          "kind": "github",
+          "owner": "kevincreedycars-debug",
+          "repository": "trading-agent-dashboard",
+          "file_path": "logic/agent_eur_direction.md"
+        },
+        {
+          "node": "When Executed by Another Workflow",
+          "type": "n8n-nodes-base.executeWorkflowTrigger",
+          "kind": "executeWorkflow",
+          "target_workflow_id": null,
+          "target_workflow_name_hint": null
+        }
+      ],
+      "sha256": "4a12aefbf510e743dfd574faba6c96bdf77a28aa7f0950f822918a9933adeba9",
+      "bytes": 71547,
+      "raw_sha256": "4a12aefbf510e743dfd574faba6c96bdf77a28aa7f0950f822918a9933adeba9",
+      "redaction_count": 0
+    },
+    {
+      "file": "GBP_Layer_1_Agent.json",
+      "id": "bMv96EPR0xCXi3bi",
+      "name": "GBP Layer 1 Agent",
+      "engine": "GBP",
+      "role": "agent",
+      "active": true,
+      "is_archived": false,
+      "version_id": "45ca399f-7ecc-4d38-adb0-147dc14e0d42",
+      "version_counter": 18,
+      "trigger_count": 0,
+      "created_at": "2026-09-12T18:46:13.325Z",
+      "updated_at": "2026-09-12T19:45:35.228Z",
+      "project_id": "ISQG9XU7TGTT6Fcu",
+      "node_count": 19,
+      "node_names": [
+        "When Executed by Another Workflow",
+        "HTTP Request | GBP/USD - Coinbase",
+        "HTTP Request | US 2Y - FRED API",
+        "HTTP Request | US 10Y - FRED API",
+        "HTTP Request | UK 5Y Gilt Yield - BoE IADB",
+        "HTTP Request | UK 10Y Gilt Yield - BoE IADB",
+        "HTTP Request | UK Bank Rate - BoE IADB",
+        "HTTP Request | UK 3M Interbank - FRED API",
+        "HTTP Request | VIX - FRED API",
+        "HTTP Request | Broad Dollar - FRED API",
+        "HTTP Request | UK Economic Calendar",
+        "Code | Build GBP Input Pack",
+        "Merge GBP Feeds",
+        "Get GBP Logic Document",
+        "Code | Combine GBP Logic and Inputs",
+        "Message a model",
+        "Code | Parse GBP Agent Output",
+        "Code | Deterministic GBP 24H Verdict Gate",
+        "Create a row"
+      ],
+      "code_nodes": [
+        {
+          "name": "Code | Build GBP Input Pack",
+          "js_code_sha256": "f8e7cdc2703e5f73dcfbc10367c84571136f502204ec476de3e7046b5e8762a9",
+          "js_code_bytes": 10362
+        },
+        {
+          "name": "Code | Combine GBP Logic and Inputs",
+          "js_code_sha256": "0ffdbc23419608994a4eed8e44ec499a346517dd74f7ed3e441ab98577d818d6",
+          "js_code_bytes": 198
+        },
+        {
+          "name": "Code | Parse GBP Agent Output",
+          "js_code_sha256": "c3efa843faeff48a5655c7b1b54ba5f211142db845a7f243aeb5f71506e9c36d",
+          "js_code_bytes": 743
+        },
+        {
+          "name": "Code | Deterministic GBP 24H Verdict Gate",
+          "js_code_sha256": "77d5f0c2646280f885bceb6be4c4e114443d66139afd63ebe8ff3d2c0b624891",
+          "js_code_bytes": 6506
+        }
+      ],
+      "credential_bindings": [
+        {
+          "node": "HTTP Request | UK Economic Calendar",
+          "names": [
+            "httpHeaderAuth"
+          ]
+        },
+        {
+          "node": "Get GBP Logic Document",
+          "names": [
+            "githubOAuth2Api"
+          ]
+        },
+        {
+          "node": "Message a model",
+          "names": [
+            "openAiApi"
+          ]
+        },
+        {
+          "node": "Create a row",
+          "names": [
+            "supabaseApi"
+          ]
+        }
+      ],
+      "routing": [
+        {
+          "node": "When Executed by Another Workflow",
+          "type": "n8n-nodes-base.executeWorkflowTrigger",
+          "kind": "executeWorkflow",
+          "target_workflow_id": null,
+          "target_workflow_name_hint": null
+        },
+        {
+          "node": "Get GBP Logic Document",
+          "type": "n8n-nodes-base.github",
+          "kind": "github",
+          "owner": "kevincreedycars-debug",
+          "repository": "trading-agent-dashboard",
+          "file_path": "logic/agent_gbp_direction.md"
+        },
+        {
+          "node": "Create a row",
+          "type": "n8n-nodes-base.supabase",
+          "kind": "supabase",
+          "table": "agent_outputs",
+          "operation": null
+        }
+      ],
+      "sha256": "2e4175e1a3926d3474fe3c3e2de90955fad4c92321c2d387adea2fda3e478b1f",
+      "bytes": 72139,
+      "raw_sha256": "11db181384e670d18ee52d2ddf3b2a40c143dbb9bce5806c8d957ba50c654b5a",
+      "redaction_count": 11
+    },
+    {
+      "file": "Gold_Agent.json",
+      "id": "7vVmN27XFZrW9vgc",
+      "name": "Gold Agent",
+      "engine": "GOLD",
+      "role": "agent",
+      "active": false,
+      "is_archived": false,
+      "version_id": "8ae92606-452a-4ac3-8e43-bc3f1e88777d",
+      "version_counter": 91,
+      "trigger_count": 0,
+      "created_at": "2026-06-03T19:42:42.160Z",
+      "updated_at": "2026-06-05T07:47:48.530Z",
+      "project_id": "ISQG9XU7TGTT6Fcu",
+      "node_count": 12,
+      "node_names": [
+        "HTTP Request | FRED - Real Yield 10Y",
+        "HTTP Request | FRED - Broad USD",
+        "HTTP Request | FRED - 2Y Yield",
+        "HTTP Request | FRED - Inflation Expectations",
+        "HTTP Request | FRED - Financial Stress",
+        "HTTP Request | FRED - Credit Stress",
+        "Merge",
+        "Prepare Gold Macro Inputs",
+        "Message a model",
+        "Schedule Trigger",
+        "Code in JavaScript",
+        "Edit a file"
+      ],
+      "code_nodes": [
+        {
+          "name": "Prepare Gold Macro Inputs",
+          "js_code_sha256": "1b3be4fc9dd987ec59836756329338eb0564eaa0bbd03c7294b7b175ecfaf133",
+          "js_code_bytes": 4375
+        },
+        {
+          "name": "Code in JavaScript",
+          "js_code_sha256": "8f3c867049c4870a4fe0286af8c7b372f0da1dda8653169ed48c643296ebc8ea",
+          "js_code_bytes": 255
+        }
+      ],
+      "credential_bindings": [
+        {
+          "node": "Message a model",
+          "names": [
+            "openAiApi"
+          ]
+        },
+        {
+          "node": "Edit a file",
+          "names": [
+            "githubOAuth2Api"
+          ]
+        }
+      ],
+      "routing": [
+        {
+          "node": "Schedule Trigger",
+          "type": "n8n-nodes-base.scheduleTrigger",
+          "kind": "schedule",
+          "cron_expression": null
+        },
+        {
+          "node": "Edit a file",
+          "type": "n8n-nodes-base.github",
+          "kind": "github",
+          "owner": "",
+          "repository": "",
+          "file_path": null
+        }
+      ],
+      "sha256": "9c5ac238a103d9c842b8a0aeea70d2224a46943a595d0bf1604337787328e98e",
+      "bytes": 20540,
+      "raw_sha256": "0225ea9c16b1cd22bfcd3a5217e0ccde6f372adec1edaeb366aa175723d71fe6",
+      "redaction_count": 6
+    },
+    {
+      "file": "GOLD_Layer_1_Agent.json",
+      "id": "wwBVT0EQcKu5517I",
+      "name": "GOLD Layer 1 Agent",
+      "engine": "GOLD",
+      "role": "agent",
+      "active": true,
+      "is_archived": false,
+      "version_id": "4a2281df-5097-46dd-837a-aa9e4473ad00",
+      "version_counter": 27,
+      "trigger_count": 0,
+      "created_at": "2026-06-07T20:29:16.510Z",
+      "updated_at": "2026-06-18T19:45:32.882Z",
+      "project_id": "ISQG9XU7TGTT6Fcu",
+      "node_count": 9,
+      "node_names": [
+        "Message a model",
+        "Supabase Get Many",
+        "Create a row",
+        "Combine md & market snapshot",
+        "Build GOLD Input Pack",
+        "Get GOLD Logic Document",
+        "Parse GOLD Agent Output",
+        "Calculate GOLD Conviction",
+        "When Executed by Another Workflow"
+      ],
+      "code_nodes": [
+        {
+          "name": "Combine md & market snapshot",
+          "js_code_sha256": "57f84ea112b2fa52daf47fb7ccbd03124aa0ede847cd39b989bb5edbf22b021b",
+          "js_code_bytes": 391
+        },
+        {
+          "name": "Build GOLD Input Pack",
+          "js_code_sha256": "32959305d4841bfbfe9c49d2e5bc308cc9e368df86015d19e3ce934562bad844",
+          "js_code_bytes": 2245
+        },
+        {
+          "name": "Parse GOLD Agent Output",
+          "js_code_sha256": "e0f2692f9387b6cfb9caf6288a499636861d0e10ae536ab19a4dffcab3472f0b",
+          "js_code_bytes": 3044
+        },
+        {
+          "name": "Calculate GOLD Conviction",
+          "js_code_sha256": "03dcbc310c3d5613d232361e8cc5ec57b520014d1c1519cff42faac076c993f2",
+          "js_code_bytes": 14655
+        }
+      ],
+      "credential_bindings": [
+        {
+          "node": "Message a model",
+          "names": [
+            "openAiApi"
+          ]
+        },
+        {
+          "node": "Supabase Get Many",
+          "names": [
+            "supabaseApi"
+          ]
+        },
+        {
+          "node": "Create a row",
+          "names": [
+            "supabaseApi"
+          ]
+        },
+        {
+          "node": "Get GOLD Logic Document",
+          "names": [
+            "githubOAuth2Api"
+          ]
+        }
+      ],
+      "routing": [
+        {
+          "node": "Supabase Get Many",
+          "type": "n8n-nodes-base.supabase",
+          "kind": "supabase",
+          "table": "market_snapshots",
+          "operation": "getAll"
+        },
+        {
+          "node": "Create a row",
+          "type": "n8n-nodes-base.supabase",
+          "kind": "supabase",
+          "table": "agent_outputs",
+          "operation": null
+        },
+        {
+          "node": "Get GOLD Logic Document",
+          "type": "n8n-nodes-base.github",
+          "kind": "github",
+          "owner": "kevincreedycars-debug",
+          "repository": "trading-agent-dashboard",
+          "file_path": "logic/agent_gold_direction.md"
+        },
+        {
+          "node": "When Executed by Another Workflow",
+          "type": "n8n-nodes-base.executeWorkflowTrigger",
+          "kind": "executeWorkflow",
+          "target_workflow_id": null,
+          "target_workflow_name_hint": null
+        }
+      ],
+      "sha256": "ac51ac0bb7691e8762bcc06c2050b5ef8669b9dc8d7f50901163ea0762ac922f",
+      "bytes": 60852,
+      "raw_sha256": "ac51ac0bb7691e8762bcc06c2050b5ef8669b9dc8d7f50901163ea0762ac922f",
+      "redaction_count": 0
+    },
+    {
+      "file": "Layer_2_Trade_Selection_Agent.json",
+      "id": "ZKGSuYcWb6EfgXBE",
+      "name": "Layer 2 Trade Selection Agent",
+      "engine": "SHARED",
+      "role": "layer2",
+      "active": true,
+      "is_archived": false,
+      "version_id": "305a3ce0-57bb-43ce-b77d-63bde96417d2",
+      "version_counter": 24,
+      "trigger_count": 0,
+      "created_at": "2026-06-19T17:31:31.649Z",
+      "updated_at": "2026-09-12T19:36:46.423Z",
+      "project_id": "ISQG9XU7TGTT6Fcu",
+      "node_count": 18,
+      "node_names": [
+        "When Executed by Another Workflow",
+        "Get latest USD rows",
+        "Get latest EUR rows",
+        "Get latest GOLD rows",
+        "Get latest NQ rows",
+        "Get latest BTC rows",
+        "Build Layer 2 Trade Selection JSON",
+        "Write data/layer2.json to GitHub",
+        "Get latest WTI rows",
+        "Get latest SILVER rows",
+        "Get latest GBP rows",
+        "Merge L2 EUR",
+        "Merge L2 GOLD",
+        "Merge L2 NQ",
+        "Merge L2 BTC",
+        "Merge L2 WTI",
+        "Merge L2 SILVER",
+        "Merge L2 GBP"
+      ],
+      "code_nodes": [
+        {
+          "name": "Build Layer 2 Trade Selection JSON",
+          "js_code_sha256": "b1c83518df77c15e72bca489245146d7c6a88e23417c823fba658fcf930f979a",
+          "js_code_bytes": 5608
+        }
+      ],
+      "credential_bindings": [
+        {
+          "node": "Get latest USD rows",
+          "names": [
+            "supabaseApi"
+          ]
+        },
+        {
+          "node": "Get latest EUR rows",
+          "names": [
+            "supabaseApi"
+          ]
+        },
+        {
+          "node": "Get latest GOLD rows",
+          "names": [
+            "supabaseApi"
+          ]
+        },
+        {
+          "node": "Get latest NQ rows",
+          "names": [
+            "supabaseApi"
+          ]
+        },
+        {
+          "node": "Get latest BTC rows",
+          "names": [
+            "supabaseApi"
+          ]
+        },
+        {
+          "node": "Write data/layer2.json to GitHub",
+          "names": [
+            "githubOAuth2Api"
+          ]
+        },
+        {
+          "node": "Get latest WTI rows",
+          "names": [
+            "supabaseApi"
+          ]
+        },
+        {
+          "node": "Get latest SILVER rows",
+          "names": [
+            "supabaseApi"
+          ]
+        },
+        {
+          "node": "Get latest GBP rows",
+          "names": [
+            "supabaseApi"
+          ]
+        }
+      ],
+      "routing": [
+        {
+          "node": "When Executed by Another Workflow",
+          "type": "n8n-nodes-base.executeWorkflowTrigger",
+          "kind": "executeWorkflow",
+          "target_workflow_id": null,
+          "target_workflow_name_hint": null
+        },
+        {
+          "node": "Get latest USD rows",
+          "type": "n8n-nodes-base.supabase",
+          "kind": "supabase",
+          "table": "agent_outputs",
+          "operation": "getAll"
+        },
+        {
+          "node": "Get latest EUR rows",
+          "type": "n8n-nodes-base.supabase",
+          "kind": "supabase",
+          "table": "agent_outputs",
+          "operation": "getAll"
+        },
+        {
+          "node": "Get latest GOLD rows",
+          "type": "n8n-nodes-base.supabase",
+          "kind": "supabase",
+          "table": "agent_outputs",
+          "operation": "getAll"
+        },
+        {
+          "node": "Get latest NQ rows",
+          "type": "n8n-nodes-base.supabase",
+          "kind": "supabase",
+          "table": "agent_outputs",
+          "operation": "getAll"
+        },
+        {
+          "node": "Get latest BTC rows",
+          "type": "n8n-nodes-base.supabase",
+          "kind": "supabase",
+          "table": "agent_outputs",
+          "operation": "getAll"
+        },
+        {
+          "node": "Write data/layer2.json to GitHub",
+          "type": "n8n-nodes-base.github",
+          "kind": "github",
+          "owner": "kevincreedycars-debug",
+          "repository": "trading-agent-dashboard",
+          "file_path": "data/layer2.json"
+        },
+        {
+          "node": "Get latest WTI rows",
+          "type": "n8n-nodes-base.supabase",
+          "kind": "supabase",
+          "table": "agent_outputs",
+          "operation": "getAll"
+        },
+        {
+          "node": "Get latest SILVER rows",
+          "type": "n8n-nodes-base.supabase",
+          "kind": "supabase",
+          "table": "agent_outputs",
+          "operation": "getAll"
+        },
+        {
+          "node": "Get latest GBP rows",
+          "type": "n8n-nodes-base.supabase",
+          "kind": "supabase",
+          "table": "agent_outputs",
+          "operation": "getAll"
+        }
+      ],
+      "sha256": "cd95546551f8861e4aceab9ab197a6afaa368b611cbb5926441f048026265068",
+      "bytes": 44325,
+      "raw_sha256": "3537f7bac258615ed82cdc08db19e2ce876ab0fac4d125e27b3611b745bc196f",
+      "redaction_count": 1
+    },
+    {
+      "file": "Master_Orchestrator.json",
+      "id": "X75RKU34ikiM5RMU",
+      "name": "Master Orchestrator",
+      "engine": "SHARED",
+      "role": "orchestrator",
+      "active": true,
+      "is_archived": false,
+      "version_id": "35007228-00e0-48ee-8c49-c0bca2be3182",
+      "version_counter": 62,
+      "trigger_count": 1,
+      "created_at": "2026-06-18T19:36:15.843Z",
+      "updated_at": "2026-09-12T19:21:33.111Z",
+      "project_id": "ISQG9XU7TGTT6Fcu",
+      "node_count": 24,
+      "node_names": [
+        "Manual Start - Run All Agents",
+        "Call '1. Economic Events Collector'",
+        "USD Collector",
+        "EUR Collector",
+        "Gold Collector",
+        "NQ Collector",
+        "BTC Collector",
+        "USD Layer 1 Agent",
+        "EUR Layer 1 Agent",
+        "Gold Layer 1 Agent",
+        "NQ Layer 1 Agent",
+        "BTC Layer 1 Agent",
+        "Dashboard Writer",
+        "Layer 2 Trade Selection Agent",
+        "Dashboard Trigger - Run All Agents",
+        "Build Workflow Status JSON",
+        "Publish Workflow Status",
+        "Guard Economic Event Collector",
+        "Build Input Health on Economic Event Failure",
+        "Publish Input Health on Economic Event Failure",
+        "WTI Layer 1 Agent",
+        "Silver Collector",
+        "Silver Layer 1 Agent",
+        "GBP Layer 1 Agent"
+      ],
+      "code_nodes": [
+        {
+          "name": "Build Workflow Status JSON",
+          "js_code_sha256": "451169bb6581a1b86e63b0a63204e2fbd4a51fda510a2169a9720854e43e3fb4",
+          "js_code_bytes": 1976
+        },
+        {
+          "name": "Guard Economic Event Collector",
+          "js_code_sha256": "fbf6a6da86a8dd7d4bc7f19deaf5f48da7bf7b55a606fd1f3bfb03c88829f2ca",
+          "js_code_bytes": 121
+        },
+        {
+          "name": "Build Input Health on Economic Event Failure",
+          "js_code_sha256": "b9c28d0776bd1e2e37ff461dbf2fbd4765913e51ef80e4b0db62820a0f94cf83",
+          "js_code_bytes": 1828
+        }
+      ],
+      "credential_bindings": [
+        {
+          "node": "Publish Workflow Status",
+          "names": [
+            "githubOAuth2Api"
+          ]
+        },
+        {
+          "node": "Publish Input Health on Economic Event Failure",
+          "names": [
+            "githubOAuth2Api"
+          ]
+        }
+      ],
+      "routing": [
+        {
+          "node": "Call '1. Economic Events Collector'",
+          "type": "n8n-nodes-base.executeWorkflow",
+          "kind": "executeWorkflow",
+          "target_workflow_id": "UaSliyR8qlSVIfmk",
+          "target_workflow_name_hint": "1. Economic Events Collector"
+        },
+        {
+          "node": "USD Collector",
+          "type": "n8n-nodes-base.executeWorkflow",
+          "kind": "executeWorkflow",
+          "target_workflow_id": "P1E4ZWtbDetYz1P5",
+          "target_workflow_name_hint": "Data Collector - USD"
+        },
+        {
+          "node": "EUR Collector",
+          "type": "n8n-nodes-base.executeWorkflow",
+          "kind": "executeWorkflow",
+          "target_workflow_id": "Z3v9kQNIM22THi2O",
+          "target_workflow_name_hint": "Data Collector - EUR"
+        },
+        {
+          "node": "Gold Collector",
+          "type": "n8n-nodes-base.executeWorkflow",
+          "kind": "executeWorkflow",
+          "target_workflow_id": "0z71FpOfKdL72hgW",
+          "target_workflow_name_hint": "Data Collector - GOLD"
+        },
+        {
+          "node": "NQ Collector",
+          "type": "n8n-nodes-base.executeWorkflow",
+          "kind": "executeWorkflow",
+          "target_workflow_id": "nYMDUSVQwEFNaH0U",
+          "target_workflow_name_hint": "Data Collector - NQ"
+        },
+        {
+          "node": "BTC Collector",
+          "type": "n8n-nodes-base.executeWorkflow",
+          "kind": "executeWorkflow",
+          "target_workflow_id": "AE3Vv7ILPPiZwZHN",
+          "target_workflow_name_hint": "Data Collector - BTC"
+        },
+        {
+          "node": "USD Layer 1 Agent",
+          "type": "n8n-nodes-base.executeWorkflow",
+          "kind": "executeWorkflow",
+          "target_workflow_id": "OCt1tB9yVMUgFTha",
+          "target_workflow_name_hint": "USD Layer 1 Agent"
+        },
+        {
+          "node": "EUR Layer 1 Agent",
+          "type": "n8n-nodes-base.executeWorkflow",
+          "kind": "executeWorkflow",
+          "target_workflow_id": "Px0bsH7chlRWH9ZD",
+          "target_workflow_name_hint": "EUR Layer 1 Agent"
+        },
+        {
+          "node": "Gold Layer 1 Agent",
+          "type": "n8n-nodes-base.executeWorkflow",
+          "kind": "executeWorkflow",
+          "target_workflow_id": "wwBVT0EQcKu5517I",
+          "target_workflow_name_hint": "GOLD Layer 1 Agent"
+        },
+        {
+          "node": "NQ Layer 1 Agent",
+          "type": "n8n-nodes-base.executeWorkflow",
+          "kind": "executeWorkflow",
+          "target_workflow_id": "FOpFp3AzTJVYdLXe",
+          "target_workflow_name_hint": "NQ Layer 1 Agent"
+        },
+        {
+          "node": "BTC Layer 1 Agent",
+          "type": "n8n-nodes-base.executeWorkflow",
+          "kind": "executeWorkflow",
+          "target_workflow_id": "G142Blty3sGHzuOr",
+          "target_workflow_name_hint": "BTC Layer 1 Agent"
+        },
+        {
+          "node": "Dashboard Writer",
+          "type": "n8n-nodes-base.executeWorkflow",
+          "kind": "executeWorkflow",
+          "target_workflow_id": "850DrjzCKKX9fDzD",
+          "target_workflow_name_hint": "Dashboard Writer - Layer 1"
+        },
+        {
+          "node": "Layer 2 Trade Selection Agent",
+          "type": "n8n-nodes-base.executeWorkflow",
+          "kind": "executeWorkflow",
+          "target_workflow_id": "ZKGSuYcWb6EfgXBE",
+          "target_workflow_name_hint": "Layer 2 Trade Selection Agent"
+        },
+        {
+          "node": "Dashboard Trigger - Run All Agents",
+          "type": "n8n-nodes-base.webhook",
+          "kind": "webhook",
+          "webhook_path": "master-orchestrator-dashboard-refresh",
+          "http_method": "POST"
+        },
+        {
+          "node": "Publish Workflow Status",
+          "type": "n8n-nodes-base.github",
+          "kind": "github",
+          "owner": "kevincreedycars-debug",
+          "repository": "trading-agent-dashboard",
+          "file_path": "data/workflow-status.json"
+        },
+        {
+          "node": "Publish Input Health on Economic Event Failure",
+          "type": "n8n-nodes-base.github",
+          "kind": "github",
+          "owner": "kevincreedycars-debug",
+          "repository": "trading-agent-dashboard",
+          "file_path": "data/input-health.json"
+        },
+        {
+          "node": "WTI Layer 1 Agent",
+          "type": "n8n-nodes-base.executeWorkflow",
+          "kind": "executeWorkflow",
+          "target_workflow_id": "8oUBopUWLiGcYU0d",
+          "target_workflow_name_hint": "WTI Layer 1 Agent"
+        },
+        {
+          "node": "Silver Collector",
+          "type": "n8n-nodes-base.executeWorkflow",
+          "kind": "executeWorkflow",
+          "target_workflow_id": "xezFmvm7cmgNNypb",
+          "target_workflow_name_hint": "Data Collector - SILVER"
+        },
+        {
+          "node": "Silver Layer 1 Agent",
+          "type": "n8n-nodes-base.executeWorkflow",
+          "kind": "executeWorkflow",
+          "target_workflow_id": "6IGOoTZxxTPyBpEp",
+          "target_workflow_name_hint": "SILVER Layer 1 Agent"
+        },
+        {
+          "node": "GBP Layer 1 Agent",
+          "type": "n8n-nodes-base.executeWorkflow",
+          "kind": "executeWorkflow",
+          "target_workflow_id": "bMv96EPR0xCXi3bi",
+          "target_workflow_name_hint": "GBP Layer 1 Agent"
+        }
+      ],
+      "sha256": "40ff622a5b9bb8e1f5bd34b220b4eeb4e4fd0675203055272d6c91920f80f3d6",
+      "bytes": 57432,
+      "raw_sha256": "40ff622a5b9bb8e1f5bd34b220b4eeb4e4fd0675203055272d6c91920f80f3d6",
+      "redaction_count": 0
+    },
+    {
+      "file": "NQ_Layer_1_Agent.json",
+      "id": "FOpFp3AzTJVYdLXe",
+      "name": "NQ Layer 1 Agent",
+      "engine": "NQ",
+      "role": "agent",
+      "active": true,
+      "is_archived": false,
+      "version_id": "b6c7045b-f07d-4397-a86b-9440a6e7456e",
+      "version_counter": 24,
+      "trigger_count": 0,
+      "created_at": "2026-06-07T19:17:29.408Z",
+      "updated_at": "2026-06-18T19:45:55.810Z",
+      "project_id": "ISQG9XU7TGTT6Fcu",
+      "node_count": 9,
+      "node_names": [
+        "Message a model",
+        "Supabase Get Many",
+        "Create a row",
+        "Combine md & market snapshot",
+        "Build NQ Input Pack",
+        "Get NQ Logic Document",
+        "Parse NQ Agent Output",
+        "Calculate NQ Conviction",
+        "When Executed by Another Workflow"
+      ],
+      "code_nodes": [
+        {
+          "name": "Combine md & market snapshot",
+          "js_code_sha256": "6c8a2ea4ca9c6b05c3c39838ae7483bdc39773d0e560e694465bfe0389461ac2",
+          "js_code_bytes": 387
+        },
+        {
+          "name": "Build NQ Input Pack",
+          "js_code_sha256": "5b333f0db720934c95eba1ea1987ea3f5c97ca153d64cbe3709d1effd49dd510",
+          "js_code_bytes": 2953
+        },
+        {
+          "name": "Parse NQ Agent Output",
+          "js_code_sha256": "64a57363f8845b3236bc2d4a336357f32af552101bf2f0e524f0c96c677a6e0e",
+          "js_code_bytes": 3284
+        },
+        {
+          "name": "Calculate NQ Conviction",
+          "js_code_sha256": "267a3187521e0e3a4ee53f6c45d7f7b7ff0b693f401e95b7cf599d3d19a90db5",
+          "js_code_bytes": 15044
+        }
+      ],
+      "credential_bindings": [
+        {
+          "node": "Message a model",
+          "names": [
+            "openAiApi"
+          ]
+        },
+        {
+          "node": "Supabase Get Many",
+          "names": [
+            "supabaseApi"
+          ]
+        },
+        {
+          "node": "Create a row",
+          "names": [
+            "supabaseApi"
+          ]
+        },
+        {
+          "node": "Get NQ Logic Document",
+          "names": [
+            "githubOAuth2Api"
+          ]
+        }
+      ],
+      "routing": [
+        {
+          "node": "Supabase Get Many",
+          "type": "n8n-nodes-base.supabase",
+          "kind": "supabase",
+          "table": "market_snapshots",
+          "operation": "getAll"
+        },
+        {
+          "node": "Create a row",
+          "type": "n8n-nodes-base.supabase",
+          "kind": "supabase",
+          "table": "agent_outputs",
+          "operation": null
+        },
+        {
+          "node": "Get NQ Logic Document",
+          "type": "n8n-nodes-base.github",
+          "kind": "github",
+          "owner": "kevincreedycars-debug",
+          "repository": "trading-agent-dashboard",
+          "file_path": "logic/agent_nq_direction.md"
+        },
+        {
+          "node": "When Executed by Another Workflow",
+          "type": "n8n-nodes-base.executeWorkflowTrigger",
+          "kind": "executeWorkflow",
+          "target_workflow_id": null,
+          "target_workflow_name_hint": null
+        }
+      ],
+      "sha256": "e657b2a8390dd9ed9f8424c7e9ac5e52a1953c98490eab2207b43e4cec5be18b",
+      "bytes": 61854,
+      "raw_sha256": "e657b2a8390dd9ed9f8424c7e9ac5e52a1953c98490eab2207b43e4cec5be18b",
+      "redaction_count": 0
+    },
+    {
+      "file": "Price_fetch_old.json",
+      "id": "TcNF8wWesKjkK3u4",
+      "name": "Price fetch old",
+      "engine": "UNCLASSIFIED",
+      "role": "other",
+      "active": false,
+      "is_archived": false,
+      "version_id": "18536969-81f0-4793-9ad1-ebc02b5784c8",
+      "version_counter": 86,
+      "trigger_count": 0,
+      "created_at": "2026-05-14T08:37:47.822Z",
+      "updated_at": "2026-06-19T13:40:35.483Z",
+      "project_id": "ISQG9XU7TGTT6Fcu",
+      "node_count": 7,
+      "node_names": [
+        "When clicking ‘Execute workflow’",
+        "HTTP Request | Fetch Prices Batch 1 - Twelve Data",
+        "HTTP Request | Fetch Prices Batch 2 - Twelve Data",
+        "Code | Transform Prices for Supabase",
+        "HTTP Request | Load Prices to Supabase",
+        "Loop Over Items",
+        "Wait"
+      ],
+      "code_nodes": [
+        {
+          "name": "Code | Transform Prices for Supabase",
+          "js_code_sha256": "93614f4e2f29c0405a31c9546103c3359e7dbd21d0e56d2d5dd446a4b91d4272",
+          "js_code_bytes": 883
+        }
+      ],
+      "credential_bindings": [],
+      "routing": [],
+      "sha256": "35515a32c4677e43c6ddbe02b8926a308c2940ff45bef54d5de9b5cd629c4488",
+      "bytes": 7867,
+      "raw_sha256": "c97062c7b97ab4fffb3d7957d26ceffe40d0879549d7c9ce4e8158174d7debf1",
+      "redaction_count": 4
+    },
+    {
+      "file": "SILVER_Layer_1_Agent.json",
+      "id": "6IGOoTZxxTPyBpEp",
+      "name": "SILVER Layer 1 Agent",
+      "engine": "SILVER",
+      "role": "agent",
+      "active": true,
+      "is_archived": false,
+      "version_id": "b4548465-3c6f-4730-8500-ad4b23cc8335",
+      "version_counter": 9,
+      "trigger_count": 0,
+      "created_at": "2026-09-12T18:33:58.285Z",
+      "updated_at": "2026-09-14T09:44:18.556Z",
+      "project_id": "ISQG9XU7TGTT6Fcu",
+      "node_count": 9,
+      "node_names": [
+        "Message a model",
+        "Supabase Get Many",
+        "Create a row",
+        "Combine md & market snapshot",
+        "Build SILVER Input Pack",
+        "Get SILVER Logic Document",
+        "Parse SILVER Agent Output",
+        "Calculate SILVER Conviction",
+        "When Executed by Another Workflow"
+      ],
+      "code_nodes": [
+        {
+          "name": "Combine md & market snapshot",
+          "js_code_sha256": "17662deaf0281dceb55b2aa7d38b5c3a78c2f8b6253b516feab6614a64ce6ff4",
+          "js_code_bytes": 395
+        },
+        {
+          "name": "Build SILVER Input Pack",
+          "js_code_sha256": "4b7277f9215d3c05cbd09a2724d8e5f1a816fee0e099c9618f7cce60e2c1f447",
+          "js_code_bytes": 3509
+        },
+        {
+          "name": "Get SILVER Logic Document",
+          "js_code_sha256": "43cff26fd28afaa781e0d4dcacddb7611759a162a6552c5cafdd75e0e03823e0",
+          "js_code_bytes": 6494
+        },
+        {
+          "name": "Parse SILVER Agent Output",
+          "js_code_sha256": "dba9b5c84f5ded52afc547840382fe7dc901fd53758501626c25e541dec2ec45",
+          "js_code_bytes": 19878
+        },
+        {
+          "name": "Calculate SILVER Conviction",
+          "js_code_sha256": "81a3b173754a7527f434e44ec4054884a5c98ea6fb969b2735665596f2a12a41",
+          "js_code_bytes": 16681
+        }
+      ],
+      "credential_bindings": [
+        {
+          "node": "Message a model",
+          "names": [
+            "openAiApi"
+          ]
+        },
+        {
+          "node": "Supabase Get Many",
+          "names": [
+            "supabaseApi"
+          ]
+        },
+        {
+          "node": "Create a row",
+          "names": [
+            "supabaseApi"
+          ]
+        }
+      ],
+      "routing": [
+        {
+          "node": "Supabase Get Many",
+          "type": "n8n-nodes-base.supabase",
+          "kind": "supabase",
+          "table": "market_snapshots",
+          "operation": "getAll"
+        },
+        {
+          "node": "Create a row",
+          "type": "n8n-nodes-base.supabase",
+          "kind": "supabase",
+          "table": "agent_outputs",
+          "operation": null
+        },
+        {
+          "node": "When Executed by Another Workflow",
+          "type": "n8n-nodes-base.executeWorkflowTrigger",
+          "kind": "executeWorkflow",
+          "target_workflow_id": null,
+          "target_workflow_name_hint": null
+        }
+      ],
+      "sha256": "916c961b886c7a72723554cdbd972a5a7625f1d4ee7912f0e7dc2acb91594986",
+      "bytes": 123510,
+      "raw_sha256": "916c961b886c7a72723554cdbd972a5a7625f1d4ee7912f0e7dc2acb91594986",
+      "redaction_count": 0
+    },
+    {
+      "file": "TEST_-_BTC_Layer_1_Agent_-_ISOLATED_-_20260723.json",
+      "id": "pQPrq13PaeclUWEC",
+      "name": "TEST - BTC Layer 1 Agent - ISOLATED - 20260723",
+      "engine": "BTC",
+      "role": "agent",
+      "active": true,
+      "is_archived": false,
+      "version_id": "5a9856fc-a1fc-47f9-bb43-6632c9e8baee",
+      "version_counter": 4,
+      "trigger_count": 0,
+      "created_at": "2026-07-23T11:30:07.076Z",
+      "updated_at": "2026-07-27T12:53:32.992Z",
+      "project_id": "ISQG9XU7TGTT6Fcu",
+      "node_count": 13,
+      "node_names": [
+        "Message a model",
+        "Supabase Get Many",
+        "Create a row",
+        "Combine md & market snapshot",
+        "Build BTC Input Pack",
+        "Get BTC Logic Document",
+        "Parse BTC Agent Output",
+        "Calculate BTC Conviction",
+        "When Executed by Another Workflow",
+        "Tag Source Run ID",
+        "Code | Require Transient Validation Contract",
+        "Code | Build Transient Layer 1 Result",
+        "Code | Tripwire Create a row"
+      ],
+      "code_nodes": [
+        {
+          "name": "Combine md & market snapshot",
+          "js_code_sha256": "cea4fd3e6af31dc25116abeb7581adec0fad255d0919dd278f67d8a238a26c31",
+          "js_code_bytes": 389
+        },
+        {
+          "name": "Build BTC Input Pack",
+          "js_code_sha256": "f842b8263d3c09979dc2ef733a496a3a2061113c935f9bb07fd58a6d4304095b",
+          "js_code_bytes": 3537
+        },
+        {
+          "name": "Parse BTC Agent Output",
+          "js_code_sha256": "80c587ffd0062e38267b84ac90c606d486d6c0cf6ad3820b63ea6f6de5d611fe",
+          "js_code_bytes": 4531
+        },
+        {
+          "name": "Calculate BTC Conviction",
+          "js_code_sha256": "ac4f3dc339679fbbaf99f598e28b94576f1570041cda7d5bacb88a70cde1a72f",
+          "js_code_bytes": 18535
+        },
+        {
+          "name": "Tag Source Run ID",
+          "js_code_sha256": "44230f846457c31c639bb8074d9cb934d86aea40fd6d1474389d851d86384b10",
+          "js_code_bytes": 713
+        },
+        {
+          "name": "Code | Require Transient Validation Contract",
+          "js_code_sha256": "89b63bc478d1619f20996355402805371258e0bbe08cc3a1090161ce01a72dd8",
+          "js_code_bytes": 1957
+        },
+        {
+          "name": "Code | Build Transient Layer 1 Result",
+          "js_code_sha256": "70e6fc2adba961ba15c6e802ebb95f98dd53ac32be7f24472a4d386d24fd748f",
+          "js_code_bytes": 4884
+        },
+        {
+          "name": "Code | Tripwire Create a row",
+          "js_code_sha256": "647e1b355162f96e713ca2fc02d2405613c1beab94207b06a66d4ef9d88a94ac",
+          "js_code_bytes": 431
+        }
+      ],
+      "credential_bindings": [
+        {
+          "node": "Message a model",
+          "names": [
+            "openAiApi"
+          ]
+        },
+        {
+          "node": "Supabase Get Many",
+          "names": [
+            "supabaseApi"
+          ]
+        },
+        {
+          "node": "Create a row",
+          "names": [
+            "supabaseApi"
+          ]
+        },
+        {
+          "node": "Get BTC Logic Document",
+          "names": [
+            "githubOAuth2Api"
+          ]
+        }
+      ],
+      "routing": [
+        {
+          "node": "Supabase Get Many",
+          "type": "n8n-nodes-base.supabase",
+          "kind": "supabase",
+          "table": "market_snapshots",
+          "operation": "getAll"
+        },
+        {
+          "node": "Create a row",
+          "type": "n8n-nodes-base.supabase",
+          "kind": "supabase",
+          "table": "agent_outputs",
+          "operation": "create"
+        },
+        {
+          "node": "Get BTC Logic Document",
+          "type": "n8n-nodes-base.github",
+          "kind": "github",
+          "owner": "kevincreedycars-debug",
+          "repository": "trading-agent-dashboard",
+          "file_path": "logic/agent_btc_direction.md"
+        },
+        {
+          "node": "When Executed by Another Workflow",
+          "type": "n8n-nodes-base.executeWorkflowTrigger",
+          "kind": "executeWorkflow",
+          "target_workflow_id": null,
+          "target_workflow_name_hint": null
+        }
+      ],
+      "sha256": "6adf767860bdf546841939d4ebe1eafb5c09d51f3068c5cc81384477853e0247",
+      "bytes": 96358,
+      "raw_sha256": "6adf767860bdf546841939d4ebe1eafb5c09d51f3068c5cc81384477853e0247",
+      "redaction_count": 0
+    },
+    {
+      "file": "TEST_-_Dashboard_Writer_-_Layer_1_-_20260722_-_modified_probe.json",
+      "id": "jGvWgeIQbWHw6Vfi",
+      "name": "TEST - Dashboard Writer - Layer 1 - 20260722 - modified probe",
+      "engine": "SHARED",
+      "role": "dashboard_writer",
+      "active": false,
+      "is_archived": false,
+      "version_id": "5fccdca5-f9e7-4ca1-8c5d-09f3abf80551",
+      "version_counter": 1,
+      "trigger_count": 0,
+      "created_at": "2026-07-23T09:12:21.509Z",
+      "updated_at": "2026-07-23T09:12:21.509Z",
+      "project_id": "ISQG9XU7TGTT6Fcu",
+      "node_count": 4,
+      "node_names": [
+        "Get many rows",
+        "Build Layer 1 JSON",
+        "Edit a file",
+        "When Executed by Another Workflow"
+      ],
+      "code_nodes": [
+        {
+          "name": "Build Layer 1 JSON",
+          "js_code_sha256": "bfd5e0bcba77acf458b004454029109c9a86d915fc9058410712a20cef7e6cb0",
+          "js_code_bytes": 13425
+        }
+      ],
+      "credential_bindings": [
+        {
+          "node": "Get many rows",
+          "names": [
+            "supabaseApi"
+          ]
+        },
+        {
+          "node": "Edit a file",
+          "names": [
+            "githubOAuth2Api"
+          ]
+        }
+      ],
+      "routing": [
+        {
+          "node": "Get many rows",
+          "type": "n8n-nodes-base.supabase",
+          "kind": "supabase",
+          "table": "agent_outputs",
+          "operation": "getAll"
+        },
+        {
+          "node": "Edit a file",
+          "type": "n8n-nodes-base.github",
+          "kind": "github",
+          "owner": "kevincreedycars-debug",
+          "repository": "trading-agent-dashboard",
+          "file_path": "data/layer1.json"
+        },
+        {
+          "node": "When Executed by Another Workflow",
+          "type": "n8n-nodes-base.executeWorkflowTrigger",
+          "kind": "executeWorkflow",
+          "target_workflow_id": null,
+          "target_workflow_name_hint": null
+        }
+      ],
+      "sha256": "6d49c6a61fe2757ab6618c5778826d4c4d7cb7dda50437889e94f2af30949d67",
+      "bytes": 18208,
+      "raw_sha256": "6d49c6a61fe2757ab6618c5778826d4c4d7cb7dda50437889e94f2af30949d67",
+      "redaction_count": 0
+    },
+    {
+      "file": "TEST_-_Dashboard_Writer_-_Layer_1_-_ISOLATED_-_20260723.json",
+      "id": "pMPxuN3dk5WWxbYY",
+      "name": "TEST - Dashboard Writer - Layer 1 - ISOLATED - 20260723",
+      "engine": "SHARED",
+      "role": "dashboard_writer",
+      "active": true,
+      "is_archived": false,
+      "version_id": "467e257f-71e3-4420-9495-3ccef91d29aa",
+      "version_counter": 9,
+      "trigger_count": 0,
+      "created_at": "2026-07-23T09:11:51.120Z",
+      "updated_at": "2026-07-27T18:51:59.741Z",
+      "project_id": "ISQG9XU7TGTT6Fcu",
+      "node_count": 6,
+      "node_names": [
+        "Get many rows",
+        "Build Layer 1 JSON",
+        "When Executed by Another Workflow",
+        "Filter Source Run ID",
+        "Code | Require Transient Validation Contract",
+        "Code | Build Transient Dashboard Result"
+      ],
+      "code_nodes": [
+        {
+          "name": "Build Layer 1 JSON",
+          "js_code_sha256": "c1bd70d033b362b4d81213d4208b0869ebad9e020a8b75301a7afe8a68b54404",
+          "js_code_bytes": 5062
+        },
+        {
+          "name": "Filter Source Run ID",
+          "js_code_sha256": "0ce058ad1f99a3f05ebb5848482ce5545b991611dc07dc5bdbf0df27812dd0ab",
+          "js_code_bytes": 1863
+        },
+        {
+          "name": "Code | Require Transient Validation Contract",
+          "js_code_sha256": "bde5f263eed159ed6501d5f1638edc22b0ec76a69c795e5f00565178491de2a1",
+          "js_code_bytes": 1638
+        },
+        {
+          "name": "Code | Build Transient Dashboard Result",
+          "js_code_sha256": "2afb9242d83b2abcf95fa418cd8bcc2d5e4e5bb75eb8acfc1ff75d7b134bc2ea",
+          "js_code_bytes": 1566
+        }
+      ],
+      "credential_bindings": [
+        {
+          "node": "Get many rows",
+          "names": [
+            "supabaseApi"
+          ]
+        }
+      ],
+      "routing": [
+        {
+          "node": "Get many rows",
+          "type": "n8n-nodes-base.supabase",
+          "kind": "supabase",
+          "table": "agent_outputs",
+          "operation": "getAll"
+        },
+        {
+          "node": "When Executed by Another Workflow",
+          "type": "n8n-nodes-base.executeWorkflowTrigger",
+          "kind": "executeWorkflow",
+          "target_workflow_id": null,
+          "target_workflow_name_hint": null
+        }
+      ],
+      "sha256": "e5988728fd697c992594125824f70e5e09cd93c1c36b198ad462df57e95cbc01",
+      "bytes": 29177,
+      "raw_sha256": "e5988728fd697c992594125824f70e5e09cd93c1c36b198ad462df57e95cbc01",
+      "redaction_count": 0
+    },
+    {
+      "file": "TEST_-_Data_Collector_-_BTC_-_20260722.json",
+      "id": "DMiMgjgFrdQZAOpW",
+      "name": "TEST - Data Collector - BTC - 20260722",
+      "engine": "UNCLASSIFIED",
+      "role": "other",
+      "active": true,
+      "is_archived": false,
+      "version_id": "814fd523-1d60-41da-a4b5-be8a333ce2cd",
+      "version_counter": 4,
+      "trigger_count": 0,
+      "created_at": "2026-07-23T09:11:50.864Z",
+      "updated_at": "2026-07-27T11:19:35.011Z",
+      "project_id": "ISQG9XU7TGTT6Fcu",
+      "node_count": 25,
+      "node_names": [
+        "HTTP Request | US 2Y Treasury Yield - FRED API",
+        "HTTP Request | US 10Y Treasury Yield - FRED Api",
+        "HTTP Request | TIPS 10Y Real Yield - FRED Api",
+        "HTTP Request | UK 10Y Proxy - FRED api",
+        "HTTP Request | VIX - FRED Api",
+        "HTTP Request | DXY - FRED Dollar Index - FRED API",
+        "HTTP Request | Gold - Coinbase",
+        "HTTP Request | BTC - Coinbase",
+        "HTTP Request | NQ - Alpha Vantage",
+        "Normalise Market Snapshot",
+        "Create a row",
+        "Supabase | Get Previous Market Snapshots",
+        "HTTP Request | Eco Calendar Recent - Finnhub",
+        "HTTP Request | Eco Calendar Upcoming - Finnhub",
+        "Code | Process Eco Data",
+        "Code | Derive Fed Bias",
+        "HTTP Request | Crypto Fear Greed",
+        "HTTP Request | BTC Market Data - CoinGecko",
+        "HTTP Request | BTC ETF Flows - Farside",
+        "Code | Derive US Eco Inputs",
+        "Supabase | Get Today US Economic Events",
+        "When Executed by Another Workflow",
+        "Code | Require Transient Validation Contract",
+        "Code | Build Transient Collector Result",
+        "Code | Tripwire Create a row"
+      ],
+      "code_nodes": [
+        {
+          "name": "Normalise Market Snapshot",
+          "js_code_sha256": "505c71a465cc6770767758eb91c614de399c1e76c3885f0c5e058189944fcda2",
+          "js_code_bytes": 15294
+        },
+        {
+          "name": "Code | Process Eco Data",
+          "js_code_sha256": "6e22f742fbfab00ceaf699a2d0b7a18cb1766670e3dae3c8d2eab08c573960aa",
+          "js_code_bytes": 2570
+        },
+        {
+          "name": "Code | Derive Fed Bias",
+          "js_code_sha256": "c8296444ca7c4587f92f7b15bf962e92441db0a0439d9dd9ecc207e0e16c3256",
+          "js_code_bytes": 593
+        },
+        {
+          "name": "Code | Derive US Eco Inputs",
+          "js_code_sha256": "957e7064b6e7b33dc0ab7bb1fbae2adcb38653e87d27eb2db7d7d52fe7be1068",
+          "js_code_bytes": 5623
+        },
+        {
+          "name": "Code | Require Transient Validation Contract",
+          "js_code_sha256": "bde5f263eed159ed6501d5f1638edc22b0ec76a69c795e5f00565178491de2a1",
+          "js_code_bytes": 1638
+        },
+        {
+          "name": "Code | Build Transient Collector Result",
+          "js_code_sha256": "ba830c3e36be0b0fde414f486b0d0ecd94fc6a391743c7df86a1055de122c56f",
+          "js_code_bytes": 1330
+        },
+        {
+          "name": "Code | Tripwire Create a row",
+          "js_code_sha256": "774e2ab1aa981673d7b1bdff26fa725ecc7a16284f7650d38ac75548667da632",
+          "js_code_bytes": 423
+        }
+      ],
+      "credential_bindings": [
+        {
+          "node": "Create a row",
+          "names": [
+            "supabaseApi"
+          ]
+        },
+        {
+          "node": "Supabase | Get Previous Market Snapshots",
+          "names": [
+            "supabaseApi"
+          ]
+        },
+        {
+          "node": "Supabase | Get Today US Economic Events",
+          "names": [
+            "supabaseApi"
+          ]
+        }
+      ],
+      "routing": [
+        {
+          "node": "Create a row",
+          "type": "n8n-nodes-base.supabase",
+          "kind": "supabase",
+          "table": "market_snapshots",
+          "operation": "create"
+        },
+        {
+          "node": "Supabase | Get Previous Market Snapshots",
+          "type": "n8n-nodes-base.supabase",
+          "kind": "supabase",
+          "table": "market_snapshots",
+          "operation": "getAll"
+        },
+        {
+          "node": "Supabase | Get Today US Economic Events",
+          "type": "n8n-nodes-base.supabase",
+          "kind": "supabase",
+          "table": "economic_events",
+          "operation": "getAll"
+        },
+        {
+          "node": "When Executed by Another Workflow",
+          "type": "n8n-nodes-base.executeWorkflowTrigger",
+          "kind": "executeWorkflow",
+          "target_workflow_id": null,
+          "target_workflow_name_hint": null
+        }
+      ],
+      "sha256": "94fdf19628ed307ac7c6126f9bffe8926016567c73e20fa69356c61f3d7ff302",
+      "bytes": 101196,
+      "raw_sha256": "8847f768e5ddc4fa57cad5695fb815dcc5759686ad631203e4711c96c820c175",
+      "redaction_count": 18
+    },
+    {
+      "file": "TEST_-_Data_Collector_-_BTC_-_20260722_-_modified_probe.json",
+      "id": "xfiQRMEcHLXfWHpa",
+      "name": "TEST - Data Collector - BTC - 20260722 - modified probe",
+      "engine": "UNCLASSIFIED",
+      "role": "other",
+      "active": false,
+      "is_archived": false,
+      "version_id": "23db38f6-cdb0-46b1-b0e6-fd2329a91aa6",
+      "version_counter": 1,
+      "trigger_count": 0,
+      "created_at": "2026-07-23T09:12:21.426Z",
+      "updated_at": "2026-07-23T09:12:21.426Z",
+      "project_id": "ISQG9XU7TGTT6Fcu",
+      "node_count": 22,
+      "node_names": [
+        "HTTP Request | US 2Y Treasury Yield - FRED API",
+        "HTTP Request | US 10Y Treasury Yield - FRED Api",
+        "HTTP Request | TIPS 10Y Real Yield - FRED Api",
+        "HTTP Request | UK 10Y Proxy - FRED api",
+        "HTTP Request | VIX - FRED Api",
+        "HTTP Request | DXY - FRED Dollar Index - FRED API",
+        "HTTP Request | Gold - Coinbase",
+        "HTTP Request | BTC - Coinbase",
+        "HTTP Request | NQ - Alpha Vantage",
+        "Normalise Market Snapshot",
+        "Create a row",
+        "Supabase | Get Previous Market Snapshots",
+        "HTTP Request | Eco Calendar Recent - Finnhub",
+        "HTTP Request | Eco Calendar Upcoming - Finnhub",
+        "Code | Process Eco Data",
+        "Code | Derive Fed Bias",
+        "HTTP Request | Crypto Fear Greed",
+        "HTTP Request | BTC Market Data - CoinGecko",
+        "HTTP Request | BTC ETF Flows - Farside",
+        "Code | Derive US Eco Inputs",
+        "Supabase | Get Today US Economic Events",
+        "When Executed by Another Workflow"
+      ],
+      "code_nodes": [
+        {
+          "name": "Normalise Market Snapshot",
+          "js_code_sha256": "505c71a465cc6770767758eb91c614de399c1e76c3885f0c5e058189944fcda2",
+          "js_code_bytes": 15294
+        },
+        {
+          "name": "Code | Process Eco Data",
+          "js_code_sha256": "6e22f742fbfab00ceaf699a2d0b7a18cb1766670e3dae3c8d2eab08c573960aa",
+          "js_code_bytes": 2570
+        },
+        {
+          "name": "Code | Derive Fed Bias",
+          "js_code_sha256": "c8296444ca7c4587f92f7b15bf962e92441db0a0439d9dd9ecc207e0e16c3256",
+          "js_code_bytes": 593
+        },
+        {
+          "name": "Code | Derive US Eco Inputs",
+          "js_code_sha256": "957e7064b6e7b33dc0ab7bb1fbae2adcb38653e87d27eb2db7d7d52fe7be1068",
+          "js_code_bytes": 5623
+        }
+      ],
+      "credential_bindings": [
+        {
+          "node": "Create a row",
+          "names": [
+            "supabaseApi"
+          ]
+        },
+        {
+          "node": "Supabase | Get Previous Market Snapshots",
+          "names": [
+            "supabaseApi"
+          ]
+        },
+        {
+          "node": "Supabase | Get Today US Economic Events",
+          "names": [
+            "supabaseApi"
+          ]
+        }
+      ],
+      "routing": [
+        {
+          "node": "Create a row",
+          "type": "n8n-nodes-base.supabase",
+          "kind": "supabase",
+          "table": "market_snapshots",
+          "operation": null
+        },
+        {
+          "node": "Supabase | Get Previous Market Snapshots",
+          "type": "n8n-nodes-base.supabase",
+          "kind": "supabase",
+          "table": "market_snapshots",
+          "operation": "getAll"
+        },
+        {
+          "node": "Supabase | Get Today US Economic Events",
+          "type": "n8n-nodes-base.supabase",
+          "kind": "supabase",
+          "table": "economic_events",
+          "operation": "getAll"
+        },
+        {
+          "node": "When Executed by Another Workflow",
+          "type": "n8n-nodes-base.executeWorkflowTrigger",
+          "kind": "executeWorkflow",
+          "target_workflow_id": null,
+          "target_workflow_name_hint": null
+        }
+      ],
+      "sha256": "6bfcd903ba20022392e65184928b3923915fe979c9d36670478886bb573ad289",
+      "bytes": 40635,
+      "raw_sha256": "092d7b96bc738f98bc694ec1db675e399d66cb633518d2c45b65892ca5264037",
+      "redaction_count": 9
+    },
+    {
+      "file": "TEST_-_Data_Collector_-_EUR_-_20260722.json",
+      "id": "mh3CLzNirpXorGKi",
+      "name": "TEST - Data Collector - EUR - 20260722",
+      "engine": "UNCLASSIFIED",
+      "role": "other",
+      "active": true,
+      "is_archived": false,
+      "version_id": "9a9f6c52-d816-4632-9c95-6a78ae1c08f4",
+      "version_counter": 3,
+      "trigger_count": 0,
+      "created_at": "2026-07-22T20:01:30.368Z",
+      "updated_at": "2026-07-27T11:19:23.413Z",
+      "project_id": "ISQG9XU7TGTT6Fcu",
+      "node_count": 37,
+      "node_names": [
+        "HTTP Request | US 2Y Treasury Yield - FRED API",
+        "HTTP Request | US 10Y Treasury Yield - FRED Api",
+        "HTTP Request | TIPS 10Y Real Yield - FRED Api",
+        "HTTP Request | Germany 10Y Proxy - FRED Api",
+        "HTTP Request | UK 10Y Proxy - FRED api",
+        "HTTP Request | VIX - FRED Api",
+        "HTTP Request | DXY - FRED Dollar Index - FRED API",
+        "HTTP Request | Gold - Coinbase",
+        "HTTP Request | BTC - Coinbase",
+        "HTTP Request | USD/JPY - Coinbase",
+        "HTTP Request | GBP/USD - Coinbase",
+        "HTTP Request | USD/CAD - Coinbase",
+        "HTTP Request | AUD/USD - Coinbase",
+        "HTTP Request | WTI Oil - FRED Api",
+        "HTTP Request | Brent Oil - FRED Api",
+        "HTTP Request | EURUSD - FRED API",
+        "HTTP Request | NQ - Alpha Vantage",
+        "HTTP Request | Japan 10Y Proxy - FRED API",
+        "Normalise Market Snapshot",
+        "Create a row",
+        "HTTP Request | Germany 2Y Yield",
+        "Supabase | Get Previous Market Snapshots",
+        "HTTP Request | Eco Calendar Recent - Finnhub",
+        "HTTP Request | Eco Calendar Upcoming - Finnhub",
+        "Code | Process Eco Data",
+        "Code | Derive Fed Bias",
+        "Limit",
+        "Supabase | Get Today EUR Economic Events",
+        "Code | Derive EUR Eco Inputs",
+        "HTTP Request | Eurozone Composite PMI",
+        "Supabase | Get Recent EUR PMI Events",
+        "Code | Derive EUR PMI Inputs",
+        "HTTP Request | Italy 10Y Proxy - FRED API",
+        "When Executed by Another Workflow",
+        "Code | Require Transient Validation Contract",
+        "Code | Build Transient Collector Result",
+        "Code | Tripwire Create a row"
+      ],
+      "code_nodes": [
+        {
+          "name": "Normalise Market Snapshot",
+          "js_code_sha256": "92e4cf08a675ab488250b52d40582c7dfebb37d0313879b6f8b81239dd17a5e0",
+          "js_code_bytes": 14065
+        },
+        {
+          "name": "Code | Process Eco Data",
+          "js_code_sha256": "4196f3c3f7ac4369d5041919edd9463bec350abccc72efe68cc3cf5d232377d4",
+          "js_code_bytes": 4444
+        },
+        {
+          "name": "Code | Derive Fed Bias",
+          "js_code_sha256": "c8296444ca7c4587f92f7b15bf962e92441db0a0439d9dd9ecc207e0e16c3256",
+          "js_code_bytes": 593
+        },
+        {
+          "name": "Code | Derive EUR Eco Inputs",
+          "js_code_sha256": "c3ab27eb23768411f9a33be0be8af1177618c374d38b75149a0d07ad6fceeee3",
+          "js_code_bytes": 5439
+        },
+        {
+          "name": "Code | Derive EUR PMI Inputs",
+          "js_code_sha256": "c4479862c049ebdc2399c7d97b726a3bca1a79fc9dd74844756cffccb4cb8b7f",
+          "js_code_bytes": 1439
+        },
+        {
+          "name": "Code | Require Transient Validation Contract",
+          "js_code_sha256": "bde5f263eed159ed6501d5f1638edc22b0ec76a69c795e5f00565178491de2a1",
+          "js_code_bytes": 1638
+        },
+        {
+          "name": "Code | Build Transient Collector Result",
+          "js_code_sha256": "8316f502b8a7bcd4ac6a7c4b6f39364e4e7722d7a8f8804c8cb1b15ec76dff90",
+          "js_code_bytes": 1331
+        },
+        {
+          "name": "Code | Tripwire Create a row",
+          "js_code_sha256": "f96d0b4832205db3cfc2d1ae4511a873a696072f10840c90853a400f05be04ed",
+          "js_code_bytes": 423
+        }
+      ],
+      "credential_bindings": [
+        {
+          "node": "Create a row",
+          "names": [
+            "supabaseApi"
+          ]
+        },
+        {
+          "node": "Supabase | Get Previous Market Snapshots",
+          "names": [
+            "supabaseApi"
+          ]
+        },
+        {
+          "node": "Supabase | Get Today EUR Economic Events",
+          "names": [
+            "supabaseApi"
+          ]
+        },
+        {
+          "node": "Supabase | Get Recent EUR PMI Events",
+          "names": [
+            "supabaseApi"
+          ]
+        }
+      ],
+      "routing": [
+        {
+          "node": "Create a row",
+          "type": "n8n-nodes-base.supabase",
+          "kind": "supabase",
+          "table": "market_snapshots",
+          "operation": "create"
+        },
+        {
+          "node": "Supabase | Get Previous Market Snapshots",
+          "type": "n8n-nodes-base.supabase",
+          "kind": "supabase",
+          "table": "market_snapshots",
+          "operation": "getAll"
+        },
+        {
+          "node": "Supabase | Get Today EUR Economic Events",
+          "type": "n8n-nodes-base.supabase",
+          "kind": "supabase",
+          "table": "economic_events",
+          "operation": "getAll"
+        },
+        {
+          "node": "Supabase | Get Recent EUR PMI Events",
+          "type": "n8n-nodes-base.supabase",
+          "kind": "supabase",
+          "table": "economic_events",
+          "operation": "getAll"
+        },
+        {
+          "node": "When Executed by Another Workflow",
+          "type": "n8n-nodes-base.executeWorkflowTrigger",
+          "kind": "executeWorkflow",
+          "target_workflow_id": null,
+          "target_workflow_name_hint": null
+        }
+      ],
+      "sha256": "fc4ed01a8041a2d4663a20d9e13a83e0f910210e039ddc690411ec0507d995d3",
+      "bytes": 125818,
+      "raw_sha256": "98cc07ee6f158ddbc3b51a6b53cace42d0e56d5720b060cbee7cb49664c97d7a",
+      "redaction_count": 30
+    },
+    {
+      "file": "TEST_-_Data_Collector_-_GOLD_-_20260722.json",
+      "id": "NLGyMosysypCldMO",
+      "name": "TEST - Data Collector - GOLD - 20260722",
+      "engine": "UNCLASSIFIED",
+      "role": "other",
+      "active": true,
+      "is_archived": false,
+      "version_id": "cc891809-9786-4883-8c0b-727b18011110",
+      "version_counter": 4,
+      "trigger_count": 0,
+      "created_at": "2026-07-23T09:11:50.944Z",
+      "updated_at": "2026-07-27T11:19:27.253Z",
+      "project_id": "ISQG9XU7TGTT6Fcu",
+      "node_count": 32,
+      "node_names": [
+        "HTTP Request | US 2Y Treasury Yield - FRED API",
+        "HTTP Request | US 10Y Treasury Yield - FRED Api",
+        "HTTP Request | TIPS 10Y Real Yield - FRED Api",
+        "HTTP Request | Germany 10Y Proxy - FRED Api",
+        "HTTP Request | UK 10Y Proxy - FRED api",
+        "HTTP Request | VIX - FRED Api",
+        "HTTP Request | DXY - FRED Dollar Index - FRED API",
+        "HTTP Request | Gold - Coinbase",
+        "HTTP Request | BTC - Coinbase",
+        "HTTP Request | USD/JPY - Coinbase",
+        "HTTP Request | GBP/USD - Coinbase",
+        "HTTP Request | USD/CAD - Coinbase",
+        "HTTP Request | AUD/USD - Coinbase",
+        "HTTP Request | WTI Oil - FRED Api",
+        "HTTP Request | Brent Oil - FRED Api",
+        "HTTP Request | EURUSD - FRED API",
+        "HTTP Request | NQ - Alpha Vantage",
+        "HTTP Request | Japan 10Y Proxy - FRED API",
+        "Normalise Market Snapshot",
+        "Create a row",
+        "HTTP Request | Germany 2Y Yield",
+        "Supabase | Get Previous Market Snapshots",
+        "HTTP Request | Eco Calendar Recent - Finnhub",
+        "HTTP Request | Eco Calendar Upcoming - Finnhub",
+        "Code | Process Eco Data",
+        "Code | Derive Fed Bias",
+        "Code | Derive US Eco Inputs",
+        "Supabase | Get Today US Economic Events",
+        "When Executed by Another Workflow",
+        "Code | Require Transient Validation Contract",
+        "Code | Build Transient Collector Result",
+        "Code | Tripwire Create a row"
+      ],
+      "code_nodes": [
+        {
+          "name": "Normalise Market Snapshot",
+          "js_code_sha256": "71b6893ff9f537b3e6dd6b8cd1cd3f3ca0e44f8a60a8c43c53ff8fb1ef7c70f4",
+          "js_code_bytes": 16245
+        },
+        {
+          "name": "Code | Process Eco Data",
+          "js_code_sha256": "6e22f742fbfab00ceaf699a2d0b7a18cb1766670e3dae3c8d2eab08c573960aa",
+          "js_code_bytes": 2570
+        },
+        {
+          "name": "Code | Derive Fed Bias",
+          "js_code_sha256": "c8296444ca7c4587f92f7b15bf962e92441db0a0439d9dd9ecc207e0e16c3256",
+          "js_code_bytes": 593
+        },
+        {
+          "name": "Code | Derive US Eco Inputs",
+          "js_code_sha256": "957e7064b6e7b33dc0ab7bb1fbae2adcb38653e87d27eb2db7d7d52fe7be1068",
+          "js_code_bytes": 5623
+        },
+        {
+          "name": "Code | Require Transient Validation Contract",
+          "js_code_sha256": "bde5f263eed159ed6501d5f1638edc22b0ec76a69c795e5f00565178491de2a1",
+          "js_code_bytes": 1638
+        },
+        {
+          "name": "Code | Build Transient Collector Result",
+          "js_code_sha256": "c7bbf44142a59b5fef963b19985591bc53bec6a17ceb7e9917d270dad0944716",
+          "js_code_bytes": 1330
+        },
+        {
+          "name": "Code | Tripwire Create a row",
+          "js_code_sha256": "f62963c210946fd461eaf2e594a705b68ac04de0b1592b3328366f4fe4902fd7",
+          "js_code_bytes": 424
+        }
+      ],
+      "credential_bindings": [
+        {
+          "node": "Create a row",
+          "names": [
+            "supabaseApi"
+          ]
+        },
+        {
+          "node": "Supabase | Get Previous Market Snapshots",
+          "names": [
+            "supabaseApi"
+          ]
+        },
+        {
+          "node": "Supabase | Get Today US Economic Events",
+          "names": [
+            "supabaseApi"
+          ]
+        }
+      ],
+      "routing": [
+        {
+          "node": "Create a row",
+          "type": "n8n-nodes-base.supabase",
+          "kind": "supabase",
+          "table": "market_snapshots",
+          "operation": "create"
+        },
+        {
+          "node": "Supabase | Get Previous Market Snapshots",
+          "type": "n8n-nodes-base.supabase",
+          "kind": "supabase",
+          "table": "market_snapshots",
+          "operation": "getAll"
+        },
+        {
+          "node": "Supabase | Get Today US Economic Events",
+          "type": "n8n-nodes-base.supabase",
+          "kind": "supabase",
+          "table": "economic_events",
+          "operation": "getAll"
+        },
+        {
+          "node": "When Executed by Another Workflow",
+          "type": "n8n-nodes-base.executeWorkflowTrigger",
+          "kind": "executeWorkflow",
+          "target_workflow_id": null,
+          "target_workflow_name_hint": null
+        }
+      ],
+      "sha256": "a2d689fbe993cfa1c2d6d570fc549d6d18e4d306e3f83d32ab3eb3aeee8bedde",
+      "bytes": 116695,
+      "raw_sha256": "141df1472a139bf81123a0cdd8aaa981bcfb7125bb9557a12e1cc06f2e574ad3",
+      "redaction_count": 28
+    },
+    {
+      "file": "TEST_-_Data_Collector_-_GOLD_-_20260722_-_modified_probe.json",
+      "id": "7tk8NwIRZNcIy2xh",
+      "name": "TEST - Data Collector - GOLD - 20260722 - modified probe",
+      "engine": "UNCLASSIFIED",
+      "role": "other",
+      "active": false,
+      "is_archived": false,
+      "version_id": "15ad7e6f-5256-4d1c-9057-455fd37ee993",
+      "version_counter": 1,
+      "trigger_count": 0,
+      "created_at": "2026-07-23T09:12:21.588Z",
+      "updated_at": "2026-07-23T09:12:21.588Z",
+      "project_id": "ISQG9XU7TGTT6Fcu",
+      "node_count": 29,
+      "node_names": [
+        "HTTP Request | US 2Y Treasury Yield - FRED API",
+        "HTTP Request | US 10Y Treasury Yield - FRED Api",
+        "HTTP Request | TIPS 10Y Real Yield - FRED Api",
+        "HTTP Request | Germany 10Y Proxy - FRED Api",
+        "HTTP Request | UK 10Y Proxy - FRED api",
+        "HTTP Request | VIX - FRED Api",
+        "HTTP Request | DXY - FRED Dollar Index - FRED API",
+        "HTTP Request | Gold - Coinbase",
+        "HTTP Request | BTC - Coinbase",
+        "HTTP Request | USD/JPY - Coinbase",
+        "HTTP Request | GBP/USD - Coinbase",
+        "HTTP Request | USD/CAD - Coinbase",
+        "HTTP Request | AUD/USD - Coinbase",
+        "HTTP Request | WTI Oil - FRED Api",
+        "HTTP Request | Brent Oil - FRED Api",
+        "HTTP Request | EURUSD - FRED API",
+        "HTTP Request | NQ - Alpha Vantage",
+        "HTTP Request | Japan 10Y Proxy - FRED API",
+        "Normalise Market Snapshot",
+        "Create a row",
+        "HTTP Request | Germany 2Y Yield",
+        "Supabase | Get Previous Market Snapshots",
+        "HTTP Request | Eco Calendar Recent - Finnhub",
+        "HTTP Request | Eco Calendar Upcoming - Finnhub",
+        "Code | Process Eco Data",
+        "Code | Derive Fed Bias",
+        "Code | Derive US Eco Inputs",
+        "Supabase | Get Today US Economic Events",
+        "When Executed by Another Workflow"
+      ],
+      "code_nodes": [
+        {
+          "name": "Normalise Market Snapshot",
+          "js_code_sha256": "71b6893ff9f537b3e6dd6b8cd1cd3f3ca0e44f8a60a8c43c53ff8fb1ef7c70f4",
+          "js_code_bytes": 16245
+        },
+        {
+          "name": "Code | Process Eco Data",
+          "js_code_sha256": "6e22f742fbfab00ceaf699a2d0b7a18cb1766670e3dae3c8d2eab08c573960aa",
+          "js_code_bytes": 2570
+        },
+        {
+          "name": "Code | Derive Fed Bias",
+          "js_code_sha256": "c8296444ca7c4587f92f7b15bf962e92441db0a0439d9dd9ecc207e0e16c3256",
+          "js_code_bytes": 593
+        },
+        {
+          "name": "Code | Derive US Eco Inputs",
+          "js_code_sha256": "957e7064b6e7b33dc0ab7bb1fbae2adcb38653e87d27eb2db7d7d52fe7be1068",
+          "js_code_bytes": 5623
+        }
+      ],
+      "credential_bindings": [
+        {
+          "node": "Create a row",
+          "names": [
+            "supabaseApi"
+          ]
+        },
+        {
+          "node": "Supabase | Get Previous Market Snapshots",
+          "names": [
+            "supabaseApi"
+          ]
+        },
+        {
+          "node": "Supabase | Get Today US Economic Events",
+          "names": [
+            "supabaseApi"
+          ]
+        }
+      ],
+      "routing": [
+        {
+          "node": "Create a row",
+          "type": "n8n-nodes-base.supabase",
+          "kind": "supabase",
+          "table": "market_snapshots",
+          "operation": null
+        },
+        {
+          "node": "Supabase | Get Previous Market Snapshots",
+          "type": "n8n-nodes-base.supabase",
+          "kind": "supabase",
+          "table": "market_snapshots",
+          "operation": "getAll"
+        },
+        {
+          "node": "Supabase | Get Today US Economic Events",
+          "type": "n8n-nodes-base.supabase",
+          "kind": "supabase",
+          "table": "economic_events",
+          "operation": "getAll"
+        },
+        {
+          "node": "When Executed by Another Workflow",
+          "type": "n8n-nodes-base.executeWorkflowTrigger",
+          "kind": "executeWorkflow",
+          "target_workflow_id": null,
+          "target_workflow_name_hint": null
+        }
+      ],
+      "sha256": "4c110fd2aa6d57644c92aa055b527d4473b6e1a69e29edfe954aade7bf6525c1",
+      "bytes": 46364,
+      "raw_sha256": "e0f73686cde60c3b485cfc9721b326839b3dfc3c13d5226c55cba31e45a9eedc",
+      "redaction_count": 14
+    },
+    {
+      "file": "TEST_-_Data_Collector_-_NQ_-_20260722.json",
+      "id": "tcYXnCdetkGzsQEx",
+      "name": "TEST - Data Collector - NQ - 20260722",
+      "engine": "UNCLASSIFIED",
+      "role": "other",
+      "active": true,
+      "is_archived": false,
+      "version_id": "b743e50f-ebc0-4084-95f2-940bcc50f575",
+      "version_counter": 3,
+      "trigger_count": 0,
+      "created_at": "2026-07-22T20:02:41.431Z",
+      "updated_at": "2026-07-27T11:19:31.129Z",
+      "project_id": "ISQG9XU7TGTT6Fcu",
+      "node_count": 32,
+      "node_names": [
+        "HTTP Request | US 2Y Treasury Yield - FRED API",
+        "HTTP Request | US 10Y Treasury Yield - FRED Api",
+        "HTTP Request | TIPS 10Y Real Yield - FRED Api",
+        "HTTP Request | Germany 10Y Proxy - FRED Api",
+        "HTTP Request | UK 10Y Proxy - FRED api",
+        "HTTP Request | VIX - FRED Api",
+        "HTTP Request | DXY - FRED Dollar Index - FRED API",
+        "HTTP Request | Gold - Coinbase",
+        "HTTP Request | BTC - Coinbase",
+        "HTTP Request | USD/JPY - Coinbase",
+        "HTTP Request | GBP/USD - Coinbase",
+        "HTTP Request | USD/CAD - Coinbase",
+        "HTTP Request | AUD/USD - Coinbase",
+        "HTTP Request | WTI Oil - FRED Api",
+        "HTTP Request | Brent Oil - FRED Api",
+        "HTTP Request | EURUSD - FRED API",
+        "HTTP Request | NQ - Alpha Vantage",
+        "HTTP Request | Japan 10Y Proxy - FRED API",
+        "Normalise Market Snapshot",
+        "Create a row",
+        "HTTP Request | Germany 2Y Yield",
+        "Supabase | Get Previous Market Snapshots",
+        "HTTP Request | Eco Calendar Recent - Finnhub",
+        "HTTP Request | Eco Calendar Upcoming - Finnhub",
+        "Code | Process Eco Data",
+        "Code | Derive Fed Bias",
+        "Code | Derive US Eco Inputs",
+        "Supabase | Get Today US Economic Events",
+        "When Executed by Another Workflow",
+        "Code | Require Transient Validation Contract",
+        "Code | Build Transient Collector Result",
+        "Code | Tripwire Create a row"
+      ],
+      "code_nodes": [
+        {
+          "name": "Normalise Market Snapshot",
+          "js_code_sha256": "e9f0bbb46cc459a254f2f5b128679bdf5c6903a541d610c6de741d98ddaedf07",
+          "js_code_bytes": 11508
+        },
+        {
+          "name": "Code | Process Eco Data",
+          "js_code_sha256": "6e22f742fbfab00ceaf699a2d0b7a18cb1766670e3dae3c8d2eab08c573960aa",
+          "js_code_bytes": 2570
+        },
+        {
+          "name": "Code | Derive Fed Bias",
+          "js_code_sha256": "c8296444ca7c4587f92f7b15bf962e92441db0a0439d9dd9ecc207e0e16c3256",
+          "js_code_bytes": 593
+        },
+        {
+          "name": "Code | Derive US Eco Inputs",
+          "js_code_sha256": "957e7064b6e7b33dc0ab7bb1fbae2adcb38653e87d27eb2db7d7d52fe7be1068",
+          "js_code_bytes": 5623
+        },
+        {
+          "name": "Code | Require Transient Validation Contract",
+          "js_code_sha256": "bde5f263eed159ed6501d5f1638edc22b0ec76a69c795e5f00565178491de2a1",
+          "js_code_bytes": 1638
+        },
+        {
+          "name": "Code | Build Transient Collector Result",
+          "js_code_sha256": "edc73ff631b17609fe5c77013f2bf8ade89da209e6386f004b7ed8266c15e606",
+          "js_code_bytes": 1320
+        },
+        {
+          "name": "Code | Tripwire Create a row",
+          "js_code_sha256": "ab4f0e1477b340885aca6d643c7e49f72265f77b8d3cb320a429eef0b6ea2fa2",
+          "js_code_bytes": 422
+        }
+      ],
+      "credential_bindings": [
+        {
+          "node": "Create a row",
+          "names": [
+            "supabaseApi"
+          ]
+        },
+        {
+          "node": "Supabase | Get Previous Market Snapshots",
+          "names": [
+            "supabaseApi"
+          ]
+        },
+        {
+          "node": "Supabase | Get Today US Economic Events",
+          "names": [
+            "supabaseApi"
+          ]
+        }
+      ],
+      "routing": [
+        {
+          "node": "Create a row",
+          "type": "n8n-nodes-base.supabase",
+          "kind": "supabase",
+          "table": "market_snapshots",
+          "operation": "create"
+        },
+        {
+          "node": "Supabase | Get Previous Market Snapshots",
+          "type": "n8n-nodes-base.supabase",
+          "kind": "supabase",
+          "table": "market_snapshots",
+          "operation": "getAll"
+        },
+        {
+          "node": "Supabase | Get Today US Economic Events",
+          "type": "n8n-nodes-base.supabase",
+          "kind": "supabase",
+          "table": "economic_events",
+          "operation": "getAll"
+        },
+        {
+          "node": "When Executed by Another Workflow",
+          "type": "n8n-nodes-base.executeWorkflowTrigger",
+          "kind": "executeWorkflow",
+          "target_workflow_id": null,
+          "target_workflow_name_hint": null
+        }
+      ],
+      "sha256": "e560ac502cf2f6670ecc8a87aa1cfc0ad3c2112a949238210e169ba21597446d",
+      "bytes": 106681,
+      "raw_sha256": "e11fadacd9c738f70f5c859fd6fa4cd8411243338734cb081a3bfc33ece61f11",
+      "redaction_count": 28
+    },
+    {
+      "file": "TEST_-_Data_Collector_-_USD_-_20260722.json",
+      "id": "QferKqGdVdTyhJTI",
+      "name": "TEST - Data Collector - USD - 20260722",
+      "engine": "UNCLASSIFIED",
+      "role": "other",
+      "active": true,
+      "is_archived": false,
+      "version_id": "a82828f5-1f42-4ee0-a7f3-4b65df1cf361",
+      "version_counter": 3,
+      "trigger_count": 0,
+      "created_at": "2026-07-22T20:01:29.713Z",
+      "updated_at": "2026-07-27T11:19:19.439Z",
+      "project_id": "ISQG9XU7TGTT6Fcu",
+      "node_count": 32,
+      "node_names": [
+        "HTTP Request | US 2Y Treasury Yield - FRED API",
+        "HTTP Request | US 10Y Treasury Yield - FRED Api",
+        "HTTP Request | TIPS 10Y Real Yield - FRED Api",
+        "HTTP Request | Germany 10Y Proxy - FRED Api",
+        "HTTP Request | UK 10Y Proxy - FRED api",
+        "HTTP Request | VIX - FRED Api",
+        "HTTP Request | DXY - FRED Dollar Index - FRED API",
+        "HTTP Request | Gold - Coinbase",
+        "HTTP Request | BTC - Coinbase",
+        "HTTP Request | USD/JPY - Coinbase",
+        "HTTP Request | GBP/USD - Coinbase",
+        "HTTP Request | USD/CAD - Coinbase",
+        "HTTP Request | AUD/USD - Coinbase",
+        "HTTP Request | WTI Oil - FRED Api",
+        "HTTP Request | Brent Oil - FRED Api",
+        "HTTP Request | EURUSD - FRED API",
+        "HTTP Request | NQ - Alpha Vantage",
+        "HTTP Request | Japan 10Y Proxy - FRED API",
+        "Normalise Market Snapshot",
+        "Create a row",
+        "HTTP Request | Germany 2Y Yield",
+        "Supabase | Get Previous Market Snapshots",
+        "HTTP Request | Eco Calendar Recent - Finnhub",
+        "HTTP Request | Eco Calendar Upcoming - Finnhub",
+        "Code | Process Eco Data",
+        "Code | Derive Fed Bias",
+        "Code | Derive USD Eco Inputs",
+        "Supabase | Get Today USD Economic Events",
+        "When Executed by Another Workflow",
+        "Code | Require Transient Validation Contract",
+        "Code | Build Transient Collector Result",
+        "Code | Tripwire Create a row"
+      ],
+      "code_nodes": [
+        {
+          "name": "Normalise Market Snapshot",
+          "js_code_sha256": "83fc559331fd427c67d70c2e27a75ac8085c4d02e485dfa4c8a457bda26e6f78",
+          "js_code_bytes": 14256
+        },
+        {
+          "name": "Code | Process Eco Data",
+          "js_code_sha256": "6e22f742fbfab00ceaf699a2d0b7a18cb1766670e3dae3c8d2eab08c573960aa",
+          "js_code_bytes": 2570
+        },
+        {
+          "name": "Code | Derive Fed Bias",
+          "js_code_sha256": "c8296444ca7c4587f92f7b15bf962e92441db0a0439d9dd9ecc207e0e16c3256",
+          "js_code_bytes": 593
+        },
+        {
+          "name": "Code | Derive USD Eco Inputs",
+          "js_code_sha256": "957e7064b6e7b33dc0ab7bb1fbae2adcb38653e87d27eb2db7d7d52fe7be1068",
+          "js_code_bytes": 5623
+        },
+        {
+          "name": "Code | Require Transient Validation Contract",
+          "js_code_sha256": "bde5f263eed159ed6501d5f1638edc22b0ec76a69c795e5f00565178491de2a1",
+          "js_code_bytes": 1638
+        },
+        {
+          "name": "Code | Build Transient Collector Result",
+          "js_code_sha256": "6bc486e93a216d5b164cdced160822cdf1b979f2125701d87a80481171ba5418",
+          "js_code_bytes": 1620
+        },
+        {
+          "name": "Code | Tripwire Create a row",
+          "js_code_sha256": "50b5df360fa65ef8ddc5754cde6eeac73b0847646ef54d3815067a9bcadc8553",
+          "js_code_bytes": 423
+        }
+      ],
+      "credential_bindings": [
+        {
+          "node": "Create a row",
+          "names": [
+            "supabaseApi"
+          ]
+        },
+        {
+          "node": "Supabase | Get Previous Market Snapshots",
+          "names": [
+            "supabaseApi"
+          ]
+        },
+        {
+          "node": "Supabase | Get Today USD Economic Events",
+          "names": [
+            "supabaseApi"
+          ]
+        }
+      ],
+      "routing": [
+        {
+          "node": "Create a row",
+          "type": "n8n-nodes-base.supabase",
+          "kind": "supabase",
+          "table": "market_snapshots",
+          "operation": "create"
+        },
+        {
+          "node": "Supabase | Get Previous Market Snapshots",
+          "type": "n8n-nodes-base.supabase",
+          "kind": "supabase",
+          "table": "market_snapshots",
+          "operation": "getAll"
+        },
+        {
+          "node": "Supabase | Get Today USD Economic Events",
+          "type": "n8n-nodes-base.supabase",
+          "kind": "supabase",
+          "table": "economic_events",
+          "operation": "getAll"
+        },
+        {
+          "node": "When Executed by Another Workflow",
+          "type": "n8n-nodes-base.executeWorkflowTrigger",
+          "kind": "executeWorkflow",
+          "target_workflow_id": null,
+          "target_workflow_name_hint": null
+        }
+      ],
+      "sha256": "e62c30a971b41740edcf9792551390ea3a358a77de3e1597405b9afda08c7d05",
+      "bytes": 112636,
+      "raw_sha256": "092bfb917680289515487fa334577bb5d2afce343bf018618caa12830bce802a",
+      "redaction_count": 28
+    },
+    {
+      "file": "TEST_-_Eco_Events_Collector_-_Isolated_20260727.json",
+      "id": "4zd3QEGWhessSGHW",
+      "name": "TEST - Eco Events Collector - Isolated 20260727",
+      "engine": "SHARED",
+      "role": "events",
+      "active": true,
+      "is_archived": false,
+      "version_id": "b24ff3cc-1d12-4de8-841f-dedc4a913dc7",
+      "version_counter": 10,
+      "trigger_count": 0,
+      "created_at": "2026-07-22T20:01:28.861Z",
+      "updated_at": "2026-08-21T19:53:48.245Z",
+      "project_id": "ISQG9XU7TGTT6Fcu",
+      "node_count": 23,
+      "node_names": [
+        "HTTP Request | RapidAPI Calendar US",
+        "HTTP Request | RapidAPI Calendar DE",
+        "HTTP Request | RapidAPI Calendar FR",
+        "HTTP Request | RapidAPI Calendar IT",
+        "HTTP Request | RapidAPI Calendar ES",
+        "HTTP Request | RapidAPI Calendar CN",
+        "HTTP Request | Forex Factory Calendar Today",
+        "Code | Normalise Forex Factory Events",
+        "Supabase | Create Economic Events",
+        "When Executed by Another Workflow",
+        "Supabase | Get Existing Economic Events",
+        "Code | Route Existing vs New",
+        "Code | Prepare Creates",
+        "Code | Prepare Updates",
+        "Supabase | Update Economic Events",
+        "Merge | Economic Event Writes",
+        "Supabase | Read Back Economic Events",
+        "Code | Validate Economic Event Barrier",
+        "Code | Build Readback Scope",
+        "Code | Tripwire Create Mutation",
+        "Code | Tripwire Update Mutation",
+        "Code | Return Transient Barrier Result",
+        "If | Validation Mode"
+      ],
+      "code_nodes": [
+        {
+          "name": "Code | Normalise Forex Factory Events",
+          "js_code_sha256": "cd66f16b3ca0afe03ce46b9848294dad53dbe1d1b529029083637de36cff8b99",
+          "js_code_bytes": 7778
+        },
+        {
+          "name": "Code | Route Existing vs New",
+          "js_code_sha256": "d85921740d55e3fd1a55fc74d7dffe5e098c6ca70217f96c0159013bd65f4c78",
+          "js_code_bytes": 2558
+        },
+        {
+          "name": "Code | Prepare Creates",
+          "js_code_sha256": "87fb158644cae9a2da368910eadd0c7a7b27048d36446d29577bc8af15277014",
+          "js_code_bytes": 160
+        },
+        {
+          "name": "Code | Prepare Updates",
+          "js_code_sha256": "a1d1ebbb67810d65548643b371fb6b487898ccccc4fcbcebde897b2e088b9842",
+          "js_code_bytes": 160
+        },
+        {
+          "name": "Code | Validate Economic Event Barrier",
+          "js_code_sha256": "390bd19c7af6d34b933e11e1794dabfef319557519489b111e358923ab94ea20",
+          "js_code_bytes": 7150
+        },
+        {
+          "name": "Code | Build Readback Scope",
+          "js_code_sha256": "d68aa53b401b2fe372ff6dc64fe487c2aefab4d1ba1a26e87c124d63a34bf21f",
+          "js_code_bytes": 1418
+        },
+        {
+          "name": "Code | Tripwire Create Mutation",
+          "js_code_sha256": "9813c9564b65290b7c1167d22e2a0922375db2186e96b84ace2f78b7a46a86d8",
+          "js_code_bytes": 535
+        },
+        {
+          "name": "Code | Tripwire Update Mutation",
+          "js_code_sha256": "f32c1b9812ffb331d9bd4089ecece768fef4f38eee84545508ba9808ec2a2629",
+          "js_code_bytes": 535
+        },
+        {
+          "name": "Code | Return Transient Barrier Result",
+          "js_code_sha256": "32aa8a41cc0bae56e73292ea91b350e24a3ddac63a1a838c6f8885c98d7ca977",
+          "js_code_bytes": 3647
+        }
+      ],
+      "credential_bindings": [
+        {
+          "node": "Supabase | Create Economic Events",
+          "names": [
+            "supabaseApi"
+          ]
+        },
+        {
+          "node": "Supabase | Get Existing Economic Events",
+          "names": [
+            "supabaseApi"
+          ]
+        },
+        {
+          "node": "Supabase | Update Economic Events",
+          "names": [
+            "supabaseApi"
+          ]
+        },
+        {
+          "node": "Supabase | Read Back Economic Events",
+          "names": [
+            "supabaseApi"
+          ]
+        }
+      ],
+      "routing": [
+        {
+          "node": "Supabase | Create Economic Events",
+          "type": "n8n-nodes-base.supabase",
+          "kind": "supabase",
+          "table": "economic_events",
+          "operation": "create"
+        },
+        {
+          "node": "When Executed by Another Workflow",
+          "type": "n8n-nodes-base.executeWorkflowTrigger",
+          "kind": "executeWorkflow",
+          "target_workflow_id": null,
+          "target_workflow_name_hint": null
+        },
+        {
+          "node": "Supabase | Get Existing Economic Events",
+          "type": "n8n-nodes-base.supabase",
+          "kind": "supabase",
+          "table": "economic_events",
+          "operation": "getAll"
+        },
+        {
+          "node": "Supabase | Update Economic Events",
+          "type": "n8n-nodes-base.supabase",
+          "kind": "supabase",
+          "table": "economic_events",
+          "operation": "update"
+        },
+        {
+          "node": "Supabase | Read Back Economic Events",
+          "type": "n8n-nodes-base.supabase",
+          "kind": "supabase",
+          "table": "economic_events",
+          "operation": "getAll"
+        }
+      ],
+      "sha256": "5ccab4de02aec711aed0288226315077e00d55bea8bb7af4bb3b622ec2ef395d",
+      "bytes": 89328,
+      "raw_sha256": "5ccab4de02aec711aed0288226315077e00d55bea8bb7af4bb3b622ec2ef395d",
+      "redaction_count": 0
+    },
+    {
+      "file": "TEST_-_EUR_Layer_1_Agent_-_ISOLATED_-_20260723.json",
+      "id": "fGr45f1LqZABLlem",
+      "name": "TEST - EUR Layer 1 Agent - ISOLATED - 20260723",
+      "engine": "EUR",
+      "role": "agent",
+      "active": true,
+      "is_archived": false,
+      "version_id": "12a0f369-179a-4180-b03e-6dbde735989c",
+      "version_counter": 4,
+      "trigger_count": 0,
+      "created_at": "2026-07-23T11:30:07.149Z",
+      "updated_at": "2026-07-27T11:28:17.020Z",
+      "project_id": "ISQG9XU7TGTT6Fcu",
+      "node_count": 13,
+      "node_names": [
+        "Message a model",
+        "Supabase Get Many",
+        "Create a row",
+        "Combine md & market snapshot",
+        "Build EUR Input Pack",
+        "Get EUR Logic Document",
+        "Parse EUR Agent Output",
+        "Calculate EUR Conviction",
+        "When Executed by Another Workflow",
+        "Tag Source Run ID",
+        "Code | Require Transient Validation Contract",
+        "Code | Build Transient Layer 1 Result",
+        "Code | Tripwire Create a row"
+      ],
+      "code_nodes": [
+        {
+          "name": "Combine md & market snapshot",
+          "js_code_sha256": "32158ba2da27bc1f1b487a75aeb82089630709193f25aa3dfdf65ff88be040e6",
+          "js_code_bytes": 389
+        },
+        {
+          "name": "Build EUR Input Pack",
+          "js_code_sha256": "fdc30207dbec8c0fdd84bc9182bd3f58afb15efe4e7c8a24d48eb157e53b9a7f",
+          "js_code_bytes": 7516
+        },
+        {
+          "name": "Parse EUR Agent Output",
+          "js_code_sha256": "78b94ceac3dcd8b182769c4ed1be9aad377e74288fda9cdb48f26e7fe99caec2",
+          "js_code_bytes": 3592
+        },
+        {
+          "name": "Calculate EUR Conviction",
+          "js_code_sha256": "11a8fa71a6a7ca84d304cbd0a00b7ee32d000a949b43fe80aa904261b1ecb075",
+          "js_code_bytes": 14732
+        },
+        {
+          "name": "Tag Source Run ID",
+          "js_code_sha256": "44230f846457c31c639bb8074d9cb934d86aea40fd6d1474389d851d86384b10",
+          "js_code_bytes": 713
+        },
+        {
+          "name": "Code | Require Transient Validation Contract",
+          "js_code_sha256": "67f57cec92fabb9cc15cba435cef87fddfbb91b5a6ed56febfb0695f05964a9c",
+          "js_code_bytes": 1957
+        },
+        {
+          "name": "Code | Build Transient Layer 1 Result",
+          "js_code_sha256": "2814f639b7db237d3875e20e041b431eec6b513397b8550b66bc34eed431a093",
+          "js_code_bytes": 4896
+        },
+        {
+          "name": "Code | Tripwire Create a row",
+          "js_code_sha256": "5f4cedc2979da216ea984a6d817b2235c4665b77cb0db45bfd16dd9a82a52ac4",
+          "js_code_bytes": 431
+        }
+      ],
+      "credential_bindings": [
+        {
+          "node": "Message a model",
+          "names": [
+            "openAiApi"
+          ]
+        },
+        {
+          "node": "Supabase Get Many",
+          "names": [
+            "supabaseApi"
+          ]
+        },
+        {
+          "node": "Create a row",
+          "names": [
+            "supabaseApi"
+          ]
+        },
+        {
+          "node": "Get EUR Logic Document",
+          "names": [
+            "githubOAuth2Api"
+          ]
+        }
+      ],
+      "routing": [
+        {
+          "node": "Supabase Get Many",
+          "type": "n8n-nodes-base.supabase",
+          "kind": "supabase",
+          "table": "market_snapshots",
+          "operation": "getAll"
+        },
+        {
+          "node": "Create a row",
+          "type": "n8n-nodes-base.supabase",
+          "kind": "supabase",
+          "table": "agent_outputs",
+          "operation": "create"
+        },
+        {
+          "node": "Get EUR Logic Document",
+          "type": "n8n-nodes-base.github",
+          "kind": "github",
+          "owner": "kevincreedycars-debug",
+          "repository": "trading-agent-dashboard",
+          "file_path": "logic/agent_eur_direction.md"
+        },
+        {
+          "node": "When Executed by Another Workflow",
+          "type": "n8n-nodes-base.executeWorkflowTrigger",
+          "kind": "executeWorkflow",
+          "target_workflow_id": null,
+          "target_workflow_name_hint": null
+        }
+      ],
+      "sha256": "c2ae0051481ec1d39ad46f6dbf7117e0ed6101b7bd850313ec2b5f14702bc738",
+      "bytes": 95106,
+      "raw_sha256": "c2ae0051481ec1d39ad46f6dbf7117e0ed6101b7bd850313ec2b5f14702bc738",
+      "redaction_count": 0
+    },
+    {
+      "file": "TEST_-_GOLD_Layer_1_Agent_-_ISOLATED_-_20260723.json",
+      "id": "rtAcgTz71gFzQSZx",
+      "name": "TEST - GOLD Layer 1 Agent - ISOLATED - 20260723",
+      "engine": "GOLD",
+      "role": "agent",
+      "active": true,
+      "is_archived": false,
+      "version_id": "e37e14ca-24b1-4f33-8acf-1bc9f2036814",
+      "version_counter": 4,
+      "trigger_count": 0,
+      "created_at": "2026-07-23T11:30:07.198Z",
+      "updated_at": "2026-07-27T12:37:44.829Z",
+      "project_id": "ISQG9XU7TGTT6Fcu",
+      "node_count": 13,
+      "node_names": [
+        "Message a model",
+        "Supabase Get Many",
+        "Create a row",
+        "Combine md & market snapshot",
+        "Build GOLD Input Pack",
+        "Get GOLD Logic Document",
+        "Parse GOLD Agent Output",
+        "Calculate GOLD Conviction",
+        "When Executed by Another Workflow",
+        "Tag Source Run ID",
+        "Code | Require Transient Validation Contract",
+        "Code | Build Transient Layer 1 Result",
+        "Code | Tripwire Create a row"
+      ],
+      "code_nodes": [
+        {
+          "name": "Combine md & market snapshot",
+          "js_code_sha256": "57f84ea112b2fa52daf47fb7ccbd03124aa0ede847cd39b989bb5edbf22b021b",
+          "js_code_bytes": 391
+        },
+        {
+          "name": "Build GOLD Input Pack",
+          "js_code_sha256": "32959305d4841bfbfe9c49d2e5bc308cc9e368df86015d19e3ce934562bad844",
+          "js_code_bytes": 2245
+        },
+        {
+          "name": "Parse GOLD Agent Output",
+          "js_code_sha256": "e0f2692f9387b6cfb9caf6288a499636861d0e10ae536ab19a4dffcab3472f0b",
+          "js_code_bytes": 3044
+        },
+        {
+          "name": "Calculate GOLD Conviction",
+          "js_code_sha256": "03dcbc310c3d5613d232361e8cc5ec57b520014d1c1519cff42faac076c993f2",
+          "js_code_bytes": 14655
+        },
+        {
+          "name": "Tag Source Run ID",
+          "js_code_sha256": "44230f846457c31c639bb8074d9cb934d86aea40fd6d1474389d851d86384b10",
+          "js_code_bytes": 713
+        },
+        {
+          "name": "Code | Require Transient Validation Contract",
+          "js_code_sha256": "7903e1393db069d9185b5dc46cf87437a202ae3c059723823411c69a1f8af0a8",
+          "js_code_bytes": 1958
+        },
+        {
+          "name": "Code | Build Transient Layer 1 Result",
+          "js_code_sha256": "7ee12a31d9f6ce45bb046bf0e3a3d4780075e00e348a9c51aaeec2b18a0c0884",
+          "js_code_bytes": 4896
+        },
+        {
+          "name": "Code | Tripwire Create a row",
+          "js_code_sha256": "4439e633de43ccb01f3ab581dc4f087ed003b13d785e3a424596e5d85b705114",
+          "js_code_bytes": 432
+        }
+      ],
+      "credential_bindings": [
+        {
+          "node": "Message a model",
+          "names": [
+            "openAiApi"
+          ]
+        },
+        {
+          "node": "Supabase Get Many",
+          "names": [
+            "supabaseApi"
+          ]
+        },
+        {
+          "node": "Create a row",
+          "names": [
+            "supabaseApi"
+          ]
+        },
+        {
+          "node": "Get GOLD Logic Document",
+          "names": [
+            "githubOAuth2Api"
+          ]
+        }
+      ],
+      "routing": [
+        {
+          "node": "Supabase Get Many",
+          "type": "n8n-nodes-base.supabase",
+          "kind": "supabase",
+          "table": "market_snapshots",
+          "operation": "getAll"
+        },
+        {
+          "node": "Create a row",
+          "type": "n8n-nodes-base.supabase",
+          "kind": "supabase",
+          "table": "agent_outputs",
+          "operation": "create"
+        },
+        {
+          "node": "Get GOLD Logic Document",
+          "type": "n8n-nodes-base.github",
+          "kind": "github",
+          "owner": "kevincreedycars-debug",
+          "repository": "trading-agent-dashboard",
+          "file_path": "logic/agent_gold_direction.md"
+        },
+        {
+          "node": "When Executed by Another Workflow",
+          "type": "n8n-nodes-base.executeWorkflowTrigger",
+          "kind": "executeWorkflow",
+          "target_workflow_id": null,
+          "target_workflow_name_hint": null
+        }
+      ],
+      "sha256": "90f0a8a5662b69b7ceaa307e82452158a018b481f9beafa9274fa23d6219ac71",
+      "bytes": 84339,
+      "raw_sha256": "90f0a8a5662b69b7ceaa307e82452158a018b481f9beafa9274fa23d6219ac71",
+      "redaction_count": 0
+    },
+    {
+      "file": "TEST_-_Layer_2_Trade_Selection_Agent_-_STAGED-ONLY_-_PROPOSED_-_20260727.json",
+      "id": "QBk8bAHkkHjJYbpK",
+      "name": "TEST - Layer 2 Trade Selection Agent - STAGED-ONLY - PROPOSED - 20260727",
+      "engine": "SHARED",
+      "role": "layer2",
+      "active": true,
+      "is_archived": false,
+      "version_id": "545ef260-3f85-4ce9-b637-56d19139768b",
+      "version_counter": 5,
+      "trigger_count": 0,
+      "created_at": "2026-07-27T06:09:53.225Z",
+      "updated_at": "2026-07-27T13:19:24.157Z",
+      "project_id": "ISQG9XU7TGTT6Fcu",
+      "node_count": 5,
+      "node_names": [
+        "When Executed by Another Workflow",
+        "Get Layer 1 Agent Outputs",
+        "Build Layer 2 Trade Selection JSON",
+        "Code | Require Transient Validation Contract",
+        "Code | Build Transient Layer 2 Result"
+      ],
+      "code_nodes": [
+        {
+          "name": "Build Layer 2 Trade Selection JSON",
+          "js_code_sha256": "4246f4cdec2c84fa5554522fc2e2f3bba5546355d3dedbeeffa8e2c7e5da04df",
+          "js_code_bytes": 67104
+        },
+        {
+          "name": "Code | Require Transient Validation Contract",
+          "js_code_sha256": "bde5f263eed159ed6501d5f1638edc22b0ec76a69c795e5f00565178491de2a1",
+          "js_code_bytes": 1638
+        },
+        {
+          "name": "Code | Build Transient Layer 2 Result",
+          "js_code_sha256": "c168ddc8d2bf3ce11739305f78955df93b7d803d41e395cc1fde5b53dd3a5fc6",
+          "js_code_bytes": 1310
+        }
+      ],
+      "credential_bindings": [
+        {
+          "node": "Get Layer 1 Agent Outputs",
+          "names": [
+            "supabaseApi"
+          ]
+        }
+      ],
+      "routing": [
+        {
+          "node": "When Executed by Another Workflow",
+          "type": "n8n-nodes-base.executeWorkflowTrigger",
+          "kind": "executeWorkflow",
+          "target_workflow_id": null,
+          "target_workflow_name_hint": null
+        },
+        {
+          "node": "Get Layer 1 Agent Outputs",
+          "type": "n8n-nodes-base.supabase",
+          "kind": "supabase",
+          "table": "agent_outputs",
+          "operation": "getAll"
+        }
+      ],
+      "sha256": "bfb5814ce308ebe5c3da05ce081542e112baa89b99ba3c0f284cdd3919959e85",
+      "bytes": 152460,
+      "raw_sha256": "bfb5814ce308ebe5c3da05ce081542e112baa89b99ba3c0f284cdd3919959e85",
+      "redaction_count": 0
+    },
+    {
+      "file": "TEST_-_Master_Orchestrator_-_ISOLATED_-_20260723.json",
+      "id": "CIvsnhyOi35zmA44",
+      "name": "TEST - Master Orchestrator - ISOLATED - 20260723",
+      "engine": "SHARED",
+      "role": "orchestrator",
+      "active": true,
+      "is_archived": false,
+      "version_id": "3f07a6a2-2626-4d5f-a6b0-3b80d69beb98",
+      "version_counter": 18,
+      "trigger_count": 1,
+      "created_at": "2026-07-22T20:02:43.566Z",
+      "updated_at": "2026-07-27T20:01:39.774Z",
+      "project_id": "ISQG9XU7TGTT6Fcu",
+      "node_count": 41,
+      "node_names": [
+        "Manual Start - Run All Agents",
+        "Call '1. Economic Events Collector'",
+        "USD Collector",
+        "EUR Collector",
+        "Gold Collector",
+        "NQ Collector",
+        "BTC Collector",
+        "USD Layer 1 Agent",
+        "EUR Layer 1 Agent",
+        "Gold Layer 1 Agent",
+        "NQ Layer 1 Agent",
+        "BTC Layer 1 Agent",
+        "Dashboard Writer",
+        "Layer 2 Trade Selection Agent",
+        "Dashboard Trigger - Run All Agents",
+        "Code | Require Economic Event Barrier",
+        "Code | Build USD Collector Contract",
+        "Code | Build EUR Collector Contract",
+        "Code | Build Gold Collector Contract",
+        "Code | Build NQ Collector Contract",
+        "Code | Build BTC Collector Contract",
+        "Code | Build USD Layer 1 Contract",
+        "Code | Build EUR Layer 1 Contract",
+        "Code | Build Gold Layer 1 Contract",
+        "Code | Build NQ Layer 1 Contract",
+        "Code | Build BTC Layer 1 Contract",
+        "Code | Build Layer 2 Contract",
+        "Code | Build Dashboard Writer Contract",
+        "Code | Reject Duplicate Probe Request",
+        "Code | Build Internal Eco Fixture Contract",
+        "Code | Aggregate USD Collector Result",
+        "Code | Aggregate EUR Collector Result",
+        "Code | Aggregate GOLD Collector Result",
+        "Code | Aggregate NQ Collector Result",
+        "Code | Aggregate BTC Collector Result",
+        "Code | Aggregate USD Layer 1 Result",
+        "Code | Aggregate EUR Layer 1 Result",
+        "Code | Aggregate GOLD Layer 1 Result",
+        "Code | Aggregate NQ Layer 1 Result",
+        "Code | Aggregate BTC Layer 1 Result",
+        "Code | Aggregate Layer 2 Result"
+      ],
+      "code_nodes": [
+        {
+          "name": "Code | Require Economic Event Barrier",
+          "js_code_sha256": "7048c251c35d47bf01aba47ba2629a4535bbbf46e3497f1a9f2c1e0d80ffe663",
+          "js_code_bytes": 3346
+        },
+        {
+          "name": "Code | Build USD Collector Contract",
+          "js_code_sha256": "16ce0d1645921095ec30b8aaea15f0a5e7cc916a1156136dec9993d619489e41",
+          "js_code_bytes": 1254
+        },
+        {
+          "name": "Code | Build EUR Collector Contract",
+          "js_code_sha256": "16ce0d1645921095ec30b8aaea15f0a5e7cc916a1156136dec9993d619489e41",
+          "js_code_bytes": 1254
+        },
+        {
+          "name": "Code | Build Gold Collector Contract",
+          "js_code_sha256": "16ce0d1645921095ec30b8aaea15f0a5e7cc916a1156136dec9993d619489e41",
+          "js_code_bytes": 1254
+        },
+        {
+          "name": "Code | Build NQ Collector Contract",
+          "js_code_sha256": "16ce0d1645921095ec30b8aaea15f0a5e7cc916a1156136dec9993d619489e41",
+          "js_code_bytes": 1254
+        },
+        {
+          "name": "Code | Build BTC Collector Contract",
+          "js_code_sha256": "16ce0d1645921095ec30b8aaea15f0a5e7cc916a1156136dec9993d619489e41",
+          "js_code_bytes": 1254
+        },
+        {
+          "name": "Code | Build USD Layer 1 Contract",
+          "js_code_sha256": "1f230043cb559392064629f0aef77272102f940ac202fbad945fdce99202e75d",
+          "js_code_bytes": 724
+        },
+        {
+          "name": "Code | Build EUR Layer 1 Contract",
+          "js_code_sha256": "3c339c3e42bfda98dd0d8e01befadd115cd697eae48ec5099617f65a6b5e1c7c",
+          "js_code_bytes": 724
+        },
+        {
+          "name": "Code | Build Gold Layer 1 Contract",
+          "js_code_sha256": "d2991bad749d1959783284c72c900cefa919a7666a151f5718699978dad9aa33",
+          "js_code_bytes": 725
+        },
+        {
+          "name": "Code | Build NQ Layer 1 Contract",
+          "js_code_sha256": "58033d12a7e533c521ea73f9d2d53f03a1ee665a6144be54c474aa45aeaecf23",
+          "js_code_bytes": 723
+        },
+        {
+          "name": "Code | Build BTC Layer 1 Contract",
+          "js_code_sha256": "7b658e68774e67d4fe14329868f368d2edd57331651a44a366bd6c4372d6637f",
+          "js_code_bytes": 724
+        },
+        {
+          "name": "Code | Build Layer 2 Contract",
+          "js_code_sha256": "4969ebf5b876d35cc589305400cc0f8aee2522da4902b50197538908581353dd",
+          "js_code_bytes": 496
+        },
+        {
+          "name": "Code | Build Dashboard Writer Contract",
+          "js_code_sha256": "f4ec957541b77b1de9cc29824b40ead2b4e6292cf5e053c20eb05fd99cf4439d",
+          "js_code_bytes": 476
+        },
+        {
+          "name": "Code | Reject Duplicate Probe Request",
+          "js_code_sha256": "c2a36ceb9782576ccf5ba236d3d0ce381204c8f501c208026a03a2b55e878beb",
+          "js_code_bytes": 3484
+        },
+        {
+          "name": "Code | Build Internal Eco Fixture Contract",
+          "js_code_sha256": "391cfb03a55bfdd26a851ae5159013560ec7595f62aecd576b16c3356e5709ff",
+          "js_code_bytes": 1165
+        },
+        {
+          "name": "Code | Aggregate USD Collector Result",
+          "js_code_sha256": "00e1867925d9acf2a5281aa12e0b8b8690602ea85bcf2414aa43241c2c51a059",
+          "js_code_bytes": 1223
+        },
+        {
+          "name": "Code | Aggregate EUR Collector Result",
+          "js_code_sha256": "455c55bcf22d6429fa000568d360b2b0b6321bd3041154cf7337393af37e4387",
+          "js_code_bytes": 1302
+        },
+        {
+          "name": "Code | Aggregate GOLD Collector Result",
+          "js_code_sha256": "6bb1f567c2224fd066bfe44d8a4153e6a226011a1521acecafe7afef87c246fd",
+          "js_code_bytes": 1304
+        },
+        {
+          "name": "Code | Aggregate NQ Collector Result",
+          "js_code_sha256": "e151074061ff5c78e7fab00e54dd8b9df4410654815d03a21c4183fd4e22c37b",
+          "js_code_bytes": 1301
+        },
+        {
+          "name": "Code | Aggregate BTC Collector Result",
+          "js_code_sha256": "71a347eb665030287ecc064a6e881d0a06a431e4e127f35050407f08fff9fa2d",
+          "js_code_bytes": 1301
+        },
+        {
+          "name": "Code | Aggregate USD Layer 1 Result",
+          "js_code_sha256": "876da2a9554e73cc0d92598220822be02a4221a23c4f954f3c531cd348015e8c",
+          "js_code_bytes": 1238
+        },
+        {
+          "name": "Code | Aggregate EUR Layer 1 Result",
+          "js_code_sha256": "d299c5a1dcf248b7457ebfecc01d13db82639c426ec843135b9e731817a17123",
+          "js_code_bytes": 1312
+        },
+        {
+          "name": "Code | Aggregate GOLD Layer 1 Result",
+          "js_code_sha256": "df314241ba6a2f3c051902de4f5aedb9ed6192cd497bd1d244a3e4904d2bd7e5",
+          "js_code_bytes": 1314
+        },
+        {
+          "name": "Code | Aggregate NQ Layer 1 Result",
+          "js_code_sha256": "e495bc5111504b8d1b3521b4f5cd0fb1de92489b9967861f24199dad3b319141",
+          "js_code_bytes": 1311
+        },
+        {
+          "name": "Code | Aggregate BTC Layer 1 Result",
+          "js_code_sha256": "e789e30bc4ae654769010a438bd52226c99fddbc01bea3c52d2f21b5f3702d6b",
+          "js_code_bytes": 1311
+        },
+        {
+          "name": "Code | Aggregate Layer 2 Result",
+          "js_code_sha256": "394749ec0980953c567028e5409344b971f78b4db00c60665085648d78e96518",
+          "js_code_bytes": 720
+        }
+      ],
+      "credential_bindings": [],
+      "routing": [
+        {
+          "node": "Call '1. Economic Events Collector'",
+          "type": "n8n-nodes-base.executeWorkflow",
+          "kind": "executeWorkflow",
+          "target_workflow_id": "4zd3QEGWhessSGHW",
+          "target_workflow_name_hint": "TEST - Eco Events Collector - 20260722"
+        },
+        {
+          "node": "USD Collector",
+          "type": "n8n-nodes-base.executeWorkflow",
+          "kind": "executeWorkflow",
+          "target_workflow_id": "QferKqGdVdTyhJTI",
+          "target_workflow_name_hint": "TEST - Data Collector - USD - 20260722"
+        },
+        {
+          "node": "EUR Collector",
+          "type": "n8n-nodes-base.executeWorkflow",
+          "kind": "executeWorkflow",
+          "target_workflow_id": "mh3CLzNirpXorGKi",
+          "target_workflow_name_hint": "TEST - Data Collector - EUR - 20260722"
+        },
+        {
+          "node": "Gold Collector",
+          "type": "n8n-nodes-base.executeWorkflow",
+          "kind": "executeWorkflow",
+          "target_workflow_id": "NLGyMosysypCldMO",
+          "target_workflow_name_hint": "TEST - Data Collector - GOLD - 20260722"
+        },
+        {
+          "node": "NQ Collector",
+          "type": "n8n-nodes-base.executeWorkflow",
+          "kind": "executeWorkflow",
+          "target_workflow_id": "tcYXnCdetkGzsQEx",
+          "target_workflow_name_hint": "TEST - Data Collector - NQ - 20260722"
+        },
+        {
+          "node": "BTC Collector",
+          "type": "n8n-nodes-base.executeWorkflow",
+          "kind": "executeWorkflow",
+          "target_workflow_id": "DMiMgjgFrdQZAOpW",
+          "target_workflow_name_hint": "TEST - Data Collector - BTC - 20260722"
+        },
+        {
+          "node": "USD Layer 1 Agent",
+          "type": "n8n-nodes-base.executeWorkflow",
+          "kind": "executeWorkflow",
+          "target_workflow_id": "GCkAH4LskXzWzT8K",
+          "target_workflow_name_hint": "USD Layer 1 Agent"
+        },
+        {
+          "node": "EUR Layer 1 Agent",
+          "type": "n8n-nodes-base.executeWorkflow",
+          "kind": "executeWorkflow",
+          "target_workflow_id": "fGr45f1LqZABLlem",
+          "target_workflow_name_hint": "EUR Layer 1 Agent"
+        },
+        {
+          "node": "Gold Layer 1 Agent",
+          "type": "n8n-nodes-base.executeWorkflow",
+          "kind": "executeWorkflow",
+          "target_workflow_id": "rtAcgTz71gFzQSZx",
+          "target_workflow_name_hint": "GOLD Layer 1 Agent"
+        },
+        {
+          "node": "NQ Layer 1 Agent",
+          "type": "n8n-nodes-base.executeWorkflow",
+          "kind": "executeWorkflow",
+          "target_workflow_id": "Xep1shMzaqwPXvuL",
+          "target_workflow_name_hint": "NQ Layer 1 Agent"
+        },
+        {
+          "node": "BTC Layer 1 Agent",
+          "type": "n8n-nodes-base.executeWorkflow",
+          "kind": "executeWorkflow",
+          "target_workflow_id": "pQPrq13PaeclUWEC",
+          "target_workflow_name_hint": "BTC Layer 1 Agent"
+        },
+        {
+          "node": "Dashboard Writer",
+          "type": "n8n-nodes-base.executeWorkflow",
+          "kind": "executeWorkflow",
+          "target_workflow_id": "pMPxuN3dk5WWxbYY",
+          "target_workflow_name_hint": "TEST - Dashboard Writer - Layer 1 - 20260722"
+        },
+        {
+          "node": "Layer 2 Trade Selection Agent",
+          "type": "n8n-nodes-base.executeWorkflow",
+          "kind": "executeWorkflow",
+          "target_workflow_id": "QBk8bAHkkHjJYbpK",
+          "target_workflow_name_hint": "TEST - Layer 2 Trade Selection Agent - STAGED-ONLY - PROPOSED - 20260727"
+        },
+        {
+          "node": "Dashboard Trigger - Run All Agents",
+          "type": "n8n-nodes-base.webhook",
+          "kind": "webhook",
+          "webhook_path": "test-46b39359-master-orchestrator-dashboard-refresh-r2",
+          "http_method": "POST"
+        }
+      ],
+      "sha256": "c73581cdaad4ace2f0f8f4d763be96e3431af7a15cb6cddfb73979c199d06a2f",
+      "bytes": 148199,
+      "raw_sha256": "60db102c69289c30c58e6db854cf8d19a10b1357e78ee6e8cf34963d6a8a7e0f",
+      "redaction_count": 1
+    },
+    {
+      "file": "TEST_-_Minimal_Create_Probe_-_20260722.json",
+      "id": "W8vbxNal94PkB45v",
+      "name": "TEST - Minimal Create Probe - 20260722",
+      "engine": "UNCLASSIFIED",
+      "role": "other",
+      "active": false,
+      "is_archived": false,
+      "version_id": "110740b7-18bd-42fb-a524-ac5699a94906",
+      "version_counter": 1,
+      "trigger_count": 0,
+      "created_at": "2026-07-22T19:59:36.298Z",
+      "updated_at": "2026-07-22T19:59:36.298Z",
+      "project_id": "ISQG9XU7TGTT6Fcu",
+      "node_count": 1,
+      "node_names": [
+        "Manual Trigger"
+      ],
+      "code_nodes": [],
+      "credential_bindings": [],
+      "routing": [],
+      "sha256": "c0c02d2f8839626c7c9beb763fbd95aaf064590f2e67b856de0bbe2bb74fbcc9",
+      "bytes": 1421,
+      "raw_sha256": "c0c02d2f8839626c7c9beb763fbd95aaf064590f2e67b856de0bbe2bb74fbcc9",
+      "redaction_count": 0
+    },
+    {
+      "file": "TEST_-_NQ_Layer_1_Agent_-_ISOLATED_-_20260723.json",
+      "id": "Xep1shMzaqwPXvuL",
+      "name": "TEST - NQ Layer 1 Agent - ISOLATED - 20260723",
+      "engine": "NQ",
+      "role": "agent",
+      "active": true,
+      "is_archived": false,
+      "version_id": "b2571286-db17-4a77-a884-f002b8ee7c9e",
+      "version_counter": 4,
+      "trigger_count": 0,
+      "created_at": "2026-07-23T11:30:07.114Z",
+      "updated_at": "2026-07-27T12:40:29.595Z",
+      "project_id": "ISQG9XU7TGTT6Fcu",
+      "node_count": 13,
+      "node_names": [
+        "Message a model",
+        "Supabase Get Many",
+        "Create a row",
+        "Combine md & market snapshot",
+        "Build NQ Input Pack",
+        "Get NQ Logic Document",
+        "Parse NQ Agent Output",
+        "Calculate NQ Conviction",
+        "When Executed by Another Workflow",
+        "Tag Source Run ID",
+        "Code | Require Transient Validation Contract",
+        "Code | Build Transient Layer 1 Result",
+        "Code | Tripwire Create a row"
+      ],
+      "code_nodes": [
+        {
+          "name": "Combine md & market snapshot",
+          "js_code_sha256": "6c8a2ea4ca9c6b05c3c39838ae7483bdc39773d0e560e694465bfe0389461ac2",
+          "js_code_bytes": 387
+        },
+        {
+          "name": "Build NQ Input Pack",
+          "js_code_sha256": "5b333f0db720934c95eba1ea1987ea3f5c97ca153d64cbe3709d1effd49dd510",
+          "js_code_bytes": 2953
+        },
+        {
+          "name": "Parse NQ Agent Output",
+          "js_code_sha256": "64a57363f8845b3236bc2d4a336357f32af552101bf2f0e524f0c96c677a6e0e",
+          "js_code_bytes": 3284
+        },
+        {
+          "name": "Calculate NQ Conviction",
+          "js_code_sha256": "267a3187521e0e3a4ee53f6c45d7f7b7ff0b693f401e95b7cf599d3d19a90db5",
+          "js_code_bytes": 15044
+        },
+        {
+          "name": "Tag Source Run ID",
+          "js_code_sha256": "44230f846457c31c639bb8074d9cb934d86aea40fd6d1474389d851d86384b10",
+          "js_code_bytes": 713
+        },
+        {
+          "name": "Code | Require Transient Validation Contract",
+          "js_code_sha256": "c0e5171b8ce3940ea40c09c67a4b2c1d6433780a170304fd9120eca1d7906ad5",
+          "js_code_bytes": 1956
+        },
+        {
+          "name": "Code | Build Transient Layer 1 Result",
+          "js_code_sha256": "b82cc5cb298ce7146379e133b3898bcccb3810947abf57f2cf7bfadeb819f0a8",
+          "js_code_bytes": 4884
+        },
+        {
+          "name": "Code | Tripwire Create a row",
+          "js_code_sha256": "c53afa4f2b4baeee661f1470426206eac3251ceeca34ece0458a1a156a9f6e71",
+          "js_code_bytes": 430
+        }
+      ],
+      "credential_bindings": [
+        {
+          "node": "Message a model",
+          "names": [
+            "openAiApi"
+          ]
+        },
+        {
+          "node": "Supabase Get Many",
+          "names": [
+            "supabaseApi"
+          ]
+        },
+        {
+          "node": "Create a row",
+          "names": [
+            "supabaseApi"
+          ]
+        },
+        {
+          "node": "Get NQ Logic Document",
+          "names": [
+            "githubOAuth2Api"
+          ]
+        }
+      ],
+      "routing": [
+        {
+          "node": "Supabase Get Many",
+          "type": "n8n-nodes-base.supabase",
+          "kind": "supabase",
+          "table": "market_snapshots",
+          "operation": "getAll"
+        },
+        {
+          "node": "Create a row",
+          "type": "n8n-nodes-base.supabase",
+          "kind": "supabase",
+          "table": "agent_outputs",
+          "operation": "create"
+        },
+        {
+          "node": "Get NQ Logic Document",
+          "type": "n8n-nodes-base.github",
+          "kind": "github",
+          "owner": "kevincreedycars-debug",
+          "repository": "trading-agent-dashboard",
+          "file_path": "logic/agent_nq_direction.md"
+        },
+        {
+          "node": "When Executed by Another Workflow",
+          "type": "n8n-nodes-base.executeWorkflowTrigger",
+          "kind": "executeWorkflow",
+          "target_workflow_id": null,
+          "target_workflow_name_hint": null
+        }
+      ],
+      "sha256": "d2fce120a8e58fb3619ae55d65b906811a3e734de12cfea71ee15b5a9fbef7ea",
+      "bytes": 85309,
+      "raw_sha256": "d2fce120a8e58fb3619ae55d65b906811a3e734de12cfea71ee15b5a9fbef7ea",
+      "redaction_count": 0
+    },
+    {
+      "file": "TEST_-_USD_Layer_1_Agent_-_ISOLATED_-_20260723.json",
+      "id": "GCkAH4LskXzWzT8K",
+      "name": "TEST - USD Layer 1 Agent - ISOLATED - 20260723",
+      "engine": "USD",
+      "role": "agent",
+      "active": true,
+      "is_archived": false,
+      "version_id": "5fe22cf8-ef99-4068-a195-48b598280d4a",
+      "version_counter": 4,
+      "trigger_count": 0,
+      "created_at": "2026-07-23T11:30:07.038Z",
+      "updated_at": "2026-07-27T11:25:14.369Z",
+      "project_id": "ISQG9XU7TGTT6Fcu",
+      "node_count": 13,
+      "node_names": [
+        "Build USD Input Pack",
+        "Message a model",
+        "Supabase Get Many",
+        "Create a row",
+        "Combine md & market snapshot",
+        "Get USD Logic Document",
+        "Parse USD Agent Output",
+        "Calculate USD Conviction",
+        "When Executed by Another Workflow",
+        "Tag Source Run ID",
+        "Code | Require Transient Validation Contract",
+        "Code | Build Transient Layer 1 Result",
+        "Code | Tripwire Create a row"
+      ],
+      "code_nodes": [
+        {
+          "name": "Build USD Input Pack",
+          "js_code_sha256": "4369b990cab6d391472860cfc84a0865840e6c2b5ab1db8c225c9302739a72ef",
+          "js_code_bytes": 5919
+        },
+        {
+          "name": "Combine md & market snapshot",
+          "js_code_sha256": "a555aa4ae503d97c6dcfbcfaa5f6432293411c424e5828406c1dbf050dd1c304",
+          "js_code_bytes": 389
+        },
+        {
+          "name": "Parse USD Agent Output",
+          "js_code_sha256": "eea58cea34646ba1189de04b0f7788962468c74b26c092ee5d40b1c77fd4be67",
+          "js_code_bytes": 4307
+        },
+        {
+          "name": "Calculate USD Conviction",
+          "js_code_sha256": "5564f2f152f819be5e5a39ded6d111cbd1ad5f83c5635aec65f3c8d6afef89eb",
+          "js_code_bytes": 12153
+        },
+        {
+          "name": "Tag Source Run ID",
+          "js_code_sha256": "44230f846457c31c639bb8074d9cb934d86aea40fd6d1474389d851d86384b10",
+          "js_code_bytes": 713
+        },
+        {
+          "name": "Code | Require Transient Validation Contract",
+          "js_code_sha256": "85cfa369c5f758686f19ddf1ceb80481ca63a5029f9a177290e1f416584b86c6",
+          "js_code_bytes": 1957
+        },
+        {
+          "name": "Code | Build Transient Layer 1 Result",
+          "js_code_sha256": "4d57515831473975add672e3462a1eda9cc53d0c67fea0de08a6001c1997c688",
+          "js_code_bytes": 4896
+        },
+        {
+          "name": "Code | Tripwire Create a row",
+          "js_code_sha256": "eb6f6f366a4637f536ee3b20207aa3b34d20e722b42fade34da112c8e82431d1",
+          "js_code_bytes": 431
+        }
+      ],
+      "credential_bindings": [
+        {
+          "node": "Message a model",
+          "names": [
+            "openAiApi"
+          ]
+        },
+        {
+          "node": "Supabase Get Many",
+          "names": [
+            "supabaseApi"
+          ]
+        },
+        {
+          "node": "Create a row",
+          "names": [
+            "supabaseApi"
+          ]
+        },
+        {
+          "node": "Get USD Logic Document",
+          "names": [
+            "githubOAuth2Api"
+          ]
+        }
+      ],
+      "routing": [
+        {
+          "node": "Supabase Get Many",
+          "type": "n8n-nodes-base.supabase",
+          "kind": "supabase",
+          "table": "market_snapshots",
+          "operation": "getAll"
+        },
+        {
+          "node": "Create a row",
+          "type": "n8n-nodes-base.supabase",
+          "kind": "supabase",
+          "table": "agent_outputs",
+          "operation": "create"
+        },
+        {
+          "node": "Get USD Logic Document",
+          "type": "n8n-nodes-base.github",
+          "kind": "github",
+          "owner": "kevincreedycars-debug",
+          "repository": "trading-agent-dashboard",
+          "file_path": "logic/agent_usd_direction.md"
+        },
+        {
+          "node": "When Executed by Another Workflow",
+          "type": "n8n-nodes-base.executeWorkflowTrigger",
+          "kind": "executeWorkflow",
+          "target_workflow_id": null,
+          "target_workflow_name_hint": null
+        }
+      ],
+      "sha256": "788a1a65106ad42f79e3c56960a620d9141034e669e25203eaba1a18163a4002",
+      "bytes": 87410,
+      "raw_sha256": "788a1a65106ad42f79e3c56960a620d9141034e669e25203eaba1a18163a4002",
+      "redaction_count": 0
+    },
+    {
+      "file": "USD_Agent.json",
+      "id": "a6UidZyJLpc68OWu",
+      "name": "USD Agent",
+      "engine": "USD",
+      "role": "agent",
+      "active": false,
+      "is_archived": false,
+      "version_id": "1014567b-8d18-4212-b4b3-a23a6c372a41",
+      "version_counter": 577,
+      "trigger_count": 1,
+      "created_at": "2026-04-29T19:15:31.316Z",
+      "updated_at": "2026-08-09T07:11:12.538Z",
+      "project_id": "ISQG9XU7TGTT6Fcu",
+      "node_count": 44,
+      "node_names": [
+        "HTTP Request | US 2Y Treasury Yield - FRED API",
+        "HTTP Request | US 10Y Treasury Yield - FRED Api",
+        "HTTP Request | TIPS 10Y Real Yield - FRED Api",
+        "HTTP Request | Germany 10Y Proxy - FRED Api",
+        "HTTP Request | UK 10Y Proxy - FRED api",
+        "HTTP Request | VIX - FRED Api",
+        "HTTP Request | DXY - FRED Dollar Index - FRED API",
+        "HTTP Request | Gold - Coinbase",
+        "HTTP Request | BTC - Coinbase",
+        "HTTP Request | USD/JPY - Coinbase",
+        "HTTP Request | GBP/USD - Coinbase",
+        "HTTP Request | USD/CAD - Coinbase",
+        "HTTP Request | AUD/USD - Coinbase",
+        "HTTP Request | WTI Oil - FRED Api",
+        "HTTP Request | Brent Oil - FRED Api",
+        "HTTP Request | Diagnosis - Claude API",
+        "Code in JavaScript1 | Prompt Builder",
+        "Edit Fields | USD Ruleset",
+        "Code in JavaScript | Fetch Code Node",
+        "Extract Diagnosis Text",
+        "Code in JavaScript | Build Extract Prompt",
+        "HTTP Request | Extract Calls - Claude API",
+        "Code in JavaScript | Parse Calls",
+        "HTTP Request | Log to Supabase",
+        "Edit Fields | O Layer Ruleset",
+        "Code in JavaScript | O Layer Prompt Builder",
+        "HTTP Request | O Layer Diagnosis - Claude API",
+        "Code in JavaScript | Extract O Layer Diagnosis Text",
+        "Code in JavaScript | Build O Layer Extract Prompt",
+        "HTTP Request | Extract O Layer Calls - Claude API",
+        "Code in JavaScript | Parse O Layer Calls",
+        "HTTP Request | Log O Layer Calls to Supabase",
+        "Code in JavaScript | Build Comparison",
+        "HTTP Request | Log Comparison to Supabase",
+        "HTTP Request | EURUSD - FRED API",
+        "HTTP Request | NQ - Alpha Vantage",
+        "Schedule Trigger",
+        "HTTP Request | Japan 10Y Proxy - FRED API",
+        "HTTP Request | Eco Calendar Recent - Finnhub",
+        "HTTP Request | Eco Calendar Upcoming - Finnhub",
+        "Code | Process Eco Data",
+        "Code | Error Check",
+        "If",
+        "Send a message"
+      ],
+      "code_nodes": [
+        {
+          "name": "Code in JavaScript1 | Prompt Builder",
+          "js_code_sha256": "f86f35a4326859ae9bd7a166075c00229cb89fb9119488b944fba7104d9127ea",
+          "js_code_bytes": 1372
+        },
+        {
+          "name": "Code in JavaScript | Fetch Code Node",
+          "js_code_sha256": "e5525d932471ce880cf1dcc620b6621f35aca39066b2175af3553843c8ee261c",
+          "js_code_bytes": 2333
+        },
+        {
+          "name": "Extract Diagnosis Text",
+          "js_code_sha256": "5f97d4f655f3d0a5f8b55b5fb0cc49c2f5181514bd2fbee2fbcb583eac0d5be2",
+          "js_code_bytes": 184
+        },
+        {
+          "name": "Code in JavaScript | Build Extract Prompt",
+          "js_code_sha256": "04ce30c6305808290f63d35c307d3580cf388ba730573a58f450727a7a4b698d",
+          "js_code_bytes": 798
+        },
+        {
+          "name": "Code in JavaScript | Parse Calls",
+          "js_code_sha256": "72c79336831fcf3988fb9e60c0546518526f4bff615425bc3ff0ded117d5ca91",
+          "js_code_bytes": 2118
+        },
+        {
+          "name": "Code in JavaScript | O Layer Prompt Builder",
+          "js_code_sha256": "0a60c41d3bb47d94d1a6e1fc573ce2c99ab81d4a064606cf797573d48c200167",
+          "js_code_bytes": 5318
+        },
+        {
+          "name": "Code in JavaScript | Extract O Layer Diagnosis Text",
+          "js_code_sha256": "5f97d4f655f3d0a5f8b55b5fb0cc49c2f5181514bd2fbee2fbcb583eac0d5be2",
+          "js_code_bytes": 184
+        },
+        {
+          "name": "Code in JavaScript | Build O Layer Extract Prompt",
+          "js_code_sha256": "cd912b0966d288ddabae294b870caab8b8d552b07db612d705e29721bda3e0cb",
+          "js_code_bytes": 1310
+        },
+        {
+          "name": "Code in JavaScript | Parse O Layer Calls",
+          "js_code_sha256": "049403784983cb3bfe8f5eb703199decc940ad3792d4f3444cfa233c47e93e35",
+          "js_code_bytes": 1840
+        },
+        {
+          "name": "Code in JavaScript | Build Comparison",
+          "js_code_sha256": "24b6b0cd8a625219c8d37cb44a542c941e74a98783898c463df95ba0b0659573",
+          "js_code_bytes": 1139
+        },
+        {
+          "name": "Code | Process Eco Data",
+          "js_code_sha256": "6e22f742fbfab00ceaf699a2d0b7a18cb1766670e3dae3c8d2eab08c573960aa",
+          "js_code_bytes": 2570
+        },
+        {
+          "name": "Code | Error Check",
+          "js_code_sha256": "eeba38621e7e68926b1983301d79c73bca3f519369acfff01a59c0a2d6fbdd6d",
+          "js_code_bytes": 1631
+        }
+      ],
+      "credential_bindings": [
+        {
+          "node": "Send a message",
+          "names": [
+            "gmailOAuth2"
+          ]
+        }
+      ],
+      "routing": [
+        {
+          "node": "Schedule Trigger",
+          "type": "n8n-nodes-base.scheduleTrigger",
+          "kind": "schedule",
+          "cron_expression": "0 6 * * 1-5"
+        }
+      ],
+      "sha256": "5d47c5ac97334c012211dd8d3928d8bb166478c780934e7011e7647aa2b8b81f",
+      "bytes": 172041,
+      "raw_sha256": "a8624d7a00ab02a0eaca4f2d64398a2b40e28aac6366afd4b1bb8cf0a80f55c8",
+      "redaction_count": 25
+    },
+    {
+      "file": "USD_Agent_HIT_MISS_Resolution.json",
+      "id": "mW2chtJ4yTZqFhCi",
+      "name": "USD Agent — HIT/MISS Resolution",
+      "engine": "USD",
+      "role": "agent",
+      "active": false,
+      "is_archived": false,
+      "version_id": "29385877-c7ac-4ec4-b0d7-c6b367fa9be8",
+      "version_counter": 136,
+      "trigger_count": 1,
+      "created_at": "2026-05-10T10:34:36.227Z",
+      "updated_at": "2026-06-28T12:49:54.406Z",
+      "project_id": "ISQG9XU7TGTT6Fcu",
+      "node_count": 17,
+      "node_names": [
+        "Schedule Trigger",
+        "HTTP Request | Gold - Coinbase",
+        "HTTP Request | BTC - Coinbase",
+        "HTTP Request | EUR/USD - Coinbase",
+        "HTTP Request | Fetch Expired Calls",
+        "HTTP Request | GBP/USD - Coinbase",
+        "HTTP Request | USD/JPY - Coinbase",
+        "HTTP Request | USD/CAD - Coinbase",
+        "HTTP Request | AUD/USD - Coinbase",
+        "Code | Resolve HIT/MISS",
+        "Code | Aggregate Prices",
+        "HTTP Request",
+        "HTTP Request | NQ - Alpha Vantage",
+        "HTTP Request | WTI Oil - Alpha Vantage",
+        "Code in JavaScript",
+        "If",
+        "Send a message"
+      ],
+      "code_nodes": [
+        {
+          "name": "Code | Resolve HIT/MISS",
+          "js_code_sha256": "ce3e06b31ca4e4ff55fa999911004f6fa808f621f091146b1a6c1f5a356f2bed",
+          "js_code_bytes": 758
+        },
+        {
+          "name": "Code | Aggregate Prices",
+          "js_code_sha256": "3009b2925fc20e92d8bd40179e779f61c777aff992a116ddeff7c800350c34bd",
+          "js_code_bytes": 1206
+        },
+        {
+          "name": "Code in JavaScript",
+          "js_code_sha256": "573d4a0baa82a47f6d4d137b833dfaa2296241916e410cc21b4828d3332f472a",
+          "js_code_bytes": 441
+        }
+      ],
+      "credential_bindings": [
+        {
+          "node": "Send a message",
+          "names": [
+            "gmailOAuth2"
+          ]
+        }
+      ],
+      "routing": [
+        {
+          "node": "Schedule Trigger",
+          "type": "n8n-nodes-base.scheduleTrigger",
+          "kind": "schedule",
+          "cron_expression": "30 13,20 * * 1-5"
+        }
+      ],
+      "sha256": "75a4318d567e37ea03a3e7b3d0f15a6b377fba2bfe3276f2900bb1e24255e77c",
+      "bytes": 15632,
+      "raw_sha256": "63edef30d15aeafabf8558881a18d2ac986efc7e3f28a6c075990abe85466e16",
+      "redaction_count": 7
+    },
+    {
+      "file": "USD_Historical_Events_Backfill_24hr_Directional_Agent_.json",
+      "id": "8GLw3EO4QXevCgg1",
+      "name": "USD Historical Events Backfill (24hr Directional Agent)",
+      "engine": "USD",
+      "role": "agent",
+      "active": true,
+      "is_archived": false,
+      "version_id": "81005e5e-926d-47fe-b219-08a7eef830f1",
+      "version_counter": 5,
+      "trigger_count": 1,
+      "created_at": "2026-08-21T19:44:49.374Z",
+      "updated_at": "2026-08-21T20:31:46.479Z",
+      "project_id": "ISQG9XU7TGTT6Fcu",
+      "node_count": 2,
+      "node_names": [
+        "Webhook | Trigger Backfill Chunk",
+        "Code | Fetch USD Calendar Days (looped)"
+      ],
+      "code_nodes": [
+        {
+          "name": "Code | Fetch USD Calendar Days (looped)",
+          "js_code_sha256": "3e7efafb225a0ed35fa4047f3fab0343dbc1e3f51dd5177f3a7d860682296a06",
+          "js_code_bytes": 1781
+        }
+      ],
+      "credential_bindings": [],
+      "routing": [
+        {
+          "node": "Webhook | Trigger Backfill Chunk",
+          "type": "n8n-nodes-base.webhook",
+          "kind": "webhook",
+          "webhook_path": "usd-historical-backfill",
+          "http_method": "POST"
+        }
+      ],
+      "sha256": "0156fc9558cdc2088f94b5347aa12161ac1f452231e4624eb7a0a202ceaa07b9",
+      "bytes": 7726,
+      "raw_sha256": "0156fc9558cdc2088f94b5347aa12161ac1f452231e4624eb7a0a202ceaa07b9",
+      "redaction_count": 0
+    },
+    {
+      "file": "USD_Layer_1_Agent.json",
+      "id": "OCt1tB9yVMUgFTha",
+      "name": "USD Layer 1 Agent",
+      "engine": "USD",
+      "role": "agent",
+      "active": true,
+      "is_archived": false,
+      "version_id": "aa275379-ea06-452c-97c9-238b41aed7bc",
+      "version_counter": 154,
+      "trigger_count": 0,
+      "created_at": "2026-06-06T16:45:19.843Z",
+      "updated_at": "2026-06-18T19:46:03.782Z",
+      "project_id": "ISQG9XU7TGTT6Fcu",
+      "node_count": 9,
+      "node_names": [
+        "Build USD Input Pack",
+        "Message a model",
+        "Supabase Get Many",
+        "Create a row",
+        "Combine md & market snapshot",
+        "Get USD Logic Document",
+        "Parse USD Agent Output",
+        "Calculate USD Conviction",
+        "When Executed by Another Workflow"
+      ],
+      "code_nodes": [
+        {
+          "name": "Build USD Input Pack",
+          "js_code_sha256": "4369b990cab6d391472860cfc84a0865840e6c2b5ab1db8c225c9302739a72ef",
+          "js_code_bytes": 5919
+        },
+        {
+          "name": "Combine md & market snapshot",
+          "js_code_sha256": "a555aa4ae503d97c6dcfbcfaa5f6432293411c424e5828406c1dbf050dd1c304",
+          "js_code_bytes": 389
+        },
+        {
+          "name": "Parse USD Agent Output",
+          "js_code_sha256": "eea58cea34646ba1189de04b0f7788962468c74b26c092ee5d40b1c77fd4be67",
+          "js_code_bytes": 4307
+        },
+        {
+          "name": "Calculate USD Conviction",
+          "js_code_sha256": "5564f2f152f819be5e5a39ded6d111cbd1ad5f83c5635aec65f3c8d6afef89eb",
+          "js_code_bytes": 12153
+        }
+      ],
+      "credential_bindings": [
+        {
+          "node": "Message a model",
+          "names": [
+            "openAiApi"
+          ]
+        },
+        {
+          "node": "Supabase Get Many",
+          "names": [
+            "supabaseApi"
+          ]
+        },
+        {
+          "node": "Create a row",
+          "names": [
+            "supabaseApi"
+          ]
+        },
+        {
+          "node": "Get USD Logic Document",
+          "names": [
+            "githubOAuth2Api"
+          ]
+        }
+      ],
+      "routing": [
+        {
+          "node": "Supabase Get Many",
+          "type": "n8n-nodes-base.supabase",
+          "kind": "supabase",
+          "table": "market_snapshots",
+          "operation": "getAll"
+        },
+        {
+          "node": "Create a row",
+          "type": "n8n-nodes-base.supabase",
+          "kind": "supabase",
+          "table": "agent_outputs",
+          "operation": null
+        },
+        {
+          "node": "Get USD Logic Document",
+          "type": "n8n-nodes-base.github",
+          "kind": "github",
+          "owner": "kevincreedycars-debug",
+          "repository": "trading-agent-dashboard",
+          "file_path": "logic/agent_usd_direction.md"
+        },
+        {
+          "node": "When Executed by Another Workflow",
+          "type": "n8n-nodes-base.executeWorkflowTrigger",
+          "kind": "executeWorkflow",
+          "target_workflow_id": null,
+          "target_workflow_name_hint": null
+        }
+      ],
+      "sha256": "e9d8db6ad5e7bcd33a57455866056af327ebb9366e7c11ef69669caedff47f93",
+      "bytes": 63899,
+      "raw_sha256": "e9d8db6ad5e7bcd33a57455866056af327ebb9366e7c11ef69669caedff47f93",
+      "redaction_count": 0
+    },
+    {
+      "file": "WTI_Layer_1_Agent.json",
+      "id": "8oUBopUWLiGcYU0d",
+      "name": "WTI Layer 1 Agent",
+      "engine": "WTI",
+      "role": "agent",
+      "active": true,
+      "is_archived": false,
+      "version_id": "6f493956-93b2-4a52-9270-c4f5aaa9d4fd",
+      "version_counter": 5,
+      "trigger_count": 0,
+      "created_at": "2026-09-12T17:58:31.494Z",
+      "updated_at": "2026-09-12T18:20:13.820Z",
+      "project_id": "ISQG9XU7TGTT6Fcu",
+      "node_count": 13,
+      "node_names": [
+        "When Executed by Another Workflow",
+        "HTTP Request | WTI Spot - FRED API",
+        "HTTP Request | Broad Dollar - FRED API",
+        "HTTP Request | VIX - FRED API",
+        "HTTP Request | S&P 500 - FRED API",
+        "HTTP Request | US 2Y - FRED API",
+        "Code | Build WTI Input Pack",
+        "Get WTI Logic Document",
+        "Code | Combine WTI Logic and Inputs",
+        "Message a model",
+        "Code | Parse WTI Agent Output",
+        "Code | Deterministic WTI 24H Verdict Gate",
+        "Create a row"
+      ],
+      "code_nodes": [
+        {
+          "name": "Code | Build WTI Input Pack",
+          "js_code_sha256": "68ed1025acd57850ad1fc02135196259df8160b512d808dc7704138525cd63f5",
+          "js_code_bytes": 3442
+        },
+        {
+          "name": "Code | Combine WTI Logic and Inputs",
+          "js_code_sha256": "35c38c169a85f2b7f3e4418ffd564deb441e939b608761162c2c497453255540",
+          "js_code_bytes": 198
+        },
+        {
+          "name": "Code | Parse WTI Agent Output",
+          "js_code_sha256": "d1e871017dda4f66bc56844257bcb1ae8cc33f34bd321bbb65a3b2e486add1ae",
+          "js_code_bytes": 715
+        },
+        {
+          "name": "Code | Deterministic WTI 24H Verdict Gate",
+          "js_code_sha256": "b6a80a218017552403f6445290dd42b95224e32ad88bb061221078897655f885",
+          "js_code_bytes": 6474
+        }
+      ],
+      "credential_bindings": [
+        {
+          "node": "Get WTI Logic Document",
+          "names": [
+            "githubOAuth2Api"
+          ]
+        },
+        {
+          "node": "Message a model",
+          "names": [
+            "openAiApi"
+          ]
+        },
+        {
+          "node": "Create a row",
+          "names": [
+            "supabaseApi"
+          ]
+        }
+      ],
+      "routing": [
+        {
+          "node": "When Executed by Another Workflow",
+          "type": "n8n-nodes-base.executeWorkflowTrigger",
+          "kind": "executeWorkflow",
+          "target_workflow_id": null,
+          "target_workflow_name_hint": null
+        },
+        {
+          "node": "Get WTI Logic Document",
+          "type": "n8n-nodes-base.github",
+          "kind": "github",
+          "owner": "kevincreedycars-debug",
+          "repository": "trading-agent-dashboard",
+          "file_path": "logic/agent_wti_direction.md"
+        },
+        {
+          "node": "Create a row",
+          "type": "n8n-nodes-base.supabase",
+          "kind": "supabase",
+          "table": "agent_outputs",
+          "operation": null
+        }
+      ],
+      "sha256": "d31bd7546b9b21a60fe490a3a2093d39a28a7f01d367f2f6e6746f2ebba12b3a",
+      "bytes": 45330,
+      "raw_sha256": "8d87db99e31c65f2b81915d9ad4c57664416be5c01aa6d2231a4f9d7176641c9",
+      "redaction_count": 10
+    }
+  ],
+  "sanitized_at": "2026-10-11T20:18:03.452Z",
+  "sanitizer": "scripts/scrub_live_workflow_exports.js",
+  "raw_export_sha256": {
+    "1._Economic_Events_EUR_PMI_Collector.json": "363e0c97342c64e667cafc75a94d52f7621c558d04a1ede6c0634d47caf49f34",
+    "Backtest_Processor.json": "d7251a339614e6b48756dba593c264c39e04249e625508fc7aeecc16196282b8",
+    "Backtest_Queue_Initialiser.json": "3b59e69500cfd437e7bc8ca81d3c301564c7c1e7526828179fffde5c7b93abc8",
+    "Backtest_Resolver.json": "296b73ccea35ebdf861723f2b0dc8e7f6e09da3640d29295eb934e248c521400",
+    "BTC_Layer_1_Agent.json": "8f9fc6d1ff7dc50ac04fb13d21700f68995f70a2257381bf3e1d05932255c200",
+    "Dashboard_Writer_-_Layer_1.json": "a8ddf2ef3b8060abe523e202ce65ba967d852a8f0192861054fc4461ee33079d",
+    "Data_Collector_-_BTC.json": "a09ca2f6c3eab7de7351a7e5fb9dd9028493d940a6393ffcdc155e47b5a99762",
+    "Data_Collector_-_EUR.json": "ff970e34aec7b96e90ebe9a18fef09756ca213646ae4da1e5a8e550dc25a71f8",
+    "Data_Collector_-_GOLD.json": "afaf532cd52e8977f5183254b9093ecca849875c5d5c32646293c6f1a0d98ff4",
+    "Data_Collector_-_NQ.json": "8fc2dabc95c3567349ff511524d743d424e611e5d3c91abfbefb80303ee4fc9b",
+    "Data_Collector_-_SILVER.json": "51b00aecde72bd4b950c04796a2204158039842f7d71dfd35d332e2882e2afcf",
+    "Data_Collector_-_USD.json": "a57bb8d68bf16367a16012d104e1707124380a3813741237030c5841a1342299",
+    "Eco_Events_Collector.json": "cace9e7857c0cd8806c5789d965d1ef90e5ade1de92844cbf35df384802a27b2",
+    "EUR_Layer_1_Agent.json": "4a12aefbf510e743dfd574faba6c96bdf77a28aa7f0950f822918a9933adeba9",
+    "GBP_Layer_1_Agent.json": "11db181384e670d18ee52d2ddf3b2a40c143dbb9bce5806c8d957ba50c654b5a",
+    "Gold_Agent.json": "0225ea9c16b1cd22bfcd3a5217e0ccde6f372adec1edaeb366aa175723d71fe6",
+    "GOLD_Layer_1_Agent.json": "ac51ac0bb7691e8762bcc06c2050b5ef8669b9dc8d7f50901163ea0762ac922f",
+    "Layer_2_Trade_Selection_Agent.json": "3537f7bac258615ed82cdc08db19e2ce876ab0fac4d125e27b3611b745bc196f",
+    "Master_Orchestrator.json": "40ff622a5b9bb8e1f5bd34b220b4eeb4e4fd0675203055272d6c91920f80f3d6",
+    "NQ_Layer_1_Agent.json": "e657b2a8390dd9ed9f8424c7e9ac5e52a1953c98490eab2207b43e4cec5be18b",
+    "Price_fetch_old.json": "c97062c7b97ab4fffb3d7957d26ceffe40d0879549d7c9ce4e8158174d7debf1",
+    "SILVER_Layer_1_Agent.json": "916c961b886c7a72723554cdbd972a5a7625f1d4ee7912f0e7dc2acb91594986",
+    "TEST_-_BTC_Layer_1_Agent_-_ISOLATED_-_20260723.json": "6adf767860bdf546841939d4ebe1eafb5c09d51f3068c5cc81384477853e0247",
+    "TEST_-_Dashboard_Writer_-_Layer_1_-_20260722_-_modified_probe.json": "6d49c6a61fe2757ab6618c5778826d4c4d7cb7dda50437889e94f2af30949d67",
+    "TEST_-_Dashboard_Writer_-_Layer_1_-_ISOLATED_-_20260723.json": "e5988728fd697c992594125824f70e5e09cd93c1c36b198ad462df57e95cbc01",
+    "TEST_-_Data_Collector_-_BTC_-_20260722.json": "8847f768e5ddc4fa57cad5695fb815dcc5759686ad631203e4711c96c820c175",
+    "TEST_-_Data_Collector_-_BTC_-_20260722_-_modified_probe.json": "092d7b96bc738f98bc694ec1db675e399d66cb633518d2c45b65892ca5264037",
+    "TEST_-_Data_Collector_-_EUR_-_20260722.json": "98cc07ee6f158ddbc3b51a6b53cace42d0e56d5720b060cbee7cb49664c97d7a",
+    "TEST_-_Data_Collector_-_GOLD_-_20260722.json": "141df1472a139bf81123a0cdd8aaa981bcfb7125bb9557a12e1cc06f2e574ad3",
+    "TEST_-_Data_Collector_-_GOLD_-_20260722_-_modified_probe.json": "e0f73686cde60c3b485cfc9721b326839b3dfc3c13d5226c55cba31e45a9eedc",
+    "TEST_-_Data_Collector_-_NQ_-_20260722.json": "e11fadacd9c738f70f5c859fd6fa4cd8411243338734cb081a3bfc33ece61f11",
+    "TEST_-_Data_Collector_-_USD_-_20260722.json": "092bfb917680289515487fa334577bb5d2afce343bf018618caa12830bce802a",
+    "TEST_-_Eco_Events_Collector_-_Isolated_20260727.json": "5ccab4de02aec711aed0288226315077e00d55bea8bb7af4bb3b622ec2ef395d",
+    "TEST_-_EUR_Layer_1_Agent_-_ISOLATED_-_20260723.json": "c2ae0051481ec1d39ad46f6dbf7117e0ed6101b7bd850313ec2b5f14702bc738",
+    "TEST_-_GOLD_Layer_1_Agent_-_ISOLATED_-_20260723.json": "90f0a8a5662b69b7ceaa307e82452158a018b481f9beafa9274fa23d6219ac71",
+    "TEST_-_Layer_2_Trade_Selection_Agent_-_STAGED-ONLY_-_PROPOSED_-_20260727.json": "bfb5814ce308ebe5c3da05ce081542e112baa89b99ba3c0f284cdd3919959e85",
+    "TEST_-_Master_Orchestrator_-_ISOLATED_-_20260723.json": "60db102c69289c30c58e6db854cf8d19a10b1357e78ee6e8cf34963d6a8a7e0f",
+    "TEST_-_Minimal_Create_Probe_-_20260722.json": "c0c02d2f8839626c7c9beb763fbd95aaf064590f2e67b856de0bbe2bb74fbcc9",
+    "TEST_-_NQ_Layer_1_Agent_-_ISOLATED_-_20260723.json": "d2fce120a8e58fb3619ae55d65b906811a3e734de12cfea71ee15b5a9fbef7ea",
+    "TEST_-_USD_Layer_1_Agent_-_ISOLATED_-_20260723.json": "788a1a65106ad42f79e3c56960a620d9141034e669e25203eaba1a18163a4002",
+    "USD_Agent.json": "a8624d7a00ab02a0eaca4f2d64398a2b40e28aac6366afd4b1bb8cf0a80f55c8",
+    "USD_Agent_HIT_MISS_Resolution.json": "63edef30d15aeafabf8558881a18d2ac986efc7e3f28a6c075990abe85466e16",
+    "USD_Historical_Events_Backfill_24hr_Directional_Agent_.json": "0156fc9558cdc2088f94b5347aa12161ac1f452231e4624eb7a0a202ceaa07b9",
+    "USD_Layer_1_Agent.json": "e9d8db6ad5e7bcd33a57455866056af327ebb9366e7c11ef69669caedff47f93",
+    "WTI_Layer_1_Agent.json": "8d87db99e31c65f2b81915d9ad4c57664416be5c01aa6d2231a4f9d7176641c9"
+  }
+}

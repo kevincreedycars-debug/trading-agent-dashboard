@@ -1,0 +1,2663 @@
+{
+  "generated_at": "2026-10-11T20:18:03.449Z",
+  "raw_dir": "tmp/live/exports-2026-10-11T18-59-53-817Z",
+  "sanitized_dir": "docs/review/usd-24h-ruleset-v1/live-exports",
+  "rules": [
+    "credential bindings (id + name) are kept verbatim because the repository's existing exports/ snapshots already record them; only secret-shaped ids longer than 32 characters are replaced",
+    "URL query parameters named apikey/api_key/api-key/key/token/access_key/secret/code/auth are replaced with <redacted>",
+    "Authorization/Bearer header values and header parameters named authorization/api key/token/secret are replaced with <redacted>",
+    "provider-shaped token literals (ghp_, github_pat_, sk-ant-, sk-, sb_secret_, sb_publishable_, sbp_, AIza, xox*, JWT) are replaced with <redacted>",
+    "named parameter objects ({ name, value } in headerParameters/queryParameters) whose name is a credential parameter have their value replaced with <redacted>; {{ ... }} credential references are kept because they name a credential instead of carrying one",
+    "pinData and staticData are emptied because pinned payloads can embed provider responses",
+    "credential names inside JSON query/body strings (\"api_key\": \"...\") are replaced with <redacted>, which is how the FRED nodes in the backtest workflows carry their key"
+  ],
+  "files": [
+    {
+      "file": "1._Economic_Events_EUR_PMI_Collector.json",
+      "workflow_id": "HIhQay9MLSzYazzI",
+      "name": "1. Economic Events EUR PMI Collector",
+      "redactions": [],
+      "residual_findings": [],
+      "sanitized_sha256": "363e0c97342c64e667cafc75a94d52f7621c558d04a1ede6c0634d47caf49f34",
+      "raw_sha256": "363e0c97342c64e667cafc75a94d52f7621c558d04a1ede6c0634d47caf49f34",
+      "sanitized_bytes": 12933
+    },
+    {
+      "file": "Backtest_Processor.json",
+      "workflow_id": "1lT52EmkH3hHJPUL",
+      "name": "Backtest Processor",
+      "redactions": [
+        {
+          "rule": "sensitive_parameter_literal",
+          "json_path": "workflow.nodes[1].parameters.headerParameters.parameters[0].value",
+          "detail": "parameter=apikey"
+        },
+        {
+          "rule": "sensitive_parameter_literal",
+          "json_path": "workflow.nodes[1].parameters.headerParameters.parameters[1].value",
+          "detail": "parameter=Authorization"
+        },
+        {
+          "rule": "sensitive_parameter_literal",
+          "json_path": "workflow.nodes[3].parameters.headerParameters.parameters[1].value",
+          "detail": "parameter=apikey"
+        },
+        {
+          "rule": "sensitive_parameter_literal",
+          "json_path": "workflow.nodes[3].parameters.headerParameters.parameters[2].value",
+          "detail": "parameter=Authorization"
+        },
+        {
+          "rule": "sensitive_parameter_literal",
+          "json_path": "workflow.nodes[4].parameters.queryParameters.parameters[4].value",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_parameter_literal",
+          "json_path": "workflow.nodes[5].parameters.queryParameters.parameters[4].value",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_parameter_literal",
+          "json_path": "workflow.nodes[6].parameters.queryParameters.parameters[4].value",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_parameter_literal",
+          "json_path": "workflow.nodes[7].parameters.queryParameters.parameters[4].value",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_parameter_literal",
+          "json_path": "workflow.nodes[8].parameters.queryParameters.parameters[4].value",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_parameter_literal",
+          "json_path": "workflow.nodes[9].parameters.queryParameters.parameters[4].value",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_parameter_literal",
+          "json_path": "workflow.nodes[10].parameters.queryParameters.parameters[4].value",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_parameter_literal",
+          "json_path": "workflow.nodes[11].parameters.queryParameters.parameters[4].value",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_parameter_literal",
+          "json_path": "workflow.nodes[12].parameters.queryParameters.parameters[4].value",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_parameter_literal",
+          "json_path": "workflow.nodes[13].parameters.queryParameters.parameters[4].value",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_parameter_literal",
+          "json_path": "workflow.nodes[14].parameters.queryParameters.parameters[4].value",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_parameter_literal",
+          "json_path": "workflow.nodes[15].parameters.queryParameters.parameters[4].value",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_parameter_literal",
+          "json_path": "workflow.nodes[16].parameters.queryParameters.parameters[4].value",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_parameter_literal",
+          "json_path": "workflow.nodes[17].parameters.queryParameters.parameters[4].value",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_parameter_literal",
+          "json_path": "workflow.nodes[23].parameters.headerParameters.parameters[2].value",
+          "detail": "parameter=x-api-key"
+        },
+        {
+          "rule": "sensitive_parameter_literal",
+          "json_path": "workflow.nodes[26].parameters.headerParameters.parameters[2].value",
+          "detail": "parameter=x-api-key"
+        },
+        {
+          "rule": "sensitive_parameter_literal",
+          "json_path": "workflow.nodes[28].parameters.headerParameters.parameters[1].value",
+          "detail": "parameter=apikey"
+        },
+        {
+          "rule": "sensitive_parameter_literal",
+          "json_path": "workflow.nodes[28].parameters.headerParameters.parameters[2].value",
+          "detail": "parameter=Authorization"
+        },
+        {
+          "rule": "sensitive_parameter_literal",
+          "json_path": "workflow.nodes[30].parameters.headerParameters.parameters[1].value",
+          "detail": "parameter=apikey"
+        },
+        {
+          "rule": "sensitive_parameter_literal",
+          "json_path": "workflow.nodes[30].parameters.headerParameters.parameters[2].value",
+          "detail": "parameter=Authorization"
+        },
+        {
+          "rule": "sensitive_parameter_literal",
+          "json_path": "workflow.nodes[31].parameters.headerParameters.parameters[1].value",
+          "detail": "parameter=apikey"
+        },
+        {
+          "rule": "sensitive_parameter_literal",
+          "json_path": "workflow.nodes[31].parameters.headerParameters.parameters[2].value",
+          "detail": "parameter=Authorization"
+        },
+        {
+          "rule": "sensitive_parameter_literal",
+          "json_path": "workflow.nodes[32].parameters.headerParameters.parameters[0].value",
+          "detail": "parameter=apikey"
+        },
+        {
+          "rule": "sensitive_parameter_literal",
+          "json_path": "workflow.nodes[32].parameters.headerParameters.parameters[1].value",
+          "detail": "parameter=Authorization"
+        },
+        {
+          "rule": "sensitive_parameter_literal",
+          "json_path": "workflow.nodes[33].parameters.headerParameters.parameters[0].value",
+          "detail": "parameter=apikey"
+        },
+        {
+          "rule": "sensitive_parameter_literal",
+          "json_path": "workflow.nodes[33].parameters.headerParameters.parameters[1].value",
+          "detail": "parameter=Authorization"
+        },
+        {
+          "rule": "sensitive_parameter_literal",
+          "json_path": "workflow.nodes[34].parameters.queryParameters.parameters[3].value",
+          "detail": "parameter=apikey"
+        }
+      ],
+      "residual_findings": [],
+      "sanitized_sha256": "da0fa266bc9ef21cb6318dac1670fcb81f1681a01a7fdaeef60daf024656c615",
+      "raw_sha256": "d7251a339614e6b48756dba593c264c39e04249e625508fc7aeecc16196282b8",
+      "sanitized_bytes": 98512
+    },
+    {
+      "file": "Backtest_Queue_Initialiser.json",
+      "workflow_id": "4IctuVz0xl7kefJ2",
+      "name": "Backtest Queue Initialiser",
+      "redactions": [
+        {
+          "rule": "sensitive_parameter_literal",
+          "json_path": "workflow.nodes[2].parameters.headerParameters.parameters[1].value",
+          "detail": "parameter=apikey"
+        },
+        {
+          "rule": "sensitive_parameter_literal",
+          "json_path": "workflow.nodes[2].parameters.headerParameters.parameters[2].value",
+          "detail": "parameter=Authorization"
+        }
+      ],
+      "residual_findings": [],
+      "sanitized_sha256": "fdf158760e3405a461826b1c16db0a76a9e6e5d2060ed1b299660808134002fb",
+      "raw_sha256": "3b59e69500cfd437e7bc8ca81d3c301564c7c1e7526828179fffde5c7b93abc8",
+      "sanitized_bytes": 4095
+    },
+    {
+      "file": "Backtest_Resolver.json",
+      "workflow_id": "S7UkIcOx1SneGaZZ",
+      "name": "Backtest Resolver",
+      "redactions": [
+        {
+          "rule": "sensitive_parameter_literal",
+          "json_path": "workflow.nodes[1].parameters.headerParameters.parameters[0].value",
+          "detail": "parameter=apikey"
+        },
+        {
+          "rule": "sensitive_parameter_literal",
+          "json_path": "workflow.nodes[1].parameters.headerParameters.parameters[1].value",
+          "detail": "parameter=Authorization"
+        },
+        {
+          "rule": "sensitive_parameter_literal",
+          "json_path": "workflow.nodes[5].parameters.queryParameters.parameters[4].value",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_parameter_literal",
+          "json_path": "workflow.nodes[6].parameters.queryParameters.parameters[4].value",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_parameter_literal",
+          "json_path": "workflow.nodes[7].parameters.queryParameters.parameters[4].value",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_parameter_literal",
+          "json_path": "workflow.nodes[8].parameters.queryParameters.parameters[4].value",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_parameter_literal",
+          "json_path": "workflow.nodes[9].parameters.queryParameters.parameters[4].value",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_parameter_literal",
+          "json_path": "workflow.nodes[10].parameters.queryParameters.parameters[4].value",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_parameter_literal",
+          "json_path": "workflow.nodes[11].parameters.queryParameters.parameters[3].value",
+          "detail": "parameter=apikey"
+        },
+        {
+          "rule": "sensitive_parameter_literal",
+          "json_path": "workflow.nodes[14].parameters.headerParameters.parameters[1].value",
+          "detail": "parameter=apikey"
+        },
+        {
+          "rule": "sensitive_parameter_literal",
+          "json_path": "workflow.nodes[14].parameters.headerParameters.parameters[2].value",
+          "detail": "parameter=Authorization"
+        },
+        {
+          "rule": "sensitive_parameter_literal",
+          "json_path": "workflow.nodes[15].parameters.headerParameters.parameters[0].value",
+          "detail": "parameter=apikey"
+        },
+        {
+          "rule": "sensitive_parameter_literal",
+          "json_path": "workflow.nodes[15].parameters.headerParameters.parameters[1].value",
+          "detail": "parameter=Authorization"
+        }
+      ],
+      "residual_findings": [],
+      "sanitized_sha256": "6432eacce31f484d70b99b3c2bad6b9a0df18c6d0cb75adef5a4696d95c16f47",
+      "raw_sha256": "296b73ccea35ebdf861723f2b0dc8e7f6e09da3640d29295eb934e248c521400",
+      "sanitized_bytes": 19918
+    },
+    {
+      "file": "BTC_Layer_1_Agent.json",
+      "workflow_id": "G142Blty3sGHzuOr",
+      "name": "BTC Layer 1 Agent",
+      "redactions": [],
+      "residual_findings": [],
+      "sanitized_sha256": "8f9fc6d1ff7dc50ac04fb13d21700f68995f70a2257381bf3e1d05932255c200",
+      "raw_sha256": "8f9fc6d1ff7dc50ac04fb13d21700f68995f70a2257381bf3e1d05932255c200",
+      "sanitized_bytes": 72899
+    },
+    {
+      "file": "Dashboard_Writer_-_Layer_1.json",
+      "workflow_id": "850DrjzCKKX9fDzD",
+      "name": "Dashboard Writer - Layer 1",
+      "redactions": [],
+      "residual_findings": [],
+      "sanitized_sha256": "a8ddf2ef3b8060abe523e202ce65ba967d852a8f0192861054fc4461ee33079d",
+      "raw_sha256": "a8ddf2ef3b8060abe523e202ce65ba967d852a8f0192861054fc4461ee33079d",
+      "sanitized_bytes": 118949
+    },
+    {
+      "file": "Data_Collector_-_BTC.json",
+      "workflow_id": "AE3Vv7ILPPiZwZHN",
+      "name": "Data Collector - BTC",
+      "redactions": [
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[0].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[1].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[2].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[3].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[4].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[5].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[8].parameters.url",
+          "detail": "parameter=apikey"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[12].parameters.url",
+          "detail": "parameter=token"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[13].parameters.url",
+          "detail": "parameter=token"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[0].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[1].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[2].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[3].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[4].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[5].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[8].parameters.url",
+          "detail": "parameter=apikey"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[12].parameters.url",
+          "detail": "parameter=token"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[13].parameters.url",
+          "detail": "parameter=token"
+        }
+      ],
+      "residual_findings": [],
+      "sanitized_sha256": "276a9e8d74cbfcafc9133b87136be1312cc38792eb4178d022b611fccfddae90",
+      "raw_sha256": "a09ca2f6c3eab7de7351a7e5fb9dd9028493d940a6393ffcdc155e47b5a99762",
+      "sanitized_bytes": 77014
+    },
+    {
+      "file": "Data_Collector_-_EUR.json",
+      "workflow_id": "Z3v9kQNIM22THi2O",
+      "name": "Data Collector - EUR",
+      "redactions": [
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[0].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[1].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[2].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[3].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[4].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[5].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[6].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[13].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[14].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[15].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[16].parameters.url",
+          "detail": "parameter=apikey"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[17].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[22].parameters.url",
+          "detail": "parameter=token"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[23].parameters.url",
+          "detail": "parameter=token"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[32].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[0].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[1].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[2].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[3].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[4].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[5].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[6].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[13].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[14].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[15].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[16].parameters.url",
+          "detail": "parameter=apikey"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[17].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[22].parameters.url",
+          "detail": "parameter=token"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[23].parameters.url",
+          "detail": "parameter=token"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[32].parameters.url",
+          "detail": "parameter=api_key"
+        }
+      ],
+      "residual_findings": [],
+      "sanitized_sha256": "28bdf355ec6023afa05b2b2e711942d5e26934d8a1b35978c6671fca8e2e54a1",
+      "raw_sha256": "ff970e34aec7b96e90ebe9a18fef09756ca213646ae4da1e5a8e550dc25a71f8",
+      "sanitized_bytes": 95956
+    },
+    {
+      "file": "Data_Collector_-_GOLD.json",
+      "workflow_id": "0z71FpOfKdL72hgW",
+      "name": "Data Collector - GOLD",
+      "redactions": [
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[0].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[1].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[2].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[3].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[4].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[5].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[6].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[13].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[14].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[15].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[16].parameters.url",
+          "detail": "parameter=apikey"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[17].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[22].parameters.url",
+          "detail": "parameter=token"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[23].parameters.url",
+          "detail": "parameter=token"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[0].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[1].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[2].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[3].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[4].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[5].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[6].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[13].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[14].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[15].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[16].parameters.url",
+          "detail": "parameter=apikey"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[17].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[22].parameters.url",
+          "detail": "parameter=token"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[23].parameters.url",
+          "detail": "parameter=token"
+        }
+      ],
+      "residual_findings": [],
+      "sanitized_sha256": "bdcc45cd68dd2433728c1602a5b8de8a3672f69a53cef7c7d7d01e1c6a6eaabb",
+      "raw_sha256": "afaf532cd52e8977f5183254b9093ecca849875c5d5c32646293c6f1a0d98ff4",
+      "sanitized_bytes": 90377
+    },
+    {
+      "file": "Data_Collector_-_NQ.json",
+      "workflow_id": "nYMDUSVQwEFNaH0U",
+      "name": "Data Collector - NQ",
+      "redactions": [
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[0].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[1].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[2].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[3].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[4].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[5].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[6].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[13].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[14].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[15].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[16].parameters.url",
+          "detail": "parameter=apikey"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[17].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[22].parameters.url",
+          "detail": "parameter=token"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[23].parameters.url",
+          "detail": "parameter=token"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[0].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[1].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[2].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[3].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[4].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[5].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[6].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[13].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[14].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[15].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[16].parameters.url",
+          "detail": "parameter=apikey"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[17].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[22].parameters.url",
+          "detail": "parameter=token"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[23].parameters.url",
+          "detail": "parameter=token"
+        }
+      ],
+      "residual_findings": [],
+      "sanitized_sha256": "a821d49fb9bd0bf99ab548649ad429c6b5e0aaed753db326f068374767ddaa4e",
+      "raw_sha256": "8fc2dabc95c3567349ff511524d743d424e611e5d3c91abfbefb80303ee4fc9b",
+      "sanitized_bytes": 80451
+    },
+    {
+      "file": "Data_Collector_-_SILVER.json",
+      "workflow_id": "xezFmvm7cmgNNypb",
+      "name": "Data Collector - SILVER",
+      "redactions": [
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[0].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[1].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[2].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[3].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[4].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[5].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[6].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[13].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[14].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[15].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[16].parameters.url",
+          "detail": "parameter=apikey"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[17].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[22].parameters.url",
+          "detail": "parameter=token"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[23].parameters.url",
+          "detail": "parameter=token"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[30].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[31].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[0].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[1].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[2].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[3].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[4].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[5].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[6].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[13].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[14].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[15].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[16].parameters.url",
+          "detail": "parameter=apikey"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[17].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[22].parameters.url",
+          "detail": "parameter=token"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[23].parameters.url",
+          "detail": "parameter=token"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[30].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[31].parameters.url",
+          "detail": "parameter=api_key"
+        }
+      ],
+      "residual_findings": [],
+      "sanitized_sha256": "a0404844e417e92d0d18bd0d5f55e9f9a082ae2c40af5e1b0198b66f16a2ef50",
+      "raw_sha256": "51b00aecde72bd4b950c04796a2204158039842f7d71dfd35d332e2882e2afcf",
+      "sanitized_bytes": 105046
+    },
+    {
+      "file": "Data_Collector_-_USD.json",
+      "workflow_id": "P1E4ZWtbDetYz1P5",
+      "name": "Data Collector - USD",
+      "redactions": [
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[0].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[1].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[2].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[3].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[4].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[5].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[6].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[13].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[14].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[15].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[16].parameters.url",
+          "detail": "parameter=apikey"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[17].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[22].parameters.url",
+          "detail": "parameter=token"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[23].parameters.url",
+          "detail": "parameter=token"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[0].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[1].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[2].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[3].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[4].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[5].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[6].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[13].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[14].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[15].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[16].parameters.url",
+          "detail": "parameter=apikey"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[17].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[22].parameters.url",
+          "detail": "parameter=token"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[23].parameters.url",
+          "detail": "parameter=token"
+        }
+      ],
+      "residual_findings": [],
+      "sanitized_sha256": "a0bbf8cd044addba9dbd479c3dad393ab9edfa7083cd1d93b6a0d277ed660e5c",
+      "raw_sha256": "a57bb8d68bf16367a16012d104e1707124380a3813741237030c5841a1342299",
+      "sanitized_bytes": 83636
+    },
+    {
+      "file": "Eco_Events_Collector.json",
+      "workflow_id": "UaSliyR8qlSVIfmk",
+      "name": "Eco Events Collector",
+      "redactions": [],
+      "residual_findings": [],
+      "sanitized_sha256": "cace9e7857c0cd8806c5789d965d1ef90e5ade1de92844cbf35df384802a27b2",
+      "raw_sha256": "cace9e7857c0cd8806c5789d965d1ef90e5ade1de92844cbf35df384802a27b2",
+      "sanitized_bytes": 42774
+    },
+    {
+      "file": "EUR_Layer_1_Agent.json",
+      "workflow_id": "Px0bsH7chlRWH9ZD",
+      "name": "EUR Layer 1 Agent",
+      "redactions": [],
+      "residual_findings": [],
+      "sanitized_sha256": "4a12aefbf510e743dfd574faba6c96bdf77a28aa7f0950f822918a9933adeba9",
+      "raw_sha256": "4a12aefbf510e743dfd574faba6c96bdf77a28aa7f0950f822918a9933adeba9",
+      "sanitized_bytes": 71547
+    },
+    {
+      "file": "GBP_Layer_1_Agent.json",
+      "workflow_id": "bMv96EPR0xCXi3bi",
+      "name": "GBP Layer 1 Agent",
+      "redactions": [
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[2].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[3].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[7].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[8].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[9].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[2].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[3].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[7].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[8].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[9].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "static_data_removed",
+          "json_path": "staticData"
+        }
+      ],
+      "residual_findings": [],
+      "sanitized_sha256": "2e4175e1a3926d3474fe3c3e2de90955fad4c92321c2d387adea2fda3e478b1f",
+      "raw_sha256": "11db181384e670d18ee52d2ddf3b2a40c143dbb9bce5806c8d957ba50c654b5a",
+      "sanitized_bytes": 72139
+    },
+    {
+      "file": "Gold_Agent.json",
+      "workflow_id": "7vVmN27XFZrW9vgc",
+      "name": "Gold Agent",
+      "redactions": [
+        {
+          "rule": "sensitive_parameter_literal",
+          "json_path": "workflow.nodes[0].parameters.queryParameters.parameters[1].value",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_parameter_literal",
+          "json_path": "workflow.nodes[1].parameters.queryParameters.parameters[1].value",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "json_body_credential_literal",
+          "json_path": "workflow.nodes[2].parameters.jsonQuery",
+          "detail": "value_length=32"
+        },
+        {
+          "rule": "json_body_credential_literal",
+          "json_path": "workflow.nodes[3].parameters.jsonQuery",
+          "detail": "value_length=32"
+        },
+        {
+          "rule": "json_body_credential_literal",
+          "json_path": "workflow.nodes[4].parameters.jsonQuery",
+          "detail": "value_length=32"
+        },
+        {
+          "rule": "json_body_credential_literal",
+          "json_path": "workflow.nodes[5].parameters.jsonQuery",
+          "detail": "value_length=32"
+        }
+      ],
+      "residual_findings": [],
+      "sanitized_sha256": "9c5ac238a103d9c842b8a0aeea70d2224a46943a595d0bf1604337787328e98e",
+      "raw_sha256": "0225ea9c16b1cd22bfcd3a5217e0ccde6f372adec1edaeb366aa175723d71fe6",
+      "sanitized_bytes": 20540
+    },
+    {
+      "file": "GOLD_Layer_1_Agent.json",
+      "workflow_id": "wwBVT0EQcKu5517I",
+      "name": "GOLD Layer 1 Agent",
+      "redactions": [],
+      "residual_findings": [],
+      "sanitized_sha256": "ac51ac0bb7691e8762bcc06c2050b5ef8669b9dc8d7f50901163ea0762ac922f",
+      "raw_sha256": "ac51ac0bb7691e8762bcc06c2050b5ef8669b9dc8d7f50901163ea0762ac922f",
+      "sanitized_bytes": 60852
+    },
+    {
+      "file": "Layer_2_Trade_Selection_Agent.json",
+      "workflow_id": "ZKGSuYcWb6EfgXBE",
+      "name": "Layer 2 Trade Selection Agent",
+      "redactions": [
+        {
+          "rule": "static_data_removed",
+          "json_path": "staticData"
+        }
+      ],
+      "residual_findings": [],
+      "sanitized_sha256": "cd95546551f8861e4aceab9ab197a6afaa368b611cbb5926441f048026265068",
+      "raw_sha256": "3537f7bac258615ed82cdc08db19e2ce876ab0fac4d125e27b3611b745bc196f",
+      "sanitized_bytes": 44325
+    },
+    {
+      "file": "Master_Orchestrator.json",
+      "workflow_id": "X75RKU34ikiM5RMU",
+      "name": "Master Orchestrator",
+      "redactions": [],
+      "residual_findings": [],
+      "sanitized_sha256": "40ff622a5b9bb8e1f5bd34b220b4eeb4e4fd0675203055272d6c91920f80f3d6",
+      "raw_sha256": "40ff622a5b9bb8e1f5bd34b220b4eeb4e4fd0675203055272d6c91920f80f3d6",
+      "sanitized_bytes": 57432
+    },
+    {
+      "file": "NQ_Layer_1_Agent.json",
+      "workflow_id": "FOpFp3AzTJVYdLXe",
+      "name": "NQ Layer 1 Agent",
+      "redactions": [],
+      "residual_findings": [],
+      "sanitized_sha256": "e657b2a8390dd9ed9f8424c7e9ac5e52a1953c98490eab2207b43e4cec5be18b",
+      "raw_sha256": "e657b2a8390dd9ed9f8424c7e9ac5e52a1953c98490eab2207b43e4cec5be18b",
+      "sanitized_bytes": 61854
+    },
+    {
+      "file": "Price_fetch_old.json",
+      "workflow_id": "TcNF8wWesKjkK3u4",
+      "name": "Price fetch old",
+      "redactions": [
+        {
+          "rule": "sensitive_parameter_literal",
+          "json_path": "workflow.nodes[1].parameters.queryParameters.parameters[3].value",
+          "detail": "parameter=apikey"
+        },
+        {
+          "rule": "sensitive_parameter_literal",
+          "json_path": "workflow.nodes[2].parameters.queryParameters.parameters[3].value",
+          "detail": "parameter=apikey"
+        },
+        {
+          "rule": "sensitive_parameter_literal",
+          "json_path": "workflow.nodes[4].parameters.headerParameters.parameters[1].value",
+          "detail": "parameter=apikey"
+        },
+        {
+          "rule": "sensitive_parameter_literal",
+          "json_path": "workflow.nodes[4].parameters.headerParameters.parameters[2].value",
+          "detail": "parameter=Authorization"
+        }
+      ],
+      "residual_findings": [],
+      "sanitized_sha256": "35515a32c4677e43c6ddbe02b8926a308c2940ff45bef54d5de9b5cd629c4488",
+      "raw_sha256": "c97062c7b97ab4fffb3d7957d26ceffe40d0879549d7c9ce4e8158174d7debf1",
+      "sanitized_bytes": 7867
+    },
+    {
+      "file": "SILVER_Layer_1_Agent.json",
+      "workflow_id": "6IGOoTZxxTPyBpEp",
+      "name": "SILVER Layer 1 Agent",
+      "redactions": [],
+      "residual_findings": [],
+      "sanitized_sha256": "916c961b886c7a72723554cdbd972a5a7625f1d4ee7912f0e7dc2acb91594986",
+      "raw_sha256": "916c961b886c7a72723554cdbd972a5a7625f1d4ee7912f0e7dc2acb91594986",
+      "sanitized_bytes": 123510
+    },
+    {
+      "file": "TEST_-_BTC_Layer_1_Agent_-_ISOLATED_-_20260723.json",
+      "workflow_id": "pQPrq13PaeclUWEC",
+      "name": "TEST - BTC Layer 1 Agent - ISOLATED - 20260723",
+      "redactions": [],
+      "residual_findings": [],
+      "sanitized_sha256": "6adf767860bdf546841939d4ebe1eafb5c09d51f3068c5cc81384477853e0247",
+      "raw_sha256": "6adf767860bdf546841939d4ebe1eafb5c09d51f3068c5cc81384477853e0247",
+      "sanitized_bytes": 96358
+    },
+    {
+      "file": "TEST_-_Dashboard_Writer_-_Layer_1_-_20260722_-_modified_probe.json",
+      "workflow_id": "jGvWgeIQbWHw6Vfi",
+      "name": "TEST - Dashboard Writer - Layer 1 - 20260722 - modified probe",
+      "redactions": [],
+      "residual_findings": [],
+      "sanitized_sha256": "6d49c6a61fe2757ab6618c5778826d4c4d7cb7dda50437889e94f2af30949d67",
+      "raw_sha256": "6d49c6a61fe2757ab6618c5778826d4c4d7cb7dda50437889e94f2af30949d67",
+      "sanitized_bytes": 18208
+    },
+    {
+      "file": "TEST_-_Dashboard_Writer_-_Layer_1_-_ISOLATED_-_20260723.json",
+      "workflow_id": "pMPxuN3dk5WWxbYY",
+      "name": "TEST - Dashboard Writer - Layer 1 - ISOLATED - 20260723",
+      "redactions": [],
+      "residual_findings": [],
+      "sanitized_sha256": "e5988728fd697c992594125824f70e5e09cd93c1c36b198ad462df57e95cbc01",
+      "raw_sha256": "e5988728fd697c992594125824f70e5e09cd93c1c36b198ad462df57e95cbc01",
+      "sanitized_bytes": 29177
+    },
+    {
+      "file": "TEST_-_Data_Collector_-_BTC_-_20260722.json",
+      "workflow_id": "DMiMgjgFrdQZAOpW",
+      "name": "TEST - Data Collector - BTC - 20260722",
+      "redactions": [
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[0].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[1].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[2].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[3].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[4].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[5].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[8].parameters.url",
+          "detail": "parameter=apikey"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[12].parameters.url",
+          "detail": "parameter=token"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[13].parameters.url",
+          "detail": "parameter=token"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[0].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[1].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[2].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[3].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[4].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[5].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[8].parameters.url",
+          "detail": "parameter=apikey"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[12].parameters.url",
+          "detail": "parameter=token"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[13].parameters.url",
+          "detail": "parameter=token"
+        }
+      ],
+      "residual_findings": [],
+      "sanitized_sha256": "94fdf19628ed307ac7c6126f9bffe8926016567c73e20fa69356c61f3d7ff302",
+      "raw_sha256": "8847f768e5ddc4fa57cad5695fb815dcc5759686ad631203e4711c96c820c175",
+      "sanitized_bytes": 101196
+    },
+    {
+      "file": "TEST_-_Data_Collector_-_BTC_-_20260722_-_modified_probe.json",
+      "workflow_id": "xfiQRMEcHLXfWHpa",
+      "name": "TEST - Data Collector - BTC - 20260722 - modified probe",
+      "redactions": [
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[0].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[1].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[2].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[3].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[4].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[5].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[8].parameters.url",
+          "detail": "parameter=apikey"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[12].parameters.url",
+          "detail": "parameter=token"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[13].parameters.url",
+          "detail": "parameter=token"
+        }
+      ],
+      "residual_findings": [],
+      "sanitized_sha256": "6bfcd903ba20022392e65184928b3923915fe979c9d36670478886bb573ad289",
+      "raw_sha256": "092d7b96bc738f98bc694ec1db675e399d66cb633518d2c45b65892ca5264037",
+      "sanitized_bytes": 40635
+    },
+    {
+      "file": "TEST_-_Data_Collector_-_EUR_-_20260722.json",
+      "workflow_id": "mh3CLzNirpXorGKi",
+      "name": "TEST - Data Collector - EUR - 20260722",
+      "redactions": [
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[0].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[1].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[2].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[3].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[4].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[5].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[6].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[13].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[14].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[15].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[16].parameters.url",
+          "detail": "parameter=apikey"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[17].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[22].parameters.url",
+          "detail": "parameter=token"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[23].parameters.url",
+          "detail": "parameter=token"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[32].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[0].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[1].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[2].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[3].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[4].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[5].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[6].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[13].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[14].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[15].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[16].parameters.url",
+          "detail": "parameter=apikey"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[17].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[22].parameters.url",
+          "detail": "parameter=token"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[23].parameters.url",
+          "detail": "parameter=token"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[32].parameters.url",
+          "detail": "parameter=api_key"
+        }
+      ],
+      "residual_findings": [],
+      "sanitized_sha256": "fc4ed01a8041a2d4663a20d9e13a83e0f910210e039ddc690411ec0507d995d3",
+      "raw_sha256": "98cc07ee6f158ddbc3b51a6b53cace42d0e56d5720b060cbee7cb49664c97d7a",
+      "sanitized_bytes": 125818
+    },
+    {
+      "file": "TEST_-_Data_Collector_-_GOLD_-_20260722.json",
+      "workflow_id": "NLGyMosysypCldMO",
+      "name": "TEST - Data Collector - GOLD - 20260722",
+      "redactions": [
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[0].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[1].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[2].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[3].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[4].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[5].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[6].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[13].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[14].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[15].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[16].parameters.url",
+          "detail": "parameter=apikey"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[17].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[22].parameters.url",
+          "detail": "parameter=token"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[23].parameters.url",
+          "detail": "parameter=token"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[0].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[1].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[2].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[3].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[4].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[5].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[6].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[13].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[14].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[15].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[16].parameters.url",
+          "detail": "parameter=apikey"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[17].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[22].parameters.url",
+          "detail": "parameter=token"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[23].parameters.url",
+          "detail": "parameter=token"
+        }
+      ],
+      "residual_findings": [],
+      "sanitized_sha256": "a2d689fbe993cfa1c2d6d570fc549d6d18e4d306e3f83d32ab3eb3aeee8bedde",
+      "raw_sha256": "141df1472a139bf81123a0cdd8aaa981bcfb7125bb9557a12e1cc06f2e574ad3",
+      "sanitized_bytes": 116695
+    },
+    {
+      "file": "TEST_-_Data_Collector_-_GOLD_-_20260722_-_modified_probe.json",
+      "workflow_id": "7tk8NwIRZNcIy2xh",
+      "name": "TEST - Data Collector - GOLD - 20260722 - modified probe",
+      "redactions": [
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[0].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[1].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[2].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[3].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[4].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[5].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[6].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[13].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[14].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[15].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[16].parameters.url",
+          "detail": "parameter=apikey"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[17].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[22].parameters.url",
+          "detail": "parameter=token"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[23].parameters.url",
+          "detail": "parameter=token"
+        }
+      ],
+      "residual_findings": [],
+      "sanitized_sha256": "4c110fd2aa6d57644c92aa055b527d4473b6e1a69e29edfe954aade7bf6525c1",
+      "raw_sha256": "e0f73686cde60c3b485cfc9721b326839b3dfc3c13d5226c55cba31e45a9eedc",
+      "sanitized_bytes": 46364
+    },
+    {
+      "file": "TEST_-_Data_Collector_-_NQ_-_20260722.json",
+      "workflow_id": "tcYXnCdetkGzsQEx",
+      "name": "TEST - Data Collector - NQ - 20260722",
+      "redactions": [
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[0].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[1].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[2].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[3].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[4].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[5].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[6].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[13].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[14].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[15].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[16].parameters.url",
+          "detail": "parameter=apikey"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[17].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[22].parameters.url",
+          "detail": "parameter=token"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[23].parameters.url",
+          "detail": "parameter=token"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[0].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[1].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[2].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[3].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[4].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[5].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[6].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[13].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[14].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[15].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[16].parameters.url",
+          "detail": "parameter=apikey"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[17].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[22].parameters.url",
+          "detail": "parameter=token"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[23].parameters.url",
+          "detail": "parameter=token"
+        }
+      ],
+      "residual_findings": [],
+      "sanitized_sha256": "e560ac502cf2f6670ecc8a87aa1cfc0ad3c2112a949238210e169ba21597446d",
+      "raw_sha256": "e11fadacd9c738f70f5c859fd6fa4cd8411243338734cb081a3bfc33ece61f11",
+      "sanitized_bytes": 106681
+    },
+    {
+      "file": "TEST_-_Data_Collector_-_USD_-_20260722.json",
+      "workflow_id": "QferKqGdVdTyhJTI",
+      "name": "TEST - Data Collector - USD - 20260722",
+      "redactions": [
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[0].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[1].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[2].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[3].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[4].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[5].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[6].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[13].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[14].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[15].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[16].parameters.url",
+          "detail": "parameter=apikey"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[17].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[22].parameters.url",
+          "detail": "parameter=token"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[23].parameters.url",
+          "detail": "parameter=token"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[0].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[1].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[2].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[3].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[4].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[5].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[6].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[13].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[14].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[15].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[16].parameters.url",
+          "detail": "parameter=apikey"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[17].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[22].parameters.url",
+          "detail": "parameter=token"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[23].parameters.url",
+          "detail": "parameter=token"
+        }
+      ],
+      "residual_findings": [],
+      "sanitized_sha256": "e62c30a971b41740edcf9792551390ea3a358a77de3e1597405b9afda08c7d05",
+      "raw_sha256": "092bfb917680289515487fa334577bb5d2afce343bf018618caa12830bce802a",
+      "sanitized_bytes": 112636
+    },
+    {
+      "file": "TEST_-_Eco_Events_Collector_-_Isolated_20260727.json",
+      "workflow_id": "4zd3QEGWhessSGHW",
+      "name": "TEST - Eco Events Collector - Isolated 20260727",
+      "redactions": [],
+      "residual_findings": [],
+      "sanitized_sha256": "5ccab4de02aec711aed0288226315077e00d55bea8bb7af4bb3b622ec2ef395d",
+      "raw_sha256": "5ccab4de02aec711aed0288226315077e00d55bea8bb7af4bb3b622ec2ef395d",
+      "sanitized_bytes": 89328
+    },
+    {
+      "file": "TEST_-_EUR_Layer_1_Agent_-_ISOLATED_-_20260723.json",
+      "workflow_id": "fGr45f1LqZABLlem",
+      "name": "TEST - EUR Layer 1 Agent - ISOLATED - 20260723",
+      "redactions": [],
+      "residual_findings": [],
+      "sanitized_sha256": "c2ae0051481ec1d39ad46f6dbf7117e0ed6101b7bd850313ec2b5f14702bc738",
+      "raw_sha256": "c2ae0051481ec1d39ad46f6dbf7117e0ed6101b7bd850313ec2b5f14702bc738",
+      "sanitized_bytes": 95106
+    },
+    {
+      "file": "TEST_-_GOLD_Layer_1_Agent_-_ISOLATED_-_20260723.json",
+      "workflow_id": "rtAcgTz71gFzQSZx",
+      "name": "TEST - GOLD Layer 1 Agent - ISOLATED - 20260723",
+      "redactions": [],
+      "residual_findings": [],
+      "sanitized_sha256": "90f0a8a5662b69b7ceaa307e82452158a018b481f9beafa9274fa23d6219ac71",
+      "raw_sha256": "90f0a8a5662b69b7ceaa307e82452158a018b481f9beafa9274fa23d6219ac71",
+      "sanitized_bytes": 84339
+    },
+    {
+      "file": "TEST_-_Layer_2_Trade_Selection_Agent_-_STAGED-ONLY_-_PROPOSED_-_20260727.json",
+      "workflow_id": "QBk8bAHkkHjJYbpK",
+      "name": "TEST - Layer 2 Trade Selection Agent - STAGED-ONLY - PROPOSED - 20260727",
+      "redactions": [],
+      "residual_findings": [],
+      "sanitized_sha256": "bfb5814ce308ebe5c3da05ce081542e112baa89b99ba3c0f284cdd3919959e85",
+      "raw_sha256": "bfb5814ce308ebe5c3da05ce081542e112baa89b99ba3c0f284cdd3919959e85",
+      "sanitized_bytes": 152460
+    },
+    {
+      "file": "TEST_-_Master_Orchestrator_-_ISOLATED_-_20260723.json",
+      "workflow_id": "CIvsnhyOi35zmA44",
+      "name": "TEST - Master Orchestrator - ISOLATED - 20260723",
+      "redactions": [
+        {
+          "rule": "static_data_removed",
+          "json_path": "staticData"
+        }
+      ],
+      "residual_findings": [],
+      "sanitized_sha256": "c73581cdaad4ace2f0f8f4d763be96e3431af7a15cb6cddfb73979c199d06a2f",
+      "raw_sha256": "60db102c69289c30c58e6db854cf8d19a10b1357e78ee6e8cf34963d6a8a7e0f",
+      "sanitized_bytes": 148199
+    },
+    {
+      "file": "TEST_-_Minimal_Create_Probe_-_20260722.json",
+      "workflow_id": "W8vbxNal94PkB45v",
+      "name": "TEST - Minimal Create Probe - 20260722",
+      "redactions": [],
+      "residual_findings": [],
+      "sanitized_sha256": "c0c02d2f8839626c7c9beb763fbd95aaf064590f2e67b856de0bbe2bb74fbcc9",
+      "raw_sha256": "c0c02d2f8839626c7c9beb763fbd95aaf064590f2e67b856de0bbe2bb74fbcc9",
+      "sanitized_bytes": 1421
+    },
+    {
+      "file": "TEST_-_NQ_Layer_1_Agent_-_ISOLATED_-_20260723.json",
+      "workflow_id": "Xep1shMzaqwPXvuL",
+      "name": "TEST - NQ Layer 1 Agent - ISOLATED - 20260723",
+      "redactions": [],
+      "residual_findings": [],
+      "sanitized_sha256": "d2fce120a8e58fb3619ae55d65b906811a3e734de12cfea71ee15b5a9fbef7ea",
+      "raw_sha256": "d2fce120a8e58fb3619ae55d65b906811a3e734de12cfea71ee15b5a9fbef7ea",
+      "sanitized_bytes": 85309
+    },
+    {
+      "file": "TEST_-_USD_Layer_1_Agent_-_ISOLATED_-_20260723.json",
+      "workflow_id": "GCkAH4LskXzWzT8K",
+      "name": "TEST - USD Layer 1 Agent - ISOLATED - 20260723",
+      "redactions": [],
+      "residual_findings": [],
+      "sanitized_sha256": "788a1a65106ad42f79e3c56960a620d9141034e669e25203eaba1a18163a4002",
+      "raw_sha256": "788a1a65106ad42f79e3c56960a620d9141034e669e25203eaba1a18163a4002",
+      "sanitized_bytes": 87410
+    },
+    {
+      "file": "USD_Agent.json",
+      "workflow_id": "a6UidZyJLpc68OWu",
+      "name": "USD Agent",
+      "redactions": [
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[0].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[1].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[2].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[3].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[4].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[5].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[6].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[13].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[14].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_parameter_literal",
+          "json_path": "workflow.nodes[15].parameters.headerParameters.parameters[2].value",
+          "detail": "parameter=x-api-key"
+        },
+        {
+          "rule": "sensitive_parameter_literal",
+          "json_path": "workflow.nodes[21].parameters.headerParameters.parameters[2].value",
+          "detail": "parameter=x-api-key"
+        },
+        {
+          "rule": "sensitive_parameter_literal",
+          "json_path": "workflow.nodes[23].parameters.headerParameters.parameters[1].value",
+          "detail": "parameter=apikey"
+        },
+        {
+          "rule": "sensitive_parameter_literal",
+          "json_path": "workflow.nodes[23].parameters.headerParameters.parameters[2].value",
+          "detail": "parameter=Authorization"
+        },
+        {
+          "rule": "sensitive_parameter_literal",
+          "json_path": "workflow.nodes[26].parameters.headerParameters.parameters[2].value",
+          "detail": "parameter=x-api-key"
+        },
+        {
+          "rule": "sensitive_parameter_literal",
+          "json_path": "workflow.nodes[29].parameters.headerParameters.parameters[2].value",
+          "detail": "parameter=x-api-key"
+        },
+        {
+          "rule": "sensitive_parameter_literal",
+          "json_path": "workflow.nodes[31].parameters.headerParameters.parameters[1].value",
+          "detail": "parameter=apikey"
+        },
+        {
+          "rule": "sensitive_parameter_literal",
+          "json_path": "workflow.nodes[31].parameters.headerParameters.parameters[2].value",
+          "detail": "parameter=Authorization"
+        },
+        {
+          "rule": "sensitive_parameter_literal",
+          "json_path": "workflow.nodes[33].parameters.headerParameters.parameters[1].value",
+          "detail": "parameter=apikey"
+        },
+        {
+          "rule": "sensitive_parameter_literal",
+          "json_path": "workflow.nodes[33].parameters.headerParameters.parameters[2].value",
+          "detail": "parameter=Authorization"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[34].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[35].parameters.url",
+          "detail": "parameter=apikey"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[37].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[38].parameters.url",
+          "detail": "parameter=token"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[39].parameters.url",
+          "detail": "parameter=token"
+        },
+        {
+          "rule": "static_data_removed",
+          "json_path": "staticData"
+        }
+      ],
+      "residual_findings": [],
+      "sanitized_sha256": "5d47c5ac97334c012211dd8d3928d8bb166478c780934e7011e7647aa2b8b81f",
+      "raw_sha256": "a8624d7a00ab02a0eaca4f2d64398a2b40e28aac6366afd4b1bb8cf0a80f55c8",
+      "sanitized_bytes": 172041
+    },
+    {
+      "file": "USD_Agent_HIT_MISS_Resolution.json",
+      "workflow_id": "mW2chtJ4yTZqFhCi",
+      "name": "USD Agent — HIT/MISS Resolution",
+      "redactions": [
+        {
+          "rule": "sensitive_parameter_literal",
+          "json_path": "workflow.nodes[4].parameters.headerParameters.parameters[0].value",
+          "detail": "parameter=apikey"
+        },
+        {
+          "rule": "sensitive_parameter_literal",
+          "json_path": "workflow.nodes[4].parameters.headerParameters.parameters[1].value",
+          "detail": "parameter=Authorization"
+        },
+        {
+          "rule": "sensitive_parameter_literal",
+          "json_path": "workflow.nodes[11].parameters.headerParameters.parameters[1].value",
+          "detail": "parameter=apikey"
+        },
+        {
+          "rule": "sensitive_parameter_literal",
+          "json_path": "workflow.nodes[11].parameters.headerParameters.parameters[2].value",
+          "detail": "parameter=Authorization"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[12].parameters.url",
+          "detail": "parameter=apikey"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[13].parameters.url",
+          "detail": "parameter=token"
+        },
+        {
+          "rule": "static_data_removed",
+          "json_path": "staticData"
+        }
+      ],
+      "residual_findings": [],
+      "sanitized_sha256": "75a4318d567e37ea03a3e7b3d0f15a6b377fba2bfe3276f2900bb1e24255e77c",
+      "raw_sha256": "63edef30d15aeafabf8558881a18d2ac986efc7e3f28a6c075990abe85466e16",
+      "sanitized_bytes": 15632
+    },
+    {
+      "file": "USD_Historical_Events_Backfill_24hr_Directional_Agent_.json",
+      "workflow_id": "8GLw3EO4QXevCgg1",
+      "name": "USD Historical Events Backfill (24hr Directional Agent)",
+      "redactions": [],
+      "residual_findings": [],
+      "sanitized_sha256": "0156fc9558cdc2088f94b5347aa12161ac1f452231e4624eb7a0a202ceaa07b9",
+      "raw_sha256": "0156fc9558cdc2088f94b5347aa12161ac1f452231e4624eb7a0a202ceaa07b9",
+      "sanitized_bytes": 7726
+    },
+    {
+      "file": "USD_Layer_1_Agent.json",
+      "workflow_id": "OCt1tB9yVMUgFTha",
+      "name": "USD Layer 1 Agent",
+      "redactions": [],
+      "residual_findings": [],
+      "sanitized_sha256": "e9d8db6ad5e7bcd33a57455866056af327ebb9366e7c11ef69669caedff47f93",
+      "raw_sha256": "e9d8db6ad5e7bcd33a57455866056af327ebb9366e7c11ef69669caedff47f93",
+      "sanitized_bytes": 63899
+    },
+    {
+      "file": "WTI_Layer_1_Agent.json",
+      "workflow_id": "8oUBopUWLiGcYU0d",
+      "name": "WTI Layer 1 Agent",
+      "redactions": [
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[1].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[2].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[3].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[4].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.nodes[5].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[1].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[2].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[3].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[4].parameters.url",
+          "detail": "parameter=api_key"
+        },
+        {
+          "rule": "sensitive_url_query_parameter",
+          "json_path": "workflow.activeVersion.nodes[5].parameters.url",
+          "detail": "parameter=api_key"
+        }
+      ],
+      "residual_findings": [],
+      "sanitized_sha256": "d31bd7546b9b21a60fe490a3a2093d39a28a7f01d367f2f6e6746f2ebba12b3a",
+      "raw_sha256": "8d87db99e31c65f2b81915d9ad4c57664416be5c01aa6d2231a4f9d7176641c9",
+      "sanitized_bytes": 45330
+    }
+  ],
+  "total_redactions": 430,
+  "total_residual_findings": 0,
+  "files_with_redactions": [
+    "Backtest_Processor.json",
+    "Backtest_Queue_Initialiser.json",
+    "Backtest_Resolver.json",
+    "Data_Collector_-_BTC.json",
+    "Data_Collector_-_EUR.json",
+    "Data_Collector_-_GOLD.json",
+    "Data_Collector_-_NQ.json",
+    "Data_Collector_-_SILVER.json",
+    "Data_Collector_-_USD.json",
+    "GBP_Layer_1_Agent.json",
+    "Gold_Agent.json",
+    "Layer_2_Trade_Selection_Agent.json",
+    "Price_fetch_old.json",
+    "TEST_-_Data_Collector_-_BTC_-_20260722.json",
+    "TEST_-_Data_Collector_-_BTC_-_20260722_-_modified_probe.json",
+    "TEST_-_Data_Collector_-_EUR_-_20260722.json",
+    "TEST_-_Data_Collector_-_GOLD_-_20260722.json",
+    "TEST_-_Data_Collector_-_GOLD_-_20260722_-_modified_probe.json",
+    "TEST_-_Data_Collector_-_NQ_-_20260722.json",
+    "TEST_-_Data_Collector_-_USD_-_20260722.json",
+    "TEST_-_Master_Orchestrator_-_ISOLATED_-_20260723.json",
+    "USD_Agent.json",
+    "USD_Agent_HIT_MISS_Resolution.json",
+    "WTI_Layer_1_Agent.json"
+  ]
+}

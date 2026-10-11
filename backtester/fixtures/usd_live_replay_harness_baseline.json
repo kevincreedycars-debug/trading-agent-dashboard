@@ -1,0 +1,1942 @@
+{
+  "frozen_at": "2026-10-11T19:10:49.306Z",
+  "frozen_by": "backtester/scripts/compare_usd_live_vs_replay.js --write-baseline",
+  "note": "Current behaviour is the frozen baseline. Re-freeze only deliberately, with the reason recorded in docs/.",
+  "logic_document_version": "2.1_weighted_engine",
+  "cases": [
+    {
+      "id": "frozen_parity_snapshot",
+      "live_code_row_sha256": "58725e3cd78e3d46cf39015993e1e3346c9bccedd1101db5b46f7f096c9ce23c",
+      "replay_output_sha256": "f1c760001df26d17af9cf819ae797c77b9bf9d0a51c47fa0e9bd925f1760a545",
+      "difference_count": 2,
+      "difference_fields": [
+        "confidence_quantities.headline_confidence_pct",
+        "confidence_quantities.strength_bucket_from_headline"
+      ],
+      "live_code": {
+        "arm": "live_code",
+        "direction": {
+          "direction_24h": "BULLISH"
+        },
+        "factor_contributions": [
+          {
+            "id": "F1",
+            "label": "F1 VIX",
+            "signal": "BEARISH",
+            "weight": 10,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F2",
+            "label": "F2 US 2Y Yield Delta",
+            "signal": "BULLISH",
+            "weight": 14,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F3",
+            "label": "F3 US-DE 2Y Spread Delta",
+            "signal": "BULLISH",
+            "weight": 10,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F4",
+            "label": "F4 US 10Y Real Yield Delta",
+            "signal": "BULLISH",
+            "weight": 10,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F5",
+            "label": "F5 DXY Delta",
+            "signal": "BULLISH",
+            "weight": 14,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F6",
+            "label": "F6 Gold Delta",
+            "signal": "BEARISH",
+            "weight": 4,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F7",
+            "label": "F7 US Economic Surprise",
+            "signal": "BULLISH",
+            "weight": 24,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F8",
+            "label": "F8 Fed Bias",
+            "signal": "BULLISH",
+            "weight": 12,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F9",
+            "label": "F9 Dollar Smile",
+            "signal": "NEUTRAL",
+            "weight": 1,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F10",
+            "label": "F10 Equity Regime",
+            "signal": "BEARISH",
+            "weight": 1,
+            "reason_is_missing_input": false
+          }
+        ],
+        "coverage": {
+          "active_weight": 99,
+          "neutral_weight": 1,
+          "active_factor_count": 9,
+          "neutral_factor_count": 1,
+          "missing_evidence_factor_count": 0,
+          "declared_missing_inputs": []
+        },
+        "participation": {
+          "active_weight": 99,
+          "participation_pct": 99,
+          "dashboard_participation_pct": null
+        },
+        "confidence_quantities": {
+          "bull_case_pct": 85,
+          "bear_case_pct": 15,
+          "net_edge_pct": 70,
+          "winning_side_conviction_pct": 85,
+          "headline_confidence_pct": null,
+          "strength_bucket_from_net_edge": "VERY_STRONG",
+          "strength_bucket_from_headline": null
+        }
+      },
+      "replay_live_path": {
+        "arm": "replay_live_path",
+        "direction": {
+          "direction_24h": "BULLISH"
+        },
+        "factor_contributions": [
+          {
+            "id": "F1",
+            "label": "F1 VIX",
+            "signal": "BEARISH",
+            "weight": 10,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F2",
+            "label": "F2 US 2Y Yield Delta",
+            "signal": "BULLISH",
+            "weight": 14,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F3",
+            "label": "F3 US-DE 2Y Spread Delta",
+            "signal": "BULLISH",
+            "weight": 10,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F4",
+            "label": "F4 US 10Y Real Yield Delta",
+            "signal": "BULLISH",
+            "weight": 10,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F5",
+            "label": "F5 DXY Delta",
+            "signal": "BULLISH",
+            "weight": 14,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F6",
+            "label": "F6 Gold Delta",
+            "signal": "BEARISH",
+            "weight": 4,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F7",
+            "label": "F7 US Economic Surprise",
+            "signal": "BULLISH",
+            "weight": 24,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F8",
+            "label": "F8 Fed Bias",
+            "signal": "BULLISH",
+            "weight": 12,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F9",
+            "label": "F9 Dollar Smile",
+            "signal": "NEUTRAL",
+            "weight": 1,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F10",
+            "label": "F10 Equity Regime",
+            "signal": "BEARISH",
+            "weight": 1,
+            "reason_is_missing_input": false
+          }
+        ],
+        "coverage": {
+          "active_weight": 99,
+          "neutral_weight": 1,
+          "active_factor_count": 9,
+          "neutral_factor_count": 1,
+          "missing_evidence_factor_count": 0,
+          "declared_missing_inputs": []
+        },
+        "participation": {
+          "active_weight": 99,
+          "participation_pct": 99,
+          "dashboard_participation_pct": null
+        },
+        "confidence_quantities": {
+          "bull_case_pct": 85,
+          "bear_case_pct": 15,
+          "net_edge_pct": 70,
+          "winning_side_conviction_pct": 85,
+          "headline_confidence_pct": 87,
+          "strength_bucket_from_net_edge": "VERY_STRONG",
+          "strength_bucket_from_headline": "VERY_STRONG"
+        }
+      },
+      "dashboard": {
+        "arm": "dashboard",
+        "row_shape_note": "Calculate output row as written to agent_outputs (autoMapInputData); the writer publishes a different, nested shape.",
+        "from_calculate_row": {
+          "headline_confidence_pct": null,
+          "strength_bucket": "PENDING",
+          "bull_case_pct": null,
+          "bear_case_pct": null,
+          "participation_pct": null,
+          "net_edge_pct": null
+        },
+        "with_conviction_model_lifted": {
+          "headline_confidence_pct": 87,
+          "strength_bucket": "VERY_STRONG",
+          "strength_field_used": "conviction_model.verdict_strength (override in the row)",
+          "node_verdict_strength": "VERY_STRONG",
+          "bull_case_pct": 85,
+          "bear_case_pct": 15,
+          "participation_pct": 99,
+          "net_edge_pct": 70
+        },
+        "headline_vs_node_winning_side": {
+          "node_winning_side_conviction_pct": 85,
+          "lifted_headline_confidence_pct": 87,
+          "differs": true
+        }
+      }
+    },
+    {
+      "id": "model_verdict_overridden",
+      "live_code_row_sha256": "a4b4670604fdc283ab5453e0d3aaf2f9983899b89b878cccbca17ae3c9fd75a8",
+      "replay_output_sha256": "f1c760001df26d17af9cf819ae797c77b9bf9d0a51c47fa0e9bd925f1760a545",
+      "difference_count": 2,
+      "difference_fields": [
+        "confidence_quantities.headline_confidence_pct",
+        "confidence_quantities.strength_bucket_from_headline"
+      ],
+      "live_code": {
+        "arm": "live_code",
+        "direction": {
+          "direction_24h": "BULLISH"
+        },
+        "factor_contributions": [
+          {
+            "id": "F1",
+            "label": "F1 VIX",
+            "signal": "BEARISH",
+            "weight": 10,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F2",
+            "label": "F2 US 2Y Yield Delta",
+            "signal": "BULLISH",
+            "weight": 14,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F3",
+            "label": "F3 US-DE 2Y Spread Delta",
+            "signal": "BULLISH",
+            "weight": 10,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F4",
+            "label": "F4 US 10Y Real Yield Delta",
+            "signal": "BULLISH",
+            "weight": 10,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F5",
+            "label": "F5 DXY Delta",
+            "signal": "BULLISH",
+            "weight": 14,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F6",
+            "label": "F6 Gold Delta",
+            "signal": "BEARISH",
+            "weight": 4,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F7",
+            "label": "F7 US Economic Surprise",
+            "signal": "BULLISH",
+            "weight": 24,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F8",
+            "label": "F8 Fed Bias",
+            "signal": "BULLISH",
+            "weight": 12,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F9",
+            "label": "F9 Dollar Smile",
+            "signal": "NEUTRAL",
+            "weight": 1,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F10",
+            "label": "F10 Equity Regime",
+            "signal": "BEARISH",
+            "weight": 1,
+            "reason_is_missing_input": false
+          }
+        ],
+        "coverage": {
+          "active_weight": 99,
+          "neutral_weight": 1,
+          "active_factor_count": 9,
+          "neutral_factor_count": 1,
+          "missing_evidence_factor_count": 0,
+          "declared_missing_inputs": []
+        },
+        "participation": {
+          "active_weight": 99,
+          "participation_pct": 99,
+          "dashboard_participation_pct": null
+        },
+        "confidence_quantities": {
+          "bull_case_pct": 85,
+          "bear_case_pct": 15,
+          "net_edge_pct": 70,
+          "winning_side_conviction_pct": 85,
+          "headline_confidence_pct": null,
+          "strength_bucket_from_net_edge": "VERY_STRONG",
+          "strength_bucket_from_headline": null
+        }
+      },
+      "replay_live_path": {
+        "arm": "replay_live_path",
+        "direction": {
+          "direction_24h": "BULLISH"
+        },
+        "factor_contributions": [
+          {
+            "id": "F1",
+            "label": "F1 VIX",
+            "signal": "BEARISH",
+            "weight": 10,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F2",
+            "label": "F2 US 2Y Yield Delta",
+            "signal": "BULLISH",
+            "weight": 14,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F3",
+            "label": "F3 US-DE 2Y Spread Delta",
+            "signal": "BULLISH",
+            "weight": 10,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F4",
+            "label": "F4 US 10Y Real Yield Delta",
+            "signal": "BULLISH",
+            "weight": 10,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F5",
+            "label": "F5 DXY Delta",
+            "signal": "BULLISH",
+            "weight": 14,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F6",
+            "label": "F6 Gold Delta",
+            "signal": "BEARISH",
+            "weight": 4,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F7",
+            "label": "F7 US Economic Surprise",
+            "signal": "BULLISH",
+            "weight": 24,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F8",
+            "label": "F8 Fed Bias",
+            "signal": "BULLISH",
+            "weight": 12,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F9",
+            "label": "F9 Dollar Smile",
+            "signal": "NEUTRAL",
+            "weight": 1,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F10",
+            "label": "F10 Equity Regime",
+            "signal": "BEARISH",
+            "weight": 1,
+            "reason_is_missing_input": false
+          }
+        ],
+        "coverage": {
+          "active_weight": 99,
+          "neutral_weight": 1,
+          "active_factor_count": 9,
+          "neutral_factor_count": 1,
+          "missing_evidence_factor_count": 0,
+          "declared_missing_inputs": []
+        },
+        "participation": {
+          "active_weight": 99,
+          "participation_pct": 99,
+          "dashboard_participation_pct": null
+        },
+        "confidence_quantities": {
+          "bull_case_pct": 85,
+          "bear_case_pct": 15,
+          "net_edge_pct": 70,
+          "winning_side_conviction_pct": 85,
+          "headline_confidence_pct": 87,
+          "strength_bucket_from_net_edge": "VERY_STRONG",
+          "strength_bucket_from_headline": "VERY_STRONG"
+        }
+      },
+      "dashboard": {
+        "arm": "dashboard",
+        "row_shape_note": "Calculate output row as written to agent_outputs (autoMapInputData); the writer publishes a different, nested shape.",
+        "from_calculate_row": {
+          "headline_confidence_pct": null,
+          "strength_bucket": "PENDING",
+          "bull_case_pct": null,
+          "bear_case_pct": null,
+          "participation_pct": null,
+          "net_edge_pct": null
+        },
+        "with_conviction_model_lifted": {
+          "headline_confidence_pct": 87,
+          "strength_bucket": "VERY_STRONG",
+          "strength_field_used": "conviction_model.verdict_strength (override in the row)",
+          "node_verdict_strength": "VERY_STRONG",
+          "bull_case_pct": 85,
+          "bear_case_pct": 15,
+          "participation_pct": 99,
+          "net_edge_pct": 70
+        },
+        "headline_vs_node_winning_side": {
+          "node_winning_side_conviction_pct": 85,
+          "lifted_headline_confidence_pct": 87,
+          "differs": true
+        }
+      }
+    },
+    {
+      "id": "stale_event",
+      "live_code_row_sha256": "58725e3cd78e3d46cf39015993e1e3346c9bccedd1101db5b46f7f096c9ce23c",
+      "replay_output_sha256": "04465c6e7760ab7c556e0b5c9a64ad0902c737b0960af12330fea508e7d89843",
+      "difference_count": 2,
+      "difference_fields": [
+        "confidence_quantities.headline_confidence_pct",
+        "confidence_quantities.strength_bucket_from_headline"
+      ],
+      "live_code": {
+        "arm": "live_code",
+        "direction": {
+          "direction_24h": "BULLISH"
+        },
+        "factor_contributions": [
+          {
+            "id": "F1",
+            "label": "F1 VIX",
+            "signal": "BEARISH",
+            "weight": 10,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F2",
+            "label": "F2 US 2Y Yield Delta",
+            "signal": "BULLISH",
+            "weight": 14,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F3",
+            "label": "F3 US-DE 2Y Spread Delta",
+            "signal": "BULLISH",
+            "weight": 10,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F4",
+            "label": "F4 US 10Y Real Yield Delta",
+            "signal": "BULLISH",
+            "weight": 10,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F5",
+            "label": "F5 DXY Delta",
+            "signal": "BULLISH",
+            "weight": 14,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F6",
+            "label": "F6 Gold Delta",
+            "signal": "BEARISH",
+            "weight": 4,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F7",
+            "label": "F7 US Economic Surprise",
+            "signal": "BULLISH",
+            "weight": 24,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F8",
+            "label": "F8 Fed Bias",
+            "signal": "BULLISH",
+            "weight": 12,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F9",
+            "label": "F9 Dollar Smile",
+            "signal": "NEUTRAL",
+            "weight": 1,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F10",
+            "label": "F10 Equity Regime",
+            "signal": "BEARISH",
+            "weight": 1,
+            "reason_is_missing_input": false
+          }
+        ],
+        "coverage": {
+          "active_weight": 99,
+          "neutral_weight": 1,
+          "active_factor_count": 9,
+          "neutral_factor_count": 1,
+          "missing_evidence_factor_count": 0,
+          "declared_missing_inputs": []
+        },
+        "participation": {
+          "active_weight": 99,
+          "participation_pct": 99,
+          "dashboard_participation_pct": null
+        },
+        "confidence_quantities": {
+          "bull_case_pct": 85,
+          "bear_case_pct": 15,
+          "net_edge_pct": 70,
+          "winning_side_conviction_pct": 85,
+          "headline_confidence_pct": null,
+          "strength_bucket_from_net_edge": "VERY_STRONG",
+          "strength_bucket_from_headline": null
+        }
+      },
+      "replay_live_path": {
+        "arm": "replay_live_path",
+        "direction": {
+          "direction_24h": "BULLISH"
+        },
+        "factor_contributions": [
+          {
+            "id": "F1",
+            "label": "F1 VIX",
+            "signal": "BEARISH",
+            "weight": 10,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F2",
+            "label": "F2 US 2Y Yield Delta",
+            "signal": "BULLISH",
+            "weight": 14,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F3",
+            "label": "F3 US-DE 2Y Spread Delta",
+            "signal": "BULLISH",
+            "weight": 10,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F4",
+            "label": "F4 US 10Y Real Yield Delta",
+            "signal": "BULLISH",
+            "weight": 10,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F5",
+            "label": "F5 DXY Delta",
+            "signal": "BULLISH",
+            "weight": 14,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F6",
+            "label": "F6 Gold Delta",
+            "signal": "BEARISH",
+            "weight": 4,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F7",
+            "label": "F7 US Economic Surprise",
+            "signal": "BULLISH",
+            "weight": 24,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F8",
+            "label": "F8 Fed Bias",
+            "signal": "BULLISH",
+            "weight": 12,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F9",
+            "label": "F9 Dollar Smile",
+            "signal": "NEUTRAL",
+            "weight": 1,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F10",
+            "label": "F10 Equity Regime",
+            "signal": "BEARISH",
+            "weight": 1,
+            "reason_is_missing_input": false
+          }
+        ],
+        "coverage": {
+          "active_weight": 99,
+          "neutral_weight": 1,
+          "active_factor_count": 9,
+          "neutral_factor_count": 1,
+          "missing_evidence_factor_count": 0,
+          "declared_missing_inputs": []
+        },
+        "participation": {
+          "active_weight": 99,
+          "participation_pct": 99,
+          "dashboard_participation_pct": null
+        },
+        "confidence_quantities": {
+          "bull_case_pct": 85,
+          "bear_case_pct": 15,
+          "net_edge_pct": 70,
+          "winning_side_conviction_pct": 85,
+          "headline_confidence_pct": 87,
+          "strength_bucket_from_net_edge": "VERY_STRONG",
+          "strength_bucket_from_headline": "VERY_STRONG"
+        }
+      },
+      "dashboard": {
+        "arm": "dashboard",
+        "row_shape_note": "Calculate output row as written to agent_outputs (autoMapInputData); the writer publishes a different, nested shape.",
+        "from_calculate_row": {
+          "headline_confidence_pct": null,
+          "strength_bucket": "PENDING",
+          "bull_case_pct": null,
+          "bear_case_pct": null,
+          "participation_pct": null,
+          "net_edge_pct": null
+        },
+        "with_conviction_model_lifted": {
+          "headline_confidence_pct": 87,
+          "strength_bucket": "VERY_STRONG",
+          "strength_field_used": "conviction_model.verdict_strength (override in the row)",
+          "node_verdict_strength": "VERY_STRONG",
+          "bull_case_pct": 85,
+          "bear_case_pct": 15,
+          "participation_pct": 99,
+          "net_edge_pct": 70
+        },
+        "headline_vs_node_winning_side": {
+          "node_winning_side_conviction_pct": 85,
+          "lifted_headline_confidence_pct": 87,
+          "differs": true
+        }
+      }
+    },
+    {
+      "id": "unchanged_hawkish_bias",
+      "live_code_row_sha256": "0b93931bbe857486aec3cde265aaff2fe81fd3a2617d2b6ccdb46dc779662c60",
+      "replay_output_sha256": "73190620d7ec50332f80e05ac80a3d25f8eff8c9c2530db4bbc9a80b17693e5e",
+      "difference_count": 2,
+      "difference_fields": [
+        "confidence_quantities.headline_confidence_pct",
+        "confidence_quantities.strength_bucket_from_headline"
+      ],
+      "live_code": {
+        "arm": "live_code",
+        "direction": {
+          "direction_24h": "BULLISH"
+        },
+        "factor_contributions": [
+          {
+            "id": "F1",
+            "label": "F1 VIX",
+            "signal": "NEUTRAL",
+            "weight": 10,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F2",
+            "label": "F2 US 2Y Yield Delta",
+            "signal": "NEUTRAL",
+            "weight": 14,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F3",
+            "label": "F3 US-DE 2Y Spread Delta",
+            "signal": "NEUTRAL",
+            "weight": 10,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F4",
+            "label": "F4 US 10Y Real Yield Delta",
+            "signal": "NEUTRAL",
+            "weight": 10,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F5",
+            "label": "F5 DXY Delta",
+            "signal": "NEUTRAL",
+            "weight": 14,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F6",
+            "label": "F6 Gold Delta",
+            "signal": "NEUTRAL",
+            "weight": 4,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F7",
+            "label": "F7 US Economic Surprise",
+            "signal": "NEUTRAL",
+            "weight": 24,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F8",
+            "label": "F8 Fed Bias",
+            "signal": "BULLISH",
+            "weight": 12,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F9",
+            "label": "F9 Dollar Smile",
+            "signal": "NEUTRAL",
+            "weight": 1,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F10",
+            "label": "F10 Equity Regime",
+            "signal": "NEUTRAL",
+            "weight": 1,
+            "reason_is_missing_input": false
+          }
+        ],
+        "coverage": {
+          "active_weight": 12,
+          "neutral_weight": 88,
+          "active_factor_count": 1,
+          "neutral_factor_count": 9,
+          "missing_evidence_factor_count": 0,
+          "declared_missing_inputs": []
+        },
+        "participation": {
+          "active_weight": 12,
+          "participation_pct": 12,
+          "dashboard_participation_pct": null
+        },
+        "confidence_quantities": {
+          "bull_case_pct": 100,
+          "bear_case_pct": 0,
+          "net_edge_pct": 100,
+          "winning_side_conviction_pct": 100,
+          "headline_confidence_pct": null,
+          "strength_bucket_from_net_edge": "VERY_STRONG",
+          "strength_bucket_from_headline": null
+        }
+      },
+      "replay_live_path": {
+        "arm": "replay_live_path",
+        "direction": {
+          "direction_24h": "BULLISH"
+        },
+        "factor_contributions": [
+          {
+            "id": "F1",
+            "label": "F1 VIX",
+            "signal": "NEUTRAL",
+            "weight": 10,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F2",
+            "label": "F2 US 2Y Yield Delta",
+            "signal": "NEUTRAL",
+            "weight": 14,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F3",
+            "label": "F3 US-DE 2Y Spread Delta",
+            "signal": "NEUTRAL",
+            "weight": 10,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F4",
+            "label": "F4 US 10Y Real Yield Delta",
+            "signal": "NEUTRAL",
+            "weight": 10,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F5",
+            "label": "F5 DXY Delta",
+            "signal": "NEUTRAL",
+            "weight": 14,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F6",
+            "label": "F6 Gold Delta",
+            "signal": "NEUTRAL",
+            "weight": 4,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F7",
+            "label": "F7 US Economic Surprise",
+            "signal": "NEUTRAL",
+            "weight": 24,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F8",
+            "label": "F8 Fed Bias",
+            "signal": "BULLISH",
+            "weight": 12,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F9",
+            "label": "F9 Dollar Smile",
+            "signal": "NEUTRAL",
+            "weight": 1,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F10",
+            "label": "F10 Equity Regime",
+            "signal": "NEUTRAL",
+            "weight": 1,
+            "reason_is_missing_input": false
+          }
+        ],
+        "coverage": {
+          "active_weight": 12,
+          "neutral_weight": 88,
+          "active_factor_count": 1,
+          "neutral_factor_count": 9,
+          "missing_evidence_factor_count": 0,
+          "declared_missing_inputs": [
+            "latest_us_event"
+          ]
+        },
+        "participation": {
+          "active_weight": 12,
+          "participation_pct": 12,
+          "dashboard_participation_pct": null
+        },
+        "confidence_quantities": {
+          "bull_case_pct": 100,
+          "bear_case_pct": 0,
+          "net_edge_pct": 100,
+          "winning_side_conviction_pct": 100,
+          "headline_confidence_pct": 39,
+          "strength_bucket_from_net_edge": "VERY_STRONG",
+          "strength_bucket_from_headline": "WEAK"
+        }
+      },
+      "dashboard": {
+        "arm": "dashboard",
+        "row_shape_note": "Calculate output row as written to agent_outputs (autoMapInputData); the writer publishes a different, nested shape.",
+        "from_calculate_row": {
+          "headline_confidence_pct": null,
+          "strength_bucket": "PENDING",
+          "bull_case_pct": null,
+          "bear_case_pct": null,
+          "participation_pct": null,
+          "net_edge_pct": null
+        },
+        "with_conviction_model_lifted": {
+          "headline_confidence_pct": 39,
+          "strength_bucket": "WEAK",
+          "strength_field_used": "derived_from_headline",
+          "node_verdict_strength": "VERY_STRONG",
+          "bull_case_pct": 100,
+          "bear_case_pct": 0,
+          "participation_pct": 12,
+          "net_edge_pct": 100
+        },
+        "headline_vs_node_winning_side": {
+          "node_winning_side_conviction_pct": 100,
+          "lifted_headline_confidence_pct": 39,
+          "differs": true
+        }
+      }
+    },
+    {
+      "id": "sparse_inputs",
+      "live_code_row_sha256": "c36baa739547ba06b473a258145b9f95d07d20a76e9f3146a3ca0cecffe72137",
+      "replay_output_sha256": "b9041bc2e1318c0a3f3e601695911fb34e62aeaa0e3b00c576f641c9b46d6320",
+      "difference_count": 3,
+      "difference_fields": [
+        "coverage.missing_evidence_factor_count",
+        "confidence_quantities.headline_confidence_pct",
+        "confidence_quantities.strength_bucket_from_headline"
+      ],
+      "live_code": {
+        "arm": "live_code",
+        "direction": {
+          "direction_24h": "BULLISH"
+        },
+        "factor_contributions": [
+          {
+            "id": "F1",
+            "label": "F1 VIX",
+            "signal": "BEARISH",
+            "weight": 10,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F2",
+            "label": "F2 US 2Y Yield Delta",
+            "signal": "BULLISH",
+            "weight": 14,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F3",
+            "label": "F3 US-DE 2Y Spread Delta",
+            "signal": "NEUTRAL",
+            "weight": 10,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F4",
+            "label": "F4 US 10Y Real Yield Delta",
+            "signal": "BULLISH",
+            "weight": 10,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F5",
+            "label": "F5 DXY Delta",
+            "signal": "BULLISH",
+            "weight": 14,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F6",
+            "label": "F6 Gold Delta",
+            "signal": "BULLISH",
+            "weight": 4,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F7",
+            "label": "F7 US Economic Surprise",
+            "signal": "NEUTRAL",
+            "weight": 24,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F8",
+            "label": "F8 Fed Bias",
+            "signal": "NEUTRAL",
+            "weight": 12,
+            "reason_is_missing_input": true
+          },
+          {
+            "id": "F9",
+            "label": "F9 Dollar Smile",
+            "signal": "BEARISH",
+            "weight": 1,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F10",
+            "label": "F10 Equity Regime",
+            "signal": "BEARISH",
+            "weight": 1,
+            "reason_is_missing_input": false
+          }
+        ],
+        "coverage": {
+          "active_weight": 54,
+          "neutral_weight": 46,
+          "active_factor_count": 7,
+          "neutral_factor_count": 3,
+          "missing_evidence_factor_count": 1,
+          "declared_missing_inputs": [
+            "de_2y_yield",
+            "us_de_2y_spread",
+            "us_de_2y_spread_d5_bps",
+            "fed_bias"
+          ]
+        },
+        "participation": {
+          "active_weight": 54,
+          "participation_pct": 54,
+          "dashboard_participation_pct": null
+        },
+        "confidence_quantities": {
+          "bull_case_pct": 78,
+          "bear_case_pct": 22,
+          "net_edge_pct": 56,
+          "winning_side_conviction_pct": 78,
+          "headline_confidence_pct": null,
+          "strength_bucket_from_net_edge": "VERY_STRONG",
+          "strength_bucket_from_headline": null
+        }
+      },
+      "replay_live_path": {
+        "arm": "replay_live_path",
+        "direction": {
+          "direction_24h": "BULLISH"
+        },
+        "factor_contributions": [
+          {
+            "id": "F1",
+            "label": "F1 VIX",
+            "signal": "BEARISH",
+            "weight": 10,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F2",
+            "label": "F2 US 2Y Yield Delta",
+            "signal": "BULLISH",
+            "weight": 14,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F3",
+            "label": "F3 US-DE 2Y Spread Delta",
+            "signal": "NEUTRAL",
+            "weight": 10,
+            "reason_is_missing_input": true
+          },
+          {
+            "id": "F4",
+            "label": "F4 US 10Y Real Yield Delta",
+            "signal": "BULLISH",
+            "weight": 10,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F5",
+            "label": "F5 DXY Delta",
+            "signal": "BULLISH",
+            "weight": 14,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F6",
+            "label": "F6 Gold Delta",
+            "signal": "BULLISH",
+            "weight": 4,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F7",
+            "label": "F7 US Economic Surprise",
+            "signal": "NEUTRAL",
+            "weight": 24,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F8",
+            "label": "F8 Fed Bias",
+            "signal": "NEUTRAL",
+            "weight": 12,
+            "reason_is_missing_input": true
+          },
+          {
+            "id": "F9",
+            "label": "F9 Dollar Smile",
+            "signal": "BEARISH",
+            "weight": 1,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F10",
+            "label": "F10 Equity Regime",
+            "signal": "BEARISH",
+            "weight": 1,
+            "reason_is_missing_input": false
+          }
+        ],
+        "coverage": {
+          "active_weight": 54,
+          "neutral_weight": 46,
+          "active_factor_count": 7,
+          "neutral_factor_count": 3,
+          "missing_evidence_factor_count": 2,
+          "declared_missing_inputs": [
+            "us_de_2y_spread_d5_bps",
+            "latest_us_event",
+            "fed_bias",
+            "equities_regime"
+          ]
+        },
+        "participation": {
+          "active_weight": 54,
+          "participation_pct": 54,
+          "dashboard_participation_pct": null
+        },
+        "confidence_quantities": {
+          "bull_case_pct": 78,
+          "bear_case_pct": 22,
+          "net_edge_pct": 56,
+          "winning_side_conviction_pct": 78,
+          "headline_confidence_pct": 60,
+          "strength_bucket_from_net_edge": "VERY_STRONG",
+          "strength_bucket_from_headline": "MODERATE"
+        }
+      },
+      "dashboard": {
+        "arm": "dashboard",
+        "row_shape_note": "Calculate output row as written to agent_outputs (autoMapInputData); the writer publishes a different, nested shape.",
+        "from_calculate_row": {
+          "headline_confidence_pct": null,
+          "strength_bucket": "PENDING",
+          "bull_case_pct": null,
+          "bear_case_pct": null,
+          "participation_pct": null,
+          "net_edge_pct": null
+        },
+        "with_conviction_model_lifted": {
+          "headline_confidence_pct": 65,
+          "strength_bucket": "STRONG",
+          "strength_field_used": "derived_from_headline",
+          "node_verdict_strength": "VERY_STRONG",
+          "bull_case_pct": 78,
+          "bear_case_pct": 22,
+          "participation_pct": 54,
+          "net_edge_pct": 56
+        },
+        "headline_vs_node_winning_side": {
+          "node_winning_side_conviction_pct": 78,
+          "lifted_headline_confidence_pct": 65,
+          "differs": true
+        }
+      }
+    },
+    {
+      "id": "conflicting_factors",
+      "live_code_row_sha256": "bfe437195ad9487cb0f30455c51695383a7f2a072f34756b1fae82fc076aeeee",
+      "replay_output_sha256": "66c497470ccf9841231522e3f387a2d694dce22285eaef54ccc8e8b72a75744b",
+      "difference_count": 2,
+      "difference_fields": [
+        "confidence_quantities.headline_confidence_pct",
+        "confidence_quantities.strength_bucket_from_headline"
+      ],
+      "live_code": {
+        "arm": "live_code",
+        "direction": {
+          "direction_24h": "BEARISH_LEAN"
+        },
+        "factor_contributions": [
+          {
+            "id": "F1",
+            "label": "F1 VIX",
+            "signal": "BEARISH",
+            "weight": 10,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F2",
+            "label": "F2 US 2Y Yield Delta",
+            "signal": "BULLISH",
+            "weight": 14,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F3",
+            "label": "F3 US-DE 2Y Spread Delta",
+            "signal": "BULLISH",
+            "weight": 10,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F4",
+            "label": "F4 US 10Y Real Yield Delta",
+            "signal": "BULLISH",
+            "weight": 10,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F5",
+            "label": "F5 DXY Delta",
+            "signal": "BEARISH",
+            "weight": 14,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F6",
+            "label": "F6 Gold Delta",
+            "signal": "BEARISH",
+            "weight": 4,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F7",
+            "label": "F7 US Economic Surprise",
+            "signal": "NEUTRAL",
+            "weight": 24,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F8",
+            "label": "F8 Fed Bias",
+            "signal": "BEARISH",
+            "weight": 12,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F9",
+            "label": "F9 Dollar Smile",
+            "signal": "BEARISH",
+            "weight": 1,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F10",
+            "label": "F10 Equity Regime",
+            "signal": "BEARISH",
+            "weight": 1,
+            "reason_is_missing_input": false
+          }
+        ],
+        "coverage": {
+          "active_weight": 76,
+          "neutral_weight": 24,
+          "active_factor_count": 9,
+          "neutral_factor_count": 1,
+          "missing_evidence_factor_count": 0,
+          "declared_missing_inputs": []
+        },
+        "participation": {
+          "active_weight": 76,
+          "participation_pct": 76,
+          "dashboard_participation_pct": null
+        },
+        "confidence_quantities": {
+          "bull_case_pct": 45,
+          "bear_case_pct": 55,
+          "net_edge_pct": -10,
+          "winning_side_conviction_pct": 55,
+          "headline_confidence_pct": null,
+          "strength_bucket_from_net_edge": "WEAK",
+          "strength_bucket_from_headline": null
+        }
+      },
+      "replay_live_path": {
+        "arm": "replay_live_path",
+        "direction": {
+          "direction_24h": "BEARISH_LEAN"
+        },
+        "factor_contributions": [
+          {
+            "id": "F1",
+            "label": "F1 VIX",
+            "signal": "BEARISH",
+            "weight": 10,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F2",
+            "label": "F2 US 2Y Yield Delta",
+            "signal": "BULLISH",
+            "weight": 14,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F3",
+            "label": "F3 US-DE 2Y Spread Delta",
+            "signal": "BULLISH",
+            "weight": 10,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F4",
+            "label": "F4 US 10Y Real Yield Delta",
+            "signal": "BULLISH",
+            "weight": 10,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F5",
+            "label": "F5 DXY Delta",
+            "signal": "BEARISH",
+            "weight": 14,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F6",
+            "label": "F6 Gold Delta",
+            "signal": "BEARISH",
+            "weight": 4,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F7",
+            "label": "F7 US Economic Surprise",
+            "signal": "NEUTRAL",
+            "weight": 24,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F8",
+            "label": "F8 Fed Bias",
+            "signal": "BEARISH",
+            "weight": 12,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F9",
+            "label": "F9 Dollar Smile",
+            "signal": "BEARISH",
+            "weight": 1,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F10",
+            "label": "F10 Equity Regime",
+            "signal": "BEARISH",
+            "weight": 1,
+            "reason_is_missing_input": false
+          }
+        ],
+        "coverage": {
+          "active_weight": 76,
+          "neutral_weight": 24,
+          "active_factor_count": 9,
+          "neutral_factor_count": 1,
+          "missing_evidence_factor_count": 0,
+          "declared_missing_inputs": [
+            "latest_us_event"
+          ]
+        },
+        "participation": {
+          "active_weight": 76,
+          "participation_pct": 76,
+          "dashboard_participation_pct": null
+        },
+        "confidence_quantities": {
+          "bull_case_pct": 45,
+          "bear_case_pct": 55,
+          "net_edge_pct": -10,
+          "winning_side_conviction_pct": 55,
+          "headline_confidence_pct": 43,
+          "strength_bucket_from_net_edge": "WEAK",
+          "strength_bucket_from_headline": "WEAK"
+        }
+      },
+      "dashboard": {
+        "arm": "dashboard",
+        "row_shape_note": "Calculate output row as written to agent_outputs (autoMapInputData); the writer publishes a different, nested shape.",
+        "from_calculate_row": {
+          "headline_confidence_pct": null,
+          "strength_bucket": "PENDING",
+          "bull_case_pct": null,
+          "bear_case_pct": null,
+          "participation_pct": null,
+          "net_edge_pct": null
+        },
+        "with_conviction_model_lifted": {
+          "headline_confidence_pct": 43,
+          "strength_bucket": "WEAK",
+          "strength_field_used": "conviction_model.verdict_strength (override in the row)",
+          "node_verdict_strength": "WEAK",
+          "bull_case_pct": 45,
+          "bear_case_pct": 55,
+          "participation_pct": 76,
+          "net_edge_pct": -10
+        },
+        "headline_vs_node_winning_side": {
+          "node_winning_side_conviction_pct": 55,
+          "lifted_headline_confidence_pct": 43,
+          "differs": true
+        }
+      }
+    },
+    {
+      "id": "missing_vix_level",
+      "live_code_row_sha256": "6271937ac979bf2f55d18ae5d547ee141db14d5439ad699f44b512beb078808b",
+      "replay_output_sha256": "968a977072702e42289be3c1326e0cbf0a23658a9b15540b558648a283a58e09",
+      "difference_count": 15,
+      "difference_fields": [
+        "factor_contributions.F1.signal",
+        "factor_contributions.F10.signal",
+        "coverage.active_weight",
+        "coverage.neutral_weight",
+        "coverage.active_factor_count",
+        "coverage.neutral_factor_count",
+        "coverage.missing_evidence_factor_count",
+        "participation.active_weight",
+        "participation.participation_pct",
+        "confidence_quantities.bull_case_pct",
+        "confidence_quantities.bear_case_pct",
+        "confidence_quantities.net_edge_pct",
+        "confidence_quantities.winning_side_conviction_pct",
+        "confidence_quantities.headline_confidence_pct",
+        "confidence_quantities.strength_bucket_from_headline"
+      ],
+      "live_code": {
+        "arm": "live_code",
+        "direction": {
+          "direction_24h": "BULLISH"
+        },
+        "factor_contributions": [
+          {
+            "id": "F1",
+            "label": "F1 VIX",
+            "signal": "BEARISH",
+            "weight": 10,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F2",
+            "label": "F2 US 2Y Yield Delta",
+            "signal": "BULLISH",
+            "weight": 14,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F3",
+            "label": "F3 US-DE 2Y Spread Delta",
+            "signal": "BULLISH",
+            "weight": 10,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F4",
+            "label": "F4 US 10Y Real Yield Delta",
+            "signal": "BULLISH",
+            "weight": 10,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F5",
+            "label": "F5 DXY Delta",
+            "signal": "BULLISH",
+            "weight": 14,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F6",
+            "label": "F6 Gold Delta",
+            "signal": "BEARISH",
+            "weight": 4,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F7",
+            "label": "F7 US Economic Surprise",
+            "signal": "BULLISH",
+            "weight": 24,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F8",
+            "label": "F8 Fed Bias",
+            "signal": "BULLISH",
+            "weight": 12,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F9",
+            "label": "F9 Dollar Smile",
+            "signal": "NEUTRAL",
+            "weight": 1,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F10",
+            "label": "F10 Equity Regime",
+            "signal": "BEARISH",
+            "weight": 1,
+            "reason_is_missing_input": false
+          }
+        ],
+        "coverage": {
+          "active_weight": 99,
+          "neutral_weight": 1,
+          "active_factor_count": 9,
+          "neutral_factor_count": 1,
+          "missing_evidence_factor_count": 0,
+          "declared_missing_inputs": [
+            "vix_level"
+          ]
+        },
+        "participation": {
+          "active_weight": 99,
+          "participation_pct": 99,
+          "dashboard_participation_pct": null
+        },
+        "confidence_quantities": {
+          "bull_case_pct": 85,
+          "bear_case_pct": 15,
+          "net_edge_pct": 70,
+          "winning_side_conviction_pct": 85,
+          "headline_confidence_pct": null,
+          "strength_bucket_from_net_edge": "VERY_STRONG",
+          "strength_bucket_from_headline": null
+        }
+      },
+      "replay_live_path": {
+        "arm": "replay_live_path",
+        "direction": {
+          "direction_24h": "BULLISH"
+        },
+        "factor_contributions": [
+          {
+            "id": "F1",
+            "label": "F1 VIX",
+            "signal": "NEUTRAL",
+            "weight": 10,
+            "reason_is_missing_input": true
+          },
+          {
+            "id": "F2",
+            "label": "F2 US 2Y Yield Delta",
+            "signal": "BULLISH",
+            "weight": 14,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F3",
+            "label": "F3 US-DE 2Y Spread Delta",
+            "signal": "BULLISH",
+            "weight": 10,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F4",
+            "label": "F4 US 10Y Real Yield Delta",
+            "signal": "BULLISH",
+            "weight": 10,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F5",
+            "label": "F5 DXY Delta",
+            "signal": "BULLISH",
+            "weight": 14,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F6",
+            "label": "F6 Gold Delta",
+            "signal": "BEARISH",
+            "weight": 4,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F7",
+            "label": "F7 US Economic Surprise",
+            "signal": "BULLISH",
+            "weight": 24,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F8",
+            "label": "F8 Fed Bias",
+            "signal": "BULLISH",
+            "weight": 12,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F9",
+            "label": "F9 Dollar Smile",
+            "signal": "NEUTRAL",
+            "weight": 1,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F10",
+            "label": "F10 Equity Regime",
+            "signal": "NEUTRAL",
+            "weight": 1,
+            "reason_is_missing_input": true
+          }
+        ],
+        "coverage": {
+          "active_weight": 88,
+          "neutral_weight": 12,
+          "active_factor_count": 7,
+          "neutral_factor_count": 3,
+          "missing_evidence_factor_count": 2,
+          "declared_missing_inputs": [
+            "vix_level"
+          ]
+        },
+        "participation": {
+          "active_weight": 88,
+          "participation_pct": 88,
+          "dashboard_participation_pct": null
+        },
+        "confidence_quantities": {
+          "bull_case_pct": 95,
+          "bear_case_pct": 5,
+          "net_edge_pct": 90,
+          "winning_side_conviction_pct": 95,
+          "headline_confidence_pct": 92,
+          "strength_bucket_from_net_edge": "VERY_STRONG",
+          "strength_bucket_from_headline": "VERY_STRONG"
+        }
+      },
+      "dashboard": {
+        "arm": "dashboard",
+        "row_shape_note": "Calculate output row as written to agent_outputs (autoMapInputData); the writer publishes a different, nested shape.",
+        "from_calculate_row": {
+          "headline_confidence_pct": null,
+          "strength_bucket": "PENDING",
+          "bull_case_pct": null,
+          "bear_case_pct": null,
+          "participation_pct": null,
+          "net_edge_pct": null
+        },
+        "with_conviction_model_lifted": {
+          "headline_confidence_pct": 87,
+          "strength_bucket": "VERY_STRONG",
+          "strength_field_used": "conviction_model.verdict_strength (override in the row)",
+          "node_verdict_strength": "VERY_STRONG",
+          "bull_case_pct": 85,
+          "bear_case_pct": 15,
+          "participation_pct": 99,
+          "net_edge_pct": 70
+        },
+        "headline_vs_node_winning_side": {
+          "node_winning_side_conviction_pct": 85,
+          "lifted_headline_confidence_pct": 87,
+          "differs": true
+        }
+      }
+    },
+    {
+      "id": "lookback_substitution",
+      "live_code_row_sha256": "d2193a3c16a8f73a55a6d77e59d7e8229ab3c372cb2770419a3a44d2dce5a209",
+      "replay_output_sha256": "649b49f8da55f51da803b72713d030dd0e4123382e6ecba1a3b9879ee467fa2b",
+      "difference_count": 2,
+      "difference_fields": [
+        "confidence_quantities.headline_confidence_pct",
+        "confidence_quantities.strength_bucket_from_headline"
+      ],
+      "live_code": {
+        "arm": "live_code",
+        "direction": {
+          "direction_24h": "BULLISH"
+        },
+        "factor_contributions": [
+          {
+            "id": "F1",
+            "label": "F1 VIX",
+            "signal": "BEARISH",
+            "weight": 10,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F2",
+            "label": "F2 US 2Y Yield Delta",
+            "signal": "BULLISH",
+            "weight": 14,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F3",
+            "label": "F3 US-DE 2Y Spread Delta",
+            "signal": "BULLISH",
+            "weight": 10,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F4",
+            "label": "F4 US 10Y Real Yield Delta",
+            "signal": "BULLISH",
+            "weight": 10,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F5",
+            "label": "F5 DXY Delta",
+            "signal": "BULLISH",
+            "weight": 14,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F6",
+            "label": "F6 Gold Delta",
+            "signal": "BULLISH",
+            "weight": 4,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F7",
+            "label": "F7 US Economic Surprise",
+            "signal": "BULLISH",
+            "weight": 24,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F8",
+            "label": "F8 Fed Bias",
+            "signal": "BULLISH",
+            "weight": 12,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F9",
+            "label": "F9 Dollar Smile",
+            "signal": "NEUTRAL",
+            "weight": 1,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F10",
+            "label": "F10 Equity Regime",
+            "signal": "BEARISH",
+            "weight": 1,
+            "reason_is_missing_input": false
+          }
+        ],
+        "coverage": {
+          "active_weight": 99,
+          "neutral_weight": 1,
+          "active_factor_count": 9,
+          "neutral_factor_count": 1,
+          "missing_evidence_factor_count": 0,
+          "declared_missing_inputs": [
+            "dxy_d5"
+          ]
+        },
+        "participation": {
+          "active_weight": 99,
+          "participation_pct": 99,
+          "dashboard_participation_pct": null
+        },
+        "confidence_quantities": {
+          "bull_case_pct": 89,
+          "bear_case_pct": 11,
+          "net_edge_pct": 78,
+          "winning_side_conviction_pct": 89,
+          "headline_confidence_pct": null,
+          "strength_bucket_from_net_edge": "VERY_STRONG",
+          "strength_bucket_from_headline": null
+        }
+      },
+      "replay_live_path": {
+        "arm": "replay_live_path",
+        "direction": {
+          "direction_24h": "BULLISH"
+        },
+        "factor_contributions": [
+          {
+            "id": "F1",
+            "label": "F1 VIX",
+            "signal": "BEARISH",
+            "weight": 10,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F2",
+            "label": "F2 US 2Y Yield Delta",
+            "signal": "BULLISH",
+            "weight": 14,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F3",
+            "label": "F3 US-DE 2Y Spread Delta",
+            "signal": "BULLISH",
+            "weight": 10,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F4",
+            "label": "F4 US 10Y Real Yield Delta",
+            "signal": "BULLISH",
+            "weight": 10,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F5",
+            "label": "F5 DXY Delta",
+            "signal": "BULLISH",
+            "weight": 14,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F6",
+            "label": "F6 Gold Delta",
+            "signal": "BULLISH",
+            "weight": 4,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F7",
+            "label": "F7 US Economic Surprise",
+            "signal": "BULLISH",
+            "weight": 24,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F8",
+            "label": "F8 Fed Bias",
+            "signal": "BULLISH",
+            "weight": 12,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F9",
+            "label": "F9 Dollar Smile",
+            "signal": "NEUTRAL",
+            "weight": 1,
+            "reason_is_missing_input": false
+          },
+          {
+            "id": "F10",
+            "label": "F10 Equity Regime",
+            "signal": "BEARISH",
+            "weight": 1,
+            "reason_is_missing_input": false
+          }
+        ],
+        "coverage": {
+          "active_weight": 99,
+          "neutral_weight": 1,
+          "active_factor_count": 9,
+          "neutral_factor_count": 1,
+          "missing_evidence_factor_count": 0,
+          "declared_missing_inputs": [
+            "dxy_d20",
+            "gold_d20_pct",
+            "nq_d20_pct"
+          ]
+        },
+        "participation": {
+          "active_weight": 99,
+          "participation_pct": 99,
+          "dashboard_participation_pct": null
+        },
+        "confidence_quantities": {
+          "bull_case_pct": 89,
+          "bear_case_pct": 11,
+          "net_edge_pct": 78,
+          "winning_side_conviction_pct": 89,
+          "headline_confidence_pct": 90,
+          "strength_bucket_from_net_edge": "VERY_STRONG",
+          "strength_bucket_from_headline": "VERY_STRONG"
+        }
+      },
+      "dashboard": {
+        "arm": "dashboard",
+        "row_shape_note": "Calculate output row as written to agent_outputs (autoMapInputData); the writer publishes a different, nested shape.",
+        "from_calculate_row": {
+          "headline_confidence_pct": null,
+          "strength_bucket": "PENDING",
+          "bull_case_pct": null,
+          "bear_case_pct": null,
+          "participation_pct": null,
+          "net_edge_pct": null
+        },
+        "with_conviction_model_lifted": {
+          "headline_confidence_pct": 90,
+          "strength_bucket": "VERY_STRONG",
+          "strength_field_used": "conviction_model.verdict_strength (override in the row)",
+          "node_verdict_strength": "VERY_STRONG",
+          "bull_case_pct": 89,
+          "bear_case_pct": 11,
+          "participation_pct": 99,
+          "net_edge_pct": 78
+        },
+        "headline_vs_node_winning_side": {
+          "node_winning_side_conviction_pct": 89,
+          "lifted_headline_confidence_pct": 90,
+          "differs": true
+        }
+      }
+    }
+  ]
+}

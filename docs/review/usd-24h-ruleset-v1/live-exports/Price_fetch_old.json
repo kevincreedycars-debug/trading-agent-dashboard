@@ -1,0 +1,296 @@
+{
+  "id": "TcNF8wWesKjkK3u4",
+  "name": "Price fetch old",
+  "description": null,
+  "active": false,
+  "activeVersionId": null,
+  "createdAt": "2026-05-14T08:37:47.822Z",
+  "updatedAt": "2026-06-19T13:40:35.483Z",
+  "isArchived": false,
+  "versionId": "18536969-81f0-4793-9ad1-ebc02b5784c8",
+  "versionCounter": 86,
+  "sourceWorkflowId": null,
+  "triggerCount": 0,
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "5a4d3725-f041-4e1b-9903-29013332c15e",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "url": "https://api.twelvedata.com/time_series",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "symbol",
+              "value": "EUR/USD,GBP/USD,USD/JPY,USD/CAD,AUD/USD"
+            },
+            {
+              "name": "interval",
+              "value": "1day"
+            },
+            {
+              "name": "outputsize",
+              "value": "100"
+            },
+            {
+              "name": "apikey",
+              "value": "<redacted>"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        176,
+        0
+      ],
+      "id": "8d7d9f42-7784-444c-9f3d-561f35cabe08",
+      "name": "HTTP Request | Fetch Prices Batch 1 - Twelve Data"
+    },
+    {
+      "parameters": {
+        "url": "https://api.twelvedata.com/time_series",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "symbol",
+              "value": "XAU/USD,WTI/USD,BTC/USD,QQQ"
+            },
+            {
+              "name": "interval",
+              "value": "1day"
+            },
+            {
+              "name": "outputsize",
+              "value": "100"
+            },
+            {
+              "name": "apikey",
+              "value": "<redacted>"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        416,
+        0
+      ],
+      "id": "51edf037-6576-4f81-93ca-ed84b405600c",
+      "name": "HTTP Request | Fetch Prices Batch 2 - Twelve Data"
+    },
+    {
+      "parameters": {
+        "jsCode": "const batch1 = $('HTTP Request | Fetch Prices Batch 1 - Twelve Data').first().json;\nconst batch2 = $('HTTP Request | Fetch Prices Batch 2 - Twelve Data').first().json;\n\nconst symbolMap = {\n  'EUR/USD': 'EUR/USD',\n  'GBP/USD': 'GBP/USD',\n  'USD/JPY': 'USD/JPY',\n  'USD/CAD': 'USD/CAD',\n  'AUD/USD': 'AUD/USD',\n  'XAU/USD': 'XAU/USD',\n  'WTI/USD': 'WTI Oil',\n  'BTC/USD': 'BTC/USD',\n  'QQQ':     'NQ'\n};\n\nconst rows = [];\n\nconst allData = { ...batch1, ...batch2 };\n\nObject.entries(allData).forEach(([symbol, data]) => {\n  if (!data.values) return;\n  const market = symbolMap[symbol];\n  if (!market) return;\n\n  data.values.forEach(bar => {\n    rows.push({\n      price_date:  bar.datetime,\n      market:      market,\n      open_price:  parseFloat(bar.open),\n      close_price: parseFloat(bar.close),\n      source:      'TwelveData'\n    });\n  });\n});\n\nreturn rows.map(r => ({ json: r }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        624,
+        0
+      ],
+      "id": "abf11d19-ebba-4140-8468-b0dc49dee5fa",
+      "name": "Code | Transform Prices for Supabase"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://apoockcbbtghnkuypdvh.supabase.co/rest/v1/market_prices",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "on_conflict",
+              "value": "price_date,market"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "apikey",
+              "value": "<redacted>"
+            },
+            {
+              "name": "Authorization",
+              "value": "<redacted>"
+            },
+            {
+              "name": "Prefer",
+              "value": "resolution=merge-duplicates"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $input.all().map(i => i.json) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1088,
+        16
+      ],
+      "id": "05a52fbd-de38-4d3b-b014-379bda5d4917",
+      "name": "HTTP Request | Load Prices to Supabase"
+    },
+    {
+      "parameters": {
+        "batchSize": 50,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        832,
+        16
+      ],
+      "id": "3bf76420-28d6-480c-a259-7b7ce9170f3b",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "amount": 100
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        288,
+        -224
+      ],
+      "id": "e340976c-7ecd-4404-9825-2c8d699c9675",
+      "name": "Wait",
+      "webhookId": "2941f661-0827-48b6-8f6c-3eb8409b023f"
+    }
+  ],
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request | Fetch Prices Batch 1 - Twelve Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request | Fetch Prices Batch 1 - Twelve Data": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request | Fetch Prices Batch 2 - Twelve Data": {
+      "main": [
+        [
+          {
+            "node": "Code | Transform Prices for Supabase",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Transform Prices for Supabase": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "HTTP Request | Load Prices to Supabase",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request | Load Prices to Supabase": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request | Fetch Prices Batch 2 - Twelve Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "nodeGroups": [],
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "pinData": {},
+  "meta": null,
+  "tags": [],
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "TcNF8wWesKjkK3u4",
+      "projectId": "ISQG9XU7TGTT6Fcu",
+      "project": {
+        "id": "ISQG9XU7TGTT6Fcu",
+        "name": "Daniel Silver <a17@live.co.uk>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "customTelemetryTags": [],
+        "creatorId": "eb4fba3e-5170-481b-abc5-ce65776c1113",
+        "createdAt": "2026-04-29T19:10:11.212Z",
+        "updatedAt": "2026-04-29T19:10:21.640Z"
+      },
+      "createdAt": "2026-05-14T08:37:47.825Z",
+      "updatedAt": "2026-05-14T08:37:47.825Z"
+    }
+  ],
+  "activeVersion": null
+}

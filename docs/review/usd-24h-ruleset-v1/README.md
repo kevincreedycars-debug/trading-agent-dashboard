@@ -13,6 +13,10 @@ logic; the pipeline was not touched.
 | `USD_24h_Policy_Config_v1.json` | Supplied policy configuration, copied verbatim (`D42A9469A68166D1…`) |
 | `discovery_report.md` | Coordinator's WP0/WP1 result: source identity, runtime liveness, eight-engine inventory, C1–C12 verdicts, blockers |
 | `coordinator_status_USD-L1-WP0.json` | Machine-readable status record in the brief's suggested shape |
+| `live_export_and_harness_report.md` | WP0b result: the authorised read-only n8n export, deployment identity, credential-material finding, routing trace for SILVER/WTI, and the live-versus-replay comparison |
+| `live_export_identity.json` | Machine-readable identity evidence for all 45 exported workflows: ids, versions, timestamps, per-node code hashes, routing, credential bindings, sanitized hashes |
+| `live-exports/` | Sanitized export of all 45 live workflows plus `manifest.json` and `scrub_report.json` |
+| `usd_live_replay_comparison.json` | Per-case comparison of the exported live code, the replay implementation and the dashboard calculation |
 
 ## The reviewer's three questions, answered from this repository
 
@@ -24,10 +28,18 @@ logic; the pipeline was not touched.
    (tip `31fd44e`). Both are listed in the discovery report, including which artefacts differ between them.
 3. Runtime: n8n is still live. Evidence: `origin/main:data/layer1.json` refreshed 2026-10-11T08:55:44Z with all
    eight agent rows run that morning, and the `live-trading` lane is committing M5/H1/H4 snapshots every 15
-   minutes. Whether the repository exports equal the running workflows is **unproven** and needs a scoped live
-   export.
+   minutes. Deployment identity is now **measured** for the USD deterministic code nodes: an authorised,
+   scoped, read-only export of all 45 live workflows on 2026-10-11T18:59:54Z shows the active
+   `USD Layer 1 Agent` (`OCt1tB9yVMUgFTha`, v154) carrying code nodes byte-identical to
+   `exports/usd_layer1_agent.json`. See `live_export_and_harness_report.md` and `live_export_identity.json`;
+   the other engine differences listed there remain unreviewed.
 
 ## Boundaries
 
-Discovery only. No live workflow, dashboard, database or credential was read or changed. Claims about trading edge,
-causal feature timing and deployment identity are explicitly out of scope here and are unanswered in the report.
+Discovery, one authorised read-only export and a local comparison harness. No live workflow, dashboard,
+database or credential value was read into this package or changed; the export used GET requests only and the
+dispatcher was left exactly as found. Raw export copies stay in the ignored `tmp/live/` folder; the committed
+copies are sanitized, and the sanitizer's rules and every redaction path are recorded in
+`live-exports/scrub_report.json`. Claims about trading edge, causal feature timing and full historical
+live/replay equivalence are out of scope here and are unanswered. The 13 harness tests prove arithmetic and
+bookkeeping agreement or disagreement on eight frozen snapshots; they are not evidence of predictive accuracy.

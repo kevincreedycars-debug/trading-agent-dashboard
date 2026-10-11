@@ -1,0 +1,156 @@
+{
+  "id": "8GLw3EO4QXevCgg1",
+  "name": "USD Historical Events Backfill (24hr Directional Agent)",
+  "description": null,
+  "active": true,
+  "activeVersionId": "81005e5e-926d-47fe-b219-08a7eef830f1",
+  "createdAt": "2026-08-21T19:44:49.374Z",
+  "updatedAt": "2026-08-21T20:31:46.479Z",
+  "isArchived": false,
+  "versionId": "81005e5e-926d-47fe-b219-08a7eef830f1",
+  "versionCounter": 5,
+  "sourceWorkflowId": null,
+  "triggerCount": 1,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "usd-historical-backfill",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "webhook-trigger-usd-backfill",
+      "name": "Webhook | Trigger Backfill Chunk",
+      "webhookId": "bd00f6cd-7544-485f-99a4-f58ef4a2a068"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const RAPIDAPI_KEY = \"cec1f7f099msh19d57fb7bd65106p1d4040jsne632a37c958b\";\nconst HOST = \"forex-factory-scraper1.p.rapidapi.com\";\nconst TIMEZONE = \"GMT-06:00 Central Time (US & Canada)\";\n\nconst body = $input.first().json.body || $input.first().json || {};\nconst dates = Array.isArray(body.dates) ? body.dates : [];\nif (dates.length === 0) {\n  return [{ json: { error: \"No dates provided. POST { dates: [\\\"YYYY-MM-DD\\\", ...] }\" } }];\n}\n\nfunction sleep(ms) { return new Promise((r) => setTimeout(r, ms)); }\n\nconst results = {};\nfor (const d of dates) {\n  const [y, m, day] = d.split(\"-\").map(Number);\n  const url = `https://${HOST}/get_calendar_details?year=${y}&month=${m}&day=${day}&currency=USD&event_name=ALL&timezone=${encodeURIComponent(TIMEZONE)}&time_format=12h`;\n  let attempt = 0;\n  let done = false;\n  while (!done && attempt < 2) {\n    attempt++;\n    try {\n      const response = await this.helpers.httpRequest({\n        method: \"GET\",\n        url,\n        headers: { \"x-rapidapi-host\": HOST, \"x-rapidapi-key\": RAPIDAPI_KEY },\n        json: true,\n        timeout: 4000,\n      });\n      results[d] = Array.isArray(response) ? response : [];\n      done = true;\n    } catch (err) {\n      const msg = String((err && err.message) || err);\n      if (/unexpected end of json|no data|204/i.test(msg)) {\n        results[d] = [];\n        done = true;\n      } else if (/429/.test(msg) && attempt < 2) {\n        await sleep(3000);\n        continue;\n      } else if (/timeout/i.test(msg)) {\n        results[d] = { __timeout: true };\n        done = true;\n      } else {\n        results[d] = { __fetch_error: msg };\n        done = true;\n      }\n    }\n  }\n  await sleep(1500);\n}\n\nreturn [{ json: { results, dates_requested: dates.length, dates_returned: Object.keys(results).length } }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        260,
+        0
+      ],
+      "id": "code-fetch-loop-usd-backfill",
+      "name": "Code | Fetch USD Calendar Days (looped)"
+    }
+  ],
+  "connections": {
+    "Webhook | Trigger Backfill Chunk": {
+      "main": [
+        [
+          {
+            "node": "Code | Fetch USD Calendar Days (looped)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "nodeGroups": [],
+  "settings": {
+    "executionOrder": "v1",
+    "executionTimeout": 1800
+  },
+  "staticData": null,
+  "pinData": null,
+  "meta": null,
+  "tags": [],
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "8GLw3EO4QXevCgg1",
+      "projectId": "ISQG9XU7TGTT6Fcu",
+      "project": {
+        "id": "ISQG9XU7TGTT6Fcu",
+        "name": "Daniel Silver <a17@live.co.uk>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "customTelemetryTags": [],
+        "creatorId": "eb4fba3e-5170-481b-abc5-ce65776c1113",
+        "createdAt": "2026-04-29T19:10:11.212Z",
+        "updatedAt": "2026-04-29T19:10:21.640Z"
+      },
+      "createdAt": "2026-08-21T19:44:49.378Z",
+      "updatedAt": "2026-08-21T19:44:49.378Z"
+    }
+  ],
+  "activeVersion": {
+    "versionId": "81005e5e-926d-47fe-b219-08a7eef830f1",
+    "workflowId": "8GLw3EO4QXevCgg1",
+    "nodes": [
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "usd-historical-backfill",
+          "responseMode": "onReceived",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2,
+        "position": [
+          0,
+          0
+        ],
+        "id": "webhook-trigger-usd-backfill",
+        "name": "Webhook | Trigger Backfill Chunk",
+        "webhookId": "bd00f6cd-7544-485f-99a4-f58ef4a2a068"
+      },
+      {
+        "parameters": {
+          "mode": "runOnceForAllItems",
+          "jsCode": "const RAPIDAPI_KEY = \"cec1f7f099msh19d57fb7bd65106p1d4040jsne632a37c958b\";\nconst HOST = \"forex-factory-scraper1.p.rapidapi.com\";\nconst TIMEZONE = \"GMT-06:00 Central Time (US & Canada)\";\n\nconst body = $input.first().json.body || $input.first().json || {};\nconst dates = Array.isArray(body.dates) ? body.dates : [];\nif (dates.length === 0) {\n  return [{ json: { error: \"No dates provided. POST { dates: [\\\"YYYY-MM-DD\\\", ...] }\" } }];\n}\n\nfunction sleep(ms) { return new Promise((r) => setTimeout(r, ms)); }\n\nconst results = {};\nfor (const d of dates) {\n  const [y, m, day] = d.split(\"-\").map(Number);\n  const url = `https://${HOST}/get_calendar_details?year=${y}&month=${m}&day=${day}&currency=USD&event_name=ALL&timezone=${encodeURIComponent(TIMEZONE)}&time_format=12h`;\n  let attempt = 0;\n  let done = false;\n  while (!done && attempt < 2) {\n    attempt++;\n    try {\n      const response = await this.helpers.httpRequest({\n        method: \"GET\",\n        url,\n        headers: { \"x-rapidapi-host\": HOST, \"x-rapidapi-key\": RAPIDAPI_KEY },\n        json: true,\n        timeout: 4000,\n      });\n      results[d] = Array.isArray(response) ? response : [];\n      done = true;\n    } catch (err) {\n      const msg = String((err && err.message) || err);\n      if (/unexpected end of json|no data|204/i.test(msg)) {\n        results[d] = [];\n        done = true;\n      } else if (/429/.test(msg) && attempt < 2) {\n        await sleep(3000);\n        continue;\n      } else if (/timeout/i.test(msg)) {\n        results[d] = { __timeout: true };\n        done = true;\n      } else {\n        results[d] = { __fetch_error: msg };\n        done = true;\n      }\n    }\n  }\n  await sleep(1500);\n}\n\nreturn [{ json: { results, dates_requested: dates.length, dates_returned: Object.keys(results).length } }];\n"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          260,
+          0
+        ],
+        "id": "code-fetch-loop-usd-backfill",
+        "name": "Code | Fetch USD Calendar Days (looped)"
+      }
+    ],
+    "connections": {
+      "Webhook | Trigger Backfill Chunk": {
+        "main": [
+          [
+            {
+              "node": "Code | Fetch USD Calendar Days (looped)",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "nodeGroups": [],
+    "authors": "Daniel Silver",
+    "name": null,
+    "description": null,
+    "autosaved": false,
+    "createdAt": "2026-08-21T20:31:46.494Z",
+    "updatedAt": "2026-08-21T20:31:46.494Z",
+    "workflowPublishHistory": [
+      {
+        "id": 246,
+        "workflowId": "8GLw3EO4QXevCgg1",
+        "versionId": "81005e5e-926d-47fe-b219-08a7eef830f1",
+        "event": "activated",
+        "userId": "eb4fba3e-5170-481b-abc5-ce65776c1113",
+        "createdAt": "2026-08-21T20:31:46.631Z"
+      }
+    ]
+  }
+}

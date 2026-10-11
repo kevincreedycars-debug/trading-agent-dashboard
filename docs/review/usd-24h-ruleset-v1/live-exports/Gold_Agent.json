@@ -1,0 +1,438 @@
+{
+  "id": "7vVmN27XFZrW9vgc",
+  "name": "Gold Agent",
+  "description": null,
+  "active": false,
+  "activeVersionId": null,
+  "createdAt": "2026-06-03T19:42:42.160Z",
+  "updatedAt": "2026-06-05T07:47:48.530Z",
+  "isArchived": false,
+  "versionId": "8ae92606-452a-4ac3-8e43-bc3f1e88777d",
+  "versionCounter": 91,
+  "sourceWorkflowId": null,
+  "triggerCount": 0,
+  "nodes": [
+    {
+      "parameters": {
+        "url": "https://api.stlouisfed.org/fred/series/observations",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "series_id",
+              "value": "DFII10"
+            },
+            {
+              "name": "api_key",
+              "value": "<redacted>"
+            },
+            {
+              "name": "file_type",
+              "value": "json"
+            },
+            {
+              "name": "sort_order",
+              "value": "desc"
+            },
+            {
+              "name": "limit",
+              "value": "10"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        208,
+        0
+      ],
+      "id": "98d8e5ff-2f4e-43b2-a778-abf293264b67",
+      "name": "HTTP Request | FRED - Real Yield 10Y"
+    },
+    {
+      "parameters": {
+        "url": "https://api.stlouisfed.org/fred/series/observations",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "series_id",
+              "value": "DTWEXBGS"
+            },
+            {
+              "name": "api_key",
+              "value": "<redacted>"
+            },
+            {
+              "name": "file_type",
+              "value": "json"
+            },
+            {
+              "name": "sort_order",
+              "value": "desc"
+            },
+            {
+              "name": "limit",
+              "value": "10"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        416,
+        0
+      ],
+      "id": "2e12188c-f079-4028-91ee-f6826b1fad34",
+      "name": "HTTP Request | FRED - Broad USD"
+    },
+    {
+      "parameters": {
+        "url": "https://api.stlouisfed.org/fred/series/observations",
+        "sendQuery": true,
+        "specifyQuery": "json",
+        "jsonQuery": "{\n  \"series_id\": \"DGS2\",\n  \"api_key\": \"<redacted>\",\n  \"file_type\": \"json\",\n  \"sort_order\": \"desc\",\n  \"limit\": \"10\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        624,
+        0
+      ],
+      "id": "9089bdc9-fc55-43ef-924d-e7683f5d957f",
+      "name": "HTTP Request | FRED - 2Y Yield"
+    },
+    {
+      "parameters": {
+        "url": "https://api.stlouisfed.org/fred/series/observations",
+        "sendQuery": true,
+        "specifyQuery": "json",
+        "jsonQuery": "{\n  \"series_id\": \"T10YIE\",\n  \"api_key\": \"<redacted>\",\n  \"file_type\": \"json\",\n  \"sort_order\": \"desc\",\n  \"limit\": \"10\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        832,
+        0
+      ],
+      "id": "f04c761d-874a-4891-aa58-c1a10acdb7bb",
+      "name": "HTTP Request | FRED - Inflation Expectations"
+    },
+    {
+      "parameters": {
+        "url": "https://api.stlouisfed.org/fred/series/observations",
+        "sendQuery": true,
+        "specifyQuery": "json",
+        "jsonQuery": "{\n  \"series_id\": \"T10YIE\",\n  \"api_key\": \"<redacted>\",\n  \"file_type\": \"json\",\n  \"sort_order\": \"desc\",\n  \"limit\": \"10\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1040,
+        0
+      ],
+      "id": "3454fe20-f8c9-43ff-bc22-3b52aee72db2",
+      "name": "HTTP Request | FRED - Financial Stress"
+    },
+    {
+      "parameters": {
+        "url": "https://api.stlouisfed.org/fred/series/observations",
+        "sendQuery": true,
+        "specifyQuery": "json",
+        "jsonQuery": "{\n  \"series_id\": \"BAMLH0A0HYM2\",\n  \"api_key\": \"<redacted>\",\n  \"file_type\": \"json\",\n  \"sort_order\": \"desc\",\n  \"limit\": \"10\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1248,
+        0
+      ],
+      "id": "738ab52d-e853-4d9e-83d3-926b0b18dfa6",
+      "name": "HTTP Request | FRED - Credit Stress"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        256,
+        224
+      ],
+      "id": "b29fd093-cc83-465b-8994-9634f5357ab1",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "jsCode": "function cleanSeries(item) {\n  const json = item.json;\n  const observations = json.observations || [];\n\n  const valid = observations\n    .filter(o => o.value !== \".\" && o.value !== null && o.value !== undefined)\n    .map(o => ({\n      date: o.date,\n      value: Number(o.value)\n    }))\n    .filter(o => !Number.isNaN(o.value));\n\n  if (valid.length < 2) {\n    return null;\n  }\n\n  return {\n    series_id: json.seriess?.[0]?.id || json.series_id || null,\n    current: valid[0].value,\n    previous: valid[1].value,\n    change: Number((valid[0].value - valid[1].value).toFixed(4)),\n    date: valid[0].date,\n    previous_date: valid[1].date\n  };\n}\n\nconst seriesMap = {};\n\nfor (const item of items) {\n  const cleaned = cleanSeries(item);\n  if (!cleaned) continue;\n\n  const obs = item.json.observations || [];\n  const first = obs[0];\n\n  // Fallback: infer series from node name if present, otherwise use item order later\n  const seriesId =\n    item.json.series_id ||\n    item.json?.seriess?.[0]?.id ||\n    item.json?.seriesId ||\n    null;\n\n  if (seriesId) {\n    seriesMap[seriesId] = cleaned;\n  }\n}\n\n// If series_id is not returned by FRED, map by item order\nconst ordered = items.map(cleanSeries).filter(Boolean);\n\nconst realYield = seriesMap.DFII10 || ordered[0];\nconst broadUsd = seriesMap.DTWEXBGS || ordered[1];\nconst twoYearYield = seriesMap.DGS2 || ordered[2];\nconst breakevenInflation = seriesMap.T10YIE || ordered[3];\nconst financialStress = seriesMap.STLFSI4 || ordered[4];\nconst creditStress = seriesMap.BAMLH0A0HYM2 || ordered[5];\n\nfunction signalFromChange(change, bullishWhenFalling = true, threshold = 0) {\n  if (change === null || change === undefined) return \"neutral\";\n  if (Math.abs(change) <= threshold) return \"neutral\";\n\n  if (bullishWhenFalling) {\n    return change < 0 ? \"bullish\" : \"bearish\";\n  }\n\n  return change > 0 ? \"bullish\" : \"bearish\";\n}\n\nfunction scoreSignal(signal) {\n  if (signal === \"bullish\") return 1;\n  if (signal === \"bearish\") return -1;\n  return 0;\n}\n\nconst drivers = {\n  real_yield: {\n    label: \"10Y real yield\",\n    ...realYield,\n    signal: signalFromChange(realYield?.change, true, 0.005)\n  },\n  broad_usd: {\n    label: \"Broad USD index\",\n    ...broadUsd,\n    signal: signalFromChange(broadUsd?.change, true, 0.02)\n  },\n  fed_expectations_proxy: {\n    label: \"2Y Treasury yield\",\n    ...twoYearYield,\n    signal: signalFromChange(twoYearYield?.change, true, 0.005)\n  },\n  inflation_expectations: {\n    label: \"10Y breakeven inflation\",\n    ...breakevenInflation,\n    signal: signalFromChange(breakevenInflation?.change, false, 0.005)\n  },\n  financial_stress: {\n    label: \"Financial stress index\",\n    ...financialStress,\n    signal: signalFromChange(financialStress?.change, false, 0.005)\n  },\n  credit_stress: {\n    label: \"High-yield credit spread\",\n    ...creditStress,\n    signal: signalFromChange(creditStress?.change, false, 0.005)\n  }\n};\n\nconst weights = {\n  \"24h\": {\n    real_yield: 0.30,\n    broad_usd: 0.25,\n    fed_expectations_proxy: 0.20,\n    financial_stress: 0.15,\n    credit_stress: 0.10\n  },\n  \"72h\": {\n    real_yield: 0.30,\n    broad_usd: 0.20,\n    fed_expectations_proxy: 0.25,\n    financial_stress: 0.15,\n    credit_stress: 0.10\n  },\n  \"7d\": {\n    real_yield: 0.25,\n    broad_usd: 0.20,\n    fed_expectations_proxy: 0.25,\n    inflation_expectations: 0.10,\n    financial_stress: 0.10,\n    credit_stress: 0.10\n  },\n  \"1m\": {\n    real_yield: 0.25,\n    broad_usd: 0.15,\n    fed_expectations_proxy: 0.25,\n    inflation_expectations: 0.15,\n    financial_stress: 0.10,\n    credit_stress: 0.10\n  }\n};\n\nfunction calculateHorizon(weightSet) {\n  let score = 0;\n\n  for (const [driver, weight] of Object.entries(weightSet)) {\n    score += scoreSignal(drivers[driver].signal) * weight;\n  }\n\n  score = Number(score.toFixed(4));\n\n  let direction = \"Neutral\";\n  if (score > 0.25) direction = \"Bullish\";\n  if (score < -0.25) direction = \"Bearish\";\n\n  const conviction = Math.round(50 + Math.abs(score) * 50);\n\n  return {\n    direction,\n    conviction: `${conviction}%`,\n    raw_score: score\n  };\n}\n\nreturn [\n  {\n    json: {\n      asset: \"Gold\",\n      generated_at: new Date().toISOString(),\n      drivers,\n      outlook: {\n        \"24h\": calculateHorizon(weights[\"24h\"]),\n        \"72h\": calculateHorizon(weights[\"72h\"]),\n        \"7d\": calculateHorizon(weights[\"7d\"]),\n        \"1m\": calculateHorizon(weights[\"1m\"])\n      }\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        624,
+        224
+      ],
+      "id": "29a1fcbc-417d-4a85-bbdc-683a940daa1e",
+      "name": "Prepare Gold Macro Inputs"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4.1-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4.1-MINI"
+        },
+        "responses": {
+          "values": [
+            {
+              "content": "You are Gold Macro Direction Agent v1.\n\nYou are a specialist institutional gold strategist.\n\nYour sole responsibility is to analyse gold (XAUUSD) and determine the most probable directional bias over:\n\n* 24 Hours\n* 72 Hours\n* 7 Days\n* 1 Month\n\nYou must use ONLY the structured data provided below.\n\nDo not invent data.\n\nDo not assume information that is not present.\n\nDo not reference geopolitical events, wars, economic reports, inflation fears, recession risks, central bank actions, ETF flows, futures positioning, or market sentiment unless those factors are explicitly present in the provided data.\n\nYour role is to interpret the supplied data exactly as a professional gold macro analyst would.\n\n==================================================\nPRIMARY OBJECTIVE\n=================\n\nDetermine:\n\n1. Direction\n2. Conviction\n3. Dominant Driver\n4. Risks To The Thesis\n\nfor:\n\n* 24H\n* 72H\n* 7D\n* 1M\n\n==================================================\nCORE GOLD FRAMEWORK\n===================\n\nGold is primarily driven by:\n\n1. US Real Yields\n2. USD Strength\n3. Fed Expectations\n4. Financial Stress\n5. Credit Stress\n6. Gold Price Confirmation\n\nWhen these drivers align, conviction increases.\n\nWhen these drivers conflict, conviction decreases.\n\nDo not simply count bullish versus bearish signals.\n\nDetermine which drivers matter most.\n\n==================================================\nDRIVER HIERARCHY\n================\n\nTier 1\n\n1. Real Yields\n\nMost important driver.\n\nReal yields falling:\nBullish Gold\n\nReal yields rising:\nBearish Gold\n\nLarge real-yield moves should outweigh weaker secondary signals.\n\n---\n\n2. USD Strength\n\nSecond most important driver.\n\nUSD rising:\nBearish Gold\n\nUSD falling:\nBullish Gold\n\nIf USD and Real Yields agree:\n\nIncrease conviction.\n\nIf USD and Real Yields conflict:\n\nReduce conviction.\n\n---\n\n3. Fed Expectations\n\nRepresented by:\n\n2-Year Treasury Yield\n\n2Y Yield Rising:\nHawkish repricing\nBearish Gold\n\n2Y Yield Falling:\nDovish repricing\nBullish Gold\n\nMost important for:\n\n* 24H\n* 72H\n* 7D\n\n==================================================\nSECONDARY DRIVERS\n=================\n\n4. Inflation Expectations\n\nRepresented by:\n\n10Y Breakeven Inflation\n\nRules:\n\nDo not treat inflation as automatically bullish.\n\nBreakevens rising:\n\nOnly mildly bullish if Real Yields are flat or falling.\n\nIf Real Yields are rising:\n\nBreakevens should have limited influence.\n\n---\n\n5. Financial Stress\n\nRepresented by:\n\nFinancial Stress Index\n\nStress rising:\n\nBullish Gold\n\nStress falling:\n\nNeutral to Bearish Gold\n\nFinancial stress is a regime modifier.\n\nOnly allow it to dominate if stress moves are unusually large.\n\n---\n\n6. Credit Stress\n\nRepresented by:\n\nCredit Spreads\n\nCredit stress rising:\n\nBullish Gold\n\nCredit stress falling:\n\nNeutral to Bearish Gold\n\nCredit stress is less important than:\n\n* Real Yields\n* USD\n* 2Y Yield\n\n==================================================\nPRICE CONFIRMATION\n==================\n\nIf gold price data is present:\n\nUse it as confirmation.\n\nRules:\n\nPrice rising while macro is bullish:\n\nIncrease conviction.\n\nPrice falling while macro is bullish:\n\nReduce conviction.\n\nPrice rising while macro is bearish:\n\nReduce bearish conviction.\n\nPrice alone should not override:\n\n* Real Yields\n* USD\n\nunless the divergence is extreme.\n\n==================================================\nCONVICTION FRAMEWORK\n====================\n\nVery Strong Alignment\n\nReal Yields\n+\nUSD\n+\n2Y Yield\n\nall point in same direction\n\nConviction:\n75% to 90%\n\n---\n\nStrong Alignment\n\nTwo major drivers agree\n\nConviction:\n65% to 75%\n\n---\n\nMixed Signals\n\nMajor drivers conflict\n\nConviction:\n50% to 65%\n\n---\n\nHigh Uncertainty\n\nNo dominant driver\n\nConviction:\n50% to 55%\n\n---\n\nOnly use:\n\n85%+\n\nwhen there is exceptionally strong alignment across the major drivers.\n\n==================================================\nIMPORTANT ANALYSIS RULES\n========================\n\nDo not simply repeat the data.\n\nExplain:\n\n* Which driver is dominant.\n* Why conviction is high or low.\n* Which signals agree.\n* Which signals conflict.\n\nThink like an institutional macro strategist.\n\nIf the data is mixed:\n\nSay so.\n\nIf conviction is low:\n\nSay so.\n\nDo not force a directional view.\n\n==================================================\nINPUT DATA\n==========\n\n{{ JSON.stringify($json, null, 2) }}\n\n==================================================\nOUTPUT FORMAT\n=============\n\n24H Direction:\n24H Conviction:\n24H Dominant Driver:\n24H Reason:\n\n72H Direction:\n72H Conviction:\n72H Dominant Driver:\n72H Reason:\n\n7D Direction:\n7D Conviction:\n7D Dominant Driver:\n7D Reason:\n\n1M Direction:\n1M Conviction:\n1M Dominant Driver:\n1M Reason:\n\nOverall Bias:\n\nMain Driver Across All Timeframes:\n\nKey Risk To Thesis:\n\nDriver Alignment Summary:\n\nData Quality Assessment:\n\nDo not refer to any driver as intraday unless explicit intraday data is provided.\n\nTreat FRED data as daily macro data.\n"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.3,
+      "position": [
+        928,
+        224
+      ],
+      "id": "9f5baebb-fe05-437a-8128-04216ad2e4e6",
+      "name": "Message a model",
+      "credentials": {
+        "openAiApi": {
+          "id": "BIioMOGj8DJHGGhb",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 6
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        0
+      ],
+      "id": "ee461ea5-b544-4eb1-a0ba-056f49c3e7ec",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $json.text || $json.output || $json.message || $json;\n\nlet parsed;\n\nif (typeof raw === 'string') {\n  parsed = JSON.parse(raw);\n} else {\n  parsed = raw;\n}\n\nreturn [\n  {\n    json: {\n      fileContent: JSON.stringify(parsed, null, 2)\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1280,
+        224
+      ],
+      "id": "360b9114-b293-4c8b-a5c6-f1a26527861a",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "resource": "file",
+        "operation": "edit",
+        "owner": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "repository": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        }
+      },
+      "type": "n8n-nodes-base.github",
+      "typeVersion": 1.1,
+      "position": [
+        992,
+        544
+      ],
+      "id": "66d4b77a-05e8-4d3f-9929-bf93aa427efb",
+      "name": "Edit a file",
+      "webhookId": "e73d8f8d-5422-45de-b142-02d1c8025026",
+      "credentials": {
+        "githubOAuth2Api": {
+          "id": "IeK5XOmmyI7JpbFD",
+          "name": "GitHub account 2"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "HTTP Request | FRED - Real Yield 10Y": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request | FRED - Broad USD",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request | FRED - Broad USD": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request | FRED - 2Y Yield",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request | FRED - 2Y Yield": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request | FRED - Inflation Expectations",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request | FRED - Inflation Expectations": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request | FRED - Financial Stress",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request | FRED - Financial Stress": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request | FRED - Credit Stress",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request | FRED - Credit Stress": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Prepare Gold Macro Inputs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Gold Macro Inputs": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Edit a file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request | FRED - Real Yield 10Y",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "nodeGroups": [],
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "tags": [],
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "7vVmN27XFZrW9vgc",
+      "projectId": "ISQG9XU7TGTT6Fcu",
+      "project": {
+        "id": "ISQG9XU7TGTT6Fcu",
+        "name": "Daniel Silver <a17@live.co.uk>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "customTelemetryTags": [],
+        "creatorId": "eb4fba3e-5170-481b-abc5-ce65776c1113",
+        "createdAt": "2026-04-29T19:10:11.212Z",
+        "updatedAt": "2026-04-29T19:10:21.640Z"
+      },
+      "createdAt": "2026-06-03T19:42:42.164Z",
+      "updatedAt": "2026-06-03T19:42:42.164Z"
+    }
+  ],
+  "activeVersion": null
+}

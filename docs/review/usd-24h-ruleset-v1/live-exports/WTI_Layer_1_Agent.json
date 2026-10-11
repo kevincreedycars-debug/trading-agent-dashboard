@@ -1,0 +1,839 @@
+{
+  "id": "8oUBopUWLiGcYU0d",
+  "name": "WTI Layer 1 Agent",
+  "description": null,
+  "active": true,
+  "activeVersionId": "6f493956-93b2-4a52-9270-c4f5aaa9d4fd",
+  "createdAt": "2026-09-12T17:58:31.494Z",
+  "updatedAt": "2026-09-12T18:20:13.820Z",
+  "isArchived": false,
+  "versionId": "6f493956-93b2-4a52-9270-c4f5aaa9d4fd",
+  "versionCounter": 5,
+  "sourceWorkflowId": null,
+  "triggerCount": 0,
+  "nodes": [
+    {
+      "id": "wti-trigger",
+      "name": "When Executed by Another Workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "inputSource": "passthrough"
+      }
+    },
+    {
+      "id": "wti-fred-wti",
+      "name": "HTTP Request | WTI Spot - FRED API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        180,
+        -240
+      ],
+      "parameters": {
+        "url": "https://api.stlouisfed.org/fred/series/observations?series_id=DCOILWTICO&sort_order=desc&limit=25&file_type=json&api_key=<redacted>",
+        "options": {}
+      }
+    },
+    {
+      "id": "wti-fred-dollar",
+      "name": "HTTP Request | Broad Dollar - FRED API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        180,
+        -120
+      ],
+      "parameters": {
+        "url": "https://api.stlouisfed.org/fred/series/observations?series_id=DTWEXBGS&sort_order=desc&limit=25&file_type=json&api_key=<redacted>",
+        "options": {}
+      }
+    },
+    {
+      "id": "wti-fred-vix",
+      "name": "HTTP Request | VIX - FRED API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        180,
+        0
+      ],
+      "parameters": {
+        "url": "https://api.stlouisfed.org/fred/series/observations?series_id=VIXCLS&sort_order=desc&limit=25&file_type=json&api_key=<redacted>",
+        "options": {}
+      }
+    },
+    {
+      "id": "wti-fred-sp500",
+      "name": "HTTP Request | S&P 500 - FRED API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        180,
+        120
+      ],
+      "parameters": {
+        "url": "https://api.stlouisfed.org/fred/series/observations?series_id=SP500&sort_order=desc&limit=25&file_type=json&api_key=<redacted>",
+        "options": {}
+      }
+    },
+    {
+      "id": "wti-fred-us2y",
+      "name": "HTTP Request | US 2Y - FRED API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        180,
+        240
+      ],
+      "parameters": {
+        "url": "https://api.stlouisfed.org/fred/series/observations?series_id=DGS2&sort_order=desc&limit=25&file_type=json&api_key=<redacted>",
+        "options": {}
+      }
+    },
+    {
+      "id": "wti-build-input-pack",
+      "name": "Code | Build WTI Input Pack",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        400,
+        0
+      ],
+      "parameters": {
+        "jsCode": "// WTI Layer 1 input pack (live shape).\n// The shared market_snapshots table has no WTI columns, so the sealed WTI agent\n// reads its own approved FRED series at run time and records the resulting input\n// values inside its agent_outputs row (raw_agent_output / full_output). No row is\n// written to market_snapshots, so no other asset's snapshot selection changes.\nconst FRED_NODES = {\n  wti: \"HTTP Request | WTI Spot - FRED API\",\n  dollar: \"HTTP Request | Broad Dollar - FRED API\",\n  vix: \"HTTP Request | VIX - FRED API\",\n  sp500: \"HTTP Request | S&P 500 - FRED API\",\n  us2y: \"HTTP Request | US 2Y - FRED API\"\n};\n\nfunction node(name) {\n  try {\n    return $(name).first().json;\n  } catch (error) {\n    return {};\n  }\n}\n\nfunction observations(data) {\n  return (data.observations || []).filter((item) => item.value !== \".\" && Number.isFinite(Number(item.value)));\n}\n\nfunction series(data, percent) {\n  const rows = observations(data);\n  const latest = rows[0] ? Number(rows[0].value) : null;\n  const change = (index) => {\n    const prior = rows[index] ? Number(rows[index].value) : null;\n    if (latest === null || prior === null || (percent && prior === 0)) return null;\n    return percent ? ((latest - prior) / prior) * 100 : latest - prior;\n  };\n  return { latest, d1: change(1), d5: change(5), date: rows[0] ? rows[0].date : null };\n}\n\nconst wti = series(node(FRED_NODES.wti), true);\nconst dollar = series(node(FRED_NODES.dollar), true);\nconst vix = series(node(FRED_NODES.vix), false);\nconst sp500 = series(node(FRED_NODES.sp500), true);\nconst us2y = series(node(FRED_NODES.us2y), false);\n\n// Core missing input means no snapshot, so it can never produce a falsely usable call.\nif (wti.latest === null || !wti.date) {\n  return [];\n}\n\nconst missing = [];\nif (wti.d1 === null) missing.push(\"wti_d1_pct\");\nif (wti.d5 === null) missing.push(\"wti_d5_pct\");\nif (dollar.latest === null) missing.push(\"dxy_level\");\nif (dollar.d1 === null) missing.push(\"dxy_d1_pct\");\nif (vix.latest === null) missing.push(\"vix_level\");\nif (sp500.d1 === null) missing.push(\"sp500_d1_pct\");\nif (us2y.d5 === null) missing.push(\"us_2y_d5_bps\");\n// No approved provider in this draft.\nmissing.push(\"wti_regime\", \"eia_crude_inventory_surprise\", \"opec_supply_bias\");\n\nconst availableInputs = {\n  wti_price: wti.latest,\n  wti_d1_pct: wti.d1,\n  wti_d5_pct: wti.d5,\n  wti_price_date: wti.date,\n\n  dxy_level: dollar.latest,\n  dxy_d1_pct: dollar.d1,\n  dxy_d5_pct: dollar.d5,\n\n  vix_level: vix.latest,\n\n  sp500_d1_pct: sp500.d1,\n\n  us_2y_yield: us2y.latest,\n  us_2y_d5_bps: us2y.d5 === null ? null : us2y.d5 * 100,\n\n  wti_regime: null,\n  eia_crude_inventory_surprise: null,\n  opec_supply_bias: null\n};\n\nconst snapshotDate = wti.date || new Date().toISOString().slice(0, 10);\n\nreturn [\n  {\n    json: {\n      asset: \"WTI\",\n      snapshot_id: null,\n      snapshot_date: snapshotDate,\n      run_time_et: new Date().toISOString(),\n      provider_status: \"READ_AT_AGENT_RUNTIME_FRED\",\n      session_status: \"DAILY_SERIES\",\n      isolation_rule: \"This Layer 1 agent may only use the WTI input pack above and the WTI logic document. It must not read other agent outputs.\",\n      execution_question: \"Based on confirmed value-driving factors available at execution time, what is the likely 24H direction of WTI crude?\",\n      available_inputs: availableInputs,\n      missing_inputs: missing,\n      missing_rule: \"Unavailable inputs are scored NEUTRAL and never inferred.\"\n    }\n  }\n];\n"
+      }
+    },
+    {
+      "id": "wti-read-logic",
+      "name": "Get WTI Logic Document",
+      "type": "n8n-nodes-base.github",
+      "typeVersion": 1.1,
+      "position": [
+        620,
+        0
+      ],
+      "parameters": {
+        "authentication": "oAuth2",
+        "resource": "file",
+        "operation": "get",
+        "owner": {
+          "__rl": true,
+          "value": "kevincreedycars-debug",
+          "mode": "list"
+        },
+        "repository": {
+          "__rl": true,
+          "value": "trading-agent-dashboard",
+          "mode": "list"
+        },
+        "filePath": "logic/agent_wti_direction.md",
+        "asBinaryProperty": false,
+        "additionalParameters": {}
+      },
+      "credentials": {
+        "githubOAuth2Api": {
+          "id": "wr4dhSbWkjNonhfi",
+          "name": "GitHub account 3"
+        }
+      },
+      "webhookId": "bae8d901-0bf3-4e7b-8d5b-6c7d74f54837"
+    },
+    {
+      "id": "wti-combine",
+      "name": "Code | Combine WTI Logic and Inputs",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        840,
+        0
+      ],
+      "parameters": {
+        "jsCode": "const pack = $(\"Code | Build WTI Input Pack\").first().json; const logic = $(\"Get WTI Logic Document\").first().json; return [{ json: { market_snapshot: pack, logic_document: logic.content || \"\" } }];"
+      }
+    },
+    {
+      "id": "wti-model",
+      "name": "Message a model",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.3,
+      "position": [
+        1060,
+        0
+      ],
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4.1-mini",
+          "mode": "list"
+        },
+        "responses": {
+          "values": [
+            {
+              "role": "system",
+              "content": "You are the WTI Layer 1 Direction Agent.\n\nYou must follow the supplied WTI logic document exactly.\n\nYou analyse WTI crude oil only. You emit a raw 24H directional classification.\n\nYou must not produce: USD calls, other asset calls, pair calls, trade recommendations, entry or exit signals, cross-asset calls, consensus calls, Layer 2 calls, or any output from another agent.\n\nLayer 1 isolation is mandatory. Use only the supplied input pack and the supplied logic document. If a required input is unavailable, score the affected factor NEUTRAL and list the field in missing_inputs. Never guess missing data.\n\nReturn valid JSON only, with this shape:\n{\"direction_24h\":\"BULLISH|BEARISH|NO_CLEAR_BIAS\",\"factor_breakdown\":{\"F1\":{\"signal\":\"BULLISH|BEARISH|NEUTRAL\",\"evidence\":\"...\",\"reason\":\"...\"},\"F2\":{},\"F3\":{},\"F4\":{},\"F5\":{},\"F6\":{},\"F7\":{},\"F8\":{},\"F9\":{},\"F10\":{}},\"missing_inputs\":[\"...\"],\"reasoning_summary\":\"...\",\"risk_flags\":[\"...\"]}\n\nRules:\n* Score every factor F1 to F10 exactly once.\n* WTI term structure, EIA inventory and OPEC supply inputs are unavailable in this draft: score F8, F9 and F10 NEUTRAL and list them as missing.\n* Do not calculate conviction. Conviction is calculated downstream by a deterministic engine."
+            },
+            {
+              "content": "={{ JSON.stringify($json) }}"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {
+          "textFormat": {
+            "textOptions": {
+              "type": "json_object"
+            }
+          }
+        }
+      },
+      "credentials": {
+        "openAiApi": {
+          "id": "VY1FMMlFQNwU3Ctt",
+          "name": "OpenAI account 2"
+        }
+      }
+    },
+    {
+      "id": "wti-parse",
+      "name": "Code | Parse WTI Agent Output",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1280,
+        0
+      ],
+      "parameters": {
+        "jsCode": "const source = $input.first().json; const raw = source.output?.[0]?.content?.[0]?.text ?? source.text ?? source; const report = typeof raw === \"object\" ? raw : JSON.parse(String(raw)); const pack = $(\"Code | Build WTI Input Pack\").first().json; return [{ json: { snapshot_id: pack.snapshot_id, agent_name: \"WTI\", layer: 1, run_time_et: pack.run_time_et, snapshot_date: pack.snapshot_date, market_inputs: pack.available_inputs, missing_inputs: pack.missing_inputs, factor_breakdown: report.factor_breakdown || {}, reasoning_summary: report.reasoning_summary || report.reason_24h || \"\", logic_document: \"agent_wti_direction.md\", logic_document_version: \"0.2_research_conviction_engine\", raw_agent_output: report } }];"
+      }
+    },
+    {
+      "id": "wti-verdict-gate",
+      "name": "Code | Deterministic WTI 24H Verdict Gate",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1500,
+        0
+      ],
+      "parameters": {
+        "jsCode": "// WTI Layer 1 deterministic 24H verdict gate (draft v0.2).\n// Mirrors the shared Layer 1 deterministic conviction contract used by the other\n// live asset agents field-for-field, so the Layer 2 trade selection agent and the\n// Dashboard Writer consume WTI rows with no new field handling. The model's own\n// conviction is ignored; this node is the only conviction source. Weights remain\n// provisional hypotheses pending historical replay.\nconst item = $input.first().json;\n\nconst WEIGHTS = { F1: 20, F2: 14, F3: 14, F4: 10, F5: 10, F6: 8, F7: 8, F8: 6, F9: 5, F10: 5 };\nconst LOGIC_DOCUMENT = \"agent_wti_direction.md\";\nconst LOGIC_DOCUMENT_VERSION = \"0.2_research_conviction_engine\";\n\nconst supplied = item.factor_breakdown && typeof item.factor_breakdown === \"object\" ? item.factor_breakdown : {};\nconst missingInputs = Array.isArray(item.missing_inputs) ? item.missing_inputs.slice() : [];\n\nlet bullish = 0;\nlet bearish = 0;\nlet neutral = 0;\nlet bullishCount = 0;\nlet bearishCount = 0;\nlet neutralCount = 0;\n\nconst factorBreakdown = {};\nfor (const [id, weight] of Object.entries(WEIGHTS)) {\n  const entry = supplied[id] && typeof supplied[id] === \"object\" ? supplied[id] : {};\n  const raw = typeof supplied[id] === \"string\" ? supplied[id] : entry.signal;\n  const signal = raw === \"BULLISH\" || raw === \"BEARISH\" ? raw : \"NEUTRAL\";\n  // Unknown or unavailable signals are scored neutral; they are never inferred.\n  factorBreakdown[id] = { ...entry, signal, weight };\n  if (signal === \"BULLISH\") {\n    bullish += weight;\n    bullishCount++;\n  } else if (signal === \"BEARISH\") {\n    bearish += weight;\n    bearishCount++;\n  } else {\n    neutral += weight;\n    neutralCount++;\n  }\n}\n\nconst active = bullish + bearish;\nconst participation = active;\nconst bullishArgument = active > 0 ? Math.round((bullish / active) * 100) : 0;\nconst bearishArgument = active > 0 ? Math.round((bearish / active) * 100) : 0;\nconst neutralPct = Math.round(neutral);\nconst netEdge = bullishArgument - bearishArgument;\nconst absEdge = Math.abs(netEdge);\nconst weightMargin = Math.abs(bullish - bearish);\n\nconst baseDirection = bullish > bearish ? \"BULLISH\" : bearish > bullish ? \"BEARISH\" : \"NO_CLEAR_BIAS\";\nconst direction =\n  baseDirection === \"NO_CLEAR_BIAS\"\n    ? \"NO_CLEAR_BIAS\"\n    : active < 50 || weightMargin < 15 || absEdge < 20\n      ? `${baseDirection}_LEAN`\n      : baseDirection;\n\nconst winningArgument =\n  baseDirection === \"BULLISH\" ? bullishArgument : baseDirection === \"BEARISH\" ? bearishArgument : 0;\nconst participationCap = Math.min(participation, 80);\nconst conviction =\n  baseDirection === \"NO_CLEAR_BIAS\" ? 0 : Math.round(winningArgument * (participationCap / 100));\n\nconst verdictStrength =\n  absEdge >= 40 && participation >= 70\n    ? \"VERY_STRONG\"\n    : absEdge >= 25 && participation >= 50\n      ? \"STRONG\"\n      : absEdge >= 15\n        ? \"MODERATE\"\n        : \"WEAK\";\n\nconst reason =\n  `24H deterministic WTI score: bull case ${bullishArgument}%, bear case ${bearishArgument}%, ` +\n  `directional participation ${participation}%, neutral/unavailable ${neutralPct}%, ` +\n  `net edge ${netEdge > 0 ? \"+\" : \"\"}${netEdge}. Missing inputs ` +\n  `(${missingInputs.length ? missingInputs.join(\", \") : \"none\"}) are scored neutral and never inferred.`;\n\nconst weightedScore = {\n  bullish_weight: bullish,\n  bearish_weight: bearish,\n  neutral_weight: neutral,\n  active_weight: active,\n  weight_margin: weightMargin\n};\n\nconst convictionModel = {\n  bull_case: bullishArgument,\n  bear_case: bearishArgument,\n  winning_side: baseDirection,\n  directional_participation: participation,\n  net_edge: netEdge,\n  final_conviction: conviction,\n  verdict_strength: verdictStrength,\n  final_conviction_logic: reason,\n\n  bullish_argument_pct: bullishArgument,\n  bearish_argument_pct: bearishArgument,\n  neutral_pct: neutralPct,\n  neutral_evidence_pct: neutralPct,\n  active_participation_pct: participation,\n  directional_participation_pct: participation,\n  net_edge_pct: netEdge,\n\n  weighted_edge: Math.abs(netEdge) / 100,\n  raw_conviction: conviction,\n  base_conviction: conviction,\n  participation,\n  participation_cap: participationCap,\n  conflict_penalty: 0,\n  missing_input_penalty: 0,\n  agreement_boost: 0,\n  bull_case_weight: bullish,\n  bear_case_weight: bearish,\n  neutral_weight: neutral\n};\n\nconst timeframeModels = {\n  \"24h\": {\n    direction,\n    conviction,\n    reason,\n    factor_breakdown: factorBreakdown,\n    weighted_score: weightedScore,\n    conviction_model: convictionModel\n  }\n};\n\nconst riskFlags = [\n  \"PROVISIONAL_WEIGHTS\",\n  \"WTI_24H_ONLY\",\n  ...(Array.isArray(item.risk_flags) ? item.risk_flags : []),\n  ...missingInputs\n];\n\nconst fullOutput = {\n  asset: \"WTI\",\n  layer: \"layer_1_raw\",\n  logic_document: LOGIC_DOCUMENT,\n  logic_document_version: LOGIC_DOCUMENT_VERSION,\n\n  direction_24h: direction,\n  conviction_24h: conviction,\n  reason_24h: reason,\n\n  factor_breakdown: factorBreakdown,\n  weighted_score: weightedScore,\n  conviction_model: convictionModel,\n  timeframe_models: timeframeModels,\n\n  score_bullish: bullishCount,\n  score_bearish: bearishCount,\n  score_neutral: neutralCount,\n  non_neutral_count: bullishCount + bearishCount,\n\n  missing_inputs: missingInputs,\n  reasoning_summary: reason,\n  risk_flags: riskFlags\n};\n\n// The live agent_outputs table has no asset / market_inputs / missing_inputs /\n// timeframe_models / non_neutral_count / risk_flags columns, so those documented\n// fields live inside full_output and the run is not failed by an unknown column.\n// warnings is a real column and carries the risk flags.\nconst {\n  asset: _asset,\n  market_inputs: _marketInputs,\n  missing_inputs: _missingInputs,\n  timeframe_models: _timeframeModels,\n  non_neutral_count: _nonNeutralCount,\n  risk_flags: _riskFlags,\n  ...rowSafe\n} = item;\n\nreturn [\n  {\n    json: {\n      ...rowSafe,\n\n      agent_name: \"WTI\",\n      layer: 1,\n      logic_document: LOGIC_DOCUMENT,\n      logic_document_version: LOGIC_DOCUMENT_VERSION,\n\n      call_24h_direction: direction,\n      call_24h_conviction: conviction,\n      call_24h_reason: reason,\n      direction_24h: direction,\n      conviction_24h: conviction,\n\n      factor_breakdown: factorBreakdown,\n      weighted_score: weightedScore,\n      conviction_model: convictionModel,\n\n      score_bullish: bullishCount,\n      score_bearish: bearishCount,\n      score_neutral: neutralCount,\n\n      warnings: riskFlags,\n      reasoning_summary: reason,\n\n      full_output: fullOutput,\n      raw_agent_output: fullOutput\n    }\n  }\n];\n\n"
+      }
+    },
+    {
+      "id": "wti-insert",
+      "name": "Create a row",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1720,
+        0
+      ],
+      "parameters": {
+        "tableId": "agent_outputs",
+        "dataToSend": "autoMapInputData"
+      },
+      "credentials": {
+        "supabaseApi": {
+          "id": "trM35g1QCTOgQp4K",
+          "name": "Supabase account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request | WTI Spot - FRED API",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "HTTP Request | Broad Dollar - FRED API",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "HTTP Request | VIX - FRED API",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "HTTP Request | S&P 500 - FRED API",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "HTTP Request | US 2Y - FRED API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request | WTI Spot - FRED API": {
+      "main": [
+        [
+          {
+            "node": "Code | Build WTI Input Pack",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request | Broad Dollar - FRED API": {
+      "main": [
+        [
+          {
+            "node": "Code | Build WTI Input Pack",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request | VIX - FRED API": {
+      "main": [
+        [
+          {
+            "node": "Code | Build WTI Input Pack",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request | S&P 500 - FRED API": {
+      "main": [
+        [
+          {
+            "node": "Code | Build WTI Input Pack",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request | US 2Y - FRED API": {
+      "main": [
+        [
+          {
+            "node": "Code | Build WTI Input Pack",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Build WTI Input Pack": {
+      "main": [
+        [
+          {
+            "node": "Get WTI Logic Document",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get WTI Logic Document": {
+      "main": [
+        [
+          {
+            "node": "Code | Combine WTI Logic and Inputs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Combine WTI Logic and Inputs": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Code | Parse WTI Agent Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Parse WTI Agent Output": {
+      "main": [
+        [
+          {
+            "node": "Code | Deterministic WTI 24H Verdict Gate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Deterministic WTI 24H Verdict Gate": {
+      "main": [
+        [
+          {
+            "node": "Create a row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "nodeGroups": [],
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "pinData": null,
+  "meta": null,
+  "tags": [],
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "8oUBopUWLiGcYU0d",
+      "projectId": "ISQG9XU7TGTT6Fcu",
+      "project": {
+        "id": "ISQG9XU7TGTT6Fcu",
+        "name": "Daniel Silver <a17@live.co.uk>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "customTelemetryTags": [],
+        "creatorId": "eb4fba3e-5170-481b-abc5-ce65776c1113",
+        "createdAt": "2026-04-29T19:10:11.212Z",
+        "updatedAt": "2026-04-29T19:10:21.640Z"
+      },
+      "createdAt": "2026-09-12T17:58:31.497Z",
+      "updatedAt": "2026-09-12T17:58:31.497Z"
+    }
+  ],
+  "activeVersion": {
+    "versionId": "6f493956-93b2-4a52-9270-c4f5aaa9d4fd",
+    "workflowId": "8oUBopUWLiGcYU0d",
+    "nodes": [
+      {
+        "id": "wti-trigger",
+        "name": "When Executed by Another Workflow",
+        "type": "n8n-nodes-base.executeWorkflowTrigger",
+        "typeVersion": 1.2,
+        "position": [
+          0,
+          0
+        ],
+        "parameters": {
+          "inputSource": "passthrough"
+        }
+      },
+      {
+        "id": "wti-fred-wti",
+        "name": "HTTP Request | WTI Spot - FRED API",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          180,
+          -240
+        ],
+        "parameters": {
+          "url": "https://api.stlouisfed.org/fred/series/observations?series_id=DCOILWTICO&sort_order=desc&limit=25&file_type=json&api_key=<redacted>",
+          "options": {}
+        }
+      },
+      {
+        "id": "wti-fred-dollar",
+        "name": "HTTP Request | Broad Dollar - FRED API",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          180,
+          -120
+        ],
+        "parameters": {
+          "url": "https://api.stlouisfed.org/fred/series/observations?series_id=DTWEXBGS&sort_order=desc&limit=25&file_type=json&api_key=<redacted>",
+          "options": {}
+        }
+      },
+      {
+        "id": "wti-fred-vix",
+        "name": "HTTP Request | VIX - FRED API",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          180,
+          0
+        ],
+        "parameters": {
+          "url": "https://api.stlouisfed.org/fred/series/observations?series_id=VIXCLS&sort_order=desc&limit=25&file_type=json&api_key=<redacted>",
+          "options": {}
+        }
+      },
+      {
+        "id": "wti-fred-sp500",
+        "name": "HTTP Request | S&P 500 - FRED API",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          180,
+          120
+        ],
+        "parameters": {
+          "url": "https://api.stlouisfed.org/fred/series/observations?series_id=SP500&sort_order=desc&limit=25&file_type=json&api_key=<redacted>",
+          "options": {}
+        }
+      },
+      {
+        "id": "wti-fred-us2y",
+        "name": "HTTP Request | US 2Y - FRED API",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          180,
+          240
+        ],
+        "parameters": {
+          "url": "https://api.stlouisfed.org/fred/series/observations?series_id=DGS2&sort_order=desc&limit=25&file_type=json&api_key=<redacted>",
+          "options": {}
+        }
+      },
+      {
+        "id": "wti-build-input-pack",
+        "name": "Code | Build WTI Input Pack",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          400,
+          0
+        ],
+        "parameters": {
+          "jsCode": "// WTI Layer 1 input pack (live shape).\n// The shared market_snapshots table has no WTI columns, so the sealed WTI agent\n// reads its own approved FRED series at run time and records the resulting input\n// values inside its agent_outputs row (raw_agent_output / full_output). No row is\n// written to market_snapshots, so no other asset's snapshot selection changes.\nconst FRED_NODES = {\n  wti: \"HTTP Request | WTI Spot - FRED API\",\n  dollar: \"HTTP Request | Broad Dollar - FRED API\",\n  vix: \"HTTP Request | VIX - FRED API\",\n  sp500: \"HTTP Request | S&P 500 - FRED API\",\n  us2y: \"HTTP Request | US 2Y - FRED API\"\n};\n\nfunction node(name) {\n  try {\n    return $(name).first().json;\n  } catch (error) {\n    return {};\n  }\n}\n\nfunction observations(data) {\n  return (data.observations || []).filter((item) => item.value !== \".\" && Number.isFinite(Number(item.value)));\n}\n\nfunction series(data, percent) {\n  const rows = observations(data);\n  const latest = rows[0] ? Number(rows[0].value) : null;\n  const change = (index) => {\n    const prior = rows[index] ? Number(rows[index].value) : null;\n    if (latest === null || prior === null || (percent && prior === 0)) return null;\n    return percent ? ((latest - prior) / prior) * 100 : latest - prior;\n  };\n  return { latest, d1: change(1), d5: change(5), date: rows[0] ? rows[0].date : null };\n}\n\nconst wti = series(node(FRED_NODES.wti), true);\nconst dollar = series(node(FRED_NODES.dollar), true);\nconst vix = series(node(FRED_NODES.vix), false);\nconst sp500 = series(node(FRED_NODES.sp500), true);\nconst us2y = series(node(FRED_NODES.us2y), false);\n\n// Core missing input means no snapshot, so it can never produce a falsely usable call.\nif (wti.latest === null || !wti.date) {\n  return [];\n}\n\nconst missing = [];\nif (wti.d1 === null) missing.push(\"wti_d1_pct\");\nif (wti.d5 === null) missing.push(\"wti_d5_pct\");\nif (dollar.latest === null) missing.push(\"dxy_level\");\nif (dollar.d1 === null) missing.push(\"dxy_d1_pct\");\nif (vix.latest === null) missing.push(\"vix_level\");\nif (sp500.d1 === null) missing.push(\"sp500_d1_pct\");\nif (us2y.d5 === null) missing.push(\"us_2y_d5_bps\");\n// No approved provider in this draft.\nmissing.push(\"wti_regime\", \"eia_crude_inventory_surprise\", \"opec_supply_bias\");\n\nconst availableInputs = {\n  wti_price: wti.latest,\n  wti_d1_pct: wti.d1,\n  wti_d5_pct: wti.d5,\n  wti_price_date: wti.date,\n\n  dxy_level: dollar.latest,\n  dxy_d1_pct: dollar.d1,\n  dxy_d5_pct: dollar.d5,\n\n  vix_level: vix.latest,\n\n  sp500_d1_pct: sp500.d1,\n\n  us_2y_yield: us2y.latest,\n  us_2y_d5_bps: us2y.d5 === null ? null : us2y.d5 * 100,\n\n  wti_regime: null,\n  eia_crude_inventory_surprise: null,\n  opec_supply_bias: null\n};\n\nconst snapshotDate = wti.date || new Date().toISOString().slice(0, 10);\n\nreturn [\n  {\n    json: {\n      asset: \"WTI\",\n      snapshot_id: null,\n      snapshot_date: snapshotDate,\n      run_time_et: new Date().toISOString(),\n      provider_status: \"READ_AT_AGENT_RUNTIME_FRED\",\n      session_status: \"DAILY_SERIES\",\n      isolation_rule: \"This Layer 1 agent may only use the WTI input pack above and the WTI logic document. It must not read other agent outputs.\",\n      execution_question: \"Based on confirmed value-driving factors available at execution time, what is the likely 24H direction of WTI crude?\",\n      available_inputs: availableInputs,\n      missing_inputs: missing,\n      missing_rule: \"Unavailable inputs are scored NEUTRAL and never inferred.\"\n    }\n  }\n];\n"
+        }
+      },
+      {
+        "id": "wti-read-logic",
+        "name": "Get WTI Logic Document",
+        "type": "n8n-nodes-base.github",
+        "typeVersion": 1.1,
+        "position": [
+          620,
+          0
+        ],
+        "parameters": {
+          "authentication": "oAuth2",
+          "resource": "file",
+          "operation": "get",
+          "owner": {
+            "__rl": true,
+            "value": "kevincreedycars-debug",
+            "mode": "list"
+          },
+          "repository": {
+            "__rl": true,
+            "value": "trading-agent-dashboard",
+            "mode": "list"
+          },
+          "filePath": "logic/agent_wti_direction.md",
+          "asBinaryProperty": false,
+          "additionalParameters": {}
+        },
+        "credentials": {
+          "githubOAuth2Api": {
+            "id": "wr4dhSbWkjNonhfi",
+            "name": "GitHub account 3"
+          }
+        },
+        "webhookId": "bae8d901-0bf3-4e7b-8d5b-6c7d74f54837"
+      },
+      {
+        "id": "wti-combine",
+        "name": "Code | Combine WTI Logic and Inputs",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          840,
+          0
+        ],
+        "parameters": {
+          "jsCode": "const pack = $(\"Code | Build WTI Input Pack\").first().json; const logic = $(\"Get WTI Logic Document\").first().json; return [{ json: { market_snapshot: pack, logic_document: logic.content || \"\" } }];"
+        }
+      },
+      {
+        "id": "wti-model",
+        "name": "Message a model",
+        "type": "@n8n/n8n-nodes-langchain.openAi",
+        "typeVersion": 2.3,
+        "position": [
+          1060,
+          0
+        ],
+        "parameters": {
+          "modelId": {
+            "__rl": true,
+            "value": "gpt-4.1-mini",
+            "mode": "list"
+          },
+          "responses": {
+            "values": [
+              {
+                "role": "system",
+                "content": "You are the WTI Layer 1 Direction Agent.\n\nYou must follow the supplied WTI logic document exactly.\n\nYou analyse WTI crude oil only. You emit a raw 24H directional classification.\n\nYou must not produce: USD calls, other asset calls, pair calls, trade recommendations, entry or exit signals, cross-asset calls, consensus calls, Layer 2 calls, or any output from another agent.\n\nLayer 1 isolation is mandatory. Use only the supplied input pack and the supplied logic document. If a required input is unavailable, score the affected factor NEUTRAL and list the field in missing_inputs. Never guess missing data.\n\nReturn valid JSON only, with this shape:\n{\"direction_24h\":\"BULLISH|BEARISH|NO_CLEAR_BIAS\",\"factor_breakdown\":{\"F1\":{\"signal\":\"BULLISH|BEARISH|NEUTRAL\",\"evidence\":\"...\",\"reason\":\"...\"},\"F2\":{},\"F3\":{},\"F4\":{},\"F5\":{},\"F6\":{},\"F7\":{},\"F8\":{},\"F9\":{},\"F10\":{}},\"missing_inputs\":[\"...\"],\"reasoning_summary\":\"...\",\"risk_flags\":[\"...\"]}\n\nRules:\n* Score every factor F1 to F10 exactly once.\n* WTI term structure, EIA inventory and OPEC supply inputs are unavailable in this draft: score F8, F9 and F10 NEUTRAL and list them as missing.\n* Do not calculate conviction. Conviction is calculated downstream by a deterministic engine."
+              },
+              {
+                "content": "={{ JSON.stringify($json) }}"
+              }
+            ]
+          },
+          "builtInTools": {},
+          "options": {
+            "textFormat": {
+              "textOptions": {
+                "type": "json_object"
+              }
+            }
+          }
+        },
+        "credentials": {
+          "openAiApi": {
+            "id": "VY1FMMlFQNwU3Ctt",
+            "name": "OpenAI account 2"
+          }
+        }
+      },
+      {
+        "id": "wti-parse",
+        "name": "Code | Parse WTI Agent Output",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1280,
+          0
+        ],
+        "parameters": {
+          "jsCode": "const source = $input.first().json; const raw = source.output?.[0]?.content?.[0]?.text ?? source.text ?? source; const report = typeof raw === \"object\" ? raw : JSON.parse(String(raw)); const pack = $(\"Code | Build WTI Input Pack\").first().json; return [{ json: { snapshot_id: pack.snapshot_id, agent_name: \"WTI\", layer: 1, run_time_et: pack.run_time_et, snapshot_date: pack.snapshot_date, market_inputs: pack.available_inputs, missing_inputs: pack.missing_inputs, factor_breakdown: report.factor_breakdown || {}, reasoning_summary: report.reasoning_summary || report.reason_24h || \"\", logic_document: \"agent_wti_direction.md\", logic_document_version: \"0.2_research_conviction_engine\", raw_agent_output: report } }];"
+        }
+      },
+      {
+        "id": "wti-verdict-gate",
+        "name": "Code | Deterministic WTI 24H Verdict Gate",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1500,
+          0
+        ],
+        "parameters": {
+          "jsCode": "// WTI Layer 1 deterministic 24H verdict gate (draft v0.2).\n// Mirrors the shared Layer 1 deterministic conviction contract used by the other\n// live asset agents field-for-field, so the Layer 2 trade selection agent and the\n// Dashboard Writer consume WTI rows with no new field handling. The model's own\n// conviction is ignored; this node is the only conviction source. Weights remain\n// provisional hypotheses pending historical replay.\nconst item = $input.first().json;\n\nconst WEIGHTS = { F1: 20, F2: 14, F3: 14, F4: 10, F5: 10, F6: 8, F7: 8, F8: 6, F9: 5, F10: 5 };\nconst LOGIC_DOCUMENT = \"agent_wti_direction.md\";\nconst LOGIC_DOCUMENT_VERSION = \"0.2_research_conviction_engine\";\n\nconst supplied = item.factor_breakdown && typeof item.factor_breakdown === \"object\" ? item.factor_breakdown : {};\nconst missingInputs = Array.isArray(item.missing_inputs) ? item.missing_inputs.slice() : [];\n\nlet bullish = 0;\nlet bearish = 0;\nlet neutral = 0;\nlet bullishCount = 0;\nlet bearishCount = 0;\nlet neutralCount = 0;\n\nconst factorBreakdown = {};\nfor (const [id, weight] of Object.entries(WEIGHTS)) {\n  const entry = supplied[id] && typeof supplied[id] === \"object\" ? supplied[id] : {};\n  const raw = typeof supplied[id] === \"string\" ? supplied[id] : entry.signal;\n  const signal = raw === \"BULLISH\" || raw === \"BEARISH\" ? raw : \"NEUTRAL\";\n  // Unknown or unavailable signals are scored neutral; they are never inferred.\n  factorBreakdown[id] = { ...entry, signal, weight };\n  if (signal === \"BULLISH\") {\n    bullish += weight;\n    bullishCount++;\n  } else if (signal === \"BEARISH\") {\n    bearish += weight;\n    bearishCount++;\n  } else {\n    neutral += weight;\n    neutralCount++;\n  }\n}\n\nconst active = bullish + bearish;\nconst participation = active;\nconst bullishArgument = active > 0 ? Math.round((bullish / active) * 100) : 0;\nconst bearishArgument = active > 0 ? Math.round((bearish / active) * 100) : 0;\nconst neutralPct = Math.round(neutral);\nconst netEdge = bullishArgument - bearishArgument;\nconst absEdge = Math.abs(netEdge);\nconst weightMargin = Math.abs(bullish - bearish);\n\nconst baseDirection = bullish > bearish ? \"BULLISH\" : bearish > bullish ? \"BEARISH\" : \"NO_CLEAR_BIAS\";\nconst direction =\n  baseDirection === \"NO_CLEAR_BIAS\"\n    ? \"NO_CLEAR_BIAS\"\n    : active < 50 || weightMargin < 15 || absEdge < 20\n      ? `${baseDirection}_LEAN`\n      : baseDirection;\n\nconst winningArgument =\n  baseDirection === \"BULLISH\" ? bullishArgument : baseDirection === \"BEARISH\" ? bearishArgument : 0;\nconst participationCap = Math.min(participation, 80);\nconst conviction =\n  baseDirection === \"NO_CLEAR_BIAS\" ? 0 : Math.round(winningArgument * (participationCap / 100));\n\nconst verdictStrength =\n  absEdge >= 40 && participation >= 70\n    ? \"VERY_STRONG\"\n    : absEdge >= 25 && participation >= 50\n      ? \"STRONG\"\n      : absEdge >= 15\n        ? \"MODERATE\"\n        : \"WEAK\";\n\nconst reason =\n  `24H deterministic WTI score: bull case ${bullishArgument}%, bear case ${bearishArgument}%, ` +\n  `directional participation ${participation}%, neutral/unavailable ${neutralPct}%, ` +\n  `net edge ${netEdge > 0 ? \"+\" : \"\"}${netEdge}. Missing inputs ` +\n  `(${missingInputs.length ? missingInputs.join(\", \") : \"none\"}) are scored neutral and never inferred.`;\n\nconst weightedScore = {\n  bullish_weight: bullish,\n  bearish_weight: bearish,\n  neutral_weight: neutral,\n  active_weight: active,\n  weight_margin: weightMargin\n};\n\nconst convictionModel = {\n  bull_case: bullishArgument,\n  bear_case: bearishArgument,\n  winning_side: baseDirection,\n  directional_participation: participation,\n  net_edge: netEdge,\n  final_conviction: conviction,\n  verdict_strength: verdictStrength,\n  final_conviction_logic: reason,\n\n  bullish_argument_pct: bullishArgument,\n  bearish_argument_pct: bearishArgument,\n  neutral_pct: neutralPct,\n  neutral_evidence_pct: neutralPct,\n  active_participation_pct: participation,\n  directional_participation_pct: participation,\n  net_edge_pct: netEdge,\n\n  weighted_edge: Math.abs(netEdge) / 100,\n  raw_conviction: conviction,\n  base_conviction: conviction,\n  participation,\n  participation_cap: participationCap,\n  conflict_penalty: 0,\n  missing_input_penalty: 0,\n  agreement_boost: 0,\n  bull_case_weight: bullish,\n  bear_case_weight: bearish,\n  neutral_weight: neutral\n};\n\nconst timeframeModels = {\n  \"24h\": {\n    direction,\n    conviction,\n    reason,\n    factor_breakdown: factorBreakdown,\n    weighted_score: weightedScore,\n    conviction_model: convictionModel\n  }\n};\n\nconst riskFlags = [\n  \"PROVISIONAL_WEIGHTS\",\n  \"WTI_24H_ONLY\",\n  ...(Array.isArray(item.risk_flags) ? item.risk_flags : []),\n  ...missingInputs\n];\n\nconst fullOutput = {\n  asset: \"WTI\",\n  layer: \"layer_1_raw\",\n  logic_document: LOGIC_DOCUMENT,\n  logic_document_version: LOGIC_DOCUMENT_VERSION,\n\n  direction_24h: direction,\n  conviction_24h: conviction,\n  reason_24h: reason,\n\n  factor_breakdown: factorBreakdown,\n  weighted_score: weightedScore,\n  conviction_model: convictionModel,\n  timeframe_models: timeframeModels,\n\n  score_bullish: bullishCount,\n  score_bearish: bearishCount,\n  score_neutral: neutralCount,\n  non_neutral_count: bullishCount + bearishCount,\n\n  missing_inputs: missingInputs,\n  reasoning_summary: reason,\n  risk_flags: riskFlags\n};\n\n// The live agent_outputs table has no asset / market_inputs / missing_inputs /\n// timeframe_models / non_neutral_count / risk_flags columns, so those documented\n// fields live inside full_output and the run is not failed by an unknown column.\n// warnings is a real column and carries the risk flags.\nconst {\n  asset: _asset,\n  market_inputs: _marketInputs,\n  missing_inputs: _missingInputs,\n  timeframe_models: _timeframeModels,\n  non_neutral_count: _nonNeutralCount,\n  risk_flags: _riskFlags,\n  ...rowSafe\n} = item;\n\nreturn [\n  {\n    json: {\n      ...rowSafe,\n\n      agent_name: \"WTI\",\n      layer: 1,\n      logic_document: LOGIC_DOCUMENT,\n      logic_document_version: LOGIC_DOCUMENT_VERSION,\n\n      call_24h_direction: direction,\n      call_24h_conviction: conviction,\n      call_24h_reason: reason,\n      direction_24h: direction,\n      conviction_24h: conviction,\n\n      factor_breakdown: factorBreakdown,\n      weighted_score: weightedScore,\n      conviction_model: convictionModel,\n\n      score_bullish: bullishCount,\n      score_bearish: bearishCount,\n      score_neutral: neutralCount,\n\n      warnings: riskFlags,\n      reasoning_summary: reason,\n\n      full_output: fullOutput,\n      raw_agent_output: fullOutput\n    }\n  }\n];\n\n"
+        }
+      },
+      {
+        "id": "wti-insert",
+        "name": "Create a row",
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          1720,
+          0
+        ],
+        "parameters": {
+          "tableId": "agent_outputs",
+          "dataToSend": "autoMapInputData"
+        },
+        "credentials": {
+          "supabaseApi": {
+            "id": "trM35g1QCTOgQp4K",
+            "name": "Supabase account"
+          }
+        }
+      }
+    ],
+    "connections": {
+      "When Executed by Another Workflow": {
+        "main": [
+          [
+            {
+              "node": "HTTP Request | WTI Spot - FRED API",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "HTTP Request | Broad Dollar - FRED API",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "HTTP Request | VIX - FRED API",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "HTTP Request | S&P 500 - FRED API",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "HTTP Request | US 2Y - FRED API",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "HTTP Request | WTI Spot - FRED API": {
+        "main": [
+          [
+            {
+              "node": "Code | Build WTI Input Pack",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "HTTP Request | Broad Dollar - FRED API": {
+        "main": [
+          [
+            {
+              "node": "Code | Build WTI Input Pack",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "HTTP Request | VIX - FRED API": {
+        "main": [
+          [
+            {
+              "node": "Code | Build WTI Input Pack",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "HTTP Request | S&P 500 - FRED API": {
+        "main": [
+          [
+            {
+              "node": "Code | Build WTI Input Pack",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "HTTP Request | US 2Y - FRED API": {
+        "main": [
+          [
+            {
+              "node": "Code | Build WTI Input Pack",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code | Build WTI Input Pack": {
+        "main": [
+          [
+            {
+              "node": "Get WTI Logic Document",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get WTI Logic Document": {
+        "main": [
+          [
+            {
+              "node": "Code | Combine WTI Logic and Inputs",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code | Combine WTI Logic and Inputs": {
+        "main": [
+          [
+            {
+              "node": "Message a model",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Message a model": {
+        "main": [
+          [
+            {
+              "node": "Code | Parse WTI Agent Output",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code | Parse WTI Agent Output": {
+        "main": [
+          [
+            {
+              "node": "Code | Deterministic WTI 24H Verdict Gate",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code | Deterministic WTI 24H Verdict Gate": {
+        "main": [
+          [
+            {
+              "node": "Create a row",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "nodeGroups": [],
+    "authors": "Daniel Silver",
+    "name": null,
+    "description": null,
+    "autosaved": false,
+    "createdAt": "2026-09-12T18:20:13.847Z",
+    "updatedAt": "2026-09-12T18:20:13.847Z",
+    "workflowPublishHistory": [
+      {
+        "id": 303,
+        "workflowId": "8oUBopUWLiGcYU0d",
+        "versionId": "6f493956-93b2-4a52-9270-c4f5aaa9d4fd",
+        "event": "activated",
+        "userId": "eb4fba3e-5170-481b-abc5-ce65776c1113",
+        "createdAt": "2026-09-12T18:20:20.068Z"
+      }
+    ]
+  }
+}

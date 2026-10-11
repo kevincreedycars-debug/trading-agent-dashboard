@@ -1,0 +1,1361 @@
+{
+  "id": "a6UidZyJLpc68OWu",
+  "name": "USD Agent",
+  "description": null,
+  "active": false,
+  "activeVersionId": null,
+  "createdAt": "2026-04-29T19:15:31.316Z",
+  "updatedAt": "2026-08-09T07:11:12.538Z",
+  "isArchived": false,
+  "versionId": "1014567b-8d18-4212-b4b3-a23a6c372a41",
+  "versionCounter": 577,
+  "sourceWorkflowId": null,
+  "triggerCount": 1,
+  "nodes": [
+    {
+      "parameters": {
+        "url": "https://api.stlouisfed.org/fred/series/observations?series_id=DGS2&sort_order=desc&limit=1&file_type=json&api_key=<redacted>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        128,
+        -944
+      ],
+      "id": "4eccd10a-f967-4e4c-a5c0-488dbfd56d08",
+      "name": "HTTP Request | US 2Y Treasury Yield - FRED API"
+    },
+    {
+      "parameters": {
+        "url": "https://api.stlouisfed.org/fred/series/observations?series_id=DGS10&sort_order=desc&limit=1&file_type=json&api_key=<redacted>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        336,
+        -944
+      ],
+      "id": "ff804306-f764-4bad-b746-a6a0f62b7c65",
+      "name": "HTTP Request | US 10Y Treasury Yield - FRED Api"
+    },
+    {
+      "parameters": {
+        "url": "https://api.stlouisfed.org/fred/series/observations?series_id=DFII10&sort_order=desc&limit=1&file_type=json&api_key=<redacted>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        544,
+        -944
+      ],
+      "id": "32d33eb8-c205-4f02-b3e0-60915b090cc1",
+      "name": "HTTP Request | TIPS 10Y Real Yield - FRED Api"
+    },
+    {
+      "parameters": {
+        "url": "https://api.stlouisfed.org/fred/series/observations?series_id=IRLTLT01DEM156N&sort_order=desc&limit=1&file_type=json&api_key=<redacted>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        144,
+        -1136
+      ],
+      "id": "4c030f60-fb60-457d-9e9b-fd1f13d1021c",
+      "name": "HTTP Request | Germany 10Y Proxy - FRED Api"
+    },
+    {
+      "parameters": {
+        "url": "https://api.stlouisfed.org/fred/series/observations?series_id=IRLTLT01GBM156N&sort_order=desc&limit=1&file_type=json&api_key=<redacted>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        336,
+        -1136
+      ],
+      "id": "8241284c-f7d4-4100-b27b-83a754f46e2a",
+      "name": "HTTP Request | UK 10Y Proxy - FRED api"
+    },
+    {
+      "parameters": {
+        "url": "https://api.stlouisfed.org/fred/series/observations?series_id=VIXCLS&sort_order=desc&limit=1&file_type=json&api_key=<redacted>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        752,
+        -1136
+      ],
+      "id": "8b55f8df-870b-4cd7-9a98-473c79e775a0",
+      "name": "HTTP Request | VIX - FRED Api"
+    },
+    {
+      "parameters": {
+        "url": "https://api.stlouisfed.org/fred/series/observations?series_id=DTWEXBGS&sort_order=desc&limit=1&file_type=json&api_key=<redacted>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        944,
+        -1136
+      ],
+      "id": "f83202f2-95d5-4d93-9a1e-ca8191bece8f",
+      "name": "HTTP Request | DXY - FRED Dollar Index - FRED API"
+    },
+    {
+      "parameters": {
+        "url": "https://api.coinbase.com/v2/prices/XAU-USD/spot",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1136,
+        -1136
+      ],
+      "id": "6d607915-7fec-41fd-8d57-b86238ca6768",
+      "name": "HTTP Request | Gold - Coinbase",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "url": "https://api.coinbase.com/v2/prices/BTC-USD/spot",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1328,
+        -1136
+      ],
+      "id": "9051cbc7-2e1f-4556-8868-e037070b73f2",
+      "name": "HTTP Request | BTC - Coinbase"
+    },
+    {
+      "parameters": {
+        "url": "https://api.coinbase.com/v2/prices/JPY-USD/spot",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        752,
+        -944
+      ],
+      "id": "170b18be-38a3-4fac-b007-0b6990d41f05",
+      "name": "HTTP Request | USD/JPY - Coinbase"
+    },
+    {
+      "parameters": {
+        "url": "https://api.coinbase.com/v2/prices/GBP-USD/spot",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        944,
+        -944
+      ],
+      "id": "a22535e0-d112-4e35-9399-c9ae118c748f",
+      "name": "HTTP Request | GBP/USD - Coinbase"
+    },
+    {
+      "parameters": {
+        "url": "https://api.coinbase.com/v2/prices/CAD-USD/spot",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1136,
+        -944
+      ],
+      "id": "01927961-fee9-4a7e-98ec-356538f6a64d",
+      "name": "HTTP Request | USD/CAD - Coinbase"
+    },
+    {
+      "parameters": {
+        "url": "https://api.coinbase.com/v2/prices/AUD-USD/spot",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1328,
+        -944
+      ],
+      "id": "6f991c39-e8f7-4026-ba9b-59507a8b364e",
+      "name": "HTTP Request | AUD/USD - Coinbase"
+    },
+    {
+      "parameters": {
+        "url": "https://api.stlouisfed.org/fred/series/observations?series_id=DCOILWTICO&sort_order=desc&limit=1&file_type=json&api_key=<redacted>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1520,
+        -1136
+      ],
+      "id": "bcbc391c-d1e9-4f22-905f-5241f9b20eeb",
+      "name": "HTTP Request | WTI Oil - FRED Api"
+    },
+    {
+      "parameters": {
+        "url": "https://api.stlouisfed.org/fred/series/observations?series_id=DCOILBRENTEU&sort_order=desc&limit=1&file_type=json&api_key=<redacted>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1712,
+        -1136
+      ],
+      "id": "4f28c481-f972-4e11-9b18-13ddb56082e6",
+      "name": "HTTP Request | Brent Oil - FRED Api"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            },
+            {
+              "name": "x-api-key",
+              "value": "<redacted>"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        704,
+        -512
+      ],
+      "id": "1722db77-7725-4ded-807c-827630842422",
+      "name": "HTTP Request | Diagnosis - Claude API",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const data    = $('Code in JavaScript | Fetch Code Node').first().json;\nconst ruleset = $('Edit Fields | USD Ruleset').first().json.ruleset;\nconst eco     = $('Code | Process Eco Data').first().json;\n\n// Format surprise scores for prompt\nconst surpriseText = eco.surprises.length > 0\n  ? eco.surprises.map(s =>\n      `  • ${s.event} (${s.date}): actual ${s.actual} vs estimate ${s.estimate} → ${s.direction} (${s.surprise > 0 ? '+' : ''}${s.surprise}σ)`\n    ).join('\\n')\n  : '  • No tier-1 releases in the past 7 days';\n\n// Format upcoming calendar for prompt\nconst calendarText = eco.calendar.filter(e => e.impact === 'high').length > 0\n  ? eco.calendar\n      .filter(e => e.impact === 'high')\n      .map(e => `  • ${e.event} @ ${e.time} UTC${e.estimate !== null ? ` — consensus: ${e.estimate}` : ''}`)\n      .join('\\n')\n  : '  • No high-impact US events scheduled this week';\n\nconst body = {\n  model: \"claude-sonnet-4-6\",\n  max_tokens: 8000,\n  system: ruleset,\n  messages: [{\n    role: \"user\",\n    content: `Today's macro data as of ${data.timestamp}:\n\n${JSON.stringify(data, null, 2)}\n\nRECENT TIER-1 DATA SURPRISES (last 7 days):\n${surpriseText}\n\nUPCOMING HIGH-IMPACT US EVENTS (next 7 days):\n${calendarText}\n\nPlease provide your full USD directional diagnosis following the output template in Section 14 of your ruleset.`\n  }]\n};\n\nreturn [{ json: body }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        528,
+        -496
+      ],
+      "id": "9dfc41a2-3297-4293-af62-9bc01cac7511",
+      "name": "Code in JavaScript1 | Prompt Builder",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "49273064-d20d-48f7-95ab-55ed85adc300",
+              "name": "ruleset",
+              "value": "USD VALUE DETERMINATION RULESET A Mechanistic Breakdown for Daily Macro Agent Ingestion Source: The Art of Currency Trading by Brent Donnelly (Wiley, 2019). Donnelly is a 20+ year professional FX trader (Lehman Brothers, HSBC, Citi, Spectra Markets), former hedge fund discretionary portfolio manager. Purpose: A complete, mechanistic ruleset describing every factor that determines the value of the US Dollar on day-to-day and week-to-week timescales. Built for ingestion by a daily macro agent that: Reads incoming macro/market data Produces a probability-weighted directional bias for the USD Translates that bias into trading conviction for EUR/USD, NQ (Nasdaq-100), BTC/USD, and XAU/USD (Gold) --- SECTION 0 — META-PRINCIPLES (override everything below if violated) These are the \"physics\" of how the USD market actually trades. The agent must apply these in every analysis, without exception. 0.1 — The DELTA is what trades, not the LEVEL The market trades off the change of fundamentals, not their absolute level. A country with poor but improving fundamentals is more likely to see its currency appreciate than a country with great but worsening fundamentals. This is because prices are set at the margin and any \"known\" state of the world is already reflected in the current price. Agent rule: When evaluating any data point, the input is not \"is the US economy strong?\" It is \"is US data trending stronger or weaker than it was last week / last month?\" 0.2 — RELATIVE TO EXPECTATIONS is what moves price, not absolute strength For any data release, central bank meeting, or news event, the question is never \"was the print strong?\" The question is \"did the print beat or miss the median consensus expectation?\" A +90k NFP print is bullish USD if consensus was +50k, and bearish USD if consensus was +200k. Identical print, opposite trade. Agent rule: Every macro data point must be tagged with three values: (a) the actual print, (b) the consensus (Bloomberg median), (c) the standard deviation of historical surprises. The signal is `(actual - consensus) / std_dev_of_surprises`. Anything beyond ±2 standard deviations is a major surprise. 0.3 — RELATIVE COMPARISON, not absolute Currencies are pairs. The USD does not exist in isolation. The dollar's value is always a function of how the US looks relative to its trading partners. Rising US rates are theoretically bullish USD — but if Eurozone rates are rising faster, EUR/USD goes UP, not down. This is the most consistently-misapplied principle in retail FX analysis. Agent rule: Every USD-positive input must be tested against the equivalent input for the comparison currency (primarily Eurozone for EUR/USD; global aggregate for the dollar smile context). 0.4 — DRIVERS CHANGE OVER TIME (regime awareness) What drives the dollar in 2024 may not be what drove it in 2014 or 2008. The market oscillates between focusing on: Domestic drivers (US data, Fed policy) — dominant in stable periods Global drivers (risk aversion, China, geopolitics) — dominant in stress periods Within domestic drivers, focus rotates between rates, growth, inflation, fiscal policy, and elections. Donnelly explicitly notes that fiscal policy used to matter and now barely does; CPI was ignored in 2013–2015 then dominated 2018+; housing data dominated in 2007. Agent rule: Maintain a \"regime tag\" — what is the market currently focused on? Update weekly by scanning financial news headlines and noting which data releases produced the largest market reactions in the past 30 days. Weight inputs accordingly. 0.5 — The Five-Star Setup (conviction calibration) Donnelly's core trading philosophy is that maximum conviction trades occur when all five branches of analysis point the same direction: Fundamentals Technicals Correlation / intermarket Behavioral (sentiment + positioning) News / catalyst Agent rule: Output conviction must scale with how many of these branches align. The ratings system the agent should output: 5-Star (Highest): All 5 branches aligned — full position 4-Star: 4 of 5 aligned, no contradiction from the 5th — strong position 3-Star: 3 of 5 aligned, 2 neutral — moderate position ≤2-Star: Mixed signals — no trade / stand aside Avoid trades with crosswinds. \"Strong winds at your back\" is the goal. --- SECTION 1 — THE DOLLAR SMILE (foundational USD framework) The USD has unique behavior because global trade is denominated in USD and the USD is the world's reserve currency. The Dollar Smile (Stephen Jen, Morgan Stanley, 2001) describes the non-linear relationship between US growth and USD value. 1.1 — The three regimes of the smile US Growth State\tGlobal State\tUSD Direction\tMechanism Very strong US growth + hawkish Fed\tAny\tUSD STRONG (left-side-up of smile)\tCapital attracted to high US yields and outperforming US assets US recession or global recession\tRisk aversion / crisis\tUSD STRONG (right-side-up of smile)\tSafe-haven flight to US Treasuries; global USD shortage as global trade financing contracts US economy moderate / muddling\tGlobal growth decent\tUSD WEAK (bottom of smile)\tCapital rotates out of USD into higher-growth jurisdictions 1.2 — The counterintuitive recession rule The dollar tends to rally into US recessions. This breaks intuition. The mechanism: US recession fears → fears the global economy will follow Investors buy US Treasuries (the global safe-haven asset) → must buy USD to do so Global trade contracts → fewer USD in circulation globally → USD shortage → USD higher Agent rule: When ISM/jobs/GDP data deteriorate sharply AND the deterioration is global rather than US-specific, this is bullish USD, not bearish, despite poor US data. This is the right side of the smile. 1.3 — Dollar smile diagnostic tree (agent decision logic) ``` 1. Is the VIX > 25 OR is there an active geopolitical/financial crisis headline?    YES → Right side of smile activated. USD = SAFE HAVEN BID. Bullish bias regardless of US data.    NO → continue.  2. Is US growth (ISM Manufacturing > 55, NFP trending > 200k, GDP nowcast > 2.5%) clearly outperforming RoW?    AND is the Fed hawkish (signaling rate hikes or higher-for-longer)?    YES → Left side of smile. Bullish USD on growth + yield differential.    NO → continue.  3. Is US growth muddling (ISM 48–55, NFP 100–200k) AND global growth decent (China PMI > 50, EZ PMI > 50)?    YES → Bottom of smile. Bearish/soft USD bias. ``` --- SECTION 2 — DOMESTIC DRIVERS OF THE DOLLAR (ranked by importance) Donnelly's hierarchy. The market focuses on these in roughly this order, though importance shifts (see Section 0.4). 2.1 — MONETARY POLICY (the #1 domestic driver, most of the time) Monetary policy is \"the number-one domestic driver of currency values most of the time.\" The Fed has three levers, in order of impact: 2.1.1 — Interest rates (the primary lever) Mechanism: Higher rates attract capital. Investors prefer high-yielding currencies, avoid low-yielding ones. Most reasons rates rise (growth, inflation, confidence) are themselves USD-supportive. Critical: The market trades bias change, not the rate move itself. By the time the Fed actually hikes, the move is priced in. The currency reacts when the Fed signals a change in bias (hawkish ↔ neutral ↔ dovish). Buy the rumor / sell the fact: Currency rallies on hawkish signaling, tops out near the actual hike. Rate Variable\tBullish USD\tBearish USD Absolute level\tHigh\tLow Direction (delta)\tRising\tFalling Yield curve shape\tSteep (normal)\tFlat or inverted Curve direction\tSteepening\tFlattening Real rates (nominal − inflation)\tHigh / rising\tLow / falling Fed bias\tHawkish\tDovish Bias direction\tBecoming MORE hawkish\tBecoming MORE dovish Agent rule — yield differentials (most important rates input): Look at the US/Germany 2Y, 5Y, 10Y differentials for EUR/USD Widening differential (US rates rising faster than German) = bullish USD (bearish EUR/USD) Narrowing differential = bearish USD The 2Y is usually most sensitive to monetary policy expectations; the 10Y reflects growth+inflation An inverted US yield curve historically precedes recession → eventually bearish USD via Fed cuts (but in the short term can be bullish via dollar smile right-side) 2.1.2 — Balance sheet (QE / QT) QE (balance sheet expansion): Bearish USD theoretically (more dollars), bullish stocks, bullish bonds (lower yields), bullish inflation QT (balance sheet contraction): Opposite — bullish USD theoretically Reality is mixed. The book explicitly warns: when BoJ went sub-zero in Jan 2016, JPY sold off for one day, then rallied for a year. The textbook reaction is NOT reliable. The actual reaction depends heavily on what's priced in. Agent rule: Treat QE/QT announcements as catalysts that get priced in over the announcement window. The bigger trade is often when surprise expansion/contraction announced (unscheduled or beyond expectations). 2.1.3 — Forward guidance (the third lever) The Fed influences markets by telling participants what it plans to do. Hawkish guidance (\"higher for longer\", dot plot moving up, hawkish dissents): USD-positive Dovish guidance (rate cut signaling, dovish dissents, \"patient\", \"data-dependent\" softening): USD-negative Wealth effect: Fed dovishness pushes equities up, which the Fed sometimes wants for the wealth effect. This means dovish Fed = stocks up + USD down (bearish USD/bullish NQ correlation in this regime). 2.1.4 — Inflation (the input to monetary policy) Inflation's impact on the USD is regime-dependent: Inflation Regime\tEffect on USD Rising inflation + credible Fed willing to hike\tBULLISH USD (rate hike expectations) Rising inflation + Fed unwilling/unable to hike\tBearish USD (real yield compression) Falling inflation in developed economy\tBearish USD (allows Fed to cut) Disinflation/deflation fears\tStrongly bearish USD (Fed dovishness) Inflation > 2% target by significant margin\tMarket hyper-focuses on every CPI/PCE print Inflation stable near target\tCPI/PCE prints lose market relevance Agent rule: Tag the current inflation regime each week. Then weight CPI/PCE prints accordingly. In a \"hot\" inflation regime, every basis point of unrounded CPI matters; in a stable regime, even 0.1% misses don't move markets. 2.1.5 — Growth (drives both rates and inflation expectations) Higher growth → higher rates expectations → bullish currency. Outside investors must buy USD to invest in US assets. Key US growth metrics: GDP, Industrial Production, Retail Sales, Housing data, ISM PMIs. 2.1.6 — Central bank preference (signaling / moral suasion) The Fed rarely directly states a USD preference (unlike ECB, BoJ). US Treasury historically supports a \"strong dollar\" rhetorically but actions matter more than words. Watch for verbal interventions: any explicit Treasury or Fed comment on the level of the dollar is a major signal. Rule: Do not bet against a credible central bank that has clearly outlined a currency preference. 2.2 — CAPITAL FLOWS (#2 domestic driver) FDI, M&A, equity flows, bond flows can drive the USD for extended periods. Cross-border M&A = immediate large FX flow (e.g. European brewery buys US company → must sell EUR, buy USD). Portfolio flows can last months/years (e.g. Macron 2017 → 2 years of EUR-buying despite weak EZ economy). Flows are fickle and hard to predict in advance, but you can observe them ex-post via: TIC data (US Treasury International Capital flows) Sovereign credit rating changes Foreign equity market performance vs US (rotation signal) Major M&A deal announcements Agent rule: Capital flows are rarely the #1 driver but can be the dominant driver during specific regimes. Watch for headlines about (a) sovereign credit downgrades, (b) major cross-border M&A involving USD, (c) portfolio shifts triggered by political events (elections, referendums, crisis resolution). 2.3 — TRADE BALANCE / CURRENT ACCOUNT (#3 domestic driver — usually low importance) Long-run determinant, very little short-run influence. Often argued that FX drives trade balance, not the other way around. Becomes hyper-relevant during periods of rising global interest rates when investors focus on financing pressures. The US runs a structural trade and current account deficit. This is bearish USD in textbook terms but has been ignored for decades because the USD is the reserve currency. Agent rule: Treat trade balance as a tertiary input. Only elevate its weight when (a) the print is extreme (>2 SD miss) AND (b) the market is currently focused on US deficits (e.g., debt-ceiling weeks, sovereign credit watch periods). 2.4 — FISCAL POLICY (low importance most of the time) Once was a textbook driver: loose fiscal + loose monetary = lower currency. The relationship has broken down in recent years. Sometimes loose fiscal = good for growth = good for USD. Sometimes loose fiscal = credit quality fears → debt downgrades → bearish USD. Agent rule: Fiscal policy is usually background noise. Elevate to relevant only when: A debt downgrade is announced or threatened Debt-ceiling / shutdown week A massive stimulus or austerity package is being passed Debt-to-GDP cross above a psychologically important threshold  --- SECTION 3 — GLOBAL DRIVERS OF THE DOLLAR When the world is in stress mode, domestic drivers can become \"totally irrelevant\" and global drivers dominate. The agent must constantly assess which regime is active. 3.1 — GLOBAL GROWTH Global growth strength → exporters (China, Korea, Brazil) do well → capital rotates AWAY from USD into EM → bearish USD Global growth weakness → safe-haven flows → bullish USD (especially when USD acts as a low-yielder safe-haven) The USD's behavior here is regime-dependent on the dollar smile Key inputs to monitor: China PMI (Manufacturing and Caixin) — leading indicator for global growth Eurozone PMI (Composite + Manufacturing) Global trade volumes (Baltic Dry, container indices) Citi Economic Surprise Indices (US vs. Global, US vs. G10, US vs. EM) Agent rule: When the US Citi Surprise Index is rising AND Global Surprise Index is falling → bullish USD (US outperformance). When both rising or both falling, the trade is in the cross-rates between specific countries, not the broad USD. 3.2 — COMMODITY PRICES (especially gold and crude) Mechanism 1 (mechanical): Commodities are priced in USD globally. Weaker USD = cheaper commodities for foreigners = higher demand = higher prices. Stronger USD = headwind for commodities. This is a near-tautological inverse relationship. Mechanism 2 (cash flow / petrodollar recycling): Oil-exporting nations receive USD when they sell oil. They diversify into other currencies. The more oil rises, the more USD they sell to maintain currency weight benchmarks. Mechanism 3 (terms of trade): Higher commodity prices benefit commodity exporters' currencies (CAD, AUD, NOK, BRL) at the expense of importers (USD, JPY, EUR partially). The USD vs. Commodities relationship: USD ↑ → Gold ↓, Crude ↓, Copper ↓ (mostly reliable) Crude ↑ → CAD ↑ (lower USDCAD), NOK ↑ — and USD weaker against commodity bloc Gold ↑ → typically bearish USD (gold is the anti-fiat trade) Agent rule for commodities as a USD signal: Strong, sustained moves in gold are the cleanest USD-direction signal among commodities Crude oil can decouple from USD when supply shocks dominate (OPEC, geopolitics) Copper as a global growth proxy — copper falling alongside USD strength = right-side dollar smile activation 3.3 — RISK AVERSION (the dominant short-term driver in stress regimes) Different currencies have different \"personalities.\" In risk-off, traders flock to low-yielding safe havens: JPY, CHF, and (often) USD. 2008 GFC: CHF, JPY, and USD all exploded higher together because all were low-yielders that served as safe havens. The USD's safe-haven status is unique: it benefits from being both (a) the reserve currency and (b) the funding currency for global trade. Agent rule — risk regime classification: Risk-On regime: VIX < 16, equities at/near highs, credit spreads tight, EM currencies bid → bearish USD bias (risk-on rotation away from USD) Neutral regime: VIX 16–22 → Domestic drivers dominate, dollar smile bottom Risk-Off regime: VIX > 22 (especially > 25), equities selling off, credit spreads widening, EM currencies under pressure → bullish USD bias (safe-haven activation) Crisis regime: VIX > 35 → Strongly bullish USD, other variables irrelevant Note: The USD's safe-haven behavior depends on the relative yield environment. When the USD is itself a high-yielder (Fed hiking), it benefits doubly. When the USD is a low-yielder (Fed at zero), it's still a haven but JPY/CHF gain more. 3.4 — GEOPOLITICS War, elections, regime change, major policy shifts → trigger currency moves and risk repricing US-specific geopolitics: presidential elections, debt ceilings, trade wars, sanctions Foreign geopolitics impacting USD: anything that elevates global risk aversion (Russia, China-Taiwan, Middle East) Agent rule: The book explicitly states geopolitics can override every other driver in the short term. The agent must monitor a geopolitics watchlist daily and assign event probabilities. A surprise election outcome or sudden conflict trumps all other macro inputs for at least 1–3 trading days. --- SECTION 4 — INTERVENTION AND RESERVE RECYCLING (mechanical USD flows) This is a critical and underappreciated mechanism. It directly creates non-discretionary USD buying or selling pressure. 4.1 — How reserve recycling works Global central banks (especially China, Saudi, HK, Singapore, Brazil, Russia) hold massive USD reserves China's reserves ranged from ~$200B in 2001 to ~$4 trillion peak in 2014 Reserves are typically held in a portfolio: ~60% USD, then EUR, JPY, GBP, others When a central bank intervenes in its own currency, it generates USD inflows/outflows To maintain portfolio currency weights, the central bank must rebalance by buying/selling EUR, GBP, AUD against USD 4.2 — The contagion mechanism (very important for the agent) Strong USD vs. EM → Strong USD vs. G10 (mechanical). Example mechanic: China reserves drop from $4T to $3T = $1T outflow If 20% are in EUR, that's $200B too many EUR China must sell EURUSD (and AUDUSD, GBPUSD) to rebalance This creates G10 currency selling pressure independent of any G10 fundamental Agent rule: When EM currencies (especially CNH, BRL, ZAR, TRY, INR) are under significant pressure, expect mechanical G10 currency selling vs USD as a secondary effect. This is most visible in commodity currencies (AUD, CAD, NZD) which suffer from BOTH global growth fears AND recycling flows. 4.3 — Direct intervention Uncommon but important when it happens BoJ has intervened to weaken JPY at multiple points SNB famously failed (then succeeded with the floor, then dropped the floor in 2015) US has intervened rarely; Plaza Accord (1985) and Louvre Accord (1987) are the classic examples Agent rule: Direct intervention by a foreign central bank against the USD is a major event. JPY-buying intervention by BoJ = bearish USDJPY = bearish USD broadly (sentiment effect). --- SECTION 5 — US ECONOMIC DATA RELEASES (graded by market impact) This is the daily/weekly bread and butter. Donnelly's importance ratings (☆ = 1 to ☆☆☆☆☆ = 5): 5.1 — Tier 1 (☆☆☆☆☆ — always market-moving) Indicator\tFrequency\tWhat to watch\tNotes Nonfarm Payrolls (NFP)\t1st Friday monthly\tHeadline jobs, Unemployment Rate, Average Hourly Earnings\tAvg miss 72k, 1 SD = 84k. >2 SD miss/beat = major surprise. Avg USDJPY range 5min after = 66 pips. ALL THREE COMPONENTS MATTER — strong headline + weak earnings can fade USD rally. 5.2 — Tier 2 (☆☆☆☆ — high impact) Indicator\tFrequency\tWhat to watch\tNotes ISM Manufacturing\t1st business day monthly\tHeadline, New Orders (forward-looking), Prices, Employment\tTimely, relevant, reliable. Employment subcomponent feeds NFP forecasts. ISM Non-Manufacturing (Services)\t3rd business day monthly\tHeadline, New Orders, Prices, Employment\tServices = larger share of US economy. Equal importance to Manufacturing. Advance GDP\tQuarterly\tHeadline GDP, Core PCE deflator\tAverage miss 0.35%. Most market-moving of the 3 GDP releases. Preliminary and Final are much less impactful. Consumer Confidence (Conference Board)\tMid-month\tHeadline, Present + Future components\tHighly correlated with S&P 500. Strong release → stocks ↑, USDJPY ↑. 5.3 — Tier 3 (☆☆☆ — meaningful but situational) Indicator\tFrequency\tNotes Initial Jobless Claims\tWeekly (Thurs)\tMost timely employment indicator. Low number = good. CPI\tMid-month\tImportance is regime-dependent. In high-inflation regimes (2007–08, 2018, 2022+), CPI is Tier 1. In stable regimes (2013–15), barely matters. Retail Sales (ex-autos and gas)\tMid-month\tWatch month-on-month, ex-autos and gas (control group). Durable Goods Orders (ex-transportation)\tMonthly\tMoM ex-transportation is the watched number. Chicago PMI, Philly Fed, Empire State\tMonthly\tRegional surveys. Note: Chicago PMI leaks at 9:42AM to subscribers, public at 9:45AM — moves at 9:42 are not random. 5.4 — Tier 4 (☆☆ — usually low impact, can spike in importance) Indicator\tFrequency\tNotes Core PCE Price Index\tWith GDP / Monthly PCE\tFed's preferred inflation gauge. Matters more around the 2% target zone. University of Michigan Consumer Sentiment\tMonthly (Prelim + Final)\tLess followed than Conference Board CCI. Industrial Production\tMonthly\tClean and timely but doesn't cover services. NAHB Housing Index\tMonthly\tMatters when housing is the focus. 5.5 — Mechanism for trading the data (NewsPivot framework) For every major data release, the agent must pre-compute: Consensus expectation (Bloomberg/Reuters median) Standard deviation of recent (past 24+ months) actual-minus-expected misses Whisper number (where market is positioned vs. consensus) Pre-release equilibrium price (the NewsPivot) After release: If actual print is within ±0.5 SD of consensus: minimal sustained move If ±1 SD: notable but often fades If ±2 SD or more: trade with the move (algos go aggressive but humans can follow) The \"good news / bad price\" signal (CRITICAL for fade trades): Strong data → currency should rally → but currency reverses through the NewsPivot within 30 minutes This is bearish price action: the market has rejected the bullish data Fade the spike, go opposite the data And vice versa: bad data + currency holds the NewsPivot = bullish price action 5.6 — Algorithmic competition The book explicitly warns: humans cannot outpace algos in the first seconds after a release. Profit comes from: Being prepared with a pre-defined plan (entry, stop, target for both upside and downside scenarios) Trading the second wave (after algos exhaust their initial allocation) Fading the kneejerk when the headline doesn't match the details (e.g., strong NFP headline but weak Average Hourly Earnings) Trading positioning extremes — when market is heavily positioned one way, even mediocre data can produce large counter-moves due to stop-runs  --- SECTION 6 — INTERMARKET CORRELATIONS (Donnelly's USD driver matrix) This is the operational core of the book's daily process. Donnelly runs 50–60 overlay charts of currency pairs vs their drivers, scanning for divergences each morning. 6.1 — The official USD driver hierarchy (Figure 8.9 of the book, Jan 2019 snapshot) For the broad USD index, the four primary drivers, in order: Rank\tDriver\tDirection 1\tUS 2, 5, and 10-year interest rates\tHigher rates → higher USD 2\tUS equities\tHigher equities → higher USD (post-2012 regime) 3\tGold\tHigher gold → lower USD (inverse) 4\tISM / Consumer Confidence\tStronger = stronger USD Note: The USD/equities correlation is regime-dependent and has flipped multiple times historically: Late 1990s: USD ↑ = stocks ↑ (US growth outperformance) 2003–2010 (RORO regime): USD ↑ = stocks ↓ (risk-on/risk-off) 2012+ (US outperformance): USD ↑ = stocks ↑ (selective) The agent must check the trailing 60-day correlation each week to know which regime is active 6.2 — Reliability ranking of FX correlations (most → least reliable) FX vs. other currencies (USD pairs move together) FX vs. interest rates (most consistent driver per Donnelly's 25-year career) FX vs. commodities (especially gold, oil, copper) FX vs. equity indices FX vs. single-name equities and ETFs 6.3 — EUR/USD specific drivers (book's explicit list) Rank\tDriver\tHow to read 1\tUS/Germany 2Y, 5Y, 10Y rate differential\tWidening US premium → EUR/USD lower 2\tGold\tGold ↑ → typically EUR/USD ↑ (USD weak) 3\tItaly 2Y and 10Y yields\tItalian yield blowouts → EZ stress → EUR/USD ↓ 4\tCrude oil\tHigher oil → mild EUR/USD positive (EZ is net oil importer like US, but shocks usually weaken USD via inflation) 6.4 — Cross-currency confirmation (the \"Truth\" rule) Donnelly: All USD-based currencies have a strong tendency to move together. If EURUSD, GBPUSD, and NZDUSD rally together with no other catalyst, the next move in AUDUSD is also more likely up and USDCAD is more likely down. USDCAD is nicknamed \"The Truth\" because it's such a clean dollar tell. Agent rule: Build a \"dollar breadth\" indicator: Count how many of [EUR/USD, GBP/USD, AUD/USD, NZD/USD, USD/JPY (inverted), USD/CAD (inverted), USD/CHF (inverted)] are moving in the same dollar direction 6 or 7 of 7 = high-conviction dollar trend (broad-based) 4 of 7 = mixed, idiosyncratic move in one currency 2 of 7 or less = no dollar trend, single-currency story 6.5 — Lead/lag and divergence trading The agent's daily process should mirror Donnelly's morning routine: Flip through correlation overlay charts Identify pairs that have diverged from their primary driver Check secondary drivers — do they confirm or contradict? Look for convergence of multiple divergences in the same direction The trade is the catch-up move Example (book's USDCAD vs crude case study, Jan 2012): USDCAD elevated despite very strong crude (divergence #1) Canadian rates pricing the opposite direction (divergence #2) DXY topping at resistance (divergence #3) Chinese equities rallying (divergence #4) All 4 pointed to lower USDCAD → trade went short USDCAD → won 6.6 — When correlations break down Correlations are dynamic and unstable They can persist for years (USDCAD vs crude) or disappear in weeks A correlation reinforces itself: when it's strong, algos pile in and make it stronger Then a regime shift breaks it The book's wisdom: don't worry about r-squared as much as the inherent economic logic. If the relationship makes fundamental macroeconomic sense, trust it. If it's purely statistical (rabbit meat prices vs Citi surprises), discard it. --- SECTION 7 — BEHAVIORAL FINANCE AND POSITIONING The market is not efficient in the short run. Human behavior creates dislocations that can be exploited. 7.1 — Sentiment vs Positioning (these are NOT the same thing) Concept\tDefinition\tSource Sentiment\tHow traders feel / what they think\tSurveys (DSI), Twitter, news tone, anecdotal Positioning\tWhat traders are actually holding\tCOT reports (CME), bank positioning surveys, futures open interest The two often agree but their divergences are the highest-conviction signals. 7.2 — The 6 sentiment/price states Sentiment\tBull market direction\tBear market direction HIGH and STABLE\tBullish\t— HIGH and RISING\tVery bullish\t— HIGH but FALLING\t—\tBEARISH (signal to sell) LOW and STABLE\t—\tBearish LOW and FALLING\t—\tVery bearish LOW but RISING\tBULLISH (signal to buy)\t— The two BOLD scenarios are the contrarian sentiment trade signals — sentiment turning against the prevailing trend. 7.3 — COT report (Commitment of Traders, CME, weekly) Key observations: Positions and price normally trend together Positioning often LEADS price at turning points (watch for divergences) Positioning trends can last >1 year Absolute levels of positioning matter less than the rate of change Most research shows it's more profitable to GO WITH COT positioning, not against it. Don't be a reflexive contrarian. Agent rule: Use COT data as a confirming/refuting signal, not a primary signal. Take fading-the-extreme trades only when: Positioning is at multi-year extreme AND fundamentals are starting to turn AND positioning is starting to turn AND there's a clear technical reversal pattern That's the Five-Star setup. 7.4 — Cognitive biases that create predictable USD mispricings Donnelly's 9 key biases: Confirmation bias: Traders absorb info that confirms their view, ignore disconfirming info. → Creates positioning extremes that overshoot fair value. Overconfidence: Especially after a winning streak. → Position sizing errors. Extrapolation (recency bias): Traders assume recent direction continues. Economist forecasts demonstrably extrapolate: USDJPY at 110 → forecasts say 120; at 120 → forecasts say 130. The bias means forecasts are systematically wrong at trend extremes. Asymmetric loss aversion: Pain of loss is ~2x joy of equal gain. → Traders hold losers too long, cut winners too early. → Creates flush moves when stops finally trigger. Greed and fear: Drive bubbles and panics. Anchoring: Traders anchor to a recent price (high, low, round number). Round number bias: USD pairs cluster and reverse at 100s, 1.0000, 1.10, etc. Favorite/longshot bias: Overweighting low-probability events, underweighting near-certain ones. Herding: Traders cluster around consensus to avoid career risk. Agent rule: When economist forecasts show clustering (low SD of forecasts) and the trend is mature (>6 months in one direction), expect mean reversion or surprise in the OPPOSITE direction at higher probability than the consensus implies. Forecasts have fat tails that the consensus misrepresents as narrow. 7.5 — Anecdotal indicators (sentiment extremes) These signal contrarian setups: Magazine cover indicator: When The Economist features a strong asset bias, ~68% of the time it's a 1-year reversal signal Skyscraper indicator: Tallest-building announcements coincide with imminent crises (Empire State 1929, Twin Towers 1972, Petronas 1997, Burj Dubai 2005) IPO indicator: Large IPOs (especially commodity-linked) often mark cycle tops (Glencore 2011 = commodity top) Cheer Hedge: When the public is excited about an asset class WTF indicator: When a move's magnitude provokes confusion (\"this makes no sense\") = positioning is wrong-footed Agent rule: Maintain a \"narrative extreme\" watchlist. When financial media converges on one USD direction (very strong dollar OR very weak dollar), elevate the contrarian probability. --- SECTION 8 — JUMP RISK / GAP RISK (event-driven discontinuities) Predictable risk-off events where USD can gap: 8.1 — Sources of jump risk Major economic data (NFP, CPI, FOMC) Central bank meetings (FOMC, ECB, BoE, BoJ) Central bank speeches (Powell, Fed members at Jackson Hole, etc.) Weekends (open Sunday afternoon NY time after Friday 5pm NY close) Unscheduled events (geopolitical, surprise central bank moves) 8.2 — Quantifying jump risk Look at historical event reactions for that specific release (Bloomberg ECMI) Use options market implied vol differential between event-day and non-event-day vol — gives an approximate gap size Research suggests 25–40% of FX returns over 1–3 month horizons come from these jumps 8.3 — Surprise central bank moves are GO-WITH trades, not fades Rule #9 of FX Trading (Donnelly): \"Never fade unexpected central bank moves. Jump on them!\" Examples cited in the book: Bank of Canada surprise rate cut (Jan 21, 2015): USDCAD 1.2070 → 1.2230 instantly → 1.2800 over following days BoJ unscheduled actions SNB EURCHF floor drop (Jan 2015) For USD specifically: Surprise FOMC dovish pivot → bearish USD, go short, hold Surprise FOMC hawkish hold/hike → bullish USD, go long, hold Reversal through the NewsPivot is the only signal to abandon the trade --- SECTION 9 — VOLATILITY AND TIME-OF-DAY (operational rules) USD trades 24/5 but liquidity and volatility vary dramatically. 9.1 — Time-of-day liquidity profile Tokyo session (8pm – 3am NY time): JPY pairs most active. Thinner USD liquidity. Vulnerable to algo-driven gappy moves. London open (3am NY): EUR, GBP, CHF activity surges. Major USD liquidity arrives. London / NY overlap (8am – 12pm NY): Peak liquidity and volatility window. Major US economic releases hit at 8:30am NY. ISM at 10am. Most important USD trading window. NY afternoon (12pm – 5pm NY): Liquidity declines as London goes home. Momentum dwindles after 11am NY. WMR fix (4pm London / 11am NY): Major rebalancing flow window. Can produce large, mean-reverting moves. Late NY (5pm onwards): \"Twilight Zone\" — daily roll-over, thin liquidity, illogical moves possible. Weekends: No trading. Sunday open (5pm NY) gaps reflect weekend news. 9.2 — When NOT to trade USD During the Tokyo session if the trade is a USD vs. EUR/GBP idea (wrong session) 30 minutes before any tier-1 US data release (positioning into the print is its own decision) The first 60 seconds after a tier-1 release (algos dominate) After 11am NY for short-term momentum trades (use afternoon for position trades only) Weekend gap-risk windows (Friday afternoon close pruning is a defensive practice)  --- SECTION 10 — SYNTHESIS: THE DAILY USD DIAGNOSIS PROCESS This section is the agent's operational playbook. Run this sequence every trading day. 10.1 — Step-by-step daily workflow STEP 1 — Regime classification (do this first, 5 minutes) VIX level (risk regime) US Citi Surprise Index trend (10D, 30D) Global Citi Surprise Index trend (10D, 30D) Trailing 30-day correlation between DXY and S&P 500 (regime tag) Active narrative dominance (rates? growth? inflation? geopolitics? China?) Output: `regime_tag = {risk_on | risk_off | crisis | neutral_domestic | neutral_global}` STEP 2 — Dollar smile diagnosis Apply the dollar smile decision tree from Section 1.3. Output: `smile_position = {left_up | bottom | right_up}`. STEP 3 — Domestic driver scan Score each in [-2, +2] (-2 = strongly bearish USD, +2 = strongly bullish USD): Driver\tInputs\tScore Fed bias\tRecent FOMC, Powell speeches, dot plot, Fed minutes\t_ US rates direction\t2Y, 5Y, 10Y delta over past 5 days\t_ US-vs-DM rate differential\tUS/DE, US/UK, US/JP differential delta\t_ US growth surprise\tISM, NFP, GDP nowcast vs trailing\t_ US inflation surprise\tCPI, PCE vs consensus\t_ US fiscal/political risk\tDebt ceiling, election, downgrade watch\t_ STEP 4 — Global driver scan Score each in [-2, +2]: Driver\tInputs\tScore Global growth\tChina PMI, EZ PMI, Citi global surprise\t_ Commodities\tGold, crude, copper trends (inverse to USD)\t_ Risk aversion\tVIX delta, credit spreads, EM FX\t_ Geopolitics\tActive event probabilities\t_ STEP 5 — Intermarket correlation check Pull DXY vs each of: US 2Y, US 10Y, US/DE 2Y differential, S&P 500, Gold, Crude, Copper, EM FX index, Bitcoin, US 10Y real yield Identify any major divergences (>1.5 SD from 60-day correlation expectation) A divergence is either (a) a fade signal for the most-recently-moved asset, or (b) a confirmation that a regime is shifting — distinguish via the broader narrative STEP 6 — Behavioral / positioning check COT report status (latest Friday): non-commercial USD positioning, EUR positioning, JPY positioning Sentiment: aggregate news tone, Twitter/blog tone, retail positioning (DSI if available) Recent magazine covers and anecdotal extremes Score positioning in [-2, +2] (-2 = extreme long USD = contrarian bearish; +2 = extreme short USD = contrarian bullish) STEP 7 — Calendar / news catalyst inventory What US data hits today, this week? What FOMC events (meetings, speeches, minutes)? What foreign central bank events (ECB, BoJ, BoE, etc.) that could shift differentials? What geopolitical events on watch? What is consensus and what is the agent's deviation from consensus? STEP 8 — Aggregate the bias Sum the scored drivers, weight by current regime: ``` regime_weights = {   'crisis':           {domestic: 0.10, global: 0.40, intermarket: 0.30, behavioral: 0.10, catalyst: 0.10}   'risk_off':         {domestic: 0.20, global: 0.35, intermarket: 0.25, behavioral: 0.10, catalyst: 0.10}   'neutral_global':   {domestic: 0.30, global: 0.30, intermarket: 0.20, behavioral: 0.10, catalyst: 0.10}   'neutral_domestic': {domestic: 0.45, global: 0.15, intermarket: 0.20, behavioral: 0.10, catalyst: 0.10}   'risk_on':          {domestic: 0.40, global: 0.20, intermarket: 0.20, behavioral: 0.10, catalyst: 0.10} } ``` Output: `usd_bias_score in [-10, +10]` and `usd_bias_direction = sign(score)`, `usd_conviction = |score| / 10`. STEP 9 — Five-Star check Count how many of the 5 branches (fundamentals, technicals, correlation, behavioral, news/catalyst) are aligned in the same direction. This becomes the star rating = trade conviction multiplier. STEP 10 — Output The agent emits: USD direction probability (e.g., \"68% probability USD strengthens over next 24–72 hours\") Star rating (1–5) Bullet-point reasoning citing each scored driver Specific trade implications for the four target markets (Section 11) 10.2 — The \"do nothing\" condition Do NOT emit a directional bias when: Sum of absolute scores < 4 (mixed signals everywhere) Star rating ≤ 2 (insufficient confluence) An imminent (< 24 hour) tier-1 catalyst (NFP, FOMC, CPI) is pending — wait for the print Active divergence between fundamentals and price action with no resolution catalyst visible (whipsaw risk) 10.3 — The \"fade vs go-with\" rule for breaking events When a USD move occurs immediately on news: If the move is on a SURPRISE central bank action → GO WITH (Rule #9) If the move is on economic data and the headline matches details → GO WITH for ~30 mins, then watch NewsPivot If the move is on economic data and headline contradicts details → FADE the kneejerk If the move is on positioning unwind (no real news) → FADE after 30–60 mins If the price reverses through the NewsPivot within 30 mins of release → fade-the-original-direction signal (very strong) --- SECTION 11 — APPLICATION TO TARGET MARKETS Translation rules from USD bias to trading conviction in each market. 11.1 — EUR/USD The cleanest, most direct USD play. EUR/USD is approximately the inverse of broad USD strength. USD Bias\tEUR/USD Direction\tNotes Strongly bullish USD\tShort EUR/USD\tCleanest expression. Confirm with US/Germany rate differential widening. Mildly bullish USD\tBias short EUR/USD\tPrefer if Italian yields rising (EZ stress confirms) Neutral\tNo trade or range trade\tUse technicals only Mildly bearish USD\tBias long EUR/USD\tConfirm with US/Germany differential narrowing Strongly bearish USD\tLong EUR/USD\tConfirm with gold rallying, crude bid EUR/USD-specific filters that can override broad USD: Italian/peripheral spread blowouts → EUR weakens regardless of USD (use Italy 2Y and 10Y as filter) ECB hawkish surprise → EUR strengthens regardless of USD direction Eurozone breakup fears (referendums, elections, Greek-style crises) → EUR weakens dramatically, EUR/USD breaks down even if broad USD is weakening EU/US trade war escalation → bearish EUR/USD 11.2 — NQ (Nasdaq-100 futures) The relationship is regime-dependent. This is the most nuanced of the four. Regime A: USD strength from US growth outperformance + Fed hawkish (most common 2022–2024) USD ↑ and NQ ↑ are positively correlated Both move on US growth narrative A hawkish Fed surprise can break this (USD ↑ but NQ ↓ on rate-shock) Regime B: USD strength from safe-haven flight (right-side dollar smile) USD ↑ and NQ ↓ — negatively correlated Risk-off regime, VIX > 22 This is the dominant mode during crises (2008, 2020 Mar, 2022 H1) Regime C: USD weakness from Fed dovish pivot USD ↓ and NQ ↑ — negatively correlated The \"Fed put\" trade. Bullish for NQ, bearish for USD. Lower USD also helps US multinationals' overseas earnings (translation effect) Agent rule for NQ: Determine which regime is active via the rolling 60-day correlation between DXY and NQ (and VIX level) If regime A: USD bias and NQ bias are aligned. High USD conviction → high NQ conviction in same direction. If regime B (risk-off): USD bias and NQ bias are opposite. High USD bullish conviction → NQ bearish conviction. If regime C (Fed pivot): Fed dovishness drives both. USD bearish + NQ bullish. Additional NQ-specific factors: Tech earnings season can override macro for 2-week windows Real US 10Y yield is a major NQ driver (rising real yields = NQ bearish, especially for long-duration tech). When Fed hawkishness drives real yields higher, NQ is doubly hit even if USD trade is \"normal.\" China growth re-acceleration → NQ bullish (semis, Apple supply chain) even if also USD-bullish via global growth 11.3 — BTC/USD Bitcoin trades as a hybrid of (a) high-beta risk asset, (b) digital gold / inflation hedge, (c) liquidity proxy. Primary driver framework: BTC is inversely correlated with USD strength over weeks/months (roughly -0.4 to -0.6) BTC is positively correlated with global liquidity (M2, central bank balance sheets, excess reserves) BTC behaves like NQ on intraday/risk-on-risk-off swings (positively correlated with QQQ) Decision rules for BTC: Macro condition\tBTC direction USD bearish + risk-on (low VIX, equities up)\tStrongly bullish BTC — dominant regime for upside USD bearish + Fed dovish pivot\tStrongly bullish BTC USD bullish + risk-on (rare combo)\tMixed — usually mildly bearish BTC USD bullish + risk-off (crisis, VIX > 25)\tStrongly bearish BTC — liquidation regime USD bullish + Fed hawkish\tBearish BTC (real yields up, liquidity tightening) USD neutral + falling real yields\tBullish BTC USD neutral + rising real yields\tBearish BTC BTC-specific overrides: Crypto-native catalysts (ETF approvals, major exchange events, regulation) can override macro for days Liquidity events (bank failures, MMF stress) can produce paradoxical BTC behavior (sometimes safe-haven, sometimes liquidation) Halving cycle is a structural background bias (~4 years), doesn't drive day-to-day but skews probabilities Agent rule: BTC's macro sensitivity has been increasing over time as institutional adoption rises. Treat BTC conviction as ~70% of NQ conviction in the same direction during aligned regimes, and 100% of inverse-USD conviction during dovish-pivot regimes. 11.4 — XAU/USD (Gold) The cleanest macro pairing among the four. Gold is essentially the inverse of real US yields plus a safe-haven premium. Primary drivers (in order): US 10Y real yield (TIPS yield) — the dominant driver. Rising real yields = bearish gold. Falling real yields = bullish gold. DXY / broad USD strength — gold priced in USD, mechanical inverse relationship Risk aversion / safe-haven demand — geopolitical events, financial stress Central bank gold buying — secular bid (China, India, EM CB diversification) Inflation expectations — gold as inflation hedge (works in some regimes, not others) Decision rules for Gold: Macro condition\tGold direction USD bearish + real yields falling\tStrongly bullish gold (best setup) USD bearish + real yields stable\tBullish gold USD bearish + real yields rising\tMixed — usually mildly bullish via USD effect USD bullish (Fed hawkish) + real yields rising\tStrongly bearish gold (worst setup) USD bullish (safe-haven) + real yields stable/falling\tBullish gold — both safe-havens bid simultaneously (override) Geopolitical crisis\tOverride: bullish gold regardless of USD direction Gold-specific overrides: Central bank surprise gold purchases (especially China PBoC) = bullish Major geopolitical event = bullish even if USD bullish (they can rally together in crisis) ETF flows (GLD, IAU) confirm or contradict the macro signal Gold/silver ratio above 90 typically marks risk-off extremes, mean-reverts Agent rule: Gold is the cleanest expression when USD weakness aligns with falling real yields. When they conflict (e.g., USD weak but real yields rising, or USD strong via safe-haven with real yields falling), use a smaller position with wider stops. Always score gold separately on (a) USD-direction signal and (b) real-yield-direction signal — if they agree, full conviction; if they disagree, half conviction. 11.5 — Cross-market consistency check Before emitting trades, run this consistency check: If primary call is\tThen expect\tIf not, reduce conviction Strong USD\tEUR/USD ↓, Gold ↓, BTC ↓ (in risk-off) or ↓ (in Fed-hawk regime)\tIf gold is rising sharply, the USD call may be wrong Weak USD\tEUR/USD ↑, Gold ↑, BTC ↑\tIf gold is falling, the USD call may be wrong Strong USD + risk-on\tNQ ↑ (regime A)\tIf NQ is falling, regime may be shifting Strong USD + risk-off\tNQ ↓ (regime B)\tIf NQ is rallying, USD strength may be temporary  --- SECTION 12 — RULES OF FX TRADING (Donnelly's 25 Rules — relevant subset) The following rules from the book are directly applicable to the agent's behavior: #\tRule\tApplication 1\tDon't blow up\tRisk management is paramount; never bet so much on one diagnosis that being wrong destroys the system 2\tAdapt or die\tDrivers change; the agent must update its weighting model continuously 3\tDo the work\tRead every Fed speech, every dot plot, every minutes release 9\tNever fade unexpected central bank moves. Jump on them!\tSurprise FOMC = go-with trade —\tThe market trades the DELTA, not the LEVEL\tAll signals must be change-based —\tIgnore \"fair value\" overvalued/undervalued claims for short-term trading\tPPP, IMF reports = useless for daily/weekly direction —\tFive-Star setups only — strong winds at your back\tMixed-signal = no trade —\tNever bet against a credible central bank's stated currency preference\tOnly relevant to USD when Treasury or Fed make explicit comments —\tProcess > outcome\tScore the agent's decision logic, not just its hit rate --- SECTION 13 — FAILURE MODES TO AVOID Common mistakes the agent must guard against: Overconfidence in a single driver: \"Rates are rising therefore USD up.\" NO — rates rising in WHO? Relative to whom? Is the market already positioned for it? Ignoring regime changes: Using a 2014 correlation framework in 2024. Confirmation bias: Once a directional view is set, ignoring contradicting data. Trading against the trend reflexively: \"Positioning is extreme so it must reverse\" — usually wrong; trends persist. Trading economic data without understanding what's priced in: A strong NFP can crush USD if expectations were higher. Always check consensus + whisper. Trading the absolute level instead of the change: A \"weak\" CPI print at 3% is bullish USD if it was expected to be 2.5% — focus on (actual - expected) / SD. Underweighting the risk regime: Domestic data analysis is irrelevant when VIX > 30. Linear thinking on USD vs NQ: Forgetting the relationship flips between regimes. Forgetting the USD's safe-haven status: US data weakening doesn't always mean USD weakens — see dollar smile right side. Overweighting fiscal policy and trade balance: These rarely matter in the short run despite being macroeconomically \"important.\" --- SECTION 14 — AGENT OUTPUT TEMPLATE The agent's daily output should follow this structure: ``` USD DIRECTIONAL DIAGNOSIS — {DATE}  REGIME TAGS:   - Risk regime: {risk_on | neutral | risk_off | crisis}   - Dollar smile position: {left_up | bottom | right_up}   - Active narrative focus: {rates | growth | inflation | geopolitics | china | other}   - DXY-SPX correlation regime: {positive | negative | decorrelated}  USD BIAS: {BULLISH | BEARISH | NEUTRAL} PROBABILITY (next 24-72hr): {XX%} CONVICTION (1-5 stars): {N}  REASONING (bullets):   • [Driver 1]: [evidence] → [score]   • [Driver 2]: [evidence] → [score]   • [Driver 3]: [evidence] → [score]   • [...]  KEY PENDING CATALYSTS:   • [Event] @ [time] — consensus [X], market positioning [Y]  INTERMARKET CONFIRMATION:   • EUR/USD: [aligned | diverging] — [observation]   • Gold: [aligned | diverging] — [observation]   • US 10Y: [aligned | diverging] — [observation]   • S&P/NQ: [aligned | diverging] — [observation]  TRADING IMPLICATIONS:    EUR/USD: {LONG | SHORT | NO TRADE} — {N}-star — Rationale: ...   NQ:      {LONG | SHORT | NO TRADE} — {N}-star — Regime: A/B/C — Rationale: ...   BTC/USD: {LONG | SHORT | NO TRADE} — {N}-star — Rationale: ...   XAU/USD: {LONG | SHORT | NO TRADE} — {N}-star — USD-leg + real-yield-leg agreement: yes/no — Rationale: ...  INVALIDATION CRITERIA:   • [What would cause this diagnosis to be wrong]   • [Specific levels/data that would flip the bias] ``` --- APPENDIX A — MASTER CHECKLIST OF USD DRIVERS (one-page reference) Domestic (rank-ordered by impact) Fed monetary policy bias (hawkish/neutral/dovish) US interest rates (2Y, 5Y, 10Y) — level AND direction US-vs-foreign interest rate differentials (especially US/Germany) Yield curve shape (steep vs flat vs inverted) Real yields (nominal − inflation expectations) US growth surprises (NFP, ISM, GDP, Retail Sales) US inflation surprises (CPI, Core PCE) Fed balance sheet (QE/QT) Forward guidance (Powell, dot plot, Fed minutes) Capital flows (TIC data, M&A, FDI) Trade balance / current account Fiscal policy (debt ceiling, downgrades, stimulus) Global (rank-ordered) Risk aversion / VIX / safe-haven flows Global growth (China PMI, EZ PMI, global trade) Commodity prices (gold, crude, copper) Geopolitics (war, elections, sanctions, regime change) EM stress and reserve recycling flows Foreign central bank actions (ECB, BoJ, PBoC) Behavioral / Positioning COT positioning (extremes + rate of change) Sentiment surveys (DSI, retail positioning) Anecdotal extremes (magazine covers, IPOs, narrative dominance) Bias detection (extrapolation in forecasts, herding) Microstructure / Operational Time of day (London/NY overlap window for major moves) WMR fix (4pm London) Jump risk (events, weekends) Cross-currency confirmation (USDCAD as \"The Truth\") --- APPENDIX B — KEY CORRELATIONS QUICK REFERENCE Correlation\tDirection\tReliability\tNotes USD vs US rates (2Y, 5Y, 10Y)\tPositive\tHigh\tMost consistent USD driver USD vs US-foreign rate differentials\tPositive (US side rising)\tHighest\tCleanest signal for USD pairs USD vs Gold\tNegative\tHigh\tMechanical (gold priced in USD) USD vs Crude oil\tNegative\tMedium\tDecouples on supply shocks USD vs Copper\tNegative\tMedium\tGlobal growth proxy DXY vs S&P 500\tRegime-dependent\tVariable\tFlipped multiple times historically USDJPY vs Nikkei\tPositive\tHigh\tJapan repatriation flows USDJPY vs US 10Y\tPositive\tHigh\tYield differential EURUSD vs Gold\tPositive\tHigh\tUSD inverse EURUSD vs Italy 10Y yields\tNegative\tMedium\tEZ stress filter USDCAD vs Crude\tNegative\tVery High\tPetrocurrency mechanism AUDUSD vs Copper/Iron Ore\tPositive\tHigh\tAustralia exports BTCUSD vs DXY\tNegative\tMedium (rising)\tImproving as institutional adoption grows BTCUSD vs NQ\tPositive\tHigh\tRisk-asset correlation Gold vs US 10Y real yield (TIPS)\tNegative\tVery High\tPrimary gold driver EM FX vs DXY\tNegative + amplified\tHigh\tReserve recycling reinforces --- APPENDIX C — IMPORTANT CAVEATS This ruleset is derived from a single book (The Art of Currency Trading, Donnelly, 2019). It reflects one experienced trader's framework, not academic consensus. Its strength is operational (built by a trader for traders); its weakness is that markets evolve. The book was published in 2019. Some specific examples (specific rate levels, named central bank governors, COT positioning data) are dated. The mechanisms are not. The agent must update its regime models continuously. A driver that mattered 5 years ago may not matter today. Re-score the importance weights monthly using observed market reactions to data releases. The book repeatedly emphasizes that simple rules fail at extremes. \"Buy on hawkish Fed\" is a guideline, not a law. The agent should treat all rules as probabilistic, not deterministic. Discretion remains essential. The book is explicit that pure systematic approaches underperform discretionary fusion approaches. The agent's job is to provide the structured input that lets a human (or downstream decision system) apply final discretion. No edge in everything-priced-in markets. When the market consensus and the agent's diagnosis agree, there is little trade. Edge exists in disagreement — when the agent's read of the data differs from the priced-in expectation. Always articulate where the agent's view diverges from consensus. --- End of ruleset. \n---\n\n## SECTION 15 — DATA VALIDATION RULES\n\n### 15.1 — WTI Price Sanity Check\n\nThe WTI price input must reflect the front-month WTI crude futures price (CL=F).\n\nValidation check: Brent trades at a $4–6 premium to WTI in normal conditions. If the Brent–WTI spread is negative OR above $12, treat the WTI feed as suspect — the feed may be pulling the wrong instrument, a stale rolled contract, or Brent itself.\n\nAgent rule: If WTI data fails this sanity check, do not use WTI for the USD/CAD oil-leg analysis. Cap USD/CAD conviction at ★★ maximum regardless of the oil signal, and flag \"WTI DATA SUSPECT — spread check failed\" in the output.\nThis document is intended as a reference framework for daily macro analysis of the US Dollar and its translation into trading conviction for EUR/USD, NQ, BTC/USD, and XAU/USD.\n",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1952,
+        -288
+      ],
+      "id": "ed1d83d9-8366-4e96-9050-8e6806d71d6b",
+      "name": "Edit Fields | USD Ruleset",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// FRED data\nconst us2y    = parseFloat($('HTTP Request | US 2Y Treasury Yield - FRED API').first().json.observations[0].value);\nconst us10y   = parseFloat($('HTTP Request | US 10Y Treasury Yield - FRED Api').first().json.observations[0].value);\nconst tips10y = parseFloat($('HTTP Request | TIPS 10Y Real Yield - FRED Api').first().json.observations[0].value);\nconst de10y   = parseFloat($('HTTP Request | Germany 10Y Proxy - FRED Api').first().json.observations[0].value);\nconst uk10y   = parseFloat($('HTTP Request | UK 10Y Proxy - FRED api').first().json.observations[0].value);\nconst jp10y   = parseFloat($('HTTP Request | Japan 10Y Proxy - FRED API').first().json.observations[0].value);\nconst vix     = parseFloat($('HTTP Request | VIX - FRED Api').first().json.observations[0].value);\nconst dxy     = parseFloat($('HTTP Request | DXY - FRED Dollar Index - FRED API').first().json.observations[0].value);\nconst wti     = parseFloat($('HTTP Request | WTI Oil - FRED Api').first().json.observations[0].value);\nconst brent   = parseFloat($('HTTP Request | Brent Oil - FRED Api').first().json.observations[0].value);\nconst eurUsd  = parseFloat($('HTTP Request | EURUSD - FRED API').first().json.observations[0].value);\n\n// Coinbase data\nconst gold   = parseFloat($('HTTP Request | Gold - Coinbase').first().json.data.amount);\nconst btc    = parseFloat($('HTTP Request | BTC - Coinbase').first().json.data.amount);\nconst jpyRaw = parseFloat($('HTTP Request | USD/JPY - Coinbase').first().json.data.amount);\nconst gbpUsd = parseFloat($('HTTP Request | GBP/USD - Coinbase').first().json.data.amount);\nconst cadRaw = parseFloat($('HTTP Request | USD/CAD - Coinbase').first().json.data.amount);\nconst audUsd = parseFloat($('HTTP Request | AUD/USD - Coinbase').first().json.data.amount);\n\n// Convert to standard FX conventions\nconst usdJpy = 1 / jpyRaw;\nconst usdCad = 1 / cadRaw;\n\n// Compute spreads\nconst usDeSpread     = us2y - de10y;\nconst usUkSpread     = us10y - uk10y;\nconst usJpSpread     = us10y - jp10y;\nconst brentWtiSpread = brent - wti;\n\nreturn [{\n  json: {\n    timestamp: new Date().toISOString(),\n    rates:   { us2y, us10y, tips10y, de10y, uk10y, jp10y, vix, dxy, wti, brent },\n    prices:  { eurUsd, gold, btc, gbpUsd, audUsd, usdJpy, usdCad },\n    spreads: { usDeSpread, usUkSpread, usJpSpread, brentWtiSpread }\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        144,
+        -720
+      ],
+      "id": "7c68bbcd-fc1a-4c80-9b0a-ebd419c7bee3",
+      "name": "Code in JavaScript | Fetch Code Node",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const response = $input.first().json;\nconst diagnosisText = response.content[0].text;\n\nreturn [{\n  json: {\n    diagnosis: diagnosisText,\n    timestamp: new Date().toISOString()\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        896,
+        -496
+      ],
+      "id": "e5576123-d21a-4035-a780-1dee51537ccb",
+      "name": "Extract Diagnosis Text",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const diagnosis = $input.first().json.diagnosis;\n\nconst body = {\n  model: \"claude-sonnet-4-6\",\n  max_tokens: 4000,\n  system: `You are a structured data extractor. Given a USD macro diagnosis, extract trading calls in strict JSON format. Output ONLY valid JSON, no other text.`,\n  messages: [{\n    role: \"user\",\n    content: `From this diagnosis, extract trading calls for all 9 markets across 3 timeframes (24h, 72h, weekly).\n\nMarkets: EUR/USD, USD/JPY, GBP/USD, USD/CAD, AUD/USD, NQ, BTC/USD, XAU/USD, WTI Oil\n\nReturn a JSON array of 27 objects, each with:\n- market (string)\n- timeframe (string: \"24h\", \"72h\", or \"weekly\")\n- direction (string: \"LONG\", \"SHORT\", or \"NO TRADE\")\n- conviction (number: 1-5)\n- rationale (string: one sentence)\n\nDIAGNOSIS:\n${diagnosis}`\n  }]\n};\n\nreturn [{ json: body }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1072,
+        -512
+      ],
+      "id": "14638a62-898c-42c5-b040-d63403d95f64",
+      "name": "Code in JavaScript | Build Extract Prompt",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            },
+            {
+              "name": "x-api-key",
+              "value": "<redacted>"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1296,
+        -496
+      ],
+      "id": "ad1f1c36-7a2e-425d-b8eb-c3fdafde79f6",
+      "name": "HTTP Request | Extract Calls - Claude API",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const response = $input.first().json;\nconst rawText = response.content[0].text;\n\nconst cleaned = rawText.replace(/```json\\n?/g, '').replace(/```/g, '').trim();\nconst calls = JSON.parse(cleaned);\n\nconst timestamp = new Date().toISOString();\n\n// Calculate expiry based on NY close (22:00 London = 17:00 NY)\nfunction getExpiry(timeframe) {\n  const now = new Date();\n  const nyCloseHourUTC = 21;\n\n  const close = new Date(now);\n  close.setUTCHours(nyCloseHourUTC, 0, 0, 0);\n\n  if (now >= close) close.setUTCDate(close.getUTCDate() + 1);\n\n  if (timeframe === '24h') {\n    const day = close.getUTCDay();\n    if (day === 6) close.setUTCDate(close.getUTCDate() + 2);\n    if (day === 0) close.setUTCDate(close.getUTCDate() + 1);\n    return close.toISOString();\n  }\n\n  if (timeframe === '72h') {\n    let added = 0;\n    while (added < 3) {\n      close.setUTCDate(close.getUTCDate() + 1);\n      const d = close.getUTCDay();\n      if (d !== 0 && d !== 6) added++;\n    }\n    return close.toISOString();\n  }\n\n  if (timeframe === 'weekly') {\n    const daysUntilFriday = (5 - close.getUTCDay() + 7) % 7 || 7;\n    close.setUTCDate(close.getUTCDate() + daysUntilFriday);\n    return close.toISOString();\n  }\n\n  return null;\n}\n\n// Entry prices passed through from the fetch aggregator\nconst prices = $('Code in JavaScript | Fetch Code Node').first().json.prices;\nconst rates  = $('Code in JavaScript | Fetch Code Node').first().json.rates;\n\nconst priceMap = {\n  'EUR/USD':  prices.gbpUsd   ? null : null,  // placeholder — filled below\n  'USD/JPY':  prices.usdJpy,\n  'GBP/USD':  prices.gbpUsd,\n  'USD/CAD':  prices.usdCad,\n  'AUD/USD':  prices.audUsd,\n  'NQ':       null,\n  'BTC/USD':  prices.btc,\n  'XAU/USD':  prices.gold,\n  'WTI Oil':  rates.wti\n};\n\n// EUR/USD isn't in the fetch yet — will be null until we add it\npriceMap['EUR/USD'] = prices.eurUsd || null;\n\nconst callsWithTimestamp = calls.map(call => ({\n  ...call,\n  timestamp,\n  status:      'OPEN',\n  source:      'donnelly',\n  entry_price: priceMap[call.market] || null,\n  expiry_at:   getExpiry(call.timeframe)\n}));\n\nreturn callsWithTimestamp.map(call => ({ json: call }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1520,
+        -496
+      ],
+      "id": "2a7172a8-4398-498b-8a76-1f9cd903fdfe",
+      "name": "Code in JavaScript | Parse Calls",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://vbssvpnrxhcxwmyakijf.supabase.co/rest/v1/calls",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "apikey",
+              "value": "<redacted>"
+            },
+            {
+              "name": "Authorization",
+              "value": "<redacted>"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1744,
+        -496
+      ],
+      "id": "af76d064-7841-49ea-9b44-03e4cf2f3598",
+      "name": "HTTP Request | Log to Supabase",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "7018df88-c77f-4a74-b60f-af0be68af4c2",
+              "name": "omors_ruleset",
+              "value": "USD Agent — Supporting Framework Supplement Source: Omors Trade Notes Status: Supplementary to `usd_ruleset.md` — not a replacement, additive layer only --- PURPOSE OF THIS DOCUMENT This document captures concepts from a second experienced trader (Omors) that either: (a) reinforce existing ruleset principles with sharper operational framing, or (b) add genuine new rules not present in the Donnelly-derived core ruleset. Where Omors overlaps with Donnelly, the stronger/more precise framing is kept. Where Omors introduces something new, it is clearly labelled as an addition. Sections that were reviewed and found to be already fully covered by `usd_ruleset.md` (rate differentials, actual-vs-consensus, risk-on/risk-off rotation) are not repeated here — consult the core ruleset for those. --- SUPPLEMENT 1 — ADR EXHAUSTION AS A SESSION FILTER (NEW RULE) Source: Omors. Not in core ruleset. Rule If the Average Daily Range (ADR) is already significantly consumed before the NY open, treat that session as low-probability for trend continuation. The likely profile is slow, choppy, mean-reverting price action. Exception: If the prior move has the profile of a reversal setup (e.g. a major level tagged, a key data miss absorbed), a slow session can still produce a tradeable reversal — but trend-following approaches should be avoided. Agent application Before issuing a trade signal for the NY session, check: > *Has the daily range already expanded significantly in London or pre-market?* If yes → downgrade conviction on directional trades for that session by 1 star. Flag output as \"ADR-constrained session.\" If a major data event (Tier 1 per Section 5 of core ruleset) is still pending → ADR exhaustion warning is suspended. Events create fresh range. --- SUPPLEMENT 2 — CURRENCY ROTATION SCAN (NEW RULE) Source: Omors. Partially implied by Donnelly's intermarket work but not made explicit as a daily scan step. Concept Currencies rotate. When one is expanding (trending with momentum, making consistent directional progress on the weekly), another is typically contracting or ranging. The daily pre-trade task is not just to ask \"which direction for USD?\" but also: > *Which currency is currently in an expansion phase, and is a new expansion candidate setting up?* Operational scan (add to daily workflow, post-diagnosis) Check futures equivalents for primary currency pairs: 6E (EUR), 6B (GBP), 6J (JPY), 6C (CAD), 6A (AUD). Identify which futures are making directional progress on the daily/weekly vs. which are in consolidation. The expanding currency = best vehicle for the USD directional bias already diagnosed. If USD is bearish and only EUR futures are expanding while GBP is consolidating, the cleanest expression of the thesis is EUR/USD, not GBP/USD. Agent output addition When the trade translation layer runs, note the expansion leader among the four target markets. Assign an additional weight-boost to that instrument if it aligns with the USD bias. Flag if the highest-conviction macro call has no expanding vehicle to express it through — this is a \"no trade\" signal even if the macro diagnosis is strong. --- SUPPLEMENT 3 — WEEKLY CANDLE EXPANSION AS A SESSION GATING FILTER (NEW RULE) Source: Omors. Not in core ruleset. Rule Only trade aggressively on days where the weekly candle is actively expanding — i.e. the current week's range is extending in the direction of the primary trend with conviction. On weeks where the weekly candle is doji-ing, compressing, or inside the prior week's range, reduce trade frequency and size. These are consolidation weeks; the macro setup may be valid but the market is not ready to move. Framing This is a timeframe filter, not a macro filter. The macro thesis can remain intact while the weekly candle consolidates. The consolidation is the market digesting information, not invalidating the thesis. The trade waits. Agent application In the agent output header, add a weekly structure flag: ``` WEEKLY CANDLE STATUS: {expanding | consolidating | reversing} SESSION FILTER: {trade aggressively | reduce size | wait for breakout} ``` --- SUPPLEMENT 4 — BOND BUYING AS A RATE CONTROL MECHANISM (REINFORCEMENT + NUANCE) Source: Omors, reinforcing Donnelly Section 2.1.3 (Fed balance sheet / QE). What Omors adds The core ruleset covers QE (money printing) as the standard rate reduction tool and its currency-damaging effects. Omors adds the less-discussed alternative mechanism: > **Encouraging institutional bond buying** can lower long-term yields without printing money. The government/central bank creates conditions that push large investors toward Treasuries (policy uncertainty, equity volatility, regulatory pressure on bank capital ratios). The result is bond prices rise, yields fall — without currency dilution. Why this matters for the agent This mechanism is relevant when: Yields are falling but the Fed has not announced QE Equity vol is elevated (VIX > 20) but no formal safe-haven crisis is declared The administration is verbally jawboning bond buyers In this scenario, falling yields are not bearish USD via the dilution channel — they may be neutral-to-bullish USD if the mechanism is institutional rotation (equities → bonds) rather than money creation. Agent rule addition When diagnosing falling yields: > Always identify the **mechanism** before assigning a USD direction.   > Falling yields via QE/balance sheet expansion → **bearish USD**   > Falling yields via institutional rotation / bond buying without printing → **ambiguous/neutral USD** — do not auto-assign bearish without confirming DXY is actually weakening   > Falling yields via growth fear / safe-haven demand → **bullish USD** (right side of Dollar Smile) This extends the existing Dollar Smile diagnostic with a yields-mechanism sub-check. --- SUPPLEMENT 5 — YIELD RALLY IN UNCERTAINTY AS AN OPERATIONAL TRIGGER (REINFORCEMENT) Source: Omors. Reinforces Donnelly's risk-off mechanics with a cleaner trigger formulation. Omors' heuristic (simplified and made precise) > When **yields rise** in an environment of **policy uncertainty or tightening** (not growth outperformance), this is a **derisking signal** — expect rotation out of risk assets soon. The inverse is equally actionable: if uncertainty is resolving and yields drop sharply, money rotates back into equities/risk. How this maps to the core ruleset This is essentially the Dollar Smile's right-left transition point made explicit as a timing signal. The Donnelly ruleset identifies the regimes; Omors identifies the yield direction within uncertainty as the early-warning trigger that a regime shift is underway. Agent rule addition Add to the daily regime-tagging workflow (Section 10 of core ruleset): > **Yield-uncertainty check:**   > If 10Y yields are rising AND the dominant narrative is uncertainty / policy risk (not growth or inflation beats):   > → Flag as **derisking in progress**   > → Expect NQ/BTC to weaken with a short lag   > → USD safe-haven bid likely building   > → Increase probability weighting for Dollar Smile right-side activation   >   > If 10Y yields are falling AND uncertainty is the dominant narrative:   > → Check mechanism (QE? Rotation? Safe-haven?) before assigning USD direction   > → Do not auto-assign bearish USD — see Supplement 4 --- SUPPLEMENT 6 — CONVICTION FREQUENCY DISCIPLINE (REINFORCEMENT) Source: Omors. Reinforces Donnelly's Five-Star trade concept with a concrete numerical anchor. The framing > Most trades end at breakeven or small loss. Profitability comes from a small number of high-R trades. Five solid 2R trades per month is sufficient to be profitable. Why this matters for the agent The core ruleset already contains Donnelly's Five-Star framework (only trade with \"strong winds at your back\"). Omors quantifies the expected outcome distribution in a way that's useful for calibrating the agent's output thresholds: If the agent is emitting 3-star or higher signals daily, it is almost certainly over-fitting — most days do not have clean macro setups The agent should be silent or \"no trade\" on more days than it is active A week that produces 1–2 high-conviction signals is functioning correctly; a week of daily signals suggests the signal thresholds are too loose Agent calibration rule (add to output template instructions) > **Frequency audit:** If the agent has issued 3+ star conviction signals on more than 3 consecutive days without a meaningful intervening \"no trade\" or 1-star day, review whether the regime tag and driver hierarchy are being applied strictly enough. Persistent high-conviction output is a red flag, not a green light. --- CROSS-REFERENCE: WHERE OMORS DEVIATES FROM CORE RULESET The following Omors positions were reviewed and not incorporated because they are either oversimplified relative to the core ruleset or have been superseded by more precise Donnelly mechanics: Omors claim\tIssue\tCore ruleset position Tariffs strengthen currency via domestic demand\tOversimplified — ignores retaliation, growth drag, and inflation pass-through complexity\tTreat tariffs as ambiguous; fiscal/geopolitical input only Gold rises with yields in uncertainty\tConflates nominal and real yields\tGold driven by real yields (TIPS). Can rise with nominal yields if real yields falling (high inflation). See Section 11.4 Yields rising → equities lower (always)\tMisses the Dollar Smile right-side and the regime where rising yields = growth outperformance = equities also up\tApply regime-check before assigning direction --- This supplement should be read alongside `usd_ruleset.md`. It does not replace any section of that document.   Source material: Omors Trade Notes (practitioner framework, institutional background)   Integrated: May 2026",
+              "type": "string"
+            },
+            {
+              "id": "a3eaeba7-3eca-4a44-b167-30f2513f4853",
+              "name": "donnelly_ruleset",
+              "value": "USD VALUE DETERMINATION RULESET A Mechanistic Breakdown for Daily Macro Agent Ingestion Source: The Art of Currency Trading by Brent Donnelly (Wiley, 2019). Donnelly is a 20+ year professional FX trader (Lehman Brothers, HSBC, Citi, Spectra Markets), former hedge fund discretionary portfolio manager. Purpose: A complete, mechanistic ruleset describing every factor that determines the value of the US Dollar on day-to-day and week-to-week timescales. Built for ingestion by a daily macro agent that: Reads incoming macro/market data Produces a probability-weighted directional bias for the USD Translates that bias into trading conviction for EUR/USD, NQ (Nasdaq-100), BTC/USD, and XAU/USD (Gold) --- SECTION 0 — META-PRINCIPLES (override everything below if violated) These are the \"physics\" of how the USD market actually trades. The agent must apply these in every analysis, without exception. 0.1 — The DELTA is what trades, not the LEVEL The market trades off the change of fundamentals, not their absolute level. A country with poor but improving fundamentals is more likely to see its currency appreciate than a country with great but worsening fundamentals. This is because prices are set at the margin and any \"known\" state of the world is already reflected in the current price. Agent rule: When evaluating any data point, the input is not \"is the US economy strong?\" It is \"is US data trending stronger or weaker than it was last week / last month?\" 0.2 — RELATIVE TO EXPECTATIONS is what moves price, not absolute strength For any data release, central bank meeting, or news event, the question is never \"was the print strong?\" The question is \"did the print beat or miss the median consensus expectation?\" A +90k NFP print is bullish USD if consensus was +50k, and bearish USD if consensus was +200k. Identical print, opposite trade. Agent rule: Every macro data point must be tagged with three values: (a) the actual print, (b) the consensus (Bloomberg median), (c) the standard deviation of historical surprises. The signal is `(actual - consensus) / std_dev_of_surprises`. Anything beyond ±2 standard deviations is a major surprise. 0.3 — RELATIVE COMPARISON, not absolute Currencies are pairs. The USD does not exist in isolation. The dollar's value is always a function of how the US looks relative to its trading partners. Rising US rates are theoretically bullish USD — but if Eurozone rates are rising faster, EUR/USD goes UP, not down. This is the most consistently-misapplied principle in retail FX analysis. Agent rule: Every USD-positive input must be tested against the equivalent input for the comparison currency (primarily Eurozone for EUR/USD; global aggregate for the dollar smile context). 0.4 — DRIVERS CHANGE OVER TIME (regime awareness) What drives the dollar in 2024 may not be what drove it in 2014 or 2008. The market oscillates between focusing on: Domestic drivers (US data, Fed policy) — dominant in stable periods Global drivers (risk aversion, China, geopolitics) — dominant in stress periods Within domestic drivers, focus rotates between rates, growth, inflation, fiscal policy, and elections. Donnelly explicitly notes that fiscal policy used to matter and now barely does; CPI was ignored in 2013–2015 then dominated 2018+; housing data dominated in 2007. Agent rule: Maintain a \"regime tag\" — what is the market currently focused on? Update weekly by scanning financial news headlines and noting which data releases produced the largest market reactions in the past 30 days. Weight inputs accordingly. 0.5 — The Five-Star Setup (conviction calibration) Donnelly's core trading philosophy is that maximum conviction trades occur when all five branches of analysis point the same direction: Fundamentals Technicals Correlation / intermarket Behavioral (sentiment + positioning) News / catalyst Agent rule: Output conviction must scale with how many of these branches align. The ratings system the agent should output: 5-Star (Highest): All 5 branches aligned — full position 4-Star: 4 of 5 aligned, no contradiction from the 5th — strong position 3-Star: 3 of 5 aligned, 2 neutral — moderate position ≤2-Star: Mixed signals — no trade / stand aside Avoid trades with crosswinds. \"Strong winds at your back\" is the goal. --- SECTION 1 — THE DOLLAR SMILE (foundational USD framework) The USD has unique behavior because global trade is denominated in USD and the USD is the world's reserve currency. The Dollar Smile (Stephen Jen, Morgan Stanley, 2001) describes the non-linear relationship between US growth and USD value. 1.1 — The three regimes of the smile US Growth State\tGlobal State\tUSD Direction\tMechanism Very strong US growth + hawkish Fed\tAny\tUSD STRONG (left-side-up of smile)\tCapital attracted to high US yields and outperforming US assets US recession or global recession\tRisk aversion / crisis\tUSD STRONG (right-side-up of smile)\tSafe-haven flight to US Treasuries; global USD shortage as global trade financing contracts US economy moderate / muddling\tGlobal growth decent\tUSD WEAK (bottom of smile)\tCapital rotates out of USD into higher-growth jurisdictions 1.2 — The counterintuitive recession rule The dollar tends to rally into US recessions. This breaks intuition. The mechanism: US recession fears → fears the global economy will follow Investors buy US Treasuries (the global safe-haven asset) → must buy USD to do so Global trade contracts → fewer USD in circulation globally → USD shortage → USD higher Agent rule: When ISM/jobs/GDP data deteriorate sharply AND the deterioration is global rather than US-specific, this is bullish USD, not bearish, despite poor US data. This is the right side of the smile. 1.3 — Dollar smile diagnostic tree (agent decision logic) ``` 1. Is the VIX > 25 OR is there an active geopolitical/financial crisis headline?    YES → Right side of smile activated. USD = SAFE HAVEN BID. Bullish bias regardless of US data.    NO → continue.  2. Is US growth (ISM Manufacturing > 55, NFP trending > 200k, GDP nowcast > 2.5%) clearly outperforming RoW?    AND is the Fed hawkish (signaling rate hikes or higher-for-longer)?    YES → Left side of smile. Bullish USD on growth + yield differential.    NO → continue.  3. Is US growth muddling (ISM 48–55, NFP 100–200k) AND global growth decent (China PMI > 50, EZ PMI > 50)?    YES → Bottom of smile. Bearish/soft USD bias. ``` --- SECTION 2 — DOMESTIC DRIVERS OF THE DOLLAR (ranked by importance) Donnelly's hierarchy. The market focuses on these in roughly this order, though importance shifts (see Section 0.4). 2.1 — MONETARY POLICY (the #1 domestic driver, most of the time) Monetary policy is \"the number-one domestic driver of currency values most of the time.\" The Fed has three levers, in order of impact: 2.1.1 — Interest rates (the primary lever) Mechanism: Higher rates attract capital. Investors prefer high-yielding currencies, avoid low-yielding ones. Most reasons rates rise (growth, inflation, confidence) are themselves USD-supportive. Critical: The market trades bias change, not the rate move itself. By the time the Fed actually hikes, the move is priced in. The currency reacts when the Fed signals a change in bias (hawkish ↔ neutral ↔ dovish). Buy the rumor / sell the fact: Currency rallies on hawkish signaling, tops out near the actual hike. Rate Variable\tBullish USD\tBearish USD Absolute level\tHigh\tLow Direction (delta)\tRising\tFalling Yield curve shape\tSteep (normal)\tFlat or inverted Curve direction\tSteepening\tFlattening Real rates (nominal − inflation)\tHigh / rising\tLow / falling Fed bias\tHawkish\tDovish Bias direction\tBecoming MORE hawkish\tBecoming MORE dovish Agent rule — yield differentials (most important rates input): Look at the US/Germany 2Y, 5Y, 10Y differentials for EUR/USD Widening differential (US rates rising faster than German) = bullish USD (bearish EUR/USD) Narrowing differential = bearish USD The 2Y is usually most sensitive to monetary policy expectations; the 10Y reflects growth+inflation An inverted US yield curve historically precedes recession → eventually bearish USD via Fed cuts (but in the short term can be bullish via dollar smile right-side) 2.1.2 — Balance sheet (QE / QT) QE (balance sheet expansion): Bearish USD theoretically (more dollars), bullish stocks, bullish bonds (lower yields), bullish inflation QT (balance sheet contraction): Opposite — bullish USD theoretically Reality is mixed. The book explicitly warns: when BoJ went sub-zero in Jan 2016, JPY sold off for one day, then rallied for a year. The textbook reaction is NOT reliable. The actual reaction depends heavily on what's priced in. Agent rule: Treat QE/QT announcements as catalysts that get priced in over the announcement window. The bigger trade is often when surprise expansion/contraction announced (unscheduled or beyond expectations). 2.1.3 — Forward guidance (the third lever) The Fed influences markets by telling participants what it plans to do. Hawkish guidance (\"higher for longer\", dot plot moving up, hawkish dissents): USD-positive Dovish guidance (rate cut signaling, dovish dissents, \"patient\", \"data-dependent\" softening): USD-negative Wealth effect: Fed dovishness pushes equities up, which the Fed sometimes wants for the wealth effect. This means dovish Fed = stocks up + USD down (bearish USD/bullish NQ correlation in this regime). 2.1.4 — Inflation (the input to monetary policy) Inflation's impact on the USD is regime-dependent: Inflation Regime\tEffect on USD Rising inflation + credible Fed willing to hike\tBULLISH USD (rate hike expectations) Rising inflation + Fed unwilling/unable to hike\tBearish USD (real yield compression) Falling inflation in developed economy\tBearish USD (allows Fed to cut) Disinflation/deflation fears\tStrongly bearish USD (Fed dovishness) Inflation > 2% target by significant margin\tMarket hyper-focuses on every CPI/PCE print Inflation stable near target\tCPI/PCE prints lose market relevance Agent rule: Tag the current inflation regime each week. Then weight CPI/PCE prints accordingly. In a \"hot\" inflation regime, every basis point of unrounded CPI matters; in a stable regime, even 0.1% misses don't move markets. 2.1.5 — Growth (drives both rates and inflation expectations) Higher growth → higher rates expectations → bullish currency. Outside investors must buy USD to invest in US assets. Key US growth metrics: GDP, Industrial Production, Retail Sales, Housing data, ISM PMIs. 2.1.6 — Central bank preference (signaling / moral suasion) The Fed rarely directly states a USD preference (unlike ECB, BoJ). US Treasury historically supports a \"strong dollar\" rhetorically but actions matter more than words. Watch for verbal interventions: any explicit Treasury or Fed comment on the level of the dollar is a major signal. Rule: Do not bet against a credible central bank that has clearly outlined a currency preference. 2.2 — CAPITAL FLOWS (#2 domestic driver) FDI, M&A, equity flows, bond flows can drive the USD for extended periods. Cross-border M&A = immediate large FX flow (e.g. European brewery buys US company → must sell EUR, buy USD). Portfolio flows can last months/years (e.g. Macron 2017 → 2 years of EUR-buying despite weak EZ economy). Flows are fickle and hard to predict in advance, but you can observe them ex-post via: TIC data (US Treasury International Capital flows) Sovereign credit rating changes Foreign equity market performance vs US (rotation signal) Major M&A deal announcements Agent rule: Capital flows are rarely the #1 driver but can be the dominant driver during specific regimes. Watch for headlines about (a) sovereign credit downgrades, (b) major cross-border M&A involving USD, (c) portfolio shifts triggered by political events (elections, referendums, crisis resolution). 2.3 — TRADE BALANCE / CURRENT ACCOUNT (#3 domestic driver — usually low importance) Long-run determinant, very little short-run influence. Often argued that FX drives trade balance, not the other way around. Becomes hyper-relevant during periods of rising global interest rates when investors focus on financing pressures. The US runs a structural trade and current account deficit. This is bearish USD in textbook terms but has been ignored for decades because the USD is the reserve currency. Agent rule: Treat trade balance as a tertiary input. Only elevate its weight when (a) the print is extreme (>2 SD miss) AND (b) the market is currently focused on US deficits (e.g., debt-ceiling weeks, sovereign credit watch periods). 2.4 — FISCAL POLICY (low importance most of the time) Once was a textbook driver: loose fiscal + loose monetary = lower currency. The relationship has broken down in recent years. Sometimes loose fiscal = good for growth = good for USD. Sometimes loose fiscal = credit quality fears → debt downgrades → bearish USD. Agent rule: Fiscal policy is usually background noise. Elevate to relevant only when: A debt downgrade is announced or threatened Debt-ceiling / shutdown week A massive stimulus or austerity package is being passed Debt-to-GDP cross above a psychologically important threshold  --- SECTION 3 — GLOBAL DRIVERS OF THE DOLLAR When the world is in stress mode, domestic drivers can become \"totally irrelevant\" and global drivers dominate. The agent must constantly assess which regime is active. 3.1 — GLOBAL GROWTH Global growth strength → exporters (China, Korea, Brazil) do well → capital rotates AWAY from USD into EM → bearish USD Global growth weakness → safe-haven flows → bullish USD (especially when USD acts as a low-yielder safe-haven) The USD's behavior here is regime-dependent on the dollar smile Key inputs to monitor: China PMI (Manufacturing and Caixin) — leading indicator for global growth Eurozone PMI (Composite + Manufacturing) Global trade volumes (Baltic Dry, container indices) Citi Economic Surprise Indices (US vs. Global, US vs. G10, US vs. EM) Agent rule: When the US Citi Surprise Index is rising AND Global Surprise Index is falling → bullish USD (US outperformance). When both rising or both falling, the trade is in the cross-rates between specific countries, not the broad USD. 3.2 — COMMODITY PRICES (especially gold and crude) Mechanism 1 (mechanical): Commodities are priced in USD globally. Weaker USD = cheaper commodities for foreigners = higher demand = higher prices. Stronger USD = headwind for commodities. This is a near-tautological inverse relationship. Mechanism 2 (cash flow / petrodollar recycling): Oil-exporting nations receive USD when they sell oil. They diversify into other currencies. The more oil rises, the more USD they sell to maintain currency weight benchmarks. Mechanism 3 (terms of trade): Higher commodity prices benefit commodity exporters' currencies (CAD, AUD, NOK, BRL) at the expense of importers (USD, JPY, EUR partially). The USD vs. Commodities relationship: USD ↑ → Gold ↓, Crude ↓, Copper ↓ (mostly reliable) Crude ↑ → CAD ↑ (lower USDCAD), NOK ↑ — and USD weaker against commodity bloc Gold ↑ → typically bearish USD (gold is the anti-fiat trade) Agent rule for commodities as a USD signal: Strong, sustained moves in gold are the cleanest USD-direction signal among commodities Crude oil can decouple from USD when supply shocks dominate (OPEC, geopolitics) Copper as a global growth proxy — copper falling alongside USD strength = right-side dollar smile activation 3.3 — RISK AVERSION (the dominant short-term driver in stress regimes) Different currencies have different \"personalities.\" In risk-off, traders flock to low-yielding safe havens: JPY, CHF, and (often) USD. 2008 GFC: CHF, JPY, and USD all exploded higher together because all were low-yielders that served as safe havens. The USD's safe-haven status is unique: it benefits from being both (a) the reserve currency and (b) the funding currency for global trade. Agent rule — risk regime classification: Risk-On regime: VIX < 16, equities at/near highs, credit spreads tight, EM currencies bid → bearish USD bias (risk-on rotation away from USD) Neutral regime: VIX 16–22 → Domestic drivers dominate, dollar smile bottom Risk-Off regime: VIX > 22 (especially > 25), equities selling off, credit spreads widening, EM currencies under pressure → bullish USD bias (safe-haven activation) Crisis regime: VIX > 35 → Strongly bullish USD, other variables irrelevant Note: The USD's safe-haven behavior depends on the relative yield environment. When the USD is itself a high-yielder (Fed hiking), it benefits doubly. When the USD is a low-yielder (Fed at zero), it's still a haven but JPY/CHF gain more. 3.4 — GEOPOLITICS War, elections, regime change, major policy shifts → trigger currency moves and risk repricing US-specific geopolitics: presidential elections, debt ceilings, trade wars, sanctions Foreign geopolitics impacting USD: anything that elevates global risk aversion (Russia, China-Taiwan, Middle East) Agent rule: The book explicitly states geopolitics can override every other driver in the short term. The agent must monitor a geopolitics watchlist daily and assign event probabilities. A surprise election outcome or sudden conflict trumps all other macro inputs for at least 1–3 trading days. --- SECTION 4 — INTERVENTION AND RESERVE RECYCLING (mechanical USD flows) This is a critical and underappreciated mechanism. It directly creates non-discretionary USD buying or selling pressure. 4.1 — How reserve recycling works Global central banks (especially China, Saudi, HK, Singapore, Brazil, Russia) hold massive USD reserves China's reserves ranged from ~$200B in 2001 to ~$4 trillion peak in 2014 Reserves are typically held in a portfolio: ~60% USD, then EUR, JPY, GBP, others When a central bank intervenes in its own currency, it generates USD inflows/outflows To maintain portfolio currency weights, the central bank must rebalance by buying/selling EUR, GBP, AUD against USD 4.2 — The contagion mechanism (very important for the agent) Strong USD vs. EM → Strong USD vs. G10 (mechanical). Example mechanic: China reserves drop from $4T to $3T = $1T outflow If 20% are in EUR, that's $200B too many EUR China must sell EURUSD (and AUDUSD, GBPUSD) to rebalance This creates G10 currency selling pressure independent of any G10 fundamental Agent rule: When EM currencies (especially CNH, BRL, ZAR, TRY, INR) are under significant pressure, expect mechanical G10 currency selling vs USD as a secondary effect. This is most visible in commodity currencies (AUD, CAD, NZD) which suffer from BOTH global growth fears AND recycling flows. 4.3 — Direct intervention Uncommon but important when it happens BoJ has intervened to weaken JPY at multiple points SNB famously failed (then succeeded with the floor, then dropped the floor in 2015) US has intervened rarely; Plaza Accord (1985) and Louvre Accord (1987) are the classic examples Agent rule: Direct intervention by a foreign central bank against the USD is a major event. JPY-buying intervention by BoJ = bearish USDJPY = bearish USD broadly (sentiment effect). --- SECTION 5 — US ECONOMIC DATA RELEASES (graded by market impact) This is the daily/weekly bread and butter. Donnelly's importance ratings (☆ = 1 to ☆☆☆☆☆ = 5): 5.1 — Tier 1 (☆☆☆☆☆ — always market-moving) Indicator\tFrequency\tWhat to watch\tNotes Nonfarm Payrolls (NFP)\t1st Friday monthly\tHeadline jobs, Unemployment Rate, Average Hourly Earnings\tAvg miss 72k, 1 SD = 84k. >2 SD miss/beat = major surprise. Avg USDJPY range 5min after = 66 pips. ALL THREE COMPONENTS MATTER — strong headline + weak earnings can fade USD rally. 5.2 — Tier 2 (☆☆☆☆ — high impact) Indicator\tFrequency\tWhat to watch\tNotes ISM Manufacturing\t1st business day monthly\tHeadline, New Orders (forward-looking), Prices, Employment\tTimely, relevant, reliable. Employment subcomponent feeds NFP forecasts. ISM Non-Manufacturing (Services)\t3rd business day monthly\tHeadline, New Orders, Prices, Employment\tServices = larger share of US economy. Equal importance to Manufacturing. Advance GDP\tQuarterly\tHeadline GDP, Core PCE deflator\tAverage miss 0.35%. Most market-moving of the 3 GDP releases. Preliminary and Final are much less impactful. Consumer Confidence (Conference Board)\tMid-month\tHeadline, Present + Future components\tHighly correlated with S&P 500. Strong release → stocks ↑, USDJPY ↑. 5.3 — Tier 3 (☆☆☆ — meaningful but situational) Indicator\tFrequency\tNotes Initial Jobless Claims\tWeekly (Thurs)\tMost timely employment indicator. Low number = good. CPI\tMid-month\tImportance is regime-dependent. In high-inflation regimes (2007–08, 2018, 2022+), CPI is Tier 1. In stable regimes (2013–15), barely matters. Retail Sales (ex-autos and gas)\tMid-month\tWatch month-on-month, ex-autos and gas (control group). Durable Goods Orders (ex-transportation)\tMonthly\tMoM ex-transportation is the watched number. Chicago PMI, Philly Fed, Empire State\tMonthly\tRegional surveys. Note: Chicago PMI leaks at 9:42AM to subscribers, public at 9:45AM — moves at 9:42 are not random. 5.4 — Tier 4 (☆☆ — usually low impact, can spike in importance) Indicator\tFrequency\tNotes Core PCE Price Index\tWith GDP / Monthly PCE\tFed's preferred inflation gauge. Matters more around the 2% target zone. University of Michigan Consumer Sentiment\tMonthly (Prelim + Final)\tLess followed than Conference Board CCI. Industrial Production\tMonthly\tClean and timely but doesn't cover services. NAHB Housing Index\tMonthly\tMatters when housing is the focus. 5.5 — Mechanism for trading the data (NewsPivot framework) For every major data release, the agent must pre-compute: Consensus expectation (Bloomberg/Reuters median) Standard deviation of recent (past 24+ months) actual-minus-expected misses Whisper number (where market is positioned vs. consensus) Pre-release equilibrium price (the NewsPivot) After release: If actual print is within ±0.5 SD of consensus: minimal sustained move If ±1 SD: notable but often fades If ±2 SD or more: trade with the move (algos go aggressive but humans can follow) The \"good news / bad price\" signal (CRITICAL for fade trades): Strong data → currency should rally → but currency reverses through the NewsPivot within 30 minutes This is bearish price action: the market has rejected the bullish data Fade the spike, go opposite the data And vice versa: bad data + currency holds the NewsPivot = bullish price action 5.6 — Algorithmic competition The book explicitly warns: humans cannot outpace algos in the first seconds after a release. Profit comes from: Being prepared with a pre-defined plan (entry, stop, target for both upside and downside scenarios) Trading the second wave (after algos exhaust their initial allocation) Fading the kneejerk when the headline doesn't match the details (e.g., strong NFP headline but weak Average Hourly Earnings) Trading positioning extremes — when market is heavily positioned one way, even mediocre data can produce large counter-moves due to stop-runs  --- SECTION 6 — INTERMARKET CORRELATIONS (Donnelly's USD driver matrix) This is the operational core of the book's daily process. Donnelly runs 50–60 overlay charts of currency pairs vs their drivers, scanning for divergences each morning. 6.1 — The official USD driver hierarchy (Figure 8.9 of the book, Jan 2019 snapshot) For the broad USD index, the four primary drivers, in order: Rank\tDriver\tDirection 1\tUS 2, 5, and 10-year interest rates\tHigher rates → higher USD 2\tUS equities\tHigher equities → higher USD (post-2012 regime) 3\tGold\tHigher gold → lower USD (inverse) 4\tISM / Consumer Confidence\tStronger = stronger USD Note: The USD/equities correlation is regime-dependent and has flipped multiple times historically: Late 1990s: USD ↑ = stocks ↑ (US growth outperformance) 2003–2010 (RORO regime): USD ↑ = stocks ↓ (risk-on/risk-off) 2012+ (US outperformance): USD ↑ = stocks ↑ (selective) The agent must check the trailing 60-day correlation each week to know which regime is active 6.2 — Reliability ranking of FX correlations (most → least reliable) FX vs. other currencies (USD pairs move together) FX vs. interest rates (most consistent driver per Donnelly's 25-year career) FX vs. commodities (especially gold, oil, copper) FX vs. equity indices FX vs. single-name equities and ETFs 6.3 — EUR/USD specific drivers (book's explicit list) Rank\tDriver\tHow to read 1\tUS/Germany 2Y, 5Y, 10Y rate differential\tWidening US premium → EUR/USD lower 2\tGold\tGold ↑ → typically EUR/USD ↑ (USD weak) 3\tItaly 2Y and 10Y yields\tItalian yield blowouts → EZ stress → EUR/USD ↓ 4\tCrude oil\tHigher oil → mild EUR/USD positive (EZ is net oil importer like US, but shocks usually weaken USD via inflation) 6.4 — Cross-currency confirmation (the \"Truth\" rule) Donnelly: All USD-based currencies have a strong tendency to move together. If EURUSD, GBPUSD, and NZDUSD rally together with no other catalyst, the next move in AUDUSD is also more likely up and USDCAD is more likely down. USDCAD is nicknamed \"The Truth\" because it's such a clean dollar tell. Agent rule: Build a \"dollar breadth\" indicator: Count how many of [EUR/USD, GBP/USD, AUD/USD, NZD/USD, USD/JPY (inverted), USD/CAD (inverted), USD/CHF (inverted)] are moving in the same dollar direction 6 or 7 of 7 = high-conviction dollar trend (broad-based) 4 of 7 = mixed, idiosyncratic move in one currency 2 of 7 or less = no dollar trend, single-currency story 6.5 — Lead/lag and divergence trading The agent's daily process should mirror Donnelly's morning routine: Flip through correlation overlay charts Identify pairs that have diverged from their primary driver Check secondary drivers — do they confirm or contradict? Look for convergence of multiple divergences in the same direction The trade is the catch-up move Example (book's USDCAD vs crude case study, Jan 2012): USDCAD elevated despite very strong crude (divergence #1) Canadian rates pricing the opposite direction (divergence #2) DXY topping at resistance (divergence #3) Chinese equities rallying (divergence #4) All 4 pointed to lower USDCAD → trade went short USDCAD → won 6.6 — When correlations break down Correlations are dynamic and unstable They can persist for years (USDCAD vs crude) or disappear in weeks A correlation reinforces itself: when it's strong, algos pile in and make it stronger Then a regime shift breaks it The book's wisdom: don't worry about r-squared as much as the inherent economic logic. If the relationship makes fundamental macroeconomic sense, trust it. If it's purely statistical (rabbit meat prices vs Citi surprises), discard it. --- SECTION 7 — BEHAVIORAL FINANCE AND POSITIONING The market is not efficient in the short run. Human behavior creates dislocations that can be exploited. 7.1 — Sentiment vs Positioning (these are NOT the same thing) Concept\tDefinition\tSource Sentiment\tHow traders feel / what they think\tSurveys (DSI), Twitter, news tone, anecdotal Positioning\tWhat traders are actually holding\tCOT reports (CME), bank positioning surveys, futures open interest The two often agree but their divergences are the highest-conviction signals. 7.2 — The 6 sentiment/price states Sentiment\tBull market direction\tBear market direction HIGH and STABLE\tBullish\t— HIGH and RISING\tVery bullish\t— HIGH but FALLING\t—\tBEARISH (signal to sell) LOW and STABLE\t—\tBearish LOW and FALLING\t—\tVery bearish LOW but RISING\tBULLISH (signal to buy)\t— The two BOLD scenarios are the contrarian sentiment trade signals — sentiment turning against the prevailing trend. 7.3 — COT report (Commitment of Traders, CME, weekly) Key observations: Positions and price normally trend together Positioning often LEADS price at turning points (watch for divergences) Positioning trends can last >1 year Absolute levels of positioning matter less than the rate of change Most research shows it's more profitable to GO WITH COT positioning, not against it. Don't be a reflexive contrarian. Agent rule: Use COT data as a confirming/refuting signal, not a primary signal. Take fading-the-extreme trades only when: Positioning is at multi-year extreme AND fundamentals are starting to turn AND positioning is starting to turn AND there's a clear technical reversal pattern That's the Five-Star setup. 7.4 — Cognitive biases that create predictable USD mispricings Donnelly's 9 key biases: Confirmation bias: Traders absorb info that confirms their view, ignore disconfirming info. → Creates positioning extremes that overshoot fair value. Overconfidence: Especially after a winning streak. → Position sizing errors. Extrapolation (recency bias): Traders assume recent direction continues. Economist forecasts demonstrably extrapolate: USDJPY at 110 → forecasts say 120; at 120 → forecasts say 130. The bias means forecasts are systematically wrong at trend extremes. Asymmetric loss aversion: Pain of loss is ~2x joy of equal gain. → Traders hold losers too long, cut winners too early. → Creates flush moves when stops finally trigger. Greed and fear: Drive bubbles and panics. Anchoring: Traders anchor to a recent price (high, low, round number). Round number bias: USD pairs cluster and reverse at 100s, 1.0000, 1.10, etc. Favorite/longshot bias: Overweighting low-probability events, underweighting near-certain ones. Herding: Traders cluster around consensus to avoid career risk. Agent rule: When economist forecasts show clustering (low SD of forecasts) and the trend is mature (>6 months in one direction), expect mean reversion or surprise in the OPPOSITE direction at higher probability than the consensus implies. Forecasts have fat tails that the consensus misrepresents as narrow. 7.5 — Anecdotal indicators (sentiment extremes) These signal contrarian setups: Magazine cover indicator: When The Economist features a strong asset bias, ~68% of the time it's a 1-year reversal signal Skyscraper indicator: Tallest-building announcements coincide with imminent crises (Empire State 1929, Twin Towers 1972, Petronas 1997, Burj Dubai 2005) IPO indicator: Large IPOs (especially commodity-linked) often mark cycle tops (Glencore 2011 = commodity top) Cheer Hedge: When the public is excited about an asset class WTF indicator: When a move's magnitude provokes confusion (\"this makes no sense\") = positioning is wrong-footed Agent rule: Maintain a \"narrative extreme\" watchlist. When financial media converges on one USD direction (very strong dollar OR very weak dollar), elevate the contrarian probability. --- SECTION 8 — JUMP RISK / GAP RISK (event-driven discontinuities) Predictable risk-off events where USD can gap: 8.1 — Sources of jump risk Major economic data (NFP, CPI, FOMC) Central bank meetings (FOMC, ECB, BoE, BoJ) Central bank speeches (Powell, Fed members at Jackson Hole, etc.) Weekends (open Sunday afternoon NY time after Friday 5pm NY close) Unscheduled events (geopolitical, surprise central bank moves) 8.2 — Quantifying jump risk Look at historical event reactions for that specific release (Bloomberg ECMI) Use options market implied vol differential between event-day and non-event-day vol — gives an approximate gap size Research suggests 25–40% of FX returns over 1–3 month horizons come from these jumps 8.3 — Surprise central bank moves are GO-WITH trades, not fades Rule #9 of FX Trading (Donnelly): \"Never fade unexpected central bank moves. Jump on them!\" Examples cited in the book: Bank of Canada surprise rate cut (Jan 21, 2015): USDCAD 1.2070 → 1.2230 instantly → 1.2800 over following days BoJ unscheduled actions SNB EURCHF floor drop (Jan 2015) For USD specifically: Surprise FOMC dovish pivot → bearish USD, go short, hold Surprise FOMC hawkish hold/hike → bullish USD, go long, hold Reversal through the NewsPivot is the only signal to abandon the trade --- SECTION 9 — VOLATILITY AND TIME-OF-DAY (operational rules) USD trades 24/5 but liquidity and volatility vary dramatically. 9.1 — Time-of-day liquidity profile Tokyo session (8pm – 3am NY time): JPY pairs most active. Thinner USD liquidity. Vulnerable to algo-driven gappy moves. London open (3am NY): EUR, GBP, CHF activity surges. Major USD liquidity arrives. London / NY overlap (8am – 12pm NY): Peak liquidity and volatility window. Major US economic releases hit at 8:30am NY. ISM at 10am. Most important USD trading window. NY afternoon (12pm – 5pm NY): Liquidity declines as London goes home. Momentum dwindles after 11am NY. WMR fix (4pm London / 11am NY): Major rebalancing flow window. Can produce large, mean-reverting moves. Late NY (5pm onwards): \"Twilight Zone\" — daily roll-over, thin liquidity, illogical moves possible. Weekends: No trading. Sunday open (5pm NY) gaps reflect weekend news. 9.2 — When NOT to trade USD During the Tokyo session if the trade is a USD vs. EUR/GBP idea (wrong session) 30 minutes before any tier-1 US data release (positioning into the print is its own decision) The first 60 seconds after a tier-1 release (algos dominate) After 11am NY for short-term momentum trades (use afternoon for position trades only) Weekend gap-risk windows (Friday afternoon close pruning is a defensive practice)  --- SECTION 10 — SYNTHESIS: THE DAILY USD DIAGNOSIS PROCESS This section is the agent's operational playbook. Run this sequence every trading day. 10.1 — Step-by-step daily workflow STEP 1 — Regime classification (do this first, 5 minutes) VIX level (risk regime) US Citi Surprise Index trend (10D, 30D) Global Citi Surprise Index trend (10D, 30D) Trailing 30-day correlation between DXY and S&P 500 (regime tag) Active narrative dominance (rates? growth? inflation? geopolitics? China?) Output: `regime_tag = {risk_on | risk_off | crisis | neutral_domestic | neutral_global}` STEP 2 — Dollar smile diagnosis Apply the dollar smile decision tree from Section 1.3. Output: `smile_position = {left_up | bottom | right_up}`. STEP 3 — Domestic driver scan Score each in [-2, +2] (-2 = strongly bearish USD, +2 = strongly bullish USD): Driver\tInputs\tScore Fed bias\tRecent FOMC, Powell speeches, dot plot, Fed minutes\t_ US rates direction\t2Y, 5Y, 10Y delta over past 5 days\t_ US-vs-DM rate differential\tUS/DE, US/UK, US/JP differential delta\t_ US growth surprise\tISM, NFP, GDP nowcast vs trailing\t_ US inflation surprise\tCPI, PCE vs consensus\t_ US fiscal/political risk\tDebt ceiling, election, downgrade watch\t_ STEP 4 — Global driver scan Score each in [-2, +2]: Driver\tInputs\tScore Global growth\tChina PMI, EZ PMI, Citi global surprise\t_ Commodities\tGold, crude, copper trends (inverse to USD)\t_ Risk aversion\tVIX delta, credit spreads, EM FX\t_ Geopolitics\tActive event probabilities\t_ STEP 5 — Intermarket correlation check Pull DXY vs each of: US 2Y, US 10Y, US/DE 2Y differential, S&P 500, Gold, Crude, Copper, EM FX index, Bitcoin, US 10Y real yield Identify any major divergences (>1.5 SD from 60-day correlation expectation) A divergence is either (a) a fade signal for the most-recently-moved asset, or (b) a confirmation that a regime is shifting — distinguish via the broader narrative STEP 6 — Behavioral / positioning check COT report status (latest Friday): non-commercial USD positioning, EUR positioning, JPY positioning Sentiment: aggregate news tone, Twitter/blog tone, retail positioning (DSI if available) Recent magazine covers and anecdotal extremes Score positioning in [-2, +2] (-2 = extreme long USD = contrarian bearish; +2 = extreme short USD = contrarian bullish) STEP 7 — Calendar / news catalyst inventory What US data hits today, this week? What FOMC events (meetings, speeches, minutes)? What foreign central bank events (ECB, BoJ, BoE, etc.) that could shift differentials? What geopolitical events on watch? What is consensus and what is the agent's deviation from consensus? STEP 8 — Aggregate the bias Sum the scored drivers, weight by current regime: ``` regime_weights = {   'crisis':           {domestic: 0.10, global: 0.40, intermarket: 0.30, behavioral: 0.10, catalyst: 0.10}   'risk_off':         {domestic: 0.20, global: 0.35, intermarket: 0.25, behavioral: 0.10, catalyst: 0.10}   'neutral_global':   {domestic: 0.30, global: 0.30, intermarket: 0.20, behavioral: 0.10, catalyst: 0.10}   'neutral_domestic': {domestic: 0.45, global: 0.15, intermarket: 0.20, behavioral: 0.10, catalyst: 0.10}   'risk_on':          {domestic: 0.40, global: 0.20, intermarket: 0.20, behavioral: 0.10, catalyst: 0.10} } ``` Output: `usd_bias_score in [-10, +10]` and `usd_bias_direction = sign(score)`, `usd_conviction = |score| / 10`. STEP 9 — Five-Star check Count how many of the 5 branches (fundamentals, technicals, correlation, behavioral, news/catalyst) are aligned in the same direction. This becomes the star rating = trade conviction multiplier. STEP 10 — Output The agent emits: USD direction probability (e.g., \"68% probability USD strengthens over next 24–72 hours\") Star rating (1–5) Bullet-point reasoning citing each scored driver Specific trade implications for the four target markets (Section 11) 10.2 — The \"do nothing\" condition Do NOT emit a directional bias when: Sum of absolute scores < 4 (mixed signals everywhere) Star rating ≤ 2 (insufficient confluence) An imminent (< 24 hour) tier-1 catalyst (NFP, FOMC, CPI) is pending — wait for the print Active divergence between fundamentals and price action with no resolution catalyst visible (whipsaw risk) 10.3 — The \"fade vs go-with\" rule for breaking events When a USD move occurs immediately on news: If the move is on a SURPRISE central bank action → GO WITH (Rule #9) If the move is on economic data and the headline matches details → GO WITH for ~30 mins, then watch NewsPivot If the move is on economic data and headline contradicts details → FADE the kneejerk If the move is on positioning unwind (no real news) → FADE after 30–60 mins If the price reverses through the NewsPivot within 30 mins of release → fade-the-original-direction signal (very strong) --- SECTION 11 — APPLICATION TO TARGET MARKETS Translation rules from USD bias to trading conviction in each market. 11.1 — EUR/USD The cleanest, most direct USD play. EUR/USD is approximately the inverse of broad USD strength. USD Bias\tEUR/USD Direction\tNotes Strongly bullish USD\tShort EUR/USD\tCleanest expression. Confirm with US/Germany rate differential widening. Mildly bullish USD\tBias short EUR/USD\tPrefer if Italian yields rising (EZ stress confirms) Neutral\tNo trade or range trade\tUse technicals only Mildly bearish USD\tBias long EUR/USD\tConfirm with US/Germany differential narrowing Strongly bearish USD\tLong EUR/USD\tConfirm with gold rallying, crude bid EUR/USD-specific filters that can override broad USD: Italian/peripheral spread blowouts → EUR weakens regardless of USD (use Italy 2Y and 10Y as filter) ECB hawkish surprise → EUR strengthens regardless of USD direction Eurozone breakup fears (referendums, elections, Greek-style crises) → EUR weakens dramatically, EUR/USD breaks down even if broad USD is weakening EU/US trade war escalation → bearish EUR/USD 11.2 — NQ (Nasdaq-100 futures) The relationship is regime-dependent. This is the most nuanced of the four. Regime A: USD strength from US growth outperformance + Fed hawkish (most common 2022–2024) USD ↑ and NQ ↑ are positively correlated Both move on US growth narrative A hawkish Fed surprise can break this (USD ↑ but NQ ↓ on rate-shock) Regime B: USD strength from safe-haven flight (right-side dollar smile) USD ↑ and NQ ↓ — negatively correlated Risk-off regime, VIX > 22 This is the dominant mode during crises (2008, 2020 Mar, 2022 H1) Regime C: USD weakness from Fed dovish pivot USD ↓ and NQ ↑ — negatively correlated The \"Fed put\" trade. Bullish for NQ, bearish for USD. Lower USD also helps US multinationals' overseas earnings (translation effect) Agent rule for NQ: Determine which regime is active via the rolling 60-day correlation between DXY and NQ (and VIX level) If regime A: USD bias and NQ bias are aligned. High USD conviction → high NQ conviction in same direction. If regime B (risk-off): USD bias and NQ bias are opposite. High USD bullish conviction → NQ bearish conviction. If regime C (Fed pivot): Fed dovishness drives both. USD bearish + NQ bullish. Additional NQ-specific factors: Tech earnings season can override macro for 2-week windows Real US 10Y yield is a major NQ driver (rising real yields = NQ bearish, especially for long-duration tech). When Fed hawkishness drives real yields higher, NQ is doubly hit even if USD trade is \"normal.\" China growth re-acceleration → NQ bullish (semis, Apple supply chain) even if also USD-bullish via global growth 11.3 — BTC/USD Bitcoin trades as a hybrid of (a) high-beta risk asset, (b) digital gold / inflation hedge, (c) liquidity proxy. Primary driver framework: BTC is inversely correlated with USD strength over weeks/months (roughly -0.4 to -0.6) BTC is positively correlated with global liquidity (M2, central bank balance sheets, excess reserves) BTC behaves like NQ on intraday/risk-on-risk-off swings (positively correlated with QQQ) Decision rules for BTC: Macro condition\tBTC direction USD bearish + risk-on (low VIX, equities up)\tStrongly bullish BTC — dominant regime for upside USD bearish + Fed dovish pivot\tStrongly bullish BTC USD bullish + risk-on (rare combo)\tMixed — usually mildly bearish BTC USD bullish + risk-off (crisis, VIX > 25)\tStrongly bearish BTC — liquidation regime USD bullish + Fed hawkish\tBearish BTC (real yields up, liquidity tightening) USD neutral + falling real yields\tBullish BTC USD neutral + rising real yields\tBearish BTC BTC-specific overrides: Crypto-native catalysts (ETF approvals, major exchange events, regulation) can override macro for days Liquidity events (bank failures, MMF stress) can produce paradoxical BTC behavior (sometimes safe-haven, sometimes liquidation) Halving cycle is a structural background bias (~4 years), doesn't drive day-to-day but skews probabilities Agent rule: BTC's macro sensitivity has been increasing over time as institutional adoption rises. Treat BTC conviction as ~70% of NQ conviction in the same direction during aligned regimes, and 100% of inverse-USD conviction during dovish-pivot regimes. 11.4 — XAU/USD (Gold) The cleanest macro pairing among the four. Gold is essentially the inverse of real US yields plus a safe-haven premium. Primary drivers (in order): US 10Y real yield (TIPS yield) — the dominant driver. Rising real yields = bearish gold. Falling real yields = bullish gold. DXY / broad USD strength — gold priced in USD, mechanical inverse relationship Risk aversion / safe-haven demand — geopolitical events, financial stress Central bank gold buying — secular bid (China, India, EM CB diversification) Inflation expectations — gold as inflation hedge (works in some regimes, not others) Decision rules for Gold: Macro condition\tGold direction USD bearish + real yields falling\tStrongly bullish gold (best setup) USD bearish + real yields stable\tBullish gold USD bearish + real yields rising\tMixed — usually mildly bullish via USD effect USD bullish (Fed hawkish) + real yields rising\tStrongly bearish gold (worst setup) USD bullish (safe-haven) + real yields stable/falling\tBullish gold — both safe-havens bid simultaneously (override) Geopolitical crisis\tOverride: bullish gold regardless of USD direction Gold-specific overrides: Central bank surprise gold purchases (especially China PBoC) = bullish Major geopolitical event = bullish even if USD bullish (they can rally together in crisis) ETF flows (GLD, IAU) confirm or contradict the macro signal Gold/silver ratio above 90 typically marks risk-off extremes, mean-reverts Agent rule: Gold is the cleanest expression when USD weakness aligns with falling real yields. When they conflict (e.g., USD weak but real yields rising, or USD strong via safe-haven with real yields falling), use a smaller position with wider stops. Always score gold separately on (a) USD-direction signal and (b) real-yield-direction signal — if they agree, full conviction; if they disagree, half conviction. 11.5 — Cross-market consistency check Before emitting trades, run this consistency check: If primary call is\tThen expect\tIf not, reduce conviction Strong USD\tEUR/USD ↓, Gold ↓, BTC ↓ (in risk-off) or ↓ (in Fed-hawk regime)\tIf gold is rising sharply, the USD call may be wrong Weak USD\tEUR/USD ↑, Gold ↑, BTC ↑\tIf gold is falling, the USD call may be wrong Strong USD + risk-on\tNQ ↑ (regime A)\tIf NQ is falling, regime may be shifting Strong USD + risk-off\tNQ ↓ (regime B)\tIf NQ is rallying, USD strength may be temporary  --- SECTION 12 — RULES OF FX TRADING (Donnelly's 25 Rules — relevant subset) The following rules from the book are directly applicable to the agent's behavior: #\tRule\tApplication 1\tDon't blow up\tRisk management is paramount; never bet so much on one diagnosis that being wrong destroys the system 2\tAdapt or die\tDrivers change; the agent must update its weighting model continuously 3\tDo the work\tRead every Fed speech, every dot plot, every minutes release 9\tNever fade unexpected central bank moves. Jump on them!\tSurprise FOMC = go-with trade —\tThe market trades the DELTA, not the LEVEL\tAll signals must be change-based —\tIgnore \"fair value\" overvalued/undervalued claims for short-term trading\tPPP, IMF reports = useless for daily/weekly direction —\tFive-Star setups only — strong winds at your back\tMixed-signal = no trade —\tNever bet against a credible central bank's stated currency preference\tOnly relevant to USD when Treasury or Fed make explicit comments —\tProcess > outcome\tScore the agent's decision logic, not just its hit rate --- SECTION 13 — FAILURE MODES TO AVOID Common mistakes the agent must guard against: Overconfidence in a single driver: \"Rates are rising therefore USD up.\" NO — rates rising in WHO? Relative to whom? Is the market already positioned for it? Ignoring regime changes: Using a 2014 correlation framework in 2024. Confirmation bias: Once a directional view is set, ignoring contradicting data. Trading against the trend reflexively: \"Positioning is extreme so it must reverse\" — usually wrong; trends persist. Trading economic data without understanding what's priced in: A strong NFP can crush USD if expectations were higher. Always check consensus + whisper. Trading the absolute level instead of the change: A \"weak\" CPI print at 3% is bullish USD if it was expected to be 2.5% — focus on (actual - expected) / SD. Underweighting the risk regime: Domestic data analysis is irrelevant when VIX > 30. Linear thinking on USD vs NQ: Forgetting the relationship flips between regimes. Forgetting the USD's safe-haven status: US data weakening doesn't always mean USD weakens — see dollar smile right side. Overweighting fiscal policy and trade balance: These rarely matter in the short run despite being macroeconomically \"important.\" --- SECTION 14 — AGENT OUTPUT TEMPLATE The agent's daily output should follow this structure: ``` USD DIRECTIONAL DIAGNOSIS — {DATE}  REGIME TAGS:   - Risk regime: {risk_on | neutral | risk_off | crisis}   - Dollar smile position: {left_up | bottom | right_up}   - Active narrative focus: {rates | growth | inflation | geopolitics | china | other}   - DXY-SPX correlation regime: {positive | negative | decorrelated}  USD BIAS: {BULLISH | BEARISH | NEUTRAL} PROBABILITY (next 24-72hr): {XX%} CONVICTION (1-5 stars): {N}  REASONING (bullets):   • [Driver 1]: [evidence] → [score]   • [Driver 2]: [evidence] → [score]   • [Driver 3]: [evidence] → [score]   • [...]  KEY PENDING CATALYSTS:   • [Event] @ [time] — consensus [X], market positioning [Y]  INTERMARKET CONFIRMATION:   • EUR/USD: [aligned | diverging] — [observation]   • Gold: [aligned | diverging] — [observation]   • US 10Y: [aligned | diverging] — [observation]   • S&P/NQ: [aligned | diverging] — [observation]  TRADING IMPLICATIONS:    EUR/USD: {LONG | SHORT | NO TRADE} — {N}-star — Rationale: ...   NQ:      {LONG | SHORT | NO TRADE} — {N}-star — Regime: A/B/C — Rationale: ...   BTC/USD: {LONG | SHORT | NO TRADE} — {N}-star — Rationale: ...   XAU/USD: {LONG | SHORT | NO TRADE} — {N}-star — USD-leg + real-yield-leg agreement: yes/no — Rationale: ...  INVALIDATION CRITERIA:   • [What would cause this diagnosis to be wrong]   • [Specific levels/data that would flip the bias] ``` --- APPENDIX A — MASTER CHECKLIST OF USD DRIVERS (one-page reference) Domestic (rank-ordered by impact) Fed monetary policy bias (hawkish/neutral/dovish) US interest rates (2Y, 5Y, 10Y) — level AND direction US-vs-foreign interest rate differentials (especially US/Germany) Yield curve shape (steep vs flat vs inverted) Real yields (nominal − inflation expectations) US growth surprises (NFP, ISM, GDP, Retail Sales) US inflation surprises (CPI, Core PCE) Fed balance sheet (QE/QT) Forward guidance (Powell, dot plot, Fed minutes) Capital flows (TIC data, M&A, FDI) Trade balance / current account Fiscal policy (debt ceiling, downgrades, stimulus) Global (rank-ordered) Risk aversion / VIX / safe-haven flows Global growth (China PMI, EZ PMI, global trade) Commodity prices (gold, crude, copper) Geopolitics (war, elections, sanctions, regime change) EM stress and reserve recycling flows Foreign central bank actions (ECB, BoJ, PBoC) Behavioral / Positioning COT positioning (extremes + rate of change) Sentiment surveys (DSI, retail positioning) Anecdotal extremes (magazine covers, IPOs, narrative dominance) Bias detection (extrapolation in forecasts, herding) Microstructure / Operational Time of day (London/NY overlap window for major moves) WMR fix (4pm London) Jump risk (events, weekends) Cross-currency confirmation (USDCAD as \"The Truth\") --- APPENDIX B — KEY CORRELATIONS QUICK REFERENCE Correlation\tDirection\tReliability\tNotes USD vs US rates (2Y, 5Y, 10Y)\tPositive\tHigh\tMost consistent USD driver USD vs US-foreign rate differentials\tPositive (US side rising)\tHighest\tCleanest signal for USD pairs USD vs Gold\tNegative\tHigh\tMechanical (gold priced in USD) USD vs Crude oil\tNegative\tMedium\tDecouples on supply shocks USD vs Copper\tNegative\tMedium\tGlobal growth proxy DXY vs S&P 500\tRegime-dependent\tVariable\tFlipped multiple times historically USDJPY vs Nikkei\tPositive\tHigh\tJapan repatriation flows USDJPY vs US 10Y\tPositive\tHigh\tYield differential EURUSD vs Gold\tPositive\tHigh\tUSD inverse EURUSD vs Italy 10Y yields\tNegative\tMedium\tEZ stress filter USDCAD vs Crude\tNegative\tVery High\tPetrocurrency mechanism AUDUSD vs Copper/Iron Ore\tPositive\tHigh\tAustralia exports BTCUSD vs DXY\tNegative\tMedium (rising)\tImproving as institutional adoption grows BTCUSD vs NQ\tPositive\tHigh\tRisk-asset correlation Gold vs US 10Y real yield (TIPS)\tNegative\tVery High\tPrimary gold driver EM FX vs DXY\tNegative + amplified\tHigh\tReserve recycling reinforces --- APPENDIX C — IMPORTANT CAVEATS This ruleset is derived from a single book (The Art of Currency Trading, Donnelly, 2019). It reflects one experienced trader's framework, not academic consensus. Its strength is operational (built by a trader for traders); its weakness is that markets evolve. The book was published in 2019. Some specific examples (specific rate levels, named central bank governors, COT positioning data) are dated. The mechanisms are not. The agent must update its regime models continuously. A driver that mattered 5 years ago may not matter today. Re-score the importance weights monthly using observed market reactions to data releases. The book repeatedly emphasizes that simple rules fail at extremes. \"Buy on hawkish Fed\" is a guideline, not a law. The agent should treat all rules as probabilistic, not deterministic. Discretion remains essential. The book is explicit that pure systematic approaches underperform discretionary fusion approaches. The agent's job is to provide the structured input that lets a human (or downstream decision system) apply final discretion. No edge in everything-priced-in markets. When the market consensus and the agent's diagnosis agree, there is little trade. Edge exists in disagreement — when the agent's read of the data differs from the priced-in expectation. Always articulate where the agent's view diverges from consensus. --- End of ruleset. This document is intended as a reference framework for daily macro analysis of the US Dollar and its translation into trading conviction for EUR/USD, NQ, BTC/USD, and XAU/USD.",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        352,
+        -288
+      ],
+      "id": "d4c5d9eb-e7e6-44c7-8105-ae85694cb5c6",
+      "name": "Edit Fields | O Layer Ruleset",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const data         = $('Code in JavaScript | Fetch Code Node').first().json;\nconst donnellyRuleset = $('Edit Fields | O Layer Ruleset').first().json.donnelly_ruleset;\nconst omorsRuleset    = $('Edit Fields | O Layer Ruleset').first().json.omors_ruleset;\nconst eco          = $('Code | Process Eco Data').first().json;\n\nconst criticalRules = `==============================================================\nCRITICAL OPERATING RULES — THESE OVERRIDE ALL INSTRUCTIONS BELOW\n==============================================================\n\nRULE A — LAYER BOUNDARY RULE (O LAYER IS A CALIBRATION FILTER ONLY)\n\nThe O Layer (Omors supplement) operates AFTER the Donnelly pass. It is a\ncalibration and gating filter only. It has no authority to reverse direction.\n\nThe O Layer IS PERMITTED to:\n  - Reduce star rating by 1 (never more than 1 per check)\n  - Add a timing caveat (e.g. \"await PPI print before acting\")\n  - Flag a vehicle as \"no expanding price structure — conditional no-trade\"\n  - Emit a derisking warning on NQ/BTC when yield/uncertainty signal is active\n\nThe O Layer is NEVER PERMITTED to:\n  - Reverse a Donnelly directional call (LONG → SHORT or SHORT → LONG)\n  - Override the Donnelly USD bias\n  - Use level-based arguments to contradict delta-based Donnelly conclusions\n\nIf O Layer analysis appears to conflict with Donnelly's direction, the correct\noutput is a modifier, not a reversal:\n\n  CORRECT:\n    Donnelly: LONG EUR/USD ★★★ (spread compressing -29 bps / 5 days)\n    O Layer: reduce to ★★ — CPI beat near-term headwind; await PPI. Direction unchanged.\n\n  INCORRECT:\n    O Layer: Bearish EUR/USD — +104 bps spread favours USD\n    [PROHIBITED — direction reversal using a level argument]\n\n--------------------------------------------------------------\n\nRULE B — RATE DIFFERENTIAL RULE (DELTA IS THE SIGNAL, LEVEL IS NOT)\n\nThe directional signal from rate spreads is the DELTA (direction of change),\nnot the LEVEL. This applies to all rate differential inputs.\n\n  WRONG:  \"US-DE spread at +104 bps favours USD — short EUR/USD\"\n  RIGHT:  \"US-DE spread narrowing 29 bps over 5 days — compression is a\n           LONG EUR/USD signal regardless of the absolute level\"\n\nA spread that is NARROWING = bearish USD signal.\nA spread that is WIDENING = bullish USD signal.\nThe absolute level has no directional content on its own.\n\nThe level is only relevant for:\n  (a) Identifying extreme readings that may mean-revert — state as a\n      conviction caveat only, never as a directional reversal\n  (b) Providing context for how much compression may still be ahead\n\n--------------------------------------------------------------\n\nREQUIRED OUTPUT FORMAT FOR ALL 27 TRADING CALLS:\n\nEach call must use this exact structure:\n  [MARKET] [TIMEFRAME] | Donnelly: [LONG/SHORT/NO TRADE] ★[N] | O Layer: [modifier or \"no adjustment\"] | Final: [LONG/SHORT/NO TRADE] ★[N]\n\nExamples:\n  EUR/USD 24h    | Donnelly: LONG ★★★ | O Layer: -1★ (CPI beat headwind, await PPI) | Final: LONG ★★\n  BTC/USD 72h    | Donnelly: SHORT ★★ | O Layer: no adjustment | Final: SHORT ★★\n  XAU/USD weekly | Donnelly: LONG ★★★★ | O Layer: ADR-constrained session | Final: LONG ★★★\n\nThe O Layer column is always a modifier. It is never a standalone directional call.\n\n==============================================================`;\n\nconst combinedSystem = criticalRules + `\n\n---\n\n` + donnellyRuleset + `\n---\n## O LAYER SUPPLEMENT — OMORS FRAMEWORK\nThe following rules are applied ON TOP of the Donnelly ruleset above. They do not replace any Donnelly section — they add filters, refinements, and new operational rules. Apply all six supplements (ADR exhaustion, currency rotation scan, weekly candle filter, bond mechanism check, yield-uncertainty check, conviction frequency discipline) as additional adjustments to your analysis.\n` + omorsRuleset;\n\n// Format surprise scores for prompt\nconst surpriseText = eco.surprises.length > 0\n  ? eco.surprises.map(s =>\n      `  • ${s.event} (${s.date}): actual ${s.actual} vs estimate ${s.estimate} → ${s.direction} (${s.surprise > 0 ? '+' : ''}${s.surprise}σ)`\n    ).join('\\n')\n  : '  • No tier-1 releases in the past 7 days';\n\n// Format upcoming calendar for prompt\nconst calendarText = eco.calendar.filter(e => e.impact === 'high').length > 0\n  ? eco.calendar\n      .filter(e => e.impact === 'high')\n      .map(e => `  • ${e.event} @ ${e.time} UTC${e.estimate !== null ? ` — consensus: ${e.estimate}` : ''}`)\n      .join('\\n')\n  : '  • No high-impact US events scheduled this week';\n\nconst body = {\n  model: \"claude-sonnet-4-6\",\n  max_tokens: 8000,\n  system: combinedSystem,\n  messages: [{\n    role: \"user\",\n    content: `Today's macro data as of ${data.timestamp}:\n${JSON.stringify(data, null, 2)}\nRECENT TIER-1 DATA SURPRISES (last 7 days):\n${surpriseText}\nUPCOMING HIGH-IMPACT US EVENTS (next 7 days):\n${calendarText}\nPlease provide your full USD directional diagnosis following the output template in Section 14 of your ruleset. Apply all O Layer filters from the Omors supplement on top of the Donnelly framework. Label your output \"O LAYER DIAGNOSIS\" at the top. Emit all 27 trading calls using the required format: [MARKET] [TIMEFRAME] | Donnelly: ... | O Layer: ... | Final: ...`\n  }]\n};\n\nreturn [{ json: body }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        528,
+        -288
+      ],
+      "id": "3523b12b-32a8-4ebd-929a-5c77db650967",
+      "name": "Code in JavaScript | O Layer Prompt Builder",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            },
+            {
+              "name": "x-api-key",
+              "value": "<redacted>"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        704,
+        -288
+      ],
+      "id": "dcbdd4c3-6a6b-4bf7-940c-50199b13e0b1",
+      "name": "HTTP Request | O Layer Diagnosis - Claude API",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const response = $input.first().json;\nconst diagnosisText = response.content[0].text;\n\nreturn [{\n  json: {\n    diagnosis: diagnosisText,\n    timestamp: new Date().toISOString()\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        896,
+        -288
+      ],
+      "id": "891ab286-3747-485a-a350-046ff3e15657",
+      "name": "Code in JavaScript | Extract O Layer Diagnosis Text",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const diagnosis = $input.first().json.diagnosis;\n\nconst body = {\n  model: \"claude-sonnet-4-6\",\n  max_tokens: 4000,\n  system: `You are a structured data extractor. Given a USD macro O Layer diagnosis, extract trading calls in strict JSON format. Output ONLY valid JSON, no other text.\n\nThe diagnosis contains 27 trading calls in this format:\n  [MARKET] [TIMEFRAME] | Donnelly: [direction] ★[N] | O Layer: [modifier] | Final: [direction] ★[N]\n\nYou must extract direction and conviction from the FINAL field only. The Donnelly and O Layer fields are context — they are not the output. The Final field is the authoritative call.`,\n  messages: [{\n    role: \"user\",\n    content: `From this O Layer diagnosis, extract the 27 Final trading calls for all 9 markets across 3 timeframes (24h, 72h, weekly).\n\nMarkets: EUR/USD, USD/JPY, GBP/USD, USD/CAD, AUD/USD, NQ, BTC/USD, XAU/USD, WTI Oil\n\nReturn a JSON array of 27 objects, each with:\n- market (string)\n- timeframe (string: \"24h\", \"72h\", or \"weekly\")\n- direction (string: \"LONG\", \"SHORT\", or \"NO TRADE\") — from the Final field only\n- conviction (number: 1-5) — star count from the Final field only\n- rationale (string: one sentence summarising the Donnelly basis plus any O Layer modifier applied)\n\nDIAGNOSIS:\n${diagnosis}`\n  }]\n};\n\nreturn [{ json: body }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1088,
+        -288
+      ],
+      "id": "c4830386-3047-4fec-8bcf-60f52dd97a06",
+      "name": "Code in JavaScript | Build O Layer Extract Prompt",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            },
+            {
+              "name": "x-api-key",
+              "value": "<redacted>"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1296,
+        -288
+      ],
+      "id": "b7ca33e2-b98e-4e8a-a534-8b4ea6362259",
+      "name": "HTTP Request | Extract O Layer Calls - Claude API",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const response = $input.first().json;\nconst rawText = response.content[0].text;\n\nconst cleaned = rawText.replace(/```json\\n?/g, '').replace(/```/g, '').trim();\nconst calls = JSON.parse(cleaned);\n\nconst timestamp = new Date().toISOString();\n\nfunction getExpiry(timeframe) {\n  const now = new Date();\n  const nyCloseHourUTC = 21;\n\n  const close = new Date(now);\n  close.setUTCHours(nyCloseHourUTC, 0, 0, 0);\n\n  if (now >= close) close.setUTCDate(close.getUTCDate() + 1);\n\n  if (timeframe === '24h') {\n    const day = close.getUTCDay();\n    if (day === 6) close.setUTCDate(close.getUTCDate() + 2);\n    if (day === 0) close.setUTCDate(close.getUTCDate() + 1);\n    return close.toISOString();\n  }\n\n  if (timeframe === '72h') {\n    let added = 0;\n    while (added < 3) {\n      close.setUTCDate(close.getUTCDate() + 1);\n      const d = close.getUTCDay();\n      if (d !== 0 && d !== 6) added++;\n    }\n    return close.toISOString();\n  }\n\n  if (timeframe === 'weekly') {\n    const daysUntilFriday = (5 - close.getUTCDay() + 7) % 7 || 7;\n    close.setUTCDate(close.getUTCDate() + daysUntilFriday);\n    return close.toISOString();\n  }\n\n  return null;\n}\n\nconst prices = $('Code in JavaScript | Fetch Code Node').first().json.prices;\nconst rates  = $('Code in JavaScript | Fetch Code Node').first().json.rates;\n\nconst priceMap = {\n  'EUR/USD':  prices.eurUsd || null,\n  'USD/JPY':  prices.usdJpy,\n  'GBP/USD':  prices.gbpUsd,\n  'USD/CAD':  prices.usdCad,\n  'AUD/USD':  prices.audUsd,\n  'NQ':       null,\n  'BTC/USD':  prices.btc,\n  'XAU/USD':  prices.gold,\n  'WTI Oil':  rates.wti\n};\n\nconst callsWithTimestamp = calls.map(call => ({\n  ...call,\n  timestamp,\n  status:      'OPEN',\n  source:      'omors',\n  entry_price: priceMap[call.market] || null,\n  expiry_at:   getExpiry(call.timeframe)\n}));\n\nreturn callsWithTimestamp.map(call => ({ json: call }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1520,
+        -288
+      ],
+      "id": "9d9f59db-0dca-4e9f-9007-4b94e90df164",
+      "name": "Code in JavaScript | Parse O Layer Calls",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://vbssvpnrxhcxwmyakijf.supabase.co/rest/v1/calls",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "apikey",
+              "value": "<redacted>"
+            },
+            {
+              "name": "Authorization",
+              "value": "<redacted>"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1744,
+        -288
+      ],
+      "id": "bb4f0174-74d2-4868-bce4-71cc0bc422d0",
+      "name": "HTTP Request | Log O Layer Calls to Supabase",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const donnellyCalls = $('Code in JavaScript | Parse Calls').all().map(i => i.json);\nconst oLayerCalls = $('Code in JavaScript | Parse O Layer Calls').all().map(i => i.json);\n\nconst comparison = donnellyCalls.map(d => {\n  const o = oLayerCalls.find(c => c.market === d.market && c.timeframe === d.timeframe);\n  const agree = o && d.direction === o.direction;\n\n  return {\n    market:              d.market,\n    timeframe:           d.timeframe,\n    donnelly_direction:  d.direction,\n    donnelly_conviction: d.conviction,\n    omors_direction:     o ? o.direction  : 'N/A',\n    omors_conviction:    o ? o.conviction : null,\n    agreement:           agree ? 'AGREE' : 'CONFLICT',\n    conviction_delta:    o ? Math.abs(d.conviction - o.conviction) : null\n  };\n});\n\nconst agreements = comparison.filter(c => c.agreement === 'AGREE').length;\nconst conflicts = comparison.filter(c => c.agreement === 'CONFLICT').length;\n\nreturn [{\n  json: {\n    timestamp:       new Date().toISOString(),\n    agreements,\n    conflicts,\n    agreement_rate:  Math.round((agreements / comparison.length) * 100),\n    comparison_json: JSON.stringify(comparison)\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        128,
+        -80
+      ],
+      "id": "7aab4fa9-bb56-4fcc-a826-938af00e80cb",
+      "name": "Code in JavaScript | Build Comparison",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://vbssvpnrxhcxwmyakijf.supabase.co/rest/v1/run_summaries",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "apikey",
+              "value": "<redacted>"
+            },
+            {
+              "name": "Authorization",
+              "value": "<redacted>"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        128,
+        128
+      ],
+      "id": "916c9fe1-9b8c-43fa-87bf-d2008b48cccc",
+      "name": "HTTP Request | Log Comparison to Supabase",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "url": "https://api.stlouisfed.org/fred/series/observations?series_id=DEXUSEU&sort_order=desc&limit=1&file_type=json&api_key=<redacted>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1520,
+        -944
+      ],
+      "id": "c9d79ab9-879f-4d9f-80d5-bdb300ebc6d3",
+      "name": "HTTP Request | EURUSD - FRED API"
+    },
+    {
+      "parameters": {
+        "url": "https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=QQQ&apikey=<redacted>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1712,
+        -944
+      ],
+      "id": "8cd39beb-a85e-4dff-8313-539002c9c7df",
+      "name": "HTTP Request | NQ - Alpha Vantage"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 6 * * 1-5"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -160,
+        -944
+      ],
+      "id": "74f881ce-a621-4789-965f-17289ca0a8e6",
+      "name": "Schedule Trigger",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "url": "https://api.stlouisfed.org/fred/series/observations?series_id=IRLTLT01JPM156N&sort_order=desc&limit=1&file_type=json&api_key=<redacted>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        544,
+        -1136
+      ],
+      "id": "11647b4c-492a-441e-bd7c-787f04c850e8",
+      "name": "HTTP Request | Japan 10Y Proxy - FRED API"
+    },
+    {
+      "parameters": {
+        "url": "=https://finnhub.io/api/v1/calendar/economic?from={{ new Date(Date.now() - 7*24*60*60*1000).toISOString().split('T')[0] }}&to={{ new Date().toISOString().split('T')[0] }}&token=<redacted>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        352,
+        -720
+      ],
+      "id": "cf110215-dcd1-42d6-ad43-73bea98c5fc7",
+      "name": "HTTP Request | Eco Calendar Recent - Finnhub",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "url": "=https://finnhub.io/api/v1/calendar/economic?from={{ new Date().toISOString().split('T')[0] }}&to={{ new Date(Date.now() + 7*24*60*60*1000).toISOString().split('T')[0] }}&token=<redacted>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        544,
+        -720
+      ],
+      "id": "970a82dc-0727-4bb0-a1c7-0d6c5114113d",
+      "name": "HTTP Request | Eco Calendar Upcoming - Finnhub",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const recent   = $('HTTP Request | Eco Calendar Recent - Finnhub').first().json.economicCalendar;\nconst upcoming = $('HTTP Request | Eco Calendar Upcoming - Finnhub').first().json.economicCalendar;\n\n// Tier-1 US indicators with sigma values for surprise normalisation\nconst TIER1 = {\n  'Non Farm Payrolls':          { key: 'NFP',           sigma: 80 },\n  'Average Hourly Earnings MoM':{ key: 'AHE_MOM',       sigma: 0.1 },\n  'Unemployment Rate':          { key: 'UNEMPLOYMENT',  sigma: 0.15 },\n  'Core Inflation Rate MoM':    { key: 'CORE_CPI_MOM',  sigma: 0.1 },\n  'Inflation Rate MoM':         { key: 'CPI_MOM',       sigma: 0.15 },\n  'ISM Manufacturing PMI':      { key: 'ISM_MFG',       sigma: 2.5 },\n  'ISM Services PMI':           { key: 'ISM_SVCS',      sigma: 2.5 },\n  'GDP Growth Rate QoQ Adv':    { key: 'GDP_ADV',       sigma: 0.5 },\n  'ADP Employment Change':      { key: 'ADP',           sigma: 50 },\n  'Initial Jobless Claims':     { key: 'JOBLESS_CLAIMS',sigma: 15 },\n  'JOLTs Job Openings':         { key: 'JOLTS',         sigma: 0.3 }\n};\n\n// Filter recent US high/medium impact events with actuals\nconst recentUS = (recent || []).filter(e =>\n  e.country === 'US' &&\n  ['high','medium'].includes(e.impact) &&\n  e.actual !== null\n);\n\n// Filter upcoming US high/medium impact events without actuals\nconst upcomingUS = (upcoming || []).filter(e =>\n  e.country === 'US' &&\n  ['high','medium'].includes(e.impact) &&\n  e.actual === null\n);\n\n// Compute surprise scores for tier-1 recent prints\nconst surprises = [];\nfor (const event of recentUS) {\n  const tier1 = TIER1[event.event];\n  if (!tier1) continue;\n  if (event.actual === null || event.estimate === null) continue;\n  const surprise = (event.actual - event.estimate) / tier1.sigma;\n  surprises.push({\n    key:       tier1.key,\n    event:     event.event,\n    date:      event.time.split(' ')[0],\n    actual:    event.actual,\n    estimate:  event.estimate,\n    surprise:  Math.round(surprise * 100) / 100,\n    direction: surprise > 0 ? 'BEAT' : surprise < 0 ? 'MISS' : 'IN LINE'\n  });\n}\n\n// Format upcoming calendar\nconst calendar = upcomingUS.map(e => ({\n  event:    e.event,\n  time:     e.time,\n  estimate: e.estimate,\n  impact:   e.impact\n}));\n\n// Format recent all US high/medium events (not just tier-1) for prompt context\nconst recentSummary = recentUS.slice(-20).map(e => ({\n  event:    e.event,\n  time:     e.time.split(' ')[0],\n  actual:   e.actual,\n  estimate: e.estimate,\n  prev:     e.prev,\n  impact:   e.impact\n}));\n\nreturn [{\n  json: {\n    surprises,\n    calendar,\n    recentSummary\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        752,
+        -720
+      ],
+      "id": "df323a99-94f0-4f21-9daf-c24fb1de4fe2",
+      "name": "Code | Process Eco Data",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const aggregated = $('Code in JavaScript | Fetch Code Node').first().json;\nconst diagnosis  = $('HTTP Request | Diagnosis - Claude API').first().json;\nconst extracted  = $('HTTP Request | Extract Calls - Claude API').first().json;\nconst logged     = $('HTTP Request | Log to Supabase').first().json;\n\nconst errors = [];\n\n// Check for null data feeds\nconst rates  = aggregated.rates  || {};\nconst prices = aggregated.prices || {};\n\nconst feedChecks = {\n  us2y:   rates.us2y,\n  us10y:  rates.us10y,\n  tips10y: rates.tips10y,\n  de10y:  rates.de10y,\n  vix:    rates.vix,\n  dxy:    rates.dxy,\n  wti:    rates.wti,\n  brent:  rates.brent,\n  gold:   prices.gold,\n  btc:    prices.btc,\n  gbpUsd: prices.gbpUsd,\n  audUsd: prices.audUsd,\n  usdJpy: prices.usdJpy,\n  usdCad: prices.usdCad,\n};\n\nfor (const [key, val] of Object.entries(feedChecks)) {\n  if (val === null || val === undefined || isNaN(val)) {\n    errors.push(`Data feed failed: ${key}`);\n  }\n}\n\n// Check Claude diagnosis\nif (!diagnosis?.content?.[0]?.text) {\n  errors.push('Claude diagnosis API call failed');\n}\n\n// Check Claude extraction\nif (!extracted?.content?.[0]?.text) {\n  errors.push('Claude extraction API call failed');\n}\n\n// Check Supabase log\nif (logged?.error || logged?.code) {\n  errors.push(`Supabase log failed: ${logged.message || logged.error}`);\n}\n\nconst hasErrors = errors.length > 0;\n\nreturn [{\n  json: {\n    hasErrors,\n    errors,\n    errorCount: errors.length,\n    message: hasErrors\n      ? `USD Agent completed with ${errors.length} error(s):\\n\\n${errors.map(e => `• ${e}`).join('\\n')}`\n      : 'USD Agent completed cleanly — all feeds healthy'\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        336,
+        128
+      ],
+      "id": "9478fbc9-264d-4835-9d98-febdc99ea9b8",
+      "name": "Code | Error Check",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "b1c5f024-15c5-498f-9fa0-b0c7f1b10418",
+              "leftValue": "={{ $json.hasErrors }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        544,
+        128
+      ],
+      "id": "71229fb8-0c15-48a2-a867-9cb4481bec4a",
+      "name": "If",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "sendTo": "a17@live.co.uk",
+        "subject": "=USD Agent — {{ $('Code | Error Check').first().json.errorCount }} issue(s) detected",
+        "message": "={{ $('Code | Error Check').first().json.message }}  Run timestamp: {{ new Date().toISOString() }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        832,
+        32
+      ],
+      "id": "517f4e47-241d-482f-97c6-75fcd5c1f13a",
+      "name": "Send a message",
+      "webhookId": "61cdf2ce-a076-4424-8b8b-7feefc0fa40e",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "a8zQUSrZhplJsK43",
+          "name": "Gmail OAuth2 API"
+        }
+      },
+      "disabled": true,
+      "onError": "continueRegularOutput"
+    }
+  ],
+  "connections": {
+    "HTTP Request | US 2Y Treasury Yield - FRED API": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request | US 10Y Treasury Yield - FRED Api",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request | US 10Y Treasury Yield - FRED Api": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request | TIPS 10Y Real Yield - FRED Api",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request | TIPS 10Y Real Yield - FRED Api": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request | Germany 10Y Proxy - FRED Api",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request | Germany 10Y Proxy - FRED Api": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request | UK 10Y Proxy - FRED api",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request | UK 10Y Proxy - FRED api": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request | Japan 10Y Proxy - FRED API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request | VIX - FRED Api": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request | DXY - FRED Dollar Index - FRED API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request | DXY - FRED Dollar Index - FRED API": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request | Gold - Coinbase",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request | Gold - Coinbase": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request | BTC - Coinbase",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request | BTC - Coinbase": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request | WTI Oil - FRED Api",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request | WTI Oil - FRED Api": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request | Brent Oil - FRED Api",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request | Brent Oil - FRED Api": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request | USD/JPY - Coinbase",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request | USD/JPY - Coinbase": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request | GBP/USD - Coinbase",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request | GBP/USD - Coinbase": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request | USD/CAD - Coinbase",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request | USD/CAD - Coinbase": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request | AUD/USD - Coinbase",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request | AUD/USD - Coinbase": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request | EURUSD - FRED API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request | Diagnosis - Claude API": {
+      "main": [
+        [
+          {
+            "node": "Extract Diagnosis Text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1 | Prompt Builder": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request | Diagnosis - Claude API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript | Fetch Code Node": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request | Eco Calendar Recent - Finnhub",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields | USD Ruleset": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1 | Prompt Builder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Diagnosis Text": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript | Build Extract Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript | Build Extract Prompt": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request | Extract Calls - Claude API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request | Extract Calls - Claude API": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript | Parse Calls",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript | Parse Calls": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request | Log to Supabase",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request | Log to Supabase": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript | Build Comparison",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields | O Layer Ruleset": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript | O Layer Prompt Builder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript | O Layer Prompt Builder": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request | O Layer Diagnosis - Claude API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request | O Layer Diagnosis - Claude API": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript | Extract O Layer Diagnosis Text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript | Extract O Layer Diagnosis Text": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript | Build O Layer Extract Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript | Build O Layer Extract Prompt": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request | Extract O Layer Calls - Claude API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request | Extract O Layer Calls - Claude API": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript | Parse O Layer Calls",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript | Parse O Layer Calls": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request | Log O Layer Calls to Supabase",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request | Log O Layer Calls to Supabase": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields | USD Ruleset",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript | Build Comparison": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request | Log Comparison to Supabase",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request | EURUSD - FRED API": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request | NQ - Alpha Vantage",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request | NQ - Alpha Vantage": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript | Fetch Code Node",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request | US 2Y Treasury Yield - FRED API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request | Japan 10Y Proxy - FRED API": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request | VIX - FRED Api",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request | Eco Calendar Recent - Finnhub": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request | Eco Calendar Upcoming - Finnhub",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request | Eco Calendar Upcoming - Finnhub": {
+      "main": [
+        [
+          {
+            "node": "Code | Process Eco Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Process Eco Data": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields | O Layer Ruleset",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request | Log Comparison to Supabase": {
+      "main": [
+        [
+          {
+            "node": "Code | Error Check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Error Check": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "nodeGroups": [],
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "staticData": {},
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "tags": [],
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "a6UidZyJLpc68OWu",
+      "projectId": "ISQG9XU7TGTT6Fcu",
+      "project": {
+        "id": "ISQG9XU7TGTT6Fcu",
+        "name": "Daniel Silver <a17@live.co.uk>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "customTelemetryTags": [],
+        "creatorId": "eb4fba3e-5170-481b-abc5-ce65776c1113",
+        "createdAt": "2026-04-29T19:10:11.212Z",
+        "updatedAt": "2026-04-29T19:10:21.640Z"
+      },
+      "createdAt": "2026-04-29T19:15:31.319Z",
+      "updatedAt": "2026-04-29T19:15:31.319Z"
+    }
+  ],
+  "activeVersion": null
+}

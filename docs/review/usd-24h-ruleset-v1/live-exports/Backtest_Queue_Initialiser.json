@@ -1,0 +1,133 @@
+{
+  "id": "4IctuVz0xl7kefJ2",
+  "name": "Backtest Queue Initialiser",
+  "description": null,
+  "active": false,
+  "activeVersionId": null,
+  "createdAt": "2026-05-12T19:48:54.038Z",
+  "updatedAt": "2026-05-13T17:40:20.321Z",
+  "isArchived": false,
+  "versionId": "2a8f0bee-5028-4aaa-bd92-e3bb4d1ce16c",
+  "versionCounter": 34,
+  "sourceWorkflowId": null,
+  "triggerCount": 0,
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        496,
+        -224
+      ],
+      "id": "2c580978-a14e-4ee8-899a-12949c3a8da4",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "jsCode": "const N = 100;\nconst tradingDays = [];\nlet date = new Date();\ndate.setDate(date.getDate() - 1);\n\nfunction addTradingDays(baseDate, n) {\n  const d = new Date(baseDate);\n  let added = 0;\n  while (added < n) {\n    d.setDate(d.getDate() + 1);\n    const day = d.getDay();\n    if (day !== 0 && day !== 6) added++;\n  }\n  return d.toISOString().split('T')[0];\n}\n\nwhile (tradingDays.length < N) {\n  date.setDate(date.getDate() - 1);\n  const day = date.getDay();\n  if (day === 0 || day === 6) continue;\n\n  const runDate = date.toISOString().split('T')[0];\n  tradingDays.push({\n    run_date: runDate,\n    resolution_date_24h: addTradingDays(date, 1),\n    resolution_date_72h: addTradingDays(date, 3),\n    resolution_date_weekly: addTradingDays(date, 5),\n    status: 'pending'\n  });\n}\n\nreturn [{ json: { rows: tradingDays } }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        384,
+        32
+      ],
+      "id": "4877b110-70e1-4c6b-a01b-d6636fd2b784",
+      "name": "Code | Generate Date Queue"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://apoockcbbtghnkuypdvh.supabase.co/rest/v1/backtest_queue",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "apikey",
+              "value": "<redacted>"
+            },
+            {
+              "name": "Authorization",
+              "value": "<redacted>"
+            },
+            {
+              "name": "Prefer",
+              "value": "resolution=ignore-duplicates"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.rows }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        592,
+        32
+      ],
+      "id": "0462fdb0-f8af-4d45-9d56-58898950d181",
+      "name": "HTTP Request | Seed Queue in Supabase"
+    }
+  ],
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Code | Generate Date Queue",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Generate Date Queue": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request | Seed Queue in Supabase",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "nodeGroups": [],
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "pinData": {},
+  "meta": null,
+  "tags": [],
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "4IctuVz0xl7kefJ2",
+      "projectId": "ISQG9XU7TGTT6Fcu",
+      "project": {
+        "id": "ISQG9XU7TGTT6Fcu",
+        "name": "Daniel Silver <a17@live.co.uk>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "customTelemetryTags": [],
+        "creatorId": "eb4fba3e-5170-481b-abc5-ce65776c1113",
+        "createdAt": "2026-04-29T19:10:11.212Z",
+        "updatedAt": "2026-04-29T19:10:21.640Z"
+      },
+      "createdAt": "2026-05-12T19:48:54.040Z",
+      "updatedAt": "2026-05-12T19:48:54.040Z"
+    }
+  ],
+  "activeVersion": null
+}

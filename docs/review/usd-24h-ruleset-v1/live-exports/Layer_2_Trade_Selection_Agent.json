@@ -1,0 +1,1423 @@
+{
+  "id": "ZKGSuYcWb6EfgXBE",
+  "name": "Layer 2 Trade Selection Agent",
+  "description": null,
+  "active": true,
+  "activeVersionId": "305a3ce0-57bb-43ce-b77d-63bde96417d2",
+  "createdAt": "2026-06-19T17:31:31.649Z",
+  "updatedAt": "2026-09-12T19:36:46.423Z",
+  "isArchived": false,
+  "versionId": "305a3ce0-57bb-43ce-b77d-63bde96417d2",
+  "versionCounter": 24,
+  "sourceWorkflowId": null,
+  "triggerCount": 0,
+  "nodes": [
+    {
+      "id": "layer2-trigger",
+      "name": "When Executed by Another Workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "typeVersion": 1.2
+    },
+    {
+      "id": "layer2-get-usd-rows",
+      "name": "Get latest USD rows",
+      "credentials": {
+        "supabaseApi": {
+          "id": "trM35g1QCTOgQp4K",
+          "name": "Supabase account"
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "position": [
+        260,
+        0
+      ],
+      "parameters": {
+        "tableId": "agent_outputs",
+        "operation": "getAll",
+        "limit": 20,
+        "orderBy": "created_at.desc",
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "agent_name",
+              "condition": "eq",
+              "keyValue": "USD"
+            },
+            {
+              "keyName": "layer",
+              "condition": "eq",
+              "keyValue": "1"
+            }
+          ]
+        }
+      },
+      "typeVersion": 1
+    },
+    {
+      "id": "layer2-get-eur-rows",
+      "name": "Get latest EUR rows",
+      "credentials": {
+        "supabaseApi": {
+          "id": "trM35g1QCTOgQp4K",
+          "name": "Supabase account"
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "position": [
+        260,
+        80
+      ],
+      "parameters": {
+        "tableId": "agent_outputs",
+        "operation": "getAll",
+        "limit": 20,
+        "orderBy": "created_at.desc",
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "agent_name",
+              "condition": "eq",
+              "keyValue": "EUR"
+            },
+            {
+              "keyName": "layer",
+              "condition": "eq",
+              "keyValue": "1"
+            }
+          ]
+        }
+      },
+      "typeVersion": 1
+    },
+    {
+      "id": "layer2-get-gold-rows",
+      "name": "Get latest GOLD rows",
+      "credentials": {
+        "supabaseApi": {
+          "id": "trM35g1QCTOgQp4K",
+          "name": "Supabase account"
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "position": [
+        260,
+        160
+      ],
+      "parameters": {
+        "tableId": "agent_outputs",
+        "operation": "getAll",
+        "limit": 20,
+        "orderBy": "created_at.desc",
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "agent_name",
+              "condition": "eq",
+              "keyValue": "GOLD"
+            },
+            {
+              "keyName": "layer",
+              "condition": "eq",
+              "keyValue": "1"
+            }
+          ]
+        }
+      },
+      "typeVersion": 1
+    },
+    {
+      "id": "layer2-get-nq-rows",
+      "name": "Get latest NQ rows",
+      "credentials": {
+        "supabaseApi": {
+          "id": "trM35g1QCTOgQp4K",
+          "name": "Supabase account"
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "position": [
+        260,
+        240
+      ],
+      "parameters": {
+        "tableId": "agent_outputs",
+        "operation": "getAll",
+        "limit": 20,
+        "orderBy": "created_at.desc",
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "agent_name",
+              "condition": "eq",
+              "keyValue": "NQ"
+            },
+            {
+              "keyName": "layer",
+              "condition": "eq",
+              "keyValue": "1"
+            }
+          ]
+        }
+      },
+      "typeVersion": 1
+    },
+    {
+      "id": "layer2-get-btc-rows",
+      "name": "Get latest BTC rows",
+      "credentials": {
+        "supabaseApi": {
+          "id": "trM35g1QCTOgQp4K",
+          "name": "Supabase account"
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "position": [
+        260,
+        320
+      ],
+      "parameters": {
+        "tableId": "agent_outputs",
+        "operation": "getAll",
+        "limit": 20,
+        "orderBy": "created_at.desc",
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "agent_name",
+              "condition": "eq",
+              "keyValue": "BTC"
+            },
+            {
+              "keyName": "layer",
+              "condition": "eq",
+              "keyValue": "1"
+            }
+          ]
+        }
+      },
+      "typeVersion": 1
+    },
+    {
+      "id": "layer2-build-json",
+      "name": "Build Layer 2 Trade Selection JSON",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        520,
+        0
+      ],
+      "parameters": {
+        "jsCode": "const rows = $input.all().map(i => i.json);\nconst assets = [\"USD\", \"EUR\", \"GOLD\", \"NQ\", \"BTC\", \"WTI\", \"SILVER\", \"GBP\"];\nconst pairs = [\n  { instrument: \"EUR/USD\", base: \"EUR\" },\n  { instrument: \"XAU/USD\", base: \"GOLD\" },\n  { instrument: \"BTC/USD\", base: \"BTC\" },\n  { instrument: \"NQ/USD\", base: \"NQ\" },\n  { instrument: \"WTI/USD\", base: \"WTI\" },\n  { instrument: \"XAG/USD\", base: \"SILVER\" },\n  { instrument: \"GBP/USD\", base: \"GBP\" }\n];\nconst LOW_CONVICTION_THRESHOLD = 60;\n\nfunction parseMaybeJson(value, fallback = {}) {\n  if (value === null || value === undefined || value === \"\") return fallback;\n  if (typeof value === \"object\") return value;\n  try {\n    return JSON.parse(value);\n  } catch (e) {\n    return fallback;\n  }\n}\n\nfunction parseMaybeArray(value, fallback = []) {\n  if (value === null || value === undefined || value === \"\") return fallback;\n  if (Array.isArray(value)) return value;\n  try {\n    const parsed = JSON.parse(value);\n    return Array.isArray(parsed) ? parsed : fallback;\n  } catch (e) {\n    return [String(value)];\n  }\n}\n\nfunction toNumber(value) {\n  if (value === null || value === undefined || value === \"\") return null;\n  const n = Number(value);\n  return Number.isFinite(n) ? n : null;\n}\n\nfunction clamp(value, min = 0, max = 100) {\n  const n = toNumber(value);\n  if (n === null) return null;\n  return Math.max(min, Math.min(max, Math.round(n)));\n}\n\nfunction normalizeDirection(value) {\n  const raw = String(value || \"PENDING\").trim().toUpperCase().replace(/\\s+/g, \"_\");\n  if ([\"PENDING\", \"NO_24H_CALL\", \"NO_CLEAR_BIAS\", \"NEUTRAL\", \"MARKET_CLOSED\", \"\"].includes(raw)) return \"NO_CLEAR_BIAS\";\n  if (raw.includes(\"BULLISH\") || raw.includes(\"LONG\")) return \"BULLISH\";\n  if (raw.includes(\"BEARISH\") || raw.includes(\"SHORT\")) return \"BEARISH\";\n  return \"NO_CLEAR_BIAS\";\n}\n\nfunction outputFromRow(row) {\n  return parseMaybeJson(row.full_output, parseMaybeJson(row.raw_agent_output, {}));\n}\n\nfunction latestFor(agent) {\n  return rows\n    .filter(row => row.agent_name === agent && Number(row.layer) === 1)\n    .filter(row => {\n      const output = outputFromRow(row);\n      const todayCall = output.today_call || {};\n      return row.call_24h_direction || row.direction_24h || output.direction_24h || todayCall.direction;\n    })\n    .sort((a, b) => {\n      const dateA = new Date(a.created_at || a.run_time_et || 0).getTime();\n      const dateB = new Date(b.created_at || b.run_time_et || 0).getTime();\n      return dateB - dateA;\n    })[0] || null;\n}\n\nfunction assetCall(agent) {\n  const row = latestFor(agent);\n  if (!row) {\n    return {\n      agent,\n      direction: \"NO_CLEAR_BIAS\",\n      conviction: null,\n      reason: \"No usable Layer 1 24H output found.\",\n      warnings: [\"Missing Layer 1 output\"]\n    };\n  }\n\n  const output = outputFromRow(row);\n  const todayCall = output.today_call || {};\n\n  return {\n    agent,\n    direction: normalizeDirection(todayCall.direction || row.call_24h_direction || row.direction_24h || output.direction_24h),\n    conviction: clamp(todayCall.confidence ?? row.call_24h_conviction ?? row.conviction_24h ?? output.conviction_24h),\n    reason: todayCall.executive_summary || row.call_24h_reason || output.reason_24h || row.reasoning_summary || output.reasoning_summary || \"\",\n    warnings: [\n      ...parseMaybeArray(row.warnings),\n      ...parseMaybeArray(output.risk_flags),\n      ...parseMaybeArray(output.warnings),\n      ...parseMaybeArray(todayCall.invalidation_risks)\n    ].filter(Boolean)\n  };\n}\n\nconst calls = Object.fromEntries(assets.map(asset => [asset, assetCall(asset)]));\nconst usd = calls.USD;\nconst trade_opportunities = [];\nconst avoid_today = [];\n\nfunction avoid(instrument, reason) {\n  avoid_today.push({ instrument, reason });\n}\n\nfor (const pair of pairs) {\n  const base = calls[pair.base];\n  const confidence = clamp(((base.conviction ?? 0) + (usd.conviction ?? 0)) / 2);\n\n  if (base.conviction === null || usd.conviction === null) {\n    avoid(pair.instrument, \"Missing 24H conviction from one or both Layer 1 assets.\");\n  } else if (base.direction === \"NO_CLEAR_BIAS\" || usd.direction === \"NO_CLEAR_BIAS\") {\n    avoid(pair.instrument, \"One or both assets have no clear 24H bias.\");\n  } else if (base.conviction < LOW_CONVICTION_THRESHOLD || usd.conviction < LOW_CONVICTION_THRESHOLD) {\n    avoid(pair.instrument, \"Mixed or low conviction 24H signals.\");\n  } else if (base.direction === usd.direction) {\n    avoid(pair.instrument, \"Both assets point in the same 24H direction, so there is no clear relative edge.\");\n  } else if (base.direction === \"BULLISH\" && usd.direction === \"BEARISH\") {\n    trade_opportunities.push({\n      instrument: pair.instrument,\n      direction: \"BUY\",\n      confidence,\n      reason: `${pair.base} is independently bullish while USD is independently bearish during today's session.`\n    });\n  } else if (base.direction === \"BEARISH\" && usd.direction === \"BULLISH\") {\n    trade_opportunities.push({\n      instrument: pair.instrument,\n      direction: \"SELL\",\n      confidence,\n      reason: `USD is independently bullish while ${pair.base} is independently bearish during today's session.`\n    });\n  } else {\n    avoid(pair.instrument, \"Mixed 24H signals.\");\n  }\n}\n\ntrade_opportunities\n  .sort((a, b) => b.confidence - a.confidence)\n  .forEach((opportunity, index) => {\n    opportunity.rank = index + 1;\n  });\n\nconst dashboard = {\n  dashboard_meta: {\n    last_updated_et: new Date().toISOString(),\n    source: \"layer_2_trade_selection_agent\"\n  },\n  trade_opportunities,\n  avoid_today\n};\n\nreturn [\n  {\n    json: {\n      file_content: JSON.stringify(dashboard, null, 2),\n      dashboard\n    }\n  }\n];"
+      },
+      "typeVersion": 2
+    },
+    {
+      "id": "layer2-write-github",
+      "name": "Write data/layer2.json to GitHub",
+      "credentials": {
+        "githubOAuth2Api": {
+          "id": "wr4dhSbWkjNonhfi",
+          "name": "GitHub account 3"
+        }
+      },
+      "type": "n8n-nodes-base.github",
+      "position": [
+        780,
+        0
+      ],
+      "parameters": {
+        "resource": "file",
+        "owner": {
+          "mode": "list",
+          "__rl": true,
+          "cachedResultName": "kevincreedycars-debug",
+          "cachedResultUrl": "https://github.com/kevincreedycars-debug",
+          "value": "kevincreedycars-debug"
+        },
+        "fileContent": "={{ $json.file_content }}",
+        "authentication": "oAuth2",
+        "filePath": "data/layer2.json",
+        "operation": "edit",
+        "repository": {
+          "mode": "list",
+          "__rl": true,
+          "cachedResultName": "trading-agent-dashboard",
+          "cachedResultUrl": "https://github.com/kevincreedycars-debug/trading-agent-dashboard",
+          "value": "trading-agent-dashboard"
+        },
+        "commitMessage": "Update layer2 dashboard data from trade selection agent"
+      },
+      "typeVersion": 1.1,
+      "webhookId": "eaf73ad3-058e-46e0-81c6-cce7d95aaf32",
+      "retryOnFail": true,
+      "maxTries": 4,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "layer2-get-wti-rows",
+      "name": "Get latest WTI rows",
+      "credentials": {
+        "supabaseApi": {
+          "id": "trM35g1QCTOgQp4K",
+          "name": "Supabase account"
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "position": [
+        200,
+        320
+      ],
+      "parameters": {
+        "tableId": "agent_outputs",
+        "operation": "getAll",
+        "limit": 20,
+        "orderBy": "created_at.desc",
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "agent_name",
+              "condition": "eq",
+              "keyValue": "WTI"
+            },
+            {
+              "keyName": "layer",
+              "condition": "eq",
+              "keyValue": "1"
+            }
+          ]
+        }
+      },
+      "typeVersion": 1
+    },
+    {
+      "id": "silver-read-0b17d0b8",
+      "name": "Get latest SILVER rows",
+      "credentials": {
+        "supabaseApi": {
+          "id": "trM35g1QCTOgQp4K",
+          "name": "Supabase account"
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "position": [
+        200,
+        400
+      ],
+      "parameters": {
+        "tableId": "agent_outputs",
+        "operation": "getAll",
+        "limit": 20,
+        "orderBy": "created_at.desc",
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "agent_name",
+              "condition": "eq",
+              "keyValue": "SILVER"
+            },
+            {
+              "keyName": "layer",
+              "condition": "eq",
+              "keyValue": "1"
+            }
+          ]
+        }
+      },
+      "typeVersion": 1
+    },
+    {
+      "name": "Get latest GBP rows",
+      "credentials": {
+        "supabaseApi": {
+          "id": "trM35g1QCTOgQp4K",
+          "name": "Supabase account"
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "position": [
+        200,
+        420
+      ],
+      "parameters": {
+        "tableId": "agent_outputs",
+        "operation": "getAll",
+        "limit": 20,
+        "orderBy": "created_at.desc",
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "agent_name",
+              "condition": "eq",
+              "keyValue": "GBP"
+            },
+            {
+              "keyName": "layer",
+              "condition": "eq",
+              "keyValue": "1"
+            }
+          ]
+        }
+      },
+      "typeVersion": 1,
+      "id": "e55c1026-7f3c-414a-8177-756cbfa47db9"
+    },
+    {
+      "parameters": {
+        "mode": "append"
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [
+        420,
+        400
+      ],
+      "id": "merge-l2-f78c194c",
+      "name": "Merge L2 EUR"
+    },
+    {
+      "parameters": {
+        "mode": "append"
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [
+        510,
+        400
+      ],
+      "id": "merge-l2-53f6d35a",
+      "name": "Merge L2 GOLD"
+    },
+    {
+      "parameters": {
+        "mode": "append"
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [
+        600,
+        400
+      ],
+      "id": "merge-l2-9138ed4c",
+      "name": "Merge L2 NQ"
+    },
+    {
+      "parameters": {
+        "mode": "append"
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [
+        690,
+        400
+      ],
+      "id": "merge-l2-9b37db35",
+      "name": "Merge L2 BTC"
+    },
+    {
+      "parameters": {
+        "mode": "append"
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [
+        780,
+        400
+      ],
+      "id": "merge-l2-26f0b5c6",
+      "name": "Merge L2 WTI"
+    },
+    {
+      "parameters": {
+        "mode": "append"
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [
+        870,
+        400
+      ],
+      "id": "merge-l2-2f96f64a",
+      "name": "Merge L2 SILVER"
+    },
+    {
+      "parameters": {
+        "mode": "append"
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [
+        960,
+        400
+      ],
+      "id": "merge-l2-ef76e57a",
+      "name": "Merge L2 GBP"
+    }
+  ],
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Get latest USD rows",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get latest EUR rows",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get latest GOLD rows",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get latest NQ rows",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get latest BTC rows",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get latest WTI rows",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get latest SILVER rows",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get latest GBP rows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get latest USD rows": {
+      "main": [
+        [
+          {
+            "node": "Merge L2 EUR",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get latest EUR rows": {
+      "main": [
+        [
+          {
+            "node": "Merge L2 EUR",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge L2 EUR": {
+      "main": [
+        [
+          {
+            "node": "Merge L2 GOLD",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get latest GOLD rows": {
+      "main": [
+        [
+          {
+            "node": "Merge L2 GOLD",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge L2 GOLD": {
+      "main": [
+        [
+          {
+            "node": "Merge L2 NQ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get latest NQ rows": {
+      "main": [
+        [
+          {
+            "node": "Merge L2 NQ",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge L2 NQ": {
+      "main": [
+        [
+          {
+            "node": "Merge L2 BTC",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get latest BTC rows": {
+      "main": [
+        [
+          {
+            "node": "Merge L2 BTC",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge L2 BTC": {
+      "main": [
+        [
+          {
+            "node": "Merge L2 WTI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get latest WTI rows": {
+      "main": [
+        [
+          {
+            "node": "Merge L2 WTI",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge L2 WTI": {
+      "main": [
+        [
+          {
+            "node": "Merge L2 SILVER",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get latest SILVER rows": {
+      "main": [
+        [
+          {
+            "node": "Merge L2 SILVER",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge L2 SILVER": {
+      "main": [
+        [
+          {
+            "node": "Merge L2 GBP",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get latest GBP rows": {
+      "main": [
+        [
+          {
+            "node": "Merge L2 GBP",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge L2 GBP": {
+      "main": [
+        [
+          {
+            "node": "Build Layer 2 Trade Selection JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Layer 2 Trade Selection JSON": {
+      "main": [
+        [
+          {
+            "node": "Write data/layer2.json to GitHub",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "nodeGroups": [],
+  "settings": {},
+  "staticData": {},
+  "pinData": {},
+  "meta": null,
+  "tags": [],
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "ZKGSuYcWb6EfgXBE",
+      "projectId": "ISQG9XU7TGTT6Fcu",
+      "project": {
+        "id": "ISQG9XU7TGTT6Fcu",
+        "name": "Daniel Silver <a17@live.co.uk>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "customTelemetryTags": [],
+        "creatorId": "eb4fba3e-5170-481b-abc5-ce65776c1113",
+        "createdAt": "2026-04-29T19:10:11.212Z",
+        "updatedAt": "2026-04-29T19:10:21.640Z"
+      },
+      "createdAt": "2026-06-19T17:31:31.652Z",
+      "updatedAt": "2026-06-19T17:31:31.652Z"
+    }
+  ],
+  "activeVersion": {
+    "versionId": "305a3ce0-57bb-43ce-b77d-63bde96417d2",
+    "workflowId": "ZKGSuYcWb6EfgXBE",
+    "nodes": [
+      {
+        "id": "layer2-trigger",
+        "name": "When Executed by Another Workflow",
+        "type": "n8n-nodes-base.executeWorkflowTrigger",
+        "position": [
+          0,
+          0
+        ],
+        "parameters": {
+          "inputSource": "passthrough"
+        },
+        "typeVersion": 1.2
+      },
+      {
+        "id": "layer2-get-usd-rows",
+        "name": "Get latest USD rows",
+        "credentials": {
+          "supabaseApi": {
+            "id": "trM35g1QCTOgQp4K",
+            "name": "Supabase account"
+          }
+        },
+        "type": "n8n-nodes-base.supabase",
+        "position": [
+          260,
+          0
+        ],
+        "parameters": {
+          "tableId": "agent_outputs",
+          "operation": "getAll",
+          "limit": 20,
+          "orderBy": "created_at.desc",
+          "matchType": "allFilters",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "agent_name",
+                "condition": "eq",
+                "keyValue": "USD"
+              },
+              {
+                "keyName": "layer",
+                "condition": "eq",
+                "keyValue": "1"
+              }
+            ]
+          }
+        },
+        "typeVersion": 1
+      },
+      {
+        "id": "layer2-get-eur-rows",
+        "name": "Get latest EUR rows",
+        "credentials": {
+          "supabaseApi": {
+            "id": "trM35g1QCTOgQp4K",
+            "name": "Supabase account"
+          }
+        },
+        "type": "n8n-nodes-base.supabase",
+        "position": [
+          260,
+          80
+        ],
+        "parameters": {
+          "tableId": "agent_outputs",
+          "operation": "getAll",
+          "limit": 20,
+          "orderBy": "created_at.desc",
+          "matchType": "allFilters",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "agent_name",
+                "condition": "eq",
+                "keyValue": "EUR"
+              },
+              {
+                "keyName": "layer",
+                "condition": "eq",
+                "keyValue": "1"
+              }
+            ]
+          }
+        },
+        "typeVersion": 1
+      },
+      {
+        "id": "layer2-get-gold-rows",
+        "name": "Get latest GOLD rows",
+        "credentials": {
+          "supabaseApi": {
+            "id": "trM35g1QCTOgQp4K",
+            "name": "Supabase account"
+          }
+        },
+        "type": "n8n-nodes-base.supabase",
+        "position": [
+          260,
+          160
+        ],
+        "parameters": {
+          "tableId": "agent_outputs",
+          "operation": "getAll",
+          "limit": 20,
+          "orderBy": "created_at.desc",
+          "matchType": "allFilters",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "agent_name",
+                "condition": "eq",
+                "keyValue": "GOLD"
+              },
+              {
+                "keyName": "layer",
+                "condition": "eq",
+                "keyValue": "1"
+              }
+            ]
+          }
+        },
+        "typeVersion": 1
+      },
+      {
+        "id": "layer2-get-nq-rows",
+        "name": "Get latest NQ rows",
+        "credentials": {
+          "supabaseApi": {
+            "id": "trM35g1QCTOgQp4K",
+            "name": "Supabase account"
+          }
+        },
+        "type": "n8n-nodes-base.supabase",
+        "position": [
+          260,
+          240
+        ],
+        "parameters": {
+          "tableId": "agent_outputs",
+          "operation": "getAll",
+          "limit": 20,
+          "orderBy": "created_at.desc",
+          "matchType": "allFilters",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "agent_name",
+                "condition": "eq",
+                "keyValue": "NQ"
+              },
+              {
+                "keyName": "layer",
+                "condition": "eq",
+                "keyValue": "1"
+              }
+            ]
+          }
+        },
+        "typeVersion": 1
+      },
+      {
+        "id": "layer2-get-btc-rows",
+        "name": "Get latest BTC rows",
+        "credentials": {
+          "supabaseApi": {
+            "id": "trM35g1QCTOgQp4K",
+            "name": "Supabase account"
+          }
+        },
+        "type": "n8n-nodes-base.supabase",
+        "position": [
+          260,
+          320
+        ],
+        "parameters": {
+          "tableId": "agent_outputs",
+          "operation": "getAll",
+          "limit": 20,
+          "orderBy": "created_at.desc",
+          "matchType": "allFilters",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "agent_name",
+                "condition": "eq",
+                "keyValue": "BTC"
+              },
+              {
+                "keyName": "layer",
+                "condition": "eq",
+                "keyValue": "1"
+              }
+            ]
+          }
+        },
+        "typeVersion": 1
+      },
+      {
+        "id": "layer2-build-json",
+        "name": "Build Layer 2 Trade Selection JSON",
+        "type": "n8n-nodes-base.code",
+        "position": [
+          520,
+          0
+        ],
+        "parameters": {
+          "jsCode": "const rows = $input.all().map(i => i.json);\nconst assets = [\"USD\", \"EUR\", \"GOLD\", \"NQ\", \"BTC\", \"WTI\", \"SILVER\", \"GBP\"];\nconst pairs = [\n  { instrument: \"EUR/USD\", base: \"EUR\" },\n  { instrument: \"XAU/USD\", base: \"GOLD\" },\n  { instrument: \"BTC/USD\", base: \"BTC\" },\n  { instrument: \"NQ/USD\", base: \"NQ\" },\n  { instrument: \"WTI/USD\", base: \"WTI\" },\n  { instrument: \"XAG/USD\", base: \"SILVER\" },\n  { instrument: \"GBP/USD\", base: \"GBP\" }\n];\nconst LOW_CONVICTION_THRESHOLD = 60;\n\nfunction parseMaybeJson(value, fallback = {}) {\n  if (value === null || value === undefined || value === \"\") return fallback;\n  if (typeof value === \"object\") return value;\n  try {\n    return JSON.parse(value);\n  } catch (e) {\n    return fallback;\n  }\n}\n\nfunction parseMaybeArray(value, fallback = []) {\n  if (value === null || value === undefined || value === \"\") return fallback;\n  if (Array.isArray(value)) return value;\n  try {\n    const parsed = JSON.parse(value);\n    return Array.isArray(parsed) ? parsed : fallback;\n  } catch (e) {\n    return [String(value)];\n  }\n}\n\nfunction toNumber(value) {\n  if (value === null || value === undefined || value === \"\") return null;\n  const n = Number(value);\n  return Number.isFinite(n) ? n : null;\n}\n\nfunction clamp(value, min = 0, max = 100) {\n  const n = toNumber(value);\n  if (n === null) return null;\n  return Math.max(min, Math.min(max, Math.round(n)));\n}\n\nfunction normalizeDirection(value) {\n  const raw = String(value || \"PENDING\").trim().toUpperCase().replace(/\\s+/g, \"_\");\n  if ([\"PENDING\", \"NO_24H_CALL\", \"NO_CLEAR_BIAS\", \"NEUTRAL\", \"MARKET_CLOSED\", \"\"].includes(raw)) return \"NO_CLEAR_BIAS\";\n  if (raw.includes(\"BULLISH\") || raw.includes(\"LONG\")) return \"BULLISH\";\n  if (raw.includes(\"BEARISH\") || raw.includes(\"SHORT\")) return \"BEARISH\";\n  return \"NO_CLEAR_BIAS\";\n}\n\nfunction outputFromRow(row) {\n  return parseMaybeJson(row.full_output, parseMaybeJson(row.raw_agent_output, {}));\n}\n\nfunction latestFor(agent) {\n  return rows\n    .filter(row => row.agent_name === agent && Number(row.layer) === 1)\n    .filter(row => {\n      const output = outputFromRow(row);\n      const todayCall = output.today_call || {};\n      return row.call_24h_direction || row.direction_24h || output.direction_24h || todayCall.direction;\n    })\n    .sort((a, b) => {\n      const dateA = new Date(a.created_at || a.run_time_et || 0).getTime();\n      const dateB = new Date(b.created_at || b.run_time_et || 0).getTime();\n      return dateB - dateA;\n    })[0] || null;\n}\n\nfunction assetCall(agent) {\n  const row = latestFor(agent);\n  if (!row) {\n    return {\n      agent,\n      direction: \"NO_CLEAR_BIAS\",\n      conviction: null,\n      reason: \"No usable Layer 1 24H output found.\",\n      warnings: [\"Missing Layer 1 output\"]\n    };\n  }\n\n  const output = outputFromRow(row);\n  const todayCall = output.today_call || {};\n\n  return {\n    agent,\n    direction: normalizeDirection(todayCall.direction || row.call_24h_direction || row.direction_24h || output.direction_24h),\n    conviction: clamp(todayCall.confidence ?? row.call_24h_conviction ?? row.conviction_24h ?? output.conviction_24h),\n    reason: todayCall.executive_summary || row.call_24h_reason || output.reason_24h || row.reasoning_summary || output.reasoning_summary || \"\",\n    warnings: [\n      ...parseMaybeArray(row.warnings),\n      ...parseMaybeArray(output.risk_flags),\n      ...parseMaybeArray(output.warnings),\n      ...parseMaybeArray(todayCall.invalidation_risks)\n    ].filter(Boolean)\n  };\n}\n\nconst calls = Object.fromEntries(assets.map(asset => [asset, assetCall(asset)]));\nconst usd = calls.USD;\nconst trade_opportunities = [];\nconst avoid_today = [];\n\nfunction avoid(instrument, reason) {\n  avoid_today.push({ instrument, reason });\n}\n\nfor (const pair of pairs) {\n  const base = calls[pair.base];\n  const confidence = clamp(((base.conviction ?? 0) + (usd.conviction ?? 0)) / 2);\n\n  if (base.conviction === null || usd.conviction === null) {\n    avoid(pair.instrument, \"Missing 24H conviction from one or both Layer 1 assets.\");\n  } else if (base.direction === \"NO_CLEAR_BIAS\" || usd.direction === \"NO_CLEAR_BIAS\") {\n    avoid(pair.instrument, \"One or both assets have no clear 24H bias.\");\n  } else if (base.conviction < LOW_CONVICTION_THRESHOLD || usd.conviction < LOW_CONVICTION_THRESHOLD) {\n    avoid(pair.instrument, \"Mixed or low conviction 24H signals.\");\n  } else if (base.direction === usd.direction) {\n    avoid(pair.instrument, \"Both assets point in the same 24H direction, so there is no clear relative edge.\");\n  } else if (base.direction === \"BULLISH\" && usd.direction === \"BEARISH\") {\n    trade_opportunities.push({\n      instrument: pair.instrument,\n      direction: \"BUY\",\n      confidence,\n      reason: `${pair.base} is independently bullish while USD is independently bearish during today's session.`\n    });\n  } else if (base.direction === \"BEARISH\" && usd.direction === \"BULLISH\") {\n    trade_opportunities.push({\n      instrument: pair.instrument,\n      direction: \"SELL\",\n      confidence,\n      reason: `USD is independently bullish while ${pair.base} is independently bearish during today's session.`\n    });\n  } else {\n    avoid(pair.instrument, \"Mixed 24H signals.\");\n  }\n}\n\ntrade_opportunities\n  .sort((a, b) => b.confidence - a.confidence)\n  .forEach((opportunity, index) => {\n    opportunity.rank = index + 1;\n  });\n\nconst dashboard = {\n  dashboard_meta: {\n    last_updated_et: new Date().toISOString(),\n    source: \"layer_2_trade_selection_agent\"\n  },\n  trade_opportunities,\n  avoid_today\n};\n\nreturn [\n  {\n    json: {\n      file_content: JSON.stringify(dashboard, null, 2),\n      dashboard\n    }\n  }\n];"
+        },
+        "typeVersion": 2
+      },
+      {
+        "id": "layer2-write-github",
+        "name": "Write data/layer2.json to GitHub",
+        "credentials": {
+          "githubOAuth2Api": {
+            "id": "wr4dhSbWkjNonhfi",
+            "name": "GitHub account 3"
+          }
+        },
+        "type": "n8n-nodes-base.github",
+        "position": [
+          780,
+          0
+        ],
+        "parameters": {
+          "resource": "file",
+          "owner": {
+            "mode": "list",
+            "__rl": true,
+            "cachedResultName": "kevincreedycars-debug",
+            "cachedResultUrl": "https://github.com/kevincreedycars-debug",
+            "value": "kevincreedycars-debug"
+          },
+          "fileContent": "={{ $json.file_content }}",
+          "authentication": "oAuth2",
+          "filePath": "data/layer2.json",
+          "operation": "edit",
+          "repository": {
+            "mode": "list",
+            "__rl": true,
+            "cachedResultName": "trading-agent-dashboard",
+            "cachedResultUrl": "https://github.com/kevincreedycars-debug/trading-agent-dashboard",
+            "value": "trading-agent-dashboard"
+          },
+          "commitMessage": "Update layer2 dashboard data from trade selection agent"
+        },
+        "typeVersion": 1.1,
+        "webhookId": "eaf73ad3-058e-46e0-81c6-cce7d95aaf32",
+        "retryOnFail": true,
+        "maxTries": 4,
+        "waitBetweenTries": 5000
+      },
+      {
+        "id": "layer2-get-wti-rows",
+        "name": "Get latest WTI rows",
+        "credentials": {
+          "supabaseApi": {
+            "id": "trM35g1QCTOgQp4K",
+            "name": "Supabase account"
+          }
+        },
+        "type": "n8n-nodes-base.supabase",
+        "position": [
+          200,
+          320
+        ],
+        "parameters": {
+          "tableId": "agent_outputs",
+          "operation": "getAll",
+          "limit": 20,
+          "orderBy": "created_at.desc",
+          "matchType": "allFilters",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "agent_name",
+                "condition": "eq",
+                "keyValue": "WTI"
+              },
+              {
+                "keyName": "layer",
+                "condition": "eq",
+                "keyValue": "1"
+              }
+            ]
+          }
+        },
+        "typeVersion": 1
+      },
+      {
+        "id": "silver-read-0b17d0b8",
+        "name": "Get latest SILVER rows",
+        "credentials": {
+          "supabaseApi": {
+            "id": "trM35g1QCTOgQp4K",
+            "name": "Supabase account"
+          }
+        },
+        "type": "n8n-nodes-base.supabase",
+        "position": [
+          200,
+          400
+        ],
+        "parameters": {
+          "tableId": "agent_outputs",
+          "operation": "getAll",
+          "limit": 20,
+          "orderBy": "created_at.desc",
+          "matchType": "allFilters",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "agent_name",
+                "condition": "eq",
+                "keyValue": "SILVER"
+              },
+              {
+                "keyName": "layer",
+                "condition": "eq",
+                "keyValue": "1"
+              }
+            ]
+          }
+        },
+        "typeVersion": 1
+      },
+      {
+        "name": "Get latest GBP rows",
+        "credentials": {
+          "supabaseApi": {
+            "id": "trM35g1QCTOgQp4K",
+            "name": "Supabase account"
+          }
+        },
+        "type": "n8n-nodes-base.supabase",
+        "position": [
+          200,
+          420
+        ],
+        "parameters": {
+          "tableId": "agent_outputs",
+          "operation": "getAll",
+          "limit": 20,
+          "orderBy": "created_at.desc",
+          "matchType": "allFilters",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "agent_name",
+                "condition": "eq",
+                "keyValue": "GBP"
+              },
+              {
+                "keyName": "layer",
+                "condition": "eq",
+                "keyValue": "1"
+              }
+            ]
+          }
+        },
+        "typeVersion": 1,
+        "id": "e55c1026-7f3c-414a-8177-756cbfa47db9"
+      },
+      {
+        "parameters": {
+          "mode": "append"
+        },
+        "type": "n8n-nodes-base.merge",
+        "typeVersion": 3,
+        "position": [
+          420,
+          400
+        ],
+        "id": "merge-l2-f78c194c",
+        "name": "Merge L2 EUR"
+      },
+      {
+        "parameters": {
+          "mode": "append"
+        },
+        "type": "n8n-nodes-base.merge",
+        "typeVersion": 3,
+        "position": [
+          510,
+          400
+        ],
+        "id": "merge-l2-53f6d35a",
+        "name": "Merge L2 GOLD"
+      },
+      {
+        "parameters": {
+          "mode": "append"
+        },
+        "type": "n8n-nodes-base.merge",
+        "typeVersion": 3,
+        "position": [
+          600,
+          400
+        ],
+        "id": "merge-l2-9138ed4c",
+        "name": "Merge L2 NQ"
+      },
+      {
+        "parameters": {
+          "mode": "append"
+        },
+        "type": "n8n-nodes-base.merge",
+        "typeVersion": 3,
+        "position": [
+          690,
+          400
+        ],
+        "id": "merge-l2-9b37db35",
+        "name": "Merge L2 BTC"
+      },
+      {
+        "parameters": {
+          "mode": "append"
+        },
+        "type": "n8n-nodes-base.merge",
+        "typeVersion": 3,
+        "position": [
+          780,
+          400
+        ],
+        "id": "merge-l2-26f0b5c6",
+        "name": "Merge L2 WTI"
+      },
+      {
+        "parameters": {
+          "mode": "append"
+        },
+        "type": "n8n-nodes-base.merge",
+        "typeVersion": 3,
+        "position": [
+          870,
+          400
+        ],
+        "id": "merge-l2-2f96f64a",
+        "name": "Merge L2 SILVER"
+      },
+      {
+        "parameters": {
+          "mode": "append"
+        },
+        "type": "n8n-nodes-base.merge",
+        "typeVersion": 3,
+        "position": [
+          960,
+          400
+        ],
+        "id": "merge-l2-ef76e57a",
+        "name": "Merge L2 GBP"
+      }
+    ],
+    "connections": {
+      "When Executed by Another Workflow": {
+        "main": [
+          [
+            {
+              "node": "Get latest USD rows",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Get latest EUR rows",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Get latest GOLD rows",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Get latest NQ rows",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Get latest BTC rows",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Get latest WTI rows",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Get latest SILVER rows",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Get latest GBP rows",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get latest USD rows": {
+        "main": [
+          [
+            {
+              "node": "Merge L2 EUR",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get latest EUR rows": {
+        "main": [
+          [
+            {
+              "node": "Merge L2 EUR",
+              "type": "main",
+              "index": 1
+            }
+          ]
+        ]
+      },
+      "Merge L2 EUR": {
+        "main": [
+          [
+            {
+              "node": "Merge L2 GOLD",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get latest GOLD rows": {
+        "main": [
+          [
+            {
+              "node": "Merge L2 GOLD",
+              "type": "main",
+              "index": 1
+            }
+          ]
+        ]
+      },
+      "Merge L2 GOLD": {
+        "main": [
+          [
+            {
+              "node": "Merge L2 NQ",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get latest NQ rows": {
+        "main": [
+          [
+            {
+              "node": "Merge L2 NQ",
+              "type": "main",
+              "index": 1
+            }
+          ]
+        ]
+      },
+      "Merge L2 NQ": {
+        "main": [
+          [
+            {
+              "node": "Merge L2 BTC",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get latest BTC rows": {
+        "main": [
+          [
+            {
+              "node": "Merge L2 BTC",
+              "type": "main",
+              "index": 1
+            }
+          ]
+        ]
+      },
+      "Merge L2 BTC": {
+        "main": [
+          [
+            {
+              "node": "Merge L2 WTI",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get latest WTI rows": {
+        "main": [
+          [
+            {
+              "node": "Merge L2 WTI",
+              "type": "main",
+              "index": 1
+            }
+          ]
+        ]
+      },
+      "Merge L2 WTI": {
+        "main": [
+          [
+            {
+              "node": "Merge L2 SILVER",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get latest SILVER rows": {
+        "main": [
+          [
+            {
+              "node": "Merge L2 SILVER",
+              "type": "main",
+              "index": 1
+            }
+          ]
+        ]
+      },
+      "Merge L2 SILVER": {
+        "main": [
+          [
+            {
+              "node": "Merge L2 GBP",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get latest GBP rows": {
+        "main": [
+          [
+            {
+              "node": "Merge L2 GBP",
+              "type": "main",
+              "index": 1
+            }
+          ]
+        ]
+      },
+      "Merge L2 GBP": {
+        "main": [
+          [
+            {
+              "node": "Build Layer 2 Trade Selection JSON",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Build Layer 2 Trade Selection JSON": {
+        "main": [
+          [
+            {
+              "node": "Write data/layer2.json to GitHub",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "nodeGroups": [],
+    "authors": "Daniel Silver",
+    "name": null,
+    "description": null,
+    "autosaved": false,
+    "createdAt": "2026-09-12T19:36:46.423Z",
+    "updatedAt": "2026-09-12T19:36:46.423Z",
+    "workflowPublishHistory": [
+      {
+        "id": 386,
+        "workflowId": "ZKGSuYcWb6EfgXBE",
+        "versionId": "305a3ce0-57bb-43ce-b77d-63bde96417d2",
+        "event": "activated",
+        "userId": "eb4fba3e-5170-481b-abc5-ce65776c1113",
+        "createdAt": "2026-09-12T19:36:46.686Z"
+      }
+    ]
+  }
+}

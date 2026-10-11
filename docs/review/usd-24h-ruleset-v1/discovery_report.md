@@ -183,3 +183,26 @@ Not completed, with the reason:
 This report is discovery only. It makes no claim about live deployment identity, causal feature timing or trading
 edge, and no production logic was modified.
 
+## 9. Update, 2026-10-11 (same session): the scoped export was authorised and the harness was built
+
+The user authorised the scoped read-only n8n export and asked for the export first, then the
+export-versus-replay harness, with `-065`/`-066` left queued. Result in
+`live_export_and_harness_report.md`, evidence in `live_export_identity.json` and `live-exports/`.
+
+- Open decision 1 is answered for USD: `USD Layer 1 Agent` (`OCt1tB9yVMUgFTha`, v154, active) runs
+  code nodes byte-identical to `exports/usd_layer1_agent.json` (export `2026-10-11T18:59:54.307Z`).
+- The SILVER chain is now traceable live (`Silver Collector` `xezFmvm7cmgNNypb` v10 → `SILVER Layer 1
+  Agent` `6IGOoTZxxTPyBpEp` v9, both called by the master orchestrator) but still has no repository
+  export. WTI has a live agent (`8oUBopUWLiGcYU0d` v5) and no live collector at all.
+- Claims C1–C12 are unchanged and now additionally reproduced by execution: the live 24h weight vector,
+  the overwritten model verdict, F7 without event ageing and F8 without change detection are asserted in
+  `backtester/tests/usd_live_replay_harness.test.js`.
+- New finding not visible from the repository alone: the live collector URLs still embed literal API keys
+  (355 values across 17 workflows), so the repo-side `{{ $env.* }}` sanitization does not describe the
+  running workflows.
+- New finding from the harness: the live deterministic node's local `n()` maps `null` to `0`, so a missing
+  level input (for example `vix_level`) is scored as a real zero and casts a directional vote instead of
+  being reported as missing; the replay implementation reports it as missing.
+- Open decision 1's remaining part, the outcome/label contract behind
+  `backtester-checker-usd-24h-2024-01.json`, is still UNKNOWN and untouched.
+

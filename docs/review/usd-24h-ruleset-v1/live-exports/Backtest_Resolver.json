@@ -1,0 +1,739 @@
+{
+  "id": "S7UkIcOx1SneGaZZ",
+  "name": "Backtest Resolver",
+  "description": null,
+  "active": false,
+  "activeVersionId": null,
+  "createdAt": "2026-05-13T19:05:50.354Z",
+  "updatedAt": "2026-05-14T09:47:43.250Z",
+  "isArchived": false,
+  "versionId": "dd84278d-744f-4955-aa7e-d56dbb4e4a9c",
+  "versionCounter": 197,
+  "sourceWorkflowId": null,
+  "triggerCount": 0,
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "819a9139-4344-478d-9bd2-1ac2b9f7dda2",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "url": "https://apoockcbbtghnkuypdvh.supabase.co/rest/v1/backtest_calls",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "status",
+              "value": "eq.OPEN"
+            },
+            {
+              "name": "direction",
+              "value": "neq.NO TRADE"
+            },
+            {
+              "name": "select",
+              "value": "*"
+            },
+            {
+              "name": "limit",
+              "value": "500"
+            },
+            {
+              "name": "resolution_date",
+              "value": "=lte.{{ new Date().toISOString().split('T')[0] }}"
+            },
+            {
+              "name": "order",
+              "value": "resolution_date.asc"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "<redacted>"
+            },
+            {
+              "name": "Authorization",
+              "value": "<redacted>"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        208,
+        0
+      ],
+      "id": "9cd18c24-8394-48d0-a74b-9f42eeff9c65",
+      "name": "HTTP Request | Fetch Completed Calls"
+    },
+    {
+      "parameters": {
+        "jsCode": "const calls = $input.all().map(item => item.json);\n\n// Group calls by resolution date\nconst dateGroups = {};\ncalls.forEach(call => {\n  const date = call.resolution_date;\n  if (!dateGroups[date]) dateGroups[date] = [];\n  dateGroups[date].push(call);\n});\n\n// Return one item per unique resolution date\nreturn Object.keys(dateGroups).map(date => ({\n  json: {\n    resolution_date: date,\n    calls: dateGroups[date]\n  }\n}));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        400,
+        0
+      ],
+      "id": "3d51ba57-e300-4f6c-9007-bade87901be0",
+      "name": "Code | Group by Resolution Date"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        608,
+        0
+      ],
+      "id": "d580dd29-85d0-45d4-8f2c-a7e7d9643001",
+      "name": "Loop Over Items | Split in Batches"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: { date: $('Loop Over Items | Split in Batches').first().json.resolution_date } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        944,
+        -352
+      ],
+      "id": "412070ac-7859-4c9d-9e49-13455e2d528f",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "url": "https://api.stlouisfed.org/fred/series/observations",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "series_id",
+              "value": "DEXUSEU"
+            },
+            {
+              "name": "sort_order",
+              "value": "desc"
+            },
+            {
+              "name": "limit",
+              "value": "5"
+            },
+            {
+              "name": "file_type",
+              "value": "json"
+            },
+            {
+              "name": "api_key",
+              "value": "<redacted>"
+            },
+            {
+              "name": "observation_end",
+              "value": "={{ $('Loop Over Items | Split in Batches').first().json.resolution_date }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1488,
+        -480
+      ],
+      "id": "2f2f67dc-9009-40d5-b78e-2d71e98a9bdc",
+      "name": "HTTP Request | Res EUR/USD - FRED"
+    },
+    {
+      "parameters": {
+        "url": "https://api.stlouisfed.org/fred/series/observations",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "series_id",
+              "value": "DEXUSUK"
+            },
+            {
+              "name": "sort_order",
+              "value": "desc"
+            },
+            {
+              "name": "limit",
+              "value": "5"
+            },
+            {
+              "name": "file_type",
+              "value": "json"
+            },
+            {
+              "name": "api_key",
+              "value": "<redacted>"
+            },
+            {
+              "name": "observation_end",
+              "value": "={{ $('Loop Over Items | Split in Batches').first().json.resolution_date }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1712,
+        -480
+      ],
+      "id": "2eaa781a-f328-41dc-a02e-edf1a7ca4079",
+      "name": "HTTP Request | Res GBP/USD - FRED"
+    },
+    {
+      "parameters": {
+        "url": "https://api.stlouisfed.org/fred/series/observations",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "series_id",
+              "value": "DEXJPUS"
+            },
+            {
+              "name": "sort_order",
+              "value": "desc"
+            },
+            {
+              "name": "limit",
+              "value": "5"
+            },
+            {
+              "name": "file_type",
+              "value": "json"
+            },
+            {
+              "name": "api_key",
+              "value": "<redacted>"
+            },
+            {
+              "name": "observation_end",
+              "value": "={{ $('Loop Over Items | Split in Batches').first().json.resolution_date }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2336,
+        -480
+      ],
+      "id": "45c88164-ca55-4045-ad33-d117702b80bc",
+      "name": "HTTP Request | Res USD/JPY - FRED"
+    },
+    {
+      "parameters": {
+        "url": "https://api.stlouisfed.org/fred/series/observations",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "series_id",
+              "value": "DEXCAUS"
+            },
+            {
+              "name": "sort_order",
+              "value": "desc"
+            },
+            {
+              "name": "limit",
+              "value": "5"
+            },
+            {
+              "name": "file_type",
+              "value": "json"
+            },
+            {
+              "name": "api_key",
+              "value": "<redacted>"
+            },
+            {
+              "name": "observation_end",
+              "value": "={{ $('Loop Over Items | Split in Batches').first().json.resolution_date }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1920,
+        -480
+      ],
+      "id": "eb06a717-db9d-49da-a7d8-6568ef830e37",
+      "name": "HTTP Request | Res USD/CAD - FRED"
+    },
+    {
+      "parameters": {
+        "url": "https://api.stlouisfed.org/fred/series/observations",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "series_id",
+              "value": "DEXUSAL"
+            },
+            {
+              "name": "sort_order",
+              "value": "desc"
+            },
+            {
+              "name": "limit",
+              "value": "5"
+            },
+            {
+              "name": "file_type",
+              "value": "json"
+            },
+            {
+              "name": "api_key",
+              "value": "<redacted>"
+            },
+            {
+              "name": "observation_end",
+              "value": "={{ $('Loop Over Items | Split in Batches').first().json.resolution_date }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2128,
+        -480
+      ],
+      "id": "be118e4b-84f1-4ede-80b3-6b79a82cfb92",
+      "name": "HTTP Request | Res AUD/USD - FRED"
+    },
+    {
+      "parameters": {
+        "url": "https://api.stlouisfed.org/fred/series/observations",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "series_id",
+              "value": "DCOILWTICO"
+            },
+            {
+              "name": "sort_order",
+              "value": "desc"
+            },
+            {
+              "name": "limit",
+              "value": "5"
+            },
+            {
+              "name": "file_type",
+              "value": "json"
+            },
+            {
+              "name": "api_key",
+              "value": "<redacted>"
+            },
+            {
+              "name": "observation_end",
+              "value": "={{ $('Loop Over Items | Split in Batches').first().json.resolution_date }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1504,
+        -224
+      ],
+      "id": "b561787e-1893-4884-aed6-0f59a7ef504d",
+      "name": "HTTP Request | Res WTI - FRED"
+    },
+    {
+      "parameters": {
+        "url": "https://www.alphavantage.co/query",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "function",
+              "value": "TIME_SERIES_DAILY"
+            },
+            {
+              "name": "symbol",
+              "value": "GLD"
+            },
+            {
+              "name": "outputsize",
+              "value": "compact"
+            },
+            {
+              "name": "apikey",
+              "value": "<redacted>"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1712,
+        -224
+      ],
+      "id": "3cf6d73a-7dec-47f1-b58b-fb19f107c81a",
+      "name": "HTTP Request | Res Gold - Vantage"
+    },
+    {
+      "parameters": {
+        "url": "https://api.coingecko.com/api/v3/coins/bitcoin/history",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "localization",
+              "value": "false"
+            },
+            {
+              "name": "date",
+              "value": "={{ (() => { const d = new Date($('Loop Over Items | Split in Batches').first().json.resolution_date); return String(d.getDate()).padStart(2,'0') + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + d.getFullYear(); })() }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1920,
+        -224
+      ],
+      "id": "ba89ed38-b26a-4f35-b965-2a2de2c22537",
+      "name": "HTTP Request | Res BTC - CoinGecko"
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $('Loop Over Items | Split in Batches').first().json;\nconst resolutionDate = item.resolution_date;\n\n// Fetch exit prices from market_prices table\nconst pricesArray = $('HTTP Request | Fetch Resolution Prices from DB').all().map(i => i.json);\n\nconst priceMap = {};\npricesArray.forEach(row => {\n  if (!priceMap[row.market]) {\n    priceMap[row.market] = parseFloat(row.close_price);\n  }\n});\n\nconst resolved = item.calls.map(call => {\n  const exitPrice = priceMap[call.market] || null;\n  const entryPrice = call.entry_price;\n\n  let status = 'UNRESOLVED';\n  let pctChange = null;\n\n  if (entryPrice && exitPrice) {\n    pctChange = (exitPrice - entryPrice) / entryPrice;\n    const threshold = call.market === 'BTC/USD' ? 0.005 : 0.001;\n\n    if (call.direction === 'LONG') {\n      status = pctChange > threshold ? 'HIT' : pctChange < -threshold ? 'MISS' : 'SCRATCH';\n    } else if (call.direction === 'SHORT') {\n      status = pctChange < -threshold ? 'HIT' : pctChange > threshold ? 'MISS' : 'SCRATCH';\n    }\n  }\n\n  return {\n    id: call.id,\n    exit_price: exitPrice,\n    status,\n    pct_change: pctChange ? parseFloat((pctChange * 100).toFixed(4)) : null\n  };\n});\n\nreturn resolved.map(r => ({ json: r }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        896,
+        320
+      ],
+      "id": "209f2f15-2ec3-4b1e-b3f3-aa01b8f7cad4",
+      "name": "Code | Resolve Calls"
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "https://apoockcbbtghnkuypdvh.supabase.co/rest/v1/backtest_calls",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "id",
+              "value": "=eq.{{ $json.id }}"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "apikey",
+              "value": "<redacted>"
+            },
+            {
+              "name": "Authorization",
+              "value": "<redacted>"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"exit_price\": $json.exit_price, \"status\": $json.status, \"pct_change\": $json.pct_change } }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1056,
+        320
+      ],
+      "id": "33be1851-f577-43f3-a15c-dbc878d21d1c",
+      "name": "HTTP Request | BT Update Call Status"
+    },
+    {
+      "parameters": {
+        "url": "https://apoockcbbtghnkuypdvh.supabase.co/rest/v1/market_prices",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "price_date",
+              "value": "=lte.{{ $('Loop Over Items | Split in Batches').first().json.resolution_date }}"
+            },
+            {
+              "name": "order",
+              "value": "price_date.desc"
+            },
+            {
+              "name": "limit",
+              "value": "800"
+            },
+            {
+              "name": "select",
+              "value": "market,close_price,price_date"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "<redacted>"
+            },
+            {
+              "name": "Authorization",
+              "value": "<redacted>"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        736,
+        320
+      ],
+      "id": "4fe1a9f2-fbda-4638-ab4c-1c9e99280fd1",
+      "name": "HTTP Request | Fetch Resolution Prices from DB"
+    }
+  ],
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request | Fetch Completed Calls",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request | Fetch Completed Calls": {
+      "main": [
+        [
+          {
+            "node": "Code | Group by Resolution Date",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Group by Resolution Date": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items | Split in Batches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items | Split in Batches": {
+      "main": [
+        [],
+        [
+          {
+            "node": "HTTP Request | Fetch Resolution Prices from DB",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request | Res EUR/USD - FRED": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request | Res GBP/USD - FRED",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request | Res GBP/USD - FRED": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request | Res USD/CAD - FRED",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request | Res USD/CAD - FRED": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request | Res AUD/USD - FRED",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request | Res AUD/USD - FRED": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request | Res USD/JPY - FRED",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request | Res USD/JPY - FRED": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request | Res WTI - FRED",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request | Res WTI - FRED": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request | Res Gold - Vantage",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request | Res Gold - Vantage": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request | Res BTC - CoinGecko",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request | Res BTC - CoinGecko": {
+      "main": [
+        []
+      ]
+    },
+    "Code | Resolve Calls": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request | BT Update Call Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request | BT Update Call Status": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items | Split in Batches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request | Fetch Resolution Prices from DB": {
+      "main": [
+        [
+          {
+            "node": "Code | Resolve Calls",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "nodeGroups": [],
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "pinData": {},
+  "meta": null,
+  "tags": [],
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "S7UkIcOx1SneGaZZ",
+      "projectId": "ISQG9XU7TGTT6Fcu",
+      "project": {
+        "id": "ISQG9XU7TGTT6Fcu",
+        "name": "Daniel Silver <a17@live.co.uk>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "customTelemetryTags": [],
+        "creatorId": "eb4fba3e-5170-481b-abc5-ce65776c1113",
+        "createdAt": "2026-04-29T19:10:11.212Z",
+        "updatedAt": "2026-04-29T19:10:21.640Z"
+      },
+      "createdAt": "2026-05-13T19:05:50.356Z",
+      "updatedAt": "2026-05-13T19:05:50.356Z"
+    }
+  ],
+  "activeVersion": null
+}

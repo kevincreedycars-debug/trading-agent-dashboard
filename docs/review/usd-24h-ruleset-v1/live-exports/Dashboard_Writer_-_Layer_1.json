@@ -1,0 +1,1438 @@
+{
+  "id": "850DrjzCKKX9fDzD",
+  "name": "Dashboard Writer - Layer 1",
+  "description": null,
+  "active": true,
+  "activeVersionId": "8c5bd16c-d0ac-49e7-86b8-5eccb4a63f4c",
+  "createdAt": "2026-06-06T17:08:37.617Z",
+  "updatedAt": "2026-09-19T14:39:28.326Z",
+  "isArchived": false,
+  "versionId": "8c5bd16c-d0ac-49e7-86b8-5eccb4a63f4c",
+  "versionCounter": 56,
+  "sourceWorkflowId": null,
+  "triggerCount": 0,
+  "nodes": [
+    {
+      "id": "3977db9f-962a-4380-bc0e-b1838e3d6b30",
+      "name": "Build Layer 1 JSON",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        416,
+        0
+      ],
+      "parameters": {
+        "jsCode": "(function (root, factory) {\n  const api = factory();\n\n  if (typeof module === \"object\" && module.exports) {\n    module.exports = api;\n  }\n\n  if (root) {\n    root.LiveCallValidity = api;\n  }\n})(typeof globalThis !== \"undefined\" ? globalThis : this, function () {\n  const SOURCE_TIMEZONE = \"America/New_York\";\n  const DISPLAY_TIMEZONE = \"Europe/London\";\n  const DEFAULT_REFRESH_SCHEDULE = \"07:00\";\n  const DEFAULT_EXECUTION_CLOCK = \"07:00 ET primary run\";\n  const DEFAULT_HORIZON_DURATION = \"PT24H\";\n  const DEFAULT_PROVISIONAL_REFRESH_NOTE = \"No authoritative orchestrator cron exists in the repository\";\n  const DEFAULT_HORIZON_NOTE = \"Weekday-active-time V1 excludes weekend-closed hours only. Exchange holidays and intraday maintenance breaks are not yet modelled.\";\n  const WEEKDAY_ACTIVE_MARKET_CALENDAR = \"WEEKDAY_ACTIVE_TIME_V1\";\n  const CRYPTO_MARKET_CALENDAR = \"CRYPTO_24_7\";\n  const WEEKEND_BLOCKED_ASSETS = new Set([\"USD\", \"EUR\", \"GBP\", \"GOLD\", \"SILVER\", \"WTI\", \"NQ\", \"XAU\", \"XAG\"]);\n  const EXPLICIT_NO_CALL_DIRECTIONS = new Set([\"NO CALL\", \"NO 24H CALL\"]);\n\n  function parseIso(value) {\n    if (!value) return null;\n    const date = value instanceof Date ? value : new Date(value);\n    return Number.isNaN(date.getTime()) ? null : date;\n  }\n\n  function firstPresentValue(...values) {\n    for (const value of values) {\n      if (value !== null && value !== undefined && value !== \"\") {\n        return value;\n      }\n    }\n    return null;\n  }\n\n  function parseExecutionClockLabel(label = DEFAULT_EXECUTION_CLOCK) {\n    const match = String(label || \"\").match(/(\\d{1,2}):(\\d{2})\\s*ET/i);\n    return {\n      hour: match ? Number(match[1]) : 7,\n      minute: match ? Number(match[2]) : 0\n    };\n  }\n\n  function getZonedParts(date, timeZone) {\n    const formatter = new Intl.DateTimeFormat(\"en-CA\", {\n      timeZone,\n      year: \"numeric\",\n      month: \"2-digit\",\n      day: \"2-digit\",\n      hour: \"2-digit\",\n      minute: \"2-digit\",\n      second: \"2-digit\",\n      hour12: false\n    });\n    const parts = formatter.formatToParts(date);\n    const lookup = Object.fromEntries(parts.map((part) => [part.type, part.value]));\n    return {\n      year: Number(lookup.year),\n      month: Number(lookup.month),\n      day: Number(lookup.day),\n      hour: Number(lookup.hour),\n      minute: Number(lookup.minute),\n      second: Number(lookup.second)\n    };\n  }\n\n  function zonedWeekdayName(date, timeZone = SOURCE_TIMEZONE) {\n    const parsed = parseIso(date);\n    if (!parsed) return \"\";\n    return parsed.toLocaleDateString(\"en-US\", {\n      timeZone,\n      weekday: \"long\"\n    });\n  }\n\n  function zonedWeekdayIndex(date, timeZone = SOURCE_TIMEZONE) {\n    const weekday = zonedWeekdayName(date, timeZone);\n    return {\n      Sunday: 0,\n      Monday: 1,\n      Tuesday: 2,\n      Wednesday: 3,\n      Thursday: 4,\n      Friday: 5,\n      Saturday: 6\n    }[weekday] ?? -1;\n  }\n\n  function isWeekendInTimeZone(date, timeZone = SOURCE_TIMEZONE) {\n    const weekdayIndex = zonedWeekdayIndex(date, timeZone);\n    return weekdayIndex === 0 || weekdayIndex === 6;\n  }\n\n  function parseOffsetMinutes(offsetLabel) {\n    const match = String(offsetLabel || \"\").match(/GMT([+-])(\\d{1,2})(?::?(\\d{2}))?/i);\n    if (!match) return 0;\n    const sign = match[1] === \"-\" ? -1 : 1;\n    const hours = Number(match[2] || 0);\n    const minutes = Number(match[3] || 0);\n    return sign * ((hours * 60) + minutes);\n  }\n\n  function getOffsetMinutes(date, timeZone) {\n    const formatter = new Intl.DateTimeFormat(\"en-US\", {\n      timeZone,\n      hour: \"2-digit\",\n      minute: \"2-digit\",\n      timeZoneName: \"shortOffset\",\n      hour12: false\n    });\n    const offsetPart = formatter.formatToParts(date).find((part) => part.type === \"timeZoneName\");\n    return parseOffsetMinutes(offsetPart?.value || \"GMT+0\");\n  }\n\n  function zonedDateTimeToUtc(parts, timeZone) {\n    let utcMs = Date.UTC(parts.year, parts.month - 1, parts.day, parts.hour, parts.minute, parts.second || 0, 0);\n\n    for (let i = 0; i < 4; i += 1) {\n      const offsetMinutes = getOffsetMinutes(new Date(utcMs), timeZone);\n      const adjustedUtcMs = Date.UTC(\n        parts.year,\n        parts.month - 1,\n        parts.day,\n        parts.hour,\n        parts.minute,\n        parts.second || 0,\n        0\n      ) - (offsetMinutes * 60000);\n\n      if (adjustedUtcMs === utcMs) break;\n      utcMs = adjustedUtcMs;\n    }\n\n    return new Date(utcMs);\n  }\n\n  function addZonedDays(parts, days) {\n    const utcDate = new Date(Date.UTC(parts.year, parts.month - 1, parts.day));\n    utcDate.setUTCDate(utcDate.getUTCDate() + days);\n    return {\n      year: utcDate.getUTCFullYear(),\n      month: utcDate.getUTCMonth() + 1,\n      day: utcDate.getUTCDate()\n    };\n  }\n\n  function computeNextRefreshDueAt(sealedAtValue, executionClockLabel = DEFAULT_EXECUTION_CLOCK, timeZone = SOURCE_TIMEZONE) {\n    const sealedAt = parseIso(sealedAtValue);\n    if (!sealedAt) return null;\n\n    const executionClock = parseExecutionClockLabel(executionClockLabel);\n    const sealedParts = getZonedParts(sealedAt, timeZone);\n    let dueParts = {\n      year: sealedParts.year,\n      month: sealedParts.month,\n      day: sealedParts.day,\n      hour: executionClock.hour,\n      minute: executionClock.minute,\n      second: 0\n    };\n    let dueAt = zonedDateTimeToUtc(dueParts, timeZone);\n\n    if (dueAt.getTime() <= sealedAt.getTime()) {\n      const nextDay = addZonedDays(sealedParts, 1);\n      dueParts = {\n        ...nextDay,\n        hour: executionClock.hour,\n        minute: executionClock.minute,\n        second: 0\n      };\n      dueAt = zonedDateTimeToUtc(dueParts, timeZone);\n    }\n\n    return dueAt.toISOString();\n  }\n\n  function isWeekendBlockedAsset(asset = \"\") {\n    return WEEKEND_BLOCKED_ASSETS.has(String(asset || \"\").toUpperCase());\n  }\n\n  function assetUsesWeekdayActiveExpiry(asset = \"\") {\n    return isWeekendBlockedAsset(asset);\n  }\n\n  function assetHorizonBasis(asset = \"\") {\n    return assetUsesWeekdayActiveExpiry(asset) ? \"WEEKDAY_ACTIVE_TIME_V1\" : \"WALL_CLOCK\";\n  }\n\n  function assetMarketCalendar(asset = \"\") {\n    return assetUsesWeekdayActiveExpiry(asset) ? WEEKDAY_ACTIVE_MARKET_CALENDAR : CRYPTO_MARKET_CALENDAR;\n  }\n\n  function normalizeDirection(direction = \"\") {\n    return String(direction || \"\").trim().toUpperCase();\n  }\n\n  function isExplicitNoCallDirection(direction = \"\") {\n    return EXPLICIT_NO_CALL_DIRECTIONS.has(normalizeDirection(direction));\n  }\n\n  function isPendingDirection(direction = \"\") {\n    return normalizeDirection(direction) === \"PENDING\" || normalizeDirection(direction) === \"\";\n  }\n\n  function isNoCallDirection(direction = \"\") {\n    return isExplicitNoCallDirection(direction) || isPendingDirection(direction);\n  }\n\n  function chooseSealedAt(agent = {}) {\n    return agent.sealed_at || agent.full_output?.created_at || agent.last_run_et || agent.created_at || null;\n  }\n\n  function chooseGeneratedAt(agent = {}) {\n    return agent.generated_at || agent.last_run_et || chooseSealedAt(agent);\n  }\n\n  function chooseSourceRunId(agent = {}) {\n    return agent.source_run_id || agent.full_output?.source_run_id || agent.full_output?.execution_id || agent.full_output?.workflow_execution_id || null;\n  }\n\n  function provisionalScheduleMetadata(dashboardMeta = {}) {\n    const clock = parseExecutionClockLabel(dashboardMeta.execution_clock || DEFAULT_EXECUTION_CLOCK);\n    const refreshSchedule = `${String(clock.hour).padStart(2, \"0\")}:${String(clock.minute).padStart(2, \"0\")}`;\n    return {\n      refresh_schedule: dashboardMeta.refresh_schedule || refreshSchedule || DEFAULT_REFRESH_SCHEDULE,\n      refresh_timezone: dashboardMeta.refresh_timezone || SOURCE_TIMEZONE,\n      refresh_schedule_status: dashboardMeta.refresh_schedule_status || \"PROVISIONAL\",\n      validity_schedule_source: dashboardMeta.validity_schedule_source || \"dashboard_meta.execution_clock\",\n      validity_schedule_note: dashboardMeta.validity_schedule_note || DEFAULT_PROVISIONAL_REFRESH_NOTE\n    };\n  }\n\n  function nextWeekdayOpenFrom(value, timeZone = SOURCE_TIMEZONE) {\n    const current = parseIso(value);\n    if (!current) return null;\n\n    const currentParts = getZonedParts(current, timeZone);\n    const weekdayIndex = zonedWeekdayIndex(current, timeZone);\n    let daysToAdd = 0;\n\n    if (weekdayIndex === 6) {\n      daysToAdd = 2;\n    } else if (weekdayIndex === 0) {\n      daysToAdd = 1;\n    } else {\n      return current;\n    }\n\n    const nextDay = addZonedDays(currentParts, daysToAdd);\n    return zonedDateTimeToUtc({\n      ...nextDay,\n      hour: 0,\n      minute: 0,\n      second: 0\n    }, timeZone);\n  }\n\n  function weekendStartFromWeekday(value, timeZone = SOURCE_TIMEZONE) {\n    const current = parseIso(value);\n    if (!current) return null;\n    const currentParts = getZonedParts(current, timeZone);\n    const weekdayIndex = zonedWeekdayIndex(current, timeZone);\n    if (weekdayIndex < 1 || weekdayIndex > 5) return current;\n\n    const daysToSaturday = 6 - weekdayIndex;\n    const saturday = addZonedDays(currentParts, daysToSaturday);\n    return zonedDateTimeToUtc({\n      ...saturday,\n      hour: 0,\n      minute: 0,\n      second: 0\n    }, timeZone);\n  }\n\n  function computeWeekdayActiveForecastWindowEnd(sealedAtValue, activeDurationMs, timeZone = SOURCE_TIMEZONE) {\n    let cursor = parseIso(sealedAtValue);\n    if (!cursor) return null;\n\n    let remainingMs = activeDurationMs;\n\n    while (remainingMs > 0) {\n      if (isWeekendInTimeZone(cursor, timeZone)) {\n        cursor = nextWeekdayOpenFrom(cursor, timeZone);\n        continue;\n      }\n\n      const weekendStart = weekendStartFromWeekday(cursor, timeZone);\n      if (!weekendStart) return null;\n\n      const activeChunkMs = Math.min(remainingMs, weekendStart.getTime() - cursor.getTime());\n      cursor = new Date(cursor.getTime() + activeChunkMs);\n      remainingMs -= activeChunkMs;\n\n      if (remainingMs > 0) {\n        cursor = nextWeekdayOpenFrom(weekendStart, timeZone);\n      }\n    }\n\n    return cursor.toISOString();\n  }\n\n  function computeForecastWindowEnd(sealedAtValue, asset = \"\", horizonDuration = DEFAULT_HORIZON_DURATION) {\n    const sealedAt = parseIso(sealedAtValue);\n    if (!sealedAt) return null;\n\n    if (horizonDuration !== DEFAULT_HORIZON_DURATION) return null;\n\n    if (!assetUsesWeekdayActiveExpiry(asset)) {\n      return new Date(sealedAt.getTime() + (24 * 60 * 60 * 1000)).toISOString();\n    }\n\n    return computeWeekdayActiveForecastWindowEnd(sealedAt, 24 * 60 * 60 * 1000, SOURCE_TIMEZONE);\n  }\n\n  function deriveLayer1StatusAtBuild(agent = {}, dashboardMeta = {}) {\n    const priorityCall = agent.priority_call || agent.calls?.[\"24h\"] || {};\n    const direction = priorityCall.direction;\n    const sealedAt = chooseSealedAt(agent);\n    const statusAtBuild = String(agent.status_at_build || priorityCall.status_at_build || \"\").toUpperCase();\n\n    if (statusAtBuild) return statusAtBuild;\n    if (!sealedAt || isPendingDirection(direction)) return \"UNAVAILABLE\";\n    if (isWeekendBlockedAsset(agent.agent) && isWeekendInTimeZone(sealedAt, SOURCE_TIMEZONE) && isExplicitNoCallDirection(direction)) {\n      return \"MARKET_CLOSED\";\n    }\n    if (isExplicitNoCallDirection(direction)) return \"NO_CALL\";\n    return \"ACTIVE\";\n  }\n\n  function buildLayer1Timing(agent = {}, dashboardMeta = {}) {\n    const executionClock = dashboardMeta.execution_clock || DEFAULT_EXECUTION_CLOCK;\n    const scheduleMeta = provisionalScheduleMetadata(dashboardMeta);\n    const generatedAt = chooseGeneratedAt(agent);\n    const sealedAt = chooseSealedAt(agent);\n    const validFrom = agent.valid_from || sealedAt;\n    const refreshDueAt = agent.refresh_due_at || computeNextRefreshDueAt(validFrom || sealedAt, executionClock, SOURCE_TIMEZONE);\n    const priorityCall = agent.priority_call || agent.calls?.[\"24h\"] || {};\n    const horizonCode = agent.horizon_code || priorityCall.horizon_code || \"24H\";\n    const horizonDuration = agent.horizon_duration || priorityCall.horizon_duration || DEFAULT_HORIZON_DURATION;\n    const horizonBasis = agent.horizon_basis || priorityCall.horizon_basis || assetHorizonBasis(agent.agent);\n    const marketCalendar = agent.market_calendar || priorityCall.market_calendar || assetMarketCalendar(agent.agent);\n    const explicitForecastWindowEnd = firstPresentValue(\n      agent.forecast_window_end,\n      priorityCall.forecast_window_end,\n      agent.expires_at,\n      priorityCall.expires_at\n    );\n    const forecastWindowEnd = explicitForecastWindowEnd ?? computeForecastWindowEnd(validFrom || sealedAt, agent.agent, horizonDuration);\n    const statusAtBuild = deriveLayer1StatusAtBuild(agent, dashboardMeta);\n\n    return {\n      generated_at: generatedAt,\n      sealed_at: sealedAt,\n      valid_from: validFrom,\n      refresh_due_at: refreshDueAt,\n      forecast_window_end: forecastWindowEnd,\n      expires_at: forecastWindowEnd,\n      status_at_build: statusAtBuild,\n      effective_status: String(agent.effective_status || priorityCall.effective_status || statusAtBuild).toUpperCase(),\n      status_resolved_at: agent.status_resolved_at || priorityCall.status_resolved_at || null,\n      horizon_code: horizonCode,\n      horizon_duration: horizonDuration,\n      horizon_basis: horizonBasis,\n      timezone: agent.timezone || priorityCall.timezone || SOURCE_TIMEZONE,\n      market_calendar: marketCalendar,\n      source_run_id: chooseSourceRunId(agent),\n      validity_note: agent.validity_note || priorityCall.validity_note || \"Operational freshness uses a provisional refresh expectation only. Forecast expiry is explicit and separate from the provisional refresh threshold.\",\n      horizon_note: agent.horizon_note || priorityCall.horizon_note || (assetUsesWeekdayActiveExpiry(agent.agent) ? DEFAULT_HORIZON_NOTE : \"\"),\n      ...scheduleMeta\n    };\n  }\n\n  function requiresExplicitForecastExpiry(agent = {}, timing = {}, priorityCall = {}) {\n    const horizonCode = String(timing.horizon_code || priorityCall.horizon_code || \"\").toUpperCase();\n    const statusAtBuild = String(timing.status_at_build || priorityCall.status_at_build || \"\").toUpperCase();\n    const direction = priorityCall.direction;\n    return horizonCode === \"24H\"\n      && timing.horizon_duration === DEFAULT_HORIZON_DURATION\n      && !isPendingDirection(direction)\n      && !isExplicitNoCallDirection(direction)\n      && ![\"UNAVAILABLE\", \"MARKET_CLOSED\", \"SUPERSEDED\"].includes(statusAtBuild);\n  }\n\n  function assertValidExplicitLayer1Expiry(agent = {}, timing = {}, priorityCall = {}) {\n    if (!requiresExplicitForecastExpiry(agent, timing, priorityCall)) {\n      return;\n    }\n\n    const forecastWindowEnd = parseIso(timing.forecast_window_end);\n    if (!forecastWindowEnd) {\n      throw new Error(\n        `Unable to derive explicit 24H forecast expiry for ${agent.agent || \"UNKNOWN\"} `\n        + `(valid_from=${timing.valid_from || \"null\"}, sealed_at=${timing.sealed_at || \"null\"}, `\n        + `forecast_window_end=${timing.forecast_window_end ?? \"null\"})`\n      );\n    }\n\n    if (timing.expires_at !== timing.forecast_window_end) {\n      throw new Error(\n        `Explicit 24H expiry mismatch for ${agent.agent || \"UNKNOWN\"} `\n        + `(forecast_window_end=${timing.forecast_window_end ?? \"null\"}, expires_at=${timing.expires_at ?? \"null\"})`\n      );\n    }\n  }\n\n  function resolveLayer1DisplayStatus(agent = {}, dashboardMeta = {}, nowValue = new Date()) {\n    const timing = buildLayer1Timing(agent, dashboardMeta);\n    const priorityCall = agent.priority_call || agent.calls?.[\"24h\"] || {};\n    const now = parseIso(nowValue) || new Date();\n    const refreshDueAt = parseIso(timing.refresh_due_at);\n    const forecastWindowEnd = parseIso(timing.forecast_window_end);\n\n    if (!timing.sealed_at || isPendingDirection(priorityCall.direction)) return \"UNAVAILABLE\";\n    if (timing.status_at_build === \"SUPERSEDED\") return \"SUPERSEDED\";\n    if (timing.status_at_build === \"UNAVAILABLE\") return \"UNAVAILABLE\";\n\n    if (isWeekendBlockedAsset(agent.agent) && isWeekendInTimeZone(now, SOURCE_TIMEZONE) && isExplicitNoCallDirection(priorityCall.direction)) {\n      return \"MARKET_CLOSED\";\n    }\n\n    if (isExplicitNoCallDirection(priorityCall.direction)) return \"NO_CALL\";\n    if (forecastWindowEnd && now.getTime() >= forecastWindowEnd.getTime()) return \"EXPIRED\";\n    if (refreshDueAt && now.getTime() >= refreshDueAt.getTime()) return \"STALE\";\n    return \"ACTIVE\";\n  }\n\n  function buildLayer2Timing({ pairCode, pairLabel, targetLeg, usdLeg, nowValue = new Date() }) {\n    const targetAgent = targetLeg?.agent || null;\n    const usdAgent = usdLeg?.agent || null;\n    const now = parseIso(nowValue) || new Date();\n    const targetStatus = targetAgent ? resolveLayer1DisplayStatus(targetAgent, targetLeg.dashboardMeta, now) : \"UNAVAILABLE\";\n    const usdStatus = usdAgent ? resolveLayer1DisplayStatus(usdAgent, usdLeg.dashboardMeta, now) : \"UNAVAILABLE\";\n    const targetTiming = targetAgent ? buildLayer1Timing(targetAgent, targetLeg.dashboardMeta) : {};\n    const usdTiming = usdAgent ? buildLayer1Timing(usdAgent, usdLeg.dashboardMeta) : {};\n\n    const targetValidFrom = parseIso(targetTiming.valid_from);\n    const usdValidFrom = parseIso(usdTiming.valid_from);\n    const targetRefreshDueAt = parseIso(targetTiming.refresh_due_at);\n    const usdRefreshDueAt = parseIso(usdTiming.refresh_due_at);\n    const targetForecastEnd = parseIso(targetTiming.forecast_window_end);\n    const usdForecastEnd = parseIso(usdTiming.forecast_window_end);\n\n    const pairValidFrom = targetValidFrom && usdValidFrom\n      ? new Date(Math.max(targetValidFrom.getTime(), usdValidFrom.getTime())).toISOString()\n      : (targetValidFrom || usdValidFrom)?.toISOString() || null;\n    const pairRefreshDueAt = targetRefreshDueAt && usdRefreshDueAt\n      ? new Date(Math.min(targetRefreshDueAt.getTime(), usdRefreshDueAt.getTime())).toISOString()\n      : (targetRefreshDueAt || usdRefreshDueAt)?.toISOString() || null;\n    const pairForecastEnd = targetForecastEnd && usdForecastEnd\n      ? new Date(Math.min(targetForecastEnd.getTime(), usdForecastEnd.getTime())).toISOString()\n      : null;\n    const pairStartDate = parseIso(pairValidFrom);\n    const pairEndDate = parseIso(pairForecastEnd);\n    const forecastWindowsOverlap = Boolean(pairStartDate && pairEndDate && pairStartDate.getTime() < pairEndDate.getTime());\n\n    let effectiveStatus = \"ACTIVE\";\n    let statusAtBuild = \"ACTIVE\";\n    let reason = null;\n\n    if (!targetAgent || !usdAgent) {\n      effectiveStatus = \"UNAVAILABLE\";\n      statusAtBuild = \"UNAVAILABLE\";\n      reason = \"Missing supporting Layer 1 leg\";\n    } else if (!forecastWindowsOverlap) {\n      effectiveStatus = \"UNAVAILABLE\";\n      statusAtBuild = \"UNAVAILABLE\";\n      reason = \"Supporting Layer 1 forecast windows do not overlap\";\n    } else if ([\"UNAVAILABLE\", \"MARKET_CLOSED\", \"SUPERSEDED\"].includes(targetStatus) || [\"UNAVAILABLE\", \"MARKET_CLOSED\", \"SUPERSEDED\"].includes(usdStatus)) {\n      effectiveStatus = \"UNAVAILABLE\";\n      statusAtBuild = \"UNAVAILABLE\";\n    } else if (targetStatus === \"NO_CALL\" || usdStatus === \"NO_CALL\") {\n      effectiveStatus = \"NO_CALL\";\n      statusAtBuild = \"NO_CALL\";\n    } else if ((targetForecastEnd && now.getTime() >= targetForecastEnd.getTime()) || (usdForecastEnd && now.getTime() >= usdForecastEnd.getTime()) || (pairEndDate && now.getTime() >= pairEndDate.getTime())) {\n      effectiveStatus = \"EXPIRED\";\n      statusAtBuild = \"ACTIVE\";\n    } else if (targetStatus === \"STALE\" || usdStatus === \"STALE\") {\n      effectiveStatus = \"STALE\";\n      statusAtBuild = \"ACTIVE\";\n    }\n\n    return {\n      pair_code: pairCode || null,\n      pair_label: pairLabel || null,\n      valid_from: effectiveStatus === \"UNAVAILABLE\" && reason ? null : pairValidFrom,\n      refresh_due_at: effectiveStatus === \"UNAVAILABLE\" && reason ? null : pairRefreshDueAt,\n      forecast_window_end: effectiveStatus === \"UNAVAILABLE\" && reason ? null : pairForecastEnd,\n      expires_at: effectiveStatus === \"UNAVAILABLE\" && reason ? null : pairForecastEnd,\n      status_at_build: statusAtBuild,\n      effective_status: effectiveStatus,\n      status_resolved_at: now.toISOString(),\n      timezone: SOURCE_TIMEZONE,\n      horizon_code: \"24H\",\n      horizon_duration: DEFAULT_HORIZON_DURATION,\n      horizon_basis: \"PAIR_SUPPORTING_FORECAST_INTERSECTION_V1\",\n      market_calendar: `${targetTiming.market_calendar || assetMarketCalendar(targetAgent?.agent)}__${usdTiming.market_calendar || assetMarketCalendar(usdAgent?.agent)}`,\n      reason,\n      supporting_legs: {\n        target: {\n          asset: targetLeg.agent?.agent || null,\n          effective_status: targetStatus,\n          valid_from: targetTiming.valid_from || null,\n          refresh_due_at: targetTiming.refresh_due_at || null,\n          forecast_window_end: targetTiming.forecast_window_end || null,\n          expires_at: targetTiming.expires_at || null,\n          sealed_at: targetTiming.sealed_at || null,\n          source_run_id: targetTiming.source_run_id || null\n        },\n        usd: {\n          asset: usdLeg.agent?.agent || null,\n          effective_status: usdStatus,\n          valid_from: usdTiming.valid_from || null,\n          refresh_due_at: usdTiming.refresh_due_at || null,\n          forecast_window_end: usdTiming.forecast_window_end || null,\n          expires_at: usdTiming.expires_at || null,\n          sealed_at: usdTiming.sealed_at || null,\n          source_run_id: usdTiming.source_run_id || null\n        }\n      }\n    };\n  }\n\n  function resolveLayer2DisplayStatus(pair = {}, nowValue = new Date()) {\n    const storedStatus = String(pair.effective_status || pair.status_at_build || \"UNAVAILABLE\").toUpperCase();\n    const now = parseIso(nowValue) || new Date();\n    const refreshDueAt = parseIso(pair.refresh_due_at);\n    const forecastWindowEnd = parseIso(pair.forecast_window_end || pair.expires_at);\n\n    if (storedStatus === \"UNAVAILABLE\" || storedStatus === \"MARKET_CLOSED\" || storedStatus === \"SUPERSEDED\") return \"UNAVAILABLE\";\n    if (storedStatus === \"NO_CALL\") return \"NO_CALL\";\n    if (forecastWindowEnd && now.getTime() >= forecastWindowEnd.getTime()) return \"EXPIRED\";\n    if (storedStatus === \"STALE\" || (refreshDueAt && now.getTime() >= refreshDueAt.getTime())) return \"STALE\";\n    return \"ACTIVE\";\n  }\n\n  function formatDisplayTime(value, timeZone = DISPLAY_TIMEZONE) {\n    const date = parseIso(value);\n    if (!date) return \"Pending\";\n    return new Intl.DateTimeFormat(\"en-GB\", {\n      timeZone,\n      day: \"2-digit\",\n      month: \"short\",\n      year: \"numeric\",\n      hour: \"2-digit\",\n      minute: \"2-digit\",\n      hour12: false\n    }).format(date);\n  }\n\n  function formatRemainingDuration(targetValue, nowValue = new Date()) {\n    const target = parseIso(targetValue);\n    const now = parseIso(nowValue) || new Date();\n    if (!target) return null;\n\n    const diffMs = target.getTime() - now.getTime();\n    if (diffMs <= 0) return null;\n\n    const totalMinutes = Math.ceil(diffMs / 60000);\n    const days = Math.floor(totalMinutes / 1440);\n    const hours = Math.floor((totalMinutes % 1440) / 60);\n    const minutes = totalMinutes % 60;\n    const parts = [];\n\n    if (days > 0) parts.push(`${days}d`);\n    if (hours > 0) parts.push(`${hours}h`);\n    if ((minutes > 0 || parts.length === 0) && parts.length < 2) parts.push(`${minutes}m`);\n\n    return parts.join(\" \");\n  }\n\n  function formatTimeUntilRefresh(refreshDueAtValue, nowValue = new Date()) {\n    const remaining = formatRemainingDuration(refreshDueAtValue, nowValue);\n    if (!parseIso(refreshDueAtValue)) return \"Awaiting refresh schedule\";\n    if (!remaining) return \"refresh overdue\";\n    return `refresh due in ${remaining}`;\n  }\n\n  function formatTimeUntilForecastExpiry(forecastWindowEndValue, nowValue = new Date()) {\n    const forecastWindowEnd = parseIso(forecastWindowEndValue);\n    if (!forecastWindowEnd) return \"Awaiting forecast expiry\";\n    const remaining = formatRemainingDuration(forecastWindowEnd, nowValue);\n    if (!remaining) return \"expired\";\n    return `expires in ${remaining}`;\n  }\n\n  function enrichLayer1DashboardData(data = {}) {\n    const dashboardMeta = data.dashboard_meta || {};\n    const scheduleMeta = provisionalScheduleMetadata(dashboardMeta);\n    const nowIso = new Date().toISOString();\n    const agents = (data.agents || []).map((rawAgent) => {\n      const timing = buildLayer1Timing(rawAgent, dashboardMeta);\n      const effectiveStatus = resolveLayer1DisplayStatus(rawAgent, dashboardMeta, new Date());\n      assertValidExplicitLayer1Expiry(rawAgent, timing, rawAgent.priority_call || rawAgent.calls?.[\"24h\"] || {});\n      const calls = { ...(rawAgent.calls || {}) };\n      const call24 = { ...(calls[\"24h\"] || {}) };\n      call24.generated_at = call24.generated_at || timing.generated_at;\n      call24.sealed_at = call24.sealed_at || timing.sealed_at;\n      call24.valid_from = call24.valid_from || timing.valid_from;\n      call24.refresh_due_at = call24.refresh_due_at || timing.refresh_due_at;\n      call24.forecast_window_end = Object.prototype.hasOwnProperty.call(call24, \"forecast_window_end\") ? call24.forecast_window_end : timing.forecast_window_end;\n      call24.expires_at = Object.prototype.hasOwnProperty.call(call24, \"expires_at\") ? call24.expires_at : timing.expires_at;\n      call24.status_at_build = call24.status_at_build || timing.status_at_build;\n      call24.effective_status = effectiveStatus;\n      call24.status_resolved_at = nowIso;\n      call24.horizon_code = call24.horizon_code || timing.horizon_code;\n      call24.horizon_duration = call24.horizon_duration || timing.horizon_duration;\n      call24.horizon_basis = call24.horizon_basis || timing.horizon_basis;\n      call24.timezone = call24.timezone || timing.timezone;\n      call24.market_calendar = call24.market_calendar || timing.market_calendar;\n      call24.source_run_id = call24.source_run_id || timing.source_run_id;\n      call24.validity_note = call24.validity_note || timing.validity_note;\n      call24.horizon_note = call24.horizon_note || timing.horizon_note;\n      calls[\"24h\"] = call24;\n\n      return {\n        ...rawAgent,\n        ...timing,\n        effective_status: effectiveStatus,\n        status_resolved_at: nowIso,\n        calls,\n        priority_call: {\n          ...(rawAgent.priority_call || call24),\n          ...call24\n        }\n      };\n    });\n\n    return {\n      ...data,\n      dashboard_meta: {\n        ...dashboardMeta,\n        display_timezone: dashboardMeta.display_timezone || DISPLAY_TIMEZONE,\n        validity_contract_version: dashboardMeta.validity_contract_version || \"live_v3_explicit_forecast_expiry\",\n        timing_contract_note: dashboardMeta.timing_contract_note || \"Forecast expiry is explicit and separate from the provisional refresh threshold. Refresh timing remains an operational expectation only.\",\n        horizon_contract_note: dashboardMeta.horizon_contract_note || DEFAULT_HORIZON_NOTE,\n        ...scheduleMeta\n      },\n      agents\n    };\n  }\n\n  return {\n    SOURCE_TIMEZONE,\n    DISPLAY_TIMEZONE,\n    DEFAULT_EXECUTION_CLOCK,\n    DEFAULT_HORIZON_DURATION,\n    DEFAULT_PROVISIONAL_REFRESH_NOTE,\n    DEFAULT_HORIZON_NOTE,\n    WEEKDAY_ACTIVE_MARKET_CALENDAR,\n    CRYPTO_MARKET_CALENDAR,\n    assetHorizonBasis,\n    assetMarketCalendar,\n    buildLayer1Timing,\n    buildLayer2Timing,\n    computeForecastWindowEnd,\n    computeNextRefreshDueAt,\n    computeWeekdayActiveForecastWindowEnd,\n    enrichLayer1DashboardData,\n    formatDisplayTime,\n    formatRemainingDuration,\n    formatTimeUntilForecastExpiry,\n    formatTimeUntilRefresh,\n    isExplicitNoCallDirection,\n    isNoCallDirection,\n    isPendingDirection,\n    isWeekendBlockedAsset,\n    parseExecutionClockLabel,\n    parseIso,\n    provisionalScheduleMetadata,\n    requiresExplicitForecastExpiry,\n    resolveLayer1DisplayStatus,\n    resolveLayer2DisplayStatus\n  };\n});\n\n\nconst rows = $input.all().map((item) => item.json);\nconst agents = [\"USD\", \"EUR\", \"GOLD\", \"SILVER\", \"NQ\", \"BTC\", \"WTI\", \"GBP\"];;\n\nfunction parseMaybeJson(value, fallback = {}) {\n  if (value === null || value === undefined || value === \"\") return fallback;\n  if (typeof value === \"object\") return value;\n  try {\n    return JSON.parse(value);\n  } catch (error) {\n    return fallback;\n  }\n}\n\nfunction parseMaybeArray(value, fallback = []) {\n  if (value === null || value === undefined || value === \"\") return fallback;\n  if (Array.isArray(value)) return value;\n  try {\n    const parsed = JSON.parse(value);\n    return Array.isArray(parsed) ? parsed : fallback;\n  } catch (error) {\n    return fallback;\n  }\n}\n\nfunction toNumber(value) {\n  if (value === null || value === undefined || value === \"\") return null;\n  const numeric = Number(value);\n  return Number.isFinite(numeric) ? numeric : null;\n}\n\nfunction parseTimestamp(value) {\n  const timestamp = new Date(value || 0).getTime();\n  return Number.isFinite(timestamp) ? timestamp : 0;\n}\n\nfunction consistencyLabel(values) {\n  if (!values.length) return \"UNKNOWN\";\n  return values.every((value) => value === values[0]) ? \"MATCHED\" : \"MISMATCHED\";\n}\n\nfunction hasUsableDirection(row) {\n  const output = parseMaybeJson(row && (row.full_output || row.raw_agent_output), {});\n  return Boolean(row && (row.direction_24h || row.call_24h_direction || output.direction_24h || (output.today_call && output.today_call.direction)));\n}\n\nfunction selectLatestRowsByAgent() {\n  const selected = {};\n  const missingAgents = [];\n  for (const agent of agents) {\n    const latest = rows\n      .filter((row) => row && row.agent_name === agent && Number(row.layer) === 1)\n      .filter(hasUsableDirection)\n      .sort((left, right) => parseTimestamp((right && (right.created_at || right.run_time_et)) || 0) - parseTimestamp((left && (left.created_at || left.run_time_et)) || 0))[0] || null;\n    if (!latest) {\n      missingAgents.push(agent);\n      continue;\n    }\n    selected[agent] = latest;\n  }\n  if (missingAgents.length) {\n    throw new Error(\"Missing required Layer 1 agents: \" + missingAgents.join(\", \"));\n  }\n  return agents.map((agent) => selected[agent]);\n}\n\nfunction buildSelectionProvenance(selectedRows) {\n  const sourceRunIds = selectedRows.map((row) => String((row && row.source_run_id) || \"\").trim()).filter(Boolean);\n  const refreshRequestIds = selectedRows.map((row) => String((row && (row.refresh_request_id || row.request_id)) || \"\").trim()).filter(Boolean);\n  const sourceRunConsistency = consistencyLabel(sourceRunIds);\n  const refreshRequestConsistency = consistencyLabel(refreshRequestIds);\n  const consistencyStatus = sourceRunConsistency === \"MISMATCHED\" || refreshRequestConsistency === \"MISMATCHED\"\n    ? \"MISMATCHED\"\n    : sourceRunConsistency === \"MATCHED\" || refreshRequestConsistency === \"MATCHED\"\n      ? \"MATCHED\"\n      : \"UNKNOWN\";\n  return {\n    sourceRunIds, refreshRequestIds, sourceRunConsistency, refreshRequestConsistency, consistencyStatus,\n    sourceRunId: sourceRunConsistency === \"MATCHED\" ? sourceRunIds[0] : null,\n    refreshRequestId: refreshRequestConsistency === \"MATCHED\" ? refreshRequestIds[0] : null\n  };\n}\n\nfunction outputFromRow(row) {\n  return parseMaybeJson(row.full_output, parseMaybeJson(row.raw_agent_output, {}));\n}\n\nfunction getDirection(row, output, oldField, newField) {\n  return row[oldField] || row[newField] || output[newField] || \"PENDING\";\n}\n\nfunction getConviction(row, output, oldField, newField) {\n  return toNumber(row[oldField] != null ? row[oldField] : row[newField] != null ? row[newField] : output[newField] != null ? output[newField] : null);\n}\n\nfunction buildKeyFactors(factorBreakdown) {\n  if (!factorBreakdown || typeof factorBreakdown !== \"object\" || Array.isArray(factorBreakdown)) return [];\n  return Object.entries(factorBreakdown).map(([key, value]) => {\n    if (value && typeof value === \"object\") {\n      const signal = value.signal || \"NEUTRAL\";\n      const weight = value.weight !== undefined ? \" [\" + value.weight + \"]\" : \"\";\n      const evidence = value.evidence ? \" - \" + value.evidence : \"\";\n      const reason = value.reason ? \" (\" + value.reason + \")\" : \"\";\n      return key + weight + \": \" + signal + evidence + reason;\n    }\n    return key + \": \" + value;\n  });\n}\n\nfunction normaliseConvictionModel(output, timeframeKey = \"24h\") {\n  const timeframeModel = output.timeframe_models?.[timeframeKey] || {};\n  const model = timeframeModel.conviction_model || output.conviction_model || {};\n  const weightedScore = timeframeModel.weighted_score || output.weighted_score || {};\n  const bullishArgument = toNumber(model.bullish_argument_pct);\n  const bearishArgument = toNumber(model.bearish_argument_pct);\n  const neutralPct = toNumber(model.neutral_evidence_pct ?? model.neutral_pct);\n  const directionalParticipation = toNumber(model.directional_participation_pct ?? model.active_participation_pct);\n  const netEdge = toNumber(model.net_edge_pct);\n  const finalConviction = toNumber(model.final_conviction);\n  const winningSide = model.winning_side || (bullishArgument !== null && bearishArgument !== null ? (bullishArgument > bearishArgument ? \"BULLISH\" : (bearishArgument > bullishArgument ? \"BEARISH\" : \"TIED\")) : null);\n  return {\n    ...model, bullish_argument_pct: bullishArgument, bearish_argument_pct: bearishArgument, neutral_pct: neutralPct, neutral_evidence_pct: neutralPct,\n    directional_participation_pct: directionalParticipation, active_participation_pct: directionalParticipation, net_edge_pct: netEdge, final_conviction: finalConviction,\n    verdict_strength: model.verdict_strength || null, winning_side: winningSide, final_conviction_logic: model.final_conviction_logic || \"\",\n    bull_case_weight: toNumber(model.bull_case_weight ?? weightedScore.bullish_weight ?? null),\n    bear_case_weight: toNumber(model.bear_case_weight ?? weightedScore.bearish_weight ?? null),\n    neutral_weight: toNumber(model.neutral_weight ?? weightedScore.neutral_weight ?? null),\n    weighted_score: {\n      bullish_weight: toNumber(weightedScore.bullish_weight ?? model.bull_case_weight ?? null),\n      bearish_weight: toNumber(weightedScore.bearish_weight ?? model.bear_case_weight ?? null),\n      neutral_weight: toNumber(weightedScore.neutral_weight ?? model.neutral_weight ?? null),\n      active_weight: toNumber(weightedScore.active_weight ?? directionalParticipation ?? null),\n      weight_margin: toNumber(weightedScore.weight_margin ?? null)\n    },\n    alignment: bullishArgument, base_conviction: finalConviction, participation: directionalParticipation\n  };\n}\n\nfunction timeframeModel(output, key) { return output.timeframe_models?.[key] || {}; }\n\nfunction callObject(row, output, key, oldDirection, newDirection, oldConviction, newConviction, oldReason, newReason) {\n  const tfModel = timeframeModel(output, key);\n  return {\n    direction: getDirection(row, output, oldDirection, newDirection),\n    conviction: getConviction(row, output, oldConviction, newConviction),\n    reason: row[oldReason] || output[newReason] || tfModel.reason || row.reasoning_summary || output.reasoning_summary || \"\",\n    conviction_model: normaliseConvictionModel(output, key),\n    weighted_score: tfModel.weighted_score || output.weighted_score || {},\n    factor_breakdown: tfModel.factor_breakdown || output.factor_breakdown || {}\n  };\n}\n\nfunction fromRow(agent, row) {\n  const output = outputFromRow(row);\n  const factorBreakdown = parseMaybeJson(row.factor_breakdown, output.factor_breakdown || {});\n  const warnings = parseMaybeArray(row.warnings, output.risk_flags || output.warnings || []);\n  const baseCalls = {\n    \"24h\": callObject(row, output, \"24h\", \"call_24h_direction\", \"direction_24h\", \"call_24h_conviction\", \"conviction_24h\", \"call_24h_reason\", \"reason_24h\"),\n    \"3d\": callObject(row, output, \"3d\", \"call_3d_direction\", \"direction_3_day\", \"call_3d_conviction\", \"conviction_3_day\", \"call_3d_reason\", \"reason_3_day\"),\n    \"current_week\": callObject(row, output, \"current_week\", \"call_current_week_direction\", \"direction_current_week\", \"call_current_week_conviction\", \"conviction_current_week\", \"call_current_week_reason\", \"reason_current_week\"),\n    \"next_week\": callObject(row, output, \"next_week\", \"call_next_week_direction\", \"direction_next_week\", \"call_next_week_conviction\", \"conviction_next_week\", \"call_next_week_reason\", \"reason_next_week\"),\n    \"current_month\": callObject(row, output, \"current_month\", \"call_current_month_direction\", \"direction_current_month\", \"call_current_month_conviction\", \"conviction_current_month\", \"call_current_month_reason\", \"reason_current_month\")\n  };\n  const priorityTimeframe = \"24h\";\n  const priorityCall = baseCalls[priorityTimeframe];\n  const convictionModel = normaliseConvictionModel(output, priorityTimeframe);\n  return {\n    agent, status: \"live\", market_status: output.market_status || row.market_status || null, last_run_et: row.run_time_et || row.created_at || null,\n    generated_at: row.run_time_et || row.created_at || null, sealed_at: row.created_at || output.created_at || row.run_time_et || null,\n    valid_from: row.valid_from || output.valid_from || row.created_at || output.created_at || row.run_time_et || null,\n    refresh_due_at: row.refresh_due_at || output.refresh_due_at || null,\n    forecast_window_end: Object.prototype.hasOwnProperty.call(row, \"forecast_window_end\") ? row.forecast_window_end : (Object.prototype.hasOwnProperty.call(output, \"forecast_window_end\") ? output.forecast_window_end : null),\n    expires_at: Object.prototype.hasOwnProperty.call(row, \"expires_at\") ? row.expires_at : (Object.prototype.hasOwnProperty.call(output, \"expires_at\") ? output.expires_at : null),\n    status_at_build: row.status_at_build || output.status_at_build || priorityCall.status_at_build || null,\n    effective_status: row.effective_status || output.effective_status || priorityCall.effective_status || null,\n    status_resolved_at: row.status_resolved_at || output.status_resolved_at || null,\n    horizon_code: row.horizon_code || output.horizon_code || priorityCall.horizon_code || \"24H\",\n    horizon_duration: row.horizon_duration || output.horizon_duration || priorityCall.horizon_duration || \"PT24H\",\n    horizon_basis: row.horizon_basis || output.horizon_basis || priorityCall.horizon_basis || null,\n    timezone: row.timezone || output.timezone || priorityCall.timezone || \"America/New_York\",\n    market_calendar: row.market_calendar || output.market_calendar || priorityCall.market_calendar || null,\n    source_run_id: row.source_run_id || output.source_run_id || output.execution_id || output.workflow_execution_id || null,\n    refresh_request_id: row.refresh_request_id || row.request_id || output.refresh_request_id || output.request_id || null,\n    summary: output.summary || row.reasoning_summary || (agent + \" Layer 1 raw call generated from sealed independent workflow.\"),\n    calls: baseCalls, priority_timeframe: priorityTimeframe, priority_call: priorityCall, factor_breakdown: factorBreakdown, key_factors: buildKeyFactors(factorBreakdown),\n    warnings, reasoning_summary: row.reasoning_summary || output.reasoning_summary || \"\", score_bullish: toNumber(row.score_bullish ?? output.score_bullish ?? null),\n    score_bearish: toNumber(row.score_bearish ?? output.score_bearish ?? null), score_neutral: toNumber(row.score_neutral ?? output.score_neutral ?? null),\n    non_neutral_count: toNumber(output.non_neutral_count ?? null), logic_document: row.logic_document || output.logic_document || null,\n    logic_document_version: row.logic_document_version || output.logic_document_version || null, conviction_model: convictionModel, timeframe_models: output.timeframe_models || {},\n    display_metrics: { bull_case: convictionModel.bullish_argument_pct, bear_case: convictionModel.bearish_argument_pct, winning_side: convictionModel.winning_side, conviction: convictionModel.final_conviction, net_edge: convictionModel.net_edge_pct, directional_participation: convictionModel.directional_participation_pct, neutral: convictionModel.neutral_evidence_pct ?? convictionModel.neutral_pct, verdict_strength: convictionModel.verdict_strength, bull_case_weight: convictionModel.bull_case_weight ?? null, bear_case_weight: convictionModel.bear_case_weight ?? null },\n    full_output: output\n  };\n}\n\nconst selectedRows = selectLatestRowsByAgent();\nconst provenance = buildSelectionProvenance(selectedRows);\nconst rowByAgent = Object.fromEntries(selectedRows.map((row) => [row.agent_name, row]));\nconst baseDashboard = {\n  source_run_id: provenance.sourceRunId,\n  refresh_request_id: provenance.refreshRequestId,\n  dashboard_meta: {\n    system_timezone: \"America/New_York\", execution_clock: \"07:00 ET primary run\", last_updated_et: new Date().toISOString(),\n    architecture: \"Layer 1 agents are sealed independent raw signal producers. No cross-agent communication.\",\n    weekend_rule: \"Weekday-active-time V1 pauses only for weekend closure. Exchange holidays and intraday maintenance breaks are not yet modelled.\",\n    display_timezone: \"Europe/London\", validity_contract_version: \"live_v3_explicit_forecast_expiry\", required_agents: agents,\n    source_run_id_consistency: provenance.sourceRunConsistency, refresh_request_id_consistency: provenance.refreshRequestConsistency, publication_consistency: provenance.consistencyStatus,\n    source_run_ids: provenance.sourceRunIds, refresh_request_ids: provenance.refreshRequestIds\n  },\n  agents: agents.map((agent) => fromRow(agent, rowByAgent[agent]))\n};\nconst dashboard = globalThis.LiveCallValidity.enrichLayer1DashboardData(baseDashboard);\ndashboard.dashboard_meta.last_updated_et = new Date().toISOString();\nreturn [{ json: { file_content: JSON.stringify(dashboard, null, 2), dashboard } }];"
+      }
+    },
+    {
+      "id": "77857e6c-da2f-4251-946e-1100e6904b2b",
+      "name": "Edit a file",
+      "webhookId": "63f6f663-41d1-4915-937c-433e1030ae7b",
+      "type": "n8n-nodes-base.github",
+      "typeVersion": 1.1,
+      "position": [
+        624,
+        0
+      ],
+      "parameters": {
+        "authentication": "oAuth2",
+        "resource": "file",
+        "operation": "edit",
+        "owner": {
+          "__rl": true,
+          "value": "kevincreedycars-debug",
+          "mode": "list",
+          "cachedResultName": "kevincreedycars-debug",
+          "cachedResultUrl": "https://github.com/kevincreedycars-debug"
+        },
+        "repository": {
+          "__rl": true,
+          "value": "trading-agent-dashboard",
+          "mode": "list",
+          "cachedResultName": "trading-agent-dashboard",
+          "cachedResultUrl": "https://github.com/kevincreedycars-debug/trading-agent-dashboard"
+        },
+        "filePath": "data/layer1.json",
+        "fileContent": "={{ $json.file_content }}",
+        "commitMessage": "Update layer1 dashboard data from agent outputs"
+      },
+      "credentials": {
+        "githubOAuth2Api": {
+          "id": "wr4dhSbWkjNonhfi",
+          "name": "GitHub account 3"
+        }
+      }
+    },
+    {
+      "id": "9fcc2657-4e50-4899-a618-8fbd0f848283",
+      "name": "When Executed by Another Workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "inputSource": "passthrough"
+      }
+    },
+    {
+      "id": "dw-live-get-usd-rows",
+      "name": "Get latest USD rows",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "alwaysOutputData": true,
+      "position": [
+        208,
+        -160
+      ],
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "agent_outputs",
+        "limit": 20,
+        "orderBy": "created_at.desc",
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "agent_name",
+              "condition": "eq",
+              "keyValue": "USD"
+            },
+            {
+              "keyName": "layer",
+              "condition": "eq",
+              "keyValue": "1"
+            }
+          ]
+        }
+      },
+      "credentials": {
+        "supabaseApi": {
+          "id": "trM35g1QCTOgQp4K",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "id": "dw-live-get-eur-rows",
+      "name": "Get latest EUR rows",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "alwaysOutputData": true,
+      "position": [
+        208,
+        -80
+      ],
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "agent_outputs",
+        "limit": 20,
+        "orderBy": "created_at.desc",
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "agent_name",
+              "condition": "eq",
+              "keyValue": "EUR"
+            },
+            {
+              "keyName": "layer",
+              "condition": "eq",
+              "keyValue": "1"
+            }
+          ]
+        }
+      },
+      "credentials": {
+        "supabaseApi": {
+          "id": "trM35g1QCTOgQp4K",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "id": "dw-live-get-gold-rows",
+      "name": "Get latest GOLD rows",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "alwaysOutputData": true,
+      "position": [
+        208,
+        0
+      ],
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "agent_outputs",
+        "limit": 20,
+        "orderBy": "created_at.desc",
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "agent_name",
+              "condition": "eq",
+              "keyValue": "GOLD"
+            },
+            {
+              "keyName": "layer",
+              "condition": "eq",
+              "keyValue": "1"
+            }
+          ]
+        }
+      },
+      "credentials": {
+        "supabaseApi": {
+          "id": "trM35g1QCTOgQp4K",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "id": "dw-live-get-nq-rows",
+      "name": "Get latest NQ rows",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "alwaysOutputData": true,
+      "position": [
+        208,
+        80
+      ],
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "agent_outputs",
+        "limit": 20,
+        "orderBy": "created_at.desc",
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "agent_name",
+              "condition": "eq",
+              "keyValue": "NQ"
+            },
+            {
+              "keyName": "layer",
+              "condition": "eq",
+              "keyValue": "1"
+            }
+          ]
+        }
+      },
+      "credentials": {
+        "supabaseApi": {
+          "id": "trM35g1QCTOgQp4K",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "id": "dw-live-get-btc-rows",
+      "name": "Get latest BTC rows",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "alwaysOutputData": true,
+      "position": [
+        208,
+        160
+      ],
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "agent_outputs",
+        "limit": 20,
+        "orderBy": "created_at.desc",
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "agent_name",
+              "condition": "eq",
+              "keyValue": "BTC"
+            },
+            {
+              "keyName": "layer",
+              "condition": "eq",
+              "keyValue": "1"
+            }
+          ]
+        }
+      },
+      "credentials": {
+        "supabaseApi": {
+          "id": "trM35g1QCTOgQp4K",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "id": "dw-merge-usd-eur",
+      "name": "Merge USD + EUR",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [
+        320,
+        -120
+      ],
+      "parameters": {
+        "mode": "append"
+      }
+    },
+    {
+      "id": "dw-merge-gold-nq",
+      "name": "Merge GOLD + NQ",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [
+        320,
+        40
+      ],
+      "parameters": {
+        "mode": "append"
+      }
+    },
+    {
+      "id": "dw-merge-core-pairs",
+      "name": "Merge Core Pairs",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [
+        480,
+        -40
+      ],
+      "parameters": {
+        "mode": "append"
+      }
+    },
+    {
+      "id": "dw-merge-core-btc",
+      "name": "Merge Core + BTC",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [
+        640,
+        40
+      ],
+      "parameters": {
+        "mode": "append"
+      }
+    },
+    {
+      "id": "dw-live-get-wti-rows",
+      "name": "Get latest WTI rows",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "alwaysOutputData": true,
+      "position": [
+        208,
+        320
+      ],
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "agent_outputs",
+        "limit": 20,
+        "orderBy": "created_at.desc",
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "agent_name",
+              "condition": "eq",
+              "keyValue": "WTI"
+            },
+            {
+              "keyName": "layer",
+              "condition": "eq",
+              "keyValue": "1"
+            }
+          ]
+        }
+      },
+      "credentials": {
+        "supabaseApi": {
+          "id": "trM35g1QCTOgQp4K",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "id": "dw-merge-core-wti",
+      "name": "Merge Core + WTI",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [
+        700,
+        320
+      ],
+      "parameters": {
+        "mode": "append"
+      }
+    },
+    {
+      "id": "silver-read-0bba818b",
+      "name": "Get latest SILVER rows",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "alwaysOutputData": true,
+      "position": [
+        208,
+        400
+      ],
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "agent_outputs",
+        "limit": 20,
+        "orderBy": "created_at.desc",
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "agent_name",
+              "condition": "eq",
+              "keyValue": "SILVER"
+            },
+            {
+              "keyName": "layer",
+              "condition": "eq",
+              "keyValue": "1"
+            }
+          ]
+        }
+      },
+      "credentials": {
+        "supabaseApi": {
+          "id": "trM35g1QCTOgQp4K",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "id": "silver-merge-01e5b790",
+      "name": "Merge Core + SILVER",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [
+        820,
+        560
+      ],
+      "parameters": {
+        "mode": "append"
+      }
+    },
+    {
+      "id": "351d2113-957a-4a91-8217-056a3b98ce5b",
+      "name": "Get latest GBP rows",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "alwaysOutputData": true,
+      "position": [
+        208,
+        420
+      ],
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "agent_outputs",
+        "limit": 20,
+        "orderBy": "created_at.desc",
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "agent_name",
+              "condition": "eq",
+              "keyValue": "GBP"
+            },
+            {
+              "keyName": "layer",
+              "condition": "eq",
+              "keyValue": "1"
+            }
+          ]
+        }
+      },
+      "credentials": {
+        "supabaseApi": {
+          "id": "trM35g1QCTOgQp4K",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "id": "af1bfc4e-39ee-4838-9374-8584213d3f4a",
+      "name": "Merge Core + GBP",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [
+        860,
+        320
+      ],
+      "parameters": {
+        "mode": "append"
+      }
+    }
+  ],
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Get latest USD rows",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get latest EUR rows",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get latest GOLD rows",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get latest NQ rows",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get latest BTC rows",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get latest WTI rows",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get latest GBP rows",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get latest SILVER rows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get latest USD rows": {
+      "main": [
+        [
+          {
+            "node": "Merge USD + EUR",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get latest EUR rows": {
+      "main": [
+        [
+          {
+            "node": "Merge USD + EUR",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Get latest GOLD rows": {
+      "main": [
+        [
+          {
+            "node": "Merge GOLD + NQ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get latest NQ rows": {
+      "main": [
+        [
+          {
+            "node": "Merge GOLD + NQ",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge USD + EUR": {
+      "main": [
+        [
+          {
+            "node": "Merge Core Pairs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge GOLD + NQ": {
+      "main": [
+        [
+          {
+            "node": "Merge Core Pairs",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge Core Pairs": {
+      "main": [
+        [
+          {
+            "node": "Merge Core + BTC",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get latest BTC rows": {
+      "main": [
+        [
+          {
+            "node": "Merge Core + BTC",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge Core + BTC": {
+      "main": [
+        [
+          {
+            "node": "Merge Core + WTI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get latest WTI rows": {
+      "main": [
+        [
+          {
+            "node": "Merge Core + WTI",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge Core + WTI": {
+      "main": [
+        [
+          {
+            "node": "Merge Core + GBP",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get latest GBP rows": {
+      "main": [
+        [
+          {
+            "node": "Merge Core + GBP",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge Core + GBP": {
+      "main": [
+        [
+          {
+            "node": "Merge Core + SILVER",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get latest SILVER rows": {
+      "main": [
+        [
+          {
+            "node": "Merge Core + SILVER",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge Core + SILVER": {
+      "main": [
+        [
+          {
+            "node": "Build Layer 1 JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Layer 1 JSON": {
+      "main": [
+        [
+          {
+            "node": "Edit a file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "nodeGroups": [],
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "tags": [],
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "850DrjzCKKX9fDzD",
+      "projectId": "ISQG9XU7TGTT6Fcu",
+      "project": {
+        "id": "ISQG9XU7TGTT6Fcu",
+        "name": "Daniel Silver <a17@live.co.uk>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "customTelemetryTags": [],
+        "creatorId": "eb4fba3e-5170-481b-abc5-ce65776c1113",
+        "createdAt": "2026-04-29T19:10:11.212Z",
+        "updatedAt": "2026-04-29T19:10:21.640Z"
+      },
+      "createdAt": "2026-06-06T17:08:37.619Z",
+      "updatedAt": "2026-06-06T17:08:37.619Z"
+    }
+  ],
+  "activeVersion": {
+    "versionId": "8c5bd16c-d0ac-49e7-86b8-5eccb4a63f4c",
+    "workflowId": "850DrjzCKKX9fDzD",
+    "nodes": [
+      {
+        "id": "3977db9f-962a-4380-bc0e-b1838e3d6b30",
+        "name": "Build Layer 1 JSON",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          416,
+          0
+        ],
+        "parameters": {
+          "jsCode": "(function (root, factory) {\n  const api = factory();\n\n  if (typeof module === \"object\" && module.exports) {\n    module.exports = api;\n  }\n\n  if (root) {\n    root.LiveCallValidity = api;\n  }\n})(typeof globalThis !== \"undefined\" ? globalThis : this, function () {\n  const SOURCE_TIMEZONE = \"America/New_York\";\n  const DISPLAY_TIMEZONE = \"Europe/London\";\n  const DEFAULT_REFRESH_SCHEDULE = \"07:00\";\n  const DEFAULT_EXECUTION_CLOCK = \"07:00 ET primary run\";\n  const DEFAULT_HORIZON_DURATION = \"PT24H\";\n  const DEFAULT_PROVISIONAL_REFRESH_NOTE = \"No authoritative orchestrator cron exists in the repository\";\n  const DEFAULT_HORIZON_NOTE = \"Weekday-active-time V1 excludes weekend-closed hours only. Exchange holidays and intraday maintenance breaks are not yet modelled.\";\n  const WEEKDAY_ACTIVE_MARKET_CALENDAR = \"WEEKDAY_ACTIVE_TIME_V1\";\n  const CRYPTO_MARKET_CALENDAR = \"CRYPTO_24_7\";\n  const WEEKEND_BLOCKED_ASSETS = new Set([\"USD\", \"EUR\", \"GBP\", \"GOLD\", \"SILVER\", \"WTI\", \"NQ\", \"XAU\", \"XAG\"]);\n  const EXPLICIT_NO_CALL_DIRECTIONS = new Set([\"NO CALL\", \"NO 24H CALL\"]);\n\n  function parseIso(value) {\n    if (!value) return null;\n    const date = value instanceof Date ? value : new Date(value);\n    return Number.isNaN(date.getTime()) ? null : date;\n  }\n\n  function firstPresentValue(...values) {\n    for (const value of values) {\n      if (value !== null && value !== undefined && value !== \"\") {\n        return value;\n      }\n    }\n    return null;\n  }\n\n  function parseExecutionClockLabel(label = DEFAULT_EXECUTION_CLOCK) {\n    const match = String(label || \"\").match(/(\\d{1,2}):(\\d{2})\\s*ET/i);\n    return {\n      hour: match ? Number(match[1]) : 7,\n      minute: match ? Number(match[2]) : 0\n    };\n  }\n\n  function getZonedParts(date, timeZone) {\n    const formatter = new Intl.DateTimeFormat(\"en-CA\", {\n      timeZone,\n      year: \"numeric\",\n      month: \"2-digit\",\n      day: \"2-digit\",\n      hour: \"2-digit\",\n      minute: \"2-digit\",\n      second: \"2-digit\",\n      hour12: false\n    });\n    const parts = formatter.formatToParts(date);\n    const lookup = Object.fromEntries(parts.map((part) => [part.type, part.value]));\n    return {\n      year: Number(lookup.year),\n      month: Number(lookup.month),\n      day: Number(lookup.day),\n      hour: Number(lookup.hour),\n      minute: Number(lookup.minute),\n      second: Number(lookup.second)\n    };\n  }\n\n  function zonedWeekdayName(date, timeZone = SOURCE_TIMEZONE) {\n    const parsed = parseIso(date);\n    if (!parsed) return \"\";\n    return parsed.toLocaleDateString(\"en-US\", {\n      timeZone,\n      weekday: \"long\"\n    });\n  }\n\n  function zonedWeekdayIndex(date, timeZone = SOURCE_TIMEZONE) {\n    const weekday = zonedWeekdayName(date, timeZone);\n    return {\n      Sunday: 0,\n      Monday: 1,\n      Tuesday: 2,\n      Wednesday: 3,\n      Thursday: 4,\n      Friday: 5,\n      Saturday: 6\n    }[weekday] ?? -1;\n  }\n\n  function isWeekendInTimeZone(date, timeZone = SOURCE_TIMEZONE) {\n    const weekdayIndex = zonedWeekdayIndex(date, timeZone);\n    return weekdayIndex === 0 || weekdayIndex === 6;\n  }\n\n  function parseOffsetMinutes(offsetLabel) {\n    const match = String(offsetLabel || \"\").match(/GMT([+-])(\\d{1,2})(?::?(\\d{2}))?/i);\n    if (!match) return 0;\n    const sign = match[1] === \"-\" ? -1 : 1;\n    const hours = Number(match[2] || 0);\n    const minutes = Number(match[3] || 0);\n    return sign * ((hours * 60) + minutes);\n  }\n\n  function getOffsetMinutes(date, timeZone) {\n    const formatter = new Intl.DateTimeFormat(\"en-US\", {\n      timeZone,\n      hour: \"2-digit\",\n      minute: \"2-digit\",\n      timeZoneName: \"shortOffset\",\n      hour12: false\n    });\n    const offsetPart = formatter.formatToParts(date).find((part) => part.type === \"timeZoneName\");\n    return parseOffsetMinutes(offsetPart?.value || \"GMT+0\");\n  }\n\n  function zonedDateTimeToUtc(parts, timeZone) {\n    let utcMs = Date.UTC(parts.year, parts.month - 1, parts.day, parts.hour, parts.minute, parts.second || 0, 0);\n\n    for (let i = 0; i < 4; i += 1) {\n      const offsetMinutes = getOffsetMinutes(new Date(utcMs), timeZone);\n      const adjustedUtcMs = Date.UTC(\n        parts.year,\n        parts.month - 1,\n        parts.day,\n        parts.hour,\n        parts.minute,\n        parts.second || 0,\n        0\n      ) - (offsetMinutes * 60000);\n\n      if (adjustedUtcMs === utcMs) break;\n      utcMs = adjustedUtcMs;\n    }\n\n    return new Date(utcMs);\n  }\n\n  function addZonedDays(parts, days) {\n    const utcDate = new Date(Date.UTC(parts.year, parts.month - 1, parts.day));\n    utcDate.setUTCDate(utcDate.getUTCDate() + days);\n    return {\n      year: utcDate.getUTCFullYear(),\n      month: utcDate.getUTCMonth() + 1,\n      day: utcDate.getUTCDate()\n    };\n  }\n\n  function computeNextRefreshDueAt(sealedAtValue, executionClockLabel = DEFAULT_EXECUTION_CLOCK, timeZone = SOURCE_TIMEZONE) {\n    const sealedAt = parseIso(sealedAtValue);\n    if (!sealedAt) return null;\n\n    const executionClock = parseExecutionClockLabel(executionClockLabel);\n    const sealedParts = getZonedParts(sealedAt, timeZone);\n    let dueParts = {\n      year: sealedParts.year,\n      month: sealedParts.month,\n      day: sealedParts.day,\n      hour: executionClock.hour,\n      minute: executionClock.minute,\n      second: 0\n    };\n    let dueAt = zonedDateTimeToUtc(dueParts, timeZone);\n\n    if (dueAt.getTime() <= sealedAt.getTime()) {\n      const nextDay = addZonedDays(sealedParts, 1);\n      dueParts = {\n        ...nextDay,\n        hour: executionClock.hour,\n        minute: executionClock.minute,\n        second: 0\n      };\n      dueAt = zonedDateTimeToUtc(dueParts, timeZone);\n    }\n\n    return dueAt.toISOString();\n  }\n\n  function isWeekendBlockedAsset(asset = \"\") {\n    return WEEKEND_BLOCKED_ASSETS.has(String(asset || \"\").toUpperCase());\n  }\n\n  function assetUsesWeekdayActiveExpiry(asset = \"\") {\n    return isWeekendBlockedAsset(asset);\n  }\n\n  function assetHorizonBasis(asset = \"\") {\n    return assetUsesWeekdayActiveExpiry(asset) ? \"WEEKDAY_ACTIVE_TIME_V1\" : \"WALL_CLOCK\";\n  }\n\n  function assetMarketCalendar(asset = \"\") {\n    return assetUsesWeekdayActiveExpiry(asset) ? WEEKDAY_ACTIVE_MARKET_CALENDAR : CRYPTO_MARKET_CALENDAR;\n  }\n\n  function normalizeDirection(direction = \"\") {\n    return String(direction || \"\").trim().toUpperCase();\n  }\n\n  function isExplicitNoCallDirection(direction = \"\") {\n    return EXPLICIT_NO_CALL_DIRECTIONS.has(normalizeDirection(direction));\n  }\n\n  function isPendingDirection(direction = \"\") {\n    return normalizeDirection(direction) === \"PENDING\" || normalizeDirection(direction) === \"\";\n  }\n\n  function isNoCallDirection(direction = \"\") {\n    return isExplicitNoCallDirection(direction) || isPendingDirection(direction);\n  }\n\n  function chooseSealedAt(agent = {}) {\n    return agent.sealed_at || agent.full_output?.created_at || agent.last_run_et || agent.created_at || null;\n  }\n\n  function chooseGeneratedAt(agent = {}) {\n    return agent.generated_at || agent.last_run_et || chooseSealedAt(agent);\n  }\n\n  function chooseSourceRunId(agent = {}) {\n    return agent.source_run_id || agent.full_output?.source_run_id || agent.full_output?.execution_id || agent.full_output?.workflow_execution_id || null;\n  }\n\n  function provisionalScheduleMetadata(dashboardMeta = {}) {\n    const clock = parseExecutionClockLabel(dashboardMeta.execution_clock || DEFAULT_EXECUTION_CLOCK);\n    const refreshSchedule = `${String(clock.hour).padStart(2, \"0\")}:${String(clock.minute).padStart(2, \"0\")}`;\n    return {\n      refresh_schedule: dashboardMeta.refresh_schedule || refreshSchedule || DEFAULT_REFRESH_SCHEDULE,\n      refresh_timezone: dashboardMeta.refresh_timezone || SOURCE_TIMEZONE,\n      refresh_schedule_status: dashboardMeta.refresh_schedule_status || \"PROVISIONAL\",\n      validity_schedule_source: dashboardMeta.validity_schedule_source || \"dashboard_meta.execution_clock\",\n      validity_schedule_note: dashboardMeta.validity_schedule_note || DEFAULT_PROVISIONAL_REFRESH_NOTE\n    };\n  }\n\n  function nextWeekdayOpenFrom(value, timeZone = SOURCE_TIMEZONE) {\n    const current = parseIso(value);\n    if (!current) return null;\n\n    const currentParts = getZonedParts(current, timeZone);\n    const weekdayIndex = zonedWeekdayIndex(current, timeZone);\n    let daysToAdd = 0;\n\n    if (weekdayIndex === 6) {\n      daysToAdd = 2;\n    } else if (weekdayIndex === 0) {\n      daysToAdd = 1;\n    } else {\n      return current;\n    }\n\n    const nextDay = addZonedDays(currentParts, daysToAdd);\n    return zonedDateTimeToUtc({\n      ...nextDay,\n      hour: 0,\n      minute: 0,\n      second: 0\n    }, timeZone);\n  }\n\n  function weekendStartFromWeekday(value, timeZone = SOURCE_TIMEZONE) {\n    const current = parseIso(value);\n    if (!current) return null;\n    const currentParts = getZonedParts(current, timeZone);\n    const weekdayIndex = zonedWeekdayIndex(current, timeZone);\n    if (weekdayIndex < 1 || weekdayIndex > 5) return current;\n\n    const daysToSaturday = 6 - weekdayIndex;\n    const saturday = addZonedDays(currentParts, daysToSaturday);\n    return zonedDateTimeToUtc({\n      ...saturday,\n      hour: 0,\n      minute: 0,\n      second: 0\n    }, timeZone);\n  }\n\n  function computeWeekdayActiveForecastWindowEnd(sealedAtValue, activeDurationMs, timeZone = SOURCE_TIMEZONE) {\n    let cursor = parseIso(sealedAtValue);\n    if (!cursor) return null;\n\n    let remainingMs = activeDurationMs;\n\n    while (remainingMs > 0) {\n      if (isWeekendInTimeZone(cursor, timeZone)) {\n        cursor = nextWeekdayOpenFrom(cursor, timeZone);\n        continue;\n      }\n\n      const weekendStart = weekendStartFromWeekday(cursor, timeZone);\n      if (!weekendStart) return null;\n\n      const activeChunkMs = Math.min(remainingMs, weekendStart.getTime() - cursor.getTime());\n      cursor = new Date(cursor.getTime() + activeChunkMs);\n      remainingMs -= activeChunkMs;\n\n      if (remainingMs > 0) {\n        cursor = nextWeekdayOpenFrom(weekendStart, timeZone);\n      }\n    }\n\n    return cursor.toISOString();\n  }\n\n  function computeForecastWindowEnd(sealedAtValue, asset = \"\", horizonDuration = DEFAULT_HORIZON_DURATION) {\n    const sealedAt = parseIso(sealedAtValue);\n    if (!sealedAt) return null;\n\n    if (horizonDuration !== DEFAULT_HORIZON_DURATION) return null;\n\n    if (!assetUsesWeekdayActiveExpiry(asset)) {\n      return new Date(sealedAt.getTime() + (24 * 60 * 60 * 1000)).toISOString();\n    }\n\n    return computeWeekdayActiveForecastWindowEnd(sealedAt, 24 * 60 * 60 * 1000, SOURCE_TIMEZONE);\n  }\n\n  function deriveLayer1StatusAtBuild(agent = {}, dashboardMeta = {}) {\n    const priorityCall = agent.priority_call || agent.calls?.[\"24h\"] || {};\n    const direction = priorityCall.direction;\n    const sealedAt = chooseSealedAt(agent);\n    const statusAtBuild = String(agent.status_at_build || priorityCall.status_at_build || \"\").toUpperCase();\n\n    if (statusAtBuild) return statusAtBuild;\n    if (!sealedAt || isPendingDirection(direction)) return \"UNAVAILABLE\";\n    if (isWeekendBlockedAsset(agent.agent) && isWeekendInTimeZone(sealedAt, SOURCE_TIMEZONE) && isExplicitNoCallDirection(direction)) {\n      return \"MARKET_CLOSED\";\n    }\n    if (isExplicitNoCallDirection(direction)) return \"NO_CALL\";\n    return \"ACTIVE\";\n  }\n\n  function buildLayer1Timing(agent = {}, dashboardMeta = {}) {\n    const executionClock = dashboardMeta.execution_clock || DEFAULT_EXECUTION_CLOCK;\n    const scheduleMeta = provisionalScheduleMetadata(dashboardMeta);\n    const generatedAt = chooseGeneratedAt(agent);\n    const sealedAt = chooseSealedAt(agent);\n    const validFrom = agent.valid_from || sealedAt;\n    const refreshDueAt = agent.refresh_due_at || computeNextRefreshDueAt(validFrom || sealedAt, executionClock, SOURCE_TIMEZONE);\n    const priorityCall = agent.priority_call || agent.calls?.[\"24h\"] || {};\n    const horizonCode = agent.horizon_code || priorityCall.horizon_code || \"24H\";\n    const horizonDuration = agent.horizon_duration || priorityCall.horizon_duration || DEFAULT_HORIZON_DURATION;\n    const horizonBasis = agent.horizon_basis || priorityCall.horizon_basis || assetHorizonBasis(agent.agent);\n    const marketCalendar = agent.market_calendar || priorityCall.market_calendar || assetMarketCalendar(agent.agent);\n    const explicitForecastWindowEnd = firstPresentValue(\n      agent.forecast_window_end,\n      priorityCall.forecast_window_end,\n      agent.expires_at,\n      priorityCall.expires_at\n    );\n    const forecastWindowEnd = explicitForecastWindowEnd ?? computeForecastWindowEnd(validFrom || sealedAt, agent.agent, horizonDuration);\n    const statusAtBuild = deriveLayer1StatusAtBuild(agent, dashboardMeta);\n\n    return {\n      generated_at: generatedAt,\n      sealed_at: sealedAt,\n      valid_from: validFrom,\n      refresh_due_at: refreshDueAt,\n      forecast_window_end: forecastWindowEnd,\n      expires_at: forecastWindowEnd,\n      status_at_build: statusAtBuild,\n      effective_status: String(agent.effective_status || priorityCall.effective_status || statusAtBuild).toUpperCase(),\n      status_resolved_at: agent.status_resolved_at || priorityCall.status_resolved_at || null,\n      horizon_code: horizonCode,\n      horizon_duration: horizonDuration,\n      horizon_basis: horizonBasis,\n      timezone: agent.timezone || priorityCall.timezone || SOURCE_TIMEZONE,\n      market_calendar: marketCalendar,\n      source_run_id: chooseSourceRunId(agent),\n      validity_note: agent.validity_note || priorityCall.validity_note || \"Operational freshness uses a provisional refresh expectation only. Forecast expiry is explicit and separate from the provisional refresh threshold.\",\n      horizon_note: agent.horizon_note || priorityCall.horizon_note || (assetUsesWeekdayActiveExpiry(agent.agent) ? DEFAULT_HORIZON_NOTE : \"\"),\n      ...scheduleMeta\n    };\n  }\n\n  function requiresExplicitForecastExpiry(agent = {}, timing = {}, priorityCall = {}) {\n    const horizonCode = String(timing.horizon_code || priorityCall.horizon_code || \"\").toUpperCase();\n    const statusAtBuild = String(timing.status_at_build || priorityCall.status_at_build || \"\").toUpperCase();\n    const direction = priorityCall.direction;\n    return horizonCode === \"24H\"\n      && timing.horizon_duration === DEFAULT_HORIZON_DURATION\n      && !isPendingDirection(direction)\n      && !isExplicitNoCallDirection(direction)\n      && ![\"UNAVAILABLE\", \"MARKET_CLOSED\", \"SUPERSEDED\"].includes(statusAtBuild);\n  }\n\n  function assertValidExplicitLayer1Expiry(agent = {}, timing = {}, priorityCall = {}) {\n    if (!requiresExplicitForecastExpiry(agent, timing, priorityCall)) {\n      return;\n    }\n\n    const forecastWindowEnd = parseIso(timing.forecast_window_end);\n    if (!forecastWindowEnd) {\n      throw new Error(\n        `Unable to derive explicit 24H forecast expiry for ${agent.agent || \"UNKNOWN\"} `\n        + `(valid_from=${timing.valid_from || \"null\"}, sealed_at=${timing.sealed_at || \"null\"}, `\n        + `forecast_window_end=${timing.forecast_window_end ?? \"null\"})`\n      );\n    }\n\n    if (timing.expires_at !== timing.forecast_window_end) {\n      throw new Error(\n        `Explicit 24H expiry mismatch for ${agent.agent || \"UNKNOWN\"} `\n        + `(forecast_window_end=${timing.forecast_window_end ?? \"null\"}, expires_at=${timing.expires_at ?? \"null\"})`\n      );\n    }\n  }\n\n  function resolveLayer1DisplayStatus(agent = {}, dashboardMeta = {}, nowValue = new Date()) {\n    const timing = buildLayer1Timing(agent, dashboardMeta);\n    const priorityCall = agent.priority_call || agent.calls?.[\"24h\"] || {};\n    const now = parseIso(nowValue) || new Date();\n    const refreshDueAt = parseIso(timing.refresh_due_at);\n    const forecastWindowEnd = parseIso(timing.forecast_window_end);\n\n    if (!timing.sealed_at || isPendingDirection(priorityCall.direction)) return \"UNAVAILABLE\";\n    if (timing.status_at_build === \"SUPERSEDED\") return \"SUPERSEDED\";\n    if (timing.status_at_build === \"UNAVAILABLE\") return \"UNAVAILABLE\";\n\n    if (isWeekendBlockedAsset(agent.agent) && isWeekendInTimeZone(now, SOURCE_TIMEZONE) && isExplicitNoCallDirection(priorityCall.direction)) {\n      return \"MARKET_CLOSED\";\n    }\n\n    if (isExplicitNoCallDirection(priorityCall.direction)) return \"NO_CALL\";\n    if (forecastWindowEnd && now.getTime() >= forecastWindowEnd.getTime()) return \"EXPIRED\";\n    if (refreshDueAt && now.getTime() >= refreshDueAt.getTime()) return \"STALE\";\n    return \"ACTIVE\";\n  }\n\n  function buildLayer2Timing({ pairCode, pairLabel, targetLeg, usdLeg, nowValue = new Date() }) {\n    const targetAgent = targetLeg?.agent || null;\n    const usdAgent = usdLeg?.agent || null;\n    const now = parseIso(nowValue) || new Date();\n    const targetStatus = targetAgent ? resolveLayer1DisplayStatus(targetAgent, targetLeg.dashboardMeta, now) : \"UNAVAILABLE\";\n    const usdStatus = usdAgent ? resolveLayer1DisplayStatus(usdAgent, usdLeg.dashboardMeta, now) : \"UNAVAILABLE\";\n    const targetTiming = targetAgent ? buildLayer1Timing(targetAgent, targetLeg.dashboardMeta) : {};\n    const usdTiming = usdAgent ? buildLayer1Timing(usdAgent, usdLeg.dashboardMeta) : {};\n\n    const targetValidFrom = parseIso(targetTiming.valid_from);\n    const usdValidFrom = parseIso(usdTiming.valid_from);\n    const targetRefreshDueAt = parseIso(targetTiming.refresh_due_at);\n    const usdRefreshDueAt = parseIso(usdTiming.refresh_due_at);\n    const targetForecastEnd = parseIso(targetTiming.forecast_window_end);\n    const usdForecastEnd = parseIso(usdTiming.forecast_window_end);\n\n    const pairValidFrom = targetValidFrom && usdValidFrom\n      ? new Date(Math.max(targetValidFrom.getTime(), usdValidFrom.getTime())).toISOString()\n      : (targetValidFrom || usdValidFrom)?.toISOString() || null;\n    const pairRefreshDueAt = targetRefreshDueAt && usdRefreshDueAt\n      ? new Date(Math.min(targetRefreshDueAt.getTime(), usdRefreshDueAt.getTime())).toISOString()\n      : (targetRefreshDueAt || usdRefreshDueAt)?.toISOString() || null;\n    const pairForecastEnd = targetForecastEnd && usdForecastEnd\n      ? new Date(Math.min(targetForecastEnd.getTime(), usdForecastEnd.getTime())).toISOString()\n      : null;\n    const pairStartDate = parseIso(pairValidFrom);\n    const pairEndDate = parseIso(pairForecastEnd);\n    const forecastWindowsOverlap = Boolean(pairStartDate && pairEndDate && pairStartDate.getTime() < pairEndDate.getTime());\n\n    let effectiveStatus = \"ACTIVE\";\n    let statusAtBuild = \"ACTIVE\";\n    let reason = null;\n\n    if (!targetAgent || !usdAgent) {\n      effectiveStatus = \"UNAVAILABLE\";\n      statusAtBuild = \"UNAVAILABLE\";\n      reason = \"Missing supporting Layer 1 leg\";\n    } else if (!forecastWindowsOverlap) {\n      effectiveStatus = \"UNAVAILABLE\";\n      statusAtBuild = \"UNAVAILABLE\";\n      reason = \"Supporting Layer 1 forecast windows do not overlap\";\n    } else if ([\"UNAVAILABLE\", \"MARKET_CLOSED\", \"SUPERSEDED\"].includes(targetStatus) || [\"UNAVAILABLE\", \"MARKET_CLOSED\", \"SUPERSEDED\"].includes(usdStatus)) {\n      effectiveStatus = \"UNAVAILABLE\";\n      statusAtBuild = \"UNAVAILABLE\";\n    } else if (targetStatus === \"NO_CALL\" || usdStatus === \"NO_CALL\") {\n      effectiveStatus = \"NO_CALL\";\n      statusAtBuild = \"NO_CALL\";\n    } else if ((targetForecastEnd && now.getTime() >= targetForecastEnd.getTime()) || (usdForecastEnd && now.getTime() >= usdForecastEnd.getTime()) || (pairEndDate && now.getTime() >= pairEndDate.getTime())) {\n      effectiveStatus = \"EXPIRED\";\n      statusAtBuild = \"ACTIVE\";\n    } else if (targetStatus === \"STALE\" || usdStatus === \"STALE\") {\n      effectiveStatus = \"STALE\";\n      statusAtBuild = \"ACTIVE\";\n    }\n\n    return {\n      pair_code: pairCode || null,\n      pair_label: pairLabel || null,\n      valid_from: effectiveStatus === \"UNAVAILABLE\" && reason ? null : pairValidFrom,\n      refresh_due_at: effectiveStatus === \"UNAVAILABLE\" && reason ? null : pairRefreshDueAt,\n      forecast_window_end: effectiveStatus === \"UNAVAILABLE\" && reason ? null : pairForecastEnd,\n      expires_at: effectiveStatus === \"UNAVAILABLE\" && reason ? null : pairForecastEnd,\n      status_at_build: statusAtBuild,\n      effective_status: effectiveStatus,\n      status_resolved_at: now.toISOString(),\n      timezone: SOURCE_TIMEZONE,\n      horizon_code: \"24H\",\n      horizon_duration: DEFAULT_HORIZON_DURATION,\n      horizon_basis: \"PAIR_SUPPORTING_FORECAST_INTERSECTION_V1\",\n      market_calendar: `${targetTiming.market_calendar || assetMarketCalendar(targetAgent?.agent)}__${usdTiming.market_calendar || assetMarketCalendar(usdAgent?.agent)}`,\n      reason,\n      supporting_legs: {\n        target: {\n          asset: targetLeg.agent?.agent || null,\n          effective_status: targetStatus,\n          valid_from: targetTiming.valid_from || null,\n          refresh_due_at: targetTiming.refresh_due_at || null,\n          forecast_window_end: targetTiming.forecast_window_end || null,\n          expires_at: targetTiming.expires_at || null,\n          sealed_at: targetTiming.sealed_at || null,\n          source_run_id: targetTiming.source_run_id || null\n        },\n        usd: {\n          asset: usdLeg.agent?.agent || null,\n          effective_status: usdStatus,\n          valid_from: usdTiming.valid_from || null,\n          refresh_due_at: usdTiming.refresh_due_at || null,\n          forecast_window_end: usdTiming.forecast_window_end || null,\n          expires_at: usdTiming.expires_at || null,\n          sealed_at: usdTiming.sealed_at || null,\n          source_run_id: usdTiming.source_run_id || null\n        }\n      }\n    };\n  }\n\n  function resolveLayer2DisplayStatus(pair = {}, nowValue = new Date()) {\n    const storedStatus = String(pair.effective_status || pair.status_at_build || \"UNAVAILABLE\").toUpperCase();\n    const now = parseIso(nowValue) || new Date();\n    const refreshDueAt = parseIso(pair.refresh_due_at);\n    const forecastWindowEnd = parseIso(pair.forecast_window_end || pair.expires_at);\n\n    if (storedStatus === \"UNAVAILABLE\" || storedStatus === \"MARKET_CLOSED\" || storedStatus === \"SUPERSEDED\") return \"UNAVAILABLE\";\n    if (storedStatus === \"NO_CALL\") return \"NO_CALL\";\n    if (forecastWindowEnd && now.getTime() >= forecastWindowEnd.getTime()) return \"EXPIRED\";\n    if (storedStatus === \"STALE\" || (refreshDueAt && now.getTime() >= refreshDueAt.getTime())) return \"STALE\";\n    return \"ACTIVE\";\n  }\n\n  function formatDisplayTime(value, timeZone = DISPLAY_TIMEZONE) {\n    const date = parseIso(value);\n    if (!date) return \"Pending\";\n    return new Intl.DateTimeFormat(\"en-GB\", {\n      timeZone,\n      day: \"2-digit\",\n      month: \"short\",\n      year: \"numeric\",\n      hour: \"2-digit\",\n      minute: \"2-digit\",\n      hour12: false\n    }).format(date);\n  }\n\n  function formatRemainingDuration(targetValue, nowValue = new Date()) {\n    const target = parseIso(targetValue);\n    const now = parseIso(nowValue) || new Date();\n    if (!target) return null;\n\n    const diffMs = target.getTime() - now.getTime();\n    if (diffMs <= 0) return null;\n\n    const totalMinutes = Math.ceil(diffMs / 60000);\n    const days = Math.floor(totalMinutes / 1440);\n    const hours = Math.floor((totalMinutes % 1440) / 60);\n    const minutes = totalMinutes % 60;\n    const parts = [];\n\n    if (days > 0) parts.push(`${days}d`);\n    if (hours > 0) parts.push(`${hours}h`);\n    if ((minutes > 0 || parts.length === 0) && parts.length < 2) parts.push(`${minutes}m`);\n\n    return parts.join(\" \");\n  }\n\n  function formatTimeUntilRefresh(refreshDueAtValue, nowValue = new Date()) {\n    const remaining = formatRemainingDuration(refreshDueAtValue, nowValue);\n    if (!parseIso(refreshDueAtValue)) return \"Awaiting refresh schedule\";\n    if (!remaining) return \"refresh overdue\";\n    return `refresh due in ${remaining}`;\n  }\n\n  function formatTimeUntilForecastExpiry(forecastWindowEndValue, nowValue = new Date()) {\n    const forecastWindowEnd = parseIso(forecastWindowEndValue);\n    if (!forecastWindowEnd) return \"Awaiting forecast expiry\";\n    const remaining = formatRemainingDuration(forecastWindowEnd, nowValue);\n    if (!remaining) return \"expired\";\n    return `expires in ${remaining}`;\n  }\n\n  function enrichLayer1DashboardData(data = {}) {\n    const dashboardMeta = data.dashboard_meta || {};\n    const scheduleMeta = provisionalScheduleMetadata(dashboardMeta);\n    const nowIso = new Date().toISOString();\n    const agents = (data.agents || []).map((rawAgent) => {\n      const timing = buildLayer1Timing(rawAgent, dashboardMeta);\n      const effectiveStatus = resolveLayer1DisplayStatus(rawAgent, dashboardMeta, new Date());\n      assertValidExplicitLayer1Expiry(rawAgent, timing, rawAgent.priority_call || rawAgent.calls?.[\"24h\"] || {});\n      const calls = { ...(rawAgent.calls || {}) };\n      const call24 = { ...(calls[\"24h\"] || {}) };\n      call24.generated_at = call24.generated_at || timing.generated_at;\n      call24.sealed_at = call24.sealed_at || timing.sealed_at;\n      call24.valid_from = call24.valid_from || timing.valid_from;\n      call24.refresh_due_at = call24.refresh_due_at || timing.refresh_due_at;\n      call24.forecast_window_end = Object.prototype.hasOwnProperty.call(call24, \"forecast_window_end\") ? call24.forecast_window_end : timing.forecast_window_end;\n      call24.expires_at = Object.prototype.hasOwnProperty.call(call24, \"expires_at\") ? call24.expires_at : timing.expires_at;\n      call24.status_at_build = call24.status_at_build || timing.status_at_build;\n      call24.effective_status = effectiveStatus;\n      call24.status_resolved_at = nowIso;\n      call24.horizon_code = call24.horizon_code || timing.horizon_code;\n      call24.horizon_duration = call24.horizon_duration || timing.horizon_duration;\n      call24.horizon_basis = call24.horizon_basis || timing.horizon_basis;\n      call24.timezone = call24.timezone || timing.timezone;\n      call24.market_calendar = call24.market_calendar || timing.market_calendar;\n      call24.source_run_id = call24.source_run_id || timing.source_run_id;\n      call24.validity_note = call24.validity_note || timing.validity_note;\n      call24.horizon_note = call24.horizon_note || timing.horizon_note;\n      calls[\"24h\"] = call24;\n\n      return {\n        ...rawAgent,\n        ...timing,\n        effective_status: effectiveStatus,\n        status_resolved_at: nowIso,\n        calls,\n        priority_call: {\n          ...(rawAgent.priority_call || call24),\n          ...call24\n        }\n      };\n    });\n\n    return {\n      ...data,\n      dashboard_meta: {\n        ...dashboardMeta,\n        display_timezone: dashboardMeta.display_timezone || DISPLAY_TIMEZONE,\n        validity_contract_version: dashboardMeta.validity_contract_version || \"live_v3_explicit_forecast_expiry\",\n        timing_contract_note: dashboardMeta.timing_contract_note || \"Forecast expiry is explicit and separate from the provisional refresh threshold. Refresh timing remains an operational expectation only.\",\n        horizon_contract_note: dashboardMeta.horizon_contract_note || DEFAULT_HORIZON_NOTE,\n        ...scheduleMeta\n      },\n      agents\n    };\n  }\n\n  return {\n    SOURCE_TIMEZONE,\n    DISPLAY_TIMEZONE,\n    DEFAULT_EXECUTION_CLOCK,\n    DEFAULT_HORIZON_DURATION,\n    DEFAULT_PROVISIONAL_REFRESH_NOTE,\n    DEFAULT_HORIZON_NOTE,\n    WEEKDAY_ACTIVE_MARKET_CALENDAR,\n    CRYPTO_MARKET_CALENDAR,\n    assetHorizonBasis,\n    assetMarketCalendar,\n    buildLayer1Timing,\n    buildLayer2Timing,\n    computeForecastWindowEnd,\n    computeNextRefreshDueAt,\n    computeWeekdayActiveForecastWindowEnd,\n    enrichLayer1DashboardData,\n    formatDisplayTime,\n    formatRemainingDuration,\n    formatTimeUntilForecastExpiry,\n    formatTimeUntilRefresh,\n    isExplicitNoCallDirection,\n    isNoCallDirection,\n    isPendingDirection,\n    isWeekendBlockedAsset,\n    parseExecutionClockLabel,\n    parseIso,\n    provisionalScheduleMetadata,\n    requiresExplicitForecastExpiry,\n    resolveLayer1DisplayStatus,\n    resolveLayer2DisplayStatus\n  };\n});\n\n\nconst rows = $input.all().map((item) => item.json);\nconst agents = [\"USD\", \"EUR\", \"GOLD\", \"SILVER\", \"NQ\", \"BTC\", \"WTI\", \"GBP\"];;\n\nfunction parseMaybeJson(value, fallback = {}) {\n  if (value === null || value === undefined || value === \"\") return fallback;\n  if (typeof value === \"object\") return value;\n  try {\n    return JSON.parse(value);\n  } catch (error) {\n    return fallback;\n  }\n}\n\nfunction parseMaybeArray(value, fallback = []) {\n  if (value === null || value === undefined || value === \"\") return fallback;\n  if (Array.isArray(value)) return value;\n  try {\n    const parsed = JSON.parse(value);\n    return Array.isArray(parsed) ? parsed : fallback;\n  } catch (error) {\n    return fallback;\n  }\n}\n\nfunction toNumber(value) {\n  if (value === null || value === undefined || value === \"\") return null;\n  const numeric = Number(value);\n  return Number.isFinite(numeric) ? numeric : null;\n}\n\nfunction parseTimestamp(value) {\n  const timestamp = new Date(value || 0).getTime();\n  return Number.isFinite(timestamp) ? timestamp : 0;\n}\n\nfunction consistencyLabel(values) {\n  if (!values.length) return \"UNKNOWN\";\n  return values.every((value) => value === values[0]) ? \"MATCHED\" : \"MISMATCHED\";\n}\n\nfunction hasUsableDirection(row) {\n  const output = parseMaybeJson(row && (row.full_output || row.raw_agent_output), {});\n  return Boolean(row && (row.direction_24h || row.call_24h_direction || output.direction_24h || (output.today_call && output.today_call.direction)));\n}\n\nfunction selectLatestRowsByAgent() {\n  const selected = {};\n  const missingAgents = [];\n  for (const agent of agents) {\n    const latest = rows\n      .filter((row) => row && row.agent_name === agent && Number(row.layer) === 1)\n      .filter(hasUsableDirection)\n      .sort((left, right) => parseTimestamp((right && (right.created_at || right.run_time_et)) || 0) - parseTimestamp((left && (left.created_at || left.run_time_et)) || 0))[0] || null;\n    if (!latest) {\n      missingAgents.push(agent);\n      continue;\n    }\n    selected[agent] = latest;\n  }\n  if (missingAgents.length) {\n    throw new Error(\"Missing required Layer 1 agents: \" + missingAgents.join(\", \"));\n  }\n  return agents.map((agent) => selected[agent]);\n}\n\nfunction buildSelectionProvenance(selectedRows) {\n  const sourceRunIds = selectedRows.map((row) => String((row && row.source_run_id) || \"\").trim()).filter(Boolean);\n  const refreshRequestIds = selectedRows.map((row) => String((row && (row.refresh_request_id || row.request_id)) || \"\").trim()).filter(Boolean);\n  const sourceRunConsistency = consistencyLabel(sourceRunIds);\n  const refreshRequestConsistency = consistencyLabel(refreshRequestIds);\n  const consistencyStatus = sourceRunConsistency === \"MISMATCHED\" || refreshRequestConsistency === \"MISMATCHED\"\n    ? \"MISMATCHED\"\n    : sourceRunConsistency === \"MATCHED\" || refreshRequestConsistency === \"MATCHED\"\n      ? \"MATCHED\"\n      : \"UNKNOWN\";\n  return {\n    sourceRunIds, refreshRequestIds, sourceRunConsistency, refreshRequestConsistency, consistencyStatus,\n    sourceRunId: sourceRunConsistency === \"MATCHED\" ? sourceRunIds[0] : null,\n    refreshRequestId: refreshRequestConsistency === \"MATCHED\" ? refreshRequestIds[0] : null\n  };\n}\n\nfunction outputFromRow(row) {\n  return parseMaybeJson(row.full_output, parseMaybeJson(row.raw_agent_output, {}));\n}\n\nfunction getDirection(row, output, oldField, newField) {\n  return row[oldField] || row[newField] || output[newField] || \"PENDING\";\n}\n\nfunction getConviction(row, output, oldField, newField) {\n  return toNumber(row[oldField] != null ? row[oldField] : row[newField] != null ? row[newField] : output[newField] != null ? output[newField] : null);\n}\n\nfunction buildKeyFactors(factorBreakdown) {\n  if (!factorBreakdown || typeof factorBreakdown !== \"object\" || Array.isArray(factorBreakdown)) return [];\n  return Object.entries(factorBreakdown).map(([key, value]) => {\n    if (value && typeof value === \"object\") {\n      const signal = value.signal || \"NEUTRAL\";\n      const weight = value.weight !== undefined ? \" [\" + value.weight + \"]\" : \"\";\n      const evidence = value.evidence ? \" - \" + value.evidence : \"\";\n      const reason = value.reason ? \" (\" + value.reason + \")\" : \"\";\n      return key + weight + \": \" + signal + evidence + reason;\n    }\n    return key + \": \" + value;\n  });\n}\n\nfunction normaliseConvictionModel(output, timeframeKey = \"24h\") {\n  const timeframeModel = output.timeframe_models?.[timeframeKey] || {};\n  const model = timeframeModel.conviction_model || output.conviction_model || {};\n  const weightedScore = timeframeModel.weighted_score || output.weighted_score || {};\n  const bullishArgument = toNumber(model.bullish_argument_pct);\n  const bearishArgument = toNumber(model.bearish_argument_pct);\n  const neutralPct = toNumber(model.neutral_evidence_pct ?? model.neutral_pct);\n  const directionalParticipation = toNumber(model.directional_participation_pct ?? model.active_participation_pct);\n  const netEdge = toNumber(model.net_edge_pct);\n  const finalConviction = toNumber(model.final_conviction);\n  const winningSide = model.winning_side || (bullishArgument !== null && bearishArgument !== null ? (bullishArgument > bearishArgument ? \"BULLISH\" : (bearishArgument > bullishArgument ? \"BEARISH\" : \"TIED\")) : null);\n  return {\n    ...model, bullish_argument_pct: bullishArgument, bearish_argument_pct: bearishArgument, neutral_pct: neutralPct, neutral_evidence_pct: neutralPct,\n    directional_participation_pct: directionalParticipation, active_participation_pct: directionalParticipation, net_edge_pct: netEdge, final_conviction: finalConviction,\n    verdict_strength: model.verdict_strength || null, winning_side: winningSide, final_conviction_logic: model.final_conviction_logic || \"\",\n    bull_case_weight: toNumber(model.bull_case_weight ?? weightedScore.bullish_weight ?? null),\n    bear_case_weight: toNumber(model.bear_case_weight ?? weightedScore.bearish_weight ?? null),\n    neutral_weight: toNumber(model.neutral_weight ?? weightedScore.neutral_weight ?? null),\n    weighted_score: {\n      bullish_weight: toNumber(weightedScore.bullish_weight ?? model.bull_case_weight ?? null),\n      bearish_weight: toNumber(weightedScore.bearish_weight ?? model.bear_case_weight ?? null),\n      neutral_weight: toNumber(weightedScore.neutral_weight ?? model.neutral_weight ?? null),\n      active_weight: toNumber(weightedScore.active_weight ?? directionalParticipation ?? null),\n      weight_margin: toNumber(weightedScore.weight_margin ?? null)\n    },\n    alignment: bullishArgument, base_conviction: finalConviction, participation: directionalParticipation\n  };\n}\n\nfunction timeframeModel(output, key) { return output.timeframe_models?.[key] || {}; }\n\nfunction callObject(row, output, key, oldDirection, newDirection, oldConviction, newConviction, oldReason, newReason) {\n  const tfModel = timeframeModel(output, key);\n  return {\n    direction: getDirection(row, output, oldDirection, newDirection),\n    conviction: getConviction(row, output, oldConviction, newConviction),\n    reason: row[oldReason] || output[newReason] || tfModel.reason || row.reasoning_summary || output.reasoning_summary || \"\",\n    conviction_model: normaliseConvictionModel(output, key),\n    weighted_score: tfModel.weighted_score || output.weighted_score || {},\n    factor_breakdown: tfModel.factor_breakdown || output.factor_breakdown || {}\n  };\n}\n\nfunction fromRow(agent, row) {\n  const output = outputFromRow(row);\n  const factorBreakdown = parseMaybeJson(row.factor_breakdown, output.factor_breakdown || {});\n  const warnings = parseMaybeArray(row.warnings, output.risk_flags || output.warnings || []);\n  const baseCalls = {\n    \"24h\": callObject(row, output, \"24h\", \"call_24h_direction\", \"direction_24h\", \"call_24h_conviction\", \"conviction_24h\", \"call_24h_reason\", \"reason_24h\"),\n    \"3d\": callObject(row, output, \"3d\", \"call_3d_direction\", \"direction_3_day\", \"call_3d_conviction\", \"conviction_3_day\", \"call_3d_reason\", \"reason_3_day\"),\n    \"current_week\": callObject(row, output, \"current_week\", \"call_current_week_direction\", \"direction_current_week\", \"call_current_week_conviction\", \"conviction_current_week\", \"call_current_week_reason\", \"reason_current_week\"),\n    \"next_week\": callObject(row, output, \"next_week\", \"call_next_week_direction\", \"direction_next_week\", \"call_next_week_conviction\", \"conviction_next_week\", \"call_next_week_reason\", \"reason_next_week\"),\n    \"current_month\": callObject(row, output, \"current_month\", \"call_current_month_direction\", \"direction_current_month\", \"call_current_month_conviction\", \"conviction_current_month\", \"call_current_month_reason\", \"reason_current_month\")\n  };\n  const priorityTimeframe = \"24h\";\n  const priorityCall = baseCalls[priorityTimeframe];\n  const convictionModel = normaliseConvictionModel(output, priorityTimeframe);\n  return {\n    agent, status: \"live\", market_status: output.market_status || row.market_status || null, last_run_et: row.run_time_et || row.created_at || null,\n    generated_at: row.run_time_et || row.created_at || null, sealed_at: row.created_at || output.created_at || row.run_time_et || null,\n    valid_from: row.valid_from || output.valid_from || row.created_at || output.created_at || row.run_time_et || null,\n    refresh_due_at: row.refresh_due_at || output.refresh_due_at || null,\n    forecast_window_end: Object.prototype.hasOwnProperty.call(row, \"forecast_window_end\") ? row.forecast_window_end : (Object.prototype.hasOwnProperty.call(output, \"forecast_window_end\") ? output.forecast_window_end : null),\n    expires_at: Object.prototype.hasOwnProperty.call(row, \"expires_at\") ? row.expires_at : (Object.prototype.hasOwnProperty.call(output, \"expires_at\") ? output.expires_at : null),\n    status_at_build: row.status_at_build || output.status_at_build || priorityCall.status_at_build || null,\n    effective_status: row.effective_status || output.effective_status || priorityCall.effective_status || null,\n    status_resolved_at: row.status_resolved_at || output.status_resolved_at || null,\n    horizon_code: row.horizon_code || output.horizon_code || priorityCall.horizon_code || \"24H\",\n    horizon_duration: row.horizon_duration || output.horizon_duration || priorityCall.horizon_duration || \"PT24H\",\n    horizon_basis: row.horizon_basis || output.horizon_basis || priorityCall.horizon_basis || null,\n    timezone: row.timezone || output.timezone || priorityCall.timezone || \"America/New_York\",\n    market_calendar: row.market_calendar || output.market_calendar || priorityCall.market_calendar || null,\n    source_run_id: row.source_run_id || output.source_run_id || output.execution_id || output.workflow_execution_id || null,\n    refresh_request_id: row.refresh_request_id || row.request_id || output.refresh_request_id || output.request_id || null,\n    summary: output.summary || row.reasoning_summary || (agent + \" Layer 1 raw call generated from sealed independent workflow.\"),\n    calls: baseCalls, priority_timeframe: priorityTimeframe, priority_call: priorityCall, factor_breakdown: factorBreakdown, key_factors: buildKeyFactors(factorBreakdown),\n    warnings, reasoning_summary: row.reasoning_summary || output.reasoning_summary || \"\", score_bullish: toNumber(row.score_bullish ?? output.score_bullish ?? null),\n    score_bearish: toNumber(row.score_bearish ?? output.score_bearish ?? null), score_neutral: toNumber(row.score_neutral ?? output.score_neutral ?? null),\n    non_neutral_count: toNumber(output.non_neutral_count ?? null), logic_document: row.logic_document || output.logic_document || null,\n    logic_document_version: row.logic_document_version || output.logic_document_version || null, conviction_model: convictionModel, timeframe_models: output.timeframe_models || {},\n    display_metrics: { bull_case: convictionModel.bullish_argument_pct, bear_case: convictionModel.bearish_argument_pct, winning_side: convictionModel.winning_side, conviction: convictionModel.final_conviction, net_edge: convictionModel.net_edge_pct, directional_participation: convictionModel.directional_participation_pct, neutral: convictionModel.neutral_evidence_pct ?? convictionModel.neutral_pct, verdict_strength: convictionModel.verdict_strength, bull_case_weight: convictionModel.bull_case_weight ?? null, bear_case_weight: convictionModel.bear_case_weight ?? null },\n    full_output: output\n  };\n}\n\nconst selectedRows = selectLatestRowsByAgent();\nconst provenance = buildSelectionProvenance(selectedRows);\nconst rowByAgent = Object.fromEntries(selectedRows.map((row) => [row.agent_name, row]));\nconst baseDashboard = {\n  source_run_id: provenance.sourceRunId,\n  refresh_request_id: provenance.refreshRequestId,\n  dashboard_meta: {\n    system_timezone: \"America/New_York\", execution_clock: \"07:00 ET primary run\", last_updated_et: new Date().toISOString(),\n    architecture: \"Layer 1 agents are sealed independent raw signal producers. No cross-agent communication.\",\n    weekend_rule: \"Weekday-active-time V1 pauses only for weekend closure. Exchange holidays and intraday maintenance breaks are not yet modelled.\",\n    display_timezone: \"Europe/London\", validity_contract_version: \"live_v3_explicit_forecast_expiry\", required_agents: agents,\n    source_run_id_consistency: provenance.sourceRunConsistency, refresh_request_id_consistency: provenance.refreshRequestConsistency, publication_consistency: provenance.consistencyStatus,\n    source_run_ids: provenance.sourceRunIds, refresh_request_ids: provenance.refreshRequestIds\n  },\n  agents: agents.map((agent) => fromRow(agent, rowByAgent[agent]))\n};\nconst dashboard = globalThis.LiveCallValidity.enrichLayer1DashboardData(baseDashboard);\ndashboard.dashboard_meta.last_updated_et = new Date().toISOString();\nreturn [{ json: { file_content: JSON.stringify(dashboard, null, 2), dashboard } }];"
+        }
+      },
+      {
+        "id": "77857e6c-da2f-4251-946e-1100e6904b2b",
+        "name": "Edit a file",
+        "webhookId": "63f6f663-41d1-4915-937c-433e1030ae7b",
+        "type": "n8n-nodes-base.github",
+        "typeVersion": 1.1,
+        "position": [
+          624,
+          0
+        ],
+        "parameters": {
+          "authentication": "oAuth2",
+          "resource": "file",
+          "operation": "edit",
+          "owner": {
+            "__rl": true,
+            "value": "kevincreedycars-debug",
+            "mode": "list",
+            "cachedResultName": "kevincreedycars-debug",
+            "cachedResultUrl": "https://github.com/kevincreedycars-debug"
+          },
+          "repository": {
+            "__rl": true,
+            "value": "trading-agent-dashboard",
+            "mode": "list",
+            "cachedResultName": "trading-agent-dashboard",
+            "cachedResultUrl": "https://github.com/kevincreedycars-debug/trading-agent-dashboard"
+          },
+          "filePath": "data/layer1.json",
+          "fileContent": "={{ $json.file_content }}",
+          "commitMessage": "Update layer1 dashboard data from agent outputs"
+        },
+        "credentials": {
+          "githubOAuth2Api": {
+            "id": "wr4dhSbWkjNonhfi",
+            "name": "GitHub account 3"
+          }
+        }
+      },
+      {
+        "id": "9fcc2657-4e50-4899-a618-8fbd0f848283",
+        "name": "When Executed by Another Workflow",
+        "type": "n8n-nodes-base.executeWorkflowTrigger",
+        "typeVersion": 1.2,
+        "position": [
+          0,
+          0
+        ],
+        "parameters": {
+          "inputSource": "passthrough"
+        }
+      },
+      {
+        "id": "dw-live-get-usd-rows",
+        "name": "Get latest USD rows",
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "alwaysOutputData": true,
+        "position": [
+          208,
+          -160
+        ],
+        "parameters": {
+          "operation": "getAll",
+          "tableId": "agent_outputs",
+          "limit": 20,
+          "orderBy": "created_at.desc",
+          "matchType": "allFilters",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "agent_name",
+                "condition": "eq",
+                "keyValue": "USD"
+              },
+              {
+                "keyName": "layer",
+                "condition": "eq",
+                "keyValue": "1"
+              }
+            ]
+          }
+        },
+        "credentials": {
+          "supabaseApi": {
+            "id": "trM35g1QCTOgQp4K",
+            "name": "Supabase account"
+          }
+        }
+      },
+      {
+        "id": "dw-live-get-eur-rows",
+        "name": "Get latest EUR rows",
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "alwaysOutputData": true,
+        "position": [
+          208,
+          -80
+        ],
+        "parameters": {
+          "operation": "getAll",
+          "tableId": "agent_outputs",
+          "limit": 20,
+          "orderBy": "created_at.desc",
+          "matchType": "allFilters",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "agent_name",
+                "condition": "eq",
+                "keyValue": "EUR"
+              },
+              {
+                "keyName": "layer",
+                "condition": "eq",
+                "keyValue": "1"
+              }
+            ]
+          }
+        },
+        "credentials": {
+          "supabaseApi": {
+            "id": "trM35g1QCTOgQp4K",
+            "name": "Supabase account"
+          }
+        }
+      },
+      {
+        "id": "dw-live-get-gold-rows",
+        "name": "Get latest GOLD rows",
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "alwaysOutputData": true,
+        "position": [
+          208,
+          0
+        ],
+        "parameters": {
+          "operation": "getAll",
+          "tableId": "agent_outputs",
+          "limit": 20,
+          "orderBy": "created_at.desc",
+          "matchType": "allFilters",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "agent_name",
+                "condition": "eq",
+                "keyValue": "GOLD"
+              },
+              {
+                "keyName": "layer",
+                "condition": "eq",
+                "keyValue": "1"
+              }
+            ]
+          }
+        },
+        "credentials": {
+          "supabaseApi": {
+            "id": "trM35g1QCTOgQp4K",
+            "name": "Supabase account"
+          }
+        }
+      },
+      {
+        "id": "dw-live-get-nq-rows",
+        "name": "Get latest NQ rows",
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "alwaysOutputData": true,
+        "position": [
+          208,
+          80
+        ],
+        "parameters": {
+          "operation": "getAll",
+          "tableId": "agent_outputs",
+          "limit": 20,
+          "orderBy": "created_at.desc",
+          "matchType": "allFilters",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "agent_name",
+                "condition": "eq",
+                "keyValue": "NQ"
+              },
+              {
+                "keyName": "layer",
+                "condition": "eq",
+                "keyValue": "1"
+              }
+            ]
+          }
+        },
+        "credentials": {
+          "supabaseApi": {
+            "id": "trM35g1QCTOgQp4K",
+            "name": "Supabase account"
+          }
+        }
+      },
+      {
+        "id": "dw-live-get-btc-rows",
+        "name": "Get latest BTC rows",
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "alwaysOutputData": true,
+        "position": [
+          208,
+          160
+        ],
+        "parameters": {
+          "operation": "getAll",
+          "tableId": "agent_outputs",
+          "limit": 20,
+          "orderBy": "created_at.desc",
+          "matchType": "allFilters",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "agent_name",
+                "condition": "eq",
+                "keyValue": "BTC"
+              },
+              {
+                "keyName": "layer",
+                "condition": "eq",
+                "keyValue": "1"
+              }
+            ]
+          }
+        },
+        "credentials": {
+          "supabaseApi": {
+            "id": "trM35g1QCTOgQp4K",
+            "name": "Supabase account"
+          }
+        }
+      },
+      {
+        "id": "dw-merge-usd-eur",
+        "name": "Merge USD + EUR",
+        "type": "n8n-nodes-base.merge",
+        "typeVersion": 3,
+        "position": [
+          320,
+          -120
+        ],
+        "parameters": {
+          "mode": "append"
+        }
+      },
+      {
+        "id": "dw-merge-gold-nq",
+        "name": "Merge GOLD + NQ",
+        "type": "n8n-nodes-base.merge",
+        "typeVersion": 3,
+        "position": [
+          320,
+          40
+        ],
+        "parameters": {
+          "mode": "append"
+        }
+      },
+      {
+        "id": "dw-merge-core-pairs",
+        "name": "Merge Core Pairs",
+        "type": "n8n-nodes-base.merge",
+        "typeVersion": 3,
+        "position": [
+          480,
+          -40
+        ],
+        "parameters": {
+          "mode": "append"
+        }
+      },
+      {
+        "id": "dw-merge-core-btc",
+        "name": "Merge Core + BTC",
+        "type": "n8n-nodes-base.merge",
+        "typeVersion": 3,
+        "position": [
+          640,
+          40
+        ],
+        "parameters": {
+          "mode": "append"
+        }
+      },
+      {
+        "id": "dw-live-get-wti-rows",
+        "name": "Get latest WTI rows",
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "alwaysOutputData": true,
+        "position": [
+          208,
+          320
+        ],
+        "parameters": {
+          "operation": "getAll",
+          "tableId": "agent_outputs",
+          "limit": 20,
+          "orderBy": "created_at.desc",
+          "matchType": "allFilters",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "agent_name",
+                "condition": "eq",
+                "keyValue": "WTI"
+              },
+              {
+                "keyName": "layer",
+                "condition": "eq",
+                "keyValue": "1"
+              }
+            ]
+          }
+        },
+        "credentials": {
+          "supabaseApi": {
+            "id": "trM35g1QCTOgQp4K",
+            "name": "Supabase account"
+          }
+        }
+      },
+      {
+        "id": "dw-merge-core-wti",
+        "name": "Merge Core + WTI",
+        "type": "n8n-nodes-base.merge",
+        "typeVersion": 3,
+        "position": [
+          700,
+          320
+        ],
+        "parameters": {
+          "mode": "append"
+        }
+      },
+      {
+        "id": "silver-read-0bba818b",
+        "name": "Get latest SILVER rows",
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "alwaysOutputData": true,
+        "position": [
+          208,
+          400
+        ],
+        "parameters": {
+          "operation": "getAll",
+          "tableId": "agent_outputs",
+          "limit": 20,
+          "orderBy": "created_at.desc",
+          "matchType": "allFilters",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "agent_name",
+                "condition": "eq",
+                "keyValue": "SILVER"
+              },
+              {
+                "keyName": "layer",
+                "condition": "eq",
+                "keyValue": "1"
+              }
+            ]
+          }
+        },
+        "credentials": {
+          "supabaseApi": {
+            "id": "trM35g1QCTOgQp4K",
+            "name": "Supabase account"
+          }
+        }
+      },
+      {
+        "id": "silver-merge-01e5b790",
+        "name": "Merge Core + SILVER",
+        "type": "n8n-nodes-base.merge",
+        "typeVersion": 3,
+        "position": [
+          820,
+          560
+        ],
+        "parameters": {
+          "mode": "append"
+        }
+      },
+      {
+        "id": "351d2113-957a-4a91-8217-056a3b98ce5b",
+        "name": "Get latest GBP rows",
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "alwaysOutputData": true,
+        "position": [
+          208,
+          420
+        ],
+        "parameters": {
+          "operation": "getAll",
+          "tableId": "agent_outputs",
+          "limit": 20,
+          "orderBy": "created_at.desc",
+          "matchType": "allFilters",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "agent_name",
+                "condition": "eq",
+                "keyValue": "GBP"
+              },
+              {
+                "keyName": "layer",
+                "condition": "eq",
+                "keyValue": "1"
+              }
+            ]
+          }
+        },
+        "credentials": {
+          "supabaseApi": {
+            "id": "trM35g1QCTOgQp4K",
+            "name": "Supabase account"
+          }
+        }
+      },
+      {
+        "id": "af1bfc4e-39ee-4838-9374-8584213d3f4a",
+        "name": "Merge Core + GBP",
+        "type": "n8n-nodes-base.merge",
+        "typeVersion": 3,
+        "position": [
+          860,
+          320
+        ],
+        "parameters": {
+          "mode": "append"
+        }
+      }
+    ],
+    "connections": {
+      "When Executed by Another Workflow": {
+        "main": [
+          [
+            {
+              "node": "Get latest USD rows",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Get latest EUR rows",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Get latest GOLD rows",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Get latest NQ rows",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Get latest BTC rows",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Get latest WTI rows",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Get latest GBP rows",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Get latest SILVER rows",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get latest USD rows": {
+        "main": [
+          [
+            {
+              "node": "Merge USD + EUR",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get latest EUR rows": {
+        "main": [
+          [
+            {
+              "node": "Merge USD + EUR",
+              "type": "main",
+              "index": 1
+            }
+          ]
+        ]
+      },
+      "Get latest GOLD rows": {
+        "main": [
+          [
+            {
+              "node": "Merge GOLD + NQ",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get latest NQ rows": {
+        "main": [
+          [
+            {
+              "node": "Merge GOLD + NQ",
+              "type": "main",
+              "index": 1
+            }
+          ]
+        ]
+      },
+      "Merge USD + EUR": {
+        "main": [
+          [
+            {
+              "node": "Merge Core Pairs",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Merge GOLD + NQ": {
+        "main": [
+          [
+            {
+              "node": "Merge Core Pairs",
+              "type": "main",
+              "index": 1
+            }
+          ]
+        ]
+      },
+      "Merge Core Pairs": {
+        "main": [
+          [
+            {
+              "node": "Merge Core + BTC",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get latest BTC rows": {
+        "main": [
+          [
+            {
+              "node": "Merge Core + BTC",
+              "type": "main",
+              "index": 1
+            }
+          ]
+        ]
+      },
+      "Merge Core + BTC": {
+        "main": [
+          [
+            {
+              "node": "Merge Core + WTI",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get latest WTI rows": {
+        "main": [
+          [
+            {
+              "node": "Merge Core + WTI",
+              "type": "main",
+              "index": 1
+            }
+          ]
+        ]
+      },
+      "Merge Core + WTI": {
+        "main": [
+          [
+            {
+              "node": "Merge Core + GBP",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get latest GBP rows": {
+        "main": [
+          [
+            {
+              "node": "Merge Core + GBP",
+              "type": "main",
+              "index": 1
+            }
+          ]
+        ]
+      },
+      "Merge Core + GBP": {
+        "main": [
+          [
+            {
+              "node": "Merge Core + SILVER",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get latest SILVER rows": {
+        "main": [
+          [
+            {
+              "node": "Merge Core + SILVER",
+              "type": "main",
+              "index": 1
+            }
+          ]
+        ]
+      },
+      "Merge Core + SILVER": {
+        "main": [
+          [
+            {
+              "node": "Build Layer 1 JSON",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Build Layer 1 JSON": {
+        "main": [
+          [
+            {
+              "node": "Edit a file",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "nodeGroups": [],
+    "authors": "Daniel Silver",
+    "name": null,
+    "description": null,
+    "autosaved": false,
+    "createdAt": "2026-09-19T14:39:28.329Z",
+    "updatedAt": "2026-09-19T14:39:28.329Z",
+    "workflowPublishHistory": [
+      {
+        "id": 434,
+        "workflowId": "850DrjzCKKX9fDzD",
+        "versionId": "8c5bd16c-d0ac-49e7-86b8-5eccb4a63f4c",
+        "event": "activated",
+        "userId": "eb4fba3e-5170-481b-abc5-ce65776c1113",
+        "createdAt": "2026-09-19T14:39:28.462Z"
+      }
+    ]
+  }
+}
