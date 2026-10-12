@@ -13875,6 +13875,17 @@ function liveTradingTimestampLabel(value) {
   return `${String(parsed.getUTCHours()).padStart(2, "0")}:${String(parsed.getUTCMinutes()).padStart(2, "0")}Z`;
 }
 
+// The same UTC instant with its own calendar date in front of the clock. A bare `HH:MMZ` cannot place a
+// trade on a day, and the closed-trades table states trades read over a fourteen-day window that crosses
+// midnight, so that one table's opened and closed columns carry the date rather than the clock alone.
+function liveTradingDateTimeLabel(value) {
+  if (!value) return displayDash();
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return String(value);
+  const day = `${parsed.getUTCFullYear()}-${String(parsed.getUTCMonth() + 1).padStart(2, "0")}-${String(parsed.getUTCDate()).padStart(2, "0")}`;
+  return `${day} ${liveTradingTimestampLabel(value)}`;
+}
+
 function liveTradingAgeSeconds(data) {
   const generated = Date.parse(data?.generated_at_utc || "");
   if (Number.isNaN(generated)) return null;
@@ -16632,7 +16643,8 @@ function liveTradingClosedTrades(data) {
     const digits = liveTradingDigitsFor(data, trade?.symbol);
     return `
       <tr>
-        <th scope="row">${escapeHtml(liveTradingTimestampLabel(trade?.closed?.time_utc))}</th>
+        <th scope="row">${escapeHtml(liveTradingDateTimeLabel(trade?.opened?.time_utc))}</th>
+        <td>${escapeHtml(liveTradingDateTimeLabel(trade?.closed?.time_utc))}</td>
         <td>
           <span class="live-trading-asset">${escapeHtml(trade?.dashboard_asset || trade?.symbol || displayDash())}</span>
           <span class="live-trading-table-symbol">${escapeHtml(trade?.symbol || displayDash())}</span>
@@ -16659,6 +16671,7 @@ function liveTradingClosedTrades(data) {
         <table class="live-trading-table">
           <thead>
             <tr>
+              <th scope="col">Opened (UTC)</th>
               <th scope="col">Closed (UTC)</th>
               <th scope="col">Trade</th>
               <th scope="col">Side</th>
@@ -16679,7 +16692,7 @@ function liveTradingClosedTrades(data) {
       </div>
       <p class="live-trading-table-caption">Paired from the terminal's deal history: the entry deal and the exit deal of one position, read over ${
         escapeHtml(windowLabel)
-      }${dealCount === null ? "" : ` (${escapeHtml(String(dealCount))} deal${dealCount === 1 ? "" : "s"} read)`}. Net is profit plus commission plus swap. A trade that closed before this window is not in the list. On the chart above, an entry is a triangle lettered E and its exit a triangle lettered X, each on the bar it happened in.</p>
+      }${dealCount === null ? "" : ` (${escapeHtml(String(dealCount))} deal${dealCount === 1 ? "" : "s"} read)`}. Opened and Closed are the position's own entry and exit times in UTC, each with its date so a trade held across midnight is placed on the day it opened and the day it closed. Net is profit plus commission plus swap. A trade that closed before this window is not in the list. On the chart above, an entry is a triangle lettered E and its exit a triangle lettered X, each on the bar it happened in.</p>
     </section>
   `;
 }

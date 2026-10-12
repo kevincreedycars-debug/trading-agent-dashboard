@@ -232,7 +232,8 @@ test("the Live Trading section renders the position and the closed trade it read
     const closed = await panels[1].innerText();
     assert.match(closed, /closed trades/i);
     assert.match(closed, /1 closed in the last 14 days · net -0\.37 USD/);
-    assert.match(closed, /13:49Z/, "the close time, newest first");
+    assert.match(closed, /2026-10-04 13:47Z/, "the position's own open date and time, in UTC");
+    assert.match(closed, /2026-10-04 13:49Z/, "the close date and time, newest first");
     assert.match(closed, /85230\.34/);
     assert.match(closed, /85248\.89/);
     assert.match(closed, /1m 25s/, "the 85 seconds it was held");
