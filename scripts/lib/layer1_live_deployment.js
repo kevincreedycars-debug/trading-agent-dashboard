@@ -23,6 +23,18 @@
  * An update into a draft_published instance can land in the draft while the executing version stays
  * put, so an update only counts as applied when the executing version changed and its published copy
  * matches the payload node for node.
+ *
+ * A write is never verified from its own response. `PUT /api/v1/workflows/{id}` answers with the body it
+ * stored, and on a draft_published instance that body is the draft, not the version the instance
+ * executes, so the caller reads the workflow back after every write attempt and verifies both copies
+ * from that read. A write that is rejected or times out leaves the state unknown - the instance may hold
+ * the payload, the backup, or something in between - so the workflow is read to establish the actual
+ * state before anything else is written.
+ *
+ * A rollback is verified the same way. `verifyRestoredWorkflow` compares the restored draft and the copy
+ * the instance actually executes against the backup's own executing copy, because restoring the draft
+ * alone reports success while the executing version still runs the failed code, and writing the draft
+ * cannot put the executing version back at all.
  */
 
 const {hash} = require("./btc_rate_limit_repair");
@@ -51,6 +63,23 @@ function asNodes(value, label) {
 
 function describeNode(node) {
   return `${node?.name ?? "unnamed"} (${node?.id ?? "no id"})`;
+}
+
+/**
+ * The two copies a draft_published instance keeps apart: `draftViewOf` is the body the next edit lands
+ * in, `executingViewOf` is the version the instance runs. A single_version instance is one object, so
+ * both views are that object.
+ */
+function draftViewOf(workflow, model) {
+  const publishingModel = model || detectPublishingModel(workflow).model;
+  if (publishingModel === "single_version") return workflow;
+  return workflow?.draftVersion && Array.isArray(workflow.draftVersion.nodes) ? workflow.draftVersion : workflow;
+}
+
+function executingViewOf(workflow, model) {
+  const publishingModel = model || detectPublishingModel(workflow).model;
+  if (publishingModel === "single_version") return workflow;
+  return workflow?.activeVersion ?? null;
 }
 
 // Older exports carry nodes without ids. An id only constrains the comparison when both sides have one.
@@ -215,7 +244,7 @@ function verifySavedWorkflow(payload, saved, context = {}) {
 }
 
 function assertPublishedCopyMatchesPayload(afterWorkflow, payload, model) {
-  const published = model === "draft_published" ? afterWorkflow.activeVersion : afterWorkflow;
+  const published = executingViewOf(afterWorkflow, model);
   if (!published || !Array.isArray(published.nodes)) {
     throw new Error("The instance did not return the copy of the executing version; the update cannot be verified.");
   }
@@ -267,12 +296,67 @@ function verifyExecutingVersion({before, afterWorkflow, payload, expectedPublish
     report.requires_publish = true;
     return report;
   }
-  const draft = afterWorkflow.draftVersion && Array.isArray(afterWorkflow.draftVersion.nodes)
-    ? afterWorkflow.draftVersion : afterWorkflow;
+  const draft = draftViewOf(afterWorkflow, detected.model);
   report.draft_copy_verified = verifySavedWorkflow(payload, draft, {label: "The draft of the workflow"}).verified;
   report.requires_publish = true;
   report.status = "draft_only_requires_publish";
   return report;
+}
+
+/**
+ * Verifies a rollback on both copies the instance keeps, against the backup taken before the update.
+ *
+ * The backup is the whole workflow as it was read, so it carries the copy the instance was executing as
+ * well as the draft. A restore writes the draft, and on a draft_published instance that leaves the
+ * executing version running whatever it ran before - the failed code, if the update had been published -
+ * so a rollback that is only checked against the draft reports success while the wrong code still
+ * executes. `rollback_verified` is true only when the draft, the executing copy and the executing version
+ * id all match the backup; when the draft is back and the executing copy is not, the rollback needs a
+ * publish and is reported as unverified rather than verified.
+ */
+function verifyRestoredWorkflow({backup, current}) {
+  const detected = detectPublishingModel(current);
+  const model = detected.model;
+  const problems = [];
+  let draftVerified = false;
+  let executingCopyVerified = false;
+  try {
+    draftVerified = verifySavedWorkflow(draftViewOf(backup, model), draftViewOf(current, model),
+      {label: "The restored draft of the workflow"}).verified;
+  } catch (error) {
+    problems.push(error.message);
+  }
+  const expectedExecuting = executingViewOf(backup, model);
+  const currentExecuting = executingViewOf(current, model);
+  if (!expectedExecuting || !Array.isArray(expectedExecuting.nodes)) {
+    problems.push("The backup does not carry the copy of the executing version, so a rollback cannot be verified against it.");
+  } else if (!currentExecuting || !Array.isArray(currentExecuting.nodes)) {
+    problems.push("The instance did not return the copy of the executing version, so a rollback cannot be verified.");
+  } else {
+    try {
+      executingCopyVerified = verifySavedWorkflow(expectedExecuting, currentExecuting,
+        {label: "The restored executing version of the workflow"}).verified;
+    } catch (error) {
+      problems.push(error.message);
+    }
+  }
+  const expectedVersionId = executingVersionOf(backup, model).executing_version_id;
+  const currentVersionId = executingVersionOf(current, model).executing_version_id;
+  const versionMatches = expectedVersionId === currentVersionId;
+  if (!versionMatches) {
+    problems.push(`The instance executes version ${JSON.stringify(currentVersionId)} instead of the ` +
+      `backed-up ${JSON.stringify(expectedVersionId)}: writing the draft does not restore the version the ` +
+      "instance executes, so the rollback needs a publish.");
+  }
+  return {
+    publishing_model: model,
+    rollback_verified: draftVerified && executingCopyVerified && versionMatches,
+    draft_verified: draftVerified,
+    executing_copy_verified: executingCopyVerified,
+    executing_version_matches_backup: versionMatches,
+    rollback_requires_publish: model === "draft_published" && draftVerified && !executingCopyVerified,
+    rollback_problems: problems
+  };
 }
 
 /**
@@ -320,7 +404,10 @@ module.exports = {
   compareNodeLists,
   deploymentPreflight,
   detectPublishingModel,
+  draftViewOf,
   executingVersionOf,
+  executingViewOf,
   verifyExecutingVersion,
+  verifyRestoredWorkflow,
   verifySavedWorkflow
 };
