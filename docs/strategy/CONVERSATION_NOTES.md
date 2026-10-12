@@ -4443,3 +4443,33 @@ charter are the next two pieces and quote the pack, so they wait on nothing; the
 stay behind the seven decisions, as the -064 scope already said.
 
 Filed as `2026-10-09-strategy-layer1-pack-and-element-instructions-066` at the new head.
+
+## 2026-10-12 - he asks what this window is working on: the status answer, and the lane is waiting
+
+He asked, plainly: "what is this vsc currently working on?" That is a status question about this window, not a new
+brief, so nothing was built and no document changed except this note. The reply took the three-bullet form: the last
+real work is the -066 pair (the Gold logic pack and the per-element validation instructions, both written
+2026-10-09); nothing is running in this window now, and two of this lane's filings still sit in the coordinator's
+review queue; and the pack describes rather than measures, so the seven decisions in its section 11 still gate any
+weight move and any published accuracy claim. The seven questions were reprinted in the reply, one line each with a
+plain reason, because the reply-style rule allows up to seven questions in that shape.
+
+Verified at the start of the turn, read-only, as the assignment requires. `coordination.js check` returned no errors.
+`monitor-state.js snapshot` at 2026-10-12T18:32:11.694Z reported the controller offline, two submissions pending
+across the project, and this lane's card reading "Working - last reported" with its last report at
+2026-10-11T15:53:40.270Z ("Recapping recent progress with the user"), which was three days older than the lane's own
+last commit and so was stale until this turn's activity report replaced it. `coordination.js check --worker strategy`
+shows `20261008-strategy-layer2-provenance-correction-and-refreshes-065` still at `pending_review`; the newest reply
+in `.local/orchestration/replies/strategy/` is the 2026-10-08 pair, and there is no reply file for
+`2026-10-09-strategy-layer1-pack-and-element-instructions-066`. So both the provenance correction (065) and the pack
+pair (066) are still waiting, and the accepted tail of the lane remains -063 and -064 with its -064-r1 revision.
+
+Boundaries. Read-only throughout: no measurement was taken, and no weight, live call, collector, workflow, export,
+dashboard page, data artifact, register entry, assignment, lock, controller or other worker was touched. No
+credential was used, the sealed window was not read, and no outcome, holdout or prospective observation was read.
+The pack's section 11 questions stand exactly as filed and the defaults recorded in the -064 review still stand for
+each of them until he answers. No prediction, accuracy, timing, profitability or trading edge is claimed.
+
+Activity reporting: `monitor-state.js activity strategy paused "Answered the user's question about what this window
+is working on; waiting on the user"` wrote `.local/orchestration/activity/strategy.json` with state `paused`, so the
+monitor shows this window waiting on the user rather than working.
