@@ -31,10 +31,13 @@
  * the payload, the backup, or something in between - so the workflow is read to establish the actual
  * state before anything else is written.
  *
- * A rollback is verified the same way. `verifyRestoredWorkflow` compares the restored draft and the copy
- * the instance actually executes against the backup's own executing copy, because restoring the draft
- * alone reports success while the executing version still runs the failed code, and writing the draft
- * cannot put the executing version back at all.
+ * A rollback is verified the same way, and by content rather than by version id. `verifyRestoredWorkflow`
+ * compares the restored draft and the copy the instance actually executes against the backup's own
+ * executing copy - nodes, connections and settings - because restoring the draft alone reports success
+ * while the executing version still runs the failed code, and writing the draft cannot put the executing
+ * version back at all. A restore that republishes the backed-up body legitimately gives the executing
+ * version a new id, so the ids are recorded for audit (`executing_version_id_backup`,
+ * `executing_version_id_current`, `executing_version_reused`) instead of being required to match.
  */
 
 const {hash} = require("./btc_rate_limit_repair");
@@ -54,6 +57,15 @@ function stripVolatile(node) {
 // A key that only one side carries has to hash the same way "absent" does on both sides.
 function stableValue(value) {
   return value === undefined ? null : value;
+}
+
+// The workflow settings, or an empty object when the copy does not expose them: some instances return the
+// executing copy without settings, and a copy that carries none compares as absent rather than as a
+// failed rollback.
+function settingsOf(view) {
+  return view && typeof view === "object" && view.settings && typeof view.settings === "object"
+    ? view.settings
+    : {};
 }
 
 function asNodes(value, label) {
@@ -310,50 +322,73 @@ function verifyExecutingVersion({before, afterWorkflow, payload, expectedPublish
  * well as the draft. A restore writes the draft, and on a draft_published instance that leaves the
  * executing version running whatever it ran before - the failed code, if the update had been published -
  * so a rollback that is only checked against the draft reports success while the wrong code still
- * executes. `rollback_verified` is true only when the draft, the executing copy and the executing version
- * id all match the backup; when the draft is back and the executing copy is not, the rollback needs a
- * publish and is reported as unverified rather than verified.
+ * executes.
+ *
+ * The verdict is about restored content, not about version ids. A restore that republishes the backed-up
+ * body legitimately creates a new executing version id, so `rollback_verified` requires the draft and the
+ * executing copy to carry the backed-up nodes, connections and settings, and the ids are recorded for
+ * audit instead: `executing_version_id_backup`, `executing_version_id_current` and
+ * `executing_version_reused` say which version the instance was able to execute again. When the draft is
+ * back and the executing copy is not, the rollback needs a publish and is reported as unverified rather
+ * than verified.
  */
 function verifyRestoredWorkflow({backup, current}) {
   const detected = detectPublishingModel(current);
   const model = detected.model;
   const problems = [];
-  let draftVerified = false;
-  let executingCopyVerified = false;
-  try {
-    draftVerified = verifySavedWorkflow(draftViewOf(backup, model), draftViewOf(current, model),
-      {label: "The restored draft of the workflow"}).verified;
-  } catch (error) {
-    problems.push(error.message);
-  }
-  const expectedExecuting = executingViewOf(backup, model);
+  const contentMatches = (expected, actual, label) => {
+    try {
+      return verifySavedWorkflow(expected, actual, {label}).verified;
+    } catch (error) {
+      problems.push(error.message);
+      return false;
+    }
+  };
+  const settingsMatch = (expected, actual, label) => {
+    if (hash(settingsOf(expected)) === hash(settingsOf(actual))) return true;
+    problems.push(`${label} does not carry the backed-up settings.`);
+    return false;
+  };
+  const backupDraft = draftViewOf(backup, model);
+  const currentDraft = draftViewOf(current, model);
+  const draftContentVerified = contentMatches(backupDraft, currentDraft, "The restored draft of the workflow");
+  const draftSettingsVerified = settingsMatch(backupDraft, currentDraft, "The restored draft of the workflow");
+  const backupExecuting = executingViewOf(backup, model);
   const currentExecuting = executingViewOf(current, model);
-  if (!expectedExecuting || !Array.isArray(expectedExecuting.nodes)) {
+  let executingContentVerified = false;
+  let executingSettingsVerified = false;
+  if (!backupExecuting || !Array.isArray(backupExecuting.nodes)) {
     problems.push("The backup does not carry the copy of the executing version, so a rollback cannot be verified against it.");
   } else if (!currentExecuting || !Array.isArray(currentExecuting.nodes)) {
     problems.push("The instance did not return the copy of the executing version, so a rollback cannot be verified.");
   } else {
-    try {
-      executingCopyVerified = verifySavedWorkflow(expectedExecuting, currentExecuting,
-        {label: "The restored executing version of the workflow"}).verified;
-    } catch (error) {
-      problems.push(error.message);
-    }
+    executingContentVerified = contentMatches(backupExecuting, currentExecuting,
+      "The restored executing version of the workflow");
+    executingSettingsVerified = settingsMatch(backupExecuting, currentExecuting,
+      "The restored executing version of the workflow");
   }
-  const expectedVersionId = executingVersionOf(backup, model).executing_version_id;
-  const currentVersionId = executingVersionOf(current, model).executing_version_id;
-  const versionMatches = expectedVersionId === currentVersionId;
-  if (!versionMatches) {
-    problems.push(`The instance executes version ${JSON.stringify(currentVersionId)} instead of the ` +
-      `backed-up ${JSON.stringify(expectedVersionId)}: writing the draft does not restore the version the ` +
-      "instance executes, so the rollback needs a publish.");
-  }
+  const draftVerified = draftContentVerified && draftSettingsVerified;
+  const executingCopyVerified = executingContentVerified && executingSettingsVerified;
+  const backupVersions = executingVersionOf(backup, model);
+  const currentVersions = executingVersionOf(current, model);
   return {
     publishing_model: model,
-    rollback_verified: draftVerified && executingCopyVerified && versionMatches,
+    rollback_verified: draftVerified && executingCopyVerified,
     draft_verified: draftVerified,
+    draft_settings_verified: draftSettingsVerified,
     executing_copy_verified: executingCopyVerified,
-    executing_version_matches_backup: versionMatches,
+    executing_settings_verified: executingSettingsVerified,
+    // Recorded, not required: republishing the backed-up content under a new version id is a verified
+    // rollback as long as the content of both copies is the backup's.
+    executing_version_id_backup: backupVersions.executing_version_id,
+    executing_version_id_current: currentVersions.executing_version_id,
+    executing_version_reused: backupVersions.executing_version_id === currentVersions.executing_version_id,
+    draft_version_id_backup: backupVersions.draft_version_id,
+    draft_version_id_current: currentVersions.draft_version_id,
+    version_counter_backup: backupVersions.version_counter,
+    version_counter_current: currentVersions.version_counter,
+    nodes_sha256_backup: backupVersions.nodes_sha256,
+    nodes_sha256_current: currentVersions.nodes_sha256,
     rollback_requires_publish: model === "draft_published" && draftVerified && !executingCopyVerified,
     rollback_problems: problems
   };

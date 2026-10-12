@@ -5,7 +5,7 @@ const os = require('node:os');
 const path = require('node:path');
 const {PUBLISHING_MODELS, VOLATILE_NODE_KEYS, assertPayloadCoversWorkflow, assertPublishedCopyMatchesPayload,
   compareNodeLists, deploymentPreflight, detectPublishingModel, executingVersionOf, verifyExecutingVersion,
-  verifySavedWorkflow} = require('../scripts/lib/layer1_live_deployment');
+  verifyRestoredWorkflow, verifySavedWorkflow} = require('../scripts/lib/layer1_live_deployment');
 const {ENGINE_BY_EXPORT_FILE, LAYER1_ENGINES, planLayer1NullConversionRepair} =
   require('../scripts/lib/layer1_null_conversion_repair');
 const {createLiveClient, live, run} = require('../scripts/repair_layer1_null_conversion');
@@ -210,7 +210,10 @@ test('every layer 1 export plans a payload that covers its own workflow, gbp dra
 // that publishes on save so both copies move, 'drop_node_draft' and 'drop_node_published' save a body
 // with a node missing (the recorded PUT defect), 'no_restore_publish' publishes the failed update but
 // leaves the restore as a draft write, which is how the failed code stays in the executing version, and
-// the rejected and timed-out variants leave the state untouched or store the body before failing.
+// the rejected and timed-out variants leave the state untouched or store the body before failing. onRead
+// 'fail' models an instance that answers no read at all, 'fail_after_write' one that stops answering once
+// a body has been stored, and 'fail_after_restore' one that answers the read-back of the update but not the
+// read that would verify the restore.
 function mockedInstance(options = {}) {
   const behaviour = {onWrite: 'draft', onActivate: 'publish', onRead: 'serve', ...options};
   const state = {
@@ -247,6 +250,9 @@ function mockedInstance(options = {}) {
       if (behaviour.onRead === 'fail') throw new Error('The GET timed out.');
       if (behaviour.onRead === 'fail_after_write' && log.writes.length) {
         throw new Error('The GET timed out after the write.');
+      }
+      if (behaviour.onRead === 'fail_after_restore' && log.writes.length >= 2) {
+        throw new Error('The GET timed out after the restore.');
       }
       return view();
     },
@@ -371,11 +377,15 @@ test('a failed update is rolled back and the rollback is verified on the executi
   assert.equal(usd.restore_written, true);
   assert.equal(usd.draft_verified, true, 'the draft is back at the backup');
   assert.equal(usd.executing_copy_verified, false);
-  assert.equal(usd.executing_version_matches_backup, false);
+  assert.equal(usd.executing_version_reused, false);
+  assert.equal(usd.executing_version_id_backup, liveUsd.activeVersionId);
+  assert.equal(usd.executing_version_id_current, 'exec-write-1', 'the executing version kept the failed body');
   assert.equal(usd.rollback_verified, false, 'a rollback is not verified while the executing version runs the failed code');
   assert.equal(usd.rollback_requires_publish, true);
-  assert.ok(usd.rollback_problems.some(problem => /writing the draft does not restore the version the instance executes/.test(problem)));
-  assert.ok(usd.rollback_problems.some(problem => /does not match the payload/.test(problem)));
+  assert.equal(usd.state_source, 'fresh_get');
+  assert.equal(usd.state_unknown, false);
+  assert.equal(usd.already_at_backup, false, 'the read showed the draft had moved, so the backup was written back');
+  assert.ok(usd.rollback_problems.some(problem => /The restored executing version of the workflow does not match the payload/.test(problem)));
   assert.match(result.stopped, /the state was read, the backup was restored/);
   assert.equal(publishedShort.log.writes.length, 2, 'the update and the restore');
   assert.deepEqual(publishedShort.state.draft.nodes, liveUsd.nodes);
@@ -388,7 +398,10 @@ test('a failed update is rolled back and the rollback is verified on the executi
   assert.equal(recovered.engines[0].mode, 'rolled_back');
   assert.equal(recovered.engines[0].draft_verified, true);
   assert.equal(recovered.engines[0].executing_copy_verified, true);
-  assert.equal(recovered.engines[0].executing_version_matches_backup, true);
+  assert.equal(recovered.engines[0].executing_version_reused, true, 'the executing version never moved, so its id is the backup id');
+  assert.equal(recovered.engines[0].executing_version_id_current, liveUsd.activeVersionId);
+  assert.equal(recovered.engines[0].version_counter_current, liveUsd.versionCounter + 2,
+    'the update and the restore each bumped the draft counter; the executing version never moved');
   assert.equal(recovered.engines[0].rollback_verified, true);
   assert.equal(recovered.engines[0].rollback_requires_publish, false);
   assert.deepEqual(recovered.engines[0].rollback_problems, []);
@@ -403,6 +416,30 @@ test('a failed update is rolled back and the rollback is verified on the executi
   assert.equal(unrestored.engines[0].rollback_verified, false);
   assert.ok(unrestored.engines[0].rollback_problems.some(problem => /restore write failed/.test(problem)));
   assert.equal(stuck.log.writes.length, 2);
+
+  // The verdict is taken on the restored content, not on the version id: a restore that republishes the
+  // backed-up body is a verified rollback even though the executing version is a new one, and the ids are
+  // recorded for audit instead of being required to match.
+  const republished = verifyRestoredWorkflow({backup: liveUsd, current: {...liveUsd, activeVersionId: 'bb-new',
+    activeVersion: {...liveUsd.activeVersion, versionId: 'bb-new'}, versionCounter: liveUsd.versionCounter + 2}});
+  assert.equal(republished.rollback_verified, true);
+  assert.equal(republished.executing_version_reused, false);
+  assert.equal(republished.executing_version_id_backup, liveUsd.activeVersionId);
+  assert.equal(republished.executing_version_id_current, 'bb-new');
+  assert.equal(republished.version_counter_current, liveUsd.versionCounter + 2);
+  assert.equal(republished.rollback_requires_publish, false);
+  assert.deepEqual(republished.rollback_problems, []);
+
+  // Settings are part of the restored content: a draft that comes back without them is not verified, and the
+  // executing copy is not blamed for it.
+  const drifted = verifyRestoredWorkflow({backup: liveUsd,
+    current: {...liveUsd, settings: {...liveUsd.settings, executionOrder: 'v0'}}});
+  assert.equal(drifted.draft_verified, false);
+  assert.equal(drifted.draft_settings_verified, false);
+  assert.equal(drifted.executing_copy_verified, true);
+  assert.equal(drifted.rollback_verified, false);
+  assert.equal(drifted.rollback_requires_publish, false, 'the draft is the copy that drifted');
+  assert.ok(drifted.rollback_problems.some(problem => /restored draft of the workflow does not carry the backed-up settings/.test(problem)));
 });
 
 test('a rejected or timed-out write is decided by a read, never by the error', async (t) => {
@@ -417,6 +454,8 @@ test('a rejected or timed-out write is decided by a read, never by the error', a
   assert.equal(result.engines[0].write_status, 'failed');
   assert.match(result.engines[0].write_error, /HTTP 400 on PUT/);
   assert.equal(result.engines[0].restore_written, false);
+  assert.equal(result.engines[0].already_at_backup, true, 'the fresh read verifies the backup is still there');
+  assert.equal(result.engines[0].state_unknown, false);
   assert.equal(result.engines[0].rollback_verified, true);
   assert.match(result.stopped, /rejected and left the workflow as it was/);
   assert.equal(rejected.log.writes.length, 1);
@@ -438,20 +477,84 @@ test('a rejected or timed-out write is decided by a read, never by the error', a
   assert.equal(rejectedOnly.engines[0].mode, 'rejected_by_instance');
   assert.equal(rejectedOnly.engines[0].restore_written, false);
   assert.equal(nothingLanded.state.draft.versionId, liveUsd.versionId);
+});
 
-  // No read, no verification: the runner restores the backup and says the rollback is unverified.
+test('a restore that republishes the backup is verified by its content, under a new executing version id', async (t) => {
+  const backupRoot = tempBackups(t);
+  // The update published a body with a node missing and the restore write is published on save as well, so
+  // the instance executes the backed-up content again, but as a new version. The rollback is verified on
+  // that content: requiring the backed-up version id back would report a finished rollback as needing a
+  // publish.
+  const republished = mockedInstance({onWrite: 'drop_node_published'});
+  const result = await liveRun(republished, ['usd', 'gold'], {backupRoot});
+  assert.equal(result.mode, 'stopped');
+  assert.equal(result.engines.length, 1, 'the next engine is not touched after a rollback');
+  const [usd] = result.engines;
+  assert.equal(usd.mode, 'rolled_back');
+  assert.match(usd.error, /carries 8 nodes instead of 9/);
+  assert.equal(usd.restore_written, true);
+  assert.equal(usd.already_at_backup, false);
+  assert.equal(usd.state_source, 'fresh_get');
+  assert.equal(usd.draft_verified, true);
+  assert.equal(usd.draft_settings_verified, true);
+  assert.equal(usd.executing_copy_verified, true, 'the executing copy carries the backed-up nodes, graph and settings');
+  assert.equal(usd.executing_settings_verified, true, 'the executing copy exposes no settings of its own');
+  assert.equal(usd.rollback_verified, true, 'a fresh read shows both copies back at the backup');
+  assert.equal(usd.rollback_requires_publish, false, 'the restore republished the backup, so no publish is needed');
+  assert.deepEqual(usd.rollback_problems, []);
+  assert.equal(usd.executing_version_id_backup, liveUsd.activeVersionId);
+  assert.equal(usd.executing_version_id_current, 'exec-write-2', 'the restore landed as a new version');
+  assert.notEqual(usd.executing_version_id_current, usd.executing_version_id_backup);
+  assert.equal(usd.executing_version_reused, false, 'the new id is recorded, not treated as a failed rollback');
+  assert.equal(usd.nodes_sha256_current, usd.nodes_sha256_backup, 'the restored content hashes as the backup');
+  assert.equal(usd.version_counter_current, liveUsd.versionCounter + 4);
+  assert.deepEqual(republished.state.draft.nodes, liveUsd.nodes);
+  assert.deepEqual(republished.state.executing.nodes, liveUsd.nodes);
+  assert.equal(republished.log.writes.length, 2, 'the update and the restore');
+  assert.deepEqual(JSON.parse(fs.readFileSync(usd.backup, 'utf8')).nodes, liveUsd.nodes);
+});
+
+test('a workflow that cannot be read is left alone, and the run reports its state as unknown', async (t) => {
+  const backupRoot = tempBackups(t);
+  // The read-back after the write never answers: no restore PUT is sent, because a write against an unknown
+  // state can turn a workflow that is still intact into a half-updated one.
   const blind = mockedInstance({onWrite: 'publish', onRead: 'fail_after_write'});
-  const unverified = await liveRun(blind, ['usd'], {backupRoot});
-  assert.equal(unverified.engines.length, 1);
-  assert.equal(unverified.engines[0].mode, 'rolled_back');
-  assert.equal(unverified.engines[0].state_source, 'unverified', 'no read means no verdict about the instance');
-  assert.match(unverified.engines[0].error, /GET timed out after the write/);
-  assert.match(unverified.engines[0].rollback_reason, /could not be read back after the write/);
-  assert.equal(unverified.engines[0].rollback_verified, false);
-  assert.equal(unverified.engines[0].draft_verified, false);
-  assert.ok(unverified.engines[0].rollback_problems.some(problem => /could not be read back after the restore/.test(problem)));
-  assert.match(unverified.stopped, /could not be read back after the write/);
-  assert.equal(blind.log.writes.length, 2, 'the update and the restore attempt');
+  const unknown = await liveRun(blind, ['usd', 'gold'], {backupRoot});
+  assert.equal(unknown.mode, 'stopped');
+  assert.equal(unknown.engines.length, 1, 'no further engine is touched');
+  const [usd] = unknown.engines;
+  assert.equal(usd.mode, 'state_unknown');
+  assert.equal(usd.state_unknown, true);
+  assert.equal(usd.rolled_back, false, 'nothing was written back, so no rollback is claimed');
+  assert.equal(usd.state_source, 'unverified', 'no read means no verdict about the instance');
+  assert.equal(usd.restore_written, false);
+  assert.equal(usd.rollback_verified, false);
+  assert.equal(usd.draft_verified, false);
+  assert.match(usd.error, /GET timed out after the write/);
+  assert.match(usd.read_error, /GET timed out after the write/);
+  assert.match(usd.rollback_reason, /could not be read back after the write/);
+  assert.ok(usd.rollback_problems.some(problem => /could not be read, so its state is unknown/.test(problem)));
+  assert.ok(usd.rollback_problems.some(problem => /No restore write was sent/.test(problem)));
+  assert.match(unknown.stopped, /state is unknown/);
+  assert.equal(blind.log.writes.length, 1, 'the update only: nothing is written while the state cannot be read');
+
+  // The instance answers the read-back of the update but not the read that would verify the restore: the
+  // restore was sent and the state it left behind is unknown rather than verified.
+  const halfBlind = mockedInstance({onWrite: 'drop_node_published', onRead: 'fail_after_restore'});
+  const seen = await liveRun(halfBlind, ['usd'], {backupRoot});
+  assert.equal(seen.mode, 'stopped');
+  assert.equal(seen.engines[0].mode, 'state_unknown');
+  assert.equal(seen.engines[0].restore_written, true, 'the restore write was accepted');
+  assert.equal(seen.engines[0].rollback_verified, false);
+  assert.equal(seen.engines[0].state_source, 'unverified');
+  assert.ok(seen.engines[0].rollback_problems.some(problem => /could not be read back after the restore/.test(problem)));
+  assert.match(seen.stopped, /state could not be read/);
+  assert.equal(halfBlind.log.writes.length, 2, 'the update and the restore, and nothing after them');
+
+  // A workflow that cannot be read before anything is written is never written to at all.
+  const unreadable = mockedInstance({onRead: 'fail'});
+  await assert.rejects(liveRun(unreadable, ['usd'], {backupRoot}), /The GET timed out\./);
+  assert.equal(unreadable.log.writes.length, 0, 'a workflow that cannot be read is never written to');
 });
 
 test('the live runner needs credentials, a USD-first sequence and a measured publishing model', async (t) => {

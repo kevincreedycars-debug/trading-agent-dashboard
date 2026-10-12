@@ -86,11 +86,16 @@ async function live(engineList, options = {}) {
   }
   const readWorkflow = (id) => instance.readWorkflow(id);
   const writeWorkflow = (id, payload) => instance.writeWorkflow(id, payload);
-  // A rollback writes the backup back and then checks what the instance actually holds: the restored
-  // draft and the copy the instance executes, both against the backup, because restoring the draft alone
-  // can leave the executing version running the failed code. The state is read before the restore writes,
-  // since a caller reaches here from a write that may never have moved anything; when the state cannot be
-  // read at all the backup is written anyway, because the backup is the state that is wanted.
+  // A rollback writes the backup back and then checks what the instance actually holds: the restored draft
+  // and the copy the instance executes, both against the backup, because restoring the draft alone can
+  // leave the executing version running the failed code.
+  //
+  // The read comes first and decides whether anything is written at all. A write that never moved the
+  // workflow leaves it at the backup already, and only a read showing the backed-up nodes, connections and
+  // settings on both copies can say so - that is what makes "rejected and left unchanged" a measured
+  // verdict instead of a guess. When the workflow cannot be read the state is unknown, and nothing is
+  // written: a PUT sent against an unknown state can turn a workflow that is still intact into a
+  // half-updated one, and an unreadable instance is no evidence that a write would land.
   const restore = async (workflowId, backupFile, reason, observed = null) => {
     const backup = JSON.parse(fs.readFileSync(backupFile, 'utf8'));
     const body = workflowBody(backup);
@@ -99,40 +104,40 @@ async function live(engineList, options = {}) {
       try {
         state = await readWorkflow(workflowId);
       } catch (error) {
-        state = null;
-      }
-    }
-    let alreadyBack = false;
-    if (state) {
-      try {
-        alreadyBack = verifySavedWorkflow(body, draftViewOf(state, detectPublishingModel(state).model),
-          {label: 'The workflow as read'}).verified;
-      } catch (error) {
-        alreadyBack = false;
+        return {mode: 'state_unknown', rolled_back: false, state_unknown: true, state_source: 'unverified',
+          restore_written: false, already_at_backup: false, rollback_reason: reason, read_error: error.message,
+          rollback_verified: false, draft_verified: false, executing_copy_verified: false,
+          rollback_requires_publish: false,
+          rollback_problems: [`The workflow could not be read, so its state is unknown: ${error.message} No ` +
+            'restore write was sent, because a PUT against an unknown state can damage a workflow that is ' +
+            'still intact.']};
       }
     }
     const problems = [];
+    let verification = verifyRestoredWorkflow({backup, current: state});
     let restoreWritten = false;
-    if (!alreadyBack) {
+    if (!verification.rollback_verified) {
       try {
         await writeWorkflow(workflowId, body);
         restoreWritten = true;
       } catch (error) {
         problems.push(`The restore write failed: ${error.message}`);
       }
+      try {
+        verification = verifyRestoredWorkflow({backup, current: await readWorkflow(workflowId)});
+      } catch (error) {
+        // The restore was sent but nothing can be said about the state it left behind.
+        return {mode: 'state_unknown', rolled_back: false, state_unknown: true, state_source: 'unverified',
+          restore_written: restoreWritten, already_at_backup: false, rollback_reason: reason,
+          rollback_verified: false, draft_verified: false, executing_copy_verified: false,
+          rollback_requires_publish: false,
+          rollback_problems: [...problems,
+            `The workflow could not be read back after the restore: ${error.message}`]};
+      }
     }
-    let verification = {rollback_verified: false, draft_verified: false, executing_copy_verified: false,
-      executing_version_matches_backup: false, rollback_requires_publish: false, rollback_problems: []};
-    try {
-      verification = verifyRestoredWorkflow({backup, current: await readWorkflow(workflowId)});
-    } catch (error) {
-      problems.push(`The workflow could not be read back after the restore: ${error.message}`);
-    }
-    return {rolled_back: true, rollback_reason: reason, restore_written: restoreWritten, backup: backupFile,
-      rollback_verified: verification.rollback_verified, draft_verified: verification.draft_verified,
-      executing_copy_verified: verification.executing_copy_verified,
-      executing_version_matches_backup: verification.executing_version_matches_backup,
-      rollback_requires_publish: verification.rollback_requires_publish,
+    return {mode: 'rolled_back', rolled_back: true, state_unknown: false, state_source: 'fresh_get',
+      restore_written: restoreWritten, already_at_backup: !restoreWritten && verification.rollback_verified,
+      rollback_reason: reason, backup: backupFile, ...verification,
       rollback_problems: [...problems, ...verification.rollback_problems]};
   };
 
@@ -166,20 +171,27 @@ async function live(engineList, options = {}) {
       observed = await readWorkflow(entry.workflowId);
     } catch (error) {
       const rollback = await restore(entry.workflowId, backup, `the workflow could not be read back after the write: ${error.message}`);
-      results.push({engine, mode: 'rolled_back', write_status: writeStatus, write_error: writeError,
-        error: error.message, state_source: 'unverified', ...rollback});
-      stopped = `the ${engine} workflow could not be read back after the write; no further engine was touched`;
+      results.push({engine, write_status: writeStatus, write_error: writeError, error: error.message, ...rollback});
+      stopped = rollback.state_unknown
+        ? `the ${engine} state is unknown: the workflow could not be read back after the write, so no ` +
+          'further write was sent and no further engine was touched'
+        : `the ${engine} workflow could not be read back after the write; no further engine was touched`;
       break;
     }
 
     const failUpdate = async (reason) => {
       const rollback = await restore(entry.workflowId, backup, reason, observed);
-      const rejected = writeStatus === 'failed' && !rollback.restore_written;
-      results.push({engine, mode: rejected ? 'rejected_by_instance' : 'rolled_back', write_status: writeStatus,
-        write_error: writeError, error: reason, state_source: 'fresh_get', ...rollback});
+      // "Rejected and left unchanged" is a measured verdict, not a reading of the error: the write failed
+      // and a fresh read shows the workflow still carrying the backed-up nodes, connections and settings on
+      // both copies, so nothing had to be written back.
+      const rejected = writeStatus === 'failed' && !rollback.restore_written && rollback.rollback_verified;
+      results.push({engine, write_status: writeStatus, write_error: writeError, error: reason, ...rollback,
+        mode: rejected ? 'rejected_by_instance' : rollback.mode});
       stopped = rejected
         ? `the ${engine} update was rejected and left the workflow as it was; no further engine was touched`
-        : `the ${engine} update did not verify; the state was read, the backup was restored and no further engine was touched`;
+        : rollback.state_unknown
+          ? `the ${engine} state could not be read, so it is unknown; no further engine was touched`
+          : `the ${engine} update did not verify; the state was read, the backup was restored and no further engine was touched`;
     };
 
     const observedModel = detectPublishingModel(observed).model;
