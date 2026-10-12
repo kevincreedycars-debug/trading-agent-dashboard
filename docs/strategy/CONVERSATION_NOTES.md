@@ -4473,3 +4473,47 @@ each of them until he answers. No prediction, accuracy, timing, profitability or
 Activity reporting: `monitor-state.js activity strategy paused "Answered the user's question about what this window
 is working on; waiting on the user"` wrote `.local/orchestration/activity/strategy.json` with state `paused`, so the
 monitor shows this window waiting on the user rather than working.
+
+## 2026-10-12 (evening) - he asks for an update on everything developed this evening: the read-only digest
+
+He asked: "give me an update on everything that was developed this evening". That is a status question about the
+project, not a new brief, so nothing was built or measured. The turn read the canonical checkout, production `main`
+and the sibling lane branches read-only and wrote one digest file, `docs/strategy/EVENING_DIGEST_2026-10-12.md`; the
+reply took the three-bullet style and named the digest for the detail, as the reply-style rule requires.
+
+What the evening (roughly 18:00-22:05 on 2026-10-12) actually contains, each item verified from git rather than taken
+on trust:
+
+1. The live trading page now dates each closed trade and the change is live on the dashboard: `d3662e5` (page, pushed
+   to production `main` from a release tree cut at `e9fc964`), `3b585bd` (feature plus tests on the lane branch), and
+   the session note `c18e63a`. The same note answers the quiet-spell question from the loop's own log: 1,264 runs, the
+   last accepted ticket `2026-10-08T14:26:32Z`, then 604 runs of `nothing_to_place`/`refused`, and the marked ladder's
+   age gates nothing.
+2. The layer 1 live-repair runner was hardened and then the USD null-conversion guard was applied and confirmed
+   executing, USD only: `2d35b08`, `78288dc`, `fbbc0ac` (hardening and the read-only publishing probe), `a204c10`,
+   `a6706b8`, `cd32b01` (failed-write and rollback corrections), `fe1f1c2` (the first supervised apply, version 154 to
+   155, dispatcher paused, GOLD and NQ untouched).
+3. The USD 24-hour improvement project was completed at 22:04 (`c1ea8ab`, 40 files), and its measured answer is that
+   improvement is **not demonstrated**; the candidate is published shadow-only with no probability and no production
+   enablement.
+4. The backtester-harness lane filed a fit review of that project's written handoff (`eb08df0`): the research half fits
+   and the engineering half is already behind the repository, with six corrections and five open user decisions.
+5. Routine: the live feed published an M5/H1/H4 snapshot to production `main` every fifteen minutes all evening, plus
+   `cline checkpoint` housekeeping.
+
+Verified at the start of the turn, read-only, as the assignment requires. `coordination.js check` returned
+`errors: []`. `monitor-state.js snapshot` at `2026-10-12T21:03Z` reported the controller offline and two submissions
+pending project-wide. `coordination.js check --worker strategy` shows `20261008-strategy-layer2-provenance-correction-and-refreshes-065`
+still at `pending_review` and no reply file for `2026-10-09-strategy-layer1-pack-and-element-instructions-066`, so the
+accepted tail of this lane is unchanged at `-063` and `-064` with `-064-r1`.
+
+Boundaries. Read-only throughout: no measurement was taken, and no weight, live call, collector, workflow, export,
+dashboard page, data artifact, register entry, assignment, lock, controller or other worker was touched. No credential
+was used; the sealed window was not read; no outcome, holdout or prospective observation was read. The seven decisions
+in the pack's section 11 stand exactly as filed and their recorded defaults still stand until he answers. No
+prediction, accuracy, timing, profitability or trading edge is claimed.
+
+No submission was filed: this is a chat status answer and not a materially revised recommendation, and the rule is not
+to submit every chat turn. Activity reporting: `monitor-state.js activity strategy paused "Answered the user's request
+for an update on the evening's development; waiting on the user"` wrote `.local/orchestration/activity/strategy.json`
+with state `paused`, so the monitor shows this window waiting on the user rather than working.
