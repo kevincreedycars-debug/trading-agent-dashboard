@@ -1,0 +1,334 @@
+{
+  "schema_version": "usd-24h-ruleset-v2",
+  "created_at": "2026-10-12T21:01:17.602Z",
+  "status": "CANDIDATE_SHADOW_ONLY",
+  "production_enabled": false,
+  "trade_eligible": false,
+  "scope": {
+    "asset": "USD",
+    "horizon": "following 24hrs",
+    "outcome_instrument": "FRED DTWEXBGS (the series the live collector stores as dxy_level)",
+    "daily_cutoff": "09:30 ET on each trading day",
+    "endpoint": "16:00 ET close of the next valid trading session",
+    "flat_band_percentage_points": 0.1,
+    "engines_modified": [
+      "USD"
+    ],
+    "other_engines": "UNTOUCHED"
+  },
+  "strength_labels": {
+    "engine_strength_label": "NOT_DEMONSTRATED",
+    "headline_strength_label": "NOT_SUPPORTED",
+    "note": "The engine label describes whether this asset's rules are evidenced better than the deployed engine; the headline label describes how much confidence a published call may carry. They are deliberately different names."
+  },
+  "selected_config_id": "challenger_logistic_l2_0.03",
+  "selected_from_filter_survivors": false,
+  "decision_arm": {
+    "kind": "challenger",
+    "description": "L2 logistic challenger (lambda 0.03) on 17 standardised features, fitted on development rows only.",
+    "parameters": {
+      "lambda": 0.03,
+      "threshold": 0.5,
+      "features": [
+        "usd_ret_1d",
+        "usd_ret_5d",
+        "usd_ma20_dist_pct",
+        "usd_vol20_pct",
+        "vix_level",
+        "vix_ret_5d",
+        "vix_pctile_252",
+        "us_2y_chg_5d_bps",
+        "us_10y_chg_5d_bps",
+        "us_de_2y_spread_chg_5d_bps",
+        "de_2y_chg_5d_bps",
+        "us_10y_real_chg_5d_bps",
+        "credit_spread_chg_5d_bps",
+        "nq_ret_5d",
+        "gold_ret_5d",
+        "eurusd_ret_5d",
+        "wti_ret_5d"
+      ],
+      "stage": "statistical_challenger"
+    },
+    "weights": null,
+    "gates": null,
+    "threshold_used": 0.5
+  },
+  "rules": [],
+  "model_execution": {
+    "feature_names": [
+      "usd_ret_1d",
+      "usd_ret_5d",
+      "usd_ma20_dist_pct",
+      "usd_vol20_pct",
+      "vix_level",
+      "vix_ret_5d",
+      "vix_pctile_252",
+      "us_2y_chg_5d_bps",
+      "us_10y_chg_5d_bps",
+      "us_de_2y_spread_chg_5d_bps",
+      "de_2y_chg_5d_bps",
+      "us_10y_real_chg_5d_bps",
+      "credit_spread_chg_5d_bps",
+      "nq_ret_5d",
+      "gold_ret_5d",
+      "eurusd_ret_5d",
+      "wti_ret_5d"
+    ],
+    "standardisation_means": [
+      0.02602165898617514,
+      0.08582442396313357,
+      0.14104608294930865,
+      0.28906082949308753,
+      16.175391705069114,
+      2.2162649769585245,
+      57.08115207373274,
+      -0.271889400921659,
+      0.6682027649769585,
+      0.013824884792626729,
+      -0.2857142857142857,
+      0.42857142857142855,
+      0.08294930875576037,
+      0.16936774193548393,
+      0.15344884792626723,
+      -0.031914285714285694,
+      -0.10586589861751143
+    ],
+    "standardisation_standard_deviations": [
+      0.2881262437765616,
+      0.6206090104074033,
+      0.7082682758985526,
+      0.07503935995130391,
+      3.4139135192844434,
+      17.320128509976506,
+      30.433910485885278,
+      12.09280443482083,
+      12.274655950348947,
+      11.45946126273638,
+      10.243400249782717,
+      9.36481369007069,
+      12.210064707043786,
+      2.53752262879364,
+      0.7921960447664292,
+      0.9369741855947256,
+      3.9645516051206924
+    ],
+    "coefficients": [
+      -0.11192301513104916,
+      0.5160835892164277,
+      -0.34858834007293005,
+      -0.0332033814447967,
+      -0.126811181444843,
+      -0.034702596619420725,
+      0.15768973675637563,
+      -0.031011072236727985,
+      0.023626346711414812,
+      0.027480368288238178,
+      -0.06735273746354742,
+      0.19883236746654767,
+      -0.2593307440563691,
+      -0.023687417123847712,
+      -0.009052521745446464,
+      0.1475513906386666,
+      0.03603604091520775
+    ],
+    "intercept": 0.20225952255239818,
+    "decision_threshold": 0.5,
+    "fitted_rows": 217,
+    "fitted_period": "dev",
+    "excluded_flat_rows": 95,
+    "direction_rule": "BULLISH when P(up) is at or above the threshold, BEARISH below it, NO_CLEAR_BIAS when a required feature is missing"
+  },
+  "probability": {
+    "field": "p_up_24h",
+    "published": false,
+    "reason": "Calibration does not beat the constant base rate on validation, so no probability is published.",
+    "calibration_record": null
+  },
+  "evidence": {
+    "selection_sha256": "82a5da17fe9fa5f316ee68c46c44e582c7ae63c986215fc5bfeca078fb6defbd",
+    "dataset_sha256": "fafdab0d25ccea559ad9f7ba5a6d60f4e275a77402555c10c2d5876805a20565",
+    "registry_sha256": "9847636c4e68166218953ed93abadfc4c05d32402d5aaf517237f016d854406a",
+    "splits": {
+      "dev": {
+        "start": "2024-01-02",
+        "end": "2025-03-31"
+      },
+      "validation": {
+        "start": "2025-04-01",
+        "end": "2025-10-31"
+      },
+      "holdout": {
+        "start": "2025-11-03",
+        "end": "2026-04-30"
+      }
+    },
+    "metrics": {
+      "dev": {
+        "scheduled": 312,
+        "directional_calls": 312,
+        "directional_coverage_pct": 100,
+        "bullish_calls": 223,
+        "bearish_calls": 89,
+        "no_clear_bias": 0,
+        "correct": 134,
+        "wrong": 83,
+        "flat": 95,
+        "not_evaluable": 0,
+        "ex_flat_accuracy_pct": 61.75,
+        "ex_flat_accuracy_ci_95": {
+          "low": 55.13,
+          "high": 67.96
+        },
+        "accuracy_all_directional_calls_pct": 42.95,
+        "bullish_accuracy_pct": 41.7,
+        "bearish_accuracy_pct": 46.07,
+        "mean_absolute_realised_move_pct": 0.2147,
+        "quarters": [
+          {
+            "quarter": "2024-Q1",
+            "directional_calls": 62,
+            "decided": 39,
+            "ex_flat_accuracy_pct": 51.28
+          },
+          {
+            "quarter": "2024-Q2",
+            "directional_calls": 63,
+            "decided": 44,
+            "ex_flat_accuracy_pct": 56.82
+          },
+          {
+            "quarter": "2024-Q3",
+            "directional_calls": 64,
+            "decided": 44,
+            "ex_flat_accuracy_pct": 63.64
+          },
+          {
+            "quarter": "2024-Q4",
+            "directional_calls": 62,
+            "decided": 43,
+            "ex_flat_accuracy_pct": 69.77
+          },
+          {
+            "quarter": "2025-Q1",
+            "directional_calls": 61,
+            "decided": 47,
+            "ex_flat_accuracy_pct": 65.96
+          }
+        ],
+        "stable_quarter_count": 5,
+        "min_stable_quarter_accuracy_pct": 51.28
+      },
+      "validation": {
+        "scheduled": 149,
+        "directional_calls": 149,
+        "directional_coverage_pct": 100,
+        "bullish_calls": 91,
+        "bearish_calls": 58,
+        "no_clear_bias": 0,
+        "correct": 58,
+        "wrong": 46,
+        "flat": 45,
+        "not_evaluable": 0,
+        "ex_flat_accuracy_pct": 55.77,
+        "ex_flat_accuracy_ci_95": {
+          "low": 46.19,
+          "high": 64.94
+        },
+        "accuracy_all_directional_calls_pct": 38.93,
+        "bullish_accuracy_pct": 35.16,
+        "bearish_accuracy_pct": 44.83,
+        "mean_absolute_realised_move_pct": 0.2423,
+        "quarters": [
+          {
+            "quarter": "2025-Q2",
+            "directional_calls": 63,
+            "decided": 50,
+            "ex_flat_accuracy_pct": 56
+          },
+          {
+            "quarter": "2025-Q3",
+            "directional_calls": 64,
+            "decided": 42,
+            "ex_flat_accuracy_pct": 59.52
+          },
+          {
+            "quarter": "2025-Q4",
+            "directional_calls": 22,
+            "decided": 12,
+            "ex_flat_accuracy_pct": 41.67
+          }
+        ],
+        "stable_quarter_count": 2,
+        "min_stable_quarter_accuracy_pct": 56
+      },
+      "holdout": {
+        "scheduled": 123,
+        "directional_calls": 122,
+        "directional_coverage_pct": 99.19,
+        "bullish_calls": 83,
+        "bearish_calls": 39,
+        "no_clear_bias": 0,
+        "correct": 37,
+        "wrong": 43,
+        "flat": 42,
+        "not_evaluable": 1,
+        "ex_flat_accuracy_pct": 46.25,
+        "ex_flat_accuracy_ci_95": {
+          "low": 35.75,
+          "high": 57.1
+        },
+        "accuracy_all_directional_calls_pct": 30.33,
+        "bullish_accuracy_pct": 27.71,
+        "bearish_accuracy_pct": 35.9,
+        "mean_absolute_realised_move_pct": 0.2069,
+        "quarters": [
+          {
+            "quarter": "2025-Q4",
+            "directional_calls": 40,
+            "decided": 24,
+            "ex_flat_accuracy_pct": 37.5
+          },
+          {
+            "quarter": "2026-Q1",
+            "directional_calls": 61,
+            "decided": 41,
+            "ex_flat_accuracy_pct": 46.34
+          },
+          {
+            "quarter": "2026-Q2",
+            "directional_calls": 21,
+            "decided": 15,
+            "ex_flat_accuracy_pct": 60
+          }
+        ],
+        "stable_quarter_count": 3,
+        "min_stable_quarter_accuracy_pct": 37.5
+      }
+    },
+    "engine_comparison": {
+      "engine_id": "engine_stored_archive",
+      "engine_holdout_ex_flat_accuracy_pct": 52.78,
+      "engine_holdout_ci_95": {
+        "low": 41.4,
+        "high": 63.87
+      },
+      "candidate_holdout_ex_flat_accuracy_pct": 46.25,
+      "candidate_holdout_ci_95": {
+        "low": 35.75,
+        "high": 57.1
+      },
+      "candidate_holdout_decided": 80,
+      "target_60_percent_met": false
+    },
+    "evidence_classification": "not_supported",
+    "registry_size": 93
+  },
+  "release_blockers": [
+    "PROSPECTIVE_SHADOW_RESULT_PENDING",
+    "EVENT_AND_FED_FAMILIES_UNAVAILABLE",
+    "OPERATIONAL_PARITY_NOT_ESTABLISHED_FOR_NEW_INPUTS",
+    "TRADING_EDGE_NOT_ASSESSED"
+  ],
+  "note": "Candidate configuration, not a deployment artefact. It consumes only repository data, is not wired into the live workflow, and may only be published after the shadow comparison and a separate deployment authorisation."
+}

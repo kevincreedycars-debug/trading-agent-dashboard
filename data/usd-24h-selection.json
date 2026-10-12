@@ -1,0 +1,439 @@
+{
+  "schema_version": "usd-24h-selection-v1",
+  "generated_at": "2026-10-12T21:01:17.548Z",
+  "dataset_sha256": "fafdab0d25ccea559ad9f7ba5a6d60f4e275a77402555c10c2d5876805a20565",
+  "registry_sha256": "9847636c4e68166218953ed93abadfc4c05d32402d5aaf517237f016d854406a",
+  "splits": {
+    "dev": {
+      "start": "2024-01-02",
+      "end": "2025-03-31"
+    },
+    "validation": {
+      "start": "2025-04-01",
+      "end": "2025-10-31"
+    },
+    "holdout": {
+      "start": "2025-11-03",
+      "end": "2026-04-30"
+    }
+  },
+  "selection_filters": {
+    "min_validation_directional_coverage_pct": 60,
+    "min_validation_decided": 100,
+    "min_validation_lower_bound_pct": 48,
+    "min_validation_stable_quarter_accuracy_pct": 40,
+    "max_abs_dev_validation_gap_pct": 12
+  },
+  "reduced_filters": {
+    "min_validation_directional_coverage_pct": 40,
+    "min_validation_decided": 60,
+    "min_validation_lower_bound_pct": 45,
+    "max_abs_dev_validation_gap_pct": 20
+  },
+  "selection_tier": "tier_2_reduced_filters",
+  "evidence_rules": {
+    "improvement_demonstrated": "holdout ex-flat accuracy lower bound above the engine arm's holdout point estimate, holdout point estimate at or above 55 percent, and at least 100 decided holdout calls",
+    "uncertain": "the winner's holdout lower bound does not clear the engine arm, or the decided sample is smaller than 100",
+    "not_supported": "the winner's holdout point estimate is at or below the engine arm's"
+  },
+  "configurations_evaluated": 93,
+  "candidate_pool_size": 85,
+  "filter_pass_count": 0,
+  "reduced_filter_pass_count": 2,
+  "ranking_key": "validation ex-flat accuracy Wilson lower bound, then validation decided count",
+  "top_10_by_declared_ranking": [
+    {
+      "config_id": "challenger_logistic_l2_0.03",
+      "passes_filters": false,
+      "passes_reduced_filters": true,
+      "filters": {
+        "validation_directional_coverage_pct": 100,
+        "validation_decided": 104,
+        "validation_lower_bound_pct": 46.19,
+        "validation_min_stable_quarter_accuracy_pct": 56,
+        "dev_validation_gap_pct": 5.98,
+        "passes": false
+      },
+      "dev": 61.75,
+      "validation": 55.77,
+      "validation_lower_bound": 46.19,
+      "validation_decided": 104,
+      "holdout": 46.25,
+      "holdout_decided": 80
+    },
+    {
+      "config_id": "challenger_logistic_l2_0.3",
+      "passes_filters": false,
+      "passes_reduced_filters": true,
+      "filters": {
+        "validation_directional_coverage_pct": 100,
+        "validation_decided": 104,
+        "validation_lower_bound_pct": 45.24,
+        "validation_min_stable_quarter_accuracy_pct": 48,
+        "dev_validation_gap_pct": 2.79,
+        "passes": false
+      },
+      "dev": 57.6,
+      "validation": 54.81,
+      "validation_lower_bound": 45.24,
+      "validation_decided": 104,
+      "holdout": 47.5,
+      "holdout_decided": 80
+    }
+  ],
+  "selected_config_id": "challenger_logistic_l2_0.03",
+  "selected_from_survivors": false,
+  "selected_arm": {
+    "kind": "challenger",
+    "description": "L2 logistic challenger (lambda 0.03) on 17 standardised features, fitted on development rows only.",
+    "rules": [],
+    "weights": null,
+    "gates": null,
+    "threshold_used": 0.5,
+    "metrics": {
+      "dev": {
+        "scheduled": 312,
+        "directional_calls": 312,
+        "directional_coverage_pct": 100,
+        "bullish_calls": 223,
+        "bearish_calls": 89,
+        "no_clear_bias": 0,
+        "correct": 134,
+        "wrong": 83,
+        "flat": 95,
+        "not_evaluable": 0,
+        "ex_flat_accuracy_pct": 61.75,
+        "ex_flat_accuracy_ci_95": {
+          "low": 55.13,
+          "high": 67.96
+        },
+        "accuracy_all_directional_calls_pct": 42.95,
+        "bullish_accuracy_pct": 41.7,
+        "bearish_accuracy_pct": 46.07,
+        "mean_absolute_realised_move_pct": 0.2147,
+        "quarters": [
+          {
+            "quarter": "2024-Q1",
+            "directional_calls": 62,
+            "decided": 39,
+            "ex_flat_accuracy_pct": 51.28
+          },
+          {
+            "quarter": "2024-Q2",
+            "directional_calls": 63,
+            "decided": 44,
+            "ex_flat_accuracy_pct": 56.82
+          },
+          {
+            "quarter": "2024-Q3",
+            "directional_calls": 64,
+            "decided": 44,
+            "ex_flat_accuracy_pct": 63.64
+          },
+          {
+            "quarter": "2024-Q4",
+            "directional_calls": 62,
+            "decided": 43,
+            "ex_flat_accuracy_pct": 69.77
+          },
+          {
+            "quarter": "2025-Q1",
+            "directional_calls": 61,
+            "decided": 47,
+            "ex_flat_accuracy_pct": 65.96
+          }
+        ],
+        "stable_quarter_count": 5,
+        "min_stable_quarter_accuracy_pct": 51.28
+      },
+      "validation": {
+        "scheduled": 149,
+        "directional_calls": 149,
+        "directional_coverage_pct": 100,
+        "bullish_calls": 91,
+        "bearish_calls": 58,
+        "no_clear_bias": 0,
+        "correct": 58,
+        "wrong": 46,
+        "flat": 45,
+        "not_evaluable": 0,
+        "ex_flat_accuracy_pct": 55.77,
+        "ex_flat_accuracy_ci_95": {
+          "low": 46.19,
+          "high": 64.94
+        },
+        "accuracy_all_directional_calls_pct": 38.93,
+        "bullish_accuracy_pct": 35.16,
+        "bearish_accuracy_pct": 44.83,
+        "mean_absolute_realised_move_pct": 0.2423,
+        "quarters": [
+          {
+            "quarter": "2025-Q2",
+            "directional_calls": 63,
+            "decided": 50,
+            "ex_flat_accuracy_pct": 56
+          },
+          {
+            "quarter": "2025-Q3",
+            "directional_calls": 64,
+            "decided": 42,
+            "ex_flat_accuracy_pct": 59.52
+          },
+          {
+            "quarter": "2025-Q4",
+            "directional_calls": 22,
+            "decided": 12,
+            "ex_flat_accuracy_pct": 41.67
+          }
+        ],
+        "stable_quarter_count": 2,
+        "min_stable_quarter_accuracy_pct": 56
+      },
+      "holdout": {
+        "scheduled": 123,
+        "directional_calls": 122,
+        "directional_coverage_pct": 99.19,
+        "bullish_calls": 83,
+        "bearish_calls": 39,
+        "no_clear_bias": 0,
+        "correct": 37,
+        "wrong": 43,
+        "flat": 42,
+        "not_evaluable": 1,
+        "ex_flat_accuracy_pct": 46.25,
+        "ex_flat_accuracy_ci_95": {
+          "low": 35.75,
+          "high": 57.1
+        },
+        "accuracy_all_directional_calls_pct": 30.33,
+        "bullish_accuracy_pct": 27.71,
+        "bearish_accuracy_pct": 35.9,
+        "mean_absolute_realised_move_pct": 0.2069,
+        "quarters": [
+          {
+            "quarter": "2025-Q4",
+            "directional_calls": 40,
+            "decided": 24,
+            "ex_flat_accuracy_pct": 37.5
+          },
+          {
+            "quarter": "2026-Q1",
+            "directional_calls": 61,
+            "decided": 41,
+            "ex_flat_accuracy_pct": 46.34
+          },
+          {
+            "quarter": "2026-Q2",
+            "directional_calls": 21,
+            "decided": 15,
+            "ex_flat_accuracy_pct": 60
+          }
+        ],
+        "stable_quarter_count": 3,
+        "min_stable_quarter_accuracy_pct": 37.5
+      }
+    }
+  },
+  "evidence_classification": "not_supported",
+  "calibration": {
+    "probability_published": false,
+    "method": null,
+    "platt_model": {
+      "a": 1.4295904865330182,
+      "b": -0.07924024412099825,
+      "fitted_rows": 217
+    },
+    "raw_validation": {
+      "evaluated": 104,
+      "brier_score": 0.254,
+      "log_loss": 0.7024,
+      "reliability_bins": [
+        {
+          "bin": "0-10",
+          "n": 2,
+          "mean_forecast": 0.0356,
+          "observed_up_share": 0
+        },
+        {
+          "bin": "10-20",
+          "n": 2,
+          "mean_forecast": 0.1616,
+          "observed_up_share": 0.5
+        },
+        {
+          "bin": "30-40",
+          "n": 7,
+          "mean_forecast": 0.3606,
+          "observed_up_share": 0.4286
+        },
+        {
+          "bin": "40-50",
+          "n": 33,
+          "mean_forecast": 0.4559,
+          "observed_up_share": 0.4242
+        },
+        {
+          "bin": "50-60",
+          "n": 34,
+          "mean_forecast": 0.556,
+          "observed_up_share": 0.5882
+        },
+        {
+          "bin": "60-70",
+          "n": 15,
+          "mean_forecast": 0.6326,
+          "observed_up_share": 0.4667
+        },
+        {
+          "bin": "70-80",
+          "n": 8,
+          "mean_forecast": 0.7322,
+          "observed_up_share": 0.375
+        },
+        {
+          "bin": "80-90",
+          "n": 3,
+          "mean_forecast": 0.8523,
+          "observed_up_share": 0.6667
+        }
+      ]
+    },
+    "calibrated_validation": {
+      "evaluated": 104,
+      "brier_score": 0.2618,
+      "log_loss": 0.7269,
+      "reliability_bins": [
+        {
+          "bin": "0-10",
+          "n": 4,
+          "mean_forecast": 0.0445,
+          "observed_up_share": 0.25
+        },
+        {
+          "bin": "20-30",
+          "n": 3,
+          "mean_forecast": 0.2547,
+          "observed_up_share": 0.3333
+        },
+        {
+          "bin": "30-40",
+          "n": 15,
+          "mean_forecast": 0.351,
+          "observed_up_share": 0.3333
+        },
+        {
+          "bin": "40-50",
+          "n": 24,
+          "mean_forecast": 0.4494,
+          "observed_up_share": 0.4583
+        },
+        {
+          "bin": "50-60",
+          "n": 25,
+          "mean_forecast": 0.5518,
+          "observed_up_share": 0.6
+        },
+        {
+          "bin": "60-70",
+          "n": 18,
+          "mean_forecast": 0.6348,
+          "observed_up_share": 0.5
+        },
+        {
+          "bin": "70-80",
+          "n": 9,
+          "mean_forecast": 0.7501,
+          "observed_up_share": 0.6667
+        },
+        {
+          "bin": "80-90",
+          "n": 4,
+          "mean_forecast": 0.8397,
+          "observed_up_share": 0.25
+        },
+        {
+          "bin": "90-100",
+          "n": 2,
+          "mean_forecast": 0.9271,
+          "observed_up_share": 0.5
+        }
+      ]
+    },
+    "base_rate_brier_validation": 0.2496,
+    "reason": "Calibration does not beat the constant base rate on validation, so no probability is published."
+  },
+  "benchmark_arms": [
+    {
+      "config_id": "baseline_always_bullish",
+      "dev": 54.84,
+      "validation": 48.08,
+      "holdout": 50,
+      "holdout_coverage_pct": 99.19
+    },
+    {
+      "config_id": "baseline_always_bearish",
+      "dev": 45.16,
+      "validation": 51.92,
+      "holdout": 50,
+      "holdout_coverage_pct": 99.19
+    },
+    {
+      "config_id": "baseline_momentum_usd_ret_1d",
+      "dev": 50.69,
+      "validation": 45.19,
+      "holdout": 50,
+      "holdout_coverage_pct": 99.19
+    },
+    {
+      "config_id": "baseline_contrarian_usd_ret_1d",
+      "dev": 49.31,
+      "validation": 54.81,
+      "holdout": 50,
+      "holdout_coverage_pct": 99.19
+    },
+    {
+      "config_id": "baseline_momentum_usd_ret_5d",
+      "dev": 53.92,
+      "validation": 43.27,
+      "holdout": 43.75,
+      "holdout_coverage_pct": 99.19
+    },
+    {
+      "config_id": "baseline_contrarian_usd_ret_5d",
+      "dev": 46.08,
+      "validation": 56.73,
+      "holdout": 56.25,
+      "holdout_coverage_pct": 99.19
+    },
+    {
+      "config_id": "baseline_momentum_usd_ret_20d",
+      "dev": 47,
+      "validation": 47.12,
+      "holdout": 51.25,
+      "holdout_coverage_pct": 99.19
+    },
+    {
+      "config_id": "baseline_contrarian_usd_ret_20d",
+      "dev": 53,
+      "validation": 52.88,
+      "holdout": 48.75,
+      "holdout_coverage_pct": 99.19
+    }
+  ],
+  "benchmark_note": "Benchmarks are scored on the same rows as the candidates. The five-day contrarian benchmark is the strongest single arm in this run and is why improvement is not claimed: the candidate rules have to beat a benchmark that needs no research.",
+  "comparison_to_engine_holdout": {
+    "engine_id": "engine_stored_archive",
+    "engine_holdout_ex_flat_accuracy_pct": 52.78,
+    "engine_holdout_ci_95": {
+      "low": 41.4,
+      "high": 63.87
+    },
+    "candidate_holdout_ex_flat_accuracy_pct": 46.25,
+    "candidate_holdout_ci_95": {
+      "low": 35.75,
+      "high": 57.1
+    },
+    "candidate_holdout_decided": 80,
+    "target_60_percent_met": false
+  }
+}

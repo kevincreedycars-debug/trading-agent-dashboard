@@ -1,0 +1,3239 @@
+{
+  "schema_version": "usd-24h-research-cards-v1",
+  "generated_at": "2026-10-12T21:01:17.328Z",
+  "dataset_sha256": "fafdab0d25ccea559ad9f7ba5a6d60f4e275a77402555c10c2d5876805a20565",
+  "registry_sha256": "9847636c4e68166218953ed93abadfc4c05d32402d5aaf517237f016d854406a",
+  "verdict_rule": {
+    "signal_floor_abs_r": 0.08,
+    "explanation_ratio": 2,
+    "statement": "A feature is prospective evidence only when its forward correlation clears the declared floor in some period and is not swamped by its correlation with the window that has just closed; a sign change between development and validation, or sign flips in several quarters, is recorded as contradictory rather than as support."
+  },
+  "cards": [
+    {
+      "family": "dxy_momentum",
+      "label": "Dollar index momentum",
+      "verdict": "weak_forward_relation_only",
+      "candidate_rules": [
+        {
+          "id": "usd_mom_1d_cont",
+          "feature": "usd_ret_1d",
+          "bullish": {
+            "comparator": "gte",
+            "threshold": 0.15
+          },
+          "bearish": {
+            "comparator": "lte",
+            "threshold": -0.15
+          },
+          "weight": 6,
+          "condition": null,
+          "status": "candidate",
+          "rationale": "One-day dollar continuation, the lookback the live F5 already uses."
+        },
+        {
+          "id": "usd_mom_5d_cont",
+          "feature": "usd_ret_5d",
+          "bullish": {
+            "comparator": "gte",
+            "threshold": 0.5
+          },
+          "bearish": {
+            "comparator": "lte",
+            "threshold": -0.5
+          },
+          "weight": 8,
+          "condition": null,
+          "status": "candidate",
+          "rationale": "Weekly dollar continuation, slower than the live one-day threshold."
+        },
+        {
+          "id": "usd_mom_5d_fade",
+          "feature": "usd_ret_5d",
+          "bullish": {
+            "comparator": "lte",
+            "threshold": -0.5
+          },
+          "bearish": {
+            "comparator": "gte",
+            "threshold": 0.5
+          },
+          "weight": 8,
+          "condition": null,
+          "status": "candidate",
+          "rationale": "The counter-hypothesis: weekly dollar mean reversion. Kept so the registry contains the opposite bet."
+        },
+        {
+          "id": "usd_trend_ma20_cont",
+          "feature": "usd_ma20_dist_pct",
+          "bullish": {
+            "comparator": "gte",
+            "threshold": 0.5
+          },
+          "bearish": {
+            "comparator": "lte",
+            "threshold": -0.5
+          },
+          "weight": 6,
+          "condition": null,
+          "status": "candidate",
+          "rationale": "Position relative to the 20-observation mean."
+        }
+      ],
+      "rule_arms": [
+        {
+          "rule_id": "usd_mom_1d_cont",
+          "status": "candidate",
+          "arm": {
+            "config_id": "single_usd_mom_1d_cont",
+            "dev": 50.43,
+            "validation": 43.33,
+            "holdout": 48.72,
+            "validation_coverage_pct": 57.05,
+            "holdout_decided": 39
+          }
+        },
+        {
+          "rule_id": "usd_mom_5d_cont",
+          "status": "candidate",
+          "arm": {
+            "config_id": "single_usd_mom_5d_cont",
+            "dev": 62.11,
+            "validation": 40,
+            "holdout": 38.24,
+            "validation_coverage_pct": 36.91,
+            "holdout_decided": 34
+          }
+        },
+        {
+          "rule_id": "usd_mom_5d_fade",
+          "status": "candidate",
+          "arm": {
+            "config_id": "single_usd_mom_5d_fade",
+            "dev": 37.89,
+            "validation": 60,
+            "holdout": 61.76,
+            "validation_coverage_pct": 36.91,
+            "holdout_decided": 34
+          }
+        },
+        {
+          "rule_id": "usd_trend_ma20_cont",
+          "status": "candidate",
+          "arm": {
+            "config_id": "single_usd_trend_ma20_cont",
+            "dev": 46.61,
+            "validation": 40.48,
+            "holdout": 48.78,
+            "validation_coverage_pct": 40.94,
+            "holdout_decided": 41
+          }
+        }
+      ],
+      "measurements": [
+        {
+          "feature": "usd_ret_1d",
+          "forward_r_by_period": {
+            "dev": {
+              "r": 0.0252,
+              "n": 311
+            },
+            "validation": {
+              "r": -0.1678,
+              "n": 148
+            },
+            "holdout": {
+              "r": -0.0872,
+              "n": 121
+            }
+          },
+          "trailing_r": {
+            "r": 0.0073,
+            "n": 583
+          },
+          "quarter_sign_stability": {
+            "quarters": 10,
+            "positive_quarters": 4,
+            "negative_quarters": 6,
+            "detail": [
+              {
+                "quarter": "2024-Q1",
+                "r": -0.1654
+              },
+              {
+                "quarter": "2024-Q2",
+                "r": 0.0308
+              },
+              {
+                "quarter": "2024-Q3",
+                "r": 0.0763
+              },
+              {
+                "quarter": "2024-Q4",
+                "r": 0.0133
+              },
+              {
+                "quarter": "2025-Q1",
+                "r": -0.0109
+              },
+              {
+                "quarter": "2025-Q2",
+                "r": -0.248
+              },
+              {
+                "quarter": "2025-Q3",
+                "r": -0.0786
+              },
+              {
+                "quarter": "2025-Q4",
+                "r": -0.043
+              },
+              {
+                "quarter": "2026-Q1",
+                "r": -0.1485
+              },
+              {
+                "quarter": "2026-Q2",
+                "r": 0.0435
+              }
+            ]
+          },
+          "tercile_up_shares": {
+            "bottom_tercile_up_share_pct": 51.13,
+            "top_tercile_up_share_pct": 49.62,
+            "bottom_tercile_n": 133,
+            "top_tercile_n": 133
+          },
+          "verdict": "forward_sign_unstable_between_periods",
+          "label": "one-day dollar return"
+        },
+        {
+          "feature": "usd_ret_5d",
+          "forward_r_by_period": {
+            "dev": {
+              "r": 0.1021,
+              "n": 311
+            },
+            "validation": {
+              "r": -0.0894,
+              "n": 148
+            },
+            "holdout": {
+              "r": -0.0612,
+              "n": 121
+            }
+          },
+          "trailing_r": {
+            "r": -0.0192,
+            "n": 583
+          },
+          "quarter_sign_stability": {
+            "quarters": 10,
+            "positive_quarters": 4,
+            "negative_quarters": 6,
+            "detail": [
+              {
+                "quarter": "2024-Q1",
+                "r": -0.0239
+              },
+              {
+                "quarter": "2024-Q2",
+                "r": 0.0751
+              },
+              {
+                "quarter": "2024-Q3",
+                "r": 0.1101
+              },
+              {
+                "quarter": "2024-Q4",
+                "r": 0.04
+              },
+              {
+                "quarter": "2025-Q1",
+                "r": -0.0192
+              },
+              {
+                "quarter": "2025-Q2",
+                "r": -0.0683
+              },
+              {
+                "quarter": "2025-Q3",
+                "r": -0.2702
+              },
+              {
+                "quarter": "2025-Q4",
+                "r": -0.2689
+              },
+              {
+                "quarter": "2026-Q1",
+                "r": -0.1186
+              },
+              {
+                "quarter": "2026-Q2",
+                "r": 0.2454
+              }
+            ]
+          },
+          "tercile_up_shares": {
+            "bottom_tercile_up_share_pct": 54.14,
+            "top_tercile_up_share_pct": 53.38,
+            "bottom_tercile_n": 133,
+            "top_tercile_n": 133
+          },
+          "verdict": "forward_sign_unstable_between_periods",
+          "label": "five-day dollar return"
+        },
+        {
+          "feature": "usd_ret_20d",
+          "forward_r_by_period": {
+            "dev": {
+              "r": -0.0062,
+              "n": 311
+            },
+            "validation": {
+              "r": -0.132,
+              "n": 148
+            },
+            "holdout": {
+              "r": -0.0377,
+              "n": 121
+            }
+          },
+          "trailing_r": {
+            "r": -0.0098,
+            "n": 583
+          },
+          "quarter_sign_stability": {
+            "quarters": 10,
+            "positive_quarters": 0,
+            "negative_quarters": 10,
+            "detail": [
+              {
+                "quarter": "2024-Q1",
+                "r": -0.182
+              },
+              {
+                "quarter": "2024-Q2",
+                "r": -0.0553
+              },
+              {
+                "quarter": "2024-Q3",
+                "r": -0.3827
+              },
+              {
+                "quarter": "2024-Q4",
+                "r": -0.1514
+              },
+              {
+                "quarter": "2025-Q1",
+                "r": -0.002
+              },
+              {
+                "quarter": "2025-Q2",
+                "r": -0.3243
+              },
+              {
+                "quarter": "2025-Q3",
+                "r": -0.2944
+              },
+              {
+                "quarter": "2025-Q4",
+                "r": -0.0039
+              },
+              {
+                "quarter": "2026-Q1",
+                "r": -0.0067
+              },
+              {
+                "quarter": "2026-Q2",
+                "r": -0.1289
+              }
+            ]
+          },
+          "tercile_up_shares": {
+            "bottom_tercile_up_share_pct": 56.39,
+            "top_tercile_up_share_pct": 48.12,
+            "bottom_tercile_n": 133,
+            "top_tercile_n": 133
+          },
+          "verdict": "weak_forward_relation",
+          "label": "twenty-day dollar return"
+        },
+        {
+          "feature": "usd_ma20_dist_pct",
+          "forward_r_by_period": {
+            "dev": {
+              "r": 0.0129,
+              "n": 311
+            },
+            "validation": {
+              "r": -0.1085,
+              "n": 148
+            },
+            "holdout": {
+              "r": -0.0448,
+              "n": 121
+            }
+          },
+          "trailing_r": {
+            "r": -0.0093,
+            "n": 583
+          },
+          "quarter_sign_stability": {
+            "quarters": 10,
+            "positive_quarters": 0,
+            "negative_quarters": 10,
+            "detail": [
+              {
+                "quarter": "2024-Q1",
+                "r": -0.0773
+              },
+              {
+                "quarter": "2024-Q2",
+                "r": -0.0121
+              },
+              {
+                "quarter": "2024-Q3",
+                "r": -0.2291
+              },
+              {
+                "quarter": "2024-Q4",
+                "r": -0.1047
+              },
+              {
+                "quarter": "2025-Q1",
+                "r": -0.13
+              },
+              {
+                "quarter": "2025-Q2",
+                "r": -0.2337
+              },
+              {
+                "quarter": "2025-Q3",
+                "r": -0.2498
+              },
+              {
+                "quarter": "2025-Q4",
+                "r": -0.0598
+              },
+              {
+                "quarter": "2026-Q1",
+                "r": -0.0335
+              },
+              {
+                "quarter": "2026-Q2",
+                "r": -0.1045
+              }
+            ]
+          },
+          "tercile_up_shares": {
+            "bottom_tercile_up_share_pct": 54.14,
+            "top_tercile_up_share_pct": 47.37,
+            "bottom_tercile_n": 133,
+            "top_tercile_n": 133
+          },
+          "verdict": "forward_sign_unstable_between_periods",
+          "label": "distance from the 20-observation mean"
+        },
+        {
+          "feature": "usd_lag1_ret_1d",
+          "forward_r_by_period": {
+            "dev": {
+              "r": -0.0356,
+              "n": 311
+            },
+            "validation": {
+              "r": 0.0233,
+              "n": 148
+            },
+            "holdout": {
+              "r": -0.0335,
+              "n": 121
+            }
+          },
+          "trailing_r": {
+            "r": -0.0011,
+            "n": 583
+          },
+          "quarter_sign_stability": {
+            "quarters": 10,
+            "positive_quarters": 3,
+            "negative_quarters": 7,
+            "detail": [
+              {
+                "quarter": "2024-Q1",
+                "r": -0.131
+              },
+              {
+                "quarter": "2024-Q2",
+                "r": -0.0134
+              },
+              {
+                "quarter": "2024-Q3",
+                "r": -0.0423
+              },
+              {
+                "quarter": "2024-Q4",
+                "r": 0.0288
+              },
+              {
+                "quarter": "2025-Q1",
+                "r": -0.1733
+              },
+              {
+                "quarter": "2025-Q2",
+                "r": 0.0008
+              },
+              {
+                "quarter": "2025-Q3",
+                "r": -0.0169
+              },
+              {
+                "quarter": "2025-Q4",
+                "r": 0.116
+              },
+              {
+                "quarter": "2026-Q1",
+                "r": -0.0637
+              },
+              {
+                "quarter": "2026-Q2",
+                "r": -0.1115
+              }
+            ]
+          },
+          "tercile_up_shares": {
+            "bottom_tercile_up_share_pct": 54.89,
+            "top_tercile_up_share_pct": 51.13,
+            "bottom_tercile_n": 133,
+            "top_tercile_n": 133
+          },
+          "verdict": "no_measurable_forward_signal",
+          "label": "one-day dollar return, one-lag series"
+        },
+        {
+          "feature": "usd_lag1_ret_5d",
+          "forward_r_by_period": {
+            "dev": {
+              "r": 0.0025,
+              "n": 311
+            },
+            "validation": {
+              "r": -0.1226,
+              "n": 148
+            },
+            "holdout": {
+              "r": -0.0603,
+              "n": 121
+            }
+          },
+          "trailing_r": {
+            "r": -0.0108,
+            "n": 583
+          },
+          "quarter_sign_stability": {
+            "quarters": 10,
+            "positive_quarters": 2,
+            "negative_quarters": 8,
+            "detail": [
+              {
+                "quarter": "2024-Q1",
+                "r": -0.0877
+              },
+              {
+                "quarter": "2024-Q2",
+                "r": -0.0157
+              },
+              {
+                "quarter": "2024-Q3",
+                "r": 0.0002
+              },
+              {
+                "quarter": "2024-Q4",
+                "r": -0.0092
+              },
+              {
+                "quarter": "2025-Q1",
+                "r": -0.2227
+              },
+              {
+                "quarter": "2025-Q2",
+                "r": -0.1539
+              },
+              {
+                "quarter": "2025-Q3",
+                "r": -0.23
+              },
+              {
+                "quarter": "2025-Q4",
+                "r": -0.1943
+              },
+              {
+                "quarter": "2026-Q1",
+                "r": -0.1526
+              },
+              {
+                "quarter": "2026-Q2",
+                "r": 0.2839
+              }
+            ]
+          },
+          "tercile_up_shares": {
+            "bottom_tercile_up_share_pct": 54.14,
+            "top_tercile_up_share_pct": 52.63,
+            "bottom_tercile_n": 133,
+            "top_tercile_n": 133
+          },
+          "verdict": "forward_sign_unstable_between_periods",
+          "label": "five-day dollar return, one-lag series"
+        }
+      ],
+      "data_requirements": [
+        "Daily dollar index values with a declared availability lag (FRED DTWEXBGS is used at two and one business days).",
+        "At least 21 usable observations before the cutoff to form the 20-observation window."
+      ],
+      "missing_inputs": [
+        "true intraday dollar quotes: the collector reads a daily FRED series, so no same-morning dollar print exists"
+      ]
+    },
+    {
+      "family": "vix_risk",
+      "label": "VIX and risk conditions",
+      "verdict": "weak_forward_relation_only",
+      "candidate_rules": [
+        {
+          "id": "risk_vix_level_haven",
+          "feature": "vix_level",
+          "bullish": {
+            "comparator": "gte",
+            "threshold": 25
+          },
+          "bearish": {
+            "comparator": "lte",
+            "threshold": 16
+          },
+          "weight": 8,
+          "condition": null,
+          "status": "candidate",
+          "rationale": "The live F1 regime mapping: high VIX is a dollar haven bid."
+        },
+        {
+          "id": "risk_vix_chg_5d",
+          "feature": "vix_ret_5d",
+          "bullish": {
+            "comparator": "gte",
+            "threshold": 10
+          },
+          "bearish": {
+            "comparator": "lte",
+            "threshold": -10
+          },
+          "weight": 6,
+          "condition": null,
+          "status": "candidate",
+          "rationale": "Direction of the VIX move rather than its level."
+        },
+        {
+          "id": "risk_vix_pctile",
+          "feature": "vix_pctile_252",
+          "bullish": {
+            "comparator": "gte",
+            "threshold": 80
+          },
+          "bearish": {
+            "comparator": "lte",
+            "threshold": 20
+          },
+          "weight": 4,
+          "condition": null,
+          "status": "candidate",
+          "rationale": "Relative rather than absolute risk level, so the rule travels across volatility regimes."
+        },
+        {
+          "id": "risk_credit_spread_chg",
+          "feature": "credit_spread_chg_5d_bps",
+          "bullish": {
+            "comparator": "gte",
+            "threshold": 25
+          },
+          "bearish": {
+            "comparator": "lte",
+            "threshold": -25
+          },
+          "weight": 5,
+          "condition": null,
+          "status": "candidate",
+          "rationale": "Credit spreads widening is a stress signal independent of equity volatility."
+        }
+      ],
+      "rule_arms": [
+        {
+          "rule_id": "risk_vix_level_haven",
+          "status": "candidate",
+          "arm": {
+            "config_id": "single_risk_vix_level_haven",
+            "dev": 43.94,
+            "validation": 33.33,
+            "holdout": 53.85,
+            "validation_coverage_pct": 34.9,
+            "holdout_decided": 26
+          }
+        },
+        {
+          "rule_id": "risk_vix_chg_5d",
+          "status": "candidate",
+          "arm": {
+            "config_id": "single_risk_vix_chg_5d",
+            "dev": 48.91,
+            "validation": 59.09,
+            "holdout": 57.58,
+            "validation_coverage_pct": 39.6,
+            "holdout_decided": 33
+          }
+        },
+        {
+          "rule_id": "risk_vix_pctile",
+          "status": "candidate",
+          "arm": {
+            "config_id": "single_risk_vix_pctile",
+            "dev": 51.43,
+            "validation": 35.9,
+            "holdout": 52.63,
+            "validation_coverage_pct": 36.24,
+            "holdout_decided": 38
+          }
+        },
+        {
+          "rule_id": "risk_credit_spread_chg",
+          "status": "candidate",
+          "arm": {
+            "config_id": "single_risk_credit_spread_chg",
+            "dev": 27.27,
+            "validation": 45,
+            "holdout": 20,
+            "validation_coverage_pct": 18.79,
+            "holdout_decided": 5
+          }
+        }
+      ],
+      "measurements": [
+        {
+          "feature": "vix_level",
+          "forward_r_by_period": {
+            "dev": {
+              "r": -0.0787,
+              "n": 311
+            },
+            "validation": {
+              "r": -0.1993,
+              "n": 148
+            },
+            "holdout": {
+              "r": -0.0133,
+              "n": 121
+            }
+          },
+          "trailing_r": {
+            "r": -0.0489,
+            "n": 583
+          },
+          "quarter_sign_stability": {
+            "quarters": 10,
+            "positive_quarters": 2,
+            "negative_quarters": 8,
+            "detail": [
+              {
+                "quarter": "2024-Q1",
+                "r": -0.2543
+              },
+              {
+                "quarter": "2024-Q2",
+                "r": -0.0733
+              },
+              {
+                "quarter": "2024-Q3",
+                "r": 0.0024
+              },
+              {
+                "quarter": "2024-Q4",
+                "r": -0.0544
+              },
+              {
+                "quarter": "2025-Q1",
+                "r": -0.1216
+              },
+              {
+                "quarter": "2025-Q2",
+                "r": -0.1504
+              },
+              {
+                "quarter": "2025-Q3",
+                "r": -0.0639
+              },
+              {
+                "quarter": "2025-Q4",
+                "r": 0.0181
+              },
+              {
+                "quarter": "2026-Q1",
+                "r": -0.0396
+              },
+              {
+                "quarter": "2026-Q2",
+                "r": -0.2023
+              }
+            ]
+          },
+          "tercile_up_shares": {
+            "bottom_tercile_up_share_pct": 53.38,
+            "top_tercile_up_share_pct": 48.87,
+            "bottom_tercile_n": 133,
+            "top_tercile_n": 133
+          },
+          "verdict": "weak_forward_relation",
+          "label": "VIX level"
+        },
+        {
+          "feature": "vix_ret_1d",
+          "forward_r_by_period": {
+            "dev": {
+              "r": -0.1333,
+              "n": 311
+            },
+            "validation": {
+              "r": 0.2051,
+              "n": 148
+            },
+            "holdout": {
+              "r": -0.0214,
+              "n": 121
+            }
+          },
+          "trailing_r": {
+            "r": 0.1803,
+            "n": 583
+          },
+          "quarter_sign_stability": {
+            "quarters": 10,
+            "positive_quarters": 4,
+            "negative_quarters": 6,
+            "detail": [
+              {
+                "quarter": "2024-Q1",
+                "r": -0.216
+              },
+              {
+                "quarter": "2024-Q2",
+                "r": -0.2228
+              },
+              {
+                "quarter": "2024-Q3",
+                "r": 0.1022
+              },
+              {
+                "quarter": "2024-Q4",
+                "r": -0.2265
+              },
+              {
+                "quarter": "2025-Q1",
+                "r": -0.2524
+              },
+              {
+                "quarter": "2025-Q2",
+                "r": 0.2534
+              },
+              {
+                "quarter": "2025-Q3",
+                "r": 0.1321
+              },
+              {
+                "quarter": "2025-Q4",
+                "r": 0.2393
+              },
+              {
+                "quarter": "2026-Q1",
+                "r": -0.1092
+              },
+              {
+                "quarter": "2026-Q2",
+                "r": -0.2674
+              }
+            ]
+          },
+          "tercile_up_shares": {
+            "bottom_tercile_up_share_pct": 55.64,
+            "top_tercile_up_share_pct": 49.62,
+            "bottom_tercile_n": 133,
+            "top_tercile_n": 133
+          },
+          "verdict": "forward_sign_unstable_between_periods",
+          "label": "one-day VIX change"
+        },
+        {
+          "feature": "vix_ret_5d",
+          "forward_r_by_period": {
+            "dev": {
+              "r": -0.0858,
+              "n": 311
+            },
+            "validation": {
+              "r": -0.1541,
+              "n": 148
+            },
+            "holdout": {
+              "r": 0.0625,
+              "n": 121
+            }
+          },
+          "trailing_r": {
+            "r": 0.0681,
+            "n": 583
+          },
+          "quarter_sign_stability": {
+            "quarters": 10,
+            "positive_quarters": 3,
+            "negative_quarters": 7,
+            "detail": [
+              {
+                "quarter": "2024-Q1",
+                "r": -0.2077
+              },
+              {
+                "quarter": "2024-Q2",
+                "r": -0.099
+              },
+              {
+                "quarter": "2024-Q3",
+                "r": 0.1511
+              },
+              {
+                "quarter": "2024-Q4",
+                "r": -0.2204
+              },
+              {
+                "quarter": "2025-Q1",
+                "r": -0.21
+              },
+              {
+                "quarter": "2025-Q2",
+                "r": -0.1545
+              },
+              {
+                "quarter": "2025-Q3",
+                "r": -0.1772
+              },
+              {
+                "quarter": "2025-Q4",
+                "r": 0.0807
+              },
+              {
+                "quarter": "2026-Q1",
+                "r": -0.1564
+              },
+              {
+                "quarter": "2026-Q2",
+                "r": 0.4179
+              }
+            ]
+          },
+          "tercile_up_shares": {
+            "bottom_tercile_up_share_pct": 48.12,
+            "top_tercile_up_share_pct": 50.38,
+            "bottom_tercile_n": 133,
+            "top_tercile_n": 133
+          },
+          "verdict": "forward_sign_unstable_across_quarters",
+          "label": "five-day VIX change"
+        },
+        {
+          "feature": "vix_pctile_252",
+          "forward_r_by_period": {
+            "dev": {
+              "r": -0.0399,
+              "n": 311
+            },
+            "validation": {
+              "r": -0.1267,
+              "n": 148
+            },
+            "holdout": {
+              "r": 0.0419,
+              "n": 121
+            }
+          },
+          "trailing_r": {
+            "r": -0.0117,
+            "n": 583
+          },
+          "quarter_sign_stability": {
+            "quarters": 10,
+            "positive_quarters": 5,
+            "negative_quarters": 5,
+            "detail": [
+              {
+                "quarter": "2024-Q1",
+                "r": -0.2433
+              },
+              {
+                "quarter": "2024-Q2",
+                "r": -0.0632
+              },
+              {
+                "quarter": "2024-Q3",
+                "r": 0.1448
+              },
+              {
+                "quarter": "2024-Q4",
+                "r": 0.0396
+              },
+              {
+                "quarter": "2025-Q1",
+                "r": -0.1199
+              },
+              {
+                "quarter": "2025-Q2",
+                "r": 0.0142
+              },
+              {
+                "quarter": "2025-Q3",
+                "r": -0.0642
+              },
+              {
+                "quarter": "2025-Q4",
+                "r": 0.0257
+              },
+              {
+                "quarter": "2026-Q1",
+                "r": 0.0699
+              },
+              {
+                "quarter": "2026-Q2",
+                "r": -0.21
+              }
+            ]
+          },
+          "tercile_up_shares": {
+            "bottom_tercile_up_share_pct": 50.38,
+            "top_tercile_up_share_pct": 51.13,
+            "bottom_tercile_n": 133,
+            "top_tercile_n": 133
+          },
+          "verdict": "forward_sign_unstable_across_quarters",
+          "label": "VIX percentile over 252 observations"
+        },
+        {
+          "feature": "credit_spread_chg_5d_bps",
+          "forward_r_by_period": {
+            "dev": {
+              "r": -0.0584,
+              "n": 311
+            },
+            "validation": {
+              "r": -0.1942,
+              "n": 148
+            },
+            "holdout": {
+              "r": 0.1336,
+              "n": 121
+            }
+          },
+          "trailing_r": {
+            "r": -0.0155,
+            "n": 583
+          },
+          "quarter_sign_stability": {
+            "quarters": 10,
+            "positive_quarters": 3,
+            "negative_quarters": 7,
+            "detail": [
+              {
+                "quarter": "2024-Q1",
+                "r": 0.0023
+              },
+              {
+                "quarter": "2024-Q2",
+                "r": -0.1149
+              },
+              {
+                "quarter": "2024-Q3",
+                "r": -0.0228
+              },
+              {
+                "quarter": "2024-Q4",
+                "r": -0.0095
+              },
+              {
+                "quarter": "2025-Q1",
+                "r": -0.0774
+              },
+              {
+                "quarter": "2025-Q2",
+                "r": -0.1944
+              },
+              {
+                "quarter": "2025-Q3",
+                "r": -0.2157
+              },
+              {
+                "quarter": "2025-Q4",
+                "r": -0.1669
+              },
+              {
+                "quarter": "2026-Q1",
+                "r": 0.0087
+              },
+              {
+                "quarter": "2026-Q2",
+                "r": 0.5648
+              }
+            ]
+          },
+          "tercile_up_shares": {
+            "bottom_tercile_up_share_pct": 57.14,
+            "top_tercile_up_share_pct": 47.37,
+            "bottom_tercile_n": 133,
+            "top_tercile_n": 133
+          },
+          "verdict": "forward_sign_unstable_across_quarters",
+          "label": "five-day high-yield spread change"
+        }
+      ],
+      "data_requirements": [
+        "VIXCLS and BAMLH0A0HYM2 daily closes with a one-business-day lag.",
+        "A 252-observation history before each cutoff for the percentile form."
+      ],
+      "missing_inputs": [
+        "no option-implied dollar skew and no intraday volatility term structure"
+      ]
+    },
+    {
+      "family": "relative_rates",
+      "label": "Relative interest rates",
+      "verdict": "weak_forward_relation_only",
+      "candidate_rules": [
+        {
+          "id": "rel_us_2y_chg5d",
+          "feature": "us_2y_chg_5d_bps",
+          "bullish": {
+            "comparator": "gte",
+            "threshold": 10
+          },
+          "bearish": {
+            "comparator": "lte",
+            "threshold": -10
+          },
+          "weight": 8,
+          "condition": null,
+          "status": "candidate",
+          "rationale": "Higher US front-end yields raise the dollar's carry; the live F2 threshold is 5bp and is treated as provisional."
+        },
+        {
+          "id": "rel_us_de_2y_spread_chg5d",
+          "feature": "us_de_2y_spread_chg_5d_bps",
+          "bullish": {
+            "comparator": "gte",
+            "threshold": 10
+          },
+          "bearish": {
+            "comparator": "lte",
+            "threshold": -10
+          },
+          "weight": 10,
+          "condition": null,
+          "status": "candidate",
+          "rationale": "The engine's own F3 idea: the spread change is the relative-rate signal, not either leg alone."
+        },
+        {
+          "id": "rel_de_2y_chg5d",
+          "feature": "de_2y_chg_5d_bps",
+          "bullish": {
+            "comparator": "lte",
+            "threshold": -10
+          },
+          "bearish": {
+            "comparator": "gte",
+            "threshold": 10
+          },
+          "weight": 6,
+          "condition": null,
+          "status": "candidate",
+          "rationale": "German front-end moves read through EUR weakness, which lifts the dollar index."
+        },
+        {
+          "id": "rel_us_10y_chg5d",
+          "feature": "us_10y_chg_5d_bps",
+          "bullish": {
+            "comparator": "gte",
+            "threshold": 10
+          },
+          "bearish": {
+            "comparator": "lte",
+            "threshold": -10
+          },
+          "weight": 5,
+          "condition": null,
+          "status": "candidate",
+          "rationale": "Long-end US yield change as a lower-weight term-premium proxy."
+        }
+      ],
+      "rule_arms": [
+        {
+          "rule_id": "rel_us_2y_chg5d",
+          "status": "candidate",
+          "arm": {
+            "config_id": "single_rel_us_2y_chg5d",
+            "dev": 54.44,
+            "validation": 58.62,
+            "holdout": 52.63,
+            "validation_coverage_pct": 32.89,
+            "holdout_decided": 19
+          }
+        },
+        {
+          "rule_id": "rel_us_de_2y_spread_chg5d",
+          "status": "candidate",
+          "arm": {
+            "config_id": "single_rel_us_de_2y_spread_chg5d",
+            "dev": 53.85,
+            "validation": 52,
+            "holdout": 50,
+            "validation_coverage_pct": 25.5,
+            "holdout_decided": 14
+          }
+        },
+        {
+          "rule_id": "rel_de_2y_chg5d",
+          "status": "candidate",
+          "arm": {
+            "config_id": "single_rel_de_2y_chg5d",
+            "dev": 47.5,
+            "validation": 47.37,
+            "holdout": 42.11,
+            "validation_coverage_pct": 14.77,
+            "holdout_decided": 19
+          }
+        },
+        {
+          "rule_id": "rel_us_10y_chg5d",
+          "status": "candidate",
+          "arm": {
+            "config_id": "single_rel_us_10y_chg5d",
+            "dev": 54.74,
+            "validation": 53.33,
+            "holdout": 40,
+            "validation_coverage_pct": 33.56,
+            "holdout_decided": 15
+          }
+        }
+      ],
+      "measurements": [
+        {
+          "feature": "us_2y_chg_5d_bps",
+          "forward_r_by_period": {
+            "dev": {
+              "r": 0.0506,
+              "n": 311
+            },
+            "validation": {
+              "r": 0.0807,
+              "n": 148
+            },
+            "holdout": {
+              "r": -0.036,
+              "n": 121
+            }
+          },
+          "trailing_r": {
+            "r": 0.0222,
+            "n": 583
+          },
+          "quarter_sign_stability": {
+            "quarters": 10,
+            "positive_quarters": 4,
+            "negative_quarters": 6,
+            "detail": [
+              {
+                "quarter": "2024-Q1",
+                "r": -0.1022
+              },
+              {
+                "quarter": "2024-Q2",
+                "r": -0.0524
+              },
+              {
+                "quarter": "2024-Q3",
+                "r": -0.0526
+              },
+              {
+                "quarter": "2024-Q4",
+                "r": 0.0854
+              },
+              {
+                "quarter": "2025-Q1",
+                "r": -0.0027
+              },
+              {
+                "quarter": "2025-Q2",
+                "r": 0.0842
+              },
+              {
+                "quarter": "2025-Q3",
+                "r": 0.0621
+              },
+              {
+                "quarter": "2025-Q4",
+                "r": 0.1145
+              },
+              {
+                "quarter": "2026-Q1",
+                "r": -0.1039
+              },
+              {
+                "quarter": "2026-Q2",
+                "r": -0.1279
+              }
+            ]
+          },
+          "tercile_up_shares": {
+            "bottom_tercile_up_share_pct": 45.11,
+            "top_tercile_up_share_pct": 51.88,
+            "bottom_tercile_n": 133,
+            "top_tercile_n": 133
+          },
+          "verdict": "forward_sign_unstable_across_quarters",
+          "label": "US 2Y change, five days"
+        },
+        {
+          "feature": "us_de_2y_spread_bps",
+          "forward_r_by_period": {
+            "dev": {
+              "r": -0.0065,
+              "n": 311
+            },
+            "validation": {
+              "r": -0.0844,
+              "n": 148
+            },
+            "holdout": {
+              "r": -0.0622,
+              "n": 121
+            }
+          },
+          "trailing_r": {
+            "r": -0.0026,
+            "n": 583
+          },
+          "quarter_sign_stability": {
+            "quarters": 10,
+            "positive_quarters": 4,
+            "negative_quarters": 6,
+            "detail": [
+              {
+                "quarter": "2024-Q1",
+                "r": -0.185
+              },
+              {
+                "quarter": "2024-Q2",
+                "r": -0.1406
+              },
+              {
+                "quarter": "2024-Q3",
+                "r": -0.0981
+              },
+              {
+                "quarter": "2024-Q4",
+                "r": -0.1303
+              },
+              {
+                "quarter": "2025-Q1",
+                "r": -0.0849
+              },
+              {
+                "quarter": "2025-Q2",
+                "r": 0.0652
+              },
+              {
+                "quarter": "2025-Q3",
+                "r": 0.1137
+              },
+              {
+                "quarter": "2025-Q4",
+                "r": 0.1609
+              },
+              {
+                "quarter": "2026-Q1",
+                "r": -0.1654
+              },
+              {
+                "quarter": "2026-Q2",
+                "r": 0.0217
+              }
+            ]
+          },
+          "tercile_up_shares": {
+            "bottom_tercile_up_share_pct": 51.88,
+            "top_tercile_up_share_pct": 54.89,
+            "bottom_tercile_n": 133,
+            "top_tercile_n": 133
+          },
+          "verdict": "forward_sign_unstable_across_quarters",
+          "label": "US minus German 2Y level"
+        },
+        {
+          "feature": "us_de_2y_spread_chg_5d_bps",
+          "forward_r_by_period": {
+            "dev": {
+              "r": 0.012,
+              "n": 311
+            },
+            "validation": {
+              "r": 0.0007,
+              "n": 148
+            },
+            "holdout": {
+              "r": -0.1806,
+              "n": 121
+            }
+          },
+          "trailing_r": {
+            "r": -0.0039,
+            "n": 583
+          },
+          "quarter_sign_stability": {
+            "quarters": 10,
+            "positive_quarters": 5,
+            "negative_quarters": 5,
+            "detail": [
+              {
+                "quarter": "2024-Q1",
+                "r": -0.1774
+              },
+              {
+                "quarter": "2024-Q2",
+                "r": -0.1185
+              },
+              {
+                "quarter": "2024-Q3",
+                "r": 0.0525
+              },
+              {
+                "quarter": "2024-Q4",
+                "r": 0.0079
+              },
+              {
+                "quarter": "2025-Q1",
+                "r": -0.0357
+              },
+              {
+                "quarter": "2025-Q2",
+                "r": 0.0174
+              },
+              {
+                "quarter": "2025-Q3",
+                "r": 0.0294
+              },
+              {
+                "quarter": "2025-Q4",
+                "r": 0.1243
+              },
+              {
+                "quarter": "2026-Q1",
+                "r": -0.3161
+              },
+              {
+                "quarter": "2026-Q2",
+                "r": -0.0112
+              }
+            ]
+          },
+          "tercile_up_shares": {
+            "bottom_tercile_up_share_pct": 49.62,
+            "top_tercile_up_share_pct": 54.89,
+            "bottom_tercile_n": 133,
+            "top_tercile_n": 133
+          },
+          "verdict": "forward_sign_unstable_across_quarters",
+          "label": "US minus German 2Y change, five days"
+        },
+        {
+          "feature": "de_2y_chg_5d_bps",
+          "forward_r_by_period": {
+            "dev": {
+              "r": 0.0495,
+              "n": 311
+            },
+            "validation": {
+              "r": 0.1232,
+              "n": 148
+            },
+            "holdout": {
+              "r": 0.1246,
+              "n": 121
+            }
+          },
+          "trailing_r": {
+            "r": 0.0316,
+            "n": 583
+          },
+          "quarter_sign_stability": {
+            "quarters": 10,
+            "positive_quarters": 8,
+            "negative_quarters": 2,
+            "detail": [
+              {
+                "quarter": "2024-Q1",
+                "r": 0.0494
+              },
+              {
+                "quarter": "2024-Q2",
+                "r": 0.071
+              },
+              {
+                "quarter": "2024-Q3",
+                "r": -0.1161
+              },
+              {
+                "quarter": "2024-Q4",
+                "r": 0.098
+              },
+              {
+                "quarter": "2025-Q1",
+                "r": 0.0399
+              },
+              {
+                "quarter": "2025-Q2",
+                "r": 0.0952
+              },
+              {
+                "quarter": "2025-Q3",
+                "r": 0.0805
+              },
+              {
+                "quarter": "2025-Q4",
+                "r": 0.0231
+              },
+              {
+                "quarter": "2026-Q1",
+                "r": 0.162
+              },
+              {
+                "quarter": "2026-Q2",
+                "r": -0.0869
+              }
+            ]
+          },
+          "tercile_up_shares": {
+            "bottom_tercile_up_share_pct": 51.13,
+            "top_tercile_up_share_pct": 55.64,
+            "bottom_tercile_n": 133,
+            "top_tercile_n": 133
+          },
+          "verdict": "weak_forward_relation",
+          "label": "German 2Y change, five days"
+        },
+        {
+          "feature": "us_10y_chg_5d_bps",
+          "forward_r_by_period": {
+            "dev": {
+              "r": 0.0767,
+              "n": 311
+            },
+            "validation": {
+              "r": -0.0263,
+              "n": 148
+            },
+            "holdout": {
+              "r": -0.0625,
+              "n": 121
+            }
+          },
+          "trailing_r": {
+            "r": -0.0052,
+            "n": 583
+          },
+          "quarter_sign_stability": {
+            "quarters": 10,
+            "positive_quarters": 6,
+            "negative_quarters": 4,
+            "detail": [
+              {
+                "quarter": "2024-Q1",
+                "r": -0.0283
+              },
+              {
+                "quarter": "2024-Q2",
+                "r": -0.0648
+              },
+              {
+                "quarter": "2024-Q3",
+                "r": 0.0191
+              },
+              {
+                "quarter": "2024-Q4",
+                "r": 0.1362
+              },
+              {
+                "quarter": "2025-Q1",
+                "r": 0.0538
+              },
+              {
+                "quarter": "2025-Q2",
+                "r": -0.0907
+              },
+              {
+                "quarter": "2025-Q3",
+                "r": 0.1069
+              },
+              {
+                "quarter": "2025-Q4",
+                "r": 0.0588
+              },
+              {
+                "quarter": "2026-Q1",
+                "r": -0.1266
+              },
+              {
+                "quarter": "2026-Q2",
+                "r": 0.0462
+              }
+            ]
+          },
+          "tercile_up_shares": {
+            "bottom_tercile_up_share_pct": 47.37,
+            "top_tercile_up_share_pct": 55.64,
+            "bottom_tercile_n": 133,
+            "top_tercile_n": 133
+          },
+          "verdict": "no_measurable_forward_signal",
+          "label": "US 10Y change, five days"
+        }
+      ],
+      "data_requirements": [
+        "DGS2, DGS10 and the German 2Y Schatz series, each with a declared lag.",
+        "Consistent quote conventions across the two countries."
+      ],
+      "missing_inputs": [
+        "ECB and Fed meeting-date conditioning, and the option-implied policy path"
+      ]
+    },
+    {
+      "family": "real_yields",
+      "label": "Real yields",
+      "verdict": "contradictory_across_periods",
+      "candidate_rules": [
+        {
+          "id": "real_10y_chg5d",
+          "feature": "us_10y_real_chg_5d_bps",
+          "bullish": {
+            "comparator": "gte",
+            "threshold": 10
+          },
+          "bearish": {
+            "comparator": "lte",
+            "threshold": -10
+          },
+          "weight": 8,
+          "condition": null,
+          "status": "candidate",
+          "rationale": "The live F4 idea with a wider provisional threshold."
+        },
+        {
+          "id": "real_10y_chg20d",
+          "feature": "us_10y_real_chg_20d_bps",
+          "bullish": {
+            "comparator": "gte",
+            "threshold": 15
+          },
+          "bearish": {
+            "comparator": "lte",
+            "threshold": -15
+          },
+          "weight": 6,
+          "condition": null,
+          "status": "candidate",
+          "rationale": "Slower real-yield trend, so the rule is not a duplicate of the five-day version."
+        },
+        {
+          "id": "real_5y_chg5d",
+          "feature": "us_5y_real_chg_5d_bps",
+          "bullish": {
+            "comparator": "gte",
+            "threshold": 10
+          },
+          "bearish": {
+            "comparator": "lte",
+            "threshold": -10
+          },
+          "weight": 5,
+          "condition": null,
+          "status": "candidate",
+          "rationale": "Belly of the real curve, closer to the policy path than the 10Y."
+        },
+        {
+          "id": "real_breakeven_chg5d",
+          "feature": "us_10y_breakeven_chg_5d_bps",
+          "bullish": {
+            "comparator": "lte",
+            "threshold": -10
+          },
+          "bearish": {
+            "comparator": "gte",
+            "threshold": 10
+          },
+          "weight": 3,
+          "condition": null,
+          "status": "candidate",
+          "rationale": "Inflation-compensation change, kept at low weight because its sign is genuinely ambiguous."
+        }
+      ],
+      "rule_arms": [
+        {
+          "rule_id": "real_10y_chg5d",
+          "status": "candidate",
+          "arm": {
+            "config_id": "single_real_10y_chg5d",
+            "dev": 57.53,
+            "validation": 53.57,
+            "holdout": 57.14,
+            "validation_coverage_pct": 28.19,
+            "holdout_decided": 7
+          }
+        },
+        {
+          "rule_id": "real_10y_chg20d",
+          "status": "candidate",
+          "arm": {
+            "config_id": "single_real_10y_chg20d",
+            "dev": 52.94,
+            "validation": 55.56,
+            "holdout": 55.56,
+            "validation_coverage_pct": 28.86,
+            "holdout_decided": 18
+          }
+        },
+        {
+          "rule_id": "real_5y_chg5d",
+          "status": "candidate",
+          "arm": {
+            "config_id": "single_real_5y_chg5d",
+            "dev": 52.5,
+            "validation": 45.95,
+            "holdout": 53.85,
+            "validation_coverage_pct": 32.89,
+            "holdout_decided": 13
+          }
+        },
+        {
+          "rule_id": "real_breakeven_chg5d",
+          "status": "candidate",
+          "arm": {
+            "config_id": "single_real_breakeven_chg5d",
+            "dev": 50,
+            "validation": 33.33,
+            "holdout": 100,
+            "validation_coverage_pct": 6.04,
+            "holdout_decided": 1
+          }
+        }
+      ],
+      "measurements": [
+        {
+          "feature": "us_10y_real_chg_5d_bps",
+          "forward_r_by_period": {
+            "dev": {
+              "r": 0.067,
+              "n": 311
+            },
+            "validation": {
+              "r": -0.0627,
+              "n": 148
+            },
+            "holdout": {
+              "r": -0.0174,
+              "n": 121
+            }
+          },
+          "trailing_r": {
+            "r": -0.0256,
+            "n": 583
+          },
+          "quarter_sign_stability": {
+            "quarters": 10,
+            "positive_quarters": 6,
+            "negative_quarters": 4,
+            "detail": [
+              {
+                "quarter": "2024-Q1",
+                "r": -0.0094
+              },
+              {
+                "quarter": "2024-Q2",
+                "r": -0.1027
+              },
+              {
+                "quarter": "2024-Q3",
+                "r": 0.0245
+              },
+              {
+                "quarter": "2024-Q4",
+                "r": 0.0881
+              },
+              {
+                "quarter": "2025-Q1",
+                "r": 0.0394
+              },
+              {
+                "quarter": "2025-Q2",
+                "r": -0.1276
+              },
+              {
+                "quarter": "2025-Q3",
+                "r": 0.1015
+              },
+              {
+                "quarter": "2025-Q4",
+                "r": 0.0674
+              },
+              {
+                "quarter": "2026-Q1",
+                "r": -0.0855
+              },
+              {
+                "quarter": "2026-Q2",
+                "r": 0.2508
+              }
+            ]
+          },
+          "tercile_up_shares": {
+            "bottom_tercile_up_share_pct": 46.62,
+            "top_tercile_up_share_pct": 54.89,
+            "bottom_tercile_n": 133,
+            "top_tercile_n": 133
+          },
+          "verdict": "no_measurable_forward_signal",
+          "label": "10Y TIPS real yield change, five days"
+        },
+        {
+          "feature": "us_10y_real_chg_20d_bps",
+          "forward_r_by_period": {
+            "dev": {
+              "r": 0.0629,
+              "n": 311
+            },
+            "validation": {
+              "r": -0.0456,
+              "n": 148
+            },
+            "holdout": {
+              "r": -0.1363,
+              "n": 121
+            }
+          },
+          "trailing_r": {
+            "r": 0.0025,
+            "n": 583
+          },
+          "quarter_sign_stability": {
+            "quarters": 10,
+            "positive_quarters": 3,
+            "negative_quarters": 7,
+            "detail": [
+              {
+                "quarter": "2024-Q1",
+                "r": -0.2614
+              },
+              {
+                "quarter": "2024-Q2",
+                "r": -0.1059
+              },
+              {
+                "quarter": "2024-Q3",
+                "r": -0.0029
+              },
+              {
+                "quarter": "2024-Q4",
+                "r": -0.0148
+              },
+              {
+                "quarter": "2025-Q1",
+                "r": 0.0902
+              },
+              {
+                "quarter": "2025-Q2",
+                "r": 0.0371
+              },
+              {
+                "quarter": "2025-Q3",
+                "r": 0.0363
+              },
+              {
+                "quarter": "2025-Q4",
+                "r": -0.0386
+              },
+              {
+                "quarter": "2026-Q1",
+                "r": -0.1034
+              },
+              {
+                "quarter": "2026-Q2",
+                "r": -0.2733
+              }
+            ]
+          },
+          "tercile_up_shares": {
+            "bottom_tercile_up_share_pct": 51.13,
+            "top_tercile_up_share_pct": 51.88,
+            "bottom_tercile_n": 133,
+            "top_tercile_n": 133
+          },
+          "verdict": "forward_sign_unstable_between_periods",
+          "label": "10Y TIPS real yield change, twenty days"
+        },
+        {
+          "feature": "us_5y_real_chg_5d_bps",
+          "forward_r_by_period": {
+            "dev": {
+              "r": 0.0593,
+              "n": 311
+            },
+            "validation": {
+              "r": -0.0287,
+              "n": 148
+            },
+            "holdout": {
+              "r": -0.0326,
+              "n": 121
+            }
+          },
+          "trailing_r": {
+            "r": 0.0038,
+            "n": 583
+          },
+          "quarter_sign_stability": {
+            "quarters": 10,
+            "positive_quarters": 5,
+            "negative_quarters": 5,
+            "detail": [
+              {
+                "quarter": "2024-Q1",
+                "r": -0.0363
+              },
+              {
+                "quarter": "2024-Q2",
+                "r": -0.1004
+              },
+              {
+                "quarter": "2024-Q3",
+                "r": 0.056
+              },
+              {
+                "quarter": "2024-Q4",
+                "r": 0.0001
+              },
+              {
+                "quarter": "2025-Q1",
+                "r": 0.0609
+              },
+              {
+                "quarter": "2025-Q2",
+                "r": -0.0897
+              },
+              {
+                "quarter": "2025-Q3",
+                "r": 0.1315
+              },
+              {
+                "quarter": "2025-Q4",
+                "r": 0.09
+              },
+              {
+                "quarter": "2026-Q1",
+                "r": -0.0403
+              },
+              {
+                "quarter": "2026-Q2",
+                "r": -0.0274
+              }
+            ]
+          },
+          "tercile_up_shares": {
+            "bottom_tercile_up_share_pct": 45.86,
+            "top_tercile_up_share_pct": 51.88,
+            "bottom_tercile_n": 133,
+            "top_tercile_n": 133
+          },
+          "verdict": "no_measurable_forward_signal",
+          "label": "5Y TIPS real yield change, five days"
+        },
+        {
+          "feature": "us_10y_breakeven_chg_5d_bps",
+          "forward_r_by_period": {
+            "dev": {
+              "r": 0.0622,
+              "n": 311
+            },
+            "validation": {
+              "r": 0.0634,
+              "n": 148
+            },
+            "holdout": {
+              "r": -0.1008,
+              "n": 121
+            }
+          },
+          "trailing_r": {
+            "r": 0.0357,
+            "n": 583
+          },
+          "quarter_sign_stability": {
+            "quarters": 10,
+            "positive_quarters": 7,
+            "negative_quarters": 3,
+            "detail": [
+              {
+                "quarter": "2024-Q1",
+                "r": -0.0535
+              },
+              {
+                "quarter": "2024-Q2",
+                "r": 0.0362
+              },
+              {
+                "quarter": "2024-Q3",
+                "r": 0.0058
+              },
+              {
+                "quarter": "2024-Q4",
+                "r": 0.1797
+              },
+              {
+                "quarter": "2025-Q1",
+                "r": 0.0574
+              },
+              {
+                "quarter": "2025-Q2",
+                "r": 0.0658
+              },
+              {
+                "quarter": "2025-Q3",
+                "r": 0.064
+              },
+              {
+                "quarter": "2025-Q4",
+                "r": 0.026
+              },
+              {
+                "quarter": "2026-Q1",
+                "r": -0.1153
+              },
+              {
+                "quarter": "2026-Q2",
+                "r": -0.2336
+              }
+            ]
+          },
+          "tercile_up_shares": {
+            "bottom_tercile_up_share_pct": 47.37,
+            "top_tercile_up_share_pct": 51.88,
+            "bottom_tercile_n": 133,
+            "top_tercile_n": 133
+          },
+          "verdict": "forward_sign_unstable_across_quarters",
+          "label": "10Y breakeven change, five days"
+        }
+      ],
+      "data_requirements": [
+        "DFII10, DFII5 and T10YIE daily closes with a declared lag."
+      ],
+      "missing_inputs": [
+        "foreign real yields, so only the US leg of a real-rate differential exists here"
+      ]
+    },
+    {
+      "family": "fed_repricing",
+      "label": "Fed repricing",
+      "verdict": "contradictory_across_periods",
+      "candidate_rules": [
+        {
+          "id": "fed_dovish_repricing_5d",
+          "feature": "policy_repricing_5d_bps",
+          "bullish": {
+            "comparator": "lte",
+            "threshold": -10
+          },
+          "bearish": {
+            "comparator": "gte",
+            "threshold": 10
+          },
+          "weight": 8,
+          "condition": null,
+          "status": "candidate",
+          "rationale": "Dovish repricing (falling 2Y) is expected to weaken the dollar; realised front-end change is the proxy for the priced path."
+        },
+        {
+          "id": "fed_repricing_20d",
+          "feature": "policy_repricing_20d_bps",
+          "bullish": {
+            "comparator": "lte",
+            "threshold": -15
+          },
+          "bearish": {
+            "comparator": "gte",
+            "threshold": 15
+          },
+          "weight": 6,
+          "condition": null,
+          "status": "candidate",
+          "rationale": "Monthly policy repricing, less sensitive to single data prints."
+        },
+        {
+          "id": "fed_effr_minus_3m",
+          "feature": "effr_minus_3m_bps",
+          "bullish": {
+            "comparator": "lte",
+            "threshold": -15
+          },
+          "bearish": {
+            "comparator": "gte",
+            "threshold": 15
+          },
+          "weight": 5,
+          "condition": null,
+          "status": "candidate",
+          "rationale": "The 3M bill trading above the effective rate is the market pricing hikes; below it, cuts."
+        },
+        {
+          "id": "fed_funding_stress",
+          "feature": "sofr_minus_effr_bps",
+          "bullish": {
+            "comparator": "gte",
+            "threshold": 10
+          },
+          "bearish": {
+            "comparator": "lte",
+            "threshold": -10
+          },
+          "weight": 3,
+          "condition": null,
+          "status": "candidate",
+          "rationale": "Repo funding pressure has historically produced a dollar bid; low weight because episodes are rare."
+        }
+      ],
+      "rule_arms": [
+        {
+          "rule_id": "fed_dovish_repricing_5d",
+          "status": "candidate",
+          "arm": {
+            "config_id": "single_fed_dovish_repricing_5d",
+            "dev": 54.44,
+            "validation": 58.62,
+            "holdout": 52.63,
+            "validation_coverage_pct": 32.89,
+            "holdout_decided": 19
+          }
+        },
+        {
+          "rule_id": "fed_repricing_20d",
+          "status": "candidate",
+          "arm": {
+            "config_id": "single_fed_repricing_20d",
+            "dev": 50.41,
+            "validation": 60.78,
+            "holdout": 42.86,
+            "validation_coverage_pct": 49.66,
+            "holdout_decided": 21
+          }
+        },
+        {
+          "rule_id": "fed_effr_minus_3m",
+          "status": "candidate",
+          "arm": {
+            "config_id": "single_fed_effr_minus_3m",
+            "dev": 44.44,
+            "validation": 66.67,
+            "holdout": 50,
+            "validation_coverage_pct": 12.08,
+            "holdout_decided": 2
+          }
+        },
+        {
+          "rule_id": "fed_funding_stress",
+          "status": "candidate",
+          "arm": {
+            "config_id": "single_fed_funding_stress",
+            "dev": 100,
+            "validation": 50,
+            "holdout": 72.73,
+            "validation_coverage_pct": 10.74,
+            "holdout_decided": 11
+          }
+        }
+      ],
+      "measurements": [
+        {
+          "feature": "policy_repricing_5d_bps",
+          "forward_r_by_period": {
+            "dev": {
+              "r": -0.0506,
+              "n": 311
+            },
+            "validation": {
+              "r": -0.0807,
+              "n": 148
+            },
+            "holdout": {
+              "r": 0.036,
+              "n": 121
+            }
+          },
+          "trailing_r": {
+            "r": -0.0222,
+            "n": 583
+          },
+          "quarter_sign_stability": {
+            "quarters": 10,
+            "positive_quarters": 6,
+            "negative_quarters": 4,
+            "detail": [
+              {
+                "quarter": "2024-Q1",
+                "r": 0.1022
+              },
+              {
+                "quarter": "2024-Q2",
+                "r": 0.0524
+              },
+              {
+                "quarter": "2024-Q3",
+                "r": 0.0526
+              },
+              {
+                "quarter": "2024-Q4",
+                "r": -0.0854
+              },
+              {
+                "quarter": "2025-Q1",
+                "r": 0.0027
+              },
+              {
+                "quarter": "2025-Q2",
+                "r": -0.0842
+              },
+              {
+                "quarter": "2025-Q3",
+                "r": -0.0621
+              },
+              {
+                "quarter": "2025-Q4",
+                "r": -0.1145
+              },
+              {
+                "quarter": "2026-Q1",
+                "r": 0.1039
+              },
+              {
+                "quarter": "2026-Q2",
+                "r": 0.1279
+              }
+            ]
+          },
+          "tercile_up_shares": {
+            "bottom_tercile_up_share_pct": 53.38,
+            "top_tercile_up_share_pct": 47.37,
+            "bottom_tercile_n": 133,
+            "top_tercile_n": 133
+          },
+          "verdict": "forward_sign_unstable_across_quarters",
+          "label": "inverse US 2Y change, five days"
+        },
+        {
+          "feature": "policy_repricing_20d_bps",
+          "forward_r_by_period": {
+            "dev": {
+              "r": -0.0683,
+              "n": 311
+            },
+            "validation": {
+              "r": -0.0475,
+              "n": 148
+            },
+            "holdout": {
+              "r": 0.0938,
+              "n": 121
+            }
+          },
+          "trailing_r": {
+            "r": -0.0508,
+            "n": 583
+          },
+          "quarter_sign_stability": {
+            "quarters": 10,
+            "positive_quarters": 6,
+            "negative_quarters": 4,
+            "detail": [
+              {
+                "quarter": "2024-Q1",
+                "r": 0.2988
+              },
+              {
+                "quarter": "2024-Q2",
+                "r": 0.0268
+              },
+              {
+                "quarter": "2024-Q3",
+                "r": 0.0185
+              },
+              {
+                "quarter": "2024-Q4",
+                "r": 0.0469
+              },
+              {
+                "quarter": "2025-Q1",
+                "r": -0.0624
+              },
+              {
+                "quarter": "2025-Q2",
+                "r": -0.0629
+              },
+              {
+                "quarter": "2025-Q3",
+                "r": -0.1135
+              },
+              {
+                "quarter": "2025-Q4",
+                "r": -0.126
+              },
+              {
+                "quarter": "2026-Q1",
+                "r": 0.1042
+              },
+              {
+                "quarter": "2026-Q2",
+                "r": 0.344
+              }
+            ]
+          },
+          "tercile_up_shares": {
+            "bottom_tercile_up_share_pct": 54.89,
+            "top_tercile_up_share_pct": 48.87,
+            "bottom_tercile_n": 133,
+            "top_tercile_n": 133
+          },
+          "verdict": "forward_sign_unstable_across_quarters",
+          "label": "inverse US 2Y change, twenty days"
+        },
+        {
+          "feature": "effr_minus_3m_bps",
+          "forward_r_by_period": {
+            "dev": {
+              "r": 0.0393,
+              "n": 311
+            },
+            "validation": {
+              "r": 0.0402,
+              "n": 148
+            },
+            "holdout": {
+              "r": -0.054,
+              "n": 121
+            }
+          },
+          "trailing_r": {
+            "r": 0.0015,
+            "n": 583
+          },
+          "quarter_sign_stability": {
+            "quarters": 10,
+            "positive_quarters": 7,
+            "negative_quarters": 3,
+            "detail": [
+              {
+                "quarter": "2024-Q1",
+                "r": 0.0861
+              },
+              {
+                "quarter": "2024-Q2",
+                "r": -0.0579
+              },
+              {
+                "quarter": "2024-Q3",
+                "r": 0.0362
+              },
+              {
+                "quarter": "2024-Q4",
+                "r": 0.1035
+              },
+              {
+                "quarter": "2025-Q1",
+                "r": 0.2425
+              },
+              {
+                "quarter": "2025-Q2",
+                "r": -0.0328
+              },
+              {
+                "quarter": "2025-Q3",
+                "r": -0.1019
+              },
+              {
+                "quarter": "2025-Q4",
+                "r": 0.0444
+              },
+              {
+                "quarter": "2026-Q1",
+                "r": 0.0316
+              },
+              {
+                "quarter": "2026-Q2",
+                "r": 0.317
+              }
+            ]
+          },
+          "tercile_up_shares": {
+            "bottom_tercile_up_share_pct": 51.88,
+            "top_tercile_up_share_pct": 54.89,
+            "bottom_tercile_n": 133,
+            "top_tercile_n": 133
+          },
+          "verdict": "no_measurable_forward_signal",
+          "label": "effective rate minus 3M bill"
+        },
+        {
+          "feature": "sofr_minus_effr_bps",
+          "forward_r_by_period": {
+            "dev": {
+              "r": 0.0072,
+              "n": 311
+            },
+            "validation": {
+              "r": 0.0198,
+              "n": 148
+            },
+            "holdout": {
+              "r": 0.0439,
+              "n": 121
+            }
+          },
+          "trailing_r": {
+            "r": 0.0093,
+            "n": 583
+          },
+          "quarter_sign_stability": {
+            "quarters": 10,
+            "positive_quarters": 5,
+            "negative_quarters": 5,
+            "detail": [
+              {
+                "quarter": "2024-Q1",
+                "r": 0.0196
+              },
+              {
+                "quarter": "2024-Q2",
+                "r": -0.074
+              },
+              {
+                "quarter": "2024-Q3",
+                "r": -0.0191
+              },
+              {
+                "quarter": "2024-Q4",
+                "r": 0.0611
+              },
+              {
+                "quarter": "2025-Q1",
+                "r": -0.0869
+              },
+              {
+                "quarter": "2025-Q2",
+                "r": -0.1894
+              },
+              {
+                "quarter": "2025-Q3",
+                "r": -0.073
+              },
+              {
+                "quarter": "2025-Q4",
+                "r": 0.2413
+              },
+              {
+                "quarter": "2026-Q1",
+                "r": 0.1045
+              },
+              {
+                "quarter": "2026-Q2",
+                "r": 0.0388
+              }
+            ]
+          },
+          "tercile_up_shares": {
+            "bottom_tercile_up_share_pct": 51.88,
+            "top_tercile_up_share_pct": 54.14,
+            "bottom_tercile_n": 133,
+            "top_tercile_n": 133
+          },
+          "verdict": "no_measurable_forward_signal",
+          "label": "SOFR minus effective rate"
+        },
+        {
+          "feature": "us_3m_chg_5d_bps",
+          "forward_r_by_period": {
+            "dev": {
+              "r": 0.0391,
+              "n": 311
+            },
+            "validation": {
+              "r": -0.0138,
+              "n": 148
+            },
+            "holdout": {
+              "r": -0.0417,
+              "n": 121
+            }
+          },
+          "trailing_r": {
+            "r": 0.0092,
+            "n": 583
+          },
+          "quarter_sign_stability": {
+            "quarters": 10,
+            "positive_quarters": 5,
+            "negative_quarters": 5,
+            "detail": [
+              {
+                "quarter": "2024-Q1",
+                "r": -0.0912
+              },
+              {
+                "quarter": "2024-Q2",
+                "r": 0.2106
+              },
+              {
+                "quarter": "2024-Q3",
+                "r": -0.0437
+              },
+              {
+                "quarter": "2024-Q4",
+                "r": 0.1591
+              },
+              {
+                "quarter": "2025-Q1",
+                "r": -0.1652
+              },
+              {
+                "quarter": "2025-Q2",
+                "r": 0.0706
+              },
+              {
+                "quarter": "2025-Q3",
+                "r": 0.0421
+              },
+              {
+                "quarter": "2025-Q4",
+                "r": 0.0677
+              },
+              {
+                "quarter": "2026-Q1",
+                "r": -0.2648
+              },
+              {
+                "quarter": "2026-Q2",
+                "r": -0.3038
+              }
+            ]
+          },
+          "tercile_up_shares": {
+            "bottom_tercile_up_share_pct": 51.13,
+            "top_tercile_up_share_pct": 51.88,
+            "bottom_tercile_n": 133,
+            "top_tercile_n": 133
+          },
+          "verdict": "no_measurable_forward_signal",
+          "label": "US 3M change, five days"
+        }
+      ],
+      "data_requirements": [
+        "EFFR, SOFR, DGS3MO and DGS2 with a declared lag.",
+        "A meeting-by-meeting implied policy path to measure repricing directly rather than through yields."
+      ],
+      "missing_inputs": [
+        "fed funds and SOFR futures implied paths are not available from a free source, so every rule here is a yield-based proxy",
+        "meeting dates and statement text are absent"
+      ]
+    },
+    {
+      "family": "economic_surprises",
+      "label": "Economic surprises",
+      "verdict": "not_evaluable_missing_source",
+      "candidate_rules": [
+        {
+          "id": "surprise_event_signal",
+          "feature": "latest_us_event_surprise",
+          "bullish": {
+            "comparator": "eq",
+            "threshold": "positive"
+          },
+          "bearish": {
+            "comparator": "eq",
+            "threshold": "negative"
+          },
+          "weight": 0,
+          "condition": null,
+          "status": "not_evaluable",
+          "rationale": "Needs original-release actual, pre-release consensus and event age. No free vintage or consensus source exists locally, so the rule cannot vote."
+        },
+        {
+          "id": "surprise_event_age_gate",
+          "feature": "latest_us_event_age_hours",
+          "bullish": {
+            "comparator": "lte",
+            "threshold": 72
+          },
+          "bearish": {
+            "comparator": "lte",
+            "threshold": 72
+          },
+          "weight": 0,
+          "condition": null,
+          "status": "not_evaluable",
+          "rationale": "Ageing requirement for the surprise input; same missing source."
+        },
+        {
+          "id": "surprise_release_day_conditioning",
+          "feature": "is_us_macro_release_day",
+          "bullish": {
+            "comparator": "eq",
+            "threshold": true
+          },
+          "bearish": {
+            "comparator": "eq",
+            "threshold": false
+          },
+          "weight": 0,
+          "condition": null,
+          "status": "not_evaluable",
+          "rationale": "Release-day conditioning needs a scheduled-calendar source with publication timestamps, which is also missing."
+        },
+        {
+          "id": "surprise_context_only_policy",
+          "feature": "latest_us_event_surprise",
+          "bullish": {
+            "comparator": "eq",
+            "threshold": "positive"
+          },
+          "bearish": {
+            "comparator": "eq",
+            "threshold": "negative"
+          },
+          "weight": 0,
+          "condition": null,
+          "status": "policy",
+          "rationale": "Until consensus vintages exist, this family may inform commentary but must not consume directional budget."
+        }
+      ],
+      "rule_arms": [
+        {
+          "rule_id": "surprise_context_only_policy",
+          "status": "policy",
+          "arm": null
+        }
+      ],
+      "measurements": [],
+      "data_requirements": [
+        "Actual value at first release, the pre-release consensus and the observation's publication timestamp.",
+        "An event-age rule applied at the cutoff, not after the fact.",
+        "A scheduled calendar of release dates and times in the same timezone convention as the cutoff."
+      ],
+      "missing_inputs": [
+        "consensus values and first-release actuals sit behind paid feeds (Finnhub calendar, RapidAPI ForexFactory) that this repository cannot read",
+        "ALFRED vintage CSV returns HTTP 404 without an API key, so no vintage reconstruction is possible either",
+        "the Fed-bias field is derived from the same paid calendar, so it is left null rather than proxied"
+      ]
+    },
+    {
+      "family": "cross_asset",
+      "label": "Cross-asset relationships",
+      "verdict": "contradictory_across_periods",
+      "candidate_rules": [
+        {
+          "id": "xasset_gold_5d_inverse",
+          "feature": "gold_ret_5d",
+          "bullish": {
+            "comparator": "lte",
+            "threshold": -1.5
+          },
+          "bearish": {
+            "comparator": "gte",
+            "threshold": 1.5
+          },
+          "weight": 5,
+          "condition": null,
+          "status": "candidate",
+          "rationale": "The live F6 mapping: gold strength is read as dollar weakness."
+        },
+        {
+          "id": "xasset_equity_5d_regime",
+          "feature": "nq_ret_5d",
+          "bullish": {
+            "comparator": "lte",
+            "threshold": -1.5
+          },
+          "bearish": {
+            "comparator": "gte",
+            "threshold": 1.5
+          },
+          "weight": 4,
+          "condition": null,
+          "status": "candidate",
+          "rationale": "Equity risk-on is expected to soften the dollar (the live F10 mapping at a longer lookback)."
+        },
+        {
+          "id": "xasset_eurusd_confirm",
+          "feature": "eurusd_ret_5d",
+          "bullish": {
+            "comparator": "lte",
+            "threshold": -1
+          },
+          "bearish": {
+            "comparator": "gte",
+            "threshold": 1
+          },
+          "weight": 4,
+          "condition": null,
+          "status": "candidate",
+          "rationale": "EUR weakness is the dominant weight in the broad dollar index, so it is a confirmation input rather than new information."
+        },
+        {
+          "id": "xasset_wti_5d_growth",
+          "feature": "wti_ret_5d",
+          "bullish": {
+            "comparator": "gte",
+            "threshold": 5
+          },
+          "bearish": {
+            "comparator": "lte",
+            "threshold": -5
+          },
+          "weight": 3,
+          "condition": null,
+          "status": "candidate",
+          "rationale": "Energy strength is treated as a global-growth signal, which is dollar supportive."
+        }
+      ],
+      "rule_arms": [
+        {
+          "rule_id": "xasset_gold_5d_inverse",
+          "status": "candidate",
+          "arm": {
+            "config_id": "single_xasset_gold_5d_inverse",
+            "dev": 42.86,
+            "validation": 37.5,
+            "holdout": 48.28,
+            "validation_coverage_pct": 16.11,
+            "holdout_decided": 29
+          }
+        },
+        {
+          "rule_id": "xasset_equity_5d_regime",
+          "status": "candidate",
+          "arm": {
+            "config_id": "single_xasset_equity_5d_regime",
+            "dev": 48.74,
+            "validation": 56,
+            "holdout": 48.84,
+            "validation_coverage_pct": 48.32,
+            "holdout_decided": 43
+          }
+        },
+        {
+          "rule_id": "xasset_eurusd_confirm",
+          "status": "candidate",
+          "arm": {
+            "config_id": "single_xasset_eurusd_confirm",
+            "dev": 48.98,
+            "validation": 50,
+            "holdout": 33.33,
+            "validation_coverage_pct": 28.86,
+            "holdout_decided": 18
+          }
+        },
+        {
+          "rule_id": "xasset_wti_5d_growth",
+          "status": "candidate",
+          "arm": {
+            "config_id": "single_xasset_wti_5d_growth",
+            "dev": 46.15,
+            "validation": 60.71,
+            "holdout": 43.48,
+            "validation_coverage_pct": 26.17,
+            "holdout_decided": 23
+          }
+        }
+      ],
+      "measurements": [
+        {
+          "feature": "gold_ret_1d",
+          "forward_r_by_period": {
+            "dev": {
+              "r": 0.012,
+              "n": 311
+            },
+            "validation": {
+              "r": -0.0709,
+              "n": 148
+            },
+            "holdout": {
+              "r": -0.0229,
+              "n": 121
+            }
+          },
+          "trailing_r": {
+            "r": -0.2402,
+            "n": 583
+          },
+          "quarter_sign_stability": {
+            "quarters": 10,
+            "positive_quarters": 6,
+            "negative_quarters": 4,
+            "detail": [
+              {
+                "quarter": "2024-Q1",
+                "r": 0.0963
+              },
+              {
+                "quarter": "2024-Q2",
+                "r": 0.0231
+              },
+              {
+                "quarter": "2024-Q3",
+                "r": -0.2558
+              },
+              {
+                "quarter": "2024-Q4",
+                "r": 0.1836
+              },
+              {
+                "quarter": "2025-Q1",
+                "r": 0.0731
+              },
+              {
+                "quarter": "2025-Q2",
+                "r": -0.1751
+              },
+              {
+                "quarter": "2025-Q3",
+                "r": -0.1309
+              },
+              {
+                "quarter": "2025-Q4",
+                "r": 0.2268
+              },
+              {
+                "quarter": "2026-Q1",
+                "r": -0.0828
+              },
+              {
+                "quarter": "2026-Q2",
+                "r": 0.1906
+              }
+            ]
+          },
+          "tercile_up_shares": {
+            "bottom_tercile_up_share_pct": 51.13,
+            "top_tercile_up_share_pct": 54.89,
+            "bottom_tercile_n": 133,
+            "top_tercile_n": 133
+          },
+          "verdict": "no_measurable_forward_signal",
+          "label": "gold return, previous session"
+        },
+        {
+          "feature": "gold_ret_5d",
+          "forward_r_by_period": {
+            "dev": {
+              "r": 0.0547,
+              "n": 311
+            },
+            "validation": {
+              "r": -0.0188,
+              "n": 148
+            },
+            "holdout": {
+              "r": 0.0626,
+              "n": 121
+            }
+          },
+          "trailing_r": {
+            "r": -0.3532,
+            "n": 583
+          },
+          "quarter_sign_stability": {
+            "quarters": 10,
+            "positive_quarters": 7,
+            "negative_quarters": 3,
+            "detail": [
+              {
+                "quarter": "2024-Q1",
+                "r": 0.1449
+              },
+              {
+                "quarter": "2024-Q2",
+                "r": 0.0241
+              },
+              {
+                "quarter": "2024-Q3",
+                "r": -0.2457
+              },
+              {
+                "quarter": "2024-Q4",
+                "r": 0.1858
+              },
+              {
+                "quarter": "2025-Q1",
+                "r": 0.2186
+              },
+              {
+                "quarter": "2025-Q2",
+                "r": -0.1004
+              },
+              {
+                "quarter": "2025-Q3",
+                "r": -0.0398
+              },
+              {
+                "quarter": "2025-Q4",
+                "r": 0.1697
+              },
+              {
+                "quarter": "2026-Q1",
+                "r": 0.0639
+              },
+              {
+                "quarter": "2026-Q2",
+                "r": 0.1053
+              }
+            ]
+          },
+          "tercile_up_shares": {
+            "bottom_tercile_up_share_pct": 52.63,
+            "top_tercile_up_share_pct": 53.38,
+            "bottom_tercile_n": 133,
+            "top_tercile_n": 133
+          },
+          "verdict": "no_measurable_forward_signal",
+          "label": "gold return, five days"
+        },
+        {
+          "feature": "gold_vol20_pct",
+          "forward_r_by_period": {
+            "dev": {
+              "r": -0.0581,
+              "n": 311
+            },
+            "validation": {
+              "r": -0.0313,
+              "n": 148
+            },
+            "holdout": {
+              "r": 0.0355,
+              "n": 121
+            }
+          },
+          "trailing_r": {
+            "r": 0.0624,
+            "n": 583
+          },
+          "quarter_sign_stability": {
+            "quarters": 10,
+            "positive_quarters": 4,
+            "negative_quarters": 6,
+            "detail": [
+              {
+                "quarter": "2024-Q1",
+                "r": 0.1888
+              },
+              {
+                "quarter": "2024-Q2",
+                "r": 0.0428
+              },
+              {
+                "quarter": "2024-Q3",
+                "r": -0.0475
+              },
+              {
+                "quarter": "2024-Q4",
+                "r": -0.3039
+              },
+              {
+                "quarter": "2025-Q1",
+                "r": -0.2369
+              },
+              {
+                "quarter": "2025-Q2",
+                "r": 0.0527
+              },
+              {
+                "quarter": "2025-Q3",
+                "r": -0.0157
+              },
+              {
+                "quarter": "2025-Q4",
+                "r": 0.155
+              },
+              {
+                "quarter": "2026-Q1",
+                "r": -0.0137
+              },
+              {
+                "quarter": "2026-Q2",
+                "r": -0.1115
+              }
+            ]
+          },
+          "tercile_up_shares": {
+            "bottom_tercile_up_share_pct": 57.14,
+            "top_tercile_up_share_pct": 51.88,
+            "bottom_tercile_n": 133,
+            "top_tercile_n": 133
+          },
+          "verdict": "no_measurable_forward_signal",
+          "label": "gold realised volatility"
+        },
+        {
+          "feature": "nq_ret_5d",
+          "forward_r_by_period": {
+            "dev": {
+              "r": 0.0686,
+              "n": 311
+            },
+            "validation": {
+              "r": 0.11,
+              "n": 148
+            },
+            "holdout": {
+              "r": -0.0027,
+              "n": 121
+            }
+          },
+          "trailing_r": {
+            "r": -0.0513,
+            "n": 583
+          },
+          "quarter_sign_stability": {
+            "quarters": 10,
+            "positive_quarters": 7,
+            "negative_quarters": 3,
+            "detail": [
+              {
+                "quarter": "2024-Q1",
+                "r": -0.0005
+              },
+              {
+                "quarter": "2024-Q2",
+                "r": 0.1125
+              },
+              {
+                "quarter": "2024-Q3",
+                "r": -0.237
+              },
+              {
+                "quarter": "2024-Q4",
+                "r": 0.2497
+              },
+              {
+                "quarter": "2025-Q1",
+                "r": 0.1683
+              },
+              {
+                "quarter": "2025-Q2",
+                "r": 0.0941
+              },
+              {
+                "quarter": "2025-Q3",
+                "r": 0.1347
+              },
+              {
+                "quarter": "2025-Q4",
+                "r": 0.1052
+              },
+              {
+                "quarter": "2026-Q1",
+                "r": 0.2474
+              },
+              {
+                "quarter": "2026-Q2",
+                "r": -0.2159
+              }
+            ]
+          },
+          "tercile_up_shares": {
+            "bottom_tercile_up_share_pct": 52.63,
+            "top_tercile_up_share_pct": 51.13,
+            "bottom_tercile_n": 133,
+            "top_tercile_n": 133
+          },
+          "verdict": "forward_sign_unstable_across_quarters",
+          "label": "Nasdaq-100 return, five days"
+        },
+        {
+          "feature": "eurusd_ret_5d",
+          "forward_r_by_period": {
+            "dev": {
+              "r": -0.0259,
+              "n": 311
+            },
+            "validation": {
+              "r": 0.0514,
+              "n": 148
+            },
+            "holdout": {
+              "r": 0.0684,
+              "n": 121
+            }
+          },
+          "trailing_r": {
+            "r": -0.0168,
+            "n": 583
+          },
+          "quarter_sign_stability": {
+            "quarters": 10,
+            "positive_quarters": 8,
+            "negative_quarters": 2,
+            "detail": [
+              {
+                "quarter": "2024-Q1",
+                "r": 0.0199
+              },
+              {
+                "quarter": "2024-Q2",
+                "r": 0.0827
+              },
+              {
+                "quarter": "2024-Q3",
+                "r": 0.046
+              },
+              {
+                "quarter": "2024-Q4",
+                "r": -0.0432
+              },
+              {
+                "quarter": "2025-Q1",
+                "r": 0.0877
+              },
+              {
+                "quarter": "2025-Q2",
+                "r": 0.0146
+              },
+              {
+                "quarter": "2025-Q3",
+                "r": 0.2537
+              },
+              {
+                "quarter": "2025-Q4",
+                "r": 0.1856
+              },
+              {
+                "quarter": "2026-Q1",
+                "r": 0.1568
+              },
+              {
+                "quarter": "2026-Q2",
+                "r": -0.2729
+              }
+            ]
+          },
+          "tercile_up_shares": {
+            "bottom_tercile_up_share_pct": 51.13,
+            "top_tercile_up_share_pct": 54.14,
+            "bottom_tercile_n": 133,
+            "top_tercile_n": 133
+          },
+          "verdict": "no_measurable_forward_signal",
+          "label": "EURUSD return, five days"
+        },
+        {
+          "feature": "wti_ret_5d",
+          "forward_r_by_period": {
+            "dev": {
+              "r": -0.0037,
+              "n": 311
+            },
+            "validation": {
+              "r": 0.1466,
+              "n": 148
+            },
+            "holdout": {
+              "r": -0.0088,
+              "n": 121
+            }
+          },
+          "trailing_r": {
+            "r": 0.0178,
+            "n": 583
+          },
+          "quarter_sign_stability": {
+            "quarters": 10,
+            "positive_quarters": 5,
+            "negative_quarters": 5,
+            "detail": [
+              {
+                "quarter": "2024-Q1",
+                "r": -0.0499
+              },
+              {
+                "quarter": "2024-Q2",
+                "r": -0.1566
+              },
+              {
+                "quarter": "2024-Q3",
+                "r": -0.0661
+              },
+              {
+                "quarter": "2024-Q4",
+                "r": 0.0996
+              },
+              {
+                "quarter": "2025-Q1",
+                "r": 0.0061
+              },
+              {
+                "quarter": "2025-Q2",
+                "r": 0.2443
+              },
+              {
+                "quarter": "2025-Q3",
+                "r": -0.0286
+              },
+              {
+                "quarter": "2025-Q4",
+                "r": 0.0396
+              },
+              {
+                "quarter": "2026-Q1",
+                "r": 0.0126
+              },
+              {
+                "quarter": "2026-Q2",
+                "r": -0.1841
+              }
+            ]
+          },
+          "tercile_up_shares": {
+            "bottom_tercile_up_share_pct": 48.87,
+            "top_tercile_up_share_pct": 53.38,
+            "bottom_tercile_n": 133,
+            "top_tercile_n": 133
+          },
+          "verdict": "forward_sign_unstable_between_periods",
+          "label": "WTI return, five days"
+        }
+      ],
+      "data_requirements": [
+        "Intraday gold history that resolves the 09:30 ET cutoff (local OANDA hourly cache).",
+        "Daily equity, FX and energy closes with a declared lag."
+      ],
+      "missing_inputs": [
+        "gold comes from a local cache of a previously acquired vendor file rather than a fresh download",
+        "the dollar index already contains EUR, so the EURUSD rule is a confirmation input, not independent evidence"
+      ]
+    }
+  ]
+}

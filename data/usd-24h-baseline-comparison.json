@@ -1,0 +1,2263 @@
+{
+  "schema_version": "usd-24h-baseline-comparison-v1",
+  "generated_at": "2026-10-12T21:01:17.178Z",
+  "dataset_sha256": "fafdab0d25ccea559ad9f7ba5a6d60f4e275a77402555c10c2d5876805a20565",
+  "registry_sha256": "9847636c4e68166218953ed93abadfc4c05d32402d5aaf517237f016d854406a",
+  "splits": {
+    "dev": {
+      "start": "2024-01-02",
+      "end": "2025-03-31"
+    },
+    "validation": {
+      "start": "2025-04-01",
+      "end": "2025-10-31"
+    },
+    "holdout": {
+      "start": "2025-11-03",
+      "end": "2026-04-30"
+    }
+  },
+  "parity": {
+    "dataset_vs_archive": {
+      "archive_rows": 604,
+      "archive_first_date": "2024-01-02",
+      "archive_last_date": "2026-04-30",
+      "matched_rows": 584,
+      "open_price_exact_matches": 584,
+      "close_price_exact_matches": 559,
+      "close_price_mismatches": [],
+      "outcome_comparable_rows": 372,
+      "market_outcome_agreements": 339,
+      "archive_only_dates": [
+        "2024-01-15",
+        "2024-02-19",
+        "2024-05-27",
+        "2024-06-19",
+        "2024-07-04",
+        "2024-09-02",
+        "2024-10-14",
+        "2024-11-11",
+        "2024-11-28",
+        "2025-01-20",
+        "2025-02-17",
+        "2025-05-26",
+        "2025-06-19",
+        "2025-07-04",
+        "2025-09-01",
+        "2025-10-13",
+        "2025-11-11",
+        "2025-11-27",
+        "2026-01-19",
+        "2026-02-16"
+      ],
+      "stored_result_counts": {
+        "WRONG": 175,
+        "FLAT": 172,
+        "CORRECT": 197,
+        "NOT_EVALUABLE": 25,
+        "NO_CALL": 15
+      }
+    },
+    "factor_parity": {
+      "archive_rows": 604,
+      "compared_factor_entries": 6040,
+      "differing_factor_entries": 0,
+      "stored_equals_replay_everywhere": true,
+      "meaning": "On this archive the stored live factor signals are byte-equal to the replay implementation's, so the unavailable-versus-zero conversion repair cannot change a single archived directional call; it only changes days whose level inputs are absent, which do not occur here."
+    }
+  },
+  "arms": {
+    "engine_stored_archive": {
+      "kind": "engine",
+      "source": "committed parity archive of the live workflow's stored calls",
+      "metrics": {
+        "dev": {
+          "scheduled": 312,
+          "directional_calls": 261,
+          "directional_coverage_pct": 83.65,
+          "bullish_calls": 99,
+          "bearish_calls": 162,
+          "no_clear_bias": 51,
+          "correct": 99,
+          "wrong": 81,
+          "flat": 81,
+          "not_evaluable": 0,
+          "ex_flat_accuracy_pct": 55,
+          "ex_flat_accuracy_ci_95": {
+            "low": 47.7,
+            "high": 62.09
+          },
+          "accuracy_all_directional_calls_pct": 37.93,
+          "bullish_accuracy_pct": 44.44,
+          "bearish_accuracy_pct": 33.95,
+          "mean_absolute_realised_move_pct": 0.215,
+          "quarters": [
+            {
+              "quarter": "2024-Q1",
+              "directional_calls": 44,
+              "decided": 27,
+              "ex_flat_accuracy_pct": 51.85
+            },
+            {
+              "quarter": "2024-Q2",
+              "directional_calls": 53,
+              "decided": 37,
+              "ex_flat_accuracy_pct": 48.65
+            },
+            {
+              "quarter": "2024-Q3",
+              "directional_calls": 59,
+              "decided": 40,
+              "ex_flat_accuracy_pct": 60
+            },
+            {
+              "quarter": "2024-Q4",
+              "directional_calls": 55,
+              "decided": 39,
+              "ex_flat_accuracy_pct": 58.97
+            },
+            {
+              "quarter": "2025-Q1",
+              "directional_calls": 50,
+              "decided": 37,
+              "ex_flat_accuracy_pct": 54.05
+            }
+          ],
+          "stable_quarter_count": 5,
+          "min_stable_quarter_accuracy_pct": 48.65
+        },
+        "validation": {
+          "scheduled": 149,
+          "directional_calls": 140,
+          "directional_coverage_pct": 93.96,
+          "bullish_calls": 60,
+          "bearish_calls": 80,
+          "no_clear_bias": 9,
+          "correct": 42,
+          "wrong": 53,
+          "flat": 45,
+          "not_evaluable": 0,
+          "ex_flat_accuracy_pct": 44.21,
+          "ex_flat_accuracy_ci_95": {
+            "low": 34.64,
+            "high": 54.23
+          },
+          "accuracy_all_directional_calls_pct": 30,
+          "bullish_accuracy_pct": 30,
+          "bearish_accuracy_pct": 30,
+          "mean_absolute_realised_move_pct": 0.231,
+          "quarters": [
+            {
+              "quarter": "2025-Q2",
+              "directional_calls": 57,
+              "decided": 44,
+              "ex_flat_accuracy_pct": 31.82
+            },
+            {
+              "quarter": "2025-Q3",
+              "directional_calls": 61,
+              "decided": 39,
+              "ex_flat_accuracy_pct": 48.72
+            },
+            {
+              "quarter": "2025-Q4",
+              "directional_calls": 22,
+              "decided": 12,
+              "ex_flat_accuracy_pct": 75
+            }
+          ],
+          "stable_quarter_count": 2,
+          "min_stable_quarter_accuracy_pct": 31.82
+        },
+        "holdout": {
+          "scheduled": 123,
+          "directional_calls": 110,
+          "directional_coverage_pct": 89.43,
+          "bullish_calls": 49,
+          "bearish_calls": 61,
+          "no_clear_bias": 12,
+          "correct": 38,
+          "wrong": 34,
+          "flat": 38,
+          "not_evaluable": 1,
+          "ex_flat_accuracy_pct": 52.78,
+          "ex_flat_accuracy_ci_95": {
+            "low": 41.4,
+            "high": 63.87
+          },
+          "accuracy_all_directional_calls_pct": 34.55,
+          "bullish_accuracy_pct": 34.69,
+          "bearish_accuracy_pct": 34.43,
+          "mean_absolute_realised_move_pct": 0.2084,
+          "quarters": [
+            {
+              "quarter": "2025-Q4",
+              "directional_calls": 38,
+              "decided": 24,
+              "ex_flat_accuracy_pct": 66.67
+            },
+            {
+              "quarter": "2026-Q1",
+              "directional_calls": 53,
+              "decided": 34,
+              "ex_flat_accuracy_pct": 47.06
+            },
+            {
+              "quarter": "2026-Q2",
+              "directional_calls": 19,
+              "decided": 14,
+              "ex_flat_accuracy_pct": 42.86
+            }
+          ],
+          "stable_quarter_count": 2,
+          "min_stable_quarter_accuracy_pct": 47.06
+        }
+      }
+    },
+    "engine_replayed_asof": {
+      "kind": "engine",
+      "source": "backtester/replay/usd/usd_replay_core.js on this dataset's as-of observations, with the event and Fed-bias families explicitly missing",
+      "blocked_input_days": {
+        "latest_us_event": 0,
+        "fed_bias": 0
+      },
+      "logic_version": "2.1_weighted_engine",
+      "metrics": {
+        "dev": {
+          "scheduled": 312,
+          "directional_calls": 261,
+          "directional_coverage_pct": 83.65,
+          "bullish_calls": 97,
+          "bearish_calls": 164,
+          "no_clear_bias": 51,
+          "correct": 94,
+          "wrong": 86,
+          "flat": 81,
+          "not_evaluable": 0,
+          "ex_flat_accuracy_pct": 52.22,
+          "ex_flat_accuracy_ci_95": {
+            "low": 44.96,
+            "high": 59.4
+          },
+          "accuracy_all_directional_calls_pct": 36.02,
+          "bullish_accuracy_pct": 43.3,
+          "bearish_accuracy_pct": 31.71,
+          "mean_absolute_realised_move_pct": 0.214,
+          "quarters": [
+            {
+              "quarter": "2024-Q1",
+              "directional_calls": 45,
+              "decided": 29,
+              "ex_flat_accuracy_pct": 48.28
+            },
+            {
+              "quarter": "2024-Q2",
+              "directional_calls": 51,
+              "decided": 35,
+              "ex_flat_accuracy_pct": 42.86
+            },
+            {
+              "quarter": "2024-Q3",
+              "directional_calls": 56,
+              "decided": 37,
+              "ex_flat_accuracy_pct": 62.16
+            },
+            {
+              "quarter": "2024-Q4",
+              "directional_calls": 54,
+              "decided": 37,
+              "ex_flat_accuracy_pct": 54.05
+            },
+            {
+              "quarter": "2025-Q1",
+              "directional_calls": 55,
+              "decided": 42,
+              "ex_flat_accuracy_pct": 52.38
+            }
+          ],
+          "stable_quarter_count": 5,
+          "min_stable_quarter_accuracy_pct": 42.86
+        },
+        "validation": {
+          "scheduled": 149,
+          "directional_calls": 132,
+          "directional_coverage_pct": 88.59,
+          "bullish_calls": 54,
+          "bearish_calls": 78,
+          "no_clear_bias": 17,
+          "correct": 46,
+          "wrong": 45,
+          "flat": 41,
+          "not_evaluable": 0,
+          "ex_flat_accuracy_pct": 50.55,
+          "ex_flat_accuracy_ci_95": {
+            "low": 40.46,
+            "high": 60.59
+          },
+          "accuracy_all_directional_calls_pct": 34.85,
+          "bullish_accuracy_pct": 37.04,
+          "bearish_accuracy_pct": 33.33,
+          "mean_absolute_realised_move_pct": 0.2409,
+          "quarters": [
+            {
+              "quarter": "2025-Q2",
+              "directional_calls": 55,
+              "decided": 43,
+              "ex_flat_accuracy_pct": 51.16
+            },
+            {
+              "quarter": "2025-Q3",
+              "directional_calls": 57,
+              "decided": 37,
+              "ex_flat_accuracy_pct": 48.65
+            },
+            {
+              "quarter": "2025-Q4",
+              "directional_calls": 20,
+              "decided": 11,
+              "ex_flat_accuracy_pct": 54.55
+            }
+          ],
+          "stable_quarter_count": 2,
+          "min_stable_quarter_accuracy_pct": 48.65
+        },
+        "holdout": {
+          "scheduled": 123,
+          "directional_calls": 104,
+          "directional_coverage_pct": 84.55,
+          "bullish_calls": 44,
+          "bearish_calls": 60,
+          "no_clear_bias": 18,
+          "correct": 34,
+          "wrong": 36,
+          "flat": 34,
+          "not_evaluable": 1,
+          "ex_flat_accuracy_pct": 48.57,
+          "ex_flat_accuracy_ci_95": {
+            "low": 37.25,
+            "high": 60.05
+          },
+          "accuracy_all_directional_calls_pct": 32.69,
+          "bullish_accuracy_pct": 31.82,
+          "bearish_accuracy_pct": 33.33,
+          "mean_absolute_realised_move_pct": 0.214,
+          "quarters": [
+            {
+              "quarter": "2025-Q4",
+              "directional_calls": 36,
+              "decided": 22,
+              "ex_flat_accuracy_pct": 54.55
+            },
+            {
+              "quarter": "2026-Q1",
+              "directional_calls": 51,
+              "decided": 35,
+              "ex_flat_accuracy_pct": 48.57
+            },
+            {
+              "quarter": "2026-Q2",
+              "directional_calls": 17,
+              "decided": 13,
+              "ex_flat_accuracy_pct": 38.46
+            }
+          ],
+          "stable_quarter_count": 2,
+          "min_stable_quarter_accuracy_pct": 48.57
+        }
+      }
+    },
+    "baseline_always_bullish": {
+      "kind": "static",
+      "source": "Majority-direction benchmark: every evaluable day called bullish.",
+      "stage": null,
+      "gates": null,
+      "weights": null,
+      "metrics": {
+        "dev": {
+          "scheduled": 312,
+          "directional_calls": 312,
+          "directional_coverage_pct": 100,
+          "bullish_calls": 312,
+          "bearish_calls": 0,
+          "no_clear_bias": 0,
+          "correct": 119,
+          "wrong": 98,
+          "flat": 95,
+          "not_evaluable": 0,
+          "ex_flat_accuracy_pct": 54.84,
+          "ex_flat_accuracy_ci_95": {
+            "low": 48.19,
+            "high": 61.32
+          },
+          "accuracy_all_directional_calls_pct": 38.14,
+          "bullish_accuracy_pct": 38.14,
+          "bearish_accuracy_pct": null,
+          "mean_absolute_realised_move_pct": 0.2147,
+          "quarters": [
+            {
+              "quarter": "2024-Q1",
+              "directional_calls": 62,
+              "decided": 39,
+              "ex_flat_accuracy_pct": 51.28
+            },
+            {
+              "quarter": "2024-Q2",
+              "directional_calls": 63,
+              "decided": 44,
+              "ex_flat_accuracy_pct": 52.27
+            },
+            {
+              "quarter": "2024-Q3",
+              "directional_calls": 64,
+              "decided": 44,
+              "ex_flat_accuracy_pct": 47.73
+            },
+            {
+              "quarter": "2024-Q4",
+              "directional_calls": 62,
+              "decided": 43,
+              "ex_flat_accuracy_pct": 69.77
+            },
+            {
+              "quarter": "2025-Q1",
+              "directional_calls": 61,
+              "decided": 47,
+              "ex_flat_accuracy_pct": 53.19
+            }
+          ],
+          "stable_quarter_count": 5,
+          "min_stable_quarter_accuracy_pct": 47.73
+        },
+        "validation": {
+          "scheduled": 149,
+          "directional_calls": 149,
+          "directional_coverage_pct": 100,
+          "bullish_calls": 149,
+          "bearish_calls": 0,
+          "no_clear_bias": 0,
+          "correct": 50,
+          "wrong": 54,
+          "flat": 45,
+          "not_evaluable": 0,
+          "ex_flat_accuracy_pct": 48.08,
+          "ex_flat_accuracy_ci_95": {
+            "low": 38.72,
+            "high": 57.58
+          },
+          "accuracy_all_directional_calls_pct": 33.56,
+          "bullish_accuracy_pct": 33.56,
+          "bearish_accuracy_pct": null,
+          "mean_absolute_realised_move_pct": 0.2423,
+          "quarters": [
+            {
+              "quarter": "2025-Q2",
+              "directional_calls": 63,
+              "decided": 50,
+              "ex_flat_accuracy_pct": 40
+            },
+            {
+              "quarter": "2025-Q3",
+              "directional_calls": 64,
+              "decided": 42,
+              "ex_flat_accuracy_pct": 54.76
+            },
+            {
+              "quarter": "2025-Q4",
+              "directional_calls": 22,
+              "decided": 12,
+              "ex_flat_accuracy_pct": 58.33
+            }
+          ],
+          "stable_quarter_count": 2,
+          "min_stable_quarter_accuracy_pct": 40
+        },
+        "holdout": {
+          "scheduled": 123,
+          "directional_calls": 122,
+          "directional_coverage_pct": 99.19,
+          "bullish_calls": 122,
+          "bearish_calls": 0,
+          "no_clear_bias": 0,
+          "correct": 40,
+          "wrong": 40,
+          "flat": 42,
+          "not_evaluable": 1,
+          "ex_flat_accuracy_pct": 50,
+          "ex_flat_accuracy_ci_95": {
+            "low": 39.3,
+            "high": 60.7
+          },
+          "accuracy_all_directional_calls_pct": 32.79,
+          "bullish_accuracy_pct": 32.79,
+          "bearish_accuracy_pct": null,
+          "mean_absolute_realised_move_pct": 0.2069,
+          "quarters": [
+            {
+              "quarter": "2025-Q4",
+              "directional_calls": 40,
+              "decided": 24,
+              "ex_flat_accuracy_pct": 41.67
+            },
+            {
+              "quarter": "2026-Q1",
+              "directional_calls": 61,
+              "decided": 41,
+              "ex_flat_accuracy_pct": 53.66
+            },
+            {
+              "quarter": "2026-Q2",
+              "directional_calls": 21,
+              "decided": 15,
+              "ex_flat_accuracy_pct": 53.33
+            }
+          ],
+          "stable_quarter_count": 3,
+          "min_stable_quarter_accuracy_pct": 41.67
+        }
+      }
+    },
+    "baseline_momentum_usd_ret_1d": {
+      "kind": "static_feature",
+      "source": "one-day dollar momentum benchmark: follow the trailing return's sign.",
+      "stage": null,
+      "gates": null,
+      "weights": null,
+      "metrics": {
+        "dev": {
+          "scheduled": 312,
+          "directional_calls": 312,
+          "directional_coverage_pct": 100,
+          "bullish_calls": 164,
+          "bearish_calls": 148,
+          "no_clear_bias": 0,
+          "correct": 110,
+          "wrong": 107,
+          "flat": 95,
+          "not_evaluable": 0,
+          "ex_flat_accuracy_pct": 50.69,
+          "ex_flat_accuracy_ci_95": {
+            "low": 44.09,
+            "high": 57.27
+          },
+          "accuracy_all_directional_calls_pct": 35.26,
+          "bullish_accuracy_pct": 39.02,
+          "bearish_accuracy_pct": 31.08,
+          "mean_absolute_realised_move_pct": 0.2147,
+          "quarters": [
+            {
+              "quarter": "2024-Q1",
+              "directional_calls": 62,
+              "decided": 39,
+              "ex_flat_accuracy_pct": 48.72
+            },
+            {
+              "quarter": "2024-Q2",
+              "directional_calls": 63,
+              "decided": 44,
+              "ex_flat_accuracy_pct": 43.18
+            },
+            {
+              "quarter": "2024-Q3",
+              "directional_calls": 64,
+              "decided": 44,
+              "ex_flat_accuracy_pct": 59.09
+            },
+            {
+              "quarter": "2024-Q4",
+              "directional_calls": 62,
+              "decided": 43,
+              "ex_flat_accuracy_pct": 51.16
+            },
+            {
+              "quarter": "2025-Q1",
+              "directional_calls": 61,
+              "decided": 47,
+              "ex_flat_accuracy_pct": 51.06
+            }
+          ],
+          "stable_quarter_count": 5,
+          "min_stable_quarter_accuracy_pct": 43.18
+        },
+        "validation": {
+          "scheduled": 149,
+          "directional_calls": 149,
+          "directional_coverage_pct": 100,
+          "bullish_calls": 70,
+          "bearish_calls": 79,
+          "no_clear_bias": 0,
+          "correct": 47,
+          "wrong": 57,
+          "flat": 45,
+          "not_evaluable": 0,
+          "ex_flat_accuracy_pct": 45.19,
+          "ex_flat_accuracy_ci_95": {
+            "low": 35.97,
+            "high": 54.76
+          },
+          "accuracy_all_directional_calls_pct": 31.54,
+          "bullish_accuracy_pct": 30,
+          "bearish_accuracy_pct": 32.91,
+          "mean_absolute_realised_move_pct": 0.2423,
+          "quarters": [
+            {
+              "quarter": "2025-Q2",
+              "directional_calls": 63,
+              "decided": 50,
+              "ex_flat_accuracy_pct": 46
+            },
+            {
+              "quarter": "2025-Q3",
+              "directional_calls": 64,
+              "decided": 42,
+              "ex_flat_accuracy_pct": 50
+            },
+            {
+              "quarter": "2025-Q4",
+              "directional_calls": 22,
+              "decided": 12,
+              "ex_flat_accuracy_pct": 25
+            }
+          ],
+          "stable_quarter_count": 2,
+          "min_stable_quarter_accuracy_pct": 46
+        },
+        "holdout": {
+          "scheduled": 123,
+          "directional_calls": 122,
+          "directional_coverage_pct": 99.19,
+          "bullish_calls": 63,
+          "bearish_calls": 59,
+          "no_clear_bias": 0,
+          "correct": 40,
+          "wrong": 40,
+          "flat": 42,
+          "not_evaluable": 1,
+          "ex_flat_accuracy_pct": 50,
+          "ex_flat_accuracy_ci_95": {
+            "low": 39.3,
+            "high": 60.7
+          },
+          "accuracy_all_directional_calls_pct": 32.79,
+          "bullish_accuracy_pct": 34.92,
+          "bearish_accuracy_pct": 30.51,
+          "mean_absolute_realised_move_pct": 0.2069,
+          "quarters": [
+            {
+              "quarter": "2025-Q4",
+              "directional_calls": 40,
+              "decided": 24,
+              "ex_flat_accuracy_pct": 45.83
+            },
+            {
+              "quarter": "2026-Q1",
+              "directional_calls": 61,
+              "decided": 41,
+              "ex_flat_accuracy_pct": 48.78
+            },
+            {
+              "quarter": "2026-Q2",
+              "directional_calls": 21,
+              "decided": 15,
+              "ex_flat_accuracy_pct": 60
+            }
+          ],
+          "stable_quarter_count": 3,
+          "min_stable_quarter_accuracy_pct": 45.83
+        }
+      }
+    },
+    "baseline_momentum_usd_ret_5d": {
+      "kind": "static_feature",
+      "source": "five-day dollar momentum benchmark: follow the trailing return's sign.",
+      "stage": null,
+      "gates": null,
+      "weights": null,
+      "metrics": {
+        "dev": {
+          "scheduled": 312,
+          "directional_calls": 312,
+          "directional_coverage_pct": 100,
+          "bullish_calls": 173,
+          "bearish_calls": 139,
+          "no_clear_bias": 0,
+          "correct": 117,
+          "wrong": 100,
+          "flat": 95,
+          "not_evaluable": 0,
+          "ex_flat_accuracy_pct": 53.92,
+          "ex_flat_accuracy_ci_95": {
+            "low": 47.27,
+            "high": 60.42
+          },
+          "accuracy_all_directional_calls_pct": 37.5,
+          "bullish_accuracy_pct": 40.46,
+          "bearish_accuracy_pct": 33.81,
+          "mean_absolute_realised_move_pct": 0.2147,
+          "quarters": [
+            {
+              "quarter": "2024-Q1",
+              "directional_calls": 62,
+              "decided": 39,
+              "ex_flat_accuracy_pct": 51.28
+            },
+            {
+              "quarter": "2024-Q2",
+              "directional_calls": 63,
+              "decided": 44,
+              "ex_flat_accuracy_pct": 54.55
+            },
+            {
+              "quarter": "2024-Q3",
+              "directional_calls": 64,
+              "decided": 44,
+              "ex_flat_accuracy_pct": 50
+            },
+            {
+              "quarter": "2024-Q4",
+              "directional_calls": 62,
+              "decided": 43,
+              "ex_flat_accuracy_pct": 65.12
+            },
+            {
+              "quarter": "2025-Q1",
+              "directional_calls": 61,
+              "decided": 47,
+              "ex_flat_accuracy_pct": 48.94
+            }
+          ],
+          "stable_quarter_count": 5,
+          "min_stable_quarter_accuracy_pct": 48.94
+        },
+        "validation": {
+          "scheduled": 149,
+          "directional_calls": 149,
+          "directional_coverage_pct": 100,
+          "bullish_calls": 62,
+          "bearish_calls": 87,
+          "no_clear_bias": 0,
+          "correct": 45,
+          "wrong": 59,
+          "flat": 45,
+          "not_evaluable": 0,
+          "ex_flat_accuracy_pct": 43.27,
+          "ex_flat_accuracy_ci_95": {
+            "low": 34.16,
+            "high": 52.86
+          },
+          "accuracy_all_directional_calls_pct": 30.2,
+          "bullish_accuracy_pct": 25.81,
+          "bearish_accuracy_pct": 33.33,
+          "mean_absolute_realised_move_pct": 0.2423,
+          "quarters": [
+            {
+              "quarter": "2025-Q2",
+              "directional_calls": 63,
+              "decided": 50,
+              "ex_flat_accuracy_pct": 50
+            },
+            {
+              "quarter": "2025-Q3",
+              "directional_calls": 64,
+              "decided": 42,
+              "ex_flat_accuracy_pct": 40.48
+            },
+            {
+              "quarter": "2025-Q4",
+              "directional_calls": 22,
+              "decided": 12,
+              "ex_flat_accuracy_pct": 25
+            }
+          ],
+          "stable_quarter_count": 2,
+          "min_stable_quarter_accuracy_pct": 40.48
+        },
+        "holdout": {
+          "scheduled": 123,
+          "directional_calls": 122,
+          "directional_coverage_pct": 99.19,
+          "bullish_calls": 60,
+          "bearish_calls": 62,
+          "no_clear_bias": 0,
+          "correct": 35,
+          "wrong": 45,
+          "flat": 42,
+          "not_evaluable": 1,
+          "ex_flat_accuracy_pct": 43.75,
+          "ex_flat_accuracy_ci_95": {
+            "low": 33.41,
+            "high": 54.66
+          },
+          "accuracy_all_directional_calls_pct": 28.69,
+          "bullish_accuracy_pct": 30,
+          "bearish_accuracy_pct": 27.42,
+          "mean_absolute_realised_move_pct": 0.2069,
+          "quarters": [
+            {
+              "quarter": "2025-Q4",
+              "directional_calls": 40,
+              "decided": 24,
+              "ex_flat_accuracy_pct": 29.17
+            },
+            {
+              "quarter": "2026-Q1",
+              "directional_calls": 61,
+              "decided": 41,
+              "ex_flat_accuracy_pct": 46.34
+            },
+            {
+              "quarter": "2026-Q2",
+              "directional_calls": 21,
+              "decided": 15,
+              "ex_flat_accuracy_pct": 60
+            }
+          ],
+          "stable_quarter_count": 3,
+          "min_stable_quarter_accuracy_pct": 29.17
+        }
+      }
+    },
+    "baseline_contrarian_usd_ret_1d": {
+      "kind": "static_feature",
+      "source": "one-day dollar mean-reversion benchmark: fade the trailing return's sign.",
+      "stage": null,
+      "gates": null,
+      "weights": null,
+      "metrics": {
+        "dev": {
+          "scheduled": 312,
+          "directional_calls": 312,
+          "directional_coverage_pct": 100,
+          "bullish_calls": 148,
+          "bearish_calls": 164,
+          "no_clear_bias": 0,
+          "correct": 107,
+          "wrong": 110,
+          "flat": 95,
+          "not_evaluable": 0,
+          "ex_flat_accuracy_pct": 49.31,
+          "ex_flat_accuracy_ci_95": {
+            "low": 42.73,
+            "high": 55.91
+          },
+          "accuracy_all_directional_calls_pct": 34.29,
+          "bullish_accuracy_pct": 37.16,
+          "bearish_accuracy_pct": 31.71,
+          "mean_absolute_realised_move_pct": 0.2147,
+          "quarters": [
+            {
+              "quarter": "2024-Q1",
+              "directional_calls": 62,
+              "decided": 39,
+              "ex_flat_accuracy_pct": 51.28
+            },
+            {
+              "quarter": "2024-Q2",
+              "directional_calls": 63,
+              "decided": 44,
+              "ex_flat_accuracy_pct": 56.82
+            },
+            {
+              "quarter": "2024-Q3",
+              "directional_calls": 64,
+              "decided": 44,
+              "ex_flat_accuracy_pct": 40.91
+            },
+            {
+              "quarter": "2024-Q4",
+              "directional_calls": 62,
+              "decided": 43,
+              "ex_flat_accuracy_pct": 48.84
+            },
+            {
+              "quarter": "2025-Q1",
+              "directional_calls": 61,
+              "decided": 47,
+              "ex_flat_accuracy_pct": 48.94
+            }
+          ],
+          "stable_quarter_count": 5,
+          "min_stable_quarter_accuracy_pct": 40.91
+        },
+        "validation": {
+          "scheduled": 149,
+          "directional_calls": 149,
+          "directional_coverage_pct": 100,
+          "bullish_calls": 79,
+          "bearish_calls": 70,
+          "no_clear_bias": 0,
+          "correct": 57,
+          "wrong": 47,
+          "flat": 45,
+          "not_evaluable": 0,
+          "ex_flat_accuracy_pct": 54.81,
+          "ex_flat_accuracy_ci_95": {
+            "low": 45.24,
+            "high": 64.03
+          },
+          "accuracy_all_directional_calls_pct": 38.26,
+          "bullish_accuracy_pct": 36.71,
+          "bearish_accuracy_pct": 40,
+          "mean_absolute_realised_move_pct": 0.2423,
+          "quarters": [
+            {
+              "quarter": "2025-Q2",
+              "directional_calls": 63,
+              "decided": 50,
+              "ex_flat_accuracy_pct": 54
+            },
+            {
+              "quarter": "2025-Q3",
+              "directional_calls": 64,
+              "decided": 42,
+              "ex_flat_accuracy_pct": 50
+            },
+            {
+              "quarter": "2025-Q4",
+              "directional_calls": 22,
+              "decided": 12,
+              "ex_flat_accuracy_pct": 75
+            }
+          ],
+          "stable_quarter_count": 2,
+          "min_stable_quarter_accuracy_pct": 50
+        },
+        "holdout": {
+          "scheduled": 123,
+          "directional_calls": 122,
+          "directional_coverage_pct": 99.19,
+          "bullish_calls": 59,
+          "bearish_calls": 63,
+          "no_clear_bias": 0,
+          "correct": 40,
+          "wrong": 40,
+          "flat": 42,
+          "not_evaluable": 1,
+          "ex_flat_accuracy_pct": 50,
+          "ex_flat_accuracy_ci_95": {
+            "low": 39.3,
+            "high": 60.7
+          },
+          "accuracy_all_directional_calls_pct": 32.79,
+          "bullish_accuracy_pct": 30.51,
+          "bearish_accuracy_pct": 34.92,
+          "mean_absolute_realised_move_pct": 0.2069,
+          "quarters": [
+            {
+              "quarter": "2025-Q4",
+              "directional_calls": 40,
+              "decided": 24,
+              "ex_flat_accuracy_pct": 54.17
+            },
+            {
+              "quarter": "2026-Q1",
+              "directional_calls": 61,
+              "decided": 41,
+              "ex_flat_accuracy_pct": 51.22
+            },
+            {
+              "quarter": "2026-Q2",
+              "directional_calls": 21,
+              "decided": 15,
+              "ex_flat_accuracy_pct": 40
+            }
+          ],
+          "stable_quarter_count": 3,
+          "min_stable_quarter_accuracy_pct": 40
+        }
+      }
+    },
+    "baseline_contrarian_usd_ret_5d": {
+      "kind": "static_feature",
+      "source": "five-day dollar mean-reversion benchmark: fade the trailing return's sign.",
+      "stage": null,
+      "gates": null,
+      "weights": null,
+      "metrics": {
+        "dev": {
+          "scheduled": 312,
+          "directional_calls": 312,
+          "directional_coverage_pct": 100,
+          "bullish_calls": 139,
+          "bearish_calls": 173,
+          "no_clear_bias": 0,
+          "correct": 100,
+          "wrong": 117,
+          "flat": 95,
+          "not_evaluable": 0,
+          "ex_flat_accuracy_pct": 46.08,
+          "ex_flat_accuracy_ci_95": {
+            "low": 39.58,
+            "high": 52.73
+          },
+          "accuracy_all_directional_calls_pct": 32.05,
+          "bullish_accuracy_pct": 35.25,
+          "bearish_accuracy_pct": 29.48,
+          "mean_absolute_realised_move_pct": 0.2147,
+          "quarters": [
+            {
+              "quarter": "2024-Q1",
+              "directional_calls": 62,
+              "decided": 39,
+              "ex_flat_accuracy_pct": 48.72
+            },
+            {
+              "quarter": "2024-Q2",
+              "directional_calls": 63,
+              "decided": 44,
+              "ex_flat_accuracy_pct": 45.45
+            },
+            {
+              "quarter": "2024-Q3",
+              "directional_calls": 64,
+              "decided": 44,
+              "ex_flat_accuracy_pct": 50
+            },
+            {
+              "quarter": "2024-Q4",
+              "directional_calls": 62,
+              "decided": 43,
+              "ex_flat_accuracy_pct": 34.88
+            },
+            {
+              "quarter": "2025-Q1",
+              "directional_calls": 61,
+              "decided": 47,
+              "ex_flat_accuracy_pct": 51.06
+            }
+          ],
+          "stable_quarter_count": 5,
+          "min_stable_quarter_accuracy_pct": 34.88
+        },
+        "validation": {
+          "scheduled": 149,
+          "directional_calls": 149,
+          "directional_coverage_pct": 100,
+          "bullish_calls": 87,
+          "bearish_calls": 62,
+          "no_clear_bias": 0,
+          "correct": 59,
+          "wrong": 45,
+          "flat": 45,
+          "not_evaluable": 0,
+          "ex_flat_accuracy_pct": 56.73,
+          "ex_flat_accuracy_ci_95": {
+            "low": 47.14,
+            "high": 65.84
+          },
+          "accuracy_all_directional_calls_pct": 39.6,
+          "bullish_accuracy_pct": 39.08,
+          "bearish_accuracy_pct": 40.32,
+          "mean_absolute_realised_move_pct": 0.2423,
+          "quarters": [
+            {
+              "quarter": "2025-Q2",
+              "directional_calls": 63,
+              "decided": 50,
+              "ex_flat_accuracy_pct": 50
+            },
+            {
+              "quarter": "2025-Q3",
+              "directional_calls": 64,
+              "decided": 42,
+              "ex_flat_accuracy_pct": 59.52
+            },
+            {
+              "quarter": "2025-Q4",
+              "directional_calls": 22,
+              "decided": 12,
+              "ex_flat_accuracy_pct": 75
+            }
+          ],
+          "stable_quarter_count": 2,
+          "min_stable_quarter_accuracy_pct": 50
+        },
+        "holdout": {
+          "scheduled": 123,
+          "directional_calls": 122,
+          "directional_coverage_pct": 99.19,
+          "bullish_calls": 62,
+          "bearish_calls": 60,
+          "no_clear_bias": 0,
+          "correct": 45,
+          "wrong": 35,
+          "flat": 42,
+          "not_evaluable": 1,
+          "ex_flat_accuracy_pct": 56.25,
+          "ex_flat_accuracy_ci_95": {
+            "low": 45.34,
+            "high": 66.59
+          },
+          "accuracy_all_directional_calls_pct": 36.89,
+          "bullish_accuracy_pct": 35.48,
+          "bearish_accuracy_pct": 38.33,
+          "mean_absolute_realised_move_pct": 0.2069,
+          "quarters": [
+            {
+              "quarter": "2025-Q4",
+              "directional_calls": 40,
+              "decided": 24,
+              "ex_flat_accuracy_pct": 70.83
+            },
+            {
+              "quarter": "2026-Q1",
+              "directional_calls": 61,
+              "decided": 41,
+              "ex_flat_accuracy_pct": 53.66
+            },
+            {
+              "quarter": "2026-Q2",
+              "directional_calls": 21,
+              "decided": 15,
+              "ex_flat_accuracy_pct": 40
+            }
+          ],
+          "stable_quarter_count": 3,
+          "min_stable_quarter_accuracy_pct": 40
+        }
+      }
+    },
+    "composite_engine_aligned_weights": {
+      "kind": "rule_set",
+      "source": "Same rules, weights redistributed to follow the live 24h factor budget by family.",
+      "stage": "combinations",
+      "gates": {
+        "min_coverage_pct": 50,
+        "min_participation_pct": 20,
+        "min_absolute_score_points": 8,
+        "min_winning_families": 2,
+        "require_no_critical_conflict": true,
+        "conflict_ratio": 0.5
+      },
+      "weights": {
+        "usd_mom_1d_cont": 7,
+        "usd_mom_5d_cont": 7,
+        "usd_mom_5d_fade": 0,
+        "usd_trend_ma20_cont": 4,
+        "risk_vix_level_haven": 8,
+        "risk_vix_chg_5d": 2,
+        "risk_vix_pctile": 1,
+        "risk_credit_spread_chg": 3,
+        "rel_us_2y_chg5d": 5,
+        "rel_us_de_2y_spread_chg5d": 5,
+        "rel_de_2y_chg5d": 3,
+        "rel_us_10y_chg5d": 2,
+        "real_10y_chg5d": 5,
+        "real_10y_chg20d": 3,
+        "real_5y_chg5d": 2,
+        "real_breakeven_chg5d": 1,
+        "fed_dovish_repricing_5d": 6,
+        "fed_repricing_20d": 4,
+        "fed_effr_minus_3m": 2,
+        "fed_funding_stress": 1,
+        "xasset_gold_5d_inverse": 4,
+        "xasset_equity_5d_regime": 1,
+        "xasset_eurusd_confirm": 2,
+        "xasset_wti_5d_growth": 1
+      },
+      "metrics": {
+        "dev": {
+          "scheduled": 312,
+          "directional_calls": 191,
+          "directional_coverage_pct": 61.22,
+          "bullish_calls": 82,
+          "bearish_calls": 109,
+          "no_clear_bias": 121,
+          "correct": 69,
+          "wrong": 60,
+          "flat": 62,
+          "not_evaluable": 0,
+          "ex_flat_accuracy_pct": 53.49,
+          "ex_flat_accuracy_ci_95": {
+            "low": 44.91,
+            "high": 61.87
+          },
+          "accuracy_all_directional_calls_pct": 36.13,
+          "bullish_accuracy_pct": 42.68,
+          "bearish_accuracy_pct": 31.19,
+          "mean_absolute_realised_move_pct": 0.2054,
+          "quarters": [
+            {
+              "quarter": "2024-Q1",
+              "directional_calls": 30,
+              "decided": 20,
+              "ex_flat_accuracy_pct": 40
+            },
+            {
+              "quarter": "2024-Q2",
+              "directional_calls": 35,
+              "decided": 22,
+              "ex_flat_accuracy_pct": 40.91
+            },
+            {
+              "quarter": "2024-Q3",
+              "directional_calls": 44,
+              "decided": 29,
+              "ex_flat_accuracy_pct": 58.62
+            },
+            {
+              "quarter": "2024-Q4",
+              "directional_calls": 49,
+              "decided": 33,
+              "ex_flat_accuracy_pct": 72.73
+            },
+            {
+              "quarter": "2025-Q1",
+              "directional_calls": 33,
+              "decided": 25,
+              "ex_flat_accuracy_pct": 44
+            }
+          ],
+          "stable_quarter_count": 5,
+          "min_stable_quarter_accuracy_pct": 40
+        },
+        "validation": {
+          "scheduled": 149,
+          "directional_calls": 71,
+          "directional_coverage_pct": 47.65,
+          "bullish_calls": 18,
+          "bearish_calls": 53,
+          "no_clear_bias": 78,
+          "correct": 21,
+          "wrong": 25,
+          "flat": 25,
+          "not_evaluable": 0,
+          "ex_flat_accuracy_pct": 45.65,
+          "ex_flat_accuracy_ci_95": {
+            "low": 32.15,
+            "high": 59.82
+          },
+          "accuracy_all_directional_calls_pct": 29.58,
+          "bullish_accuracy_pct": 22.22,
+          "bearish_accuracy_pct": 32.08,
+          "mean_absolute_realised_move_pct": 0.2204,
+          "quarters": [
+            {
+              "quarter": "2025-Q2",
+              "directional_calls": 26,
+              "decided": 20,
+              "ex_flat_accuracy_pct": 55
+            },
+            {
+              "quarter": "2025-Q3",
+              "directional_calls": 39,
+              "decided": 24,
+              "ex_flat_accuracy_pct": 41.67
+            },
+            {
+              "quarter": "2025-Q4",
+              "directional_calls": 6,
+              "decided": 2,
+              "ex_flat_accuracy_pct": 0
+            }
+          ],
+          "stable_quarter_count": 2,
+          "min_stable_quarter_accuracy_pct": 41.67
+        },
+        "holdout": {
+          "scheduled": 123,
+          "directional_calls": 63,
+          "directional_coverage_pct": 51.22,
+          "bullish_calls": 27,
+          "bearish_calls": 36,
+          "no_clear_bias": 59,
+          "correct": 22,
+          "wrong": 18,
+          "flat": 23,
+          "not_evaluable": 1,
+          "ex_flat_accuracy_pct": 55,
+          "ex_flat_accuracy_ci_95": {
+            "low": 39.83,
+            "high": 69.29
+          },
+          "accuracy_all_directional_calls_pct": 34.92,
+          "bullish_accuracy_pct": 37.04,
+          "bearish_accuracy_pct": 33.33,
+          "mean_absolute_realised_move_pct": 0.2093,
+          "quarters": [
+            {
+              "quarter": "2025-Q4",
+              "directional_calls": 21,
+              "decided": 10,
+              "ex_flat_accuracy_pct": 60
+            },
+            {
+              "quarter": "2026-Q1",
+              "directional_calls": 30,
+              "decided": 20,
+              "ex_flat_accuracy_pct": 50
+            },
+            {
+              "quarter": "2026-Q2",
+              "directional_calls": 12,
+              "decided": 10,
+              "ex_flat_accuracy_pct": 60
+            }
+          ],
+          "stable_quarter_count": 1,
+          "min_stable_quarter_accuracy_pct": 50
+        }
+      }
+    },
+    "composite_equal_weights": {
+      "kind": "rule_set",
+      "source": "All evaluable candidate rules on their declared weights with the full gates.",
+      "stage": "combinations",
+      "gates": {
+        "min_coverage_pct": 50,
+        "min_participation_pct": 20,
+        "min_absolute_score_points": 8,
+        "min_winning_families": 2,
+        "require_no_critical_conflict": true,
+        "conflict_ratio": 0.5
+      },
+      "weights": {
+        "usd_mom_1d_cont": 6,
+        "usd_mom_5d_cont": 8,
+        "usd_mom_5d_fade": 8,
+        "usd_trend_ma20_cont": 6,
+        "risk_vix_level_haven": 8,
+        "risk_vix_chg_5d": 6,
+        "risk_vix_pctile": 4,
+        "risk_credit_spread_chg": 5,
+        "rel_us_2y_chg5d": 8,
+        "rel_us_de_2y_spread_chg5d": 10,
+        "rel_de_2y_chg5d": 6,
+        "rel_us_10y_chg5d": 5,
+        "real_10y_chg5d": 8,
+        "real_10y_chg20d": 6,
+        "real_5y_chg5d": 5,
+        "real_breakeven_chg5d": 3,
+        "fed_dovish_repricing_5d": 8,
+        "fed_repricing_20d": 6,
+        "fed_effr_minus_3m": 5,
+        "fed_funding_stress": 3,
+        "xasset_gold_5d_inverse": 5,
+        "xasset_equity_5d_regime": 4,
+        "xasset_eurusd_confirm": 4,
+        "xasset_wti_5d_growth": 3
+      },
+      "metrics": {
+        "dev": {
+          "scheduled": 312,
+          "directional_calls": 177,
+          "directional_coverage_pct": 56.73,
+          "bullish_calls": 77,
+          "bearish_calls": 100,
+          "no_clear_bias": 135,
+          "correct": 62,
+          "wrong": 56,
+          "flat": 59,
+          "not_evaluable": 0,
+          "ex_flat_accuracy_pct": 52.54,
+          "ex_flat_accuracy_ci_95": {
+            "low": 43.6,
+            "high": 61.33
+          },
+          "accuracy_all_directional_calls_pct": 35.03,
+          "bullish_accuracy_pct": 38.96,
+          "bearish_accuracy_pct": 32,
+          "mean_absolute_realised_move_pct": 0.2078,
+          "quarters": [
+            {
+              "quarter": "2024-Q1",
+              "directional_calls": 30,
+              "decided": 17,
+              "ex_flat_accuracy_pct": 52.94
+            },
+            {
+              "quarter": "2024-Q2",
+              "directional_calls": 33,
+              "decided": 21,
+              "ex_flat_accuracy_pct": 38.1
+            },
+            {
+              "quarter": "2024-Q3",
+              "directional_calls": 41,
+              "decided": 28,
+              "ex_flat_accuracy_pct": 60.71
+            },
+            {
+              "quarter": "2024-Q4",
+              "directional_calls": 43,
+              "decided": 29,
+              "ex_flat_accuracy_pct": 68.97
+            },
+            {
+              "quarter": "2025-Q1",
+              "directional_calls": 30,
+              "decided": 23,
+              "ex_flat_accuracy_pct": 34.78
+            }
+          ],
+          "stable_quarter_count": 5,
+          "min_stable_quarter_accuracy_pct": 34.78
+        },
+        "validation": {
+          "scheduled": 149,
+          "directional_calls": 62,
+          "directional_coverage_pct": 41.61,
+          "bullish_calls": 18,
+          "bearish_calls": 44,
+          "no_clear_bias": 87,
+          "correct": 20,
+          "wrong": 17,
+          "flat": 25,
+          "not_evaluable": 0,
+          "ex_flat_accuracy_pct": 54.05,
+          "ex_flat_accuracy_ci_95": {
+            "low": 38.38,
+            "high": 68.96
+          },
+          "accuracy_all_directional_calls_pct": 32.26,
+          "bullish_accuracy_pct": 27.78,
+          "bearish_accuracy_pct": 34.09,
+          "mean_absolute_realised_move_pct": 0.2085,
+          "quarters": [
+            {
+              "quarter": "2025-Q2",
+              "directional_calls": 21,
+              "decided": 15,
+              "ex_flat_accuracy_pct": 66.67
+            },
+            {
+              "quarter": "2025-Q3",
+              "directional_calls": 34,
+              "decided": 20,
+              "ex_flat_accuracy_pct": 50
+            },
+            {
+              "quarter": "2025-Q4",
+              "directional_calls": 7,
+              "decided": 2,
+              "ex_flat_accuracy_pct": 0
+            }
+          ],
+          "stable_quarter_count": 2,
+          "min_stable_quarter_accuracy_pct": 50
+        },
+        "holdout": {
+          "scheduled": 123,
+          "directional_calls": 54,
+          "directional_coverage_pct": 43.9,
+          "bullish_calls": 26,
+          "bearish_calls": 28,
+          "no_clear_bias": 68,
+          "correct": 18,
+          "wrong": 14,
+          "flat": 22,
+          "not_evaluable": 1,
+          "ex_flat_accuracy_pct": 56.25,
+          "ex_flat_accuracy_ci_95": {
+            "low": 39.33,
+            "high": 71.83
+          },
+          "accuracy_all_directional_calls_pct": 33.33,
+          "bullish_accuracy_pct": 38.46,
+          "bearish_accuracy_pct": 28.57,
+          "mean_absolute_realised_move_pct": 0.212,
+          "quarters": [
+            {
+              "quarter": "2025-Q4",
+              "directional_calls": 20,
+              "decided": 9,
+              "ex_flat_accuracy_pct": 66.67
+            },
+            {
+              "quarter": "2026-Q1",
+              "directional_calls": 24,
+              "decided": 15,
+              "ex_flat_accuracy_pct": 46.67
+            },
+            {
+              "quarter": "2026-Q2",
+              "directional_calls": 10,
+              "decided": 8,
+              "ex_flat_accuracy_pct": 62.5
+            }
+          ],
+          "stable_quarter_count": 1,
+          "min_stable_quarter_accuracy_pct": 46.67
+        }
+      }
+    },
+    "challenger_logistic_l2_0.1": {
+      "kind": "challenger",
+      "source": "L2 logistic challenger (lambda 0.1) on 17 standardised features, fitted on development rows only.",
+      "stage": "statistical_challenger",
+      "gates": null,
+      "weights": null,
+      "metrics": {
+        "dev": {
+          "scheduled": 312,
+          "directional_calls": 312,
+          "directional_coverage_pct": 100,
+          "bullish_calls": 235,
+          "bearish_calls": 77,
+          "no_clear_bias": 0,
+          "correct": 133,
+          "wrong": 84,
+          "flat": 95,
+          "not_evaluable": 0,
+          "ex_flat_accuracy_pct": 61.29,
+          "ex_flat_accuracy_ci_95": {
+            "low": 54.67,
+            "high": 67.52
+          },
+          "accuracy_all_directional_calls_pct": 42.63,
+          "bullish_accuracy_pct": 41.28,
+          "bearish_accuracy_pct": 46.75,
+          "mean_absolute_realised_move_pct": 0.2147,
+          "quarters": [
+            {
+              "quarter": "2024-Q1",
+              "directional_calls": 62,
+              "decided": 39,
+              "ex_flat_accuracy_pct": 53.85
+            },
+            {
+              "quarter": "2024-Q2",
+              "directional_calls": 63,
+              "decided": 44,
+              "ex_flat_accuracy_pct": 59.09
+            },
+            {
+              "quarter": "2024-Q3",
+              "directional_calls": 64,
+              "decided": 44,
+              "ex_flat_accuracy_pct": 59.09
+            },
+            {
+              "quarter": "2024-Q4",
+              "directional_calls": 62,
+              "decided": 43,
+              "ex_flat_accuracy_pct": 72.09
+            },
+            {
+              "quarter": "2025-Q1",
+              "directional_calls": 61,
+              "decided": 47,
+              "ex_flat_accuracy_pct": 61.7
+            }
+          ],
+          "stable_quarter_count": 5,
+          "min_stable_quarter_accuracy_pct": 53.85
+        },
+        "validation": {
+          "scheduled": 149,
+          "directional_calls": 149,
+          "directional_coverage_pct": 100,
+          "bullish_calls": 110,
+          "bearish_calls": 39,
+          "no_clear_bias": 0,
+          "correct": 56,
+          "wrong": 48,
+          "flat": 45,
+          "not_evaluable": 0,
+          "ex_flat_accuracy_pct": 53.85,
+          "ex_flat_accuracy_ci_95": {
+            "low": 44.3,
+            "high": 63.12
+          },
+          "accuracy_all_directional_calls_pct": 37.58,
+          "bullish_accuracy_pct": 34.55,
+          "bearish_accuracy_pct": 46.15,
+          "mean_absolute_realised_move_pct": 0.2423,
+          "quarters": [
+            {
+              "quarter": "2025-Q2",
+              "directional_calls": 63,
+              "decided": 50,
+              "ex_flat_accuracy_pct": 48
+            },
+            {
+              "quarter": "2025-Q3",
+              "directional_calls": 64,
+              "decided": 42,
+              "ex_flat_accuracy_pct": 59.52
+            },
+            {
+              "quarter": "2025-Q4",
+              "directional_calls": 22,
+              "decided": 12,
+              "ex_flat_accuracy_pct": 58.33
+            }
+          ],
+          "stable_quarter_count": 2,
+          "min_stable_quarter_accuracy_pct": 48
+        },
+        "holdout": {
+          "scheduled": 123,
+          "directional_calls": 122,
+          "directional_coverage_pct": 99.19,
+          "bullish_calls": 96,
+          "bearish_calls": 26,
+          "no_clear_bias": 0,
+          "correct": 38,
+          "wrong": 42,
+          "flat": 42,
+          "not_evaluable": 1,
+          "ex_flat_accuracy_pct": 47.5,
+          "ex_flat_accuracy_ci_95": {
+            "low": 36.92,
+            "high": 58.3
+          },
+          "accuracy_all_directional_calls_pct": 31.15,
+          "bullish_accuracy_pct": 29.17,
+          "bearish_accuracy_pct": 38.46,
+          "mean_absolute_realised_move_pct": 0.2069,
+          "quarters": [
+            {
+              "quarter": "2025-Q4",
+              "directional_calls": 40,
+              "decided": 24,
+              "ex_flat_accuracy_pct": 41.67
+            },
+            {
+              "quarter": "2026-Q1",
+              "directional_calls": 61,
+              "decided": 41,
+              "ex_flat_accuracy_pct": 48.78
+            },
+            {
+              "quarter": "2026-Q2",
+              "directional_calls": 21,
+              "decided": 15,
+              "ex_flat_accuracy_pct": 53.33
+            }
+          ],
+          "stable_quarter_count": 3,
+          "min_stable_quarter_accuracy_pct": 41.67
+        }
+      }
+    },
+    "single_rel_us_2y_chg5d": {
+      "kind": "rule_set",
+      "source": "Single-rule arm: Higher US front-end yields raise the dollar's carry; the live F2 threshold is 5bp and is treated as provisional.",
+      "stage": "individual_factors",
+      "gates": {
+        "min_coverage_pct": 0,
+        "min_participation_pct": 0,
+        "min_absolute_score_points": 0,
+        "min_winning_families": 1,
+        "require_no_critical_conflict": false
+      },
+      "weights": {},
+      "metrics": {
+        "dev": {
+          "scheduled": 312,
+          "directional_calls": 135,
+          "directional_coverage_pct": 43.27,
+          "bullish_calls": 66,
+          "bearish_calls": 69,
+          "no_clear_bias": 177,
+          "correct": 49,
+          "wrong": 41,
+          "flat": 45,
+          "not_evaluable": 0,
+          "ex_flat_accuracy_pct": 54.44,
+          "ex_flat_accuracy_ci_95": {
+            "low": 44.18,
+            "high": 64.34
+          },
+          "accuracy_all_directional_calls_pct": 36.3,
+          "bullish_accuracy_pct": 39.39,
+          "bearish_accuracy_pct": 33.33,
+          "mean_absolute_realised_move_pct": 0.2207,
+          "quarters": [
+            {
+              "quarter": "2024-Q1",
+              "directional_calls": 32,
+              "decided": 15,
+              "ex_flat_accuracy_pct": 53.33
+            },
+            {
+              "quarter": "2024-Q2",
+              "directional_calls": 30,
+              "decided": 21,
+              "ex_flat_accuracy_pct": 47.62
+            },
+            {
+              "quarter": "2024-Q3",
+              "directional_calls": 29,
+              "decided": 21,
+              "ex_flat_accuracy_pct": 47.62
+            },
+            {
+              "quarter": "2024-Q4",
+              "directional_calls": 24,
+              "decided": 17,
+              "ex_flat_accuracy_pct": 82.35
+            },
+            {
+              "quarter": "2025-Q1",
+              "directional_calls": 20,
+              "decided": 16,
+              "ex_flat_accuracy_pct": 43.75
+            }
+          ],
+          "stable_quarter_count": 5,
+          "min_stable_quarter_accuracy_pct": 43.75
+        },
+        "validation": {
+          "scheduled": 149,
+          "directional_calls": 49,
+          "directional_coverage_pct": 32.89,
+          "bullish_calls": 18,
+          "bearish_calls": 31,
+          "no_clear_bias": 100,
+          "correct": 17,
+          "wrong": 12,
+          "flat": 20,
+          "not_evaluable": 0,
+          "ex_flat_accuracy_pct": 58.62,
+          "ex_flat_accuracy_ci_95": {
+            "low": 40.74,
+            "high": 74.49
+          },
+          "accuracy_all_directional_calls_pct": 34.69,
+          "bullish_accuracy_pct": 33.33,
+          "bearish_accuracy_pct": 35.48,
+          "mean_absolute_realised_move_pct": 0.2255,
+          "quarters": [
+            {
+              "quarter": "2025-Q2",
+              "directional_calls": 28,
+              "decided": 20,
+              "ex_flat_accuracy_pct": 55
+            },
+            {
+              "quarter": "2025-Q3",
+              "directional_calls": 16,
+              "decided": 7,
+              "ex_flat_accuracy_pct": 71.43
+            },
+            {
+              "quarter": "2025-Q4",
+              "directional_calls": 5,
+              "decided": 2,
+              "ex_flat_accuracy_pct": 50
+            }
+          ],
+          "stable_quarter_count": 1,
+          "min_stable_quarter_accuracy_pct": 55
+        },
+        "holdout": {
+          "scheduled": 123,
+          "directional_calls": 28,
+          "directional_coverage_pct": 22.76,
+          "bullish_calls": 17,
+          "bearish_calls": 11,
+          "no_clear_bias": 94,
+          "correct": 10,
+          "wrong": 9,
+          "flat": 9,
+          "not_evaluable": 1,
+          "ex_flat_accuracy_pct": 52.63,
+          "ex_flat_accuracy_ci_95": {
+            "low": 31.71,
+            "high": 72.67
+          },
+          "accuracy_all_directional_calls_pct": 35.71,
+          "bullish_accuracy_pct": 35.29,
+          "bearish_accuracy_pct": 36.36,
+          "mean_absolute_realised_move_pct": 0.251,
+          "quarters": [
+            {
+              "quarter": "2025-Q4",
+              "directional_calls": 9,
+              "decided": 6,
+              "ex_flat_accuracy_pct": 66.67
+            },
+            {
+              "quarter": "2026-Q1",
+              "directional_calls": 16,
+              "decided": 10,
+              "ex_flat_accuracy_pct": 50
+            },
+            {
+              "quarter": "2026-Q2",
+              "directional_calls": 3,
+              "decided": 3,
+              "ex_flat_accuracy_pct": 33.33
+            }
+          ],
+          "stable_quarter_count": 0,
+          "min_stable_quarter_accuracy_pct": null
+        }
+      }
+    },
+    "single_risk_vix_level_haven": {
+      "kind": "rule_set",
+      "source": "Single-rule arm: The live F1 regime mapping: high VIX is a dollar haven bid.",
+      "stage": "individual_factors",
+      "gates": {
+        "min_coverage_pct": 0,
+        "min_participation_pct": 0,
+        "min_absolute_score_points": 0,
+        "min_winning_families": 1,
+        "require_no_critical_conflict": false
+      },
+      "weights": {},
+      "metrics": {
+        "dev": {
+          "scheduled": 312,
+          "directional_calls": 191,
+          "directional_coverage_pct": 61.22,
+          "bullish_calls": 6,
+          "bearish_calls": 185,
+          "no_clear_bias": 121,
+          "correct": 58,
+          "wrong": 74,
+          "flat": 59,
+          "not_evaluable": 0,
+          "ex_flat_accuracy_pct": 43.94,
+          "ex_flat_accuracy_ci_95": {
+            "low": 35.76,
+            "high": 52.46
+          },
+          "accuracy_all_directional_calls_pct": 30.37,
+          "bullish_accuracy_pct": 16.67,
+          "bearish_accuracy_pct": 30.81,
+          "mean_absolute_realised_move_pct": 0.2074,
+          "quarters": [
+            {
+              "quarter": "2024-Q1",
+              "directional_calls": 62,
+              "decided": 39,
+              "ex_flat_accuracy_pct": 48.72
+            },
+            {
+              "quarter": "2024-Q2",
+              "directional_calls": 54,
+              "decided": 40,
+              "ex_flat_accuracy_pct": 47.5
+            },
+            {
+              "quarter": "2024-Q3",
+              "directional_calls": 31,
+              "decided": 21,
+              "ex_flat_accuracy_pct": 47.62
+            },
+            {
+              "quarter": "2024-Q4",
+              "directional_calls": 27,
+              "decided": 20,
+              "ex_flat_accuracy_pct": 30
+            },
+            {
+              "quarter": "2025-Q1",
+              "directional_calls": 17,
+              "decided": 12,
+              "ex_flat_accuracy_pct": 33.33
+            }
+          ],
+          "stable_quarter_count": 4,
+          "min_stable_quarter_accuracy_pct": 30
+        },
+        "validation": {
+          "scheduled": 149,
+          "directional_calls": 52,
+          "directional_coverage_pct": 34.9,
+          "bullish_calls": 18,
+          "bearish_calls": 34,
+          "no_clear_bias": 97,
+          "correct": 11,
+          "wrong": 22,
+          "flat": 19,
+          "not_evaluable": 0,
+          "ex_flat_accuracy_pct": 33.33,
+          "ex_flat_accuracy_ci_95": {
+            "low": 19.75,
+            "high": 50.39
+          },
+          "accuracy_all_directional_calls_pct": 21.15,
+          "bullish_accuracy_pct": 11.11,
+          "bearish_accuracy_pct": 26.47,
+          "mean_absolute_realised_move_pct": 0.2502,
+          "quarters": [
+            {
+              "quarter": "2025-Q2",
+              "directional_calls": 17,
+              "decided": 11,
+              "ex_flat_accuracy_pct": 18.18
+            },
+            {
+              "quarter": "2025-Q3",
+              "directional_calls": 33,
+              "decided": 22,
+              "ex_flat_accuracy_pct": 40.91
+            },
+            {
+              "quarter": "2025-Q4",
+              "directional_calls": 2,
+              "decided": 0,
+              "ex_flat_accuracy_pct": null
+            }
+          ],
+          "stable_quarter_count": 1,
+          "min_stable_quarter_accuracy_pct": 40.91
+        },
+        "holdout": {
+          "scheduled": 123,
+          "directional_calls": 38,
+          "directional_coverage_pct": 30.89,
+          "bullish_calls": 15,
+          "bearish_calls": 23,
+          "no_clear_bias": 84,
+          "correct": 14,
+          "wrong": 12,
+          "flat": 12,
+          "not_evaluable": 1,
+          "ex_flat_accuracy_pct": 53.85,
+          "ex_flat_accuracy_ci_95": {
+            "low": 35.46,
+            "high": 71.24
+          },
+          "accuracy_all_directional_calls_pct": 36.84,
+          "bullish_accuracy_pct": 40,
+          "bearish_accuracy_pct": 34.78,
+          "mean_absolute_realised_move_pct": 0.2143,
+          "quarters": [
+            {
+              "quarter": "2025-Q4",
+              "directional_calls": 13,
+              "decided": 6,
+              "ex_flat_accuracy_pct": 66.67
+            },
+            {
+              "quarter": "2026-Q1",
+              "directional_calls": 23,
+              "decided": 18,
+              "ex_flat_accuracy_pct": 50
+            },
+            {
+              "quarter": "2026-Q2",
+              "directional_calls": 2,
+              "decided": 2,
+              "ex_flat_accuracy_pct": 50
+            }
+          ],
+          "stable_quarter_count": 1,
+          "min_stable_quarter_accuracy_pct": 50
+        }
+      }
+    },
+    "single_xasset_gold_5d_inverse": {
+      "kind": "rule_set",
+      "source": "Single-rule arm: The live F6 mapping: gold strength is read as dollar weakness.",
+      "stage": "individual_factors",
+      "gates": {
+        "min_coverage_pct": 0,
+        "min_participation_pct": 0,
+        "min_absolute_score_points": 0,
+        "min_winning_families": 1,
+        "require_no_critical_conflict": false
+      },
+      "weights": {},
+      "metrics": {
+        "dev": {
+          "scheduled": 312,
+          "directional_calls": 18,
+          "directional_coverage_pct": 5.77,
+          "bullish_calls": 10,
+          "bearish_calls": 8,
+          "no_clear_bias": 294,
+          "correct": 6,
+          "wrong": 8,
+          "flat": 4,
+          "not_evaluable": 0,
+          "ex_flat_accuracy_pct": 42.86,
+          "ex_flat_accuracy_ci_95": {
+            "low": 21.38,
+            "high": 67.41
+          },
+          "accuracy_all_directional_calls_pct": 33.33,
+          "bullish_accuracy_pct": 30,
+          "bearish_accuracy_pct": 37.5,
+          "mean_absolute_realised_move_pct": 0.2978,
+          "quarters": [
+            {
+              "quarter": "2024-Q1",
+              "directional_calls": 3,
+              "decided": 3,
+              "ex_flat_accuracy_pct": 0
+            },
+            {
+              "quarter": "2024-Q2",
+              "directional_calls": 5,
+              "decided": 3,
+              "ex_flat_accuracy_pct": 33.33
+            },
+            {
+              "quarter": "2024-Q3",
+              "directional_calls": 4,
+              "decided": 2,
+              "ex_flat_accuracy_pct": 100
+            },
+            {
+              "quarter": "2024-Q4",
+              "directional_calls": 4,
+              "decided": 4,
+              "ex_flat_accuracy_pct": 50
+            },
+            {
+              "quarter": "2025-Q1",
+              "directional_calls": 2,
+              "decided": 2,
+              "ex_flat_accuracy_pct": 50
+            }
+          ],
+          "stable_quarter_count": 0,
+          "min_stable_quarter_accuracy_pct": null
+        },
+        "validation": {
+          "scheduled": 149,
+          "directional_calls": 24,
+          "directional_coverage_pct": 16.11,
+          "bullish_calls": 10,
+          "bearish_calls": 14,
+          "no_clear_bias": 125,
+          "correct": 6,
+          "wrong": 10,
+          "flat": 8,
+          "not_evaluable": 0,
+          "ex_flat_accuracy_pct": 37.5,
+          "ex_flat_accuracy_ci_95": {
+            "low": 18.48,
+            "high": 61.36
+          },
+          "accuracy_all_directional_calls_pct": 25,
+          "bullish_accuracy_pct": 10,
+          "bearish_accuracy_pct": 35.71,
+          "mean_absolute_realised_move_pct": 0.2038,
+          "quarters": [
+            {
+              "quarter": "2025-Q2",
+              "directional_calls": 16,
+              "decided": 12,
+              "ex_flat_accuracy_pct": 50
+            },
+            {
+              "quarter": "2025-Q3",
+              "directional_calls": 1,
+              "decided": 0,
+              "ex_flat_accuracy_pct": null
+            },
+            {
+              "quarter": "2025-Q4",
+              "directional_calls": 7,
+              "decided": 4,
+              "ex_flat_accuracy_pct": 0
+            }
+          ],
+          "stable_quarter_count": 0,
+          "min_stable_quarter_accuracy_pct": null
+        },
+        "holdout": {
+          "scheduled": 123,
+          "directional_calls": 35,
+          "directional_coverage_pct": 28.46,
+          "bullish_calls": 15,
+          "bearish_calls": 20,
+          "no_clear_bias": 87,
+          "correct": 14,
+          "wrong": 15,
+          "flat": 6,
+          "not_evaluable": 1,
+          "ex_flat_accuracy_pct": 48.28,
+          "ex_flat_accuracy_ci_95": {
+            "low": 31.39,
+            "high": 65.57
+          },
+          "accuracy_all_directional_calls_pct": 40,
+          "bullish_accuracy_pct": 46.67,
+          "bearish_accuracy_pct": 35,
+          "mean_absolute_realised_move_pct": 0.238,
+          "quarters": [
+            {
+              "quarter": "2025-Q4",
+              "directional_calls": 5,
+              "decided": 4,
+              "ex_flat_accuracy_pct": 100
+            },
+            {
+              "quarter": "2026-Q1",
+              "directional_calls": 23,
+              "decided": 18,
+              "ex_flat_accuracy_pct": 38.89
+            },
+            {
+              "quarter": "2026-Q2",
+              "directional_calls": 7,
+              "decided": 7,
+              "ex_flat_accuracy_pct": 42.86
+            }
+          ],
+          "stable_quarter_count": 1,
+          "min_stable_quarter_accuracy_pct": 38.89
+        }
+      }
+    },
+    "single_rel_us_de_2y_spread_chg5d": {
+      "kind": "rule_set",
+      "source": "Single-rule arm: The engine's own F3 idea: the spread change is the relative-rate signal, not either leg alone.",
+      "stage": "individual_factors",
+      "gates": {
+        "min_coverage_pct": 0,
+        "min_participation_pct": 0,
+        "min_absolute_score_points": 0,
+        "min_winning_families": 1,
+        "require_no_critical_conflict": false
+      },
+      "weights": {},
+      "metrics": {
+        "dev": {
+          "scheduled": 312,
+          "directional_calls": 127,
+          "directional_coverage_pct": 40.71,
+          "bullish_calls": 64,
+          "bearish_calls": 63,
+          "no_clear_bias": 185,
+          "correct": 49,
+          "wrong": 42,
+          "flat": 36,
+          "not_evaluable": 0,
+          "ex_flat_accuracy_pct": 53.85,
+          "ex_flat_accuracy_ci_95": {
+            "low": 43.66,
+            "high": 63.72
+          },
+          "accuracy_all_directional_calls_pct": 38.58,
+          "bullish_accuracy_pct": 46.88,
+          "bearish_accuracy_pct": 30.16,
+          "mean_absolute_realised_move_pct": 0.2178,
+          "quarters": [
+            {
+              "quarter": "2024-Q1",
+              "directional_calls": 20,
+              "decided": 17,
+              "ex_flat_accuracy_pct": 58.82
+            },
+            {
+              "quarter": "2024-Q2",
+              "directional_calls": 25,
+              "decided": 17,
+              "ex_flat_accuracy_pct": 47.06
+            },
+            {
+              "quarter": "2024-Q3",
+              "directional_calls": 22,
+              "decided": 13,
+              "ex_flat_accuracy_pct": 53.85
+            },
+            {
+              "quarter": "2024-Q4",
+              "directional_calls": 30,
+              "decided": 19,
+              "ex_flat_accuracy_pct": 68.42
+            },
+            {
+              "quarter": "2025-Q1",
+              "directional_calls": 30,
+              "decided": 25,
+              "ex_flat_accuracy_pct": 44
+            }
+          ],
+          "stable_quarter_count": 4,
+          "min_stable_quarter_accuracy_pct": 44
+        },
+        "validation": {
+          "scheduled": 149,
+          "directional_calls": 38,
+          "directional_coverage_pct": 25.5,
+          "bullish_calls": 14,
+          "bearish_calls": 24,
+          "no_clear_bias": 111,
+          "correct": 13,
+          "wrong": 12,
+          "flat": 13,
+          "not_evaluable": 0,
+          "ex_flat_accuracy_pct": 52,
+          "ex_flat_accuracy_ci_95": {
+            "low": 33.5,
+            "high": 69.97
+          },
+          "accuracy_all_directional_calls_pct": 34.21,
+          "bullish_accuracy_pct": 35.71,
+          "bearish_accuracy_pct": 33.33,
+          "mean_absolute_realised_move_pct": 0.2702,
+          "quarters": [
+            {
+              "quarter": "2025-Q2",
+              "directional_calls": 22,
+              "decided": 17,
+              "ex_flat_accuracy_pct": 52.94
+            },
+            {
+              "quarter": "2025-Q3",
+              "directional_calls": 15,
+              "decided": 8,
+              "ex_flat_accuracy_pct": 50
+            },
+            {
+              "quarter": "2025-Q4",
+              "directional_calls": 1,
+              "decided": 0,
+              "ex_flat_accuracy_pct": null
+            }
+          ],
+          "stable_quarter_count": 1,
+          "min_stable_quarter_accuracy_pct": 52.94
+        },
+        "holdout": {
+          "scheduled": 123,
+          "directional_calls": 23,
+          "directional_coverage_pct": 18.7,
+          "bullish_calls": 8,
+          "bearish_calls": 15,
+          "no_clear_bias": 99,
+          "correct": 7,
+          "wrong": 7,
+          "flat": 9,
+          "not_evaluable": 1,
+          "ex_flat_accuracy_pct": 50,
+          "ex_flat_accuracy_ci_95": {
+            "low": 26.8,
+            "high": 73.2
+          },
+          "accuracy_all_directional_calls_pct": 30.43,
+          "bullish_accuracy_pct": 12.5,
+          "bearish_accuracy_pct": 40,
+          "mean_absolute_realised_move_pct": 0.166,
+          "quarters": [
+            {
+              "quarter": "2025-Q4",
+              "directional_calls": 8,
+              "decided": 4,
+              "ex_flat_accuracy_pct": 75
+            },
+            {
+              "quarter": "2026-Q1",
+              "directional_calls": 9,
+              "decided": 6,
+              "ex_flat_accuracy_pct": 33.33
+            },
+            {
+              "quarter": "2026-Q2",
+              "directional_calls": 6,
+              "decided": 4,
+              "ex_flat_accuracy_pct": 50
+            }
+          ],
+          "stable_quarter_count": 0,
+          "min_stable_quarter_accuracy_pct": null
+        }
+      }
+    }
+  },
+  "notes": [
+    "Every arm is scored on the same rows, the same flat band (0.1pp on the broad dollar index) and the same chronological periods.",
+    "engine_stored_archive is the only arm that is a measurement of live behaviour; every other arm is a local computation.",
+    "No arm in this file may be read as a trading edge: no spread, cost, fill or path evidence exists here."
+  ]
+}

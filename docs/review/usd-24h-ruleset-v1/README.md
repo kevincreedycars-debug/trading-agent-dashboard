@@ -16,12 +16,42 @@ logic; the pipeline was not touched.
 | `live_export_and_harness_report.md` | WP0b result: the authorised read-only n8n export, deployment identity, credential-material finding, routing trace for SILVER/WTI, and the live-versus-replay comparison |
 | `live_export_identity.json` | Machine-readable identity evidence for all 45 exported workflows: ids, versions, timestamps, per-node code hashes, routing, credential bindings, sanitized hashes |
 | `live-exports/` | Sanitized export of all 45 live workflows plus `manifest.json` and `scrub_report.json` |
-| `usd_live_replay_comparison.json` | Per-case comparison of the exported live code, the replay implementation and the dashboard calculation, with the `layer1-confidence-map-v1` mapping per case and for the published row |
+| `usd_live_replay_comparison.json` | Per-case comparison of the exported live code, the replay implementation and the dashboard calculation, with the `layer1-confidence-map-v2` mapping per case and for the published row |
 | `../..//scripts/lib/layer1_null_conversion_repair.js` | Planner and minimal-diff applier for the unavailable-versus-zero conversion repair in the eight layer 1 engines (`scripts/repair_layer1_null_conversion.js` runs it offline or against a live workflow) |
-| `../..//backtester/lib/layer1_confidence_mapping.js` | `layer1-confidence-map-v1` contract: evidence shares, heuristic strength and calibrated probability mapped into three disjoint blocks, with a validator |
+| `../..//backtester/lib/layer1_confidence_mapping.js` | `layer1-confidence-map-v2` contract: evidence shares, heuristic strength and calibrated probability mapped into three disjoint blocks, with the engine verdict label and the headline blend label kept apart rather than merged into one strength name, and a validator |
+| `USD_24H_IMPROVEMENT_RESULTS.md` | The USD 24-hour improvement project: measured baseline, seven research families, dataset and experiment results, selection, verdict, shadow behaviour |
+| `USD_24H_RESEARCH_CARDS.md` | Generated research cards per family: candidate rules, measured evidence and counterevidence, the forward-versus-closed-window timing contrast, data requirements and unavailable inputs |
+| `USD_24h_Master_Ruleset_v2.md` | Candidate master ruleset: scope, inputs, decision arm, separately labelled engine strength and headline strength, release blockers |
+| `USD_24H_SHADOW_AND_DEPLOYMENT_DIFF.md` | Offline shadow result against the deployed engine, and the exact deployment diff that is prepared but not applied |
+| `../..//config/usd_24h_ruleset_v2.json` | The frozen candidate configuration, including the fitted model coefficients and the full declared rule table |
+| `../..//data/usd-24h-research-dataset.json` | One row per 09:30 ET cutoff with as-of features, per-input provenance, missing-input flags and the future outcome kept separate |
+| `../..//data/usd-24h-dataset-manifest.json` | Dataset manifest: every input with provider, request URL, cache sha256, row counts, declared availability lag, coverage and the three unavailable inputs |
+| `../..//data/usd-24h-experiment-registry.json` | Every one of the 93 configurations attempted, with per-period metrics for each |
+| `../..//data/usd-24h-baseline-comparison.json` | Engine, replayed engine, benchmark and candidate arms scored on the same rows and periods, plus the archive parity check |
+| `../..//data/usd-24h-research-cards.json` | Machine-readable research cards |
+| `../..//data/usd-24h-selection.json` | The chronological selection: declared filters, ranking, winner, evidence classification and calibration outcome |
+| `../..//data/usd-24h-shadow-comparison.json` | Per-date offline shadow comparison of the candidate against the deployed engine's stored calls |
 
 New tests added with those two artefacts: `tests/layer1_null_conversion_repair.test.js`,
 `backtester/tests/layer1_null_conversion_profile.test.js`, `backtester/tests/layer1_confidence_mapping.test.js`.
+
+## USD 24-hour improvement work (2026-10-12)
+
+The USD 24-hour ruleset question from the supplied brief (work packages 2–7) was worked through on
+repository data only. What was produced: a versioned dataset with a manifest, seven research cards,
+93 recorded experiments, the baseline comparison, the chronological selection, the frozen candidate
+configuration and the offline shadow comparison. The verdict is that **improvement is not
+demonstrated**: the selected candidate (an L2 logistic challenger fitted on development rows only)
+reaches 61.75% and 55.77% ex-flat accuracy on development and validation, then 46.25% on the untouched
+holdout against the deployed engine's 52.78%. `config/usd_24h_ruleset_v2.json` is published as
+`CANDIDATE_SHADOW_ONLY` with no probability, no trade eligibility and four release blockers.
+
+The work also measured, on the same rows: the deployed engine's stored calls are not better than a
+constant direction in any period; the repaired and pre-repair engines are indistinguishable on the
+604-row archive, because all 6,040 stored factor entries already equal the replay implementation's; and
+the economic-surprise family cannot be evaluated at all, so 24 of the engine's 100 live points rest on
+an input this repository cannot verify. No live workflow, dispatcher, dashboard or database was
+touched, and the candidate has never run in n8n.
 
 ## The reviewer's three questions, answered from this repository
 
