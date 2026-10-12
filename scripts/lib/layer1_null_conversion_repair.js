@@ -20,6 +20,8 @@
  * `scripts/repair_layer1_null_conversion.js`, which is a separate, explicitly authorised operation.
  */
 
+const {assertPayloadCoversWorkflow} = require("./layer1_live_deployment");
+
 const LAYER1_ENGINES = {
   usd: { workflowId: "OCt1tB9yVMUgFTha", exportFile: "exports/usd_layer1_agent.json" },
   eur: { workflowId: "Px0bsH7chlRWH9ZD", exportFile: "exports/eur_layer1_agent.json" },
@@ -99,6 +101,7 @@ function codeNodes(workflow) {
 
 function planLayer1NullConversionRepair(workflow) {
   if (!workflow || typeof workflow !== "object") throw new Error("A layer 1 workflow object is required.");
+  if (!Array.isArray(workflow.nodes)) throw new Error("A layer 1 workflow must expose its nodes array.");
   const scanned = codeNodes(workflow);
   const nodes = scanned.map((node) => {
     const outcome = repairLayer1Source(node.parameters.jsCode);
@@ -112,23 +115,45 @@ function planLayer1NullConversionRepair(workflow) {
     };
   });
   const repaired = nodes.filter((node) => node.status === "repaired");
-  const payloadNodes = scanned.map((node) => {
+  // The publishing payload is the whole workflow, in the order the workflow holds its nodes: a narrow
+  // payload of the code nodes alone would delete the trigger, the database nodes and the model call.
+  const payloadNodes = workflow.nodes.map((node) => {
     const replacement = repaired.find((entry) => entry.id === node.id);
     return replacement ? { ...node, parameters: { ...node.parameters, jsCode: replacement.after } } : node;
   });
+  const payload = {
+    name: workflow.name,
+    nodes: payloadNodes,
+    connections: workflow.connections,
+    settings: workflow.settings || {}
+  };
+  const coverage = assertPayloadCoversWorkflow(workflow, payload);
+  // Only the intended jsCode may move: the publisher would otherwise ship an unexplained code change.
+  const changedCodeNodes = payloadNodes
+    .filter((node, index) => node.parameters?.jsCode !== workflow.nodes[index].parameters?.jsCode)
+    .map((node) => node.name)
+    .sort();
+  const intendedCodeNodes = repaired.map((node) => node.name).sort();
+  if (JSON.stringify(changedCodeNodes) !== JSON.stringify(intendedCodeNodes)) {
+    throw new Error(
+      `The payload changes the jsCode of ${changedCodeNodes.join(", ") || "no node"} but the repair intends ` +
+      `${intendedCodeNodes.join(", ") || "no node"}.`
+    );
+  }
   return {
-    payload: {
-      name: workflow.name,
-      nodes: payloadNodes,
-      connections: workflow.connections,
-      settings: workflow.settings || {}
-    },
+    payload,
+    payload_code_changes: changedCodeNodes,
     nodes,
+    coverage,
     summary: {
       workflowId: workflow.id ?? null,
       workflowName: workflow.name ?? null,
       engine: ENGINE_BY_WORKFLOW_ID[workflow.id] ?? null,
       codeNodes: nodes.length,
+      nodesInWorkflow: coverage.nodes_in_workflow,
+      nodesInPayload: coverage.nodes_in_payload,
+      nonCodeNodesInPayload: coverage.non_code_nodes_in_payload,
+      connectionsPreserved: coverage.connections_preserved,
       repaired: repaired.map((node) => node.name),
       alreadyGuarded: nodes.filter((node) => node.status === "already_guarded").map((node) => node.name),
       withoutHelper: nodes.filter((node) => node.status === "no_helper").map((node) => node.name),
