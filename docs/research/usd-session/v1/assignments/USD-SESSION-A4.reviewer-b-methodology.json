@@ -1,0 +1,52 @@
+{
+  "schema_version": "usd-session-assignment-v1",
+  "assignment_id": "USD-SESSION-A4",
+  "created_at": "2026-10-13",
+  "status": "READY_TO_SEND",
+  "title": "Independent critique B - data availability, leakage, statistical design, implementation fidelity, overfitting",
+  "family_group": ["review"],
+  "assigned_to": {
+    "slot": "frontier-reviewer-b",
+    "note": "Reviewer B must not see Reviewer A's review or the synthesis. Its first review is independent of both, and it reviews the same evidence as A."
+  },
+  "review_object": {
+    "what": "The complete proposed logic for the USD session engine: every research card returned by A1 and A2, the master specification produced by synthesis, the frozen evaluation design, and this coordinator's own dataset and experiment plan",
+    "inputs": [
+      "docs/research/usd-session/v1/inventory.md",
+      "docs/research/usd-session/v1/session_contract_v1.json",
+      "docs/research/usd-session/v1/exposed_periods.md",
+      "docs/research/usd-session/v1/implementation_plan.md when it exists",
+      "every card under docs/research/usd-session/v1/research-cards/",
+      "data/usd-24h-dataset-manifest.json and data/usd-24h-research-dataset.json (the available data, read-only)"
+    ]
+  },
+  "review_focus": [
+    "Can each card's stated inputs actually be obtained for the claimed history, at the frequency claimed, with the timing claimed?",
+    "Is there any look-ahead: a value that in reality became known after the 05:00 London cutoff, a revision used as if it were the first print, a session bar that closed after the endpoint?",
+    "Is the statistical design sound: frozen target, eligibility, missing-quote policy, holidays, ties, splits, scoring, uncertainty and multiple-comparison accounting?",
+    "Is the implementation faithful to the stated rule, and is LLM discretion eliminated from the numeric path?",
+    "Where could overfitting enter: parameter grids, threshold searches, factor selection, or a holdout already spent?",
+    "Does any claimed result come from the numerical harness rather than from narrative?"
+  ],
+  "required_output": {
+    "format": "a JSON issue register following docs/research/usd-session/v1/review-issue-register.schema.json",
+    "per_issue": [
+      "issue_id",
+      "severity (blocker, major, minor, note)",
+      "the concrete objection in one paragraph",
+      "the evidence or reasoning that supports it",
+      "the proposed remedy",
+      "a falsifiable test that would confirm or refute it"
+    ],
+    "also_required": [
+      "an explicit statement of which cards are data-blocked today",
+      "an approval or rejection of the frozen evaluation design before any candidate is scored"
+    ]
+  },
+  "rules": [
+    "Reviewer B's approval of the evaluation design is a gate: no candidate scoring happens before it or before the coordinator records why it is unavailable.",
+    "State plainly when a test cannot be run with the data that exists, rather than proposing a design that requires data no one can obtain.",
+    "Agreement between models is not evidence of predictive value, and this review must not present it as such.",
+    "No production, workflow, dashboard or configuration change is authorised by this review."
+  ]
+}

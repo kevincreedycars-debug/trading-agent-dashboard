@@ -1,0 +1,48 @@
+{
+  "schema_version": "usd-session-assignment-v1",
+  "assignment_id": "USD-SESSION-A5",
+  "created_at": "2026-10-13",
+  "status": "READY_TO_SEND",
+  "title": "Reconcile research and both reviews into one engine specification and issue register",
+  "family_group": ["synthesis"],
+  "assigned_to": {
+    "slot": "frontier-synthesis",
+    "note": "Receives the cards, Reviewer A's register and Reviewer B's register together, after both reviews are complete and frozen."
+  },
+  "synthesis_must_produce": {
+    "master_specification": {
+      "required_sections": [
+        "the exact target: cutoff, endpoint, instrument, quote source, flat handling, eligibility and abstention",
+        "the complete factor set with each factor's card id and its single role (direction, regime, quality gate, abstention gate)",
+        "how factors combine into one call, stated as an exact computable rule, not a narrative",
+        "how conflicts are resolved when factors disagree, including whether any factor can veto another",
+        "which information is counted exactly once, with an explicit list of resolved double counts and how each was resolved",
+        "the abstention rule: the conditions under which no call is published, and the data-quality states that trigger it",
+        "what the engine does with missing, stale or revised inputs, factor by factor",
+        "the labelled boundary between the repaired version of the current logic and the research-proposed logic, so the two can be scored separately",
+        "every rule linked to the card that justifies it and to the specification clause it implements"
+      ]
+    },
+    "issue_register": {
+      "document": "issue id, severity, status (accepted, rejected, deferred, unresolved), the reviewer who raised it, and the resolution or the reason it stays open",
+      "rule": "Unresolved disagreements are preserved, not averaged away; a deferred blocker is a stated blocker, not a resolved issue"
+    },
+    "engine_deliverable": {
+      "form": "one shared numerical implementation usable for both historical scoring and prospective shadow use; historical runs must require no LLM calls",
+      "trace": "an auditable calculation trace per session: input values with their observation instants, each factor's verdict, the combination arithmetic, and the final direction or abstention"
+    }
+  },
+  "hard_rules": [
+    "Reproduce existing behaviour where it can be reproduced, and document any LLM discretion that cannot be translated faithfully instead of inventing a replacement rule.",
+    "The specification must be more than the concatenated research reports; if it cannot be expressed as a computable rule, say so and mark the factor unresolved.",
+    "Do not carry any USD-specific sign, weight or threshold to another asset.",
+    "Do not present model agreement as evidence of predictive value.",
+    "No probability may be published unless a calibration beats the base rate.",
+    "No production, workflow, dashboard, dispatcher or configuration change is authorised by the synthesis."
+  ],
+  "deliverable_locations": {
+    "master_specification": "docs/research/usd-session/v1/engine-specification.md",
+    "issue_register": "docs/research/usd-session/v1/issue-register.json",
+    "machine_readable_rules": "docs/research/usd-session/v1/engine-rules.v1.json (every rule cites its card id)"
+  }
+}
