@@ -1,10 +1,10 @@
 {
-  "status": "success",
-  "last_run_started_at": "2026-10-12T07:46:34.632Z",
-  "last_run_finished_at": "2026-10-12T07:46:34.633Z",
+  "status": "failed",
+  "last_run_started_at": "2026-10-13T06:47:42.059Z",
+  "last_run_finished_at": "2026-10-13T06:47:42.060Z",
   "triggered_by": "dashboard_or_manual",
-  "message": "Manual Refresh Complete",
-  "failed_step": null,
+  "message": "Master Orchestrator finished with errors.",
+  "failed_step": "Silver Collector",
   "steps": [
     {
       "name": "Call '1. Economic Events Collector'",
@@ -32,7 +32,8 @@
     },
     {
       "name": "Silver Collector",
-      "status": "success"
+      "status": "failed",
+      "error": "Bad gateway - the service failed to handle your request"
     },
     {
       "name": "USD Layer 1 Agent",
@@ -71,5 +72,8 @@
       "status": "success"
     }
   ],
-  "error": null
+  "error": {
+    "step": "Silver Collector",
+    "reason": "Bad gateway - the service failed to handle your request"
+  }
 }
