@@ -1,0 +1,56 @@
+{
+  "schema_version": "usd-session-assignment-v1",
+  "assignment_id": "USD-SESSION-A1",
+  "created_at": "2026-10-13",
+  "status": "READY_TO_SEND",
+  "title": "USD price behaviour and risk conditions at the 05:00 London cutoff",
+  "family_group": ["usd_price_behaviour", "risk_conditions"],
+  "assigned_to": {
+    "slot": "field-model-1",
+    "note": "One frontier model fills the cards. It must not see the reviewer packages or the coordinator's expectations."
+  },
+  "target_contract": {
+    "cutoff": "05:00 Europe/London (04:00Z in GMT, 03:00Z in BST)",
+    "endpoint": "17:00 America/New_York the same local date (22:00Z EST, 21:00Z EDT)",
+    "label": "sign of the label-instrument change from cutoff to endpoint, flat band frozen separately",
+    "instrument": "DXY, quote source UNVERIFIED; the researcher must state which instrument a claim is actually about"
+  },
+  "coordinator_context_allowed": [
+    "Inventory of the deployed engine: docs/research/usd-session/v1/inventory.md",
+    "Contract and open decisions: docs/research/usd-session/v1/session_contract_v1.json",
+    "What has already been examined: docs/research/usd-session/v1/exposed_periods.md",
+    "Data actually reachable in this repository (read-only): data/usd-24h-research-dataset.json and its manifest, backtester/tmp/oanda_eur_usd_h1.csv, oanda_xau_usd_h1.csv, oanda_nas100_usd_h1.csv, data/backtester-checker-usd-24h-2024-01.json"
+  ],
+  "coordinator_analysis_withheld": [
+    "No expected sign, no expected size, no preference for any candidate, and no accuracy figure from the 24-hour study is sent with this assignment."
+  ],
+  "cards_to_produce": [
+    "fx.usd-session-momentum (trailing move over 1d and 5d, continuation versus fade)",
+    "fx.usd-overnight-range-position (where the dollar sits in its own recent range at the cutoff)",
+    "fx.usd-session-volatility-regime (realised volatility and its effect on the expected move and on abstention)",
+    "risk.vix-level-and-change-at-cutoff",
+    "risk.risk-on-off-cross-asset-state (equities, credit, gold, crypto at the cutoff)",
+    "risk.usd-safe-haven-demand (whether the dollar is being bought as insurance)",
+    "data.quality-gate-for-abstention (which data states should force abstention rather than a weak call)"
+  ],
+  "questions_every_card_must_answer": [
+    "What is the mechanism inside this specific 17-hour window?",
+    "When does the relation change sign, weaken, or stop being informative because it is already priced?",
+    "Is the factor direction, regime context, a quality gate or an abstention gate?",
+    "What exactly was observable at 05:00 London, and how stale is each input?",
+    "What is the programmable hypothesis, what parameter values are allowed, and what result would kill it?",
+    "Which other cards share the same information, and what would be double-counted?"
+  ],
+  "deliverable": {
+    "format": "one JSON file per card following docs/research/usd-session/v1/research-card.schema.json",
+    "location": "docs/research/usd-session/v1/research-cards/<card_id>.json",
+    "must_also_return": "a short note listing sources fetched with links, and any question the model could not resolve"
+  },
+  "rules": [
+    "Do not consult or reproduce the coordinator's own conclusions; the package withholds them.",
+    "Do not propose new thresholds that cannot be computed from the listed data.",
+    "State plainly when an input is unavailable rather than substituting a proxy silently.",
+    "A card may conclude that the factor should not be used.",
+    "No production, workflow, dashboard or configuration change is authorised by this assignment."
+  ]
+}

@@ -1,0 +1,55 @@
+{
+  "schema_version": "usd-session-assignment-v1",
+  "assignment_id": "USD-SESSION-A2",
+  "created_at": "2026-10-13",
+  "status": "READY_TO_SEND",
+  "title": "Rates, policy expectations, releases and calendar context at the 05:00 London cutoff",
+  "family_group": ["rates_and_policy_expectations", "macroeconomic_releases", "calendar_context"],
+  "assigned_to": {
+    "slot": "field-model-2",
+    "note": "A second frontier model, given the same contract but a disjoint card set, so A1 and A2 do not see each other's drafts."
+  },
+  "target_contract": {
+    "cutoff": "05:00 Europe/London (04:00Z GMT, 03:00Z BST)",
+    "endpoint": "17:00 America/New_York the same local date (22:00Z EST, 21:00Z EDT)",
+    "label": "sign of the label-instrument change from cutoff to endpoint, flat band frozen separately",
+    "instrument": "DXY, quote source UNVERIFIED"
+  },
+  "coordinator_context_allowed": [
+    "Inventory of the deployed engine: docs/research/usd-session/v1/inventory.md",
+    "Contract and open decisions: docs/research/usd-session/v1/session_contract_v1.json",
+    "What has already been examined: docs/research/usd-session/v1/exposed_periods.md",
+    "The deployed engine's own rulebook, as live input: logic/agent_usd_direction.md",
+    "Reachable data (read-only): the FRED series named in data/usd-24h-dataset-manifest.json, and the repository's economic-calendar artefacts if any are reachable"
+  ],
+  "coordinator_analysis_withheld": [
+    "No expected sign or size is supplied, and no finding from the closed 24-hour study is sent with this assignment."
+  ],
+  "cards_to_produce": [
+    "rates.us-front-end-delta (2Y and 3M yield changes as policy-expectation proxies)",
+    "rates.relative-front-end-delta (US versus Germany and versus other G10 front ends, with the euro-area and UK legs named)",
+    "rates.real-yield-delta (10Y and 5Y real yields, and the breakeven split)",
+    "rates.term-premium-and-curve (10Y minus 2Y, and whether the level or the change matters)",
+    "rates.credit-spread-delta (high-yield spread change as a risk and growth proxy)",
+    "calendar.known-releases-between-cutoff-and-endpoint (which releases are scheduled inside the window and how a known-but-unreleased event may be used without using its outcome)",
+    "calendar.days-since-and-until-high-impact-events (positioning around known dates)",
+    "macro.release-surprise-at-first-print (including the honest answer if consensus vintages are unavailable)"
+  ],
+  "questions_every_card_must_answer": [
+    "Which yields or spreads are genuinely observable at 05:00 London today, and with what publication lag?",
+    "Which part of a release is a reaction that is already in the price by the cutoff and which part is still predictive?",
+    "How do these cards overlap with each other and with the price-behaviour cards, and what would be double-counted?",
+    "What would have to be true for the relation to change sign inside a London-to-New-York window?",
+    "What is the programmable hypothesis, the allowed parameters, and the result that kills it?"
+  ],
+  "deliverable": {
+    "format": "one JSON file per card following docs/research/usd-session/v1/research-card.schema.json",
+    "location": "docs/research/usd-session/v1/research-cards/<card_id>.json"
+  },
+  "rules": [
+    "A scheduled release may enter as a known calendar event; its outcome may not, unless a first-print value genuinely existed before the cutoff.",
+    "State clearly when a required vintage or consensus series is unavailable, and mark the card accordingly rather than proxying silently.",
+    "Do not carry over any USD-specific sign, weight or threshold to another asset; other assets are out of scope.",
+    "No production, workflow, dashboard or configuration change is authorised by this assignment."
+  ]
+}

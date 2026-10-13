@@ -1,0 +1,96 @@
+{
+  "schema_version": "usd-session-contract-v1",
+  "created_at": "2026-10-13",
+  "status": "RESEARCH_DECLARED_NOT_WIRED",
+  "production_enabled": false,
+  "trade_eligible": false,
+  "scope": {
+    "asset": "USD",
+    "extends_to": "EUR, GBP, GOLD, SILVER, NQ, BTC, WTI (not started; no USD sign, weight or threshold transfers)",
+    "one_call_per_day": true,
+    "families": [
+      "foreign rates and policy expectations",
+      "macroeconomic releases",
+      "risk conditions",
+      "USD price behaviour",
+      "cross-assets",
+      "calendar context"
+    ]
+  },
+  "cutoff": {
+    "local": "05:00",
+    "zone": "Europe/London",
+    "zone_standard_offset_hours": 0,
+    "zone_summer_offset_hours": 1,
+    "utc_rule": "04:00Z while London is on GMT, 03:00Z while London is on BST",
+    "bst_2026_start_utc": "2026-03-29T01:00:00Z",
+    "bst_2026_end_utc": "2026-10-25T01:00:00Z",
+    "asof_rule": "every input value must carry an observation instant at or before the cutoff instant; later revisions are not permitted"
+  },
+  "endpoint": {
+    "local": "17:00",
+    "zone": "America/New_York",
+    "zone_standard_offset_hours": -5,
+    "zone_summer_offset_hours": -4,
+    "utc_rule": "22:00Z while New York is on EST, 21:00Z while New York is on EDT",
+    "edt_2026_start_utc": "2026-03-08T07:00:00Z",
+    "edt_2026_end_utc": "2026-11-01T06:00:00Z",
+    "same_local_date_as_cutoff": true,
+    "note": "The endpoint is 17 nominal hours after the cutoff on most days, but the two zones shift on different dates, so the UTC gap is 16 hours during the two weeks in spring when New York has changed and London has not, and also during the week in autumn when London has fallen back and New York has not (measured 2026-10-27: 16 hours). The engine must resolve both zones independently from declared transitions, never by adding a fixed number of hours."
+  },
+  "outcome_instrument": {
+    "proposed_code": "DXY",
+    "proposed_quote_source": null,
+    "verification_state": "UNVERIFIED",
+    "repo_candidates_reviewed": [
+      {
+        "candidate": "FRED DTWEXBGS (live collector field dxy_level)",
+        "usable_for_intraday_session": false,
+        "why": "daily index published by the Federal Reserve with a 1-2 business-day lag, so it cannot price 05:00 London or 17:00 New York on the day"
+      },
+      {
+        "candidate": "Coinbase v2 prices XAU-USD/BTC-USD/JPY-USD/GBP-USD/CAD-USD/AUD-USD spot",
+        "usable_for_intraday_session": "partial",
+        "why": "six pairs only, no EUR, no CHF, no SEK; cannot reproduce the ICE DXY basket, and Coinbase FX is a crypto-venue quote, not an interbank DXY print"
+      },
+      {
+        "candidate": "local OANDA hourly caches (EUR_USD, XAU_USD, NAS100_USD)",
+        "usable_for_intraday_session": "partial",
+        "why": "hourly to 2026-04-30, but EUR/USD is one DXY leg out of six and the cache is a historical file, not a live source"
+      }
+    ],
+    "blocking_question": "Which tradeable, freely readable instrument is the USD direction label, and which quote source prices it at both ends? A DXY-labelled call must be executable in the instrument the number actually comes from.",
+    "fallback_if_unresolved": "Publish the label as the instrument that does have a source (for example EUR/USD from OANDA or a documented USD proxy built from the available pairs), name it in every artefact and never call it DXY."
+  },
+  "flat_handling": {
+    "flat_band": null,
+    "status": "UNDECIDED",
+    "note": "The 0.1 percentage-point band of the 24-hour study was fitted to a daily index over a nominal day. Over a 17-hour session the band must be re-derived and frozen before candidate comparison, and may be expressed in the instrument's own price units or in ATR fractions."
+  },
+  "eligibility": {
+    "weekdays_only": true,
+    "exchange_holidays": "UNDECIDED - the live engine does not model holidays; the research dataset must carry a session calendar instead of inferring one",
+    "missing_quote_policy": "UNDECIDED - must be frozen with the dataset",
+    "ties": "UNDECIDED - must be frozen with the band"
+  },
+  "scoring": {
+    "primary": "balanced accuracy on decided calls",
+    "must_report": [
+      "coverage",
+      "sample size",
+      "matched-day comparison against the original and repaired engines",
+      "uncertainty",
+      "stability across periods",
+      "event-day versus quiet-day split"
+    ],
+    "abstention_allowed": true,
+    "probability_publication": "forbidden unless a calibration beats the base rate"
+  },
+  "contract_vs_deployed_engine": {
+    "deployed_cutoff": "09:30 America/New_York",
+    "deployed_endpoint": "16:00 America/New_York close of the next valid trading session",
+    "measured_median_elapsed_hours": 30.5,
+    "overlap_with_new_window": "07 nominal hours (from the 05:00 London cutoff to the 09:30 ET snapshot the live engine reacts to)",
+    "scoring_rule": "the deployed engine's stored calls score on the new label only as a diagnostic arm and every table says so; the deployed engine was never asked this question"
+  }
+}

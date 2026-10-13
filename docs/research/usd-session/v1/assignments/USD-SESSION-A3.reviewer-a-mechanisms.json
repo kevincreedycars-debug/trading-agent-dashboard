@@ -1,0 +1,52 @@
+{
+  "schema_version": "usd-session-assignment-v1",
+  "assignment_id": "USD-SESSION-A3",
+  "created_at": "2026-10-13",
+  "status": "READY_TO_SEND",
+  "title": "Independent critique A - economic mechanisms, signs, timing, interactions, regimes, double-counting",
+  "family_group": ["review"],
+  "assigned_to": {
+    "slot": "frontier-reviewer-a",
+    "note": "Reviewer A must not see Reviewer B's review or the synthesis. Its first review is independent of both."
+  },
+  "review_object": {
+    "what": "The complete proposed logic for the USD session engine: every research card returned by A1 and A2, plus the master specification produced by synthesis, plus this coordinator's inventory of the deployed engine",
+    "inputs": [
+      "docs/research/usd-session/v1/inventory.md",
+      "docs/research/usd-session/v1/session_contract_v1.json",
+      "docs/research/usd-session/v1/exposed_periods.md",
+      "every card under docs/research/usd-session/v1/research-cards/",
+      "the synthesised engine specification when it exists"
+    ]
+  },
+  "review_focus": [
+    "Is each stated mechanism economically coherent for a London-to-New-York session specifically, or is it borrowed from a longer or shorter horizon?",
+    "Are the proposed signs right, and are the stated sign-change and weakening conditions sufficient?",
+    "Is the timing claim consistent with when the information actually becomes available?",
+    "Are interactions between factors modelled, or does the specification add independent votes where the effects are conditional?",
+    "Are regime assumptions (risk-on/off, policy regime, high versus low volatility) explicit and testable?",
+    "Is any information counted twice by two cards that share a driver?",
+    "Does the specification abstain where it should, rather than publishing a weak call?"
+  ],
+  "required_output": {
+    "format": "a JSON issue register following docs/research/usd-session/v1/review-issue-register.schema.json",
+    "per_issue": [
+      "issue_id",
+      "severity (blocker, major, minor, note)",
+      "the concrete objection in one paragraph",
+      "the evidence or reasoning that supports it",
+      "the proposed remedy",
+      "a falsifiable test that would confirm or refute it"
+    ],
+    "also_required": [
+      "a summary judgement on each card's session_role (direction, regime, gate, abstention, drop)",
+      "an explicit statement of what you could not evaluate and why"
+    ]
+  },
+  "rules": [
+    "Disagreement must be recorded as an issue, not resolved by deference to another model.",
+    "Agreement between models is not evidence of predictive value, and this review must not present it as such.",
+    "Do not propose optimising for a reported win rate.",
+    "No production, workflow, dashboard or configuration change is authorised by this review."
+  ]
+}
