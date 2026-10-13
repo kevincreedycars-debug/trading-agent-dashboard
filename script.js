@@ -26,6 +26,8 @@ const confidenceBandDeliveryUrl = "./data/confidence-band-delivery.json?v=202607
 const researchProofMapUrl = "./data/research-proof-map.json?v=20260902-proof-map-v1";
 const backtestEngineUrl = "./data/backtest-engine.json?v=20260903-engine-v1";
 const architectureManifestUrlDefault = "./data/architecture-map.json?v=20260721-architecture-mirror-v1";
+const researchLibraryUrl = "./data/research-library/catalog.json?v=20261013-research-library-v1";
+const researchLibraryDocumentsUrl = "./data/research-library/documents.json?v=20261013-research-library-v1";
 const researchSupabaseUrl = "https://eaolqbrlywczinfordvg.supabase.co/rest/v1";
 const researchSupabaseKey = "sb_publishable_k6YbEuuk3GyB9GVTQDtNVA_J1gCRYaY";
 const headlineConfidenceLib = globalThis.HeadlineConfidence;
@@ -265,6 +267,23 @@ let layer2Data = null;
 let backtestData = null;
 let backtestingDevelopmentData = null;
 let factorEdgeLabData = null;
+let researchLibraryData = null;
+let researchLibraryDocuments = null;
+const researchLibraryState = {
+  asset: "USD",
+  group: "all",
+  research: "all",
+  review: "all",
+  backtest: "all",
+  query: "",
+  factorId: "",
+  uploadTaskId: "",
+  serviceEndpoint: "",
+  serviceToken: "",
+  serviceState: "unknown",
+  serviceDetail: "",
+  message: ""
+};
 let phase2ShadowBacktestData = null;
 let confidenceBandDeliveryData = null;
 let researchProofMapData = null;
@@ -6742,6 +6761,919 @@ function renderFactorEdgeEntitySection(entityName, entity = {}, options = {}) {
         })}
       `}
     </article>
+  `;
+}
+
+// ---------------------------------------------------------------------------------------------
+// Research Library
+//
+// Research management only. The panel reads the committed catalog and document registry,
+// prepares a manual ChatGPT task, and reads or stores documents through the local, authenticated
+// library service. It calls no model API, changes no live artifact, and treats every returned
+// report as research evidence until a review accepts it and a backtest supports it.
+// ---------------------------------------------------------------------------------------------
+
+const researchLibraryLocalKeys = {
+  endpoint: "research-library-service-endpoint",
+  token: "research-library-service-token"
+};
+const researchLibraryDefaultEndpoint = "http://127.0.0.1:8791";
+
+function researchLibraryLib() {
+  return globalThis.ResearchLibrary || null;
+}
+
+function researchLibraryTone(value) {
+  const text = String(value || "");
+  if (["blocked", "changes_requested"].includes(text)) return "rl-tone-blocked";
+  if (["uploaded", "accepted", "tested"].includes(text)) return "rl-tone-ok";
+  if (["in_progress", "queued", "ready"].includes(text)) return "rl-tone-active";
+  return "rl-tone-idle";
+}
+
+function researchLibraryStatusPill(kind, value) {
+  const lib = researchLibraryLib();
+  const labels = lib ? (kind === "research" ? lib.RESEARCH_LABELS : kind === "review" ? lib.REVIEW_LABELS : lib.BACKTEST_LABELS) : {};
+  const label = labels[value] || String(value || "unknown");
+  return `<span class="rl-pill ${researchLibraryTone(value)}" data-rl-status="${escapeHtml(kind)}">${escapeHtml(label)}</span>`;
+}
+
+function researchLibraryDocumentList() {
+  return asArray(researchLibraryDocuments?.documents);
+}
+
+function researchLibraryDocumentsFor(factorId, types = []) {
+  const wanted = String(factorId || "");
+  return researchLibraryDocumentList().filter(document => {
+    if (wanted && String(document.factor_id || "") !== wanted) return false;
+    if (types.length && !types.includes(String(document.document_type))) return false;
+    return true;
+  });
+}
+
+function restoreResearchLibraryServiceSettings() {
+  if (!researchLibraryState.serviceEndpoint) researchLibraryState.serviceEndpoint = researchLibraryDefaultEndpoint;
+  if (!storageAvailable()) return;
+  try {
+    const endpoint = window.localStorage.getItem(researchLibraryLocalKeys.endpoint);
+    const token = window.localStorage.getItem(researchLibraryLocalKeys.token);
+    if (endpoint) researchLibraryState.serviceEndpoint = endpoint;
+    if (token) researchLibraryState.serviceToken = token;
+  } catch (err) {
+    console.warn("Could not read the research library service settings", err);
+  }
+}
+
+function saveResearchLibraryServiceSettings() {
+  researchLibraryState.serviceEndpoint = String(researchLibraryState.serviceEndpoint || researchLibraryDefaultEndpoint).replace(/\/+$/, "");
+  if (!storageAvailable()) return;
+  try {
+    window.localStorage.setItem(researchLibraryLocalKeys.endpoint, researchLibraryState.serviceEndpoint);
+    window.localStorage.setItem(researchLibraryLocalKeys.token, researchLibraryState.serviceToken);
+  } catch (err) {
+    console.warn("Could not save the research library service settings", err);
+  }
+}
+
+function researchLibraryServiceClient() {
+  const lib = researchLibraryLib();
+  if (!lib) return null;
+  return lib.createServiceClient({
+    endpoint: researchLibraryState.serviceEndpoint || researchLibraryDefaultEndpoint,
+    token: researchLibraryState.serviceToken
+  });
+}
+
+async function probeResearchLibraryService(options = {}) {
+  const client = researchLibraryServiceClient();
+  if (!client) {
+    researchLibraryState.serviceState = "unavailable";
+    researchLibraryState.serviceDetail = "The shared research library helper did not load.";
+    return false;
+  }
+  try {
+    const health = await client.health();
+    researchLibraryState.serviceState = "connected";
+    researchLibraryState.serviceDetail = `${health.service || "service"} ${health.version || ""}`.trim();
+    if (options.render !== false) renderResearchLibrary();
+    return true;
+  } catch (err) {
+    researchLibraryState.serviceState = "offline";
+    researchLibraryState.serviceDetail = err?.message || String(err);
+    if (options.render !== false) renderResearchLibrary();
+    return false;
+  }
+}
+
+function researchLibraryMessage(text) {
+  researchLibraryState.message = String(text || "");
+  renderResearchLibrary();
+}
+
+function researchLibraryDownloadBlob(filename, text, mime = "application/json") {
+  const blob = new Blob([text], { type: `${mime};charset=utf-8` });
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = filename;
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 4000);
+}
+
+function researchLibraryDownloadBytes(filename, bytes, mime = "application/octet-stream") {
+  const blob = new Blob([bytes], { type: mime });
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = filename;
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 4000);
+}
+
+async function researchLibraryCopyPrompt(taskId) {
+  const lib = researchLibraryLib();
+  const task = lib ? lib.taskById(researchLibraryData || {}, taskId) : null;
+  if (!task) {
+    researchLibraryMessage(`Task ${taskId} is not in the catalog.`);
+    return;
+  }
+  const text = String(task.prompt || "");
+  try {
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(text);
+      researchLibraryMessage(`Prompt for ${taskId} copied. Paste it into your own ChatGPT session; nothing was sent from this page.`);
+      return;
+    }
+    throw new Error("clipboard unavailable");
+  } catch (err) {
+    const holder = document.getElementById("researchLibraryPromptBuffer");
+    if (holder) {
+      holder.value = text;
+      holder.hidden = false;
+      holder.focus();
+      holder.select();
+      researchLibraryMessage(`Clipboard was unavailable, so the prompt for ${taskId} is selected in the box below the task list.`);
+      return;
+    }
+    researchLibraryMessage(`Could not copy the prompt: ${err?.message || err}`);
+  }
+}
+
+function researchLibraryContextPackage(taskId) {
+  const lib = researchLibraryLib();
+  if (!lib) {
+    researchLibraryMessage("The shared research library helper did not load.");
+    return;
+  }
+  const contextPackage = lib.buildContextPackage(researchLibraryData || {}, taskId);
+  if (!contextPackage) {
+    researchLibraryMessage(`Task ${taskId} is not in the catalog.`);
+    return;
+  }
+  researchLibraryDownloadBlob(`${taskId}.context-package.json`, `${JSON.stringify(contextPackage, null, 2)}\n`);
+  researchLibraryMessage(`Context package for ${taskId} downloaded at context version ${contextPackage.context_version}.`);
+}
+
+async function researchLibraryDownloadDocument(documentId, version, storage) {
+  const document = researchLibraryDocumentList().find(entry => String(entry.document_id) === String(documentId));
+  if (!document) {
+    researchLibraryMessage(`Document ${documentId} is not registered.`);
+    return;
+  }
+  const latest = asArray(document.versions).reduce((best, entry) => (best === null || Number(entry.version) > Number(best.version) ? entry : best), null);
+  const wanted = version ? Number(version) : Number(latest?.version || 0);
+  const record = asArray(document.versions).find(entry => Number(entry.version) === wanted);
+  const lib = researchLibraryLib();
+  try {
+    if (storage === "repo_path" && document.repo_path) {
+      const response = await fetch(`./${document.repo_path}`, { cache: "no-store" });
+      if (!response.ok) throw new Error(`${response.status} ${response.statusText}`);
+      const bytes = new Uint8Array(await response.arrayBuffer());
+      let verification = "not verified";
+      if (lib && globalThis.crypto?.subtle) {
+        const actual = await lib.sha256Hex(bytes);
+        verification = actual === record?.sha256 ? `hash verified ${actual.slice(0, 12)}` : `HASH MISMATCH: file ${actual.slice(0, 12)} vs registry ${String(record?.sha256).slice(0, 12)}`;
+      }
+      const name = String(document.repo_path).split("/").pop();
+      researchLibraryDownloadBytes(name, bytes);
+      researchLibraryMessage(`${document.title} downloaded (${verification}).`);
+      return;
+    }
+    const client = researchLibraryServiceClient();
+    if (!client) throw new Error("the shared research library helper did not load");
+    const result = await client.download(documentId, wanted);
+    const actual = lib && globalThis.crypto?.subtle ? await lib.sha256Hex(result.bytes) : "";
+    const verification = actual && result.sha256 ? (actual === result.sha256 ? `hash verified ${actual.slice(0, 12)}` : `HASH MISMATCH: ${actual.slice(0, 12)} vs ${result.sha256.slice(0, 12)}`) : "hash not checked in this browser";
+    researchLibraryDownloadBytes(`${documentId}-v${wanted}.json`, result.bytes);
+    researchLibraryMessage(`${document.title} version ${wanted} downloaded (${verification}).`);
+  } catch (err) {
+    researchLibraryMessage(`${document.title} could not be downloaded: ${err?.message || err}`);
+  }
+}
+
+async function researchLibraryRefreshDocuments() {
+  try {
+    const refreshed = await fetchLocalJson(researchLibraryDocumentsUrl);
+    if (refreshed) researchLibraryDocuments = refreshed;
+  } catch (err) {
+    console.warn("Could not refresh the research library registry", err);
+  }
+}
+
+async function researchLibraryUpload(taskId) {
+  const lib = researchLibraryLib();
+  const task = lib ? lib.taskById(researchLibraryData || {}, taskId) : null;
+  if (!lib || !task) {
+    researchLibraryMessage(`Task ${taskId} is not in the catalog.`);
+    return;
+  }
+  const fileInput = document.getElementById("researchLibraryUploadFile");
+  const modelInput = document.getElementById("researchLibraryUploadModel");
+  const documentIdInput = document.getElementById("researchLibraryUploadId");
+  const titleInput = document.getElementById("researchLibraryUploadTitle");
+  const noteInput = document.getElementById("researchLibraryUploadNote");
+  const file = fileInput?.files?.[0];
+  if (!file) {
+    researchLibraryMessage("Choose the file the model returned before uploading.");
+    return;
+  }
+  const model = String(modelInput?.value || "").trim();
+  const documentId = String(documentIdInput?.value || "").trim().toLowerCase().replace(/[^a-z0-9._-]+/g, "-");
+  if (!documentId) {
+    researchLibraryMessage("A document id is required.");
+    return;
+  }
+  const documentType = task.kind === "review" ? "review" : task.kind === "synthesis" ? "synthesis" : "report";
+  const client = researchLibraryServiceClient();
+  if (!client) {
+    researchLibraryMessage("The shared research library helper did not load.");
+    return;
+  }
+  researchLibraryMessage(`Uploading ${file.name} against ${taskId}...`);
+  try {
+    const bytes = new Uint8Array(await file.arrayBuffer());
+    const payload = {
+      document_id: documentId,
+      asset: task.asset || "USD",
+      task_id: taskId,
+      document_type: documentType,
+      title: String(titleInput?.value || "").trim() || `${taskId} return`,
+      model,
+      note: String(noteInput?.value || "").trim(),
+      context_version: task.context_version,
+      original_filename: file.name,
+      content_base64: lib.toBase64(bytes)
+    };
+    const registration = await client.upload(payload);
+    await researchLibraryRefreshDocuments();
+    const known = researchLibraryDocumentList().some(entry => String(entry.document_id) === String(registration.document_id));
+    if (!known) {
+      // The service writes the registry file in the checkout it runs from. A published page cannot
+      // see that write, so the record is shown here until the committed registry catches up.
+      const version = {
+        version: registration.version,
+        sha256: registration.sha256,
+        bytes: registration.bytes,
+        registered_at: new Date().toISOString().slice(0, 10),
+        original_filename: file.name,
+        model,
+        context_version: task.context_version,
+        note: "registered by the local service; awaiting the committed registry"
+      };
+      researchLibraryDocuments = {
+        ...(researchLibraryDocuments || {}),
+        documents: [...researchLibraryDocumentList(), {
+          document_id: registration.document_id,
+          asset: payload.asset,
+          factor_id: null,
+          task_id: taskId,
+          document_type: documentType,
+          title: payload.title,
+          model,
+          origin: "external_upload",
+          storage: "library_object",
+          public_download: false,
+          context_version: task.context_version,
+          object_sha256: registration.sha256,
+          versions: [version]
+        }]
+      };
+    }
+    researchLibraryState.uploadTaskId = "";
+    researchLibraryMessage(`${file.name} registered as ${registration.document_id} version ${registration.version} (sha256 ${String(registration.sha256).slice(0, 12)}). An upload is not an approval: the review status stays pending until a review is recorded.`);
+  } catch (err) {
+    researchLibraryMessage(`Upload failed: ${err?.message || err}`);
+  }
+}
+
+function maybeProbeResearchLibraryService() {
+  // A stored token means the reader has configured the service, so check it when the tab is opened. Without
+  // a token the panel makes no loopback request at all, which keeps a published page quiet.
+  if (researchLibraryState.serviceState !== "unknown" || !researchLibraryState.serviceToken) return;
+  probeResearchLibraryService();
+}
+
+function setupResearchLibraryControls() {
+  restoreResearchLibraryServiceSettings();
+  const panel = document.getElementById("researchLibraryPanel");
+  if (!panel) return;
+
+  panel.addEventListener("click", event => {
+    const target = event.target;
+
+    const connectButton = target.closest("[data-rl-connect]");
+    if (connectButton) {
+      const endpointField = document.getElementById("researchLibraryEndpoint");
+      const tokenField = document.getElementById("researchLibraryToken");
+      if (endpointField) researchLibraryState.serviceEndpoint = endpointField.value.trim() || researchLibraryDefaultEndpoint;
+      if (tokenField) researchLibraryState.serviceToken = tokenField.value.trim();
+      saveResearchLibraryServiceSettings();
+      probeResearchLibraryService();
+      return;
+    }
+
+    const assetButton = target.closest("[data-rl-asset]");
+    if (assetButton) {
+      researchLibraryState.asset = assetButton.dataset.rlAsset || "USD";
+      researchLibraryState.factorId = "";
+      researchLibraryState.uploadTaskId = "";
+      researchLibraryState.message = "";
+      renderResearchLibrary();
+      return;
+    }
+
+    const backButton = target.closest("[data-rl-back]");
+    if (backButton) {
+      researchLibraryState.factorId = "";
+      researchLibraryState.uploadTaskId = "";
+      renderResearchLibrary();
+      return;
+    }
+
+    const factorRow = target.closest("[data-rl-factor]");
+    if (factorRow) {
+      researchLibraryState.factorId = factorRow.dataset.rlFactor || "";
+      researchLibraryState.message = "";
+      renderResearchLibrary();
+      return;
+    }
+
+    const copyButton = target.closest("[data-rl-copy-prompt]");
+    if (copyButton) {
+      researchLibraryCopyPrompt(copyButton.dataset.rlCopyPrompt);
+      return;
+    }
+
+    const packageButton = target.closest("[data-rl-context-package]");
+    if (packageButton) {
+      researchLibraryContextPackage(packageButton.dataset.rlContextPackage);
+      return;
+    }
+
+    const uploadToggle = target.closest("[data-rl-upload-toggle]");
+    if (uploadToggle) {
+      const taskId = uploadToggle.dataset.rlUploadToggle;
+      researchLibraryState.uploadTaskId = researchLibraryState.uploadTaskId === taskId ? "" : taskId;
+      researchLibraryState.message = "";
+      renderResearchLibrary();
+      return;
+    }
+
+    const uploadSubmit = target.closest("[data-rl-upload-submit]");
+    if (uploadSubmit) {
+      researchLibraryUpload(uploadSubmit.dataset.rlUploadSubmit);
+      return;
+    }
+
+    const downloadButton = target.closest("[data-rl-download]");
+    if (downloadButton) {
+      researchLibraryDownloadDocument(downloadButton.dataset.rlDownload, downloadButton.dataset.rlVersion, downloadButton.dataset.rlStorage);
+      return;
+    }
+  });
+
+  panel.addEventListener("change", event => {
+    const filter = event.target.closest("[data-rl-filter]");
+    if (filter) {
+      researchLibraryState[filter.dataset.rlFilter] = filter.value;
+      renderResearchLibrary();
+    }
+  });
+
+  panel.addEventListener("input", event => {
+    const query = event.target.closest("[data-rl-query]");
+    if (query) {
+      researchLibraryState.query = query.value;
+      renderResearchLibrary();
+    }
+  });
+}
+
+function researchLibraryServiceCard() {
+  const state = researchLibraryState.serviceState;
+  const stateLabel = state === "connected" ? "Connected" : state === "offline" ? "Not reachable" : state === "unavailable" ? "Helper missing" : "Not checked";
+  const tone = state === "connected" ? "rl-tone-ok" : state === "offline" || state === "unavailable" ? "rl-tone-blocked" : "rl-tone-idle";
+  return `
+    <section class="detail-panel rl-service-card" data-rl-service-card="true">
+      <div class="rl-service-head">
+        <div>
+          <p class="eyebrow">Durable store</p>
+          <h3>Local library service</h3>
+        </div>
+        <span class="rl-pill ${tone}" data-rl-service-state="${escapeHtml(state)}">${escapeHtml(stateLabel)}</span>
+      </div>
+      <p class="research-panel-copy">
+        Uploaded reports are stored outside Git as research evidence and are readable only through the
+        local service, which binds loopback and needs a token kept outside this page: start it with
+        <code>node scripts/research-library-server.js --serve-repo</code>, then read the token with
+        <code>Get-Content .local\\research-library\\service-token</code> and paste it here once.
+        The published page can browse the committed registry and download repo-backed documents, but it
+        cannot upload and it cannot read an uploaded report.
+      </p>
+      <div class="rl-service-form">
+        <label>Endpoint<input id="researchLibraryEndpoint" type="text" value="${escapeHtml(researchLibraryState.serviceEndpoint || researchLibraryDefaultEndpoint)}" /></label>
+        <label>Token<input id="researchLibraryToken" type="password" value="${escapeHtml(researchLibraryState.serviceToken)}" autocomplete="off" /></label>
+        <button class="inspect-button" type="button" data-rl-connect="true">Save and check</button>
+      </div>
+      <p class="rl-service-detail" data-rl-service-detail="true">${escapeHtml(researchLibraryState.serviceDetail || "Not checked in this session.")}</p>
+    </section>
+  `;
+}
+
+function researchLibraryAssetChips(lib, catalog) {
+  const assets = lib.listAssets(catalog);
+  const buttons = assets.map(asset => {
+    const factors = asArray(asset.factors);
+    const active = asset.asset === researchLibraryState.asset;
+    const uploaded = factors.filter(factor => lib.normalizeFactorStatuses(factor).research === "uploaded").length;
+    const blocked = factors.filter(factor => lib.normalizeFactorStatuses(factor).research === "blocked").length;
+    return `
+      <button type="button" class="rl-asset-chip${active ? " active" : ""}" data-rl-asset="${escapeHtml(asset.asset)}">
+        <strong>${escapeHtml(asset.label || asset.asset)}</strong>
+        <span>${factors.length} factor${factors.length === 1 ? "" : "s"}${uploaded ? ` · ${uploaded} uploaded` : ""}${blocked ? ` · ${blocked} blocked` : ""}</span>
+      </button>
+    `;
+  }).join("");
+  return `<nav class="rl-asset-strip" aria-label="Assets" data-rl-assets="true">${buttons}</nav>`;
+}
+
+function researchLibraryProgressCards(lib, factors) {
+  const counts = lib.progressCounts(factors);
+  const researchParts = ["uploaded", "ready", "in_progress", "not_started", "blocked"]
+    .filter(key => counts.research[key])
+    .map(key => `${counts.research[key]} ${lib.RESEARCH_LABELS[key].toLowerCase()}`);
+  const reviewParts = ["accepted", "changes_requested", "pending"]
+    .filter(key => counts.review[key])
+    .map(key => `${counts.review[key]} ${lib.REVIEW_LABELS[key].toLowerCase()}`);
+  const backtestParts = ["tested", "queued", "not_tested"]
+    .filter(key => counts.backtest[key])
+    .map(key => `${counts.backtest[key]} ${lib.BACKTEST_LABELS[key].toLowerCase()}`);
+  return `
+    <section class="backtest-grid three-column rl-progress-grid" data-rl-progress="true">
+      ${renderBacktestKpiMetric("Factors", String(counts.total), "", "Factors carried by the selected asset filter")}
+      ${renderBacktestKpiMetric("Research", String(counts.research.uploaded + counts.research.in_progress), researchParts.join(" · "), "Uploaded and in-progress reports, then the rest of the research states")}
+      ${renderBacktestKpiMetric("Review", String(counts.review.accepted), reviewParts.join(" · "), "An uploaded report is not reviewed until a review is recorded")}
+      ${renderBacktestKpiMetric("Backtest", String(counts.backtest.tested), backtestParts.join(" · "), "An accepted hypothesis is not tested until a backtest is recorded")}
+    </section>
+  `;
+}
+
+function researchLibraryFilterRow(lib, catalog, factors) {
+  const groups = Array.from(new Set(factors.map(factor => String(factor.group || "")))).filter(Boolean).sort();
+  const options = (values, labels, current) => [`<option value="all"${current === "all" ? " selected" : ""}>All</option>`]
+    .concat(values.map(value => `<option value="${escapeHtml(value)}"${current === value ? " selected" : ""}>${escapeHtml(labels ? labels[value] : value)}</option>`))
+    .join("");
+  const filtered = lib.filterFactors(catalog, {
+    asset: researchLibraryState.asset,
+    group: researchLibraryState.group,
+    research: researchLibraryState.research,
+    review: researchLibraryState.review,
+    backtest: researchLibraryState.backtest,
+    query: researchLibraryState.query
+  });
+  return `
+    <section class="detail-panel rl-filter-card" data-rl-filters="true">
+      <div class="rl-filter-grid">
+        <label>Family<select data-rl-filter="group" data-rl-filter-name="group">${options(groups, null, researchLibraryState.group)}</select></label>
+        <label>Research<select data-rl-filter="research">${options(lib.RESEARCH_STATUSES, lib.RESEARCH_LABELS, researchLibraryState.research)}</select></label>
+        <label>Review<select data-rl-filter="review">${options(lib.REVIEW_STATUSES, lib.REVIEW_LABELS, researchLibraryState.review)}</select></label>
+        <label>Backtest<select data-rl-filter="backtest">${options(lib.BACKTEST_STATUSES, lib.BACKTEST_LABELS, researchLibraryState.backtest)}</select></label>
+        <label>Search<input type="search" data-rl-query="true" value="${escapeHtml(researchLibraryState.query)}" placeholder="factor, blocker or dependency" /></label>
+      </div>
+      <p class="rl-filter-note" data-rl-filter-count="true">${filtered.length} of ${factors.length} factors shown</p>
+    </section>
+  `;
+}
+
+function researchLibraryFactorTable(lib, factors) {
+  if (!factors.length) {
+    return `<section class="detail-panel rl-table-card"><div class="empty-state">No factor matches the current filters.</div></section>`;
+  }
+  const rows = factors.map(factor => {
+    const statuses = lib.normalizeFactorStatuses(factor);
+    const weights = Number.isFinite(Number(factor.live_weight_coded)) || Number.isFinite(Number(factor.live_weight_rulebook))
+      ? `${Number.isFinite(Number(factor.live_weight_coded)) ? factor.live_weight_coded : "–"} / ${Number.isFinite(Number(factor.live_weight_rulebook)) ? factor.live_weight_rulebook : "–"}`
+      : displayDash();
+    const blockers = asArray(factor.blockers).concat(asArray(factor.dependencies));
+    return `
+      <tr class="rl-factor-row" data-rl-factor="${escapeHtml(factor.factor_id)}" tabindex="0" role="button" aria-label="Open ${escapeHtml(factor.label || factor.factor_id)}">
+        <td class="rl-cell-factor">
+          <strong>${escapeHtml(factor.label || factor.factor_id)}</strong>
+          <span class="rl-factor-id">${escapeHtml(factor.factor_id)}</span>
+        </td>
+        <td>${escapeHtml(String(factor.group || "").replace(/_/g, " "))}</td>
+        <td>${escapeHtml(factor.role || "")}</td>
+        <td class="rl-cell-weight"><span class="rl-muted">coded / rulebook</span><strong>${escapeHtml(String(weights))}</strong></td>
+        <td>${researchLibraryStatusPill("research", statuses.research)}</td>
+        <td>${researchLibraryStatusPill("review", statuses.review)}</td>
+        <td>${researchLibraryStatusPill("backtest", statuses.backtest)}</td>
+        <td class="rl-cell-doc">
+          <span>${escapeHtml(factor.doc_version || "undocumented")}</span>
+          <span class="rl-muted">${escapeHtml(factor.updated_at || "")}</span>
+        </td>
+        <td class="rl-cell-flags">
+          ${blockers.length
+            ? blockers.slice(0, 2).map(line => `<span class="rl-flag${asArray(factor.blockers).includes(line) ? " rl-flag-blocker" : ""}">${escapeHtml(line)}</span>`).join("")
+            : `<span class="rl-muted">none recorded</span>`}
+        </td>
+      </tr>
+    `;
+  }).join("");
+  return `
+    <section class="detail-panel rl-table-card" data-rl-factor-table-wrap="true">
+      <div class="rl-table-scroll">
+        <table class="rl-table" data-rl-factor-table="true">
+          <thead>
+            <tr>
+              <th scope="col">Factor</th>
+              <th scope="col">Family</th>
+              <th scope="col">Role</th>
+              <th scope="col">Live weight</th>
+              <th scope="col">Research</th>
+              <th scope="col">Review</th>
+              <th scope="col">Backtest</th>
+              <th scope="col">Document</th>
+              <th scope="col">Blockers and dependencies</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+    </section>
+  `;
+}
+
+function researchLibraryDocumentRow(lib, document) {
+  const latest = lib.latestVersion(document);
+  const version = latest ? Number(latest.version) : null;
+  const isRepo = document.storage === "repo_path";
+  const actions = [
+    `<button class="inspect-button rl-mini" type="button" data-rl-download="${escapeHtml(document.document_id)}" data-rl-version="${version || ""}" data-rl-storage="${escapeHtml(document.storage || "")}">Download</button>`
+  ];
+  if (isRepo && document.repo_path) {
+    actions.unshift(`<a class="inspect-button rl-mini" href="./${escapeHtml(document.repo_path)}" target="_blank" rel="noopener">View</a>`);
+  } else if (!isRepo) {
+    actions.unshift(`<span class="rl-muted rl-inline-note">view and download need the local service</span>`);
+  }
+  return `
+    <li class="rl-document-row" data-rl-document="${escapeHtml(document.document_id)}">
+      <div class="rl-document-head">
+        <strong>${escapeHtml(document.title || document.document_id)}</strong>
+        <span class="rl-pill rl-tone-idle">${escapeHtml(document.document_type || "document")}</span>
+      </div>
+      <div class="rl-document-meta">
+        <span>${escapeHtml(document.document_id)}</span>
+        <span>v${version === null ? "?" : version}${asArray(document.versions).length > 1 ? ` of ${asArray(document.versions).length}` : ""}</span>
+        <span>${escapeHtml(document.model || document.origin || "")}</span>
+        <span>${escapeHtml(latest?.registered_at || document.updated_at || "")}</span>
+        ${latest?.sha256 ? `<span class="rl-hash">sha256 ${escapeHtml(String(latest.sha256).slice(0, 12))}</span>` : ""}
+        ${latest?.bytes ? `<span>${escapeHtml(lib.formatBytes(latest.bytes))}</span>` : ""}
+      </div>
+      ${document.note ? `<p class="rl-document-note">${escapeHtml(document.note)}</p>` : ""}
+      ${document.hash_note ? `<p class="rl-document-note">${escapeHtml(document.hash_note)}</p>` : ""}
+      ${latest?.prompt_sha256 ? `<p class="rl-document-note">dispatched prompt sha256 ${escapeHtml(String(latest.prompt_sha256).slice(0, 16))}${latest.context_version ? ` · context ${escapeHtml(latest.context_version)}` : ""}</p>` : ""}
+      <div class="rl-document-actions">${actions.join("")}</div>
+    </li>
+  `;
+}
+
+function researchLibraryFactorDetail(lib, catalog, factor) {
+  const documents = researchLibraryDocumentsFor(factor.factor_id);
+  const assetLevel = researchLibraryDocumentList().filter(document => !document.factor_id && String(document.asset) === String(factor.asset));
+  const reports = documents.filter(document => document.document_type === "report");
+  const reviews = documents.filter(document => document.document_type === "review" || document.document_type === "issue_register");
+  const other = documents.filter(document => !["report", "review", "issue_register"].includes(document.document_type));
+  const tasks = lib.tasksCoveringFactor(catalog, factor.factor_id);
+  const statuses = lib.normalizeFactorStatuses(factor);
+  const list = (items, className = "rl-list") => items.length
+    ? `<ul class="${className}">${items.map(item => `<li>${escapeHtml(item)}</li>`).join("")}</ul>`
+    : `<p class="rl-muted">None recorded.</p>`;
+  const documentBlock = (items, emptyText) => items.length
+    ? `<ul class="rl-document-list">${items.map(document => researchLibraryDocumentRow(lib, document)).join("")}</ul>`
+    : `<p class="rl-muted">${escapeHtml(emptyText)}</p>`;
+
+  return `
+    <section class="detail-panel wide-panel rl-detail-card" data-rl-factor-detail="${escapeHtml(factor.factor_id)}">
+      <div class="rl-detail-head">
+        <div>
+          <p class="eyebrow">${escapeHtml(factor.asset_label || factor.asset)} · factor detail</p>
+          <h3>${escapeHtml(factor.label || factor.factor_id)}</h3>
+          <p class="rl-factor-id">${escapeHtml(factor.factor_id)}</p>
+        </div>
+        <button class="inspect-button" type="button" data-rl-back="true">Back to all factors</button>
+      </div>
+      <div class="rl-detail-status">
+        ${researchLibraryStatusPill("research", statuses.research)}
+        ${researchLibraryStatusPill("review", statuses.review)}
+        ${researchLibraryStatusPill("backtest", statuses.backtest)}
+        <span class="rl-pill rl-tone-idle">${escapeHtml(factor.role || "role unstated")}</span>
+        <span class="rl-pill rl-tone-idle">${escapeHtml(String(factor.group || "").replace(/_/g, " "))}</span>
+      </div>
+
+      <div class="rl-detail-grid">
+        <article class="rl-detail-block">
+          <p class="eyebrow">Brief</p>
+          <p>${escapeHtml(factor.brief || "No brief recorded.")}</p>
+          <p class="rl-muted">Document ${escapeHtml(factor.doc_version || "undocumented")} · updated ${escapeHtml(factor.updated_at || "unknown")}</p>
+        </article>
+        <article class="rl-detail-block">
+          <p class="eyebrow">Current rules</p>
+          ${list(asArray(factor.current_rules), "rl-list rl-rule-list")}
+          ${Number.isFinite(Number(factor.live_weight_coded)) || Number.isFinite(Number(factor.live_weight_rulebook))
+            ? `<p class="rl-muted">Live weight in the code / in the rulebook: ${escapeHtml(String(factor.live_weight_coded ?? "none"))} / ${escapeHtml(String(factor.live_weight_rulebook ?? "none"))}</p>`
+            : ""}
+          ${factor.lookback ? `<p class="rl-muted">Lookback ${escapeHtml(factor.lookback)}${factor.threshold ? ` · threshold ${escapeHtml(factor.threshold)}` : ""}</p>` : ""}
+        </article>
+        <article class="rl-detail-block">
+          <p class="eyebrow">Blockers and dependencies</p>
+          ${list(asArray(factor.blockers), "rl-list rl-blocker-list")}
+          ${list(asArray(factor.dependencies), "rl-list rl-dependency-list")}
+        </article>
+        <article class="rl-detail-block">
+          <p class="eyebrow">Sources</p>
+          ${list(asArray(factor.sources))}
+        </article>
+      </div>
+
+      <article class="rl-detail-block">
+        <p class="eyebrow">Research tasks covering this factor</p>
+        ${tasks.length
+          ? `<ul class="rl-task-list">${tasks.map(task => `
+              <li>
+                <strong>${escapeHtml(task.task_id)}</strong> · ${escapeHtml(task.title || "")}
+                <span class="rl-pill ${researchLibraryTone(task.status)}">${escapeHtml(lib.RESEARCH_LABELS[task.status] || task.status || "")}</span>
+                <span class="rl-muted">context ${escapeHtml(task.context_version || "")}</span>
+                <div class="rl-document-actions">
+                  <button class="inspect-button rl-mini" type="button" data-rl-copy-prompt="${escapeHtml(task.task_id)}">Copy prompt</button>
+                  <button class="inspect-button rl-mini" type="button" data-rl-context-package="${escapeHtml(task.task_id)}">Download context package</button>
+                </div>
+              </li>`).join("")}</ul>`
+          : `<p class="rl-muted">No task covers this factor yet.</p>`}
+      </article>
+
+      <article class="rl-detail-block">
+        <p class="eyebrow">Reports</p>
+        ${documentBlock(reports, "No report has been uploaded against this factor yet.")}
+        <p class="eyebrow rl-subhead">Reviews</p>
+        ${documentBlock(reviews, "No review has been registered against this factor yet.")}
+        <p class="eyebrow rl-subhead">Asset documents</p>
+        ${documentBlock(assetLevel, "No asset-level document is registered yet.")}
+      </article>
+
+      <article class="rl-detail-block">
+        <p class="eyebrow">History</p>
+        ${asArray(factor.history).length
+          ? `<ul class="rl-list rl-history-list">${asArray(factor.history).map(entry => `<li><span class="rl-muted">${escapeHtml(entry.date || "")}</span> ${escapeHtml(entry.note || entry.version || "")}</li>`).join("")}</ul>`
+          : `<p class="rl-muted">No history recorded beyond the documents above.</p>`}
+      </article>
+    </section>
+  `;
+}
+
+function researchLibraryUploadForm(lib, task) {
+  const defaultId = `${String(task.task_id).toLowerCase()}-return`;
+  const kindLabel = task.kind === "review" ? "review" : task.kind === "synthesis" ? "synthesis" : "report";
+  return `
+    <div class="rl-upload-form" data-rl-upload-form="${escapeHtml(task.task_id)}">
+      <p class="rl-muted">Upload the document this task returns. It is stored as ${escapeHtml(kindLabel)} evidence against task ${escapeHtml(task.task_id)} at context version ${escapeHtml(task.context_version || "")}, with the dispatched prompt hash recorded beside it. Uploading is not an approval.</p>
+      <div class="rl-upload-grid">
+        <label>Document id<input id="researchLibraryUploadId" type="text" value="${escapeHtml(defaultId)}" /></label>
+        <label>Title<input id="researchLibraryUploadTitle" type="text" value="${escapeHtml(`${task.task_id} return`)}" /></label>
+        <label>Model<input id="researchLibraryUploadModel" type="text" placeholder="the model label you actually used" /></label>
+        <label>File<input id="researchLibraryUploadFile" type="file" /></label>
+        <label>Note<input id="researchLibraryUploadNote" type="text" placeholder="optional" /></label>
+      </div>
+      <button class="inspect-button" type="button" data-rl-upload-submit="${escapeHtml(task.task_id)}">Upload ${escapeHtml(kindLabel)}</button>
+    </div>
+  `;
+}
+
+function researchLibraryTaskSection(lib, catalog, asset) {
+  const tasks = asArray(catalog.tasks).filter(task => String(task.asset) === String(asset.asset));
+  const coverage = lib.factorCoverage(catalog);
+  const assetFactors = asArray(asset.factors);
+  const assetFactorIds = assetFactors.map(factor => String(factor.factor_id));
+  const uncovered = coverage.uncovered.filter(entry => entry.asset === asset.asset);
+  if (!tasks.length) {
+    return `
+      <section class="detail-panel wide-panel rl-tasks-card" data-rl-tasks="true">
+        <div class="research-section-head">
+          <div><p class="eyebrow">Research tasks</p><h3>No task is published for ${escapeHtml(asset.label || asset.asset)} yet</h3></div>
+          <p class="research-panel-copy">${escapeHtml(asset.standfirst || "")} ${escapeHtml(asset.next_step || "")}</p>
+        </div>
+      </section>
+    `;
+  }
+  const rows = tasks.map(task => {
+    const covers = asArray(task.covers);
+    const open = researchLibraryState.uploadTaskId === task.task_id;
+    const taskDocuments = researchLibraryDocumentList().filter(document => String(document.task_id || "") === String(task.task_id));
+    return `
+      <li class="rl-task-row" data-rl-task="${escapeHtml(task.task_id)}">
+        <div class="rl-task-head">
+          <div>
+            <strong>${escapeHtml(task.task_id)}</strong>
+            <span class="rl-pill rl-tone-idle">${escapeHtml(String(task.kind || "").replace(/_/g, " "))}</span>
+            <span class="rl-pill ${researchLibraryTone(task.status)}">${escapeHtml(lib.RESEARCH_LABELS[task.status] || task.status || "")}</span>
+          </div>
+          <span class="rl-muted">context ${escapeHtml(task.context_version || "")} · prompt fingerprint ${escapeHtml(lib.fingerprint(task.prompt))}</span>
+        </div>
+        <p class="rl-task-title">${escapeHtml(task.title || "")}</p>
+        <p class="rl-muted">Covers ${covers.length} factor${covers.length === 1 ? "" : "s"}: ${escapeHtml(covers.join(", "))}</p>
+        ${asArray(task.depends_on).length ? `<p class="rl-muted">Depends on ${escapeHtml(asArray(task.depends_on).join(", "))}</p>` : ""}
+        ${asArray(task.gaps).length ? `<ul class="rl-list rl-gap-list">${asArray(task.gaps).map(gap => `<li>${escapeHtml(gap)}</li>`).join("")}</ul>` : ""}
+        ${taskDocuments.length ? `
+          <div class="rl-task-documents">
+            <p class="eyebrow">Documents registered against this task</p>
+            <ul class="rl-document-list">${taskDocuments.map(document => researchLibraryDocumentRow(lib, document)).join("")}</ul>
+          </div>` : ""}
+        <div class="rl-document-actions">
+          <button class="inspect-button rl-mini" type="button" data-rl-copy-prompt="${escapeHtml(task.task_id)}">Copy prompt</button>
+          <button class="inspect-button rl-mini" type="button" data-rl-context-package="${escapeHtml(task.task_id)}">Download context package</button>
+          <button class="inspect-button rl-mini" type="button" data-rl-upload-toggle="${escapeHtml(task.task_id)}">${open ? "Close upload" : "Upload report"}</button>
+          <span class="rl-muted rl-inline-note">manual ChatGPT task: nothing is sent to a model from this page</span>
+        </div>
+        ${open ? researchLibraryUploadForm(lib, task) : ""}
+      </li>
+    `;
+  }).join("");
+
+  return `
+    <section class="detail-panel wide-panel rl-tasks-card" data-rl-tasks="true">
+      <div class="research-section-head">
+        <div>
+          <p class="eyebrow">Research tasks</p>
+          <h3>${tasks.length} task${tasks.length === 1 ? "" : "s"} for ${escapeHtml(asset.label || asset.asset)}</h3>
+        </div>
+        <p class="research-panel-copy">Each task is self-contained: its id, the agreed session objective, the implementation and rulebook excerpts, the data actually reachable, the research prompt and the required output schema all travel together in the context package.</p>
+      </div>
+      <ul class="rl-task-list rl-task-list-full">${rows}</ul>
+      <p class="rl-muted" data-rl-coverage="true">Coverage: ${coverage.covered.filter(id => assetFactorIds.includes(id)).length} of ${assetFactors.length} ${escapeHtml(asset.asset)} factors are covered by a task; ${uncovered.length} are not.</p>
+      ${uncovered.length ? `<ul class="rl-list rl-gap-list">${uncovered.map(entry => `<li>${escapeHtml(entry.factor_id)} — ${escapeHtml(entry.label || "")}</li>`).join("")}</ul>` : ""}
+      <textarea id="researchLibraryPromptBuffer" class="rl-prompt-buffer" hidden rows="6" aria-label="Prompt copy buffer"></textarea>
+    </section>
+  `;
+}
+
+function researchLibraryEngineSection(lib, catalog, asset) {
+  const entries = asArray(catalog.engine_documents).filter(entry => String(entry.asset || asset.asset) === String(asset.asset));
+  if (!entries.length) return "";
+  const rows = entries.map(entry => {
+    const registered = entry.registered_document_id
+      ? researchLibraryDocumentList().find(document => String(document.document_id) === String(entry.registered_document_id))
+      : null;
+    const actions = [];
+    if (entry.repo_path) {
+      actions.push(`<a class="inspect-button rl-mini" href="./${escapeHtml(entry.repo_path)}" target="_blank" rel="noopener">View</a>`);
+    }
+    if (registered) {
+      const latest = lib.latestVersion(registered);
+      actions.push(`<button class="inspect-button rl-mini" type="button" data-rl-download="${escapeHtml(registered.document_id)}" data-rl-version="${latest ? latest.version : ""}" data-rl-storage="${escapeHtml(registered.storage || "")}">Download</button>`);
+    }
+    return `
+      <li class="rl-engine-row" data-rl-engine-document="${escapeHtml(entry.document_id)}">
+        <div class="rl-document-head">
+          <strong>${escapeHtml(entry.title || entry.document_id)}</strong>
+          <span class="rl-pill rl-tone-idle">${escapeHtml(entry.document_type || "document")}</span>
+          <span class="rl-pill ${researchLibraryTone(entry.status)}">${escapeHtml(lib.RESEARCH_LABELS[entry.status] || entry.status || "")}</span>
+        </div>
+        <div class="rl-document-meta">
+          <span>${escapeHtml(entry.document_id)}</span>
+          ${entry.task_id ? `<span>task ${escapeHtml(entry.task_id)}</span>` : ""}
+          <span>${escapeHtml(entry.updated_at || "")}</span>
+        </div>
+        ${entry.note ? `<p class="rl-document-note">${escapeHtml(entry.note)}</p>` : ""}
+        ${entry.hash_note ? `<p class="rl-document-note">${escapeHtml(entry.hash_note)}</p>` : ""}
+        ${actions.length ? `<div class="rl-document-actions">${actions.join("")}</div>` : ""}
+      </li>
+    `;
+  }).join("");
+  return `
+    <section class="detail-panel wide-panel rl-engine-card" data-rl-engine="true">
+      <div class="research-section-head">
+        <div>
+          <p class="eyebrow">Whole-engine evidence</p>
+          <h3>Reviews, synthesis and experiment results</h3>
+        </div>
+        <p class="research-panel-copy">These judge the engine rather than a single factor, so they live here instead of under a factor. The two independent reviews and the synthesis are registered separately, and a review or synthesis written before a factor report changed is flagged for reassessment.</p>
+      </div>
+      <ul class="rl-document-list rl-engine-list">${rows}</ul>
+    </section>
+  `;
+}
+
+function renderResearchLibrary() {
+  const panel = document.getElementById("researchLibraryPanel");
+  const updated = document.getElementById("researchLibraryUpdated");
+  if (!panel) return;
+  const lib = researchLibraryLib();
+  if (updated) {
+    updated.textContent = researchLibraryData
+      ? `Catalog ${researchLibraryData.generated_at || "undated"} · registry ${researchLibraryDocumentList().length} documents`
+      : "Loading research catalog...";
+  }
+  if (!lib) {
+    panel.innerHTML = `
+      <section class="detail-panel wide-panel rl-head-card">
+        <div class="empty-state">The shared research library helper (lib/research_library.js) did not load, so the library cannot be rendered. Nothing else on this dashboard is affected.</div>
+      </section>
+    `;
+    return;
+  }
+
+  const catalog = lib.normalizeCatalog(researchLibraryData || {});
+  if (researchLibraryData?.meta?.error || asArray(catalog.assets).length === 0) {
+    panel.innerHTML = `
+      <section class="detail-panel wide-panel rl-head-card">
+        <p class="eyebrow">Research Library</p>
+        <h3>Catalog unavailable</h3>
+        <div class="empty-state">${escapeHtml(researchLibraryData?.meta?.error || "data/research-library/catalog.json is missing or empty.")}</div>
+      </section>
+    `;
+    return;
+  }
+
+  const assets = lib.listAssets(catalog);
+  const asset = lib.getAsset(catalog, researchLibraryState.asset) || assets[0];
+  researchLibraryState.asset = asset.asset;
+  const factors = asArray(asset.factors);
+  const filtered = lib.filterFactors(catalog, {
+    asset: asset.asset,
+    group: researchLibraryState.group,
+    research: researchLibraryState.research,
+    review: researchLibraryState.review,
+    backtest: researchLibraryState.backtest,
+    query: researchLibraryState.query
+  });
+  const detailFactor = researchLibraryState.factorId
+    ? lib.listFactors(catalog, asset.asset).find(factor => String(factor.factor_id) === String(researchLibraryState.factorId))
+    : null;
+
+  const head = `
+    <article class="detail-panel wide-panel rl-head-card" data-rl-head="true">
+      <div class="research-section-head">
+        <div>
+          <p class="eyebrow">Research Library · ${escapeHtml(asset.label || asset.asset)}</p>
+          <h3>Asset, factor and evidence register</h3>
+        </div>
+        <p class="research-panel-copy">${escapeHtml(catalog.scope_note || "")}</p>
+      </div>
+      <p class="rl-standfirst">${escapeHtml(asset.standfirst || "")}</p>
+      <p class="rl-muted">Next step: ${escapeHtml(asset.next_step || "not stated")}</p>
+      ${asArray(asset.blockers).length ? `
+        <div class="rl-blocker-panel">
+          <p class="eyebrow">Open blockers</p>
+          <ul class="rl-list rl-blocker-list">${asArray(asset.blockers).map(blocker => `<li>${escapeHtml(blocker)}</li>`).join("")}</ul>
+        </div>` : ""}
+      ${asset.note ? `<p class="rl-muted">${escapeHtml(asset.note)}</p>` : ""}
+    </article>
+  `;
+  const message = researchLibraryState.message
+    ? `<p class="rl-message" data-rl-message="true">${escapeHtml(researchLibraryState.message)}</p>`
+    : "";
+
+  const body = detailFactor
+    ? researchLibraryFactorDetail(lib, catalog, detailFactor)
+    : [
+      researchLibraryProgressCards(lib, filtered),
+      researchLibraryFilterRow(lib, catalog, factors),
+      researchLibraryFactorTable(lib, filtered),
+      researchLibraryTaskSection(lib, catalog, asset),
+      researchLibraryEngineSection(lib, catalog, asset)
+    ].join("");
+
+  panel.innerHTML = `
+    <section class="rl-shell" data-rl-shell="true">
+      ${head}
+      ${researchLibraryServiceCard()}
+      ${researchLibraryAssetChips(lib, catalog)}
+      ${message}
+      ${body}
+    </section>
   `;
 }
 
@@ -13948,6 +14880,7 @@ function setTab(tab) {
   const researchProofMapView = document.getElementById("researchProofMapView");
   const backtestingDevelopmentView = document.getElementById("backtestingDevelopmentView");
   const factorEdgeLabView = document.getElementById("factorEdgeLabView");
+  const researchLibraryView = document.getElementById("researchLibraryView");
   const shadowLogicBacktestView = document.getElementById("shadowLogicBacktestView");
   const structureMapView = document.getElementById("structureMapView");
   const architectureView = document.getElementById("architectureView");
@@ -13960,6 +14893,7 @@ function setTab(tab) {
   if (researchProofMapView) researchProofMapView.classList.toggle("active-view", activeTab === "research-proof-map");
   if (backtestingDevelopmentView) backtestingDevelopmentView.classList.toggle("active-view", activeTab === "backtesting-development");
   if (factorEdgeLabView) factorEdgeLabView.classList.toggle("active-view", activeTab === "factor-edge-lab");
+  if (researchLibraryView) researchLibraryView.classList.toggle("active-view", activeTab === "research-library");
   if (shadowLogicBacktestView) shadowLogicBacktestView.classList.toggle("active-view", activeTab === "shadow-logic-backtest");
   if (structureMapView) structureMapView.classList.toggle("active-view", activeTab === "structure-map");
   if (architectureView) architectureView.classList.toggle("active-view", activeTab === "architecture");
@@ -13971,6 +14905,7 @@ function setTab(tab) {
   if (activeTab === "research-proof-map") renderResearchProofMap(researchProofMapData || {});
   if (activeTab === "backtesting-development") renderBacktestingDevelopmentTracker(backtestingDevelopmentData || {});
   if (activeTab === "factor-edge-lab") renderFactorEdgeLab(factorEdgeLabData || {});
+  if (activeTab === "research-library") { renderResearchLibrary(); maybeProbeResearchLibraryService(); }
   if (activeTab === "shadow-logic-backtest") renderShadowLogicBacktest(phase2ShadowBacktestData || {});
   if (activeTab === "architecture") {
     renderArchitecture();
@@ -14539,7 +15474,7 @@ async function fetchResearchDashboardData() {
 }
 
 async function loadDashboard() {
-  const [layer1Result, layer2Result, researchResult, factorEdgeLabResult, phase2ShadowBacktestResult, confidenceBandDeliveryResult, researchProofMapResult, backtestEngineResult, economicEventRefreshResult, economicEventsSourceResult, inputHealthResult, backtestingDevelopmentResult] = await Promise.allSettled([
+  const [layer1Result, layer2Result, researchResult, factorEdgeLabResult, phase2ShadowBacktestResult, confidenceBandDeliveryResult, researchProofMapResult, backtestEngineResult, economicEventRefreshResult, economicEventsSourceResult, inputHealthResult, backtestingDevelopmentResult, researchLibraryResult, researchLibraryDocumentsResult] = await Promise.allSettled([
     fetch(layer1Url, { cache: "no-store" }),
     fetch(layer2Url, { cache: "no-store" }),
     fetchResearchDashboardData(),
@@ -14551,7 +15486,9 @@ async function loadDashboard() {
     fetchLocalJson(economicEventRefreshUrl),
     fetchLocalJson(economicEventsSourceUrl),
     fetchLocalJson(inputHealthUrl),
-    fetchLocalJson(backtestingDevelopmentUrl)
+    fetchLocalJson(backtestingDevelopmentUrl),
+    fetchLocalJson(researchLibraryUrl),
+    fetchLocalJson(researchLibraryDocumentsUrl)
   ]);
 
   try {
@@ -14599,6 +15536,31 @@ async function loadDashboard() {
       meta: {
         error: backtestingDevelopmentResult.reason?.message || String(backtestingDevelopmentResult.reason)
       }
+    };
+  }
+
+  if (researchLibraryResult.status === "fulfilled") {
+    researchLibraryData = researchLibraryResult.value;
+  } else {
+    console.error(researchLibraryResult.reason);
+    researchLibraryData = {
+      schema_version: "research-library-catalog-v1",
+      meta: { error: researchLibraryResult.reason?.message || String(researchLibraryResult.reason) },
+      assets: [],
+      tasks: [],
+      engine_documents: [],
+      repo_documents: []
+    };
+  }
+
+  if (researchLibraryDocumentsResult.status === "fulfilled") {
+    researchLibraryDocuments = researchLibraryDocumentsResult.value;
+  } else {
+    console.error(researchLibraryDocumentsResult.reason);
+    researchLibraryDocuments = {
+      schema_version: "research-library-documents-v1",
+      meta: { error: researchLibraryDocumentsResult.reason?.message || String(researchLibraryDocumentsResult.reason) },
+      documents: []
     };
   }
 
@@ -14702,6 +15664,7 @@ async function loadDashboard() {
   renderBacktestEngine(backtestEngineData);
   renderBacktestingDevelopmentTracker(backtestingDevelopmentData);
   renderFactorEdgeLab(factorEdgeLabData);
+  renderResearchLibrary();
   renderShadowLogicBacktest(phase2ShadowBacktestData);
   renderWorkflowStatus(workflowStatus);
   renderOverviewStatusPanel();
@@ -14713,6 +15676,7 @@ async function loadDashboard() {
 }
 
 setupTabs();
+setupResearchLibraryControls();
 setupBacktestEvidenceControls();
 setupBacktestingDevelopmentControls();
 setupArchitectureControls();
