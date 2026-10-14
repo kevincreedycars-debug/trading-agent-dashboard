@@ -4839,3 +4839,23 @@ row, its assignment, its hard lines, the go-ahead gate and its first task all st
 14. Open and unchanged: the coordinator is still offline at its last snapshot and the queue still holds this lane's
     filings, so the register row and the assignment remain uncommitted in the central checkout for the coordinator to
     accept, reword or withdraw.
+
+### 13. The arrangement proved against the live site (added the same evening, filed as revision -070-r1)
+
+13.1 What the designer's folder holds is what the live site serves, checked page by page rather than asserted. Fetched
+over HTTPS and compared with the checkout after normalising the checkout's CRLF line endings to the LF the repository
+stores: index.html served 28,856 bytes, sha256 8c148a1f6b793a630549ca0bce9dd71ea79543f5f3a7a353cd322056348e0976, and
+the checkout hashes the same; usd-layer1-logic.html 86,554 /
+a983730e3a7e02635cad56d0dc1eb2e856f0ed097dd5d256e73eec78e48421f0, same; gold.html 36,231 /
+977520c2170e024313c1e1673a05df015ad6f2290803df192fea6c06f5b769ce, same; standing-dashboard.html 19,817 /
+0e8156e30524b3e444fce3063ceb72d04ac7bfe8cc7d1cb34e9f51b552b95480, same; dashboard-northstar.html 15,863 /
+54204a8cef5a3cae276b39787ca8876ffe4a47b6fdb46ca074afd62092e0c5b8, same. All five answered HTTP 200. The served and
+checkout byte counts differ on each page by exactly the number of CRLF endings, which is the working-tree convention
+rather than a content difference.
+
+13.2 What this settles and what it does not. It settles the thing the user's correction was about: the folder the
+designer edits contains the pages that are actually served, so a design change made there is a change to the live
+dashboard rather than to a look-alike. It does not prove the checkout equals the live tip at any later moment - the
+live-trading lane keeps adding data-file-only commits to main every few minutes - so the window must fetch and rebase
+before it publishes, and the comparison normalised line endings, so it establishes content equality rather than
+byte-for-byte file identity.
