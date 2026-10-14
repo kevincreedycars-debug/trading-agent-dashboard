@@ -4657,3 +4657,124 @@ each default named, and he answered all five in one line. Verbatim: "1. Yes 2. T
 14. Boundaries unchanged: read-only outside this worktree, nothing pushed, published, deployed, merged or refreshed,
     no credential used, no secret, sealed window, holdout or prospective observation read, no other worker touched
     and no subagent spawned. The monitor activity line was set to `paused` while this lane waits on the coordinator.
+## 2026-10-14 (night) - Astra is the ChatGPT frontier model, the briefs are already live, and the design window was built
+
+One user turn, verbatim, carrying three asks: *"no astra is relating to the chatgpt fronteir analysis model we are
+going to use it for the research tasks we have planned with the orchestartor but its being really slow I just need the
+resrach briefs to give it - preferably we have these uploaded to the live dashboard area we have recently added that
+discuss the resarch task"*, then *"Also can you give me the instructions to the other VSCs so that they reply to me in
+the condensed and simplifed format we speak here"*, then *"also I give you full permissions now to build you dont need
+to send to the coordinator, just double check it wont override anything so crerate me the new deepseek VSC for the
+designer"*. This is the first turn in which this lane has written anything outside `docs/strategy/`, and the third ask
+is why: the user granted the authority directly, waived the coordinator step and asked for a collision check first. It
+was taken as authority to create the window, not as authority to touch anything else - no page, no data, no other
+worker, no push, no publish.
+
+### 1. Astra, settled by the user
+
+Astra is the ChatGPT frontier analysis model the user drives himself for the research tasks planned with the
+coordinator; it is slow, which is why he wants the briefs in hand ready to paste. It is not a worker here and has no
+artefact of its own. That closes the only open word from submissions -067 and -068: the five USD session briefs are
+the set he means, exactly as section 1.2 of the build order treated them. Nothing about the briefs changed.
+
+### 2. The briefs are already live, so "upload" turned out to be "make them one click"
+
+Fetched over HTTPS this turn, all five HTTP 200, served sizes measured rather than inferred: A1
+`USD-SESSION-A1.price-and-risk.json` 3,630 bytes, A2 3,797, A3 2,823, A4 3,238, A5 3,364, all under
+`https://kevincreedycars-debug.github.io/trading-agent-dashboard/docs/research/usd-session/v1/assignments/`. The live
+site is served from the repository root of `main`, so those files are already reachable there and nothing needs
+uploading or publishing. What is missing is a clickable list on the page that discusses the research task - the USD
+Logic Dossier, `usd-layer1-logic.html`, whose top bar label on `main`'s `index.html` reads "USD Logic Dossier" (the
+other seven links read North Star Brief, Standing Dashboard, Gold, Backtest Flow, Call Map, USD Call Map, What moves
+gold). The root `.nojekyll` file switches Jekyll off, so there is no directory listing to browse to and a links block
+on that page is the only one-click route. Recorded in full, with every address and its honest limits, in
+`docs/strategy/RESEARCH_BRIEFS_FOR_ASTRA_20261014.md`.
+
+### 2b. The reply-style instruction for the other windows
+
+Recorded verbatim, with why it must be pasted rather than sent and which windows it goes to, in
+`docs/strategy/REPLY_STYLE_PASTE_IN_20261014.md`. The reason it is a paste: no channel here pushes an instruction into
+another window, and file notifications never wake an idle agent session, so the user's own message is the only route;
+step 5 of the block has each worker write the rule into its own startup notes so it survives a reload. It is a user
+instruction, so a worker may adopt it without a coordinator decision, and the coordinator still owns the canonical
+copy of the rule.
+
+### 3. The design window, built this turn after the collision check
+
+Order of work, so the check is provable rather than asserted:
+
+1. **Collision check first, before anything was written.** `Test-Path` false for `.local/worktrees/dashboard-design`,
+   `tools/dashboard-design-node`, `docs/orchestration/assignments/dashboard-design.md`,
+   `.local/orchestration/inbox/dashboard-design` and `.local/orchestration/outbox/dashboard-design`; `git branch -a
+   --list '*dashboard-design*'` empty; `git worktree list` carried no such entry; `Select-String` for
+   `dashboard-design` in the register matched nothing; the register read 18 workers, none of them a dashboard or
+   design lane; `origin/main` was `6cf4828` (2026-10-14T20:55:29+01:00, a live-trading data-only snapshot commit).
+2. **Worktree cut from production**: `git worktree add .local/worktrees/dashboard-design -b
+   workers/dashboard-design-20261014 origin/main`, HEAD `6cf4828`, 361 files checked out.
+3. **The three lane files, copied out of this lane's own reviewed build order by program
+   (`tmp/install-069.js`), not retyped**, and the script refuses if a target already exists:
+   `docs/orchestration/assignments/dashboard-design.md` 7,931 bytes / 103 CRLF / 0 bare LF / sha256
+   `8b32fc0bd7e2d7c22160f746d6fed6a08d179b8e6b48b37d2e5ec67c857f8e3e` (the appendix A body, with a provenance
+   header naming this lane and the user's words, a first-task section pointing at the five briefs, and a closing
+   provenance section saying the coordinator owns the file and may reissue it);
+   `tools/dashboard-design-node/DashboardDesign.code-workspace` 930 bytes / 24 CRLF / sha256
+   `9027dfc10dadc75a4bbdebffeedb626d3d7eb5c9b671a58903b2a0e766c84dbb` (appendix B, window title
+   "Dashboard Design | DeepSeek", own worktree first and the central folder second for reference);
+   `tools/dashboard-design-node/README.md` 1,897 bytes / 24 CRLF / sha256
+   `9df2cfb1a879b61286f0701689bd1079f38896e4954c938365753ccc94a45ea4` (appendix C).
+4. **The register row, inserted by text (`tmp/register-069.js`) so every other byte of the register is preserved**:
+   102,374 -> 104,693 bytes, workers 18 -> 19 with `dashboard-design` last, `JSON.parse` clean, bare LF 0 before and
+   after. The row is `mailbox_auto_connect: true`, branch `workers/dashboard-design-20261014`, assignment
+   `dashboard-design-001`, status `instructions_published_awaiting_worker`, baseline `6cf4828`, display name
+   "Dashboard Designer", and a `next` that records the user's authority for the creation, the collision check, the
+   first task (the briefs block) and the unchanged hard lines. Register sha256 now
+   `318b4bf3ad20eac1e133917a608ec5ee138299b8be637642135e4aa1d4a7662c`.
+5. **The window's own startup files, in its worktree** (`tmp/design-seed-069.js`): `AGENTS.md` 1,515 bytes / 12 CRLF,
+   copied byte-identical to `DASHBOARD_DESIGN_AGENT.md` and `.clinerules/dashboard-design.md` (the three share sha256
+   `21de6e0c8f985d0c...`), `.vscode/settings.json` 537 bytes with the teal title bar from appendix B, and a seeded
+   `docs/dashboard-design/README.md` 1,658 bytes that points at the assignment, the first task, the preview command,
+   the browser guards and the two canonical CLIs.
+6. **Local ignore rules, because `main` has none.** The design worktree is cut from `main`, and `main`'s `.gitignore`
+   carries no local-rules block - the `/tmp/`, `/.local/`, `/.vscode/` lines exist only on this lane's branch. A
+   per-worktree `info/exclude` was written first and did **not** take effect (`check-ignore` returned nothing, git
+   2.53.0), because `info/exclude` is read from the common directory: the working location is
+   `D:/trading-agent-dashboard-codex/.git/info/exclude`, which already carried `/tmp/`. A labelled block for
+   `/.clinerules/`, `/AGENTS.md`, `/DASHBOARD_DESIGN_AGENT.md`, `/STRATEGY_AGENT.md`, `/.vscode/` and `/tmp/` was
+   appended there, and the dead per-worktree copy was deleted. It is shared across the repository's worktrees, so the
+   effect was checked in both: the design worktree now shows only `?? docs/dashboard-design/` (its own notes seed,
+   left for it to commit) and this lane's worktree stayed clean.
+
+### 4. Evidence that the wiring works, rather than a claim that it should
+
+`node scripts/monitor-state.js snapshot` now returns **20 rows**, and the new row reads id `dashboard-design`, name
+"Dashboard Designer", assignment `dashboard-design-001`, `action_prompt` "Check your inbox and read your current
+assignment.", task "Tell dashboard-design: Check your mailbox and start dashboard-design-001", state "YOUR ACTION:
+wake agent", and resolves both the assignment file and the worktree folder - so the desktop monitor picks the window
+up from the register alone, as appendix C said it would. `node scripts/coordination.js check` still returns
+`errors: []`, with `pending: 5` (this lane's 065, 066, 067, 067-r1 and 068) and every other worker row unchanged in
+status.
+
+### 5. What the user has to do, and what is left open
+
+1. Open `tools/dashboard-design-node/DashboardDesign.code-workspace` in a new VS Code window, choose DeepSeek in the
+   task, paste the one-time message from appendix D of the build order, and run **Mailbox: Connect This Cline Worker**
+   once - the row carries `mailbox_auto_connect`, so it reconnects by itself after that.
+2. The first thing to put to him in that window is the briefs block on the USD Logic Dossier page, which answers the
+   first part of this turn's request; publishing stays behind his go-ahead in that window.
+3. Open for the coordinator, all recorded rather than decided here: the row and the assignment file were written by
+   this lane, not by it, and it may reissue, reword or withdraw both; `main`'s `.gitignore` still has no local-rules
+   block, so a future lane cut from `main` needs the same shared-exclude treatment or its startup files will show as
+   untracked; and the four older strategy submissions plus 068 are still undrained at `pending_review`, with the
+   controller's last snapshot at 2026-10-12T21:03Z.
+4. Backing out is one `git worktree remove` plus a revert of this lane's commit for the register row and the notes;
+   the two lane files are new and simply delete.
+
+### 6. Standing boundary, restated because this turn moved it
+
+Every earlier turn of this lane wrote only `docs/strategy/` in its own worktree plus ignored scratch. This turn wrote
+six things in the central folder (`docs/orchestration/assignments/dashboard-design.md`, the two
+`tools/dashboard-design-node/` files, the register row, the shared `.git/info/exclude` block) and five in the design
+worktree, and that is the whole of it: nothing was pushed, published, deployed, merged or refreshed, no page was
+touched, no credential was read, no other worker's folder was entered and no subagent was spawned. The central
+checkout's pre-existing modifications are exactly as they were found; the only central changes are the two new files
+and the added register row.
