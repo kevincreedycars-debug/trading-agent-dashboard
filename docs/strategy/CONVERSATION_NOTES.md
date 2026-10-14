@@ -4859,3 +4859,67 @@ dashboard rather than to a look-alike. It does not prove the checkout equals the
 live-trading lane keeps adding data-file-only commits to main every few minutes - so the window must fetch and rebase
 before it publishes, and the comparison normalised line endings, so it establishes content equality rather than
 byte-for-byte file identity.
+
+## 14. The designer's window launched, connected and started its own task (2026-10-14, on the user's instruction)
+
+14.1 The user's instruction, verbatim, in this window: "Launch the designer VSC with cline already setup". Read as:
+not only open the window, but have it arrive already bound to the mailbox bridge and already working on its
+assignment, rather than stopping at the two manual clicks the build order listed - choose DeepSeek, and run
+Mailbox: Connect This Cline Worker once. This turn does exactly that and records the evidence. It does not touch a
+page, the register, the assignment file or the served site.
+
+14.2 Route, and why each step was needed.
+
+1. Window: `code --new-window "D:\trading-agent-dashboard-codex\tools\dashboard-design-node\DashboardDesign.code-workspace"`
+   (VS Code 1.141.0, `C:\Users\A17\AppData\Local\Programs\Microsoft VS Code\bin\code.cmd`), exit 0. No window for that
+   workspace existed before. The multi-root workspace opens the registered checkout as its first folder and the central
+   folder second, which is exactly what the bridge binding requires.
+2. Connection: the register row already carries `mailbox_auto_connect: true`, and the extension takes its automatic path when
+   `saved === undefined && worker.mailbox_auto_connect === true`, so no click was needed. Binding also requires the first
+   folder to normalise to the row's `path` and the window to be trusted; both held, because the connection file appeared on
+   the first polling cycles and has kept advancing since.
+3. Task: the bridge never opens a Cline task on its own initiative, so the documented one-shot operator route was used -
+   `node scripts/mailbox-start-task.js arm dashboard-design` returned `armed: true`, event key
+   `dashboard-design:dashboard-design-001:assignment:36961228bdcca52e84e23bc21e35d59c0297d832ec2af79c84738a59352659be`,
+   prompt 786 bytes. `workerEvent` produced that event because the row's status is `instructions_published_awaiting_worker`,
+   none of this worker's submissions is pending review, no reply exists for it, and there is no activity file to suppress
+   the wake. The `arm` tool signs requests with the fixed string "harness lane <timestamp>"; that signature is the tool's
+   own, and the request file is the only place this action is named.
+
+14.3 Evidence, read back from the canonical files rather than from the window's UI.
+
+1. `start-task/dashboard-design.report.json`: `state: started`, detail empty, prompt_sha256
+   `ff0a3334b711c05d07ea2b4462897137d7db9023033af299101e7f49d5b20577`, requested_by
+   `harness lane 2026-10-14T20:53:31.897Z`, finished_at `2026-10-14T20:53:59.958Z`. `started` means Cline's exported
+   `startNewTask` was present and returned without error, so a task is open in that window on the assignment wake text.
+   As with `sendMessage`, that is a call that did not throw, not a delivery receipt.
+2. `start-task/dashboard-design.consumed.json`: the request was consumed exactly once, whatever the outcome.
+3. `dispatch/dashboard-design/ae3b3b34373ebc125f1123b1a0f348b8bebba101a8fa739e934e1c971dab6d0c.json`:
+   `state: sent_unconfirmed`, `task_start: true`, attempted_at `2026-10-14T20:53:59.957Z`, so the ordinary delivery path
+   will not send the same event text again.
+4. `connections/dashboard-design.json`: extension 0.3.0, `updated_at` `2026-10-14T20:56:14.840Z` and advancing every five
+   seconds, detail the same event key. Its state reads `sent_unconfirmed` because after a start the request file is gone
+   and the next tick finds the dispatch record already present - the dedup working, not a failure.
+5. The window itself: a new storage entry
+   `%APPDATA%\Code\User\workspaceStorage\f53ac6631e0cde9faf9097f7a2af1cf1\workspace.json` naming
+   `file:///d%3A/trading-agent-dashboard-codex/tools/dashboard-design-node/DashboardDesign.code-workspace`, created
+   21:54:28 local (20:54:28Z), after the launch.
+6. Nothing was written inside the design checkout: `git status --porcelain` there still reads only
+   `?? docs/dashboard-design/` (its notes seed, standing since the build) and HEAD is still `def7cde`, the live tip this
+   lane cut it to.
+
+14.4 Deliberately not claimed, and not done.
+
+1. No activity line for `dashboard-design`. `.local/orchestration/activity/dashboard-design.json` does not exist, so the
+   monitor shows that row as unreported until the designer's own window reports it. Writing another worker's activity from
+   this lane would put this lane's words under that worker's name, and pickup is established by the worker's own report.
+2. No provider change and no credential read. Cline's provider selection lives in the extension's own storage, which this
+   advisory lane does not read or change, so if the new task opens on a provider other than DeepSeek the user selects
+   DeepSeek in that task - the one click that remains.
+3. Boundary. The files this action added are the operator tool's own request, report and consumed record under
+   `.local/orchestration/start-task/`, plus the bridge's `connections/` and `dispatch/` records. The central folder, the
+   register row, the assignment file, the worktrees and the served site are untouched, and this lane's writes remain
+   `docs/strategy/` in this checkout.
+4. If the user wants that window silent, `Mailbox: Disconnect` in it persists and overrides automatic reconnection. The start
+   request is already consumed and cannot be replayed, so a second task start would have to be armed again.
+
