@@ -4517,3 +4517,81 @@ No submission was filed: this is a chat status answer and not a materially revis
 to submit every chat turn. Activity reporting: `monitor-state.js activity strategy paused "Answered the user's request
 for an update on the evening's development; waiting on the user"` wrote `.local/orchestration/activity/strategy.json`
 with state `paused`, so the monitor shows this window waiting on the user rather than working.
+## 2026-10-14 - User request: the "Astra" briefs confirmed, and a new design window on DeepSeek
+
+Verbatim, one user turn carrying two asks: *"confirm that it has the research briefs for Astra ready yet"*, and
+*"Also can you build another VSC that focuses purely on design changes on the live dashboard, also setup with
+deepseek."* The turn widened nothing in this advisory lane and names no new authority for it.
+
+### What is ready, and what the name "Astra" resolves to
+
+1. Five research briefs are published on `origin/main` under `docs/research/usd-session/v1/assignments/`, and every
+   one of them carries status exactly `READY_TO_SEND` (read file by file this turn):
+   `USD-SESSION-A1.price-and-risk.json` (slot `field-model-1`, seven price and risk cards),
+   `USD-SESSION-A2.rates-releases-calendar.json`, `USD-SESSION-A3.reviewer-a-mechanisms.json`,
+   `USD-SESSION-A4.reviewer-b-methodology.json`, `USD-SESSION-A5.synthesis.json`.
+2. No model is named in any of them: A1 says of its slot only "One frontier model fills the cards", and the JSON
+   carries no `model` field. Nothing has been sent - there is no model output and no filled card under
+   `docs/research/usd-session/v1/research-cards/` beyond the template.
+3. The corrected target is in place from today: `CHECKPOINT_3.md` (7,464 bytes, 2026-10-14) fixes the session at 05:00
+   `Europe/London` to 05:00 `Europe/London` on the next local date; the earlier 17:00 `America/New_York` endpoint is
+   withdrawn.
+4. The name "Astra" appears nowhere the coordinator owns: `git grep -in astra origin/main` returns no match, the
+   register has no such worker and the mailbox no such connection. The only two occurrences this lane can read are in
+   its own worktree's gold-research handoff and progress documents, where "Codex (Astra)" labels the reviewing agent.
+   The honest answer is therefore: the USD briefs are ready; if he means an agent carrying that name, no brief
+   anywhere is addressed to it, and one word settles which set he means.
+5. Waiting state, for completeness: `node scripts/coordination.js check` returned `errors: []` with two submissions
+   pending project-wide, both this lane's and both at `pending_review` with no reply file -
+   `20261008-strategy-layer2-provenance-correction-and-refreshes-065` and
+   `2026-10-09-strategy-layer1-pack-and-element-instructions-066`. The monitor's last snapshot (2026-10-12T21:03Z)
+   reported the controller offline, and the coordinator's activity line last read `working` on 2026-10-13.
+
+### The design window: what this lane could and could not do
+
+6. It cannot be built from here. This worker writes only `docs/strategy/` in its own worktree; the worktree, the
+   register row, the assignment, the workspace file and the README are coordinator writes, and the register and
+   `tools/` are central. No worktree was created, no register row written and no workspace file written by this turn.
+7. What was delivered instead is the complete build order,
+   `docs/strategy/CREATE_DASHBOARD_DESIGN_WINDOW_20261014.md`, whose appendix bodies are ready to copy verbatim - the
+   assignment text, the register row, the `.code-workspace` file, the README and the one-time paste-in message - with
+   the worktree command, the acceptance checks, the risks, and five open questions that each carry a default.
+8. Shape proposed: worker `dashboard-design`, assignment `dashboard-design-001`, branch
+   `workers/dashboard-design-20261014`, worktree `.local/worktrees/dashboard-design` cut from `origin/main`, own notes
+   in `docs/dashboard-design/`, DeepSeek selected in the Cline task (the register carries no provider field, as with
+   `strategy-2`), `mailbox_auto_connect`, status `instructions_published_awaiting_worker` and a teal window tint.
+9. Scope: design surface only - the thirteen top-level pages, `styles.css`, `script.js` where it lays out, the
+   `templates/*` and their builders together, `backtester/partials/shared_nav.html`, and the browser guards its own
+   change needs. Hard lines: no measured number, table cell, banner, as-of line, label meaning, route or file name;
+   the bar and rail contract frozen; one writer on the pages at a time.
+10. The one real decision, with a recommended default: the lane publishes itself, one purpose per push, only on the
+    user's go-ahead in that window, with the browser suite green in the same change and the served bytes named per
+    page afterwards (option A). The conservative alternative is that it never pushes and the coordinator's dashboard
+    lane does (option B); a lane that pushes freely is not recommended, because it removes the go-ahead gate the
+    register's own dashboard workstream already carries.
+
+### Measurements this turn rested on
+
+11. `origin/main` tip `72bbaf92c421316a69a0c8ca1ba29120bfea5b8f`, committed 2026-10-14T20:40:22+01:00.
+12. Thirteen top-level `.html` pages are served at that tip, with their sizes recorded in the build order;
+    `styles.css` 229,068 bytes, `script.js` 930,980 and `playwright-dashboard-smoke.js` 124,620.
+13. The 2026-10-03 navigation change shipped: `index.html` and `gold.html` both carry top-bar and side-rail markers
+    (69 and 67 matching lines), so the bar and rail are now the contract a design change must preserve rather than the
+    thing it replaces.
+14. The user's design reference sits in the repository root - `Design Reference/claude dash example.txt`, 94,941
+    bytes, a complete cream/ink/gold/navy dashboard with a declared token palette - and the build order names it as
+    the target look rather than leaving the lane to guess.
+15. Window pattern and commands: `tools/strategy-node/` (a `.code-workspace` plus a README carrying the one-time
+    message), `node scripts/test-local.js browser` or `npm run test:browser` for the guards, and
+    `npm run research-library`, which serves the repository locally so a page can be looked at before anything is
+    published.
+
+### Boundaries and filing
+
+16. Read-only outside this worktree: no page, stylesheet, script, template, builder, guard, register, assignment,
+    mailbox, controller or monitor file was touched; nothing was pushed, published, deployed, merged or refreshed; no
+    credential was used; no secret, sealed window, holdout or prospective observation was read; no other worker was
+    touched and no subagent was spawned.
+17. Filed as submission `2026-10-14-strategy-dashboard-design-window-067` at `ready_for_review` on this document's
+    bytes, with the register row and the workspace JSON machine-checked to parse, and the activity line written so the
+    monitor shows this window waiting on the user rather than working.
