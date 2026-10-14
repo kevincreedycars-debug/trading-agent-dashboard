@@ -6,6 +6,14 @@ with deepseek."* Advice only: this lane writes nothing outside `docs/strategy/`,
 edit the register, publish an assignment, write in `tools/`, or push. Every file body below is ready to copy
 verbatim; the coordinator (or the user by hand) is the one who creates it.
 
+**The user answered the five questions the same evening (2026-10-14), and every answer is the default this order
+already recommended:** yes to publishing from this window on his go-ahead, the whole site rather than the home page
+alone, yes to restyling the top bar and side rail with the labels and targets frozen, yes to running the browser
+guards and adding one for whatever it fixes, and yes to the shipped design reference as the target look applied page
+by page. Nothing in the instruction, the file bodies or the acceptance checks below changes as a result: the five
+answers are recorded verbatim in section 10, and section 6's option A and the assignment's step 4 are now the
+confirmed rule rather than a recommendation.
+
 ## 1. The two asks, and what is actually ready
 
 **1.1 The research briefs.** Five briefs are published on `origin/main` under
@@ -144,18 +152,24 @@ trading credential.
 **One writer at a time.** The coordinator's `dashboard` workstream and this lane must not push to the pages at the
 same time. If the workstream status is anything other than settled, the lane builds and waits.
 
-## 6. Publishing: the one real decision, with a recommended default
+## 6. Publishing: the one real decision, confirmed as option A on 2026-10-14
 
-- **A - the lane pushes, per-change go-ahead (recommended).** It builds in its own worktree cut from `origin/main`,
-  shows the user the page served from the worktree first (`npm run research-library`), and pushes only when the user
-  says go in that window: one purpose per push, browser suite green in the same change, served bytes named per page
-  (size and digest) after the push, rollback by one revert. This is what "design changes on the live dashboard"
-  means in practice, and the go-ahead gate is what the register's own dashboard text already demands.
+- **A - the lane pushes, per-change go-ahead (recommended, and the user's answer on 2026-10-14).** It builds in its
+  own worktree cut from `origin/main`, shows the user the page served from the worktree first
+  (`npm run research-library`), and pushes only when the user says go in that window: one purpose per push, browser
+  suite green in the same change, served bytes named per page (size and digest) after the push, rollback by one
+  revert. This is what "design changes on the live dashboard" means in practice, and the go-ahead gate is what the
+  register's own dashboard text already demands.
 - **B - the lane never pushes.** Every push stays with the coordinator's dashboard lane; the design lane only
   prepares the change and proves it. This is the shape every registered worker has today (they write their own notes
   only) and it is the safe fallback if the user does not want a second publishing window.
 - **C - the lane pushes freely.** Not recommended: it removes the per-change go-ahead the register's dashboard
   workstream already carries, and leaves two writers on production with no gate.
+
+**Settled.** The user answered A on 2026-10-14, asked as "does the new window publish to the live site itself, one
+change at a time and only after your go-ahead". So the per-change go-ahead above is the live rule, options B and C
+stay recorded only as the shapes that were weighed and set aside, and the one-writer rule in section 5 applies to
+every push.
 
 ## 7. Acceptance: how the reviewer knows the window is built
 
@@ -208,19 +222,33 @@ none of it from the live site:
 No page, stylesheet, script, template, builder, guard, register, assignment, mailbox file, controller or monitor file
 was changed by this lane, and nothing was pushed, published or deployed.
 
-## 10. Open questions for the user, each with the default if it goes unanswered
+## 10. The five questions, put to the user and answered on 2026-10-14
 
-1. Does the new window publish to the live site itself, one change at a time and only after your go-ahead
-   (recommended), or does every push stay with the central coordinator? **Default: it publishes, with your go-ahead
-   each time.**
-2. Is the whole public site in scope or only the dashboard home page to start? **Default: the whole site, starting
-   with the home page and the Gold page.**
-3. May it restyle the top bar and side rail while keeping every label and link exactly as they are, or leave the
-   navigation alone? **Default: restyling allowed, labels and targets frozen.**
-4. Should it run the browser guards and add a new one for whatever it fixes, in the same change? **Default: yes.**
-5. Should it follow your shipped design reference (`Design Reference/claude dash example.txt`) as the target look, or
-   keep the dashboard's current look and only tidy it? **Default: the reference is the target look, applied
-   page by page with your approval on each.**
+Each question went to the user in the same turn as this order; his reply was five short answers, recorded verbatim
+below. Every one of them is the default this order recommended, which is why the instruction, the file bodies and
+the acceptance checks above needed no rework - only the wording changed, from a default to a confirmed rule.
+
+1. "Does the new window publish to the live site itself, one change at a time and only after your go-ahead, or does
+   every push stay with the central coordinator?" Answer, verbatim: **"Yes"**. Settles section 6: option A is the
+   rule, the go-ahead gate stays, and the one-writer rule in section 5 applies to every push.
+2. "Is the whole public site in scope or only the dashboard home page to start?" Answer, verbatim: **"The whole
+   site"**. Settles section 5 and the assignment's own list: all thirteen top-level pages are in scope, the home page
+   and the Gold page first because they are read most, and the list is re-read from `git ls-tree origin/main` before
+   each change.
+3. "May it restyle the top bar and side rail while keeping every label and link exactly as they are, or leave the
+   navigation alone?" Answer, verbatim: **"Yes"**, meaning restyling is allowed and the labels and targets stay
+   frozen, which is hard line 3 in the assignment.
+4. "Should it run the browser guards and add a new one for whatever it fixes, in the same change?" Answer, verbatim:
+   **"Yes"**. Settles the assignment's steps 4 and 5 and acceptance check 7.5: no change is published without the
+   suite green in the same change and an assertion that fails if the fix drifts back.
+5. "Should it follow your shipped design reference as the target look, or keep the dashboard's current look and only
+   tidy it?" Answer, verbatim: **"Yes"**, meaning the reference is the target. Settles the design-language section of
+   the assignment: `Design Reference/claude dash example.txt` is read end to end before the first proposal, and it is
+   applied page by page rather than in one sweep.
+
+No question in this order is left unanswered, so nothing here is being run on an assumed default. The one name still
+unresolved is not a build question and is not decided by this order: "Astra" matches no artifact the coordinator
+owns, so the five `READY_TO_SEND` USD session briefs remain the only candidate set (section 1.2).
 
 ## Appendix A - the assignment file, ready to copy to `docs/orchestration/assignments/dashboard-design.md`
 
@@ -282,7 +310,9 @@ job is to bring the live dashboard toward that quality without changing what it 
 2. **Report first.** Tell the user what you found and what you would change, with the specific finding behind each
    change. Change nothing before he answers.
 3. **Preview before publish.** Serve the page from your own worktree so he can look at it before it is live.
-4. **Publish only on his go-ahead in this window.** One purpose per push, cut from `origin/main`, browser suite
+4. **Publish only on his go-ahead in this window.** He confirmed this gate on 2026-10-14, and also confirmed that
+   the whole site is in scope and the browser suite must stay green around every push. One purpose per push, cut from
+   `origin/main`, browser suite
    green in the same change (`node scripts/test-local.js browser`), then name what is served - size and digest per
    page - so the result is checkable from outside rather than asserted.
 5. **Guard what you fix.** Add a browser assertion that fails if the page drifts back to what you just fixed.

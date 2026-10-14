@@ -4595,3 +4595,65 @@ deepseek."* The turn widened nothing in this advisory lane and names no new auth
 17. Filed as submission `2026-10-14-strategy-dashboard-design-window-067` at `ready_for_review` on this document's
     bytes, with the register row and the workspace JSON machine-checked to parse, and the activity line written so the
     monitor shows this window waiting on the user rather than working.
+## 2026-10-14 (evening, later) - The user answered all five design-window questions: the build order stands as written
+
+The five questions in section 10 of `CREATE_DASHBOARD_DESIGN_WINDOW_20261014.md` were put to the user in chat with
+each default named, and he answered all five in one line. Verbatim: "1. Yes 2. The whole site 3. Yes 4. Yes 5. Yes".
+
+### What each answer settles
+
+1. Publishing - **yes**. The new window publishes to the live site itself, one change at a time, only on his go-ahead
+   in that window, which is option A in section 6: one purpose per push, browser suite green in the same change,
+   served bytes named per page afterwards, rollback by one revert, and the one-writer rule against the coordinator's
+   `dashboard` workstream still applies. Options B and C stay recorded only as the shapes weighed and set aside.
+2. Scope - **the whole site**. All thirteen top-level pages rather than the home page alone, with the home page and
+   the Gold page first because they are read most, and the list re-read from `git ls-tree origin/main` before each
+   change. This is what the assignment already says, so no list changed.
+3. Navigation - **yes**. The top bar and side rail may be restyled; every label, target and the brand string stay
+   frozen, which is hard line 3 in the assignment. Restyling in, re-labelling out.
+4. Guards - **yes**. The browser suite runs in the same change as the edit and the lane adds its own assertion for
+   whatever it fixes, so a drift back fails the suite rather than being argued about.
+5. Design reference - **yes**. `Design Reference/claude dash example.txt` is the target look, read end to end before
+   the first proposal and applied page by page rather than in one sweep.
+
+### Why almost nothing in the order had to change
+
+6. Every one of the five answers is the default the order already recommended, so no instruction, no file body, no
+   acceptance check, no risk answer and no hard line needed rework. What changed is the wording and the status of the
+   five: they are confirmed rules now, not defaults that would have been assumed if he had stayed silent. The order
+   keeps ten sections and appendices A to D, with the same appendix bodies ready to copy verbatim.
+
+### The edits made to the build order this turn
+
+7. A short block in the opening section records that the five answers arrived the same evening, lists them in plain
+   words, and says that the file bodies and acceptance checks stand unchanged.
+8. Section 6's heading now reads "confirmed as option A on 2026-10-14", its option A is marked as the user's answer
+   rather than a recommendation, and a closing "Settled" paragraph records that the go-ahead gate is the live rule.
+9. Appendix A's step 4 (publish only on his go-ahead) carries the confirmation and the whole-site scope, so the
+   assignment text a new window reads is not left implying anything is provisional.
+10. Section 10 was rewritten from open questions with defaults into the five questions with his answers verbatim and
+    one line on what each settles, plus a closing note that nothing in the order is running on an assumed default.
+    The one name still unresolved is not a build question: "Astra" matches no artifact the coordinator owns, so the
+    five `READY_TO_SEND` USD session briefs remain the only candidate set.
+
+### The -067 figure correction, recorded here as the revision promised
+
+11. The summary figure quoted in submission -067 for the build order was 27,138 bytes at sha256 `a960049e...`, taken
+    from the working file before its final one-line edit; the committed artifact is 27,160 bytes at sha256
+    `7641a670...`, and the difference is that one line and nothing else. Submission
+    `2026-10-14-strategy-dashboard-design-window-067-r1` corrects that figure and states that no commit, no finding
+    and no question moved. The notes figure quoted in -067 (424,701 bytes, sha256 `2f22c7e0...`) was correct when
+    filed.
+12. This entry is the first write to these notes since then, so that figure now moves too, as promised in -067-r1:
+    the paragraph above and this one are the record, and the corrected figures for both artifacts are in the
+    submission that follows this entry.
+
+### What is still outside this lane
+
+13. Nothing about the build itself: the worktree, the register row, the assignment file, the workspace file and the
+    README are coordinator writes and this worker writes only `docs/strategy/` in its own worktree. The deliverable
+    remains the order itself, now with every decision it needed already answered, so the coordinator can create the
+    lane without asking anything further.
+14. Boundaries unchanged: read-only outside this worktree, nothing pushed, published, deployed, merged or refreshed,
+    no credential used, no secret, sealed window, holdout or prospective observation read, no other worker touched
+    and no subagent spawned. The monitor activity line was set to `paused` while this lane waits on the coordinator.
