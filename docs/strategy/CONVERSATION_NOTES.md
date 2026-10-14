@@ -4778,3 +4778,64 @@ worktree, and that is the whole of it: nothing was pushed, published, deployed, 
 touched, no credential was read, no other worker's folder was entered and no subagent was spawned. The central
 checkout's pre-existing modifications are exactly as they were found; the only central changes are the two new files
 and the added register row.
+
+## 2026-10-14 (late) - The user rejected the separate design copy, and the window was rebuilt on the live line
+
+One user turn, verbatim: *"No the designer is meant to be connected into the main project and the main live dashboard not
+a separate instance"*. It rejects the shape this lane built a few hours earlier and nothing else: the window, its register
+row, its assignment, its hard lines, the go-ahead gate and its first task all stand.
+
+### What was wrong with the build
+
+1. The first build cut a branch `workers/dashboard-design-20261014` from `origin/main` at `6cf4828`, put it in
+   `.local/worktrees/dashboard-design`, and labelled the window's two folders "own worktree" and "Central project and
+   dashboard - reference". Read from the user's side that is a second copy of the site sitting beside the real one, with a
+   preview-then-publish gate between them.
+2. The fact that decided the rebuild is not a preference. **The local branch `main` is not the live line.** Measured this
+   turn: it is 969 commits behind and 8 commits ahead of `origin/main` - it is the old main-folder baseline lineage - so a
+   checkout on the branch named `main` would not have been the live dashboard either. The live site is served from the
+   repository root of `origin/main`, and that is the line to reach for.
+3. The repository already has the right pattern for working on it: `.local/live-trading-feed-publish` is a worktree
+   detached at the live tip of `origin/main`, which is how the live-trading lane publishes data-file-only commits to
+   `main` every few minutes.
+
+### What was changed, and the evidence for each change
+
+4. Branch `workers/dashboard-design-20261014` deleted (`was 6cf4828`), never pushed:
+   `git ls-remote origin refs/heads/workers/dashboard-design-20261014` returns nothing.
+5. The worktree was removed and re-cut **detached at the live tip of `origin/main`** (`def7cde`, 2026-10-14 21:35
+   +0100). `git worktree list` shows it as `def7cde (detached HEAD)`; its status is clean apart from its own untracked
+   `docs/dashboard-design/` notes folder, and the startup files it needs are ignored by the shared
+   `.git/info/exclude` block exactly as before.
+6. The assignment (`docs/orchestration/assignments/dashboard-design.md`, 7,931 -> 9,503 bytes) now says: line `main`;
+   the checkout is the live dashboard's own working tree, detached at the live tip of `origin/main`, not a copy and not a
+   sandbox; hard line 4 forbids re-pointing the checkout or force-pushing and names the live-trading lane's data-file
+   commits; step 3 previews with `node scripts/research-library-server.js --serve-repo`; step 4 is the fast-forward route
+   (`git fetch origin`, rebase onto the new tip, browser suite green, `git push origin HEAD:main`, then the served page
+   named by size and digest). Its provenance section records the rejection verbatim and the local-`main` trap.
+7. The window file now names its folders "Live dashboard (main) - your working folder" and "Project and coordination -
+   main folder", with no "reference" wording, and turns `git.autoRepositoryDetection` on because this window fetches,
+   rebases and pushes. The README carries the same correction in its one-time paste-in message and in its prose.
+8. The register row: `branch` `workers/dashboard-design-20261014` -> `main`, `baseline` `6cf4828` -> `def7cde`, and a
+   `next` that records the rejection verbatim, the deletion, the re-cut, the branch-reading note and the unchanged hard
+   lines.
+
+### Verification, measured after the rebuild
+
+9. `monitor-state.js snapshot` returns 20 rows, and the design row resolves both its assignment file and its folder.
+10. `coordination.js check --worker dashboard-design` returns `errors: []` with `pending: 0` for that worker and status
+    `instructions_published_awaiting_worker`; the register parses with 19 workers and exactly one `dashboard-design` row.
+11. The central diff for the whole build is the register row and nothing else: `git diff --stat
+    docs/orchestration/projects.json` reads 13 insertions, 0 deletions.
+12. `node --check` passed on the rebuild script before it ran, and every write reported its own byte count, CRLF count,
+    bare-LF count and sha256 in the run log.
+
+### Boundary
+
+13. The same boundary as the build itself: this turn wrote the three central files this lane created for the window,
+    re-cut the window's own checkout, and wrote `docs/strategy/` in this checkout. Nothing was pushed, published,
+    deployed or merged; no page, data file, other lane, credential or sealed window was touched; no subagent was spawned;
+    and the sandbox branch is deleted rather than left lying about.
+14. Open and unchanged: the coordinator is still offline at its last snapshot and the queue still holds this lane's
+    filings, so the register row and the assignment remain uncommitted in the central checkout for the coordinator to
+    accept, reword or withdraw.

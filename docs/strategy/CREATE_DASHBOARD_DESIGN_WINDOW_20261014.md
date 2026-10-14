@@ -14,6 +14,12 @@ by page. Nothing in the instruction, the file bodies or the acceptance checks be
 answers are recorded verbatim in section 10, and section 6's option A and the assignment's step 4 are now the
 confirmed rule rather than a recommendation.
 
+**Revised the same evening, after it was built:** the user rejected the separate-copy arrangement this order proposed,
+verbatim: *"No the designer is meant to be connected into the main project and the main live dashboard not a separate
+instance"*. Section 11 records the change and exactly what it supersedes; the published assignment, the two window
+files and the register row already carry it. Appendices B and C are superseded for the checkout, branch and folder
+wording only - their scope, hard lines, workflow and one-time message stand.
+
 ## 1. The two asks, and what is actually ready
 
 **1.1 The research briefs.** Five briefs are published on `origin/main` under
@@ -249,6 +255,45 @@ the acceptance checks above needed no rework - only the wording changed, from a 
 No question in this order is left unanswered, so nothing here is being run on an assumed default. The one name still
 unresolved is not a build question and is not decided by this order: "Astra" matches no artifact the coordinator
 owns, so the five `READY_TO_SEND` USD session briefs remain the only candidate set (section 1.2).
+
+## 11. Revision, 2026-10-14 (same evening): the separate copy was rejected, and the window now sits on the live line
+
+The user rejected the arrangement this order proposed, in chat, verbatim: *"No the designer is meant to be connected into
+the main project and the main live dashboard not a separate instance"*. Read with his first ask - "another VSC that
+focuses purely on design changes on the live dashboard" - the requirement is that the design window works on the live
+dashboard itself, not on a copy of it. Nothing else he has set is withdrawn: the go-ahead gate, the whole-site scope, the
+frozen bar and rail, the browser guards and the design reference all stand, and so do the window, its register row and its
+first task.
+
+1. **What was wrong.** The first build cut a branch `workers/dashboard-design-20261014` from `origin/main` at
+   `6cf4828`, put it in `.local/worktrees/dashboard-design`, and named the window's two folders "own worktree" and
+   "Central project and dashboard - reference". From the user's side that is a second copy of the site beside the real
+   one, with a preview-then-publish gate in between.
+2. **The fact that settled the shape, measured this turn.** The local branch `main` **is not the live line**: it is 969
+   commits behind and 8 commits ahead of `origin/main` (the old main-folder baseline lineage). The live site is served
+   from the repository root of `origin/main`, so the live line must always be reached as `origin/main`. The repository
+   already works on that line this way: `.local/live-trading-feed-publish` is a worktree detached at the live tip of
+   `origin/main`, which is how the live-trading lane publishes data-file-only commits to `main` every few minutes.
+3. **The checkout.** The branch was deleted (never pushed) and the worktree re-cut **detached at the live tip of
+   `origin/main`** - `def7cde` at the time of writing. It is the live dashboard's working tree, not a branch of its own
+   beside it.
+4. **The publish route** is unchanged in kind and sharper in words: one purpose per commit, `git fetch origin` and rebase
+   onto the new tip because that lane keeps adding data-file commits, the browser suite green in the same change
+   (`node scripts/test-local.js browser`), `git push origin HEAD:main`, then the served page named by size and digest.
+   Never force-push, never commit a data file, never re-point the checkout at another branch.
+5. **The window.** Neither folder is a copy or a "reference": the first is the live dashboard's own working folder, the
+   second is the project's coordination surface. `git.autoRepositoryDetection` is on, because this window now fetches,
+   rebases and pushes.
+6. **The register row.** `branch` reads `main` - the line this worker is on and publishes to - and `baseline` reads
+   `def7cde`; `next` records the rejection verbatim, the deletion, the re-cut and the local-`main` trap.
+7. **Verified afterwards.** The worktree is at the live tip and clean apart from its own notes folder; the register parses
+   with 19 workers and exactly one `dashboard-design` row, and the central diff for the whole build is that row and
+   nothing else (13 inserted lines, no deletions); `monitor-state.js snapshot` returns 20 rows with the design row
+   resolving its assignment file and its folder; `coordination.js check --worker dashboard-design` returns
+   `errors: []`; the sandbox branch is gone locally and was never on the remote.
+8. **What is superseded in this file.** Appendices B and C are superseded for the checkout, branch and folder wording,
+   and Appendix A's assignment body is superseded by the published file itself; everything else in them still describes
+   what shipped.
 
 ## Appendix A - the assignment file, ready to copy to `docs/orchestration/assignments/dashboard-design.md`
 
