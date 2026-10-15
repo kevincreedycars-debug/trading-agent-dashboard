@@ -166,6 +166,42 @@ async function main() {
     await page.fill("input[data-rl-query]", "");
     await page.waitForFunction(() => document.querySelectorAll("[data-rl-factor-table] tbody tr").length > 10);
 
+    // The factor table must have the whole width of its container, not the left half of a stray
+    // two-column grid. .wide-panel's grid-column: span 2 used to open a second implicit column
+    // inside .rl-shell, and every card that does not span it - this table among them - was laid out
+    // at half width with its nine columns crushed to about 39px. Text rects, not cell heights, tell
+    // a wrapped heading or pill apart from a single line one.
+    const tableLayout = await page.evaluate(() => {
+      const table = document.querySelector("[data-rl-factor-table]");
+      const wrap = table.closest("[data-rl-factor-table-wrap]");
+      const shell = document.querySelector("[data-rl-shell='true']");
+      const card = table.closest(".rl-table-card");
+      const columns = Array.from(table.querySelectorAll("thead th"));
+      const wraps = node => {
+        const range = document.createRange();
+        range.selectNodeContents(node);
+        return range.getClientRects().length > 1;
+      };
+      return {
+        shellTracks: getComputedStyle(shell).gridTemplateColumns.split(" ").length,
+        shellWidth: Math.round(shell.getBoundingClientRect().width),
+        wrapWidth: Math.round(wrap.getBoundingClientRect().width),
+        cardGridColumn: getComputedStyle(card).gridColumn,
+        narrowestColumn: Math.min(...columns.map(node => Math.round(node.getBoundingClientRect().width))),
+        wrappedHeadings: columns.filter(wraps).map(node => node.textContent.trim()),
+        wrappedPills: Array.from(table.querySelectorAll(".rl-pill")).filter(wraps).length
+      };
+    });
+    audit.factorTableLayout = tableLayout;
+    assert.equal(tableLayout.shellTracks, 1, "the library shell must be a single full-width column");
+    assert.ok(
+      Math.abs(tableLayout.wrapWidth - tableLayout.shellWidth) <= 1,
+      `the factor table card must fill the shell, saw ${tableLayout.wrapWidth} of ${tableLayout.shellWidth}px`
+    );
+    assert.ok(tableLayout.narrowestColumn >= 50, `no factor column may be crushed to a sliver, narrowest was ${tableLayout.narrowestColumn}px`);
+    assert.deepEqual(tableLayout.wrappedHeadings, [], `every factor table heading must stay on one line, wrapped: ${tableLayout.wrappedHeadings.join(", ")}`);
+    assert.equal(tableLayout.wrappedPills, 0, "a status pill inside the factor table must not break across lines");
+
     // The factor detail page carries the brief, the current rules, the sources and the history.
     await page.click("[data-rl-factor='fx.usd-session-momentum']");
     await page.waitForSelector("[data-rl-factor-detail='fx.usd-session-momentum']");

@@ -8664,7 +8664,14 @@ body {
    text surface wraps rather than clips.
    --------------------------------------------------------------------------- */
 
-.rl-shell { display: grid; gap: 18px; min-width: 0; }
+/* One full-width column, always. The cards in this shell include .wide-panel, whose
+   grid-column: span 2 belongs to the multi-column grids elsewhere on the dashboard. Inside a grid
+   with no explicit columns that span opened a second implicit column, so every card that does not
+   span it - the local service card, the asset strip, the filters and the factor table - was laid
+   out at half width, and the factor table's nine columns were crushed into the left half of the
+   page. Pinning one column and clearing the span keeps the shell a stack of full-width cards. */
+.rl-shell { display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; min-width: 0; }
+.rl-shell > * { grid-column: 1 / -1; }
 .rl-head-card, .rl-service-card, .rl-filter-card, .rl-table-card, .rl-tasks-card, .rl-engine-card, .rl-detail-card { padding: 18px 20px; min-width: 0; }
 .rl-standfirst { margin: 6px 0; color: var(--ink-mid); font-size: 0.98rem; overflow-wrap: anywhere; }
 .rl-muted { color: var(--ink-muted); font-size: 0.82rem; overflow-wrap: anywhere; }
@@ -8700,7 +8707,7 @@ body {
 .rl-table-scroll { overflow-x: auto; }
 .rl-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
 .rl-table th, .rl-table td { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--line); vertical-align: top; overflow-wrap: anywhere; }
-.rl-table th { font-size: 0.66rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--ink-muted); }
+.rl-table th { font-size: 0.66rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--ink-muted); white-space: nowrap; }
 .rl-cell-factor strong { display: block; }
 .rl-factor-row { cursor: pointer; }
 .rl-factor-row:hover, .rl-factor-row:focus-visible { background: rgba(94, 161, 255, 0.09); outline: none; }
@@ -8716,6 +8723,9 @@ body {
 .rl-tone-active { color: var(--blue); border-color: rgba(94, 161, 255, 0.4); background: rgba(94, 161, 255, 0.1); }
 .rl-tone-blocked { color: var(--red); border-color: rgba(255, 91, 110, 0.4); background: rgba(255, 91, 110, 0.1); }
 .rl-tone-idle { color: var(--ink-muted); border-color: var(--line); background: rgba(255, 255, 255, 0.03); }
+/* A status pill reads as one word group; inside the wide factor table it must not be broken
+   mid-word ("PEND / ING"), which is what the table's blanket overflow-wrap: anywhere was doing. */
+.rl-table .rl-pill { white-space: nowrap; }
 
 .rl-list { margin: 6px 0 0; padding-left: 18px; display: grid; gap: 4px; font-size: 0.84rem; overflow-wrap: anywhere; }
 .rl-blocker-list li { color: #ffc3cb; }
