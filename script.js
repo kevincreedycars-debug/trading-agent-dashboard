@@ -277,7 +277,9 @@ const researchLibraryState = {
   backtest: "all",
   query: "",
   factorId: "",
+  topicId: "",
   uploadTaskId: "",
+  uploadStage: "",
   serviceEndpoint: "",
   serviceToken: "",
   serviceState: "unknown",
@@ -7123,6 +7125,8 @@ function setupResearchLibraryControls() {
     if (assetButton) {
       researchLibraryState.asset = assetButton.dataset.rlAsset || "USD";
       researchLibraryState.factorId = "";
+      researchLibraryState.topicId = "";
+      researchLibraryState.uploadStage = "";
       researchLibraryState.uploadTaskId = "";
       researchLibraryState.message = "";
       renderResearchLibrary();
@@ -7163,11 +7167,45 @@ function setupResearchLibraryControls() {
       return;
     }
 
+    const topicButton = target.closest("[data-rl-topic]");
+    if (topicButton) {
+      researchLibraryState.topicId = topicButton.dataset.rlTopic || "";
+      researchLibraryState.factorId = "";
+      researchLibraryState.uploadStage = "";
+      researchLibraryState.message = "";
+      renderResearchLibrary();
+      return;
+    }
+
+    const stagePromptButton = target.closest("[data-rl-copy-stage-prompt]");
+    if (stagePromptButton) {
+      const [topicId, stageId] = String(stagePromptButton.dataset.rlCopyStagePrompt || "").split(":");
+      researchLibraryCopyStagePrompt(topicId, stageId);
+      return;
+    }
+
+    const stageUploadButton = target.closest("[data-rl-stage-upload]");
+    if (stageUploadButton) {
+      const [topicId, stageId] = String(stageUploadButton.dataset.rlStageUpload || "").split(":");
+      researchLibraryStageUpload(topicId, stageId, stageUploadButton.closest("[data-rl-upload-form]"));
+      return;
+    }
+
+    const viewButton = target.closest("[data-rl-view]");
+    if (viewButton) {
+      researchLibraryViewDocument(viewButton.dataset.rlView, viewButton.dataset.rlVersion);
+      return;
+    }
+
     const uploadToggle = target.closest("[data-rl-upload-toggle]");
     if (uploadToggle) {
-      const taskId = uploadToggle.dataset.rlUploadToggle;
-      researchLibraryState.uploadTaskId = researchLibraryState.uploadTaskId === taskId ? "" : taskId;
+      const key = uploadToggle.dataset.rlUploadToggle;
       researchLibraryState.message = "";
+      if (String(key).includes(":")) {
+        researchLibraryState.uploadStage = researchLibraryState.uploadStage === key ? "" : key;
+      } else {
+        researchLibraryState.uploadTaskId = researchLibraryState.uploadTaskId === key ? "" : key;
+      }
       renderResearchLibrary();
       return;
     }
@@ -7230,6 +7268,383 @@ function researchLibraryServiceCard() {
       </div>
       <p class="rl-service-detail" data-rl-service-detail="true">${escapeHtml(researchLibraryState.serviceDetail || "Not checked in this session.")}</p>
     </section>
+  `;
+}
+
+// The topic workflow, as the panel shows it: one topic, three numbered stages, and the metadata the reader
+// would otherwise have to assemble by hand. The page never sends a prompt anywhere and never scores anything.
+function researchLibraryDocumentSummaries() {
+  const lib = researchLibraryLib();
+  return lib ? lib.listDocuments(researchLibraryDocuments || {}) : [];
+}
+
+function researchLibraryTopicState(lib, topic) {
+  return lib.topicProgress(topic, { documents: researchLibraryDocumentSummaries() });
+}
+
+function researchLibraryStageDocumentId(topic, stageId) {
+  const slug = String(topic.slug || topic.topic_id || "topic").toLowerCase();
+  return `${slug}-${stageId === "red_team" ? "red-team" : stageId}`;
+}
+
+function researchLibraryStageKey(topic, stageId) {
+  return `${topic.topic_id}:${stageId}`;
+}
+
+// Copies the prompt file's own bytes, after checking them against the hash the catalogue publishes. The copy
+// is the same file the View link opens and the Download button writes, so a reader cannot paste a drifted
+// prompt without being told.
+async function researchLibraryCopyStagePrompt(topicId, stageId) {
+  const lib = researchLibraryLib();
+  const topic = lib ? lib.topicById(researchLibraryData || {}, topicId) : null;
+  const stage = topic ? lib.stageById(topic, stageId) : null;
+  if (!stage || !stage.prompt_path) {
+    researchLibraryMessage(`No ${stageId} prompt is published for that topic.`);
+    return;
+  }
+  try {
+    const response = await fetch(`./${stage.prompt_path}`, { cache: "no-store" });
+    if (!response.ok) throw new Error(`${response.status} ${response.statusText}`);
+    const bytes = new Uint8Array(await response.arrayBuffer());
+    const text = new TextDecoder().decode(bytes);
+    if (lib && globalThis.crypto?.subtle) {
+      const actual = await lib.sha256Hex(bytes);
+      if (actual !== stage.prompt_sha256) {
+        researchLibraryMessage(`The published ${stage.label} prompt does not match the hash in the catalogue (file ${actual.slice(0, 12)} vs catalogue ${String(stage.prompt_sha256).slice(0, 12)}), so it was not copied.`);
+        return;
+      }
+    }
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(text);
+      researchLibraryMessage(`${stage.label} prompt for "${topic.title}" copied (${text.length} characters, sha256 ${String(stage.prompt_sha256).slice(0, 12)}). Paste it into your own session; nothing was sent from this page.`);
+      return;
+    }
+    throw new Error("clipboard unavailable");
+  } catch (err) {
+    const holder = document.getElementById("researchLibraryPromptBuffer");
+    if (holder) {
+      holder.value = `see ${stage.prompt_path} in the checkout`;
+      holder.hidden = false;
+      holder.focus();
+      holder.select();
+      researchLibraryMessage(`Clipboard was unavailable, so the prompt path is selected in the box at the foot of the panel: ${stage.prompt_path}`);
+      return;
+    }
+    researchLibraryMessage(`Could not copy the ${stage.label} prompt: ${err?.message || err}`);
+  }
+}
+
+// Viewing is honest about where the bytes live: a published document opens from the checkout, an uploaded one
+// is read through the local service and opened from an ephemeral blob, and the message says so.
+async function researchLibraryViewDocument(documentId, version) {
+  const document = researchLibraryDocumentList().find(entry => String(entry.document_id) === String(documentId));
+  if (!document) {
+    researchLibraryMessage(`Document ${documentId} is not registered.`);
+    return;
+  }
+  const latest = asArray(document.versions).reduce((best, entry) => (best === null || Number(entry.version) > Number(best.version) ? entry : best), null);
+  const wanted = version ? Number(version) : Number(latest?.version || 0);
+  if (document.storage === "repo_path" && document.repo_path) {
+    window.open(`./${document.repo_path}`, "_blank", "noopener");
+    researchLibraryMessage(`${document.title} opened from the published file ${document.repo_path}.`);
+    return;
+  }
+  try {
+    const client = researchLibraryServiceClient();
+    if (!client) throw new Error("the shared research library helper did not load");
+    const result = await client.download(documentId, wanted);
+    const actual = researchLibraryLib() && globalThis.crypto?.subtle ? await researchLibraryLib().sha256Hex(result.bytes) : "";
+    if (actual && result.sha256 && actual !== result.sha256) {
+      researchLibraryMessage(`${document.title} failed its integrity check (${actual.slice(0, 12)} vs ${result.sha256.slice(0, 12)}), so it was not opened.`);
+      return;
+    }
+    const url = URL.createObjectURL(new Blob([result.bytes], { type: "text/plain;charset=utf-8" }));
+    window.open(url, "_blank", "noopener");
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
+    researchLibraryMessage(`${document.title} version ${wanted} opened from the bytes read through the local service. This view is not published and the address is temporary.`);
+  } catch (err) {
+    researchLibraryMessage(`${document.title} could not be viewed: ${err?.message || err} Uploaded bytes are readable only through the local service.`);
+  }
+}
+
+// One stage, one Markdown file. The dashboard writes the topic, the stage, the document type and the exact
+// parent version, so the reader supplies a file and a model label and nothing else. Nothing here approves
+// anything: the service records evidence and moves no status.
+async function researchLibraryStageUpload(topicId, stageId, form) {
+  const lib = researchLibraryLib();
+  const topic = lib ? lib.topicById(researchLibraryData || {}, topicId) : null;
+  if (!lib || !topic) {
+    researchLibraryMessage(`Topic ${topicId} is not in the catalogue.`);
+    return;
+  }
+  const progress = researchLibraryTopicState(lib, topic);
+  const stage = progress.stages.find(entry => entry.stage === stageId);
+  if (!stage) {
+    researchLibraryMessage(`Topic ${topicId} has no ${stageId} stage.`);
+    return;
+  }
+  const file = form?.querySelector("[data-rl-upload-file]")?.files?.[0];
+  if (!file) {
+    researchLibraryMessage(`Choose the one Markdown file the ${stage.label} stage returned.`);
+    return;
+  }
+  const model = String(form.querySelector("[data-rl-upload-model]")?.value || "").trim();
+  if (!model) {
+    researchLibraryMessage("Name the model or session that produced the document: the record is not complete without it.");
+    return;
+  }
+  if (stage.parent_stage && (!stage.parent_document_id || stage.parent_version === null)) {
+    researchLibraryMessage(`The ${stage.parent_stage} stage has no registered document yet, so this upload has nothing to attach to. Run the earlier stage first.`);
+    return;
+  }
+  const client = researchLibraryServiceClient();
+  if (!client) {
+    researchLibraryMessage("The shared research library helper did not load, so nothing can be registered.");
+    return;
+  }
+  const payload = {
+    // One stage has one document: a corrected return becomes the next version of it rather than a second
+    // document for the same stage, so a review keeps pointing at the report it was written against.
+    document_id: stage.document_id || researchLibraryStageDocumentId(topic, stage.stage),
+    asset: topic.asset || "USD",
+    factor_id: asArray(topic.factor_ids)[0] || null,
+    topic_id: topic.topic_id,
+    stage: stage.stage,
+    document_type: stage.document_type,
+    title: String(form.querySelector("[data-rl-upload-title]")?.value || "").trim() || `${topic.title} - ${stage.label}`,
+    model,
+    note: String(form.querySelector("[data-rl-upload-note]")?.value || "").trim(),
+    original_filename: file.name,
+    content_base64: lib.toBase64(new Uint8Array(await file.arrayBuffer()))
+  };
+  if (stage.stage === "adjudication") {
+    payload.open_findings = String(form.querySelector("[data-rl-upload-findings]")?.value || "")
+      .split("\n").map(line => line.trim()).filter(Boolean);
+  }
+  if (stage.parent_stage) {
+    payload.parent_document_id = stage.parent_document_id;
+    payload.parent_version = stage.parent_version;
+  }
+  researchLibraryMessage(`Uploading ${file.name} as stage ${stage.order} (${stage.label}) of ${topic.title}...`);
+  try {
+    const registration = await client.upload(payload);
+    await researchLibraryRefreshDocuments();
+    researchLibraryState.uploadStage = "";
+    const attached = stage.parent_stage ? `, attached to ${registration.parent_document_id || payload.parent_document_id} v${registration.parent_version || payload.parent_version}` : "";
+    researchLibraryMessage(`${file.name} registered as ${registration.document_id} v${registration.version} (sha256 ${String(registration.sha256).slice(0, 12)}, ${lib.formatBytes(registration.bytes)}${attached})${registration.duplicate ? ". These bytes were already registered, so no new version was written" : ""}. Evidence only: no factor status, weight, threshold or live call moved.`);
+  } catch (err) {
+    researchLibraryMessage(`${file.name} could not be registered: ${err?.message || err}`);
+  }
+}
+
+function researchLibraryTopicChips(lib, catalog, asset) {
+  const topics = lib.listTopics(catalog, asset.asset);
+  if (!topics.length) return "";
+  const buttons = topics.map(topic => {
+    const progress = researchLibraryTopicState(lib, topic);
+    const active = topic.topic_id === researchLibraryState.topicId;
+    const dispatch = topic.dispatch && topic.dispatch.state === "dispatched" ? "dispatched" : "not dispatched";
+    return `
+      <button type="button" class="rl-topic-chip${active ? " active" : ""}" data-rl-topic="${escapeHtml(topic.topic_id)}">
+        <strong>${escapeHtml(topic.title)}</strong>
+        <span>${progress.delivered_stages} of ${progress.total_stages} stages delivered · ${escapeHtml(dispatch)} · ${topic.factor_ids.length} factor${topic.factor_ids.length === 1 ? "" : "s"}</span>
+      </button>
+    `;
+  }).join("");
+  return `<nav class="rl-topic-strip" aria-label="Research topics" data-rl-topics="true">${buttons}</nav>`;
+}
+
+function researchLibraryStagePromptBlock(lib, topic, stage) {
+  const source = stage.prompt_source || {};
+  const sourceLabel = source.kind === "dispatched_brief"
+    ? `generated from the dispatched brief ${source.repo_path || ""}`
+    : "generated from the catalogue and this topic map";
+  return `
+    <div class="rl-stage-prompt" data-rl-stage-prompt="${escapeHtml(stage.stage)}">
+      <div class="rl-document-actions">
+        <button class="inspect-button rl-mini" type="button" data-rl-copy-stage-prompt="${escapeHtml(researchLibraryStageKey(topic, stage.stage))}">Copy prompt</button>
+        <a class="inspect-button rl-mini" href="./${escapeHtml(stage.prompt_path)}" target="_blank" rel="noopener">View prompt</a>
+      </div>
+      <p class="rl-muted">${escapeHtml(stage.prompt_path)} · sha256 <span class="rl-hash">${escapeHtml(String(stage.prompt_sha256).slice(0, 16))}</span> · ${escapeHtml(sourceLabel)}</p>
+      <p class="rl-muted">${escapeHtml(stage.deliverable)}</p>
+    </div>
+  `;
+}
+
+function researchLibraryStageAttachBlock(lib, topic, stage) {
+  if (!stage.parent_stage) return "";
+  const parentLabel = lib.STAGE_LABELS[stage.parent_stage] || stage.parent_stage;
+  if (!stage.parent_document_id) {
+    return `
+      <div class="rl-stage-attach" data-rl-stage-attach="true">
+        <p class="eyebrow">What to attach</p>
+        <p class="rl-muted">The ${escapeHtml(parentLabel)} stage has no registered document yet, so there is nothing to attach. Deliver stage ${escapeHtml(String(stage.order - 1))} first.</p>
+      </div>
+    `;
+  }
+  const sameVersion = stage.reviewed_version !== null && stage.reviewed_version === stage.parent_version;
+  return `
+    <div class="rl-stage-attach" data-rl-stage-attach="true">
+      <p class="eyebrow">What to attach</p>
+      <p class="rl-muted">Download the exact ${escapeHtml(parentLabel)} version this stage must judge, and attach that file. If your copy has a different sha256, the prompt tells you to stop rather than review a different version.</p>
+      <div class="rl-document-meta">
+        <span>${escapeHtml(stage.parent_document_id)}</span>
+        <span>v${escapeHtml(String(stage.parent_version))}</span>
+        <span class="rl-hash">sha256 ${escapeHtml(String(stage.parent_sha256).slice(0, 16))}</span>
+        ${sameVersion ? `<span>this stage judged v${escapeHtml(String(stage.reviewed_version))}</span>` : ""}
+      </div>
+      <div class="rl-document-actions">
+        <button class="inspect-button rl-mini" type="button" data-rl-download="${escapeHtml(stage.parent_document_id)}" data-rl-version="${escapeHtml(String(stage.parent_version))}" data-rl-storage="library_object">Download to attach</button>
+      </div>
+    </div>
+  `;
+}
+
+function researchLibraryStageDocumentBlock(lib, topic, stage) {
+  if (!stage.document_id) {
+    return `
+      <div class="rl-stage-document" data-rl-stage-document-empty="${escapeHtml(stage.stage)}">
+        <p class="eyebrow">Registered document</p>
+        <p class="rl-muted">No document is registered for this stage yet. ${stage.state === "awaiting_upload" ? `The ${escapeHtml(lib.STAGE_LABELS[stage.parent_stage] || stage.parent_stage)} stage is delivered, so this stage can be run now.` : "This stage can start once the earlier stage is delivered."}</p>
+      </div>
+    `;
+  }
+  const published = stage.storage === "repo_path";
+  const storageLine = published
+    ? "published with the site, so View and Download read the file in the checkout"
+    : "stored outside Git as evidence, so View and Download need the local service";
+  const stale = stage.state === "reassessment_required";
+  const reviewLine = stage.parent_stage
+    ? `<p class="rl-document-note">Judged ${escapeHtml(stage.reviewed_document_id || stage.parent_document_id)} v${escapeHtml(String(stage.reviewed_version === null ? "?" : stage.reviewed_version))}${stage.reviewed_sha256 ? ` (sha256 <span class="rl-hash">${escapeHtml(String(stage.reviewed_sha256).slice(0, 16))}</span>)` : ""}${stale ? ` - superseded, because the current version is v${escapeHtml(String(stage.parent_version))}, so this stage has to be run again` : ""}.</p>`
+    : "";
+  return `
+    <div class="rl-stage-document" data-rl-stage-document="${escapeHtml(stage.document_id)}">
+      <p class="eyebrow">Registered document</p>
+      <strong>${escapeHtml(stage.title || stage.document_id)}</strong>
+      <div class="rl-document-meta">
+        <span>${escapeHtml(stage.document_id)}</span>
+        <span>v${escapeHtml(String(stage.version))}${stage.versions_total > 1 ? ` of ${escapeHtml(String(stage.versions_total))}` : ""}</span>
+        <span class="rl-hash" data-rl-stage-hash="true">sha256 ${escapeHtml(String(stage.sha256).slice(0, 16))}</span>
+        <span>${escapeHtml(lib.formatBytes(stage.bytes))}</span>
+        <span>${escapeHtml(stage.registered_at || "")}</span>
+        <span>${escapeHtml(stage.model || "")}</span>
+      </div>
+      ${stage.note ? `<p class="rl-document-note">${escapeHtml(stage.note)}</p>` : ""}
+      ${reviewLine}
+      <p class="rl-document-note rl-muted">${escapeHtml(storageLine)}.</p>
+      <div class="rl-document-actions">
+        <button class="inspect-button rl-mini" type="button" data-rl-view="${escapeHtml(stage.document_id)}" data-rl-version="${escapeHtml(String(stage.version))}">View</button>
+        <button class="inspect-button rl-mini" type="button" data-rl-download="${escapeHtml(stage.document_id)}" data-rl-version="${escapeHtml(String(stage.version))}" data-rl-storage="${escapeHtml(stage.storage || "")}">Download</button>
+      </div>
+    </div>
+  `;
+}
+
+function researchLibraryStageUploadForm(lib, topic, stage) {
+  const connected = researchLibraryState.serviceState === "connected";
+  const key = researchLibraryStageKey(topic, stage.stage);
+  const open = researchLibraryState.uploadStage === key;
+  const defaultId = stage.document_id || researchLibraryStageDocumentId(topic, stage.stage);
+  const findings = stage.stage === "adjudication";
+  return `
+    <div class="rl-stage-upload" data-rl-upload-form="${escapeHtml(key)}">
+      <div class="rl-document-actions">
+        <button class="inspect-button rl-mini" type="button" data-rl-upload-toggle="${escapeHtml(key)}">${open ? `Close ${escapeHtml(stage.label)} upload` : `Upload ${escapeHtml(stage.label)} Markdown`}</button>
+        <span class="rl-muted rl-inline-note">one file per stage; the page writes the topic, the stage and the version judged</span>
+      </div>
+      ${open ? `
+        <div class="rl-upload-grid">
+          <label>Title<input type="text" data-rl-upload-title value="${escapeHtml(`${topic.title} - ${stage.label}`)}" /></label>
+          <label>Model or session<input type="text" data-rl-upload-model placeholder="the label you actually used" /></label>
+          <label>File<input type="file" data-rl-upload-file accept=".md,.markdown,.txt" /></label>
+          <label>Note<input type="text" data-rl-upload-note placeholder="optional" /></label>
+        </div>
+        ${findings ? `<label class="rl-muted">Unresolved findings, one per line<textarea rows="3" data-rl-upload-findings placeholder="each line is recorded as an open finding for central synthesis"></textarea></label>` : ""}
+        <p class="rl-muted">Document id ${escapeHtml(defaultId)}${stage.parent_stage ? `, attached to ${escapeHtml(stage.parent_document_id || "the parent stage")} v${escapeHtml(String(stage.parent_version))}` : ""}. Uploading records evidence: it is not an approval and it moves no factor status.</p>
+        <div class="rl-document-actions">
+          <button class="inspect-button" type="button" data-rl-stage-upload="${escapeHtml(key)}"${connected ? "" : " disabled"}>Register ${escapeHtml(stage.label)} document</button>
+          ${connected ? "" : `<span class="rl-muted">the local service must be connected before a document can be stored; start it, then save the token in the panel above</span>`}
+        </div>
+      ` : ""}
+    </div>
+  `;
+}
+
+function researchLibraryTopicStageCard(lib, topic, stage) {
+  const tone = stage.state === "delivered" ? "rl-tone-ok"
+    : stage.state === "awaiting_upload" ? "rl-tone-active"
+      : stage.state === "reassessment_required" ? "rl-tone-blocked" : "rl-tone-idle";
+  const findings = asArray(stage.open_findings);
+  return `
+    <article class="rl-stage-card is-${escapeHtml(stage.state)}" data-rl-stage="${escapeHtml(stage.stage)}" data-rl-stage-state="${escapeHtml(stage.state)}">
+      <div class="rl-stage-head">
+        <div class="rl-stage-identity">
+          <span class="rl-stage-number">${escapeHtml(String(stage.order))}</span>
+          <span class="rl-stage-title">${escapeHtml(stage.label)}</span>
+        </div>
+        <span class="rl-pill ${tone}" data-rl-stage-pill="${escapeHtml(stage.stage)}">${escapeHtml(stage.state_label)}</span>
+      </div>
+      ${researchLibraryStagePromptBlock(lib, topic, stage)}
+      ${researchLibraryStageAttachBlock(lib, topic, stage)}
+      ${researchLibraryStageDocumentBlock(lib, topic, stage)}
+      ${findings.length ? `<div class="rl-stage-findings" data-rl-stage-findings="true"><p class="eyebrow">Unresolved findings</p><ul class="rl-list">${findings.map(finding => `<li>${escapeHtml(finding)}</li>`).join("")}</ul></div>` : ""}
+      ${researchLibraryStageUploadForm(lib, topic, stage)}
+    </article>
+  `;
+}
+
+function researchLibraryTopicPage(lib, catalog, asset) {
+  const topics = lib.listTopics(catalog, asset.asset);
+  if (!topics.length) return "";
+  const topic = topics.find(entry => entry.topic_id === researchLibraryState.topicId) || topics[0];
+  researchLibraryState.topicId = topic.topic_id;
+  const progress = researchLibraryTopicState(lib, topic);
+  const factors = lib.listFactors(catalog, asset.asset);
+  const factorLabels = asArray(topic.factor_ids).map(factorId => {
+    const factor = factors.find(entry => entry.factor_id === factorId);
+    return factor ? `${factorId} (${factor.label})` : factorId;
+  });
+  const overlaps = asArray(topic.overlaps).map(id => {
+    const other = lib.topicById(catalog, id);
+    return other ? other.title : id;
+  });
+  return `
+    <section class="rl-topic-page" data-rl-topic-page="${escapeHtml(topic.topic_id)}">
+      <article class="detail-panel wide-panel rl-head-card" data-rl-topic-head="true">
+        <div class="research-section-head">
+          <div>
+            <p class="eyebrow">Topic · three stages</p>
+            <h3>${escapeHtml(topic.title)}</h3>
+          </div>
+          <p class="research-panel-copy">${escapeHtml(topic.summary || "")}</p>
+        </div>
+        <p class="rl-muted">Factor entries: ${escapeHtml(factorLabels.join(", "))}</p>
+        ${overlaps.length ? `<p class="rl-muted">Interacts with: ${escapeHtml(overlaps.join("; "))}</p>` : ""}
+        <div class="rl-topic-meta">
+          <span data-rl-topic-progress="${escapeHtml(topic.topic_id)}">${progress.delivered_stages} of ${progress.total_stages} stages delivered</span>
+          <span data-rl-next-stage="${escapeHtml(progress.next_stage || "none")}">next ${escapeHtml(progress.next_stage || "none")}</span>
+          <span data-rl-ready-for-synthesis="${progress.ready_for_synthesis}">ready for central synthesis: ${progress.ready_for_synthesis ? "yes" : "no"}</span>
+          <span>${escapeHtml(topic.dispatch && topic.dispatch.state === "dispatched" ? `dispatched under ${topic.dispatch.task_id}` : "not dispatched")}</span>
+        </div>
+        <p class="rl-muted" data-rl-topic-note="true">${escapeHtml(progress.note)}</p>
+        <p class="rl-muted">Next step: ${escapeHtml(topic.next_step || "")}</p>
+      </article>
+      <div class="rl-stage-list" data-rl-stage-list="true">
+        ${progress.stages.map(stage => researchLibraryTopicStageCard(lib, topic, stage)).join("")}
+      </div>
+    </section>
+  `;
+}
+
+// Everything technical stays here, below the workflow and clearly labelled: it supports the three stages and
+// is not the route a reader has to walk to run one.
+function researchLibrarySecondaryHead() {
+  return `
+    <div class="rl-secondary-head" data-rl-secondary-head="true">
+      <p class="eyebrow">Secondary</p>
+      <h3>Technical inventory, factor register and legacy records</h3>
+      <p class="research-panel-copy">Not the workflow. Below are the factor register with its three separate statuses, the legacy session tasks (kept as history and not the route to run), the whole-engine reviews and syntheses, the schemas and the closed studies. A pass through the three stages above needs none of it.</p>
+    </div>
   `;
 }
 
@@ -7371,7 +7786,12 @@ function researchLibraryDocumentRow(lib, document) {
   if (isRepo && document.repo_path) {
     actions.unshift(`<a class="inspect-button rl-mini" href="./${escapeHtml(document.repo_path)}" target="_blank" rel="noopener">View</a>`);
   } else if (!isRepo) {
-    actions.unshift(`<span class="rl-muted rl-inline-note">view and download need the local service</span>`);
+    actions.unshift(`<button class="inspect-button rl-mini" type="button" data-rl-view="${escapeHtml(document.document_id)}" data-rl-version="${version === null ? "" : escapeHtml(String(version))}">View</button>`);
+    // A document stored outside Git has no published bytes, so when the service is not connected the page says
+    // which of the two things is missing rather than hiding the action.
+    if (researchLibraryState.serviceState !== "connected") {
+      actions.unshift(`<span class="rl-muted rl-inline-note">view and download need the local service</span>`);
+    }
   }
   // A brief is the prompt: the same bytes that are downloaded can be copied straight into the reader's own
   // session, which is the one place the panel and the handoff bundle are meant to agree.
@@ -7569,8 +7989,8 @@ function researchLibraryTaskSection(lib, catalog, asset) {
     <section class="detail-panel wide-panel rl-tasks-card" data-rl-tasks="true">
       <div class="research-section-head">
         <div>
-          <p class="eyebrow">Research tasks</p>
-          <h3>${tasks.length} task${tasks.length === 1 ? "" : "s"} for ${escapeHtml(asset.label || asset.asset)}</h3>
+          <p class="eyebrow">Legacy research tasks</p>
+          <h3>${tasks.length} task${tasks.length === 1 ? "" : "s"} for ${escapeHtml(asset.label || asset.asset)}, kept as history</h3>
         </div>
         <p class="research-panel-copy">Each task is self-contained: its id, the agreed session objective, the implementation and rulebook excerpts, the data actually reachable, the research prompt and the required output schema all travel together in the context package.</p>
       </div>
@@ -7636,7 +8056,7 @@ function renderResearchLibrary() {
   const lib = researchLibraryLib();
   if (updated) {
     updated.textContent = researchLibraryData
-      ? `Catalog ${researchLibraryData.generated_at || "undated"} · registry ${researchLibraryDocumentList().length} documents`
+      ? `Catalog ${researchLibraryData.generated_at || "undated"} · ${asArray(researchLibraryData.topics).length} topics · registry ${researchLibraryDocumentList().length} documents`
       : "Loading research catalog...";
   }
   if (!lib) {
@@ -7681,7 +8101,7 @@ function renderResearchLibrary() {
       <div class="research-section-head">
         <div>
           <p class="eyebrow">Research Library · ${escapeHtml(asset.label || asset.asset)}</p>
-          <h3>Asset, factor and evidence register</h3>
+          <h3>Topics with three stages, and the evidence register behind them</h3>
         </div>
         <p class="research-panel-copy">${escapeHtml(catalog.scope_note || "")}</p>
       </div>
@@ -7702,6 +8122,8 @@ function renderResearchLibrary() {
   const body = detailFactor
     ? researchLibraryFactorDetail(lib, catalog, detailFactor)
     : [
+      researchLibraryTopicPage(lib, catalog, asset),
+      researchLibrarySecondaryHead(),
       researchLibraryProgressCards(lib, filtered),
       researchLibraryFilterRow(lib, catalog, factors),
       researchLibraryFactorTable(lib, filtered),
@@ -7714,6 +8136,7 @@ function renderResearchLibrary() {
       ${head}
       ${researchLibraryServiceCard()}
       ${researchLibraryAssetChips(lib, catalog)}
+      ${researchLibraryTopicChips(lib, catalog, asset)}
       ${message}
       ${body}
     </section>

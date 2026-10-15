@@ -430,3 +430,237 @@ test("the service answers an unknown route and a bad body rather than guessing",
     await new Promise(resolve => service.server.close(resolve));
   }
 });
+
+// ---------------------------------------------------------------------------------------------
+// Topics and the three numbered stages
+// ---------------------------------------------------------------------------------------------
+
+test("the catalogue carries six topics, three numbered stages each, over all twenty-five factors", () => {
+  const topics = ResearchLibrary.listTopics(catalog);
+  assert.equal(topics.length, 6, "the USD research map carries six topics");
+  const covered = new Set();
+  topics.forEach(topic => {
+    assert.equal(topic.asset, "USD");
+    assert.ok(topic.title && topic.summary, `${topic.topic_id} needs a title and a summary`);
+    assert.equal(topic.stages.length, 3, `${topic.topic_id} must carry three stages`);
+    assert.deepEqual(topic.stages.map(stage => stage.stage), ResearchLibrary.TOPIC_STAGES.slice());
+    assert.deepEqual(topic.stages.map(stage => stage.order), [1, 2, 3]);
+    assert.deepEqual(topic.stages.map(stage => stage.parent_stage), [null, "research", "red_team"]);
+    assert.deepEqual(topic.stages.map(stage => stage.document_type), ["report", "review", "synthesis"]);
+    assert.deepEqual(topic.stages.map(stage => stage.label), ["Research", "Red-team", "Adjudication"]);
+    assert.ok(topic.factor_ids.length >= 1, `${topic.topic_id} must name the factor entries it serves`);
+    topic.factor_ids.forEach(factorId => covered.add(factorId));
+    topic.overlaps.forEach(overlapId => assert.ok(ResearchLibrary.topicById(catalog, overlapId), `${overlapId} must resolve`));
+    assert.ok(topic.companions.length >= 1, `${topic.topic_id} should name the files it rests on`);
+  });
+  assert.equal(covered.size, 25, "every USD factor sits in a topic");
+  // One report can be evidence for more than one factor entry through its topic, which is a mapping rather
+  // than a second independent result.
+  assert.deepEqual(
+    ResearchLibrary.topicsCoveringFactor(catalog, "risk.vix-level-and-change-at-cutoff").map(topic => topic.topic_id),
+    ["usd-topic-vix-level-and-risk-regime"]
+  );
+});
+
+test("every stage prompt exists, matches its catalogue hash and stands on its own", () => {
+  const hosts = ["openai.com", "anthropic.com", "api.openai", "generativelanguage", "claude.ai"];
+  ResearchLibrary.listTopics(catalog).forEach(topic => {
+    topic.stages.forEach(stage => {
+      const abs = path.join(root, stage.prompt_path);
+      assert.ok(fs.existsSync(abs), `${stage.prompt_path} is missing`);
+      const text = fs.readFileSync(abs, "utf8");
+      assert.equal(sha256(text), stage.prompt_sha256, `${stage.prompt_path} hash drifted`);
+      assert.equal(Buffer.byteLength(text, "utf8"), stage.prompt_bytes);
+      assert.ok(text.startsWith("# "), `${stage.prompt_path} needs a title`);
+      assert.ok(text.includes(topic.topic_id), `${stage.prompt_path} must name its topic`);
+      assert.ok(text.includes("05:00 Europe/London"), `${stage.prompt_path} must state the cutoff`);
+      assert.ok(text.includes("## Prohibitions"), `${stage.prompt_path} must carry the prohibitions`);
+      assert.ok(text.includes("## What to return"), `${stage.prompt_path} must say what to return`);
+      const required = stage.stage === "research" ? "## What the report must cover"
+        : stage.stage === "red_team" ? "## What to attack, claim by claim" : "## What the adjudication must contain";
+      assert.ok(text.includes(required), `${stage.prompt_path} must carry ${required}`);
+      hosts.forEach(host => assert.equal(text.toLowerCase().includes(host), false, `${stage.prompt_path} must not name ${host}`));
+    });
+  });
+});
+
+test("the VIX stage 1 prompt is the dispatched assignment, not the legacy reviewer task", () => {
+  const topic = ResearchLibrary.topicById(catalog, "usd-topic-vix-level-and-risk-regime");
+  const research = ResearchLibrary.stageById(topic, "research");
+  const text = fs.readFileSync(path.join(root, research.prompt_path), "utf8");
+  assert.equal(research.prompt_source.kind, "dispatched_brief");
+  assert.equal(research.prompt_source.repo_path, "docs/research/handoff/usd/v1/deep-research/VIX_COMPREHENSIVE_REPORT_BRIEF.md");
+  assert.equal(
+    research.prompt_source.sha256,
+    sha256(fs.readFileSync(path.join(root, research.prompt_source.repo_path), "utf8"))
+  );
+  assert.ok(text.includes("USD-BASELINE-AUDIT-01"), "the dispatched task is named");
+  assert.ok(text.includes("A comprehensive, source-backed report investigating how VIX"), "the assignment is reproduced in full");
+  assert.ok(Buffer.byteLength(text, "utf8") > 20000, "the whole assignment is in the one file");
+  const a3 = ResearchLibrary.taskById(catalog, "USD-SESSION-A3");
+  assert.equal(text.includes(a3.prompt.slice(0, 60)), false, "stage 1 must not copy the legacy reviewer prompt");
+});
+
+test("the VIX topic reads research delivered, red-team awaiting a file and adjudication not started", () => {
+  const topic = ResearchLibrary.topicById(catalog, "usd-topic-vix-level-and-risk-regime");
+  const progress = ResearchLibrary.topicProgress(topic, registry);
+  const byStage = new Map(progress.stages.map(stage => [stage.stage, stage]));
+  const research = byStage.get("research");
+  assert.equal(research.state, "delivered");
+  assert.equal(research.state_label, "Delivered");
+  assert.equal(research.document_id, "usd-baseline-audit-01-vix-usd-report");
+  assert.equal(research.version, 1);
+  assert.equal(research.sha256, "e4151937411eb1e9235c21e4942327b2d24486e405887d70a90a8f5367eb381d");
+  assert.equal(research.bytes, 84056);
+  assert.equal(research.parent_stage, "");
+  const redTeam = byStage.get("red_team");
+  assert.equal(redTeam.state, "awaiting_upload");
+  assert.equal(redTeam.document_id, "", "the red-team file is not registered yet");
+  assert.equal(redTeam.parent_document_id, research.document_id);
+  assert.equal(redTeam.parent_version, 1);
+  assert.equal(redTeam.parent_sha256, research.sha256);
+  const adjudication = byStage.get("adjudication");
+  assert.equal(adjudication.state, "not_started");
+  assert.equal(adjudication.parent_document_id, "", "stage 3 waits for the review");
+  assert.equal(progress.delivered_stages, 1);
+  assert.equal(progress.total_stages, 3);
+  assert.equal(progress.next_stage, "red_team");
+  assert.equal(progress.ready_for_synthesis, false);
+  assert.deepEqual(progress.open_findings, []);
+  // The five topics that have not been dispatched have nothing registered at all.
+  ResearchLibrary.listTopics(catalog).slice(1).forEach(other => {
+    const otherProgress = ResearchLibrary.topicProgress(other, registry);
+    assert.equal(otherProgress.delivered_stages, 0, `${other.topic_id} must start empty`);
+    assert.equal(otherProgress.next_stage, "research");
+  });
+  // And delivery moved no factor status.
+  const counts = ResearchLibrary.progressCounts(ResearchLibrary.listFactors(catalog));
+  assert.equal(counts.research.uploaded, 0);
+  assert.equal(counts.research.ready, 22);
+  assert.equal(counts.review.accepted, 0);
+});
+
+test("a stage that judged an earlier version of its parent is flagged rather than settled", () => {
+  const topic = ResearchLibrary.topicById(catalog, "usd-topic-vix-level-and-risk-regime");
+  const documents = { documents: [
+    { document_id: "vix-stage-1", topic_id: topic.topic_id, stage: "research", asset: "USD", document_type: "report", storage: "library_object", object_sha256: "a".repeat(64), versions: [{ version: 1, sha256: "a".repeat(64), registered_at: "2026-10-15" }, { version: 2, sha256: "b".repeat(64), registered_at: "2026-10-18" }] },
+    { document_id: "vix-stage-2", topic_id: topic.topic_id, stage: "red_team", asset: "USD", document_type: "review", storage: "library_object", object_sha256: "c".repeat(64), parent_document_id: "vix-stage-1", parent_version: 1, parent_sha256: "a".repeat(64), versions: [{ version: 1, sha256: "c".repeat(64), registered_at: "2026-10-16" }] }
+  ] };
+  const progress = ResearchLibrary.topicProgress(topic, documents);
+  const redTeam = progress.stages.find(stage => stage.stage === "red_team");
+  assert.equal(redTeam.state, "reassessment_required");
+  assert.equal(redTeam.stale_parent_version, true);
+  assert.equal(redTeam.reviewed_version, 1);
+  assert.equal(redTeam.parent_version, 2);
+  assert.deepEqual(progress.flagged_for_reassessment, ["red_team"]);
+  assert.equal(progress.ready_for_synthesis, false);
+
+  // The same review against the current version, with an adjudication under it, reads as ready.
+  const current = JSON.parse(JSON.stringify(documents));
+  current.documents[1].parent_version = 2;
+  current.documents[1].parent_sha256 = "b".repeat(64);
+  current.documents.push({ document_id: "vix-stage-3", topic_id: topic.topic_id, stage: "adjudication", asset: "USD", document_type: "synthesis", storage: "library_object", object_sha256: "d".repeat(64), parent_document_id: "vix-stage-2", parent_version: 1, parent_sha256: "c".repeat(64), open_findings: ["the label instrument is still unverified"], versions: [{ version: 1, sha256: "d".repeat(64), registered_at: "2026-10-19" }] });
+  const settled = ResearchLibrary.topicProgress(topic, current);
+  assert.equal(settled.delivered_stages, 3);
+  assert.equal(settled.ready_for_synthesis, true);
+  assert.deepEqual(settled.open_findings, ["the label instrument is still unverified"]);
+  assert.equal(settled.unresolved_findings, 1);
+  assert.ok(settled.note.includes("unresolved finding"));
+});
+
+test("the store records the topic, the stage and the exact version a stage judged", () => {
+  const dir = tempDir("stage-store");
+  const store = createStore({ root: path.join(dir, "library"), registryPath: path.join(dir, "documents.json"), now: () => new Date("2026-10-15T00:00:00Z") });
+  const topicId = "usd-topic-vix-level-and-risk-regime";
+  const research = store.registerUpload({
+    document_id: "vix-stage-1", asset: "USD", factor_id: "live.f1-vix-level", topic_id: topicId, stage: "research",
+    document_type: "report", title: "Research", model: "Astra deep research", content_text: "# report\n"
+  }, catalog);
+  assert.equal(research.document.topic_id, topicId);
+  assert.equal(research.document.stage, "research");
+  assert.equal(research.document.parent_document_id, undefined);
+  assert.equal(research.document.task_id, null);
+
+  const review = store.registerUpload({
+    document_id: "vix-stage-2", asset: "USD", topic_id: topicId, stage: "red_team", document_type: "review",
+    title: "Red-team", model: "Astra review", parent_document_id: "vix-stage-1", parent_version: 1,
+    content_text: "# review\n"
+  }, catalog);
+  assert.equal(review.document.parent_document_id, "vix-stage-1");
+  assert.equal(review.document.parent_version, 1);
+  assert.equal(review.document.parent_sha256, research.sha256);
+  assert.equal(review.document.versions[0].parent_sha256, research.sha256);
+
+  const adjudication = store.registerUpload({
+    document_id: "vix-stage-3", asset: "USD", topic_id: topicId, stage: "adjudication", document_type: "synthesis",
+    title: "Adjudication", model: "Astra synthesis", parent_document_id: "vix-stage-2", parent_version: 1,
+    open_findings: ["label instrument unverified", "no measured base rate"], content_text: "# adjudication\n"
+  }, catalog);
+  assert.deepEqual(adjudication.document.open_findings, ["label instrument unverified", "no measured base rate"]);
+
+  // A second version of the research report keeps the first immutable, and the review still points at v1.
+  store.registerUpload({
+    document_id: "vix-stage-1", asset: "USD", topic_id: topicId, stage: "research", document_type: "report",
+    title: "Research", model: "Astra deep research", content_text: "# report v2\n"
+  }, catalog);
+  const stageOne = store.readRegistry().documents.find(entry => entry.document_id === "vix-stage-1");
+  assert.equal(stageOne.versions.length, 2);
+  assert.equal(stageOne.versions[0].sha256, research.sha256);
+  const manifestEntry = store.manifest().documents.find(entry => entry.document_id === "vix-stage-2");
+  assert.equal(manifestEntry.stage, "red_team");
+  assert.equal(manifestEntry.parent_version, 1);
+  assert.equal(store.readObject("vix-stage-1", 1).version.sha256, research.sha256);
+});
+
+test("the store refuses a stage upload that breaks the linkage", () => {
+  const dir = tempDir("stage-guard");
+  const store = createStore({ root: path.join(dir, "library"), registryPath: path.join(dir, "documents.json") });
+  const topicId = "usd-topic-vix-level-and-risk-regime";
+  const base = { document_id: "x", asset: "USD", title: "t", model: "m", content_text: "y" };
+
+  assert.throws(() => store.registerUpload({ ...base, topic_id: "not-a-topic", stage: "research", document_type: "report" }, catalog), /is not in the catalog/);
+  assert.throws(() => store.registerUpload({ ...base, topic_id: topicId, document_type: "report" }, catalog), /stage is required/);
+  assert.throws(() => store.registerUpload({ ...base, stage: "research", document_type: "report" }, catalog), /topic_id is required/);
+  assert.throws(() => store.registerUpload({ ...base, topic_id: topicId, stage: "red_team", document_type: "review" }, catalog), /must name the research document it judged/);
+  assert.throws(() => store.registerUpload({ ...base, topic_id: topicId, stage: "red_team", document_type: "synthesis", parent_document_id: "nope", parent_version: 1 }, catalog), /expects a review document/);
+  assert.throws(() => store.registerUpload({ ...base, topic_id: topicId, stage: "red_team", document_type: "review", parent_document_id: "nope", parent_version: 1 }, catalog), /is not registered/);
+  // The first stage of a topic has no parent, so an upload that names one is refused too.
+  assert.throws(() => store.registerUpload({ ...base, topic_id: topicId, stage: "research", document_type: "report", parent_document_id: "x", parent_version: 1 }, catalog), /has no parent document/);
+  // And an upload with no topic at all is still allowed for a legacy task, exactly as before.
+  const legacy = store.registerUpload({
+    document_id: "usd-session-a1-return", asset: "USD", task_id: "USD-SESSION-A1", document_type: "report",
+    title: "A1 return", model: "ChatGPT (test)", content_text: "{\"cards\":[]}"
+  }, catalog);
+  assert.equal(legacy.document.topic_id, null);
+  assert.equal(legacy.document.stage, null);
+});
+
+test("the validator refuses a mis-linked or unlinked stage document", () => {
+  const broken = JSON.parse(JSON.stringify(registry));
+  broken.documents.find(entry => entry.document_id === "usd-baseline-audit-01-vix-usd-report").topic_id = "usd-topic-nope";
+  assert.ok(ResearchLibrary.validateDocuments(broken, catalog).some(problem => problem.includes("unknown topic")));
+
+  const mismatched = JSON.parse(JSON.stringify(registry));
+  mismatched.documents.find(entry => entry.document_id === "usd-baseline-audit-01-vix-usd-report").document_type = "review";
+  assert.ok(ResearchLibrary.validateDocuments(mismatched, catalog).some(problem => problem.includes("expects a report document")));
+
+  const missingParent = JSON.parse(JSON.stringify(registry));
+  missingParent.documents.push({
+    document_id: "vix-review", asset: "USD", topic_id: "usd-topic-vix-level-and-risk-regime", stage: "red_team",
+    document_type: "review", storage: "library_object", public_download: false, object_sha256: "a".repeat(64),
+    versions: [{ version: 1, sha256: "a".repeat(64), registered_at: "2026-10-15" }]
+  });
+  assert.ok(ResearchLibrary.validateDocuments(missingParent, catalog).some(problem => problem.includes("must name the research document it judged")));
+
+  const honest = JSON.parse(JSON.stringify(missingParent));
+  Object.assign(honest.documents[honest.documents.length - 1], {
+    parent_document_id: "usd-baseline-audit-01-vix-usd-report",
+    parent_version: 1,
+    parent_sha256: "e4151937411eb1e9235c21e4942327b2d24486e405887d70a90a8f5367eb381d"
+  });
+  assert.deepEqual(ResearchLibrary.validateDocuments(honest, catalog), []);
+
+  const wrongVersion = JSON.parse(JSON.stringify(honest));
+  wrongVersion.documents[wrongVersion.documents.length - 1].parent_version = 7;
+  assert.ok(ResearchLibrary.validateDocuments(wrongVersion, catalog).some(problem => problem.includes("which is not registered")));
+});

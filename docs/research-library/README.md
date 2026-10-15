@@ -5,6 +5,48 @@ under research, in what state, against which task, with which documents, and it 
 task. It is an addition for research management only. It changes no live call, no trading feed, no n8n
 workflow, no dispatcher state and no production scoring path.
 
+## Topics and the three numbered stages
+
+The primary workflow is one topic at a time, and each topic runs three stages in order. The topic page sits
+above the factor register; the register, the legacy task list and the schemas are in a clearly labelled
+secondary section because a pass through the three stages needs none of them.
+
+- **A topic** is one research question. It names the factor entries its answer is evidence for (`factor_ids`),
+  the topics it interacts with (`overlaps`), the files it rests on (`companions` and the published briefs in
+  `packs`), and the questions it wants answered (`probes`). A factor may appear in one topic and be mapped
+  from another topic's answer; that mapping is recorded once, on the topic, rather than counted as a second
+  independent result.
+- **Stage 1, research** returns one Markdown report (`report`). **Stage 2, red-team** returns one Markdown
+  issue register (`review`) and must name the exact research version it judged. **Stage 3, adjudication**
+  returns one Markdown adjudication (`synthesis`) and must name the exact review it judged.
+- **Every stage card** shows the published prompt with its hash and a Copy prompt button, what to attach
+  (stage 2 and 3 name the parent document id, version and sha256 and offer Download to attach), the registered
+  document with View and Download, and a single-file upload that records the topic, the stage, the document
+  type and the parent version for the reader. Nothing else has to be authored by hand: no JSON, no split
+  reports, no reconstructed task context.
+- **Stage state is read from the registry, not asserted**: `not_started`, `awaiting_upload` (the parent stage
+  is delivered), `delivered`, or `reassessment_required` when the return judged a version the parent has since
+  replaced. A topic is ready for central synthesis only when all three stages are delivered and the chain
+  judged the current versions. Ready for synthesis says nothing about an edge: research accepted for synthesis
+  is not a validated trading rule.
+- **The prompts live in `docs/research/topics/usd/<topic-slug>/`** and are generated with the topic map by
+  `scripts/build_research_library.js`, so a prompt cannot drift from the catalogue: the catalogue carries each
+  prompt's sha256, the page verifies the file against that hash before it copies it, and `verify` fails if a
+  prompt file is edited on disk. The VIX topic's stage 1 prompt is the dispatched deep-research brief
+  reproduced in full, so the Copy prompt button on VIX pastes the VIX assignment and never the legacy
+  `USD-SESSION-A3` reviewer prompt.
+- **Six topics cover the twenty-five USD factor entries today.** The VIX topic
+  (`usd-topic-vix-level-and-risk-regime`) is the dispatched one; the stage prompts of the other five are
+  written and checked and can be released as a batch.
+
+Where the completed VIX red-team file goes: open the local page (`http://127.0.0.1:8791/index.html` when the
+service is started with `npm run research-library`), choose **Research Library**, keep **USD**, select the VIX
+topic, open **Upload Red-team Markdown** on stage 2, choose the single Markdown file the reviewer returned, put
+the model or session label in the model field (required) and press **Register Red-team document**. The page
+attaches it to research version 1 and refuses the upload if that version is not registered. The same route
+works for every other stage and topic. Uploading records evidence: it is not an approval and it moves no factor
+status, no weight, no threshold and no live call.
+
 ## What the panel gives the reader
 
 - **Eight asset categories**, USD first, then EUR, GBP, GOLD, SILVER, NQ, BTC, WTI. USD is populated; the
