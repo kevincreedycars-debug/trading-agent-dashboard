@@ -409,3 +409,142 @@ test("every brief carries the corrected shared facts", () => {
   const f1 = read(builder.pilotBriefRow().pack_path);
   assert.ok(f1.includes("repaired in the repository on 2026-10-11 and applied to the live workflow on 2026-10-12"), "the null-versus-unavailable repair carries both dates");
 });
+// The deep-research tier: the primary deliverable of the handoff and the three steps after it. The packs
+// are the card step, so these checks hold that the report is asked for first, that the sequence is in the
+// owner's order, and that the one sentence about the two-hypothesis limit says where that limit applies.
+test("the deep-research tier asks for the report first and states the four steps in order", () => {
+  const startHere = read(builder.DEEP_RESEARCH_START_HERE_PATH);
+  const reportBrief = read(builder.REPORT_BRIEF_PATH);
+  const docs = builder.deepResearchDocuments();
+  assert.equal(docs.length, manifest.counts.deep_research_documents);
+  assert.ok(manifest.counts.deep_research_documents >= 6, "the tier publishes its six documents");
+  for (const doc of docs) {
+    assert.ok(fs.existsSync(path.join(root, doc.path)), `${doc.path} must exist`);
+    assert.ok(read(doc.path).length > 4000, `${doc.path} is too thin to carry an assignment`);
+  }
+
+  assert.ok(manifest.deep_research.primary_deliverable === builder.PRIMARY_DELIVERABLE, "the manifest and the tier state one primary deliverable");
+  assert.ok(startHere.includes(builder.PRIMARY_DELIVERABLE), "the tier states the primary deliverable in full");
+  assert.ok(reportBrief.includes(builder.PRIMARY_DELIVERABLE), "the report brief asks for that deliverable in full");
+  assert.ok(startHere.includes("05:00 Europe/London") && reportBrief.includes(builder.HORIZON.end), "both state the session this programme is written for");
+
+  let cursor = -1;
+  for (const step of builder.DEEP_RESEARCH_STEPS) {
+    const at = startHere.indexOf(`${step.step}. ${step.name}`);
+    assert.ok(at > cursor, `step ${step.step} (${step.name}) must follow the step before it`);
+    cursor = at;
+  }
+  assert.equal(builder.DEEP_RESEARCH_STEPS.length, 4);
+
+  for (const path of [builder.REPORT_BRIEF_PATH, builder.NEUTRAL_CONTEXT_PACK_PATH, builder.RED_TEAM_BRIEF_PATH, builder.SYNTHESIS_BRIEF_PATH, builder.BACKTEST_BRIEF_PATH]) {
+    assert.ok(startHere.includes(path.replace(`${builder.OUT_DIR}/`, "")), `${path} must be named by the tier's start-here note`);
+  }
+  assert.ok(reportBrief.includes("Not a research card"), "the report brief keeps the card out of step 1");
+  assert.ok(reportBrief.includes(builder.pilotBriefRow().task_id), "the report registers against the task that covers the factor");
+  assert.ok(reportBrief.includes("## 3. What the report must cover"), "the report brief lists what the report has to cover");
+  assert.ok(/11\. Candidate relations, unranked/.test(reportBrief), "the discovery phase is asked for as many candidates as the sources support");
+  assert.ok(!reportBrief.includes("At most two programmable hypotheses per returned report"), "the two-hypothesis limit is not put on the report");
+});
+
+test("the two-hypothesis limit is stated once and scoped to the individual card", () => {
+  assert.ok(builder.HYPOTHESIS_LIMIT_SCOPE.includes("At most two programmable hypotheses per returned card"));
+  assert.ok(builder.HYPOTHESIS_LIMIT_SCOPE.includes("does not apply to the discovery phase"));
+  for (const key of ["start_here", "report_brief", "red_team_brief", "synthesis_brief"]) {
+    const path = manifest.deep_research[key];
+    assert.ok(read(path).includes(builder.HYPOTHESIS_LIMIT_SCOPE), `${path} must carry the same sentence about the limit`);
+  }
+  assert.ok(manifest.deep_research.hypothesis_limit_scope === builder.HYPOTHESIS_LIMIT_SCOPE, "the manifest repeats that sentence rather than paraphrasing it");
+  assert.ok(read(builder.START_HERE_PATH).includes(builder.PRIMARY_DELIVERABLE), "the bundle's own start-here note leads with the primary deliverable");
+});
+
+
+
+// The context pack is deliberately thin in argument and thick in facts. These checks hold both halves:
+// every fact it is allowed to carry is generated from the contract, the catalogue and the register, and
+// none of the fields written to steer a card answer appears in it - the whole point of the pack.
+test("the neutral context pack carries the facts and none of the steering fields", () => {
+  const pack = read(builder.NEUTRAL_CONTEXT_PACK_PATH);
+  const contract = builder.sessionContract();
+  assert.deepEqual(builder.contractAgreementProblems(), [], "the bundle and the session contract must agree");
+
+  assert.ok(pack.includes(builder.SESSION_CONTRACT_PATH), "the pack names the contract it is read from");
+  assert.ok(pack.includes(builder.HORIZON.start) && pack.includes(builder.HORIZON.end), "the pack states the session at both ends");
+  assert.ok(pack.includes(contract.cutoff.asof_rule), "the pack states the as-of rule");
+  assert.ok(pack.includes("## 0. Why this pack exists and what it deliberately leaves out"), "the pack states its own exclusions");
+  assert.ok(pack.includes("It deliberately excludes"), "the pack says what it left out rather than leaving the omission to be guessed");
+  for (const row of builder.unresolvedDecisionRows(contract)) {
+    assert.ok(pack.includes(row.detail), `the open decision ${row.decision} reaches the pack with the contract's own words`);
+    assert.ok(pack.includes(row.state), `the open decision ${row.decision} reaches the pack with its state`);
+  }
+
+  for (const factor of builder.LIVE_FACTORS) {
+    assert.ok(pack.includes(factor.factor_id), `${factor.factor_id} must appear in the factor table`);
+    assert.ok(pack.includes(factor.rule), `${factor.factor_id}: the deployed rule is stated as the code reads it`);
+    assert.ok(pack.includes(`24h weight ${codedWeights24h[`F${factor.order}`]} coded`), `${factor.factor_id}: the coded 24h weight is stated`);
+  }
+  assert.ok(pack.includes("| rulebook v2.1 |"), "the rulebook vector is stated");
+  assert.ok(pack.includes(builder.AVAILABILITY_BLOCK.split("\n")[0]), "the availability facts reach the pack");
+
+  // The steering fields: every one of them is a question, a prompt or a proposed answer written for a card,
+  // and the pack may not carry any of them.
+  const steering = [];
+  for (const row of briefRows) {
+    steering.push(...row.questions);
+    if (row.register && row.register.pack) {
+      const hints = row.register.pack;
+      for (const field of ["questions", "counterarguments", "hypothesis_seed", "falsification", "gap", "timing"]) {
+        if (Array.isArray(hints[field])) steering.push(...hints[field]);
+        else if (typeof hints[field] === "string") steering.push(hints[field]);
+      }
+    }
+    if (row.brief) {
+      for (const [field, value] of Object.entries(row.brief)) {
+        if (field === "factor_id" || field === "card_family") continue;
+        if (Array.isArray(value)) steering.push(...value);
+        else if (typeof value === "string" && value.length > 30) steering.push(value);
+      }
+    }
+  }
+  assert.ok(steering.length > 60, "there is steering text to leave out");
+  for (const text of steering) {
+    assert.ok(!pack.includes(text), `the pack must not carry steering text: ${text.slice(0, 60)}...`);
+  }
+  for (const phrase of ["hypothesis_seed", "## Hypothesis", "### Hypothesis", "rejection_test", "falsification_test"]) {
+    assert.ok(!pack.includes(phrase), `the pack must not carry ${phrase}`);
+  }
+});
+
+// Correcting the programme may not move a dispatched byte, and the two hand-written records beside the
+// pilot package are the half of that the generator cannot check by itself. These checks tie them to the
+// bytes on disk: the package and its members still hash to what the dispatch record pins, and the return
+// of pilot 1 is recorded as preliminary, unreviewed and not backtested rather than as a result.
+const crypto = require("node:crypto");
+const PILOT_DISPATCH_RECORD_PATH = `${builder.PILOT_DIR}/PILOT_DISPATCH_RECORD.md`;
+const PILOT_RETURN_STATUS_PATH = `${builder.PILOT_DIR}/PILOT_1_RETURN_STATUS.md`;
+
+test("the deep-research tier is versioned apart from the packs and from the frozen pilot package", () => {
+  assert.equal(manifest.pack_version, builder.PACK_VERSION);
+  assert.equal(manifest.pilot.package_version, builder.PILOT_VERSION);
+  assert.equal(manifest.deep_research.version, builder.DEEP_RESEARCH_VERSION);
+  assert.notEqual(manifest.deep_research.version, manifest.pack_version, "the tier is versioned apart from the packs");
+
+  const sha256 = content => crypto.createHash("sha256").update(content).digest("hex");
+  const dispatch = read(PILOT_DISPATCH_RECORD_PATH);
+  assert.ok(dispatch.includes(sha256(fs.readFileSync(path.join(root, builder.PILOT_ZIP_PATH)))), "the dispatched archive still hashes to the value the record pins");
+  for (const filePath of [builder.pilotBriefRow().pack_path, builder.TEMPLATE_PATH, builder.CARD_SCHEMA_PATH, builder.PILOT_START_HERE_PATH]) {
+    assert.ok(dispatch.includes(sha256(fs.readFileSync(path.join(root, filePath)))), `${filePath} still hashes to the value the record pins`);
+  }
+  assert.equal(manifest.files.find(file => file.path === builder.PILOT_ZIP_PATH).sha256, sha256(fs.readFileSync(path.join(root, builder.PILOT_ZIP_PATH))), "the manifest pins the same archive bytes");
+});
+
+test("the return of pilot 1 is recorded as preliminary, unreviewed and not backtested", () => {
+  const status = read(PILOT_RETURN_STATUS_PATH);
+  for (const phrase of ["preliminary", "unreviewed", "not backtested", builder.pilotBriefRow().task_id, "not advanced", "deep-research/START_HERE.md"]) {
+    assert.ok(status.includes(phrase), `the return status record must say ${phrase}`);
+  }
+  assert.ok(status.includes("does not complete it"), "the record says the return is not the completion of the task");
+  assert.ok(status.includes("22 ready and 3 blocked"), "the record states that no factor status moved");
+  assert.ok(/no hash is claimed/.test(status), "the record claims no hash for bytes it does not hold");
+  const dispatch = read(PILOT_DISPATCH_RECORD_PATH);
+  assert.ok(dispatch.includes(PILOT_RETURN_STATUS_PATH.replace(`${builder.OUT_DIR}/`, "")), "the dispatch record points at the return status record");
+});

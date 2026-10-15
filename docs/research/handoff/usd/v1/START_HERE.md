@@ -8,9 +8,16 @@ Every brief uses one session: 05:00 Europe/London to 05:00 Europe/London on the 
 
 ## Download
 
-- The whole bundle as one archive: [`usd-research-handoff-v1.zip`](usd-research-handoff-v1.zip) - every file below, 25 briefs included, stored uncompressed so the archive is reproducible.
+- The whole bundle as one archive: [`usd-research-handoff-v1.zip`](usd-research-handoff-v1.zip) - every file below, 25 briefs and the deep-research tier included, stored uncompressed so the archive is reproducible.
 - The same list as data: [`BRIEF_INDEX.json`](BRIEF_INDEX.json) - factor id, label, half, covering task, status and pack path for all 25 briefs.
+- The deep-research tier, which is the primary deliverable: [`deep-research/START_HERE.md`](deep-research/START_HERE.md), with the report brief [`deep-research/VIX_COMPREHENSIVE_REPORT_BRIEF.md`](deep-research/VIX_COMPREHENSIVE_REPORT_BRIEF.md) and the neutral context pack [`deep-research/CONTEXT_PACK_NEUTRAL.md`](deep-research/CONTEXT_PACK_NEUTRAL.md).
 - The first pilot package, the VIX brief with the output template and the full card schema in one archive: [`pilot/usd-vix-pilot-v1.zip`](pilot/usd-vix-pilot-v1.zip), opening at [`pilot/VIX_PILOT_START_HERE.md`](pilot/VIX_PILOT_START_HERE.md).
+
+## The primary deliverable, and where a card sits
+
+A comprehensive, source-backed report investigating how VIX - its level, its change and its interactions with the other factors in this system - relates to the subsequent direction of the US dollar over one session: 05:00 Europe/London to 05:00 Europe/London on the next local date.
+
+The report is step 1 of [`deep-research/START_HERE.md`](deep-research/START_HERE.md); an independent red-team review is step 2, the revised synthesis with its structured research cards is step 3, and backtesting under a frozen session and data contract is step 4. The 25 briefs below are the card step, so a returned card is a later output and not a substitute for the report.
 
 ## The twenty-five briefs
 

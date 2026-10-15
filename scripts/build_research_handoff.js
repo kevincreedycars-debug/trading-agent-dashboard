@@ -1081,6 +1081,86 @@ const PILOT_ZIP_PATH = `${PILOT_DIR}/usd-vix-pilot-v1.zip`;
 const PILOT_ZIP_ROOT = "usd-vix-pilot-v1";
 const PILOT_VERSION = "1.0.0";
 const PILOT_FACTOR_ID = "live.f1-vix-level";
+// ---------------------------------------------------------------------------
+// The deep-research tier: the primary deliverable of this handoff and the three steps that follow it.
+// It is versioned on its own, so correcting the programme does not move the bytes of the packs
+// (pack version 2.0.0), of the dispatched pilot package (package 1.0.0) or of the twenty-five briefs.
+// ---------------------------------------------------------------------------
+const DEEP_RESEARCH_DIR = `${OUT_DIR}/deep-research`;
+const DEEP_RESEARCH_VERSION = "1.0.0";
+const DEEP_RESEARCH_START_HERE_PATH = `${DEEP_RESEARCH_DIR}/START_HERE.md`;
+const REPORT_BRIEF_PATH = `${DEEP_RESEARCH_DIR}/VIX_COMPREHENSIVE_REPORT_BRIEF.md`;
+const NEUTRAL_CONTEXT_PACK_PATH = `${DEEP_RESEARCH_DIR}/CONTEXT_PACK_NEUTRAL.md`;
+const RED_TEAM_BRIEF_PATH = `${DEEP_RESEARCH_DIR}/RED_TEAM_REVIEW_BRIEF.md`;
+const SYNTHESIS_BRIEF_PATH = `${DEEP_RESEARCH_DIR}/SYNTHESIS_AND_CARDS_BRIEF.md`;
+const BACKTEST_BRIEF_PATH = `${DEEP_RESEARCH_DIR}/BACKTEST_HANDOFF_BRIEF.md`;
+const SESSION_CONTRACT_PATH = "docs/research/usd-session/v1/session_contract_v1.json";
+
+const PRIMARY_DELIVERABLE =
+  "A comprehensive, source-backed report investigating how VIX - its level, its change and its " +
+  "interactions with the other factors in this system - relates to the subsequent direction of the US " +
+  "dollar over one session: 05:00 Europe/London to 05:00 Europe/London on the next local date.";
+
+// The order the owner set: research, then an independent attack, then the revised synthesis with its
+// cards, then the measurement. A card is the third step's output, so it is never the first deliverable.
+const DEEP_RESEARCH_STEPS = [
+  {
+    step: 1,
+    id: "deep-research",
+    name: "Deep research with Astra",
+    owner: "one frontier-model session, prepared and run by the owner",
+    deliverable:
+      "The report, plus the source note: every source actually fetched, its link, the passage relied on and the questions left unresolved.",
+    gate:
+      "The report is a literature-and-evidence synthesis. It measures nothing of our own session, and nothing in it is a finding about this system until step 2 and step 4 have run."
+  },
+  {
+    step: 2,
+    id: "red-team",
+    name: "Independent red-team review",
+    owner: "a reviewer that is not the author's session and did not write the report",
+    deliverable:
+      "An issue register: every load-bearing claim quoted, the exact defect named, the evidence that would settle it, and a verdict per claim.",
+    gate:
+      "Only what survives the attack is carried into the synthesis. A claim that cannot be assessed from the sources given is marked as such rather than repaired by argument."
+  },
+  {
+    step: 3,
+    id: "synthesis-and-cards",
+    name: "Revised synthesis and structured research cards",
+    owner: "the synthesising session, on the red team's register",
+    deliverable:
+      "The revised report with every issue marked folded, contested or open, and one research card per factor the synthesis supports, on the card schema.",
+    gate:
+      "The limit of at most two programmable hypotheses applies here, to an individual card, and only here; the discovery phase of steps 1 and 2 is not limited to two."
+  },
+  {
+    step: 4,
+    id: "backtest",
+    name: "Backtesting under a frozen session and data contract",
+    owner: "the backtesting lane, after the design is frozen",
+    deliverable:
+      "Candidate results on the frozen design, with coverage, sample size, uncertainty, stability across periods and the event-day split reported.",
+    gate:
+      "Nothing is scored before the design is frozen, and no weight, sign, threshold or lookback changes because a backtest passed."
+  }
+];
+
+// The one place the two-hypothesis limit is stated, so the report brief, the card brief and the tests
+// read the same sentence instead of three paraphrases of it.
+const HYPOTHESIS_LIMIT_SCOPE =
+  "At most two programmable hypotheses per returned card. That limit is a card rule: it applies to the " +
+  "individual research card in step 3, and it does not apply to the discovery phase, where a report may " +
+  "state, compare and rank as many candidate relations as its sources support.";
+
+const CONTEXT_AND_LIMIT =
+  "The rule in force and the data reachable today are context for this programme, not limits on it. The " +
+  "deployed sign, weight, threshold and lookback are the object of an audit; they are never evidence for " +
+  "a claim. A review may use any source it can fetch and cite, whether or not this repository can " +
+  "reproduce it. What is missing blocks one thing only: empirical validation of our exact session. It " +
+  "does not block research into mechanisms, evidence and interactions, and it is never a reason to " +
+  "narrow the question to what this repository happens to hold.";
+
 // Every entry in the zip sits under this folder, so extracting the archive gives one named directory.
 const ZIP_ROOT = "usd-research-handoff-v1";
 // A fixed timestamp keeps the archive byte-stable between runs; the files inside carry their own dates.
@@ -2119,6 +2199,19 @@ function briefIndexDocument() {
         "One pack per factor: a baseline audit for a factor the deployed node computes today, a research " +
         "assignment for a factor with no rule in force. Nothing here approves a factor or asserts a result."
     },
+    deep_research: {
+      version: DEEP_RESEARCH_VERSION,
+      directory: DEEP_RESEARCH_DIR,
+      primary_deliverable: PRIMARY_DELIVERABLE,
+      start_here: DEEP_RESEARCH_START_HERE_PATH,
+      report_brief: REPORT_BRIEF_PATH,
+      context_pack: NEUTRAL_CONTEXT_PACK_PATH,
+      sequence: DEEP_RESEARCH_STEPS.map(step => `${step.step}. ${step.name}`),
+      note:
+        "The deep-research tier, versioned on its own: the report is the primary deliverable, the briefs below are " +
+        "the card step, and the packs of a factor are the assignment that produces its card. The pilot package " +
+        `${PILOT_VERSION} stays frozen and is not the deep research assignment.`
+    },
     briefs: rows.map(row => ({
       position: row.position,
       factor_id: row.factor_id,
@@ -2228,6 +2321,710 @@ function zipStore(entries) {
   return Buffer.concat([...chunks, central, end]);
 }
 
+// ---------------------------------------------------------------------------
+// The deep-research tier: one primary deliverable and the three steps after it. Every fact these
+// documents state is read from the session contract, the committed catalogue or the extracted register,
+// and the builder refuses to write when the contract and this bundle disagree.
+// ---------------------------------------------------------------------------
+
+/** The session contract, or an error: the pack may not describe a session the contract no longer holds. */
+function sessionContract() {
+  const contract = readJson(SESSION_CONTRACT_PATH);
+  const problems = contractAgreementProblems(contract);
+  if (problems.length) {
+    throw new Error(`${SESSION_CONTRACT_PATH} disagrees with this bundle: ${problems.join("; ")}`);
+  }
+  return contract;
+}
+
+/** Every disagreement between the session contract and the constants this bundle is written from. */
+function contractAgreementProblems(contract = readJson(SESSION_CONTRACT_PATH)) {
+  const problems = [];
+  const cutoff = `${contract.cutoff.local} ${contract.cutoff.zone}`;
+  const endpoint = `${contract.endpoint.local} ${contract.endpoint.zone} on the next local date`;
+  if (contract.horizon_id !== HORIZON.horizon_id) {
+    problems.push(`the contract's horizon_id is ${contract.horizon_id} while this bundle writes ${HORIZON.horizon_id}`);
+  }
+  if (cutoff !== HORIZON.start) problems.push(`the contract's cutoff is ${cutoff} while this bundle writes ${HORIZON.start}`);
+  if (endpoint !== HORIZON.end) problems.push(`the contract's endpoint is ${endpoint} while this bundle writes ${HORIZON.end}`);
+  if (contract.endpoint.nominal_hours !== HORIZON.nominal_hours) {
+    problems.push(`the contract's nominal hours are ${contract.endpoint.nominal_hours} while this bundle writes ${HORIZON.nominal_hours}`);
+  }
+  const weekdays = (contract.endpoint.session_start_weekdays || []).join(",");
+  if (weekdays !== HORIZON.session_start_weekdays.join(",")) {
+    problems.push(`the contract's session starts are ${weekdays} while this bundle writes ${HORIZON.session_start_weekdays.join(",")}`);
+  }
+  if (contract.outcome_instrument.proposed_code !== TARGET.intended_label_instrument) {
+    problems.push(
+      `the contract proposes the label ${contract.outcome_instrument.proposed_code} while this bundle writes ${TARGET.intended_label_instrument}`
+    );
+  }
+  if (contract.outcome_instrument.verification_state !== TARGET.verification_state) {
+    problems.push(
+      `the contract's label verification state is ${contract.outcome_instrument.verification_state} while this bundle writes ${TARGET.verification_state}`
+    );
+  }
+  if ((contract.outcome_instrument.proposed_quote_source || null) !== TARGET.quote_source) {
+    problems.push("the contract names a label quote source while this bundle writes none");
+  }
+  return problems;
+}
+
+/**
+ * The decisions the session contract still leaves open, read from the contract rather than restated, so a
+ * decision frozen elsewhere leaves this list by itself instead of leaving a stale row behind it.
+ */
+function unresolvedDecisionRows(contract = sessionContract()) {
+  return [
+    {
+      decision: "label instrument and quote source",
+      state: contract.outcome_instrument.verification_state,
+      detail: contract.outcome_instrument.blocking_question
+    },
+    {
+      decision: "missing-quote policy",
+      state: String(contract.eligibility.missing_quote_policy).split(" - ")[0],
+      detail: contract.eligibility.missing_quote_policy
+    },
+    { decision: "flat band", state: contract.flat_handling.status, detail: contract.flat_handling.note },
+    { decision: "ties in scoring", state: String(contract.eligibility.ties).split(" - ")[0], detail: contract.eligibility.ties },
+    {
+      decision: "exchange holidays and the session calendar",
+      state: String(contract.eligibility.exchange_holidays).split(" - ")[0],
+      detail: contract.eligibility.exchange_holidays
+    }
+  ];
+}
+
+function deepResearchStartHereMarkdown() {
+  const contract = sessionContract();
+  const relative = filePath => filePath.replace(`${OUT_DIR}/`, "");
+  const lines = [];
+  lines.push("# USD deep research - start here");
+  lines.push("");
+  lines.push(
+    `Generated ${EXTRACTED_AT} on branch \`${EXTRACTION_BRANCH}\` at \`${EXTRACTION_COMMIT}\`. Deep-research tier ` +
+    `${DEEP_RESEARCH_VERSION}, context version ${CONTEXT_VERSION}, pack version ${PACK_VERSION}, card schema ${CARD_SCHEMA_VERSION}.`
+  );
+  lines.push("");
+  lines.push("## The primary deliverable");
+  lines.push("");
+  lines.push(PRIMARY_DELIVERABLE);
+  lines.push("");
+  lines.push(
+    "That report is the primary deliverable of this programme. A returned research card is neither a substitute for " +
+    "it nor its equal: the twenty-five briefs one level up are per-factor assignments whose returns are cards, and a " +
+    "card is the third step below rather than the first."
+  );
+  lines.push("");
+  lines.push("## The four steps, in this order");
+  lines.push("");
+  for (const step of DEEP_RESEARCH_STEPS) {
+    lines.push(`**${step.step}. ${step.name}**`);
+    lines.push("");
+    lines.push(`- Owner: ${step.owner}.`);
+    lines.push(`- Deliverable: ${step.deliverable}`);
+    lines.push(`- Gate: ${step.gate}`);
+    lines.push("");
+  }
+  lines.push("## The files in this folder");
+  lines.push("");
+  lines.push(`- \`${relative(REPORT_BRIEF_PATH)}\` - step 1, the primary deliverable, in full.`);
+  lines.push(`- \`${relative(NEUTRAL_CONTEXT_PACK_PATH)}\` - the factual context a report may assume, with every prior conclusion and proposed hypothesis left out on purpose.`);
+  lines.push(`- \`${relative(RED_TEAM_BRIEF_PATH)}\` - step 2: attack the report claim by claim before anything is synthesised.`);
+  lines.push(`- \`${relative(SYNTHESIS_BRIEF_PATH)}\` - step 3: the revised synthesis and the structured cards.`);
+  lines.push(`- \`${relative(BACKTEST_BRIEF_PATH)}\` - step 4: what must be frozen before anything is scored.`);
+  lines.push(`- \`${relative(DEEP_RESEARCH_START_HERE_PATH)}\` - this note.`);
+  lines.push("");
+  lines.push("## What is context and what is a limit");
+  lines.push("");
+  lines.push(`- ${CONTEXT_AND_LIMIT}`);
+  lines.push(`- ${HYPOTHESIS_LIMIT_SCOPE}`);
+  lines.push(
+    "- The label decision and the frozen evaluation design belong to step 4's owner, not to the report: a report may " +
+    "say what its sources imply for the missing-quote policy, the flat band and the tie rule, and it freezes none of them."
+  );
+  lines.push("");
+  lines.push("## The session every file here is written for");
+  lines.push("");
+  lines.push(
+    `Start ${HORIZON.start}, end ${HORIZON.end}, ${HORIZON.nominal_hours} nominal hours, a start on a Monday-to-Friday ` +
+    `local date only. The contract behind that is \`${SESSION_CONTRACT_PATH}\`, horizon \`${contract.horizon_id}\`, ` +
+    "corrected 2026-10-14; the context pack states the whole of it, and no file in this folder may describe another window."
+  );
+  lines.push("");
+  lines.push("## How a return is handled");
+  lines.push("");
+  lines.push(
+    `- The report and its source note upload against \`${pilotBriefRow().task_id}\` for \`${PILOT_FACTOR_ID}\` in the ` +
+    "Research Library, the task that covers the factor. An upload records evidence; it is not an approval."
+  );
+  lines.push(
+    "- The card that came back from pilot 1 is recorded as preliminary, unreviewed and not backtested in the " +
+    "hand-written record beside the frozen package (`pilot/PILOT_1_RETURN_STATUS.md`, in the repository rather than " +
+    "inside this archive), and it is not the completion of that task."
+  );
+  lines.push(
+    "- The library's review assignments for the twenty-five factors are the card-step reviews. The red team of step 2 " +
+    "is a separate, earlier pass over the report and is recorded on its own."
+  );
+  lines.push("");
+  lines.push("## The prohibitions this tier carries");
+  lines.push("");
+  lines.push(PROHIBITIONS);
+  lines.push("");
+  lines.push("## What is not claimed");
+  lines.push("");
+  lines.push("- No backtest was run for any factor here and no performance figure is asserted anywhere in it.");
+  lines.push("- A report is evidence, a review is an opinion on evidence, a card is a hypothesis and a passing backtest is not a deployment.");
+  lines.push("- Nothing here made or authorised a change to anything that runs: no production, workflow, dashboard, feed, dispatcher, database or configuration change.");
+  lines.push("");
+  lines.push("## Regenerating it");
+  lines.push("");
+  lines.push(
+    "`node scripts/build_research_handoff.js write` writes this folder with the rest of the bundle, and `check` fails " +
+    `if a file here is stale, if the context pack stops matching \`${SESSION_CONTRACT_PATH}\`, or if the catalogue and ` +
+    "the briefs stop agreeing."
+  );
+  lines.push("");
+  return lines.join("\n");
+}
+
+function comprehensiveReportBriefMarkdown() {
+  const rows = factorBriefRows();
+  const vixReaders = rows
+    .filter(row => row.live && row.register && row.register.inputs.some(input => /vix/i.test(input.input)))
+    .map(row => `\`${row.factor_id}\``);
+  const relative = filePath => filePath.replace(`${OUT_DIR}/`, "");
+  const lines = [];
+  lines.push("# VIX and the subsequent direction of the US dollar - comprehensive research brief (live.f1-vix-level)");
+  lines.push("");
+  lines.push(
+    `- Task: \`${pilotBriefRow().task_id}\`. Report brief ${DEEP_RESEARCH_VERSION} of the deep-research tier, context version ` +
+    `${CONTEXT_VERSION}, pack version ${PACK_VERSION}, extracted ${EXTRACTED_AT} on branch \`${EXTRACTION_BRANCH}\` at \`${EXTRACTION_COMMIT}\`.`
+  );
+  lines.push(
+    `- Read [\`${relative(NEUTRAL_CONTEXT_PACK_PATH)}\`](${relative(NEUTRAL_CONTEXT_PACK_PATH)}) first. It carries the session, the existing factors, the rules in force, the data that exists and the decisions that are open - and nothing else, on purpose.`
+  );
+  lines.push("- This brief is step 1 of four. A research card is step 3's output, under the same task, and it is not what this brief asks for.");
+  lines.push("");
+  lines.push("## 1. What is asked");
+  lines.push("");
+  lines.push("Produce one comprehensive, source-backed report. It is the primary deliverable of this programme:");
+  lines.push("");
+  lines.push(PRIMARY_DELIVERABLE);
+  lines.push("");
+  lines.push(
+    "We have a rule in force that reads the VIX level as a risk regime, and a session we have defined but have not " +
+    "measured, because the instrument that would label it has no verified quote source. Neither of those is the " +
+    "question. The question is what the evidence actually says about how VIX and the things it interacts with relate " +
+    "to where the dollar goes next, inside this window, and where that evidence is thin, contradictory or absent."
+  );
+  lines.push("");
+  lines.push(
+    "Return the report as markdown, plus the source note described in section 6. Format the report with the sections " +
+    "of section 3 in that order: a reader who disagrees with you should be able to find the weakness."
+  );
+  lines.push("");
+  lines.push("## 2. The session the report is written for");
+  lines.push("");
+  lines.push(
+    `- Start ${HORIZON.start}. End ${HORIZON.end}. Both ends are London wall-clock times one local date apart; every ` +
+    `eligible session is exactly ${HORIZON.nominal_hours} hours. The contract is \`${SESSION_CONTRACT_PATH}\`.`
+  );
+  lines.push(
+    "- The label instrument is proposed as DXY and is UNVERIFIED: no intraday dollar-index print exists in this " +
+    "repository or in the live collector, and no quote source is committed. Never present another instrument as DXY: " +
+    "if a source is about EUR/USD, a basket, the broad trade-weighted index or a futures contract, name that instrument " +
+    "in the same sentence, and say whether its window is a close-to-close day, an intraday slice or something else."
+  );
+  lines.push(
+    "- The deployed engine is not this window: it cuts off at 09:30 America/New_York and ends at the next 16:00 ET " +
+    "close, a median 30.5 elapsed hours. The closed 24-hour study behind it overlaps the corrected session for 14.5 " +
+    "nominal hours (15.5 in the weeks when New York has changed and London has not) and leaves the session's first 9.5 " +
+    "hours unmeasured. Read every number in this repository as belonging to one of those windows, and say which."
+  );
+  lines.push("");
+  lines.push("## 3. What the report must cover");
+  lines.push("");
+  lines.push("1. What VIX is and what it measures, from sources: the level, the index family around it, the futures term structure, and anything published about volatility of volatility. Name the instrument and the window of every claim.");
+  lines.push("2. The proposed mechanisms by which VIX would move the dollar inside a 24-hour London-to-London window - safe-haven demand, risk appetite and cross-asset correlation, carry and funding, policy expectations, positioning and flows - and the observable each mechanism would leave at the cutoff.");
+  lines.push("3. Level against change: whether the level, the 1-day change or a longer change is the informative quantity, and on what evidence that judgement rests.");
+  lines.push(`4. Interactions with the factors in this system, taken from the context pack's factor table: for each one, whether the sources support an interaction with VIX, what the two together would imply, and which pairs would double-count one input. The deployed set already reads VIX in ${vixReaders.length} places - ${vixReaders.join(", ")} - and the session set carries its own VIX card, so name every overlap you rely on and every overlap you are introducing.`);
+  lines.push("5. Where the relation weakens, changes sign or stops being informative: growth shocks against policy and funding shocks, low-volatility regimes, event days, month-end and quarter-end, and what the sources say distinguishes them.");
+  lines.push("6. What is already in the price at the cutoff, given that 05:00 London follows the US close that produced the VIX print, and how a study could tell a reaction from a prediction.");
+  lines.push("7. The cross-asset carriers of the same channel: equities, credit, gold, rates and crypto, with the same instrument and window labelling.");
+  lines.push("8. Event and calendar conditioning inside the window, including the release calendar and the H.10 timing.");
+  lines.push("9. What the sources cannot settle: contradictions, weak identification, period dependence, and claims that are plausible but unsourced.");
+  lines.push("10. What our own session cannot be measured on yet, stated plainly, and what that does not block.");
+  lines.push("11. Candidate relations, unranked: as many as the sources support, each with the window it was evidenced on, the direction, the condition under which it holds and what would falsify it.");
+  lines.push("12. Open questions, and what you would need to fetch or measure next.");
+  lines.push("13. What is not claimed, in your own words.");
+  lines.push("");
+  lines.push("## 4. Evidence standards");
+  lines.push("");
+  lines.push("- Cite only what you actually fetched in this session: the link, the passage you relied on, when the source is dated, and what that passage supports.");
+  lines.push("- Label the window of every piece of evidence. A close-to-close daily relation, an intraday slice, an options-implied measure and a 30-hour study window are four different objects; none of them may be presented as evidence about our 05:00-to-05:00 session.");
+  lines.push("- Keep mechanism apart from measurement. A coherent argument for why a channel exists is not a measurement of it, and a modelled or simulated figure is not an observed one.");
+  lines.push("- Where sources disagree, give both and say which one you find better identified and why.");
+  lines.push("- Prefer primary sources - the exchange, the index provider, the Federal Reserve, the paper itself - over summaries, and say when only a summary was reachable.");
+  lines.push("- Name the instrument a claim is really about, every time. Never present another instrument as DXY.");
+  lines.push("- A relation that exists on another asset, another window or another era is reported as exactly that.");
+  lines.push("");
+  lines.push("## 5. Context, not a limit");
+  lines.push("");
+  lines.push(`- ${CONTEXT_AND_LIMIT}`);
+  lines.push(`- ${HYPOTHESIS_LIMIT_SCOPE}`);
+  lines.push(
+    "- The label instrument and quote source are unverified, and the missing-quote policy, the flat band and the tie " +
+    "rule are open decisions listed in the context pack. None of them is frozen here, none of them is yours to freeze, " +
+    "and the report may say what the sources imply for each of them."
+  );
+  lines.push("");
+  lines.push("## 6. What to return");
+  lines.push("");
+  lines.push("1. The report, as markdown, with the sections of section 3 in that order and an explicit what-is-not-claimed section.");
+  lines.push("2. The source note: every source you fetched, its link, the passage you relied on, what it supports, the window it concerns and whether it is primary; then the questions you could not resolve and what you could not reach behind a paywall or a login.");
+  lines.push(
+    `3. Both upload against \`${pilotBriefRow().task_id}\` for \`${PILOT_FACTOR_ID}\` in the Research Library. An upload records ` +
+    "evidence; it is not an approval, and it moves no factor's status."
+  );
+  lines.push("");
+  lines.push("## 7. Prohibitions");
+  lines.push("");
+  lines.push(PROHIBITIONS);
+  lines.push("");
+  lines.push("## 8. What happens after you return it");
+  lines.push("");
+  lines.push(
+    "An independent red team attacks the report claim by claim (step 2, `" +
+    `${relative(RED_TEAM_BRIEF_PATH)}` +
+    "`). Only what survives is carried into the revised synthesis and the structured research cards (step 3, `" +
+    `${relative(SYNTHESIS_BRIEF_PATH)}` +
+    "`), where the per-card limit of at most two programmable hypotheses applies. Nothing is scored before the session " +
+    "and data contract is frozen (step 4, `" +
+    `${relative(BACKTEST_BRIEF_PATH)}` +
+    "`), and no weight, sign, threshold or lookback changes because a report or a backtest exists."
+  );
+  lines.push("");
+  lines.push("## 9. What this brief is not");
+  lines.push("");
+  lines.push("- Not a research card: a card is step 3's output, on the schema, and the two-hypothesis limit is not a limit on this report.");
+  lines.push("- Not an audit of our deployed rule, and not an approval of it or of any replacement: the deployed rule is context to be tested against the evidence, never evidence for a claim.");
+  lines.push("- Not a measurement of our session: the report says what is known and how well, and states plainly what the missing label data leaves unmeasured.");
+  lines.push("- Not a backtest, a performance figure, an accuracy rate or a sample size, and it asserts none.");
+  lines.push("- Not a live change of any kind: no production, workflow, dashboard, feed, dispatcher, database or configuration change is authorised by this brief.");
+  lines.push("");
+  lines.push("## 10. The other nine deployed factors and the fifteen session factors");
+  lines.push("");
+  lines.push(
+    `This brief is the programme's first report and its subject is VIX. The other factor ids in the context pack get ` +
+    `their own assignments: the deployed set audits code that runs (tasks \`USD-BASELINE-AUDIT-01\` to \`USD-BASELINE-AUDIT-10\`, ` +
+    `one per factor, of which only \`${pilotBriefRow().task_id}\` is addressed here), and the fifteen session factors carry the two field packages. ` +
+    "The same four steps apply to them when their turns come."
+  );
+  lines.push("");
+  return lines.join("\n");
+}
+
+function neutralContextPackMarkdown() {
+  const contract = sessionContract();
+  const scope = catalogueScope();
+  const rows = factorBriefRows();
+  const lines = [];
+  lines.push("# Neutral context pack - what a VIX report may assume");
+  lines.push("");
+  lines.push(
+    `Generated ${EXTRACTED_AT} on branch \`${EXTRACTION_BRANCH}\` at \`${EXTRACTION_COMMIT}\`. Deep-research tier ` +
+    `${DEEP_RESEARCH_VERSION}, context version ${CONTEXT_VERSION}. Facts only, read from \`${SESSION_CONTRACT_PATH}\`, ` +
+    `\`${CATALOG_PATH}\` and the extracted register.`
+  );
+  lines.push("");
+  lines.push("## 0. Why this pack exists and what it deliberately leaves out");
+  lines.push("");
+  lines.push(
+    "The report of step 1 is written without our own earlier thinking in front of it. Anchoring is the failure mode " +
+    "here: a reader handed our questions will answer our questions, and a reader handed a hypothesis will test that " +
+    "hypothesis rather than find the right one."
+  );
+  lines.push("");
+  lines.push("So this pack carries five things and nothing else:");
+  lines.push("");
+  lines.push("1. the session definition (section 1);");
+  lines.push("2. the factors that exist in this system (section 2);");
+  lines.push("3. the rules that execute today, as code facts (section 3);");
+  lines.push("4. the data that exists and its staleness at the cutoff (section 4);");
+  lines.push("5. the decisions still open (section 5).");
+  lines.push("");
+  lines.push("It deliberately excludes, and no sentence in it is derived from:");
+  lines.push("");
+  lines.push("- every prior research conclusion in this repository about VIX, about the dollar and about this session;");
+  lines.push("- every proposed hypothesis, hypothesis seed, falsification prompt and rejection test for any factor;");
+  lines.push("- every card verdict, ranking, score, weight of importance or recommendation, and the assembled synthesis of the earlier session research;");
+  lines.push("- the register's and the briefs' own research prompts, open questions, counterarguments, timing notes, overlap notes, data asks and gap statements - the fields written to steer a card answer rather than to state a fact about the system;");
+  lines.push("- the returned card of pilot 1 and the source note with it, which are recorded elsewhere as preliminary and unreviewed.");
+  lines.push("");
+  lines.push(
+    "Those texts are kept out on purpose, and the omission is checkable rather than promised: the pack is generated " +
+    "without those fields, and the guards fail if any of them appears in it. If a claim in the report matters, it " +
+    "must come from a source the report itself fetched, not from this file."
+  );
+  lines.push("");
+  lines.push(
+    "A row in this pack is a fact about what is deployed or what is reachable. It is not a finding, not an " +
+    "endorsement, and not an ordering by expected value: the factor order below is the committed catalogue's order."
+  );
+  lines.push("");
+  lines.push("## 1. The session");
+  lines.push("");
+  lines.push(`- Contract: \`${SESSION_CONTRACT_PATH}\`, horizon_id \`${contract.horizon_id}\`, status \`${contract.status}\`, corrected ${contract.horizon_corrected_at}, production_enabled ${contract.production_enabled}, trade_eligible ${contract.trade_eligible}.`);
+  lines.push(`- Start: ${HORIZON.start}. End: ${HORIZON.end}. Nominal length ${HORIZON.nominal_hours} hours; one directional call per local date is the design's intent.`);
+  lines.push(`- Weekday rule: ${contract.endpoint.session_start_rule}`);
+  lines.push(`- Zone rule: ${contract.cutoff.utc_rule}; the London transitions carried by the contract are ${contract.cutoff.bst_2026_start_utc} and ${contract.cutoff.bst_2026_end_utc}.`);
+  lines.push(`- As-of rule for every input: ${contract.cutoff.asof_rule}`);
+  lines.push(`- The deployed engine's own window, for contrast: ${contract.contract_vs_deployed_engine.deployed_cutoff} to ${contract.contract_vs_deployed_engine.deployed_endpoint}, a measured median of ${contract.contract_vs_deployed_engine.measured_median_elapsed_hours} elapsed hours.`);
+  lines.push(`- How the deployed engine's own calls relate to this window: ${contract.contract_vs_deployed_engine.scoring_rule}`);
+  lines.push(`- What the closed study behind it measured: ${contract.contract_vs_deployed_engine.measured_against_the_corrected_window}`);
+  lines.push(`- Families declared over the whole USD programme: ${contract.scope.families.join(", ")}.`);
+  lines.push("");
+  lines.push(`## 2. The factors that exist (${scope.total}: ${scope.live} deployed, ${scope.session} session-research)`);
+  lines.push("");
+  lines.push("| # | Factor id | Label | Group | Role | Rule in force | Research | Review | Backtest | Covered by |");
+  lines.push("| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |");
+  for (const row of rows) {
+    const order = row.live && row.register ? `F${row.register.order}` : null;
+    const rule = order
+      ? `deployed, 24h weight ${CODED_WEIGHTS["24h"][order]} coded / ${RULEBOOK_WEIGHTS[order]} rulebook`
+      : "none in force";
+    lines.push(
+      `| ${row.position} | \`${row.factor_id}\` | ${row.label} | ${row.group} | ${row.role} | ${rule} | ` +
+      `${row.research_status} | ${row.review_status} | ${row.backtest_status} | ${row.task_id ? `\`${row.task_id}\`` : "no task"} |`
+    );
+  }
+  lines.push("");
+  lines.push(
+    `A factor's own brief is not part of this pack: the ${scope.total} packs are assignments one level up in \`${PACK_DIR.replace(`${OUT_DIR}/`, "")}\`, ` +
+    "and they carry the research prompts this pack deliberately omits."
+  );
+  lines.push("");
+  lines.push("## 3. The rules that execute today");
+  lines.push("");
+  lines.push(
+    `These are code facts, taken from the register beside \`${CATALOG_PATH}\`, from exports/usd_layer1_agent.json and ` +
+    "from logic/agent_usd_direction.md v2.1. They are the object of the audit. They are never evidence for a claim " +
+    "about VIX, about the dollar or about the session."
+  );
+  lines.push("");
+  lines.push("### 3.1 The path that produces the published call");
+  lines.push("");
+  lines.push(`- The published call is produced by the deterministic node Calculate USD Conviction in the live workflow USD Layer 1 Agent (OCt1tB9yVMUgFTha). ${DEPLOYED_WORKFLOW}.`);
+  lines.push(`- The model writes the per-factor verdict strings; the code computes every published number, and where they disagree the code wins. Collector: ${COLLECTOR_WORKFLOW}; runtime: ${RUNTIME}.`);
+  lines.push(`- ${MODIFIERS.note}`);
+  lines.push(`- ${AGGREGATION.formula}. The published strength label and the dashboard's separately derived bucket can disagree on the same row; the full arithmetic is stated in \`${OUT_DIR}/USD_SYSTEM_CONTEXT.md\` and in \`${OUT_DIR}/USD_FACTOR_REGISTER.md\`.`);
+  lines.push("");
+  lines.push("### 3.2 The two weight vectors, by timeframe");
+  lines.push("");
+  lines.push(`| Vector | ${LIVE_FACTORS.map(factor => `F${factor.order}`).join(" | ")} |`);
+  lines.push(`| --- |${LIVE_FACTORS.map(() => " --- |").join("")}`);
+  for (const timeframe of Object.keys(CODED_WEIGHTS)) {
+    lines.push(`| coded ${timeframe} | ${LIVE_FACTORS.map(factor => CODED_WEIGHTS[timeframe][`F${factor.order}`]).join(" | ")} |`);
+  }
+  lines.push(`| rulebook v2.1 | ${LIVE_FACTORS.map(factor => RULEBOOK_WEIGHTS[`F${factor.order}`]).join(" | ")} |`);
+  lines.push("");
+  lines.push(`Aggregation: ${AGGREGATION.formula}.`);
+  lines.push("");
+  lines.push("### 3.3 Each deployed factor's rule, as the code reads it");
+  lines.push("");
+  for (const factor of LIVE_FACTORS) {
+    lines.push(`- **F${factor.order} ${factor.label}** (\`${factor.factor_id}\`, task \`${factor.task_id}\`) - ${factor.rule}`);
+    for (const input of factor.inputs) {
+      lines.push(`  - input \`${input.input}\` from ${input.source}; units ${input.units}; transform ${input.transform}; lookback ${input.lookback}; at the cutoff ${input.cutoff}`);
+    }
+    lines.push(`  - missing or stale: ${factor.missing_stale}`);
+    lines.push(`  - code: ${factor.code_refs.join(" | ")}`);
+  }
+  lines.push("");
+  lines.push("### 3.4 Recorded defects in that path");
+  lines.push("");
+  lines.push("Code facts, recorded from reading the exports. They are not findings about VIX or about the dollar, and no report is asked to accept them:");
+  lines.push("");
+  for (const defect of KNOWN_DEFECTS) lines.push(`- ${defect}`);
+  lines.push("");
+  lines.push("## 4. The data that exists, and what is stale at the cutoff");
+  lines.push("");
+  lines.push(AVAILABILITY_BLOCK);
+  lines.push("");
+  lines.push("### 4.1 Availability of each deployed factor's own inputs");
+  lines.push("");
+  for (const factor of LIVE_FACTORS) {
+    lines.push(`- F${factor.order} ${factor.label}: history - ${factor.hist_avail} Live - ${factor.live_avail}`);
+  }
+  lines.push("");
+  lines.push("### 4.2 Sources already reviewed for the label, and why none of them is the session label yet");
+  lines.push("");
+  lines.push(
+    `Recorded in \`${SESSION_CONTRACT_PATH}\`. This is a factual assessment of reachability, not a conclusion about ` +
+    "the factor: a report that needs an intraday dollar print should read it as the list of what this repository tried."
+  );
+  lines.push("");
+  for (const candidate of contract.outcome_instrument.repo_candidates_reviewed) {
+    lines.push(`- ${candidate.candidate}: usable for an intraday session - ${candidate.usable_for_intraday_session}. ${candidate.why}`);
+  }
+  lines.push(`- Fallback if the label stays unresolved: ${contract.outcome_instrument.fallback_if_unresolved}`);
+  lines.push("");
+  lines.push("### 4.3 Collected by the live pipeline but read by no factor");
+  lines.push("");
+  lines.push("Every input below is already fetched or stored, so a study of it would not start from nothing:");
+  lines.push("");
+  for (const entry of UNSCORED_COLLECTED_INPUTS) {
+    lines.push(`- ${entry.input} - ${entry.collected} Not scored because ${entry.why_unscored}`);
+  }
+  lines.push("");
+  lines.push("## 5. The decisions that are still open");
+  lines.push("");
+  lines.push(
+    `Read from \`${SESSION_CONTRACT_PATH}\`; a decision frozen there leaves this list by itself. An open decision is ` +
+    "not a recommendation, and neither this pack nor the report freezes any of them."
+  );
+  lines.push("");
+  lines.push("| Decision | State | The contract's own words |");
+  lines.push("| --- | --- | --- |");
+  for (const row of unresolvedDecisionRows(contract)) {
+    lines.push(`| ${row.decision} | ${row.state} | ${row.detail} |`);
+  }
+  lines.push("");
+  lines.push(
+    `Scoring, where the contract has decided: primary metric - ${contract.scoring.primary}; must report - ` +
+    `${contract.scoring.must_report.join(", ")}. Abstention allowed: ${contract.scoring.abstention_allowed}. ` +
+    `Publication of a probability: ${contract.scoring.probability_publication}.`
+  );
+  lines.push("");
+  lines.push("## 6. What this pack is not");
+  lines.push("");
+  lines.push("- Not a summary of our research and not a position on VIX: it holds no conclusion, no hypothesis, no ranking and no recommendation.");
+  lines.push("- Not exhaustive of the question: it describes this system. The evidence a report needs may be entirely outside it, and the brief expects that.");
+  lines.push("- Not an approval of anything: a row here records what is deployed or reachable, and a defect recorded here is a code observation rather than a verdict on a factor.");
+  lines.push("- Not authorisation for any change: no production, workflow, dashboard, feed, dispatcher, database or configuration change follows from it.");
+  lines.push("");
+  return lines.join("\n");
+}
+
+function redTeamReviewBriefMarkdown() {
+  const relative = filePath => filePath.replace(`${OUT_DIR}/`, "");
+  const lines = [];
+  lines.push("# Independent red-team review of the VIX report - step 2 brief");
+  lines.push("");
+  lines.push(
+    `- Task: \`${pilotBriefRow().task_id}\`. Step 2 of four of the deep-research tier ${DEEP_RESEARCH_VERSION}, context version ` +
+    `${CONTEXT_VERSION}. The report under review is the return of [\`${relative(REPORT_BRIEF_PATH)}\`](${relative(REPORT_BRIEF_PATH)}).`
+  );
+  lines.push("- Attach the report and its source note, and nothing else about its reasoning.");
+  lines.push("");
+  lines.push("## 1. What you are for");
+  lines.push("");
+  lines.push(
+    "Your job is to find what is wrong, unsupported or overstated in the report before the synthesis carries it further. " +
+    "A report that survives an honest attack is worth more than a report that was never attacked, so the review is " +
+    "expected to damage claims and to say which ones stood up. It is not a summary, not a rewrite and not a vote."
+  );
+  lines.push("");
+  lines.push("## 2. Independence rules");
+  lines.push("");
+  lines.push("- You are not the author's session and you did not write the report; do not ask it what it meant. The report must stand on the words it contains.");
+  lines.push("- Open the sources yourself wherever they are reachable, and say which ones you could re-fetch. Where a source is behind a login or a paywall and you cannot reach it, judge only on the quotation given and mark the claim's status accordingly.");
+  lines.push("- Judge claims, not style, and attack the strongest version of a claim rather than a weakened one.");
+  lines.push("- Say when a claim is right and only its scope is too wide: a narrower true claim is a result, not a loss.");
+  lines.push("");
+  lines.push("## 3. What to attack, claim by claim");
+  lines.push("");
+  lines.push("- Traceability: does the passage cited actually say what the claim says, and is the link the source itself rather than a summary of it?");
+  lines.push("- Window: is the evidence about our 05:00 London to 05:00 London session, or about a daily close-to-close day, an intraday slice or another window, presented as if it were ours?");
+  lines.push("- Instrument: is a claim really about EUR/USD, a basket or a future, presented under the DXY name?");
+  lines.push("- Mechanism against measurement: is a plausible channel being used as if the relation had been measured?");
+  lines.push("- Already priced: does the claim count an effect as predictive that the cutoff has already absorbed?");
+  lines.push("- Identification and scope: sample period, era dependence, regime dependence, conditioning-on-the-outcome, survivorship in the sources chosen, base rates behind a conditional claim, and any number that has no stated origin.");
+  lines.push("- Counter-evidence: is the strongest contrary evidence in the sources the report fetched absent, or present and dismissed without a reason?");
+  lines.push("- Internal consistency: does one section contradict another, and does the what-is-not-claimed section match what the body actually does?");
+  lines.push("- Overlap: does the report lean on an interaction that double-counts one input across factors, and does it say so?");
+  lines.push("");
+  lines.push("## 4. A verdict for every load-bearing claim");
+  lines.push("");
+  lines.push("- `SUPPORTED` - the sources given support it as stated.");
+  lines.push("- `NARROWED` - something in it is supported, and the supported part is stated here in your own words.");
+  lines.push("- `NOT_SUPPORTED` - the sources given do not support it, or contradict it; say which.");
+  lines.push("- `UNASSESSABLE` - it could not be judged from the sources given; say what would settle it.");
+  lines.push("");
+  lines.push("For each claim also give: the claim quoted, severity (fatal, material, cosmetic), what is wrong, and the evidence that would resolve it. End with two lists: what survives the attack unchanged, and what the review could not reach at all.");
+  lines.push("");
+  lines.push("## 5. What to return");
+  lines.push("");
+  lines.push("1. The issue register, claim by claim, with the verdicts of section 4.");
+  lines.push("2. The two closing lists: what survives, and what this review could not reach.");
+  lines.push("3. A short note of the sources you re-fetched and those you could not, and the questions you could not resolve.");
+  lines.push(
+    `4. Upload it against \`${pilotBriefRow().task_id}\` in the Research Library, beside the report it attacks. An upload records ` +
+    "evidence; it is not an approval, and it moves no factor's status."
+  );
+  lines.push("");
+  lines.push("## 6. Prohibitions");
+  lines.push("");
+  lines.push(PROHIBITIONS);
+  lines.push("");
+  lines.push("## 7. What this review is not");
+  lines.push("");
+  lines.push("- Not the card review of step 3: no card exists yet, and nothing here approves a hypothesis.");
+  lines.push("- Not a rewrite of the report: the synthesiser revises it, and every issue you raised must be answered or left visibly open.");
+  lines.push("- Not a place to impose the card rule: " + HYPOTHESIS_LIMIT_SCOPE + " A report of twenty sourced candidate relations is a better report than one with two, and the attack is on whether each of them is supported.");
+  lines.push("- Not a decision on the label instrument, the missing-quote policy, the flat band or the tie rule: those are open, and this brief freezes none of them.");
+  lines.push("- Not a live change of any kind: no production, workflow, dashboard, feed, dispatcher, database or configuration change is authorised by it.");
+  lines.push("");
+  return lines.join("\n");
+}
+
+function synthesisAndCardsBriefMarkdown() {
+  const relative = filePath => filePath.replace(`${OUT_DIR}/`, "");
+  const lines = [];
+  lines.push("# Revised synthesis and structured research cards - step 3 brief");
+  lines.push("");
+  lines.push(
+    `- Task: \`${pilotBriefRow().task_id}\`. Step 3 of four of the deep-research tier ${DEEP_RESEARCH_VERSION}, context version ` +
+    `${CONTEXT_VERSION}, card schema ${CARD_SCHEMA_VERSION}.`
+  );
+  lines.push(
+    `- Inputs: the report of [\`${relative(REPORT_BRIEF_PATH)}\`](${relative(REPORT_BRIEF_PATH)}) and the issue register of [\`${relative(RED_TEAM_BRIEF_PATH)}\`](${relative(RED_TEAM_BRIEF_PATH)}). Nothing else is synthesised.`
+  );
+  lines.push("");
+  lines.push("## 1. What is asked");
+  lines.push("");
+  lines.push("Two deliverables, in this order:");
+  lines.push("");
+  lines.push("1. the revised report, with every issue from the register answered or left visibly open;");
+  lines.push("2. one structured research card per factor the synthesis supports, on the card schema.");
+  lines.push("");
+  lines.push("The cards come out of the revised synthesis. A card written before the register is answered is a second draft of the first report, not a result of this step.");
+  lines.push("");
+  lines.push("## 2. The revised synthesis");
+  lines.push("");
+  lines.push("- Keep the section order of the report brief and keep the source note with it.");
+  lines.push("- Mark every issue from the register as `folded` (and say what changed), `contested` (and say what evidence would settle it and why the claim is kept) or `open` (and say plainly that it is unresolved).");
+  lines.push("- A claim repeated more confidently is not a claim with better evidence. Downgrade what the attack weakened, and delete what it destroyed.");
+  lines.push("- Say what changed and why, in a short section of its own, so a reader can see the effect of the attack rather than having to reconstruct it.");
+  lines.push("- What the sources cannot settle stays stated as such through the revision; the session's own measurement gap is stated, not filled.");
+  lines.push("");
+  lines.push("## 3. The structured cards");
+  lines.push("");
+  lines.push(
+    `- Schema: \`${CARD_SCHEMA_PATH}\` (${CARD_SCHEMA_VERSION}), which extends \`${CARD_SCHEMA_BASE_PATH}\`. Field list, order and a copyable skeleton: [\`${relative(TEMPLATE_PATH)}\`](${relative(TEMPLATE_PATH)}). The factor's own assignment is its pack one level up in \`${relative(PACK_DIR)}/\`.`
+  );
+  lines.push(`- ${HYPOTHESIS_LIMIT_SCOPE}`);
+  lines.push("- Every card carries: the session horizon block, the calendar and quote handling, what was observable at the cutoff with each input's staleness, whether the relation is a reaction or a prediction, the mechanism, the direction claim, the session role, the programmable hypotheses with the values each parameter may take, its default and the rule for choosing it on training rows only, the result that would falsify each one, the rejection test, the evidence, the limitations and the open questions.");
+  lines.push("- Every claim in a card's verdict is traceable to an entry in its evidence, or is labelled as a judgement. An empty required field is not an accepted card.");
+  lines.push("- Cards are tied to sessions, not to instruments: a card that needs a different window or a different instrument says so instead of borrowing ours.");
+  lines.push("- A card is evidence. It is not a rule, not an approval and not a change to anything that runs.");
+  lines.push("");
+  lines.push("## 4. Identity, evidence and registration");
+  lines.push("");
+  lines.push("- One card per factor id. `card_version` increments, a revision supersedes the earlier card rather than overwriting it, and `supersedes` names it.");
+  lines.push("- A card's evidence is the revised report and the register behind it: cite the entry, and keep the source note's link with it.");
+  lines.push(
+    `- The preliminary card of pilot 1 - recorded as preliminary, unreviewed and not backtested in \`pilot/PILOT_1_RETURN_STATUS.md\` - may be ` +
+    "read as an input. Where a card contradicts it, say so; never treat it as reviewed, as tested or as the completion of the task."
+  );
+  lines.push(
+    `- Upload the revised synthesis and the cards against \`${pilotBriefRow().task_id}\` in the Research Library. An upload records ` +
+    "evidence; it is not an approval, and it moves no factor's status."
+  );
+  lines.push("");
+  lines.push("## 5. Prohibitions");
+  lines.push("");
+  lines.push(PROHIBITIONS);
+  lines.push("");
+  lines.push("## 6. What this step is not");
+  lines.push("");
+  lines.push("- Not step 4: no card is scored here, no sample, no coverage and no performance number is produced.");
+  lines.push("- Not an approval: a review accepts or rejects a card, and this step is not that review.");
+  lines.push("- Not a decision on the label instrument, the missing-quote policy, the flat band or the tie rule.");
+  lines.push("- Not a live change of any kind: no production, workflow, dashboard, feed, dispatcher, database or configuration change is authorised by it.");
+  lines.push("");
+  return lines.join("\n");
+}
+
+function backtestHandoffBriefMarkdown() {
+  const contract = sessionContract();
+  const relative = filePath => filePath.replace(`${OUT_DIR}/`, "");
+  const lines = [];
+  lines.push("# Backtesting under a frozen session and data contract - step 4 brief");
+  lines.push("");
+  lines.push(
+    `- Task: \`${pilotBriefRow().task_id}\`. Step 4 of four of the deep-research tier ${DEEP_RESEARCH_VERSION}, context version ` +
+    `${CONTEXT_VERSION}. The candidates it may score are the cards of [\`${relative(SYNTHESIS_BRIEF_PATH)}\`](${relative(SYNTHESIS_BRIEF_PATH)}), not the prose of a report.`
+  );
+  lines.push(`- The design lives in \`${SESSION_CONTRACT_PATH}\`. This brief does not change it; it states what has to be closed before anything is scored.`);
+  lines.push("");
+  lines.push("## 1. Nothing is scored before the design is frozen");
+  lines.push("");
+  lines.push(
+    "A number produced before the design is fixed is a number that can be fitted, and every later comparison " +
+    "against it is contaminated. So the freeze comes first, in one recorded step, with the open entries of the " +
+    "contract resolved in writing: the label instrument and its quote source, the missing-quote policy, the flat " +
+    "band, the tie rule and the session calendar."
+  );
+  lines.push("");
+  lines.push("## 2. What the freeze has to contain");
+  lines.push("");
+  lines.push(`- The session: ${HORIZON.start} to ${HORIZON.end}, Monday-to-Friday starts only, ${HORIZON.nominal_hours} nominal hours, resolved from the declared London transitions and never by adding hours, held by test over every start from 2023 to 2027.`);
+  lines.push("- The session calendar: exchange holidays carried as data rather than inferred, so a holiday session is a stated exclusion and not a silent one.");
+  lines.push("- The label: the instrument and the quote source that price both ends of the session. Until that is closed nothing below can be computed, because both end prints come from it. Calling the label DXY while it is priced from something else is a defect, not a simplification.");
+  lines.push("- The missing-quote policy: one policy, frozen, with a session whose start or endpoint print is missing counted as a data exclusion that leaves the scored sample and is reported as coverage. The one proposed policy is that one, and it stays explicitly proposed until the freeze records it: this bundle does not freeze it and neither does the report.");
+  lines.push("- The flat band and the tie rule, re-derived for this session and frozen with the rest. The closed 24-hour study's 0.1 percentage-point band was fitted to a daily index over a nominal day and may not be borrowed.");
+  lines.push("- The split: which sessions are training and which are validation, fixed chronologically and declared before any result is seen. A parameter chosen on validation sessions is a parameter chosen on the answer.");
+  lines.push("- The input as-of rule, per input: every value carries an observation instant at or before the cutoff, no later revision is used as if it were a first print, and a daily series is the previous close with its declared staleness rather than the same morning's print.");
+  lines.push(`- The scoring: primary metric ${contract.scoring.primary}; abstention allowed (${contract.scoring.abstention_allowed}); a data exclusion and a model abstention counted and reported separately.`);
+  lines.push("");
+  lines.push("## 3. What any run must report");
+  lines.push("");
+  lines.push(`- ${contract.scoring.must_report.join("; ")}.`);
+  lines.push("- Which sessions were excluded and why, so coverage can be read as coverage rather than as a result.");
+  lines.push(`- The deployed engine's stored calls score on this label only as a diagnostic arm, and every table says so: ${contract.contract_vs_deployed_engine.scoring_rule}`);
+  lines.push("- A parameter's chosen value, the range it was chosen from and the training-only rule that chose it, exactly as the card declared them before the run.");
+  lines.push("");
+  lines.push("## 4. What a passing run would not mean");
+  lines.push("");
+  lines.push("- Not a deployment: no weight, sign, threshold or lookback changes because a backtest passed.");
+  lines.push("- Not an approval: a reviewer accepts a card on evidence, and a backtest is one input to that review.");
+  lines.push(`- Not a probability: ${contract.scoring.probability_publication}.`);
+  lines.push("- Not a licence to reopen the design: if the freeze has to change, the previous results are void and the freeze is recorded again before the next run.");
+  lines.push("");
+  lines.push("## 5. What is deliberately deferred here");
+  lines.push("");
+  lines.push("- The missing-quote policy stays proposed, not frozen: it is settled by the owner with the methodology review, and the VIX return is one input to that decision rather than the decision.");
+  lines.push("- No per-factor interface work is added by this bundle: nothing here changes a live node, a feed, a dashboard or a configuration.");
+  lines.push("- The label decision precedes everything else, and no scoring run starts while it is open.");
+  lines.push("");
+  lines.push("## 6. Prohibitions");
+  lines.push("");
+  lines.push(PROHIBITIONS);
+  lines.push("");
+  lines.push("## 7. What this brief is not");
+  lines.push("");
+  lines.push("- Not a result: it produces no number by itself and asserts none.");
+  lines.push("- Not authorisation to touch the live system: no production, workflow, dashboard, feed, dispatcher, database or configuration change is authorised by it.");
+  lines.push("");
+  return lines.join("\n");
+}
+
+/** The deep-research documents, in the order a reader should meet them. */
+function deepResearchDocuments() {
+  return [
+    { path: DEEP_RESEARCH_START_HERE_PATH, content: deepResearchStartHereMarkdown() },
+    { path: REPORT_BRIEF_PATH, content: comprehensiveReportBriefMarkdown() },
+    { path: NEUTRAL_CONTEXT_PACK_PATH, content: neutralContextPackMarkdown() },
+    { path: RED_TEAM_BRIEF_PATH, content: redTeamReviewBriefMarkdown() },
+    { path: SYNTHESIS_BRIEF_PATH, content: synthesisAndCardsBriefMarkdown() },
+    { path: BACKTEST_BRIEF_PATH, content: backtestHandoffBriefMarkdown() }
+  ];
+}
+
 function handoffManifest(bundleFiles) {
   const register = registerDocument();
   return {
@@ -2257,6 +3054,8 @@ function handoffManifest(bundleFiles) {
       packs: factorBriefRows().length,
       live_packs: LIVE_FACTORS.length,
       session_packs: SESSION_FACTOR_BRIEFS.length,
+      deep_research_documents: deepResearchDocuments().length,
+      deep_research_steps: DEEP_RESEARCH_STEPS.length,
       defects: register.defects.length,
       unscored_collected_inputs: register.unscored_collected_inputs.length,
       open_questions: factorBriefRows().reduce((total, row) => total + row.questions.length, 0),
@@ -2264,6 +3063,33 @@ function handoffManifest(bundleFiles) {
     },
     brief_index: BRIEF_INDEX_PATH,
     download: { path: ZIP_PATH, root: ZIP_ROOT },
+    deep_research: {
+      version: DEEP_RESEARCH_VERSION,
+      directory: DEEP_RESEARCH_DIR,
+      primary_deliverable: PRIMARY_DELIVERABLE,
+      start_here: DEEP_RESEARCH_START_HERE_PATH,
+      report_brief: REPORT_BRIEF_PATH,
+      context_pack: NEUTRAL_CONTEXT_PACK_PATH,
+      red_team_brief: RED_TEAM_BRIEF_PATH,
+      synthesis_brief: SYNTHESIS_BRIEF_PATH,
+      backtest_brief: BACKTEST_BRIEF_PATH,
+      report: {
+        factor_id: PILOT_FACTOR_ID,
+        task_id: pilotBriefRow().task_id,
+        subject: "VIX and its interactions with the other factors, against the subsequent direction of the US dollar over the session below.",
+        context_source: SESSION_CONTRACT_PATH
+      },
+      sequence: DEEP_RESEARCH_STEPS.map(step => `${step.step}. ${step.name}`),
+      hypothesis_limit_scope: HYPOTHESIS_LIMIT_SCOPE,
+      context_not_limit: CONTEXT_AND_LIMIT,
+      note:
+        "The primary deliverable of this handoff is the report of step 1, not a research card. The tier is " +
+        "versioned separately from the packs (pack version 2.0.0) and from the frozen pilot package (1.0.0), so " +
+        "correcting the programme moved no dispatched byte: the twenty-five briefs, the card schema, the template " +
+        "and the pilot archive are the same bytes they were before this tier existed. The context pack is generated " +
+        "from the session contract, the committed catalogue and the extracted register, and the builder refuses to " +
+        "write when the contract and the bundle disagree."
+    },
     pilot: {
       package: PILOT_ZIP_PATH,
       package_root: PILOT_ZIP_ROOT,
@@ -2282,6 +3108,7 @@ function handoffManifest(bundleFiles) {
     files: bundleFiles.map(file => ({ path: file.path, bytes: asBuffer(file.content).length, sha256: sha256(file.content) })),
     sources: [
       { path: CATALOG_PATH, note: "Authority for all twenty-five USD factor rows and for which library task covers each session factor." },
+      { path: SESSION_CONTRACT_PATH, note: "The session contract: horizon, weekday and DST rule, the label's verification state, the open decisions and the scoring design the context pack states." },
       { path: "exports/usd_layer1_agent.json", note: "The published call's conviction node and the input pack." },
       { path: "exports/usd_collector.json", note: "The collector's normalising node and the inputs it stores." },
       { path: "logic/agent_usd_direction.md", note: "The rulebook the workflow fetches on every run." },
@@ -2417,9 +3244,20 @@ function startHereMarkdown(register) {
   lines.push("");
   lines.push("## Download");
   lines.push("");
-  lines.push(`- The whole bundle as one archive: [\`${relative(ZIP_PATH)}\`](${relative(ZIP_PATH)}) - every file below, ${rows.length} briefs included, stored uncompressed so the archive is reproducible.`);
+  lines.push(`- The whole bundle as one archive: [\`${relative(ZIP_PATH)}\`](${relative(ZIP_PATH)}) - every file below, ${rows.length} briefs and the deep-research tier included, stored uncompressed so the archive is reproducible.`);
   lines.push(`- The same list as data: [\`${relative(BRIEF_INDEX_PATH)}\`](${relative(BRIEF_INDEX_PATH)}) - factor id, label, half, covering task, status and pack path for all ${rows.length} briefs.`);
+  lines.push(`- The deep-research tier, which is the primary deliverable: [\`${relative(DEEP_RESEARCH_START_HERE_PATH)}\`](${relative(DEEP_RESEARCH_START_HERE_PATH)}), with the report brief [\`${relative(REPORT_BRIEF_PATH)}\`](${relative(REPORT_BRIEF_PATH)}) and the neutral context pack [\`${relative(NEUTRAL_CONTEXT_PACK_PATH)}\`](${relative(NEUTRAL_CONTEXT_PACK_PATH)}).`);
   lines.push(`- The first pilot package, the VIX brief with the output template and the full card schema in one archive: [\`${relative(PILOT_ZIP_PATH)}\`](${relative(PILOT_ZIP_PATH)}), opening at [\`${relative(PILOT_START_HERE_PATH)}\`](${relative(PILOT_START_HERE_PATH)}).`);
+  lines.push("");
+  lines.push("## The primary deliverable, and where a card sits");
+  lines.push("");
+  lines.push(PRIMARY_DELIVERABLE);
+  lines.push("");
+  lines.push(
+    `The report is step 1 of [\`${relative(DEEP_RESEARCH_START_HERE_PATH)}\`](${relative(DEEP_RESEARCH_START_HERE_PATH)}); an independent red-team review is step 2, ` +
+    "the revised synthesis with its structured research cards is step 3, and backtesting under a frozen session and data contract is step 4. The " +
+    `${rows.length} briefs below are the card step, so a returned card is a later output and not a substitute for the report.`
+  );
   lines.push("");
   lines.push("## The twenty-five briefs");
   lines.push("");
@@ -2558,6 +3396,8 @@ function buildBundle() {
   files.push({ path: CARD_SCHEMA_PATH, content: `${JSON.stringify(cardSchemaV3(), null, 2)}\n` });
   files.push({ path: TRACKER_PATH, content: `${JSON.stringify(trackerDocument(), null, 2)}\n` });
   files.push({ path: START_HERE_PATH, content: startHereMarkdown(register) });
+  // The deep-research tier: the primary deliverable of this handoff and the three steps after it.
+  for (const file of deepResearchDocuments()) files.push(file);
   // The pilot package is one brief plus the two files its section 7 points at. It is built before the
   // bundle archive so the archive carries it too, and its own zip is stored rather than compressed.
   for (const file of buildPilot(files).files) files.push(file);
@@ -2580,9 +3420,9 @@ function main() {
     process.exit(2);
   }
 
-  const problems = catalogueAgreementProblems().concat(catalogueBriefProblems());
+  const problems = catalogueAgreementProblems().concat(catalogueBriefProblems(), contractAgreementProblems());
   if (problems.length) {
-    console.error(`refusing to ${mode}: the briefs contradict ${CATALOG_PATH}`);
+    console.error(`refusing to ${mode}: the bundle contradicts the catalogue or the session contract`);
     for (const problem of problems) console.error(`- ${problem}`);
     process.exit(1);
   }
@@ -2631,6 +3471,9 @@ module.exports = {
   MODIFIERS,
   KNOWN_DEFECTS,
   UNSCORED_COLLECTED_INPUTS,
+  ENGINE_BLOCK,
+  AVAILABILITY_BLOCK,
+  PROHIBITIONS,
   CARD_FIELDS,
   CARD_FAMILIES,
   CARD_SCHEMA_PATH,
@@ -2653,6 +3496,29 @@ module.exports = {
   PILOT_ZIP_ROOT,
   PILOT_VERSION,
   PILOT_FACTOR_ID,
+  DEEP_RESEARCH_DIR,
+  DEEP_RESEARCH_VERSION,
+  DEEP_RESEARCH_START_HERE_PATH,
+  REPORT_BRIEF_PATH,
+  NEUTRAL_CONTEXT_PACK_PATH,
+  RED_TEAM_BRIEF_PATH,
+  SYNTHESIS_BRIEF_PATH,
+  BACKTEST_BRIEF_PATH,
+  SESSION_CONTRACT_PATH,
+  PRIMARY_DELIVERABLE,
+  DEEP_RESEARCH_STEPS,
+  HYPOTHESIS_LIMIT_SCOPE,
+  CONTEXT_AND_LIMIT,
+  sessionContract,
+  contractAgreementProblems,
+  unresolvedDecisionRows,
+  deepResearchStartHereMarkdown,
+  comprehensiveReportBriefMarkdown,
+  neutralContextPackMarkdown,
+  redTeamReviewBriefMarkdown,
+  synthesisAndCardsBriefMarkdown,
+  backtestHandoffBriefMarkdown,
+  deepResearchDocuments,
   CONTEXT_VERSION,
   PACK_VERSION,
   EXTRACTED_AT,
