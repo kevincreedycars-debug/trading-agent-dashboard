@@ -111,16 +111,55 @@ test("the context package carries the task, the factors it covers and a stable f
   assert.equal(ResearchLibrary.buildContextPackage(catalog, "USD-SESSION-Z9"), null);
 });
 
-test("coverage is computed: A1 and A2 cover fifteen cards, the ten live factors are uncovered", () => {
+test("coverage is computed: A1 and A2 cover fifteen cards and both reviews plus the synthesis cover all twenty-five", () => {
   const coverage = ResearchLibrary.factorCoverage(catalog);
   const a1 = coverage.tasks.find(task => task.task_id === "USD-SESSION-A1");
   const a2 = coverage.tasks.find(task => task.task_id === "USD-SESSION-A2");
   assert.equal(a1.covers.length, 7);
   assert.equal(a2.covers.length, 8);
-  assert.equal(coverage.covered.length, 15);
-  assert.equal(coverage.uncovered.length, 10);
-  assert.ok(coverage.uncovered.every(entry => entry.factor_id.startsWith("live.")));
+  assert.equal(coverage.covered.length, 25);
+  assert.equal(coverage.uncovered.length, 0, "no USD factor may sit outside every task");
+  ["USD-SESSION-A3", "USD-SESSION-A4", "USD-SESSION-A5"].forEach(taskId => {
+    const task = coverage.tasks.find(entry => entry.task_id === taskId);
+    assert.equal(task.covers.length, 25, `${taskId} must cover all twenty-five entries`);
+  });
   assert.ok(a1.gaps.length >= 1 && a2.gaps.length >= 1);
+});
+
+test("every USD factor carries a self-contained brief in the registry, and no status moved", () => {
+  // Coverage is counted from the registry rather than asserted from the catalogue's own brief text: a factor
+  // counts only when a brief document is registered against its own id, the file exists, and its hash is the
+  // one the registry recorded. A brief is an assignment, so this check also holds the line that publishing
+  // twenty-five briefs is not twenty-five pieces of research: the statuses stay where they were.
+  const factors = ResearchLibrary.listFactors(catalog).filter(factor => factor.asset === "USD");
+  assert.equal(factors.length, 25);
+  const briefs = registry.documents.filter(document => document.document_type === "brief" && document.factor_id);
+  const byFactor = new Map(briefs.map(document => [document.factor_id, document]));
+  for (const factor of factors) {
+    const document = byFactor.get(factor.factor_id);
+    assert.ok(document, `${factor.factor_id} has no registered brief`);
+    const abs = path.join(root, document.repo_path);
+    assert.ok(fs.existsSync(abs), `${factor.factor_id} names a brief that is missing: ${document.repo_path}`);
+    assert.equal(ResearchLibrary.latestVersion(document).sha256, sha256(fs.readFileSync(abs)), `${factor.factor_id}: brief hash drifted`);
+    const text = fs.readFileSync(abs, "utf8");
+    assert.ok(text.includes("05:00 Europe/London"), `${factor.factor_id}: the brief must use the 05:00 London session`);
+    assert.ok(text.includes("## 7. What to return"), `${factor.factor_id}: the brief must carry output instructions`);
+    assert.ok(text.includes("## 8. What to answer"), `${factor.factor_id}: the brief must carry its research prompt`);
+    assert.ok(text.includes(factor.label), `${factor.factor_id}: the brief must carry the catalogue's label`);
+  }
+  assert.equal(byFactor.size, 25);
+  assert.equal(catalog.research_briefs.total, 25);
+  assert.equal(catalog.research_briefs.live_engine_audits, 10);
+  assert.equal(catalog.research_briefs.session_research, 15);
+  assert.equal(catalog.repo_documents.filter(entry => entry.brief_kind).length, 25, "the catalogue lists the same twenty-five briefs");
+  // Publishing the briefs changed no research state: nothing was marked completed, uploaded or accepted.
+  const counts = ResearchLibrary.progressCounts(factors);
+  assert.equal(counts.total, 25);
+  assert.equal(counts.research.ready, 22);
+  assert.equal(counts.research.blocked, 3);
+  assert.equal(counts.research.uploaded, 0);
+  assert.equal(counts.review.accepted, 0);
+  assert.equal(counts.backtest.tested, 0);
 });
 
 test("progress counts keep research, review and backtest apart", () => {
@@ -176,7 +215,7 @@ test("a review written before a newer report is flagged for reassessment", () =>
 test("the committed registry validates and every repo-backed hash matches the file", () => {
   assert.deepEqual(ResearchLibrary.validateDocuments(registry, catalog), []);
   const repoDocuments = registry.documents.filter(entry => entry.storage === "repo_path");
-  assert.equal(repoDocuments.length, 15);
+  assert.equal(repoDocuments.length, 41, "sixteen repository artefacts and twenty-five per-factor briefs");
   repoDocuments.forEach(document => {
     const abs = path.join(root, document.repo_path);
     assert.ok(fs.existsSync(abs), `${document.document_id} is missing on disk`);

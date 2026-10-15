@@ -32,23 +32,33 @@
     },
     "output_schema": {
       "schema_path": "docs/research/usd-session/v1/research-card.schema.json",
-      "schema_version": "research-card-v1",
+      "schema_version": "usd-session-research-card-v2",
       "format": "one JSON document per card, collected into a single file per task on return",
       "verdict": "A card may conclude that the factor should not be used. A returned card is research evidence, not an approved rule.",
       "required_fields": [
         "card_id",
-        "asset",
+        "schema_version",
+        "created_at",
+        "author",
+        "status",
+        "title",
         "family",
+        "assignment_id",
+        "session_horizon",
+        "calendar_and_quote_handling",
         "mechanism",
-        "sign_and_conditions",
-        "role",
-        "inputs_required",
-        "observable_at_cutoff",
-        "programmable_hypothesis",
-        "allowed_parameter_values",
-        "falsifying_result",
-        "overlap_and_double_counting",
-        "sources"
+        "direction_claim",
+        "session_role",
+        "observable_by_cutoff",
+        "reaction_vs_predictive",
+        "historical_data_requirements",
+        "live_data_requirements",
+        "dependencies_and_overlap",
+        "hypothesis",
+        "parameters",
+        "rejection_test",
+        "evidence",
+        "open_questions"
       ]
     },
     "policy": {
@@ -89,12 +99,12 @@
         "The label instrument and quote source is unverified, so every claim must name the instrument it is actually about."
       ],
       "depends_on": [],
-      "session_objective": "One directional USD call per day over the 05:00 Europe/London to 17:00 America/New_York session, from factors whose value is observable at the cutoff, with the label instrument and quote source declared.",
+      "session_objective": "One directional USD call per day over the 05:00 Europe/London to 05:00 Europe/London 24-hour session (the endpoint is the next local date), from factors whose value is observable at the cutoff, with the label instrument and quote source declared.",
       "implementation_excerpt": "Deployed 24h weights as coded in Calculate USD Conviction, workflow OCt1tB9yVMUgFTha v154: F1 10, F2 14, F3 10,\nF4 10, F5 14, F6 4, F7 24, F8 12, F9 1, F10 1, sum 100.\nAggregation: the weights of BULLISH and BEARISH factors become bullish and bearish; active = bullish + bearish;\nbullishArgument = round(bullish / active * 100); netEdge = bullishArgument - bearishArgument; direction is the larger\nside, suffixed _LEAN when the absolute net edge is below 20, NO_CLEAR_BIAS on an exact tie; conviction is the winning\nargument percentage, so conviction is a share of ACTIVE evidence and can read 100 per cent while half the weight is missing.\nMissing factor input: that factor scores NEUTRAL and its weight moves to the neutral pile. The node strips raw inputs before the write.",
       "rulebook_excerpt": "logic/agent_usd_direction.md, version 2.1, fetched live from GitHub on every run and read by the model.\nIts own weight table reads 10, 14, 16, 14, 6, 5, 3, 18, 12, 2 - a different allocation of the same total from the code above.\nDocumented in the rulebook but NOT implemented in the code: the VIX 1d and 5d modifiers, the stronger-message-wins conflict\nrule, F8 as a delta, and the participation cap, missing-input penalty, conflict penalty and agreement boost, which the code\nhard-codes to zero or to active.\nThe rulebook cites no book, edition or external source, so the factor set has no provenance in this repository.",
       "data_information": [
         "No intraday dollar index print exists in this repository or in the live collector, so the cutoff and endpoint prices are unverified at both ends.",
-        "The live collector takes one snapshot per day at the 09:30 ET pipeline time and prices the dollar with FRED DTWEXBGS, a daily index published with a one to two business-day lag.",
+        "The live collector takes one snapshot per day at the 09:30 ET pipeline time and prices the dollar with FRED DTWEXBGS, a daily index the Federal Reserve publishes in H.10 on Mondays at 16:15 ET for the previous business week, which leaves it two to six business days old at the 05:00 London cutoff (median four); the shorter one to two business-day figure is the FRED refresh lag, not the availability lag.",
         "Hourly OANDA caches exist for EUR/USD, XAU/USD and NAS100 only, and only to 2026-04-30.",
         "Daily macro series (FRED and Bundesbank) are the previous close at 05:00 London, correctly lagged, never the same morning.",
         "The paid calendar feed stores no consensus snapshot and no release-instant vintage.",
@@ -112,7 +122,7 @@
         "Do not state a performance figure you have not measured, and do not quote one from memory.",
         "A card may conclude that the factor should not be used. That is a valid return."
       ],
-      "prompt": "TASK USD-SESSION-A1 - USD price behaviour and risk conditions at the 05:00 London cutoff\nField research package. Return one research card per card id listed below.\n\nYou are writing for one reader who trades the US dollar and needs to know what is actually true, not what sounds plausible.\n\nObjective. One directional USD call per day over the 05:00 Europe/London to 17:00 America/New_York session, from factors whose value is observable at the cutoff, with the label instrument and quote source declared.\nCutoff: 05:00 Europe/London. Endpoint: 17:00 America/New_York on the same local date. The two zones change on different dates, so the window is 17 hours on most days and 16 hours in the spring and autumn mismatch weeks.\nIntended label instrument: DXY. Its quote source is NOT yet verified. If a claim is really about EUR/USD, a basket, or any other instrument, name that instrument and say so. Never present a different instrument as if it were DXY.\nEverything must be observable at 05:00 London: a value published after the cutoff may not be used, and a later revision may not be used as if it were the first print.\n\nFamilies in scope: USD price behaviour, risk conditions.\n\nCard ids to return:\n- fx.usd-session-momentum\n- fx.usd-overnight-range-position\n- fx.usd-session-volatility-regime\n- risk.vix-level-and-change-at-cutoff\n- risk.risk-on-off-cross-asset-state\n- risk.usd-safe-haven-demand\n- data.quality-gate-for-abstention\n\nOutput schema: docs/research/usd-session/v1/research-card.schema.json (research-card-v1), one JSON document per card, carrying every one of: card_id, asset, family, mechanism, sign_and_conditions, role, inputs_required, observable_at_cutoff, programmable_hypothesis, allowed_parameter_values, falsifying_result, overlap_and_double_counting, sources. A card that leaves a required field empty is not accepted.\n\nEvery card must answer, in its own words: the mechanism that would operate inside this specific 17-hour window; when the relation changes sign, weakens, or stops being informative because it is already priced; whether the factor is direction, regime context, a quality gate or an abstention gate; what exactly was observable at the cutoff and how stale each input is; the programmable hypothesis with its bounded parameter values; the result that would falsify it; and which other cards share the same information and what would be double-counted.\n\nData that is reachable today, stated once so no card has to guess:\n- No intraday dollar index print exists in this repository or in the live collector, so the cutoff and endpoint prices are unverified at both ends.\n- The live collector takes one snapshot per day at the 09:30 ET pipeline time and prices the dollar with FRED DTWEXBGS, a daily index published with a one to two business-day lag.\n- Hourly OANDA caches exist for EUR/USD, XAU/USD and NAS100 only, and only to 2026-04-30.\n- Daily macro series (FRED and Bundesbank) are the previous close at 05:00 London, correctly lagged, never the same morning.\n- The paid calendar feed stores no consensus snapshot and no release-instant vintage.\n- Full inventory: docs/research/usd-session/v1/inventory.md sections 2 and 7; cached-input manifest: data/usd-24h-dataset-manifest.json.\n\nRules.\n- No production, workflow, dashboard, dispatcher, database or configuration change is authorised by this task.\n- State an unavailable input plainly rather than substituting a proxy silently.\n- Do not propose a threshold that cannot be computed from the data named in this package.\n- Do not state a performance figure you have not measured, and do not quote one from memory.\n- A card may conclude that the factor should not be used. That is a valid return.\n\nReturn the cards only. Do not propose a trading rule, a position size, a probability, or a performance figure. The reader decides what, if anything, becomes a rule."
+      "prompt": "TASK USD-SESSION-A1 - USD price behaviour and risk conditions at the 05:00 London cutoff\nField research package. Return one research card per card id listed below.\n\nYou are writing for one reader who trades the US dollar and needs to know what is actually true, not what sounds plausible.\n\nObjective. One directional USD call per day over the 05:00 Europe/London to 05:00 Europe/London 24-hour session (the endpoint is the next local date), from factors whose value is observable at the cutoff, with the label instrument and quote source declared.\nCutoff: 05:00 Europe/London. Endpoint: 05:00 Europe/London on the next local date: one 24-hour session whose two ends are wall-clock times in the same zone. New York is not part of the session definition and is kept only for the timing of the Federal Reserve H.10 release. A session starts on a Monday-to-Friday local date only; the London spring and autumn transitions fall inside the preceding Saturday start, which is not a session, so every eligible session is exactly 24 hours.\nIntended label instrument: DXY. Its quote source is NOT yet verified. If a claim is really about EUR/USD, a basket, or any other instrument, name that instrument and say so. Never present a different instrument as if it were DXY.\nEverything must be observable at 05:00 London: a value published after the cutoff may not be used, and a later revision may not be used as if it were the first print.\n\nFamilies in scope: USD price behaviour, risk conditions.\n\nCard ids to return:\n- fx.usd-session-momentum\n- fx.usd-overnight-range-position\n- fx.usd-session-volatility-regime\n- risk.vix-level-and-change-at-cutoff\n- risk.risk-on-off-cross-asset-state\n- risk.usd-safe-haven-demand\n- data.quality-gate-for-abstention\n\nOutput schema: docs/research/usd-session/v1/research-card.schema.json (usd-session-research-card-v2), one JSON document per card, carrying every one of: card_id, schema_version, created_at, author, status, title, family, assignment_id, session_horizon, calendar_and_quote_handling, mechanism, direction_claim, session_role, observable_by_cutoff, reaction_vs_predictive, historical_data_requirements, live_data_requirements, dependencies_and_overlap, hypothesis, parameters, rejection_test, evidence, open_questions. A card that leaves a required field empty is not accepted.\n\nEvery card must answer, in its own words: the session horizon it is written for, stated once in the card's own session_horizon block, and the DST, weekend and missing-quote handling in calendar_and_quote_handling; the mechanism that would operate inside this specific 24-hour London-to-London window; when the relation changes sign, weakens, or stops being informative because it is already priced; whether the factor is direction, regime context, a quality gate or an abstention gate; what exactly was observable at the cutoff and how stale each input is; the programmable hypothesis with its bounded parameter values; the result that would falsify it; and which other cards share the same information and what would be double-counted.\n\nData that is reachable today, stated once so no card has to guess:\n- No intraday dollar index print exists in this repository or in the live collector, so the cutoff and endpoint prices are unverified at both ends.\n- The live collector takes one snapshot per day at the 09:30 ET pipeline time and prices the dollar with FRED DTWEXBGS, a daily index the Federal Reserve publishes in H.10 on Mondays at 16:15 ET for the previous business week, which leaves it two to six business days old at the 05:00 London cutoff (median four); the shorter one to two business-day figure is the FRED refresh lag, not the availability lag.\n- Hourly OANDA caches exist for EUR/USD, XAU/USD and NAS100 only, and only to 2026-04-30.\n- Daily macro series (FRED and Bundesbank) are the previous close at 05:00 London, correctly lagged, never the same morning.\n- The paid calendar feed stores no consensus snapshot and no release-instant vintage.\n- Full inventory: docs/research/usd-session/v1/inventory.md sections 2 and 7; cached-input manifest: data/usd-24h-dataset-manifest.json.\n\nRules.\n- No production, workflow, dashboard, dispatcher, database or configuration change is authorised by this task.\n- State an unavailable input plainly rather than substituting a proxy silently.\n- Do not propose a threshold that cannot be computed from the data named in this package.\n- Do not state a performance figure you have not measured, and do not quote one from memory.\n- A card may conclude that the factor should not be used. That is a valid return.\n\nReturn the cards only. Do not propose a trading rule, a position size, a probability, or a performance figure. The reader decides what, if anything, becomes a rule."
     },
     {
       "task_id": "USD-SESSION-A2",
@@ -137,12 +147,12 @@
         "Consensus and first-print vintages may be unreachable; the surprise card must report that plainly rather than substitute a proxy."
       ],
       "depends_on": [],
-      "session_objective": "One directional USD call per day over the 05:00 Europe/London to 17:00 America/New_York session, from factors whose value is observable at the cutoff, with the label instrument and quote source declared.",
+      "session_objective": "One directional USD call per day over the 05:00 Europe/London to 05:00 Europe/London 24-hour session (the endpoint is the next local date), from factors whose value is observable at the cutoff, with the label instrument and quote source declared.",
       "implementation_excerpt": "Deployed 24h weights as coded in Calculate USD Conviction, workflow OCt1tB9yVMUgFTha v154: F1 10, F2 14, F3 10,\nF4 10, F5 14, F6 4, F7 24, F8 12, F9 1, F10 1, sum 100.\nAggregation: the weights of BULLISH and BEARISH factors become bullish and bearish; active = bullish + bearish;\nbullishArgument = round(bullish / active * 100); netEdge = bullishArgument - bearishArgument; direction is the larger\nside, suffixed _LEAN when the absolute net edge is below 20, NO_CLEAR_BIAS on an exact tie; conviction is the winning\nargument percentage, so conviction is a share of ACTIVE evidence and can read 100 per cent while half the weight is missing.\nMissing factor input: that factor scores NEUTRAL and its weight moves to the neutral pile. The node strips raw inputs before the write.",
       "rulebook_excerpt": "logic/agent_usd_direction.md, version 2.1, fetched live from GitHub on every run and read by the model.\nIts own weight table reads 10, 14, 16, 14, 6, 5, 3, 18, 12, 2 - a different allocation of the same total from the code above.\nDocumented in the rulebook but NOT implemented in the code: the VIX 1d and 5d modifiers, the stronger-message-wins conflict\nrule, F8 as a delta, and the participation cap, missing-input penalty, conflict penalty and agreement boost, which the code\nhard-codes to zero or to active.\nThe rulebook cites no book, edition or external source, so the factor set has no provenance in this repository.",
       "data_information": [
         "No intraday dollar index print exists in this repository or in the live collector, so the cutoff and endpoint prices are unverified at both ends.",
-        "The live collector takes one snapshot per day at the 09:30 ET pipeline time and prices the dollar with FRED DTWEXBGS, a daily index published with a one to two business-day lag.",
+        "The live collector takes one snapshot per day at the 09:30 ET pipeline time and prices the dollar with FRED DTWEXBGS, a daily index the Federal Reserve publishes in H.10 on Mondays at 16:15 ET for the previous business week, which leaves it two to six business days old at the 05:00 London cutoff (median four); the shorter one to two business-day figure is the FRED refresh lag, not the availability lag.",
         "Hourly OANDA caches exist for EUR/USD, XAU/USD and NAS100 only, and only to 2026-04-30.",
         "Daily macro series (FRED and Bundesbank) are the previous close at 05:00 London, correctly lagged, never the same morning.",
         "The paid calendar feed stores no consensus snapshot and no release-instant vintage.",
@@ -160,7 +170,7 @@
         "Do not state a performance figure you have not measured, and do not quote one from memory.",
         "A card may conclude that the factor should not be used. That is a valid return."
       ],
-      "prompt": "TASK USD-SESSION-A2 - Rates, policy expectations, releases and calendar context\nField research package. Return one research card per card id listed below.\n\nYou are writing for one reader who trades the US dollar and needs to know what is actually true, not what sounds plausible.\n\nObjective. One directional USD call per day over the 05:00 Europe/London to 17:00 America/New_York session, from factors whose value is observable at the cutoff, with the label instrument and quote source declared.\nCutoff: 05:00 Europe/London. Endpoint: 17:00 America/New_York on the same local date. The two zones change on different dates, so the window is 17 hours on most days and 16 hours in the spring and autumn mismatch weeks.\nIntended label instrument: DXY. Its quote source is NOT yet verified. If a claim is really about EUR/USD, a basket, or any other instrument, name that instrument and say so. Never present a different instrument as if it were DXY.\nEverything must be observable at 05:00 London: a value published after the cutoff may not be used, and a later revision may not be used as if it were the first print.\n\nFamilies in scope: foreign rates and policy expectations, macroeconomic releases, calendar context.\n\nCard ids to return:\n- rates.us-front-end-delta\n- rates.relative-front-end-delta\n- rates.real-yield-delta\n- rates.term-premium-and-curve\n- rates.credit-spread-delta\n- calendar.known-releases-between-cutoff-and-endpoint\n- calendar.days-since-and-until-high-impact-events\n- macro.release-surprise-at-first-print\n\nOutput schema: docs/research/usd-session/v1/research-card.schema.json (research-card-v1), one JSON document per card, carrying every one of: card_id, asset, family, mechanism, sign_and_conditions, role, inputs_required, observable_at_cutoff, programmable_hypothesis, allowed_parameter_values, falsifying_result, overlap_and_double_counting, sources. A card that leaves a required field empty is not accepted.\n\nEvery card must answer, in its own words: the mechanism that would operate inside this specific 17-hour window; when the relation changes sign, weakens, or stops being informative because it is already priced; whether the factor is direction, regime context, a quality gate or an abstention gate; what exactly was observable at the cutoff and how stale each input is; the programmable hypothesis with its bounded parameter values; the result that would falsify it; and which other cards share the same information and what would be double-counted.\n\nData that is reachable today, stated once so no card has to guess:\n- No intraday dollar index print exists in this repository or in the live collector, so the cutoff and endpoint prices are unverified at both ends.\n- The live collector takes one snapshot per day at the 09:30 ET pipeline time and prices the dollar with FRED DTWEXBGS, a daily index published with a one to two business-day lag.\n- Hourly OANDA caches exist for EUR/USD, XAU/USD and NAS100 only, and only to 2026-04-30.\n- Daily macro series (FRED and Bundesbank) are the previous close at 05:00 London, correctly lagged, never the same morning.\n- The paid calendar feed stores no consensus snapshot and no release-instant vintage.\n- Full inventory: docs/research/usd-session/v1/inventory.md sections 2 and 7; cached-input manifest: data/usd-24h-dataset-manifest.json.\n\nRules.\n- No production, workflow, dashboard, dispatcher, database or configuration change is authorised by this task.\n- State an unavailable input plainly rather than substituting a proxy silently.\n- Do not propose a threshold that cannot be computed from the data named in this package.\n- Do not state a performance figure you have not measured, and do not quote one from memory.\n- A card may conclude that the factor should not be used. That is a valid return.\n\nIf the consensus that was published before a release cannot be reached, say so and say what that costs the family. Do not reconstruct a consensus from memory and do not present a later revision as a first print."
+      "prompt": "TASK USD-SESSION-A2 - Rates, policy expectations, releases and calendar context\nField research package. Return one research card per card id listed below.\n\nYou are writing for one reader who trades the US dollar and needs to know what is actually true, not what sounds plausible.\n\nObjective. One directional USD call per day over the 05:00 Europe/London to 05:00 Europe/London 24-hour session (the endpoint is the next local date), from factors whose value is observable at the cutoff, with the label instrument and quote source declared.\nCutoff: 05:00 Europe/London. Endpoint: 05:00 Europe/London on the next local date: one 24-hour session whose two ends are wall-clock times in the same zone. New York is not part of the session definition and is kept only for the timing of the Federal Reserve H.10 release. A session starts on a Monday-to-Friday local date only; the London spring and autumn transitions fall inside the preceding Saturday start, which is not a session, so every eligible session is exactly 24 hours.\nIntended label instrument: DXY. Its quote source is NOT yet verified. If a claim is really about EUR/USD, a basket, or any other instrument, name that instrument and say so. Never present a different instrument as if it were DXY.\nEverything must be observable at 05:00 London: a value published after the cutoff may not be used, and a later revision may not be used as if it were the first print.\n\nFamilies in scope: foreign rates and policy expectations, macroeconomic releases, calendar context.\n\nCard ids to return:\n- rates.us-front-end-delta\n- rates.relative-front-end-delta\n- rates.real-yield-delta\n- rates.term-premium-and-curve\n- rates.credit-spread-delta\n- calendar.known-releases-between-cutoff-and-endpoint\n- calendar.days-since-and-until-high-impact-events\n- macro.release-surprise-at-first-print\n\nOutput schema: docs/research/usd-session/v1/research-card.schema.json (usd-session-research-card-v2), one JSON document per card, carrying every one of: card_id, schema_version, created_at, author, status, title, family, assignment_id, session_horizon, calendar_and_quote_handling, mechanism, direction_claim, session_role, observable_by_cutoff, reaction_vs_predictive, historical_data_requirements, live_data_requirements, dependencies_and_overlap, hypothesis, parameters, rejection_test, evidence, open_questions. A card that leaves a required field empty is not accepted.\n\nEvery card must answer, in its own words: the session horizon it is written for, stated once in the card's own session_horizon block, and the DST, weekend and missing-quote handling in calendar_and_quote_handling; the mechanism that would operate inside this specific 24-hour London-to-London window; when the relation changes sign, weakens, or stops being informative because it is already priced; whether the factor is direction, regime context, a quality gate or an abstention gate; what exactly was observable at the cutoff and how stale each input is; the programmable hypothesis with its bounded parameter values; the result that would falsify it; and which other cards share the same information and what would be double-counted.\n\nData that is reachable today, stated once so no card has to guess:\n- No intraday dollar index print exists in this repository or in the live collector, so the cutoff and endpoint prices are unverified at both ends.\n- The live collector takes one snapshot per day at the 09:30 ET pipeline time and prices the dollar with FRED DTWEXBGS, a daily index the Federal Reserve publishes in H.10 on Mondays at 16:15 ET for the previous business week, which leaves it two to six business days old at the 05:00 London cutoff (median four); the shorter one to two business-day figure is the FRED refresh lag, not the availability lag.\n- Hourly OANDA caches exist for EUR/USD, XAU/USD and NAS100 only, and only to 2026-04-30.\n- Daily macro series (FRED and Bundesbank) are the previous close at 05:00 London, correctly lagged, never the same morning.\n- The paid calendar feed stores no consensus snapshot and no release-instant vintage.\n- Full inventory: docs/research/usd-session/v1/inventory.md sections 2 and 7; cached-input manifest: data/usd-24h-dataset-manifest.json.\n\nRules.\n- No production, workflow, dashboard, dispatcher, database or configuration change is authorised by this task.\n- State an unavailable input plainly rather than substituting a proxy silently.\n- Do not propose a threshold that cannot be computed from the data named in this package.\n- Do not state a performance figure you have not measured, and do not quote one from memory.\n- A card may conclude that the factor should not be used. That is a valid return.\n\nIf the consensus that was published before a release cannot be reached, say so and say what that costs the family. Do not reconstruct a consensus from memory and do not present a later revision as a first print."
     },
     {
       "task_id": "USD-SESSION-A3",
@@ -171,6 +181,16 @@
       "status": "not_started",
       "context_version": "usd-session-context-20261013.1",
       "covers": [
+        "live.f1-vix-level",
+        "live.f2-us-2y-delta",
+        "live.f3-us-de-2y-spread-delta",
+        "live.f4-real-yield-delta",
+        "live.f5-dxy-delta",
+        "live.f6-gold-delta",
+        "live.f7-economic-surprise",
+        "live.f8-fed-bias",
+        "live.f9-dollar-smile",
+        "live.f10-equity-versus-usd",
         "fx.usd-session-momentum",
         "fx.usd-overnight-range-position",
         "fx.usd-session-volatility-regime",
@@ -188,19 +208,19 @@
         "macro.release-surprise-at-first-print"
       ],
       "gaps": [
-        "This review cannot start until both field packages return their cards.",
+        "This review cannot start until all twenty-five briefs have returned their cards: the fifteen session cards from the two field packages, and the ten baseline-audit cards from the handoff bundle tasks USD-BASELINE-AUDIT-01 to USD-BASELINE-AUDIT-10.",
         "Reviewer A is kept blind to Reviewer B, and neither sees the coordinator expectations."
       ],
       "depends_on": [
         "USD-SESSION-A1",
         "USD-SESSION-A2"
       ],
-      "session_objective": "One directional USD call per day over the 05:00 Europe/London to 17:00 America/New_York session, from factors whose value is observable at the cutoff, with the label instrument and quote source declared.",
+      "session_objective": "One directional USD call per day over the 05:00 Europe/London to 05:00 Europe/London 24-hour session (the endpoint is the next local date), from factors whose value is observable at the cutoff, with the label instrument and quote source declared.",
       "implementation_excerpt": "Deployed 24h weights as coded in Calculate USD Conviction, workflow OCt1tB9yVMUgFTha v154: F1 10, F2 14, F3 10,\nF4 10, F5 14, F6 4, F7 24, F8 12, F9 1, F10 1, sum 100.\nAggregation: the weights of BULLISH and BEARISH factors become bullish and bearish; active = bullish + bearish;\nbullishArgument = round(bullish / active * 100); netEdge = bullishArgument - bearishArgument; direction is the larger\nside, suffixed _LEAN when the absolute net edge is below 20, NO_CLEAR_BIAS on an exact tie; conviction is the winning\nargument percentage, so conviction is a share of ACTIVE evidence and can read 100 per cent while half the weight is missing.\nMissing factor input: that factor scores NEUTRAL and its weight moves to the neutral pile. The node strips raw inputs before the write.",
       "rulebook_excerpt": "logic/agent_usd_direction.md, version 2.1, fetched live from GitHub on every run and read by the model.\nIts own weight table reads 10, 14, 16, 14, 6, 5, 3, 18, 12, 2 - a different allocation of the same total from the code above.\nDocumented in the rulebook but NOT implemented in the code: the VIX 1d and 5d modifiers, the stronger-message-wins conflict\nrule, F8 as a delta, and the participation cap, missing-input penalty, conflict penalty and agreement boost, which the code\nhard-codes to zero or to active.\nThe rulebook cites no book, edition or external source, so the factor set has no provenance in this repository.",
       "data_information": [
         "No intraday dollar index print exists in this repository or in the live collector, so the cutoff and endpoint prices are unverified at both ends.",
-        "The live collector takes one snapshot per day at the 09:30 ET pipeline time and prices the dollar with FRED DTWEXBGS, a daily index published with a one to two business-day lag.",
+        "The live collector takes one snapshot per day at the 09:30 ET pipeline time and prices the dollar with FRED DTWEXBGS, a daily index the Federal Reserve publishes in H.10 on Mondays at 16:15 ET for the previous business week, which leaves it two to six business days old at the 05:00 London cutoff (median four); the shorter one to two business-day figure is the FRED refresh lag, not the availability lag.",
         "Hourly OANDA caches exist for EUR/USD, XAU/USD and NAS100 only, and only to 2026-04-30.",
         "Daily macro series (FRED and Bundesbank) are the previous close at 05:00 London, correctly lagged, never the same morning.",
         "The paid calendar feed stores no consensus snapshot and no release-instant vintage.",
@@ -218,7 +238,7 @@
         "Do not state a performance figure you have not measured, and do not quote one from memory.",
         "A card may conclude that the factor should not be used. That is a valid return."
       ],
-      "prompt": "TASK USD-SESSION-A3 - Reviewer A: mechanisms, signs, timing, interactions and double counting\nIndependent review package. Lens: economic and market mechanism. Judge whether each proposed card would actually operate inside this 17-hour window.\n\nYou are writing for one reader who trades the US dollar and needs to know what is actually true, not what sounds plausible.\n\nObjective. One directional USD call per day over the 05:00 Europe/London to 17:00 America/New_York session, from factors whose value is observable at the cutoff, with the label instrument and quote source declared.\nCutoff: 05:00 Europe/London. Endpoint: 17:00 America/New_York on the same local date. The two zones change on different dates, so the window is 17 hours on most days and 16 hours in the spring and autumn mismatch weeks.\nIntended label instrument: DXY. Its quote source is NOT yet verified. If a claim is really about EUR/USD, a basket, or any other instrument, name that instrument and say so. Never present a different instrument as if it were DXY.\nEverything must be observable at 05:00 London: a value published after the cutoff may not be used, and a later revision may not be used as if it were the first print.\n\nSubject: the fifteen research cards returned by the two field packages, taken as written. Read them as claims to be attacked rather than as findings to be summarised.\n\nFor every card ask: is the stated mechanism true, and is it true on this horizon rather than on a daily or monthly one; is the sign right and does it flip in any plausible regime; is the timing right, that is when inside the window does it act; is the information already in the price by 05:00 London; and which other card carries the same information, so that weighting both would double-count one idea.\n\nName any card whose mechanism you believe is simply wrong, and say what evidence would settle it.\n\nIf the card set misses a mechanism that matters on this window, say which and why, but do not write the missing card yourself.\n\nOutput schema: docs/research/usd-session/v1/review-issue-register.schema.json, one entry per objection, with severity, the evidence or missing evidence it rests on, the remedy and the test that would falsify it.\nThe cards under review follow docs/research/usd-session/v1/research-card.schema.json (research-card-v1): use it to check that each card answers every required field, and say so when one does not.\n\nReturn a review with, for every objection: its severity, the exact evidence or missing evidence it rests on, the remedy, and the test that would falsify the objection. Do not soften an objection because the coordinator may dislike it, and do not manufacture one to look thorough.\n\nRules.\n- No production, workflow, dashboard, dispatcher, database or configuration change is authorised by this task.\n- State an unavailable input plainly rather than substituting a proxy silently.\n- Do not propose a threshold that cannot be computed from the data named in this package.\n- Do not state a performance figure you have not measured, and do not quote one from memory.\n- A card may conclude that the factor should not be used. That is a valid return.\n- You are one of two independent reviewers. Do not assume what the other reviewer will say, and do not write as if your acceptance were the last step.\n\nReturn the issue register and the per-card verdicts. Do not rewrite the cards and do not propose weights."
+      "prompt": "TASK USD-SESSION-A3 - Reviewer A: mechanisms, signs, timing, interactions and double counting\nIndependent review package. Lens: economic and market mechanism. Judge whether each proposed card would actually operate inside this 24-hour London-to-London session.\n\nYou are writing for one reader who trades the US dollar and needs to know what is actually true, not what sounds plausible.\n\nObjective. One directional USD call per day over the 05:00 Europe/London to 05:00 Europe/London 24-hour session (the endpoint is the next local date), from factors whose value is observable at the cutoff, with the label instrument and quote source declared.\nCutoff: 05:00 Europe/London. Endpoint: 05:00 Europe/London on the next local date: one 24-hour session whose two ends are wall-clock times in the same zone. New York is not part of the session definition and is kept only for the timing of the Federal Reserve H.10 release. A session starts on a Monday-to-Friday local date only; the London spring and autumn transitions fall inside the preceding Saturday start, which is not a session, so every eligible session is exactly 24 hours.\nIntended label instrument: DXY. Its quote source is NOT yet verified. If a claim is really about EUR/USD, a basket, or any other instrument, name that instrument and say so. Never present a different instrument as if it were DXY.\nEverything must be observable at 05:00 London: a value published after the cutoff may not be used, and a later revision may not be used as if it were the first print.\n\nSubject: all twenty-five briefs taken as written, in two halves. The fifteen session-research cards returned by the two field packages, and the ten baseline-audit cards returned against the deployed factors (F1 VIX level, F2 US 2Y delta, F3 US-DE 2Y spread delta, F4 real yield delta, F5 DXY delta, F6 gold delta, F7 economic surprise, F8 Fed bias, F9 dollar smile, F10 equity versus USD) from the handoff bundle packs under docs/research/handoff/usd/v1/packs/. Read them as claims to be attacked rather than as findings to be summarised.\n\nFor every card ask: is the stated mechanism true, and is it true on this horizon rather than on a daily or monthly one; is the sign right and does it flip in any plausible regime; is the timing right, that is when inside the window does it act; is the information already in the price by 05:00 London; and which other card carries the same information, so that weighting both would double-count one idea.\n\nThen work the overlaps across the whole set of twenty-five, not card by card: the deployed baseline audits already overlap each other (F2 with F3, F3 with F4, F4 with F6, F1 with F9 and F10, and the F7 and F8 pair), and the session cards overlap the deployed ones wherever they read the same quantity (session rates against F2 to F4, the session VIX and cross-asset cards against F1, F9 and F10, the session calendar cards against F7, and the session momentum and range cards against F5). Name every pair or group you judge to be one idea, say which member should carry it, and say what the discarded members would still add.\n\nName any card whose mechanism you believe is simply wrong, and say what evidence would settle it.\n\nIf the card set misses a mechanism that matters on this window, say which and why, but do not write the missing card yourself.\n\nOutput schema: docs/research/usd-session/v1/review-issue-register.schema.json, one entry per objection, with severity, the evidence or missing evidence it rests on, the remedy and the test that would falsify it.\nThe cards under review follow docs/research/usd-session/v1/research-card.schema.json (usd-session-research-card-v2): use it to check that each card answers every required field, including its own session_horizon and calendar_and_quote_handling blocks, and say so when one does not.\n\nReturn a review with, for every objection: its severity, the exact evidence or missing evidence it rests on, the remedy, and the test that would falsify the objection. Do not soften an objection because the coordinator may dislike it, and do not manufacture one to look thorough.\n\nRules.\n- No production, workflow, dashboard, dispatcher, database or configuration change is authorised by this task.\n- State an unavailable input plainly rather than substituting a proxy silently.\n- Do not propose a threshold that cannot be computed from the data named in this package.\n- Do not state a performance figure you have not measured, and do not quote one from memory.\n- A card may conclude that the factor should not be used. That is a valid return.\n- You are one of two independent reviewers. Do not assume what the other reviewer will say, and do not write as if your acceptance were the last step.\n\nReturn the issue register and the per-card verdicts. Do not rewrite the cards and do not propose weights."
     },
     {
       "task_id": "USD-SESSION-A4",
@@ -229,6 +249,16 @@
       "status": "not_started",
       "context_version": "usd-session-context-20261013.1",
       "covers": [
+        "live.f1-vix-level",
+        "live.f2-us-2y-delta",
+        "live.f3-us-de-2y-spread-delta",
+        "live.f4-real-yield-delta",
+        "live.f5-dxy-delta",
+        "live.f6-gold-delta",
+        "live.f7-economic-surprise",
+        "live.f8-fed-bias",
+        "live.f9-dollar-smile",
+        "live.f10-equity-versus-usd",
         "fx.usd-session-momentum",
         "fx.usd-overnight-range-position",
         "fx.usd-session-volatility-regime",
@@ -246,19 +276,19 @@
         "macro.release-surprise-at-first-print"
       ],
       "gaps": [
-        "This review cannot start until both field packages return their cards.",
+        "This review cannot start until all twenty-five briefs have returned their cards: the fifteen session cards from the two field packages, and the ten baseline-audit cards from the handoff bundle tasks USD-BASELINE-AUDIT-01 to USD-BASELINE-AUDIT-10.",
         "The evaluation design it must approve is a proposal in docs/research/usd-session/v1/implementation_plan.md; no candidate may be scored before this approval is recorded."
       ],
       "depends_on": [
         "USD-SESSION-A1",
         "USD-SESSION-A2"
       ],
-      "session_objective": "One directional USD call per day over the 05:00 Europe/London to 17:00 America/New_York session, from factors whose value is observable at the cutoff, with the label instrument and quote source declared.",
+      "session_objective": "One directional USD call per day over the 05:00 Europe/London to 05:00 Europe/London 24-hour session (the endpoint is the next local date), from factors whose value is observable at the cutoff, with the label instrument and quote source declared.",
       "implementation_excerpt": "Deployed 24h weights as coded in Calculate USD Conviction, workflow OCt1tB9yVMUgFTha v154: F1 10, F2 14, F3 10,\nF4 10, F5 14, F6 4, F7 24, F8 12, F9 1, F10 1, sum 100.\nAggregation: the weights of BULLISH and BEARISH factors become bullish and bearish; active = bullish + bearish;\nbullishArgument = round(bullish / active * 100); netEdge = bullishArgument - bearishArgument; direction is the larger\nside, suffixed _LEAN when the absolute net edge is below 20, NO_CLEAR_BIAS on an exact tie; conviction is the winning\nargument percentage, so conviction is a share of ACTIVE evidence and can read 100 per cent while half the weight is missing.\nMissing factor input: that factor scores NEUTRAL and its weight moves to the neutral pile. The node strips raw inputs before the write.",
       "rulebook_excerpt": "logic/agent_usd_direction.md, version 2.1, fetched live from GitHub on every run and read by the model.\nIts own weight table reads 10, 14, 16, 14, 6, 5, 3, 18, 12, 2 - a different allocation of the same total from the code above.\nDocumented in the rulebook but NOT implemented in the code: the VIX 1d and 5d modifiers, the stronger-message-wins conflict\nrule, F8 as a delta, and the participation cap, missing-input penalty, conflict penalty and agreement boost, which the code\nhard-codes to zero or to active.\nThe rulebook cites no book, edition or external source, so the factor set has no provenance in this repository.",
       "data_information": [
         "No intraday dollar index print exists in this repository or in the live collector, so the cutoff and endpoint prices are unverified at both ends.",
-        "The live collector takes one snapshot per day at the 09:30 ET pipeline time and prices the dollar with FRED DTWEXBGS, a daily index published with a one to two business-day lag.",
+        "The live collector takes one snapshot per day at the 09:30 ET pipeline time and prices the dollar with FRED DTWEXBGS, a daily index the Federal Reserve publishes in H.10 on Mondays at 16:15 ET for the previous business week, which leaves it two to six business days old at the 05:00 London cutoff (median four); the shorter one to two business-day figure is the FRED refresh lag, not the availability lag.",
         "Hourly OANDA caches exist for EUR/USD, XAU/USD and NAS100 only, and only to 2026-04-30.",
         "Daily macro series (FRED and Bundesbank) are the previous close at 05:00 London, correctly lagged, never the same morning.",
         "The paid calendar feed stores no consensus snapshot and no release-instant vintage.",
@@ -276,7 +306,7 @@
         "Do not state a performance figure you have not measured, and do not quote one from memory.",
         "A card may conclude that the factor should not be used. That is a valid return."
       ],
-      "prompt": "TASK USD-SESSION-A4 - Reviewer B: data availability, leakage, statistical design, fidelity and overfitting\nIndependent review package. Lens: data and method. Judge whether each card could be tested honestly with the data that actually exists.\n\nYou are writing for one reader who trades the US dollar and needs to know what is actually true, not what sounds plausible.\n\nObjective. One directional USD call per day over the 05:00 Europe/London to 17:00 America/New_York session, from factors whose value is observable at the cutoff, with the label instrument and quote source declared.\nCutoff: 05:00 Europe/London. Endpoint: 17:00 America/New_York on the same local date. The two zones change on different dates, so the window is 17 hours on most days and 16 hours in the spring and autumn mismatch weeks.\nIntended label instrument: DXY. Its quote source is NOT yet verified. If a claim is really about EUR/USD, a basket, or any other instrument, name that instrument and say so. Never present a different instrument as if it were DXY.\nEverything must be observable at 05:00 London: a value published after the cutoff may not be used, and a later revision may not be used as if it were the first print.\n\nSubject: the fifteen research cards returned by the two field packages, plus the proposed frozen evaluation design.\n\nFor every card ask: is the input genuinely available at 05:00 London, and at what publication lag; is any value used that could only be known later; is the parameter bounded tightly enough to avoid a fitted curve; is the stated falsifying test real; and does the card quietly depend on a proxy that changes what is being measured.\n\nThen judge the evaluation design: the development, validation and holdout split, the flat band, the abstention rule, the scoring metric, the uncertainty reporting and the sealed set. Say approved, approved with conditions or refused, and name the clause you would change.\n\nCall out any card that cannot be tested at all with the data named in this package.\n\nOutput schema: docs/research/usd-session/v1/review-issue-register.schema.json, one entry per objection, with severity, the evidence or missing evidence it rests on, the remedy and the test that would falsify it.\nThe cards under review follow docs/research/usd-session/v1/research-card.schema.json (research-card-v1): use it to check that each card answers every required field, and say so when one does not.\n\nReturn a review with, for every objection: its severity, the exact evidence or missing evidence it rests on, the remedy, and the test that would falsify the objection. Do not soften an objection because the coordinator may dislike it, and do not manufacture one to look thorough.\n\nRules.\n- No production, workflow, dashboard, dispatcher, database or configuration change is authorised by this task.\n- State an unavailable input plainly rather than substituting a proxy silently.\n- Do not propose a threshold that cannot be computed from the data named in this package.\n- Do not state a performance figure you have not measured, and do not quote one from memory.\n- A card may conclude that the factor should not be used. That is a valid return.\n- You are one of two independent reviewers. Do not assume what the other reviewer will say, and do not write as if your acceptance were the last step.\n\nReturn the issue register, the per-card verdicts and the decision on the evaluation design. No candidate may be scored until this decision is recorded."
+      "prompt": "TASK USD-SESSION-A4 - Reviewer B: data availability, leakage, statistical design, fidelity and overfitting\nIndependent review package. Lens: data and method. Judge whether each card could be tested honestly with the data that actually exists.\n\nYou are writing for one reader who trades the US dollar and needs to know what is actually true, not what sounds plausible.\n\nObjective. One directional USD call per day over the 05:00 Europe/London to 05:00 Europe/London 24-hour session (the endpoint is the next local date), from factors whose value is observable at the cutoff, with the label instrument and quote source declared.\nCutoff: 05:00 Europe/London. Endpoint: 05:00 Europe/London on the next local date: one 24-hour session whose two ends are wall-clock times in the same zone. New York is not part of the session definition and is kept only for the timing of the Federal Reserve H.10 release. A session starts on a Monday-to-Friday local date only; the London spring and autumn transitions fall inside the preceding Saturday start, which is not a session, so every eligible session is exactly 24 hours.\nIntended label instrument: DXY. Its quote source is NOT yet verified. If a claim is really about EUR/USD, a basket, or any other instrument, name that instrument and say so. Never present a different instrument as if it were DXY.\nEverything must be observable at 05:00 London: a value published after the cutoff may not be used, and a later revision may not be used as if it were the first print.\n\nSubject: all twenty-five briefs, plus the proposed frozen evaluation design. The fifteen session-research cards from the two field packages, and the ten baseline-audit cards returned against the deployed factors F1 to F10 from the handoff bundle packs under docs/research/handoff/usd/v1/packs/.\n\nFor every card ask: is the input genuinely available at 05:00 London, and at what publication lag; is any value used that could only be known later; is the parameter bounded tightly enough to avoid a fitted curve; is the stated falsifying test real; and does the card quietly depend on a proxy that changes what is being measured.\n\nThen judge the set as a whole rather than twenty-five times over: the twenty-five briefs read the same handful of series, so say which cards would be tested against the same series, which of them cannot be separated by any test the design allows, and how many independent comparisons the design actually buys once the overlaps are counted. Where two cards share a series, name the one you would keep and why.\n\nThen judge the evaluation design: the development, validation and holdout split, the flat band, the abstention rule, the scoring metric, the uncertainty reporting and the sealed set. Say approved, approved with conditions or refused, and name the clause you would change.\n\nCall out any card that cannot be tested at all with the data named in this package, and any card whose overlap with another makes it untestable in isolation.\n\nOutput schema: docs/research/usd-session/v1/review-issue-register.schema.json, one entry per objection, with severity, the evidence or missing evidence it rests on, the remedy and the test that would falsify it.\nThe cards under review follow docs/research/usd-session/v1/research-card.schema.json (usd-session-research-card-v2): use it to check that each card answers every required field, including its own session_horizon and calendar_and_quote_handling blocks, and say so when one does not.\n\nReturn a review with, for every objection: its severity, the exact evidence or missing evidence it rests on, the remedy, and the test that would falsify the objection. Do not soften an objection because the coordinator may dislike it, and do not manufacture one to look thorough.\n\nRules.\n- No production, workflow, dashboard, dispatcher, database or configuration change is authorised by this task.\n- State an unavailable input plainly rather than substituting a proxy silently.\n- Do not propose a threshold that cannot be computed from the data named in this package.\n- Do not state a performance figure you have not measured, and do not quote one from memory.\n- A card may conclude that the factor should not be used. That is a valid return.\n- You are one of two independent reviewers. Do not assume what the other reviewer will say, and do not write as if your acceptance were the last step.\n\nReturn the issue register, the per-card verdicts and the decision on the evaluation design. No candidate may be scored until this decision is recorded."
     },
     {
       "task_id": "USD-SESSION-A5",
@@ -287,6 +317,16 @@
       "status": "not_started",
       "context_version": "usd-session-context-20261013.1",
       "covers": [
+        "live.f1-vix-level",
+        "live.f2-us-2y-delta",
+        "live.f3-us-de-2y-spread-delta",
+        "live.f4-real-yield-delta",
+        "live.f5-dxy-delta",
+        "live.f6-gold-delta",
+        "live.f7-economic-surprise",
+        "live.f8-fed-bias",
+        "live.f9-dollar-smile",
+        "live.f10-equity-versus-usd",
         "fx.usd-session-momentum",
         "fx.usd-overnight-range-position",
         "fx.usd-session-volatility-regime",
@@ -311,12 +351,12 @@
         "USD-SESSION-A3",
         "USD-SESSION-A4"
       ],
-      "session_objective": "One directional USD call per day over the 05:00 Europe/London to 17:00 America/New_York session, from factors whose value is observable at the cutoff, with the label instrument and quote source declared.",
+      "session_objective": "One directional USD call per day over the 05:00 Europe/London to 05:00 Europe/London 24-hour session (the endpoint is the next local date), from factors whose value is observable at the cutoff, with the label instrument and quote source declared.",
       "implementation_excerpt": "Deployed 24h weights as coded in Calculate USD Conviction, workflow OCt1tB9yVMUgFTha v154: F1 10, F2 14, F3 10,\nF4 10, F5 14, F6 4, F7 24, F8 12, F9 1, F10 1, sum 100.\nAggregation: the weights of BULLISH and BEARISH factors become bullish and bearish; active = bullish + bearish;\nbullishArgument = round(bullish / active * 100); netEdge = bullishArgument - bearishArgument; direction is the larger\nside, suffixed _LEAN when the absolute net edge is below 20, NO_CLEAR_BIAS on an exact tie; conviction is the winning\nargument percentage, so conviction is a share of ACTIVE evidence and can read 100 per cent while half the weight is missing.\nMissing factor input: that factor scores NEUTRAL and its weight moves to the neutral pile. The node strips raw inputs before the write.",
       "rulebook_excerpt": "logic/agent_usd_direction.md, version 2.1, fetched live from GitHub on every run and read by the model.\nIts own weight table reads 10, 14, 16, 14, 6, 5, 3, 18, 12, 2 - a different allocation of the same total from the code above.\nDocumented in the rulebook but NOT implemented in the code: the VIX 1d and 5d modifiers, the stronger-message-wins conflict\nrule, F8 as a delta, and the participation cap, missing-input penalty, conflict penalty and agreement boost, which the code\nhard-codes to zero or to active.\nThe rulebook cites no book, edition or external source, so the factor set has no provenance in this repository.",
       "data_information": [
         "No intraday dollar index print exists in this repository or in the live collector, so the cutoff and endpoint prices are unverified at both ends.",
-        "The live collector takes one snapshot per day at the 09:30 ET pipeline time and prices the dollar with FRED DTWEXBGS, a daily index published with a one to two business-day lag.",
+        "The live collector takes one snapshot per day at the 09:30 ET pipeline time and prices the dollar with FRED DTWEXBGS, a daily index the Federal Reserve publishes in H.10 on Mondays at 16:15 ET for the previous business week, which leaves it two to six business days old at the 05:00 London cutoff (median four); the shorter one to two business-day figure is the FRED refresh lag, not the availability lag.",
         "Hourly OANDA caches exist for EUR/USD, XAU/USD and NAS100 only, and only to 2026-04-30.",
         "Daily macro series (FRED and Bundesbank) are the previous close at 05:00 London, correctly lagged, never the same morning.",
         "The paid calendar feed stores no consensus snapshot and no release-instant vintage.",
@@ -334,7 +374,7 @@
         "Do not state a performance figure you have not measured, and do not quote one from memory.",
         "A card may conclude that the factor should not be used. That is a valid return."
       ],
-      "prompt": "TASK USD-SESSION-A5 - Synthesis into one engine specification and one open-issue register\nSynthesis package. Combine the field cards and both reviews into one engine specification and one open-issue register.\n\nYou are writing for one reader who trades the US dollar and needs to know what is actually true, not what sounds plausible.\n\nObjective. One directional USD call per day over the 05:00 Europe/London to 17:00 America/New_York session, from factors whose value is observable at the cutoff, with the label instrument and quote source declared.\nCutoff: 05:00 Europe/London. Endpoint: 17:00 America/New_York on the same local date. The two zones change on different dates, so the window is 17 hours on most days and 16 hours in the spring and autumn mismatch weeks.\nIntended label instrument: DXY. Its quote source is NOT yet verified. If a claim is really about EUR/USD, a basket, or any other instrument, name that instrument and say so. Never present a different instrument as if it were DXY.\nEverything must be observable at 05:00 London: a value published after the cutoff may not be used, and a later revision may not be used as if it were the first print.\n\nSubject: the fifteen field cards, Reviewer A and Reviewer B, and the frozen evaluation design. Produce the specification the field cards and the reviews jointly support, which is likely to be smaller than the card set.\n\nReturn: the engine specification (which cards survive, in what role and with what bounded parameters); the open-issue register using docs/research/usd-session/v1/review-issue-register.schema.json; the conflicts between the two reviewers that you could NOT resolve and why; an explicit list of what remains unverifiable from repository-reachable data; and the smallest set of decisions only the user can take.\nThe cards and reviews you combine follow docs/research/usd-session/v1/research-card.schema.json (research-card-v1) and docs/research/usd-session/v1/review-issue-register.schema.json; keep both shapes so the synthesis can be checked mechanically.\n\nRules.\n- No production, workflow, dashboard, dispatcher, database or configuration change is authorised by this task.\n- State an unavailable input plainly rather than substituting a proxy silently.\n- Do not propose a threshold that cannot be computed from the data named in this package.\n- Do not state a performance figure you have not measured, and do not quote one from memory.\n- A card may conclude that the factor should not be used. That is a valid return.\n- Where the reviewers disagree and the evidence does not settle it, say so. Do not average two positions into a third that neither reviewer supports.\n- Nothing you write becomes a live rule. This synthesis is a research artefact.\n\nReturn the specification, the issue register, the conflicts you could not resolve, what remains unverifiable, and the decisions only the user can take."
+      "prompt": "TASK USD-SESSION-A5 - Synthesis into one engine specification and one open-issue register\nSynthesis package. Combine the field cards and both reviews into one engine specification and one open-issue register.\n\nYou are writing for one reader who trades the US dollar and needs to know what is actually true, not what sounds plausible.\n\nObjective. One directional USD call per day over the 05:00 Europe/London to 05:00 Europe/London 24-hour session (the endpoint is the next local date), from factors whose value is observable at the cutoff, with the label instrument and quote source declared.\nCutoff: 05:00 Europe/London. Endpoint: 05:00 Europe/London on the next local date: one 24-hour session whose two ends are wall-clock times in the same zone. New York is not part of the session definition and is kept only for the timing of the Federal Reserve H.10 release. A session starts on a Monday-to-Friday local date only; the London spring and autumn transitions fall inside the preceding Saturday start, which is not a session, so every eligible session is exactly 24 hours.\nIntended label instrument: DXY. Its quote source is NOT yet verified. If a claim is really about EUR/USD, a basket, or any other instrument, name that instrument and say so. Never present a different instrument as if it were DXY.\nEverything must be observable at 05:00 London: a value published after the cutoff may not be used, and a later revision may not be used as if it were the first print.\n\nSubject: all twenty-five field cards, Reviewer A, Reviewer B and the frozen evaluation design. The ten baseline-audit cards sit alongside the fifteen session cards here: the deployed set is in the specification because its sign, weight, threshold and lookback have to be either justified or replaced by the same evidence standard, and because it is where the overlaps with the session cards actually bite. Produce the specification the briefs and the reviews jointly support, which is likely to be smaller than the twenty-five cards.\n\nReturn: the engine specification (which cards survive, in what role and with what bounded parameters); the open-issue register using docs/research/usd-session/v1/review-issue-register.schema.json; the conflicts between the two reviewers that you could NOT resolve and why; an explicit list of what remains unverifiable from repository-reachable data; and the smallest set of decisions only the user can take.\nThe cards and reviews you combine follow docs/research/usd-session/v1/research-card.schema.json (usd-session-research-card-v2) and docs/research/usd-session/v1/review-issue-register.schema.json; keep both shapes so the synthesis can be checked mechanically.\n\nRules.\n- No production, workflow, dashboard, dispatcher, database or configuration change is authorised by this task.\n- State an unavailable input plainly rather than substituting a proxy silently.\n- Do not propose a threshold that cannot be computed from the data named in this package.\n- Do not state a performance figure you have not measured, and do not quote one from memory.\n- A card may conclude that the factor should not be used. That is a valid return.\n- Where the reviewers disagree and the evidence does not settle it, say so. Do not average two positions into a third that neither reviewer supports.\n- Nothing you write becomes a live rule. This synthesis is a research artefact.\n\nReturn the specification, the issue register, the conflicts you could not resolve, what remains unverifiable, and the decisions only the user can take."
     }
   ],
   "engine_documents": [
@@ -441,7 +481,7 @@
       "title": "Session target contract v1",
       "document_type": "brief",
       "repo_path": "docs/research/usd-session/v1/session_contract_v1.json",
-      "note": "The 05:00 London to 17:00 New York target, with the label decision left open."
+      "note": "The 05:00 London to 05:00 London on the next local date target (24 hours, corrected 2026-10-14), with the label decision left open."
     },
     {
       "asset": "USD",
@@ -502,6 +542,18 @@
       "document_type": "brief",
       "repo_path": "docs/research/usd-session/v1/CHECKPOINT_2.md",
       "note": "This cycle: macro inventory, source assessment, weight vectors and the research library."
+    },
+    {
+      "asset": "USD",
+      "factor_id": null,
+      "task_id": null,
+      "model": null,
+      "updated_at": "2026-10-13",
+      "document_id": "usd-session-checkpoint-3",
+      "title": "Checkpoint 3: the session-horizon correction",
+      "document_type": "brief",
+      "repo_path": "docs/research/usd-session/v1/CHECKPOINT_3.md",
+      "note": "The 2026-10-14 correction to 05:00 London to 05:00 London on the next local date, the engine and card-schema version bumps, and the re-measured overlap with the closed 24-hour study."
     },
     {
       "asset": "USD",
@@ -598,15 +650,377 @@
       "document_type": "experiment",
       "repo_path": "data/usd-24h-selection.json",
       "note": "The selected candidate under the predeclared filters, and the evidence classification."
+    },
+    {
+      "document_id": "usd-brief-f1-vix-level",
+      "title": "F1 VIX level and risk regime - research brief",
+      "document_type": "brief",
+      "asset": "USD",
+      "factor_id": "live.f1-vix-level",
+      "task_id": null,
+      "model": null,
+      "updated_at": "2026-10-13",
+      "repo_path": "docs/research/handoff/usd/v1/packs/f1-vix-level.md",
+      "brief_kind": "baseline_audit",
+      "brief_position": 1,
+      "note": "Baseline audit brief: what the deployed node computes for this factor, and what would have to be shown before its sign, weight, threshold and lookback are treated as justified."
+    },
+    {
+      "document_id": "usd-brief-f2-us-2y-delta",
+      "title": "F2 US 2Y yield delta - research brief",
+      "document_type": "brief",
+      "asset": "USD",
+      "factor_id": "live.f2-us-2y-delta",
+      "task_id": null,
+      "model": null,
+      "updated_at": "2026-10-13",
+      "repo_path": "docs/research/handoff/usd/v1/packs/f2-us-2y-delta.md",
+      "brief_kind": "baseline_audit",
+      "brief_position": 2,
+      "note": "Baseline audit brief: what the deployed node computes for this factor, and what would have to be shown before its sign, weight, threshold and lookback are treated as justified."
+    },
+    {
+      "document_id": "usd-brief-f3-us-de-2y-spread-delta",
+      "title": "F3 US-DE 2Y spread delta - research brief",
+      "document_type": "brief",
+      "asset": "USD",
+      "factor_id": "live.f3-us-de-2y-spread-delta",
+      "task_id": null,
+      "model": null,
+      "updated_at": "2026-10-13",
+      "repo_path": "docs/research/handoff/usd/v1/packs/f3-us-de-2y-spread-delta.md",
+      "brief_kind": "baseline_audit",
+      "brief_position": 3,
+      "note": "Baseline audit brief: what the deployed node computes for this factor, and what would have to be shown before its sign, weight, threshold and lookback are treated as justified."
+    },
+    {
+      "document_id": "usd-brief-f4-real-yield-delta",
+      "title": "F4 US 10Y real yield delta - research brief",
+      "document_type": "brief",
+      "asset": "USD",
+      "factor_id": "live.f4-real-yield-delta",
+      "task_id": null,
+      "model": null,
+      "updated_at": "2026-10-13",
+      "repo_path": "docs/research/handoff/usd/v1/packs/f4-real-yield-delta.md",
+      "brief_kind": "baseline_audit",
+      "brief_position": 4,
+      "note": "Baseline audit brief: what the deployed node computes for this factor, and what would have to be shown before its sign, weight, threshold and lookback are treated as justified."
+    },
+    {
+      "document_id": "usd-brief-f5-dxy-delta",
+      "title": "F5 DXY delta - research brief",
+      "document_type": "brief",
+      "asset": "USD",
+      "factor_id": "live.f5-dxy-delta",
+      "task_id": null,
+      "model": null,
+      "updated_at": "2026-10-13",
+      "repo_path": "docs/research/handoff/usd/v1/packs/f5-dxy-delta.md",
+      "brief_kind": "baseline_audit",
+      "brief_position": 5,
+      "note": "Baseline audit brief: what the deployed node computes for this factor, and what would have to be shown before its sign, weight, threshold and lookback are treated as justified."
+    },
+    {
+      "document_id": "usd-brief-f6-gold-delta",
+      "title": "F6 Gold delta - research brief",
+      "document_type": "brief",
+      "asset": "USD",
+      "factor_id": "live.f6-gold-delta",
+      "task_id": null,
+      "model": null,
+      "updated_at": "2026-10-13",
+      "repo_path": "docs/research/handoff/usd/v1/packs/f6-gold-delta.md",
+      "brief_kind": "baseline_audit",
+      "brief_position": 6,
+      "note": "Baseline audit brief: what the deployed node computes for this factor, and what would have to be shown before its sign, weight, threshold and lookback are treated as justified."
+    },
+    {
+      "document_id": "usd-brief-f7-economic-surprise",
+      "title": "F7 US economic surprise - research brief",
+      "document_type": "brief",
+      "asset": "USD",
+      "factor_id": "live.f7-economic-surprise",
+      "task_id": null,
+      "model": null,
+      "updated_at": "2026-10-13",
+      "repo_path": "docs/research/handoff/usd/v1/packs/f7-economic-surprise.md",
+      "brief_kind": "baseline_audit",
+      "brief_position": 7,
+      "note": "Baseline audit brief: what the deployed node computes for this factor, and what would have to be shown before its sign, weight, threshold and lookback are treated as justified."
+    },
+    {
+      "document_id": "usd-brief-f8-fed-bias",
+      "title": "F8 Fed bias - research brief",
+      "document_type": "brief",
+      "asset": "USD",
+      "factor_id": "live.f8-fed-bias",
+      "task_id": null,
+      "model": null,
+      "updated_at": "2026-10-13",
+      "repo_path": "docs/research/handoff/usd/v1/packs/f8-fed-bias.md",
+      "brief_kind": "baseline_audit",
+      "brief_position": 8,
+      "note": "Baseline audit brief: what the deployed node computes for this factor, and what would have to be shown before its sign, weight, threshold and lookback are treated as justified."
+    },
+    {
+      "document_id": "usd-brief-f9-dollar-smile",
+      "title": "F9 Dollar Smile regime - research brief",
+      "document_type": "brief",
+      "asset": "USD",
+      "factor_id": "live.f9-dollar-smile",
+      "task_id": null,
+      "model": null,
+      "updated_at": "2026-10-13",
+      "repo_path": "docs/research/handoff/usd/v1/packs/f9-dollar-smile.md",
+      "brief_kind": "baseline_audit",
+      "brief_position": 9,
+      "note": "Baseline audit brief: what the deployed node computes for this factor, and what would have to be shown before its sign, weight, threshold and lookback are treated as justified."
+    },
+    {
+      "document_id": "usd-brief-f10-equity-versus-usd",
+      "title": "F10 Equity versus USD - research brief",
+      "document_type": "brief",
+      "asset": "USD",
+      "factor_id": "live.f10-equity-versus-usd",
+      "task_id": null,
+      "model": null,
+      "updated_at": "2026-10-13",
+      "repo_path": "docs/research/handoff/usd/v1/packs/f10-equity-versus-usd.md",
+      "brief_kind": "baseline_audit",
+      "brief_position": 10,
+      "note": "Baseline audit brief: what the deployed node computes for this factor, and what would have to be shown before its sign, weight, threshold and lookback are treated as justified."
+    },
+    {
+      "document_id": "usd-brief-fx-usd-session-momentum",
+      "title": "USD session momentum - research brief",
+      "document_type": "brief",
+      "asset": "USD",
+      "factor_id": "fx.usd-session-momentum",
+      "task_id": "USD-SESSION-A1",
+      "model": null,
+      "updated_at": "2026-10-13",
+      "repo_path": "docs/research/handoff/usd/v1/packs/fx-usd-session-momentum.md",
+      "brief_kind": "research_assignment",
+      "brief_position": 11,
+      "note": "Research brief: the factor, the session context, the research prompt and the output instructions. No rule is in force for it, and a returned card is evidence rather than an approval."
+    },
+    {
+      "document_id": "usd-brief-fx-usd-overnight-range-position",
+      "title": "USD overnight range position - research brief",
+      "document_type": "brief",
+      "asset": "USD",
+      "factor_id": "fx.usd-overnight-range-position",
+      "task_id": "USD-SESSION-A1",
+      "model": null,
+      "updated_at": "2026-10-13",
+      "repo_path": "docs/research/handoff/usd/v1/packs/fx-usd-overnight-range-position.md",
+      "brief_kind": "research_assignment",
+      "brief_position": 12,
+      "note": "Research brief: the factor, the session context, the research prompt and the output instructions. No rule is in force for it, and a returned card is evidence rather than an approval."
+    },
+    {
+      "document_id": "usd-brief-fx-usd-session-volatility-regime",
+      "title": "USD session volatility regime - research brief",
+      "document_type": "brief",
+      "asset": "USD",
+      "factor_id": "fx.usd-session-volatility-regime",
+      "task_id": "USD-SESSION-A1",
+      "model": null,
+      "updated_at": "2026-10-13",
+      "repo_path": "docs/research/handoff/usd/v1/packs/fx-usd-session-volatility-regime.md",
+      "brief_kind": "research_assignment",
+      "brief_position": 13,
+      "note": "Research brief: the factor, the session context, the research prompt and the output instructions. No rule is in force for it, and a returned card is evidence rather than an approval."
+    },
+    {
+      "document_id": "usd-brief-risk-vix-level-and-change-at-cutoff",
+      "title": "VIX level and change at the cutoff - research brief",
+      "document_type": "brief",
+      "asset": "USD",
+      "factor_id": "risk.vix-level-and-change-at-cutoff",
+      "task_id": "USD-SESSION-A1",
+      "model": null,
+      "updated_at": "2026-10-13",
+      "repo_path": "docs/research/handoff/usd/v1/packs/risk-vix-level-and-change-at-cutoff.md",
+      "brief_kind": "research_assignment",
+      "brief_position": 14,
+      "note": "Research brief: the factor, the session context, the research prompt and the output instructions. No rule is in force for it, and a returned card is evidence rather than an approval."
+    },
+    {
+      "document_id": "usd-brief-risk-risk-on-off-cross-asset-state",
+      "title": "Risk-on and risk-off cross-asset state - research brief",
+      "document_type": "brief",
+      "asset": "USD",
+      "factor_id": "risk.risk-on-off-cross-asset-state",
+      "task_id": "USD-SESSION-A1",
+      "model": null,
+      "updated_at": "2026-10-13",
+      "repo_path": "docs/research/handoff/usd/v1/packs/risk-risk-on-off-cross-asset-state.md",
+      "brief_kind": "research_assignment",
+      "brief_position": 15,
+      "note": "Research brief: the factor, the session context, the research prompt and the output instructions. No rule is in force for it, and a returned card is evidence rather than an approval."
+    },
+    {
+      "document_id": "usd-brief-risk-usd-safe-haven-demand",
+      "title": "USD safe-haven demand - research brief",
+      "document_type": "brief",
+      "asset": "USD",
+      "factor_id": "risk.usd-safe-haven-demand",
+      "task_id": "USD-SESSION-A1",
+      "model": null,
+      "updated_at": "2026-10-13",
+      "repo_path": "docs/research/handoff/usd/v1/packs/risk-usd-safe-haven-demand.md",
+      "brief_kind": "research_assignment",
+      "brief_position": 16,
+      "note": "Research brief: the factor, the session context, the research prompt and the output instructions. No rule is in force for it, and a returned card is evidence rather than an approval."
+    },
+    {
+      "document_id": "usd-brief-data-quality-gate-for-abstention",
+      "title": "Data quality gate for abstention - research brief",
+      "document_type": "brief",
+      "asset": "USD",
+      "factor_id": "data.quality-gate-for-abstention",
+      "task_id": "USD-SESSION-A1",
+      "model": null,
+      "updated_at": "2026-10-13",
+      "repo_path": "docs/research/handoff/usd/v1/packs/data-quality-gate-for-abstention.md",
+      "brief_kind": "research_assignment",
+      "brief_position": 17,
+      "note": "Research brief: the factor, the session context, the research prompt and the output instructions. No rule is in force for it, and a returned card is evidence rather than an approval."
+    },
+    {
+      "document_id": "usd-brief-rates-us-front-end-delta",
+      "title": "US front-end delta - research brief",
+      "document_type": "brief",
+      "asset": "USD",
+      "factor_id": "rates.us-front-end-delta",
+      "task_id": "USD-SESSION-A2",
+      "model": null,
+      "updated_at": "2026-10-13",
+      "repo_path": "docs/research/handoff/usd/v1/packs/rates-us-front-end-delta.md",
+      "brief_kind": "research_assignment",
+      "brief_position": 18,
+      "note": "Research brief: the factor, the session context, the research prompt and the output instructions. No rule is in force for it, and a returned card is evidence rather than an approval."
+    },
+    {
+      "document_id": "usd-brief-rates-relative-front-end-delta",
+      "title": "Relative front-end delta - research brief",
+      "document_type": "brief",
+      "asset": "USD",
+      "factor_id": "rates.relative-front-end-delta",
+      "task_id": "USD-SESSION-A2",
+      "model": null,
+      "updated_at": "2026-10-13",
+      "repo_path": "docs/research/handoff/usd/v1/packs/rates-relative-front-end-delta.md",
+      "brief_kind": "research_assignment",
+      "brief_position": 19,
+      "note": "Research brief: the factor, the session context, the research prompt and the output instructions. No rule is in force for it, and a returned card is evidence rather than an approval."
+    },
+    {
+      "document_id": "usd-brief-rates-real-yield-delta",
+      "title": "Real yield delta - research brief",
+      "document_type": "brief",
+      "asset": "USD",
+      "factor_id": "rates.real-yield-delta",
+      "task_id": "USD-SESSION-A2",
+      "model": null,
+      "updated_at": "2026-10-13",
+      "repo_path": "docs/research/handoff/usd/v1/packs/rates-real-yield-delta.md",
+      "brief_kind": "research_assignment",
+      "brief_position": 20,
+      "note": "Research brief: the factor, the session context, the research prompt and the output instructions. No rule is in force for it, and a returned card is evidence rather than an approval."
+    },
+    {
+      "document_id": "usd-brief-rates-term-premium-and-curve",
+      "title": "Term premium and curve - research brief",
+      "document_type": "brief",
+      "asset": "USD",
+      "factor_id": "rates.term-premium-and-curve",
+      "task_id": "USD-SESSION-A2",
+      "model": null,
+      "updated_at": "2026-10-13",
+      "repo_path": "docs/research/handoff/usd/v1/packs/rates-term-premium-and-curve.md",
+      "brief_kind": "research_assignment",
+      "brief_position": 21,
+      "note": "Research brief: the factor, the session context, the research prompt and the output instructions. No rule is in force for it, and a returned card is evidence rather than an approval."
+    },
+    {
+      "document_id": "usd-brief-rates-credit-spread-delta",
+      "title": "Credit spread delta - research brief",
+      "document_type": "brief",
+      "asset": "USD",
+      "factor_id": "rates.credit-spread-delta",
+      "task_id": "USD-SESSION-A2",
+      "model": null,
+      "updated_at": "2026-10-13",
+      "repo_path": "docs/research/handoff/usd/v1/packs/rates-credit-spread-delta.md",
+      "brief_kind": "research_assignment",
+      "brief_position": 22,
+      "note": "Research brief: the factor, the session context, the research prompt and the output instructions. No rule is in force for it, and a returned card is evidence rather than an approval."
+    },
+    {
+      "document_id": "usd-brief-calendar-known-releases-between-cutoff-and-endpoint",
+      "title": "Known releases inside the window - research brief",
+      "document_type": "brief",
+      "asset": "USD",
+      "factor_id": "calendar.known-releases-between-cutoff-and-endpoint",
+      "task_id": "USD-SESSION-A2",
+      "model": null,
+      "updated_at": "2026-10-13",
+      "repo_path": "docs/research/handoff/usd/v1/packs/calendar-known-releases-between-cutoff-and-endpoint.md",
+      "brief_kind": "research_assignment",
+      "brief_position": 23,
+      "note": "Research brief: the factor, the session context, the research prompt and the output instructions. No rule is in force for it, and a returned card is evidence rather than an approval."
+    },
+    {
+      "document_id": "usd-brief-calendar-days-since-and-until-high-impact-events",
+      "title": "Distance from high-impact events - research brief",
+      "document_type": "brief",
+      "asset": "USD",
+      "factor_id": "calendar.days-since-and-until-high-impact-events",
+      "task_id": "USD-SESSION-A2",
+      "model": null,
+      "updated_at": "2026-10-13",
+      "repo_path": "docs/research/handoff/usd/v1/packs/calendar-days-since-and-until-high-impact-events.md",
+      "brief_kind": "research_assignment",
+      "brief_position": 24,
+      "note": "Research brief: the factor, the session context, the research prompt and the output instructions. No rule is in force for it, and a returned card is evidence rather than an approval."
+    },
+    {
+      "document_id": "usd-brief-macro-release-surprise-at-first-print",
+      "title": "Release surprise at first print - research brief",
+      "document_type": "brief",
+      "asset": "USD",
+      "factor_id": "macro.release-surprise-at-first-print",
+      "task_id": "USD-SESSION-A2",
+      "model": null,
+      "updated_at": "2026-10-13",
+      "repo_path": "docs/research/handoff/usd/v1/packs/macro-release-surprise-at-first-print.md",
+      "brief_kind": "research_assignment",
+      "brief_position": 25,
+      "note": "Research brief: the factor, the session context, the research prompt and the output instructions. No rule is in force for it, and a returned card is evidence rather than an approval."
     }
   ],
+  "research_briefs": {
+    "bundle": "docs/research/handoff/usd/v1",
+    "generated_by": "scripts/build_research_handoff.js",
+    "start_here_path": "docs/research/handoff/usd/v1/START_HERE.md",
+    "index_path": "docs/research/handoff/usd/v1/BRIEF_INDEX.json",
+    "download_path": "docs/research/handoff/usd/v1/usd-research-handoff-v1.zip",
+    "document_prefix": "usd-brief-",
+    "total": 25,
+    "live_engine_audits": 10,
+    "session_research": 15,
+    "note": "One self-contained brief per USD factor, carrying its context, its research prompt and its output instructions: a baseline audit for a factor the deployed node computes today, a research assignment for a factor with no rule in force. Covering every factor is not progress: a brief is an assignment, no research status moves because a brief exists, and a returned card is evidence rather than an approval."
+  },
   "assets": [
     {
       "asset": "USD",
       "label": "US Dollar",
       "standfirst": "The first asset in the library and the only one with factors under research today.",
       "status": "active",
-      "next_step": "Run the two field packages in the reader's own ChatGPT session, upload the returns against their task ids, then run the two reviews.",
+      "next_step": "Take one brief per factor from the twenty-five published briefs (Copy prompt or Download on a factor row), run it in your own ChatGPT session, upload each return against the covering task id (USD-SESSION-A1 or USD-SESSION-A2 for the session factors, USD-BASELINE-AUDIT-01 to USD-BASELINE-AUDIT-10 for the deployed ones), then run the two reviews, which cover all twenty-five entries and their overlaps.",
       "factors": [
         {
           "review_status": "pending",
@@ -903,7 +1317,7 @@
           "label": "USD session momentum",
           "asset": "USD",
           "role": "direction",
-          "brief": "Trailing 1-day and 5-day move in the label instrument, read at the cutoff: continuation or fade inside the 17-hour window."
+          "brief": "Trailing 1-day and 5-day move in the label instrument, read at the cutoff: continuation or fade inside the 24-hour London-to-London session."
         },
         {
           "group": "research_session_v1",

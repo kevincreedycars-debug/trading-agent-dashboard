@@ -8836,7 +8836,13 @@ body {
    text surface wraps rather than clips.
    --------------------------------------------------------------------------- */
 
-.rl-shell { display: grid; gap: 18px; min-width: 0; }
+/* The shell pairs its narrower cards two to a row from 1181 px up, and the factor table takes the full
+   width of the panel there: left in a single implicit column it rendered at roughly 470 px of a 1000 px
+   panel at 1280 px. Below 1181 px the shell is one column, which is the width the published page
+   already measured (744 px at 1024 px, 370 px at 390 px) and where `wide-panel` drops to `span 1`. */
+.rl-shell { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; min-width: 0; }
+.rl-table-card { grid-column: 1 / -1; }
+@media (max-width: 1180px) { .rl-shell { grid-template-columns: minmax(0, 1fr); } }
 .rl-head-card, .rl-service-card, .rl-filter-card, .rl-table-card, .rl-tasks-card, .rl-engine-card, .rl-detail-card { padding: 18px 20px; min-width: 0; }
 .rl-standfirst { margin: 6px 0; color: var(--ink-mid); font-size: 0.98rem; overflow-wrap: anywhere; }
 .rl-muted { color: var(--ink-muted); font-size: 0.82rem; overflow-wrap: anywhere; }

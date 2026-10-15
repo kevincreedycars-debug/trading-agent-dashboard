@@ -10,12 +10,13 @@
     "note": "Reviewer B must not see Reviewer A's review or the synthesis. Its first review is independent of both, and it reviews the same evidence as A."
   },
   "review_object": {
-    "what": "The complete proposed logic for the USD session engine: every research card returned by A1 and A2, the master specification produced by synthesis, the frozen evaluation design, and this coordinator's own dataset and experiment plan",
+    "what": "The complete proposed logic for the USD session engine: all twenty-five briefs and the cards they return - the fifteen session-research cards from A1 and A2, and the ten baseline-audit cards for the deployed factors F1 to F10 from the handoff bundle packs under docs/research/handoff/usd/v1/packs/ - plus the master specification produced by synthesis, the frozen evaluation design, and this coordinator's own dataset and experiment plan",
     "inputs": [
       "docs/research/usd-session/v1/inventory.md",
       "docs/research/usd-session/v1/session_contract_v1.json",
       "docs/research/usd-session/v1/exposed_periods.md",
       "docs/research/usd-session/v1/implementation_plan.md when it exists",
+      "docs/research/handoff/usd/v1/packs/ (one brief per factor, twenty-five of them) and docs/research/handoff/usd/v1/BRIEF_INDEX.json",
       "every card under docs/research/usd-session/v1/research-cards/",
       "data/usd-24h-dataset-manifest.json and data/usd-24h-research-dataset.json (the available data, read-only)"
     ]
@@ -24,6 +25,7 @@
     "Can each card's stated inputs actually be obtained for the claimed history, at the frequency claimed, with the timing claimed?",
     "Is there any look-ahead: a value that in reality became known after the 05:00 London cutoff, a revision used as if it were the first print, a session bar that closed after the endpoint?",
     "Is the statistical design sound: frozen target, eligibility, missing-quote policy, holidays, ties, splits, scoring, uncertainty and multiple-comparison accounting?",
+    "How many independent comparisons does the design actually buy once the overlaps across all twenty-five cards are counted? The twenty-five briefs read the same handful of series, so say which cards would be tested against the same series, which of them cannot be separated by any test the design allows, and which single member of each overlapping group you would keep.",
     "Is the implementation faithful to the stated rule, and is LLM discretion eliminated from the numeric path?",
     "Where could overfitting enter: parameter grids, threshold searches, factor selection, or a holdout already spent?",
     "Does any claimed result come from the numerical harness rather than from narrative?"

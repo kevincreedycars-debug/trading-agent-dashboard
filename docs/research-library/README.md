@@ -15,10 +15,13 @@ workflow, no dispatcher state and no production scoring path.
 - **A factor table** showing, per factor: family, role (direction / regime / quality gate / abstention gate),
   the live weight in the code **and** in the rulebook, the three separate statuses, the document version and
   updated date, and the blockers and dependencies.
-- **Progress counts** as four cards: factors, research, review, backtest.
+- **Progress counts** as four cards: factors, research, review, backtest, plus a line stating how many of the
+  factors in view carry a self-contained brief (25 of 25 today), with the note that a brief is an assignment
+  and not research progress.
 - **A factor detail page** per factor: its brief, its current rules (or the statement that no rule is in force
-  because the card is a hypothesis), blockers and dependencies, its sources, the tasks that cover it, its
-  reports and reviews, and its history.
+  because the card is a hypothesis), blockers and dependencies, its sources, the self-contained brief
+  published for it with Copy prompt and Download, the tasks that cover it, its reports and reviews, and its
+  history.
 - **A research-task list** with, per task: the unique task id, its kind, its status, the context version, a
   prompt fingerprint, the factors it covers, the gaps it does not cover, its dependencies, and the actions
   Copy prompt, Download context package and Upload report.
@@ -32,10 +35,53 @@ session objective, the implementation excerpt, the rulebook excerpt, the data ac
 itself and the required output schema. Download context package writes the same material as one JSON document
 with a context fingerprint, and includes which factors the task covers and which are gaps.
 
+Copy prompt on a factor's own brief copies that brief's published file: the twenty-five USD factors each carry
+one (ten baseline audits of the deployed factors and fifteen session-research assignments), and the same file is
+what the Download button writes, what the handoff archive ships, and what the registry hashed. A test walks all
+twenty-five factor rows in a real browser and fails if any one of them has no brief, no Copy prompt or no
+Download.
+
 The reader pastes that into their own ChatGPT session. **Nothing on this page calls a frontier model API.**
 The catalogue carries `manual_task_only: true` and `frontier_api_calls: false`, and a test asserts that no
 model host appears anywhere in the catalogue or in the shared helper. An uploaded document is research
-evidence; it does not become an approved trading rule, and no status moves on upload alone.
+evidence; it does not become an approved trading rule, and no status moves on upload alone. Publishing the
+twenty-five briefs moved no status either: coverage is an assignment, not a result.
+
+## Running a task, step by step
+
+1. **Start the service and open the panel**: `node scripts/research-library-server.js --serve-repo`, then the
+   Research Library tab. The published GitHub Pages tab serves the same prompts and the same twenty-five briefs,
+   but the upload flow needs the local service.
+2. **Copy one brief per factor, or one package per task.** Each factor's detail page carries its own
+   self-contained brief with Copy prompt and Download, and the brief is the unit a model is given: two halves
+   exist, the ten deployed baseline audits (F1 to F10, task ids `USD-BASELINE-AUDIT-01` to `-10`) and the
+   fifteen session-research assignments (7 in `USD-SESSION-A1`, 8 in `USD-SESSION-A2`). The two field packages
+   remain the only prompts that build several cards at once, and each package lists every card id it covers.
+3. **The briefs and the prompts are generated, not hand-written.** The briefs come from
+   `scripts/build_research_handoff.js` (authored per factor in that file, published under
+   `docs/research/handoff/usd/v1/packs/`); the task prompts come from the assignment packages
+   (`docs/research/usd-session/v1/assignments/USD-SESSION-A1.price-and-risk.json`,
+   `…A2.rates-releases-calendar.json`, `…A3…`, `…A4…`, `…A5.synthesis.json`) together with the shared headers and
+   data bullets in `scripts/build_research_library.js`. The bytes the panel copies for a task are `tasks[].prompt`
+   in `data/research-library/catalog.json`, so changing a prompt means editing the source and running
+   `node scripts/build_research_library.js catalog --write`; changing a brief means running
+   `node scripts/build_research_handoff.js write` and then `node scripts/build_research_library.js registry --write`,
+   because the registry hashes the same pack files.
+4. **Run the briefs, or both packages, in the user's own ChatGPT session** and keep the returns: the required
+   shape is `docs/research/usd-session/v1/research-card.schema.json` (`usd-session-research-card-v2`), one JSON
+   document per card id; every brief also names the same schema and field list, so a card from a brief and a card
+   from a package are the same object.
+5. **Register a return as evidence, two ways.** Either upload it in the panel against the same task id (Upload report,
+   with a document id and the model label, the bytes going outside Git and the registry written by the service), or
+   commit the card JSON under `docs/research/usd-session/v1/research-cards/`, where
+   `backtester/tests/usd_session_research_card.test.js` validates every `.json` file in that folder against the schema.
+6. **Nothing moves by itself.** An upload adds a registry version and the panel states in its own words that it is not
+   an approval. The factor's `research_status` is set in the catalogue source (`scripts/build_research_library.js`) and
+   re-generated, review stays `pending` until A3 or A4 records one, and `backtest_status` cannot be `tested` before a
+   review is accepted.
+7. **Then A3, A4 and A5**, which run against the returned cards rather than against the prompts above, cover all
+   twenty-five entries and their overlaps, and carry Reviewer B's decision on the frozen evaluation design as the
+   gate before any candidate is scored.
 
 ## Storage design
 

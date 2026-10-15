@@ -19,11 +19,20 @@ const ResearchLibrary = require('../lib/research_library.js');
 const root = path.resolve(__dirname, '..');
 const catalogPath = path.join(root, 'data', 'research-library', 'catalog.json');
 const registryPath = path.join(root, 'data', 'research-library', 'documents.json');
+// The same briefs the handoff bundle publishes are the briefs the factor pages offer, so the pack path, its
+// hash and its coverage come from one generator instead of two lists that can drift apart.
+const Handoff = require('./build_research_handoff.js');
+
+// The twenty-five factor ids the briefs cover, in catalogue order, read from the handoff builder rather than
+// listed twice. The two review tasks and the synthesis cover this whole set, so a factor added to either
+// half cannot quietly fall outside the reviews.
+const ALL_BRIEF_FACTOR_IDS = Handoff.factorBriefRows().map(row => row.factor_id);
 const TODAY = '2026-10-13';
 
 const SESSION_OBJECTIVE =
-  'One directional USD call per day over the 05:00 Europe/London to 17:00 America/New_York session, '
-  + 'from factors whose value is observable at the cutoff, with the label instrument and quote source declared.';
+  'One directional USD call per day over the 05:00 Europe/London to 05:00 Europe/London 24-hour session '
+  + '(the endpoint is the next local date), from factors whose value is observable at the cutoff, '
+  + 'with the label instrument and quote source declared.';
 
 const STORAGE = {
   registry_path: 'data/research-library/documents.json',
@@ -45,23 +54,33 @@ const STORAGE = {
   },
   output_schema: {
     schema_path: 'docs/research/usd-session/v1/research-card.schema.json',
-    schema_version: 'research-card-v1',
+    schema_version: 'usd-session-research-card-v2',
     format: 'one JSON document per card, collected into a single file per task on return',
     verdict: 'A card may conclude that the factor should not be used. A returned card is research evidence, not an approved rule.',
     required_fields: [
       'card_id',
-      'asset',
+      'schema_version',
+      'created_at',
+      'author',
+      'status',
+      'title',
       'family',
+      'assignment_id',
+      'session_horizon',
+      'calendar_and_quote_handling',
       'mechanism',
-      'sign_and_conditions',
-      'role',
-      'inputs_required',
-      'observable_at_cutoff',
-      'programmable_hypothesis',
-      'allowed_parameter_values',
-      'falsifying_result',
-      'overlap_and_double_counting',
-      'sources'
+      'direction_claim',
+      'session_role',
+      'observable_by_cutoff',
+      'reaction_vs_predictive',
+      'historical_data_requirements',
+      'live_data_requirements',
+      'dependencies_and_overlap',
+      'hypothesis',
+      'parameters',
+      'rejection_test',
+      'evidence',
+      'open_questions'
     ]
   },
   policy: {
@@ -258,7 +277,7 @@ const A1_FACTORS = [
     label: 'USD session momentum',
     asset: 'USD',
     role: 'direction',
-    brief: 'Trailing 1-day and 5-day move in the label instrument, read at the cutoff: continuation or fade inside the 17-hour window.',
+    brief: 'Trailing 1-day and 5-day move in the label instrument, read at the cutoff: continuation or fade inside the 24-hour London-to-London session.',
     dependencies: ['The label instrument and quote source decision.'],
     sources: ['Price and risk package USD-SESSION-A1']
   }),
@@ -388,16 +407,17 @@ const TASK_RULES = [
 
 const CARD_SCHEMA_PATH = 'docs/research/usd-session/v1/research-card.schema.json';
 const CARD_SCHEMA_FIELDS = [
-  'card_id', 'asset', 'family', 'mechanism', 'sign_and_conditions', 'role', 'inputs_required',
-  'observable_at_cutoff', 'programmable_hypothesis', 'allowed_parameter_values', 'falsifying_result',
-  'overlap_and_double_counting', 'sources'
+  'card_id', 'schema_version', 'created_at', 'author', 'status', 'title', 'family', 'assignment_id',
+  'session_horizon', 'calendar_and_quote_handling', 'mechanism', 'direction_claim', 'session_role',
+  'observable_by_cutoff', 'reaction_vs_predictive', 'historical_data_requirements', 'live_data_requirements',
+  'dependencies_and_overlap', 'hypothesis', 'parameters', 'rejection_test', 'evidence', 'open_questions'
 ];
 const ISSUE_SCHEMA_PATH = 'docs/research/usd-session/v1/review-issue-register.schema.json';
 
 
 const DATA_INFORMATION = [
   'No intraday dollar index print exists in this repository or in the live collector, so the cutoff and endpoint prices are unverified at both ends.',
-  'The live collector takes one snapshot per day at the 09:30 ET pipeline time and prices the dollar with FRED DTWEXBGS, a daily index published with a one to two business-day lag.',
+  'The live collector takes one snapshot per day at the 09:30 ET pipeline time and prices the dollar with FRED DTWEXBGS, a daily index the Federal Reserve publishes in H.10 on Mondays at 16:15 ET for the previous business week, which leaves it two to six business days old at the 05:00 London cutoff (median four); the shorter one to two business-day figure is the FRED refresh lag, not the availability lag.',
   'Hourly OANDA caches exist for EUR/USD, XAU/USD and NAS100 only, and only to 2026-04-30.',
   'Daily macro series (FRED and Bundesbank) are the previous close at 05:00 London, correctly lagged, never the same morning.',
   'The paid calendar feed stores no consensus snapshot and no release-instant vintage.',
@@ -412,7 +432,7 @@ function header(taskId, title, kindLine) {
     'You are writing for one reader who trades the US dollar and needs to know what is actually true, not what sounds plausible.',
     '',
     `Objective. ${SESSION_OBJECTIVE}`,
-    'Cutoff: 05:00 Europe/London. Endpoint: 17:00 America/New_York on the same local date. The two zones change on different dates, so the window is 17 hours on most days and 16 hours in the spring and autumn mismatch weeks.',
+    'Cutoff: 05:00 Europe/London. Endpoint: 05:00 Europe/London on the next local date: one 24-hour session whose two ends are wall-clock times in the same zone. New York is not part of the session definition and is kept only for the timing of the Federal Reserve H.10 release. A session starts on a Monday-to-Friday local date only; the London spring and autumn transitions fall inside the preceding Saturday start, which is not a session, so every eligible session is exactly 24 hours.',
     'Intended label instrument: DXY. Its quote source is NOT yet verified. If a claim is really about EUR/USD, a basket, or any other instrument, name that instrument and say so. Never present a different instrument as if it were DXY.',
     'Everything must be observable at 05:00 London: a value published after the cutoff may not be used, and a later revision may not be used as if it were the first print.'
   ].join('\n');
@@ -427,9 +447,9 @@ function fieldPrompt({ taskId, title, packets, cards, familyLine, closing }) {
     'Card ids to return:',
     ...cards.map(card => `- ${card}`),
     '',
-    `Output schema: ${CARD_SCHEMA_PATH} (research-card-v1), one JSON document per card, carrying every one of: ${CARD_SCHEMA_FIELDS.join(', ')}. A card that leaves a required field empty is not accepted.`,
+    `Output schema: ${CARD_SCHEMA_PATH} (usd-session-research-card-v2), one JSON document per card, carrying every one of: ${CARD_SCHEMA_FIELDS.join(', ')}. A card that leaves a required field empty is not accepted.`,
     '',
-    'Every card must answer, in its own words: the mechanism that would operate inside this specific 17-hour window; when the relation changes sign, weakens, or stops being informative because it is already priced; whether the factor is direction, regime context, a quality gate or an abstention gate; what exactly was observable at the cutoff and how stale each input is; the programmable hypothesis with its bounded parameter values; the result that would falsify it; and which other cards share the same information and what would be double-counted.',
+    'Every card must answer, in its own words: the session horizon it is written for, stated once in the card\'s own session_horizon block, and the DST, weekend and missing-quote handling in calendar_and_quote_handling; the mechanism that would operate inside this specific 24-hour London-to-London window; when the relation changes sign, weakens, or stops being informative because it is already priced; whether the factor is direction, regime context, a quality gate or an abstention gate; what exactly was observable at the cutoff and how stale each input is; the programmable hypothesis with its bounded parameter values; the result that would falsify it; and which other cards share the same information and what would be double-counted.',
     '',
     packets,
     '',
@@ -449,7 +469,7 @@ function reviewPrompt({ taskId, title, lens, subject, extra, closing }) {
     extra,
     '',
     `Output schema: ${ISSUE_SCHEMA_PATH}, one entry per objection, with severity, the evidence or missing evidence it rests on, the remedy and the test that would falsify it.`,
-    `The cards under review follow ${CARD_SCHEMA_PATH} (research-card-v1): use it to check that each card answers every required field, and say so when one does not.`,
+    `The cards under review follow ${CARD_SCHEMA_PATH} (usd-session-research-card-v2): use it to check that each card answers every required field, including its own session_horizon and calendar_and_quote_handling blocks, and say so when one does not.`,
     '',
     'Return a review with, for every objection: its severity, the exact evidence or missing evidence it rests on, the remedy, and the test that would falsify the objection. Do not soften an objection because the coordinator may dislike it, and do not manufacture one to look thorough.',
     '',
@@ -468,7 +488,7 @@ function synthesisPrompt({ taskId, title, subject, closing }) {
     subject,
     '',
     'Return: the engine specification (which cards survive, in what role and with what bounded parameters); the open-issue register using docs/research/usd-session/v1/review-issue-register.schema.json; the conflicts between the two reviewers that you could NOT resolve and why; an explicit list of what remains unverifiable from repository-reachable data; and the smallest set of decisions only the user can take.',
-    `The cards and reviews you combine follow ${CARD_SCHEMA_PATH} (research-card-v1) and ${ISSUE_SCHEMA_PATH}; keep both shapes so the synthesis can be checked mechanically.`,
+    `The cards and reviews you combine follow ${CARD_SCHEMA_PATH} (usd-session-research-card-v2) and ${ISSUE_SCHEMA_PATH}; keep both shapes so the synthesis can be checked mechanically.`,
     '',
     'Rules.',
     ...TASK_RULES.map(rule => `- ${rule}`),
@@ -580,9 +600,9 @@ const TASKS = [
     slot: 'reviewer-a',
     status: 'not_started',
     context_version: 'usd-session-context-20261013.1',
-    covers: ALL_RESEARCH_CARD_IDS,
+    covers: ALL_BRIEF_FACTOR_IDS,
     gaps: [
-      'This review cannot start until both field packages return their cards.',
+      'This review cannot start until all twenty-five briefs have returned their cards: the fifteen session cards from the two field packages, and the ten baseline-audit cards from the handoff bundle tasks USD-BASELINE-AUDIT-01 to USD-BASELINE-AUDIT-10.',
       'Reviewer A is kept blind to Reviewer B, and neither sees the coordinator expectations.'
     ],
     depends_on: ['USD-SESSION-A1', 'USD-SESSION-A2'],
@@ -599,10 +619,11 @@ const TASKS = [
     prompt: reviewPrompt({
       taskId: 'USD-SESSION-A3',
       title: 'Reviewer A: mechanisms, signs, timing, interactions and double counting',
-      lens: 'Lens: economic and market mechanism. Judge whether each proposed card would actually operate inside this 17-hour window.',
-      subject: 'Subject: the fifteen research cards returned by the two field packages, taken as written. Read them as claims to be attacked rather than as findings to be summarised.',
+      lens: 'Lens: economic and market mechanism. Judge whether each proposed card would actually operate inside this 24-hour London-to-London session.',
+      subject: 'Subject: all twenty-five briefs taken as written, in two halves. The fifteen session-research cards returned by the two field packages, and the ten baseline-audit cards returned against the deployed factors (F1 VIX level, F2 US 2Y delta, F3 US-DE 2Y spread delta, F4 real yield delta, F5 DXY delta, F6 gold delta, F7 economic surprise, F8 Fed bias, F9 dollar smile, F10 equity versus USD) from the handoff bundle packs under docs/research/handoff/usd/v1/packs/. Read them as claims to be attacked rather than as findings to be summarised.',
       extra: [
         'For every card ask: is the stated mechanism true, and is it true on this horizon rather than on a daily or monthly one; is the sign right and does it flip in any plausible regime; is the timing right, that is when inside the window does it act; is the information already in the price by 05:00 London; and which other card carries the same information, so that weighting both would double-count one idea.',
+        'Then work the overlaps across the whole set of twenty-five, not card by card: the deployed baseline audits already overlap each other (F2 with F3, F3 with F4, F4 with F6, F1 with F9 and F10, and the F7 and F8 pair), and the session cards overlap the deployed ones wherever they read the same quantity (session rates against F2 to F4, the session VIX and cross-asset cards against F1, F9 and F10, the session calendar cards against F7, and the session momentum and range cards against F5). Name every pair or group you judge to be one idea, say which member should carry it, and say what the discarded members would still add.',
         'Name any card whose mechanism you believe is simply wrong, and say what evidence would settle it.',
         'If the card set misses a mechanism that matters on this window, say which and why, but do not write the missing card yourself.'
       ].join('\n\n'),
@@ -617,9 +638,9 @@ const TASKS = [
     slot: 'reviewer-b',
     status: 'not_started',
     context_version: 'usd-session-context-20261013.1',
-    covers: ALL_RESEARCH_CARD_IDS,
+    covers: ALL_BRIEF_FACTOR_IDS,
     gaps: [
-      'This review cannot start until both field packages return their cards.',
+      'This review cannot start until all twenty-five briefs have returned their cards: the fifteen session cards from the two field packages, and the ten baseline-audit cards from the handoff bundle tasks USD-BASELINE-AUDIT-01 to USD-BASELINE-AUDIT-10.',
       'The evaluation design it must approve is a proposal in docs/research/usd-session/v1/implementation_plan.md; no candidate may be scored before this approval is recorded.'
     ],
     depends_on: ['USD-SESSION-A1', 'USD-SESSION-A2'],
@@ -637,11 +658,12 @@ const TASKS = [
       taskId: 'USD-SESSION-A4',
       title: 'Reviewer B: data availability, leakage, statistical design, fidelity and overfitting',
       lens: 'Lens: data and method. Judge whether each card could be tested honestly with the data that actually exists.',
-      subject: 'Subject: the fifteen research cards returned by the two field packages, plus the proposed frozen evaluation design.',
+      subject: 'Subject: all twenty-five briefs, plus the proposed frozen evaluation design. The fifteen session-research cards from the two field packages, and the ten baseline-audit cards returned against the deployed factors F1 to F10 from the handoff bundle packs under docs/research/handoff/usd/v1/packs/.',
       extra: [
         'For every card ask: is the input genuinely available at 05:00 London, and at what publication lag; is any value used that could only be known later; is the parameter bounded tightly enough to avoid a fitted curve; is the stated falsifying test real; and does the card quietly depend on a proxy that changes what is being measured.',
+        'Then judge the set as a whole rather than twenty-five times over: the twenty-five briefs read the same handful of series, so say which cards would be tested against the same series, which of them cannot be separated by any test the design allows, and how many independent comparisons the design actually buys once the overlaps are counted. Where two cards share a series, name the one you would keep and why.',
         'Then judge the evaluation design: the development, validation and holdout split, the flat band, the abstention rule, the scoring metric, the uncertainty reporting and the sealed set. Say approved, approved with conditions or refused, and name the clause you would change.',
-        'Call out any card that cannot be tested at all with the data named in this package.'
+        'Call out any card that cannot be tested at all with the data named in this package, and any card whose overlap with another makes it untestable in isolation.'
       ].join('\n\n'),
       closing: 'Return the issue register, the per-card verdicts and the decision on the evaluation design. No candidate may be scored until this decision is recorded.'
     })
@@ -654,7 +676,7 @@ const TASKS = [
     slot: 'synthesis',
     status: 'not_started',
     context_version: 'usd-session-context-20261013.1',
-    covers: ALL_RESEARCH_CARD_IDS,
+    covers: ALL_BRIEF_FACTOR_IDS,
     gaps: [
       'This task cannot start until both reviews are recorded.',
       'It produces a research artefact only: no weight, threshold or probability becomes live without the user.'
@@ -673,7 +695,7 @@ const TASKS = [
     prompt: synthesisPrompt({
       taskId: 'USD-SESSION-A5',
       title: 'Synthesis into one engine specification and one open-issue register',
-      subject: 'Subject: the fifteen field cards, Reviewer A and Reviewer B, and the frozen evaluation design. Produce the specification the field cards and the reviews jointly support, which is likely to be smaller than the card set.',
+      subject: 'Subject: all twenty-five field cards, Reviewer A, Reviewer B and the frozen evaluation design. The ten baseline-audit cards sit alongside the fifteen session cards here: the deployed set is in the specification because its sign, weight, threshold and lookback have to be either justified or replaced by the same evidence standard, and because it is where the overlaps with the session cards actually bite. Produce the specification the briefs and the reviews jointly support, which is likely to be smaller than the twenty-five cards.',
       closing: 'Return the specification, the issue register, the conflicts you could not resolve, what remains unverifiable, and the decisions only the user can take.'
     })
   }
@@ -684,7 +706,7 @@ const USD_ASSET = {
   label: 'US Dollar',
   standfirst: 'The first asset in the library and the only one with factors under research today.',
   status: 'active',
-  next_step: "Run the two field packages in the reader's own ChatGPT session, upload the returns against their task ids, then run the two reviews.",
+  next_step: "Take one brief per factor from the twenty-five published briefs (Copy prompt or Download on a factor row), run it in your own ChatGPT session, upload each return against the covering task id (USD-SESSION-A1 or USD-SESSION-A2 for the session factors, USD-BASELINE-AUDIT-01 to USD-BASELINE-AUDIT-10 for the deployed ones), then run the two reviews, which cover all twenty-five entries and their overlaps.",
   factors: [...LIVE_FACTORS, ...A1_FACTORS, ...A2_FACTORS],
   blockers: [
     'Label instrument and quote source unresolved: no free intraday DXY print exists in this checkout or in the collector, so the cutoff and endpoint prices are unverified at both ends.',
@@ -855,12 +877,13 @@ const ENGINE_DOCUMENTS = [
 // REPO_DOC_ANCHOR
 const REPO_DOCUMENTS = [
   { document_id: 'usd-session-inventory', title: 'USD input and decision inventory (WP1)', document_type: 'brief', repo_path: 'docs/research/usd-session/v1/inventory.md', note: 'Every input, rule, threshold and fallback extracted from the deployed node.' },
-  { document_id: 'usd-session-contract', title: 'Session target contract v1', document_type: 'brief', repo_path: 'docs/research/usd-session/v1/session_contract_v1.json', note: 'The 05:00 London to 17:00 New York target, with the label decision left open.' },
+  { document_id: 'usd-session-contract', title: 'Session target contract v1', document_type: 'brief', repo_path: 'docs/research/usd-session/v1/session_contract_v1.json', note: 'The 05:00 London to 05:00 London on the next local date target (24 hours, corrected 2026-10-14), with the label decision left open.' },
   { document_id: 'usd-session-exposed-periods', title: 'Exposed periods record', document_type: 'brief', repo_path: 'docs/research/usd-session/v1/exposed_periods.md', note: 'What has already been read, so nothing is later called unseen.' },
   { document_id: 'usd-session-implementation-plan', title: 'Implementation and experiment plan', document_type: 'brief', repo_path: 'docs/research/usd-session/v1/implementation_plan.md', note: 'Includes the evaluation design Reviewer B must approve.' },
   { document_id: 'usd-session-isolation', title: 'Isolation note', document_type: 'brief', repo_path: 'docs/research/usd-session/v1/isolation.md', note: 'What actually stops a research run writing into production.' },
   { document_id: 'usd-session-checkpoint-1', title: 'Checkpoint 1', document_type: 'brief', repo_path: 'docs/research/usd-session/v1/CHECKPOINT_1.md', note: 'The first checkpoint return.' },
   { document_id: 'usd-session-checkpoint-2', title: 'Checkpoint 2', document_type: 'brief', repo_path: 'docs/research/usd-session/v1/CHECKPOINT_2.md', note: 'This cycle: macro inventory, source assessment, weight vectors and the research library.' },
+  { document_id: 'usd-session-checkpoint-3', title: 'Checkpoint 3: the session-horizon correction', document_type: 'brief', repo_path: 'docs/research/usd-session/v1/CHECKPOINT_3.md', note: 'The 2026-10-14 correction to 05:00 London to 05:00 London on the next local date, the engine and card-schema version bumps, and the re-measured overlap with the closed 24-hour study.' },
   { document_id: 'usd-session-card-schema', title: 'Research card schema', document_type: 'context_package', repo_path: 'docs/research/usd-session/v1/research-card.schema.json', note: 'The schema every returned card must follow.' },
   { document_id: 'usd-session-issue-schema', title: 'Review issue register schema', document_type: 'context_package', repo_path: 'docs/research/usd-session/v1/review-issue-register.schema.json', note: 'The schema every reviewer return must follow.' },
   { document_id: 'usd-session-target-source-assessment', title: 'DXY and intraday source assessment', document_type: 'brief', repo_path: 'docs/research/usd-session/v1/target_source_assessment.md', note: 'Coverage, cutoff and endpoint quotes, access, licensing and cost, with a recommendation.' },
@@ -878,6 +901,32 @@ const REPO_DOCUMENTS = [
   ...entry
 }));
 
+// The twenty-five self-contained research briefs, one per USD factor, generated and hashed by
+// scripts/build_research_handoff.js and published here as repo-backed documents. The library is the second
+// place the same briefs appear: the handoff bundle is the artefact a reader downloads, and these rows are
+// what the factor page offers as Copy prompt and Download. The bytes are the same file, so the registry
+// hash and the bundle's own manifest hash cover one set of bytes rather than two copies of the text.
+const BRIEF_DOCUMENTS = Handoff.factorBriefRows().map(row => ({
+  document_id: `usd-brief-${row.factor_id.replace(/^live\./, '').replace(/\./g, '-')}`,
+  title: `${row.label} - research brief`,
+  document_type: 'brief',
+  asset: 'USD',
+  factor_id: row.factor_id,
+  task_id: row.live ? null : row.task_id,
+  model: null,
+  updated_at: TODAY,
+  repo_path: row.pack_path,
+  brief_kind: row.live ? 'baseline_audit' : 'research_assignment',
+  brief_position: row.position,
+  note: row.live
+    ? 'Baseline audit brief: what the deployed node computes for this factor, and what would have to be shown before its sign, weight, threshold and lookback are treated as justified.'
+    : 'Research brief: the factor, the session context, the research prompt and the output instructions. No rule is in force for it, and a returned card is evidence rather than an approval.'
+}));
+
+// Every document the registry seeds: the repository artefacts plus the per-factor briefs. Both lists are
+// hashed from the file on disk when the registry is written, so a corrected brief becomes a new version.
+const REGISTRY_DOCUMENTS = [...REPO_DOCUMENTS, ...BRIEF_DOCUMENTS];
+
 function buildCatalog() {
   return {
     schema_version: 'research-library-catalog-v1',
@@ -887,7 +936,19 @@ function buildCatalog() {
     storage: STORAGE,
     tasks: TASKS,
     engine_documents: ENGINE_DOCUMENTS,
-    repo_documents: REPO_DOCUMENTS,
+    repo_documents: REGISTRY_DOCUMENTS,
+    research_briefs: {
+      bundle: Handoff.OUT_DIR,
+      generated_by: 'scripts/build_research_handoff.js',
+      start_here_path: Handoff.START_HERE_PATH,
+      index_path: Handoff.BRIEF_INDEX_PATH,
+      download_path: Handoff.ZIP_PATH,
+      document_prefix: 'usd-brief-',
+      total: ALL_BRIEF_FACTOR_IDS.length,
+      live_engine_audits: Handoff.LIVE_FACTORS.length,
+      session_research: ALL_BRIEF_FACTOR_IDS.length - Handoff.LIVE_FACTORS.length,
+      note: 'One self-contained brief per USD factor, carrying its context, its research prompt and its output instructions: a baseline audit for a factor the deployed node computes today, a research assignment for a factor with no rule in force. Covering every factor is not progress: a brief is an assignment, no research status moves because a brief exists, and a returned card is evidence rather than an approval.'
+    },
     assets: [USD_ASSET, ...OTHER_ASSETS]
   };
 }
@@ -930,7 +991,7 @@ function seedRegistry(existing) {
   let added = 0;
   let versioned = 0;
 
-  REPO_DOCUMENTS.forEach(entry => {
+  REGISTRY_DOCUMENTS.forEach(entry => {
     const absPath = path.join(root, entry.repo_path);
     if (!fs.existsSync(absPath)) {
       problems.push(`repo document ${entry.document_id} is missing: ${entry.repo_path}`);
