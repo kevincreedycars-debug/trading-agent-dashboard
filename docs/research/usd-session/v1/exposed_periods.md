@@ -50,10 +50,14 @@ exploration, feature engineering and pipeline testing, and never again as an uns
 
 ## 4. What remains genuinely unseen for the new session target
 
-1. **The 05:00→17:00 intraday label itself.** No artefact in this repository has ever computed the USD
-   change from 05:00 Europe/London to 17:00 America/New_York on the same day for any date. Nothing about
-   that label's distribution, persistence, flat rate or factor relations has been read. That is the only
-   untouched target, and it is untouched only until the first exploratory table is printed.
+1. **The 05:00→05:00 London intraday label itself.** No artefact in this repository has ever computed the USD
+   change from 05:00 Europe/London on one local date to 05:00 Europe/London on the next local date for any
+   date. Nothing about that label's distribution, persistence, flat rate or factor relations has been read.
+   That is the only untouched target, and it is untouched only until the first exploratory table is printed.
+   The closed 24-hour study is **not** this label: its interval runs from the 09:30 ET snapshot to the next
+   16:00 ET close, which measured against this window overlaps it for 14.5 hours (15.5 in the weeks when New
+   York changes before London), leaves the session's first 9.5 hours (New York time 00:00 to 09:30) uncovered,
+   and runs a median 16 hours past the session's endpoint.
 2. **Prospective days after 2026-04-30**, which the caches do not yet hold. These are the truly sealed
    observations, and they arrive one day at a time.
 3. **Live intraday pairs not present in the caches** (EUR/USD after 2026-04-30, any DXY print at all).
@@ -68,5 +72,8 @@ exploration, feature engineering and pipeline testing, and never again as an uns
   prospective days as the independent confirmation set, and do not open the reserved block until final
   selection. If that is judged too small, say so plainly and rely on prospective confirmation instead.
 - Every table that scores the deployed engine on the new label must state the horizon mismatch: the
-  deployed engine was asked 09:30 ET → next 16:00 ET, never 05:00 London → 17:00 New York.
+  deployed engine was asked 09:30 ET → next 16:00 ET, never 05:00 London → 05:00 London on the next local
+  date. The superseded 07-nominal-hour overlap figure is corrected to 14.5 nominal hours (15.5 in the weeks
+  when New York changes before London), with 9.5 hours of the session never covered by the study and a median
+  16 hours of the study's interval beyond the session's endpoint.
 - Nothing in this record authorises deploying, activating or publishing anything.

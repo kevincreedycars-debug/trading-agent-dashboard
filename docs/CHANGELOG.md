@@ -1,5 +1,19 @@
 # Changelog
 
+## 2026-10-15
+
+### Added
+
+- Delivered twenty-five self-contained USD research briefs, one per catalogue factor, under `docs/research/handoff/usd/v1/`: 25 briefs in `packs/` (10 baseline audits of the deployed factors, 15 newly authored session-research briefs), `BRIEF_INDEX.json`, `tracker_tasks.json` with 25 rows, `START_HERE.md` with the numbered list of all twenty-five briefs and a link to each pack, and `usd-research-handoff-v1.zip`, a stored archive the builder writes itself and which verifies byte for byte. `scripts/build_research_handoff.js` refuses to write unless the authored briefs cover the catalogue's non-live factors exactly, and every brief states one session - 05:00 `Europe/London` to 05:00 `Europe/London` on the next local date - so none can carry the withdrawn 17:00 New York window.
+- Registered the same twenty-five pack files as repo-backed `brief` documents in the Research Library, so each factor page carries a Brief block with Copy prompt and Download and the panel states a coverage line of 25 of 25; the copied prompt and the downloaded file are the same bytes the registry hashed.
+- Added `.gitattributes` with `docs/research/handoff/** -text`: the bundle's `HANDOFF_MANIFEST.json` hashes the brief files and the library registry hashes the same bytes, so a checkout must not renormalise that one folder. Scoped to the folder this commit introduces; nothing that already ships is affected.
+
+### Changed
+
+- Tasks `USD-SESSION-A3`, `A4` and `A5` now cover all twenty-five factor ids instead of the fifteen session cards, and their prompts and the three assignment packages tell both reviewers and the synthesis to work the overlaps across the whole set - inside the deployed half (F2/F3, F3/F4, F4/F6, F1/F9/F10, F7/F8) and between the halves - and to say how many independent comparisons the design actually buys. `node scripts/build_research_library.js verify` reports zero factors covered by no task.
+- Guards: `npm run test:research-handoff` 12 of 12, including a completeness check that walks every catalogue factor id to a real pack on disk and an archive check that parses the zip's central directory and rebuilds it byte for byte; `tests/research_library.test.js` 18 of 18, including a 25 of 25 registry coverage check; `tests/research_library.browser.test.js` 1 of 1, opening all twenty-five factor pages and failing if any one lacks a brief, a Copy prompt or a Download, then copying one brief and downloading it and checking both.
+- No research status moved: 25 factors still read 22 ready and 3 blocked, nothing was uploaded, accepted or scored, and the catalogue's `research_briefs.note` says in its own words that covering every factor is not progress. Nothing was deployed, published to a workflow or sent.
+
 ## 2026-10-09
 
 ### Added

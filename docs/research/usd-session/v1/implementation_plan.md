@@ -42,7 +42,7 @@ Feature construction rules (to be frozen with the dataset):
 
 | Item | Proposal |
 | --- | --- |
-| Target | sign of the label-instrument change from the 05:00 Europe/London cutoff to the 17:00 America/New_York endpoint, same local date |
+| Target | sign of the label-instrument change from the 05:00 Europe/London cutoff to the 05:00 Europe/London endpoint on the next local date (one 24-hour session; corrected 2026-10-14, see `CHECKPOINT_3.md`) |
 | Flat band | fitted on training sessions only, frozen before candidate comparison, reported in the contract file |
 | Eligibility | weekdays only; a session is dropped if the label or a required feature is missing; the missing-quote policy is declared in `session_contract_v1.json` before scoring |
 | Ties | a session whose change is inside the band is not a date tie for direction purposes; it leaves the decided-call accuracy and its share is reported |

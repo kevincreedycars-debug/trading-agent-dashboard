@@ -1,0 +1,835 @@
+{
+  "schema_version": "usd-factor-register-v1",
+  "asset": "USD",
+  "generated_at": "2026-10-15",
+  "context_version": "usd-session-context-20261014.1",
+  "pack_version": "2.0.0",
+  "extraction": {
+    "branch": "research/usd-session-20261013",
+    "commit": "d07af11166ea1d39e5f4184e85a993e03bcb7137",
+    "deployed_workflow": "USD Layer 1 Agent, workflow OCt1tB9yVMUgFTha, v154, active, code nodes byte-identical to exports/usd_layer1_agent.json (scoped export 2026-10-11T18:59:54.307Z)",
+    "collector_workflow": "Data Collector - USD, export exports/usd_collector.json (repository snapshot; the live collector id was not in the scoped identity file)",
+    "runtime": "n8n Cloud, workspace https://silver17.app.n8n.cloud (project ISQG9XU7TGTT6Fcu)",
+    "card_schema": {
+      "path": "docs/research/handoff/usd/v1/research_card.schema.json",
+      "version": "usd-session-research-card-v3",
+      "base": "docs/research/usd-session/v1/research-card.schema.json"
+    }
+  },
+  "catalogue": {
+    "path": "data/research-library/catalog.json",
+    "authority": "The committed catalogue is the authority for a live factor's id, label, group, role and status. This register adds the extracted detail behind each factor and is refused if it contradicts the catalogue."
+  },
+  "horizon": {
+    "horizon_id": "london-0500-to-london-0500-next-day",
+    "start": "05:00 Europe/London",
+    "end": "05:00 Europe/London on the next local date",
+    "nominal_hours": 24,
+    "session_start_weekdays": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "note": "One 24-hour session whose two ends are London wall-clock times one local date apart. The first statement of this target was 05:00 London to 17:00 America/New_York on the same local date; it was withdrawn on 2026-10-14 and anything still carrying it is superseded. A session starts on a Monday-to-Friday local date only: the London spring (01:00Z, last Sunday of March) and autumn (01:00Z, last Sunday of October) transitions fall inside the session that starts on the preceding Saturday, so that start measures 23 hours in spring and 25 in autumn and is not a session. The Friday session therefore contains Friday's US close and ends on Saturday morning, which is intended. Every eligible session is exactly 24 hours, held by test over every Monday-to-Friday start from 2023 to 2027 (backtester/tests/usd_session_engine_interface.test.js)."
+  },
+  "target": {
+    "intended_label_instrument": "DXY",
+    "quote_source": null,
+    "verification_state": "UNVERIFIED",
+    "rule": "No intraday DXY print exists in this repository or in the live collector, so the label instrument and the quote source are unverified at both ends. If a claim is really about EUR/USD, a custom basket or any other instrument, name that instrument and say so; never present another instrument as DXY. The live collector prices the dollar with FRED DTWEXBGS, which is a feature and cannot be the session label: H.10 publishes on Mondays at 16:15 ET for the previous business week, so at a 05:00 London cutoff that value is 2 to 6 business days old (median 4)."
+  },
+  "weights": {
+    "coded_by_timeframe": {
+      "24h": {
+        "F1": 10,
+        "F2": 14,
+        "F3": 10,
+        "F4": 10,
+        "F5": 14,
+        "F6": 4,
+        "F7": 24,
+        "F8": 12,
+        "F9": 1,
+        "F10": 1
+      },
+      "3d": {
+        "F1": 8,
+        "F2": 16,
+        "F3": 16,
+        "F4": 16,
+        "F5": 14,
+        "F6": 8,
+        "F7": 8,
+        "F8": 10,
+        "F9": 3,
+        "F10": 1
+      },
+      "current_week": {
+        "F1": 5,
+        "F2": 14,
+        "F3": 18,
+        "F4": 18,
+        "F5": 15,
+        "F6": 7,
+        "F7": 5,
+        "F8": 12,
+        "F9": 5,
+        "F10": 1
+      },
+      "next_week": {
+        "F1": 4,
+        "F2": 12,
+        "F3": 20,
+        "F4": 18,
+        "F5": 6,
+        "F6": 5,
+        "F7": 6,
+        "F8": 18,
+        "F9": 10,
+        "F10": 1
+      },
+      "current_month": {
+        "F1": 3,
+        "F2": 12,
+        "F3": 18,
+        "F4": 20,
+        "F5": 8,
+        "F6": 5,
+        "F7": 5,
+        "F8": 18,
+        "F9": 10,
+        "F10": 1
+      }
+    },
+    "rulebook": {
+      "F1": 10,
+      "F2": 14,
+      "F3": 16,
+      "F4": 14,
+      "F5": 6,
+      "F6": 5,
+      "F7": 3,
+      "F8": 18,
+      "F9": 12,
+      "F10": 2
+    },
+    "rulebook_source": "logic/agent_usd_direction.md v2.1, which the live workflow fetches from GitHub on every run; the two vectors and the disagreements between them are catalogued in docs/research/usd-session/v1/weight_vector_discrepancy.md",
+    "discrepancy_document": "docs/research/usd-session/v1/weight_vector_discrepancy.md"
+  },
+  "aggregation": {
+    "source": "exports/usd_layer1_agent.json -> Calculate USD Conviction, scoreTimeframe",
+    "formula": "conviction = round(winning side weight / active weight * 100), where active weight is the sum of the bullish and bearish weights only",
+    "steps": [
+      "Each factor returns a signal of BULLISH, BEARISH or NEUTRAL with an evidence string and a reason.",
+      "The timeframe's coded weight is added to the pile of the signal that returned; a NEUTRAL factor's weight goes to the neutral pile and never to active weight.",
+      "bullish_argument_pct = round(bullish weight / active weight * 100), and bearish_argument_pct the same on the bearish side.",
+      "net_edge_pct = bullish_argument_pct - bearish_argument_pct.",
+      "The direction is the heavier side; an exact tie returns NO_CLEAR_BIAS.",
+      "A direction whose absolute net edge is below 20 is published with the suffix _LEAN.",
+      "conviction is the winning side's percentage of active weight, and 0 when the direction is NO_CLEAR_BIAS.",
+      "verdict_strength is bucketed from the absolute net edge: 40 or more VERY_STRONG, 25 or more STRONG, 15 or more MODERATE, otherwise WEAK."
+    ],
+    "consequences": [
+      "A missing input cannot lower conviction: its weight leaves active weight, so conviction is a share of the evidence that arrived and can read 100 while half the weight is absent.",
+      "neutral_pct is a sum of weight points printed with a per-cent sign in the reason string, not a percentage of anything.",
+      "NO_CLEAR_BIAS requires an exact tie of the two weight sums, so abstention is an arithmetic accident rather than a designed gate."
+    ]
+  },
+  "modifiers": {
+    "note": "logic/agent_usd_direction.md sections 8.2 to 8.5 describe a participation cap, a missing-input penalty, a conflict penalty and an agreement boost. The conviction node implements none of them and returns the rulebook's own names as fixed values, so no published call can have been moved by any of the four.",
+    "values": {
+      "participation": "the active weight in points, identical to participation_cap",
+      "participation_cap": "the active weight in points, so no capacity is ever withheld",
+      "conflict_penalty": 0,
+      "missing_input_penalty": 0,
+      "agreement_boost": 0,
+      "weighted_edge": "the absolute net edge divided by 100"
+    },
+    "source": "exports/usd_layer1_agent.json -> Calculate USD Conviction, conviction_model legacy aliases"
+  },
+  "defects": [
+    "Two weight vectors are live at once: the workflow fetches the rulebook on every run while the code uses its own constants, so the published number follows the code. F7 carries 24 coded points against a rulebook weight of 3 and F8 12 against 18, and nothing reconciles them.",
+    "The F7 signal string is produced outside the reachable workflow, so 24 of the 100 coded points cannot be reproduced from this repository: every node in the collector export that could compute a surprise from a calendar is an entry point with no consumer.",
+    "'Code | Derive Fed Bias' is a second implementation of the bias score with no consumer, and the collector's own data_quality note names it as the source of the live fed_bias, which is in fact computed by 'Code | Derive USD Eco Inputs'.",
+    "The same data_quality note says latest_us_event is selected from the Finnhub economic calendar, while the live row is read from Supabase and the Finnhub chain never reaches the snapshot.",
+    "The helpers latestUsEventFromEcoData and upcomingEventsFromEcoData, which would recompute the event signal from actual against forecast and invert the sign for Unemployment Rate and Initial Jobless Claims, are defined and never called.",
+    "The four modifiers of rulebook section 8 are returned as constants: participation and participation_cap equal the active weight, and conflict_penalty, missing_input_penalty and agreement_boost are all zero.",
+    "neutral_pct is a sum of weight points reported with a per-cent sign inside the reason string.",
+    "Snapshot selection is sortedRows.find(isUsableUsdSnapshot) || sortedRows[0]: it has no as-of bound against the 05:00 London cutoff, no per-field age and no revision exclusion, and the fallback row may be missing inputs the pack requires.",
+    "Gold, BTC and NQ history percentages count stored collector rows, so those lookbacks follow the pipeline's run history rather than a trading calendar.",
+    "Fields exist in the stored row and are written as null on every run: spx_d1_pct, btc_dominance, latest_ez_event, ecb_bias, global_growth_regime, ez_stress_flag and geopolitical_risk_flag.",
+    "equities_regime is computed from the 16 and 25 VIX thresholds, stored in the row and exposed to the model, and read by no conviction factor, which recomputes the regime from vix_level.",
+    "WTI, Brent and the five FX pairs are fetched and transformed in the collector but are not first-class fields of the stored snapshot; they survive only inside raw_payload, with the US-DE 10Y and US-JP 10Y spreads.",
+    "The dashboard publishes a second strength label derived separately from the same call, so two strength labels can disagree on one row.",
+    "The label instrument and its quote source are still undecided: the collector prices the dollar with FRED DTWEXBGS, a weekly broad H.10 index 2 to 6 business days old at a 05:00 London cutoff, and no intraday dollar-index print exists in the repository or the collector."
+  ],
+  "unscored_collected_inputs": [
+    {
+      "input": "btc_price, btc_d1_pct, btc_d5_pct, btc_d20_pct",
+      "collected": "Coinbase spot, stored in every snapshot row with windows counted in stored rows",
+      "why_unscored": "no live factor reads them, so crypto risk appetite is the one cross-asset complex the engine collects and ignores."
+    },
+    {
+      "input": "equities_regime",
+      "collected": "computed in the collector from the 16 and 25 VIX thresholds and exposed to the model",
+      "why_unscored": "the stored label is read by no factor, which recomputes the regime from vix_level."
+    },
+    {
+      "input": "wti, brent",
+      "collected": "FRED spot series fetched and converted to per-cent changes, kept only inside raw_payload",
+      "why_unscored": "they are not stored as snapshot fields, so no factor can read them and no review can audit them."
+    },
+    {
+      "input": "eurusd, usd_jpy, gbp_usd, usd_cad, aud_usd",
+      "collected": "FRED EUR/USD and Coinbase spot for the other four, kept only inside raw_payload",
+      "why_unscored": "the dollar's own crosses are collected daily and read by no factor."
+    },
+    {
+      "input": "us_de_10y_spread, us_jp_10y_spread",
+      "collected": "computed in the collector inside raw_payload",
+      "why_unscored": "no factor reads the longer-horizon relative-rate proxies."
+    },
+    {
+      "input": "vix_d1, vix_d5",
+      "collected": "stored in every snapshot row and exposed to the model",
+      "why_unscored": "the rulebook reads VIX level and change together and the code reads the level only."
+    },
+    {
+      "input": "us_10y_yield, us_10y_d5_bps",
+      "collected": "FRED DGS10 through the collector",
+      "why_unscored": "only the real 10Y is scored, so the nominal 10Y and its change are unused."
+    },
+    {
+      "input": "us_2y_d20_bps, dxy_d20, gold_d20_pct, nq_d20_pct, us_10y_real_yield_d20_bps",
+      "collected": "stored in the snapshot row",
+      "why_unscored": "only the timeframes longer than 24 hours read them, so at this study's horizon they are collected and never used."
+    },
+    {
+      "input": "us_de_2y_spread, us_de_2y_spread_d1_bps, us_de_2y_spread_d20_bps, de_2y_d5_bps",
+      "collected": "stored or exposed in the snapshot row, with the d1 and d20 spread legs never computed by the collector",
+      "why_unscored": "only the fixed five-day spread delta is scored."
+    },
+    {
+      "input": "spx_d1_pct, btc_dominance, latest_ez_event, ecb_bias, global_growth_regime, ez_stress_flag, geopolitical_risk_flag",
+      "collected": "declared in the snapshot row and written as null every run",
+      "why_unscored": "every rulebook factor that needs one of them, the left side of the Dollar Smile above all, is unimplementable from the collector as it stands."
+    },
+    {
+      "input": "upcoming_events",
+      "collected": "stored in every snapshot row from the same eco source",
+      "why_unscored": "no factor reads the forward calendar, so the collector knows what is scheduled inside the session and the engine does not."
+    },
+    {
+      "input": "sofr, BAMLH0A0HYM2, SP500, NASDAQ100",
+      "collected": "market-close FRED series reachable in the closed study's cached frame but not collected by the live pipeline",
+      "why_unscored": "funding and credit stress have no live factor, and the closed study's frame is where they could be tested first."
+    }
+  ],
+  "factors": [
+    {
+      "order": 1,
+      "task_id": "USD-BASELINE-AUDIT-01",
+      "factor_id": "live.f1-vix-level",
+      "label": "F1 VIX level and risk regime",
+      "group": "live_engine",
+      "pack_family": "risk_conditions",
+      "card_family": "risk_conditions",
+      "role": "regime context",
+      "card_role": "regime_context",
+      "deployed": true,
+      "definition": "The VIX level at the cutoff read as the risk regime the dollar is trading in; the deployed code reads the level only, while the rulebook also describes 1-day and 5-day modifiers that do not execute.",
+      "inputs": [
+        {
+          "input": "vix_level",
+          "source": "FRED VIXCLS, stored by the USD collector",
+          "units": "index",
+          "transform": "level, no transformation",
+          "lookback": "none",
+          "cutoff": "1 to 2 business days old at 05:00 London; this family's publication time carries a declared assumption, not a verified schedule"
+        }
+      ],
+      "rule": "VIX > 25 reads BULLISH, 16 to 25 NEUTRAL, below 16 BEARISH. Level only. Threshold 25 / 16. Coded weight 10, rulebook weight 10, deployed in signals.F1.",
+      "missing_stale": "A missing level scores F1 NEUTRAL and names the missing input; the null-to-zero defect was repaired live on 2026-10-11 and no archived call moved.",
+      "dependencies": [],
+      "overlap": "F9 (Dollar Smile) reads the same VIX level with the bias string and F10 gates on the same 25 / 16 thresholds, so one input informs three factors.",
+      "historical_availability": "FRED VIXCLS daily, cached from 2023-04-03 in the closed study's cache and in the 22-series macro frame from 2024-01-02; latest published values only, no vintage.",
+      "live_availability": "Collected once per day at the 09:30 ET pipeline time, with no as-of check against the 05:00 London cutoff and no per-field age.",
+      "code_refs": [
+        "exports/usd_layer1_agent.json -> Calculate USD Conviction, signals.F1 (thresholds 25 and 16, weight 10)",
+        "exports/usd_layer1_agent.json -> Build USD Input Pack (vix_level, vix_d1, vix_d5 exposed to the model)"
+      ],
+      "book_refs": [
+        "logic/agent_usd_direction.md section 5, 'Factor 1 - VIX Level and Risk Regime'",
+        "logic/agent_usd_direction.md section 15 rule 4 ('VIX > 25 activates safe-haven USD logic')"
+      ],
+      "weights": {
+        "coded_by_timeframe": {
+          "24h": 10,
+          "3d": 8,
+          "current_week": 5,
+          "next_week": 4,
+          "current_month": 3
+        },
+        "coded_24h": 10,
+        "rulebook": 10,
+        "rulebook_source": "logic/agent_usd_direction.md v2.1, which the live workflow fetches from GitHub on every run; the two vectors and the disagreements between them are catalogued in docs/research/usd-session/v1/weight_vector_discrepancy.md"
+      },
+      "status": {
+        "research": "ready",
+        "review": "pending",
+        "backtest": "not_tested",
+        "note": "Deployed baseline: no research card has been run on it and it is not a candidate."
+      },
+      "blockers": [],
+      "pack_path": "docs/research/handoff/usd/v1/packs/f1-vix-level.md",
+      "pack_questions": 3
+    },
+    {
+      "order": 2,
+      "task_id": "USD-BASELINE-AUDIT-02",
+      "factor_id": "live.f2-us-2y-delta",
+      "label": "F2 US 2Y yield delta",
+      "group": "live_engine",
+      "pack_family": "rates_and_policy_expectations",
+      "card_family": "rates_and_policy_expectations",
+      "role": "direction",
+      "card_role": "direction",
+      "deployed": true,
+      "definition": "The change in the US 2-year Treasury yield as a proxy for repricing of the US policy path.",
+      "inputs": [
+        {
+          "input": "us_2y_d5_bps, us_2y_d20_bps",
+          "source": "FRED DGS2, stored by the USD collector",
+          "units": "basis points",
+          "transform": "difference of the level over the lookback",
+          "lookback": "5 days on 24h, 20 days on longer timeframes",
+          "cutoff": "1 to 2 business days old; a daily series, so the cutoff value is the previous close"
+        }
+      ],
+      "rule": "At or above +5 bps reads BULLISH, at or below -5 bps BEARISH, otherwise NEUTRAL. Threshold +/- 5 bps. Coded weight 14, rulebook weight 14.",
+      "missing_stale": "A missing delta scores NEUTRAL and names the missing input; the 20d-to-5d substitution on longer timeframes is only a warning string.",
+      "dependencies": [
+        "A rate series whose publication schedule is verified at the cutoff."
+      ],
+      "overlap": "F3 contains the US leg, so a move in DGS2 enters twice when both are active; F4 moves with nominal yields through the inflation-expectation leg.",
+      "historical_availability": "FRED DGS2 daily in the closed study's cache from 2023-04-03 and in the macro frame from 2024-01-02; latest published values only.",
+      "live_availability": "Collected daily; the H.15 family is 1 to 2 business days old at the cutoff and its exact publication time was not verified in this cycle.",
+      "code_refs": [
+        "exports/usd_layer1_agent.json -> Calculate USD Conviction, signals.F2 via signalFromDelta(us2yDelta, 5, -5, ...)",
+        "exports/usd_layer1_agent.json -> Build USD Input Pack (us_2y_d5_bps, us_2y_d20_bps)"
+      ],
+      "book_refs": [
+        "logic/agent_usd_direction.md section 5, 'Factor 2 - US 2-Year Yield Delta'",
+        "logic/agent_usd_direction.md section 15 rules 1 and 3 ('always use delta, not level'; 'relative rates matter more than absolute US rates')"
+      ],
+      "weights": {
+        "coded_by_timeframe": {
+          "24h": 14,
+          "3d": 16,
+          "current_week": 14,
+          "next_week": 12,
+          "current_month": 12
+        },
+        "coded_24h": 14,
+        "rulebook": 14,
+        "rulebook_source": "logic/agent_usd_direction.md v2.1, which the live workflow fetches from GitHub on every run; the two vectors and the disagreements between them are catalogued in docs/research/usd-session/v1/weight_vector_discrepancy.md"
+      },
+      "status": {
+        "research": "ready",
+        "review": "pending",
+        "backtest": "not_tested",
+        "note": "Deployed baseline."
+      },
+      "blockers": [],
+      "pack_path": "docs/research/handoff/usd/v1/packs/f2-us-2y-delta.md",
+      "pack_questions": 3
+    },
+    {
+      "order": 3,
+      "task_id": "USD-BASELINE-AUDIT-03",
+      "factor_id": "live.f3-us-de-2y-spread-delta",
+      "label": "F3 US-DE 2Y spread delta",
+      "group": "live_engine",
+      "pack_family": "relative_rates",
+      "card_family": "rates_and_policy_expectations",
+      "role": "direction",
+      "card_role": "direction",
+      "deployed": true,
+      "definition": "The five-day change in the US minus German 2-year yield spread, read as the relative-rate stance behind the dollar; the deployed code reads one fixed five-day change at every timeframe, and the rulebook factor is the same spread delta with the same thresholds.",
+      "inputs": [
+        {
+          "input": "us_de_2y_spread_d5_bps",
+          "source": "computed in the collector from FRED DGS2 (node 'HTTP Request | US 2Y Treasury Yield - FRED API') and a Bundesbank CSV German 2Y node ('HTTP Request | Germany 2Y Yield'), stored by the USD collector",
+          "units": "basis points",
+          "transform": "five-day difference of the spread level",
+          "lookback": "5 days at every timeframe",
+          "cutoff": "inherits the older leg; the German CSV and the US close are 1 to 2 business days old at 05:00 London"
+        }
+      ],
+      "rule": "At or above +5 bps reads BULLISH, at or below -5 bps BEARISH, otherwise NEUTRAL, on one fixed five-day window. Threshold +/- 5 bps. Coded weight 10, rulebook weight 16.",
+      "missing_stale": "A missing spread delta scores NEUTRAL and names the missing input; the input pack also lists `de_2y_yield`, `us_de_2y_spread` and `us_de_2y_spread_d5_bps` as must-be-neutral if unavailable. The spread's 1-day and 20-day deltas are exposed to the model and never read by the code, and the collector stores no 20-day German 2Y delta at all.",
+      "dependencies": [
+        "A German 2Y series whose publication schedule, holidays and as-of dates match the US leg."
+      ],
+      "overlap": "Shares its US leg with F2, so a US 2Y move is weighted twice when both factors are active; the German leg arrives from a different vendor and calendar from the US leg it is subtracted from.",
+      "historical_availability": "The US leg is in the closed study's cache from 2023-04-03 and in the 22-series macro frame from 2024-01-02; the Bundesbank German 2Y series was not traced in either cached frame in this cycle.",
+      "live_availability": "One row per day at the 09:30 ET pipeline time, no vintage, and the German CSV's as-of date is not asserted in the row.",
+      "code_refs": [
+        "exports/usd_layer1_agent.json -> Calculate USD Conviction, signals.F3 = signalFromDelta(inputs.us_de_2y_spread_d5_bps, 5, -5, ...) at every timeframe",
+        "exports/usd_collector.json -> Normalise Market Snapshot: us_de_2y_spread = spread(us2y.latest, de2y.latest), us_de_2y_spread_d5_bps = spreadD5(us2y, de2y); de2y parsed by bundesbankCsv",
+        "exports/usd_layer1_agent.json -> Build USD Input Pack (us_de_2y_spread, us_de_2y_spread_d1_bps, us_de_2y_spread_d5_bps, us_de_2y_spread_d20_bps)"
+      ],
+      "book_refs": [
+        "logic/agent_usd_direction.md section 5, 'Factor 3 - US/Germany 2-Year Rate Differential Delta' (weight 16; widening by 5 bps or more BULLISH, narrowing by 5 bps or more BEARISH)"
+      ],
+      "weights": {
+        "coded_by_timeframe": {
+          "24h": 10,
+          "3d": 16,
+          "current_week": 18,
+          "next_week": 20,
+          "current_month": 18
+        },
+        "coded_24h": 10,
+        "rulebook": 16,
+        "rulebook_source": "logic/agent_usd_direction.md v2.1, which the live workflow fetches from GitHub on every run; the two vectors and the disagreements between them are catalogued in docs/research/usd-session/v1/weight_vector_discrepancy.md"
+      },
+      "status": {
+        "research": "ready",
+        "review": "pending",
+        "backtest": "not_tested",
+        "note": "Deployed baseline."
+      },
+      "blockers": [],
+      "pack_path": "docs/research/handoff/usd/v1/packs/f3-us-de-2y-spread-delta.md",
+      "pack_questions": 3
+    },
+    {
+      "order": 4,
+      "task_id": "USD-BASELINE-AUDIT-04",
+      "factor_id": "live.f4-real-yield-delta",
+      "label": "F4 US 10Y real yield delta",
+      "group": "live_engine",
+      "pack_family": "rates_inflation",
+      "card_family": "rates_and_policy_expectations",
+      "role": "direction",
+      "card_role": "direction",
+      "deployed": true,
+      "definition": "The change in the US 10-year TIPS real yield, read as the real-rate leg of dollar strength; the code prefers the 20-day change on the two long timeframes and the 5-day change elsewhere, and the rulebook names the 5-day change with the 20-day input quoted as available if present.",
+      "inputs": [
+        {
+          "input": "us_10y_real_yield_d5_bps, us_10y_real_yield_d20_bps",
+          "source": "FRED DFII10 (node 'HTTP Request | TIPS 10Y Real Yield - FRED Api'), stored by the USD collector",
+          "units": "basis points",
+          "transform": "difference of the level over the lookback",
+          "lookback": "5 days on 24h, 3d and current_week; 20 days on next_week and current_month when the optional field is present",
+          "cutoff": "Federal Reserve H.15 family, 1 to 2 business days old at 05:00 London, median 1"
+        }
+      ],
+      "rule": "At or above +5 bps reads BULLISH, at or below -5 bps BEARISH, otherwise NEUTRAL, on whichever lookback the timeframe selects. Threshold +/- 5 bps. Coded weight 10, rulebook weight 14.",
+      "missing_stale": "A missing delta scores NEUTRAL and names the missing input; the 20d-to-5d substitution on the two long timeframes is only a warning string, and because the 20-day field is optional in the snapshot a null there silently changes the lookback the factor is scored on.",
+      "dependencies": [
+        "A verified H.15 publication time and vintage for the real-yield series."
+      ],
+      "overlap": "Moves with F2 whenever breakevens are flat, because the nominal 10-year and real 10-year series share the same policy-path news; it is also the rate-side twin of F6, which reads gold as the other side of the same real-rate complex.",
+      "historical_availability": "FRED DFII10 in the closed study's cache from 2023-04-03 and in the 22-series macro frame from 2024-01-02; latest published values only, no vintage.",
+      "live_availability": "Collected daily at the 09:30 ET pipeline time with no as-of check against the 05:00 London cutoff and no per-field age; revisions of the H.15 series are not detectable because no vintage is stored.",
+      "code_refs": [
+        "exports/usd_layer1_agent.json -> Calculate USD Conviction, signals.F4 = signalFromDelta(realYieldDelta, 5, -5, ...), where realYieldDelta takes us_10y_real_yield_d20_bps on next_week and current_month, else us_10y_real_yield_d5_bps",
+        "exports/usd_layer1_agent.json -> Build USD Input Pack (us_10y_real_yield, us_10y_real_yield_d5_bps, us_10y_real_yield_d20_bps)"
+      ],
+      "book_refs": [
+        "logic/agent_usd_direction.md section 5, 'Factor 4 - US 10-Year Real Yield Delta' (weight 14; rising by 5 bps or more over 5 days BULLISH, falling by 5 bps or more BEARISH, us_10y_real_yield_d20_bps listed as an input)"
+      ],
+      "weights": {
+        "coded_by_timeframe": {
+          "24h": 10,
+          "3d": 16,
+          "current_week": 18,
+          "next_week": 18,
+          "current_month": 20
+        },
+        "coded_24h": 10,
+        "rulebook": 14,
+        "rulebook_source": "logic/agent_usd_direction.md v2.1, which the live workflow fetches from GitHub on every run; the two vectors and the disagreements between them are catalogued in docs/research/usd-session/v1/weight_vector_discrepancy.md"
+      },
+      "status": {
+        "research": "ready",
+        "review": "pending",
+        "backtest": "not_tested",
+        "note": "Deployed baseline."
+      },
+      "blockers": [],
+      "pack_path": "docs/research/handoff/usd/v1/packs/f4-real-yield-delta.md",
+      "pack_questions": 3
+    },
+    {
+      "order": 5,
+      "task_id": "USD-BASELINE-AUDIT-05",
+      "factor_id": "live.f5-dxy-delta",
+      "label": "F5 DXY delta",
+      "group": "live_engine",
+      "pack_family": "price_confirmation",
+      "card_family": "usd_price_behaviour",
+      "role": "direction",
+      "card_role": "direction",
+      "deployed": true,
+      "definition": "The percentage change in the dollar index the collector stores as `dxy_level`, read as confirmation that the market is already expressing dollar strength or weakness; the code reads a 1-day change on 24h with a tighter threshold and a 5-day or 20-day change on the longer timeframes.",
+      "inputs": [
+        {
+          "input": "dxy_d1, dxy_d5, dxy_d20",
+          "source": "collected by the USD collector node 'HTTP Request | DXY - FRED Dollar Index - FRED API' and turned into percentage changes by fredPct (offsets of 1, 5 and 20 observations of the returned series); target_source_assessment.md records the stored series as FRED DTWEXBGS, the Federal Reserve H.10 nominal broad U.S. dollar index, not the ICE DXY basket, and the source page states that all values are subject to revision",
+          "units": "per cent change of the index level",
+          "transform": "percentage change over 1, 5 or 20 observations of the series",
+          "lookback": "1 day on 24h; 5 days on 3d and current_week; 20 days on next_week and current_month when dxy_d20 is present",
+          "cutoff": "2 to 6 business days old at 05:00 London, median 4, because the H.10 family is released on Mondays at 16:15 ET for the previous business week"
+        }
+      ],
+      "rule": "On 24h: at or above +0.15 per cent BULLISH, at or below -0.15 per cent BEARISH, otherwise NEUTRAL. On every other timeframe: +/- 0.30 per cent. Coded weight 14 on 24h, rulebook weight 6.",
+      "missing_stale": "A missing delta scores NEUTRAL and names the missing input. The substitutions are silent and one of them changes the test: on 24h a null `dxy_d1` moves the factor to `dxy_d5` while the threshold stays at the 1-day 0.15 per cent, so a five-day move is judged on the tighter band, and on the two long timeframes a null `dxy_d20` moves it to `dxy_d5`. Neither substitution reaches the numeric payload.",
+      "dependencies": [
+        "A dollar index whose release schedule is daily rather than weekly, and a decision on which index the label instrument uses."
+      ],
+      "overlap": "The collected series is a broad dollar index, so whenever the session label is built from the same index family the factor contains part of the target; it also restates F2, F3 and F4 as a price rather than as a yield, and the rulebook makes it the primary tiebreaker, a role the code never grants it.",
+      "historical_availability": "FRED DTWEXBGS is a daily series available well before the closed study's cache (2023-04-03) and the macro frame (2024-01-02); latest published values only, no vintage, so revisions are invisible.",
+      "live_availability": "One collector row per day at the 09:30 ET pipeline time and no per-field age, so the newest observation is already several business days old at the 05:00 London cutoff.",
+      "code_refs": [
+        "exports/usd_layer1_agent.json -> Calculate USD Conviction, signals.F5 = signalFromDelta(dxyDelta, tf === '24h' ? 0.15 : 0.3, tf === '24h' ? -0.15 : -0.3, ...) with dxyDelta = dxy_d20 on next_week and current_month, else dxy_d1 on 24h, else dxy_d5",
+        "exports/usd_collector.json -> Normalise Market Snapshot: const dxy = fredPct(dxyRaw); dxy_level = dxy.latest, dxy_d1 = dxy.d1, dxy_d5 = dxy.d5, dxy_d20 = dxy.d20"
+      ],
+      "book_refs": [
+        "logic/agent_usd_direction.md section 5, 'Factor 5 - DXY 5-Day Delta' (weight 6; up more than 0.30 per cent over 5 days BULLISH, down more than 0.30 per cent BEARISH, and the same section names DXY the primary tiebreaker when weighted scores are balanced)",
+        "logic/agent_usd_direction.md section 7, 'Step 3 - Tiebreaker Rules' (DXY 5d first, then US 2Y 5d, real yield 5d, VIX 5d; no code path reads this order)"
+      ],
+      "weights": {
+        "coded_by_timeframe": {
+          "24h": 14,
+          "3d": 14,
+          "current_week": 15,
+          "next_week": 6,
+          "current_month": 8
+        },
+        "coded_24h": 14,
+        "rulebook": 6,
+        "rulebook_source": "logic/agent_usd_direction.md v2.1, which the live workflow fetches from GitHub on every run; the two vectors and the disagreements between them are catalogued in docs/research/usd-session/v1/weight_vector_discrepancy.md"
+      },
+      "status": {
+        "research": "ready",
+        "review": "pending",
+        "backtest": "not_tested",
+        "note": "Deployed baseline; coded and rulebook weights differ most here in rank terms, 14 against 6."
+      },
+      "blockers": [],
+      "pack_path": "docs/research/handoff/usd/v1/packs/f5-dxy-delta.md",
+      "pack_questions": 3
+    },
+    {
+      "order": 6,
+      "task_id": "USD-BASELINE-AUDIT-06",
+      "factor_id": "live.f6-gold-delta",
+      "label": "F6 Gold delta",
+      "group": "live_engine",
+      "pack_family": "safe_haven_overlap",
+      "card_family": "cross_assets",
+      "role": "direction",
+      "card_role": "direction",
+      "deployed": true,
+      "definition": "The change in the spot gold price, read as the anti-dollar leg: gold weakness is scored as dollar support and gold strength as dollar pressure; the deployed code inverts the sign against a 0.1 per cent band, and the rulebook states the same inversion without a numeric band.",
+      "inputs": [
+        {
+          "input": "gold_d1_pct, gold_d5_pct, gold_d20_pct",
+          "source": "Coinbase spot quote collected by the node 'HTTP Request | Gold - Coinbase'; the percentage changes are computed by the collector's historyPct against its own previously stored snapshot rows ('Supabase | Get Previous Market Snapshots'), so the window is counted in stored pipeline rows rather than in calendar days or exchange sessions",
+          "units": "per cent change",
+          "transform": "percentage change against the row 1, 5 or 20 positions back in the collector's own history, with a fallback to the 1-day column when the 5-day column is missing",
+          "lookback": "5 stored rows on 24h, 3d and current_week; 20 stored rows on next_week and current_month when gold_d20_pct is present, otherwise the 5-row arm",
+          "cutoff": "spot quote read at the 09:30 ET pipeline time, so the observed price is not a 05:00 London print and no as-of check is applied"
+        }
+      ],
+      "rule": "Gold below -0.1 per cent reads BULLISH, gold above +0.1 per cent BEARISH, inside +/- 0.1 per cent NEUTRAL, on the selected lookback. Coded weight 4 on 24h, rulebook weight 5.",
+      "missing_stale": "A missing gold delta scores NEUTRAL and names the missing input; the input pack silently substitutes `gold_d1_pct` for a missing `gold_d5_pct` and records only a warning string, so a one-row move can be labelled and scored as a five-day move, and the row counts themselves depend on how often the collector ran.",
+      "dependencies": [
+        "A gold price series with a fixed daily benchmark time, and a window counted in calendar or session time rather than in pipeline rows."
+      ],
+      "overlap": "F4 already reads the real-rate complex from the other side, and F1, F9 and F10 read the same risk appetite through VIX and equities; when gold and the dollar rise together the rulebook tells the model to flag a safe-haven conflict, while the code carries a conflict penalty that is hard-coded to zero.",
+      "historical_availability": "A Coinbase spot price is retrievable historically, but the closed study's cache and the macro frame record no gold series traced in this cycle, so the row-based window has no obvious historical equivalent.",
+      "live_availability": "One quote per collector run, no vintage, no benchmark time, and the deltas are only as regular as the pipeline's run history.",
+      "code_refs": [
+        "exports/usd_layer1_agent.json -> Calculate USD Conviction, signals.F6: gold below -0.1 per cent BULLISH, above +0.1 per cent BEARISH, with goldDelta = gold_d20_pct on next_week and current_month, else gold_d5_pct",
+        "exports/usd_layer1_agent.json -> Build USD Input Pack: goldD5 = gold_d5_pct if present else gold_d1_pct, with the warning 'gold_d5_pct missing; using gold_d1_pct fallback'",
+        "exports/usd_collector.json -> Normalise Market Snapshot: const goldPrice = coinbasePrice(goldRaw); goldD1Pct = historyPct(goldPrice, 'gold_price', 0), goldD5Pct = historyPct(goldPrice, 'gold_price', 4), goldD20Pct = historyPct(goldPrice, 'gold_price', 19)"
+      ],
+      "book_refs": [
+        "logic/agent_usd_direction.md section 5, 'Factor 6 - Gold 5-Day Delta' (weight 5; gold falling over 5 days BULLISH, rising over 5 days BEARISH, gold flat NEUTRAL, plus the instruction to flag a possible safe-haven conflict when gold rises while the dollar strengthens)"
+      ],
+      "weights": {
+        "coded_by_timeframe": {
+          "24h": 4,
+          "3d": 8,
+          "current_week": 7,
+          "next_week": 5,
+          "current_month": 5
+        },
+        "coded_24h": 4,
+        "rulebook": 5,
+        "rulebook_source": "logic/agent_usd_direction.md v2.1, which the live workflow fetches from GitHub on every run; the two vectors and the disagreements between them are catalogued in docs/research/usd-session/v1/weight_vector_discrepancy.md"
+      },
+      "status": {
+        "research": "ready",
+        "review": "pending",
+        "backtest": "not_tested",
+        "note": "Deployed baseline."
+      },
+      "blockers": [],
+      "pack_path": "docs/research/handoff/usd/v1/packs/f6-gold-delta.md",
+      "pack_questions": 3
+    },
+    {
+      "order": 7,
+      "task_id": "USD-BASELINE-AUDIT-07",
+      "factor_id": "live.f7-economic-surprise",
+      "label": "F7 US economic surprise",
+      "group": "live_engine",
+      "pack_family": "event_surprises",
+      "card_family": "macroeconomic_releases",
+      "role": "direction",
+      "card_role": "direction",
+      "deployed": true,
+      "definition": "The dollar-side read of the most recent completed US release: the collector stores a per-event signal string and the conviction node copies that string; the magnitude of the surprise, the consensus it was measured against and the event's age are never read.",
+      "inputs": [
+        {
+          "input": "latest_us_event.usd_signal",
+          "source": "the event row the collector stores ('Supabase | Get Today USD Economic Events'), passed through 'Code | Derive USD Eco Inputs' to 'Normalise Market Snapshot'; the string is one of BULLISH, BEARISH or NEUTRAL and its producer is not reachable in the collector export, because every node that would compute it from a calendar ('HTTP Request | Eco Calendar Recent - Finnhub', 'HTTP Request | Eco Calendar Upcoming - Finnhub', 'Code | Process Eco Data', 'Code | Derive Fed Bias') is an entry point with no consumer in this workflow",
+          "units": "categorical string",
+          "transform": "none; the string is scored as it is stored",
+          "lookback": "the single latest completed event the row carries, whatever its age",
+          "cutoff": "no as-of check; the stored event also carries date and time fields that the signal rule never reads"
+        }
+      ],
+      "rule": "BULLISH reads BULLISH (positive US surprise supports USD), BEARISH reads BEARISH, any other string or a missing event reads NEUTRAL. No threshold, no surprise magnitude. Coded weight 24 on 24h, 8 on 3d, 5 on current_week, 6 on next_week, 5 on current_month; rulebook weight 3 inside a 72-hour window.",
+      "missing_stale": "A null `latest_us_event` scores NEUTRAL with the evidence string 'No recent US event'. The collector also appends latest_us_event to the snapshot's missing array and marks source_status partial, but the agent end sees only the null, so a partial row and a healthy row produce the same factor reading. A stale event is indistinguishable from a fresh one: nothing holds the rulebook's 72-hour window, and neither a consensus revision nor a first print is detectable.",
+      "dependencies": [
+        "A consensus forecast archive with a first-print vintage, so that a surprise magnitude can be formed and dated."
+      ],
+      "overlap": "A release moves the same rates and price inputs that F2, F4 and F5 read, so one surprise can enter the score three or four times; F8 is derived from the same stored event rows and F9 reads the same regime.",
+      "historical_availability": "No consensus or first-print archive is committed. The calendar in the closed study's data records release times without consensus values and an ALFRED vintage file needs a key, so a historical surprise series cannot be rebuilt from this repository.",
+      "live_availability": "One row per day, with an event date and time stored but never tested for age, and no vintage of either the consensus or the stored string.",
+      "code_refs": [
+        "exports/usd_layer1_agent.json -> Calculate USD Conviction, signals.F7: BULLISH if ev.usd_signal === 'BULLISH', BEARISH if 'BEARISH', else NEUTRAL (weight 24 on 24h)",
+        "exports/usd_layer1_agent.json -> Build USD Input Pack (latest_us_event exposed to the model and listed among the must-be-neutral inputs when absent)",
+        "exports/usd_collector.json -> Normalise Market Snapshot: latestUsEvent = ecoDataRaw?.latest_us_event || null, followed by checkMissing('latest_us_event', latestUsEvent). The helper latestUsEventFromEcoData, which would recompute usd_signal from actual against forecast and invert the sign for Unemployment Rate and Initial Jobless Claims, and the helper upcomingEventsFromEcoData are both defined and never called, so the stored string is read unexamined"
+      ],
+      "book_refs": [
+        "logic/agent_usd_direction.md section 5, 'Factor 7 - US Economic Surprise Direction' (weight 3; the expected input structure carries an age_hours field and a 72-hour window; only confirmed actual-versus-consensus data may be counted)"
+      ],
+      "weights": {
+        "coded_by_timeframe": {
+          "24h": 24,
+          "3d": 8,
+          "current_week": 5,
+          "next_week": 6,
+          "current_month": 5
+        },
+        "coded_24h": 24,
+        "rulebook": 3,
+        "rulebook_source": "logic/agent_usd_direction.md v2.1, which the live workflow fetches from GitHub on every run; the two vectors and the disagreements between them are catalogued in docs/research/usd-session/v1/weight_vector_discrepancy.md"
+      },
+      "status": {
+        "research": "blocked",
+        "review": "pending",
+        "backtest": "not_tested",
+        "note": "Highest coded weight on the 24h timeframe at 24 points, against a rulebook weight of 3."
+      },
+      "blockers": [
+        "No consensus or first-print vintage source is reachable from this repository."
+      ],
+      "pack_path": "docs/research/handoff/usd/v1/packs/f7-economic-surprise.md",
+      "pack_questions": 3
+    },
+    {
+      "order": 8,
+      "task_id": "USD-BASELINE-AUDIT-08",
+      "factor_id": "live.f8-fed-bias",
+      "label": "F8 Fed bias",
+      "group": "live_engine",
+      "pack_family": "policy_stance",
+      "card_family": "rates_and_policy_expectations",
+      "role": "direction",
+      "card_role": "direction",
+      "deployed": true,
+      "definition": "The stored Fed-bias string, tested for the words hawkish or dovish, read as the direction of policy expectations. The rulebook factor is the change in bias; only the current string is retained, so no change can be measured, and the code tests the absolute state the rulebook says not to trade.",
+      "inputs": [
+        {
+          "input": "fed_bias",
+          "source": "computed inside the collector by 'Code | Derive USD Eco Inputs' from the last eight completed events of the stored calendar: plus one for a BULLISH usd_signal and minus one for a BEARISH one, doubled when the event's impact rank is three, summed and labelled hawkish at two or more, dovish at minus two or less, neutral otherwise. A second implementation in the same export, 'Code | Derive Fed Bias', would score the same events plus or minus one; that node has no consumer and never runs",
+          "units": "categorical string (hawkish | neutral | dovish | unknown)",
+          "transform": "substring test for hawkish and for dovish",
+          "lookback": "the current string only",
+          "cutoff": "no as-of check; the string is recomputed once per collector run from whichever completed events the stored calendar holds"
+        }
+      ],
+      "rule": "A string containing 'hawkish' reads BULLISH, one containing 'dovish' BEARISH, neutral NEUTRAL, 'unknown' is treated as a missing input and scores NEUTRAL. No threshold, no comparison against a prior reading. Coded weight 12 on 24h, 10 on 3d, 12 on current_week, 18 on next_week, 18 on current_month; rulebook weight 18, described there as the highest-weight factor and explicitly a delta.",
+      "missing_stale": "An absent or 'unknown' string scores NEUTRAL and names the missing input. The two-point cutoff behind the string is a coded constant with no stated calibration, the eight-event window is undocumented, and because only the current string survives, no amount of stored data can show whether the bias changed since the previous session.",
+      "dependencies": [
+        "A retained vintage of the bias string, or of the events behind it, so that a change in bias can be measured."
+      ],
+      "overlap": "F7 is built from the same stored event rows and contributes to the same score, F2 and F4 read the same policy path through yields, and F9 uses this string as a gate, so one policy story can carry five factors.",
+      "historical_availability": "No fed_bias series appears in the closed study's data or in the 22-series macro frame, and the events behind the score are not archived with consensus values, so the factor has no history to test as specified.",
+      "live_availability": "One string per collector run, no vintage, no stored score as evidence, and no age attached to the events inside it.",
+      "code_refs": [
+        "exports/usd_layer1_agent.json -> Calculate USD Conviction, signals.F8: BULLISH when the lowercased string includes 'hawkish', BEARISH when it includes 'dovish', NEUTRAL otherwise or when the string is empty or 'unknown' (weight 12 on 24h)",
+        "exports/usd_layer1_agent.json -> Build USD Input Pack (fed_bias exposed to the model and listed among the must-be-neutral inputs when unknown)",
+        "exports/usd_collector.json -> Normalise Market Snapshot: fedBiasRaw = getNode('Code | Derive USD Eco Inputs'), fedBias = fedBiasRaw?.fed_bias || 'unknown', checkMissing('fed_bias', ...)",
+        "exports/usd_collector.json -> Code | Derive Fed Bias (a second, unconnected implementation of the same idea that no node consumes)"
+      ],
+      "book_refs": [
+        "logic/agent_usd_direction.md section 5, 'Factor 8 - Fed Bias Delta' (weight 18; BULLISH only when the bias moved more hawkish than the prior reading, BEARISH when it moved more dovish, and 'the market trades the change in Fed bias, not the absolute state')",
+        "logic/agent_usd_direction.md section 15 (weight table listing Factor 8 at 18)"
+      ],
+      "weights": {
+        "coded_by_timeframe": {
+          "24h": 12,
+          "3d": 10,
+          "current_week": 12,
+          "next_week": 18,
+          "current_month": 18
+        },
+        "coded_24h": 12,
+        "rulebook": 18,
+        "rulebook_source": "logic/agent_usd_direction.md v2.1, which the live workflow fetches from GitHub on every run; the two vectors and the disagreements between them are catalogued in docs/research/usd-session/v1/weight_vector_discrepancy.md"
+      },
+      "status": {
+        "research": "blocked",
+        "review": "pending",
+        "backtest": "not_tested",
+        "note": "Coded weight 12 on the 24h timeframe while the rulebook calls it the highest-weight factor at 18; the implemented rule contradicts the rulebook's stated mechanism."
+      },
+      "blockers": [
+        "No vintage of the bias string is retained, so no change can be measured."
+      ],
+      "pack_path": "docs/research/handoff/usd/v1/packs/f8-fed-bias.md",
+      "pack_questions": 3
+    },
+    {
+      "order": 9,
+      "task_id": "USD-BASELINE-AUDIT-09",
+      "factor_id": "live.f9-dollar-smile",
+      "label": "F9 Dollar Smile regime",
+      "group": "live_engine",
+      "pack_family": "risk_regime",
+      "card_family": "risk_conditions",
+      "role": "regime context",
+      "card_role": "regime_context",
+      "deployed": true,
+      "definition": "The Dollar Smile read of the regime: the dollar is expected to be bid at the two extremes of the smile and offered in the middle, so the deployed rule looks for a high-volatility regime or for a calm regime whose bias string is not hawkish. The rulebook's bullish left side, US growth outperforming global growth with a hawkish Fed, has no input in the code.",
+      "inputs": [
+        {
+          "input": "vix_level, fed_bias",
+          "source": "FRED VIXCLS through the collector's vix_level field and the collector-derived fed_bias string",
+          "units": "index level and categorical string",
+          "transform": "level comparisons at 25 and 16 plus a substring test for hawkish",
+          "lookback": "levels only; no change in VIX and no change in bias is read, although the rulebook lists vix_d1 and vix_d5",
+          "cutoff": "inherits both inputs: VIXCLS is a market-close series and the bias string is recomputed once per collector run"
+        }
+      ],
+      "rule": "VIX above 25 reads BULLISH; VIX below 16 while the bias string does not contain 'hawkish' reads BEARISH; every other case NEUTRAL. Coded weight 1 on 24h, 3 on 3d, 5 on current_week, 10 on next_week, 10 on current_month; rulebook weight 12.",
+      "missing_stale": "A missing VIX level returns NEUTRAL with the evidence string 'No clear Dollar Smile edge', which is the same answer the factor gives whenever VIX sits between 16 and 25 or the bias string is unknown, so a missing input and an uninformative regime are indistinguishable in the payload. The rulebook's permission to score NEUTRAL to avoid double-counting F1 is not implemented as a test.",
+      "dependencies": [
+        "A verified publication time for VIXCLS, a retained vintage of the bias string, and a growth measure for the smile's left side."
+      ],
+      "overlap": "F1 applies the same 25 and 16 thresholds to the same VIX level, F10 gates on them again, and F8 reads the same bias string, so this factor adds only the 'not hawkish' test on top of F1 on the timeframe where both are scored.",
+      "historical_availability": "VIXCLS is reachable from 2023-04-03 in the closed study's cache and from 2024-01-02 in the 22-series macro frame, but the second condition needs a bias history that is not committed and the left side needs a growth series the collector never stores, so at most the high-volatility arm can be reconstructed.",
+      "live_availability": "Both inputs are read once per collector run with no per-field age and no stored regime label.",
+      "code_refs": [
+        "exports/usd_layer1_agent.json -> Calculate USD Conviction, signals.F9: BULLISH when vix_level > 25, BEARISH when vix_level < 16 and the bias string does not include 'hawkish', else NEUTRAL (weight 1 on 24h)",
+        "exports/usd_layer1_agent.json -> Build USD Input Pack (vix_level, vix_d1, vix_d5 and fed_bias exposed to the model)",
+        "exports/usd_collector.json -> Normalise Market Snapshot: equities_regime is stored from the same 16 and 25 thresholds but no conviction factor reads it"
+      ],
+      "book_refs": [
+        "logic/agent_usd_direction.md section 5, 'Factor 9 - Dollar Smile Regime' (weight 12; BULLISH on VIX above 25 or an active crisis, BULLISH on US growth outperforming global growth with a hawkish Fed, BEARISH on moderate US growth with decent global growth; the section instructs 'Avoid double-counting Factor 1' and permits NEUTRAL when Factor 1 already carries the whole risk signal)"
+      ],
+      "weights": {
+        "coded_by_timeframe": {
+          "24h": 1,
+          "3d": 3,
+          "current_week": 5,
+          "next_week": 10,
+          "current_month": 10
+        },
+        "coded_24h": 1,
+        "rulebook": 12,
+        "rulebook_source": "logic/agent_usd_direction.md v2.1, which the live workflow fetches from GitHub on every run; the two vectors and the disagreements between them are catalogued in docs/research/usd-session/v1/weight_vector_discrepancy.md"
+      },
+      "status": {
+        "research": "ready",
+        "review": "pending",
+        "backtest": "not_tested",
+        "note": "Deployed baseline; the coded weight of 1 on the 24h timeframe makes the smile's separate content nearly invisible in the published number."
+      },
+      "blockers": [],
+      "pack_path": "docs/research/handoff/usd/v1/packs/f9-dollar-smile.md",
+      "pack_questions": 3
+    },
+    {
+      "order": 10,
+      "task_id": "USD-BASELINE-AUDIT-10",
+      "factor_id": "live.f10-equity-versus-usd",
+      "label": "F10 Equity versus USD",
+      "group": "live_engine",
+      "pack_family": "cross_asset_appetite",
+      "card_family": "cross_assets",
+      "role": "regime context",
+      "card_role": "regime_context",
+      "deployed": true,
+      "definition": "The cross-asset read of equities against the dollar, gated by the same VIX regime: in calm markets a rising equity market is read as dollar-negative and a falling one as dollar-positive, and in stressed markets a falling equity market is read as dollar-positive. The rulebook's neutral-regime row, equities moving inside 16 to 25, is unhandled in code and falls into the same NEUTRAL branch as a missing input.",
+      "inputs": [
+        {
+          "input": "nq_d1_pct on 24h, else nq_d5_pct, and vix_level",
+          "source": "Alpha Vantage GLOBAL_QUOTE on QQQ for the price; the one-day change is the vendor's own change-percent field and the five-day change is computed by historyPct against the collector's stored rows; VIXCLS for the gate",
+          "units": "per cent change and index level",
+          "transform": "sign of the equity change inside a VIX regime; the 24h arm prefers nq_d1_pct and falls back to nq_d5_pct when absent",
+          "lookback": "one day on 24h; five stored rows on every other timeframe",
+          "cutoff": "the quote is read at the pipeline run time and the daily change is the vendor's figure, not a change measured between the cutoff and the session end"
+        }
+      ],
+      "rule": "VIX below 16 with NQ up reads BEARISH; VIX below 16 with NQ down BULLISH; VIX above 25 with NQ down BULLISH; every other combination NEUTRAL. No percentage threshold; only the sign of the change is read. Coded weight 1 at every timeframe; rulebook weight 2.",
+      "missing_stale": "A missing NQ change or a missing VIX level returns NEUTRAL with the evidence string 'Missing NQ/VIX'. The unhandled combinations, VIX above 25 with NQ up and the whole 16-to-25 band, also read NEUTRAL, and the payload does not distinguish an unhandled regime from absent data.",
+      "dependencies": [
+        "An equity series whose change is measured against the cutoff rather than supplied by a vendor, and a decision on whether the factor should use the index or the ETF."
+      ],
+      "overlap": "F1 and F9 apply the same 25 and 16 thresholds, F6 reads the same risk appetite through gold, and the factor is the risk-appetite leg of the story F9's smile is built on.",
+      "historical_availability": "FRED NASDAQ100 is in the 22-series macro frame from 2024-01-02, but the live factor prices QQQ through Alpha Vantage, so the reconstructable series is not the collected one, and the vendor's change-percent field cannot be reproduced from a cached frame.",
+      "live_availability": "One row per collector run: the five-day arm counts stored rows and the one-day arm is the vendor's figure, with no age attached to either and no regime label stored alongside the call.",
+      "code_refs": [
+        "exports/usd_layer1_agent.json -> Calculate USD Conviction, signals.F10: BEARISH when vix_level < 16 and the NQ change is positive, BULLISH when vix_level < 16 and it is negative, BULLISH when vix_level > 25 and it is negative, else NEUTRAL (weight 1 at every timeframe)",
+        "exports/usd_layer1_agent.json -> Calculate USD Conviction, nqDelta = nq_d1_pct on 24h when present, else nq_d5_pct",
+        "exports/usd_collector.json -> Normalise Market Snapshot: nq = alphaQuote(getNode('HTTP Request | NQ - Alpha Vantage')), nqD5Pct = historyPct(nq.price, 'nq_price', 4), nqD20Pct = historyPct(nq.price, 'nq_price', 19); equities_regime is stored from the VIX thresholds and read by no factor"
+      ],
+      "book_refs": [
+        "logic/agent_usd_direction.md section 5, 'Factor 10 - Equity Direction vs USD Correlation Regime' (weight 2; risk-on with VIX below 16 and equities rising BEARISH, falling BULLISH, risk-off with VIX above 25 and equities falling BULLISH, neutral regime NEUTRAL, input missing NEUTRAL with a missing-input note; 'The USD/equity relationship changes by regime' and 'Do not force this factor unless the regime is clear')"
+      ],
+      "weights": {
+        "coded_by_timeframe": {
+          "24h": 1,
+          "3d": 1,
+          "current_week": 1,
+          "next_week": 1,
+          "current_month": 1
+        },
+        "coded_24h": 1,
+        "rulebook": 2,
+        "rulebook_source": "logic/agent_usd_direction.md v2.1, which the live workflow fetches from GitHub on every run; the two vectors and the disagreements between them are catalogued in docs/research/usd-session/v1/weight_vector_discrepancy.md"
+      },
+      "status": {
+        "research": "ready",
+        "review": "pending",
+        "backtest": "not_tested",
+        "note": "Deployed baseline; a one-point weight on every timeframe, on an ETF quote rather than the index."
+      },
+      "blockers": [],
+      "pack_path": "docs/research/handoff/usd/v1/packs/f10-equity-versus-usd.md",
+      "pack_questions": 3
+    }
+  ]
+}

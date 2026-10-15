@@ -1,5 +1,7 @@
 # Active Milestone
 
+Delivery note, 2026-10-15 (USD session brief-delivery cycle, interactive coordinator), prepended without changing the milestone below: the twenty-five self-contained USD research briefs the user asked for exist as files rather than as a description. `docs/research/handoff/usd/v1/` carries 34 generated files - 25 briefs under `packs/` (10 baseline audits of the deployed factors and 15 session-research briefs authored in `scripts/build_research_handoff.js`), `BRIEF_INDEX.json`, `tracker_tasks.json` with 25 rows, `START_HERE.md` with the numbered list of all twenty-five briefs and a link to each, and `usd-research-handoff-v1.zip`, a stored archive the builder writes itself and which verifies byte for byte. Every brief states 05:00 `Europe/London` to 05:00 `Europe/London` on the next local date, and the builder refuses to write unless the authored briefs cover the catalogue's non-live factors exactly. The same 25 files are published in the Research Library: each factor page offers Copy prompt and Download for its own brief, the panel reads 25 of 25, and no research status moved (22 ready, 3 blocked, nothing uploaded, accepted or scored). Tasks `USD-SESSION-A3`, `A4` and `A5` now cover all 25 factor ids. Guards: `test:research-handoff` 12 of 12, `tests/research_library.test.js` 18 of 18, `tests/research_library.browser.test.js` 1 of 1. Nothing live changed: no workflow, feed, credential or dispatcher file was touched.
+
 ## Current Feature
 
 Architecture Mirror

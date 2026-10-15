@@ -1,14 +1,14 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "usd-session-research-card-v1",
+  "$id": "usd-session-research-card-v2",
   "title": "USD session research card",
-  "description": "One card per factor or coordinated factor group for the USD 05:00 Europe/London to 17:00 America/New_York session study. The card is the unit a frontier researcher fills in and a reviewer attacks; the engine specification links every implemented rule back to a card id.",
+  "description": "One card per factor or coordinated factor group for the USD 05:00 Europe/London to 05:00 Europe/London session study: both ends are London wall-clock times one local day apart, 24 nominal hours, with the eligible starts and the missing-quote rule stated on the card. The card is the unit a frontier researcher fills in and a reviewer attacks; the engine specification links every implemented rule back to a card id.",
   "type": "object",
   "additionalProperties": false,
   "required": [
     "card_id", "schema_version", "created_at", "author", "status", "title", "family",
-    "assignment_id", "mechanism", "direction_claim", "session_role", "observable_by_cutoff",
-    "reaction_vs_predictive", "historical_data_requirements", "live_data_requirements",
+    "assignment_id", "session_horizon", "calendar_and_quote_handling", "mechanism", "direction_claim", "session_role",
+    "observable_by_cutoff", "reaction_vs_predictive", "historical_data_requirements", "live_data_requirements",
     "dependencies_and_overlap", "hypothesis", "parameters", "rejection_test", "evidence", "open_questions"
   ],
   "properties": {
@@ -17,7 +17,7 @@
       "pattern": "^[a-z0-9][a-z0-9._-]{2,63}$",
       "description": "Stable id, e.g. `fx.usd-momentum-1d`. The engine specification cites this id."
     },
-    "schema_version": { "const": "usd-session-research-card-v1" },
+    "schema_version": { "const": "usd-session-research-card-v2" },
     "created_at": { "type": "string", "format": "date" },
     "author": {
       "type": "object",
@@ -44,13 +44,56 @@
       ]
     },
     "assignment_id": { "type": "string", "minLength": 3 },
+    "session_horizon": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["horizon_id", "start_local", "start_zone", "end_local", "end_zone", "end_day_offset", "nominal_hours", "rule"],
+      "description": "The session the card is about, stated on the card itself so a card can never be read against a superseded horizon. Fixed by docs/research/usd-session/v1/session_contract_v1.json: both ends are Europe/London wall-clock times one local day apart.",
+      "properties": {
+        "horizon_id": { "const": "london-0500-to-london-0500-next-day" },
+        "start_local": { "const": "05:00" },
+        "start_zone": { "const": "Europe/London" },
+        "end_local": { "const": "05:00" },
+        "end_zone": { "const": "Europe/London" },
+        "end_day_offset": { "const": 1 },
+        "nominal_hours": { "const": 24 },
+        "rule": {
+          "type": "string",
+          "minLength": 40,
+          "description": "The researcher's own statement of the window: a session starts at 05:00 London on Monday to Friday only, it ends at 05:00 London on the next local date, the Friday session therefore contains Friday's US close and ends on Saturday morning, the London spring and autumn transitions fall inside the excluded Saturday start so every eligible session is 24 hours, and the label is the change in the label instrument between the two London instants."
+        }
+      }
+    },
+    "calendar_and_quote_handling": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["dst_rule", "weekend_rule", "missing_quote_rule"],
+      "description": "How the card's own data is aligned to the two London instants. A card that leaves any of this to the reader is not accepted.",
+      "properties": {
+        "dst_rule": {
+          "type": "string",
+          "minLength": 40,
+          "description": "Both ends are London local times resolved from the declared transitions, and what the card's series does on the changeover days and on the excluded Saturday start."
+        },
+        "weekend_rule": {
+          "type": "string",
+          "minLength": 40,
+          "description": "Which rows the card is eligible on (Monday-to-Friday starts), what happens to the Friday session that ends on Saturday morning, and what a series that does not print at the weekend contributes."
+        },
+        "missing_quote_rule": {
+          "type": "string",
+          "minLength": 40,
+          "description": "What happens when either London print is missing, stale or later revised: the contract drops the session and counts it as coverage, and never fills, forward-carries or interpolates."
+        }
+      }
+    },
     "mechanism": {
       "type": "object",
       "additionalProperties": false,
       "required": ["summary", "session_relevance", "economic_channel"],
       "properties": {
         "summary": { "type": "string", "minLength": 40 },
-        "session_relevance": { "type": "string", "minLength": 20 },
+        "session_relevance": { "type": "string", "minLength": 20, "description": "Why the effect should appear inside the declared session_horizon (24 nominal hours, 05:00 London to 05:00 London on the next local date) rather than overnight or over several days." },
         "economic_channel": { "type": "string", "minLength": 10 }
       }
     },
@@ -103,7 +146,7 @@
           "frequency": { "enum": ["intraday_hourly", "intraday_minute", "daily", "weekly", "monthly", "event_driven"] },
           "units": { "type": "string" },
           "history_start": { "type": "string", "format": "date" },
-          "session_timing_rule": { "type": "string", "minLength": 20 },
+          "session_timing_rule": { "type": "string", "minLength": 20, "description": "How a value is assigned to a session and to the 05:00 London cutoff for this series, including DST changeover days, the excluded Saturday start, weekends and holidays, and any missing bar or missing print." },
           "vintage_available": { "enum": ["yes", "no", "unknown"] }
         }
       }

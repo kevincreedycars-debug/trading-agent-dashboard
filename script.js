@@ -6928,6 +6928,29 @@ async function researchLibraryCopyPrompt(taskId) {
   }
 }
 
+// Copies one factor's published brief, fetched from the checkout, so the prompt the reader pastes is the
+// same file the Download button writes and the same file the handoff bundle ships.
+async function researchLibraryCopyBrief(documentId) {
+  const document = researchLibraryDocumentList().find(entry => String(entry.document_id) === String(documentId));
+  if (!document || !document.repo_path) {
+    researchLibraryMessage(`Brief ${documentId} is not registered with a published file.`);
+    return;
+  }
+  try {
+    const response = await fetch(`./${document.repo_path}`, { cache: "no-store" });
+    if (!response.ok) throw new Error(`${response.status} ${response.statusText}`);
+    const text = await response.text();
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(text);
+      researchLibraryMessage(`Brief for ${document.factor_id || document.document_id} copied (${text.length} characters). Paste it into your own ChatGPT session; nothing was sent from this page.`);
+      return;
+    }
+    throw new Error("clipboard unavailable");
+  } catch (err) {
+    researchLibraryMessage(`Could not copy the brief: ${err?.message || err}`);
+  }
+}
+
 function researchLibraryContextPackage(taskId) {
   const lib = researchLibraryLib();
   if (!lib) {
@@ -7133,6 +7156,12 @@ function setupResearchLibraryControls() {
       return;
     }
 
+    const briefCopyButton = target.closest("[data-rl-copy-brief]");
+    if (briefCopyButton) {
+      researchLibraryCopyBrief(briefCopyButton.dataset.rlCopyBrief);
+      return;
+    }
+
     const packageButton = target.closest("[data-rl-context-package]");
     if (packageButton) {
       researchLibraryContextPackage(packageButton.dataset.rlContextPackage);
@@ -7228,6 +7257,10 @@ function researchLibraryAssetChips(lib, catalog) {
 
 function researchLibraryProgressCards(lib, factors) {
   const counts = lib.progressCounts(factors);
+  // Coverage is counted from the registry, not asserted: a factor counts only when a brief document is
+  // registered against its own id, and the catalogue's own total says how many briefs exist altogether.
+  const briefed = factors.filter(factor => researchLibraryDocumentsFor(factor.factor_id, ["brief"]).length > 0).length;
+  const briefTarget = Number(researchLibraryData?.research_briefs?.total) || factors.length;
   const researchParts = ["uploaded", "ready", "in_progress", "not_started", "blocked"]
     .filter(key => counts.research[key])
     .map(key => `${counts.research[key]} ${lib.RESEARCH_LABELS[key].toLowerCase()}`);
@@ -7244,6 +7277,7 @@ function researchLibraryProgressCards(lib, factors) {
       ${renderBacktestKpiMetric("Review", String(counts.review.accepted), reviewParts.join(" · "), "An uploaded report is not reviewed until a review is recorded")}
       ${renderBacktestKpiMetric("Backtest", String(counts.backtest.tested), backtestParts.join(" · "), "An accepted hypothesis is not tested until a backtest is recorded")}
     </section>
+    <p class="rl-muted rl-brief-coverage" data-rl-brief-coverage="${escapeHtml(`${briefed} of ${factors.length}`)}">Self-contained briefs: ${escapeHtml(String(briefed))} of ${escapeHtml(String(factors.length))} factors in view carry one, out of ${escapeHtml(String(briefTarget))} in the committed catalogue. A brief is an assignment, so this count is not research progress and no status moves because a brief exists.</p>
   `;
 }
 
@@ -7344,6 +7378,11 @@ function researchLibraryDocumentRow(lib, document) {
   } else if (!isRepo) {
     actions.unshift(`<span class="rl-muted rl-inline-note">view and download need the local service</span>`);
   }
+  // A brief is the prompt: the same bytes that are downloaded can be copied straight into the reader's own
+  // session, which is the one place the panel and the handoff bundle are meant to agree.
+  if (document.document_type === "brief" && isRepo && document.repo_path) {
+    actions.unshift(`<button class="inspect-button rl-mini" type="button" data-rl-copy-brief="${escapeHtml(document.document_id)}">Copy prompt</button>`);
+  }
   return `
     <li class="rl-document-row" data-rl-document="${escapeHtml(document.document_id)}">
       <div class="rl-document-head">
@@ -7371,7 +7410,7 @@ function researchLibraryFactorDetail(lib, catalog, factor) {
   const assetLevel = researchLibraryDocumentList().filter(document => !document.factor_id && String(document.asset) === String(factor.asset));
   const reports = documents.filter(document => document.document_type === "report");
   const reviews = documents.filter(document => document.document_type === "review" || document.document_type === "issue_register");
-  const other = documents.filter(document => !["report", "review", "issue_register"].includes(document.document_type));
+  const briefs = documents.filter(document => document.document_type === "brief");
   const tasks = lib.tasksCoveringFactor(catalog, factor.factor_id);
   const statuses = lib.normalizeFactorStatuses(factor);
   const list = (items, className = "rl-list") => items.length
@@ -7403,6 +7442,10 @@ function researchLibraryFactorDetail(lib, catalog, factor) {
         <article class="rl-detail-block">
           <p class="eyebrow">Brief</p>
           <p>${escapeHtml(factor.brief || "No brief recorded.")}</p>
+          ${briefs.length
+            ? `<p class="rl-muted">One self-contained brief is published for this factor: its context, its research prompt and its output instructions are all in the file below.</p>
+               ${documentBlock(briefs, "No self-contained brief is registered for this factor yet.")}`
+            : `<p class="rl-muted rl-inline-note">No self-contained brief is registered for this factor yet.</p>`}
           <p class="rl-muted">Document ${escapeHtml(factor.doc_version || "undocumented")} · updated ${escapeHtml(factor.updated_at || "unknown")}</p>
         </article>
         <article class="rl-detail-block">

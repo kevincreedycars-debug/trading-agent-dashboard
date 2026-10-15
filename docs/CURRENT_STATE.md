@@ -1,6 +1,8 @@
 # Current State - AI Trading Platform
 
-Last updated: 2026-07-21
+Last updated: 2026-10-15
+
+Delivery note, 2026-10-15 (USD session brief-delivery cycle, interactive coordinator), prepended without changing the state description below: the twenty-five self-contained USD research briefs are delivered, downloadable and published in the Research Library. `docs/research/handoff/usd/v1/` holds 34 generated files written by `scripts/build_research_handoff.js`: 25 briefs under `packs/` (10 baseline audits of the deployed factors and 15 session-research briefs, one per non-live catalogue factor, each self-contained with its own context, questions, hypothesis seed, falsification test, data asks, prohibitions, card field list and one session - 05:00 `Europe/London` to 05:00 `Europe/London` on the next local date), `BRIEF_INDEX.json`, `tracker_tasks.json` with 25 rows, `START_HERE.md` with the numbered list of all twenty-five briefs and a link to each, and `usd-research-handoff-v1.zip`, a stored archive the builder writes itself and verifies byte for byte. The same 25 files are registered as repo-backed `brief` documents, so each factor page carries a Brief block with Copy prompt and Download, the coverage line reads 25 of 25, and the copied prompt and the downloaded file are the same bytes the registry hashed. No status moved: 22 ready and 3 blocked, before and after, nothing uploaded, accepted or scored. Tasks `USD-SESSION-A3`, `A4` and `A5` cover all 25 factor ids and `verify` reports zero factors covered by no task. Guards: `npm run test:research-handoff` 12 of 12, `tests/research_library.test.js` 18 of 18, `tests/research_library.browser.test.js` 1 of 1. The Research Library's factor table is at the full width of its panel, an implementation published by the dashboard lane and re-measured here at both widths. Nothing live changed: no workflow, feed, credential, dispatcher or production file was touched.
 
 ## Platform Status
 

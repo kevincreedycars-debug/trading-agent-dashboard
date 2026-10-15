@@ -1,0 +1,659 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "usd-session-research-card-v3",
+  "title": "USD baseline-audit research card",
+  "description": "One card per deployed factor for the USD 05:00 Europe/London to 05:00 Europe/London session study, both ends London wall-clock times one local day apart and 24 nominal hours. The card is what a frontier researcher returns and a reviewer attacks. It extends docs/research/usd-session/v1/research-card.schema.json (usd-session-research-card-v2) unchanged in its session_horizon, calendar_and_quote_handling and evidence blocks, and adds the fields a baseline audit of a deployed factor needs. A card may conclude that a factor should not be used; no card approves a rule.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "card_id",
+    "schema_version",
+    "created_at",
+    "author",
+    "status",
+    "title",
+    "asset",
+    "factor_id",
+    "task_id",
+    "card_version",
+    "model",
+    "family",
+    "assignment_id",
+    "session_horizon",
+    "calendar_and_quote_handling",
+    "verdict",
+    "mechanism",
+    "direction_claim",
+    "session_role",
+    "observable_by_cutoff",
+    "reaction_vs_predictive",
+    "historical_data_requirements",
+    "live_data_requirements",
+    "missing_or_stale_handling",
+    "dependencies_and_overlap",
+    "hypotheses",
+    "rejection_test",
+    "falsification_tests",
+    "evidence",
+    "limitations",
+    "open_questions"
+  ],
+  "properties": {
+    "card_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9._-]{2,63}$",
+      "description": "Stable id, e.g. fx.usd-f1-vix-regime-24h."
+    },
+    "schema_version": {
+      "const": "usd-session-research-card-v3"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date"
+    },
+    "author": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "name"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "field-model",
+            "frontier-reviewer",
+            "coordinator"
+          ]
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "status": {
+      "enum": [
+        "stub",
+        "research-drafted",
+        "reviewed-a",
+        "reviewed-b",
+        "synthesised",
+        "implemented",
+        "tested",
+        "rejected"
+      ]
+    },
+    "title": {
+      "type": "string",
+      "minLength": 4
+    },
+    "asset": {
+      "const": "USD"
+    },
+    "factor_id": {
+      "type": "string",
+      "minLength": 4,
+      "description": "A factor_id carried by the register and by the committed catalogue."
+    },
+    "task_id": {
+      "type": "string",
+      "minLength": 3,
+      "description": "The audit task the card answers, e.g. USD-BASELINE-AUDIT-01."
+    },
+    "card_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "model": {
+      "type": "string",
+      "minLength": 1,
+      "description": "The model that wrote the card. A card is evidence, not an approval."
+    },
+    "family": {
+      "enum": [
+        "rates_and_policy_expectations",
+        "macroeconomic_releases",
+        "risk_conditions",
+        "usd_price_behaviour",
+        "cross_assets",
+        "calendar_context",
+        "data_quality"
+      ]
+    },
+    "assignment_id": {
+      "type": "string",
+      "minLength": 3
+    },
+    "session_horizon": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "horizon_id",
+        "start_local",
+        "start_zone",
+        "end_local",
+        "end_zone",
+        "end_day_offset",
+        "nominal_hours",
+        "rule"
+      ],
+      "properties": {
+        "horizon_id": {
+          "const": "london-0500-to-london-0500-next-day"
+        },
+        "start_local": {
+          "const": "05:00"
+        },
+        "start_zone": {
+          "const": "Europe/London"
+        },
+        "end_local": {
+          "const": "05:00"
+        },
+        "end_zone": {
+          "const": "Europe/London"
+        },
+        "end_day_offset": {
+          "const": 1
+        },
+        "nominal_hours": {
+          "const": 24
+        },
+        "rule": {
+          "type": "string",
+          "minLength": 40,
+          "description": "The card's own statement of the window, including the Monday-to-Friday starts, the Friday session that contains the US close and the excluded London transitions."
+        }
+      }
+    },
+    "calendar_and_quote_handling": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "dst_rule",
+        "weekend_rule",
+        "missing_quote_rule"
+      ],
+      "properties": {
+        "dst_rule": {
+          "type": "string",
+          "minLength": 40,
+          "description": "Both ends are London local times resolved from the declared transitions, and what the card's series does on the changeover dates."
+        },
+        "weekend_rule": {
+          "type": "string",
+          "minLength": 40,
+          "description": "Which sessions the card is eligible on, and what happens to the Friday session that ends on Saturday."
+        },
+        "missing_quote_rule": {
+          "type": "string",
+          "minLength": 40,
+          "description": "What happens when either London print is missing, stale or later revised."
+        }
+      }
+    },
+    "verdict": {
+      "enum": [
+        "supported",
+        "rejected",
+        "inconclusive",
+        "not_testable"
+      ],
+      "description": "The card's conclusion about the deployed baseline. Not a promise of profit and not an approval."
+    },
+    "mechanism": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "summary",
+        "session_relevance",
+        "economic_channel"
+      ],
+      "properties": {
+        "summary": {
+          "type": "string",
+          "minLength": 40
+        },
+        "session_relevance": {
+          "type": "string",
+          "minLength": 20,
+          "description": "Why the effect should appear inside the 24-hour session."
+        },
+        "economic_channel": {
+          "type": "string",
+          "minLength": 10
+        }
+      }
+    },
+    "direction_claim": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sign_expected",
+        "magnitude_expected",
+        "sign_change_conditions",
+        "weakening_conditions",
+        "already_priced_in_conditions"
+      ],
+      "properties": {
+        "sign_expected": {
+          "enum": [
+            "BULLISH",
+            "BEARISH",
+            "REGIME_ONLY",
+            "AMBIGUOUS"
+          ]
+        },
+        "magnitude_expected": {
+          "type": "string",
+          "minLength": 10
+        },
+        "sign_change_conditions": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          }
+        },
+        "weakening_conditions": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          }
+        },
+        "already_priced_in_conditions": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          },
+          "description": "What is already in the price at 05:00 London, stated rather than counted again as predictive."
+        }
+      }
+    },
+    "session_role": {
+      "enum": [
+        "direction",
+        "regime_context",
+        "quality_gate",
+        "abstention_gate",
+        "diagnostic_only"
+      ],
+      "description": "The catalogue's role is a display string; the card uses this enum."
+    },
+    "observable_by_cutoff": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "available",
+        "as_of_rule",
+        "notes"
+      ],
+      "properties": {
+        "available": {
+          "type": "boolean"
+        },
+        "as_of_rule": {
+          "type": "string",
+          "minLength": 20
+        },
+        "notes": {
+          "type": "string"
+        }
+      }
+    },
+    "reaction_vs_predictive": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "classified",
+        "explanation"
+      ],
+      "properties": {
+        "classified": {
+          "enum": [
+            "predictive",
+            "reaction_only",
+            "mixed"
+          ]
+        },
+        "explanation": {
+          "type": "string",
+          "minLength": 40
+        }
+      }
+    },
+    "historical_data_requirements": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "series",
+          "source",
+          "frequency",
+          "units",
+          "history_start",
+          "session_timing_rule",
+          "vintage_available"
+        ],
+        "properties": {
+          "series": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string"
+          },
+          "frequency": {
+            "enum": [
+              "intraday_hourly",
+              "intraday_minute",
+              "daily",
+              "weekly",
+              "monthly",
+              "event_driven"
+            ]
+          },
+          "units": {
+            "type": "string"
+          },
+          "history_start": {
+            "type": "string",
+            "format": "date"
+          },
+          "session_timing_rule": {
+            "type": "string",
+            "minLength": 20,
+            "description": "How a value is assigned to a session and to the 05:00 London cutoff, including changeover days, the excluded Saturday start, weekends, holidays and any missing bar or print."
+          },
+          "vintage_available": {
+            "enum": [
+              "yes",
+              "no",
+              "unknown"
+            ]
+          }
+        }
+      }
+    },
+    "live_data_requirements": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "series",
+          "collector_path",
+          "exists_today",
+          "latency_note"
+        ],
+        "properties": {
+          "series": {
+            "type": "string"
+          },
+          "collector_path": {
+            "type": "string"
+          },
+          "exists_today": {
+            "enum": [
+              "yes",
+              "no",
+              "partial"
+            ]
+          },
+          "latency_note": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "missing_or_stale_handling": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "missing_rule",
+        "stale_rule",
+        "effect_on_score"
+      ],
+      "properties": {
+        "missing_rule": {
+          "type": "string",
+          "minLength": 20,
+          "description": "What the factor does when its input is absent."
+        },
+        "stale_rule": {
+          "type": "string",
+          "minLength": 20,
+          "description": "The age test, if any, between the input's as-of time and the cutoff."
+        },
+        "effect_on_score": {
+          "type": "string",
+          "minLength": 20,
+          "description": "What a missing or stale input does to the published score, stated as arithmetic rather than as intent."
+        }
+      }
+    },
+    "dependencies_and_overlap": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "depends_on",
+        "overlaps_with",
+        "double_count_risk"
+      ],
+      "properties": {
+        "depends_on": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "overlaps_with": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "double_count_risk": {
+          "type": "string",
+          "minLength": 20
+        }
+      }
+    },
+    "hypotheses": {
+      "type": "array",
+      "maxItems": 2,
+      "description": "At most two programmable hypotheses. Each carries its parameters, declared before validation. One hypothesis, or none with a stated reason, is a valid return.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "programmable_statement",
+          "null_hypothesis",
+          "expected_effect_size",
+          "eligible_rows_note",
+          "parameters"
+        ],
+        "properties": {
+          "programmable_statement": {
+            "type": "string",
+            "minLength": 40,
+            "description": "A statement a program could evaluate session by session without judgement."
+          },
+          "null_hypothesis": {
+            "type": "string",
+            "minLength": 20
+          },
+          "expected_effect_size": {
+            "type": "string",
+            "minLength": 10
+          },
+          "eligible_rows_note": {
+            "type": "string"
+          },
+          "parameters": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "name",
+                "values",
+                "default",
+                "selection_rule"
+              ],
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "values": {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": {}
+                },
+                "default": {},
+                "selection_rule": {
+                  "type": "string",
+                  "minLength": 15,
+                  "description": "How the value is chosen on training rows only, declared before validation."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "rejection_test": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "design",
+        "metric",
+        "reject_if",
+        "cannot_conclude_if",
+        "sample_and_period",
+        "multiple_comparisons_note"
+      ],
+      "properties": {
+        "design": {
+          "type": "string",
+          "minLength": 30
+        },
+        "metric": {
+          "type": "string",
+          "minLength": 10
+        },
+        "reject_if": {
+          "type": "string",
+          "minLength": 20
+        },
+        "cannot_conclude_if": {
+          "type": "string",
+          "minLength": 20
+        },
+        "sample_and_period": {
+          "type": "string",
+          "minLength": 20
+        },
+        "multiple_comparisons_note": {
+          "type": "string",
+          "minLength": 20
+        }
+      }
+    },
+    "falsification_tests": {
+      "type": "array",
+      "minItems": 1,
+      "description": "What would have to be true for the claim to be abandoned, stated before the test is run.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "design",
+          "metric",
+          "reject_if",
+          "cannot_conclude_if"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "design": {
+            "type": "string",
+            "minLength": 30
+          },
+          "metric": {
+            "type": "string",
+            "minLength": 10
+          },
+          "reject_if": {
+            "type": "string",
+            "minLength": 20
+          },
+          "cannot_conclude_if": {
+            "type": "string",
+            "minLength": 20
+          }
+        }
+      }
+    },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "fetched",
+          "url",
+          "supports",
+          "source_type"
+        ],
+        "properties": {
+          "fetched": {
+            "type": "boolean"
+          },
+          "url": {
+            "type": "string"
+          },
+          "supports": {
+            "type": "string",
+            "minLength": 10
+          },
+          "source_type": {
+            "enum": [
+              "paper",
+              "central_bank",
+              "official_statistics",
+              "textbook",
+              "practitioner",
+              "repository_artefact",
+              "not_yet_fetched"
+            ]
+          }
+        }
+      },
+      "description": "Only an entry with fetched: true may be cited as evidence. An intended but unfetched source carries fetched: false and source_type not_yet_fetched."
+    },
+    "limitations": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string"
+      },
+      "description": "What this card could not establish, including anything unmeasured."
+    },
+    "open_questions": {
+      "type": "array",
+      "minItems": 0,
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}

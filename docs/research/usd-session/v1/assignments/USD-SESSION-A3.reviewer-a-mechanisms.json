@@ -10,22 +10,23 @@
     "note": "Reviewer A must not see Reviewer B's review or the synthesis. Its first review is independent of both."
   },
   "review_object": {
-    "what": "The complete proposed logic for the USD session engine: every research card returned by A1 and A2, plus the master specification produced by synthesis, plus this coordinator's inventory of the deployed engine",
+    "what": "The complete proposed logic for the USD session engine: all twenty-five briefs and the cards they return - the fifteen session-research cards from A1 and A2, and the ten baseline-audit cards for the deployed factors F1 to F10 from the handoff bundle packs under docs/research/handoff/usd/v1/packs/ - plus the master specification produced by synthesis, plus this coordinator's inventory of the deployed engine",
     "inputs": [
       "docs/research/usd-session/v1/inventory.md",
       "docs/research/usd-session/v1/session_contract_v1.json",
       "docs/research/usd-session/v1/exposed_periods.md",
+      "docs/research/handoff/usd/v1/packs/ (one brief per factor, twenty-five of them) and docs/research/handoff/usd/v1/BRIEF_INDEX.json",
       "every card under docs/research/usd-session/v1/research-cards/",
       "the synthesised engine specification when it exists"
     ]
   },
   "review_focus": [
-    "Is each stated mechanism economically coherent for a London-to-New-York session specifically, or is it borrowed from a longer or shorter horizon?",
+    "Is each stated mechanism economically coherent for a London-to-London 24-hour session specifically, or is it borrowed from a longer or shorter horizon?",
     "Are the proposed signs right, and are the stated sign-change and weakening conditions sufficient?",
     "Is the timing claim consistent with when the information actually becomes available?",
     "Are interactions between factors modelled, or does the specification add independent votes where the effects are conditional?",
     "Are regime assumptions (risk-on/off, policy regime, high versus low volatility) explicit and testable?",
-    "Is any information counted twice by two cards that share a driver?",
+    "Is any information counted twice by two cards that share a driver? Answer this across the whole set of twenty-five, not card by card: the deployed baseline audits overlap each other (F2 with F3, F3 with F4, F4 with F6, F1 with F9 and F10, and the F7 and F8 pair), and the session cards overlap the deployed ones wherever they read the same quantity (session rates against F2 to F4, the session VIX and cross-asset cards against F1, F9 and F10, the session calendar cards against F7, and the session momentum and range cards against F5). Name every pair or group that is one idea, which member should carry it, and what the others still add.",
     "Does the specification abstain where it should, rather than publishing a weak call?"
   ],
   "required_output": {

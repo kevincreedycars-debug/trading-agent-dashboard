@@ -15,6 +15,7 @@ const path = require("node:path");
 const { chromium } = require("playwright");
 
 const { createServiceServer } = require("../scripts/research-library-server.js");
+const ResearchLibrary = require("../lib/research_library.js");
 
 const rootDir = path.resolve(__dirname, "..");
 const TOKEN = "browser-test-token-0123456789";
@@ -75,6 +76,9 @@ async function main() {
   const libraryRoot = path.join(workDir, "library");
   const registryPath = path.join(workDir, "documents.json");
   fs.copyFileSync(path.join(rootDir, "data", "research-library", "documents.json"), registryPath);
+  // The committed registry is read once: it names every brief's file and the hash the page's download has to
+  // match, and the temporary copy above is what the local service writes to.
+  const committedRegistry = JSON.parse(fs.readFileSync(registryPath, "utf8"));
   const service = createServiceServer({
     token: TOKEN,
     libraryRoot,
@@ -212,7 +216,60 @@ async function main() {
     await page.click("[data-rl-back]");
     await page.waitForSelector("[data-rl-factor-table]");
 
-    // Copy prompt puts the exact dispatched prompt on the clipboard.
+    // Every one of the twenty-five factors offers its own published brief, and the count says so. The check
+    // walks the table rather than trusting the registry count: a factor with no Copy prompt or no Download is
+    // a factor without a brief, whatever the catalogue's total claims.
+    const factorIds = await page.$$eval("[data-rl-factor-table] tbody tr", nodes => nodes.map(node => node.getAttribute("data-rl-factor")));
+    assert.equal(factorIds.length, 25, `expected twenty-five USD factors, saw ${factorIds.length}`);
+    const briefCoverage = await page.$eval("[data-rl-brief-coverage]", node => node.getAttribute("data-rl-brief-coverage"));
+    assert.equal(briefCoverage, "25 of 25", `every factor must carry a brief, saw ${briefCoverage}`);
+    audit.briefCoverage = briefCoverage;
+    const missingBrief = [];
+    for (const factorId of factorIds) {
+      const expectedId = `usd-brief-${factorId.replace(/^live\./, "").replace(/\./g, "-")}`;
+      await page.click(`[data-rl-factor='${factorId}']`);
+      await page.waitForSelector(`[data-rl-factor-detail='${factorId}']`);
+      const actions = await page.$eval(`[data-rl-factor-detail='${factorId}']`, node => {
+        const row = node.querySelector("[data-rl-document]");
+        return {
+          copy: Boolean(node.querySelector("[data-rl-copy-brief]")),
+          download: Boolean(node.querySelector("[data-rl-download]")),
+          documentId: row ? row.getAttribute("data-rl-document") : ""
+        };
+      });
+      if (!actions.copy || !actions.download || actions.documentId !== expectedId) missingBrief.push(factorId);
+      await page.click("[data-rl-back]");
+      await page.waitForSelector("[data-rl-factor-table]");
+    }
+    assert.deepEqual(missingBrief, [], "each factor must offer Copy prompt and Download for its own registered brief");
+    audit.briefFactors = factorIds.length;
+
+    // Copy prompt on a session brief writes that brief's own bytes, and Download writes the same file the
+    // registry hashed: the two actions deliver the handoff bundle's pack, not a second copy of it.
+    await page.click("[data-rl-factor='rates.real-yield-delta']");
+    await page.waitForSelector("[data-rl-factor-detail='rates.real-yield-delta']");
+    await page.click("[data-rl-document='usd-brief-rates-real-yield-delta'] [data-rl-copy-brief]");
+    await page.waitForFunction(() => (document.querySelector("[data-rl-message]")?.textContent || "").includes("copied"));
+    const briefClipboard = await page.evaluate(() => navigator.clipboard.readText());
+    assert.ok(briefClipboard.startsWith("# Real yield delta - research brief pack (rates.real-yield-delta)"), "the copied text must be the factor's own brief");
+    assert.ok(briefClipboard.includes("05:00 Europe/London"), "the copied brief states the session");
+    assert.ok(briefClipboard.includes("## 7. What to return") && briefClipboard.includes("## 8. What to answer"), "the copied brief carries the prompt and the output instructions");
+    audit.briefClipboardLength = briefClipboard.length;
+
+    const briefWait = page.waitForEvent("download");
+    await page.click("[data-rl-document='usd-brief-rates-real-yield-delta'] [data-rl-download]");
+    const briefFile = await briefWait;
+    const briefPath = path.join(workDir, "brief.md");
+    await briefFile.saveAs(briefPath);
+    const briefDocument = committedRegistry.documents.find(document => document.factor_id === "rates.real-yield-delta" && document.document_type === "brief");
+    assert.ok(briefDocument, "the registry must carry the brief for the factor");
+    assert.equal(sha256(fs.readFileSync(briefPath)), ResearchLibrary.latestVersion(briefDocument).sha256, "the downloaded brief must be the file the registry hashed");
+    // Windows normalises line endings on the clipboard, so the comparison is made on the text itself.
+    const normalize = text => text.replace(/\r\n/g, "\n");
+    assert.equal(normalize(fs.readFileSync(briefPath, "utf8")), normalize(briefClipboard), "Copy prompt and Download must deliver the same brief");
+    audit.briefDownloadHashMatches = true;
+    await page.click("[data-rl-back]");
+    await page.waitForSelector("[data-rl-factor-table]");
     await page.click("[data-rl-task='USD-SESSION-A1'] [data-rl-copy-prompt]");
     await page.waitForFunction(() => (document.querySelector("[data-rl-message]")?.textContent || "").includes("copied"));
     const clipboard = await page.evaluate(() => navigator.clipboard.readText());
@@ -263,8 +320,10 @@ async function main() {
     assert.equal(sha256(fs.readFileSync(downloadedPath, "utf8")), sha256(uploadContent));
     audit.uploadedDownloadMatches = true;
 
-    // A repo-backed document downloads with its registered hash intact, from a factor page, where the
-    // asset-level documents are listed.
+    // A repo-backed document downloads with its **current** hash intact, from a factor page, where the
+    // asset-level documents are listed. The check is against the latest registered version, not version 1:
+    // a later version is kept alongside the immutable first one, so a document that has been corrected on
+    // disk since its first registration still has to match what the registry says about it now.
     await page.click("[data-rl-factor='live.f1-vix-level']");
     await page.waitForSelector("[data-rl-factor-detail='live.f1-vix-level']");
     const repoWait = page.waitForEvent("download");
@@ -272,18 +331,46 @@ async function main() {
     const repoFile = await repoWait;
     const repoPath = path.join(workDir, "inventory.md");
     await repoFile.saveAs(repoPath);
-    const committedRegistry = JSON.parse(fs.readFileSync(path.join(rootDir, "data", "research-library", "documents.json"), "utf8"));
     const inventory = committedRegistry.documents.find(document => document.document_id === "usd-session-inventory");
-    assert.equal(sha256(fs.readFileSync(repoPath)), inventory.versions[0].sha256);
+    assert.equal(sha256(fs.readFileSync(repoPath)), ResearchLibrary.latestVersion(inventory).sha256);
     audit.repoDownloadHashMatches = true;
     await page.click("[data-rl-back]");
     await page.waitForSelector("[data-rl-factor-table]");
+
+    // The factor table takes the full width of the panel: sharing a grid row with a narrower card renders
+    // it at half width, which buries its own columns behind a sideways scroll. A regression here is silent,
+    // so the two widths are measured rather than assumed.
+    audit.desktopTableWidth = await page.evaluate(() => {
+      const widthOf = selector => {
+        const element = document.querySelector(selector);
+        return element ? Math.round(element.getBoundingClientRect().width) : null;
+      };
+      const scroll = document.querySelector("[data-rl-factor-table-wrap='true'] .rl-table-scroll");
+      return {
+        shell: widthOf("[data-rl-shell='true']"),
+        table: widthOf("[data-rl-factor-table-wrap='true']"),
+        scrollOverflowPx: scroll ? scroll.scrollWidth - scroll.clientWidth : null
+      };
+    });
+    assert.ok(
+      audit.desktopTableWidth.table >= audit.desktopTableWidth.shell - 1,
+      `the factor table must span the panel, saw ${audit.desktopTableWidth.table} of ${audit.desktopTableWidth.shell}px`
+    );
+    assert.equal(audit.desktopTableWidth.scrollOverflowPx, 0, "the factor table must not scroll sideways when it has the full width");
 
     // Narrow width: nothing may escape sideways.
     await page.setViewportSize({ width: 390, height: 900 });
     await page.waitForTimeout(300);
     audit.narrowOverflowPx = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
     assert.ok(audit.narrowOverflowPx <= 1, `the panel must not overflow at 390px, saw ${audit.narrowOverflowPx}px`);
+    audit.narrowShellColumns = await page.evaluate(() =>
+      getComputedStyle(document.querySelector("[data-rl-shell='true']")).gridTemplateColumns
+    );
+    assert.equal(
+      audit.narrowShellColumns.trim().split(/\s+/).length,
+      1,
+      `below 1181px the panel must be one column, saw ${audit.narrowShellColumns}`
+    );
     await page.setViewportSize({ width: 1440, height: 1000 });
 
     // The research addition reached nothing but this checkout and the local service.

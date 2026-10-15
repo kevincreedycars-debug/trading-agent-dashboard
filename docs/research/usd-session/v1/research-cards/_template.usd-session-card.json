@@ -1,15 +1,30 @@
 {
   "card_id": "fx.usd-overnight-momentum-1d",
-  "schema_version": "usd-session-research-card-v1",
+  "schema_version": "usd-session-research-card-v2",
   "created_at": "2026-10-13",
   "author": { "kind": "coordinator", "name": "deepseek-coordinator" },
   "status": "stub",
-  "title": "Trailing dollar move carried into the London-to-New-York session",
+  "title": "Trailing dollar move carried into the next 05:00 London session",
   "family": "usd_price_behaviour",
   "assignment_id": "USD-SESSION-A1",
+  "session_horizon": {
+    "horizon_id": "london-0500-to-london-0500-next-day",
+    "start_local": "05:00",
+    "start_zone": "Europe/London",
+    "end_local": "05:00",
+    "end_zone": "Europe/London",
+    "end_day_offset": 1,
+    "nominal_hours": 24,
+    "rule": "PLACEHOLDER: the session starts at 05:00 Europe/London on a Monday-to-Friday local date and ends at 05:00 Europe/London on the next local date. Friday's session therefore contains Friday's US close and ends on Saturday morning. The London spring and autumn transitions fall inside the Saturday start, which is not a session, so every eligible session is exactly 24 hours; the label is the change in the label instrument between the two London instants."
+  },
+  "calendar_and_quote_handling": {
+    "dst_rule": "PLACEHOLDER: both ends are London local times resolved from the declared transitions, so the changeover weeks do not shorten the session; state what this series does on the changeover Sundays and on the changeover Saturday start.",
+    "weekend_rule": "PLACEHOLDER: rows are eligible on Monday-to-Friday starts only; state whether the Friday session that ends on Saturday morning can be labelled from this series, and what the series contributes when it does not print at the weekend.",
+    "missing_quote_rule": "PLACEHOLDER: per the contract a session whose either London print is missing, stale or later revised is dropped and counted as coverage; state how many sessions this series is expected to drop and that nothing is filled, forward-carried or interpolated."
+  },
   "mechanism": {
-    "summary": "PLACEHOLDER for the researcher: state the economic or behavioural reason the trailing dollar move should persist, weaken or reverse over the London-to-New-York window, naming the participants and the flow.",
-    "session_relevance": "PLACEHOLDER: why the effect should appear inside this 17-hour window rather than overnight or over several days.",
+    "summary": "PLACEHOLDER for the researcher: state the economic or behavioural reason the trailing dollar move should persist, weaken or reverse over the London-to-London 24-hour window, naming the participants and the flow.",
+    "session_relevance": "PLACEHOLDER: why the effect should appear inside this 24-hour window, 05:00 London to 05:00 London on the next local date, rather than overnight or over several days.",
     "economic_channel": "PLACEHOLDER: spot flow, positioning, policy-expectation repricing, liquidity, or risk premia."
   },
   "direction_claim": {
@@ -36,7 +51,7 @@
       "frequency": "intraday_hourly",
       "units": "PLACEHOLDER",
       "history_start": "2024-01-01",
-      "session_timing_rule": "PLACEHOLDER: how a value is assigned to a session and to the cutoff, including holidays and missing bars.",
+      "session_timing_rule": "PLACEHOLDER: how a value is assigned to a session and to the 05:00 London cutoff, including the DST changeover days, the excluded Saturday start, holidays, and missing bars or prints. A missing print drops the session and is counted as coverage; nothing is filled, forward-carried or interpolated.",
       "vintage_available": "unknown"
     }
   ],
@@ -72,7 +87,7 @@
     "metric": "PLACEHOLDER: balanced accuracy, AUC, or another named metric on decided sessions.",
     "reject_if": "PLACEHOLDER: the value that kills the card.",
     "cannot_conclude_if": "PLACEHOLDER: what would leave the question open rather than answered.",
-    "sample_and_period": "PLACEHOLDER: the period and expected sample size, with the horizon-mismatch caveat.",
+    "sample_and_period": "PLACEHOLDER: the period in local London dates and the expected sample size. Count eligible rows after the Monday-to-Friday start rule, then subtract the sessions this card's series drops for a missing or stale London print. The window is 05:00 London to 05:00 London, so any comparison with evidence built on a different window (a US-hours window, or an overnight convention) has to be stated and the mismatch addressed.",
     "multiple_comparisons_note": "PLACEHOLDER: how this test counts against the 100-configuration budget."
   },
   "evidence": [
