@@ -325,3 +325,87 @@ test("a family or role the schema cannot accept is refused rather than guessed",
   }
 });
 
+
+// The first pilot package: the VIX brief with the two files its section 7 only points at. The brief lists
+// the card's field names, so the package is not runnable without the schema; these checks hold that the
+// three travel together, that the copies are the bundle's own bytes and that nothing else is in the archive.
+test("the VIX pilot package carries the brief, the template and the full schema as one archive", () => {
+  const row = builder.pilotBriefRow();
+  assert.equal(row.factor_id, builder.PILOT_FACTOR_ID);
+  assert.ok(row.live, "the pilot audits deployed code, so its brief is a baseline audit");
+
+  const bundle = builder.buildBundle();
+  const packageFiles = builder.buildPilot(bundle).files;
+  const noteFile = packageFiles.find(file => file.path === builder.PILOT_START_HERE_PATH);
+  const zipFile = packageFiles.find(file => file.path === builder.PILOT_ZIP_PATH);
+  assert.ok(noteFile && zipFile, "the package is one note and one archive");
+  assert.equal(packageFiles.length, 2, "the package adds the note and the archive to the bundle and nothing else");
+
+  const note = Buffer.from(noteFile.content, "utf8").toString("utf8");
+  for (const named of ["f1-vix-level.md", "RESEARCH_OUTPUT_TEMPLATE.md", "research_card.schema.json", builder.CARD_SCHEMA_VERSION, row.task_id]) {
+    assert.ok(note.includes(named), `the note must name ${named}`);
+  }
+  assert.ok(note.includes("the field list alone"), "the note says why the schema travels with the brief");
+  assert.ok(note.includes("baseline audit"), "the note says what the pilot audits");
+
+  const expected = [
+    { name: "VIX_PILOT_START_HERE.md", path: builder.PILOT_START_HERE_PATH },
+    { name: "f1-vix-level.md", path: row.pack_path },
+    { name: "RESEARCH_OUTPUT_TEMPLATE.md", path: builder.TEMPLATE_PATH },
+    { name: "research_card.schema.json", path: builder.CARD_SCHEMA_PATH }
+  ];
+  const byPath = new Map(bundle.map(file => [file.path, Buffer.isBuffer(file.content) ? file.content : Buffer.from(file.content, "utf8")]));
+  const zip = zipFile.content;
+  const members = [];
+  let offset = 0;
+  while (zip.readUInt32LE(offset) === 0x04034b50) {
+    const method = zip.readUInt16LE(offset + 8);
+    const size = zip.readUInt32LE(offset + 18);
+    const nameLength = zip.readUInt16LE(offset + 26);
+    const extraLength = zip.readUInt16LE(offset + 28);
+    const name = zip.subarray(offset + 30, offset + 30 + nameLength).toString("utf8");
+    const dataStart = offset + 30 + nameLength + extraLength;
+    assert.equal(method, 0, "the pilot archive stores its members rather than compressing them");
+    members.push({ name: name.replace(`${builder.PILOT_ZIP_ROOT}/`, ""), content: zip.subarray(dataStart, dataStart + size) });
+    offset = dataStart + size;
+  }
+  assert.deepEqual(
+    members.map(member => member.name).slice().sort(),
+    expected.map(entry => entry.name).slice().sort(),
+    "the archive holds the brief, the template, the schema and the note, and nothing else"
+  );
+  for (const entry of expected) {
+    const member = members.find(item => item.name === entry.name);
+    assert.deepEqual(member.content, byPath.get(entry.path), `${entry.name} must be the bundle's own bytes`);
+  }
+  assert.equal(manifest.counts.pilot_packages, 1);
+  assert.equal(manifest.pilot.package, builder.PILOT_ZIP_PATH);
+  assert.equal(manifest.pilot.factor_id, builder.PILOT_FACTOR_ID);
+  assert.equal(manifest.pilot.brief, row.pack_path);
+  assert.equal(manifest.pilot.card_schema, builder.CARD_SCHEMA_PATH);
+  assert.ok(read(builder.START_HERE_PATH).includes(`(${builder.PILOT_ZIP_PATH.replace(`${builder.OUT_DIR}/`, "")})`), "the start-here note links the pilot archive");
+});
+
+// The corrections this bundle carries, asserted on every brief because the shared text is what drifted:
+// one proposed missing-quote policy with data exclusions kept apart from model abstentions, the engine's
+// exact tie stated as reachable arithmetic rather than unreachable, and the executing version named beside
+// the audited baseline instead of being called v154.
+test("every brief carries the corrected shared facts", () => {
+  for (const row of briefRows) {
+    const pack = read(row.pack_path);
+    assert.ok(!pack.includes("unreachable with the deployed weights"), `${row.factor_id}: the exact tie is not unreachable`);
+    assert.ok(!pack.includes("exact tie and is unreachable"), `${row.factor_id}: the exact tie is not unreachable`);
+    assert.ok(pack.includes("reachable arithmetic"), `${row.factor_id}: the exact tie is reachable arithmetic`);
+    assert.ok(!pack.includes("missing-quote policy are still undecided"), `${row.factor_id}: the missing-quote policy is not undecided`);
+    assert.ok(pack.includes("The one proposed missing-quote policy"), `${row.factor_id}: one proposed missing-quote policy is stated`);
+    assert.ok(pack.includes("data exclusion"), `${row.factor_id}: a missing print is a data exclusion`);
+    assert.ok(pack.includes("model abstention"), `${row.factor_id}: an abstention is named as a different object`);
+    assert.ok(pack.includes("executing") && pack.includes("v155"), `${row.factor_id}: the executing version is named`);
+    assert.ok(pack.includes("v154"), `${row.factor_id}: the audited baseline version is named`);
+  }
+  assert.ok(contextDocument.includes("One proposed policy"), "the shared context states the one proposed policy");
+  assert.ok(!contextDocument.includes("The missing-quote policy is still `UNDECIDED`"), "the shared context no longer calls the missing-quote policy undecided");
+  assert.ok(contextDocument.includes("executing version"), "the shared context keeps the executing version apart from the baseline");
+  const f1 = read(builder.pilotBriefRow().pack_path);
+  assert.ok(f1.includes("repaired in the repository on 2026-10-11 and applied to the live workflow on 2026-10-12"), "the null-versus-unavailable repair carries both dates");
+});

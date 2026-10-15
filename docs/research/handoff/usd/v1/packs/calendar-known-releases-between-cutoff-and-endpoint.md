@@ -36,10 +36,17 @@ this pack, and none may be proposed as part of the deliverable.
   the preceding Saturday, so that start measures 23 hours in spring and 25 in autumn and is not a session.
   Every eligible session is therefore exactly 24 hours.
 - The Friday session contains Friday's US close and ends on Saturday morning. That is intended.
-- A session whose endpoint print is missing is dropped and counted as coverage. Nothing is filled,
-  forward-carried, interpolated or silently extended to Monday.
-- The flat band, the tie policy and the missing-quote policy are still undecided; they must be frozen
-  before any candidate is scored and may not be borrowed from the closed 24-hour study.
+- A session whose start or endpoint print is missing is never filled, forward-carried, interpolated or
+  silently extended to Monday. The one proposed missing-quote policy - to be frozen, together with the flat
+  band and the study's own tie policy, before any candidate is scored, and recorded in the session contract
+  where the entry still reads UNDECIDED - is that such a session is a data exclusion: it leaves the scored
+  sample and is reported as coverage rather than as an abstention.
+- A data exclusion and a model abstention are different objects and are counted and scored separately. An
+  abstention is the model declining to give a direction on a session whose two ends both exist; that
+  session stays in the scored sample and is scored as a no-call, and it is never reported as coverage lost.
+- The label's flat band and the study's own tie policy for scoring are still undecided; they must be frozen
+  with the missing-quote policy before any candidate is scored and may not be borrowed from the closed
+  24-hour study.
 
 - The label instrument and its quote source are UNDECIDED. No intraday DXY print exists in this repository or in the live collector, so the label instrument and the quote source are unverified at both ends. If a claim is really about EUR/USD, a custom basket or any other instrument, name that instrument and say so; never present another instrument as DXY. The live collector prices the dollar with FRED DTWEXBGS, which is a feature and cannot be the session label: H.10 publishes on Mondays at 16:15 ET for the previous business week, so at a 05:00 London cutoff that value is 2 to 6 business days old (median 4).
 
@@ -77,17 +84,26 @@ Which releases are scheduled between the cutoff and the endpoint, and how a know
 ## 5. The engine this factor would join
 
 - The published call is produced by the deterministic node Calculate USD Conviction in the live workflow
-  USD Layer 1 Agent (OCt1tB9yVMUgFTha v154). The model writes the per-factor verdict strings; the code
-  computes every published number, and where they disagree the code wins.
+  USD Layer 1 Agent (OCt1tB9yVMUgFTha). Two versions matter and they are not the same fact. The executing
+  version is v155, published 2026-10-12T19:52:13.451Z by the supervised live apply of the null-conversion
+  guard (version id 0fb553c2-b1f1-4afa-bfdc-1166b60a6a79, versionCounter 155, nodes_sha256 b2583215ca25
+  6a96dd0d7693635a66681fff42595805cdb254d48ae52960b974). The audited baseline is the repository export
+  exports/usd_layer1_agent.json, measured against v154 on 2026-10-11 (scoped export
+  2026-10-11T18:59:54.307Z); its Calculate USD Conviction jsCode
+  (580f0aa34bc1dd5d210e0dc3391dd653414ac1f68fbc0594133dc597a29254d4) is the same bytes the executing
+  version runs, so the arithmetic audited here is the arithmetic in force. The model writes the per-factor
+  verdict strings; the code computes every published number, and where they disagree the code wins.
 - Coded 24h weights: F1 10, F2 14, F3 10, F4 10, F5 14, F6 4, F7 24, F8 12, F9 1, F10 1 (sum 100).
   The rulebook logic/agent_usd_direction.md v2.1, which the workflow fetches from GitHub on every run,
   publishes F1 10, F2 14, F3 16, F4 14, F5 6, F6 5, F7 3, F8 18, F9 12, F10 2. Both are live and nothing
   reconciles them.
 - conviction = round(winning weight / active weight * 100): a share of active evidence, not a probability.
   It can read 100% while half the weight is missing, because a missing input moves to the neutral pile
-  instead of into active. Direction carries the suffix _LEAN when |netEdge| < 20; NO_CLEAR_BIAS needs an
-  exact tie and is unreachable with the deployed weights. The dashboard publishes a second, separately
-  derived strength bucket, so two strength labels can disagree on the same row.
+  instead of into active. Direction carries the suffix _LEAN when |netEdge| < 20; NO_CLEAR_BIAS requires an
+  exact tie of the two weight sums, and the deployed 24h vector can produce one (F2 + F3 + F4 + F6 + F8 = 50
+  against F1 + F5 + F7 + F9 + F10 = 50), so abstention is reachable arithmetic rather than a designed gate.
+  The dashboard publishes a second, separately derived strength bucket, so two strength labels can disagree
+  on the same row.
 - F7 (coded 24 points) copies a pre-computed usd_signal with no consensus, no first print and no age.
   F8 (12 points) reads a categorical bias string with no vintage. Together 36 of the 100 coded points
   cannot be reproduced from reachable data.

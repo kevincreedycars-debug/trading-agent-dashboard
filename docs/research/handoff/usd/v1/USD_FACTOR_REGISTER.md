@@ -1,6 +1,6 @@
 # USD factor register (baseline audit, 2026-10-15)
 
-Ten factors that the deployed node computes today, extracted from USD Layer 1 Agent, workflow OCt1tB9yVMUgFTha, v154, active, code nodes byte-identical to exports/usd_layer1_agent.json (scoped export 2026-10-11T18:59:54.307Z) and logic/agent_usd_direction.md v2.1, which the live workflow fetches from GitHub on every run; the two vectors and the disagreements between them are catalogued in docs/research/usd-session/v1/weight_vector_discrepancy.md. Each row is a baseline audit: the question is whether the deployed sign, weight, threshold and lookback are justified. The authoritative catalogue of the same factors is `data/research-library/catalog.json`.
+Ten factors that the deployed node computes today, extracted from USD Layer 1 Agent, workflow OCt1tB9yVMUgFTha: executing version v155 (version id 0fb553c2-b1f1-4afa-bfdc-1166b60a6a79, versionCounter 155, published 2026-10-12T19:52:13.451Z by the supervised live apply of the null-conversion guard, nodes_sha256 b2583215ca256a96dd0d7693635a66681fff42595805cdb254d48ae52960b974); the audited baseline is the repository export exports/usd_layer1_agent.json, measured against v154 on 2026-10-11 (scoped export 2026-10-11T18:59:54.307Z), whose Calculate USD Conviction jsCode sha256 is 580f0aa34bc1dd5d210e0dc3391dd653414ac1f68fbc0594133dc597a29254d4, the same bytes the executing version runs and logic/agent_usd_direction.md v2.1, which the live workflow fetches from GitHub on every run; the two vectors and the disagreements between them are catalogued in docs/research/usd-session/v1/weight_vector_discrepancy.md. Each row is a baseline audit: the question is whether the deployed sign, weight, threshold and lookback are justified. The authoritative catalogue of the same factors is `data/research-library/catalog.json`.
 
 ## Weights
 
@@ -33,7 +33,7 @@ conviction = round(winning side weight / active weight * 100), where active weig
 ### F1 VIX level and risk regime (live.f1-vix-level)
 
 - Rule: VIX > 25 reads BULLISH, 16 to 25 NEUTRAL, below 16 BEARISH. Level only. Threshold 25 / 16. Coded weight 10, rulebook weight 10, deployed in signals.F1.
-- Missing or stale: A missing level scores F1 NEUTRAL and names the missing input; the null-to-zero defect was repaired live on 2026-10-11 and no archived call moved.
+- Missing or stale: A missing level scores F1 NEUTRAL and names the missing input. The null-versus-unavailable guard was repaired in the repository on 2026-10-11 and applied to the live workflow on 2026-10-12, which published v155; with every input present the repaired engine returns the recorded verdicts unchanged, so no recorded call with a complete input set moved.
 - Overlap: F9 (Dollar Smile) reads the same VIX level with the bias string and F10 gates on the same 25 / 16 thresholds, so one input informs three factors.
 - History: FRED VIXCLS daily, cached from 2023-04-03 in the closed study's cache and in the 22-series macro frame from 2024-01-02; latest published values only, no vintage.
 - Live: Collected once per day at the 09:30 ET pipeline time, with no as-of check against the 05:00 London cutoff and no per-field age.

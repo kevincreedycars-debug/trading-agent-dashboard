@@ -34,7 +34,11 @@ const PACK_VERSION = "2.0.0";
 const EXTRACTED_AT = "2026-10-15";
 const EXTRACTION_BRANCH = "research/usd-session-20261013";
 const EXTRACTION_COMMIT = "d07af11166ea1d39e5f4184e85a993e03bcb7137";
-const DEPLOYED_WORKFLOW = "USD Layer 1 Agent, workflow OCt1tB9yVMUgFTha, v154, active, code nodes byte-identical to exports/usd_layer1_agent.json (scoped export 2026-10-11T18:59:54.307Z)";
+// Two different facts, kept apart because they carry different dates and version numbers: the audited
+// baseline is the repository export, measured against the live workflow on 2026-10-11 while it was v154;
+// the executing version is v155, published on 2026-10-12 by the supervised live apply of the
+// null-conversion guard. The export's `Calculate USD Conviction` jsCode is the same bytes v155 executes.
+const DEPLOYED_WORKFLOW = "USD Layer 1 Agent, workflow OCt1tB9yVMUgFTha: executing version v155 (version id 0fb553c2-b1f1-4afa-bfdc-1166b60a6a79, versionCounter 155, published 2026-10-12T19:52:13.451Z by the supervised live apply of the null-conversion guard, nodes_sha256 b2583215ca256a96dd0d7693635a66681fff42595805cdb254d48ae52960b974); the audited baseline is the repository export exports/usd_layer1_agent.json, measured against v154 on 2026-10-11 (scoped export 2026-10-11T18:59:54.307Z), whose Calculate USD Conviction jsCode sha256 is 580f0aa34bc1dd5d210e0dc3391dd653414ac1f68fbc0594133dc597a29254d4, the same bytes the executing version runs";
 const COLLECTOR_WORKFLOW = "Data Collector - USD, export exports/usd_collector.json (repository snapshot; the live collector id was not in the scoped identity file)";
 const RUNTIME = "n8n Cloud, workspace https://silver17.app.n8n.cloud (project ISQG9XU7TGTT6Fcu)";
 
@@ -92,10 +96,17 @@ const HORIZON_BLOCK = [
   "  the preceding Saturday, so that start measures 23 hours in spring and 25 in autumn and is not a session.",
   "  Every eligible session is therefore exactly 24 hours.",
   "- The Friday session contains Friday's US close and ends on Saturday morning. That is intended.",
-  "- A session whose endpoint print is missing is dropped and counted as coverage. Nothing is filled,",
-  "  forward-carried, interpolated or silently extended to Monday.",
-  "- The flat band, the tie policy and the missing-quote policy are still undecided; they must be frozen",
-  "  before any candidate is scored and may not be borrowed from the closed 24-hour study."
+  "- A session whose start or endpoint print is missing is never filled, forward-carried, interpolated or",
+  "  silently extended to Monday. The one proposed missing-quote policy - to be frozen, together with the flat",
+  "  band and the study's own tie policy, before any candidate is scored, and recorded in the session contract",
+  "  where the entry still reads UNDECIDED - is that such a session is a data exclusion: it leaves the scored",
+  "  sample and is reported as coverage rather than as an abstention.",
+  "- A data exclusion and a model abstention are different objects and are counted and scored separately. An",
+  "  abstention is the model declining to give a direction on a session whose two ends both exist; that",
+  "  session stays in the scored sample and is scored as a no-call, and it is never reported as coverage lost.",
+  "- The label's flat band and the study's own tie policy for scoring are still undecided; they must be frozen",
+  "  with the missing-quote policy before any candidate is scored and may not be borrowed from the closed",
+  "  24-hour study."
 ].join("\n");
 
 const AVAILABILITY_BLOCK = [
@@ -118,17 +129,26 @@ const AVAILABILITY_BLOCK = [
 
 const ENGINE_BLOCK = [
   "- The published call is produced by the deterministic node Calculate USD Conviction in the live workflow",
-  "  USD Layer 1 Agent (OCt1tB9yVMUgFTha v154). The model writes the per-factor verdict strings; the code",
-  "  computes every published number, and where they disagree the code wins.",
+  "  USD Layer 1 Agent (OCt1tB9yVMUgFTha). Two versions matter and they are not the same fact. The executing",
+  "  version is v155, published 2026-10-12T19:52:13.451Z by the supervised live apply of the null-conversion",
+  "  guard (version id 0fb553c2-b1f1-4afa-bfdc-1166b60a6a79, versionCounter 155, nodes_sha256 b2583215ca25",
+  "  6a96dd0d7693635a66681fff42595805cdb254d48ae52960b974). The audited baseline is the repository export",
+  "  exports/usd_layer1_agent.json, measured against v154 on 2026-10-11 (scoped export",
+  "  2026-10-11T18:59:54.307Z); its Calculate USD Conviction jsCode",
+  "  (580f0aa34bc1dd5d210e0dc3391dd653414ac1f68fbc0594133dc597a29254d4) is the same bytes the executing",
+  "  version runs, so the arithmetic audited here is the arithmetic in force. The model writes the per-factor",
+  "  verdict strings; the code computes every published number, and where they disagree the code wins.",
   "- Coded 24h weights: F1 10, F2 14, F3 10, F4 10, F5 14, F6 4, F7 24, F8 12, F9 1, F10 1 (sum 100).",
   "  The rulebook logic/agent_usd_direction.md v2.1, which the workflow fetches from GitHub on every run,",
   "  publishes F1 10, F2 14, F3 16, F4 14, F5 6, F6 5, F7 3, F8 18, F9 12, F10 2. Both are live and nothing",
   "  reconciles them.",
   "- conviction = round(winning weight / active weight * 100): a share of active evidence, not a probability.",
   "  It can read 100% while half the weight is missing, because a missing input moves to the neutral pile",
-  "  instead of into active. Direction carries the suffix _LEAN when |netEdge| < 20; NO_CLEAR_BIAS needs an",
-  "  exact tie and is unreachable with the deployed weights. The dashboard publishes a second, separately",
-  "  derived strength bucket, so two strength labels can disagree on the same row.",
+  "  instead of into active. Direction carries the suffix _LEAN when |netEdge| < 20; NO_CLEAR_BIAS requires an",
+  "  exact tie of the two weight sums, and the deployed 24h vector can produce one (F2 + F3 + F4 + F6 + F8 = 50",
+  "  against F1 + F5 + F7 + F9 + F10 = 50), so abstention is reachable arithmetic rather than a designed gate.",
+  "  The dashboard publishes a second, separately derived strength bucket, so two strength labels can disagree",
+  "  on the same row.",
   "- F7 (coded 24 points) copies a pre-computed usd_signal with no consensus, no first print and no age.",
   "  F8 (12 points) reads a categorical bias string with no vintage. Together 36 of the 100 coded points",
   "  cannot be reproduced from reachable data.",
@@ -173,7 +193,8 @@ const CARD_FIELDS = [
 
 // ---------------------------------------------------------------------------
 // The ten factors the deployed USD node computes today, extracted on 2026-10-13 from
-// exports/usd_layer1_agent.json (live workflow OCt1tB9yVMUgFTha v154) and logic/agent_usd_direction.md
+// exports/usd_layer1_agent.json (workflow OCt1tB9yVMUgFTha; audited baseline measured at v154 on 2026-10-11,
+// executing version v155 since 2026-10-12) and logic/agent_usd_direction.md
 // v2.1. These are executing code, not candidates. Their packs are baseline audits: the question is
 // whether the deployed sign, weight, threshold and lookback are justified.
 // ---------------------------------------------------------------------------
@@ -193,7 +214,7 @@ const LIVE_FACTORS = [
       { input: "vix_level", source: "FRED VIXCLS, stored by the USD collector", units: "index", transform: "level, no transformation", lookback: "none", cutoff: "1 to 2 business days old at 05:00 London; this family's publication time carries a declared assumption, not a verified schedule" }
     ],
     rule: "VIX > 25 reads BULLISH, 16 to 25 NEUTRAL, below 16 BEARISH. Level only. Threshold 25 / 16. Coded weight 10, rulebook weight 10, deployed in signals.F1.",
-    missing_stale: "A missing level scores F1 NEUTRAL and names the missing input; the null-to-zero defect was repaired live on 2026-10-11 and no archived call moved.",
+    missing_stale: "A missing level scores F1 NEUTRAL and names the missing input. The null-versus-unavailable guard was repaired in the repository on 2026-10-11 and applied to the live workflow on 2026-10-12, which published v155; with every input present the repaired engine returns the recorded verdicts unchanged, so no recorded call with a complete input set moved.",
     deps: [],
     overlap: "F9 (Dollar Smile) reads the same VIX level with the bias string and F10 gates on the same 25 / 16 thresholds, so one input informs three factors.",
     hist_avail: "FRED VIXCLS daily, cached from 2023-04-03 in the closed study's cache and in the 22-series macro frame from 2024-01-02; latest published values only, no vintage.",
@@ -828,7 +849,7 @@ const SESSION_FACTOR_BRIEFS = [
     questions: [
       "Which per-input conditions (age, revision state, a missing endpoint, a source that did not update) can be detected at the cutoff, and which cannot?",
       "What is the smallest set of conditions that should withhold a call, and what does withholding cost in coverage terms?",
-      "How should a session whose endpoint print is missing be handled: dropped and counted as coverage, or scored with a stated bound?"
+      "The proposed missing-quote policy drops a session whose start or endpoint print is missing and counts it as a data exclusion rather than an abstention: what would have to be shown for a stated bound to beat the drop, and how would that be tested without letting an exclusion be scored as a call?"
     ],
     counterarguments: [
       "A gate that removes sessions with stale data is a filter fitted to the sources available today and may not survive a source change.",
@@ -1054,6 +1075,12 @@ const TRACKER_PATH = `${OUT_DIR}/tracker_tasks.json`;
 const START_HERE_PATH = `${OUT_DIR}/START_HERE.md`;
 const BRIEF_INDEX_PATH = `${OUT_DIR}/BRIEF_INDEX.json`;
 const ZIP_PATH = `${OUT_DIR}/usd-research-handoff-v1.zip`;
+const PILOT_DIR = `${OUT_DIR}/pilot`;
+const PILOT_START_HERE_PATH = `${PILOT_DIR}/VIX_PILOT_START_HERE.md`;
+const PILOT_ZIP_PATH = `${PILOT_DIR}/usd-vix-pilot-v1.zip`;
+const PILOT_ZIP_ROOT = "usd-vix-pilot-v1";
+const PILOT_VERSION = "1.0.0";
+const PILOT_FACTOR_ID = "live.f1-vix-level";
 // Every entry in the zip sits under this folder, so extracting the archive gives one named directory.
 const ZIP_ROOT = "usd-research-handoff-v1";
 // A fixed timestamp keeps the archive byte-stable between runs; the files inside carry their own dates.
@@ -2232,10 +2259,26 @@ function handoffManifest(bundleFiles) {
       session_packs: SESSION_FACTOR_BRIEFS.length,
       defects: register.defects.length,
       unscored_collected_inputs: register.unscored_collected_inputs.length,
-      open_questions: factorBriefRows().reduce((total, row) => total + row.questions.length, 0)
+      open_questions: factorBriefRows().reduce((total, row) => total + row.questions.length, 0),
+      pilot_packages: 1
     },
     brief_index: BRIEF_INDEX_PATH,
     download: { path: ZIP_PATH, root: ZIP_ROOT },
+    pilot: {
+      package: PILOT_ZIP_PATH,
+      package_root: PILOT_ZIP_ROOT,
+      package_version: PILOT_VERSION,
+      start_here: PILOT_START_HERE_PATH,
+      factor_id: PILOT_FACTOR_ID,
+      brief: pilotBriefRow().pack_path,
+      template: TEMPLATE_PATH,
+      card_schema: CARD_SCHEMA_PATH,
+      note:
+        "The first pilot package: one brief (the VIX baseline audit) with the output template and the full " +
+        "card schema, in one archive. The brief's field list names the card's fields; the schema carries the " +
+        "JSON structure they live in, so the pilot cannot be run from the field list alone. The brief, the " +
+        "template and the schema inside the archive are the same bytes as the files at the paths above."
+    },
     files: bundleFiles.map(file => ({ path: file.path, bytes: asBuffer(file.content).length, sha256: sha256(file.content) })),
     sources: [
       { path: CATALOG_PATH, note: "Authority for all twenty-five USD factor rows and for which library task covers each session factor." },
@@ -2370,12 +2413,13 @@ function startHereMarkdown(register) {
   lines.push("");
   lines.push(`This bundle is the standardised handoff for the USD research programme: ${rows.length} self-contained briefs, one per USD factor in the committed Research Library catalogue, each carrying its own context, its research prompt and its output instructions. Hand one brief to one model and a card comes back. Nothing here is a forecast, a performance number or an approval.`);
   lines.push("");
-  lines.push(`Every brief uses one session: ${HORIZON.start} to ${HORIZON.end}. The flat band, the tie policy and the missing-quote policy are still undecided and are not assumed by any brief.`);
+  lines.push(`Every brief uses one session: ${HORIZON.start} to ${HORIZON.end}. Missing quotes have one proposed policy, to be frozen before any candidate is scored: a session whose start or endpoint print is missing is a data exclusion - it leaves the scored sample and is counted as coverage, and nothing is filled, forward-carried or interpolated. A data exclusion is not a model abstention, and the two are counted and scored separately. The label's flat band and the study's own tie policy for scoring are still undecided and are assumed by no brief.`);
   lines.push("");
   lines.push("## Download");
   lines.push("");
   lines.push(`- The whole bundle as one archive: [\`${relative(ZIP_PATH)}\`](${relative(ZIP_PATH)}) - every file below, ${rows.length} briefs included, stored uncompressed so the archive is reproducible.`);
   lines.push(`- The same list as data: [\`${relative(BRIEF_INDEX_PATH)}\`](${relative(BRIEF_INDEX_PATH)}) - factor id, label, half, covering task, status and pack path for all ${rows.length} briefs.`);
+  lines.push(`- The first pilot package, the VIX brief with the output template and the full card schema in one archive: [\`${relative(PILOT_ZIP_PATH)}\`](${relative(PILOT_ZIP_PATH)}), opening at [\`${relative(PILOT_START_HERE_PATH)}\`](${relative(PILOT_START_HERE_PATH)}).`);
   lines.push("");
   lines.push("## The twenty-five briefs");
   lines.push("");
@@ -2417,6 +2461,89 @@ function startHereMarkdown(register) {
   return lines.join("\n");
 }
 
+// ---------------------------------------------------------------------------
+// The first pilot package. The VIX brief's own section 7 lists the card's field
+// names and points at the template and the schema; a pilot return needs the three
+// together, because the schema is what states the complete JSON structure - which
+// fields are required, the nested objects and their required keys, the enums and
+// the length minimums - and the field list alone does not.
+// ---------------------------------------------------------------------------
+
+function pilotBriefRow() {
+  const row = factorBriefRows().find(item => item.factor_id === PILOT_FACTOR_ID);
+  if (!row) throw new Error(`${PILOT_FACTOR_ID} is not one of the briefs this bundle publishes`);
+  return row;
+}
+
+function pilotStartHereMarkdown() {
+  const row = pilotBriefRow();
+  const briefFile = row.pack_path.replace(`${PACK_DIR}/`, "");
+  const lines = [];
+
+  lines.push("# USD research pilot 1 - the VIX baseline audit as one package");
+  lines.push("");
+  lines.push(`Generated ${EXTRACTED_AT} on branch \`${EXTRACTION_BRANCH}\` at \`${EXTRACTION_COMMIT}\`. Pilot package ${PILOT_VERSION}, context version ${CONTEXT_VERSION}, pack version ${PACK_VERSION}, card schema ${CARD_SCHEMA_VERSION}.`);
+  lines.push("");
+  lines.push(`This package is one brief, not the programme: the VIX factor \`${row.factor_id}\` (task \`${row.task_id}\`), the output template that shows the shape of a return, and the complete card schema. The three are packed together because the brief lists the card's field names while the schema states the JSON structure those names live in - which block is required, which fields are objects, what those objects must contain, which values are allowed and where a list or a string has a minimum length. A return assembled from the field list alone is not a valid card.`);
+  lines.push("");
+  lines.push("## What is inside");
+  lines.push("");
+  lines.push(`- \`${briefFile}\` - the brief, byte-identical to the bundle's own \`packs/${briefFile}\`. It carries the session, the deployed baseline for this factor, the research prompt, the prohibitions and the output instructions.`);
+  lines.push("- `RESEARCH_OUTPUT_TEMPLATE.md` - the same field list in the order the card must carry it, with the placeholders a return replaces.");
+  lines.push(`- \`research_card.schema.json\` (${CARD_SCHEMA_VERSION}) - the structure a returned card is validated against, extending \`${CARD_SCHEMA_BASE_PATH}\`.`);
+  lines.push("- `VIX_PILOT_START_HERE.md` - this note.");
+  lines.push("");
+  lines.push("## How the pilot runs");
+  lines.push("");
+  lines.push(`1. Read \`${briefFile}\` first; it is the brief and it is self-contained for everything except the structure of the return.`);
+  lines.push("2. Open the schema before writing: every field of the card is listed in the brief, but the required blocks (`session_horizon`, `calendar_and_quote_handling`, `observable_by_cutoff`, `historical_data_requirements`, `live_data_requirements`, `missing_or_stale_handling`, `dependencies_and_overlap`, `evidence`, `limitations`, `open_questions`) carry their own required keys, and the enums are closed.");
+  lines.push("3. Paste the brief into your own model session. Nothing in this repository calls a model API, and no brief authorises a workflow, feed, dashboard or configuration change.");
+  lines.push(`4. Return one JSON document for the factor, following the schema, plus the short note the brief asks for: every source you actually fetched, with its link and the passage you relied on, and the questions you could not resolve. Upload it against \`${row.task_id}\` in the Research Library. An upload records evidence; it is not an approval.`);
+  lines.push("");
+  lines.push("## What this pilot is and is not");
+  lines.push("");
+  lines.push(`- It is a **baseline audit**: the VIX factor is one of the ten the deployed node computes today (${DEPLOYED_WORKFLOW}), so the question is whether the deployed sign, weight, threshold and lookback are justified, and the deployed values are the object of the audit rather than evidence for the claim.`);
+  lines.push("- It is not a review, a backtest or a rule. A returned card is evidence; it becomes a rule only after a review accepts it and a backtest supports it.");
+  lines.push("- It asserts nothing about this factor's behaviour: no accuracy, no sample size and no performance number exists for it here, and none may be invented.");
+  for (const claim of handoffManifest([]).not_claimed) lines.push(`- ${claim}`);
+  lines.push("");
+  lines.push("## The prohibitions the brief carries");
+  lines.push("");
+  for (const line of PROHIBITIONS.split("\n")) lines.push(line);
+  lines.push("");
+  lines.push("## Answers to anticipate");
+  lines.push("");
+  lines.push("- A return that says part of the mechanism cannot be tested on this horizon with the data that is reachable is a valid return; the brief asks for it to be stated plainly rather than substituted.");
+  lines.push("- Every parameter you propose must carry the values you allow, a default and the rule for choosing it on training sessions only, declared before validation.");
+  lines.push("");
+  lines.push(`The whole bundle, all ${factorBriefRows().length} briefs, is one level up: \`${START_HERE_PATH.replace(`${OUT_DIR}/`, "")}\` describes it.`);
+  lines.push("");
+  return lines.join("\n");
+}
+
+function buildPilot(files) {
+  const briefPath = pilotBriefRow().pack_path;
+  const byPath = new Map(files.map(file => [file.path, file]));
+  const note = pilotStartHereMarkdown();
+  // The note is the package's own file; the other three are the bundle's files, byte for byte, so the
+  // package cannot drift from the bundle it came out of. Only the note and the archive join the bundle.
+  const members = [
+    { name: "VIX_PILOT_START_HERE.md", content: note },
+    { name: briefPath.split("/").pop(), content: byPath.get(briefPath).content },
+    { name: "RESEARCH_OUTPUT_TEMPLATE.md", content: byPath.get(TEMPLATE_PATH).content },
+    { name: "research_card.schema.json", content: byPath.get(CARD_SCHEMA_PATH).content }
+  ];
+  const zip = {
+    path: PILOT_ZIP_PATH,
+    // Flat inside the archive: the pilot is four files a reader takes out and puts side by side.
+    content: zipStore(members.map(member => ({
+      name: `${PILOT_ZIP_ROOT}/${member.name}`,
+      content: asBuffer(member.content)
+    })))
+  };
+  return { members, zip, files: [{ path: PILOT_START_HERE_PATH, content: note }, zip] };
+}
+
 function buildBundle() {
   const register = registerDocument();
   const files = [];
@@ -2431,6 +2558,9 @@ function buildBundle() {
   files.push({ path: CARD_SCHEMA_PATH, content: `${JSON.stringify(cardSchemaV3(), null, 2)}\n` });
   files.push({ path: TRACKER_PATH, content: `${JSON.stringify(trackerDocument(), null, 2)}\n` });
   files.push({ path: START_HERE_PATH, content: startHereMarkdown(register) });
+  // The pilot package is one brief plus the two files its section 7 points at. It is built before the
+  // bundle archive so the archive carries it too, and its own zip is stored rather than compressed.
+  for (const file of buildPilot(files).files) files.push(file);
   files.push({
     path: ZIP_PATH,
     content: zipStore(files.map(file => ({
@@ -2506,6 +2636,7 @@ module.exports = {
   CARD_SCHEMA_PATH,
   CARD_SCHEMA_VERSION,
   CARD_SCHEMA_BASE_PATH,
+  TEMPLATE_PATH,
   CATALOG_PATH,
   OUT_DIR,
   PACK_DIR,
@@ -2516,6 +2647,12 @@ module.exports = {
   BRIEF_INDEX_PATH,
   ZIP_PATH,
   ZIP_ROOT,
+  PILOT_DIR,
+  PILOT_START_HERE_PATH,
+  PILOT_ZIP_PATH,
+  PILOT_ZIP_ROOT,
+  PILOT_VERSION,
+  PILOT_FACTOR_ID,
   CONTEXT_VERSION,
   PACK_VERSION,
   EXTRACTED_AT,
@@ -2542,6 +2679,9 @@ module.exports = {
   zipStore,
   crc32,
   handoffManifest,
+  pilotBriefRow,
+  pilotStartHereMarkdown,
+  buildPilot,
   trackerDocument,
   startHereMarkdown,
   buildBundle,
