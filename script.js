@@ -721,6 +721,17 @@ function initMarketGlobe() {
   const ctx = canvas.getContext("2d");
   const width = canvas.width;
   const height = canvas.height;
+
+  // Draw in the 290px space the markup and the stylesheet already use, on a bitmap sized for the reader's own
+  // screen: at a device pixel ratio of 1 nothing changes, and on a denser screen the sphere and its coastlines
+  // are sharp instead of being stretched up from a 290px bitmap.
+  const pixelRatio = Math.min(2, window.devicePixelRatio || 1);
+  if (pixelRatio > 1) {
+    canvas.width = Math.round(width * pixelRatio);
+    canvas.height = Math.round(height * pixelRatio);
+    ctx.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+  }
+
   const cx = width / 2;
   const cy = height / 2;
   const radius = 118;
@@ -742,6 +753,39 @@ function initMarketGlobe() {
     progress: index / routes.length,
     speed: 0.0013 + (index % 4) * 0.00022
   }));
+
+  // Coarse land outlines, degrees east then north, hand-simplified to a small globe's worth of detail: enough
+  // for the 290px sphere to read as the Earth rather than as a wireframe ball. These are a drawing constant,
+  // like cities and routes above - nothing here is fetched, measured, stored or published, and nothing but
+  // this canvas reads them.
+  const landmasses = [
+    // North America
+    [[-166, 66], [-160, 70], [-146, 70], [-130, 70], [-115, 69], [-100, 68], [-88, 70], [-76, 73], [-66, 66], [-56, 52], [-64, 45], [-70, 42], [-76, 35], [-80, 26], [-84, 30], [-90, 29], [-97, 26], [-97, 21], [-91, 19], [-87, 21], [-88, 16], [-83, 9], [-78, 8], [-83, 8], [-92, 15], [-96, 16], [-105, 20], [-110, 24], [-114, 28], [-117, 32], [-122, 37], [-124, 43], [-124, 48], [-131, 53], [-140, 60], [-150, 59], [-158, 56], [-165, 60]],
+    // Greenland
+    [[-45, 60], [-52, 66], [-55, 72], [-60, 76], [-68, 78], [-58, 82], [-40, 83], [-25, 82], [-20, 76], [-25, 70], [-35, 65]],
+    // South America
+    [[-77, 8], [-72, 11], [-62, 11], [-52, 5], [-50, 0], [-44, -3], [-35, -6], [-38, -13], [-40, -21], [-48, -25], [-53, -34], [-58, -38], [-63, -42], [-65, -47], [-68, -52], [-75, -52], [-73, -45], [-73, -37], [-71, -30], [-70, -20], [-75, -15], [-81, -6], [-80, -3], [-78, 1]],
+    // Africa
+    [[-17, 15], [-16, 20], [-12, 28], [-9, 32], [-5, 36], [10, 37], [20, 32], [32, 31], [35, 28], [43, 12], [51, 12], [42, -1], [40, -10], [35, -20], [33, -26], [27, -34], [18, -34], [12, -17], [13, -6], [9, 4], [3, 6], [-4, 5], [-13, 9]],
+    // Eurasia
+    [[-9, 38], [-9, 43], [-1, 46], [-4, 48], [2, 51], [5, 53], [9, 55], [12, 56], [10, 59], [5, 62], [12, 65], [18, 69], [28, 71], [40, 68], [55, 68], [70, 73], [80, 73], [100, 76], [115, 73], [130, 72], [145, 70], [160, 70], [170, 66], [178, 65], [170, 60], [163, 57], [158, 52], [140, 55], [135, 45], [128, 38], [122, 30], [110, 20], [105, 10], [100, 13], [98, 8], [103, 1], [95, 5], [90, 22], [85, 20], [80, 15], [77, 8], [73, 15], [72, 20], [65, 25], [60, 25], [57, 20], [52, 17], [45, 13], [43, 17], [38, 22], [35, 29], [35, 36], [30, 40], [26, 40], [23, 37], [19, 40], [16, 38], [13, 41], [10, 44], [5, 43], [3, 42], [0, 39], [-6, 36]],
+    // British Isles
+    [[-5, 50], [-1, 51], [1, 52], [0, 54], [-2, 56], [-3, 58], [-5, 58], [-6, 56], [-5, 53], [-6, 51]],
+    // Ireland
+    [[-6, 52], [-10, 52], [-10, 55], [-6, 55]],
+    // Japan
+    [[130, 31], [135, 34], [140, 36], [142, 41], [145, 44], [141, 45], [138, 37], [134, 33]],
+    // Madagascar
+    [[43, -12], [50, -15], [48, -25], [44, -25], [43, -17]],
+    // Australia
+    [[114, -22], [114, -27], [118, -34], [125, -32], [132, -32], [138, -35], [141, -38], [147, -38], [150, -37], [153, -28], [146, -19], [142, -11], [136, -12], [130, -12], [129, -15], [122, -17]],
+    // New Zealand
+    [[173, -35], [178, -38], [174, -41], [171, -44], [167, -46], [166, -45], [172, -41]],
+    // New Guinea, Borneo and Sumatra
+    [[131, -1], [141, -3], [147, -8], [141, -9], [134, -8]],
+    [[109, 2], [117, 4], [119, -3], [110, -3]],
+    [[95, 5], [100, 0], [106, -6], [103, -7], [97, 2]]
+  ];
 
   function toPoint(lat, lng, r = radius) {
     const phi = (90 - lat) * Math.PI / 180;
@@ -775,6 +819,63 @@ function initMarketGlobe() {
       y: (Math.sin((1 - amount) * omega) / sin) * a.y + (Math.sin(amount * omega) / sin) * b.y,
       z: (Math.sin((1 - amount) * omega) / sin) * a.z + (Math.sin(amount * omega) / sin) * b.z
     };
+  }
+
+  // Sutherland-Hodgman clip against the visible hemisphere (z >= 0), so an outline that runs over the limb is
+  // cut at the limb instead of folding onto the far side of the sphere. The cut edge is a straight chord
+  // between two crossings, which at this size stands in for the great-circle edge it replaces.
+  function frontFacing(points) {
+    const out = [];
+    for (let index = 0; index < points.length; index += 1) {
+      const current = points[index];
+      const next = points[(index + 1) % points.length];
+      const currentVisible = current.z >= 0;
+      const nextVisible = next.z >= 0;
+      if (currentVisible) out.push(current);
+      if (currentVisible === nextVisible) continue;
+      const amount = current.z / (current.z - next.z);
+      out.push({
+        x: current.x + (next.x - current.x) * amount,
+        y: current.y + (next.y - current.y) * amount,
+        z: 0
+      });
+    }
+    return out;
+  }
+
+  // Two extra points on every edge: the coarse outline is smooth enough to read as a coastline, and where an
+  // edge crosses the limb the cut lands where the coast really crosses rather than a hand-width to one side.
+  function densify(outline, steps = 3) {
+    const dense = [];
+    for (let index = 0; index < outline.length; index += 1) {
+      const [lngA, latA] = outline[index];
+      const [lngB, latB] = outline[(index + 1) % outline.length];
+      dense.push([lngA, latA]);
+      for (let step = 1; step < steps; step += 1) {
+        const amount = step / steps;
+        dense.push([lngA + (lngB - lngA) * amount, latA + (latB - latA) * amount]);
+      }
+    }
+    return dense;
+  }
+
+  function drawLandmass(outline) {
+    const visible = frontFacing(densify(outline).map(([lng, lat]) => toPoint(lat, lng, radius * 0.998)));
+    if (visible.length < 3) return;
+
+    ctx.beginPath();
+    visible.forEach((point, index) => {
+      const x = cx + point.x;
+      const y = cy - point.y;
+      if (index === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    });
+    ctx.closePath();
+    ctx.fillStyle = "rgba(126, 178, 196, 0.44)";
+    ctx.fill();
+    ctx.strokeStyle = "rgba(196, 232, 240, 0.5)";
+    ctx.lineWidth = 0.7;
+    ctx.stroke();
   }
 
   function drawRoute(route) {
@@ -872,6 +973,8 @@ function initMarketGlobe() {
       ctx.stroke();
       ctx.globalAlpha = 1;
     }
+
+    landmasses.forEach(drawLandmass);
     ctx.restore();
 
     routes.forEach(drawRoute);
