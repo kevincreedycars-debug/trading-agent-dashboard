@@ -1,5 +1,18 @@
 # Changelog
 
+## 2026-10-15 (interactive coordinator, pilot-dispatch cycle) - the dispatched VIX pilot is pinned by version and hash beside the archive, the missing-quote policy stays proposed and the pilot stays bundle-only
+
+### Added
+
+- `docs/research/handoff/usd/v1/pilot/PILOT_DISPATCH_RECORD.md`: the exact package handed to the manual Astra pilot, so the returned card is registered against the bytes that produced it - pilot 1 of package `1.0.0` for factor `live.f1-vix-level` (task `USD-BASELINE-AUDIT-01`), pack version `2.0.0`, context version `usd-session-context-20261014.1`, card schema `usd-session-research-card-v3`, generated 2026-10-15 on `research/usd-session-20261013` at `d07af11166ea1d39e5f4184e85a993e03bcb7137`. The archive `pilot/usd-vix-pilot-v1.zip` is pinned at 46,619 bytes and sha256 `1a4dfbeaa0a98987b074c376aade6a7d64c32a77292ecd788bd3d558b2e8451f`, with its four flat members individually: `f1-vix-level.md` 14,724 / `808dc01ada48798e01561ef31fd19899dffc0eac9fee826bf9dacd067e499842`, `RESEARCH_OUTPUT_TEMPLATE.md` 8,582 / `cbea6e9efd5b9b3baacc34c675b6d6b183e5a0ac41ab24c530e45d1b8aa0bc0a`, `research_card.schema.json` 17,060 / `43b549d0279817b88c76863c7f5ba186d74e902cc6310e36711508cd17094746` and `VIX_PILOT_START_HERE.md` 5,611 / `408962f8fe86553404c5f57675765c9911fc7e6a709fea54ab8809acfe793942`. The brief's registered identity is recorded too (`usd-brief-f1-vix-level` version 2 at `808dc01ada48798e…` / 14,724 bytes, version 1 kept immutable at `25f6207967d3c088…` / 12,974 bytes) with the registration rule that follows: the return uploads against `USD-BASELINE-AUDIT-01` for `live.f1-vix-level`, registers against package `1.0.0` and these hashes, a card written against other bytes registers against the version it actually read, and a later package is versioned rather than substituted.
+
+### Notes
+
+- The record is hand-written precisely so the dispatch stays frozen: it is not generated, not a member of the archive and not a library document, so no dispatched byte moved - `node scripts/build_research_handoff.js check` still reads `36 files under docs/research/handoff/usd/v1: all current` and the archive still hashes to `1a4dfbea…` on disk and over both live routes. `HANDOFF_MANIFEST.json` already carries the same values in its `pilot` block and in the `pilot/usd-vix-pilot-v1.zip` row of `files`, so a later edit makes the manifest disagree with the record instead of silently re-pointing the pilot. The bundle the pilot was cut from is recorded with it: `usd-research-handoff-v1.zip` 596,029 / `22a0bb45…`, `HANDOFF_MANIFEST.json` 11,721 / `b4bc3412…`, `USD_SYSTEM_CONTEXT.md` 30,426 / `37b510e6…`, `START_HERE.md` 9,535 / `2136378f…`.
+- Two owner decisions are recorded with the dispatch: the proposed missing-quote policy stays **explicitly proposed** until the methodology reviewer assesses it, and is frozen together with the flat band and the study's own tie policy before any candidate is scored, the VIX card being one input to that assessment rather than the decision; and the pilot package stays a **bundle-only download**, with no per-factor action, no new library document and no interface work.
+- Not claimed: nothing was deployed, no workflow, feed, dashboard, dispatcher, database or interface was touched, no factor's status moved (22 ready, 3 blocked, before and after), the pilot has not been run and no result exists for it, and an upload is evidence rather than an approval. Guards unchanged: handoff 14 of 14, library 19 of 19, usd-session 33 of 33.
+
+
 ## 2026-10-15
 
 ### Added
