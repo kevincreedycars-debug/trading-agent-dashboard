@@ -14,6 +14,14 @@
 - Guards: `npm run test:research-handoff` 12 of 12, including a completeness check that walks every catalogue factor id to a real pack on disk and an archive check that parses the zip's central directory and rebuilds it byte for byte; `tests/research_library.test.js` 18 of 18, including a 25 of 25 registry coverage check; `tests/research_library.browser.test.js` 1 of 1, opening all twenty-five factor pages and failing if any one lacks a brief, a Copy prompt or a Download, then copying one brief and downloading it and checking both.
 - No research status moved: 25 factors still read 22 ready and 3 blocked, nothing was uploaded, accepted or scored, and the catalogue's `research_briefs.note` says in its own words that covering every factor is not progress. Nothing was deployed, published to a workflow or sent.
 
+### Verified
+
+- Published the delivery to `main` as commit `f7fc4690`, rebased onto the live-feed snapshot `c3589304`: `git hash-object` on the working copies equals `git rev-parse origin/main:<path>` for `START_HERE.md` (`29417229`), `BRIEF_INDEX.json` (`5f38a3c8`), `usd-research-handoff-v1.zip` (`d900d8b1`), `HANDOFF_MANIFEST.json` (`31de2a44`) and `packs/f1-vix-level.md` (`970beee4`), so the published bytes are the delivered bytes.
+- A fresh checkout of `main` reports `checked 34 files under docs/research/handoff/usd/v1: all current, one brief per factor for 25 factors, and the briefs agree with data/research-library/catalog.json`, lands that folder as `w/lf` under the new `.gitattributes` rule instead of renormalising it, and passes `tests/research_handoff.test.js` 12 of 12. In the same checkout `tests/research_library.browser.test.js` is 1 of 1 and `tests/research_library.test.js` is 16 of 18, the two failures being the pre-existing `data/usd-24h-experiment-registry.json` and `data/usd-24h-selection.json` registry hash mismatches that fail identically on untouched `main` (15 of 17), which is why the guard line above reads 18 of 18 on the research branch.
+- The download links were fetched over HTTPS during this cycle and returned HTTP 200 with the byte lengths of the published blobs: `START_HERE.md` 8,928, `BRIEF_INDEX.json` 18,138, `usd-research-handoff-v1.zip` 502,477, under `https://raw.githubusercontent.com/kevincreedycars-debug/trading-agent-dashboard/main/docs/research/handoff/usd/v1/`, with every pack at `.../v1/packs/<pack>.md`.
+- Reported for the owner, not caused by this delivery: `https://kevincreedycars-debug.github.io/trading-agent-dashboard/` answered HTTP 404 for every path tried on 2026-10-15, `/index.html` and the pre-existing `gold-factor-wip.html` included, so the Pages route is not serving while the raw-content and file-page routes are.
+
+
 ## 2026-10-09
 
 ### Added
