@@ -6,15 +6,17 @@ B dashboard interface and document workflow, C research prompts and programme.
 
 ## Opening the two extra sessions (the parts only the owner can do)
 
-The two worktrees already exist, on branches cut from the checkpoint commit `56afd67b` and then fast-forwarded
-to the contract commit for this cycle (`2f665417`, "make the Research Library three numbered stages per topic"),
-so they already carry the catalogue, the stage prompts and this note:
+The two worktrees already exist, on branches cut from checkpoint `56afd67b` and then fast-forwarded to the tip
+of `research/usd-session-20261013` after the contract commit of this cycle ("make the Research Library three
+numbered stages per topic, publish the VIX prompts and enforce the stage chain"), so they already carry the
+catalogue, the stage prompts and this note:
 
 - `D:/trading-agent-dashboard-codex.worktrees/ws-b-dashboard` on `workstream/b-dashboard-interface`
 - `D:/trading-agent-dashboard-codex.worktrees/ws-c-research` on `workstream/c-research-programme`
 
-Confirm with `git -C <worktree path> log --oneline -1`: it must name `2f665417` before you start. If it names
-`56afd67b`, run `git -C <worktree path> merge --ff-only research/usd-session-20261013` once, in that window.
+Confirm with `git -C <worktree path> log --oneline -1` and compare it with
+`git -C D:/trading-agent-dashboard-codex log --oneline -1`: they must name the same commit before you start. If
+they do not, run `git -C <worktree path> merge --ff-only research/usd-session-20261013` once, in that window.
 
 Steps: in VS Code, **File → Open Folder…**, choose one of those two paths, and let it open in the *same*
 window (VS Code also offers a new window; either is fine). A second Cline session now runs in that folder,
