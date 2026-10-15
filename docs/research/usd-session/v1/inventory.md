@@ -94,13 +94,13 @@ inherit a citation. Version 2.1 superseded an earlier edition whose text is not 
 | Question the new engine asks | Live path today | Historical path today |
 | --- | --- | --- |
 | USD level at 05:00 London | none (collector runs once, at the 09:30 ET pipeline time) | none intraday; daily FRED `DTWEXBGS` only |
-| USD level at 17:00 New York | none | none intraday |
+| USD level at the 05:00 London endpoint, on the next local date | none | none intraday |
 | Foreign 2Y/10Y yields, VIX, real yields, credit spreads | FRED daily with 1–2 day lag at the moment it runs | same series, daily; ALFRED vintages unreachable without a key |
 | Risk and cross-asset state at 05:00 London | Coinbase spot (gold, BTC, JPY/GBP/CAD/AUD) is intraday; NQ is a QQQ quote | hourly OANDA caches for EUR/USD, XAU/USD, NAS100 to 2026-04-30 |
 | Calendar events known at 05:00 London | Finnhub calendar, no release-instant field retained | paid calendar import exists (RapidAPI ForexData) but no consensus vintage |
 | Economic surprise with consensus at the time | paid feeds only | not available: ALFRED vintage CSV 404s without a key |
 
-Consequence for the study: the 05:00→17:00 session can only be built today from (a) hourly intraday pair
+Consequence for the study: the 05:00→05:00 London session can only be built today from (a) hourly intraday pair
 and metals caches and (b) daily macro series whose 05:00 value is the **previous** close, correctly lagged.
 That is a legitimate and leakage-safe design, but every card must say so, because it means most macro
 factors answer "what did yesterday's close say" rather than "what happened overnight".

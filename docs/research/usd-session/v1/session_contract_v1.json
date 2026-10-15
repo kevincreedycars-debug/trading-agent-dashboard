@@ -4,6 +4,9 @@
   "status": "RESEARCH_DECLARED_NOT_WIRED",
   "production_enabled": false,
   "trade_eligible": false,
+  "horizon_id": "london-0500-to-london-0500-next-day",
+  "horizon_corrected_at": "2026-10-14",
+  "horizon_correction_note": "The first version of this contract named 17:00 America/New_York on the same local date as the endpoint, an unfixed-zone gap of 17 nominal hours and 16 in the mismatch weeks. The endpoint is now 05:00 Europe/London on the next local date: a 24-hour session whose two ends are wall-clock times in one zone, so no US transition can move the window. America/New_York is kept only for the timing of the Federal Reserve's H.10 release. The correction is carried through backtester/lib/usd_session_engine_interface.js (engine_version usd-session-engine-interface-v2), research-card.schema.json (v2), the five assignment packages and the research documents in this folder; anything that still says 17:00 New York is superseded.",
   "scope": {
     "asset": "USD",
     "extends_to": "EUR, GBP, GOLD, SILVER, NQ, BTC, WTI (not started; no USD sign, weight or threshold transfers)",
@@ -22,21 +25,25 @@
     "zone": "Europe/London",
     "zone_standard_offset_hours": 0,
     "zone_summer_offset_hours": 1,
-    "utc_rule": "04:00Z while London is on GMT, 03:00Z while London is on BST",
+    "utc_rule": "05:00Z while London is on GMT, 04:00Z while London is on BST",
     "bst_2026_start_utc": "2026-03-29T01:00:00Z",
     "bst_2026_end_utc": "2026-10-25T01:00:00Z",
     "asof_rule": "every input value must carry an observation instant at or before the cutoff instant; later revisions are not permitted"
   },
   "endpoint": {
-    "local": "17:00",
-    "zone": "America/New_York",
-    "zone_standard_offset_hours": -5,
-    "zone_summer_offset_hours": -4,
-    "utc_rule": "22:00Z while New York is on EST, 21:00Z while New York is on EDT",
-    "edt_2026_start_utc": "2026-03-08T07:00:00Z",
-    "edt_2026_end_utc": "2026-11-01T06:00:00Z",
-    "same_local_date_as_cutoff": true,
-    "note": "The endpoint is 17 nominal hours after the cutoff on most days, but the two zones shift on different dates, so the UTC gap is 16 hours during the two weeks in spring when New York has changed and London has not, and also during the week in autumn when London has fallen back and New York has not (measured 2026-10-27: 16 hours). The engine must resolve both zones independently from declared transitions, never by adding a fixed number of hours."
+    "local": "05:00",
+    "zone": "Europe/London",
+    "zone_standard_offset_hours": 0,
+    "zone_summer_offset_hours": 1,
+    "utc_rule": "05:00Z on the next local date while London is on GMT, 04:00Z on the next local date while London is on BST",
+    "bst_2026_start_utc": "2026-03-29T01:00:00Z",
+    "bst_2026_end_utc": "2026-10-25T01:00:00Z",
+    "same_local_date_as_cutoff": false,
+    "endpoint_day_offset": 1,
+    "nominal_hours": 24,
+    "session_start_weekdays": [1, 2, 3, 4, 5],
+    "session_start_rule": "A session starts at 05:00 London on a Monday-to-Friday local date only; Saturday and Sunday starts are never sessions. The London spring transition (01:00Z on the last Sunday of March) and the autumn transition (01:00Z on the last Sunday of October) both fall inside the session that starts on the preceding Saturday, so that start measures 23 hours in spring and 25 in autumn and is excluded; every eligible session is therefore exactly 24 hours, held by test over every Monday-to-Friday start from 2023 to 2027.",
+    "note": "America/New_York is no longer part of the session definition and is retained only for the timing of the Federal Reserve's H.10 release. Both ends are London wall-clock times one local date apart, so the US and EU changeover dates cannot alter the window; the engine resolves each end from the declared London transitions and never by adding a fixed number of hours (backtester/lib/usd_session_engine_interface.js, engine_version usd-session-engine-interface-v2)."
   },
   "outcome_instrument": {
     "proposed_code": "DXY",
@@ -46,7 +53,7 @@
       {
         "candidate": "FRED DTWEXBGS (live collector field dxy_level)",
         "usable_for_intraday_session": false,
-        "why": "daily index published by the Federal Reserve with a 1-2 business-day lag, so it cannot price 05:00 London or 17:00 New York on the day"
+        "why": "daily index the Federal Reserve publishes in H.10 on Mondays at 16:15 ET for the previous business week, so it is two to six business days old at the 05:00 London cutoff (median 4) and cannot price either 05:00 London print on the day"
       },
       {
         "candidate": "Coinbase v2 prices XAU-USD/BTC-USD/JPY-USD/GBP-USD/CAD-USD/AUD-USD spot",
@@ -65,7 +72,7 @@
   "flat_handling": {
     "flat_band": null,
     "status": "UNDECIDED",
-    "note": "The 0.1 percentage-point band of the 24-hour study was fitted to a daily index over a nominal day. Over a 17-hour session the band must be re-derived and frozen before candidate comparison, and may be expressed in the instrument's own price units or in ATR fractions."
+    "note": "The 0.1 percentage-point band of the closed 24-hour study was fitted to a daily index over a nominal day. Over this 24-hour London-to-London session the band must be re-derived and frozen before candidate comparison, and may be expressed in the instrument's own price units or in ATR fractions."
   },
   "eligibility": {
     "weekdays_only": true,
@@ -90,7 +97,9 @@
     "deployed_cutoff": "09:30 America/New_York",
     "deployed_endpoint": "16:00 America/New_York close of the next valid trading session",
     "measured_median_elapsed_hours": 30.5,
-    "overlap_with_new_window": "07 nominal hours (from the 05:00 London cutoff to the 09:30 ET snapshot the live engine reacts to)",
-    "scoring_rule": "the deployed engine's stored calls score on the new label only as a diagnostic arm and every table says so; the deployed engine was never asked this question"
+    "measured_against_the_corrected_window": "Measured on the closed study's own 583 evaluable rows, resolved with this contract's engine interface: the study's interval overlaps the corrected session for 14.5 hours on 528 rows and 15.5 hours on 55 rows (the weeks when New York has changed and London has not); the session's first 9.5 hours (8.5 in those weeks), New York time 00:00 to 09:30, are not covered by the study at all; and the study's interval runs a median 16 hours past the session's endpoint (min 15, max 88 on the 24 delayed-endpoint rows).",
+    "overlap_with_new_window": "14.5 nominal hours (15.5 in the two weeks a year when New York changes before London), not the 07 nominal hours recorded before the horizon correction: that figure was 17 hours minus the 9.5-hour gap from 05:00 London to the 09:30 ET snapshot, and the endpoint is no longer 17:00 New York.",
+    "hours_of_the_session_not_covered_by_the_study": 9.5,
+    "scoring_rule": "the deployed engine's stored calls score on the new label only as a diagnostic arm and every table says so; the deployed engine was never asked this question (09:30 ET to the next 16:00 ET close, 30.5 hours at the median) and was never asked to forecast from 05:00 London"
   }
 }

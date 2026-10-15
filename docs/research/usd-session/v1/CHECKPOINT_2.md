@@ -25,7 +25,8 @@ threshold or candidate was defined and no forecast was scored.
 `target_source_assessment.md`. Verified from the sources themselves: the ICE U.S. Dollar Index is the exclusive
 property of ICE Data Indices, LLC and any use "whether directly or indirectly" is prohibited without written
 consent, while the DX futures contract's official daily settlement is a volume-weighted average of 14:59-15:00
-Eastern, two hours before the 17:00 New York endpoint; the Fed's H.10 family is public domain but weekly; and the
+Eastern, two hours before the endpoint the session now uses, which is 05:00 London on the next local date
+(corrected 2026-10-14; this section as first written said 17:00 New York); the Fed's H.10 family is public domain but weekly; and the
 free mirrors could not be verified at all (Stooq refused the fetch, the Nasdaq Data Link page returned 404).
 
 Recommendation: **do not purchase yet, and do not relabel anything as DXY.** The only route that keeps the DXY
