@@ -223,7 +223,29 @@ test("the committed registry validates and every repo-backed hash matches the fi
     assert.equal(latest.sha256, sha256(fs.readFileSync(abs)), `${document.document_id} hash drifted`);
     assert.ok(latest.bytes > 0);
   });
-  assert.equal(registry.documents.filter(entry => entry.storage === "library_object").length, 0);
+  const uploads = registry.documents.filter(entry => entry.storage === "library_object");
+  assert.equal(uploads.length, 1, "the one return registered so far is the VIX report");
+  const uploaded = uploads[0];
+  assert.equal(uploaded.document_id, "usd-baseline-audit-01-vix-usd-report");
+  assert.equal(uploaded.asset, "USD");
+  assert.equal(uploaded.factor_id, "live.f1-vix-level");
+  assert.equal(uploaded.document_type, "report");
+  assert.equal(uploaded.origin, "external_upload");
+  assert.equal(uploaded.public_download, false);
+  assert.equal(uploaded.model, "Astra deep research");
+  assert.equal(uploaded.task_id, null, "USD-BASELINE-AUDIT-01 is a handoff brief id, not a catalogue task");
+  assert.ok(uploaded.note.includes("USD-BASELINE-AUDIT-01"), "the audit task is named in the document note");
+  assert.ok(uploaded.note.includes("Research delivered, review pending"));
+  const uploadedVersion = ResearchLibrary.latestVersion(uploaded);
+  assert.equal(uploadedVersion.version, 1);
+  assert.equal(uploadedVersion.bytes, 84056);
+  assert.equal(uploadedVersion.sha256, "e4151937411eb1e9235c21e4942327b2d24486e405887d70a90a8f5367eb381d");
+  assert.ok(uploadedVersion.note.includes("USD-BASELINE-AUDIT-01"), "and in the version note");
+  assert.equal(uploaded.object_sha256, uploadedVersion.sha256);
+  // Registering evidence is not progress: the factor's own three statuses are exactly what they were.
+  const uploadedFactor = ResearchLibrary.listFactors(catalog).find(entry => entry.factor_id === "live.f1-vix-level");
+  assert.deepEqual(ResearchLibrary.normalizeFactorStatuses(uploadedFactor),
+    { research: "ready", review: "pending", backtest: "not_tested" });
   assert.equal(registry.storage_contract.public_upload, false);
   assert.equal(registry.storage_contract.public_download, false);
 });

@@ -105,6 +105,23 @@ Two layers, deliberately different:
   working-tree change for the coordinator to commit; a published page cannot see that write until it is
   committed, and the panel says so instead of pretending otherwise.
 
+## Registered returns
+
+One return is registered in the committed registry so far, and it is the worked example of the boundary above.
+
+| Document | Factor | Task | Model | Registration |
+| --- | --- | --- | --- | --- |
+| `usd-baseline-audit-01-vix-usd-report` — "VIX and the subsequent direction of the US dollar: a critical research report for the 05:00 Europe/London forecast session" | `live.f1-vix-level` | `USD-BASELINE-AUDIT-01` | Astra deep research | 2026-10-15, version 1, 84,056 bytes, sha256 `e4151937411eb1e9235c21e4942327b2d24486e405887d70a90a8f5367eb381d` |
+
+- The row reads **research delivered, review pending**, in the document's own note and in its version note. The audit
+  task id is a brief id and no library catalogue task carries it, and the validator refuses a `task_id` that is not in
+  the catalogue, so the id is named in the notes rather than recorded as a task that does not exist.
+- The bytes are not published. The published page shows the metadata row and the note, while View and Download need
+  the local service, and the factor's three statuses are exactly what they were (`ready` / `pending` / `not_tested`):
+  an upload is evidence, not progress, and nothing about the deployed node changed.
+- The factor's brief is untouched, so the prompt a reader copies and the prompt this registry fingerprinted are still
+  the same file, and a later report on the same factor would be registered as a new version rather than substituted.
+
 ## The local authenticated service
 
 ```

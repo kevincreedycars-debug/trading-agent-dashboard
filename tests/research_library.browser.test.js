@@ -290,6 +290,28 @@ async function main() {
     // disk since its first registration still has to match what the registry says about it now.
     await page.click("[data-rl-factor='live.f1-vix-level']");
     await page.waitForSelector("[data-rl-factor-detail='live.f1-vix-level']");
+    // The registered VIX return is on this page and it is the worked example of the boundary: its note names
+    // the audit brief it answers and says delivery is not review, its bytes are not published so there is no
+    // View link and Download needs the local service, and its presence moved none of the factor's statuses.
+    const registeredReturn = await page.$eval("[data-rl-document='usd-baseline-audit-01-vix-usd-report']", node => ({
+      text: node.textContent.replace(/\s+/g, " ").trim(),
+      viewLink: Boolean(node.querySelector("a[href]")),
+      serviceNote: (node.querySelector(".rl-inline-note")?.textContent || "").trim(),
+      download: Boolean(node.querySelector("[data-rl-download]"))
+    }));
+    assert.ok(registeredReturn.text.includes("USD-BASELINE-AUDIT-01"), "the registered return must name the audit brief it answers");
+    assert.ok(registeredReturn.text.includes("Research delivered, review pending"), "and must not read as an approval");
+    assert.ok(registeredReturn.text.includes("Astra deep research"), "the model label is part of the record");
+    assert.ok(registeredReturn.text.includes("sha256 e4151937411e"), "the page shows the hash it will be checked against");
+    assert.equal(registeredReturn.viewLink, false, "an uploaded report has no published bytes to view");
+    assert.ok(registeredReturn.download, "it is still downloadable through the local service");
+    assert.ok(/local service/.test(registeredReturn.serviceNote), "and the page says the service is what reads it");
+    audit.registeredReturn = true;
+    const f1Statuses = await page.$$eval("[data-rl-factor-detail='live.f1-vix-level'] .rl-detail-status [data-rl-status]",
+      nodes => nodes.map(node => `${node.getAttribute("data-rl-status")}=${node.textContent.trim()}`));
+    assert.deepEqual(f1Statuses, ["research=Ready", "review=Pending", "backtest=Not tested"],
+      "registering evidence must leave the factor's three statuses exactly as they were");
+    audit.registeredReturnStatuses = f1Statuses;
     const repoWait = page.waitForEvent("download");
     await page.click("[data-rl-document='usd-session-inventory'] [data-rl-download]");
     const repoFile = await repoWait;
