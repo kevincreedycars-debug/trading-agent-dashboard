@@ -6,6 +6,16 @@ shared context half of every USD research pack: a pack carries its own factor-sp
 here for the engine, the target and the known defects. Nothing in this file is a research result; where a
 fact is unavailable or ambiguous, that is stated rather than filled.
 
+Two versions are kept apart throughout, because they are different facts. The **executing version** of the
+USD workflow is **v155**, published on 2026-10-12T19:52:13.451Z (version id
+`0fb553c2-b1f1-4afa-bfdc-1166b60a6a79`, `versionCounter` 155, `nodes_sha256`
+`b2583215ca256a96dd0d7693635a66681fff42595805cdb254d48ae52960b974`) when the null-versus-unavailable guard
+was applied to it live. The **audited baseline** is `exports/usd_layer1_agent.json`, a repository export
+measured against v154 on 2026-10-11, and its `Calculate USD Conviction` jsCode
+(`580f0aa34bc1dd5d210e0dc3391dd653414ac1f68fbc0594133dc597a29254d4`) is the same bytes the executing version
+runs. Every code fact below was read from that export, so it describes the arithmetic in force; only the
+version number of the running workflow has moved since.
+
 ## 1. The research objective and its horizon
 
 Forecast the direction of the US dollar over one session: the change in the label instrument from
@@ -26,20 +36,29 @@ transitions.
   over every Monday-to-Friday start from 2023 to 2027.
 - **Eligible starts.** Monday to Friday local dates only; Saturday and Sunday starts are never sessions.
 - **Friday and the weekend.** The Friday session contains Friday's US close and ends on Saturday morning.
-  That is intended. No session is silently extended to Monday: a session whose endpoint print is missing is
-  dropped and counted as coverage, never filled, forward-carried or interpolated.
-- **Missing quotes.** The missing-quote policy is still `UNDECIDED` in the contract and must be frozen with
-  the dataset before any candidate is scored. `target_source_assessment.md` §4 lists the five questions the
-  chosen source must answer in writing first.
-- **Ties and the flat band.** Undecided. The 0.1 percentage-point band of the closed 24-hour study was
-  fitted to a daily index over a nominal day and may not be carried over.
+  That is intended. No session is silently extended to Monday: a session whose start or endpoint print is
+  missing is never filled, forward-carried or interpolated.
+- **Missing quotes.** One proposed policy, to be frozen with the dataset before any candidate is scored, and
+  recorded in `session_contract_v1.json`, whose entry still reads `UNDECIDED`: a session whose start or
+  endpoint print is missing, stale or later revised is a **data exclusion** - it leaves the scored sample and
+  is reported as coverage, and nothing is filled, carried forward or interpolated.
+  `target_source_assessment.md` §4 lists the five questions the chosen quote source must answer in writing
+  first.
+- **Data exclusions and model abstentions are not the same object.** They are counted and scored separately:
+  an abstention is the model declining to give a direction on a session whose two ends both exist, that
+  session stays in the scored sample and is scored as a no-call, and an exclusion is never reported as an
+  abstention or the other way round.
+- **The label's flat band and the study's own tie policy.** Undecided, and frozen with the missing-quote
+  policy. The 0.1 percentage-point band of the closed 24-hour study was fitted to a daily index over a
+  nominal day and may not be carried over. This is a different object from the deployed engine's exact tie of
+  two weight sums, which is reachable arithmetic (below, §3.4 and §6.3).
 
 ## 2. Architecture: the complete path from inputs to the published call
 
 ```
 Data Collector - USD (exports/usd_collector.json, ~29 nodes)
   -> Supabase table market_snapshots, one row appended per run (in practice one row per day)
-USD Layer 1 Agent (workflow OCt1tB9yVMUgFTha v154, 9 nodes)
+USD Layer 1 Agent (workflow OCt1tB9yVMUgFTha, executing version v155 since 2026-10-12, 9 nodes)
   Supabase Get Many                getAll, no filter: the whole table is fetched
   -> Build USD Input Pack          selects one snapshot, builds available_inputs and warnings
   -> Get USD Logic Document        fetches logic/agent_usd_direction.md live from GitHub on every run
@@ -59,8 +78,10 @@ inside `full_output` / `raw_agent_output` (claim C1 in `discovery_report.md`). N
 so the model can abort a run but cannot author one.
 
 Runtime identity: n8n Cloud, workspace `https://silver17.app.n8n.cloud`, project `ISQG9XU7TGTT6Fcu`. Live
-workflow: `USD Layer 1 Agent`, id `OCt1tB9yVMUgFTha`, v154, active; its code nodes were measured
-byte-identical to `exports/usd_layer1_agent.json` in the scoped export of 2026-10-11T18:59:54.307Z. The
+workflow: `USD Layer 1 Agent`, id `OCt1tB9yVMUgFTha`, executing version v155 since 2026-10-12 (the applied
+null-versus-unavailable guard); the code facts here were measured against v154 on 2026-10-11, when its code
+nodes were byte-identical to `exports/usd_layer1_agent.json` in the scoped export of
+2026-10-11T18:59:54.307Z, and `Calculate USD Conviction` is byte-equal between that export and v155. The
 collector is `exports/usd_collector.json`, a repository snapshot; the collector's live identity was not
 re-measured in that export.
 
@@ -158,7 +179,7 @@ Overrides and fallbacks, all inside the code path:
 
 | Class | Examples | Authority |
 | --- | --- | --- |
-| **Executing code** | `exports/usd_layer1_agent.json` (live, v154): the `TIMEFRAME_WEIGHTS` literal, the thresholds, the missing→NEUTRAL rule, the substitution ladder, the snapshot selection, the conviction formula; `Build Layer 1 JSON`; `backtester/lib/layer2_pair_logic.js` (`combinedConfidence = min(targetConfidence, usdConfidence)`) | produces the published call |
+| **Executing code** | `exports/usd_layer1_agent.json` (the audited baseline, measured at v154 on 2026-10-11; byte-equal to the executing v155 code nodes): the `TIMEFRAME_WEIGHTS` literal, the thresholds, the missing→NEUTRAL rule, the substitution ladder, the snapshot selection, the conviction formula; `Build Layer 1 JSON`; `backtester/lib/layer2_pair_logic.js` (`combinedConfidence = min(targetConfidence, usdConfidence)`) | produces the published call |
 | **Alternative configuration** | `config/usd_24h_ruleset_v2.json` (`CANDIDATE_SHADOW_ONLY`, `production_enabled: false`, never run in n8n); the closed study's `original_v2_1` and `repaired` arms; the research arms in `implementation_plan.md` §3 | none in production |
 | **Rulebook guidance** | `logic/agent_usd_direction.md` v2.1: the weight table, the `_LEAN` conditions (active weight < 50, margin < 15, conflict, missing inputs, tiebreaker, conviction < 65%), the tiebreaker hierarchy (DXY 5d, US 2Y 5d, real yield 5d, VIX 5d), the participation cap, the missing-input and conflict penalties, the agreement boosts, the conviction bands (50–55 Very Weak … 85–100 Very Strong), the sixteen "key rules" | fetched and read by the model on every run; shapes verdicts, not numbers |
 | **Research artefacts** | this folder, `docs/research/usd-session/v1/`, the assignment packages A1–A5, the card schema, `data/research/usd-session/*` | no production effect |
@@ -279,9 +300,9 @@ happened.
 | --- | --- | --- |
 | Branch | `research/usd-session-20261013` | the research branch this bundle was extracted on |
 | Commit | `d07af11166ea1d39e5f4184e85a993e03bcb7137` | the commit the extraction was taken from |
-| Live workflow | `USD Layer 1 Agent`, id `OCt1tB9yVMUgFTha`, version 154, active | produces the published call |
+| Live workflow | `USD Layer 1 Agent`, id `OCt1tB9yVMUgFTha`, executing version v155 from 2026-10-12T19:52:13.451Z (the applied null-versus-unavailable guard) | produces the published call |
 | Live code nodes | `Build USD Input Pack`, `Calculate USD Conviction`, `Build Layer 1 JSON` | input pack, scoring, payload assembly |
-| Scoped export | `exports/usd_layer1_agent.json`, 2026-10-11T18:59:54.307Z | the copy the code facts were read from; byte-identical to the live nodes at that time |
+| Scoped export | `exports/usd_layer1_agent.json`, measured against v154 on 2026-10-11 (export 2026-10-11T18:59:54.307Z) | the copy the code facts were read from; byte-identical to the live nodes at that time, and `Calculate USD Conviction` is the same bytes v155 executes |
 | Collector | `Data Collector - USD`, `exports/usd_collector.json` | repository snapshot; the live collector id was not in the scoped identity file |
 | Collector nodes | `Normalise Market Snapshot`, `Code | Derive USD Eco Inputs`, `Code | Derive Fed Bias` (orphaned) | where each stored field is built |
 | Runtime | n8n Cloud, `https://silver17.app.n8n.cloud`, project `ISQG9XU7TGTT6Fcu` | where both workflows execute |
@@ -308,8 +329,10 @@ The closed study measured a different question and its numbers may not be borrow
   with `production_enabled: false` and has never run in n8n.
 - **Its exposed periods are spent.** What has already been read is recorded in
   `docs/research/usd-session/v1/exposed_periods.md`; no period listed there can be called unseen again.
-- **Its flat band, tie policy and missing-quote policy were never frozen** for the London-to-London session,
-  so they may not be inherited.
+- **Its flat band, its own tie policy and its missing-quote handling may not be inherited** for the
+  London-to-London session: none of the three was frozen there, and the briefs now carry one proposed
+  missing-quote policy (a missing print is a data exclusion, above, §1) which is still to be frozen with the
+  dataset.
 - **Its 93-configuration registry is an in-sample search.** A winning configuration from it is a starting
   hypothesis, not evidence, and the new study's evaluation design has not been approved yet.
 

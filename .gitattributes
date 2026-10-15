@@ -19,3 +19,12 @@
 # folder on purpose; the rule above still covers markdown everywhere else and
 # nothing else in the tree changes.
 docs/review/** -text
+
+# Byte-exact research artefacts, added 2026-10-15 with the USD brief handoff.
+# `docs/research/handoff/usd/v1/HANDOFF_MANIFEST.json` records the sha256 of every generated
+# brief, the local Research Library registry records the same hash for each of the same 25
+# files, and `tests/research_handoff.test.js` compares the archive's members with the files on
+# disk. `-text` disables line-ending conversion in both directions, so a checkout hands back the
+# bytes the builder wrote and one hash keeps meaning the same thing on every machine. Scoped to
+# this folder, which this commit introduces; no path that already ships is covered.
+docs/research/handoff/** -text

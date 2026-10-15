@@ -4,12 +4,13 @@ Generated 2026-10-15 on branch `research/usd-session-20261013` at `d07af11166ea1
 
 This bundle is the standardised handoff for the USD research programme: 25 self-contained briefs, one per USD factor in the committed Research Library catalogue, each carrying its own context, its research prompt and its output instructions. Hand one brief to one model and a card comes back. Nothing here is a forecast, a performance number or an approval.
 
-Every brief uses one session: 05:00 Europe/London to 05:00 Europe/London on the next local date. The flat band, the tie policy and the missing-quote policy are still undecided and are not assumed by any brief.
+Every brief uses one session: 05:00 Europe/London to 05:00 Europe/London on the next local date. Missing quotes have one proposed policy, to be frozen before any candidate is scored: a session whose start or endpoint print is missing is a data exclusion - it leaves the scored sample and is counted as coverage, and nothing is filled, forward-carried or interpolated. A data exclusion is not a model abstention, and the two are counted and scored separately. The label's flat band and the study's own tie policy for scoring are still undecided and are assumed by no brief.
 
 ## Download
 
 - The whole bundle as one archive: [`usd-research-handoff-v1.zip`](usd-research-handoff-v1.zip) - every file below, 25 briefs included, stored uncompressed so the archive is reproducible.
 - The same list as data: [`BRIEF_INDEX.json`](BRIEF_INDEX.json) - factor id, label, half, covering task, status and pack path for all 25 briefs.
+- The first pilot package, the VIX brief with the output template and the full card schema in one archive: [`pilot/usd-vix-pilot-v1.zip`](pilot/usd-vix-pilot-v1.zip), opening at [`pilot/VIX_PILOT_START_HERE.md`](pilot/VIX_PILOT_START_HERE.md).
 
 ## The twenty-five briefs
 

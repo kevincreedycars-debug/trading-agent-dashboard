@@ -100,7 +100,8 @@ const STORAGE = {
 };
 
 // The ten factors the deployed USD node computes today, extracted on 2026-10-13 from
-// exports/usd_layer1_agent.json (workflow OCt1tB9yVMUgFTha v154) and logic/agent_usd_direction.md v2.1.
+// exports/usd_layer1_agent.json (workflow OCt1tB9yVMUgFTha; that export is the audited baseline, measured
+// against v154 on 2026-10-11, and the executing version is v155 since 2026-10-12) and logic/agent_usd_direction.md v2.1.
 // The two weight columns are both live and disagree; see docs/research/usd-session/v1/weight_vector_discrepancy.md.
 const L = (factor) => ({
   review_status: 'pending',
@@ -500,7 +501,7 @@ function synthesisPrompt({ taskId, title, subject, closing }) {
 }
 
 const IMPLEMENTATION_EXCERPT = [
-  'Deployed 24h weights as coded in Calculate USD Conviction, workflow OCt1tB9yVMUgFTha v154: F1 10, F2 14, F3 10,',
+  'Deployed 24h weights as coded in Calculate USD Conviction, workflow OCt1tB9yVMUgFTha (the executing version is v155 since 2026-10-12, the audited export was measured at v154 on 2026-10-11): F1 10, F2 14, F3 10,',
   'F4 10, F5 14, F6 4, F7 24, F8 12, F9 1, F10 1, sum 100.',
   'Aggregation: the weights of BULLISH and BEARISH factors become bullish and bearish; active = bullish + bearish;',
   'bullishArgument = round(bullish / active * 100); netEdge = bullishArgument - bearishArgument; direction is the larger',
