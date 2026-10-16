@@ -75,7 +75,14 @@ test("the M5 pane zooms, and two marked levels each side survive every step", as
   const feed = JSON.parse(fs.readFileSync(feedPath, "utf8"));
   const levels = JSON.parse(fs.readFileSync(levelsPath, "utf8"));
   const btcBars = feed.instruments.find(instrument => instrument.symbol === "BTCUSD").m5.bars;
-  assert.equal(btcBars.length, 120, "the feed publishes 120 M5 bars for BTCUSD");
+  const total = btcBars.length;
+  // The reader's own requirement of 2026-10-06, widened on 2026-10-07: at least a full day of M5 bars in the
+  // published block, because that is what the pane can be dragged back through. The floor stays 288; the producer
+  // now publishes 576 (two days), and every window below is derived from the block's own length.
+  assert.ok(total >= 288, `the feed publishes at least a full day (24 hours) of M5 bars for BTCUSD (it publishes ${total})`);
+  const halfWindow = Math.ceil(total / 2);
+  const quarterWindow = Math.ceil(total / 4);
+  const eighthWindow = Math.ceil(total / 8);
 
   const server = await startServer({ feed, levels });
   const browser = await chromium.launch({ headless: true });
@@ -86,8 +93,8 @@ test("the M5 pane zooms, and two marked levels each side survive every step", as
     await page.waitForSelector('[data-live-chart-symbol="BTCUSD"]', { timeout: 20000 });
     await page.click('[data-live-chart-symbol="BTCUSD"]');
     await page.waitForFunction(
-      () => document.querySelectorAll("#liveTradingPanel .live-trading-chart-body").length === 120,
-      null,
+      count => document.querySelectorAll("#liveTradingPanel .live-trading-chart-body").length === count,
+      total,
       { timeout: 20000 }
     );
 
@@ -116,38 +123,44 @@ test("the M5 pane zooms, and two marked levels each side survive every step", as
     };
 
     // Every published bar, and nothing further to zoom out to.
-    const opening = await checkWindow(120, 1);
-    assert.match(opening.caption, /all 120 M5 bars drawn/);
+    const opening = await checkWindow(total, 1);
+    assert.ok(opening.caption.includes(`all ${total} M5 bars drawn`), `the widest view states it: ${opening.caption}`);
     assert.equal(opening.zoomOut, false, "the widest view has nothing further to zoom out to");
     assert.equal(opening.zoomIn, true);
 
     // Each press halves the window, and the caption says which window it is rather than leaving it to be
     // counted off the picture.
     await page.click('[data-live-chart-zoom="1"]');
-    const half = await checkWindow(60, 2);
-    assert.match(half.caption, /60 of 120 M5 bars drawn \(zoom 2\u00d7\)/);
+    const half = await checkWindow(halfWindow, 2);
+    assert.ok(
+      half.caption.includes(`${halfWindow} of ${total} M5 bars drawn (zoom 2\u00d7)`),
+      `each press halves the window the caption names: ${half.caption}`
+    );
 
     // The magnification is the reader's, so it survives a reload the way the symbol and the scale do.
     await page.reload({ waitUntil: "domcontentloaded" });
     await page.click('.tab-button[data-tab="live-trading"]');
-    const reloaded = await checkWindow(60, 2);
-    assert.match(reloaded.caption, /60 of 120 M5 bars drawn/);
+    const reloaded = await checkWindow(halfWindow, 2);
+    assert.ok(
+      reloaded.caption.includes(`${halfWindow} of ${total} M5 bars drawn`),
+      `the magnification survives a reload: ${reloaded.caption}`
+    );
 
     await page.click('[data-live-chart-zoom="1"]');
-    await checkWindow(30, 4);
+    await checkWindow(quarterWindow, 4);
     await page.click('[data-live-chart-zoom="1"]');
-    const closest = await checkWindow(15, 8);
+    const closest = await checkWindow(eighthWindow, 8);
     assert.equal(closest.zoomIn, false, "the closest step is the end of the ladder");
     assert.equal(closest.zoomOut, true);
 
     // Zooming back out is the same control in the other direction.
     await page.click('[data-live-chart-zoom="-1"]');
-    await checkWindow(30, 4);
+    await checkWindow(quarterWindow, 4);
 
     // A wheel over the price pane zooms it, the way a terminal does.
     await page.hover(".live-trading-chart-plot");
     await page.mouse.wheel(0, -120);
-    await checkWindow(15, 8);
+    await checkWindow(eighthWindow, 8);
 
     // And the ladder is still reachable in one click at the closest magnification, so zooming in never hides a
     // published line: it is drawn, or counted on the tab that brings it back.
@@ -158,7 +171,7 @@ test("the M5 pane zooms, and two marked levels each side survive every step", as
       { timeout: 10000 }
     );
     const fitted = await page.evaluate(chartReadout);
-    assert.equal(fitted.bars, 15, "fitting the ladder to the scale does not change the window of bars");
+    assert.equal(fitted.bars, eighthWindow, "fitting the ladder to the scale does not change the window of bars");
   } finally {
     await browser.close();
     await server.close();
