@@ -239,7 +239,10 @@ function optionsFor(dir, over = {}) {
   options.lock = path.join(dir, "trader.lock");
   options.state = path.join(dir, "trader-state.json");
   options.journal = path.join(dir, "orders.log");
-  return { ...options, ...over };
+  // The close-request log is off here unless a test asks for it: reading it means asking the remote for the
+  // published branch, and no test may reach the network or act on whatever is committed there. The runs that
+  // exercise it pass a path and the exec stub that answers the git read.
+  return { ...options, closeRequests: "off", ...over };
 }
 
 // The flags a spawn's argument list carries, so a test can assert what the loop actually asked the tool for
@@ -467,6 +470,7 @@ test("the usage states the arming flag, the sources and the caps, and offers no 
   assert.match(USAGE, /sends nothing/);
   assert.match(USAGE, /--close-ticket <n>/, "the one hand act this loop takes is stated");
   assert.match(USAGE, /Needs --once/, "and that it is a hand act rather than a cadence");
+  assert.match(USAGE, /--close-requests <path>/, "the page's own close request is stated too");
   assert.match(USAGE, /twice the risk it was placed with/, "the stop adjustment is stated as automatic rather than as a flag");
   assert.match(USAGE, /never moved a second time/, "and that it is one rung rather than a trail");
   assert.equal(/--lots|--max-lots/.test(USAGE), false, "the loop must not offer a size of its own");
@@ -1792,6 +1796,223 @@ test("a hand run whose terminal cannot be read, or whose send was refused, sends
   assert.equal(refused.record.hand.done, false);
   assert.match(refused.record.reason, /is not there any more/);
   assert.equal(fs.existsSync(path.join(dir, "trader-state.json")), false, "a refused close is not a close");
+});
+
+// The dashboard's own close request: one row in data/live-trading-close-request.json, committed to the
+// published branch by the page's Open positions table and read here on the tick after it lands. What these
+// tests hold: the ask is read out of the branch rather than waited for, the ticket still has to be this
+// lane's own, an ask outside its window or already answered is not acted on, an ask is answered once, and a
+// run with nothing waiting judges the market exactly as it always did.
+function requestDocument(rows) {
+  return `${JSON.stringify({
+    schema_version: "live-trading-close-request-v1",
+    updated_at_utc: new Date(NOW).toISOString(),
+    note: "Close requests asked for by hand from the live dashboard's Open positions table.",
+    request_count: rows.length,
+    requests: rows
+  }, null, 2)}\n`;
+}
+
+function askRow({ ticket = 278466300, minutesAgo = 2, symbol = "BTCUSD", side = "buy", volume = 0.01 } = {}) {
+  const stamp = new Date(NOW - minutesAgo * 60000).toISOString().replace(/\.\d{3}Z$/, "Z");
+  return {
+    request_id: `close-${ticket}-${stamp.replace(/[^0-9A-Za-z]/g, "")}`,
+    ticket,
+    symbol,
+    side,
+    volume,
+    requested_at_utc: stamp,
+    requested_by: "dashboard",
+    note: "Close pressed in the Open positions table."
+  };
+}
+
+// The two git reads the loop makes for the log, answered without a repository: the fetch, then the file out
+// of FETCH_HEAD. Anything else fails, so a test can see the loop ask for exactly what it should.
+function requestExec(document, { fetchFails = false, showFails = false } = {}) {
+  const calls = [];
+  const exec = (command, args) => {
+    calls.push([command, ...args].join(" "));
+    if (args.includes("fetch")) {
+      return fetchFails ? { status: 128, stdout: "", stderr: "no such remote" } : { status: 0, stdout: "", stderr: "" };
+    }
+    if (args.includes("show")) {
+      return showFails ? { status: 128, stdout: "", stderr: "not in that tree" } : { status: 0, stdout: document, stderr: "" };
+    }
+    return { status: 128, stdout: "", stderr: `unexpected git call: ${args.join(" ")}` };
+  };
+  exec.calls = calls;
+  return exec;
+}
+
+function withRequestLog(dir, path_) {
+  fs.mkdirSync(path.dirname(path_), { recursive: true });
+  fs.writeFileSync(path_, requestDocument([askRow()]), "utf8");
+  return dir;
+}
+
+test("an ask from the page takes the named ticket out on the tick after it lands, and nothing else that run", () => {
+  const dir = tempDir();
+  // No fixtures at all: the ask is answered before the three artifacts are read, the way a hand act is.
+  const spawn = fakeSpawn({
+    status: { positions: [{ ticket: 278466300, symbol: "BTCUSD", side: "buy", magic: ORDER_MAGIC, volume: 0.01, price_open: 84500, profit: 0.4 }] },
+    send: { exitCode: 0, stdout: closedStdout() }
+  });
+  const exec = requestExec(requestDocument([askRow()]));
+  const { code, record } = runOnce(
+    optionsFor(dir, { confirmLive: true, closeRequests: "data/live-trading-close-request.json" }),
+    { spawn, exec, now: () => NOW }
+  );
+
+  assert.equal(code, 0);
+  assert.equal(record.status, "closed");
+  assert.match(exec.calls[0], /^git -C .+ fetch --quiet origin main$/, "the published branch is what is asked for the log");
+  assert.match(exec.calls[1], /^git -C .+ show FETCH_HEAD:data\/live-trading-close-request\.json$/);
+  assert.equal(record.close_requests.enabled, true);
+  assert.equal(record.close_requests.source, "FETCH_HEAD:data/live-trading-close-request.json");
+  assert.equal(record.close_requests.published, 1);
+  assert.equal(record.close_requests.asked.ticket, 278466300);
+  assert.equal(record.close_requests.taken.outcome, "closed");
+  assert.deepEqual(spawn.calls.map(call => call.args[1]), ["status", "close"], "the terminal is read, then the position is exited");
+  assert.equal(flagMap(spawn.calls[1].args)["--comment"], "l2l-rule-asked", "the ticket says it was asked for, not that a hand did it");
+  assert.equal(flagMap(spawn.calls[1].args)["--ticket"], "278466300");
+  assert.match(record.reason, /in answer to the dashboard's close request asked at/);
+  assert.equal(record.rule, undefined, "the market is not judged on the run that answers an ask");
+  assert.deepEqual(record.placements, [], "nothing was placed");
+  const held = readState(path.join(dir, "trader-state.json"));
+  assert.equal(held.closes.length, 1);
+  assert.equal(held.closes[0].ticket, 278466300);
+  assert.equal(held.closes[0].comment, "l2l-rule-asked");
+  assert.equal(held.closes[0].request_id, askRow().request_id, "the state says which press produced the row");
+  assert.equal(held.closes[0].requested_by, "dashboard");
+  assert.equal(held.close_requests.length, 1);
+  assert.equal(held.close_requests[0].outcome, "closed");
+  assert.equal(held.close_requests[0].source, "FETCH_HEAD:data/live-trading-close-request.json");
+});
+
+test("an ask older than its window, or one already answered, is not acted on and the market is judged as always", () => {
+  // Past the half hour the loop acts within: the row is there and readable, and it is not an instruction to
+  // this tick. A position opened since must not be closed by an ask nobody meant for it.
+  const staleDir = tempDir();
+  writeFixtures(staleDir);
+  const staleSpawn = fakeSpawn();
+  const stale = runOnce(
+    optionsFor(staleDir, { confirmLive: true, closeRequests: "data/live-trading-close-request.json" }),
+    { spawn: staleSpawn, exec: requestExec(requestDocument([askRow({ minutesAgo: 45 })])), now: () => NOW }
+  );
+  assert.equal(stale.record.close_requests.published, 1, "the row was seen");
+  assert.equal(stale.record.close_requests.taken, null, "and was not taken");
+  assert.equal(stale.record.close_requests.asked, undefined);
+  assert.equal(staleSpawn.calls.some(call => call.args[1] === "close"), false);
+  assert.equal(stale.record.status, "placed", "the tick traded exactly as it would have with no ask at all");
+
+  // Answered on an earlier tick: the page's log is append-only, so the state file is what makes an ask a
+  // one-shot. The same row is read again and left alone.
+  const answeredDir = tempDir();
+  writeFixtures(answeredDir);
+  const ask = askRow();
+  fs.writeFileSync(
+    path.join(answeredDir, "trader-state.json"),
+    `${JSON.stringify({ placements: [], close_requests: [{ request_id: ask.request_id, ticket: ask.ticket, outcome: "closed" }] }, null, 2)}\n`,
+    "utf8"
+  );
+  const answeredSpawn = fakeSpawn();
+  const answered = runOnce(
+    optionsFor(answeredDir, { confirmLive: true, closeRequests: "data/live-trading-close-request.json" }),
+    { spawn: answeredSpawn, exec: requestExec(requestDocument([ask])), now: () => NOW }
+  );
+  assert.equal(answered.record.close_requests.published, 1);
+  assert.equal(answered.record.close_requests.taken, null);
+  assert.equal(answeredSpawn.calls.some(call => call.args[1] === "close"), false, "an ask is answered once");
+  assert.equal(answered.record.status, "placed");
+});
+
+test("an ask naming a ticket that is not this loop's own is written down as answered and takes nothing out", () => {
+  const dir = tempDir();
+  const spawn = fakeSpawn({
+    status: { positions: [{ ticket: 11, symbol: "EURUSD", side: "buy", magic: 1, volume: 0.01, price_open: 1.1 }] }
+  });
+  const document = requestDocument([askRow({ ticket: 11, symbol: "EURUSD" })]);
+  const first = runOnce(
+    optionsFor(dir, { confirmLive: true, closeRequests: "data/live-trading-close-request.json" }),
+    { spawn, exec: requestExec(document), now: () => NOW }
+  );
+  assert.equal(first.code, 0);
+  assert.equal(first.record.status, "nothing_to_close");
+  assert.equal(first.record.close_requests.taken.outcome, "nothing_to_close");
+  assert.equal(spawn.calls.length, 1, "another path's ticket is not this loop's to take out");
+  const held = readState(path.join(dir, "trader-state.json"));
+  assert.equal(held.close_requests.length, 1);
+  assert.equal(held.close_requests[0].outcome, "nothing_to_close");
+  assert.equal(held.closes.length, 0, "nothing was closed, so nothing is recorded as closed");
+
+  // The next tick reads the same row and does not ask the account about it again: it moves on to the market.
+  const secondSpawn = fakeSpawn();
+  const second = runOnce(
+    optionsFor(dir, { confirmLive: true, closeRequests: "data/live-trading-close-request.json" }),
+    { spawn: secondSpawn, exec: requestExec(document), now: () => NOW }
+  );
+  assert.equal(secondSpawn.calls.length, 0, "an answered ask is not looked at a second time");
+  assert.equal(second.record.close_requests.taken, null);
+  assert.match(second.record.reason, /Layer 1 calls could not be read/, "the run carried on to the market and refused there");
+});
+
+test("the log is read from the published branch, and the checkout's own copy is what a machine with no remote falls back on", () => {
+  const dir = tempDir();
+  const copied = path.join(dir, "data", "live-trading-close-request.json");
+  withRequestLog(dir, copied);
+  const spawn = fakeSpawn({
+    status: { positions: [{ ticket: 278466300, symbol: "BTCUSD", side: "buy", magic: ORDER_MAGIC, volume: 0.01, price_open: 84500 }] },
+    send: { exitCode: 0, stdout: closedStdout() }
+  });
+  const offline = runOnce(
+    optionsFor(dir, {
+      published: dir,
+      confirmLive: true,
+      closeRequests: "data/live-trading-close-request.json"
+    }),
+    { spawn, exec: requestExec("", { fetchFails: true, showFails: true }), now: () => NOW }
+  );
+  assert.equal(offline.record.status, "closed", "the ask in the checkout's copy is still answered");
+  assert.match(offline.record.close_requests.source, /live-trading-close-request\.json$/, "the checkout's own copy is what was read");
+  assert.equal(/FETCH_HEAD/.test(offline.record.close_requests.source), false, "and not the branch, which could not be asked");
+  assert.match(offline.record.reason, /in answer to the dashboard's close request/);
+});
+
+test("a log that cannot be read is a note in the record rather than a refusal, and off means no read at all", () => {
+  const dir = tempDir();
+  writeFixtures(dir);
+  const brokenSpawn = fakeSpawn();
+  const broken = runOnce(
+    optionsFor(dir, { confirmLive: true, closeRequests: "data/live-trading-close-request.json" }),
+    { spawn: brokenSpawn, exec: requestExec("{\"schema_version\":\"l2l-levels-v1\"}"), now: () => NOW }
+  );
+  assert.equal(broken.record.status, "placed", "a log the loop cannot read does not stop it trading");
+  assert.equal(broken.record.close_requests.published, null);
+  assert.match(broken.record.close_requests.error, /not a close-request document/);
+  assert.equal(broken.record.close_requests.taken, null);
+
+  const offSpawn = fakeSpawn();
+  const off = runOnce(optionsFor(dir, { confirmLive: true }), { spawn: offSpawn, exec: unreachableExec(), now: () => NOW });
+  assert.equal(off.record.close_requests.enabled, false, "off is stated rather than left to be guessed at");
+  assert.equal(off.record.status, "placed");
+});
+
+function unreachableExec() {
+  return () => {
+    throw new Error("the close-request log is off, so no git call may happen");
+  };
+}
+
+test("the three new command-line switches are read, and the defaults are the published branch and the page's path", () => {
+  assert.equal(parseArgs(["--once"]).closeRequests, "data/live-trading-close-request.json");
+  assert.equal(parseArgs(["--once"]).requestsRemote, "origin");
+  assert.equal(parseArgs(["--once"]).requestsBranch, "main");
+  assert.equal(parseArgs(["--once", "--close-requests", "off"]).closeRequests, "off");
+  assert.equal(parseArgs(["--once", "--close-requests", "tmp/asks.json"]).closeRequests, "tmp/asks.json");
+  assert.equal(parseArgs(["--once", "--requests-remote", "upstream"]).requestsRemote, "upstream");
+  assert.equal(parseArgs(["--once", "--requests-branch", "release"]).requestsBranch, "release");
+  assert.throws(() => parseArgs(["--once", "--close-requests"]), UsageError);
 });
 
 

@@ -26,6 +26,10 @@ const researchProofMapUrl = "./data/research-proof-map.json?v=20260902-proof-map
 const backtestEngineUrl = "./data/backtest-engine.json?v=20260903-engine-v1";
 const liveTradingUrl = "./data/live-trading.json?v=20261003-h1h4-snapshot";
 const liveTradingLevelsUrl = "./data/l2l-levels.json?v=20261001-l2l-levels-v1";
+// The dashboard's own close-request log, as this page serves it. It is read here and not only written: an ask
+// made on another device, or in an earlier session on this one, is what the Open positions table reports
+// underneath itself.
+const liveTradingCloseUrl = "./data/live-trading-close-request.json?v=20261016-live-trading-close-request-v1";
 const architectureManifestUrlDefault = "./data/architecture-map.json?v=20260721-architecture-mirror-v1";
 const researchLibraryUrl = "./data/research-library/catalog.json?v=20261013-research-library-v1";
 const researchLibraryDocumentsUrl = "./data/research-library/documents.json?v=20261013-research-library-v1";
@@ -15277,6 +15281,29 @@ let liveTradingPublish = {
   conflict: false,
   status: ""
 };
+// The dashboard's own hand-close, as the Open positions table offers it. This page cannot close anything
+// itself - it holds no broker connection and no order code - so a press leaves an ask, and there are two
+// routes for one: the close link registered on this PC (`l2lclose`), which runs the loop's own hand-close in
+// seconds, and a row written into `data/live-trading-close-request.json` with the reader's own GitHub token,
+// which the five-minute loop reads out of the published branch and acts on at its next tick. Only a ticket
+// carrying this lane's own magic is offered a Close button: the loop refuses anything else, so a button on
+// another path's position would be a control that cannot work.
+let liveTradingClose = {
+  // The row whose confirm strip is open, and the position it was opened for.
+  pending: null,
+  pending_position: null,
+  asking: false,
+  status: "",
+  tone: "note",
+  // The committed log as this page serves it, and the blob sha of the copy this browser last read or wrote,
+  // so a commit cannot quietly replace an ask another writer made.
+  log: null,
+  sha: null,
+  log_error: ""
+};
+// The document module both this page and the trading loop use for that file. index.html loads it ahead of
+// this file, the way the marked-levels module is loaded.
+const liveTradingCloseRequest = (typeof globalThis !== "undefined" && globalThis.LiveTradingCloseRequest) || null;
 // The plot's price scale, kept from the last render so a click can be turned back into a price.
 let liveTradingChartScale = null;
 
@@ -17098,6 +17125,33 @@ function setupLiveTradingChart(panel) {
       liveTradingChartSwallowClick = false;
       return;
     }
+    // The Open positions table's own control, at the top so a press can never be read as something else. The
+    // Close now link is left to the browser: that navigation is how the ticket reaches the close link
+    // registered on this machine, so its default is never prevented, and the note below it says what the page
+    // handed over rather than what it knows.
+    const closeAskButton = event.target.closest("[data-live-close-ask]");
+    if (closeAskButton) {
+      liveTradingOpenCloseConfirm(Number(closeAskButton.dataset.liveCloseAsk));
+      return;
+    }
+    const closeNowLink = event.target.closest("[data-live-close-now]");
+    if (closeNowLink) {
+      liveTradingCloseHandedOver(Number(closeNowLink.dataset.liveCloseNow));
+      return;
+    }
+    const closeLoopButton = event.target.closest("[data-live-close-loop]");
+    if (closeLoopButton && !closeLoopButton.disabled) {
+      const ticket = Number(closeLoopButton.dataset.liveCloseLoop);
+      const row = (Array.isArray(liveTradingData?.positions) ? liveTradingData.positions : [])
+        .find(position => Number(position?.ticket) === ticket) || liveTradingClose.pending_position;
+      askLiveTradingClose(ticket, row);
+      return;
+    }
+    const closeCancelButton = event.target.closest("[data-live-close-cancel]");
+    if (closeCancelButton) {
+      liveTradingCancelClose();
+      return;
+    }
     const markButton = event.target.closest("[data-live-chart-mark]");
     if (markButton) {
       liveTradingMarking = !liveTradingMarking;
@@ -17581,6 +17635,212 @@ function liveTradingDurationLabel(seconds) {
   return `${Math.floor(total / 3600)}h ${String(Math.floor((total % 3600) / 60)).padStart(2, "0")}m`;
 }
 
+// ---- The Open positions table's own hand-close ---------------------------------------------------------
+// The close link is the fast route: scripts/register-live-trading-close-link.ps1 registers the name below on
+// this PC, and the browser hands it the ticket. The published page can offer a link but cannot know whether
+// the handler is installed, so the page states what it handed over rather than promising a result, and the
+// log route sits beside it for exactly that case.
+const liveTradingCloseLink = "l2lclose";
+
+function liveTradingCloseLaneMagic() {
+  return liveTradingStrategy ? Number(liveTradingStrategy.LANE_MAGIC) : null;
+}
+
+function liveTradingCloseHref(ticket) {
+  return `${liveTradingCloseLink}:${encodeURIComponent(String(ticket))}`;
+}
+
+function liveTradingCloseIsLaneTicket(position) {
+  const laneMagic = liveTradingCloseLaneMagic();
+  return laneMagic !== null && Number(position?.magic) === laneMagic;
+}
+
+// The same target the marked-levels commit uses, with the one path this capability may touch: the repository
+// and branch the reader typed in the publishing box, and the close-request file.
+function liveTradingCloseTarget() {
+  if (!liveTradingCloseRequest || !liveTradingLevelsStore) {
+    return { ok: false, error: "The close-request module did not load on this page." };
+  }
+  return liveTradingCloseRequest.normaliseTarget({
+    repo: liveTradingPublish.repo,
+    branch: liveTradingPublish.branch,
+    path: liveTradingCloseRequest.DEFAULT_REQUEST_PATH,
+    github: liveTradingLevelsStore
+  });
+}
+
+function liveTradingCloseReason() {
+  return "Close pressed in the Open positions table on the live dashboard.";
+}
+
+// The log's newest ask, described in words: what the table states underneath itself so an ask is never only
+// remembered by the session that made it.
+function liveTradingCloseNote() {
+  if (!liveTradingCloseRequest) return "The close-request module did not load on this page, so nothing can be asked for from here.";
+  if (liveTradingClose.log_error) {
+    return `The close-request log could not be read (${liveTradingClose.log_error}), so nothing is shown about earlier asks.`;
+  }
+  const last = liveTradingCloseRequest.latestRequest(liveTradingClose.log || {});
+  if (!last) return "No close has been asked for from this page yet.";
+  const described = liveTradingCloseRequest.describeRequest(last, Date.now());
+  const shape = [last.side ? last.side.toUpperCase() : null, last.volume ? `${last.volume} lot` : null, last.symbol]
+    .filter(Boolean)
+    .join(" ");
+  return `The last close asked for here was ticket ${last.ticket}${shape ? ` (${shape})` : ""}, ${described.text}`;
+}
+
+// One cell per open position. A row this lane's own loop placed gets the control; anything else on the
+// account says whose it is, because the loop only ever takes out a ticket carrying its own magic.
+function liveTradingCloseCell(position) {
+  const ticket = Number(position?.ticket);
+  if (!Number.isInteger(ticket) || ticket <= 0) {
+    return `<td class="live-trading-close-cell"><span class="live-trading-close-other">${escapeHtml(displayDash())}</span></td>`;
+  }
+  if (!liveTradingCloseIsLaneTicket(position)) {
+    return `<td class="live-trading-close-cell"><span class="live-trading-close-other">another path's</span></td>`;
+  }
+  const pending = liveTradingClose.pending !== null && Number(liveTradingClose.pending) === ticket;
+  if (!pending) {
+    return `
+      <td class="live-trading-close-cell">
+        <button type="button" class="live-trading-close-button" data-live-close-ask="${escapeHtml(String(ticket))}" title="Ask for this ticket to be taken out: on this PC in seconds, or by the loop on its next tick">Close</button>
+      </td>
+    `;
+  }
+  const side = ["buy", "sell"].includes(position?.side) ? position.side.toUpperCase() : null;
+  const shape = [side, position?.volume ? `${position.volume} lot` : null, position?.symbol || null].filter(Boolean).join(" ");
+  const status = liveTradingClose.status
+    ? `<p class="live-trading-close-status ${escapeHtml(liveTradingClose.tone)}" role="status" aria-live="polite">${escapeHtml(liveTradingClose.status)}</p>`
+    : "";
+  // The loop route needs the publishing box's token, and that box belongs to the published page. A copy served
+  // by the tool on this machine already has the quickest route there is, so it is offered alone, with the
+  // reason stated rather than a button that could not work.
+  const loopRoute = liveTradingLevelsEndpoint
+    ? `<p class="live-trading-close-note">This copy is served by the tool on this machine, so the close link runs the loop's own close here in seconds. The request log belongs to the published page, where the GitHub box lives.</p>`
+    : `<button type="button" class="live-trading-close-route" data-live-close-loop="${escapeHtml(String(ticket))}"${liveTradingClose.asking ? " disabled" : ""}>Ask the loop instead</button>`;
+  return `
+    <td class="live-trading-close-cell">
+      <div class="live-trading-close-confirm" role="group" aria-label="Close ticket ${escapeHtml(String(ticket))}">
+        <p class="live-trading-close-question">Close #${escapeHtml(String(ticket))}${shape ? ` ${escapeHtml(shape)}` : ""} now?</p>
+        <a class="live-trading-close-route primary" data-live-close-now="${escapeHtml(String(ticket))}" href="${escapeHtml(liveTradingCloseHref(ticket))}" title="Hands this ticket to the close link registered on this PC: one confirmation box, then the loop's own hand-close">Close now on this PC</a>
+        ${loopRoute}
+        <button type="button" class="live-trading-close-route quiet" data-live-close-cancel="${escapeHtml(String(ticket))}">Cancel</button>
+        ${status}
+      </div>
+    </td>
+  `;
+}
+
+// Opening and closing the confirm strip is page state only, so a re-render cannot lose it: the row stays
+// open until the reader cancels it or the position leaves the table.
+function liveTradingOpenCloseConfirm(ticket) {
+  const numeric = Number(ticket);
+  const positions = Array.isArray(liveTradingData?.positions) ? liveTradingData.positions : [];
+  liveTradingClose.pending = Number.isInteger(numeric) ? numeric : null;
+  liveTradingClose.pending_position = positions.find(row => Number(row?.ticket) === numeric) || null;
+  liveTradingClose.status = "";
+  liveTradingClose.tone = "note";
+  renderLiveTrading(liveTradingData || {});
+}
+
+function liveTradingCancelClose() {
+  liveTradingClose.pending = null;
+  liveTradingClose.pending_position = null;
+  liveTradingClose.status = "";
+  liveTradingClose.tone = "note";
+  renderLiveTrading(liveTradingData || {});
+}
+
+// The browser is handing the ticket to this PC's own close link. The page can see neither whether the handler
+// is installed nor what it answered, so it states exactly what it handed over and leaves the log route one
+// press away rather than implying the trade is already out.
+function liveTradingCloseHandedOver(ticket) {
+  liveTradingClose.tone = "waiting";
+  liveTradingClose.status = `Handed ticket ${ticket} to this PC's close link. One confirmation box should appear: answering yes runs the loop's own close, and the position is gone in seconds. If no box appears, this PC has no close link registered - use Ask the loop instead.`;
+  renderLiveTrading(liveTradingData || {});
+}
+
+// The request route: one row appended to the log and committed with the reader's own GitHub token, the way a
+// marked level is published. The log is append-only and this page's own copy is merged in on a conflict, so a
+// commit can neither drop another writer's ask nor double this reader's.
+async function askLiveTradingClose(ticket, position) {
+  const module_ = liveTradingCloseRequest;
+  if (!module_) {
+    liveTradingClose.tone = "error";
+    liveTradingClose.status = "The close-request module did not load on this page, so nothing was asked.";
+    renderLiveTrading(liveTradingData || {});
+    return;
+  }
+  const target = liveTradingCloseTarget();
+  if (!target.ok) {
+    liveTradingClose.tone = "error";
+    liveTradingClose.status = target.error;
+    renderLiveTrading(liveTradingData || {});
+    return;
+  }
+  const built = module_.buildRequest({
+    ticket,
+    symbol: position?.symbol ?? null,
+    side: ["buy", "sell"].includes(position?.side) ? position.side : null,
+    volume: Number(position?.volume),
+    requestedAtUtc: new Date().toISOString(),
+    requestedBy: module_.REQUESTED_BY.dashboard,
+    note: liveTradingCloseReason()
+  });
+  if (!built.ok) {
+    liveTradingClose.tone = "error";
+    liveTradingClose.status = built.error;
+    renderLiveTrading(liveTradingData || {});
+    return;
+  }
+  if (!liveTradingPublish.token) {
+    liveTradingClose.tone = "error";
+    liveTradingClose.status = "Asking the loop needs a GitHub token with Contents: read and write on this repository. Paste one in the marked-levels box below the chart and press Connect; the close link needs no token.";
+    renderLiveTrading(liveTradingData || {});
+    return;
+  }
+  liveTradingClose.asking = true;
+  liveTradingClose.tone = "waiting";
+  liveTradingClose.status = `Asking the five-minute loop to close #${ticket}\u2026`;
+  renderLiveTrading(liveTradingData || {});
+  const nowIso = new Date().toISOString();
+  const mine = module_.appendRequests(liveTradingClose.log || module_.createEmptyState(nowIso), [built.request], { nowIso });
+  const message = `Ask the live loop to close ticket ${ticket} (${built.request.requested_at_utc})`;
+  const send = (state, expectedSha, force) => module_.commitRequests({
+    owner: target.owner,
+    repo: target.repo,
+    branch: target.branch,
+    token: liveTradingPublish.token,
+    path: target.path,
+    state,
+    message,
+    expectedSha,
+    force
+  });
+  let result = await send(mine, liveTradingClose.sha);
+  let committed = mine;
+  if (!result.ok && result.conflict && result.remote?.state) {
+    // Another writer moved the file: the merge keeps both sets of asks, and the commit is retried once
+    // against the sha that was just read.
+    committed = module_.mergeStates(mine, result.remote.state, { nowIso });
+    result = await send(committed, result.remote.sha, true);
+  }
+  liveTradingClose.asking = false;
+  if (!result.ok) {
+    liveTradingClose.tone = "error";
+    liveTradingClose.status = `${result.error} Nothing was asked for.`;
+    renderLiveTrading(liveTradingData || {});
+    return;
+  }
+  liveTradingClose.log = module_.normaliseState(committed);
+  liveTradingClose.log_error = "";
+  if (result.sha) liveTradingClose.sha = result.sha;
+  const commit = result.commit_sha ? ` (commit ${result.commit_sha.slice(0, 7)})` : "";
+  liveTradingClose.tone = "waiting";
+  liveTradingClose.status = `Asked: ticket ${ticket} is written into ${target.path} on ${target.branch}${commit}. The loop reads it on its next tick, within five minutes, and this row clears when a later snapshot shows the position gone.`;
+  renderLiveTrading(liveTradingData || {});
+}
+
 function liveTradingPositions(data) {
   const hasBlock = Array.isArray(data?.positions);
   const positions = hasBlock ? data.positions : [];
@@ -17616,6 +17876,7 @@ function liveTradingPositions(data) {
       <section class="live-trading-table-panel">
         ${head}
         <p class="live-trading-table-empty">${emptyText}</p>
+        <p class="live-trading-table-note-line">${escapeHtml(liveTradingCloseNote())}</p>
       </section>
     `;
   }
@@ -17644,6 +17905,7 @@ function liveTradingPositions(data) {
         <td>${escapeHtml(liveTradingTimestampLabel(position?.opened?.time_utc))}</td>
         <td class="num">#${escapeHtml(String(position?.ticket ?? displayDash()))}<span class="live-trading-table-magic">magic ${escapeHtml(String(position?.magic ?? displayDash()))}</span></td>
         <td class="live-trading-table-note">${escapeHtml(position?.comment || "")}</td>
+        ${liveTradingCloseCell(position)}
       </tr>
     `;
   }).join("");
@@ -17668,12 +17930,14 @@ function liveTradingPositions(data) {
               <th scope="col">Opened (UTC)</th>
               <th scope="col">Ticket</th>
               <th scope="col">Comment</th>
+              <th scope="col">Close</th>
             </tr>
           </thead>
           <tbody>${rows}</tbody>
         </table>
       </div>
-      <p class="live-trading-table-caption">Read from the terminal's own <span class="live-trading-mono">positions_get</span> on the run that wrote this snapshot. Nothing on this page can open, change or close a position.</p>
+      <p class="live-trading-table-caption">Read from the terminal's own <span class="live-trading-mono">positions_get</span> on the run that wrote this snapshot. This table cannot open or change a position, and it cannot send a close either: pressing <b>Close</b> asks for one, and there are two routes for the ask. <b>Close now on this PC</b> hands the ticket to the close link registered on this machine (<span class="live-trading-mono">scripts/register-live-trading-close-link.ps1</span>), which shows one confirmation and runs the loop's own close there - seconds, not minutes. <b>Ask the loop instead</b> writes one row into <span class="live-trading-mono">data/live-trading-close-request.json</span> with your own GitHub token, exactly as a marked level is published, and the five-minute loop reads it out of the published branch and acts on its next tick. Either way the loop takes out only a ticket carrying its own magic, printed in the Ticket cell: another path's position says so and is offered no button.</p>
+      <p class="live-trading-table-note-line">${escapeHtml(liveTradingCloseNote())}</p>
     </section>
   `;
 }
@@ -17835,7 +18099,7 @@ function renderLiveTrading(data) {
     ${liveTradingClosedTrades(data)}
 
     <div class="live-trading-provenance">
-      <p><b>Read-only.</b> Quotes, account facts, M5/H1/H4 candles, and a read-back of what was executed. This section has no order code: it cannot place, modify, close or cancel anything, and neither can the snapshot it renders.</p>
+      <p><b>Read-only, except one ask.</b> Quotes, account facts, M5/H1/H4 candles, and a read-back of what was executed. This section has no order code and holds no broker connection: it cannot place, modify or cancel anything, and neither can the snapshot it renders. The one thing a reader can do here is ask for an open position of this lane's own to be taken out, from the Close column of the table below; the page leaves that ask in one of two places and can send no order itself.</p>
       <p>Open positions and closed trades are read from the terminal on each producer run, so a trade placed deliberately shows up here instead of being taken on trust: its entry, its current or exit price, what it made, and its fees. Placing one is a separate, deliberate act by the local bridge tool run in the terminal session, and every trade that tool places carries its own magic number, which the ticket cell above prints.</p>
       <p>Marked L2L levels come from <span class="live-trading-mono">data/l2l-levels.json</span>${escapeHtml(levelsStamp)}. They are prices marked by hand on the chart, not levels the producer detected. A mark is written by the tool on the machine holding the terminal, or by this browser into its own draft and then into the repository as a commit made with the reader's own token; the committed file is the copy everyone reads.</p>
       <p>The L2L entry rule table below is read from those same artifacts, by <span class="live-trading-mono">lib/l2l_strategy.js</span>: the direction Layer 1 sealed for the asset, a five-minute candle that closes beyond a marked level, a limit back at that level, the stop behind the leg that made the deviation, and the target at five times the risk. It states a stage and a ticket for all four pairs and it cannot trade: it carries no order call, the only thing here that can send a ticket is the order tool run by hand, and a call whose own published window has closed is not read as a direction at all.</p>
@@ -18584,7 +18848,7 @@ async function fetchResearchDashboardData() {
 }
 
 async function loadDashboard() {
-  const [layer1Result, layer2Result, researchResult, factorEdgeLabResult, phase2ShadowBacktestResult, confidenceBandDeliveryResult, researchProofMapResult, backtestEngineResult, economicEventRefreshResult, economicEventsSourceResult, inputHealthResult, liveTradingResult, liveTradingLevelsResult, researchLibraryResult, researchLibraryDocumentsResult] = await Promise.allSettled([
+  const [layer1Result, layer2Result, researchResult, factorEdgeLabResult, phase2ShadowBacktestResult, confidenceBandDeliveryResult, researchProofMapResult, backtestEngineResult, economicEventRefreshResult, economicEventsSourceResult, inputHealthResult, liveTradingResult, liveTradingLevelsResult, liveTradingCloseResult, researchLibraryResult, researchLibraryDocumentsResult] = await Promise.allSettled([
     fetch(layer1Url, { cache: "no-store" }),
     fetch(layer2Url, { cache: "no-store" }),
     fetchResearchDashboardData(),
@@ -18598,6 +18862,7 @@ async function loadDashboard() {
     fetchLocalJson(inputHealthUrl),
     fetchLocalJson(liveTradingUrl),
     fetchLocalJson(liveTradingLevelsUrl),
+    fetchLocalJson(liveTradingCloseUrl),
     fetchLocalJson(researchLibraryUrl),
     fetchLocalJson(researchLibraryDocumentsUrl)
   ]);
@@ -18658,6 +18923,26 @@ async function loadDashboard() {
     // The published page still draws the chart without marked levels, so this is a warning with a
     // reason rather than a fatal error.
     console.error(liveTradingLevelsResult.reason);
+  }
+
+  // The close-request log, as this page serves it: an ask made from another device, or from this one in an
+  // earlier session, is what the Open positions table reports underneath itself. A file that is not there yet
+  // is an empty log rather than a problem - the first ask creates it - and a file that cannot be read as this
+  // document is stated in words rather than treated as no asks at all.
+  if (liveTradingCloseRequest) {
+    if (liveTradingCloseResult.status === "fulfilled" && liveTradingCloseResult.value) {
+      const raw = liveTradingCloseResult.value;
+      const problems = liveTradingCloseRequest.validateRequestsState(raw);
+      if (problems.length) {
+        liveTradingClose.log_error = problems.join("; ");
+      } else {
+        liveTradingClose.log = liveTradingCloseRequest.normaliseState(raw);
+        liveTradingClose.log_error = "";
+      }
+    } else if (liveTradingCloseResult.status === "rejected") {
+      liveTradingClose.log = liveTradingCloseRequest.createEmptyState(new Date().toISOString());
+      liveTradingClose.log_error = "";
+    }
   }
   // The loopback marking tool holds the write endpoint, so a page served by it posts its marks to the file
   // on this machine. The repository, branch and any stored token are read back either way, so the page

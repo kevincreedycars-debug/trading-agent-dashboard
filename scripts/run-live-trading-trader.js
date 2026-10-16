@@ -109,6 +109,10 @@ const strategy = require("../lib/l2l_strategy.js");
 // and what "this snapshot is still fresh" means. Reading them from one place is what stops the loop and the
 // page drifting on either.
 const feedPublisher = require("./publish-live-trading-feed.js");
+// The dashboard's own close request: the one document the page's Open positions table writes, and the rules
+// that decide whether a row in it may be acted on at all. The loop reads the rules rather than restating
+// them, so the file the page writes and the file this tick reads cannot drift apart.
+const closeRequests = require("../lib/live_trading_close_request.js");
 
 const REPO_ROOT = path.resolve(__dirname, "..");
 const ORDER_TOOL_RELATIVE = "tools/mt5-bridge/live-trading-order.py";
@@ -123,6 +127,12 @@ const DEFAULT_LOG = "tmp/live-trading-trader.log";
 const DEFAULT_LOCK = "tmp/live-trading-trader.lock";
 const DEFAULT_STATE = "tmp/live-trading-trader-state.json";
 const DEFAULT_JOURNAL = "tmp/live-trading-orders.log";
+// Where the dashboard's close requests are read from in the published tree, and the branch they are read out
+// of. The page commits the file to the published branch, so the loop asks the remote for it on each tick
+// rather than waiting for the publish checkout to be refreshed under it: the ask is a hand act, and half an
+// hour of publisher cadence is not a reasonable wait for one. The branch is fetched into FETCH_HEAD only, so
+// the read moves no branch and no working tree the publisher is using.
+const DEFAULT_CLOSE_REQUESTS = closeRequests.DEFAULT_REQUEST_PATH;
 // M5: the timeframe the rule confirms on, and the cadence this loop aligns to.
 const BAR_SECONDS = 300;
 const DEFAULT_INTERVAL_SECONDS = BAR_SECONDS;
@@ -194,6 +204,13 @@ const USAGE = [
   "                             the act is to be out of a named position rather than to judge it; the ticket must be",
   "                             an open position carrying this lane's own magic, and --confirm-live still gates the",
   "                             send. Needs --once: a hand act on one ticket is not a cadence",
+  "  --close-requests <path>    the dashboard's own close-request log, read from the published branch at each run",
+  `                             (default ${DEFAULT_CLOSE_REQUESTS}). A reader pressing Close in the page's Open`,
+  "                             positions table asks for one named ticket to be taken out; the ticket still has to",
+  "                             carry this lane's own magic and the ask has to be younger than thirty minutes,",
+  "                             and --confirm-live still gates the send. `off` stops the read",
+  "  --requests-remote <name>   remote the close-request log is fetched from (default origin)",
+  "  --requests-branch <name>   branch the close-request log is fetched from (default main)",
   "  --state <path>             what has already been placed (default tmp/live-trading-trader-state.json)",
   "  --log <path>               append-only run log (default tmp/live-trading-trader.log)",
   "  --lock <path>              the guard against two runs at once (default tmp/live-trading-trader.lock)",
@@ -231,6 +248,9 @@ function parseArgs(argv) {
     maxOpen: DEFAULT_MAX_OPEN,
     maxPerDay: DEFAULT_MAX_PER_DAY,
     closeTicket: null,
+    closeRequests: DEFAULT_CLOSE_REQUESTS,
+    requestsRemote: feedPublisher.DEFAULT_REMOTE,
+    requestsBranch: feedPublisher.DEFAULT_BRANCH,
     state: DEFAULT_STATE,
     log: DEFAULT_LOG,
     lock: DEFAULT_LOCK,
@@ -287,6 +307,15 @@ function parseArgs(argv) {
         break;
       case "--close-ticket":
         options.closeTicket = positiveInteger(token, next());
+        break;
+      case "--close-requests":
+        options.closeRequests = String(next()).trim() || DEFAULT_CLOSE_REQUESTS;
+        break;
+      case "--requests-remote":
+        options.requestsRemote = String(next()).trim();
+        break;
+      case "--requests-branch":
+        options.requestsBranch = String(next()).trim();
         break;
       case "--published":
         options.published = next();
@@ -1092,11 +1121,15 @@ function readState(statePath) {
       placements: Array.isArray(parsed?.placements) ? parsed.placements : [],
       cancellations: Array.isArray(parsed?.cancellations) ? parsed.cancellations : [],
       closes: Array.isArray(parsed?.closes) ? parsed.closes : [],
-      moves: Array.isArray(parsed?.moves) ? parsed.moves : []
+      moves: Array.isArray(parsed?.moves) ? parsed.moves : [],
+      // Every ask from the dashboard's Open positions table this loop has already answered, whether it acted
+      // on it or left it alone. It is what makes a request a one-shot: the page's log is append-only, so the
+      // only place a request can be marked as dealt with is here.
+      close_requests: Array.isArray(parsed?.close_requests) ? parsed.close_requests : []
     };
   } catch {
     // No readable state is an empty state: a fresh machine's first run is not a reason to refuse.
-    return { placements: [], cancellations: [], closes: [], moves: [] };
+    return { placements: [], cancellations: [], closes: [], moves: [], close_requests: [] };
   }
 }
 
@@ -1107,15 +1140,257 @@ function writeState(statePath, state) {
   const cancellations = (state.cancellations || []).slice(-STATE_HISTORY);
   const closes = (state.closes || []).slice(-STATE_HISTORY);
   const moves = (state.moves || []).slice(-STATE_HISTORY);
-  // The cancellations, closes and moves keys are written only when there is one, so a file that has never had a
-  // removal, an exit or a stop moved keeps the shape it has always had.
+  const closeRequestsAnswered = (state.close_requests || []).slice(-STATE_HISTORY);
+  // The cancellations, closes, moves and answered requests are written only when there is one, so a file that
+  // has never had a removal, an exit, a stop moved or an ask from the page keeps the shape it has always had.
   const payload = { placements };
   if (cancellations.length) payload.cancellations = cancellations;
   if (closes.length) payload.closes = closes;
   if (moves.length) payload.moves = moves;
+  if (closeRequestsAnswered.length) payload.close_requests = closeRequestsAnswered;
   fs.writeFileSync(resolved, `${JSON.stringify(payload, null, 2)}\n`, "utf8");
   return resolved;
 }
+
+// ---- Taking one ticket out by hand, from either of the two ways a person asks for it -------------------
+// One act, two ways in. A ticket named on the command line and a ticket named by a row in the dashboard's
+// own close-request log are the same act on the account: the terminal is read first, the ticket still has to
+// carry this lane's own magic, a working limit is cancelled and a position is exited at the market, and
+// --confirm-live still decides whether anything is sent. What differs is only who asked, which the row's
+// comment and the run's own reason say, so a reader can tell a hand run from a press on the page.
+//
+// The record this fills is the one the flag has always filled: `hand` for the act, `terminal` for what was
+// read, `placements` emptied, because a close is not a trade this loop placed.
+function takeTicketOut({ options, record, statePath, spawn, now, ticket, comment, request, state: injectedState }) {
+  const handTicket = Number(ticket);
+  const read = runTool(spawn, options, toolArgs("status", options));
+  const live = liveFromStatus(read.record);
+  if (!live) {
+    record.terminal_read = {
+      exit_code: read.exitCode,
+      refused: read.record?.refused === true,
+      message: read.record?.message ? String(read.record.message).slice(0, 300) : null,
+      error: read.error
+    };
+    return {
+      status: "refused",
+      exitCode: 1,
+      outcome: "terminal_unreadable",
+      reason: `the terminal could not be read, so ticket ${handTicket} could not be looked up and nothing was sent: ${read.error || record.terminal_read.message || `the order tool exited ${read.exitCode}`}`
+    };
+  }
+  record.terminal = {
+    account: live.account?.login_masked ?? null,
+    positions_open: live.positions.length,
+    orders_open: live.orders.length,
+    ours: live.ours.length
+  };
+  record.placements = [];
+  const position = live.positions.find(row => Number(row?.ticket) === handTicket) || null;
+  const order = live.orders.find(row => Number(row?.ticket) === handTicket) || null;
+  const ours = live.ours.find(row => Number(row?.ticket) === handTicket) || null;
+  record.hand = {
+    ticket: handTicket,
+    artifacts_read: false,
+    kind: position ? "position" : order ? "working_limit" : null,
+    symbol: position?.symbol ?? order?.symbol ?? null,
+    side: rowDirection(position || order),
+    ours: ours !== null,
+    action: null,
+    sent: false,
+    done: false,
+    refused: false,
+    retcode_name: null,
+    tool_exit: null,
+    done_at_utc: null,
+    tool_reason: null
+  };
+  // A ticket an ask from the page named carries the ask's own id, its stamp and who asked, so the state file
+  // says which press produced the row rather than only that something took the ticket out.
+  if (request) {
+    record.hand.request_id = request.request_id;
+    record.hand.requested_at_utc = request.requested_at_utc;
+    record.hand.requested_by = request.requested_by;
+  }
+
+  // A ticket on the account that is not this loop's own is not this loop's to take out: a position opened by
+  // hand or by another lane is left alone, and the reason says which of the two facts failed rather than
+  // "not found".
+  if (!ours) {
+    record.status = "nothing_to_close";
+    record.reason = position || order
+      ? `ticket ${handTicket} is on this account but does not carry this loop's own magic, so it is not this loop's to take out: nothing was sent.`
+      : `ticket ${handTicket} is not an open order or position on this account: there is nothing to close.`;
+    return { status: "nothing_to_close", exitCode: 0, outcome: "nothing_to_close", reason: record.reason };
+  }
+  // The kind decides the tool's own action: a position is exited at the market and a resting limit is taken
+  // back out. One flag, because from the user's side both are "be out of this ticket".
+  const action = position ? "close" : "cancel";
+  record.hand.action = action;
+  if (!options.confirmLive) {
+    record.status = "planned";
+    record.reason = `not armed: --confirm-live was not passed, so ticket ${handTicket} would have been taken out as a ${action} and nothing was sent.`;
+    return { status: "planned", exitCode: 0, outcome: "planned", reason: record.reason };
+  }
+  const result = runTool(spawn, options, toolArgs(action, options, [
+    "--ticket", String(handTicket),
+    "--comment", comment,
+    "--confirm-live"
+  ]));
+  const answer = result.record?.answer || null;
+  record.hand.sent = true;
+  record.hand.done = answer?.done === true;
+  record.hand.refused = result.record?.refused === true;
+  record.hand.retcode_name = answer?.retcode_name ?? null;
+  record.hand.tool_exit = result.exitCode;
+  record.hand.done_at_utc = record.hand.done ? new Date(now()).toISOString() : null;
+  record.hand.tool_reason = record.hand.done
+    ? null
+    : (result.record?.message ? String(result.record.message).slice(0, 300) : result.error);
+  // Only what was sent and landed is written down, the way every other send in this file is: the state file is
+  // this lane's record of what it did to the account, and one of these acts is one of those.
+  if (record.hand.done) {
+    const handState = injectedState || readState(statePath);
+    const handRow = { ...record.hand, comment };
+    if (action === "close") {
+      handState.closes = (handState.closes || []).concat([handRow]);
+    } else {
+      handState.cancellations = (handState.cancellations || []).concat([handRow]);
+    }
+    writeState(statePath, handState);
+  }
+  if (record.hand.sent && !record.hand.done && !record.hand.refused) {
+    record.status = "send_failed";
+    record.reason = `ticket ${handTicket} was sent to the terminal as a ${action} and did not land; the order tool's own journal holds the terminal's answer.`;
+    return { status: "send_failed", exitCode: 1, outcome: "send_failed", reason: record.reason };
+  }
+  if (record.hand.done) {
+    const kindWord = action === "close" ? "position" : "working limit";
+    record.status = action === "close" ? "closed" : "cancelled";
+    record.reason = request
+      ? `${kindWord} ${handTicket} was taken out in answer to the dashboard's close request asked at ${request.requested_at_utc}, and nothing else was read, reviewed or placed this run.`
+      : `${kindWord} ${handTicket} was taken out by hand, and nothing else was read, reviewed or placed this run.`;
+    return { status: record.status, exitCode: 0, outcome: record.status, reason: record.reason };
+  }
+  record.status = "refused";
+  record.reason = `ticket ${handTicket} was refused before anything was sent: ${record.hand.tool_reason}`;
+  return { status: "refused", exitCode: 0, outcome: "refused", reason: record.reason };
+}
+
+// ---- The dashboard's own close request, read once per run ----------------------------------------------
+// The published branch is asked for the log first, because the page commits there and a request that waits
+// for the checkout under this tick to be refreshed is a request answered half an hour late. The fetch moves
+// FETCH_HEAD and nothing else, so it disturbs no branch and no working tree the publisher is using. The
+// checkout's own copy is the fallback for a machine with no remote to ask, and every failure here is a note
+// in the record rather than a refusal: a network problem must not stop the loop trading.
+function parseRequestsDocument(raw) {
+  let parsed = null;
+  try {
+    parsed = JSON.parse(String(raw || ""));
+  } catch (error) {
+    return { state: null, error: `it could not be read as JSON: ${error.message}` };
+  }
+  const problems = closeRequests.validateRequestsState(parsed);
+  if (problems.length) return { state: null, error: problems.join("; ") };
+  return { state: closeRequests.normaliseState(parsed), error: null };
+}
+
+function readCloseRequests({ options, published, exec = spawnSync }) {
+  const relative = options.closeRequests;
+  if (relative === "off") return { enabled: false, source: null, state: null, error: null };
+  const fetched = feedPublisher.git(
+    ["-C", published, "fetch", "--quiet", options.requestsRemote, options.requestsBranch],
+    { exec }
+  );
+  if (fetched.ok) {
+    const shown = feedPublisher.git(["-C", published, "show", `FETCH_HEAD:${relative}`], { exec });
+    if (shown.ok) {
+      const parsed = parseRequestsDocument(shown.stdout);
+      if (parsed.state) return { enabled: true, source: `FETCH_HEAD:${relative}`, state: parsed.state, error: null };
+      return { enabled: true, source: null, state: null, error: `the published ${relative} is not a close-request document this loop can act on: ${parsed.error}` };
+    }
+  }
+  const local = resolveInside(published, relative);
+  try {
+    const parsed = parseRequestsDocument(fs.readFileSync(local, "utf8"));
+    if (parsed.state) return { enabled: true, source: relativePath(local), state: parsed.state, error: null };
+    return { enabled: true, source: null, state: null, error: parsed.error };
+  } catch (error) {
+    const why = fetched.ok ? relativePath(local) : (fetched.stderr || fetched.error?.message || "git could not be run");
+    return { enabled: true, source: null, state: null, error: `the close-request log could not be read (${why}): ${error.message}` };
+  }
+}
+
+// One ask per run, the oldest this loop has not already answered. The ask is taken before the artifacts and
+// before the freshness gate for the same reason a hand-run close is: the instruction is to be out of a named
+// ticket rather than to read the market. What comes back is the act itself - its status, its reason and the
+// code the run exits with - or null when there was nothing to act on, in which case the run carries on and
+// judges the market as it always did.
+//
+// The ask is written into the state whatever the outcome was, including "there was nothing to close",
+// because it is this file and not the page's log that makes an ask a one-shot: the page's log is append-only
+// and cannot mark anything as dealt with.
+function closeRequestStep({ options, record, published, statePath, spawn, now, state: injectedState, exec = spawnSync }) {
+  const read = readCloseRequests({ options, published, exec });
+  record.close_requests = {
+    enabled: read.enabled,
+    source: read.source,
+    error: read.error,
+    published: read.state ? read.state.requests.length : null,
+    taken: null
+  };
+  if (!read.enabled || !read.state) return null;
+  const state = injectedState || readState(statePath);
+  const answered = new Set((state.close_requests || []).map(row => row?.request_id).filter(Boolean));
+  (state.closes || []).concat(state.cancellations || []).forEach(row => {
+    if (row?.request_id) answered.add(row.request_id);
+  });
+  const pending = closeRequests.pendingRequests(read.state, now()).filter(row => !answered.has(row.request_id));
+  if (!pending.length) return null;
+  const ask = pending[0];
+  record.close_requests.asked = {
+    request_id: ask.request_id,
+    ticket: ask.ticket,
+    symbol: ask.symbol,
+    requested_at_utc: ask.requested_at_utc,
+    requested_by: ask.requested_by
+  };
+  const act = takeTicketOut({
+    options,
+    record,
+    statePath,
+    spawn,
+    now,
+    ticket: ask.ticket,
+    comment: `${COMMENT_PREFIX}asked`,
+    request: ask
+  });
+  const after = injectedState || readState(statePath);
+  after.close_requests = (after.close_requests || []).concat([{
+    request_id: ask.request_id,
+    ticket: ask.ticket,
+    symbol: ask.symbol,
+    requested_at_utc: ask.requested_at_utc,
+    requested_by: ask.requested_by,
+    answered_at_utc: new Date(now()).toISOString(),
+    outcome: act.outcome,
+    source: read.source,
+    action: record.hand?.action ?? null,
+    done: record.hand?.done === true,
+    reason: act.reason
+  }]);
+  writeState(statePath, after);
+  record.close_requests.taken = {
+    request_id: ask.request_id,
+    ticket: ask.ticket,
+    action: record.hand?.action ?? null,
+    outcome: act.outcome,
+    done: record.hand?.done === true,
+    code: act.exitCode
+  };
+  return act;
+}
+
 
 function signalKey(symbol, timeUtc) {
   return `${symbol}|${timeUtc || "unknown"}`;
@@ -1383,116 +1658,54 @@ function runOnce(options, deps = {}) {
     }
     record.stole_stale_lock = lock.stoleStaleLock === true;
 
-    // A hand-run close is its own act, taken before the three artifacts and before the snapshot's freshness gate:
-    // the instruction is to be out of a named ticket rather than to read the market, so a Layer 1 file that has not
-    // refreshed or a snapshot a few minutes old is not a reason to refuse it. What is still read is the terminal's
-    // own account, and the ticket still has to be one of this loop's own: a working limit is cancelled and a
-    // position is exited at the market, whichever the ticket turns out to be. Nothing else happens this run - no
-    // review, no removal, no ticket - and --confirm-live still decides whether anything is sent, so a hand run
-    // without it states the act and leaves the account alone.
+    // A close is its own act, taken before the three artifacts and before the snapshot's freshness gate: the
+    // instruction is to be out of a named ticket rather than to read the market, so a Layer 1 file that has
+    // not refreshed or a snapshot a few minutes old is not a reason to refuse it. What is read either way is
+    // the terminal's own account, and the ticket still has to be one of this loop's own: a working limit is
+    // cancelled and a position is exited at the market, whichever the ticket turns out to be. Nothing else
+    // happens this run - no review, no removal, no ticket - and --confirm-live still decides whether anything
+    // is sent, so a run without it states the act and leaves the account alone.
+    //
+    // Two ways a person asks for that act. --close-ticket names the ticket on the command line; a row in the
+    // dashboard's close-request log names it from the page's Open positions table. A run told which ticket to
+    // take does not read the log, because it was given its instruction already; a run asked for neither reads
+    // the log, and when a request is waiting it is answered instead of the market being judged.
     if (options.closeTicket !== null) {
-      const handTicket = Number(options.closeTicket);
-      const read = runTool(spawn, options, toolArgs("status", options));
-      const live = liveFromStatus(read.record);
-      if (!live) {
-        record.terminal_read = {
-          exit_code: read.exitCode,
-          refused: read.record?.refused === true,
-          message: read.record?.message ? String(read.record.message).slice(0, 300) : null,
-          error: read.error
-        };
-        return refuse(
-          "refused",
-          `the terminal could not be read, so ticket ${handTicket} could not be looked up and nothing was sent: ${read.error || record.terminal_read.message || `the order tool exited ${read.exitCode}`}`
-        );
-      }
-      record.terminal = {
-        account: live.account?.login_masked ?? null,
-        positions_open: live.positions.length,
-        orders_open: live.orders.length,
-        ours: live.ours.length
+      record.close_requests = {
+        enabled: false,
+        reason: "a hand run takes the ticket it names and reads no request log"
       };
-      record.placements = [];
-      const position = live.positions.find(row => Number(row?.ticket) === handTicket) || null;
-      const order = live.orders.find(row => Number(row?.ticket) === handTicket) || null;
-      const ours = live.ours.find(row => Number(row?.ticket) === handTicket) || null;
-      record.hand = {
-        ticket: handTicket,
-        artifacts_read: false,
-        kind: position ? "position" : order ? "working_limit" : null,
-        symbol: position?.symbol ?? order?.symbol ?? null,
-        side: rowDirection(position || order),
-        ours: ours !== null,
-        action: null,
-        sent: false,
-        done: false,
-        refused: false,
-        retcode_name: null,
-        tool_exit: null,
-        done_at_utc: null,
-        tool_reason: null
-      };
-      // A ticket on the account that is not this loop's own is not this loop's to take out: a position opened by
-      // hand or by another lane is left alone, and the reason says which of the two facts failed rather than
-      // "not found".
-      if (!ours) {
-        record.status = "nothing_to_close";
-        record.reason = position || order
-          ? `ticket ${handTicket} is on this account but does not carry this loop's own magic, so it is not this loop's to take out: nothing was sent.`
-          : `ticket ${handTicket} is not an open order or position on this account: there is nothing to close.`;
-        return finish(0);
-      }
-      // The kind decides the tool's own action: a position is exited at the market and a resting limit is taken
-      // back out. One flag, because from the user's side both are "be out of this ticket".
-      const action = position ? "close" : "cancel";
-      record.hand.action = action;
-      if (!options.confirmLive) {
-        record.status = "planned";
-        record.reason = `not armed: --confirm-live was not passed, so ticket ${handTicket} would have been taken out as a ${action} and nothing was sent.`;
-        return finish(0);
-      }
-      const result = runTool(spawn, options, toolArgs(action, options, [
-        "--ticket", String(handTicket),
-        "--comment", `${COMMENT_PREFIX}hand`,
-        "--confirm-live"
-      ]));
-      const answer = result.record?.answer || null;
-      record.hand.sent = true;
-      record.hand.done = answer?.done === true;
-      record.hand.refused = result.record?.refused === true;
-      record.hand.retcode_name = answer?.retcode_name ?? null;
-      record.hand.tool_exit = result.exitCode;
-      record.hand.done_at_utc = record.hand.done ? new Date(now()).toISOString() : null;
-      record.hand.tool_reason = record.hand.done
-        ? null
-        : (result.record?.message ? String(result.record.message).slice(0, 300) : result.error);
-      // Only what was sent and landed is written down, the way every other send in this file is: the state file is
-      // this lane's record of what it did to the account, and a hand act is one of those. The state is read here,
-      // at the top of the run, because nothing else this run reads it.
-      if (record.hand.done) {
-        const handState = deps.state || readState(statePath);
-        const handRow = { ...record.hand, comment: `${COMMENT_PREFIX}hand` };
-        if (action === "close") {
-          handState.closes = (handState.closes || []).concat([handRow]);
-        } else {
-          handState.cancellations = (handState.cancellations || []).concat([handRow]);
-        }
-        writeState(statePath, handState);
-      }
-      if (record.hand.sent && !record.hand.done && !record.hand.refused) {
-        record.status = "send_failed";
-        record.reason = `ticket ${handTicket} was sent to the terminal as a ${action} and did not land; the order tool's own journal holds the terminal's answer.`;
-        return finish(1);
-      }
-      if (record.hand.done) {
-        record.status = action === "close" ? "closed" : "cancelled";
-        record.reason = `${action === "close" ? "position" : "working limit"} ${handTicket} was taken out by hand, and nothing else was read, reviewed or placed this run.`;
-        return finish(0);
-      }
-      record.status = "refused";
-      record.reason = `ticket ${handTicket} was refused before anything was sent: ${record.hand.tool_reason}`;
-      return finish(0);
+      const act = takeTicketOut({
+        options,
+        record,
+        statePath,
+        state: deps.state,
+        spawn,
+        now,
+        ticket: options.closeTicket,
+        comment: `${COMMENT_PREFIX}hand`,
+        request: null
+      });
+      // An unreadable terminal is the one outcome that fails the run loudly, the way it always has: a loop
+      // that cannot see the account must not be quiet about it.
+      if (act.outcome === "terminal_unreadable") return refuse("refused", act.reason);
+      return finish(act.exitCode);
     }
+    const asked = closeRequestStep({
+      options,
+      record,
+      published,
+      statePath,
+      state: deps.state,
+      spawn,
+      now,
+      exec: deps.exec || spawnSync
+    });
+    if (asked) {
+      if (asked.outcome === "terminal_unreadable") return refuse("refused", asked.reason);
+      return finish(asked.exitCode);
+    }
+
 
 
     // Gate 1: the three artifacts, each read by name. A file that is not there or does not parse is a

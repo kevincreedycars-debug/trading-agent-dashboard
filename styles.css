@@ -8345,6 +8345,26 @@ body {
 .live-trading-table-note { max-width: 220px; overflow: hidden; text-overflow: ellipsis; color: #a9bdd4; }
 .live-trading-table-empty { margin: 0; color: #a9bdd4; font: 500 11.5px 'IBM Plex Mono', monospace; overflow-wrap: anywhere; }
 .live-trading-table-caption { margin: 0; color: #7f93aa; font: 500 10.5px 'IBM Plex Mono', monospace; overflow-wrap: anywhere; }
+.live-trading-table-note-line { margin: 0; color: #8ea6c0; font: 500 10.5px 'IBM Plex Mono', monospace; overflow-wrap: anywhere; }
+/* The Open positions table's own hand-close: the button, the confirm strip it opens, and the two routes for
+   one ask. The strip lives inside its own cell rather than over the row, so nothing in the table moves when
+   it opens and the ticket's own numbers stay readable while the reader decides. */
+.live-trading-close-cell { white-space: normal; }
+.live-trading-close-button { padding: 4px 10px; border: 1px solid #7a3a44; border-radius: 8px; background: rgba(255, 107, 122, .1); color: #ff9aa4; font: 600 10px 'IBM Plex Mono', monospace; letter-spacing: .04em; cursor: pointer; }
+.live-trading-close-button:hover { border-color: #ff9aa4; background: rgba(255, 107, 122, .2); color: #ffeef0; }
+.live-trading-close-other { color: #5d7089; font-size: 9.5px; letter-spacing: .04em; }
+.live-trading-close-confirm { display: grid; gap: 6px; min-width: 190px; max-width: 270px; }
+.live-trading-close-question { margin: 0; color: #eaf2fb; font: 600 10.5px 'IBM Plex Mono', monospace; }
+.live-trading-close-route { display: inline-block; padding: 4px 9px; border: 1px solid #35485f; border-radius: 8px; background: #0e1a27; color: #cddcec; font: 600 10px 'IBM Plex Mono', monospace; letter-spacing: .03em; text-align: center; text-decoration: none; cursor: pointer; }
+.live-trading-close-route:hover { border-color: #4fd1a5; color: #eaf2fb; }
+.live-trading-close-route.primary { border-color: #7a3a44; background: rgba(255, 107, 122, .14); color: #ffc2c9; }
+.live-trading-close-route.primary:hover { border-color: #ff9aa4; background: rgba(255, 107, 122, .24); color: #ffffff; }
+.live-trading-close-route.quiet { border-color: #26374b; color: #8ea6c0; }
+.live-trading-close-route:disabled { border-color: #26374b; background: #0c1622; color: #4b5c72; cursor: not-allowed; }
+.live-trading-close-note { margin: 0; color: #7f93aa; font: 500 9.5px 'IBM Plex Mono', monospace; line-height: 1.45; white-space: normal; }
+.live-trading-close-status { margin: 0; padding: 5px 7px; border: 1px solid #35485f; border-radius: 8px; background: #0e1a27; color: #cddcec; font: 500 10px 'IBM Plex Mono', monospace; line-height: 1.45; white-space: normal; }
+.live-trading-close-status.waiting { border-color: #b9832a; background: rgba(240, 194, 116, .1); color: #f0c274; }
+.live-trading-close-status.error { border-color: #7a3a44; background: rgba(255, 107, 122, .12); color: #ff9aa4; }
 .live-trading-side { padding: 2px 7px; border: 1px solid #35485f; border-radius: 999px; color: #a9bdd4; font: 700 9.5px 'IBM Plex Mono', monospace; letter-spacing: .06em; }
 .live-trading-side.buy { color: #7ef0c4; border-color: #2b6b57; background: rgba(79, 209, 165, .12); }
 .live-trading-side.sell { color: #ff9aa4; border-color: #7a3a44; background: rgba(255, 107, 122, .12); }

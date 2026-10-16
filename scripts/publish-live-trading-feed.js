@@ -519,6 +519,7 @@ module.exports = {
   decidePublish,
   buildCommitMessage,
   parseGeneratedAt,
+  git,
   resolveDefaultCheckout,
   ensureCheckout,
   readRemoteGeneratedAt,
