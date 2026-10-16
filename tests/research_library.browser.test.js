@@ -362,10 +362,12 @@ async function main() {
       "the published page reads the same registry record");
     await publicPage.click("[data-rl-stage='red_team'] [data-rl-upload-toggle]");
     await publicPage.waitForSelector("[data-rl-stage='red_team'] [data-rl-stage-upload]");
-    assert.equal(await publicPage.$eval("[data-rl-stage='red_team'] [data-rl-stage-upload]", node => node.disabled), true,
-      "the published page must not offer an upload it cannot perform");
+    assert.equal(await publicPage.$eval("[data-rl-stage='red_team'] [data-rl-stage-upload]", node => node.disabled), false,
+      "the published page offers the private store, so Register is available there");
+    await publicPage.click("[data-rl-stage='red_team'] [data-rl-stage-upload]");
+    await publicPage.waitForFunction(() => (document.querySelector("[data-rl-message]")?.textContent || "").includes("Choose the one Markdown file"), null, { timeout: 15000 });
     const publicNote = await publicPage.$eval("[data-rl-stage='red_team']", node => node.textContent.replace(/\s+/g, " "));
-    assert.ok(publicNote.includes("the local service must be connected"), "and must say what is missing");
+    assert.ok(publicNote.includes("not an approval"), "and must say an upload is evidence, not an approval");
     await publicPage.click(`[data-rl-stage='red_team'] [data-rl-view='${registered.document_id}']`);
     await publicPage.waitForFunction(() => (document.querySelector("[data-rl-message]")?.textContent || "").includes("local service"), null, { timeout: 15000 });
     audit.publishedPageHonest = true;
