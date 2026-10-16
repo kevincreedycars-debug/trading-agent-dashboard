@@ -6958,6 +6958,35 @@ function researchLibraryServiceClient() {
   });
 }
 
+// The private hosted store, when this page has it. The page keeps no secret of its own: the reader
+// signs in once with an email link and the module uses that session from then on.
+function researchLibraryHostedClient() {
+  const adapter = globalThis.ResearchUploadDashboard;
+  if (!adapter || typeof adapter.isConfigured !== "function" || !adapter.isConfigured()) return null;
+  return adapter;
+}
+
+function researchLibraryConfigureHostedUpload() {
+  const adapter = globalThis.ResearchUploadDashboard;
+  if (!adapter || typeof adapter.configure !== "function") return null;
+  adapter.configure({ url: String(researchSupabaseUrl || "").replace("/rest/v1", ""), key: researchSupabaseKey });
+  return researchLibraryHostedClient();
+}
+
+async function researchLibraryMergeHosted(topicId) {
+  const adapter = researchLibraryHostedClient();
+  if (!adapter || !adapter.signedIn() || !topicId) return 0;
+  const merged = await adapter.refresh(topicId, () => researchLibraryDocuments, next => { researchLibraryDocuments = next; });
+  if (merged) renderResearchLibrary();
+  return merged;
+}
+
+function researchLibraryHostedAccountBar() {
+  const adapter = globalThis.ResearchUploadDashboard;
+  if (!adapter || typeof adapter.accountBarHtml !== "function") return "";
+  return `<section class="detail-panel rl-account-panel" data-rl-account-panel="true">${adapter.accountBarHtml()}</section>`;
+}
+
 async function probeResearchLibraryService(options = {}) {
   const client = researchLibraryServiceClient();
   if (!client) {
@@ -7221,6 +7250,28 @@ function setupResearchLibraryControls() {
 
   panel.addEventListener("click", event => {
     const target = event.target;
+
+    // The private hosted store owns its own documents: its sign-in controls, and view or download of
+    // anything stored there. Registered documents keep using the local service paths below.
+    const hostedAdapter = researchLibraryHostedClient();
+    if (hostedAdapter) {
+      if (target.closest("[data-rl-account-signin], [data-rl-account-signout]")) {
+        researchLibraryState.hostedTopic = "";
+        hostedAdapter.handleAccountAction(target);
+        return;
+      }
+      const hostedControl = target.closest("[data-rl-view]") || target.closest("[data-rl-download]");
+      if (hostedControl) {
+        const isView = !!target.closest("[data-rl-view]");
+        const documentId = isView ? hostedControl.dataset.rlView : hostedControl.dataset.rlDownload;
+        const stored = researchLibraryDocumentList().find(entry => String(entry.document_id) === String(documentId));
+        if (stored && stored.hosted) {
+          hostedAdapter.openDocument(stored, hostedControl.dataset.rlVersion, isView ? "view" : "download")
+            .then(result => researchLibraryMessage(result.message));
+          return;
+        }
+      }
+    }
 
     const connectButton = target.closest("[data-rl-connect]");
     if (connectButton) {
@@ -7560,6 +7611,39 @@ async function researchLibraryStageUpload(topicId, stageId, form) {
     researchLibraryMessage(`The ${stage.parent_stage} stage has no registered document yet, so this upload has nothing to attach to. Run the earlier stage first.`);
     return;
   }
+  // A signed-in reader with the private store available uploads straight to it. An upload is evidence:
+  // it moves no factor status, weight, threshold or live call.
+  const hostedUpload = researchLibraryHostedClient();
+  if (hostedUpload && hostedUpload.signedIn()) {
+    const researchStage = progress.stages.find(entry => entry.stage === "research");
+    const parents = {};
+    if (stage.stage === "red_team") parents.researchRef = stage.parent_document_id || "";
+    if (stage.stage === "adjudication") {
+      parents.researchRef = (researchStage && researchStage.document_id) || "";
+      parents.redTeamRef = stage.parent_document_id || "";
+    }
+    const result = await hostedUpload.uploadStage({
+      topic,
+      stage,
+      file,
+      title: String(form.querySelector("[data-rl-upload-title]")?.value || "").trim(),
+      model,
+      note: String(form.querySelector("[data-rl-upload-note]")?.value || "").trim(),
+      parents,
+      onStored: async () => {
+        researchLibraryState.uploadStage = "";
+        await researchLibraryRefreshDocuments();
+        await researchLibraryMergeHosted(topic.topic_id);
+      }
+    });
+    if (!result.ok && result.message) researchLibraryMessage(result.message);
+    return;
+  }
+  if (hostedUpload && researchLibraryState.serviceState !== "connected") {
+    researchLibraryMessage("Sign in with your email link before uploading a research document. The local library service is not connected in this browser, so nothing else can receive the file.");
+    return;
+  }
+
   const client = researchLibraryServiceClient();
   if (!client) {
     researchLibraryMessage("The shared research library helper did not load, so nothing can be registered.");
@@ -8259,6 +8343,14 @@ function renderResearchLibrary() {
     return;
   }
 
+  // Keep the private upload store configured for this page, and pull its records once per topic so the
+  // stage cards show what has been stored. Nothing here approves anything or moves a status.
+  researchLibraryConfigureHostedUpload();
+  if (researchLibraryState.hostedTopic !== researchLibraryState.topicId) {
+    researchLibraryState.hostedTopic = researchLibraryState.topicId;
+    researchLibraryMergeHosted(researchLibraryState.topicId);
+  }
+
   const catalog = lib.normalizeCatalog(researchLibraryData || {});
   if (researchLibraryData?.meta?.error || asArray(catalog.assets).length === 0) {
     panel.innerHTML = `
@@ -8325,6 +8417,7 @@ function renderResearchLibrary() {
   panel.innerHTML = `
     <section class="rl-shell" data-rl-shell="true">
       ${head}
+      ${researchLibraryHostedAccountBar()}
       ${researchLibraryServiceCard()}
       ${researchLibraryAssetChips(lib, catalog)}
       ${researchLibraryTopicChips(lib, catalog, asset)}

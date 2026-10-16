@@ -231,14 +231,14 @@ async function main() {
 
     // Stage 2 copies the red-team assignment; stage 3 the adjudication assignment.
     await page.click("[data-rl-stage='red_team'] [data-rl-copy-stage-prompt]");
-    await page.waitForFunction(() => (document.querySelector("[data-rl-message]")?.textContent || "").includes("Red-team prompt"));
+    await page.waitForFunction(() => (document.querySelector("[data-rl-message]")?.textContent || "").includes("Red-team instruction"));
     const redTeamPrompt = await page.evaluate(() => navigator.clipboard.readText());
     assert.ok(redTeamPrompt.startsWith("# VIX, its change and the USD risk regime at the 05:00 London cutoff - stage 2 of 3: Red-team"));
     assert.ok(redTeamPrompt.includes("## Independence rules"));
     assert.ok(redTeamPrompt.includes("SUPPORTED"));
     assert.ok(redTeamPrompt.includes(`Reviewed topic: ${VIX_TOPIC}`), "the return header names the topic it judges");
     await page.click("[data-rl-stage='adjudication'] [data-rl-copy-stage-prompt]");
-    await page.waitForFunction(() => (document.querySelector("[data-rl-message]")?.textContent || "").includes("Adjudication prompt"));
+    await page.waitForFunction(() => (document.querySelector("[data-rl-message]")?.textContent || "").includes("Adjudication instruction"));
     const adjudicationPrompt = await page.evaluate(() => navigator.clipboard.readText());
     assert.ok(adjudicationPrompt.includes("## What the adjudication must contain"));
     assert.ok(adjudicationPrompt.includes("Handoff to central USD synthesis"));

@@ -64,6 +64,10 @@ create table public.research_documents (
   kind text not null check (btrim(kind) <> ''),
   parent_research_id uuid references public.research_documents(id),
   parent_red_team_id uuid references public.research_documents(id),
+  -- A later stage names its parent either as a hosted row above or, when the earlier document is already
+  -- registered in the published catalogue, by that registered document id.
+  parent_research_ref text not null default '',
+  parent_red_team_ref text not null default '',
   sha256 text not null check (sha256 ~ '^[0-9a-f]{64}$'),
   bytes bigint not null check (bytes >= 0),
   storage_path text not null unique check (storage_path ~ '^[^/]+/[123]/v[1-9][0-9]*-[0-9a-f]{64}\.md$'),
@@ -73,9 +77,13 @@ create table public.research_documents (
   constraint research_documents_topic_stage_version_key unique (topic_id, stage, version),
   constraint research_documents_topic_stage_sha256_key unique (topic_id, stage, sha256),
   constraint research_documents_parent_shape check (
-    (stage = 1 and parent_research_id is null and parent_red_team_id is null)
-    or (stage = 2 and parent_research_id is not null and parent_red_team_id is null)
-    or (stage = 3 and parent_research_id is not null and parent_red_team_id is not null)
+    (stage = 1 and parent_research_id is null and parent_red_team_id is null and parent_research_ref = '' and parent_red_team_ref = '')
+    or (stage = 2
+        and (parent_research_id is not null or parent_research_ref <> '')
+        and parent_red_team_id is null and parent_red_team_ref = '')
+    or (stage = 3
+        and (parent_research_id is not null or parent_research_ref <> '')
+        and (parent_red_team_id is not null or parent_red_team_ref <> ''))
   )
 );
 
