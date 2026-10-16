@@ -17902,8 +17902,8 @@ const LIVE_TRADE_LOGIC_STEPS = [
     detail: "0.01 lot, the market's own minimum size. Position size is not a setting anywhere on this page, and the loop passes no size of its own."
   },
   {
-    title: "The stop and the target are set once",
-    detail: "The loop never moves, trails or widens them. Both prices are fixed at the moment the ticket is left, and nothing on any page can change them."
+    title: "The stop is set once, and moves once",
+    detail: "Both prices are fixed at the moment the ticket is left. The one thing ever changed on an open trade is the stop, and only once the trade has run to twice the risk it was placed with: it goes to the entry the trade was placed at, so the worst it can do from there is break even. The target is never moved, nothing trails or follows the market, and no page can change either price."
   },
   {
     title: "Nothing on this page can trade",

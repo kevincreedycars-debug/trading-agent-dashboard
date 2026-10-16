@@ -108,7 +108,12 @@ test("the M5 pane is dragged by the hand, and a pan never also marks a level", a
   const levels = JSON.parse(fs.readFileSync(levelsPath, "utf8"));
   const btcBars = feed.instruments.find(instrument => instrument.symbol === "BTCUSD").m5.bars;
   const total = btcBars.length;
-  assert.equal(total, 120, "the feed publishes 120 M5 bars for BTCUSD");
+  // The reader's requirement of 2026-10-06, widened on 2026-10-07: the pane has to drag back through the published
+  // block, and it can only drag through what the block carries. The floor stays a full day (288 bars); the producer
+  // now publishes two (576), and every window below is derived from the block's own length.
+  assert.ok(total >= 288, `the feed publishes at least a full day (24 hours) of M5 bars for BTCUSD (it publishes ${total})`);
+  // The window a drag is measured on is the zoomed-in one: the newest half of the block.
+  const window2 = Math.ceil(total / 2);
 
   const server = await startServer({ feed, levels });
   const browser = await chromium.launch({ headless: true });
@@ -119,8 +124,8 @@ test("the M5 pane is dragged by the hand, and a pan never also marks a level", a
     await page.waitForSelector('[data-live-chart-symbol="BTCUSD"]', { timeout: 20000 });
     await page.click('[data-live-chart-symbol="BTCUSD"]');
     await page.waitForFunction(
-      () => document.querySelectorAll("#liveTradingPanel .live-trading-chart-body").length === 120,
-      null,
+      count => document.querySelectorAll("#liveTradingPanel .live-trading-chart-body").length === count,
+      total,
       { timeout: 20000 }
     );
 
@@ -129,14 +134,17 @@ test("the M5 pane is dragged by the hand, and a pan never also marks a level", a
     // spacing, so a drag of ten bars is ten of those pitches times that factor, in the browser's own pixels.
     await page.click('[data-live-chart-zoom="1"]');
     await page.waitForFunction(
-      () => document.querySelectorAll("#liveTradingPanel .live-trading-chart-body").length === 60,
-      null,
+      count => document.querySelectorAll("#liveTradingPanel .live-trading-chart-body").length === count,
+      window2,
       { timeout: 10000 }
     );
     const opening = await page.evaluate(chartReadout);
-    assert.match(opening.caption, /60 of 120 M5 bars drawn \(zoom 2\u00d7\)/);
-    assert.equal(opening.bars, 60);
-    assert.equal(opening.volumes, 60, "the volume histogram is drawn from the window the bars are drawn from");
+    assert.ok(
+      opening.caption.includes(`${window2} of ${total} M5 bars drawn (zoom 2\u00d7)`),
+      `the pane opens on the newest half of the block: ${opening.caption}`
+    );
+    assert.equal(opening.bars, window2);
+    assert.equal(opening.volumes, window2, "the volume histogram is drawn from the window the bars are drawn from");
     assert.equal(opening.last.close, Number(btcBars[total - 1].close), "the legend opens on the newest bar");
     assert.equal(opening.last.high, Number(btcBars[total - 1].high), "and carries the whole bar, not just its close");
     assert.doesNotMatch(opening.caption, /dragged/, "the page opens on a view nothing has dragged");
@@ -198,8 +206,8 @@ test("the M5 pane is dragged by the hand, and a pan never also marks a level", a
       right.after.crosshair >= 0 && right.after.crosshair <= right.after.canvas.height,
       "on the pane it belongs to, rather than where the scale has since been pushed to"
     );
-    assert.equal(right.after.bars, 60, "a slide keeps the same number of bars on the picture");
-    assert.equal(right.after.volumes, 60, "and the same volume bars under them");
+    assert.equal(right.after.bars, window2, "a slide keeps the same number of bars on the picture");
+    assert.equal(right.after.volumes, window2, "and the same volume bars under them");
     assert.equal(pricePan(right.after.caption), null, "a sideways drag moves no price");
     const back = draggedBack(right.after.caption);
     assert.ok(back >= 9 && back <= 11, `dragging ten bars to the right says ${back} bars back`);
@@ -208,7 +216,7 @@ test("the M5 pane is dragged by the hand, and a pan never also marks a level", a
     assert.equal(right.after.last.high, Number(btcBars[shown].high), "and reads the whole of that bar");
     // The floor the zoom is held to as well, on the window the drag is really drawing: two published lines each
     // side of those bars, so a five-minute close is still read against a level while the window is slid.
-    const drawn = btcBars.slice(total - 60 - back, total - back);
+    const drawn = btcBars.slice(total - window2 - back, total - back);
     const drawnPrices = drawn.flatMap(bar => [Number(bar.high), Number(bar.low)]);
     const above = right.after.levelPrices.filter(price => price > Math.max(...drawnPrices)).length;
     const below = right.after.levelPrices.filter(price => price < Math.min(...drawnPrices)).length;
@@ -230,7 +238,10 @@ test("the M5 pane is dragged by the hand, and a pan never also marks a level", a
       forward.after.frame.y + forward.after.frame.height / 2
     );
     const reset = await page.evaluate(chartReadout);
-    assert.match(reset.caption, /60 of 120 M5 bars drawn \(zoom 2\u00d7\)/);
+    assert.ok(
+      reset.caption.includes(`${window2} of ${total} M5 bars drawn (zoom 2\u00d7)`),
+      `the double click puts the caption back too: ${reset.caption}`
+    );
     assert.doesNotMatch(reset.caption, /dragged/, "the double click puts both axes back");
     assert.equal(reset.last.close, Number(btcBars[total - 1].close), "and the legend with them");
     assert.deepEqual(reset.barXs, opening.barXs, "the picture is the one the page opened on, bar for bar");
@@ -242,7 +253,7 @@ test("the M5 pane is dragged by the hand, and a pan never also marks a level", a
     // caption states which way and by how much of the pane.
     const beforeDown = await page.evaluate(chartReadout);
     const down = await drag(0, 40);
-    assert.equal(down.after.bars, 60, "a vertical drag draws the same window of bars");
+    assert.equal(down.after.bars, window2, "a vertical drag draws the same window of bars");
     assert.deepEqual(down.after.barXs, beforeDown.barXs, "and moves none of them across the picture");
     assert.equal(down.after.last.close, Number(btcBars[total - 1].close), "the newest bar is still the one drawn");
     const panned = pricePan(down.after.caption);
@@ -292,7 +303,10 @@ test("the M5 pane is dragged by the hand, and a pan never also marks a level", a
       far.after.frame.y + far.after.frame.height / 2
     );
     const backFromClamp = await page.evaluate(chartReadout);
-    assert.match(backFromClamp.caption, /60 of 120 M5 bars drawn \(zoom 2\u00d7\)/);
+    assert.ok(
+      backFromClamp.caption.includes(`${window2} of ${total} M5 bars drawn (zoom 2\u00d7)`),
+      `the double click is the way back from the far end as well: ${backFromClamp.caption}`
+    );
     assert.deepEqual(backFromClamp.levelYs, opening.levelYs);
 
     // A pan must never also mark a level. Arming the marking and dragging the canvas marks nothing, because the

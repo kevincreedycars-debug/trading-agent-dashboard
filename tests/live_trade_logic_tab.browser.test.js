@@ -194,6 +194,7 @@ test("the walkthrough states the rule's own numbers, and the module, the loop an
   // the module's geometry above; a tree that carries the loop must match it exactly.
   const hasLoop = fs.existsSync(loopPath) && fs.existsSync(registerPath);
   let perDay = 4;
+  let breakeven = 2;
   if (hasLoop) {
     const loop = fs.readFileSync(loopPath, "utf8");
     perDay = Number((loop.match(/const DEFAULT_MAX_PER_DAY = (\d+);/) || [])[1]);
@@ -202,6 +203,10 @@ test("the walkthrough states the rule's own numbers, and the module, the loop an
     assert.ok(Number.isInteger(perDay) && perDay > 0, "the loop states a daily count of new trades");
     assert.equal(maxOpen, "null", "and passes no cap of its own across markets: the one-trade-per-market hold is the cap");
     assert.equal(expiry, "null", "and no expiry, because the marked levels are permanent");
+    // The one rung the loop adds to a position it already holds, read the same way: the page states that the stop
+    // moves once, and the multiple it moves at is the loop's own number rather than a remembered one.
+    breakeven = Number((loop.match(/const BREAKEVEN_R_MULTIPLE = (\d+);/) || [])[1]);
+    assert.equal(breakeven, 2, "and one rung for the stop, at twice the risk the trade was placed with");
     // And the registration script's own defaults, which are what the rule asks a fresh task to be armed with.
     const register = fs.readFileSync(registerPath, "utf8");
     assert.match(register, /\[int\] \$MaxOpen = 0,/, "a freshly registered task passes no cap across markets");
@@ -229,6 +234,13 @@ test("the walkthrough states the rule's own numbers, and the module, the loop an
     assert.match(logic.stepsText, /One trade per market, and the other three stay free/);
     assert.match(logic.stepsText, /The entry carries no time limit/);
     assert.match(logic.stepsText, /0\.01 lot/);
+    // The stop's one rung, stated in the page and held to the loop's own multiple: the step used to read that the
+    // loop never moves either price, which stopped describing the loop when the rung was added, so the sentence is
+    // now the amended one and the multiple it turns on is the number read out of the loop above (2, asserted there
+    // as "twice the risk"), not a number typed into the copy.
+    assert.match(logic.stepsText, /The stop is set once, and moves once/);
+    assert.match(logic.stepsText, /twice the risk it was placed with/);
+    assert.match(logic.stepsText, /The target is never moved, nothing trails or follows the market/);
     // The day's count, in the words the page uses, held to the loop's own number rather than to a remembered one.
     assert.match(logic.gatesText, new RegExp(`${WORDS[perDay]} a day by default`, "i"));
     assert.match(logic.gatesText, /one per market/);
