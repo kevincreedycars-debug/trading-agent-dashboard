@@ -7805,6 +7805,10 @@ function researchLibraryStageDocumentBlock(lib, topic, stage) {
 
 function researchLibraryStageUploadForm(lib, topic, stage) {
   const connected = researchLibraryState.serviceState === "connected";
+  // A stage document can be stored two ways: through the local service in a checkout, or through the
+  // private hosted store this page already has keys for. Either one is enough to offer the button.
+  const hostedReady = !!researchLibraryHostedClient();
+  const canRegister = connected || hostedReady;
   const key = researchLibraryStageKey(topic, stage.stage);
   const open = researchLibraryState.uploadStage === key;
   const defaultId = stage.document_id || researchLibraryStageDocumentId(topic, stage.stage);
@@ -7825,8 +7829,8 @@ function researchLibraryStageUploadForm(lib, topic, stage) {
         ${findings ? `<label class="rl-muted">Unresolved findings, one per line<textarea rows="3" data-rl-upload-findings placeholder="each line is recorded as an open finding for central synthesis"></textarea></label>` : ""}
         <p class="rl-muted">Document id ${escapeHtml(defaultId)}${stage.parent_stage ? `, attached to ${escapeHtml(stage.parent_document_id || "the parent stage")} v${escapeHtml(String(stage.parent_version))}` : ""}. Uploading records evidence: it is not an approval and it moves no factor status.</p>
         <div class="rl-document-actions">
-          <button class="inspect-button" type="button" data-rl-stage-upload="${escapeHtml(key)}"${connected ? "" : " disabled"}>Register ${escapeHtml(stage.label)} document</button>
-          ${connected ? "" : `<span class="rl-muted">the local service must be connected before a document can be stored; start it, then save the token in the panel above</span>`}
+          <button class="inspect-button" type="button" data-rl-stage-upload="${escapeHtml(key)}"${canRegister ? "" : " disabled"}>Register ${escapeHtml(stage.label)} document</button>
+          ${canRegister ? "" : `<span class="rl-muted">neither the local service nor the private store is available, so a document cannot be stored yet</span>`}
         </div>
       ` : ""}
     </div>
