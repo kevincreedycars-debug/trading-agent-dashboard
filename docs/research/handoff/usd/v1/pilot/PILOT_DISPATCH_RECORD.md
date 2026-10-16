@@ -45,12 +45,24 @@ The same values are emitted by the builder in `HANDOFF_MANIFEST.json` (`pilot` b
 later edit changes any of these bytes, the manifest disagrees with this note and the pilot dispatch has
 been superseded rather than quietly re-pointed.
 
-The bundle the pilot was cut from, for provenance: `usd-research-handoff-v1.zip` 596,029 bytes,
-sha256 `22a0bb454ec2592c67763178a498b447ca2196529b212aa9c0ae923e2c07e1a6`;
+The bundle the pilot was cut from, as it stood at dispatch, for provenance: `usd-research-handoff-v1.zip`
+596,029 bytes, sha256 `22a0bb454ec2592c67763178a498b447ca2196529b212aa9c0ae923e2c07e1a6`;
 `HANDOFF_MANIFEST.json` 11,721 bytes, sha256
 `b4bc3412df97dda2d08f3884af3829203f6ffb30331bccc8fb7450de2df35135`; `USD_SYSTEM_CONTEXT.md` 30,426
 bytes, sha256 `37b510e621ef10965dcc9f01e6cacd438acc0169541e4a9e325810d2e476ed1f`; `START_HERE.md` 9,535
 bytes, sha256 `2136378f61071a18ba7408a83f25cf158744a36c0d28bd135714ad04384ec89e`.
+
+Corrected later the same day, and recorded here rather than left implicit: the handoff gained a
+deep-research tier (`docs/research/handoff/usd/v1/deep-research/`, tier version `1.0.0`) whose report is
+now the primary deliverable, so the bundle around this package was regenerated. Nothing in the package
+moved: the values in the two tables above still hash to what is on disk, the pack version is still
+`2.0.0`, and every one of the twenty-five briefs, the template and the card schema is byte-identical.
+The bundle and its note are new bytes: `usd-research-handoff-v1.zip` is now 680,193 bytes, sha256
+`a49e4e0fabc29353cb0a39fc6eb17a136b85637f21f4940b9443a70db481b4a6`; `HANDOFF_MANIFEST.json` is 16,261
+bytes, sha256 `78ff27e6400bd516b4deb3fe716c79eb53b7a3e2e534252b709aff8c11006048`; `START_HERE.md` is
+10,631 bytes, sha256 `f56672cc868521901d5b12322e52ae19fa64d261d023a6e85c49bdb965f3ba42`.
+`USD_SYSTEM_CONTEXT.md` is untouched at 30,426 bytes and sha256 `37b510e621ef1096…`. A later dispatch is
+a new package with its own version, never this one re-pointed.
 
 ## The brief's own registered identity
 
@@ -95,6 +107,12 @@ The brief inside the package is the registered document `usd-brief-f1-vix-level`
 
 ## Status
 
-Awaiting the manual Astra return, to be registered against the version and hashes above. This is a
-record, not a work item: nothing else in the repository depends on the pilot, no lane is blocked by it,
-and no further build, deployment or publication follows from it.
+The manual Astra return has come back and is recorded as **preliminary, unreviewed and not backtested** in
+`docs/research/handoff/usd/v1/pilot/PILOT_1_RETURN_STATUS.md`, which is the hand-written record beside this
+one. That return does not complete task `USD-BASELINE-AUDIT-01`, it moved no factor's status and it was not
+advanced towards implementation: it answered the per-factor baseline-audit question this package asked, and
+the deep research the programme now wants is briefed in
+`docs/research/handoff/usd/v1/deep-research/START_HERE.md`.
+
+This is still a record, not a work item: nothing else in the repository depends on the pilot, no lane is
+blocked by it, and no further build, deployment or publication follows from it.

@@ -1,0 +1,27 @@
+{
+  "name": "trading-agent-dashboard",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Asset Directional Movement Dashboard local test dependencies",
+  "scripts": {
+    "monitor": "powershell -NoProfile -ExecutionPolicy Bypass -File tools/project-monitor/start.ps1",
+    "test:monitor": "node --test tests/monitor_state.test.js tests/coordination.test.js tests/token_usage.test.js",
+    "test:coordination": "node --test tests/coordination.test.js",
+    "test": "node scripts/test-local.js",
+    "test:refresh-harness": "node --test tests/refresh_workflow_harness.test.js",
+    "test:usd-session": "node --test tests/usd_session_research_guard.test.js backtester/tests/usd_session_research_card.test.js backtester/tests/usd_session_engine_interface.test.js",
+    "test:research-library": "node --test tests/research_library.test.js tests/research_library.browser.test.js",
+    "test:research-handoff": "node --test tests/research_handoff.test.js",
+    "research-library": "node scripts/research-library-server.js --serve-repo",
+    "research-library:check": "node scripts/build_research_library.js verify",
+    "macro-inventory": "node backtester/scripts/build_macro_asof_inventory.js",
+    "test:refresh-browser": "node --test tests/refresh_progress.browser.test.js",
+    "test:refresh-browser:watch": "node --test --watch tests/refresh_progress.browser.test.js",
+    "playwright:install": "npx playwright install chromium",
+    "test:unit": "node scripts/test-local.js unit",
+    "test:browser": "node scripts/test-local.js browser"
+  },
+  "devDependencies": {
+    "playwright": "^1.62.1"
+  }
+}

@@ -29,6 +29,8 @@
     "packs": 25,
     "live_packs": 10,
     "session_packs": 15,
+    "deep_research_documents": 6,
+    "deep_research_steps": 4,
     "defects": 14,
     "unscored_collected_inputs": 12,
     "open_questions": 75,
@@ -38,6 +40,32 @@
   "download": {
     "path": "docs/research/handoff/usd/v1/usd-research-handoff-v1.zip",
     "root": "usd-research-handoff-v1"
+  },
+  "deep_research": {
+    "version": "1.0.0",
+    "directory": "docs/research/handoff/usd/v1/deep-research",
+    "primary_deliverable": "A comprehensive, source-backed report investigating how VIX - its level, its change and its interactions with the other factors in this system - relates to the subsequent direction of the US dollar over one session: 05:00 Europe/London to 05:00 Europe/London on the next local date.",
+    "start_here": "docs/research/handoff/usd/v1/deep-research/START_HERE.md",
+    "report_brief": "docs/research/handoff/usd/v1/deep-research/VIX_COMPREHENSIVE_REPORT_BRIEF.md",
+    "context_pack": "docs/research/handoff/usd/v1/deep-research/CONTEXT_PACK_NEUTRAL.md",
+    "red_team_brief": "docs/research/handoff/usd/v1/deep-research/RED_TEAM_REVIEW_BRIEF.md",
+    "synthesis_brief": "docs/research/handoff/usd/v1/deep-research/SYNTHESIS_AND_CARDS_BRIEF.md",
+    "backtest_brief": "docs/research/handoff/usd/v1/deep-research/BACKTEST_HANDOFF_BRIEF.md",
+    "report": {
+      "factor_id": "live.f1-vix-level",
+      "task_id": "USD-BASELINE-AUDIT-01",
+      "subject": "VIX and its interactions with the other factors, against the subsequent direction of the US dollar over the session below.",
+      "context_source": "docs/research/usd-session/v1/session_contract_v1.json"
+    },
+    "sequence": [
+      "1. Deep research with Astra",
+      "2. Independent red-team review",
+      "3. Revised synthesis and structured research cards",
+      "4. Backtesting under a frozen session and data contract"
+    ],
+    "hypothesis_limit_scope": "At most two programmable hypotheses per returned card. That limit is a card rule: it applies to the individual research card in step 3, and it does not apply to the discovery phase, where a report may state, compare and rank as many candidate relations as its sources support.",
+    "context_not_limit": "The rule in force and the data reachable today are context for this programme, not limits on it. The deployed sign, weight, threshold and lookback are the object of an audit; they are never evidence for a claim. A review may use any source it can fetch and cite, whether or not this repository can reproduce it. What is missing blocks one thing only: empirical validation of our exact session. It does not block research into mechanisms, evidence and interactions, and it is never a reason to narrow the question to what this repository happens to hold.",
+    "note": "The primary deliverable of this handoff is the report of step 1, not a research card. The tier is versioned separately from the packs (pack version 2.0.0) and from the frozen pilot package (1.0.0), so correcting the programme moved no dispatched byte: the twenty-five briefs, the card schema, the template and the pilot archive are the same bytes they were before this tier existed. The context pack is generated from the session contract, the committed catalogue and the extracted register, and the builder refuses to write when the contract and the bundle disagree."
   },
   "pilot": {
     "package": "docs/research/handoff/usd/v1/pilot/usd-vix-pilot-v1.zip",
@@ -188,8 +216,8 @@
     },
     {
       "path": "docs/research/handoff/usd/v1/BRIEF_INDEX.json",
-      "bytes": 18138,
-      "sha256": "b49c1db86d4e2191b0857c5ca4a15f8b62497dc551403f45533ebfe6d128f9b4"
+      "bytes": 19340,
+      "sha256": "6e9dfaa1ae207384e07ad2bf7984ce2cb7c94b079cf28bc609d140fc0b8d3c2e"
     },
     {
       "path": "docs/research/handoff/usd/v1/RESEARCH_OUTPUT_TEMPLATE.md",
@@ -208,8 +236,38 @@
     },
     {
       "path": "docs/research/handoff/usd/v1/START_HERE.md",
-      "bytes": 9535,
-      "sha256": "2136378f61071a18ba7408a83f25cf158744a36c0d28bd135714ad04384ec89e"
+      "bytes": 10631,
+      "sha256": "f56672cc868521901d5b12322e52ae19fa64d261d023a6e85c49bdb965f3ba42"
+    },
+    {
+      "path": "docs/research/handoff/usd/v1/deep-research/START_HERE.md",
+      "bytes": 7298,
+      "sha256": "b4e7230213ad3f80cde65fee0954f07450258c7127f21ea937b7d20ed1ef33ff"
+    },
+    {
+      "path": "docs/research/handoff/usd/v1/deep-research/VIX_COMPREHENSIVE_REPORT_BRIEF.md",
+      "bytes": 10976,
+      "sha256": "40a05c141bf2c6baab1417b896d763174fd06242725b4c0d6c60842aacdc0923"
+    },
+    {
+      "path": "docs/research/handoff/usd/v1/deep-research/CONTEXT_PACK_NEUTRAL.md",
+      "bytes": 45268,
+      "sha256": "7e92e4e568df0b84cde906ab4db0ce6135348c99ec871ef8f7b6e48ee8471b00"
+    },
+    {
+      "path": "docs/research/handoff/usd/v1/deep-research/RED_TEAM_REVIEW_BRIEF.md",
+      "bytes": 5799,
+      "sha256": "69c76511b16bab61ebcbd01e987fd5fefec72cfcdc2764e131ad10aee3fe2670"
+    },
+    {
+      "path": "docs/research/handoff/usd/v1/deep-research/SYNTHESIS_AND_CARDS_BRIEF.md",
+      "bytes": 5430,
+      "sha256": "7a87e20d2b8d18ccbe451593fdc55ee6fa76cba4b04cc5844ea235207c58790d"
+    },
+    {
+      "path": "docs/research/handoff/usd/v1/deep-research/BACKTEST_HANDOFF_BRIEF.md",
+      "bytes": 5891,
+      "sha256": "1c15a482ea41c1ff348dda8b6f268a723d654fe429f332957f79b063f507722c"
     },
     {
       "path": "docs/research/handoff/usd/v1/pilot/VIX_PILOT_START_HERE.md",
@@ -223,14 +281,18 @@
     },
     {
       "path": "docs/research/handoff/usd/v1/usd-research-handoff-v1.zip",
-      "bytes": 596029,
-      "sha256": "22a0bb454ec2592c67763178a498b447ca2196529b212aa9c0ae923e2c07e1a6"
+      "bytes": 680193,
+      "sha256": "a49e4e0fabc29353cb0a39fc6eb17a136b85637f21f4940b9443a70db481b4a6"
     }
   ],
   "sources": [
     {
       "path": "data/research-library/catalog.json",
       "note": "Authority for all twenty-five USD factor rows and for which library task covers each session factor."
+    },
+    {
+      "path": "docs/research/usd-session/v1/session_contract_v1.json",
+      "note": "The session contract: horizon, weekday and DST rule, the label's verification state, the open decisions and the scoring design the context pack states."
     },
     {
       "path": "exports/usd_layer1_agent.json",

@@ -180,6 +180,11 @@ function createServiceServer(options = {}) {
         token_file: storageContract.token_file,
         counts: manifest.counts,
         catalog_tasks: (readCatalog(catalogPath).tasks || []).map(task => task.task_id),
+        catalog_topics: (readCatalog(catalogPath).topics || []).map(topic => ({
+          topic_id: topic.topic_id,
+          factor_ids: topic.factor_ids || [],
+          stages: (topic.stages || []).map(stage => stage.stage)
+        })),
         note: 'Uploads and downloads require the bearer token. This service publishes no report.'
       });
       return;
@@ -249,6 +254,10 @@ function createServiceServer(options = {}) {
         bytes: registration.bytes,
         document_type: registration.document.document_type,
         task_id: registration.document.task_id,
+        topic_id: registration.document.topic_id || null,
+        stage: registration.document.stage || null,
+        parent_document_id: registration.document.parent_document_id || null,
+        parent_version: registration.document.parent_version === undefined ? null : registration.document.parent_version,
         download_reference: `/documents/${registration.document_id}/versions/${registration.version}`,
         note: 'Registered as research evidence. This is not an approval and it changes no live rule.'
       });
