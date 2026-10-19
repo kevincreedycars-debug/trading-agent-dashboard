@@ -1,9 +1,10 @@
 "use strict";
 
-// The Research Library panel in a real browser, against the three-stage topic workflow: the prompt each stage
-// copies, one Markdown upload per stage with the exact version it judged, the full document behind View and
-// Download, persistence across a refresh and a service restart, a revised research report flagging its review
-// for reassessment, and the honest difference between the published page and the local service.
+// The Research Library panel in a real browser, against the factor-chain workflow: the prompt each stage
+// copies, one Markdown upload per chain and stage with the exact version it judged, the full document behind
+// View and Download, sibling-chain isolation, the gated final chain, persistence across a refresh and a
+// service restart, a revised research report flagging its review for reassessment, and the honest difference
+// between the published page and the local service.
 //
 // Every upload here goes to a temporary registry and object store, never to the committed evidence records:
 // the committed registry is hashed before and after the run to prove it.
@@ -186,12 +187,44 @@ async function main() {
     await openLibrary();
 // CHUNK-END-2
 
-    // The topic workflow: six topics over the twenty-five factors, the dispatched VIX topic first and active.
+    // The chain board: six topic labels over the twenty-five factors, the dispatched VIX label first and active.
     const topics = await page.$$eval("[data-rl-topic]", nodes => nodes.map(node => node.getAttribute("data-rl-topic")));
     assert.equal(topics.length, 6, "the research map must offer six topics");
     assert.equal(topics[0], VIX_TOPIC, "the dispatched VIX topic comes first");
     assert.equal(await page.$eval("[data-rl-topic].active", node => node.getAttribute("data-rl-topic")), VIX_TOPIC);
     audit.topics = topics;
+
+    // The topic is a grouping label. Under it each factor is its own chain, with three stages of its own.
+    const chainRows = await page.$$eval("[data-rl-chain]", nodes => nodes.map(node => ({
+      chain: node.getAttribute("data-rl-chain"),
+      complete: node.getAttribute("data-rl-chain-complete"),
+      count: node.querySelector("[data-rl-chain-count]")?.getAttribute("data-rl-chain-count") || "",
+      toggle: Boolean(node.querySelector("[data-rl-chain-toggle]"))
+    })));
+    assert.deepEqual(chainRows.map(entry => entry.chain),
+      ["usd-factor-live-f1-vix-level", "usd-factor-risk-vix-level-and-change-at-cutoff"],
+      "the VIX topic must render one row per factor chain");
+    assert.equal(chainRows.every(entry => entry.toggle), true, "every chain row must be expandable");
+    assert.equal(chainRows[0].complete, "false");
+    assert.equal(chainRows[0].count, "1/3", "the delivered research stage is counted against the factor chain");
+    assert.equal(chainRows[1].count, "0/3", "the sibling factor's chain must not inherit the first factor's document");
+    audit.factorChains = chainRows;
+
+    // The final analysis is offered only behind the registry gate. With no complete factor chain it is shut,
+    // and neither its prompt nor an upload is rendered.
+    const finalGate = await page.$eval("[data-rl-final-chain]", node => ({
+      unlocked: node.getAttribute("data-rl-final-unlocked"),
+      gate: node.getAttribute("data-rl-final-gate"),
+      pending: node.getAttribute("data-rl-final-pending"),
+      state: node.getAttribute("data-rl-final-state")
+    }));
+    assert.equal(finalGate.unlocked, "false", "the final chain must be locked while factor chains are incomplete");
+    assert.equal(finalGate.pending, "25", "every factor chain is pending at the start");
+    assert.equal(finalGate.gate, "0/25");
+    assert.equal(finalGate.state, "locked");
+    assert.ok(await page.$("[data-rl-final-locked]"), "the shut chain must say why it is shut");
+    assert.equal((await page.$$("[data-rl-final-chain] [data-rl-stage]")).length, 0, "a shut final chain must render no stage");
+    audit.finalGate = finalGate;
 
     const stageStates = () => page.$$eval("[data-rl-stage]", nodes => nodes.map(node => ({
       stage: node.getAttribute("data-rl-stage"),
@@ -220,7 +253,7 @@ async function main() {
     await page.click("[data-rl-stage='research'] [data-rl-copy-stage-prompt]");
     await page.waitForFunction(() => (document.querySelector("[data-rl-message]")?.textContent || "").includes("copied"));
     const researchPrompt = await page.evaluate(() => navigator.clipboard.readText());
-    assert.ok(researchPrompt.startsWith("# VIX, its change and the USD risk regime"), "the copied prompt must be the VIX assignment");
+    assert.ok(researchPrompt.startsWith("# F1 VIX level and risk regime - live.f1-vix-level - stage 1 of 3: Research"), "the copied prompt must be the VIX factor-chain assignment");
     assert.ok(researchPrompt.includes("USD-BASELINE-AUDIT-01"), "the dispatched task is named");
     assert.ok(researchPrompt.includes("A comprehensive, source-backed report investigating how VIX"), "the assignment body must be in the prompt");
     assert.ok(researchPrompt.includes(VIX_TOPIC), "the topic is named");
@@ -233,10 +266,10 @@ async function main() {
     await page.click("[data-rl-stage='red_team'] [data-rl-copy-stage-prompt]");
     await page.waitForFunction(() => (document.querySelector("[data-rl-message]")?.textContent || "").includes("Red-team instruction"));
     const redTeamPrompt = await page.evaluate(() => navigator.clipboard.readText());
-    assert.ok(redTeamPrompt.startsWith("# VIX, its change and the USD risk regime at the 05:00 London cutoff - stage 2 of 3: Red-team"));
+    assert.ok(redTeamPrompt.startsWith("# F1 VIX level and risk regime - live.f1-vix-level - stage 2 of 3: Red-team"));
     assert.ok(redTeamPrompt.includes("## Independence rules"));
     assert.ok(redTeamPrompt.includes("SUPPORTED"));
-    assert.ok(redTeamPrompt.includes(`Reviewed topic: ${VIX_TOPIC}`), "the return header names the topic it judges");
+    assert.ok(redTeamPrompt.includes("Reviewed document:"), "the return names the factor chain and the registered version it judges");
     await page.click("[data-rl-stage='adjudication'] [data-rl-copy-stage-prompt]");
     await page.waitForFunction(() => (document.querySelector("[data-rl-message]")?.textContent || "").includes("Adjudication instruction"));
     const adjudicationPrompt = await page.evaluate(() => navigator.clipboard.readText());
@@ -372,6 +405,21 @@ async function main() {
     await publicPage.waitForFunction(() => (document.querySelector("[data-rl-message]")?.textContent || "").includes("local service"), null, { timeout: 15000 });
     audit.publishedPageHonest = true;
     await publicContext.close();
+
+    // Chains are isolated by factor: expanding the sibling VIX chain shows its own empty stages, even though
+    // the first chain has a registered research report under the same topic.
+    await page.click("[data-rl-chain='usd-factor-risk-vix-level-and-change-at-cutoff'] [data-rl-chain-toggle]");
+    await page.waitForSelector("[data-rl-chain-body='usd-factor-risk-vix-level-and-change-at-cutoff'] [data-rl-stage]", { timeout: 15000 });
+    const siblingStages = await page.$$eval("[data-rl-chain-body='usd-factor-risk-vix-level-and-change-at-cutoff'] [data-rl-stage]", nodes => nodes.map(node => ({
+      stage: node.getAttribute("data-rl-stage"),
+      state: node.getAttribute("data-rl-stage-state")
+    })));
+    assert.deepEqual(siblingStages.map(entry => entry.stage), ["research", "red_team", "adjudication"]);
+    assert.deepEqual(siblingStages.map(entry => entry.state), ["not_started", "not_started", "not_started"],
+      "a sibling factor chain must not read another factor's documents");
+    await page.click("[data-rl-chain='usd-factor-live-f1-vix-level'] [data-rl-chain-toggle]");
+    await page.waitForSelector("[data-rl-chain-body='usd-factor-live-f1-vix-level'] [data-rl-stage]", { timeout: 15000 });
+    audit.chainIsolation = siblingStages.map(entry => `${entry.stage}=${entry.state}`);
 
     // The legacy material is still present, below the workflow and clearly marked as not the route.
     const legacyTasks = await page.$$eval("[data-rl-task]", nodes => nodes.map(node => node.getAttribute("data-rl-task")));

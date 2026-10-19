@@ -8767,7 +8767,7 @@ body {
 .rl-detail-block { border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; background: var(--panel2); display: grid; gap: 6px; min-width: 0; }
 .rl-subhead { margin-top: 12px; }
 
-/* The topic workflow: three numbered stages first, everything technical below them. */
+/* The factor-chain workflow: topic labels, one row per chain, stages first and everything technical below. */
 .rl-topic-strip { display: flex; flex-wrap: wrap; gap: 10px; grid-column: 1 / -1; }
 .rl-topic-chip {
   display: grid; gap: 2px; text-align: left; padding: 10px 12px; border-radius: 10px;
@@ -8787,7 +8787,69 @@ body {
 .rl-programme-labels span { border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; color: var(--ink-muted); font-size: 0.72rem; }
 .rl-programme-labels strong { display: block; color: var(--ink-mid); font-weight: 600; }
 
+/* One row per factor chain: the row is the scanning layer, the three cards below it are the work. */
+.rl-chain-list { display: grid; gap: 10px; min-width: 0; }
+.rl-chain {
+  border: 1px solid var(--line); border-left-width: 3px; border-radius: 12px;
+  background: var(--panel2); min-width: 0;
+}
+.rl-chain.is-open { background: rgba(29, 53, 85, 0.34); }
+.rl-chain.is-complete { border-left-color: var(--green); }
+.rl-chain-row {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto auto auto 18px;
+  gap: 10px; align-items: center; padding: 10px 12px; min-width: 0;
+}
+.rl-chain-toggle {
+  display: grid; gap: 2px; min-width: 0; padding: 0; border: 0; background: none;
+  color: var(--text); text-align: left; cursor: pointer; font: inherit;
+}
+.rl-chain-toggle:focus-visible { outline: 2px solid var(--blue); outline-offset: 3px; border-radius: 6px; }
+.rl-chain-name { font-weight: 600; font-size: 0.9rem; overflow-wrap: anywhere; }
+.rl-chain-id { font-family: var(--mono); font-size: 0.68rem; color: var(--ink-faint); overflow-wrap: anywhere; }
+.rl-chain-steps { display: flex; gap: 4px; }
+.rl-chain-step {
+  display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px;
+  border-radius: 50%; border: 1px solid var(--line); font-family: var(--mono); font-size: 0.64rem; color: var(--ink-muted);
+}
+.rl-chain-step.is-delivered { border-color: rgba(24, 212, 139, 0.65); background: rgba(24, 212, 139, 0.16); color: var(--green); }
+.rl-chain-step.is-awaiting_upload { border-color: rgba(94, 161, 255, 0.65); background: rgba(94, 161, 255, 0.16); color: var(--blue); }
+.rl-chain-step.is-reassessment_required { border-color: rgba(255, 91, 110, 0.7); background: rgba(255, 91, 110, 0.16); color: var(--red); }
+.rl-chain-count { font-family: var(--mono); font-size: 0.72rem; color: var(--ink-muted); white-space: nowrap; }
+.rl-chain-chevron { font-family: var(--mono); font-size: 1rem; color: var(--ink-muted); text-align: center; }
+.rl-chain-stale {
+  margin: 0 12px 10px; padding: 8px 10px; border-radius: 8px;
+  border: 1px solid rgba(255, 91, 110, 0.3); background: rgba(255, 91, 110, 0.08);
+  color: #ffc3cb; font-size: 0.8rem; overflow-wrap: anywhere;
+}
+.rl-chain-body { border-top: 1px solid var(--line); padding: 12px; display: grid; gap: 10px; min-width: 0; }
+.rl-chain-meta { display: flex; flex-wrap: wrap; gap: 10px; font-family: var(--mono); font-size: 0.7rem; color: var(--ink-muted); }
+
+/* The asset-level final chain: shut by the registry gate until every factor chain is complete. */
+.rl-final-card { grid-column: 1 / -1; display: grid; gap: 12px; min-width: 0; }
+.rl-final-head { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; }
+.rl-final-gate { display: grid; gap: 6px; }
+.rl-final-bar { height: 8px; border-radius: 999px; background: rgba(255, 255, 255, 0.07); overflow: hidden; }
+.rl-final-bar-fill { display: block; height: 100%; background: var(--blue); transition: width 0.2s ease; }
+.rl-final-card.is-unlocked .rl-final-bar-fill { background: var(--green); }
+.rl-final-pending { border: 1px dashed var(--line); border-radius: 10px; padding: 10px 12px; }
+.rl-final-pending summary { cursor: pointer; font-size: 0.82rem; color: var(--ink-mid); }
+.rl-final-pending[open] summary { margin-bottom: 6px; }
+
+/* Storage and asset scope live at the foot of the panel, collapsed by default. */
+.rl-tech-details { grid-column: 1 / -1; padding: 0; min-width: 0; }
+.rl-tech-details > summary {
+  cursor: pointer; padding: 14px 20px; font-size: 0.82rem; color: var(--ink-mid);
+  border-radius: 12px;
+}
+.rl-tech-details[open] > summary { border-bottom: 1px solid var(--line); border-radius: 12px 12px 0 0; }
+.rl-tech-details > p, .rl-tech-grid { margin: 0 20px 16px; }
+.rl-tech-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; align-items: start; }
+.rl-tech-block { display: grid; gap: 10px; min-width: 0; }
+.rl-tech-block .detail-panel { padding: 0; }
+
 .rl-stage-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; align-items: start; }
+
+
 .rl-stage-card {
   border: 1px solid var(--line); border-left-width: 3px; border-radius: 12px; padding: 16px;
   background: var(--panel2); display: grid; gap: 10px; align-content: start; min-width: 0;
@@ -8824,7 +8886,11 @@ body {
   .rl-head-card, .rl-service-card, .rl-filter-card, .rl-table-card, .rl-tasks-card, .rl-engine-card, .rl-detail-card { padding: 14px 12px; }
   .rl-asset-chip { flex: 1 1 100%; }
   .rl-topic-chip { flex: 1 1 100%; }
-  .rl-programme-labels { grid-template-columns: minmax(0, 1fr); }
+  .rl-chain-row { grid-template-columns: minmax(0, 1fr) auto auto; }
+  .rl-chain-steps { grid-column: 1 / -1; }
+  .rl-chain-chevron { display: none; }
+  .rl-tech-details > summary { padding: 12px; }
+  .rl-tech-details > p, .rl-tech-grid { margin: 0 12px 12px; }
 }
 
 

@@ -707,7 +707,7 @@ const USD_ASSET = {
   label: 'US Dollar',
   standfirst: 'The first asset in the library and the only one with factors under research today.',
   status: 'active',
-  next_step: "Work one topic at a time through its three stages. Stage 1: copy the research prompt from the topic page and run it in your own session, then upload the one Markdown report it returns against that topic. Stage 2: download the exact research version the card names, run the red-team prompt, upload the review. Stage 3: download both documents, run the adjudication prompt, upload the conclusion. The stages of the other five topics are written and hash-checked and can be released as a batch at any time. The legacy task list (USD-SESSION-A1 to A5) is kept as history and is not the workflow.",
+  next_step: "Work one factor chain at a time through its three stages. Stage 1: open the factor's chain row, copy the research prompt and run it in your own session, then upload the one Markdown report against that chain. Stage 2: download the exact research version the card names, run the red-team prompt, upload the review. Stage 3: download both documents, run the adjudication prompt, upload the conclusion. The final asset-level chain stays locked until every one of the twenty-five factor chains is complete; the topic labels group chains and own no stage. The legacy task list (USD-SESSION-A1 to A5) is kept as history and is not the workflow.",
   factors: [...LIVE_FACTORS, ...A1_FACTORS, ...A2_FACTORS],
   blockers: [
     'Label instrument and quote source unresolved: no free intraday DXY print exists in this checkout or in the collector, so the cutoff and endpoint prices are unverified at both ends.',
@@ -725,7 +725,7 @@ const OTHER_ASSETS = [
     label: 'Euro',
     standfirst: 'No EUR session research has started. Nothing from the USD programme transfers by default.',
     status: 'not_started',
-    next_step: 'Wait for the USD programme to reach a synthesis, then decide per asset whether the same question is asked.',
+    next_step: 'Wait for the USD final chain to complete, then decide per asset whether the same question is asked.',
     blockers: ['No assignment is published for this asset.'],
     factors: [],
     note: 'No USD sign, weight, threshold or factor transfers to another asset without its own research.'
@@ -735,7 +735,7 @@ const OTHER_ASSETS = [
     label: 'British Pound',
     standfirst: 'No GBP session research has started.',
     status: 'not_started',
-    next_step: 'Wait for the USD synthesis.',
+    next_step: 'Wait for the USD final chain.',
     blockers: ['No assignment is published for this asset.'],
     factors: [],
     note: 'No USD result transfers here.'
@@ -745,7 +745,7 @@ const OTHER_ASSETS = [
     label: 'Gold',
     standfirst: 'No gold session research has started in this programme; the gold backtesting lane keeps its own scope.',
     status: 'not_started',
-    next_step: 'Keep the existing gold lane scope until the USD synthesis says what is worth repeating.',
+    next_step: 'Keep the existing gold lane scope until the USD final chain says what is worth repeating.',
     blockers: ['No assignment is published for this asset.'],
     factors: [],
     note: 'Gold keeps its own horizon policy and backtesting loop.'
@@ -755,7 +755,7 @@ const OTHER_ASSETS = [
     label: 'Silver',
     standfirst: 'No silver session research has started.',
     status: 'not_started',
-    next_step: 'Wait for the USD synthesis.',
+    next_step: 'Wait for the USD final chain.',
     blockers: ['No assignment is published for this asset.'],
     factors: [],
     note: 'No USD result transfers here.'
@@ -765,7 +765,7 @@ const OTHER_ASSETS = [
     label: 'Nasdaq 100',
     standfirst: 'No NQ session research has started.',
     status: 'not_started',
-    next_step: 'Wait for the USD synthesis.',
+    next_step: 'Wait for the USD final chain.',
     blockers: ['No assignment is published for this asset.'],
     factors: [],
     note: 'The only NQ input in the live USD collector is a QQQ quote, which is an ETF, not the index.'
@@ -775,7 +775,7 @@ const OTHER_ASSETS = [
     label: 'Bitcoin',
     standfirst: 'No BTC session research has started.',
     status: 'not_started',
-    next_step: 'Wait for the USD synthesis.',
+    next_step: 'Wait for the USD final chain.',
     blockers: ['No assignment is published for this asset.'],
     factors: [],
     note: 'No USD result transfers here.'
@@ -785,7 +785,7 @@ const OTHER_ASSETS = [
     label: 'Crude Oil (WTI)',
     standfirst: 'No WTI session research has started.',
     status: 'not_started',
-    next_step: 'Wait for the USD synthesis.',
+    next_step: 'Wait for the USD final chain.',
     blockers: ['No assignment is published for this asset.'],
     factors: [],
     note: 'No USD result transfers here.'
@@ -929,21 +929,49 @@ const BRIEF_DOCUMENTS = Handoff.factorBriefRows().map(row => ({
 const REGISTRY_DOCUMENTS = [...REPO_DOCUMENTS, ...BRIEF_DOCUMENTS];
 
 // ---------------------------------------------------------------------------------------------
-// Topics: one research question, three numbered stages
+// Factor chains: one factor, three numbered stages
 //
-// A topic is the unit a reader works on. It names the factor entries its answer is evidence for, the three
-// prompts in order, and the document type each stage returns. The prompts are generated from this file, so a
-// prompt cannot drift from the catalogue, and each prompt's hash goes into the catalogue so the page can say
-// which prompt was copied. Nothing here authorises a model call: a prompt is copied by hand into the
-// reader's own session, and the returned document is uploaded by hand as evidence.
+// A factor chain is the unit a reader works on. It names its factor and its topic label, the three
+// prompts in order, and the document type each stage returns. The prompts are generated from this file,
+// so a prompt cannot drift from the catalogue, and each prompt's hash goes into the catalogue so the
+// page can say which prompt was copied. Nothing here authorises a model call: a prompt is copied by
+// hand into the reader's own session, and the returned document is uploaded by hand as evidence.
 // ---------------------------------------------------------------------------------------------
 
-const TOPIC_DIR = 'docs/research/topics/usd';
+// Research is factor-scoped: prompts live under one folder per factor chain, and the gated asset-level
+// chain has its own folder so the final analysis is never mistaken for a factor review.
+const FACTOR_DIR = 'docs/research/factors/usd';
+const FINAL_DIR = 'docs/research/final/usd';
 const DEEP_RESEARCH_DIR = 'docs/research/handoff/usd/v1/deep-research';
 const VIX_DISPATCHED_BRIEF = `${DEEP_RESEARCH_DIR}/VIX_COMPREHENSIVE_REPORT_BRIEF.md`;
 const CONTEXT_PACK_NEUTRAL = `${DEEP_RESEARCH_DIR}/CONTEXT_PACK_NEUTRAL.md`;
-const TOPIC_STAGE_ORDER = { research: 1, red_team: 2, adjudication: 3 };
-const TOPIC_STAGE_META = {
+const FACTOR_STAGE_ORDER = { research: 1, red_team: 2, adjudication: 3 };
+const FINAL_STAGE_ORDER = { final_analysis: 1, final_review: 2 };
+const FINAL_STAGE_META = {
+  final_analysis: {
+    label: 'Final analysis',
+    document_type: 'synthesis',
+    deliverable: 'One Markdown asset-level synthesis over every factor chain adjudication, with what survives, what conflicts and what stays unresolved.',
+    returns: 'The asset-level conclusion; which factor-chain findings survive; how conflicts between factor chains are resolved; the proposed asset-level treatment; explicitly unvalidated parameters; required empirical tests; and an explicit what-is-not-claimed section.'
+  },
+  final_review: {
+    label: 'Final review',
+    document_type: 'review',
+    deliverable: 'One Markdown review of the asset-level synthesis: every load-bearing conclusion quoted, given a verdict, a severity and the evidence that would settle it.',
+    returns: 'The issue register, the two closing lists (what survives unchanged, what the review could not reach), the sources you re-fetched and the questions you could not resolve.'
+  }
+};
+function stageMeta(stageId) {
+  return FINAL_STAGE_META[stageId] || FACTOR_STAGE_META[stageId];
+}
+function stageOrder(stageId) {
+  return FINAL_STAGE_ORDER[stageId] || FACTOR_STAGE_ORDER[stageId];
+}
+// Factor chains run the three research stages; the gated asset-level chain runs its own two.
+const FACTOR_STAGE_IDS = Object.keys(FACTOR_STAGE_ORDER);
+const FINAL_STAGE_IDS = Object.keys(FINAL_STAGE_ORDER);
+
+const FACTOR_STAGE_META = {
   research: {
     label: 'Research',
     document_type: 'report',
@@ -965,14 +993,14 @@ const TOPIC_STAGE_META = {
 };
 
 // The session every stage is written for. It is repeated in every prompt because a prompt has to stand alone.
-const TOPIC_SESSION_BLOCK = [
+const FACTOR_SESSION_BLOCK = [
   '- **Session**: 05:00 Europe/London to 05:00 Europe/London on the next local date. Both ends are London wall-clock times one local date apart, so every eligible session is exactly 24 hours. The contract is `docs/research/usd-session/v1/session_contract_v1.json`.',
   '- **Starts and ends**: a session starts on a Monday-to-Friday London local date only. A Saturday or Sunday start is never a session; the Saturday start is the only one that can contain a London daylight-saving transition, which is why every eligible session is exactly 24 hours (`backtester/lib/usd_session_engine_interface.js`, `SESSION_CONTRACT`, `session_start_rule`). A Friday session therefore ends at the 05:00 London endpoint on the Saturday. When the endpoint value does not exist, record the session as not evaluable and leave the value missing: never fill it from a Friday close, a Monday open, an interpolation or a later revision, and never quote a number whose window you cannot name.',
   '- **Label instrument**: proposed as DXY and UNVERIFIED. No intraday dollar-index print exists in this repository or in the live collector, and no quote source is committed. Never present another instrument as DXY: if a source is about EUR/USD, a basket, the broad trade-weighted index or a futures contract, name that instrument in the same sentence, and say whether its window is a close-to-close day, an intraday slice or something else.',
   '- **The deployed engine is not this window, and its timing is read from the code that defines it, never from memory or from a document**: the stored live calls were attached to the window resolved by the repository\'s own Phase 1 contract - a 09:30 America/New_York open on the call date to the 16:00 America/New_York close of the next date that has a value, sliding up to three days when the scheduled close has none (`getPhase1OutcomeWindow` in `backtester/lib/timeframe_windows.js`, applied in `backtester/lib/usd24h/outcomes.js`, whose own note calls it a nominal 24-hour horizon rather than 24 elapsed hours and which records `measured_elapsed_hours` per row). The "median 30.5 elapsed hours" figure is a measurement on the closed study\'s own 583 evaluable rows, recorded under `contract_vs_deployed_engine` in `docs/research/usd-session/v1/session_contract_v1.json`: it is a property of that study, not a declared property of the live engine, and it must be attributed that way every time it is quoted. The same block measures the overlap of that study\'s interval with this session as 14.5 hours on 528 rows and 15.5 hours on 55 rows - the two weeks a year when New York has changed and London has not - and the session\'s first 9.5 hours (8.5 in those weeks) as uncovered. Those figures are measured and date-dependent: they are not to be derived by subtracting a fixed London-to-New-York offset, and any comparison of a London-anchored window with a New-York-anchored one must be resolved per date from declared transitions. The archive\'s "next valid trading session" means the next date with an available value, not a holiday-aware exchange calendar, and the engine does not model market holidays. If the code and a document disagree about the live engine\'s timing, the code is the authority; report the disagreement rather than repeating the document.'
 ];
 
-const TOPIC_PROHIBITIONS = [
+const FACTOR_PROHIBITIONS = [
   'Do not invent a backtest, a performance figure, an accuracy rate or a sample size. If you have not measured it, say it is unmeasured. Numbers you remember are not evidence.',
   'Do not use hindsight: never state what a past period would have predicted using information that was not available at that time, and do not present a later revision as a first print.',
   'Cite only sources you actually fetched in this session, with the link and the passage you relied on.',
@@ -983,13 +1011,21 @@ const TOPIC_PROHIBITIONS = [
   'Recommending data the collector should record and a treatment a future engine should apply is required content, not a change being made. No production, workflow, dashboard, feed, dispatcher, database or configuration change is authorised by this prompt, none may be carried out now, and none may be reported as done or as agreed.'
 ];
 
-function promptFrontmatter(topic, stageId, extraLines = []) {
-  const meta = TOPIC_STAGE_META[stageId];
+function chainLabel(chain) {
+  return chain.factor_id ? `the factor chain for \`${chain.factor_id}\`` : `the asset-level final chain \`${chain.chain_id}\``;
+}
+
+function promptFrontmatter(chain, stageId, extraLines = []) {
+  const meta = stageMeta(stageId);
+  const stageCount = chain.factor_id ? FACTOR_STAGE_IDS.length : FINAL_STAGE_IDS.length;
+  const group = chain.topic_id ? `; group label \`${chain.topic_id}\` (${chain.group_title || 'grouping only'})` : '';
   return [
-    `# ${topic.title} - stage ${TOPIC_STAGE_ORDER[stageId]} of 3: ${meta.label}`,
+    `# ${chain.title} - stage ${stageOrder(stageId)} of ${stageCount}: ${meta.label}`,
     '',
-    `- Topic \`${topic.topic_id}\` on asset USD; stage \`${stageId}\`; this stage returns exactly one Markdown document (${meta.document_type}).`,
-    `- Factors this stage is evidence for: ${topic.factor_ids.map(id => `\`${id}\``).join(', ')}. One document can carry evidence for more than one factor entry; that is a mapping, not a second independent result.`,
+    `- ${chain.factor_id ? `Factor chain \`${chain.chain_id}\` for factor \`${chain.factor_id}\`` : `Asset-level final chain \`${chain.chain_id}\``} on asset USD${group}; stage \`${stageId}\`; this stage returns exactly one Markdown document (${meta.document_type}).`,
+    chain.factor_id
+      ? `- The chain belongs to one factor entry, so the evidence this stage returns maps to \`${chain.factor_id}\` and is not counted as a second independent result elsewhere.`
+      : `- This is the asset-level synthesis chain: it reads every factor-chain adjudication and is not itself a factor result. It opens only through the gate, never because a prompt was copied.`,
     '- Paste this whole prompt as one message into your own fresh session. Nothing is sent to a model from the dashboard, and this page holds no model credentials.',
     ...extraLines,
     ''
@@ -997,22 +1033,21 @@ function promptFrontmatter(topic, stageId, extraLines = []) {
 }
 
 function sessionSection() {
-  return ['## The session this is written for', '', ...TOPIC_SESSION_BLOCK, ''].join('\n');
+  return ['## The session this is written for', '', ...FACTOR_SESSION_BLOCK, ''].join('\n');
 }
 
 function prohibitionsSection() {
-  return ['## Prohibitions', '', ...TOPIC_PROHIBITIONS, ''].join('\n');
+  return ['## Prohibitions', '', ...FACTOR_PROHIBITIONS, ''].join('\n');
 }
 
-function factorContextBlock(topic) {
+function factorContextBlock(chain) {
   const byId = new Map(USD_ASSET.factors.map(factor => [factor.factor_id, factor]));
+  const factor = chain.factor_id ? byId.get(chain.factor_id) : null;
   const lines = [];
-  topic.factor_ids.forEach(factorId => {
-    const factor = byId.get(factorId);
-    if (!factor) {
-      lines.push(`- \`${factorId}\` is named by this topic but is not in the catalogue.`);
-      return;
-    }
+  if (!factor && chain.factor_id) {
+    lines.push(`- \`${chain.factor_id}\` is named by this chain but is not in the catalogue.`);
+  }
+  if (factor) {
     const status = factor.research_status === 'blocked' ? ' (research blocked on data access)' : '';
     lines.push(`- **${factor.factor_id}** - ${factor.label}${status}. Role: ${factor.role}. Group: ${factor.group}.`);
     lines.push(`  - The question this entry stands for: ${factor.brief}`);
@@ -1021,39 +1056,50 @@ function factorContextBlock(topic) {
     }
     if (factor.threshold) lines.push(`  - Threshold: ${factor.threshold}; lookback: ${factor.lookback || 'not stated'}.`);
     if ((factor.sources || []).length) lines.push(`  - Series the collector reads: ${factor.sources.join('; ')}.`);
-  });
+  }
   return [
-    '## The factor entries this topic is evidence for',
+    chain.factor_id ? '## The factor entry this chain is evidence for' : '## The asset-level synthesis this chain produces',
     '',
-    'These entries are context to audit. They are not evidence for any claim, and they are not the scope limit of this assignment.',
+    chain.factor_id
+      ? 'This entry is context to audit. It is not evidence for any claim, and it is not the scope limit of this assignment.'
+      : 'This chain reads every factor chain adjudication for the asset. It is the synthesis layer, not a fourth factor review.',
     '',
     ...lines,
     ''
   ].join('\n');
 }
 
-function companionBlock(topic, stageId) {
-  const lines = (topic.companions || []).map(entry => `- \`${entry.repo_path}\` (${entry.role}) - sha256 \`${entry.sha256}\``);
+function companionBlock(chain, stageId) {
+  const lines = (chain.companions || []).map(entry => `- \`${entry.repo_path}\` (${entry.role}) - sha256 \`${entry.sha256}\``);
   if (stageId === 'research') {
-    (topic.packs || []).forEach(pack => lines.push(`- \`${pack.repo_path}\` - the published brief for \`${pack.factor_id}\`; sha256 \`${pack.sha256}\``));
+    (chain.packs || []).forEach(pack => lines.push(`- \`${pack.repo_path}\` - the published brief for \`${pack.factor_id}\`; sha256 \`${pack.sha256}\``));
   }
   if (!lines.length) return '';
   const header = stageId === 'research'
-    ? 'Files in the checkout this topic rests on, if you can reach them. They are aids: the prompt has to stand on its own without them.'
-    : 'Files in the checkout behind this topic, if you can reach them. They are aids, not attachments you must have.';
+    ? 'Files in the checkout this chain rests on, if you can reach them. They are aids: the prompt has to stand on its own without them.'
+    : 'Files in the checkout behind this chain, if you can reach them. They are aids, not attachments you must have.';
   return ['## Companion files in the repository', '', header, '', ...lines, ''].join('\n');
 }
 
-function returnSection(topic, stageId) {
-  const meta = TOPIC_STAGE_META[stageId];
+function returnSection(chain, stageId) {
+  const meta = stageMeta(stageId);
   const lines = ['## What to return', '', `- Required content: ${meta.returns}`];
   if (stageId === 'research') {
     lines.push('- Return one Markdown document. The report and its source note belong inside that one file: sections in order, then the source note, then the what-is-not-claimed section.');
-  } else if (stageId === 'red_team') {
+  } else if (stageId === 'final_analysis') {
+    lines.push('- Return one Markdown document. At the top, before the body, list every factor-chain adjudication you read with its document id, version and sha256 as shown on its stage card, so the gate can be audited from the return alone.');
+    lines.push('');
+    lines.push('```');
+    lines.push(`Synthesis chain: ${chain.chain_id}`);
+    lines.push('Adjudication read: <factor id> - <document id> - version <version> - sha256 <sha256>');
+    lines.push('Adjudication read: <factor id> - <document id> - version <version> - sha256 <sha256>');
+    lines.push('```');
+  } else {
     lines.push('- Return one Markdown document. Put these identifier lines at the top of the file, before the body, and fill them from the stage card you downloaded:');
     lines.push('');
     lines.push('```');
-    lines.push(`Reviewed topic: ${topic.topic_id}`);
+    lines.push(`Reviewed chain: ${chain.chain_id}`);
+    if (chain.factor_id) lines.push(`Reviewed factor: ${chain.factor_id}`);
     lines.push('Reviewed document: <document id shown on the stage card you downloaded>');
     lines.push('Reviewed version: <version>');
     lines.push('Reviewed sha256: <sha256 shown on that card>');
@@ -1074,22 +1120,20 @@ function returnSection(topic, stageId) {
     lines.push('');
   }
   lines.push('- Keep it in one file. Tables, sources, hypotheses, candidate relations and appendices all belong inside that document; nothing here needs a second file, a JSON payload or a hand-built schema.');
-  lines.push(stageId === 'adjudication'
-    ? '- The dashboard records the topic, the stage and the exact versions this document judged, so that metadata is not yours to assemble: pick the stage card, choose the file, upload it.'
-    : '- The dashboard records the topic, the stage and the exact version this document judged, so that metadata is not yours to assemble: pick the stage card, choose the file, upload it.');
+  lines.push('- The dashboard records the chain, the stage and the exact version this document judged, so that metadata is not yours to assemble: pick the stage card, choose the file, upload it.');
   lines.push('');
   return lines.join('\n');
 }
 
-function researchPrompt(topic) {
-  const dispatchLine = topic.dispatch && topic.dispatch.state === 'dispatched'
-    ? `- The programme has already dispatched this topic: it is deep-research step 1 under task \`${topic.dispatch.task_id}\`, pack version ${topic.dispatch.pack_version}, context version ${topic.dispatch.context_version}.`
-    : '- This topic has not been dispatched yet. This is the next research assignment, written and hash-checked so it is ready to run.';
+function researchPrompt(chain) {
+  const dispatchLine = chain.dispatch && chain.dispatch.state === 'dispatched'
+    ? `- The programme has already dispatched the research behind this chain: it is deep-research step 1 under task \`${chain.dispatch.task_id}\`, pack version ${chain.dispatch.pack_version}, context version ${chain.dispatch.context_version}.`
+    : '- This chain has not been dispatched yet. This is the next research assignment, written and hash-checked so it is ready to run.';
   const sections = [
-    promptFrontmatter(topic, 'research', [dispatchLine]),
+    promptFrontmatter(chain, 'research', [dispatchLine]),
     '## What this stage is for',
     '',
-    'Produce one comprehensive, source-backed report investigating how the inputs of this topic - their levels, their changes and their interactions with each other and with the rest of the system - relate to the subsequent direction of the US dollar over one session: 05:00 Europe/London to 05:00 Europe/London on the next local date.',
+    'Produce one comprehensive, source-backed report investigating how the inputs of this factor - their levels, their changes and their interactions with each other and with the rest of the system - relate to the subsequent direction of the US dollar over one session: 05:00 Europe/London to 05:00 Europe/London on the next local date.',
     '',
     'Rules are in force for some of these entries, and the session is defined but unmeasured because the instrument that would label it has no verified quote source. Neither is the question. The question is what the evidence actually says about where the dollar goes next inside this window, and where that evidence is thin, contradictory or absent.',
     '',
@@ -1099,31 +1143,31 @@ function researchPrompt(topic) {
     '2. **Mechanisms**: the channels by which each input could move the dollar inside a 24-hour London-to-London window - safe-haven demand, risk appetite and cross-asset correlation, carry and funding, policy expectations, positioning and flows - and the observable each mechanism would leave at the cutoff.',
     '3. **Regimes**: whether the relation is stable or regime-dependent (volatility level, direction of the dollar, policy cycle, liquidity), and on what evidence that judgement rests.',
     '4. **Level against change**: whether the level, a one-day change or a longer change is the informative quantity, and on what evidence.',
-    '5. **Interactions**: for each pair of entries the sources support - inside this topic and with the other factor entries - the sign, the mechanism, the window, and whether the pair is the same information counted twice.',
+    '5. **Interactions**: for each pair of entries the sources support - inside this factor and with the other factor entries - the sign, the mechanism, the window, and whether the pair is the same information counted twice.',
     '6. **Timing**: what is observable at 05:00 Europe/London, what is already in the price by then, and what arrives only during the session.',
     '7. **Predictive evidence**: what has actually been measured about the subsequent 24-hour direction, with the sample, the window and the era stated; and where the honest answer is that nothing has been measured for this instrument and window.',
     '8. **Contradictory findings**: the strongest contrary evidence you found, named as such rather than omitted.',
     '9. **Hypotheses**: the candidate relation or relations worth testing, each with a falsifiable statement, what would refute it, and how it could be measured in this repository.',
     '10. **Data requirements**: the series, resolution, vintage handling and history the test would need, and which of them are missing or behind a paywall.',
     '',
-    '## Questions for this topic',
+    '## Questions for this factor',
     '',
-    ...topic.probes.map((probe, index) => `${index + 1}. ${probe}`),
+    ...chain.probes.map((probe, index) => `${index + 1}. ${probe}`),
     '',
     '## Existing thresholds are context, not the scope limit',
     '',
     'The rules in force are listed below because they are what the deployed engine does today. Audit them rather than defend them, and do not treat them as the limit of what may be investigated: if the sources support a different quantity, window, sign or interaction, say so and say what it rests on.',
     ''
   ];
-  if (topic.dispatched_brief_text) {
+  if (chain.dispatched_brief_text) {
     sections.push(
       '## The dispatched assignment',
       '',
-      `The programme sent this brief for this topic. It is reproduced here in full so that this one prompt is sufficient on its own; its own file is \`${topic.dispatch.prompt_path}\`, and its hash is recorded in the topic index.`,
+      `The programme sent this brief for the research behind this chain. It is reproduced here in full so that this one prompt is sufficient on its own; its own file is \`${chain.dispatch.prompt_path}\`, and its hash is recorded in the chain registry.`,
       '',
       '--- begin dispatched brief ---',
       '',
-      topic.dispatched_brief_text.trimEnd(),
+      chain.dispatched_brief_text.trimEnd(),
       '',
       '--- end dispatched brief ---',
       ''
@@ -1131,9 +1175,9 @@ function researchPrompt(topic) {
   }
   sections.push(
     sessionSection(),
-    factorContextBlock(topic),
-    companionBlock(topic, 'research'),
-    returnSection(topic, 'research'),
+    factorContextBlock(chain),
+    companionBlock(chain, 'research'),
+    returnSection(chain, 'research'),
     prohibitionsSection(),
     '## What happens after you return it',
     '',
@@ -1143,10 +1187,13 @@ function researchPrompt(topic) {
   return sections.join('\n');
 }
 
-function redTeamPrompt(topic) {
+function redTeamPrompt(chain) {
+  const chainRef = chain.factor_id
+    ? `factor chain \`${chain.chain_id}\``
+    : `asset-level final chain \`${chain.chain_id}\``;
   const sections = [
-    promptFrontmatter(topic, 'red_team', [
-      `- Reviewed document: the research return registered against topic \`${topic.topic_id}\`, stage \`research\`. The stage 1 card shows its document id, its version and its sha256: attach exactly that version.`
+    promptFrontmatter(chain, 'red_team', [
+      `- Reviewed document: the research return registered against ${chainRef}, stage \`research\`. The stage 1 card shows its document id, its version and its sha256: attach exactly that version.`
     ]),
     '## What this stage is for',
     '',
@@ -1184,15 +1231,15 @@ function redTeamPrompt(topic) {
     'For each claim also give the claim quoted, its severity (fatal, material, cosmetic), what is wrong, and the evidence that would resolve it. End with two lists: what survives the attack unchanged, and what the review could not reach at all.',
     ''
   ];
-  if (topic.programme_red_team_text) {
+  if (chain.programme_red_team_text) {
     sections.push(
       '## The programme brief this stage follows',
       '',
-      `The deep-research tier wrote this step-2 brief for the dispatched topic. It is reproduced in full so that this one prompt is sufficient; its own file is \`${topic.programme_red_team_path}\`.`,
+      `The deep-research tier wrote this step-2 brief for the dispatched research. It is reproduced in full so that this one prompt is sufficient; its own file is \`${chain.programme_red_team_path}\`.`,
       '',
       '--- begin programme brief ---',
       '',
-      topic.programme_red_team_text.trimEnd(),
+      chain.programme_red_team_text.trimEnd(),
       '',
       '--- end programme brief ---',
       ''
@@ -1200,9 +1247,9 @@ function redTeamPrompt(topic) {
   }
   sections.push(
     sessionSection(),
-    factorContextBlock(topic),
-    companionBlock(topic, 'red_team'),
-    returnSection(topic, 'red_team'),
+    factorContextBlock(chain),
+    companionBlock(chain, 'red_team'),
+    returnSection(chain, 'red_team'),
     prohibitionsSection(),
     '## What happens after you return it',
     '',
@@ -1212,10 +1259,13 @@ function redTeamPrompt(topic) {
   return sections.join('\n');
 }
 
-function adjudicationPrompt(topic) {
+function adjudicationPrompt(chain) {
+  const chainRef = chain.factor_id
+    ? `factor \`${chain.factor_id}\` (chain \`${chain.chain_id}\`)`
+    : `the asset-level final chain \`${chain.chain_id}\``;
   return [
-    promptFrontmatter(topic, 'adjudication', [
-      `- Attach both documents this stage judges: the research return for topic \`${topic.topic_id}\` and the red-team review of it. If the copy you pasted carries a "Versions to judge" block written by the dashboard, those two versions are the ones; otherwise download them from the two stage cards that name them: the stage 2 card names the research version it judged and the stage 3 card names the red-team version, each card showing the first characters of that sha256, and the handoff that supplies this prompt gives both in full.`
+    promptFrontmatter(chain, 'adjudication', [
+      `- Attach both documents this stage judges: the research return for ${chainRef} and the red-team review of it. Each stage card shows its document id, version and sha256; attach those exact versions.`
     ]),
     '## What this stage is for',
     '',
@@ -1245,30 +1295,138 @@ function adjudicationPrompt(topic) {
     '5. **Inputs, transformations, timing, interactions and missing-data considerations** - including what the collector does not record today and what it would have to record.',
     '6. **Explicitly unvalidated parameters** - every number or choice you propose that has not been measured, named as unvalidated.',
     '7. **Required empirical tests and remaining blockers** - what would have to be measured, on what sample and window, with what data, and what is missing or behind a paywall.',
-    '8. **Handoff to central USD synthesis** - a short, self-contained section a later central synthesis can read on its own: what this topic contributes, what it rules out, what stays unresolved, and what it does not claim.',
+    chain.factor_id
+      ? '8. **Handoff to central USD synthesis** - a short, self-contained section a later central synthesis can read on its own: what this factor contributes, what it rules out, what stays unresolved, and what it does not claim.'
+      : '8. **Final asset-level conclusion** - the synthesis over every factor chain: which relations survive, how conflicts between factor chains are resolved, what the asset-level treatment is and what remains unresolved. State plainly that it is accepted research, not a validated trading rule.',
     '',
     '## The line this stage must not cross',
     '',
     'Research accepted for synthesis is not a validated trading rule. This stage proposes; it does not implement, score, deploy or change a live call, and it asserts no performance figure it has not measured. A recommendation is not a change and is required content: which series and resolution the collector should record, with what vintage and history handling, and how a future engine should treat this factor, all belong in sections 4, 5 and 7. What is forbidden is making the change, presenting it as agreed or scheduled, or claiming that anything in the live engine, a workflow, the dashboard, the feed, the dispatcher or the database has already been changed.',
     '',
     sessionSection(),
-    factorContextBlock(topic),
-    companionBlock(topic, 'adjudication'),
-    returnSection(topic, 'adjudication'),
+    factorContextBlock(chain),
+    companionBlock(chain, 'adjudication'),
+    returnSection(chain, 'adjudication'),
     prohibitionsSection(),
     '## What happens after you return it',
     '',
-    'Central USD synthesis is a separate step: it reads the adjudications of every topic, resolves what conflicts between them, and only then can an isolated implementation and validation step follow. Nothing enters the live engine because a document exists.',
+    chain.factor_id
+      ? 'Central USD synthesis is a separate step: it reads the adjudications of every factor chain, resolves what conflicts between them, and only then can an isolated implementation and validation step follow. Nothing enters the live engine because a document exists.'
+      : 'This is the last research step for the asset: an isolated implementation and validation step can follow only on the evidence recorded here, and every claim stays unvalidated until that step measures it. Nothing enters the live engine because a document exists.',
     ''
   ].join('\n');
 }
 
-// The topic map. Every USD factor sits in exactly one topic, and a topic may name the topics it interacts
-// with, so a returned report is mapped to the factor entries it is evidence for without being treated as
-// independent evidence a second time. The VIX topic is the one the programme has actually dispatched.
+// The asset-level chain has its own two stages: a synthesis over the twenty-five adjudications, then an
+// independent review of that synthesis. It is not a fourth factor review, so it never re-reads a factor
+// chain's raw research as new evidence.
+function finalAnalysisPrompt(chain) {
+  const chainList = (chain.factor_chain_ids || []).map(chainId => `- \`${chainId}\``);
+  return [
+    promptFrontmatter(chain, 'final_analysis', [
+      '- This stage opens only when every factor chain has delivered research, red team and adjudication against its current parent versions. Read the adjudications of all of them; do not substitute an earlier research report for an adjudication.'
+    ]),
+    '## What this stage is for',
+    '',
+    'Read every factor-chain adjudication for the asset and produce the best-supported asset-level conclusion. The adjudications are the evidence; this stage synthesises them, resolves what conflicts between factor chains, and states plainly what the whole body of work does and does not support.',
+    '',
+    '## Which documents you are reading',
+    '',
+    '- Read the adjudication of each of these chains, at the exact version and sha256 shown on its stage card:',
+    '',
+    ...chainList,
+    '',
+    '- If a chain has no adjudication, say so and stop: this stage is gated on all of them existing.',
+    '',
+    '## How to decide',
+    '',
+    '- A relation that survived its own adjudication is carried forward at the strength that adjudication supports, not at the strength its research claimed.',
+    '- Where two chains conflict, say which evidence decides and why, or record the conflict as unresolved.',
+    '- Do not average adjudications, and do not treat cross-chain agreement as independent confirmation when the chains share an input.',
+    '- A relation that was rejected or left unresolved in adjudication stays rejected or unresolved here.',
+    '',
+    '## What the synthesis must contain',
+    '',
+    '1. **Asset-level conclusion** - what the evidence supports about the direction of the dollar over the session, stated plainly.',
+    '2. **What survives** - the relations carried forward from adjudication, each with the strength its adjudication supports.',
+    '3. **Conflicts between chains** - each conflict, the evidence that decides it, and what remains unresolved.',
+    '4. **Proposed asset-level treatment** - only where the evidence supports it: inputs, transformations, signs, thresholds, lookbacks and timing. Where it does not, say that instead.',
+    '5. **Explicitly unvalidated parameters** - every number or choice proposed that has not been measured, named as unvalidated.',
+    '6. **Required empirical tests and remaining blockers** - what would have to be measured, on what sample and window, with what data, and what is missing or behind a paywall.',
+    '7. **What is not claimed** - a plain section listing what this synthesis does not establish.',
+    '',
+    '## The line this stage must not cross',
+    '',
+    'This is accepted research, not a validated trading rule. It proposes; it does not implement, score, deploy or change a live call, and it asserts no performance figure it has not measured.',
+    '',
+    sessionSection(),
+    factorContextBlock(chain),
+    companionBlock(chain, 'final_analysis'),
+    returnSection(chain, 'final_analysis'),
+    prohibitionsSection(),
+    '## What happens after you return it',
+    '',
+    'The final review judges this synthesis. Only after that review is adjudicated can an isolated implementation and validation step follow, and nothing enters the live engine because a document exists.',
+    ''
+  ].join('\n');
+}
+function finalReviewPrompt(chain) {
+  return [
+    promptFrontmatter(chain, 'final_review', [
+      '- Attach the asset-level synthesis this stage judges. Its stage card shows the document id, version and sha256; attach those exact versions.'
+    ]),
+    '## What this stage is for',
+    '',
+    'Review the asset-level synthesis as an independent reviewer. Your job is to find where it claims more than the factor adjudications support, where conflicts were smoothed over, and where the proposed asset-level treatment rests on an unvalidated parameter. You are not asked to defend or to rewrite it.',
+    '',
+    '## Which version you are judging',
+    '',
+    '- Reproduce the synthesis document id, version and sha256 in the identifier lines at the top of your return.',
+    '- If the attachment does not match the card it came from, say so and stop.',
+    '',
+    '## How to review',
+    '',
+    '- Quote every load-bearing sentence you judge, then give a verdict, a severity and the evidence that would settle it.',
+    '- Check the synthesis against the adjudications it names: a claim stronger than its source adjudication is an issue.',
+    '- Check that unresolved and rejected findings were not silently carried forward as accepted.',
+    '- Check that every number in the proposed treatment is either measured or marked unvalidated.',
+    '- Say when a claim survives unchanged; a review that finds nothing still has to show what was tested.',
+    '',
+    '## What the review must contain',
+    '',
+    '1. **Issue register** - each issue with the quoted claim, verdict, severity and settling evidence.',
+    '2. **What survives unchanged** - the claims you tested and did not overturn.',
+    '3. **What the review could not reach** - scope limits, missing evidence and paywalled sources.',
+    '4. **Sources you re-fetched** - with the link and the passage you relied on.',
+    '5. **Questions you could not resolve** - stated as unresolved rather than guessed.',
+    '',
+    '## The line this stage must not cross',
+    '',
+    'The review is evidence, not an approval. It does not implement, score, deploy or change a live call, and it asserts no performance figure it has not measured.',
+    '',
+    sessionSection(),
+    factorContextBlock(chain),
+    companionBlock(chain, 'final_review'),
+    returnSection(chain, 'final_review'),
+    prohibitionsSection(),
+    '## What happens after you return it',
+    '',
+    'The review is adjudicated like any other stage, and only then can an isolated implementation and validation step follow. Nothing enters the live engine because a document exists.',
+    ''
+  ].join('\n');
+}
+
+
+
+
+// The topic labels. Every USD factor sits in exactly one label, and a label may name the other labels it
+// interacts with. The label carries shared context and probes only; the chain under each factor owns the
+// stages and the evidence. The VIX label carries the one dispatched brief, which is attached to the F1 chain's
+// stage 1 prompt.
 const TOPIC_MAP = [
   {
     topic_id: 'usd-topic-vix-level-and-risk-regime',
+
     slug: 'vix-level-and-risk-regime',
     title: 'VIX, its change and the USD risk regime at the 05:00 London cutoff',
     summary: 'Whether the VIX level, its one-day change or a longer change says anything about the direction of the dollar over the next 24-hour London-to-London session, and what those quantities interact with.',
@@ -1293,7 +1451,7 @@ const TOPIC_MAP = [
       'Is the mechanism safe-haven demand, risk appetite, carry or policy expectations, and what observable at the cutoff distinguishes them?',
       'How much of the VIX move is already in the dollar at 05:00 Europe/London, and what is left for the following 24 hours?'
     ],
-    next_step: 'The research report is registered. Run stage 2 (red-team) against research version 1, then stage 3 (adjudication).'
+    next_step: 'The research report is registered on the usd-factor-live-f1-vix-level chain. Run that chain\'s stage 2 (red-team) against research version 1, then its stage 3 (adjudication). The sibling usd-factor-risk-vix-level-and-change-at-cutoff chain is still not started and is not advanced by that report.'
   },
   {
     topic_id: 'usd-topic-front-end-rates',
@@ -1313,7 +1471,7 @@ const TOPIC_MAP = [
       'Does a real-yield change add information beyond the nominal front end, and does that survive the inflation-expectation measurement problem?',
       'Are these relations already in the dollar by 05:00 Europe/London, given that the US cash market is closed at the cutoff?'
     ],
-    next_step: 'Not dispatched. The research prompt is written and checked; take it from the stage 1 card when the batch opens.'
+    next_step: 'Not dispatched. Each factor under this label has its own written and checked research prompt; open a chain and take its stage 1 prompt when the batch opens.'
   },
   {
     topic_id: 'usd-topic-dollar-index-gold-and-equities',
@@ -1333,7 +1491,7 @@ const TOPIC_MAP = [
       'Does a same-day dollar move followed by a session direction suggest mean reversion or continuation, and on what evidence?',
       'Are gold and equities independent evidence for the dollar, or the same risk factor counted twice?'
     ],
-    next_step: 'Not dispatched. The research prompt is written and checked; take it from the stage 1 card when the batch opens.'
+    next_step: 'Not dispatched. Each factor under this label has its own written and checked research prompt; open a chain and take its stage 1 prompt when the batch opens.'
   },
   {
     topic_id: 'usd-topic-economic-surprise-and-fed-bias',
@@ -1353,7 +1511,7 @@ const TOPIC_MAP = [
       'Is Fed bias an observable at 05:00 Europe/London or a narrative, and what would an observable version look like?',
       'How much of a surprise is already in the dollar in the minutes after the print, and how do you separate that from the session that follows?'
     ],
-    next_step: 'Not dispatched. The research prompt is written and checked; take it from the stage 1 card when the batch opens.'
+    next_step: 'Not dispatched. Each factor under this label has its own written and checked research prompt; open a chain and take its stage 1 prompt when the batch opens.'
   },
   {
     topic_id: 'usd-topic-fx-session-structure',
@@ -1373,7 +1531,7 @@ const TOPIC_MAP = [
       'Is safe-haven demand observable at the cutoff separately from risk-on/off, or is it the same input twice?',
       'Which instrument labels these factors, given that DXY has no verified intraday source?'
     ],
-    next_step: 'Not dispatched. The research prompt is written and checked; take it from the stage 1 card when the batch opens.'
+    next_step: 'Not dispatched. Each factor under this label has its own written and checked research prompt; open a chain and take its stage 1 prompt when the batch opens.'
   },
   {
     topic_id: 'usd-topic-calendar-and-data-quality',
@@ -1393,12 +1551,13 @@ const TOPIC_MAP = [
       'Which releases matter for the dollar over this window, and are the timestamps verifiable at the cutoff?',
       'Can an abstention rule be evaluated at all without a frozen label instrument, and what would it take?'
     ],
-    next_step: 'Not dispatched. The research prompt is written and checked; take it from the stage 1 card when the batch opens.'
+    next_step: 'Not dispatched. Each factor under this label has its own written and checked research prompt; open a chain and take its stage 1 prompt when the batch opens.'
   }
 ];
 
-// buildCatalog is defined below; the topic section above only prepares prompt text and hashes.
+// buildCatalog is defined below; the topic map above only prepares grouping labels and prompt text.
 function buildCatalog() {
+  const built = buildChains();
   return {
     schema_version: 'research-library-catalog-v1',
     generated_at: TODAY,
@@ -1406,7 +1565,9 @@ function buildCatalog() {
     scope_note: 'Research management only. Preparing a task writes nothing to a model, uploading a report records evidence, and a returned report becomes a rule only after a review accepts it and a backtest supports it.',
     storage: STORAGE,
     tasks: TASKS,
-    topics: buildTopics().topics,
+    topics: built.topics,
+    factor_chains: built.factor_chains,
+    final_chain: built.final_chain,
     engine_documents: ENGINE_DOCUMENTS,
     repo_documents: REGISTRY_DOCUMENTS,
     research_briefs: {
@@ -1542,16 +1703,76 @@ function report(label, problems) {
   return false;
 }
 
-// Written from the topic map above, so the prompt files and the catalogue cannot disagree: the catalogue
+// Written from the chain map above, so the prompt files and the catalogue cannot disagree: the catalogue
 // carries each prompt's hash, and the check command re-reads the files. Nothing here or anywhere else sends
-// a prompt to a model.
-function buildTopics() {
+// a prompt to a model. One writer serves both kinds of chain: a factor chain and the gated asset-level
+// final chain differ only in their folder, identifiers and whether a dispatched brief sits behind stage 1.
+function chainStagesFor(chain, dir, files) {
+  const isFactor = Boolean(chain.factor_id);
+  const stageIds = isFactor ? FACTOR_STAGE_IDS : FINAL_STAGE_IDS;
+  const text = isFactor
+    ? { research: researchPrompt(chain), red_team: redTeamPrompt(chain), adjudication: adjudicationPrompt(chain) }
+    : { final_analysis: finalAnalysisPrompt(chain), final_review: finalReviewPrompt(chain) };
+  const fileSlugs = { research: 'research', red_team: 'red-team', adjudication: 'adjudication', final_analysis: 'final-analysis', final_review: 'final-review' };
+  const parentStages = { research: null, red_team: 'research', adjudication: 'red_team', final_analysis: null, final_review: 'final_analysis' };
+  const stages = stageIds.map(stageId => {
+    const meta = stageMeta(stageId);
+    const repoPath = `${dir}/${chain.slug}/0${stageOrder(stageId)}-${fileSlugs[stageId]}-prompt.md`;
+    files.push({
+      repo_path: repoPath,
+      stage: stageId,
+      chain_id: chain.chain_id,
+      factor_id: chain.factor_id || null,
+      text: text[stageId]
+    });
+    const sourceKind = stageId === 'research' && chain.dispatch && chain.dispatch.prompt_path ? 'dispatched_brief' : 'generated';
+    const sha256 = crypto.createHash('sha256').update(text[stageId], 'utf8').digest('hex');
+    return {
+      stage: stageId,
+      order: stageOrder(stageId),
+      label: meta.label,
+      prompt_path: repoPath,
+      prompt_sha256: sha256,
+      prompt_bytes: Buffer.byteLength(text[stageId], 'utf8'),
+      prompt_source: sourceKind === 'dispatched_brief'
+        ? {
+          kind: sourceKind,
+          repo_path: chain.dispatch.prompt_path,
+          sha256: chain.dispatch.prompt_sha256,
+          note: 'Generated from the dispatched brief and reproduced in full inside this prompt.'
+        }
+        : {
+          kind: sourceKind,
+          repo_path: repoPath,
+          sha256,
+          note: 'Generated from the catalogue and the chain map, and shown on the page before it is copied.'
+        },
+      document_type: meta.document_type,
+      parent_stage: parentStages[stageId],
+      deliverable: meta.deliverable,
+      returns: meta.returns
+    };
+  });
+  return stages;
+}
+
+// The catalogue carries prompts by path and hash, not by value: the page reads the file and verifies the
+// hash, so the registry never depends on a copy of prompt text.
+function publicChain(chain) {
+  const { dispatched_brief_text, programme_red_team_text, ...rest } = chain;
+  return rest;
+}
+
+function buildChains() {
   const problems = [];
   const files = [];
   const briefByFactor = new Map(BRIEF_DOCUMENTS.map(entry => [entry.factor_id, entry]));
+  const factorById = new Map(USD_ASSET.factors.map(factor => [factor.factor_id, factor]));
   const sha256Of = text => crypto.createHash('sha256').update(text, 'utf8').digest('hex');
 
-  const topics = TOPIC_MAP.map(spec => {
+  // Step 1: the six topics are grouping labels. They carry no stages and own no research; they name
+  // factors, shared context and the order the page groups them in.
+  const groups = TOPIC_MAP.map(spec => {
     const companions = (spec.companion_paths || []).map(entry => {
       const absPath = path.join(root, entry.repo_path);
       if (!fs.existsSync(absPath)) {
@@ -1612,68 +1833,111 @@ function buildTopics() {
       }
     }
 
-    const text = {
-      research: researchPrompt(topic),
-      red_team: redTeamPrompt(topic),
-      adjudication: adjudicationPrompt(topic)
-    };
-    const stages = Object.keys(TOPIC_STAGE_ORDER).map(stageId => {
-      const fileSlug = stageId === 'red_team' ? 'red-team' : stageId;
-      const repoPath = `${TOPIC_DIR}/${spec.slug}/0${TOPIC_STAGE_ORDER[stageId]}-${fileSlug}-prompt.md`;
-      files.push({ repo_path: repoPath, stage: stageId, topic_id: spec.topic_id, text: text[stageId] });
-      const sourceKind = stageId === 'research' && topic.dispatch.prompt_path ? 'dispatched_brief' : 'generated';
-      return {
-        stage: stageId,
-        order: TOPIC_STAGE_ORDER[stageId],
-        label: TOPIC_STAGE_META[stageId].label,
-        prompt_path: repoPath,
-        prompt_sha256: sha256Of(text[stageId]),
-        prompt_bytes: Buffer.byteLength(text[stageId], 'utf8'),
-        prompt_source: sourceKind === 'dispatched_brief'
-          ? {
-            kind: sourceKind,
-            repo_path: topic.dispatch.prompt_path,
-            sha256: topic.dispatch.prompt_sha256,
-            note: 'Generated from the dispatched brief and reproduced in full inside this prompt.'
-          }
-          : {
-            kind: sourceKind,
-            repo_path: repoPath,
-            sha256: sha256Of(text[stageId]),
-            note: 'Generated from the catalogue and the topic map, and shown on the page before it is copied.'
-          },
-        document_type: TOPIC_STAGE_META[stageId].document_type,
-        parent_stage: stageId === 'research' ? null : stageId === 'red_team' ? 'research' : 'red_team',
-        deliverable: TOPIC_STAGE_META[stageId].deliverable,
-        returns: TOPIC_STAGE_META[stageId].returns
+    return topic;
+  });
+
+  // Step 2: every factor owns one research chain. The chain inherits the groups shared context and
+  // pack, and carries a factor-specific probe so the report is written for that entry, not for the topic.
+  const chains = [];
+  const chainIds = new Set();
+  groups.forEach(group => {
+    group.factor_ids.forEach(factorId => {
+      const factor = factorById.get(factorId);
+      if (!factor) {
+        problems.push(`group ${group.topic_id} names factor ${factorId}, which is not in the catalogue`);
+        return;
+      }
+      const chainId = `usd-factor-${factorId.replace(/[^a-z0-9]+/gi, '-').replace(/^-+|-+$/g, '').toLowerCase()}`;
+      if (chainIds.has(chainId)) {
+        problems.push(`factor ${factorId} produced a duplicate chain id ${chainId}`);
+        return;
+      }
+      chainIds.add(chainId);
+      // The group's dispatched brief belongs to one factor only. Copy the dispatch state, not its prompt
+      // path, so a sibling factor chain cannot claim the same brief as its own research source.
+      const chainDispatch = { ...group.dispatch };
+      delete chainDispatch.prompt_path;
+      delete chainDispatch.prompt_sha256;
+      // The dispatched assignment covers one factor only. A sibling factor chain has not been dispatched and
+      // must not present the group's task id as its own research source.
+      if (factorId !== 'live.f1-vix-level' && chainDispatch.state === 'dispatched') {
+        chainDispatch.state = 'queued';
+        delete chainDispatch.task_id;
+        delete chainDispatch.pack_version;
+        delete chainDispatch.context_version;
+        delete chainDispatch.dispatched_at;
+      }
+      const chain = {
+        chain_id: chainId,
+        factor_id: factorId,
+        asset: 'USD',
+        topic_id: group.topic_id,
+        group_title: group.title,
+        slug: factorId.replace(/[^a-z0-9]+/gi, '-').replace(/^-+|-+$/g, '').toLowerCase(),
+        title: `${factor.label} - ${factorId}`,
+        summary: factor.brief,
+        factor_label: factor.label,
+        factor_group: factor.group,
+        factor_role: factor.role,
+        dispatch: chainDispatch,
+        companions: group.companions.map(entry => ({ ...entry })),
+        packs: group.packs.filter(pack => pack.factor_id === factorId).map(pack => ({ ...pack })),
+        probes: [
+          `Chain question: does \`${factorId}\` - ${factor.label} - carry information about the next 24-hour dollar move, and in which quantity? ${factor.brief}`,
+          ...group.probes
+        ]
       };
+      // The registered VIX evidence was written under the programme brief, so it stays attached to the
+      // VIX factor it was dispatched for and does not become a second, independent result elsewhere.
+      if (group.dispatched_brief_text && factorId === 'live.f1-vix-level') {
+        chain.dispatched_brief_text = group.dispatched_brief_text;
+        chain.dispatch.prompt_path = group.dispatch.prompt_path;
+        chain.dispatch.prompt_sha256 = group.dispatch.prompt_sha256;
+      }
+      if (group.programme_red_team_text && factorId === 'live.f1-vix-level') {
+        chain.programme_red_team_path = group.programme_red_team_path;
+        chain.programme_red_team_text = group.programme_red_team_text;
+      }
+      chain.stages = chainStagesFor(chain, FACTOR_DIR, files);
+      chains.push(publicChain(chain));
     });
-
-    return {
-      topic_id: topic.topic_id,
-      asset: topic.asset,
-      slug: topic.slug,
-      title: topic.title,
-      summary: topic.summary,
-      factor_ids: topic.factor_ids,
-      overlaps: topic.overlaps,
-      next_step: topic.next_step,
-      dispatch: topic.dispatch,
-      companions: topic.companions,
-      packs: topic.packs,
-      probes: topic.probes,
-      stages
-    };
   });
 
-  const factorIds = new Set(topics.flatMap(topic => topic.factor_ids));
+  // Step 3: one asset-level final chain, gated on every factor chain delivering all three stages.
+  const finalChain = {
+    chain_id: 'usd-final-asset-analysis',
+    asset: 'USD',
+    slug: 'final-asset-analysis',
+    title: 'USD asset-level final analysis',
+    summary: 'The synthesis over all 25 factor chains: which relations survive, how conflicts between factor chains are resolved, and what the asset-level treatment is. It opens only when every factor has research, red team and adjudication against current versions.',
+    dispatch: { state: 'queued' },
+    companions: [
+      { repo_path: 'docs/research/usd-session/v1/inventory.md', role: 'the input and decision inventory the synthesis closes out' }
+    ],
+    packs: [],
+    probes: [
+      'Which relation across the 25 factor chains survives its red team and adjudication, and which were only plausible mechanisms?',
+      'Where two factor chains disagree, what evidence decides between them, and what stays unresolved?',
+      'What is the smallest asset-level treatment the evidence supports, and which parameters remain unvalidated?'
+    ],
+    gate: {
+      requires: 'all-factor-chains',
+      factor_count: chains.length,
+      stage_count: Object.keys(FACTOR_STAGE_ORDER).length,
+      note: 'Unlocked by the registry: every factor chain must deliver research, red team and adjudication against the current parent versions.'
+    },
+    factor_chain_ids: chains.map(chain => chain.chain_id)
+  };
+  finalChain.stages = chainStagesFor(finalChain, FINAL_DIR, files);
+
+  const covered = new Set(chains.map(chain => chain.factor_id));
   USD_ASSET.factors.forEach(factor => {
-    if (!factorIds.has(factor.factor_id)) problems.push(`factor ${factor.factor_id} sits in no topic`);
+    if (!covered.has(factor.factor_id)) problems.push(`factor ${factor.factor_id} carries no research chain`);
   });
-  return { topics, files, problems };
+  return { topics: groups, factor_chains: chains, final_chain: finalChain, files, problems };
 }
 
-function writeTopicFiles(built) {
+function writePromptFiles(built) {
   built.files.forEach(file => {
     const absPath = path.join(root, file.repo_path);
     fs.mkdirSync(path.dirname(absPath), { recursive: true });
@@ -1681,12 +1945,12 @@ function writeTopicFiles(built) {
   });
 }
 
-function topicsCommand(flag) {
-  const built = buildTopics();
-  if (!report('topics', built.problems)) return 1;
+function chainsCommand(flag) {
+  const built = buildChains();
+  if (!report('chains', built.problems)) return 1;
   if (flag === '--write') {
-    writeTopicFiles(built);
-    console.log(`topics written: ${built.files.length} prompt files under ${TOPIC_DIR}`);
+    writePromptFiles(built);
+    console.log(`chains written: ${built.files.length} prompt files under ${FACTOR_DIR} and ${FINAL_DIR}`);
     return 0;
   }
   const drifted = built.files.filter(file => {
@@ -1694,16 +1958,20 @@ function topicsCommand(flag) {
     return !fs.existsSync(absPath) || fs.readFileSync(absPath, 'utf8') !== file.text;
   });
   if (drifted.length) {
-    console.log(`topics check: ${drifted.length} prompt file(s) differ from the authored prompts. Run topics --write.`);
+    console.log(`chains check: ${drifted.length} prompt file(s) differ from the authored prompts. Run chains --write.`);
     drifted.forEach(file => console.log(`  - ${file.repo_path}`));
     return 1;
   }
   const committed = readJsonIfExists(catalogPath);
-  if (committed && JSON.stringify(built.topics) !== JSON.stringify(committed.topics || [])) {
-    console.log('topics check: the committed catalogue carries a different topic map. Run catalog --write.');
+  if (committed && JSON.stringify(built.factor_chains) !== JSON.stringify(committed.factor_chains || [])) {
+    console.log('chains check: the committed catalogue carries a different factor chain map. Run catalog --write.');
     return 1;
   }
-  console.log(`topics check: ${built.files.length} prompt files and the topic map match the authored topics.`);
+  if (committed && JSON.stringify(built.final_chain) !== JSON.stringify(committed.final_chain || null)) {
+    console.log('chains check: the committed catalogue carries a different final chain. Run catalog --write.');
+    return 1;
+  }
+  console.log(`chains check: ${built.factor_chains.length} factor chains, ${built.files.length} prompt files and the final chain match the authored chains.`);
   return 0;
 }
 
@@ -1715,10 +1983,10 @@ function catalogCommand(flag) {
     fs.writeFileSync(catalogPath, rendered);
     console.log(`catalog written: ${path.relative(root, catalogPath)}`);
     // The prompt files are written with the catalogue they are hashed into, so the two cannot disagree.
-    const built = buildTopics();
-    if (!report('topics', built.problems)) return 1;
-    writeTopicFiles(built);
-    console.log(`topic prompts written: ${built.files.length} files under ${TOPIC_DIR}`);
+    const built = buildChains();
+    if (!report('chains', built.problems)) return 1;
+    writePromptFiles(built);
+    console.log(`chain prompts written: ${built.files.length} files under ${FACTOR_DIR} and ${FINAL_DIR}`);
     return 0;
   }
   const committed = fs.existsSync(catalogPath) ? fs.readFileSync(catalogPath, 'utf8') : '';
@@ -1763,11 +2031,11 @@ function verifyCommand() {
   let ok = report('catalog', ResearchLibrary.validateCatalog(catalog));
   ok = report('registry', ResearchLibrary.validateDocuments(registry, catalog)) && ok;
   ok = report('repo hashes', verifyRepoHashes(registry)) && ok;
-  // The topic prompts are checked against the authored text, not just against the hash in the catalogue: a
+  // The chain prompts are checked against the authored text, not just against the hash in the catalogue: a
   // prompt file edited on disk after the catalogue was written has to fail this guard.
-  const builtTopics = buildTopics();
-  ok = report('topics', builtTopics.problems) && ok;
-  ok = report('topic prompts', builtTopics.files
+  const builtChains = buildChains();
+  ok = report('chains', builtChains.problems) && ok;
+  ok = report('chain prompts', builtChains.files
     .filter(file => {
       const absPath = path.join(root, file.repo_path);
       return !fs.existsSync(absPath) || fs.readFileSync(absPath, 'utf8') !== file.text;
@@ -1781,13 +2049,24 @@ function verifyCommand() {
   console.log(`backtest ${JSON.stringify(counts.backtest)}`);
   console.log(`factors not covered by any task: ${coverage.uncovered.length}`);
   coverage.uncovered.forEach(entry => console.log(`  - ${entry.asset} ${entry.factor_id}`));
-  const topics = ResearchLibrary.listTopics(catalog);
-  console.log(`topics: ${topics.length}, ${ResearchLibrary.TOPIC_STAGES.length} stages each`);
-  topics.forEach(topic => {
-    const progress = ResearchLibrary.topicProgress(topic, registry);
+  const factorChains = ResearchLibrary.listFactorChains(catalog);
+  console.log(`factor chains: ${factorChains.length}, ${ResearchLibrary.FACTOR_STAGES.length} stages each`);
+  factorChains.forEach(chain => {
+    const progress = ResearchLibrary.chainProgress(chain, registry);
     const stages = progress.stages.map(stage => `${stage.stage}=${stage.state}`).join(', ');
-    console.log(`topic ${topic.topic_id}: ${stages}; next ${progress.next_stage || 'none'}; ready for synthesis ${progress.ready_for_synthesis}`);
+    console.log(`chain ${chain.chain_id} (${chain.factor_id}): ${stages}; next ${progress.next_stage || 'none'}`);
   });
+  const topics = ResearchLibrary.listTopics(catalog);
+  console.log(`topic labels: ${topics.length}`);
+  topics.forEach(topic => {
+    const progress = ResearchLibrary.topicProgress(topic, registry, catalog);
+    const chains = progress.chains || [];
+    console.log(`topic ${topic.topic_id}: ${progress.factors_complete}/${progress.factors_total} factor chains complete; ${progress.delivered_stages}/${progress.total_stages} stages; ready for final analysis ${progress.ready_for_synthesis}; chains ${chains.map(chain => chain.chain_id).join(', ')}`);
+  });
+  const gate = ResearchLibrary.finalChainStatus(catalog, registry);
+  const gateNext = gate.stages.find(stage => stage.state !== 'delivered');
+  console.log(`final chain: ${gate.chain_id} ${gate.state} (${gate.factors_complete}/${gate.factors_total} factor chains complete); next ${gateNext ? gateNext.stage : 'none'}`);
+  if (gate.pending.length) console.log(`final chain pending factors: ${gate.pending.map(entry => `${entry.factor_id} (${entry.delivered_stages}/${entry.total_stages}, next ${entry.next_stage})`).join(', ')}`);
   coverage.tasks.forEach(task => {
     const record = ResearchLibrary.taskById(catalog, task.task_id);
     const prompt = record ? ResearchLibrary.fingerprint(record.prompt) : 'missing';
@@ -1800,9 +2079,9 @@ function main() {
   const [command, flag] = process.argv.slice(2);
   if (command === 'catalog') process.exit(catalogCommand(flag));
   if (command === 'registry') process.exit(registryCommand(flag));
-  if (command === 'topics') process.exit(topicsCommand(flag));
+  if (command === 'topics' || command === 'chains') process.exit(chainsCommand(flag));
   if (command === 'verify') process.exit(verifyCommand());
-  console.log('usage: node scripts/build_research_library.js <catalog|registry|topics|verify> [--write|--check]');
+  console.log('usage: node scripts/build_research_library.js <catalog|registry|chains|topics|verify> [--write|--check]');
   process.exit(1);
 }
 
