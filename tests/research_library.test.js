@@ -432,61 +432,110 @@ test("the service answers an unknown route and a bad body rather than guessing",
 });
 
 // ---------------------------------------------------------------------------------------------
-// Topics and the three numbered stages
+// Topic labels, factor chains and the gated final chain
 // ---------------------------------------------------------------------------------------------
 
-test("the catalogue carries six topics, three numbered stages each, over all twenty-five factors", () => {
+test("the catalogue carries six topic labels and twenty-five factor chains, three stages each, plus a gated final chain", () => {
   const topics = ResearchLibrary.listTopics(catalog);
-  assert.equal(topics.length, 6, "the USD research map carries six topics");
+  assert.equal(topics.length, 6, "the USD research map carries six topic labels");
   const covered = new Set();
   topics.forEach(topic => {
     assert.equal(topic.asset, "USD");
     assert.ok(topic.title && topic.summary, `${topic.topic_id} needs a title and a summary`);
-    assert.equal(topic.stages.length, 3, `${topic.topic_id} must carry three stages`);
-    assert.deepEqual(topic.stages.map(stage => stage.stage), ResearchLibrary.TOPIC_STAGES.slice());
-    assert.deepEqual(topic.stages.map(stage => stage.order), [1, 2, 3]);
-    assert.deepEqual(topic.stages.map(stage => stage.parent_stage), [null, "research", "red_team"]);
-    assert.deepEqual(topic.stages.map(stage => stage.document_type), ["report", "review", "synthesis"]);
-    assert.deepEqual(topic.stages.map(stage => stage.label), ["Research", "Red-team", "Adjudication"]);
-    assert.ok(topic.factor_ids.length >= 1, `${topic.topic_id} must name the factor entries it serves`);
+    assert.deepEqual(ResearchLibrary.chainStages(topic), [], `${topic.topic_id} is a grouping label and carries no stages`);
+    assert.ok(topic.factor_ids.length >= 1, `${topic.topic_id} must name the factor entries it groups`);
     topic.factor_ids.forEach(factorId => covered.add(factorId));
     topic.overlaps.forEach(overlapId => assert.ok(ResearchLibrary.topicById(catalog, overlapId), `${overlapId} must resolve`));
     assert.ok(topic.companions.length >= 1, `${topic.topic_id} should name the files it rests on`);
   });
-  assert.equal(covered.size, 25, "every USD factor sits in a topic");
-  // One report can be evidence for more than one factor entry through its topic, which is a mapping rather
-  // than a second independent result.
+  assert.equal(covered.size, 25, "every USD factor sits under a topic label");
+
+  const chains = ResearchLibrary.listFactorChains(catalog, "USD");
+  assert.equal(chains.length, 25, "the map carries one research chain per factor");
+  const chained = new Set();
+  chains.forEach(chain => {
+    assert.ok(chain.title && chain.summary, `${chain.chain_id} needs a title and a summary`);
+    assert.equal(ResearchLibrary.factorChainById(catalog, chain.chain_id).chain_id, chain.chain_id);
+    assert.equal(ResearchLibrary.factorChainForFactor(catalog, chain.factor_id).chain_id, chain.chain_id);
+    assert.ok(ResearchLibrary.getAsset(catalog, "USD").factors.some(factor => factor.factor_id === chain.factor_id), `${chain.factor_id} must exist on the asset`);
+    assert.ok(ResearchLibrary.topicById(catalog, chain.topic_id), `${chain.chain_id} must sit under a topic label`);
+    assert.equal(ResearchLibrary.chainStages(chain).length, 3, `${chain.chain_id} must carry three stages`);
+    assert.deepEqual(ResearchLibrary.chainStages(chain).map(stage => stage.stage), ResearchLibrary.FACTOR_STAGES.slice());
+    assert.deepEqual(ResearchLibrary.chainStages(chain).map(stage => stage.order), [1, 2, 3]);
+    assert.deepEqual(ResearchLibrary.chainStages(chain).map(stage => stage.parent_stage), [null, "research", "red_team"]);
+    assert.deepEqual(ResearchLibrary.chainStages(chain).map(stage => stage.document_type), ["report", "review", "synthesis"]);
+    assert.deepEqual(ResearchLibrary.chainStages(chain).map(stage => stage.label), ["Research", "Red-team", "Adjudication"]);
+    assert.equal(chained.has(chain.factor_id), false, `${chain.factor_id} carries one chain, not two`);
+    chained.add(chain.factor_id);
+  });
+  assert.equal(chained.size, 25, "every factor carries exactly one chain");
+  assert.deepEqual(
+    ResearchLibrary.factorChainsForTopic(catalog, "usd-topic-vix-level-and-risk-regime").map(chain => chain.chain_id),
+    ["usd-factor-live-f1-vix-level", "usd-factor-risk-vix-level-and-change-at-cutoff"]
+  );
+  // A factor resolves to its grouping label. Membership is not evidence: the sibling VIX chain stays 0/3 rather
+  // than inheriting the F1 chain's registered report.
   assert.deepEqual(
     ResearchLibrary.topicsCoveringFactor(catalog, "risk.vix-level-and-change-at-cutoff").map(topic => topic.topic_id),
     ["usd-topic-vix-level-and-risk-regime"]
   );
+
+  const finalSpec = ResearchLibrary.finalChain(catalog, "USD");
+  assert.equal(finalSpec.chain_id, "usd-final-asset-analysis");
+  assert.equal(finalSpec.factor_id, undefined, "the final chain belongs to the asset, not to a factor");
+  assert.equal(ResearchLibrary.chainStages(finalSpec).length, 2);
+  assert.deepEqual(ResearchLibrary.chainStages(finalSpec).map(stage => stage.stage), ResearchLibrary.FINAL_CHAIN_STAGES);
+  assert.deepEqual(ResearchLibrary.chainStages(finalSpec).map(stage => stage.parent_stage), [null, "final_analysis"]);
+  assert.deepEqual(ResearchLibrary.chainStages(finalSpec).map(stage => stage.document_type), ["synthesis", "review"]);
+  assert.equal(finalSpec.gate.requires, "all-factor-chains");
+  assert.equal(finalSpec.gate.factor_count, 25);
+  assert.equal(finalSpec.gate.stage_count, 3);
+  assert.deepEqual(finalSpec.factor_chain_ids.slice().sort(), chains.map(chain => chain.chain_id).sort());
 });
 
-test("every stage prompt exists, matches its catalogue hash and stands on its own", () => {
+test("every chain prompt exists, matches its catalogue hash and stands on its own", () => {
   const hosts = ["openai.com", "anthropic.com", "api.openai", "generativelanguage", "claude.ai"];
-  ResearchLibrary.listTopics(catalog).forEach(topic => {
-    topic.stages.forEach(stage => {
-      const abs = path.join(root, stage.prompt_path);
-      assert.ok(fs.existsSync(abs), `${stage.prompt_path} is missing`);
-      const text = fs.readFileSync(abs, "utf8");
-      assert.equal(sha256(text), stage.prompt_sha256, `${stage.prompt_path} hash drifted`);
-      assert.equal(Buffer.byteLength(text, "utf8"), stage.prompt_bytes);
-      assert.ok(text.startsWith("# "), `${stage.prompt_path} needs a title`);
-      assert.ok(text.includes(topic.topic_id), `${stage.prompt_path} must name its topic`);
-      assert.ok(text.includes("05:00 Europe/London"), `${stage.prompt_path} must state the cutoff`);
-      assert.ok(text.includes("## Prohibitions"), `${stage.prompt_path} must carry the prohibitions`);
-      assert.ok(text.includes("## What to return"), `${stage.prompt_path} must say what to return`);
-      const required = stage.stage === "research" ? "## What the report must cover"
-        : stage.stage === "red_team" ? "## What to attack, claim by claim" : "## What the adjudication must contain";
-      assert.ok(text.includes(required), `${stage.prompt_path} must carry ${required}`);
-      hosts.forEach(host => assert.equal(text.toLowerCase().includes(host), false, `${stage.prompt_path} must not name ${host}`));
-    });
+  const requiredSections = {
+    research: "## What the report must cover",
+    red_team: "## What to attack, claim by claim",
+    adjudication: "## What the adjudication must contain",
+    final_analysis: "## What the synthesis must contain",
+    final_review: "## How to review"
+  };
+  const entries = [];
+  ResearchLibrary.listFactorChains(catalog, "USD").forEach(chain => {
+    ResearchLibrary.chainStages(chain).forEach(stage => entries.push({ chain, stage }));
+  });
+  const finalSpec = ResearchLibrary.finalChain(catalog, "USD");
+  ResearchLibrary.chainStages(finalSpec).forEach(stage => entries.push({ chain: finalSpec, stage }));
+  assert.equal(entries.length, 77, "twenty-five chains of three stages plus the two final stages");
+  entries.forEach(({ chain, stage }) => {
+    const abs = path.join(root, stage.prompt_path);
+    assert.ok(fs.existsSync(abs), `${stage.prompt_path} is missing`);
+    const text = fs.readFileSync(abs, "utf8");
+    assert.equal(sha256(text), stage.prompt_sha256, `${stage.prompt_path} hash drifted`);
+    assert.equal(Buffer.byteLength(text, "utf8"), stage.prompt_bytes);
+    assert.ok(text.startsWith("# "), `${stage.prompt_path} needs a title`);
+    assert.ok(text.includes(chain.chain_id), `${stage.prompt_path} must name its chain`);
+    if (chain.factor_id) {
+      assert.ok(text.includes(chain.factor_id), `${stage.prompt_path} must name its factor`);
+      assert.ok(text.includes(chain.topic_id), `${stage.prompt_path} must name its group label`);
+    } else {
+      assert.equal(text.includes("group label"), false, `${stage.prompt_path} is asset-level and carries no topic`);
+    }
+    assert.ok(text.includes("05:00 Europe/London"), `${stage.prompt_path} must state the cutoff`);
+    assert.ok(text.includes("## Prohibitions"), `${stage.prompt_path} must carry the prohibitions`);
+    assert.ok(text.includes("## What to return"), `${stage.prompt_path} must say what to return`);
+    const required = requiredSections[stage.stage];
+    assert.ok(required, `${stage.stage} needs a known required section`);
+    assert.ok(text.includes(required), `${stage.prompt_path} must carry ${required}`);
+    hosts.forEach(host => assert.equal(text.toLowerCase().includes(host), false, `${stage.prompt_path} must not name ${host}`));
   });
 });
 
-test("the VIX stage 1 prompt is the dispatched assignment, not the legacy reviewer task", () => {
-  const topic = ResearchLibrary.topicById(catalog, "usd-topic-vix-level-and-risk-regime");
-  const research = ResearchLibrary.stageById(topic, "research");
+test("the VIX factor chain's research prompt is the dispatched assignment, not the legacy reviewer task", () => {
+  const chain = ResearchLibrary.factorChainForFactor(catalog, "live.f1-vix-level");
+  const research = ResearchLibrary.chainStageById(chain, "research");
   const text = fs.readFileSync(path.join(root, research.prompt_path), "utf8");
   assert.equal(research.prompt_source.kind, "dispatched_brief");
   assert.equal(research.prompt_source.repo_path, "docs/research/handoff/usd/v1/deep-research/VIX_COMPREHENSIVE_REPORT_BRIEF.md");
@@ -499,11 +548,18 @@ test("the VIX stage 1 prompt is the dispatched assignment, not the legacy review
   assert.ok(Buffer.byteLength(text, "utf8") > 20000, "the whole assignment is in the one file");
   const a3 = ResearchLibrary.taskById(catalog, "USD-SESSION-A3");
   assert.equal(text.includes(a3.prompt.slice(0, 60)), false, "stage 1 must not copy the legacy reviewer prompt");
+  // The sibling VIX factor chain did not receive the dispatched brief as a second, independent result.
+  const sibling = ResearchLibrary.chainStageById(
+    ResearchLibrary.factorChainForFactor(catalog, "risk.vix-level-and-change-at-cutoff"),
+    "research"
+  );
+  assert.equal(sibling.prompt_source.kind, "generated");
+  assert.equal(fs.readFileSync(path.join(root, sibling.prompt_path), "utf8").includes("USD-BASELINE-AUDIT-01"), false);
 });
 
-test("the VIX topic reads research delivered, red-team awaiting a file and adjudication not started", () => {
-  const topic = ResearchLibrary.topicById(catalog, "usd-topic-vix-level-and-risk-regime");
-  const progress = ResearchLibrary.topicProgress(topic, registry);
+test("the VIX factor chain reads research delivered, red-team awaiting a file and adjudication not started", () => {
+  const chain = ResearchLibrary.factorChainForFactor(catalog, "live.f1-vix-level");
+  const progress = ResearchLibrary.chainProgress(chain, registry);
   const byStage = new Map(progress.stages.map(stage => [stage.stage, stage]));
   const research = byStage.get("research");
   assert.equal(research.state, "delivered");
@@ -527,12 +583,34 @@ test("the VIX topic reads research delivered, red-team awaiting a file and adjud
   assert.equal(progress.next_stage, "red_team");
   assert.equal(progress.ready_for_synthesis, false);
   assert.deepEqual(progress.open_findings, []);
-  // The five topics that have not been dispatched have nothing registered at all.
-  ResearchLibrary.listTopics(catalog).slice(1).forEach(other => {
-    const otherProgress = ResearchLibrary.topicProgress(other, registry);
-    assert.equal(otherProgress.delivered_stages, 0, `${other.topic_id} must start empty`);
-    assert.equal(otherProgress.next_stage, "research");
-  });
+
+  // The sibling VIX factor chain owns its own research: the dispatched brief did not count twice.
+  const sibling = ResearchLibrary.factorChainForFactor(catalog, "risk.vix-level-and-change-at-cutoff");
+  const siblingProgress = ResearchLibrary.chainProgress(sibling, registry);
+  assert.equal(siblingProgress.delivered_stages, 0, "one report cannot settle two factor chains");
+  assert.equal(siblingProgress.next_stage, "research");
+
+  // The topic label carries no stages of its own; its progress is the sum of the chains under it.
+  const topic = ResearchLibrary.topicById(catalog, "usd-topic-vix-level-and-risk-regime");
+  const topicRoll = ResearchLibrary.topicProgress(topic, registry, catalog);
+  assert.deepEqual(topicRoll.stages, []);
+  assert.equal(topicRoll.chains.length, 2);
+  assert.equal(topicRoll.delivered_stages, 1);
+  assert.equal(topicRoll.total_stages, 6);
+  assert.equal(topicRoll.ready_for_synthesis, false);
+
+  // The asset-level final chain stays locked until every factor chain completes all three stages.
+  const final = ResearchLibrary.finalChainStatus(catalog, registry);
+  assert.equal(final.state, "locked");
+  assert.equal(final.state_label, "Locked until every factor chain is complete");
+  assert.equal(final.unlocked, false);
+  assert.equal(final.factors_total, 25);
+  assert.equal(final.factors_complete, 0);
+  assert.equal(final.pending.length, 25);
+  const pendingVix = final.pending.find(entry => entry.factor_id === "live.f1-vix-level");
+  assert.equal(pendingVix.next_stage, "red_team");
+  assert.equal(pendingVix.delivered_stages, 1);
+
   // And delivery moved no factor status.
   const counts = ResearchLibrary.progressCounts(ResearchLibrary.listFactors(catalog));
   assert.equal(counts.research.uploaded, 0);
@@ -541,12 +619,12 @@ test("the VIX topic reads research delivered, red-team awaiting a file and adjud
 });
 
 test("a stage that judged an earlier version of its parent is flagged rather than settled", () => {
-  const topic = ResearchLibrary.topicById(catalog, "usd-topic-vix-level-and-risk-regime");
+  const chain = ResearchLibrary.factorChainForFactor(catalog, "live.f1-vix-level");
   const documents = { documents: [
-    { document_id: "vix-stage-1", topic_id: topic.topic_id, stage: "research", asset: "USD", document_type: "report", storage: "library_object", object_sha256: "a".repeat(64), versions: [{ version: 1, sha256: "a".repeat(64), registered_at: "2026-10-15" }, { version: 2, sha256: "b".repeat(64), registered_at: "2026-10-18" }] },
-    { document_id: "vix-stage-2", topic_id: topic.topic_id, stage: "red_team", asset: "USD", document_type: "review", storage: "library_object", object_sha256: "c".repeat(64), parent_document_id: "vix-stage-1", parent_version: 1, parent_sha256: "a".repeat(64), versions: [{ version: 1, sha256: "c".repeat(64), registered_at: "2026-10-16" }] }
+    { document_id: "vix-stage-1", chain_id: chain.chain_id, factor_id: chain.factor_id, topic_id: chain.topic_id, stage: "research", asset: "USD", document_type: "report", storage: "library_object", object_sha256: "a".repeat(64), versions: [{ version: 1, sha256: "a".repeat(64), registered_at: "2026-10-15" }, { version: 2, sha256: "b".repeat(64), registered_at: "2026-10-18" }] },
+    { document_id: "vix-stage-2", chain_id: chain.chain_id, factor_id: chain.factor_id, topic_id: chain.topic_id, stage: "red_team", asset: "USD", document_type: "review", storage: "library_object", object_sha256: "c".repeat(64), parent_document_id: "vix-stage-1", parent_version: 1, parent_sha256: "a".repeat(64), versions: [{ version: 1, sha256: "c".repeat(64), registered_at: "2026-10-16" }] }
   ] };
-  const progress = ResearchLibrary.topicProgress(topic, documents);
+  const progress = ResearchLibrary.chainProgress(chain, documents);
   const redTeam = progress.stages.find(stage => stage.stage === "red_team");
   assert.equal(redTeam.state, "reassessment_required");
   assert.equal(redTeam.stale_parent_version, true);
@@ -554,45 +632,60 @@ test("a stage that judged an earlier version of its parent is flagged rather tha
   assert.equal(redTeam.parent_version, 2);
   assert.deepEqual(progress.flagged_for_reassessment, ["red_team"]);
   assert.equal(progress.ready_for_synthesis, false);
+  const final = ResearchLibrary.finalChainStatus(catalog, documents);
+  assert.equal(final.unlocked, false);
+  assert.equal(final.flagged_factor_ids.includes(chain.factor_id), true);
 
   // The same review against the current version, with an adjudication under it, reads as ready.
   const current = JSON.parse(JSON.stringify(documents));
   current.documents[1].parent_version = 2;
   current.documents[1].parent_sha256 = "b".repeat(64);
-  current.documents.push({ document_id: "vix-stage-3", topic_id: topic.topic_id, stage: "adjudication", asset: "USD", document_type: "synthesis", storage: "library_object", object_sha256: "d".repeat(64), parent_document_id: "vix-stage-2", parent_version: 1, parent_sha256: "c".repeat(64), open_findings: ["the label instrument is still unverified"], versions: [{ version: 1, sha256: "d".repeat(64), registered_at: "2026-10-19" }] });
-  const settled = ResearchLibrary.topicProgress(topic, current);
+  current.documents.push({ document_id: "vix-stage-3", chain_id: chain.chain_id, factor_id: chain.factor_id, topic_id: chain.topic_id, stage: "adjudication", asset: "USD", document_type: "synthesis", storage: "library_object", object_sha256: "d".repeat(64), parent_document_id: "vix-stage-2", parent_version: 1, parent_sha256: "c".repeat(64), open_findings: ["the label instrument is still unverified"], versions: [{ version: 1, sha256: "d".repeat(64), registered_at: "2026-10-19" }] });
+  const settled = ResearchLibrary.chainProgress(chain, current);
   assert.equal(settled.delivered_stages, 3);
   assert.equal(settled.ready_for_synthesis, true);
+  assert.equal(settled.complete, true);
   assert.deepEqual(settled.open_findings, ["the label instrument is still unverified"]);
   assert.equal(settled.unresolved_findings, 1);
   assert.ok(settled.note.includes("unresolved finding"));
+  // One complete factor chain does not open the final gate.
+  const stillLocked = ResearchLibrary.finalChainStatus(catalog, current);
+  assert.equal(stillLocked.unlocked, false);
+  assert.equal(stillLocked.factors_complete, 1);
+  assert.equal(stillLocked.pending.length, 24);
 });
 
-test("the store records the topic, the stage and the exact version a stage judged", () => {
+test("the store records the chain, the stage and the exact version a stage judged", () => {
   const dir = tempDir("stage-store");
   const store = createStore({ root: path.join(dir, "library"), registryPath: path.join(dir, "documents.json"), now: () => new Date("2026-10-15T00:00:00Z") });
   const topicId = "usd-topic-vix-level-and-risk-regime";
+  const chain = ResearchLibrary.factorChainForFactor(catalog, "live.f1-vix-level");
   const research = store.registerUpload({
     document_id: "vix-stage-1", asset: "USD", factor_id: "live.f1-vix-level", topic_id: topicId, stage: "research",
     document_type: "report", title: "Research", model: "Astra deep research", content_text: "# report\n"
   }, catalog);
   assert.equal(research.document.topic_id, topicId);
+  assert.equal(research.document.factor_id, "live.f1-vix-level");
+  assert.equal(research.document.chain_id, chain.chain_id);
   assert.equal(research.document.stage, "research");
   assert.equal(research.document.parent_document_id, undefined);
   assert.equal(research.document.task_id, null);
 
   const review = store.registerUpload({
-    document_id: "vix-stage-2", asset: "USD", topic_id: topicId, stage: "red_team", document_type: "review",
+    document_id: "vix-stage-2", asset: "USD", factor_id: "live.f1-vix-level", stage: "red_team", document_type: "review",
     title: "Red-team", model: "Astra review", parent_document_id: "vix-stage-1", parent_version: 1,
     content_text: "# review\n"
   }, catalog);
+  assert.equal(review.document.chain_id, chain.chain_id, "a chain-only upload records the factor from the chain");
+  assert.equal(review.document.factor_id, "live.f1-vix-level");
   assert.equal(review.document.parent_document_id, "vix-stage-1");
   assert.equal(review.document.parent_version, 1);
   assert.equal(review.document.parent_sha256, research.sha256);
   assert.equal(review.document.versions[0].parent_sha256, research.sha256);
+  assert.equal(review.document.versions[0].chain_id, chain.chain_id);
 
   const adjudication = store.registerUpload({
-    document_id: "vix-stage-3", asset: "USD", topic_id: topicId, stage: "adjudication", document_type: "synthesis",
+    document_id: "vix-stage-3", asset: "USD", factor_id: "live.f1-vix-level", stage: "adjudication", document_type: "synthesis",
     title: "Adjudication", model: "Astra synthesis", parent_document_id: "vix-stage-2", parent_version: 1,
     open_findings: ["label instrument unverified", "no measured base rate"], content_text: "# adjudication\n"
   }, catalog);
@@ -600,38 +693,47 @@ test("the store records the topic, the stage and the exact version a stage judge
 
   // A second version of the research report keeps the first immutable, and the review still points at v1.
   store.registerUpload({
-    document_id: "vix-stage-1", asset: "USD", topic_id: topicId, stage: "research", document_type: "report",
+    document_id: "vix-stage-1", asset: "USD", factor_id: "live.f1-vix-level", stage: "research", document_type: "report",
     title: "Research", model: "Astra deep research", content_text: "# report v2\n"
   }, catalog);
   const stageOne = store.readRegistry().documents.find(entry => entry.document_id === "vix-stage-1");
   assert.equal(stageOne.versions.length, 2);
   assert.equal(stageOne.versions[0].sha256, research.sha256);
+  assert.equal(stageOne.chain_id, chain.chain_id);
   const manifestEntry = store.manifest().documents.find(entry => entry.document_id === "vix-stage-2");
   assert.equal(manifestEntry.stage, "red_team");
+  assert.equal(manifestEntry.chain_id, chain.chain_id);
   assert.equal(manifestEntry.parent_version, 1);
   assert.equal(store.readObject("vix-stage-1", 1).version.sha256, research.sha256);
 });
 
-test("the store refuses a stage upload that breaks the linkage", () => {
+test("the store refuses a stage upload that breaks the chain linkage", () => {
   const dir = tempDir("stage-guard");
   const store = createStore({ root: path.join(dir, "library"), registryPath: path.join(dir, "documents.json") });
   const topicId = "usd-topic-vix-level-and-risk-regime";
+  const finalChainId = ResearchLibrary.finalChain(catalog).chain_id;
   const base = { document_id: "x", asset: "USD", title: "t", model: "m", content_text: "y" };
 
-  assert.throws(() => store.registerUpload({ ...base, topic_id: "not-a-topic", stage: "research", document_type: "report" }, catalog), /is not in the catalog/);
-  assert.throws(() => store.registerUpload({ ...base, topic_id: topicId, document_type: "report" }, catalog), /stage is required/);
-  assert.throws(() => store.registerUpload({ ...base, stage: "research", document_type: "report" }, catalog), /topic_id is required/);
-  assert.throws(() => store.registerUpload({ ...base, topic_id: topicId, stage: "red_team", document_type: "review" }, catalog), /must name the research document it judged/);
-  assert.throws(() => store.registerUpload({ ...base, topic_id: topicId, stage: "red_team", document_type: "synthesis", parent_document_id: "nope", parent_version: 1 }, catalog), /expects a review document/);
-  assert.throws(() => store.registerUpload({ ...base, topic_id: topicId, stage: "red_team", document_type: "review", parent_document_id: "nope", parent_version: 1 }, catalog), /is not registered/);
-  // The first stage of a topic has no parent, so an upload that names one is refused too.
-  assert.throws(() => store.registerUpload({ ...base, topic_id: topicId, stage: "research", document_type: "report", parent_document_id: "x", parent_version: 1 }, catalog), /has no parent document/);
-  // And an upload with no topic at all is still allowed for a legacy task, exactly as before.
+  assert.throws(() => store.registerUpload({ ...base, factor_id: "not-a-factor", stage: "research", document_type: "report" }, catalog), /carries no research chain/);
+  assert.throws(() => store.registerUpload({ ...base, chain_id: "not-a-chain", stage: "research", document_type: "report" }, catalog), /is not in the catalog/);
+  assert.throws(() => store.registerUpload({ ...base, stage: "research", document_type: "report" }, catalog), /factor_id or chain_id is required/);
+  assert.throws(() => store.registerUpload({ ...base, topic_id: topicId, stage: "research", document_type: "report" }, catalog), /factor_id or chain_id is required/);
+  // The final chain is asset-level: it must not claim a factor or a grouping label.
+  assert.throws(() => store.registerUpload({ ...base, chain_id: finalChainId, factor_id: "live.f1-vix-level", stage: "final_analysis", document_type: "synthesis" }, catalog), /must not name a factor/);
+  assert.throws(() => store.registerUpload({ ...base, chain_id: finalChainId, topic_id: topicId, stage: "final_analysis", document_type: "synthesis" }, catalog), /must not name a topic/);
+  assert.throws(() => store.registerUpload({ ...base, factor_id: "live.f1-vix-level", stage: "red_team", document_type: "review" }, catalog), /must name the research document it judged/);
+  assert.throws(() => store.registerUpload({ ...base, factor_id: "live.f1-vix-level", stage: "red_team", document_type: "synthesis", parent_document_id: "nope", parent_version: 1 }, catalog), /expects a review document/);
+  assert.throws(() => store.registerUpload({ ...base, factor_id: "live.f1-vix-level", stage: "red_team", document_type: "review", parent_document_id: "nope", parent_version: 1 }, catalog), /is not registered/);
+  // The first stage of a chain has no parent, so an upload that names one is refused too.
+  assert.throws(() => store.registerUpload({ ...base, factor_id: "live.f1-vix-level", stage: "research", document_type: "report", parent_document_id: "x", parent_version: 1 }, catalog), /has no parent document/);
+  // And an upload with no chain at all is still allowed for a legacy task, exactly as before.
   const legacy = store.registerUpload({
     document_id: "usd-session-a1-return", asset: "USD", task_id: "USD-SESSION-A1", document_type: "report",
     title: "A1 return", model: "ChatGPT (test)", content_text: "{\"cards\":[]}"
   }, catalog);
   assert.equal(legacy.document.topic_id, null);
+  assert.equal(legacy.document.factor_id, null);
+  assert.equal(legacy.document.chain_id, null);
   assert.equal(legacy.document.stage, null);
 });
 
@@ -646,7 +748,7 @@ test("the validator refuses a mis-linked or unlinked stage document", () => {
 
   const missingParent = JSON.parse(JSON.stringify(registry));
   missingParent.documents.push({
-    document_id: "vix-review", asset: "USD", topic_id: "usd-topic-vix-level-and-risk-regime", stage: "red_team",
+    document_id: "vix-review", asset: "USD", factor_id: "live.f1-vix-level", topic_id: "usd-topic-vix-level-and-risk-regime", stage: "red_team",
     document_type: "review", storage: "library_object", public_download: false, object_sha256: "a".repeat(64),
     versions: [{ version: 1, sha256: "a".repeat(64), registered_at: "2026-10-15" }]
   });

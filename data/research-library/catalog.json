@@ -391,7 +391,7 @@
       "overlaps": [
         "usd-topic-fx-session-structure"
       ],
-      "next_step": "The research report is registered. Run stage 2 (red-team) against research version 1, then stage 3 (adjudication).",
+      "next_step": "The research report is registered on the usd-factor-live-f1-vix-level chain. Run that chain's stage 2 (red-team) against research version 1, then its stage 3 (adjudication). The sibling usd-factor-risk-vix-level-and-change-at-cutoff chain is still not started and is not advanced by that report.",
       "dispatch": {
         "state": "dispatched",
         "task_id": "USD-BASELINE-AUDIT-01",
@@ -429,62 +429,9 @@
         "Is the mechanism safe-haven demand, risk appetite, carry or policy expectations, and what observable at the cutoff distinguishes them?",
         "How much of the VIX move is already in the dollar at 05:00 Europe/London, and what is left for the following 24 hours?"
       ],
-      "stages": [
-        {
-          "stage": "research",
-          "order": 1,
-          "label": "Research",
-          "prompt_path": "docs/research/topics/usd/vix-level-and-risk-regime/01-research-prompt.md",
-          "prompt_sha256": "69daff3ca4962730c30adc0b21117713715e61b184a2ef67ae0e3f9dfe8bfb7d",
-          "prompt_bytes": 21099,
-          "prompt_source": {
-            "kind": "dispatched_brief",
-            "repo_path": "docs/research/handoff/usd/v1/deep-research/VIX_COMPREHENSIVE_REPORT_BRIEF.md",
-            "sha256": "40a05c141bf2c6baab1417b896d763174fd06242725b4c0d6c60842aacdc0923",
-            "note": "Generated from the dispatched brief and reproduced in full inside this prompt."
-          },
-          "document_type": "report",
-          "parent_stage": null,
-          "deliverable": "One Markdown report: the assignment answered in full, with the source note as a section inside the same document.",
-          "returns": "Sections in the order the prompt asks for, an explicit what-is-not-claimed section, and the source note naming every source you fetched, the passage you relied on, the window it concerns and whether it is primary."
-        },
-        {
-          "stage": "red_team",
-          "order": 2,
-          "label": "Red-team",
-          "prompt_path": "docs/research/topics/usd/vix-level-and-risk-regime/02-red-team-prompt.md",
-          "prompt_sha256": "f391fce4db5a5d25c5166fd9c7887811983e5d9af08c32ea1680bb6d451cec15",
-          "prompt_bytes": 15238,
-          "prompt_source": {
-            "kind": "generated",
-            "repo_path": "docs/research/topics/usd/vix-level-and-risk-regime/02-red-team-prompt.md",
-            "sha256": "f391fce4db5a5d25c5166fd9c7887811983e5d9af08c32ea1680bb6d451cec15",
-            "note": "Generated from the catalogue and the topic map, and shown on the page before it is copied."
-          },
-          "document_type": "review",
-          "parent_stage": "research",
-          "deliverable": "One Markdown issue register: every load-bearing claim quoted, given a verdict, a severity and the evidence that would settle it.",
-          "returns": "The issue register, the two closing lists (what survives unchanged, what the review could not reach), the sources you re-fetched and the questions you could not resolve."
-        },
-        {
-          "stage": "adjudication",
-          "order": 3,
-          "label": "Adjudication",
-          "prompt_path": "docs/research/topics/usd/vix-level-and-risk-regime/03-adjudication-prompt.md",
-          "prompt_sha256": "4587ebcaa932717c1246c0976e07608f3b083768d554eb7f6064b7b6fda46dfc",
-          "prompt_bytes": 8756,
-          "prompt_source": {
-            "kind": "generated",
-            "repo_path": "docs/research/topics/usd/vix-level-and-risk-regime/03-adjudication-prompt.md",
-            "sha256": "4587ebcaa932717c1246c0976e07608f3b083768d554eb7f6064b7b6fda46dfc",
-            "note": "Generated from the catalogue and the topic map, and shown on the page before it is copied."
-          },
-          "document_type": "synthesis",
-          "parent_stage": "red_team",
-          "deliverable": "One Markdown adjudication: corrected conclusions, a decision on every material objection, and a handoff to central USD synthesis.",
-          "returns": "Corrected conclusions; finding-by-finding decisions; accepted, rejected and unresolved claims; proposed treatment of the factor in the engine; inputs, transformations, timing, interactions and missing-data treatment; explicitly unvalidated parameters; required empirical tests and remaining blockers; the handoff section."
-        }
-      ]
+      "dispatched_brief_text": "# VIX and the subsequent direction of the US dollar - comprehensive research brief (live.f1-vix-level)\n\n- Task: `USD-BASELINE-AUDIT-01`. Report brief 1.0.0 of the deep-research tier, context version usd-session-context-20261014.1, pack version 2.0.0, extracted 2026-10-15 on branch `research/usd-session-20261013` at `d07af11166ea1d39e5f4184e85a993e03bcb7137`.\n- Read [`deep-research/CONTEXT_PACK_NEUTRAL.md`](deep-research/CONTEXT_PACK_NEUTRAL.md) first. It carries the session, the existing factors, the rules in force, the data that exists and the decisions that are open - and nothing else, on purpose.\n- This brief is step 1 of four. A research card is step 3's output, under the same task, and it is not what this brief asks for.\n\n## 1. What is asked\n\nProduce one comprehensive, source-backed report. It is the primary deliverable of this programme:\n\nA comprehensive, source-backed report investigating how VIX - its level, its change and its interactions with the other factors in this system - relates to the subsequent direction of the US dollar over one session: 05:00 Europe/London to 05:00 Europe/London on the next local date.\n\nWe have a rule in force that reads the VIX level as a risk regime, and a session we have defined but have not measured, because the instrument that would label it has no verified quote source. Neither of those is the question. The question is what the evidence actually says about how VIX and the things it interacts with relate to where the dollar goes next, inside this window, and where that evidence is thin, contradictory or absent.\n\nReturn the report as markdown, plus the source note described in section 6. Format the report with the sections of section 3 in that order: a reader who disagrees with you should be able to find the weakness.\n\n## 2. The session the report is written for\n\n- Start 05:00 Europe/London. End 05:00 Europe/London on the next local date. Both ends are London wall-clock times one local date apart; every eligible session is exactly 24 hours. The contract is `docs/research/usd-session/v1/session_contract_v1.json`.\n- The label instrument is proposed as DXY and is UNVERIFIED: no intraday dollar-index print exists in this repository or in the live collector, and no quote source is committed. Never present another instrument as DXY: if a source is about EUR/USD, a basket, the broad trade-weighted index or a futures contract, name that instrument in the same sentence, and say whether its window is a close-to-close day, an intraday slice or something else.\n- The deployed engine is not this window: it cuts off at 09:30 America/New_York and ends at the next 16:00 ET close, a median 30.5 elapsed hours. The closed 24-hour study behind it overlaps the corrected session for 14.5 nominal hours (15.5 in the weeks when New York has changed and London has not) and leaves the session's first 9.5 hours unmeasured. Read every number in this repository as belonging to one of those windows, and say which.\n\n## 3. What the report must cover\n\n1. What VIX is and what it measures, from sources: the level, the index family around it, the futures term structure, and anything published about volatility of volatility. Name the instrument and the window of every claim.\n2. The proposed mechanisms by which VIX would move the dollar inside a 24-hour London-to-London window - safe-haven demand, risk appetite and cross-asset correlation, carry and funding, policy expectations, positioning and flows - and the observable each mechanism would leave at the cutoff.\n3. Level against change: whether the level, the 1-day change or a longer change is the informative quantity, and on what evidence that judgement rests.\n4. Interactions with the factors in this system, taken from the context pack's factor table: for each one, whether the sources support an interaction with VIX, what the two together would imply, and which pairs would double-count one input. The deployed set already reads VIX in 3 places - `live.f1-vix-level`, `live.f9-dollar-smile`, `live.f10-equity-versus-usd` - and the session set carries its own VIX card, so name every overlap you rely on and every overlap you are introducing.\n5. Where the relation weakens, changes sign or stops being informative: growth shocks against policy and funding shocks, low-volatility regimes, event days, month-end and quarter-end, and what the sources say distinguishes them.\n6. What is already in the price at the cutoff, given that 05:00 London follows the US close that produced the VIX print, and how a study could tell a reaction from a prediction.\n7. The cross-asset carriers of the same channel: equities, credit, gold, rates and crypto, with the same instrument and window labelling.\n8. Event and calendar conditioning inside the window, including the release calendar and the H.10 timing.\n9. What the sources cannot settle: contradictions, weak identification, period dependence, and claims that are plausible but unsourced.\n10. What our own session cannot be measured on yet, stated plainly, and what that does not block.\n11. Candidate relations, unranked: as many as the sources support, each with the window it was evidenced on, the direction, the condition under which it holds and what would falsify it.\n12. Open questions, and what you would need to fetch or measure next.\n13. What is not claimed, in your own words.\n\n## 4. Evidence standards\n\n- Cite only what you actually fetched in this session: the link, the passage you relied on, when the source is dated, and what that passage supports.\n- Label the window of every piece of evidence. A close-to-close daily relation, an intraday slice, an options-implied measure and a 30-hour study window are four different objects; none of them may be presented as evidence about our 05:00-to-05:00 session.\n- Keep mechanism apart from measurement. A coherent argument for why a channel exists is not a measurement of it, and a modelled or simulated figure is not an observed one.\n- Where sources disagree, give both and say which one you find better identified and why.\n- Prefer primary sources - the exchange, the index provider, the Federal Reserve, the paper itself - over summaries, and say when only a summary was reachable.\n- Name the instrument a claim is really about, every time. Never present another instrument as DXY.\n- A relation that exists on another asset, another window or another era is reported as exactly that.\n\n## 5. Context, not a limit\n\n- The rule in force and the data reachable today are context for this programme, not limits on it. The deployed sign, weight, threshold and lookback are the object of an audit; they are never evidence for a claim. A review may use any source it can fetch and cite, whether or not this repository can reproduce it. What is missing blocks one thing only: empirical validation of our exact session. It does not block research into mechanisms, evidence and interactions, and it is never a reason to narrow the question to what this repository happens to hold.\n- At most two programmable hypotheses per returned card. That limit is a card rule: it applies to the individual research card in step 3, and it does not apply to the discovery phase, where a report may state, compare and rank as many candidate relations as its sources support.\n- The label instrument and quote source are unverified, and the missing-quote policy, the flat band and the tie rule are open decisions listed in the context pack. None of them is frozen here, none of them is yours to freeze, and the report may say what the sources imply for each of them.\n\n## 6. What to return\n\n1. The report, as markdown, with the sections of section 3 in that order and an explicit what-is-not-claimed section.\n2. The source note: every source you fetched, its link, the passage you relied on, what it supports, the window it concerns and whether it is primary; then the questions you could not resolve and what you could not reach behind a paywall or a login.\n3. Both upload against `USD-BASELINE-AUDIT-01` for `live.f1-vix-level` in the Research Library. An upload records evidence; it is not an approval, and it moves no factor's status.\n\n## 7. Prohibitions\n\nDo not invent a backtest, a performance figure, an accuracy rate or a sample size. If you have not\nmeasured it, say it is unmeasured. Numbers you remember are not evidence.\nDo not use hindsight: never state what a past period would have predicted using information that was not\navailable at that time, and do not present a later revision as a first print.\nCite only sources you actually fetched in this session, with the link and the passage you relied on.\nWhere you are uncertain, say so and give the reason; an unresolved question is a valid return.\nState effects that are already in the price at the cutoff rather than counting them again as predictive.\nTreat the deployed weights, thresholds and signs as a baseline to audit, never as evidence for your claim.\nName the instrument a claim is really about. Never present another instrument as DXY.\nNo production, workflow, dashboard, feed, dispatcher, database or configuration change is authorised by\nthis pack, and none may be proposed as part of the deliverable.\n\n## 8. What happens after you return it\n\nAn independent red team attacks the report claim by claim (step 2, `deep-research/RED_TEAM_REVIEW_BRIEF.md`). Only what survives is carried into the revised synthesis and the structured research cards (step 3, `deep-research/SYNTHESIS_AND_CARDS_BRIEF.md`), where the per-card limit of at most two programmable hypotheses applies. Nothing is scored before the session and data contract is frozen (step 4, `deep-research/BACKTEST_HANDOFF_BRIEF.md`), and no weight, sign, threshold or lookback changes because a report or a backtest exists.\n\n## 9. What this brief is not\n\n- Not a research card: a card is step 3's output, on the schema, and the two-hypothesis limit is not a limit on this report.\n- Not an audit of our deployed rule, and not an approval of it or of any replacement: the deployed rule is context to be tested against the evidence, never evidence for a claim.\n- Not a measurement of our session: the report says what is known and how well, and states plainly what the missing label data leaves unmeasured.\n- Not a backtest, a performance figure, an accuracy rate or a sample size, and it asserts none.\n- Not a live change of any kind: no production, workflow, dashboard, feed, dispatcher, database or configuration change is authorised by this brief.\n\n## 10. The other nine deployed factors and the fifteen session factors\n\nThis brief is the programme's first report and its subject is VIX. The other factor ids in the context pack get their own assignments: the deployed set audits code that runs (tasks `USD-BASELINE-AUDIT-01` to `USD-BASELINE-AUDIT-10`, one per factor, of which only `USD-BASELINE-AUDIT-01` is addressed here), and the fifteen session factors carry the two field packages. The same four steps apply to them when their turns come.\n",
+      "programme_red_team_path": "docs/research/handoff/usd/v1/deep-research/RED_TEAM_REVIEW_BRIEF.md",
+      "programme_red_team_text": "# Independent red-team review of the VIX report - step 2 brief\n\n- Task: `USD-BASELINE-AUDIT-01`. Step 2 of four of the deep-research tier 1.0.0, context version usd-session-context-20261014.1. The report under review is the return of [`deep-research/VIX_COMPREHENSIVE_REPORT_BRIEF.md`](deep-research/VIX_COMPREHENSIVE_REPORT_BRIEF.md).\n- Attach the report and its source note, and nothing else about its reasoning.\n\n## 1. What you are for\n\nYour job is to find what is wrong, unsupported or overstated in the report before the synthesis carries it further. A report that survives an honest attack is worth more than a report that was never attacked, so the review is expected to damage claims and to say which ones stood up. It is not a summary, not a rewrite and not a vote.\n\n## 2. Independence rules\n\n- You are not the author's session and you did not write the report; do not ask it what it meant. The report must stand on the words it contains.\n- Open the sources yourself wherever they are reachable, and say which ones you could re-fetch. Where a source is behind a login or a paywall and you cannot reach it, judge only on the quotation given and mark the claim's status accordingly.\n- Judge claims, not style, and attack the strongest version of a claim rather than a weakened one.\n- Say when a claim is right and only its scope is too wide: a narrower true claim is a result, not a loss.\n\n## 3. What to attack, claim by claim\n\n- Traceability: does the passage cited actually say what the claim says, and is the link the source itself rather than a summary of it?\n- Window: is the evidence about our 05:00 London to 05:00 London session, or about a daily close-to-close day, an intraday slice or another window, presented as if it were ours?\n- Instrument: is a claim really about EUR/USD, a basket or a future, presented under the DXY name?\n- Mechanism against measurement: is a plausible channel being used as if the relation had been measured?\n- Already priced: does the claim count an effect as predictive that the cutoff has already absorbed?\n- Identification and scope: sample period, era dependence, regime dependence, conditioning-on-the-outcome, survivorship in the sources chosen, base rates behind a conditional claim, and any number that has no stated origin.\n- Counter-evidence: is the strongest contrary evidence in the sources the report fetched absent, or present and dismissed without a reason?\n- Internal consistency: does one section contradict another, and does the what-is-not-claimed section match what the body actually does?\n- Overlap: does the report lean on an interaction that double-counts one input across factors, and does it say so?\n\n## 4. A verdict for every load-bearing claim\n\n- `SUPPORTED` - the sources given support it as stated.\n- `NARROWED` - something in it is supported, and the supported part is stated here in your own words.\n- `NOT_SUPPORTED` - the sources given do not support it, or contradict it; say which.\n- `UNASSESSABLE` - it could not be judged from the sources given; say what would settle it.\n\nFor each claim also give: the claim quoted, severity (fatal, material, cosmetic), what is wrong, and the evidence that would resolve it. End with two lists: what survives the attack unchanged, and what the review could not reach at all.\n\n## 5. What to return\n\n1. The issue register, claim by claim, with the verdicts of section 4.\n2. The two closing lists: what survives, and what this review could not reach.\n3. A short note of the sources you re-fetched and those you could not, and the questions you could not resolve.\n4. Upload it against `USD-BASELINE-AUDIT-01` in the Research Library, beside the report it attacks. An upload records evidence; it is not an approval, and it moves no factor's status.\n\n## 6. Prohibitions\n\nDo not invent a backtest, a performance figure, an accuracy rate or a sample size. If you have not\nmeasured it, say it is unmeasured. Numbers you remember are not evidence.\nDo not use hindsight: never state what a past period would have predicted using information that was not\navailable at that time, and do not present a later revision as a first print.\nCite only sources you actually fetched in this session, with the link and the passage you relied on.\nWhere you are uncertain, say so and give the reason; an unresolved question is a valid return.\nState effects that are already in the price at the cutoff rather than counting them again as predictive.\nTreat the deployed weights, thresholds and signs as a baseline to audit, never as evidence for your claim.\nName the instrument a claim is really about. Never present another instrument as DXY.\nNo production, workflow, dashboard, feed, dispatcher, database or configuration change is authorised by\nthis pack, and none may be proposed as part of the deliverable.\n\n## 7. What this review is not\n\n- Not the card review of step 3: no card exists yet, and nothing here approves a hypothesis.\n- Not a rewrite of the report: the synthesiser revises it, and every issue you raised must be answered or left visibly open.\n- Not a place to impose the card rule: At most two programmable hypotheses per returned card. That limit is a card rule: it applies to the individual research card in step 3, and it does not apply to the discovery phase, where a report may state, compare and rank as many candidate relations as its sources support. A report of twenty sourced candidate relations is a better report than one with two, and the attack is on whether each of them is supported.\n- Not a decision on the label instrument, the missing-quote policy, the flat band or the tie rule: those are open, and this brief freezes none of them.\n- Not a live change of any kind: no production, workflow, dashboard, feed, dispatcher, database or configuration change is authorised by it.\n"
     },
     {
       "topic_id": "usd-topic-front-end-rates",
@@ -505,7 +452,7 @@
       "overlaps": [
         "usd-topic-economic-surprise-and-fed-bias"
       ],
-      "next_step": "Not dispatched. The research prompt is written and checked; take it from the stage 1 card when the batch opens.",
+      "next_step": "Not dispatched. Each factor under this label has its own written and checked research prompt; open a chain and take its stage 1 prompt when the batch opens.",
       "dispatch": {
         "state": "queued"
       },
@@ -572,62 +519,6 @@
         "Is the informative quantity the level, a five-day change or a same-session change, and does the answer depend on the policy cycle?",
         "Does a real-yield change add information beyond the nominal front end, and does that survive the inflation-expectation measurement problem?",
         "Are these relations already in the dollar by 05:00 Europe/London, given that the US cash market is closed at the cutoff?"
-      ],
-      "stages": [
-        {
-          "stage": "research",
-          "order": 1,
-          "label": "Research",
-          "prompt_path": "docs/research/topics/usd/front-end-rates/01-research-prompt.md",
-          "prompt_sha256": "eb048f72fb4f848e028363ef3ab70302d2b6e33cbf35d87d318fe9c23f3b160f",
-          "prompt_bytes": 13632,
-          "prompt_source": {
-            "kind": "generated",
-            "repo_path": "docs/research/topics/usd/front-end-rates/01-research-prompt.md",
-            "sha256": "eb048f72fb4f848e028363ef3ab70302d2b6e33cbf35d87d318fe9c23f3b160f",
-            "note": "Generated from the catalogue and the topic map, and shown on the page before it is copied."
-          },
-          "document_type": "report",
-          "parent_stage": null,
-          "deliverable": "One Markdown report: the assignment answered in full, with the source note as a section inside the same document.",
-          "returns": "Sections in the order the prompt asks for, an explicit what-is-not-claimed section, and the source note naming every source you fetched, the passage you relied on, the window it concerns and whether it is primary."
-        },
-        {
-          "stage": "red_team",
-          "order": 2,
-          "label": "Red-team",
-          "prompt_path": "docs/research/topics/usd/front-end-rates/02-red-team-prompt.md",
-          "prompt_sha256": "62f104d73c05917fc1ce499ed36dc2682752c10841c4aaf727624d50b848c46f",
-          "prompt_bytes": 11834,
-          "prompt_source": {
-            "kind": "generated",
-            "repo_path": "docs/research/topics/usd/front-end-rates/02-red-team-prompt.md",
-            "sha256": "62f104d73c05917fc1ce499ed36dc2682752c10841c4aaf727624d50b848c46f",
-            "note": "Generated from the catalogue and the topic map, and shown on the page before it is copied."
-          },
-          "document_type": "review",
-          "parent_stage": "research",
-          "deliverable": "One Markdown issue register: every load-bearing claim quoted, given a verdict, a severity and the evidence that would settle it.",
-          "returns": "The issue register, the two closing lists (what survives unchanged, what the review could not reach), the sources you re-fetched and the questions you could not resolve."
-        },
-        {
-          "stage": "adjudication",
-          "order": 3,
-          "label": "Adjudication",
-          "prompt_path": "docs/research/topics/usd/front-end-rates/03-adjudication-prompt.md",
-          "prompt_sha256": "2eeea6ae4f143fc13964395069640932ea9aec573cb063ced10affdae2233c28",
-          "prompt_bytes": 11480,
-          "prompt_source": {
-            "kind": "generated",
-            "repo_path": "docs/research/topics/usd/front-end-rates/03-adjudication-prompt.md",
-            "sha256": "2eeea6ae4f143fc13964395069640932ea9aec573cb063ced10affdae2233c28",
-            "note": "Generated from the catalogue and the topic map, and shown on the page before it is copied."
-          },
-          "document_type": "synthesis",
-          "parent_stage": "red_team",
-          "deliverable": "One Markdown adjudication: corrected conclusions, a decision on every material objection, and a handoff to central USD synthesis.",
-          "returns": "Corrected conclusions; finding-by-finding decisions; accepted, rejected and unresolved claims; proposed treatment of the factor in the engine; inputs, transformations, timing, interactions and missing-data treatment; explicitly unvalidated parameters; required empirical tests and remaining blockers; the handoff section."
-        }
       ]
     },
     {
@@ -646,7 +537,7 @@
         "usd-topic-vix-level-and-risk-regime",
         "usd-topic-fx-session-structure"
       ],
-      "next_step": "Not dispatched. The research prompt is written and checked; take it from the stage 1 card when the batch opens.",
+      "next_step": "Not dispatched. Each factor under this label has its own written and checked research prompt; open a chain and take its stage 1 prompt when the batch opens.",
       "dispatch": {
         "state": "queued"
       },
@@ -689,62 +580,6 @@
         "Which dollar index is a claim actually about, and does the answer change with the index construction?",
         "Does a same-day dollar move followed by a session direction suggest mean reversion or continuation, and on what evidence?",
         "Are gold and equities independent evidence for the dollar, or the same risk factor counted twice?"
-      ],
-      "stages": [
-        {
-          "stage": "research",
-          "order": 1,
-          "label": "Research",
-          "prompt_path": "docs/research/topics/usd/dollar-index-gold-and-equities/01-research-prompt.md",
-          "prompt_sha256": "2b9f08a8045eb96dc5aef8e412cc4419124685ffd0e72a8c8e7ba0cf003cbff1",
-          "prompt_bytes": 10787,
-          "prompt_source": {
-            "kind": "generated",
-            "repo_path": "docs/research/topics/usd/dollar-index-gold-and-equities/01-research-prompt.md",
-            "sha256": "2b9f08a8045eb96dc5aef8e412cc4419124685ffd0e72a8c8e7ba0cf003cbff1",
-            "note": "Generated from the catalogue and the topic map, and shown on the page before it is copied."
-          },
-          "document_type": "report",
-          "parent_stage": null,
-          "deliverable": "One Markdown report: the assignment answered in full, with the source note as a section inside the same document.",
-          "returns": "Sections in the order the prompt asks for, an explicit what-is-not-claimed section, and the source note naming every source you fetched, the passage you relied on, the window it concerns and whether it is primary."
-        },
-        {
-          "stage": "red_team",
-          "order": 2,
-          "label": "Red-team",
-          "prompt_path": "docs/research/topics/usd/dollar-index-gold-and-equities/02-red-team-prompt.md",
-          "prompt_sha256": "513fab8d03cf62865790ce1767d98a956a50b8dbc5bbd22ea7349c1de8f5d11c",
-          "prompt_bytes": 9937,
-          "prompt_source": {
-            "kind": "generated",
-            "repo_path": "docs/research/topics/usd/dollar-index-gold-and-equities/02-red-team-prompt.md",
-            "sha256": "513fab8d03cf62865790ce1767d98a956a50b8dbc5bbd22ea7349c1de8f5d11c",
-            "note": "Generated from the catalogue and the topic map, and shown on the page before it is copied."
-          },
-          "document_type": "review",
-          "parent_stage": "research",
-          "deliverable": "One Markdown issue register: every load-bearing claim quoted, given a verdict, a severity and the evidence that would settle it.",
-          "returns": "The issue register, the two closing lists (what survives unchanged, what the review could not reach), the sources you re-fetched and the questions you could not resolve."
-        },
-        {
-          "stage": "adjudication",
-          "order": 3,
-          "label": "Adjudication",
-          "prompt_path": "docs/research/topics/usd/dollar-index-gold-and-equities/03-adjudication-prompt.md",
-          "prompt_sha256": "1b0ccb98d8b2dcdc593b39e176e48cb1883fcf882ccbb4bf271a012723aeb613",
-          "prompt_bytes": 9583,
-          "prompt_source": {
-            "kind": "generated",
-            "repo_path": "docs/research/topics/usd/dollar-index-gold-and-equities/03-adjudication-prompt.md",
-            "sha256": "1b0ccb98d8b2dcdc593b39e176e48cb1883fcf882ccbb4bf271a012723aeb613",
-            "note": "Generated from the catalogue and the topic map, and shown on the page before it is copied."
-          },
-          "document_type": "synthesis",
-          "parent_stage": "red_team",
-          "deliverable": "One Markdown adjudication: corrected conclusions, a decision on every material objection, and a handoff to central USD synthesis.",
-          "returns": "Corrected conclusions; finding-by-finding decisions; accepted, rejected and unresolved claims; proposed treatment of the factor in the engine; inputs, transformations, timing, interactions and missing-data treatment; explicitly unvalidated parameters; required empirical tests and remaining blockers; the handoff section."
-        }
       ]
     },
     {
@@ -762,7 +597,7 @@
         "usd-topic-front-end-rates",
         "usd-topic-calendar-and-data-quality"
       ],
-      "next_step": "Not dispatched. The research prompt is written and checked; take it from the stage 1 card when the batch opens.",
+      "next_step": "Not dispatched. Each factor under this label has its own written and checked research prompt; open a chain and take its stage 1 prompt when the batch opens.",
       "dispatch": {
         "state": "queued"
       },
@@ -799,62 +634,6 @@
         "Is the first print the only honest vintage, and what does the revision history of the tested series look like?",
         "Is Fed bias an observable at 05:00 Europe/London or a narrative, and what would an observable version look like?",
         "How much of a surprise is already in the dollar in the minutes after the print, and how do you separate that from the session that follows?"
-      ],
-      "stages": [
-        {
-          "stage": "research",
-          "order": 1,
-          "label": "Research",
-          "prompt_path": "docs/research/topics/usd/economic-surprise-and-fed-bias/01-research-prompt.md",
-          "prompt_sha256": "8a3524062ae6b9a552bcd7bf8592a99c65e6cb988353afc8d02ad32d6f60c042",
-          "prompt_bytes": 10660,
-          "prompt_source": {
-            "kind": "generated",
-            "repo_path": "docs/research/topics/usd/economic-surprise-and-fed-bias/01-research-prompt.md",
-            "sha256": "8a3524062ae6b9a552bcd7bf8592a99c65e6cb988353afc8d02ad32d6f60c042",
-            "note": "Generated from the catalogue and the topic map, and shown on the page before it is copied."
-          },
-          "document_type": "report",
-          "parent_stage": null,
-          "deliverable": "One Markdown report: the assignment answered in full, with the source note as a section inside the same document.",
-          "returns": "Sections in the order the prompt asks for, an explicit what-is-not-claimed section, and the source note naming every source you fetched, the passage you relied on, the window it concerns and whether it is primary."
-        },
-        {
-          "stage": "red_team",
-          "order": 2,
-          "label": "Red-team",
-          "prompt_path": "docs/research/topics/usd/economic-surprise-and-fed-bias/02-red-team-prompt.md",
-          "prompt_sha256": "442d3f2d9203a8c0b31b733c57a14b8ee27e4b7f8e3189f5040fdaf613e88953",
-          "prompt_bytes": 9893,
-          "prompt_source": {
-            "kind": "generated",
-            "repo_path": "docs/research/topics/usd/economic-surprise-and-fed-bias/02-red-team-prompt.md",
-            "sha256": "442d3f2d9203a8c0b31b733c57a14b8ee27e4b7f8e3189f5040fdaf613e88953",
-            "note": "Generated from the catalogue and the topic map, and shown on the page before it is copied."
-          },
-          "document_type": "review",
-          "parent_stage": "research",
-          "deliverable": "One Markdown issue register: every load-bearing claim quoted, given a verdict, a severity and the evidence that would settle it.",
-          "returns": "The issue register, the two closing lists (what survives unchanged, what the review could not reach), the sources you re-fetched and the questions you could not resolve."
-        },
-        {
-          "stage": "adjudication",
-          "order": 3,
-          "label": "Adjudication",
-          "prompt_path": "docs/research/topics/usd/economic-surprise-and-fed-bias/03-adjudication-prompt.md",
-          "prompt_sha256": "3c7973ab280415aecf4fa7ed4209777307dd700b8de36d05ebe6dc85aa02001a",
-          "prompt_bytes": 9539,
-          "prompt_source": {
-            "kind": "generated",
-            "repo_path": "docs/research/topics/usd/economic-surprise-and-fed-bias/03-adjudication-prompt.md",
-            "sha256": "3c7973ab280415aecf4fa7ed4209777307dd700b8de36d05ebe6dc85aa02001a",
-            "note": "Generated from the catalogue and the topic map, and shown on the page before it is copied."
-          },
-          "document_type": "synthesis",
-          "parent_stage": "red_team",
-          "deliverable": "One Markdown adjudication: corrected conclusions, a decision on every material objection, and a handoff to central USD synthesis.",
-          "returns": "Corrected conclusions; finding-by-finding decisions; accepted, rejected and unresolved claims; proposed treatment of the factor in the engine; inputs, transformations, timing, interactions and missing-data treatment; explicitly unvalidated parameters; required empirical tests and remaining blockers; the handoff section."
-        }
       ]
     },
     {
@@ -874,7 +653,7 @@
         "usd-topic-vix-level-and-risk-regime",
         "usd-topic-dollar-index-gold-and-equities"
       ],
-      "next_step": "Not dispatched. The research prompt is written and checked; take it from the stage 1 card when the batch opens.",
+      "next_step": "Not dispatched. Each factor under this label has its own written and checked research prompt; open a chain and take its stage 1 prompt when the batch opens.",
       "dispatch": {
         "state": "queued"
       },
@@ -923,62 +702,6 @@
         "Does session momentum survive the bid-ask bounce of a 24-hour window, and what measurement would separate them?",
         "Is safe-haven demand observable at the cutoff separately from risk-on/off, or is it the same input twice?",
         "Which instrument labels these factors, given that DXY has no verified intraday source?"
-      ],
-      "stages": [
-        {
-          "stage": "research",
-          "order": 1,
-          "label": "Research",
-          "prompt_path": "docs/research/topics/usd/fx-session-structure/01-research-prompt.md",
-          "prompt_sha256": "744dbbddaa7d27f0602438fb5730f74e02ca21f89933f4cc269ec6c4bab9bdbe",
-          "prompt_bytes": 11767,
-          "prompt_source": {
-            "kind": "generated",
-            "repo_path": "docs/research/topics/usd/fx-session-structure/01-research-prompt.md",
-            "sha256": "744dbbddaa7d27f0602438fb5730f74e02ca21f89933f4cc269ec6c4bab9bdbe",
-            "note": "Generated from the catalogue and the topic map, and shown on the page before it is copied."
-          },
-          "document_type": "report",
-          "parent_stage": null,
-          "deliverable": "One Markdown report: the assignment answered in full, with the source note as a section inside the same document.",
-          "returns": "Sections in the order the prompt asks for, an explicit what-is-not-claimed section, and the source note naming every source you fetched, the passage you relied on, the window it concerns and whether it is primary."
-        },
-        {
-          "stage": "red_team",
-          "order": 2,
-          "label": "Red-team",
-          "prompt_path": "docs/research/topics/usd/fx-session-structure/02-red-team-prompt.md",
-          "prompt_sha256": "9f3ae01bea04cd0b0144f5a04543d9d034ed3c5b897c191d4e6bc765536851ba",
-          "prompt_bytes": 10606,
-          "prompt_source": {
-            "kind": "generated",
-            "repo_path": "docs/research/topics/usd/fx-session-structure/02-red-team-prompt.md",
-            "sha256": "9f3ae01bea04cd0b0144f5a04543d9d034ed3c5b897c191d4e6bc765536851ba",
-            "note": "Generated from the catalogue and the topic map, and shown on the page before it is copied."
-          },
-          "document_type": "review",
-          "parent_stage": "research",
-          "deliverable": "One Markdown issue register: every load-bearing claim quoted, given a verdict, a severity and the evidence that would settle it.",
-          "returns": "The issue register, the two closing lists (what survives unchanged, what the review could not reach), the sources you re-fetched and the questions you could not resolve."
-        },
-        {
-          "stage": "adjudication",
-          "order": 3,
-          "label": "Adjudication",
-          "prompt_path": "docs/research/topics/usd/fx-session-structure/03-adjudication-prompt.md",
-          "prompt_sha256": "04b729b676ab889d8f8fe50ceb93c0218871e4fd39e280080910ae2edc653b4b",
-          "prompt_bytes": 10252,
-          "prompt_source": {
-            "kind": "generated",
-            "repo_path": "docs/research/topics/usd/fx-session-structure/03-adjudication-prompt.md",
-            "sha256": "04b729b676ab889d8f8fe50ceb93c0218871e4fd39e280080910ae2edc653b4b",
-            "note": "Generated from the catalogue and the topic map, and shown on the page before it is copied."
-          },
-          "document_type": "synthesis",
-          "parent_stage": "red_team",
-          "deliverable": "One Markdown adjudication: corrected conclusions, a decision on every material objection, and a handoff to central USD synthesis.",
-          "returns": "Corrected conclusions; finding-by-finding decisions; accepted, rejected and unresolved claims; proposed treatment of the factor in the engine; inputs, transformations, timing, interactions and missing-data treatment; explicitly unvalidated parameters; required empirical tests and remaining blockers; the handoff section."
-        }
       ]
     },
     {
@@ -995,7 +718,7 @@
       "overlaps": [
         "usd-topic-economic-surprise-and-fed-bias"
       ],
-      "next_step": "Not dispatched. The research prompt is written and checked; take it from the stage 1 card when the batch opens.",
+      "next_step": "Not dispatched. Each factor under this label has its own written and checked research prompt; open a chain and take its stage 1 prompt when the batch opens.",
       "dispatch": {
         "state": "queued"
       },
@@ -1032,20 +755,68 @@
         "What is the honest treatment when the collector input is stale or missing: abstain, shrink or score neutral?",
         "Which releases matter for the dollar over this window, and are the timestamps verifiable at the cutoff?",
         "Can an abstention rule be evaluated at all without a frozen label instrument, and what would it take?"
+      ]
+    }
+  ],
+  "factor_chains": [
+    {
+      "chain_id": "usd-factor-live-f1-vix-level",
+      "factor_id": "live.f1-vix-level",
+      "asset": "USD",
+      "topic_id": "usd-topic-vix-level-and-risk-regime",
+      "group_title": "VIX, its change and the USD risk regime at the 05:00 London cutoff",
+      "slug": "live-f1-vix-level",
+      "title": "F1 VIX level and risk regime - live.f1-vix-level",
+      "summary": "VIX level is read as the risk regime the dollar is trading in. The rulebook also describes 1d and 5d modifiers; the deployed code does not implement them.",
+      "factor_label": "F1 VIX level and risk regime",
+      "factor_group": "live_engine",
+      "factor_role": "regime context",
+      "dispatch": {
+        "state": "dispatched",
+        "task_id": "USD-BASELINE-AUDIT-01",
+        "pack_version": "2.0.0",
+        "context_version": "usd-session-context-20261014.1",
+        "dispatched_at": "2026-10-15",
+        "prompt_path": "docs/research/handoff/usd/v1/deep-research/VIX_COMPREHENSIVE_REPORT_BRIEF.md",
+        "prompt_sha256": "40a05c141bf2c6baab1417b896d763174fd06242725b4c0d6c60842aacdc0923"
+      },
+      "companions": [
+        {
+          "repo_path": "docs/research/handoff/usd/v1/deep-research/CONTEXT_PACK_NEUTRAL.md",
+          "role": "the neutral context pack the brief asks the reader to work from",
+          "sha256": "7e92e4e568df0b84cde906ab4db0ce6135348c99ec871ef8f7b6e48ee8471b00",
+          "bytes": 45268
+        }
       ],
+      "packs": [
+        {
+          "factor_id": "live.f1-vix-level",
+          "repo_path": "docs/research/handoff/usd/v1/packs/f1-vix-level.md",
+          "sha256": "808dc01ada48798e01561ef31fd19899dffc0eac9fee826bf9dacd067e499842",
+          "bytes": 14724
+        }
+      ],
+      "probes": [
+        "Chain question: does `live.f1-vix-level` - F1 VIX level and risk regime - carry information about the next 24-hour dollar move, and in which quantity? VIX level is read as the risk regime the dollar is trading in. The rulebook also describes 1d and 5d modifiers; the deployed code does not implement them.",
+        "Is the informative quantity the level, the one-day change or a five-day change, and does the answer differ between calm and stressed regimes?",
+        "Does the volatility-of-volatility or term-structure information add anything the level does not already carry?",
+        "Is the mechanism safe-haven demand, risk appetite, carry or policy expectations, and what observable at the cutoff distinguishes them?",
+        "How much of the VIX move is already in the dollar at 05:00 Europe/London, and what is left for the following 24 hours?"
+      ],
+      "programme_red_team_path": "docs/research/handoff/usd/v1/deep-research/RED_TEAM_REVIEW_BRIEF.md",
       "stages": [
         {
           "stage": "research",
           "order": 1,
           "label": "Research",
-          "prompt_path": "docs/research/topics/usd/calendar-and-data-quality/01-research-prompt.md",
-          "prompt_sha256": "1eef002b2f29b2fb5df3bcbff359f450ac532d44dc2b9e90675c8aea22d835f7",
-          "prompt_bytes": 10450,
+          "prompt_path": "docs/research/factors/usd/live-f1-vix-level/01-research-prompt.md",
+          "prompt_sha256": "522822d1a8dc67540a2b4239106ee804f5fd0f42539ca5412aba7483bf755234",
+          "prompt_bytes": 20760,
           "prompt_source": {
-            "kind": "generated",
-            "repo_path": "docs/research/topics/usd/calendar-and-data-quality/01-research-prompt.md",
-            "sha256": "1eef002b2f29b2fb5df3bcbff359f450ac532d44dc2b9e90675c8aea22d835f7",
-            "note": "Generated from the catalogue and the topic map, and shown on the page before it is copied."
+            "kind": "dispatched_brief",
+            "repo_path": "docs/research/handoff/usd/v1/deep-research/VIX_COMPREHENSIVE_REPORT_BRIEF.md",
+            "sha256": "40a05c141bf2c6baab1417b896d763174fd06242725b4c0d6c60842aacdc0923",
+            "note": "Generated from the dispatched brief and reproduced in full inside this prompt."
           },
           "document_type": "report",
           "parent_stage": null,
@@ -1056,14 +827,14 @@
           "stage": "red_team",
           "order": 2,
           "label": "Red-team",
-          "prompt_path": "docs/research/topics/usd/calendar-and-data-quality/02-red-team-prompt.md",
-          "prompt_sha256": "0654b0b8c60421f8ec473727144280511eed66343529a44e3335fc41c5ad43bb",
-          "prompt_bytes": 9610,
+          "prompt_path": "docs/research/factors/usd/live-f1-vix-level/02-red-team-prompt.md",
+          "prompt_sha256": "4265e8f5588fbe5e87e61a4be38b60dee8dcba6ca3db0d7c89886248058b28a9",
+          "prompt_bytes": 14792,
           "prompt_source": {
             "kind": "generated",
-            "repo_path": "docs/research/topics/usd/calendar-and-data-quality/02-red-team-prompt.md",
-            "sha256": "0654b0b8c60421f8ec473727144280511eed66343529a44e3335fc41c5ad43bb",
-            "note": "Generated from the catalogue and the topic map, and shown on the page before it is copied."
+            "repo_path": "docs/research/factors/usd/live-f1-vix-level/02-red-team-prompt.md",
+            "sha256": "4265e8f5588fbe5e87e61a4be38b60dee8dcba6ca3db0d7c89886248058b28a9",
+            "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
           },
           "document_type": "review",
           "parent_stage": "research",
@@ -1074,14 +845,2294 @@
           "stage": "adjudication",
           "order": 3,
           "label": "Adjudication",
-          "prompt_path": "docs/research/topics/usd/calendar-and-data-quality/03-adjudication-prompt.md",
-          "prompt_sha256": "b64b3379918bdaaeb0e76500a464a925a4ab3638799b786fb286f902ce5f4198",
-          "prompt_bytes": 9256,
+          "prompt_path": "docs/research/factors/usd/live-f1-vix-level/03-adjudication-prompt.md",
+          "prompt_sha256": "869c302d20c9f3bfaac91aef65d56f13fcbff1ce5fd521bb11b7b9cee11eb434",
+          "prompt_bytes": 8337,
           "prompt_source": {
             "kind": "generated",
-            "repo_path": "docs/research/topics/usd/calendar-and-data-quality/03-adjudication-prompt.md",
-            "sha256": "b64b3379918bdaaeb0e76500a464a925a4ab3638799b786fb286f902ce5f4198",
-            "note": "Generated from the catalogue and the topic map, and shown on the page before it is copied."
+            "repo_path": "docs/research/factors/usd/live-f1-vix-level/03-adjudication-prompt.md",
+            "sha256": "869c302d20c9f3bfaac91aef65d56f13fcbff1ce5fd521bb11b7b9cee11eb434",
+            "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
+          },
+          "document_type": "synthesis",
+          "parent_stage": "red_team",
+          "deliverable": "One Markdown adjudication: corrected conclusions, a decision on every material objection, and a handoff to central USD synthesis.",
+          "returns": "Corrected conclusions; finding-by-finding decisions; accepted, rejected and unresolved claims; proposed treatment of the factor in the engine; inputs, transformations, timing, interactions and missing-data treatment; explicitly unvalidated parameters; required empirical tests and remaining blockers; the handoff section."
+        }
+      ]
+    },
+    {
+      "chain_id": "usd-factor-risk-vix-level-and-change-at-cutoff",
+      "factor_id": "risk.vix-level-and-change-at-cutoff",
+      "asset": "USD",
+      "topic_id": "usd-topic-vix-level-and-risk-regime",
+      "group_title": "VIX, its change and the USD risk regime at the 05:00 London cutoff",
+      "slug": "risk-vix-level-and-change-at-cutoff",
+      "title": "VIX level and change at the cutoff - risk.vix-level-and-change-at-cutoff",
+      "summary": "VIX level and its change, read as risk regime rather than as a standalone direction, with the documented-but-unimplemented 1d and 5d modifiers examined.",
+      "factor_label": "VIX level and change at the cutoff",
+      "factor_group": "research_session_v1",
+      "factor_role": "regime",
+      "dispatch": {
+        "state": "queued"
+      },
+      "companions": [
+        {
+          "repo_path": "docs/research/handoff/usd/v1/deep-research/CONTEXT_PACK_NEUTRAL.md",
+          "role": "the neutral context pack the brief asks the reader to work from",
+          "sha256": "7e92e4e568df0b84cde906ab4db0ce6135348c99ec871ef8f7b6e48ee8471b00",
+          "bytes": 45268
+        }
+      ],
+      "packs": [
+        {
+          "factor_id": "risk.vix-level-and-change-at-cutoff",
+          "repo_path": "docs/research/handoff/usd/v1/packs/risk-vix-level-and-change-at-cutoff.md",
+          "sha256": "70db4ed35d4aaaff9d90bbaf0f6ac3f06b5b89c8bfddb4ccee5f82e323f8cceb",
+          "bytes": 13694
+        }
+      ],
+      "probes": [
+        "Chain question: does `risk.vix-level-and-change-at-cutoff` - VIX level and change at the cutoff - carry information about the next 24-hour dollar move, and in which quantity? VIX level and its change, read as risk regime rather than as a standalone direction, with the documented-but-unimplemented 1d and 5d modifiers examined.",
+        "Is the informative quantity the level, the one-day change or a five-day change, and does the answer differ between calm and stressed regimes?",
+        "Does the volatility-of-volatility or term-structure information add anything the level does not already carry?",
+        "Is the mechanism safe-haven demand, risk appetite, carry or policy expectations, and what observable at the cutoff distinguishes them?",
+        "How much of the VIX move is already in the dollar at 05:00 Europe/London, and what is left for the following 24 hours?"
+      ],
+      "stages": [
+        {
+          "stage": "research",
+          "order": 1,
+          "label": "Research",
+          "prompt_path": "docs/research/factors/usd/risk-vix-level-and-change-at-cutoff/01-research-prompt.md",
+          "prompt_sha256": "171eba87f0a011cb137dec9425c445bd2c86a4efa8db4fec51e0f688e549be91",
+          "prompt_bytes": 9396,
+          "prompt_source": {
+            "kind": "generated",
+            "repo_path": "docs/research/factors/usd/risk-vix-level-and-change-at-cutoff/01-research-prompt.md",
+            "sha256": "171eba87f0a011cb137dec9425c445bd2c86a4efa8db4fec51e0f688e549be91",
+            "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
+          },
+          "document_type": "report",
+          "parent_stage": null,
+          "deliverable": "One Markdown report: the assignment answered in full, with the source note as a section inside the same document.",
+          "returns": "Sections in the order the prompt asks for, an explicit what-is-not-claimed section, and the source note naming every source you fetched, the passage you relied on, the window it concerns and whether it is primary."
+        },
+        {
+          "stage": "red_team",
+          "order": 2,
+          "label": "Red-team",
+          "prompt_path": "docs/research/factors/usd/risk-vix-level-and-change-at-cutoff/02-red-team-prompt.md",
+          "prompt_sha256": "00d8ba43bbd41ad55a81f6ce4f11dda51806d24abea3e306dd7f934d124b5974",
+          "prompt_bytes": 8722,
+          "prompt_source": {
+            "kind": "generated",
+            "repo_path": "docs/research/factors/usd/risk-vix-level-and-change-at-cutoff/02-red-team-prompt.md",
+            "sha256": "00d8ba43bbd41ad55a81f6ce4f11dda51806d24abea3e306dd7f934d124b5974",
+            "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
+          },
+          "document_type": "review",
+          "parent_stage": "research",
+          "deliverable": "One Markdown issue register: every load-bearing claim quoted, given a verdict, a severity and the evidence that would settle it.",
+          "returns": "The issue register, the two closing lists (what survives unchanged, what the review could not reach), the sources you re-fetched and the questions you could not resolve."
+        },
+        {
+          "stage": "adjudication",
+          "order": 3,
+          "label": "Adjudication",
+          "prompt_path": "docs/research/factors/usd/risk-vix-level-and-change-at-cutoff/03-adjudication-prompt.md",
+          "prompt_sha256": "4d0c64b15fe8d7624a40d8b6791da266454cfdc0823b42c31bb1c4c543bed0dd",
+          "prompt_bytes": 8416,
+          "prompt_source": {
+            "kind": "generated",
+            "repo_path": "docs/research/factors/usd/risk-vix-level-and-change-at-cutoff/03-adjudication-prompt.md",
+            "sha256": "4d0c64b15fe8d7624a40d8b6791da266454cfdc0823b42c31bb1c4c543bed0dd",
+            "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
+          },
+          "document_type": "synthesis",
+          "parent_stage": "red_team",
+          "deliverable": "One Markdown adjudication: corrected conclusions, a decision on every material objection, and a handoff to central USD synthesis.",
+          "returns": "Corrected conclusions; finding-by-finding decisions; accepted, rejected and unresolved claims; proposed treatment of the factor in the engine; inputs, transformations, timing, interactions and missing-data treatment; explicitly unvalidated parameters; required empirical tests and remaining blockers; the handoff section."
+        }
+      ]
+    },
+    {
+      "chain_id": "usd-factor-live-f2-us-2y-delta",
+      "factor_id": "live.f2-us-2y-delta",
+      "asset": "USD",
+      "topic_id": "usd-topic-front-end-rates",
+      "group_title": "US front-end rates, real yields and curve position",
+      "slug": "live-f2-us-2y-delta",
+      "title": "F2 US 2Y yield delta - live.f2-us-2y-delta",
+      "summary": "Change in the US 2Y yield as a policy-expectation proxy.",
+      "factor_label": "F2 US 2Y yield delta",
+      "factor_group": "live_engine",
+      "factor_role": "direction",
+      "dispatch": {
+        "state": "queued"
+      },
+      "companions": [
+        {
+          "repo_path": "docs/research/usd-session/v1/weight_vector_discrepancy.md",
+          "role": "the two live weight vectors and where each is used",
+          "sha256": "2f420763193b0a032ccd38c1958563cd848c942f7cf49b53cad8de0ad98535cc",
+          "bytes": 6554
+        }
+      ],
+      "packs": [
+        {
+          "factor_id": "live.f2-us-2y-delta",
+          "repo_path": "docs/research/handoff/usd/v1/packs/f2-us-2y-delta.md",
+          "sha256": "1f6593c81175ce0ca3675d77dab14bb7397b03235df48523ffdb24ac7e785121",
+          "bytes": 14443
+        }
+      ],
+      "probes": [
+        "Chain question: does `live.f2-us-2y-delta` - F2 US 2Y yield delta - carry information about the next 24-hour dollar move, and in which quantity? Change in the US 2Y yield as a policy-expectation proxy.",
+        "Which of the eight entries is measuring something the others do not, and which pairs are the same information counted twice?",
+        "Is the informative quantity the level, a five-day change or a same-session change, and does the answer depend on the policy cycle?",
+        "Does a real-yield change add information beyond the nominal front end, and does that survive the inflation-expectation measurement problem?",
+        "Are these relations already in the dollar by 05:00 Europe/London, given that the US cash market is closed at the cutoff?"
+      ],
+      "stages": [
+        {
+          "stage": "research",
+          "order": 1,
+          "label": "Research",
+          "prompt_path": "docs/research/factors/usd/live-f2-us-2y-delta/01-research-prompt.md",
+          "prompt_sha256": "a8363ef0eaf6c47f4f9c8cf7a4363883048492691eecb22b6480225ef48ff7f4",
+          "prompt_bytes": 9003,
+          "prompt_source": {
+            "kind": "generated",
+            "repo_path": "docs/research/factors/usd/live-f2-us-2y-delta/01-research-prompt.md",
+            "sha256": "a8363ef0eaf6c47f4f9c8cf7a4363883048492691eecb22b6480225ef48ff7f4",
+            "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
+          },
+          "document_type": "report",
+          "parent_stage": null,
+          "deliverable": "One Markdown report: the assignment answered in full, with the source note as a section inside the same document.",
+          "returns": "Sections in the order the prompt asks for, an explicit what-is-not-claimed section, and the source note naming every source you fetched, the passage you relied on, the window it concerns and whether it is primary."
+        },
+        {
+          "stage": "red_team",
+          "order": 2,
+          "label": "Red-team",
+          "prompt_path": "docs/research/factors/usd/live-f2-us-2y-delta/02-red-team-prompt.md",
+          "prompt_sha256": "afb8eaa2a6190b293cd97573d2e4eb28e2488155db188dfc465418ad4ed9d045",
+          "prompt_bytes": 8434,
+          "prompt_source": {
+            "kind": "generated",
+            "repo_path": "docs/research/factors/usd/live-f2-us-2y-delta/02-red-team-prompt.md",
+            "sha256": "afb8eaa2a6190b293cd97573d2e4eb28e2488155db188dfc465418ad4ed9d045",
+            "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
+          },
+          "document_type": "review",
+          "parent_stage": "research",
+          "deliverable": "One Markdown issue register: every load-bearing claim quoted, given a verdict, a severity and the evidence that would settle it.",
+          "returns": "The issue register, the two closing lists (what survives unchanged, what the review could not reach), the sources you re-fetched and the questions you could not resolve."
+        },
+        {
+          "stage": "adjudication",
+          "order": 3,
+          "label": "Adjudication",
+          "prompt_path": "docs/research/factors/usd/live-f2-us-2y-delta/03-adjudication-prompt.md",
+          "prompt_sha256": "2efcb74abdc7dd63a5735ed6c1cc1e5106b24002197f7ea12792879d6552c70c",
+          "prompt_bytes": 8112,
+          "prompt_source": {
+            "kind": "generated",
+            "repo_path": "docs/research/factors/usd/live-f2-us-2y-delta/03-adjudication-prompt.md",
+            "sha256": "2efcb74abdc7dd63a5735ed6c1cc1e5106b24002197f7ea12792879d6552c70c",
+            "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
+          },
+          "document_type": "synthesis",
+          "parent_stage": "red_team",
+          "deliverable": "One Markdown adjudication: corrected conclusions, a decision on every material objection, and a handoff to central USD synthesis.",
+          "returns": "Corrected conclusions; finding-by-finding decisions; accepted, rejected and unresolved claims; proposed treatment of the factor in the engine; inputs, transformations, timing, interactions and missing-data treatment; explicitly unvalidated parameters; required empirical tests and remaining blockers; the handoff section."
+        }
+      ]
+    },
+    {
+      "chain_id": "usd-factor-live-f3-us-de-2y-spread-delta",
+      "factor_id": "live.f3-us-de-2y-spread-delta",
+      "asset": "USD",
+      "topic_id": "usd-topic-front-end-rates",
+      "group_title": "US front-end rates, real yields and curve position",
+      "slug": "live-f3-us-de-2y-spread-delta",
+      "title": "F3 US-DE 2Y spread delta - live.f3-us-de-2y-spread-delta",
+      "summary": "Change in the US minus German 2Y spread, derived in the collector from two series.",
+      "factor_label": "F3 US-DE 2Y spread delta",
+      "factor_group": "live_engine",
+      "factor_role": "direction",
+      "dispatch": {
+        "state": "queued"
+      },
+      "companions": [
+        {
+          "repo_path": "docs/research/usd-session/v1/weight_vector_discrepancy.md",
+          "role": "the two live weight vectors and where each is used",
+          "sha256": "2f420763193b0a032ccd38c1958563cd848c942f7cf49b53cad8de0ad98535cc",
+          "bytes": 6554
+        }
+      ],
+      "packs": [
+        {
+          "factor_id": "live.f3-us-de-2y-spread-delta",
+          "repo_path": "docs/research/handoff/usd/v1/packs/f3-us-de-2y-spread-delta.md",
+          "sha256": "0d2f81ba66be7a6efea703673373c106ecb4d51362d681d9acdc59f1d5f3ccb4",
+          "bytes": 15483
+        }
+      ],
+      "probes": [
+        "Chain question: does `live.f3-us-de-2y-spread-delta` - F3 US-DE 2Y spread delta - carry information about the next 24-hour dollar move, and in which quantity? Change in the US minus German 2Y spread, derived in the collector from two series.",
+        "Which of the eight entries is measuring something the others do not, and which pairs are the same information counted twice?",
+        "Is the informative quantity the level, a five-day change or a same-session change, and does the answer depend on the policy cycle?",
+        "Does a real-yield change add information beyond the nominal front end, and does that survive the inflation-expectation measurement problem?",
+        "Are these relations already in the dollar by 05:00 Europe/London, given that the US cash market is closed at the cutoff?"
+      ],
+      "stages": [
+        {
+          "stage": "research",
+          "order": 1,
+          "label": "Research",
+          "prompt_path": "docs/research/factors/usd/live-f3-us-de-2y-spread-delta/01-research-prompt.md",
+          "prompt_sha256": "33270708a4af5be4368317f2f8206bcceb12c38f9bb76dd14f082ba5671530e6",
+          "prompt_bytes": 9172,
+          "prompt_source": {
+            "kind": "generated",
+            "repo_path": "docs/research/factors/usd/live-f3-us-de-2y-spread-delta/01-research-prompt.md",
+            "sha256": "33270708a4af5be4368317f2f8206bcceb12c38f9bb76dd14f082ba5671530e6",
+            "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
+          },
+          "document_type": "report",
+          "parent_stage": null,
+          "deliverable": "One Markdown report: the assignment answered in full, with the source note as a section inside the same document.",
+          "returns": "Sections in the order the prompt asks for, an explicit what-is-not-claimed section, and the source note naming every source you fetched, the passage you relied on, the window it concerns and whether it is primary."
+        },
+        {
+          "stage": "red_team",
+          "order": 2,
+          "label": "Red-team",
+          "prompt_path": "docs/research/factors/usd/live-f3-us-de-2y-spread-delta/02-red-team-prompt.md",
+          "prompt_sha256": "7ea3d0cf090516a1b64c5347ca140b554477a3ce1d3b72610f1714b9c75fa470",
+          "prompt_bytes": 8573,
+          "prompt_source": {
+            "kind": "generated",
+            "repo_path": "docs/research/factors/usd/live-f3-us-de-2y-spread-delta/02-red-team-prompt.md",
+            "sha256": "7ea3d0cf090516a1b64c5347ca140b554477a3ce1d3b72610f1714b9c75fa470",
+            "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
+          },
+          "document_type": "review",
+          "parent_stage": "research",
+          "deliverable": "One Markdown issue register: every load-bearing claim quoted, given a verdict, a severity and the evidence that would settle it.",
+          "returns": "The issue register, the two closing lists (what survives unchanged, what the review could not reach), the sources you re-fetched and the questions you could not resolve."
+        },
+        {
+          "stage": "adjudication",
+          "order": 3,
+          "label": "Adjudication",
+          "prompt_path": "docs/research/factors/usd/live-f3-us-de-2y-spread-delta/03-adjudication-prompt.md",
+          "prompt_sha256": "b7056c11bdd60aec5f74a5e57c5e1fdee994a0818f2d95161bd16585df6ba1f6",
+          "prompt_bytes": 8261,
+          "prompt_source": {
+            "kind": "generated",
+            "repo_path": "docs/research/factors/usd/live-f3-us-de-2y-spread-delta/03-adjudication-prompt.md",
+            "sha256": "b7056c11bdd60aec5f74a5e57c5e1fdee994a0818f2d95161bd16585df6ba1f6",
+            "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
+          },
+          "document_type": "synthesis",
+          "parent_stage": "red_team",
+          "deliverable": "One Markdown adjudication: corrected conclusions, a decision on every material objection, and a handoff to central USD synthesis.",
+          "returns": "Corrected conclusions; finding-by-finding decisions; accepted, rejected and unresolved claims; proposed treatment of the factor in the engine; inputs, transformations, timing, interactions and missing-data treatment; explicitly unvalidated parameters; required empirical tests and remaining blockers; the handoff section."
+        }
+      ]
+    },
+    {
+      "chain_id": "usd-factor-live-f4-real-yield-delta",
+      "factor_id": "live.f4-real-yield-delta",
+      "asset": "USD",
+      "topic_id": "usd-topic-front-end-rates",
+      "group_title": "US front-end rates, real yields and curve position",
+      "slug": "live-f4-real-yield-delta",
+      "title": "F4 US 10Y real yield delta - live.f4-real-yield-delta",
+      "summary": "Change in the 10Y TIPS real yield.",
+      "factor_label": "F4 US 10Y real yield delta",
+      "factor_group": "live_engine",
+      "factor_role": "direction",
+      "dispatch": {
+        "state": "queued"
+      },
+      "companions": [
+        {
+          "repo_path": "docs/research/usd-session/v1/weight_vector_discrepancy.md",
+          "role": "the two live weight vectors and where each is used",
+          "sha256": "2f420763193b0a032ccd38c1958563cd848c942f7cf49b53cad8de0ad98535cc",
+          "bytes": 6554
+        }
+      ],
+      "packs": [
+        {
+          "factor_id": "live.f4-real-yield-delta",
+          "repo_path": "docs/research/handoff/usd/v1/packs/f4-real-yield-delta.md",
+          "sha256": "d728e0beca019ed1dd268b1e7d49b820b2127aef5e26cada7367519c5f11aecd",
+          "bytes": 15578
+        }
+      ],
+      "probes": [
+        "Chain question: does `live.f4-real-yield-delta` - F4 US 10Y real yield delta - carry information about the next 24-hour dollar move, and in which quantity? Change in the 10Y TIPS real yield.",
+        "Which of the eight entries is measuring something the others do not, and which pairs are the same information counted twice?",
+        "Is the informative quantity the level, a five-day change or a same-session change, and does the answer depend on the policy cycle?",
+        "Does a real-yield change add information beyond the nominal front end, and does that survive the inflation-expectation measurement problem?",
+        "Are these relations already in the dollar by 05:00 Europe/London, given that the US cash market is closed at the cutoff?"
+      ],
+      "stages": [
+        {
+          "stage": "research",
+          "order": 1,
+          "label": "Research",
+          "prompt_path": "docs/research/factors/usd/live-f4-real-yield-delta/01-research-prompt.md",
+          "prompt_sha256": "937edaebf723e738b1b676eec332ff6a57c0726c2ff907f314e14774d5360c43",
+          "prompt_bytes": 9019,
+          "prompt_source": {
+            "kind": "generated",
+            "repo_path": "docs/research/factors/usd/live-f4-real-yield-delta/01-research-prompt.md",
+            "sha256": "937edaebf723e738b1b676eec332ff6a57c0726c2ff907f314e14774d5360c43",
+            "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
+          },
+          "document_type": "report",
+          "parent_stage": null,
+          "deliverable": "One Markdown report: the assignment answered in full, with the source note as a section inside the same document.",
+          "returns": "Sections in the order the prompt asks for, an explicit what-is-not-claimed section, and the source note naming every source you fetched, the passage you relied on, the window it concerns and whether it is primary."
+        },
+        {
+          "stage": "red_team",
+          "order": 2,
+          "label": "Red-team",
+          "prompt_path": "docs/research/factors/usd/live-f4-real-yield-delta/02-red-team-prompt.md",
+          "prompt_sha256": "4f1ef73de82ee2bad856a07ad2345633c4c93269e868bc83eef68cf7cfe3ae93",
+          "prompt_bytes": 8466,
+          "prompt_source": {
+            "kind": "generated",
+            "repo_path": "docs/research/factors/usd/live-f4-real-yield-delta/02-red-team-prompt.md",
+            "sha256": "4f1ef73de82ee2bad856a07ad2345633c4c93269e868bc83eef68cf7cfe3ae93",
+            "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
+          },
+          "document_type": "review",
+          "parent_stage": "research",
+          "deliverable": "One Markdown issue register: every load-bearing claim quoted, given a verdict, a severity and the evidence that would settle it.",
+          "returns": "The issue register, the two closing lists (what survives unchanged, what the review could not reach), the sources you re-fetched and the questions you could not resolve."
+        },
+        {
+          "stage": "adjudication",
+          "order": 3,
+          "label": "Adjudication",
+          "prompt_path": "docs/research/factors/usd/live-f4-real-yield-delta/03-adjudication-prompt.md",
+          "prompt_sha256": "ed40e70222dd27d451fd8f37810b8d4bc27f3163261de71f65e12d74a86075b2",
+          "prompt_bytes": 8149,
+          "prompt_source": {
+            "kind": "generated",
+            "repo_path": "docs/research/factors/usd/live-f4-real-yield-delta/03-adjudication-prompt.md",
+            "sha256": "ed40e70222dd27d451fd8f37810b8d4bc27f3163261de71f65e12d74a86075b2",
+            "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
+          },
+          "document_type": "synthesis",
+          "parent_stage": "red_team",
+          "deliverable": "One Markdown adjudication: corrected conclusions, a decision on every material objection, and a handoff to central USD synthesis.",
+          "returns": "Corrected conclusions; finding-by-finding decisions; accepted, rejected and unresolved claims; proposed treatment of the factor in the engine; inputs, transformations, timing, interactions and missing-data treatment; explicitly unvalidated parameters; required empirical tests and remaining blockers; the handoff section."
+        }
+      ]
+    },
+    {
+      "chain_id": "usd-factor-rates-us-front-end-delta",
+      "factor_id": "rates.us-front-end-delta",
+      "asset": "USD",
+      "topic_id": "usd-topic-front-end-rates",
+      "group_title": "US front-end rates, real yields and curve position",
+      "slug": "rates-us-front-end-delta",
+      "title": "US front-end delta - rates.us-front-end-delta",
+      "summary": "2Y and 3M yield changes as policy-expectation proxies, with the publication lag of each series stated.",
+      "factor_label": "US front-end delta",
+      "factor_group": "research_session_v1",
+      "factor_role": "direction",
+      "dispatch": {
+        "state": "queued"
+      },
+      "companions": [
+        {
+          "repo_path": "docs/research/usd-session/v1/weight_vector_discrepancy.md",
+          "role": "the two live weight vectors and where each is used",
+          "sha256": "2f420763193b0a032ccd38c1958563cd848c942f7cf49b53cad8de0ad98535cc",
+          "bytes": 6554
+        }
+      ],
+      "packs": [
+        {
+          "factor_id": "rates.us-front-end-delta",
+          "repo_path": "docs/research/handoff/usd/v1/packs/rates-us-front-end-delta.md",
+          "sha256": "5d18fd2985d28f3139e1d9440ba73e1644ab96bdb46a094737b5f734408514aa",
+          "bytes": 13425
+        }
+      ],
+      "probes": [
+        "Chain question: does `rates.us-front-end-delta` - US front-end delta - carry information about the next 24-hour dollar move, and in which quantity? 2Y and 3M yield changes as policy-expectation proxies, with the publication lag of each series stated.",
+        "Which of the eight entries is measuring something the others do not, and which pairs are the same information counted twice?",
+        "Is the informative quantity the level, a five-day change or a same-session change, and does the answer depend on the policy cycle?",
+        "Does a real-yield change add information beyond the nominal front end, and does that survive the inflation-expectation measurement problem?",
+        "Are these relations already in the dollar by 05:00 Europe/London, given that the US cash market is closed at the cutoff?"
+      ],
+      "stages": [
+        {
+          "stage": "research",
+          "order": 1,
+          "label": "Research",
+          "prompt_path": "docs/research/factors/usd/rates-us-front-end-delta/01-research-prompt.md",
+          "prompt_sha256": "7e918d894a4b765e2173c0261f69284c9232e8738a92d4997591d58f13720bd4",
+          "prompt_bytes": 9152,
+          "prompt_source": {
+            "kind": "generated",
+            "repo_path": "docs/research/factors/usd/rates-us-front-end-delta/01-research-prompt.md",
+            "sha256": "7e918d894a4b765e2173c0261f69284c9232e8738a92d4997591d58f13720bd4",
+            "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
+          },
+          "document_type": "report",
+          "parent_stage": null,
+          "deliverable": "One Markdown report: the assignment answered in full, with the source note as a section inside the same document.",
+          "returns": "Sections in the order the prompt asks for, an explicit what-is-not-claimed section, and the source note naming every source you fetched, the passage you relied on, the window it concerns and whether it is primary."
+        },
+        {
+          "stage": "red_team",
+          "order": 2,
+          "label": "Red-team",
+          "prompt_path": "docs/research/factors/usd/rates-us-front-end-delta/02-red-team-prompt.md",
+          "prompt_sha256": "3bfe007847bf5b8313e3cd4e3a7a15112eff3cdad3226fb70110350651e090f4",
+          "prompt_bytes": 8534,
+          "prompt_source": {
+            "kind": "generated",
+            "repo_path": "docs/research/factors/usd/rates-us-front-end-delta/02-red-team-prompt.md",
+            "sha256": "3bfe007847bf5b8313e3cd4e3a7a15112eff3cdad3226fb70110350651e090f4",
+            "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
+          },
+          "document_type": "review",
+          "parent_stage": "research",
+          "deliverable": "One Markdown issue register: every load-bearing claim quoted, given a verdict, a severity and the evidence that would settle it.",
+          "returns": "The issue register, the two closing lists (what survives unchanged, what the review could not reach), the sources you re-fetched and the questions you could not resolve."
+        },
+        {
+          "stage": "adjudication",
+          "order": 3,
+          "label": "Adjudication",
+          "prompt_path": "docs/research/factors/usd/rates-us-front-end-delta/03-adjudication-prompt.md",
+          "prompt_sha256": "a18389c676539b1452c984695f003654afbbf2e2eca8d9bc59709b469fadae3e",
+          "prompt_bytes": 8217,
+          "prompt_source": {
+            "kind": "generated",
+            "repo_path": "docs/research/factors/usd/rates-us-front-end-delta/03-adjudication-prompt.md",
+            "sha256": "a18389c676539b1452c984695f003654afbbf2e2eca8d9bc59709b469fadae3e",
+            "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
+          },
+          "document_type": "synthesis",
+          "parent_stage": "red_team",
+          "deliverable": "One Markdown adjudication: corrected conclusions, a decision on every material objection, and a handoff to central USD synthesis.",
+          "returns": "Corrected conclusions; finding-by-finding decisions; accepted, rejected and unresolved claims; proposed treatment of the factor in the engine; inputs, transformations, timing, interactions and missing-data treatment; explicitly unvalidated parameters; required empirical tests and remaining blockers; the handoff section."
+        }
+      ]
+    },
+    {
+      "chain_id": "usd-factor-rates-relative-front-end-delta",
+      "factor_id": "rates.relative-front-end-delta",
+      "asset": "USD",
+      "topic_id": "usd-topic-front-end-rates",
+      "group_title": "US front-end rates, real yields and curve position",
+      "slug": "rates-relative-front-end-delta",
+      "title": "Relative front-end delta - rates.relative-front-end-delta",
+      "summary": "US against German and other G10 front ends, with each euro-area and UK leg named rather than implied.",
+      "factor_label": "Relative front-end delta",
+      "factor_group": "research_session_v1",
+      "factor_role": "direction",
+      "dispatch": {
+        "state": "queued"
+      },
+      "companions": [
+        {
+          "repo_path": "docs/research/usd-session/v1/weight_vector_discrepancy.md",
+          "role": "the two live weight vectors and where each is used",
+          "sha256": "2f420763193b0a032ccd38c1958563cd848c942f7cf49b53cad8de0ad98535cc",
+          "bytes": 6554
+        }
+      ],
+      "packs": [
+        {
+          "factor_id": "rates.relative-front-end-delta",
+          "repo_path": "docs/research/handoff/usd/v1/packs/rates-relative-front-end-delta.md",
+          "sha256": "63d9f1d934b160314332f6b955ef84adca0df19bdf6cdbc19af881006c82f751",
+          "bytes": 13396
+        }
+      ],
+      "probes": [
+        "Chain question: does `rates.relative-front-end-delta` - Relative front-end delta - carry information about the next 24-hour dollar move, and in which quantity? US against German and other G10 front ends, with each euro-area and UK leg named rather than implied.",
+        "Which of the eight entries is measuring something the others do not, and which pairs are the same information counted twice?",
+        "Is the informative quantity the level, a five-day change or a same-session change, and does the answer depend on the policy cycle?",
+        "Does a real-yield change add information beyond the nominal front end, and does that survive the inflation-expectation measurement problem?",
+        "Are these relations already in the dollar by 05:00 Europe/London, given that the US cash market is closed at the cutoff?"
+      ],
+      "stages": [
+        {
+          "stage": "research",
+          "order": 1,
+          "label": "Research",
+          "prompt_path": "docs/research/factors/usd/rates-relative-front-end-delta/01-research-prompt.md",
+          "prompt_sha256": "945c83573c55bc14c913e7a4ce4a994799c9575bb2a1a350e603b3ebb621f567",
+          "prompt_bytes": 9189,
+          "prompt_source": {
+            "kind": "generated",
+            "repo_path": "docs/research/factors/usd/rates-relative-front-end-delta/01-research-prompt.md",
+            "sha256": "945c83573c55bc14c913e7a4ce4a994799c9575bb2a1a350e603b3ebb621f567",
+            "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
+          },
+          "document_type": "report",
+          "parent_stage": null,
+          "deliverable": "One Markdown report: the assignment answered in full, with the source note as a section inside the same document.",
+          "returns": "Sections in the order the prompt asks for, an explicit what-is-not-claimed section, and the source note naming every source you fetched, the passage you relied on, the window it concerns and whether it is primary."
+        },
+        {
+          "stage": "red_team",
+          "order": 2,
+          "label": "Red-team",
+          "prompt_path": "docs/research/factors/usd/rates-relative-front-end-delta/02-red-team-prompt.md",
+          "prompt_sha256": "9701a5770ffb95c87d2e997de6e81969c094d1ff956252d700373bdcac228e8c",
+          "prompt_bytes": 8566,
+          "prompt_source": {
+            "kind": "generated",
+            "repo_path": "docs/research/factors/usd/rates-relative-front-end-delta/02-red-team-prompt.md",
+            "sha256": "9701a5770ffb95c87d2e997de6e81969c094d1ff956252d700373bdcac228e8c",
+            "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
+          },
+          "document_type": "review",
+          "parent_stage": "research",
+          "deliverable": "One Markdown issue register: every load-bearing claim quoted, given a verdict, a severity and the evidence that would settle it.",
+          "returns": "The issue register, the two closing lists (what survives unchanged, what the review could not reach), the sources you re-fetched and the questions you could not resolve."
+        },
+        {
+          "stage": "adjudication",
+          "order": 3,
+          "label": "Adjudication",
+          "prompt_path": "docs/research/factors/usd/rates-relative-front-end-delta/03-adjudication-prompt.md",
+          "prompt_sha256": "7f1a41de30aa53438229b3404c6a77de15863559cdb918ba890202a3db29b227",
+          "prompt_bytes": 8255,
+          "prompt_source": {
+            "kind": "generated",
+            "repo_path": "docs/research/factors/usd/rates-relative-front-end-delta/03-adjudication-prompt.md",
+            "sha256": "7f1a41de30aa53438229b3404c6a77de15863559cdb918ba890202a3db29b227",
+            "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
+          },
+          "document_type": "synthesis",
+          "parent_stage": "red_team",
+          "deliverable": "One Markdown adjudication: corrected conclusions, a decision on every material objection, and a handoff to central USD synthesis.",
+          "returns": "Corrected conclusions; finding-by-finding decisions; accepted, rejected and unresolved claims; proposed treatment of the factor in the engine; inputs, transformations, timing, interactions and missing-data treatment; explicitly unvalidated parameters; required empirical tests and remaining blockers; the handoff section."
+        }
+      ]
+    },
+    {
+      "chain_id": "usd-factor-rates-real-yield-delta",
+      "factor_id": "rates.real-yield-delta",
+      "asset": "USD",
+      "topic_id": "usd-topic-front-end-rates",
+      "group_title": "US front-end rates, real yields and curve position",
+      "slug": "rates-real-yield-delta",
+      "title": "Real yield delta - rates.real-yield-delta",
+      "summary": "10Y and 5Y real yields and the breakeven split, separating the nominal and inflation parts of the move.",
+      "factor_label": "Real yield delta",
+      "factor_group": "research_session_v1",
+      "factor_role": "direction",
+      "dispatch": {
+        "state": "queued"
+      },
+      "companions": [
+        {
+          "repo_path": "docs/research/usd-session/v1/weight_vector_discrepancy.md",
+          "role": "the two live weight vectors and where each is used",
+          "sha256": "2f420763193b0a032ccd38c1958563cd848c942f7cf49b53cad8de0ad98535cc",
+          "bytes": 6554
+        }
+      ],
+      "packs": [
+        {
+          "factor_id": "rates.real-yield-delta",
+          "repo_path": "docs/research/handoff/usd/v1/packs/rates-real-yield-delta.md",
+          "sha256": "b39eadc79f2491816719419702cfa4aff99ac731af1ae60ffd8aac12bbf810cb",
+          "bytes": 13543
+        }
+      ],
+      "probes": [
+        "Chain question: does `rates.real-yield-delta` - Real yield delta - carry information about the next 24-hour dollar move, and in which quantity? 10Y and 5Y real yields and the breakeven split, separating the nominal and inflation parts of the move.",
+        "Which of the eight entries is measuring something the others do not, and which pairs are the same information counted twice?",
+        "Is the informative quantity the level, a five-day change or a same-session change, and does the answer depend on the policy cycle?",
+        "Does a real-yield change add information beyond the nominal front end, and does that survive the inflation-expectation measurement problem?",
+        "Are these relations already in the dollar by 05:00 Europe/London, given that the US cash market is closed at the cutoff?"
+      ],
+      "stages": [
+        {
+          "stage": "research",
+          "order": 1,
+          "label": "Research",
+          "prompt_path": "docs/research/factors/usd/rates-real-yield-delta/01-research-prompt.md",
+          "prompt_sha256": "0f8f6dfd0a34e1e6a359160b04053e138f22fda50bbd83043bdf17232814982b",
+          "prompt_bytes": 9107,
+          "prompt_source": {
+            "kind": "generated",
+            "repo_path": "docs/research/factors/usd/rates-real-yield-delta/01-research-prompt.md",
+            "sha256": "0f8f6dfd0a34e1e6a359160b04053e138f22fda50bbd83043bdf17232814982b",
+            "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
+          },
+          "document_type": "report",
+          "parent_stage": null,
+          "deliverable": "One Markdown report: the assignment answered in full, with the source note as a section inside the same document.",
+          "returns": "Sections in the order the prompt asks for, an explicit what-is-not-claimed section, and the source note naming every source you fetched, the passage you relied on, the window it concerns and whether it is primary."
+        },
+        {
+          "stage": "red_team",
+          "order": 2,
+          "label": "Red-team",
+          "prompt_path": "docs/research/factors/usd/rates-real-yield-delta/02-red-team-prompt.md",
+          "prompt_sha256": "51c679815b140c24c6fe04abee057c98294d4e2f67ad0c906a9f8148eb882a92",
+          "prompt_bytes": 8490,
+          "prompt_source": {
+            "kind": "generated",
+            "repo_path": "docs/research/factors/usd/rates-real-yield-delta/02-red-team-prompt.md",
+            "sha256": "51c679815b140c24c6fe04abee057c98294d4e2f67ad0c906a9f8148eb882a92",
+            "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
+          },
+          "document_type": "review",
+          "parent_stage": "research",
+          "deliverable": "One Markdown issue register: every load-bearing claim quoted, given a verdict, a severity and the evidence that would settle it.",
+          "returns": "The issue register, the two closing lists (what survives unchanged, what the review could not reach), the sources you re-fetched and the questions you could not resolve."
+        },
+        {
+          "stage": "adjudication",
+          "order": 3,
+          "label": "Adjudication",
+          "prompt_path": "docs/research/factors/usd/rates-real-yield-delta/03-adjudication-prompt.md",
+          "prompt_sha256": "a2ba7e28c0fda7f7f0089403045dceeb46f9d0ec50bb75cbeb4d1dd3f8bf7582",
+          "prompt_bytes": 8171,
+          "prompt_source": {
+            "kind": "generated",
+            "repo_path": "docs/research/factors/usd/rates-real-yield-delta/03-adjudication-prompt.md",
+            "sha256": "a2ba7e28c0fda7f7f0089403045dceeb46f9d0ec50bb75cbeb4d1dd3f8bf7582",
+            "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
+          },
+          "document_type": "synthesis",
+          "parent_stage": "red_team",
+          "deliverable": "One Markdown adjudication: corrected conclusions, a decision on every material objection, and a handoff to central USD synthesis.",
+          "returns": "Corrected conclusions; finding-by-finding decisions; accepted, rejected and unresolved claims; proposed treatment of the factor in the engine; inputs, transformations, timing, interactions and missing-data treatment; explicitly unvalidated parameters; required empirical tests and remaining blockers; the handoff section."
+        }
+      ]
+    },
+    {
+      "chain_id": "usd-factor-rates-term-premium-and-curve",
+      "factor_id": "rates.term-premium-and-curve",
+      "asset": "USD",
+      "topic_id": "usd-topic-front-end-rates",
+      "group_title": "US front-end rates, real yields and curve position",
+      "slug": "rates-term-premium-and-curve",
+      "title": "Term premium and curve - rates.term-premium-and-curve",
+      "summary": "10Y minus 2Y slope, and whether the level or the change carries information across the session.",
+      "factor_label": "Term premium and curve",
+      "factor_group": "research_session_v1",
+      "factor_role": "regime",
+      "dispatch": {
+        "state": "queued"
+      },
+      "companions": [
+        {
+          "repo_path": "docs/research/usd-session/v1/weight_vector_discrepancy.md",
+          "role": "the two live weight vectors and where each is used",
+          "sha256": "2f420763193b0a032ccd38c1958563cd848c942f7cf49b53cad8de0ad98535cc",
+          "bytes": 6554
+        }
+      ],
+      "packs": [
+        {
+          "factor_id": "rates.term-premium-and-curve",
+          "repo_path": "docs/research/handoff/usd/v1/packs/rates-term-premium-and-curve.md",
+          "sha256": "2ee7eb05d33b841438982367fc253aa7662db158dcd1fa855ad24849a15ab96b",
+          "bytes": 13337
+        }
+      ],
+      "probes": [
+        "Chain question: does `rates.term-premium-and-curve` - Term premium and curve - carry information about the next 24-hour dollar move, and in which quantity? 10Y minus 2Y slope, and whether the level or the change carries information across the session.",
+        "Which of the eight entries is measuring something the others do not, and which pairs are the same information counted twice?",
+        "Is the informative quantity the level, a five-day change or a same-session change, and does the answer depend on the policy cycle?",
+        "Does a real-yield change add information beyond the nominal front end, and does that survive the inflation-expectation measurement problem?",
+        "Are these relations already in the dollar by 05:00 Europe/London, given that the US cash market is closed at the cutoff?"
+      ],
+      "stages": [
+        {
+          "stage": "research",
+          "order": 1,
+          "label": "Research",
+          "prompt_path": "docs/research/factors/usd/rates-term-premium-and-curve/01-research-prompt.md",
+          "prompt_sha256": "a0e69f60d2a76e6f4ae3c9c1f39d3e297884f614aa4391c73db44719375f3edf",
+          "prompt_bytes": 9151,
+          "prompt_source": {
+            "kind": "generated",
+            "repo_path": "docs/research/factors/usd/rates-term-premium-and-curve/01-research-prompt.md",
+            "sha256": "a0e69f60d2a76e6f4ae3c9c1f39d3e297884f614aa4391c73db44719375f3edf",
+            "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
+          },
+          "document_type": "report",
+          "parent_stage": null,
+          "deliverable": "One Markdown report: the assignment answered in full, with the source note as a section inside the same document.",
+          "returns": "Sections in the order the prompt asks for, an explicit what-is-not-claimed section, and the source note naming every source you fetched, the passage you relied on, the window it concerns and whether it is primary."
+        },
+        {
+          "stage": "red_team",
+          "order": 2,
+          "label": "Red-team",
+          "prompt_path": "docs/research/factors/usd/rates-term-premium-and-curve/02-red-team-prompt.md",
+          "prompt_sha256": "73ba1daeb330cd96f101809d3cea27d2a8d7a956b4e63c50287952a14731227e",
+          "prompt_bytes": 8536,
+          "prompt_source": {
+            "kind": "generated",
+            "repo_path": "docs/research/factors/usd/rates-term-premium-and-curve/02-red-team-prompt.md",
+            "sha256": "73ba1daeb330cd96f101809d3cea27d2a8d7a956b4e63c50287952a14731227e",
+            "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
+          },
+          "document_type": "review",
+          "parent_stage": "research",
+          "deliverable": "One Markdown issue register: every load-bearing claim quoted, given a verdict, a severity and the evidence that would settle it.",
+          "returns": "The issue register, the two closing lists (what survives unchanged, what the review could not reach), the sources you re-fetched and the questions you could not resolve."
+        },
+        {
+          "stage": "adjudication",
+          "order": 3,
+          "label": "Adjudication",
+          "prompt_path": "docs/research/factors/usd/rates-term-premium-and-curve/03-adjudication-prompt.md",
+          "prompt_sha256": "170311301cd866d4a2fad052289310d77132221717e36790f7e314255177a236",
+          "prompt_bytes": 8223,
+          "prompt_source": {
+            "kind": "generated",
+            "repo_path": "docs/research/factors/usd/rates-term-premium-and-curve/03-adjudication-prompt.md",
+            "sha256": "170311301cd866d4a2fad052289310d77132221717e36790f7e314255177a236",
+            "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
+          },
+          "document_type": "synthesis",
+          "parent_stage": "red_team",
+          "deliverable": "One Markdown adjudication: corrected conclusions, a decision on every material objection, and a handoff to central USD synthesis.",
+          "returns": "Corrected conclusions; finding-by-finding decisions; accepted, rejected and unresolved claims; proposed treatment of the factor in the engine; inputs, transformations, timing, interactions and missing-data treatment; explicitly unvalidated parameters; required empirical tests and remaining blockers; the handoff section."
+        }
+      ]
+    },
+    {
+      "chain_id": "usd-factor-rates-credit-spread-delta",
+      "factor_id": "rates.credit-spread-delta",
+      "asset": "USD",
+      "topic_id": "usd-topic-front-end-rates",
+      "group_title": "US front-end rates, real yields and curve position",
+      "slug": "rates-credit-spread-delta",
+      "title": "Credit spread delta - rates.credit-spread-delta",
+      "summary": "High-yield spread change as a growth and risk proxy, with its overlap against the cross-asset risk card bounded.",
+      "factor_label": "Credit spread delta",
+      "factor_group": "research_session_v1",
+      "factor_role": "regime",
+      "dispatch": {
+        "state": "queued"
+      },
+      "companions": [
+        {
+          "repo_path": "docs/research/usd-session/v1/weight_vector_discrepancy.md",
+          "role": "the two live weight vectors and where each is used",
+          "sha256": "2f420763193b0a032ccd38c1958563cd848c942f7cf49b53cad8de0ad98535cc",
+          "bytes": 6554
+        }
+      ],
+      "packs": [
+        {
+          "factor_id": "rates.credit-spread-delta",
+          "repo_path": "docs/research/handoff/usd/v1/packs/rates-credit-spread-delta.md",
+          "sha256": "9ed5e0a650fc0d974158ca15c4869a0829bc47de2d3ff2cb7380547b35941513",
+          "bytes": 13470
+        }
+      ],
+      "probes": [
+        "Chain question: does `rates.credit-spread-delta` - Credit spread delta - carry information about the next 24-hour dollar move, and in which quantity? High-yield spread change as a growth and risk proxy, with its overlap against the cross-asset risk card bounded.",
+        "Which of the eight entries is measuring something the others do not, and which pairs are the same information counted twice?",
+        "Is the informative quantity the level, a five-day change or a same-session change, and does the answer depend on the policy cycle?",
+        "Does a real-yield change add information beyond the nominal front end, and does that survive the inflation-expectation measurement problem?",
+        "Are these relations already in the dollar by 05:00 Europe/London, given that the US cash market is closed at the cutoff?"
+      ],
+      "stages": [
+        {
+          "stage": "research",
+          "order": 1,
+          "label": "Research",
+          "prompt_path": "docs/research/factors/usd/rates-credit-spread-delta/01-research-prompt.md",
+          "prompt_sha256": "3876b91cb32c48f03f0eb4ef6a2066d18938b572d4a2821f48b994494bcdcce1",
+          "prompt_bytes": 9162,
+          "prompt_source": {
+            "kind": "generated",
+            "repo_path": "docs/research/factors/usd/rates-credit-spread-delta/01-research-prompt.md",
+            "sha256": "3876b91cb32c48f03f0eb4ef6a2066d18938b572d4a2821f48b994494bcdcce1",
+            "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
+          },
+          "document_type": "report",
+          "parent_stage": null,
+          "deliverable": "One Markdown report: the assignment answered in full, with the source note as a section inside the same document.",
+          "returns": "Sections in the order the prompt asks for, an explicit what-is-not-claimed section, and the source note naming every source you fetched, the passage you relied on, the window it concerns and whether it is primary."
+        },
+        {
+          "stage": "red_team",
+          "order": 2,
+          "label": "Red-team",
+          "prompt_path": "docs/research/factors/usd/rates-credit-spread-delta/02-red-team-prompt.md",
+          "prompt_sha256": "ef3f122f52ac8f8f1571eba327b424559e22985a1e40d513b625fcf8867c5cec",
+          "prompt_bytes": 8533,
+          "prompt_source": {
+            "kind": "generated",
+            "repo_path": "docs/research/factors/usd/rates-credit-spread-delta/02-red-team-prompt.md",
+            "sha256": "ef3f122f52ac8f8f1571eba327b424559e22985a1e40d513b625fcf8867c5cec",
+            "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
+          },
+          "document_type": "review",
+          "parent_stage": "research",
+          "deliverable": "One Markdown issue register: every load-bearing claim quoted, given a verdict, a severity and the evidence that would settle it.",
+          "returns": "The issue register, the two closing lists (what survives unchanged, what the review could not reach), the sources you re-fetched and the questions you could not resolve."
+        },
+        {
+          "stage": "adjudication",
+          "order": 3,
+          "label": "Adjudication",
+          "prompt_path": "docs/research/factors/usd/rates-credit-spread-delta/03-adjudication-prompt.md",
+          "prompt_sha256": "9db00b803c4383dc2611010b617f7d0c4bc333e0262930f7dc0738b686c00958",
+          "prompt_bytes": 8217,
+          "prompt_source": {
+            "kind": "generated",
+            "repo_path": "docs/research/factors/usd/rates-credit-spread-delta/03-adjudication-prompt.md",
+            "sha256": "9db00b803c4383dc2611010b617f7d0c4bc333e0262930f7dc0738b686c00958",
+            "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
+          },
+          "document_type": "synthesis",
+          "parent_stage": "red_team",
+          "deliverable": "One Markdown adjudication: corrected conclusions, a decision on every material objection, and a handoff to central USD synthesis.",
+          "returns": "Corrected conclusions; finding-by-finding decisions; accepted, rejected and unresolved claims; proposed treatment of the factor in the engine; inputs, transformations, timing, interactions and missing-data treatment; explicitly unvalidated parameters; required empirical tests and remaining blockers; the handoff section."
+        }
+      ]
+    },
+    {
+      "chain_id": "usd-factor-live-f5-dxy-delta",
+      "factor_id": "live.f5-dxy-delta",
+      "asset": "USD",
+      "topic_id": "usd-topic-dollar-index-gold-and-equities",
+      "group_title": "Dollar index, gold and equity-against-USD relations",
+      "slug": "live-f5-dxy-delta",
+      "title": "F5 DXY delta - live.f5-dxy-delta",
+      "summary": "Trailing change in the dollar index the collector stores as dxy_level (FRED DTWEXBGS), with a d1 to d5 to d20 substitution ladder.",
+      "factor_label": "F5 DXY delta",
+      "factor_group": "live_engine",
+      "factor_role": "direction",
+      "dispatch": {
+        "state": "queued"
+      },
+      "companions": [
+        {
+          "repo_path": "docs/research/usd-session/v1/target_source_assessment.md",
+          "role": "DXY and intraday source coverage, access and cost",
+          "sha256": "078f8951777b782643b0aa4d1a87ba82b1beede0128f2e43cf2b5faeed1277da",
+          "bytes": 8421
+        }
+      ],
+      "packs": [
+        {
+          "factor_id": "live.f5-dxy-delta",
+          "repo_path": "docs/research/handoff/usd/v1/packs/f5-dxy-delta.md",
+          "sha256": "d7cb348a11a4eb5c60b703e42e5c5f09c5ec4b48e3fecee56036d9d08394fc8f",
+          "bytes": 16687
+        }
+      ],
+      "probes": [
+        "Chain question: does `live.f5-dxy-delta` - F5 DXY delta - carry information about the next 24-hour dollar move, and in which quantity? Trailing change in the dollar index the collector stores as dxy_level (FRED DTWEXBGS), with a d1 to d5 to d20 substitution ladder.",
+        "Is the dollar smile a measured relation for this window, or a descriptive convenience: what would falsify it?",
+        "Which dollar index is a claim actually about, and does the answer change with the index construction?",
+        "Does a same-day dollar move followed by a session direction suggest mean reversion or continuation, and on what evidence?",
+        "Are gold and equities independent evidence for the dollar, or the same risk factor counted twice?"
+      ],
+      "stages": [
+        {
+          "stage": "research",
+          "order": 1,
+          "label": "Research",
+          "prompt_path": "docs/research/factors/usd/live-f5-dxy-delta/01-research-prompt.md",
+          "prompt_sha256": "dfdeea3979302cc8f18333fb9b3d706c74a122dfe6b2d724c7c906e6b8546d33",
+          "prompt_bytes": 9109,
+          "prompt_source": {
+            "kind": "generated",
+            "repo_path": "docs/research/factors/usd/live-f5-dxy-delta/01-research-prompt.md",
+            "sha256": "dfdeea3979302cc8f18333fb9b3d706c74a122dfe6b2d724c7c906e6b8546d33",
+            "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
+          },
+          "document_type": "report",
+          "parent_stage": null,
+          "deliverable": "One Markdown report: the assignment answered in full, with the source note as a section inside the same document.",
+          "returns": "Sections in the order the prompt asks for, an explicit what-is-not-claimed section, and the source note naming every source you fetched, the passage you relied on, the window it concerns and whether it is primary."
+        },
+        {
+          "stage": "red_team",
+          "order": 2,
+          "label": "Red-team",
+          "prompt_path": "docs/research/factors/usd/live-f5-dxy-delta/02-red-team-prompt.md",
+          "prompt_sha256": "8e1e968eaaa1697a47fe6868b562f7ddfe698304e9ec9fdcc2f4409951c78cc6",
+          "prompt_bytes": 8559,
+          "prompt_source": {
+            "kind": "generated",
+            "repo_path": "docs/research/factors/usd/live-f5-dxy-delta/02-red-team-prompt.md",
+            "sha256": "8e1e968eaaa1697a47fe6868b562f7ddfe698304e9ec9fdcc2f4409951c78cc6",
+            "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
+          },
+          "document_type": "review",
+          "parent_stage": "research",
+          "deliverable": "One Markdown issue register: every load-bearing claim quoted, given a verdict, a severity and the evidence that would settle it.",
+          "returns": "The issue register, the two closing lists (what survives unchanged, what the review could not reach), the sources you re-fetched and the questions you could not resolve."
+        },
+        {
+          "stage": "adjudication",
+          "order": 3,
+          "label": "Adjudication",
+          "prompt_path": "docs/research/factors/usd/live-f5-dxy-delta/03-adjudication-prompt.md",
+          "prompt_sha256": "f8703ed094b896c13747a794bfabeaf04981861a3228007ecfab38e2dd0c097b",
+          "prompt_bytes": 8235,
+          "prompt_source": {
+            "kind": "generated",
+            "repo_path": "docs/research/factors/usd/live-f5-dxy-delta/03-adjudication-prompt.md",
+            "sha256": "f8703ed094b896c13747a794bfabeaf04981861a3228007ecfab38e2dd0c097b",
+            "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
+          },
+          "document_type": "synthesis",
+          "parent_stage": "red_team",
+          "deliverable": "One Markdown adjudication: corrected conclusions, a decision on every material objection, and a handoff to central USD synthesis.",
+          "returns": "Corrected conclusions; finding-by-finding decisions; accepted, rejected and unresolved claims; proposed treatment of the factor in the engine; inputs, transformations, timing, interactions and missing-data treatment; explicitly unvalidated parameters; required empirical tests and remaining blockers; the handoff section."
+        }
+      ]
+    },
+    {
+      "chain_id": "usd-factor-live-f6-gold-delta",
+      "factor_id": "live.f6-gold-delta",
+      "asset": "USD",
+      "topic_id": "usd-topic-dollar-index-gold-and-equities",
+      "group_title": "Dollar index, gold and equity-against-USD relations",
+      "slug": "live-f6-gold-delta",
+      "title": "F6 Gold delta - live.f6-gold-delta",
+      "summary": "Gold move as an inverse dollar-risk read.",
+      "factor_label": "F6 Gold delta",
+      "factor_group": "live_engine",
+      "factor_role": "direction",
+      "dispatch": {
+        "state": "queued"
+      },
+      "companions": [
+        {
+          "repo_path": "docs/research/usd-session/v1/target_source_assessment.md",
+          "role": "DXY and intraday source coverage, access and cost",
+          "sha256": "078f8951777b782643b0aa4d1a87ba82b1beede0128f2e43cf2b5faeed1277da",
+          "bytes": 8421
+        }
+      ],
+      "packs": [
+        {
+          "factor_id": "live.f6-gold-delta",
+          "repo_path": "docs/research/handoff/usd/v1/packs/f6-gold-delta.md",
+          "sha256": "a52d73415b8684085e4b8d4642615409f759bc34059364e178b0e37c8e3b177a",
+          "bytes": 16529
+        }
+      ],
+      "probes": [
+        "Chain question: does `live.f6-gold-delta` - F6 Gold delta - carry information about the next 24-hour dollar move, and in which quantity? Gold move as an inverse dollar-risk read.",
+        "Is the dollar smile a measured relation for this window, or a descriptive convenience: what would falsify it?",
+        "Which dollar index is a claim actually about, and does the answer change with the index construction?",
+        "Does a same-day dollar move followed by a session direction suggest mean reversion or continuation, and on what evidence?",
+        "Are gold and equities independent evidence for the dollar, or the same risk factor counted twice?"
+      ],
+      "stages": [
+        {
+          "stage": "research",
+          "order": 1,
+          "label": "Research",
+          "prompt_path": "docs/research/factors/usd/live-f6-gold-delta/01-research-prompt.md",
+          "prompt_sha256": "a9d700caab77f8a7dbbc1ce56d3a05790b43ec8fb34afce0d9cc7a059182304b",
+          "prompt_bytes": 8924,
+          "prompt_source": {
+            "kind": "generated",
+            "repo_path": "docs/research/factors/usd/live-f6-gold-delta/01-research-prompt.md",
+            "sha256": "a9d700caab77f8a7dbbc1ce56d3a05790b43ec8fb34afce0d9cc7a059182304b",
+            "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
+          },
+          "document_type": "report",
+          "parent_stage": null,
+          "deliverable": "One Markdown report: the assignment answered in full, with the source note as a section inside the same document.",
+          "returns": "Sections in the order the prompt asks for, an explicit what-is-not-claimed section, and the source note naming every source you fetched, the passage you relied on, the window it concerns and whether it is primary."
+        },
+        {
+          "stage": "red_team",
+          "order": 2,
+          "label": "Red-team",
+          "prompt_path": "docs/research/factors/usd/live-f6-gold-delta/02-red-team-prompt.md",
+          "prompt_sha256": "7ed225d12fb2bf586ace4db4b76ccb2c3dfd4f7fd01fcd40622300e978920dd1",
+          "prompt_bytes": 8462,
+          "prompt_source": {
+            "kind": "generated",
+            "repo_path": "docs/research/factors/usd/live-f6-gold-delta/02-red-team-prompt.md",
+            "sha256": "7ed225d12fb2bf586ace4db4b76ccb2c3dfd4f7fd01fcd40622300e978920dd1",
+            "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
+          },
+          "document_type": "review",
+          "parent_stage": "research",
+          "deliverable": "One Markdown issue register: every load-bearing claim quoted, given a verdict, a severity and the evidence that would settle it.",
+          "returns": "The issue register, the two closing lists (what survives unchanged, what the review could not reach), the sources you re-fetched and the questions you could not resolve."
+        },
+        {
+          "stage": "adjudication",
+          "order": 3,
+          "label": "Adjudication",
+          "prompt_path": "docs/research/factors/usd/live-f6-gold-delta/03-adjudication-prompt.md",
+          "prompt_sha256": "2e550ac5bc9d44fd88fc955eae38a525f62310c94151ac1c469ae2c785a19f8d",
+          "prompt_bytes": 8139,
+          "prompt_source": {
+            "kind": "generated",
+            "repo_path": "docs/research/factors/usd/live-f6-gold-delta/03-adjudication-prompt.md",
+            "sha256": "2e550ac5bc9d44fd88fc955eae38a525f62310c94151ac1c469ae2c785a19f8d",
+            "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
+          },
+          "document_type": "synthesis",
+          "parent_stage": "red_team",
+          "deliverable": "One Markdown adjudication: corrected conclusions, a decision on every material objection, and a handoff to central USD synthesis.",
+          "returns": "Corrected conclusions; finding-by-finding decisions; accepted, rejected and unresolved claims; proposed treatment of the factor in the engine; inputs, transformations, timing, interactions and missing-data treatment; explicitly unvalidated parameters; required empirical tests and remaining blockers; the handoff section."
+        }
+      ]
+    },
+    {
+      "chain_id": "usd-factor-live-f9-dollar-smile",
+      "factor_id": "live.f9-dollar-smile",
+      "asset": "USD",
+      "topic_id": "usd-topic-dollar-index-gold-and-equities",
+      "group_title": "Dollar index, gold and equity-against-USD relations",
+      "slug": "live-f9-dollar-smile",
+      "title": "F9 Dollar Smile regime - live.f9-dollar-smile",
+      "summary": "The smile regime read from the VIX level and the bias string.",
+      "factor_label": "F9 Dollar Smile regime",
+      "factor_group": "live_engine",
+      "factor_role": "regime context",
+      "dispatch": {
+        "state": "queued"
+      },
+      "companions": [
+        {
+          "repo_path": "docs/research/usd-session/v1/target_source_assessment.md",
+          "role": "DXY and intraday source coverage, access and cost",
+          "sha256": "078f8951777b782643b0aa4d1a87ba82b1beede0128f2e43cf2b5faeed1277da",
+          "bytes": 8421
+        }
+      ],
+      "packs": [
+        {
+          "factor_id": "live.f9-dollar-smile",
+          "repo_path": "docs/research/handoff/usd/v1/packs/f9-dollar-smile.md",
+          "sha256": "e90bdc5b62bfb8b736b3329d029c39ef4e79056cb7043b6ea1545ec8d7460102",
+          "bytes": 16586
+        }
+      ],
+      "probes": [
+        "Chain question: does `live.f9-dollar-smile` - F9 Dollar Smile regime - carry information about the next 24-hour dollar move, and in which quantity? The smile regime read from the VIX level and the bias string.",
+        "Is the dollar smile a measured relation for this window, or a descriptive convenience: what would falsify it?",
+        "Which dollar index is a claim actually about, and does the answer change with the index construction?",
+        "Does a same-day dollar move followed by a session direction suggest mean reversion or continuation, and on what evidence?",
+        "Are gold and equities independent evidence for the dollar, or the same risk factor counted twice?"
+      ],
+      "stages": [
+        {
+          "stage": "research",
+          "order": 1,
+          "label": "Research",
+          "prompt_path": "docs/research/factors/usd/live-f9-dollar-smile/01-research-prompt.md",
+          "prompt_sha256": "1f8ca43c30738a418fb1514b46c705f02490e20b6e1bf20fb42e265424cdff61",
+          "prompt_bytes": 8963,
+          "prompt_source": {
+            "kind": "generated",
+            "repo_path": "docs/research/factors/usd/live-f9-dollar-smile/01-research-prompt.md",
+            "sha256": "1f8ca43c30738a418fb1514b46c705f02490e20b6e1bf20fb42e265424cdff61",
+            "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
+          },
+          "document_type": "report",
+          "parent_stage": null,
+          "deliverable": "One Markdown report: the assignment answered in full, with the source note as a section inside the same document.",
+          "returns": "Sections in the order the prompt asks for, an explicit what-is-not-claimed section, and the source note naming every source you fetched, the passage you relied on, the window it concerns and whether it is primary."
+        },
+        {
+          "stage": "red_team",
+          "order": 2,
+          "label": "Red-team",
+          "prompt_path": "docs/research/factors/usd/live-f9-dollar-smile/02-red-team-prompt.md",
+          "prompt_sha256": "f820d6b49039fbb3818b33235021f9275e997ec5d14a97148a76cd7beb62df8a",
+          "prompt_bytes": 8472,
+          "prompt_source": {
+            "kind": "generated",
+            "repo_path": "docs/research/factors/usd/live-f9-dollar-smile/02-red-team-prompt.md",
+            "sha256": "f820d6b49039fbb3818b33235021f9275e997ec5d14a97148a76cd7beb62df8a",
+            "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
+          },
+          "document_type": "review",
+          "parent_stage": "research",
+          "deliverable": "One Markdown issue register: every load-bearing claim quoted, given a verdict, a severity and the evidence that would settle it.",
+          "returns": "The issue register, the two closing lists (what survives unchanged, what the review could not reach), the sources you re-fetched and the questions you could not resolve."
+        },
+        {
+          "stage": "adjudication",
+          "order": 3,
+          "label": "Adjudication",
+          "prompt_path": "docs/research/factors/usd/live-f9-dollar-smile/03-adjudication-prompt.md",
+          "prompt_sha256": "a10b54540288484fd730be63628d787129d2562dea72ce0e1631fbe3b0a35f57",
+          "prompt_bytes": 8151,
+          "prompt_source": {
+            "kind": "generated",
+            "repo_path": "docs/research/factors/usd/live-f9-dollar-smile/03-adjudication-prompt.md",
+            "sha256": "a10b54540288484fd730be63628d787129d2562dea72ce0e1631fbe3b0a35f57",
+            "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
+          },
+          "document_type": "synthesis",
+          "parent_stage": "red_team",
+          "deliverable": "One Markdown adjudication: corrected conclusions, a decision on every material objection, and a handoff to central USD synthesis.",
+          "returns": "Corrected conclusions; finding-by-finding decisions; accepted, rejected and unresolved claims; proposed treatment of the factor in the engine; inputs, transformations, timing, interactions and missing-data treatment; explicitly unvalidated parameters; required empirical tests and remaining blockers; the handoff section."
+        }
+      ]
+    },
+    {
+      "chain_id": "usd-factor-live-f10-equity-versus-usd",
+      "factor_id": "live.f10-equity-versus-usd",
+      "asset": "USD",
+      "topic_id": "usd-topic-dollar-index-gold-and-equities",
+      "group_title": "Dollar index, gold and equity-against-USD relations",
+      "slug": "live-f10-equity-versus-usd",
+      "title": "F10 Equity versus USD - live.f10-equity-versus-usd",
+      "summary": "Cross-asset read of equities against the dollar, gated by the VIX regime.",
+      "factor_label": "F10 Equity versus USD",
+      "factor_group": "live_engine",
+      "factor_role": "regime context",
+      "dispatch": {
+        "state": "queued"
+      },
+      "companions": [
+        {
+          "repo_path": "docs/research/usd-session/v1/target_source_assessment.md",
+          "role": "DXY and intraday source coverage, access and cost",
+          "sha256": "078f8951777b782643b0aa4d1a87ba82b1beede0128f2e43cf2b5faeed1277da",
+          "bytes": 8421
+        }
+      ],
+      "packs": [
+        {
+          "factor_id": "live.f10-equity-versus-usd",
+          "repo_path": "docs/research/handoff/usd/v1/packs/f10-equity-versus-usd.md",
+          "sha256": "d3dadf1c7ee18b656a7a955148364ed9dd953840c599c0907591d53eaadddb55",
+          "bytes": 16835
+        }
+      ],
+      "probes": [
+        "Chain question: does `live.f10-equity-versus-usd` - F10 Equity versus USD - carry information about the next 24-hour dollar move, and in which quantity? Cross-asset read of equities against the dollar, gated by the VIX regime.",
+        "Is the dollar smile a measured relation for this window, or a descriptive convenience: what would falsify it?",
+        "Which dollar index is a claim actually about, and does the answer change with the index construction?",
+        "Does a same-day dollar move followed by a session direction suggest mean reversion or continuation, and on what evidence?",
+        "Are gold and equities independent evidence for the dollar, or the same risk factor counted twice?"
+      ],
+      "stages": [
+        {
+          "stage": "research",
+          "order": 1,
+          "label": "Research",
+          "prompt_path": "docs/research/factors/usd/live-f10-equity-versus-usd/01-research-prompt.md",
+          "prompt_sha256": "90387d021a522d721fc843cba059ea8e07355a78a2d9fa05bc468c441acaf6db",
+          "prompt_bytes": 9067,
+          "prompt_source": {
+            "kind": "generated",
+            "repo_path": "docs/research/factors/usd/live-f10-equity-versus-usd/01-research-prompt.md",
+            "sha256": "90387d021a522d721fc843cba059ea8e07355a78a2d9fa05bc468c441acaf6db",
+            "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
+          },
+          "document_type": "report",
+          "parent_stage": null,
+          "deliverable": "One Markdown report: the assignment answered in full, with the source note as a section inside the same document.",
+          "returns": "Sections in the order the prompt asks for, an explicit what-is-not-claimed section, and the source note naming every source you fetched, the passage you relied on, the window it concerns and whether it is primary."
+        },
+        {
+          "stage": "red_team",
+          "order": 2,
+          "label": "Red-team",
+          "prompt_path": "docs/research/factors/usd/live-f10-equity-versus-usd/02-red-team-prompt.md",
+          "prompt_sha256": "9303dc99ed3876fd0336d896be0d17a442d619f0562f1cbf1819fab09cb12974",
+          "prompt_bytes": 8565,
+          "prompt_source": {
+            "kind": "generated",
+            "repo_path": "docs/research/factors/usd/live-f10-equity-versus-usd/02-red-team-prompt.md",
+            "sha256": "9303dc99ed3876fd0336d896be0d17a442d619f0562f1cbf1819fab09cb12974",
+            "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
+          },
+          "document_type": "review",
+          "parent_stage": "research",
+          "deliverable": "One Markdown issue register: every load-bearing claim quoted, given a verdict, a severity and the evidence that would settle it.",
+          "returns": "The issue register, the two closing lists (what survives unchanged, what the review could not reach), the sources you re-fetched and the questions you could not resolve."
+        },
+        {
+          "stage": "adjudication",
+          "order": 3,
+          "label": "Adjudication",
+          "prompt_path": "docs/research/factors/usd/live-f10-equity-versus-usd/03-adjudication-prompt.md",
+          "prompt_sha256": "c817655e539fa0e866fde9f1c8b17456e672841f5db4b8474f5d6a175a24873f",
+          "prompt_bytes": 8250,
+          "prompt_source": {
+            "kind": "generated",
+            "repo_path": "docs/research/factors/usd/live-f10-equity-versus-usd/03-adjudication-prompt.md",
+            "sha256": "c817655e539fa0e866fde9f1c8b17456e672841f5db4b8474f5d6a175a24873f",
+            "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
+          },
+          "document_type": "synthesis",
+          "parent_stage": "red_team",
+          "deliverable": "One Markdown adjudication: corrected conclusions, a decision on every material objection, and a handoff to central USD synthesis.",
+          "returns": "Corrected conclusions; finding-by-finding decisions; accepted, rejected and unresolved claims; proposed treatment of the factor in the engine; inputs, transformations, timing, interactions and missing-data treatment; explicitly unvalidated parameters; required empirical tests and remaining blockers; the handoff section."
+        }
+      ]
+    },
+    {
+      "chain_id": "usd-factor-live-f7-economic-surprise",
+      "factor_id": "live.f7-economic-surprise",
+      "asset": "USD",
+      "topic_id": "usd-topic-economic-surprise-and-fed-bias",
+      "group_title": "Economic surprises, first prints and Fed bias",
+      "slug": "live-f7-economic-surprise",
+      "title": "F7 US economic surprise - live.f7-economic-surprise",
+      "summary": "The highest-weight live family. The stored usd_signal per event is copied straight through, with no consensus and no first-print vintage reachable from this repository.",
+      "factor_label": "F7 US economic surprise",
+      "factor_group": "live_engine",
+      "factor_role": "direction",
+      "dispatch": {
+        "state": "queued"
+      },
+      "companions": [
+        {
+          "repo_path": "docs/research/usd-session/v1/macro_data_inventory.md",
+          "role": "publication timing, revisions, missingness and live versus historical availability",
+          "sha256": "3a473fd839c4676ff51a7b373822a5639e89d4b540ec1d4907074e391532418d",
+          "bytes": 6062
+        }
+      ],
+      "packs": [
+        {
+          "factor_id": "live.f7-economic-surprise",
+          "repo_path": "docs/research/handoff/usd/v1/packs/f7-economic-surprise.md",
+          "sha256": "604185221074fa2673da9b24d387cca6ac286de6443a0baae6e8de9b1d891fd3",
+          "bytes": 17272
+        }
+      ],
+      "probes": [
+        "Chain question: does `live.f7-economic-surprise` - F7 US economic surprise - carry information about the next 24-hour dollar move, and in which quantity? The highest-weight live family. The stored usd_signal per event is copied straight through, with no consensus and no first-print vintage reachable from this repository.",
+        "Which surprise measure is defensible: survey consensus, model nowcast, or the market-implied move, and what does each one cost?",
+        "Is the first print the only honest vintage, and what does the revision history of the tested series look like?",
+        "Is Fed bias an observable at 05:00 Europe/London or a narrative, and what would an observable version look like?",
+        "How much of a surprise is already in the dollar in the minutes after the print, and how do you separate that from the session that follows?"
+      ],
+      "stages": [
+        {
+          "stage": "research",
+          "order": 1,
+          "label": "Research",
+          "prompt_path": "docs/research/factors/usd/live-f7-economic-surprise/01-research-prompt.md",
+          "prompt_sha256": "8494e07fe54223fab61af6c9fe9f469b8845de9f53c6b1782192227f747e5a12",
+          "prompt_bytes": 9422,
+          "prompt_source": {
+            "kind": "generated",
+            "repo_path": "docs/research/factors/usd/live-f7-economic-surprise/01-research-prompt.md",
+            "sha256": "8494e07fe54223fab61af6c9fe9f469b8845de9f53c6b1782192227f747e5a12",
+            "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
+          },
+          "document_type": "report",
+          "parent_stage": null,
+          "deliverable": "One Markdown report: the assignment answered in full, with the source note as a section inside the same document.",
+          "returns": "Sections in the order the prompt asks for, an explicit what-is-not-claimed section, and the source note naming every source you fetched, the passage you relied on, the window it concerns and whether it is primary."
+        },
+        {
+          "stage": "red_team",
+          "order": 2,
+          "label": "Red-team",
+          "prompt_path": "docs/research/factors/usd/live-f7-economic-surprise/02-red-team-prompt.md",
+          "prompt_sha256": "9a6b39ad0458c897cac1de6f47ee359a8a8a70d6ff7f02442d07f1eaebfdf9ab",
+          "prompt_bytes": 8763,
+          "prompt_source": {
+            "kind": "generated",
+            "repo_path": "docs/research/factors/usd/live-f7-economic-surprise/02-red-team-prompt.md",
+            "sha256": "9a6b39ad0458c897cac1de6f47ee359a8a8a70d6ff7f02442d07f1eaebfdf9ab",
+            "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
+          },
+          "document_type": "review",
+          "parent_stage": "research",
+          "deliverable": "One Markdown issue register: every load-bearing claim quoted, given a verdict, a severity and the evidence that would settle it.",
+          "returns": "The issue register, the two closing lists (what survives unchanged, what the review could not reach), the sources you re-fetched and the questions you could not resolve."
+        },
+        {
+          "stage": "adjudication",
+          "order": 3,
+          "label": "Adjudication",
+          "prompt_path": "docs/research/factors/usd/live-f7-economic-surprise/03-adjudication-prompt.md",
+          "prompt_sha256": "3ba23d884d76afc48abfb9d6b51326de42ec81684005294e2dc374b4fb536af8",
+          "prompt_bytes": 8447,
+          "prompt_source": {
+            "kind": "generated",
+            "repo_path": "docs/research/factors/usd/live-f7-economic-surprise/03-adjudication-prompt.md",
+            "sha256": "3ba23d884d76afc48abfb9d6b51326de42ec81684005294e2dc374b4fb536af8",
+            "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
+          },
+          "document_type": "synthesis",
+          "parent_stage": "red_team",
+          "deliverable": "One Markdown adjudication: corrected conclusions, a decision on every material objection, and a handoff to central USD synthesis.",
+          "returns": "Corrected conclusions; finding-by-finding decisions; accepted, rejected and unresolved claims; proposed treatment of the factor in the engine; inputs, transformations, timing, interactions and missing-data treatment; explicitly unvalidated parameters; required empirical tests and remaining blockers; the handoff section."
+        }
+      ]
+    },
+    {
+      "chain_id": "usd-factor-live-f8-fed-bias",
+      "factor_id": "live.f8-fed-bias",
+      "asset": "USD",
+      "topic_id": "usd-topic-economic-surprise-and-fed-bias",
+      "group_title": "Economic surprises, first prints and Fed bias",
+      "slug": "live-f8-fed-bias",
+      "title": "F8 Fed bias - live.f8-fed-bias",
+      "summary": "Directional read of the Fed bias string, tested for the words hawkish or dovish. The rulebook describes a delta; the code measures no change.",
+      "factor_label": "F8 Fed bias",
+      "factor_group": "live_engine",
+      "factor_role": "direction",
+      "dispatch": {
+        "state": "queued"
+      },
+      "companions": [
+        {
+          "repo_path": "docs/research/usd-session/v1/macro_data_inventory.md",
+          "role": "publication timing, revisions, missingness and live versus historical availability",
+          "sha256": "3a473fd839c4676ff51a7b373822a5639e89d4b540ec1d4907074e391532418d",
+          "bytes": 6062
+        }
+      ],
+      "packs": [
+        {
+          "factor_id": "live.f8-fed-bias",
+          "repo_path": "docs/research/handoff/usd/v1/packs/f8-fed-bias.md",
+          "sha256": "5cddde1f4eab88538555f7869b234e0030518bb01f8e52bf6f1af1c6abe6728e",
+          "bytes": 16999
+        }
+      ],
+      "probes": [
+        "Chain question: does `live.f8-fed-bias` - F8 Fed bias - carry information about the next 24-hour dollar move, and in which quantity? Directional read of the Fed bias string, tested for the words hawkish or dovish. The rulebook describes a delta; the code measures no change.",
+        "Which surprise measure is defensible: survey consensus, model nowcast, or the market-implied move, and what does each one cost?",
+        "Is the first print the only honest vintage, and what does the revision history of the tested series look like?",
+        "Is Fed bias an observable at 05:00 Europe/London or a narrative, and what would an observable version look like?",
+        "How much of a surprise is already in the dollar in the minutes after the print, and how do you separate that from the session that follows?"
+      ],
+      "stages": [
+        {
+          "stage": "research",
+          "order": 1,
+          "label": "Research",
+          "prompt_path": "docs/research/factors/usd/live-f8-fed-bias/01-research-prompt.md",
+          "prompt_sha256": "44ebe3f2b716ed8cf3ecf87e7f4489085f192f91216a01f5741997711ac38451",
+          "prompt_bytes": 9209,
+          "prompt_source": {
+            "kind": "generated",
+            "repo_path": "docs/research/factors/usd/live-f8-fed-bias/01-research-prompt.md",
+            "sha256": "44ebe3f2b716ed8cf3ecf87e7f4489085f192f91216a01f5741997711ac38451",
+            "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
+          },
+          "document_type": "report",
+          "parent_stage": null,
+          "deliverable": "One Markdown report: the assignment answered in full, with the source note as a section inside the same document.",
+          "returns": "Sections in the order the prompt asks for, an explicit what-is-not-claimed section, and the source note naming every source you fetched, the passage you relied on, the window it concerns and whether it is primary."
+        },
+        {
+          "stage": "red_team",
+          "order": 2,
+          "label": "Red-team",
+          "prompt_path": "docs/research/factors/usd/live-f8-fed-bias/02-red-team-prompt.md",
+          "prompt_sha256": "7c449862b2f088d856ba135889435a4dacd96d0ab2e0e3cde514af21abd18d5a",
+          "prompt_bytes": 8589,
+          "prompt_source": {
+            "kind": "generated",
+            "repo_path": "docs/research/factors/usd/live-f8-fed-bias/02-red-team-prompt.md",
+            "sha256": "7c449862b2f088d856ba135889435a4dacd96d0ab2e0e3cde514af21abd18d5a",
+            "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
+          },
+          "document_type": "review",
+          "parent_stage": "research",
+          "deliverable": "One Markdown issue register: every load-bearing claim quoted, given a verdict, a severity and the evidence that would settle it.",
+          "returns": "The issue register, the two closing lists (what survives unchanged, what the review could not reach), the sources you re-fetched and the questions you could not resolve."
+        },
+        {
+          "stage": "adjudication",
+          "order": 3,
+          "label": "Adjudication",
+          "prompt_path": "docs/research/factors/usd/live-f8-fed-bias/03-adjudication-prompt.md",
+          "prompt_sha256": "ebec4f3b78bee055325f75f6abf2fd12fe2a9f3f73b9cb23622ca835c49b3b0d",
+          "prompt_bytes": 8264,
+          "prompt_source": {
+            "kind": "generated",
+            "repo_path": "docs/research/factors/usd/live-f8-fed-bias/03-adjudication-prompt.md",
+            "sha256": "ebec4f3b78bee055325f75f6abf2fd12fe2a9f3f73b9cb23622ca835c49b3b0d",
+            "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
+          },
+          "document_type": "synthesis",
+          "parent_stage": "red_team",
+          "deliverable": "One Markdown adjudication: corrected conclusions, a decision on every material objection, and a handoff to central USD synthesis.",
+          "returns": "Corrected conclusions; finding-by-finding decisions; accepted, rejected and unresolved claims; proposed treatment of the factor in the engine; inputs, transformations, timing, interactions and missing-data treatment; explicitly unvalidated parameters; required empirical tests and remaining blockers; the handoff section."
+        }
+      ]
+    },
+    {
+      "chain_id": "usd-factor-macro-release-surprise-at-first-print",
+      "factor_id": "macro.release-surprise-at-first-print",
+      "asset": "USD",
+      "topic_id": "usd-topic-economic-surprise-and-fed-bias",
+      "group_title": "Economic surprises, first prints and Fed bias",
+      "slug": "macro-release-surprise-at-first-print",
+      "title": "Release surprise at first print - macro.release-surprise-at-first-print",
+      "summary": "The honest test of the highest-weight live family. Asking for a first-print surprise with the consensus that was published before the release, and stating plainly if no such source is reachable.",
+      "factor_label": "Release surprise at first print",
+      "factor_group": "research_session_v1",
+      "factor_role": "direction",
+      "dispatch": {
+        "state": "queued"
+      },
+      "companions": [
+        {
+          "repo_path": "docs/research/usd-session/v1/macro_data_inventory.md",
+          "role": "publication timing, revisions, missingness and live versus historical availability",
+          "sha256": "3a473fd839c4676ff51a7b373822a5639e89d4b540ec1d4907074e391532418d",
+          "bytes": 6062
+        }
+      ],
+      "packs": [
+        {
+          "factor_id": "macro.release-surprise-at-first-print",
+          "repo_path": "docs/research/handoff/usd/v1/packs/macro-release-surprise-at-first-print.md",
+          "sha256": "4cfa12e5074d569f8daab01a73ffaf6dc7e195f45370fc54700ec6bb201549bc",
+          "bytes": 14299
+        }
+      ],
+      "probes": [
+        "Chain question: does `macro.release-surprise-at-first-print` - Release surprise at first print - carry information about the next 24-hour dollar move, and in which quantity? The honest test of the highest-weight live family. Asking for a first-print surprise with the consensus that was published before the release, and stating plainly if no such source is reachable.",
+        "Which surprise measure is defensible: survey consensus, model nowcast, or the market-implied move, and what does each one cost?",
+        "Is the first print the only honest vintage, and what does the revision history of the tested series look like?",
+        "Is Fed bias an observable at 05:00 Europe/London or a narrative, and what would an observable version look like?",
+        "How much of a surprise is already in the dollar in the minutes after the print, and how do you separate that from the session that follows?"
+      ],
+      "stages": [
+        {
+          "stage": "research",
+          "order": 1,
+          "label": "Research",
+          "prompt_path": "docs/research/factors/usd/macro-release-surprise-at-first-print/01-research-prompt.md",
+          "prompt_sha256": "90c2adb556bf80b395414b3ba32e8984b4656aaad0e863f949c16afd6e76f152",
+          "prompt_bytes": 9529,
+          "prompt_source": {
+            "kind": "generated",
+            "repo_path": "docs/research/factors/usd/macro-release-surprise-at-first-print/01-research-prompt.md",
+            "sha256": "90c2adb556bf80b395414b3ba32e8984b4656aaad0e863f949c16afd6e76f152",
+            "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
+          },
+          "document_type": "report",
+          "parent_stage": null,
+          "deliverable": "One Markdown report: the assignment answered in full, with the source note as a section inside the same document.",
+          "returns": "Sections in the order the prompt asks for, an explicit what-is-not-claimed section, and the source note naming every source you fetched, the passage you relied on, the window it concerns and whether it is primary."
+        },
+        {
+          "stage": "red_team",
+          "order": 2,
+          "label": "Red-team",
+          "prompt_path": "docs/research/factors/usd/macro-release-surprise-at-first-print/02-red-team-prompt.md",
+          "prompt_sha256": "9834923ff210a708fb7739d4d42239c554155fa187a83e8093fdd31f3856f753",
+          "prompt_bytes": 8831,
+          "prompt_source": {
+            "kind": "generated",
+            "repo_path": "docs/research/factors/usd/macro-release-surprise-at-first-print/02-red-team-prompt.md",
+            "sha256": "9834923ff210a708fb7739d4d42239c554155fa187a83e8093fdd31f3856f753",
+            "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
+          },
+          "document_type": "review",
+          "parent_stage": "research",
+          "deliverable": "One Markdown issue register: every load-bearing claim quoted, given a verdict, a severity and the evidence that would settle it.",
+          "returns": "The issue register, the two closing lists (what survives unchanged, what the review could not reach), the sources you re-fetched and the questions you could not resolve."
+        },
+        {
+          "stage": "adjudication",
+          "order": 3,
+          "label": "Adjudication",
+          "prompt_path": "docs/research/factors/usd/macro-release-surprise-at-first-print/03-adjudication-prompt.md",
+          "prompt_sha256": "d161b84c70259a3b22e1a627b3ef06f1457dc9d15741211b96c95c122fe052b8",
+          "prompt_bytes": 8527,
+          "prompt_source": {
+            "kind": "generated",
+            "repo_path": "docs/research/factors/usd/macro-release-surprise-at-first-print/03-adjudication-prompt.md",
+            "sha256": "d161b84c70259a3b22e1a627b3ef06f1457dc9d15741211b96c95c122fe052b8",
+            "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
+          },
+          "document_type": "synthesis",
+          "parent_stage": "red_team",
+          "deliverable": "One Markdown adjudication: corrected conclusions, a decision on every material objection, and a handoff to central USD synthesis.",
+          "returns": "Corrected conclusions; finding-by-finding decisions; accepted, rejected and unresolved claims; proposed treatment of the factor in the engine; inputs, transformations, timing, interactions and missing-data treatment; explicitly unvalidated parameters; required empirical tests and remaining blockers; the handoff section."
+        }
+      ]
+    },
+    {
+      "chain_id": "usd-factor-fx-usd-session-momentum",
+      "factor_id": "fx.usd-session-momentum",
+      "asset": "USD",
+      "topic_id": "usd-topic-fx-session-structure",
+      "group_title": "Session structure, overnight range and safe-haven demand",
+      "slug": "fx-usd-session-momentum",
+      "title": "USD session momentum - fx.usd-session-momentum",
+      "summary": "Trailing 1-day and 5-day move in the label instrument, read at the cutoff: continuation or fade inside the 24-hour London-to-London session.",
+      "factor_label": "USD session momentum",
+      "factor_group": "research_session_v1",
+      "factor_role": "direction",
+      "dispatch": {
+        "state": "queued"
+      },
+      "companions": [
+        {
+          "repo_path": "docs/research/usd-session/v1/session_contract_v1.json",
+          "role": "the session contract the cutoff and endpoint come from",
+          "sha256": "aa7c6c191e6407935b6335e941a1a66de8979f828a23e22a1f6d249b086a2757",
+          "bytes": 7748
+        }
+      ],
+      "packs": [
+        {
+          "factor_id": "fx.usd-session-momentum",
+          "repo_path": "docs/research/handoff/usd/v1/packs/fx-usd-session-momentum.md",
+          "sha256": "935d7526dd48a14efe36b0c63c2ae3e113e1e1422ef5b5be2f12151cfb422ab3",
+          "bytes": 13922
+        }
+      ],
+      "probes": [
+        "Chain question: does `fx.usd-session-momentum` - USD session momentum - carry information about the next 24-hour dollar move, and in which quantity? Trailing 1-day and 5-day move in the label instrument, read at the cutoff: continuation or fade inside the 24-hour London-to-London session.",
+        "Is the range position a state variable or an artefact of when the session starts, and what does the start time do to it?",
+        "Does session momentum survive the bid-ask bounce of a 24-hour window, and what measurement would separate them?",
+        "Is safe-haven demand observable at the cutoff separately from risk-on/off, or is it the same input twice?",
+        "Which instrument labels these factors, given that DXY has no verified intraday source?"
+      ],
+      "stages": [
+        {
+          "stage": "research",
+          "order": 1,
+          "label": "Research",
+          "prompt_path": "docs/research/factors/usd/fx-usd-session-momentum/01-research-prompt.md",
+          "prompt_sha256": "e412b7eb8749de9ba67356dff67ee21d3efb805371e96066f1179d84b8688683",
+          "prompt_bytes": 9106,
+          "prompt_source": {
+            "kind": "generated",
+            "repo_path": "docs/research/factors/usd/fx-usd-session-momentum/01-research-prompt.md",
+            "sha256": "e412b7eb8749de9ba67356dff67ee21d3efb805371e96066f1179d84b8688683",
+            "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
+          },
+          "document_type": "report",
+          "parent_stage": null,
+          "deliverable": "One Markdown report: the assignment answered in full, with the source note as a section inside the same document.",
+          "returns": "Sections in the order the prompt asks for, an explicit what-is-not-claimed section, and the source note naming every source you fetched, the passage you relied on, the window it concerns and whether it is primary."
+        },
+        {
+          "stage": "red_team",
+          "order": 2,
+          "label": "Red-team",
+          "prompt_path": "docs/research/factors/usd/fx-usd-session-momentum/02-red-team-prompt.md",
+          "prompt_sha256": "b807d59686e929ee06896cbca1ab0766c8f2092106192daa3d272ab19393a9ae",
+          "prompt_bytes": 8539,
+          "prompt_source": {
+            "kind": "generated",
+            "repo_path": "docs/research/factors/usd/fx-usd-session-momentum/02-red-team-prompt.md",
+            "sha256": "b807d59686e929ee06896cbca1ab0766c8f2092106192daa3d272ab19393a9ae",
+            "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
+          },
+          "document_type": "review",
+          "parent_stage": "research",
+          "deliverable": "One Markdown issue register: every load-bearing claim quoted, given a verdict, a severity and the evidence that would settle it.",
+          "returns": "The issue register, the two closing lists (what survives unchanged, what the review could not reach), the sources you re-fetched and the questions you could not resolve."
+        },
+        {
+          "stage": "adjudication",
+          "order": 3,
+          "label": "Adjudication",
+          "prompt_path": "docs/research/factors/usd/fx-usd-session-momentum/03-adjudication-prompt.md",
+          "prompt_sha256": "519f19aaca4e5706d9d1eba92dc8719449bfd7b8031e9b8225492644dab56fa5",
+          "prompt_bytes": 8221,
+          "prompt_source": {
+            "kind": "generated",
+            "repo_path": "docs/research/factors/usd/fx-usd-session-momentum/03-adjudication-prompt.md",
+            "sha256": "519f19aaca4e5706d9d1eba92dc8719449bfd7b8031e9b8225492644dab56fa5",
+            "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
+          },
+          "document_type": "synthesis",
+          "parent_stage": "red_team",
+          "deliverable": "One Markdown adjudication: corrected conclusions, a decision on every material objection, and a handoff to central USD synthesis.",
+          "returns": "Corrected conclusions; finding-by-finding decisions; accepted, rejected and unresolved claims; proposed treatment of the factor in the engine; inputs, transformations, timing, interactions and missing-data treatment; explicitly unvalidated parameters; required empirical tests and remaining blockers; the handoff section."
+        }
+      ]
+    },
+    {
+      "chain_id": "usd-factor-fx-usd-overnight-range-position",
+      "factor_id": "fx.usd-overnight-range-position",
+      "asset": "USD",
+      "topic_id": "usd-topic-fx-session-structure",
+      "group_title": "Session structure, overnight range and safe-haven demand",
+      "slug": "fx-usd-overnight-range-position",
+      "title": "USD overnight range position - fx.usd-overnight-range-position",
+      "summary": "Where the dollar sits in its own recent range at the cutoff, as a bound on the session move rather than a directional call.",
+      "factor_label": "USD overnight range position",
+      "factor_group": "research_session_v1",
+      "factor_role": "direction",
+      "dispatch": {
+        "state": "queued"
+      },
+      "companions": [
+        {
+          "repo_path": "docs/research/usd-session/v1/session_contract_v1.json",
+          "role": "the session contract the cutoff and endpoint come from",
+          "sha256": "aa7c6c191e6407935b6335e941a1a66de8979f828a23e22a1f6d249b086a2757",
+          "bytes": 7748
+        }
+      ],
+      "packs": [
+        {
+          "factor_id": "fx.usd-overnight-range-position",
+          "repo_path": "docs/research/handoff/usd/v1/packs/fx-usd-overnight-range-position.md",
+          "sha256": "d32df302f92a09668870532962d0a5158c32ad677102b0a12c330abe251546f6",
+          "bytes": 13747
+        }
+      ],
+      "probes": [
+        "Chain question: does `fx.usd-overnight-range-position` - USD overnight range position - carry information about the next 24-hour dollar move, and in which quantity? Where the dollar sits in its own recent range at the cutoff, as a bound on the session move rather than a directional call.",
+        "Is the range position a state variable or an artefact of when the session starts, and what does the start time do to it?",
+        "Does session momentum survive the bid-ask bounce of a 24-hour window, and what measurement would separate them?",
+        "Is safe-haven demand observable at the cutoff separately from risk-on/off, or is it the same input twice?",
+        "Which instrument labels these factors, given that DXY has no verified intraday source?"
+      ],
+      "stages": [
+        {
+          "stage": "research",
+          "order": 1,
+          "label": "Research",
+          "prompt_path": "docs/research/factors/usd/fx-usd-overnight-range-position/01-research-prompt.md",
+          "prompt_sha256": "cf5e78be9eb5da5525e5d50c70d8b041ba15ca50e42e983c24119454e354542d",
+          "prompt_bytes": 9160,
+          "prompt_source": {
+            "kind": "generated",
+            "repo_path": "docs/research/factors/usd/fx-usd-overnight-range-position/01-research-prompt.md",
+            "sha256": "cf5e78be9eb5da5525e5d50c70d8b041ba15ca50e42e983c24119454e354542d",
+            "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
+          },
+          "document_type": "report",
+          "parent_stage": null,
+          "deliverable": "One Markdown report: the assignment answered in full, with the source note as a section inside the same document.",
+          "returns": "Sections in the order the prompt asks for, an explicit what-is-not-claimed section, and the source note naming every source you fetched, the passage you relied on, the window it concerns and whether it is primary."
+        },
+        {
+          "stage": "red_team",
+          "order": 2,
+          "label": "Red-team",
+          "prompt_path": "docs/research/factors/usd/fx-usd-overnight-range-position/02-red-team-prompt.md",
+          "prompt_sha256": "3b81e02554a049a05c09be411e5141d6bb872d2af691697c2d4c5328a10631ec",
+          "prompt_bytes": 8602,
+          "prompt_source": {
+            "kind": "generated",
+            "repo_path": "docs/research/factors/usd/fx-usd-overnight-range-position/02-red-team-prompt.md",
+            "sha256": "3b81e02554a049a05c09be411e5141d6bb872d2af691697c2d4c5328a10631ec",
+            "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
+          },
+          "document_type": "review",
+          "parent_stage": "research",
+          "deliverable": "One Markdown issue register: every load-bearing claim quoted, given a verdict, a severity and the evidence that would settle it.",
+          "returns": "The issue register, the two closing lists (what survives unchanged, what the review could not reach), the sources you re-fetched and the questions you could not resolve."
+        },
+        {
+          "stage": "adjudication",
+          "order": 3,
+          "label": "Adjudication",
+          "prompt_path": "docs/research/factors/usd/fx-usd-overnight-range-position/03-adjudication-prompt.md",
+          "prompt_sha256": "b4baeae608be32bb1c6c6bfcce38cbf285f05f5f6c79bc66638c97fac97cbe60",
+          "prompt_bytes": 8292,
+          "prompt_source": {
+            "kind": "generated",
+            "repo_path": "docs/research/factors/usd/fx-usd-overnight-range-position/03-adjudication-prompt.md",
+            "sha256": "b4baeae608be32bb1c6c6bfcce38cbf285f05f5f6c79bc66638c97fac97cbe60",
+            "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
+          },
+          "document_type": "synthesis",
+          "parent_stage": "red_team",
+          "deliverable": "One Markdown adjudication: corrected conclusions, a decision on every material objection, and a handoff to central USD synthesis.",
+          "returns": "Corrected conclusions; finding-by-finding decisions; accepted, rejected and unresolved claims; proposed treatment of the factor in the engine; inputs, transformations, timing, interactions and missing-data treatment; explicitly unvalidated parameters; required empirical tests and remaining blockers; the handoff section."
+        }
+      ]
+    },
+    {
+      "chain_id": "usd-factor-fx-usd-session-volatility-regime",
+      "factor_id": "fx.usd-session-volatility-regime",
+      "asset": "USD",
+      "topic_id": "usd-topic-fx-session-structure",
+      "group_title": "Session structure, overnight range and safe-haven demand",
+      "slug": "fx-usd-session-volatility-regime",
+      "title": "USD session volatility regime - fx.usd-session-volatility-regime",
+      "summary": "Realised volatility of the label instrument and the effect of that regime on the expected move and on whether a call should be withheld.",
+      "factor_label": "USD session volatility regime",
+      "factor_group": "research_session_v1",
+      "factor_role": "abstention gate",
+      "dispatch": {
+        "state": "queued"
+      },
+      "companions": [
+        {
+          "repo_path": "docs/research/usd-session/v1/session_contract_v1.json",
+          "role": "the session contract the cutoff and endpoint come from",
+          "sha256": "aa7c6c191e6407935b6335e941a1a66de8979f828a23e22a1f6d249b086a2757",
+          "bytes": 7748
+        }
+      ],
+      "packs": [
+        {
+          "factor_id": "fx.usd-session-volatility-regime",
+          "repo_path": "docs/research/handoff/usd/v1/packs/fx-usd-session-volatility-regime.md",
+          "sha256": "7dfbdad10c7123852faa60d1782c458039aa5d34cff219c9d068d17fd1e268fc",
+          "bytes": 13667
+        }
+      ],
+      "probes": [
+        "Chain question: does `fx.usd-session-volatility-regime` - USD session volatility regime - carry information about the next 24-hour dollar move, and in which quantity? Realised volatility of the label instrument and the effect of that regime on the expected move and on whether a call should be withheld.",
+        "Is the range position a state variable or an artefact of when the session starts, and what does the start time do to it?",
+        "Does session momentum survive the bid-ask bounce of a 24-hour window, and what measurement would separate them?",
+        "Is safe-haven demand observable at the cutoff separately from risk-on/off, or is it the same input twice?",
+        "Which instrument labels these factors, given that DXY has no verified intraday source?"
+      ],
+      "stages": [
+        {
+          "stage": "research",
+          "order": 1,
+          "label": "Research",
+          "prompt_path": "docs/research/factors/usd/fx-usd-session-volatility-regime/01-research-prompt.md",
+          "prompt_sha256": "540c708c94fd8e1f24943bdd40037a3edf4b18ac33d0328f17e21e302226a033",
+          "prompt_bytes": 9203,
+          "prompt_source": {
+            "kind": "generated",
+            "repo_path": "docs/research/factors/usd/fx-usd-session-volatility-regime/01-research-prompt.md",
+            "sha256": "540c708c94fd8e1f24943bdd40037a3edf4b18ac33d0328f17e21e302226a033",
+            "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
+          },
+          "document_type": "report",
+          "parent_stage": null,
+          "deliverable": "One Markdown report: the assignment answered in full, with the source note as a section inside the same document.",
+          "returns": "Sections in the order the prompt asks for, an explicit what-is-not-claimed section, and the source note naming every source you fetched, the passage you relied on, the window it concerns and whether it is primary."
+        },
+        {
+          "stage": "red_team",
+          "order": 2,
+          "label": "Red-team",
+          "prompt_path": "docs/research/factors/usd/fx-usd-session-volatility-regime/02-red-team-prompt.md",
+          "prompt_sha256": "2e11c925e5140bfde1f9cfcc7aa239dfc7372d7aa3301c4f25eaf1ebb96d4620",
+          "prompt_bytes": 8631,
+          "prompt_source": {
+            "kind": "generated",
+            "repo_path": "docs/research/factors/usd/fx-usd-session-volatility-regime/02-red-team-prompt.md",
+            "sha256": "2e11c925e5140bfde1f9cfcc7aa239dfc7372d7aa3301c4f25eaf1ebb96d4620",
+            "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
+          },
+          "document_type": "review",
+          "parent_stage": "research",
+          "deliverable": "One Markdown issue register: every load-bearing claim quoted, given a verdict, a severity and the evidence that would settle it.",
+          "returns": "The issue register, the two closing lists (what survives unchanged, what the review could not reach), the sources you re-fetched and the questions you could not resolve."
+        },
+        {
+          "stage": "adjudication",
+          "order": 3,
+          "label": "Adjudication",
+          "prompt_path": "docs/research/factors/usd/fx-usd-session-volatility-regime/03-adjudication-prompt.md",
+          "prompt_sha256": "25309f9f2585b4c0d62f467da488b219596a888705a244ede86ab7f952e678df",
+          "prompt_bytes": 8322,
+          "prompt_source": {
+            "kind": "generated",
+            "repo_path": "docs/research/factors/usd/fx-usd-session-volatility-regime/03-adjudication-prompt.md",
+            "sha256": "25309f9f2585b4c0d62f467da488b219596a888705a244ede86ab7f952e678df",
+            "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
+          },
+          "document_type": "synthesis",
+          "parent_stage": "red_team",
+          "deliverable": "One Markdown adjudication: corrected conclusions, a decision on every material objection, and a handoff to central USD synthesis.",
+          "returns": "Corrected conclusions; finding-by-finding decisions; accepted, rejected and unresolved claims; proposed treatment of the factor in the engine; inputs, transformations, timing, interactions and missing-data treatment; explicitly unvalidated parameters; required empirical tests and remaining blockers; the handoff section."
+        }
+      ]
+    },
+    {
+      "chain_id": "usd-factor-risk-usd-safe-haven-demand",
+      "factor_id": "risk.usd-safe-haven-demand",
+      "asset": "USD",
+      "topic_id": "usd-topic-fx-session-structure",
+      "group_title": "Session structure, overnight range and safe-haven demand",
+      "slug": "risk-usd-safe-haven-demand",
+      "title": "USD safe-haven demand - risk.usd-safe-haven-demand",
+      "summary": "Whether the dollar is being bought as insurance rather than for carry, which changes the sign of the same risk move.",
+      "factor_label": "USD safe-haven demand",
+      "factor_group": "research_session_v1",
+      "factor_role": "direction",
+      "dispatch": {
+        "state": "queued"
+      },
+      "companions": [
+        {
+          "repo_path": "docs/research/usd-session/v1/session_contract_v1.json",
+          "role": "the session contract the cutoff and endpoint come from",
+          "sha256": "aa7c6c191e6407935b6335e941a1a66de8979f828a23e22a1f6d249b086a2757",
+          "bytes": 7748
+        }
+      ],
+      "packs": [
+        {
+          "factor_id": "risk.usd-safe-haven-demand",
+          "repo_path": "docs/research/handoff/usd/v1/packs/risk-usd-safe-haven-demand.md",
+          "sha256": "27973f50f27a6f4a23dd6fe555b1e99b7da479c3530355953a0beccf2192ab95",
+          "bytes": 13567
+        }
+      ],
+      "probes": [
+        "Chain question: does `risk.usd-safe-haven-demand` - USD safe-haven demand - carry information about the next 24-hour dollar move, and in which quantity? Whether the dollar is being bought as insurance rather than for carry, which changes the sign of the same risk move.",
+        "Is the range position a state variable or an artefact of when the session starts, and what does the start time do to it?",
+        "Does session momentum survive the bid-ask bounce of a 24-hour window, and what measurement would separate them?",
+        "Is safe-haven demand observable at the cutoff separately from risk-on/off, or is it the same input twice?",
+        "Which instrument labels these factors, given that DXY has no verified intraday source?"
+      ],
+      "stages": [
+        {
+          "stage": "research",
+          "order": 1,
+          "label": "Research",
+          "prompt_path": "docs/research/factors/usd/risk-usd-safe-haven-demand/01-research-prompt.md",
+          "prompt_sha256": "13c77efe57ed5ba1a5042642159dad650e2673e4e2c27cbdf7cf7610f73712d1",
+          "prompt_bytes": 9085,
+          "prompt_source": {
+            "kind": "generated",
+            "repo_path": "docs/research/factors/usd/risk-usd-safe-haven-demand/01-research-prompt.md",
+            "sha256": "13c77efe57ed5ba1a5042642159dad650e2673e4e2c27cbdf7cf7610f73712d1",
+            "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
+          },
+          "document_type": "report",
+          "parent_stage": null,
+          "deliverable": "One Markdown report: the assignment answered in full, with the source note as a section inside the same document.",
+          "returns": "Sections in the order the prompt asks for, an explicit what-is-not-claimed section, and the source note naming every source you fetched, the passage you relied on, the window it concerns and whether it is primary."
+        },
+        {
+          "stage": "red_team",
+          "order": 2,
+          "label": "Red-team",
+          "prompt_path": "docs/research/factors/usd/risk-usd-safe-haven-demand/02-red-team-prompt.md",
+          "prompt_sha256": "310b77c26c9de529eeb05b46262d6e8c4e54607e6c450ae3622ecfcbd60caff5",
+          "prompt_bytes": 8541,
+          "prompt_source": {
+            "kind": "generated",
+            "repo_path": "docs/research/factors/usd/risk-usd-safe-haven-demand/02-red-team-prompt.md",
+            "sha256": "310b77c26c9de529eeb05b46262d6e8c4e54607e6c450ae3622ecfcbd60caff5",
+            "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
+          },
+          "document_type": "review",
+          "parent_stage": "research",
+          "deliverable": "One Markdown issue register: every load-bearing claim quoted, given a verdict, a severity and the evidence that would settle it.",
+          "returns": "The issue register, the two closing lists (what survives unchanged, what the review could not reach), the sources you re-fetched and the questions you could not resolve."
+        },
+        {
+          "stage": "adjudication",
+          "order": 3,
+          "label": "Adjudication",
+          "prompt_path": "docs/research/factors/usd/risk-usd-safe-haven-demand/03-adjudication-prompt.md",
+          "prompt_sha256": "c7ab82d35ef4784fe1d9fb59839fe2fe49db16ffb32ba33aa919e387b0046c8c",
+          "prompt_bytes": 8226,
+          "prompt_source": {
+            "kind": "generated",
+            "repo_path": "docs/research/factors/usd/risk-usd-safe-haven-demand/03-adjudication-prompt.md",
+            "sha256": "c7ab82d35ef4784fe1d9fb59839fe2fe49db16ffb32ba33aa919e387b0046c8c",
+            "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
+          },
+          "document_type": "synthesis",
+          "parent_stage": "red_team",
+          "deliverable": "One Markdown adjudication: corrected conclusions, a decision on every material objection, and a handoff to central USD synthesis.",
+          "returns": "Corrected conclusions; finding-by-finding decisions; accepted, rejected and unresolved claims; proposed treatment of the factor in the engine; inputs, transformations, timing, interactions and missing-data treatment; explicitly unvalidated parameters; required empirical tests and remaining blockers; the handoff section."
+        }
+      ]
+    },
+    {
+      "chain_id": "usd-factor-risk-risk-on-off-cross-asset-state",
+      "factor_id": "risk.risk-on-off-cross-asset-state",
+      "asset": "USD",
+      "topic_id": "usd-topic-fx-session-structure",
+      "group_title": "Session structure, overnight range and safe-haven demand",
+      "slug": "risk-risk-on-off-cross-asset-state",
+      "title": "Risk-on and risk-off cross-asset state - risk.risk-on-off-cross-asset-state",
+      "summary": "Equities, credit, gold and crypto at the cutoff as one risk state, with the double-counting risk against the VIX card named explicitly.",
+      "factor_label": "Risk-on and risk-off cross-asset state",
+      "factor_group": "research_session_v1",
+      "factor_role": "regime",
+      "dispatch": {
+        "state": "queued"
+      },
+      "companions": [
+        {
+          "repo_path": "docs/research/usd-session/v1/session_contract_v1.json",
+          "role": "the session contract the cutoff and endpoint come from",
+          "sha256": "aa7c6c191e6407935b6335e941a1a66de8979f828a23e22a1f6d249b086a2757",
+          "bytes": 7748
+        }
+      ],
+      "packs": [
+        {
+          "factor_id": "risk.risk-on-off-cross-asset-state",
+          "repo_path": "docs/research/handoff/usd/v1/packs/risk-risk-on-off-cross-asset-state.md",
+          "sha256": "628dd20a05d23d1901fd4728e5fbaf0a9b607efac31e6537c51bb0b78be83a46",
+          "bytes": 13829
+        }
+      ],
+      "probes": [
+        "Chain question: does `risk.risk-on-off-cross-asset-state` - Risk-on and risk-off cross-asset state - carry information about the next 24-hour dollar move, and in which quantity? Equities, credit, gold and crypto at the cutoff as one risk state, with the double-counting risk against the VIX card named explicitly.",
+        "Is the range position a state variable or an artefact of when the session starts, and what does the start time do to it?",
+        "Does session momentum survive the bid-ask bounce of a 24-hour window, and what measurement would separate them?",
+        "Is safe-haven demand observable at the cutoff separately from risk-on/off, or is it the same input twice?",
+        "Which instrument labels these factors, given that DXY has no verified intraday source?"
+      ],
+      "stages": [
+        {
+          "stage": "research",
+          "order": 1,
+          "label": "Research",
+          "prompt_path": "docs/research/factors/usd/risk-risk-on-off-cross-asset-state/01-research-prompt.md",
+          "prompt_sha256": "662d884b99dbde3477d89291572c8bbc2b936eaa718f0a4f49f1933554262fbf",
+          "prompt_bytes": 9316,
+          "prompt_source": {
+            "kind": "generated",
+            "repo_path": "docs/research/factors/usd/risk-risk-on-off-cross-asset-state/01-research-prompt.md",
+            "sha256": "662d884b99dbde3477d89291572c8bbc2b936eaa718f0a4f49f1933554262fbf",
+            "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
+          },
+          "document_type": "report",
+          "parent_stage": null,
+          "deliverable": "One Markdown report: the assignment answered in full, with the source note as a section inside the same document.",
+          "returns": "Sections in the order the prompt asks for, an explicit what-is-not-claimed section, and the source note naming every source you fetched, the passage you relied on, the window it concerns and whether it is primary."
+        },
+        {
+          "stage": "red_team",
+          "order": 2,
+          "label": "Red-team",
+          "prompt_path": "docs/research/factors/usd/risk-risk-on-off-cross-asset-state/02-red-team-prompt.md",
+          "prompt_sha256": "06087a96ba1808052d946c8ba58a63a5113e40bbda38babe55f67bff788d1b74",
+          "prompt_bytes": 8736,
+          "prompt_source": {
+            "kind": "generated",
+            "repo_path": "docs/research/factors/usd/risk-risk-on-off-cross-asset-state/02-red-team-prompt.md",
+            "sha256": "06087a96ba1808052d946c8ba58a63a5113e40bbda38babe55f67bff788d1b74",
+            "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
+          },
+          "document_type": "review",
+          "parent_stage": "research",
+          "deliverable": "One Markdown issue register: every load-bearing claim quoted, given a verdict, a severity and the evidence that would settle it.",
+          "returns": "The issue register, the two closing lists (what survives unchanged, what the review could not reach), the sources you re-fetched and the questions you could not resolve."
+        },
+        {
+          "stage": "adjudication",
+          "order": 3,
+          "label": "Adjudication",
+          "prompt_path": "docs/research/factors/usd/risk-risk-on-off-cross-asset-state/03-adjudication-prompt.md",
+          "prompt_sha256": "684391e09b34ef72965ba97d1845df93ccc2d9881e4b7718d7255c19044c596a",
+          "prompt_bytes": 8429,
+          "prompt_source": {
+            "kind": "generated",
+            "repo_path": "docs/research/factors/usd/risk-risk-on-off-cross-asset-state/03-adjudication-prompt.md",
+            "sha256": "684391e09b34ef72965ba97d1845df93ccc2d9881e4b7718d7255c19044c596a",
+            "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
+          },
+          "document_type": "synthesis",
+          "parent_stage": "red_team",
+          "deliverable": "One Markdown adjudication: corrected conclusions, a decision on every material objection, and a handoff to central USD synthesis.",
+          "returns": "Corrected conclusions; finding-by-finding decisions; accepted, rejected and unresolved claims; proposed treatment of the factor in the engine; inputs, transformations, timing, interactions and missing-data treatment; explicitly unvalidated parameters; required empirical tests and remaining blockers; the handoff section."
+        }
+      ]
+    },
+    {
+      "chain_id": "usd-factor-calendar-known-releases-between-cutoff-and-endpoint",
+      "factor_id": "calendar.known-releases-between-cutoff-and-endpoint",
+      "asset": "USD",
+      "topic_id": "usd-topic-calendar-and-data-quality",
+      "group_title": "Calendar state and the data-quality gate",
+      "slug": "calendar-known-releases-between-cutoff-and-endpoint",
+      "title": "Known releases inside the window - calendar.known-releases-between-cutoff-and-endpoint",
+      "summary": "Which releases are scheduled between the cutoff and the endpoint, and how a known-but-unreleased event may be used without using its outcome.",
+      "factor_label": "Known releases inside the window",
+      "factor_group": "research_session_v1",
+      "factor_role": "quality gate",
+      "dispatch": {
+        "state": "queued"
+      },
+      "companions": [
+        {
+          "repo_path": "docs/research/usd-session/v1/inventory.md",
+          "role": "the input and decision inventory this topic closes out",
+          "sha256": "a886f1ddcce52d4d8a0af77069b391deb1338275380cccd2e08d41fd61f2d56a",
+          "bytes": 10980
+        }
+      ],
+      "packs": [
+        {
+          "factor_id": "calendar.known-releases-between-cutoff-and-endpoint",
+          "repo_path": "docs/research/handoff/usd/v1/packs/calendar-known-releases-between-cutoff-and-endpoint.md",
+          "sha256": "600b05e33f5f29894b51ff501bec88d0d6d89ed5cd1105a9a2736bfa8e7e89db",
+          "bytes": 13485
+        }
+      ],
+      "probes": [
+        "Chain question: does `calendar.known-releases-between-cutoff-and-endpoint` - Known releases inside the window - carry information about the next 24-hour dollar move, and in which quantity? Which releases are scheduled between the cutoff and the endpoint, and how a known-but-unreleased event may be used without using its outcome.",
+        "Does a scheduled release inside the session change the expected direction, the expected dispersion, or only the confidence?",
+        "What is the honest treatment when the collector input is stale or missing: abstain, shrink or score neutral?",
+        "Which releases matter for the dollar over this window, and are the timestamps verifiable at the cutoff?",
+        "Can an abstention rule be evaluated at all without a frozen label instrument, and what would it take?"
+      ],
+      "stages": [
+        {
+          "stage": "research",
+          "order": 1,
+          "label": "Research",
+          "prompt_path": "docs/research/factors/usd/calendar-known-releases-between-cutoff-and-endpoint/01-research-prompt.md",
+          "prompt_sha256": "9dacc421ce78b6aed0c6a49f8fe42ac3d3d3d56756e6d35fdc23d466668ccb02",
+          "prompt_bytes": 9384,
+          "prompt_source": {
+            "kind": "generated",
+            "repo_path": "docs/research/factors/usd/calendar-known-releases-between-cutoff-and-endpoint/01-research-prompt.md",
+            "sha256": "9dacc421ce78b6aed0c6a49f8fe42ac3d3d3d56756e6d35fdc23d466668ccb02",
+            "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
+          },
+          "document_type": "report",
+          "parent_stage": null,
+          "deliverable": "One Markdown report: the assignment answered in full, with the source note as a section inside the same document.",
+          "returns": "Sections in the order the prompt asks for, an explicit what-is-not-claimed section, and the source note naming every source you fetched, the passage you relied on, the window it concerns and whether it is primary."
+        },
+        {
+          "stage": "red_team",
+          "order": 2,
+          "label": "Red-team",
+          "prompt_path": "docs/research/factors/usd/calendar-known-releases-between-cutoff-and-endpoint/02-red-team-prompt.md",
+          "prompt_sha256": "aeec363c6eeb98e62302ce096f146a66302421885ed528ad0f10878ee4263899",
+          "prompt_bytes": 8791,
+          "prompt_source": {
+            "kind": "generated",
+            "repo_path": "docs/research/factors/usd/calendar-known-releases-between-cutoff-and-endpoint/02-red-team-prompt.md",
+            "sha256": "aeec363c6eeb98e62302ce096f146a66302421885ed528ad0f10878ee4263899",
+            "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
+          },
+          "document_type": "review",
+          "parent_stage": "research",
+          "deliverable": "One Markdown issue register: every load-bearing claim quoted, given a verdict, a severity and the evidence that would settle it.",
+          "returns": "The issue register, the two closing lists (what survives unchanged, what the review could not reach), the sources you re-fetched and the questions you could not resolve."
+        },
+        {
+          "stage": "adjudication",
+          "order": 3,
+          "label": "Adjudication",
+          "prompt_path": "docs/research/factors/usd/calendar-known-releases-between-cutoff-and-endpoint/03-adjudication-prompt.md",
+          "prompt_sha256": "8cd6b3bf925c27c1977c8728027dfee899c06fdce132d2e92e953d053fb51513",
+          "prompt_bytes": 8501,
+          "prompt_source": {
+            "kind": "generated",
+            "repo_path": "docs/research/factors/usd/calendar-known-releases-between-cutoff-and-endpoint/03-adjudication-prompt.md",
+            "sha256": "8cd6b3bf925c27c1977c8728027dfee899c06fdce132d2e92e953d053fb51513",
+            "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
+          },
+          "document_type": "synthesis",
+          "parent_stage": "red_team",
+          "deliverable": "One Markdown adjudication: corrected conclusions, a decision on every material objection, and a handoff to central USD synthesis.",
+          "returns": "Corrected conclusions; finding-by-finding decisions; accepted, rejected and unresolved claims; proposed treatment of the factor in the engine; inputs, transformations, timing, interactions and missing-data treatment; explicitly unvalidated parameters; required empirical tests and remaining blockers; the handoff section."
+        }
+      ]
+    },
+    {
+      "chain_id": "usd-factor-calendar-days-since-and-until-high-impact-events",
+      "factor_id": "calendar.days-since-and-until-high-impact-events",
+      "asset": "USD",
+      "topic_id": "usd-topic-calendar-and-data-quality",
+      "group_title": "Calendar state and the data-quality gate",
+      "slug": "calendar-days-since-and-until-high-impact-events",
+      "title": "Distance from high-impact events - calendar.days-since-and-until-high-impact-events",
+      "summary": "Positioning measured as distance from known high-impact dates, using only the release calendar and never the surprise.",
+      "factor_label": "Distance from high-impact events",
+      "factor_group": "research_session_v1",
+      "factor_role": "regime",
+      "dispatch": {
+        "state": "queued"
+      },
+      "companions": [
+        {
+          "repo_path": "docs/research/usd-session/v1/inventory.md",
+          "role": "the input and decision inventory this topic closes out",
+          "sha256": "a886f1ddcce52d4d8a0af77069b391deb1338275380cccd2e08d41fd61f2d56a",
+          "bytes": 10980
+        }
+      ],
+      "packs": [
+        {
+          "factor_id": "calendar.days-since-and-until-high-impact-events",
+          "repo_path": "docs/research/handoff/usd/v1/packs/calendar-days-since-and-until-high-impact-events.md",
+          "sha256": "d7af3823c18f92ac4ca110b72cd76ea2cce7d67dc7fe1d5091a1b49f089f14dd",
+          "bytes": 13287
+        }
+      ],
+      "probes": [
+        "Chain question: does `calendar.days-since-and-until-high-impact-events` - Distance from high-impact events - carry information about the next 24-hour dollar move, and in which quantity? Positioning measured as distance from known high-impact dates, using only the release calendar and never the surprise.",
+        "Does a scheduled release inside the session change the expected direction, the expected dispersion, or only the confidence?",
+        "What is the honest treatment when the collector input is stale or missing: abstain, shrink or score neutral?",
+        "Which releases matter for the dollar over this window, and are the timestamps verifiable at the cutoff?",
+        "Can an abstention rule be evaluated at all without a frozen label instrument, and what would it take?"
+      ],
+      "stages": [
+        {
+          "stage": "research",
+          "order": 1,
+          "label": "Research",
+          "prompt_path": "docs/research/factors/usd/calendar-days-since-and-until-high-impact-events/01-research-prompt.md",
+          "prompt_sha256": "93f69a90f6db38a05bedb9c47d82d689ffbb797521651d45f5b780a8b2cfc3c0",
+          "prompt_bytes": 9308,
+          "prompt_source": {
+            "kind": "generated",
+            "repo_path": "docs/research/factors/usd/calendar-days-since-and-until-high-impact-events/01-research-prompt.md",
+            "sha256": "93f69a90f6db38a05bedb9c47d82d689ffbb797521651d45f5b780a8b2cfc3c0",
+            "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
+          },
+          "document_type": "report",
+          "parent_stage": null,
+          "deliverable": "One Markdown report: the assignment answered in full, with the source note as a section inside the same document.",
+          "returns": "Sections in the order the prompt asks for, an explicit what-is-not-claimed section, and the source note naming every source you fetched, the passage you relied on, the window it concerns and whether it is primary."
+        },
+        {
+          "stage": "red_team",
+          "order": 2,
+          "label": "Red-team",
+          "prompt_path": "docs/research/factors/usd/calendar-days-since-and-until-high-impact-events/02-red-team-prompt.md",
+          "prompt_sha256": "ad01de2b32638e56e970f3e9e04a5b254e402173a2a967839060dcc05cce9168",
+          "prompt_bytes": 8738,
+          "prompt_source": {
+            "kind": "generated",
+            "repo_path": "docs/research/factors/usd/calendar-days-since-and-until-high-impact-events/02-red-team-prompt.md",
+            "sha256": "ad01de2b32638e56e970f3e9e04a5b254e402173a2a967839060dcc05cce9168",
+            "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
+          },
+          "document_type": "review",
+          "parent_stage": "research",
+          "deliverable": "One Markdown issue register: every load-bearing claim quoted, given a verdict, a severity and the evidence that would settle it.",
+          "returns": "The issue register, the two closing lists (what survives unchanged, what the review could not reach), the sources you re-fetched and the questions you could not resolve."
+        },
+        {
+          "stage": "adjudication",
+          "order": 3,
+          "label": "Adjudication",
+          "prompt_path": "docs/research/factors/usd/calendar-days-since-and-until-high-impact-events/03-adjudication-prompt.md",
+          "prompt_sha256": "3496e7b39671e79aca9f8275aedc31d9f9951dcdc99f45e3e1dd6de5751b27b9",
+          "prompt_bytes": 8445,
+          "prompt_source": {
+            "kind": "generated",
+            "repo_path": "docs/research/factors/usd/calendar-days-since-and-until-high-impact-events/03-adjudication-prompt.md",
+            "sha256": "3496e7b39671e79aca9f8275aedc31d9f9951dcdc99f45e3e1dd6de5751b27b9",
+            "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
+          },
+          "document_type": "synthesis",
+          "parent_stage": "red_team",
+          "deliverable": "One Markdown adjudication: corrected conclusions, a decision on every material objection, and a handoff to central USD synthesis.",
+          "returns": "Corrected conclusions; finding-by-finding decisions; accepted, rejected and unresolved claims; proposed treatment of the factor in the engine; inputs, transformations, timing, interactions and missing-data treatment; explicitly unvalidated parameters; required empirical tests and remaining blockers; the handoff section."
+        }
+      ]
+    },
+    {
+      "chain_id": "usd-factor-data-quality-gate-for-abstention",
+      "factor_id": "data.quality-gate-for-abstention",
+      "asset": "USD",
+      "topic_id": "usd-topic-calendar-and-data-quality",
+      "group_title": "Calendar state and the data-quality gate",
+      "slug": "data-quality-gate-for-abstention",
+      "title": "Data quality gate for abstention - data.quality-gate-for-abstention",
+      "summary": "Which data states should force abstention instead of a weak call, given that the live collector has no as-of check and no staleness test.",
+      "factor_label": "Data quality gate for abstention",
+      "factor_group": "research_session_v1",
+      "factor_role": "quality gate",
+      "dispatch": {
+        "state": "queued"
+      },
+      "companions": [
+        {
+          "repo_path": "docs/research/usd-session/v1/inventory.md",
+          "role": "the input and decision inventory this topic closes out",
+          "sha256": "a886f1ddcce52d4d8a0af77069b391deb1338275380cccd2e08d41fd61f2d56a",
+          "bytes": 10980
+        }
+      ],
+      "packs": [
+        {
+          "factor_id": "data.quality-gate-for-abstention",
+          "repo_path": "docs/research/handoff/usd/v1/packs/data-quality-gate-for-abstention.md",
+          "sha256": "a4415c7cc67ec20a53ab66b069313299e5280f0ebffea4bf3ec15a0a8cafb236",
+          "bytes": 13826
+        }
+      ],
+      "probes": [
+        "Chain question: does `data.quality-gate-for-abstention` - Data quality gate for abstention - carry information about the next 24-hour dollar move, and in which quantity? Which data states should force abstention instead of a weak call, given that the live collector has no as-of check and no staleness test.",
+        "Does a scheduled release inside the session change the expected direction, the expected dispersion, or only the confidence?",
+        "What is the honest treatment when the collector input is stale or missing: abstain, shrink or score neutral?",
+        "Which releases matter for the dollar over this window, and are the timestamps verifiable at the cutoff?",
+        "Can an abstention rule be evaluated at all without a frozen label instrument, and what would it take?"
+      ],
+      "stages": [
+        {
+          "stage": "research",
+          "order": 1,
+          "label": "Research",
+          "prompt_path": "docs/research/factors/usd/data-quality-gate-for-abstention/01-research-prompt.md",
+          "prompt_sha256": "cce71bed0ddd0a61a59b102ea6b23a9849202abb11071f343076a0d1dc3ec205",
+          "prompt_bytes": 9221,
+          "prompt_source": {
+            "kind": "generated",
+            "repo_path": "docs/research/factors/usd/data-quality-gate-for-abstention/01-research-prompt.md",
+            "sha256": "cce71bed0ddd0a61a59b102ea6b23a9849202abb11071f343076a0d1dc3ec205",
+            "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
+          },
+          "document_type": "report",
+          "parent_stage": null,
+          "deliverable": "One Markdown report: the assignment answered in full, with the source note as a section inside the same document.",
+          "returns": "Sections in the order the prompt asks for, an explicit what-is-not-claimed section, and the source note naming every source you fetched, the passage you relied on, the window it concerns and whether it is primary."
+        },
+        {
+          "stage": "red_team",
+          "order": 2,
+          "label": "Red-team",
+          "prompt_path": "docs/research/factors/usd/data-quality-gate-for-abstention/02-red-team-prompt.md",
+          "prompt_sha256": "c49e4f77b5e27e4e46113cfe12c4c519c35adb4186c2c8ce59007d6b4fbbc5cd",
+          "prompt_bytes": 8632,
+          "prompt_source": {
+            "kind": "generated",
+            "repo_path": "docs/research/factors/usd/data-quality-gate-for-abstention/02-red-team-prompt.md",
+            "sha256": "c49e4f77b5e27e4e46113cfe12c4c519c35adb4186c2c8ce59007d6b4fbbc5cd",
+            "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
+          },
+          "document_type": "review",
+          "parent_stage": "research",
+          "deliverable": "One Markdown issue register: every load-bearing claim quoted, given a verdict, a severity and the evidence that would settle it.",
+          "returns": "The issue register, the two closing lists (what survives unchanged, what the review could not reach), the sources you re-fetched and the questions you could not resolve."
+        },
+        {
+          "stage": "adjudication",
+          "order": 3,
+          "label": "Adjudication",
+          "prompt_path": "docs/research/factors/usd/data-quality-gate-for-abstention/03-adjudication-prompt.md",
+          "prompt_sha256": "ca66c3ff6ab6e750d709d0471ab47e530c192a7b1b29a3e939c17f81ddafd573",
+          "prompt_bytes": 8323,
+          "prompt_source": {
+            "kind": "generated",
+            "repo_path": "docs/research/factors/usd/data-quality-gate-for-abstention/03-adjudication-prompt.md",
+            "sha256": "ca66c3ff6ab6e750d709d0471ab47e530c192a7b1b29a3e939c17f81ddafd573",
+            "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
           },
           "document_type": "synthesis",
           "parent_stage": "red_team",
@@ -1091,6 +3142,99 @@
       ]
     }
   ],
+  "final_chain": {
+    "chain_id": "usd-final-asset-analysis",
+    "asset": "USD",
+    "slug": "final-asset-analysis",
+    "title": "USD asset-level final analysis",
+    "summary": "The synthesis over all 25 factor chains: which relations survive, how conflicts between factor chains are resolved, and what the asset-level treatment is. It opens only when every factor has research, red team and adjudication against current versions.",
+    "dispatch": {
+      "state": "queued"
+    },
+    "companions": [
+      {
+        "repo_path": "docs/research/usd-session/v1/inventory.md",
+        "role": "the input and decision inventory the synthesis closes out"
+      }
+    ],
+    "packs": [],
+    "probes": [
+      "Which relation across the 25 factor chains survives its red team and adjudication, and which were only plausible mechanisms?",
+      "Where two factor chains disagree, what evidence decides between them, and what stays unresolved?",
+      "What is the smallest asset-level treatment the evidence supports, and which parameters remain unvalidated?"
+    ],
+    "gate": {
+      "requires": "all-factor-chains",
+      "factor_count": 25,
+      "stage_count": 3,
+      "note": "Unlocked by the registry: every factor chain must deliver research, red team and adjudication against the current parent versions."
+    },
+    "factor_chain_ids": [
+      "usd-factor-live-f1-vix-level",
+      "usd-factor-risk-vix-level-and-change-at-cutoff",
+      "usd-factor-live-f2-us-2y-delta",
+      "usd-factor-live-f3-us-de-2y-spread-delta",
+      "usd-factor-live-f4-real-yield-delta",
+      "usd-factor-rates-us-front-end-delta",
+      "usd-factor-rates-relative-front-end-delta",
+      "usd-factor-rates-real-yield-delta",
+      "usd-factor-rates-term-premium-and-curve",
+      "usd-factor-rates-credit-spread-delta",
+      "usd-factor-live-f5-dxy-delta",
+      "usd-factor-live-f6-gold-delta",
+      "usd-factor-live-f9-dollar-smile",
+      "usd-factor-live-f10-equity-versus-usd",
+      "usd-factor-live-f7-economic-surprise",
+      "usd-factor-live-f8-fed-bias",
+      "usd-factor-macro-release-surprise-at-first-print",
+      "usd-factor-fx-usd-session-momentum",
+      "usd-factor-fx-usd-overnight-range-position",
+      "usd-factor-fx-usd-session-volatility-regime",
+      "usd-factor-risk-usd-safe-haven-demand",
+      "usd-factor-risk-risk-on-off-cross-asset-state",
+      "usd-factor-calendar-known-releases-between-cutoff-and-endpoint",
+      "usd-factor-calendar-days-since-and-until-high-impact-events",
+      "usd-factor-data-quality-gate-for-abstention"
+    ],
+    "stages": [
+      {
+        "stage": "final_analysis",
+        "order": 1,
+        "label": "Final analysis",
+        "prompt_path": "docs/research/final/usd/final-asset-analysis/01-final-analysis-prompt.md",
+        "prompt_sha256": "af86161f3d07c107c0d56d9255f09f793c847b0e94d32e9fb6df07c059bcd849",
+        "prompt_bytes": 8041,
+        "prompt_source": {
+          "kind": "generated",
+          "repo_path": "docs/research/final/usd/final-asset-analysis/01-final-analysis-prompt.md",
+          "sha256": "af86161f3d07c107c0d56d9255f09f793c847b0e94d32e9fb6df07c059bcd849",
+          "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
+        },
+        "document_type": "synthesis",
+        "parent_stage": null,
+        "deliverable": "One Markdown asset-level synthesis over every factor chain adjudication, with what survives, what conflicts and what stays unresolved.",
+        "returns": "The asset-level conclusion; which factor-chain findings survive; how conflicts between factor chains are resolved; the proposed asset-level treatment; explicitly unvalidated parameters; required empirical tests; and an explicit what-is-not-claimed section."
+      },
+      {
+        "stage": "final_review",
+        "order": 2,
+        "label": "Final review",
+        "prompt_path": "docs/research/final/usd/final-asset-analysis/02-final-review-prompt.md",
+        "prompt_sha256": "5c854eaa9afbefb079b0f08e6d393e200413030ca098daa91dc5e1cfa193b858",
+        "prompt_bytes": 6133,
+        "prompt_source": {
+          "kind": "generated",
+          "repo_path": "docs/research/final/usd/final-asset-analysis/02-final-review-prompt.md",
+          "sha256": "5c854eaa9afbefb079b0f08e6d393e200413030ca098daa91dc5e1cfa193b858",
+          "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
+        },
+        "document_type": "review",
+        "parent_stage": "final_analysis",
+        "deliverable": "One Markdown review of the asset-level synthesis: every load-bearing conclusion quoted, given a verdict, a severity and the evidence that would settle it.",
+        "returns": "The issue register, the two closing lists (what survives unchanged, what the review could not reach), the sources you re-fetched and the questions you could not resolve."
+      }
+    ]
+  },
   "engine_documents": [
     {
       "document_id": "usd-session-label-instrument-decision",
@@ -1734,7 +3878,7 @@
       "label": "US Dollar",
       "standfirst": "The first asset in the library and the only one with factors under research today.",
       "status": "active",
-      "next_step": "Work one topic at a time through its three stages. Stage 1: copy the research prompt from the topic page and run it in your own session, then upload the one Markdown report it returns against that topic. Stage 2: download the exact research version the card names, run the red-team prompt, upload the review. Stage 3: download both documents, run the adjudication prompt, upload the conclusion. The stages of the other five topics are written and hash-checked and can be released as a batch at any time. The legacy task list (USD-SESSION-A1 to A5) is kept as history and is not the workflow.",
+      "next_step": "Work one factor chain at a time through its three stages. Stage 1: open the factor's chain row, copy the research prompt and run it in your own session, then upload the one Markdown report against that chain. Stage 2: download the exact research version the card names, run the red-team prompt, upload the review. Stage 3: download both documents, run the adjudication prompt, upload the conclusion. The final asset-level chain stays locked until every one of the twenty-five factor chains is complete; the topic labels group chains and own no stage. The legacy task list (USD-SESSION-A1 to A5) is kept as history and is not the workflow.",
       "factors": [
         {
           "review_status": "pending",
@@ -2454,7 +4598,7 @@
       "label": "Euro",
       "standfirst": "No EUR session research has started. Nothing from the USD programme transfers by default.",
       "status": "not_started",
-      "next_step": "Wait for the USD programme to reach a synthesis, then decide per asset whether the same question is asked.",
+      "next_step": "Wait for the USD final chain to complete, then decide per asset whether the same question is asked.",
       "blockers": [
         "No assignment is published for this asset."
       ],
@@ -2466,7 +4610,7 @@
       "label": "British Pound",
       "standfirst": "No GBP session research has started.",
       "status": "not_started",
-      "next_step": "Wait for the USD synthesis.",
+      "next_step": "Wait for the USD final chain.",
       "blockers": [
         "No assignment is published for this asset."
       ],
@@ -2478,7 +4622,7 @@
       "label": "Gold",
       "standfirst": "No gold session research has started in this programme; the gold backtesting lane keeps its own scope.",
       "status": "not_started",
-      "next_step": "Keep the existing gold lane scope until the USD synthesis says what is worth repeating.",
+      "next_step": "Keep the existing gold lane scope until the USD final chain says what is worth repeating.",
       "blockers": [
         "No assignment is published for this asset."
       ],
@@ -2490,7 +4634,7 @@
       "label": "Silver",
       "standfirst": "No silver session research has started.",
       "status": "not_started",
-      "next_step": "Wait for the USD synthesis.",
+      "next_step": "Wait for the USD final chain.",
       "blockers": [
         "No assignment is published for this asset."
       ],
@@ -2502,7 +4646,7 @@
       "label": "Nasdaq 100",
       "standfirst": "No NQ session research has started.",
       "status": "not_started",
-      "next_step": "Wait for the USD synthesis.",
+      "next_step": "Wait for the USD final chain.",
       "blockers": [
         "No assignment is published for this asset."
       ],
@@ -2514,7 +4658,7 @@
       "label": "Bitcoin",
       "standfirst": "No BTC session research has started.",
       "status": "not_started",
-      "next_step": "Wait for the USD synthesis.",
+      "next_step": "Wait for the USD final chain.",
       "blockers": [
         "No assignment is published for this asset."
       ],
@@ -2526,7 +4670,7 @@
       "label": "Crude Oil (WTI)",
       "standfirst": "No WTI session research has started.",
       "status": "not_started",
-      "next_step": "Wait for the USD synthesis.",
+      "next_step": "Wait for the USD final chain.",
       "blockers": [
         "No assignment is published for this asset."
       ],
