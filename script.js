@@ -6918,14 +6918,6 @@ function researchLibraryDocumentList() {
   return asArray(researchLibraryDocuments?.documents);
 }
 
-function researchLibraryDocumentsFor(factorId, types = []) {
-  const wanted = String(factorId || "");
-  return researchLibraryDocumentList().filter(document => {
-    if (wanted && String(document.factor_id || "") !== wanted) return false;
-    if (types.length && !types.includes(String(document.document_type))) return false;
-    return true;
-  });
-}
 
 function restoreResearchLibraryServiceSettings() {
   if (!researchLibraryState.serviceEndpoint) researchLibraryState.serviceEndpoint = researchLibraryDefaultEndpoint;
@@ -6995,12 +6987,6 @@ function researchLibraryForgetHosted() {
   researchLibraryDocuments = Object.assign({}, researchLibraryDocuments || {}, {
     documents: list.filter(document => !document.hosted)
   });
-}
-
-function researchLibraryHostedAccountBar() {
-  const adapter = globalThis.ResearchUploadDashboard;
-  if (!adapter || typeof adapter.accountBarHtml !== "function") return "";
-  return `<section class="detail-panel rl-account-panel" data-rl-account-panel="true">${adapter.accountBarHtml()}</section>`;
 }
 
 async function probeResearchLibraryService(options = {}) {
@@ -7364,17 +7350,11 @@ function setupResearchLibraryControls() {
       return;
     }
 
-    const backButton = target.closest("[data-rl-back]");
-    if (backButton) {
-      researchLibraryState.factorId = "";
-      researchLibraryState.uploadTaskId = "";
-      renderResearchLibrary();
-      return;
-    }
-
     const factorRow = target.closest("[data-rl-factor]");
     if (factorRow) {
-      researchLibraryState.factorId = factorRow.dataset.rlFactor || "";
+      const factorId = factorRow.dataset.rlFactor || "";
+      researchLibraryState.factorId = researchLibraryState.factorId === factorId ? "" : factorId;
+      researchLibraryState.uploadStage = "";
       researchLibraryState.message = "";
       renderResearchLibrary();
       return;
@@ -7470,6 +7450,14 @@ function setupResearchLibraryControls() {
       researchLibraryDownloadDocument(downloadButton.dataset.rlDownload, downloadButton.dataset.rlVersion, downloadButton.dataset.rlStorage);
       return;
     }
+  });
+
+  panel.addEventListener("keydown", event => {
+    if (event.key !== "Enter" && event.key !== " ") return;
+    const factorRow = event.target.closest("[data-rl-factor]");
+    if (!factorRow || event.target !== factorRow) return;
+    event.preventDefault();
+    factorRow.click();
   });
 
   panel.addEventListener("change", event => {
@@ -7763,29 +7751,6 @@ async function researchLibraryStageUpload(chainId, stageId, form) {
   }
 }
 
-function researchLibraryTopicChips(lib, catalog, asset) {
-  const topics = lib.listTopics(catalog, asset.asset).sort((left, right) => {
-    const leftPriority = left.topic_id === "usd-topic-vix-level-and-risk-regime" ? 0 : 1;
-    const rightPriority = right.topic_id === "usd-topic-vix-level-and-risk-regime" ? 0 : 1;
-    return leftPriority - rightPriority;
-  });
-  if (!topics.length) return "";
-  const chains = lib.listFactorChains(catalog, asset.asset);
-  const documents = { documents: researchLibraryDocumentSummaries() };
-  const buttons = topics.map(topic => {
-    const topicChains = chains.filter(chain => String(chain.topic_id) === String(topic.topic_id));
-    const complete = topicChains.filter(chain => lib.chainProgress(chain, documents).complete).length;
-    const active = topic.topic_id === researchLibraryState.topicId;
-    const dispatch = topic.dispatch && topic.dispatch.state === "dispatched" ? "dispatched" : "not dispatched";
-    return `
-      <button type="button" class="rl-topic-chip${active ? " active" : ""}${topic.topic_id === "usd-topic-vix-level-and-risk-regime" ? " is-priority" : ""}" data-rl-topic="${escapeHtml(topic.topic_id)}">
-        <strong>${escapeHtml(topic.title)}</strong>
-        <span>${complete} of ${topicChains.length} chains complete · ${escapeHtml(dispatch)} · ${topic.factor_ids.length} factor${topic.factor_ids.length === 1 ? "" : "s"}</span>
-      </button>
-    `;
-  }).join("");
-  return `<nav class="rl-topic-strip" aria-label="Research topics" data-rl-topics="true">${buttons}</nav>`;
-}
 
 function researchLibraryStagePromptBlock(lib, chain, stage) {
   const source = stage.prompt_source || {};
@@ -7969,94 +7934,8 @@ function researchLibraryChainStageCard(lib, chain, stage, options = {}) {
   `;
 }
 
-function researchLibraryChainStepStrip(lib, progress) {
-  return `<span class="rl-chain-steps">${progress.stages.map(stage => `
-    <span class="rl-chain-step is-${escapeHtml(stage.state)}" data-rl-chain-step="${escapeHtml(stage.stage)}" data-rl-step-state="${escapeHtml(stage.state)}" title="${escapeHtml(`${stage.label}: ${stage.state_label}`)}">${escapeHtml(String(stage.order))}</span>
-  `).join("")}</span>`;
-}
 
-function researchLibraryChainRow(lib, chain) {
-  const progress = lib.chainProgress(chain, { documents: researchLibraryDocumentSummaries() });
-  const open = researchLibraryState.chainId === chain.chain_id;
-  const flagged = asArray(progress.flagged_for_reassessment);
-  const nextStage = progress.stages.find(stage => stage.stage === progress.next_stage);
-  const tone = progress.complete ? "rl-tone-ok" : flagged.length ? "rl-tone-blocked" : progress.delivered_stages ? "rl-tone-active" : "rl-tone-idle";
-  const stateLabel = progress.complete ? "three stages delivered"
-    : flagged.length ? `${flagged.length} stage${flagged.length === 1 ? "" : "s"} stale`
-      : nextStage ? `next: ${nextStage.label}` : "not started";
-  const flaggedLabels = progress.stages
-    .filter(stage => flagged.includes(stage.stage))
-    .map(stage => stage.label);
-  return `
-    <article class="rl-chain${open ? " is-open" : ""}${progress.complete ? " is-complete" : ""}" data-rl-chain="${escapeHtml(chain.chain_id)}" data-rl-chain-state="${progress.complete ? "complete" : flagged.length ? "stale" : progress.delivered_stages ? "in_progress" : "not_started"}" data-rl-chain-complete="${progress.complete ? "true" : "false"}" data-rl-ready-for-synthesis="${progress.ready_for_synthesis ? "true" : "false"}">
-      <div class="rl-chain-row">
-        <button class="rl-chain-toggle" type="button" data-rl-chain-toggle="${escapeHtml(chain.chain_id)}" aria-expanded="${open ? "true" : "false"}" aria-controls="rl-chain-body-${escapeHtml(chain.slug || chain.chain_id)}">
-          <span class="rl-chain-name">${escapeHtml(chain.factor_label || chain.title)}</span>
-          <span class="rl-chain-id">${escapeHtml(chain.factor_id || "")} | ${escapeHtml(chain.chain_id)}</span>
-        </button>
-        ${researchLibraryChainStepStrip(lib, progress)}
-        <span class="rl-chain-count" data-rl-chain-count="${progress.delivered_stages}/${progress.total_stages}">${progress.delivered_stages} of ${progress.total_stages}</span>
-        <span class="rl-pill ${tone}" data-rl-chain-pill="true">${escapeHtml(stateLabel)}</span>
-        <span class="rl-chain-chevron" aria-hidden="true">${open ? "-" : "+"}</span>
-      </div>
-      ${flagged.length ? `
-        <p class="rl-chain-stale" data-rl-chain-stale="true">${escapeHtml(flaggedLabels.join(" and "))} judged an earlier version of the parent stage. Rerun ${escapeHtml(flaggedLabels.length === 1 ? "that stage" : "those stages")} in order before this chain can count.</p>
-      ` : ""}
-      ${open ? `
-        <div class="rl-chain-body" id="rl-chain-body-${escapeHtml(chain.slug || chain.chain_id)}" data-rl-chain-body="${escapeHtml(chain.chain_id)}">
-          <p class="rl-muted">${escapeHtml(chain.summary || "")}</p>
-          <div class="rl-chain-meta">
-            <span data-rl-chain-progress="${escapeHtml(chain.chain_id)}">${progress.delivered_stages} of ${progress.total_stages} stages delivered</span>
-            <span data-rl-chain-next="${escapeHtml(progress.next_stage || "none")}">next ${escapeHtml(nextStage ? nextStage.label : "none")}</span>
-            <span data-rl-chain-ready="${progress.complete ? "true" : "false"}">chain complete: ${progress.complete ? "yes" : "no"}</span>
-            <span>${escapeHtml(chain.dispatch && chain.dispatch.state === "dispatched" ? `dispatched under ${chain.dispatch.task_id}` : "not dispatched")}</span>
-          </div>
-          <p class="rl-muted">${escapeHtml(progress.note)}</p>
-          <div class="rl-stage-list" data-rl-stage-list="${escapeHtml(chain.chain_id)}">
-            ${progress.stages.map(stage => researchLibraryChainStageCard(lib, chain, stage)).join("")}
-          </div>
-        </div>
-      ` : ""}
-    </article>
-  `;
-}
 
-function researchLibraryChainBoard(lib, catalog, asset) {
-  const topics = lib.listTopics(catalog, asset.asset);
-  if (!topics.length) return "";
-  const topic = topics.find(entry => entry.topic_id === researchLibraryState.topicId) || topics[0];
-  researchLibraryState.topicId = topic.topic_id;
-  const chains = lib.factorChainsForTopic(catalog, topic.topic_id);
-  const documents = { documents: researchLibraryDocumentSummaries() };
-  const active = chains.find(chain => chain.chain_id === researchLibraryState.chainId) || chains[0];
-  if (active) {
-    researchLibraryState.chainId = active.chain_id;
-    researchLibraryMergeHosted(active.chain_id);
-  }
-  const complete = chains.filter(chain => lib.chainProgress(chain, documents).complete).length;
-  return `
-    <section class="rl-topic-page" data-rl-topic-page="${escapeHtml(topic.topic_id)}">
-      <article class="detail-panel wide-panel rl-head-card" data-rl-topic-head="true">
-        <div class="research-section-head">
-          <div>
-            <p class="eyebrow">Topic - one chain per factor</p>
-            <h3>${escapeHtml(topic.title)}</h3>
-          </div>
-          <p class="research-panel-copy">${escapeHtml(topic.summary || "")}</p>
-        </div>
-        <div class="rl-topic-meta">
-          <span data-rl-topic-progress="${escapeHtml(topic.topic_id)}">${complete} of ${chains.length} chains complete</span>
-          <span>${escapeHtml(topic.dispatch && topic.dispatch.state === "dispatched" ? `dispatched under ${topic.dispatch.task_id}` : "not dispatched")}</span>
-          <span>${topic.factor_ids.length} factor${topic.factor_ids.length === 1 ? "" : "s"} in this topic</span>
-        </div>
-        <p class="rl-muted">Next step: ${escapeHtml(topic.next_step || "")}</p>
-      </article>
-      <div class="rl-chain-list" data-rl-chain-list="true">
-        ${chains.map(chain => researchLibraryChainRow(lib, chain)).join("")}
-      </div>
-    </section>
-  `;
-}
 
 // The asset-level final chain is one chain too, and it is gated by the registry rather than by a parent
 // link: it stays shut until every factor chain has delivered research, red-team and adjudication against the
@@ -8127,15 +8006,6 @@ function researchLibraryTechnicalSection(lib, catalog) {
 }
 
 
-function researchLibrarySecondaryHead() {
-  return `
-    <div class="rl-secondary-head" data-rl-secondary-head="true">
-      <p class="eyebrow">Archive</p>
-      <h3>Archived technical inventory, factor register and legacy records</h3>
-      <p class="research-panel-copy">Not the workflow. Below are the factor register with its three separate statuses, the legacy session tasks (kept as history and not the route to run), the whole-engine reviews and syntheses, the schemas and the closed studies. A pass through the three stages above needs none of it.</p>
-    </div>
-  `;
-}
 
 function researchLibraryAssetChips(lib, catalog) {
   const assets = lib.listAssets(catalog);
@@ -8154,71 +8024,90 @@ function researchLibraryAssetChips(lib, catalog) {
   return `<nav class="rl-asset-strip" aria-label="Assets" data-rl-assets="true">${buttons}</nav>`;
 }
 
-function researchLibraryProgressCards(lib, factors) {
-  const counts = lib.progressCounts(factors);
-  // Coverage is counted from the registry, not asserted: a factor counts only when a brief document is
-  // registered against its own id, and the catalogue's own total says how many briefs exist altogether.
-  const briefed = factors.filter(factor => researchLibraryDocumentsFor(factor.factor_id, ["brief"]).length > 0).length;
-  const briefTarget = Number(researchLibraryData?.research_briefs?.total) || factors.length;
-  const researchParts = ["uploaded", "ready", "in_progress", "not_started", "blocked"]
-    .filter(key => counts.research[key])
-    .map(key => `${counts.research[key]} ${lib.RESEARCH_LABELS[key].toLowerCase()}`);
-  const reviewParts = ["accepted", "changes_requested", "pending"]
-    .filter(key => counts.review[key])
-    .map(key => `${counts.review[key]} ${lib.REVIEW_LABELS[key].toLowerCase()}`);
-  const backtestParts = ["tested", "queued", "not_tested"]
-    .filter(key => counts.backtest[key])
-    .map(key => `${counts.backtest[key]} ${lib.BACKTEST_LABELS[key].toLowerCase()}`);
-  return `
-    <section class="backtest-grid three-column rl-progress-grid" data-rl-progress="true">
-      ${renderBacktestKpiMetric("Factors", String(counts.total), "", "Factors carried by the selected asset filter")}
-      ${renderBacktestKpiMetric("Research", String(counts.research.uploaded + counts.research.in_progress), researchParts.join(" · "), "Uploaded and in-progress reports, then the rest of the research states")}
-      ${renderBacktestKpiMetric("Review", String(counts.review.accepted), reviewParts.join(" · "), "An uploaded report is not reviewed until a review is recorded")}
-      ${renderBacktestKpiMetric("Backtest", String(counts.backtest.tested), backtestParts.join(" · "), "An accepted hypothesis is not tested until a backtest is recorded")}
-    </section>
-    <p class="rl-muted rl-brief-coverage" data-rl-brief-coverage="${escapeHtml(`${briefed} of ${factors.length}`)}">Self-contained briefs: ${escapeHtml(String(briefed))} of ${escapeHtml(String(factors.length))} factors in view carry one, out of ${escapeHtml(String(briefTarget))} in the committed catalogue. A brief is an assignment, so this count is not research progress and no status moves because a brief exists.</p>
-  `;
-}
 
-function researchLibraryFilterRow(lib, catalog, factors) {
-  const groups = Array.from(new Set(factors.map(factor => String(factor.group || "")))).filter(Boolean).sort();
-  const options = (values, labels, current) => [`<option value="all"${current === "all" ? " selected" : ""}>All</option>`]
-    .concat(values.map(value => `<option value="${escapeHtml(value)}"${current === value ? " selected" : ""}>${escapeHtml(labels ? labels[value] : value)}</option>`))
-    .join("");
-  const filtered = lib.filterFactors(catalog, {
-    asset: researchLibraryState.asset,
-    group: researchLibraryState.group,
-    research: researchLibraryState.research,
-    review: researchLibraryState.review,
-    backtest: researchLibraryState.backtest,
-    query: researchLibraryState.query
-  });
+
+// One row opens one factor chain. The row is the factor list's only entry point: its three stages sit
+// directly underneath it and use the registrations the registry already carries.
+function researchLibraryFactorStage(lib, chain, stage) {
+  const key = `${chain.chain_id}:${stage.stage}`;
+  const open = researchLibraryState.uploadStage === key;
+  const tone = stage.state === "delivered" ? "rl-tone-ok"
+    : stage.state === "reassessment_required" ? "rl-tone-blocked"
+      : stage.state === "awaiting_upload" ? "rl-tone-active" : "rl-tone-idle";
+  const parentDocument = stage.parent_document_id
+    ? researchLibraryDocumentList().find(entry => String(entry.document_id) === String(stage.parent_document_id))
+    : null;
+  const parentStorage = parentDocument?.storage || "library_object";
+  const hasInputs = Boolean(stage.parent_document_id);
+  const hasResult = Boolean(stage.document_id);
+  const inputBlocked = Boolean(stage.parent_stage) && !hasInputs;
+  const hosted = Boolean(researchLibraryHostedClient());
+  const canRegister = researchLibraryState.serviceState === "connected" || hosted;
+  const findings = stage.stage === "adjudication" || stage.stage === "final_adjudication";
+  const resultLabel = hasResult ? `Download ${stage.document_id} v${stage.version}` : "No result registered";
   return `
-    <section class="detail-panel rl-filter-card" data-rl-filters="true">
-      <div class="rl-filter-grid">
-        <label>Family<select data-rl-filter="group" data-rl-filter-name="group">${options(groups, null, researchLibraryState.group)}</select></label>
-        <label>Research<select data-rl-filter="research">${options(lib.RESEARCH_STATUSES, lib.RESEARCH_LABELS, researchLibraryState.research)}</select></label>
-        <label>Review<select data-rl-filter="review">${options(lib.REVIEW_STATUSES, lib.REVIEW_LABELS, researchLibraryState.review)}</select></label>
-        <label>Backtest<select data-rl-filter="backtest">${options(lib.BACKTEST_STATUSES, lib.BACKTEST_LABELS, researchLibraryState.backtest)}</select></label>
-        <label>Search<input type="search" data-rl-query="true" value="${escapeHtml(researchLibraryState.query)}" placeholder="factor, blocker or dependency" /></label>
+    <article class="rl-factor-stage is-${escapeHtml(stage.state)}" data-rl-stage="${escapeHtml(stage.stage)}" data-rl-stage-state="${escapeHtml(stage.state)}" data-rl-chain-stage="${escapeHtml(key)}" data-rl-stage-input="${escapeHtml(stage.parent_document_id)}" data-rl-stage-input-version="${stage.parent_version === null ? "" : escapeHtml(stage.parent_version)}" data-rl-stage-input-hash="${escapeHtml(stage.parent_sha256)}" data-rl-stage-document="${escapeHtml(stage.document_id)}" data-rl-stage-version="${stage.version === null ? "" : escapeHtml(stage.version)}" data-rl-stage-hash="${escapeHtml(stage.sha256)}">
+      <div class="rl-factor-stage-head">
+        <span class="rl-stage-number">${Number(stage.order) || ""}</span>
+        <span class="rl-stage-title">${escapeHtml(stage.label)}</span>
+        <span class="rl-pill ${tone}" data-rl-stage-pill="true">${escapeHtml(stage.state_label)}</span>
       </div>
-      <p class="rl-filter-note" data-rl-filter-count="true">${filtered.length} of ${factors.length} factors shown</p>
-    </section>
+      <p class="rl-factor-stage-evidence">
+        ${hasResult
+          ? `Result <code>${escapeHtml(stage.document_id)}</code> v${escapeHtml(String(stage.version))}${stage.sha256 ? ` sha256 ${escapeHtml(String(stage.sha256).slice(0, 12))}` : ""}`
+          : "No result registered"}
+        ${hasInputs
+          ? ` &middot; Inputs <code>${escapeHtml(stage.parent_document_id)}</code> v${escapeHtml(String(stage.parent_version))}${stage.parent_sha256 ? ` sha256 ${escapeHtml(String(stage.parent_sha256).slice(0, 12))}` : ""}`
+          : " &middot; No earlier result"}
+        ${stage.state === "reassessment_required" ? " &middot; The earlier result changed, so this stage has to run again." : ""}
+      </p>
+      <div class="rl-factor-stage-actions">
+        <button class="inspect-button rl-mini" type="button" data-rl-copy-stage-prompt="${escapeHtml(key)}">Copy prompt</button>
+        <a class="inspect-button rl-mini" href="./${escapeHtml(stage.prompt_path)}" download data-rl-download-prompt="${escapeHtml(stage.stage)}">Download prompt</a>
+        <button class="inspect-button rl-mini" type="button" data-rl-download="${escapeHtml(stage.parent_document_id)}" data-rl-version="${stage.parent_version === null ? "" : escapeHtml(stage.parent_version)}" data-rl-storage="${escapeHtml(parentStorage)}"${hasInputs ? "" : " disabled title=\"No earlier result to download\""}>Download inputs</button>
+        <button class="inspect-button rl-mini" type="button" data-rl-upload-toggle="${escapeHtml(key)}"${inputBlocked ? " disabled title=\"The earlier stage has no registered result\"" : ""}>Upload result</button>
+        <button class="inspect-button rl-mini" type="button" data-rl-download="${escapeHtml(stage.document_id)}" data-rl-version="${stage.version === null ? "" : escapeHtml(stage.version)}" data-rl-storage="${escapeHtml(stage.storage)}"${hasResult ? ` title="${escapeHtml(resultLabel)}"` : " disabled"}>Download result</button>
+      </div>
+      ${open ? `
+        <div class="rl-stage-upload rl-factor-stage-upload" data-rl-upload-form="${escapeHtml(key)}">
+          <input type="file" accept=".md,.markdown,.txt,text/markdown,text/plain" data-rl-upload-file>
+          <input type="text" data-rl-upload-model placeholder="Model or session">
+          ${findings ? `<textarea rows="2" data-rl-upload-findings placeholder="Open findings, one per line"></textarea>` : ""}
+          <button class="inspect-button rl-mini" type="button" data-rl-stage-upload="${escapeHtml(key)}"${canRegister ? "" : " disabled"}>Register result</button>
+          <p class="rl-muted rl-inline-note">Evidence only; no status moves.</p>
+        </div>
+      ` : ""}
+    </article>
   `;
 }
 
-function researchLibraryFactorTable(lib, factors) {
+function researchLibraryFactorStages(lib, chain, progress) {
+  return `
+    <div class="rl-factor-stages" data-rl-factor-stages="${escapeHtml(chain.factor_id)}">
+      ${progress.stages.map(stage => researchLibraryFactorStage(lib, chain, stage)).join("")}
+    </div>
+  `;
+}
+
+
+function researchLibraryFactorTable(lib, catalog, factors) {
   if (!factors.length) {
-    return `<section class="detail-panel rl-table-card"><div class="empty-state">No factor matches the current filters.</div></section>`;
+    return `<section class="detail-panel rl-table-card"><div class="empty-state">No factor chains are registered for this asset.</div></section>`;
   }
+  const documents = { documents: researchLibraryDocumentSummaries() };
   const rows = factors.map(factor => {
+    const chain = lib.factorChainForFactor(catalog, factor.factor_id);
+    const progress = chain ? lib.chainProgress(chain, documents, catalog) : null;
+    const open = Boolean(chain) && researchLibraryState.factorId === factor.factor_id;
+    const complete = Boolean(progress && progress.complete);
+    const expansionId = `rl-factor-stages-${String(factor.factor_id).replace(/[^a-zA-Z0-9_-]+/g, "-")}`;
     const statuses = lib.normalizeFactorStatuses(factor);
     const weights = Number.isFinite(Number(factor.live_weight_coded)) || Number.isFinite(Number(factor.live_weight_rulebook))
       ? `${Number.isFinite(Number(factor.live_weight_coded)) ? factor.live_weight_coded : "–"} / ${Number.isFinite(Number(factor.live_weight_rulebook)) ? factor.live_weight_rulebook : "–"}`
       : displayDash();
     const blockers = asArray(factor.blockers).concat(asArray(factor.dependencies));
     return `
-      <tr class="rl-factor-row" data-rl-factor="${escapeHtml(factor.factor_id)}" tabindex="0" role="button" aria-label="Open ${escapeHtml(factor.label || factor.factor_id)}">
+      <tr class="rl-factor-row${complete ? " is-complete" : ""}" data-rl-factor="${escapeHtml(factor.factor_id)}" data-rl-factor-complete="${complete ? "true" : "false"}" data-rl-ready-for-synthesis="${complete ? "true" : "false"}" tabindex="0" role="button" aria-expanded="${open ? "true" : "false"}" aria-controls="${expansionId}" aria-label="Open ${escapeHtml(factor.label || factor.factor_id)}'s three research stages">
         <td class="rl-cell-factor">
           <strong>${escapeHtml(factor.label || factor.factor_id)}</strong>
           <span class="rl-factor-id">${escapeHtml(factor.factor_id)}</span>
@@ -8239,6 +8128,11 @@ function researchLibraryFactorTable(lib, factors) {
             : `<span class="rl-muted">none recorded</span>`}
         </td>
       </tr>
+      ${open && progress ? `
+        <tr class="rl-factor-expansion-row" data-rl-factor-expansion="${escapeHtml(factor.factor_id)}">
+          <td colspan="9" id="${expansionId}">${researchLibraryFactorStages(lib, chain, progress)}</td>
+        </tr>
+      ` : ""}
     `;
   }).join("");
   return `
@@ -8265,231 +8159,9 @@ function researchLibraryFactorTable(lib, factors) {
   `;
 }
 
-function researchLibraryDocumentRow(lib, document) {
-  const latest = lib.latestVersion(document);
-  const version = latest ? Number(latest.version) : null;
-  const isRepo = document.storage === "repo_path";
-  const actions = [
-    `<button class="inspect-button rl-mini" type="button" data-rl-download="${escapeHtml(document.document_id)}" data-rl-version="${version || ""}" data-rl-storage="${escapeHtml(document.storage || "")}">Download</button>`
-  ];
-  if (isRepo && document.repo_path) {
-    actions.unshift(`<a class="inspect-button rl-mini" href="./${escapeHtml(document.repo_path)}" target="_blank" rel="noopener">View</a>`);
-  } else if (!isRepo) {
-    actions.unshift(`<button class="inspect-button rl-mini" type="button" data-rl-view="${escapeHtml(document.document_id)}" data-rl-version="${version === null ? "" : escapeHtml(String(version))}">View</button>`);
-    // A document stored outside Git has no published bytes, so when the service is not connected the page says
-    // which of the two things is missing rather than hiding the action.
-    if (researchLibraryState.serviceState !== "connected") {
-      actions.unshift(`<span class="rl-muted rl-inline-note">view and download need the local service</span>`);
-    }
-  }
-  // A brief is the prompt: the same bytes that are downloaded can be copied straight into the reader's own
-  // session, which is the one place the panel and the handoff bundle are meant to agree.
-  if (document.document_type === "brief" && isRepo && document.repo_path) {
-    actions.unshift(`<button class="inspect-button rl-mini" type="button" data-rl-copy-brief="${escapeHtml(document.document_id)}">Copy prompt</button>`);
-  }
-  return `
-    <li class="rl-document-row" data-rl-document="${escapeHtml(document.document_id)}">
-      <div class="rl-document-head">
-        <strong>${escapeHtml(document.title || document.document_id)}</strong>
-        <span class="rl-pill rl-tone-idle">${escapeHtml(document.document_type || "document")}</span>
-      </div>
-      <div class="rl-document-meta">
-        <span>${escapeHtml(document.document_id)}</span>
-        <span>v${version === null ? "?" : version}${asArray(document.versions).length > 1 ? ` of ${asArray(document.versions).length}` : ""}</span>
-        <span>${escapeHtml(document.model || document.origin || "")}</span>
-        <span>${escapeHtml(latest?.registered_at || document.updated_at || "")}</span>
-        ${latest?.sha256 ? `<span class="rl-hash">sha256 ${escapeHtml(String(latest.sha256).slice(0, 12))}</span>` : ""}
-        ${latest?.bytes ? `<span>${escapeHtml(lib.formatBytes(latest.bytes))}</span>` : ""}
-      </div>
-      ${document.note ? `<p class="rl-document-note">${escapeHtml(document.note)}</p>` : ""}
-      ${document.hash_note ? `<p class="rl-document-note">${escapeHtml(document.hash_note)}</p>` : ""}
-      ${latest?.prompt_sha256 ? `<p class="rl-document-note">dispatched prompt sha256 ${escapeHtml(String(latest.prompt_sha256).slice(0, 16))}${latest.context_version ? ` · context ${escapeHtml(latest.context_version)}` : ""}</p>` : ""}
-      <div class="rl-document-actions">${actions.join("")}</div>
-    </li>
-  `;
-}
 
-function researchLibraryFactorDetail(lib, catalog, factor) {
-  const documents = researchLibraryDocumentsFor(factor.factor_id);
-  const assetLevel = researchLibraryDocumentList().filter(document => !document.factor_id && String(document.asset) === String(factor.asset));
-  const reports = documents.filter(document => document.document_type === "report");
-  const reviews = documents.filter(document => document.document_type === "review" || document.document_type === "issue_register");
-  const briefs = documents.filter(document => document.document_type === "brief");
-  const tasks = lib.tasksCoveringFactor(catalog, factor.factor_id);
-  const statuses = lib.normalizeFactorStatuses(factor);
-  const list = (items, className = "rl-list") => items.length
-    ? `<ul class="${className}">${items.map(item => `<li>${escapeHtml(item)}</li>`).join("")}</ul>`
-    : `<p class="rl-muted">None recorded.</p>`;
-  const documentBlock = (items, emptyText) => items.length
-    ? `<ul class="rl-document-list">${items.map(document => researchLibraryDocumentRow(lib, document)).join("")}</ul>`
-    : `<p class="rl-muted">${escapeHtml(emptyText)}</p>`;
 
-  return `
-    <section class="detail-panel wide-panel rl-detail-card" data-rl-factor-detail="${escapeHtml(factor.factor_id)}">
-      <div class="rl-detail-head">
-        <div>
-          <p class="eyebrow">${escapeHtml(factor.asset_label || factor.asset)} · factor detail</p>
-          <h3>${escapeHtml(factor.label || factor.factor_id)}</h3>
-          <p class="rl-factor-id">${escapeHtml(factor.factor_id)}</p>
-        </div>
-        <button class="inspect-button" type="button" data-rl-back="true">Back to all factors</button>
-      </div>
-      <div class="rl-detail-status">
-        ${researchLibraryStatusPill("research", statuses.research)}
-        ${researchLibraryStatusPill("review", statuses.review)}
-        ${researchLibraryStatusPill("backtest", statuses.backtest)}
-        <span class="rl-pill rl-tone-idle">${escapeHtml(factor.role || "role unstated")}</span>
-        <span class="rl-pill rl-tone-idle">${escapeHtml(String(factor.group || "").replace(/_/g, " "))}</span>
-      </div>
 
-      <div class="rl-detail-grid">
-        <article class="rl-detail-block">
-          <p class="eyebrow">Brief</p>
-          <p>${escapeHtml(factor.brief || "No brief recorded.")}</p>
-          ${briefs.length
-            ? `<p class="rl-muted">One self-contained brief is published for this factor: its context, its research prompt and its output instructions are all in the file below.</p>
-               ${documentBlock(briefs, "No self-contained brief is registered for this factor yet.")}`
-            : `<p class="rl-muted rl-inline-note">No self-contained brief is registered for this factor yet.</p>`}
-          <p class="rl-muted">Document ${escapeHtml(factor.doc_version || "undocumented")} · updated ${escapeHtml(factor.updated_at || "unknown")}</p>
-        </article>
-        <article class="rl-detail-block">
-          <p class="eyebrow">Current rules</p>
-          ${list(asArray(factor.current_rules), "rl-list rl-rule-list")}
-          ${Number.isFinite(Number(factor.live_weight_coded)) || Number.isFinite(Number(factor.live_weight_rulebook))
-            ? `<p class="rl-muted">Live weight in the code / in the rulebook: ${escapeHtml(String(factor.live_weight_coded ?? "none"))} / ${escapeHtml(String(factor.live_weight_rulebook ?? "none"))}</p>`
-            : ""}
-          ${factor.lookback ? `<p class="rl-muted">Lookback ${escapeHtml(factor.lookback)}${factor.threshold ? ` · threshold ${escapeHtml(factor.threshold)}` : ""}</p>` : ""}
-        </article>
-        <article class="rl-detail-block">
-          <p class="eyebrow">Blockers and dependencies</p>
-          ${list(asArray(factor.blockers), "rl-list rl-blocker-list")}
-          ${list(asArray(factor.dependencies), "rl-list rl-dependency-list")}
-        </article>
-        <article class="rl-detail-block">
-          <p class="eyebrow">Sources</p>
-          ${list(asArray(factor.sources))}
-        </article>
-      </div>
-
-      <article class="rl-detail-block">
-        <p class="eyebrow">Research tasks covering this factor</p>
-        ${tasks.length
-          ? `<ul class="rl-task-list">${tasks.map(task => `
-              <li>
-                <strong>${escapeHtml(task.task_id)}</strong> · ${escapeHtml(task.title || "")}
-                <span class="rl-pill ${researchLibraryTone(task.status)}">${escapeHtml(lib.RESEARCH_LABELS[task.status] || task.status || "")}</span>
-                <span class="rl-muted">context ${escapeHtml(task.context_version || "")}</span>
-                <div class="rl-document-actions">
-                  <button class="inspect-button rl-mini" type="button" data-rl-copy-prompt="${escapeHtml(task.task_id)}">Copy prompt</button>
-                  <button class="inspect-button rl-mini" type="button" data-rl-context-package="${escapeHtml(task.task_id)}">Download context package</button>
-                </div>
-              </li>`).join("")}</ul>`
-          : `<p class="rl-muted">No task covers this factor yet.</p>`}
-      </article>
-
-      <article class="rl-detail-block">
-        <p class="eyebrow">Reports</p>
-        ${documentBlock(reports, "No report has been uploaded against this factor yet.")}
-        <p class="eyebrow rl-subhead">Reviews</p>
-        ${documentBlock(reviews, "No review has been registered against this factor yet.")}
-        <p class="eyebrow rl-subhead">Asset documents</p>
-        ${documentBlock(assetLevel, "No asset-level document is registered yet.")}
-      </article>
-
-      <article class="rl-detail-block">
-        <p class="eyebrow">History</p>
-        ${asArray(factor.history).length
-          ? `<ul class="rl-list rl-history-list">${asArray(factor.history).map(entry => `<li><span class="rl-muted">${escapeHtml(entry.date || "")}</span> ${escapeHtml(entry.note || entry.version || "")}</li>`).join("")}</ul>`
-          : `<p class="rl-muted">No history recorded beyond the documents above.</p>`}
-      </article>
-    </section>
-  `;
-}
-
-function researchLibraryUploadForm(lib, task) {
-  const defaultId = `${String(task.task_id).toLowerCase()}-return`;
-  const kindLabel = task.kind === "review" ? "review" : task.kind === "synthesis" ? "synthesis" : "report";
-  return `
-    <div class="rl-upload-form" data-rl-upload-form="${escapeHtml(task.task_id)}">
-      <p class="rl-muted">Upload the document this task returns. It is stored as ${escapeHtml(kindLabel)} evidence against task ${escapeHtml(task.task_id)} at context version ${escapeHtml(task.context_version || "")}, with the dispatched prompt hash recorded beside it. Uploading is not an approval.</p>
-      <div class="rl-upload-grid">
-        <label>Document id<input id="researchLibraryUploadId" type="text" value="${escapeHtml(defaultId)}" /></label>
-        <label>Title<input id="researchLibraryUploadTitle" type="text" value="${escapeHtml(`${task.task_id} return`)}" /></label>
-        <label>Model<input id="researchLibraryUploadModel" type="text" placeholder="the model label you actually used" /></label>
-        <label>File<input id="researchLibraryUploadFile" type="file" /></label>
-        <label>Note<input id="researchLibraryUploadNote" type="text" placeholder="optional" /></label>
-      </div>
-      <button class="inspect-button" type="button" data-rl-upload-submit="${escapeHtml(task.task_id)}">Upload ${escapeHtml(kindLabel)}</button>
-    </div>
-  `;
-}
-
-function researchLibraryTaskSection(lib, catalog, asset) {
-  const tasks = asArray(catalog.tasks).filter(task => String(task.asset) === String(asset.asset));
-  const coverage = lib.factorCoverage(catalog);
-  const assetFactors = asArray(asset.factors);
-  const assetFactorIds = assetFactors.map(factor => String(factor.factor_id));
-  const uncovered = coverage.uncovered.filter(entry => entry.asset === asset.asset);
-  if (!tasks.length) {
-    return `
-      <section class="detail-panel wide-panel rl-tasks-card" data-rl-tasks="true">
-        <div class="research-section-head">
-          <div><p class="eyebrow">Research tasks</p><h3>No task is published for ${escapeHtml(asset.label || asset.asset)} yet</h3></div>
-          <p class="research-panel-copy">${escapeHtml(asset.standfirst || "")} ${escapeHtml(asset.next_step || "")}</p>
-        </div>
-      </section>
-    `;
-  }
-  const rows = tasks.map(task => {
-    const covers = asArray(task.covers);
-    const open = researchLibraryState.uploadTaskId === task.task_id;
-    const taskDocuments = researchLibraryDocumentList().filter(document => String(document.task_id || "") === String(task.task_id));
-    return `
-      <li class="rl-task-row" data-rl-task="${escapeHtml(task.task_id)}">
-        <div class="rl-task-head">
-          <div>
-            <strong>${escapeHtml(task.task_id)}</strong>
-            <span class="rl-pill rl-tone-idle">${escapeHtml(String(task.kind || "").replace(/_/g, " "))}</span>
-            <span class="rl-pill ${researchLibraryTone(task.status)}">${escapeHtml(lib.RESEARCH_LABELS[task.status] || task.status || "")}</span>
-          </div>
-          <span class="rl-muted">context ${escapeHtml(task.context_version || "")} · prompt fingerprint ${escapeHtml(lib.fingerprint(task.prompt))}</span>
-        </div>
-        <p class="rl-task-title">${escapeHtml(task.title || "")}</p>
-        <p class="rl-muted">Covers ${covers.length} factor${covers.length === 1 ? "" : "s"}: ${escapeHtml(covers.join(", "))}</p>
-        ${asArray(task.depends_on).length ? `<p class="rl-muted">Depends on ${escapeHtml(asArray(task.depends_on).join(", "))}</p>` : ""}
-        ${asArray(task.gaps).length ? `<ul class="rl-list rl-gap-list">${asArray(task.gaps).map(gap => `<li>${escapeHtml(gap)}</li>`).join("")}</ul>` : ""}
-        ${taskDocuments.length ? `
-          <div class="rl-task-documents">
-            <p class="eyebrow">Documents registered against this task</p>
-            <ul class="rl-document-list">${taskDocuments.map(document => researchLibraryDocumentRow(lib, document)).join("")}</ul>
-          </div>` : ""}
-        <div class="rl-document-actions">
-          <button class="inspect-button rl-mini" type="button" data-rl-copy-prompt="${escapeHtml(task.task_id)}">Copy prompt</button>
-          <button class="inspect-button rl-mini" type="button" data-rl-context-package="${escapeHtml(task.task_id)}">Download context package</button>
-          <button class="inspect-button rl-mini" type="button" data-rl-upload-toggle="${escapeHtml(task.task_id)}">${open ? "Close upload" : "Upload report"}</button>
-          <span class="rl-muted rl-inline-note">manual ChatGPT task: nothing is sent to a model from this page</span>
-        </div>
-        ${open ? researchLibraryUploadForm(lib, task) : ""}
-      </li>
-    `;
-  }).join("");
-
-  return `
-    <section class="detail-panel wide-panel rl-tasks-card" data-rl-tasks="true">
-      <div class="research-section-head">
-        <div>
-          <p class="eyebrow">Legacy research tasks</p>
-          <h3>${tasks.length} task${tasks.length === 1 ? "" : "s"} for ${escapeHtml(asset.label || asset.asset)}, kept as history</h3>
-        </div>
-        <p class="research-panel-copy">Each task is self-contained: its id, the agreed session objective, the implementation and rulebook excerpts, the data actually reachable, the research prompt and the required output schema all travel together in the context package.</p>
-      </div>
-      <ul class="rl-task-list rl-task-list-full">${rows}</ul>
-      <p class="rl-muted" data-rl-coverage="true">Coverage: ${coverage.covered.filter(id => assetFactorIds.includes(id)).length} of ${assetFactors.length} ${escapeHtml(asset.asset)} factors are covered by a task; ${uncovered.length} are not.</p>
-      ${uncovered.length ? `<ul class="rl-list rl-gap-list">${uncovered.map(entry => `<li>${escapeHtml(entry.factor_id)} — ${escapeHtml(entry.label || "")}</li>`).join("")}</ul>` : ""}
-      <textarea id="researchLibraryPromptBuffer" class="rl-prompt-buffer" hidden rows="6" aria-label="Prompt copy buffer"></textarea>
-    </section>
-  `;
-}
 
 function researchLibraryEngineSection(lib, catalog, asset) {
   const entries = asArray(catalog.engine_documents).filter(entry => String(entry.asset || asset.asset) === String(asset.asset));
@@ -8578,17 +8250,6 @@ function renderResearchLibrary() {
   const asset = lib.getAsset(catalog, researchLibraryState.asset) || assets[0];
   researchLibraryState.asset = asset.asset;
   const factors = asArray(asset.factors);
-  const filtered = lib.filterFactors(catalog, {
-    asset: asset.asset,
-    group: researchLibraryState.group,
-    research: researchLibraryState.research,
-    review: researchLibraryState.review,
-    backtest: researchLibraryState.backtest,
-    query: researchLibraryState.query
-  });
-  const detailFactor = researchLibraryState.factorId
-    ? lib.listFactors(catalog, asset.asset).find(factor => String(factor.factor_id) === String(researchLibraryState.factorId))
-    : null;
 
   const head = `
     <article class="detail-panel wide-panel rl-head-card" data-rl-head="true">
@@ -8613,24 +8274,16 @@ function renderResearchLibrary() {
     ? `<p class="rl-message" data-rl-message="true">${escapeHtml(researchLibraryState.message)}</p>`
     : "";
 
-  const body = detailFactor
-    ? researchLibraryFactorDetail(lib, catalog, detailFactor)
-    : [
-      researchLibraryChainBoard(lib, catalog, asset),
-      researchLibraryFinalChain(lib, catalog, asset),
-      researchLibrarySecondaryHead(),
-      researchLibraryProgressCards(lib, filtered),
-      researchLibraryFilterRow(lib, catalog, factors),
-      researchLibraryFactorTable(lib, filtered),
-      researchLibraryTaskSection(lib, catalog, asset),
-      researchLibraryEngineSection(lib, catalog, asset),
-      researchLibraryTechnicalSection(lib, catalog)
-    ].join("");
+  const body = [
+    researchLibraryFactorTable(lib, catalog, factors),
+    researchLibraryFinalChain(lib, catalog, asset),
+    researchLibraryEngineSection(lib, catalog, asset),
+    researchLibraryTechnicalSection(lib, catalog)
+  ].join("");
 
   panel.innerHTML = `
     <section class="rl-shell" data-rl-shell="true">
       ${head}
-      ${researchLibraryTopicChips(lib, catalog, asset)}
       ${message}
       ${body}
     </section>
