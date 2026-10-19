@@ -38,10 +38,9 @@ secondary section because a pass through the three stages needs none of them.
   prompt file is edited on disk. The VIX chain's stage 1 prompt is the dispatched deep-research brief
   reproduced in full, so its Copy prompt button pastes the VIX assignment and never the legacy
   `USD-SESSION-A3` reviewer prompt.
-- **The asset-level final chain** `usd-final-asset-analysis` has two stages, `final_analysis` (`synthesis`)
-  and `final_review` (`review`). Its gate is the registry rather than a parent link: it stays locked until
+- **The asset-level final chain** `usd-final-asset-analysis` has three stages: `final_analysis` (`synthesis`), `final_red_team` (`review`) and `final_adjudication` (`synthesis`). Its gate is the registry rather than a parent link: it stays locked until
   every one of the twenty-five factor chains has delivered all three stages against current versions. The
-  panel shows the gate as a count (today `0/25`, twenty-five pending) and renders no stage until it opens.
+  panel shows the gate as a count (today `0/25`, twenty-five pending) and renders no stage until it opens. The red-team receives the final analysis and the factor adjudications behind it. The adjudication receives the analysis, the red-team findings and that evidence package, then ends with the complete candidate Layer 1 logic for an isolated backtest.
 - **Twenty-five chains cover the twenty-five USD factor entries today.** The VIX chain
   (`usd-factor-live-f1-vix-level`) is the dispatched one; the other chains carry written and checked prompts
   and can be released as a batch. On the committed registry the VIX chain reads research delivered, red-team
@@ -62,7 +61,7 @@ evidence: it is not an approval and it moves no factor status, no weight, no thr
   that chain's three stage cards. Chains are isolated by factor: opening a sibling row shows that chain's own
   empty stages, never another factor's document.
 - **The gated final chain** below the factor chains: `usd-final-asset-analysis`, its gate count, the pending
-  factors, and its two stage cards only once every factor chain is complete. A locked final chain renders no
+  factors, and its three stage cards only once every factor chain is complete. A locked final chain renders no
   stage and no prompt, because there is nothing yet to synthesise.
 - **Eight asset categories**, USD first, then EUR, GBP, GOLD, SILVER, NQ, BTC, WTI. USD is populated; the
   other seven carry a standfirst, a next step and an explicit note that no USD sign, weight or threshold
@@ -120,7 +119,7 @@ twenty-five briefs moved no status either: coverage is an assignment, not a resu
    assembles the chain, the stage, the document type and the parent version; the local service writes the bytes
    outside Git and updates the registry. The next stage then reads `awaiting_upload`.
 5. **The final chain stays locked until all twenty-five factor chains are complete** against current versions.
-   Only then do its two prompts appear, and it is copied and uploaded the same way.
+   Only then do its three prompts appear, in order: final analysis, final red-team, final adjudication. Each stage has its own prompt, input-package manifest, download controls, upload and registered result.
 6. **Nothing moves by itself.** An upload adds a registry version and the panel states in its own words that it is
    not an approval. The factor's `research_status` and `review_status` are set in the catalogue source
    (`scripts/build_research_library.js`) and re-generated; an upload, including an adjudication, changes neither,
@@ -145,7 +144,7 @@ Two layers, deliberately different:
 - Objects are written once, under their own SHA-256, and never rewritten. The same bytes uploaded twice are a
   no-op that returns the version that already exists.
 - Every document version records `sha256`, `bytes`, `registered_at`, the original filename, the model label,
-  the context version and the SHA-256 of the dispatched prompt that was in the catalogue at upload time.
+  the context version and the SHA-256 of the dispatched prompt that was in the catalogue at upload time. A final-chain version also records its `input_documents`: the exact document ids, versions and sha256 values it judged, including the factor adjudications that support it.
 - A download is re-hashed on read, and the panel hashes what it received and compares it with the registry, so
   "the downloaded file matches the uploaded file" is checked rather than asserted.
 - Repo-backed documents are registered by hash too, and `node scripts/build_research_library.js verify` fails

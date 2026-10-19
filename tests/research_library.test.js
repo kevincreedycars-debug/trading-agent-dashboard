@@ -483,13 +483,15 @@ test("the catalogue carries six topic labels and twenty-five factor chains, thre
   const finalSpec = ResearchLibrary.finalChain(catalog, "USD");
   assert.equal(finalSpec.chain_id, "usd-final-asset-analysis");
   assert.equal(finalSpec.factor_id, undefined, "the final chain belongs to the asset, not to a factor");
-  assert.equal(ResearchLibrary.chainStages(finalSpec).length, 2);
+  assert.equal(ResearchLibrary.chainStages(finalSpec).length, 3);
   assert.deepEqual(ResearchLibrary.chainStages(finalSpec).map(stage => stage.stage), ResearchLibrary.FINAL_CHAIN_STAGES);
-  assert.deepEqual(ResearchLibrary.chainStages(finalSpec).map(stage => stage.parent_stage), [null, "final_analysis"]);
-  assert.deepEqual(ResearchLibrary.chainStages(finalSpec).map(stage => stage.document_type), ["synthesis", "review"]);
+  assert.deepEqual(ResearchLibrary.chainStages(finalSpec).map(stage => stage.parent_stage), [null, "final_analysis", "final_red_team"]);
+  assert.deepEqual(ResearchLibrary.chainStages(finalSpec).map(stage => stage.document_type), ["synthesis", "review", "synthesis"]);
+  assert.deepEqual(ResearchLibrary.chainStages(finalSpec).map(stage => stage.input_stages), [[], ["final_analysis"], ["final_analysis", "final_red_team"]]);
   assert.equal(finalSpec.gate.requires, "all-factor-chains");
   assert.equal(finalSpec.gate.factor_count, 25);
   assert.equal(finalSpec.gate.stage_count, 3);
+  assert.equal(finalSpec.gate.final_stage_count, 3);
   assert.deepEqual(finalSpec.factor_chain_ids.slice().sort(), chains.map(chain => chain.chain_id).sort());
 });
 
@@ -500,7 +502,8 @@ test("every chain prompt exists, matches its catalogue hash and stands on its ow
     red_team: "## What to attack, claim by claim",
     adjudication: "## What the adjudication must contain",
     final_analysis: "## What the synthesis must contain",
-    final_review: "## How to review"
+    final_red_team: "## How to challenge, claim by claim",
+    final_adjudication: "## What the adjudication must contain"
   };
   const entries = [];
   ResearchLibrary.listFactorChains(catalog, "USD").forEach(chain => {
@@ -508,7 +511,7 @@ test("every chain prompt exists, matches its catalogue hash and stands on its ow
   });
   const finalSpec = ResearchLibrary.finalChain(catalog, "USD");
   ResearchLibrary.chainStages(finalSpec).forEach(stage => entries.push({ chain: finalSpec, stage }));
-  assert.equal(entries.length, 77, "twenty-five chains of three stages plus the two final stages");
+  assert.equal(entries.length, 78, "twenty-five chains of three stages plus the three final stages");
   entries.forEach(({ chain, stage }) => {
     const abs = path.join(root, stage.prompt_path);
     assert.ok(fs.existsSync(abs), `${stage.prompt_path} is missing`);
@@ -530,6 +533,28 @@ test("every chain prompt exists, matches its catalogue hash and stands on its ow
     assert.ok(required, `${stage.stage} needs a known required section`);
     assert.ok(text.includes(required), `${stage.prompt_path} must carry ${required}`);
     hosts.forEach(host => assert.equal(text.toLowerCase().includes(host), false, `${stage.prompt_path} must not name ${host}`));
+  });
+});
+
+test("the final chain prompts carry the analysis, red-team and candidate-logic stages", () => {
+  const finalSpec = ResearchLibrary.finalChain(catalog, "USD");
+  const analysis = ResearchLibrary.chainStageById(finalSpec, "final_analysis");
+  const redTeam = ResearchLibrary.chainStageById(finalSpec, "final_red_team");
+  const adjudication = ResearchLibrary.chainStageById(finalSpec, "final_adjudication");
+  const analysisText = fs.readFileSync(path.join(root, analysis.prompt_path), "utf8");
+  const redTeamText = fs.readFileSync(path.join(root, redTeam.prompt_path), "utf8");
+  const adjudicationText = fs.readFileSync(path.join(root, adjudication.prompt_path), "utf8");
+  assert.equal(analysisText.includes("final red-team judges this synthesis"), true);
+  assert.equal(redTeamText.includes("final analysis"), true);
+  assert.equal(redTeamText.includes("supporting evidence"), true);
+  assert.equal(redTeamText.includes("adjudication of every factor chain"), true);
+  assert.equal(adjudicationText.includes("final red-team"), true);
+  assert.equal(adjudicationText.includes("final analysis"), true);
+  assert.equal(adjudicationText.includes("## Complete candidate Layer 1 logic for isolated backtesting"), true);
+  assert.equal(adjudicationText.includes("isolated backtest"), true);
+  assert.equal(adjudicationText.includes("does not implement, score, deploy"), true);
+  [analysisText, redTeamText, adjudicationText].forEach(text => {
+    assert.equal(text.includes("final review"), false, "the removed two-stage name must not survive in a final prompt");
   });
 });
 
@@ -721,6 +746,8 @@ test("the store refuses a stage upload that breaks the chain linkage", () => {
   // The final chain is asset-level: it must not claim a factor or a grouping label.
   assert.throws(() => store.registerUpload({ ...base, chain_id: finalChainId, factor_id: "live.f1-vix-level", stage: "final_analysis", document_type: "synthesis" }, catalog), /must not name a factor/);
   assert.throws(() => store.registerUpload({ ...base, chain_id: finalChainId, topic_id: topicId, stage: "final_analysis", document_type: "synthesis" }, catalog), /must not name a topic/);
+  // And it cannot be written while the registry gate is shut, even if the caller names a stage directly.
+  assert.throws(() => store.registerUpload({ ...base, chain_id: finalChainId, stage: "final_analysis", document_type: "synthesis" }, catalog), /final chain is locked/);
   assert.throws(() => store.registerUpload({ ...base, factor_id: "live.f1-vix-level", stage: "red_team", document_type: "review" }, catalog), /must name the research document it judged/);
   assert.throws(() => store.registerUpload({ ...base, factor_id: "live.f1-vix-level", stage: "red_team", document_type: "synthesis", parent_document_id: "nope", parent_version: 1 }, catalog), /expects a review document/);
   assert.throws(() => store.registerUpload({ ...base, factor_id: "live.f1-vix-level", stage: "red_team", document_type: "review", parent_document_id: "nope", parent_version: 1 }, catalog), /is not registered/);
@@ -765,4 +792,83 @@ test("the validator refuses a mis-linked or unlinked stage document", () => {
   const wrongVersion = JSON.parse(JSON.stringify(honest));
   wrongVersion.documents[wrongVersion.documents.length - 1].parent_version = 7;
   assert.ok(ResearchLibrary.validateDocuments(wrongVersion, catalog).some(problem => problem.includes("which is not registered")));
+});
+
+test("the final chain records its input package and flags stale downstream results", () => {
+  const finalSpec = ResearchLibrary.finalChain(catalog, "USD");
+  const documents = { documents: [] };
+  const digest = (id, version = 1) => sha256(`${id}-v${version}`);
+  ResearchLibrary.listFactorChains(catalog, "USD").forEach(chain => {
+    const researchId = `${chain.chain_id}-research`;
+    const reviewId = `${chain.chain_id}-red-team`;
+    const adjudicationId = `${chain.chain_id}-adjudication`;
+    const base = { asset: "USD", factor_id: chain.factor_id, topic_id: chain.topic_id, chain_id: chain.chain_id, storage: "library_object", object_sha256: digest(researchId), public_download: false };
+    documents.documents.push({ ...base, document_id: researchId, stage: "research", document_type: "report", title: "Research", versions: [{ version: 1, sha256: digest(researchId), bytes: 10, registered_at: "2026-10-20" }] });
+    documents.documents.push({ ...base, document_id: reviewId, stage: "red_team", document_type: "review", title: "Red-team", parent_document_id: researchId, parent_version: 1, versions: [{ version: 1, sha256: digest(reviewId), bytes: 10, registered_at: "2026-10-20" }] });
+    documents.documents.push({ ...base, document_id: adjudicationId, stage: "adjudication", document_type: "synthesis", title: "Adjudication", parent_document_id: reviewId, parent_version: 1, versions: [{ version: 1, sha256: digest(adjudicationId), bytes: 10, registered_at: "2026-10-20" }] });
+  });
+
+  const unlocked = ResearchLibrary.finalChainStatus(catalog, documents);
+  assert.equal(unlocked.unlocked, true);
+  assert.equal(unlocked.state, "unlocked");
+  assert.equal(unlocked.total_stages, 3);
+  const analysisStage = unlocked.stages.find(stage => stage.stage === "final_analysis");
+  const redTeamStage = unlocked.stages.find(stage => stage.stage === "final_red_team");
+  const adjudicationStage = unlocked.stages.find(stage => stage.stage === "final_adjudication");
+  assert.equal(analysisStage.input_documents.length, 25, "final analysis receives every factor adjudication");
+  assert.equal(redTeamStage.input_documents.length, 26, "final red-team receives the analysis and every adjudication");
+  assert.equal(adjudicationStage.input_documents.length, 27, "final adjudication receives both final documents and every adjudication");
+
+  const dir = tempDir("final-chain-store");
+  const registryPath = path.join(dir, "documents.json");
+  fs.writeFileSync(registryPath, `${JSON.stringify({ schema_version: "research-library-documents-v1", documents: documents.documents }, null, 2)}\n`, "utf8");
+  const store = createStore({ root: path.join(dir, "library"), registryPath, now: () => new Date("2026-10-20T00:00:00Z") });
+  const packageFor = stageId => ResearchLibrary.asArray(ResearchLibrary.finalChainStatus(catalog, store.readRegistry()).stages.find(stage => stage.stage === stageId).input_documents)
+    .filter(entry => !entry.missing)
+    .map(entry => ({ document_id: entry.document_id, version: entry.version, sha256: entry.sha256, role: entry.role, role_stage: entry.role_stage }));
+
+  assert.throws(() => store.registerUpload({
+    document_id: "usd-final-analysis", asset: "USD", chain_id: finalSpec.chain_id, stage: "final_analysis", document_type: "synthesis",
+    title: "Final analysis", model: "Astra final analysis", content_text: "# final analysis\n"
+  }, catalog), /must name its input package/);
+
+  const analysis = store.registerUpload({
+    document_id: "usd-final-analysis", asset: "USD", chain_id: finalSpec.chain_id, stage: "final_analysis", document_type: "synthesis",
+    title: "Final analysis", model: "Astra final analysis", content_text: "# final analysis\n",
+    input_documents: packageFor("final_analysis")
+  }, catalog);
+  assert.equal(analysis.document.input_documents.length, 25);
+
+  const redTeam = store.registerUpload({
+    document_id: "usd-final-red-team", asset: "USD", chain_id: finalSpec.chain_id, stage: "final_red_team", document_type: "review",
+    title: "Final red-team", model: "Astra final red-team", content_text: "# final red-team\n",
+    parent_document_id: "usd-final-analysis", parent_version: 1,
+    input_documents: packageFor("final_red_team")
+  }, catalog);
+  assert.equal(redTeam.document.input_documents.length, 26);
+
+  const adjudication = store.registerUpload({
+    document_id: "usd-final-adjudication", asset: "USD", chain_id: finalSpec.chain_id, stage: "final_adjudication", document_type: "synthesis",
+    title: "Final adjudication", model: "Astra final adjudication", content_text: "# final adjudication\n",
+    parent_document_id: "usd-final-red-team", parent_version: 1,
+    input_documents: packageFor("final_adjudication")
+  }, catalog);
+  assert.equal(adjudication.document.input_documents.length, 27);
+  const complete = ResearchLibrary.finalChainStatus(catalog, store.readRegistry());
+  assert.equal(complete.state, "complete");
+  assert.equal(complete.delivered_stages, 3);
+  assert.deepEqual(ResearchLibrary.validateDocuments(store.readRegistry(), catalog), [], "the recorded final packages validate");
+
+  // A new version of one factor adjudication makes every final return stale, even though the chain itself was
+  // not re-uploaded and the gate still has all 25 complete factor chains.
+  const moved = store.readRegistry();
+  const changed = moved.documents.find(entry => entry.document_id === `${ResearchLibrary.listFactorChains(catalog, "USD")[0].chain_id}-adjudication`);
+  changed.versions.push({ version: 2, sha256: digest(changed.document_id, 2), bytes: 11, registered_at: "2026-10-21" });
+  store.writeRegistry(moved);
+  const stale = ResearchLibrary.finalChainStatus(catalog, store.readRegistry());
+  assert.equal(stale.unlocked, true);
+  assert.equal(stale.state, "in_progress");
+  assert.equal(stale.complete, false);
+  assert.deepEqual(stale.flagged_for_reassessment, ["final_analysis", "final_red_team", "final_adjudication"]);
+  assert.ok(stale.stale_inputs.some(entry => entry.document_id === changed.document_id && entry.current_version === 2));
 });

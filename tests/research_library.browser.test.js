@@ -216,12 +216,21 @@ async function main() {
       unlocked: node.getAttribute("data-rl-final-unlocked"),
       gate: node.getAttribute("data-rl-final-gate"),
       pending: node.getAttribute("data-rl-final-pending"),
+      delivered: node.getAttribute("data-rl-final-delivered"),
+      next: node.getAttribute("data-rl-final-next"),
       state: node.getAttribute("data-rl-final-state")
     }));
     assert.equal(finalGate.unlocked, "false", "the final chain must be locked while factor chains are incomplete");
     assert.equal(finalGate.pending, "25", "every factor chain is pending at the start");
     assert.equal(finalGate.gate, "0/25");
+    assert.equal(finalGate.delivered, "0/3", "the final chain carries three stages, not two");
+    assert.equal(finalGate.next, "final_analysis");
     assert.equal(finalGate.state, "locked");
+    assert.deepEqual(
+      await page.evaluate(() => window.ResearchLibrary.FINAL_CHAIN_STAGES.slice()),
+      ["final_analysis", "final_red_team", "final_adjudication"],
+      "the page's library exposes the corrected three-stage final workflow"
+    );
     assert.ok(await page.$("[data-rl-final-locked]"), "the shut chain must say why it is shut");
     assert.equal((await page.$$("[data-rl-final-chain] [data-rl-stage]")).length, 0, "a shut final chain must render no stage");
     audit.finalGate = finalGate;
