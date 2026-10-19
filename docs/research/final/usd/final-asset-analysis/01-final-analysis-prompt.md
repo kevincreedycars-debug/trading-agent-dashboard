@@ -1,4 +1,4 @@
-# USD asset-level final analysis - stage 1 of 2: Final analysis
+# USD asset-level final analysis - stage 1 of 3: Final analysis
 
 - Asset-level final chain `usd-final-asset-analysis` on asset USD; stage `final_analysis`; this stage returns exactly one Markdown document (synthesis).
 - This is the asset-level synthesis chain: it reads every factor-chain adjudication and is not itself a factor result. It opens only through the gate, never because a prompt was copied.
@@ -77,7 +77,7 @@ This chain reads every factor chain adjudication for the asset. It is the synthe
 
 Files in the checkout behind this chain, if you can reach them. They are aids, not attachments you must have.
 
-- `docs/research/usd-session/v1/inventory.md` (the input and decision inventory the synthesis closes out) - sha256 `undefined`
+- `docs/research/usd-session/v1/inventory.md` (the input and decision inventory the synthesis closes out) - sha256 `a886f1ddcce52d4d8a0af77069b391deb1338275380cccd2e08d41fd61f2d56a`
 
 ## What to return
 
@@ -90,7 +90,7 @@ Adjudication read: <factor id> - <document id> - version <version> - sha256 <sha
 Adjudication read: <factor id> - <document id> - version <version> - sha256 <sha256>
 ```
 - Keep it in one file. Tables, sources, hypotheses, candidate relations and appendices all belong inside that document; nothing here needs a second file, a JSON payload or a hand-built schema.
-- The dashboard records the chain, the stage and the exact version this document judged, so that metadata is not yours to assemble: pick the stage card, choose the file, upload it.
+- The dashboard records the chain, the stage and the exact input package this document judged, so that metadata is not yours to assemble: download the package, choose the file, upload it.
 
 ## Prohibitions
 
@@ -105,4 +105,4 @@ No production, workflow, dashboard, feed, dispatcher, database or configuration 
 
 ## What happens after you return it
 
-The final review judges this synthesis. Only after that review is adjudicated can an isolated implementation and validation step follow, and nothing enters the live engine because a document exists.
+The final red-team judges this synthesis and the evidence behind it. Only after the final adjudication decides those findings can an isolated implementation and validation step follow, and nothing enters the live engine because a document exists.

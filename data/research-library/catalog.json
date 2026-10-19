@@ -3147,14 +3147,15 @@
     "asset": "USD",
     "slug": "final-asset-analysis",
     "title": "USD asset-level final analysis",
-    "summary": "The synthesis over all 25 factor chains: which relations survive, how conflicts between factor chains are resolved, and what the asset-level treatment is. It opens only when every factor has research, red team and adjudication against current versions.",
+    "summary": "The three-stage final chain over all 25 factor chains: final analysis, an independent red-team of that analysis and its supporting evidence, then a final adjudication that produces the complete candidate Layer 1 logic for isolated backtesting. It opens only when every factor has research, red team and adjudication against current versions.",
     "dispatch": {
       "state": "queued"
     },
     "companions": [
       {
         "repo_path": "docs/research/usd-session/v1/inventory.md",
-        "role": "the input and decision inventory the synthesis closes out"
+        "role": "the input and decision inventory the synthesis closes out",
+        "sha256": "a886f1ddcce52d4d8a0af77069b391deb1338275380cccd2e08d41fd61f2d56a"
       }
     ],
     "packs": [],
@@ -3167,7 +3168,8 @@
       "requires": "all-factor-chains",
       "factor_count": 25,
       "stage_count": 3,
-      "note": "Unlocked by the registry: every factor chain must deliver research, red team and adjudication against the current parent versions."
+      "final_stage_count": 3,
+      "note": "Unlocked by the registry: every factor chain must deliver research, red team and adjudication against the current parent versions. The final chain then runs final analysis, final red-team and final adjudication, with each stage recording its input package."
     },
     "factor_chain_ids": [
       "usd-factor-live-f1-vix-level",
@@ -3202,36 +3204,62 @@
         "order": 1,
         "label": "Final analysis",
         "prompt_path": "docs/research/final/usd/final-asset-analysis/01-final-analysis-prompt.md",
-        "prompt_sha256": "af86161f3d07c107c0d56d9255f09f793c847b0e94d32e9fb6df07c059bcd849",
-        "prompt_bytes": 8041,
+        "prompt_sha256": "408a6dceb0b52c0bdeab44c61dd6c3d4cc377dc8bfeddac6d0fca2f15ebb3cc0",
+        "prompt_bytes": 8151,
         "prompt_source": {
           "kind": "generated",
           "repo_path": "docs/research/final/usd/final-asset-analysis/01-final-analysis-prompt.md",
-          "sha256": "af86161f3d07c107c0d56d9255f09f793c847b0e94d32e9fb6df07c059bcd849",
+          "sha256": "408a6dceb0b52c0bdeab44c61dd6c3d4cc377dc8bfeddac6d0fca2f15ebb3cc0",
           "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
         },
         "document_type": "synthesis",
         "parent_stage": null,
+        "input_stages": [],
         "deliverable": "One Markdown asset-level synthesis over every factor chain adjudication, with what survives, what conflicts and what stays unresolved.",
         "returns": "The asset-level conclusion; which factor-chain findings survive; how conflicts between factor chains are resolved; the proposed asset-level treatment; explicitly unvalidated parameters; required empirical tests; and an explicit what-is-not-claimed section."
       },
       {
-        "stage": "final_review",
+        "stage": "final_red_team",
         "order": 2,
-        "label": "Final review",
-        "prompt_path": "docs/research/final/usd/final-asset-analysis/02-final-review-prompt.md",
-        "prompt_sha256": "5c854eaa9afbefb079b0f08e6d393e200413030ca098daa91dc5e1cfa193b858",
-        "prompt_bytes": 6133,
+        "label": "Final red-team",
+        "prompt_path": "docs/research/final/usd/final-asset-analysis/02-final-red-team-prompt.md",
+        "prompt_sha256": "b498378d551ff5afb44dc7b4b321f5d35e4a1df709cd59ad6081d0412af4d9f6",
+        "prompt_bytes": 8376,
         "prompt_source": {
           "kind": "generated",
-          "repo_path": "docs/research/final/usd/final-asset-analysis/02-final-review-prompt.md",
-          "sha256": "5c854eaa9afbefb079b0f08e6d393e200413030ca098daa91dc5e1cfa193b858",
+          "repo_path": "docs/research/final/usd/final-asset-analysis/02-final-red-team-prompt.md",
+          "sha256": "b498378d551ff5afb44dc7b4b321f5d35e4a1df709cd59ad6081d0412af4d9f6",
           "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
         },
         "document_type": "review",
         "parent_stage": "final_analysis",
-        "deliverable": "One Markdown review of the asset-level synthesis: every load-bearing conclusion quoted, given a verdict, a severity and the evidence that would settle it.",
-        "returns": "The issue register, the two closing lists (what survives unchanged, what the review could not reach), the sources you re-fetched and the questions you could not resolve."
+        "input_stages": [
+          "final_analysis"
+        ],
+        "deliverable": "One Markdown independent challenge to the final analysis and the factor adjudications behind it: every load-bearing conclusion quoted, given a verdict, a severity and the evidence that would settle it.",
+        "returns": "The issue register against the final analysis and its supporting adjudications; the two closing lists (what survives unchanged, what the red-team could not reach); the sources you re-fetched; and the questions you could not resolve."
+      },
+      {
+        "stage": "final_adjudication",
+        "order": 3,
+        "label": "Final adjudication",
+        "prompt_path": "docs/research/final/usd/final-asset-analysis/03-final-adjudication-prompt.md",
+        "prompt_sha256": "c1987dae5897ae8697793061230524b245f986fcf94826043ee118ec58ed5bc7",
+        "prompt_bytes": 10280,
+        "prompt_source": {
+          "kind": "generated",
+          "repo_path": "docs/research/final/usd/final-asset-analysis/03-final-adjudication-prompt.md",
+          "sha256": "c1987dae5897ae8697793061230524b245f986fcf94826043ee118ec58ed5bc7",
+          "note": "Generated from the catalogue and the chain map, and shown on the page before it is copied."
+        },
+        "document_type": "synthesis",
+        "parent_stage": "final_red_team",
+        "input_stages": [
+          "final_analysis",
+          "final_red_team"
+        ],
+        "deliverable": "One Markdown adjudication of the final analysis and the red-team findings, ending with the complete candidate Layer 1 logic for an isolated backtest.",
+        "returns": "Finding-by-finding decisions; accepted, rejected and unresolved claims; and the complete candidate Layer 1 logic: inputs, transformations, signs, thresholds, weights, interactions, timing, abstention, score construction and deterministic pseudocode, with every unvalidated parameter named, plus the isolated-backtest plan, data requirements and explicit what-is-not-claimed section."
       }
     ]
   },

@@ -946,7 +946,7 @@ const DEEP_RESEARCH_DIR = 'docs/research/handoff/usd/v1/deep-research';
 const VIX_DISPATCHED_BRIEF = `${DEEP_RESEARCH_DIR}/VIX_COMPREHENSIVE_REPORT_BRIEF.md`;
 const CONTEXT_PACK_NEUTRAL = `${DEEP_RESEARCH_DIR}/CONTEXT_PACK_NEUTRAL.md`;
 const FACTOR_STAGE_ORDER = { research: 1, red_team: 2, adjudication: 3 };
-const FINAL_STAGE_ORDER = { final_analysis: 1, final_review: 2 };
+const FINAL_STAGE_ORDER = { final_analysis: 1, final_red_team: 2, final_adjudication: 3 };
 const FINAL_STAGE_META = {
   final_analysis: {
     label: 'Final analysis',
@@ -954,11 +954,17 @@ const FINAL_STAGE_META = {
     deliverable: 'One Markdown asset-level synthesis over every factor chain adjudication, with what survives, what conflicts and what stays unresolved.',
     returns: 'The asset-level conclusion; which factor-chain findings survive; how conflicts between factor chains are resolved; the proposed asset-level treatment; explicitly unvalidated parameters; required empirical tests; and an explicit what-is-not-claimed section.'
   },
-  final_review: {
-    label: 'Final review',
+  final_red_team: {
+    label: 'Final red-team',
     document_type: 'review',
-    deliverable: 'One Markdown review of the asset-level synthesis: every load-bearing conclusion quoted, given a verdict, a severity and the evidence that would settle it.',
-    returns: 'The issue register, the two closing lists (what survives unchanged, what the review could not reach), the sources you re-fetched and the questions you could not resolve.'
+    deliverable: 'One Markdown independent challenge to the final analysis and the factor adjudications behind it: every load-bearing conclusion quoted, given a verdict, a severity and the evidence that would settle it.',
+    returns: 'The issue register against the final analysis and its supporting adjudications; the two closing lists (what survives unchanged, what the red-team could not reach); the sources you re-fetched; and the questions you could not resolve.'
+  },
+  final_adjudication: {
+    label: 'Final adjudication',
+    document_type: 'synthesis',
+    deliverable: 'One Markdown adjudication of the final analysis and the red-team findings, ending with the complete candidate Layer 1 logic for an isolated backtest.',
+    returns: 'Finding-by-finding decisions; accepted, rejected and unresolved claims; and the complete candidate Layer 1 logic: inputs, transformations, signs, thresholds, weights, interactions, timing, abstention, score construction and deterministic pseudocode, with every unvalidated parameter named, plus the isolated-backtest plan, data requirements and explicit what-is-not-claimed section.'
   }
 };
 function stageMeta(stageId) {
@@ -967,7 +973,7 @@ function stageMeta(stageId) {
 function stageOrder(stageId) {
   return FINAL_STAGE_ORDER[stageId] || FACTOR_STAGE_ORDER[stageId];
 }
-// Factor chains run the three research stages; the gated asset-level chain runs its own two.
+// Factor chains run the three research stages; the gated asset-level chain runs analysis, red-team, adjudication.
 const FACTOR_STAGE_IDS = Object.keys(FACTOR_STAGE_ORDER);
 const FINAL_STAGE_IDS = Object.keys(FINAL_STAGE_ORDER);
 
@@ -1094,6 +1100,29 @@ function returnSection(chain, stageId) {
     lines.push('Adjudication read: <factor id> - <document id> - version <version> - sha256 <sha256>');
     lines.push('Adjudication read: <factor id> - <document id> - version <version> - sha256 <sha256>');
     lines.push('```');
+  } else if (stageId === 'final_red_team') {
+    lines.push('- Return one Markdown document. Put these identifier lines at the top of the file, before the body, and fill them from the input package you downloaded:');
+    lines.push('');
+    lines.push('```');
+    lines.push(`Reviewed chain: ${chain.chain_id}`);
+    lines.push('Reviewed final analysis: <document id>');
+    lines.push('Reviewed final analysis version: <version>');
+    lines.push('Reviewed final analysis sha256: <sha256>');
+    lines.push('Supporting adjudication read: <factor id> - <document id> - version <version> - sha256 <sha256>');
+    lines.push('Supporting adjudication read: <factor id> - <document id> - version <version> - sha256 <sha256>');
+    lines.push('```');
+  } else if (stageId === 'final_adjudication') {
+    lines.push('- Return one Markdown document. Put these identifier lines at the top of the file, before the body, and fill them from the input package you downloaded:');
+    lines.push('');
+    lines.push('```');
+    lines.push(`Adjudicated chain: ${chain.chain_id}`);
+    lines.push('Final analysis: <document id> - version <version> - sha256 <sha256>');
+    lines.push('Final red-team: <document id> - version <version> - sha256 <sha256>');
+    lines.push('Supporting adjudication read: <factor id> - <document id> - version <version> - sha256 <sha256>');
+    lines.push('```');
+    lines.push('- End the document with a section headed `## Complete candidate Layer 1 logic for isolated backtesting`. It must be complete enough for another person to implement without going back to the analysis, and it must be explicitly a candidate, not a deployed rule.');
+    lines.push('- Inside that section, give: the rule identity and version; every input with its series, transformation, sign and timing; every threshold, weight, lookback and interaction with its units; the abstention and missing-data rules; the score construction and any tie-break; deterministic pseudocode; the parameter table marking each parameter measured or unvalidated; the isolated-backtest plan, sample and metrics; and the data requirements and blockers.');
+    lines.push('- Mark every parameter that has not been measured as `unvalidated`. Do not present a candidate number as a live threshold, and do not include a production change or a performance claim.');
   } else {
     lines.push('- Return one Markdown document. Put these identifier lines at the top of the file, before the body, and fill them from the stage card you downloaded:');
     lines.push('');
@@ -1120,7 +1149,9 @@ function returnSection(chain, stageId) {
     lines.push('');
   }
   lines.push('- Keep it in one file. Tables, sources, hypotheses, candidate relations and appendices all belong inside that document; nothing here needs a second file, a JSON payload or a hand-built schema.');
-  lines.push('- The dashboard records the chain, the stage and the exact version this document judged, so that metadata is not yours to assemble: pick the stage card, choose the file, upload it.');
+  lines.push(chain.factor_id
+    ? '- The dashboard records the chain, the stage and the exact version this document judged, so that metadata is not yours to assemble: pick the stage card, choose the file, upload it.'
+    : '- The dashboard records the chain, the stage and the exact input package this document judged, so that metadata is not yours to assemble: download the package, choose the file, upload it.');
   lines.push('');
   return lines.join('\n');
 }
@@ -1317,9 +1348,10 @@ function adjudicationPrompt(chain) {
   ].join('\n');
 }
 
-// The asset-level chain has its own two stages: a synthesis over the twenty-five adjudications, then an
-// independent review of that synthesis. It is not a fourth factor review, so it never re-reads a factor
-// chain's raw research as new evidence.
+// The asset-level chain has its own three stages: a synthesis over the twenty-five adjudications, an
+// independent red-team of that synthesis and its supporting evidence, then an adjudication that produces the
+// complete candidate Layer 1 logic for an isolated backtest. None of them is a fourth factor review, and none
+// of them deploys anything.
 function finalAnalysisPrompt(chain) {
   const chainList = (chain.factor_chain_ids || []).map(chainId => `- \`${chainId}\``);
   return [
@@ -1366,55 +1398,119 @@ function finalAnalysisPrompt(chain) {
     prohibitionsSection(),
     '## What happens after you return it',
     '',
-    'The final review judges this synthesis. Only after that review is adjudicated can an isolated implementation and validation step follow, and nothing enters the live engine because a document exists.',
+    'The final red-team judges this synthesis and the evidence behind it. Only after the final adjudication decides those findings can an isolated implementation and validation step follow, and nothing enters the live engine because a document exists.',
     ''
   ].join('\n');
 }
-function finalReviewPrompt(chain) {
+function finalRedTeamPrompt(chain) {
+  const chainList = (chain.factor_chain_ids || []).map(chainId => `- \`${chainId}\``);
   return [
-    promptFrontmatter(chain, 'final_review', [
-      '- Attach the asset-level synthesis this stage judges. Its stage card shows the document id, version and sha256; attach those exact versions.'
+    promptFrontmatter(chain, 'final_red_team', [
+      '- Attach the final analysis and its supporting evidence: the final analysis file and the adjudication of every factor chain, at the exact versions and sha256 values shown in the input package. Do not review the analysis in isolation from the evidence it cites.'
     ]),
     '## What this stage is for',
     '',
-    'Review the asset-level synthesis as an independent reviewer. Your job is to find where it claims more than the factor adjudications support, where conflicts were smoothed over, and where the proposed asset-level treatment rests on an unvalidated parameter. You are not asked to defend or to rewrite it.',
+    'Challenge the final analysis as an independent red-team. Your job is to find where it claims more than the factor adjudications support, where conflicts were smoothed over, and where the proposed asset-level treatment rests on an unvalidated parameter. You receive the analysis and its supporting evidence together, and you are not asked to defend or rewrite either.',
     '',
-    '## Which version you are judging',
+    '## Which documents you are judging',
     '',
-    '- Reproduce the synthesis document id, version and sha256 in the identifier lines at the top of your return.',
-    '- If the attachment does not match the card it came from, say so and stop.',
+    '- The primary target is the final analysis at the exact document id, version and sha256 shown in the input package.',
+    '- The supporting evidence is the adjudication of each of these factor chains, at the exact versions shown in the same package:',
     '',
-    '## How to review',
+    ...chainList,
+    '',
+    '- Those adjudications are the direct evidence behind the final analysis. Each names the research report and red-team it decided; use those earlier documents when a claim needs the underlying passage.',
+    '- If any file in the input package does not match the version and sha256 on its card, say so and stop. Do not review a substituted document.',
+    '',
+    '## How to challenge, claim by claim',
     '',
     '- Quote every load-bearing sentence you judge, then give a verdict, a severity and the evidence that would settle it.',
-    '- Check the synthesis against the adjudications it names: a claim stronger than its source adjudication is an issue.',
-    '- Check that unresolved and rejected findings were not silently carried forward as accepted.',
+    '- Test each final claim against the adjudication it cites: a claim stronger than its source adjudication is an issue.',
+    '- Check that rejected, narrowed and unresolved findings were not silently carried forward as accepted.',
+    '- Check that cross-chain agreement is not counted as independent confirmation when the chains share an input.',
     '- Check that every number in the proposed treatment is either measured or marked unvalidated.',
-    '- Say when a claim survives unchanged; a review that finds nothing still has to show what was tested.',
+    '- Say when a claim survives unchanged; a red-team that finds nothing still has to show what was tested.',
     '',
-    '## What the review must contain',
+    '## What the red-team must contain',
     '',
-    '1. **Issue register** - each issue with the quoted claim, verdict, severity and settling evidence.',
+    '1. **Issue register** - each issue with the quoted claim, verdict, severity and the evidence that would settle it.',
     '2. **What survives unchanged** - the claims you tested and did not overturn.',
-    '3. **What the review could not reach** - scope limits, missing evidence and paywalled sources.',
+    '3. **What the red-team could not reach** - scope limits, missing evidence and paywalled sources.',
     '4. **Sources you re-fetched** - with the link and the passage you relied on.',
     '5. **Questions you could not resolve** - stated as unresolved rather than guessed.',
     '',
     '## The line this stage must not cross',
     '',
-    'The review is evidence, not an approval. It does not implement, score, deploy or change a live call, and it asserts no performance figure it has not measured.',
+    'The red-team is evidence, not an approval and not a vote. It does not implement, score, deploy or change a live call, and it asserts no performance figure it has not measured.',
     '',
     sessionSection(),
     factorContextBlock(chain),
-    companionBlock(chain, 'final_review'),
-    returnSection(chain, 'final_review'),
+    companionBlock(chain, 'final_red_team'),
+    returnSection(chain, 'final_red_team'),
     prohibitionsSection(),
     '## What happens after you return it',
     '',
-    'The review is adjudicated like any other stage, and only then can an isolated implementation and validation step follow. Nothing enters the live engine because a document exists.',
+    'The final adjudication receives this red-team and the final analysis together, decides every material finding on the evidence, and then writes the complete candidate Layer 1 logic for an isolated backtest. Nothing enters the live engine because a document exists.',
     ''
   ].join('\n');
 }
+function finalAdjudicationPrompt(chain) {
+  const chainList = (chain.factor_chain_ids || []).map(chainId => `- \`${chainId}\``);
+  return [
+    promptFrontmatter(chain, 'final_adjudication', [
+      '- Attach both documents this stage judges: the final analysis and the final red-team of it, plus the factor-chain adjudications that support the analysis, at the exact versions and sha256 values shown in the input package.'
+    ]),
+    '## What this stage is for',
+    '',
+    'Read the final analysis and the final red-team findings together and produce the best-supported final decision. Resolve each material red-team objection on the evidence; do not split the difference, do not average the two documents, and do not treat agreement between them as evidence. Then write the complete candidate Layer 1 logic that follows from the decision, ready for an isolated backtest and not for deployment.',
+    '',
+    '## Which documents you are judging',
+    '',
+    '- The final analysis is the synthesis under adjudication.',
+    '- The final red-team is the independent challenge to it.',
+    '- The supporting evidence is the adjudication of each of these factor chains, at the exact versions shown in the input package:',
+    '',
+    ...chainList,
+    '',
+    '- Those adjudications are the direct evidence behind the analysis and the red-team. Each names the research report and red-team it decided; use those earlier documents when a decision needs the underlying passage.',
+    '- If any file in the input package does not match the version and sha256 on its card, say so and stop.',
+    '',
+    '## How to decide',
+    '',
+    '- Answer a material red-team objection on the evidence the documents give, and on sources you fetched yourself; say which it was.',
+    '- Reject an objection the evidence does not support, and say what is wrong with it.',
+    '- A claim that neither document settles stays unresolved and is listed as unresolved rather than quietly dropped.',
+    '- A narrowing that keeps the true part of a claim is a decision, not a compromise.',
+    '- The candidate logic follows the adjudicated evidence. It is not a compromise between the analysis and the red-team.',
+    '',
+    '## What the adjudication must contain',
+    '',
+    '1. **Corrected final conclusions** - the best-supported version of each conclusion, stated plainly.',
+    '2. **Finding-by-finding decisions** - every material red-team finding, decided as accepted, rejected or unresolved, each with its reason.',
+    '3. **Accepted, rejected and unresolved claims** - as three explicit lists.',
+    '4. **Complete candidate Layer 1 logic for isolated backtesting** - a self-contained specification: the candidate rule identity and version; every input with its series, transformation, sign and timing; every threshold, weight, lookback and interaction with its units; the abstention and missing-data rules; the score construction and any tie-break; and deterministic pseudocode another person can implement without going back to the analysis.',
+    '5. **Parameter table** - every threshold, weight, lookback, sign and interaction named above, each marked `measured` or `unvalidated`, with its source and units.',
+    '6. **Isolated-backtest plan** - the sample, the window, the outcome definition, the controls, the metrics and the pass/fail conditions that would test the candidate without touching the live engine.',
+    '7. **Data requirements and blockers** - the series, resolution, vintage handling and history the test needs, and what is missing or behind a paywall.',
+    '8. **What is not claimed** - a plain section listing what this adjudication and candidate logic do not establish.',
+    '',
+    '## The line this stage must not cross',
+    '',
+    'The candidate Layer 1 logic is for an isolated backtest only. This stage does not implement, score, deploy, publish or change a live call, and it asserts no performance figure it has not measured. Every number that has not been measured is marked unvalidated, and no production configuration is proposed as part of the deliverable.',
+    '',
+    sessionSection(),
+    factorContextBlock(chain),
+    companionBlock(chain, 'final_adjudication'),
+    returnSection(chain, 'final_adjudication'),
+    prohibitionsSection(),
+    '## What happens after you return it',
+    '',
+    'The candidate Layer 1 logic can be handed to an isolated backtest as a candidate, never as a live rule. Only a measured, out-of-sample test can support a later deployment decision, and nothing enters the live engine because a document exists.',
+    ''
+  ].join('\n');
+}
+
+
 
 
 
@@ -1712,9 +1808,28 @@ function chainStagesFor(chain, dir, files) {
   const stageIds = isFactor ? FACTOR_STAGE_IDS : FINAL_STAGE_IDS;
   const text = isFactor
     ? { research: researchPrompt(chain), red_team: redTeamPrompt(chain), adjudication: adjudicationPrompt(chain) }
-    : { final_analysis: finalAnalysisPrompt(chain), final_review: finalReviewPrompt(chain) };
-  const fileSlugs = { research: 'research', red_team: 'red-team', adjudication: 'adjudication', final_analysis: 'final-analysis', final_review: 'final-review' };
-  const parentStages = { research: null, red_team: 'research', adjudication: 'red_team', final_analysis: null, final_review: 'final_analysis' };
+    : { final_analysis: finalAnalysisPrompt(chain), final_red_team: finalRedTeamPrompt(chain), final_adjudication: finalAdjudicationPrompt(chain) };
+  const fileSlugs = {
+    research: 'research',
+    red_team: 'red-team',
+    adjudication: 'adjudication',
+    final_analysis: 'final-analysis',
+    final_red_team: 'final-red-team',
+    final_adjudication: 'final-adjudication'
+  };
+  const parentStages = {
+    research: null,
+    red_team: 'research',
+    adjudication: 'red_team',
+    final_analysis: null,
+    final_red_team: 'final_analysis',
+    final_adjudication: 'final_red_team'
+  };
+  const inputStages = {
+    final_analysis: [],
+    final_red_team: ['final_analysis'],
+    final_adjudication: ['final_analysis', 'final_red_team']
+  };
   const stages = stageIds.map(stageId => {
     const meta = stageMeta(stageId);
     const repoPath = `${dir}/${chain.slug}/0${stageOrder(stageId)}-${fileSlugs[stageId]}-prompt.md`;
@@ -1749,6 +1864,7 @@ function chainStagesFor(chain, dir, files) {
         },
       document_type: meta.document_type,
       parent_stage: parentStages[stageId],
+      ...(isFactor ? {} : { input_stages: inputStages[stageId] }),
       deliverable: meta.deliverable,
       returns: meta.returns
     };
@@ -1903,17 +2019,21 @@ function buildChains() {
     });
   });
 
-  // Step 3: one asset-level final chain, gated on every factor chain delivering all three stages.
+  // Step 3: one asset-level final chain, gated on every factor chain delivering all three stages. It runs
+  // final analysis, an independent final red-team of that analysis and its evidence, then a final adjudication
+  // that produces the candidate Layer 1 logic for an isolated backtest.
+  const finalInventoryPath = 'docs/research/usd-session/v1/inventory.md';
+  const finalInventory = fs.existsSync(path.join(root, finalInventoryPath)) ? hashFile(path.join(root, finalInventoryPath)) : null;
   const finalChain = {
     chain_id: 'usd-final-asset-analysis',
     asset: 'USD',
     slug: 'final-asset-analysis',
     title: 'USD asset-level final analysis',
-    summary: 'The synthesis over all 25 factor chains: which relations survive, how conflicts between factor chains are resolved, and what the asset-level treatment is. It opens only when every factor has research, red team and adjudication against current versions.',
+    summary: 'The three-stage final chain over all 25 factor chains: final analysis, an independent red-team of that analysis and its supporting evidence, then a final adjudication that produces the complete candidate Layer 1 logic for isolated backtesting. It opens only when every factor has research, red team and adjudication against current versions.',
     dispatch: { state: 'queued' },
-    companions: [
-      { repo_path: 'docs/research/usd-session/v1/inventory.md', role: 'the input and decision inventory the synthesis closes out' }
-    ],
+    companions: finalInventory
+      ? [{ repo_path: finalInventoryPath, role: 'the input and decision inventory the synthesis closes out', sha256: finalInventory.sha256 }]
+      : [],
     packs: [],
     probes: [
       'Which relation across the 25 factor chains survives its red team and adjudication, and which were only plausible mechanisms?',
@@ -1924,7 +2044,8 @@ function buildChains() {
       requires: 'all-factor-chains',
       factor_count: chains.length,
       stage_count: Object.keys(FACTOR_STAGE_ORDER).length,
-      note: 'Unlocked by the registry: every factor chain must deliver research, red team and adjudication against the current parent versions.'
+      final_stage_count: Object.keys(FINAL_STAGE_ORDER).length,
+      note: 'Unlocked by the registry: every factor chain must deliver research, red team and adjudication against the current parent versions. The final chain then runs final analysis, final red-team and final adjudication, with each stage recording its input package.'
     },
     factor_chain_ids: chains.map(chain => chain.chain_id)
   };
@@ -2064,8 +2185,11 @@ function verifyCommand() {
     console.log(`topic ${topic.topic_id}: ${progress.factors_complete}/${progress.factors_total} factor chains complete; ${progress.delivered_stages}/${progress.total_stages} stages; ready for final analysis ${progress.ready_for_synthesis}; chains ${chains.map(chain => chain.chain_id).join(', ')}`);
   });
   const gate = ResearchLibrary.finalChainStatus(catalog, registry);
+  ok = report('final chain', gate && gate.stages.length === ResearchLibrary.FINAL_CHAIN_STAGES.length
+    ? []
+    : [`final chain must carry ${ResearchLibrary.FINAL_CHAIN_STAGES.length} stages`]) && ok;
   const gateNext = gate.stages.find(stage => stage.state !== 'delivered');
-  console.log(`final chain: ${gate.chain_id} ${gate.state} (${gate.factors_complete}/${gate.factors_total} factor chains complete); next ${gateNext ? gateNext.stage : 'none'}`);
+  console.log(`final chain: ${gate.chain_id} ${gate.state} (${gate.factors_complete}/${gate.factors_total} factor chains complete, ${gate.delivered_stages}/${gate.total_stages} final stages); next ${gateNext ? gateNext.stage : 'none'}; gate ${gate.unlocked ? 'open' : 'locked'}`);
   if (gate.pending.length) console.log(`final chain pending factors: ${gate.pending.map(entry => `${entry.factor_id} (${entry.delivered_stages}/${entry.total_stages}, next ${entry.next_stage})`).join(', ')}`);
   coverage.tasks.forEach(task => {
     const record = ResearchLibrary.taskById(catalog, task.task_id);
