@@ -527,15 +527,18 @@ test("fresh Layer 1 publication remains terminal after all fresh markers appear"
 });
 
 test("overview system status makes aligned layer freshness explicit", async () => {
+  // Freshness is measured against the current clock, so the fixture has to move with the suite rather than
+  // freeze on the day it was written: a fixed August publish time reads as stale by October.
+  const now = Date.now();
   const harness = await createHarness({
     workflowStatus: buildWorkflowStatus({
       status: "success",
-      startedAt: "2026-08-19T08:12:00.000Z",
-      finishedAt: "2026-08-19T08:15:00.000Z",
+      startedAt: new Date(now - 10 * 60 * 1000).toISOString(),
+      finishedAt: new Date(now - 2 * 60 * 1000).toISOString(),
       message: "Last production run finished."
     }),
-    layer1: buildPublishedLayer1("2026-08-19T08:15:28.000Z"),
-    layer2: buildPublishedLayer2("2026-08-19T08:15:18.000Z")
+    layer1: buildPublishedLayer1(new Date(now - 60 * 1000).toISOString()),
+    layer2: buildPublishedLayer2(new Date(now - 90 * 1000).toISOString())
   });
   try {
     const context = await harness.createContext();

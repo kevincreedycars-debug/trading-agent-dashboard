@@ -1,5 +1,31 @@
 # Changelog
 
+## 2026-10-19 (interactive coordinator, factor-chain cycle) - the Research Library becomes twenty-five factor chains with a gated three-stage final chain, and hosted uploads are repaired
+
+### Added
+
+- `data/research-library/catalog.json`: twenty-five `factor_chains`, each with a `chain_id`, `factor_id`, `topic_id`, `slug` and three stages (research, red team, adjudication). The six topics remain grouping labels; they own no stage and no document.
+- `final_chain` `usd-final-asset-analysis` with `final_analysis`, `final_red_team` and `final_adjudication`, gated by the registry. On the committed registry it reads `0/25` factor chains complete, `0/3` final stages and `state=locked`, so no final stage is rendered until every factor chain is complete against current parent versions.
+- Seventy-eight generated prompts: seventy-five under `docs/research/factors/usd/<factor-slug>/` and three under `docs/research/final/usd/final-asset-analysis/`. `chains --check` (with `topics --check` as an alias) and `verify` fail on drift.
+- Hosted-upload coverage for final stages: a row is owned by its chain id rather than its display topic, the final stage name survives the hosted table's numeric `stage` and `kind` columns, and `model` plus `note` round-trip with the document.
+
+### Changed
+
+- The Research Library panel opens on one expandable row per factor chain with its own `n/3` count and stage cards, then the final chain's gate, then the factor register, legacy tasks and whole-engine documents in a secondary section. Stage copy, upload, View, Download and the final input-package download are chain-scoped.
+- The registry and store record `chain_id`/`factor_id`, refuse a stage that breaks parent linkage, and flag a stage stale when its parent version or any final input-package entry changes. Each final stage records the exact `input_documents` it judged.
+- The shared navigation carries Research Library under Evidence and the existing Live Trade Logic tab under System: 13 pages, 19 rail entries and 3 outbound entries, with `--check` reporting zero changes. The Live Trade Logic entry is navigation copy for an existing read-only tab and changes no trading code or call.
+- Browser fixtures now use the current labels, provenance wording and clock, and the hosted adapter tests assert chain ownership and final-stage round-trip.
+
+### Verified
+
+- Full local suite `npm test`: 596 of 596 pass, 0 fail. `node --check script.js` is clean; the Live Trade Logic browser guard is 5 of 5; `node scripts/build_research_library.js verify` reports catalog, registry, repo hashes, chains and chain prompts ok; nav `--check` reports 13 pages, 19 rail entries, 3 outbound, 0 changes.
+- VIX evidence is unchanged: `usd-baseline-audit-01-vix-usd-report` is still version 1 at 84,056 bytes with sha256 `e4151937411eb1e9235c21e4942327b2d24486e405887d70a90a8f5367eb381d`; the stored object re-hashes to the same value; the VIX chain reads research delivered, red team awaiting the file and adjudication not started, while its sibling reads `0/3`.
+- The branch merges current `origin/main` (`48ee6a5f`) without conflicts. `data/live-trading.json`, `data/layer1.json` and `data/layer2.json` are byte-identical to `origin/main`; no live script, workflow, export, feed or database file appears in the diff.
+
+### Not claimed
+
+- No factor status, weight, threshold, sign, live call or workflow changed. Nothing was uploaded, reviewed, accepted, scored, merged or deployed, and no trading edge is claimed. The VIX red-team file is still the next manual step, at `usd-factor-live-f1-vix-level` stage 2.
+
 ## 2026-10-15 (interactive coordinator, pilot-dispatch cycle) - the dispatched VIX pilot is pinned by version and hash beside the archive, the missing-quote policy stays proposed and the pilot stays bundle-only
 
 ### Added

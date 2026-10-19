@@ -142,7 +142,7 @@ test("the published dashboard opens the read-only Live Trading section", async (
     }
 
     const provenance = await page.locator("#liveTradingPanel .live-trading-provenance").textContent();
-    assert.match(provenance, /Read-only\./);
+    assert.match(provenance, /Read-only, except one ask\./);
     assert.match(provenance, /no order code/);
     assert.match(provenance, /not a signal/);
 

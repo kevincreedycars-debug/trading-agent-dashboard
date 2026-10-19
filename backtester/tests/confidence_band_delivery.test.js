@@ -245,9 +245,12 @@ test("current active Layer 1 and Layer 2 directional calls resolve truthfully ag
   const layer1 = readJson(layer1Path);
   const layer2 = readJson(layer2Path);
 
+  // The checked-in calibration covers five Layer 1 markets. A newer market may publish a live call before a
+  // historical band exists for it, and there is no exact row to resolve until that calibration is extended.
+  const calibratedMarkets = new Set(payload.coverage.layer1_markets);
   const activeDirectionalAgents = (layer1.agents || []).filter((agent) => {
     const direction = String(agent?.calls?.["24h"]?.direction || "").toUpperCase();
-    return direction.startsWith("BULLISH") || direction.startsWith("BEARISH");
+    return calibratedMarkets.has(agent.agent) && (direction.startsWith("BULLISH") || direction.startsWith("BEARISH"));
   });
 
   assert.ok(activeDirectionalAgents.length > 0);

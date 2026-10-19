@@ -285,6 +285,8 @@ const researchLibraryState = {
   query: "",
   factorId: "",
   topicId: "",
+  chainId: "",
+  hostedChains: new Set(),
   uploadTaskId: "",
   uploadStage: "",
   serviceEndpoint: "",
@@ -6973,12 +6975,26 @@ function researchLibraryConfigureHostedUpload() {
   return researchLibraryHostedClient();
 }
 
-async function researchLibraryMergeHosted(topicId) {
+async function researchLibraryMergeHosted(chainId, options = {}) {
   const adapter = researchLibraryHostedClient();
-  if (!adapter || !adapter.signedIn() || !topicId) return 0;
-  const merged = await adapter.refresh(topicId, () => researchLibraryDocuments, next => { researchLibraryDocuments = next; });
+  const id = String(chainId || "").trim();
+  if (!adapter || !adapter.signedIn() || !id) return 0;
+  if (!options.force && researchLibraryState.hostedChains.has(id)) return 0;
+  researchLibraryState.hostedChains.add(id);
+  const merged = await adapter.refresh(id, () => researchLibraryDocuments, next => { researchLibraryDocuments = next; });
   if (merged) renderResearchLibrary();
   return merged;
+}
+
+// Hosted documents live only for the signed-in session. Signing out drops them from the page's view
+// without touching the committed registry or the local service's records.
+function researchLibraryForgetHosted() {
+  researchLibraryState.hostedChains.clear();
+  const list = researchLibraryDocumentList();
+  if (!list.some(document => document.hosted)) return;
+  researchLibraryDocuments = Object.assign({}, researchLibraryDocuments || {}, {
+    documents: list.filter(document => !document.hosted)
+  });
 }
 
 function researchLibraryHostedAccountBar() {
@@ -7141,6 +7157,55 @@ async function researchLibraryDownloadDocument(documentId, version, storage) {
   }
 }
 
+// The input package is the manifest the reader attaches and the registry records. It is generated from the
+// stage card's own versions, so the package cannot name a document the page did not show.
+function researchLibraryDownloadInputPackage(chainId, stageId) {
+  const lib = researchLibraryLib();
+  const catalog = lib ? lib.normalizeCatalog(researchLibraryData || {}) : null;
+  const chain = catalog ? researchLibraryChainById(lib, catalog, chainId) : null;
+  if (!lib || !chain) {
+    researchLibraryMessage(`Chain ${chainId} is not in the catalogue.`);
+    return;
+  }
+  const progress = lib.chainProgress(chain, { documents: researchLibraryDocumentSummaries() }, catalog);
+  const stage = progress.stages.find(entry => entry.stage === stageId);
+  if (!stage) {
+    researchLibraryMessage(`Chain ${chainId} has no ${stageId} stage.`);
+    return;
+  }
+  const inputs = asArray(stage.input_documents);
+  const missing = inputs.filter(entry => entry.missing || !entry.document_id);
+  if (missing.length) {
+    researchLibraryMessage(`The ${stage.label} input package is not complete: ${missing.length} document(s) are missing. Finish the factor chains and the earlier final stages first.`);
+    return;
+  }
+  const lines = [
+    `# ${chain.title} - ${stage.label} input package`,
+    "",
+    `- Chain: ${chain.chain_id}`,
+    `- Stage: ${stage.stage} (${stage.order} of ${stage.total_stages || progress.total_stages})`,
+    `- Prompt: ${stage.prompt_path}`,
+    `- Prompt sha256: ${stage.prompt_sha256}`,
+    `- Output document type: ${stage.document_type}`,
+    "",
+    "Attach these exact versions to the session that runs the prompt. If any downloaded file has a different sha256, stop and refresh the page rather than review or adjudicate a substituted document.",
+    ""
+  ];
+  ["stage_input", "supporting_evidence"].forEach(role => {
+    const entries = inputs.filter(entry => entry.role === role);
+    if (!entries.length) return;
+    lines.push(`## ${role === "stage_input" ? "Final-chain inputs" : "Supporting evidence"}`, "");
+    entries.forEach(entry => {
+      lines.push(`- ${entry.role_stage || entry.stage || "document"}: ${entry.document_id} - version ${entry.version} - sha256 ${entry.sha256}${entry.factor_id ? ` - factor ${entry.factor_id}` : ""}`);
+    });
+    lines.push("");
+  });
+  lines.push("## Registration", "", "The upload records every entry above as the exact input package this stage judged. A later version of any entry marks the stage stale.", "");
+  const filename = `${chain.slug || chain.chain_id}-${String(stage.stage).replace(/_/g, "-")}-input-package.md`;
+  researchLibraryDownloadBlob(filename, `${lines.join("\n")}\n`, "text/markdown");
+  researchLibraryMessage(`${stage.label} input package downloaded (${inputs.length} document${inputs.length === 1 ? "" : "s"}).`);
+}
+
 async function researchLibraryRefreshDocuments() {
   try {
     const refreshed = await fetchLocalJson(researchLibraryDocumentsUrl);
@@ -7256,7 +7321,9 @@ function setupResearchLibraryControls() {
     const hostedAdapter = researchLibraryHostedClient();
     if (hostedAdapter) {
       if (target.closest("[data-rl-account-signin], [data-rl-account-signout]")) {
-        researchLibraryState.hostedTopic = "";
+        const signingOut = !!target.closest("[data-rl-account-signout]");
+        if (signingOut) researchLibraryForgetHosted();
+        else researchLibraryState.hostedChains.clear();
         hostedAdapter.handleAccountAction(target);
         return;
       }
@@ -7289,6 +7356,7 @@ function setupResearchLibraryControls() {
       researchLibraryState.asset = assetButton.dataset.rlAsset || "USD";
       researchLibraryState.factorId = "";
       researchLibraryState.topicId = "";
+      researchLibraryState.chainId = "";
       researchLibraryState.uploadStage = "";
       researchLibraryState.uploadTaskId = "";
       researchLibraryState.message = "";
@@ -7333,7 +7401,18 @@ function setupResearchLibraryControls() {
     const topicButton = target.closest("[data-rl-topic]");
     if (topicButton) {
       researchLibraryState.topicId = topicButton.dataset.rlTopic || "";
+      researchLibraryState.chainId = "";
       researchLibraryState.factorId = "";
+      researchLibraryState.uploadStage = "";
+      researchLibraryState.message = "";
+      renderResearchLibrary();
+      return;
+    }
+
+    const chainButton = target.closest("[data-rl-chain-toggle]");
+    if (chainButton) {
+      const chainId = chainButton.dataset.rlChainToggle || "";
+      researchLibraryState.chainId = researchLibraryState.chainId === chainId ? "" : chainId;
       researchLibraryState.uploadStage = "";
       researchLibraryState.message = "";
       renderResearchLibrary();
@@ -7342,15 +7421,22 @@ function setupResearchLibraryControls() {
 
     const stagePromptButton = target.closest("[data-rl-copy-stage-prompt]");
     if (stagePromptButton) {
-      const [topicId, stageId] = String(stagePromptButton.dataset.rlCopyStagePrompt || "").split(":");
-      researchLibraryCopyStagePrompt(topicId, stageId);
+      const [chainId, stageId] = String(stagePromptButton.dataset.rlCopyStagePrompt || "").split(":");
+      researchLibraryCopyStagePrompt(chainId, stageId);
       return;
     }
 
     const stageUploadButton = target.closest("[data-rl-stage-upload]");
     if (stageUploadButton) {
-      const [topicId, stageId] = String(stageUploadButton.dataset.rlStageUpload || "").split(":");
-      researchLibraryStageUpload(topicId, stageId, stageUploadButton.closest("[data-rl-upload-form]"));
+      const [chainId, stageId] = String(stageUploadButton.dataset.rlStageUpload || "").split(":");
+      researchLibraryStageUpload(chainId, stageId, stageUploadButton.closest("[data-rl-upload-form]"));
+      return;
+    }
+
+    const inputPackageButton = target.closest("[data-rl-input-package]");
+    if (inputPackageButton) {
+      const [chainId, stageId] = String(inputPackageButton.dataset.rlInputPackage || "").split(":");
+      researchLibraryDownloadInputPackage(chainId, stageId);
       return;
     }
 
@@ -7434,91 +7520,56 @@ function researchLibraryServiceCard() {
   `;
 }
 
-// The topic workflow, as the panel shows it: one topic, three numbered stages, and the metadata the reader
-// would otherwise have to assemble by hand. The page never sends a prompt anywhere and never scores anything.
+// The factor-chain workflow, as the panel shows it: one chain, three numbered stages, and the metadata the
+// reader would otherwise have to assemble by hand. The page never sends a prompt anywhere and never scores
+// anything.
 function researchLibraryDocumentSummaries() {
   const lib = researchLibraryLib();
   return lib ? lib.listDocuments(researchLibraryDocuments || {}) : [];
 }
 
-function researchLibraryTopicState(lib, topic) {
-  return lib.topicProgress(topic, { documents: researchLibraryDocumentSummaries() });
+function researchLibraryChainById(lib, catalog, chainId) {
+  const id = String(chainId || "");
+  if (!lib || !id) return null;
+  const factorChain = lib.factorChainById(catalog, id);
+  if (factorChain) return factorChain;
+  const finalChain = lib.finalChain(catalog);
+  return finalChain && String(finalChain.chain_id) === id ? finalChain : null;
 }
 
-function researchLibraryStageDocumentId(topic, stageId) {
-  const slug = String(topic.slug || topic.topic_id || "topic").toLowerCase();
-  return `${slug}-${stageId === "red_team" ? "red-team" : stageId}`;
+function researchLibraryStageDocumentId(chain, stageId) {
+  const slug = String(chain.slug || chain.chain_id || "chain").toLowerCase();
+  return `${slug}-${String(stageId || "stage").replace(/_/g, "-")}`;
 }
 
-function researchLibraryStageKey(topic, stageId) {
-  return `${topic.topic_id}:${stageId}`;
+function researchLibraryStageLabel(lib, stageId) {
+  const id = String(stageId || "");
+  return (lib.FINAL_STAGE_LABELS && lib.FINAL_STAGE_LABELS[id])
+    || (lib.STAGE_LABELS && lib.STAGE_LABELS[id])
+    || id;
 }
 
-function researchLibraryStageInputs(lib, topic, stage) {
-  const progress = researchLibraryTopicState(lib, topic);
-  const byStage = new Map(progress.stages.map(entry => [entry.stage, entry]));
-  const research = byStage.get("research");
-  const redTeam = byStage.get("red_team");
-  if (stage.stage === "red_team") {
-    return research?.document_id ? [{ ...research, input_label: "Stage 1 research report" }] : [];
-  }
-  if (stage.stage !== "adjudication") return [];
-  const inputs = [];
-  if (research?.document_id) {
-    inputs.push({
-      ...research,
-      input_label: "Stage 1 research report",
-      version: redTeam?.reviewed_version ?? research.version,
-      sha256: redTeam?.reviewed_sha256 || research.sha256
-    });
-  }
-  if (redTeam?.document_id) inputs.push({ ...redTeam, input_label: "Stage 2 red-team finding" });
-  return inputs;
-}
-
-function researchLibraryVersionsBlock(lib, topic, stage) {
-  const inputs = researchLibraryStageInputs(lib, topic, stage);
-  if (stage.stage === "red_team" && inputs.length === 1) {
-    const research = inputs[0];
-    return [
-      "Version to review (written by the dashboard)",
-      `Research document: ${research.document_id}`,
-      `Research version: ${research.version}`,
-      `Research sha256: ${research.sha256}`
-    ].join("\n");
-  }
-  if (stage.stage === "adjudication" && inputs.length === 2) {
-    const research = inputs.find(input => input.stage === "research");
-    const redTeam = inputs.find(input => input.stage === "red_team");
-    return [
-      "Versions to judge (written by the dashboard)",
-      `Judged research document: ${research.document_id}`,
-      `Judged research version: ${research.version}`,
-      `Judged research sha256: ${research.sha256}`,
-      `Judged red-team document: ${redTeam.document_id}`,
-      `Judged red-team version: ${redTeam.version}`,
-      `Judged red-team sha256: ${redTeam.sha256}`
-    ].join("\n");
-  }
-  return "";
+function researchLibraryStageKey(chain, stageId) {
+  return `${chain.chain_id}:${stageId}`;
 }
 
 // Copies the prompt file's own bytes, after checking them against the hash the catalogue publishes. The copy
 // is the same file the View link opens and the Download button writes, so a reader cannot paste a drifted
 // prompt without being told.
-async function researchLibraryCopyStagePrompt(topicId, stageId) {
+async function researchLibraryCopyStagePrompt(chainId, stageId) {
   const lib = researchLibraryLib();
-  const topic = lib ? lib.topicById(researchLibraryData || {}, topicId) : null;
-  const stage = topic ? lib.stageById(topic, stageId) : null;
+  const catalog = lib ? lib.normalizeCatalog(researchLibraryData || {}) : null;
+  const chain = catalog ? researchLibraryChainById(lib, catalog, chainId) : null;
+  const stage = chain ? lib.stageById(chain, stageId) : null;
   if (!stage || !stage.prompt_path) {
-    researchLibraryMessage(`No ${stageId} prompt is published for that topic.`);
+    researchLibraryMessage(`No ${stageId} prompt is published for that chain.`);
     return;
   }
   try {
     const response = await fetch(`./${stage.prompt_path}`, { cache: "no-store" });
     if (!response.ok) throw new Error(`${response.status} ${response.statusText}`);
     const bytes = new Uint8Array(await response.arrayBuffer());
-    const promptText = new TextDecoder().decode(bytes);
+    const text = new TextDecoder().decode(bytes);
     if (lib && globalThis.crypto?.subtle) {
       const actual = await lib.sha256Hex(bytes);
       if (actual !== stage.prompt_sha256) {
@@ -7526,11 +7577,9 @@ async function researchLibraryCopyStagePrompt(topicId, stageId) {
         return;
       }
     }
-    const versions = researchLibraryVersionsBlock(lib, topic, stage);
-    const text = versions ? `${promptText.trimEnd()}\n\n${versions}\n` : promptText;
     if (navigator.clipboard?.writeText) {
       await navigator.clipboard.writeText(text);
-      researchLibraryMessage(`${stage.label} instruction for "${topic.title}" copied (${promptText.length} prompt characters, sha256 ${String(stage.prompt_sha256).slice(0, 12)}${versions ? "; exact input versions appended by the dashboard" : ""}). Paste it into your own session; nothing was sent from this page.`);
+      researchLibraryMessage(`${stage.label} prompt for "${chain.title || chain.chain_id}" copied (${text.length} characters, sha256 ${String(stage.prompt_sha256).slice(0, 12)}). Paste it into your own session; nothing was sent from this page.`);
       return;
     }
     throw new Error("clipboard unavailable");
@@ -7581,20 +7630,21 @@ async function researchLibraryViewDocument(documentId, version) {
   }
 }
 
-// One stage, one Markdown file. The dashboard writes the topic, the stage, the document type and the exact
-// parent version, so the reader supplies a file and a model label and nothing else. Nothing here approves
-// anything: the service records evidence and moves no status.
-async function researchLibraryStageUpload(topicId, stageId, form) {
+// One stage, one Markdown file. The dashboard writes the chain, the factor, the stage, the document type and
+// the exact parent version, so the reader supplies a file and a model label and nothing else. Nothing here
+// approves anything: the service records evidence and moves no status.
+async function researchLibraryStageUpload(chainId, stageId, form) {
   const lib = researchLibraryLib();
-  const topic = lib ? lib.topicById(researchLibraryData || {}, topicId) : null;
-  if (!lib || !topic) {
-    researchLibraryMessage(`Topic ${topicId} is not in the catalogue.`);
+  const catalog = lib ? lib.normalizeCatalog(researchLibraryData || {}) : null;
+  const chain = catalog ? researchLibraryChainById(lib, catalog, chainId) : null;
+  if (!lib || !chain) {
+    researchLibraryMessage(`Chain ${chainId} is not in the catalogue.`);
     return;
   }
-  const progress = researchLibraryTopicState(lib, topic);
+  const progress = lib.chainProgress(chain, { documents: researchLibraryDocumentSummaries() }, catalog);
   const stage = progress.stages.find(entry => entry.stage === stageId);
   if (!stage) {
-    researchLibraryMessage(`Topic ${topicId} has no ${stageId} stage.`);
+    researchLibraryMessage(`Chain ${chainId} has no ${stageId} stage.`);
     return;
   }
   const file = form?.querySelector("[data-rl-upload-file]")?.files?.[0];
@@ -7611,10 +7661,27 @@ async function researchLibraryStageUpload(topicId, stageId, form) {
     researchLibraryMessage(`The ${stage.parent_stage} stage has no registered document yet, so this upload has nothing to attach to. Run the earlier stage first.`);
     return;
   }
-  // A signed-in reader with the private store available uploads straight to it. An upload is evidence:
-  // it moves no factor status, weight, threshold or live call.
+  const isFinalChain = !chain.factor_id;
+  const inputDocuments = asArray(stage.input_documents).filter(entry => !entry.missing && entry.document_id);
+  if (isFinalChain) {
+    const finalStatus = lib.finalChainStatus(catalog, { documents: researchLibraryDocumentSummaries() });
+    if (!finalStatus || !finalStatus.unlocked) {
+      researchLibraryMessage("The final chain is locked until every factor chain is complete against current versions, so nothing can be registered.");
+      return;
+    }
+    if (!inputDocuments.length || inputDocuments.length !== asArray(stage.input_documents).length) {
+      researchLibraryMessage(`The ${stage.label} input package is incomplete, so this return has nothing complete to be registered against.`);
+      return;
+    }
+  }
+  const client = researchLibraryServiceClient();
   const hostedUpload = researchLibraryHostedClient();
-  if (hostedUpload && hostedUpload.signedIn()) {
+  const title = String(form.querySelector("[data-rl-upload-title]")?.value || "").trim() || `${chain.title} - ${stage.label}`;
+  const note = String(form.querySelector("[data-rl-upload-note]")?.value || "").trim();
+  // A signed-in reader with the private store available uploads a factor-chain stage straight to it.
+  // The final chain is different: its return records the exact factor input package, which only the local
+  // service stores, so that chain stays on the local path.
+  if (hostedUpload && hostedUpload.signedIn() && !isFinalChain) {
     const researchStage = progress.stages.find(entry => entry.stage === "research");
     const parents = {};
     if (stage.stage === "red_team") parents.researchRef = stage.parent_document_id || "";
@@ -7623,48 +7690,50 @@ async function researchLibraryStageUpload(topicId, stageId, form) {
       parents.redTeamRef = stage.parent_document_id || "";
     }
     const result = await hostedUpload.uploadStage({
-      topic,
+      topic: { topic_id: chain.topic_id, title: chain.title },
+      chain,
+      chainId: chain.chain_id,
       stage,
       file,
-      title: String(form.querySelector("[data-rl-upload-title]")?.value || "").trim(),
+      title,
       model,
-      note: String(form.querySelector("[data-rl-upload-note]")?.value || "").trim(),
+      note,
       parents,
       onStored: async () => {
         researchLibraryState.uploadStage = "";
-        await researchLibraryRefreshDocuments();
-        await researchLibraryMergeHosted(topic.topic_id);
+        await researchLibraryMergeHosted(chain.chain_id, { force: true });
       }
     });
     if (!result.ok && result.message) researchLibraryMessage(result.message);
     return;
   }
-  if (hostedUpload && researchLibraryState.serviceState !== "connected") {
-    researchLibraryMessage("Sign in with your email link before uploading a research document. The local library service is not connected in this browser, so nothing else can receive the file.");
+  if (hostedUpload && hostedUpload.signedIn() && isFinalChain && !client) {
+    researchLibraryMessage("The final chain records its full factor input package, which the private hosted store does not hold. Connect the local library service to register this stage.");
     return;
   }
-
-  const client = researchLibraryServiceClient();
   if (!client) {
-    researchLibraryMessage("The shared research library helper did not load, so nothing can be registered.");
+    researchLibraryMessage(hostedUpload
+      ? "Sign in with your email link before uploading a research document. The local library service is not connected in this browser, so nothing else can receive the file."
+      : "The shared research library helper did not load, so nothing can be registered.");
     return;
   }
   const payload = {
     // One stage has one document: a corrected return becomes the next version of it rather than a second
     // document for the same stage, so a review keeps pointing at the report it was written against.
-    document_id: stage.document_id || researchLibraryStageDocumentId(topic, stage.stage),
-    asset: topic.asset || "USD",
-    factor_id: asArray(topic.factor_ids)[0] || null,
-    topic_id: topic.topic_id,
+    document_id: stage.document_id || researchLibraryStageDocumentId(chain, stage.stage),
+    asset: chain.asset || "USD",
+    factor_id: chain.factor_id || null,
+    topic_id: chain.topic_id || null,
+    chain_id: chain.chain_id,
     stage: stage.stage,
     document_type: stage.document_type,
-    title: String(form.querySelector("[data-rl-upload-title]")?.value || "").trim() || `${topic.title} - ${stage.label}`,
+    title,
     model,
-    note: String(form.querySelector("[data-rl-upload-note]")?.value || "").trim(),
+    note,
     original_filename: file.name,
     content_base64: lib.toBase64(new Uint8Array(await file.arrayBuffer()))
   };
-  if (stage.stage === "adjudication") {
+  if (stage.stage === "adjudication" || stage.stage === "final_adjudication") {
     payload.open_findings = String(form.querySelector("[data-rl-upload-findings]")?.value || "")
       .split("\n").map(line => line.trim()).filter(Boolean);
   }
@@ -7672,13 +7741,23 @@ async function researchLibraryStageUpload(topicId, stageId, form) {
     payload.parent_document_id = stage.parent_document_id;
     payload.parent_version = stage.parent_version;
   }
-  researchLibraryMessage(`Uploading ${file.name} as stage ${stage.order} (${stage.label}) of ${topic.title}...`);
+  if (isFinalChain) {
+    payload.input_documents = inputDocuments.map(entry => ({
+      document_id: entry.document_id,
+      version: entry.version,
+      sha256: entry.sha256,
+      role: entry.role,
+      role_stage: entry.role_stage
+    }));
+  }
+  researchLibraryMessage(`Uploading ${file.name} as stage ${stage.order} (${stage.label}) of ${chain.title}...`);
   try {
     const registration = await client.upload(payload);
     await researchLibraryRefreshDocuments();
     researchLibraryState.uploadStage = "";
     const attached = stage.parent_stage ? `, attached to ${registration.parent_document_id || payload.parent_document_id} v${registration.parent_version || payload.parent_version}` : "";
-    researchLibraryMessage(`${file.name} registered as ${registration.document_id} v${registration.version} (sha256 ${String(registration.sha256).slice(0, 12)}, ${lib.formatBytes(registration.bytes)}${attached})${registration.duplicate ? ". These bytes were already registered, so no new version was written" : ""}. Evidence only: no factor status, weight, threshold or live call moved.`);
+    const packageNote = isFinalChain ? `, with ${inputDocuments.length} input documents recorded` : "";
+    researchLibraryMessage(`${file.name} registered as ${registration.document_id} v${registration.version} (sha256 ${String(registration.sha256).slice(0, 12)}, ${lib.formatBytes(registration.bytes)}${attached}${packageNote})${registration.duplicate ? ". These bytes were already registered, so no new version was written" : ""}. Evidence only: no factor status, weight, threshold or live call moved.`);
   } catch (err) {
     researchLibraryMessage(`${file.name} could not be registered: ${err?.message || err}`);
   }
@@ -7691,30 +7770,33 @@ function researchLibraryTopicChips(lib, catalog, asset) {
     return leftPriority - rightPriority;
   });
   if (!topics.length) return "";
+  const chains = lib.listFactorChains(catalog, asset.asset);
+  const documents = { documents: researchLibraryDocumentSummaries() };
   const buttons = topics.map(topic => {
-    const progress = researchLibraryTopicState(lib, topic);
+    const topicChains = chains.filter(chain => String(chain.topic_id) === String(topic.topic_id));
+    const complete = topicChains.filter(chain => lib.chainProgress(chain, documents).complete).length;
     const active = topic.topic_id === researchLibraryState.topicId;
     const dispatch = topic.dispatch && topic.dispatch.state === "dispatched" ? "dispatched" : "not dispatched";
     return `
       <button type="button" class="rl-topic-chip${active ? " active" : ""}${topic.topic_id === "usd-topic-vix-level-and-risk-regime" ? " is-priority" : ""}" data-rl-topic="${escapeHtml(topic.topic_id)}">
         <strong>${escapeHtml(topic.title)}</strong>
-        <span>${progress.delivered_stages} of ${progress.total_stages} stages delivered · ${escapeHtml(dispatch)} · ${topic.factor_ids.length} factor${topic.factor_ids.length === 1 ? "" : "s"}</span>
+        <span>${complete} of ${topicChains.length} chains complete · ${escapeHtml(dispatch)} · ${topic.factor_ids.length} factor${topic.factor_ids.length === 1 ? "" : "s"}</span>
       </button>
     `;
   }).join("");
   return `<nav class="rl-topic-strip" aria-label="Research topics" data-rl-topics="true">${buttons}</nav>`;
 }
 
-function researchLibraryStagePromptBlock(lib, topic, stage) {
+function researchLibraryStagePromptBlock(lib, chain, stage) {
   const source = stage.prompt_source || {};
   const sourceLabel = source.kind === "dispatched_brief"
     ? `generated from the dispatched brief ${source.repo_path || ""}`
-    : "generated from the catalogue and this topic map";
+    : "generated from the catalogue and this chain";
   return `
     <div class="rl-stage-prompt" data-rl-stage-prompt="${escapeHtml(stage.stage)}">
       <div class="rl-document-actions">
-        <button class="inspect-button rl-mini" type="button" data-rl-copy-stage-prompt="${escapeHtml(researchLibraryStageKey(topic, stage.stage))}">Copy instruction</button>
-        <a class="inspect-button rl-mini" href="./${escapeHtml(stage.prompt_path)}" download>Download instruction</a>
+        <button class="inspect-button rl-mini" type="button" data-rl-copy-stage-prompt="${escapeHtml(researchLibraryStageKey(chain, stage.stage))}">Copy prompt</button>
+        <a class="inspect-button rl-mini" href="./${escapeHtml(stage.prompt_path)}" target="_blank" rel="noopener">View prompt</a>
       </div>
       <p class="rl-muted">${escapeHtml(stage.prompt_path)} · sha256 <span class="rl-hash">${escapeHtml(String(stage.prompt_sha256).slice(0, 16))}</span> · ${escapeHtml(sourceLabel)}</p>
       <p class="rl-muted">${escapeHtml(stage.deliverable)}</p>
@@ -7722,53 +7804,72 @@ function researchLibraryStagePromptBlock(lib, topic, stage) {
   `;
 }
 
-function researchLibraryStageAttachBlock(lib, topic, stage) {
-  if (!stage.parent_stage) {
+function researchLibraryStageInputList(entries) {
+  return `<ul class="rl-list rl-input-list">${entries.map(entry => `
+    <li class="rl-input-row" data-rl-input-document="${escapeHtml(entry.document_id)}">
+      <span>${escapeHtml(entry.factor_id || entry.title || entry.document_id)}</span>
+      <span>${escapeHtml(entry.document_id)} v${escapeHtml(String(entry.version))}</span>
+      <span class="rl-hash">sha256 ${escapeHtml(String(entry.sha256).slice(0, 16))}</span>
+      <button class="inspect-button rl-mini" type="button" data-rl-download="${escapeHtml(entry.document_id)}" data-rl-version="${escapeHtml(String(entry.version))}" data-rl-storage="${escapeHtml(entry.storage || "library_object")}">Download</button>
+    </li>
+  `).join("")}</ul>`;
+}
+
+function researchLibraryStageAttachBlock(lib, chain, stage) {
+  const inputs = asArray(stage.input_documents);
+  if (!stage.parent_stage && !inputs.length) return "";
+  if (inputs.length) {
+    const stageInputs = inputs.filter(entry => !entry.missing && entry.role === "stage_input");
+    const supporting = inputs.filter(entry => !entry.missing && entry.role === "supporting_evidence");
+    const missing = inputs.filter(entry => entry.missing || !entry.document_id);
+    const stale = asArray(stage.stale_inputs);
     return `
-      <div class="rl-stage-attach" data-rl-stage-attach="true">
-        <p class="eyebrow">Input to download</p>
-        <p class="rl-muted">No earlier result is required. Download the instruction above if you want the stage 1 input as a file.</p>
-        <a class="inspect-button rl-mini" href="./${escapeHtml(stage.prompt_path)}" download>Download input</a>
+      <div class="rl-stage-attach" data-rl-stage-attach="true" data-rl-stage-input-package="${escapeHtml(researchLibraryStageKey(chain, stage.stage))}" data-rl-input-count="${inputs.length}">
+        <p class="eyebrow">Input package</p>
+        <p class="rl-muted">Download these exact versions and attach them together. If a file's sha256 differs from the card, stop rather than review or adjudicate a substituted document.</p>
+        ${stageInputs.length ? `<div class="rl-stage-input-group"><p class="rl-muted">Final-chain input${stageInputs.length === 1 ? "" : "s"}</p>${researchLibraryStageInputList(stageInputs)}</div>` : ""}
+        ${supporting.length ? `<details class="rl-stage-input-group" data-rl-supporting-evidence="${supporting.length}"><summary>Supporting evidence (${supporting.length} adjudications)</summary>${researchLibraryStageInputList(supporting)}</details>` : ""}
+        ${missing.length ? `<p class="rl-muted" data-rl-input-missing="true">${missing.length} required document${missing.length === 1 ? " is" : "s are"} still missing, so this package is not complete. Finish the earlier stages and factor chains first.</p>` : ""}
+        ${stale.length ? `<p class="rl-document-note" data-rl-input-stale="${stale.length}">${stale.length} input${stale.length === 1 ? " has" : "s have"} changed since this stage was returned: ${escapeHtml(stale.map(entry => `${entry.document_id} v${entry.version} -> v${entry.current_version}`).join("; "))}.</p>` : ""}
+        <div class="rl-document-actions">
+          <button class="inspect-button rl-mini" type="button" data-rl-input-package="${escapeHtml(researchLibraryStageKey(chain, stage.stage))}"${missing.length ? " disabled" : ""}>Download input package</button>
+        </div>
       </div>
     `;
   }
-  const inputs = researchLibraryStageInputs(lib, topic, stage);
-  const requiredCount = stage.stage === "adjudication" ? 2 : 1;
-  if (inputs.length !== requiredCount) {
+  const parentLabel = researchLibraryStageLabel(lib, stage.parent_stage);
+  if (!stage.parent_document_id) {
     return `
       <div class="rl-stage-attach" data-rl-stage-attach="true">
-        <p class="eyebrow">Inputs to download</p>
-        <p class="rl-muted">${stage.stage === "adjudication" ? "Stage 3 needs both the stage 1 research report and the stage 2 red-team finding." : "Stage 2 needs the stage 1 research report."} Deliver the missing earlier result first.</p>
+        <p class="eyebrow">What to attach</p>
+        <p class="rl-muted">The ${escapeHtml(parentLabel)} stage has no registered document yet, so there is nothing to attach. Deliver stage ${escapeHtml(String(stage.order - 1))} first.</p>
       </div>
     `;
   }
-  const rows = inputs.map(input => `
-    <div class="rl-stage-input" data-rl-stage-input="${escapeHtml(input.stage)}">
-      <strong>${escapeHtml(input.input_label)}</strong>
-      <div class="rl-document-meta">
-        <span>${escapeHtml(input.document_id)}</span>
-        <span>v${escapeHtml(String(input.version))}</span>
-        <span class="rl-hash">sha256 ${escapeHtml(String(input.sha256).slice(0, 16))}</span>
-      </div>
-      <button class="inspect-button rl-mini" type="button" data-rl-download="${escapeHtml(input.document_id)}" data-rl-version="${escapeHtml(String(input.version))}" data-rl-storage="${escapeHtml(input.storage || "library_object")}">Download input</button>
-    </div>
-  `).join("");
+  const sameVersion = stage.reviewed_version !== null && stage.reviewed_version === stage.parent_version;
   return `
     <div class="rl-stage-attach" data-rl-stage-attach="true">
-      <p class="eyebrow">${stage.stage === "adjudication" ? "Two inputs to download" : "Input to download"}</p>
-      <p class="rl-muted">Download the exact registered version${inputs.length === 1 ? "" : "s"} below. The copied instruction carries the same full identifiers.</p>
-      ${rows}
+      <p class="eyebrow">What to attach</p>
+      <p class="rl-muted">Download the exact ${escapeHtml(parentLabel)} version this stage must judge, and attach that file. If your copy has a different sha256, the prompt tells you to stop rather than review a different version.</p>
+      <div class="rl-document-meta">
+        <span>${escapeHtml(stage.parent_document_id)}</span>
+        <span>v${escapeHtml(String(stage.parent_version))}</span>
+        <span class="rl-hash">sha256 ${escapeHtml(String(stage.parent_sha256).slice(0, 16))}</span>
+        ${sameVersion ? `<span>this stage judged v${escapeHtml(String(stage.reviewed_version))}</span>` : ""}
+      </div>
+      <div class="rl-document-actions">
+        <button class="inspect-button rl-mini" type="button" data-rl-download="${escapeHtml(stage.parent_document_id)}" data-rl-version="${escapeHtml(String(stage.parent_version))}" data-rl-storage="library_object">Download inputs</button>
+      </div>
     </div>
   `;
 }
 
-function researchLibraryStageDocumentBlock(lib, topic, stage) {
+function researchLibraryStageDocumentBlock(lib, chain, stage) {
   if (!stage.document_id) {
     return `
       <div class="rl-stage-document" data-rl-stage-document-empty="${escapeHtml(stage.stage)}">
         <p class="eyebrow">Registered document</p>
-        <p class="rl-muted">No document is registered for this stage yet. ${stage.state === "awaiting_upload" ? `The ${escapeHtml(lib.STAGE_LABELS[stage.parent_stage] || stage.parent_stage)} stage is delivered, so this stage can be run now.` : "This stage can start once the earlier stage is delivered."}</p>
-        <button class="inspect-button rl-mini" type="button" disabled>View result</button>
+        <p class="rl-muted">No document is registered for this stage yet. ${stage.state === "awaiting_upload" ? (stage.parent_stage ? `The ${escapeHtml(researchLibraryStageLabel(lib, stage.parent_stage))} stage is delivered, so this stage can be run now.` : "The gate is open and the input package is complete, so this stage can be run now.") : "This stage can start once its earlier stages and input package are complete."}</p>
       </div>
     `;
   }
@@ -7803,48 +7904,54 @@ function researchLibraryStageDocumentBlock(lib, topic, stage) {
   `;
 }
 
-function researchLibraryStageUploadForm(lib, topic, stage) {
-  const connected = researchLibraryState.serviceState === "connected";
-  // A stage document can be stored two ways: through the local service in a checkout, or through the
-  // private hosted store this page already has keys for. Either one is enough to offer the button.
-  const hostedReady = !!researchLibraryHostedClient();
-  const canRegister = connected || hostedReady;
-  const key = researchLibraryStageKey(topic, stage.stage);
+function researchLibraryStageUploadForm(lib, chain, stage) {
+  const hosted = !!researchLibraryHostedClient();
+  const finalChain = !chain.factor_id;
+  // The private store holds factor-chain stage returns. The final chain's return also records its full
+  // factor input package, which only the local service stores, so it cannot use the hosted path.
+  const hostedCanStore = hosted && !finalChain;
+  const canRegister = researchLibraryState.serviceState === "connected" || hostedCanStore;
+  const key = researchLibraryStageKey(chain, stage.stage);
   const open = researchLibraryState.uploadStage === key;
-  const defaultId = stage.document_id || researchLibraryStageDocumentId(topic, stage.stage);
-  const findings = stage.stage === "adjudication";
+  const defaultId = stage.document_id || researchLibraryStageDocumentId(chain, stage.stage);
+  const findings = stage.stage === "adjudication" || stage.stage === "final_adjudication";
+  const inputDocs = asArray(stage.input_documents);
+  const inputCount = inputDocs.filter(entry => !entry.missing && entry.document_id).length;
+  const inputsMissing = inputDocs.some(entry => entry.missing || !entry.document_id);
   return `
     <div class="rl-stage-upload" data-rl-upload-form="${escapeHtml(key)}">
       <div class="rl-document-actions">
-        <button class="inspect-button rl-mini" type="button" data-rl-upload-toggle="${escapeHtml(key)}">${open ? "Close upload" : "Upload result"}</button>
-        <span class="rl-muted rl-inline-note">one file per stage; the page writes the topic, the stage and the version judged</span>
+        <button class="inspect-button rl-mini" type="button" data-rl-upload-toggle="${escapeHtml(key)}">${open ? `Close ${escapeHtml(stage.label)} upload` : `Upload ${escapeHtml(stage.label)} result`}</button>
+        <span class="rl-muted rl-inline-note">one file per stage; the page writes the chain, the stage and the version judged</span>
       </div>
       ${open ? `
         <div class="rl-upload-grid">
-          <label>Title<input type="text" data-rl-upload-title value="${escapeHtml(`${topic.title} - ${stage.label}`)}" /></label>
+          <label>Title<input type="text" data-rl-upload-title value="${escapeHtml(`${chain.title} - ${stage.label}`)}" /></label>
           <label>Model or session<input type="text" data-rl-upload-model placeholder="the label you actually used" /></label>
-          <label>File<input type="file" data-rl-upload-file accept=".md,.markdown,.txt" /></label>
+          <label>Result file<input type="file" data-rl-upload-file accept=".md,.markdown,.txt" /></label>
           <label>Note<input type="text" data-rl-upload-note placeholder="optional" /></label>
         </div>
-        ${findings ? `<label class="rl-muted">Unresolved findings, one per line<textarea rows="3" data-rl-upload-findings placeholder="each line is recorded as an open finding for central synthesis"></textarea></label>` : ""}
-        <p class="rl-muted">Document id ${escapeHtml(defaultId)}${stage.parent_stage ? `, attached to ${escapeHtml(stage.parent_document_id || "the parent stage")} v${escapeHtml(String(stage.parent_version))}` : ""}. Uploading records evidence: it is not an approval and it moves no factor status.</p>
+        ${findings ? `<label class="rl-muted">Unresolved findings, one per line<textarea rows="3" data-rl-upload-findings placeholder="each line is recorded as an open finding for the final analysis"></textarea></label>` : ""}
+        <p class="rl-muted">Document id ${escapeHtml(defaultId)}${stage.parent_stage ? `, attached to ${escapeHtml(stage.parent_document_id || "the parent stage")} v${escapeHtml(String(stage.parent_version))}` : ""}${inputCount ? `, with its ${inputCount}-document input package recorded` : ""}. Uploading records evidence: it is not an approval and it moves no factor status.</p>
         <div class="rl-document-actions">
-          <button class="inspect-button" type="button" data-rl-stage-upload="${escapeHtml(key)}"${canRegister ? "" : " disabled"}>Register ${escapeHtml(stage.label)} document</button>
-          ${canRegister ? "" : `<span class="rl-muted">neither the local service nor the private store is available, so a document cannot be stored yet</span>`}
+          <button class="inspect-button" type="button" data-rl-stage-upload="${escapeHtml(key)}"${canRegister && !inputsMissing ? "" : " disabled"}>Register ${escapeHtml(stage.label)} document</button>
+          ${canRegister ? "" : `<span class="rl-muted">${finalChain ? "the final chain needs the local library service, because its return records the full factor input package; start it, then save the token in storage settings at the foot of the panel" : hosted ? "sign in with your email link, or connect the local library service, before a document can be stored" : "the local service must be connected before a document can be stored; start it, then save the token in storage settings at the foot of the panel"}</span>`}
+          ${inputsMissing ? `<span class="rl-muted">the input package is incomplete, so nothing can be registered against it yet</span>` : ""}
         </div>
       ` : ""}
     </div>
   `;
 }
 
-function researchLibraryTopicStageCard(lib, topic, stage) {
+function researchLibraryChainStageCard(lib, chain, stage, options = {}) {
+  const controls = options.controls !== false;
   const tone = stage.state === "delivered" ? "rl-tone-ok"
     : stage.state === "awaiting_upload" ? "rl-tone-active"
       : stage.state === "reassessment_required" ? "rl-tone-blocked" : "rl-tone-idle";
   const findings = asArray(stage.open_findings);
-  const nextAction = topic.topic_id === "usd-topic-vix-level-and-risk-regime" && stage.stage === "red_team" && stage.state === "awaiting_upload";
+  const nextAction = chain.topic_id === "usd-topic-vix-level-and-risk-regime" && stage.stage === "red_team" && stage.state === "awaiting_upload";
   return `
-    <article class="rl-stage-card is-${escapeHtml(stage.state)}${nextAction ? " is-next-action" : ""}" data-rl-stage="${escapeHtml(stage.stage)}" data-rl-stage-state="${escapeHtml(stage.state)}">
+    <article class="rl-stage-card is-${escapeHtml(stage.state)}" data-rl-stage="${escapeHtml(stage.stage)}" data-rl-stage-state="${escapeHtml(stage.state)}" data-rl-chain-stage="${escapeHtml(chain.chain_id)}" data-rl-stage-controls="${controls ? "true" : "false"}">
       <div class="rl-stage-head">
         <div class="rl-stage-identity">
           <span class="rl-stage-number">${escapeHtml(String(stage.order))}</span>
@@ -7853,70 +7960,173 @@ function researchLibraryTopicStageCard(lib, topic, stage) {
         </div>
         <span class="rl-pill ${tone}" data-rl-stage-pill="${escapeHtml(stage.stage)}">${escapeHtml(stage.state_label)}</span>
       </div>
-      ${researchLibraryStagePromptBlock(lib, topic, stage)}
-      ${researchLibraryStageAttachBlock(lib, topic, stage)}
-      ${researchLibraryStageDocumentBlock(lib, topic, stage)}
+      ${controls ? researchLibraryStagePromptBlock(lib, chain, stage) : ""}
+      ${controls ? researchLibraryStageAttachBlock(lib, chain, stage) : ""}
+      ${researchLibraryStageDocumentBlock(lib, chain, stage)}
       ${findings.length ? `<div class="rl-stage-findings" data-rl-stage-findings="true"><p class="eyebrow">Unresolved findings</p><ul class="rl-list">${findings.map(finding => `<li>${escapeHtml(finding)}</li>`).join("")}</ul></div>` : ""}
-      ${researchLibraryStageUploadForm(lib, topic, stage)}
+      ${controls ? researchLibraryStageUploadForm(lib, chain, stage) : `<p class="rl-muted" data-rl-stage-gated="true">The final chain gate is closed, so its prompt and upload controls are not offered. The registered result stays visible and is flagged when its evidence changes.</p>`}
     </article>
   `;
 }
 
-function researchLibraryTopicPage(lib, catalog, asset) {
+function researchLibraryChainStepStrip(lib, progress) {
+  return `<span class="rl-chain-steps">${progress.stages.map(stage => `
+    <span class="rl-chain-step is-${escapeHtml(stage.state)}" data-rl-chain-step="${escapeHtml(stage.stage)}" data-rl-step-state="${escapeHtml(stage.state)}" title="${escapeHtml(`${stage.label}: ${stage.state_label}`)}">${escapeHtml(String(stage.order))}</span>
+  `).join("")}</span>`;
+}
+
+function researchLibraryChainRow(lib, chain) {
+  const progress = lib.chainProgress(chain, { documents: researchLibraryDocumentSummaries() });
+  const open = researchLibraryState.chainId === chain.chain_id;
+  const flagged = asArray(progress.flagged_for_reassessment);
+  const nextStage = progress.stages.find(stage => stage.stage === progress.next_stage);
+  const tone = progress.complete ? "rl-tone-ok" : flagged.length ? "rl-tone-blocked" : progress.delivered_stages ? "rl-tone-active" : "rl-tone-idle";
+  const stateLabel = progress.complete ? "three stages delivered"
+    : flagged.length ? `${flagged.length} stage${flagged.length === 1 ? "" : "s"} stale`
+      : nextStage ? `next: ${nextStage.label}` : "not started";
+  const flaggedLabels = progress.stages
+    .filter(stage => flagged.includes(stage.stage))
+    .map(stage => stage.label);
+  return `
+    <article class="rl-chain${open ? " is-open" : ""}${progress.complete ? " is-complete" : ""}" data-rl-chain="${escapeHtml(chain.chain_id)}" data-rl-chain-state="${progress.complete ? "complete" : flagged.length ? "stale" : progress.delivered_stages ? "in_progress" : "not_started"}" data-rl-chain-complete="${progress.complete ? "true" : "false"}" data-rl-ready-for-synthesis="${progress.ready_for_synthesis ? "true" : "false"}">
+      <div class="rl-chain-row">
+        <button class="rl-chain-toggle" type="button" data-rl-chain-toggle="${escapeHtml(chain.chain_id)}" aria-expanded="${open ? "true" : "false"}" aria-controls="rl-chain-body-${escapeHtml(chain.slug || chain.chain_id)}">
+          <span class="rl-chain-name">${escapeHtml(chain.factor_label || chain.title)}</span>
+          <span class="rl-chain-id">${escapeHtml(chain.factor_id || "")} | ${escapeHtml(chain.chain_id)}</span>
+        </button>
+        ${researchLibraryChainStepStrip(lib, progress)}
+        <span class="rl-chain-count" data-rl-chain-count="${progress.delivered_stages}/${progress.total_stages}">${progress.delivered_stages} of ${progress.total_stages}</span>
+        <span class="rl-pill ${tone}" data-rl-chain-pill="true">${escapeHtml(stateLabel)}</span>
+        <span class="rl-chain-chevron" aria-hidden="true">${open ? "-" : "+"}</span>
+      </div>
+      ${flagged.length ? `
+        <p class="rl-chain-stale" data-rl-chain-stale="true">${escapeHtml(flaggedLabels.join(" and "))} judged an earlier version of the parent stage. Rerun ${escapeHtml(flaggedLabels.length === 1 ? "that stage" : "those stages")} in order before this chain can count.</p>
+      ` : ""}
+      ${open ? `
+        <div class="rl-chain-body" id="rl-chain-body-${escapeHtml(chain.slug || chain.chain_id)}" data-rl-chain-body="${escapeHtml(chain.chain_id)}">
+          <p class="rl-muted">${escapeHtml(chain.summary || "")}</p>
+          <div class="rl-chain-meta">
+            <span data-rl-chain-progress="${escapeHtml(chain.chain_id)}">${progress.delivered_stages} of ${progress.total_stages} stages delivered</span>
+            <span data-rl-chain-next="${escapeHtml(progress.next_stage || "none")}">next ${escapeHtml(nextStage ? nextStage.label : "none")}</span>
+            <span data-rl-chain-ready="${progress.complete ? "true" : "false"}">chain complete: ${progress.complete ? "yes" : "no"}</span>
+            <span>${escapeHtml(chain.dispatch && chain.dispatch.state === "dispatched" ? `dispatched under ${chain.dispatch.task_id}` : "not dispatched")}</span>
+          </div>
+          <p class="rl-muted">${escapeHtml(progress.note)}</p>
+          <div class="rl-stage-list" data-rl-stage-list="${escapeHtml(chain.chain_id)}">
+            ${progress.stages.map(stage => researchLibraryChainStageCard(lib, chain, stage)).join("")}
+          </div>
+        </div>
+      ` : ""}
+    </article>
+  `;
+}
+
+function researchLibraryChainBoard(lib, catalog, asset) {
   const topics = lib.listTopics(catalog, asset.asset);
   if (!topics.length) return "";
   const topic = topics.find(entry => entry.topic_id === researchLibraryState.topicId) || topics[0];
   researchLibraryState.topicId = topic.topic_id;
-  const progress = researchLibraryTopicState(lib, topic);
-  const progressByStage = new Map(progress.stages.map(stage => [stage.stage, stage]));
-  const setupCompleted = progress.stages.length === 3;
-  const researchDelivered = progressByStage.get("research")?.state === "delivered";
-  const adjudicationCompleted = progressByStage.get("adjudication")?.state === "delivered";
-  const factors = lib.listFactors(catalog, asset.asset);
-  const factorLabels = asArray(topic.factor_ids).map(factorId => {
-    const factor = factors.find(entry => entry.factor_id === factorId);
-    return factor ? `${factorId} (${factor.label})` : factorId;
-  });
-  const overlaps = asArray(topic.overlaps).map(id => {
-    const other = lib.topicById(catalog, id);
-    return other ? other.title : id;
-  });
+  const chains = lib.factorChainsForTopic(catalog, topic.topic_id);
+  const documents = { documents: researchLibraryDocumentSummaries() };
+  const active = chains.find(chain => chain.chain_id === researchLibraryState.chainId) || chains[0];
+  if (active) {
+    researchLibraryState.chainId = active.chain_id;
+    researchLibraryMergeHosted(active.chain_id);
+  }
+  const complete = chains.filter(chain => lib.chainProgress(chain, documents).complete).length;
   return `
     <section class="rl-topic-page" data-rl-topic-page="${escapeHtml(topic.topic_id)}">
       <article class="detail-panel wide-panel rl-head-card" data-rl-topic-head="true">
         <div class="research-section-head">
           <div>
-            <p class="eyebrow">Topic · three stages</p>
+            <p class="eyebrow">Topic - one chain per factor</p>
             <h3>${escapeHtml(topic.title)}</h3>
           </div>
           <p class="research-panel-copy">${escapeHtml(topic.summary || "")}</p>
         </div>
-        <p class="rl-muted">Factor entries: ${escapeHtml(factorLabels.join(", "))}</p>
-        ${overlaps.length ? `<p class="rl-muted">Interacts with: ${escapeHtml(overlaps.join("; "))}</p>` : ""}
         <div class="rl-topic-meta">
-          <span data-rl-topic-progress="${escapeHtml(topic.topic_id)}">${progress.delivered_stages} of ${progress.total_stages} stages delivered</span>
-          <span data-rl-next-stage="${escapeHtml(progress.next_stage || "none")}">next ${escapeHtml(progress.next_stage || "none")}</span>
-          <span data-rl-ready-for-synthesis="${progress.ready_for_synthesis}">ready for central synthesis: ${progress.ready_for_synthesis ? "yes" : "no"}</span>
+          <span data-rl-topic-progress="${escapeHtml(topic.topic_id)}">${complete} of ${chains.length} chains complete</span>
           <span>${escapeHtml(topic.dispatch && topic.dispatch.state === "dispatched" ? `dispatched under ${topic.dispatch.task_id}` : "not dispatched")}</span>
+          <span>${topic.factor_ids.length} factor${topic.factor_ids.length === 1 ? "" : "s"} in this topic</span>
         </div>
-        <div class="rl-programme-labels" data-rl-programme-labels="true">
-          <span><strong>setup completed</strong> ${setupCompleted ? "Yes" : "No"}</span>
-          <span><strong>research delivered</strong> ${researchDelivered ? "Yes" : "No"}</span>
-          <span><strong>adjudication completed</strong> ${adjudicationCompleted ? "Yes" : "No"}</span>
-          <span><strong>empirically validated</strong> No</span>
-        </div>
-        <p class="rl-muted" data-rl-topic-note="true">${escapeHtml(progress.note)}</p>
         <p class="rl-muted">Next step: ${escapeHtml(topic.next_step || "")}</p>
       </article>
-      <div class="rl-stage-list" data-rl-stage-list="true">
-        ${progress.stages.map(stage => researchLibraryTopicStageCard(lib, topic, stage)).join("")}
+      <div class="rl-chain-list" data-rl-chain-list="true">
+        ${chains.map(chain => researchLibraryChainRow(lib, chain)).join("")}
       </div>
     </section>
   `;
 }
 
-// Everything technical stays here, below the workflow and clearly labelled: it supports the three stages and
-// is not the route a reader has to walk to run one.
+// The asset-level final chain is one chain too, and it is gated by the registry rather than by a parent
+// link: it stays shut until every factor chain has delivered research, red-team and adjudication against the
+// versions that are current. Its three stages are final analysis, final red-team and final adjudication.
+// When it is shut, no prompt and no upload is offered; registered results stay visible if evidence changed.
+function researchLibraryFinalChain(lib, catalog, asset) {
+  const spec = lib.finalChain(catalog, asset.asset);
+  if (!spec) return "";
+  researchLibraryMergeHosted(spec.chain_id);
+  const status = lib.finalChainStatus(catalog, { documents: researchLibraryDocumentSummaries() });
+  const hasFinalEvidence = status.stages.some(stage => stage.document_id);
+  const renderStages = status.unlocked || hasFinalEvidence;
+  const percent = status.factors_total ? Math.round((status.factors_complete / status.factors_total) * 100) : 0;
+  const pendingLabels = status.pending.map(entry => {
+    const chain = lib.factorChainForFactor(catalog, entry.factor_id);
+    return {
+      label: chain ? (chain.factor_label || chain.title) : entry.factor_id,
+      delivered: entry.delivered_stages,
+      total: entry.total_stages
+    };
+  });
+  return `
+    <section class="detail-panel wide-panel rl-final-card${status.unlocked ? " is-unlocked" : " is-locked"}" data-rl-final-chain="${escapeHtml(status.chain_id)}" data-rl-final-state="${escapeHtml(status.state)}" data-rl-final-unlocked="${status.unlocked ? "true" : "false"}" data-rl-final-gate="${status.factors_complete}/${status.factors_total}" data-rl-final-pending="${status.pending.length}" data-rl-final-delivered="${status.delivered_stages}/${status.total_stages}" data-rl-final-next="${escapeHtml(status.next_stage || "none")}">
+      <div class="rl-final-head">
+        <div>
+          <p class="eyebrow">Final chain - asset level</p>
+          <h3>${escapeHtml(spec.title)}</h3>
+        </div>
+        <span class="rl-pill ${status.unlocked ? "rl-tone-active" : "rl-tone-idle"}" data-rl-final-pill="true">${escapeHtml(status.state_label)}</span>
+      </div>
+      <p class="rl-standfirst">${escapeHtml(spec.summary || "")}</p>
+      <div class="rl-final-gate" data-rl-final-gate-panel="true">
+        <div class="rl-final-bar" role="img" aria-label="${status.factors_complete} of ${status.factors_total} factor chains complete"><span class="rl-final-bar-fill" style="width:${percent}%"></span></div>
+        <p class="rl-muted" data-rl-final-gate-text="true">${status.factors_complete} of ${status.factors_total} factor chains have all three stages against current versions. ${status.unlocked ? "The gate is open." : `Still pending: ${status.pending.length}.`}</p>
+      </div>
+      ${pendingLabels.length ? `
+        <details class="rl-final-pending" data-rl-final-pending-list="true">
+          <summary>${pendingLabels.length} factor chain${pendingLabels.length === 1 ? "" : "s"} still pending</summary>
+          <ul class="rl-list">
+            ${pendingLabels.map(entry => `<li>${escapeHtml(entry.label)}: ${entry.delivered} of ${entry.total} stages</li>`).join("")}
+          </ul>
+        </details>
+      ` : ""}
+      ${renderStages ? `
+        <p class="rl-muted" data-rl-final-stage-intro="true">${status.unlocked
+          ? "Every factor chain is complete against its current parents. Final analysis reads the registered adjudications; final red-team receives that analysis and its supporting evidence; final adjudication receives both and writes the complete candidate Layer 1 logic for an isolated backtest."
+          : "The final chain has registered evidence, but the gate is closed because a factor chain changed. The registered stages stay visible and stale results are marked; prompts and uploads return only when every factor chain is complete again."}</p>
+        <div class="rl-stage-list" data-rl-final-stage-list="true">
+          ${status.stages.map(stage => researchLibraryChainStageCard(lib, spec, stage, { controls: status.unlocked })).join("")}
+        </div>
+      ` : `
+        <p class="rl-muted" data-rl-final-locked="true">Locked. The three final stages - analysis, red-team and adjudication - do not appear until every factor chain is complete. Finish the factor chains above; the gate reads the registry, so a passing checklist or a local replay does not open it.</p>
+      `}
+    </section>
+  `;
+}
+function researchLibraryTechnicalSection(lib, catalog) {
+  return `
+    <details class="detail-panel wide-panel rl-tech-details" data-rl-technical="true">
+      <summary>Storage, asset scope and technical settings</summary>
+      <p class="rl-muted">These settings support the chains above; they are not the route. The service stores uploaded evidence and reads it back. It moves no factor status, weight, threshold or live call.</p>
+      <div class="rl-tech-grid">
+        ${researchLibraryServiceCard()}
+        <div class="rl-tech-block">${researchLibraryAssetChips(lib, catalog)}</div>
+      </div>
+    </details>
+  `;
+}
+
+
 function researchLibrarySecondaryHead() {
   return `
     <div class="rl-secondary-head" data-rl-secondary-head="true">
@@ -8347,13 +8557,10 @@ function renderResearchLibrary() {
     return;
   }
 
-  // Keep the private upload store configured for this page, and pull its records once per topic so the
-  // stage cards show what has been stored. Nothing here approves anything or moves a status.
+  // Keep the private upload store configured for this page. Each chain pulls its hosted records the first
+  // time it is drawn, so the stage cards show what has been stored. Nothing here approves anything or moves
+  // a status.
   researchLibraryConfigureHostedUpload();
-  if (researchLibraryState.hostedTopic !== researchLibraryState.topicId) {
-    researchLibraryState.hostedTopic = researchLibraryState.topicId;
-    researchLibraryMergeHosted(researchLibraryState.topicId);
-  }
 
   const catalog = lib.normalizeCatalog(researchLibraryData || {});
   if (researchLibraryData?.meta?.error || asArray(catalog.assets).length === 0) {
@@ -8387,8 +8594,8 @@ function renderResearchLibrary() {
     <article class="detail-panel wide-panel rl-head-card" data-rl-head="true">
       <div class="research-section-head">
         <div>
-          <p class="eyebrow">Research Library · ${escapeHtml(asset.label || asset.asset)}</p>
-          <h3>Topics with three stages, and the evidence register behind them</h3>
+          <p class="eyebrow">Research Library - ${escapeHtml(asset.label || asset.asset)}</p>
+          <h3>One chain per factor, three stages each, and a gated asset-level final analysis</h3>
         </div>
         <p class="research-panel-copy">${escapeHtml(catalog.scope_note || "")}</p>
       </div>
@@ -8409,21 +8616,20 @@ function renderResearchLibrary() {
   const body = detailFactor
     ? researchLibraryFactorDetail(lib, catalog, detailFactor)
     : [
-      researchLibraryTopicPage(lib, catalog, asset),
+      researchLibraryChainBoard(lib, catalog, asset),
+      researchLibraryFinalChain(lib, catalog, asset),
       researchLibrarySecondaryHead(),
       researchLibraryProgressCards(lib, filtered),
       researchLibraryFilterRow(lib, catalog, factors),
       researchLibraryFactorTable(lib, filtered),
       researchLibraryTaskSection(lib, catalog, asset),
-      researchLibraryEngineSection(lib, catalog, asset)
+      researchLibraryEngineSection(lib, catalog, asset),
+      researchLibraryTechnicalSection(lib, catalog)
     ].join("");
 
   panel.innerHTML = `
     <section class="rl-shell" data-rl-shell="true">
       ${head}
-      ${researchLibraryHostedAccountBar()}
-      ${researchLibraryServiceCard()}
-      ${researchLibraryAssetChips(lib, catalog)}
       ${researchLibraryTopicChips(lib, catalog, asset)}
       ${message}
       ${body}

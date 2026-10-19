@@ -326,7 +326,8 @@ if (-not $Quiet) {
     Write-Output "Potential private secret material detected:"
     $issues |
       Sort-Object Path, Line, Pattern |
-      Format-Table Path, Line, Pattern, Description -AutoSize
+      Format-Table Path, Line, Pattern, Description -AutoSize |
+      Out-String -Width 4096
   }
 }
 
