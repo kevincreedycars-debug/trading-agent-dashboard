@@ -156,8 +156,8 @@ function selfChecks() {
   if (JSON.stringify(standaloneEntries) !== JSON.stringify(expected)) {
     throw new Error('the two rail variants must offer the same entries in the same order');
   }
-  if (dashboardEntries.length !== 17) {
-    throw new Error(`the rail must offer the 17 dashboard tabs, found ${dashboardEntries.length}`);
+  if (dashboardEntries.length !== 19) {
+    throw new Error(`the rail must offer the 19 dashboard tabs, found ${dashboardEntries.length}`);
   }
   const dashboardOutbound = outboundOf(parts['rail-dashboard']);
   const standaloneOutbound = outboundOf(parts['rail-standalone']);

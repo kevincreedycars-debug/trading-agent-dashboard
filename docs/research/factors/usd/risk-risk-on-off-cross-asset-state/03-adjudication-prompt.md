@@ -64,7 +64,7 @@ Files in the checkout behind this chain, if you can reach them. They are aids, n
 ## What to return
 
 - Required content: Corrected conclusions; finding-by-finding decisions; accepted, rejected and unresolved claims; proposed treatment of the factor in the engine; inputs, transformations, timing, interactions and missing-data treatment; explicitly unvalidated parameters; required empirical tests and remaining blockers; the handoff section.
-- Return one Markdown document. Put these identifier lines at the top of the file, before the body. The dashboard writes the two document ids, versions and hashes on the stage 3 card and in the "Versions to judge" block copied with the prompt; reproduce them here and add the last line yourself:
+- Return one Markdown document. Put these identifier lines at the top of the file, before the body, and fill them from the stage card you downloaded:
 
 ```
 Reviewed chain: usd-factor-risk-risk-on-off-cross-asset-state
@@ -73,7 +73,6 @@ Reviewed document: <document id shown on the stage card you downloaded>
 Reviewed version: <version>
 Reviewed sha256: <sha256 shown on that card>
 ```
-
 - Keep it in one file. Tables, sources, hypotheses, candidate relations and appendices all belong inside that document; nothing here needs a second file, a JSON payload or a hand-built schema.
 - The dashboard records the chain, the stage and the exact version this document judged, so that metadata is not yours to assemble: pick the stage card, choose the file, upload it.
 

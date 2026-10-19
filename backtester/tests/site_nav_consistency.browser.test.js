@@ -33,13 +33,13 @@ const BAR_HREFS = ["dashboard-northstar.html", "standing-dashboard.html", "gold.
 const GROUPS = ["Operate", "Live", "Evidence", "System"];
 const RAIL_LABELS = [
   "Overview", "USD", "EUR", "Gold", "Silver", "NQ", "BTC", "WTI", "GBP", "Pair Analysis",
-  "Live Trading", "Backtest / Accuracy", "Backtest Engine", "Research Proof Map", "Factor Edge Lab",
-  "Shadow Logic Backtest", "Architecture",
+  "Live Trading", "Research Library", "Backtest / Accuracy", "Backtest Engine",
+  "Research Proof Map", "Factor Edge Lab", "Shadow Logic Backtest", "Architecture", "Live Trade Logic",
 ];
 const RAIL_TABS = [
   "overview", "USD", "EUR", "GOLD", "SILVER", "NQ", "BTC", "WTI", "GBP", "layer2",
-  "live-trading", "backtest", "backtest-engine", "research-proof-map", "factor-edge-lab",
-  "shadow-logic-backtest", "architecture",
+  "live-trading", "research-library", "backtest", "backtest-engine",
+  "research-proof-map", "factor-edge-lab", "shadow-logic-backtest", "architecture", "live-trade-logic",
 ];
 // Off the dashboard the gold entry is the gold tabs page rather than the dashboard's own gold view: that page
 // is what the label names, and its hash handling already works with no script of its own.
@@ -126,7 +126,7 @@ test("every page carries the partial's render byte for byte, in the page's own l
   } catch (error) {
     report = error.stdout || "";
   }
-  assert.match(report, /--check: 13 pages, 17 rail entries, 3 outbound, 0 change\(s\)/, "--check must find all thirteen pages current");
+  assert.match(report, /--check: 13 pages, 19 rail entries, 3 outbound, 0 change\(s\)/, "--check must find all thirteen pages current");
   assert.doesNotMatch(report, /: (refreshed|placed)$/m, "no page may still need the block written into it");
   nav.PAGES.forEach(page => {
     const source = read(page.file);
@@ -165,8 +165,8 @@ test("the partial is the navigation that was agreed, in both variants", () => {
     assert.ok(block.includes(FOOT), `the ${variant} rail must carry its foot`);
     assert.ok(block.includes('<style id="shared-nav-css">'), `the ${variant} block must carry its own styling`);
     const entries = rows(block, /<(?:button|a) class="tab-button[^"]*" (data-tab|href)="([^"]+)"[^>]*>([^<]+)<\/(?:button|a)>/g);
-    assert.deepEqual(entries.map(entry => entry[2]), RAIL_LABELS, `the ${variant} rail must offer the same seventeen labels in order`);
-    // The outbound entry is not one of the seventeen: it leaves the dashboard set, so it is a link in both
+    assert.deepEqual(entries.map(entry => entry[2]), RAIL_LABELS, `the ${variant} rail must offer the same nineteen labels in order`);
+    // The outbound entry is not one of the nineteen: it leaves the dashboard set, so it is a link in both
     // variants and the dashboard's tab binder never sees it. Both variants must carry the same one.
     assert.deepEqual(
       rows(block, /<a class="side-rail-link" href="([^"]+)" target="_top">([^<]+)<\/a>/g).map(row => [row[0], row[1]]),
@@ -227,7 +227,7 @@ test("all thirteen served pages show one bar and one rail, and every link it off
       assert.deepEqual(seen.groups, GROUPS, `${where} must group the entries the same way`);
       assert.equal(seen.foot, FOOT, `${where} must carry the rail's foot`);
       assert.equal(seen.dots, 1, `${where} must show one status dot`);
-      assert.deepEqual(seen.entries.map(entry => entry.label), RAIL_LABELS, `${where} must offer the same seventeen labels in order`);
+      assert.deepEqual(seen.entries.map(entry => entry.label), RAIL_LABELS, `${where} must offer the same nineteen labels in order`);
       assert.deepEqual(
         seen.outbound.map(entry => [entry.href, entry.label, entry.target]),
         RAIL_OUTBOUND_HREFS.map((href, index) => [href, RAIL_OUTBOUND_LABELS[index], "_top"]),

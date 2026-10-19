@@ -65,7 +65,11 @@ function harness(options) {
     if (target.includes('/auth/v1/otp')) return jsonResponse({}, 200);
     if (target.includes('/auth/v1/logout')) return jsonResponse({}, 204);
     if (target.includes('/rest/v1/research_documents')) {
-      if (method === 'GET') return jsonResponse(rows.filter(row => target.includes(encodeURIComponent(TOPIC)) ? row.topic_id === TOPIC : true));
+      if (method === 'GET') {
+        const filter = target.match(/topic_id=eq\.([^&]+)/);
+        const wanted = filter ? decodeURIComponent(filter[1]) : '';
+        return jsonResponse(rows.filter(row => !wanted || row.topic_id === wanted));
+      }
       const payload = JSON.parse(init.body);
       const row = Object.assign({ id: `row-${rows.length + 1}`, uploaded_at: '2026-10-16T00:00:00.000Z' }, payload);
       rows.push(row);
@@ -129,6 +133,7 @@ test('a stage upload stores the exact bytes under the stage path and records the
 
   const result = await adapter.uploadStage({
     topic: topic(),
+    chainId: 'usd-chain-vix-level',
     stage: redTeamStage(),
     file,
     title: 'VIX red-team return',
@@ -138,10 +143,11 @@ test('a stage upload stores the exact bytes under the stage path and records the
   });
 
   assert.equal(result.ok, true, result.message);
-  const objectPath = `${TOPIC}/2/v1-${expectedSha}.md`;
+  const objectPath = `usd-chain-vix-level/2/v1-${expectedSha}.md`;
   assert.ok(world.objects.has(objectPath), `stored object ${objectPath}`);
   assert.deepEqual(Buffer.from(world.objects.get(objectPath)), file.bytes, 'stored bytes are identical to the file');
   const row = world.rows[0];
+  assert.equal(row.topic_id, 'usd-chain-vix-level', 'the chain is the store owner, not its display topic');
   assert.equal(row.stage, 2);
   assert.equal(row.version, 1);
   assert.equal(row.sha256, expectedSha);
@@ -150,21 +156,50 @@ test('a stage upload stores the exact bytes under the stage path and records the
   assert.match(row.notes, /Model or session: verification session/);
 });
 
+test('a final chain stage keeps its own stage name and owner', async () => {
+  const world = harness({ signedIn: true });
+  const file = stageFile('# Final red-team return\n\nOne finding.\n');
+  const result = await adapter.uploadStage({
+    topic: { topic_id: 'usd-final-topic', title: 'USD final chain' },
+    chainId: 'usd-chain-final',
+    stage: { stage: 'final_red_team', label: 'Final red-team', document_type: 'review' },
+    file,
+    title: 'USD final red-team return',
+    model: 'session',
+    parents: { researchRef: 'final-analysis-01' },
+    onStored: async () => {}
+  });
+
+  assert.equal(result.ok, true, result.message);
+  const row = world.rows[0];
+  assert.equal(row.topic_id, 'usd-chain-final');
+  assert.equal(row.stage, 2, 'the hosted table still uses its three numeric stages');
+  assert.equal(row.kind, 'final_red_team', 'the final stage name is kept in the kind column');
+
+  let documents = { documents: [] };
+  const merged = await adapter.refresh('usd-chain-final', () => documents, next => { documents = next; });
+  assert.equal(merged, 1);
+  assert.equal(documents.documents[0].stage, 'final_red_team');
+  assert.equal(documents.documents[0].document_type, 'review');
+  assert.equal(documents.documents[0].chain_id, 'usd-chain-final');
+});
+
 test('a stored document is merged into the page registry and downloads byte-identical content', async () => {
   const world = harness({ signedIn: true });
   const file = stageFile('# Round trip\n\nBody.\n');
-  await adapter.uploadStage({ topic: topic(), stage: redTeamStage(), file, title: 'Round trip', model: 'session', parents: { researchRef: 'usd-baseline-audit-01-vix-usd-report' } });
+  await adapter.uploadStage({ topic: topic(), chainId: 'usd-chain-vix-level', stage: redTeamStage(), file, title: 'Round trip', model: 'session', parents: { researchRef: 'usd-baseline-audit-01-vix-usd-report' } });
 
   let documents = { documents: [] };
-  const merged = await adapter.refresh(TOPIC, () => documents, next => { documents = next; });
+  const merged = await adapter.refresh('usd-chain-vix-level', () => documents, next => { documents = next; });
   assert.equal(merged, 1, 'one hosted document merged');
   const hosted = documents.documents[0];
   assert.equal(hosted.hosted, true);
-  assert.equal(hosted.topic_id, TOPIC);
+  assert.equal(hosted.chain_id, 'usd-chain-vix-level');
+  assert.equal(hosted.topic_id, 'usd-chain-vix-level');
   assert.equal(hosted.stage, 'red_team');
   assert.equal(hosted.storage, 'library_object');
   assert.equal(hosted.versions[0].version, 1);
-  assert.equal(hosted.versions[0].storage_path, `${TOPIC}/2/v1-${crypto.createHash('sha256').update(file.bytes).digest('hex')}.md`);
+  assert.equal(hosted.versions[0].storage_path, `usd-chain-vix-level/2/v1-${crypto.createHash('sha256').update(file.bytes).digest('hex')}.md`);
 
   const saved = [];
   globalThis.researchLibraryDownloadBytes = (name, bytes) => saved.push({ name, bytes });
@@ -176,7 +211,7 @@ test('a stored document is merged into the page registry and downloads byte-iden
   delete globalThis.researchLibraryDownloadBytes;
 
   // The merge is idempotent: a second refresh replaces the hosted rows rather than duplicating them.
-  const mergedAgain = await adapter.refresh(TOPIC, () => documents, next => { documents = next; });
+  const mergedAgain = await adapter.refresh('usd-chain-vix-level', () => documents, next => { documents = next; });
   assert.equal(mergedAgain, 1);
   assert.equal(documents.documents.length, 1);
 });

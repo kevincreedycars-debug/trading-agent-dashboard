@@ -94,6 +94,8 @@ test("row-to-document mapping matches the research library shape", () => {
     stage: "research",
     document_type: "report",
     title: "VIX report",
+    model: "",
+    note: "first return",
     origin: "external_upload",
     storage: "library_object",
     public_download: false,

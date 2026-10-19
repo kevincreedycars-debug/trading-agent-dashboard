@@ -11,8 +11,11 @@ Read the research report and the red-team review together and produce the best-s
 
 ## Which versions you are judging
 
-- Reproduce the research document id, version and sha256, and the red-team document id, version and sha256, in the identifier lines at the top of your return.
-- If either attachment does not match the card it came from, say so and stop.
+- This stage judges two documents, and each needs its own identifier: the research return, and the red-team review of it.
+- The dashboard supplies both, one card per document: the stage 2 card carries the research document id, version and sha256, and the stage 3 card carries the red-team document id, version and sha256, shown as a prefix on the card; any "Versions to judge" block copied with this prompt, and the handoff that supplies it, carries the same six values with the sha256 in full. Reproduce them in the identifier lines at the top of your return; do not assemble them yourself and do not take them from memory of another session.
+- If your session can hash a file locally (`sha256sum`, `Get-FileHash`, `certutil -hashfile`, or the equivalent), recompute the sha256 of each attached file and write whether it matches the supplied value. If an attachment does not match the identifier supplied for it, say so and stop.
+- If your session has no hashing tool, write plainly that the hashes were taken from the dashboard and were not independently recomputed in this session. Do not claim a verification you did not perform, and do not present the card's value as something you confirmed.
+- If either attachment is missing, say so and stop.
 
 ## How to decide
 
@@ -34,13 +37,14 @@ Read the research report and the red-team review together and produce the best-s
 
 ## The line this stage must not cross
 
-Research accepted for synthesis is not a validated trading rule. This stage proposes; it does not implement, score, deploy or change a live call, and it asserts no performance figure it has not measured.
+Research accepted for synthesis is not a validated trading rule. This stage proposes; it does not implement, score, deploy or change a live call, and it asserts no performance figure it has not measured. A recommendation is not a change and is required content: which series and resolution the collector should record, with what vintage and history handling, and how a future engine should treat this factor, all belong in sections 4, 5 and 7. What is forbidden is making the change, presenting it as agreed or scheduled, or claiming that anything in the live engine, a workflow, the dashboard, the feed, the dispatcher or the database has already been changed.
 
 ## The session this is written for
 
 - **Session**: 05:00 Europe/London to 05:00 Europe/London on the next local date. Both ends are London wall-clock times one local date apart, so every eligible session is exactly 24 hours. The contract is `docs/research/usd-session/v1/session_contract_v1.json`.
+- **Starts and ends**: a session starts on a Monday-to-Friday London local date only. A Saturday or Sunday start is never a session; the Saturday start is the only one that can contain a London daylight-saving transition, which is why every eligible session is exactly 24 hours (`backtester/lib/usd_session_engine_interface.js`, `SESSION_CONTRACT`, `session_start_rule`). A Friday session therefore ends at the 05:00 London endpoint on the Saturday. When the endpoint value does not exist, record the session as not evaluable and leave the value missing: never fill it from a Friday close, a Monday open, an interpolation or a later revision, and never quote a number whose window you cannot name.
 - **Label instrument**: proposed as DXY and UNVERIFIED. No intraday dollar-index print exists in this repository or in the live collector, and no quote source is committed. Never present another instrument as DXY: if a source is about EUR/USD, a basket, the broad trade-weighted index or a futures contract, name that instrument in the same sentence, and say whether its window is a close-to-close day, an intraday slice or something else.
-- **The deployed engine is not this window**: it cuts off at 09:30 America/New_York and ends at the next 16:00 ET close, a median 30.5 elapsed hours. It overlaps the corrected session for about 14.5 nominal hours and leaves the session's first 9.5 hours unmeasured. Say which window every number belongs to.
+- **The deployed engine is not this window, and its timing is read from the code that defines it, never from memory or from a document**: the stored live calls were attached to the window resolved by the repository's own Phase 1 contract - a 09:30 America/New_York open on the call date to the 16:00 America/New_York close of the next date that has a value, sliding up to three days when the scheduled close has none (`getPhase1OutcomeWindow` in `backtester/lib/timeframe_windows.js`, applied in `backtester/lib/usd24h/outcomes.js`, whose own note calls it a nominal 24-hour horizon rather than 24 elapsed hours and which records `measured_elapsed_hours` per row). The "median 30.5 elapsed hours" figure is a measurement on the closed study's own 583 evaluable rows, recorded under `contract_vs_deployed_engine` in `docs/research/usd-session/v1/session_contract_v1.json`: it is a property of that study, not a declared property of the live engine, and it must be attributed that way every time it is quoted. The same block measures the overlap of that study's interval with this session as 14.5 hours on 528 rows and 15.5 hours on 55 rows - the two weeks a year when New York has changed and London has not - and the session's first 9.5 hours (8.5 in those weeks) as uncovered. Those figures are measured and date-dependent: they are not to be derived by subtracting a fixed London-to-New-York offset, and any comparison of a London-anchored window with a New-York-anchored one must be resolved per date from declared transitions. The archive's "next valid trading session" means the next date with an available value, not a holiday-aware exchange calendar, and the engine does not model market holidays. If the code and a document disagree about the live engine's timing, the code is the authority; report the disagreement rather than repeating the document.
 
 ## The factor entry this chain is evidence for
 
@@ -82,7 +86,7 @@ Where you are uncertain, say so and give the reason; an unresolved question is a
 State effects that are already in the price at the cutoff rather than counting them again as predictive.
 Treat the deployed weights, thresholds and signs as a baseline to audit, never as evidence for your claim.
 Name the instrument a claim is really about. Never present another instrument as DXY.
-No production, workflow, dashboard, feed, dispatcher, database or configuration change is authorised by this prompt, and none may be proposed as part of the deliverable.
+Recommending data the collector should record and a treatment a future engine should apply is required content, not a change being made. No production, workflow, dashboard, feed, dispatcher, database or configuration change is authorised by this prompt, none may be carried out now, and none may be reported as done or as agreed.
 
 ## What happens after you return it
 

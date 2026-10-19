@@ -588,7 +588,7 @@ test("the VIX factor chain reads research delivered, red-team awaiting a file an
   const byStage = new Map(progress.stages.map(stage => [stage.stage, stage]));
   const research = byStage.get("research");
   assert.equal(research.state, "delivered");
-  assert.equal(research.state_label, "Uploaded");
+  assert.equal(research.state_label, "Delivered");
   assert.equal(research.document_id, "usd-baseline-audit-01-vix-usd-report");
   assert.equal(research.version, 1);
   assert.equal(research.sha256, "e4151937411eb1e9235c21e4942327b2d24486e405887d70a90a8f5367eb381d");

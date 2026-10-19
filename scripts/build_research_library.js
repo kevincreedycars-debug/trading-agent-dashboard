@@ -1133,20 +1133,6 @@ function returnSection(chain, stageId) {
     lines.push('Reviewed version: <version>');
     lines.push('Reviewed sha256: <sha256 shown on that card>');
     lines.push('```');
-  } else {
-    lines.push('- Return one Markdown document. Put these identifier lines at the top of the file, before the body. The dashboard writes the two document ids, versions and hashes on the stage 3 card and in the "Versions to judge" block copied with the prompt; reproduce them here and add the last line yourself:');
-    lines.push('');
-    lines.push('```');
-    lines.push(`Reviewed topic: ${topic.topic_id}`);
-    lines.push('Judged research document: <the research document id the dashboard supplies>');
-    lines.push('Judged research version: <the research version the dashboard supplies>');
-    lines.push('Judged research sha256: <the research sha256 the dashboard supplies>');
-    lines.push('Judged red-team document: <the red-team document id the dashboard supplies>');
-    lines.push('Judged red-team version: <the red-team version the dashboard supplies>');
-    lines.push('Judged red-team sha256: <the red-team sha256 the dashboard supplies>');
-    lines.push('Attachment hashes recomputed in this session: <yes, with the command you used, or no>');
-    lines.push('```');
-    lines.push('');
   }
   lines.push('- Keep it in one file. Tables, sources, hypotheses, candidate relations and appendices all belong inside that document; nothing here needs a second file, a JSON payload or a hand-built schema.');
   lines.push(chain.factor_id

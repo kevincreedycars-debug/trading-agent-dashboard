@@ -245,8 +245,8 @@ async function main() {
     assert.deepEqual(stages.map(entry => entry.stage), ["research", "red_team", "adjudication"]);
     assert.deepEqual(stages.map(entry => entry.state), ["delivered", "awaiting_upload", "not_started"],
       "initial stage display must be research delivered, red-team awaiting the file, adjudication not started");
-    assert.equal(stages[0].pill, "Uploaded");
-    assert.equal(stages[1].pill, "Ready to run");
+    assert.equal(stages[0].pill, "Delivered");
+    assert.equal(stages[1].pill, "Awaiting upload");
     assert.ok(stages[0].text.includes(VIX_RESEARCH_DOCUMENT), "stage 1 must name its registered document");
     assert.ok(stages[0].text.includes("sha256 e4151937411e"), "and the hash the reader will see verified");
     assert.ok(stages[1].text.includes(VIX_RESEARCH_DOCUMENT) && stages[1].text.includes("v1"),
@@ -260,7 +260,7 @@ async function main() {
 
     // Stage 1 copies the whole dispatched VIX assignment, and never the legacy reviewer task.
     await page.click("[data-rl-stage='research'] [data-rl-copy-stage-prompt]");
-    await page.waitForFunction(() => (document.querySelector("[data-rl-message]")?.textContent || "").includes("copied"));
+    await page.waitForFunction(() => (document.querySelector("[data-rl-message]")?.textContent || "").includes("Research prompt for"));
     const researchPrompt = await page.evaluate(() => navigator.clipboard.readText());
     assert.ok(researchPrompt.startsWith("# F1 VIX level and risk regime - live.f1-vix-level - stage 1 of 3: Research"), "the copied prompt must be the VIX factor-chain assignment");
     assert.ok(researchPrompt.includes("USD-BASELINE-AUDIT-01"), "the dispatched task is named");
@@ -273,14 +273,14 @@ async function main() {
 
     // Stage 2 copies the red-team assignment; stage 3 the adjudication assignment.
     await page.click("[data-rl-stage='red_team'] [data-rl-copy-stage-prompt]");
-    await page.waitForFunction(() => (document.querySelector("[data-rl-message]")?.textContent || "").includes("Red-team instruction"));
+    await page.waitForFunction(() => (document.querySelector("[data-rl-message]")?.textContent || "").includes("Red-team prompt for"));
     const redTeamPrompt = await page.evaluate(() => navigator.clipboard.readText());
     assert.ok(redTeamPrompt.startsWith("# F1 VIX level and risk regime - live.f1-vix-level - stage 2 of 3: Red-team"));
     assert.ok(redTeamPrompt.includes("## Independence rules"));
     assert.ok(redTeamPrompt.includes("SUPPORTED"));
     assert.ok(redTeamPrompt.includes("Reviewed document:"), "the return names the factor chain and the registered version it judges");
     await page.click("[data-rl-stage='adjudication'] [data-rl-copy-stage-prompt]");
-    await page.waitForFunction(() => (document.querySelector("[data-rl-message]")?.textContent || "").includes("Adjudication instruction"));
+    await page.waitForFunction(() => (document.querySelector("[data-rl-message]")?.textContent || "").includes("Adjudication prompt for"));
     const adjudicationPrompt = await page.evaluate(() => navigator.clipboard.readText());
     assert.ok(adjudicationPrompt.includes("## What the adjudication must contain"));
     assert.ok(adjudicationPrompt.includes("Handoff to central USD synthesis"));
