@@ -1,10 +1,10 @@
 {
-  "status": "success",
-  "last_run_started_at": "2026-10-20T04:17:52.288Z",
-  "last_run_finished_at": "2026-10-20T04:17:52.288Z",
+  "status": "failed",
+  "last_run_started_at": "2026-10-20T17:47:29.089Z",
+  "last_run_finished_at": "2026-10-20T17:47:29.089Z",
   "triggered_by": "dashboard_or_manual",
-  "message": "Manual Refresh Complete",
-  "failed_step": null,
+  "message": "Master Orchestrator finished with errors.",
+  "failed_step": "Silver Collector",
   "steps": [
     {
       "name": "Call '1. Economic Events Collector'",
@@ -32,7 +32,8 @@
     },
     {
       "name": "Silver Collector",
-      "status": "success"
+      "status": "failed",
+      "error": "The resource you are requesting could not be found"
     },
     {
       "name": "USD Layer 1 Agent",
@@ -71,5 +72,8 @@
       "status": "success"
     }
   ],
-  "error": null
+  "error": {
+    "step": "Silver Collector",
+    "reason": "The resource you are requesting could not be found"
+  }
 }
