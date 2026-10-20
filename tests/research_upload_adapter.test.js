@@ -63,6 +63,17 @@ function harness(options) {
     const method = String((init && init.method) || 'GET').toUpperCase();
     calls.push(`${method} ${target}`);
     if (target.includes('/auth/v1/otp')) return jsonResponse({}, 200);
+    if (target.includes('/auth/v1/token?grant_type=password')) {
+      const payload = JSON.parse(init.body);
+      if (payload.password !== settings.password) return jsonResponse({ error: 'invalid_grant' }, 400);
+      return jsonResponse({
+        access_token: fakeJwt(USER_ID),
+        refresh_token: 'refresh-demo',
+        token_type: 'bearer',
+        expires_in: 3600,
+        user: { id: USER_ID }
+      }, 200);
+    }
     if (target.includes('/auth/v1/logout')) return jsonResponse({}, 204);
     if (target.includes('/rest/v1/research_documents')) {
       if (method === 'GET') {
@@ -112,11 +123,13 @@ function redTeamStage() {
   return { stage: 'red_team', label: 'Red-team', document_type: 'review' };
 }
 
-test('the account bar asks for an email when signed out and offers sign-out when signed in', async () => {
+test('the account bar asks for an email and a password when signed out and offers sign-out when signed in', async () => {
   harness({ signedIn: false });
   const signedOut = adapter.accountBarHtml();
   assert.match(signedOut, /data-rl-account-signin/);
   assert.match(signedOut, /data-rl-account-email/);
+  assert.match(signedOut, /data-rl-account-password/);
+  assert.match(signedOut, /data-rl-account-password-signin/);
   assert.doesNotMatch(signedOut, /data-rl-account-signout/);
 
   harness({ signedIn: true });
@@ -124,6 +137,26 @@ test('the account bar asks for an email when signed out and offers sign-out when
   assert.match(signedIn, /data-rl-account-signout/);
   assert.doesNotMatch(signedIn, /data-rl-account-signin/);
   assert.match(signedIn, /Signed in/);
+});
+
+test('signing in from the account bar with a password turns the bar into a signed-in session', async () => {
+  harness({ signedIn: false, password: 'owner-password' });
+  assert.equal(adapter.signedIn(), false);
+
+  const scope = {
+    querySelector: selector => selector === '[data-rl-account-email]'
+      ? { value: 'owner@example.com' }
+      : selector === '[data-rl-account-password]' ? { value: 'owner-password' } : null
+  };
+  const button = {
+    closest: selector => (selector === '[data-rl-account]' ? scope
+      : selector === '[data-rl-account-password-signin]' ? {} : null)
+  };
+
+  const handled = await adapter.handleAccountAction(button);
+  assert.equal(handled, true);
+  assert.equal(adapter.signedIn(), true, 'a correct password produces a session');
+  assert.match(adapter.accountBarHtml(), /Signed in/);
 });
 
 test('a stage upload stores the exact bytes under the stage path and records the parent', async () => {
@@ -153,6 +186,7 @@ test('a stage upload stores the exact bytes under the stage path and records the
   assert.equal(row.sha256, expectedSha);
   assert.equal(row.storage_path, objectPath);
   assert.equal(row.uploaded_by, USER_ID);
+  assert.equal(row.original_filename, 'red-team-return.md', 'the uploaded file name is recorded for the card and the download');
   assert.match(row.notes, /Model or session: verification session/);
 });
 
@@ -238,7 +272,7 @@ test('an upload without a signed-in session is refused in plain words', async ()
   harness({ signedIn: false });
   const result = await adapter.uploadStage({ topic: topic(), stage: redTeamStage(), file: stageFile('# x\n'), title: 'x', model: 'session' });
   assert.equal(result.ok, false);
-  assert.match(result.message, /Sign in with your email link/);
+  assert.match(result.message, /Sign in with your email/);
 });
 
 test('a later stage records the registered parent it follows and refuses an upload without one', async () => {

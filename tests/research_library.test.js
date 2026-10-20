@@ -399,6 +399,7 @@ test("an authenticated upload round-trips byte for byte and appears in the manif
     assert.equal(entry.latest_sha256, sha256(content));
     assert.equal(entry.public_download, false);
     assert.equal(entry.task_id, "USD-SESSION-A1");
+    assert.equal(entry.original_filename, "a1.json", "the manifest names the file the reader registered");
 
     const exportPayload = await (await fetch(`${base}/export`, { headers: { Authorization: "Bearer test-token-0123456789" } })).json();
     assert.equal(exportPayload.download_references.some(reference => reference.document_id === "usd-session-a1-return"), true);
@@ -426,6 +427,13 @@ test("the service answers an unknown route and a bad body rather than guessing",
     const badPayload = await fetch(`${base}/documents`, { method: "POST", headers, body: JSON.stringify({ document_id: "x" }) });
     assert.equal(badPayload.status, 400);
     assert.ok((await badPayload.json()).problems.length >= 3);
+    // The client turns that problem list into a readable refusal rather than a pasted JSON body.
+    const client = ResearchLibrary.createServiceClient({ endpoint: base, token: "test-token-0123456789" });
+    await assert.rejects(() => client.upload({ document_id: "x" }), error => {
+      assert.ok(error.message.includes("document_type must be one of"), error.message);
+      assert.ok(!error.message.includes('{"ok":false'), "the refusal must not be a raw body");
+      return true;
+    });
   } finally {
     await new Promise(resolve => service.server.close(resolve));
   }
@@ -699,6 +707,7 @@ test("the store records the chain, the stage and the exact version a stage judge
   const review = store.registerUpload({
     document_id: "vix-stage-2", asset: "USD", factor_id: "live.f1-vix-level", stage: "red_team", document_type: "review",
     title: "Red-team", model: "Astra review", parent_document_id: "vix-stage-1", parent_version: 1,
+    original_filename: "VIX_USD_RedTeam_Review_v1.md",
     content_text: "# review\n"
   }, catalog);
   assert.equal(review.document.chain_id, chain.chain_id, "a chain-only upload records the factor from the chain");
@@ -729,6 +738,7 @@ test("the store records the chain, the stage and the exact version a stage judge
   assert.equal(manifestEntry.stage, "red_team");
   assert.equal(manifestEntry.chain_id, chain.chain_id);
   assert.equal(manifestEntry.parent_version, 1);
+  assert.equal(manifestEntry.original_filename, "VIX_USD_RedTeam_Review_v1.md", "the manifest keeps the registered filename");
   assert.equal(store.readObject("vix-stage-1", 1).version.sha256, research.sha256);
 });
 
@@ -872,3 +882,59 @@ test("the final chain records its input package and flags stale downstream resul
   assert.deepEqual(stale.flagged_for_reassessment, ["final_analysis", "final_red_team", "final_adjudication"]);
   assert.ok(stale.stale_inputs.some(entry => entry.document_id === changed.document_id && entry.current_version === 2));
 });
+
+// A hosted stage return is owned by the chain it was stored under, while a committed registry document names
+// its factor. Both must resolve to the same chain, and neither may be counted for a different one.
+test("a chain reads its registry documents by factor and its hosted rows by chain id", () => {
+  const catalog = {
+    assets: [{ asset: "USD", factors: [{ factor_id: "live.f1-vix-level", label: "VIX level" }] }],
+    factor_chains: [{
+      chain_id: "usd-factor-live-f1-vix-level",
+      factor_id: "live.f1-vix-level",
+      asset: "USD",
+      topic_id: "usd-topic-vix-level-and-risk-regime",
+      title: "VIX level",
+      stages: [
+        { stage: "research", order: 1, label: "Research", document_type: "report", parent_stage: null },
+        { stage: "red_team", order: 2, label: "Red-team", document_type: "review", parent_stage: "research" },
+        { stage: "adjudication", order: 3, label: "Adjudication", document_type: "synthesis", parent_stage: "red_team" }
+      ]
+    }]
+  };
+  const chain = ResearchLibrary.listFactorChains(catalog, "USD")[0];
+  const registryDocument = {
+    document_id: "usd-baseline-audit-01-vix-usd-report",
+    factor_id: "live.f1-vix-level",
+    stage: "research",
+    document_type: "report",
+    storage: "library_object",
+    versions: [{ version: 1, sha256: "a".repeat(64), bytes: 10, registered_at: "2026-10-15" }]
+  };
+  const hostedDocument = {
+    document_id: "11111111-1111-4111-8111-111111111111",
+    chain_id: chain.chain_id,
+    topic_id: chain.chain_id,
+    stage: "red_team",
+    document_type: "review",
+    storage: "library_object",
+    hosted: true,
+    parent_document_id: registryDocument.document_id,
+    parent_version: 1,
+    versions: [{ version: 1, sha256: "b".repeat(64), bytes: 12, registered_at: "2026-10-20T12:00:00Z", original_filename: "red-team.md" }]
+  };
+  const otherChain = { ...hostedDocument, document_id: "22222222-2222-4222-8222-222222222222", chain_id: "usd-factor-other", topic_id: "usd-factor-other" };
+  const documents = { documents: [registryDocument, hostedDocument, otherChain] };
+
+  const found = ResearchLibrary.chainDocuments(documents, chain).map(document => document.document_id);
+  assert.deepEqual(found, [registryDocument.document_id, hostedDocument.document_id]);
+
+  const research = ResearchLibrary.chainStageState(chain, "research", documents, catalog);
+  assert.equal(research.state, "delivered");
+  const redTeam = ResearchLibrary.chainStageState(chain, "red_team", documents, catalog);
+  assert.equal(redTeam.state, "delivered");
+  assert.equal(redTeam.original_filename, "red-team.md", "the uploaded file name reaches the stage card");
+  const adjudication = ResearchLibrary.chainStageState(chain, "adjudication", documents, catalog);
+  assert.equal(adjudication.state, "awaiting_upload", "the hosted red-team opens the adjudication stage");
+  assert.equal(adjudication.parent_document_id, hostedDocument.document_id, "stage three attaches the hosted red-team");
+});
+

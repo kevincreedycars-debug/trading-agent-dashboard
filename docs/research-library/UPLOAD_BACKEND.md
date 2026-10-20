@@ -1,77 +1,54 @@
 # Research upload backend
 
-This adds a private place for signed-in dashboard users to keep returned research documents. The browser uploads the original bytes, records their SHA-256 fingerprint, and later asks Supabase for a short-lived download link. Uploading research is still evidence, not approval.
+This is the private place the published dashboard keeps returned research documents in. It is provisioned and in use: a signed-in reader uploads the original bytes from the live page, the store records the SHA-256 fingerprint and the file name, and View or Download later asks Supabase for a short-lived private link and re-checks the fingerprint before anything is shown or saved. Uploading research is still evidence, not approval.
 
-## Provision it once
+## What exists
 
-1. Create the place for files. In a PowerShell session that has the project's service key, run:
+- Project `eaolqbrlywczinfordvg` (`Inputs Database`), the same project the dashboard already reads its research views from. The page carries only that project's publishable key; no service key is in the repository or the page.
+- Private bucket `research-documents`. No object in it has a public URL.
+- Table `public.research_documents`: `topic_id` (the chain id), `stage` (1, 2, 3), `version`, `title`, `kind`, `original_filename`, `sha256`, `bytes`, `storage_path`, `parent_research_id`/`parent_red_team_id` (hosted parents) or `parent_research_ref`/`parent_red_team_ref` (a parent already registered in the catalogue), `uploaded_by`, `uploaded_at`, `notes`.
+- View `public.research_documents_current` (latest row per chain and stage).
+- Membership table `public.research_members` and `public.is_research_member()`. This list is the access rule: an account that can sign in but is not on it is refused every row and every object. Only the service role can change the list, and no policy exposes it.
+- Policies: members may select and insert rows and objects they own; nobody may update or delete, so committed versions are append-only. Anonymous users are refused rows and objects.
+- `public.research_upload_backend_status()`: a metadata-only health check that reports whether the bucket exists, whether it is private and whether the table exists. It exposes no rows, paths, identities or contents.
 
-   ```powershell
-   $env:SUPABASE_SERVICE_KEY = Read-Host -AsSecureString | ConvertFrom-SecureString -AsPlainText
-   node scripts/research-upload-provision.js
-   Remove-Item Env:SUPABASE_SERVICE_KEY
-   ```
+`supabase/research-uploads.sql` is the whole one-time script. It refuses to run if it finds a conflicting table, view, function, policy, membership table or public bucket. RLS on `storage.objects` is already enabled by the platform, so the script does not alter that table.
 
-   The helper creates `research-documents` when it is missing, refuses a public bucket, and never prints the key. If local PowerShell policy does not permit the secure prompt pipeline, set the environment variable by another non-logging method; never put it in a command file or repository file.
+## Sign in
 
-2. Open the Supabase SQL editor for project `eaolqbrlywczinfordvg`, paste the whole file printed by the helper (`supabase/research-uploads.sql`), and run it once. The transaction creates the table, view, policies, and metadata-only verification function. Its opening guard stops the entire transaction if it finds a conflicting table, view, function, policy, or public bucket.
+The library header carries an account block. A reader signs in once in the browser with the owner account's email and password, or asks for an email link; the session token is kept in that browser only, and signing out drops the hosted rows from the page without touching the committed registry or the local service's records.
 
-3. Confirm the setup from this checkout:
+The owner account is `research-library@example.com`, created by the project administrator with a confirmed email address so that no inbox is needed to sign in. Its password is held by the owner and is not in this repository. To replace the address or the password, use the Supabase dashboard (Authentication → Users) or create a new account and add it to `public.research_members`.
 
-   ```powershell
-   node scripts/verify-research-upload.js
-   ```
+To add another permitted account, insert its user id:
 
-   All five lines must say `PASS`: bucket exists, bucket is private, table exists, anonymous insert is refused, and anonymous read is refused. This check reads the publishable key already present in `script.js`; it does not use a service key.
-
-4. On the dashboard, enter the permitted user's email, open the confirmation/sign-in link in the same browser, and sign in once. Email confirmation is required, so uploads remain unavailable until that link has been opened.
-
-## Two dashboard hooks for the UI session
-
-These are the two integration points on `origin/main`; the UI session should apply them while it owns `index.html` and `script.js`.
-
-First, load the upload helper next to the existing library helper. The current surrounding lines are:
-
-```html
-  <script src="lib/l2l_strategy.js?v=20261005-l2l-trade-level"></script>
-  <script src="lib/research_library.js?v=20261013-research-library-v1"></script>
-  <script src="lib/live_trading_close_request.js?v=20261016-live-trading-close-request"></script>
+```sql
+insert into public.research_members (user_id, note) values ('<uuid>', 'who this is');
 ```
 
-Add exactly this line immediately after `research_library.js`:
+## What the page does
 
-```html
-  <script src="lib/research_upload_client.js?v=20261016-research-upload-v1"></script>
-```
+- Factor-chain stages 1 to 3 upload straight to the store when a session exists. The chain id owns the version sequence, so two chains under one display topic never share a version number.
+- Stage 2 records the research row it follows and stage 3 records the research and red-team rows; a parent already registered in the catalogue is named by its catalogue document id, and a parent stored here is named by its row id.
+- The card shows the registered file name, version, hash, size, date and the private-store note. View downloads the bytes, checks them against the recorded hash and opens them; Download saves them under the uploaded file name.
+- The final chain still needs the local library service: its return records the exact factor input package, which the hosted table does not hold.
+- Refusals appear inside the upload form, with the chosen file and typed details left in place. Nothing is called registered until the store has answered with the stored row, and no refusal writes anything.
 
-Second, route the existing upload button to the Supabase adapter. The current `origin/main:script.js` call site is:
+## Messages a reader may see
 
-```js
-    const uploadSubmit = target.closest("[data-rl-upload-submit]");
-    if (uploadSubmit) {
-      researchLibraryUpload(uploadSubmit.dataset.rlUploadSubmit);
-      return;
-    }
-```
-
-After adding an adapter that converts the selected task into `topicId`, numbered `stage`, `title`, `kind`, `file`, and `parents`, replace the one call with:
-
-```js
-      researchLibraryUploadToSupabase(uploadSubmit.dataset.rlUploadSubmit);
-```
-
-The adapter should configure `window.ResearchUpload` with the existing `researchSupabaseUrl` (with `/rest/v1` removed) and existing `researchSupabaseKey`; it must not add another key. It should display each returned `message`, preserve the returned `retry` action when registration fails after storage succeeds, use `rowsToDocuments(rows)` before passing results to the existing library renderer, and use `signedUrl(row, seconds)` for both View and Download.
-
-## Messages a user may see
-
-- “Sign in with your email link…” means no authenticated session is available in this browser. Request a link and open it in the same browser.
+- “Sign in with your email and password…” means no session exists in this browser.
 - “The upload service could not be reached…” means the browser could not contact Supabase. Check the connection and retry.
-- “These exact file contents are already stored…” means the SHA-256 uniqueness rule found the same bytes for that topic and stage. Open the existing version instead.
-- “The file could not be stored…” means no object was committed. Retry the ordinary upload after checking the connection.
-- “The file is stored, but its library record could not be saved…” means the bytes reached private storage but the table row did not. Use the offered retry; it reuses the same path and does not upload the object again.
-- “A private download link could not be created…” means the session expired or access was refused. Sign in again; if it continues, ask the owner to inspect the policies.
-- “This document has no file location…” means its database row is incomplete and needs owner attention.
+- “These exact file contents are already stored…” means the SHA-256 rule found the same bytes for that chain and stage. Open the existing version instead.
+- “The file could not be stored…” means no object was committed; nothing was recorded.
+- “The file is stored, but its library record could not be saved…” means the bytes reached private storage but the row did not; retry registration reuses the same path and does not upload the object again.
+- “A private download link could not be created…” means the session expired or access was refused. Sign in again.
+- “That email address and password were not accepted…” means the credentials are wrong; nothing is stored.
 
-## Security rules
+## Verify the provisioning
 
-The `research-documents` bucket is private. The page contains only the project's existing publishable key and never a service key. Only authenticated users may list or insert document rows, upload objects, read objects, or create expiring signed download links. Ordinary users have no update or delete policy, so committed versions are append-only. Unique constraints prevent a repeated version number and prevent the same bytes from being registered twice for one topic stage. Anonymous users cannot read or write documents or objects, and nothing in the bucket has a public URL. The anonymous metadata check reports only whether provisioning exists and is private; it exposes no rows, paths, identities, or contents.
+```powershell
+node scripts/verify-research-upload.js
+```
+
+All five lines must say `PASS`: bucket exists, bucket is private, table exists, anonymous insert is refused, anonymous read is refused. The check reads the publishable key already present in `script.js`; it never uses a service key.
+

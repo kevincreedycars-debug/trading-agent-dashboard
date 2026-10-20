@@ -448,12 +448,14 @@ async function main() {
       "the published page reads the same registry record");
     await publicPage.click("[data-rl-stage='red_team'] [data-rl-upload-toggle]");
     await publicPage.waitForSelector("[data-rl-stage='red_team'] [data-rl-stage-upload]");
-    assert.equal(await publicPage.$eval("[data-rl-stage='red_team'] [data-rl-stage-upload]", node => node.disabled), false,
-      "the published page offers the private store, so Register is available there");
-    await publicPage.click("[data-rl-stage='red_team'] [data-rl-stage-upload]");
-    await publicPage.waitForFunction(() => (document.querySelector("[data-rl-message]")?.textContent || "").includes("Choose the one Markdown file"), null, { timeout: 15000 });
-    const publicNote = await publicPage.$eval("[data-rl-stage='red_team']", node => node.textContent.replace(/\s+/g, " "));
-    assert.ok(publicNote.includes("Evidence only"), "and must say an upload is evidence, not an approval");
+    // The published page carries the private store's sign-in block, and refuses to offer registration until a
+    // session exists: the reader is told to sign in rather than being handed a button that cannot work.
+    assert.ok(await publicPage.$("[data-rl-account-card]"), "the published page carries the private-store sign-in block");
+    assert.match(await publicPage.$eval("[data-rl-account-card]", node => node.textContent), /Sign in/);
+    assert.equal(await publicPage.$eval("[data-rl-stage='red_team'] [data-rl-stage-upload]", node => node.disabled), true,
+      "a signed-out reader is asked to sign in before a register control is offered");
+    const publicNote = await publicPage.$eval("[data-rl-stage='red_team'] [data-rl-upload-form]", node => node.textContent.replace(/\s+/g, " "));
+    assert.ok(publicNote.includes("Sign in above"), "and the form says where to sign in");
     assert.equal(await publicPage.$$eval("[data-rl-view]", nodes => nodes.length), 0,
       "the stage controls are prompts, inputs, upload and result download; there is no separate view action");
     audit.publishedPageHonest = true;
@@ -552,9 +554,126 @@ async function main() {
     assert.ok(liveFeedRequests.length >= 1, "the live layer1 feed the dashboard already asks for must still be requested");
     audit.liveFeedRequests = liveFeedRequests;
 
-    // Every upload in this run went to the temporary registry and object store: the committed evidence
+    // A dashboard served from somewhere other than the service (the published page, another checkout) reads a
+    // registry copy the service never writes. That was the reported failure: the upload succeeded, the panel
+    // closed the form and kept saying "Awaiting upload" with no error. The service's manifest is now read as
+    // well, a refusal is shown in the form with the file and details kept, and the stored file is readable.
+    const staleWorkDir = fs.mkdtempSync(path.join(os.tmpdir(), "rl-stale-page-"));
+    const staleRegistryPath = path.join(staleWorkDir, "service-documents.json");
+    const staleSnapshotPath = path.join(staleWorkDir, "page-documents.json");
+    fs.copyFileSync(committedRegistryPath, staleRegistryPath);
+    fs.copyFileSync(committedRegistryPath, staleSnapshotPath);
+    const staleLibraryRoot = path.join(staleWorkDir, "library");
+    fs.cpSync(path.join(rootDir, ".local", "research-library", "objects"), path.join(staleLibraryRoot, "objects"), { recursive: true });
+    const staleService = createServiceServer({ token: TOKEN, libraryRoot: staleLibraryRoot, registryPath: staleRegistryPath, catalogPath });
+    const staleServicePort = await listenSafe(staleService.server);
+    const staleOverrides = { "/data/research-library/documents.json": staleSnapshotPath };
+    const staleServer = serveRepo([], staleOverrides);
+    const stalePort = await listenSafe(staleServer);
+    const staleBase = `http://127.0.0.1:${stalePort}`;
+    const staleContext = await browser.newContext({ viewport: { width: 1440, height: 1000 }, acceptDownloads: true });
+    const stalePage = await staleContext.newPage();
+    const staleErrors = [];
+    stalePage.on("pageerror", error => staleErrors.push(error.message));
+    try {
+      await stalePage.goto(staleBase, { waitUntil: "networkidle" });
+      await stalePage.evaluate(([endpoint, token]) => {
+        window.localStorage.setItem("research-library-service-endpoint", endpoint);
+        window.localStorage.setItem("research-library-service-token", token);
+      }, [`http://127.0.0.1:${staleServicePort}`, TOKEN]);
+      await stalePage.goto(staleBase, { waitUntil: "networkidle" });
+      await stalePage.getByRole("button", { name: "Research Library" }).click();
+      await stalePage.waitForSelector("[data-rl-shell='true']", { timeout: 20000 });
+      await stalePage.click("[data-rl-factor='live.f1-vix-level']");
+      await stalePage.waitForSelector("[data-rl-factor-stages='live.f1-vix-level'] [data-rl-stage='red_team']", { timeout: 15000 });
+      await stalePage.waitForFunction(() => document.querySelector("[data-rl-service-state]")?.getAttribute("data-rl-service-state") === "connected", null, { timeout: 15000 });
+
+      // A refusal names the missing field, and the chosen file stays in the form.
+      await stalePage.click("[data-rl-factor-stages='live.f1-vix-level'] [data-rl-stage='research'] [data-rl-upload-toggle]");
+      await stalePage.waitForSelector("[data-rl-stage='research'] [data-rl-upload-file]");
+      await stalePage.setInputFiles("[data-rl-stage='research'] [data-rl-upload-file]", researchV2File);
+      await stalePage.click("[data-rl-stage='research'] [data-rl-stage-upload]");
+      await stalePage.waitForSelector("[data-rl-stage='research'] [data-rl-upload-error]:not([hidden])");
+      const refusal = await stalePage.$eval("[data-rl-stage='research'] [data-rl-upload-error]", node => node.textContent.trim());
+      assert.ok(refusal.includes("Name the model or session"), `a refusal must name the missing field, saw: ${refusal}`);
+      assert.equal(await stalePage.$eval("[data-rl-stage='research'] [data-rl-upload-file]", node => node.files.length), 1,
+        "the chosen file must stay selected after a refusal");
+      assert.equal(await stalePage.$eval("[data-rl-stage='research']", node => node.getAttribute("data-rl-stage-state")), "delivered",
+        "a refused upload must change no stage");
+      assert.equal(JSON.parse(fs.readFileSync(staleRegistryPath, "utf8")).documents.filter(entry => entry.stage === "research").length, 1,
+        "a refused upload must write nothing");
+      audit.refusalKeepsForm = true;
+      await stalePage.click("[data-rl-stage='research'] [data-rl-upload-toggle]");
+      // The real upload: the page's registry copy cannot show it, so the service's own record must.
+      await stalePage.click("[data-rl-stage='red_team'] [data-rl-upload-toggle]");
+      await stalePage.waitForSelector("[data-rl-stage='red_team'] [data-rl-upload-file]");
+      await stalePage.setInputFiles("[data-rl-stage='red_team'] [data-rl-upload-file]", reviewFile);
+      await stalePage.fill("[data-rl-stage='red_team'] [data-rl-upload-model]", "Astra red-team (stale page test)");
+      await stalePage.click("[data-rl-stage='red_team'] [data-rl-stage-upload]");
+      await stalePage.waitForFunction(() => (document.querySelector("[data-rl-message]")?.textContent || "").includes("registered as"), null, { timeout: 20000 });
+      await stalePage.waitForFunction(() => document.querySelector("[data-rl-stage='red_team']")?.getAttribute("data-rl-stage-state") === "delivered", null, { timeout: 20000 });
+      const staleMessage = await stalePage.$eval("[data-rl-message]", node => node.textContent.trim());
+      assert.ok(staleMessage.includes("registry copy"), "the page must say its registry copy is not the one the service wrote");
+      assert.equal(await stalePage.$eval("[data-rl-stage='red_team'] [data-rl-stage-filename]", node => node.textContent.trim()), "vix-red-team-review.md",
+        "the registered filename must be shown back on the stage card");
+      const staleRecord = JSON.parse(fs.readFileSync(staleRegistryPath, "utf8")).documents.find(entry => entry.stage === "red_team");
+      assert.equal(staleRecord.parent_document_id, VIX_RESEARCH_DOCUMENT, "the stored review must name the VIX research document");
+      assert.equal(staleRecord.parent_version, 1);
+      assert.equal(staleRecord.parent_sha256, VIX_RESEARCH_SHA);
+      assert.equal(staleRecord.versions[0].original_filename, "vix-red-team-review.md");
+      assert.equal(staleRecord.versions[0].sha256, sha256(reviewContent));
+
+      // Download is offered from the delivered card, under the name the reader selected, with the stored bytes.
+      const staleWait = stalePage.waitForEvent("download");
+      await stalePage.click(`[data-rl-stage='red_team'] [data-rl-download='${staleRecord.document_id}']`);
+      const staleDownload = await staleWait;
+      assert.equal(staleDownload.suggestedFilename(), "vix-red-team-review.md");
+      const stalePath = path.join(staleWorkDir, "stale-download.md");
+      await staleDownload.saveAs(stalePath);
+      assert.equal(sha256(fs.readFileSync(stalePath)), sha256(reviewContent));
+
+      // Stage 3 names the red-team review as the input it judges, and downloads it under its stored name.
+      const stage3Input = await stalePage.$eval("[data-rl-factor-stages='live.f1-vix-level'] [data-rl-stage='adjudication']", node => ({
+        input: node.getAttribute("data-rl-stage-input"),
+        version: node.getAttribute("data-rl-stage-input-version"),
+        hash: node.getAttribute("data-rl-stage-input-hash")
+      }));
+      assert.deepEqual(stage3Input, {
+        input: staleRecord.document_id,
+        version: "1",
+        hash: sha256(reviewContent)
+      }, "stage 3 must retrieve the red-team review registered in the private store");
+      const stage3Wait = stalePage.waitForEvent("download");
+      await stalePage.click(`[data-rl-stage='adjudication'] [data-rl-download='${staleRecord.document_id}']`);
+      const stage3Download = await stage3Wait;
+      assert.equal(stage3Download.suggestedFilename(), "vix-red-team-review.md", "stage 3 must download the stored review");
+      // Acceptance is untouched: the factor still reads research ready, review pending, backtest not tested.
+      const staleFactorRow = await stalePage.$eval("[data-rl-factor-table] [data-rl-factor='live.f1-vix-level']", node => node.textContent.replace(/\s+/g, " ").trim());
+      ["Ready", "Pending", "Not tested"].forEach(label => assert.ok(staleFactorRow.includes(label), `the factor's ${label} status must be unchanged, saw: ${staleFactorRow}`));
+      assert.equal(await stalePage.$eval("[data-rl-final-chain]", node => node.getAttribute("data-rl-final-unlocked")), "false", "the final chain gate stays shut");
+
+      // A reload keeps the stage delivered, because the service manifest is read again.
+      await stalePage.reload({ waitUntil: "networkidle" });
+      await stalePage.getByRole("button", { name: "Research Library" }).click();
+      await stalePage.waitForSelector("[data-rl-shell='true']", { timeout: 20000 });
+      await stalePage.click("[data-rl-factor='live.f1-vix-level']");
+      await stalePage.waitForSelector("[data-rl-factor-stages='live.f1-vix-level'] [data-rl-stage='red_team']", { timeout: 15000 });
+      await stalePage.waitForFunction(() => document.querySelector("[data-rl-stage='red_team']")?.getAttribute("data-rl-stage-state") === "delivered", null, { timeout: 20000 });
+      assert.equal(await stalePage.$eval("[data-rl-stage='red_team'] [data-rl-stage-filename]", node => node.textContent.trim()), "vix-red-team-review.md",
+        "the filename must survive a reload");
+      assert.deepEqual(staleErrors, [], `stale-page errors: ${staleErrors.join(" | ")}`);
+      audit.stalePageManifest = { document_id: staleRecord.document_id, parent: staleRecord.parent_document_id, parent_version: staleRecord.parent_version };
+    } finally {
+      await staleContext.close();
+      await new Promise(resolve => staleService.server.close(resolve));
+      await new Promise(resolve => staleServer.close(resolve));
+    }
+
+    // Every upload in this run went to a temporary registry and object store: the committed evidence
     // records, and their hashes, are exactly what they were.
     assert.equal(sha256(fs.readFileSync(committedRegistryPath)), committedRegistryHash, "the committed registry must not change");
+    assert.equal(JSON.parse(fs.readFileSync(committedRegistryPath, "utf8")).documents.length, committedRegistry.documents.length);
+
     assert.equal(JSON.parse(fs.readFileSync(committedRegistryPath, "utf8")).documents.length, committedRegistry.documents.length);
     assert.deepEqual(pageErrors, [], `page errors: ${pageErrors.join(" | ")}`);
   } finally {

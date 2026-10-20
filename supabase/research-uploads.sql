@@ -29,6 +29,14 @@ begin
     raise exception 'public.research_documents_current already exists; inspect it before running this one-time script';
   end if;
 
+  if to_regclass('public.research_members') is not null then
+    raise exception 'public.research_members already exists; inspect it before running this one-time script';
+  end if;
+
+  if to_regprocedure('public.is_research_member()') is not null then
+    raise exception 'public.is_research_member() already exists; inspect it before running this one-time script';
+  end if;
+
   select policyname into conflicting_policy
   from pg_policies
   where (schemaname, tablename, policyname) in (
@@ -71,6 +79,8 @@ create table public.research_documents (
   sha256 text not null check (sha256 ~ '^[0-9a-f]{64}$'),
   bytes bigint not null check (bytes >= 0),
   storage_path text not null unique check (storage_path ~ '^[^/]+/[123]/v[1-9][0-9]*-[0-9a-f]{64}\.md$'),
+  -- The name of the file the reader actually uploaded, so the card and the download can show it back.
+  original_filename text not null default '' check (original_filename !~ '[/\\]'),
   uploaded_by uuid not null default auth.uid() references auth.users(id),
   uploaded_at timestamptz not null default now(),
   notes text not null default '',
@@ -88,28 +98,52 @@ create table public.research_documents (
 );
 
 alter table public.research_documents enable row level security;
-alter table storage.objects enable row level security;
 
 revoke all on public.research_documents from public, anon, authenticated;
 grant select, insert on public.research_documents to authenticated;
+
+-- Who may read and write research documents. This list is the whole access rule: an account that is not on
+-- it is refused every row and every object, even if it can sign in. Only the service role can change it, and
+-- no policy exposes it, so a member cannot add another account.
+create table public.research_members (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  note text not null default '',
+  added_at timestamptz not null default now()
+);
+
+alter table public.research_members enable row level security;
+revoke all on public.research_members from public, anon, authenticated;
+
+create function public.is_research_member()
+returns boolean
+language sql
+security definer
+set search_path = pg_catalog, public
+stable
+as $function$
+  select exists (select 1 from public.research_members where user_id = auth.uid());
+$function$;
+
+revoke all on function public.is_research_member() from public;
+grant execute on function public.is_research_member() to authenticated;
 
 create policy research_documents_authenticated_select
 on public.research_documents
 for select
 to authenticated
-using (true);
+using (public.is_research_member());
 
 create policy research_documents_authenticated_insert
 on public.research_documents
 for insert
 to authenticated
-with check (uploaded_by = (select auth.uid()));
+with check (uploaded_by = (select auth.uid()) and public.is_research_member());
 
 create policy research_documents_objects_authenticated_select
 on storage.objects
 for select
 to authenticated
-using (bucket_id = 'research-documents');
+using (bucket_id = 'research-documents' and public.is_research_member());
 
 create policy research_documents_objects_authenticated_insert
 on storage.objects
@@ -118,6 +152,7 @@ to authenticated
 with check (
   bucket_id = 'research-documents'
   and owner_id::uuid = (select auth.uid())
+  and public.is_research_member()
 );
 
 create view public.research_documents_current

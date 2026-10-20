@@ -66,10 +66,52 @@ test("a refused anonymous write surfaces a plain message", async () => {
   });
   assert.deepEqual(result, {
     ok: false,
-    message: "Sign in with your email link before uploading or opening a research document."
+    message: "Sign in with your email and password, or with the email link, before uploading or opening a research document."
   });
   assert.match(result.message, /^[A-Z].*[.!?]$/);
   assert.doesNotMatch(result.message, /\b(401|403)\b/);
+});
+
+test("a password sign-in stores the returned session and reports a refusal in plain words", async () => {
+  const calls = [];
+  const stored = new Map();
+  const storage = {
+    getItem: key => stored.get(key) || null,
+    setItem: (key, value) => stored.set(key, value),
+    removeItem: key => stored.delete(key)
+  };
+  configure(async (url, init) => {
+    calls.push({ url: String(url), body: init && init.body });
+    const payload = init && init.body ? JSON.parse(init.body) : {};
+    if (payload.password === "the-right-one") {
+      return jsonResponse(200, {
+        access_token: "header.eyJzdWIiOiIwMDAwMDAwMC0wMDAwLTQwMDAtODAwMC0wMDAwMDAwMDAwMDEifQ.signature",
+        refresh_token: "refresh-value",
+        token_type: "bearer",
+        expires_in: 3600,
+        user: { id: "00000000-0000-4000-8000-000000000001" }
+      });
+    }
+    return jsonResponse(400, { error: "invalid_grant", error_description: "Invalid login credentials" });
+  }, storage);
+
+  const refused = await ResearchUpload.signInWithPassword("owner@example.com", "wrong");
+  assert.equal(refused.ok, false);
+  assert.match(refused.message, /not accepted/);
+  assert.equal(ResearchUpload.session(), null);
+
+  const accepted = await ResearchUpload.signInWithPassword("owner@example.com", "the-right-one");
+  assert.equal(accepted.ok, true);
+  assert.match(accepted.message, /Signed in/);
+  const session = ResearchUpload.session();
+  assert.equal(session.user_id, "00000000-0000-4000-8000-000000000001");
+  assert.equal(calls[0].url, "https://example.supabase.co/auth/v1/token?grant_type=password");
+  assert.equal(JSON.parse(calls[0].body).email, "owner@example.com");
+  assert.ok([...stored.values()].some(value => String(value).includes("refresh-value")), "the session is kept in this browser only");
+
+  const missing = await ResearchUpload.signInWithPassword("owner@example.com", "");
+  assert.equal(missing.ok, false);
+  assert.match(missing.message, /Enter the password/);
 });
 
 test("row-to-document mapping matches the research library shape", () => {
@@ -108,6 +150,7 @@ test("row-to-document mapping matches the research library shape", () => {
       bytes: 12,
       registered_at: "2026-10-16T12:00:00Z",
       storage_path: `usd-vix/1/v1-${"b".repeat(64)}.md`,
+      original_filename: "",
       note: "first return"
     }],
     asset: "",
