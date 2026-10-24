@@ -1,5 +1,31 @@
 # Changelog
 
+## 2026-10-24 (interactive coordinator, live upload repair) - one file is the whole upload, the stage reads Uploaded, and the published page keeps it
+
+### Fixed
+
+- The published Research Library upload no longer asks for a model or session label before it will take a file. The field is removed from the form and from the record; the page writes the file name, SHA-256, bytes, upload time, asset, factor, chain, stage, document type, version and parent linkage itself.
+- A session that had silently expired no longer reads as a broken upload: `lib/research_upload_client.js` swaps the stored refresh token for a fresh access token before a request and asks for the password again only when that token is refused, then explains the state in the account block.
+- A 409 from the bucket is treated as the bytes already being stored, so a retry finishes the registration instead of failing on a file that is already there.
+- The account block no longer offers an email-link sign-in to an owner address with no inbox; it signs in with the email and password and remembers only the address, in that browser.
+- Signing in with a local library service absent no longer points the reader at a loopback address: the panel says the local service is optional and that the private store takes the file.
+
+### Changed
+
+- A stored stage reads **Uploaded** instead of "Delivered", and shows the upload time beside the file name, hash and version.
+- Factor-stage cards expose `data-rl-view`: View opens the stored bytes in a new tab from a short-lived private link after a fingerprint re-check, and Download saves the same bytes under the uploaded file name.
+- Cache-busters: `research_library.js?v=20261024-research-library-v5`, `research_upload_client.js` and `research_upload_adapter.js?v=20261024-research-upload-v3`, `script.js?v=20261024-research-upload-hosted-v8`.
+- `docs/research-library/UPLOAD_BACKEND.md` records the one-file upload, the Uploaded terminology, the refresh behaviour and a new section on checking the published page.
+
+### Added
+
+- `docs/research-library/test-uploads/TEST-RESEARCH-LIBRARY-UPLOAD-20261024.md`: the registered scripted fixture the page check uploads, so the checked file is a catalogued document rather than a stray local file. It is not research evidence and it approves nothing.
+
+### Guards
+
+- Library unit 29/29, upload client 9/9, adapter 9/9, library browser 1/1 (now asserting three View controls, adjudication disabled and research enabled), full `npm test` 600/602 with the two live-trading browser failures unchanged on a pristine `origin/main` checkout.
+- Deployed on `main` as `32489f9b` on top of the live-feed snapshot `470eb344`. Scripted read of the published page: sign-in, one file chosen into `usd-factor-live-f8-fed-bias` stage 1, pill flipped to Uploaded in about 1.3 seconds, the same record after a reload, View opened the bytes, Download saved 286 identical bytes, no model field, no loopback address. The check's rows, objects and disposable account were removed afterwards, and no factor status, weight, threshold, sign, live call, workflow or feed moved.
+
 ## 2026-10-19 (interactive coordinator, factor-chain cycle) - the Research Library becomes twenty-five factor chains with a gated three-stage final chain, and hosted uploads are repaired
 
 ### Added

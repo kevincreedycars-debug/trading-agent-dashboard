@@ -65,3 +65,9 @@ node scripts/verify-research-upload.js
 
 All five lines must say `PASS`: bucket exists, bucket is private, table exists, anonymous insert is refused, anonymous read is refused. The check reads the publishable key already present in `script.js`; it never uses a service key.
 
+## Check the published page
+
+`node tmp/run-live-page-check.js` is a local, ignored script that drives the published URL the way a reader does: sign in from the account block, open one factor chain, choose one Markdown file, click Upload result, read the stage card, reload the page, open View and save Download. The run of 2026-10-24 read: signed in; the open form held one input (`file`) and no model field; the stage pill went from Not started to Uploaded about 1.3 seconds after the click; the page said the file was stored as stage 1 version 1 and that the stage now reads Uploaded; after a reload the stage still read UPLOADED with the record id, `v1`, `sha256 f8df3674f6df`, the file name, `uploaded 24 Oct 2026, 15:28:25` and the private-store note; View opened those bytes in a new tab; Download saved 286 bytes identical to the chosen file under its own name; nothing pointed at a loopback address. The file it uploads is the registered test document `docs/research-library/test-uploads/TEST-RESEARCH-LIBRARY-UPLOAD-20261024.md`, and its rows and objects were deleted after the run.
+
+The check needs an account on `public.research_members`. The disposable `upload-check-20261024@example.com` used for that run was removed with its rows and objects, so the store is back to the owner alone; add a check account only for the length of a run, as in the `insert` above, and delete it afterwards.
+
