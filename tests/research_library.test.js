@@ -321,7 +321,10 @@ test("the store refuses a malformed upload, an oversize body and a path-shaped i
   assert.throws(() => store.registerUpload({ ...base, task_id: "USD-SESSION-Z9" }, catalog), /is not in the catalog/);
   assert.throws(() => store.registerUpload({ ...base, task_id: "USD-SESSION-A1", context_version: "stale-version" }, catalog), /does not match/);
   assert.throws(() => store.registerUpload({ ...base, factor_id: "not.a.factor" }, catalog), /not in the catalog/);
-  assert.throws(() => store.registerUpload({ ...base, model: "" }, catalog), /model is required/);
+  // The model label is optional provenance: a return without one is registered rather than refused.
+  const withoutModel = store.registerUpload({ ...base, document_id: "x-no-model", model: "" }, catalog);
+  assert.equal(withoutModel.document_id, "x-no-model");
+  assert.ok(!withoutModel.model, "no model label is recorded when none is given");
   assert.throws(() => store.readObject("nope", 1), /is not registered/);
   assert.throws(
     () => store.registerUpload({ ...base, content_text: "a".repeat(store.MAX_UPLOAD_BYTES + 1) }, catalog),
@@ -596,7 +599,7 @@ test("the VIX factor chain reads research delivered, red-team awaiting a file an
   const byStage = new Map(progress.stages.map(stage => [stage.stage, stage]));
   const research = byStage.get("research");
   assert.equal(research.state, "delivered");
-  assert.equal(research.state_label, "Delivered");
+  assert.equal(research.state_label, "Uploaded");
   assert.equal(research.document_id, "usd-baseline-audit-01-vix-usd-report");
   assert.equal(research.version, 1);
   assert.equal(research.sha256, "e4151937411eb1e9235c21e4942327b2d24486e405887d70a90a8f5367eb381d");

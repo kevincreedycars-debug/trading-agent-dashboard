@@ -162,6 +162,87 @@ test("row-to-document mapping matches the research library shape", () => {
   }]);
 });
 
+test("an expired stored session is refreshed before the request, so a reopened page keeps working", async () => {
+  const calls = [];
+  const stored = new Map([["sb-example-auth-token", JSON.stringify({
+    access_token: "stale-token",
+    refresh_token: "refresh-value",
+    expires_at: Math.floor(Date.now() / 1000) - 120,
+    user_id: "00000000-0000-4000-8000-000000000001"
+  })]]);
+  const storage = {
+    getItem: key => stored.get(key) || null,
+    setItem: (key, value) => stored.set(key, value),
+    removeItem: key => stored.delete(key)
+  };
+  configure(async (url, options = {}) => {
+    calls.push({ url: String(url), headers: options.headers || {}, body: options.body });
+    if (String(url).includes("grant_type=refresh_token")) {
+      return jsonResponse(200, {
+        access_token: "fresh-token",
+        refresh_token: "refresh-value-2",
+        token_type: "bearer",
+        expires_in: 3600,
+        user: { id: "00000000-0000-4000-8000-000000000001" }
+      });
+    }
+    return jsonResponse(200, []);
+  }, storage);
+
+  const listed = await ResearchUpload.listByTopic("usd-vix");
+  assert.equal(listed.ok, true);
+  assert.equal(calls[0].url, "https://example.supabase.co/auth/v1/token?grant_type=refresh_token");
+  assert.equal(JSON.parse(calls[0].body).refresh_token, "refresh-value");
+  assert.equal(calls[1].headers.Authorization, "Bearer fresh-token", "the stored token is swapped before the read");
+  assert.match(stored.get("sb-example-auth-token"), /fresh-token/, "the refreshed session replaces the expired one");
+});
+
+test("an expired refresh token clears the session instead of pretending to be signed in", async () => {
+  const stored = new Map([["sb-example-auth-token", JSON.stringify({
+    access_token: "stale-token",
+    refresh_token: "revoked-refresh",
+    expires_at: Math.floor(Date.now() / 1000) - 120,
+    user_id: "00000000-0000-4000-8000-000000000001"
+  })]]);
+  const storage = {
+    getItem: key => stored.get(key) || null,
+    setItem: (key, value) => stored.set(key, value),
+    removeItem: key => stored.delete(key)
+  };
+  configure(async url => {
+    if (String(url).includes("grant_type=refresh_token")) return jsonResponse(400, { error: "invalid_grant" });
+    return jsonResponse(200, []);
+  }, storage);
+
+  const listed = await ResearchUpload.listByTopic("usd-vix");
+  assert.equal(listed.ok, false);
+  assert.match(listed.message, /Sign in with your email/);
+  assert.equal(ResearchUpload.session(), null, "a revoked refresh token signs the page out");
+});
+
+test("a file whose object already sits in the bucket is registered rather than refused", async () => {
+  const calls = [];
+  configure(async (url, options = {}) => {
+    calls.push({ url: String(url), method: options.method || "GET" });
+    if (String(url).includes("/rest/v1/research_documents?") && (!options.method || options.method === "GET")) return jsonResponse(200, []);
+    if (String(url).includes("/storage/v1/object/research-documents/")) {
+      return jsonResponse(400, { statusCode: "409", error: "Duplicate", message: "The resource already exists" });
+    }
+    if (String(url).endsWith("/rest/v1/research_documents") && options.method === "POST") return jsonResponse(201, [{ id: "saved" }]);
+    return jsonResponse(500, {});
+  });
+
+  const result = await ResearchUpload.upload({
+    topicId: "usd-vix",
+    stage: 1,
+    title: "VIX report",
+    kind: "report",
+    file: { type: "text/markdown", arrayBuffer: async () => new TextEncoder().encode("already there").buffer }
+  });
+  assert.equal(result.ok, true, result.message);
+  assert.equal(result.row.id, "saved");
+});
+
 test("retry reuses the same storage path without uploading twice", async () => {
   const calls = [];
   let inserts = 0;

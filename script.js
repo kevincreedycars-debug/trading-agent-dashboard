@@ -7308,7 +7308,6 @@ async function researchLibraryUpload(taskId) {
     return;
   }
   const fileInput = document.getElementById("researchLibraryUploadFile");
-  const modelInput = document.getElementById("researchLibraryUploadModel");
   const documentIdInput = document.getElementById("researchLibraryUploadId");
   const titleInput = document.getElementById("researchLibraryUploadTitle");
   const noteInput = document.getElementById("researchLibraryUploadNote");
@@ -7317,7 +7316,6 @@ async function researchLibraryUpload(taskId) {
     researchLibraryMessage("Choose the file the model returned before uploading.");
     return;
   }
-  const model = String(modelInput?.value || "").trim();
   const documentId = String(documentIdInput?.value || "").trim().toLowerCase().replace(/[^a-z0-9._-]+/g, "-");
   if (!documentId) {
     researchLibraryMessage("A document id is required.");
@@ -7338,7 +7336,6 @@ async function researchLibraryUpload(taskId) {
       task_id: taskId,
       document_type: documentType,
       title: String(titleInput?.value || "").trim() || `${taskId} return`,
-      model,
       note: String(noteInput?.value || "").trim(),
       context_version: task.context_version,
       original_filename: file.name,
@@ -7356,7 +7353,6 @@ async function researchLibraryUpload(taskId) {
         bytes: registration.bytes,
         registered_at: new Date().toISOString().slice(0, 10),
         original_filename: file.name,
-        model,
         context_version: task.context_version,
         note: "registered by the local service; awaiting the committed registry"
       };
@@ -7369,7 +7365,6 @@ async function researchLibraryUpload(taskId) {
           task_id: taskId,
           document_type: documentType,
           title: payload.title,
-          model,
           origin: "external_upload",
           storage: "library_object",
           public_download: false,
@@ -7581,7 +7576,7 @@ function setupResearchLibraryControls() {
   });
 
   panel.addEventListener("input", event => {
-    const uploadField = event.target.closest("[data-rl-upload-title], [data-rl-upload-model], [data-rl-upload-note], [data-rl-upload-findings]");
+    const uploadField = event.target.closest("[data-rl-upload-title], [data-rl-upload-note], [data-rl-upload-findings]");
     if (uploadField) {
       const form = uploadField.closest("[data-rl-upload-form]");
       if (form) researchLibrarySaveUploadDraft(form.dataset.rlUploadForm, form);
@@ -7603,25 +7598,19 @@ function researchLibraryServiceCard() {
     <section class="detail-panel rl-service-card" data-rl-service-card="true">
       <div class="rl-service-head">
         <div>
-          <p class="eyebrow">Durable store</p>
+          <p class="eyebrow">Optional local service</p>
           <h3>Local library service</h3>
         </div>
         <span class="rl-pill ${tone}" data-rl-service-state="${escapeHtml(state)}">${escapeHtml(stateLabel)}</span>
       </div>
       <p class="research-panel-copy">
-        Uploaded reports are stored outside Git as research evidence and are readable only through the
-        local service, which binds loopback and needs a token kept outside this page: start it with
-        <code>node scripts/research-library-server.js --serve-repo</code>, then read the token with
-        <code>Get-Content .local\\research-library\\service-token</code> and paste it here once.
-        The published page can browse the committed registry and download repo-backed documents, but it
-        cannot upload and it cannot read an uploaded report.
+        Reading, uploading, View and Download all run against the private store in this page once you are
+        signed in above. Nothing has to be started on your computer for that.
       </p>
       <p class="rl-service-detail" data-rl-service-page="true">
-        The page served by the service itself reads the registry the service writes:
-        <code>${escapeHtml(`${researchLibraryState.serviceEndpoint || researchLibraryDefaultEndpoint}/index.html`)}</code>.
-        Any other address (GitHub Pages, a different checkout) reads its own
-        <code>data/research-library/documents.json</code>; uploads still store and download, and this panel
-        reads the service's manifest for what that registry copy does not list.
+        This optional local checkout service exists for one remaining job: the asset-level final chain records
+        its whole factor input package, which the private store does not hold yet. It binds loopback only and
+        needs a token kept outside Git; leaving it unset changes nothing for the factor stages.
       </p>
       <div class="rl-service-form">
         <label>Endpoint<input id="researchLibraryEndpoint" type="text" value="${escapeHtml(researchLibraryState.serviceEndpoint || researchLibraryDefaultEndpoint)}" /></label>
@@ -7752,7 +7741,6 @@ function researchLibrarySaveUploadDraft(key, form) {
   if (!key || !form) return;
   researchLibraryState.uploadDraft[key] = {
     title: String(form.querySelector("[data-rl-upload-title]")?.value || ""),
-    model: String(form.querySelector("[data-rl-upload-model]")?.value || ""),
     note: String(form.querySelector("[data-rl-upload-note]")?.value || ""),
     findings: String(form.querySelector("[data-rl-upload-findings]")?.value || "")
   };
@@ -7787,7 +7775,6 @@ function researchLibraryRegisteredDocument(payload, registration) {
     bytes: Number(registration.bytes),
     registered_at: new Date().toISOString().slice(0, 10),
     original_filename: String(payload.original_filename || ""),
-    model: payload.model || "",
     note: "registered by the local library service",
     parent_document_id: registration.parent_document_id || payload.parent_document_id || null,
     parent_version: registration.parent_version ?? payload.parent_version ?? null,
@@ -7804,7 +7791,6 @@ function researchLibraryRegisteredDocument(payload, registration) {
     stage: registration.stage || payload.stage || null,
     document_type: registration.document_type || payload.document_type,
     title: payload.title,
-    model: payload.model,
     origin: "external_upload",
     storage: "library_object",
     public_download: false,
@@ -7863,12 +7849,7 @@ async function researchLibraryStageUpload(chainId, stageId, form) {
       researchLibraryStageNotice(form, `Choose the one Markdown file the ${stage.label} stage returned.`);
       return;
     }
-    const model = String(form.querySelector("[data-rl-upload-model]")?.value || "").trim();
     researchLibrarySaveUploadDraft(draftKey, form);
-    if (!model) {
-      researchLibraryStageNotice(form, "Name the model or session that produced the document: the record is not complete without it.");
-      return;
-    }
     if (stage.parent_stage && (!stage.parent_document_id || stage.parent_version === null)) {
       researchLibraryStageNotice(form, `The ${stage.parent_stage} stage has no registered document yet, so this upload has nothing to attach to. Run the earlier stage first.`);
       return;
@@ -7909,7 +7890,6 @@ async function researchLibraryStageUpload(chainId, stageId, form) {
         stage,
         file,
         title,
-        model,
         note,
         parents,
         onStored: async () => {
@@ -7947,7 +7927,6 @@ async function researchLibraryStageUpload(chainId, stageId, form) {
       stage: stage.stage,
       document_type: stage.document_type,
       title,
-      model,
       note,
       original_filename: file.name,
       content_base64: lib.toBase64(new Uint8Array(await file.arrayBuffer()))
@@ -8171,7 +8150,6 @@ function researchLibraryStageUploadForm(lib, chain, stage) {
       ${open ? `
         <div class="rl-upload-grid">
           <label>Title<input type="text" data-rl-upload-title value="${escapeHtml(draft.title || `${chain.title} - ${stage.label}`)}" /></label>
-          <label>Model or session<input type="text" data-rl-upload-model value="${escapeHtml(draft.model || "")}" placeholder="the label you actually used" /></label>
           <label>Result file<input type="file" data-rl-upload-file accept=".md,.markdown,.txt" /></label>
           <label>Note<input type="text" data-rl-upload-note value="${escapeHtml(draft.note || "")}" placeholder="optional" /></label>
         </div>
@@ -8181,7 +8159,7 @@ function researchLibraryStageUploadForm(lib, chain, stage) {
         <p class="rl-muted">Document id ${escapeHtml(defaultId)}${stage.parent_stage ? `, attached to ${escapeHtml(stage.parent_document_id || "the parent stage")} v${escapeHtml(String(stage.parent_version))}` : ""}${inputCount ? `, with its ${inputCount}-document input package recorded` : ""}. Uploading records evidence: it is not an approval and it moves no factor status.</p>
         <div class="rl-document-actions">
           <button class="inspect-button" type="button" data-rl-stage-upload="${escapeHtml(key)}"${canRegister && !inputsMissing ? "" : " disabled"}>Register ${escapeHtml(stage.label)} document</button>
-          ${canRegister ? "" : `<span class="rl-muted">${finalChain ? "the final chain needs the local library service, because its return records the full factor input package; start it, then save the token in storage settings at the foot of the panel" : hosted ? "sign in above, or connect the local library service, before a document can be stored" : "the local service must be connected before a document can be stored; start it, then save the token in storage settings at the foot of the panel"}</span>`}
+          ${canRegister ? "" : `<span class="rl-muted">${finalChain ? "the final chain records its whole factor input package, which the private store does not hold yet, so its return still needs the local library service" : hosted ? "sign in above before a document can be stored" : "the upload store is not available in this page"}</span>`}
           ${inputsMissing ? `<span class="rl-muted">the input package is incomplete, so nothing can be registered against it yet</span>` : ""}
         </div>
       ` : ""}
@@ -8340,7 +8318,7 @@ function researchLibraryFactorStage(lib, chain, stage) {
       </div>
       <p class="rl-factor-stage-evidence">
         ${hasResult
-          ? `Result <code>${escapeHtml(stage.document_id)}</code> v${escapeHtml(String(stage.version))}${stage.sha256 ? ` sha256 ${escapeHtml(String(stage.sha256).slice(0, 12))}` : ""}${stage.original_filename ? ` &middot; file <span data-rl-stage-filename="true">${escapeHtml(stage.original_filename)}</span>` : ""}${hostedResult ? " &middot; private store" : ""}`
+          ? `Result <code>${escapeHtml(stage.document_id)}</code> v${escapeHtml(String(stage.version))}${stage.sha256 ? ` sha256 ${escapeHtml(String(stage.sha256).slice(0, 12))}` : ""}${stage.original_filename ? ` &middot; file <span data-rl-stage-filename="true">${escapeHtml(stage.original_filename)}</span>` : ""}${hostedResult && resultDocument?.latest_registered_at ? ` &middot; uploaded <span data-rl-stage-uploaded="true">${escapeHtml(formatDashboardTime(resultDocument.latest_registered_at))}</span>` : ""}${hostedResult ? " &middot; private store" : ""}`
           : "No result registered"}
         ${hasInputs
           ? ` &middot; Inputs <code>${escapeHtml(stage.parent_document_id)}</code> v${escapeHtml(String(stage.parent_version))}${stage.parent_sha256 ? ` sha256 ${escapeHtml(String(stage.parent_sha256).slice(0, 12))}` : ""}`
@@ -8352,17 +8330,17 @@ function researchLibraryFactorStage(lib, chain, stage) {
         <a class="inspect-button rl-mini" href="./${escapeHtml(stage.prompt_path)}" download data-rl-download-prompt="${escapeHtml(stage.stage)}">Download prompt</a>
         <button class="inspect-button rl-mini" type="button" data-rl-download="${escapeHtml(stage.parent_document_id)}" data-rl-version="${stage.parent_version === null ? "" : escapeHtml(stage.parent_version)}" data-rl-storage="${escapeHtml(parentStorage)}"${hasInputs ? "" : " disabled title=\"No earlier result to download\""}>Download inputs</button>
         <button class="inspect-button rl-mini" type="button" data-rl-upload-toggle="${escapeHtml(key)}"${inputBlocked ? " disabled title=\"The earlier stage has no registered result\"" : ""}>Upload result</button>
+        <button class="inspect-button rl-mini" type="button" data-rl-view="${escapeHtml(stage.document_id)}" data-rl-version="${stage.version === null ? "" : escapeHtml(String(stage.version))}"${hasResult ? ` title="${escapeHtml(resultLabel)}"` : " disabled"}>View result</button>
         <button class="inspect-button rl-mini" type="button" data-rl-download="${escapeHtml(stage.document_id)}" data-rl-version="${stage.version === null ? "" : escapeHtml(stage.version)}" data-rl-storage="${escapeHtml(stage.storage)}"${hasResult ? ` title="${escapeHtml(resultLabel)}"` : " disabled"}>Download result</button>
       </div>
       ${open ? `
         <div class="rl-stage-upload rl-factor-stage-upload" data-rl-upload-form="${escapeHtml(key)}">
           <input type="file" accept=".md,.markdown,.txt,text/markdown,text/plain" data-rl-upload-file>
-          <input type="text" data-rl-upload-model value="${escapeHtml(draft.model || "")}" placeholder="Model or session">
           ${findings ? `<textarea rows="2" data-rl-upload-findings placeholder="Open findings, one per line">${escapeHtml(draft.findings || "")}</textarea>` : ""}
           <p class="rl-muted" data-rl-upload-status hidden></p>
           <p class="rl-message rl-message-error" data-rl-upload-error role="alert" hidden></p>
-          <button class="inspect-button rl-mini" type="button" data-rl-stage-upload="${escapeHtml(key)}"${canRegister ? "" : " disabled"}>Register result</button>
-          <p class="rl-muted rl-inline-note">${canRegister ? "Evidence only; no status moves." : "Sign in above before a document can be stored."}</p>
+          <button class="inspect-button rl-mini" type="button" data-rl-stage-upload="${escapeHtml(key)}"${canRegister ? "" : " disabled"}>Upload ${escapeHtml(stage.label)} result</button>
+          <p class="rl-muted rl-inline-note">${canRegister ? "One Markdown file. The file name, time, factor, stage and version are recorded for you; evidence only, no status moves." : "Sign in above before a document can be stored."}</p>
         </div>
       ` : ""}
     </article>

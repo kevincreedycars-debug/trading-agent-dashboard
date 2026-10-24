@@ -16,9 +16,20 @@ This is the private place the published dashboard keeps returned research docume
 
 ## Sign in
 
-The library header carries an account block. A reader signs in once in the browser with the owner account's email and password, or asks for an email link; the session token is kept in that browser only, and signing out drops the hosted rows from the page without touching the committed registry or the local service's records.
+The library header carries an account block. A reader signs in once in the browser with the owner
+account's email and password; the session token is kept in that browser only, and signing out drops
+the hosted rows from the page without touching the committed registry or the local service's records.
 
-The owner account is `research-library@example.com`, created by the project administrator with a confirmed email address so that no inbox is needed to sign in. Its password is held by the owner and is not in this repository. To replace the address or the password, use the Supabase dashboard (Authentication → Users) or create a new account and add it to `public.research_members`.
+The session outlives the tab: the page swaps the hour-long access token for a fresh one with its
+stored refresh token before any request, so a page reopened the next day still uploads and downloads
+without signing in again. Only when the refresh token itself is refused does the block ask for the
+password again. No email-link sign-in is offered: the owner address has no inbox, so a link could
+never arrive and the button only led readers into a dead end.
+
+The owner account is `research-library@example.com`, created by the project administrator with a
+confirmed email address so that no inbox is needed to sign in. Its password is held by the owner and
+is not in this repository. To replace the address or the password, use the Supabase dashboard
+(Authentication → Users) or create a new account and add it to `public.research_members`.
 
 To add another permitted account, insert its user id:
 
@@ -29,8 +40,10 @@ insert into public.research_members (user_id, note) values ('<uuid>', 'who this 
 ## What the page does
 
 - Factor-chain stages 1 to 3 upload straight to the store when a session exists. The chain id owns the version sequence, so two chains under one display topic never share a version number.
+- The form asks for one Markdown file and nothing else. The reader used to be asked for a model or session label and the upload was refused without it; that field is gone, and the record no longer carries it. The page writes the rest itself: file name, SHA-256, bytes, upload time, asset, factor, chain, stage, document type and version, plus the parent row or catalogue document the stage follows.
 - Stage 2 records the research row it follows and stage 3 records the research and red-team rows; a parent already registered in the catalogue is named by its catalogue document id, and a parent stored here is named by its row id.
-- The card shows the registered file name, version, hash, size, date and the private-store note. View downloads the bytes, checks them against the recorded hash and opens them; Download saves them under the uploaded file name.
+- A stage whose file is stored reads **Uploaded** (the pill used to say "Delivered"), with the file name, hash, size, upload date and the private-store note. **View result** opens the bytes in a new tab and **Download result** saves them under the uploaded file name; both go through a short-lived private link and re-check the fingerprint first.
+- Opening the factor chain again, or reloading the page, pulls that chain's hosted rows, so the stage still reads Uploaded with the same file name and version.
 - The final chain still needs the local library service: its return records the exact factor input package, which the hosted table does not hold.
 - Refusals appear inside the upload form, with the chosen file and typed details left in place. Nothing is called registered until the store has answered with the stored row, and no refusal writes anything.
 
@@ -40,7 +53,7 @@ insert into public.research_members (user_id, note) values ('<uuid>', 'who this 
 - “The upload service could not be reached…” means the browser could not contact Supabase. Check the connection and retry.
 - “These exact file contents are already stored…” means the SHA-256 rule found the same bytes for that chain and stage. Open the existing version instead.
 - “The file could not be stored…” means no object was committed; nothing was recorded.
-- “The file is stored, but its library record could not be saved…” means the bytes reached private storage but the row did not; retry registration reuses the same path and does not upload the object again.
+- “The file is stored, but its library record could not be saved…” means the bytes reached private storage but the row did not; retry registration reuses the same path, and an object already in the bucket is finished off rather than refused.
 - “A private download link could not be created…” means the session expired or access was refused. Sign in again.
 - “That email address and password were not accepted…” means the credentials are wrong; nothing is stored.
 

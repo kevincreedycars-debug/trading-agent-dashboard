@@ -292,7 +292,7 @@ async function main() {
     assert.deepEqual(stages.map(entry => entry.stage), ["research", "red_team", "adjudication"]);
     assert.deepEqual(stages.map(entry => entry.state), ["delivered", "awaiting_upload", "not_started"],
       "initial stage display must be research delivered, red-team awaiting the file, adjudication not started");
-    assert.equal(stages[0].pill, "Delivered");
+    assert.equal(stages[0].pill, "Uploaded");
     assert.equal(stages[1].pill, "Awaiting upload");
     assert.equal(stages[0].document, VIX_RESEARCH_DOCUMENT, "stage 1 must carry its registered document");
     assert.equal(stages[0].hash, VIX_RESEARCH_SHA, "and the hash the reader will verify");
@@ -349,7 +349,8 @@ async function main() {
     await page.click("[data-rl-stage='red_team'] [data-rl-upload-toggle]");
     await page.waitForSelector("[data-rl-stage='red_team'] [data-rl-upload-file]");
     await page.setInputFiles("[data-rl-stage='red_team'] [data-rl-upload-file]", reviewFile);
-    await page.fill("[data-rl-stage='red_team'] [data-rl-upload-model]", "Astra red-team (browser test)");
+    assert.equal(await page.locator("[data-rl-stage='red_team'] [data-rl-upload-model]").count(), 0,
+      "the upload form asks for one file and nothing else: no model or session label");
     await page.click("[data-rl-stage='red_team'] [data-rl-stage-upload]");
     await page.waitForFunction(() => (document.querySelector("[data-rl-message]")?.textContent || "").includes("registered as"), null, { timeout: 20000 });
     const registrationMessage = await page.$eval("[data-rl-message]", node => node.textContent.trim());
@@ -363,7 +364,6 @@ async function main() {
     assert.equal(registered.parent_version, 1);
     assert.equal(registered.parent_sha256, VIX_RESEARCH_SHA);
     assert.equal(registered.public_download, false, "an uploaded review is not published");
-    assert.equal(registered.model, "Astra red-team (browser test)");
     assert.equal(registered.versions[0].sha256, sha256(reviewContent));
     assert.equal(registered.versions[0].bytes, Buffer.byteLength(reviewContent, "utf8"));
     audit.uploadLinkage = { document_id: registered.document_id, parent: registered.parent_document_id, reviewed_version: registered.parent_version };
@@ -416,7 +416,6 @@ async function main() {
     await page.click("[data-rl-stage='research'] [data-rl-upload-toggle]");
     await page.waitForSelector("[data-rl-stage='research'] [data-rl-upload-file]");
     await page.setInputFiles("[data-rl-stage='research'] [data-rl-upload-file]", researchV2File);
-    await page.fill("[data-rl-stage='research'] [data-rl-upload-model]", "Astra deep research (v2, browser test)");
     await page.click("[data-rl-stage='research'] [data-rl-stage-upload]");
     await page.waitForFunction(() => (document.querySelector("[data-rl-message]")?.textContent || "").includes("registered as"), null, { timeout: 20000 });
     const researchRecord = JSON.parse(fs.readFileSync(registryPath, "utf8")).documents.find(entry => entry.document_id === VIX_RESEARCH_DOCUMENT);
@@ -456,8 +455,14 @@ async function main() {
       "a signed-out reader is asked to sign in before a register control is offered");
     const publicNote = await publicPage.$eval("[data-rl-stage='red_team'] [data-rl-upload-form]", node => node.textContent.replace(/\s+/g, " "));
     assert.ok(publicNote.includes("Sign in above"), "and the form says where to sign in");
-    assert.equal(await publicPage.$$eval("[data-rl-view]", nodes => nodes.length), 0,
-      "the stage controls are prompts, inputs, upload and result download; there is no separate view action");
+    // View and Download sit next to the stage: the reader can open a stored file before saving it. A stage
+    // with no result has both controls disabled rather than hidden, so the row does not move as results land.
+    assert.equal(await publicPage.$$eval("[data-rl-view]", nodes => nodes.length), 3,
+      "each of the three stage cards carries one View control");
+    assert.equal(await publicPage.$eval("[data-rl-stage='adjudication'] [data-rl-view]", node => node.disabled), true,
+      "a stage with no result cannot be viewed");
+    assert.equal(await publicPage.$eval("[data-rl-stage='research'] [data-rl-view]", node => node.disabled), false,
+      "a stage with a registered result can be viewed");
     audit.publishedPageHonest = true;
     await publicContext.close();
 
@@ -496,13 +501,11 @@ async function main() {
     await page.click("[data-rl-stage='red_team'] [data-rl-upload-toggle]");
     await page.waitForSelector("[data-rl-stage='red_team'] [data-rl-upload-file]");
     await page.setInputFiles("[data-rl-stage='red_team'] [data-rl-upload-file]", reviewV2File);
-    await page.fill("[data-rl-stage='red_team'] [data-rl-upload-model]", "Astra red-team v2 (browser test)");
     await page.click("[data-rl-stage='red_team'] [data-rl-stage-upload]");
     await page.waitForFunction(() => (document.querySelector("[data-rl-message]")?.textContent || "").includes("registered as"), null, { timeout: 20000 });
     await page.click("[data-rl-stage='adjudication'] [data-rl-upload-toggle]");
     await page.waitForSelector("[data-rl-stage='adjudication'] [data-rl-upload-file]");
     await page.setInputFiles("[data-rl-stage='adjudication'] [data-rl-upload-file]", adjudicationFile);
-    await page.fill("[data-rl-stage='adjudication'] [data-rl-upload-model]", "Astra adjudication (browser test)");
     await page.click("[data-rl-stage='adjudication'] [data-rl-stage-upload]");
     await page.waitForFunction(() => {
       const row = document.querySelector("[data-rl-factor='live.f1-vix-level']");
@@ -588,16 +591,16 @@ async function main() {
       await stalePage.waitForSelector("[data-rl-factor-stages='live.f1-vix-level'] [data-rl-stage='red_team']", { timeout: 15000 });
       await stalePage.waitForFunction(() => document.querySelector("[data-rl-service-state]")?.getAttribute("data-rl-service-state") === "connected", null, { timeout: 15000 });
 
-      // A refusal names the missing field, and the chosen file stays in the form.
+      // A refusal names what is missing, and nothing is written. The form no longer asks for a model or
+      // session label, so the only thing a reader can leave out is the file itself.
       await stalePage.click("[data-rl-factor-stages='live.f1-vix-level'] [data-rl-stage='research'] [data-rl-upload-toggle]");
       await stalePage.waitForSelector("[data-rl-stage='research'] [data-rl-upload-file]");
-      await stalePage.setInputFiles("[data-rl-stage='research'] [data-rl-upload-file]", researchV2File);
+      assert.equal(await stalePage.locator("[data-rl-stage='research'] [data-rl-upload-model]").count(), 0,
+        "the stage form asks for one file and nothing else");
       await stalePage.click("[data-rl-stage='research'] [data-rl-stage-upload]");
       await stalePage.waitForSelector("[data-rl-stage='research'] [data-rl-upload-error]:not([hidden])");
       const refusal = await stalePage.$eval("[data-rl-stage='research'] [data-rl-upload-error]", node => node.textContent.trim());
-      assert.ok(refusal.includes("Name the model or session"), `a refusal must name the missing field, saw: ${refusal}`);
-      assert.equal(await stalePage.$eval("[data-rl-stage='research'] [data-rl-upload-file]", node => node.files.length), 1,
-        "the chosen file must stay selected after a refusal");
+      assert.ok(refusal.includes("Choose the one Markdown file"), `a refusal must name the missing field, saw: ${refusal}`);
       assert.equal(await stalePage.$eval("[data-rl-stage='research']", node => node.getAttribute("data-rl-stage-state")), "delivered",
         "a refused upload must change no stage");
       assert.equal(JSON.parse(fs.readFileSync(staleRegistryPath, "utf8")).documents.filter(entry => entry.stage === "research").length, 1,
@@ -608,7 +611,6 @@ async function main() {
       await stalePage.click("[data-rl-stage='red_team'] [data-rl-upload-toggle]");
       await stalePage.waitForSelector("[data-rl-stage='red_team'] [data-rl-upload-file]");
       await stalePage.setInputFiles("[data-rl-stage='red_team'] [data-rl-upload-file]", reviewFile);
-      await stalePage.fill("[data-rl-stage='red_team'] [data-rl-upload-model]", "Astra red-team (stale page test)");
       await stalePage.click("[data-rl-stage='red_team'] [data-rl-stage-upload]");
       await stalePage.waitForFunction(() => (document.querySelector("[data-rl-message]")?.textContent || "").includes("registered as"), null, { timeout: 20000 });
       await stalePage.waitForFunction(() => document.querySelector("[data-rl-stage='red_team']")?.getAttribute("data-rl-stage-state") === "delivered", null, { timeout: 20000 });

@@ -126,10 +126,10 @@ function redTeamStage() {
 test('the account bar asks for an email and a password when signed out and offers sign-out when signed in', async () => {
   harness({ signedIn: false });
   const signedOut = adapter.accountBarHtml();
-  assert.match(signedOut, /data-rl-account-signin/);
   assert.match(signedOut, /data-rl-account-email/);
   assert.match(signedOut, /data-rl-account-password/);
   assert.match(signedOut, /data-rl-account-password-signin/);
+  assert.doesNotMatch(signedOut, /data-rl-account-signin/, 'an email link to an address with no inbox is not offered');
   assert.doesNotMatch(signedOut, /data-rl-account-signout/);
 
   harness({ signedIn: true });
@@ -187,7 +187,7 @@ test('a stage upload stores the exact bytes under the stage path and records the
   assert.equal(row.storage_path, objectPath);
   assert.equal(row.uploaded_by, USER_ID);
   assert.equal(row.original_filename, 'red-team-return.md', 'the uploaded file name is recorded for the card and the download');
-  assert.match(row.notes, /Model or session: verification session/);
+  assert.equal(row.notes, '', 'a model or session label is no longer part of the record');
 });
 
 test('a final chain stage keeps its own stage name and owner', async () => {
