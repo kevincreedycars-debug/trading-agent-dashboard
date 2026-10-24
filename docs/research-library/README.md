@@ -184,20 +184,22 @@ Get-Content .local\research-library\service-token     # paste once into the pane
 - `GET /health` (unauthenticated, counts only), `GET /manifest`, `GET /export` (manifest plus per-document
   download references and the task prompt hashes), `POST /documents`, `GET /documents/<id>/versions/<n>`,
   `GET /tasks/<taskId>/context-package`.
-- There is **no public upload and no public download**: a report uploaded here is not published, and the
-  published page cannot read it. That is the intended boundary, not a limitation to work around.
-- `--serve-repo` also serves this checkout on loopback, which is the supported way to run the upload flow
-  (browser private-network rules block a public page from reaching a loopback service, and this repository
-  already uses the same local-serve pattern for the L2L levels tool).
+- Nothing here is **public**: a returned report is stored privately and is never published by the page. The
+  published page reads it only for a signed-in member, through a short-lived private link. That is the
+  intended boundary, not a limitation to work around.
+- `--serve-repo` also serves this checkout on loopback, which is still the supported way to run the upload
+  flow **without** a hosted session, and the only way to register the final chain's return, which records its
+  whole factor input package (browser private-network rules block a public page from reaching a loopback
+  service, and this repository already uses the same local-serve pattern for the L2L levels tool).
 
-### Smallest backend addition, stated plainly
+### The hosted store, stated plainly
 
-The dashboard is a static GitHub Pages site with no server. Durable authenticated uploads therefore need a
-process; the smallest one that satisfies the brief without inventing persistence is the loopback service
-above, writing an immutable object store beside a committed metadata registry. If uploads must later work from
-the published page with no local process, the next step is Supabase, already the project's data layer: a
-private storage bucket plus a table with row-level rules for an authenticated user. That needs an operator
-decision, credentials and a schema, and it is **not** simulated here.
+The published page needs no local process for a factor-chain stage: the private store in Supabase project
+`eaolqbrlywczinfordvg` (bucket `research-documents`, table `public.research_documents`, membership table
+`public.research_members`) takes the bytes straight from the page for a member's session, and View or
+Download mints a short-lived private link after re-checking the recorded sha256. The loopback service above
+remains for the final chain and for anyone working offline. Where the bytes live, what signs in, how to keep
+a local copy and how to re-run the published-page check are in `docs/research-library/PAGE_CHECK_RUNBOOK.md`.
 
 ## Status vocabulary, kept honest
 

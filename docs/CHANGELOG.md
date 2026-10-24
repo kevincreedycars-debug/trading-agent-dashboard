@@ -1,4 +1,26 @@
 # Changelog
+## 2026-10-24 (interactive coordinator, storage and phone handoff) - where documents live, remembered sign-in, and a repeatable page check
+
+### Added
+
+- `scripts/research_library_page_check.js` (`npm run research-library:page-check`, `:mobile`) drives the published page at desktop width or as an iPhone 13 and asserts each reader-visible step: sign-in, one file input and no model field, the pill going Uploaded, the session and record surviving a reload, stage 2 naming and returning its parent byte-for-byte, View, Download, no loopback request, no page error. It can provision its own disposable member (`--provision`) and always removes the rows, objects and account it created.
+- `scripts/research_library_export.js` (`npm run research-library:export`) writes every hosted document and a `manifest.json` with the recorded metadata and a per-file sha256 re-check into `.local/research-library-export/`, which Git ignores. It refuses a row whose topic, stage, version or hash could write outside the export folder.
+- `tests/research_library_export.test.js` pins the export path rules, the refusal cases and when a copy counts as verified (6 tests).
+- `docs/research-library/PAGE_CHECK_RUNBOOK.md` answers where the bytes are, what signs in, what still needs a PC, how to keep local copies, whether a GitHub backup is worth adding, the VIX id-versus-hash question and how to re-run the check, including a five-step real-phone check.
+
+### Changed
+
+- `docs/research-library/UPLOAD_BACKEND.md` records the export route, the GitHub-metadata boundary, that the email provider is the only sign-in, and the committed page check instead of the ad-hoc `tmp` script.
+- `docs/research-library/README.md` no longer describes the hosted store as a future step: it states the private bucket and table as the live path for factor chains, and keeps the loopback service as the final chain's route.
+- `package.json` gains `research-library:export`, `research-library:page-check` and `research-library:page-check:mobile`, and `test:research-library` now includes the export test.
+
+### Verified
+
+- Phone-sized emulation with the local service stopped: sign-in, one file input, no model field, upload, Uploaded, reload, same record, parent retrieval byte-for-byte, View, Download, no loopback host, no page error; desktop width reported the same. Both runs removed their own row, object and disposable member.
+- The store holds one member (the owner), one document (`d7b8eb40-…`, `VIX_USD_Research_Report.md`, 84,056 bytes, sha256 `e4151937…`) and one object; the exported copy re-hashes to the same value.
+- Guards: export 6/6, library 29/29, upload client 9/9, adapter 9/9, library browser 1/1. No factor status, weight, threshold, sign, live call, workflow, feed or committed hash moved.
+
+
 
 ## 2026-10-24 (interactive coordinator, live upload repair) - one file is the whole upload, the stage reads Uploaded, and the published page keeps it
 

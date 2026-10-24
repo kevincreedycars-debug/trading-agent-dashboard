@@ -11,6 +11,8 @@ This is the private place the published dashboard keeps returned research docume
 - Membership table `public.research_members` and `public.is_research_member()`. This list is the access rule: an account that can sign in but is not on it is refused every row and every object. Only the service role can change the list, and no policy exposes it.
 - Policies: members may select and insert rows and objects they own; nobody may update or delete, so committed versions are append-only. Anonymous users are refused rows and objects.
 - `public.research_upload_backend_status()`: a metadata-only health check that reports whether the bucket exists, whether it is private and whether the table exists. It exposes no rows, paths, identities or contents.
+- `scripts/research_library_export.js` (`npm run research-library:export`) reads the store and writes every document, plus a `manifest.json` carrying the recorded metadata and a per-file sha256 re-check, under `.local/research-library-export/`. Git ignores `.local/`, so a local copy never reaches the repository, and the script never writes to the store.
+- GitHub holds the page, the provisioning script, the prompts and the registry metadata (`data/research-library/documents.json`: document id, version, sha256, bytes, note), never the returned bytes. A registry row whose `storage` is `library_object` and whose `public_download` is `false` is the pointer to the private bucket.
 
 `supabase/research-uploads.sql` is the whole one-time script. It refuses to run if it finds a conflicting table, view, function, policy, membership table or public bucket. RLS on `storage.objects` is already enabled by the platform, so the script does not alter that table.
 
@@ -30,6 +32,10 @@ The owner account is `research-library@example.com`, created by the project admi
 confirmed email address so that no inbox is needed to sign in. Its password is held by the owner and
 is not in this repository. To replace the address or the password, use the Supabase dashboard
 (Authentication → Users) or create a new account and add it to `public.research_members`.
+
+Only the project's email provider is enabled: there is no GitHub, Google or other external sign-in, and
+nothing in the page offers one. A remembered session is the supported convenience — sign in once in that
+browser, and reopening the page the next day needs no password until the refresh token itself is refused.
 
 To add another permitted account, insert its user id:
 
@@ -67,7 +73,22 @@ All five lines must say `PASS`: bucket exists, bucket is private, table exists, 
 
 ## Check the published page
 
-`node tmp/run-live-page-check.js` is a local, ignored script that drives the published URL the way a reader does: sign in from the account block, open one factor chain, choose one Markdown file, click Upload result, read the stage card, reload the page, open View and save Download. The run of 2026-10-24 read: signed in; the open form held one input (`file`) and no model field; the stage pill went from Not started to Uploaded about 1.3 seconds after the click; the page said the file was stored as stage 1 version 1 and that the stage now reads Uploaded; after a reload the stage still read UPLOADED with the record id, `v1`, `sha256 f8df3674f6df`, the file name, `uploaded 24 Oct 2026, 15:28:25` and the private-store note; View opened those bytes in a new tab; Download saved 286 bytes identical to the chosen file under its own name; nothing pointed at a loopback address. The file it uploads is the registered test document `docs/research-library/test-uploads/TEST-RESEARCH-LIBRARY-UPLOAD-20261024.md`, and its rows and objects were deleted after the run.
+`npm run research-library:page-check` (desktop width) and `npm run research-library:page-check:mobile`
+(iPhone 13 emulation) drive the published URL the way a reader does: sign in from the account block, open
+one factor chain, choose one Markdown file, upload, read the stage card, reload, open View and Download,
+then read the parent document the next stage names and download it. Every step prints `PASS` or `FAIL`,
+the run exits non-zero if anything fails, and the script deletes only the rows that appeared during its
+own run plus the member account it created. The whole flow, the isolation rules and the two-minute check
+to repeat by hand on a real phone are in `docs/research-library/PAGE_CHECK_RUNBOOK.md`.
 
-The check needs an account on `public.research_members`. The disposable `upload-check-20261024@example.com` used for that run was removed with its rows and objects, so the store is back to the owner alone; add a check account only for the length of a run, as in the `insert` above, and delete it afterwards.
+The run of 2026-10-24 (phone-sized emulation, local service stopped, nothing listening on port 8791) read:
+signed in; the stage form held one `file` input and no model field; the pill went Not started → Uploaded
+and stayed UPLOADED across a reload with the same record id; stage 2 named that record as its input and
+returned the identical bytes; View opened the bytes; Download saved them under the uploaded name; the
+hosts contacted were the published site, the Supabase project and the two font hosts, so no loopback
+request was made and no page error was raised. The desktop run reported the same, and both runs removed
+their row, object and account afterwards.
+
+The earlier ad-hoc script `tmp/run-live-page-check.js` is superseded by the committed script and is kept
+only as local history.
 
