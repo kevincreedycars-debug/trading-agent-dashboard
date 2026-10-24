@@ -6,6 +6,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const crypto = require('node:crypto');
+const fs = require('node:fs');
 const path = require('node:path');
 
 require(path.join(__dirname, '..', 'lib', 'research_upload_client.js'));
@@ -77,6 +78,7 @@ function harness(options) {
     if (target.includes('/auth/v1/logout')) return jsonResponse({}, 204);
     if (target.includes('/rest/v1/research_documents')) {
       if (method === 'GET') {
+        if (settings.listFails) return jsonResponse({ message: 'unavailable' }, 500);
         const filter = target.match(/topic_id=eq\.([^&]+)/);
         const wanted = filter ? decodeURIComponent(filter[1]) : '';
         return jsonResponse(rows.filter(row => !wanted || row.topic_id === wanted));
@@ -218,6 +220,120 @@ test('a final chain stage keeps its own stage name and owner', async () => {
   assert.equal(documents.documents[0].chain_id, 'usd-chain-final');
 });
 
+// The asset-level final chain is the one chain whose return judges a package of factor documents. The local
+// service used to be the only place that could record that package; this proves the private store keeps it
+// too, stage by stage, with each stage still attached to the one before it.
+test('the final chain keeps its whole input package and every parent link in the private store', async () => {
+  const world = harness({ signedIn: true });
+  const packageDocuments = [
+    {
+      document_id: 'usd-baseline-audit-01-vix-usd-adjudication',
+      version: 2,
+      sha256: 'c'.repeat(64),
+      role: 'vix-level',
+      role_stage: 'adjudication'
+    },
+    {
+      document_id: 'usd-baseline-audit-02-front-end-rates-adjudication',
+      version: 1,
+      sha256: 'd'.repeat(64),
+      role: 'front-end-rates',
+      role_stage: 'adjudication'
+    }
+  ];
+  const analysis = await adapter.uploadStage({
+    topic: { topic_id: 'usd-final-topic', title: 'USD final chain' },
+    chainId: 'usd-chain-final',
+    stage: { stage: 'final_analysis', label: 'Final analysis', document_type: 'synthesis' },
+    file: stageFile('# Final analysis\n\nSynthesis.\n'),
+    title: 'USD final analysis',
+    note: 'read against the 24 October registry',
+    inputPackage: { documents: packageDocuments, recorded_at: '2026-10-24T08:59:00.000Z' },
+    onStored: async () => {}
+  });
+  assert.equal(analysis.ok, true, analysis.message);
+  const analysisRow = world.rows[0];
+  assert.equal(analysisRow.stage, 1);
+  assert.equal(analysisRow.kind, 'final_analysis');
+  assert.match(analysisRow.notes, /^read against the 24 October registry\nresearch-input-package:v1 \{/, 'the note is kept first, then the package behind its marker');
+  const marker = 'research-input-package:v1 ';
+  const recorded = JSON.parse(analysisRow.notes.slice(analysisRow.notes.indexOf(marker) + marker.length));
+  assert.deepEqual(recorded.documents, packageDocuments, 'the exact factor documents and versions travel with the return');
+  assert.equal(recorded.stage, 'final_analysis');
+  assert.equal(recorded.recorded_at, '2026-10-24T08:59:00.000Z');
+
+  const redTeam = await adapter.uploadStage({
+    topic: { topic_id: 'usd-final-topic', title: 'USD final chain' },
+    chainId: 'usd-chain-final',
+    stage: { stage: 'final_red_team', label: 'Final red-team', document_type: 'review' },
+    file: stageFile('# Final red-team\n\nOne finding.\n'),
+    title: 'USD final red-team',
+    parents: { researchRef: analysisRow.id },
+    onStored: async () => {}
+  });
+  assert.equal(redTeam.ok, true, redTeam.message);
+  const redTeamRow = world.rows[1];
+  assert.equal(redTeamRow.stage, 2);
+  assert.equal(redTeamRow.parent_research_ref, analysisRow.id, 'the red-team return names the analysis it read');
+  assert.equal(redTeamRow.notes, '', 'a plain note stays a plain note: no package is invented for it');
+
+  const adjudication = await adapter.uploadStage({
+    topic: { topic_id: 'usd-final-topic', title: 'USD final chain' },
+    chainId: 'usd-chain-final',
+    stage: { stage: 'final_adjudication', label: 'Final adjudication', document_type: 'synthesis' },
+    file: stageFile('# Final adjudication\n\nRuling.\n'),
+    title: 'USD final adjudication',
+    parents: { researchRef: analysisRow.id, redTeamRef: redTeamRow.id },
+    onStored: async () => {}
+  });
+  assert.equal(adjudication.ok, true, adjudication.message);
+  assert.equal(world.rows[2].parent_red_team_ref, redTeamRow.id);
+
+  // One read of the whole store restores the chain the page shows: stage names, both parent links and the
+  // input package the analysis judged.
+  let documents = { documents: [] };
+  const merged = await adapter.refreshAll(() => documents, next => { documents = next; });
+  assert.equal(merged, 3, 'the analysis, the red-team return and the adjudication all come back');
+  const byStage = {};
+  documents.documents.forEach(document => { byStage[document.stage] = document; });
+  assert.deepEqual(Object.keys(byStage).sort(), ['final_adjudication', 'final_analysis', 'final_red_team']);
+  assert.deepEqual(byStage.final_analysis.input_documents, packageDocuments);
+  assert.deepEqual(byStage.final_analysis.input_package.documents, packageDocuments);
+  assert.equal(byStage.final_analysis.input_package.recorded_at, '2026-10-24T08:59:00.000Z');
+  assert.equal(byStage.final_analysis.note, 'read against the 24 October registry', 'the marker line is not shown as a note');
+  assert.equal(byStage.final_red_team.parent_document_id, analysisRow.id);
+  assert.equal(byStage.final_red_team.parent_version, 1);
+  assert.equal(byStage.final_adjudication.parent_document_id, redTeamRow.id);
+  assert.equal(byStage.final_adjudication.input_documents, undefined, 'only the stage that judged a package carries one');
+});
+
+test('one read covers the whole store, reports a failed read as nothing read, and leaves untouched chains alone', async () => {
+  const world = harness({ signedIn: true });
+  await adapter.uploadStage({
+    topic: topic(),
+    chainId: 'usd-chain-vix-level',
+    stage: redTeamStage(),
+    file: stageFile('# Only stored document\n'),
+    title: 'Only stored document',
+    parents: { researchRef: 'usd-baseline-audit-01-vix-usd-report' }
+  });
+
+  let documents = { documents: [] };
+  const merged = await adapter.refreshAll(() => documents, next => { documents = next; });
+  assert.equal(merged, 1);
+  assert.equal(documents.documents.length, 1, 'a chain with nothing stored is not given an invented record');
+  const read = `${PROJECT_URL}/rest/v1/research_documents?order=topic_id.asc,stage.asc,version.asc&limit=1000`;
+  assert.equal(world.calls.filter(call => call === `GET ${read}`).length, 1, 'the whole store is read in one request, not one request per chain');
+
+  harness({ signedIn: true, listFails: true });
+  const failed = await adapter.refreshAll(() => ({ documents: [] }), () => {});
+  assert.equal(failed, -1, 'a store that could not be read is reported as nothing read, so the page does not claim it is up to date');
+
+  harness({ signedIn: false });
+  const signedOut = await adapter.refreshAll(() => ({ documents: [] }), () => {});
+  assert.equal(signedOut, -1);
+});
+
 test('a stored document is merged into the page registry and downloads byte-identical content', async () => {
   const world = harness({ signedIn: true });
   const file = stageFile('# Round trip\n\nBody.\n');
@@ -308,3 +424,29 @@ test('nextVersion continues the version sequence for one topic stage only', () =
   assert.equal(adapter.nextVersion(rows, TOPIC, 3), 1);
   assert.equal(adapter.nextVersion([], TOPIC, 1), 1);
 });
+
+// The page used to keep the final chain's upload for the local service, because only that service recorded
+// the factor input package. The page now hands every stage, the final chain included, to the same adapter, so
+// these guards keep the local service from creeping back into that path.
+test('the page offers the final chain upload to a signed-in member and sends its whole input package', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'script.js'), 'utf8');
+  const bodyOf = (start, end) => {
+    const from = source.indexOf(start);
+    assert.ok(from >= 0, `${start} is in the page`);
+    const to = source.indexOf(end, from);
+    assert.ok(to > from, `${end} follows it`);
+    return source.slice(from, to);
+  };
+
+  const form = bodyOf('function researchLibraryStageUploadForm(', '\nfunction researchLibraryChainStageCard(');
+  assert.doesNotMatch(form, /!\s*finalChain/, 'the final chain is not held back from the private store');
+  assert.doesNotMatch(form, /needs the local library service/, 'no note sends the reader to the local service');
+  assert.match(form, /hosted && researchLibraryHostedClient\(\)\?\.signedIn\(\)/, 'a signed-in member can register either chain');
+
+  const upload = bodyOf('async function researchLibraryStageUpload(', '\nfunction researchLibraryStagePromptBlock(');
+  const hostedBranch = upload.indexOf('if (hostedUpload && hostedUpload.signedIn())');
+  const localFallback = upload.indexOf('if (!client)');
+  assert.ok(hostedBranch >= 0 && localFallback > hostedBranch, 'the private store is offered before the local service');
+  assert.match(upload, /inputPackage: isFinalChain \? \{ documents: inputDocumentList/, 'the final chain sends its input package');
+});
+

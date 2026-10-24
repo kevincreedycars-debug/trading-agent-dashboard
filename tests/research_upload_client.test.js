@@ -162,6 +162,110 @@ test("row-to-document mapping matches the research library shape", () => {
   }]);
 });
 
+// A final-chain return judges a package of factor documents. The hosted table has no column for that
+// package, so it travels in the notes column behind a marker and comes back with the document, which is
+// what lets a final stage be checked against the evidence it actually received.
+test("a final-chain return stores its input package and reads it back with the document", async () => {
+  const calls = [];
+  configure(async (url, options = {}) => {
+    calls.push({ url: String(url), method: options.method || "GET", body: options.body });
+    if (String(url).includes("/rest/v1/research_documents?") && (!options.method || options.method === "GET")) return jsonResponse(200, []);
+    if (String(url).includes("/storage/v1/object/research-documents/")) return jsonResponse(200, { Key: "stored" });
+    if (String(url).endsWith("/rest/v1/research_documents") && options.method === "POST") {
+      const payload = JSON.parse(options.body);
+      return jsonResponse(201, [Object.assign({}, payload, {
+        id: "22222222-2222-4222-8222-222222222222",
+        parent_research_id: payload.parent_research_ref || null,
+        parent_red_team_id: payload.parent_red_team_ref || null,
+        uploaded_at: "2026-10-24T09:00:00Z"
+      })]);
+    }
+    return jsonResponse(500, {});
+  });
+
+  const packageDocuments = [
+    { document_id: "usd-01-adjudication", version: 2, sha256: "c".repeat(64), role: "vix-level", role_stage: "adjudication" },
+    { document_id: "usd-02-adjudication", version: 1, sha256: "d".repeat(64), role: "front-end-rates", role_stage: "adjudication" }
+  ];
+  const result = await ResearchUpload.upload({
+    topicId: "usd-chain-final",
+    stage: 1,
+    title: "USD final analysis",
+    kind: "final_analysis",
+    notes: "read against the 24 October registry",
+    inputPackage: { documents: packageDocuments, recorded_at: "2026-10-24T08:59:00.000Z" },
+    file: { type: "text/markdown", arrayBuffer: async () => new TextEncoder().encode("# Final analysis\n").buffer }
+  });
+  assert.equal(result.ok, true, result.message);
+
+  const inserted = JSON.parse(calls.find(call => call.method === "POST" && call.url.endsWith("/rest/v1/research_documents")).body);
+  assert.match(inserted.notes, /^read against the 24 October registry\nresearch-input-package:v1 \{/);
+  assert.equal(inserted.kind, "final_analysis", "the final stage name is kept in the free-text kind column");
+
+  const [document] = ResearchUpload.rowsToDocuments([result.row]);
+  assert.equal(document.note, "read against the 24 October registry", "the reader's note reads back without the marker line");
+  assert.equal(document.stage, "final_analysis");
+  assert.deepEqual(document.input_documents, packageDocuments);
+  assert.deepEqual(document.input_package.documents, packageDocuments);
+  assert.equal(document.input_package.recorded_at, "2026-10-24T08:59:00.000Z");
+  assert.equal(document.input_package.stage, "final_analysis");
+});
+
+test("a later version without an input package does not inherit the earlier package", () => {
+  const base = {
+    topic_id: "usd-chain-final",
+    stage: 1,
+    title: "USD final analysis",
+    kind: "final_analysis",
+    parent_research_id: null,
+    parent_red_team_id: null,
+    bytes: 12,
+    original_filename: "final-analysis.md"
+  };
+  const rows = [
+    Object.assign({}, base, {
+      id: "v1",
+      version: 1,
+      sha256: "e".repeat(64),
+      storage_path: "usd-chain-final/1/v1.md",
+      uploaded_at: "2026-10-24T08:00:00Z",
+      notes: `first return\nresearch-input-package:v1 ${JSON.stringify({ chain_id: "usd-chain-final", stage: "final_analysis", recorded_at: "2026-10-24T07:59:00.000Z", documents: [{ document_id: "usd-01-adjudication", version: 2, sha256: "c".repeat(64), role: "vix-level", role_stage: "adjudication" }] })}`
+    }),
+    Object.assign({}, base, {
+      id: "v2",
+      version: 2,
+      sha256: "f".repeat(64),
+      storage_path: "usd-chain-final/1/v2.md",
+      uploaded_at: "2026-10-24T10:00:00Z",
+      notes: "corrected return"
+    })
+  ];
+  const [document] = ResearchUpload.rowsToDocuments(rows);
+  assert.equal(document.note, "corrected return");
+  assert.equal(document.input_documents, undefined, "the current version records no package, so the document has none");
+  assert.equal(document.versions[0].input_documents.length, 1, "the package the first version recorded is still on that version");
+  assert.equal(document.versions[1].input_documents, undefined);
+});
+
+test("every stored row is read in one request and a refusal is reported in plain words", async () => {
+  const calls = [];
+  configure(async (url, options = {}) => {
+    calls.push({ url: String(url), method: options.method || "GET" });
+    return jsonResponse(200, []);
+  });
+  const listed = await ResearchUpload.listAll();
+  assert.equal(listed.ok, true);
+  assert.deepEqual(listed.rows, []);
+  assert.equal(calls.length, 1);
+  assert.match(calls[0].url, /\/rest\/v1\/research_documents\?order=topic_id\.asc,stage\.asc,version\.asc&limit=1000$/);
+
+  configure(async () => jsonResponse(403, { message: "forbidden" }));
+  const refused = await ResearchUpload.listAll();
+  assert.equal(refused.ok, false);
+  assert.match(refused.message, /could not be loaded/);
+  assert.doesNotMatch(refused.message, /403/);
+});
+
 test("an expired stored session is refreshed before the request, so a reopened page keeps working", async () => {
   const calls = [];
   const stored = new Map([["sb-example-auth-token", JSON.stringify({

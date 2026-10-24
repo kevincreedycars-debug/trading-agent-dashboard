@@ -290,6 +290,9 @@ const researchLibraryState = {
   topicId: "",
   chainId: "",
   hostedChains: new Set(),
+  hostedLibraryLoaded: false,
+  hostedLibraryLoading: false,
+  hostedLibraryError: "",
   uploadTaskId: "",
   uploadStage: "",
   uploadDraft: {},
@@ -7064,10 +7067,59 @@ async function researchLibraryMergeHosted(chainId, options = {}) {
   return merged;
 }
 
+// The whole private store is read once per signed-in session. Factor chains, the asset-level final chain
+// and its gate all read the same registry view, so without this read a stored adjudication would only
+// appear once its own chain had been opened, and a chain that was never opened would leave the final
+// chain reading locked however much had been stored. It records evidence only: the gate still reads the
+// registry, and no factor status, weight, threshold or live call is touched.
+async function researchLibraryLoadHostedLibrary(options = {}) {
+  const adapter = researchLibraryHostedClient();
+  if (!adapter || !adapter.signedIn()) return -1;
+  if (researchLibraryState.hostedLibraryLoading) return -1;
+  if (!options.force && researchLibraryState.hostedLibraryLoaded) return -1;
+  researchLibraryState.hostedLibraryLoading = true;
+  let merged = -1;
+  try {
+    merged = await adapter.refreshAll(() => researchLibraryDocuments, next => { researchLibraryDocuments = next; });
+    if (merged < 0) {
+      // A store that could not be read is retried on the next sign-in, not on every redraw: the chains
+      // still read their own records when a stage card is opened.
+      researchLibraryState.hostedLibraryError = "stored documents could not be read from the private store";
+    } else {
+      researchLibraryState.hostedLibraryLoaded = true;
+      researchLibraryState.hostedLibraryError = "";
+      // Every chain has now been read in full, including chains with nothing stored, so opening one
+      // again in this session does not need another request.
+      const lib = researchLibraryLib();
+      const catalog = lib ? lib.normalizeCatalog(researchLibraryData || {}) : null;
+      asArray(catalog && catalog.factor_chains).forEach(chain => researchLibraryState.hostedChains.add(String(chain.chain_id)));
+      const finalChain = catalog && typeof lib.finalChain === "function" ? lib.finalChain(catalog) : null;
+      if (finalChain) researchLibraryState.hostedChains.add(String(finalChain.chain_id));
+    }
+  } catch (err) {
+    researchLibraryState.hostedLibraryError = "stored documents could not be read from the private store";
+    console.warn("Could not read the private research store", err);
+  } finally {
+    researchLibraryState.hostedLibraryLoading = false;
+  }
+  renderResearchLibrary();
+  return merged;
+}
+
+function maybeLoadHostedResearchLibrary(options = {}) {
+  const adapter = researchLibraryHostedClient();
+  if (!adapter || !adapter.signedIn()) return;
+  if (researchLibraryState.hostedLibraryLoading || researchLibraryState.hostedLibraryLoaded) return;
+  if (researchLibraryState.hostedLibraryError && !options.force) return;
+  researchLibraryLoadHostedLibrary(options);
+}
+
 // Hosted documents live only for the signed-in session. Signing out drops them from the page's view
 // without touching the committed registry or the local service's records.
 function researchLibraryForgetHosted() {
   researchLibraryState.hostedChains.clear();
+  researchLibraryState.hostedLibraryLoaded = false;
+  researchLibraryState.hostedLibraryError = "";
   const list = researchLibraryDocumentList();
   if (!list.some(document => document.hosted)) return;
   researchLibraryDocuments = Object.assign({}, researchLibraryDocuments || {}, {
@@ -7402,7 +7454,13 @@ function setupResearchLibraryControls() {
     if (hostedAccount && target.closest("[data-rl-account-password-signin], [data-rl-account-signin], [data-rl-account-signout]")) {
       const signingOut = !!target.closest("[data-rl-account-signout]");
       if (signingOut) researchLibraryForgetHosted();
-      else researchLibraryState.hostedChains.clear();
+      else {
+        // A new sign-in reads the store again from scratch: the previous session's records and its
+        // "already read" note belong to the previous session.
+        researchLibraryState.hostedChains.clear();
+        researchLibraryState.hostedLibraryLoaded = false;
+        researchLibraryState.hostedLibraryError = "";
+      }
       hostedAccount.handleAccountAction(target);
       return;
     }
@@ -7871,16 +7929,27 @@ async function researchLibraryStageUpload(chainId, stageId, form) {
     const note = String(form.querySelector("[data-rl-upload-note]")?.value || "").trim();
     const client = researchLibraryServiceClient();
     const hostedUpload = researchLibraryHostedClient();
-    // A signed-in reader with the private store available uploads a factor-chain stage straight to it, and the
-    // page keeps reading the store's own rows. The final chain is different: its return records the exact
-    // factor input package, which the hosted store does not hold, so that chain stays on the local path.
-    if (hostedUpload && hostedUpload.signedIn() && !isFinalChain) {
-      const researchStage = progress.stages.find(entry => entry.stage === "research");
+    const inputDocumentList = inputDocuments.map(entry => ({
+      document_id: entry.document_id,
+      version: entry.version,
+      sha256: entry.sha256,
+      role: entry.role,
+      role_stage: entry.role_stage
+    }));
+    // A signed-in reader uploads every stage straight to the private store, the asset-level final chain
+    // included: the final chain's return carries its whole factor input package, which the page records with
+    // the return so a reviewer can still check it against the evidence it actually judged. The local service
+    // is used only when the page has no signed-in private store.
+    if (hostedUpload && hostedUpload.signedIn()) {
+      const stageById = id => progress.stages.find(entry => entry.stage === id) || null;
+      const researchStage = stageById(isFinalChain ? "final_analysis" : "research");
+      const redTeamStage = stageById(isFinalChain ? "final_red_team" : "red_team");
       const parents = {};
-      if (stage.stage === "red_team") parents.researchRef = stage.parent_document_id || "";
-      if (stage.stage === "adjudication") {
-        parents.researchRef = (researchStage && researchStage.document_id) || "";
-        parents.redTeamRef = stage.parent_document_id || "";
+      if (stage.parent_stage) {
+        parents.researchRef = (researchStage && researchStage.document_id) || (isFinalChain ? "" : stage.parent_document_id) || "";
+        if (stage.stage === "adjudication" || stage.stage === "final_adjudication") {
+          parents.redTeamRef = (redTeamStage && redTeamStage.document_id) || stage.parent_document_id || "";
+        }
       }
       researchLibraryStageNotice(form, `Uploading ${file.name} as stage ${stage.order} (${stage.label}) of ${chain.title} to the private store...`, "status");
       const result = await hostedUpload.uploadStage({
@@ -7892,6 +7961,7 @@ async function researchLibraryStageUpload(chainId, stageId, form) {
         title,
         note,
         parents,
+        inputPackage: isFinalChain ? { documents: inputDocumentList, recorded_at: new Date().toISOString() } : null,
         onStored: async () => {
           researchLibraryState.uploadStage = "";
           delete researchLibraryState.uploadDraft[draftKey];
@@ -7902,11 +7972,8 @@ async function researchLibraryStageUpload(chainId, stageId, form) {
         researchLibraryStageNotice(form, `${String(result.message || "The private store did not accept the file.")} Nothing was registered; your file and details are still in this form.`);
         return;
       }
-      researchLibraryStageNotice(form, String(result.message || `${file.name} stored as stage ${stage.order} of ${chain.title}.`), "status");
-      return;
-    }
-    if (hostedUpload && hostedUpload.signedIn() && isFinalChain && !client) {
-      researchLibraryStageNotice(form, "The final chain records its full factor input package, which the private hosted store does not hold. Connect the local library service to register this stage.");
+      const packageNote = isFinalChain ? `, with ${inputDocumentList.length} input documents recorded` : "";
+      researchLibraryStageNotice(form, `${String(result.message || `${file.name} stored as stage ${stage.order} of ${chain.title}.`).replace(/\.$/, "")}${packageNote}. Evidence only: no factor status, weight, threshold or live call moved.`, "status");
       return;
     }
     if (!client) {
@@ -7940,13 +8007,7 @@ async function researchLibraryStageUpload(chainId, stageId, form) {
       payload.parent_version = stage.parent_version;
     }
     if (isFinalChain) {
-      payload.input_documents = inputDocuments.map(entry => ({
-        document_id: entry.document_id,
-        version: entry.version,
-        sha256: entry.sha256,
-        role: entry.role,
-        role_stage: entry.role_stage
-      }));
+      payload.input_documents = inputDocumentList;
     }
     researchLibraryStageNotice(form, `Uploading ${file.name} as stage ${stage.order} (${stage.label}) of ${chain.title}...`, "status");
     stored = await client.upload(payload);
@@ -8127,11 +8188,10 @@ function researchLibraryStageDocumentBlock(lib, chain, stage) {
 
 function researchLibraryStageUploadForm(lib, chain, stage) {
   const hosted = !!researchLibraryHostedClient();
-  const finalChain = !chain.factor_id;
-  // The private store holds factor-chain stage returns. The final chain's return also records its full
-  // factor input package, which only the local service stores, so it cannot use the hosted path.
-  const hostedCanStore = hosted && !finalChain;
-  const canRegister = researchLibraryState.serviceState === "connected" || (hostedCanStore && researchLibraryHostedClient()?.signedIn());
+  // Both chains store through the private store when a member is signed in. The final chain's return
+  // carries its whole factor input package, which the page records with the return, so the final chain is
+  // not kept back for the local service.
+  const canRegister = researchLibraryState.serviceState === "connected" || (hosted && researchLibraryHostedClient()?.signedIn());
   const key = researchLibraryStageKey(chain, stage.stage);
   const open = researchLibraryState.uploadStage === key;
   const defaultId = stage.document_id || researchLibraryStageDocumentId(chain, stage.stage);
@@ -8159,7 +8219,7 @@ function researchLibraryStageUploadForm(lib, chain, stage) {
         <p class="rl-muted">Document id ${escapeHtml(defaultId)}${stage.parent_stage ? `, attached to ${escapeHtml(stage.parent_document_id || "the parent stage")} v${escapeHtml(String(stage.parent_version))}` : ""}${inputCount ? `, with its ${inputCount}-document input package recorded` : ""}. Uploading records evidence: it is not an approval and it moves no factor status.</p>
         <div class="rl-document-actions">
           <button class="inspect-button" type="button" data-rl-stage-upload="${escapeHtml(key)}"${canRegister && !inputsMissing ? "" : " disabled"}>Register ${escapeHtml(stage.label)} document</button>
-          ${canRegister ? "" : `<span class="rl-muted">${finalChain ? "the final chain records its whole factor input package, which the private store does not hold yet, so its return still needs the local library service" : hosted ? "sign in above before a document can be stored" : "the upload store is not available in this page"}</span>`}
+          ${canRegister ? "" : `<span class="rl-muted">${hosted ? "sign in above before a document can be stored" : "the upload store is not available in this page"}</span>`}
           ${inputsMissing ? `<span class="rl-muted">the input package is incomplete, so nothing can be registered against it yet</span>` : ""}
         </div>
       ` : ""}
@@ -8484,8 +8544,9 @@ function renderResearchLibrary() {
   if (!panel) return;
   const lib = researchLibraryLib();
   if (updated) {
+    const storedNote = researchLibraryState.hostedLibraryError ? ` · ${researchLibraryState.hostedLibraryError}` : "";
     updated.textContent = researchLibraryData
-      ? `Catalog ${researchLibraryData.generated_at || "undated"} · ${asArray(researchLibraryData.topics).length} topics · registry ${researchLibraryDocumentList().length} documents`
+      ? `Catalog ${researchLibraryData.generated_at || "undated"} · ${asArray(researchLibraryData.topics).length} topics · registry ${researchLibraryDocumentList().length} documents${storedNote}`
       : "Loading research catalog...";
   }
   if (!lib) {
@@ -8497,10 +8558,11 @@ function renderResearchLibrary() {
     return;
   }
 
-  // Keep the private upload store configured for this page. Each chain pulls its hosted records the first
-  // time it is drawn, so the stage cards show what has been stored. Nothing here approves anything or moves
-  // a status.
+  // Keep the private upload store configured for this page. The whole store is read once per signed-in
+  // session, so every chain and the final-chain gate see what has been stored; each chain then pulls its
+  // hosted records the first time it is drawn. Nothing here approves anything or moves a status.
   researchLibraryConfigureHostedUpload();
+  maybeLoadHostedResearchLibrary();
 
   const catalog = lib.normalizeCatalog(researchLibraryData || {});
   if (researchLibraryData?.meta?.error || asArray(catalog.assets).length === 0) {

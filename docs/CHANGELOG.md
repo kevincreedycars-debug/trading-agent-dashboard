@@ -1,4 +1,21 @@
 # Changelog
+## 2026-10-24 (interactive coordinator, hosted final chain) - the asset-level final chain stores in the private store
+
+### Changed
+
+- `script.js` hands the asset-level final chain to the private store like any factor chain: the `isFinalChain && !client` guard is gone from the stage upload, `researchLibraryStageUploadForm` no longer holds the final chain back for the local service, and the reader is told to sign in rather than pointed at a loopback address. The local service remains an optional route only when no member is signed in.
+- The final chain's return is uploaded with its whole factor input package: `inputPackage` carries every input document's id, version, sha256, role and role stage, plus the time the package was read, so a reviewer can check a final stage against the evidence it actually judged.
+- `lib/research_upload_client.js` stores that package in the `notes` column behind `research-input-package:v1` because the hosted table has no column for it, and `rowsToDocuments` restores it per version, so a later version that recorded no package does not inherit an earlier one. `listAll()` reads the whole store in one request (limit 1000).
+- `lib/research_upload_adapter.js` gains `refreshAll()`, which merges every stored chain in one read and returns `-1` when the store could not be read, so the page never claims a library it has not seen.
+- `script.js` reads the whole store once per signed-in session (`researchLibraryLoadHostedLibrary`, wired into the render), so the factor chains and the final-chain gate see what is stored without each chain being opened first.
+- Cache-busters: `research_upload_client.js` and `research_upload_adapter.js` at `20261024-research-upload-v4`, `script.js` at `20261024-research-upload-hosted-v9`.
+
+### Verified
+
+- Guards: upload client 12/12, adapter 12/12 (including the package round trip, a later version with no package, one whole-store read, and a source guard that the final chain is no longer held back for the local service), `test:research-library` 36/36 including the browser test, `research-library:check` unchanged with the final chain `locked` at `0/25`.
+- Full `npm test` 612/614 with the two live-trading browser failures (the read-only section's order-like control and the closed-window refusal case) reproduced with this work stashed, so they are not from this change. The library registry gained one version: `research-library-readme` moved to version 2 because the README text changed, and `research-library:check` is clean again after `registry --write`.
+- Not verified: no hosted final-chain run has happened, because the gate is closed at `0/25` factor chains and no factor status is to be moved to open it; the page check needs a live account (`CHECK_EMAIL`/`CHECK_PASSWORD` or `--provision`) and the published page.
+
 ## 2026-10-24 (interactive coordinator, storage and phone handoff) - where documents live, remembered sign-in, and a repeatable page check
 
 ### Added

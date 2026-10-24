@@ -19,10 +19,11 @@ returned bytes. A registry row for a hosted document says `storage: library_obje
 `public_download: false`; that is the flag that says "the bytes are in the private store".
 
 Nothing in the hosted path needs the owner's PC: the page talks to Supabase directly with the
-publishable key it already ships, and the reader's own session. The local library service
-(`http://127.0.0.1:8791`) is optional and is used only for the final asset-level chain, whose return
-records the whole factor input package that the hosted table does not hold. A published page without a
-stored service token makes no loopback request at all.
+publishable key it already ships, and the reader's own session. That covers the factor chains and the
+final asset-level chain alike - a final stage carries the factor input package it judged in the row's
+`notes`, so nothing has to be recorded by a local process. The local library service
+(`http://127.0.0.1:8791`) is optional and remains for anyone working offline. A published page without
+a stored service token makes no loopback request at all.
 
 ## Signing in
 

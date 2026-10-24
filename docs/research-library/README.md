@@ -187,19 +187,22 @@ Get-Content .local\research-library\service-token     # paste once into the pane
 - Nothing here is **public**: a returned report is stored privately and is never published by the page. The
   published page reads it only for a signed-in member, through a short-lived private link. That is the
   intended boundary, not a limitation to work around.
-- `--serve-repo` also serves this checkout on loopback, which is still the supported way to run the upload
-  flow **without** a hosted session, and the only way to register the final chain's return, which records its
-  whole factor input package (browser private-network rules block a public page from reaching a loopback
-  service, and this repository already uses the same local-serve pattern for the L2L levels tool).
+- `--serve-repo` also serves this checkout on loopback, which is the supported way to run the upload
+  flow **without** a hosted session (browser private-network rules block a public page from reaching a
+  loopback service, and this repository already uses the same local-serve pattern for the L2L levels
+  tool). A hosted session needs none of it, for factor chains or for the final chain.
 
 ### The hosted store, stated plainly
 
-The published page needs no local process for a factor-chain stage: the private store in Supabase project
+The published page needs no local process for any stage: the private store in Supabase project
 `eaolqbrlywczinfordvg` (bucket `research-documents`, table `public.research_documents`, membership table
 `public.research_members`) takes the bytes straight from the page for a member's session, and View or
-Download mints a short-lived private link after re-checking the recorded sha256. The loopback service above
-remains for the final chain and for anyone working offline. Where the bytes live, what signs in, how to keep
-a local copy and how to re-run the published-page check are in `docs/research-library/PAGE_CHECK_RUNBOOK.md`.
+Download mints a short-lived private link after re-checking the recorded sha256. That includes the final
+asset-level chain: the hosted table has no column for the factor input package, so the package travels in
+the row's `notes` behind `research-input-package:v1` and is read back against that version only. The
+loopback service above remains for anyone working offline. Where the bytes live, what signs in, how to
+keep a local copy and how to re-run the published-page check are in
+`docs/research-library/PAGE_CHECK_RUNBOOK.md`.
 
 ## Status vocabulary, kept honest
 
