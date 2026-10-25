@@ -626,6 +626,13 @@ copy taken after the stop is the one restored, and the manifest says so in `prov
 - **Proved on this machine:** 615 unit and 84 browser tests green; `-Show` proved read-only by hash; the two
   effective-config readings compared (`identical`); the real bundle written and `--verify`d on live state; the
   page drawing a fresh armed card, a stale armed card and the parked lane at 390px.
+- **Proved on the deployed page** (2026-10-25T21:22Z, `https://kevincreedycars-debug.github.io/trading-agent-dashboard/`):
+  lane 1 badge **LIVE** with `DESKTOP-UD0L47I`, armed, `nothing_to_place`, no stale alert; lane 2 **DISABLED** and
+  parked; no page script errors; at 390px the page and both cards overflow by 0px and the rows stack to one
+  column. The served `data/live-trading-trader.ftmo-1.json` carries `host.computer: DESKTOP-UD0L47I`,
+  `expected_interval_seconds: 300`, `armed: true`, written 21:11:34Z. `scripts/check-live-trading-publication.js`
+  exits 0 (lanes 2, failing 0). The stale card cannot be produced live while the PC trades, so it is proved by
+  fixture in the browser suite rather than by the published page.
 - **Not proved:** that the host trades correctly after a restore, that a reboot recovers with nobody logged in,
   and that the PC stays off. Those need the host.
 - **Yours:** the cart at ≈€16.20 / 1 month / UK / Desktop Experience, the IONOS quote, and the stop-and-arm at
