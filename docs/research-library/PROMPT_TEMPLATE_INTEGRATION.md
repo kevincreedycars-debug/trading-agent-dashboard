@@ -386,6 +386,40 @@ allowance spend, but every later stage will judge a report that does not match t
 publishes. Re-running stage 1 under v3.1.0 costs one more unit and yields a chain that is comparable end to
 end. Either way there is one pilot chain, `usd-factor-live-f5-dxy-delta`, not a second one.
 
+**5. The prompt lineage on this branch is not the deployed lineage, so the merge is not applied.** `main`
+already carries `research-prompt-v3.1.0` (commit `65ec66aa`, documented by `2f8b8f08`), and its prompt files
+use a different layout from the ones this branch renders: `## What this stage is for`, `## What the report must
+cover`, `## Questions for this factor`, `## Existing thresholds are context, not the scope limit`,
+`## The session this is written for`, `## The factor entry this chain is evidence for`,
+`## Companion files in the repository`, `## What to return`, `## Prohibitions`,
+`## What happens after you return it`. This branch renders thirteen sections beginning `## Assignment`,
+`## Objective`, `## The session and the instrument`, `## Inputs` and ending `## Completion checklist`,
+`## Prohibitions`, `## What happens next`. Merging `origin/main` produced 84 conflicts: 78 prompt files, the
+catalogue, the registry, both research-library docs, `scripts/build_research_library.js` and
+`tests/research_library.test.js`. The generator on `main` inlines the session block, the evidence separation
+and the valid-conclusions lists; this branch moved that text into `lib/research_prompt_templates.js`.
+
+The merge was aborted and nothing was forced: taking this branch's side would rewrite every deployed prompt,
+and taking `main`'s side would retire this branch's template module and its hashes. Both are content
+decisions, not mechanical ones, so the branch keeps its own rendering and `origin/main` keeps the deployed
+one until the owner says which is canonical. Everything else on this branch (delivery, allowance gate,
+`deliver`/`adopt`) is independent of that choice and is committed and tested.
+
+**6. The reading path, exercised on this host rather than described.** `allowance --latest-rollout` imported
+`%USERPROFILE%\.codex\sessions\2026\10\25\rollout-2026-10-25T20-59-51-01a174dc-….jsonl` and the gate now
+reads: `enforced: true`, `provider_ok`, primary window 79 percent of 85 usable (6 percent headroom, resets
+`2026-10-26T00:11:46Z`), secondary 15 percent of 85 (resets `2026-11-01T11:07:00Z`), `plan_type: plus`,
+credits `144.7441982500`, observed `2026-10-25T21:06:31Z`. The reading goes stale after 90 minutes, at which
+point the runner refuses the dispatch and pauses the queue instead of spending into an unread window. That
+headroom is also the reason not to spend a stage blindly: the earlier F5 run moved this same window from 35
+to 79 percent.
+
+**7. One pilot chain, and it is F5.** The VIX red-team stage prepared earlier in this note is not the pilot:
+the owner's instruction is to complete the chain that already has a research stage, `usd-factor-live-f5-dxy-delta`.
+Its stage 1 is registered as `live-f5-dxy-delta-research` version 1 with the bytes above. Adopting it here is
+one command (`deliver`), and it will record the prompt it actually answered; the red-team stage then becomes
+the only runnable stage of that chain.
+
 ## Handoff after the push
 
 Branch `workstream/c-research-programme` is pushed for review. The coordinator integrates; this

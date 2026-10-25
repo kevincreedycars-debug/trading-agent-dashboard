@@ -462,7 +462,7 @@ async function mainAsync(argv, io = process) {
   const command = String(argv[0] || '');
   if (command === 'deliver' || command === 'adopt') {
     try {
-      return await runDelivery(command, argv, io);
+      return await runDelivery(command, argv.slice(1), io);
     } catch (error) {
       return fail(error, io);
     }
