@@ -62,6 +62,11 @@ Where the same evidence is counted twice, the document says so.
   the remedy is a measurement or a supplement, never a stronger claim.
 - **Adding nothing** - a factor whose information is already in the inputs before it earns no weight. More
   factors are not assumed to improve accuracy, and improved accuracy is only ever an empirical result.
+- **A potentially useful input or interaction** - the evidence may support a directional input, or a pair whose
+  interaction carries information, as worth testing further. The document states the sign, the condition, the
+  window it was evidenced on and the measurement that would validate it, and marks it unvalidated. Research may
+  support a candidate here; it may never confirm one. The list above is not a whitelist of acceptable answers:
+  a report that finds a positive relation and says so with its limits is making the return the contract asks for.
 
 ## 5. Research is not validation
 
@@ -108,10 +113,9 @@ delivered).
 - Each asset needs its own factor catalogue, its own instrument definitions and its own declared cutoff and
   session before any of its prompts can be generated. An asset-specific factor list is not a copy of the USD
   list with the symbol changed.
-- The catalogue currently declares the asset strip order `USD, EUR, GBP, GOLD, SILVER, NQ, BTC, WTI`, which
-  differs from the owner's expansion order above by GBP's position. This is recorded, not silently changed:
-  expansion follows the owner's order, and the strip order is a one-line catalogue change when the owner wants
-  the two aligned.
+- The catalogue declares the asset strip order `USD, EUR, GOLD, SILVER, NQ, BTC, WTI, GBP`, which is the
+  owner's expansion order. GBP sits last because the owner named it last, not because its evidence is weaker;
+  nothing in the strip ranks the research, and no asset's status changes with its position.
 - No non-USD asset may inherit a USD result, and the catalogue already refuses to let one appear to.
 
 ## 9. Change control

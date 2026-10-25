@@ -731,16 +731,6 @@ const OTHER_ASSETS = [
     note: 'No USD sign, weight, threshold or factor transfers to another asset without its own research.'
   },
   {
-    asset: 'GBP',
-    label: 'British Pound',
-    standfirst: 'No GBP session research has started.',
-    status: 'not_started',
-    next_step: 'Wait for the USD final chain.',
-    blockers: ['No assignment is published for this asset.'],
-    factors: [],
-    note: 'No USD result transfers here.'
-  },
-  {
     asset: 'GOLD',
     label: 'Gold',
     standfirst: 'No gold session research has started in this programme; the gold backtesting lane keeps its own scope.',
@@ -784,6 +774,18 @@ const OTHER_ASSETS = [
     asset: 'WTI',
     label: 'Crude Oil (WTI)',
     standfirst: 'No WTI session research has started.',
+    status: 'not_started',
+    next_step: 'Wait for the USD final chain.',
+    blockers: ['No assignment is published for this asset.'],
+    factors: [],
+    note: 'No USD result transfers here.'
+  },
+  // The research expansion order: USD, then EUR, GOLD, SILVER, NQ, BTC, WTI, GBP. GBP sits last because it is
+  // the asset the owner named last, not because its evidence is weaker; nothing here ranks the research.
+  {
+    asset: 'GBP',
+    label: 'British Pound',
+    standfirst: 'No GBP session research has started.',
     status: 'not_started',
     next_step: 'Wait for the USD final chain.',
     blockers: ['No assignment is published for this asset.'],
@@ -1029,13 +1031,16 @@ const FACTOR_EVIDENCE_SEPARATION = [
   '- **Incremental value beyond existing inputs** - what this factor adds to a decision already able to use the entries before it. Information already contained in an earlier input is not new, and a factor that adds nothing is a finding, not a gap.'
 ];
 
-// The conclusions a stage is allowed to reach. Exclusion, regime-only use and insufficient evidence are
-// results, not failures, and the programme does not assume that more factors improve accuracy.
+// The conclusions a stage is allowed to reach. Exclusion, regime-only use, insufficient evidence and adding
+// nothing are results, not failures, and the programme does not assume that more factors improve accuracy.
+// A supported directional input or interaction is equally allowed: the four are the ways a factor can fail to
+// earn weight, and a positive finding has to remain reachable or the audit is rigged against the factor.
 const FACTOR_VALID_CONCLUSIONS = [
   '- **Exclusion** - the evidence may support leaving this factor out of the decision entirely.',
   '- **Regime-only use** - the evidence may support using it only in a named regime, and only where that regime is identifiable at the cutoff.',
   '- **Insufficient evidence** - where nothing has been measured for this session, saying so is the correct return; the remedy is a measurement or a supplement, never a stronger claim.',
-  '- **Adding nothing** - a factor whose information is already in the inputs before it earns no weight. More factors are not assumed to improve accuracy, and improved accuracy is only ever an empirical result.'
+  '- **Adding nothing** - a factor whose information is already in the inputs before it earns no weight. More factors are not assumed to improve accuracy, and improved accuracy is only ever an empirical result.',
+  '- **A potentially useful input or interaction** - the evidence may support a directional input, or a pair whose interaction carries information, as worth testing further. State the sign, the condition, the window it was evidenced on and the measurement that would validate it, and mark it unvalidated: this stage can support a candidate, never a confirmation.'
 ];
 
 function evidenceSection() {
@@ -1187,7 +1192,7 @@ function returnSection(chain, stageId) {
 
 function researchPrompt(chain) {
   const dispatchLine = chain.dispatch && chain.dispatch.state === 'dispatched'
-    ? `- The programme has already dispatched the research behind this chain: it is deep-research step 1 under task \`${chain.dispatch.task_id}\`, pack version ${chain.dispatch.pack_version}, context version ${chain.dispatch.context_version}.`
+    ? `- The programme has already dispatched the research behind this chain: task \`${chain.dispatch.task_id}\`, brief ${chain.dispatch.brief_version || '1.0.0'}, pack version ${chain.dispatch.pack_version}, context version ${chain.dispatch.context_version}. That brief is the record of what was asked; this prompt is what this stage is judged against.`
     : '- This chain has not been dispatched yet. This is the next research assignment, written and hash-checked so it is ready to run.';
   const sections = [
     promptFrontmatter(chain, 'research', [dispatchLine]),
@@ -1222,16 +1227,18 @@ function researchPrompt(chain) {
     ''
   ];
   if (chain.dispatched_brief_text) {
+    const dispatch = chain.dispatch || {};
     sections.push(
       '## The dispatched assignment',
       '',
-      `The programme sent this brief for the research behind this chain. It is reproduced here in full so that this one prompt is sufficient on its own; its own file is \`${chain.dispatch.prompt_path}\`, and its hash is recorded in the chain registry.`,
+      `This chain was dispatched under task \`${dispatch.task_id}\` - brief ${dispatch.brief_version || '1.0.0'}, pack version ${dispatch.pack_version}, context version \`${dispatch.context_version}\`, issued ${dispatch.dispatched_at}. The brief's own file is \`${dispatch.prompt_path}\`, sha256 \`${dispatch.prompt_sha256}\`; it stays in the repository as the record of what was asked, and it is not reproduced here.`,
       '',
-      '--- begin dispatched brief ---',
+      'The brief was written for a four-step programme: report, red team, research cards, then a backtest handoff. This chain replaced that with three stages - research, red team, adjudication - so anything the brief says about step numbers, research cards, card schemas or a per-card hypothesis limit belongs to a workflow this chain does not use and does not constrain this report. This stage returns one report, stage 2 attacks it claim by claim, and stage 3 decides what, if anything, enters central USD synthesis.',
       '',
-      chain.dispatched_brief_text.trimEnd(),
+      'Two requirements of the brief are kept here because the rest of this prompt does not say them:',
       '',
-      '--- end dispatched brief ---',
+      '- Prefer primary sources - the exchange, the index provider, the Federal Reserve, the paper itself - over summaries, and say when only a summary was reachable. Where sources disagree, give both and say which you find better identified, and why.',
+      '- Follow the same channel into its cross-asset carriers - equities, credit, gold, rates and crypto - labelling every instrument and window the same way, and condition the window on the event and release calendar, including the timing of the Federal Reserve H.10 release.',
       ''
     );
   }
@@ -1296,16 +1303,11 @@ function redTeamPrompt(chain) {
     ''
   ];
   if (chain.programme_red_team_text) {
+    const briefSha = crypto.createHash('sha256').update(chain.programme_red_team_text, 'utf8').digest('hex');
     sections.push(
       '## The programme brief this stage follows',
       '',
-      `The deep-research tier wrote this step-2 brief for the dispatched research. It is reproduced in full so that this one prompt is sufficient; its own file is \`${chain.programme_red_team_path}\`.`,
-      '',
-      '--- begin programme brief ---',
-      '',
-      chain.programme_red_team_text.trimEnd(),
-      '',
-      '--- end programme brief ---',
+      `The deep-research tier wrote a step-2 brief for the dispatched research. It stays at \`${chain.programme_red_team_path}\`, sha256 \`${briefSha}\`, as the record of what was asked, and it is not reproduced here: it was written for a four-step programme with research cards, and this chain uses three stages. This prompt is the red-team instruction for this stage, and the report is attacked against the claims it actually makes.`,
       ''
     );
   }
@@ -1571,6 +1573,7 @@ const TOPIC_MAP = [
     dispatch: {
       state: 'dispatched',
       task_id: 'USD-BASELINE-AUDIT-01',
+      brief_version: '1.0.0',
       pack_version: '2.0.0',
       context_version: 'usd-session-context-20261014.1',
       dispatched_at: '2026-10-15'
@@ -1894,7 +1897,7 @@ function chainStagesFor(chain, dir, files) {
           kind: sourceKind,
           repo_path: chain.dispatch.prompt_path,
           sha256: chain.dispatch.prompt_sha256,
-          note: 'Generated from the dispatched brief and reproduced in full inside this prompt.'
+          note: 'Generated from the dispatched brief and the chain map; the brief is cited by path and hash, not reproduced.'
         }
         : {
           kind: sourceKind,

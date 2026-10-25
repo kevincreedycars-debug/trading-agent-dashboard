@@ -1,4 +1,42 @@
 # Changelog
+## 2026-10-25 (interactive coordinator, research programme, round two) - briefs de-duplicated, positive conclusion allowed, asset order aligned
+
+### Changed
+
+- `scripts/build_research_library.js`: the VIX stage-1 prompt no longer pastes the dispatched brief and the
+  stage-2 prompt no longer pastes the step-2 brief. Both are cited by path and sha256, and a sentence states that
+  their four-step and card language belongs to a workflow the three-stage chain does not use. Two requirements
+  only the brief carried - primary sources with disagreement handling, cross-asset carriers with calendar
+  conditioning - are kept as explicit bullets. Stage 1 falls from 25,290 to 16,156 characters, stage 2 from
+  19,048 to 13,473.
+- A fifth permitted conclusion, **a potentially useful input or interaction**, marked unvalidated, in the
+  generator and in `docs/research/programme/SHARED_CONTRACT.md` section 4: a supported directional finding stays
+  inside the contract.
+- The asset strip order is the owner's expansion order, `USD, EUR, GOLD, SILVER, NQ, BTC, WTI, GBP`; GBP moved to
+  the end and nothing else about any asset changed.
+- The 78 prompts and `data/research-library/catalog.json` regenerated together with `catalog --write`;
+  cache-buster `20261025-research-programme-v2` in `script.js` and `index.html`.
+- `docs/research/programme/PROMPT_AUDIT_20261025.md` records the five defects the round found and what replaced
+  them; `CURRENT_TASK.md`, `ACTIVE_MILESTONE.md` and `SESSION_NOTES.md` carry the handoff.
+
+### Guards
+
+- `tests/research_library.test.js`: the 51 deciding prompts must name all five conclusions including the
+  unvalidated positive one, and no prompt may contain any of nine superseded phrases (step 1 of four, a research
+  card is step 3, the same four steps apply, the per-card hypothesis limit, "none may be proposed", the brief
+  markers, the legacy upload instruction).
+- `tests/research_library.browser.test.js`: the copied stage-1 prompt must cite the brief by path, must not paste
+  its opening sentence, must carry both blocks, and must be between 12,000 and 20,000 characters.
+
+### Unchanged, and checked
+
+- The VIX report is still `usd-baseline-audit-01-vix-usd-report` v1, 84,056 bytes, sha256 `e4151937â€¦`, with
+  stage 2's parent link and (empty) stage 3 unchanged; the final chain is still locked at 0/25.
+- Both source briefs are byte-identical: a sent brief is a record, and the fix was to stop copying it, not to
+  rewrite it.
+- No factor status, weight, threshold, sign, live call, workflow or data file moved.
+
+
 ## 2026-10-25 (interactive coordinator, research programme) - shared contract, two owned lanes, cleaned prompt set
 
 ### Added

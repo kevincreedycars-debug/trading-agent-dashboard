@@ -51,15 +51,15 @@ session and still satisfy every line of the prompt as it stood.
      inputs - with the requirement that every load-bearing claim states which kind it rests on in the sentence
      that makes the claim, and that evidence counted twice is declared. Emitted into all six stage types, so all
      78 files carry it.
-   - **Conclusions this stage is allowed to reach** - exclusion, regime-only use, insufficient evidence and
-     adding nothing - emitted into research, adjudication and final analysis, the three stages where a factor's
-     fate is decided (51 files).
+   - **Conclusions this stage is allowed to reach** - exclusion, regime-only use, insufficient evidence, adding
+     nothing and a potentially useful input or interaction - emitted into research, adjudication and final
+     analysis, the three stages where a factor's fate is decided (51 files).
 2. The two red-team stages gained one attack each: a factor red-team must ask whether a mechanism, a
    contemporaneous association, another window's measurement or an existing input is being presented as our
    session's evidence, and a final red-team must check the same at asset level.
 3. A guard was added to `tests/research_library.test.js`: every one of the 78 prompts must carry the five kinds,
-   and the 51 deciding prompts must name all four permitted conclusions. A future edit that drops either block
-   fails the suite rather than silently weakening the programme.
+   and the 51 deciding prompts must name all five permitted conclusions, the positive one marked unvalidated. A
+   future edit that drops either block fails the suite rather than silently weakening the programme.
 
 The prompts were regenerated with `node scripts/build_research_library.js catalog --write`, which writes the
 prompt files and the catalogue hashes in the same operation. Results after regeneration: `chains --check`
@@ -80,6 +80,41 @@ One consequence is worth stating plainly: the delivered VIX report was written a
 prompt. It is not re-run for this. The cleaned stage 2 prompt now requires the red-team to test the report
 against the five kinds, and if it fails that test the remedy is a supplement registered as a new version
 against the report, not a silent rerun that replaces it.
+
+## Second round, 2026-10-25: the dispatched brief inside the prompt
+
+The owner asked for the 25,490-character VIX stage-1 prompt to be inspected for an obsolete four-step workflow,
+card instructions, conflicting deliverables, contradictory recommendation restrictions and duplicated historical
+material. Length alone was not treated as a fault. The inspection found five real defects, all in the two
+verbatim briefs the VIX prompts embedded rather than in the authored blocks:
+
+1. **Duplicated historical material.** The prompt restated the session, the mechanisms, the prohibited moves and
+   the required return, then reproduced the whole dispatched brief - 130 lines - which restated the same things
+   again. The red-team prompt did the same with its 19,048-character step-2 brief.
+2. **Obsolete four-step workflow.** "This brief is step 1 of four", "the same four steps apply to them when their
+   turns come", and a step-2/3/4 paragraph naming `RED_TEAM_REVIEW_BRIEF.md`,
+   `SYNTHESIS_AND_CARDS_BRIEF.md` and `BACKTEST_HANDOFF_BRIEF.md` survived inside the embedded text after the
+   three-stage chain had replaced that programme.
+3. **Card instructions.** "A research card is step 3's output", "not a research card", and a per-card limit of
+   at most two programmable hypotheses: instructions for a document this stage does not produce, and a limit the
+   stage-1 report does not have.
+4. **Conflicting deliverable.** The embedded brief told the reader to "upload against `USD-BASELINE-AUDIT-01`",
+   a legacy task id, while the prompt's own return section says the dashboard records the chain and stage.
+5. **Contradictory recommendation restriction.** The embedded brief said no change "may be proposed as part of
+   the deliverable", while the outer prompt's required content includes recommending data the collector should
+   record and a treatment a future engine should apply. A reader following the brief could not have returned the
+   required content.
+
+What changed: the generator now cites both briefs by path and sha256 and states that their step and card language
+belongs to a workflow this chain does not use; the two requirements the outer prompt did not already carry -
+primary sources and disagreement handling, and cross-asset carriers with calendar conditioning - are kept as
+explicit bullets. The VIX stage-1 prompt falls from 25,290 to 16,156 characters and the stage-2 prompt from
+19,048 to 13,473, with no requirement removed. A second guard now fails the suite if any of the superseded phrases
+reappears in any of the 78 prompts, and the browser scenario asserts that the copied prompt cites the brief rather
+than pasting it.
+
+The briefs themselves are unchanged and still hold those sentences: they are the record of what was dispatched,
+and rewriting a sent brief would falsify the record. What changed is that a prompt no longer carries one.
 
 ## What this audit does not close
 

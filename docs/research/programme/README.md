@@ -26,8 +26,10 @@ how it should be represented and tested in the Layer 1 algorithm. USD first, the
 WTI and GBP, each with its own factor catalogue and instrument definitions.
 
 The programme does not assume that a factor is useful or that more factors improve accuracy. Exclusion,
-regime-only use and insufficient evidence are valid conclusions, and any claim of improved accuracy has to
-come from an empirical test rather than from research prose.
+regime-only use, insufficient evidence, adding nothing and a potentially useful input or interaction are all
+valid conclusions, and any claim of improved accuracy has to come from an empirical test rather than from
+research prose. A supported directional finding is as much a result as an exclusion; the contract asks for the
+limits around it, not for a negative answer.
 
 ## The three lanes
 

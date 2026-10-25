@@ -547,11 +547,12 @@ test("every chain prompt exists, matches its catalogue hash and stands on its ow
   });
 });
 
-test("every chain prompt keeps the five evidence kinds apart and allows exclusion", () => {
+test("every chain prompt keeps the five evidence kinds apart and allows exclusion and a positive finding", () => {
   // The programme's shared contract separates mechanism, contemporaneous association, predictive evidence from
   // other windows, evidence for our exact session and incremental value. A prompt that drops one of them lets a
   // report slide from one kind into another, and exclusion, regime-only use or insufficient evidence stops being
-  // available as a conclusion.
+  // available as a conclusion. A supported directional input or interaction has to remain reachable too: the
+  // audit asks whether a factor earns weight, not only whether it can be dropped.
   const kinds = [
     "**Economic mechanism**",
     "**Contemporaneous association**",
@@ -583,10 +584,53 @@ test("every chain prompt keeps the five evidence kinds apart and allows exclusio
       text.includes("## Conclusions this stage is allowed to reach"),
       `${stage.prompt_path} must say that exclusion is a conclusion`
     );
-    ["**Exclusion**", "**Regime-only use**", "**Insufficient evidence**", "**Adding nothing**"].forEach(item =>
+    ["**Exclusion**", "**Regime-only use**", "**Insufficient evidence**", "**Adding nothing**", "**A potentially useful input or interaction**"].forEach(item =>
       assert.ok(text.includes(item), `${stage.prompt_path} must name ${item}`)
     );
+    assert.ok(
+      text.includes("mark it unvalidated"),
+      `${stage.prompt_path} must keep a positive finding subject to empirical validation`
+    );
   });
+});
+
+test("no chain prompt carries the superseded four-step workflow, card rules or a recommendation contradiction", () => {
+  // The prompts used to reproduce their dispatched brief in full, and the briefs still describe a four-step
+  // programme (report, red team, research cards, backtest handoff). That text outlived the three-stage chain and
+  // told a reader to return a card, obey a per-card hypothesis limit, upload against a legacy task id and never
+  // propose a change - the last of which contradicted the prompt's own required content. The brief stays in the
+  // repository as the record of what was asked; none of it may reappear inside a prompt.
+  const obsolete = [
+    "step 1 of four",
+    "A research card is step 3",
+    "Not a research card",
+    "The same four steps apply",
+    "per-card limit of at most two programmable hypotheses applies",
+    "none may be proposed as part of the deliverable",
+    "--- begin dispatched brief ---",
+    "Upload against",
+    "step 3, `deep-research/SYNTHESIS_AND_CARDS_BRIEF.md`"
+  ];
+  const entries = [];
+  ResearchLibrary.listFactorChains(catalog, "USD").forEach(chain => {
+    ResearchLibrary.chainStages(chain).forEach(stage => entries.push(stage));
+  });
+  ResearchLibrary.chainStages(ResearchLibrary.finalChain(catalog, "USD")).forEach(stage => entries.push(stage));
+  assert.equal(entries.length, 78);
+  entries.forEach(stage => {
+    const text = fs.readFileSync(path.join(root, stage.prompt_path), "utf8");
+    obsolete.forEach(phrase =>
+      assert.equal(text.includes(phrase), false, `${stage.prompt_path} must not carry the superseded text: ${phrase}`)
+    );
+  });
+  // The one prompt dispatched from a brief still names the brief, its hash and the fact that the chain replaced it.
+  const vix = ResearchLibrary.chainStageById(
+    ResearchLibrary.factorChainForFactor(catalog, "live.f1-vix-level"),
+    "research"
+  );
+  const vixText = fs.readFileSync(path.join(root, vix.prompt_path), "utf8");
+  assert.ok(vixText.includes("belongs to a workflow this chain does not use"), "the brief's step language is marked superseded");
+  assert.ok(vixText.includes("it is not reproduced here"), "the brief is cited, not copied");
 });
 
 test("the final chain prompts carry the analysis, red-team and candidate-logic stages", () => {
@@ -622,8 +666,22 @@ test("the VIX factor chain's research prompt is the dispatched assignment, not t
     sha256(fs.readFileSync(path.join(root, research.prompt_source.repo_path), "utf8"))
   );
   assert.ok(text.includes("USD-BASELINE-AUDIT-01"), "the dispatched task is named");
-  assert.ok(text.includes("A comprehensive, source-backed report investigating how VIX"), "the assignment is reproduced in full");
-  assert.ok(Buffer.byteLength(text, "utf8") > 20000, "the whole assignment is in the one file");
+  assert.ok(text.includes("brief 1.0.0"), "the brief version is named");
+  assert.ok(
+    text.includes("docs/research/handoff/usd/v1/deep-research/VIX_COMPREHENSIVE_REPORT_BRIEF.md"),
+    "the brief is cited by path"
+  );
+  assert.equal(
+    text.includes("A comprehensive, source-backed report investigating how VIX"),
+    false,
+    "the brief is cited, not reproduced: the prompt already carries the report's required coverage"
+  );
+  assert.ok(Buffer.byteLength(text, "utf8") < 20000, "the prompt carries one stage, not the brief's four steps as well");
+  assert.ok(
+    text.includes("## Five kinds of evidence that must not be mixed") &&
+      text.includes("**A potentially useful input or interaction**"),
+    "the condensed prompt keeps the five kinds and both directions of conclusion"
+  );
   const a3 = ResearchLibrary.taskById(catalog, "USD-SESSION-A3");
   assert.equal(text.includes(a3.prompt.slice(0, 60)), false, "stage 1 must not copy the legacy reviewer prompt");
   // The sibling VIX factor chain did not receive the dispatched brief as a second, independent result.

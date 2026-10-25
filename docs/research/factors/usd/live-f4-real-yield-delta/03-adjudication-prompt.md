@@ -42,6 +42,7 @@ A claim that changes kind between sections - a mechanism presented as a measurem
 - **Regime-only use** - the evidence may support using it only in a named regime, and only where that regime is identifiable at the cutoff.
 - **Insufficient evidence** - where nothing has been measured for this session, saying so is the correct return; the remedy is a measurement or a supplement, never a stronger claim.
 - **Adding nothing** - a factor whose information is already in the inputs before it earns no weight. More factors are not assumed to improve accuracy, and improved accuracy is only ever an empirical result.
+- **A potentially useful input or interaction** - the evidence may support a directional input, or a pair whose interaction carries information, as worth testing further. State the sign, the condition, the window it was evidenced on and the measurement that would validate it, and mark it unvalidated: this stage can support a candidate, never a confirmation.
 
 ## What the adjudication must contain
 

@@ -313,10 +313,18 @@ async function main() {
     const researchPrompt = await page.evaluate(() => navigator.clipboard.readText());
     assert.ok(researchPrompt.startsWith("# F1 VIX level and risk regime - live.f1-vix-level - stage 1 of 3: Research"), "the copied prompt must be the VIX factor-chain assignment");
     assert.ok(researchPrompt.includes("USD-BASELINE-AUDIT-01"), "the dispatched task is named");
-    assert.ok(researchPrompt.includes("A comprehensive, source-backed report investigating how VIX"), "the assignment body must be in the prompt");
+    assert.ok(researchPrompt.includes("VIX_COMPREHENSIVE_REPORT_BRIEF.md"), "the dispatched brief is cited by path");
+    assert.equal(
+      researchPrompt.includes("A comprehensive, source-backed report investigating how VIX"),
+      false,
+      "the brief is cited, not pasted: the prompt already carries the coverage it asks for"
+    );
+    assert.ok(researchPrompt.includes("## Five kinds of evidence that must not be mixed"), "the evidence kinds are in the copied prompt");
+    assert.ok(researchPrompt.includes("**A potentially useful input or interaction**"), "a positive finding is an allowed conclusion");
     assert.ok(researchPrompt.includes(VIX_TOPIC), "the topic is named");
     assert.ok(researchPrompt.includes("05:00 Europe/London"), "the cutoff is stated");
-    assert.ok(researchPrompt.length > 20000, `the full assignment must be copied, saw ${researchPrompt.length} characters`);
+    assert.ok(researchPrompt.length > 12000 && researchPrompt.length < 20000,
+      `one stage must be copied, not the brief's four, saw ${researchPrompt.length} characters`);
     const a3Prompt = ResearchLibrary.taskById(JSON.parse(fs.readFileSync(catalogPath, "utf8")), "USD-SESSION-A3").prompt;
     assert.equal(researchPrompt.includes(a3Prompt.slice(0, 60)), false, "stage 1 must not copy the legacy reviewer task");
 
