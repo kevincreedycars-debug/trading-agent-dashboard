@@ -160,10 +160,11 @@ catalogue so the repository registry was never touched:
    `public_download: false`; the stored object was read back and matched, and `status` then showed
    `delivered: 1`.
 
-Not demonstrated, and deliberately so: a real factor chain. In this worktree `.local/research-library/objects/`
-is empty, so the red-team stage of the VIX topic cannot re-hash the report it is meant to judge (see below), and
-the revised stage prompts are still with the research coordinator. The carrier is proven; the chain over real
-topics is the next act, not a claimed result.
+Not demonstrated, and deliberately so: a real factor chain. The VIX report object does exist, though not in this
+worktree: it was retrieved from the canonical checkout's private store and re-hashed to the registered value (see
+"Before the pilot" below), so the red-team stage has the bytes it must judge. What is still missing is the
+coordinator's confirmation of which catalogue and prompt version the pilot reads. The carrier is proven; the chain
+over a real topic is the next act, not a claimed result.
 
 ## Allowance access and the provider's own limit signal (read path verified, not yet wired)
 
@@ -183,14 +184,87 @@ The provider's numbers do reach the host, though. `codex exec` without `--epheme
 ```
 
 So a machine-readable reset signal exists: `primary.resets_at` is the five-hour window reset and
-`secondary.resets_at` the weekly one, both epoch seconds. It is the provider's window, not our counter, and
-nothing in `lib/` reads it yet — `reset_cadence` is still `manual`. A refused turn surfaces in the same JSONL as
-`{"type":"error"}` followed by `{"type":"turn.failed"}` (shape observed on the version-mismatch 400 above);
-`rate_limit_reached_type` is the field that should be non-null on a quota refusal, which is inferred from the
-schema and not tested, because no run has been pushed to the limit and none should be.
+`secondary.resets_at` the weekly one, both epoch seconds. It is the provider's window, not our counter.
+A refused turn surfaces in the same JSONL as `{"type":"error"}` followed by `{"type":"turn.failed"}` (shape
+observed on the version-mismatch 400 above); `rate_limit_reached_type` is the field that is non-null on a quota
+refusal, taken from the schema. No run has been pushed to the limit to see one, and none should be.
 
-The first act of an unattended shift therefore remains: read our allowance, read the last rollout's
-`rate_limits`, and only then dispatch.
+## Allowance control: the provider's numbers, wired in
+
+The supervisor no longer depends on a human reading `usage.json` before a shift. `lib/codex_usage.js` reads a
+rollout and turns it into a gate; `lib/research_pipeline.js` enforces that gate on every dispatch. Both halves of
+the allowance are enforced together, and neither can be switched off by a run:
+
+- **the operator count** — `limit`, with `reserve` dispatches held back for the owner's own use;
+- **the provider windows** — a fresh reading of the plan's own percentages, with a capacity ceiling
+  (`capacity_percent`, default 85) that leaves the rest of the five-hour and weekly windows for the owner.
+
+Commands:
+
+```
+node scripts/research-pipeline.js allowance                     # both halves, with the windows and reset times
+node scripts/research-pipeline.js allowance --provider on|off   # the owner's switch for the provider half
+node scripts/research-pipeline.js allowance --capacity-percent 80 --max-age-minutes 60
+node scripts/research-pipeline.js allowance --from-rollout FILE # import one rollout (also the resume path)
+node scripts/research-pipeline.js allowance --latest-rollout    # import the newest rollout under ~/.codex/sessions
+node scripts/research-pipeline.js allowance --refusal "MESSAGE" [--refusal-type T] [--resets-at ISO]
+```
+
+What the gate does, in the order it decides:
+
+1. `provider_allowance_unknown` — no reading has been imported, or the reading carries no window. Paused.
+2. `provider_refused` — the provider refused a run and no later reading has cleared it. Paused, and `resume`
+   refuses too: the reset time in the refusal is the only thing that ends it.
+3. `provider_allowance_stale` — the reading is older than `max_age_minutes`, or a window it describes has already
+   reset. Paused, because percentages from an ended window say nothing about the current one.
+4. `provider_allowance_exhausted` — either window is at or above `capacity_percent`, or the operator count has
+   reached `limit - reserve`. Paused, and the reason names the window and its `resets_at`.
+
+The order matters for an unattended loop: unknown is never permission, and nothing expires into permission.
+
+Pausing and resuming without losing work:
+
+- a failing gate pauses the queue itself (`paused_by: "allowance"`) and refuses the dispatch. An owner pause
+  (`paused_by: "operator"`) is never lifted by this code;
+- `allowance --from-rollout` (or `--latest-rollout`) is the resume path. A reading that clears the gate lifts an
+  allowance pause and leaves the queue untouched; a reading that does not clear it keeps the pause and records why;
+- the queue keeps every claim, attempt count and registered version across a pause, and `recover` still releases
+  an expired lease. A stage that was already registered is not re-dispatched, and re-submitting identical bytes
+  returns `duplicate: true` instead of writing a second version.
+
+Recording a refusal also switches the provider half on: a refusal is proof that the plan's limit applies, so the
+supervisor must not keep dispatching because nobody had enabled the check.
+
+One deliberate limit: `rate_limits` is only present in a rollout written by a run that reached the provider. A run
+started with `--ephemeral` writes no rollout, and a run that never got that far writes no limit numbers, so
+`allowance --from-rollout` on such a file fails with `provider_reading_incomplete` instead of importing zeros.
+
+## Per-stage execution receipts
+
+A model name inside a document proves nothing. `submit --rollout` reads what the runtime recorded and compares it
+with what is being registered:
+
+- `model` in the rollout's `turn_context` must equal `--model`, or the submission fails `model_mismatch`;
+- the registered bytes must appear among the run's assistant messages, or the submission fails
+  `return_not_in_rollout` — a document assembled by hand is not this run's answer;
+- `--envelope SHA256` must equal the hash of the dispatched envelope, or `envelope_mismatch`; the envelope
+  itself carries the catalogue prompt hash and the exact parent version the stage judges, so this is what
+  "the stage received its exact inputs" means in practice;
+- `--exec-log FILE` reads the captured `codex exec --json` stream (UTF-8 or UTF-16LE): its `thread_id` must match
+  the rollout's, and `--require-search` refuses a stage with no completed `web_search` item
+  (`search_not_observed`). The receipt records the query, the actions (`search`, `open_page`, `find_in_page`) and
+  the source URLs the run actually saw.
+
+Each receipt is written to `.local/research-pipeline/receipts/` and attached to the job record, with the rollout's
+own sha256, thread id, CLI version, plan type, token usage and windows.
+
+Verified on 2026-10-25 against the carrier demonstration: parsing the captured `astra_exec.jsonl` (UTF-16LE)
+yields thread `01a174a1-8838-76a2-9b2c-474d19bbb4f0`, five completed `web_search` items with actions
+`search`, `open_page` and `find_in_page`, and source URLs on `developers.openai.com`; parsing the matching
+rollout yields the same thread, `model: "gpt-6-astra"`, `cli_version: "0.164.0"`, `plan_type: "plus"`, and the
+two windows. The rollout alone does **not** carry the search results, which is why the exec stream is part of the
+receipt.
+
 
 ## Running with the local PC off (not implemented, and excluded by choice)
 
@@ -242,13 +316,54 @@ Where a finished report is visible, stated plainly:
 - so "verified dashboard download" today means the local service. Publishing report bytes would mean committing
   them under `docs/` and deploying, which is a change of the storage decision, not a step in this route.
 
-## Still the owner's decision
+## Verified on 2026-10-25, reported separately
+
+- **Carrier verified.** `codex exec` from `@openai/codex@0.164.0`, `-m gpt-6-astra -c web_search=live -s read-only`,
+  answered a dispatched envelope; the return was verified and registered as version 1 with
+  `storage: library_object`, `public_download: false`, `status: delivered`.
+- **Live web search verified.** The captured `astra_exec.jsonl` of that run holds five completed `web_search`
+  items (`search`, `open_page`, `find_in_page`) with source URLs on `developers.openai.com`; the rollout of the
+  same thread records `model: "gpt-6-astra"` and `cli_version: "0.164.0"`. That is retrieval, not a claim inside
+  an answer. The 6,179-byte answer also cites the pages it opened.
+- **Automatic allowance handling verified.** `lib/codex_usage.js` parses a real rollout into the two windows,
+  their reset times, the plan, the credits and any refusal; `lib/research_pipeline.js` pauses and refuses on
+  unknown, stale, refused or exhausted, lifts an allowance pause only on a fresh reading, and leaves the queue,
+  the attempt counts and the registered versions intact across the pause. Guarded by tests that write rollout
+  fixtures and never call a model.
+- **Real research chain not verified.** No stage over a real topic has been executed through the carrier yet.
+  The VIX research report exists, but the red-team stage needs the report bytes, the revised prompts and an
+  execution directory the coordinator agrees to.
+- **Hosted unattended execution not verified.** With this PC off nothing runs: the carrier is a local process
+  reading `~/.codex/auth.json`, and no unpaid supported remote route was found.
+
+## Before the pilot: what is already known, and what is not
+
+Established from the shared repository on 2026-10-25, without changing the canonical checkout or its registry:
+
+- the VIX research report is registered as `usd-baseline-audit-01-vix-usd-report` version 1, 84,056 bytes,
+  sha256 `e4151937411eb1e9235c21e4942327b2d24486e405887d70a90a8f5367eb381d`, `storage: library_object`,
+  `public_download: false`. Its object was retrieved through the authorised private store at
+  `.local/research-library/objects/e4/e41519…` in the canonical checkout and its bytes re-hash to that value,
+  so it does not need regenerating;
+- no red-team and no adjudication document exists for that topic in the canonical registry or in the registry on
+  `origin/main`. The two roles that remain are red-team and adjudication; the research role is done;
+- the prompt question is real and unresolved: `origin/main` (65444c58) carries a six-topic catalogue whose briefs
+  are embedded as `dispatched_brief_text` plus `packs` and `probes` — VIX topic block sha256
+  `9ac5677f64a052ce8790bc400f693f750f5033273b85073f47fd8110454d6606` — with the stage-1/stage-2 duplication fixed at
+  `fe56e520`, while this branch carries a catalogue with a `stages[]` array and separate prompt files under
+  `docs/research/topics/usd/vix-level-and-risk-regime/` (`69daff3c…`, `f391fce4…`, `4587ebca…`), published by
+  `c89a5faa`, which is not on `origin/main`. The supervisor verifies prompts against whatever catalogue it is
+  given, so the coordinator has to say which catalogue the pilot reads, and the pilot then records those hashes;
+- the canonical checkout is on `research/usd-session-20261013` at `1e6ab197` with a clean tree, and the shared
+  object database already contains this branch, so its commits are visible to the coordinator without a push.
+
 
 1. Whether the pinned carrier (`@openai/codex@0.164.0`, `exec -m gpt-6-astra -c web_search=live`) is the
    supported route, and where that binary is allowed to come from — npm at a pinned version, or a future app
    build that ships a CLI which knows the model.
-2. Whether the provider's `rate_limits` block should be read by the pipeline (an `allowance --from-rollout`
-   style import) or stay a human check before each shift.
+2. ~~Whether the provider's `rate_limits` block should be read by the pipeline or stay a human check before each
+   shift.~~ Decided by the owner on 2026-10-25: it is wired in as code, with a configurable capacity ceiling and a
+   reserve, because unattended operation cannot depend on a human check each shift.
 3. Whether an unattended carrier is wanted at all, given that with this PC off there is no unpaid route, and
    that a hosted runner means exporting the plan session and paying for minutes.
 4. Whether report bytes should ever be public on Pages. Today they are deliberately not.
