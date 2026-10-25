@@ -385,11 +385,21 @@ wait for now exists (section 7.1), so switching it on is its own clone, terminal
 snapshot cadence itself is untouched: one aligned producer run per M5 bar into `data/live-trading.json`, logged in
 `tmp/live-trading-feed.log` (19:45:21Z was the last read before the change).
 
-`LiveTradingPublishLanes019` was registered at 2026-10-25T19:49:13Z: a ten-minute clock, `--min-interval-seconds 600`,
-`--config config/live-trading-lanes.json`, and
-`--checkout D:\trading-agent-dashboard-codex\.local\live-trading-feed-publish` - the same publish checkout, the same
-state file (`tmp/live-trading-publish-state.json`) and therefore the same 600s interval gate and the same lock
-(`live-trading-publish.lock`, 900s TTL) the old publisher used.
+`LiveTradingPublishLanes019` was registered at 2026-10-25T19:49:13Z and took its final shape at 20:03:21Z: a ten-minute
+clock, `--min-interval-seconds 540`, `--config config/live-trading-lanes.json`, and
+`--checkout D:\trading-agent-dashboard-codex\.local\live-trading-feed-publish` - the same publish checkout and the same
+state file (`tmp/live-trading-publish-state.json`) the old publisher used, and therefore the same lock
+(`live-trading-publish.lock`, 900s TTL).
+
+**Why the gate is 540 and not 600.** The interval is measured from the *publish*, which happens a few seconds after its
+tick, so a 600-second clock against a 600-second gate refuses every other run - the second tick is 595s after the
+publish, not 600 - and a ten-minute clock would have published every twenty minutes. 540 sits inside the tick with a
+55-second margin and still holds six publishes an hour, the script's own budget against GitHub's ten-builds soft limit.
+The first tick under the final shape logged `too_soon` - "the last publish was 216s ago, inside the 540s cadence".
+
+**The real run's one JSON line is kept.** The wrapper the task runs now appends to `tmp/live-trading-lanes-publish.log`.
+Before this, only the self-test logged: a gated tick and a publish both exit 0, so from outside there was nothing to
+read except the state file - which is written only when something is published.
 
 The engine `scripts/publish-live-trading-feed.js` is kept: the lanes publisher calls it. What is retired is the
 single-artifact **invocation** - the `-Publish` flag on the feed task - not the file.

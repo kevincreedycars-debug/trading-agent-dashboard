@@ -97,7 +97,10 @@ function Get-WrapperLines($extraFlags, $redirect) {
   )
 }
 
-Write-Wrapper $wrapperPath (Get-WrapperLines "" "") | Out-Null
+# The real run's one JSON line is kept, not discarded: a tick the interval gate turns away and a tick that publishes
+# both exit 0, so without this line the only record of which happened is the state file, which is written only when
+# something is actually published. Appending rather than overwriting keeps the recent history in one place.
+Write-Wrapper $wrapperPath (Get-WrapperLines "" $logPath) | Out-Null
 
 if ($wrapperPath -match " ") {
   throw "The wrapper path '$wrapperPath' contains a space, which the hidden launcher cannot be handed without " +
