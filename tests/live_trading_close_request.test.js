@@ -8,6 +8,8 @@
 // that moved under it.
 const test = require("node:test");
 const assert = require("node:assert/strict");
+const fs = require("node:fs");
+const path = require("node:path");
 
 const requests = require("../lib/live_trading_close_request.js");
 const levelsStore = require("../lib/l2l_levels_store.js");
@@ -381,4 +383,17 @@ test("a read with no token still works, and a file that is not there yet is an e
   assert.equal(missing.ok, true);
   assert.equal(missing.missing, true);
   assert.equal(missing.state.request_count, 0);
+});
+
+// The page loads this library by a URL with a cache-buster in it, and GitHub Pages serves static files with a
+// ten-minute cache. A reader whose browser cached the v1 library under the old URL would keep writing rows that
+// name no account, and the loop refuses those, so the press would look like nothing happened. The buster names the
+// schema, which is what makes the new library a different file to a browser that already holds the old one.
+test("the page asks for this library under a buster that names the v2 schema", () => {
+  const index = fs.readFileSync(path.resolve(__dirname, "..", "index.html"), "utf8");
+  const loaded = index.match(/src="(lib\/live_trading_close_request\.js[^"]*)"/);
+  assert.ok(loaded, "index.html loads lib/live_trading_close_request.js");
+  const version = new URL(loaded[1], "https://dashboard.invalid/").searchParams.get("v") || "";
+  assert.match(version, /live-trading-close-request-v2$/,
+    "the buster ends with the schema this library writes, so a cached v1 copy is never reused");
 });
