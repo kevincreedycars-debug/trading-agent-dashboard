@@ -33,6 +33,17 @@ test("one call a day, one at a time", () => {
     "a success earlier in the New York day turns every later slot away");
   assert.match(workflow, /a run of this job is still in flight/,
     "a run still going turns a second slot away rather than overlapping the orchestrator");
+  // Force is the one hand override, and it may bend only the clock: a duplicate or an overlap stands.
+  const duplicateGuard = workflow.indexOf("today already has a successful run");
+  const forceGate = workflow.indexOf('"${FORCE:-false}" = "true"');
+  const earlyGate = workflow.indexOf('local_hour" -lt 7');
+  assert.ok(duplicateGuard > 0 && forceGate > duplicateGuard && earlyGate > forceGate,
+    "force is reached after the day's guards and before the clock, so it cannot cause a duplicate or an overlap");
+  // A dry run proves the guards without calling anything, so it must not be the success that ends the day.
+  assert.match(workflow, /run-name: orchestrator daily \$\{\{ inputs\.dry_run == 'true' && 'dry' \|\| 'live' \}\}/,
+    "the run names itself dry or live, the only thing a later slot can read back");
+  assert.match(workflow, /select\(\.displayTitle \| startswith\("orchestrator daily live"\)\)/,
+    "and only live runs count towards the day, by a name no unnamed run can imitate");
   // One POST in the whole file: the trigger is a single place, not scattered through the steps.
   assert.equal(occurrences(workflow, "-X POST"), 1);
   assert.match(workflow, /if: steps\.decide\.outputs\.decision == 'trigger' && steps\.decide\.outputs\.dry_run != 'true' && steps\.decide\.outputs\.enabled == 'true'/,

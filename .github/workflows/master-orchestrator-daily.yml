@@ -11,6 +11,12 @@
 # at ten at night.
 name: master-orchestrator-daily
 
+# The slot puts its character in its own run name, because the guards read the run list back: a dry run proves the
+# guards without calling anything, so it must never be the "success today" that turns tomorrow morning's slot away.
+# The name is a prefix of its own rather than a word like "live", because a run without a name is titled after the
+# workflow or the commit, and those must not be mistaken for a live slot.
+run-name: orchestrator daily ${{ inputs.dry_run == 'true' && 'dry' || 'live' }}
+
 on:
   schedule:
     - cron: "7 * * * *"
@@ -72,13 +78,14 @@ jobs:
           gh api -H "Accept: application/vnd.github.raw" \
             "repos/${GITHUB_REPOSITORY}/contents/data/workflow-control.json?ref=main" > control.json
 
-          # Every earlier run of this same job today, from the repository's own run list. This is the record the
-          # guards use: a success today means the day is done; a run still going means a second one would
-          # overlap the orchestrator itself.
+          # Every earlier live run of this same job today, from the repository's own run list. This is the record
+          # the guards use: a success today means the day is done; a run still going means a second one would
+          # overlap the orchestrator itself. Dry runs are not in it — they call nothing, so they leave the day free.
           gh run list --workflow master-orchestrator-daily.yml --limit 60 \
-            --json databaseId,createdAt,status,conclusion,event > runs.json || echo '[]' > runs.json
+            --json databaseId,createdAt,status,conclusion,event,displayTitle > runs.json || echo '[]' > runs.json
           jq --arg since "$since" --arg self "${GITHUB_RUN_ID}" \
-            '[.[] | select(.databaseId != ($self | tonumber)) | select(.createdAt >= $since)]' \
+            '[.[] | select(.databaseId != ($self | tonumber)) | select(.createdAt >= $since)
+                  | select(.displayTitle | startswith("orchestrator daily live"))]' \
             runs.json > today.json
 
           succeeded=$(jq '[.[] | select(.conclusion == "success")] | length' today.json)
@@ -86,19 +93,22 @@ jobs:
           echo "runs_today_succeeded=$succeeded runs_today_in_flight=$in_flight"
           jq -r '.[] | "  \(.createdAt) \(.status)/\(.conclusion // "-") \(.event) #\(.databaseId)"' today.json
 
+          # Order matters. The day's two guards are absolute: a duplicate or an overlap is never overridden by a
+          # clock or by a person. Force comes next, so a person asking at 06:40 or at 15:00 gets a run when the day
+          # is otherwise free; the local-hour gates are what the clock alone obeys.
           decision=skip
           reason=""
           if [ "$succeeded" -gt 0 ]; then
             reason="today already has a successful run of this job, so a second call would be a duplicate"
           elif [ "$in_flight" -gt 0 ]; then
             reason="a run of this job is still in flight, so a second call would overlap the orchestrator"
+          elif [ "${FORCE:-false}" = "true" ]; then
+            decision=trigger
+            reason="a person asked for it, so the clock window does not apply (the day's two guards still do)"
           elif [ "$local_hour" -lt 7 ]; then
             reason="it is before 07:00 New York"
           elif [ "$local_hour" -ge 11 ]; then
             reason="the 07:00-10:00 New York slots have all passed for today"
-          elif [ "${FORCE:-false}" = "true" ]; then
-            decision=trigger
-            reason="a person asked for it outside the guards"
           else
             decision=trigger
             reason="the first slot at or after 07:00 New York and nothing has run today"

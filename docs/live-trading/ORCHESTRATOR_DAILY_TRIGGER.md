@@ -29,10 +29,17 @@ UTC and decides in `America/New_York` whether this slot is the day's run:
 | 07:00-10:59, a run today already succeeded | skip, so a delayed slot cannot double up |
 | 07:00-10:59, a run today still in flight | skip, so a second call cannot overlap the orchestrator |
 | 11:00 or later | skip, so an outage at 07:00 does not fire a run at ten at night |
+| a person dispatches with `force` | run when the day is otherwise free: force bends the clock, never the duplicate or overlap guards |
+| a person dispatches with `dry_run` (the default) | print the decision and stop; a dry run never counts as the day's run |
 
 The four slots at 07:07, 08:07, 09:07 and 10:07 exist because GitHub often starts scheduled runs several minutes
 late; a 07:00 slot that starts at 07:14 still runs. Daylight saving needs no maintenance: the hour is read on a New
 York clock, so the same cron gives 07:00 ET in both halves of the year.
+
+A dry run and a live run are the same workflow, so the run list cannot tell them apart by conclusion. Each run names
+itself instead — `orchestrator daily dry` or `orchestrator daily live` — and only the live ones count towards the
+day. Without that, one hand-run dry run would have used up the day and the next morning's slot would have reported
+"already ran" and done nothing.
 
 **What the job writes.** Nothing. It is `contents: read` and never checks out the repository. The record of the
 invocation is the Actions run itself: the step summary carries the local time, the decision and why, the webhook's
