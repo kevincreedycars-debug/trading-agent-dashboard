@@ -41,7 +41,10 @@ const {
   decide,
   readState,
   runOnce,
-  main
+  main,
+  TRADE_DAY_TIMEZONE,
+  tradeDayKey,
+  placementsToday
 } = require("../scripts/run-live-trading-trader.js");
 
 const repoRoot = path.join(__dirname, "..");
@@ -239,6 +242,9 @@ function optionsFor(dir, over = {}) {
   options.lock = path.join(dir, "trader.lock");
   options.state = path.join(dir, "trader-state.json");
   options.journal = path.join(dir, "orders.log");
+  // The page's heartbeat, written beside the run's log rather than into the repository's own tmp/, so a test
+  // can read what a run would have published without a suite racing another suite's file.
+  options.statusOut = path.join(dir, "trader-status.json");
   // The close-request log is off here unless a test asks for it: reading it means asking the remote for the
   // published branch, and no test may reach the network or act on whatever is committed there. The runs that
   // exercise it pass a path and the exec stub that answers the git read.
@@ -259,17 +265,19 @@ function flagMap(args) {
 }
 
 // The account as the tool's read-only `status` prints it: the human line, then the record on its own line.
-function statusStdout({ positions = [], orders = [] } = {}) {
+function statusStdout({ positions = [], orders = [], account = {} } = {}) {
   const record = {
     at_utc: new Date(NOW).toISOString(),
     tool: ORDER_TOOL_RELATIVE,
     action: "status",
     account: {
       login_masked: "***614",
+      server: "FTMO-Server",
       balance: 9997.55,
       equity: 9997.55,
       positions_open: positions.length,
-      orders_open: orders.length
+      orders_open: orders.length,
+      ...account
     },
     ticket_filter: null,
     positions,
@@ -804,6 +812,75 @@ test("a trade whose target the account has already taken is over, and its level 
   assert.equal(row.trade.ended_by, "target-fill");
   assert.match(row.trade.reason, /has taken its target/);
   assert.match(row.trade.reason, /closing at 85510/);
+});
+
+test("a trade a person closed away from its stop and its target is over, and the loop does not reopen it", () => {
+  const dir = tempDir();
+  // The exit sits nearer neither the 84300 stop nor the 85500 target: nothing the market did ended this trade, a
+  // person did. A stop-out is the rule's own re-arm (the next test), but a hand close is not a ticket this loop
+  // puts back, so the level waits for a fresh crossing instead of reopening the trade someone chose to end.
+  writeFixtures(dir, {
+    feed: feedFixture({ close: 84700, previousClose: 84600, closedTrades: [closedTrade({ price_close: 84900 })] })
+  });
+  stateWithPlacement(dir);
+  const spawn = fakeSpawn();
+  const { code, record } = runOnce(optionsFor(dir, { confirmLive: true }), { spawn, now: () => NOW });
+
+  assert.equal(code, 0);
+  assert.equal(record.status, "nothing_to_place");
+  assert.equal(spawn.calls.length, 1, "nothing was put back");
+  const row = record.rule.rows.find(entry => entry.symbol === "BTCUSD");
+  assert.equal(row.reentry, undefined, "the trade is ended rather than re-entered");
+  assert.equal(row.trade.ended, true);
+  assert.equal(row.trade.ended_by, "hand-close");
+  assert.match(row.trade.reason, /taken out by hand/);
+});
+
+test("a trade the market stopped out is still the level's own, and it is put back", () => {
+  const dir = tempDir();
+  // The exit sits at the stop, which is the ending the user kept alive: the level stays active and the same ticket
+  // goes back at the level it was triggered on. Nothing here changes for a stop-out.
+  writeFixtures(dir, {
+    feed: feedFixture({ close: 84700, previousClose: 84600, closedTrades: [closedTrade({ price_close: 84320 })] })
+  });
+  stateWithPlacement(dir);
+  const spawn = fakeSpawn();
+  const { code, record } = runOnce(optionsFor(dir, { confirmLive: true }), { spawn, now: () => NOW });
+
+  assert.equal(code, 0);
+  assert.equal(record.status, "placed");
+  const row = record.rule.rows.find(entry => entry.symbol === "BTCUSD");
+  assert.equal(row.trade.ended, false);
+  assert.equal(row.reentry, true);
+  assert.equal(row.decision, "place");
+});
+
+test("a close this lane wrote down by hand ends the trade even when the account's own record is out of the window", () => {
+  const dir = tempDir();
+  writeFixtures(dir, { feed: feedFixture({ close: 84700, previousClose: 84600 }) });
+  stateWithPlacement(dir);
+  // The close landed in an earlier run and is in this lane's state: the account's history no longer carries it,
+  // and the loop still knows the ticket was taken out by a person rather than by its stop.
+  const statePath = path.join(dir, "trader-state.json");
+  const state = JSON.parse(fs.readFileSync(statePath, "utf8"));
+  state.closes = [
+    {
+      ticket: 278466300,
+      symbol: "BTCUSD",
+      action: "close",
+      done: true,
+      done_at_utc: "2026-10-05T05:30:00.000Z",
+      comment: "l2l-rule-asked"
+    }
+  ];
+  fs.writeFileSync(statePath, `${JSON.stringify(state, null, 2)}\n`, "utf8");
+  const spawn = fakeSpawn();
+  const { record } = runOnce(optionsFor(dir, { confirmLive: true }), { spawn, now: () => NOW });
+
+  const row = record.rule.rows.find(entry => entry.symbol === "BTCUSD");
+  assert.equal(row.trade.ended, true);
+  assert.equal(row.trade.ended_by, "hand-close");
+  assert.equal(record.status, "nothing_to_place");
 });
 
 test("a trade whose call has changed is over, and its level is not re-entered", () => {
@@ -1805,7 +1882,7 @@ test("a hand run whose terminal cannot be read, or whose send was refused, sends
 // run with nothing waiting judges the market exactly as it always did.
 function requestDocument(rows) {
   return `${JSON.stringify({
-    schema_version: "live-trading-close-request-v1",
+    schema_version: "live-trading-close-request-v2",
     updated_at_utc: new Date(NOW).toISOString(),
     note: "Close requests asked for by hand from the live dashboard's Open positions table.",
     request_count: rows.length,
@@ -1813,16 +1890,32 @@ function requestDocument(rows) {
   }, null, 2)}\n`;
 }
 
-function askRow({ ticket = 278466300, minutesAgo = 2, symbol = "BTCUSD", side = "buy", volume = 0.01 } = {}) {
+function askRow({
+  ticket = 278466300,
+  minutesAgo = 2,
+  symbol = "BTCUSD",
+  side = "buy",
+  volume = 0.01,
+  lane = "ftmo-1",
+  masked = "***614",
+  server = "FTMO-Server",
+  requestId = null,
+  expiresInMinutes = 30
+} = {}) {
   const stamp = new Date(NOW - minutesAgo * 60000).toISOString().replace(/\.\d{3}Z$/, "Z");
+  const expiry = new Date(NOW - minutesAgo * 60000 + expiresInMinutes * 60000)
+    .toISOString()
+    .replace(/\.\d{3}Z$/, "Z");
   return {
-    request_id: `close-${ticket}-${stamp.replace(/[^0-9A-Za-z]/g, "")}`,
+    request_id: requestId || `close-${lane}-${ticket}-${stamp.replace(/[^0-9A-Za-z]/g, "")}-a1b2`,
     ticket,
     symbol,
     side,
     volume,
     requested_at_utc: stamp,
+    expires_at_utc: expiry,
     requested_by: "dashboard",
+    account: { lane, login_masked: masked, server },
     note: "Close pressed in the Open positions table."
   };
 }
@@ -1860,7 +1953,7 @@ test("an ask from the page takes the named ticket out on the tick after it lands
   });
   const exec = requestExec(requestDocument([askRow()]));
   const { code, record } = runOnce(
-    optionsFor(dir, { confirmLive: true, closeRequests: "data/live-trading-close-request.json" }),
+    optionsFor(dir, { confirmLive: true, lane: "ftmo-1", closeRequests: "data/live-trading-close-request.json" }),
     { spawn, exec, now: () => NOW }
   );
 
@@ -1897,12 +1990,13 @@ test("an ask older than its window, or one already answered, is not acted on and
   writeFixtures(staleDir);
   const staleSpawn = fakeSpawn();
   const stale = runOnce(
-    optionsFor(staleDir, { confirmLive: true, closeRequests: "data/live-trading-close-request.json" }),
+    optionsFor(staleDir, { confirmLive: true, lane: "ftmo-1", closeRequests: "data/live-trading-close-request.json" }),
     { spawn: staleSpawn, exec: requestExec(requestDocument([askRow({ minutesAgo: 45 })])), now: () => NOW }
   );
   assert.equal(stale.record.close_requests.published, 1, "the row was seen");
   assert.equal(stale.record.close_requests.taken, null, "and was not taken");
-  assert.equal(stale.record.close_requests.asked, undefined);
+  assert.equal(stale.record.close_requests.asked, null);
+  assert.equal(stale.record.close_requests.answered[0].outcome, "expired", "and it is written down as expired rather than passed over");
   assert.equal(staleSpawn.calls.some(call => call.args[1] === "close"), false);
   assert.equal(stale.record.status, "placed", "the tick traded exactly as it would have with no ask at all");
 
@@ -1918,7 +2012,7 @@ test("an ask older than its window, or one already answered, is not acted on and
   );
   const answeredSpawn = fakeSpawn();
   const answered = runOnce(
-    optionsFor(answeredDir, { confirmLive: true, closeRequests: "data/live-trading-close-request.json" }),
+    optionsFor(answeredDir, { confirmLive: true, lane: "ftmo-1", closeRequests: "data/live-trading-close-request.json" }),
     { spawn: answeredSpawn, exec: requestExec(requestDocument([ask])), now: () => NOW }
   );
   assert.equal(answered.record.close_requests.published, 1);
@@ -1934,7 +2028,7 @@ test("an ask naming a ticket that is not this loop's own is written down as answ
   });
   const document = requestDocument([askRow({ ticket: 11, symbol: "EURUSD" })]);
   const first = runOnce(
-    optionsFor(dir, { confirmLive: true, closeRequests: "data/live-trading-close-request.json" }),
+    optionsFor(dir, { confirmLive: true, lane: "ftmo-1", closeRequests: "data/live-trading-close-request.json" }),
     { spawn, exec: requestExec(document), now: () => NOW }
   );
   assert.equal(first.code, 0);
@@ -1949,7 +2043,7 @@ test("an ask naming a ticket that is not this loop's own is written down as answ
   // The next tick reads the same row and does not ask the account about it again: it moves on to the market.
   const secondSpawn = fakeSpawn();
   const second = runOnce(
-    optionsFor(dir, { confirmLive: true, closeRequests: "data/live-trading-close-request.json" }),
+    optionsFor(dir, { confirmLive: true, lane: "ftmo-1", closeRequests: "data/live-trading-close-request.json" }),
     { spawn: secondSpawn, exec: requestExec(document), now: () => NOW }
   );
   assert.equal(secondSpawn.calls.length, 0, "an answered ask is not looked at a second time");
@@ -1969,6 +2063,7 @@ test("the log is read from the published branch, and the checkout's own copy is 
     optionsFor(dir, {
       published: dir,
       confirmLive: true,
+      lane: "ftmo-1",
       closeRequests: "data/live-trading-close-request.json"
     }),
     { spawn, exec: requestExec("", { fetchFails: true, showFails: true }), now: () => NOW }
@@ -1979,12 +2074,104 @@ test("the log is read from the published branch, and the checkout's own copy is 
   assert.match(offline.record.reason, /in answer to the dashboard's close request/);
 });
 
+test("an ask asked on the other lane is written down as another account's and takes nothing out", () => {
+  const dir = tempDir();
+  const spawn = fakeSpawn({
+    status: { positions: [{ ticket: 278466300, symbol: "BTCUSD", side: "buy", magic: ORDER_MAGIC, volume: 0.01, price_open: 84500 }] }
+  });
+  // The same published log carries a row from account 2. This loop runs lane 1, so the row is not its own: it
+  // says so, writes that down once, and sends nothing - the account's own ticket is still there afterwards.
+  const document = requestDocument([askRow({ lane: "ftmo-2", masked: "***777" })]);
+  const tick = runOnce(
+    optionsFor(dir, { confirmLive: true, lane: "ftmo-1", closeRequests: "data/live-trading-close-request.json" }),
+    { spawn, exec: requestExec(document), now: () => NOW }
+  );
+  assert.equal(tick.record.close_requests.taken, null);
+  assert.equal(tick.record.close_requests.answered[0].outcome, "foreign_account");
+  assert.match(tick.record.close_requests.answered[0].reason, /asked on lane ftmo-2/);
+  assert.equal(spawn.calls.filter(call => call.args.includes("close")).length, 0, "nothing was sent");
+  const held = readState(path.join(dir, "trader-state.json"));
+  assert.equal(held.close_requests.length, 1);
+  assert.equal(held.close_requests[0].outcome, "foreign_account");
+  assert.equal(held.close_requests[0].account.lane, "ftmo-2", "the answer names whose row it was");
+
+  // A second tick does not write the same answer again: an answer is one row, like a close.
+  const again = runOnce(
+    optionsFor(dir, { confirmLive: true, lane: "ftmo-1", closeRequests: "data/live-trading-close-request.json" }),
+    { spawn: fakeSpawn(), exec: requestExec(document), now: () => NOW }
+  );
+  assert.equal(again.record.close_requests.answered.length, 0);
+});
+
+test("an ask whose account the terminal does not report is refused even on the right lane", () => {
+  const dir = tempDir();
+  // The row names lane 1 but a login the terminal does not have - a copied row, or a terminal logged into the
+  // other account since the ask was written. The account identity, not the lane alone, is what decides it.
+  const spawn = fakeSpawn({
+    status: {
+      account: { login_masked: "***999", server: "FTMO-Server" },
+      positions: [{ ticket: 278466300, symbol: "BTCUSD", side: "buy", magic: ORDER_MAGIC, volume: 0.01, price_open: 84500 }]
+    }
+  });
+  const tick = runOnce(
+    optionsFor(dir, { confirmLive: true, lane: "ftmo-1", closeRequests: "data/live-trading-close-request.json" }),
+    { spawn, exec: requestExec(requestDocument([askRow()])), now: () => NOW }
+  );
+  assert.equal(tick.record.close_requests.taken.outcome, "foreign_account");
+  assert.match(tick.record.close_requests.taken.reason, /\*\*\*614.*\*\*\*999/);
+  assert.equal(spawn.calls.filter(call => call.args.includes("close")).length, 0, "nothing was sent");
+});
+
+test("an ask already answered through a close this lane wrote is refused as a replay, once", () => {
+  const dir = tempDir();
+  const row = askRow();
+  fs.mkdirSync(path.join(dir, "data"), { recursive: true });
+  // The state holds the close that came from this id, but not the answer row itself: the tick after the close
+  // knows the ask is spent, says so once, and neither acts on it nor writes that answer every five minutes.
+  fs.writeFileSync(
+    path.join(dir, "trader-state.json"),
+    `${JSON.stringify({
+      placements: [],
+      closes: [{ ticket: row.ticket, symbol: row.symbol, action: "close", done: true, done_at_utc: "2026-10-05T05:30:00.000Z", request_id: row.request_id }]
+    }, null, 2)}\n`,
+    "utf8"
+  );
+  const spawn = fakeSpawn();
+  const tick = runOnce(
+    optionsFor(dir, { confirmLive: true, lane: "ftmo-1", closeRequests: "data/live-trading-close-request.json" }),
+    { spawn, exec: requestExec(requestDocument([row])), now: () => NOW }
+  );
+  assert.equal(tick.record.close_requests.taken, null, "an answered ask is not acted on again");
+  assert.equal(tick.record.close_requests.answered[0].outcome, "replay");
+  assert.equal(spawn.calls.filter(call => call.args.includes("close")).length, 0);
+  const held = readState(path.join(dir, "trader-state.json"));
+  assert.equal(held.close_requests.length, 1);
+  assert.equal(held.close_requests[0].outcome, "replay");
+  const next = runOnce(
+    optionsFor(dir, { confirmLive: true, lane: "ftmo-1", closeRequests: "data/live-trading-close-request.json" }),
+    { spawn: fakeSpawn(), exec: requestExec(requestDocument([row])), now: () => NOW }
+  );
+  assert.equal(next.record.close_requests.answered.length, 0, "the replay is written once, not every tick");
+});
+
+test("a loop that was not told its lane cannot claim an ask, and says why", () => {
+  const dir = tempDir();
+  const spawn = fakeSpawn();
+  const tick = runOnce(
+    optionsFor(dir, { confirmLive: true, closeRequests: "data/live-trading-close-request.json" }),
+    { spawn, exec: requestExec(requestDocument([askRow()])), now: () => NOW }
+  );
+  assert.match(tick.record.close_requests.error, /was not told which lane/);
+  assert.equal(tick.record.close_requests.taken, null);
+  assert.equal(spawn.calls.filter(call => call.args.includes("close")).length, 0, "nothing was sent");
+});
+
 test("a log that cannot be read is a note in the record rather than a refusal, and off means no read at all", () => {
   const dir = tempDir();
   writeFixtures(dir);
   const brokenSpawn = fakeSpawn();
   const broken = runOnce(
-    optionsFor(dir, { confirmLive: true, closeRequests: "data/live-trading-close-request.json" }),
+    optionsFor(dir, { confirmLive: true, lane: "ftmo-1", closeRequests: "data/live-trading-close-request.json" }),
     { spawn: brokenSpawn, exec: requestExec("{\"schema_version\":\"l2l-levels-v1\"}"), now: () => NOW }
   );
   assert.equal(broken.record.status, "placed", "a log the loop cannot read does not stop it trading");
@@ -2055,3 +2242,63 @@ test("a stop move the tool refused does not spend the rung, and the next run ask
   assert.equal(readState(path.join(dir, "trader-state.json")).moves.length, 1);
 });
 
+
+// The daily cap is a Prague trading day, not a UTC day: the clock the account's own day and loss limits roll on.
+// The four instants below sit in the two hours where the two clocks disagree, which is where a UTC cut let the
+// loop spend a second cap on the same FTMO day.
+test("the daily cap counts placements in the Europe/Prague day, DST included", () => {
+  assert.equal(TRADE_DAY_TIMEZONE, "Europe/Prague");
+
+  // Winter: Prague is UTC+1, so 23:30Z on the 15th is already 00:30 on the 16th there.
+  const winterLate = "2026-01-15T23:30:00.000Z";
+  assert.equal(tradeDayKey(winterLate), "2026-01-16");
+  const winterState = { placements: [{ symbol: "BTCUSD", placed: true, placed_at_utc: winterLate }] };
+  // 00:10Z on the 16th is 01:10 in Prague, so it is still that same Prague day - and it was *not* the same UTC
+  // day as the placement, which is the case the old counter got wrong.
+  assert.equal(placementsToday(winterState, Date.parse("2026-01-16T00:10:00Z")), 1);
+  assert.equal(placementsToday(winterState, Date.parse("2026-01-17T00:10:00Z")), 0);
+  // The other side of the same night: 22:50Z on the 15th is 23:50 Prague on the 15th, a different Prague day.
+  assert.equal(placementsToday(winterState, Date.parse("2026-01-15T22:50:00Z")), 0);
+
+  // Summer: Prague is UTC+2, so the same wall-clock hour arrives at 22:00Z instead.
+  const summerLate = "2026-07-14T22:30:00.000Z";
+  assert.equal(tradeDayKey(summerLate), "2026-07-15");
+  assert.equal(placementsToday({ placements: [{ placed: true, placed_at_utc: summerLate }] }, Date.parse("2026-07-15T00:30:00Z")), 1);
+  assert.equal(placementsToday({ placements: [{ placed: true, placed_at_utc: summerLate }] }, Date.parse("2026-07-14T20:00:00Z")), 0);
+
+  // Spring forward, 2026-03-29 (01:00Z jumps 02:00 CET to 03:00 CEST): neither side of the change moves the day.
+  assert.equal(tradeDayKey("2026-03-29T00:59:00Z"), "2026-03-29");
+  assert.equal(tradeDayKey("2026-03-29T01:00:00Z"), "2026-03-29");
+  assert.equal(tradeDayKey("2026-03-29T23:30:00Z"), "2026-03-30");
+  // Autumn back, 2026-10-25 (01:00Z takes 03:00 CEST back to 02:00 CET): the repeated hour stays one day.
+  assert.equal(tradeDayKey("2026-10-24T23:30:00Z"), "2026-10-25");
+  assert.equal(tradeDayKey("2026-10-25T00:59:00Z"), "2026-10-25");
+  assert.equal(tradeDayKey("2026-10-25T01:00:00Z"), "2026-10-25");
+  assert.equal(tradeDayKey("2026-10-25T22:59:00Z"), "2026-10-25");
+  assert.equal(tradeDayKey("2026-10-25T23:30:00Z"), "2026-10-26");
+
+  // A placement whose stamp cannot be read is not one of today's, and a re-entry is still not a trade the day
+  // opened: both rules the UTC counter had are kept rather than lost in the change of clock.
+  const unreadable = { placements: [{ placed: true, placed_at_utc: null }, { placed: true, placed_at_utc: "not a date" }] };
+  assert.equal(tradeDayKey(null), null);
+  assert.equal(tradeDayKey(""), null);
+  assert.equal(placementsToday(unreadable, Date.parse("2026-10-05T06:00:00Z")), 0);
+  const mixed = {
+    placements: [
+      { placed: true, placed_at_utc: "2026-10-05T05:00:00Z" },
+      { placed: true, reentry: true, placed_at_utc: "2026-10-05T05:30:00Z" }
+    ]
+  };
+  assert.equal(placementsToday(mixed, Date.parse("2026-10-05T06:00:00Z")), 1);
+});
+
+// The count is on the row the loop writes as well as in the decision, so a reader of the log knows which Prague day
+// the number belongs to and does not have to infer it from the runner's version.
+test("the run record states the trade day and the clock it was counted on", () => {
+  const dir = tempDir();
+  const spawn = fakeSpawn({ status: { positions: [], orders: [], history: [] } });
+  const result = runOnce(optionsFor(dir, {}), { spawn, now: () => NOW });
+  assert.equal(result.record.caps.trade_day, "2026-10-05");
+  assert.equal(result.record.caps.trade_day_timezone, "Europe/Prague");
+  assert.equal(result.record.caps.max_per_day, 4);
+});

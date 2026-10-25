@@ -74,10 +74,17 @@ function feedWithTwoPositions() {
   return feed;
 }
 
-async function startServer(feed) {
+async function startServer(feed, { omit = [] } = {}) {
   const server = http.createServer((req, res) => {
     const url = new URL(req.url || "/", "http://127.0.0.1");
     const pathname = url.pathname === "/" ? "/index.html" : url.pathname;
+    // A case can hide one published file, which is how the page is tested as a reader finds it before a
+    // document has been published at all.
+    if (omit.includes(pathname)) {
+      res.writeHead(404, { "Content-Type": "text/plain; charset=utf-8" });
+      res.end("Not found");
+      return;
+    }
     if (pathname === "/data/live-trading.json") {
       res.writeHead(200, { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store" });
       res.end(JSON.stringify(feed));
@@ -256,13 +263,20 @@ test("the log route commits one row for the ticket, through the reader's own tok
     assert.equal(puts.length, 1, "one ask is one commit");
     assert.match(puts[0].url, /api\.github\.com\/repos\/kevincreedycars-debug\/trading-agent-dashboard\/contents\/data\/live-trading-close-request\.json/);
     const committed = JSON.parse(Buffer.from(puts[0].body.content, "base64").toString("utf8"));
-    assert.equal(committed.schema_version, "live-trading-close-request-v1");
+    assert.equal(committed.schema_version, "live-trading-close-request-v2");
     assert.equal(committed.requests.length, 1);
     assert.equal(committed.requests[0].ticket, 300456025);
     assert.equal(committed.requests[0].side, "buy");
     assert.equal(committed.requests[0].volume, 0.01);
     assert.equal(committed.requests[0].requested_by, "dashboard");
     assert.match(committed.requests[0].note, /Open positions table/);
+    // The row names the lane the lanes document gives this page's own feed, and the masked account the snapshot
+    // already shows. Without both, the loop that reads this file could not tell which terminal to close in.
+    assert.equal(committed.requests[0].account.lane, "ftmo-1");
+    assert.equal(committed.requests[0].account.login_masked, feed.account.login_masked);
+    assert.equal(committed.requests[0].account.server, feed.account.server);
+    assert.match(committed.requests[0].request_id, /^close-ftmo-1-300456025-/);
+    assert.match(committed.requests[0].expires_at_utc, /^\d{4}-\d{2}-\d{2}T/);
 
     const status = await textOf(page.locator("#liveTradingPanel .live-trading-close-status"));
     assert.match(status, /Asked: ticket 300456025 is written into data\/live-trading-close-request\.json/);
@@ -296,3 +310,36 @@ test("without a token the log route says what is missing instead of failing quie
     await server.close();
   }
 });
+
+test("with no lanes document published yet, the ask still names the primary lane rather than being refused", async () => {
+  // A reader can be holding a page whose cache-buster predates the lanes document, and asking must still work:
+  // the fallback is the lane id the document gives the primary feed, which is the feed this page reads. An ask
+  // that named no lane at all would be refused by the module, which is the failure this case exists to catch.
+  const feed = feedWithTwoPositions();
+  const server = await startServer(feed, { omit: ["/data/live-trading-lanes.json"] });
+  const browser = await chromium.launch();
+  const puts = [];
+  try {
+    const page = await browser.newPage();
+    const panel = await openPanel(page, server.origin, { put: puts });
+    await page.fill("[data-live-publish-token]", "ghp_example_token");
+    await page.click("[data-live-publish-save]");
+    await rowFor(panel, 300456025).locator("[data-live-close-ask]").click();
+    await page.waitForSelector("#liveTradingPanel [data-live-close-loop]");
+    await page.click("#liveTradingPanel [data-live-close-loop]");
+    await page.waitForFunction(() => {
+      const node = document.querySelector("#liveTradingPanel .live-trading-close-status");
+      return Boolean(node && /Asked: ticket 300456025/.test(node.textContent || ""));
+    });
+
+    assert.equal(puts.length, 1, "the ask is committed anyway");
+    const committed = JSON.parse(Buffer.from(puts[0].body.content, "base64").toString("utf8"));
+    assert.equal(committed.schema_version, "live-trading-close-request-v2");
+    assert.equal(committed.requests[0].account.lane, "ftmo-1");
+    assert.equal(committed.requests[0].account.login_masked, feed.account.login_masked);
+  } finally {
+    await browser.close();
+    await server.close();
+  }
+});
+

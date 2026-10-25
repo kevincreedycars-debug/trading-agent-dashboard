@@ -127,6 +127,13 @@ const DEFAULT_LOG = "tmp/live-trading-trader.log";
 const DEFAULT_LOCK = "tmp/live-trading-trader.lock";
 const DEFAULT_STATE = "tmp/live-trading-trader-state.json";
 const DEFAULT_JOURNAL = "tmp/live-trading-orders.log";
+// The one small document this loop writes for the page: which lane it is, whether it is armed, when it last
+// ran and what it did. The snapshot says what the account holds; this says whether a loop is alive behind it,
+// so an account with a fresh snapshot and no heartbeat is a feed that is running without a trader. It lives in
+// tmp/ with every other local record, and the lanes publisher carries it to the page beside that lane's
+// snapshot. It holds no credential and no full login: the masked login the page already shows, or nothing.
+const DEFAULT_STATUS_OUT = "tmp/live-trading-trader-status.json";
+const STATUS_SCHEMA_VERSION = "live-trading-trader-status-v1";
 // Where the dashboard's close requests are read from in the published tree, and the branch they are read out
 // of. The page commits the file to the published branch, so the loop asks the remote for it on each tick
 // rather than waiting for the publish checkout to be refreshed under it: the ask is a hand act, and half an
@@ -196,9 +203,12 @@ const USAGE = [
   "  --max-open <n>             hand cap only: working tickets this loop allows at once, across all pairs. The",
   "                             rule's own hold is the cap and it is per pair - one ticket per pair at a time -",
   "                             so this is left out unless a run asks for one (default: none)",
-  "  --max-per-day <n>          trades this loop opens in one UTC day (default 4). A ticket put back at the",
-  "                             level a standing trade was triggered on is that same trade rather than a new",
-  "                             one, so it does not count against this",
+  "  --max-per-day <n>          trades this loop opens in one Europe/Prague day (default 4): the clock FTMO's",
+  "                             own day and loss limits roll on, where 00:00-02:00 Prague is still the previous",
+  "                             UTC day and both clock changes are read in the named zone rather than as a",
+  "                             fixed offset. This counts placements; it is not a loss-limit guard. A ticket put",
+  "                             back at the level a standing trade was triggered on is that same trade rather",
+  "                             than a new one, so it does not count against this",
   "  --close-ticket <n>         hand run only: close this ticket this once, whatever the rule would say, and place",
   "                             nothing else that run. The artifacts are not read and the rule is not asked, since",
   "                             the act is to be out of a named position rather than to judge it; the ticket must be",
@@ -206,11 +216,17 @@ const USAGE = [
   "                             send. Needs --once: a hand act on one ticket is not a cadence",
   "  --close-requests <path>    the dashboard's own close-request log, read from the published branch at each run",
   `                             (default ${DEFAULT_CLOSE_REQUESTS}). A reader pressing Close in the page's Open`,
-  "                             positions table asks for one named ticket to be taken out; the ticket still has to",
-  "                             carry this lane's own magic and the ask has to be younger than thirty minutes,",
+  "                             positions table asks for one named ticket to be taken out; the row has to name",
+  "                             this loop's lane and account, the ticket still has to carry this lane's own",
+  "                             magic, the ask has to be younger than thirty minutes and before its own expiry,",
   "                             and --confirm-live still gates the send. `off` stops the read",
+  "  --lane <id>                the lane this checkout trades, exactly as config/live-trading-lanes.json names it",
+  "                             (for example ftmo-1). Required for close requests: a row asked on one account is",
+  "                             never acted on by the other account's loop",
   "  --requests-remote <name>   remote the close-request log is fetched from (default origin)",
   "  --requests-branch <name>   branch the close-request log is fetched from (default main)",
+  "  --status-out <path>        the small heartbeat this run leaves for the page, carried by the lanes publisher",
+  "                             beside this lane's snapshot (default tmp/live-trading-trader-status.json)",
   "  --state <path>             what has already been placed (default tmp/live-trading-trader-state.json)",
   "  --log <path>               append-only run log (default tmp/live-trading-trader.log)",
   "  --lock <path>              the guard against two runs at once (default tmp/live-trading-trader.lock)",
@@ -249,12 +265,14 @@ function parseArgs(argv) {
     maxPerDay: DEFAULT_MAX_PER_DAY,
     closeTicket: null,
     closeRequests: DEFAULT_CLOSE_REQUESTS,
+    lane: null,
     requestsRemote: feedPublisher.DEFAULT_REMOTE,
     requestsBranch: feedPublisher.DEFAULT_BRANCH,
     state: DEFAULT_STATE,
     log: DEFAULT_LOG,
     lock: DEFAULT_LOCK,
     journal: DEFAULT_JOURNAL,
+    statusOut: DEFAULT_STATUS_OUT,
     python: null,
     terminal: null
   };
@@ -311,6 +329,9 @@ function parseArgs(argv) {
       case "--close-requests":
         options.closeRequests = String(next()).trim() || DEFAULT_CLOSE_REQUESTS;
         break;
+      case "--lane":
+        options.lane = String(next()).trim() || null;
+        break;
       case "--requests-remote":
         options.requestsRemote = String(next()).trim();
         break;
@@ -341,6 +362,9 @@ function parseArgs(argv) {
       case "--journal":
         options.journal = next();
         break;
+      case "--status-out":
+        options.statusOut = next();
+        break;
       case "--python":
         options.python = next();
         break;
@@ -358,6 +382,11 @@ function parseArgs(argv) {
   }
   if (options.settleSeconds >= options.intervalSeconds) {
     throw new UsageError("--settle-seconds must be smaller than --interval-seconds, or the cadence chases itself.");
+  }
+  if (options.lane !== null && !closeRequests.isLane(options.lane)) {
+    throw new UsageError(
+      `--lane must be a lane id from config/live-trading-lanes.json (for example ftmo-1), got ${JSON.stringify(options.lane)}.`
+    );
   }
   return options;
 }
@@ -469,19 +498,30 @@ function joinLevels(feed, levelsJson) {
 }
 
 
-// Whether the account's own record of a closed trade shows it leaving at its target rather than at its stop. The
-// exit price is the one price the position closed at, and the two it could have closed at are the ones placed with
-// it: the exit sits nearer exactly one of them, which is the price the market reached first. A trade that ended
-// away from both - a hand close, or a gap straight through both - is not read as having taken its target, because
-// this reading is what ends a trade's life for the day and a record that does not say must not end anything.
-function closedAtItsTarget(row) {
+// Which of the two prices a closed trade left at: the one it was placed with, or its take-profit. The exit
+// price is the one price the position closed at, and the two it could have closed at are the ones placed with
+// it - the exit sits nearer exactly one of them, which is the price the market reached first. A trade that
+// ended away from both is a hand close if it was not the stop, and `other` is what says so.
+function exitEnding(row) {
   const exit = Number(row?.price_close);
-  if (!Number.isFinite(exit)) return false;
+  if (!Number.isFinite(exit)) return null;
   const distance = price => {
     const value = price === null || price === undefined || price === "" ? Number.NaN : Number(price);
     return Number.isFinite(value) ? Math.abs(exit - value) : Number.POSITIVE_INFINITY;
   };
-  return distance(row?.take_profit) < distance(row?.stop_loss);
+  const toTarget = distance(row?.take_profit);
+  const toStop = distance(row?.stop_loss);
+  if (!Number.isFinite(toTarget) && !Number.isFinite(toStop)) return null;
+  if (toTarget < toStop) return "target";
+  if (toStop < toTarget) return "stop";
+  return "other";
+}
+
+// Whether the account's own record of a closed trade shows it leaving at its target rather than at its stop. A
+// trade that ended away from both is not read as having taken its target: this reading is what ends a trade's
+// life for the day at its target, and the separate hand-close reading below is what ends it when a person did.
+function closedAtItsTarget(row) {
+  return exitEnding(row) === "target";
 }
 
 // The trade each pair already has on: the level its newest ticket was placed at - the level it was triggered on -
@@ -527,6 +567,13 @@ function tradeCycles({ state, directions = {}, joined, closedTrades = [] } = {})
   const ours = (Array.isArray(closedTrades) ? closedTrades : []).filter(
     row => Number(row?.magic) === ORDER_MAGIC && String(row?.comment || "").startsWith(COMMENT_PREFIX)
   );
+  // Every act this lane wrote down that took a ticket out by hand: the closes and cancellations of an ask or a
+  // hand run, and the answers to close requests that say one landed. They are what lets a trade a person ended
+  // be recognised even when the account's own record is not in the snapshot's window.
+  const manualEnds = (Array.isArray(state?.closes) ? state.closes : [])
+    .concat(Array.isArray(state?.cancellations) ? state.cancellations : [])
+    .concat(Array.isArray(state?.close_requests) ? state.close_requests : [])
+    .filter(row => row && (row.done === true || row.outcome === "closed" || row.outcome === "cancelled"));
   // One row per pair: the newest ticket this loop placed on it. Everything older is the same trade put back, or a
   // trade that has already been answered, and the account itself is the live fact about what is still working.
   const newest = new Map();
@@ -542,7 +589,8 @@ function tradeCycles({ state, directions = {}, joined, closedTrades = [] } = {})
     cycles.set(symbol, tradeCycle(symbol, row, {
       directions,
       instrument: instrumentBySymbol.get(symbol) || null,
-      closedTrades: ours
+      closedTrades: ours,
+      manualEnds
     }));
   }
   return cycles;
@@ -582,6 +630,9 @@ function tradeReason({ symbol, asset, side, trigger, target, direction, endedBy,
   if (endedBy === "target-fill") {
     return `The trade at ${trigger} has taken its target: the account's own record shows ${symbol} closing at ${settled?.price_close}, its own take-profit, so the level's turn is over and the next day is what this pair waits for.`;
   }
+  if (endedBy === "hand-close") {
+    return `The trade at ${trigger} was taken out by hand, not by its stop and not at its target, and a ticket a person closed is not one this loop puts back: the level waits for the rule's own crossing at a fresh bar rather than reopening the trade someone chose to end.`;
+  }
   if (endedBy === "target-touched") {
     return `The trade at ${trigger} has had its target reached without its entry filling: ${side === "long" ? "the bid" : "the ask"} is ${exitPrice} and the target this ticket was left aiming at is ${target}, so what the level was waiting for has already happened without this entry, the level's turn is over for now, and a fresh crossing is what would open the next one.`;
   }
@@ -589,11 +640,14 @@ function tradeReason({ symbol, asset, side, trigger, target, direction, endedBy,
 
 // One pair's trade, from the ticket this loop placed on it. Split out of `tradeCycles` only so this file keeps one
 // function per idea: everything below is the arithmetic of reading the two artifacts and the account's record.
-function tradeCycle(symbol, row, { directions = {}, instrument = null, closedTrades = [] } = {}) {
+function tradeCycle(symbol, row, { directions = {}, instrument = null, closedTrades = [], manualEnds = [] } = {}) {
   const asset = row?.asset || instrument?.dashboard_asset || null;
   const side = row?.side === "short" ? "short" : "long";
   const trigger = Number(row?.level ?? row?.entry);
   const entryIsPrice = Number.isFinite(trigger);
+  const placedTicket = row?.order_ticket === undefined || row?.order_ticket === null
+    ? null
+    : Number(row.order_ticket);
   const levels = strategy.readLevels(instrument?.levels);
   const point = instrument?.point ?? null;
   const direction = directions && typeof directions === "object" ? directions[asset] : null;
@@ -615,6 +669,24 @@ function tradeCycle(symbol, row, { directions = {}, instrument = null, closedTra
         && (Date.parse(entry?.opened?.time_utc || "") || 0) >= placedAtMs
         && closedAtItsTarget(entry)
       ) || null;
+  // A trade that ended by a person rather than by the market, read two ways so neither the page nor the
+  // account's own record has to be the only witness. The account's record says it left away from both its
+  // stop and its target; this lane's own state says a close or a cancellation was written for this ticket or
+  // symbol after it was placed. Either one ends the trade here, because a ticket a person took out is not one
+  // this loop puts back - that is the whole difference between a stop, which the rule re-arms, and a hand.
+  const closedByHand = placedAtMs === null
+    ? null
+    : closedTrades.find(entry =>
+        entry?.symbol === symbol
+        && (Date.parse(entry?.opened?.time_utc || "") || 0) >= placedAtMs
+        && exitEnding(entry) === "other"
+      ) || null;
+  const askedByHand = (Array.isArray(manualEnds) ? manualEnds : []).find(entry => {
+    if (!entry || entry.symbol !== symbol) return false;
+    if (placedTicket !== null && Number.isFinite(placedTicket) && Number(entry.ticket) === placedTicket) return true;
+    const when = Date.parse(entry.done_at_utc || entry.answered_at_utc || "") || 0;
+    return placedAtMs !== null && when >= placedAtMs;
+  }) || null;
   const quote = instrument?.quote && typeof instrument.quote === "object" ? instrument.quote : null;
   const bid = Number(quote?.bid);
   const ask = Number(quote?.ask);
@@ -636,11 +708,13 @@ function tradeCycle(symbol, row, { directions = {}, instrument = null, closedTra
   const exitPrice = exitPriceFor(side, instrument);
   const endedBy = !callSide || callSide !== side
     ? "call"
-    : settled
-      ? "target-fill"
-      : targetReached
-        ? "target-touched"
-        : null;
+    : askedByHand || closedByHand
+      ? "hand-close"
+      : settled
+        ? "target-fill"
+        : targetReached
+          ? "target-touched"
+          : null;
   const ticket = endedBy ? null : strategy.reentryPlan({ symbol, side, entry: trigger, levels, point });
   return {
     symbol,
@@ -1181,6 +1255,7 @@ function takeTicketOut({ options, record, statePath, spawn, now, ticket, comment
   }
   record.terminal = {
     account: live.account?.login_masked ?? null,
+    server: live.account?.server ?? null,
     positions_open: live.positions.length,
     orders_open: live.orders.length,
     ours: live.ours.length
@@ -1211,6 +1286,21 @@ function takeTicketOut({ options, record, statePath, spawn, now, ticket, comment
     record.hand.request_id = request.request_id;
     record.hand.requested_at_utc = request.requested_at_utc;
     record.hand.requested_by = request.requested_by;
+    record.hand.account = request.account || null;
+    // Defence in depth on the same fact the ask carried. The row named a lane and a masked login; the terminal
+    // read a moment ago is the account those have to match. A row copied from the other lane's page, or a
+    // terminal logged into the other account since the ask was written, is refused here - before the ticket is
+    // looked up in this loop's own magic - so nothing can be closed on the wrong account.
+    const owned = closeRequests.accountMatches(request, {
+      lane: options.lane,
+      loginMasked: live.account?.login_masked ?? null,
+      server: live.account?.server ?? null
+    });
+    if (!owned.ok) {
+      record.status = "nothing_to_close";
+      record.reason = `${owned.reason}, so ticket ${handTicket} was not taken out: nothing was sent.`;
+      return { status: "nothing_to_close", exitCode: 0, outcome: "foreign_account", reason: record.reason };
+    }
   }
 
   // A ticket on the account that is not this loop's own is not this loop's to take out: a position opened by
@@ -1334,26 +1424,95 @@ function closeRequestStep({ options, record, published, statePath, spawn, now, s
   const read = readCloseRequests({ options, published, exec });
   record.close_requests = {
     enabled: read.enabled,
+    lane: options.lane ?? null,
     source: read.source,
     error: read.error,
     published: read.state ? read.state.requests.length : null,
-    taken: null
+    asked: null,
+    taken: null,
+    answered: []
   };
   if (!read.enabled || !read.state) return null;
   const state = injectedState || readState(statePath);
+  // Every ask now names the account it was asked on. A loop that was not told its own lane cannot claim one,
+  // and saying so once per run is better than acting on a row that might belong to the other account.
+  if (!options.lane) {
+    record.close_requests.error =
+      "this loop was not told which lane it is (--lane), so it cannot claim a close request: every ask names its account now, and a loop without a lane must not act on one.";
+    return null;
+  }
+  // What this lane has already dealt with: its own answers, and the closes and cancellations it wrote when an
+  // ask turned into an act. Both make an id answered, and an answered id is a replay rather than a close.
   const answered = new Set((state.close_requests || []).map(row => row?.request_id).filter(Boolean));
   (state.closes || []).concat(state.cancellations || []).forEach(row => {
     if (row?.request_id) answered.add(row.request_id);
   });
-  const pending = closeRequests.pendingRequests(read.state, now()).filter(row => !answered.has(row.request_id));
-  if (!pending.length) return null;
-  const ask = pending[0];
+  const answeredRows = new Set((state.close_requests || []).map(row => row?.request_id).filter(Boolean));
+  const askedAtMs = now();
+  const acks = [];
+  const answer = (request, fields) => {
+    const row = closeRequests.answerFor(request, {
+      answeredAtUtc: new Date(askedAtMs).toISOString(),
+      source: read.source,
+      ...fields
+    });
+    acks.push(row);
+    record.close_requests.answered.push({
+      request_id: row.request_id,
+      ticket: row.ticket,
+      outcome: row.outcome,
+      reason: row.reason
+    });
+    return row;
+  };
+
+  // Walk the log once, oldest ask first. A row is refused for exactly one reason and that reason is written
+  // down: it was already answered, it has expired, it names another account, or it is this lane's and waits.
+  // Only the waiting rows are candidates, and only the oldest of them is taken this run.
+  const mine = [];
+  for (const request of read.state.requests) {
+    if (answered.has(request.request_id)) {
+      if (!answeredRows.has(request.request_id)) {
+        answer(request, {
+          outcome: closeRequests.ANSWER_OUTCOMES.replay,
+          reason: `ask ${request.request_id} was already answered by this lane, so it is not acted on again.`
+        });
+      }
+      continue;
+    }
+    if (!closeRequests.isOpenRequest(request, askedAtMs)) {
+      answer(request, {
+        outcome: closeRequests.ANSWER_OUTCOMES.expired,
+        reason: `ask ${request.request_id} expired at ${request.expires_at_utc || "the end of its window"} without being acted on: nothing was sent.`
+      });
+      continue;
+    }
+    const ownership = closeRequests.accountMatches(request, { lane: options.lane });
+    if (!ownership.ok) {
+      answer(request, {
+        outcome: closeRequests.ANSWER_OUTCOMES.foreign_account,
+        reason: `${ownership.reason}: this lane left it alone, and nothing was sent.`
+      });
+      continue;
+    }
+    mine.push(request);
+  }
+
+  if (acks.length) {
+    state.close_requests = (state.close_requests || []).concat(acks);
+    writeState(statePath, state);
+  }
+  if (!mine.length) return null;
+
+  const ask = mine[0];
   record.close_requests.asked = {
     request_id: ask.request_id,
     ticket: ask.ticket,
     symbol: ask.symbol,
     requested_at_utc: ask.requested_at_utc,
-    requested_by: ask.requested_by
+    expires_at_utc: ask.expires_at_utc,
+    requested_by: ask.requested_by,
+    account: ask.account
   };
   const act = takeTicketOut({
     options,
@@ -1366,19 +1525,14 @@ function closeRequestStep({ options, record, published, statePath, spawn, now, s
     request: ask
   });
   const after = injectedState || readState(statePath);
-  after.close_requests = (after.close_requests || []).concat([{
-    request_id: ask.request_id,
-    ticket: ask.ticket,
-    symbol: ask.symbol,
-    requested_at_utc: ask.requested_at_utc,
-    requested_by: ask.requested_by,
-    answered_at_utc: new Date(now()).toISOString(),
+  after.close_requests = (after.close_requests || []).concat([closeRequests.answerFor(ask, {
+    answeredAtUtc: new Date(now()).toISOString(),
     outcome: act.outcome,
     source: read.source,
     action: record.hand?.action ?? null,
     done: record.hand?.done === true,
     reason: act.reason
-  }]);
+  })]);
   writeState(statePath, after);
   record.close_requests.taken = {
     request_id: ask.request_id,
@@ -1386,7 +1540,8 @@ function closeRequestStep({ options, record, published, statePath, spawn, now, s
     action: record.hand?.action ?? null,
     outcome: act.outcome,
     done: record.hand?.done === true,
-    code: act.exitCode
+    code: act.exitCode,
+    reason: act.reason
   };
   return act;
 }
@@ -1415,10 +1570,37 @@ function reentriesToday(state, nowMs) {
   return todayPlacements(state, nowMs).filter(row => row?.reentry === true).length;
 }
 
+// The day `--max-per-day` counts in. The counter used to cut at 00:00 UTC, which is 01:00 or 02:00 in Prague -
+// the clock the FTMO account's own day and loss limits roll on - so between midnight and 01:00/02:00 local the
+// loop could spend a whole second daily cap while the account still read it as the same trading day. The zone is
+// named rather than expressed as an offset, so both clock changes are the platform's arithmetic and not a table
+// kept here. This is a placement counter, not a loss-limit guard.
+const TRADE_DAY_TIMEZONE = "Europe/Prague";
+const TRADE_DAY_FORMAT = new Intl.DateTimeFormat("en-CA", {
+  timeZone: TRADE_DAY_TIMEZONE,
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit"
+});
+
+// A calendar day in the trading zone, as YYYY-MM-DD, from an instant or an ISO string. A stamp that cannot be read
+// is `null` rather than today: a placement whose time is broken must never be counted as one of today's.
+function tradeDayKey(value) {
+  const ms = typeof value === "number" ? value : Date.parse(String(value ?? ""));
+  if (!Number.isFinite(ms)) return null;
+  const parts = TRADE_DAY_FORMAT.formatToParts(new Date(ms));
+  const pick = type => (parts.find(part => part.type === type) || {}).value || "";
+  const year = pick("year");
+  const month = pick("month");
+  const day = pick("day");
+  return year && month && day ? `${year}-${month}-${day}` : null;
+}
+
 function todayPlacements(state, nowMs) {
-  const day = new Date(nowMs).toISOString().slice(0, 10);
+  const day = tradeDayKey(nowMs);
+  if (!day) return [];
   return (Array.isArray(state?.placements) ? state.placements : []).filter(
-    row => row?.placed === true && String(row?.placed_at_utc || "").slice(0, 10) === day
+    row => row?.placed === true && tradeDayKey(row?.placed_at_utc) === day
   );
 }
 
@@ -1549,6 +1731,50 @@ function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, Math.max(0, ms)));
 }
 
+// The heartbeat the page reads for one lane: the smallest set of facts that says whether a loop is alive
+// behind a snapshot, whether that loop may send, and what it last did. It is derived from the run's own
+// record rather than gathered here, so the page and the log cannot disagree about a run.
+function traderStatus(record, { nowMs } = {}) {
+  const at = record?.at_utc ?? null;
+  const closeRequests = record?.close_requests && typeof record.close_requests === "object"
+    ? record.close_requests
+    : null;
+  return {
+    schema_version: STATUS_SCHEMA_VERSION,
+    lane: record?.lane ?? null,
+    at_utc: at,
+    written_at_utc: new Date(Number.isFinite(nowMs) ? nowMs : Date.now()).toISOString(),
+    armed: record?.armed === true,
+    status: record?.status ?? "unknown",
+    reason: record?.reason ? String(record.reason).slice(0, 400) : null,
+    account: {
+      login_masked: record?.terminal?.account ?? null,
+      server: record?.terminal?.server ?? null
+    },
+    terminal: record?.terminal
+      ? {
+          positions_open: record.terminal.positions_open ?? null,
+          orders_open: record.terminal.orders_open ?? null,
+          ours: record.terminal.ours ?? null
+        }
+      : null,
+    close_requests: closeRequests
+      ? {
+          enabled: closeRequests.enabled === true,
+          error: closeRequests.error ?? null,
+          taken: closeRequests.taken
+            ? {
+                request_id: closeRequests.taken.request_id ?? null,
+                ticket: closeRequests.taken.ticket ?? null,
+                outcome: closeRequests.taken.outcome ?? null
+              }
+            : null
+        }
+      : null,
+    duration_seconds: record?.duration_seconds ?? null
+  };
+}
+
 // One line, always: the log is read by eye and by grep, and a run with nothing to say still has to say when.
 function formatRunRecord(record) {
   return JSON.stringify(record);
@@ -1619,6 +1845,10 @@ function runOnce(options, deps = {}) {
   const record = {
     at_utc: new Date(startedMs).toISOString(),
     status: "unknown",
+    // The lane this checkout trades, as the lanes file names it. It is what makes a close request on this
+    // account this loop's to answer, and it is in every line of the log so a reader with two lanes open
+    // cannot mistake one log for the other.
+    lane: options.lane ?? null,
     armed: options.confirmLive === true,
     sources: {
       published: relativePath(published),
@@ -1629,14 +1859,36 @@ function runOnce(options, deps = {}) {
     caps: {
       expire_minutes: options.expireMinutes,
       max_open: options.maxOpen,
-      max_per_day: options.maxPerDay
+      max_per_day: options.maxPerDay,
+      // Which day the count above belongs to, and on whose clock, so a reader of the log can tell a fresh
+      // Prague day from a run that simply has not placed anything yet.
+      trade_day: tradeDayKey(startedMs),
+      trade_day_timezone: TRADE_DAY_TIMEZONE
     }
   };
   let lock = null;
 
+  // The document the page reads to tell a live lane from a snapshot with nothing behind it. It is written on
+  // every run that reaches the log - a refusal included, because "the loop ran and refused" is a heartbeat -
+  // and a write that fails is noted in the run rather than failing a run that has already done its work.
+  const writeStatus = deps.writeStatus
+    || ((statusPath, payload) => {
+      const resolved = path.resolve(REPO_ROOT, statusPath);
+      fs.mkdirSync(path.dirname(resolved), { recursive: true });
+      const temporary = `${resolved}.tmp`;
+      fs.writeFileSync(temporary, `${JSON.stringify(payload, null, 2)}\n`, "utf8");
+      fs.renameSync(temporary, resolved);
+      return resolved;
+    });
+
   const finish = (code) => {
     record.duration_seconds = round2((now() - startedMs) / 1000);
     writeLog(logPath, record);
+    try {
+      writeStatus(options.statusOut, traderStatus(record, { nowMs: now() }));
+    } catch (error) {
+      record.status_write_error = String(error.message || error).slice(0, 200);
+    }
     return { code, record };
   };
   // A gate that refused: nothing could be read, so nothing was sent. The run fails loudly, because a loop
@@ -1765,6 +2017,7 @@ function runOnce(options, deps = {}) {
     }
     record.terminal = {
       account: live.account?.login_masked ?? null,
+      server: live.account?.server ?? null,
       positions_open: live.positions.length,
       orders_open: live.orders.length,
       ours: live.ours.length
@@ -2234,6 +2487,8 @@ module.exports = {
   exitPriceFor,
   marketHasReached,
   closedAtItsTarget,
+  exitEnding,
+  traderStatus,
   tradeCycles,
   reviewPendings,
   reviewPositions,
@@ -2246,6 +2501,8 @@ module.exports = {
   writeState,
   signalKey,
   takenSignals,
+  TRADE_DAY_TIMEZONE,
+  tradeDayKey,
   placementsToday,
   reentriesToday,
   decide,

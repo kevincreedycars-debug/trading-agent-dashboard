@@ -46,6 +46,19 @@ param(
   # for - the way --expire-minutes is - so the cadence in the scheduler and the loop's own log cannot disagree.
   [int] $MaxOpen = 0,
   [int] $MaxPerDay = 4,
+  # One task per lane, running the snapshot producer and then this loop inside the same scheduled run. That is
+  # what removes the ordering assumption the two separate tasks carried: the loop can never start before the
+  # snapshot that carries the bar it reads, because the producer's own run has to finish first, and a producer
+  # that fails stops the run instead of handing the loop an older snapshot. The 90-second settle the rule states
+  # belongs to the producer's --align in this shape, so the loop is not asked to align again on top of it.
+  [switch] $ChainFeed,
+  [int] $FeedSettleSeconds = 90,
+  [int] $FeedIntervalSeconds = 300,
+  # The lane this checkout trades, exactly as config/live-trading-lanes.json names it. An ask from the page now
+  # names the account it was asked on, and a loop without a lane cannot claim one, so the task has to carry the
+  # id. Empty means "work it out from the lanes file's root for this checkout", which is one lane by construction
+  # and refuses rather than guessing when it is not.
+  [string] $Lane = "",
   [switch] $Arm,
   [switch] $NoStart,
   [switch] $Remove,
@@ -76,8 +89,15 @@ if ($Remove) {
 
 $runner = Join-Path $RepoRoot "scripts\run-live-trading-trader.js"
 $orderTool = Join-Path $RepoRoot "tools\mt5-bridge\live-trading-order.py"
-foreach ($required in @($runner, $orderTool)) {
-  if (-not (Test-Path -LiteralPath $required)) { throw "Not found: $required" }
+$feedRunner = Join-Path $RepoRoot "scripts\run-live-trading-feed.js"
+$producer = Join-Path $RepoRoot "tools\mt5-bridge\live-trading-snapshot.py"
+$required = @($runner, $orderTool)
+if ($ChainFeed) { $required += @($feedRunner, $producer) }
+foreach ($requiredPath in $required) {
+  if (-not (Test-Path -LiteralPath $requiredPath)) { throw "Not found: $requiredPath" }
+}
+if ($FeedSettleSeconds -lt 0 -or $FeedSettleSeconds -ge $FeedIntervalSeconds) {
+  throw "-FeedSettleSeconds must be 0 or more and smaller than -FeedIntervalSeconds, or the chained cadence chases itself."
 }
 
 if (-not $Node) {
@@ -95,6 +115,11 @@ $logPath = Join-Path $RepoRoot "tmp\live-trading-trader.log"
 $lockPath = Join-Path $RepoRoot "tmp\live-trading-trader.lock"
 $statePath = Join-Path $RepoRoot "tmp\live-trading-trader-state.json"
 $journalPath = Join-Path $RepoRoot "tmp\live-trading-orders.log"
+# The producer's own paths, used only when -ChainFeed asks for it. They stay the artifact's own defaults so the
+# snapshot this loop reads is the same file the feed cadence writes and the dashboard publishes.
+$feedOutPath = Join-Path $RepoRoot "data\live-trading.json"
+$feedLogPath = Join-Path $RepoRoot "tmp\live-trading-feed.log"
+$feedLockPath = Join-Path $RepoRoot "tmp\live-trading-feed.lock"
 $wrapperPath = Join-Path $RepoRoot "tmp\live-trading-trader-run.cmd"
 $terminalArgument = ""
 if ($Terminal -and (Test-Path -LiteralPath $Terminal)) {
@@ -107,6 +132,40 @@ if ($Terminal -and (Test-Path -LiteralPath $Terminal)) {
 # still reads everything and writes down the ticket it would have left - and sends nothing.
 $armArgument = ""
 if ($Arm) { $armArgument = " --confirm-live" }
+
+# The lane the task carries. A loop that was not told its lane cannot claim a close request, because every ask
+# now names the account it was asked on; so the id is resolved here, from the lanes file's own root for this
+# checkout, and a registration that cannot resolve exactly one lane stops rather than registering a loop that
+# would refuse every ask.
+$laneId = $Lane.Trim()
+if (-not $laneId) {
+  $lanesConfig = Join-Path $RepoRoot "config\live-trading-lanes.json"
+  if (-not (Test-Path -LiteralPath $lanesConfig)) {
+    throw "Not found: $lanesConfig. Pass -Lane <id> if this checkout has no lanes file."
+  }
+  try {
+    $lanes = (Get-Content -LiteralPath $lanesConfig -Raw | ConvertFrom-Json).lanes
+  } catch {
+    throw "The lanes file $lanesConfig could not be read: $($_.Exception.Message)"
+  }
+  $resolvedRoot = (Resolve-Path -LiteralPath $RepoRoot).Path.TrimEnd('\')
+  $matches = @($lanes | Where-Object {
+    $candidate = Join-Path $RepoRoot ($_.root)
+    $resolved = Resolve-Path -LiteralPath $candidate -ErrorAction SilentlyContinue
+    $resolved -and $resolved.Path.TrimEnd('\') -eq $resolvedRoot
+  })
+  if ($matches.Count -eq 1) {
+    $laneId = [string]$matches[0].id
+  } elseif ($matches.Count -eq 0) {
+    throw "No lane in $lanesConfig has this checkout ($resolvedRoot) as its root. Pass -Lane <id> explicitly."
+  } else {
+    throw ("More than one lane in $lanesConfig has this checkout as its root (" +
+      (($matches | ForEach-Object { $_.id }) -join ", ") + "). Pass -Lane <id> explicitly.")
+  }
+}
+if (-not $laneId) { throw "The lane id resolved to nothing; pass -Lane <id>." }
+$laneArgument = " --lane `"$laneId`" "
+
 
 # The hidden launcher takes the command to run as one argument, and Task Scheduler doubles every quote inside
 # an argument it stores, so the command the task passes is quote-free - `cmd.exe /c <wrapper>` - and every
@@ -129,15 +188,25 @@ function Get-WrapperLines($extraFlags) {
   if ($MaxOpen -gt 0) { $maxOpenArgument = "--max-open $MaxOpen " }
   $command = "`"$Node`" `"$runner`" --once $extraFlags --quiet --python `"$Python`" " +
     "--state `"$statePath`" --log `"$logPath`" --lock `"$lockPath`" --journal `"$journalPath`" " +
-    "${expireArgument}${maxOpenArgument}--max-per-day $MaxPerDay$terminalArgument"
-  return @(
+    "${laneArgument}${expireArgument}${maxOpenArgument}--max-per-day $MaxPerDay$terminalArgument"
+  $lines = @(
     "@echo off",
     "rem Generated by scripts/register-live-trading-trader-task.ps1. Machine specific; rewritten at each registration.",
     "rem The quotes belong here on purpose: the command line the task passes must not contain any.",
-    "cd /d `"$RepoRoot`"",
-    $command,
-    "exit /b %ERRORLEVEL%"
+    "cd /d `"$RepoRoot`""
   )
+  if ($ChainFeed) {
+    # The snapshot first, in this same process tree, and the loop only if it succeeded: a producer that could not
+    # write a fresh snapshot leaves the loop reading an older one, so the run stops and the scheduler reports it
+    # rather than trading on what the last good run saw. `--align` sits here, so the run starts at the bar close
+    # plus -FeedSettleSeconds, the 90 seconds the rule states.
+    $lines += "`"$Node`" `"$feedRunner`" --once --align --interval-seconds $FeedIntervalSeconds --settle-seconds $FeedSettleSeconds --quiet --python `"$Python`" " +
+      "--out `"$feedOutPath`" --log `"$feedLogPath`" --lock `"$feedLockPath`"$terminalArgument"
+    $lines += "if errorlevel 1 exit /b %ERRORLEVEL%"
+  }
+  $lines += $command
+  $lines += "exit /b %ERRORLEVEL%"
+  return $lines
 }
 
 # The one place the hidden-launcher hop is spelled out, so the task and the self test cannot drift apart.
@@ -150,8 +219,11 @@ function Get-LauncherPair($wrapper) {
 }
 
 # --align is the point of the task, and the settle window is later here than the feed's own twenty seconds:
-# the producer samples the bar close first, publishes it, and this loop then reads what it wrote.
-Write-Wrapper $wrapperPath (Get-WrapperLines "--align --settle-seconds 90$armArgument") | Out-Null
+# the producer samples the bar close first, publishes it, and this loop then reads what it wrote. In the chained
+# shape the producer does that aligning itself at -FeedSettleSeconds, so the loop starts the moment the snapshot
+# has been written and is not asked to wait for the following bar.
+$alignArgument = if ($ChainFeed) { $armArgument } else { "--align --settle-seconds 90$armArgument" }
+Write-Wrapper $wrapperPath (Get-WrapperLines $alignArgument) | Out-Null
 if ($wrapperPath -match " ") {
   throw "The wrapper path '$wrapperPath' contains a space, which the hidden launcher cannot be handed without " +
     "quoting it and reintroducing the doubled-quote fault. Move the repository to a path without spaces."
@@ -175,6 +247,7 @@ $plan = [ordered]@{
   task_name          = $TaskName
   interval_minutes   = $IntervalMinutes
   repo_root          = $RepoRoot
+  lane               = $laneId
   log                = $logPath
   lock               = $lockPath
   state              = $statePath
@@ -187,6 +260,10 @@ $plan = [ordered]@{
   wrapper            = $wrapperPath
   order_path         = "tools/mt5-bridge/live-trading-order.py, one pending limit per confirmed row"
   armed              = [bool]$Arm
+  chain_feed         = [bool]$ChainFeed
+  feed_snapshot      = $(if ($ChainFeed) { $feedOutPath } else { "separate task (not chained)" })
+  feed_log           = $(if ($ChainFeed) { $feedLogPath } else { "separate task (not chained)" })
+  feed_settle_seconds = $(if ($ChainFeed) { $FeedSettleSeconds } else { "separate task (not chained)" })
   expire_minutes     = $(if ($ExpireMinutes -gt 0) { $ExpireMinutes } else { "none (the entry stands until its reason is gone)" })
   max_open           = $(if ($MaxOpen -gt 0) { $MaxOpen } else { "none (the rule's own one ticket per pair)" })
   max_per_day        = $MaxPerDay

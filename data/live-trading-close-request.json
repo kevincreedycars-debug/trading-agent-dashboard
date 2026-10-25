@@ -1,7 +1,7 @@
 {
-  "schema_version": "live-trading-close-request-v1",
-  "updated_at_utc": "2026-10-16T12:30:00Z",
-  "note": "Close requests asked for by hand from the live dashboard's Open positions table. Each row is one ticket and the moment a reader asked for it. The five-minute loop reads this file from the published branch on its next tick and takes out only a ticket carrying its own magic, and only while the row is younger than thirty minutes; an older row is left alone, because a position opened since must not be closed by an ask nobody meant for it. The dashboard writes this file with the reader's own GitHub token, through the same contents API calls the marked-levels file uses. This file is a request, not an order: nothing in it places, changes or closes anything on its own.",
+  "schema_version": "live-trading-close-request-v2",
+  "updated_at_utc": "2026-10-24T20:00:00Z",
+  "note": "Close requests asked for by hand from the live dashboard's Open positions table. Each row names one ticket, the moment a reader asked for it, and the account it was asked on (`account.lane` and the masked login). A lane's five-minute loop reads this file from the published branch on its next tick and takes out only a ticket on its own account carrying its own magic, only while the row is younger than thirty minutes and before its own `expires_at_utc`; a row naming another lane or another account is never acted on, and a row whose id the loop has already answered is refused as a replay rather than acted on twice. The dashboard writes this file with the reader's own GitHub token, through the same contents API calls the marked-levels file uses. This file is a request, not an order: nothing in it places, changes or closes anything on its own.",
   "request_count": 0,
   "requests": []
 }

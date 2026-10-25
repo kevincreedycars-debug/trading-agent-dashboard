@@ -572,6 +572,94 @@ test("the exit code separates a refusal from a feed that is simply already curre
   assert.match(help.out, /--min-interval-seconds/);
 });
 
+// --- the shared checkout and the lock that guards it --------------------------------------------------------
+// The publish checkout is shared with whatever real publish is running, so a dry run builds one of its own and
+// deletes it, and a real publish holds a lock for the length of the run. Both are asserted here, because both
+// are the reason a test can no longer reset a checkout a publish is mid-way through.
+
+test("a dry run with no checkout of its own builds one beside the live checkout and removes it", () => {
+  const workspace = tempWorkspace();
+  const nowMs = Date.UTC(2026, 9, 4, 13, 6, 0);
+  fs.writeFileSync(workspace.feed, JSON.stringify(feedGeneratedAt(nowMs - MINUTE), null, 2), "utf8");
+  const git = fakeGit({ remoteFeed: feedGeneratedAt(nowMs - 6 * MINUTE) });
+  const options = optionsFor(workspace, { dryRun: true });
+  delete options.checkout;
+
+  const result = publisher.publishFeed(options, { exec: git.exec, now: () => nowMs });
+
+  const live = path.join("D:", "canonical", ...publisher.DEFAULT_CHECKOUT_RELATIVE.split("/"));
+  assert.equal(result.checkout_is_isolated, true);
+  assert.notEqual(result.checkout, live);
+  assert.equal(path.dirname(result.checkout), path.dirname(live));
+  assert.ok(path.basename(result.checkout).startsWith(`${path.basename(live)}-run-`), "the run's own checkout is named for it");
+  assert.equal(result.action, "would_publish");
+  assert.equal(result.checkout_cleanup.removed, true);
+  const calls = gitCalls(git.calls);
+  assert.equal(calls.filter((call) => call.includes(`-C ${live} `)).length, 0, "the live checkout is never used");
+  assert.equal(calls.filter((call) => call.includes("worktree add")).length, 1);
+  assert.equal(calls.filter((call) => call.includes("worktree remove")).length, 1);
+});
+
+test("a lock held by another publish is a refusal, and that lock is left where it is", () => {
+  const workspace = tempWorkspace();
+  const nowMs = Date.now();
+  fs.writeFileSync(workspace.feed, JSON.stringify(feedGeneratedAt(nowMs - MINUTE), null, 2), "utf8");
+  const lockPath = publisher.resolveLockPath(workspace.state);
+  fs.mkdirSync(path.dirname(lockPath), { recursive: true });
+  fs.writeFileSync(lockPath, `${JSON.stringify({ pid: 9999, started_at_utc: new Date(nowMs - 5000).toISOString(), checkout: "elsewhere" })}\n`);
+  const git = fakeGit({ remoteFeed: feedGeneratedAt(nowMs - 6 * MINUTE) });
+
+  const result = publisher.publishFeed(optionsFor(workspace), { exec: git.exec, now: () => nowMs });
+
+  assert.equal(result.action, "locked");
+  assert.equal(result.published, false);
+  assert.equal(result.lock.held, false);
+  assert.match(result.reason, /pid 9999/);
+  assert.equal(gitCalls(git.calls).filter((call) => call.includes("push")).length, 0);
+  assert.equal(gitCalls(git.calls).filter((call) => call.includes("commit")).length, 0);
+  assert.equal(fs.existsSync(lockPath), true, "another run's lock is never deleted by a refusal");
+  assert.equal(fs.existsSync(workspace.state), false, "a refusal records no publish");
+});
+
+test("a lock older than its TTL is broken, recorded, and the publish proceeds", () => {
+  const workspace = tempWorkspace();
+  const nowMs = Date.now();
+  fs.writeFileSync(workspace.feed, JSON.stringify(feedGeneratedAt(nowMs - MINUTE), null, 2), "utf8");
+  const lockPath = publisher.resolveLockPath(workspace.state);
+  fs.mkdirSync(path.dirname(lockPath), { recursive: true });
+  fs.writeFileSync(lockPath, `${JSON.stringify({ pid: 4242, started_at_utc: "2026-10-04T13:00:00.000Z" })}\n`);
+  const old = new Date(nowMs - 20 * MINUTE);
+  fs.utimesSync(lockPath, old, old);
+  const git = fakeGit({ remoteFeed: feedGeneratedAt(nowMs - 6 * MINUTE) });
+
+  const result = publisher.publishFeed(optionsFor(workspace), { exec: git.exec, now: () => nowMs });
+
+  assert.equal(result.action, "published");
+  assert.equal(result.lock.stale_broken, true);
+  assert.equal(result.lock.stale_age_seconds, 1200);
+  assert.equal(result.lock_released, true);
+  assert.equal(fs.existsSync(lockPath), false, "the run's own lock is released when it ends");
+});
+
+test("the lock is one file per publish, taken once, and released only by the run that holds it", () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "live-trading-lock-"));
+  const statePath = path.join(dir, "state", "publish-state.json");
+  const lockPath = publisher.resolveLockPath(statePath);
+  assert.equal(lockPath, path.join(dir, "state", "live-trading-publish.lock"));
+
+  const mine = publisher.acquirePublishLock({ lockPath, nowMs: Date.now(), checkout: "checkout" });
+  assert.equal(mine.ok, true);
+  const second = publisher.acquirePublishLock({ lockPath, nowMs: Date.now(), checkout: "checkout" });
+  assert.equal(second.ok, false);
+  assert.match(second.reason, /holds the lock/);
+
+  // A lock file that has since been replaced belongs to someone else, and this run no longer owns it.
+  fs.writeFileSync(lockPath, `${JSON.stringify({ pid: 1, started_at_utc: "2026-01-01T00:00:00.000Z" })}\n`);
+  assert.equal(publisher.releasePublishLock({ lockPath, holder: mine.holder }), false);
+  assert.equal(fs.existsSync(lockPath), true);
+});
+
+
 // A stand-in for the producer process, so the runner's own path - lock, validator, publish step - is exercised
 // without a terminal. Only the process boundary is replaced; everything after it is the real code.
 function fakeProducer(feed) {

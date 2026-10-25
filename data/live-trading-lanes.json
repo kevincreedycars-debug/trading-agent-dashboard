@@ -1,0 +1,38 @@
+{
+  "schema_version": "live-trading-lanes-v1",
+  "generated_at_utc": "2026-10-24T20:00:00.000Z",
+  "publisher": "scripts/publish-live-trading-lanes.js",
+  "note": "One row per FTMO account, as the lanes publisher read the file on this run. `enabled: false` is a lane that is parked rather than broken: nothing is published for it and no loop trades it. A lane's snapshot and trader heartbeat are files on the machine holding that lane's terminal; this document and those files travel together in one commit.",
+  "lanes": [
+    {
+      "id": "ftmo-1",
+      "label": "FTMO account 1",
+      "enabled": true,
+      "feed": "data/live-trading.json",
+      "trader_status": "data/live-trading-trader.ftmo-1.json",
+      "account_login_masked": "***614",
+      "account_server": "FTMO-Server",
+      "generated_at_utc": "2026-10-24T19:16:30.268797+00:00",
+      "status": "published",
+      "trader": {
+        "published": null,
+        "reason": "no heartbeat published yet: this shape was written by hand when the lanes document was introduced, and the lanes publisher replaces it on its next publish"
+      }
+    },
+    {
+      "id": "ftmo-2",
+      "label": "FTMO account 2",
+      "enabled": false,
+      "feed": "data/live-trading.account2.json",
+      "trader_status": null,
+      "account_login_masked": null,
+      "account_server": null,
+      "generated_at_utc": null,
+      "status": "disabled",
+      "trader": {
+        "published": null,
+        "reason": "the lane is disabled, so no trader runs it"
+      }
+    }
+  ]
+}

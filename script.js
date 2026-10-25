@@ -29,7 +29,16 @@ const liveTradingLevelsUrl = "./data/l2l-levels.json?v=20261001-l2l-levels-v1";
 // The dashboard's own close-request log, as this page serves it. It is read here and not only written: an ask
 // made on another device, or in an earlier session on this one, is what the Open positions table reports
 // underneath itself.
-const liveTradingCloseUrl = "./data/live-trading-close-request.json?v=20261016-live-trading-close-request-v1";
+const liveTradingCloseUrl = "./data/live-trading-close-request.json?v=20261024-live-trading-close-request-v2";
+// The lanes document the publisher writes beside the snapshot. It is what names the lane and the masked account a
+// close request is asked on, so it is read when an ask is made rather than when the page loads: a page served
+// before the document existed can still ask, on the primary lane whose feed it is reading.
+const liveTradingLanesUrl = "./data/live-trading-lanes.json?v=20261024-live-trading-lanes-v1";
+const LIVE_TRADING_FEED_PATH = "data/live-trading.json";
+// The lane this page's own snapshot belongs to when the lanes document does not name it. This page reads the
+// primary feed, which is the lane the lanes document calls ftmo-1; if that ever changes, an ask stamped with the
+// old id is refused by the loop rather than sent to the wrong account.
+const DEFAULT_LIVE_TRADING_LANE = "ftmo-1";
 const architectureManifestUrlDefault = "./data/architecture-map.json?v=20260721-architecture-mirror-v1";
 const researchLibraryUrl = "./data/research-library/catalog.json?v=20261013-research-library-v1";
 const researchLibraryDocumentsUrl = "./data/research-library/documents.json?v=20261013-research-library-v1";
@@ -18558,6 +18567,26 @@ function liveTradingCloseHandedOver(ticket) {
 // The request route: one row appended to the log and committed with the reader's own GitHub token, the way a
 // marked level is published. The log is append-only and this page's own copy is merged in on a conflict, so a
 // commit can neither drop another writer's ask nor double this reader's.
+// Which lane an ask from this page belongs to. The lanes document is fetched once, on the first ask, and only
+// for this: nothing on the page is drawn from it, so a document that is missing or unreadable costs the reader a
+// lane's name in the request, not the table. The fallback is the primary lane, which is the feed this page reads.
+let liveTradingLanesDocument = null;
+let liveTradingLanesRequested = false;
+async function liveTradingAskLane() {
+  if (!liveTradingLanesRequested) {
+    liveTradingLanesRequested = true;
+    try {
+      const documentValue = await fetchLocalJson(liveTradingLanesUrl);
+      liveTradingLanesDocument = documentValue && Array.isArray(documentValue.lanes) ? documentValue : null;
+    } catch {
+      liveTradingLanesDocument = null;
+    }
+  }
+  const lanes = Array.isArray(liveTradingLanesDocument?.lanes) ? liveTradingLanesDocument.lanes : [];
+  const mine = lanes.find((lane) => lane && typeof lane.id === "string" && lane.id && lane.feed === LIVE_TRADING_FEED_PATH);
+  return mine ? mine.id : DEFAULT_LIVE_TRADING_LANE;
+}
+
 async function askLiveTradingClose(ticket, position) {
   const module_ = liveTradingCloseRequest;
   if (!module_) {
@@ -18573,6 +18602,10 @@ async function askLiveTradingClose(ticket, position) {
     renderLiveTrading(liveTradingData || {});
     return;
   }
+  // Which lane and which account this ask is for. Two accounts write the one request file, so a row that does not
+  // name its lane could be answered by the wrong loop; the module refuses such a row rather than writing it, and
+  // the masked login is the page's own, never a full one.
+  const lane = await liveTradingAskLane();
   const built = module_.buildRequest({
     ticket,
     symbol: position?.symbol ?? null,
@@ -18580,7 +18613,10 @@ async function askLiveTradingClose(ticket, position) {
     volume: Number(position?.volume),
     requestedAtUtc: new Date().toISOString(),
     requestedBy: module_.REQUESTED_BY.dashboard,
-    note: liveTradingCloseReason()
+    note: liveTradingCloseReason(),
+    lane,
+    accountLoginMasked: liveTradingData?.account?.login_masked ?? null,
+    accountServer: liveTradingData?.account?.server ?? null
   });
   if (!built.ok) {
     liveTradingClose.tone = "error";
