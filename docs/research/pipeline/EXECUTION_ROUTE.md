@@ -354,8 +354,10 @@ Established from the shared repository on 2026-10-25, without changing the canon
   `docs/research/topics/usd/vix-level-and-risk-regime/` (`69daff3c…`, `f391fce4…`, `4587ebca…`), published by
   `c89a5faa`, which is not on `origin/main`. The supervisor verifies prompts against whatever catalogue it is
   given, so the coordinator has to say which catalogue the pilot reads, and the pilot then records those hashes;
-- the canonical checkout is on `research/usd-session-20261013` at `1e6ab197` with a clean tree, and the shared
-  object database already contains this branch, so its commits are visible to the coordinator without a push.
+- the canonical checkout was clean when inspected, on `research/usd-session-20261013` at `1e6ab197`, and the shared
+  object database already contains this branch, so its commits are visible to the coordinator without a push. It
+  was being edited by another process later in the same session (26 modified paths), which is why this lane reads
+  it and never writes to it.
 
 
 1. Whether the pinned carrier (`@openai/codex@0.164.0`, `exec -m gpt-6-astra -c web_search=live`) is the
