@@ -38,6 +38,8 @@ concurrency:
 
 env:
   TZ: America/New_York
+  # The job never clones the repository, so every gh call is told which repository and which branch to read.
+  GH_REPO: ${{ github.repository }}
 
 jobs:
   trigger:
@@ -57,8 +59,9 @@ jobs:
           local_hour=$((10#$(date +%H)))
           local_minute=$(date +%M)
           # Today's local midnight as a UTC stamp, which is what the run list is cut by: a run from yesterday
-          # evening New York must not count as today's.
-          since=$(date -d 'today 00:00' -u +%Y-%m-%dT%H:%M:%SZ)
+          # evening New York must not count as today's. The epoch is taken on the New York clock and then printed
+          # in UTC, because `date -u -d 'today 00:00'` would read that midnight as UTC rather than as New York's.
+          since=$(date -u -d "@$(date -d 'today 00:00' +%s)" +%Y-%m-%dT%H:%M:%SZ)
 
           echo "local_now=${local_date}T${local_hour}:${local_minute} (America/New_York)"
           echo "today_started_utc=$since"
@@ -72,7 +75,7 @@ jobs:
           # guards use: a success today means the day is done; a run still going means a second one would
           # overlap the orchestrator itself.
           gh run list --workflow master-orchestrator-daily.yml --limit 60 \
-            --json databaseId,createdAt,status,conclusion,event > runs.json
+            --json databaseId,createdAt,status,conclusion,event > runs.json || echo '[]' > runs.json
           jq --arg since "$since" --arg self "${GITHUB_RUN_ID}" \
             '[.[] | select(.databaseId != ($self | tonumber)) | select(.createdAt >= $since)]' \
             runs.json > today.json

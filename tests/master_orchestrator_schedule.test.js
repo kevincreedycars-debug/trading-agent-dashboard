@@ -49,6 +49,13 @@ test("the trigger calls the webhook the dashboard calls, and writes nothing of i
   assert.doesNotMatch(workflow, /actions\/checkout/, "no clone: the control file and the status file come from the API");
   assert.match(workflow, /"Accept: application\/vnd\.github\.raw"[\s\S]*data\/workflow-status\.json/,
     "the run is confirmed from the committed status file, not from a cached page");
+  assert.match(workflow, /GH_REPO: \$\{\{ github\.repository \}\}/,
+    "every gh call names its repository, because the job has no clone to infer it from");
+  // `date -u -d 'today 00:00'` reads that midnight as UTC, which would cut the run list eight hours early in
+  // summer and put yesterday evening's run inside today. The epoch is taken on the local clock first.
+  assert.doesNotMatch(workflow, /since=\$\(date -u -d 'today/, "the local midnight is not parsed as UTC");
+  assert.match(workflow, /since=\$\(date -u -d "@\$\(date -d 'today 00:00' \+%s\)"/,
+    "the cut is the New York midnight, printed in UTC");
 });
 
 test("a dispatch defaults to asking without calling", () => {
