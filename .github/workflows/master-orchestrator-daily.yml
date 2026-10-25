@@ -1,0 +1,218 @@
+# The orchestrator drives eight Layer 1 agents, and until now the only way to start it was a person pressing
+# Refresh on the dashboard (data/workflow-control.json posts to the same webhook used here). A run is a decision,
+# so the trigger has to be one run a day at a stated local time, it has to follow daylight saving, it must not
+# overlap or double up, and it has to leave a record saying whether it fired and how the run ended.
+#
+# GitHub's cron is fixed to UTC and cannot follow a New York clock, so this wakes every hour at :07 and decides in
+# America/New_York whether this slot is the day's run. Scheduled runs on GitHub are often started some minutes
+# late, so the rule is "the first slot at or after 07:00 New York", not "exactly 07:00": a slot delayed to 07:14
+# still runs, and any later slot that day sees the earlier success and stops. The window closes at 10:00 New York,
+# so a GitHub outage at 07:00 does not cause an orchestrator run at ten at night.
+name: master-orchestrator-daily
+
+on:
+  schedule:
+    - cron: "7 * * * *"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Print the decision and the guards without calling the webhook"
+        type: boolean
+        default: true
+      force:
+        description: "Call the webhook even outside the 07:00-10:00 New York window (a person asking, not the clock)"
+        type: boolean
+        default: false
+
+# Read-only on the repository: this job starts a run and reads what the run wrote. It writes nothing, so it can
+# never collide with the feed publisher, the lanes publisher or the orchestrator's own status commit.
+permissions:
+  contents: read
+  actions: read
+
+# One run of this job at a time, and a queued slot waits instead of cancelling: an orchestrator run that is half
+# done must not be cut off by the next hourly slot, and the once-a-day guard below turns the queued slot away.
+concurrency:
+  group: master-orchestrator-daily
+  cancel-in-progress: false
+
+env:
+  TZ: America/New_York
+
+jobs:
+  trigger:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Read the control file and the guards
+        id: decide
+        env:
+          GH_TOKEN: ${{ github.token }}
+          DRY_RUN: ${{ inputs.dry_run }}
+          FORCE: ${{ inputs.force }}
+        run: |
+          set -euo pipefail
+
+          local_date=$(date +%F)
+          local_hour=$((10#$(date +%H)))
+          local_minute=$(date +%M)
+          # Today's local midnight as a UTC stamp, which is what the run list is cut by: a run from yesterday
+          # evening New York must not count as today's.
+          since=$(date -d 'today 00:00' -u +%Y-%m-%dT%H:%M:%SZ)
+
+          echo "local_now=${local_date}T${local_hour}:${local_minute} (America/New_York)"
+          echo "today_started_utc=$since"
+
+          # The control file is read from the branch the page is served from, not from a checkout: this job never
+          # clones the repository, and the file it obeys is the one the dashboard itself would read.
+          gh api -H "Accept: application/vnd.github.raw" \
+            "repos/${GITHUB_REPOSITORY}/contents/data/workflow-control.json?ref=main" > control.json
+
+          # Every earlier run of this same job today, from the repository's own run list. This is the record the
+          # guards use: a success today means the day is done; a run still going means a second one would
+          # overlap the orchestrator itself.
+          gh run list --workflow master-orchestrator-daily.yml --limit 60 \
+            --json databaseId,createdAt,status,conclusion,event > runs.json
+          jq --arg since "$since" --arg self "${GITHUB_RUN_ID}" \
+            '[.[] | select(.databaseId != ($self | tonumber)) | select(.createdAt >= $since)]' \
+            runs.json > today.json
+
+          succeeded=$(jq '[.[] | select(.conclusion == "success")] | length' today.json)
+          in_flight=$(jq '[.[] | select(.status != "completed")] | length' today.json)
+          echo "runs_today_succeeded=$succeeded runs_today_in_flight=$in_flight"
+          jq -r '.[] | "  \(.createdAt) \(.status)/\(.conclusion // "-") \(.event) #\(.databaseId)"' today.json
+
+          decision=skip
+          reason=""
+          if [ "$succeeded" -gt 0 ]; then
+            reason="today already has a successful run of this job, so a second call would be a duplicate"
+          elif [ "$in_flight" -gt 0 ]; then
+            reason="a run of this job is still in flight, so a second call would overlap the orchestrator"
+          elif [ "$local_hour" -lt 7 ]; then
+            reason="it is before 07:00 New York"
+          elif [ "$local_hour" -gt 10 ]; then
+            reason="the 07:00-10:00 New York window has closed for today"
+          elif [ "${FORCE:-false}" = "true" ]; then
+            decision=trigger
+            reason="a person asked for it outside the guards"
+          else
+            decision=trigger
+            reason="the first slot at or after 07:00 New York and nothing has run today"
+          fi
+          echo "decision=$decision (${reason})"
+
+          echo "decision=$decision" >> "$GITHUB_OUTPUT"
+          echo "reason=$reason" >> "$GITHUB_OUTPUT"
+          echo "local_date=$local_date" >> "$GITHUB_OUTPUT"
+          echo "local_now=${local_date}T${local_hour}:${local_minute}" >> "$GITHUB_OUTPUT"
+          echo "dry_run=${DRY_RUN:-false}" >> "$GITHUB_OUTPUT"
+          echo "webhook_url=$(jq -r '.webhook_url // empty' control.json)" >> "$GITHUB_OUTPUT"
+          echo "enabled=$(jq -r '.enabled // false' control.json)" >> "$GITHUB_OUTPUT"
+
+      - name: Say what the clock and the guards decided
+        run: |
+          {
+            echo "### master-orchestrator-daily"
+            echo ""
+            echo "| field | value |"
+            echo "| --- | --- |"
+            echo "| Local time (America/New_York) | ${{ steps.decide.outputs.local_now }} |"
+            echo "| Decision | ${{ steps.decide.outputs.decision }} |"
+            echo "| Why | ${{ steps.decide.outputs.reason }} |"
+            echo "| enabled in data/workflow-control.json | ${{ steps.decide.outputs.enabled }} |"
+            echo "| webhook | ${{ steps.decide.outputs.webhook_url }} |"
+            echo "| dry run | ${{ steps.decide.outputs.dry_run }} |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Refuse to call a webhook the control file has switched off
+        if: steps.decide.outputs.decision == 'trigger' && steps.decide.outputs.dry_run != 'true' && steps.decide.outputs.enabled != 'true'
+        run: |
+          echo "data/workflow-control.json carries enabled=${{ steps.decide.outputs.enabled }}, so nothing was called." | tee -a "$GITHUB_STEP_SUMMARY"
+          exit 1
+
+      - name: Call the webhook the dashboard itself calls
+        id: call
+        if: steps.decide.outputs.decision == 'trigger' && steps.decide.outputs.dry_run != 'true' && steps.decide.outputs.enabled == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          WEBHOOK_URL: ${{ steps.decide.outputs.webhook_url }}
+        run: |
+          set -euo pipefail
+
+          # What the status file says before the call, so the run it writes can be told from a copy that never
+          # moved.
+          before=$(gh api -H "Accept: application/vnd.github.raw" \
+            "repos/${GITHUB_REPOSITORY}/contents/data/workflow-status.json?ref=main" | jq -r '.last_run_started_at // empty')
+          echo "status_before=$before"
+
+          started_at=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+          code=$(curl -sS -o webhook.out -w '%{http_code}' --max-time 600 \
+            -X POST -H 'content-type: application/json' \
+            -d '{"triggered_by":"schedule","source":"github-actions:master-orchestrator-daily","local_date":"${{ steps.decide.outputs.local_date }}"}' \
+            "$WEBHOOK_URL") || code="curl-failed"
+          echo "webhook_started_at=$started_at webhook_http=$code"
+          head -c 2000 webhook.out || true
+          {
+            echo "started_at=$started_at"
+            echo "http=$code"
+          } >> "$GITHUB_OUTPUT"
+
+          case "$code" in
+            2??) ;;
+            *) echo "the webhook did not accept the call: $code"; exit 1 ;;
+          esac
+
+          # The call returns when n8n answers, which is not the moment the run finishes: the flow ends by writing
+          # data/workflow-status.json through its own GitHub node. That commit is the record of the run, and
+          # reading it from the API rather than from the page keeps a cached copy from looking like a run that
+          # never started.
+          deadline=$(( $(date +%s) + 900 ))
+          while [ "$(date +%s)" -lt "$deadline" ]; do
+            if gh api -H "Accept: application/vnd.github.raw" \
+              "repos/${GITHUB_REPOSITORY}/contents/data/workflow-status.json?ref=main" > status.json 2>/dev/null; then
+              now_started=$(jq -r '.last_run_started_at // empty' status.json 2>/dev/null || true)
+              if [ -n "$now_started" ] && [ "$now_started" != "$before" ]; then
+                break
+              fi
+            fi
+            sleep 15
+          done
+
+          reported=""
+          if [ -s status.json ]; then reported=$(jq -r '.last_run_started_at // empty' status.json 2>/dev/null || true); fi
+          if [ -z "$reported" ] || [ "$reported" = "$before" ]; then
+            echo "the webhook was called but data/workflow-status.json still carries the run that started at ${before:-nothing}; nothing reported back inside fifteen minutes"
+            exit 1
+          fi
+
+          status=$(jq -r '.status // "unknown"' status.json)
+          failed_step=$(jq -r '.failed_step // "-"' status.json)
+          finished=$(jq -r '.last_run_finished_at // "unknown"' status.json)
+          message=$(jq -r '.message // ""' status.json)
+          echo "status=$status failed_step=$failed_step finished=$finished message=$message"
+          {
+            echo ""
+            echo "| field | value |"
+            echo "| --- | --- |"
+            echo "| Webhook http | $code |"
+            echo "| Run started (UTC) | $started_at |"
+            echo "| Run reported (UTC) | $finished |"
+            echo "| Status | $status |"
+            echo "| Failed step | $failed_step |"
+            echo ""
+            echo "data/workflow-status.json as the run wrote it:"
+            echo ""
+            echo '```json'
+            cat status.json
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          if [ "$status" != "success" ]; then
+            echo "the orchestrator run finished as $status at step $failed_step"
+            exit 1
+          fi
+
+      - name: Report the skip
+        if: steps.decide.outputs.decision == 'skip' || steps.decide.outputs.dry_run == 'true'
+        run: |
+          echo "nothing was called: ${{ steps.decide.outputs.reason }}" | tee -a "$GITHUB_STEP_SUMMARY"

@@ -92,7 +92,7 @@ the instance - is [LAYER1_SCHEDULE_VERIFICATION_20261024.md](../orchestration/LA
 | Flow | Recorded cadence | Weekday/weekend | Timezone handling | What the API read shows |
 | --- | --- | --- | --- | --- |
 | USD, EUR, GBP, GOLD, SILVER, NQ, BTC, WTI Layer 1 agents (8) | 07:00 | weekdays only, per the intended design | `America/New_York`, named | active, `executeWorkflowTrigger`, no schedule of their own; last runs 2026-10-24T11:22-11:24Z |
-| Master orchestrator | fans them out | inherits the caller | inherits | active; manual trigger + webhook; last call 2026-10-24T11:19:53Z |
+| Master orchestrator | fans them out; called once a day at 07:00 `America/New_York` from `main` | inherits the caller | inherits | active; webhook + manual trigger; since 2026-10-24 called by `.github/workflows/master-orchestrator-daily.yml`; last manual call 2026-10-24T11:19:53Z |
 | `layer2_trade_selection_agent`, `dashboard_writer` | downstream of the fan-out | inherits | inherits | `Dashboard Writer - Layer 1` active, last success 2026-10-24T11:24:49Z |
 | Research session (separate from live execution) | 05:00 | - | `Europe/London`, named | not read in this pass |
 
@@ -101,10 +101,16 @@ reads it.
 
 **Still open, and now precisely stated:**
 
-1. Identify **who or what POSTs** the orchestrator webhook. The executions say `mode: webhook` and nothing more; until
-   the caller is named, "Layer 1 is sealed" describes its definitions, not a cadence anyone has watched.
-2. Decide whether 07:00 `America/New_York` should become a real schedule. That is a Layer 1 change; `scripts/verify-layer1-schedules.js`
-   currently asserts it and therefore fails against the instance as it stands.
+1. ~~Identify **who or what POSTs** the orchestrator webhook.~~ **Answered 2026-10-24:** a GitHub Actions schedule,
+   `.github/workflows/master-orchestrator-daily.yml`, POSTs the same webhook the dashboard's Refresh button posts,
+   once a day at 07:00 `America/New_York` (window 07:00-10:00 to absorb GitHub's start delay), with a once-a-day
+   guard, a concurrency group and a confirmation read of `data/workflow-status.json`. The dashboard is no longer the
+   only caller. See [ORCHESTRATOR_DAILY_TRIGGER.md](ORCHESTRATOR_DAILY_TRIGGER.md).
+2. ~~Decide whether 07:00 `America/New_York` should become a real schedule.~~ **Done 2026-10-24, at the orchestrator
+   and not at the agents.** The eight agents keep their `executeWorkflowTrigger` and are still started by the
+   fan-out; what is scheduled is the single call that starts it. `scripts/verify-layer1-schedules.js` still asserts a
+   per-agent 07:00, which the instance still does not implement - that assertion is now wrong about where the
+   schedule lives, not about whether one exists, and the script remains untracked here.
 3. Re-export the flows into `exports/` if a fresh copy is wanted. An export is a read of the live definition, and stays
    a deliberate separate act.
 
@@ -298,11 +304,13 @@ wait for now exists (section 7.1), so switching it on is its own clone, terminal
   claimed.
 - It is the weekend. Nothing about execution behaviour - placing, fills, exits, the 90-second settle against a live
   tick - can be verified until the market reopens; a quiet weekend proves only that a schedule fires.
-- The cloud schedule is **verified as of 2026-10-24 and is not a schedule**: n8n holds no active schedule trigger,
-  the eight agents are started by the Master Orchestrator behind a webhook, and the observed calls are irregular.
-  [LAYER1_SCHEDULE_VERIFICATION_20261024.md](../orchestration/LAYER1_SCHEDULE_VERIFICATION_20261024.md) records the
-  API read, the workflow names, the execution times, and the fact that `scripts/verify-layer1-schedules.js` still
-  encodes a per-agent 07:00 intent the instance does not implement (that script is untracked and unowned here).
+- The cloud schedule is **no longer absent, and still not trusted**: as of 2026-10-24 the eight agents had no
+  schedule of their own and were started only behind the Master Orchestrator's webhook, with irregular observed
+  calls. [LAYER1_SCHEDULE_VERIFICATION_20261024.md](../orchestration/LAYER1_SCHEDULE_VERIFICATION_20261024.md)
+  records that API read. Since then `.github/workflows/master-orchestrator-daily.yml` calls that webhook once a day
+  at 07:00 `America/New_York` ([ORCHESTRATOR_DAILY_TRIGGER.md](ORCHESTRATOR_DAILY_TRIGGER.md)); the first week of its
+  runs is the evidence that the cadence exists, and `scripts/verify-layer1-schedules.js` still encodes a per-agent
+  07:00 intent the instance does not implement (that script is untracked and unowned here).
 - The trader heartbeat is written on this PC but **not yet published**: the running publisher is still the
   single-artifact `LiveTradingFeedTick019`, so the page's lane 1 card says "no heartbeat published" until the lanes
   task replaces it.

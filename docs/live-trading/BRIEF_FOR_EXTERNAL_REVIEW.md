@@ -37,8 +37,11 @@ the hosting question exists.
 
 ## 2. The two layers, and why they are separate
 
-**Layer 1 - calls (cloud, untouched by any of this).** Eight n8n flows, one per asset, run in n8n cloud at 07:00 ET and
-publish `data/layer1.json` to `main` on GitHub. Each agent writes a call per horizon (`24h`, `3d`, `current_week`,
+**Layer 1 - calls (cloud, untouched by any of this).** Eight n8n flows, one per asset, publish `data/layer1.json` to
+`main` on GitHub once a day at 07:00 ET. They hold no schedule of their own: each is started by the Master
+Orchestrator, which since 2026-10-24 is called once a day at 07:00 `America/New_York` by
+`.github/workflows/master-orchestrator-daily.yml` ([ORCHESTRATOR_DAILY_TRIGGER.md](ORCHESTRATOR_DAILY_TRIGGER.md)).
+Each agent writes a call per horizon (`24h`, `3d`, `current_week`,
 `next_week`, `current_month`) with `direction`, `conviction`, `sealed_at`, `expires_at`, and a forecast window. Agents
 are sealed: they read only their own logic document and the latest upstream inputs. The dashboard shows them. Example
 of the current shape (2026-10-24 11:24Z publication): USD BEARISH, EUR BULLISH_LEAN, GOLD BULLISH_LEAN, SILVER
