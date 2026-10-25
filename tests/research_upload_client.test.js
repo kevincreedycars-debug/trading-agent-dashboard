@@ -380,3 +380,72 @@ test("retry reuses the same storage path without uploading twice", async () => {
     .map(call => JSON.parse(call.body).storage_path);
   assert.deepEqual(insertedPaths, [result.storagePath, result.storagePath]);
 });
+test("GitHub sign-in sends the browser to the project's own OAuth endpoint", async () => {
+  configure(async () => jsonResponse(500, {}), {
+    getItem: () => null,
+    setItem: () => {},
+    removeItem: () => {}
+  });
+  const visited = [];
+  const result = await ResearchUpload.signInWithGitHub({
+    redirectTo: "https://example.github.io/trading-agent-dashboard/",
+    redirect: url => visited.push(url)
+  });
+
+  assert.equal(result.ok, true);
+  assert.equal(visited.length, 1, "the browser is sent once");
+  const url = new URL(visited[0]);
+  assert.equal(`${url.origin}${url.pathname}`, "https://example.supabase.co/auth/v1/authorize");
+  assert.equal(url.searchParams.get("provider"), "github");
+  assert.equal(url.searchParams.get("redirect_to"), "https://example.github.io/trading-agent-dashboard/");
+  assert.doesNotMatch(visited[0], /secret|service_role|sb_secret/i, "no secret travels in the sign-in URL");
+  assert.match(result.message, /GitHub/);
+});
+
+test("the page's own address is the default place GitHub sends the reader back to", async () => {
+  configure(async () => jsonResponse(500, {}), {
+    getItem: () => null,
+    setItem: () => {},
+    removeItem: () => {}
+  });
+  const previousLocation = globalThis.location;
+  globalThis.location = {
+    href: "https://example.github.io/trading-agent-dashboard/#/research-library",
+    hash: "",
+    pathname: "/trading-agent-dashboard/",
+    search: ""
+  };
+  try {
+    const target = ResearchUpload.authorizeUrl();
+    assert.equal(new URL(target).searchParams.get("redirect_to"), "https://example.github.io/trading-agent-dashboard/");
+  } finally {
+    globalThis.location = previousLocation;
+  }
+});
+
+test("a provider sign-in that comes back refused is reported in plain words", () => {
+  const previousLocation = globalThis.location;
+  const previousHistory = globalThis.history;
+  const replaced = [];
+  globalThis.location = {
+    hash: "#error=access_denied&error_description=Unsupported+provider%3A+provider+is+not+enabled",
+    pathname: "/trading-agent-dashboard/",
+    search: "",
+    href: "https://example.github.io/trading-agent-dashboard/#error=access_denied"
+  };
+  globalThis.history = { replaceState: (...args) => replaced.push(args.slice(0, 2)) };
+  try {
+    configure(async () => jsonResponse(500, {}), {
+      getItem: () => null,
+      setItem: () => {},
+      removeItem: () => {}
+    });
+    assert.match(ResearchUpload.authError(), /not turned on for this library yet/);
+    assert.equal(ResearchUpload.session(), null, "no session is invented from a refusal");
+    assert.equal(replaced.length, 1, "the error fragment is taken out of the address bar");
+  } finally {
+    globalThis.location = previousLocation;
+    globalThis.history = previousHistory;
+  }
+});
+

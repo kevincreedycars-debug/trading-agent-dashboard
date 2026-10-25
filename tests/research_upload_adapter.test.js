@@ -450,3 +450,59 @@ test('the page offers the final chain upload to a signed-in member and sends its
   assert.match(upload, /inputPackage: isFinalChain \? \{ documents: inputDocumentList/, 'the final chain sends its input package');
 });
 
+
+// GitHub is the owner's chosen sign-in. The button only sends the browser to the project's own OAuth
+// endpoint: the GitHub client id and secret live in Supabase, never in this page or this repository.
+test('the account bar offers GitHub sign-in and that button starts the redirect', async () => {
+  harness({ signedIn: false });
+  const html = adapter.accountBarHtml();
+  assert.match(html, /data-rl-account-github-signin/, 'the GitHub button is drawn');
+  assert.match(html, />Sign in with GitHub</);
+  assert.match(html, /data-rl-account-password-signin/, 'the account email and password stay as the fallback');
+
+  const previousLocation = globalThis.location;
+  const visited = [];
+  globalThis.location = {
+    href: 'https://example.github.io/trading-agent-dashboard/',
+    hash: '',
+    pathname: '/trading-agent-dashboard/',
+    search: '',
+    assign: url => visited.push(String(url))
+  };
+  try {
+    const button = { closest: selector => (selector.includes('data-rl-account-github-signin') ? button : null) };
+    const handled = await adapter.handleAccountAction(button);
+    assert.equal(handled, true);
+    assert.equal(visited.length, 1, 'the browser is sent to exactly one place');
+    const target = new URL(visited[0]);
+    assert.equal(`${target.origin}${target.pathname}`, `${PROJECT_URL}/auth/v1/authorize`);
+    assert.equal(target.searchParams.get('provider'), 'github');
+    assert.equal(target.searchParams.get('redirect_to'), 'https://example.github.io/trading-agent-dashboard/');
+    assert.doesNotMatch(visited[0], /secret|service_role/i, 'no secret is put in the page or the URL');
+    assert.equal(adapter.signedIn(), false, 'leaving the page is not a session');
+  } finally {
+    globalThis.location = previousLocation;
+  }
+});
+
+test('a refused GitHub return is shown in the account bar instead of a blank sign-in block', () => {
+  const previousLocation = globalThis.location;
+  const previousHistory = globalThis.history;
+  globalThis.location = {
+    hash: '#error=access_denied&error_description=provider+is+not+enabled',
+    pathname: '/trading-agent-dashboard/',
+    search: '',
+    href: 'https://example.github.io/trading-agent-dashboard/#error=access_denied'
+  };
+  globalThis.history = { replaceState: () => {} };
+  try {
+    harness({ signedIn: false });
+    const html = adapter.accountBarHtml();
+    assert.match(html, /not turned on for this library yet/);
+    assert.match(html, /data-rl-account-github-signin/, 'the button stays available for a second try');
+  } finally {
+    globalThis.location = previousLocation;
+    globalThis.history = previousHistory;
+  }
+});
+

@@ -22,6 +22,12 @@ The library header carries an account block. A reader signs in once in the brows
 account's email and password; the session token is kept in that browser only, and signing out drops
 the hosted rows from the page without touching the committed registry or the local service's records.
 
+GitHub is the owner's chosen sign-in, so **Sign in with GitHub** sits first in that block and the email
+and password stay underneath as the fallback. The button only redirects to the project's own OAuth
+endpoint: the GitHub client id and secret live in Supabase, and the page still carries no secret at
+all. `docs/research-library/GITHUB_SIGN_IN.md` holds the two one-time steps that need the owner's own
+GitHub account, the ownership transfer that follows the first GitHub sign-in, and the phone check.
+
 The session outlives the tab: the page swaps the hour-long access token for a fresh one with its
 stored refresh token before any request, so a page reopened the next day still uploads and downloads
 without signing in again. Only when the refresh token itself is refused does the block ask for the

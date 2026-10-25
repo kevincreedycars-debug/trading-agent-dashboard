@@ -7451,7 +7451,7 @@ function setupResearchLibraryControls() {
     // The private hosted store owns its own documents: its sign-in controls, and view or download of
     // anything stored there. Registered documents keep using the local service paths below.
     const hostedAccount = globalThis.ResearchUploadDashboard;
-    if (hostedAccount && target.closest("[data-rl-account-password-signin], [data-rl-account-signin], [data-rl-account-signout]")) {
+    if (hostedAccount && target.closest("[data-rl-account-github-signin], [data-rl-account-password-signin], [data-rl-account-signin], [data-rl-account-signout]")) {
       const signingOut = !!target.closest("[data-rl-account-signout]");
       if (signingOut) researchLibraryForgetHosted();
       else {
