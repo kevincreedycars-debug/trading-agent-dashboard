@@ -183,11 +183,23 @@ test("the published dashboard opens the read-only Live Trading section", async (
       /only ever sent to api\.github\.com/,
       "the marking panel must say where the reader's token is sent"
     );
-    assert.equal(
-      await page.locator('#liveTradingView button:text-matches("(buy|sell|order|position|close|modify|cancel|trade)", "i")').count(),
-      0,
-      "no control in the read-only section may read like an order path"
-    );
+    // The section declares exactly one order-shaped control and no more: the Close button the Open
+    // positions table draws for a ticket carrying this lane's own magic, bound with `data-live-close-ask`
+    // and covered by the close-control suite. Every other control must still read as something other than
+    // an order path, and the declared one must name a ticket the shipped snapshot actually carries - the
+    // earlier form of this guard only held while the account happened to be flat, because a closed table
+    // draws no button at all.
+    const orderLike = await page.locator("#liveTradingView button").evaluateAll(nodes => nodes
+      .filter(node => /(buy|sell|order|position|close|modify|cancel|trade)/i.test(node.textContent || ""))
+      .filter(node => !node.hasAttribute("data-live-close-ask"))
+      .map(node => node.outerHTML.slice(0, 120)));
+    assert.deepEqual(orderLike, [], "no control in the read-only section may read like an order path");
+    const declaredClose = await page.locator("#liveTradingView [data-live-close-ask]").evaluateAll(nodes => nodes.map(node => node.getAttribute("data-live-close-ask")));
+    const shippedTickets = (snapshot.positions || []).map(position => String(position.ticket));
+    for (const ticket of declaredClose) {
+      assert.ok(shippedTickets.includes(ticket), `the declared hand close must name a ticket the snapshot carries, saw ${ticket}`);
+    }
+    assert.equal(new Set(declaredClose).size, declaredClose.length, "one open ticket must not get two hand closes");
 
     assert.equal(snapshot.read_only, true, "the shipped snapshot must declare itself read-only");
     assert.equal(snapshot.order_functions_called, false, "the shipped snapshot must record that the producer called no order function");

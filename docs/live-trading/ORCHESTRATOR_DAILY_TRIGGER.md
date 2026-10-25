@@ -57,6 +57,18 @@ without calling anything: `gh workflow run master-orchestrator-daily.yml -f dry_
 07:00-10:00 gate, the concurrency group, one POST in the whole file, the once-a-day and in-flight guards, read-only
 permissions, no checkout, and the dispatch defaults.
 
+## The first real dispatch, and what a green run proves
+
+On `origin/main` the workflow is live and has been dispatched twice — once dry, once live. The live one is
+**run 40203054555**, title `orchestrator daily live`, event `workflow_dispatch`, started 2026-10-25T14:36:48Z,
+conclusion **success** (`gh run view 40203054555 --json conclusion,status,displayTitle,createdAt,event`).
+
+That conclusion is stronger than "the POST was accepted": the job exits 1 if the webhook fails, if
+`data/workflow-status.json` on `main` still carries the previous `last_run_started_at` after fifteen minutes, or if
+the run reports any `status` other than `success`. A green run therefore means the orchestrator ran and wrote its
+own record. The step summary of that run carries `decision`, the webhook HTTP code, and the run's
+`status`/`failed_step` for the same reason.
+
 ## What this does not fix
 
 - The n8n flow's own status writer stamps `triggered_by: "dashboard_or_manual"` in a Code node. A scheduled call is

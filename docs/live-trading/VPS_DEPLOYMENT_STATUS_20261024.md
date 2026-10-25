@@ -19,6 +19,7 @@ done, what is blocked on a purchase or a login, and what is code that does not e
 | A second account on the page: an Accounts strip draws each lane from the published lanes document, its own snapshot and its own trader heartbeat, with lane 2 shown as DISABLED | `script.js` (`liveTradingAccounts`), `styles.css`, `data/live-trading-lanes.json` | browser close-control suite 6/6; the strip is drawn from the same artifacts the publisher writes |
 | The lanes publisher carries the lanes document and each lane's trader heartbeat in the same commit, refuses a heartbeat naming another lane or account, and writes the summary to `data/live-trading-lanes.json` | `scripts/publish-live-trading-lanes.js`, `scripts/publish-live-trading-feed.js` (`extras`), `config/live-trading-lanes.json` | lanes and feed-publish suites together: 39 tests, 0 failures; `-Test` through the launcher answered `would_publish`, `origin/main` unchanged |
 | The secret scanner's report is readable when it has no console: one line per finding instead of a `Format-Table` sized to the terminal | `scripts/check-repo-for-secrets.ps1` | `backtester/tests/secret_scanner.test.js` 5/5, and the full local suite is now **758 pass, 0 fail** |
+| Two browser-test expectations that only held while the account was flat now read the artifacts instead of a remembered stage: the read-only guard allows the Close button the Open-positions table draws for a lane ticket and none other, and the rule-panel case expects the module's own stages, so a pair holding an open position reads `blocked` rather than `no call` | `tests/live_trading_dashboard.browser.test.js`, `tests/live_trading_rule_panel.browser.test.js` | on a main-line checkout with the local research-library object store present: **666 tests, 666 pass, 0 fail** (the same tree without that ignored blob fails `research_library.browser.test.js`, and nothing else) |
 
 Why it mattered: 00:00 Prague is 22:00 or 23:00 UTC, so the old UTC cut handed the loop a **second** daily cap
 inside the same FTMO trading day (01:00/02:00 local). The counter is a placement counter, not a loss-limit guard,
@@ -42,11 +43,27 @@ VPS:
 - Data centre in the **UK/London**, then ping the FTMO server from the box before trusting it.
 - Windows licence **included**, monthly term, RDP access, provider console reboot.
 
-Links to check, prices **not quoted here** because every page refused or truncated when read today
-(`contabo.com/en/vps/`, `ionos.com/servers/vps`, `vultr.com/pricing` - 403): Contabo Cloud VPS (Windows option,
-UK region) `https://contabo.com/en/vps/`; IONOS VPS+ (Windows, licence included) `https://www.ionos.com/servers/vps`.
-Read three lines at checkout and stop if any is wrong: the **Windows licence line**, the **term length** (skip a
-24-month default), and the **region**.
+**The page prices, read on 2026-10-24 evening.** Contabo's Windows pages answered this time, so the numbers below are
+the provider's own, not a guess:
+
+| Product | Spec | Price shown (24-month rate) | Verdict |
+| --- | --- | --- | --- |
+| Contabo **Cloud VPS 4 + Windows Server** | 4 vCPU, 8 GB RAM, 100 GB SSD, 1 snapshot, 200 Mbit/s | €5.50/month incl. VAT (€4.40 excl.) | **the one to buy**: meets the floor, UK is a listed location |
+| Contabo **Cloud VPS 6 + Windows Server** | 6 vCPU, 12 GB RAM, 200 GB SSD / 100 GB NVMe | €7.50/month incl. VAT (€6.00 excl.) | the comfortable option: two terminals plus Node and Python leave room |
+| Contabo Cloud VPS 8 + Windows Server | 8 vCPU, 24 GB RAM, 300 GB SSD / 150 GB NVMe | €14.00/month incl. VAT (€11.20 excl.) | more than this job needs |
+| netcup VPS 1000 G12.5 | 4 vCore, 8 GB RAM, 128 GB SSD | €14.50/month incl. 19% VAT (12-month term) | **rejected**: netcup sells no Windows licence (self-install, 180-day trial only) |
+| IONOS VPS+ Windows | not read: the plan table truncated on every fetch | - | unquoted rather than guessed |
+
+- Order page: `https://contabo.com/en/windows-servers-vps/` (the product page carries the plan cards above; the licence
+  is included in that price, and Contabo's own FAQ says a customer-supplied Windows licence is **not** allowed).
+- Location list on the same page: Australia, India, Germany, Japan, Singapore, **United Kingdom**, United States.
+  Choose the UK location at checkout, then ping the FTMO server from the box before trusting it.
+- The €5.50 is the *24-month* rate the page headlines. If a 1-month term is wanted, the checkout shows that price
+  instead; read the **term line**, the **Windows Server version** (2022 or 2025 with Desktop Experience - not Server
+  Core, which cannot run MT5) and the **location line** before paying. Nothing here is bought yet.
+- Account checklist for the purchase itself: business or private account with 2FA on, address and VAT details that
+  match the card, a card that accepts foreign currency, the provider's abuse/support contact saved somewhere other
+  than the host, and the invoice in the same mailbox the renewal notices reach.
 
 A second FTMO-provided VPS is worth one question to support, because it would arrive pre-configured for the
 platform; nothing in this repository confirms FTMO offers one for this account type.

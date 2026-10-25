@@ -176,7 +176,8 @@ function priceText(value, digits = 2) {
 test("a call whose own window has closed is refused, and every pair still gets a row", async () => {
   const feed = oldBarsFeed();
   const levels = JSON.parse(fs.readFileSync(levelsPath, "utf8"));
-  const server = await startServer({ feed, levels, layer1: datedCalls(-7 * 24 * 60 * 60 * 1000, "EXPIRED") });
+  const layer1 = datedCalls(-7 * 24 * 60 * 60 * 1000, "EXPIRED");
+  const server = await startServer({ feed, levels, layer1 });
   const browser = await chromium.launch({ headless: true });
   try {
     const page = await browser.newPage();
@@ -191,11 +192,38 @@ test("a call whose own window has closed is refused, and every pair still gets a
     assert.ok(panel.headings.includes("Layer 1 call") && panel.headings.includes("Target (5R)"));
 
     // The artifact's own calls ran out on 2026-09-08 and only the older call is still stored, so no direction
-    // is read: the row says which call is there and when its window closed, and the stage is "no call".
+    // is read: the row says which call is there and when its window closed, and the stage is "no call". The
+    // table is held to the module's own rows, because one further stage is honest and data-driven: a pair the
+    // shipped snapshot already holds a position on reads as "blocked" - the rule's one-trade-per-pair cap -
+    // and never as a direction taken from the expired call. The earlier form of this case expected all four
+    // rows to say "no call", which only held while the account happened to be flat.
+    // The page hands the module no direction at all for a call whose window has closed, so that is what the
+    // module is asked here: the only stage it can reach is "no call", or "blocked" for the pair the shipped
+    // snapshot already holds. (Published directions read from the artifact regardless of expiry would say
+    // "waiting", which is exactly the drift this case exists to prevent.)
+    const expected = expectedRows(feed, levels, { EUR: null, GOLD: null, NQ: null, BTC: null });
     assert.deepEqual(panel.calls, ["NO LIVE CALL", "NO LIVE CALL", "NO LIVE CALL", "NO LIVE CALL"]);
-    assert.deepEqual(panel.stages, ["NO CALL", "NO CALL", "NO CALL", "NO CALL"]);
-    assert.match(panel.meta, /^4 pairs \u00b7 0 confirmed \u00b7 0 waiting \u00b7 0 blocked \u00b7 4 no call/);
-    for (const read of panel.reads) assert.match(read, /takes no trade without one/);
+    assert.deepEqual(panel.stages, expected.map(row => row.stage.replace(/-/g, " ").toUpperCase()));
+    const heldPairs = (feed.positions || []).map(position => position.symbol);
+    expected.forEach((row) => {
+      if (row.stage === "blocked") {
+        assert.ok(heldPairs.includes(row.symbol), `${row.symbol} may only be blocked by a position the snapshot holds`);
+      } else {
+        assert.equal(row.stage, "no-call", `${row.symbol} may not be ${row.stage} on a call whose window has closed`);
+      }
+    });
+    const counts = expected.reduce((totals, row) => Object.assign(totals, { [row.stage]: (totals[row.stage] || 0) + 1 }), {});
+    assert.match(panel.meta, new RegExp(`^4 pairs \u00b7 0 confirmed \u00b7 0 waiting \u00b7 ${counts.blocked || 0} blocked \u00b7 ${counts["no-call"] || 0} no call`));
+    // Each row says in its own words why it takes no trade: a call whose window has closed reads as "takes no
+    // trade without one", and the held pair reads as the cap itself, in the module's own sentence.
+    panel.reads.forEach((read, index) => {
+      if (expected[index].stage === "blocked") {
+        assert.equal(read, expected[index].reason);
+        assert.match(read, /already holds an open position/);
+      } else {
+        assert.match(read, /takes no trade without one/);
+      }
+    });
     // No row states a ticket, because no row is confirmed.
     assert.deepEqual(panel.limits, ["\u2014", "\u2014", "\u2014", "\u2014"]);
 
