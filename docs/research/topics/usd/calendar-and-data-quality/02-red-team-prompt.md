@@ -1,99 +1,149 @@
-# Calendar state and the data-quality gate - stage 2 of 3: Red-team
+# Calendar state and the data-quality gate - USD stage 2 of 3: Red-team
 
-- Topic `usd-topic-calendar-and-data-quality` on asset USD; stage `red_team`; this stage returns exactly one Markdown document (review).
-- Factors this stage is evidence for: `calendar.known-releases-between-cutoff-and-endpoint`, `calendar.days-since-and-until-high-impact-events`, `data.quality-gate-for-abstention`. One document can carry evidence for more than one factor entry; that is a mapping, not a second independent result.
-- Paste this whole prompt as one message into your own fresh session. Nothing is sent to a model from the dashboard, and this page holds no model credentials.
-- Reviewed document: the research return registered against topic `usd-topic-calendar-and-data-quality`, stage `research`. The stage 1 card shows its document id, its version and its sha256: attach exactly that version.
+## Assignment
 
-## What this stage is for
+- Topic: `usd-topic-calendar-and-data-quality` on USD (US Dollar), chain `factor`.
+- Stage: 2 of 3, red-team. This stage returns exactly one Markdown document (review), named `usd-calendar-and-data-quality-s2-red-team.md`.
+- Prompt template: `research-prompt-v3.0.0`, written 2026-10-13. The template is versioned: if a newer `research-prompt` template exists, that one governs and this file is superseded.
+- This prompt is self-contained. Paste it as one message into a fresh session; nothing is sent to a model from the dashboard and no credential is attached to it.
+- Asset status: active. The session is defined below and the data reachable from this repository is named with each input.
+- Programme record: this topic has not been dispatched. Nothing has been returned for it, and this prompt is its first assignment.
 
-Find what is wrong, unsupported or overstated in the research report before the adjudication carries it further. A report that survives an honest attack is worth more than one that was never attacked, so this stage is expected to damage claims and to say which ones stood up. It is not a summary, not a rewrite and not a vote, and it does not manufacture disagreement.
+## Objective
 
-## Which version you are attacking
+Attack one document: the stage 1 report for Calendar state and the data-quality gate, which the operator supplies, and return one issue register. Judge every load-bearing claim on the passage it cites and on the sources you fetch yourself, give each claim a verdict, a severity and the evidence that would settle it, and keep separate what the report gets right, what it cannot support and what you could not reach. Do not rewrite the report and do not propose an implementation; a narrower true claim is a result, not a loss.
 
-- Attach the exact research version the stage 1 card points to, and nothing else about its reasoning.
-- Copy that card's document id, version and sha256 into the identifier lines at the top of your return.
-- If the copy you hold has a different hash from the one on the card, say so and stop: you would not be reviewing the registered version.
+## The session and the instrument
 
-## Independence rules
+- Session: 05:00 Europe/London to 05:00 Europe/London on the next local date. Both ends are London wall-clock times one local date apart, so every eligible session is exactly 24 hours. The contract is `docs/research/usd-session/v1/session_contract_v1.json`.
+- Label instrument: DXY, and UNVERIFIED. No intraday dollar-index print exists in this repository or in the live collector, and no quote source is committed. If a claim is really about EUR/USD, a basket, the broad trade-weighted index or a futures contract, name that instrument in the same sentence and say what its window is.
+- The deployed engine is not this window: it cuts off at 09:30 America/New_York and ends at the next 16:00 ET close, a median 30.5 elapsed hours. It overlaps this session for about 14.5 nominal hours and leaves the session's first 9.5 hours unmeasured. Say which window every number belongs to.
+- The window is closed to later information: a value published after 05:00 London, or a revision published later, may not be used as what was known at the cutoff.
 
-- You are not the author's session and you did not write the report; do not ask it what it meant. The report must stand on the words it contains.
-- Open the sources yourself wherever they are reachable, and say which ones you could re-fetch. Where a source is behind a login or a paywall, judge only on the quotation given and mark the claim status accordingly.
-- Judge claims, not style, and attack the strongest version of a claim rather than a weakened one.
-- Say when a claim is right and only its scope is too wide: a narrower true claim is a result, not a loss.
+## Inputs
 
-## What to attack, claim by claim
+### The factor entries this topic answers for
 
-- **Traceability**: does the passage cited actually say what the claim says, and is the link the source itself rather than a summary of it?
-- **Window**: is the evidence about our 05:00 London to 05:00 London session, or about a close-to-close day, an intraday slice or another window, presented as if it were ours?
-- **Instrument**: is a claim really about EUR/USD, a basket or a future, presented under the DXY name?
-- **Mechanism against measurement**: is a plausible channel being used as if the relation had been measured?
-- **Already priced**: does the claim count an effect as predictive that the cutoff has already absorbed?
-- **Identification and scope**: sample period, era dependence, regime dependence, conditioning on the outcome, survivorship in the sources chosen, base rates behind a conditional claim, and any number with no stated origin.
-- **Counter-evidence**: is the strongest contrary evidence in the sources the report fetched absent, or present and dismissed without a reason?
-- **Internal consistency**: does one section contradict another, and does the what-is-not-claimed section match what the body actually does?
-- **Overlap**: does the report lean on an interaction that counts one input twice across factor entries, and does it say so?
+These are the catalogue entries this topic is evidence for. They are context to audit, never evidence for a claim, and never the scope limit of the assignment.
 
-## A verdict for every load-bearing claim
-
-`SUPPORTED` - the sources given support it as stated. `NARROWED` - something in it is supported, and the supported part is stated in your own words. `NOT_SUPPORTED` - the sources given do not support it, or contradict it; say which. `UNASSESSABLE` - it could not be judged from the sources given; say what would settle it.
-
-For each claim also give the claim quoted, its severity (fatal, material, cosmetic), what is wrong, and the evidence that would resolve it. End with two lists: what survives the attack unchanged, and what the review could not reach at all.
-
-## The session this is written for
-
-- **Session**: 05:00 Europe/London to 05:00 Europe/London on the next local date. Both ends are London wall-clock times one local date apart, so every eligible session is exactly 24 hours. The contract is `docs/research/usd-session/v1/session_contract_v1.json`.
-- **Label instrument**: proposed as DXY and UNVERIFIED. No intraday dollar-index print exists in this repository or in the live collector, and no quote source is committed. Never present another instrument as DXY: if a source is about EUR/USD, a basket, the broad trade-weighted index or a futures contract, name that instrument in the same sentence, and say whether its window is a close-to-close day, an intraday slice or something else.
-- **The deployed engine is not this window**: it cuts off at 09:30 America/New_York and ends at the next 16:00 ET close, a median 30.5 elapsed hours. It overlaps the corrected session for about 14.5 nominal hours and leaves the session's first 9.5 hours unmeasured. Say which window every number belongs to.
-
-## The factor entries this topic is evidence for
-
-These entries are context to audit. They are not evidence for any claim, and they are not the scope limit of this assignment.
-
-- **calendar.known-releases-between-cutoff-and-endpoint** - Known releases inside the window. Role: quality gate. Group: research_session_v1.
-  - The question this entry stands for: Which releases are scheduled between the cutoff and the endpoint, and how a known-but-unreleased event may be used without using its outcome.
-  - Rule in force today, as context to audit and never as evidence: No rule is in force. This is a hypothesis to be researched, not a deployed rule..
+- `calendar.known-releases-between-cutoff-and-endpoint` - Known releases inside the window. Role: quality gate. Group: research_session_v1. Research status: ready.
+  - What the entry stands for: Which releases are scheduled between the cutoff and the endpoint, and how a known-but-unreleased event may be used without using its outcome.
+  - Rule in force today, the baseline to audit and never evidence: No rule is in force. This is a hypothesis to be researched, not a deployed rule..
   - Series the collector reads: Collector calendar feed (paid); Rates package USD-SESSION-A2.
-- **calendar.days-since-and-until-high-impact-events** - Distance from high-impact events. Role: regime. Group: research_session_v1.
-  - The question this entry stands for: Positioning measured as distance from known high-impact dates, using only the release calendar and never the surprise.
-  - Rule in force today, as context to audit and never as evidence: No rule is in force. This is a hypothesis to be researched, not a deployed rule..
+  - Published brief: `docs/research/handoff/usd/v1/packs/calendar-known-releases-between-cutoff-and-endpoint.md` (sha256 `600b05e33f5f29894b51ff501bec88d0d6d89ed5cd1105a9a2736bfa8e7e89db`, 13485 bytes). Read it with this prompt if it is attached; the questions below stand without it.
+- `calendar.days-since-and-until-high-impact-events` - Distance from high-impact events. Role: regime. Group: research_session_v1. Research status: ready.
+  - What the entry stands for: Positioning measured as distance from known high-impact dates, using only the release calendar and never the surprise.
+  - Rule in force today, the baseline to audit and never evidence: No rule is in force. This is a hypothesis to be researched, not a deployed rule..
   - Series the collector reads: Collector calendar feed (paid); Rates package USD-SESSION-A2.
-- **data.quality-gate-for-abstention** - Data quality gate for abstention. Role: quality gate. Group: research_session_v1.
-  - The question this entry stands for: Which data states should force abstention instead of a weak call, given that the live collector has no as-of check and no staleness test.
-  - Rule in force today, as context to audit and never as evidence: No rule is in force. This is a hypothesis to be researched, not a deployed rule..
+  - Published brief: `docs/research/handoff/usd/v1/packs/calendar-days-since-and-until-high-impact-events.md` (sha256 `d7af3823c18f92ac4ca110b72cd76ea2cce7d67dc7fe1d5091a1b49f089f14dd`, 13287 bytes). Read it with this prompt if it is attached; the questions below stand without it.
+- `data.quality-gate-for-abstention` - Data quality gate for abstention. Role: quality gate. Group: research_session_v1. Research status: ready.
+  - What the entry stands for: Which data states should force abstention instead of a weak call, given that the live collector has no as-of check and no staleness test.
+  - Rule in force today, the baseline to audit and never evidence: No rule is in force. This is a hypothesis to be researched, not a deployed rule..
   - Series the collector reads: docs/research/usd-session/v1/inventory.md section 4 and 7.
+  - Published brief: `docs/research/handoff/usd/v1/packs/data-quality-gate-for-abstention.md` (sha256 `a4415c7cc67ec20a53ab66b069313299e5280f0ebffea4bf3ec15a0a8cafb236`, 13826 bytes). Read it with this prompt if it is attached; the questions below stand without it.
 
-## Companion files in the repository
+### Documents you are given
 
-Files in the checkout behind this topic, if you can reach them. They are aids, not attachments you must have.
+Supplied by the operator. Record the file name and the first heading of the document you judge in the header lines your deliverable asks for. If what you were given is clearly another topic or another stage, stop and say so.
 
-- `docs/research/usd-session/v1/inventory.md` (the input and decision inventory this topic closes out) - sha256 `a886f1ddcce52d4d8a0af77069b391deb1338275380cccd2e08d41fd61f2d56a`
+- `usd-calendar-and-data-quality-s1-research.md` - the stage 1 research report for this topic, supplied by the operator. As supplied: version `unknown`, sha256 `unknown`.
 
-## What to return
+### Documents in this checkout
 
-- Required content: The issue register, the two closing lists (what survives unchanged, what the review could not reach), the sources you re-fetched and the questions you could not resolve.
-- Return one Markdown document. Put these identifier lines at the top of the file, before the body, and fill them from the stage card you downloaded:
+Each line names a file, the part of it that matters, its hash and what it is for. If a file is not attached to this message, answer from this prompt and say which files you could not open.
+
+- `docs/research/usd-session/v1/inventory.md` - the input and decision inventory this topic closes out. sha256 `a886f1ddcce52d4d8a0af77069b391deb1338275380cccd2e08d41fd61f2d56a`.
+
+## Questions to answer
+
+Answer every question below, in order. Where the evidence does not exist, write that and what would settle it: an honest "not answerable from the sources I can reach" is a complete answer, a guess is not.
+
+### Questions to answer, claim by claim
+
+1. For each load-bearing claim: what exactly does it assert, and does the passage it cites support it as stated?
+2. Window: is the evidence about the session above, or about a close-to-close day, an intraday slice or another window presented as if it were ours?
+3. Instrument: is a claim really about EUR/USD, a basket, a futures contract or an ETF, presented under another name?
+4. Mechanism against measurement: is a plausible channel being used as though the relation had been measured?
+5. Already priced: does the claim count as predictive something the cutoff has already absorbed?
+6. Identification: sample period, era and regime dependence, conditioning on the outcome, survivorship in the sources chosen, the base rate behind a conditional claim, and any number with no stated origin.
+7. Counter-evidence: is the strongest contrary evidence in the sources the report fetched missing, or present and dismissed without a reason?
+8. Internal consistency and scope: does one section contradict another, does the what-is-not-claimed section match the body, and is any true claim only too wide?
+9. Coverage: does every entry in scope get an answer, and is every question the report could not answer named as unanswered?
+
+## Evidence standard
+
+- Name the source for every load-bearing claim: publication, series id, table or section, and the date you read it. A claim with no source is written as your reading, not as a finding.
+- Cite the passage you rely on. Where a source only partly supports a claim, write what it does support and what it leaves out.
+- Separate measurement from mechanism. A channel is a hypothesis; say which part of a claim has been measured and which part has not.
+- State the sample behind any relation: instrument, window, era and the number of non-overlapping observations. A number with no sample is not evidence.
+- Prefer the primary source to a summary, and the series documentation to a post about the series.
+- Report what you could not reach: paywalls, undated pages, dead links, series with no documented vintage. Do not fill the gap with a plausible number.
+- Where two sources disagree, say so and say which you would trust and why.
+- Every claim about timing is about this session and this cutoff, not about a general close-to-close convention.
+
+## Deliverable
+
+Return exactly one Markdown file and nothing else.
+
+- File name: `usd-calendar-and-data-quality-s2-red-team.md`. Copy it exactly: the library records the name it receives and matches it to the prompt that asked for it.
+- Format: one Markdown file. No JSON, no zip, no PDF, no spreadsheet, no second file, no separate sources note, no filled-in card.
+- Length: as long as the material needs, and no longer. A short file that answers every question beats a long one that answers some.
+- Header lines, above the first heading, in this form:
 
 ```
 Reviewed topic: usd-topic-calendar-and-data-quality
-Reviewed document: <document id shown on the stage card you downloaded>
-Reviewed version: <version>
-Reviewed sha256: <sha256 shown on that card>
+Reviewed document: <the file name you were given>
+Reviewed version: <the version you were given, or unknown>
+Reviewed sha256: <the hash you were given, or unknown>
+Reviewed first heading: <the first heading of that document, verbatim>
 ```
-- Keep it in one file. Tables, sources, hypotheses, candidate relations and appendices all belong inside that document; nothing here needs a second file, a JSON payload or a hand-built schema.
-- The dashboard records the topic, the stage and the exact version this document judged, so that metadata is not yours to assemble: pick the stage card, choose the file, upload it.
+
+Write `unknown` where a version or a hash was not supplied. Do not invent one, and do not stop because it is missing.
+
+- Sections: exactly these, in this order, each as a `## ` heading with the exact title:
+
+  1. `## Summary - the verdict, in at most ten lines`
+  2. `## The document judged - file name, first heading, the version and hash you were given`
+  3. `## Claims checked - one row per load-bearing claim: claim as stated, where it is, verdict, severity, the evidence and the reason`
+  4. `## What the report gets right`
+  5. `## What the report cannot support, and the sentence that breaks it`
+  6. `## What you could not check, and what would settle it`
+  7. `## Window, instrument and timing defects`
+  8. `## Identification, sample and inference defects`
+  9. `## Overlap and double counting the report leaves unaddressed`
+  10. `## Questions the report should have answered and did not`
+  11. `## What a corrected version of the strongest surviving claim would say`
+  12. `## Sources consulted`
+
+Keep a section that turns out to be empty, and say in one sentence why it is empty.
+Do not restate these instructions, and do not add a section that summarises the prompt.
+
+## Completion checklist
+
+Walk this list before you return the file. A "no" means the file is not ready.
+
+- [ ] Every load-bearing claim in the document has a row in the register.
+- [ ] Every verdict carries a reason and a severity, not only a label.
+- [ ] The header lines record the file name and first heading you were given, and never invent a hash.
+- [ ] What the report gets right is listed as such.
+- [ ] What you could not check is kept separate from what you checked and found wrong.
+- [ ] No rewritten report, no replacement section and no proposed implementation.
+- [ ] The file name and every section heading match the instructions exactly.
 
 ## Prohibitions
 
-Do not invent a backtest, a performance figure, an accuracy rate or a sample size. If you have not measured it, say it is unmeasured. Numbers you remember are not evidence.
-Do not use hindsight: never state what a past period would have predicted using information that was not available at that time, and do not present a later revision as a first print.
-Cite only sources you actually fetched in this session, with the link and the passage you relied on.
-Where you are uncertain, say so and give the reason; an unresolved question is a valid return.
-State effects that are already in the price at the cutoff rather than counting them again as predictive.
-Treat the deployed weights, thresholds and signs as a baseline to audit, never as evidence for your claim.
-Name the instrument a claim is really about. Never present another instrument as DXY.
-No production, workflow, dashboard, feed, dispatcher, database or configuration change is authorised by this prompt, and none may be proposed as part of the deliverable.
+- Do not treat a rule in force as evidence for itself. It is the baseline you are auditing.
+- Do not propose or make a change to a live engine, a live call or a deployed workflow.
+- Do not invent a number, a series id, a citation, a date or a hash. `unknown` is allowed; a guess is not.
+- Do not return JSON, a dashboard card, a zip, a spreadsheet, a second file, or this prompt pasted back.
+- Do not add, rename, reorder or merge the deliverable sections.
+- Do not report a directional edge from a sample you have not described.
+- Do not use a value published after the cutoff, or a later revision, as what was known at the cutoff.
+- Do not treat a local export, a passing replay test or a workflow run as evidence that anything is deployed, timely or profitable.
+- Do not assume access to data this prompt does not name; if a test needs it, say what it is and where it would come from.
 
-## What happens after you return it
+If a question can only be answered by breaking one of these, say so in the file rather than breaking it.
 
-The adjudication (stage 3) reads the report and this review together and decides every material objection. Nothing here approves a hypothesis, scores a factor or changes a live call: an upload records evidence and moves no status.
+## What happens next
+
+The operator supplies this review and the report it judges, unchanged and under their own names, to stage 3 (adjudication) for the same topic. The review does not replace the report, and no engine reads either.

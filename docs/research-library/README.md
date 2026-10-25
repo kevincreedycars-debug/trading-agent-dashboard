@@ -32,12 +32,20 @@ secondary section because a pass through the three stages needs none of them.
 - **The prompts live in `docs/research/topics/usd/<topic-slug>/`** and are generated with the topic map by
   `scripts/build_research_library.js`, so a prompt cannot drift from the catalogue: the catalogue carries each
   prompt's sha256, the page verifies the file against that hash before it copies it, and `verify` fails if a
-  prompt file is edited on disk. The VIX topic's stage 1 prompt is the dispatched deep-research brief
-  reproduced in full, so the Copy prompt button on VIX pastes the VIX assignment and never the legacy
-  `USD-SESSION-A3` reviewer prompt.
+  prompt file is edited on disk.
+- **The prompt words come from one versioned template, `lib/research_prompt_templates.js`**
+  (`research-prompt-v3.0.0`), and the builder supplies only the facts: which entries belong to the topic, the
+  session and label instrument, the documents the stage is given, the deliverable name and the dispatch record.
+  Every stage is rendered from the same ten sections in the same order, each prompt names the template version
+  it came from, and the builder refuses to write one that keeps an older workflow's wording, leaves a
+  `<placeholder>` for a value the reader may not have, drops a section or names a deliverable fewer than twice.
+  The superseded VIX brief and the programme red-team brief are named and hashed in the catalogue and refused
+  rather than reproduced, so the Copy prompt button pastes the topic's own stage 1 assignment and never the
+  legacy `USD-SESSION-A3` reviewer prompt.
 - **Six topics cover the twenty-five USD factor entries today.** The VIX topic
-  (`usd-topic-vix-level-and-risk-regime`) is the dispatched one; the stage prompts of the other five are
-  written and checked and can be released as a batch.
+  (`usd-topic-vix-level-and-risk-regime`) is the dispatched one; all six now carry the template-rendered stage
+  prompts and can be released as a batch. The other seven assets exist only as draft profiles that state their
+  open decisions: no session, no label instrument and no factor mapping is inherited from USD.
 
 Where the completed VIX red-team file goes: open the local page (`http://127.0.0.1:8791/index.html` when the
 service is started with `npm run research-library`), choose **Research Library**, keep **USD**, select the VIX
@@ -104,7 +112,8 @@ twenty-five briefs moved no status either: coverage is an assignment, not a resu
    `docs/research/handoff/usd/v1/packs/`); the task prompts come from the assignment packages
    (`docs/research/usd-session/v1/assignments/USD-SESSION-A1.price-and-risk.json`,
    `…A2.rates-releases-calendar.json`, `…A3…`, `…A4…`, `…A5.synthesis.json`) together with the shared headers and
-   data bullets in `scripts/build_research_library.js`. The bytes the panel copies for a task are `tasks[].prompt`
+   data bullets in `scripts/build_research_library.js`, and the stage prompts of the six topics come from
+   `lib/research_prompt_templates.js` plus that builder's topic specs. The bytes the panel copies for a task are `tasks[].prompt`
    in `data/research-library/catalog.json`, so changing a prompt means editing the source and running
    `node scripts/build_research_library.js catalog --write`; changing a brief means running
    `node scripts/build_research_handoff.js write` and then `node scripts/build_research_library.js registry --write`,

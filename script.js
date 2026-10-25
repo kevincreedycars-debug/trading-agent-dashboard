@@ -7456,9 +7456,13 @@ function researchLibraryTopicChips(lib, catalog, asset) {
 
 function researchLibraryStagePromptBlock(lib, topic, stage) {
   const source = stage.prompt_source || {};
-  const sourceLabel = source.kind === "dispatched_brief"
-    ? `generated from the dispatched brief ${source.repo_path || ""}`
-    : "generated from the catalogue and this topic map";
+  // Every stage is now rendered from the versioned template, so the label names that template instead of
+  // describing where an older prompt was copied from.
+  const sourceLabel = source.template_version
+    ? `rendered from prompt template ${source.template_version} and this topic map`
+    : source.kind === "dispatched_brief"
+      ? `generated from the dispatched brief ${source.repo_path || ""}`
+      : "generated from the catalogue and this topic map";
   return `
     <div class="rl-stage-prompt" data-rl-stage-prompt="${escapeHtml(stage.stage)}">
       <div class="rl-document-actions">

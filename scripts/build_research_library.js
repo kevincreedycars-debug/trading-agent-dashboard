@@ -15,6 +15,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
 const ResearchLibrary = require('../lib/research_library.js');
+const Prompts = require('../lib/research_prompt_templates.js');
 
 const root = path.resolve(__dirname, '..');
 const catalogPath = path.join(root, 'data', 'research-library', 'catalog.json');
@@ -941,306 +942,75 @@ const REGISTRY_DOCUMENTS = [...REPO_DOCUMENTS, ...BRIEF_DOCUMENTS];
 const TOPIC_DIR = 'docs/research/topics/usd';
 const DEEP_RESEARCH_DIR = 'docs/research/handoff/usd/v1/deep-research';
 const VIX_DISPATCHED_BRIEF = `${DEEP_RESEARCH_DIR}/VIX_COMPREHENSIVE_REPORT_BRIEF.md`;
+const PROGRAMME_RED_TEAM_BRIEF = `${DEEP_RESEARCH_DIR}/RED_TEAM_REVIEW_BRIEF.md`;
 const CONTEXT_PACK_NEUTRAL = `${DEEP_RESEARCH_DIR}/CONTEXT_PACK_NEUTRAL.md`;
-const TOPIC_STAGE_ORDER = { research: 1, red_team: 2, adjudication: 3 };
-const TOPIC_STAGE_META = {
-  research: {
-    label: 'Research',
-    document_type: 'report',
-    deliverable: 'One Markdown report: the assignment answered in full, with the source note as a section inside the same document.',
-    returns: 'Sections in the order the prompt asks for, an explicit what-is-not-claimed section, and the source note naming every source you fetched, the passage you relied on, the window it concerns and whether it is primary.'
-  },
-  red_team: {
-    label: 'Red-team',
-    document_type: 'review',
-    deliverable: 'One Markdown issue register: every load-bearing claim quoted, given a verdict, a severity and the evidence that would settle it.',
-    returns: 'The issue register, the two closing lists (what survives unchanged, what the review could not reach), the sources you re-fetched and the questions you could not resolve.'
-  },
-  adjudication: {
-    label: 'Adjudication',
-    document_type: 'synthesis',
-    deliverable: 'One Markdown adjudication: corrected conclusions, a decision on every material objection, and a handoff to central USD synthesis.',
-    returns: 'Corrected conclusions; finding-by-finding decisions; accepted, rejected and unresolved claims; proposed treatment of the factor in the engine; inputs, transformations, timing, interactions and missing-data treatment; explicitly unvalidated parameters; required empirical tests and remaining blockers; the handoff section.'
-  }
-};
+// Stage order, labels, document types and deliverable file names come from the versioned template in
+// lib/research_prompt_templates.js. This builder owns the catalogue facts - the entries, the hashes, the
+// dispatch record - and the template owns every word of the prompt, so a prompt cannot be assembled here
+// from a second, older set of instructions.
 
-// The session every stage is written for. It is repeated in every prompt because a prompt has to stand alone.
-const TOPIC_SESSION_BLOCK = [
-  '- **Session**: 05:00 Europe/London to 05:00 Europe/London on the next local date. Both ends are London wall-clock times one local date apart, so every eligible session is exactly 24 hours. The contract is `docs/research/usd-session/v1/session_contract_v1.json`.',
-  '- **Label instrument**: proposed as DXY and UNVERIFIED. No intraday dollar-index print exists in this repository or in the live collector, and no quote source is committed. Never present another instrument as DXY: if a source is about EUR/USD, a basket, the broad trade-weighted index or a futures contract, name that instrument in the same sentence, and say whether its window is a close-to-close day, an intraday slice or something else.',
-  "- **The deployed engine is not this window**: it cuts off at 09:30 America/New_York and ends at the next 16:00 ET close, a median 30.5 elapsed hours. It overlaps the corrected session for about 14.5 nominal hours and leaves the session's first 9.5 hours unmeasured. Say which window every number belongs to."
-];
-
-const TOPIC_PROHIBITIONS = [
-  'Do not invent a backtest, a performance figure, an accuracy rate or a sample size. If you have not measured it, say it is unmeasured. Numbers you remember are not evidence.',
-  'Do not use hindsight: never state what a past period would have predicted using information that was not available at that time, and do not present a later revision as a first print.',
-  'Cite only sources you actually fetched in this session, with the link and the passage you relied on.',
-  'Where you are uncertain, say so and give the reason; an unresolved question is a valid return.',
-  'State effects that are already in the price at the cutoff rather than counting them again as predictive.',
-  'Treat the deployed weights, thresholds and signs as a baseline to audit, never as evidence for your claim.',
-  'Name the instrument a claim is really about. Never present another instrument as DXY.',
-  'No production, workflow, dashboard, feed, dispatcher, database or configuration change is authorised by this prompt, and none may be proposed as part of the deliverable.'
-];
-
-function promptFrontmatter(topic, stageId, extraLines = []) {
-  const meta = TOPIC_STAGE_META[stageId];
-  return [
-    `# ${topic.title} - stage ${TOPIC_STAGE_ORDER[stageId]} of 3: ${meta.label}`,
-    '',
-    `- Topic \`${topic.topic_id}\` on asset USD; stage \`${stageId}\`; this stage returns exactly one Markdown document (${meta.document_type}).`,
-    `- Factors this stage is evidence for: ${topic.factor_ids.map(id => `\`${id}\``).join(', ')}. One document can carry evidence for more than one factor entry; that is a mapping, not a second independent result.`,
-    '- Paste this whole prompt as one message into your own fresh session. Nothing is sent to a model from the dashboard, and this page holds no model credentials.',
-    ...extraLines,
-    ''
-  ].join('\n');
+// The factor entry as the template reads it: the catalogue row, plus the published brief that covers it
+// when one exists. The template decides how each field is worded.
+function promptEntry(factor, pack) {
+  const entry = {
+    factor_id: factor.factor_id,
+    label: factor.label,
+    group: factor.group,
+    role: factor.role,
+    brief: factor.brief,
+    current_rules: factor.current_rules,
+    threshold: factor.threshold,
+    lookback: factor.lookback,
+    sources: factor.sources,
+    blockers: factor.blockers,
+    research_status: factor.research_status
+  };
+  if (pack) entry.pack = pack;
+  return entry;
 }
 
-function sessionSection() {
-  return ['## The session this is written for', '', ...TOPIC_SESSION_BLOCK, ''].join('\n');
+// One topic, one stage, one self-contained prompt. The session comes from the asset profile, the entries
+// from the catalogue, and the documents a later stage judges from the names stage 1 and 2 derived.
+function promptContext(topic, stageId) {
+  const kind = topic.kind;
+  const fileName = stage => Prompts.deliverableFileName({ asset: topic.asset, slug: topic.slug, kind, stage });
+  const given = stageId === 'research'
+    ? []
+    : stageId === 'red_team'
+      ? [{ file_name: fileName('research'), note: 'the stage 1 research report for this topic, supplied by the operator' }]
+      : [
+        { file_name: fileName('research'), note: 'the stage 1 research report for this topic, supplied by the operator' },
+        { file_name: fileName('red_team'), note: 'the stage 2 red-team review of that report, supplied by the operator' }
+      ];
+  const dispatch = topic.dispatch || {};
+  return {
+    kind,
+    stage: stageId,
+    profile: Prompts.assetProfile(topic.asset),
+    date: TODAY,
+    topic: {
+      topic_id: topic.topic_id,
+      slug: topic.slug,
+      title: topic.title,
+      question: topic.question,
+      probes: topic.probes
+    },
+    entries: topic.entries,
+    companions: topic.companions,
+    given,
+    programme: {
+      dispatched: dispatch.state === 'dispatched',
+      task_id: dispatch.task_id,
+      pack_version: dispatch.pack_version,
+      context_version: dispatch.context_version,
+      superseded: topic.superseded
+    },
+    deliverable: { file_name: fileName(stageId) }
+  };
 }
 
-function prohibitionsSection() {
-  return ['## Prohibitions', '', ...TOPIC_PROHIBITIONS, ''].join('\n');
-}
-
-function factorContextBlock(topic) {
-  const byId = new Map(USD_ASSET.factors.map(factor => [factor.factor_id, factor]));
-  const lines = [];
-  topic.factor_ids.forEach(factorId => {
-    const factor = byId.get(factorId);
-    if (!factor) {
-      lines.push(`- \`${factorId}\` is named by this topic but is not in the catalogue.`);
-      return;
-    }
-    const status = factor.research_status === 'blocked' ? ' (research blocked on data access)' : '';
-    lines.push(`- **${factor.factor_id}** - ${factor.label}${status}. Role: ${factor.role}. Group: ${factor.group}.`);
-    lines.push(`  - The question this entry stands for: ${factor.brief}`);
-    if ((factor.current_rules || []).length) {
-      lines.push(`  - Rule in force today, as context to audit and never as evidence: ${factor.current_rules.join('; ')}.`);
-    }
-    if (factor.threshold) lines.push(`  - Threshold: ${factor.threshold}; lookback: ${factor.lookback || 'not stated'}.`);
-    if ((factor.sources || []).length) lines.push(`  - Series the collector reads: ${factor.sources.join('; ')}.`);
-  });
-  return [
-    '## The factor entries this topic is evidence for',
-    '',
-    'These entries are context to audit. They are not evidence for any claim, and they are not the scope limit of this assignment.',
-    '',
-    ...lines,
-    ''
-  ].join('\n');
-}
-
-function companionBlock(topic, stageId) {
-  const lines = (topic.companions || []).map(entry => `- \`${entry.repo_path}\` (${entry.role}) - sha256 \`${entry.sha256}\``);
-  if (stageId === 'research') {
-    (topic.packs || []).forEach(pack => lines.push(`- \`${pack.repo_path}\` - the published brief for \`${pack.factor_id}\`; sha256 \`${pack.sha256}\``));
-  }
-  if (!lines.length) return '';
-  const header = stageId === 'research'
-    ? 'Files in the checkout this topic rests on, if you can reach them. They are aids: the prompt has to stand on its own without them.'
-    : 'Files in the checkout behind this topic, if you can reach them. They are aids, not attachments you must have.';
-  return ['## Companion files in the repository', '', header, '', ...lines, ''].join('\n');
-}
-
-function returnSection(topic, stageId) {
-  const meta = TOPIC_STAGE_META[stageId];
-  const lines = ['## What to return', '', `- Required content: ${meta.returns}`];
-  if (stageId === 'research') {
-    lines.push('- Return one Markdown document. The report and its source note belong inside that one file: sections in order, then the source note, then the what-is-not-claimed section.');
-  } else {
-    lines.push('- Return one Markdown document. Put these identifier lines at the top of the file, before the body, and fill them from the stage card you downloaded:');
-    lines.push('');
-    lines.push('```');
-    lines.push(`Reviewed topic: ${topic.topic_id}`);
-    lines.push('Reviewed document: <document id shown on the stage card you downloaded>');
-    lines.push('Reviewed version: <version>');
-    lines.push('Reviewed sha256: <sha256 shown on that card>');
-    lines.push('```');
-  }
-  lines.push('- Keep it in one file. Tables, sources, hypotheses, candidate relations and appendices all belong inside that document; nothing here needs a second file, a JSON payload or a hand-built schema.');
-  lines.push('- The dashboard records the topic, the stage and the exact version this document judged, so that metadata is not yours to assemble: pick the stage card, choose the file, upload it.');
-  lines.push('');
-  return lines.join('\n');
-}
-
-function researchPrompt(topic) {
-  const dispatchLine = topic.dispatch && topic.dispatch.state === 'dispatched'
-    ? `- The programme has already dispatched this topic: it is deep-research step 1 under task \`${topic.dispatch.task_id}\`, pack version ${topic.dispatch.pack_version}, context version ${topic.dispatch.context_version}.`
-    : '- This topic has not been dispatched yet. This is the next research assignment, written and hash-checked so it is ready to run.';
-  const sections = [
-    promptFrontmatter(topic, 'research', [dispatchLine]),
-    '## What this stage is for',
-    '',
-    'Produce one comprehensive, source-backed report investigating how the inputs of this topic - their levels, their changes and their interactions with each other and with the rest of the system - relate to the subsequent direction of the US dollar over one session: 05:00 Europe/London to 05:00 Europe/London on the next local date.',
-    '',
-    'Rules are in force for some of these entries, and the session is defined but unmeasured because the instrument that would label it has no verified quote source. Neither is the question. The question is what the evidence actually says about where the dollar goes next inside this window, and where that evidence is thin, contradictory or absent.',
-    '',
-    '## What the report must cover',
-    '',
-    '1. **Measurement**: what each input is and what it measures, from sources - the index or series family around it, any futures or forward structure, the publication and revision process, and the exact window each measurement refers to. Name the instrument and the window of every claim.',
-    '2. **Mechanisms**: the channels by which each input could move the dollar inside a 24-hour London-to-London window - safe-haven demand, risk appetite and cross-asset correlation, carry and funding, policy expectations, positioning and flows - and the observable each mechanism would leave at the cutoff.',
-    '3. **Regimes**: whether the relation is stable or regime-dependent (volatility level, direction of the dollar, policy cycle, liquidity), and on what evidence that judgement rests.',
-    '4. **Level against change**: whether the level, a one-day change or a longer change is the informative quantity, and on what evidence.',
-    '5. **Interactions**: for each pair of entries the sources support - inside this topic and with the other factor entries - the sign, the mechanism, the window, and whether the pair is the same information counted twice.',
-    '6. **Timing**: what is observable at 05:00 Europe/London, what is already in the price by then, and what arrives only during the session.',
-    '7. **Predictive evidence**: what has actually been measured about the subsequent 24-hour direction, with the sample, the window and the era stated; and where the honest answer is that nothing has been measured for this instrument and window.',
-    '8. **Contradictory findings**: the strongest contrary evidence you found, named as such rather than omitted.',
-    '9. **Hypotheses**: the candidate relation or relations worth testing, each with a falsifiable statement, what would refute it, and how it could be measured in this repository.',
-    '10. **Data requirements**: the series, resolution, vintage handling and history the test would need, and which of them are missing or behind a paywall.',
-    '',
-    '## Questions for this topic',
-    '',
-    ...topic.probes.map((probe, index) => `${index + 1}. ${probe}`),
-    '',
-    '## Existing thresholds are context, not the scope limit',
-    '',
-    'The rules in force are listed below because they are what the deployed engine does today. Audit them rather than defend them, and do not treat them as the limit of what may be investigated: if the sources support a different quantity, window, sign or interaction, say so and say what it rests on.',
-    ''
-  ];
-  if (topic.dispatched_brief_text) {
-    sections.push(
-      '## The dispatched assignment',
-      '',
-      `The programme sent this brief for this topic. It is reproduced here in full so that this one prompt is sufficient on its own; its own file is \`${topic.dispatch.prompt_path}\`, and its hash is recorded in the topic index.`,
-      '',
-      '--- begin dispatched brief ---',
-      '',
-      topic.dispatched_brief_text.trimEnd(),
-      '',
-      '--- end dispatched brief ---',
-      ''
-    );
-  }
-  sections.push(
-    sessionSection(),
-    factorContextBlock(topic),
-    companionBlock(topic, 'research'),
-    returnSection(topic, 'research'),
-    prohibitionsSection(),
-    '## What happens after you return it',
-    '',
-    'An independent red team attacks the report claim by claim (stage 2). Only what survives is carried into the adjudication (stage 3), which decides what, if anything, enters central USD synthesis. Nothing is scored before the session and data contract is frozen, and no weight, sign, threshold, lookback or live call changes because a report exists.',
-    ''
-  );
-  return sections.join('\n');
-}
-
-function redTeamPrompt(topic) {
-  const sections = [
-    promptFrontmatter(topic, 'red_team', [
-      `- Reviewed document: the research return registered against topic \`${topic.topic_id}\`, stage \`research\`. The stage 1 card shows its document id, its version and its sha256: attach exactly that version.`
-    ]),
-    '## What this stage is for',
-    '',
-    'Find what is wrong, unsupported or overstated in the research report before the adjudication carries it further. A report that survives an honest attack is worth more than one that was never attacked, so this stage is expected to damage claims and to say which ones stood up. It is not a summary, not a rewrite and not a vote, and it does not manufacture disagreement.',
-    '',
-    '## Which version you are attacking',
-    '',
-    '- Attach the exact research version the stage 1 card points to, and nothing else about its reasoning.',
-    "- Copy that card's document id, version and sha256 into the identifier lines at the top of your return.",
-    '- If the copy you hold has a different hash from the one on the card, say so and stop: you would not be reviewing the registered version.',
-    '',
-    '## Independence rules',
-    '',
-    "- You are not the author's session and you did not write the report; do not ask it what it meant. The report must stand on the words it contains.",
-    '- Open the sources yourself wherever they are reachable, and say which ones you could re-fetch. Where a source is behind a login or a paywall, judge only on the quotation given and mark the claim status accordingly.',
-    '- Judge claims, not style, and attack the strongest version of a claim rather than a weakened one.',
-    "- Say when a claim is right and only its scope is too wide: a narrower true claim is a result, not a loss.",
-    '',
-    '## What to attack, claim by claim',
-    '',
-    '- **Traceability**: does the passage cited actually say what the claim says, and is the link the source itself rather than a summary of it?',
-    '- **Window**: is the evidence about our 05:00 London to 05:00 London session, or about a close-to-close day, an intraday slice or another window, presented as if it were ours?',
-    '- **Instrument**: is a claim really about EUR/USD, a basket or a future, presented under the DXY name?',
-    '- **Mechanism against measurement**: is a plausible channel being used as if the relation had been measured?',
-    '- **Already priced**: does the claim count an effect as predictive that the cutoff has already absorbed?',
-    '- **Identification and scope**: sample period, era dependence, regime dependence, conditioning on the outcome, survivorship in the sources chosen, base rates behind a conditional claim, and any number with no stated origin.',
-    '- **Counter-evidence**: is the strongest contrary evidence in the sources the report fetched absent, or present and dismissed without a reason?',
-    '- **Internal consistency**: does one section contradict another, and does the what-is-not-claimed section match what the body actually does?',
-    '- **Overlap**: does the report lean on an interaction that counts one input twice across factor entries, and does it say so?',
-    '',
-    '## A verdict for every load-bearing claim',
-    '',
-    '`SUPPORTED` - the sources given support it as stated. `NARROWED` - something in it is supported, and the supported part is stated in your own words. `NOT_SUPPORTED` - the sources given do not support it, or contradict it; say which. `UNASSESSABLE` - it could not be judged from the sources given; say what would settle it.',
-    '',
-    'For each claim also give the claim quoted, its severity (fatal, material, cosmetic), what is wrong, and the evidence that would resolve it. End with two lists: what survives the attack unchanged, and what the review could not reach at all.',
-    ''
-  ];
-  if (topic.programme_red_team_text) {
-    sections.push(
-      '## The programme brief this stage follows',
-      '',
-      `The deep-research tier wrote this step-2 brief for the dispatched topic. It is reproduced in full so that this one prompt is sufficient; its own file is \`${topic.programme_red_team_path}\`.`,
-      '',
-      '--- begin programme brief ---',
-      '',
-      topic.programme_red_team_text.trimEnd(),
-      '',
-      '--- end programme brief ---',
-      ''
-    );
-  }
-  sections.push(
-    sessionSection(),
-    factorContextBlock(topic),
-    companionBlock(topic, 'red_team'),
-    returnSection(topic, 'red_team'),
-    prohibitionsSection(),
-    '## What happens after you return it',
-    '',
-    'The adjudication (stage 3) reads the report and this review together and decides every material objection. Nothing here approves a hypothesis, scores a factor or changes a live call: an upload records evidence and moves no status.',
-    ''
-  );
-  return sections.join('\n');
-}
-
-function adjudicationPrompt(topic) {
-  return [
-    promptFrontmatter(topic, 'adjudication', [
-      `- Attach both documents this stage judges: the research return for topic \`${topic.topic_id}\` and the red-team review of it. Each stage card shows its document id, version and sha256; attach those exact versions.`
-    ]),
-    '## What this stage is for',
-    '',
-    'Read the research report and the red-team review together and produce the best-supported conclusion. Resolve each material objection on the evidence; do not split the difference, do not average the two documents, and do not treat agreement between them as evidence. Where the evidence does not decide, say which finding is unresolved and what would decide it.',
-    '',
-    '## Which versions you are judging',
-    '',
-    '- Reproduce the research document id, version and sha256, and the red-team document id, version and sha256, in the identifier lines at the top of your return.',
-    '- If either attachment does not match the card it came from, say so and stop.',
-    '',
-    '## How to decide',
-    '',
-    '- Answer a material objection on the evidence the two documents give, and on sources you fetched yourself; say which it was.',
-    '- Reject an objection the evidence does not support, and say what is wrong with it.',
-    '- A claim that neither document settles stays unresolved and is listed as unresolved rather than quietly dropped.',
-    '- A narrowing that keeps the true part of a claim is a decision, not a compromise.',
-    '',
-    '## What the adjudication must contain',
-    '',
-    '1. **Corrected conclusions** - the best-supported version of each conclusion, stated plainly.',
-    '2. **Finding-by-finding decisions** - every material objection from the review, decided as accepted, rejected or unresolved, each with its reason.',
-    '3. **Accepted, rejected and unresolved claims** - as three explicit lists.',
-    '4. **Proposed treatment of the factor in the engine** - only where the evidence supports it: the input, the transformation, the sign, the threshold, the lookback, the timing and how any interaction is handled. Where the evidence does not support a treatment, say that instead. The rules in force are context to be tested, never a target to agree with.',
-    '5. **Inputs, transformations, timing, interactions and missing-data considerations** - including what the collector does not record today and what it would have to record.',
-    '6. **Explicitly unvalidated parameters** - every number or choice you propose that has not been measured, named as unvalidated.',
-    '7. **Required empirical tests and remaining blockers** - what would have to be measured, on what sample and window, with what data, and what is missing or behind a paywall.',
-    '8. **Handoff to central USD synthesis** - a short, self-contained section a later central synthesis can read on its own: what this topic contributes, what it rules out, what stays unresolved, and what it does not claim.',
-    '',
-    '## The line this stage must not cross',
-    '',
-    'Research accepted for synthesis is not a validated trading rule. This stage proposes; it does not implement, score, deploy or change a live call, and it asserts no performance figure it has not measured.',
-    '',
-    sessionSection(),
-    factorContextBlock(topic),
-    companionBlock(topic, 'adjudication'),
-    returnSection(topic, 'adjudication'),
-    prohibitionsSection(),
-    '## What happens after you return it',
-    '',
-    'Central USD synthesis is a separate step: it reads the adjudications of every topic, resolves what conflicts between them, and only then can an isolated implementation and validation step follow. Nothing enters the live engine because a document exists.',
-    ''
-  ].join('\n');
+function topicPrompt(topic, stageId) {
+  return Prompts.buildStagePrompt(promptContext(topic, stageId));
 }
 
 // The topic map. Every USD factor sits in exactly one topic, and a topic may name the topics it interacts
@@ -1252,6 +1022,7 @@ const TOPIC_MAP = [
     slug: 'vix-level-and-risk-regime',
     title: 'VIX, its change and the USD risk regime at the 05:00 London cutoff',
     summary: 'Whether the VIX level, its one-day change or a longer change says anything about the direction of the dollar over the next 24-hour London-to-London session, and what those quantities interact with.',
+    question: 'Does the VIX level, its one-day change or a longer change say anything about the direction of the dollar over the next 24-hour London-to-London session, and what do those quantities interact with?',
     factor_ids: ['live.f1-vix-level', 'risk.vix-level-and-change-at-cutoff'],
     overlaps: ['usd-topic-fx-session-structure'],
     dispatch: {
@@ -1259,12 +1030,12 @@ const TOPIC_MAP = [
       task_id: 'USD-BASELINE-AUDIT-01',
       pack_version: '2.0.0',
       context_version: 'usd-session-context-20261014.1',
-      dispatched_at: '2026-10-15'
+      dispatched_at: '2026-10-15',
+      source_brief: VIX_DISPATCHED_BRIEF
     },
-    dispatched_brief_path: VIX_DISPATCHED_BRIEF,
-    programme_red_team_path: `${DEEP_RESEARCH_DIR}/RED_TEAM_REVIEW_BRIEF.md`,
+    superseded_paths: [VIX_DISPATCHED_BRIEF, PROGRAMME_RED_TEAM_BRIEF],
     companion_paths: [
-      { repo_path: CONTEXT_PACK_NEUTRAL, role: 'the neutral context pack the brief asks the reader to work from' }
+      { repo_path: CONTEXT_PACK_NEUTRAL, role: 'the neutral context pack the programme published alongside the topic' }
     ],
     pack_factor_ids: ['live.f1-vix-level', 'risk.vix-level-and-change-at-cutoff'],
     probes: [
@@ -1280,6 +1051,7 @@ const TOPIC_MAP = [
     slug: 'front-end-rates',
     title: 'US front-end rates, real yields and curve position',
     summary: 'Whether front-end rate changes, real yields, the US-DE spread and curve or credit measures carry information about the next 24-hour dollar move, at the level or in a delta.',
+    question: 'Do front-end rate changes, real yields, the US-DE spread and curve or credit measures carry information about the next 24-hour dollar move that is not already in the other entries of this topic, at the level or in a delta?',
     factor_ids: ['live.f2-us-2y-delta', 'live.f3-us-de-2y-spread-delta', 'live.f4-real-yield-delta', 'rates.us-front-end-delta', 'rates.relative-front-end-delta', 'rates.real-yield-delta', 'rates.term-premium-and-curve', 'rates.credit-spread-delta'],
     overlaps: ['usd-topic-economic-surprise-and-fed-bias'],
     dispatch: { state: 'queued' },
@@ -1300,6 +1072,7 @@ const TOPIC_MAP = [
     slug: 'dollar-index-gold-and-equities',
     title: 'Dollar index, gold and equity-against-USD relations',
     summary: 'Whether the dollar index delta, gold and equity moves carry independent information about the next 24-hour dollar move, or restate the risk appetite the other topics already measure.',
+    question: 'Do the dollar index delta, gold and equity moves carry information about the next 24-hour dollar move that is independent of the risk appetite the other topics measure, or do they restate it?',
     factor_ids: ['live.f5-dxy-delta', 'live.f6-gold-delta', 'live.f9-dollar-smile', 'live.f10-equity-versus-usd'],
     overlaps: ['usd-topic-vix-level-and-risk-regime', 'usd-topic-fx-session-structure'],
     dispatch: { state: 'queued' },
@@ -1320,6 +1093,7 @@ const TOPIC_MAP = [
     slug: 'economic-surprise-and-fed-bias',
     title: 'Economic surprises, first prints and Fed bias',
     summary: 'Whether release surprises, their first-print vintages and the realised-versus-signalled policy path explain the next 24-hour dollar move, and what part of that is already priced.',
+    question: 'Do release surprises, their first-print vintages and the realised-versus-signalled policy path explain the next 24-hour dollar move, and what part of that is already priced at the cutoff?',
     factor_ids: ['live.f7-economic-surprise', 'live.f8-fed-bias', 'macro.release-surprise-at-first-print'],
     overlaps: ['usd-topic-front-end-rates', 'usd-topic-calendar-and-data-quality'],
     dispatch: { state: 'queued' },
@@ -1340,6 +1114,7 @@ const TOPIC_MAP = [
     slug: 'fx-session-structure',
     title: 'Session structure, overnight range and safe-haven demand',
     summary: 'Whether the placement of the dollar inside its own range, session momentum and safe-haven or risk-on state carry information forward into the next 24-hour session.',
+    question: 'Do the placement of the dollar inside its own range, session momentum and safe-haven or risk-on state carry information forward into the next 24-hour session, and which of them is not the same input twice?',
     factor_ids: ['fx.usd-session-momentum', 'fx.usd-overnight-range-position', 'fx.usd-session-volatility-regime', 'risk.usd-safe-haven-demand', 'risk.risk-on-off-cross-asset-state'],
     overlaps: ['usd-topic-vix-level-and-risk-regime', 'usd-topic-dollar-index-gold-and-equities'],
     dispatch: { state: 'queued' },
@@ -1360,6 +1135,7 @@ const TOPIC_MAP = [
     slug: 'calendar-and-data-quality',
     title: 'Calendar state and the data-quality gate',
     summary: 'Whether the release calendar and the collector data-quality state should inform the call, gate it, or abstain, and what that means for the 25 factor entries.',
+    question: 'Should the release calendar and the collector data-quality state inform the call, gate it or force an abstention, and what does that mean for the twenty-five factor entries?',
     factor_ids: ['calendar.known-releases-between-cutoff-and-endpoint', 'calendar.days-since-and-until-high-impact-events', 'data.quality-gate-for-abstention'],
     overlaps: ['usd-topic-economic-surprise-and-fed-bias'],
     dispatch: { state: 'queued' },
@@ -1557,75 +1333,84 @@ function buildTopics() {
       return { factor_id: factorId, repo_path: entry.repo_path, sha256, bytes };
     }).filter(Boolean);
 
+    if (!spec.question) problems.push(`topic ${spec.topic_id} has no question for the research stage to answer`);
+
+    const packByFactor = new Map(packs.map(pack => [pack.factor_id, pack]));
+    const factorById = new Map(USD_ASSET.factors.map(factor => [factor.factor_id, factor]));
+    const entries = spec.factor_ids.map(factorId => {
+      const factor = factorById.get(factorId);
+      if (!factor) {
+        problems.push(`topic ${spec.topic_id} names a factor that is not in the catalogue: ${factorId}`);
+        return null;
+      }
+      return promptEntry(factor, packByFactor.get(factorId));
+    }).filter(Boolean);
+
     const topic = {
       topic_id: spec.topic_id,
       asset: 'USD',
+      kind: spec.kind || 'factor',
       slug: spec.slug,
       title: spec.title,
       summary: spec.summary,
+      question: spec.question,
       factor_ids: spec.factor_ids.slice(),
       overlaps: (spec.overlaps || []).slice(),
       next_step: spec.next_step,
       dispatch: { ...(spec.dispatch || { state: 'queued' }) },
       companions,
       packs,
+      entries,
+      superseded: [],
       probes: (spec.probes || []).slice()
     };
 
-    if (spec.dispatched_brief_path) {
-      const absPath = path.join(root, spec.dispatched_brief_path);
+    // An earlier assignment for this topic is programme history, not an input. Its text is deliberately
+    // not reproduced: every stage names the file and its hash and says that it must not be answered.
+    (spec.superseded_paths || []).forEach(repoPath => {
+      const absPath = path.join(root, repoPath);
       if (!fs.existsSync(absPath)) {
-        problems.push(`topic ${spec.topic_id} names a dispatched brief that does not exist: ${spec.dispatched_brief_path}`);
-      } else {
-        topic.dispatched_brief_text = fs.readFileSync(absPath, 'utf8');
-        topic.dispatch.prompt_path = spec.dispatched_brief_path;
-        topic.dispatch.prompt_sha256 = hashFile(absPath).sha256;
+        problems.push(`topic ${spec.topic_id} names a superseded brief that does not exist: ${repoPath}`);
+        return;
       }
-    }
-    if (spec.programme_red_team_path) {
-      const absPath = path.join(root, spec.programme_red_team_path);
-      if (!fs.existsSync(absPath)) {
-        problems.push(`topic ${spec.topic_id} names a programme brief that does not exist: ${spec.programme_red_team_path}`);
-      } else {
-        topic.programme_red_team_path = spec.programme_red_team_path;
-        topic.programme_red_team_text = fs.readFileSync(absPath, 'utf8');
-      }
-    }
+      topic.superseded.push({ repo_path: repoPath, sha256: hashFile(absPath).sha256 });
+    });
 
     const text = {
-      research: researchPrompt(topic),
-      red_team: redTeamPrompt(topic),
-      adjudication: adjudicationPrompt(topic)
+      research: topicPrompt(topic, 'research'),
+      red_team: topicPrompt(topic, 'red_team'),
+      adjudication: topicPrompt(topic, 'adjudication')
     };
-    const stages = Object.keys(TOPIC_STAGE_ORDER).map(stageId => {
-      const fileSlug = stageId === 'red_team' ? 'red-team' : stageId;
-      const repoPath = `${TOPIC_DIR}/${spec.slug}/0${TOPIC_STAGE_ORDER[stageId]}-${fileSlug}-prompt.md`;
-      files.push({ repo_path: repoPath, stage: stageId, topic_id: spec.topic_id, text: text[stageId] });
-      const sourceKind = stageId === 'research' && topic.dispatch.prompt_path ? 'dispatched_brief' : 'generated';
+    const stages = Prompts.STAGE_ORDER.map(stageId => {
+      const meta = Prompts.stageMeta(topic.kind, stageId);
+      const repoPath = `${TOPIC_DIR}/${spec.slug}/0${meta.order}-${meta.file_slug}-prompt.md`;
+      const prompt = text[stageId];
+      files.push({ repo_path: repoPath, stage: stageId, topic_id: spec.topic_id, text: prompt });
+      const fileName = Prompts.deliverableFileName({
+        asset: topic.asset,
+        slug: topic.slug,
+        kind: topic.kind,
+        stage: stageId
+      });
+      const sections = Prompts.DELIVERABLE_SECTIONS[`${topic.kind}/${stageId}`] || [];
       return {
         stage: stageId,
-        order: TOPIC_STAGE_ORDER[stageId],
-        label: TOPIC_STAGE_META[stageId].label,
+        order: meta.order,
+        label: meta.label,
         prompt_path: repoPath,
-        prompt_sha256: sha256Of(text[stageId]),
-        prompt_bytes: Buffer.byteLength(text[stageId], 'utf8'),
-        prompt_source: sourceKind === 'dispatched_brief'
-          ? {
-            kind: sourceKind,
-            repo_path: topic.dispatch.prompt_path,
-            sha256: topic.dispatch.prompt_sha256,
-            note: 'Generated from the dispatched brief and reproduced in full inside this prompt.'
-          }
-          : {
-            kind: sourceKind,
-            repo_path: repoPath,
-            sha256: sha256Of(text[stageId]),
-            note: 'Generated from the catalogue and the topic map, and shown on the page before it is copied.'
-          },
-        document_type: TOPIC_STAGE_META[stageId].document_type,
+        prompt_sha256: sha256Of(prompt),
+        prompt_bytes: Buffer.byteLength(prompt, 'utf8'),
+        prompt_source: {
+          kind: 'generated',
+          repo_path: repoPath,
+          sha256: sha256Of(prompt),
+          template_version: Prompts.TEMPLATE_VERSION,
+          note: `Rendered from prompt template ${Prompts.TEMPLATE_VERSION} and the topic map, and shown on the page before it is copied.`
+        },
+        document_type: meta.document_type,
         parent_stage: stageId === 'research' ? null : stageId === 'red_team' ? 'research' : 'red_team',
-        deliverable: TOPIC_STAGE_META[stageId].deliverable,
-        returns: TOPIC_STAGE_META[stageId].returns
+        deliverable: `One Markdown ${meta.document_type}, named \`${fileName}\`.`,
+        returns: `Sections in order: ${sections.map(title => `\`## ${title}\``).join(', ')}.`
       };
     });
 

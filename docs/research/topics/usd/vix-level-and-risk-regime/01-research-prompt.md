@@ -1,184 +1,138 @@
-# VIX, its change and the USD risk regime at the 05:00 London cutoff - stage 1 of 3: Research
+# VIX, its change and the USD risk regime at the 05:00 London cutoff - USD stage 1 of 3: Research
 
-- Topic `usd-topic-vix-level-and-risk-regime` on asset USD; stage `research`; this stage returns exactly one Markdown document (report).
-- Factors this stage is evidence for: `live.f1-vix-level`, `risk.vix-level-and-change-at-cutoff`. One document can carry evidence for more than one factor entry; that is a mapping, not a second independent result.
-- Paste this whole prompt as one message into your own fresh session. Nothing is sent to a model from the dashboard, and this page holds no model credentials.
-- The programme has already dispatched this topic: it is deep-research step 1 under task `USD-BASELINE-AUDIT-01`, pack version 2.0.0, context version usd-session-context-20261014.1.
+## Assignment
 
-## What this stage is for
+- Topic: `usd-topic-vix-level-and-risk-regime` on USD (US Dollar), chain `factor`.
+- Stage: 1 of 3, research. This stage returns exactly one Markdown document (report), named `usd-vix-level-and-risk-regime-s1-research.md`.
+- Prompt template: `research-prompt-v3.0.0`, written 2026-10-13. The template is versioned: if a newer `research-prompt` template exists, that one governs and this file is superseded.
+- This prompt is self-contained. Paste it as one message into a fresh session; nothing is sent to a model from the dashboard and no credential is attached to it.
+- Asset status: active. The session is defined below and the data reachable from this repository is named with each input.
+- Programme record: this topic was dispatched as task `USD-BASELINE-AUDIT-01`, pack version 2.0.0, context version usd-session-context-20261014.1. Anything already returned for it is an earlier version of this topic and is not an input here unless the inputs section names it.
+- Superseded brief: `docs/research/handoff/usd/v1/deep-research/VIX_COMPREHENSIVE_REPORT_BRIEF.md` (sha256 `40a05c141bf2c6baab1417b896d763174fd06242725b4c0d6c60842aacdc0923`) set out an earlier workflow for this topic. It is kept as programme history and must not be followed or answered; the one deliverable this stage asks for is the one named above.
+- Superseded brief: `docs/research/handoff/usd/v1/deep-research/RED_TEAM_REVIEW_BRIEF.md` (sha256 `69c76511b16bab61ebcbd01e987fd5fefec72cfcdc2764e131ad10aee3fe2670`) set out an earlier workflow for this topic. It is kept as programme history and must not be followed or answered; the one deliverable this stage asks for is the one named above.
 
-Produce one comprehensive, source-backed report investigating how the inputs of this topic - their levels, their changes and their interactions with each other and with the rest of the system - relate to the subsequent direction of the US dollar over one session: 05:00 Europe/London to 05:00 Europe/London on the next local date.
+## Objective
 
-Rules are in force for some of these entries, and the session is defined but unmeasured because the instrument that would label it has no verified quote source. Neither is the question. The question is what the evidence actually says about where the dollar goes next inside this window, and where that evidence is thin, contradictory or absent.
+Answer one question in one report: Does the VIX level, its one-day change or a longer change say anything about the direction of the dollar over the next 24-hour London-to-London session, and what do those quantities interact with? Return a source-backed report that states what the evidence supports for the US Dollar session above, what it does not, and what would refute each claim, using the entries named below as the scope of evidence. The rules in force are the baseline to audit, not the target and not evidence. The report is evidence about this topic; it is not a trading rule, and nothing you return changes a live call.
 
-## What the report must cover
+## The session and the instrument
 
-1. **Measurement**: what each input is and what it measures, from sources - the index or series family around it, any futures or forward structure, the publication and revision process, and the exact window each measurement refers to. Name the instrument and the window of every claim.
-2. **Mechanisms**: the channels by which each input could move the dollar inside a 24-hour London-to-London window - safe-haven demand, risk appetite and cross-asset correlation, carry and funding, policy expectations, positioning and flows - and the observable each mechanism would leave at the cutoff.
-3. **Regimes**: whether the relation is stable or regime-dependent (volatility level, direction of the dollar, policy cycle, liquidity), and on what evidence that judgement rests.
-4. **Level against change**: whether the level, a one-day change or a longer change is the informative quantity, and on what evidence.
-5. **Interactions**: for each pair of entries the sources support - inside this topic and with the other factor entries - the sign, the mechanism, the window, and whether the pair is the same information counted twice.
-6. **Timing**: what is observable at 05:00 Europe/London, what is already in the price by then, and what arrives only during the session.
-7. **Predictive evidence**: what has actually been measured about the subsequent 24-hour direction, with the sample, the window and the era stated; and where the honest answer is that nothing has been measured for this instrument and window.
-8. **Contradictory findings**: the strongest contrary evidence you found, named as such rather than omitted.
-9. **Hypotheses**: the candidate relation or relations worth testing, each with a falsifiable statement, what would refute it, and how it could be measured in this repository.
-10. **Data requirements**: the series, resolution, vintage handling and history the test would need, and which of them are missing or behind a paywall.
+- Session: 05:00 Europe/London to 05:00 Europe/London on the next local date. Both ends are London wall-clock times one local date apart, so every eligible session is exactly 24 hours. The contract is `docs/research/usd-session/v1/session_contract_v1.json`.
+- Label instrument: DXY, and UNVERIFIED. No intraday dollar-index print exists in this repository or in the live collector, and no quote source is committed. If a claim is really about EUR/USD, a basket, the broad trade-weighted index or a futures contract, name that instrument in the same sentence and say what its window is.
+- The deployed engine is not this window: it cuts off at 09:30 America/New_York and ends at the next 16:00 ET close, a median 30.5 elapsed hours. It overlaps this session for about 14.5 nominal hours and leaves the session's first 9.5 hours unmeasured. Say which window every number belongs to.
+- The window is closed to later information: a value published after 05:00 London, or a revision published later, may not be used as what was known at the cutoff.
 
-## Questions for this topic
+## Inputs
+
+### The factor entries this topic answers for
+
+These are the catalogue entries this topic is evidence for. They are context to audit, never evidence for a claim, and never the scope limit of the assignment.
+
+- `live.f1-vix-level` - F1 VIX level and risk regime. Role: regime context. Group: live_engine. Research status: ready.
+  - What the entry stands for: VIX level is read as the risk regime the dollar is trading in. The rulebook also describes 1d and 5d modifiers; the deployed code does not implement them.
+  - Rule in force today, the baseline to audit and never evidence: VIX above 25 reads BULLISH, 16 to 25 NEUTRAL, below 16 BEARISH; level only; the documented 1d/5d modifier is not implemented.
+  - Threshold: 25 / 16. Lookback: level.
+  - Series the collector reads: FRED VIXCLS, read by the collector and stored as vix_level.
+  - Published brief: `docs/research/handoff/usd/v1/packs/f1-vix-level.md` (sha256 `808dc01ada48798e01561ef31fd19899dffc0eac9fee826bf9dacd067e499842`, 14724 bytes). Read it with this prompt if it is attached; the questions below stand without it.
+- `risk.vix-level-and-change-at-cutoff` - VIX level and change at the cutoff. Role: regime. Group: research_session_v1. Research status: ready.
+  - What the entry stands for: VIX level and its change, read as risk regime rather than as a standalone direction, with the documented-but-unimplemented 1d and 5d modifiers examined.
+  - Rule in force today, the baseline to audit and never evidence: No rule is in force. This is a hypothesis to be researched, not a deployed rule..
+  - Series the collector reads: FRED VIXCLS; Price and risk package USD-SESSION-A1.
+  - Published brief: `docs/research/handoff/usd/v1/packs/risk-vix-level-and-change-at-cutoff.md` (sha256 `70db4ed35d4aaaff9d90bbaf0f6ac3f06b5b89c8bfddb4ccee5f82e323f8cceb`, 13694 bytes). Read it with this prompt if it is attached; the questions below stand without it.
+
+### Documents in this checkout
+
+Each line names a file, the part of it that matters, its hash and what it is for. If a file is not attached to this message, answer from this prompt and say which files you could not open.
+
+- `docs/research/handoff/usd/v1/deep-research/CONTEXT_PACK_NEUTRAL.md` - the neutral context pack the programme published alongside the topic. sha256 `7e92e4e568df0b84cde906ab4db0ce6135348c99ec871ef8f7b6e48ee8471b00`.
+
+## Questions to answer
+
+Answer every question below, in order. Where the evidence does not exist, write that and what would settle it: an honest "not answerable from the sources I can reach" is a complete answer, a guess is not.
+
+### Questions about this topic
 
 1. Is the informative quantity the level, the one-day change or a five-day change, and does the answer differ between calm and stressed regimes?
 2. Does the volatility-of-volatility or term-structure information add anything the level does not already carry?
 3. Is the mechanism safe-haven demand, risk appetite, carry or policy expectations, and what observable at the cutoff distinguishes them?
 4. How much of the VIX move is already in the dollar at 05:00 Europe/London, and what is left for the following 24 hours?
 
-## Existing thresholds are context, not the scope limit
+### Questions that apply to the whole topic
 
-The rules in force are listed below because they are what the deployed engine does today. Audit them rather than defend them, and do not treat them as the limit of what may be investigated: if the sources support a different quantity, window, sign or interaction, say so and say what it rests on.
+5. Which entries in this topic are the same information counted twice, which one carries it, and what would tell them apart?
+6. What is observable at the cutoff, what has the cutoff already absorbed, and what arrives only during the session?
+7. What has actually been measured about this window with this instrument - the sample, the era, the regime and the number of independent observations - and where is the honest answer that nothing has?
+8. What is the strongest contrary evidence you found, and what would refute the relation you would propose?
+9. What would the test need that this repository or the collector does not have, and what sits behind a paywall?
 
-## The dispatched assignment
+### Questions about each entry
 
-The programme sent this brief for this topic. It is reproduced here in full so that this one prompt is sufficient on its own; its own file is `docs/research/handoff/usd/v1/deep-research/VIX_COMPREHENSIVE_REPORT_BRIEF.md`, and its hash is recorded in the topic index.
+10. `live.f1-vix-level` (F1 VIX level and risk regime): VIX level is read as the risk regime the dollar is trading in. The rulebook also describes 1d and 5d modifiers; the deployed code does not implement them. What does it measure, from which series and which publication process, with what lag and revision practice - and is the informative quantity the level, the recorded lookback measure (level), or another transform?
+11. `live.f1-vix-level` audit: the rule in force reads VIX above 25 reads BULLISH, 16 to 25 NEUTRAL, below 16 BEARISH; level only; the documented 1d/5d modifier is not implemented, with threshold 25 / 16 and lookback level. Is that sign, that threshold and that lookback supported for this window, and what would refute it?
+12. `risk.vix-level-and-change-at-cutoff` (VIX level and change at the cutoff): VIX level and its change, read as risk regime rather than as a standalone direction, with the documented-but-unimplemented 1d and 5d modifiers examined. What does it measure, from which series and which publication process, with what lag and revision practice - and is the informative quantity the level, the recorded lookback measure (not stated), or another transform?
+13. `risk.vix-level-and-change-at-cutoff` audit: the rule in force reads No rule is in force. This is a hypothesis to be researched, not a deployed rule., with threshold none stated and lookback not stated. Is that sign, that threshold and that lookback supported for this window, and what would refute it?
 
---- begin dispatched brief ---
+## Evidence standard
 
-# VIX and the subsequent direction of the US dollar - comprehensive research brief (live.f1-vix-level)
+- Name the source for every load-bearing claim: publication, series id, table or section, and the date you read it. A claim with no source is written as your reading, not as a finding.
+- Cite the passage you rely on. Where a source only partly supports a claim, write what it does support and what it leaves out.
+- Separate measurement from mechanism. A channel is a hypothesis; say which part of a claim has been measured and which part has not.
+- State the sample behind any relation: instrument, window, era and the number of non-overlapping observations. A number with no sample is not evidence.
+- Prefer the primary source to a summary, and the series documentation to a post about the series.
+- Report what you could not reach: paywalls, undated pages, dead links, series with no documented vintage. Do not fill the gap with a plausible number.
+- Where two sources disagree, say so and say which you would trust and why.
+- Every claim about timing is about this session and this cutoff, not about a general close-to-close convention.
 
-- Task: `USD-BASELINE-AUDIT-01`. Report brief 1.0.0 of the deep-research tier, context version usd-session-context-20261014.1, pack version 2.0.0, extracted 2026-10-15 on branch `research/usd-session-20261013` at `d07af11166ea1d39e5f4184e85a993e03bcb7137`.
-- Read [`deep-research/CONTEXT_PACK_NEUTRAL.md`](deep-research/CONTEXT_PACK_NEUTRAL.md) first. It carries the session, the existing factors, the rules in force, the data that exists and the decisions that are open - and nothing else, on purpose.
-- This brief is step 1 of four. A research card is step 3's output, under the same task, and it is not what this brief asks for.
+## Deliverable
 
-## 1. What is asked
+Return exactly one Markdown file and nothing else.
 
-Produce one comprehensive, source-backed report. It is the primary deliverable of this programme:
+- File name: `usd-vix-level-and-risk-regime-s1-research.md`. Copy it exactly: the library records the name it receives and matches it to the prompt that asked for it.
+- Format: one Markdown file. No JSON, no zip, no PDF, no spreadsheet, no second file, no separate sources note, no filled-in card.
+- Length: as long as the material needs, and no longer. A short file that answers every question beats a long one that answers some.
+- Sections: exactly these, in this order, each as a `## ` heading with the exact title:
 
-A comprehensive, source-backed report investigating how VIX - its level, its change and its interactions with the other factors in this system - relates to the subsequent direction of the US dollar over one session: 05:00 Europe/London to 05:00 Europe/London on the next local date.
+  1. `## Summary - the answer, in at most ten lines`
+  2. `## What this topic asks and what this report answers`
+  3. `## Evidence by entry - one subsection per entry, with its series, its publication process and the sources you read`
+  4. `## What is observable at the cutoff, and what has the cutoff already absorbed`
+  5. `## What the evidence supports, by entry, with the sample behind each claim`
+  6. `## What the evidence does not support, and the claims it refutes`
+  7. `## Overlap - which entries carry the same information twice`
+  8. `## Contrary evidence, and what would refute the reading you propose`
+  9. `## What could not be established, and what would establish it`
+  10. `## Implications for the entries, each marked unvalidated, with the parameter that is unmeasured`
+  11. `## Sources`
 
-We have a rule in force that reads the VIX level as a risk regime, and a session we have defined but have not measured, because the instrument that would label it has no verified quote source. Neither of those is the question. The question is what the evidence actually says about how VIX and the things it interacts with relate to where the dollar goes next, inside this window, and where that evidence is thin, contradictory or absent.
+Keep a section that turns out to be empty, and say in one sentence why it is empty.
+Do not restate these instructions, and do not add a section that summarises the prompt.
 
-Return the report as markdown, plus the source note described in section 6. Format the report with the sections of section 3 in that order: a reader who disagrees with you should be able to find the weakness.
+## Completion checklist
 
-## 2. The session the report is written for
+Walk this list before you return the file. A "no" means the file is not ready.
 
-- Start 05:00 Europe/London. End 05:00 Europe/London on the next local date. Both ends are London wall-clock times one local date apart; every eligible session is exactly 24 hours. The contract is `docs/research/usd-session/v1/session_contract_v1.json`.
-- The label instrument is proposed as DXY and is UNVERIFIED: no intraday dollar-index print exists in this repository or in the live collector, and no quote source is committed. Never present another instrument as DXY: if a source is about EUR/USD, a basket, the broad trade-weighted index or a futures contract, name that instrument in the same sentence, and say whether its window is a close-to-close day, an intraday slice or something else.
-- The deployed engine is not this window: it cuts off at 09:30 America/New_York and ends at the next 16:00 ET close, a median 30.5 elapsed hours. The closed 24-hour study behind it overlaps the corrected session for 14.5 nominal hours (15.5 in the weeks when New York has changed and London has not) and leaves the session's first 9.5 hours unmeasured. Read every number in this repository as belonging to one of those windows, and say which.
-
-## 3. What the report must cover
-
-1. What VIX is and what it measures, from sources: the level, the index family around it, the futures term structure, and anything published about volatility of volatility. Name the instrument and the window of every claim.
-2. The proposed mechanisms by which VIX would move the dollar inside a 24-hour London-to-London window - safe-haven demand, risk appetite and cross-asset correlation, carry and funding, policy expectations, positioning and flows - and the observable each mechanism would leave at the cutoff.
-3. Level against change: whether the level, the 1-day change or a longer change is the informative quantity, and on what evidence that judgement rests.
-4. Interactions with the factors in this system, taken from the context pack's factor table: for each one, whether the sources support an interaction with VIX, what the two together would imply, and which pairs would double-count one input. The deployed set already reads VIX in 3 places - `live.f1-vix-level`, `live.f9-dollar-smile`, `live.f10-equity-versus-usd` - and the session set carries its own VIX card, so name every overlap you rely on and every overlap you are introducing.
-5. Where the relation weakens, changes sign or stops being informative: growth shocks against policy and funding shocks, low-volatility regimes, event days, month-end and quarter-end, and what the sources say distinguishes them.
-6. What is already in the price at the cutoff, given that 05:00 London follows the US close that produced the VIX print, and how a study could tell a reaction from a prediction.
-7. The cross-asset carriers of the same channel: equities, credit, gold, rates and crypto, with the same instrument and window labelling.
-8. Event and calendar conditioning inside the window, including the release calendar and the H.10 timing.
-9. What the sources cannot settle: contradictions, weak identification, period dependence, and claims that are plausible but unsourced.
-10. What our own session cannot be measured on yet, stated plainly, and what that does not block.
-11. Candidate relations, unranked: as many as the sources support, each with the window it was evidenced on, the direction, the condition under which it holds and what would falsify it.
-12. Open questions, and what you would need to fetch or measure next.
-13. What is not claimed, in your own words.
-
-## 4. Evidence standards
-
-- Cite only what you actually fetched in this session: the link, the passage you relied on, when the source is dated, and what that passage supports.
-- Label the window of every piece of evidence. A close-to-close daily relation, an intraday slice, an options-implied measure and a 30-hour study window are four different objects; none of them may be presented as evidence about our 05:00-to-05:00 session.
-- Keep mechanism apart from measurement. A coherent argument for why a channel exists is not a measurement of it, and a modelled or simulated figure is not an observed one.
-- Where sources disagree, give both and say which one you find better identified and why.
-- Prefer primary sources - the exchange, the index provider, the Federal Reserve, the paper itself - over summaries, and say when only a summary was reachable.
-- Name the instrument a claim is really about, every time. Never present another instrument as DXY.
-- A relation that exists on another asset, another window or another era is reported as exactly that.
-
-## 5. Context, not a limit
-
-- The rule in force and the data reachable today are context for this programme, not limits on it. The deployed sign, weight, threshold and lookback are the object of an audit; they are never evidence for a claim. A review may use any source it can fetch and cite, whether or not this repository can reproduce it. What is missing blocks one thing only: empirical validation of our exact session. It does not block research into mechanisms, evidence and interactions, and it is never a reason to narrow the question to what this repository happens to hold.
-- At most two programmable hypotheses per returned card. That limit is a card rule: it applies to the individual research card in step 3, and it does not apply to the discovery phase, where a report may state, compare and rank as many candidate relations as its sources support.
-- The label instrument and quote source are unverified, and the missing-quote policy, the flat band and the tie rule are open decisions listed in the context pack. None of them is frozen here, none of them is yours to freeze, and the report may say what the sources imply for each of them.
-
-## 6. What to return
-
-1. The report, as markdown, with the sections of section 3 in that order and an explicit what-is-not-claimed section.
-2. The source note: every source you fetched, its link, the passage you relied on, what it supports, the window it concerns and whether it is primary; then the questions you could not resolve and what you could not reach behind a paywall or a login.
-3. Both upload against `USD-BASELINE-AUDIT-01` for `live.f1-vix-level` in the Research Library. An upload records evidence; it is not an approval, and it moves no factor's status.
-
-## 7. Prohibitions
-
-Do not invent a backtest, a performance figure, an accuracy rate or a sample size. If you have not
-measured it, say it is unmeasured. Numbers you remember are not evidence.
-Do not use hindsight: never state what a past period would have predicted using information that was not
-available at that time, and do not present a later revision as a first print.
-Cite only sources you actually fetched in this session, with the link and the passage you relied on.
-Where you are uncertain, say so and give the reason; an unresolved question is a valid return.
-State effects that are already in the price at the cutoff rather than counting them again as predictive.
-Treat the deployed weights, thresholds and signs as a baseline to audit, never as evidence for your claim.
-Name the instrument a claim is really about. Never present another instrument as DXY.
-No production, workflow, dashboard, feed, dispatcher, database or configuration change is authorised by
-this pack, and none may be proposed as part of the deliverable.
-
-## 8. What happens after you return it
-
-An independent red team attacks the report claim by claim (step 2, `deep-research/RED_TEAM_REVIEW_BRIEF.md`). Only what survives is carried into the revised synthesis and the structured research cards (step 3, `deep-research/SYNTHESIS_AND_CARDS_BRIEF.md`), where the per-card limit of at most two programmable hypotheses applies. Nothing is scored before the session and data contract is frozen (step 4, `deep-research/BACKTEST_HANDOFF_BRIEF.md`), and no weight, sign, threshold or lookback changes because a report or a backtest exists.
-
-## 9. What this brief is not
-
-- Not a research card: a card is step 3's output, on the schema, and the two-hypothesis limit is not a limit on this report.
-- Not an audit of our deployed rule, and not an approval of it or of any replacement: the deployed rule is context to be tested against the evidence, never evidence for a claim.
-- Not a measurement of our session: the report says what is known and how well, and states plainly what the missing label data leaves unmeasured.
-- Not a backtest, a performance figure, an accuracy rate or a sample size, and it asserts none.
-- Not a live change of any kind: no production, workflow, dashboard, feed, dispatcher, database or configuration change is authorised by this brief.
-
-## 10. The other nine deployed factors and the fifteen session factors
-
-This brief is the programme's first report and its subject is VIX. The other factor ids in the context pack get their own assignments: the deployed set audits code that runs (tasks `USD-BASELINE-AUDIT-01` to `USD-BASELINE-AUDIT-10`, one per factor, of which only `USD-BASELINE-AUDIT-01` is addressed here), and the fifteen session factors carry the two field packages. The same four steps apply to them when their turns come.
-
---- end dispatched brief ---
-
-## The session this is written for
-
-- **Session**: 05:00 Europe/London to 05:00 Europe/London on the next local date. Both ends are London wall-clock times one local date apart, so every eligible session is exactly 24 hours. The contract is `docs/research/usd-session/v1/session_contract_v1.json`.
-- **Label instrument**: proposed as DXY and UNVERIFIED. No intraday dollar-index print exists in this repository or in the live collector, and no quote source is committed. Never present another instrument as DXY: if a source is about EUR/USD, a basket, the broad trade-weighted index or a futures contract, name that instrument in the same sentence, and say whether its window is a close-to-close day, an intraday slice or something else.
-- **The deployed engine is not this window**: it cuts off at 09:30 America/New_York and ends at the next 16:00 ET close, a median 30.5 elapsed hours. It overlaps the corrected session for about 14.5 nominal hours and leaves the session's first 9.5 hours unmeasured. Say which window every number belongs to.
-
-## The factor entries this topic is evidence for
-
-These entries are context to audit. They are not evidence for any claim, and they are not the scope limit of this assignment.
-
-- **live.f1-vix-level** - F1 VIX level and risk regime. Role: regime context. Group: live_engine.
-  - The question this entry stands for: VIX level is read as the risk regime the dollar is trading in. The rulebook also describes 1d and 5d modifiers; the deployed code does not implement them.
-  - Rule in force today, as context to audit and never as evidence: VIX above 25 reads BULLISH, 16 to 25 NEUTRAL, below 16 BEARISH; level only; the documented 1d/5d modifier is not implemented.
-  - Threshold: 25 / 16; lookback: level.
-  - Series the collector reads: FRED VIXCLS, read by the collector and stored as vix_level.
-- **risk.vix-level-and-change-at-cutoff** - VIX level and change at the cutoff. Role: regime. Group: research_session_v1.
-  - The question this entry stands for: VIX level and its change, read as risk regime rather than as a standalone direction, with the documented-but-unimplemented 1d and 5d modifiers examined.
-  - Rule in force today, as context to audit and never as evidence: No rule is in force. This is a hypothesis to be researched, not a deployed rule..
-  - Series the collector reads: FRED VIXCLS; Price and risk package USD-SESSION-A1.
-
-## Companion files in the repository
-
-Files in the checkout this topic rests on, if you can reach them. They are aids: the prompt has to stand on its own without them.
-
-- `docs/research/handoff/usd/v1/deep-research/CONTEXT_PACK_NEUTRAL.md` (the neutral context pack the brief asks the reader to work from) - sha256 `7e92e4e568df0b84cde906ab4db0ce6135348c99ec871ef8f7b6e48ee8471b00`
-- `docs/research/handoff/usd/v1/packs/f1-vix-level.md` - the published brief for `live.f1-vix-level`; sha256 `808dc01ada48798e01561ef31fd19899dffc0eac9fee826bf9dacd067e499842`
-- `docs/research/handoff/usd/v1/packs/risk-vix-level-and-change-at-cutoff.md` - the published brief for `risk.vix-level-and-change-at-cutoff`; sha256 `70db4ed35d4aaaff9d90bbaf0f6ac3f06b5b89c8bfddb4ccee5f82e323f8cceb`
-
-## What to return
-
-- Required content: Sections in the order the prompt asks for, an explicit what-is-not-claimed section, and the source note naming every source you fetched, the passage you relied on, the window it concerns and whether it is primary.
-- Return one Markdown document. The report and its source note belong inside that one file: sections in order, then the source note, then the what-is-not-claimed section.
-- Keep it in one file. Tables, sources, hypotheses, candidate relations and appendices all belong inside that document; nothing here needs a second file, a JSON payload or a hand-built schema.
-- The dashboard records the topic, the stage and the exact version this document judged, so that metadata is not yours to assemble: pick the stage card, choose the file, upload it.
+- [ ] Every question in "Questions to answer" is answered, or named as unanswerable with what would settle it.
+- [ ] Every entry in the inputs has a subsection in "Evidence by entry".
+- [ ] Every load-bearing claim names its source and the sample behind it.
+- [ ] The overlap between the entries is addressed, not assumed away.
+- [ ] The report says what would refute the reading it proposes.
+- [ ] Any treatment is marked unvalidated, with its unmeasured parameter named.
+- [ ] The file name and every section heading match the instructions exactly.
 
 ## Prohibitions
 
-Do not invent a backtest, a performance figure, an accuracy rate or a sample size. If you have not measured it, say it is unmeasured. Numbers you remember are not evidence.
-Do not use hindsight: never state what a past period would have predicted using information that was not available at that time, and do not present a later revision as a first print.
-Cite only sources you actually fetched in this session, with the link and the passage you relied on.
-Where you are uncertain, say so and give the reason; an unresolved question is a valid return.
-State effects that are already in the price at the cutoff rather than counting them again as predictive.
-Treat the deployed weights, thresholds and signs as a baseline to audit, never as evidence for your claim.
-Name the instrument a claim is really about. Never present another instrument as DXY.
-No production, workflow, dashboard, feed, dispatcher, database or configuration change is authorised by this prompt, and none may be proposed as part of the deliverable.
+- Do not treat a rule in force as evidence for itself. It is the baseline you are auditing.
+- Do not propose or make a change to a live engine, a live call or a deployed workflow.
+- Do not invent a number, a series id, a citation, a date or a hash. `unknown` is allowed; a guess is not.
+- Do not return JSON, a dashboard card, a zip, a spreadsheet, a second file, or this prompt pasted back.
+- Do not add, rename, reorder or merge the deliverable sections.
+- Do not report a directional edge from a sample you have not described.
+- Do not use a value published after the cutoff, or a later revision, as what was known at the cutoff.
+- Do not treat a local export, a passing replay test or a workflow run as evidence that anything is deployed, timely or profitable.
+- Do not assume access to data this prompt does not name; if a test needs it, say what it is and where it would come from.
 
-## What happens after you return it
+If a question can only be answered by breaking one of these, say so in the file rather than breaking it.
 
-An independent red team attacks the report claim by claim (stage 2). Only what survives is carried into the adjudication (stage 3), which decides what, if anything, enters central USD synthesis. Nothing is scored before the session and data contract is frozen, and no weight, sign, threshold, lookback or live call changes because a report exists.
+## What happens next
+
+The operator supplies this file, unchanged and under the same name, to stage 2 (red-team) for the same topic. Nothing else happens to it: no engine reads it, no call changes, and the report is evidence for an adjudication, not a rule.

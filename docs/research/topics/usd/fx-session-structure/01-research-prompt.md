@@ -1,100 +1,156 @@
-# Session structure, overnight range and safe-haven demand - stage 1 of 3: Research
+# Session structure, overnight range and safe-haven demand - USD stage 1 of 3: Research
 
-- Topic `usd-topic-fx-session-structure` on asset USD; stage `research`; this stage returns exactly one Markdown document (report).
-- Factors this stage is evidence for: `fx.usd-session-momentum`, `fx.usd-overnight-range-position`, `fx.usd-session-volatility-regime`, `risk.usd-safe-haven-demand`, `risk.risk-on-off-cross-asset-state`. One document can carry evidence for more than one factor entry; that is a mapping, not a second independent result.
-- Paste this whole prompt as one message into your own fresh session. Nothing is sent to a model from the dashboard, and this page holds no model credentials.
-- This topic has not been dispatched yet. This is the next research assignment, written and hash-checked so it is ready to run.
+## Assignment
 
-## What this stage is for
+- Topic: `usd-topic-fx-session-structure` on USD (US Dollar), chain `factor`.
+- Stage: 1 of 3, research. This stage returns exactly one Markdown document (report), named `usd-fx-session-structure-s1-research.md`.
+- Prompt template: `research-prompt-v3.0.0`, written 2026-10-13. The template is versioned: if a newer `research-prompt` template exists, that one governs and this file is superseded.
+- This prompt is self-contained. Paste it as one message into a fresh session; nothing is sent to a model from the dashboard and no credential is attached to it.
+- Asset status: active. The session is defined below and the data reachable from this repository is named with each input.
+- Programme record: this topic has not been dispatched. Nothing has been returned for it, and this prompt is its first assignment.
 
-Produce one comprehensive, source-backed report investigating how the inputs of this topic - their levels, their changes and their interactions with each other and with the rest of the system - relate to the subsequent direction of the US dollar over one session: 05:00 Europe/London to 05:00 Europe/London on the next local date.
+## Objective
 
-Rules are in force for some of these entries, and the session is defined but unmeasured because the instrument that would label it has no verified quote source. Neither is the question. The question is what the evidence actually says about where the dollar goes next inside this window, and where that evidence is thin, contradictory or absent.
+Answer one question in one report: Do the placement of the dollar inside its own range, session momentum and safe-haven or risk-on state carry information forward into the next 24-hour session, and which of them is not the same input twice? Return a source-backed report that states what the evidence supports for the US Dollar session above, what it does not, and what would refute each claim, using the entries named below as the scope of evidence. The rules in force are the baseline to audit, not the target and not evidence. The report is evidence about this topic; it is not a trading rule, and nothing you return changes a live call.
 
-## What the report must cover
+## The session and the instrument
 
-1. **Measurement**: what each input is and what it measures, from sources - the index or series family around it, any futures or forward structure, the publication and revision process, and the exact window each measurement refers to. Name the instrument and the window of every claim.
-2. **Mechanisms**: the channels by which each input could move the dollar inside a 24-hour London-to-London window - safe-haven demand, risk appetite and cross-asset correlation, carry and funding, policy expectations, positioning and flows - and the observable each mechanism would leave at the cutoff.
-3. **Regimes**: whether the relation is stable or regime-dependent (volatility level, direction of the dollar, policy cycle, liquidity), and on what evidence that judgement rests.
-4. **Level against change**: whether the level, a one-day change or a longer change is the informative quantity, and on what evidence.
-5. **Interactions**: for each pair of entries the sources support - inside this topic and with the other factor entries - the sign, the mechanism, the window, and whether the pair is the same information counted twice.
-6. **Timing**: what is observable at 05:00 Europe/London, what is already in the price by then, and what arrives only during the session.
-7. **Predictive evidence**: what has actually been measured about the subsequent 24-hour direction, with the sample, the window and the era stated; and where the honest answer is that nothing has been measured for this instrument and window.
-8. **Contradictory findings**: the strongest contrary evidence you found, named as such rather than omitted.
-9. **Hypotheses**: the candidate relation or relations worth testing, each with a falsifiable statement, what would refute it, and how it could be measured in this repository.
-10. **Data requirements**: the series, resolution, vintage handling and history the test would need, and which of them are missing or behind a paywall.
+- Session: 05:00 Europe/London to 05:00 Europe/London on the next local date. Both ends are London wall-clock times one local date apart, so every eligible session is exactly 24 hours. The contract is `docs/research/usd-session/v1/session_contract_v1.json`.
+- Label instrument: DXY, and UNVERIFIED. No intraday dollar-index print exists in this repository or in the live collector, and no quote source is committed. If a claim is really about EUR/USD, a basket, the broad trade-weighted index or a futures contract, name that instrument in the same sentence and say what its window is.
+- The deployed engine is not this window: it cuts off at 09:30 America/New_York and ends at the next 16:00 ET close, a median 30.5 elapsed hours. It overlaps this session for about 14.5 nominal hours and leaves the session's first 9.5 hours unmeasured. Say which window every number belongs to.
+- The window is closed to later information: a value published after 05:00 London, or a revision published later, may not be used as what was known at the cutoff.
 
-## Questions for this topic
+## Inputs
+
+### The factor entries this topic answers for
+
+These are the catalogue entries this topic is evidence for. They are context to audit, never evidence for a claim, and never the scope limit of the assignment.
+
+- `fx.usd-session-momentum` - USD session momentum. Role: direction. Group: research_session_v1. Research status: ready.
+  - What the entry stands for: Trailing 1-day and 5-day move in the label instrument, read at the cutoff: continuation or fade inside the 24-hour London-to-London session.
+  - Rule in force today, the baseline to audit and never evidence: No rule is in force. This is a hypothesis to be researched, not a deployed rule..
+  - Series the collector reads: Price and risk package USD-SESSION-A1.
+  - Published brief: `docs/research/handoff/usd/v1/packs/fx-usd-session-momentum.md` (sha256 `935d7526dd48a14efe36b0c63c2ae3e113e1e1422ef5b5be2f12151cfb422ab3`, 13922 bytes). Read it with this prompt if it is attached; the questions below stand without it.
+- `fx.usd-overnight-range-position` - USD overnight range position. Role: direction. Group: research_session_v1. Research status: ready.
+  - What the entry stands for: Where the dollar sits in its own recent range at the cutoff, as a bound on the session move rather than a directional call.
+  - Rule in force today, the baseline to audit and never evidence: No rule is in force. This is a hypothesis to be researched, not a deployed rule..
+  - Series the collector reads: Price and risk package USD-SESSION-A1.
+  - Published brief: `docs/research/handoff/usd/v1/packs/fx-usd-overnight-range-position.md` (sha256 `d32df302f92a09668870532962d0a5158c32ad677102b0a12c330abe251546f6`, 13747 bytes). Read it with this prompt if it is attached; the questions below stand without it.
+- `fx.usd-session-volatility-regime` - USD session volatility regime. Role: abstention gate. Group: research_session_v1. Research status: ready.
+  - What the entry stands for: Realised volatility of the label instrument and the effect of that regime on the expected move and on whether a call should be withheld.
+  - Rule in force today, the baseline to audit and never evidence: No rule is in force. This is a hypothesis to be researched, not a deployed rule..
+  - Series the collector reads: Price and risk package USD-SESSION-A1.
+  - Published brief: `docs/research/handoff/usd/v1/packs/fx-usd-session-volatility-regime.md` (sha256 `7dfbdad10c7123852faa60d1782c458039aa5d34cff219c9d068d17fd1e268fc`, 13667 bytes). Read it with this prompt if it is attached; the questions below stand without it.
+- `risk.usd-safe-haven-demand` - USD safe-haven demand. Role: direction. Group: research_session_v1. Research status: ready.
+  - What the entry stands for: Whether the dollar is being bought as insurance rather than for carry, which changes the sign of the same risk move.
+  - Rule in force today, the baseline to audit and never evidence: No rule is in force. This is a hypothesis to be researched, not a deployed rule..
+  - Series the collector reads: Price and risk package USD-SESSION-A1.
+  - Published brief: `docs/research/handoff/usd/v1/packs/risk-usd-safe-haven-demand.md` (sha256 `27973f50f27a6f4a23dd6fe555b1e99b7da479c3530355953a0beccf2192ab95`, 13567 bytes). Read it with this prompt if it is attached; the questions below stand without it.
+- `risk.risk-on-off-cross-asset-state` - Risk-on and risk-off cross-asset state. Role: regime. Group: research_session_v1. Research status: ready.
+  - What the entry stands for: Equities, credit, gold and crypto at the cutoff as one risk state, with the double-counting risk against the VIX card named explicitly.
+  - Rule in force today, the baseline to audit and never evidence: No rule is in force. This is a hypothesis to be researched, not a deployed rule..
+  - Series the collector reads: FRED credit and equity series in the closed study dataset; Coinbase spot quotes; Price and risk package USD-SESSION-A1.
+  - Published brief: `docs/research/handoff/usd/v1/packs/risk-risk-on-off-cross-asset-state.md` (sha256 `628dd20a05d23d1901fd4728e5fbaf0a9b607efac31e6537c51bb0b78be83a46`, 13829 bytes). Read it with this prompt if it is attached; the questions below stand without it.
+
+### Documents in this checkout
+
+Each line names a file, the part of it that matters, its hash and what it is for. If a file is not attached to this message, answer from this prompt and say which files you could not open.
+
+- `docs/research/usd-session/v1/session_contract_v1.json` - the session contract the cutoff and endpoint come from. sha256 `aa7c6c191e6407935b6335e941a1a66de8979f828a23e22a1f6d249b086a2757`.
+
+## Questions to answer
+
+Answer every question below, in order. Where the evidence does not exist, write that and what would settle it: an honest "not answerable from the sources I can reach" is a complete answer, a guess is not.
+
+### Questions about this topic
 
 1. Is the range position a state variable or an artefact of when the session starts, and what does the start time do to it?
 2. Does session momentum survive the bid-ask bounce of a 24-hour window, and what measurement would separate them?
 3. Is safe-haven demand observable at the cutoff separately from risk-on/off, or is it the same input twice?
 4. Which instrument labels these factors, given that DXY has no verified intraday source?
 
-## Existing thresholds are context, not the scope limit
+### Questions that apply to the whole topic
 
-The rules in force are listed below because they are what the deployed engine does today. Audit them rather than defend them, and do not treat them as the limit of what may be investigated: if the sources support a different quantity, window, sign or interaction, say so and say what it rests on.
+5. Which entries in this topic are the same information counted twice, which one carries it, and what would tell them apart?
+6. What is observable at the cutoff, what has the cutoff already absorbed, and what arrives only during the session?
+7. What has actually been measured about this window with this instrument - the sample, the era, the regime and the number of independent observations - and where is the honest answer that nothing has?
+8. What is the strongest contrary evidence you found, and what would refute the relation you would propose?
+9. What would the test need that this repository or the collector does not have, and what sits behind a paywall?
 
-## The session this is written for
+### Questions about each entry
 
-- **Session**: 05:00 Europe/London to 05:00 Europe/London on the next local date. Both ends are London wall-clock times one local date apart, so every eligible session is exactly 24 hours. The contract is `docs/research/usd-session/v1/session_contract_v1.json`.
-- **Label instrument**: proposed as DXY and UNVERIFIED. No intraday dollar-index print exists in this repository or in the live collector, and no quote source is committed. Never present another instrument as DXY: if a source is about EUR/USD, a basket, the broad trade-weighted index or a futures contract, name that instrument in the same sentence, and say whether its window is a close-to-close day, an intraday slice or something else.
-- **The deployed engine is not this window**: it cuts off at 09:30 America/New_York and ends at the next 16:00 ET close, a median 30.5 elapsed hours. It overlaps the corrected session for about 14.5 nominal hours and leaves the session's first 9.5 hours unmeasured. Say which window every number belongs to.
+10. `fx.usd-session-momentum` (USD session momentum): Trailing 1-day and 5-day move in the label instrument, read at the cutoff: continuation or fade inside the 24-hour London-to-London session. What does it measure, from which series and which publication process, with what lag and revision practice - and is the informative quantity the level, the recorded lookback measure (not stated), or another transform?
+11. `fx.usd-session-momentum` audit: the rule in force reads No rule is in force. This is a hypothesis to be researched, not a deployed rule., with threshold none stated and lookback not stated. Is that sign, that threshold and that lookback supported for this window, and what would refute it?
+12. `fx.usd-overnight-range-position` (USD overnight range position): Where the dollar sits in its own recent range at the cutoff, as a bound on the session move rather than a directional call. What does it measure, from which series and which publication process, with what lag and revision practice - and is the informative quantity the level, the recorded lookback measure (not stated), or another transform?
+13. `fx.usd-overnight-range-position` audit: the rule in force reads No rule is in force. This is a hypothesis to be researched, not a deployed rule., with threshold none stated and lookback not stated. Is that sign, that threshold and that lookback supported for this window, and what would refute it?
+14. `fx.usd-session-volatility-regime` (USD session volatility regime): Realised volatility of the label instrument and the effect of that regime on the expected move and on whether a call should be withheld. What does it measure, from which series and which publication process, with what lag and revision practice - and is the informative quantity the level, the recorded lookback measure (not stated), or another transform?
+15. `fx.usd-session-volatility-regime` audit: the rule in force reads No rule is in force. This is a hypothesis to be researched, not a deployed rule., with threshold none stated and lookback not stated. Is that sign, that threshold and that lookback supported for this window, and what would refute it?
+16. `risk.usd-safe-haven-demand` (USD safe-haven demand): Whether the dollar is being bought as insurance rather than for carry, which changes the sign of the same risk move. What does it measure, from which series and which publication process, with what lag and revision practice - and is the informative quantity the level, the recorded lookback measure (not stated), or another transform?
+17. `risk.usd-safe-haven-demand` audit: the rule in force reads No rule is in force. This is a hypothesis to be researched, not a deployed rule., with threshold none stated and lookback not stated. Is that sign, that threshold and that lookback supported for this window, and what would refute it?
+18. `risk.risk-on-off-cross-asset-state` (Risk-on and risk-off cross-asset state): Equities, credit, gold and crypto at the cutoff as one risk state, with the double-counting risk against the VIX card named explicitly. What does it measure, from which series and which publication process, with what lag and revision practice - and is the informative quantity the level, the recorded lookback measure (not stated), or another transform?
+19. `risk.risk-on-off-cross-asset-state` audit: the rule in force reads No rule is in force. This is a hypothesis to be researched, not a deployed rule., with threshold none stated and lookback not stated. Is that sign, that threshold and that lookback supported for this window, and what would refute it?
 
-## The factor entries this topic is evidence for
+## Evidence standard
 
-These entries are context to audit. They are not evidence for any claim, and they are not the scope limit of this assignment.
+- Name the source for every load-bearing claim: publication, series id, table or section, and the date you read it. A claim with no source is written as your reading, not as a finding.
+- Cite the passage you rely on. Where a source only partly supports a claim, write what it does support and what it leaves out.
+- Separate measurement from mechanism. A channel is a hypothesis; say which part of a claim has been measured and which part has not.
+- State the sample behind any relation: instrument, window, era and the number of non-overlapping observations. A number with no sample is not evidence.
+- Prefer the primary source to a summary, and the series documentation to a post about the series.
+- Report what you could not reach: paywalls, undated pages, dead links, series with no documented vintage. Do not fill the gap with a plausible number.
+- Where two sources disagree, say so and say which you would trust and why.
+- Every claim about timing is about this session and this cutoff, not about a general close-to-close convention.
 
-- **fx.usd-session-momentum** - USD session momentum. Role: direction. Group: research_session_v1.
-  - The question this entry stands for: Trailing 1-day and 5-day move in the label instrument, read at the cutoff: continuation or fade inside the 24-hour London-to-London session.
-  - Rule in force today, as context to audit and never as evidence: No rule is in force. This is a hypothesis to be researched, not a deployed rule..
-  - Series the collector reads: Price and risk package USD-SESSION-A1.
-- **fx.usd-overnight-range-position** - USD overnight range position. Role: direction. Group: research_session_v1.
-  - The question this entry stands for: Where the dollar sits in its own recent range at the cutoff, as a bound on the session move rather than a directional call.
-  - Rule in force today, as context to audit and never as evidence: No rule is in force. This is a hypothesis to be researched, not a deployed rule..
-  - Series the collector reads: Price and risk package USD-SESSION-A1.
-- **fx.usd-session-volatility-regime** - USD session volatility regime. Role: abstention gate. Group: research_session_v1.
-  - The question this entry stands for: Realised volatility of the label instrument and the effect of that regime on the expected move and on whether a call should be withheld.
-  - Rule in force today, as context to audit and never as evidence: No rule is in force. This is a hypothesis to be researched, not a deployed rule..
-  - Series the collector reads: Price and risk package USD-SESSION-A1.
-- **risk.usd-safe-haven-demand** - USD safe-haven demand. Role: direction. Group: research_session_v1.
-  - The question this entry stands for: Whether the dollar is being bought as insurance rather than for carry, which changes the sign of the same risk move.
-  - Rule in force today, as context to audit and never as evidence: No rule is in force. This is a hypothesis to be researched, not a deployed rule..
-  - Series the collector reads: Price and risk package USD-SESSION-A1.
-- **risk.risk-on-off-cross-asset-state** - Risk-on and risk-off cross-asset state. Role: regime. Group: research_session_v1.
-  - The question this entry stands for: Equities, credit, gold and crypto at the cutoff as one risk state, with the double-counting risk against the VIX card named explicitly.
-  - Rule in force today, as context to audit and never as evidence: No rule is in force. This is a hypothesis to be researched, not a deployed rule..
-  - Series the collector reads: FRED credit and equity series in the closed study dataset; Coinbase spot quotes; Price and risk package USD-SESSION-A1.
+## Deliverable
 
-## Companion files in the repository
+Return exactly one Markdown file and nothing else.
 
-Files in the checkout this topic rests on, if you can reach them. They are aids: the prompt has to stand on its own without them.
+- File name: `usd-fx-session-structure-s1-research.md`. Copy it exactly: the library records the name it receives and matches it to the prompt that asked for it.
+- Format: one Markdown file. No JSON, no zip, no PDF, no spreadsheet, no second file, no separate sources note, no filled-in card.
+- Length: as long as the material needs, and no longer. A short file that answers every question beats a long one that answers some.
+- Sections: exactly these, in this order, each as a `## ` heading with the exact title:
 
-- `docs/research/usd-session/v1/session_contract_v1.json` (the session contract the cutoff and endpoint come from) - sha256 `aa7c6c191e6407935b6335e941a1a66de8979f828a23e22a1f6d249b086a2757`
-- `docs/research/handoff/usd/v1/packs/fx-usd-session-momentum.md` - the published brief for `fx.usd-session-momentum`; sha256 `935d7526dd48a14efe36b0c63c2ae3e113e1e1422ef5b5be2f12151cfb422ab3`
-- `docs/research/handoff/usd/v1/packs/fx-usd-overnight-range-position.md` - the published brief for `fx.usd-overnight-range-position`; sha256 `d32df302f92a09668870532962d0a5158c32ad677102b0a12c330abe251546f6`
-- `docs/research/handoff/usd/v1/packs/fx-usd-session-volatility-regime.md` - the published brief for `fx.usd-session-volatility-regime`; sha256 `7dfbdad10c7123852faa60d1782c458039aa5d34cff219c9d068d17fd1e268fc`
-- `docs/research/handoff/usd/v1/packs/risk-usd-safe-haven-demand.md` - the published brief for `risk.usd-safe-haven-demand`; sha256 `27973f50f27a6f4a23dd6fe555b1e99b7da479c3530355953a0beccf2192ab95`
-- `docs/research/handoff/usd/v1/packs/risk-risk-on-off-cross-asset-state.md` - the published brief for `risk.risk-on-off-cross-asset-state`; sha256 `628dd20a05d23d1901fd4728e5fbaf0a9b607efac31e6537c51bb0b78be83a46`
+  1. `## Summary - the answer, in at most ten lines`
+  2. `## What this topic asks and what this report answers`
+  3. `## Evidence by entry - one subsection per entry, with its series, its publication process and the sources you read`
+  4. `## What is observable at the cutoff, and what has the cutoff already absorbed`
+  5. `## What the evidence supports, by entry, with the sample behind each claim`
+  6. `## What the evidence does not support, and the claims it refutes`
+  7. `## Overlap - which entries carry the same information twice`
+  8. `## Contrary evidence, and what would refute the reading you propose`
+  9. `## What could not be established, and what would establish it`
+  10. `## Implications for the entries, each marked unvalidated, with the parameter that is unmeasured`
+  11. `## Sources`
 
-## What to return
+Keep a section that turns out to be empty, and say in one sentence why it is empty.
+Do not restate these instructions, and do not add a section that summarises the prompt.
 
-- Required content: Sections in the order the prompt asks for, an explicit what-is-not-claimed section, and the source note naming every source you fetched, the passage you relied on, the window it concerns and whether it is primary.
-- Return one Markdown document. The report and its source note belong inside that one file: sections in order, then the source note, then the what-is-not-claimed section.
-- Keep it in one file. Tables, sources, hypotheses, candidate relations and appendices all belong inside that document; nothing here needs a second file, a JSON payload or a hand-built schema.
-- The dashboard records the topic, the stage and the exact version this document judged, so that metadata is not yours to assemble: pick the stage card, choose the file, upload it.
+## Completion checklist
+
+Walk this list before you return the file. A "no" means the file is not ready.
+
+- [ ] Every question in "Questions to answer" is answered, or named as unanswerable with what would settle it.
+- [ ] Every entry in the inputs has a subsection in "Evidence by entry".
+- [ ] Every load-bearing claim names its source and the sample behind it.
+- [ ] The overlap between the entries is addressed, not assumed away.
+- [ ] The report says what would refute the reading it proposes.
+- [ ] Any treatment is marked unvalidated, with its unmeasured parameter named.
+- [ ] The file name and every section heading match the instructions exactly.
 
 ## Prohibitions
 
-Do not invent a backtest, a performance figure, an accuracy rate or a sample size. If you have not measured it, say it is unmeasured. Numbers you remember are not evidence.
-Do not use hindsight: never state what a past period would have predicted using information that was not available at that time, and do not present a later revision as a first print.
-Cite only sources you actually fetched in this session, with the link and the passage you relied on.
-Where you are uncertain, say so and give the reason; an unresolved question is a valid return.
-State effects that are already in the price at the cutoff rather than counting them again as predictive.
-Treat the deployed weights, thresholds and signs as a baseline to audit, never as evidence for your claim.
-Name the instrument a claim is really about. Never present another instrument as DXY.
-No production, workflow, dashboard, feed, dispatcher, database or configuration change is authorised by this prompt, and none may be proposed as part of the deliverable.
+- Do not treat a rule in force as evidence for itself. It is the baseline you are auditing.
+- Do not propose or make a change to a live engine, a live call or a deployed workflow.
+- Do not invent a number, a series id, a citation, a date or a hash. `unknown` is allowed; a guess is not.
+- Do not return JSON, a dashboard card, a zip, a spreadsheet, a second file, or this prompt pasted back.
+- Do not add, rename, reorder or merge the deliverable sections.
+- Do not report a directional edge from a sample you have not described.
+- Do not use a value published after the cutoff, or a later revision, as what was known at the cutoff.
+- Do not treat a local export, a passing replay test or a workflow run as evidence that anything is deployed, timely or profitable.
+- Do not assume access to data this prompt does not name; if a test needs it, say what it is and where it would come from.
 
-## What happens after you return it
+If a question can only be answered by breaking one of these, say so in the file rather than breaking it.
 
-An independent red team attacks the report claim by claim (stage 2). Only what survives is carried into the adjudication (stage 3), which decides what, if anything, enters central USD synthesis. Nothing is scored before the session and data contract is frozen, and no weight, sign, threshold, lookback or live call changes because a report exists.
+## What happens next
+
+The operator supplies this file, unchanged and under the same name, to stage 2 (red-team) for the same topic. Nothing else happens to it: no engine reads it, no call changes, and the report is evidence for an adjudication, not a rule.

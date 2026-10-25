@@ -15,6 +15,7 @@ const path = require("node:path");
 const { spawnSync } = require("node:child_process");
 
 const ResearchLibrary = require("../lib/research_library.js");
+const Prompts = require("../lib/research_prompt_templates.js");
 const { createStore } = require("../lib/research_library_store.js");
 const { createServiceServer } = require("../scripts/research-library-server.js");
 
@@ -475,28 +476,35 @@ test("every stage prompt exists, matches its catalogue hash and stands on its ow
       assert.ok(text.includes(topic.topic_id), `${stage.prompt_path} must name its topic`);
       assert.ok(text.includes("05:00 Europe/London"), `${stage.prompt_path} must state the cutoff`);
       assert.ok(text.includes("## Prohibitions"), `${stage.prompt_path} must carry the prohibitions`);
-      assert.ok(text.includes("## What to return"), `${stage.prompt_path} must say what to return`);
-      const required = stage.stage === "research" ? "## What the report must cover"
-        : stage.stage === "red_team" ? "## What to attack, claim by claim" : "## What the adjudication must contain";
+      assert.ok(text.includes("## Deliverable"), `${stage.prompt_path} must say what to return`);
+      assert.ok(text.includes(stage.prompt_source.template_version), `${stage.prompt_path} must name the template version it was rendered from`);
+      assert.equal(text.includes("{{"), false, `${stage.prompt_path} must carry no unfilled placeholder`);
+      // Every stage names the exact file it asks for, so the operator and the registry cannot disagree.
+      const fileName = Prompts.deliverableFileName({ asset: topic.asset, slug: topic.slug, kind: topic.kind || "factor", stage: stage.stage });
+      assert.ok(text.includes(`\`${fileName}\``), `${stage.prompt_path} must name ${fileName} as the file to return`);
+      // Later stages are given the earlier files by name; the first stage is given nothing but the checkout.
+      if (stage.stage !== "research") assert.ok(text.includes("### Documents you are given"), `${stage.prompt_path} must name the files it is given`);
+      const required = stage.stage === "research" ? "### Questions about each entry"
+        : stage.stage === "red_team" ? "### Questions to answer, claim by claim" : "### Questions to decide, finding by finding";
       assert.ok(text.includes(required), `${stage.prompt_path} must carry ${required}`);
       hosts.forEach(host => assert.equal(text.toLowerCase().includes(host), false, `${stage.prompt_path} must not name ${host}`));
     });
   });
 });
 
-test("the VIX stage 1 prompt is the dispatched assignment, not the legacy reviewer task", () => {
+test("the VIX stage 1 prompt is rendered from the template and names the brief it replaced without reproducing it", () => {
   const topic = ResearchLibrary.topicById(catalog, "usd-topic-vix-level-and-risk-regime");
   const research = ResearchLibrary.stageById(topic, "research");
   const text = fs.readFileSync(path.join(root, research.prompt_path), "utf8");
-  assert.equal(research.prompt_source.kind, "dispatched_brief");
-  assert.equal(research.prompt_source.repo_path, "docs/research/handoff/usd/v1/deep-research/VIX_COMPREHENSIVE_REPORT_BRIEF.md");
-  assert.equal(
-    research.prompt_source.sha256,
-    sha256(fs.readFileSync(path.join(root, research.prompt_source.repo_path), "utf8"))
-  );
+  assert.equal(research.prompt_source.kind, "generated");
+  assert.equal(research.prompt_source.repo_path, research.prompt_path);
+  assert.equal(research.prompt_source.sha256, sha256(text));
+  assert.ok(research.prompt_source.template_version.startsWith("research-prompt-v"));
   assert.ok(text.includes("USD-BASELINE-AUDIT-01"), "the dispatched task is named");
-  assert.ok(text.includes("A comprehensive, source-backed report investigating how VIX"), "the assignment is reproduced in full");
-  assert.ok(Buffer.byteLength(text, "utf8") > 20000, "the whole assignment is in the one file");
+  // The brief that used to be reproduced in full is now programme history: named, hashed and refused.
+  assert.ok(text.includes("docs/research/handoff/usd/v1/deep-research/VIX_COMPREHENSIVE_REPORT_BRIEF.md"));
+  assert.ok(text.includes("must not be followed or answered"));
+  assert.equal(text.includes("A comprehensive, source-backed report investigating how VIX"), false, "the superseded brief is not reproduced");
   const a3 = ResearchLibrary.taskById(catalog, "USD-SESSION-A3");
   assert.equal(text.includes(a3.prompt.slice(0, 60)), false, "stage 1 must not copy the legacy reviewer prompt");
 });
