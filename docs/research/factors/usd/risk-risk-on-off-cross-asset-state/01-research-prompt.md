@@ -6,7 +6,7 @@
 - Factor: `risk.risk-on-off-cross-asset-state` - Risk-on and risk-off cross-asset state.
 - Group label: `usd-topic-fx-session-structure` (Session structure, overnight range and safe-haven demand). The label groups chains; it owns no stage and this prompt is the only stage you run for it.
 - Stage: 1 of 3, research. This stage returns exactly one Markdown document (report), named `usd-risk-risk-on-off-cross-asset-state-s1-research.md`.
-- Prompt template: `research-prompt-v3.0.0`, written 2026-10-13. The template is versioned: if a newer `research-prompt` template exists, that one governs and this file is superseded.
+- Prompt template: `research-prompt-v3.1.0`, written 2026-10-13. The template is versioned: if a newer `research-prompt` template exists, that one governs and this file is superseded.
 - This prompt is self-contained. Paste it as one message into a fresh session; nothing is sent to a model from the dashboard and no credential is attached to it.
 - Asset status: active. The session is defined below and the data reachable from this repository is named with each input.
 - Programme record: this chain has not been dispatched. Nothing has been returned for it, and this prompt is its first assignment.
@@ -47,23 +47,24 @@ Answer every question below, in order. Where the evidence does not exist, write 
 ### Questions about this chain
 
 1. Chain question: does `risk.risk-on-off-cross-asset-state` - Risk-on and risk-off cross-asset state - carry information about the next 24-hour dollar move, and in which quantity? Equities, credit, gold and crypto at the cutoff as one risk state, with the double-counting risk against the VIX card named explicitly.
-2. Is the range position a state variable or an artefact of when the session starts, and what does the start time do to it?
-3. Does session momentum survive the bid-ask bounce of a 24-hour window, and what measurement would separate them?
-4. Is safe-haven demand observable at the cutoff separately from risk-on/off, or is it the same input twice?
-5. Which instrument labels these factors, given that DXY has no verified intraday source?
+2. Which assets define the risk state, at what cutoff, and do their quotes share one window, or is the state assembled from instruments that are closed at 05:00 London?
+3. Is one composite state justified, or does the evidence support separate equity, credit and commodity channels with different signs for the dollar?
+4. How much does the state overlap the VIX level, gold and the equity-dollar relation, and which single chain should own the risk factor?
+5. Does the risk state carry directional information at all, or is it a conditioning variable that changes the sign of other factors?
+6. Which instrument labels these factors, given that DXY has no verified intraday source?
 
 ### Questions that apply to the whole chain
 
-6. Which entries in this chain are the same information counted twice, which one carries it, and what would tell them apart?
-7. What is observable at the cutoff, what has the cutoff already absorbed, and what arrives only during the session?
-8. What has actually been measured about this window with this instrument - the sample, the era, the regime and the number of independent observations - and where is the honest answer that nothing has?
-9. What is the strongest contrary evidence you found, and what would refute the relation you would propose?
-10. What would the test need that this repository or the collector does not have, and what sits behind a paywall?
+7. Which entries in this chain are the same information counted twice, which one carries it, and what would tell them apart?
+8. What is observable at the cutoff, what has the cutoff already absorbed, and what arrives only during the session?
+9. What has actually been measured about this window with this instrument - the sample, the era, the regime and the number of independent observations - and where is the honest answer that nothing has?
+10. What is the strongest contrary evidence you found, and what would refute the relation you would propose?
+11. What would the test need that this repository or the collector does not have, and what sits behind a paywall?
 
 ### Questions about each entry
 
-11. `risk.risk-on-off-cross-asset-state` (Risk-on and risk-off cross-asset state): Equities, credit, gold and crypto at the cutoff as one risk state, with the double-counting risk against the VIX card named explicitly. What does it measure, from which series and which publication process, with what lag and revision practice - and is the informative quantity the level, the recorded lookback measure (not stated), or another transform?
-12. `risk.risk-on-off-cross-asset-state` audit: the rule in force reads No rule is in force. This is a hypothesis to be researched, not a deployed rule., with threshold none stated and lookback not stated. Is that sign, that threshold and that lookback supported for this window, and what would refute it?
+12. `risk.risk-on-off-cross-asset-state` (Risk-on and risk-off cross-asset state): Equities, credit, gold and crypto at the cutoff as one risk state, with the double-counting risk against the VIX card named explicitly. What does it measure, from which series and which publication process, with what lag and revision practice - and is the informative quantity the level, the recorded lookback measure (not stated), or another transform?
+13. `risk.risk-on-off-cross-asset-state`: no rule is in force. State the candidate relation worth testing for this entry, what would refute it, and how it could be measured with the data named in this prompt.
 
 ## Evidence standard
 

@@ -6,7 +6,7 @@
 - Factor: `rates.real-yield-delta` - Real yield delta.
 - Group label: `usd-topic-front-end-rates` (US front-end rates, real yields and curve position). The label groups chains; it owns no stage and this prompt is the only stage you run for it.
 - Stage: 1 of 3, research. This stage returns exactly one Markdown document (report), named `usd-rates-real-yield-delta-s1-research.md`.
-- Prompt template: `research-prompt-v3.0.0`, written 2026-10-13. The template is versioned: if a newer `research-prompt` template exists, that one governs and this file is superseded.
+- Prompt template: `research-prompt-v3.1.0`, written 2026-10-13. The template is versioned: if a newer `research-prompt` template exists, that one governs and this file is superseded.
 - This prompt is self-contained. Paste it as one message into a fresh session; nothing is sent to a model from the dashboard and no credential is attached to it.
 - Asset status: active. The session is defined below and the data reachable from this repository is named with each input.
 - Programme record: this chain has not been dispatched. Nothing has been returned for it, and this prompt is its first assignment.
@@ -47,23 +47,24 @@ Answer every question below, in order. Where the evidence does not exist, write 
 ### Questions about this chain
 
 1. Chain question: does `rates.real-yield-delta` - Real yield delta - carry information about the next 24-hour dollar move, and in which quantity? 10Y and 5Y real yields and the breakeven split, separating the nominal and inflation parts of the move.
-2. Which of the eight entries is measuring something the others do not, and which pairs are the same information counted twice?
-3. Is the informative quantity the level, a five-day change or a same-session change, and does the answer depend on the policy cycle?
-4. Does a real-yield change add information beyond the nominal front end, and does that survive the inflation-expectation measurement problem?
-5. Are these relations already in the dollar by 05:00 Europe/London, given that the US cash market is closed at the cutoff?
+2. Is the real yield measured from TIPS, from a nominal-minus-survey-expectations decomposition, or from a model, and which of them is available at the cutoff?
+3. Does the move come from the nominal leg or the breakeven, and how reliable is the breakeven when both inflation swaps and TIPS liquidity are imperfect?
+4. Is the mechanism a discount-rate channel for the dollar, a growth channel, or a risk-premium channel, and what evidence separates those cases?
+5. Does this chain duplicate live F4, and does a 5Y real yield add anything to the 10Y that the deployed chain already uses?
+6. Which of the eight entries is measuring something the others do not, and which pairs are the same information counted twice?
 
 ### Questions that apply to the whole chain
 
-6. Which entries in this chain are the same information counted twice, which one carries it, and what would tell them apart?
-7. What is observable at the cutoff, what has the cutoff already absorbed, and what arrives only during the session?
-8. What has actually been measured about this window with this instrument - the sample, the era, the regime and the number of independent observations - and where is the honest answer that nothing has?
-9. What is the strongest contrary evidence you found, and what would refute the relation you would propose?
-10. What would the test need that this repository or the collector does not have, and what sits behind a paywall?
+7. Which entries in this chain are the same information counted twice, which one carries it, and what would tell them apart?
+8. What is observable at the cutoff, what has the cutoff already absorbed, and what arrives only during the session?
+9. What has actually been measured about this window with this instrument - the sample, the era, the regime and the number of independent observations - and where is the honest answer that nothing has?
+10. What is the strongest contrary evidence you found, and what would refute the relation you would propose?
+11. What would the test need that this repository or the collector does not have, and what sits behind a paywall?
 
 ### Questions about each entry
 
-11. `rates.real-yield-delta` (Real yield delta): 10Y and 5Y real yields and the breakeven split, separating the nominal and inflation parts of the move. What does it measure, from which series and which publication process, with what lag and revision practice - and is the informative quantity the level, the recorded lookback measure (not stated), or another transform?
-12. `rates.real-yield-delta` audit: the rule in force reads No rule is in force. This is a hypothesis to be researched, not a deployed rule., with threshold none stated and lookback not stated. Is that sign, that threshold and that lookback supported for this window, and what would refute it?
+12. `rates.real-yield-delta` (Real yield delta): 10Y and 5Y real yields and the breakeven split, separating the nominal and inflation parts of the move. What does it measure, from which series and which publication process, with what lag and revision practice - and is the informative quantity the level, the recorded lookback measure (not stated), or another transform?
+13. `rates.real-yield-delta`: no rule is in force. State the candidate relation worth testing for this entry, what would refute it, and how it could be measured with the data named in this prompt.
 
 ## Evidence standard
 

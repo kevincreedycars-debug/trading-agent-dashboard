@@ -6,7 +6,7 @@
 - Factor: `macro.release-surprise-at-first-print` - Release surprise at first print.
 - Group label: `usd-topic-economic-surprise-and-fed-bias` (Economic surprises, first prints and Fed bias). The label groups chains; it owns no stage and this prompt is the only stage you run for it.
 - Stage: 1 of 3, research. This stage returns exactly one Markdown document (report), named `usd-macro-release-surprise-at-first-print-s1-research.md`.
-- Prompt template: `research-prompt-v3.0.0`, written 2026-10-13. The template is versioned: if a newer `research-prompt` template exists, that one governs and this file is superseded.
+- Prompt template: `research-prompt-v3.1.0`, written 2026-10-13. The template is versioned: if a newer `research-prompt` template exists, that one governs and this file is superseded.
 - This prompt is self-contained. Paste it as one message into a fresh session; nothing is sent to a model from the dashboard and no credential is attached to it.
 - Asset status: active. The session is defined below and the data reachable from this repository is named with each input.
 - Programme record: this chain has not been dispatched. Nothing has been returned for it, and this prompt is its first assignment.
@@ -48,23 +48,25 @@ Answer every question below, in order. Where the evidence does not exist, write 
 ### Questions about this chain
 
 1. Chain question: does `macro.release-surprise-at-first-print` - Release surprise at first print - carry information about the next 24-hour dollar move, and in which quantity? The honest test of the highest-weight live family. Asking for a first-print surprise with the consensus that was published before the release, and stating plainly if no such source is reachable.
-2. Which surprise measure is defensible: survey consensus, model nowcast, or the market-implied move, and what does each one cost?
-3. Is the first print the only honest vintage, and what does the revision history of the tested series look like?
-4. Is Fed bias an observable at 05:00 Europe/London or a narrative, and what would an observable version look like?
-5. How much of a surprise is already in the dollar in the minutes after the print, and how do you separate that from the session that follows?
+2. What is the surprise - the first print minus the consensus published before the release - and can any such pair be reached without a paid vintage archive?
+3. At which moment does the surprise become observable, and how much of the reaction is already inside the dollar by the next 05:00 London cutoff?
+4. Is the mechanism a policy-expectation repricing or a risk-premium change, and does the sign depend on the state of the policy cycle and on where the policy rate sits?
+5. Does the surprise add information beyond the front-end rate change and the equity move that follow the print, and what is the honest conclusion if no vintage source is reachable at all?
+6. Which of these three chains is testing a surprise, which is testing a narrative, and which is testing the same underlying information twice?
+7. Is the first print the only honest vintage, and what does the revision history of the tested series look like?
 
 ### Questions that apply to the whole chain
 
-6. Which entries in this chain are the same information counted twice, which one carries it, and what would tell them apart?
-7. What is observable at the cutoff, what has the cutoff already absorbed, and what arrives only during the session?
-8. What has actually been measured about this window with this instrument - the sample, the era, the regime and the number of independent observations - and where is the honest answer that nothing has?
-9. What is the strongest contrary evidence you found, and what would refute the relation you would propose?
-10. What would the test need that this repository or the collector does not have, and what sits behind a paywall?
+8. Which entries in this chain are the same information counted twice, which one carries it, and what would tell them apart?
+9. What is observable at the cutoff, what has the cutoff already absorbed, and what arrives only during the session?
+10. What has actually been measured about this window with this instrument - the sample, the era, the regime and the number of independent observations - and where is the honest answer that nothing has?
+11. What is the strongest contrary evidence you found, and what would refute the relation you would propose?
+12. What would the test need that this repository or the collector does not have, and what sits behind a paywall?
 
 ### Questions about each entry
 
-11. `macro.release-surprise-at-first-print` (Release surprise at first print): The honest test of the highest-weight live family. Asking for a first-print surprise with the consensus that was published before the release, and stating plainly if no such source is reachable. What does it measure, from which series and which publication process, with what lag and revision practice - and is the informative quantity the level, the recorded lookback measure (not stated), or another transform?
-12. `macro.release-surprise-at-first-print` audit: the rule in force reads No rule is in force. This is a hypothesis to be researched, not a deployed rule., with threshold none stated and lookback not stated. Is that sign, that threshold and that lookback supported for this window, and what would refute it?
+13. `macro.release-surprise-at-first-print` (Release surprise at first print): The honest test of the highest-weight live family. Asking for a first-print surprise with the consensus that was published before the release, and stating plainly if no such source is reachable. What does it measure, from which series and which publication process, with what lag and revision practice - and is the informative quantity the level, the recorded lookback measure (not stated), or another transform?
+14. `macro.release-surprise-at-first-print`: no rule is in force. State the candidate relation worth testing for this entry, what would refute it, and how it could be measured with the data named in this prompt.
 
 ## Evidence standard
 

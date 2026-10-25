@@ -6,7 +6,7 @@
 - Factor: `rates.us-front-end-delta` - US front-end delta.
 - Group label: `usd-topic-front-end-rates` (US front-end rates, real yields and curve position). The label groups chains; it owns no stage and this prompt is the only stage you run for it.
 - Stage: 2 of 3, red-team. This stage returns exactly one Markdown document (review), named `usd-rates-us-front-end-delta-s2-red-team.md`.
-- Prompt template: `research-prompt-v3.0.0`, written 2026-10-13. The template is versioned: if a newer `research-prompt` template exists, that one governs and this file is superseded.
+- Prompt template: `research-prompt-v3.1.0`, written 2026-10-13. The template is versioned: if a newer `research-prompt` template exists, that one governs and this file is superseded.
 - This prompt is self-contained. Paste it as one message into a fresh session; nothing is sent to a model from the dashboard and no credential is attached to it.
 - Asset status: active. The session is defined below and the data reachable from this repository is named with each input.
 - Programme record: this chain has not been dispatched. Nothing has been returned for it, and this prompt is its first assignment.
@@ -61,6 +61,14 @@ Answer every question below, in order. Where the evidence does not exist, write 
 7. Counter-evidence: is the strongest contrary evidence in the sources the report fetched missing, or present and dismissed without a reason?
 8. Internal consistency and scope: does one section contradict another, does the what-is-not-claimed section match the body, and is any true claim only too wide?
 9. Coverage: does every entry in scope get an answer, and is every question the report could not answer named as unanswered?
+
+### Questions this chain asks, which the report had to answer
+
+10. Do the 2Y and 3M series share a publication lag and a market calendar, and is a change computed from a stale 3M print comparable to one computed from the 2Y? Did the report answer it, and on what source?
+11. Is the informative quantity the 3M bill, the 2Y note, their difference, or a policy-expectation measure implied by them, and does the 3M bill carry a flight-to-quality distortion? Did the report answer it, and on what source?
+12. Does a front-end change reflect expected policy, term premium, or a liquidity and collateral effect, and what observable at the cutoff separates them? Did the report answer it, and on what source?
+13. Does this chain duplicate the live F2 and F3 chains, and if so what does it add - the 3M leg, the policy-cycle conditioning, or nothing? Did the report answer it, and on what source?
+14. Which of the eight entries is measuring something the others do not, and which pairs are the same information counted twice? Did the report answer it, and on what source?
 
 ## Evidence standard
 

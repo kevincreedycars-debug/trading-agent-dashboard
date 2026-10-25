@@ -6,7 +6,7 @@
 - Factor: `live.f3-us-de-2y-spread-delta` - F3 US-DE 2Y spread delta.
 - Group label: `usd-topic-front-end-rates` (US front-end rates, real yields and curve position). The label groups chains; it owns no stage and this prompt is the only stage you run for it.
 - Stage: 1 of 3, research. This stage returns exactly one Markdown document (report), named `usd-live-f3-us-de-2y-spread-delta-s1-research.md`.
-- Prompt template: `research-prompt-v3.0.0`, written 2026-10-13. The template is versioned: if a newer `research-prompt` template exists, that one governs and this file is superseded.
+- Prompt template: `research-prompt-v3.1.0`, written 2026-10-13. The template is versioned: if a newer `research-prompt` template exists, that one governs and this file is superseded.
 - This prompt is self-contained. Paste it as one message into a fresh session; nothing is sent to a model from the dashboard and no credential is attached to it.
 - Asset status: active. The session is defined below and the data reachable from this repository is named with each input.
 - Programme record: this chain has not been dispatched. Nothing has been returned for it, and this prompt is its first assignment.
@@ -48,23 +48,24 @@ Answer every question below, in order. Where the evidence does not exist, write 
 ### Questions about this chain
 
 1. Chain question: does `live.f3-us-de-2y-spread-delta` - F3 US-DE 2Y spread delta - carry information about the next 24-hour dollar move, and in which quantity? Change in the US minus German 2Y spread, derived in the collector from two series.
-2. Which of the eight entries is measuring something the others do not, and which pairs are the same information counted twice?
-3. Is the informative quantity the level, a five-day change or a same-session change, and does the answer depend on the policy cycle?
-4. Does a real-yield change add information beyond the nominal front end, and does that survive the inflation-expectation measurement problem?
-5. Are these relations already in the dollar by 05:00 Europe/London, given that the US cash market is closed at the cutoff?
+2. Is the spread built from two series with different publication lags and market calendars, and what does that mismatch do to a five-day change computed at the cutoff?
+3. Is the informative part the US leg, the German leg or the difference, and can the two legs be separated with data observable at 05:00 London?
+4. Are Bund yields available on the same date and vintage as DGS2, and what happens to the spread when one leg misses a session or is republished?
+5. Does the relative 2Y spread add anything beyond the US 2Y delta and the broad dollar index, or is its weight the US leg counted twice?
+6. Which of the eight entries is measuring something the others do not, and which pairs are the same information counted twice?
 
 ### Questions that apply to the whole chain
 
-6. Which entries in this chain are the same information counted twice, which one carries it, and what would tell them apart?
-7. What is observable at the cutoff, what has the cutoff already absorbed, and what arrives only during the session?
-8. What has actually been measured about this window with this instrument - the sample, the era, the regime and the number of independent observations - and where is the honest answer that nothing has?
-9. What is the strongest contrary evidence you found, and what would refute the relation you would propose?
-10. What would the test need that this repository or the collector does not have, and what sits behind a paywall?
+7. Which entries in this chain are the same information counted twice, which one carries it, and what would tell them apart?
+8. What is observable at the cutoff, what has the cutoff already absorbed, and what arrives only during the session?
+9. What has actually been measured about this window with this instrument - the sample, the era, the regime and the number of independent observations - and where is the honest answer that nothing has?
+10. What is the strongest contrary evidence you found, and what would refute the relation you would propose?
+11. What would the test need that this repository or the collector does not have, and what sits behind a paywall?
 
 ### Questions about each entry
 
-11. `live.f3-us-de-2y-spread-delta` (F3 US-DE 2Y spread delta): Change in the US minus German 2Y spread, derived in the collector from two series. What does it measure, from which series and which publication process, with what lag and revision practice - and is the informative quantity the level, the recorded lookback measure (5 days on the 24h timeframe), or another transform?
-12. `live.f3-us-de-2y-spread-delta` audit: the rule in force reads 5-day change at or above +5 bps reads BULLISH, at or below -5 bps BEARISH, with threshold +/- 5 bps and lookback 5 days on the 24h timeframe. Is that sign, that threshold and that lookback supported for this window, and what would refute it?
+12. `live.f3-us-de-2y-spread-delta` (F3 US-DE 2Y spread delta): Change in the US minus German 2Y spread, derived in the collector from two series. What does it measure, from which series and which publication process, with what lag and revision practice - and is the informative quantity the level, the recorded lookback measure (5 days on the 24h timeframe), or another transform?
+13. `live.f3-us-de-2y-spread-delta` audit: the rule in force reads 5-day change at or above +5 bps reads BULLISH, at or below -5 bps BEARISH, with threshold +/- 5 bps and lookback 5 days on the 24h timeframe. Is that sign, that threshold and that lookback supported for this window, and what would refute it?
 
 ## Evidence standard
 

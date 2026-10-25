@@ -6,7 +6,7 @@
 - Factor: `live.f9-dollar-smile` - F9 Dollar Smile regime.
 - Group label: `usd-topic-dollar-index-gold-and-equities` (Dollar index, gold and equity-against-USD relations). The label groups chains; it owns no stage and this prompt is the only stage you run for it.
 - Stage: 3 of 3, adjudication. This stage returns exactly one Markdown document (synthesis), named `usd-live-f9-dollar-smile-s3-adjudication.md`.
-- Prompt template: `research-prompt-v3.0.0`, written 2026-10-13. The template is versioned: if a newer `research-prompt` template exists, that one governs and this file is superseded.
+- Prompt template: `research-prompt-v3.1.0`, written 2026-10-13. The template is versioned: if a newer `research-prompt` template exists, that one governs and this file is superseded.
 - This prompt is self-contained. Paste it as one message into a fresh session; nothing is sent to a model from the dashboard and no credential is attached to it.
 - Asset status: active. The session is defined below and the data reachable from this repository is named with each input.
 - Programme record: this chain has not been dispatched. Nothing has been returned for it, and this prompt is its first assignment.
@@ -62,6 +62,15 @@ Answer every question below, in order. Where the evidence does not exist, write 
 6. Is any proposed treatment computable from the data named in this prompt, and which of its parameters have not been measured?
 7. Does the proposed treatment count one input twice across entries or chains, and if so, which chain owns it?
 8. What must the asset synthesis decide that this chain cannot?
+
+### Questions this chain must settle
+
+9. Is the dollar smile a measured relation in this window or a descriptive story, and what observation would falsify it? Settle it: accepted, rejected or unresolved, and what evidence decides it?
+10. The deployed reading uses the VIX 25/16 pair and the bias string: are those the right variables, and does the smile need a third state such as global growth or funding stress that neither captures? Settle it: accepted, rejected or unresolved, and what evidence decides it?
+11. Is the smile a regime variable that should switch other factors signs, or a separate directional factor, and can those two roles be told apart with session data? Settle it: accepted, rejected or unresolved, and what evidence decides it?
+12. Does the smile add anything to the VIX level and the cross-asset risk state it is computed from, and is the rulebook weight of 12 defensible against the coded 1? Settle it: accepted, rejected or unresolved, and what evidence decides it?
+13. Which dollar index is a claim actually about, and does the answer change with the index construction? Settle it: accepted, rejected or unresolved, and what evidence decides it?
+14. Are gold and equities independent evidence for the dollar, or the same risk factor counted twice? Settle it: accepted, rejected or unresolved, and what evidence decides it?
 
 ## Evidence standard
 

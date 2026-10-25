@@ -6,7 +6,7 @@
 - Factor: `calendar.days-since-and-until-high-impact-events` - Distance from high-impact events.
 - Group label: `usd-topic-calendar-and-data-quality` (Calendar state and the data-quality gate). The label groups chains; it owns no stage and this prompt is the only stage you run for it.
 - Stage: 3 of 3, adjudication. This stage returns exactly one Markdown document (synthesis), named `usd-calendar-days-since-and-until-high-impact-events-s3-adjudication.md`.
-- Prompt template: `research-prompt-v3.0.0`, written 2026-10-13. The template is versioned: if a newer `research-prompt` template exists, that one governs and this file is superseded.
+- Prompt template: `research-prompt-v3.1.0`, written 2026-10-13. The template is versioned: if a newer `research-prompt` template exists, that one governs and this file is superseded.
 - This prompt is self-contained. Paste it as one message into a fresh session; nothing is sent to a model from the dashboard and no credential is attached to it.
 - Asset status: active. The session is defined below and the data reachable from this repository is named with each input.
 - Programme record: this chain has not been dispatched. Nothing has been returned for it, and this prompt is its first assignment.
@@ -61,6 +61,14 @@ Answer every question below, in order. Where the evidence does not exist, write 
 6. Is any proposed treatment computable from the data named in this prompt, and which of its parameters have not been measured?
 7. Does the proposed treatment count one input twice across entries or chains, and if so, which chain owns it?
 8. What must the asset synthesis decide that this chain cannot?
+
+### Questions this chain must settle
+
+9. Is distance from a high-impact date a meaningful state variable, and does the evidence support drift before a release, after it, or neither? Settle it: accepted, rejected or unresolved, and what evidence decides it?
+10. Which events count as high impact, and does the answer depend on a classification that is itself hindsight-defined? Settle it: accepted, rejected or unresolved, and what evidence decides it?
+11. Is the mechanism positioning, hedging demand, or pre-announcement drift, and what observable at the cutoff separates it from ordinary seasonality? Settle it: accepted, rejected or unresolved, and what evidence decides it?
+12. Is the distance measure distinct from the release-window factor and from a volatility regime, and does it carry any information beyond them? Settle it: accepted, rejected or unresolved, and what evidence decides it?
+13. Can an abstention rule be evaluated at all without a frozen label instrument, and what would it take? Settle it: accepted, rejected or unresolved, and what evidence decides it?
 
 ## Evidence standard
 

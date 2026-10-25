@@ -6,7 +6,7 @@
 - Factor: `rates.term-premium-and-curve` - Term premium and curve.
 - Group label: `usd-topic-front-end-rates` (US front-end rates, real yields and curve position). The label groups chains; it owns no stage and this prompt is the only stage you run for it.
 - Stage: 2 of 3, red-team. This stage returns exactly one Markdown document (review), named `usd-rates-term-premium-and-curve-s2-red-team.md`.
-- Prompt template: `research-prompt-v3.0.0`, written 2026-10-13. The template is versioned: if a newer `research-prompt` template exists, that one governs and this file is superseded.
+- Prompt template: `research-prompt-v3.1.0`, written 2026-10-13. The template is versioned: if a newer `research-prompt` template exists, that one governs and this file is superseded.
 - This prompt is self-contained. Paste it as one message into a fresh session; nothing is sent to a model from the dashboard and no credential is attached to it.
 - Asset status: active. The session is defined below and the data reachable from this repository is named with each input.
 - Programme record: this chain has not been dispatched. Nothing has been returned for it, and this prompt is its first assignment.
@@ -61,6 +61,14 @@ Answer every question below, in order. Where the evidence does not exist, write 
 7. Counter-evidence: is the strongest contrary evidence in the sources the report fetched missing, or present and dismissed without a reason?
 8. Internal consistency and scope: does one section contradict another, does the what-is-not-claimed section match the body, and is any true claim only too wide?
 9. Coverage: does every entry in scope get an answer, and is every question the report could not answer named as unanswered?
+
+### Questions this chain asks, which the report had to answer
+
+10. Is the informative object the slope level, its change, or a term-premium estimate, and can a term premium be estimated with the data named here rather than asserted? Did the report answer it, and on what source?
+11. Is a curve slope observable at 05:00 London from previous closes, and how does a stale slope interact with a session that contains a US data release? Did the report answer it, and on what source?
+12. Does the slope carry growth expectations, inflation compensation, or a term-premium and duration-demand story, and what observable separates them? Did the report answer it, and on what source?
+13. Does the slope add information beyond the levels of its two legs, each of which already carries its own chain, and is it a regime variable or a direction? Did the report answer it, and on what source?
+14. Which of the eight entries is measuring something the others do not, and which pairs are the same information counted twice? Did the report answer it, and on what source?
 
 ## Evidence standard
 

@@ -6,7 +6,7 @@
 - Factor: `live.f6-gold-delta` - F6 Gold delta.
 - Group label: `usd-topic-dollar-index-gold-and-equities` (Dollar index, gold and equity-against-USD relations). The label groups chains; it owns no stage and this prompt is the only stage you run for it.
 - Stage: 2 of 3, red-team. This stage returns exactly one Markdown document (review), named `usd-live-f6-gold-delta-s2-red-team.md`.
-- Prompt template: `research-prompt-v3.0.0`, written 2026-10-13. The template is versioned: if a newer `research-prompt` template exists, that one governs and this file is superseded.
+- Prompt template: `research-prompt-v3.1.0`, written 2026-10-13. The template is versioned: if a newer `research-prompt` template exists, that one governs and this file is superseded.
 - This prompt is self-contained. Paste it as one message into a fresh session; nothing is sent to a model from the dashboard and no credential is attached to it.
 - Asset status: active. The session is defined below and the data reachable from this repository is named with each input.
 - Programme record: this chain has not been dispatched. Nothing has been returned for it, and this prompt is its first assignment.
@@ -62,6 +62,15 @@ Answer every question below, in order. Where the evidence does not exist, write 
 7. Counter-evidence: is the strongest contrary evidence in the sources the report fetched missing, or present and dismissed without a reason?
 8. Internal consistency and scope: does one section contradict another, does the what-is-not-claimed section match the body, and is any true claim only too wide?
 9. Coverage: does every entry in scope get an answer, and is every question the report could not answer named as unanswered?
+
+### Questions this chain asks, which the report had to answer
+
+10. Is gold read as an inverse dollar proxy, a real-rate hedge or a safe-haven asset, and how would the sign differ between those three readings? Did the report answer it, and on what source?
+11. Is the Coinbase XAU-USD spot quote the same instrument, venue and window as the gold the literature measures, and how does a 24/7 crypto-venue quote behave against a 05:00 London cutoff? Did the report answer it, and on what source?
+12. Is a five-day gold change the right transformation, and does the one-day fallback change the meaning of the signal rather than only its horizon? Did the report answer it, and on what source?
+13. Does gold add information beyond the real yield, the VIX level and the cross-asset risk state, or is its apparent dollar relation a restatement of real rates? Did the report answer it, and on what source?
+14. Which dollar index is a claim actually about, and does the answer change with the index construction? Did the report answer it, and on what source?
+15. Are gold and equities independent evidence for the dollar, or the same risk factor counted twice? Did the report answer it, and on what source?
 
 ## Evidence standard
 

@@ -6,7 +6,7 @@
 - Factor: `rates.credit-spread-delta` - Credit spread delta.
 - Group label: `usd-topic-front-end-rates` (US front-end rates, real yields and curve position). The label groups chains; it owns no stage and this prompt is the only stage you run for it.
 - Stage: 2 of 3, red-team. This stage returns exactly one Markdown document (review), named `usd-rates-credit-spread-delta-s2-red-team.md`.
-- Prompt template: `research-prompt-v3.0.0`, written 2026-10-13. The template is versioned: if a newer `research-prompt` template exists, that one governs and this file is superseded.
+- Prompt template: `research-prompt-v3.1.0`, written 2026-10-13. The template is versioned: if a newer `research-prompt` template exists, that one governs and this file is superseded.
 - This prompt is self-contained. Paste it as one message into a fresh session; nothing is sent to a model from the dashboard and no credential is attached to it.
 - Asset status: active. The session is defined below and the data reachable from this repository is named with each input.
 - Programme record: this chain has not been dispatched. Nothing has been returned for it, and this prompt is its first assignment.
@@ -61,6 +61,14 @@ Answer every question below, in order. Where the evidence does not exist, write 
 7. Counter-evidence: is the strongest contrary evidence in the sources the report fetched missing, or present and dismissed without a reason?
 8. Internal consistency and scope: does one section contradict another, does the what-is-not-claimed section match the body, and is any true claim only too wide?
 9. Coverage: does every entry in scope get an answer, and is every question the report could not answer named as unanswered?
+
+### Questions this chain asks, which the report had to answer
+
+10. Which credit series measures the spread the claim is about, at what rating and maturity, and how stale is it at the cutoff? Did the report answer it, and on what source?
+11. Is the informative quantity the spread level, a one-day change, or a change over several days, and does a spread change lag the equity move it is meant to signal? Did the report answer it, and on what source?
+12. Is the mechanism a growth signal, a risk-appetite signal, or a funding and default-risk signal, and does the sign for the dollar differ between the default story and the risk story? Did the report answer it, and on what source?
+13. Does the credit spread add information beyond the VIX level, the equity move and the risk state, or is it a slower restatement of the same risk factor? Did the report answer it, and on what source?
+14. Which of the eight entries is measuring something the others do not, and which pairs are the same information counted twice? Did the report answer it, and on what source?
 
 ## Evidence standard
 

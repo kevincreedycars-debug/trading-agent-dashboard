@@ -265,7 +265,7 @@ async function main() {
     const researchPrompt = await page.evaluate(() => navigator.clipboard.readText());
     assert.ok(researchPrompt.startsWith("# F1 VIX level and risk regime - live.f1-vix-level - USD stage 1 of 3: Research"), "the copied prompt must be the VIX factor-chain assignment");
     assert.ok(researchPrompt.includes("USD-BASELINE-AUDIT-01"), "the dispatched task is named");
-    assert.ok(researchPrompt.includes("`research-prompt-v3.0.0`"), "the prompt names the template version it came from");
+    assert.ok(researchPrompt.includes("`research-prompt-v3.1.0`"), "the prompt names the template version it came from");
     assert.ok(researchPrompt.includes(VIX_TOPIC), "the group label is named");
     assert.ok(researchPrompt.includes("05:00 Europe/London"), "the cutoff is stated");
     assert.equal(researchPrompt.includes("stage card"), false, "no card instruction survives in the prompt");

@@ -6,7 +6,7 @@
 - Factor: `live.f8-fed-bias` - F8 Fed bias.
 - Group label: `usd-topic-economic-surprise-and-fed-bias` (Economic surprises, first prints and Fed bias). The label groups chains; it owns no stage and this prompt is the only stage you run for it.
 - Stage: 2 of 3, red-team. This stage returns exactly one Markdown document (review), named `usd-live-f8-fed-bias-s2-red-team.md`.
-- Prompt template: `research-prompt-v3.0.0`, written 2026-10-13. The template is versioned: if a newer `research-prompt` template exists, that one governs and this file is superseded.
+- Prompt template: `research-prompt-v3.1.0`, written 2026-10-13. The template is versioned: if a newer `research-prompt` template exists, that one governs and this file is superseded.
 - This prompt is self-contained. Paste it as one message into a fresh session; nothing is sent to a model from the dashboard and no credential is attached to it.
 - Asset status: active. The session is defined below and the data reachable from this repository is named with each input.
 - Programme record: this chain has not been dispatched. Nothing has been returned for it, and this prompt is its first assignment.
@@ -63,6 +63,15 @@ Answer every question below, in order. Where the evidence does not exist, write 
 7. Counter-evidence: is the strongest contrary evidence in the sources the report fetched missing, or present and dismissed without a reason?
 8. Internal consistency and scope: does one section contradict another, does the what-is-not-claimed section match the body, and is any true claim only too wide?
 9. Coverage: does every entry in scope get an answer, and is every question the report could not answer named as unanswered?
+
+### Questions this chain asks, which the report had to answer
+
+10. Is a bias string a measurement or an interpretation, and can the same words be turned into a reproducible, dated, pre-cutoff value? Did the report answer it, and on what source?
+11. No vintage of the string is retained: does the deployed read measure a change, a level, or a revision introduced after the fact, and what would a versioned series look like? Did the report answer it, and on what source?
+12. Does the bias label carry information beyond the front-end rate change and the release surprise that ostensibly produce it? Did the report answer it, and on what source?
+13. If the string cannot be versioned, what is the honest Layer 1 role: a documented input, a documented exclusion, or no incremental value? Did the report answer it, and on what source?
+14. Which of these three chains is testing a surprise, which is testing a narrative, and which is testing the same underlying information twice? Did the report answer it, and on what source?
+15. Is the first print the only honest vintage, and what does the revision history of the tested series look like? Did the report answer it, and on what source?
 
 ## Evidence standard
 

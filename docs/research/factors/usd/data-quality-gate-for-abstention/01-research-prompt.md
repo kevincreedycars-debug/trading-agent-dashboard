@@ -6,14 +6,14 @@
 - Factor: `data.quality-gate-for-abstention` - Data quality gate for abstention.
 - Group label: `usd-topic-calendar-and-data-quality` (Calendar state and the data-quality gate). The label groups chains; it owns no stage and this prompt is the only stage you run for it.
 - Stage: 1 of 3, research. This stage returns exactly one Markdown document (report), named `usd-data-quality-gate-for-abstention-s1-research.md`.
-- Prompt template: `research-prompt-v3.0.0`, written 2026-10-13. The template is versioned: if a newer `research-prompt` template exists, that one governs and this file is superseded.
+- Prompt template: `research-prompt-v3.1.0`, written 2026-10-13. The template is versioned: if a newer `research-prompt` template exists, that one governs and this file is superseded.
 - This prompt is self-contained. Paste it as one message into a fresh session; nothing is sent to a model from the dashboard and no credential is attached to it.
 - Asset status: active. The session is defined below and the data reachable from this repository is named with each input.
 - Programme record: this chain has not been dispatched. Nothing has been returned for it, and this prompt is its first assignment.
 
 ## Objective
 
-Answer one question in one report: Chain question: does `data.quality-gate-for-abstention` - Data quality gate for abstention - carry information about the next 24-hour dollar move, and in which quantity? Which data states should force abstention instead of a weak call, given that the live collector has no as-of check and no staleness test. Return a source-backed report that states what the evidence supports for the US Dollar session above, what it does not, and what would refute each claim, using the entries named below as the scope of evidence. The rules in force are the baseline to audit, not the target and not evidence. The report is evidence about this chain; it is not a trading rule, and nothing you return changes a live call.
+Answer one question in one report: Chain question: what should `data.quality-gate-for-abstention` - Data quality gate for abstention - change about the call, given that it is a quality gate rather than a directional input? Which data states should force abstention instead of a weak call, given that the live collector has no as-of check and no staleness test. Return a source-backed report that states what the evidence supports for the US Dollar session above, what it does not, and what would refute each claim, using the entries named below as the scope of evidence. The rules in force are the baseline to audit, not the target and not evidence. The report is evidence about this chain; it is not a trading rule, and nothing you return changes a live call.
 
 ## The session and the instrument
 
@@ -46,24 +46,26 @@ Answer every question below, in order. Where the evidence does not exist, write 
 
 ### Questions about this chain
 
-1. Chain question: does `data.quality-gate-for-abstention` - Data quality gate for abstention - carry information about the next 24-hour dollar move, and in which quantity? Which data states should force abstention instead of a weak call, given that the live collector has no as-of check and no staleness test.
-2. Does a scheduled release inside the session change the expected direction, the expected dispersion, or only the confidence?
-3. What is the honest treatment when the collector input is stale or missing: abstain, shrink or score neutral?
-4. Which releases matter for the dollar over this window, and are the timestamps verifiable at the cutoff?
-5. Can an abstention rule be evaluated at all without a frozen label instrument, and what would it take?
+1. Chain question: what should `data.quality-gate-for-abstention` - Data quality gate for abstention - change about the call, given that it is a quality gate rather than a directional input? Which data states should force abstention instead of a weak call, given that the live collector has no as-of check and no staleness test.
+2. Which data states should force abstention - missing, stale, revised, or unreachable at the cutoff - and how is each state detected without an as-of check in the live collector?
+3. Does the gate improve directional accuracy on the sessions it does trade, and what does it cost in coverage and in skipped sessions that would have been called correctly?
+4. How are skipped sessions counted - as errors, as excluded observations, or as a separate coverage figure - and what benchmark makes abstention comparable to always calling?
+5. Which sessions does the gate skip in practice, and are they the sessions where a call was least likely to be right, or simply the sessions with the most missing inputs?
+6. Can an abstention rule be evaluated at all without a frozen label instrument, and what would it take?
 
 ### Questions that apply to the whole chain
 
-6. Which entries in this chain are the same information counted twice, which one carries it, and what would tell them apart?
-7. What is observable at the cutoff, what has the cutoff already absorbed, and what arrives only during the session?
-8. What has actually been measured about this window with this instrument - the sample, the era, the regime and the number of independent observations - and where is the honest answer that nothing has?
-9. What is the strongest contrary evidence you found, and what would refute the relation you would propose?
-10. What would the test need that this repository or the collector does not have, and what sits behind a paywall?
+7. Which entries in this chain are the same information counted twice, which one carries it, and what would tell them apart?
+8. What is observable at the cutoff, what has the cutoff already absorbed, and what arrives only during the session?
+9. What has actually been measured about this window with this instrument - the sample, the era, the regime and the number of independent observations - and where is the honest answer that nothing has?
+10. What is the strongest contrary evidence you found, and what would refute the relation you would propose?
+11. What would the test need that this repository or the collector does not have, and what sits behind a paywall?
 
 ### Questions about each entry
 
-11. `data.quality-gate-for-abstention` (Data quality gate for abstention): Which data states should force abstention instead of a weak call, given that the live collector has no as-of check and no staleness test. What does it measure, from which series and which publication process, with what lag and revision practice - and is the informative quantity the level, the recorded lookback measure (not stated), or another transform?
-12. `data.quality-gate-for-abstention` audit: the rule in force reads No rule is in force. This is a hypothesis to be researched, not a deployed rule., with threshold none stated and lookback not stated. Is that sign, that threshold and that lookback supported for this window, and what would refute it?
+12. `data.quality-gate-for-abstention` (Data quality gate for abstention): Which data states should force abstention instead of a weak call, given that the live collector has no as-of check and no staleness test. What does it measure, from which series and which publication process, with what lag and revision practice - and is the informative quantity the level, the recorded lookback measure (not stated), or another transform?
+13. `data.quality-gate-for-abstention` gate: this entry decides whether a call is made, not which way. Which data or regime states should trigger it, how many sessions would it skip, what would it cost in coverage and in skipped sessions that would have been right, and would the calls it keeps be more accurate than calling every session?
+14. `data.quality-gate-for-abstention`: no rule is in force. State the candidate relation worth testing for this entry, what would refute it, and how it could be measured with the data named in this prompt.
 
 ## Evidence standard
 

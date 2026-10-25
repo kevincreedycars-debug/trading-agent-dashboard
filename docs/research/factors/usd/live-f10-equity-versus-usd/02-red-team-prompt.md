@@ -6,7 +6,7 @@
 - Factor: `live.f10-equity-versus-usd` - F10 Equity versus USD.
 - Group label: `usd-topic-dollar-index-gold-and-equities` (Dollar index, gold and equity-against-USD relations). The label groups chains; it owns no stage and this prompt is the only stage you run for it.
 - Stage: 2 of 3, red-team. This stage returns exactly one Markdown document (review), named `usd-live-f10-equity-versus-usd-s2-red-team.md`.
-- Prompt template: `research-prompt-v3.0.0`, written 2026-10-13. The template is versioned: if a newer `research-prompt` template exists, that one governs and this file is superseded.
+- Prompt template: `research-prompt-v3.1.0`, written 2026-10-13. The template is versioned: if a newer `research-prompt` template exists, that one governs and this file is superseded.
 - This prompt is self-contained. Paste it as one message into a fresh session; nothing is sent to a model from the dashboard and no credential is attached to it.
 - Asset status: active. The session is defined below and the data reachable from this repository is named with each input.
 - Programme record: this chain has not been dispatched. Nothing has been returned for it, and this prompt is its first assignment.
@@ -62,6 +62,15 @@ Answer every question below, in order. Where the evidence does not exist, write 
 7. Counter-evidence: is the strongest contrary evidence in the sources the report fetched missing, or present and dismissed without a reason?
 8. Internal consistency and scope: does one section contradict another, does the what-is-not-claimed section match the body, and is any true claim only too wide?
 9. Coverage: does every entry in scope get an answer, and is every question the report could not answer named as unanswered?
+
+### Questions this chain asks, which the report had to answer
+
+10. The stored input is a QQQ ETF quote: what is the difference between the Nasdaq-100 index, the NQ future and the ETF for a 24-hour London session, and which one does a claim actually need? Did the report answer it, and on what source?
+11. Is the QQQ quote a regular-hours close with gaps, a pre-market price or a delayed snapshot at the cutoff, and what do the ETF premium to net asset value and its distributions do to a one-day change? Did the report answer it, and on what source?
+12. Is the equity-dollar relation a risk-appetite channel, a rate channel or a growth channel, and is its sign stable across regimes or does it flip with the VIX gate? Did the report answer it, and on what source?
+13. Does the equity move add information beyond the VIX level and the cross-asset risk state, or is it the same risk appetite counted a third time? Did the report answer it, and on what source?
+14. Which dollar index is a claim actually about, and does the answer change with the index construction? Did the report answer it, and on what source?
+15. Are gold and equities independent evidence for the dollar, or the same risk factor counted twice? Did the report answer it, and on what source?
 
 ## Evidence standard
 

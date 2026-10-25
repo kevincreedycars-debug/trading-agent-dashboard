@@ -6,7 +6,7 @@
 - Factor: `risk.vix-level-and-change-at-cutoff` - VIX level and change at the cutoff.
 - Group label: `usd-topic-vix-level-and-risk-regime` (VIX, its change and the USD risk regime at the 05:00 London cutoff). The label groups chains; it owns no stage and this prompt is the only stage you run for it.
 - Stage: 1 of 3, research. This stage returns exactly one Markdown document (report), named `usd-risk-vix-level-and-change-at-cutoff-s1-research.md`.
-- Prompt template: `research-prompt-v3.0.0`, written 2026-10-13. The template is versioned: if a newer `research-prompt` template exists, that one governs and this file is superseded.
+- Prompt template: `research-prompt-v3.1.0`, written 2026-10-13. The template is versioned: if a newer `research-prompt` template exists, that one governs and this file is superseded.
 - This prompt is self-contained. Paste it as one message into a fresh session; nothing is sent to a model from the dashboard and no credential is attached to it.
 - Asset status: active. The session is defined below and the data reachable from this repository is named with each input.
 - Programme record: this chain has not been dispatched. Nothing has been returned for it, and this prompt is its first assignment.
@@ -47,23 +47,24 @@ Answer every question below, in order. Where the evidence does not exist, write 
 ### Questions about this chain
 
 1. Chain question: does `risk.vix-level-and-change-at-cutoff` - VIX level and change at the cutoff - carry information about the next 24-hour dollar move, and in which quantity? VIX level and its change, read as risk regime rather than as a standalone direction, with the documented-but-unimplemented 1d and 5d modifiers examined.
-2. Is the informative quantity the level, the one-day change or a five-day change, and does the answer differ between calm and stressed regimes?
-3. Does the volatility-of-volatility or term-structure information add anything the level does not already carry?
-4. Is the mechanism safe-haven demand, risk appetite, carry or policy expectations, and what observable at the cutoff distinguishes them?
-5. How much of the VIX move is already in the dollar at 05:00 Europe/London, and what is left for the following 24 hours?
+2. What does the VIX level at the cutoff add to the level the deployed F1 rule already uses, and is a second chain carrying the same variable a duplication the synthesis has to resolve?
+3. Is the informative quantity the level, the one-day change, the five-day change, or the change between the last US close and the cutoff, and how stale is the observation at 05:00 London?
+4. Is the mechanism a safe-haven demand for dollars, a funding or liquidity squeeze, or a risk-appetite shock, and what observable separates them?
+5. Does the VIX change add information beyond the cross-asset risk state and the equity move, and is its sign the same in a calm and a stressed regime?
+6. Which of these two chains is measuring something the other does not, and which is the same VIX variable counted twice?
 
 ### Questions that apply to the whole chain
 
-6. Which entries in this chain are the same information counted twice, which one carries it, and what would tell them apart?
-7. What is observable at the cutoff, what has the cutoff already absorbed, and what arrives only during the session?
-8. What has actually been measured about this window with this instrument - the sample, the era, the regime and the number of independent observations - and where is the honest answer that nothing has?
-9. What is the strongest contrary evidence you found, and what would refute the relation you would propose?
-10. What would the test need that this repository or the collector does not have, and what sits behind a paywall?
+7. Which entries in this chain are the same information counted twice, which one carries it, and what would tell them apart?
+8. What is observable at the cutoff, what has the cutoff already absorbed, and what arrives only during the session?
+9. What has actually been measured about this window with this instrument - the sample, the era, the regime and the number of independent observations - and where is the honest answer that nothing has?
+10. What is the strongest contrary evidence you found, and what would refute the relation you would propose?
+11. What would the test need that this repository or the collector does not have, and what sits behind a paywall?
 
 ### Questions about each entry
 
-11. `risk.vix-level-and-change-at-cutoff` (VIX level and change at the cutoff): VIX level and its change, read as risk regime rather than as a standalone direction, with the documented-but-unimplemented 1d and 5d modifiers examined. What does it measure, from which series and which publication process, with what lag and revision practice - and is the informative quantity the level, the recorded lookback measure (not stated), or another transform?
-12. `risk.vix-level-and-change-at-cutoff` audit: the rule in force reads No rule is in force. This is a hypothesis to be researched, not a deployed rule., with threshold none stated and lookback not stated. Is that sign, that threshold and that lookback supported for this window, and what would refute it?
+12. `risk.vix-level-and-change-at-cutoff` (VIX level and change at the cutoff): VIX level and its change, read as risk regime rather than as a standalone direction, with the documented-but-unimplemented 1d and 5d modifiers examined. What does it measure, from which series and which publication process, with what lag and revision practice - and is the informative quantity the level, the recorded lookback measure (not stated), or another transform?
+13. `risk.vix-level-and-change-at-cutoff`: no rule is in force. State the candidate relation worth testing for this entry, what would refute it, and how it could be measured with the data named in this prompt.
 
 ## Evidence standard
 

@@ -496,6 +496,64 @@ test("the catalogue carries six topic labels and twenty-five factor chains, thre
   assert.deepEqual(finalSpec.factor_chain_ids.slice().sort(), chains.map(chain => chain.chain_id).sort());
 });
 
+test("every factor chain asks its own questions, and a gate is asked what it changes rather than which way", () => {
+  const chains = ResearchLibrary.listFactorChains(catalog, "USD");
+  const seen = new Map();
+  chains.forEach(chain => {
+    const probes = chain.probes || [];
+    assert.ok(probes.length >= 5, `${chain.factor_id} must carry a chain question plus its own factor questions, found ${probes.length}`);
+    assert.ok(probes[0].startsWith("Chain question:"), `${chain.factor_id} must open with its chain question`);
+    const key = JSON.stringify(probes.slice(1));
+    assert.equal(seen.has(key), false, `${chain.factor_id} reuses the probe text of ${seen.get(key)}: a shared group question set is not a factor-specific one`);
+    seen.set(key, chain.factor_id);
+    const gate = /gate/i.test(chain.factor_role || "");
+    if (gate) {
+      assert.match(probes[0], /change about the call/, `${chain.factor_id} is a ${chain.factor_role} and must not be asked only which way the dollar moves`);
+      assert.doesNotMatch(probes[0], /carry information about the next 24-hour dollar move/, `${chain.factor_id} is a gate, not a directional factor`);
+    } else {
+      assert.match(probes[0], /carry information about the next 24-hour dollar move/, `${chain.factor_id} is a directional factor`);
+    }
+  });
+  const probesFor = factorId => (ResearchLibrary.factorChainForFactor(catalog, factorId).probes || []).join(" ");
+  // Four of the mismatches a shared group question set produced, pinned so they cannot come back silently.
+  assert.doesNotMatch(probesFor("live.f6-gold-delta"), /dollar smile/i, "the gold chain must not be asked the smile question");
+  assert.match(probesFor("live.f6-gold-delta"), /XAU-USD/, "the gold chain must ask about the instrument the collector actually stores");
+  assert.doesNotMatch(probesFor("live.f10-equity-versus-usd"), /dollar smile/i, "the equity chain must not be asked the smile question");
+  assert.match(probesFor("live.f10-equity-versus-usd"), /QQQ/, "the equity chain must name the Nasdaq-100, the future and the ETF it stores");
+  assert.doesNotMatch(probesFor("risk.usd-safe-haven-demand"), /range position|bid-ask bounce/i, "the safe-haven chain must not be asked the FX session-structure questions");
+  assert.doesNotMatch(probesFor("data.quality-gate-for-abstention"), /scheduled release inside the session/i, "the abstention gate must not be asked the calendar questions");
+  const abstention = probesFor("data.quality-gate-for-abstention");
+  ["accuracy", "coverage", "skipped sessions"].forEach(term => {
+    assert.ok(abstention.includes(term), `the abstention gate must be evaluated on ${term}`);
+  });
+  assert.match(probesFor("live.f1-vix-level"), /stale/, "the VIX chain must ask how stale VIXCLS is at the cutoff");
+  assert.match(probesFor("live.f2-us-2y-delta"), /DGS2|vintage/, "the 2Y chain must ask about the series and its vintage");
+});
+
+test("an asset profile is not a factor catalogue: only USD is dispatchable, and each draft names what is missing", () => {
+  const assets = ResearchLibrary.listAssets(catalog);
+  assets.forEach(asset => {
+    assert.ok(asset.catalogue && asset.catalogue.state, `${asset.asset} must state whether it has a dispatchable catalogue`);
+    if (asset.asset === "USD") {
+      assert.equal(asset.catalogue.state, "dispatchable");
+      assert.equal(asset.catalogue.factor_entries, 25);
+      assert.equal(asset.catalogue.factor_chains, 25);
+      assert.equal(asset.catalogue.stage_prompts, 78);
+      assert.equal(asset.catalogue.published_briefs, 25);
+      assert.equal(asset.catalogue.remaining, undefined, "a complete catalogue has nothing left to generate");
+      return;
+    }
+    assert.equal(asset.catalogue.state, "profile_only", `${asset.asset} has no factor entry and must say so`);
+    assert.equal(asset.factors.length, 0, `${asset.asset} must not claim a factor entry it does not have`);
+    assert.equal(asset.catalogue.factor_entries, 0);
+    assert.equal(asset.catalogue.factor_chains, 0);
+    assert.equal(asset.catalogue.stage_prompts, 0);
+    assert.equal(asset.catalogue.published_briefs, 0);
+    assert.ok((asset.catalogue.remaining || []).length >= 3, `${asset.asset} must name what remains before it could be dispatched`);
+    assert.ok(asset.catalogue.open_decisions >= 1, `${asset.asset} keeps its unresolved instrument decisions`);
+  });
+});
+
 test("the asset_synthesis topic spec carries the final chain's three stages and its gate, and opens nothing", () => {
   const spec = ResearchLibrary.synthesisTopic(catalog, "USD");
   assert.ok(spec, "the catalogue carries an asset_synthesis topic");

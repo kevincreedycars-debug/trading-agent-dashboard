@@ -6,7 +6,7 @@
 - Factor: `live.f8-fed-bias` - F8 Fed bias.
 - Group label: `usd-topic-economic-surprise-and-fed-bias` (Economic surprises, first prints and Fed bias). The label groups chains; it owns no stage and this prompt is the only stage you run for it.
 - Stage: 1 of 3, research. This stage returns exactly one Markdown document (report), named `usd-live-f8-fed-bias-s1-research.md`.
-- Prompt template: `research-prompt-v3.0.0`, written 2026-10-13. The template is versioned: if a newer `research-prompt` template exists, that one governs and this file is superseded.
+- Prompt template: `research-prompt-v3.1.0`, written 2026-10-13. The template is versioned: if a newer `research-prompt` template exists, that one governs and this file is superseded.
 - This prompt is self-contained. Paste it as one message into a fresh session; nothing is sent to a model from the dashboard and no credential is attached to it.
 - Asset status: active. The session is defined below and the data reachable from this repository is named with each input.
 - Programme record: this chain has not been dispatched. Nothing has been returned for it, and this prompt is its first assignment.
@@ -49,23 +49,25 @@ Answer every question below, in order. Where the evidence does not exist, write 
 ### Questions about this chain
 
 1. Chain question: does `live.f8-fed-bias` - F8 Fed bias - carry information about the next 24-hour dollar move, and in which quantity? Directional read of the Fed bias string, tested for the words hawkish or dovish. The rulebook describes a delta; the code measures no change.
-2. Which surprise measure is defensible: survey consensus, model nowcast, or the market-implied move, and what does each one cost?
-3. Is the first print the only honest vintage, and what does the revision history of the tested series look like?
-4. Is Fed bias an observable at 05:00 Europe/London or a narrative, and what would an observable version look like?
-5. How much of a surprise is already in the dollar in the minutes after the print, and how do you separate that from the session that follows?
+2. Is a bias string a measurement or an interpretation, and can the same words be turned into a reproducible, dated, pre-cutoff value?
+3. No vintage of the string is retained: does the deployed read measure a change, a level, or a revision introduced after the fact, and what would a versioned series look like?
+4. Does the bias label carry information beyond the front-end rate change and the release surprise that ostensibly produce it?
+5. If the string cannot be versioned, what is the honest Layer 1 role: a documented input, a documented exclusion, or no incremental value?
+6. Which of these three chains is testing a surprise, which is testing a narrative, and which is testing the same underlying information twice?
+7. Is the first print the only honest vintage, and what does the revision history of the tested series look like?
 
 ### Questions that apply to the whole chain
 
-6. Which entries in this chain are the same information counted twice, which one carries it, and what would tell them apart?
-7. What is observable at the cutoff, what has the cutoff already absorbed, and what arrives only during the session?
-8. What has actually been measured about this window with this instrument - the sample, the era, the regime and the number of independent observations - and where is the honest answer that nothing has?
-9. What is the strongest contrary evidence you found, and what would refute the relation you would propose?
-10. What would the test need that this repository or the collector does not have, and what sits behind a paywall?
+8. Which entries in this chain are the same information counted twice, which one carries it, and what would tell them apart?
+9. What is observable at the cutoff, what has the cutoff already absorbed, and what arrives only during the session?
+10. What has actually been measured about this window with this instrument - the sample, the era, the regime and the number of independent observations - and where is the honest answer that nothing has?
+11. What is the strongest contrary evidence you found, and what would refute the relation you would propose?
+12. What would the test need that this repository or the collector does not have, and what sits behind a paywall?
 
 ### Questions about each entry
 
-11. `live.f8-fed-bias` (F8 Fed bias): Directional read of the Fed bias string, tested for the words hawkish or dovish. The rulebook describes a delta; the code measures no change. What does it measure, from which series and which publication process, with what lag and revision practice - and is the informative quantity the level, the recorded lookback measure (current string only), or another transform?
-12. `live.f8-fed-bias` audit: the rule in force reads string contains hawkish or dovish; unknown is treated as a missing input and scores NEUTRAL, with threshold none and lookback current string only. Is that sign, that threshold and that lookback supported for this window, and what would refute it?
+13. `live.f8-fed-bias` (F8 Fed bias): Directional read of the Fed bias string, tested for the words hawkish or dovish. The rulebook describes a delta; the code measures no change. What does it measure, from which series and which publication process, with what lag and revision practice - and is the informative quantity the level, the recorded lookback measure (current string only), or another transform?
+14. `live.f8-fed-bias` audit: the rule in force reads string contains hawkish or dovish; unknown is treated as a missing input and scores NEUTRAL, with threshold none and lookback current string only. Is that sign, that threshold and that lookback supported for this window, and what would refute it?
 
 ## Evidence standard
 

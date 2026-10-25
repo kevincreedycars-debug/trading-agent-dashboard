@@ -4,7 +4,7 @@
 
 - Chain: `usd-final-asset-analysis` on USD (US Dollar); chain kind `asset_synthesis`.
 - Stage: 1 of 3, final analysis. This stage returns exactly one Markdown document (synthesis), named `usd-final-asset-analysis-s1-proposal.md`.
-- Prompt template: `research-prompt-v3.0.0`, written 2026-10-13. The template is versioned: if a newer `research-prompt` template exists, that one governs and this file is superseded.
+- Prompt template: `research-prompt-v3.1.0`, written 2026-10-13. The template is versioned: if a newer `research-prompt` template exists, that one governs and this file is superseded.
 - This prompt is self-contained. Paste it as one message into a fresh session; nothing is sent to a model from the dashboard and no credential is attached to it.
 - Asset status: active. The session is defined below and the data reachable from this repository is named with each input.
 - Gate: this chain does not open early. It runs only when all 25 factor chains have delivered research, red-team and adjudication against their current parent versions, and the gate is `all-factor-chains`. If any one of them is missing or stale, stop and say which: an incomplete synthesis presented as a result is worse than no synthesis.

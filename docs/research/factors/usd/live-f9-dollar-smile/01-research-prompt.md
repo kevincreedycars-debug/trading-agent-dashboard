@@ -6,7 +6,7 @@
 - Factor: `live.f9-dollar-smile` - F9 Dollar Smile regime.
 - Group label: `usd-topic-dollar-index-gold-and-equities` (Dollar index, gold and equity-against-USD relations). The label groups chains; it owns no stage and this prompt is the only stage you run for it.
 - Stage: 1 of 3, research. This stage returns exactly one Markdown document (report), named `usd-live-f9-dollar-smile-s1-research.md`.
-- Prompt template: `research-prompt-v3.0.0`, written 2026-10-13. The template is versioned: if a newer `research-prompt` template exists, that one governs and this file is superseded.
+- Prompt template: `research-prompt-v3.1.0`, written 2026-10-13. The template is versioned: if a newer `research-prompt` template exists, that one governs and this file is superseded.
 - This prompt is self-contained. Paste it as one message into a fresh session; nothing is sent to a model from the dashboard and no credential is attached to it.
 - Asset status: active. The session is defined below and the data reachable from this repository is named with each input.
 - Programme record: this chain has not been dispatched. Nothing has been returned for it, and this prompt is its first assignment.
@@ -48,23 +48,25 @@ Answer every question below, in order. Where the evidence does not exist, write 
 ### Questions about this chain
 
 1. Chain question: does `live.f9-dollar-smile` - F9 Dollar Smile regime - carry information about the next 24-hour dollar move, and in which quantity? The smile regime read from the VIX level and the bias string.
-2. Is the dollar smile a measured relation for this window, or a descriptive convenience: what would falsify it?
-3. Which dollar index is a claim actually about, and does the answer change with the index construction?
-4. Does a same-day dollar move followed by a session direction suggest mean reversion or continuation, and on what evidence?
-5. Are gold and equities independent evidence for the dollar, or the same risk factor counted twice?
+2. Is the dollar smile a measured relation in this window or a descriptive story, and what observation would falsify it?
+3. The deployed reading uses the VIX 25/16 pair and the bias string: are those the right variables, and does the smile need a third state such as global growth or funding stress that neither captures?
+4. Is the smile a regime variable that should switch other factors signs, or a separate directional factor, and can those two roles be told apart with session data?
+5. Does the smile add anything to the VIX level and the cross-asset risk state it is computed from, and is the rulebook weight of 12 defensible against the coded 1?
+6. Which dollar index is a claim actually about, and does the answer change with the index construction?
+7. Are gold and equities independent evidence for the dollar, or the same risk factor counted twice?
 
 ### Questions that apply to the whole chain
 
-6. Which entries in this chain are the same information counted twice, which one carries it, and what would tell them apart?
-7. What is observable at the cutoff, what has the cutoff already absorbed, and what arrives only during the session?
-8. What has actually been measured about this window with this instrument - the sample, the era, the regime and the number of independent observations - and where is the honest answer that nothing has?
-9. What is the strongest contrary evidence you found, and what would refute the relation you would propose?
-10. What would the test need that this repository or the collector does not have, and what sits behind a paywall?
+8. Which entries in this chain are the same information counted twice, which one carries it, and what would tell them apart?
+9. What is observable at the cutoff, what has the cutoff already absorbed, and what arrives only during the session?
+10. What has actually been measured about this window with this instrument - the sample, the era, the regime and the number of independent observations - and where is the honest answer that nothing has?
+11. What is the strongest contrary evidence you found, and what would refute the relation you would propose?
+12. What would the test need that this repository or the collector does not have, and what sits behind a paywall?
 
 ### Questions about each entry
 
-11. `live.f9-dollar-smile` (F9 Dollar Smile regime): The smile regime read from the VIX level and the bias string. What does it measure, from which series and which publication process, with what lag and revision practice - and is the informative quantity the level, the recorded lookback measure (level), or another transform?
-12. `live.f9-dollar-smile` audit: the rule in force reads VIX above 25 reads BULLISH; VIX below 16 and not hawkish reads BEARISH, with threshold 25 / 16 and lookback level. Is that sign, that threshold and that lookback supported for this window, and what would refute it?
+13. `live.f9-dollar-smile` (F9 Dollar Smile regime): The smile regime read from the VIX level and the bias string. What does it measure, from which series and which publication process, with what lag and revision practice - and is the informative quantity the level, the recorded lookback measure (level), or another transform?
+14. `live.f9-dollar-smile` audit: the rule in force reads VIX above 25 reads BULLISH; VIX below 16 and not hawkish reads BEARISH, with threshold 25 / 16 and lookback level. Is that sign, that threshold and that lookback supported for this window, and what would refute it?
 
 ## Evidence standard
 

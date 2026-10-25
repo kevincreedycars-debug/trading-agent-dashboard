@@ -33,8 +33,12 @@ secondary section because a pass through the three stages needs none of them.
   Complete says nothing about an edge: research accepted for synthesis is not a validated trading rule.
 - **The prompts live in `docs/research/factors/usd/<factor-slug>/`** (three per chain) and the final prompts in
   `docs/research/final/usd/final-asset-analysis/`. All seventy-eight are rendered from one versioned module,
-  `lib/research_prompt_templates.js` at `research-prompt-v3.0.0`, so a prompt cannot drift from the catalogue and
-  a workflow instruction cannot survive in one chain after being removed from another. The builder owns the facts
+  `lib/research_prompt_templates.js` at `research-prompt-v3.1.0`, so a prompt cannot drift from the catalogue and
+  a workflow instruction cannot survive in one chain after being removed from another. The questions are
+  authored per factor: each of the twenty-five entries carries its own probes, the label keeps only the
+  questions that span its factors, a gate is asked what it changes about the call rather than which way the
+  dollar moves, and stages 2 and 3 re-ask the factor's own questions so a question cannot stop at stage 1.
+  The builder owns the facts
   (chain ids, factor entries, deliverable hashes, the gate); the template owns every word. Rendering is audited
   before a file is written: a prompt missing one of its ten sections, carrying a phrase from the older workflow
   (a four-step brief, a stage card, a research card, a dashboard navigation or a JSON paste), leaving a
@@ -69,7 +73,10 @@ evidence: it is not an approval and it moves no factor status, no weight, no thr
   stage and no prompt, because there is nothing yet to synthesise.
 - **Eight asset categories**, USD first, then EUR, GBP, GOLD, SILVER, NQ, BTC, WTI. USD is populated; the
   other seven carry a standfirst, a next step and an explicit note that no USD sign, weight or threshold
-  transfers to them.
+  transfers to them. Each asset record also carries a `catalogue` block stating whether it is
+  `dispatchable` or `profile_only`, with its factor-entry, chain, stage-prompt and brief counts, so a draft
+  profile is never mistaken for a factor catalogue: the seven drafts read `profile_only` with zero of each
+  and a `remaining` list of what would have to be generated before anything under them could be dispatched.
 - **A secondary register** below the workflow, labelled as not the workflow: asset and factor filters (family,
   research status, review status, backtest status and free-text search over factor id, label, brief, blockers
   and dependencies, with a live "n of m factors shown" count), the factor table (family, role, the live weight

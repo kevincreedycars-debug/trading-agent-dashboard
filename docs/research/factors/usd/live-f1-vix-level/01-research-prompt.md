@@ -6,7 +6,7 @@
 - Factor: `live.f1-vix-level` - F1 VIX level and risk regime.
 - Group label: `usd-topic-vix-level-and-risk-regime` (VIX, its change and the USD risk regime at the 05:00 London cutoff). The label groups chains; it owns no stage and this prompt is the only stage you run for it.
 - Stage: 1 of 3, research. This stage returns exactly one Markdown document (report), named `usd-live-f1-vix-level-s1-research.md`.
-- Prompt template: `research-prompt-v3.0.0`, written 2026-10-13. The template is versioned: if a newer `research-prompt` template exists, that one governs and this file is superseded.
+- Prompt template: `research-prompt-v3.1.0`, written 2026-10-13. The template is versioned: if a newer `research-prompt` template exists, that one governs and this file is superseded.
 - This prompt is self-contained. Paste it as one message into a fresh session; nothing is sent to a model from the dashboard and no credential is attached to it.
 - Asset status: active. The session is defined below and the data reachable from this repository is named with each input.
 - Programme record: this chain was dispatched as task `USD-BASELINE-AUDIT-01`, pack version 2.0.0, context version usd-session-context-20261014.1. Anything already returned for it is an earlier version of this chain and is not an input here unless the inputs section names it.
@@ -49,23 +49,24 @@ Answer every question below, in order. Where the evidence does not exist, write 
 ### Questions about this chain
 
 1. Chain question: does `live.f1-vix-level` - F1 VIX level and risk regime - carry information about the next 24-hour dollar move, and in which quantity? VIX level is read as the risk regime the dollar is trading in. The rulebook also describes 1d and 5d modifiers; the deployed code does not implement them.
-2. Is the informative quantity the level, the one-day change or a five-day change, and does the answer differ between calm and stressed regimes?
-3. Does the volatility-of-volatility or term-structure information add anything the level does not already carry?
-4. Is the mechanism safe-haven demand, risk appetite, carry or policy expectations, and what observable at the cutoff distinguishes them?
-5. How much of the VIX move is already in the dollar at 05:00 Europe/London, and what is left for the following 24 hours?
+2. Is the informative quantity the VIX level at the last US close, its one-day change or its five-day change, and does the deployed 25/16 pair add anything a continuous level does not?
+3. How stale is the VIXCLS observation at the 05:00 London cutoff, and what does that staleness do to a claim that the level is a cutoff-time regime read?
+4. Is the mechanism safe-haven demand, risk appetite, carry or policy expectations, and which observable at the cutoff separates them from a common hidden driver?
+5. Does the VIX level still carry information once the cross-asset risk state, gold and the credit spread are in the model, or is it the same risk factor counted twice?
+6. Which of these two chains is measuring something the other does not, and which is the same VIX variable counted twice?
 
 ### Questions that apply to the whole chain
 
-6. Which entries in this chain are the same information counted twice, which one carries it, and what would tell them apart?
-7. What is observable at the cutoff, what has the cutoff already absorbed, and what arrives only during the session?
-8. What has actually been measured about this window with this instrument - the sample, the era, the regime and the number of independent observations - and where is the honest answer that nothing has?
-9. What is the strongest contrary evidence you found, and what would refute the relation you would propose?
-10. What would the test need that this repository or the collector does not have, and what sits behind a paywall?
+7. Which entries in this chain are the same information counted twice, which one carries it, and what would tell them apart?
+8. What is observable at the cutoff, what has the cutoff already absorbed, and what arrives only during the session?
+9. What has actually been measured about this window with this instrument - the sample, the era, the regime and the number of independent observations - and where is the honest answer that nothing has?
+10. What is the strongest contrary evidence you found, and what would refute the relation you would propose?
+11. What would the test need that this repository or the collector does not have, and what sits behind a paywall?
 
 ### Questions about each entry
 
-11. `live.f1-vix-level` (F1 VIX level and risk regime): VIX level is read as the risk regime the dollar is trading in. The rulebook also describes 1d and 5d modifiers; the deployed code does not implement them. What does it measure, from which series and which publication process, with what lag and revision practice - and is the informative quantity the level, the recorded lookback measure (level), or another transform?
-12. `live.f1-vix-level` audit: the rule in force reads VIX above 25 reads BULLISH, 16 to 25 NEUTRAL, below 16 BEARISH; level only; the documented 1d/5d modifier is not implemented, with threshold 25 / 16 and lookback level. Is that sign, that threshold and that lookback supported for this window, and what would refute it?
+12. `live.f1-vix-level` (F1 VIX level and risk regime): VIX level is read as the risk regime the dollar is trading in. The rulebook also describes 1d and 5d modifiers; the deployed code does not implement them. What does it measure, from which series and which publication process, with what lag and revision practice - and is the informative quantity the level, the recorded lookback measure (level), or another transform?
+13. `live.f1-vix-level` audit: the rule in force reads VIX above 25 reads BULLISH, 16 to 25 NEUTRAL, below 16 BEARISH; level only; the documented 1d/5d modifier is not implemented, with threshold 25 / 16 and lookback level. Is that sign, that threshold and that lookback supported for this window, and what would refute it?
 
 ## Evidence standard
 

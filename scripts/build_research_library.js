@@ -125,6 +125,12 @@ const LIVE_FACTORS = [
     group: 'live_engine',
     role: 'regime context',
     brief: 'VIX level is read as the risk regime the dollar is trading in. The rulebook also describes 1d and 5d modifiers; the deployed code does not implement them.',
+    probes: [
+      'Is the informative quantity the VIX level at the last US close, its one-day change or its five-day change, and does the deployed 25/16 pair add anything a continuous level does not?',
+      'How stale is the VIXCLS observation at the 05:00 London cutoff, and what does that staleness do to a claim that the level is a cutoff-time regime read?',
+      'Is the mechanism safe-haven demand, risk appetite, carry or policy expectations, and which observable at the cutoff separates them from a common hidden driver?',
+      'Does the VIX level still carry information once the cross-asset risk state, gold and the credit spread are in the model, or is it the same risk factor counted twice?'
+    ],
     current_rules: ['VIX above 25 reads BULLISH, 16 to 25 NEUTRAL, below 16 BEARISH', 'level only; the documented 1d/5d modifier is not implemented'],
     lookback: 'level',
     threshold: '25 / 16',
@@ -138,6 +144,12 @@ const LIVE_FACTORS = [
     group: 'live_engine',
     role: 'direction',
     brief: 'Change in the US 2Y yield as a policy-expectation proxy.',
+    probes: [
+      'Is the informative quantity the five-day change, the level or a same-session change, and does the deployed five-day window measure anything inside the 24-hour session?',
+      'Is the FRED DGS2 value at the cutoff the previous US close, and what vintage or revision risk attaches to a series read that way two business days after the fact?',
+      'Does a 2Y move carry policy expectations, growth news or a term-premium and liquidity component, and which observable at the cutoff separates a growth shock from a policy shock?',
+      'Does the 2Y delta survive once the 10Y real yield, the US-DE spread and the curve slope are in the same model, and does the same-day dollar reaction leave anything for the following 24 hours?'
+    ],
     current_rules: ['5-day change at or above +5 bps reads BULLISH, at or below -5 bps BEARISH'],
     lookback: '5 days on the 24h timeframe',
     threshold: '+/- 5 bps',
@@ -151,6 +163,12 @@ const LIVE_FACTORS = [
     group: 'live_engine',
     role: 'direction',
     brief: 'Change in the US minus German 2Y spread, derived in the collector from two series.',
+    probes: [
+      'Is the spread built from two series with different publication lags and market calendars, and what does that mismatch do to a five-day change computed at the cutoff?',
+      'Is the informative part the US leg, the German leg or the difference, and can the two legs be separated with data observable at 05:00 London?',
+      'Are Bund yields available on the same date and vintage as DGS2, and what happens to the spread when one leg misses a session or is republished?',
+      'Does the relative 2Y spread add anything beyond the US 2Y delta and the broad dollar index, or is its weight the US leg counted twice?'
+    ],
     current_rules: ['5-day change at or above +5 bps reads BULLISH, at or below -5 bps BEARISH'],
     lookback: '5 days on the 24h timeframe',
     threshold: '+/- 5 bps',
@@ -164,6 +182,12 @@ const LIVE_FACTORS = [
     group: 'live_engine',
     role: 'direction',
     brief: 'Change in the 10Y TIPS real yield.',
+    probes: [
+      'Is the informative quantity the TIPS real yield change, the nominal-minus-breakeven split, or the level, and how much of the change comes from the breakeven measurement itself?',
+      'How stale is DFII10 at the cutoff, and do TIPS liquidity and off-the-run pricing contaminate the measured change enough to matter for a five-day window?',
+      'Is the mechanism a real discount-rate story for the dollar or a growth story, and what observable separates a real-rate rise that helps the dollar from one that hurts it?',
+      'Does the real yield add information beyond the nominal 10Y and the front-end delta, and would the evidence support the deployed five-day change over a shorter window?'
+    ],
     current_rules: ['5-day change at or above +5 bps reads BULLISH, at or below -5 bps BEARISH'],
     lookback: '5 days on the 24h timeframe',
     threshold: '+/- 5 bps',
@@ -177,6 +201,12 @@ const LIVE_FACTORS = [
     group: 'live_engine',
     role: 'direction',
     brief: 'Trailing change in the dollar index the collector stores as dxy_level (FRED DTWEXBGS), with a d1 to d5 to d20 substitution ladder.',
+    probes: [
+      'Is the stored DTWEXBGS the broad trade-weighted index rather than DXY, and what does calling it the dollar index do to every claim that quotes it?',
+      'Is a one-day change of a daily H.10 index observable at 05:00 London given its publication lag, and what does the d1 to d5 to d20 fallback ladder do to the horizon of the signal?',
+      'Is the informative content own-session momentum, mean reversion after a large move, or slow trend, and which of them can a 24-hour session capture at all?',
+      'Does the index delta predict the next session, or is it an accounting identity against the bilateral pairs that the label instrument is meant to measure?'
+    ],
     current_rules: ['1-day change at or above +0.15% reads BULLISH, at or below -0.15% BEARISH', 'falls back d1 then d5 then d20 and records only a warning string'],
     lookback: '1 day on the 24h timeframe',
     threshold: '+/- 0.15%',
@@ -191,6 +221,12 @@ const LIVE_FACTORS = [
     group: 'live_engine',
     role: 'direction',
     brief: 'Gold move as an inverse dollar-risk read.',
+    probes: [
+      'Is gold read as an inverse dollar proxy, a real-rate hedge or a safe-haven asset, and how would the sign differ between those three readings?',
+      'Is the Coinbase XAU-USD spot quote the same instrument, venue and window as the gold the literature measures, and how does a 24/7 crypto-venue quote behave against a 05:00 London cutoff?',
+      'Is a five-day gold change the right transformation, and does the one-day fallback change the meaning of the signal rather than only its horizon?',
+      'Does gold add information beyond the real yield, the VIX level and the cross-asset risk state, or is its apparent dollar relation a restatement of real rates?'
+    ],
     current_rules: ['at or below -0.1% reads BULLISH, above +0.1% BEARISH', 'falls back from 5-day to 1-day and records only a warning string'],
     lookback: '5 days, 1-day fallback',
     threshold: '+/- 0.1%',
@@ -204,6 +240,12 @@ const LIVE_FACTORS = [
     group: 'live_engine',
     role: 'direction',
     brief: 'The highest-weight live family. The stored usd_signal per event is copied straight through, with no consensus and no first-print vintage reachable from this repository.',
+    probes: [
+      'What is a surprise here, and can any consensus or first-print vintage published before the release be reached, or is the stored usd_signal an unversioned derived value whose input cannot be recovered?',
+      'Is the release outcome observable before the 05:00 London cutoff, and what does the signal do on a session whose releases land inside the window rather than before it?',
+      'Is the mechanism an immediate repricing of rate expectations, a risk-premium change or a growth surprise, and does the direction depend on the policy reaction function in force?',
+      'Does a surprise signal add information beyond the front-end rate change that follows it, and how much of the surprise reaction is already in the dollar by the next cutoff?'
+    ],
     current_rules: ['the collector pre-computes a usd_signal per event and the node copies it', 'no threshold, no as-of check, no vintage'],
     lookback: 'whatever the collector stored',
     threshold: 'none',
@@ -219,6 +261,12 @@ const LIVE_FACTORS = [
     group: 'live_engine',
     role: 'direction',
     brief: 'Directional read of the Fed bias string, tested for the words hawkish or dovish. The rulebook describes a delta; the code measures no change.',
+    probes: [
+      'Is a bias string a measurement or an interpretation, and can the same words be turned into a reproducible, dated, pre-cutoff value?',
+      'No vintage of the string is retained: does the deployed read measure a change, a level, or a revision introduced after the fact, and what would a versioned series look like?',
+      'Does the bias label carry information beyond the front-end rate change and the release surprise that ostensibly produce it?',
+      'If the string cannot be versioned, what is the honest Layer 1 role: a documented input, a documented exclusion, or no incremental value?'
+    ],
     current_rules: ['string contains hawkish or dovish', 'unknown is treated as a missing input and scores NEUTRAL'],
     lookback: 'current string only',
     threshold: 'none',
@@ -234,6 +282,12 @@ const LIVE_FACTORS = [
     group: 'live_engine',
     role: 'regime context',
     brief: 'The smile regime read from the VIX level and the bias string.',
+    probes: [
+      'Is the dollar smile a measured relation in this window or a descriptive story, and what observation would falsify it?',
+      'The deployed reading uses the VIX 25/16 pair and the bias string: are those the right variables, and does the smile need a third state such as global growth or funding stress that neither captures?',
+      'Is the smile a regime variable that should switch other factors signs, or a separate directional factor, and can those two roles be told apart with session data?',
+      'Does the smile add anything to the VIX level and the cross-asset risk state it is computed from, and is the rulebook weight of 12 defensible against the coded 1?'
+    ],
     current_rules: ['VIX above 25 reads BULLISH; VIX below 16 and not hawkish reads BEARISH'],
     lookback: 'level',
     threshold: '25 / 16',
@@ -247,6 +301,12 @@ const LIVE_FACTORS = [
     group: 'live_engine',
     role: 'regime context',
     brief: 'Cross-asset read of equities against the dollar, gated by the VIX regime.',
+    probes: [
+      'The stored input is a QQQ ETF quote: what is the difference between the Nasdaq-100 index, the NQ future and the ETF for a 24-hour London session, and which one does a claim actually need?',
+      'Is the QQQ quote a regular-hours close with gaps, a pre-market price or a delayed snapshot at the cutoff, and what do the ETF premium to net asset value and its distributions do to a one-day change?',
+      'Is the equity-dollar relation a risk-appetite channel, a rate channel or a growth channel, and is its sign stable across regimes or does it flip with the VIX gate?',
+      'Does the equity move add information beyond the VIX level and the cross-asset risk state, or is it the same risk appetite counted a third time?'
+    ],
     current_rules: ['VIX below 16 with NQ up reads BEARISH; VIX below 16 with NQ down BULLISH; VIX above 25 with NQ down BULLISH'],
     lookback: 'NQ 1 day',
     threshold: '16 / 25',
@@ -280,6 +340,12 @@ const A1_FACTORS = [
     asset: 'USD',
     role: 'direction',
     brief: 'Trailing 1-day and 5-day move in the label instrument, read at the cutoff: continuation or fade inside the 24-hour London-to-London session.',
+    probes: [
+      'Momentum in which instrument, over which lookback, and is a trailing one-day or five-day move in the label instrument observable at 05:00 London when that instrument has no verified intraday source?',
+      'Is the trailing move measured on the same instrument and quote source as the label, or on a proxy that introduces a basis the signal cannot separate from momentum?',
+      'Is the mechanism continuation under gradual information diffusion, or mean reversion after a liquidity-driven move, and what measurable condition separates them?',
+      'Is session momentum distinct from the dollar index delta and the overnight range position, and does it survive the bid-ask bounce of a 24-hour window?'
+    ],
     dependencies: ['The label instrument and quote source decision.'],
     sources: ['Price and risk package USD-SESSION-A1']
   }),
@@ -289,6 +355,12 @@ const A1_FACTORS = [
     asset: 'USD',
     role: 'direction',
     brief: 'Where the dollar sits in its own recent range at the cutoff, as a bound on the session move rather than a directional call.',
+    probes: [
+      'Where in its own range is the dollar at the cutoff, measured over which lookback, and does the answer depend on where the range window starts relative to the 05:00 London boundary?',
+      'Is the range computed from the same quote source as the label instrument, and how do missing prints or a thin overnight session distort the measured position?',
+      'Is range position a state variable that bounds the expected session move, a breakout signal, or an artefact of the range window itself?',
+      'Is it distinct from session momentum and the volatility regime, or can its information be recovered from those two?'
+    ],
     dependencies: ['The label instrument and quote source decision.'],
     sources: ['Price and risk package USD-SESSION-A1']
   }),
@@ -298,6 +370,12 @@ const A1_FACTORS = [
     asset: 'USD',
     role: 'abstention gate',
     brief: 'Realised volatility of the label instrument and the effect of that regime on the expected move and on whether a call should be withheld.',
+    probes: [
+      'Is realised volatility measured from the label instrument, from a proxy, or from an implied measure, and over which window is it observable at the cutoff?',
+      'Does the regime change the expected direction, the expected dispersion, or only whether a call should be made at all?',
+      'Is the abstention value of a volatility regime separable from a data-quality gate, and what threshold would be a measured quantity rather than a convention?',
+      'Does the volatility regime interact with the VIX level and the risk state, or does it restate them in dollar terms?'
+    ],
     dependencies: ['The label instrument and quote source decision.'],
     sources: ['Price and risk package USD-SESSION-A1']
   }),
@@ -307,6 +385,12 @@ const A1_FACTORS = [
     asset: 'USD',
     role: 'regime',
     brief: 'VIX level and its change, read as risk regime rather than as a standalone direction, with the documented-but-unimplemented 1d and 5d modifiers examined.',
+    probes: [
+      'What does the VIX level at the cutoff add to the level the deployed F1 rule already uses, and is a second chain carrying the same variable a duplication the synthesis has to resolve?',
+      'Is the informative quantity the level, the one-day change, the five-day change, or the change between the last US close and the cutoff, and how stale is the observation at 05:00 London?',
+      'Is the mechanism a safe-haven demand for dollars, a funding or liquidity squeeze, or a risk-appetite shock, and what observable separates them?',
+      'Does the VIX change add information beyond the cross-asset risk state and the equity move, and is its sign the same in a calm and a stressed regime?'
+    ],
     sources: ['FRED VIXCLS', 'Price and risk package USD-SESSION-A1']
   }),
   R({
@@ -315,6 +399,12 @@ const A1_FACTORS = [
     asset: 'USD',
     role: 'regime',
     brief: 'Equities, credit, gold and crypto at the cutoff as one risk state, with the double-counting risk against the VIX card named explicitly.',
+    probes: [
+      'Which assets define the risk state, at what cutoff, and do their quotes share one window, or is the state assembled from instruments that are closed at 05:00 London?',
+      'Is one composite state justified, or does the evidence support separate equity, credit and commodity channels with different signs for the dollar?',
+      'How much does the state overlap the VIX level, gold and the equity-dollar relation, and which single chain should own the risk factor?',
+      'Does the risk state carry directional information at all, or is it a conditioning variable that changes the sign of other factors?'
+    ],
     sources: ['FRED credit and equity series in the closed study dataset', 'Coinbase spot quotes', 'Price and risk package USD-SESSION-A1']
   }),
   R({
@@ -323,6 +413,12 @@ const A1_FACTORS = [
     asset: 'USD',
     role: 'direction',
     brief: 'Whether the dollar is being bought as insurance rather than for carry, which changes the sign of the same risk move.',
+    probes: [
+      'What observation distinguishes the dollar being bought as insurance from the dollar being bought for carry, and can that distinction be measured at the cutoff?',
+      'Is safe-haven demand a separate factor or the residual of the risk state, the VIX level and the rate differentials, and is there an instrument that isolates it, such as cross-currency basis or FX-implied volatility skew?',
+      'Does the relation hold symmetrically in risk-off and risk-on, and is the sign stable across funding-stress episodes?',
+      'Does safe-haven demand add incremental information beyond the risk state and the VIX, and what data would have to be bought before it can be tested?'
+    ],
     sources: ['Price and risk package USD-SESSION-A1']
   }),
   R({
@@ -331,6 +427,12 @@ const A1_FACTORS = [
     asset: 'USD',
     role: 'quality gate',
     brief: 'Which data states should force abstention instead of a weak call, given that the live collector has no as-of check and no staleness test.',
+    probes: [
+      'Which data states should force abstention - missing, stale, revised, or unreachable at the cutoff - and how is each state detected without an as-of check in the live collector?',
+      'Does the gate improve directional accuracy on the sessions it does trade, and what does it cost in coverage and in skipped sessions that would have been called correctly?',
+      'How are skipped sessions counted - as errors, as excluded observations, or as a separate coverage figure - and what benchmark makes abstention comparable to always calling?',
+      'Which sessions does the gate skip in practice, and are they the sessions where a call was least likely to be right, or simply the sessions with the most missing inputs?'
+    ],
     dependencies: ['The label instrument and quote source decision.', 'Reviewer B approval of the frozen evaluation design.'],
     sources: ['docs/research/usd-session/v1/inventory.md section 4 and 7']
   })
@@ -342,6 +444,12 @@ const A2_FACTORS = [
     label: 'US front-end delta',
     role: 'direction',
     brief: '2Y and 3M yield changes as policy-expectation proxies, with the publication lag of each series stated.',
+    probes: [
+      'Do the 2Y and 3M series share a publication lag and a market calendar, and is a change computed from a stale 3M print comparable to one computed from the 2Y?',
+      'Is the informative quantity the 3M bill, the 2Y note, their difference, or a policy-expectation measure implied by them, and does the 3M bill carry a flight-to-quality distortion?',
+      'Does a front-end change reflect expected policy, term premium, or a liquidity and collateral effect, and what observable at the cutoff separates them?',
+      'Does this chain duplicate the live F2 and F3 chains, and if so what does it add - the 3M leg, the policy-cycle conditioning, or nothing?'
+    ],
     sources: ['FRED DGS2 and DTB3 via the closed study dataset', 'Rates package USD-SESSION-A2']
   }),
   R({
@@ -349,6 +457,12 @@ const A2_FACTORS = [
     label: 'Relative front-end delta',
     role: 'direction',
     brief: 'US against German and other G10 front ends, with each euro-area and UK leg named rather than implied.',
+    probes: [
+      'Which foreign front end is used, from which source, and is it observable at 05:00 London on the same date and vintage as the US leg?',
+      'Is a bilateral differential the right object, or should the dollar basket weights determine a weighted differential against several front ends?',
+      'Does the relative move reflect divergent policy expectations, a common global factor, or a currency-specific risk premium?',
+      'Does the differential add information beyond the US front end and the dollar index, and is a German leg a proxy for the euro rather than for the relative factor?'
+    ],
     dependencies: ['Access to a foreign front-end series that is genuinely observable at the cutoff.'],
     sources: ['Bundesbank 2Y series', 'Rates package USD-SESSION-A2']
   }),
@@ -357,6 +471,12 @@ const A2_FACTORS = [
     label: 'Real yield delta',
     role: 'direction',
     brief: '10Y and 5Y real yields and the breakeven split, separating the nominal and inflation parts of the move.',
+    probes: [
+      'Is the real yield measured from TIPS, from a nominal-minus-survey-expectations decomposition, or from a model, and which of them is available at the cutoff?',
+      'Does the move come from the nominal leg or the breakeven, and how reliable is the breakeven when both inflation swaps and TIPS liquidity are imperfect?',
+      'Is the mechanism a discount-rate channel for the dollar, a growth channel, or a risk-premium channel, and what evidence separates those cases?',
+      'Does this chain duplicate live F4, and does a 5Y real yield add anything to the 10Y that the deployed chain already uses?'
+    ],
     sources: ['FRED DFII10 and T10YIE', 'Rates package USD-SESSION-A2']
   }),
   R({
@@ -364,6 +484,12 @@ const A2_FACTORS = [
     label: 'Term premium and curve',
     role: 'regime',
     brief: '10Y minus 2Y slope, and whether the level or the change carries information across the session.',
+    probes: [
+      'Is the informative object the slope level, its change, or a term-premium estimate, and can a term premium be estimated with the data named here rather than asserted?',
+      'Is a curve slope observable at 05:00 London from previous closes, and how does a stale slope interact with a session that contains a US data release?',
+      'Does the slope carry growth expectations, inflation compensation, or a term-premium and duration-demand story, and what observable separates them?',
+      'Does the slope add information beyond the levels of its two legs, each of which already carries its own chain, and is it a regime variable or a direction?'
+    ],
     sources: ['FRED DGS10 and DGS2', 'Rates package USD-SESSION-A2']
   }),
   R({
@@ -371,6 +497,12 @@ const A2_FACTORS = [
     label: 'Credit spread delta',
     role: 'regime',
     brief: 'High-yield spread change as a growth and risk proxy, with its overlap against the cross-asset risk card bounded.',
+    probes: [
+      'Which credit series measures the spread the claim is about, at what rating and maturity, and how stale is it at the cutoff?',
+      'Is the informative quantity the spread level, a one-day change, or a change over several days, and does a spread change lag the equity move it is meant to signal?',
+      'Is the mechanism a growth signal, a risk-appetite signal, or a funding and default-risk signal, and does the sign for the dollar differ between the default story and the risk story?',
+      'Does the credit spread add information beyond the VIX level, the equity move and the risk state, or is it a slower restatement of the same risk factor?'
+    ],
     sources: ['FRED high-yield spread series', 'Rates package USD-SESSION-A2']
   }),
   R({
@@ -378,6 +510,12 @@ const A2_FACTORS = [
     label: 'Known releases inside the window',
     role: 'quality gate',
     brief: 'Which releases are scheduled between the cutoff and the endpoint, and how a known-but-unreleased event may be used without using its outcome.',
+    probes: [
+      'Which releases fall inside the session, how are their timestamps verified before the cutoff, and what happens when a release time is scheduled but its consensus is unavailable?',
+      'Does a known-but-unreleased event change the expected direction, the expected dispersion, or only the confidence in a call, and how can that be measured rather than assumed?',
+      'Can the event be used without using its outcome, and is a pre-release positioning effect distinguishable from the post-release reaction that the next session will contain?',
+      'What is the honest treatment of a session whose dominant event is a release the collector cannot date reliably: abstain, widen, or call with a stated caveat?'
+    ],
     sources: ['Collector calendar feed (paid)', 'Rates package USD-SESSION-A2']
   }),
   R({
@@ -385,6 +523,12 @@ const A2_FACTORS = [
     label: 'Distance from high-impact events',
     role: 'regime',
     brief: 'Positioning measured as distance from known high-impact dates, using only the release calendar and never the surprise.',
+    probes: [
+      'Is distance from a high-impact date a meaningful state variable, and does the evidence support drift before a release, after it, or neither?',
+      'Which events count as high impact, and does the answer depend on a classification that is itself hindsight-defined?',
+      'Is the mechanism positioning, hedging demand, or pre-announcement drift, and what observable at the cutoff separates it from ordinary seasonality?',
+      'Is the distance measure distinct from the release-window factor and from a volatility regime, and does it carry any information beyond them?'
+    ],
     sources: ['Collector calendar feed (paid)', 'Rates package USD-SESSION-A2']
   }),
   R({
@@ -392,6 +536,12 @@ const A2_FACTORS = [
     label: 'Release surprise at first print',
     role: 'direction',
     brief: 'The honest test of the highest-weight live family. Asking for a first-print surprise with the consensus that was published before the release, and stating plainly if no such source is reachable.',
+    probes: [
+      'What is the surprise - the first print minus the consensus published before the release - and can any such pair be reached without a paid vintage archive?',
+      'At which moment does the surprise become observable, and how much of the reaction is already inside the dollar by the next 05:00 London cutoff?',
+      'Is the mechanism a policy-expectation repricing or a risk-premium change, and does the sign depend on the state of the policy cycle and on where the policy rate sits?',
+      'Does the surprise add information beyond the front-end rate change and the equity move that follow the print, and what is the honest conclusion if no vintage source is reachable at all?'
+    ],
     blockers: ['No consensus or first-print vintage source is reachable from this repository: the ALFRED vintage CSV needs a key, and the live calendar feed stores no consensus snapshot.'],
     research_status: 'blocked',
     sources: ['Rates package USD-SESSION-A2', 'docs/research/usd-session/v1/inventory.md section 7'],
@@ -1027,10 +1177,7 @@ const TOPIC_MAP = [
     ],
     pack_factor_ids: ['live.f1-vix-level', 'risk.vix-level-and-change-at-cutoff'],
     probes: [
-      'Is the informative quantity the level, the one-day change or a five-day change, and does the answer differ between calm and stressed regimes?',
-      'Does the volatility-of-volatility or term-structure information add anything the level does not already carry?',
-      'Is the mechanism safe-haven demand, risk appetite, carry or policy expectations, and what observable at the cutoff distinguishes them?',
-      'How much of the VIX move is already in the dollar at 05:00 Europe/London, and what is left for the following 24 hours?'
+      'Which of these two chains is measuring something the other does not, and which is the same VIX variable counted twice?'
     ],
     next_step: 'The research report is registered on the usd-factor-live-f1-vix-level chain. Run that chain\'s stage 2 (red-team) against research version 1, then its stage 3 (adjudication). The sibling usd-factor-risk-vix-level-and-change-at-cutoff chain is still not started and is not advanced by that report.'
   },
@@ -1047,10 +1194,7 @@ const TOPIC_MAP = [
     ],
     pack_factor_ids: ['live.f2-us-2y-delta', 'live.f3-us-de-2y-spread-delta', 'live.f4-real-yield-delta', 'rates.us-front-end-delta', 'rates.relative-front-end-delta', 'rates.real-yield-delta', 'rates.term-premium-and-curve', 'rates.credit-spread-delta'],
     probes: [
-      'Which of the eight entries is measuring something the others do not, and which pairs are the same information counted twice?',
-      'Is the informative quantity the level, a five-day change or a same-session change, and does the answer depend on the policy cycle?',
-      'Does a real-yield change add information beyond the nominal front end, and does that survive the inflation-expectation measurement problem?',
-      'Are these relations already in the dollar by 05:00 Europe/London, given that the US cash market is closed at the cutoff?'
+      'Which of the eight entries is measuring something the others do not, and which pairs are the same information counted twice?'
     ],
     next_step: 'Not dispatched. Each factor under this label has its own written and checked research prompt; open a chain and take its stage 1 prompt when the batch opens.'
   },
@@ -1067,9 +1211,7 @@ const TOPIC_MAP = [
     ],
     pack_factor_ids: ['live.f5-dxy-delta', 'live.f6-gold-delta', 'live.f9-dollar-smile', 'live.f10-equity-versus-usd'],
     probes: [
-      'Is the dollar smile a measured relation for this window, or a descriptive convenience: what would falsify it?',
       'Which dollar index is a claim actually about, and does the answer change with the index construction?',
-      'Does a same-day dollar move followed by a session direction suggest mean reversion or continuation, and on what evidence?',
       'Are gold and equities independent evidence for the dollar, or the same risk factor counted twice?'
     ],
     next_step: 'Not dispatched. Each factor under this label has its own written and checked research prompt; open a chain and take its stage 1 prompt when the batch opens.'
@@ -1087,10 +1229,8 @@ const TOPIC_MAP = [
     ],
     pack_factor_ids: ['live.f7-economic-surprise', 'live.f8-fed-bias', 'macro.release-surprise-at-first-print'],
     probes: [
-      'Which surprise measure is defensible: survey consensus, model nowcast, or the market-implied move, and what does each one cost?',
-      'Is the first print the only honest vintage, and what does the revision history of the tested series look like?',
-      'Is Fed bias an observable at 05:00 Europe/London or a narrative, and what would an observable version look like?',
-      'How much of a surprise is already in the dollar in the minutes after the print, and how do you separate that from the session that follows?'
+      'Which of these three chains is testing a surprise, which is testing a narrative, and which is testing the same underlying information twice?',
+      'Is the first print the only honest vintage, and what does the revision history of the tested series look like?'
     ],
     next_step: 'Not dispatched. Each factor under this label has its own written and checked research prompt; open a chain and take its stage 1 prompt when the batch opens.'
   },
@@ -1107,9 +1247,6 @@ const TOPIC_MAP = [
     ],
     pack_factor_ids: ['fx.usd-session-momentum', 'fx.usd-overnight-range-position', 'fx.usd-session-volatility-regime', 'risk.usd-safe-haven-demand', 'risk.risk-on-off-cross-asset-state'],
     probes: [
-      'Is the range position a state variable or an artefact of when the session starts, and what does the start time do to it?',
-      'Does session momentum survive the bid-ask bounce of a 24-hour window, and what measurement would separate them?',
-      'Is safe-haven demand observable at the cutoff separately from risk-on/off, or is it the same input twice?',
       'Which instrument labels these factors, given that DXY has no verified intraday source?'
     ],
     next_step: 'Not dispatched. Each factor under this label has its own written and checked research prompt; open a chain and take its stage 1 prompt when the batch opens.'
@@ -1127,9 +1264,6 @@ const TOPIC_MAP = [
     ],
     pack_factor_ids: ['calendar.known-releases-between-cutoff-and-endpoint', 'calendar.days-since-and-until-high-impact-events', 'data.quality-gate-for-abstention'],
     probes: [
-      'Does a scheduled release inside the session change the expected direction, the expected dispersion, or only the confidence?',
-      'What is the honest treatment when the collector input is stale or missing: abstain, shrink or score neutral?',
-      'Which releases matter for the dollar over this window, and are the timestamps verifiable at the cutoff?',
       'Can an abstention rule be evaluated at all without a frozen label instrument, and what would it take?'
     ],
     next_step: 'Not dispatched. Each factor under this label has its own written and checked research prompt; open a chain and take its stage 1 prompt when the batch opens.'
@@ -1137,6 +1271,45 @@ const TOPIC_MAP = [
 ];
 
 // buildCatalog is defined below; the topic map above only prepares grouping labels and prompt text.
+// An asset profile is not a factor catalogue. A draft profile records the session, the instruments and the
+// USD mappings a later programme would start from; it owns no factor entry, no chain, no stage prompt and no
+// brief, so nothing under it can be dispatched. These counts are derived from the built catalogue so the two
+// cannot drift into looking alike.
+function assetCatalogRecord(asset, built) {
+  const assetId = asset.asset;
+  const profile = Prompts.assetProfile(assetId) || {};
+  const factors = (asset.factors || []).length;
+  const chains = built.factor_chains.filter(chain => chain.asset === assetId);
+  const stagePrompts = chains.reduce((total, chain) => total + (chain.stages || []).length, 0);
+  const finalPrompts = assetId === 'USD' && built.final_chain ? (built.final_chain.stages || []).length : 0;
+  const briefs = BRIEF_DOCUMENTS.filter(entry => entry.asset === assetId).length;
+  const complete = factors > 0 && chains.length === factors;
+  const state = complete && assetId === 'USD' ? 'dispatchable' : complete ? 'incomplete' : 'profile_only';
+  const catalogue = {
+    state,
+    factor_entries: factors,
+    factor_chains: chains.length,
+    stage_prompts: stagePrompts + finalPrompts,
+    published_briefs: briefs,
+    prompt_profile: profile.status || 'none',
+    open_decisions: (profile.open_questions || []).length,
+    note: state === 'dispatchable'
+      ? 'Complete: every factor has a catalogue entry, a three-stage chain with its prompts, and a published brief.'
+      : state === 'incomplete'
+        ? 'Partly built: some factors have an entry without a chain. Nothing here is dispatchable until every entry has all three prompts.'
+        : `Asset profile only, at status ${profile.status || 'unknown'}: no factor entry, no factor chain, no stage prompt and no published brief. Nothing here is dispatchable, and this record is not a factor catalogue.`
+  };
+  if (state !== 'dispatchable') {
+    catalogue.remaining = [
+      'A label instrument and quote source decision, naming the contract, index or spot venue and how it is quoted at the cutoff.',
+      'One factor entry per candidate factor, with its series, publication timing, transformations and blockers. None exists yet for this asset.',
+      `One three-stage chain per factor, so ${factors || 'the first'} prompt set(s) would have to be written and checked before anything can be dispatched.`,
+      'A published brief per factor, and an asset-level final chain with its own completion gate.'
+    ];
+  }
+  return { ...asset, catalogue };
+}
+
 function buildCatalog() {
   const built = buildChains();
   return {
@@ -1164,7 +1337,7 @@ function buildCatalog() {
       session_research: ALL_BRIEF_FACTOR_IDS.length - Handoff.LIVE_FACTORS.length,
       note: 'One self-contained brief per USD factor, carrying its context, its research prompt and its output instructions: a baseline audit for a factor the deployed node computes today, a research assignment for a factor with no rule in force. Covering every factor is not progress: a brief is an assignment, no research status moves because a brief exists, and a returned card is evidence rather than an approval.'
     },
-    assets: [USD_ASSET, ...OTHER_ASSETS]
+    assets: [USD_ASSET, ...OTHER_ASSETS].map(asset => assetCatalogRecord(asset, built))
   };
 }
 
@@ -1397,6 +1570,7 @@ function chainPromptContext(chain, stageId, kind, factor, factorChains) {
     factor_id: isFinal ? null : chain.factor_id,
     factor_entry: isFinal ? null : factorEntryContext(chain, factor),
     entries: isFinal ? [] : [factorEntryContext(chain, factor)],
+    chain_questions: isFinal ? [] : (chain.probes || []).slice(1),
     companions: (chain.companions || []).map(entry => ({ repo_path: entry.repo_path, role: entry.role, sha256: entry.sha256 })),
     given: givenDocuments(chain, kind, stageId, factorChains),
     deliverable: { file_name: chainDeliverable(chain, kind, stageId) },
@@ -1481,6 +1655,16 @@ function chainStagesFor(chain, dir, files, factor, factorChains) {
 function publicChain(chain) {
   const { dispatched_brief_text, programme_red_team_text, ...rest } = chain;
   return rest;
+}
+
+// A quality gate or an abstention gate is not a directional factor. Its chain question has to ask what the entry
+// should change about the call, not whether it predicts direction; otherwise every stage asks the wrong question
+// and an honest "this carries no directional information" reads as a failed assignment.
+function chainQuestion(factorId, factor) {
+  const gate = /gate/i.test(String(factor.role || ''));
+  return gate
+    ? `Chain question: what should \`${factorId}\` - ${factor.label} - change about the call, given that it is a ${factor.role} rather than a directional input? ${factor.brief}`
+    : `Chain question: does \`${factorId}\` - ${factor.label} - carry information about the next 24-hour dollar move, and in which quantity? ${factor.brief}`;
 }
 
 function buildChains() {
@@ -1603,7 +1787,8 @@ function buildChains() {
         companions: group.companions.map(entry => ({ ...entry })),
         packs: group.packs.filter(pack => pack.factor_id === factorId).map(pack => ({ ...pack })),
         probes: [
-          `Chain question: does \`${factorId}\` - ${factor.label} - carry information about the next 24-hour dollar move, and in which quantity? ${factor.brief}`,
+          chainQuestion(factorId, factor),
+          ...(factor.probes || []),
           ...group.probes
         ]
       };

@@ -38,6 +38,10 @@ After merging `research/usd-session-20261013` into this branch:
 - The eighteen topic prompts no longer exist. Their content is not the wording of record, and the files
   are deleted rather than left as a second route.
 
+The module has since been revised to `research-prompt-v3.1.0`; the section at the end of this note records
+what changed, why, and how it was verified. Every statement above about which generator owns the prompts
+still holds, because the ownership did not move.
+
 
 ## What the generated files actually say
 
@@ -167,3 +171,107 @@ Each states what its return contains and why it is not interchangeable. The prof
 `live.f10-equity-versus-usd` is circular for a Nasdaq label and therefore does not transfer. Every
 mapping that is not settled is marked `unresolved: true`, and the prompt that carries them says so in
 words. No sign, threshold or window is asserted for any draft asset.
+
+A profile is not a catalogue. Each asset record now carries a derived `catalogue` block, so the
+difference is machine-readable rather than a matter of reading the prose:
+
+| Asset | `catalogue.state` | factor entries | chains | stage prompts | published briefs |
+| --- | --- | --- | --- | --- | --- |
+| USD | `dispatchable` | 25 | 25 | 78 | 25 |
+| EUR, GBP, GOLD, SILVER, NQ, BTC, WTI | `profile_only` | 0 | 0 | 0 | 0 |
+
+A `profile_only` record also carries `remaining`: the label instrument and quote source decision, one
+factor entry per candidate factor with its series and timing, a three-stage chain per factor, and a
+published brief per factor plus an asset-level final chain with its own gate. Those counts are computed
+from the built catalogue, so an asset cannot look dispatchable while it has no prompts, and
+`tests/research_library.test.js` asserts the table above exactly. `open_decisions` reports how many
+instrument questions the profile still leaves open.
+
+## v3.1.0: factor-specific questions, gate questions and the correction of mismatched probes
+
+`research-prompt-v3.0.0` put every chain under one template but left the questions group-level: a chain
+inherited the probes of its topic label, so a factor could be asked another factor's question.
+
+The defect, stated precisely. Probes sat on the six topic labels, and each chain took the whole label's
+list. Where a label grouped unlike factors, the wrong question arrived:
+
+| Factor chain | Probe it was asked | Whose question it was |
+| --- | --- | --- |
+| `live.f6-gold-delta` | "Is the dollar smile a measured relation for this window" | `live.f9-dollar-smile` |
+| `live.f5-dxy-delta` | "Are gold and equities independent evidence for the dollar" | the label, not this entry |
+| `live.f10-equity-versus-usd` | the dollar-smile and dollar-index probes | `live.f9` and `live.f5` |
+| `risk.usd-safe-haven-demand` | range position and bid-ask bounce | the three `fx.usd-*` chains |
+| `risk.risk-on-off-cross-asset-state` | range position and bid-ask bounce | the three `fx.usd-*` chains |
+| `data.quality-gate-for-abstention` | scheduled releases and release timestamps | the two `calendar.*` chains |
+| `calendar.days-since-and-until-high-impact-events` | "Can an abstention rule be evaluated at all" | `data.quality-gate-for-abstention` |
+
+Seven chains, eleven borrowed questions. `live.f4-real-yield-delta` carried a related defect: it was
+asked whether a real-yield change adds information beyond the nominal front end, which is its own
+question asked back at it. The count that matters is that no chain now carries a question belonging to
+another factor.
+
+The correction is at the authoring level, not in the prompt text:
+
+- Every one of the twenty-five factor entries in `scripts/build_research_library.js` carries its own four
+  `probes`, written for that factor: what it measures and in which transformation, when the value is
+  actually observable at 05:00 London and what revisions do to it, which mechanism would produce the
+  relation and what observable separates it from an alternative, and whether it adds anything once the
+  neighbouring factors are in the model. The VIX entry asks about level versus change versus staleness
+  and safe-haven competition; the 2Y entry asks about the five-day window, the FRED vintage and the
+  growth-versus-policy decomposition; the equity entry asks which of the Nasdaq-100 index, the future and
+  the ETF a claim is about. A test refuses a chain whose probe list is a copy of another chain's.
+- The topic labels keep only the questions that genuinely span their factors, one or two each: which of
+  the eight front-end entries duplicates which, which dollar index a claim is about, whether gold and
+  equities are independent, which instrument labels the FX factors, and whether an abstention rule can be
+  evaluated without a frozen label.
+- The chain question itself now depends on the factor's role. A quality gate or abstention gate is asked
+  "what should this change about the call, given that it is a gate rather than a directional input",
+  because asking a gate whether it predicts direction invites an honest "no" to be read as a failed
+  assignment.
+- Stages 2 and 3 carry the same factor questions, reframed: the red-team must say whether the report
+  answered each one and on what source, and the adjudication must settle each one. A factor's questions
+  therefore reach all three stages instead of stopping at stage 1.
+
+Abstention is now evaluated on three quantities, not one. The gate's questions ask whether it improves
+directional accuracy on the sessions it trades, what it costs in coverage, and how skipped sessions are
+counted - as errors, as excluded observations or as a separate coverage figure - against a benchmark of
+always calling. `entryQuestions` adds a gate-specific question to the stage 1 entry questions for any
+entry whose role contains "gate", and the gate's own probes carry those three quantities into stages 2
+and 3, so the volatility abstention factor is asked the same three quantities rather than a sign and a
+threshold it does not have.
+
+Entry audit questions also stopped asserting a rule that does not exist: the placeholder
+`No rule is in force...` carried by the fifteen research-package factors is filtered out, so those chains
+now read "no rule is in force" instead of quoting a placeholder as if it were deployed.
+
+Evidence from the regenerated files, not from the generator: 78 of 78 prompts carry
+`research-prompt-v3.1.0`; each factor chain carries six or seven questions made of its chain question, its
+four own probes and its label's shared probes; `live.f6-gold-delta` no longer contains "dollar smile" and
+does contain `XAU-USD`; `live.f10-equity-versus-usd` names QQQ, the index and the future; the abstention
+chain contains "accuracy", "coverage" and "skipped sessions" and no longer contains "scheduled release
+inside the session"; both gate chains ask what they change about the call. `chains --check`,
+`topics --check` and `catalog --check` pass; `tests/research_prompt_templates.test.js` is 6 of 6;
+`tests/research_library.test.js` is 29 of 31, the two failures being the pre-existing `usd-24h` CRLF
+registry pair, unchanged by this work and present before it.
+
+What the checks do not establish: that the questions are the right questions. That is a reading of the
+text, recorded factor by factor in this note and in the CHANGELOG entry, not a property a hash can prove.
+
+## Handoff after the push
+
+Branch `workstream/c-research-programme` is pushed for review. The coordinator integrates; this
+workstream does not merge into `research/usd-session-20261013` and does not deploy.
+
+1. Compare this branch's prompt layer with the latest deployed prompt change before merging. Keep both
+   sets of improvements: this branch owns the factor-specific probes, the gate questions, the stage 2
+   and 3 chain questions and the asset `catalogue` block; the deployed branch owns whatever it has
+   changed since `1e6ab197`. Regenerate through `scripts/build_research_library.js` once, after the merge,
+   so the single authoritative generator writes every prompt.
+2. `node scripts/build_research_library.js catalog --write`, then `chains --check`, `topics --check`,
+   `catalog --check`, then `node --test tests/research_prompt_templates.test.js tests/research_library.test.js`.
+3. Expected known failure: the two `usd-24h` registry hash mismatches in a CRLF checkout. Do not run
+   `registry --write` to silence them.
+4. `asset_synthesis` keeps the final chain as its canonical identity. Do not create a second dispatch
+   task and do not bypass the gate; coordinate stage-specific execution ids with the automation
+   coordinator beneath `usd-final-asset-analysis`. While the 25-factor gate is unmet the chain stays
+   locked and ineligible for execution, whatever an internal field says.

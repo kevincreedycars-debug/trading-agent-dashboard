@@ -6,7 +6,7 @@
 - Factor: `live.f6-gold-delta` - F6 Gold delta.
 - Group label: `usd-topic-dollar-index-gold-and-equities` (Dollar index, gold and equity-against-USD relations). The label groups chains; it owns no stage and this prompt is the only stage you run for it.
 - Stage: 1 of 3, research. This stage returns exactly one Markdown document (report), named `usd-live-f6-gold-delta-s1-research.md`.
-- Prompt template: `research-prompt-v3.0.0`, written 2026-10-13. The template is versioned: if a newer `research-prompt` template exists, that one governs and this file is superseded.
+- Prompt template: `research-prompt-v3.1.0`, written 2026-10-13. The template is versioned: if a newer `research-prompt` template exists, that one governs and this file is superseded.
 - This prompt is self-contained. Paste it as one message into a fresh session; nothing is sent to a model from the dashboard and no credential is attached to it.
 - Asset status: active. The session is defined below and the data reachable from this repository is named with each input.
 - Programme record: this chain has not been dispatched. Nothing has been returned for it, and this prompt is its first assignment.
@@ -48,23 +48,25 @@ Answer every question below, in order. Where the evidence does not exist, write 
 ### Questions about this chain
 
 1. Chain question: does `live.f6-gold-delta` - F6 Gold delta - carry information about the next 24-hour dollar move, and in which quantity? Gold move as an inverse dollar-risk read.
-2. Is the dollar smile a measured relation for this window, or a descriptive convenience: what would falsify it?
-3. Which dollar index is a claim actually about, and does the answer change with the index construction?
-4. Does a same-day dollar move followed by a session direction suggest mean reversion or continuation, and on what evidence?
-5. Are gold and equities independent evidence for the dollar, or the same risk factor counted twice?
+2. Is gold read as an inverse dollar proxy, a real-rate hedge or a safe-haven asset, and how would the sign differ between those three readings?
+3. Is the Coinbase XAU-USD spot quote the same instrument, venue and window as the gold the literature measures, and how does a 24/7 crypto-venue quote behave against a 05:00 London cutoff?
+4. Is a five-day gold change the right transformation, and does the one-day fallback change the meaning of the signal rather than only its horizon?
+5. Does gold add information beyond the real yield, the VIX level and the cross-asset risk state, or is its apparent dollar relation a restatement of real rates?
+6. Which dollar index is a claim actually about, and does the answer change with the index construction?
+7. Are gold and equities independent evidence for the dollar, or the same risk factor counted twice?
 
 ### Questions that apply to the whole chain
 
-6. Which entries in this chain are the same information counted twice, which one carries it, and what would tell them apart?
-7. What is observable at the cutoff, what has the cutoff already absorbed, and what arrives only during the session?
-8. What has actually been measured about this window with this instrument - the sample, the era, the regime and the number of independent observations - and where is the honest answer that nothing has?
-9. What is the strongest contrary evidence you found, and what would refute the relation you would propose?
-10. What would the test need that this repository or the collector does not have, and what sits behind a paywall?
+8. Which entries in this chain are the same information counted twice, which one carries it, and what would tell them apart?
+9. What is observable at the cutoff, what has the cutoff already absorbed, and what arrives only during the session?
+10. What has actually been measured about this window with this instrument - the sample, the era, the regime and the number of independent observations - and where is the honest answer that nothing has?
+11. What is the strongest contrary evidence you found, and what would refute the relation you would propose?
+12. What would the test need that this repository or the collector does not have, and what sits behind a paywall?
 
 ### Questions about each entry
 
-11. `live.f6-gold-delta` (F6 Gold delta): Gold move as an inverse dollar-risk read. What does it measure, from which series and which publication process, with what lag and revision practice - and is the informative quantity the level, the recorded lookback measure (5 days, 1-day fallback), or another transform?
-12. `live.f6-gold-delta` audit: the rule in force reads at or below -0.1% reads BULLISH, above +0.1% BEARISH; falls back from 5-day to 1-day and records only a warning string, with threshold +/- 0.1% and lookback 5 days, 1-day fallback. Is that sign, that threshold and that lookback supported for this window, and what would refute it?
+13. `live.f6-gold-delta` (F6 Gold delta): Gold move as an inverse dollar-risk read. What does it measure, from which series and which publication process, with what lag and revision practice - and is the informative quantity the level, the recorded lookback measure (5 days, 1-day fallback), or another transform?
+14. `live.f6-gold-delta` audit: the rule in force reads at or below -0.1% reads BULLISH, above +0.1% BEARISH; falls back from 5-day to 1-day and records only a warning string, with threshold +/- 0.1% and lookback 5 days, 1-day fallback. Is that sign, that threshold and that lookback supported for this window, and what would refute it?
 
 ## Evidence standard
 

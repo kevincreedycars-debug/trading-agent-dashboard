@@ -6,7 +6,7 @@
 - Factor: `live.f10-equity-versus-usd` - F10 Equity versus USD.
 - Group label: `usd-topic-dollar-index-gold-and-equities` (Dollar index, gold and equity-against-USD relations). The label groups chains; it owns no stage and this prompt is the only stage you run for it.
 - Stage: 1 of 3, research. This stage returns exactly one Markdown document (report), named `usd-live-f10-equity-versus-usd-s1-research.md`.
-- Prompt template: `research-prompt-v3.0.0`, written 2026-10-13. The template is versioned: if a newer `research-prompt` template exists, that one governs and this file is superseded.
+- Prompt template: `research-prompt-v3.1.0`, written 2026-10-13. The template is versioned: if a newer `research-prompt` template exists, that one governs and this file is superseded.
 - This prompt is self-contained. Paste it as one message into a fresh session; nothing is sent to a model from the dashboard and no credential is attached to it.
 - Asset status: active. The session is defined below and the data reachable from this repository is named with each input.
 - Programme record: this chain has not been dispatched. Nothing has been returned for it, and this prompt is its first assignment.
@@ -48,23 +48,25 @@ Answer every question below, in order. Where the evidence does not exist, write 
 ### Questions about this chain
 
 1. Chain question: does `live.f10-equity-versus-usd` - F10 Equity versus USD - carry information about the next 24-hour dollar move, and in which quantity? Cross-asset read of equities against the dollar, gated by the VIX regime.
-2. Is the dollar smile a measured relation for this window, or a descriptive convenience: what would falsify it?
-3. Which dollar index is a claim actually about, and does the answer change with the index construction?
-4. Does a same-day dollar move followed by a session direction suggest mean reversion or continuation, and on what evidence?
-5. Are gold and equities independent evidence for the dollar, or the same risk factor counted twice?
+2. The stored input is a QQQ ETF quote: what is the difference between the Nasdaq-100 index, the NQ future and the ETF for a 24-hour London session, and which one does a claim actually need?
+3. Is the QQQ quote a regular-hours close with gaps, a pre-market price or a delayed snapshot at the cutoff, and what do the ETF premium to net asset value and its distributions do to a one-day change?
+4. Is the equity-dollar relation a risk-appetite channel, a rate channel or a growth channel, and is its sign stable across regimes or does it flip with the VIX gate?
+5. Does the equity move add information beyond the VIX level and the cross-asset risk state, or is it the same risk appetite counted a third time?
+6. Which dollar index is a claim actually about, and does the answer change with the index construction?
+7. Are gold and equities independent evidence for the dollar, or the same risk factor counted twice?
 
 ### Questions that apply to the whole chain
 
-6. Which entries in this chain are the same information counted twice, which one carries it, and what would tell them apart?
-7. What is observable at the cutoff, what has the cutoff already absorbed, and what arrives only during the session?
-8. What has actually been measured about this window with this instrument - the sample, the era, the regime and the number of independent observations - and where is the honest answer that nothing has?
-9. What is the strongest contrary evidence you found, and what would refute the relation you would propose?
-10. What would the test need that this repository or the collector does not have, and what sits behind a paywall?
+8. Which entries in this chain are the same information counted twice, which one carries it, and what would tell them apart?
+9. What is observable at the cutoff, what has the cutoff already absorbed, and what arrives only during the session?
+10. What has actually been measured about this window with this instrument - the sample, the era, the regime and the number of independent observations - and where is the honest answer that nothing has?
+11. What is the strongest contrary evidence you found, and what would refute the relation you would propose?
+12. What would the test need that this repository or the collector does not have, and what sits behind a paywall?
 
 ### Questions about each entry
 
-11. `live.f10-equity-versus-usd` (F10 Equity versus USD): Cross-asset read of equities against the dollar, gated by the VIX regime. What does it measure, from which series and which publication process, with what lag and revision practice - and is the informative quantity the level, the recorded lookback measure (NQ 1 day), or another transform?
-12. `live.f10-equity-versus-usd` audit: the rule in force reads VIX below 16 with NQ up reads BEARISH; VIX below 16 with NQ down BULLISH; VIX above 25 with NQ down BULLISH, with threshold 16 / 25 and lookback NQ 1 day. Is that sign, that threshold and that lookback supported for this window, and what would refute it?
+13. `live.f10-equity-versus-usd` (F10 Equity versus USD): Cross-asset read of equities against the dollar, gated by the VIX regime. What does it measure, from which series and which publication process, with what lag and revision practice - and is the informative quantity the level, the recorded lookback measure (NQ 1 day), or another transform?
+14. `live.f10-equity-versus-usd` audit: the rule in force reads VIX below 16 with NQ up reads BEARISH; VIX below 16 with NQ down BULLISH; VIX above 25 with NQ down BULLISH, with threshold 16 / 25 and lookback NQ 1 day. Is that sign, that threshold and that lookback supported for this window, and what would refute it?
 
 ## Evidence standard
 

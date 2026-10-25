@@ -6,7 +6,7 @@
 - Factor: `live.f3-us-de-2y-spread-delta` - F3 US-DE 2Y spread delta.
 - Group label: `usd-topic-front-end-rates` (US front-end rates, real yields and curve position). The label groups chains; it owns no stage and this prompt is the only stage you run for it.
 - Stage: 3 of 3, adjudication. This stage returns exactly one Markdown document (synthesis), named `usd-live-f3-us-de-2y-spread-delta-s3-adjudication.md`.
-- Prompt template: `research-prompt-v3.0.0`, written 2026-10-13. The template is versioned: if a newer `research-prompt` template exists, that one governs and this file is superseded.
+- Prompt template: `research-prompt-v3.1.0`, written 2026-10-13. The template is versioned: if a newer `research-prompt` template exists, that one governs and this file is superseded.
 - This prompt is self-contained. Paste it as one message into a fresh session; nothing is sent to a model from the dashboard and no credential is attached to it.
 - Asset status: active. The session is defined below and the data reachable from this repository is named with each input.
 - Programme record: this chain has not been dispatched. Nothing has been returned for it, and this prompt is its first assignment.
@@ -62,6 +62,14 @@ Answer every question below, in order. Where the evidence does not exist, write 
 6. Is any proposed treatment computable from the data named in this prompt, and which of its parameters have not been measured?
 7. Does the proposed treatment count one input twice across entries or chains, and if so, which chain owns it?
 8. What must the asset synthesis decide that this chain cannot?
+
+### Questions this chain must settle
+
+9. Is the spread built from two series with different publication lags and market calendars, and what does that mismatch do to a five-day change computed at the cutoff? Settle it: accepted, rejected or unresolved, and what evidence decides it?
+10. Is the informative part the US leg, the German leg or the difference, and can the two legs be separated with data observable at 05:00 London? Settle it: accepted, rejected or unresolved, and what evidence decides it?
+11. Are Bund yields available on the same date and vintage as DGS2, and what happens to the spread when one leg misses a session or is republished? Settle it: accepted, rejected or unresolved, and what evidence decides it?
+12. Does the relative 2Y spread add anything beyond the US 2Y delta and the broad dollar index, or is its weight the US leg counted twice? Settle it: accepted, rejected or unresolved, and what evidence decides it?
+13. Which of the eight entries is measuring something the others do not, and which pairs are the same information counted twice? Settle it: accepted, rejected or unresolved, and what evidence decides it?
 
 ## Evidence standard
 

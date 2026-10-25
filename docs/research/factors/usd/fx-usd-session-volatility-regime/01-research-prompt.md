@@ -6,14 +6,14 @@
 - Factor: `fx.usd-session-volatility-regime` - USD session volatility regime.
 - Group label: `usd-topic-fx-session-structure` (Session structure, overnight range and safe-haven demand). The label groups chains; it owns no stage and this prompt is the only stage you run for it.
 - Stage: 1 of 3, research. This stage returns exactly one Markdown document (report), named `usd-fx-usd-session-volatility-regime-s1-research.md`.
-- Prompt template: `research-prompt-v3.0.0`, written 2026-10-13. The template is versioned: if a newer `research-prompt` template exists, that one governs and this file is superseded.
+- Prompt template: `research-prompt-v3.1.0`, written 2026-10-13. The template is versioned: if a newer `research-prompt` template exists, that one governs and this file is superseded.
 - This prompt is self-contained. Paste it as one message into a fresh session; nothing is sent to a model from the dashboard and no credential is attached to it.
 - Asset status: active. The session is defined below and the data reachable from this repository is named with each input.
 - Programme record: this chain has not been dispatched. Nothing has been returned for it, and this prompt is its first assignment.
 
 ## Objective
 
-Answer one question in one report: Chain question: does `fx.usd-session-volatility-regime` - USD session volatility regime - carry information about the next 24-hour dollar move, and in which quantity? Realised volatility of the label instrument and the effect of that regime on the expected move and on whether a call should be withheld. Return a source-backed report that states what the evidence supports for the US Dollar session above, what it does not, and what would refute each claim, using the entries named below as the scope of evidence. The rules in force are the baseline to audit, not the target and not evidence. The report is evidence about this chain; it is not a trading rule, and nothing you return changes a live call.
+Answer one question in one report: Chain question: what should `fx.usd-session-volatility-regime` - USD session volatility regime - change about the call, given that it is a abstention gate rather than a directional input? Realised volatility of the label instrument and the effect of that regime on the expected move and on whether a call should be withheld. Return a source-backed report that states what the evidence supports for the US Dollar session above, what it does not, and what would refute each claim, using the entries named below as the scope of evidence. The rules in force are the baseline to audit, not the target and not evidence. The report is evidence about this chain; it is not a trading rule, and nothing you return changes a live call.
 
 ## The session and the instrument
 
@@ -46,24 +46,26 @@ Answer every question below, in order. Where the evidence does not exist, write 
 
 ### Questions about this chain
 
-1. Chain question: does `fx.usd-session-volatility-regime` - USD session volatility regime - carry information about the next 24-hour dollar move, and in which quantity? Realised volatility of the label instrument and the effect of that regime on the expected move and on whether a call should be withheld.
-2. Is the range position a state variable or an artefact of when the session starts, and what does the start time do to it?
-3. Does session momentum survive the bid-ask bounce of a 24-hour window, and what measurement would separate them?
-4. Is safe-haven demand observable at the cutoff separately from risk-on/off, or is it the same input twice?
-5. Which instrument labels these factors, given that DXY has no verified intraday source?
+1. Chain question: what should `fx.usd-session-volatility-regime` - USD session volatility regime - change about the call, given that it is a abstention gate rather than a directional input? Realised volatility of the label instrument and the effect of that regime on the expected move and on whether a call should be withheld.
+2. Is realised volatility measured from the label instrument, from a proxy, or from an implied measure, and over which window is it observable at the cutoff?
+3. Does the regime change the expected direction, the expected dispersion, or only whether a call should be made at all?
+4. Is the abstention value of a volatility regime separable from a data-quality gate, and what threshold would be a measured quantity rather than a convention?
+5. Does the volatility regime interact with the VIX level and the risk state, or does it restate them in dollar terms?
+6. Which instrument labels these factors, given that DXY has no verified intraday source?
 
 ### Questions that apply to the whole chain
 
-6. Which entries in this chain are the same information counted twice, which one carries it, and what would tell them apart?
-7. What is observable at the cutoff, what has the cutoff already absorbed, and what arrives only during the session?
-8. What has actually been measured about this window with this instrument - the sample, the era, the regime and the number of independent observations - and where is the honest answer that nothing has?
-9. What is the strongest contrary evidence you found, and what would refute the relation you would propose?
-10. What would the test need that this repository or the collector does not have, and what sits behind a paywall?
+7. Which entries in this chain are the same information counted twice, which one carries it, and what would tell them apart?
+8. What is observable at the cutoff, what has the cutoff already absorbed, and what arrives only during the session?
+9. What has actually been measured about this window with this instrument - the sample, the era, the regime and the number of independent observations - and where is the honest answer that nothing has?
+10. What is the strongest contrary evidence you found, and what would refute the relation you would propose?
+11. What would the test need that this repository or the collector does not have, and what sits behind a paywall?
 
 ### Questions about each entry
 
-11. `fx.usd-session-volatility-regime` (USD session volatility regime): Realised volatility of the label instrument and the effect of that regime on the expected move and on whether a call should be withheld. What does it measure, from which series and which publication process, with what lag and revision practice - and is the informative quantity the level, the recorded lookback measure (not stated), or another transform?
-12. `fx.usd-session-volatility-regime` audit: the rule in force reads No rule is in force. This is a hypothesis to be researched, not a deployed rule., with threshold none stated and lookback not stated. Is that sign, that threshold and that lookback supported for this window, and what would refute it?
+12. `fx.usd-session-volatility-regime` (USD session volatility regime): Realised volatility of the label instrument and the effect of that regime on the expected move and on whether a call should be withheld. What does it measure, from which series and which publication process, with what lag and revision practice - and is the informative quantity the level, the recorded lookback measure (not stated), or another transform?
+13. `fx.usd-session-volatility-regime` gate: this entry decides whether a call is made, not which way. Which data or regime states should trigger it, how many sessions would it skip, what would it cost in coverage and in skipped sessions that would have been right, and would the calls it keeps be more accurate than calling every session?
+14. `fx.usd-session-volatility-regime`: no rule is in force. State the candidate relation worth testing for this entry, what would refute it, and how it could be measured with the data named in this prompt.
 
 ## Evidence standard
 

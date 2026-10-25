@@ -6,7 +6,7 @@
 - Factor: `fx.usd-session-volatility-regime` - USD session volatility regime.
 - Group label: `usd-topic-fx-session-structure` (Session structure, overnight range and safe-haven demand). The label groups chains; it owns no stage and this prompt is the only stage you run for it.
 - Stage: 3 of 3, adjudication. This stage returns exactly one Markdown document (synthesis), named `usd-fx-usd-session-volatility-regime-s3-adjudication.md`.
-- Prompt template: `research-prompt-v3.0.0`, written 2026-10-13. The template is versioned: if a newer `research-prompt` template exists, that one governs and this file is superseded.
+- Prompt template: `research-prompt-v3.1.0`, written 2026-10-13. The template is versioned: if a newer `research-prompt` template exists, that one governs and this file is superseded.
 - This prompt is self-contained. Paste it as one message into a fresh session; nothing is sent to a model from the dashboard and no credential is attached to it.
 - Asset status: active. The session is defined below and the data reachable from this repository is named with each input.
 - Programme record: this chain has not been dispatched. Nothing has been returned for it, and this prompt is its first assignment.
@@ -61,6 +61,14 @@ Answer every question below, in order. Where the evidence does not exist, write 
 6. Is any proposed treatment computable from the data named in this prompt, and which of its parameters have not been measured?
 7. Does the proposed treatment count one input twice across entries or chains, and if so, which chain owns it?
 8. What must the asset synthesis decide that this chain cannot?
+
+### Questions this chain must settle
+
+9. Is realised volatility measured from the label instrument, from a proxy, or from an implied measure, and over which window is it observable at the cutoff? Settle it: accepted, rejected or unresolved, and what evidence decides it?
+10. Does the regime change the expected direction, the expected dispersion, or only whether a call should be made at all? Settle it: accepted, rejected or unresolved, and what evidence decides it?
+11. Is the abstention value of a volatility regime separable from a data-quality gate, and what threshold would be a measured quantity rather than a convention? Settle it: accepted, rejected or unresolved, and what evidence decides it?
+12. Does the volatility regime interact with the VIX level and the risk state, or does it restate them in dollar terms? Settle it: accepted, rejected or unresolved, and what evidence decides it?
+13. Which instrument labels these factors, given that DXY has no verified intraday source? Settle it: accepted, rejected or unresolved, and what evidence decides it?
 
 ## Evidence standard
 
