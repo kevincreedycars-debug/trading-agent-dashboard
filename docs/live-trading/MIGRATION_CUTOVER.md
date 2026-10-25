@@ -5,6 +5,14 @@ PC trader running, because the moment that matters is the one where the PC stops
 holding the same lane is the failure a file lock cannot prevent, and only a person can confirm the old one is
 off.
 
+**Before step 1 there are two pages.** [VPS_ACCESS_HANDOFF.md](VPS_ACCESS_HANDOFF.md) is how the host is reached
+(password into the local DPAPI store, one console block, key-only SSH) and what account 2 is still missing;
+`scripts/prepare-live-trading-host.ps1 -Mode Plan` prints the ten build steps with the command each one runs, and
+`-Mode Verify -ProbeTerminal -PinnedCommit <commit>` reads the host back as one check per claim and exits 1 while
+any blocking check fails. Do not start step 1 until that verify run is green with nothing passed to
+`-IgnoreCheck`: it is the cheapest place to find a second lane sharing a lock file, a task that only runs for a
+logged-on user, or a heartbeat that was copied rather than written.
+
 ## What is in the bundle, and what it is for
 
 `scripts/prepare-live-trading-migration.js` writes one directory per lane. Its contents are the lane's memory

@@ -1,0 +1,62 @@
+# Monitoring that does not live on the machine it watches. The dashboard shows results, so a terminal that died,
+# a trader that stopped and a publisher that stalled all look identical there - and when the trading host is off
+# or unreachable, nothing on it can report that it is off. This runs in GitHub's cloud every fifteen minutes and
+# asks the published URLs, which is the one place the answer exists whether the host is up or not:
+#
+#   node scripts/check-live-trading-publication.js   exit 0 fresh, 1 stale or identity-mismatched, 2 unreadable
+#
+# The job's own failure is the alert: a red run appears in the Actions list and GitHub's default notifications
+# email the repository owner for a failed scheduled workflow. It writes nothing, holds no credential and cannot
+# send anything, so a false alarm costs a red run and never a trade.
+#
+# Before the trading host exists, a red run here means the PC is asleep - which is the truth this is meant to
+# tell, and the reason the monitor is worth having before the migration rather than after it.
+name: live-trading-monitor
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# A slow run must not stack up behind itself; the next slot supersedes it, because this job only ever reads.
+concurrency:
+  group: live-trading-monitor
+  cancel-in-progress: true
+
+jobs:
+  publication:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check out the checker at this commit
+        uses: actions/checkout@v4
+        with:
+          # No credential is left behind in the checkout: this job never pushes.
+          persist-credentials: false
+
+      - name: Use the runtime the repository uses
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      # --json because the summary is what a person reads on a phone at 03:00 and the run log keeps the same
+      # evidence for a diff. One request per lane, not two: the human report and the JSON say the same thing,
+      # and asking twice invites a disagreement between them. The exit code is kept, because it is the alarm.
+      - name: Ask the published URLs whether each lane is alive
+        run: |
+          set -o pipefail
+          status=0
+          node scripts/check-live-trading-publication.js --json | tee report.json || status=$?
+          {
+            echo "## live trading publication check"
+            echo ""
+            echo "exit code ${status}: 0 fresh, 1 stale or identity mismatch, 2 lanes document unreadable"
+            echo ""
+            echo '```json'
+            cat report.json
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          exit "$status"

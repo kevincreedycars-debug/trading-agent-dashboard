@@ -84,17 +84,35 @@ What those same reads did settle, and what they did not:
 - **Provisioning.** Not stated anywhere on the pages read, and not verified. It does not change the buy decision;
   the first RDP attempt is the evidence.
 
-Read these lines in the cart before paying, in this order: the **term** (1 month, not 24, unless that is intended), the
-**Windows Server version** and Desktop Experience, the **location** (UK), the **VAT line**, the **total payable now**,
-and whether a multi-month term is charged in full up front - the configurator only renders the default 1-month order
-summary, so that answer exists nowhere else.
+**Bought on 2026-10-25: Contabo order 15592634, EUR 17.46 paid, one-month term, United Kingdom.** The cart read
+higher than the estimate below, and the difference is a region surcharge rather than VAT: Cloud VPS Core 4
+(4 vCPU, 8 GB RAM, 100 GB SSD, Windows Server) with the UK location selected. Net EUR 14.55 = plan EUR 5.50 +
+Windows Server EUR 8.00 + UK surcharge EUR 1.05; UK VAT at 20% = EUR 2.91; **total EUR 17.46**. Every EUR 16.20
+written below is therefore superseded by EUR 17.46: the estimate was arithmetic on the configurator's two
+rate lines with no surcharge, and it was low by EUR 1.26. The purchase confirmation says provisioning is under
+way, normally 30 minutes and up to three hours, so **the host does not exist until the provisioning email says
+it does**; the Windows version and Desktop Experience are read at the first login, not assumed from the order.
 
-**The buy, if it is bought:** Cloud VPS Core 4 + Windows Server Datacenter at a 1-month term - EUR 13.50/month before
-VAT, about EUR 16.20 with UK VAT - because it meets the floor above and commits to nothing beyond a month. Core 6 +
-Windows (EUR 24.50/month before VAT) is the comfortable option only if nearly double the monthly cost is acceptable.
-Configurator links: `https://contabo.com/en/vps/cloud-vps-core-4/`, `.../cloud-vps-core-6/`, `.../cloud-vps-core-8/`;
-Windows product page `https://contabo.com/en/windows-servers-vps/`; UK location
-`https://contabo.com/en/locations/united-kingdom/`. Nothing is bought.
+| Corrected line | Figure |
+| --- | --- |
+| plan, Cloud VPS Core 4, 1-month term | EUR 5.50/month |
+| Windows Server licence | + EUR 8.00/month |
+| UK region surcharge | + EUR 1.05/month |
+| net | EUR 14.55/month |
+| UK VAT 20% | + EUR 2.91 |
+| **paid** | **EUR 17.46, one month, no setup fee** |
+
+Those were the lines the order was read on, in this order: the **term** (1 month, not 24), the **Windows Server
+version** and Desktop Experience, the **location** (UK), the **VAT line**, the **total payable now**, and whether a
+multi-month term is charged in full up front. The order as placed: 1 month, Windows Server, United Kingdom,
+EUR 17.46 payable now - so the surcharge line was the one difference from the estimate, and it was on the cart
+rather than in the licence.
+
+**The plan that was bought:** Cloud VPS Core 4 + Windows Server at a 1-month term, because it meets the floor
+above and commits to nothing beyond a month. Core 6 + Windows (EUR 24.50/month before VAT) stays the
+comfortable option if nearly double the monthly cost ever becomes acceptable. Configurator links:
+`https://contabo.com/en/vps/cloud-vps-core-4/`, `.../cloud-vps-core-6/`, `.../cloud-vps-core-8/`; Windows product
+page `https://contabo.com/en/windows-servers-vps/`; UK location `https://contabo.com/en/locations/united-kingdom/`.
 - Account checklist for the purchase itself: business or private account with 2FA on, address and VAT details
   that match the card, a card that accepts foreign currency, the provider's abuse/support contact saved somewhere
   other than the host, and the invoice in the same mailbox the renewal notices reach.
@@ -507,22 +525,32 @@ following term equal to the initial one:
 | --- | --- | --- |
 | product | Cloud VPS **Core 4** - 4 vCPU, 8 GB RAM, 100 GB SSD, 200 Mbit/s | €5.50/month on a 1-month term |
 | licence | **Windows Server Datacenter** (billed separately from the plan) | +€8.00/month |
-| subtotal before VAT | | €13.50/month |
-| UK VAT 20% | | ≈ €2.70 |
-| **total** | | **≈ €16.20/month, no setup fee** |
+| region | **United Kingdom** (Portsmouth) | +€1.05/month surcharge |
+| subtotal before VAT | | €14.55/month |
+| UK VAT 20% | | €2.91 |
+| **total** | **order 15592634, paid 2026-10-25** | **€17.46, one month, no setup fee** |
 | 24-month alternative | €12.40/month before VAT, renews for another 24 months | not chosen |
-| location | **United Kingdom** - Contabo's UK data centre is in Portsmouth, England; GBP billing available | |
 | OS install | Windows Server **with Desktop Experience** | required - Server Core has no GUI and cannot run the MT5 terminal |
+| provisioning | normally 30 minutes, up to three hours | the host is not assumed to exist until the email says so |
 
-Read off the cart before paying, and stop if any of these differ: a setup fee line, a term other than 1 month, VAT not
-at 20%, a total that is not ≈€16.20, a Windows selection offering only Server Core, or a location other than the
-United Kingdom. Two items could **not** be confirmed from the vendor's own pages in this session - the Windows version
-list and the Desktop Experience wording (the Windows page returned 404, and `contabo.com/en/vps/` truncated its plan
-table before the prices) - so they are read off the cart rather than asserted here.
+The estimate this section carried before the order (€16.20) came from the configurator's plan and licence lines
+alone; the cart added the UK surcharge, which is €1.05 net and €1.26 with VAT. That is the whole of the
+difference, and it is a correction to the record rather than a change of plan.
+
+The order was read off the cart on these items and none of them differed: no setup fee line, a 1-month term, VAT
+at 20%, a Windows selection with Desktop Experience, and the United Kingdom as the location. The one number that
+did move was the total - €17.46 rather than the €16.20 estimated from the plan and licence lines, because the
+cart carries a UK surcharge. Two items were still **not** confirmed from the vendor's own pages before the order -
+the exact Windows Server version and the Desktop Experience wording - so both are read on the host at first login
+(`Get-ComputerInfo` and the presence of `explorer.exe`), and `scripts/prepare-live-trading-host.ps1 -Mode Verify`
+fails if Desktop Experience is not there.
 
 ### 10.5 What is still between here and "PC off"
 
-1. The host does not exist. Provisioning time is still unverified; IONOS is still unquoted.
+1. The host is **bought and not yet delivered**: Contabo order 15592634, €17.46 paid, provisioning normally 30
+   minutes and up to three hours. Nothing below is claimed until the email arrives and the first login proves the
+   Windows build. Access, the one-time remote-access setup and the account #2 checklist are written down in
+   [VPS_ACCESS_HANDOFF.md](VPS_ACCESS_HANDOFF.md).
 2. On the host: one MT5 install per lane, logged in, Startup shortcut, Algo Trading **off**; then the three `-Test`
    runs (feed register, trader register, lanes publish), then a snapshot carrying `***614`.
 3. State migration, in this order: `tmp/live-trading-trader-state.json` (held 36, cancellations 4, closes 1, moves 3),
@@ -648,6 +676,146 @@ copy taken after the stop is the one restored, and the manifest says so in `prov
   parts are tested - the bundle that would be restored verifies byte for byte, and the registration script keeps
   the wrapper it replaces - but the full stop/restore/arm cycle has not been rehearsed, because a rehearsal needs
   the second host it is meant to protect.
-- **Yours:** the cart at ≈€16.20 / 1 month / UK / Desktop Experience, the IONOS quote, and the stop-and-arm at
-  cutover. Nothing in this section changes what the PC is doing: one trader, one publisher, lane 2 disabled.
+- **Yours, and now only this:** the provisioning email, the first RDP login, and the stop-and-arm at cutover.
+  The cart is bought (order 15592634, €17.46, one month, UK, Windows Server) and the €16.20 in this section is
+  superseded by §10.4's corrected table; the IONOS quote is closed as unused. What replaced "wait for a host" is
+  §12: an account probe that reads a lane's identity and symbol rules, and a prepare/verify script that names
+  every host-side claim before anything is armed. Nothing in this section changes what the PC is doing: one
+  trader, one publisher, lane 2 disabled.
 
+
+## 12. 2026-10-25, later: the host is bought, and every host-side claim is now checkable
+
+### 12.1 The purchase, and the correction it forced on this record
+
+Contabo order **15592634**, **EUR 17.46 paid**, Cloud VPS Core 4 (4 vCPU, 8 GB RAM, 100 GB SSD), Windows Server,
+one-month term, United Kingdom. Provisioning is under way: the confirmation says normally 30 minutes and
+potentially up to three hours, so the host is treated as **not existing** until the provisioning email says it
+does, and the Windows build and Desktop Experience are read at the first login.
+
+The record's own estimate was wrong by EUR 1.26 and the error is instructive rather than embarrassing: the UK
+region surcharge (EUR 1.05 net) is a cart line, not a configurator line, so an estimate built from the plan and
+licence rates alone lands at EUR 16.20 while the cart lands at EUR 17.46. Corrected in §2 (block plus table),
+§10.4 (the ordered cart), §10.5 item 1 and §11.5. The IONOS line is closed: nothing was bought there and no quote
+is outstanding.
+
+### 12.2 Access: what to do when the email arrives, and where the secret goes
+
+The whole sequence is [VPS_ACCESS_HANDOFF.md](VPS_ACCESS_HANDOFF.md). The short form, because the order matters:
+
+1. **Keep the password in the email and in the local DPAPI store, never in chat, Git, a log or the migration
+   bundle.** The store is the one this repository already uses (`%USERPROFILE%\.trading-agent-dashboard\`,
+   `set-credential.ps1`, no echo, encrypted per user). Three names were added to `config/credential-manifest.json`
+   so that script will accept them: `VPS_HOST` (non-secret), `VPS_RDP_USER` (non-secret), `VPS_RDP_PASSWORD`
+   (secret). Run `set-credential.ps1 -Name VPS_RDP_PASSWORD` and type the password at the prompt.
+2. **First login by RDP**, once, and paste the one-time block in §3 of the handoff doc: it installs OpenSSH
+   Server, installs the key below, turns password login off for `sshd`, and narrows SSH and RDP to one source
+   address.
+3. **From then on I connect with the key, not the password**: `ssh -i .local\vps-access\id_ed25519
+   Administrator@<host>`. Key-only auth is what makes it possible to automate the build without a credential ever
+   appearing in a command line, a log or a document.
+
+The key pair exists as of this session, generated locally and never exported:
+
+```
+ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJr9y6QMdql8e5RQTAcYS1vfk18nG39Buht8tpHDWP0z trading-agent-vps-access 2026-10-25
+```
+
+That line is a **public** key and is safe to paste into the host; the private half stays in
+`.local\vps-access\id_ed25519`, which is inside the ignored folder. The private key has no passphrase, because a
+passphrase that has to be typed defeats unattended automation; the compensating controls are the ACL on the file,
+key-only SSH, and the fact that both RDP and SSH are limited to a named source address. If the PC's public IP
+changes (it is a domestic address, `46.208.115.96` at the time of writing), the firewall rule is what has to be
+updated - in the Contabo panel or on the host - and that is a step the handover doc spells out for the phone case
+as well.
+
+
+### 12.3 Two new tools, because "the host looks right" is not a check
+
+The gap this session closed is not a missing step in the runbook; it is that the host after the build could be
+wrong in ways nothing in this repository would notice. Both tools read and neither writes.
+
+**`tools/mt5-bridge/live-trading-account-probe.py`** answers, per lane, against one terminal: which account is
+logged in (masked, `***614`-style), on which server, with what currency, leverage, margin rules and permissions,
+and for each instrument the plan names - is it known, is it in Market Watch, is its trade mode full, what are its
+digits, contract size, volume step and stops level. It takes the terminal path as an argument, because on a host
+with two terminals a bare `initialize()` attaches to whichever answers, and it prints one JSON document so the
+prepare script can read it. It names no order function and the suite asserts that; it does not even select a
+symbol, so it cannot change Market Watch.
+
+Proved against the live terminal at 2026-10-25T21:32Z: build 6231, connected, account `***614` on `FTMO-Server`,
+USD, leverage 30, balance 10014.23, `trade_allowed` and `trade_expert` true, margin mode retail hedging, one open
+position, and all four instruments (EURUSD, XAUUSD, US100.cash, BTCUSD) known, visible and full trading. That is
+the reading the host's lane 1 has to reproduce after the restore, and the reading lane 2 has to reproduce for its
+own account - which is why the probe compares against the lanes file rather than merely printing.
+
+**`scripts/prepare-live-trading-host.ps1`** has two modes that share one list. `-Mode Plan` prints the ten build
+steps with the command each one runs and the fact it proves, and changes nothing. `-Mode Verify` reads the host
+and emits one check per claim, `blocking` or `advisory`, with `-Out` for the JSON a reader can diff later. The
+claims are the ones that have bitten elsewhere in this project:
+
+- Desktop Experience present (`explorer.exe`, installation type), because Server Core cannot run a terminal;
+- node 20+, git, python 3.13, `MetaTrader5 5.0.6231` - the versions the PC proved;
+- an execution checkout and a publisher checkout that are **neither the same tree nor nested**, each exactly on
+  `-PinnedCommit` and the runtime one clean, and **no scheduled task that pulls or reinstalls code**;
+- auto-logon on with a stored password, RDP enabled with NLA, `sshd` present - reported as facts, and the first
+  two blocking because "recovers with nobody logged on" and "reconnect from the phone" are those two fields;
+- per lane: root, terminal, wrapper, declared state/log/lock/journal, and the account identity in the lanes file;
+- **no path and no task name shared between lanes** (terminal, state, log, lock, journal, heartbeat, published);
+- **the heartbeat's `host.computer` must be this computer** - a copied heartbeat is history, not health, and that
+  is exactly what a migrated lane's first hour looks like;
+- heartbeat fresh within 3 x its own `expected_interval_seconds`, feed fresh within 900s;
+- the lane's trader task registered, and its **logon type not `Interactive`** - a task that only runs for a logged-on
+  user never runs on a host whose session nobody opens;
+- with `-ProbeTerminal`: the terminal is reachable, the masked login and server match the lanes file, permissions
+  allow trading, and every symbol in the lane's own feed is fully tradable.
+
+**What the PC's own run says**, and it is worth reading rather than glossing: on the live checkout, lane 1 passes
+identity, wrapper, isolation, freshness, terminal and probe checks, and **fails
+`lane_ftmo-1_trader_runs_without_logon`** - its task's logon type is `Interactive`. That is the precise reason a
+reboot on this PC with nobody logged in would not bring the loop back, and it is the check the host must pass
+before the PC is allowed to go quiet. With the seven checks that cannot apply to this machine named with
+`-IgnoreCheck` (checkout separation and pinning, auto-logon, RDP, the PC's interactive task, and the runtime tree's
+own uncommitted files) the same run prints `result = host_ready` and exits 0, which is how the exit code was shown
+to follow the checks rather than the mood of the run.
+
+`-IgnoreCheck` never turns a failure into a pass: the check keeps `ok: false`, its reason, and the line is marked
+`skip` and prefixed `ignored by -IgnoreCheck:`. At cutover nothing is ignored.
+
+
+
+### 12.4 Account #2: the exact list, and nothing invented to fill it
+
+Lane 2 is prepared in structure (`root: ../ftmo2`, its own terminal path, its own three task names, its own
+`status_published`) and blocked in four facts. The authoritative checklist is in
+[VPS_ACCESS_HANDOFF.md](VPS_ACCESS_HANDOFF.md) §5; what the verify run reports on the PC today is:
+
+| Check | Reads now | What answers it |
+| --- | --- | --- |
+| `lane_ftmo-2_account_identity_configured` | fail - the lanes file holds no login and no server | the account number (masked to its last three digits here) and the server name **exactly as the terminal shows it**, from the FTMO account page |
+| `lane_ftmo-2_terminal_present` | fail - `C:\Program Files\FTMO Global Markets MT5 Terminal 2` does not exist | the second terminal install on the host, logged in by hand to account 2 |
+| `lane_ftmo-2_wrapper_present`, `..._trader_task_registered` | fail - nothing registered because the terminal is not there | the lane's own registration, unarmed, after the terminal exists |
+| `lane_ftmo-2_heartbeat_written_here` | fail - no heartbeat | one tick of that lane's own trader on the host; a copied one would be meaningless |
+
+Two of those four are mine to do the moment the terminal exists; the first is the one only the user can supply.
+Not copied from lane 1, deliberately: the login, the server, the ticket history, the state file, the journal and
+the heartbeat. Copied on purpose, because it is one strategy with one set of caps: the rule, `--max-open 1`,
+`--max-per-day 4`, `--expire-minutes 30`, `--settle-seconds 90`, the alignment rule and the four instruments -
+and no price offset anywhere, since shifting a limit to look different from lane 1 would be inventing a strategy
+to satisfy a check.
+
+### 12.5 What is proved, and what is not
+
+- **Proved today:** the purchase and its corrected figure; the key pair and the access sequence, written down
+  rather than remembered; the probe against the live terminal (identity, permissions, all four symbol
+  specifications); the prepare script's plan ordering and its read-only promise; the verify script's isolation,
+  pinning, heartbeat-host and unattended-logon checks, each failing for its own reason in a fixture and passing
+  when the fixture is corrected; the exit code following the check list; the PC's live run naming the interactive
+  task as the reboot gap.
+- **Not proved, and not claimed:** anything on the host. No login, no Windows build, no Desktop Experience, no
+  terminal, no task, no restore, no reboot with nobody logged on, no RDP-from-phone reconnect, no PC-off run, no
+  automatic daily trigger (the first slot is 2026-10-26 11:07Z and it is still an attempt), and no external
+  monitoring beyond a person running the checker.
+- **Next, in order:** wait for the email; §12.2 steps 1-3; run `-Mode Plan` against the real roots and follow it;
+  `-Mode Verify -ProbeTerminal -PinnedCommit <commit>` until every check is `ok` (nothing ignored); then the
+  cutover in [MIGRATION_CUTOVER.md](MIGRATION_CUTOVER.md), with publishing moving last.

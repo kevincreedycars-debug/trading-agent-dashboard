@@ -6,6 +6,7 @@ One read-only producer, one artifact, and one order tool kept deliberately apart
 | --- | --- |
 | `live-trading-snapshot.py` | Reads the running FTMO MT5 terminal and writes the dashboard's snapshot: quotes, account facts, M5/H1/H4 candles, and the read-back of what was executed. |
 | `live-trading-order.py` | Places, cancels or closes one trade at a time, by hand, behind `--confirm-live`. The only file in this lane that names an order call. |
+| `live-trading-account-probe.py` | Reads one terminal's account identity (masked login), server, permissions and, per instrument, whether it is known, in Market Watch and fully tradable. For the host build and the migration check; names no order call and selects no symbol. |
 | `../../data/live-trading.json` | The snapshot the dashboard's **Live Trading** section renders |
 | `../../scripts/validate_live_trading_feed.js` | Validates the artifact before it is trusted or published |
 | `../../tests/live_trading_feed.test.js` | Contract tests, including the read-only function allowlist |
@@ -21,6 +22,13 @@ python tools/mt5-bridge/live-trading-snapshot.py
 python tools/mt5-bridge/live-trading-snapshot.py --path "C:\Program Files\FTMO Global Markets MT5 Terminal"
 python tools/mt5-bridge/live-trading-snapshot.py --out data/live-trading.json --candles 576 --h1-candles 336 --h4-candles 240 --stale-seconds 900
 node scripts/validate_live_trading_feed.js data/live-trading.json
+```
+
+The probe is run per lane, with the terminal named, because on a host with two terminals a bare `initialize()`
+attaches to whichever answers:
+
+```powershell
+python tools/mt5-bridge/live-trading-account-probe.py "--path=C:\Program Files\FTMO Global Markets MT5 Terminal" "--symbols=EURUSD,XAUUSD,US100.cash,BTCUSD"
 ```
 
 `--path` accepts `terminal64.exe` or the folder containing it. `--candles`, `--h1-candles` and

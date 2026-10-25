@@ -31,6 +31,14 @@ The local credential system manages only continuity-relevant variables:
 - `ALPHA_VANTAGE_API_KEY`
 - `OANDA_API_TOKEN`
 - `OANDA_ACCOUNT_ID`
+- `VPS_HOST`
+- `VPS_RDP_USER`
+- `VPS_RDP_PASSWORD`
+
+The last three exist for the always-on trading host (`docs/live-trading/VPS_ACCESS_HANDOFF.md`): the address and
+the account name are configuration, and the password is a private credential held only so a first RDP login can be
+made by hand before a key is installed. After that block the host is reached by key, and the value is not read
+again.
 
 Ordinary importer settings such as dates, filenames, symbols, presets, delimiters, and time zones must stay outside the credential store.
 
@@ -70,6 +78,7 @@ The local validator and child runner support these scopes:
 - `n8n`
 - `backtester`
 - `market-importers`
+- `vps-host`
 - `all`
 
 Availability policy:
@@ -89,6 +98,9 @@ Current classifications:
 - `ALPHA_VANTAGE_API_KEY`: optional
 - `OANDA_API_TOKEN`: required
 - `OANDA_ACCOUNT_ID`: conditional
+- `VPS_HOST`: conditional
+- `VPS_RDP_USER`: conditional
+- `VPS_RDP_PASSWORD`: conditional
 
 ## Local Scripts
 

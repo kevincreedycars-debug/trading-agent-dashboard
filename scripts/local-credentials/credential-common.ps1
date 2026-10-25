@@ -264,7 +264,7 @@ function Resolve-CredentialSelection {
   }
 
   foreach ($itemScope in $requestedScopes) {
-    if ($itemScope -notin @("n8n", "backtester", "market-importers", "all")) {
+    if ($itemScope -notin @("n8n", "backtester", "market-importers", "vps-host", "all")) {
       throw "Unsupported scope '$itemScope'."
     }
   }
