@@ -51,6 +51,10 @@ const STAGE_SPECS = [
 
 const LETTERS = ["a", "b", "c", "d"];
 
+// One factor id per fixture topic, because a factor in the catalogue names exactly one chain and an upload is
+// resolved through that chain.
+const FIXTURE_FACTOR = "fx.fixture-level";
+
 // A catalogue of one or more topics, matching what the committed one says about a topic and its three
 // stages, with prompts written into the temporary root so their hashes are real.
 function buildFixture(label, options = {}) {
@@ -79,14 +83,33 @@ function buildFixture(label, options = {}) {
       asset: "USD",
       title: `Fixture topic ${letter.toUpperCase()}`,
       summary: `What the fixture topic ${letter.toUpperCase()} asks.`,
-      factor_ids: ["fx.fixture-level"],
+      factor_ids: [`${FIXTURE_FACTOR}-${letter}`],
       stages
     };
   });
+  // The chain is what the registry resolves an upload against, and on this catalogue it is a top-level
+  // `factor_chains` entry, not something derived from a topic. One chain per fixture topic, carrying that
+  // topic's three stages, so a stage upload resolves exactly as it does against the committed catalogue. The
+  // factor id is unique per topic because a factor names exactly one chain.
+  const factor_chains = topics.map(topic => ({
+    chain_id: `${topic.asset.toLowerCase()}-factor-${topic.topic_id.replace(/^usd-topic-/, "usd-")}`,
+    factor_id: topic.factor_ids[0],
+    asset: topic.asset,
+    topic_id: topic.topic_id,
+    group_title: topic.title,
+    slug: topic.topic_id.replace(/^usd-topic-/, ""),
+    title: `Fixture factor - ${topic.factor_ids[0]}`,
+    summary: topic.summary,
+    stages: topic.stages
+  }));
   const catalog = {
     schema_version: "research-library-catalog-v1",
-    assets: [{ asset: "USD", factors: [{ factor_id: "fx.fixture-level", label: "Fixture factor" }] }],
+    assets: [{
+      asset: "USD",
+      factors: topics.map(topic => ({ factor_id: topic.factor_ids[0], label: topic.title }))
+    }],
     topics,
+    factor_chains,
     tasks: []
   };
   const catalogPath = path.join(root, "data", "research-library", "catalog.json");
@@ -219,7 +242,7 @@ test("a verified return is registered under its stage id, reads back byte-identi
   const document = pipeline.documents().find(entry => entry.document_id === result.registration.document_id);
   assert.equal(document.topic_id, topicId);
   assert.equal(document.stage, "research");
-  assert.equal(document.factor_id, "fx.fixture-level");
+  assert.equal(document.factor_id, `${FIXTURE_FACTOR}-a`);
   assert.equal(document.model, "fixture-session");
   assert.equal(document.versions.length, 1);
   assert.deepEqual(document.open_findings, ["the fixture has no live data"]);
@@ -612,6 +635,54 @@ test("the CLI pause, allowance and recover commands are the only way the supervi
   const bad = cli("allowance", "--limit", "lots", ...root);
   assert.equal(bad.code, 1);
   assert.match(bad.error.message, /--limit must be a non-negative number/);
+});
+
+test("a topic that groups two factor chains refuses an unnamed chain and runs the chain that is named", () => {
+  const fixture = buildFixture("chains");
+  const topic = fixture.topics[0];
+  const secondFactorId = `${FIXTURE_FACTOR}-b`;
+  const chainId = `${topic.topic_id}-second`;
+  // The committed catalogue keeps the stages on the factor chain and leaves the topic as a grouping label.
+  const catalog = {
+    ...fixture.catalog,
+    topics: [{ ...topic, stages: undefined, factor_ids: [topic.factor_ids[0], secondFactorId] }],
+    assets: [{
+      asset: "USD",
+      factors: [...fixture.catalog.assets[0].factors, { factor_id: secondFactorId, label: "Second fixture factor" }]
+    }],
+    factor_chains: [
+      ...fixture.catalog.factor_chains,
+      { ...fixture.catalog.factor_chains[0], chain_id: chainId, factor_id: secondFactorId, title: "Second fixture chain" }
+    ]
+  };
+  fs.writeFileSync(fixture.catalogPath, `${JSON.stringify(catalog, null, 2)}\n`, "utf8");
+  const pipeline = pipelineFor(fixture, { catalog });
+
+  // Two chains, two sets of stages: the supervisor does not guess which one the operator meant.
+  const plan = pipeline.plan();
+  assert.equal(plan.length, 6, "each of the two chains contributes its three stages");
+  const ambiguous = (() => {
+    try {
+      pipeline.dispatch(topic.topic_id, "research");
+      return null;
+    } catch (error) {
+      return error;
+    }
+  })();
+  assert.ok(ambiguous, "a topic with two chains refuses an unnamed stage");
+  assert.equal(ambiguous.code, "chain_required");
+  assert.match(ambiguous.message, new RegExp(chainId));
+
+  const dispatched = pipeline.dispatch(topic.topic_id, "research", { chain: chainId });
+  assert.equal(dispatched.job.job_key, `${chainId}/research`);
+  assert.equal(dispatched.envelope.document_id, stageDocumentId(chainId, "research"));
+
+  const bytes = Buffer.from(completeDocument("Chained research"), "utf8");
+  const submitted = pipeline.submit(topic.topic_id, "research", bytes, { chain: chainId, model: "fixture-session" });
+  assert.equal(submitted.registration.document_id, stageDocumentId(chainId, "research"));
+  const document = pipeline.documents().find(entry => entry.document_id === submitted.registration.document_id);
+  assert.equal(document.factor_id, secondFactorId);
+  assert.equal(document.topic_id, topic.topic_id);
 });
 
 test("the CLI argument parser keeps repeated findings and refuses a flag given twice", () => {

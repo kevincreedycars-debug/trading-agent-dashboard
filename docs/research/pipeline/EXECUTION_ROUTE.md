@@ -25,9 +25,9 @@ are local files; the pipeline opens no socket and calls no API.
 | --- | --- | --- |
 | see the queue | `node scripts/research-pipeline.js status` | nothing |
 | see which stages may run | `plan [--runnable]` | nothing |
-| read an envelope | `preview TOPIC STAGE [--out FILE]` | nothing (a claim and an allowance unit are not spent) |
-| start a stage | `dispatch TOPIC STAGE` | one envelope under `.local/research-pipeline/outbox/`, a claim, one allowance unit |
-| accept a return | `submit TOPIC STAGE --file F --model NAME` | `.local/research-library/objects/…` plus one `data/research-library/documents.json` entry |
+| read an envelope | `preview TOPIC STAGE [--chain CHAIN] [--out FILE]` | nothing (a claim and an allowance unit are not spent) |
+| start a stage | `dispatch TOPIC STAGE [--chain CHAIN]` | one envelope under `.local/research-pipeline/outbox/`, a claim, one allowance unit |
+| accept a return | `submit TOPIC STAGE --file F --model NAME [--chain CHAIN]` | `.local/research-library/objects/…` plus one `data/research-library/documents.json` entry |
 | release a dead run | `recover` | queue only |
 | stop or restart | `pause --reason TEXT`, `resume` | queue only |
 | state the allowance | `allowance --limit N --reserve N --reset` | `.local/research-pipeline/usage.json` |
@@ -43,9 +43,33 @@ be `delivered`, the object is stored and registered, the stored object is read b
 topic page is asked again and must show that exact version as delivered. A rejection is written to
 `.local/research-pipeline/returns/rejected/` and the stage may still answer the same dispatch.
 
+## Which stages the supervisor sees (verified 2026-10-25, integrated on main)
+
+The committed catalogue keeps the three stages on the **factor chain** and leaves a topic as a grouping label;
+the first version of this supervisor read them off the topic, so against `data/research-library/catalog.json`
+every topic looked empty and nothing was runnable. The integration fixes that rather than restating it:
+
+- a topic that carries its own stages still resolves to itself; otherwise the supervisor resolves it to the
+  chains listed under that topic;
+- a topic that groups more than one chain refuses an unnamed stage with `chain_required` and names the
+  candidates, so the operator's choice is made explicitly by `--chain CHAIN_ID` and never guessed;
+- the job key and the registered document id are derived from the chain (`usd-factor-live-f1-vix-level/research`,
+  document `usd-factor-live-f1-vix-level-research`), so two chains of one topic cannot overwrite each other.
+
+Measured against the committed catalogue on 2026-10-25 with `node scripts/research-pipeline.js status`:
+`{"stages":75,"runnable":25,"claimed":0,"delivered":1,"waiting":74,"topics_ready":0}` — 75 is 25 chains times
+three stages, and the one delivered stage is the VIX research report version 1 that was already registered.
+`plan --runnable` lists the VIX red-team stage plus the research stage of the other twenty-four chains. Those
+counts are a reading of the catalogue and the registry; they are not a claim that any new stage ran.
+
+Not done here, and not proof of the milestones: no stage was dispatched against the committed catalogue, because
+that spends allowance and writes the registry. The carrier demo below stayed in a scratch root with a
+one-chain catalogue, so it verifies the carrier and the registration shape, not the real factor chain, not
+automatic allowance handling and not execution with this PC off.
+
 ## What the guards show (verified)
 
-`node --test tests/research_pipeline.test.js` — 14 of 14 pass on 2026-10-25, and the same file is discovered
+`node --test tests/research_pipeline.test.js` — 15 of 15 pass on 2026-10-25, and the same file is discovered
 by `npm test`:
 
 - stage ordering: a stage runs only when every earlier stage of its topic is delivered, and a delivered stage
@@ -59,6 +83,8 @@ by `npm test`:
 - integrity: a prompt that drifted from the catalogue, and a parent object whose bytes no longer match the
   registry, both stop the dispatch before it is claimed;
 - allowance: the reserve is never reached, and clearing the count is an explicit `--reset`, not a clock;
+- a topic that groups two factor chains refuses an unnamed stage with `chain_required`, and the chain named with
+  `--chain` dispatches, registers and reads back under that chain's own document id;
 - the CLI itself: status and preview write no state, dispatch → submit → status round-trips, and
   `pause`/`resume`/`allowance`/`recover` are the only controls.
 

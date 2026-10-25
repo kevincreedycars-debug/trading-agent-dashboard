@@ -4,9 +4,9 @@
 //
 //   node scripts/research-pipeline.js status [--json] [--stages]
 //   node scripts/research-pipeline.js plan [--asset USD] [--topic TOPIC] [--runnable]
-//   node scripts/research-pipeline.js preview TOPIC STAGE [--out FILE] [--json]
-//   node scripts/research-pipeline.js dispatch TOPIC STAGE [--owner NAME]
-//   node scripts/research-pipeline.js submit TOPIC STAGE --file FILE --model NAME [--title T] [--note N]
+//   node scripts/research-pipeline.js preview TOPIC STAGE [--chain CHAIN] [--out FILE] [--json]
+//   node scripts/research-pipeline.js dispatch TOPIC STAGE [--chain CHAIN] [--owner NAME]
+//   node scripts/research-pipeline.js submit TOPIC STAGE --file FILE --model NAME [--chain CHAIN] [--title T] [--note N]
 //                                                  [--open-finding TEXT ...]
 //   node scripts/research-pipeline.js recover
 //   node scripts/research-pipeline.js pause --reason TEXT
@@ -28,9 +28,9 @@ const { createPipeline } = require('../lib/research_pipeline.js');
 const USAGE = [
   'node scripts/research-pipeline.js status [--json] [--stages]',
   'node scripts/research-pipeline.js plan [--asset USD] [--topic TOPIC] [--runnable]',
-  'node scripts/research-pipeline.js preview TOPIC STAGE [--out FILE] [--json]',
-  'node scripts/research-pipeline.js dispatch TOPIC STAGE [--owner NAME]',
-  'node scripts/research-pipeline.js submit TOPIC STAGE --file FILE --model NAME [--title T] [--note N] [--open-finding TEXT ...]',
+  'node scripts/research-pipeline.js preview TOPIC STAGE [--chain CHAIN] [--out FILE] [--json]',
+  'node scripts/research-pipeline.js dispatch TOPIC STAGE [--chain CHAIN] [--owner NAME]',
+  'node scripts/research-pipeline.js submit TOPIC STAGE --file FILE --model NAME [--chain CHAIN] [--title T] [--note N] [--open-finding TEXT ...]',
   'node scripts/research-pipeline.js recover',
   'node scripts/research-pipeline.js pause --reason TEXT',
   'node scripts/research-pipeline.js resume',
@@ -174,7 +174,7 @@ function run(argv, io = process) {
   if (command === 'preview') {
     needPositionals(command, positionals, 2, 'TOPIC and STAGE');
     const [topicId, stageId] = positionals;
-    const envelope = pipeline.envelope(topicId, stageId);
+    const envelope = pipeline.envelope(topicId, stageId, { chain: flagText(flags, 'chain') });
     const out = flagText(flags, 'out');
     const summary = {
       ok: true,
@@ -205,7 +205,7 @@ function run(argv, io = process) {
   if (command === 'dispatch') {
     needPositionals(command, positionals, 2, 'TOPIC and STAGE');
     const [topicId, stageId] = positionals;
-    const result = pipeline.dispatch(topicId, stageId, { owner: flagText(flags, 'owner', 'operator-cli') });
+    const result = pipeline.dispatch(topicId, stageId, { owner: flagText(flags, 'owner', 'operator-cli'), chain: flagText(flags, 'chain') });
     emit(io, {
       ok: true,
       job_key: result.job.job_key,
@@ -229,7 +229,8 @@ function run(argv, io = process) {
       title: flagText(flags, 'title'),
       note: flagText(flags, 'note'),
       original_filename: path.basename(source),
-      open_findings: flagList(flags, 'open-finding')
+      open_findings: flagList(flags, 'open-finding'),
+      chain: flagText(flags, 'chain')
     });
     emit(io, {
       ok: true,
