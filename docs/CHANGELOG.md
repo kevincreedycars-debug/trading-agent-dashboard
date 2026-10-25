@@ -1,4 +1,30 @@
 # Changelog
+## 2026-10-25 (interactive coordinator, research programme) - shared contract, two owned lanes, cleaned prompt set
+
+### Added
+
+- `docs/research/programme/README.md`, `SHARED_CONTRACT.md`, `INTERFACES.md` and `PROMPT_AUDIT_20261025.md`: the
+  owner's session and instrument rules, the five evidence kinds and the four permitted conclusions, the states a
+  document passes through, the preserve-then-supplement rule, the asset gate, asset expansion, change control, the
+  lane map and the hand-off objects between the lanes.
+- Two authored blocks in `scripts/build_research_library.js` - the five evidence kinds, emitted into all six stage
+  types, and the permitted conclusions, emitted into research, adjudication and final analysis - plus one extra
+  attack in each red-team stage.
+- A guard in `tests/research_library.test.js`: every one of the 78 prompts must carry the five kinds and each of the
+  51 deciding prompts must name all four permitted conclusions.
+
+### Changed
+
+- The 78 generated prompts and `data/research-library/catalog.json` were regenerated together with
+  `node scripts/build_research_library.js catalog --write`, so each prompt and its recorded hash still agree.
+
+### Unchanged, and checked
+
+- The stored VIX report, its version, hash and parent links; the factor statuses (22 research ready, 3 blocked,
+  review pending and backtest not tested everywhere); the chain states (VIX research delivered, red team awaiting a
+  file, adjudication not started) and the final chain still locked at 0/25. Checks: `chains --check` clean,
+  `verify` clean, library unit 30/30, `test:research-library` 37/37 including the browser scenario.
+
 ## 2026-10-24 (interactive coordinator, hosted final chain) - the asset-level final chain stores in the private store
 
 ### Changed

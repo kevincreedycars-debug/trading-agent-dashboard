@@ -24,6 +24,25 @@ Rules are in force for some of these entries, and the session is defined but unm
 9. **Hypotheses**: the candidate relation or relations worth testing, each with a falsifiable statement, what would refute it, and how it could be measured in this repository.
 10. **Data requirements**: the series, resolution, vintage handling and history the test would need, and which of them are missing or behind a paywall.
 
+## Five kinds of evidence that must not be mixed
+
+Each kind answers a different question, and evidence of one kind never stands in for another. State which kind every load-bearing claim rests on, in the sentence that makes the claim:
+
+- **Economic mechanism** - why an input could move the dollar inside the session at all. A mechanism is a reason to look; it is not a measurement, and a plausible channel is not evidence that the channel operates.
+- **Contemporaneous association** - what moves with the dollar at the same time. It says nothing about direction after the cutoff, and the dollar may be the thing doing the moving.
+- **Predictive evidence from other windows** - measured relations for a close-to-close day, a New York session, an event window or a monthly horizon. Relevant background, not evidence for this session; name the window every time the number is quoted.
+- **Evidence for our exact session** - a measurement of the 05:00 Europe/London start to the 05:00 Europe/London endpoint on the next local date. Where none exists for a claim, say so rather than borrowing another window's result.
+- **Incremental value beyond existing inputs** - what this factor adds to a decision already able to use the entries before it. Information already contained in an earlier input is not new, and a factor that adds nothing is a finding, not a gap.
+
+A claim that changes kind between sections - a mechanism presented as a measurement, another window presented as ours, an input already in the decision presented as new - is the most common way a body of research overstates what is known. Where the same evidence is counted twice, say so.
+
+## Conclusions this stage is allowed to reach
+
+- **Exclusion** - the evidence may support leaving this factor out of the decision entirely.
+- **Regime-only use** - the evidence may support using it only in a named regime, and only where that regime is identifiable at the cutoff.
+- **Insufficient evidence** - where nothing has been measured for this session, saying so is the correct return; the remedy is a measurement or a supplement, never a stronger claim.
+- **Adding nothing** - a factor whose information is already in the inputs before it earns no weight. More factors are not assumed to improve accuracy, and improved accuracy is only ever an empirical result.
+
 ## Questions for this factor
 
 1. Chain question: does `rates.us-front-end-delta` - US front-end delta - carry information about the next 24-hour dollar move, and in which quantity? 2Y and 3M yield changes as policy-expectation proxies, with the publication lag of each series stated.

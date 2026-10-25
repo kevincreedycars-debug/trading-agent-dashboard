@@ -547,6 +547,48 @@ test("every chain prompt exists, matches its catalogue hash and stands on its ow
   });
 });
 
+test("every chain prompt keeps the five evidence kinds apart and allows exclusion", () => {
+  // The programme's shared contract separates mechanism, contemporaneous association, predictive evidence from
+  // other windows, evidence for our exact session and incremental value. A prompt that drops one of them lets a
+  // report slide from one kind into another, and exclusion, regime-only use or insufficient evidence stops being
+  // available as a conclusion.
+  const kinds = [
+    "**Economic mechanism**",
+    "**Contemporaneous association**",
+    "**Predictive evidence from other windows**",
+    "**Evidence for our exact session**",
+    "**Incremental value beyond existing inputs**"
+  ];
+  const entries = [];
+  ResearchLibrary.listFactorChains(catalog, "USD").forEach(chain => {
+    ResearchLibrary.chainStages(chain).forEach(stage => entries.push({ chain, stage }));
+  });
+  const finalSpec = ResearchLibrary.finalChain(catalog, "USD");
+  ResearchLibrary.chainStages(finalSpec).forEach(stage => entries.push({ chain: finalSpec, stage }));
+  assert.equal(entries.length, 78, "twenty-five chains of three stages plus the three final stages");
+  entries.forEach(({ stage }) => {
+    const text = fs.readFileSync(path.join(root, stage.prompt_path), "utf8");
+    assert.ok(
+      text.includes("## Five kinds of evidence that must not be mixed"),
+      `${stage.prompt_path} must keep the evidence kinds apart`
+    );
+    kinds.forEach(kind => assert.ok(text.includes(kind), `${stage.prompt_path} must name ${kind}`));
+  });
+  const deciding = ["research", "adjudication", "final_analysis"];
+  const decisions = entries.filter(({ stage }) => deciding.includes(stage.stage));
+  assert.equal(decisions.length, 51, "one research and one adjudication for each of twenty-five chains, plus the final analysis");
+  decisions.forEach(({ stage }) => {
+    const text = fs.readFileSync(path.join(root, stage.prompt_path), "utf8");
+    assert.ok(
+      text.includes("## Conclusions this stage is allowed to reach"),
+      `${stage.prompt_path} must say that exclusion is a conclusion`
+    );
+    ["**Exclusion**", "**Regime-only use**", "**Insufficient evidence**", "**Adding nothing**"].forEach(item =>
+      assert.ok(text.includes(item), `${stage.prompt_path} must name ${item}`)
+    );
+  });
+});
+
 test("the final chain prompts carry the analysis, red-team and candidate-logic stages", () => {
   const finalSpec = ResearchLibrary.finalChain(catalog, "USD");
   const analysis = ResearchLibrary.chainStageById(finalSpec, "final_analysis");

@@ -28,11 +28,24 @@ Find what is wrong, unsupported or overstated in the research report before the 
 - **Window**: is the evidence about our 05:00 London to 05:00 London session, or about a close-to-close day, an intraday slice or another window, presented as if it were ours?
 - **Instrument**: is a claim really about EUR/USD, a basket or a future, presented under the DXY name?
 - **Mechanism against measurement**: is a plausible channel being used as if the relation had been measured?
+- **Mixed evidence**: is a mechanism, a contemporaneous association, another window's measurement or information already in an earlier input being presented as predictive evidence for our session?
 - **Already priced**: does the claim count an effect as predictive that the cutoff has already absorbed?
 - **Identification and scope**: sample period, era dependence, regime dependence, conditioning on the outcome, survivorship in the sources chosen, base rates behind a conditional claim, and any number with no stated origin.
 - **Counter-evidence**: is the strongest contrary evidence in the sources the report fetched absent, or present and dismissed without a reason?
 - **Internal consistency**: does one section contradict another, and does the what-is-not-claimed section match what the body actually does?
 - **Overlap**: does the report lean on an interaction that counts one input twice across factor entries, and does it say so?
+
+## Five kinds of evidence that must not be mixed
+
+Each kind answers a different question, and evidence of one kind never stands in for another. State which kind every load-bearing claim rests on, in the sentence that makes the claim:
+
+- **Economic mechanism** - why an input could move the dollar inside the session at all. A mechanism is a reason to look; it is not a measurement, and a plausible channel is not evidence that the channel operates.
+- **Contemporaneous association** - what moves with the dollar at the same time. It says nothing about direction after the cutoff, and the dollar may be the thing doing the moving.
+- **Predictive evidence from other windows** - measured relations for a close-to-close day, a New York session, an event window or a monthly horizon. Relevant background, not evidence for this session; name the window every time the number is quoted.
+- **Evidence for our exact session** - a measurement of the 05:00 Europe/London start to the 05:00 Europe/London endpoint on the next local date. Where none exists for a claim, say so rather than borrowing another window's result.
+- **Incremental value beyond existing inputs** - what this factor adds to a decision already able to use the entries before it. Information already contained in an earlier input is not new, and a factor that adds nothing is a finding, not a gap.
+
+A claim that changes kind between sections - a mechanism presented as a measurement, another window presented as ours, an input already in the decision presented as new - is the most common way a body of research overstates what is known. Where the same evidence is counted twice, say so.
 
 ## A verdict for every load-bearing claim
 
