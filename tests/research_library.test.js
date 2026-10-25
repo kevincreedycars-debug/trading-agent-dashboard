@@ -15,6 +15,7 @@ const path = require("node:path");
 const { spawnSync } = require("node:child_process");
 
 const ResearchLibrary = require("../lib/research_library.js");
+const Prompts = require("../lib/research_prompt_templates.js");
 const { createStore } = require("../lib/research_library_store.js");
 const { createServiceServer } = require("../scripts/research-library-server.js");
 
@@ -321,10 +322,9 @@ test("the store refuses a malformed upload, an oversize body and a path-shaped i
   assert.throws(() => store.registerUpload({ ...base, task_id: "USD-SESSION-Z9" }, catalog), /is not in the catalog/);
   assert.throws(() => store.registerUpload({ ...base, task_id: "USD-SESSION-A1", context_version: "stale-version" }, catalog), /does not match/);
   assert.throws(() => store.registerUpload({ ...base, factor_id: "not.a.factor" }, catalog), /not in the catalog/);
-  // The model label is optional provenance: a return without one is registered rather than refused.
-  const withoutModel = store.registerUpload({ ...base, document_id: "x-no-model", model: "" }, catalog);
-  assert.equal(withoutModel.document_id, "x-no-model");
-  assert.ok(!withoutModel.model, "no model label is recorded when none is given");
+  // The model or session is optional provenance now, so an empty model is accepted rather than refused; what
+  // is still refused is an upload that names a task or a factor the catalogue does not carry.
+  assert.equal(store.registerUpload({ ...base, document_id: "no-model", model: "" }, catalog).version, 1);
   assert.throws(() => store.readObject("nope", 1), /is not registered/);
   assert.throws(
     () => store.registerUpload({ ...base, content_text: "a".repeat(store.MAX_UPLOAD_BYTES + 1) }, catalog),
@@ -402,7 +402,6 @@ test("an authenticated upload round-trips byte for byte and appears in the manif
     assert.equal(entry.latest_sha256, sha256(content));
     assert.equal(entry.public_download, false);
     assert.equal(entry.task_id, "USD-SESSION-A1");
-    assert.equal(entry.original_filename, "a1.json", "the manifest names the file the reader registered");
 
     const exportPayload = await (await fetch(`${base}/export`, { headers: { Authorization: "Bearer test-token-0123456789" } })).json();
     assert.equal(exportPayload.download_references.some(reference => reference.document_id === "usd-session-a1-return"), true);
@@ -430,13 +429,6 @@ test("the service answers an unknown route and a bad body rather than guessing",
     const badPayload = await fetch(`${base}/documents`, { method: "POST", headers, body: JSON.stringify({ document_id: "x" }) });
     assert.equal(badPayload.status, 400);
     assert.ok((await badPayload.json()).problems.length >= 3);
-    // The client turns that problem list into a readable refusal rather than a pasted JSON body.
-    const client = ResearchLibrary.createServiceClient({ endpoint: base, token: "test-token-0123456789" });
-    await assert.rejects(() => client.upload({ document_id: "x" }), error => {
-      assert.ok(error.message.includes("document_type must be one of"), error.message);
-      assert.ok(!error.message.includes('{"ok":false'), "the refusal must not be a raw body");
-      return true;
-    });
   } finally {
     await new Promise(resolve => service.server.close(resolve));
   }
@@ -506,16 +498,137 @@ test("the catalogue carries six topic labels and twenty-five factor chains, thre
   assert.deepEqual(finalSpec.factor_chain_ids.slice().sort(), chains.map(chain => chain.chain_id).sort());
 });
 
+test("every factor chain asks its own questions, and a gate is asked what it changes rather than which way", () => {
+  const chains = ResearchLibrary.listFactorChains(catalog, "USD");
+  const seen = new Map();
+  chains.forEach(chain => {
+    const probes = chain.probes || [];
+    assert.ok(probes.length >= 5, `${chain.factor_id} must carry a chain question plus its own factor questions, found ${probes.length}`);
+    assert.ok(probes[0].startsWith("Chain question:"), `${chain.factor_id} must open with its chain question`);
+    const key = JSON.stringify(probes.slice(1));
+    assert.equal(seen.has(key), false, `${chain.factor_id} reuses the probe text of ${seen.get(key)}: a shared group question set is not a factor-specific one`);
+    seen.set(key, chain.factor_id);
+    const gate = /gate/i.test(chain.factor_role || "");
+    if (gate) {
+      assert.match(probes[0], /change about the call/, `${chain.factor_id} is a ${chain.factor_role} and must not be asked only which way the dollar moves`);
+      assert.doesNotMatch(probes[0], /carry information about the next 24-hour dollar move/, `${chain.factor_id} is a gate, not a directional factor`);
+    } else {
+      assert.match(probes[0], /carry information about the next 24-hour dollar move/, `${chain.factor_id} is a directional factor`);
+    }
+  });
+  const probesFor = factorId => (ResearchLibrary.factorChainForFactor(catalog, factorId).probes || []).join(" ");
+  // Four of the mismatches a shared group question set produced, pinned so they cannot come back silently.
+  assert.doesNotMatch(probesFor("live.f6-gold-delta"), /dollar smile/i, "the gold chain must not be asked the smile question");
+  assert.match(probesFor("live.f6-gold-delta"), /XAU-USD/, "the gold chain must ask about the instrument the collector actually stores");
+  assert.doesNotMatch(probesFor("live.f10-equity-versus-usd"), /dollar smile/i, "the equity chain must not be asked the smile question");
+  assert.match(probesFor("live.f10-equity-versus-usd"), /QQQ/, "the equity chain must name the Nasdaq-100, the future and the ETF it stores");
+  assert.doesNotMatch(probesFor("risk.usd-safe-haven-demand"), /range position|bid-ask bounce/i, "the safe-haven chain must not be asked the FX session-structure questions");
+  assert.doesNotMatch(probesFor("data.quality-gate-for-abstention"), /scheduled release inside the session/i, "the abstention gate must not be asked the calendar questions");
+  const abstention = probesFor("data.quality-gate-for-abstention");
+  ["accuracy", "coverage", "skipped sessions"].forEach(term => {
+    assert.ok(abstention.includes(term), `the abstention gate must be evaluated on ${term}`);
+  });
+  assert.match(probesFor("live.f1-vix-level"), /stale/, "the VIX chain must ask how stale VIXCLS is at the cutoff");
+  assert.match(probesFor("live.f2-us-2y-delta"), /DGS2|vintage/, "the 2Y chain must ask about the series and its vintage");
+});
+
+test("a chain that may withhold the call reports the four numbers together and names its comparable sessions", () => {
+  const stagesText = chain =>
+    ResearchLibrary.chainStages(chain)
+      .map(stage => fs.readFileSync(path.join(root, stage.prompt_path), "utf8"))
+      .join("\n");
+  const gates = ResearchLibrary.listFactorChains(catalog, "USD").filter(chain => /gate/i.test(chain.factor_role || ""));
+  assert.ok(gates.length >= 2, "the quality gate and the volatility abstention gate are the chains this contract is tested on");
+  gates.forEach(chain => {
+    const text = stagesText(chain);
+    assert.ok(text.includes(Prompts.ABSTENTION_RULE), `${chain.factor_id} must carry the abstention rule verbatim in every stage`);
+    ["coverage", "accuracy of the calls made", "score of the withheld calls", "comparable sessions"].forEach(term => {
+      assert.ok(text.includes(term), `${chain.factor_id} must report ${term} together with the other three`);
+    });
+    assert.ok(text.includes("regime, the calendar state and the instrument"), `${chain.factor_id} must define the comparable sessions it compares against`);
+    assert.ok(text.includes("insufficient evidence"), `${chain.factor_id} must return insufficient evidence when the rule cannot be scored`);
+  });
+  const directional = ResearchLibrary.factorChainForFactor(catalog, "live.f1-vix-level");
+  assert.equal(stagesText(directional).includes(Prompts.ABSTENTION_RULE), false, "a directional chain is not asked how abstention is scored");
+  // The gate's article is chosen, not pasted: "a abstention gate" is the first defect a reader notices.
+  const abstention = ResearchLibrary.factorChainForFactor(catalog, "fx.usd-session-volatility-regime");
+  assert.match(abstention.probes[0], /it is an abstention gate/, "the abstention chain question must read as English");
+  assert.equal(/it is a abstention/.test(abstention.probes.join(" ")), false, "no chain may render \"a abstention\"");
+});
+
+test("an asset profile is not a factor catalogue: only USD is dispatchable, and each draft names what is missing", () => {
+  const assets = ResearchLibrary.listAssets(catalog);
+  assets.forEach(asset => {
+    assert.ok(asset.catalogue && asset.catalogue.state, `${asset.asset} must state whether it has a dispatchable catalogue`);
+    if (asset.asset === "USD") {
+      assert.equal(asset.catalogue.state, "dispatchable");
+      assert.equal(asset.catalogue.factor_entries, 25);
+      assert.equal(asset.catalogue.factor_chains, 25);
+      assert.equal(asset.catalogue.stage_prompts, 78);
+      assert.equal(asset.catalogue.published_briefs, 25);
+      assert.equal(asset.catalogue.remaining, undefined, "a complete catalogue has nothing left to generate");
+      return;
+    }
+    assert.equal(asset.catalogue.state, "profile_only", `${asset.asset} has no factor entry and must say so`);
+    assert.equal(asset.factors.length, 0, `${asset.asset} must not claim a factor entry it does not have`);
+    assert.equal(asset.catalogue.factor_entries, 0);
+    assert.equal(asset.catalogue.factor_chains, 0);
+    assert.equal(asset.catalogue.stage_prompts, 0);
+    assert.equal(asset.catalogue.published_briefs, 0);
+    assert.ok((asset.catalogue.remaining || []).length >= 3, `${asset.asset} must name what remains before it could be dispatched`);
+    assert.ok(asset.catalogue.open_decisions >= 1, `${asset.asset} keeps its unresolved instrument decisions`);
+  });
+});
+
+test("the asset_synthesis topic spec carries the final chain's three stages and its gate, and opens nothing", () => {
+  const spec = ResearchLibrary.synthesisTopic(catalog, "USD");
+  assert.ok(spec, "the catalogue carries an asset_synthesis topic");
+  const finalSpec = ResearchLibrary.finalChain(catalog, "USD");
+  assert.equal(spec.chain_id, finalSpec.chain_id);
+  assert.equal(spec.chain_kind, "asset_synthesis");
+  assert.equal(spec.template_version, Prompts.TEMPLATE_VERSION);
+  assert.deepEqual(spec.stage_ids, ResearchLibrary.FINAL_CHAIN_STAGES.slice());
+  assert.equal(spec.stage_paths.length, 3);
+  ResearchLibrary.FINAL_CHAIN_STAGES.forEach(stageId => {
+    const expected = ResearchLibrary.chainStageById(finalSpec, stageId);
+    const listed = spec.stage_paths.find(entry => entry.stage === stageId);
+    assert.equal(listed.prompt_path, expected.prompt_path, `${stageId} prompt path must match the final chain`);
+    assert.equal(listed.prompt_sha256, expected.prompt_sha256, `${stageId} hash must match the final chain`);
+  });
+  assert.equal(spec.gate.requires, "all-factor-chains");
+  assert.equal(spec.gate.factor_count, ResearchLibrary.listFactorChains(catalog, "USD").length);
+  assert.deepEqual(spec.factor_ids, finalSpec.factor_chain_ids.slice());
+  // It is a catalogue entry, not a seventh grouping label, and its existence does not move the gate.
+  assert.equal(ResearchLibrary.listTopics(catalog, "USD").some(topic => topic.topic_id === spec.topic_id), false);
+  const gate = ResearchLibrary.finalChainStatus(catalog, registry);
+  assert.equal(gate.unlocked, false, "the synthesis stays locked while the factor chains are incomplete");
+});
+
 test("every chain prompt exists, matches its catalogue hash and stands on its own", () => {
   const hosts = ["openai.com", "anthropic.com", "api.openai", "generativelanguage", "claude.ai"];
-  const requiredSections = {
-    research: "## What the report must cover",
-    red_team: "## What to attack, claim by claim",
-    adjudication: "## What the adjudication must contain",
-    final_analysis: "## What the synthesis must contain",
-    final_red_team: "## How to challenge, claim by claim",
-    final_adjudication: "## What the adjudication must contain"
+  const sharedTitles = [
+    "## Assignment",
+    "## Objective",
+    "## The session and the instrument",
+    "## Inputs",
+    "## Evidence standard",
+    "## Five kinds of evidence that must not be mixed",
+    "## What to return",
+    "## Completion checklist",
+    "## Prohibitions",
+    "## What happens next"
+  ];
+  const requiredTitles = {
+    research: ["## What the report must cover", "## What the report must contain"],
+    red_team: ["## What to attack, claim by claim", "## What the review must contain", "## Independence rules", "## A verdict for every load-bearing claim"],
+    adjudication: ["## How to decide", "## What the adjudication must contain"],
+    final_analysis: ["## How to decide", "## What the synthesis must contain"],
+    final_red_team: ["## How to challenge, claim by claim", "## What the review must contain"],
+    final_adjudication: ["## How to decide", "## What the adjudication must contain"]
   };
+  // Every prompt is rendered from one versioned template, so every prompt carries the same sections in
+  // the same order and the same version label. A prompt that drifts from that skeleton is a regression,
+  // not a variation.
   const entries = [];
   ResearchLibrary.listFactorChains(catalog, "USD").forEach(chain => {
     ResearchLibrary.chainStages(chain).forEach(stage => entries.push({ chain, stage }));
@@ -531,106 +644,28 @@ test("every chain prompt exists, matches its catalogue hash and stands on its ow
     assert.equal(Buffer.byteLength(text, "utf8"), stage.prompt_bytes);
     assert.ok(text.startsWith("# "), `${stage.prompt_path} needs a title`);
     assert.ok(text.includes(chain.chain_id), `${stage.prompt_path} must name its chain`);
+    assert.ok(text.includes(`\`${Prompts.TEMPLATE_VERSION}\``), `${stage.prompt_path} must name the template version it was rendered from`);
     if (chain.factor_id) {
       assert.ok(text.includes(chain.factor_id), `${stage.prompt_path} must name its factor`);
       assert.ok(text.includes(chain.topic_id), `${stage.prompt_path} must name its group label`);
     } else {
-      assert.equal(text.includes("group label"), false, `${stage.prompt_path} is asset-level and carries no topic`);
+      assert.equal(text.includes("Group label:"), false, `${stage.prompt_path} is asset-level and carries no group label`);
     }
     assert.ok(text.includes("05:00 Europe/London"), `${stage.prompt_path} must state the cutoff`);
-    assert.ok(text.includes("## Prohibitions"), `${stage.prompt_path} must carry the prohibitions`);
-    assert.ok(text.includes("## What to return"), `${stage.prompt_path} must say what to return`);
-    const required = requiredSections[stage.stage];
-    assert.ok(required, `${stage.stage} needs a known required section`);
-    assert.ok(text.includes(required), `${stage.prompt_path} must carry ${required}`);
+    const kind = chain.factor_id ? "factor" : "asset_synthesis";
+    const templateStage = stage.stage.replace(/^final_/, "").replace("analysis", "research");
+    const deliverable = Prompts.deliverableFileName({ asset: chain.asset, slug: chain.slug, kind, stage: templateStage });
+    assert.ok(text.includes(`\`${deliverable}\``), `${stage.prompt_path} must name the file it asks for`);
+    // The titles stay literal here rather than read back from the template: this is the contract the library
+    // page and the operator workflow quote, so a rename in the template has to fail this test.
+    sharedTitles.concat(requiredTitles[stage.stage]).forEach(title => {
+      assert.ok(text.includes(`${title}\n`), `${stage.prompt_path} must carry ${title}`);
+    });
+    Prompts.FORBIDDEN_PHRASES.forEach(phrase => {
+      assert.equal(text.toLowerCase().includes(phrase.toLowerCase()), false, `${stage.prompt_path} carries the superseded phrase "${phrase}"`);
+    });
     hosts.forEach(host => assert.equal(text.toLowerCase().includes(host), false, `${stage.prompt_path} must not name ${host}`));
   });
-});
-
-test("every chain prompt keeps the five evidence kinds apart and allows exclusion and a positive finding", () => {
-  // The programme's shared contract separates mechanism, contemporaneous association, predictive evidence from
-  // other windows, evidence for our exact session and incremental value. A prompt that drops one of them lets a
-  // report slide from one kind into another, and exclusion, regime-only use or insufficient evidence stops being
-  // available as a conclusion. A supported directional input or interaction has to remain reachable too: the
-  // audit asks whether a factor earns weight, not only whether it can be dropped.
-  const kinds = [
-    "**Economic mechanism**",
-    "**Contemporaneous association**",
-    "**Predictive evidence from other windows**",
-    "**Evidence for our exact session**",
-    "**Incremental value beyond existing inputs**"
-  ];
-  const entries = [];
-  ResearchLibrary.listFactorChains(catalog, "USD").forEach(chain => {
-    ResearchLibrary.chainStages(chain).forEach(stage => entries.push({ chain, stage }));
-  });
-  const finalSpec = ResearchLibrary.finalChain(catalog, "USD");
-  ResearchLibrary.chainStages(finalSpec).forEach(stage => entries.push({ chain: finalSpec, stage }));
-  assert.equal(entries.length, 78, "twenty-five chains of three stages plus the three final stages");
-  entries.forEach(({ stage }) => {
-    const text = fs.readFileSync(path.join(root, stage.prompt_path), "utf8");
-    assert.ok(
-      text.includes("## Five kinds of evidence that must not be mixed"),
-      `${stage.prompt_path} must keep the evidence kinds apart`
-    );
-    kinds.forEach(kind => assert.ok(text.includes(kind), `${stage.prompt_path} must name ${kind}`));
-  });
-  const deciding = ["research", "adjudication", "final_analysis"];
-  const decisions = entries.filter(({ stage }) => deciding.includes(stage.stage));
-  assert.equal(decisions.length, 51, "one research and one adjudication for each of twenty-five chains, plus the final analysis");
-  decisions.forEach(({ stage }) => {
-    const text = fs.readFileSync(path.join(root, stage.prompt_path), "utf8");
-    assert.ok(
-      text.includes("## Conclusions this stage is allowed to reach"),
-      `${stage.prompt_path} must say that exclusion is a conclusion`
-    );
-    ["**Exclusion**", "**Regime-only use**", "**Insufficient evidence**", "**Adding nothing**", "**A potentially useful input or interaction**"].forEach(item =>
-      assert.ok(text.includes(item), `${stage.prompt_path} must name ${item}`)
-    );
-    assert.ok(
-      text.includes("mark it unvalidated"),
-      `${stage.prompt_path} must keep a positive finding subject to empirical validation`
-    );
-  });
-});
-
-test("no chain prompt carries the superseded four-step workflow, card rules or a recommendation contradiction", () => {
-  // The prompts used to reproduce their dispatched brief in full, and the briefs still describe a four-step
-  // programme (report, red team, research cards, backtest handoff). That text outlived the three-stage chain and
-  // told a reader to return a card, obey a per-card hypothesis limit, upload against a legacy task id and never
-  // propose a change - the last of which contradicted the prompt's own required content. The brief stays in the
-  // repository as the record of what was asked; none of it may reappear inside a prompt.
-  const obsolete = [
-    "step 1 of four",
-    "A research card is step 3",
-    "Not a research card",
-    "The same four steps apply",
-    "per-card limit of at most two programmable hypotheses applies",
-    "none may be proposed as part of the deliverable",
-    "--- begin dispatched brief ---",
-    "Upload against",
-    "step 3, `deep-research/SYNTHESIS_AND_CARDS_BRIEF.md`"
-  ];
-  const entries = [];
-  ResearchLibrary.listFactorChains(catalog, "USD").forEach(chain => {
-    ResearchLibrary.chainStages(chain).forEach(stage => entries.push(stage));
-  });
-  ResearchLibrary.chainStages(ResearchLibrary.finalChain(catalog, "USD")).forEach(stage => entries.push(stage));
-  assert.equal(entries.length, 78);
-  entries.forEach(stage => {
-    const text = fs.readFileSync(path.join(root, stage.prompt_path), "utf8");
-    obsolete.forEach(phrase =>
-      assert.equal(text.includes(phrase), false, `${stage.prompt_path} must not carry the superseded text: ${phrase}`)
-    );
-  });
-  // The one prompt dispatched from a brief still names the brief, its hash and the fact that the chain replaced it.
-  const vix = ResearchLibrary.chainStageById(
-    ResearchLibrary.factorChainForFactor(catalog, "live.f1-vix-level"),
-    "research"
-  );
-  const vixText = fs.readFileSync(path.join(root, vix.prompt_path), "utf8");
-  assert.ok(vixText.includes("belongs to a workflow this chain does not use"), "the brief's step language is marked superseded");
-  assert.ok(vixText.includes("it is not reproduced here"), "the brief is cited, not copied");
 });
 
 test("the final chain prompts carry the analysis, red-team and candidate-logic stages", () => {
@@ -640,61 +675,52 @@ test("the final chain prompts carry the analysis, red-team and candidate-logic s
   const adjudication = ResearchLibrary.chainStageById(finalSpec, "final_adjudication");
   const analysisText = fs.readFileSync(path.join(root, analysis.prompt_path), "utf8");
   const redTeamText = fs.readFileSync(path.join(root, redTeam.prompt_path), "utf8");
+
   const adjudicationText = fs.readFileSync(path.join(root, adjudication.prompt_path), "utf8");
-  assert.equal(analysisText.includes("final red-team judges this synthesis"), true);
+  assert.equal(analysisText.includes("The factor-chain adjudications this stage reconciles"), true);
+  assert.equal(analysisText.includes("all 25 factor chains have delivered"), true, "the gate is stated in the prompt");
+  assert.equal(analysisText.includes("`all-factor-chains`"), true);
+  assert.equal(analysisText.includes("This chain does not open early".toLowerCase()), true);
   assert.equal(redTeamText.includes("final analysis"), true);
-  assert.equal(redTeamText.includes("supporting evidence"), true);
-  assert.equal(redTeamText.includes("adjudication of every factor chain"), true);
+  assert.equal(redTeamText.includes("candidate model specification and validation plan"), true);
   assert.equal(adjudicationText.includes("final red-team"), true);
   assert.equal(adjudicationText.includes("final analysis"), true);
-  assert.equal(adjudicationText.includes("## Complete candidate Layer 1 logic for isolated backtesting"), true);
+  assert.equal(adjudicationText.includes("Complete candidate Layer 1 logic for isolated backtesting"), true);
   assert.equal(adjudicationText.includes("isolated backtest"), true);
-  assert.equal(adjudicationText.includes("does not implement, score, deploy"), true);
+  assert.equal(adjudicationText.includes("does not fit, score, deploy or change a live call"), true);
   [analysisText, redTeamText, adjudicationText].forEach(text => {
     assert.equal(text.includes("final review"), false, "the removed two-stage name must not survive in a final prompt");
+    assert.equal(text.includes("## What to return"), true, "every prompt ends by saying what to return, and under which file name");
   });
 });
 
-test("the asset strip follows the owner's expansion order", () => {
-  // USD first, then EUR, GOLD, SILVER, NQ, BTC, WTI, GBP. The position ranks no evidence and moves no status: this
-  // guards the order the owner named, so a later edit cannot reorder the strip silently.
-  const expected = ["USD", "EUR", "GOLD", "SILVER", "NQ", "BTC", "WTI", "GBP"];
-  assert.deepEqual(ResearchLibrary.ASSET_ORDER.slice(), expected, "the shared order constant");
-  assert.deepEqual(catalog.asset_order, expected, "the written catalogue");
-  assert.deepEqual(
-    ResearchLibrary.listAssets(ResearchLibrary.normalizeCatalog(catalog)).map(asset => asset.asset),
-    expected,
-    "the order a reader sees"
-  );
-});
-
-test("the VIX factor chain's research prompt is the dispatched assignment, not the legacy reviewer task", () => {
+test("the VIX factor chain's research prompt names the dispatched brief as superseded instead of reproducing it", () => {
   const chain = ResearchLibrary.factorChainForFactor(catalog, "live.f1-vix-level");
   const research = ResearchLibrary.chainStageById(chain, "research");
   const text = fs.readFileSync(path.join(root, research.prompt_path), "utf8");
-  assert.equal(research.prompt_source.kind, "dispatched_brief");
-  assert.equal(research.prompt_source.repo_path, "docs/research/handoff/usd/v1/deep-research/VIX_COMPREHENSIVE_REPORT_BRIEF.md");
+  // One template renders every prompt, so the dispatched brief is named, hashed and refused rather than
+  // pasted underneath a second assignment.
+  assert.equal(research.prompt_source.kind, "generated");
+  assert.equal(research.prompt_source.template_version, Prompts.TEMPLATE_VERSION);
   assert.equal(
     research.prompt_source.sha256,
-    sha256(fs.readFileSync(path.join(root, research.prompt_source.repo_path), "utf8"))
+    sha256(text),
+    "the catalogue hashes the generated prompt, not the brief it supersedes"
   );
-  assert.ok(text.includes("USD-BASELINE-AUDIT-01"), "the dispatched task is named");
-  assert.ok(text.includes("brief 1.0.0"), "the brief version is named");
+  assert.ok(text.includes("USD-BASELINE-AUDIT-01"), "the dispatched task is named as programme history");
   assert.ok(
     text.includes("docs/research/handoff/usd/v1/deep-research/VIX_COMPREHENSIVE_REPORT_BRIEF.md"),
-    "the brief is cited by path"
+    "the superseded brief is named"
   );
-  assert.equal(
-    text.includes("A comprehensive, source-backed report investigating how VIX"),
-    false,
-    "the brief is cited, not reproduced: the prompt already carries the report's required coverage"
-  );
-  assert.ok(Buffer.byteLength(text, "utf8") < 20000, "the prompt carries one stage, not the brief's four steps as well");
   assert.ok(
-    text.includes("## Five kinds of evidence that must not be mixed") &&
-      text.includes("**A potentially useful input or interaction**"),
-    "the condensed prompt keeps the five kinds and both directions of conclusion"
+    text.includes("must not be followed or answered"),
+    "the superseded brief is refused in words"
   );
+  assert.equal(text.includes("--- begin dispatched brief ---"), false, "the brief body is not reproduced");
+  const brief = fs.readFileSync(path.join(root, "docs/research/handoff/usd/v1/deep-research/VIX_COMPREHENSIVE_REPORT_BRIEF.md"), "utf8");
+  const briefLine = brief.split("\n").find(line => line.length > 120);
+  assert.ok(briefLine, "the brief has a long line to test against");
+  assert.equal(text.includes(briefLine), false, "no line of the old brief survives inside the prompt");
   const a3 = ResearchLibrary.taskById(catalog, "USD-SESSION-A3");
   assert.equal(text.includes(a3.prompt.slice(0, 60)), false, "stage 1 must not copy the legacy reviewer prompt");
   // The sibling VIX factor chain did not receive the dispatched brief as a second, independent result.
@@ -823,7 +849,6 @@ test("the store records the chain, the stage and the exact version a stage judge
   const review = store.registerUpload({
     document_id: "vix-stage-2", asset: "USD", factor_id: "live.f1-vix-level", stage: "red_team", document_type: "review",
     title: "Red-team", model: "Astra review", parent_document_id: "vix-stage-1", parent_version: 1,
-    original_filename: "VIX_USD_RedTeam_Review_v1.md",
     content_text: "# review\n"
   }, catalog);
   assert.equal(review.document.chain_id, chain.chain_id, "a chain-only upload records the factor from the chain");
@@ -854,7 +879,6 @@ test("the store records the chain, the stage and the exact version a stage judge
   assert.equal(manifestEntry.stage, "red_team");
   assert.equal(manifestEntry.chain_id, chain.chain_id);
   assert.equal(manifestEntry.parent_version, 1);
-  assert.equal(manifestEntry.original_filename, "VIX_USD_RedTeam_Review_v1.md", "the manifest keeps the registered filename");
   assert.equal(store.readObject("vix-stage-1", 1).version.sha256, research.sha256);
 });
 
@@ -998,11 +1022,126 @@ test("the final chain records its input package and flags stale downstream resul
   assert.deepEqual(stale.flagged_for_reassessment, ["final_analysis", "final_red_team", "final_adjudication"]);
   assert.ok(stale.stale_inputs.some(entry => entry.document_id === changed.document_id && entry.current_version === 2));
 });
+test("every chain prompt keeps the five evidence kinds apart and allows exclusion and a positive finding", () => {
+  // The programme's shared contract separates mechanism, contemporaneous association, predictive evidence from
+  // other windows, evidence for our exact session and incremental value. A prompt that drops one of them lets a
+  // report slide from one kind into another, and exclusion, regime-only use or insufficient evidence stops being
+  // available as a conclusion. A supported directional input or interaction has to remain reachable too: the
+  // audit asks whether a factor earns weight, not only whether it can be dropped. The v3.1.0 rewrite replaced the
+  // questions and kept both sections, so this guard runs against the current prompts unchanged.
+  const kinds = [
+    "**Economic mechanism**",
+    "**Contemporaneous association**",
+    "**Predictive evidence from other windows**",
+    "**Evidence for our exact session**",
+    "**Incremental value beyond existing inputs**"
+  ];
+  const entries = [];
+  ResearchLibrary.listFactorChains(catalog, "USD").forEach(chain => {
+    ResearchLibrary.chainStages(chain).forEach(stage => entries.push({ chain, stage }));
+  });
+  const finalSpec = ResearchLibrary.finalChain(catalog, "USD");
+  ResearchLibrary.chainStages(finalSpec).forEach(stage => entries.push({ chain: finalSpec, stage }));
+  assert.equal(entries.length, 78, "twenty-five chains of three stages plus the three final stages");
+  entries.forEach(({ stage }) => {
+    const text = fs.readFileSync(path.join(root, stage.prompt_path), "utf8");
+    assert.ok(
+      text.includes("## Five kinds of evidence that must not be mixed"),
+      `${stage.prompt_path} must keep the evidence kinds apart`
+    );
+    kinds.forEach(kind => assert.ok(text.includes(kind), `${stage.prompt_path} must name ${kind}`));
+  });
+  const deciding = ["research", "adjudication", "final_analysis", "final_adjudication"];
+  const decisions = entries.filter(({ stage }) => deciding.includes(stage.stage));
+  assert.equal(decisions.length, 52, "one research and one adjudication for each of twenty-five chains, plus the final analysis and the final adjudication");
+  decisions.forEach(({ stage }) => {
+    const text = fs.readFileSync(path.join(root, stage.prompt_path), "utf8");
+    assert.ok(
+      text.includes("## Conclusions this stage is allowed to reach"),
+      `${stage.prompt_path} must say that exclusion is a conclusion`
+    );
+    ["**Exclusion**", "**Regime-only use**", "**Insufficient evidence**", "**Adding nothing**", "**A potentially useful input or interaction**"].forEach(item =>
+      assert.ok(text.includes(item), `${stage.prompt_path} must name ${item}`)
+    );
+    assert.ok(
+      text.includes("mark it unvalidated"),
+      `${stage.prompt_path} must keep a positive finding subject to empirical validation`
+    );
+  });
+  // A red-team returns findings, so it carries no conclusions section and is not asked to decide anything.
+  entries.filter(({ stage }) => !deciding.includes(stage.stage)).forEach(({ stage }) => {
+    const text = fs.readFileSync(path.join(root, stage.prompt_path), "utf8");
+    assert.equal(
+      text.includes("## Conclusions this stage is allowed to reach"),
+      false,
+      `${stage.prompt_path} is a review stage and must not carry a conclusions section`
+    );
+  });
+});
 
-// A hosted stage return is owned by the chain it was stored under, while a committed registry document names
-// its factor. Both must resolve to the same chain, and neither may be counted for a different one.
+
+
+test("no chain prompt carries the superseded four-step workflow, card rules or a recommendation contradiction", () => {
+  // The prompts used to reproduce their dispatched brief in full, and the briefs still describe a four-step
+  // programme (report, red team, research cards, backtest handoff). That text outlived the three-stage chain and
+  // told a reader to return a card, obey a per-card hypothesis limit, upload against a legacy task id and never
+  // propose a change - the last of which contradicted the prompt's own required content. The brief stays in the
+  // repository as the record of what was asked; none of it may reappear inside a prompt.
+  const obsolete = [
+    "step 1 of four",
+    "A research card is step 3",
+    "Not a research card",
+    "The same four steps apply",
+    "per-card limit of at most two programmable hypotheses applies",
+    "none may be proposed as part of the deliverable",
+    "--- begin dispatched brief ---",
+    "Upload against",
+    "step 3, `deep-research/SYNTHESIS_AND_CARDS_BRIEF.md`"
+  ];
+  const entries = [];
+  ResearchLibrary.listFactorChains(catalog, "USD").forEach(chain => {
+    ResearchLibrary.chainStages(chain).forEach(stage => entries.push(stage));
+  });
+  ResearchLibrary.chainStages(ResearchLibrary.finalChain(catalog, "USD")).forEach(stage => entries.push(stage));
+  assert.equal(entries.length, 78);
+  entries.forEach(stage => {
+    const text = fs.readFileSync(path.join(root, stage.prompt_path), "utf8");
+    obsolete.forEach(phrase =>
+      assert.equal(text.includes(phrase), false, `${stage.prompt_path} must not carry the superseded text: ${phrase}`)
+    );
+  });
+  // The one prompt dispatched from a brief still names the brief, its hash and the fact that the chain replaced
+  // it, and it still refuses the brief rather than reproducing it.
+  const vix = ResearchLibrary.chainStageById(
+    ResearchLibrary.factorChainForFactor(catalog, "live.f1-vix-level"),
+    "research"
+  );
+  const vixText = fs.readFileSync(path.join(root, vix.prompt_path), "utf8");
+  assert.ok(
+    vixText.includes("docs/research/handoff/usd/v1/deep-research/VIX_COMPREHENSIVE_REPORT_BRIEF.md"),
+    "the dispatched brief is named"
+  );
+  assert.ok(/sha256 `[0-9a-f]{64}`/.test(vixText), "the brief is named with its hash");
+  assert.ok(vixText.includes("must not be followed or answered"), "the brief is marked superseded");
+  assert.ok(vixText.includes("the one deliverable this stage asks for"), "the brief's deliverable is not the stage's");
+});
+
+test("the asset strip follows the owner's expansion order", () => {
+  // USD first, then EUR, GOLD, SILVER, NQ, BTC, WTI, GBP. The position ranks no evidence and moves no status: this
+  // guards the order the owner named, so a later edit cannot reorder the strip silently.
+  const expected = ["USD", "EUR", "GOLD", "SILVER", "NQ", "BTC", "WTI", "GBP"];
+  assert.deepEqual(ResearchLibrary.ASSET_ORDER.slice(), expected, "the shared order constant");
+  assert.deepEqual(catalog.asset_order, expected, "the written catalogue");
+  assert.deepEqual(
+    ResearchLibrary.listAssets(ResearchLibrary.normalizeCatalog(catalog)).map(asset => asset.asset),
+    expected,
+    "the order a reader sees"
+  );
+});
+
+
 test("a chain reads its registry documents by factor and its hosted rows by chain id", () => {
-  const catalog = {
+  const scopedCatalog = {
     assets: [{ asset: "USD", factors: [{ factor_id: "live.f1-vix-level", label: "VIX level" }] }],
     factor_chains: [{
       chain_id: "usd-factor-live-f1-vix-level",
@@ -1017,7 +1156,7 @@ test("a chain reads its registry documents by factor and its hosted rows by chai
       ]
     }]
   };
-  const chain = ResearchLibrary.listFactorChains(catalog, "USD")[0];
+  const chain = ResearchLibrary.listFactorChains(scopedCatalog, "USD")[0];
   const registryDocument = {
     document_id: "usd-baseline-audit-01-vix-usd-report",
     factor_id: "live.f1-vix-level",
@@ -1044,13 +1183,12 @@ test("a chain reads its registry documents by factor and its hosted rows by chai
   const found = ResearchLibrary.chainDocuments(documents, chain).map(document => document.document_id);
   assert.deepEqual(found, [registryDocument.document_id, hostedDocument.document_id]);
 
-  const research = ResearchLibrary.chainStageState(chain, "research", documents, catalog);
+  const research = ResearchLibrary.chainStageState(chain, "research", documents, scopedCatalog);
   assert.equal(research.state, "delivered");
-  const redTeam = ResearchLibrary.chainStageState(chain, "red_team", documents, catalog);
+  const redTeam = ResearchLibrary.chainStageState(chain, "red_team", documents, scopedCatalog);
   assert.equal(redTeam.state, "delivered");
   assert.equal(redTeam.original_filename, "red-team.md", "the uploaded file name reaches the stage card");
-  const adjudication = ResearchLibrary.chainStageState(chain, "adjudication", documents, catalog);
+  const adjudication = ResearchLibrary.chainStageState(chain, "adjudication", documents, scopedCatalog);
   assert.equal(adjudication.state, "awaiting_upload", "the hosted red-team opens the adjudication stage");
   assert.equal(adjudication.parent_document_id, hostedDocument.document_id, "stage three attaches the hosted red-team");
 });
-

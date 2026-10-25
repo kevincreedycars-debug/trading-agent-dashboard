@@ -1,19 +1,51 @@
 # F3 US-DE 2Y spread delta - live.f3-us-de-2y-spread-delta - stage 2 of 3: Red-team
 
-- Factor chain `usd-factor-live-f3-us-de-2y-spread-delta` for factor `live.f3-us-de-2y-spread-delta` on asset USD; group label `usd-topic-front-end-rates` (US front-end rates, real yields and curve position); stage `red_team`; this stage returns exactly one Markdown document (review).
-- The chain belongs to one factor entry, so the evidence this stage returns maps to `live.f3-us-de-2y-spread-delta` and is not counted as a second independent result elsewhere.
-- Paste this whole prompt as one message into your own fresh session. Nothing is sent to a model from the dashboard, and this page holds no model credentials.
-- Reviewed document: the research return registered against factor chain `usd-factor-live-f3-us-de-2y-spread-delta`, stage `research`. The stage 1 card shows its document id, its version and its sha256: attach exactly that version.
+## Assignment
 
-## What this stage is for
+- Chain: `usd-factor-live-f3-us-de-2y-spread-delta` on USD (US Dollar); chain kind `factor`.
+- Factor: `live.f3-us-de-2y-spread-delta` - F3 US-DE 2Y spread delta.
+- Group label: `usd-topic-front-end-rates` (US front-end rates, real yields and curve position). The label groups chains; it owns no stage and this prompt is the only stage you run for it.
+- Stage: 2 of 3, red-team. This stage returns exactly one Markdown document (review), named `usd-live-f3-us-de-2y-spread-delta-s2-red-team.md`.
+- Prompt template: `research-prompt-v3.1.0`, written 2026-10-13. The template is versioned: if a newer `research-prompt` template exists, that one governs and this file is superseded.
+- This prompt is self-contained. Paste it as one message into a fresh session; nothing is sent to a model from the dashboard and no credential is attached to it.
+- Asset status: active. The session is defined below and the data reachable from this repository is named with each input.
+- Programme record: this chain has not been dispatched. Nothing has been returned for it, and this prompt is its first assignment.
 
-Find what is wrong, unsupported or overstated in the research report before the adjudication carries it further. A report that survives an honest attack is worth more than one that was never attacked, so this stage is expected to damage claims and to say which ones stood up. It is not a summary, not a rewrite and not a vote, and it does not manufacture disagreement.
+## Objective
 
-## Which version you are attacking
+Attack one document: the stage 1 report for F3 US-DE 2Y spread delta - live.f3-us-de-2y-spread-delta, which the operator supplies, and return one issue register. Judge every load-bearing claim on the passage it cites and on the sources you fetch yourself, give each claim a verdict, a severity and the evidence that would settle it, and keep separate what the report gets right, what it cannot support and what you could not reach. Do not rewrite the report and do not propose an implementation; a narrower true claim is a result, not a loss.
 
-- Attach the exact research version the stage 1 card points to, and nothing else about its reasoning.
-- Copy that card's document id, version and sha256 into the identifier lines at the top of your return.
-- If the copy you hold has a different hash from the one on the card, say so and stop: you would not be reviewing the registered version.
+## The session and the instrument
+
+- Session: 05:00 Europe/London to 05:00 Europe/London on the next local date. Both ends are London wall-clock times one local date apart, so every eligible session is exactly 24 hours. The contract is `docs/research/usd-session/v1/session_contract_v1.json`.
+- Label instrument: DXY, and UNVERIFIED. No intraday dollar-index print exists in this repository or in the live collector, and no quote source is committed. If a claim is really about EUR/USD, a basket, the broad trade-weighted index or a futures contract, name that instrument in the same sentence and say what its window is.
+- The deployed engine is not this window: it cuts off at 09:30 America/New_York and ends at the next 16:00 ET close, a median 30.5 elapsed hours. It overlaps this session for about 14.5 nominal hours and leaves the session's first 9.5 hours unmeasured. Say which window every number belongs to.
+- The window is closed to later information: a value published after 05:00 London, or a revision published later, may not be used as what was known at the cutoff.
+
+## Inputs
+
+### The factor entries this chain answers for
+
+These are the catalogue entries this chain is evidence for. They are context to audit, never evidence for a claim, and never the scope limit of the assignment.
+
+- `live.f3-us-de-2y-spread-delta` - F3 US-DE 2Y spread delta. Role: direction. Group: live_engine. Research status: ready.
+  - What the entry stands for: Change in the US minus German 2Y spread, derived in the collector from two series.
+  - Rule in force today, the baseline to audit and never evidence: 5-day change at or above +5 bps reads BULLISH, at or below -5 bps BEARISH.
+  - Threshold: +/- 5 bps. Lookback: 5 days on the 24h timeframe.
+  - Series the collector reads: FRED DGS2; Bundesbank BBSSY 2Y CSV.
+  - Published brief: `docs/research/handoff/usd/v1/packs/f3-us-de-2y-spread-delta.md` (sha256 `0d2f81ba66be7a6efea703673373c106ecb4d51362d681d9acdc59f1d5f3ccb4`, 15483 bytes). Read it with this prompt if it is attached; the questions below stand without it.
+
+### Documents you are given
+
+Supplied by the operator. Record the file name and the first heading of the document you judge in the header lines your deliverable asks for. If what you were given is clearly another topic or another stage, stop and say so.
+
+- `usd-live-f3-us-de-2y-spread-delta-s1-research.md` - the stage 1 report for this chain, at the version and hash registered against its stage 1. As supplied: version `unknown`, sha256 `unknown`.
+
+### Documents in this checkout
+
+Each line names a file, the part of it that matters, its hash and what it is for. If a file is not attached to this message, answer from this prompt and say which files you could not open.
+
+- `docs/research/usd-session/v1/weight_vector_discrepancy.md` - the two live weight vectors and where each is used. sha256 `2f420763193b0a032ccd38c1958563cd848c942f7cf49b53cad8de0ad98535cc`.
 
 ## Independence rules
 
@@ -24,16 +56,38 @@ Find what is wrong, unsupported or overstated in the research report before the 
 
 ## What to attack, claim by claim
 
-- **Traceability**: does the passage cited actually say what the claim says, and is the link the source itself rather than a summary of it?
-- **Window**: is the evidence about our 05:00 London to 05:00 London session, or about a close-to-close day, an intraday slice or another window, presented as if it were ours?
-- **Instrument**: is a claim really about EUR/USD, a basket or a future, presented under the DXY name?
-- **Mechanism against measurement**: is a plausible channel being used as if the relation had been measured?
-- **Mixed evidence**: is a mechanism, a contemporaneous association, another window's measurement or information already in an earlier input being presented as predictive evidence for our session?
-- **Already priced**: does the claim count an effect as predictive that the cutoff has already absorbed?
-- **Identification and scope**: sample period, era dependence, regime dependence, conditioning on the outcome, survivorship in the sources chosen, base rates behind a conditional claim, and any number with no stated origin.
-- **Counter-evidence**: is the strongest contrary evidence in the sources the report fetched absent, or present and dismissed without a reason?
-- **Internal consistency**: does one section contradict another, and does the what-is-not-claimed section match what the body actually does?
-- **Overlap**: does the report lean on an interaction that counts one input twice across factor entries, and does it say so?
+Answer every question below, in order. Where the evidence does not exist, write that and what would settle it: an honest "not answerable from the sources I can reach" is a complete answer, a guess is not.
+
+### Questions to answer, claim by claim
+
+1. For each load-bearing claim: what exactly does it assert, and does the passage it cites support it as stated?
+2. Window: is the evidence about the session above, or about a close-to-close day, an intraday slice or another window presented as if it were ours?
+3. Instrument: is a claim really about EUR/USD, a basket, a futures contract or an ETF, presented under another name?
+4. Mechanism against measurement: is a plausible channel being used as though the relation had been measured?
+5. Already priced: does the claim count as predictive something the cutoff has already absorbed?
+6. Identification: sample period, era and regime dependence, conditioning on the outcome, survivorship in the sources chosen, the base rate behind a conditional claim, and any number with no stated origin.
+7. Counter-evidence: is the strongest contrary evidence in the sources the report fetched missing, or present and dismissed without a reason?
+8. Internal consistency and scope: does one section contradict another, does the what-is-not-claimed section match the body, and is any true claim only too wide?
+9. Coverage: does every entry in scope get an answer, and is every question the report could not answer named as unanswered?
+
+### Questions this chain asks, which the report had to answer
+
+10. Is the spread built from two series with different publication lags and market calendars, and what does that mismatch do to a five-day change computed at the cutoff? Did the report answer it, and on what source?
+11. Is the informative part the US leg, the German leg or the difference, and can the two legs be separated with data observable at 05:00 London? Did the report answer it, and on what source?
+12. Are Bund yields available on the same date and vintage as DGS2, and what happens to the spread when one leg misses a session or is republished? Did the report answer it, and on what source?
+13. Does the relative 2Y spread add anything beyond the US 2Y delta and the broad dollar index, or is its weight the US leg counted twice? Did the report answer it, and on what source?
+14. Which of the eight entries is measuring something the others do not, and which pairs are the same information counted twice? Did the report answer it, and on what source?
+
+## Evidence standard
+
+- Name the source for every load-bearing claim: publication, series id, table or section, and the date you read it. A claim with no source is written as your reading, not as a finding.
+- Cite the passage you rely on. Where a source only partly supports a claim, write what it does support and what it leaves out.
+- Separate measurement from mechanism. A channel is a hypothesis; say which part of a claim has been measured and which part has not.
+- State the sample behind any relation: instrument, window, era and the number of non-overlapping observations. A number with no sample is not evidence.
+- Prefer the primary source to a summary, and the series documentation to a post about the series.
+- Report what you could not reach: paywalls, undated pages, dead links, series with no documented vintage. Do not fill the gap with a plausible number.
+- Where two sources disagree, say so and say which you would trust and why.
+- Every claim about timing is about this session and this cutoff, not about a general close-to-close convention.
 
 ## Five kinds of evidence that must not be mixed
 
@@ -53,55 +107,71 @@ A claim that changes kind between sections - a mechanism presented as a measurem
 
 For each claim also give the claim quoted, its severity (fatal, material, cosmetic), what is wrong, and the evidence that would resolve it. End with two lists: what survives the attack unchanged, and what the review could not reach at all.
 
-## The session this is written for
+## What the review must contain
 
-- **Session**: 05:00 Europe/London to 05:00 Europe/London on the next local date. Both ends are London wall-clock times one local date apart, so every eligible session is exactly 24 hours. The contract is `docs/research/usd-session/v1/session_contract_v1.json`.
-- **Starts and ends**: a session starts on a Monday-to-Friday London local date only. A Saturday or Sunday start is never a session; the Saturday start is the only one that can contain a London daylight-saving transition, which is why every eligible session is exactly 24 hours (`backtester/lib/usd_session_engine_interface.js`, `SESSION_CONTRACT`, `session_start_rule`). A Friday session therefore ends at the 05:00 London endpoint on the Saturday. When the endpoint value does not exist, record the session as not evaluable and leave the value missing: never fill it from a Friday close, a Monday open, an interpolation or a later revision, and never quote a number whose window you cannot name.
-- **Label instrument**: proposed as DXY and UNVERIFIED. No intraday dollar-index print exists in this repository or in the live collector, and no quote source is committed. Never present another instrument as DXY: if a source is about EUR/USD, a basket, the broad trade-weighted index or a futures contract, name that instrument in the same sentence, and say whether its window is a close-to-close day, an intraday slice or something else.
-- **The deployed engine is not this window, and its timing is read from the code that defines it, never from memory or from a document**: the stored live calls were attached to the window resolved by the repository's own Phase 1 contract - a 09:30 America/New_York open on the call date to the 16:00 America/New_York close of the next date that has a value, sliding up to three days when the scheduled close has none (`getPhase1OutcomeWindow` in `backtester/lib/timeframe_windows.js`, applied in `backtester/lib/usd24h/outcomes.js`, whose own note calls it a nominal 24-hour horizon rather than 24 elapsed hours and which records `measured_elapsed_hours` per row). The "median 30.5 elapsed hours" figure is a measurement on the closed study's own 583 evaluable rows, recorded under `contract_vs_deployed_engine` in `docs/research/usd-session/v1/session_contract_v1.json`: it is a property of that study, not a declared property of the live engine, and it must be attributed that way every time it is quoted. The same block measures the overlap of that study's interval with this session as 14.5 hours on 528 rows and 15.5 hours on 55 rows - the two weeks a year when New York has changed and London has not - and the session's first 9.5 hours (8.5 in those weeks) as uncovered. Those figures are measured and date-dependent: they are not to be derived by subtracting a fixed London-to-New-York offset, and any comparison of a London-anchored window with a New-York-anchored one must be resolved per date from declared transitions. The archive's "next valid trading session" means the next date with an available value, not a holiday-aware exchange calendar, and the engine does not model market holidays. If the code and a document disagree about the live engine's timing, the code is the authority; report the disagreement rather than repeating the document.
+The file must contain exactly these sections, in this order, each as a `## ` heading with the exact title:
 
-## The factor entry this chain is evidence for
+  1. `## Summary - the verdict, in at most ten lines`
+  2. `## The document judged - file name, first heading, the version and hash you were given`
+  3. `## Claims checked - one row per load-bearing claim: claim as stated, where it is, verdict, severity, the evidence and the reason`
+  4. `## What the report gets right`
+  5. `## What the report cannot support, and the sentence that breaks it`
+  6. `## What you could not check, and what would settle it`
+  7. `## Window, instrument and timing defects`
+  8. `## Identification, sample and inference defects`
+  9. `## Overlap and double counting the report leaves unaddressed`
+  10. `## Questions the report should have answered and did not`
+  11. `## What a corrected version of the strongest surviving claim would say`
+  12. `## Sources consulted`
 
-This entry is context to audit. It is not evidence for any claim, and it is not the scope limit of this assignment.
-
-- **live.f3-us-de-2y-spread-delta** - F3 US-DE 2Y spread delta. Role: direction. Group: live_engine.
-  - The question this entry stands for: Change in the US minus German 2Y spread, derived in the collector from two series.
-  - Rule in force today, as context to audit and never as evidence: 5-day change at or above +5 bps reads BULLISH, at or below -5 bps BEARISH.
-  - Threshold: +/- 5 bps; lookback: 5 days on the 24h timeframe.
-  - Series the collector reads: FRED DGS2; Bundesbank BBSSY 2Y CSV.
-
-## Companion files in the repository
-
-Files in the checkout behind this chain, if you can reach them. They are aids, not attachments you must have.
-
-- `docs/research/usd-session/v1/weight_vector_discrepancy.md` (the two live weight vectors and where each is used) - sha256 `2f420763193b0a032ccd38c1958563cd848c942f7cf49b53cad8de0ad98535cc`
+Keep a section that turns out to be empty, and say in one sentence why it is empty.
+Do not restate these instructions, and do not add a section that summarises the prompt.
 
 ## What to return
 
-- Required content: The issue register, the two closing lists (what survives unchanged, what the review could not reach), the sources you re-fetched and the questions you could not resolve.
-- Return one Markdown document. Put these identifier lines at the top of the file, before the body, and fill them from the stage card you downloaded:
+Return exactly one Markdown file and nothing else.
+
+- File name: `usd-live-f3-us-de-2y-spread-delta-s2-red-team.md`. Copy it exactly: the library records the name it receives and matches it to the prompt that asked for it.
+- Format: one Markdown file. No JSON, no zip, no PDF, no spreadsheet, no second file, no separate sources note, no filled-in card.
+- Length: as long as the material needs, and no longer. A short file that answers every question beats a long one that answers some.
+- Header lines, above the first heading, in this form:
 
 ```
 Reviewed chain: usd-factor-live-f3-us-de-2y-spread-delta
-Reviewed factor: live.f3-us-de-2y-spread-delta
-Reviewed document: <document id shown on the stage card you downloaded>
-Reviewed version: <version>
-Reviewed sha256: <sha256 shown on that card>
+Reviewed document: <the file name you were given>
+Reviewed version: <the version you were given, or unknown>
+Reviewed sha256: <the hash you were given, or unknown>
+Reviewed first heading: <the first heading of that document, verbatim>
 ```
-- Keep it in one file. Tables, sources, hypotheses, candidate relations and appendices all belong inside that document; nothing here needs a second file, a JSON payload or a hand-built schema.
-- The dashboard records the chain, the stage and the exact version this document judged, so that metadata is not yours to assemble: pick the stage card, choose the file, upload it.
+
+Write `unknown` where a version or a hash was not supplied. Do not invent one, and do not stop because it is missing.
+
+## Completion checklist
+
+Walk this list before you return the file. A "no" means the file is not ready.
+
+- [ ] Every load-bearing claim in the document has a row in the register.
+- [ ] Every verdict carries a reason and a severity, not only a label.
+- [ ] The header lines record the file name and first heading you were given, and never invent a hash.
+- [ ] What the report gets right is listed as such.
+- [ ] What you could not check is kept separate from what you checked and found wrong.
+- [ ] No rewritten report, no replacement section and no proposed implementation.
+- [ ] The file name and every section heading match the instructions exactly.
 
 ## Prohibitions
 
-Do not invent a backtest, a performance figure, an accuracy rate or a sample size. If you have not measured it, say it is unmeasured. Numbers you remember are not evidence.
-Do not use hindsight: never state what a past period would have predicted using information that was not available at that time, and do not present a later revision as a first print.
-Cite only sources you actually fetched in this session, with the link and the passage you relied on.
-Where you are uncertain, say so and give the reason; an unresolved question is a valid return.
-State effects that are already in the price at the cutoff rather than counting them again as predictive.
-Treat the deployed weights, thresholds and signs as a baseline to audit, never as evidence for your claim.
-Name the instrument a claim is really about. Never present another instrument as DXY.
-Recommending data the collector should record and a treatment a future engine should apply is required content, not a change being made. No production, workflow, dashboard, feed, dispatcher, database or configuration change is authorised by this prompt, none may be carried out now, and none may be reported as done or as agreed.
+- Do not treat a rule in force as evidence for itself. It is the baseline you are auditing.
+- Do not propose or make a change to a live engine, a live call or a deployed workflow.
+- Do not invent a number, a series id, a citation, a date or a hash. `unknown` is allowed; a guess is not.
+- Do not return JSON, a dashboard card, a zip, a spreadsheet, a second file, or this prompt pasted back.
+- Do not add, rename, reorder or merge the deliverable sections.
+- Do not report a directional edge from a sample you have not described.
+- Do not use a value published after the cutoff, or a later revision, as what was known at the cutoff.
+- Do not treat a local export, a passing replay test or a workflow run as evidence that anything is deployed, timely or profitable.
+- Do not assume access to data this prompt does not name; if a test needs it, say what it is and where it would come from.
 
-## What happens after you return it
+If a question can only be answered by breaking one of these, say so in the file rather than breaking it.
 
-The adjudication (stage 3) reads the report and this review together and decides every material objection. Nothing here approves a hypothesis, scores a factor or changes a live call: an upload records evidence and moves no status.
+## What happens next
+
+The operator supplies this review and the report it judges, unchanged and under their own names, to stage 3 (adjudication) for the same chain. The review does not replace the report, and no engine reads either.

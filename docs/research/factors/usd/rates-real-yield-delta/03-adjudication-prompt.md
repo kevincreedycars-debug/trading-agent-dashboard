@@ -1,28 +1,87 @@
 # Real yield delta - rates.real-yield-delta - stage 3 of 3: Adjudication
 
-- Factor chain `usd-factor-rates-real-yield-delta` for factor `rates.real-yield-delta` on asset USD; group label `usd-topic-front-end-rates` (US front-end rates, real yields and curve position); stage `adjudication`; this stage returns exactly one Markdown document (synthesis).
-- The chain belongs to one factor entry, so the evidence this stage returns maps to `rates.real-yield-delta` and is not counted as a second independent result elsewhere.
-- Paste this whole prompt as one message into your own fresh session. Nothing is sent to a model from the dashboard, and this page holds no model credentials.
-- Attach both documents this stage judges: the research return for factor `rates.real-yield-delta` (chain `usd-factor-rates-real-yield-delta`) and the red-team review of it. Each stage card shows its document id, version and sha256; attach those exact versions.
+## Assignment
 
-## What this stage is for
+- Chain: `usd-factor-rates-real-yield-delta` on USD (US Dollar); chain kind `factor`.
+- Factor: `rates.real-yield-delta` - Real yield delta.
+- Group label: `usd-topic-front-end-rates` (US front-end rates, real yields and curve position). The label groups chains; it owns no stage and this prompt is the only stage you run for it.
+- Stage: 3 of 3, adjudication. This stage returns exactly one Markdown document (synthesis), named `usd-rates-real-yield-delta-s3-adjudication.md`.
+- Prompt template: `research-prompt-v3.1.0`, written 2026-10-13. The template is versioned: if a newer `research-prompt` template exists, that one governs and this file is superseded.
+- This prompt is self-contained. Paste it as one message into a fresh session; nothing is sent to a model from the dashboard and no credential is attached to it.
+- Asset status: active. The session is defined below and the data reachable from this repository is named with each input.
+- Programme record: this chain has not been dispatched. Nothing has been returned for it, and this prompt is its first assignment.
 
-Read the research report and the red-team review together and produce the best-supported conclusion. Resolve each material objection on the evidence; do not split the difference, do not average the two documents, and do not treat agreement between them as evidence. Where the evidence does not decide, say which finding is unresolved and what would decide it.
+## Objective
 
-## Which versions you are judging
+Decide one chain: settle every material objection against the stage 1 report and the stage 2 review for Real yield delta - rates.real-yield-delta, and return the corrected, best-supported conclusion. State what the chain rules out, what stays unresolved and what would settle it, and state a treatment of the entries only where the evidence supports one, naming every parameter that has not been measured. This stage decides on the evidence available when it is run; it does not fit, score, deploy or change a live call.
 
-- This stage judges two documents, and each needs its own identifier: the research return, and the red-team review of it.
-- The dashboard supplies both, one card per document: the stage 2 card carries the research document id, version and sha256, and the stage 3 card carries the red-team document id, version and sha256, shown as a prefix on the card; any "Versions to judge" block copied with this prompt, and the handoff that supplies it, carries the same six values with the sha256 in full. Reproduce them in the identifier lines at the top of your return; do not assemble them yourself and do not take them from memory of another session.
-- If your session can hash a file locally (`sha256sum`, `Get-FileHash`, `certutil -hashfile`, or the equivalent), recompute the sha256 of each attached file and write whether it matches the supplied value. If an attachment does not match the identifier supplied for it, say so and stop.
-- If your session has no hashing tool, write plainly that the hashes were taken from the dashboard and were not independently recomputed in this session. Do not claim a verification you did not perform, and do not present the card's value as something you confirmed.
-- If either attachment is missing, say so and stop.
+## The session and the instrument
+
+- Session: 05:00 Europe/London to 05:00 Europe/London on the next local date. Both ends are London wall-clock times one local date apart, so every eligible session is exactly 24 hours. The contract is `docs/research/usd-session/v1/session_contract_v1.json`.
+- Label instrument: DXY, and UNVERIFIED. No intraday dollar-index print exists in this repository or in the live collector, and no quote source is committed. If a claim is really about EUR/USD, a basket, the broad trade-weighted index or a futures contract, name that instrument in the same sentence and say what its window is.
+- The deployed engine is not this window: it cuts off at 09:30 America/New_York and ends at the next 16:00 ET close, a median 30.5 elapsed hours. It overlaps this session for about 14.5 nominal hours and leaves the session's first 9.5 hours unmeasured. Say which window every number belongs to.
+- The window is closed to later information: a value published after 05:00 London, or a revision published later, may not be used as what was known at the cutoff.
+
+## Inputs
+
+### The factor entries this chain answers for
+
+These are the catalogue entries this chain is evidence for. They are context to audit, never evidence for a claim, and never the scope limit of the assignment.
+
+- `rates.real-yield-delta` - Real yield delta. Role: direction. Group: research_session_v1. Research status: ready.
+  - What the entry stands for: 10Y and 5Y real yields and the breakeven split, separating the nominal and inflation parts of the move.
+  - Rule in force today, the baseline to audit and never evidence: No rule is in force. This is a hypothesis to be researched, not a deployed rule..
+  - Series the collector reads: FRED DFII10 and T10YIE; Rates package USD-SESSION-A2.
+  - Published brief: `docs/research/handoff/usd/v1/packs/rates-real-yield-delta.md` (sha256 `b39eadc79f2491816719419702cfa4aff99ac731af1ae60ffd8aac12bbf810cb`, 13543 bytes). Read it with this prompt if it is attached; the questions below stand without it.
+
+### Documents you are given
+
+Supplied by the operator. Record the file name and the first heading of each document you judge in the header lines your deliverable asks for. If either is clearly another topic or another stage, stop and say so.
+
+- `usd-rates-real-yield-delta-s1-research.md` - the stage 1 report for this chain, at the version and hash registered against its stage 1. As supplied: version `unknown`, sha256 `unknown`.
+- `usd-rates-real-yield-delta-s2-red-team.md` - the stage 2 review for this chain, at the version and hash registered against its stage 2. As supplied: version `unknown`, sha256 `unknown`.
+
+### Documents in this checkout
+
+Each line names a file, the part of it that matters, its hash and what it is for. If a file is not attached to this message, answer from this prompt and say which files you could not open.
+
+- `docs/research/usd-session/v1/weight_vector_discrepancy.md` - the two live weight vectors and where each is used. sha256 `2f420763193b0a032ccd38c1958563cd848c942f7cf49b53cad8de0ad98535cc`.
 
 ## How to decide
 
-- Answer a material objection on the evidence the two documents give, and on sources you fetched yourself; say which it was.
-- Reject an objection the evidence does not support, and say what is wrong with it.
-- A claim that neither document settles stays unresolved and is listed as unresolved rather than quietly dropped.
-- A narrowing that keeps the true part of a claim is a decision, not a compromise.
+Answer every question below, in order. Where the evidence does not exist, write that and what would settle it: an honest "not answerable from the sources I can reach" is a complete answer, a guess is not.
+
+Resolve each material objection on the evidence; do not split the difference, do not average the two documents, and do not treat agreement between them as evidence. Where the evidence does not decide, say which finding is unresolved and what would decide it.
+
+### Questions to decide, finding by finding
+
+1. For each material objection: do the two documents and the sources you fetch decide it, or does it stay open?
+2. Where the report and the review agree, do they rest on the same source - and if so, is that agreement evidence, or one source counted twice?
+3. Which conclusion survives in corrected form, and exactly what changed in it?
+4. Which objection is rejected, and what is wrong with it?
+5. Which claim stays unresolved, and what measurement would settle it?
+6. Is any proposed treatment computable from the data named in this prompt, and which of its parameters have not been measured?
+7. Does the proposed treatment count one input twice across entries or chains, and if so, which chain owns it?
+8. What must the asset synthesis decide that this chain cannot?
+
+### Questions this chain must settle
+
+9. Is the real yield measured from TIPS, from a nominal-minus-survey-expectations decomposition, or from a model, and which of them is available at the cutoff? Settle it: accepted, rejected or unresolved, and what evidence decides it?
+10. Does the move come from the nominal leg or the breakeven, and how reliable is the breakeven when both inflation swaps and TIPS liquidity are imperfect? Settle it: accepted, rejected or unresolved, and what evidence decides it?
+11. Is the mechanism a discount-rate channel for the dollar, a growth channel, or a risk-premium channel, and what evidence separates those cases? Settle it: accepted, rejected or unresolved, and what evidence decides it?
+12. Does this chain duplicate live F4, and does a 5Y real yield add anything to the 10Y that the deployed chain already uses? Settle it: accepted, rejected or unresolved, and what evidence decides it?
+13. Which of the eight entries is measuring something the others do not, and which pairs are the same information counted twice? Settle it: accepted, rejected or unresolved, and what evidence decides it?
+
+## Evidence standard
+
+- Name the source for every load-bearing claim: publication, series id, table or section, and the date you read it. A claim with no source is written as your reading, not as a finding.
+- Cite the passage you rely on. Where a source only partly supports a claim, write what it does support and what it leaves out.
+- Separate measurement from mechanism. A channel is a hypothesis; say which part of a claim has been measured and which part has not.
+- State the sample behind any relation: instrument, window, era and the number of non-overlapping observations. A number with no sample is not evidence.
+- Prefer the primary source to a summary, and the series documentation to a post about the series.
+- Report what you could not reach: paywalls, undated pages, dead links, series with no documented vintage. Do not fill the gap with a plausible number.
+- Where two sources disagree, say so and say which you would trust and why.
+- Every claim about timing is about this session and this cutoff, not about a general close-to-close convention.
 
 ## Five kinds of evidence that must not be mixed
 
@@ -46,67 +105,69 @@ A claim that changes kind between sections - a mechanism presented as a measurem
 
 ## What the adjudication must contain
 
-1. **Corrected conclusions** - the best-supported version of each conclusion, stated plainly.
-2. **Finding-by-finding decisions** - every material objection from the review, decided as accepted, rejected or unresolved, each with its reason.
-3. **Accepted, rejected and unresolved claims** - as three explicit lists.
-4. **Proposed treatment of the factor in the engine** - only where the evidence supports it: the input, the transformation, the sign, the threshold, the lookback, the timing and how any interaction is handled. Where the evidence does not support a treatment, say that instead. The rules in force are context to be tested, never a target to agree with.
-5. **Inputs, transformations, timing, interactions and missing-data considerations** - including what the collector does not record today and what it would have to record.
-6. **Explicitly unvalidated parameters** - every number or choice you propose that has not been measured, named as unvalidated.
-7. **Required empirical tests and remaining blockers** - what would have to be measured, on what sample and window, with what data, and what is missing or behind a paywall.
-8. **Handoff to central USD synthesis** - a short, self-contained section a later central synthesis can read on its own: what this factor contributes, what it rules out, what stays unresolved, and what it does not claim.
+The file must contain exactly these sections, in this order, each as a `## ` heading with the exact title:
 
-## The line this stage must not cross
+  1. `## Summary - the decision, in at most ten lines`
+  2. `## The documents judged - file names, first headings, versions and hashes`
+  3. `## Decision register - one row per material objection: accepted, rejected or unresolved, with the evidence and the reason`
+  4. `## The conclusion for this chain, in corrected form`
+  5. `## What the evidence supports, by entry, with the sample behind each claim`
+  6. `## What this chain rules out`
+  7. `## Unresolved items, and the measurement that would settle each`
+  8. `## Proposed treatment, if the evidence supports one, with every unvalidated parameter named`
+  9. `## Required empirical tests and remaining blockers`
+  10. `## Ownership of inputs that overlap another chain`
+  11. `## Handoff to central USD synthesis`
+  12. `## Sources`
 
-Research accepted for synthesis is not a validated trading rule. This stage proposes; it does not implement, score, deploy or change a live call, and it asserts no performance figure it has not measured. A recommendation is not a change and is required content: which series and resolution the collector should record, with what vintage and history handling, and how a future engine should treat this factor, all belong in sections 4, 5 and 7. What is forbidden is making the change, presenting it as agreed or scheduled, or claiming that anything in the live engine, a workflow, the dashboard, the feed, the dispatcher or the database has already been changed.
-
-## The session this is written for
-
-- **Session**: 05:00 Europe/London to 05:00 Europe/London on the next local date. Both ends are London wall-clock times one local date apart, so every eligible session is exactly 24 hours. The contract is `docs/research/usd-session/v1/session_contract_v1.json`.
-- **Starts and ends**: a session starts on a Monday-to-Friday London local date only. A Saturday or Sunday start is never a session; the Saturday start is the only one that can contain a London daylight-saving transition, which is why every eligible session is exactly 24 hours (`backtester/lib/usd_session_engine_interface.js`, `SESSION_CONTRACT`, `session_start_rule`). A Friday session therefore ends at the 05:00 London endpoint on the Saturday. When the endpoint value does not exist, record the session as not evaluable and leave the value missing: never fill it from a Friday close, a Monday open, an interpolation or a later revision, and never quote a number whose window you cannot name.
-- **Label instrument**: proposed as DXY and UNVERIFIED. No intraday dollar-index print exists in this repository or in the live collector, and no quote source is committed. Never present another instrument as DXY: if a source is about EUR/USD, a basket, the broad trade-weighted index or a futures contract, name that instrument in the same sentence, and say whether its window is a close-to-close day, an intraday slice or something else.
-- **The deployed engine is not this window, and its timing is read from the code that defines it, never from memory or from a document**: the stored live calls were attached to the window resolved by the repository's own Phase 1 contract - a 09:30 America/New_York open on the call date to the 16:00 America/New_York close of the next date that has a value, sliding up to three days when the scheduled close has none (`getPhase1OutcomeWindow` in `backtester/lib/timeframe_windows.js`, applied in `backtester/lib/usd24h/outcomes.js`, whose own note calls it a nominal 24-hour horizon rather than 24 elapsed hours and which records `measured_elapsed_hours` per row). The "median 30.5 elapsed hours" figure is a measurement on the closed study's own 583 evaluable rows, recorded under `contract_vs_deployed_engine` in `docs/research/usd-session/v1/session_contract_v1.json`: it is a property of that study, not a declared property of the live engine, and it must be attributed that way every time it is quoted. The same block measures the overlap of that study's interval with this session as 14.5 hours on 528 rows and 15.5 hours on 55 rows - the two weeks a year when New York has changed and London has not - and the session's first 9.5 hours (8.5 in those weeks) as uncovered. Those figures are measured and date-dependent: they are not to be derived by subtracting a fixed London-to-New-York offset, and any comparison of a London-anchored window with a New-York-anchored one must be resolved per date from declared transitions. The archive's "next valid trading session" means the next date with an available value, not a holiday-aware exchange calendar, and the engine does not model market holidays. If the code and a document disagree about the live engine's timing, the code is the authority; report the disagreement rather than repeating the document.
-
-## The factor entry this chain is evidence for
-
-This entry is context to audit. It is not evidence for any claim, and it is not the scope limit of this assignment.
-
-- **rates.real-yield-delta** - Real yield delta. Role: direction. Group: research_session_v1.
-  - The question this entry stands for: 10Y and 5Y real yields and the breakeven split, separating the nominal and inflation parts of the move.
-  - Rule in force today, as context to audit and never as evidence: No rule is in force. This is a hypothesis to be researched, not a deployed rule..
-  - Series the collector reads: FRED DFII10 and T10YIE; Rates package USD-SESSION-A2.
-
-## Companion files in the repository
-
-Files in the checkout behind this chain, if you can reach them. They are aids, not attachments you must have.
-
-- `docs/research/usd-session/v1/weight_vector_discrepancy.md` (the two live weight vectors and where each is used) - sha256 `2f420763193b0a032ccd38c1958563cd848c942f7cf49b53cad8de0ad98535cc`
+Keep a section that turns out to be empty, and say in one sentence why it is empty.
+Do not restate these instructions, and do not add a section that summarises the prompt.
 
 ## What to return
 
-- Required content: Corrected conclusions; finding-by-finding decisions; accepted, rejected and unresolved claims; proposed treatment of the factor in the engine; inputs, transformations, timing, interactions and missing-data treatment; explicitly unvalidated parameters; required empirical tests and remaining blockers; the handoff section.
-- Return one Markdown document. Put these identifier lines at the top of the file, before the body, and fill them from the stage card you downloaded:
+Return exactly one Markdown file and nothing else.
+
+- File name: `usd-rates-real-yield-delta-s3-adjudication.md`. Copy it exactly: the library records the name it receives and matches it to the prompt that asked for it.
+- Format: one Markdown file. No JSON, no zip, no PDF, no spreadsheet, no second file, no separate sources note, no filled-in card.
+- Length: as long as the material needs, and no longer. A short file that answers every question beats a long one that answers some.
+- Header lines, above the first heading, in this form:
 
 ```
 Reviewed chain: usd-factor-rates-real-yield-delta
-Reviewed factor: rates.real-yield-delta
-Reviewed document: <document id shown on the stage card you downloaded>
-Reviewed version: <version>
-Reviewed sha256: <sha256 shown on that card>
+Reviewed document: <the file name you were given>
+Reviewed version: <the version you were given, or unknown>
+Reviewed sha256: <the hash you were given, or unknown>
+Reviewed first heading: <the first heading of that document, verbatim>
 ```
-- Keep it in one file. Tables, sources, hypotheses, candidate relations and appendices all belong inside that document; nothing here needs a second file, a JSON payload or a hand-built schema.
-- The dashboard records the chain, the stage and the exact version this document judged, so that metadata is not yours to assemble: pick the stage card, choose the file, upload it.
+
+Write `unknown` where a version or a hash was not supplied. Do not invent one, and do not stop because it is missing.
+
+## Completion checklist
+
+Walk this list before you return the file. A "no" means the file is not ready.
+
+- [ ] Every material objection from the review has a decision.
+- [ ] Every decision names the evidence it rests on.
+- [ ] Agreement between the two documents that rests on one source is identified as such.
+- [ ] The corrected conclusion can be used without reading either input document.
+- [ ] Every unresolved item carries the measurement that would settle it.
+- [ ] Any treatment names its unmeasured parameters and the chain that owns each overlapping input.
+- [ ] Nothing here changes a live call, and no parameter is presented as validated.
 
 ## Prohibitions
 
-Do not invent a backtest, a performance figure, an accuracy rate or a sample size. If you have not measured it, say it is unmeasured. Numbers you remember are not evidence.
-Do not use hindsight: never state what a past period would have predicted using information that was not available at that time, and do not present a later revision as a first print.
-Cite only sources you actually fetched in this session, with the link and the passage you relied on.
-Where you are uncertain, say so and give the reason; an unresolved question is a valid return.
-State effects that are already in the price at the cutoff rather than counting them again as predictive.
-Treat the deployed weights, thresholds and signs as a baseline to audit, never as evidence for your claim.
-Name the instrument a claim is really about. Never present another instrument as DXY.
-Recommending data the collector should record and a treatment a future engine should apply is required content, not a change being made. No production, workflow, dashboard, feed, dispatcher, database or configuration change is authorised by this prompt, none may be carried out now, and none may be reported as done or as agreed.
+- Do not treat a rule in force as evidence for itself. It is the baseline you are auditing.
+- Do not propose or make a change to a live engine, a live call or a deployed workflow.
+- Do not invent a number, a series id, a citation, a date or a hash. `unknown` is allowed; a guess is not.
+- Do not return JSON, a dashboard card, a zip, a spreadsheet, a second file, or this prompt pasted back.
+- Do not add, rename, reorder or merge the deliverable sections.
+- Do not report a directional edge from a sample you have not described.
+- Do not use a value published after the cutoff, or a later revision, as what was known at the cutoff.
+- Do not treat a local export, a passing replay test or a workflow run as evidence that anything is deployed, timely or profitable.
+- Do not assume access to data this prompt does not name; if a test needs it, say what it is and where it would come from.
 
-## What happens after you return it
+If a question can only be answered by breaking one of these, say so in the file rather than breaking it.
 
-Central USD synthesis is a separate step: it reads the adjudications of every factor chain, resolves what conflicts between them, and only then can an isolated implementation and validation step follow. Nothing enters the live engine because a document exists.
+## What happens next
+
+The adjudication becomes the record for this chain. It is the input to the asset synthesis chain, which reconciles every factor chain into one candidate model and one validation plan. Nothing is fitted or deployed at this step, and a treatment named here stays unvalidated until that plan runs and is itself reviewed.

@@ -15,6 +15,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
 const ResearchLibrary = require('../lib/research_library.js');
+const Prompts = require('../lib/research_prompt_templates.js');
 
 const root = path.resolve(__dirname, '..');
 const catalogPath = path.join(root, 'data', 'research-library', 'catalog.json');
@@ -124,6 +125,12 @@ const LIVE_FACTORS = [
     group: 'live_engine',
     role: 'regime context',
     brief: 'VIX level is read as the risk regime the dollar is trading in. The rulebook also describes 1d and 5d modifiers; the deployed code does not implement them.',
+    probes: [
+      'Is the informative quantity the VIX level at the last US close, its one-day change or its five-day change, and does the deployed 25/16 pair add anything a continuous level does not?',
+      'How stale is the VIXCLS observation at the 05:00 London cutoff, and what does that staleness do to a claim that the level is a cutoff-time regime read?',
+      'Is the mechanism safe-haven demand, risk appetite, carry or policy expectations, and which observable at the cutoff separates them from a common hidden driver?',
+      'Does the VIX level still carry information once the cross-asset risk state, gold and the credit spread are in the model, or is it the same risk factor counted twice?'
+    ],
     current_rules: ['VIX above 25 reads BULLISH, 16 to 25 NEUTRAL, below 16 BEARISH', 'level only; the documented 1d/5d modifier is not implemented'],
     lookback: 'level',
     threshold: '25 / 16',
@@ -137,6 +144,12 @@ const LIVE_FACTORS = [
     group: 'live_engine',
     role: 'direction',
     brief: 'Change in the US 2Y yield as a policy-expectation proxy.',
+    probes: [
+      'Is the informative quantity the five-day change, the level or a same-session change, and does the deployed five-day window measure anything inside the 24-hour session?',
+      'Is the FRED DGS2 value at the cutoff the previous US close, and what vintage or revision risk attaches to a series read that way two business days after the fact?',
+      'Does a 2Y move carry policy expectations, growth news or a term-premium and liquidity component, and which observable at the cutoff separates a growth shock from a policy shock?',
+      'Does the 2Y delta survive once the 10Y real yield, the US-DE spread and the curve slope are in the same model, and does the same-day dollar reaction leave anything for the following 24 hours?'
+    ],
     current_rules: ['5-day change at or above +5 bps reads BULLISH, at or below -5 bps BEARISH'],
     lookback: '5 days on the 24h timeframe',
     threshold: '+/- 5 bps',
@@ -150,6 +163,12 @@ const LIVE_FACTORS = [
     group: 'live_engine',
     role: 'direction',
     brief: 'Change in the US minus German 2Y spread, derived in the collector from two series.',
+    probes: [
+      'Is the spread built from two series with different publication lags and market calendars, and what does that mismatch do to a five-day change computed at the cutoff?',
+      'Is the informative part the US leg, the German leg or the difference, and can the two legs be separated with data observable at 05:00 London?',
+      'Are Bund yields available on the same date and vintage as DGS2, and what happens to the spread when one leg misses a session or is republished?',
+      'Does the relative 2Y spread add anything beyond the US 2Y delta and the broad dollar index, or is its weight the US leg counted twice?'
+    ],
     current_rules: ['5-day change at or above +5 bps reads BULLISH, at or below -5 bps BEARISH'],
     lookback: '5 days on the 24h timeframe',
     threshold: '+/- 5 bps',
@@ -163,6 +182,12 @@ const LIVE_FACTORS = [
     group: 'live_engine',
     role: 'direction',
     brief: 'Change in the 10Y TIPS real yield.',
+    probes: [
+      'Is the informative quantity the TIPS real yield change, the nominal-minus-breakeven split, or the level, and how much of the change comes from the breakeven measurement itself?',
+      'How stale is DFII10 at the cutoff, and do TIPS liquidity and off-the-run pricing contaminate the measured change enough to matter for a five-day window?',
+      'Is the mechanism a real discount-rate story for the dollar or a growth story, and what observable separates a real-rate rise that helps the dollar from one that hurts it?',
+      'Does the real yield add information beyond the nominal 10Y and the front-end delta, and would the evidence support the deployed five-day change over a shorter window?'
+    ],
     current_rules: ['5-day change at or above +5 bps reads BULLISH, at or below -5 bps BEARISH'],
     lookback: '5 days on the 24h timeframe',
     threshold: '+/- 5 bps',
@@ -176,6 +201,12 @@ const LIVE_FACTORS = [
     group: 'live_engine',
     role: 'direction',
     brief: 'Trailing change in the dollar index the collector stores as dxy_level (FRED DTWEXBGS), with a d1 to d5 to d20 substitution ladder.',
+    probes: [
+      'Is the stored DTWEXBGS the broad trade-weighted index rather than DXY, and what does calling it the dollar index do to every claim that quotes it?',
+      'Is a one-day change of a daily H.10 index observable at 05:00 London given its publication lag, and what does the d1 to d5 to d20 fallback ladder do to the horizon of the signal?',
+      'Is the informative content own-session momentum, mean reversion after a large move, or slow trend, and which of them can a 24-hour session capture at all?',
+      'Does the index delta predict the next session, or is it an accounting identity against the bilateral pairs that the label instrument is meant to measure?'
+    ],
     current_rules: ['1-day change at or above +0.15% reads BULLISH, at or below -0.15% BEARISH', 'falls back d1 then d5 then d20 and records only a warning string'],
     lookback: '1 day on the 24h timeframe',
     threshold: '+/- 0.15%',
@@ -190,6 +221,12 @@ const LIVE_FACTORS = [
     group: 'live_engine',
     role: 'direction',
     brief: 'Gold move as an inverse dollar-risk read.',
+    probes: [
+      'Is gold read as an inverse dollar proxy, a real-rate hedge or a safe-haven asset, and how would the sign differ between those three readings?',
+      'Is the Coinbase XAU-USD spot quote the same instrument, venue and window as the gold the literature measures, and how does a 24/7 crypto-venue quote behave against a 05:00 London cutoff?',
+      'Is a five-day gold change the right transformation, and does the one-day fallback change the meaning of the signal rather than only its horizon?',
+      'Does gold add information beyond the real yield, the VIX level and the cross-asset risk state, or is its apparent dollar relation a restatement of real rates?'
+    ],
     current_rules: ['at or below -0.1% reads BULLISH, above +0.1% BEARISH', 'falls back from 5-day to 1-day and records only a warning string'],
     lookback: '5 days, 1-day fallback',
     threshold: '+/- 0.1%',
@@ -203,6 +240,12 @@ const LIVE_FACTORS = [
     group: 'live_engine',
     role: 'direction',
     brief: 'The highest-weight live family. The stored usd_signal per event is copied straight through, with no consensus and no first-print vintage reachable from this repository.',
+    probes: [
+      'What is a surprise here, and can any consensus or first-print vintage published before the release be reached, or is the stored usd_signal an unversioned derived value whose input cannot be recovered?',
+      'Is the release outcome observable before the 05:00 London cutoff, and what does the signal do on a session whose releases land inside the window rather than before it?',
+      'Is the mechanism an immediate repricing of rate expectations, a risk-premium change or a growth surprise, and does the direction depend on the policy reaction function in force?',
+      'Does a surprise signal add information beyond the front-end rate change that follows it, and how much of the surprise reaction is already in the dollar by the next cutoff?'
+    ],
     current_rules: ['the collector pre-computes a usd_signal per event and the node copies it', 'no threshold, no as-of check, no vintage'],
     lookback: 'whatever the collector stored',
     threshold: 'none',
@@ -218,6 +261,12 @@ const LIVE_FACTORS = [
     group: 'live_engine',
     role: 'direction',
     brief: 'Directional read of the Fed bias string, tested for the words hawkish or dovish. The rulebook describes a delta; the code measures no change.',
+    probes: [
+      'Is a bias string a measurement or an interpretation, and can the same words be turned into a reproducible, dated, pre-cutoff value?',
+      'No vintage of the string is retained: does the deployed read measure a change, a level, or a revision introduced after the fact, and what would a versioned series look like?',
+      'Does the bias label carry information beyond the front-end rate change and the release surprise that ostensibly produce it?',
+      'If the string cannot be versioned, what is the honest Layer 1 role: a documented input, a documented exclusion, or no incremental value?'
+    ],
     current_rules: ['string contains hawkish or dovish', 'unknown is treated as a missing input and scores NEUTRAL'],
     lookback: 'current string only',
     threshold: 'none',
@@ -233,6 +282,12 @@ const LIVE_FACTORS = [
     group: 'live_engine',
     role: 'regime context',
     brief: 'The smile regime read from the VIX level and the bias string.',
+    probes: [
+      'Is the dollar smile a measured relation in this window or a descriptive story, and what observation would falsify it?',
+      'The deployed reading uses the VIX 25/16 pair and the bias string: are those the right variables, and does the smile need a third state such as global growth or funding stress that neither captures?',
+      'Is the smile a regime variable that should switch other factors signs, or a separate directional factor, and can those two roles be told apart with session data?',
+      'Does the smile add anything to the VIX level and the cross-asset risk state it is computed from, and is the rulebook weight of 12 defensible against the coded 1?'
+    ],
     current_rules: ['VIX above 25 reads BULLISH; VIX below 16 and not hawkish reads BEARISH'],
     lookback: 'level',
     threshold: '25 / 16',
@@ -246,6 +301,12 @@ const LIVE_FACTORS = [
     group: 'live_engine',
     role: 'regime context',
     brief: 'Cross-asset read of equities against the dollar, gated by the VIX regime.',
+    probes: [
+      'The stored input is a QQQ ETF quote: what is the difference between the Nasdaq-100 index, the NQ future and the ETF for a 24-hour London session, and which one does a claim actually need?',
+      'Is the QQQ quote a regular-hours close with gaps, a pre-market price or a delayed snapshot at the cutoff, and what do the ETF premium to net asset value and its distributions do to a one-day change?',
+      'Is the equity-dollar relation a risk-appetite channel, a rate channel or a growth channel, and is its sign stable across regimes or does it flip with the VIX gate?',
+      'Does the equity move add information beyond the VIX level and the cross-asset risk state, or is it the same risk appetite counted a third time?'
+    ],
     current_rules: ['VIX below 16 with NQ up reads BEARISH; VIX below 16 with NQ down BULLISH; VIX above 25 with NQ down BULLISH'],
     lookback: 'NQ 1 day',
     threshold: '16 / 25',
@@ -279,6 +340,12 @@ const A1_FACTORS = [
     asset: 'USD',
     role: 'direction',
     brief: 'Trailing 1-day and 5-day move in the label instrument, read at the cutoff: continuation or fade inside the 24-hour London-to-London session.',
+    probes: [
+      'Momentum in which instrument, over which lookback, and is a trailing one-day or five-day move in the label instrument observable at 05:00 London when that instrument has no verified intraday source?',
+      'Is the trailing move measured on the same instrument and quote source as the label, or on a proxy that introduces a basis the signal cannot separate from momentum?',
+      'Is the mechanism continuation under gradual information diffusion, or mean reversion after a liquidity-driven move, and what measurable condition separates them?',
+      'Is session momentum distinct from the dollar index delta and the overnight range position, and does it survive the bid-ask bounce of a 24-hour window?'
+    ],
     dependencies: ['The label instrument and quote source decision.'],
     sources: ['Price and risk package USD-SESSION-A1']
   }),
@@ -288,6 +355,12 @@ const A1_FACTORS = [
     asset: 'USD',
     role: 'direction',
     brief: 'Where the dollar sits in its own recent range at the cutoff, as a bound on the session move rather than a directional call.',
+    probes: [
+      'Where in its own range is the dollar at the cutoff, measured over which lookback, and does the answer depend on where the range window starts relative to the 05:00 London boundary?',
+      'Is the range computed from the same quote source as the label instrument, and how do missing prints or a thin overnight session distort the measured position?',
+      'Is range position a state variable that bounds the expected session move, a breakout signal, or an artefact of the range window itself?',
+      'Is it distinct from session momentum and the volatility regime, or can its information be recovered from those two?'
+    ],
     dependencies: ['The label instrument and quote source decision.'],
     sources: ['Price and risk package USD-SESSION-A1']
   }),
@@ -297,6 +370,12 @@ const A1_FACTORS = [
     asset: 'USD',
     role: 'abstention gate',
     brief: 'Realised volatility of the label instrument and the effect of that regime on the expected move and on whether a call should be withheld.',
+    probes: [
+      'Is realised volatility measured from the label instrument, from a proxy, or from an implied measure, and over which window is it observable at the cutoff?',
+      'Does the regime change the expected direction, the expected dispersion, or only whether a call should be made at all?',
+      'Is the abstention value of a volatility regime separable from a data-quality gate, and what threshold would be a measured quantity rather than a convention?',
+      'Does the volatility regime interact with the VIX level and the risk state, or does it restate them in dollar terms?'
+    ],
     dependencies: ['The label instrument and quote source decision.'],
     sources: ['Price and risk package USD-SESSION-A1']
   }),
@@ -306,6 +385,12 @@ const A1_FACTORS = [
     asset: 'USD',
     role: 'regime',
     brief: 'VIX level and its change, read as risk regime rather than as a standalone direction, with the documented-but-unimplemented 1d and 5d modifiers examined.',
+    probes: [
+      'What does the VIX level at the cutoff add to the level the deployed F1 rule already uses, and is a second chain carrying the same variable a duplication the synthesis has to resolve?',
+      'Is the informative quantity the level, the one-day change, the five-day change, or the change between the last US close and the cutoff, and how stale is the observation at 05:00 London?',
+      'Is the mechanism a safe-haven demand for dollars, a funding or liquidity squeeze, or a risk-appetite shock, and what observable separates them?',
+      'Does the VIX change add information beyond the cross-asset risk state and the equity move, and is its sign the same in a calm and a stressed regime?'
+    ],
     sources: ['FRED VIXCLS', 'Price and risk package USD-SESSION-A1']
   }),
   R({
@@ -314,6 +399,12 @@ const A1_FACTORS = [
     asset: 'USD',
     role: 'regime',
     brief: 'Equities, credit, gold and crypto at the cutoff as one risk state, with the double-counting risk against the VIX card named explicitly.',
+    probes: [
+      'Which assets define the risk state, at what cutoff, and do their quotes share one window, or is the state assembled from instruments that are closed at 05:00 London?',
+      'Is one composite state justified, or does the evidence support separate equity, credit and commodity channels with different signs for the dollar?',
+      'How much does the state overlap the VIX level, gold and the equity-dollar relation, and which single chain should own the risk factor?',
+      'Does the risk state carry directional information at all, or is it a conditioning variable that changes the sign of other factors?'
+    ],
     sources: ['FRED credit and equity series in the closed study dataset', 'Coinbase spot quotes', 'Price and risk package USD-SESSION-A1']
   }),
   R({
@@ -322,6 +413,12 @@ const A1_FACTORS = [
     asset: 'USD',
     role: 'direction',
     brief: 'Whether the dollar is being bought as insurance rather than for carry, which changes the sign of the same risk move.',
+    probes: [
+      'What observation distinguishes the dollar being bought as insurance from the dollar being bought for carry, and can that distinction be measured at the cutoff?',
+      'Is safe-haven demand a separate factor or the residual of the risk state, the VIX level and the rate differentials, and is there an instrument that isolates it, such as cross-currency basis or FX-implied volatility skew?',
+      'Does the relation hold symmetrically in risk-off and risk-on, and is the sign stable across funding-stress episodes?',
+      'Does safe-haven demand add incremental information beyond the risk state and the VIX, and what data would have to be bought before it can be tested?'
+    ],
     sources: ['Price and risk package USD-SESSION-A1']
   }),
   R({
@@ -330,6 +427,12 @@ const A1_FACTORS = [
     asset: 'USD',
     role: 'quality gate',
     brief: 'Which data states should force abstention instead of a weak call, given that the live collector has no as-of check and no staleness test.',
+    probes: [
+      'Which data states should force abstention - missing, stale, revised, or unreachable at the cutoff - and how is each state detected without an as-of check in the live collector?',
+      'Does the gate improve the accuracy of the calls it keeps, and what does that cost in coverage? Report four numbers together: coverage, the accuracy of the calls made, the score of the withheld calls, and the same two on comparable sessions the gate did not skip.',
+      'How are skipped sessions counted - as errors, as excluded observations or as a separate coverage figure - and which sessions count as comparable, named by regime, calendar state and instrument?',
+      'Which sessions does the gate skip in practice, and are they the sessions where a call was least likely to be right, or simply the sessions with the most missing inputs?'
+    ],
     dependencies: ['The label instrument and quote source decision.', 'Reviewer B approval of the frozen evaluation design.'],
     sources: ['docs/research/usd-session/v1/inventory.md section 4 and 7']
   })
@@ -341,6 +444,12 @@ const A2_FACTORS = [
     label: 'US front-end delta',
     role: 'direction',
     brief: '2Y and 3M yield changes as policy-expectation proxies, with the publication lag of each series stated.',
+    probes: [
+      'Do the 2Y and 3M series share a publication lag and a market calendar, and is a change computed from a stale 3M print comparable to one computed from the 2Y?',
+      'Is the informative quantity the 3M bill, the 2Y note, their difference, or a policy-expectation measure implied by them, and does the 3M bill carry a flight-to-quality distortion?',
+      'Does a front-end change reflect expected policy, term premium, or a liquidity and collateral effect, and what observable at the cutoff separates them?',
+      'Does this chain duplicate the live F2 and F3 chains, and if so what does it add - the 3M leg, the policy-cycle conditioning, or nothing?'
+    ],
     sources: ['FRED DGS2 and DTB3 via the closed study dataset', 'Rates package USD-SESSION-A2']
   }),
   R({
@@ -348,6 +457,12 @@ const A2_FACTORS = [
     label: 'Relative front-end delta',
     role: 'direction',
     brief: 'US against German and other G10 front ends, with each euro-area and UK leg named rather than implied.',
+    probes: [
+      'Which foreign front end is used, from which source, and is it observable at 05:00 London on the same date and vintage as the US leg?',
+      'Is a bilateral differential the right object, or should the dollar basket weights determine a weighted differential against several front ends?',
+      'Does the relative move reflect divergent policy expectations, a common global factor, or a currency-specific risk premium?',
+      'Does the differential add information beyond the US front end and the dollar index, and is a German leg a proxy for the euro rather than for the relative factor?'
+    ],
     dependencies: ['Access to a foreign front-end series that is genuinely observable at the cutoff.'],
     sources: ['Bundesbank 2Y series', 'Rates package USD-SESSION-A2']
   }),
@@ -356,6 +471,12 @@ const A2_FACTORS = [
     label: 'Real yield delta',
     role: 'direction',
     brief: '10Y and 5Y real yields and the breakeven split, separating the nominal and inflation parts of the move.',
+    probes: [
+      'Is the real yield measured from TIPS, from a nominal-minus-survey-expectations decomposition, or from a model, and which of them is available at the cutoff?',
+      'Does the move come from the nominal leg or the breakeven, and how reliable is the breakeven when both inflation swaps and TIPS liquidity are imperfect?',
+      'Is the mechanism a discount-rate channel for the dollar, a growth channel, or a risk-premium channel, and what evidence separates those cases?',
+      'Does this chain duplicate live F4, and does a 5Y real yield add anything to the 10Y that the deployed chain already uses?'
+    ],
     sources: ['FRED DFII10 and T10YIE', 'Rates package USD-SESSION-A2']
   }),
   R({
@@ -363,6 +484,12 @@ const A2_FACTORS = [
     label: 'Term premium and curve',
     role: 'regime',
     brief: '10Y minus 2Y slope, and whether the level or the change carries information across the session.',
+    probes: [
+      'Is the informative object the slope level, its change, or a term-premium estimate, and can a term premium be estimated with the data named here rather than asserted?',
+      'Is a curve slope observable at 05:00 London from previous closes, and how does a stale slope interact with a session that contains a US data release?',
+      'Does the slope carry growth expectations, inflation compensation, or a term-premium and duration-demand story, and what observable separates them?',
+      'Does the slope add information beyond the levels of its two legs, each of which already carries its own chain, and is it a regime variable or a direction?'
+    ],
     sources: ['FRED DGS10 and DGS2', 'Rates package USD-SESSION-A2']
   }),
   R({
@@ -370,6 +497,12 @@ const A2_FACTORS = [
     label: 'Credit spread delta',
     role: 'regime',
     brief: 'High-yield spread change as a growth and risk proxy, with its overlap against the cross-asset risk card bounded.',
+    probes: [
+      'Which credit series measures the spread the claim is about, at what rating and maturity, and how stale is it at the cutoff?',
+      'Is the informative quantity the spread level, a one-day change, or a change over several days, and does a spread change lag the equity move it is meant to signal?',
+      'Is the mechanism a growth signal, a risk-appetite signal, or a funding and default-risk signal, and does the sign for the dollar differ between the default story and the risk story?',
+      'Does the credit spread add information beyond the VIX level, the equity move and the risk state, or is it a slower restatement of the same risk factor?'
+    ],
     sources: ['FRED high-yield spread series', 'Rates package USD-SESSION-A2']
   }),
   R({
@@ -377,6 +510,12 @@ const A2_FACTORS = [
     label: 'Known releases inside the window',
     role: 'quality gate',
     brief: 'Which releases are scheduled between the cutoff and the endpoint, and how a known-but-unreleased event may be used without using its outcome.',
+    probes: [
+      'Which releases fall inside the session, how are their timestamps verified before the cutoff, and what happens when a release time is scheduled but its consensus is unavailable?',
+      'Does a known-but-unreleased event change the expected direction, the expected dispersion, or only the confidence in a call, and how can that be measured rather than assumed?',
+      'Can the event be used without using its outcome, and is a pre-release positioning effect distinguishable from the post-release reaction that the next session will contain?',
+      'What is the honest treatment of a session whose dominant event is a release the collector cannot date reliably: abstain, widen, or call with a stated caveat?'
+    ],
     sources: ['Collector calendar feed (paid)', 'Rates package USD-SESSION-A2']
   }),
   R({
@@ -384,6 +523,12 @@ const A2_FACTORS = [
     label: 'Distance from high-impact events',
     role: 'regime',
     brief: 'Positioning measured as distance from known high-impact dates, using only the release calendar and never the surprise.',
+    probes: [
+      'Is distance from a high-impact date a meaningful state variable, and does the evidence support drift before a release, after it, or neither?',
+      'Which events count as high impact, and does the answer depend on a classification that is itself hindsight-defined?',
+      'Is the mechanism positioning, hedging demand, or pre-announcement drift, and what observable at the cutoff separates it from ordinary seasonality?',
+      'Is the distance measure distinct from the release-window factor and from a volatility regime, and does it carry any information beyond them?'
+    ],
     sources: ['Collector calendar feed (paid)', 'Rates package USD-SESSION-A2']
   }),
   R({
@@ -391,6 +536,12 @@ const A2_FACTORS = [
     label: 'Release surprise at first print',
     role: 'direction',
     brief: 'The honest test of the highest-weight live family. Asking for a first-print surprise with the consensus that was published before the release, and stating plainly if no such source is reachable.',
+    probes: [
+      'What is the surprise - the first print minus the consensus published before the release - and can any such pair be reached without a paid vintage archive?',
+      'At which moment does the surprise become observable, and how much of the reaction is already inside the dollar by the next 05:00 London cutoff?',
+      'Is the mechanism a policy-expectation repricing or a risk-premium change, and does the sign depend on the state of the policy cycle and on where the policy rate sits?',
+      'Does the surprise add information beyond the front-end rate change and the equity move that follow the print, and what is the honest conclusion if no vintage source is reachable at all?'
+    ],
     blockers: ['No consensus or first-print vintage source is reachable from this repository: the ALFRED vintage CSV needs a key, and the live calendar feed stores no consensus snapshot.'],
     research_status: 'blocked',
     sources: ['Rates package USD-SESSION-A2', 'docs/research/usd-session/v1/inventory.md section 7'],
@@ -731,6 +882,16 @@ const OTHER_ASSETS = [
     note: 'No USD sign, weight, threshold or factor transfers to another asset without its own research.'
   },
   {
+    asset: 'GBP',
+    label: 'British Pound',
+    standfirst: 'No GBP session research has started.',
+    status: 'not_started',
+    next_step: 'Wait for the USD final chain.',
+    blockers: ['No assignment is published for this asset.'],
+    factors: [],
+    note: 'No USD result transfers here.'
+  },
+  {
     asset: 'GOLD',
     label: 'Gold',
     standfirst: 'No gold session research has started in this programme; the gold backtesting lane keeps its own scope.',
@@ -774,18 +935,6 @@ const OTHER_ASSETS = [
     asset: 'WTI',
     label: 'Crude Oil (WTI)',
     standfirst: 'No WTI session research has started.',
-    status: 'not_started',
-    next_step: 'Wait for the USD final chain.',
-    blockers: ['No assignment is published for this asset.'],
-    factors: [],
-    note: 'No USD result transfers here.'
-  },
-  // The research expansion order: USD, then EUR, GOLD, SILVER, NQ, BTC, WTI, GBP. GBP sits last because it is
-  // the asset the owner named last, not because its evidence is weaker; nothing here ranks the research.
-  {
-    asset: 'GBP',
-    label: 'British Pound',
-    standfirst: 'No GBP session research has started.',
     status: 'not_started',
     next_step: 'Wait for the USD final chain.',
     blockers: ['No assignment is published for this asset.'],
@@ -953,20 +1102,20 @@ const FINAL_STAGE_META = {
   final_analysis: {
     label: 'Final analysis',
     document_type: 'synthesis',
-    deliverable: 'One Markdown asset-level synthesis over every factor chain adjudication, with what survives, what conflicts and what stays unresolved.',
-    returns: 'The asset-level conclusion; which factor-chain findings survive; how conflicts between factor chains are resolved; the proposed asset-level treatment; explicitly unvalidated parameters; required empirical tests; and an explicit what-is-not-claimed section.'
+    deliverable: 'One Markdown asset-level synthesis over every factor-chain adjudication: what survives, what conflicts, the candidate specification and its validation plan, and what cannot be tested here.',
+    returns: 'The adjudications reconciled; where the factor chains agree and conflict; the entries that survive, merge or drop; the candidate specification; the unvalidated parameters named as parameters; the validation plan; what would falsify it; the data gaps; sources.'
   },
   final_red_team: {
     label: 'Final red-team',
     document_type: 'review',
-    deliverable: 'One Markdown independent challenge to the final analysis and the factor adjudications behind it: every load-bearing conclusion quoted, given a verdict, a severity and the evidence that would settle it.',
-    returns: 'The issue register against the final analysis and its supporting adjudications; the two closing lists (what survives unchanged, what the red-team could not reach); the sources you re-fetched; and the questions you could not resolve.'
+    deliverable: 'One Markdown independent challenge to the final analysis: every load-bearing claim quoted, given a verdict, a severity and the evidence that would settle it.',
+    returns: 'The issue register; specification and validation-plan defects; what the proposal gets right; what is unvalidated but presented as settled; what a corrected version would change and what it should not; sources.'
   },
   final_adjudication: {
     label: 'Final adjudication',
     document_type: 'synthesis',
     deliverable: 'One Markdown adjudication of the final analysis and the red-team findings, ending with the complete candidate Layer 1 logic for an isolated backtest.',
-    returns: 'Finding-by-finding decisions; accepted, rejected and unresolved claims; and the complete candidate Layer 1 logic: inputs, transformations, signs, thresholds, weights, interactions, timing, abstention, score construction and deterministic pseudocode, with every unvalidated parameter named, plus the isolated-backtest plan, data requirements and explicit what-is-not-claimed section.'
+    returns: 'The decision register; the accepted specification and validation plan; the complete candidate Layer 1 logic with every parameter marked measured or unvalidated; the acceptance criterion and the condition that would abandon the model; unresolved items; decisions reserved to the user; what the handoff does not claim; sources.'
   }
 };
 function stageMeta(stageId) {
@@ -983,580 +1132,24 @@ const FACTOR_STAGE_META = {
   research: {
     label: 'Research',
     document_type: 'report',
-    deliverable: 'One Markdown report: the assignment answered in full, with the source note as a section inside the same document.',
-    returns: 'Sections in the order the prompt asks for, an explicit what-is-not-claimed section, and the source note naming every source you fetched, the passage you relied on, the window it concerns and whether it is primary.'
+    deliverable: 'One Markdown report: the assignment answered in full, with the sources as the closing section inside the same document.',
+    returns: 'The sections the prompt fixes, in order, each answered or named unanswerable, with the sample behind every claim, an explicit what-could-not-be-established section and a closing sources section.'
   },
   red_team: {
     label: 'Red-team',
     document_type: 'review',
     deliverable: 'One Markdown issue register: every load-bearing claim quoted, given a verdict, a severity and the evidence that would settle it.',
-    returns: 'The issue register, the two closing lists (what survives unchanged, what the review could not reach), the sources you re-fetched and the questions you could not resolve.'
+    returns: 'The issue register; what the report gets right; what it cannot support and what you could not check; window, instrument, timing and inference defects; the double counting it leaves unaddressed; the corrected version of the strongest surviving claim; sources.'
   },
   adjudication: {
     label: 'Adjudication',
     document_type: 'synthesis',
-    deliverable: 'One Markdown adjudication: corrected conclusions, a decision on every material objection, and a handoff to central USD synthesis.',
-    returns: 'Corrected conclusions; finding-by-finding decisions; accepted, rejected and unresolved claims; proposed treatment of the factor in the engine; inputs, transformations, timing, interactions and missing-data treatment; explicitly unvalidated parameters; required empirical tests and remaining blockers; the handoff section.'
+    deliverable: 'One Markdown adjudication: corrected conclusions, a decision on every material objection, the required tests and a handoff to the asset synthesis.',
+    returns: 'The decision register; the corrected conclusion for the chain; what the chain rules out; unresolved items; the proposed treatment with every unvalidated parameter named; required tests and blockers; input ownership across chains; the handoff to the asset synthesis; sources.'
   }
 };
 
 // The session every stage is written for. It is repeated in every prompt because a prompt has to stand alone.
-const FACTOR_SESSION_BLOCK = [
-  '- **Session**: 05:00 Europe/London to 05:00 Europe/London on the next local date. Both ends are London wall-clock times one local date apart, so every eligible session is exactly 24 hours. The contract is `docs/research/usd-session/v1/session_contract_v1.json`.',
-  '- **Starts and ends**: a session starts on a Monday-to-Friday London local date only. A Saturday or Sunday start is never a session; the Saturday start is the only one that can contain a London daylight-saving transition, which is why every eligible session is exactly 24 hours (`backtester/lib/usd_session_engine_interface.js`, `SESSION_CONTRACT`, `session_start_rule`). A Friday session therefore ends at the 05:00 London endpoint on the Saturday. When the endpoint value does not exist, record the session as not evaluable and leave the value missing: never fill it from a Friday close, a Monday open, an interpolation or a later revision, and never quote a number whose window you cannot name.',
-  '- **Label instrument**: proposed as DXY and UNVERIFIED. No intraday dollar-index print exists in this repository or in the live collector, and no quote source is committed. Never present another instrument as DXY: if a source is about EUR/USD, a basket, the broad trade-weighted index or a futures contract, name that instrument in the same sentence, and say whether its window is a close-to-close day, an intraday slice or something else.',
-  '- **The deployed engine is not this window, and its timing is read from the code that defines it, never from memory or from a document**: the stored live calls were attached to the window resolved by the repository\'s own Phase 1 contract - a 09:30 America/New_York open on the call date to the 16:00 America/New_York close of the next date that has a value, sliding up to three days when the scheduled close has none (`getPhase1OutcomeWindow` in `backtester/lib/timeframe_windows.js`, applied in `backtester/lib/usd24h/outcomes.js`, whose own note calls it a nominal 24-hour horizon rather than 24 elapsed hours and which records `measured_elapsed_hours` per row). The "median 30.5 elapsed hours" figure is a measurement on the closed study\'s own 583 evaluable rows, recorded under `contract_vs_deployed_engine` in `docs/research/usd-session/v1/session_contract_v1.json`: it is a property of that study, not a declared property of the live engine, and it must be attributed that way every time it is quoted. The same block measures the overlap of that study\'s interval with this session as 14.5 hours on 528 rows and 15.5 hours on 55 rows - the two weeks a year when New York has changed and London has not - and the session\'s first 9.5 hours (8.5 in those weeks) as uncovered. Those figures are measured and date-dependent: they are not to be derived by subtracting a fixed London-to-New-York offset, and any comparison of a London-anchored window with a New-York-anchored one must be resolved per date from declared transitions. The archive\'s "next valid trading session" means the next date with an available value, not a holiday-aware exchange calendar, and the engine does not model market holidays. If the code and a document disagree about the live engine\'s timing, the code is the authority; report the disagreement rather than repeating the document.'
-];
-
-const FACTOR_PROHIBITIONS = [
-  'Do not invent a backtest, a performance figure, an accuracy rate or a sample size. If you have not measured it, say it is unmeasured. Numbers you remember are not evidence.',
-  'Do not use hindsight: never state what a past period would have predicted using information that was not available at that time, and do not present a later revision as a first print.',
-  'Cite only sources you actually fetched in this session, with the link and the passage you relied on.',
-  'Where you are uncertain, say so and give the reason; an unresolved question is a valid return.',
-  'State effects that are already in the price at the cutoff rather than counting them again as predictive.',
-  'Treat the deployed weights, thresholds and signs as a baseline to audit, never as evidence for your claim.',
-  'Name the instrument a claim is really about. Never present another instrument as DXY.',
-  'Recommending data the collector should record and a treatment a future engine should apply is required content, not a change being made. No production, workflow, dashboard, feed, dispatcher, database or configuration change is authorised by this prompt, none may be carried out now, and none may be reported as done or as agreed.'
-];
-
-// The five kinds of evidence the programme keeps apart. A mechanism is a reason to look, a contemporaneous
-// association is not direction after the cutoff, another window's measurement is not this session's, and an
-// input already in the decision is not new information. Repeated in every prompt because a prompt has to
-// stand alone.
-const FACTOR_EVIDENCE_SEPARATION = [
-  '- **Economic mechanism** - why an input could move the dollar inside the session at all. A mechanism is a reason to look; it is not a measurement, and a plausible channel is not evidence that the channel operates.',
-  '- **Contemporaneous association** - what moves with the dollar at the same time. It says nothing about direction after the cutoff, and the dollar may be the thing doing the moving.',
-  "- **Predictive evidence from other windows** - measured relations for a close-to-close day, a New York session, an event window or a monthly horizon. Relevant background, not evidence for this session; name the window every time the number is quoted.",
-  "- **Evidence for our exact session** - a measurement of the 05:00 Europe/London start to the 05:00 Europe/London endpoint on the next local date. Where none exists for a claim, say so rather than borrowing another window's result.",
-  '- **Incremental value beyond existing inputs** - what this factor adds to a decision already able to use the entries before it. Information already contained in an earlier input is not new, and a factor that adds nothing is a finding, not a gap.'
-];
-
-// The conclusions a stage is allowed to reach. Exclusion, regime-only use, insufficient evidence and adding
-// nothing are results, not failures, and the programme does not assume that more factors improve accuracy.
-// A supported directional input or interaction is equally allowed: the four are the ways a factor can fail to
-// earn weight, and a positive finding has to remain reachable or the audit is rigged against the factor.
-const FACTOR_VALID_CONCLUSIONS = [
-  '- **Exclusion** - the evidence may support leaving this factor out of the decision entirely.',
-  '- **Regime-only use** - the evidence may support using it only in a named regime, and only where that regime is identifiable at the cutoff.',
-  '- **Insufficient evidence** - where nothing has been measured for this session, saying so is the correct return; the remedy is a measurement or a supplement, never a stronger claim.',
-  '- **Adding nothing** - a factor whose information is already in the inputs before it earns no weight. More factors are not assumed to improve accuracy, and improved accuracy is only ever an empirical result.',
-  '- **A potentially useful input or interaction** - the evidence may support a directional input, or a pair whose interaction carries information, as worth testing further. State the sign, the condition, the window it was evidenced on and the measurement that would validate it, and mark it unvalidated: this stage can support a candidate, never a confirmation.'
-];
-
-function evidenceSection() {
-  return [
-    '## Five kinds of evidence that must not be mixed',
-    '',
-    'Each kind answers a different question, and evidence of one kind never stands in for another. State which kind every load-bearing claim rests on, in the sentence that makes the claim:',
-    '',
-    ...FACTOR_EVIDENCE_SEPARATION,
-    '',
-    'A claim that changes kind between sections - a mechanism presented as a measurement, another window presented as ours, an input already in the decision presented as new - is the most common way a body of research overstates what is known. Where the same evidence is counted twice, say so.',
-    ''
-  ].join('\n');
-}
-
-function validConclusionsSection() {
-  return [
-    '## Conclusions this stage is allowed to reach',
-    '',
-    ...FACTOR_VALID_CONCLUSIONS,
-    ''
-  ].join('\n');
-}
-
-function chainLabel(chain) {
-  return chain.factor_id ? `the factor chain for \`${chain.factor_id}\`` : `the asset-level final chain \`${chain.chain_id}\``;
-}
-
-function promptFrontmatter(chain, stageId, extraLines = []) {
-  const meta = stageMeta(stageId);
-  const stageCount = chain.factor_id ? FACTOR_STAGE_IDS.length : FINAL_STAGE_IDS.length;
-  const group = chain.topic_id ? `; group label \`${chain.topic_id}\` (${chain.group_title || 'grouping only'})` : '';
-  return [
-    `# ${chain.title} - stage ${stageOrder(stageId)} of ${stageCount}: ${meta.label}`,
-    '',
-    `- ${chain.factor_id ? `Factor chain \`${chain.chain_id}\` for factor \`${chain.factor_id}\`` : `Asset-level final chain \`${chain.chain_id}\``} on asset USD${group}; stage \`${stageId}\`; this stage returns exactly one Markdown document (${meta.document_type}).`,
-    chain.factor_id
-      ? `- The chain belongs to one factor entry, so the evidence this stage returns maps to \`${chain.factor_id}\` and is not counted as a second independent result elsewhere.`
-      : `- This is the asset-level synthesis chain: it reads every factor-chain adjudication and is not itself a factor result. It opens only through the gate, never because a prompt was copied.`,
-    '- Paste this whole prompt as one message into your own fresh session. Nothing is sent to a model from the dashboard, and this page holds no model credentials.',
-    ...extraLines,
-    ''
-  ].join('\n');
-}
-
-function sessionSection() {
-  return ['## The session this is written for', '', ...FACTOR_SESSION_BLOCK, ''].join('\n');
-}
-
-function prohibitionsSection() {
-  return ['## Prohibitions', '', ...FACTOR_PROHIBITIONS, ''].join('\n');
-}
-
-function factorContextBlock(chain) {
-  const byId = new Map(USD_ASSET.factors.map(factor => [factor.factor_id, factor]));
-  const factor = chain.factor_id ? byId.get(chain.factor_id) : null;
-  const lines = [];
-  if (!factor && chain.factor_id) {
-    lines.push(`- \`${chain.factor_id}\` is named by this chain but is not in the catalogue.`);
-  }
-  if (factor) {
-    const status = factor.research_status === 'blocked' ? ' (research blocked on data access)' : '';
-    lines.push(`- **${factor.factor_id}** - ${factor.label}${status}. Role: ${factor.role}. Group: ${factor.group}.`);
-    lines.push(`  - The question this entry stands for: ${factor.brief}`);
-    if ((factor.current_rules || []).length) {
-      lines.push(`  - Rule in force today, as context to audit and never as evidence: ${factor.current_rules.join('; ')}.`);
-    }
-    if (factor.threshold) lines.push(`  - Threshold: ${factor.threshold}; lookback: ${factor.lookback || 'not stated'}.`);
-    if ((factor.sources || []).length) lines.push(`  - Series the collector reads: ${factor.sources.join('; ')}.`);
-  }
-  return [
-    chain.factor_id ? '## The factor entry this chain is evidence for' : '## The asset-level synthesis this chain produces',
-    '',
-    chain.factor_id
-      ? 'This entry is context to audit. It is not evidence for any claim, and it is not the scope limit of this assignment.'
-      : 'This chain reads every factor chain adjudication for the asset. It is the synthesis layer, not a fourth factor review.',
-    '',
-    ...lines,
-    ''
-  ].join('\n');
-}
-
-function companionBlock(chain, stageId) {
-  const lines = (chain.companions || []).map(entry => `- \`${entry.repo_path}\` (${entry.role}) - sha256 \`${entry.sha256}\``);
-  if (stageId === 'research') {
-    (chain.packs || []).forEach(pack => lines.push(`- \`${pack.repo_path}\` - the published brief for \`${pack.factor_id}\`; sha256 \`${pack.sha256}\``));
-  }
-  if (!lines.length) return '';
-  const header = stageId === 'research'
-    ? 'Files in the checkout this chain rests on, if you can reach them. They are aids: the prompt has to stand on its own without them.'
-    : 'Files in the checkout behind this chain, if you can reach them. They are aids, not attachments you must have.';
-  return ['## Companion files in the repository', '', header, '', ...lines, ''].join('\n');
-}
-
-function returnSection(chain, stageId) {
-  const meta = stageMeta(stageId);
-  const lines = ['## What to return', '', `- Required content: ${meta.returns}`];
-  if (stageId === 'research') {
-    lines.push('- Return one Markdown document. The report and its source note belong inside that one file: sections in order, then the source note, then the what-is-not-claimed section.');
-  } else if (stageId === 'final_analysis') {
-    lines.push('- Return one Markdown document. At the top, before the body, list every factor-chain adjudication you read with its document id, version and sha256 as shown on its stage card, so the gate can be audited from the return alone.');
-    lines.push('');
-    lines.push('```');
-    lines.push(`Synthesis chain: ${chain.chain_id}`);
-    lines.push('Adjudication read: <factor id> - <document id> - version <version> - sha256 <sha256>');
-    lines.push('Adjudication read: <factor id> - <document id> - version <version> - sha256 <sha256>');
-    lines.push('```');
-  } else if (stageId === 'final_red_team') {
-    lines.push('- Return one Markdown document. Put these identifier lines at the top of the file, before the body, and fill them from the input package you downloaded:');
-    lines.push('');
-    lines.push('```');
-    lines.push(`Reviewed chain: ${chain.chain_id}`);
-    lines.push('Reviewed final analysis: <document id>');
-    lines.push('Reviewed final analysis version: <version>');
-    lines.push('Reviewed final analysis sha256: <sha256>');
-    lines.push('Supporting adjudication read: <factor id> - <document id> - version <version> - sha256 <sha256>');
-    lines.push('Supporting adjudication read: <factor id> - <document id> - version <version> - sha256 <sha256>');
-    lines.push('```');
-  } else if (stageId === 'final_adjudication') {
-    lines.push('- Return one Markdown document. Put these identifier lines at the top of the file, before the body, and fill them from the input package you downloaded:');
-    lines.push('');
-    lines.push('```');
-    lines.push(`Adjudicated chain: ${chain.chain_id}`);
-    lines.push('Final analysis: <document id> - version <version> - sha256 <sha256>');
-    lines.push('Final red-team: <document id> - version <version> - sha256 <sha256>');
-    lines.push('Supporting adjudication read: <factor id> - <document id> - version <version> - sha256 <sha256>');
-    lines.push('```');
-    lines.push('- End the document with a section headed `## Complete candidate Layer 1 logic for isolated backtesting`. It must be complete enough for another person to implement without going back to the analysis, and it must be explicitly a candidate, not a deployed rule.');
-    lines.push('- Inside that section, give: the rule identity and version; every input with its series, transformation, sign and timing; every threshold, weight, lookback and interaction with its units; the abstention and missing-data rules; the score construction and any tie-break; deterministic pseudocode; the parameter table marking each parameter measured or unvalidated; the isolated-backtest plan, sample and metrics; and the data requirements and blockers.');
-    lines.push('- Mark every parameter that has not been measured as `unvalidated`. Do not present a candidate number as a live threshold, and do not include a production change or a performance claim.');
-  } else {
-    lines.push('- Return one Markdown document. Put these identifier lines at the top of the file, before the body, and fill them from the stage card you downloaded:');
-    lines.push('');
-    lines.push('```');
-    lines.push(`Reviewed chain: ${chain.chain_id}`);
-    if (chain.factor_id) lines.push(`Reviewed factor: ${chain.factor_id}`);
-    lines.push('Reviewed document: <document id shown on the stage card you downloaded>');
-    lines.push('Reviewed version: <version>');
-    lines.push('Reviewed sha256: <sha256 shown on that card>');
-    lines.push('```');
-  }
-  lines.push('- Keep it in one file. Tables, sources, hypotheses, candidate relations and appendices all belong inside that document; nothing here needs a second file, a JSON payload or a hand-built schema.');
-  lines.push(chain.factor_id
-    ? '- The dashboard records the chain, the stage and the exact version this document judged, so that metadata is not yours to assemble: pick the stage card, choose the file, upload it.'
-    : '- The dashboard records the chain, the stage and the exact input package this document judged, so that metadata is not yours to assemble: download the package, choose the file, upload it.');
-  lines.push('');
-  return lines.join('\n');
-}
-
-function researchPrompt(chain) {
-  const dispatchLine = chain.dispatch && chain.dispatch.state === 'dispatched'
-    ? `- The programme has already dispatched the research behind this chain: task \`${chain.dispatch.task_id}\`, brief ${chain.dispatch.brief_version || '1.0.0'}, pack version ${chain.dispatch.pack_version}, context version ${chain.dispatch.context_version}. That brief is the record of what was asked; this prompt is what this stage is judged against.`
-    : '- This chain has not been dispatched yet. This is the next research assignment, written and hash-checked so it is ready to run.';
-  const sections = [
-    promptFrontmatter(chain, 'research', [dispatchLine]),
-    '## What this stage is for',
-    '',
-    'Produce one comprehensive, source-backed report investigating how the inputs of this factor - their levels, their changes and their interactions with each other and with the rest of the system - relate to the subsequent direction of the US dollar over one session: 05:00 Europe/London to 05:00 Europe/London on the next local date.',
-    '',
-    'Rules are in force for some of these entries, and the session is defined but unmeasured because the instrument that would label it has no verified quote source. Neither is the question. The question is what the evidence actually says about where the dollar goes next inside this window, and where that evidence is thin, contradictory or absent.',
-    '',
-    '## What the report must cover',
-    '',
-    '1. **Measurement**: what each input is and what it measures, from sources - the index or series family around it, any futures or forward structure, the publication and revision process, and the exact window each measurement refers to. Name the instrument and the window of every claim.',
-    '2. **Mechanisms**: the channels by which each input could move the dollar inside a 24-hour London-to-London window - safe-haven demand, risk appetite and cross-asset correlation, carry and funding, policy expectations, positioning and flows - and the observable each mechanism would leave at the cutoff.',
-    '3. **Regimes**: whether the relation is stable or regime-dependent (volatility level, direction of the dollar, policy cycle, liquidity), and on what evidence that judgement rests.',
-    '4. **Level against change**: whether the level, a one-day change or a longer change is the informative quantity, and on what evidence.',
-    '5. **Interactions**: for each pair of entries the sources support - inside this factor and with the other factor entries - the sign, the mechanism, the window, and whether the pair is the same information counted twice.',
-    '6. **Timing**: what is observable at 05:00 Europe/London, what is already in the price by then, and what arrives only during the session.',
-    '7. **Predictive evidence**: what has actually been measured about the subsequent 24-hour direction, with the sample, the window and the era stated; and where the honest answer is that nothing has been measured for this instrument and window.',
-    '8. **Contradictory findings**: the strongest contrary evidence you found, named as such rather than omitted.',
-    '9. **Hypotheses**: the candidate relation or relations worth testing, each with a falsifiable statement, what would refute it, and how it could be measured in this repository.',
-    '10. **Data requirements**: the series, resolution, vintage handling and history the test would need, and which of them are missing or behind a paywall.',
-    '',
-    evidenceSection(),
-    validConclusionsSection(),
-    '## Questions for this factor',
-    '',
-    ...chain.probes.map((probe, index) => `${index + 1}. ${probe}`),
-    '',
-    '## Existing thresholds are context, not the scope limit',
-    '',
-    'The rules in force are listed below because they are what the deployed engine does today. Audit them rather than defend them, and do not treat them as the limit of what may be investigated: if the sources support a different quantity, window, sign or interaction, say so and say what it rests on.',
-    ''
-  ];
-  if (chain.dispatched_brief_text) {
-    const dispatch = chain.dispatch || {};
-    sections.push(
-      '## The dispatched assignment',
-      '',
-      `This chain was dispatched under task \`${dispatch.task_id}\` - brief ${dispatch.brief_version || '1.0.0'}, pack version ${dispatch.pack_version}, context version \`${dispatch.context_version}\`, issued ${dispatch.dispatched_at}. The brief's own file is \`${dispatch.prompt_path}\`, sha256 \`${dispatch.prompt_sha256}\`; it stays in the repository as the record of what was asked, and it is not reproduced here.`,
-      '',
-      'The brief was written for a four-step programme: report, red team, research cards, then a backtest handoff. This chain replaced that with three stages - research, red team, adjudication - so anything the brief says about step numbers, research cards, card schemas or a per-card hypothesis limit belongs to a workflow this chain does not use and does not constrain this report. This stage returns one report, stage 2 attacks it claim by claim, and stage 3 decides what, if anything, enters central USD synthesis.',
-      '',
-      'Two requirements of the brief are kept here because the rest of this prompt does not say them:',
-      '',
-      '- Prefer primary sources - the exchange, the index provider, the Federal Reserve, the paper itself - over summaries, and say when only a summary was reachable. Where sources disagree, give both and say which you find better identified, and why.',
-      '- Follow the same channel into its cross-asset carriers - equities, credit, gold, rates and crypto - labelling every instrument and window the same way, and condition the window on the event and release calendar, including the timing of the Federal Reserve H.10 release.',
-      ''
-    );
-  }
-  sections.push(
-    sessionSection(),
-    factorContextBlock(chain),
-    companionBlock(chain, 'research'),
-    returnSection(chain, 'research'),
-    prohibitionsSection(),
-    '## What happens after you return it',
-    '',
-    'An independent red team attacks the report claim by claim (stage 2). Only what survives is carried into the adjudication (stage 3), which decides what, if anything, enters central USD synthesis. Nothing is scored before the session and data contract is frozen, and no weight, sign, threshold, lookback or live call changes because a report exists.',
-    ''
-  );
-  return sections.join('\n');
-}
-
-function redTeamPrompt(chain) {
-  const chainRef = chain.factor_id
-    ? `factor chain \`${chain.chain_id}\``
-    : `asset-level final chain \`${chain.chain_id}\``;
-  const sections = [
-    promptFrontmatter(chain, 'red_team', [
-      `- Reviewed document: the research return registered against ${chainRef}, stage \`research\`. The stage 1 card shows its document id, its version and its sha256: attach exactly that version.`
-    ]),
-    '## What this stage is for',
-    '',
-    'Find what is wrong, unsupported or overstated in the research report before the adjudication carries it further. A report that survives an honest attack is worth more than one that was never attacked, so this stage is expected to damage claims and to say which ones stood up. It is not a summary, not a rewrite and not a vote, and it does not manufacture disagreement.',
-    '',
-    '## Which version you are attacking',
-    '',
-    '- Attach the exact research version the stage 1 card points to, and nothing else about its reasoning.',
-    "- Copy that card's document id, version and sha256 into the identifier lines at the top of your return.",
-    '- If the copy you hold has a different hash from the one on the card, say so and stop: you would not be reviewing the registered version.',
-    '',
-    '## Independence rules',
-    '',
-    "- You are not the author's session and you did not write the report; do not ask it what it meant. The report must stand on the words it contains.",
-    '- Open the sources yourself wherever they are reachable, and say which ones you could re-fetch. Where a source is behind a login or a paywall, judge only on the quotation given and mark the claim status accordingly.',
-    '- Judge claims, not style, and attack the strongest version of a claim rather than a weakened one.',
-    "- Say when a claim is right and only its scope is too wide: a narrower true claim is a result, not a loss.",
-    '',
-    '## What to attack, claim by claim',
-    '',
-    '- **Traceability**: does the passage cited actually say what the claim says, and is the link the source itself rather than a summary of it?',
-    '- **Window**: is the evidence about our 05:00 London to 05:00 London session, or about a close-to-close day, an intraday slice or another window, presented as if it were ours?',
-    '- **Instrument**: is a claim really about EUR/USD, a basket or a future, presented under the DXY name?',
-    '- **Mechanism against measurement**: is a plausible channel being used as if the relation had been measured?',
-    "- **Mixed evidence**: is a mechanism, a contemporaneous association, another window's measurement or information already in an earlier input being presented as predictive evidence for our session?",
-    '- **Already priced**: does the claim count an effect as predictive that the cutoff has already absorbed?',
-    '- **Identification and scope**: sample period, era dependence, regime dependence, conditioning on the outcome, survivorship in the sources chosen, base rates behind a conditional claim, and any number with no stated origin.',
-    '- **Counter-evidence**: is the strongest contrary evidence in the sources the report fetched absent, or present and dismissed without a reason?',
-    '- **Internal consistency**: does one section contradict another, and does the what-is-not-claimed section match what the body actually does?',
-    '- **Overlap**: does the report lean on an interaction that counts one input twice across factor entries, and does it say so?',
-    '',
-    evidenceSection(),
-    '## A verdict for every load-bearing claim',
-    '',
-    '`SUPPORTED` - the sources given support it as stated. `NARROWED` - something in it is supported, and the supported part is stated in your own words. `NOT_SUPPORTED` - the sources given do not support it, or contradict it; say which. `UNASSESSABLE` - it could not be judged from the sources given; say what would settle it.',
-    '',
-    'For each claim also give the claim quoted, its severity (fatal, material, cosmetic), what is wrong, and the evidence that would resolve it. End with two lists: what survives the attack unchanged, and what the review could not reach at all.',
-    ''
-  ];
-  if (chain.programme_red_team_text) {
-    const briefSha = crypto.createHash('sha256').update(chain.programme_red_team_text, 'utf8').digest('hex');
-    sections.push(
-      '## The programme brief this stage follows',
-      '',
-      `The deep-research tier wrote a step-2 brief for the dispatched research. It stays at \`${chain.programme_red_team_path}\`, sha256 \`${briefSha}\`, as the record of what was asked, and it is not reproduced here: it was written for a four-step programme with research cards, and this chain uses three stages. This prompt is the red-team instruction for this stage, and the report is attacked against the claims it actually makes.`,
-      ''
-    );
-  }
-  sections.push(
-    sessionSection(),
-    factorContextBlock(chain),
-    companionBlock(chain, 'red_team'),
-    returnSection(chain, 'red_team'),
-    prohibitionsSection(),
-    '## What happens after you return it',
-    '',
-    'The adjudication (stage 3) reads the report and this review together and decides every material objection. Nothing here approves a hypothesis, scores a factor or changes a live call: an upload records evidence and moves no status.',
-    ''
-  );
-  return sections.join('\n');
-}
-
-function adjudicationPrompt(chain) {
-  const chainRef = chain.factor_id
-    ? `factor \`${chain.factor_id}\` (chain \`${chain.chain_id}\`)`
-    : `the asset-level final chain \`${chain.chain_id}\``;
-  return [
-    promptFrontmatter(chain, 'adjudication', [
-      `- Attach both documents this stage judges: the research return for ${chainRef} and the red-team review of it. Each stage card shows its document id, version and sha256; attach those exact versions.`
-    ]),
-    '## What this stage is for',
-    '',
-    'Read the research report and the red-team review together and produce the best-supported conclusion. Resolve each material objection on the evidence; do not split the difference, do not average the two documents, and do not treat agreement between them as evidence. Where the evidence does not decide, say which finding is unresolved and what would decide it.',
-    '',
-    '## Which versions you are judging',
-    '',
-    '- This stage judges two documents, and each needs its own identifier: the research return, and the red-team review of it.',
-    '- The dashboard supplies both, one card per document: the stage 2 card carries the research document id, version and sha256, and the stage 3 card carries the red-team document id, version and sha256, shown as a prefix on the card; any "Versions to judge" block copied with this prompt, and the handoff that supplies it, carries the same six values with the sha256 in full. Reproduce them in the identifier lines at the top of your return; do not assemble them yourself and do not take them from memory of another session.',
-    '- If your session can hash a file locally (`sha256sum`, `Get-FileHash`, `certutil -hashfile`, or the equivalent), recompute the sha256 of each attached file and write whether it matches the supplied value. If an attachment does not match the identifier supplied for it, say so and stop.',
-    '- If your session has no hashing tool, write plainly that the hashes were taken from the dashboard and were not independently recomputed in this session. Do not claim a verification you did not perform, and do not present the card\'s value as something you confirmed.',
-    '- If either attachment is missing, say so and stop.',
-    '',
-    '## How to decide',
-    '',
-    '- Answer a material objection on the evidence the two documents give, and on sources you fetched yourself; say which it was.',
-    '- Reject an objection the evidence does not support, and say what is wrong with it.',
-    '- A claim that neither document settles stays unresolved and is listed as unresolved rather than quietly dropped.',
-    '- A narrowing that keeps the true part of a claim is a decision, not a compromise.',
-    '',
-    evidenceSection(),
-    validConclusionsSection(),
-    '## What the adjudication must contain',
-    '',
-    '1. **Corrected conclusions** - the best-supported version of each conclusion, stated plainly.',
-    '2. **Finding-by-finding decisions** - every material objection from the review, decided as accepted, rejected or unresolved, each with its reason.',
-    '3. **Accepted, rejected and unresolved claims** - as three explicit lists.',
-    '4. **Proposed treatment of the factor in the engine** - only where the evidence supports it: the input, the transformation, the sign, the threshold, the lookback, the timing and how any interaction is handled. Where the evidence does not support a treatment, say that instead. The rules in force are context to be tested, never a target to agree with.',
-    '5. **Inputs, transformations, timing, interactions and missing-data considerations** - including what the collector does not record today and what it would have to record.',
-    '6. **Explicitly unvalidated parameters** - every number or choice you propose that has not been measured, named as unvalidated.',
-    '7. **Required empirical tests and remaining blockers** - what would have to be measured, on what sample and window, with what data, and what is missing or behind a paywall.',
-    chain.factor_id
-      ? '8. **Handoff to central USD synthesis** - a short, self-contained section a later central synthesis can read on its own: what this factor contributes, what it rules out, what stays unresolved, and what it does not claim.'
-      : '8. **Final asset-level conclusion** - the synthesis over every factor chain: which relations survive, how conflicts between factor chains are resolved, what the asset-level treatment is and what remains unresolved. State plainly that it is accepted research, not a validated trading rule.',
-    '',
-    '## The line this stage must not cross',
-    '',
-    'Research accepted for synthesis is not a validated trading rule. This stage proposes; it does not implement, score, deploy or change a live call, and it asserts no performance figure it has not measured. A recommendation is not a change and is required content: which series and resolution the collector should record, with what vintage and history handling, and how a future engine should treat this factor, all belong in sections 4, 5 and 7. What is forbidden is making the change, presenting it as agreed or scheduled, or claiming that anything in the live engine, a workflow, the dashboard, the feed, the dispatcher or the database has already been changed.',
-    '',
-    sessionSection(),
-    factorContextBlock(chain),
-    companionBlock(chain, 'adjudication'),
-    returnSection(chain, 'adjudication'),
-    prohibitionsSection(),
-    '## What happens after you return it',
-    '',
-    chain.factor_id
-      ? 'Central USD synthesis is a separate step: it reads the adjudications of every factor chain, resolves what conflicts between them, and only then can an isolated implementation and validation step follow. Nothing enters the live engine because a document exists.'
-      : 'This is the last research step for the asset: an isolated implementation and validation step can follow only on the evidence recorded here, and every claim stays unvalidated until that step measures it. Nothing enters the live engine because a document exists.',
-    ''
-  ].join('\n');
-}
-
-// The asset-level chain has its own three stages: a synthesis over the twenty-five adjudications, an
-// independent red-team of that synthesis and its supporting evidence, then an adjudication that produces the
-// complete candidate Layer 1 logic for an isolated backtest. None of them is a fourth factor review, and none
-// of them deploys anything.
-function finalAnalysisPrompt(chain) {
-  const chainList = (chain.factor_chain_ids || []).map(chainId => `- \`${chainId}\``);
-  return [
-    promptFrontmatter(chain, 'final_analysis', [
-      '- This stage opens only when every factor chain has delivered research, red team and adjudication against its current parent versions. Read the adjudications of all of them; do not substitute an earlier research report for an adjudication.'
-    ]),
-    '## What this stage is for',
-    '',
-    'Read every factor-chain adjudication for the asset and produce the best-supported asset-level conclusion. The adjudications are the evidence; this stage synthesises them, resolves what conflicts between factor chains, and states plainly what the whole body of work does and does not support.',
-    '',
-    '## Which documents you are reading',
-    '',
-    '- Read the adjudication of each of these chains, at the exact version and sha256 shown on its stage card:',
-    '',
-    ...chainList,
-    '',
-    '- If a chain has no adjudication, say so and stop: this stage is gated on all of them existing.',
-    '',
-    '## How to decide',
-    '',
-    '- A relation that survived its own adjudication is carried forward at the strength that adjudication supports, not at the strength its research claimed.',
-    '- Where two chains conflict, say which evidence decides and why, or record the conflict as unresolved.',
-    '- Do not average adjudications, and do not treat cross-chain agreement as independent confirmation when the chains share an input.',
-    '- A relation that was rejected or left unresolved in adjudication stays rejected or unresolved here.',
-    '',
-    evidenceSection(),
-    validConclusionsSection(),
-    '## What the synthesis must contain',
-    '',
-    '1. **Asset-level conclusion** - what the evidence supports about the direction of the dollar over the session, stated plainly.',
-    '2. **What survives** - the relations carried forward from adjudication, each with the strength its adjudication supports.',
-    '3. **Conflicts between chains** - each conflict, the evidence that decides it, and what remains unresolved.',
-    '4. **Proposed asset-level treatment** - only where the evidence supports it: inputs, transformations, signs, thresholds, lookbacks and timing. Where it does not, say that instead.',
-    '5. **Explicitly unvalidated parameters** - every number or choice proposed that has not been measured, named as unvalidated.',
-    '6. **Required empirical tests and remaining blockers** - what would have to be measured, on what sample and window, with what data, and what is missing or behind a paywall.',
-    '7. **What is not claimed** - a plain section listing what this synthesis does not establish.',
-    '',
-    '## The line this stage must not cross',
-    '',
-    'This is accepted research, not a validated trading rule. It proposes; it does not implement, score, deploy or change a live call, and it asserts no performance figure it has not measured.',
-    '',
-    sessionSection(),
-    factorContextBlock(chain),
-    companionBlock(chain, 'final_analysis'),
-    returnSection(chain, 'final_analysis'),
-    prohibitionsSection(),
-    '## What happens after you return it',
-    '',
-    'The final red-team judges this synthesis and the evidence behind it. Only after the final adjudication decides those findings can an isolated implementation and validation step follow, and nothing enters the live engine because a document exists.',
-    ''
-  ].join('\n');
-}
-function finalRedTeamPrompt(chain) {
-  const chainList = (chain.factor_chain_ids || []).map(chainId => `- \`${chainId}\``);
-  return [
-    promptFrontmatter(chain, 'final_red_team', [
-      '- Attach the final analysis and its supporting evidence: the final analysis file and the adjudication of every factor chain, at the exact versions and sha256 values shown in the input package. Do not review the analysis in isolation from the evidence it cites.'
-    ]),
-    '## What this stage is for',
-    '',
-    'Challenge the final analysis as an independent red-team. Your job is to find where it claims more than the factor adjudications support, where conflicts were smoothed over, and where the proposed asset-level treatment rests on an unvalidated parameter. You receive the analysis and its supporting evidence together, and you are not asked to defend or rewrite either.',
-    '',
-    '## Which documents you are judging',
-    '',
-    '- The primary target is the final analysis at the exact document id, version and sha256 shown in the input package.',
-    '- The supporting evidence is the adjudication of each of these factor chains, at the exact versions shown in the same package:',
-    '',
-    ...chainList,
-    '',
-    '- Those adjudications are the direct evidence behind the final analysis. Each names the research report and red-team it decided; use those earlier documents when a claim needs the underlying passage.',
-    '- If any file in the input package does not match the version and sha256 on its card, say so and stop. Do not review a substituted document.',
-    '',
-    '## How to challenge, claim by claim',
-    '',
-    '- Quote every load-bearing sentence you judge, then give a verdict, a severity and the evidence that would settle it.',
-    '- Test each final claim against the adjudication it cites: a claim stronger than its source adjudication is an issue.',
-    '- Check that rejected, narrowed and unresolved findings were not silently carried forward as accepted.',
-    '- Check that cross-chain agreement is not counted as independent confirmation when the chains share an input.',
-    '- Check that every number in the proposed treatment is either measured or marked unvalidated.',
-    "- Check that no conclusion rests on a mechanism, a contemporaneous association, another window's measurement or information already in an earlier input presented as this session's evidence.",
-    '- Say when a claim survives unchanged; a red-team that finds nothing still has to show what was tested.',
-    '',
-    evidenceSection(),
-    '## What the red-team must contain',
-    '',
-    '1. **Issue register** - each issue with the quoted claim, verdict, severity and the evidence that would settle it.',
-    '2. **What survives unchanged** - the claims you tested and did not overturn.',
-    '3. **What the red-team could not reach** - scope limits, missing evidence and paywalled sources.',
-    '4. **Sources you re-fetched** - with the link and the passage you relied on.',
-    '5. **Questions you could not resolve** - stated as unresolved rather than guessed.',
-    '',
-    '## The line this stage must not cross',
-    '',
-    'The red-team is evidence, not an approval and not a vote. It does not implement, score, deploy or change a live call, and it asserts no performance figure it has not measured.',
-    '',
-    sessionSection(),
-    factorContextBlock(chain),
-    companionBlock(chain, 'final_red_team'),
-    returnSection(chain, 'final_red_team'),
-    prohibitionsSection(),
-    '## What happens after you return it',
-    '',
-    'The final adjudication receives this red-team and the final analysis together, decides every material finding on the evidence, and then writes the complete candidate Layer 1 logic for an isolated backtest. Nothing enters the live engine because a document exists.',
-    ''
-  ].join('\n');
-}
-function finalAdjudicationPrompt(chain) {
-  const chainList = (chain.factor_chain_ids || []).map(chainId => `- \`${chainId}\``);
-  return [
-    promptFrontmatter(chain, 'final_adjudication', [
-      '- Attach both documents this stage judges: the final analysis and the final red-team of it, plus the factor-chain adjudications that support the analysis, at the exact versions and sha256 values shown in the input package.'
-    ]),
-    '## What this stage is for',
-    '',
-    'Read the final analysis and the final red-team findings together and produce the best-supported final decision. Resolve each material red-team objection on the evidence; do not split the difference, do not average the two documents, and do not treat agreement between them as evidence. Then write the complete candidate Layer 1 logic that follows from the decision, ready for an isolated backtest and not for deployment.',
-    '',
-    '## Which documents you are judging',
-    '',
-    '- The final analysis is the synthesis under adjudication.',
-    '- The final red-team is the independent challenge to it.',
-    '- The supporting evidence is the adjudication of each of these factor chains, at the exact versions shown in the input package:',
-    '',
-    ...chainList,
-    '',
-    '- Those adjudications are the direct evidence behind the analysis and the red-team. Each names the research report and red-team it decided; use those earlier documents when a decision needs the underlying passage.',
-    '- If any file in the input package does not match the version and sha256 on its card, say so and stop.',
-    '',
-    '## How to decide',
-    '',
-    '- Answer a material red-team objection on the evidence the documents give, and on sources you fetched yourself; say which it was.',
-    '- Reject an objection the evidence does not support, and say what is wrong with it.',
-    '- A claim that neither document settles stays unresolved and is listed as unresolved rather than quietly dropped.',
-    '- A narrowing that keeps the true part of a claim is a decision, not a compromise.',
-    '- The candidate logic follows the adjudicated evidence. It is not a compromise between the analysis and the red-team.',
-    '',
-    evidenceSection(),
-    '## What the adjudication must contain',
-    '',
-    '1. **Corrected final conclusions** - the best-supported version of each conclusion, stated plainly.',
-    '2. **Finding-by-finding decisions** - every material red-team finding, decided as accepted, rejected or unresolved, each with its reason.',
-    '3. **Accepted, rejected and unresolved claims** - as three explicit lists.',
-    '4. **Complete candidate Layer 1 logic for isolated backtesting** - a self-contained specification: the candidate rule identity and version; every input with its series, transformation, sign and timing; every threshold, weight, lookback and interaction with its units; the abstention and missing-data rules; the score construction and any tie-break; and deterministic pseudocode another person can implement without going back to the analysis.',
-    '5. **Parameter table** - every threshold, weight, lookback, sign and interaction named above, each marked `measured` or `unvalidated`, with its source and units.',
-    '6. **Isolated-backtest plan** - the sample, the window, the outcome definition, the controls, the metrics and the pass/fail conditions that would test the candidate without touching the live engine.',
-    '7. **Data requirements and blockers** - the series, resolution, vintage handling and history the test needs, and what is missing or behind a paywall.',
-    '8. **What is not claimed** - a plain section listing what this adjudication and candidate logic do not establish.',
-    '',
-    '## The line this stage must not cross',
-    '',
-    'The candidate Layer 1 logic is for an isolated backtest only. This stage does not implement, score, deploy, publish or change a live call, and it asserts no performance figure it has not measured. Every number that has not been measured is marked unvalidated, and no production configuration is proposed as part of the deliverable.',
-    '',
-    sessionSection(),
-    factorContextBlock(chain),
-    companionBlock(chain, 'final_adjudication'),
-    returnSection(chain, 'final_adjudication'),
-    prohibitionsSection(),
-    '## What happens after you return it',
-    '',
-    'The candidate Layer 1 logic can be handed to an isolated backtest as a candidate, never as a live rule. Only a measured, out-of-sample test can support a later deployment decision, and nothing enters the live engine because a document exists.',
-    ''
-  ].join('\n');
-}
-
-
-
-
-
-
 // The topic labels. Every USD factor sits in exactly one label, and a label may name the other labels it
 // interacts with. The label carries shared context and probes only; the chain under each factor owns the
 // stages and the evidence. The VIX label carries the one dispatched brief, which is attached to the F1 chain's
@@ -1573,7 +1166,6 @@ const TOPIC_MAP = [
     dispatch: {
       state: 'dispatched',
       task_id: 'USD-BASELINE-AUDIT-01',
-      brief_version: '1.0.0',
       pack_version: '2.0.0',
       context_version: 'usd-session-context-20261014.1',
       dispatched_at: '2026-10-15'
@@ -1585,10 +1177,7 @@ const TOPIC_MAP = [
     ],
     pack_factor_ids: ['live.f1-vix-level', 'risk.vix-level-and-change-at-cutoff'],
     probes: [
-      'Is the informative quantity the level, the one-day change or a five-day change, and does the answer differ between calm and stressed regimes?',
-      'Does the volatility-of-volatility or term-structure information add anything the level does not already carry?',
-      'Is the mechanism safe-haven demand, risk appetite, carry or policy expectations, and what observable at the cutoff distinguishes them?',
-      'How much of the VIX move is already in the dollar at 05:00 Europe/London, and what is left for the following 24 hours?'
+      'Which of these two chains is measuring something the other does not, and which is the same VIX variable counted twice?'
     ],
     next_step: 'The research report is registered on the usd-factor-live-f1-vix-level chain. Run that chain\'s stage 2 (red-team) against research version 1, then its stage 3 (adjudication). The sibling usd-factor-risk-vix-level-and-change-at-cutoff chain is still not started and is not advanced by that report.'
   },
@@ -1605,10 +1194,7 @@ const TOPIC_MAP = [
     ],
     pack_factor_ids: ['live.f2-us-2y-delta', 'live.f3-us-de-2y-spread-delta', 'live.f4-real-yield-delta', 'rates.us-front-end-delta', 'rates.relative-front-end-delta', 'rates.real-yield-delta', 'rates.term-premium-and-curve', 'rates.credit-spread-delta'],
     probes: [
-      'Which of the eight entries is measuring something the others do not, and which pairs are the same information counted twice?',
-      'Is the informative quantity the level, a five-day change or a same-session change, and does the answer depend on the policy cycle?',
-      'Does a real-yield change add information beyond the nominal front end, and does that survive the inflation-expectation measurement problem?',
-      'Are these relations already in the dollar by 05:00 Europe/London, given that the US cash market is closed at the cutoff?'
+      'Which of the eight entries is measuring something the others do not, and which pairs are the same information counted twice?'
     ],
     next_step: 'Not dispatched. Each factor under this label has its own written and checked research prompt; open a chain and take its stage 1 prompt when the batch opens.'
   },
@@ -1625,9 +1211,7 @@ const TOPIC_MAP = [
     ],
     pack_factor_ids: ['live.f5-dxy-delta', 'live.f6-gold-delta', 'live.f9-dollar-smile', 'live.f10-equity-versus-usd'],
     probes: [
-      'Is the dollar smile a measured relation for this window, or a descriptive convenience: what would falsify it?',
       'Which dollar index is a claim actually about, and does the answer change with the index construction?',
-      'Does a same-day dollar move followed by a session direction suggest mean reversion or continuation, and on what evidence?',
       'Are gold and equities independent evidence for the dollar, or the same risk factor counted twice?'
     ],
     next_step: 'Not dispatched. Each factor under this label has its own written and checked research prompt; open a chain and take its stage 1 prompt when the batch opens.'
@@ -1645,10 +1229,8 @@ const TOPIC_MAP = [
     ],
     pack_factor_ids: ['live.f7-economic-surprise', 'live.f8-fed-bias', 'macro.release-surprise-at-first-print'],
     probes: [
-      'Which surprise measure is defensible: survey consensus, model nowcast, or the market-implied move, and what does each one cost?',
-      'Is the first print the only honest vintage, and what does the revision history of the tested series look like?',
-      'Is Fed bias an observable at 05:00 Europe/London or a narrative, and what would an observable version look like?',
-      'How much of a surprise is already in the dollar in the minutes after the print, and how do you separate that from the session that follows?'
+      'Which of these three chains is testing a surprise, which is testing a narrative, and which is testing the same underlying information twice?',
+      'Is the first print the only honest vintage, and what does the revision history of the tested series look like?'
     ],
     next_step: 'Not dispatched. Each factor under this label has its own written and checked research prompt; open a chain and take its stage 1 prompt when the batch opens.'
   },
@@ -1665,9 +1247,6 @@ const TOPIC_MAP = [
     ],
     pack_factor_ids: ['fx.usd-session-momentum', 'fx.usd-overnight-range-position', 'fx.usd-session-volatility-regime', 'risk.usd-safe-haven-demand', 'risk.risk-on-off-cross-asset-state'],
     probes: [
-      'Is the range position a state variable or an artefact of when the session starts, and what does the start time do to it?',
-      'Does session momentum survive the bid-ask bounce of a 24-hour window, and what measurement would separate them?',
-      'Is safe-haven demand observable at the cutoff separately from risk-on/off, or is it the same input twice?',
       'Which instrument labels these factors, given that DXY has no verified intraday source?'
     ],
     next_step: 'Not dispatched. Each factor under this label has its own written and checked research prompt; open a chain and take its stage 1 prompt when the batch opens.'
@@ -1685,9 +1264,6 @@ const TOPIC_MAP = [
     ],
     pack_factor_ids: ['calendar.known-releases-between-cutoff-and-endpoint', 'calendar.days-since-and-until-high-impact-events', 'data.quality-gate-for-abstention'],
     probes: [
-      'Does a scheduled release inside the session change the expected direction, the expected dispersion, or only the confidence?',
-      'What is the honest treatment when the collector input is stale or missing: abstain, shrink or score neutral?',
-      'Which releases matter for the dollar over this window, and are the timestamps verifiable at the cutoff?',
       'Can an abstention rule be evaluated at all without a frozen label instrument, and what would it take?'
     ],
     next_step: 'Not dispatched. Each factor under this label has its own written and checked research prompt; open a chain and take its stage 1 prompt when the batch opens.'
@@ -1695,6 +1271,45 @@ const TOPIC_MAP = [
 ];
 
 // buildCatalog is defined below; the topic map above only prepares grouping labels and prompt text.
+// An asset profile is not a factor catalogue. A draft profile records the session, the instruments and the
+// USD mappings a later programme would start from; it owns no factor entry, no chain, no stage prompt and no
+// brief, so nothing under it can be dispatched. These counts are derived from the built catalogue so the two
+// cannot drift into looking alike.
+function assetCatalogRecord(asset, built) {
+  const assetId = asset.asset;
+  const profile = Prompts.assetProfile(assetId) || {};
+  const factors = (asset.factors || []).length;
+  const chains = built.factor_chains.filter(chain => chain.asset === assetId);
+  const stagePrompts = chains.reduce((total, chain) => total + (chain.stages || []).length, 0);
+  const finalPrompts = assetId === 'USD' && built.final_chain ? (built.final_chain.stages || []).length : 0;
+  const briefs = BRIEF_DOCUMENTS.filter(entry => entry.asset === assetId).length;
+  const complete = factors > 0 && chains.length === factors;
+  const state = complete && assetId === 'USD' ? 'dispatchable' : complete ? 'incomplete' : 'profile_only';
+  const catalogue = {
+    state,
+    factor_entries: factors,
+    factor_chains: chains.length,
+    stage_prompts: stagePrompts + finalPrompts,
+    published_briefs: briefs,
+    prompt_profile: profile.status || 'none',
+    open_decisions: (profile.open_questions || []).length,
+    note: state === 'dispatchable'
+      ? 'Complete: every factor has a catalogue entry, a three-stage chain with its prompts, and a published brief.'
+      : state === 'incomplete'
+        ? 'Partly built: some factors have an entry without a chain. Nothing here is dispatchable until every entry has all three prompts.'
+        : `Asset profile only, at status ${profile.status || 'unknown'}: no factor entry, no factor chain, no stage prompt and no published brief. Nothing here is dispatchable, and this record is not a factor catalogue.`
+  };
+  if (state !== 'dispatchable') {
+    catalogue.remaining = [
+      'A label instrument and quote source decision, naming the contract, index or spot venue and how it is quoted at the cutoff.',
+      'One factor entry per candidate factor, with its series, publication timing, transformations and blockers. None exists yet for this asset.',
+      `One three-stage chain per factor, so ${factors || 'the first'} prompt set(s) would have to be written and checked before anything can be dispatched.`,
+      'A published brief per factor, and an asset-level final chain with its own completion gate.'
+    ];
+  }
+  return { ...asset, catalogue };
+}
+
 function buildCatalog() {
   const built = buildChains();
   return {
@@ -1707,6 +1322,7 @@ function buildCatalog() {
     topics: built.topics,
     factor_chains: built.factor_chains,
     final_chain: built.final_chain,
+    synthesis_topic: built.synthesis_topic,
     engine_documents: ENGINE_DOCUMENTS,
     repo_documents: REGISTRY_DOCUMENTS,
     research_briefs: {
@@ -1721,7 +1337,7 @@ function buildCatalog() {
       session_research: ALL_BRIEF_FACTOR_IDS.length - Handoff.LIVE_FACTORS.length,
       note: 'One self-contained brief per USD factor, carrying its context, its research prompt and its output instructions: a baseline audit for a factor the deployed node computes today, a research assignment for a factor with no rule in force. Covering every factor is not progress: a brief is an assignment, no research status moves because a brief exists, and a returned card is evidence rather than an approval.'
     },
-    assets: [USD_ASSET, ...OTHER_ASSETS]
+    assets: [USD_ASSET, ...OTHER_ASSETS].map(asset => assetCatalogRecord(asset, built))
   };
 }
 
@@ -1846,12 +1462,135 @@ function report(label, problems) {
 // carries each prompt's hash, and the check command re-reads the files. Nothing here or anywhere else sends
 // a prompt to a model. One writer serves both kinds of chain: a factor chain and the gated asset-level
 // final chain differ only in their folder, identifiers and whether a dispatched brief sits behind stage 1.
-function chainStagesFor(chain, dir, files) {
+// ---------------------------------------------------------------------------------------------
+// Prompt rendering
+//
+// Every one of the seventy-eight chain prompts is rendered by lib/research_prompt_templates.js.
+// The builder owns the facts - chain ids, factor entries, hashes, the gate - and the template owns
+// every word, so a workflow instruction cannot survive in one chain after being removed from
+// another. Nothing here sends a prompt to a model: a prompt is copied by hand and the returned
+// document is uploaded by hand.
+// ---------------------------------------------------------------------------------------------
+
+// The final chain's catalogue stage ids are kept because the registry and the page key on them;
+// the template calls the same three stages research, red_team and adjudication.
+const TEMPLATE_STAGE = {
+  research: 'research',
+  red_team: 'red_team',
+  adjudication: 'adjudication',
+  final_analysis: 'research',
+  final_red_team: 'red_team',
+  final_adjudication: 'adjudication'
+};
+
+function chainDeliverable(chain, kind, stageId) {
+  return Prompts.deliverableFileName({ asset: chain.asset, slug: chain.slug, kind, stage: TEMPLATE_STAGE[stageId] });
+}
+
+function factorEntryContext(chain, factor) {
+  const entry = factor || {};
+  return {
+    factor_id: chain.factor_id,
+    label: chain.factor_label,
+    brief: entry.brief || chain.summary,
+    role: chain.factor_role,
+    group: chain.factor_group,
+    research_status: entry.research_status || 'not stated',
+    current_rules: entry.current_rules || [],
+    threshold: entry.threshold,
+    lookback: entry.lookback,
+    sources: entry.sources || [],
+    blockers: entry.blockers || [],
+    pack: (chain.packs || [])[0]
+  };
+}
+
+function givenDocuments(chain, kind, stageId, factorChains) {
+  if (kind === 'factor') {
+    const report = {
+      file_name: chainDeliverable(chain, 'factor', 'research'),
+      note: 'the stage 1 report for this chain, at the version and hash registered against its stage 1'
+    };
+    const review = {
+      file_name: chainDeliverable(chain, 'factor', 'red_team'),
+      note: 'the stage 2 review for this chain, at the version and hash registered against its stage 2'
+    };
+    if (stageId === 'red_team') return [report];
+    if (stageId === 'adjudication') return [report, review];
+    return [];
+  }
+  const analysis = { file_name: chainDeliverable(chain, 'asset_synthesis', 'final_analysis'), note: 'the final analysis for this asset, at the version registered against its stage 1' };
+  const redTeam = { file_name: chainDeliverable(chain, 'asset_synthesis', 'final_red_team'), note: 'the final red-team for this asset, at the version registered against its stage 2' };
+  if (stageId === 'final_analysis') {
+    return (factorChains || []).map(factorChain => ({
+      file_name: chainDeliverable(factorChain, 'factor', 'adjudication'),
+      note: `the stage 3 adjudication of \`${factorChain.chain_id}\`, at the version and hash registered against that chain`
+    }));
+  }
+  if (stageId === 'final_red_team') {
+    return [analysis, { file_name: 'usd-factor-*-s3-adjudication.md', note: 'every supporting adjudication the final analysis recorded, at the version and hash it recorded for each' }];
+  }
+  return [analysis, redTeam, { file_name: 'usd-factor-*-s3-adjudication.md', note: 'every supporting adjudication the final analysis recorded, at the version and hash it recorded for each' }];
+}
+
+function programmeContext(chain) {
+  const dispatch = chain.dispatch || {};
+  const programme = { dispatched: dispatch.state === 'dispatched' };
+  if (programme.dispatched) {
+    programme.task_id = dispatch.task_id;
+    programme.pack_version = dispatch.pack_version;
+    programme.context_version = dispatch.context_version;
+  }
+  // A brief that set out an older workflow is named, hashed and refused. Its text is not spliced
+  // into the prompt: a prompt that carries two assignments is the defect this template replaces.
+  if (dispatch.prompt_path && dispatch.prompt_sha256) {
+    programme.superseded = [{ repo_path: dispatch.prompt_path, sha256: dispatch.prompt_sha256 }];
+  }
+  return programme;
+}
+
+function chainPromptContext(chain, stageId, kind, factor, factorChains) {
+  const isFinal = kind === 'asset_synthesis';
+  const topic = {
+    topic_id: isFinal ? chain.chain_id : chain.topic_id,
+    slug: chain.slug,
+    title: chain.title,
+    question: (chain.probes || [])[0] || `${chain.title} on ${chain.asset}.`,
+    probes: (chain.probes || []).slice(),
+    group_title: chain.group_title
+  };
+  return {
+    kind,
+    stage: TEMPLATE_STAGE[stageId],
+    date: TODAY,
+    asset: chain.asset,
+    profile: Prompts.assetProfile(chain.asset),
+    subject: { noun: 'chain', id: chain.chain_id },
+    topic,
+    factor_id: isFinal ? null : chain.factor_id,
+    factor_entry: isFinal ? null : factorEntryContext(chain, factor),
+    entries: isFinal ? [] : [factorEntryContext(chain, factor)],
+    chain_questions: isFinal ? [] : (chain.probes || []).slice(1),
+    companions: (chain.companions || []).map(entry => ({ repo_path: entry.repo_path, role: entry.role, sha256: entry.sha256 })),
+    given: givenDocuments(chain, kind, stageId, factorChains),
+    deliverable: { file_name: chainDeliverable(chain, kind, stageId) },
+    programme: programmeContext(chain),
+    gate: isFinal && chain.gate ? { requires: chain.gate.requires, factor_count: chain.gate.factor_count } : null
+  };
+}
+
+function renderChainPrompt(chain, stageId, kind, factor, factorChains) {
+  return Prompts.buildStagePrompt(chainPromptContext(chain, stageId, kind, factor, factorChains));
+}
+
+function chainStagesFor(chain, dir, files, factor, factorChains) {
   const isFactor = Boolean(chain.factor_id);
   const stageIds = isFactor ? FACTOR_STAGE_IDS : FINAL_STAGE_IDS;
-  const text = isFactor
-    ? { research: researchPrompt(chain), red_team: redTeamPrompt(chain), adjudication: adjudicationPrompt(chain) }
-    : { final_analysis: finalAnalysisPrompt(chain), final_red_team: finalRedTeamPrompt(chain), final_adjudication: finalAdjudicationPrompt(chain) };
+  const kind = isFactor ? 'factor' : 'asset_synthesis';
+  const text = {};
+  stageIds.forEach(stageId => {
+    text[stageId] = renderChainPrompt(chain, stageId, kind, factor, factorChains);
+  });
   const fileSlugs = {
     research: 'research',
     red_team: 'red-team',
@@ -1883,7 +1622,7 @@ function chainStagesFor(chain, dir, files) {
       factor_id: chain.factor_id || null,
       text: text[stageId]
     });
-    const sourceKind = stageId === 'research' && chain.dispatch && chain.dispatch.prompt_path ? 'dispatched_brief' : 'generated';
+    const hasSupersededBrief = stageId === 'research' && chain.dispatch && chain.dispatch.prompt_path;
     const sha256 = crypto.createHash('sha256').update(text[stageId], 'utf8').digest('hex');
     return {
       stage: stageId,
@@ -1892,19 +1631,15 @@ function chainStagesFor(chain, dir, files) {
       prompt_path: repoPath,
       prompt_sha256: sha256,
       prompt_bytes: Buffer.byteLength(text[stageId], 'utf8'),
-      prompt_source: sourceKind === 'dispatched_brief'
-        ? {
-          kind: sourceKind,
-          repo_path: chain.dispatch.prompt_path,
-          sha256: chain.dispatch.prompt_sha256,
-          note: 'Generated from the dispatched brief and the chain map; the brief is cited by path and hash, not reproduced.'
-        }
-        : {
-          kind: sourceKind,
-          repo_path: repoPath,
-          sha256,
-          note: 'Generated from the catalogue and the chain map, and shown on the page before it is copied.'
-        },
+      prompt_source: {
+        kind: 'generated',
+        repo_path: repoPath,
+        sha256,
+        template_version: Prompts.TEMPLATE_VERSION,
+        note: hasSupersededBrief
+          ? `Generated from the catalogue and the chain map by \`${Prompts.TEMPLATE_VERSION}\`. The dispatched brief \`${chain.dispatch.prompt_path}\` is named inside the prompt and refused, not reproduced: this file is the one assignment.`
+          : `Generated from the catalogue and the chain map by \`${Prompts.TEMPLATE_VERSION}\`, and shown on the page before it is copied.`
+      },
       document_type: meta.document_type,
       parent_stage: parentStages[stageId],
       ...(isFactor ? {} : { input_stages: inputStages[stageId] }),
@@ -1920,6 +1655,19 @@ function chainStagesFor(chain, dir, files) {
 function publicChain(chain) {
   const { dispatched_brief_text, programme_red_team_text, ...rest } = chain;
   return rest;
+}
+
+// A quality gate or an abstention gate is not a directional factor. Its chain question has to ask what the entry
+// should change about the call, not whether it predicts direction; otherwise every stage asks the wrong question
+// and an honest "this carries no directional information" reads as a failed assignment.
+function chainQuestion(factorId, factor) {
+  const gate = /gate/i.test(String(factor.role || ''));
+  // "a abstention gate" is the kind of defect a reader notices before anything else, so the article is chosen,
+  // not pasted: roles in use are "abstention gate", "quality gate", "direction", "regime" and "regime context".
+  const article = /^[aeiou]/i.test(String(factor.role || '')) ? 'an' : 'a';
+  return gate
+    ? `Chain question: what should \`${factorId}\` - ${factor.label} - change about the call, given that it is ${article} ${factor.role} rather than a directional input? ${factor.brief}`
+    : `Chain question: does \`${factorId}\` - ${factor.label} - carry information about the next 24-hour dollar move, and in which quantity? ${factor.brief}`;
 }
 
 function buildChains() {
@@ -2042,7 +1790,8 @@ function buildChains() {
         companions: group.companions.map(entry => ({ ...entry })),
         packs: group.packs.filter(pack => pack.factor_id === factorId).map(pack => ({ ...pack })),
         probes: [
-          `Chain question: does \`${factorId}\` - ${factor.label} - carry information about the next 24-hour dollar move, and in which quantity? ${factor.brief}`,
+          chainQuestion(factorId, factor),
+          ...(factor.probes || []),
           ...group.probes
         ]
       };
@@ -2057,7 +1806,7 @@ function buildChains() {
         chain.programme_red_team_path = group.programme_red_team_path;
         chain.programme_red_team_text = group.programme_red_team_text;
       }
-      chain.stages = chainStagesFor(chain, FACTOR_DIR, files);
+      chain.stages = chainStagesFor(chain, FACTOR_DIR, files, factor);
       chains.push(publicChain(chain));
     });
   });
@@ -2092,13 +1841,36 @@ function buildChains() {
     },
     factor_chain_ids: chains.map(chain => chain.chain_id)
   };
-  finalChain.stages = chainStagesFor(finalChain, FINAL_DIR, files);
+  finalChain.stages = chainStagesFor(finalChain, FINAL_DIR, files, null, chains);
+
+  // Step 4: the asset_synthesis topic spec. It is a catalogue entry in its own right, with the three
+  // stages it owns and the gate that opens them, so the final chain's assignment is explicit rather than
+  // implied by a chain record. It is not a seventh grouping label, it owns no factor, and it cannot be
+  // reached before every factor chain has delivered all three stages against current parent versions:
+  // the library's gate decides that, and nothing in this spec changes the gate.
+  const synthesisTopic = {
+    topic_id: 'usd-topic-asset-synthesis',
+    asset: 'USD',
+    chain_id: finalChain.chain_id,
+    slug: finalChain.slug,
+    title: finalChain.title,
+    question: finalChain.probes[0],
+    chain_kind: 'asset_synthesis',
+    template_version: Prompts.TEMPLATE_VERSION,
+    summary: finalChain.summary,
+    stage_ids: FINAL_STAGE_IDS.slice(),
+    stage_paths: finalChain.stages.map(stage => ({ stage: stage.stage, order: stage.order, prompt_path: stage.prompt_path, prompt_sha256: stage.prompt_sha256 })),
+    factor_ids: finalChain.factor_chain_ids.slice(),
+    gate: { ...finalChain.gate, state_source: 'registry' },
+    unlock_note: 'Locked until every one of the factor chains has delivered research, red team and adjudication against current parent versions. This spec records the gate; it does not open it, and no stage of it may be run early.',
+    next_step: 'Run stages 1 to 3 only when the library reports the gate open, and take the prompt from this catalogue entry rather than from a copy.'
+  };
 
   const covered = new Set(chains.map(chain => chain.factor_id));
   USD_ASSET.factors.forEach(factor => {
     if (!covered.has(factor.factor_id)) problems.push(`factor ${factor.factor_id} carries no research chain`);
   });
-  return { topics: groups, factor_chains: chains, final_chain: finalChain, files, problems };
+  return { topics: groups, factor_chains: chains, final_chain: finalChain, synthesis_topic: synthesisTopic, files, problems };
 }
 
 function writePromptFiles(built) {
@@ -2135,7 +1907,11 @@ function chainsCommand(flag) {
     console.log('chains check: the committed catalogue carries a different final chain. Run catalog --write.');
     return 1;
   }
-  console.log(`chains check: ${built.factor_chains.length} factor chains, ${built.files.length} prompt files and the final chain match the authored chains.`);
+  if (committed && JSON.stringify(built.synthesis_topic) !== JSON.stringify(committed.synthesis_topic || null)) {
+    console.log('chains check: the committed catalogue carries a different asset_synthesis topic spec. Run catalog --write.');
+    return 1;
+  }
+  console.log(`chains check: ${built.factor_chains.length} factor chains, ${built.files.length} prompt files, the final chain and the asset_synthesis topic spec match the authored chains.`);
   return 0;
 }
 

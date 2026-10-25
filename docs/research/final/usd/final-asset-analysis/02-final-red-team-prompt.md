@@ -1,57 +1,74 @@
-# USD asset-level final analysis - stage 2 of 3: Final red-team
+# USD asset-level final analysis - stage 2 of 3: Red-team
 
-- Asset-level final chain `usd-final-asset-analysis` on asset USD; stage `final_red_team`; this stage returns exactly one Markdown document (review).
-- This is the asset-level synthesis chain: it reads every factor-chain adjudication and is not itself a factor result. It opens only through the gate, never because a prompt was copied.
-- Paste this whole prompt as one message into your own fresh session. Nothing is sent to a model from the dashboard, and this page holds no model credentials.
-- Attach the final analysis and its supporting evidence: the final analysis file and the adjudication of every factor chain, at the exact versions and sha256 values shown in the input package. Do not review the analysis in isolation from the evidence it cites.
+## Assignment
 
-## What this stage is for
+- Chain: `usd-final-asset-analysis` on USD (US Dollar); chain kind `asset_synthesis`.
+- Stage: 2 of 3, red-team. This stage returns exactly one Markdown document (review), named `usd-final-asset-analysis-s2-red-team.md`.
+- Prompt template: `research-prompt-v3.1.0`, written 2026-10-13. The template is versioned: if a newer `research-prompt` template exists, that one governs and this file is superseded.
+- This prompt is self-contained. Paste it as one message into a fresh session; nothing is sent to a model from the dashboard and no credential is attached to it.
+- Asset status: active. The session is defined below and the data reachable from this repository is named with each input.
+- Gate: this chain does not open early. It runs only when all 25 factor chains have delivered research, red-team and adjudication against their current parent versions, and the gate is `all-factor-chains`. If any one of them is missing or stale, stop and say which: an incomplete synthesis presented as a result is worse than no synthesis.
+- The gate is enforced by the library, not by this prompt. Reading the condition here is not permission to begin, and returning a file does not change the locked state of anything.
+- Programme record: this chain has not been dispatched. Nothing has been returned for it, and this prompt is its first assignment.
 
-Challenge the final analysis as an independent red-team. Your job is to find where it claims more than the factor adjudications support, where conflicts were smoothed over, and where the proposed asset-level treatment rests on an unvalidated parameter. You receive the analysis and its supporting evidence together, and you are not asked to defend or rewrite either.
+## Objective
 
-## Which documents you are judging
+Attack the US Dollar candidate model specification and validation plan in the document you are given, claim by claim, and return one issue register. Attack both halves: whether the specification is computable, timely and free of double counting, and whether the plan could tell a real relation from an artefact of the sample, the benchmarks or the number of comparisons tried. Do not rewrite the specification. Say what is wrong, how much it matters and what evidence would settle it.
 
-- The primary target is the final analysis at the exact document id, version and sha256 shown in the input package.
-- The supporting evidence is the adjudication of each of these factor chains, at the exact versions shown in the same package:
+## The session and the instrument
 
-- `usd-factor-live-f1-vix-level`
-- `usd-factor-risk-vix-level-and-change-at-cutoff`
-- `usd-factor-live-f2-us-2y-delta`
-- `usd-factor-live-f3-us-de-2y-spread-delta`
-- `usd-factor-live-f4-real-yield-delta`
-- `usd-factor-rates-us-front-end-delta`
-- `usd-factor-rates-relative-front-end-delta`
-- `usd-factor-rates-real-yield-delta`
-- `usd-factor-rates-term-premium-and-curve`
-- `usd-factor-rates-credit-spread-delta`
-- `usd-factor-live-f5-dxy-delta`
-- `usd-factor-live-f6-gold-delta`
-- `usd-factor-live-f9-dollar-smile`
-- `usd-factor-live-f10-equity-versus-usd`
-- `usd-factor-live-f7-economic-surprise`
-- `usd-factor-live-f8-fed-bias`
-- `usd-factor-macro-release-surprise-at-first-print`
-- `usd-factor-fx-usd-session-momentum`
-- `usd-factor-fx-usd-overnight-range-position`
-- `usd-factor-fx-usd-session-volatility-regime`
-- `usd-factor-risk-usd-safe-haven-demand`
-- `usd-factor-risk-risk-on-off-cross-asset-state`
-- `usd-factor-calendar-known-releases-between-cutoff-and-endpoint`
-- `usd-factor-calendar-days-since-and-until-high-impact-events`
-- `usd-factor-data-quality-gate-for-abstention`
+- Session: 05:00 Europe/London to 05:00 Europe/London on the next local date. Both ends are London wall-clock times one local date apart, so every eligible session is exactly 24 hours. The contract is `docs/research/usd-session/v1/session_contract_v1.json`.
+- Label instrument: DXY, and UNVERIFIED. No intraday dollar-index print exists in this repository or in the live collector, and no quote source is committed. If a claim is really about EUR/USD, a basket, the broad trade-weighted index or a futures contract, name that instrument in the same sentence and say what its window is.
+- The deployed engine is not this window: it cuts off at 09:30 America/New_York and ends at the next 16:00 ET close, a median 30.5 elapsed hours. It overlaps this session for about 14.5 nominal hours and leaves the session's first 9.5 hours unmeasured. Say which window every number belongs to.
+- The window is closed to later information: a value published after 05:00 London, or a revision published later, may not be used as what was known at the cutoff.
 
-- Those adjudications are the direct evidence behind the final analysis. Each names the research report and red-team it decided; use those earlier documents when a claim needs the underlying passage.
-- If any file in the input package does not match the version and sha256 on its card, say so and stop. Do not review a substituted document.
+## Inputs
+
+### Documents you are given
+
+Supplied by the operator. Record the file name and the first heading of the document you judge in the header lines your deliverable asks for. If what you were given is clearly another topic or another stage, stop and say so.
+
+- `usd-final-asset-analysis-s1-proposal.md` - the final analysis for this asset, at the version registered against its stage 1. As supplied: version `unknown`, sha256 `unknown`.
+- `usd-factor-*-s3-adjudication.md` - every supporting adjudication the final analysis recorded, at the version and hash it recorded for each. As supplied: version `unknown`, sha256 `unknown`.
+
+### The entries in scope
+
+Every entry below belongs to at least one of the factor chains this synthesis reads. They are the catalogue's record of what is being proposed, not evidence, and not the scope limit of the reconciliation.
+
+
+### Documents in this checkout
+
+Each line names a file, the part of it that matters, its hash and what it is for. If a file is not attached to this message, answer from this prompt and say which files you could not open.
+
+- `docs/research/usd-session/v1/inventory.md` - the input and decision inventory the synthesis closes out. sha256 `a886f1ddcce52d4d8a0af77069b391deb1338275380cccd2e08d41fd61f2d56a`.
 
 ## How to challenge, claim by claim
 
-- Quote every load-bearing sentence you judge, then give a verdict, a severity and the evidence that would settle it.
-- Test each final claim against the adjudication it cites: a claim stronger than its source adjudication is an issue.
-- Check that rejected, narrowed and unresolved findings were not silently carried forward as accepted.
-- Check that cross-chain agreement is not counted as independent confirmation when the chains share an input.
-- Check that every number in the proposed treatment is either measured or marked unvalidated.
-- Check that no conclusion rests on a mechanism, a contemporaneous association, another window's measurement or information already in an earlier input presented as this session's evidence.
-- Say when a claim survives unchanged; a red-team that finds nothing still has to show what was tested.
+Answer every question below, in order. Where the evidence does not exist, write that and what would settle it: an honest "not answerable from the sources I can reach" is a complete answer, a guess is not.
+
+### Questions to answer, claim by claim
+
+1. Can the specification be computed from the inputs it names, at the cutoff it names, with the vintage discipline it claims?
+2. Is the timing honest: is every input observable at the cutoff, or does one of them only arrive later?
+3. Is any input counted twice - across entries, across factor chains, or through an interaction term?
+4. Is the aggregation policy justified, or is it a sum of scores dressed as a model? Where a weight is fitted, on what sample and with what protection?
+5. Are the signs and thresholds supported by the evidence cited, or inherited from the deployed baseline?
+6. Is the label the same instrument and window as the analysis, or has an ETF, a basket or a different closing time slipped in?
+7. Could the validation plan tell a real relation from a lucky one: sample size, era splits, multiplicity, holdout, and the number of variants tried?
+8. Are the benchmarks fair or trivially beatable - the no-call baseline, the deployed engine and a shuffled control?
+9. Do the metrics measure what matters, including base rates, coverage when the rule abstains, and sensitivity to costs?
+10. What is unvalidated but presented as settled, and what would falsify the whole specification?
+
+## Evidence standard
+
+- Name the source for every load-bearing claim: publication, series id, table or section, and the date you read it. A claim with no source is written as your reading, not as a finding.
+- Cite the passage you rely on. Where a source only partly supports a claim, write what it does support and what it leaves out.
+- Separate measurement from mechanism. A channel is a hypothesis; say which part of a claim has been measured and which part has not.
+- State the sample behind any relation: instrument, window, era and the number of non-overlapping observations. A number with no sample is not evidence.
+- Prefer the primary source to a summary, and the series documentation to a post about the series.
+- Report what you could not reach: paywalls, undated pages, dead links, series with no documented vintage. Do not fill the gap with a plausible number.
+- Where two sources disagree, say so and say which you would trust and why.
+- Every claim about timing is about this session and this cutoff, not about a general close-to-close convention.
 
 ## Five kinds of evidence that must not be mixed
 
@@ -65,63 +82,69 @@ Each kind answers a different question, and evidence of one kind never stands in
 
 A claim that changes kind between sections - a mechanism presented as a measurement, another window presented as ours, an input already in the decision presented as new - is the most common way a body of research overstates what is known. Where the same evidence is counted twice, say so.
 
-## What the red-team must contain
+## What the review must contain
 
-1. **Issue register** - each issue with the quoted claim, verdict, severity and the evidence that would settle it.
-2. **What survives unchanged** - the claims you tested and did not overturn.
-3. **What the red-team could not reach** - scope limits, missing evidence and paywalled sources.
-4. **Sources you re-fetched** - with the link and the passage you relied on.
-5. **Questions you could not resolve** - stated as unresolved rather than guessed.
+The file must contain exactly these sections, in this order, each as a `## ` heading with the exact title:
 
-## The line this stage must not cross
+  1. `## Summary - the verdict, in at most ten lines`
+  2. `## The document judged - file name, first heading, the version and hash you were given`
+  3. `## Claims checked - one row per load-bearing claim: claim as stated, where it is, verdict, severity, the evidence and the reason`
+  4. `## Specification defects - computability, timing, double counting, aggregation, signs and thresholds, the label`
+  5. `## Validation-plan defects - splits, multiplicity, benchmarks, metrics, costs, coverage`
+  6. `## What the proposal gets right`
+  7. `## What is unvalidated but presented as settled`
+  8. `## What a corrected version would have to change, and what it should not change`
+  9. `## Questions the proposal should have answered and did not`
+  10. `## Sources consulted`
 
-The red-team is evidence, not an approval and not a vote. It does not implement, score, deploy or change a live call, and it asserts no performance figure it has not measured.
-
-## The session this is written for
-
-- **Session**: 05:00 Europe/London to 05:00 Europe/London on the next local date. Both ends are London wall-clock times one local date apart, so every eligible session is exactly 24 hours. The contract is `docs/research/usd-session/v1/session_contract_v1.json`.
-- **Starts and ends**: a session starts on a Monday-to-Friday London local date only. A Saturday or Sunday start is never a session; the Saturday start is the only one that can contain a London daylight-saving transition, which is why every eligible session is exactly 24 hours (`backtester/lib/usd_session_engine_interface.js`, `SESSION_CONTRACT`, `session_start_rule`). A Friday session therefore ends at the 05:00 London endpoint on the Saturday. When the endpoint value does not exist, record the session as not evaluable and leave the value missing: never fill it from a Friday close, a Monday open, an interpolation or a later revision, and never quote a number whose window you cannot name.
-- **Label instrument**: proposed as DXY and UNVERIFIED. No intraday dollar-index print exists in this repository or in the live collector, and no quote source is committed. Never present another instrument as DXY: if a source is about EUR/USD, a basket, the broad trade-weighted index or a futures contract, name that instrument in the same sentence, and say whether its window is a close-to-close day, an intraday slice or something else.
-- **The deployed engine is not this window, and its timing is read from the code that defines it, never from memory or from a document**: the stored live calls were attached to the window resolved by the repository's own Phase 1 contract - a 09:30 America/New_York open on the call date to the 16:00 America/New_York close of the next date that has a value, sliding up to three days when the scheduled close has none (`getPhase1OutcomeWindow` in `backtester/lib/timeframe_windows.js`, applied in `backtester/lib/usd24h/outcomes.js`, whose own note calls it a nominal 24-hour horizon rather than 24 elapsed hours and which records `measured_elapsed_hours` per row). The "median 30.5 elapsed hours" figure is a measurement on the closed study's own 583 evaluable rows, recorded under `contract_vs_deployed_engine` in `docs/research/usd-session/v1/session_contract_v1.json`: it is a property of that study, not a declared property of the live engine, and it must be attributed that way every time it is quoted. The same block measures the overlap of that study's interval with this session as 14.5 hours on 528 rows and 15.5 hours on 55 rows - the two weeks a year when New York has changed and London has not - and the session's first 9.5 hours (8.5 in those weeks) as uncovered. Those figures are measured and date-dependent: they are not to be derived by subtracting a fixed London-to-New-York offset, and any comparison of a London-anchored window with a New-York-anchored one must be resolved per date from declared transitions. The archive's "next valid trading session" means the next date with an available value, not a holiday-aware exchange calendar, and the engine does not model market holidays. If the code and a document disagree about the live engine's timing, the code is the authority; report the disagreement rather than repeating the document.
-
-## The asset-level synthesis this chain produces
-
-This chain reads every factor chain adjudication for the asset. It is the synthesis layer, not a fourth factor review.
-
-
-## Companion files in the repository
-
-Files in the checkout behind this chain, if you can reach them. They are aids, not attachments you must have.
-
-- `docs/research/usd-session/v1/inventory.md` (the input and decision inventory the synthesis closes out) - sha256 `a886f1ddcce52d4d8a0af77069b391deb1338275380cccd2e08d41fd61f2d56a`
+Keep a section that turns out to be empty, and say in one sentence why it is empty.
+Do not restate these instructions, and do not add a section that summarises the prompt.
 
 ## What to return
 
-- Required content: The issue register against the final analysis and its supporting adjudications; the two closing lists (what survives unchanged, what the red-team could not reach); the sources you re-fetched; and the questions you could not resolve.
-- Return one Markdown document. Put these identifier lines at the top of the file, before the body, and fill them from the input package you downloaded:
+Return exactly one Markdown file and nothing else.
+
+- File name: `usd-final-asset-analysis-s2-red-team.md`. Copy it exactly: the library records the name it receives and matches it to the prompt that asked for it.
+- Format: one Markdown file. No JSON, no zip, no PDF, no spreadsheet, no second file, no separate sources note, no filled-in card.
+- Length: as long as the material needs, and no longer. A short file that answers every question beats a long one that answers some.
+- Header lines, above the first heading, in this form:
 
 ```
 Reviewed chain: usd-final-asset-analysis
-Reviewed final analysis: <document id>
-Reviewed final analysis version: <version>
-Reviewed final analysis sha256: <sha256>
-Supporting adjudication read: <factor id> - <document id> - version <version> - sha256 <sha256>
-Supporting adjudication read: <factor id> - <document id> - version <version> - sha256 <sha256>
+Reviewed document: <the file name you were given>
+Reviewed version: <the version you were given, or unknown>
+Reviewed sha256: <the hash you were given, or unknown>
+Reviewed first heading: <the first heading of that document, verbatim>
 ```
-- Keep it in one file. Tables, sources, hypotheses, candidate relations and appendices all belong inside that document; nothing here needs a second file, a JSON payload or a hand-built schema.
-- The dashboard records the chain, the stage and the exact input package this document judged, so that metadata is not yours to assemble: download the package, choose the file, upload it.
+
+Write `unknown` where a version or a hash was not supplied. Do not invent one, and do not stop because it is missing.
+
+## Completion checklist
+
+Walk this list before you return the file. A "no" means the file is not ready.
+
+- [ ] Both halves of the proposal are attacked: the specification and the validation plan.
+- [ ] Every load-bearing claim has a row in the register with a verdict, a severity and a reason.
+- [ ] Computability at the stated cutoff is checked input by input.
+- [ ] Double counting is checked across entries, across factor chains and through interactions.
+- [ ] The multiplicity of the validation design is assessed, not only its metrics.
+- [ ] What the proposal gets right is listed as such.
+- [ ] The file name and every section heading match the instructions exactly.
 
 ## Prohibitions
 
-Do not invent a backtest, a performance figure, an accuracy rate or a sample size. If you have not measured it, say it is unmeasured. Numbers you remember are not evidence.
-Do not use hindsight: never state what a past period would have predicted using information that was not available at that time, and do not present a later revision as a first print.
-Cite only sources you actually fetched in this session, with the link and the passage you relied on.
-Where you are uncertain, say so and give the reason; an unresolved question is a valid return.
-State effects that are already in the price at the cutoff rather than counting them again as predictive.
-Treat the deployed weights, thresholds and signs as a baseline to audit, never as evidence for your claim.
-Name the instrument a claim is really about. Never present another instrument as DXY.
-Recommending data the collector should record and a treatment a future engine should apply is required content, not a change being made. No production, workflow, dashboard, feed, dispatcher, database or configuration change is authorised by this prompt, none may be carried out now, and none may be reported as done or as agreed.
+- Do not treat a rule in force as evidence for itself. It is the baseline you are auditing.
+- Do not propose or make a change to a live engine, a live call or a deployed workflow.
+- Do not invent a number, a series id, a citation, a date or a hash. `unknown` is allowed; a guess is not.
+- Do not return JSON, a dashboard card, a zip, a spreadsheet, a second file, or this prompt pasted back.
+- Do not add, rename, reorder or merge the deliverable sections.
+- Do not report a directional edge from a sample you have not described.
+- Do not use a value published after the cutoff, or a later revision, as what was known at the cutoff.
+- Do not treat a local export, a passing replay test or a workflow run as evidence that anything is deployed, timely or profitable.
+- Do not assume access to data this prompt does not name; if a test needs it, say what it is and where it would come from.
 
-## What happens after you return it
+If a question can only be answered by breaking one of these, say so in the file rather than breaking it.
 
-The final adjudication receives this red-team and the final analysis together, decides every material finding on the evidence, and then writes the complete candidate Layer 1 logic for an isolated backtest. Nothing enters the live engine because a document exists.
+## What happens next
+
+The operator supplies this review and the final analysis it judges, unchanged, to stage 3 (adjudication) for the same asset. The review does not replace the proposal.
