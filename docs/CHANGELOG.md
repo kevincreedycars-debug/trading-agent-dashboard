@@ -32,6 +32,10 @@
   failures. The library browser test fails waiting for a download event, and fails identically on untouched
   `origin/main` `9c618d22` in a fresh worktree, so it is pre-existing and environmental rather than caused here.
 - Nothing was published to a model, dispatched or uploaded, and no allowance was spent.
+- Deployed as `65ec66aa` and read back from the public site: the live catalogue is 319,477 bytes, sha256
+  `aa249c41…`, byte-identical to the committed file, and the three live VIX prompts hash to
+  `596a6530…`, `78d66cda…` and `c2e7312a…`, the catalogue's values. The dispatcher's preview reports the same
+  `prompt_sha256` for the prompt it would send, so the manual copy and the automated dispatch read one file.
 
 ## 2026-10-25 (integration lane) - Astra route integrated, the supervisor reads chains, probes specified
 

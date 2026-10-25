@@ -124,9 +124,31 @@ The review pass that the coordinator asked for was run against the regenerated f
 What the checks do not establish: that these are the right questions. That is a reading of the text, recorded
 factor by factor here and in the changelog; a hash cannot prove it.
 
+## Deployed and read back
+
+- The prompts and catalogue were deployed to `main` as `65ec66aa` (`d4de0110..65ec66aa`), a fast-forward over
+  the live-snapshot commits, and the integration branch is pushed alongside it.
+- Read back from the public site at 2026-10-25T21:26Z, not assumed: the live
+  `data/research-library/catalog.json` is 319,477 bytes, sha256
+  `aa249c41cb51eae8a9a25fba5db2c28ccbc5d477710daf7863a5279b197541a9`, byte-identical to the committed file,
+  carries `research-prompt-v3.1.0`, and its USD record reads `dispatchable` 25/25/78/25. The live
+  `index.html` serves cache-buster `20261025-research-prompt-v310`.
+- The three live VIX prompts hash to the catalogue's values: research 16,598 bytes /
+  `596a6530…`, red-team 14,699 / `78d66cda…`, adjudication 16,119 / `c2e7312a…`.
+- The dispatcher reads the same bytes: `node scripts/research-pipeline.js preview
+  usd-topic-vix-level-and-risk-regime research --chain usd-factor-live-f1-vix-level` reports
+  `prompt_path` `docs/research/factors/usd/live-f1-vix-level/01-research-prompt.md` and `prompt_sha256`
+  `596a6530…`, identical to the catalogue, inside its own envelope. `plan --asset USD --runnable` lists 25
+  runnable stages with the VIX red-team first.
+- Two environment limits, stated rather than worked around: the red-team preview needs the registered research
+  object, which is present in the canonical checkout's `.local/research-library/objects` (84,056 bytes,
+  `e4151937…`) but absent from a fresh worktree; and `research-library:page-check` needs the owner's hosted
+  sign-in, so it was not run.
+
 ## Handoff: automation coordinator
 
-- **Deployed prompt version:** `research-prompt-v3.1.0`, in the commit that carries this note on `main`.
+- **Deployed prompt version:** `research-prompt-v3.1.0`; the prompts and catalogue were deployed in
+  `65ec66aa` on `main`, and this note is the follow-up commit.
 - **Canonical identity:** `usd-final-asset-analysis` for the asset-level chain. Do not create a second dispatch
   task; the factor chains are `usd-factor-<factor-id>`.
 - **Per-stage hashes:** each stage's `prompt_path`, `prompt_sha256`, `prompt_bytes` and
