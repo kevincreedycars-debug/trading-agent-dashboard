@@ -11,6 +11,11 @@ The supervisor writes one Markdown envelope per stage, something outside this re
 to a model, and the returned file comes back through `submit`, which verifies it and registers it in the
 Research Library registry or rejects it.
 
+The carrier verified on 2026-10-25 is the local Codex CLI at `0.164.0` running `codex exec` against the
+owner's ChatGPT/Codex plan session. It answers `gpt-6-astra`, it can search the web, and it needs this PC to be
+on. Each of those three points has a recorded command below, and each one also failed on an earlier build that
+this document now names, so the version is part of the route rather than a footnote.
+
 ## Interface (verified)
 
 `lib/research_pipeline.js` is the supervisor and `scripts/research-pipeline.js` is its only front end. Both
@@ -57,42 +62,132 @@ by `npm test`:
 - the CLI itself: status and preview write no state, dispatch → submit → status round-trips, and
   `pause`/`resume`/`allowance`/`recover` are the only controls.
 
-These are guards on the supervisor's own bookkeeping. They say nothing about whether any model can run a
-stage unattended, and nothing about research quality.
+These are guards on the supervisor's own bookkeeping. They say nothing about research quality, and nothing
+about the model itself — the carrier section below is where the route stops being an assumption and becomes a
+command that was run.
 
-## Billing basis (assumed, not verified)
+## Billing basis (verified for this account, 2026-10-25)
 
 The pipeline has no knowledge of money or plan limits. It keeps a counter in `usage.json`:
 `limit`, `reserve`, `used`, `reset_cadence: "manual"`, `reset_at`. The operator states `limit` and `reserve`;
 the supervisor refuses a dispatch at `used >= limit - reserve`.
 
-Not verified, and therefore not asserted anywhere in code:
+What the carrier actually spends, verified by running it:
 
-- whether an execution route is billed per token through an API key or against a ChatGPT/Codex plan quota;
-- how many dispatches such a plan allows in a window, and whether a deep-research run costs one unit or more;
-- whether any machine-readable reset signal exists. The code assumes none, which is why `reset_cadence` is
-  `manual` and `--reset` is required.
+- it authenticates with the ChatGPT/Codex session already in `~/.codex/auth.json` (`auth_mode: chatgpt`);
+  `OPENAI_API_KEY` is not set on this host and no key was passed on any command line. The carrier demo
+  therefore spent the plan's allowance, not a paid API account;
+- the provider reports this account as `plan_type: "plus"` with a 300-minute window, a 10,080-minute window and
+  a credits balance of `144.7441982500` at the time of the run;
+- one report stage consumed 269,333 input tokens (216,320 of them cached) and 1,632 output tokens in 74
+  seconds, and moved the 300-minute window from 27% to 30%. So a stage is a few percent of one five-hour
+  window, measured in tokens and percent, not a fixed number of "runs": the supervisor's unit is a dispatch and
+  the provider's unit is tokens.
 
-Until the owner states those facts, treat `limit`/`reserve` as a self-imposed budget, not a measurement of
-what the plan allows.
+Still not verified: whether any route here could be billed to an API key (nothing in this route sets one), what
+the plan's ceiling is in absolute tokens, and whether the allowance left is enough for three stages of real
+research on several topics. One stage at ~270k input tokens is a floor, not a ceiling.
 
-## Allowance access (verified interface, unverified source)
+## The carrier that was actually run (verified 2026-10-25)
 
-Reading the allowance is `node scripts/research-pipeline.js allowance`; changing it is
-`allowance --limit N --reserve N --reset`. There is no importer, because the repository holds no credential
-and no plan endpoint. A run started with the wrong `limit` stops at the wrong place, so the first act of an
-unattended shift is to read the allowance, not to dispatch.
+Build matters more than anything else on this route. Three Codex builds are on this host and only one of them
+can answer the model:
 
-## Running with the local PC off (not implemented)
+| Build | Where it comes from | `-m gpt-6-astra` |
+| --- | --- | --- |
+| `codex-cli 0.147.0` | the `codex` on `PATH` | not tested to completion; predates the model |
+| `codex-cli 0.163.0-alpha.11.2` | shipped inside the desktop app (`…\OpenAI\Codex\bin\37f54d68e5533a51\codex.exe`) | refused: `400 invalid_request_error`, "The 'gpt-6-astra' model requires a newer version of Codex" |
+| `codex-cli 0.164.0` | `npm install @openai/codex@0.164.0` into a scratch prefix (npm `latest` on 2026-10-25) | answered |
 
-The supervisor is a one-shot CLI on this host. It does not run when the machine is off, and no scheduler,
-service, hosted runner or remote worker has been added. `recover` exists precisely because a run can be cut
-off by a shutdown, and it requeues an expired claim without losing the attempt count.
+Invocation that worked, with the envelope on stdin and the last message written to a file:
 
-To make a stage happen with the PC off, something outside this checkout must (a) start the dispatch, (b) carry
-the envelope to a model, and (c) bring the return back to `submit`. None of those three legs is implemented
-here, and none is verified. `dispatch`/`submit` are written so that any such carrier stays replaceable: a
-carrier moves bytes and nothing else.
+```powershell
+Get-Content <envelope>.md -Raw |
+  node <scratch>\node_modules\@openai\codex\bin\codex.js exec --json --skip-git-repo-check `
+    -m gpt-6-astra -c web_search=live -s read-only -C <root> -o <root>\return.md -
+```
+
+What each part of that line establishes:
+
+- `--json` prints one event per line on stdout, so the carrier can be driven without a terminal: `thread.started`
+  gives `thread_id`, `item.completed` types are `agent_message`, `web_search`, `command_execution`, and
+  `turn.completed` gives `usage` (`input_tokens`, `cached_input_tokens`, `output_tokens`).
+- `-c web_search=live` is the only way search is on. `codex exec --help` lists no `--search` flag, and without
+  the override the run has no web tool at all. With it, each search is a `web_search` item carrying `action`
+  (`search`, `open_page`, `find_in_page`), `url`, `title` and `snippet`, which is exactly the source-retrieval
+  evidence a stage report is meant to rest on.
+- no `resume` and no `--ephemeral`: every `exec` call is a fresh thread with its own `thread_id`, so a stage
+  cannot inherit an earlier stage's context, and dropping `--ephemeral` keeps the rollout file that carries the
+  provider's limit numbers.
+- `-s read-only` and `-C <root>` keep the agent from writing anything itself; the only bytes that travel back are
+  the answer, which `submit` then verifies.
+
+The demonstration run, in a scratch root outside the repository (`%TEMP%\astra-carrier-demo`) with a one-topic
+catalogue so the repository registry was never touched:
+
+1. `dispatch astra-carrier-demo research` wrote a 1,572-byte envelope, sha256 `b931dec3…`, prompt
+   `151bb39a…` verified against the catalogue, one allowance unit spent.
+2. Astra answered in 74 seconds with a 6,179-byte document, five headings, search evidence from
+   `developers.openai.com`, thread `01a174a1-8838-76a2-9b2c-474d19bbb4f0`.
+3. `submit … --model gpt-6-astra` verified the return (6,179 bytes, 5 headings, no truncation or placeholder
+   markers) and registered version 1, sha256 `0621219e…`, `storage: library_object`,
+   `public_download: false`; the stored object was read back and matched, and `status` then showed
+   `delivered: 1`.
+
+Not demonstrated, and deliberately so: a real factor chain. In this worktree `.local/research-library/objects/`
+is empty, so the red-team stage of the VIX topic cannot re-hash the report it is meant to judge (see below), and
+the revised stage prompts are still with the research coordinator. The carrier is proven; the chain over real
+topics is the next act, not a claimed result.
+
+## Allowance access and the provider's own limit signal (read path verified, not yet wired)
+
+Reading our allowance is `node scripts/research-pipeline.js allowance`; changing it is
+`allowance --limit N --reserve N --reset`. There is no importer, and `usage.json` stays a self-imposed budget:
+the supervisor knows nothing about the plan.
+
+The provider's numbers do reach the host, though. `codex exec` without `--ephemeral` writes a rollout to
+`~/.codex/sessions/YYYY/MM/DD/rollout-<timestamp>-<thread_id>.jsonl`, and the `thread_id` printed by
+`exec --json` is the join key into that filename. Inside it, `token_count` events carry:
+
+```
+"rate_limits":{"limit_id":"codex","primary":{"used_percent":30.0,"window_minutes":300,"resets_at":1792973506},
+"secondary":{"used_percent":7.0,"window_minutes":10080,"resets_at":1793531220},
+"credits":{"has_credits":true,"unlimited":false,"balance":"144.7441982500"},
+"plan_type":"plus","rate_limit_reached_type":null}
+```
+
+So a machine-readable reset signal exists: `primary.resets_at` is the five-hour window reset and
+`secondary.resets_at` the weekly one, both epoch seconds. It is the provider's window, not our counter, and
+nothing in `lib/` reads it yet — `reset_cadence` is still `manual`. A refused turn surfaces in the same JSONL as
+`{"type":"error"}` followed by `{"type":"turn.failed"}` (shape observed on the version-mismatch 400 above);
+`rate_limit_reached_type` is the field that should be non-null on a quota refusal, which is inferred from the
+schema and not tested, because no run has been pushed to the limit and none should be.
+
+The first act of an unattended shift therefore remains: read our allowance, read the last rollout's
+`rate_limits`, and only then dispatch.
+
+## Running with the local PC off (not implemented, and excluded by choice)
+
+The supervisor is a one-shot CLI on this host and so is the carrier: `codex exec` runs as a local process, reads
+`~/.codex/auth.json`, and writes its rollout under `~/.codex/sessions`. Nothing runs when the machine is off, and
+no scheduler, service, hosted runner or remote worker has been added. `recover` exists precisely because a run
+can be cut off by a shutdown, and it requeues an expired claim without losing the attempt count.
+
+Three ways to move a stage off this PC, and why none of them is in place:
+
+- a provider-side cloud or scheduled task: it runs in a remote sandbox, not in this checkout, so it cannot write
+  `.local/research-pipeline/outbox/`, cannot read the private objects, and cannot run `submit`. Provider
+  documentation for those surfaces could not be retrieved during this session (every fetch of
+  `developers.openai.com` and `learn.chatgpt.com` returned an empty body), so their exact terms are unverified
+  here rather than contradicted;
+- a self-hosted runner: it needs a machine left on, which is the same requirement as leaving this PC on, plus a
+  second host to keep patched;
+- a hosted runner with this session's credentials: that exports the owner's plan session to a third-party host,
+  and hosted minutes are paid hosting. Both are out of scope by instruction.
+
+So the honest statement is: with the PC off, the chain does not run, and no unpaid supported route found here
+changes that. The carrier demo adds one measured fact — the answer arrives in about a minute and a quarter of
+wall-clock time, so an on-PC run of a full topic is a matter of minutes, not an overnight job.
 
 ## Store access (verified boundary)
 
@@ -107,7 +202,27 @@ objects, so dispatching the red-team stage of the VIX topic failed with
 answer, not a defect: the stored bytes are intentionally outside Git, so a checkout that has not received them
 cannot run a stage that judges them. A worktree is for code and guards; the pipeline runs where the objects are.
 
+The demonstration run confirmed the registration shape end to end: the row it wrote reads `storage:
+"library_object"`, `public_download: false`, `origin: "external_upload"`, `model: "gpt-6-astra"`, one version
+with the returned sha256, and `status` listed the stage as `delivered`.
+
+Where a finished report is visible, stated plainly:
+
+- hosted dashboard (`https://kevincreedycars-debug.github.io/trading-agent-dashboard/`, GitHub Pages from a
+  commit): the published registry row — id, title, type, model, date, version, hash, "not published" note. Not
+  the bytes;
+- local service: the topic page renders the stored document and offers View/Download, and the download is hashed
+  against the registry before it is served;
+- so "verified dashboard download" today means the local service. Publishing report bytes would mean committing
+  them under `docs/` and deploying, which is a change of the storage decision, not a step in this route.
+
 ## Still the owner's decision
 
-1. The execution route and its billing basis, so the allowance numbers mean something.
-2. Whether an unattended carrier is wanted at all, and where it would run when this PC is off.
+1. Whether the pinned carrier (`@openai/codex@0.164.0`, `exec -m gpt-6-astra -c web_search=live`) is the
+   supported route, and where that binary is allowed to come from — npm at a pinned version, or a future app
+   build that ships a CLI which knows the model.
+2. Whether the provider's `rate_limits` block should be read by the pipeline (an `allowance --from-rollout`
+   style import) or stay a human check before each shift.
+3. Whether an unattended carrier is wanted at all, given that with this PC off there is no unpaid route, and
+   that a hosted runner means exporting the plan session and paying for minutes.
+4. Whether report bytes should ever be public on Pages. Today they are deliberately not.
