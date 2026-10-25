@@ -15,7 +15,7 @@
 - The asset strip order is the owner's expansion order, `USD, EUR, GOLD, SILVER, NQ, BTC, WTI, GBP`; GBP moved to
   the end and nothing else about any asset changed.
 - The 78 prompts and `data/research-library/catalog.json` regenerated together with `catalog --write`;
-  cache-buster `20261025-research-programme-v2` in `script.js` and `index.html`.
+  cache-buster `20261025-research-programme-v3` in `script.js` and `index.html`. The strip order lives in `ASSET_ORDER` and in the catalogue's `asset_order` field, both changed, with a test that fails if either drifts.
 - `docs/research/programme/PROMPT_AUDIT_20261025.md` records the five defects the round found and what replaced
   them; `CURRENT_TASK.md`, `ACTIVE_MILESTONE.md` and `SESSION_NOTES.md` carry the handoff.
 

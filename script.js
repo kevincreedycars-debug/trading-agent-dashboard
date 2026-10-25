@@ -40,7 +40,7 @@ const LIVE_TRADING_FEED_PATH = "data/live-trading.json";
 // old id is refused by the loop rather than sent to the wrong account.
 const DEFAULT_LIVE_TRADING_LANE = "ftmo-1";
 const architectureManifestUrlDefault = "./data/architecture-map.json?v=20260721-architecture-mirror-v1";
-const researchLibraryUrl = "./data/research-library/catalog.json?v=20261025-research-programme-v2";
+const researchLibraryUrl = "./data/research-library/catalog.json?v=20261025-research-programme-v3";
 const researchLibraryDocumentsUrl = "./data/research-library/documents.json?v=20261013-research-library-v1";
 const researchSupabaseUrl = "https://eaolqbrlywczinfordvg.supabase.co/rest/v1";
 const researchSupabaseKey = "sb_publishable_k6YbEuuk3GyB9GVTQDtNVA_J1gCRYaY";

@@ -655,6 +655,19 @@ test("the final chain prompts carry the analysis, red-team and candidate-logic s
   });
 });
 
+test("the asset strip follows the owner's expansion order", () => {
+  // USD first, then EUR, GOLD, SILVER, NQ, BTC, WTI, GBP. The position ranks no evidence and moves no status: this
+  // guards the order the owner named, so a later edit cannot reorder the strip silently.
+  const expected = ["USD", "EUR", "GOLD", "SILVER", "NQ", "BTC", "WTI", "GBP"];
+  assert.deepEqual(ResearchLibrary.ASSET_ORDER.slice(), expected, "the shared order constant");
+  assert.deepEqual(catalog.asset_order, expected, "the written catalogue");
+  assert.deepEqual(
+    ResearchLibrary.listAssets(ResearchLibrary.normalizeCatalog(catalog)).map(asset => asset.asset),
+    expected,
+    "the order a reader sees"
+  );
+});
+
 test("the VIX factor chain's research prompt is the dispatched assignment, not the legacy reviewer task", () => {
   const chain = ResearchLibrary.factorChainForFactor(catalog, "live.f1-vix-level");
   const research = ResearchLibrary.chainStageById(chain, "research");
