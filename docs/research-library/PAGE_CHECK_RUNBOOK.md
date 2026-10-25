@@ -49,7 +49,7 @@ in but is not on that list is refused everything, which is what keeps other GitH
 
 ## What works from a phone with the PC switched off
 
-Verified on 2026-10-25 against the published page (code commit `2c8b486f`, Pages built 11:27Z) with the local service
+Verified on 2026-10-25 against the published page (code commit `564f6566`, cache-busters `20261025-research-programme-v1`) with the local service
 stopped (nothing listening on `127.0.0.1:8791`, and no loopback request observed during the run): every
 step below passed, and the final chain still read `0/25` with `unlocked=false` and no upload form
 offered after the factor upload, so the real gate was left exactly where it was. The same run on
@@ -61,9 +61,16 @@ offered after the factor upload, so the real gate was left exactly where it was.
 - VIX chain: stage 1 shows the hosted row `d7b8eb40-…` v1, sha256 `e4151937…`, 84,056 bytes; stage 2
   names that row as its input and hands the same 84,056 bytes back.
 
-The final asset-level chain (stage 1-3 of `usd-final-asset-analysis`) is the one surface that still needs
-the local service, because its return records the exact factor input package. It is also gated on every
-factor chain being complete, so it cannot be reached yet.
+The final asset-level chain (stages 1-3 of `usd-final-asset-analysis`) registers through the same private
+store as every factor chain, with the exact factor input package it judged recorded behind
+`research-input-package:v1`, so it does not need the local service. It is gated on all twenty-five factor
+chains being complete against their current versions, so it cannot be reached yet: the live page reads
+`unlocked=false`, `0/25`, twenty-five pending and no stage card rendered.
+
+On 2026-10-25 the live page was re-read after the prompt regeneration: the VIX stage 1 **Copy prompt**
+succeeded at 25,490 characters and sha256 `3c2db00e…`, matching the catalogue, and the copied text carried
+the five evidence kinds; the final chain still read `unlocked=false`, `0/25`, `0/3` final stages and no page
+error was raised.
 
 ## Keeping a local copy
 
