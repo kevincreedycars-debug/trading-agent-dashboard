@@ -49,7 +49,7 @@ in but is not on that list is refused everything, which is what keeps other GitH
 
 ## What works from a phone with the PC switched off
 
-Verified on 2026-10-25 against the published page (`c98bf16c`, Pages built 11:18Z) with the local service
+Verified on 2026-10-25 against the published page (code commit `2c8b486f`, Pages built 11:27Z) with the local service
 stopped (nothing listening on `127.0.0.1:8791`, and no loopback request observed during the run): every
 step below passed, and the final chain still read `0/25` with `unlocked=false` and no upload form
 offered after the factor upload, so the real gate was left exactly where it was. The same run on
