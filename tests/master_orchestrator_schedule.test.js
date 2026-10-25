@@ -40,7 +40,7 @@ test("one call a day, one at a time", () => {
   assert.ok(duplicateGuard > 0 && forceGate > duplicateGuard && earlyGate > forceGate,
     "force is reached after the day's guards and before the clock, so it cannot cause a duplicate or an overlap");
   // A dry run proves the guards without calling anything, so it must not be the success that ends the day.
-  assert.match(workflow, /run-name: orchestrator daily \$\{\{ inputs\.dry_run == 'true' && 'dry' \|\| 'live' \}\}/,
+  assert.match(workflow, /run-name: orchestrator daily \$\{\{ inputs\.dry_run && 'dry' \|\| 'live' \}\}/,
     "the run names itself dry or live, the only thing a later slot can read back");
   assert.match(workflow, /select\(\.displayTitle \| startswith\("orchestrator daily live"\)\)/,
     "and only live runs count towards the day, by a name no unnamed run can imitate");

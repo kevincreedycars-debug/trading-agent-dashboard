@@ -15,7 +15,9 @@ name: master-orchestrator-daily
 # guards without calling anything, so it must never be the "success today" that turns tomorrow morning's slot away.
 # The name is a prefix of its own rather than a word like "live", because a run without a name is titled after the
 # workflow or the commit, and those must not be mistaken for a live slot.
-run-name: orchestrator daily ${{ inputs.dry_run == 'true' && 'dry' || 'live' }}
+# A `boolean` dispatch input arrives as a boolean, not as the string "true", so the name tests it for truth rather
+# than comparing it to text.
+run-name: orchestrator daily ${{ inputs.dry_run && 'dry' || 'live' }}
 
 on:
   schedule:
