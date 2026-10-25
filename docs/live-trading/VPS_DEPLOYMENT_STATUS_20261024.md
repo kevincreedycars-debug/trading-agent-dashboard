@@ -404,6 +404,27 @@ The lanes publisher's own `-Test` (a `--force --dry-run`, so it cannot commit or
 `extras` = `data/live-trading-trader.ftmo-1.json` and `data/live-trading-lanes.json`, lane 1 identity `***614`
 matched, and lane 2 `disabled` - "the lanes file marks this lane disabled, so it is not read and not published".
 
+**The first real lanes publish landed at 2026-10-25T19:59:46.541Z, commit `0b2a1c67`**, three files in one commit:
+`data/live-trading.json` (generated 19:55:20Z), `data/live-trading-trader.ftmo-1.json` and
+`data/live-trading-lanes.json`. Read back from the Pages origin, not from the checkout: the lanes document carries
+lane 1 `status: "published"` with `trader: {published: data/live-trading-trader.ftmo-1.json, written_at_utc:
+2026-10-25T19:56:32.204Z, armed: true, status: nothing_to_place}`, and lane 2 `enabled: false`, `status: "disabled"`,
+`reason: "the lane is disabled, so no trader runs it"`. The heartbeat file is served on its own URL with lane
+`ftmo-1`, `armed: true`, `account ***614 FTMO-Server`, `positions_open: 1`, `orders_open: 0`, `ours: 1`. Then
+`node scripts/check-live-trading-publication.js` reports
+`ftmo-1 | ok | enabled | identity ***614 (matched) | snapshot 349s of 900s | heartbeat 278s, armed` and
+`ftmo-2 | disabled` - exit 0, where before the switch it said "heartbeat not declared" and could only check the
+snapshot.
+
+**Publishing status and armed status are separate fields and stay separate.** A lane row's `status` answers "are this
+lane's artifacts published" (`published` / `disabled`); `trader.armed` answers "may its loop send" (`true` / `false`).
+A lane can be published with an unarmed loop, and that combination is exactly what lane 1 showed for two days.
+
+**What the page draws, precisely.** `script.js` reads this document for the lane id a close request is stamped with
+(`liveTradingLanesUrl`), and no element of the page renders the heartbeat or the lane rows yet. So the heartbeat is
+published and served on the site's own URLs, but nothing on the page's cards displays it: that is a page change, not a
+publishing gap, and it is the next UI item if the heartbeat is to be read on the page itself.
+
 ### 10.2 The production loop had been unarmed since 2026-10-24 19:35Z
 
 `tmp/live-trading-trader-run.cmd` was rewritten at **2026-10-24T19:35:28Z** (local 20:35:28, BST) and lost three
