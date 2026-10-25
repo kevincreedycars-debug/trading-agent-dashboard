@@ -1,12 +1,18 @@
 [CmdletBinding()]
 param(
   [string]$LocalHome = (Join-Path $env:USERPROFILE ".trading-agent-dashboard"),
-  [string]$RepoRoot = (Split-Path -Parent $PSScriptRoot),
+  [string]$RepoRoot,
   [switch]$InitializeEmptyStoreIfMissing,
   [switch]$ForceSync
 )
 
 $ErrorActionPreference = "Stop"
+
+# `$PSScriptRoot` is empty while parameter defaults are evaluated when this script is started with `-File` on
+# PowerShell 5.1, so a default expression built from it throws instead of resolving. The root is worked out here
+# instead, in the body, where the script already knows where it lives - and `-RepoRoot` still overrides it.
+if (-not $RepoRoot) { $RepoRoot = Split-Path -Parent $PSScriptRoot }
+if (-not $RepoRoot) { $RepoRoot = (Get-Location).Path }
 
 $templateRoot = Join-Path $PSScriptRoot "local-credentials"
 $localConfig = Join-Path $LocalHome "config"

@@ -25,7 +25,7 @@ Experience** rather than Server Core. Server Core has no desktop, and an MT5 ter
 Three moves, and only the third needs anything from you.
 
 **2.1 Read the email, keep the secret in it.** Note the host name or IP address. Do not paste the password into
-this conversation, a commit, a log, the migration bundle or a shell one-liner - all four are places it would
+this conversation, a commit, a log, the migration bundle or a shell one-liner - all five are places it would
 outlive the moment.
 
 **2.2 Put the password in the store this repository already uses.** It is a per-user DPAPI-encrypted file
@@ -48,6 +48,20 @@ powershell -NoProfile -ExecutionPolicy Bypass -File "$env:USERPROFILE\.trading-a
 All three names are approved in `config/credential-manifest.json`, so the script will accept them and
 `validate-credentials.ps1` will report them as present rather than failing on an unknown name. The three are new
 in this session; the manifest is the list that decides which names the store may hold.
+
+The store reads its manifest from the **local home**, which is a copy. If that copy predates this commit, the
+prompt answers `Unknown credential name 'VPS_RDP_PASSWORD'` and nothing is stored; refresh it once, from the
+repository, and the names arrive:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts\create-local-secret-home.ps1 -ForceSync
+powershell -NoProfile -ExecutionPolicy Bypass -File "$env:USERPROFILE\.trading-agent-dashboard\scripts\validate-credentials.ps1" -Scope vps-host
+```
+
+The validator then lists the three as `missing`, which is the correct state before the email arrives, and it
+exits 0 because all three are `conditional` rather than `required`. Verified in this session: the sync copies 12
+manifest entries and the updated scope list into the local home, and the scope is then accepted with three
+missing.
 
 **2.3 Log in once, and paste one block.** See §3. After that block, the password is not needed again: access is by
 key. Say "the block ran" and nothing else - I read the result from the host, not from you.
