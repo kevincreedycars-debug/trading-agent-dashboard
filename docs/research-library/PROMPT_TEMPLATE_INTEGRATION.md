@@ -316,6 +316,76 @@ research version. What this branch establishes, read from the CLI rather than as
   local allowance unit on nothing. Dispatch belongs in the canonical checkout once it carries this prompt
   hash, followed by the research session that produces the review and the upload that registers it.
 
+## Reconciliation with the deployed line: canonical checkout, hosted delivery, provider readings and F5
+
+Written 2026-10-25, after the owner's four corrections. Each point is answered from evidence, and the
+correction that changes a plan is named as one.
+
+**1. The canonical checkout was inspected, not updated.** `D:\trading-agent-dashboard-codex` is on
+`research/usd-session-20261013` at `1e6ab197` with uncommitted work in 15 tracked files (backtester
+confidence mapping and USD session engine, `docs/CURRENT_*`, `docs/orchestration/projects.json`,
+`lib/research_library*.js`, `script.js`, `styles.css`, two research-library tests) and untracked lanes
+(`backtester/gold_session_policy*`, `docs/orchestration/assignments/*`, `tools/dashboard-design-node/`).
+A fast-forward is impossible in both directions: the branch is not an ancestor of `origin/main` and
+`origin/main` is not an ancestor of it. Nothing there was reset, moved or stashed. Deployment therefore
+happens from this worktree onto the branch the page is published from, after a real merge, and never by
+overwriting that folder.
+
+**2. Storage follows the hosted implementation; the runner now uses it too.** The page already reaches the
+private `research-documents` bucket and the `research_documents` table through
+`lib/research_upload_client.js` (`supabase/research-uploads.sql`, provisioned by
+`scripts/research-upload-provision.js`, checked by `scripts/verify-research-upload.js`). What was missing was
+the *runner*: `research-pipeline.js submit` wrote only to the local registry, and the README described the
+local service. The gap is now closed rather than documented:
+
+- `lib/research_hosted_store.js` loads the page's own client, so a runner registration lands on the same
+  bucket, at the same path (`<chain>/<stage>/v<version>-<sha>.md`), with the same version sequence, the same
+  notes layout (`Dispatch provenance: …` then `Model or session: …` last) and the same read-back rule.
+- It refuses a loopback project address by name, carries no URL literal of its own, and takes the project
+  address and publishable key from `script.js` so the runner cannot drift away from the deployed page.
+- The worker signs in with its own account (`RESEARCH_WORKER_EMAIL`, `RESEARCH_WORKER_PASSWORD`) - the
+  secure backend authentication - and never with the GitHub provider the owner uses in a browser. Neither
+  variable is written to a file, a receipt, a log line or a returned value.
+- `deliver` (and its `adopt` alias) is the operational command: hosted registration and byte-identical
+  read-back first, then the local registry record. `--skip-hosted` exists and is named for what it does; a
+  document that sits only in a local folder is not delivery.
+- `pipeline.deliveryPlan()` derives the hosted owner id, stage number, kind and the *catalogued* prompt
+  provenance, so no operator types them.
+- `tests/research_hosted_store.test.js` proves upload, registration, signed-link download and hash equality
+  against an in-memory fixture of those Supabase routes: no process is started, no port is opened, every
+  recorded request is asserted to be on the project host and none on loopback. The local service is never
+  started for that suite, so it passes with the service stopped.
+
+**3. The provider reading is wired into the runner, and a missing reading pauses dispatch.** The reading path
+was already real and verified: `codex exec` writes a rollout, `lib/codex_usage.js` parses `rate_limits` from
+it (`primary` 300-minute window, `secondary` weekly window, `resets_at`, `credits`, `plan_type`,
+`rate_limit_reached_type`), and `allowance --from-rollout FILE | --latest-rollout` imports it. What remained
+`provider_disabled` was the policy switch: `enabled` was opt-in, so the gate never ran unless someone turned
+it on. The runner no longer depends on that: `dispatch` requires a reading (`require_provider`), and refuses
+with `provider_disabled`, `provider_allowance_unknown`, `provider_allowance_stale` or `provider_refused`,
+pausing the queue through the same `allowance-gate` control that a refusal already used. `--provider-optional`
+exists for the guards and a scratch root and is not the operational path. Manually typed session numbers are
+not used anywhere: the receipt carries the provider's own windows.
+
+**4. F5 is reconciled, and its provenance does not match v3.1.0.** The 47,576-byte report is on this host at
+`D:\trading-agent-dashboard-pilot\runs\20261025-dxy\research.md`, and it re-hashes to
+`9048e8979a93a9c3407cc25704ee8dc8b45b0484636960ee2c3917dc118c9a2c`, exactly the registered value in
+`live-f5-dxy-delta-research` version 1. Its recorded dispatch provenance is prompt
+`docs/research/factors/usd/live-f5-dxy-delta/01-research-prompt.md` sha256
+`dfdeea3979302cc8f18333fb9b3d706c74a122dfe6b2d724c7c906e6b8546d33` (9,109 bytes, thread
+`01a174dc-cfdb-7ed1-9616-f582e9a5c02b`, `gpt-6-astra`, `codex-cli 0.164.0`). The catalogue now serves prompt
+`158091162ebb0fbaf394051f58268103964e1ab4c0c9cc5330130dbbcfbc96a7` (14,588 bytes) at that path, and the
+v3.1.0 prompt fixes eleven named sections (`## Summary - the answer, in at most ten lines` first,
+`## Sources` last). The returned file has twelve different headings (`## 1. Measurement` … `## 10. Data
+requirements`, `## Source note`, `## What is not claimed`) and no `## Sources`. So the report answered the
+earlier brief, and the difference is recorded as provenance rather than smoothed over.
+
+That is a technical reason, and it is stated so the owner can overrule it: continuing the F5 chain
+(red-team against the existing 47,576 bytes) keeps one real run, one real search trail and one real
+allowance spend, but every later stage will judge a report that does not match the prompt the catalogue
+publishes. Re-running stage 1 under v3.1.0 costs one more unit and yields a chain that is comparable end to
+end. Either way there is one pilot chain, `usd-factor-live-f5-dxy-delta`, not a second one.
+
 ## Handoff after the push
 
 Branch `workstream/c-research-programme` is pushed for review. The coordinator integrates; this

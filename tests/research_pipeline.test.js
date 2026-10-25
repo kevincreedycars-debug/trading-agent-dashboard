@@ -842,7 +842,13 @@ function cliHarness() {
   return (...argv) => {
     stdout.length = 0;
     stderr.length = 0;
-    const code = runCli(argv, io);
+    // These guards are about claims, envelopes and the registry. The allowance gate that needs a provider
+    // reading is exercised on its own below, so a dispatch here says --provider-optional out loud rather than
+    // leaning on the operational default.
+    const args = String(argv[0]) === "dispatch" && !argv.includes("--provider-required")
+      ? [...argv, "--provider-optional"]
+      : [...argv];
+    const code = runCli(args, io);
     const out = stdout.join("");
     const err = stderr.join("");
     return { code, out, err, json: readJsonOrNull(out), error: readJsonOrNull(err) };
@@ -1103,5 +1109,139 @@ test("the CLI establishes the provider allowance from a rollout, records a refus
   assert.equal(refusal.json.queue.paused, true);
   assert.equal(cli("dispatch", topicId, "red_team", ...root).error.code, "pipeline_paused");
   assert.equal(cli("resume", ...root).error.code, "provider_refused");
+});
+
+test("the delivery plan names the hosted owner, the stage number and the catalogued prompt provenance", () => {
+  const fixture = buildFixture("delivery-plan");
+  const pipeline = pipelineFor(fixture);
+  const topic = fixture.topics[0];
+
+  // On this fixture the topic carries its own stages, so the owner id is the topic. On the committed catalogue
+  // a topic is a display group and the owner is the factor chain id, which is the same value the page uploads
+  // under; either way it is derived from the catalogue, never typed.
+  const plan = pipeline.deliveryPlan(topic.topic_id, "research");
+  assert.equal(plan.topicId, topic.topic_id);
+  assert.equal(plan.group_topic_id, topic.topic_id);
+  assert.equal(plan.stage, 1);
+  assert.equal(plan.stage_id, "research");
+  assert.equal(plan.kind, "report");
+  assert.equal(plan.parent, null);
+  assert.equal(plan.provenance.prompt_path, topic.stages[0].prompt_path);
+  assert.equal(plan.provenance.prompt_sha256, topic.stages[0].prompt_sha256);
+
+  assert.throws(
+    () => pipeline.deliveryPlan(topic.topic_id, "red_team"),
+    error => error.code === "parent_missing"
+  );
+});
+
+test("a document produced elsewhere is adopted, read back and shown as the delivered stage", () => {
+  const fixture = buildFixture("adopt");
+  const pipeline = pipelineFor(fixture);
+  const topic = fixture.topics[0];
+  const chain = fixture.catalog.factor_chains[0];
+  const bytes = Buffer.from(completeDocument("adopted research report"), "utf8");
+  const hostedPath = `${topic.topic_id}/1/v1-${sha256(bytes)}.md`;
+
+  const result = pipeline.adopt(topic.topic_id, "research", bytes, {
+    model: "gpt-6-astra",
+    source: "D:/trading-agent-dashboard-pilot/runs/20261025-dxy/research.md",
+    provenance: {
+      prompt_path: "prompts/earlier-research.md",
+      prompt_sha256: "a".repeat(64),
+      prompt_bytes: 9109,
+      catalog_version: "research-prompt-v3.1.0"
+    },
+    hosted: {
+      ok: true,
+      sha256: sha256(bytes),
+      row_id: "row-1",
+      storage_path: hostedPath,
+      version: 1,
+      duplicate: false,
+      readback: { ok: true, sha256: sha256(bytes), bytes: bytes.length }
+    }
+  });
+
+  assert.equal(result.registration.document_id, stageDocumentId(topic.topic_id, "research"));
+  assert.equal(result.registration.sha256, sha256(bytes));
+  assert.equal(result.hosted.row_id, "row-1");
+  assert.equal(result.hosted.storage_path, hostedPath);
+  assert.equal(pipeline.budget().used, 0, "an adoption spends no allowance unit");
+  assert.deepEqual(pipeline.jobs(), {}, "an adoption claims no dispatch");
+
+  const stored = pipeline.store.readObject(result.registration.document_id, 1);
+  assert.equal(sha256(stored.bytes), sha256(bytes));
+  const document = pipeline.documents().find(entry => entry.document_id === result.registration.document_id);
+  assert.match(document.versions[0].note, /no dispatch in this queue is claimed and no allowance unit was spent/);
+  assert.match(document.versions[0].note, /prompts\/earlier-research\.md sha256 a{64} \(9109 bytes\)/);
+  assert.match(document.versions[0].note, /row-1/);
+
+  const entry = pipeline.plan({ topicId: topic.topic_id }).find(candidate => candidate.stage === "research");
+  assert.equal(entry.page_state, "delivered");
+  assert.equal(entry.runnable, false);
+
+  // With the research stage delivered, the hosted plan for the review names the exact version it judges.
+  const review = pipeline.deliveryPlan(topic.topic_id, "red_team");
+  assert.equal(review.stage, 2);
+  assert.deepEqual(review.parent, { stage_number: 1, version: 1, sha256: sha256(bytes), research_version: 1 });
+});
+
+test("an adoption is refused when the hosted row does not carry the bytes it would record", () => {
+  const fixture = buildFixture("adopt-mismatch");
+  const pipeline = pipelineFor(fixture);
+  const topic = fixture.topics[0];
+  const bytes = Buffer.from(completeDocument("adopted research report"), "utf8");
+
+  assert.throws(
+    () => pipeline.adopt(topic.topic_id, "research", bytes, {
+      model: "gpt-6-astra",
+      hosted: { ok: true, sha256: "b".repeat(64), row_id: "row-2", storage_path: "x/1/v1-b.md", version: 1 }
+    }),
+    error => error.code === "hosted_readback_mismatch"
+  );
+  assert.throws(
+    () => pipeline.adopt(topic.topic_id, "research", bytes, {
+      model: "gpt-6-astra",
+      hosted_required: true
+    }),
+    error => error.code === "hosted_not_configured"
+  );
+  assert.equal(fs.existsSync(fixture.registryPath), false, "a refused adoption records nothing");
+});
+
+test("a dispatch without a provider reading is paused instead of spending an allowance unit", () => {
+  const fixture = buildFixture("provider-gate");
+  const topicId = fixture.topics[0].topic_id;
+  const off = pipelineFor(fixture);
+  assert.throws(() => off.dispatch(topicId, "research", { require_provider: true }), error => error.code === "provider_disabled");
+  assert.equal(off.budget().used, 0);
+  assert.equal(off.status().paused, true, "a missing reading pauses the queue");
+  assert.throws(() => off.dispatch(topicId, "research", { require_provider: true }), error => error.code === "pipeline_paused");
+
+  const unknownFixture = buildFixture("provider-gate-unknown");
+  const enabled = pipelineFor(unknownFixture, { provider: { enabled: true } });
+  assert.throws(
+    () => enabled.dispatch(unknownFixture.topics[0].topic_id, "research", { require_provider: true }),
+    error => error.code === "provider_allowance_unknown"
+  );
+  assert.equal(enabled.budget().used, 0);
+});
+
+test("the CLI dispatch refuses a missing provider reading, and still refuses once the provider half is on", () => {
+  const fixture = buildFixture("cli-provider");
+  const cli = cliHarness();
+  const root = ["--root", fixture.root];
+  const topicId = fixture.topics[0].topic_id;
+
+  const refused = cli("dispatch", topicId, "research", "--provider-required", ...root);
+  assert.equal(refused.code, 1);
+  assert.equal(refused.error.code, "provider_disabled");
+  assert.equal(cli("allowance", ...root).json.allowance.used, 0);
+
+  assert.equal(cli("allowance", "--provider", "on", ...root).code, 0);
+  const stillRefused = cli("dispatch", topicId, "research", "--provider-required", ...root);
+  assert.equal(stillRefused.code, 1, "switching the provider half on without a reading still pauses dispatch");
+  assert.ok(["provider_allowance_unknown", "pipeline_paused"].includes(stillRefused.error.code), stillRefused.error.code);
 });
 
