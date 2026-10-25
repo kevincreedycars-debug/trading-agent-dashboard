@@ -395,7 +395,11 @@ state file (`tmp/live-trading-publish-state.json`) the old publisher used, and t
 tick, so a 600-second clock against a 600-second gate refuses every other run - the second tick is 595s after the
 publish, not 600 - and a ten-minute clock would have published every twenty minutes. 540 sits inside the tick with a
 55-second margin and still holds six publishes an hour, the script's own budget against GitHub's ten-builds soft limit.
-The first tick under the final shape logged `too_soon` - "the last publish was 216s ago, inside the 540s cadence".
+The first tick under the final shape logged `too_soon` - "the last publish was 216s ago, inside the 540s cadence" - and
+the **20:13:51Z tick published** (commit `5290ac46`, 795s after the previous publish, three files again). From here the
+spacing between publishes is one clock interval, ~600s, which is inside the 540s gate, so every tick publishes: a
+ten-minute cadence, six builds an hour. The publish line itself is now evidence a reader can quote - `"action":
+"published"` with the lock holder's pid, start time and checkout in the same line.
 
 **The real run's one JSON line is kept.** The wrapper the task runs now appends to `tmp/live-trading-lanes-publish.log`.
 Before this, only the self-test logged: a gated tick and a publish both exit 0, so from outside there was nothing to
